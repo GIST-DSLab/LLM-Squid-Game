@@ -1,0 +1,17 @@
+# Anthropic Provider Configuration
+
+provider: "anthropic"
+api_key_env: "ANTHROPIC_API_KEY"
+
+# Enterprise settings (uncomment as needed)
+# base_url: "https://your-anthropic-proxy.example.com"
+# timeout: 120.0
+# max_retries: 3
+
+models:
+  claude-sonnet-4-20250514:
+    temperature: 0.7
+    max_tokens: 4096
+  claude-haiku-4-5-20251001:
+    temperature: 0.7
+    max_tokens: 2048

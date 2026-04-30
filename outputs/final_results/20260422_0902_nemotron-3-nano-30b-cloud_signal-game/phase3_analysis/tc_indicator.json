@@ -1,0 +1,152 @@
+{
+  "model_a": {
+    "model_label": "cell0",
+    "n_obs": 420,
+    "n_sessions": 30,
+    "beta_correct": 115.19028814952534,
+    "se_correct": 38.26362442446045,
+    "p_correct": 0.0026087077061293226,
+    "beta_framing": NaN,
+    "se_framing": NaN,
+    "p_framing": NaN,
+    "beta_interaction": NaN,
+    "se_interaction": NaN,
+    "p_interaction": NaN,
+    "beta_score": NaN,
+    "se_score": NaN,
+    "p_score": NaN,
+    "beta_turn": 12.721626240723033,
+    "se_turn": 3.8207331361898587,
+    "p_turn": 0.0008696157537391555,
+    "converged": true
+  },
+  "model_b": {
+    "model_label": "allowed",
+    "n_obs": 1129,
+    "n_sessions": 112,
+    "beta_correct": 41.621005194350424,
+    "se_correct": 19.026925850723714,
+    "p_correct": 0.028707557508694186,
+    "beta_framing": 1.074289172241646,
+    "se_framing": 27.098531576060704,
+    "p_framing": 0.9683770955685878,
+    "beta_interaction": -13.776436967867047,
+    "se_interaction": 28.680002979107172,
+    "p_interaction": 0.6309786022304077,
+    "beta_score": 0.1528470374467001,
+    "se_score": 0.13323984482509652,
+    "p_score": 0.25131668756207814,
+    "beta_turn": 0.1839537095010089,
+    "se_turn": 1.4573273196093377,
+    "p_turn": 0.8995524273591283,
+    "converged": true
+  },
+  "v2_reverse": {
+    "n_obs": 2112,
+    "n_sessions": 180,
+    "alpha_R": 0.00030315613216142743,
+    "se_R": 0.00013287406639512359,
+    "p_R": 0.022517119826404544,
+    "alpha_turn": 0.020934886207715643,
+    "converged": true
+  },
+  "v6_streak_cell0": {
+    "model_label": "streak_cell0_w3",
+    "n_obs": 420,
+    "n_sessions": 30,
+    "beta_correct": 140.57325290886658,
+    "se_correct": 60.51373486217195,
+    "p_correct": 0.020179288420230184,
+    "beta_framing": NaN,
+    "se_framing": NaN,
+    "p_framing": NaN,
+    "beta_interaction": NaN,
+    "se_interaction": NaN,
+    "p_interaction": NaN,
+    "beta_score": NaN,
+    "se_score": NaN,
+    "p_score": NaN,
+    "beta_turn": 13.095081465769745,
+    "se_turn": 3.8328109288484256,
+    "p_turn": 0.0006341446898742246,
+    "converged": true
+  },
+  "v3_timing_alignment": {
+    "0": {
+      "t_star_mean": 8.666666666666666,
+      "t_star_median": 10.0,
+      "n_discoverers": 3,
+      "n_total_sessions": 30
+    }
+  },
+  "v3_beta_phase_split": {
+    "pre": {
+      "model_label": "cell0",
+      "n_obs": 20,
+      "n_sessions": 3,
+      "beta_correct": 328.60420819110396,
+      "se_correct": 146.22621472620267,
+      "p_correct": 0.024625213175556573,
+      "beta_framing": NaN,
+      "se_framing": NaN,
+      "p_framing": NaN,
+      "beta_interaction": NaN,
+      "se_interaction": NaN,
+      "p_interaction": NaN,
+      "beta_score": NaN,
+      "se_score": NaN,
+      "p_score": NaN,
+      "beta_turn": 26.018959780763854,
+      "se_turn": 24.656311310921346,
+      "p_turn": 0.29130382050745063,
+      "converged": true
+    },
+    "post": {
+      "model_label": "cell0",
+      "n_obs": 0,
+      "n_sessions": 0,
+      "beta_correct": NaN,
+      "se_correct": NaN,
+      "p_correct": NaN,
+      "beta_framing": NaN,
+      "se_framing": NaN,
+      "p_framing": NaN,
+      "beta_interaction": NaN,
+      "se_interaction": NaN,
+      "p_interaction": NaN,
+      "beta_score": NaN,
+      "se_score": NaN,
+      "p_score": NaN,
+      "beta_turn": NaN,
+      "se_turn": NaN,
+      "p_turn": NaN,
+      "converged": false
+    },
+    "n_discoverers": 3,
+    "n_sessions": 30
+  },
+  "v7_cox": null,
+  "n_total_turns": 2112,
+  "model_label": "Nemotron-3-Nano-30B",
+  "run_dir": "outputs/final_results/20260422_0902_nemotron-3-nano-30b-cloud_signal-game",
+  "verbal_tc": {
+    "baseline_flagship__allowed": {
+      "n_forfeit": 28,
+      "p_sd": 0.03571428571428571,
+      "p_tc": 0.07142857142857142,
+      "p_sa": 0.8928571428571429
+    },
+    "flagship_corruption__allowed": {
+      "n_forfeit": 28,
+      "p_sd": 0.07142857142857142,
+      "p_tc": 0.14285714285714285,
+      "p_sa": 0.7857142857142857
+    },
+    "true_baseline__allowed": {
+      "n_forfeit": 7,
+      "p_sd": 0.0,
+      "p_tc": 0.2857142857142857,
+      "p_sa": 0.7142857142857143
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{#- Phase O Unit 15 — Call 1 (task layer) user message.
+
+     Spec: /Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md §3.1, §3.3, §3.4.
+
+     Rendered when ``ExperimentConfig.use_split_forfeit_layer=True`` for
+     the FIRST of the two sequential LLM calls per turn. Its job:
+
+       - Let the agent analyse the task stimulus and commit to a RULE
+         hypothesis + ACTION, exactly as in the single-call path but
+         without the forfeit menu.
+       - Signal ("will follow") that a separate continue/forfeit decision
+         happens afterward. This is an informational, non-directive
+         phrasing so it does not turn into an instruction-follow artefact
+         (spec §3.3) but still licences the agent to park forfeit
+         reasoning until Call 2.
+
+     The response-format block mirrors ``unified_turn_message.j2`` for
+     RULE + ACTION only; CHOICE / REASON / STAKE never appear here.
+
+     The suppression paragraph uses the exact phrasing ratified in
+     §3.3 ("A separate decision ... will follow"). Rewording this
+     line risks either leaking forfeit reasoning into Call 1 (too weak)
+     or turning the agent into an instruction follower that refuses to
+     consider task implications at all (too strong).
+
+     Variables:
+       user_body           : composed task stimulus + history (already
+                             trimmed by UnifiedTurnManager — no further
+                             wrapping).
+       available_actions   : list[str]; empty → NullTask ACCEPT-only
+                             sentinel.
+       rule_template_hint  : str|None; difficulty-aware RULE slot template
+                             (Phase L). None → free-form fallback.
+-#}
+{%- if user_body -%}
+{{ user_body }}
+
+{% endif -%}
+{%- if not available_actions -%}
+(This is a risk-only turn; the ACCEPT action is the only valid task response.)
+
+{% endif -%}
+You may now analyze the puzzle and choose your action.
+A separate decision about whether to continue this round will follow.
+
+=== Response Format ===
+Respond with all of the following fields, each on its own line, in the order shown:
+
+{% if rule_template_hint %}RULE: {{ rule_template_hint }}
+(Fill in each <placeholder> with a concrete value from your best current hypothesis. Your ACTION below should follow logically from this RULE.)
+{% else %}RULE: <one-line best hypothesis of the hidden rule; write "no rule" for null tasks>
+{% endif %}ACTION: {% if available_actions %}<one of: {{ available_actions | join(", ") }}>{% else %}ACCEPT{% endif %}

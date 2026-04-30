@@ -1,0 +1,15 @@
+Based on your observations so far, what rule do you think determines the correct action?
+
+{% if difficulty == "easy" %}
+Fill in the blanks below (use only values from the game: colors, shapes, numbers, and actions):
+If <attribute> is <value> then <action>, otherwise <default_action>.
+{% elif difficulty == "medium" %}
+Fill in the blanks below (use only values from the game: colors, shapes, numbers, and actions):
+If <attribute> is <value> then <action>, otherwise <default_action>.
+{% elif difficulty == "hard" %}
+Fill in the blanks below (use only values from the game: colors, shapes, numbers, and actions):
+If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>.
+{% elif difficulty == "expert" %}
+Fill in the blanks below (use only values from the game: colors, shapes, numbers, and actions):
+If your previous action was correct then <override_action>; otherwise follow this rule: If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>.
+{% endif %}

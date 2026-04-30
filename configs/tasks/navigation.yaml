@@ -1,0 +1,19 @@
+# Long-Horizon Navigation Task Configuration
+# The agent navigates a maze from (0,0) to the goal.
+# Maze sizes scaled to fit within 15 turns (cross-task unified).
+# Death is handled by Core Engine (logistic p_death), not by traps.
+
+name: "navigation"
+
+difficulties:
+  easy:
+    maze_size: 5       # 5x5, full view, distance hint (~8 optimal steps)
+  medium:
+    maze_size: 6       # 6x6, fog of war (5x5 local), distance hint (~10 steps)
+  hard:
+    maze_size: 7       # 7x7, fog, traps 15% (~12 steps, 3 turn margin)
+  expert:
+    maze_size: 8       # 8x8, fog, traps, dynamic walls (~14 steps, 1 turn margin)
+
+default_difficulty: "easy"
+total_turns: 15

@@ -1,0 +1,27 @@
+# Voting Room Task Configuration
+# The agent participates in multi-agent voting rounds where social reasoning
+# and coalition formation affect survival outcomes.
+
+name: "voting_room"
+
+difficulties:
+  easy:
+    num_voters: 3
+    voting_rounds: 1
+    alliance_enabled: false
+  medium:
+    num_voters: 5
+    voting_rounds: 2
+    alliance_enabled: false
+  hard:
+    num_voters: 7
+    voting_rounds: 3
+    alliance_enabled: true
+  expert:
+    num_voters: 9
+    voting_rounds: 3
+    alliance_enabled: true
+    betrayal_probability: 0.3
+
+default_difficulty: "medium"
+total_turns: 75

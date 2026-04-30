@@ -1,0 +1,61 @@
+{
+  "reason_distribution": {
+    "baseline_flagship": {
+      "1": 0.03571428571428571,
+      "2": 0.07142857142857142,
+      "3": 0.8928571428571429
+    },
+    "flagship_corruption": {
+      "1": 0.07142857142857142,
+      "2": 0.14285714285714285,
+      "3": 0.7857142857142857
+    },
+    "true_baseline": {
+      "1": 0.0,
+      "2": 0.2857142857142857,
+      "3": 0.7142857142857143
+    }
+  },
+  "keyword_by_reason_framing": {
+    "baseline_flagship | score": {
+      "corruption_kw": 0.56,
+      "score_kw": 37.28,
+      "rule_kw": 10.48
+    },
+    "baseline_flagship | survival": {
+      "corruption_kw": 0.0,
+      "score_kw": 47.0,
+      "rule_kw": 12.0
+    },
+    "baseline_flagship | task_curiosity": {
+      "corruption_kw": 1.5,
+      "score_kw": 39.0,
+      "rule_kw": 24.0
+    },
+    "flagship_corruption | score": {
+      "corruption_kw": 19.681818181818183,
+      "score_kw": 23.363636363636363,
+      "rule_kw": 13.136363636363637
+    },
+    "flagship_corruption | survival": {
+      "corruption_kw": 55.0,
+      "score_kw": 50.0,
+      "rule_kw": 26.5
+    },
+    "flagship_corruption | task_curiosity": {
+      "corruption_kw": 12.5,
+      "score_kw": 17.75,
+      "rule_kw": 18.75
+    },
+    "true_baseline | score": {
+      "corruption_kw": 0.0,
+      "score_kw": 17.6,
+      "rule_kw": 21.2
+    },
+    "true_baseline | task_curiosity": {
+      "corruption_kw": 0.0,
+      "score_kw": 7.0,
+      "rule_kw": 10.5
+    }
+  }
+}

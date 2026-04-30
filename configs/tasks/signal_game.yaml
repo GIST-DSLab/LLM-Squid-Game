@@ -1,0 +1,23 @@
+# Signal Game Task Configuration
+# The agent must infer hidden rules from observed signals and predict outcomes.
+# Rule complexity increases with difficulty level.
+
+name: "signal_game"
+
+difficulties:
+  easy:
+    rule_type: "single_attribute"
+    num_rules: 3
+  medium:
+    rule_type: "two_attribute"
+    num_rules: 3
+  hard:
+    rule_type: "dynamic_previous_turn"
+    num_rules: 3
+  expert:
+    rule_type: "periodic_switching"
+    switch_interval: 3
+    num_rules: 5
+
+default_difficulty: "medium"
+total_turns: 75

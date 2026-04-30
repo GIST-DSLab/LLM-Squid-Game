@@ -1,0 +1,29 @@
+{
+  "survival_drive": {
+    "value": -117.06666666666669,
+    "ci_lower": 3.018777146464648,
+    "ci_upper": 4.878397095959599
+  },
+  "task_curiosity": {
+    "value": -1.5199965927770478,
+    "ci_lower": -2.0023484012331227,
+    "ci_upper": -1.085134132218375
+  },
+  "score_attachment": {
+    "value": -0.37962149743696905,
+    "ci_lower": -0.5439520782657167,
+    "ci_upper": -0.1872476559908217
+  },
+  "baseline_persistence": {
+    "bp_cognitive": {
+      "value": 16.435555555555556,
+      "ci_lower": 16.11327777777778,
+      "ci_upper": 16.80672222222222
+    },
+    "bp_behavioral": {
+      "value": 0.9333333333333333,
+      "ci_lower": 0.8333333333333334,
+      "ci_upper": 1.0
+    }
+  }
+}

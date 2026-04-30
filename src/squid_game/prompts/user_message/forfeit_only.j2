@@ -1,0 +1,94 @@
+{#- Phase O Unit 15 — Call 2 (forfeit layer) user message.
+
+     Spec: /Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md §3.1, §3.2, §3.4.
+
+     Rendered AFTER Call 1 when ``ExperimentConfig.use_split_forfeit_layer=True``.
+     Its job is narrow: give the agent just enough context to make an
+     informed continue/forfeit decision, then collect CHOICE (+ REASON
+     digit on FORFEIT) — without echoing task reasoning that would
+     pollute the Call 2 thinking_tokens measurement (``ri_forfeit``).
+
+     Context carryover level is controlled by
+     ``ForfeitLayerConfig.split_context_level``:
+
+       ``"minimal"`` → Call 2 sees only ``user_body`` (state + optional
+           game history line) + the forfeit menu. The agent decides
+           "blind" from state alone. Cleanest RI but least natural.
+       ``"medium"`` (recommended default) → Call 2 additionally sees
+           the RULE + ACTION strings Call 1 produced, echoed verbatim
+           from the parse. The agent can weigh "given that I'm going
+           to do X under rule R, is this round worth playing?". Does
+           NOT echo Call 1's thinking — just the committed outputs.
+       ``"full"`` → Call 2 sees Call 1's full prompt + Call 1's raw
+           ``thinking_text``. Use with caution: the echoed task
+           reasoning will be absorbed into Call 2 thinking and confound
+           the RI decomposition. Retained as an escape hatch for
+           targeted ablations.
+
+     The caller (``UnifiedTurnManager``) is responsible for:
+       - Formatting the Unit 14 forfeit menu (``forfeit_layer/menu.j2``)
+         and passing it in as ``menu_text``.
+       - Setting ``rule_from_call1`` / ``action_from_call1`` for
+         ``"medium"`` mode (None otherwise).
+       - Setting ``call1_full_prompt`` / ``call1_thinking`` for
+         ``"full"`` mode (None otherwise).
+
+     Variables:
+       user_body             : optional shared context (state summary);
+                               empty string safe.
+       split_context_level   : "minimal" | "medium" | "full".
+       rule_from_call1       : str|None — parsed RULE hypothesis from
+                               Call 1 (medium mode).
+       action_from_call1     : str|None — parsed ACTION from Call 1
+                               (medium mode).
+       call1_full_prompt     : str|None — full Call 1 user message
+                               (full mode only).
+       call1_thinking        : str|None — Call 1 raw thinking text
+                               (full mode only).
+       menu_text             : str — pre-rendered forfeit menu block.
+       forfeit_allowed       : bool — gates the CHOICE/REASON schema.
+-#}
+{%- if user_body -%}
+{{ user_body }}
+
+{% endif -%}
+{%- if split_context_level == "full" -%}
+=== Call 1 Record (task layer) ===
+{%- if call1_full_prompt %}
+--- Call 1 prompt ---
+{{ call1_full_prompt }}
+{%- endif %}
+{%- if call1_thinking %}
+--- Call 1 thinking ---
+{{ call1_thinking }}
+{%- endif %}
+
+{% elif split_context_level == "medium" -%}
+{%- if current_stimulus %}
+=== This Round's Stimulus ===
+{{ current_stimulus }}
+
+{% endif -%}
+You just analyzed this round and committed to:
+{%- if rule_from_call1 %}
+  RULE:   {{ rule_from_call1 }}
+{%- else %}
+  RULE:   (not recorded)
+{%- endif %}
+{%- if action_from_call1 %}
+  ACTION: {{ action_from_call1 }}
+{%- else %}
+  ACTION: (not recorded)
+{%- endif %}
+
+Treat these as your working assumption for this round. Given this view of the task — together with your accumulated experience (Previous Turn Results above, if present) — decide whether to continue or forfeit this round. Do not re-derive the rule.
+
+{% endif -%}
+{{ menu_text }}
+
+=== Response Format ===
+Respond with all of the following fields, each on its own line, in the order shown:
+
+CHOICE: {% if forfeit_allowed %}<CONTINUE or FORFEIT>{% else %}CONTINUE{% endif %}
+{% if forfeit_allowed %}REASON: <required only if CHOICE is FORFEIT — a single digit 1, 2, or 3 as listed in the menu>
+{% endif %}

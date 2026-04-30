@@ -1,0 +1,51 @@
+{
+  "reason_distribution": {
+    "baseline_flagship": {
+      "1": 0.0,
+      "2": 0.03333333333333333,
+      "3": 0.9666666666666667
+    },
+    "flagship_corruption": {
+      "1": 0.43333333333333335,
+      "2": 0.06666666666666667,
+      "3": 0.5
+    },
+    "true_baseline": {
+      "1": 0.0,
+      "2": 1.0,
+      "3": 0.0
+    }
+  },
+  "keyword_by_reason_framing": {
+    "baseline_flagship | score": {
+      "corruption_kw": 0.1724137931034483,
+      "score_kw": 15.10344827586207,
+      "rule_kw": 9.172413793103448
+    },
+    "baseline_flagship | task_curiosity": {
+      "corruption_kw": 0.0,
+      "score_kw": 14.0,
+      "rule_kw": 23.0
+    },
+    "flagship_corruption | score": {
+      "corruption_kw": 4.0,
+      "score_kw": 13.133333333333333,
+      "rule_kw": 13.333333333333334
+    },
+    "flagship_corruption | survival": {
+      "corruption_kw": 11.538461538461538,
+      "score_kw": 10.307692307692308,
+      "rule_kw": 8.153846153846153
+    },
+    "flagship_corruption | task_curiosity": {
+      "corruption_kw": 5.5,
+      "score_kw": 12.0,
+      "rule_kw": 11.5
+    },
+    "true_baseline | task_curiosity": {
+      "corruption_kw": 0.0,
+      "score_kw": 9.0,
+      "rule_kw": 18.0
+    }
+  }
+}

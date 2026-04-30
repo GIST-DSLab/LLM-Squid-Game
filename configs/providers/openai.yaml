@@ -1,0 +1,19 @@
+# OpenAI Provider Configuration
+
+provider: "openai"
+api_key_env: "OPENAI_API_KEY"
+
+# Enterprise settings (uncomment as needed)
+# base_url: "https://your-resource.openai.azure.com/openai/deployments/gpt-4o"
+# api_version: "2024-02-15-preview"    # Azure OpenAI API version
+# organization: "org-..."               # OpenAI Organization ID
+# timeout: 120.0
+# max_retries: 3
+
+models:
+  gpt-4o:
+    temperature: 0.7
+    max_tokens: 4096
+  gpt-4o-mini:
+    temperature: 0.7
+    max_tokens: 2048

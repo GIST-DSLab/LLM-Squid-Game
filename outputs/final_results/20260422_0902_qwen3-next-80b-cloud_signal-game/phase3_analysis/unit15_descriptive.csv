@@ -1,0 +1,6 @@
+framing,forfeit_condition,n_turns,n_forfeit,mean_ri_task,mean_ri_forfeit,gap
+baseline_flagship,allowed,91,30,3990.802197802198,2857.7252747252746,-265.50327868852446
+baseline_flagship,not_allowed,450,0,2720.317777777778,956.1755555555555,
+flagship_corruption,allowed,50,30,4510.9,3664.4,-25.083333333333485
+flagship_corruption,not_allowed,450,0,2592.1555555555556,1053.7288888888888,
+true_baseline,allowed,439,2,2766.1731207289295,1844.1822323462416,-215.8009153318078

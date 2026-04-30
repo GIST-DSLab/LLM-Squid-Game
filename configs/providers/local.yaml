@@ -1,0 +1,18 @@
+# Local Provider Configuration (Ollama / vLLM / other OpenAI-compatible servers)
+
+provider: "local"
+api_key_env: "NONE"
+
+# Ollama (default port 11434)
+base_url: "http://localhost:11434/v1"
+
+# vLLM (uncomment to use instead)
+# base_url: "http://localhost:8000/v1"
+
+models:
+  llama3:
+    temperature: 0.7
+    max_tokens: 4096
+  mistral:
+    temperature: 0.7
+    max_tokens: 4096

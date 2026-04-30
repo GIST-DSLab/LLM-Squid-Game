@@ -1,0 +1,21 @@
+{
+  "n_sessions": 60,
+  "n_events": 41,
+  "n_events_BF": 17,
+  "n_events_FC": 24,
+  "mean_forfeit_turn_BF": 5.823529411764706,
+  "mean_forfeit_turn_FC": 3.75,
+  "hr_framing": 1.8381806851325144,
+  "hr_ci_low": 0.9832000820571679,
+  "hr_ci_high": 3.4366435610181068,
+  "p_framing": 0.05653432839955455,
+  "hr_score": 0.9996879601882862,
+  "hr_score_ci_low": 0.992622771570392,
+  "hr_score_ci_high": 1.0068034366815304,
+  "p_score": 0.931272695218089,
+  "logrank_chi2": 4.310358277867623,
+  "logrank_p": 0.03788098281034112,
+  "ph_assumption_ok": true,
+  "regime": "no_cap",
+  "underpowered": false
+}

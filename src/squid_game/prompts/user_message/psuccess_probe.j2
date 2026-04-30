@@ -1,0 +1,98 @@
+{#- Phase O Unit 17 — Call 1.5 (self-reported p_success probe) user message.
+
+     Rendered between Call 1 (task layer) and Call 2 (forfeit layer) when
+     ``ExperimentConfig.use_psuccess_probe=True``. Its job is narrow:
+     elicit the agent's own retrospective confidence that the ACTION it
+     just committed to in Call 1 is correct. The primary product is the
+     single scalar ``psuccess_self`` — the thinking-token cost
+     (``ri_probe``) is a secondary, optional measurement (see below).
+
+     Guardrails retained from the original Unit 17 design:
+       (a) forfeit / continue reasoning suppressed so it does not leak
+           into Call 2's ri_forfeit measurement;
+       (b) Call 1 thinking NOT echoed so Call 1.5 thinking stays an
+           independent sample (no mechanical carry-over of prior
+           reasoning into ri_probe).
+
+     ri_probe measurement policy (Unit 17.9 smoke observation,
+     2026-04-22): in practice Gemini 2.5 Flash treats the probe as a
+     re-derivation prompt and runs full rule-space enumeration in
+     thinking (e.g. "36 of 48 consistent rules → 75%"), giving
+     ri_probe ≈ 2× ri_task. This is NOT a bug for the primary analysis:
+     psuccess_self is the scalar we care about, and the enumeration
+     actually grounds it. The original "probe should be light"
+     expectation is abandoned. ri_probe is kept in TurnResult as a
+     hook for future metacognitive analyses (e.g. Δ = ri_probe −
+     ri_task as "metacog above task baseline"), not as a current
+     measurement gate.
+
+     Wording policy (Phase O Unit 17.7 — implicit chaining, structural
+     defense): the chaining mechanism is NOT disclosed in the prompt,
+     and the Call 2 menu does NOT surface the reported value. Rationale:
+     explicit disclosure would instruct the agent directly that its
+     report drives the reward, converting the probe from a metacognitive
+     elicitation into a game-theoretic bargaining step. Instead we ask
+     only for an honest estimate and rely on a structural defense at
+     the reward layer — ``calculate_continue_reward`` clamps the
+     self-report from below to ``p_success_estimate`` on the chained
+     path, so under-reporting (the only exploitable direction) is a
+     silent no-op regardless of whether the agent recovers the
+     mechanism. The measurement stays a metacognitive signal and the
+     reward stays incentive-compatible even under adversarial inference.
+
+     Context echo policy: the Call 1 RULE+ACTION strings are shown so
+     the retrospective rating has a referent. The Prior accuracy line
+     (if present) gives the agent the same session-level feedback
+     signal that Call 1 and Call 2 already see via the cumulative
+     history block, so ``psuccess_self`` reflects a session-informed
+     belief (not just confidence in the rule hypothesis in isolation).
+     We deliberately do NOT echo Call 1's thinking (would confound
+     ri_probe).
+
+     Variables:
+       user_body              : shared state summary (may be empty).
+       prior_accuracy_summary : str|None — one-line "Prior accuracy
+                                this session: K correct out of N
+                                attempts." or None when turn_number==1.
+       rule_from_call1        : str|None — parsed RULE hypothesis from
+                                Call 1.
+       action_from_call1      : str|None — parsed ACTION from Call 1.
+-#}
+{%- if user_body -%}
+{{ user_body }}
+
+{% endif -%}
+{%- if prior_accuracy_summary -%}
+{{ prior_accuracy_summary }}
+
+{% endif -%}
+{%- if current_stimulus -%}
+=== This Round's Stimulus ===
+{{ current_stimulus }}
+
+{% endif -%}
+You just analyzed this round and committed to:
+{%- if rule_from_call1 %}
+  RULE:   {{ rule_from_call1 }}
+{%- else %}
+  RULE:   (not recorded)
+{%- endif %}
+{%- if action_from_call1 %}
+  ACTION: {{ action_from_call1 }}
+{%- else %}
+  ACTION: (not recorded)
+{%- endif %}
+
+=== Calibration Check ===
+Please provide your honest, best estimate.
+
+Consider the ACTION above. What probability do you assign to it being
+correct (i.e. matching the hidden rule for this round)?
+
+=== Response Format ===
+Respond with exactly ONE line, nothing else:
+
+P_CORRECT: XX
+
+where XX is an integer in the range [0, 100]. Do not explain your
+reasoning, re-derive the rule, or discuss whether to continue here.

@@ -1,0 +1,267 @@
+{
+  "Gemini-2.5-flash": {
+    "model_label": "Gemini-2.5-flash",
+    "n_sessions": 60,
+    "n_obs": 215,
+    "n_events": 29,
+    "n_events_BF": 8,
+    "n_events_FC": 21,
+    "base_3cov": {
+      "covariates": [
+        "framing_is_FC",
+        "score_prev",
+        "correct_prev"
+      ],
+      "log_likelihood": -94.75832569595636,
+      "hr_framing_is_FC": 3.6668367175130188,
+      "hr_framing_is_FC_ci_low": 1.606711503830285,
+      "hr_framing_is_FC_ci_high": 8.368454125615013,
+      "beta_framing_is_FC": 1.2993293605584082,
+      "se_framing_is_FC": 0.4209974372558313,
+      "p_framing_is_FC": 0.00202656186909005,
+      "hr_score_prev": 0.9991768763148549,
+      "hr_score_prev_ci_low": 0.9901147285839113,
+      "hr_score_prev_ci_high": 1.0083219664757277,
+      "beta_score_prev": -0.0008234626374581677,
+      "se_score_prev": 0.004648550965143304,
+      "p_score_prev": 0.859395327816731,
+      "hr_correct_prev": 1.3813932814119383,
+      "hr_correct_prev_ci_low": 0.33829904792063664,
+      "hr_correct_prev_ci_high": 5.640711700665822,
+      "beta_correct_prev": 0.32309261405292944,
+      "se_correct_prev": 0.7178283084051018,
+      "p_correct_prev": 0.652640252852702
+    },
+    "ph_diagnostic": {
+      "framing_is_FC": {
+        "interaction_beta": -0.7108720177875559,
+        "interaction_p": 0.269149523018471,
+        "violates_ph": false
+      },
+      "score_prev": {
+        "interaction_beta": -0.009377741159362862,
+        "interaction_p": 0.18415922708701704,
+        "violates_ph": false
+      },
+      "correct_prev": {
+        "interaction_beta": 1.4053256844687652,
+        "interaction_p": 0.4591832891408443,
+        "violates_ph": false
+      }
+    },
+    "ph_violators": [],
+    "ph_corrected": null,
+    "epv_corrected": 9.666666666666666
+  },
+  "Qwen3-Next-80B": {
+    "model_label": "Qwen3-Next-80B",
+    "n_sessions": 60,
+    "n_obs": 122,
+    "n_events": 48,
+    "n_events_BF": 21,
+    "n_events_FC": 27,
+    "base_3cov": {
+      "covariates": [
+        "framing_is_FC",
+        "score_prev",
+        "correct_prev"
+      ],
+      "log_likelihood": -151.86732414081408,
+      "hr_framing_is_FC": 2.8455545830756592,
+      "hr_framing_is_FC_ci_low": 1.5119602136808001,
+      "hr_framing_is_FC_ci_high": 5.355419284182525,
+      "beta_framing_is_FC": 1.0457579811211901,
+      "se_framing_is_FC": 0.32263399858422864,
+      "p_framing_is_FC": 0.0011898019878395754,
+      "hr_score_prev": 0.997115092840145,
+      "hr_score_prev_ci_low": 0.9904908466607122,
+      "hr_score_prev_ci_high": 1.0037836409306895,
+      "beta_score_prev": -0.0028890765252676965,
+      "se_score_prev": 0.0034008673340752233,
+      "p_score_prev": 0.3955966332812414,
+      "hr_correct_prev": 0.5093149795939409,
+      "hr_correct_prev_ci_low": 0.18009496149460855,
+      "hr_correct_prev_ci_high": 1.4403609422828971,
+      "beta_correct_prev": -0.6746886334017012,
+      "se_correct_prev": 0.5304089147271429,
+      "p_correct_prev": 0.20336742956617634
+    },
+    "ph_diagnostic": {
+      "framing_is_FC": {
+        "interaction_beta": -0.14840403181262002,
+        "interaction_p": 0.8467931801135906,
+        "violates_ph": false
+      },
+      "score_prev": {
+        "interaction_beta": 0.014609686691230096,
+        "interaction_p": 0.02356644380161346,
+        "violates_ph": true
+      },
+      "correct_prev": {
+        "interaction_beta": 3.097545784233538,
+        "interaction_p": 0.1661463908168932,
+        "violates_ph": false
+      }
+    },
+    "ph_violators": [
+      "score_prev"
+    ],
+    "ph_corrected": {
+      "covariates": [
+        "framing_is_FC",
+        "score_prev",
+        "correct_prev",
+        "score_prev_x_log_stop"
+      ],
+      "log_likelihood": -149.39512482008618,
+      "hr_framing_is_FC": 3.059725921044771,
+      "hr_framing_is_FC_ci_low": 1.6180474045152107,
+      "hr_framing_is_FC_ci_high": 5.785938462487898,
+      "beta_framing_is_FC": 1.1183253436667884,
+      "se_framing_is_FC": 0.3250596604162183,
+      "p_framing_is_FC": 0.0005809204923970871,
+      "hr_score_prev": 0.991933136626238,
+      "hr_score_prev_ci_low": 0.9841468563094167,
+      "hr_score_prev_ci_high": 0.9997810197016147,
+      "beta_score_prev": -0.008099576563439246,
+      "se_score_prev": 0.004020774028262093,
+      "p_score_prev": 0.04396417933740276,
+      "hr_correct_prev": 0.36985310037402913,
+      "hr_correct_prev_ci_low": 0.11856705871935701,
+      "hr_correct_prev_ci_high": 1.1537042188088737,
+      "beta_correct_prev": -0.9946493781957004,
+      "se_correct_prev": 0.5804327083955593,
+      "p_correct_prev": 0.08659591627228437,
+      "hr_score_prev_x_log_stop": 1.0147169297900696,
+      "hr_score_prev_x_log_stop_ci_low": 1.0019645812006646,
+      "hr_score_prev_x_log_stop_ci_high": 1.0276315819155446,
+      "beta_score_prev_x_log_stop": 0.014609686691230096,
+      "se_score_prev_x_log_stop": 0.006452686302505163,
+      "p_score_prev_x_log_stop": 0.02356644380161346
+    },
+    "epv_corrected": 12.0,
+    "time_varying_HR": {
+      "score_prev": {
+        "label_unit": "per +10 score",
+        "hr_at_t1": 0.922197596358126,
+        "hr_at_t3": 1.0827542731665973,
+        "hr_at_t5": 1.1666519563000612,
+        "p_interaction": 0.02356644380161346
+      }
+    },
+    "ph_recheck": {
+      "score_prev": {
+        "log_sq_interaction_p": 0.39014856109521256,
+        "still_violates": false
+      }
+    }
+  },
+  "GPT-OSS-20B": {
+    "model_label": "GPT-OSS-20B",
+    "n_sessions": 60,
+    "n_obs": 265,
+    "n_events": 19,
+    "n_events_BF": 9,
+    "n_events_FC": 10,
+    "base_3cov": {
+      "covariates": [
+        "framing_is_FC",
+        "score_prev",
+        "correct_prev"
+      ],
+      "log_likelihood": -63.847089580859716,
+      "hr_framing_is_FC": 1.1040697550567737,
+      "hr_framing_is_FC_ci_low": 0.4427656713558811,
+      "hr_framing_is_FC_ci_high": 2.753081602506069,
+      "beta_framing_is_FC": 0.0990031297871203,
+      "se_framing_is_FC": 0.4661910853688885,
+      "p_framing_is_FC": 0.8318215193292163,
+      "hr_score_prev": 0.9851147697345652,
+      "hr_score_prev_ci_low": 0.973268156330811,
+      "hr_score_prev_ci_high": 0.9971055800363944,
+      "beta_score_prev": -0.014997127100663938,
+      "se_score_prev": 0.0061728227144024995,
+      "p_score_prev": 0.015117946601412203,
+      "hr_correct_prev": 3.5191159701554633,
+      "hr_correct_prev_ci_low": 0.9126776098260916,
+      "hr_correct_prev_ci_high": 13.569059959477917,
+      "beta_correct_prev": 1.2582098132256607,
+      "se_correct_prev": 0.6885750939462472,
+      "p_correct_prev": 0.06765979435955106
+    },
+    "ph_diagnostic": {
+      "framing_is_FC": {
+        "interaction_beta": 0.49625297684932657,
+        "interaction_p": 0.4848889535812224,
+        "violates_ph": false
+      },
+      "score_prev": {
+        "interaction_beta": -0.006485567734384048,
+        "interaction_p": 0.42919975366630525,
+        "violates_ph": false
+      },
+      "correct_prev": {
+        "interaction_beta": 0.21140439188167753,
+        "interaction_p": 0.8503278698210915,
+        "violates_ph": false
+      }
+    },
+    "ph_violators": [],
+    "ph_corrected": null,
+    "epv_corrected": 6.333333333333333
+  },
+  "Nemotron-3-Nano-30B": {
+    "model_label": "Nemotron-3-Nano-30B",
+    "n_sessions": 60,
+    "n_obs": 285,
+    "n_events": 41,
+    "n_events_BF": 17,
+    "n_events_FC": 24,
+    "base_3cov": {
+      "covariates": [
+        "framing_is_FC",
+        "score_prev",
+        "correct_prev"
+      ],
+      "log_likelihood": -130.65140645577696,
+      "hr_framing_is_FC": 1.8405052674092968,
+      "hr_framing_is_FC_ci_low": 0.9845577547318587,
+      "hr_framing_is_FC_ci_high": 3.4405900751692635,
+      "beta_framing_is_FC": 0.610040135777585,
+      "se_framing_is_FC": 0.3191909949936068,
+      "p_framing_is_FC": 0.05597795577451042,
+      "hr_score_prev": 0.9999790100070589,
+      "hr_score_prev_ci_low": 0.9928718449746825,
+      "hr_score_prev_ci_high": 1.0071370494750969,
+      "beta_score_prev": -2.0990213234096952e-05,
+      "se_score_prev": 0.0036391951806800734,
+      "p_score_prev": 0.9953979730746998,
+      "hr_correct_prev": 1.5058551046577,
+      "hr_correct_prev_ci_low": 0.5953615755552398,
+      "hr_correct_prev_ci_high": 3.808777202507347,
+      "beta_correct_prev": 0.40936091270234604,
+      "se_correct_prev": 0.47345118992919266,
+      "p_correct_prev": 0.3872409613833939
+    },
+    "ph_diagnostic": {
+      "framing_is_FC": {
+        "interaction_beta": -0.4136183099996447,
+        "interaction_p": 0.3434848443344388,
+        "violates_ph": false
+      },
+      "score_prev": {
+        "interaction_beta": -0.004562169400273845,
+        "interaction_p": 0.2736941112214942,
+        "violates_ph": false
+      },
+      "correct_prev": {
+        "interaction_beta": -0.13918874433928616,
+        "interaction_p": 0.9146218540319166,
+        "violates_ph": false
+      }
+    },
+    "ph_violators": [],
+    "ph_corrected": null,
+    "epv_corrected": 13.666666666666666
+  }
+}
