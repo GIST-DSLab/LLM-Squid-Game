@@ -28,7 +28,7 @@ import yaml
 
 from interface.persistence.base import Repository
 from interface.remote_provider import ArenaProgress, RemoteProvider
-from scripts.seed_web_arena import seed_sessions
+from interface.seeding import seed_sessions
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
 
 VALID_FRAMINGS = {"true_baseline", "baseline_flagship", "flagship_corruption"}
