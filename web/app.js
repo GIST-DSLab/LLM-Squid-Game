@@ -867,4 +867,26 @@
       },
     }));
   });
+
+  // ---------------------------------------------------------------------
+  // Landing scroll-reveal. One persistent observer is enough: while the
+  // home tab is hidden (Alpine x-show -> display:none) the elements have
+  // no box and never intersect, so entries only fire when the landing is
+  // actually on screen. prefers-reduced-motion is handled in CSS.
+  // ---------------------------------------------------------------------
+  const revealEls = document.querySelectorAll(".landing .reveal");
+  if (revealEls.length && "IntersectionObserver" in window) {
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+    );
+    revealEls.forEach((el) => revealObserver.observe(el));
+  }
 })();
