@@ -340,11 +340,21 @@
   // ---------------------------------------------------------------------
   // Nav: hash-based tab routing, no router library.
   // ---------------------------------------------------------------------
+  // Tabs that belong to the game app. Every other hash — none, #home, #about,
+  // or a stale section anchor from the old about.html — falls back to the
+  // landing, so old external links keep working.
+  const APP_TABS = ["play", "arena", "models", "leaderboard", "logs"];
+
+  function tabFromHash() {
+    const h = (location.hash || "").replace("#", "");
+    return APP_TABS.indexOf(h) !== -1 ? h : "home";
+  }
+
   document.addEventListener("alpine:init", () => {
     Alpine.store("nav", {
-      tab: (location.hash || "#play").replace("#", "") || "play",
+      tab: tabFromHash(),
       setFromHash() {
-        this.tab = (location.hash || "#play").replace("#", "") || "play";
+        this.tab = tabFromHash();
       },
     });
     window.addEventListener("hashchange", () => Alpine.store("nav").setFromHash());

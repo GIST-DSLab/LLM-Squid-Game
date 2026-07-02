@@ -19,9 +19,12 @@
 </head>
 <body>
   <header class="topbar">
-    <a href="#play" class="brand" title="Back to home">LLM <span class="accent">Squid Game</span> — Web Arena</a>
+    <a href="#home" class="brand" title="Back to home">
+      <span class="shapes">&#9675;&#9651;&#9633;</span>
+      LLM <span class="accent">Squid Game</span> — Web Arena
+    </a>
     <nav class="tabs" x-data x-cloak>
-      <a href="about.html">About</a>
+      <a href="#home" :class="{ active: $store.nav.tab === 'home' }">Home</a>
       <a href="#play" :class="{ active: $store.nav.tab === 'play' }">Play</a>
       <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">LLM Arena</a>
       <a href="#models" :class="{ active: $store.nav.tab === 'models' }">Model Leaderboard</a>
