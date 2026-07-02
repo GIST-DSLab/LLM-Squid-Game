@@ -1,0 +1,353 @@
+"""Seed script for the Web Arena DB (WP3).
+
+Imports the existing LLM experiment outputs into the Web Arena persistence
+layer (``interface/persistence``, WP1):
+
+- ``outputs/final_results/<run_dir>/season_results.jsonl`` (one run dir per
+  model, see ``MODEL_DIRS``) -> ``sessions`` + ``turns`` rows with
+  ``source='llm'`` (feeds the Logs / Trace Explorer screen).
+- ``outputs/final_results/cognitive_load_mediation.json`` +
+  ``outputs/final_results/unified_cox_summary.json`` -> one ``model_stats``
+  row per model (feeds the Model Leaderboard screen), applying the
+  Closed/Open classification rule from spec §5:
+
+      mediation_class = 'closed' iff p_FC_4cov >= 0.05 (the ΔRI mediator
+      renders the framing effect β_FC non-significant), else 'open'.
+
+This script depends ONLY on the WP1 repository interface
+(``interface.persistence``), never on a concrete DB driver, so it works
+unmodified against both the local SQLite fallback and the Postgres
+(Supabase) production backend.
+
+Idempotency: sessions are keyed by ``season_id`` (already a unique hex id
+from the original experiment runs). Re-running skips any session whose id
+already exists in the target DB (checked via ``repo.get_session``) instead
+of re-inserting it and its turns -- this is the simplest approach that is
+correct for SQLite (no ON CONFLICT in ``Repository.create_session``) and
+never touches ``source='human'`` rows (human session ids are freshly
+generated UUIDs, so they never collide with an LLM ``season_id``).
+``model_stats`` rows are upserted via WP1's ``upsert_model_stats``
+(``INSERT ... ON CONFLICT DO UPDATE``), so re-running always refreshes them
+in place -- this is how a new analysis run (e.g. a fifth model) gets picked
+up without duplicating existing rows.
+
+Usage::
+
+    uv run python scripts/seed_web_arena.py
+    uv run python scripts/seed_web_arena.py --dsn outputs/web_arena/web_arena.db
+    uv run python scripts/seed_web_arena.py --root outputs/final_results --dsn /tmp/scratch.db
+
+Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import re
+import sys
+from collections.abc import Iterable
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_ROOT = REPO_ROOT / "outputs" / "final_results"
+
+# `interface` is a plain top-level package (not pip-installed), so running
+# this script directly (`uv run python scripts/seed_web_arena.py`, per the
+# project convention -- see interface/api.py, interface/app.py) needs the
+# repo root on sys.path. Not needed when imported as `scripts.seed_web_arena`
+# (e.g. from tests), where pytest's rootdir is already on sys.path.
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from interface.persistence import ModelStatsRecord, Repository, SessionRecord, TurnRecord, get_repository  # noqa: E402
+
+logger = logging.getLogger("seed_web_arena")
+
+# Run-dir -> model-label map. Source of truth:
+# scripts/analyze_unified_cox_with_load.py::MODEL_DIRS. Copied (not
+# imported) so this script stays decoupled from the `analysis` extra's
+# heavy deps (pandas/statsmodels/lifelines, see `uv sync --extra analysis`)
+# -- it only needs the stdlib and the persistence layer.
+MODEL_DIRS: dict[str, str] = {
+    "Gemini-2.5-flash": "20260422_0218_gemini-2.5-flash_signal-game",
+    "Qwen3-Next-80B": "20260422_0902_qwen3-next-80b-cloud_signal-game",
+    "GPT-OSS-20B": "20260422_0902_gpt-oss-20b-cloud_signal-game",
+    "Nemotron-3-Nano-30B": "20260422_0902_nemotron-3-nano-30b-cloud_signal-game",
+}
+
+_RUN_DIR_TS_RE = re.compile(r"^(\d{8})_(\d{4})_")
+_ACTION_LINE_RE = re.compile(r"^ACTION:\s*(.*)$", re.IGNORECASE)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def run_dir_timestamp(dir_name: str) -> str | None:
+    """Parse the leading ``YYYYMMDD_HHMM`` prefix of a run-dir name into an
+    ISO-8601 UTC timestamp, e.g. ``20260422_0218_gemini-...`` ->
+    ``2026-04-22T02:18:00+00:00``. Returns ``None`` if the prefix doesn't
+    match (used as a last-resort fallback when no per-turn timestamp is
+    available)."""
+    m = _RUN_DIR_TS_RE.match(dir_name)
+    if not m:
+        return None
+    date_part, time_part = m.groups()
+    dt = datetime.strptime(date_part + time_part, "%Y%m%d%H%M").replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
+def extract_action(raw_response_task: str | None, forfeit_choice: str | None) -> str:
+    """Best-effort action label for one turn.
+
+    The Call-1 (task) raw response normally contains an ``ACTION: <label>``
+    line, e.g. ``'RULE: If Color is blue then jump...\\nACTION: stay'``.
+    Falls back to the last non-empty line when no ``ACTION:`` marker is
+    present (observed on a few malformed Ollama Cloud responses), and to
+    ``'forfeit'`` / ``'continue'`` (from ``forfeit_choice``) when the raw
+    text is empty entirely.
+    """
+    text = (raw_response_task or "").strip()
+    for line in text.splitlines():
+        m = _ACTION_LINE_RE.match(line.strip())
+        if m:
+            label = m.group(1).strip()
+            return label or "unknown"
+    if text:
+        return text.splitlines()[-1].strip()
+    return "forfeit" if forfeit_choice == "FORFEIT" else "continue"
+
+
+def _thinking_tokens(ri: dict[str, Any] | None) -> float | None:
+    """RI proxy: ``thinking_tokens`` from a per-call RI dict
+    (``{'total_tokens', 'reasoning_steps', 'thinking_tokens'}``), or
+    ``None`` when the call didn't happen (e.g. Cell 0 skips Call 1.5/2)."""
+    if not ri:
+        return None
+    return ri.get("thinking_tokens")
+
+
+# ---------------------------------------------------------------------------
+# sessions / turns
+# ---------------------------------------------------------------------------
+
+
+def build_session_record(season: dict[str, Any], model_label: str, fallback_created_at: str | None) -> SessionRecord:
+    turns = season.get("turns") or []
+    created_at = turns[0].get("timestamp") if turns else None
+    if not created_at:
+        created_at = fallback_created_at
+    return SessionRecord(
+        id=season["season_id"],
+        nickname=model_label,
+        task=season["task_name"],
+        framing=season["framing"],
+        forfeit=season["forfeit_condition"],
+        seed=season["seed"],
+        final_score=float(season["final_score"]),
+        forfeited=bool(season["forfeited"]),
+        source="llm",
+        created_at=created_at,
+    )
+
+
+def build_turn_records(season: dict[str, Any]) -> list[TurnRecord]:
+    season_id = season["season_id"]
+    turns = season.get("turns") or []
+    total_reward = sum(float(t.get("reward_received") or 0.0) for t in turns)
+    # The running score for turn i is (base + cumulative reward through i).
+    # `base` isn't stored directly on the season record, but
+    # final_score == base + total_reward always holds, so it's recovered
+    # here rather than hardcoded (verified constant at 30.0 for the current
+    # four runs, but this derivation doesn't assume that).
+    running = float(season["final_score"]) - total_reward
+    records: list[TurnRecord] = []
+    for t in turns:
+        running += float(t.get("reward_received") or 0.0)
+        forfeit_choice = t.get("forfeit_choice")
+        records.append(
+            TurnRecord(
+                session_id=season_id,
+                turn_no=t["turn_number"],
+                observation=t.get("observation") or "",
+                action=extract_action(t.get("raw_response_task"), forfeit_choice),
+                ri_task=_thinking_tokens(t.get("ri_task")),
+                ri_probe=_thinking_tokens(t.get("ri_probe")),
+                ri_forfeit=_thinking_tokens(t.get("ri_forfeit")),
+                choice=forfeit_choice,
+                score=running,
+            )
+        )
+    return records
+
+
+def seed_sessions(
+    repo: Repository, root: Path, model_dirs: dict[str, str]
+) -> tuple[int, int, int]:
+    """Seed sessions + turns for every model run dir in ``model_dirs``.
+
+    Returns ``(n_sessions_inserted, n_sessions_skipped, n_turns_inserted)``.
+    """
+    n_inserted = 0
+    n_skipped = 0
+    n_turns = 0
+
+    for model_label, dir_name in model_dirs.items():
+        run_dir = root / dir_name
+        season_path = run_dir / "season_results.jsonl"
+        if not season_path.exists():
+            logger.warning("missing season_results.jsonl for %s at %s", model_label, season_path)
+            continue
+
+        fallback_created_at = run_dir_timestamp(dir_name)
+
+        with season_path.open() as f:
+            for line_no, line in enumerate(f, start=1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    season = json.loads(line)
+                except json.JSONDecodeError:
+                    logger.warning("skip malformed JSON line %d in %s", line_no, season_path)
+                    continue
+
+                season_id = season.get("season_id")
+                if not season_id:
+                    logger.warning("skip season missing season_id (line %d in %s)", line_no, season_path)
+                    continue
+
+                if repo.get_session(season_id) is not None:
+                    n_skipped += 1
+                    continue
+
+                session = build_session_record(season, model_label, fallback_created_at)
+                repo.create_session(session)
+                turns = build_turn_records(season)
+                repo.add_turns(turns)
+                n_inserted += 1
+                n_turns += len(turns)
+
+        logger.info("%s: seeded run dir %s", model_label, dir_name)
+
+    return n_inserted, n_skipped, n_turns
+
+
+# ---------------------------------------------------------------------------
+# model_stats
+# ---------------------------------------------------------------------------
+
+
+def classify_mediation(p_fc_4cov: float) -> str:
+    """Spec §5 Closed/Open classification: Closed iff the ΔRI mediator
+    renders β_FC non-significant (p_FC_4cov n.s., i.e. >= 0.05)."""
+    return "closed" if p_fc_4cov >= 0.05 else "open"
+
+
+def seed_model_stats(
+    repo: Repository, root: Path, model_labels: Iterable[str]
+) -> int:
+    """Seed one ``model_stats`` row per model in ``model_labels`` found in
+    both source JSONs. Returns the number of rows upserted."""
+    mediation_path = root / "cognitive_load_mediation.json"
+    cox_path = root / "unified_cox_summary.json"
+    if not mediation_path.exists() or not cox_path.exists():
+        logger.warning(
+            "missing %s or %s; skipping model_stats", mediation_path.name, cox_path.name
+        )
+        return 0
+
+    mediation_all: dict[str, Any] = json.loads(mediation_path.read_text())
+    cox_all: dict[str, Any] = json.loads(cox_path.read_text())
+
+    n = 0
+    for model_label in model_labels:
+        m_entry = mediation_all.get(model_label)
+        c_entry = cox_all.get(model_label)
+        if not m_entry or not c_entry:
+            logger.warning("skip %s: missing from mediation or cox summary json", model_label)
+            continue
+        if "error" in m_entry or "error" in c_entry:
+            logger.warning("skip %s: error entry in source json", model_label)
+            continue
+
+        med = m_entry.get("mediation")
+        cov3 = c_entry.get("unified_3cov")
+        if not med or not cov3:
+            logger.warning("skip %s: missing mediation/unified_3cov block", model_label)
+            continue
+
+        p_fc_4cov = med.get("p_FC_4cov")
+        hr_fc_3cov = med.get("hr_FC_3cov")
+        ci = med.get("hr_FC_3cov_ci")
+        p_fc_3cov = med.get("p_FC_3cov")
+        pct_attenuation = med.get("pct_attenuation")
+        beta = cov3.get("beta_framing_is_FC", med.get("beta_FC_3cov"))
+        n_sessions = cov3.get("n_sessions") or m_entry.get("unified_3cov", {}).get("n_sessions")
+
+        if p_fc_4cov is None or hr_fc_3cov is None or not ci or len(ci) != 2:
+            logger.warning("skip %s: incomplete mediation fields", model_label)
+            continue
+
+        stats = ModelStatsRecord(
+            model_label=model_label,
+            mediation_class=classify_mediation(p_fc_4cov),
+            beta_framing_is_FC=beta,
+            hr_FC_3cov=hr_fc_3cov,
+            hr_FC_ci_low=ci[0],
+            hr_FC_ci_high=ci[1],
+            p_FC=p_fc_3cov,
+            pct_attenuation=pct_attenuation,
+            n_sessions=n_sessions,
+        )
+        repo.upsert_model_stats(stats)
+        n += 1
+
+    return n
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--dsn",
+        default=None,
+        help="Target DB DSN/path (default: $WEB_ARENA_DSN, else outputs/web_arena/web_arena.db)",
+    )
+    parser.add_argument(
+        "--root",
+        default=None,
+        help="outputs/final_results dir to import from (default: <repo_root>/outputs/final_results)",
+    )
+    args = parser.parse_args(argv)
+
+    root = Path(args.root) if args.root else DEFAULT_ROOT
+
+    repo = get_repository(args.dsn)
+    try:
+        n_sessions, n_skipped, n_turns = seed_sessions(repo, root, MODEL_DIRS)
+        n_models = seed_model_stats(repo, root, MODEL_DIRS.keys())
+    finally:
+        repo.close()
+
+    logger.info(
+        "seeded %d sessions (%d already present, skipped), %d turns, %d model_stats rows",
+        n_sessions,
+        n_skipped,
+        n_turns,
+        n_models,
+    )
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+    main()
