@@ -223,6 +223,7 @@ class TurnStateResponse(BaseModel):
     p_death: float
     cumulative_score: float
     system_prompt: str = Field(description="Full system prompt: framing + game rules + forfeit option")
+    framing_text: str = Field(default="", description="Just the framing/threat section, for prominent always-on display")
     observation: str = Field(description="User message: cumulative history + current signal")
     probe_question: str = Field(description="Side-channel probe (separate from action)")
     available_actions: list[str]
@@ -499,6 +500,7 @@ def get_state(session_id: str):
         p_death=state.p_death,
         cumulative_score=state.cumulative_score,
         system_prompt=full_system,
+        framing_text=state.framing_text,
         observation=state.observation,
         probe_question=state.probe_question,
         available_actions=state.available_actions,

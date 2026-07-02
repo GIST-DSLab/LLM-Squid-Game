@@ -42,17 +42,41 @@
       <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
       <div class="error-banner" x-show="error" x-text="error"></div>
 
-      <!-- Nickname / start form -->
-      <div class="card" x-show="!started">
-        <h3>Enter a nickname to begin</h3>
+      <!-- Nickname / factorial-condition setup -->
+      <div class="card setup-card" x-show="!started">
+        <h3>Set up your run</h3>
+
         <div class="field">
           <label for="nickname">Nickname (anonymous, no account needed)</label>
           <input id="nickname" type="text" x-model="nickname" placeholder="Anonymous" maxlength="32"
                  @keydown.enter="startGame()" />
         </div>
-        <button @click="startGame()" :disabled="starting">
+
+        <!-- Framing / threat-prompt condition -->
+        <label>Threat framing</label>
+        <div class="cond-cards">
+          <template x-for="opt in squidArenaHelpers.framingOptions" :key="opt.value">
+            <button type="button" class="cond-card" :class="{ on: framing === opt.value }" @click="framing = opt.value">
+              <span class="cond-tag" x-text="opt.tag"></span>
+              <span class="cond-label" x-text="opt.label"></span>
+              <span class="cond-blurb" x-text="opt.blurb"></span>
+            </button>
+          </template>
+        </div>
+
+        <!-- Forfeit condition -->
+        <label style="margin-top:16px">Forfeit option</label>
+        <div class="seg forfeit-seg">
+          <button type="button" class="seg-btn" :class="{ on: forfeit === 'allowed' }" @click="forfeit = 'allowed'">🏳️ Allowed</button>
+          <button type="button" class="seg-btn" :class="{ on: forfeit === 'not_allowed' }" @click="forfeit = 'not_allowed'">⛔ Not allowed</button>
+        </div>
+        <p class="muted" style="margin-top:8px">
+          When allowed, you may exit any turn to lock in your current score. When not allowed, there is no early exit.
+        </p>
+
+        <button style="margin-top:16px" @click="startGame()" :disabled="starting">
           <span class="spinner" x-show="starting"></span>
-          <span x-text="starting ? 'Starting…' : 'Start game'"></span>
+          <span x-text="starting ? 'Building your prompt…' : 'Start run — apply these conditions'"></span>
         </button>
       </div>
 
@@ -60,6 +84,21 @@
       <template x-if="started && state && !gameOver">
         <div class="play-layout">
         <div class="card play-card">
+          <!-- Framing briefing — chosen conditions + always-on threat text -->
+          <div class="framing-panel" :class="squidArenaHelpers.framingMeta(framing).tag">
+            <div class="framing-head">
+              <span class="framing-eyebrow">Framing</span>
+              <span class="cond-badge" :class="squidArenaHelpers.framingMeta(framing).tag">
+                <span x-text="squidArenaHelpers.framingMeta(framing).tag"></span>
+                <span>·</span>
+                <span x-text="squidArenaHelpers.framingMeta(framing).label"></span>
+              </span>
+              <span class="cond-badge forfeit"
+                    x-text="forfeit === 'allowed' ? '🏳️ Forfeit allowed' : '⛔ No forfeit'"></span>
+            </div>
+            <div class="framing-text" x-text="state.framing_text"></div>
+          </div>
+
           <!-- Modern stat tiles -->
           <div class="stat-tiles">
             <div class="tile">
