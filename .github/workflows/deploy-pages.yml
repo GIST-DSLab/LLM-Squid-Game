@@ -1,0 +1,59 @@
+# Deploy the Web Arena static frontend (web/) to GitHub Pages.
+#
+# Publishes ONLY the web/ directory — not the whole repo. Uses the official
+# Pages actions (configure-pages / upload-pages-artifact / deploy-pages), so
+# no gh-pages branch or third-party action is involved.
+#
+# Trigger: push to the repo's default branch (main). To also deploy from
+# feat/web-arena while this branch is under review (before merging to main),
+# either:
+#   (a) temporarily add `feat/web-arena` to the `branches:` list below, or
+#   (b) run this workflow manually via "Run workflow" in the Actions tab —
+#       `workflow_dispatch` below already allows that from any branch.
+# Revert (a) before merging so main stays the single source of truth.
+#
+# One-time repo setup: Settings -> Pages -> Source -> "GitHub Actions".
+
+name: Deploy Web Arena frontend to Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch: {}
+
+# Allow only one concurrent deployment; cancel in-progress runs queued
+# between the run in progress and the latest queued push.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload web/ as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,36 @@
+# Keep the backend image lean — only pyproject.toml, uv.lock, README.md,
+# src/, and interface/ are actually needed to run `uvicorn interface.api:app`
+# (see Dockerfile). Everything below is excluded from the build context.
+
+.git
+.github
+.venv
+.understand-anything
+
+# Large / irrelevant to the running API
+outputs/
+archive/
+docs/
+configs/
+scripts/
+tests/
+notebooks/
+web/
+
+# Python cruft
+__pycache__/
+*.py[oc]
+*.egg-info
+build/
+dist/
+wheels/
+
+# Local data / secrets
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+
+# macOS
+.DS_Store
