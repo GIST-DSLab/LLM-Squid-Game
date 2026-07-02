@@ -1,0 +1,72 @@
+"""Data records for the Web Arena persistence layer.
+
+These dataclasses are the driver-agnostic wire format used by the
+``Repository`` interface (see ``interface/persistence/base.py``). Neither
+consumer (``interface/api.py`` / a future seed script) nor either backend
+(SQLite, Postgres) should need anything beyond these shapes.
+
+Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §7.
+"""
+
+from __future__ import annotations
+
+import uuid
+from dataclasses import dataclass
+
+
+def new_id() -> str:
+    """Generate a short, URL-safe session id (same convention as
+    ``interface/human_game.py``'s ``season_id``)."""
+    return uuid.uuid4().hex[:12]
+
+
+@dataclass
+class SessionRecord:
+    """One row of the ``sessions`` table.
+
+    ``id`` may be left as ``""`` on creation to let the repository generate
+    one. ``created_at`` is always server-assigned; any value passed in on
+    creation is ignored by the backend (never client-supplied, per design
+    constraints).
+    """
+
+    id: str
+    nickname: str
+    task: str
+    framing: str
+    forfeit: str
+    seed: int
+    final_score: float
+    forfeited: bool
+    source: str  # "human" | "llm"
+    created_at: str | None = None
+
+
+@dataclass
+class TurnRecord:
+    """One row of the ``turns`` table."""
+
+    session_id: str
+    turn_no: int
+    observation: str
+    action: str
+    score: float
+    ri_task: float | None = None
+    ri_probe: float | None = None
+    ri_forfeit: float | None = None
+    choice: str | None = None
+
+
+@dataclass
+class ModelStatsRecord:
+    """One row of the ``model_stats`` table (Model Leaderboard, spec §5)."""
+
+    model_label: str
+    mediation_class: str  # "closed" | "open"
+    beta_framing_is_FC: float
+    hr_FC_3cov: float
+    hr_FC_ci_low: float
+    hr_FC_ci_high: float
+    p_FC: float
+    pct_attenuation: float
+    n_sessions: int

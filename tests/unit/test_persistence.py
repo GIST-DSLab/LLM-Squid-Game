@@ -1,0 +1,262 @@
+"""Unit tests for the Web Arena persistence layer (``interface/persistence``).
+
+Offline, SQLite-only (in-memory). Covers: idempotent schema creation, CRUD
+round-trip for all three tables (sessions / turns / model_stats), the
+play-leaderboard ordering query, and model_stats upsert overwrite semantics.
+
+Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §7.
+"""
+
+from __future__ import annotations
+
+import importlib
+
+import pytest
+
+from interface.persistence import ModelStatsRecord, Repository, SessionRecord, TurnRecord, get_repository
+from interface.persistence.sqlite_repository import SQLiteRepository
+
+
+@pytest.fixture
+def repo() -> Repository:
+    r = get_repository(":memory:")
+    yield r
+    r.close()
+
+
+def _session(**overrides) -> SessionRecord:
+    defaults = dict(
+        id="",
+        nickname="alice",
+        task="signal_game",
+        framing="flagship_corruption",
+        forfeit="allowed",
+        seed=42,
+        final_score=10.0,
+        forfeited=False,
+        source="human",
+    )
+    defaults.update(overrides)
+    return SessionRecord(**defaults)
+
+
+# ---------------------------------------------------------------------------
+# Factory / backend selection
+# ---------------------------------------------------------------------------
+
+
+def test_get_repository_defaults_to_sqlite_for_non_postgres_dsn() -> None:
+    repo = get_repository(":memory:")
+    try:
+        assert isinstance(repo, SQLiteRepository)
+    finally:
+        repo.close()
+
+
+def test_get_repository_reads_env_var_when_dsn_omitted(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
+    repo = get_repository()
+    try:
+        assert isinstance(repo, SQLiteRepository)
+    finally:
+        repo.close()
+
+
+def test_postgres_repository_module_imports_without_psycopg_installed() -> None:
+    # Importing the module (as opposed to instantiating PostgresRepository)
+    # must never require psycopg to be installed.
+    mod = importlib.import_module("interface.persistence.postgres_repository")
+    assert hasattr(mod, "PostgresRepository")
+
+
+# ---------------------------------------------------------------------------
+# Schema creation
+# ---------------------------------------------------------------------------
+
+
+def test_schema_creation_is_idempotent(repo: Repository) -> None:
+    repo.init_schema()
+    repo.init_schema()
+    # No error, and the repo is still usable.
+    assert repo.list_sessions() == []
+
+
+# ---------------------------------------------------------------------------
+# sessions CRUD
+# ---------------------------------------------------------------------------
+
+
+def test_create_and_get_session_round_trip(repo: Repository) -> None:
+    session_id = repo.create_session(_session(nickname="bob", final_score=7.5))
+    fetched = repo.get_session(session_id)
+
+    assert fetched is not None
+    assert fetched.id == session_id
+    assert fetched.nickname == "bob"
+    assert fetched.task == "signal_game"
+    assert fetched.framing == "flagship_corruption"
+    assert fetched.forfeit == "allowed"
+    assert fetched.seed == 42
+    assert fetched.final_score == 7.5
+    assert fetched.forfeited is False
+    assert fetched.source == "human"
+    assert fetched.created_at is not None  # server-assigned
+
+
+def test_create_session_generates_id_when_blank(repo: Repository) -> None:
+    session_id = repo.create_session(_session(id=""))
+    assert session_id != ""
+    assert repo.get_session(session_id) is not None
+
+
+def test_create_session_ignores_client_supplied_created_at(repo: Repository) -> None:
+    session_id = repo.create_session(_session(created_at="2000-01-01T00:00:00+00:00"))
+    fetched = repo.get_session(session_id)
+    assert fetched.created_at != "2000-01-01T00:00:00+00:00"
+
+
+def test_get_session_returns_none_for_unknown_id(repo: Repository) -> None:
+    assert repo.get_session("does-not-exist") is None
+
+
+def test_list_sessions_filters_by_source_task_framing(repo: Repository) -> None:
+    repo.create_session(_session(nickname="human1", source="human", task="signal_game", framing="flagship_corruption"))
+    repo.create_session(_session(nickname="llm1", source="llm", task="signal_game", framing="flagship_corruption"))
+    repo.create_session(_session(nickname="human2", source="human", task="voting_room", framing="flagship_corruption"))
+
+    human_signal = repo.list_sessions(source="human", task="signal_game", framing="flagship_corruption")
+    assert [s.nickname for s in human_signal] == ["human1"]
+
+    all_llm = repo.list_sessions(source="llm")
+    assert [s.nickname for s in all_llm] == ["llm1"]
+
+
+def test_play_leaderboard_orders_sessions_by_final_score_desc_within_arena_bucket(
+    repo: Repository,
+) -> None:
+    repo.create_session(
+        _session(nickname="low", final_score=5.0, task="signal_game", framing="flagship_corruption", source="human")
+    )
+    repo.create_session(
+        _session(nickname="high", final_score=50.0, task="signal_game", framing="flagship_corruption", source="human")
+    )
+    repo.create_session(
+        _session(nickname="mid", final_score=20.0, task="signal_game", framing="flagship_corruption", source="human")
+    )
+    # Different arena bucket — must not leak into the ranking.
+    repo.create_session(
+        _session(nickname="other_arena", final_score=1000.0, task="voting_room", framing="flagship_corruption", source="human")
+    )
+
+    leaderboard = repo.list_sessions(
+        source="human", task="signal_game", framing="flagship_corruption", order_by_score=True
+    )
+    assert [s.nickname for s in leaderboard] == ["high", "mid", "low"]
+
+
+# ---------------------------------------------------------------------------
+# turns CRUD
+# ---------------------------------------------------------------------------
+
+
+def test_add_and_list_turns_round_trip(repo: Repository) -> None:
+    session_id = repo.create_session(_session())
+    turns = [
+        TurnRecord(
+            session_id=session_id,
+            turn_no=1,
+            observation="signal A",
+            action="button_1",
+            ri_task=12.0,
+            ri_probe=3.0,
+            ri_forfeit=None,
+            choice=None,
+            score=1.0,
+        ),
+        TurnRecord(
+            session_id=session_id,
+            turn_no=2,
+            observation="signal B",
+            action="forfeit",
+            ri_task=8.0,
+            ri_probe=2.0,
+            ri_forfeit=5.0,
+            choice="1",
+            score=1.0,
+        ),
+    ]
+    repo.add_turns(turns)
+
+    fetched = repo.list_turns(session_id)
+    assert [t.turn_no for t in fetched] == [1, 2]
+    assert fetched[0].observation == "signal A"
+    assert fetched[1].choice == "1"
+    assert fetched[1].ri_forfeit == 5.0
+
+
+def test_add_turns_with_empty_list_is_a_noop(repo: Repository) -> None:
+    repo.add_turns([])  # must not raise
+
+
+def test_list_turns_for_unknown_session_returns_empty(repo: Repository) -> None:
+    assert repo.list_turns("does-not-exist") == []
+
+
+def test_add_turns_bulk_inserts_across_multiple_sessions(repo: Repository) -> None:
+    sid_a = repo.create_session(_session(nickname="a"))
+    sid_b = repo.create_session(_session(nickname="b"))
+    repo.add_turns(
+        [
+            TurnRecord(session_id=sid_a, turn_no=1, observation="o", action="x", score=1.0),
+            TurnRecord(session_id=sid_b, turn_no=1, observation="o", action="x", score=2.0),
+        ]
+    )
+    assert len(repo.list_turns(sid_a)) == 1
+    assert len(repo.list_turns(sid_b)) == 1
+
+
+# ---------------------------------------------------------------------------
+# model_stats upsert
+# ---------------------------------------------------------------------------
+
+
+def _model_stats(**overrides) -> ModelStatsRecord:
+    defaults = dict(
+        model_label="Gemini-2.5-flash",
+        mediation_class="open",
+        beta_framing_is_FC=0.8,
+        hr_FC_3cov=2.2,
+        hr_FC_ci_low=1.5,
+        hr_FC_ci_high=3.1,
+        p_FC=0.01,
+        pct_attenuation=15.0,
+        n_sessions=30,
+    )
+    defaults.update(overrides)
+    return ModelStatsRecord(**defaults)
+
+
+def test_upsert_model_stats_inserts_new_row(repo: Repository) -> None:
+    repo.upsert_model_stats(_model_stats())
+    rows = repo.list_model_stats()
+    assert len(rows) == 1
+    assert rows[0].model_label == "Gemini-2.5-flash"
+    assert rows[0].mediation_class == "open"
+
+
+def test_upsert_model_stats_overwrites_existing_row(repo: Repository) -> None:
+    repo.upsert_model_stats(_model_stats(beta_framing_is_FC=0.8, mediation_class="open"))
+    repo.upsert_model_stats(_model_stats(beta_framing_is_FC=0.05, mediation_class="closed", p_FC=0.9))
+
+    rows = repo.list_model_stats()
+    assert len(rows) == 1  # overwritten, not duplicated
+    assert rows[0].mediation_class == "closed"
+    assert rows[0].beta_framing_is_FC == 0.05
+    assert rows[0].p_FC == 0.9
+
+
+def test_list_model_stats_returns_multiple_models(repo: Repository) -> None:
+    repo.upsert_model_stats(_model_stats(model_label="Gemini-2.5-flash", beta_framing_is_FC=0.8))
+    repo.upsert_model_stats(_model_stats(model_label="GPT-OSS-20B", beta_framing_is_FC=0.3))
+    rows = repo.list_model_stats()
+    assert {r.model_label for r in rows} == {"Gemini-2.5-flash", "GPT-OSS-20B"}
