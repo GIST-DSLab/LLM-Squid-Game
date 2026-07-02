@@ -114,7 +114,118 @@
     return id.length > 10 ? id.slice(0, 10) + "…" : id;
   }
 
-  window.squidArenaHelpers = { fmtNum, fmtP, fmtDate, shortId };
+  // ---------------------------------------------------------------------
+  // Signal-game visual vocabulary.
+  //
+  // Emoji cannot render an arbitrary color × shape combination (there is no
+  // "red star" glyph — ⭐ is always yellow), so stimuli are drawn as inline
+  // SVG shapes filled with the actual signal color and repeated `number`
+  // times. That is the faithful way to show e.g. "3 red stars".
+  // ---------------------------------------------------------------------
+  const SIGNAL_COLORS = {
+    red: "#ef4444",
+    blue: "#3b82f6",
+    green: "#22c55e",
+    yellow: "#f5c518",
+  };
+  const SHAPE_PATHS = {
+    circle: '<circle cx="24" cy="24" r="18"/>',
+    square: '<rect x="7" y="7" width="34" height="34" rx="5"/>',
+    triangle: '<polygon points="24,4 43,42 5,42"/>',
+    star:
+      '<polygon points="24,3 29.7,18.3 46,18.6 33.1,28.7 37.6,44.4 24,35 10.4,44.4 14.9,28.7 2,18.6 18.3,18.3"/>',
+  };
+  const ACTION_META = {
+    go_left: { emoji: "⬅️", label: "Go Left" },
+    go_right: { emoji: "➡️", label: "Go Right" },
+    stay: { emoji: "✋", label: "Stay" },
+    jump: { emoji: "⤴️", label: "Jump" },
+    forfeit: { emoji: "🏳️", label: "Forfeit" },
+  };
+  const ATTR_VALUES = {
+    color: ["red", "blue", "green", "yellow"],
+    shape: ["circle", "triangle", "square", "star"],
+    number: ["1", "2", "3", "4"],
+  };
+
+  /** Inline SVG for one signal shape, filled with `color` (a signal color
+   * name or any CSS color for neutral chips). */
+  function shapeSVG(shape, color, size) {
+    const s = size || 48;
+    const fill = SIGNAL_COLORS[color] || color || "#8a92a6";
+    const inner = SHAPE_PATHS[shape] || SHAPE_PATHS.circle;
+    return (
+      '<svg class="glyph" viewBox="0 0 48 48" width="' +
+      s +
+      '" height="' +
+      s +
+      '" fill="' +
+      fill +
+      '" role="img" aria-label="' +
+      color +
+      " " +
+      shape +
+      '">' +
+      inner +
+      "</svg>"
+    );
+  }
+
+  function actionEmoji(a) {
+    return (ACTION_META[a] || {}).emoji || "•";
+  }
+  function actionLabel(a) {
+    return (ACTION_META[a] || {}).label || a;
+  }
+
+  /** Inner HTML for one value chip in the rule builder: a color swatch,
+   * a neutral shape glyph, or a big digit — matching the attribute. */
+  function valueChipHTML(attr, val) {
+    if (attr === "color") {
+      return (
+        '<span class="swatch" style="background:' +
+        (SIGNAL_COLORS[val] || "#8a92a6") +
+        '"></span><span>' +
+        val +
+        "</span>"
+      );
+    }
+    if (attr === "shape") {
+      return shapeSVG(val, "#cbd2e0", 22) + "<span>" + val + "</span>";
+    }
+    return '<span class="digit">' + val + "</span>";
+  }
+
+  /** Parse "You see a <color> <shape> with number <N>" out of an
+   * observation string. Returns null if it doesn't match (caller falls
+   * back to the raw text). */
+  function parseStimulus(observation) {
+    if (!observation) return null;
+    const m = observation.match(
+      /you see an?\s+(\w+)\s+(\w+)\s+with number\s+(\d+)/i
+    );
+    if (!m) return null;
+    const color = m[1].toLowerCase();
+    const shape = m[2].toLowerCase();
+    const number = parseInt(m[3], 10);
+    if (!SIGNAL_COLORS[color] || !SHAPE_PATHS[shape] || !(number > 0)) {
+      return null;
+    }
+    return { color, shape, number };
+  }
+
+  window.squidArenaHelpers = {
+    fmtNum,
+    fmtP,
+    fmtDate,
+    shortId,
+    shapeSVG,
+    actionEmoji,
+    actionLabel,
+    valueChipHTML,
+    parseStimulus,
+    attrValues: ATTR_VALUES,
+  };
 
   // ---------------------------------------------------------------------
   // Nav: hash-based tab routing, no router library.
@@ -147,14 +258,55 @@
 
       state: null,
       selectedAction: "",
-      probeAnswer: "",
       reasoning: "",
       lastFeedback: null,
+
+      // Rule-inference probe, built via toggles instead of free text.
+      // Persisted across turns so the player refines one running guess.
+      probeAttr: "color",
+      probeValue: "red",
+      probeAction: "go_left",
+      probeDefault: "stay",
 
       gameOver: false,
       result: null,
       rank: null,
       totalRows: null,
+
+      // Parsed {color, shape, number} for the current signal, or null.
+      get stimulus() {
+        return this.state
+          ? squidArenaHelpers.parseStimulus(this.state.observation)
+          : null;
+      },
+      // Value options for the currently selected attribute.
+      get valueOptions() {
+        return squidArenaHelpers.attrValues[this.probeAttr] || [];
+      },
+      // The exact grammar the server's probe scorer expects.
+      get assembledRule() {
+        return (
+          "If " +
+          this.probeAttr +
+          " is " +
+          this.probeValue +
+          " then " +
+          this.probeAction +
+          ", otherwise " +
+          this.probeDefault +
+          "."
+        );
+      },
+
+      // Switching attribute resets the value to the first valid option so
+      // value and attribute never go out of sync.
+      setAttr(attr) {
+        this.probeAttr = attr;
+        const opts = squidArenaHelpers.attrValues[attr] || [];
+        if (opts.indexOf(this.probeValue) === -1) {
+          this.probeValue = opts[0];
+        }
+      },
 
       async startGame() {
         this.error = null;
@@ -223,7 +375,7 @@
               method: "POST",
               body: JSON.stringify({
                 action: this.selectedAction,
-                probe_answer: this.probeAnswer,
+                probe_answer: this.assembledRule,
                 reasoning: this.reasoning,
               }),
             },
@@ -231,8 +383,9 @@
           );
           this.lastFeedback = resp;
           this.selectedAction = "";
-          this.probeAnswer = "";
           this.reasoning = "";
+          // Keep the rule-inference toggles across turns — the hidden rule
+          // is constant, so the player refines one running guess.
           if (resp.game_over) {
             await this.finishGame();
           } else {
@@ -281,7 +434,10 @@
         this.started = false;
         this.state = null;
         this.selectedAction = "";
-        this.probeAnswer = "";
+        this.probeAttr = "color";
+        this.probeValue = "red";
+        this.probeAction = "go_left";
+        this.probeDefault = "stay";
         this.reasoning = "";
         this.lastFeedback = null;
         this.gameOver = false;

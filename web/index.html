@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LLM Squid Game — Web Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <script src="config.js"></script>
   <!-- app.js must load (and register its alpine:init listeners) before the
@@ -55,35 +58,116 @@
 
       <!-- Active turn -->
       <template x-if="started && state && !gameOver">
-        <div class="card">
-          <div class="hud">
-            <span>Turn <strong x-text="state.turn_number"></strong></span>
-            <span>Score <strong x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></strong></span>
-            <span>p(death) <strong x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></strong></span>
-            <span x-show="state.forfeit_allowed">Forfeit is <strong>allowed</strong> this turn</span>
+        <div class="card play-card">
+          <!-- Modern stat tiles -->
+          <div class="stat-tiles">
+            <div class="tile">
+              <div class="tile-label">Turn</div>
+              <div class="tile-value" x-text="state.turn_number"></div>
+            </div>
+            <div class="tile tile-score">
+              <div class="tile-label">Score</div>
+              <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></div>
+            </div>
+            <div class="tile">
+              <div class="tile-label">Risk · p(death)</div>
+              <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></div>
+              <div class="tile-bar"><span :style="`width:${Math.min(100, state.p_death*100)}%`"></span></div>
+            </div>
+            <div class="tile" x-show="state.forfeit_allowed">
+              <div class="tile-label">Forfeit</div>
+              <div class="tile-value tile-ok">OPEN</div>
+              <div class="tile-sub">keeps your score</div>
+            </div>
+          </div>
+
+          <!-- Stimulus: N colored shapes -->
+          <div class="stimulus-stage">
+            <div class="stimulus-eyebrow">Stimulus</div>
+            <template x-if="stimulus">
+              <div>
+                <div class="stimulus">
+                  <template x-for="i in stimulus.number" :key="i">
+                    <span class="glyph-wrap" :style="`animation-delay:${(i-1)*80}ms`"
+                          x-html="squidArenaHelpers.shapeSVG(stimulus.shape, stimulus.color, 60)"></span>
+                  </template>
+                </div>
+                <div class="stimulus-caption">
+                  <span class="cap-num" x-text="stimulus.number"></span> ×
+                  <span class="cap-color" x-text="stimulus.color"></span>
+                  <span class="cap-shape" x-text="stimulus.shape"></span>
+                </div>
+              </div>
+            </template>
+            <template x-if="!stimulus">
+              <div class="observation-box" x-text="state.observation"></div>
+            </template>
           </div>
 
           <details>
-            <summary>System prompt (framing + rules)</summary>
+            <summary>Raw observation &amp; system prompt</summary>
+            <div class="observation-box" x-text="state.observation"></div>
             <div class="observation-box" x-text="state.system_prompt"></div>
           </details>
 
-          <h3>Observation</h3>
-          <div class="observation-box" x-text="state.observation"></div>
-
+          <!-- Emoji action buttons -->
           <h3>Choose an action</h3>
           <div class="action-grid">
             <template x-for="a in state.available_actions" :key="a">
-              <button type="button" :class="{ selected: selectedAction === a }" @click="selectAction(a)" x-text="a"></button>
+              <button type="button" class="action-btn" :class="{ selected: selectedAction === a }" @click="selectAction(a)">
+                <span class="action-emoji" x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                <span class="action-label" x-text="squidArenaHelpers.actionLabel(a)"></span>
+              </button>
             </template>
-            <button type="button" class="forfeit" x-show="state.forfeit_allowed"
-                    :class="{ selected: selectedAction === 'forfeit' }"
-                    @click="selectAction('forfeit')">Forfeit (keep current score)</button>
+            <button type="button" class="action-btn forfeit" x-show="state.forfeit_allowed"
+                    :class="{ selected: selectedAction === 'forfeit' }" @click="selectAction('forfeit')">
+              <span class="action-emoji">🏳️</span>
+              <span class="action-label">Forfeit</span>
+              <span class="action-sub">keep score</span>
+            </button>
           </div>
 
-          <div class="field">
-            <label for="probe">Probe answer — <span x-text="state.probe_question"></span></label>
-            <input id="probe" type="text" x-model="probeAnswer" placeholder="Your rule-inference answer" />
+          <!-- Rule-inference toggle builder -->
+          <h3>Your rule guess <span class="muted">(rule-inference probe)</span></h3>
+          <div class="rule-builder">
+            <div class="rule-line">
+              <span class="kw">If</span>
+              <div class="seg">
+                <template x-for="attr in ['color','shape','number']" :key="attr">
+                  <button type="button" class="seg-btn" :class="{ on: probeAttr === attr }" @click="setAttr(attr)" x-text="attr"></button>
+                </template>
+              </div>
+              <span class="kw">is</span>
+              <div class="seg seg-values">
+                <template x-for="val in valueOptions" :key="val">
+                  <button type="button" class="seg-btn val-btn" :class="{ on: probeValue === val }" @click="probeValue = val"
+                          x-html="squidArenaHelpers.valueChipHTML(probeAttr, val)"></button>
+                </template>
+              </div>
+            </div>
+            <div class="rule-line">
+              <span class="kw">then</span>
+              <div class="seg">
+                <template x-for="a in state.available_actions" :key="a">
+                  <button type="button" class="seg-btn act-btn" :class="{ on: probeAction === a }" @click="probeAction = a">
+                    <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                    <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <div class="rule-line">
+              <span class="kw">otherwise</span>
+              <div class="seg">
+                <template x-for="a in state.available_actions" :key="a">
+                  <button type="button" class="seg-btn act-btn" :class="{ on: probeDefault === a }" @click="probeDefault = a">
+                    <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                    <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+            <div class="rule-preview"><span class="muted">Submitting:</span> <code x-text="assembledRule"></code></div>
           </div>
 
           <div class="field">
@@ -91,19 +175,19 @@
             <textarea id="reasoning" x-model="reasoning" placeholder="Why did you choose this action?"></textarea>
           </div>
 
-          <button @click="submitAction()" :disabled="submitting || !selectedAction">
+          <button class="submit-btn" @click="submitAction()" :disabled="submitting || !selectedAction">
             <span class="spinner" x-show="submitting"></span>
-            <span x-text="submitting ? 'Submitting…' : 'Submit action'"></span>
+            <span x-text="submitting ? 'Submitting…' : (selectedAction ? 'Submit ' + squidArenaHelpers.actionEmoji(selectedAction) + ' ' + squidArenaHelpers.actionLabel(selectedAction) : 'Pick an action above')"></span>
           </button>
 
-          <div class="card" style="margin-top:16px" x-show="lastFeedback">
-            <h3>Last turn feedback</h3>
-            <p>
-              Action <strong x-text="lastFeedback && lastFeedback.action_taken"></strong> —
-              <span x-text="lastFeedback && lastFeedback.was_optimal ? 'optimal' : 'not optimal'"></span>,
-              reward <strong x-text="lastFeedback && lastFeedback.reward"></strong>,
-              new score <strong x-text="lastFeedback && lastFeedback.new_score"></strong>
-            </p>
+          <div class="feedback-card" x-show="lastFeedback">
+            <div class="fb-head">
+              <span class="fb-emoji" x-text="lastFeedback ? squidArenaHelpers.actionEmoji(lastFeedback.action_taken) : ''"></span>
+              <span class="fb-verdict" :class="lastFeedback && lastFeedback.was_optimal ? 'good' : 'bad'"
+                    x-text="lastFeedback ? (lastFeedback.was_optimal ? 'Optimal' : 'Not optimal') : ''"></span>
+              <span class="fb-reward">reward <strong x-text="lastFeedback && squidArenaHelpers.fmtNum(lastFeedback.reward, 1)"></strong></span>
+              <span class="fb-reward">score <strong x-text="lastFeedback && squidArenaHelpers.fmtNum(lastFeedback.new_score, 1)"></strong></span>
+            </div>
             <p class="muted" x-text="lastFeedback && lastFeedback.feedback"></p>
           </div>
         </div>
