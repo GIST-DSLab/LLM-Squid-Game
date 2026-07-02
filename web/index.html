@@ -423,90 +423,238 @@
          ================================================================= -->
     <section x-data="logsScreen()" x-show="$store.nav.tab === 'logs'" x-cloak>
       <h2>Logs / Trace Explorer</h2>
-      <p class="muted">Browse past sessions (LLM experiment runs and human Play sessions). Click a row to expand its turn-by-turn trace.</p>
+      <p class="muted">Browse past sessions — human plays and LLM experiment runs are listed separately. Click a session to open its full turn-by-turn trace.</p>
 
       <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
       <div class="error-banner" x-show="error" x-text="error"></div>
 
-      <div class="filters">
-        <div class="field">
-          <label for="f-source">Source</label>
-          <select id="f-source" x-model="filterSource" @change="load()">
-            <option value="">All</option>
-            <option value="human">Human</option>
-            <option value="llm">LLM</option>
-          </select>
+      <!-- ============================ LIST VIEW ============================ -->
+      <div x-show="view === 'list'">
+        <div class="filters">
+          <div class="field">
+            <label for="f-task">Task</label>
+            <input id="f-task" type="text" x-model="filterTask" placeholder="e.g. signal_game" @keydown.enter="load()" />
+          </div>
+          <div class="field">
+            <label for="f-framing">Framing</label>
+            <input id="f-framing" type="text" x-model="filterFraming" placeholder="e.g. flagship_corruption" @keydown.enter="load()" />
+          </div>
+          <div class="field" style="flex: 0 0 auto; align-self: flex-end;">
+            <button @click="load()">Apply filters</button>
+          </div>
         </div>
-        <div class="field">
-          <label for="f-task">Task</label>
-          <input id="f-task" type="text" x-model="filterTask" placeholder="e.g. signal_game" @keydown.enter="load()" />
-        </div>
-        <div class="field">
-          <label for="f-framing">Framing</label>
-          <input id="f-framing" type="text" x-model="filterFraming" placeholder="e.g. flagship_corruption" @keydown.enter="load()" />
-        </div>
-        <div class="field" style="flex: 0 0 auto; align-self: flex-end;">
-          <button @click="load()">Apply filters</button>
-        </div>
+
+        <div x-show="loading && !loaded"><span class="spinner"></span> Loading sessions…</div>
+
+        <template x-if="loaded">
+          <div>
+            <!-- Human sessions -->
+            <div class="log-section">
+              <div class="log-section-head">
+                <span class="pill human">Human</span>
+                <span x-text="human.length + ' session' + (human.length === 1 ? '' : 's')"></span>
+              </div>
+              <p class="muted" x-show="human.length === 0">No human plays yet — be the first!</p>
+              <template x-for="s in human" :key="s.session_id">
+                <button type="button" class="log-item" @click="open(s)">
+                  <span class="li-name" x-text="s.nickname"></span>
+                  <span class="cond-badge" :class="squidArenaHelpers.framingMeta(s.framing).tag" x-text="squidArenaHelpers.framingMeta(s.framing).tag || s.framing"></span>
+                  <span class="li-meta" x-text="s.forfeit"></span>
+                  <span class="li-score" x-text="'score ' + s.final_score"></span>
+                  <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
+                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
+                  <span class="li-open">Open ›</span>
+                </button>
+              </template>
+            </div>
+
+            <!-- LLM sessions -->
+            <div class="log-section">
+              <div class="log-section-head">
+                <span class="pill llm">LLM</span>
+                <span x-text="llm.length + ' session' + (llm.length === 1 ? '' : 's')"></span>
+              </div>
+              <p class="muted" x-show="llm.length === 0">No LLM runs seeded.</p>
+              <template x-for="s in llm" :key="s.session_id">
+                <button type="button" class="log-item" @click="open(s)">
+                  <span class="li-name" x-text="s.nickname"></span>
+                  <span class="cond-badge" :class="squidArenaHelpers.framingMeta(s.framing).tag" x-text="squidArenaHelpers.framingMeta(s.framing).tag || s.framing"></span>
+                  <span class="li-meta" x-text="s.forfeit"></span>
+                  <span class="li-score" x-text="'score ' + s.final_score"></span>
+                  <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
+                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
+                  <span class="li-open">Open ›</span>
+                </button>
+              </template>
+            </div>
+
+            <button class="secondary" @click="load()" style="margin-top:6px">Refresh</button>
+          </div>
+        </template>
       </div>
 
-      <div x-show="loading && !loaded"><span class="spinner"></span> Loading sessions…</div>
+      <!-- =========================== DETAIL VIEW =========================== -->
+      <div x-show="view === 'detail'" x-cloak>
+        <button class="secondary" @click="back()">‹ Back to all sessions</button>
 
-      <template x-if="loaded">
-        <div class="card">
-          <p class="muted" x-show="sessions.length === 0">No sessions logged yet.</p>
+        <div x-show="detailLoading" style="margin-top:16px"><span class="spinner"></span> Loading trace…</div>
+        <div class="error-banner" x-show="detailError" x-text="detailError"></div>
 
-          <template x-for="s in sessions" :key="s.session_id">
-            <div class="log-row">
-              <div class="log-row-summary clickable" @click="toggle(s.session_id)">
-                <span class="log-cell" x-text="squidArenaHelpers.shortId(s.session_id)"></span>
-                <span class="log-cell"><span class="pill" :class="s.source" x-text="s.source"></span></span>
-                <span class="log-cell" x-text="s.nickname"></span>
-                <span class="log-cell" x-text="s.task"></span>
-                <span class="log-cell" x-text="s.framing"></span>
-                <span class="log-cell" x-text="s.forfeit"></span>
-                <span class="log-cell" x-text="'score ' + s.final_score"></span>
-                <span class="log-cell" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
-                <span class="log-cell muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
-              </div>
-
-              <div class="turn-detail" x-show="expandedId === s.session_id" x-cloak>
-                <div x-show="detailLoading"><span class="spinner"></span> Loading trace…</div>
-                <div class="error-banner" x-show="detailError" x-text="detailError"></div>
-                <template x-if="detail && expandedId === s.session_id">
-                  <div class="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Turn</th><th>Observation</th><th>Action</th>
-                          <th>ri_task</th><th>ri_probe</th><th>ri_forfeit</th>
-                          <th>Choice</th><th>Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <template x-for="t in detail.turns" :key="t.turn_no">
-                          <tr>
-                            <td x-text="t.turn_no"></td>
-                            <td style="white-space:normal; max-width:320px" x-text="t.observation"></td>
-                            <td x-text="t.action"></td>
-                            <td x-text="squidArenaHelpers.fmtNum(t.ri_task, 0)"></td>
-                            <td x-text="squidArenaHelpers.fmtNum(t.ri_probe, 0)"></td>
-                            <td x-text="squidArenaHelpers.fmtNum(t.ri_forfeit, 0)"></td>
-                            <td x-text="t.choice ?? '—'"></td>
-                            <td x-text="t.score"></td>
-                          </tr>
-                        </template>
-                      </tbody>
-                    </table>
-                  </div>
-                </template>
-              </div>
+        <template x-if="detail && selected">
+          <div style="margin-top:16px">
+            <!-- Session header -->
+            <div class="trace-head">
+              <span class="pill" :class="selected.source" x-text="selected.source"></span>
+              <span class="trace-title" x-text="selected.nickname"></span>
+              <span class="cond-badge" :class="framingMeta.tag" x-text="framingMeta.tag + ' · ' + framingMeta.label"></span>
+              <span class="cond-badge forfeit" x-text="selected.forfeit === 'allowed' ? '🏳️ forfeit allowed' : '⛔ no forfeit'"></span>
+              <span class="li-score" x-text="'final ' + selected.final_score"></span>
+              <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(selected.created_at)"></span>
             </div>
-          </template>
 
-          <button class="secondary" @click="load()" style="margin-top:12px">Refresh</button>
-        </div>
-      </template>
+            <!-- Turn strip navigator -->
+            <div class="turn-strip">
+              <template x-for="(t, i) in turns" :key="t.turn_no">
+                <button type="button" class="strip-btn"
+                        :class="{ on: stepIdx === i, ok: t.correct === true, no: t.correct === false, flag: t.choice === 'FORFEIT' || t.action === 'forfeit' }"
+                        @click="goStep(i)" x-text="'T' + t.turn_no"></button>
+              </template>
+            </div>
+
+            <template x-if="curTurn">
+              <div class="play-layout">
+                <div class="card play-card">
+                  <!-- Framing (condition summary; per-turn framing text isn't stored for logs) -->
+                  <div class="framing-panel" :class="framingMeta.tag">
+                    <div class="framing-head">
+                      <span class="framing-eyebrow">Framing</span>
+                      <span class="cond-badge" :class="framingMeta.tag" x-text="framingMeta.tag + ' · ' + framingMeta.label"></span>
+                      <span class="cond-badge forfeit" x-text="selected.forfeit === 'allowed' ? '🏳️ forfeit allowed' : '⛔ no forfeit'"></span>
+                    </div>
+                    <div class="framing-text" x-text="framingMeta.blurb"></div>
+                  </div>
+
+                  <!-- Stat tiles -->
+                  <div class="stat-tiles">
+                    <div class="tile">
+                      <div class="tile-label">Turn</div>
+                      <div class="tile-value"><span x-text="curTurn.turn_no"></span><span class="tile-of" x-text="' / ' + stepCount"></span></div>
+                    </div>
+                    <div class="tile tile-score">
+                      <div class="tile-label">Score after</div>
+                      <div class="tile-value" x-text="squidArenaHelpers.fmtNum(curTurn.score, 1)"></div>
+                    </div>
+                    <div class="tile">
+                      <div class="tile-label">Verdict</div>
+                      <div class="tile-value"
+                           :class="(curTurn.choice === 'FORFEIT' || curTurn.action === 'forfeit') ? 'tile-ok' : (curTurn.correct === true ? 'tile-ok' : (curTurn.correct === false ? 'tile-bad' : ''))"
+                           x-text="(curTurn.choice === 'FORFEIT' || curTurn.action === 'forfeit') ? '🏳️' : (curTurn.correct === true ? '✓' : (curTurn.correct === false ? '✗' : '—'))"></div>
+                    </div>
+                  </div>
+
+                  <!-- Stimulus -->
+                  <div class="stimulus-stage">
+                    <div class="stimulus-eyebrow">Stimulus</div>
+                    <template x-if="curStimulus">
+                      <div>
+                        <div class="stimulus">
+                          <template x-for="i in curStimulus.number" :key="i">
+                            <span class="glyph-wrap" x-html="squidArenaHelpers.shapeSVG(curStimulus.shape, curStimulus.color, 56)"></span>
+                          </template>
+                        </div>
+                        <div class="stimulus-caption">
+                          <span class="cap-num" x-text="curStimulus.number"></span> ×
+                          <span x-text="curStimulus.color"></span> <span x-text="curStimulus.shape"></span>
+                        </div>
+                      </div>
+                    </template>
+                    <template x-if="!curStimulus">
+                      <div class="observation-box" x-text="curTurn.observation"></div>
+                    </template>
+                  </div>
+
+                  <!-- Action taken (read-only) -->
+                  <h3>Action taken</h3>
+                  <div class="action-grid">
+                    <template x-for="a in curActions" :key="a">
+                      <div class="action-btn" :class="{ selected: curTurn.action === a }">
+                        <span class="action-emoji" x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                        <span class="action-label" x-text="squidArenaHelpers.actionLabel(a)"></span>
+                      </div>
+                    </template>
+                    <div class="action-btn forfeit selected" x-show="curTurn.action === 'forfeit' || curTurn.choice === 'FORFEIT'">
+                      <span class="action-emoji">🏳️</span>
+                      <span class="action-label">Forfeit</span>
+                    </div>
+                  </div>
+
+                  <!-- Model's literal answer -->
+                  <template x-if="curTurn.raw_response">
+                    <div class="raw-answer">
+                      <div class="raw-label">Model output</div>
+                      <pre x-text="curTurn.raw_response"></pre>
+                    </div>
+                  </template>
+
+                  <!-- Thinking (per split-call) -->
+                  <h3>Thinking <span class="muted">chain-of-thought per call</span></h3>
+                  <div class="think-stats">
+                    <span>ri_task <strong x-text="squidArenaHelpers.fmtNum(curTurn.ri_task, 0)"></strong></span>
+                    <span>ri_probe <strong x-text="squidArenaHelpers.fmtNum(curTurn.ri_probe, 0)"></strong></span>
+                    <span>ri_forfeit <strong x-text="squidArenaHelpers.fmtNum(curTurn.ri_forfeit, 0)"></strong></span>
+                  </div>
+
+                  <template x-if="curTurn.thinking_task">
+                    <details class="think-block" open>
+                      <summary><span class="think-tag task">task</span> action reasoning</summary>
+                      <div class="think-text" x-text="curTurn.thinking_task"></div>
+                    </details>
+                  </template>
+                  <template x-if="curTurn.thinking_probe">
+                    <details class="think-block">
+                      <summary><span class="think-tag probe">probe</span> p(success) reasoning</summary>
+                      <div class="think-text" x-text="curTurn.thinking_probe"></div>
+                    </details>
+                  </template>
+                  <template x-if="curTurn.thinking_forfeit">
+                    <details class="think-block">
+                      <summary><span class="think-tag forfeit">forfeit</span> continue / forfeit reasoning</summary>
+                      <div class="think-text" x-text="curTurn.thinking_forfeit"></div>
+                    </details>
+                  </template>
+                  <p class="muted" x-show="!curTurn.thinking_task && !curTurn.thinking_probe && !curTurn.thinking_forfeit">
+                    No thinking text recorded for this turn.
+                  </p>
+
+                  <!-- Prev / Next -->
+                  <div class="step-nav">
+                    <button class="secondary" @click="prev()" :disabled="stepIdx === 0">‹ Prev</button>
+                    <span class="step-count" x-text="'Turn ' + curTurn.turn_no + ' of ' + stepCount"></span>
+                    <button class="secondary" @click="next()" :disabled="stepIdx >= stepCount - 1">Next ›</button>
+                  </div>
+                </div>
+
+                <!-- Turn rail -->
+                <aside class="card history-panel">
+                  <div class="history-head">Turns</div>
+                  <div class="history-scroll">
+                    <template x-for="(t, i) in turns" :key="t.turn_no">
+                      <div class="hist-row" :class="{ 'row-active': stepIdx === i }" @click="goStep(i)" style="cursor:pointer">
+                        <span class="hist-tag" x-text="'T' + t.turn_no"></span>
+                        <span class="hist-stim" x-html="squidArenaHelpers.miniStimHTML(squidArenaHelpers.parseStimulus(t.observation))"></span>
+                        <span class="hist-act"><span x-text="squidArenaHelpers.actionEmoji(t.action)"></span></span>
+                        <span class="hist-verdict"
+                              :class="(t.choice === 'FORFEIT' || t.action === 'forfeit') ? 'flag' : (t.correct === true ? 'ok' : (t.correct === false ? 'no' : ''))"
+                              x-text="(t.choice === 'FORFEIT' || t.action === 'forfeit') ? '🏳' : (t.correct === true ? '✓' : (t.correct === false ? '✗' : '—'))"></span>
+                      </div>
+                    </template>
+                  </div>
+                </aside>
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
     </section>
   </main>
 

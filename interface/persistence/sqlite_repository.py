@@ -40,6 +40,11 @@ CREATE TABLE IF NOT EXISTS turns (
     ri_forfeit REAL,
     choice TEXT,
     score REAL NOT NULL,
+    thinking_task TEXT,
+    thinking_probe TEXT,
+    thinking_forfeit TEXT,
+    raw_response TEXT,
+    correct INTEGER,
     PRIMARY KEY (session_id, turn_no)
 );
 
@@ -155,8 +160,10 @@ class SQLiteRepository(Repository):
                 """
                 INSERT INTO turns
                     (session_id, turn_no, observation, action,
-                     ri_task, ri_probe, ri_forfeit, choice, score)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     ri_task, ri_probe, ri_forfeit, choice, score,
+                     thinking_task, thinking_probe, thinking_forfeit,
+                     raw_response, correct)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
                     (
@@ -169,6 +176,11 @@ class SQLiteRepository(Repository):
                         t.ri_forfeit,
                         t.choice,
                         t.score,
+                        t.thinking_task,
+                        t.thinking_probe,
+                        t.thinking_forfeit,
+                        t.raw_response,
+                        None if t.correct is None else int(t.correct),
                     )
                     for t in turns
                 ],
@@ -258,6 +270,11 @@ def _row_to_turn(row: sqlite3.Row) -> TurnRecord:
         ri_forfeit=row["ri_forfeit"],
         choice=row["choice"],
         score=row["score"],
+        thinking_task=row["thinking_task"],
+        thinking_probe=row["thinking_probe"],
+        thinking_forfeit=row["thinking_forfeit"],
+        raw_response=row["raw_response"],
+        correct=None if row["correct"] is None else bool(row["correct"]),
     )
 
 

@@ -170,6 +170,8 @@ def build_turn_records(season: dict[str, Any]) -> list[TurnRecord]:
     for t in turns:
         running += float(t.get("reward_received") or 0.0)
         forfeit_choice = t.get("forfeit_choice")
+        tsf = t.get("task_success_factor")
+        correct = None if tsf is None else (float(tsf) == 1.0)
         records.append(
             TurnRecord(
                 session_id=season_id,
@@ -181,6 +183,12 @@ def build_turn_records(season: dict[str, Any]) -> list[TurnRecord]:
                 ri_forfeit=_thinking_tokens(t.get("ri_forfeit")),
                 choice=forfeit_choice,
                 score=running,
+                # Split-call chain-of-thought + the model's literal answer.
+                thinking_task=t.get("thinking_text_task"),
+                thinking_probe=t.get("thinking_text_probe"),
+                thinking_forfeit=t.get("thinking_text_forfeit"),
+                raw_response=t.get("raw_response_task"),
+                correct=correct,
             )
         )
     return records

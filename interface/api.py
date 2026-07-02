@@ -326,6 +326,11 @@ class LogTurnRow(BaseModel):
     ri_forfeit: float | None = None
     choice: str | None = None
     score: float
+    thinking_task: str | None = None
+    thinking_probe: str | None = None
+    thinking_forfeit: str | None = None
+    raw_response: str | None = None
+    correct: bool | None = None
 
 
 class LogDetailResponse(BaseModel):
@@ -399,6 +404,12 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
         for turn, score_after_turn in zip(result.turns, turn_scores):
             thinking_tokens = turn.reasoning_investment.thinking_tokens
             action = turn.action_outcome.action_taken if turn.action_outcome else turn.raw_response
+            reasoning = turn.thinking_text or None
+            correct = (
+                None
+                if turn.forfeit_decision or turn.action_outcome is None
+                else bool(turn.action_outcome.was_optimal)
+            )
             turn_records.append(
                 TurnRecord(
                     session_id=session_id,
@@ -413,6 +424,10 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
                     ri_forfeit=thinking_tokens if turn.forfeit_decision else None,
                     choice=None,
                     score=score_after_turn,
+                    # The human's typed reasoning is their "thinking" for the turn.
+                    thinking_task=None if turn.forfeit_decision else reasoning,
+                    thinking_forfeit=reasoning if turn.forfeit_decision else None,
+                    correct=correct,
                 )
             )
 
@@ -675,6 +690,11 @@ def get_log_detail(session_id: str):
                 ri_forfeit=t.ri_forfeit,
                 choice=t.choice,
                 score=t.score,
+                thinking_task=t.thinking_task,
+                thinking_probe=t.thinking_probe,
+                thinking_forfeit=t.thinking_forfeit,
+                raw_response=t.raw_response,
+                correct=t.correct,
             )
             for t in turns
         ],

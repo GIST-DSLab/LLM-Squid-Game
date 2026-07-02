@@ -263,6 +263,21 @@
     return out;
   }
 
+  /** Parse the available-actions list out of an observation, falling back to
+   * the signal-game default four. */
+  function parseActions(observation) {
+    if (observation) {
+      const m = observation.match(/available actions:\s*\[([^\]]+)\]/i);
+      if (m) {
+        return m[1]
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+    }
+    return ["go_left", "go_right", "stay", "jump"];
+  }
+
   /** Compact inline-SVG stimulus (small glyphs repeated `number` times) for
    * the history panel. */
   function miniStimHTML(s) {
@@ -284,6 +299,7 @@
     valueChipHTML,
     parseStimulus,
     parseClues,
+    parseActions,
     miniStimHTML,
     attrValues: ATTR_VALUES,
     framingOptions: FRAMING_OPTIONS,
@@ -614,16 +630,19 @@
       error: null,
       statusMsg: "",
       loaded: false,
-      sessions: [],
+      human: [],
+      llm: [],
 
-      filterSource: "",
       filterTask: "",
       filterFraming: "",
 
-      expandedId: null,
+      // list | detail
+      view: "list",
+      selected: null,
       detail: null,
       detailLoading: false,
       detailError: null,
+      stepIdx: 0,
 
       async init() {
         await this.load();
@@ -634,13 +653,14 @@
         this.error = null;
         try {
           const params = new URLSearchParams();
-          if (this.filterSource) params.set("source", this.filterSource);
           if (this.filterTask) params.set("task", this.filterTask);
           if (this.filterFraming) params.set("framing", this.filterFraming);
           const qs = params.toString();
           const data = await fetchJSON(`/api/logs${qs ? "?" + qs : ""}`, {}, (m) => (this.statusMsg = m));
           this.statusMsg = "";
-          this.sessions = data.sessions;
+          const all = data.sessions || [];
+          this.human = all.filter((s) => s.source === "human");
+          this.llm = all.filter((s) => s.source === "llm");
           this.loaded = true;
         } catch (e) {
           this.error = e.message;
@@ -649,23 +669,66 @@
         }
       },
 
-      async toggle(sessionId) {
-        if (this.expandedId === sessionId) {
-          this.expandedId = null;
-          this.detail = null;
-          return;
-        }
-        this.expandedId = sessionId;
+      // Open a session on its own detail screen and load the trace.
+      async open(session) {
+        this.selected = session;
+        this.view = "detail";
         this.detail = null;
         this.detailError = null;
+        this.stepIdx = 0;
         this.detailLoading = true;
         try {
-          this.detail = await fetchJSON(`/api/logs/${encodeURIComponent(sessionId)}`, {}, () => {});
+          this.detail = await fetchJSON(
+            `/api/logs/${encodeURIComponent(session.session_id)}`,
+            {},
+            () => {}
+          );
         } catch (e) {
           this.detailError = e.message;
         } finally {
           this.detailLoading = false;
         }
+      },
+
+      back() {
+        this.view = "list";
+        this.detail = null;
+        this.selected = null;
+      },
+
+      get turns() {
+        return (this.detail && this.detail.turns) || [];
+      },
+      get stepCount() {
+        return this.turns.length;
+      },
+      get curTurn() {
+        return this.turns[this.stepIdx] || null;
+      },
+      get curStimulus() {
+        return this.curTurn
+          ? squidArenaHelpers.parseStimulus(this.curTurn.observation)
+          : null;
+      },
+      get curActions() {
+        return this.curTurn
+          ? squidArenaHelpers.parseActions(this.curTurn.observation)
+          : [];
+      },
+      get framingMeta() {
+        return this.selected
+          ? squidArenaHelpers.framingMeta(this.selected.framing)
+          : { label: "", tag: "", blurb: "" };
+      },
+
+      next() {
+        if (this.stepIdx < this.stepCount - 1) this.stepIdx += 1;
+      },
+      prev() {
+        if (this.stepIdx > 0) this.stepIdx -= 1;
+      },
+      goStep(i) {
+        this.stepIdx = i;
       },
     }));
   });

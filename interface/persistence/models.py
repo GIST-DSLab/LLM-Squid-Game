@@ -56,6 +56,14 @@ class TurnRecord:
     ri_probe: float | None = None
     ri_forfeit: float | None = None
     choice: str | None = None
+    # Per-call thinking / chain-of-thought text (LLM split-call: task / probe /
+    # forfeit; human: the single reasoning blob lands in one of them). Plus the
+    # model's literal answer and whether the turn's action was correct.
+    thinking_task: str | None = None
+    thinking_probe: str | None = None
+    thinking_forfeit: str | None = None
+    raw_response: str | None = None
+    correct: bool | None = None
 
 
 @dataclass

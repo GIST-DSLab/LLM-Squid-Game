@@ -557,6 +557,11 @@ def test_logs_lists_both_sources_newest_first_and_detail_matches_engine_turn_tra
             "ri_forfeit",
             "choice",
             "score",
+            "thinking_task",
+            "thinking_probe",
+            "thinking_forfeit",
+            "raw_response",
+            "correct",
         }
         assert isinstance(t["observation"], str) and t["observation"] != ""
         assert isinstance(t["action"], str) and t["action"] != ""
