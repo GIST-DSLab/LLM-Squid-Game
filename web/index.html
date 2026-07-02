@@ -58,6 +58,7 @@
 
       <!-- Active turn -->
       <template x-if="started && state && !gameOver">
+        <div class="play-layout">
         <div class="card play-card">
           <!-- Modern stat tiles -->
           <div class="stat-tiles">
@@ -190,7 +191,42 @@
             </div>
             <p class="muted" x-text="lastFeedback && lastFeedback.feedback"></p>
           </div>
-        </div>
+        </div><!-- /play-card -->
+
+        <!-- History panel: clues on top, turn history accumulating below -->
+        <aside class="card history-panel">
+          <div class="history-head">History</div>
+          <div class="history-scroll">
+            <template x-for="(c, i) in clues" :key="'clue' + i">
+              <div class="hist-row is-clue">
+                <span class="hist-tag clue">CLUE</span>
+                <span class="hist-stim" x-html="squidArenaHelpers.miniStimHTML(c)"></span>
+                <span class="hist-arrow">→</span>
+                <span class="hist-act">
+                  <span x-text="squidArenaHelpers.actionEmoji(c.action)"></span>
+                  <span x-text="squidArenaHelpers.actionLabel(c.action)"></span>
+                </span>
+              </div>
+            </template>
+
+            <div class="hist-divider" x-show="clues.length && history.length"></div>
+
+            <template x-for="h in history" :key="'t' + h.turn">
+              <div class="hist-row">
+                <span class="hist-tag" x-text="'T' + h.turn"></span>
+                <span class="hist-stim" x-html="squidArenaHelpers.miniStimHTML(h.stimulus)"></span>
+                <span class="hist-act"><span x-text="squidArenaHelpers.actionEmoji(h.action)"></span></span>
+                <span class="hist-verdict" :class="h.forfeit ? 'flag' : (h.optimal ? 'ok' : 'no')"
+                      x-text="h.forfeit ? 'forfeit' : (h.optimal ? '✓ correct' : '✗ wrong')"></span>
+              </div>
+            </template>
+
+            <div class="hist-empty" x-show="clues.length === 0 && history.length === 0">
+              No clues yet — your turns will appear here.
+            </div>
+          </div>
+        </aside>
+        </div><!-- /play-layout -->
       </template>
 
       <div class="card" x-show="started && loading && !state">

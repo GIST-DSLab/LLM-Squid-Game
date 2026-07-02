@@ -214,6 +214,36 @@
     return { color, shape, number };
   }
 
+  /** Parse the few-shot "clue" example pairs the server embeds in the system
+   * prompt, e.g. "red circle with number 1 → go_left". Returns a list of
+   * {color, shape, number, action}. These are the rule-informative hints. */
+  function parseClues(systemPrompt) {
+    if (!systemPrompt) return [];
+    const re =
+      /\b(red|blue|green|yellow)\s+(circle|triangle|square|star)\s+with number\s+(\d+)\s*(?:→|->)\s*(\w+)/gi;
+    const out = [];
+    let m;
+    while ((m = re.exec(systemPrompt)) !== null) {
+      out.push({
+        color: m[1].toLowerCase(),
+        shape: m[2].toLowerCase(),
+        number: parseInt(m[3], 10),
+        action: m[4],
+      });
+    }
+    return out;
+  }
+
+  /** Compact inline-SVG stimulus (small glyphs repeated `number` times) for
+   * the history panel. */
+  function miniStimHTML(s) {
+    if (!s || !(s.number > 0)) return "—";
+    let out = "";
+    const n = Math.min(s.number, 6);
+    for (let i = 0; i < n; i++) out += shapeSVG(s.shape, s.color, 16);
+    return out;
+  }
+
   window.squidArenaHelpers = {
     fmtNum,
     fmtP,
@@ -224,6 +254,8 @@
     actionLabel,
     valueChipHTML,
     parseStimulus,
+    parseClues,
+    miniStimHTML,
     attrValues: ATTR_VALUES,
   };
 
@@ -268,6 +300,9 @@
       probeAction: "go_left",
       probeDefault: "stay",
 
+      // Accumulated per-turn history: {turn, stimulus, action, optimal, forfeit}.
+      history: [],
+
       gameOver: false,
       result: null,
       rank: null,
@@ -278,6 +313,12 @@
         return this.state
           ? squidArenaHelpers.parseStimulus(this.state.observation)
           : null;
+      },
+      // Few-shot "clue" example pairs embedded in the system prompt.
+      get clues() {
+        return this.state
+          ? squidArenaHelpers.parseClues(this.state.system_prompt)
+          : [];
       },
       // Value options for the currently selected attribute.
       get valueOptions() {
@@ -322,6 +363,9 @@
                 framing: this.framing,
                 forfeit_condition: this.forfeit,
                 nickname: this.nickname,
+                // Show 2 rule-informative clue examples up front (EASY: one
+                // positive + one negative), surfaced in the History panel.
+                num_few_shot: 2,
               }),
             },
             (m) => (this.statusMsg = m)
@@ -366,6 +410,10 @@
           this.error = "Choose an action (or Forfeit) first.";
           return;
         }
+        // Capture the turn's context before the state advances/resets.
+        const chosen = this.selectedAction;
+        const stim = this.stimulus;
+        const turnNo = this.state.turn_number;
         this.submitting = true;
         this.error = null;
         try {
@@ -382,6 +430,13 @@
             (m) => (this.statusMsg = m)
           );
           this.lastFeedback = resp;
+          this.history.push({
+            turn: turnNo,
+            stimulus: stim,
+            action: chosen,
+            optimal: !!resp.was_optimal,
+            forfeit: chosen === "forfeit",
+          });
           this.selectedAction = "";
           this.reasoning = "";
           // Keep the rule-inference toggles across turns — the hidden rule
@@ -438,6 +493,7 @@
         this.probeValue = "red";
         this.probeAction = "go_left";
         this.probeDefault = "stay";
+        this.history = [];
         this.reasoning = "";
         this.lastFeedback = null;
         this.gameOver = false;
