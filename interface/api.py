@@ -279,7 +279,7 @@ class ModelLeaderboardRow(BaseModel):
     hr_FC_3cov: float
     hr_FC_ci_low: float
     hr_FC_ci_high: float
-    p_FC: float = Field(description="p for β_FC in the 4-cov (mediator-adjusted) Cox model")
+    p_FC: float = Field(description="p for β_FC in the 3-cov (pre-mediator) Cox model, matching hr_FC_3cov")
     pct_attenuation: float
     n_sessions: int
 
