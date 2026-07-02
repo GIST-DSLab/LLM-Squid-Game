@@ -279,7 +279,7 @@
          PLAY
          ================================================================= -->
     <section x-data="playScreen()" x-show="$store.nav.tab === 'play'" x-cloak>
-      <h2>Play</h2>
+      <h2 class="h-shape s-circle">Play</h2>
       <p class="muted">
         Default arena: task <strong x-text="task"></strong>, framing
         <strong x-text="framing"></strong>, forfeit <strong x-text="forfeit"></strong>.
@@ -569,7 +569,7 @@
          LLM ARENA (BYOE — Bring Your Own Endpoint)
          ================================================================= -->
     <section x-data="arenaScreen()" x-show="$store.nav.tab === 'arena'" x-cloak>
-      <h2>LLM Arena</h2>
+      <h2 class="h-shape s-triangle">LLM Arena</h2>
       <p class="muted">
         Enter your own model and climb the leaderboard. You host an HTTP endpoint;
         we drive a full split-call season against it (task → p(success) probe →
@@ -740,7 +740,7 @@
          MODEL LEADERBOARD
          ================================================================= -->
     <section x-data="modelLeaderboardScreen()" x-show="$store.nav.tab === 'models'" x-cloak>
-      <h2>Model Leaderboard</h2>
+      <h2 class="h-shape s-square">Model Leaderboard</h2>
       <p class="muted">
         Ranked by the mediation-chain closure test (spec §5): <strong>Open</strong> models still
         show a significant framing → forfeit effect after controlling for reasoning-investment
@@ -819,7 +819,7 @@
          PLAY LEADERBOARD
          ================================================================= -->
     <section x-data="playLeaderboardScreen()" x-show="$store.nav.tab === 'leaderboard'" x-cloak>
-      <h2>Play Leaderboard</h2>
+      <h2 class="h-shape s-circle">Play Leaderboard</h2>
       <p class="muted">
         Human sessions for arena task=<strong x-text="task"></strong>,
         framing=<strong x-text="framing"></strong>, ranked by final score.
@@ -859,7 +859,7 @@
          LOGS / TRACE EXPLORER
          ================================================================= -->
     <section x-data="logsScreen()" x-show="$store.nav.tab === 'logs'" x-cloak>
-      <h2>Logs / Trace Explorer</h2>
+      <h2 class="h-shape s-square">Logs / Trace Explorer</h2>
       <p class="muted">Browse past sessions — human plays and LLM experiment runs are listed separately. Click a session to open its full turn-by-turn trace.</p>
 
       <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>

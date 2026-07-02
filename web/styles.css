@@ -1479,3 +1479,25 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   .landing .reveal { opacity: 1; transform: none; transition: none; }
 }
+
+/* =====================================================================
+   App-screen Squid Game details — shape-numbered headings, tab marker
+   ===================================================================== */
+
+.h-shape::before {
+  color: var(--accent);
+  margin-right: 8px;
+  font-size: 0.85em;
+}
+.h-shape.s-circle::before { content: "\25CB"; }
+.h-shape.s-triangle::before { content: "\25B3"; }
+.h-shape.s-square::before { content: "\25A1"; }
+
+nav.tabs a.active { box-shadow: inset 0 -2px 0 var(--accent); }
+
+header.topbar .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
