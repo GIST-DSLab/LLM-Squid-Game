@@ -20,6 +20,7 @@
   <header class="topbar">
     <a href="#play" class="brand" title="Back to home">LLM <span class="accent">Squid Game</span> — Web Arena</a>
     <nav class="tabs" x-data x-cloak>
+      <a href="about.html">About</a>
       <a href="#play" :class="{ active: $store.nav.tab === 'play' }">Play</a>
       <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">LLM Arena</a>
       <a href="#models" :class="{ active: $store.nav.tab === 'models' }">Model Leaderboard</a>
@@ -53,8 +54,27 @@
                  @keydown.enter="startGame()" />
         </div>
 
+        <!-- Game / task selection -->
+        <label>Game</label>
+        <div class="cond-cards game-cards">
+          <template x-for="g in squidArenaHelpers.gameOptions" :key="g.value">
+            <button type="button" class="cond-card game-card"
+                    :class="{ on: task === g.value, soon: !g.available }"
+                    :disabled="!g.available"
+                    @click="g.available && (task = g.value)">
+              <span class="game-head">
+                <span class="game-icon" x-text="g.icon"></span>
+                <span class="cond-label" x-text="g.label"></span>
+                <span class="badge-reco" x-show="g.recommended">Recommended</span>
+                <span class="badge-soon" x-show="!g.available">To be continued</span>
+              </span>
+              <span class="cond-blurb" x-text="g.blurb"></span>
+            </button>
+          </template>
+        </div>
+
         <!-- Framing / threat-prompt condition -->
-        <label>Threat framing</label>
+        <label style="margin-top:16px">Threat framing</label>
         <div class="cond-cards">
           <template x-for="opt in squidArenaHelpers.framingOptions" :key="opt.value">
             <button type="button" class="cond-card" :class="{ on: framing === opt.value }" @click="framing = opt.value">

@@ -177,6 +177,34 @@
     return acc;
   }, {});
 
+  // Selectable task modules. Only signal_game is wired end-to-end today; the
+  // others are placeholders (available === false) shown as "to be continued".
+  const GAME_OPTIONS = [
+    {
+      value: "signal_game",
+      icon: "🔴",
+      label: "Signal Game",
+      blurb:
+        "Infer the hidden rule mapping a colored-shape signal to an action, then act on it each turn.",
+      available: true,
+      recommended: true,
+    },
+    {
+      value: "voting_room",
+      icon: "🗳️",
+      label: "Voting Room",
+      blurb: "Social-deduction voting under elimination pressure.",
+      available: false,
+    },
+    {
+      value: "navigation",
+      icon: "🧭",
+      label: "Long-Horizon Navigation",
+      blurb: "Multi-step planning toward a distant goal.",
+      available: false,
+    },
+  ];
+
   /** Inline SVG for one signal shape, filled with `color` (a signal color
    * name or any CSS color for neutral chips). */
   function shapeSVG(shape, color, size) {
@@ -306,6 +334,7 @@
     framingMeta: function (f) {
       return FRAMING_META[f] || { label: f, tag: "", blurb: "" };
     },
+    gameOptions: GAME_OPTIONS,
   };
 
   // ---------------------------------------------------------------------

@@ -1086,3 +1086,36 @@ footer {
   text-decoration: none;
 }
 .button-link:hover { background: var(--accent-dim); }
+
+/* ============================================================
+   Play — game / task selector
+   ============================================================ */
+.game-card { position: relative; }
+.game-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.game-icon { font-size: 1.15rem; line-height: 1; }
+.badge-reco,
+.badge-soon {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.badge-reco { background: rgba(63, 178, 127, 0.18); color: var(--ok); }
+.badge-soon { background: rgba(217, 164, 65, 0.16); color: var(--warn); }
+
+/* Placeholder games: visibly inert. */
+.cond-card.game-card.soon {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cond-card.game-card.soon:hover {
+  border-color: var(--border);
+  transform: none;
+}
