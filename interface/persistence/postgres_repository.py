@@ -71,13 +71,17 @@ class PostgresRepository(Repository):
 
     def create_session(self, session: SessionRecord) -> str:
         session_id = session.id or new_id()
+        # Server-side timestamp by default; a caller (e.g. the WP3 seed
+        # script) may override it to preserve an original run time. When the
+        # supplied value is NULL, COALESCE falls back to server time.
         with self._conn.cursor() as cur:
             cur.execute(
                 """
                 INSERT INTO sessions
                     (id, nickname, task, framing, forfeit, seed,
                      final_score, forfeited, source, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, now())
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        COALESCE(%s::timestamptz, now()))
                 """,
                 (
                     session_id,
@@ -89,6 +93,7 @@ class PostgresRepository(Repository):
                     session.final_score,
                     session.forfeited,
                     session.source,
+                    session.created_at,
                 ),
             )
         return session_id

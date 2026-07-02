@@ -69,6 +69,49 @@ def test_postgres_repository_module_imports_without_psycopg_installed() -> None:
     assert hasattr(mod, "PostgresRepository")
 
 
+def test_get_repository_routes_postgres_dsn_to_postgres_backend(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A postgres:// DSN must select the Postgres backend without a live
+    # server. Inject a fake ``psycopg`` so PostgresRepository can construct
+    # (it imports psycopg lazily and runs init_schema on a cursor).
+    import sys
+    import types
+
+    executed: list[str] = []
+
+    class _FakeCursor:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql, params=None):
+            executed.append(sql)
+
+    class _FakeConn:
+        def cursor(self):
+            return _FakeCursor()
+
+        def close(self):
+            pass
+
+    fake_psycopg = types.ModuleType("psycopg")
+    fake_psycopg.connect = lambda dsn, autocommit=False: _FakeConn()
+    monkeypatch.setitem(sys.modules, "psycopg", fake_psycopg)
+
+    from interface.persistence.postgres_repository import PostgresRepository
+
+    repo = get_repository("postgresql://user:pw@localhost:5432/db")
+    try:
+        assert isinstance(repo, PostgresRepository)
+        # init_schema ran against the (fake) connection.
+        assert any("CREATE TABLE" in sql for sql in executed)
+    finally:
+        repo.close()
+
+
 # ---------------------------------------------------------------------------
 # Schema creation
 # ---------------------------------------------------------------------------
@@ -109,10 +152,19 @@ def test_create_session_generates_id_when_blank(repo: Repository) -> None:
     assert repo.get_session(session_id) is not None
 
 
-def test_create_session_ignores_client_supplied_created_at(repo: Repository) -> None:
+def test_create_session_preserves_caller_supplied_created_at(repo: Repository) -> None:
+    # The seed script (WP3) preserves original historical run timestamps.
     session_id = repo.create_session(_session(created_at="2000-01-01T00:00:00+00:00"))
     fetched = repo.get_session(session_id)
-    assert fetched.created_at != "2000-01-01T00:00:00+00:00"
+    assert fetched.created_at == "2000-01-01T00:00:00+00:00"
+
+
+def test_create_session_assigns_server_timestamp_when_created_at_is_none(repo: Repository) -> None:
+    # WP2 callers pass created_at=None (the default) and get a server stamp.
+    session_id = repo.create_session(_session(created_at=None))
+    fetched = repo.get_session(session_id)
+    assert fetched.created_at is not None
+    assert fetched.created_at != ""
 
 
 def test_get_session_returns_none_for_unknown_id(repo: Repository) -> None:

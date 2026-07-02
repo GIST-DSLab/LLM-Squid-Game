@@ -83,7 +83,9 @@ class SQLiteRepository(Repository):
 
     def create_session(self, session: SessionRecord) -> str:
         session_id = session.id or new_id()
-        created_at = datetime.now(timezone.utc).isoformat()
+        # Server-side timestamp by default; a caller (e.g. the WP3 seed
+        # script) may override it to preserve an original run time.
+        created_at = session.created_at or datetime.now(timezone.utc).isoformat()
         with self._lock:
             self._conn.execute(
                 """

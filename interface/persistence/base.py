@@ -29,8 +29,10 @@ class Repository(ABC):
     def create_session(self, session: SessionRecord) -> str:
         """Insert a session row. Returns the (possibly generated) id.
 
-        ``created_at`` is always assigned server-side; any value passed on
-        ``session.created_at`` is ignored.
+        ``created_at`` is assigned server-side by DEFAULT (when
+        ``session.created_at`` is ``None``). A caller may override it by
+        passing a non-``None`` value, which is stored verbatim — used by the
+        seed script to preserve original historical run timestamps.
         """
 
     @abstractmethod

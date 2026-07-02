@@ -25,9 +25,10 @@ class SessionRecord:
     """One row of the ``sessions`` table.
 
     ``id`` may be left as ``""`` on creation to let the repository generate
-    one. ``created_at`` is always server-assigned; any value passed in on
-    creation is ignored by the backend (never client-supplied, per design
-    constraints).
+    one. ``created_at`` is server-assigned by DEFAULT: leave it ``None`` and
+    the backend stamps the current UTC time. A caller may override it (e.g.
+    the WP3 seed script preserving an original LLM run timestamp) by passing
+    a non-``None`` value, which the backend then stores verbatim.
     """
 
     id: str
