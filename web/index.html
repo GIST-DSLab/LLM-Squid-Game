@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Squid Game — Web Arena</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+  <!-- app.js must load (and register its alpine:init listeners) before the
+       Alpine CDN bundle, because Alpine.start() runs synchronously the
+       moment the CDN script executes -- it does not wait for subsequent
+       deferred scripts. Loading order here is load-bearing. -->
+  <script defer src="app.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>LLM <span class="accent">Squid Game</span> — Web Arena</h1>
+    <nav class="tabs" x-data x-cloak>
+      <a href="#play" :class="{ active: $store.nav.tab === 'play' }">Play</a>
+      <a href="#models" :class="{ active: $store.nav.tab === 'models' }">Model Leaderboard</a>
+      <a href="#leaderboard" :class="{ active: $store.nav.tab === 'leaderboard' }">Play Leaderboard</a>
+      <a href="#logs" :class="{ active: $store.nav.tab === 'logs' }">Logs / Trace Explorer</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- =================================================================
+         PLAY
+         ================================================================= -->
+    <section x-data="playScreen()" x-show="$store.nav.tab === 'play'" x-cloak>
+      <h2>Play</h2>
+      <p class="muted">
+        Default arena: task <strong x-text="task"></strong>, framing
+        <strong x-text="framing"></strong>, forfeit <strong x-text="forfeit"></strong>.
+        Scores are computed and verified entirely on the server.
+      </p>
+
+      <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
+      <div class="error-banner" x-show="error" x-text="error"></div>
+
+      <!-- Nickname / start form -->
+      <div class="card" x-show="!started">
+        <h3>Enter a nickname to begin</h3>
+        <div class="field">
+          <label for="nickname">Nickname (anonymous, no account needed)</label>
+          <input id="nickname" type="text" x-model="nickname" placeholder="Anonymous" maxlength="32"
+                 @keydown.enter="startGame()" />
+        </div>
+        <button @click="startGame()" :disabled="starting">
+          <span class="spinner" x-show="starting"></span>
+          <span x-text="starting ? 'Starting…' : 'Start game'"></span>
+        </button>
+      </div>
+
+      <!-- Active turn -->
+      <template x-if="started && state && !gameOver">
+        <div class="card">
+          <div class="hud">
+            <span>Turn <strong x-text="state.turn_number"></strong></span>
+            <span>Score <strong x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></strong></span>
+            <span>p(death) <strong x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></strong></span>
+            <span x-show="state.forfeit_allowed">Forfeit is <strong>allowed</strong> this turn</span>
+          </div>
+
+          <details>
+            <summary>System prompt (framing + rules)</summary>
+            <div class="observation-box" x-text="state.system_prompt"></div>
+          </details>
+
+          <h3>Observation</h3>
+          <div class="observation-box" x-text="state.observation"></div>
+
+          <h3>Choose an action</h3>
+          <div class="action-grid">
+            <template x-for="a in state.available_actions" :key="a">
+              <button type="button" :class="{ selected: selectedAction === a }" @click="selectAction(a)" x-text="a"></button>
+            </template>
+            <button type="button" class="forfeit" x-show="state.forfeit_allowed"
+                    :class="{ selected: selectedAction === 'forfeit' }"
+                    @click="selectAction('forfeit')">Forfeit (keep current score)</button>
+          </div>
+
+          <div class="field">
+            <label for="probe">Probe answer — <span x-text="state.probe_question"></span></label>
+            <input id="probe" type="text" x-model="probeAnswer" placeholder="Your rule-inference answer" />
+          </div>
+
+          <div class="field">
+            <label for="reasoning">Reasoning (optional — your chain of thought before this action)</label>
+            <textarea id="reasoning" x-model="reasoning" placeholder="Why did you choose this action?"></textarea>
+          </div>
+
+          <button @click="submitAction()" :disabled="submitting || !selectedAction">
+            <span class="spinner" x-show="submitting"></span>
+            <span x-text="submitting ? 'Submitting…' : 'Submit action'"></span>
+          </button>
+
+          <div class="card" style="margin-top:16px" x-show="lastFeedback">
+            <h3>Last turn feedback</h3>
+            <p>
+              Action <strong x-text="lastFeedback && lastFeedback.action_taken"></strong> —
+              <span x-text="lastFeedback && lastFeedback.was_optimal ? 'optimal' : 'not optimal'"></span>,
+              reward <strong x-text="lastFeedback && lastFeedback.reward"></strong>,
+              new score <strong x-text="lastFeedback && lastFeedback.new_score"></strong>
+            </p>
+            <p class="muted" x-text="lastFeedback && lastFeedback.feedback"></p>
+          </div>
+        </div>
+      </template>
+
+      <div class="card" x-show="started && loading && !state">
+        <span class="spinner"></span> Loading turn state…
+      </div>
+
+      <!-- Game over / result -->
+      <template x-if="gameOver">
+        <div class="card">
+          <h3>Game over</h3>
+          <template x-if="!result">
+            <p><span class="spinner"></span> Fetching final result…</p>
+          </template>
+          <template x-if="result">
+            <div>
+              <div class="result-score" x-text="squidArenaHelpers.fmtNum(result.final_score, 1)"></div>
+              <p>
+                Turns played: <strong x-text="result.turns_played"></strong> ·
+                Forfeited: <strong x-text="result.forfeited ? 'yes' : 'no'"></strong> ·
+                Survived: <strong x-text="result.survived ? 'yes' : 'no'"></strong>
+              </p>
+              <p x-show="rank">
+                Play Leaderboard rank: <strong x-text="rank"></strong>
+                <span x-show="totalRows"> of <span x-text="totalRows"></span></span>
+                (task=<span x-text="task"></span>, framing=<span x-text="framing"></span>)
+              </p>
+              <button class="secondary" @click="playAgain()">Play again</button>
+            </div>
+          </template>
+        </div>
+      </template>
+    </section>
+
+    <!-- =================================================================
+         MODEL LEADERBOARD
+         ================================================================= -->
+    <section x-data="modelLeaderboardScreen()" x-show="$store.nav.tab === 'models'" x-cloak>
+      <h2>Model Leaderboard</h2>
+      <p class="muted">
+        Ranked by the mediation-chain closure test (spec §5): <strong>Open</strong> models still
+        show a significant framing → forfeit effect after controlling for reasoning-investment
+        cognitive load; <strong>Closed</strong> models have that effect fully mediated by decision
+        cost. Within each group, sorted by β (framing effect) descending.
+      </p>
+
+      <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
+      <div class="error-banner" x-show="error" x-text="error"></div>
+      <div x-show="loading && !loaded"><span class="spinner"></span> Loading model leaderboard…</div>
+
+      <template x-if="loaded">
+        <div>
+          <div class="card">
+            <h3><span class="pill open">Open</span> — residual FSPM signal beyond cognitive load</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Model</th><th>Class</th><th>HR_FC [95% CI]</th><th>p</th>
+                    <th>% attenuation</th><th>β</th><th>n sessions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="row in open" :key="row.model_label">
+                    <tr>
+                      <td x-text="row.model_label"></td>
+                      <td><span class="pill open" x-text="row.mediation_class"></span></td>
+                      <td x-text="squidArenaHelpers.fmtNum(row.hr_FC_3cov, 2) + ' [' + squidArenaHelpers.fmtNum(row.hr_FC_ci_low, 2) + ', ' + squidArenaHelpers.fmtNum(row.hr_FC_ci_high, 2) + ']'"></td>
+                      <td x-text="squidArenaHelpers.fmtP(row.p_FC)"></td>
+                      <td x-text="squidArenaHelpers.fmtNum(row.pct_attenuation, 1) + '%'"></td>
+                      <td x-text="squidArenaHelpers.fmtNum(row.beta_framing_is_FC, 3)"></td>
+                      <td x-text="row.n_sessions"></td>
+                    </tr>
+                  </template>
+                  <tr x-show="open.length === 0"><td colspan="7" class="muted">No Open models yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3><span class="pill closed">Closed</span> — framing effect fully mediated by decision cost</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Model</th><th>Class</th><th>HR_FC [95% CI]</th><th>p</th>
+                    <th>% attenuation</th><th>β</th><th>n sessions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="row in closed" :key="row.model_label">
+                    <tr>
+                      <td x-text="row.model_label"></td>
+                      <td><span class="pill closed" x-text="row.mediation_class"></span></td>
+                      <td x-text="squidArenaHelpers.fmtNum(row.hr_FC_3cov, 2) + ' [' + squidArenaHelpers.fmtNum(row.hr_FC_ci_low, 2) + ', ' + squidArenaHelpers.fmtNum(row.hr_FC_ci_high, 2) + ']'"></td>
+                      <td x-text="squidArenaHelpers.fmtP(row.p_FC)"></td>
+                      <td x-text="squidArenaHelpers.fmtNum(row.pct_attenuation, 1) + '%'"></td>
+                      <td x-text="squidArenaHelpers.fmtNum(row.beta_framing_is_FC, 3)"></td>
+                      <td x-text="row.n_sessions"></td>
+                    </tr>
+                  </template>
+                  <tr x-show="closed.length === 0"><td colspan="7" class="muted">No Closed models yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <button class="secondary" @click="load()">Refresh</button>
+        </div>
+      </template>
+    </section>
+
+    <!-- =================================================================
+         PLAY LEADERBOARD
+         ================================================================= -->
+    <section x-data="playLeaderboardScreen()" x-show="$store.nav.tab === 'leaderboard'" x-cloak>
+      <h2>Play Leaderboard</h2>
+      <p class="muted">
+        Human sessions for arena task=<strong x-text="task"></strong>,
+        framing=<strong x-text="framing"></strong>, ranked by final score.
+      </p>
+
+      <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
+      <div class="error-banner" x-show="error" x-text="error"></div>
+      <div x-show="loading && !loaded"><span class="spinner"></span> Loading play leaderboard…</div>
+
+      <template x-if="loaded">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Rank</th><th>Nickname</th><th>Final score</th><th>Forfeited</th><th>Played at</th></tr>
+              </thead>
+              <tbody>
+                <template x-for="(row, idx) in rows" :key="row.session_id">
+                  <tr>
+                    <td><span class="rank-badge" x-text="idx + 1"></span></td>
+                    <td x-text="row.nickname"></td>
+                    <td x-text="row.final_score"></td>
+                    <td x-text="row.forfeited ? 'yes' : 'no'"></td>
+                    <td x-text="squidArenaHelpers.fmtDate(row.created_at)"></td>
+                  </tr>
+                </template>
+                <tr x-show="rows.length === 0"><td colspan="5" class="muted">No plays yet — be the first!</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="secondary" @click="load()" style="margin-top:12px">Refresh</button>
+        </div>
+      </template>
+    </section>
+
+    <!-- =================================================================
+         LOGS / TRACE EXPLORER
+         ================================================================= -->
+    <section x-data="logsScreen()" x-show="$store.nav.tab === 'logs'" x-cloak>
+      <h2>Logs / Trace Explorer</h2>
+      <p class="muted">Browse past sessions (LLM experiment runs and human Play sessions). Click a row to expand its turn-by-turn trace.</p>
+
+      <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
+      <div class="error-banner" x-show="error" x-text="error"></div>
+
+      <div class="filters">
+        <div class="field">
+          <label for="f-source">Source</label>
+          <select id="f-source" x-model="filterSource" @change="load()">
+            <option value="">All</option>
+            <option value="human">Human</option>
+            <option value="llm">LLM</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-task">Task</label>
+          <input id="f-task" type="text" x-model="filterTask" placeholder="e.g. signal_game" @keydown.enter="load()" />
+        </div>
+        <div class="field">
+          <label for="f-framing">Framing</label>
+          <input id="f-framing" type="text" x-model="filterFraming" placeholder="e.g. flagship_corruption" @keydown.enter="load()" />
+        </div>
+        <div class="field" style="flex: 0 0 auto; align-self: flex-end;">
+          <button @click="load()">Apply filters</button>
+        </div>
+      </div>
+
+      <div x-show="loading && !loaded"><span class="spinner"></span> Loading sessions…</div>
+
+      <template x-if="loaded">
+        <div class="card">
+          <p class="muted" x-show="sessions.length === 0">No sessions logged yet.</p>
+
+          <template x-for="s in sessions" :key="s.session_id">
+            <div class="log-row">
+              <div class="log-row-summary clickable" @click="toggle(s.session_id)">
+                <span class="log-cell" x-text="squidArenaHelpers.shortId(s.session_id)"></span>
+                <span class="log-cell"><span class="pill" :class="s.source" x-text="s.source"></span></span>
+                <span class="log-cell" x-text="s.nickname"></span>
+                <span class="log-cell" x-text="s.task"></span>
+                <span class="log-cell" x-text="s.framing"></span>
+                <span class="log-cell" x-text="s.forfeit"></span>
+                <span class="log-cell" x-text="'score ' + s.final_score"></span>
+                <span class="log-cell" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
+                <span class="log-cell muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
+              </div>
+
+              <div class="turn-detail" x-show="expandedId === s.session_id" x-cloak>
+                <div x-show="detailLoading"><span class="spinner"></span> Loading trace…</div>
+                <div class="error-banner" x-show="detailError" x-text="detailError"></div>
+                <template x-if="detail && expandedId === s.session_id">
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Turn</th><th>Observation</th><th>Action</th>
+                          <th>ri_task</th><th>ri_probe</th><th>ri_forfeit</th>
+                          <th>Choice</th><th>Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template x-for="t in detail.turns" :key="t.turn_no">
+                          <tr>
+                            <td x-text="t.turn_no"></td>
+                            <td style="white-space:normal; max-width:320px" x-text="t.observation"></td>
+                            <td x-text="t.action"></td>
+                            <td x-text="squidArenaHelpers.fmtNum(t.ri_task, 0)"></td>
+                            <td x-text="squidArenaHelpers.fmtNum(t.ri_probe, 0)"></td>
+                            <td x-text="squidArenaHelpers.fmtNum(t.ri_forfeit, 0)"></td>
+                            <td x-text="t.choice ?? '—'"></td>
+                            <td x-text="t.score"></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <button class="secondary" @click="load()" style="margin-top:12px">Refresh</button>
+        </div>
+      </template>
+    </section>
+  </main>
+
+  <footer>
+    LLM Squid Game — Web Arena. Server-authoritative scoring. Backend:
+    <code x-data x-text="window.WEB_ARENA_API"></code>
+  </footer>
+</body>
+</html>
