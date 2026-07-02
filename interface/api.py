@@ -28,6 +28,7 @@ never a concrete DB driver.
 import os
 import re
 import sys
+import threading
 import time
 import uuid
 from collections import defaultdict
@@ -99,8 +100,12 @@ _sessions: dict[str, HumanGameSession] = {}
 # stays framing/game-mechanics only, per the WP2 brief).
 _nicknames: dict[str, str] = {}
 
-# Guards against double-persisting the same session's result.
+# Guards against double-persisting the same session's result. The lock makes
+# the check-then-insert atomic across FastAPI's sync-route threadpool; the DB
+# row (session id is a PRIMARY KEY) is the durable source of truth across a
+# process restart, when the in-process set is lost.
 _persisted_session_ids: set[str] = set()
+_persist_lock = threading.Lock()
 
 # Token counter for reasoning text.
 _encoding = tiktoken.get_encoding("cl100k_base")
@@ -145,9 +150,30 @@ _RATE_LIMIT_WINDOW_SECONDS = float(os.environ.get("WEB_ARENA_RATE_LIMIT_WINDOW_S
 _rate_limit_hits: dict[str, list[float]] = defaultdict(list)
 
 
+def _client_key(request: Request) -> str:
+    """Best-effort client identifier for rate-limit bucketing.
+
+    On Render/Fly/HF a TLS/proxy sits in front of the container, so
+    ``request.client.host`` is the proxy's IP for every request — that would
+    collapse all clients into one shared bucket and let one heavy player lock
+    everyone out. Use the first hop of ``X-Forwarded-For`` when present.
+
+    Trust boundary: ``X-Forwarded-For`` is client-spoofable, so a determined
+    abuser can evade the limit by rotating the header. That is acceptable for
+    an anonymous, free-tier benchmark (there is no auth to protect and the
+    hosting edge — Render/Fly/HF — sets XFF itself); the limiter is only a
+    courtesy throttle, not a security control.
+    """
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        first_hop = xff.split(",")[0].strip()
+        if first_hop:
+            return first_hop
+    return request.client.host if request.client else "unknown"
+
+
 def _check_rate_limit(request: Request, bucket: str) -> None:
-    client_host = request.client.host if request.client else "unknown"
-    key = f"{bucket}:{client_host}"
+    key = f"{bucket}:{_client_key(request)}"
     now = time.monotonic()
     hits = _rate_limit_hits[key]
     cutoff = now - _RATE_LIMIT_WINDOW_SECONDS
@@ -347,50 +373,75 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
     ``SessionRecord``/``TurnRecord`` (persistence layer). Scoring itself is
     never recomputed here — it is read back verbatim from the already
     server-computed ``SeasonResult``.
+
+    Concurrency-safe and idempotent: a frontend retry / double-fire of
+    ``GET /api/result`` for the same finished session must never raise (no
+    500) nor duplicate rows. Under FastAPI's sync-route threadpool two calls
+    can race, so the whole check-and-insert runs under ``_persist_lock``; a
+    duplicate insert (e.g. after a process restart lost the in-process set,
+    or a cross-process race) is caught and treated as already-persisted.
     """
-    if session_id in _persisted_session_ids:
-        return
+    with _persist_lock:
+        if session_id in _persisted_session_ids:
+            return
+        # Durable cross-restart guard: if the row is already in the DB, the
+        # in-process set was simply lost — mark and return without re-inserting.
+        if _repository.get_session(session_id) is not None:
+            _persisted_session_ids.add(session_id)
+            return
 
-    result = game.get_result()
-    nickname = _nicknames.get(session_id, DEFAULT_NICKNAME)
+        result = game.get_result()
+        nickname = _nicknames.get(session_id, DEFAULT_NICKNAME)
 
-    _repository.create_session(
-        SessionRecord(
-            id=session_id,
-            nickname=nickname,
-            task=result.task_name,
-            framing=result.framing.value,
-            forfeit=result.forfeit_condition.value,
-            seed=result.seed if result.seed is not None else 0,
-            final_score=result.final_score,
-            forfeited=result.forfeited,
-            source="human",
-        )
-    )
-
-    turn_scores = game.turn_scores
-    turn_records: list[TurnRecord] = []
-    for turn, score_after_turn in zip(result.turns, turn_scores):
-        thinking_tokens = turn.reasoning_investment.thinking_tokens
-        action = turn.action_outcome.action_taken if turn.action_outcome else turn.raw_response
-        turn_records.append(
-            TurnRecord(
-                session_id=session_id,
-                turn_no=turn.turn_number,
-                observation=turn.observation,
-                action=action,
-                # Human play collects one reasoning blob per turn (no
-                # split-call architecture); bucket it under ri_forfeit on
-                # a forfeit turn, ri_task otherwise.
-                ri_task=None if turn.forfeit_decision else thinking_tokens,
-                ri_probe=None,
-                ri_forfeit=thinking_tokens if turn.forfeit_decision else None,
-                choice=None,
-                score=score_after_turn,
+        turn_scores = game.turn_scores
+        turn_records: list[TurnRecord] = []
+        for turn, score_after_turn in zip(result.turns, turn_scores):
+            thinking_tokens = turn.reasoning_investment.thinking_tokens
+            action = turn.action_outcome.action_taken if turn.action_outcome else turn.raw_response
+            turn_records.append(
+                TurnRecord(
+                    session_id=session_id,
+                    turn_no=turn.turn_number,
+                    observation=turn.observation,
+                    action=action,
+                    # Human play collects one reasoning blob per turn (no
+                    # split-call architecture); bucket it under ri_forfeit on
+                    # a forfeit turn, ri_task otherwise.
+                    ri_task=None if turn.forfeit_decision else thinking_tokens,
+                    ri_probe=None,
+                    ri_forfeit=thinking_tokens if turn.forfeit_decision else None,
+                    choice=None,
+                    score=score_after_turn,
+                )
             )
-        )
-    _repository.add_turns(turn_records)
-    _persisted_session_ids.add(session_id)
+
+        try:
+            _repository.create_session(
+                SessionRecord(
+                    id=session_id,
+                    nickname=nickname,
+                    task=result.task_name,
+                    framing=result.framing.value,
+                    forfeit=result.forfeit_condition.value,
+                    seed=result.seed if result.seed is not None else 0,
+                    final_score=result.final_score,
+                    forfeited=result.forfeited,
+                    source="human",
+                )
+            )
+        except Exception:
+            # A concurrent/earlier writer already inserted this session id
+            # (PRIMARY KEY conflict). Catching the driver-specific duplicate
+            # error here (rather than importing sqlite3/psycopg exceptions and
+            # coupling to a backend) keeps persistence idempotent: if the row
+            # now exists, treat it as success; otherwise the failure was real.
+            if _repository.get_session(session_id) is not None:
+                _persisted_session_ids.add(session_id)
+                return
+            raise
+
+        _repository.add_turns(turn_records)
+        _persisted_session_ids.add(session_id)
 
 
 # ---------------------------------------------------------------------------

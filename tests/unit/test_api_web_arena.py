@@ -284,3 +284,122 @@ def test_logs_lists_sessions_and_detail_returns_turn_trace(
 def test_logs_detail_404_for_unknown_session(client: TestClient) -> None:
     resp = client.get("/api/logs/does-not-exist")
     assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Production hardening: idempotent persistence under retry / lost-set restart
+# ---------------------------------------------------------------------------
+
+
+def test_result_idempotent_even_when_inprocess_set_is_lost(
+    client: TestClient, api_module
+) -> None:
+    """Simulates a process restart (in-process guard set cleared) between two
+    /api/result calls: the DB row is the durable guard, so the second call
+    must still return 200 and must NOT raise a PRIMARY-KEY 500 or duplicate
+    rows.
+    """
+    session_id, state = _play_two_turn_game(client, nickname="Dana")
+    assert state["game_over"] is True
+
+    first = client.get("/api/result", params={"session_id": session_id})
+    assert first.status_code == 200
+
+    # Wipe the fast-path set to force the create_session path again — this is
+    # exactly what a redeploy/cold-start does on Render's free tier.
+    api_module._persisted_session_ids.clear()
+
+    second = client.get("/api/result", params={"session_id": session_id})
+    assert second.status_code == 200  # not a 500 from the PK conflict
+    assert len(api_module._repository.list_turns(session_id)) == 2
+    assert len(api_module._repository.list_sessions(source="human")) == 1
+
+
+def test_persist_result_is_idempotent_under_concurrent_double_fire(
+    client: TestClient, api_module
+) -> None:
+    """Two threads persisting the same finished session concurrently (the
+    threadpool race the coordinator flagged) must not raise and must produce
+    exactly one session row + no duplicate turns.
+    """
+    import threading
+
+    session_id, _ = _play_two_turn_game(client, nickname="Evan")
+    game = api_module._sessions[session_id]
+
+    # Force both threads past the fast-path set so they contend on the insert.
+    api_module._persisted_session_ids.clear()
+
+    errors: list[Exception] = []
+    barrier = threading.Barrier(2)
+
+    def worker() -> None:
+        try:
+            barrier.wait()
+            api_module._persist_result(session_id, game)
+        except Exception as exc:  # noqa: BLE001 - test records any raise
+            errors.append(exc)
+
+    threads = [threading.Thread(target=worker) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert errors == []
+    assert len(api_module._repository.list_sessions(source="human")) == 1
+    assert len(api_module._repository.list_turns(session_id)) == 2
+
+
+# ---------------------------------------------------------------------------
+# Production hardening: rate limit keyed by X-Forwarded-For behind a proxy
+# ---------------------------------------------------------------------------
+
+
+def test_rate_limit_uses_x_forwarded_for_first_hop_for_independent_buckets(
+    client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Behind a TLS/proxy edge (Render/Fly/HF) every request shares one
+    request.client.host, so bucketing must key on X-Forwarded-For: two
+    distinct client IPs get independent budgets.
+    """
+    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+
+    ip_a = {"X-Forwarded-For": "203.0.113.1"}
+    ip_b = {"X-Forwarded-For": "203.0.113.2, 70.0.0.9"}  # first hop = client
+
+    for _ in range(2):
+        assert client.post("/api/new_game", json={}, headers=ip_a).status_code == 200
+    # ip_a is now exhausted...
+    assert client.post("/api/new_game", json={}, headers=ip_a).status_code == 429
+    # ...but ip_b has its own untouched budget.
+    for _ in range(2):
+        assert client.post("/api/new_game", json={}, headers=ip_b).status_code == 200
+    assert client.post("/api/new_game", json={}, headers=ip_b).status_code == 429
+
+
+def test_rate_limit_same_x_forwarded_for_shares_one_bucket(
+    client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    hdr = {"X-Forwarded-For": "198.51.100.7"}
+    for _ in range(2):
+        assert client.post("/api/new_game", json={}, headers=hdr).status_code == 200
+    assert client.post("/api/new_game", json={}, headers=hdr).status_code == 429
+
+
+def test_client_key_prefers_xff_first_hop_else_falls_back(api_module) -> None:
+    from starlette.requests import Request
+
+    def _make(headers: dict[str, str], client_host: str | None):
+        raw = [(k.lower().encode(), v.encode()) for k, v in headers.items()]
+        scope = {
+            "type": "http",
+            "headers": raw,
+            "client": (client_host, 12345) if client_host else None,
+        }
+        return Request(scope)
+
+    assert api_module._client_key(_make({"x-forwarded-for": "1.2.3.4, 5.6.7.8"}, "10.0.0.1")) == "1.2.3.4"
+    assert api_module._client_key(_make({}, "10.0.0.1")) == "10.0.0.1"
+    assert api_module._client_key(_make({}, None)) == "unknown"
