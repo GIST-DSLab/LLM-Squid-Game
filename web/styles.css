@@ -261,7 +261,7 @@ tr.clickable:hover { background: var(--panel-alt); }
   font-weight: 600;
 }
 
-.pill.open { background: rgba(63, 178, 127, 0.15); color: var(--ok); }
+.pill.open { background: rgba(127, 194, 177, 0.15); color: var(--ok); }
 .pill.closed { background: rgba(227, 178, 60, 0.15); color: var(--warn); }
 .pill.human { background: rgba(237, 27, 118, 0.15); color: var(--accent); }
 .pill.llm { background: rgba(120, 130, 255, 0.15); color: #9aa3ff; }
@@ -596,7 +596,7 @@ footer {
   padding: 3px 10px;
   border-radius: 999px;
 }
-.fb-verdict.good { background: rgba(63, 178, 127, 0.16); color: var(--ok); }
+.fb-verdict.good { background: rgba(127, 194, 177, 0.16); color: var(--ok); }
 .fb-verdict.bad { background: rgba(227, 178, 60, 0.16); color: var(--warn); }
 .fb-reward { font-size: 13px; color: var(--text-dim); }
 .fb-reward strong { color: var(--text); font-variant-numeric: tabular-nums; }
@@ -975,8 +975,8 @@ footer {
   border-radius: 999px;
 }
 .think-tag.task    { background: rgba(120,130,255,0.16); color: #9aa3ff; }
-.think-tag.probe   { background: rgba(63,178,127,0.16);  color: var(--ok); }
-.think-tag.forfeit { background: rgba(217,164,65,0.16);  color: var(--warn); }
+.think-tag.probe   { background: rgba(127,194,177,0.16);  color: var(--ok); }
+.think-tag.forfeit { background: rgba(227,178,60,0.16);  color: var(--warn); }
 .think-text {
   padding: 4px 16px 16px;
   white-space: pre-wrap;
@@ -1111,7 +1111,7 @@ footer {
   padding: 2px 7px;
   border-radius: 999px;
 }
-.badge-reco { background: rgba(63, 178, 127, 0.18); color: var(--ok); }
+.badge-reco { background: rgba(127, 194, 177, 0.18); color: var(--ok); }
 .badge-soon { background: rgba(227, 178, 60, 0.16); color: var(--warn); }
 
 /* Placeholder games: visibly inert. */
