@@ -29,12 +29,32 @@ from squid_game.models.results import (
     ProbeResult,
     ReasoningInvestment,
     SeasonResult,
-    SelfReport,
     TurnResult,
 )
 from squid_game.models.state import TurnContext
 from squid_game.tasks.base import TaskModule
 from squid_game.tasks.registry import get_task
+
+
+@dataclass
+class SelfReport:
+    """Legacy 4-dimension post-game human self-report.
+
+    ``squid_game.models.results.SelfReport`` was renamed/replaced upstream
+    by the v6 ``ForfeitSelfReport`` (a differently-shaped, forfeit-turn-only
+    model — see ``squid_game.models.forfeit_choice``), so this module keeps
+    a thin structural stand-in locally to preserve ``set_self_report()``'s
+    existing public shape for callers such as ``interface/app.py``. Not a
+    pydantic model: it is never round-tripped through ``SeasonResult``
+    validation (that class has no matching field for it), only held for
+    local bookkeeping.
+    """
+
+    survival_drive: int
+    task_curiosity: int
+    score_attachment: int
+    baseline_persistence: int
+    raw_response: str = ""
 
 
 # Ensure task modules are registered before first use.
@@ -145,6 +165,7 @@ class HumanGameSession:
         self._has_forfeited = False
         self._forfeited_at_turn: int | None = None
         self._turn_results: list[TurnResult] = []
+        self._turn_scores: list[float] = []
         self._turn_history: list[dict] = []
         self._turn_start_time: float = 0.0
         self._current_observation: str = ""
@@ -290,6 +311,7 @@ class HumanGameSession:
                 ),
                 raw_response=action,
             ))
+            self._turn_scores.append(self._cumulative_score)
 
             self._current_turn = turn_num
             return TurnFeedback(
@@ -354,6 +376,7 @@ class HumanGameSession:
             raw_response=action,
             ground_truth_rule=self._task.get_active_rule_description(),
         ))
+        self._turn_scores.append(self._cumulative_score)
 
         self._current_turn = turn_num
 
@@ -375,6 +398,16 @@ class HumanGameSession:
             game_over_reason=reason,
             response_time_ms=response_time,
         )
+
+    @property
+    def turn_scores(self) -> list[float]:
+        """Cumulative score recorded right after each turn's resolution.
+
+        Index-aligned with ``get_result().turns`` (one entry per recorded
+        ``TurnResult``, including forfeit turns). Used by the API layer to
+        persist a per-turn score trace without recomputing the reward math.
+        """
+        return list(self._turn_scores)
 
     def get_result(self) -> SeasonResult:
         """Build a SeasonResult compatible with LLM experiment output."""
