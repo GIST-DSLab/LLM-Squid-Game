@@ -96,10 +96,20 @@ def _write_run_dir(tmp_path: Path, dir_name: str, seasons: list[dict]) -> Path:
 
 
 def _write_mediation_and_cox(tmp_path: Path, entries: dict[str, dict]) -> None:
-    """``entries``: {model_label: {"p_FC_4cov": ..., "beta_FC_3cov": ..., "n_sessions": ...}}."""
+    """Write synthetic ``cognitive_load_mediation.json`` +
+    ``unified_cox_summary.json``.
+
+    ``entries``: {model_label: {"p_FC_4cov": ..., "beta_FC_3cov": ...,
+    "n_sessions": ...}}. By default the mediation ``beta_FC_3cov`` and the
+    cox ``unified_3cov.beta_framing_is_FC`` are set to the SAME value (they
+    are identical in the real data). Pass ``cox_beta`` to make them DIFFER,
+    which exercises the "prefer the cox value" precedence.
+    """
     mediation = {}
     cox = {}
     for label, e in entries.items():
+        med_beta = e.get("beta_FC_3cov", 1.0)
+        cox_beta = e.get("cox_beta", med_beta)
         mediation[label] = {
             "model_label": label,
             "unified_3cov": {"n_sessions": e.get("n_sessions", 2)},
@@ -108,7 +118,7 @@ def _write_mediation_and_cox(tmp_path: Path, entries: dict[str, dict]) -> None:
                 "hr_FC_3cov_ci": e.get("hr_FC_3cov_ci", [1.0, 3.0]),
                 "p_FC_3cov": e.get("p_FC_3cov", 0.01),
                 "p_FC_4cov": e["p_FC_4cov"],
-                "beta_FC_3cov": e.get("beta_FC_3cov", 1.0),
+                "beta_FC_3cov": med_beta,
                 "pct_attenuation": e.get("pct_attenuation", 20.0),
             },
         }
@@ -116,7 +126,7 @@ def _write_mediation_and_cox(tmp_path: Path, entries: dict[str, dict]) -> None:
             "model_label": label,
             "unified_3cov": {
                 "n_sessions": e.get("n_sessions", 2),
-                "beta_framing_is_FC": e.get("beta_FC_3cov", 1.0),
+                "beta_framing_is_FC": cox_beta,
             },
         }
     (tmp_path / "cognitive_load_mediation.json").write_text(json.dumps(mediation))
@@ -274,6 +284,33 @@ def test_seed_sessions_warns_and_skips_missing_run_dir(repo: Repository, tmp_pat
     assert repo.list_sessions(source="llm") == []
 
 
+def test_seed_sessions_skips_malformed_season_without_aborting_the_file(
+    repo: Repository, tmp_path: Path
+) -> None:
+    good = _season("good", final_score=50.0, forfeited=False, turns=[_turn(1, reward_received=50.0)])
+    # Malformed: has a season_id (so it passes the id guard) but is missing
+    # the required `task_name`/`final_score` keys build_session_record needs.
+    malformed = {"season_id": "bad", "turns": [{"turn_number": 1}]}
+    good2 = _season("good2", final_score=20.0, forfeited=True, turns=[_turn(1, forfeit_choice="FORFEIT")])
+
+    run_dir = tmp_path / "20260101_0000_test-model_signal-game"
+    run_dir.mkdir(parents=True)
+    with (run_dir / "season_results.jsonl").open("w") as f:
+        for s in (good, malformed, good2):
+            f.write(json.dumps(s) + "\n")
+
+    model_dirs = {"Test-Model": "20260101_0000_test-model_signal-game"}
+    n_inserted, n_skipped, n_turns = seed_sessions(repo, tmp_path, model_dirs)
+
+    # The malformed record is skipped; the two well-formed ones still seed.
+    assert n_inserted == 2
+    assert n_turns == 2
+    assert {s.id for s in repo.list_sessions(source="llm")} == {"good", "good2"}
+    # No partial row for the malformed season (nothing inserted for it).
+    assert repo.get_session("bad") is None
+    assert repo.list_turns("bad") == []
+
+
 # ---------------------------------------------------------------------------
 # seed_model_stats
 # ---------------------------------------------------------------------------
@@ -316,6 +353,51 @@ def test_seed_model_stats_classifies_open_when_p_fc_4cov_significant(repo: Repos
     seed_model_stats(repo, tmp_path, ["Open-Model"])
     rows = repo.list_model_stats()
     assert rows[0].mediation_class == "open"
+
+
+def test_seed_model_stats_prefers_cox_beta_over_mediation_beta_when_they_differ(
+    repo: Repository, tmp_path: Path
+) -> None:
+    # Global constraints: beta_framing_is_FC comes from the Cox summary's
+    # unified_3cov, NOT the mediation block. Make the two sources differ so
+    # the precedence is actually exercised (they're identical in real data).
+    _write_mediation_and_cox(
+        tmp_path,
+        {"Model-Y": {"p_FC_4cov": 0.01, "beta_FC_3cov": 9.99, "cox_beta": 1.23}},
+    )
+    seed_model_stats(repo, tmp_path, ["Model-Y"])
+    rows = repo.list_model_stats()
+    assert rows[0].beta_framing_is_FC == 1.23  # cox value wins, not 9.99
+
+
+def test_seed_model_stats_falls_back_to_mediation_beta_when_cox_beta_absent(
+    repo: Repository, tmp_path: Path
+) -> None:
+    _write_mediation_and_cox(tmp_path, {"Model-Z": {"p_FC_4cov": 0.01, "beta_FC_3cov": 2.5}})
+    # Remove the cox beta entirely to force the fallback path.
+    cox = json.loads((tmp_path / "unified_cox_summary.json").read_text())
+    del cox["Model-Z"]["unified_3cov"]["beta_framing_is_FC"]
+    (tmp_path / "unified_cox_summary.json").write_text(json.dumps(cox))
+
+    seed_model_stats(repo, tmp_path, ["Model-Z"])
+    rows = repo.list_model_stats()
+    assert rows[0].beta_framing_is_FC == 2.5  # mediation fallback
+
+
+def test_seed_model_stats_preserves_zero_n_sessions_without_falling_back(
+    repo: Repository, tmp_path: Path
+) -> None:
+    # A legitimate n_sessions == 0 must survive: the fallback is `is None`,
+    # not falsy-or. Set the mediation-block fallback to a different value so
+    # a regression (falsy-or) would visibly pick it up instead of 0.
+    _write_mediation_and_cox(tmp_path, {"Zero-Model": {"p_FC_4cov": 0.01, "n_sessions": 0}})
+    mediation = json.loads((tmp_path / "cognitive_load_mediation.json").read_text())
+    mediation["Zero-Model"]["unified_3cov"]["n_sessions"] = 999
+    (tmp_path / "cognitive_load_mediation.json").write_text(json.dumps(mediation))
+
+    seed_model_stats(repo, tmp_path, ["Zero-Model"])
+    rows = repo.list_model_stats()
+    assert rows[0].n_sessions == 0  # not 999
 
 
 def test_seed_model_stats_skips_model_missing_from_one_source_json(repo: Repository, tmp_path: Path) -> None:

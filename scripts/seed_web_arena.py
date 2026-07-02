@@ -226,9 +226,24 @@ def seed_sessions(
                     n_skipped += 1
                     continue
 
-                session = build_session_record(season, model_label, fallback_created_at)
+                # Guard the per-record build the same way the JSON decode is
+                # guarded above: a single malformed season (missing a
+                # required key, or a turn without turn_number) is logged and
+                # skipped rather than aborting the whole file mid-run.
+                try:
+                    session = build_session_record(season, model_label, fallback_created_at)
+                    turns = build_turn_records(season)
+                except (KeyError, TypeError, ValueError) as exc:
+                    logger.warning(
+                        "skip malformed season %s (line %d in %s): %s",
+                        season_id,
+                        line_no,
+                        season_path,
+                        exc,
+                    )
+                    continue
+
                 repo.create_session(session)
-                turns = build_turn_records(season)
                 repo.add_turns(turns)
                 n_inserted += 1
                 n_turns += len(turns)
@@ -287,8 +302,20 @@ def seed_model_stats(
         ci = med.get("hr_FC_3cov_ci")
         p_fc_3cov = med.get("p_FC_3cov")
         pct_attenuation = med.get("pct_attenuation")
-        beta = cov3.get("beta_framing_is_FC", med.get("beta_FC_3cov"))
-        n_sessions = cov3.get("n_sessions") or m_entry.get("unified_3cov", {}).get("n_sessions")
+        # Prefer the Cox summary's unified_3cov.beta_framing_is_FC (global
+        # constraints doc); fall back to the mediation block's beta_FC_3cov
+        # only when absent (the two are numerically identical in the real
+        # data). Use an explicit `is None` check, not `.get(k, default)`,
+        # so a legitimate 0.0 β isn't overridden.
+        beta = cov3.get("beta_framing_is_FC")
+        if beta is None:
+            beta = med.get("beta_FC_3cov")
+        # Explicit `is None` (not falsy-or) so a legitimate n_sessions == 0
+        # doesn't wrongly trigger the fallback, matching the p_fc_4cov /
+        # hr_fc_3cov style below.
+        n_sessions = cov3.get("n_sessions")
+        if n_sessions is None:
+            n_sessions = m_entry.get("unified_3cov", {}).get("n_sessions")
 
         if p_fc_4cov is None or hr_fc_3cov is None or not ci or len(ci) != 2:
             logger.warning("skip %s: incomplete mediation fields", model_label)
