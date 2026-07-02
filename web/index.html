@@ -18,9 +18,10 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>LLM <span class="accent">Squid Game</span> — Web Arena</h1>
+    <a href="#play" class="brand" title="Back to home">LLM <span class="accent">Squid Game</span> — Web Arena</a>
     <nav class="tabs" x-data x-cloak>
       <a href="#play" :class="{ active: $store.nav.tab === 'play' }">Play</a>
+      <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">LLM Arena</a>
       <a href="#models" :class="{ active: $store.nav.tab === 'models' }">Model Leaderboard</a>
       <a href="#leaderboard" :class="{ active: $store.nav.tab === 'leaderboard' }">Play Leaderboard</a>
       <a href="#logs" :class="{ active: $store.nav.tab === 'logs' }">Logs / Trace Explorer</a>
@@ -297,6 +298,177 @@
           </template>
         </div>
       </template>
+    </section>
+
+    <!-- =================================================================
+         LLM ARENA (BYOE — Bring Your Own Endpoint)
+         ================================================================= -->
+    <section x-data="arenaScreen()" x-show="$store.nav.tab === 'arena'" x-cloak>
+      <h2>LLM Arena</h2>
+      <p class="muted">
+        Enter your own model and climb the leaderboard. You host an HTTP endpoint;
+        we drive a full split-call season against it (task → p(success) probe →
+        forfeit, every turn) and score it with the exact same engine as the
+        built-in models. The finished run appears in Logs / Trace Explorer.
+      </p>
+
+      <div class="error-banner" x-show="error" x-text="error"></div>
+
+      <!-- ---------------------- SETUP (idle) ---------------------- -->
+      <div x-show="!runId">
+        <div class="card">
+          <h3>How it works</h3>
+          <p class="muted">
+            Your endpoint receives a POST per LLM call and returns the model's
+            answer as text. Both an OpenAI-compatible server and a minimal custom
+            server are accepted — we send a superset request and read the answer
+            flexibly.
+          </p>
+          <div class="contract-grid">
+            <div class="contract-col">
+              <div class="raw-label">Request we send</div>
+              <pre>POST &lt;your-endpoint&gt;
+{
+  "model": "&lt;label&gt;",
+  "messages": [
+    {"role":"system","content":"&lt;rules + framing&gt;"},
+    {"role":"user","content":"&lt;observation / question&gt;"}
+  ],
+  "system": "&lt;same system text&gt;",
+  "user":   "&lt;same user text&gt;"
+}</pre>
+            </div>
+            <div class="contract-col">
+              <div class="raw-label">Answer we accept</div>
+              <pre># OpenAI-compatible
+{"choices":[{"message":{"content":"ACTION: go_left"}}]}
+
+# …or minimal custom
+{"content":"ACTION: go_left"}
+# also: text | completion | response | output
+
+# optional reasoning (feeds RI):
+#   message.reasoning_content  |  "reasoning": "…"</pre>
+            </div>
+          </div>
+          <p class="muted small">
+            Your model just answers the prompt in plain text (e.g.
+            <code>RULE: … / ACTION: go_left</code>, then <code>P_CORRECT: 60</code>,
+            then <code>CHOICE: CONTINUE</code>). The same parser used for the
+            built-in models reads it.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Your endpoint</h3>
+          <div class="field">
+            <label for="a-url">Endpoint URL</label>
+            <input id="a-url" type="url" x-model="endpointUrl"
+                   placeholder="https://your-server.example/v1/chat/completions" />
+          </div>
+          <div class="field">
+            <label for="a-model">Model label (shown on the board)</label>
+            <input id="a-model" type="text" x-model="modelLabel" maxlength="40"
+                   placeholder="e.g. my-qwen3-8b" />
+          </div>
+          <div class="arena-auth">
+            <div class="field">
+              <label for="a-ah">Auth header <span class="muted">(optional)</span></label>
+              <input id="a-ah" type="text" x-model="authHeader" placeholder="Authorization" />
+            </div>
+            <div class="field">
+              <label for="a-av">Auth value <span class="muted">(optional)</span></label>
+              <input id="a-av" type="text" x-model="authValue" placeholder="Bearer sk-…" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Conditions</h3>
+          <label class="muted">Threat framing</label>
+          <div class="cond-cards">
+            <template x-for="opt in squidArenaHelpers.framingOptions" :key="opt.value">
+              <div class="cond-card" :class="{ on: framing === opt.value }" @click="framing = opt.value">
+                <span class="cond-tag" :class="opt.tag" x-text="opt.tag"></span>
+                <span class="cond-label" x-text="opt.label"></span>
+                <span class="cond-blurb" x-text="opt.blurb"></span>
+              </div>
+            </template>
+          </div>
+
+          <label class="muted" style="margin-top:14px; display:block;">Forfeit option</label>
+          <div class="forfeit-seg">
+            <button type="button" :class="{ on: forfeit === 'allowed' }" @click="forfeit = 'allowed'">🏳️ Forfeit allowed</button>
+            <button type="button" :class="{ on: forfeit === 'not_allowed' }" @click="forfeit = 'not_allowed'">⛔ Not allowed</button>
+          </div>
+
+          <div class="field" style="margin-top:14px; max-width:180px;">
+            <label for="a-turns">Turns</label>
+            <input id="a-turns" type="number" min="1" max="30" x-model.number="totalTurns" />
+          </div>
+        </div>
+
+        <button @click="launch()" :disabled="launching || !endpointUrl">
+          <span x-show="!launching">Launch run — send prompts to my endpoint</span>
+          <span x-show="launching"><span class="spinner"></span> Starting…</span>
+        </button>
+      </div>
+
+      <!-- ---------------------- RUNNING / RESULT ---------------------- -->
+      <div x-show="runId" x-cloak>
+        <div class="card">
+          <div class="trace-head" style="margin-top:0">
+            <span class="pill llm">arena</span>
+            <span class="trace-title" x-text="modelLabel || 'anon-model'"></span>
+            <span class="cond-badge" :class="squidArenaHelpers.framingMeta(framing).tag"
+                  x-text="squidArenaHelpers.framingMeta(framing).tag + ' · ' + squidArenaHelpers.framingMeta(framing).label"></span>
+            <span class="cond-badge forfeit" x-text="forfeit === 'allowed' ? '🏳️ forfeit allowed' : '⛔ no forfeit'"></span>
+          </div>
+
+          <!-- Running -->
+          <template x-if="running || (!status && !failed)">
+            <div>
+              <div class="arena-phase">
+                <span class="spinner"></span>
+                <span x-text="status ? ('Turn call in progress — phase: ' + status.phase) : 'Contacting your endpoint…'"></span>
+              </div>
+              <div class="arena-progress">
+                <div class="bar" :style="'width:' + pct + '%'"></div>
+              </div>
+              <div class="muted small" x-show="status" x-text="status ? (status.calls_done + ' / ' + status.calls_total + ' LLM calls') : ''"></div>
+            </div>
+          </template>
+
+          <!-- Done -->
+          <template x-if="done">
+            <div class="arena-result">
+              <div class="arena-score">
+                <div class="tile-label">Final helpfulness score</div>
+                <div class="arena-score-value" x-text="squidArenaHelpers.fmtNum(status.final_score, 1)"></div>
+                <div class="cond-badge" :class="status.forfeited ? 'push_only' : 'baseline'"
+                     x-text="status.forfeited ? '🏳️ forfeited' : '✓ completed'"></div>
+              </div>
+              <div class="arena-actions">
+                <a class="button-link" href="#logs">View full trace in Logs →</a>
+                <button class="secondary" @click="reset()">Run again</button>
+              </div>
+            </div>
+          </template>
+
+          <!-- Error -->
+          <template x-if="failed">
+            <div>
+              <div class="error-banner" x-text="(status && status.error) || error || 'Run failed.'"></div>
+              <p class="muted small">
+                Check that your endpoint is reachable from the server, returns an
+                answer field we recognise, and (if needed) that the auth header is
+                correct.
+              </p>
+              <button class="secondary" @click="reset()">Back to setup</button>
+            </div>
+          </template>
+        </div>
+      </div>
     </section>
 
     <!-- =================================================================

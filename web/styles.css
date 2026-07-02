@@ -36,7 +36,8 @@ header.topbar {
   gap: 12px;
 }
 
-header.topbar h1 {
+header.topbar h1,
+header.topbar .brand {
   font-family: var(--font-display);
   font-size: 18px;
   margin: 0;
@@ -44,9 +45,20 @@ header.topbar h1 {
   text-transform: uppercase;
 }
 
+/* Clickable home brand — looks like the title, not a hyperlink. */
+header.topbar .brand {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+header.topbar .brand:hover { opacity: 0.82; }
+
 h2 { font-family: var(--font-display); letter-spacing: 0.02em; }
 
-header.topbar h1 .accent { color: var(--accent); }
+header.topbar h1 .accent,
+header.topbar .brand .accent { color: var(--accent); }
 
 nav.tabs {
   display: flex;
@@ -994,3 +1006,83 @@ footer {
   background: var(--accent-dim);
   border-radius: 8px;
 }
+
+/* ============================================================
+   LLM Arena (BYOE)
+   ============================================================ */
+.contract-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 12px 0;
+}
+@media (max-width: 760px) { .contract-grid { grid-template-columns: 1fr; } }
+.contract-col pre {
+  margin: 6px 0 0;
+  padding: 12px;
+  background: #0b0d12;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #cdd3df;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.arena-auth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 620px) { .arena-auth { grid-template-columns: 1fr; } }
+
+.small { font-size: 0.82rem; }
+
+.arena-phase {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+  color: var(--text);
+}
+.arena-progress {
+  height: 12px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.arena-progress .bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  transition: width 0.4s ease;
+}
+
+.arena-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 8px;
+}
+.arena-score { display: flex; flex-direction: column; gap: 6px; }
+.arena-score-value {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--warn);
+  line-height: 1;
+}
+.arena-actions { display: flex; gap: 10px; align-items: center; }
+.button-link {
+  display: inline-block;
+  padding: 9px 16px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.button-link:hover { background: var(--accent-dim); }

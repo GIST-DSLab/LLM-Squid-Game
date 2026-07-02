@@ -44,6 +44,11 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from interface.arena import (
+    VALID_FORFEITS,
+    VALID_FRAMINGS,
+    run_arena_session,
+)
 from interface.human_game import HumanGameSession
 from interface.persistence import (
     ModelStatsRecord,
@@ -51,6 +56,7 @@ from interface.persistence import (
     TurnRecord,
     get_repository,
 )
+from interface.remote_provider import ArenaProgress
 
 app = FastAPI(
     title="LLM Squid Game API",
@@ -113,6 +119,10 @@ _encoding = tiktoken.get_encoding("cl100k_base")
 # Module-level repository singleton (driver-agnostic; see interface/persistence).
 # Reads WEB_ARENA_DSN, falls back to a local SQLite file.
 _repository = get_repository()
+
+# LLM Arena: live progress per background run_id (see interface/arena.py).
+_arena_runs: dict[str, "ArenaProgress"] = {}
+_arena_lock = threading.Lock()
 
 
 # ---------------------------------------------------------------------------
@@ -699,6 +709,88 @@ def get_log_detail(session_id: str):
             for t in turns
         ],
     )
+
+
+# ---------------------------------------------------------------------------
+# LLM Arena (BYOE — Bring Your Own Endpoint)
+# ---------------------------------------------------------------------------
+
+
+class ArenaRunRequest(BaseModel):
+    endpoint_url: str = Field(..., description="Participant HTTP endpoint (http/https).")
+    model_label: str = Field("anon-model", description="Display name for the leaderboard.")
+    framing: str = Field("flagship_corruption", description="Threat framing condition.")
+    forfeit: str = Field("allowed", description="allowed | not_allowed.")
+    auth_header: str | None = Field(None, description="Optional auth header name, e.g. Authorization.")
+    auth_value: str | None = Field(None, description="Optional auth header value, e.g. 'Bearer sk-...'.")
+    total_turns: int = Field(15, ge=1, le=30, description="Season length (1–30 turns).")
+
+
+class ArenaRunResponse(BaseModel):
+    run_id: str
+
+
+class ArenaStatusResponse(BaseModel):
+    status: str  # running | done | error
+    calls_done: int
+    calls_total: int
+    phase: str
+    session_id: str | None = None
+    final_score: float | None = None
+    forfeited: bool | None = None
+    error: str | None = None
+
+
+@app.post("/api/arena/run", response_model=ArenaRunResponse)
+def arena_run(req: ArenaRunRequest, request: Request):
+    """Start a background arena season against a participant endpoint.
+
+    The server drives the full split-call pipeline (task / probe / forfeit per
+    turn), scoring with the same Core Engine used for the built-in models.
+    Poll GET /api/arena/status?run_id=... for live progress and the result.
+    """
+    _check_rate_limit(request, "arena")
+
+    if req.framing not in VALID_FRAMINGS:
+        raise HTTPException(400, f"Unknown framing '{req.framing}'.")
+    if req.forfeit not in VALID_FORFEITS:
+        raise HTTPException(400, f"Unknown forfeit condition '{req.forfeit}'.")
+
+    model_label = sanitize_nickname(req.model_label) or "anon-model"
+
+    run_id = uuid.uuid4().hex[:12]
+    progress = ArenaProgress()
+    progress.calls_total = req.total_turns * 3
+    with _arena_lock:
+        _arena_runs[run_id] = progress
+
+    def _work() -> None:
+        try:
+            run_arena_session(
+                _repository,
+                endpoint_url=req.endpoint_url,
+                model_label=model_label,
+                framing=req.framing,
+                forfeit=req.forfeit,
+                auth_header=req.auth_header,
+                auth_value=req.auth_value,
+                total_turns=req.total_turns,
+                progress=progress,
+            )
+        except Exception as exc:  # noqa: BLE001 — surfaced to the participant
+            progress.fail(str(exc))
+
+    threading.Thread(target=_work, name=f"arena-{run_id}", daemon=True).start()
+    return ArenaRunResponse(run_id=run_id)
+
+
+@app.get("/api/arena/status", response_model=ArenaStatusResponse)
+def arena_status(run_id: str):
+    """Live progress + result for an arena run."""
+    progress = _arena_runs.get(run_id)
+    if progress is None:
+        raise HTTPException(404, f"Arena run {run_id} not found.")
+    return ArenaStatusResponse(**progress.snapshot())
 
 
 # ---------------------------------------------------------------------------

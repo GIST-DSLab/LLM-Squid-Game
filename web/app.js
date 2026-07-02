@@ -731,5 +731,101 @@
         this.stepIdx = i;
       },
     }));
+
+    // -----------------------------------------------------------------
+    // LLM Arena (BYOE)
+    // -----------------------------------------------------------------
+    Alpine.data("arenaScreen", () => ({
+      endpointUrl: "",
+      modelLabel: "",
+      authHeader: "",
+      authValue: "",
+      framing: window.WEB_ARENA_DEFAULT_FRAMING,
+      forfeit: window.WEB_ARENA_DEFAULT_FORFEIT,
+      totalTurns: 15,
+
+      runId: null,
+      status: null,
+      error: null,
+      launching: false,
+      _poll: null,
+
+      get running() {
+        return !!this.status && this.status.status === "running";
+      },
+      get done() {
+        return !!this.status && this.status.status === "done";
+      },
+      get failed() {
+        return (!!this.status && this.status.status === "error") || !!this.error;
+      },
+      get pct() {
+        if (!this.status || !this.status.calls_total) return 0;
+        return Math.min(100, Math.round((100 * this.status.calls_done) / this.status.calls_total));
+      },
+
+      async launch() {
+        this.error = null;
+        this.status = null;
+        this.launching = true;
+        try {
+          const data = await fetchJSON(
+            "/api/arena/run",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                endpoint_url: this.endpointUrl,
+                model_label: this.modelLabel || "anon-model",
+                framing: this.framing,
+                forfeit: this.forfeit,
+                auth_header: this.authHeader || null,
+                auth_value: this.authValue || null,
+                total_turns: Number(this.totalTurns) || 15,
+              }),
+            },
+            () => {}
+          );
+          this.runId = data.run_id;
+          this._startPolling();
+        } catch (e) {
+          this.error = e.message;
+        } finally {
+          this.launching = false;
+        }
+      },
+
+      _startPolling() {
+        const tick = async () => {
+          try {
+            this.status = await fetchJSON(
+              "/api/arena/status?run_id=" + encodeURIComponent(this.runId),
+              {},
+              () => {}
+            );
+            if (this.status.status !== "running") this._stopPolling();
+          } catch (e) {
+            this.error = e.message;
+            this._stopPolling();
+          }
+        };
+        tick();
+        this._poll = setInterval(tick, 1500);
+      },
+
+      _stopPolling() {
+        if (this._poll) {
+          clearInterval(this._poll);
+          this._poll = null;
+        }
+      },
+
+      reset() {
+        this._stopPolling();
+        this.runId = null;
+        this.status = null;
+        this.error = null;
+      },
+    }));
   });
 })();
