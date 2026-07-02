@@ -70,8 +70,9 @@ app = FastAPI(
 
 # Sensible default allow-list (GitHub Pages site + common local dev servers).
 # Override entirely via WEB_ARENA_CORS_ORIGINS (comma-separated), e.g.
-#   WEB_ARENA_CORS_ORIGINS="https://irregular6612.github.io,http://localhost:5500"
+#   WEB_ARENA_CORS_ORIGINS="https://gist-dslab.github.io,http://localhost:5500"
 _DEFAULT_CORS_ORIGINS = [
+    "https://gist-dslab.github.io",
     "https://irregular6612.github.io",
     "http://localhost:5500",
     "http://127.0.0.1:5500",
