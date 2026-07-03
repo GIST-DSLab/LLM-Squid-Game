@@ -80,11 +80,11 @@ def test_app_imports_and_registers_all_endpoints(api_module) -> None:
         "/api/action",
         "/api/result",
         "/api/leaderboard/models",
-        "/api/leaderboard/play",
         "/api/logs",
         "/api/logs/{session_id}",
     ]:
         assert expected in paths, f"missing route: {expected}"
+    assert "/api/leaderboard/play" not in paths, "Play Leaderboard route should be removed"
 
 
 # ---------------------------------------------------------------------------
@@ -214,22 +214,6 @@ def test_result_persists_session_and_turns_idempotently(client: TestClient, api_
 # ---------------------------------------------------------------------------
 # New read endpoints
 # ---------------------------------------------------------------------------
-
-
-def test_leaderboard_play_returns_sessions_for_default_arena(
-    client: TestClient, api_module
-) -> None:
-    session_id, _ = _play_two_turn_game(client, nickname="Bob")
-    client.get("/api/result", params={"session_id": session_id})
-
-    resp = client.get(
-        "/api/leaderboard/play", params={"task": "signal_game", "framing": "flagship_corruption"}
-    )
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["task"] == "signal_game"
-    assert body["framing"] == "flagship_corruption"
-    assert any(row["session_id"] == session_id for row in body["rows"])
 
 
 def test_leaderboard_models_groups_open_closed_sorted_by_beta_descending(

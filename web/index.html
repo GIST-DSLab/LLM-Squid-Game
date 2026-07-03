@@ -28,7 +28,6 @@
       <a href="#play" :class="{ active: $store.nav.tab === 'play' }">Play</a>
       <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">LLM Arena</a>
       <a href="#models" :class="{ active: $store.nav.tab === 'models' }">Model Leaderboard</a>
-      <a href="#leaderboard" :class="{ active: $store.nav.tab === 'leaderboard' }">Play Leaderboard</a>
       <a href="#logs" :class="{ active: $store.nav.tab === 'logs' }">Logs / Trace Explorer</a>
     </nav>
   </header>
@@ -886,46 +885,6 @@
           </div>
 
           <button class="secondary" @click="load()">Refresh</button>
-        </div>
-      </template>
-    </section>
-
-    <!-- =================================================================
-         PLAY LEADERBOARD
-         ================================================================= -->
-    <section x-data="playLeaderboardScreen()" x-show="$store.nav.tab === 'leaderboard'" x-cloak>
-      <h2 class="h-shape s-circle">Play Leaderboard</h2>
-      <p class="muted">
-        Human sessions for arena task=<strong x-text="task"></strong>,
-        framing=<strong x-text="framing"></strong>, ranked by final score.
-      </p>
-
-      <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
-      <div class="error-banner" x-show="error" x-text="error"></div>
-      <div x-show="loading && !loaded"><span class="spinner"></span> Loading play leaderboard…</div>
-
-      <template x-if="loaded">
-        <div class="card">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>Rank</th><th>Nickname</th><th>Final score</th><th>Forfeited</th><th>Played at</th></tr>
-              </thead>
-              <tbody>
-                <template x-for="(row, idx) in rows" :key="row.session_id">
-                  <tr>
-                    <td><span class="rank-badge" x-text="idx + 1"></span></td>
-                    <td x-text="row.nickname"></td>
-                    <td x-text="row.final_score"></td>
-                    <td x-text="row.forfeited ? 'yes' : 'no'"></td>
-                    <td x-text="squidArenaHelpers.fmtDate(row.created_at)"></td>
-                  </tr>
-                </template>
-                <tr x-show="rows.length === 0"><td colspan="5" class="muted">No plays yet — be the first!</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <button class="secondary" @click="load()" style="margin-top:12px">Refresh</button>
         </div>
       </template>
     </section>

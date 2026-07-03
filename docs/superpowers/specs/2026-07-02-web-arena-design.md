@@ -13,8 +13,7 @@ Build a public-facing website for the LLM Squid Game benchmark that lets anyone:
 1. **Play the game** in the browser (anonymous, nickname only).
 2. **View a Model Leaderboard** ranking LLMs by a research-grounded metric
    (mediation-chain closure → Cox β for framing effect on forfeit timing).
-3. **View a Play Leaderboard** ranking human sessions by raw final score.
-4. **Browse logs** (trace explorer) for both LLM experiment runs and human sessions.
+3. **Browse logs** (trace explorer) for both LLM experiment runs and human sessions.
 
 All site UI text is in **English**. The site is intended to be lightweight and
 mostly static (GitHub Pages) with a small hosted backend for the parts that
@@ -65,12 +64,9 @@ backend + Postgres and keep everything else static/read-only.
 1. **Play** — enter a nickname → play the fixed arena configuration
    (default `signal_game` + `flagship_corruption`, the primary FSPM cell)
    turn-by-turn. Each turn shows the observation, collects the action (+ probe +
-   reasoning), and the end-of-game view shows the final score and the player's
-   rank on the Play Leaderboard.
+   reasoning), and the end-of-game view shows the final score.
 2. **Model Leaderboard** (scientific) — see §5.
-3. **Play Leaderboard** (casual) — human sessions ranked by final score `S`,
-   bucketed by arena configuration (task + framing). Anonymous nicknames.
-4. **Logs / Trace Explorer** — list past sessions (LLM experiment runs +
+3. **Logs / Trace Explorer** — list past sessions (LLM experiment runs +
    human sessions); expand any session to a turn-by-turn view of observation,
    action, per-call RI (`ri_task` / `ri_probe` / `ri_forfeit`), forfeit choice,
    and score.
@@ -109,7 +105,6 @@ Computed per model from the analysis pipeline outputs
 | `POST /api/action` | existing | submit action + probe + reasoning |
 | `GET /api/result` | existing (extend) | on game over, **persist result to DB** |
 | `GET /api/leaderboard/models` | **new** | Closed/Open groups, β descending |
-| `GET /api/leaderboard/play` | **new** | human sessions ranked by score (arena bucket) |
 | `GET /api/logs` | **new** | list sessions (LLM + human) |
 | `GET /api/logs/{id}` | **new** | turn-by-turn trace for one session |
 
