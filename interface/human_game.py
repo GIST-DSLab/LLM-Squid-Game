@@ -24,6 +24,10 @@ from squid_game.models.enums import (
     Framing,
     ForfeitCondition,
 )
+from squid_game.models.forfeit_choice import (
+    ForfeitSelfReport,
+    REASON_BY_DIGIT,
+)
 from squid_game.models.results import (
     ActionOutcome,
     ProbeResult,
@@ -156,6 +160,7 @@ class HumanGameSession:
         self._p_death_constant = p_death_constant
 
         self._self_report: SelfReport | None = None
+        self._forfeit_self_report: ForfeitSelfReport | None = None
 
         # Game state
         self._season_id = uuid.uuid4().hex[:12]
@@ -274,7 +279,7 @@ class HumanGameSession:
         )
 
     def submit_action(
-        self, action: str, probe_answer: str = ""
+        self, action: str, probe_answer: str = "", forfeit_reason: int | None = None
     ) -> TurnFeedback:
         """Submit an action and advance the game by one turn."""
         response_time = (time.time() - self._turn_start_time) * 1000
@@ -289,6 +294,14 @@ class HumanGameSession:
         if action == "forfeit" and self._forfeit_ctrl.is_forfeit_allowed():
             self._has_forfeited = True
             self._forfeited_at_turn = turn_num
+
+            if forfeit_reason in REASON_BY_DIGIT:
+                self._forfeit_self_report = ForfeitSelfReport(
+                    reason=REASON_BY_DIGIT[forfeit_reason],
+                    raw_digit=forfeit_reason,  # type: ignore[arg-type]  # guarded by the membership test
+                    raw_response="human",
+                    forfeit_turn=turn_num,
+                )
 
             # Record turn result
             probe_score = self._task.score_probe(probe_answer) if probe_answer else 0.0
@@ -428,6 +441,7 @@ class HumanGameSession:
             forfeited_at_turn=self._forfeited_at_turn,
             total_reasoning_investment=total_ri,
             self_report=self._self_report,
+            forfeit_self_report=self._forfeit_self_report,
         )
 
     def set_self_report(
