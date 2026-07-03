@@ -546,3 +546,62 @@ def test_arena_request_max_tokens_default_and_bounds():
     # rejects out-of-range
     with _pytest.raises(ValidationError):
         ArenaRunRequest(endpoint_url="https://x/v1", max_tokens=999999)
+
+
+# ---------------------------------------------------------------------------
+# Human play defaults: 10-turn season + real per-turn death
+# ---------------------------------------------------------------------------
+
+
+def test_new_game_defaults_to_ten_turns(client: TestClient, api_module) -> None:
+    """Human play defaults to a 10-turn season (was 15).
+
+    ``TurnStateResponse`` does not surface ``total_turns``, so the default is
+    observed on the live session's ``TurnState`` (``get_turn_state()``) rather
+    than the /api/state JSON — see the plan's verification note."""
+    resp = client.post("/api/new_game", json={})
+    assert resp.status_code == 200
+    session_id = resp.json()["session_id"]
+    game = api_module._sessions[session_id]
+    assert game.get_turn_state().total_turns == 10
+
+
+def test_new_game_defaults_enable_real_death(
+    client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """actual_death defaults to True: a firing death check eliminates the
+    player on the first action and zeroes the score. If the default were
+    False, the ``if self._actual_death:`` branch would be skipped, the death
+    roll never consulted, and the game would not end here.
+
+    The death roll is forced deterministically by patching the session's
+    ``apply_death_check`` to always return True. (The plan proposed
+    ``p_death_constant: 1.0`` for determinism, but p_death flows into the
+    Equal-EV CONTINUE reward as ``p_d`` — at 1.0 the ``(1 - p_d)`` denominator
+    in forfeit_layer.py divides by zero before the death check runs, so the
+    default 0.15 is kept and only the roll is forced.)"""
+    resp = client.post(
+        "/api/new_game",
+        json={"num_few_shot": 0, "curriculum_turns": 0},
+    )
+    assert resp.status_code == 200
+    session_id = resp.json()["session_id"]
+
+    game = api_module._sessions[session_id]
+    monkeypatch.setattr(game._survival, "apply_death_check", lambda p_death, rng: True)
+
+    state = client.get("/api/state", params={"session_id": session_id}).json()
+    assert not state["game_over"]
+    action = state["available_actions"][0]
+    act = client.post(
+        f"/api/action?session_id={session_id}",
+        json={"action": action, "probe_answer": "", "reasoning": ""},
+    ).json()
+
+    assert act["game_over"] is True
+    assert act["game_over_reason"] == "eliminated"
+    assert act["new_score"] == 0.0
+
+    result = client.get("/api/result", params={"session_id": session_id}).json()
+    assert result["survived"] is False
+    assert result["final_score"] == 0.0
