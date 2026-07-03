@@ -568,6 +568,21 @@
         </div><!-- /play-layout -->
       </template>
 
+      <!-- Elimination overlay: dramatic death moment before the between/report flow -->
+      <div class="death-overlay" x-show="eliminated" x-cloak x-transition.opacity>
+        <div class="death-panel">
+          <div class="death-skull">💀</div>
+          <h2 class="death-title">ELIMINATED</h2>
+          <p class="death-sub">
+            You were erased at turn <strong x-text="eliminatedTurn"></strong>.
+            Your score
+            (<strong x-text="squidArenaHelpers.fmtNum(eliminatedLostScore, 1)"></strong>)
+            is gone.
+          </p>
+          <button class="submit-btn" @click="dismissDeath()">Continue →</button>
+        </div>
+      </div>
+
       <div class="card" x-show="started && loading && !state">
         <span class="spinner"></span> Loading turn state…
       </div>

@@ -1526,3 +1526,41 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 .hm-empty { background: transparent; opacity: 0.25; }
 .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.85em; flex-wrap: wrap; }
 .heatmap-legend .hm-cell { display: inline-flex; align-items: center; justify-content: center; }
+
+/* Elimination overlay */
+.death-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 6, 10, 0.86);
+  backdrop-filter: blur(3px);
+}
+.death-panel {
+  text-align: center;
+  padding: 40px 32px;
+  max-width: 420px;
+  color: #f5f5f7;
+}
+.death-skull {
+  font-size: 88px;
+  line-height: 1;
+  animation:
+    pop-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    death-shake 0.5s ease-in-out 0.32s 2;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+}
+.death-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+  color: #ff4d5e;
+  margin: 14px 0 8px;
+}
+.death-sub { color: #d8d2da; margin-bottom: 22px; }
+@keyframes death-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(-6px) rotate(-4deg); }
+  75% { transform: translateX(6px) rotate(4deg); }
+}
