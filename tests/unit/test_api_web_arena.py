@@ -548,3 +548,17 @@ def test_log_detail_exposes_psuccess_self(client):
 
     detail = client.get(f"/api/logs/{session_id}").json()
     assert detail["turns"][0]["psuccess_self"] == 77
+
+
+def test_arena_request_max_tokens_default_and_bounds():
+    from interface.api import ArenaRunRequest
+    import pytest as _pytest
+    from pydantic import ValidationError
+
+    # default
+    assert ArenaRunRequest(endpoint_url="https://x/v1").max_tokens == 2048
+    # accepts an in-range override
+    assert ArenaRunRequest(endpoint_url="https://x/v1", max_tokens=8192).max_tokens == 8192
+    # rejects out-of-range
+    with _pytest.raises(ValidationError):
+        ArenaRunRequest(endpoint_url="https://x/v1", max_tokens=999999)
