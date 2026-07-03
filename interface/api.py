@@ -26,6 +26,7 @@ never a concrete DB driver.
 """
 
 import os
+import random
 import re
 import sys
 import threading
@@ -205,7 +206,10 @@ class NewGameRequest(BaseModel):
     difficulty: str = "easy"
     framing: str = "survival"
     forfeit_condition: str = "allowed"
-    seed: int = 42
+    # None = assign a fresh random seed per game (interactive human play).
+    # An explicit seed is honored unchanged (tests, future "replay this
+    # exact game"). Only the ABSENCE of a seed triggers randomization.
+    seed: int | None = None
     total_turns: int = 15
     actual_death: bool = False
     starting_score: float = 0.0
@@ -482,12 +486,17 @@ def new_game(req: NewGameRequest, request: Request):
     _check_rate_limit(request, "new_game")
 
     session_id = uuid.uuid4().hex[:12]
+    # Fresh seed per attempt unless the caller pinned one. This drives both
+    # the task instance (which signals/rules appear) and the death-check RNG,
+    # so a human replays a different game each time. The chosen seed is still
+    # persisted via SeasonResult.seed, keeping every session reproducible.
+    seed = req.seed if req.seed is not None else random.randint(1, 2**31 - 1)
     game = HumanGameSession(
         task_name=req.task_name,
         difficulty=req.difficulty,
         framing=req.framing,
         forfeit_condition=req.forfeit_condition,
-        seed=req.seed,
+        seed=seed,
         total_turns=req.total_turns,
         actual_death=req.actual_death,
         starting_score=req.starting_score,

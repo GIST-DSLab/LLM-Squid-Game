@@ -116,6 +116,35 @@ def test_new_game_accepts_nickname_and_legacy_callers_still_work(client: TestCli
 
 
 # ---------------------------------------------------------------------------
+# Per-attempt random seed (human web play)
+# ---------------------------------------------------------------------------
+
+
+def test_new_game_without_seed_randomizes_per_attempt(client: TestClient, api_module) -> None:
+    """Omitting ``seed`` gives each human game a fresh seed, so no two
+    attempts replay the same task instance / death-RNG stream."""
+    seeds = set()
+    for _ in range(8):
+        resp = client.post("/api/new_game", json={})
+        assert resp.status_code == 200
+        sid = resp.json()["session_id"]
+        seeds.add(api_module._sessions[sid]._seed)
+
+    # Not all pinned to the old hardcoded default (42), and drawing 8 seeds
+    # from a 2**31 space collides only astronomically rarely.
+    assert seeds != {42}
+    assert len(seeds) > 1
+
+
+def test_new_game_honors_explicit_seed(client: TestClient, api_module) -> None:
+    """An explicitly supplied seed is still used verbatim (tests / replay)."""
+    resp = client.post("/api/new_game", json={"seed": 7})
+    assert resp.status_code == 200
+    sid = resp.json()["session_id"]
+    assert api_module._sessions[sid]._seed == 7
+
+
+# ---------------------------------------------------------------------------
 # CORS configuration
 # ---------------------------------------------------------------------------
 
