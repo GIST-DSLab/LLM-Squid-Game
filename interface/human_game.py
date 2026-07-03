@@ -457,6 +457,12 @@ class HumanGameSession:
             response_time_ms=response_time,
         )
 
+    @property
+    def cumulative_score(self) -> float:
+        """Current cumulative score. Side-effect free, unlike get_turn_state()
+        (which re-rolls the task signal and resets the turn timer)."""
+        return self._cumulative_score
+
     def preview_continue_reward(self, psuccess_self: int | None = None) -> float:
         """Reward that would be credited if the player CONTINUEs this turn and
         is correct. Same inputs as ``submit_action``'s reward path (current

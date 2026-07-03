@@ -58,3 +58,14 @@ def test_preview_is_nonnegative_at_start() -> None:
     game = _session()
     game.get_turn_state()
     assert game.preview_continue_reward(psuccess_self=50) >= 0.0
+
+
+def test_reward_preview_path_does_not_reroll_signal() -> None:
+    game = _session()
+    game.get_turn_state()  # arm turn -> sets _current_signal
+    sig_before = game._task._current_signal  # noqa: SLF001 (regression guard)
+    _ = game.cumulative_score
+    _ = game.preview_continue_reward(psuccess_self=70)
+    # The score accessor + preview must NOT re-roll the signal that
+    # submit_action will score against.
+    assert game._task._current_signal is sig_before

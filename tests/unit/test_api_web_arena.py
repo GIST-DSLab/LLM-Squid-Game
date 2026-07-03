@@ -757,3 +757,47 @@ def test_new_game_defaults_enable_real_death(
     result = client.get("/api/result", params={"session_id": session_id}).json()
     assert result["survived"] is False
     assert result["final_score"] == 0.0
+
+
+def test_leaderboard_best_per_nickname(client) -> None:
+    # Two campaigns for the same nickname; only the higher total should appear.
+    def _finish(campaign_id, seed):
+        r = _new_game(client, nickname="erin", password="pw",
+                      campaign_id=campaign_id, seed=seed)
+        sid = r.json()["session_id"]
+        for _ in range(3):
+            st = client.get("/api/state", params={"session_id": sid}).json()
+            if st["game_over"]:
+                break
+            client.post(f"/api/action?session_id={sid}",
+                        json={"action": st["available_actions"][0],
+                              "probe_answer": "", "reasoning": ""})
+        # Each campaign here is a single game, so its campaign total is this
+        # game's final score.
+        return client.get("/api/result",
+                          params={"session_id": sid}).json()["final_score"]
+    total_a = _finish("camp-a", 1)
+    total_b = _finish("camp-b", 2)
+    board = client.get("/api/leaderboard/play").json()["campaigns"]
+    erin_rows = [c for c in board if c["nickname"] == "erin"]
+    assert len(erin_rows) == 1
+    # The surviving row must be the HIGHER-total campaign, not merely first-seen.
+    assert erin_rows[0]["total_score"] == max(total_a, total_b)
+
+
+def test_reward_preview_matches_engine(client) -> None:
+    sid = _new_game(client, nickname="fay", password="pw").json()["session_id"]
+    client.get("/api/state", params={"session_id": sid})
+    resp = client.get("/api/reward_preview",
+                      params={"session_id": sid, "psuccess": 80})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "continue_reward_if_correct" in body
+    assert body["continue_reward_if_correct"] >= 0.0
+    assert "current_score" in body
+
+
+def test_reward_preview_unknown_session_404(client) -> None:
+    resp = client.get("/api/reward_preview",
+                      params={"session_id": "nope", "psuccess": 50})
+    assert resp.status_code == 404

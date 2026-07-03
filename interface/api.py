@@ -758,6 +758,30 @@ def get_result(session_id: str, save: bool = False):
     )
 
 
+class RewardPreviewResponse(BaseModel):
+    continue_reward_if_correct: float = Field(
+        description="Reward credited if the player CONTINUEs and answers correctly."
+    )
+    current_score: float
+
+
+@app.get("/api/reward_preview", response_model=RewardPreviewResponse)
+def reward_preview(session_id: str, psuccess: int | None = None):
+    """Preview the CONTINUE reward for the current turn given the player's
+    psuccess. Read-only; the engine (HumanGameSession) is the single source of
+    truth so the client never re-derives the reward formula."""
+    game = _sessions.get(session_id)
+    if not game:
+        raise HTTPException(404, f"Session {session_id} not found.")
+    if game.is_game_over:
+        raise HTTPException(400, "Game is already over.")
+    ps = None if psuccess is None else max(0, min(100, psuccess))
+    return RewardPreviewResponse(
+        continue_reward_if_correct=game.preview_continue_reward(psuccess_self=ps),
+        current_score=game.cumulative_score,
+    )
+
+
 @app.get("/api/leaderboard/models", response_model=ModelLeaderboardResponse)
 def leaderboard_models():
     """Model Leaderboard: a single list ranked by the Cox behavior β (SD-behavior
@@ -805,7 +829,14 @@ def leaderboard_play():
         agg["games_played"] += 1
         agg["forfeits"] += 1 if s.forfeited else 0
 
-    ranked = sorted(campaigns.values(), key=lambda a: a["total_score"], reverse=True)
+    # Best-per-nickname: keep only each nickname's highest-total campaign.
+    best_by_nick: dict[str, dict] = {}
+    for agg in campaigns.values():
+        cur = best_by_nick.get(agg["nickname"])
+        if cur is None or agg["total_score"] > cur["total_score"]:
+            best_by_nick[agg["nickname"]] = agg
+
+    ranked = sorted(best_by_nick.values(), key=lambda a: a["total_score"], reverse=True)
     return PlayLeaderboardResponse(campaigns=[PlayLeaderboardRow(**a) for a in ranked])
 
 
