@@ -562,6 +562,7 @@ def test_logs_lists_both_sources_newest_first_and_detail_matches_engine_turn_tra
             "thinking_forfeit",
             "raw_response",
             "correct",
+            "psuccess_self",
         }
         assert isinstance(t["observation"], str) and t["observation"] != ""
         assert isinstance(t["action"], str) and t["action"] != ""
