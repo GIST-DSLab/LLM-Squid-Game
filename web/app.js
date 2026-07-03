@@ -451,6 +451,8 @@
       // Split-call staged turn: 1=rule+action, 2=p(correct), 3=continue/forfeit.
       turnStage: 1,
       lastFeedback: null,
+      continueReward: null,
+      previewLoading: false,
 
       // Rule-inference probe, built via toggles instead of free text.
       // Persisted across turns so the player refines one running guess.
@@ -671,10 +673,24 @@
         this.error = null;
         this.turnStage = 2;
       },
-      commitConfidence() {
-        // Stage 2 -> 3: lock p(correct). The slider always has a value.
+      async commitConfidence() {
+        // Stage 2 -> 3: lock p(correct), fetch the server-side reward preview.
         this.error = null;
         this.turnStage = 3;
+        this.continueReward = null;
+        this.previewLoading = true;
+        try {
+          const r = await fetchJSON(
+            `/api/reward_preview?session_id=${encodeURIComponent(this.sessionId)}&psuccess=${this.psuccess}`,
+            {},
+            () => {}
+          );
+          this.continueReward = r.continue_reward_if_correct;
+        } catch (_) {
+          this.continueReward = null; // preview is best-effort; never blocks the turn
+        } finally {
+          this.previewLoading = false;
+        }
       },
       chooseContinue() {
         // Stage 3: keep the stage-1 action and submit as-is.

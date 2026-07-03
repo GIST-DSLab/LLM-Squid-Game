@@ -541,6 +541,18 @@
               </div>
             </div>
 
+            <div class="reward-preview"
+                 style="display:flex;gap:16px;margin:8px 0;padding:10px 12px;background:rgba(255,255,255,0.05);border-radius:10px;">
+              <div>
+                <div class="muted">계속하고 정답 시</div>
+                <strong x-text="previewLoading ? '…' : (continueReward === null ? '—' : '+' + squidArenaHelpers.fmtNum(continueReward, 1))"></strong>
+              </div>
+              <div>
+                <div class="muted">포기 시 (확정)</div>
+                <strong x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></strong>
+              </div>
+            </div>
+
             <div class="decision-row">
               <button class="submit-btn" @click="chooseContinue()" :disabled="submitting">
                 <span class="spinner" x-show="submitting"></span>
