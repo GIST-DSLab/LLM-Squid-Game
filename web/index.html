@@ -299,6 +299,16 @@
 
       <!-- Nickname / factorial-condition setup -->
       <div class="card setup-card" x-show="!started">
+        <div class="resume-card" x-show="resumable" x-cloak
+             style="border:1px solid var(--accent,#7c5cff);border-radius:12px;padding:14px;margin-bottom:14px;">
+          <strong x-text="'이어하기: ' + (checkpoint && checkpoint.campaignIndex) + '/6 완료'"></strong>
+          <p class="muted" x-text="checkpoint ? ('닉네임 ' + checkpoint.nickname) : ''"></p>
+          <div class="decision-row">
+            <button class="submit-btn" @click="resumeCampaign()">이어서 플레이 ▶</button>
+            <button class="submit-btn forfeit" @click="discardCheckpoint()">새로 시작</button>
+          </div>
+        </div>
+
         <h3>Set up your run</h3>
 
         <div class="field">

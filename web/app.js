@@ -413,6 +413,10 @@
       betweenGames: false,   // "condition complete → continue" card
       forfeitReason: null,   // 1|2|3, chosen when Forfeit is selected
 
+      // Resume-from-checkpoint state (localStorage game-boundary checkpoint).
+      resumable: false,
+      checkpoint: null,
+
       nickname: "",
       password: "",
       sessionId: null,
@@ -502,23 +506,71 @@
         }
       },
 
+      // --- Campaign resume checkpoint (localStorage, game-boundary only) ---
+      _CKPT_KEY: "squidArenaPlayCheckpoint_v1",
+
+      _saveCheckpoint() {
+        try {
+          const data = {
+            v: 1,
+            nickname: this.nickname,
+            password: this.password,
+            campaignId: this.campaignId,
+            // Resume index = number of fully-completed games = the index of the
+            // next game to play. Correct both mid-game (campaignResults.length
+            // == the in-progress 0-based game index) and between games (after
+            // finishing game N, length == N+1 → resume at game N+1). Do NOT use
+            // this.campaignIndex here: between games it points at the finished
+            // game and would replay it.
+            campaignIndex: this.campaignResults.length,
+            campaignResults: this.campaignResults,
+            updatedAt: Date.now(),
+          };
+          window.localStorage.setItem(this._CKPT_KEY, JSON.stringify(data));
+        } catch (_) { /* storage may be unavailable; ignore */ }
+      },
+      _loadCheckpoint() {
+        try {
+          const raw = window.localStorage.getItem(this._CKPT_KEY);
+          if (!raw) return null;
+          const d = JSON.parse(raw);
+          if (!d || d.v !== 1 || d.campaignIndex >= 6) return null;
+          return d;
+        } catch (_) { return null; }
+      },
+      _clearCheckpoint() {
+        try { window.localStorage.removeItem(this._CKPT_KEY); } catch (_) {}
+      },
+
       // Alpine keeps this component alive across tab switches (x-show only
       // hides it), so an in-progress game would otherwise survive navigating
       // away and back. Discard it the moment the player leaves the Play tab, so
-      // returning always starts from a fresh setup screen.
+      // returning always starts from a fresh setup screen — unless there is
+      // in-progress campaign work, in which case save a resume checkpoint
+      // instead of discarding it.
       init() {
+        const ck = this._loadCheckpoint();
+        if (ck) { this.checkpoint = ck; this.resumable = true; }
         this.$watch("$store.nav.tab", (tab, prev) => {
-          if (
-            prev === "play" &&
-            tab !== "play" &&
-            (this.started || this.betweenGames || this.campaignDone)
-          ) {
-            this.playAgain();
+          if (prev === "play" && tab !== "play") {
+            if (this.started || this.betweenGames) {
+              // Save progress at the game boundary instead of discarding it.
+              this._saveCheckpoint();
+              this.playAgain();
+              const c = this._loadCheckpoint();
+              if (c) { this.checkpoint = c; this.resumable = true; }
+            } else if (this.campaignDone) {
+              // Nothing to resume; reset the finished-campaign screen.
+              this.playAgain();
+            }
           }
         });
       },
 
       startCampaign() {
+        // A brand-new campaign supersedes any saved checkpoint.
+        this._clearCheckpoint();
+        this.resumable = false;
         this.campaignIndex = 0;
         // One id shared across this run's 6 games so the server can group them
         // into a campaign total on the Play Leaderboard.
@@ -725,6 +777,11 @@
         } else {
           this.betweenGames = true;
         }
+        if (this.campaignDone) {
+          this._clearCheckpoint();
+        } else {
+          this._saveCheckpoint();
+        }
       },
 
       advanceCampaign() {
@@ -733,6 +790,26 @@
         this._resetTurnState();
         this.loading = true;
         this.startGame();
+      },
+
+      resumeCampaign() {
+        const ck = this.checkpoint;
+        if (!ck) return;
+        this.nickname = ck.nickname;
+        this.password = ck.password || "";
+        this.campaignId = ck.campaignId;
+        this.campaignIndex = ck.campaignIndex;
+        this.campaignResults = ck.campaignResults || [];
+        this.campaignDone = false;
+        this.betweenGames = false;
+        this.resumable = false;
+        this._resetTurnState();
+        this.startGame();
+      },
+      discardCheckpoint() {
+        this._clearCheckpoint();
+        this.resumable = false;
+        this.checkpoint = null;
       },
 
       _resetTurnState() {
