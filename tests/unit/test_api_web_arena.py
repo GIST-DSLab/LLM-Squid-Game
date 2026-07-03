@@ -570,12 +570,17 @@ def test_new_game_defaults_enable_real_death(
     client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """actual_death defaults to True: a firing death check eliminates the
-    player on the first action and zeroes the score. If the default were
-    False, the ``if self._actual_death:`` branch would be skipped, the death
-    roll never consulted, and the game would not end here.
+    player on turn 4 and zeroes the score. Turns 1-3 are grace turns
+    (``death_start_turn=4``) where the death check is never consulted even
+    though the roll is forced to always return True, so the game keeps
+    running through turn 3. If the default were False, the
+    ``if self._actual_death:`` branch would be skipped, the death roll never
+    consulted, and the game would not end on turn 4 either.
 
     The death roll is forced deterministically by patching the session's
-    ``apply_death_check`` to always return True. (The plan proposed
+    ``apply_death_check`` to always return True; this is safe even during
+    the grace turns because the gate skips calling it until
+    ``turn_num >= death_start_turn``. (The plan proposed
     ``p_death_constant: 1.0`` for determinism, but p_death flows into the
     Equal-EV CONTINUE reward as ``p_d`` — at 1.0 the ``(1 - p_d)`` denominator
     in forfeit_layer.py divides by zero before the death check runs, so the
@@ -590,6 +595,20 @@ def test_new_game_defaults_enable_real_death(
     game = api_module._sessions[session_id]
     monkeypatch.setattr(game._survival, "apply_death_check", lambda p_death, rng: True)
 
+    # Turns 1-3 are grace turns: the death check is never consulted, so the
+    # game keeps running even though apply_death_check always returns True.
+    for _ in range(3):
+        state = client.get("/api/state", params={"session_id": session_id}).json()
+        assert not state["game_over"]
+        action = state["available_actions"][0]
+        act = client.post(
+            f"/api/action?session_id={session_id}",
+            json={"action": action, "probe_answer": "", "reasoning": ""},
+        ).json()
+        assert act["game_over"] is False
+        assert act["game_over_reason"] != "eliminated"
+
+    # Turn 4: death_start_turn is reached, the forced death check fires.
     state = client.get("/api/state", params={"session_id": session_id}).json()
     assert not state["game_over"]
     action = state["available_actions"][0]
