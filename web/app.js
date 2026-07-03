@@ -422,6 +422,8 @@
       selectedAction: "",
       reasoning: "",
       psuccess: 50,
+      // Split-call staged turn: 1=rule+action, 2=p(correct), 3=continue/forfeit.
+      turnStage: 1,
       lastFeedback: null,
 
       // Rule-inference probe, built via toggles instead of free text.
@@ -557,6 +559,33 @@
         this.forfeitReason = d;
       },
 
+      // --- Split-call staged turn (mirrors LLM Call 1 / 1.5 / 2) ---
+      commitAction() {
+        // Stage 1 -> 2: lock the game action. Forfeit is NOT a stage-1 choice;
+        // it is offered only at stage 3.
+        if (!this.selectedAction || this.selectedAction === "forfeit") {
+          this.error = "Pick a game action first.";
+          return;
+        }
+        this.error = null;
+        this.turnStage = 2;
+      },
+      commitConfidence() {
+        // Stage 2 -> 3: lock p(correct). The slider always has a value.
+        this.error = null;
+        this.turnStage = 3;
+      },
+      chooseContinue() {
+        // Stage 3: keep the stage-1 action and submit as-is.
+        this.submitAction();
+      },
+      chooseForfeit(reason) {
+        // Stage 3: override to forfeit with the given reason digit, then submit.
+        this.selectedAction = "forfeit";
+        this.forfeitReason = reason;
+        this.submitAction();
+      },
+
       async submitAction() {
         if (!this.selectedAction) {
           this.error = "Choose an action (or Forfeit) first.";
@@ -601,6 +630,7 @@
           this.reasoning = "";
           this.psuccess = 50;
           this.forfeitReason = null;
+          this.turnStage = 1;
           // Keep the rule-inference toggles across turns — the hidden rule
           // is constant, so the player refines one running guess.
           if (resp.game_over) {
@@ -662,6 +692,7 @@
         this.state = null;
         this.selectedAction = "";
         this.forfeitReason = null;
+        this.turnStage = 1;
         this.probeAttr = "color";
         this.probeValue = "red";
         this.probeAction = "go_left";
