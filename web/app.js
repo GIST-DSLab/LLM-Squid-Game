@@ -380,7 +380,7 @@
   // Tabs that belong to the game app. Every other hash — none, #home, #about,
   // or a stale section anchor from the old about.html — falls back to the
   // landing, so old external links keep working.
-  const APP_TABS = ["play", "arena", "models", "leaderboard", "logs"];
+  const APP_TABS = ["play", "arena", "models", "logs"];
 
   function tabFromHash() {
     const h = (location.hash || "").replace("#", "");
@@ -756,42 +756,6 @@
           this.statusMsg = "";
           this.open = data.open;
           this.closed = data.closed;
-          this.loaded = true;
-        } catch (e) {
-          this.error = e.message;
-        } finally {
-          this.loading = false;
-        }
-      },
-    }));
-
-    // -----------------------------------------------------------------
-    // Play Leaderboard screen
-    // -----------------------------------------------------------------
-    Alpine.data("playLeaderboardScreen", () => ({
-      task: window.WEB_ARENA_DEFAULT_TASK,
-      framing: window.WEB_ARENA_DEFAULT_FRAMING,
-      loading: false,
-      error: null,
-      statusMsg: "",
-      loaded: false,
-      rows: [],
-
-      async init() {
-        await this.load();
-      },
-
-      async load() {
-        this.loading = true;
-        this.error = null;
-        try {
-          const data = await fetchJSON(
-            `/api/leaderboard/play?task=${encodeURIComponent(this.task)}&framing=${encodeURIComponent(this.framing)}`,
-            {},
-            (m) => (this.statusMsg = m)
-          );
-          this.statusMsg = "";
-          this.rows = data.rows;
           this.loaded = true;
         } catch (e) {
           this.error = e.message;
