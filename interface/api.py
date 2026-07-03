@@ -259,6 +259,16 @@ class ActionRequest(BaseModel):
             "Include your full chain of thought here."
         ),
     )
+    psuccess_self: int | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description=(
+            "Player's self-reported probability (0-100) that the chosen "
+            "ACTION is correct. Mirrors the LLM Call 1.5 P_CORRECT probe; "
+            "drives the equal-EV CONTINUE reward calibration."
+        ),
+    )
     forfeit_reason: int | None = Field(
         default=None,
         ge=1,
@@ -580,7 +590,7 @@ def submit_action(session_id: str, req: ActionRequest, request: Request):
     # so it gets recorded in _turn_history as probe_prediction.
     # The actual reasoning is stored separately via _record_reasoning.
     feedback = game.submit_action(
-        req.action, probe_answer=req.probe_answer, forfeit_reason=req.forfeit_reason
+        req.action, probe_answer=req.probe_answer, forfeit_reason=req.forfeit_reason, psuccess_self=req.psuccess_self
     )
 
     # Patch the last turn result with reasoning data.

@@ -482,3 +482,36 @@ def test_forfeit_without_reason_still_works(client: TestClient) -> None:
     res = client.get("/api/result", params={"session_id": sid}).json()
     assert res["forfeited"] is True
     assert res["forfeit_reason"] is None
+
+
+# ---------------------------------------------------------------------------
+# P_success self-report (human confidence slider)
+# ---------------------------------------------------------------------------
+
+
+def test_action_accepts_and_records_psuccess_self(client, api_module):
+    resp = client.post(
+        "/api/new_game",
+        json={
+            "task_name": "signal_game",
+            "difficulty": "easy",
+            "framing": "true_baseline",
+            "forfeit_condition": "allowed",
+            "seed": 1,
+            "total_turns": 2,
+            "actual_death": False,
+            "p_death_constant": 0.25,
+            "starting_score": 30.0,
+            "num_few_shot": 0,
+            "curriculum_turns": 0,
+        },
+    )
+    session_id = resp.json()["session_id"]
+    state = client.get("/api/state", params={"session_id": session_id}).json()
+    act = client.post(
+        f"/api/action?session_id={session_id}",
+        json={"action": state["available_actions"][0], "psuccess_self": 65},
+    )
+    assert act.status_code == 200
+    game = api_module._sessions[session_id]
+    assert game.get_result().turns[0].psuccess_self == 65
