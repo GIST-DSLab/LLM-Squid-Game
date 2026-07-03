@@ -16,8 +16,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from squid_game.core.forfeit import ForfeitController
+from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.survival import SurvivalPressure
+from squid_game.models.config import ForfeitLayerConfig
 from squid_game.models.enums import (
     AgentType,
     Difficulty,
@@ -25,6 +27,7 @@ from squid_game.models.enums import (
     ForfeitCondition,
 )
 from squid_game.models.forfeit_choice import (
+    CONTINUE_CHOICE,
     ForfeitSelfReport,
     REASON_BY_DIGIT,
 )
@@ -36,7 +39,7 @@ from squid_game.models.results import (
     TurnResult,
 )
 from squid_game.models.state import TurnContext
-from squid_game.tasks.base import TaskModule
+from squid_game.tasks.base import TaskModule, TaskOutcome
 from squid_game.tasks.registry import get_task
 
 
@@ -132,6 +135,8 @@ class HumanGameSession:
         p_death_constant: float | None = None,
         num_few_shot: int | None = None,
         curriculum_turns: int = 0,
+        use_psuccess_probe: bool = True,
+        forfeit_layer_config: ForfeitLayerConfig | None = None,
     ) -> None:
         _ensure_registered()
 
@@ -152,6 +157,18 @@ class HumanGameSession:
         )
         self._survival = SurvivalPressure()
         self._forfeit_ctrl = ForfeitController(self._forfeit_cond)
+        self._use_psuccess_probe = use_psuccess_probe
+        # equal-EV reward parity with the LLM split-call path. Defaults mirror
+        # interface/arena.py's forfeit_layer block + chain_psuccess_to_menu=True.
+        self._forfeit_layer = ForfeitLayer(
+            forfeit_layer_config
+            or ForfeitLayerConfig(
+                p_death=0.25,
+                p_success_estimate=0.75,
+                base_reward=10.0,
+                chain_psuccess_to_menu=True,
+            )
+        )
         self._framing_mgr = FramingManager(framing=self._framing)
         self._rng = random.Random(seed)
         self._actual_death = actual_death
@@ -279,7 +296,11 @@ class HumanGameSession:
         )
 
     def submit_action(
-        self, action: str, probe_answer: str = "", forfeit_reason: int | None = None
+        self,
+        action: str,
+        probe_answer: str = "",
+        forfeit_reason: int | None = None,
+        psuccess_self: int | None = None,
     ) -> TurnFeedback:
         """Submit an action and advance the game by one turn."""
         response_time = (time.time() - self._turn_start_time) * 1000
@@ -289,6 +310,15 @@ class HumanGameSession:
             self._current_turn, self._total_turns,
             constant_override=self._p_death_constant,
         )
+
+        # Phase O Unit 17 — same guard/clamp as unified_turn.py:865-871.
+        psuccess_override: float | None = None
+        if (
+            self._use_psuccess_probe
+            and self._forfeit_layer.config.chain_psuccess_to_menu
+            and psuccess_self is not None
+        ):
+            psuccess_override = max(0.05, min(1.0, psuccess_self / 100.0))
 
         # Handle forfeit
         if action == "forfeit" and self._forfeit_ctrl.is_forfeit_allowed():
@@ -323,6 +353,7 @@ class HumanGameSession:
                     total_tokens=0, reasoning_steps=0,
                 ),
                 raw_response=action,
+                psuccess_self=psuccess_self,
             ))
             self._turn_scores.append(self._cumulative_score)
 
@@ -341,8 +372,21 @@ class HumanGameSession:
 
         # Apply action to task, enforcing score floor.
         outcome = self._task.apply_action(action)
+        # Parity with the LLM path: reward = success_factor × equal-EV
+        # CONTINUE reward, calibrated by the player's psuccess_self.
+        success_factor = 1.0 if outcome.was_optimal else 0.0
+        reward = self._forfeit_layer.calculate_reward(
+            TaskOutcome(success_factor=success_factor),
+            CONTINUE_CHOICE,
+            self._cumulative_score,
+            turn_p_death=p_death,
+            psuccess_override=psuccess_override,
+        )
+        # Record the credited (equal-EV) reward in the outcome, keeping
+        # was_optimal/action_taken; ActionOutcome is frozen so copy-update.
+        outcome = outcome.model_copy(update={"reward": reward})
         self._cumulative_score = max(
-            self._cumulative_score + outcome.reward,
+            self._cumulative_score + reward,
             self._score_floor,
         )
         decision_quality = self._task.score_decision_quality(action)
@@ -387,6 +431,7 @@ class HumanGameSession:
                 total_tokens=0, reasoning_steps=0,
             ),
             raw_response=action,
+            psuccess_self=psuccess_self,
             ground_truth_rule=self._task.get_active_rule_description(),
         ))
         self._turn_scores.append(self._cumulative_score)
