@@ -399,97 +399,120 @@
             <div class="observation-box" x-text="state.system_prompt"></div>
           </details>
 
-          <!-- Emoji action buttons -->
-          <h3>Choose an action</h3>
-          <div class="action-grid">
-            <template x-for="a in state.available_actions" :key="a">
-              <button type="button" class="action-btn" :class="{ selected: selectedAction === a }" @click="selectAction(a)">
-                <span class="action-emoji" x-text="squidArenaHelpers.actionEmoji(a)"></span>
-                <span class="action-label" x-text="squidArenaHelpers.actionLabel(a)"></span>
-              </button>
-            </template>
-            <button type="button" class="action-btn forfeit" x-show="state.forfeit_allowed"
-                    :class="{ selected: selectedAction === 'forfeit' }" @click="selectAction('forfeit')">
-              <span class="action-emoji">🏳️</span>
-              <span class="action-label">Forfeit</span>
-              <span class="action-sub">keep score</span>
-            </button>
-          </div>
-
-          <div class="reason-picker" x-show="selectedAction === 'forfeit'">
-            <div class="reason-head">Why are you forfeiting? (required)</div>
-            <div class="seg reason-seg">
-              <template x-for="r in squidArenaHelpers.reasonOptions" :key="r.digit">
-                <button type="button" class="seg-btn"
-                        :class="{ on: forfeitReason === r.digit }" @click="pickReason(r.digit)">
-                  <span x-text="r.emoji"></span>
-                  <span x-text="'⓪①②③'.charAt(r.digit) + ' ' + r.label"></span>
+          <!-- ============ STAGE 1: rule inference + game action ============ -->
+          <div x-show="turnStage === 1">
+            <h3>Choose an action</h3>
+            <div class="action-grid">
+              <template x-for="a in state.available_actions" :key="a">
+                <button type="button" class="action-btn" :class="{ selected: selectedAction === a }" @click="selectAction(a)">
+                  <span class="action-emoji" x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                  <span class="action-label" x-text="squidArenaHelpers.actionLabel(a)"></span>
                 </button>
               </template>
             </div>
+
+            <!-- Rule-inference toggle builder -->
+            <h3>Your rule guess <span class="muted">(rule-inference probe)</span></h3>
+            <div class="rule-builder">
+              <div class="rule-line">
+                <span class="kw">If</span>
+                <div class="seg">
+                  <template x-for="attr in ['color','shape','number']" :key="attr">
+                    <button type="button" class="seg-btn" :class="{ on: probeAttr === attr }" @click="setAttr(attr)" x-text="attr"></button>
+                  </template>
+                </div>
+                <span class="kw">is</span>
+                <div class="seg seg-values">
+                  <template x-for="val in valueOptions" :key="val">
+                    <button type="button" class="seg-btn val-btn" :class="{ on: probeValue === val }" @click="probeValue = val"
+                            x-html="squidArenaHelpers.valueChipHTML(probeAttr, val)"></button>
+                  </template>
+                </div>
+              </div>
+              <div class="rule-line">
+                <span class="kw">then</span>
+                <div class="seg">
+                  <template x-for="a in state.available_actions" :key="a">
+                    <button type="button" class="seg-btn act-btn" :class="{ on: probeAction === a }" @click="probeAction = a">
+                      <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                      <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <div class="rule-line">
+                <span class="kw">otherwise</span>
+                <div class="seg">
+                  <template x-for="a in state.available_actions" :key="a">
+                    <button type="button" class="seg-btn act-btn" :class="{ on: probeDefault === a }" @click="probeDefault = a">
+                      <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                      <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <div class="rule-preview"><span class="muted">Submitting:</span> <code x-text="assembledRule"></code></div>
+            </div>
+
+            <div class="field">
+              <label for="reasoning">Reasoning (optional — your chain of thought before this action)</label>
+              <textarea id="reasoning" x-model="reasoning" placeholder="Why did you choose this action?"></textarea>
+            </div>
+
+            <button class="submit-btn" @click="commitAction()" :disabled="!selectedAction">
+              <span x-text="selectedAction ? 'Next → confidence (' + squidArenaHelpers.actionLabel(selectedAction) + ')' : 'Pick an action above'"></span>
+            </button>
           </div>
 
-          <!-- Rule-inference toggle builder -->
-          <h3>Your rule guess <span class="muted">(rule-inference probe)</span></h3>
-          <div class="rule-builder">
-            <div class="rule-line">
-              <span class="kw">If</span>
-              <div class="seg">
-                <template x-for="attr in ['color','shape','number']" :key="attr">
-                  <button type="button" class="seg-btn" :class="{ on: probeAttr === attr }" @click="setAttr(attr)" x-text="attr"></button>
-                </template>
-              </div>
-              <span class="kw">is</span>
-              <div class="seg seg-values">
-                <template x-for="val in valueOptions" :key="val">
-                  <button type="button" class="seg-btn val-btn" :class="{ on: probeValue === val }" @click="probeValue = val"
-                          x-html="squidArenaHelpers.valueChipHTML(probeAttr, val)"></button>
-                </template>
-              </div>
+          <!-- ============ STAGE 2: p(correct) confidence ============ -->
+          <div x-show="turnStage === 2">
+            <div class="rule-preview">
+              <span class="muted">Your action:</span>
+              <code x-text="squidArenaHelpers.actionEmoji(selectedAction) + ' ' + squidArenaHelpers.actionLabel(selectedAction)"></code>
             </div>
-            <div class="rule-line">
-              <span class="kw">then</span>
-              <div class="seg">
-                <template x-for="a in state.available_actions" :key="a">
-                  <button type="button" class="seg-btn act-btn" :class="{ on: probeAction === a }" @click="probeAction = a">
-                    <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
-                    <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+            <div class="field">
+              <label for="psuccess">
+                How likely is your action correct? (P_CORRECT)
+                <strong x-text="psuccess + '%'"></strong>
+              </label>
+              <input type="range" id="psuccess" min="0" max="100" step="1"
+                     x-model.number="psuccess" />
+            </div>
+            <button class="submit-btn" @click="commitConfidence()">Next → decision</button>
+          </div>
+
+          <!-- ============ STAGE 3: continue vs forfeit ============ -->
+          <div x-show="turnStage === 3">
+            <div class="rule-preview">
+              <span class="muted">Action</span>
+              <code x-text="squidArenaHelpers.actionEmoji(selectedAction) + ' ' + squidArenaHelpers.actionLabel(selectedAction)"></code>
+              &nbsp;·&nbsp; <span class="muted">confidence</span> <strong x-text="psuccess + '%'"></strong>
+            </div>
+
+            <div class="reason-picker" x-show="state.forfeit_allowed">
+              <div class="reason-head">If you forfeit, why? (pick before forfeiting)</div>
+              <div class="seg reason-seg">
+                <template x-for="r in squidArenaHelpers.reasonOptions" :key="r.digit">
+                  <button type="button" class="seg-btn"
+                          :class="{ on: forfeitReason === r.digit }" @click="pickReason(r.digit)">
+                    <span x-text="r.emoji"></span>
+                    <span x-text="'⓪①②③'.charAt(r.digit) + ' ' + r.label"></span>
                   </button>
                 </template>
               </div>
             </div>
-            <div class="rule-line">
-              <span class="kw">otherwise</span>
-              <div class="seg">
-                <template x-for="a in state.available_actions" :key="a">
-                  <button type="button" class="seg-btn act-btn" :class="{ on: probeDefault === a }" @click="probeDefault = a">
-                    <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
-                    <span x-text="squidArenaHelpers.actionLabel(a)"></span>
-                  </button>
-                </template>
-              </div>
+
+            <div class="decision-row">
+              <button class="submit-btn" @click="chooseContinue()" :disabled="submitting">
+                <span class="spinner" x-show="submitting"></span>
+                <span x-text="submitting ? 'Submitting…' : 'CONTINUE ▶'"></span>
+              </button>
+              <button class="submit-btn forfeit" x-show="state.forfeit_allowed"
+                      @click="chooseForfeit(forfeitReason)" :disabled="submitting || !forfeitReason">
+                🏳️ FORFEIT
+              </button>
             </div>
-            <div class="rule-preview"><span class="muted">Submitting:</span> <code x-text="assembledRule"></code></div>
           </div>
-
-          <div class="field">
-            <label for="psuccess">
-              How likely is your action correct? (P_CORRECT)
-              <strong x-text="psuccess + '%'"></strong>
-            </label>
-            <input type="range" id="psuccess" min="0" max="100" step="1"
-                   x-model.number="psuccess" />
-          </div>
-
-          <div class="field">
-            <label for="reasoning">Reasoning (optional — your chain of thought before this action)</label>
-            <textarea id="reasoning" x-model="reasoning" placeholder="Why did you choose this action?"></textarea>
-          </div>
-
-          <button class="submit-btn" @click="submitAction()" :disabled="submitting || !selectedAction">
-            <span class="spinner" x-show="submitting"></span>
-            <span x-text="submitting ? 'Submitting…' : (selectedAction ? 'Submit ' + squidArenaHelpers.actionEmoji(selectedAction) + ' ' + squidArenaHelpers.actionLabel(selectedAction) : 'Pick an action above')"></span>
-          </button>
 
           <div class="feedback-card" x-show="lastFeedback">
             <div class="fb-head">
