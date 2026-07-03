@@ -312,3 +312,19 @@ def test_list_model_stats_returns_multiple_models(repo: Repository) -> None:
     repo.upsert_model_stats(_model_stats(model_label="GPT-OSS-20B", beta_framing_is_FC=0.3))
     rows = repo.list_model_stats()
     assert {r.model_label for r in rows} == {"Gemini-2.5-flash", "GPT-OSS-20B"}
+
+
+def test_turn_record_round_trips_psuccess_self(repo: Repository) -> None:
+    session_id = repo.create_session(_session())
+    repo.add_turns([
+        TurnRecord(
+            session_id=session_id,
+            turn_no=1,
+            observation="signal A",
+            action="button_1",
+            score=1.0,
+            psuccess_self=72,
+        ),
+    ])
+    fetched = repo.list_turns(session_id)
+    assert fetched[0].psuccess_self == 72

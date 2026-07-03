@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS turns (
     thinking_forfeit TEXT,
     raw_response TEXT,
     correct BOOLEAN,
+    psuccess_self INTEGER,
     PRIMARY KEY (session_id, turn_no)
 );
 
@@ -71,6 +72,9 @@ class PostgresRepository(Repository):
     def init_schema(self) -> None:
         with self._conn.cursor() as cur:
             cur.execute(_SCHEMA)
+            cur.execute(
+                "ALTER TABLE turns ADD COLUMN IF NOT EXISTS psuccess_self INTEGER"
+            )
 
     # -- sessions -------------------------------------------------------
 
@@ -159,8 +163,8 @@ class PostgresRepository(Repository):
                     (session_id, turn_no, observation, action,
                      ri_task, ri_probe, ri_forfeit, choice, score,
                      thinking_task, thinking_probe, thinking_forfeit,
-                     raw_response, correct)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                     raw_response, correct, psuccess_self)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 [
                     (
@@ -178,6 +182,7 @@ class PostgresRepository(Repository):
                         t.thinking_forfeit,
                         t.raw_response,
                         t.correct,
+                        t.psuccess_self,
                     )
                     for t in turns
                 ],
@@ -189,7 +194,7 @@ class PostgresRepository(Repository):
                 "SELECT session_id, turn_no, observation, action, "
                 "ri_task, ri_probe, ri_forfeit, choice, score, "
                 "thinking_task, thinking_probe, thinking_forfeit, "
-                "raw_response, correct "
+                "raw_response, correct, psuccess_self "
                 "FROM turns WHERE session_id = %s ORDER BY turn_no ASC",
                 (session_id,),
             )
@@ -270,7 +275,7 @@ def _row_to_turn(row: tuple) -> TurnRecord:
     (
         session_id, turn_no, observation, action, ri_task, ri_probe,
         ri_forfeit, choice, score, thinking_task, thinking_probe,
-        thinking_forfeit, raw_response, correct,
+        thinking_forfeit, raw_response, correct, psuccess_self,
     ) = row
     return TurnRecord(
         session_id=session_id,
@@ -287,6 +292,7 @@ def _row_to_turn(row: tuple) -> TurnRecord:
         thinking_forfeit=thinking_forfeit,
         raw_response=raw_response,
         correct=correct,
+        psuccess_self=psuccess_self,
     )
 
 

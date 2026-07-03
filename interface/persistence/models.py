@@ -64,6 +64,7 @@ class TurnRecord:
     thinking_forfeit: str | None = None
     raw_response: str | None = None
     correct: bool | None = None
+    psuccess_self: int | None = None
 
 
 @dataclass

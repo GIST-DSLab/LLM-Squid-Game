@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS turns (
     thinking_forfeit TEXT,
     raw_response TEXT,
     correct INTEGER,
+    psuccess_self INTEGER,
     PRIMARY KEY (session_id, turn_no)
 );
 
@@ -82,6 +83,14 @@ class SQLiteRepository(Repository):
     def init_schema(self) -> None:
         with self._lock:
             self._conn.executescript(_SCHEMA)
+            cols = {
+                r["name"]
+                for r in self._conn.execute("PRAGMA table_info(turns)")
+            }
+            if "psuccess_self" not in cols:
+                self._conn.execute(
+                    "ALTER TABLE turns ADD COLUMN psuccess_self INTEGER"
+                )
             self._conn.commit()
 
     # -- sessions -------------------------------------------------------
@@ -162,8 +171,8 @@ class SQLiteRepository(Repository):
                     (session_id, turn_no, observation, action,
                      ri_task, ri_probe, ri_forfeit, choice, score,
                      thinking_task, thinking_probe, thinking_forfeit,
-                     raw_response, correct)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     raw_response, correct, psuccess_self)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 [
                     (
@@ -181,6 +190,7 @@ class SQLiteRepository(Repository):
                         t.thinking_forfeit,
                         t.raw_response,
                         None if t.correct is None else int(t.correct),
+                        t.psuccess_self,
                     )
                     for t in turns
                 ],
@@ -275,6 +285,7 @@ def _row_to_turn(row: sqlite3.Row) -> TurnRecord:
         thinking_forfeit=row["thinking_forfeit"],
         raw_response=row["raw_response"],
         correct=None if row["correct"] is None else bool(row["correct"]),
+        psuccess_self=row["psuccess_self"],
     )
 
 
