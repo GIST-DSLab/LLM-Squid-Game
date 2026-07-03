@@ -188,6 +188,15 @@
     { framing: "flagship_corruption", forfeit: "not_allowed", tag: "push_pull", label: "Push+Pull · No-forfeit" },
     { framing: "flagship_corruption", forfeit: "allowed",     tag: "push_pull", label: "Push+Pull · Forfeit" },
   ];
+  // Player-facing scenario copy for the Play campaign. Deliberately avoids the
+  // internal "Push"/"Pull" vocabulary; describes the situation instead.
+  const CAMPAIGN_SCENARIOS = {
+    baseline: "그냥 편하게 게임을 플레이해보세요.",
+    pull: "이 게임의 점수는 리더보드에 직접 반영됩니다.",
+    push_pull:
+      "이 게임의 점수는 리더보드에 직접 반영됩니다. 매 턴 정답 여부와 무관하게 일정 확률로 탈락할 수 있습니다. 신중하게 판단하세요. 틀리면 그 턴 점수는 0점입니다.",
+  };
+
   const TOTAL_TURNS = 10;  // must match server NewGameRequest.total_turns
   const REASON_OPTIONS = [
     { digit: 1, label: "To survive", emoji: "🛡️" },
@@ -368,6 +377,14 @@
     },
     gameOptions: GAME_OPTIONS,
     campaignConditions: CAMPAIGN_CONDITIONS,
+    campaignScenario: function (tag) {
+      return CAMPAIGN_SCENARIOS[tag] || "";
+    },
+    forfeitLine: function (forfeit) {
+      return forfeit === "allowed"
+        ? "🏳️ 포기 가능 — 지금까지 점수를 지키고 안전하게 빠져나갑니다."
+        : "⛔ 포기 불가 — 끝까지 진행해야 합니다.";
+    },
     totalTurns: TOTAL_TURNS,
     reasonOptions: REASON_OPTIONS,
     turnsSurvived,

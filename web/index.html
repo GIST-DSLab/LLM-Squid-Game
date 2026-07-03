@@ -345,6 +345,14 @@
           </template>
         </div>
 
+        <div class="scenario-box"
+             style="background:rgba(124,92,255,0.08);border-radius:10px;padding:12px;margin:12px 0;">
+          <div class="framing-eyebrow">첫 게임</div>
+          <div x-text="squidArenaHelpers.campaignScenario(squidArenaHelpers.campaignConditions[0].tag)"></div>
+          <div class="muted" style="margin-top:6px;"
+               x-text="squidArenaHelpers.forfeitLine(squidArenaHelpers.campaignConditions[0].forfeit)"></div>
+        </div>
+
         <button style="margin-top:16px" @click="startCampaign()" :disabled="starting">
           <span class="spinner" x-show="starting"></span>
           <span x-text="starting ? 'Building your prompt…' : 'Start 6-game run'"></span>
@@ -357,6 +365,12 @@
         <div class="card play-card">
           <div class="campaign-progress">
             <span class="cp-step" x-text="'Game ' + (campaignIndex + 1) + ' / 6'"></span>
+            <div class="cp-bar" style="display:flex;gap:4px;margin-top:6px;">
+              <template x-for="i in 6" :key="i">
+                <span class="cp-seg"
+                      :style="`flex:1;height:8px;border-radius:4px;background:${(i-1) < campaignIndex ? 'var(--accent,#7c5cff)' : ((i-1) === campaignIndex ? 'var(--accent,#7c5cff)' : 'rgba(255,255,255,0.12)')};opacity:${(i-1) === campaignIndex ? '1' : ((i-1) < campaignIndex ? '0.55' : '1')};`"></span>
+              </template>
+            </div>
           </div>
 
           <!-- Framing briefing — chosen conditions + always-on threat text -->
@@ -367,6 +381,11 @@
                     x-text="squidArenaHelpers.framingMeta(framing).label"></span>
               <span class="cond-badge forfeit"
                     x-text="forfeit === 'allowed' ? '🏳️ Forfeit allowed' : '⛔ No forfeit'"></span>
+            </div>
+            <div class="scenario-box"
+                 style="background:rgba(124,92,255,0.08);border-radius:10px;padding:10px 12px;margin:8px 0;">
+              <div x-text="squidArenaHelpers.campaignScenario(currentCondition.tag)"></div>
+              <div class="muted" style="margin-top:6px;" x-text="squidArenaHelpers.forfeitLine(currentCondition.forfeit)"></div>
             </div>
             <div class="framing-text" x-text="state.framing_text"></div>
           </div>
@@ -613,6 +632,14 @@
           <p class="muted">
             Next: <strong x-text="squidArenaHelpers.campaignConditions[campaignIndex + 1].label"></strong>
           </p>
+          <div class="scenario-box"
+               style="background:rgba(124,92,255,0.08);border-radius:10px;padding:12px;margin:10px 0;"
+               x-show="campaignIndex + 1 < 6">
+            <div class="framing-eyebrow">다음 게임</div>
+            <div x-text="squidArenaHelpers.campaignScenario(squidArenaHelpers.campaignConditions[campaignIndex + 1].tag)"></div>
+            <div class="muted" style="margin-top:6px;"
+                 x-text="squidArenaHelpers.forfeitLine(squidArenaHelpers.campaignConditions[campaignIndex + 1].forfeit)"></div>
+          </div>
           <button @click="advanceCampaign()">Continue →</button>
         </div>
       </template>
