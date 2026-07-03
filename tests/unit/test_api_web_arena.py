@@ -114,6 +114,12 @@ def test_new_game_blank_nickname_400(client) -> None:
     assert _new_game(client, nickname="   ", password="pw").status_code == 400
 
 
+def test_new_game_control_char_nickname_400(client) -> None:
+    # A control-char-only nickname sanitizes to the reserved fallback and must
+    # be rejected, not collapsed into a single shared identity.
+    assert _new_game(client, nickname="\x07\x01", password="pw").status_code == 400
+
+
 # ---------------------------------------------------------------------------
 # App import / route registration
 # ---------------------------------------------------------------------------

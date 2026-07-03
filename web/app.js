@@ -569,15 +569,15 @@
         if (ck) { this.checkpoint = ck; this.resumable = true; }
         this.$watch("$store.nav.tab", (tab, prev) => {
           if (prev === "play" && tab !== "play") {
-            if (this.started || this.betweenGames) {
+            if (this.campaignDone) {
+              // Finished campaign: nothing to resume; just reset the screen.
+              this.playAgain();
+            } else if (this.started || this.betweenGames) {
               // Save progress at the game boundary instead of discarding it.
               this._saveCheckpoint();
               this.playAgain();
               const c = this._loadCheckpoint();
               if (c) { this.checkpoint = c; this.resumable = true; }
-            } else if (this.campaignDone) {
-              // Nothing to resume; reset the finished-campaign screen.
-              this.playAgain();
             }
           }
         });

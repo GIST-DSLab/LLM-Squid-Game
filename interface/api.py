@@ -262,6 +262,7 @@ class NewGameRequest(BaseModel):
     )
     password: str = Field(
         default="",
+        max_length=64,
         description=(
             "Player password protecting the nickname identity. Required. "
             "First use of a nickname registers it with this password; later "
@@ -591,12 +592,23 @@ def new_game(req: NewGameRequest, request: Request):
     if not req.password:
         raise HTTPException(400, "비밀번호를 입력해 주세요.")
     nick = sanitize_nickname(req.nickname)
+    if nick == DEFAULT_NICKNAME:
+        raise HTTPException(400, "닉네임을 입력해 주세요.")
     with _player_lock:
         existing = _repository.get_player(nick)
         if existing is None:
-            _repository.create_player(
-                PlayerRecord(nickname=nick, pw_hash=hash_password(req.password))
-            )
+            try:
+                _repository.create_player(
+                    PlayerRecord(nickname=nick, pw_hash=hash_password(req.password))
+                )
+            except Exception:
+                # Another worker registered this nickname first (cross-process
+                # race; _player_lock is per-process). Fall back to verifying.
+                racing = _repository.get_player(nick)
+                if racing is None or not verify_password(req.password, racing.pw_hash):
+                    raise HTTPException(
+                        403, "이미 사용 중인 닉네임입니다. 비밀번호가 일치하지 않습니다."
+                    )
         elif not verify_password(req.password, existing.pw_hash):
             raise HTTPException(
                 403, "이미 사용 중인 닉네임입니다. 비밀번호가 일치하지 않습니다."
