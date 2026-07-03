@@ -903,8 +903,12 @@
 
     <!-- =================================================================
          LOGS / TRACE EXPLORER
+         x-if (not x-show): unmounts on leave and re-mounts a fresh
+         logsScreen() on entry, so the screen resets to the list view with
+         cleared filters and a re-fetched list every time the tab is opened.
          ================================================================= -->
-    <section x-data="logsScreen()" x-show="$store.nav.tab === 'logs'" x-cloak>
+    <template x-if="$store.nav.tab === 'logs'">
+    <section x-data="logsScreen()">
       <h2 class="h-shape s-square">Logs / Trace Explorer</h2>
       <p class="muted">Browse past LLM experiment runs. Click a session to open its full turn-by-turn trace.</p>
 
@@ -1120,6 +1124,7 @@
         </template>
       </div>
     </section>
+    </template>
   </main>
 
   <footer>
