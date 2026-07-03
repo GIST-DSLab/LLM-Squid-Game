@@ -473,6 +473,15 @@
           </div>
 
           <div class="field">
+            <label for="psuccess">
+              How likely is your action correct? (P_CORRECT)
+              <strong x-text="psuccess + '%'"></strong>
+            </label>
+            <input type="range" id="psuccess" min="0" max="100" step="1"
+                   x-model.number="psuccess" />
+          </div>
+
+          <div class="field">
             <label for="reasoning">Reasoning (optional — your chain of thought before this action)</label>
             <textarea id="reasoning" x-model="reasoning" placeholder="Why did you choose this action?"></textarea>
           </div>

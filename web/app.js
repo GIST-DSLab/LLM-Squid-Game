@@ -421,6 +421,7 @@
       state: null,
       selectedAction: "",
       reasoning: "",
+      psuccess: 50,
       lastFeedback: null,
 
       // Rule-inference probe, built via toggles instead of free text.
@@ -581,6 +582,7 @@
                 action: this.selectedAction,
                 probe_answer: this.assembledRule,
                 reasoning: this.reasoning,
+                psuccess_self: this.psuccess,
                 forfeit_reason: reason,
               }),
             },
@@ -597,6 +599,7 @@
           });
           this.selectedAction = "";
           this.reasoning = "";
+          this.psuccess = 50;
           this.forfeitReason = null;
           // Keep the rule-inference toggles across turns — the hidden rule
           // is constant, so the player refines one running guess.
@@ -665,6 +668,7 @@
         this.probeDefault = "stay";
         this.history = [];
         this.reasoning = "";
+        this.psuccess = 50;
         this.lastFeedback = null;
         this.gameOver = false;
         this.result = null;
