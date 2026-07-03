@@ -328,6 +328,11 @@
       <template x-if="started && state && !gameOver">
         <div class="play-layout">
         <div class="card play-card">
+          <div class="campaign-progress">
+            <span class="cp-step" x-text="'Game ' + (campaignIndex + 1) + ' / 6'"></span>
+            <span class="cond-badge" :class="currentCondition.tag" x-text="currentCondition.label"></span>
+          </div>
+
           <!-- Framing briefing — chosen conditions + always-on threat text -->
           <div class="framing-panel" :class="squidArenaHelpers.framingMeta(framing).tag">
             <div class="framing-head">
@@ -409,6 +414,19 @@
               <span class="action-label">Forfeit</span>
               <span class="action-sub">keep score</span>
             </button>
+          </div>
+
+          <div class="reason-picker" x-show="selectedAction === 'forfeit'">
+            <div class="reason-head">Why are you forfeiting? (required)</div>
+            <div class="seg reason-seg">
+              <template x-for="r in squidArenaHelpers.reasonOptions" :key="r.digit">
+                <button type="button" class="seg-btn"
+                        :class="{ on: forfeitReason === r.digit }" @click="pickReason(r.digit)">
+                  <span x-text="r.emoji"></span>
+                  <span x-text="'⓪①②③'.charAt(r.digit) + ' ' + r.label"></span>
+                </button>
+              </template>
+            </div>
           </div>
 
           <!-- Rule-inference toggle builder -->
@@ -516,29 +534,14 @@
         <span class="spinner"></span> Loading turn state…
       </div>
 
-      <!-- Game over / result -->
-      <template x-if="gameOver">
-        <div class="card">
-          <h3>Game over</h3>
-          <template x-if="!result">
-            <p><span class="spinner"></span> Fetching final result…</p>
-          </template>
-          <template x-if="result">
-            <div>
-              <div class="result-score" x-text="squidArenaHelpers.fmtNum(result.final_score, 1)"></div>
-              <p>
-                Turns played: <strong x-text="result.turns_played"></strong> ·
-                Forfeited: <strong x-text="result.forfeited ? 'yes' : 'no'"></strong> ·
-                Survived: <strong x-text="result.survived ? 'yes' : 'no'"></strong>
-              </p>
-              <p x-show="rank">
-                Play Leaderboard rank: <strong x-text="rank"></strong>
-                <span x-show="totalRows"> of <span x-text="totalRows"></span></span>
-                (task=<span x-text="task"></span>, framing=<span x-text="framing"></span>)
-              </p>
-              <button class="secondary" @click="playAgain()">Play again</button>
-            </div>
-          </template>
+      <!-- Between conditions: one game done, prompt to continue -->
+      <template x-if="betweenGames">
+        <div class="card between-card">
+          <h3 x-text="'Condition ' + campaignIndex + ' of 6 complete'"></h3>
+          <p class="muted">
+            Next: <strong x-text="squidArenaHelpers.campaignConditions[campaignIndex + 1].label"></strong>
+          </p>
+          <button @click="advanceCampaign()">Continue →</button>
         </div>
       </template>
     </section>

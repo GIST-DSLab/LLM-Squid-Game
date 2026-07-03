@@ -401,8 +401,13 @@
     // -----------------------------------------------------------------
     Alpine.data("playScreen", () => ({
       task: window.WEB_ARENA_DEFAULT_TASK,
-      framing: window.WEB_ARENA_DEFAULT_FRAMING,
-      forfeit: window.WEB_ARENA_DEFAULT_FORFEIT,
+
+      // Campaign state — 6 conditions played in a fixed order.
+      campaignIndex: 0,
+      campaignResults: [],   // one entry per finished game
+      campaignDone: false,
+      betweenGames: false,   // "condition complete → continue" card
+      forfeitReason: null,   // 1|2|3, chosen when Forfeit is selected
 
       nickname: "",
       sessionId: null,
@@ -430,8 +435,17 @@
 
       gameOver: false,
       result: null,
-      rank: null,
-      totalRows: null,
+
+      get currentCondition() {
+        return squidArenaHelpers.campaignConditions[this.campaignIndex]
+          || squidArenaHelpers.campaignConditions[0];
+      },
+      get framing() {
+        return this.currentCondition.framing;
+      },
+      get forfeit() {
+        return this.currentCondition.forfeit;
+      },
 
       // Parsed {color, shape, number} for the current signal, or null.
       get stimulus() {
@@ -472,6 +486,14 @@
         if (opts.indexOf(this.probeValue) === -1) {
           this.probeValue = opts[0];
         }
+      },
+
+      startCampaign() {
+        this.campaignIndex = 0;
+        this.campaignResults = [];
+        this.campaignDone = false;
+        this.betweenGames = false;
+        this.startGame();
       },
 
       async startGame() {
@@ -528,6 +550,10 @@
 
       selectAction(a) {
         this.selectedAction = a;
+        if (a !== "forfeit") this.forfeitReason = null;
+      },
+      pickReason(d) {
+        this.forfeitReason = d;
       },
 
       async submitAction() {
@@ -535,8 +561,13 @@
           this.error = "Choose an action (or Forfeit) first.";
           return;
         }
+        if (this.selectedAction === "forfeit" && !this.forfeitReason) {
+          this.error = "Pick a forfeit reason (①②③) first.";
+          return;
+        }
         // Capture the turn's context before the state advances/resets.
         const chosen = this.selectedAction;
+        const reason = this.forfeitReason;
         const stim = this.stimulus;
         const turnNo = this.state.turn_number;
         this.submitting = true;
@@ -550,6 +581,7 @@
                 action: this.selectedAction,
                 probe_answer: this.assembledRule,
                 reasoning: this.reasoning,
+                forfeit_reason: reason,
               }),
             },
             (m) => (this.statusMsg = m)
@@ -561,9 +593,11 @@
             action: chosen,
             optimal: !!resp.was_optimal,
             forfeit: chosen === "forfeit",
+            reason: reason,
           });
           this.selectedAction = "";
           this.reasoning = "";
+          this.forfeitReason = null;
           // Keep the rule-inference toggles across turns — the hidden rule
           // is constant, so the player refines one running guess.
           if (resp.game_over) {
@@ -587,33 +621,43 @@
             (m) => (this.statusMsg = m)
           );
           this.result = res;
-          await this.computeRank();
+          this.recordCurrentGame(res);
         } catch (e) {
           this.error = e.message;
         }
       },
 
-      async computeRank() {
-        try {
-          const lb = await fetchJSON(
-            `/api/leaderboard/play?task=${encodeURIComponent(this.task)}&framing=${encodeURIComponent(this.framing)}`,
-            {},
-            () => {}
-          );
-          this.totalRows = lb.rows.length;
-          const idx = lb.rows.findIndex((r) => r.session_id === this.sessionId);
-          this.rank = idx >= 0 ? idx + 1 : null;
-        } catch (_) {
-          // Rank is a nice-to-have; don't block the result view on it.
-          this.rank = null;
+      recordCurrentGame(res) {
+        const cond = this.currentCondition;
+        this.campaignResults.push({
+          framing: cond.framing,
+          forfeit: cond.forfeit,
+          tag: cond.tag,
+          label: cond.label,
+          history: this.history.slice(),
+          forfeited: !!res.forfeited,
+          forfeitReason: res.forfeit_reason || null,
+          finalScore: res.final_score,
+        });
+        if (this.campaignIndex >= squidArenaHelpers.campaignConditions.length - 1) {
+          this.campaignDone = true;
+        } else {
+          this.betweenGames = true;
         }
       },
 
-      playAgain() {
+      advanceCampaign() {
+        this.campaignIndex += 1;
+        this.betweenGames = false;
+        this._resetTurnState();
+        this.startGame();
+      },
+
+      _resetTurnState() {
         this.sessionId = null;
-        this.started = false;
         this.state = null;
         this.selectedAction = "";
+        this.forfeitReason = null;
         this.probeAttr = "color";
         this.probeValue = "red";
         this.probeAction = "go_left";
@@ -623,10 +667,17 @@
         this.lastFeedback = null;
         this.gameOver = false;
         this.result = null;
-        this.rank = null;
-        this.totalRows = null;
         this.error = null;
         this.statusMsg = "";
+      },
+
+      playAgain() {
+        this._resetTurnState();
+        this.started = false;
+        this.campaignIndex = 0;
+        this.campaignResults = [];
+        this.campaignDone = false;
+        this.betweenGames = false;
       },
     }));
 
