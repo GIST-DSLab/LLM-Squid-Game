@@ -50,9 +50,11 @@ from interface.arena import (
     VALID_FRAMINGS,
     run_arena_session,
 )
+from interface.auth import hash_password, verify_password
 from interface.human_game import HumanGameSession
 from interface.persistence import (
     ModelStatsRecord,
+    PlayerRecord,
     SessionRecord,
     TurnRecord,
     get_repository,
@@ -119,6 +121,11 @@ _campaigns: dict[str, str | None] = {}
 # process restart, when the in-process set is lost.
 _persisted_session_ids: set[str] = set()
 _persist_lock = threading.Lock()
+
+# Guards the check-then-insert on the ``players`` table (nickname registration
+# vs. password verification) against concurrent requests for the same
+# nickname racing each other.
+_player_lock = threading.Lock()
 
 # Whether finished human plays are written to the shared DB. Re-enabled on
 # 2026-07-03 to power the human Play Leaderboard (campaign totals) — each of a
@@ -251,6 +258,16 @@ class NewGameRequest(BaseModel):
             "Player nickname (anonymous, no accounts). Sanitized server-side "
             "(control chars stripped, whitespace collapsed, capped at 32 "
             "chars); blank/missing falls back to 'Anonymous'."
+        ),
+    )
+    password: str = Field(
+        default="",
+        description=(
+            "Player password protecting the nickname identity. Required. "
+            "First use of a nickname registers it with this password; later "
+            "uses must supply the same password. Hashed server-side (pbkdf2); "
+            "never stored in plaintext. No recovery — a lost password locks "
+            "that nickname."
         ),
     )
     campaign_id: str | None = Field(
@@ -567,6 +584,24 @@ def new_game(req: NewGameRequest, request: Request):
     """Start a new game session."""
     _check_rate_limit(request, "new_game")
 
+    # --- Play identity: nickname + password auth ---
+    raw_nick = (req.nickname or "").strip()
+    if not raw_nick:
+        raise HTTPException(400, "닉네임을 입력해 주세요.")
+    if not req.password:
+        raise HTTPException(400, "비밀번호를 입력해 주세요.")
+    nick = sanitize_nickname(req.nickname)
+    with _player_lock:
+        existing = _repository.get_player(nick)
+        if existing is None:
+            _repository.create_player(
+                PlayerRecord(nickname=nick, pw_hash=hash_password(req.password))
+            )
+        elif not verify_password(req.password, existing.pw_hash):
+            raise HTTPException(
+                403, "이미 사용 중인 닉네임입니다. 비밀번호가 일치하지 않습니다."
+            )
+
     session_id = uuid.uuid4().hex[:12]
     # Fresh seed per attempt unless the caller pinned one. This drives both
     # the task instance (which signals/rules appear) and the death-check RNG,
@@ -588,7 +623,7 @@ def new_game(req: NewGameRequest, request: Request):
         curriculum_turns=req.curriculum_turns,
     )
     _sessions[session_id] = game
-    _nicknames[session_id] = sanitize_nickname(req.nickname)
+    _nicknames[session_id] = nick
     _campaigns[session_id] = sanitize_campaign_id(req.campaign_id)
     return NewGameResponse(
         session_id=session_id,

@@ -93,6 +93,7 @@ def _play_game(
             "num_few_shot": 0,
             "curriculum_turns": 0,
             "nickname": nickname,
+            "password": "pw",
         },
     )
     assert resp.status_code == 200
@@ -169,7 +170,10 @@ def test_result_extra_client_supplied_score_field_is_ignored(
     server is the single source of truth for scoring."""
     resp = client.post(
         "/api/new_game",
-        json={"task_name": "signal_game", "difficulty": "easy", "total_turns": 1, "seed": 3},
+        json={
+            "task_name": "signal_game", "difficulty": "easy", "total_turns": 1, "seed": 3,
+            "nickname": "rogue-tester", "password": "pw",
+        },
     )
     session_id = resp.json()["session_id"]
     state = client.get("/api/state", params={"session_id": session_id}).json()
@@ -551,6 +555,8 @@ def test_six_condition_campaign_drive(client: TestClient, api_module) -> None:
                 "actual_death": False,
                 "num_few_shot": 0,
                 "curriculum_turns": 0,
+                "nickname": "campaign-tester",
+                "password": "pw",
             },
         ).json()["session_id"]
 
