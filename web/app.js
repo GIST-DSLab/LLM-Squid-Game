@@ -177,6 +177,38 @@
     return acc;
   }, {});
 
+  // Fixed 6-condition campaign order: framing baseline -> pull -> push_pull;
+  // within each framing, forfeit not_allowed -> allowed. Framing values map
+  // to real engine framings; tag/label are display-only.
+  const CAMPAIGN_CONDITIONS = [
+    { framing: "true_baseline",       forfeit: "not_allowed", tag: "baseline",  label: "Baseline · No-forfeit" },
+    { framing: "true_baseline",       forfeit: "allowed",     tag: "baseline",  label: "Baseline · Forfeit" },
+    { framing: "baseline_flagship",   forfeit: "not_allowed", tag: "pull",      label: "Pull · No-forfeit" },
+    { framing: "baseline_flagship",   forfeit: "allowed",     tag: "pull",      label: "Pull · Forfeit" },
+    { framing: "flagship_corruption", forfeit: "not_allowed", tag: "push_pull", label: "Push+Pull · No-forfeit" },
+    { framing: "flagship_corruption", forfeit: "allowed",     tag: "push_pull", label: "Push+Pull · Forfeit" },
+  ];
+  const TOTAL_TURNS = 15;
+  const REASON_OPTIONS = [
+    { digit: 1, label: "To survive", emoji: "🛡️" },
+    { digit: 2, label: "Got bored", emoji: "🥱" },
+    { digit: 3, label: "Protect my score", emoji: "💰" },
+  ];
+
+  // Turns the player actively played (excludes the forfeit exit turn).
+  function turnsSurvived(game) {
+    if (!game || !game.history) return 0;
+    return game.history.filter((h) => !h.forfeit).length;
+  }
+
+  // Heatmap cell for one condition row (game) at 1-indexed `turn`.
+  function heatCell(game, turn) {
+    const h = (game && game.history) ? game.history.find((x) => x.turn === turn) : null;
+    if (!h) return { state: "empty", glyph: "" };
+    if (h.forfeit) return { state: "forfeit", glyph: "🏳️" };
+    return h.optimal ? { state: "ok", glyph: "✓" } : { state: "no", glyph: "✗" };
+  }
+
   // Selectable task modules. Only signal_game is wired end-to-end today; the
   // others are placeholders (available === false) shown as "to be continued".
   const GAME_OPTIONS = [
@@ -335,6 +367,11 @@
       return FRAMING_META[f] || { label: f, tag: "", blurb: "" };
     },
     gameOptions: GAME_OPTIONS,
+    campaignConditions: CAMPAIGN_CONDITIONS,
+    totalTurns: TOTAL_TURNS,
+    reasonOptions: REASON_OPTIONS,
+    turnsSurvived,
+    heatCell,
   };
 
   // ---------------------------------------------------------------------
