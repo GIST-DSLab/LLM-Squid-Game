@@ -129,6 +129,7 @@ class HumanGameSession:
         forfeit_condition: str = "allowed",
         seed: int = 42,
         total_turns: int = 15,
+        death_start_turn: int = 4,
         actual_death: bool = True,
         starting_score: float = 0.0,
         score_floor: float = 0.0,
@@ -146,6 +147,7 @@ class HumanGameSession:
         self._forfeit_cond = ForfeitCondition(forfeit_condition)
         self._seed = seed
         self._total_turns = total_turns
+        self._death_start_turn = death_start_turn
 
         # Core components (same as GameEngine)
         self._task: TaskModule = get_task(task_name)()
@@ -405,9 +407,10 @@ class HumanGameSession:
         # Probe scoring
         probe_score = self._task.score_probe(probe_answer) if probe_answer else 0.0
 
-        # Death check (skipped in Phantom Death mode)
+        # Death check (skipped in Phantom Death mode, and during the early
+        # grace turns before death_start_turn — human play only).
         is_dead = False
-        if self._actual_death:
+        if self._actual_death and turn_num >= self._death_start_turn:
             is_dead = self._survival.apply_death_check(p_death, self._rng)
             if is_dead:
                 self._is_alive = False
