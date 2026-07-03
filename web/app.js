@@ -491,6 +491,22 @@
         }
       },
 
+      // Alpine keeps this component alive across tab switches (x-show only
+      // hides it), so an in-progress game would otherwise survive navigating
+      // away and back. Discard it the moment the player leaves the Play tab, so
+      // returning always starts from a fresh setup screen.
+      init() {
+        this.$watch("$store.nav.tab", (tab, prev) => {
+          if (
+            prev === "play" &&
+            tab !== "play" &&
+            (this.started || this.betweenGames || this.campaignDone)
+          ) {
+            this.playAgain();
+          }
+        });
+      },
+
       startCampaign() {
         this.campaignIndex = 0;
         this.campaignResults = [];

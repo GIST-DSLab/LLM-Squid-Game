@@ -330,18 +330,14 @@
         <div class="card play-card">
           <div class="campaign-progress">
             <span class="cp-step" x-text="'Game ' + (campaignIndex + 1) + ' / 6'"></span>
-            <span class="cond-badge" :class="currentCondition.tag" x-text="currentCondition.label"></span>
           </div>
 
           <!-- Framing briefing — chosen conditions + always-on threat text -->
           <div class="framing-panel" :class="squidArenaHelpers.framingMeta(framing).tag">
             <div class="framing-head">
               <span class="framing-eyebrow">Framing</span>
-              <span class="cond-badge" :class="squidArenaHelpers.framingMeta(framing).tag">
-                <span x-text="squidArenaHelpers.framingMeta(framing).tag"></span>
-                <span>·</span>
-                <span x-text="squidArenaHelpers.framingMeta(framing).label"></span>
-              </span>
+              <span class="cond-badge" :class="squidArenaHelpers.framingMeta(framing).tag"
+                    x-text="squidArenaHelpers.framingMeta(framing).label"></span>
               <span class="cond-badge forfeit"
                     x-text="forfeit === 'allowed' ? '🏳️ Forfeit allowed' : '⛔ No forfeit'"></span>
             </div>
@@ -358,7 +354,9 @@
               <div class="tile-label">Score</div>
               <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></div>
             </div>
-            <div class="tile">
+            <!-- p(death) is meaningless under the true_baseline framing (no
+                 termination metaphor, p_end=0), so hide it there. -->
+            <div class="tile" x-show="framing !== 'true_baseline'">
               <div class="tile-label">Risk · p(death)</div>
               <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></div>
               <div class="tile-bar"><span :style="`width:${Math.min(100, state.p_death*100)}%`"></span></div>
@@ -735,8 +733,8 @@
 
           <label class="muted" style="margin-top:14px; display:block;">Forfeit option</label>
           <div class="forfeit-seg">
-            <button type="button" :class="{ on: forfeit === 'allowed' }" @click="forfeit = 'allowed'">🏳️ Forfeit allowed</button>
-            <button type="button" :class="{ on: forfeit === 'not_allowed' }" @click="forfeit = 'not_allowed'">⛔ Not allowed</button>
+            <button type="button" class="seg-btn" :class="{ on: forfeit === 'allowed' }" @click="forfeit = 'allowed'">🏳️ Forfeit allowed</button>
+            <button type="button" class="seg-btn" :class="{ on: forfeit === 'not_allowed' }" @click="forfeit = 'not_allowed'">⛔ Not allowed</button>
           </div>
 
           <div class="field" style="margin-top:14px; max-width:180px;">
