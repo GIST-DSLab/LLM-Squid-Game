@@ -720,6 +720,11 @@
             <label for="a-turns">Turns</label>
             <input id="a-turns" type="number" min="1" max="30" x-model.number="totalTurns" />
           </div>
+
+          <div class="field" style="margin-top:14px; max-width:180px;">
+            <label for="a-max-tokens">Max tokens / call</label>
+            <input id="a-max-tokens" type="number" min="256" max="32768" step="256" x-model.number="maxTokens" />
+          </div>
         </div>
 
         <button @click="launch()" :disabled="launching || !endpointUrl">
