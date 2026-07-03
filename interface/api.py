@@ -369,6 +369,7 @@ class LogTurnRow(BaseModel):
     thinking_forfeit: str | None = None
     raw_response: str | None = None
     correct: bool | None = None
+    psuccess_self: int | None = None
 
 
 class LogDetailResponse(BaseModel):
@@ -466,6 +467,7 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
                     thinking_task=None if turn.forfeit_decision else reasoning,
                     thinking_forfeit=reasoning if turn.forfeit_decision else None,
                     correct=correct,
+                    psuccess_self=turn.psuccess_self,
                 )
             )
 
@@ -742,6 +744,7 @@ def get_log_detail(session_id: str):
                 thinking_forfeit=t.thinking_forfeit,
                 raw_response=t.raw_response,
                 correct=t.correct,
+                psuccess_self=t.psuccess_self,
             )
             for t in turns
         ],

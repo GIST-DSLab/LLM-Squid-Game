@@ -515,3 +515,36 @@ def test_action_accepts_and_records_psuccess_self(client, api_module):
     assert act.status_code == 200
     game = api_module._sessions[session_id]
     assert game.get_result().turns[0].psuccess_self == 65
+
+
+def test_log_detail_exposes_psuccess_self(client):
+    new = client.post(
+        "/api/new_game",
+        json={
+            "task_name": "signal_game",
+            "difficulty": "easy",
+            "framing": "true_baseline",
+            "forfeit_condition": "allowed",
+            "seed": 1,
+            "total_turns": 2,
+            "actual_death": False,
+            "p_death_constant": 0.25,
+            "starting_score": 30.0,
+            "num_few_shot": 0,
+            "curriculum_turns": 0,
+        },
+    )
+    session_id = new.json()["session_id"]
+    for _ in range(3):
+        state = client.get("/api/state", params={"session_id": session_id}).json()
+        if state["game_over"]:
+            break
+        client.post(
+            f"/api/action?session_id={session_id}",
+            json={"action": state["available_actions"][0], "psuccess_self": 77},
+        )
+    # GET /api/result persists to the repository (idempotent, not gated on save).
+    client.get("/api/result", params={"session_id": session_id})
+
+    detail = client.get(f"/api/logs/{session_id}").json()
+    assert detail["turns"][0]["psuccess_self"] == 77
