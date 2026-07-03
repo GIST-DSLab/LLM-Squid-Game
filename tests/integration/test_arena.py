@@ -128,5 +128,29 @@ def test_arena_endpoint_failure_raises(monkeypatch, tmp_path):
 def test_arena_config_enables_psuccess_chaining():
     from interface.arena import _arena_config_dict
 
-    cfg = _arena_config_dict("flagship_corruption", "allowed", "some-model", 15)
+    cfg = _arena_config_dict("flagship_corruption", "allowed", "some-model", 15, 2048)
     assert cfg["forfeit_layer"]["chain_psuccess_to_menu"] is True
+
+
+def test_arena_forwards_max_tokens_to_endpoint(monkeypatch, tmp_path):
+    monkeypatch.setattr(arena_mod, "_ARENA_RUNS_DIR", tmp_path / "arena_runs")
+    seen: dict = {}
+
+    def _fake_post(url, json=None, headers=None, timeout=None):  # noqa: A002
+        seen.setdefault("max_tokens", json.get("max_tokens"))
+        phase = _fake_post.n % 3
+        _fake_post.n += 1
+        content = ("RULE: if red then go_left otherwise stay\nACTION: go_left"
+                   if phase == 0 else "P_CORRECT: 60" if phase == 1 else "CHOICE: CONTINUE")
+        return _FakeResponse({"choices": [{"message": {"content": content}}],
+                              "usage": {"prompt_tokens": 20, "completion_tokens": 5}})
+    _fake_post.n = 0
+    monkeypatch.setattr("interface.remote_provider.httpx.post", _fake_post)
+
+    repo = SQLiteRepository(":memory:")
+    arena_mod.run_arena_session(
+        repo, endpoint_url="https://p.example/v1/chat/completions",
+        model_label="Contender-7B", framing="flagship_corruption",
+        forfeit="allowed", total_turns=1, max_tokens=8192,
+    )
+    assert seen["max_tokens"] == 8192

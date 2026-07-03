@@ -79,6 +79,12 @@ it. Run the WP1 seed script against the same DSN once the Supabase DB exists
 `/api/leaderboard/models` and `/api/logs` return empty results, which is a
 valid (if boring) state for a first deploy.
 
+**Backing up live plays:** the deployed site's human/LLM plays live only in
+Supabase (not in git). Periodically mirror them to a local SQLite snapshot with
+`scripts/backup_web_arena.py --source-dsn "$WEB_ARENA_DSN"` (the inverse of the
+seed script; idempotent, skips sessions already backed up) so new live plays are
+not lost.
+
 ### Swapping platforms
 
 The Dockerfile only assumes `$PORT`, `WEB_ARENA_DSN`, `WEB_ARENA_CORS_ORIGINS`

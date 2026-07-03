@@ -906,6 +906,7 @@
       framing: window.WEB_ARENA_DEFAULT_FRAMING,
       forfeit: window.WEB_ARENA_DEFAULT_FORFEIT,
       totalTurns: 15,
+      maxTokens: 4096,
 
       runId: null,
       status: null,
@@ -945,6 +946,7 @@
                 auth_header: this.authHeader || null,
                 auth_value: this.authValue || null,
                 total_turns: Number(this.totalTurns) || 15,
+                max_tokens: Number(this.maxTokens) || 4096,
               }),
             },
             () => {}

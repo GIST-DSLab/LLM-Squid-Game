@@ -764,6 +764,7 @@ class ArenaRunRequest(BaseModel):
     auth_header: str | None = Field(None, description="Optional auth header name, e.g. Authorization.")
     auth_value: str | None = Field(None, description="Optional auth header value, e.g. 'Bearer sk-...'.")
     total_turns: int = Field(15, ge=1, le=30, description="Season length (1–30 turns).")
+    max_tokens: int = Field(2048, ge=256, le=32768, description="Per-call generation budget. Reasoning models need >=4096 so their answer lands after the thinking block.")
 
 
 class ArenaRunResponse(BaseModel):
@@ -815,6 +816,7 @@ def arena_run(req: ArenaRunRequest, request: Request):
                 auth_header=req.auth_header,
                 auth_value=req.auth_value,
                 total_turns=req.total_turns,
+                max_tokens=req.max_tokens,
                 progress=progress,
             )
         except Exception as exc:  # noqa: BLE001 — surfaced to the participant
