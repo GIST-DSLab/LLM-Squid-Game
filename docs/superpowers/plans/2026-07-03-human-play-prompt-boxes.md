@@ -279,15 +279,17 @@ git commit -m "feat(web-arena): framingImagery + stripFewShot helpers for prompt
 ### Task 4: 렌더 — 위협 박스(3-슬롯) + 공통 규칙 박스 + raw 격하
 
 **Files:**
-- Modify: `web/index.html:343-406` (framing-panel → threat-box, stimulus 뒤에 rules-box, raw details 재라벨)
+- Modify: `web/index.html` — **라이브 플레이 화면**의 framing-panel → threat-box, stimulus 뒤 rules-box, raw details 재라벨. (동시 편집으로 행 번호가 밀리므로 아래 앵커로 위치를 찾을 것.)
 - Modify: `web/styles.css` (신규 `.threat-box` / `.rules-box` 스타일 추가, 파일 끝 또는 `.framing-panel` 근처)
+
+> ⚠️ **`framing-panel`이 두 곳 있음.** 대상은 **플레이 화면** 블록 — `x-text="squidArenaHelpers.framingMeta(framing).label"` 와 `x-text="state.framing_text"` 를 포함한 쪽(현재 ~377행). **로그 리플레이 화면**의 블록(`:class="framingMeta.tag"`, `framingMeta` 앞에 `squidArenaHelpers.` 없음, 현재 ~1098행)은 **건드리지 말 것.** 아래 `grep` 로 항상 재확인: `grep -n "state.framing_text" web/index.html` 가 가리키는 라인이 플레이 화면 threat 텍스트다.
 
 **Interfaces:**
 - Consumes: `state.framing_threat`, `state.system_rules` (Task 1), `squidArenaHelpers.framingImagery` / `stripFewShot` (Task 3), 스프라이트 3종 (Task 2).
 
 - [ ] **Step 1: Replace the framing-panel with the threat box**
 
-`web/index.html` 의 framing-panel 블록(343–353행, `<!-- Framing briefing ... -->` 부터 닫는 `</div>` 까지)을 아래로 교체:
+`web/index.html` 의 **플레이 화면** framing-panel 블록(`<!-- Framing briefing — chosen conditions ... -->` 주석부터 `x-text="state.framing_text"` 를 감싼 닫는 `</div>` 까지, 현재 ~377–391행)을 아래로 교체. 위 ⚠️ 대로 로그 리플레이 블록이 아님을 `state.framing_text` grep 으로 확인 후 진행:
 
 ```html
           <!-- Threat box (per-game): framing badge + axis imagery + threat text -->
@@ -314,7 +316,7 @@ git commit -m "feat(web-arena): framingImagery + stripFewShot helpers for prompt
 
 - [ ] **Step 2: Add the common rules box + relabel the raw dump**
 
-`web/index.html` 의 stimulus-stage 닫는 `</div>` (약 400행) 다음, 기존 `<details>` 블록(402–406행)을 아래로 교체:
+`web/index.html` 의 **플레이 화면** stimulus-stage 뒤에 오는 기존 `<details>` 블록(`<summary>Raw observation &amp; system prompt</summary>` 를 포함, 현재 ~440–444행)을 아래로 교체. 위치 확인: `grep -n "Raw observation" web/index.html`.
 
 ```html
           <!-- Common rules box: signal-game task rules, identical every game, always open -->
