@@ -588,3 +588,76 @@ def test_logs_lists_both_sources_newest_first_and_detail_matches_engine_turn_tra
 def test_logs_detail_returns_404_for_unknown_session_id(client: TestClient) -> None:
     resp = client.get("/api/logs/does-not-exist-at-all")
     assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Six-condition human campaign drive
+# ---------------------------------------------------------------------------
+
+CAMPAIGN_ORDER = [
+    ("true_baseline", "not_allowed"),
+    ("true_baseline", "allowed"),
+    ("baseline_flagship", "not_allowed"),
+    ("baseline_flagship", "allowed"),
+    ("flagship_corruption", "not_allowed"),
+    ("flagship_corruption", "allowed"),
+]
+
+
+def test_six_condition_campaign_drive(client: TestClient, api_module) -> None:
+    """Drive all six (framing x forfeit) conditions in the fixed campaign
+    order; forfeit on the first allowed turn with reason=1 ("survival") and
+    assert it is recorded. Every game must get its own random seed (no
+    ``seed`` field is sent in /api/new_game) -- a regression guard for the
+    per-game random-seed wiring."""
+    for framing, forfeit in CAMPAIGN_ORDER:
+        sid = client.post(
+            "/api/new_game",
+            json={
+                "task_name": "signal_game",
+                "framing": framing,
+                "forfeit_condition": forfeit,
+                "total_turns": 3,
+                "actual_death": False,
+                "num_few_shot": 0,
+                "curriculum_turns": 0,
+            },
+        ).json()["session_id"]
+
+        # Play until game over; forfeit (reason=1) on the first allowed turn.
+        while True:
+            st = client.get("/api/state", params={"session_id": sid}).json()
+            if st["game_over"]:
+                break
+            if st["forfeit_allowed"]:
+                client.post(
+                    f"/api/action?session_id={sid}",
+                    json={
+                        "action": "forfeit",
+                        "probe_answer": "",
+                        "reasoning": "",
+                        "forfeit_reason": 1,
+                    },
+                )
+                break
+            client.post(
+                f"/api/action?session_id={sid}",
+                json={
+                    "action": st["available_actions"][0],
+                    "probe_answer": "",
+                    "reasoning": "",
+                },
+            )
+
+        res = client.get("/api/result", params={"session_id": sid}).json()
+        assert res["framing"] == framing
+        assert res["forfeit_condition"] == forfeit
+        if forfeit == "allowed":
+            assert res["forfeited"] is True
+            assert res["forfeit_reason"] == "survival"
+
+    # Distinct random seeds across the six games (no seed was sent by the
+    # client, so the server must have assigned each game its own).
+    live = list(api_module._sessions.values())
+    live_seeds = [g._seed for g in live]
+    assert len(set(live_seeds)) == len(live_seeds)  # all distinct
