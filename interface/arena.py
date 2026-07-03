@@ -40,7 +40,7 @@ _ARENA_RUNS_DIR = Path("outputs/web_arena/arena_runs")
 
 
 def _arena_config_dict(
-    framing: str, forfeit: str, model_label: str, total_turns: int
+    framing: str, forfeit: str, model_label: str, total_turns: int, max_tokens: int
 ) -> dict:
     """Single-cell v6 split-call config for one arena season."""
     return {
@@ -88,7 +88,7 @@ def _arena_config_dict(
                     "provider": "openai",  # ignored; _create_provider is overridden
                     "model": model_label,
                     "temperature": 0.7,
-                    "max_tokens": 2048,
+                    "max_tokens": max_tokens,
                 },
             }
         ],
@@ -116,6 +116,7 @@ def run_arena_session(
     auth_header: str | None = None,
     auth_value: str | None = None,
     total_turns: int = 15,
+    max_tokens: int = 2048,
     timeout: float = 60.0,
     progress: ArenaProgress | None = None,
 ) -> ArenaProgress:
@@ -149,7 +150,7 @@ def run_arena_session(
 
     cfg_path = run_root / "config.yaml"
     cfg_path.write_text(
-        yaml.safe_dump(_arena_config_dict(framing, forfeit, model_label, total_turns)),
+        yaml.safe_dump(_arena_config_dict(framing, forfeit, model_label, total_turns, max_tokens)),
         encoding="utf-8",
     )
     config = load_config_from_yaml(str(cfg_path)).model_copy(
