@@ -22,7 +22,7 @@
 
 - `index.html`에 **`#home` 섹션(About 랜딩)** 신설.
 - Alpine `$store.nav.tab` 기본값 `'play'` → `'home'`. 해시 없음 / `#home` / `#about`(별칭) → home 탭.
-- 탭 구성: **Home · Play · LLM Arena · Model Leaderboard · Play Leaderboard · Logs**. 상단 브랜드 클릭 → `#home`.
+- 탭 구성: **Home · Play · LLM Arena · Model Leaderboard · Logs**. 상단 브랜드 클릭 → `#home`. (Play Leaderboard 탭은 2026-07-03 제거됨.)
 - 랜딩 CTA는 해시 전환으로 앱 화면 직행: "Play the game →" → `#play`, "Watch the AIs" → `#logs`, "Model leaderboard" → `#models`.
 - `about.html` 참조는 index.html nav 링크 1곳뿐임을 확인함 (grep, 2026-07-02).
 
