@@ -183,6 +183,33 @@ def test_list_sessions_filters_by_source_task_framing(repo: Repository) -> None:
     assert [s.nickname for s in all_llm] == ["llm1"]
 
 
+def test_delete_sessions_by_source_removes_sessions_and_their_turns(repo: Repository) -> None:
+    human_a = repo.create_session(_session(nickname="human_a", source="human"))
+    human_b = repo.create_session(_session(nickname="human_b", source="human"))
+    llm = repo.create_session(_session(nickname="llm_keep", source="llm"))
+    for sid in (human_a, human_b, llm):
+        repo.add_turns(
+            [TurnRecord(session_id=sid, turn_no=1, observation="o", action="x", score=1.0)]
+        )
+
+    deleted = repo.delete_sessions_by_source("human")
+
+    assert deleted == 2
+    assert repo.list_sessions(source="human") == []
+    # LLM session and its turns are untouched.
+    assert [s.nickname for s in repo.list_sessions(source="llm")] == ["llm_keep"]
+    assert len(repo.list_turns(llm)) == 1
+    # No orphaned turns left behind for the deleted human sessions.
+    assert repo.list_turns(human_a) == []
+    assert repo.list_turns(human_b) == []
+
+
+def test_delete_sessions_by_source_returns_zero_when_none_match(repo: Repository) -> None:
+    repo.create_session(_session(source="llm"))
+    assert repo.delete_sessions_by_source("human") == 0
+    assert len(repo.list_sessions(source="llm")) == 1
+
+
 def test_play_leaderboard_orders_sessions_by_final_score_desc_within_arena_bucket(
     repo: Repository,
 ) -> None:

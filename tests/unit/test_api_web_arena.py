@@ -80,11 +80,11 @@ def test_app_imports_and_registers_all_endpoints(api_module) -> None:
         "/api/action",
         "/api/result",
         "/api/leaderboard/models",
+        "/api/leaderboard/play",
         "/api/logs",
         "/api/logs/{session_id}",
     ]:
         assert expected in paths, f"missing route: {expected}"
-    assert "/api/leaderboard/play" not in paths, "Play Leaderboard route should be removed"
 
 
 # ---------------------------------------------------------------------------
@@ -216,7 +216,7 @@ def test_result_persists_session_and_turns_idempotently(client: TestClient, api_
 # ---------------------------------------------------------------------------
 
 
-def test_leaderboard_models_groups_open_closed_sorted_by_beta_descending(
+def test_leaderboard_models_flat_list_sorted_by_beta_descending(
     client: TestClient, api_module
 ) -> None:
     from interface.persistence import ModelStatsRecord
@@ -232,6 +232,9 @@ def test_leaderboard_models_groups_open_closed_sorted_by_beta_descending(
             p_FC=0.01,
             pct_attenuation=10.0,
             n_sessions=30,
+            sd_behavior_pass=True,
+            sd_verbal_pass=False,
+            sd_cognitive_pass=True,
         )
     )
     api_module._repository.upsert_model_stats(
@@ -264,14 +267,89 @@ def test_leaderboard_models_groups_open_closed_sorted_by_beta_descending(
     resp = client.get("/api/leaderboard/models")
     assert resp.status_code == 200
     body = resp.json()
-    assert [r["model_label"] for r in body["open"]] == ["Model-B", "Model-A"]
-    assert [r["model_label"] for r in body["closed"]] == ["Model-C"]
+    # One flat list, ranked by β descending (no open/closed grouping).
+    assert [r["model_label"] for r in body["models"]] == ["Model-B", "Model-A", "Model-C"]
+    # Per-channel SD flags are surfaced on each row.
+    model_a = next(r for r in body["models"] if r["model_label"] == "Model-A")
+    assert model_a["sd_behavior_pass"] is True
+    assert model_a["sd_verbal_pass"] is False
+    assert model_a["sd_cognitive_pass"] is True
+    assert model_a["mediation_class"] == "open"
 
 
-def test_leaderboard_models_empty_returns_empty_groups_not_error(client: TestClient) -> None:
+def test_leaderboard_models_empty_returns_empty_list_not_error(client: TestClient) -> None:
     resp = client.get("/api/leaderboard/models")
     assert resp.status_code == 200
-    assert resp.json() == {"open": [], "closed": []}
+    assert resp.json() == {"models": []}
+
+
+# ---------------------------------------------------------------------------
+# Play Leaderboard: campaign aggregation
+# ---------------------------------------------------------------------------
+
+
+def test_sanitize_campaign_id_keeps_url_safe_chars_else_none(api_module) -> None:
+    assert api_module.sanitize_campaign_id(None) is None
+    assert api_module.sanitize_campaign_id("") is None
+    assert api_module.sanitize_campaign_id("   ") is None  # spaces are stripped out
+    assert api_module.sanitize_campaign_id("abc-123_DEF") == "abc-123_DEF"
+    # Injection chars are dropped, not stored verbatim.
+    assert api_module.sanitize_campaign_id("a'; DROP TABLE--") == "aDROPTABLE--"
+    assert len(api_module.sanitize_campaign_id("x" * 200)) == 64
+
+
+def test_new_game_persists_campaign_id_and_play_leaderboard_sums_it(
+    client: TestClient, api_module
+) -> None:
+    """Two games sharing a campaign_id are summed into one Play Leaderboard
+    row; an ungrouped game stands alone."""
+    def _play(nickname: str, campaign_id: str | None) -> str:
+        resp = client.post(
+            "/api/new_game",
+            json={
+                "task_name": "signal_game", "difficulty": "easy",
+                "framing": "flagship_corruption", "forfeit_condition": "allowed",
+                "seed": 1, "total_turns": 2, "actual_death": False,
+                "num_few_shot": 0, "curriculum_turns": 0,
+                "nickname": nickname, "campaign_id": campaign_id,
+            },
+        )
+        sid = resp.json()["session_id"]
+        for _ in range(3):
+            state = client.get("/api/state", params={"session_id": sid}).json()
+            if state["game_over"]:
+                break
+            client.post(
+                f"/api/action?session_id={sid}",
+                json={"action": state["available_actions"][0], "probe_answer": "", "reasoning": "r"},
+            )
+        client.get("/api/result", params={"session_id": sid})
+        return sid
+
+    g1 = _play("Ren", "camp-1")
+    g2 = _play("Ren", "camp-1")
+    g3 = _play("Solo", None)
+
+    # Both camp-1 games carry the campaign_id in the DB.
+    assert api_module._repository.get_session(g1).campaign_id == "camp-1"
+    assert api_module._repository.get_session(g2).campaign_id == "camp-1"
+    assert api_module._repository.get_session(g3).campaign_id is None
+
+    body = client.get("/api/leaderboard/play").json()
+    by_id = {c["campaign_id"]: c for c in body["campaigns"]}
+    assert by_id["camp-1"]["nickname"] == "Ren"
+    assert by_id["camp-1"]["games_played"] == 2
+    # Solo game is its own single-game campaign keyed by its session id.
+    assert by_id[g3]["games_played"] == 1
+    # Ranked by total_score descending.
+    scores = [c["total_score"] for c in body["campaigns"]]
+    assert scores == sorted(scores, reverse=True)
+
+
+def test_play_leaderboard_empty_returns_empty_list(client: TestClient) -> None:
+    resp = client.get("/api/leaderboard/play")
+    assert resp.status_code == 200
+    assert resp.json() == {"campaigns": []}
 
 
 def test_logs_lists_sessions_and_detail_returns_turn_trace(

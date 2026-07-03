@@ -407,6 +407,7 @@
 
       // Campaign state — 6 conditions played in a fixed order.
       campaignIndex: 0,
+      campaignId: null,      // shared by the 6 games so the Play Leaderboard can sum them
       campaignResults: [],   // one entry per finished game
       campaignDone: false,
       betweenGames: false,   // "condition complete → continue" card
@@ -512,6 +513,12 @@
 
       startCampaign() {
         this.campaignIndex = 0;
+        // One id shared across this run's 6 games so the server can group them
+        // into a campaign total on the Play Leaderboard.
+        this.campaignId =
+          (window.crypto && window.crypto.randomUUID)
+            ? window.crypto.randomUUID().replace(/-/g, "")
+            : "c" + Math.random().toString(36).slice(2, 14);
         this.campaignResults = [];
         this.campaignDone = false;
         this.betweenGames = false;
@@ -532,6 +539,7 @@
                 framing: this.framing,
                 forfeit_condition: this.forfeit,
                 nickname: this.nickname,
+                campaign_id: this.campaignId,
                 // Show 2 rule-informative clue examples up front (EASY: one
                 // positive + one negative), surfaced in the History panel.
                 num_few_shot: 2,
@@ -737,15 +745,18 @@
     }));
 
     // -----------------------------------------------------------------
-    // Model Leaderboard screen
+    // Leaderboard screen — one page, [ LLM | Human ] toggle. The LLM board
+    // ranks models by the Cox behavior β with per-channel SD checkmarks; the
+    // Human board ranks Play campaigns by cumulative 6-game score.
     // -----------------------------------------------------------------
-    Alpine.data("modelLeaderboardScreen", () => ({
+    Alpine.data("leaderboardScreen", () => ({
+      view: "llm", // 'llm' | 'human'
       loading: false,
       error: null,
       statusMsg: "",
       loaded: false,
-      open: [],
-      closed: [],
+      models: [],
+      campaigns: [],
 
       async init() {
         await this.load();
@@ -755,10 +766,13 @@
         this.loading = true;
         this.error = null;
         try {
-          const data = await fetchJSON("/api/leaderboard/models", {}, (m) => (this.statusMsg = m));
+          const [m, p] = await Promise.all([
+            fetchJSON("/api/leaderboard/models", {}, (x) => (this.statusMsg = x)),
+            fetchJSON("/api/leaderboard/play", {}, (x) => (this.statusMsg = x)),
+          ]);
+          this.models = m.models || [];
+          this.campaigns = p.campaigns || [];
           this.statusMsg = "";
-          this.open = data.open;
-          this.closed = data.closed;
           this.loaded = true;
         } catch (e) {
           this.error = e.message;
@@ -776,6 +790,7 @@
       error: null,
       statusMsg: "",
       loaded: false,
+      human: [],
       llm: [],
 
       filterTask: "",
@@ -798,14 +813,14 @@
         this.error = null;
         try {
           const params = new URLSearchParams();
-          // Human plays are not surfaced anywhere — ask the API for LLM runs
-          // only so human rows never reach the client.
-          params.set("source", "llm");
           if (this.filterTask) params.set("task", this.filterTask);
           if (this.filterFraming) params.set("framing", this.filterFraming);
-          const data = await fetchJSON(`/api/logs?${params.toString()}`, {}, (m) => (this.statusMsg = m));
+          const qs = params.toString();
+          const data = await fetchJSON(`/api/logs${qs ? "?" + qs : ""}`, {}, (m) => (this.statusMsg = m));
           this.statusMsg = "";
-          this.llm = data.sessions || [];
+          const all = data.sessions || [];
+          this.human = all.filter((s) => s.source === "human");
+          this.llm = all.filter((s) => s.source === "llm");
           this.loaded = true;
         } catch (e) {
           this.error = e.message;

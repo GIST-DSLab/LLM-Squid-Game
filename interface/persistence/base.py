@@ -54,6 +54,16 @@ class Repository(ABC):
         Leaderboard); otherwise sorts by ``created_at`` descending (Logs).
         """
 
+    @abstractmethod
+    def delete_sessions_by_source(self, source: str) -> int:
+        """Delete every session with the given ``source`` and its turns.
+
+        The ``turns`` table has no ON DELETE CASCADE, so implementations must
+        remove the dependent turn rows first. Returns the number of session
+        rows deleted. Used by ``scripts/purge_human_sessions.py`` to drop
+        human plays that are no longer surfaced anywhere.
+        """
+
     # -- turns --------------------------------------------------------------
 
     @abstractmethod

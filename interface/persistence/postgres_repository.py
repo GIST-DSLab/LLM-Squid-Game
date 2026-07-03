@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     final_score DOUBLE PRECISION NOT NULL,
     forfeited BOOLEAN NOT NULL,
     source TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    campaign_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -54,7 +55,10 @@ CREATE TABLE IF NOT EXISTS model_stats (
     hr_FC_ci_high DOUBLE PRECISION NOT NULL,
     p_FC DOUBLE PRECISION NOT NULL,
     pct_attenuation DOUBLE PRECISION NOT NULL,
-    n_sessions INTEGER NOT NULL
+    n_sessions INTEGER NOT NULL,
+    sd_behavior_pass BOOLEAN NOT NULL DEFAULT FALSE,
+    sd_verbal_pass BOOLEAN NOT NULL DEFAULT FALSE,
+    sd_cognitive_pass BOOLEAN NOT NULL DEFAULT FALSE
 );
 """
 
@@ -75,6 +79,14 @@ class PostgresRepository(Repository):
             cur.execute(
                 "ALTER TABLE turns ADD COLUMN IF NOT EXISTS psuccess_self INTEGER"
             )
+            cur.execute(
+                "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS campaign_id TEXT"
+            )
+            for col in ("sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass"):
+                cur.execute(
+                    f"ALTER TABLE model_stats ADD COLUMN IF NOT EXISTS {col} "
+                    "BOOLEAN NOT NULL DEFAULT FALSE"
+                )
 
     # -- sessions -------------------------------------------------------
 
@@ -88,9 +100,9 @@ class PostgresRepository(Repository):
                 """
                 INSERT INTO sessions
                     (id, nickname, task, framing, forfeit, seed,
-                     final_score, forfeited, source, created_at)
+                     final_score, forfeited, source, created_at, campaign_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
-                        COALESCE(%s::timestamptz, now()))
+                        COALESCE(%s::timestamptz, now()), %s)
                 """,
                 (
                     session_id,
@@ -103,6 +115,7 @@ class PostgresRepository(Repository):
                     session.forfeited,
                     session.source,
                     session.created_at,
+                    session.campaign_id,
                 ),
             )
         return session_id
@@ -111,7 +124,7 @@ class PostgresRepository(Repository):
         with self._conn.cursor() as cur:
             cur.execute(
                 "SELECT id, nickname, task, framing, forfeit, seed, "
-                "final_score, forfeited, source, created_at "
+                "final_score, forfeited, source, created_at, campaign_id "
                 "FROM sessions WHERE id = %s",
                 (session_id,),
             )
@@ -150,6 +163,17 @@ class PostgresRepository(Repository):
             cur.execute(query, params)
             rows = cur.fetchall()
         return [_row_to_session(row) for row in rows]
+
+    def delete_sessions_by_source(self, source: str) -> int:
+        # No ON DELETE CASCADE on turns — remove dependent turn rows first.
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM turns WHERE session_id IN "
+                "(SELECT id FROM sessions WHERE source = %s)",
+                (source,),
+            )
+            cur.execute("DELETE FROM sessions WHERE source = %s", (source,))
+            return cur.rowcount
 
     # -- turns ------------------------------------------------------------
 
@@ -210,8 +234,9 @@ class PostgresRepository(Repository):
                 INSERT INTO model_stats
                     (model_label, mediation_class, beta_framing_is_FC,
                      hr_FC_3cov, hr_FC_ci_low, hr_FC_ci_high, p_FC,
-                     pct_attenuation, n_sessions)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                     pct_attenuation, n_sessions,
+                     sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (model_label) DO UPDATE SET
                     mediation_class = excluded.mediation_class,
                     beta_framing_is_FC = excluded.beta_framing_is_FC,
@@ -220,7 +245,10 @@ class PostgresRepository(Repository):
                     hr_FC_ci_high = excluded.hr_FC_ci_high,
                     p_FC = excluded.p_FC,
                     pct_attenuation = excluded.pct_attenuation,
-                    n_sessions = excluded.n_sessions
+                    n_sessions = excluded.n_sessions,
+                    sd_behavior_pass = excluded.sd_behavior_pass,
+                    sd_verbal_pass = excluded.sd_verbal_pass,
+                    sd_cognitive_pass = excluded.sd_cognitive_pass
                 """,
                 (
                     stats.model_label,
@@ -232,6 +260,9 @@ class PostgresRepository(Repository):
                     stats.p_FC,
                     stats.pct_attenuation,
                     stats.n_sessions,
+                    stats.sd_behavior_pass,
+                    stats.sd_verbal_pass,
+                    stats.sd_cognitive_pass,
                 ),
             )
 
@@ -240,7 +271,8 @@ class PostgresRepository(Repository):
             cur.execute(
                 "SELECT model_label, mediation_class, beta_framing_is_FC, "
                 "hr_FC_3cov, hr_FC_ci_low, hr_FC_ci_high, p_FC, "
-                "pct_attenuation, n_sessions "
+                "pct_attenuation, n_sessions, "
+                "sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass "
                 "FROM model_stats ORDER BY model_label ASC"
             )
             rows = cur.fetchall()
@@ -255,7 +287,7 @@ class PostgresRepository(Repository):
 def _row_to_session(row: tuple) -> SessionRecord:
     (
         id_, nickname, task, framing, forfeit, seed,
-        final_score, forfeited, source, created_at,
+        final_score, forfeited, source, created_at, campaign_id,
     ) = row
     return SessionRecord(
         id=id_,
@@ -268,6 +300,7 @@ def _row_to_session(row: tuple) -> SessionRecord:
         forfeited=bool(forfeited),
         source=source,
         created_at=created_at.isoformat() if hasattr(created_at, "isoformat") else created_at,
+        campaign_id=campaign_id,
     )
 
 
@@ -300,6 +333,7 @@ def _row_to_model_stats(row: tuple) -> ModelStatsRecord:
     (
         model_label, mediation_class, beta_framing_is_FC, hr_FC_3cov,
         hr_FC_ci_low, hr_FC_ci_high, p_FC, pct_attenuation, n_sessions,
+        sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass,
     ) = row
     return ModelStatsRecord(
         model_label=model_label,
@@ -311,4 +345,7 @@ def _row_to_model_stats(row: tuple) -> ModelStatsRecord:
         p_FC=p_FC,
         pct_attenuation=pct_attenuation,
         n_sessions=n_sessions,
+        sd_behavior_pass=bool(sd_behavior_pass),
+        sd_verbal_pass=bool(sd_verbal_pass),
+        sd_cognitive_pass=bool(sd_cognitive_pass),
     )
