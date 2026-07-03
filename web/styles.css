@@ -785,6 +785,7 @@ footer {
   color: var(--text);
 }
 .cond-badge.baseline { color: #9aa3af; border-color: #4b5563; }
+.cond-badge.pull { color: var(--warn); border-color: rgba(227, 178, 60, 0.5); }
 .cond-badge.push_only { color: var(--warn); border-color: rgba(227, 178, 60, 0.5); }
 .cond-badge.push_pull { color: var(--accent); border-color: var(--accent-dim); }
 .cond-badge.forfeit { color: var(--text-dim); text-transform: none; letter-spacing: 0; }

@@ -650,6 +650,7 @@
         this.campaignIndex += 1;
         this.betweenGames = false;
         this._resetTurnState();
+        this.loading = true;
         this.startGame();
       },
 
