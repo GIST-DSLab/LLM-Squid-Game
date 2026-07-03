@@ -377,13 +377,16 @@
   // ---------------------------------------------------------------------
   // Nav: hash-based tab routing, no router library.
   // ---------------------------------------------------------------------
-  // Tabs that belong to the game app. Every other hash — none, #home, #about,
-  // or a stale section anchor from the old about.html — falls back to the
-  // landing, so old external links keep working.
-  const APP_TABS = ["play", "arena", "models", "logs"];
+  // Tabs that belong to the game app. #home is the landing: hero + the
+  // leaderboard. #leaderboard shows the same leaderboard section on its own
+  // (no hero) — one shared component instance serves both. An empty hash or
+  // unknown anchor falls back to #home; the legacy #models link maps to the
+  // standalone #leaderboard. The full game explainer lives on #about.
+  const APP_TABS = ["home", "about", "play", "arena", "leaderboard", "logs"];
 
   function tabFromHash() {
     const h = (location.hash || "").replace("#", "");
+    if (h === "models") return "leaderboard"; // legacy leaderboard anchor
     return APP_TABS.indexOf(h) !== -1 ? h : "home";
   }
 
@@ -773,7 +776,6 @@
       error: null,
       statusMsg: "",
       loaded: false,
-      human: [],
       llm: [],
 
       filterTask: "",
@@ -796,14 +798,14 @@
         this.error = null;
         try {
           const params = new URLSearchParams();
+          // Human plays are not surfaced anywhere — ask the API for LLM runs
+          // only so human rows never reach the client.
+          params.set("source", "llm");
           if (this.filterTask) params.set("task", this.filterTask);
           if (this.filterFraming) params.set("framing", this.filterFraming);
-          const qs = params.toString();
-          const data = await fetchJSON(`/api/logs${qs ? "?" + qs : ""}`, {}, (m) => (this.statusMsg = m));
+          const data = await fetchJSON(`/api/logs?${params.toString()}`, {}, (m) => (this.statusMsg = m));
           this.statusMsg = "";
-          const all = data.sessions || [];
-          this.human = all.filter((s) => s.source === "human");
-          this.llm = all.filter((s) => s.source === "llm");
+          this.llm = data.sessions || [];
           this.loaded = true;
         } catch (e) {
           this.error = e.message;

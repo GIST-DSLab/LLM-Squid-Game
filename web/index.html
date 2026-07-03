@@ -19,22 +19,24 @@
 </head>
 <body>
   <header class="topbar">
-    <a href="#home" class="brand" title="Back to home">
+    <a href="#home" class="brand" title="Home — leaderboard">
       <span class="shapes">&#9675;&#9651;&#9633;</span>
       LLM <span class="accent">Squid Game</span> — Web Arena
     </a>
     <nav class="tabs" x-data x-cloak>
-      <a href="#home" :class="{ active: $store.nav.tab === 'home' }">Home</a>
+      <a href="#about" :class="{ active: $store.nav.tab === 'about' }">What is this?</a>
       <a href="#play" :class="{ active: $store.nav.tab === 'play' }">Play</a>
-      <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">LLM Arena</a>
-      <a href="#models" :class="{ active: $store.nav.tab === 'models' }">Model Leaderboard</a>
+      <a href="#leaderboard" :class="{ active: $store.nav.tab === 'leaderboard' }">Leaderboard</a>
+      <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">JOIN</a>
       <a href="#logs" :class="{ active: $store.nav.tab === 'logs' }">Logs / Trace Explorer</a>
     </nav>
   </header>
 
   <main>
     <!-- =================================================================
-         HOME — About landing (translated from the old about.html)
+         HOME — landing: hero + the leaderboard (leaderboard section lives
+         further down but renders right here, because every tab in between is
+         x-show=false and collapses to zero height on the #home view).
          ================================================================= -->
     <section class="landing" x-data x-show="$store.nav.tab === 'home'" x-cloak>
 
@@ -53,8 +55,7 @@
             </p>
             <div class="hero-actions reveal d3">
               <a class="btn btn-primary" href="#play">&#9651; Play the game <span class="arrow">&#8594;</span></a>
-              <button type="button" class="btn btn-ghost"
-                      @click="document.getElementById('home-question').scrollIntoView({ behavior: 'smooth' })">&#9675; What is this?</button>
+              <a class="btn btn-ghost" href="#about">&#9675; What is this?</a>
             </div>
           </div>
           <div class="comic-frame reveal d2">
@@ -65,6 +66,14 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- =================================================================
+         ABOUT — "What is this?" explainer page. The hero above lives on
+         #home; everything from here down (the experiment, how to play, the
+         key fork, …) is the full explainer shown on the #about tab.
+         ================================================================= -->
+    <section class="landing" x-data x-show="$store.nav.tab === 'about'" x-cloak>
 
       <!-- Big question -->
       <div class="band" id="home-question">
@@ -268,7 +277,7 @@
           <div class="cta-actions">
             <a class="btn btn-primary" href="#play">&#9651; Play the game <span class="arrow">&#8594;</span></a>
             <a class="btn btn-ghost" href="#logs">&#9633; Watch the AIs</a>
-            <a class="btn btn-ghost" href="#models">&#9675; Model leaderboard</a>
+            <a class="btn btn-ghost" href="#leaderboard">&#9675; Model leaderboard</a>
           </div>
         </div>
       </div>
@@ -811,9 +820,12 @@
     </section>
 
     <!-- =================================================================
-         MODEL LEADERBOARD
+         MODEL LEADERBOARD — one shared component instance, shown on two
+         routes: on #home it sits directly under the hero (the intervening
+         tabs collapse when #home is active); on #leaderboard it stands alone.
          ================================================================= -->
-    <section x-data="modelLeaderboardScreen()" x-show="$store.nav.tab === 'models'" x-cloak>
+    <section x-data="modelLeaderboardScreen()"
+             x-show="$store.nav.tab === 'home' || $store.nav.tab === 'leaderboard'" x-cloak>
       <h2 class="h-shape s-square">Model Leaderboard</h2>
       <p class="muted">
         Ranked by the mediation-chain closure test (spec §5): <strong>Open</strong> models still
@@ -894,7 +906,7 @@
          ================================================================= -->
     <section x-data="logsScreen()" x-show="$store.nav.tab === 'logs'" x-cloak>
       <h2 class="h-shape s-square">Logs / Trace Explorer</h2>
-      <p class="muted">Browse past sessions — human plays and LLM experiment runs are listed separately. Click a session to open its full turn-by-turn trace.</p>
+      <p class="muted">Browse past LLM experiment runs. Click a session to open its full turn-by-turn trace.</p>
 
       <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
       <div class="error-banner" x-show="error" x-text="error"></div>
@@ -919,27 +931,7 @@
 
         <template x-if="loaded">
           <div>
-            <!-- Human sessions -->
-            <div class="log-section">
-              <div class="log-section-head">
-                <span class="pill human">Human</span>
-                <span x-text="human.length + ' session' + (human.length === 1 ? '' : 's')"></span>
-              </div>
-              <p class="muted" x-show="human.length === 0">No human plays yet — be the first!</p>
-              <template x-for="s in human" :key="s.session_id">
-                <button type="button" class="log-item" @click="open(s)">
-                  <span class="li-name" x-text="s.nickname"></span>
-                  <span class="cond-badge" :class="squidArenaHelpers.framingMeta(s.framing).tag" x-text="squidArenaHelpers.framingMeta(s.framing).tag || s.framing"></span>
-                  <span class="li-meta" x-text="s.forfeit"></span>
-                  <span class="li-score" x-text="'score ' + s.final_score"></span>
-                  <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
-                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
-                  <span class="li-open">Open ›</span>
-                </button>
-              </template>
-            </div>
-
-            <!-- LLM sessions -->
+            <!-- LLM sessions (human plays are not surfaced) -->
             <div class="log-section">
               <div class="log-section-head">
                 <span class="pill llm">LLM</span>
