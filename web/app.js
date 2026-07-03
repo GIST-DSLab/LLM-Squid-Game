@@ -454,10 +454,10 @@
 
       // Rule-inference probe, built via toggles instead of free text.
       // Persisted across turns so the player refines one running guess.
-      probeAttr: "color",
-      probeValue: "red",
-      probeAction: "go_left",
-      probeDefault: "stay",
+      probeAttr: "?",
+      probeValue: "?",
+      probeAction: "?",
+      probeDefault: "?",
 
       // Accumulated per-turn history: {turn, stimulus, action, optimal, forfeit}.
       history: [],
@@ -496,31 +496,28 @@
       },
       // Value options for the currently selected attribute.
       get valueOptions() {
+        if (this.probeAttr === "?") return [];
         return squidArenaHelpers.attrValues[this.probeAttr] || [];
       },
       // The exact grammar the server's probe scorer expects.
       get assembledRule() {
+        if (
+          this.probeAttr === "?" || this.probeValue === "?" ||
+          this.probeAction === "?" || this.probeDefault === "?"
+        ) {
+          return ""; // no guess yet → server skips probe scoring
+        }
         return (
-          "If " +
-          this.probeAttr +
-          " is " +
-          this.probeValue +
-          " then " +
-          this.probeAction +
-          ", otherwise " +
-          this.probeDefault +
-          "."
+          "If " + this.probeAttr + " is " + this.probeValue +
+          " then " + this.probeAction + ", otherwise " + this.probeDefault + "."
         );
       },
 
-      // Switching attribute resets the value to the first valid option so
-      // value and attribute never go out of sync.
+      // Switching attribute resets the value to "?" so the player must
+      // consciously re-pick a value under the new attribute.
       setAttr(attr) {
         this.probeAttr = attr;
-        const opts = squidArenaHelpers.attrValues[attr] || [];
-        if (opts.indexOf(this.probeValue) === -1) {
-          this.probeValue = opts[0];
-        }
+        this.probeValue = "?"; // force a conscious re-pick under the new attribute
       },
 
       // --- Campaign resume checkpoint (localStorage, game-boundary only) ---
@@ -835,10 +832,10 @@
         this.selectedAction = "";
         this.forfeitReason = null;
         this.turnStage = 1;
-        this.probeAttr = "color";
-        this.probeValue = "red";
-        this.probeAction = "go_left";
-        this.probeDefault = "stay";
+        this.probeAttr = "?";
+        this.probeValue = "?";
+        this.probeAction = "?";
+        this.probeDefault = "?";
         this.history = [];
         this.reasoning = "";
         this.psuccess = 50;
