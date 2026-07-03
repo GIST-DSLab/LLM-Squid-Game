@@ -537,7 +537,7 @@
       <!-- Between conditions: one game done, prompt to continue -->
       <template x-if="betweenGames">
         <div class="card between-card">
-          <h3 x-text="'Condition ' + campaignIndex + ' of 6 complete'"></h3>
+          <h3 x-text="'Condition ' + (campaignIndex + 1) + ' of 6 complete'"></h3>
           <p class="muted">
             Next: <strong x-text="squidArenaHelpers.campaignConditions[campaignIndex + 1].label"></strong>
           </p>
