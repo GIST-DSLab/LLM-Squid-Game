@@ -35,6 +35,12 @@ docs/superpowers/plans/2026-07-03-human-play-prompt-boxes.md 계획을 실행한
    (`x-text="state.framing_text"` + `squidArenaHelpers.framingMeta(framing)` 포함).
    *로그 리플레이 화면* 블록(`:class="framingMeta.tag"`, squidArenaHelpers 접두어 없음)은
    절대 건드리지 말 것. 확인: `grep -n "state.framing_text" web/index.html` 가 플레이 화면.
+2b. **`scenario-box`와의 충돌 주의 (중요).** 동시 세션이 커밋 33f14eb에서 플레이 화면 framing
+   블록 바로 옆에 `scenario-box` div들(평이한 언어 설명 + X/6 진행바)을 추가했다. Task 4의
+   threat-box가 이 영역과 겹친다. **framing-panel만 교체하고 scenario-box는 보존**하는 게
+   기본 방침이나, 둘의 관계(threat-box가 scenario-box를 대체? 공존? 통합?)가 불명확하면
+   코드를 덮어쓰지 말고 멈춰서 사람에게 확인할 것. 시작 전 `git log --oneline -10` 으로
+   scenario-box 관련 후속 커밋이 더 있는지 점검.
 3. **기존 API 필드 삭제 금지.** Task 1은 system_rules/framing_threat를 *추가*만 한다.
    system_prompt·framing_text·observation은 하위 호환 + raw 디버그 뷰용으로 유지.
 4. **크롭 좌표는 초안이다.** Task 2의 CROPS 박스는 시각 검증(Step 3에서 PNG를 Read)으로
