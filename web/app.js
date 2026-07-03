@@ -188,7 +188,7 @@
     { framing: "flagship_corruption", forfeit: "not_allowed", tag: "push_pull", label: "Push+Pull · No-forfeit" },
     { framing: "flagship_corruption", forfeit: "allowed",     tag: "push_pull", label: "Push+Pull · Forfeit" },
   ];
-  const TOTAL_TURNS = 15;
+  const TOTAL_TURNS = 10;  // must match server NewGameRequest.total_turns
   const REASON_OPTIONS = [
     { digit: 1, label: "To survive", emoji: "🛡️" },
     { digit: 2, label: "Got bored", emoji: "🥱" },
@@ -443,6 +443,12 @@
       gameOver: false,
       result: null,
 
+      // Elimination overlay: shown when a turn ends in death before the
+      // normal finish flow (see submitAction / dismissDeath).
+      eliminated: false,
+      eliminatedTurn: null,
+      eliminatedLostScore: 0,
+
       get currentCondition() {
         return squidArenaHelpers.campaignConditions[this.campaignIndex]
           || squidArenaHelpers.campaignConditions[0];
@@ -661,7 +667,15 @@
           // Keep the rule-inference toggles across turns — the hidden rule
           // is constant, so the player refines one running guess.
           if (resp.game_over) {
-            await this.finishGame();
+            if (resp.game_over_reason === "eliminated") {
+              // Score entering this turn (pre-wipe) drives the "you lost N" line.
+              this.eliminatedLostScore =
+                (this.state && this.state.cumulative_score) || 0;
+              this.eliminatedTurn = turnNo;
+              this.eliminated = true; // overlay; dismissDeath() runs the finish flow
+            } else {
+              await this.finishGame();
+            }
           } else {
             await this.refreshState();
           }
@@ -670,6 +684,11 @@
         } finally {
           this.submitting = false;
         }
+      },
+
+      async dismissDeath() {
+        this.eliminated = false;
+        await this.finishGame();
       },
 
       async finishGame() {
@@ -729,6 +748,9 @@
         this.psuccess = 50;
         this.lastFeedback = null;
         this.gameOver = false;
+        this.eliminated = false;
+        this.eliminatedTurn = null;
+        this.eliminatedLostScore = 0;
         this.result = null;
         this.error = null;
         this.statusMsg = "";

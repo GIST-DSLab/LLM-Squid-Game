@@ -238,8 +238,8 @@ class NewGameRequest(BaseModel):
     # An explicit seed is honored unchanged (tests, future "replay this
     # exact game"). Only the ABSENCE of a seed triggers randomization.
     seed: int | None = None
-    total_turns: int = 15
-    actual_death: bool = False
+    total_turns: int = 10
+    actual_death: bool = True
     starting_score: float = 0.0
     score_floor: float = 0.0
     p_death_constant: float | None = 0.15
