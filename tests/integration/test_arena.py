@@ -123,3 +123,10 @@ def test_arena_endpoint_failure_raises(monkeypatch, tmp_path):
             forfeit="allowed",
             total_turns=1,
         )
+
+
+def test_arena_config_enables_psuccess_chaining():
+    from interface.arena import _arena_config_dict
+
+    cfg = _arena_config_dict("flagship_corruption", "allowed", "some-model", 15)
+    assert cfg["forfeit_layer"]["chain_psuccess_to_menu"] is True

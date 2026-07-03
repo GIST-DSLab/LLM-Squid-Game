@@ -58,6 +58,7 @@ def _arena_config_dict(
             "p_success_estimate": 0.75,
             "base_reward": 10.0,
             "split_context_level": "medium",
+            "chain_psuccess_to_menu": True,
         },
         "seasons": [
             {
