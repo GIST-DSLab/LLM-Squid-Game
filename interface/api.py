@@ -8,7 +8,6 @@ Endpoints:
     POST /api/action              — submit action + probe + reasoning
     GET  /api/result              — get final season result; persists on game over
     GET  /api/leaderboard/models  — Model Leaderboard (Open/Closed, β descending)
-    GET  /api/leaderboard/play    — Play Leaderboard (human sessions by score)
     GET  /api/logs                — list past sessions (LLM + human)
     GET  /api/logs/{session_id}   — turn-by-turn trace for one session
 
@@ -345,12 +344,6 @@ class SessionSummaryRow(BaseModel):
     created_at: str | None = None
 
 
-class PlayLeaderboardResponse(BaseModel):
-    task: str
-    framing: str
-    rows: list[SessionSummaryRow] = Field(description="Ordered by final_score descending")
-
-
 class LogsResponse(BaseModel):
     sessions: list[SessionSummaryRow] = Field(description="Ordered newest-first (created_at descending)")
 
@@ -663,10 +656,6 @@ def get_result(session_id: str, save: bool = False):
     )
 
 
-DEFAULT_PLAY_TASK = "signal_game"
-DEFAULT_PLAY_FRAMING = "flagship_corruption"
-
-
 @app.get("/api/leaderboard/models", response_model=ModelLeaderboardResponse)
 def leaderboard_models():
     """Model Leaderboard (spec §5): Closed/Open groups, β descending within each.
@@ -689,22 +678,6 @@ def leaderboard_models():
     return ModelLeaderboardResponse(
         open=[_model_stats_to_row(r) for r in open_rows],
         closed=[_model_stats_to_row(r) for r in closed_rows],
-    )
-
-
-@app.get("/api/leaderboard/play", response_model=PlayLeaderboardResponse)
-def leaderboard_play(task: str = DEFAULT_PLAY_TASK, framing: str = DEFAULT_PLAY_FRAMING):
-    """Play Leaderboard: human sessions ranked by final_score, bucketed by arena.
-
-    Defaults to the primary Play arena (signal_game + flagship_corruption).
-    """
-    sessions = _repository.list_sessions(
-        source="human", task=task, framing=framing, order_by_score=True
-    )
-    return PlayLeaderboardResponse(
-        task=task,
-        framing=framing,
-        rows=[_session_record_to_row(s) for s in sessions],
     )
 
 

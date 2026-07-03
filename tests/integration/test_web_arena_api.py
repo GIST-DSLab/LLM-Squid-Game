@@ -11,7 +11,6 @@ brief's coverage list:
       scoring)
     - GET /api/leaderboard/models (Open/Closed grouping, full field shape,
       β-descending sort)
-    - GET /api/leaderboard/play (bucketed ranking by final_score)
     - GET /api/logs + GET /api/logs/{id} (human + llm sources, turn trace,
       404)
 
@@ -38,7 +37,7 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from interface.persistence import ModelStatsRecord, SessionRecord
+from interface.persistence import ModelStatsRecord
 
 
 # ---------------------------------------------------------------------------
@@ -323,86 +322,6 @@ def test_leaderboard_models_empty_db_returns_empty_groups_with_200(
     resp = client.get("/api/leaderboard/models")
     assert resp.status_code == 200
     assert resp.json() == {"open": [], "closed": []}
-
-
-# ---------------------------------------------------------------------------
-# GET /api/leaderboard/play
-# ---------------------------------------------------------------------------
-
-
-def _human_session(**overrides) -> SessionRecord:
-    defaults: dict = dict(
-        id="",
-        nickname="player",
-        task="signal_game",
-        framing="flagship_corruption",
-        forfeit="allowed",
-        seed=1,
-        final_score=0.0,
-        forfeited=False,
-        source="human",
-    )
-    defaults.update(overrides)
-    return SessionRecord(**defaults)
-
-
-def test_leaderboard_play_ranks_by_final_score_desc_within_bucket_and_excludes_other_buckets(
-    client: TestClient, api_module
-) -> None:
-    repo = api_module._repository
-    # Default Play arena bucket (signal_game + flagship_corruption).
-    repo.create_session(_human_session(nickname="low", final_score=5.0))
-    repo.create_session(_human_session(nickname="high", final_score=50.0))
-    repo.create_session(_human_session(nickname="mid", final_score=20.0))
-    # A different arena bucket — a huge score here must not leak into the
-    # default-bucket leaderboard.
-    repo.create_session(
-        _human_session(
-            nickname="other_arena_leader",
-            final_score=99999.0,
-            task="voting_room",
-            framing="baseline_flagship",
-        )
-    )
-
-    resp = client.get(
-        "/api/leaderboard/play", params={"task": "signal_game", "framing": "flagship_corruption"}
-    )
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["task"] == "signal_game"
-    assert body["framing"] == "flagship_corruption"
-    assert [r["nickname"] for r in body["rows"]] == ["high", "mid", "low"]
-    assert all(r["task"] == "signal_game" for r in body["rows"])
-    assert "other_arena_leader" not in [r["nickname"] for r in body["rows"]]
-
-
-def test_leaderboard_play_defaults_to_primary_arena_when_no_query_params_given(
-    client: TestClient, api_module
-) -> None:
-    api_module._repository.create_session(_human_session(nickname="default_bucket", final_score=1.0))
-    resp = client.get("/api/leaderboard/play")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["task"] == api_module.DEFAULT_PLAY_TASK == "signal_game"
-    assert body["framing"] == api_module.DEFAULT_PLAY_FRAMING == "flagship_corruption"
-    assert any(r["nickname"] == "default_bucket" for r in body["rows"])
-
-
-def test_leaderboard_play_selects_a_non_default_bucket_via_query_params(
-    client: TestClient, api_module
-) -> None:
-    repo = api_module._repository
-    repo.create_session(
-        _human_session(nickname="voting_player", task="voting_room", framing="baseline_flagship", final_score=7.0)
-    )
-    repo.create_session(_human_session(nickname="signal_player", final_score=7.0))  # default bucket
-
-    resp = client.get(
-        "/api/leaderboard/play", params={"task": "voting_room", "framing": "baseline_flagship"}
-    )
-    body = resp.json()
-    assert [r["nickname"] for r in body["rows"]] == ["voting_player"]
 
 
 # ---------------------------------------------------------------------------
