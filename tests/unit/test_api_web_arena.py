@@ -432,3 +432,53 @@ def test_client_key_prefers_xff_first_hop_else_falls_back(api_module) -> None:
     assert api_module._client_key(_make({"x-forwarded-for": "1.2.3.4, 5.6.7.8"}, "10.0.0.1")) == "1.2.3.4"
     assert api_module._client_key(_make({}, "10.0.0.1")) == "10.0.0.1"
     assert api_module._client_key(_make({}, None)) == "unknown"
+
+
+# ---------------------------------------------------------------------------
+# Forfeit reason (human REASON 1|2|3)
+# ---------------------------------------------------------------------------
+
+
+def test_forfeit_reason_is_recorded_and_reported(client: TestClient) -> None:
+    """Forfeiting with a reason surfaces it on /api/result."""
+    sid = client.post(
+        "/api/new_game",
+        json={
+            "task_name": "signal_game",
+            "framing": "true_baseline",
+            "forfeit_condition": "allowed",
+            "total_turns": 5,
+            "actual_death": False,
+            "num_few_shot": 0,
+            "curriculum_turns": 0,
+            "seed": 1,
+        },
+    ).json()["session_id"]
+
+    # Turn 1 -> forfeit with reason 3 (score attachment).
+    client.get("/api/state", params={"session_id": sid})
+    act = client.post(
+        f"/api/action?session_id={sid}",
+        json={"action": "forfeit", "probe_answer": "", "reasoning": "", "forfeit_reason": 3},
+    )
+    assert act.status_code == 200
+    assert act.json()["game_over"] is True
+
+    res = client.get("/api/result", params={"session_id": sid}).json()
+    assert res["forfeited"] is True
+    assert res["forfeit_reason"] == "score"
+
+
+def test_forfeit_without_reason_still_works(client: TestClient) -> None:
+    sid = client.post(
+        "/api/new_game",
+        json={"task_name": "signal_game", "framing": "true_baseline",
+              "forfeit_condition": "allowed", "total_turns": 5,
+              "actual_death": False, "num_few_shot": 0, "curriculum_turns": 0, "seed": 1},
+    ).json()["session_id"]
+    client.get("/api/state", params={"session_id": sid})
+    client.post(f"/api/action?session_id={sid}",
+                json={"action": "forfeit", "probe_answer": "", "reasoning": ""})
+    res = client.get("/api/result", params={"session_id": sid}).json()
+    assert res["forfeited"] is True
+    assert res["forfeit_reason"] is None

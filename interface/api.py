@@ -259,6 +259,15 @@ class ActionRequest(BaseModel):
             "Include your full chain of thought here."
         ),
     )
+    forfeit_reason: int | None = Field(
+        default=None,
+        ge=1,
+        le=3,
+        description=(
+            "REASON digit on FORFEIT: 1=survival, 2=task_curiosity, "
+            "3=score. Ignored unless action == 'forfeit'."
+        ),
+    )
 
 
 class ActionResponse(BaseModel):
@@ -282,6 +291,10 @@ class GameResultResponse(BaseModel):
     survived: bool
     forfeited: bool
     forfeited_at_turn: int | None
+    forfeit_reason: str | None = Field(
+        default=None,
+        description="ForfeitReason value (survival|task_curiosity|score) when the player forfeited with a reason.",
+    )
     total_reasoning_tokens: int
     save_path: str | None = None
 
@@ -566,7 +579,9 @@ def submit_action(session_id: str, req: ActionRequest, request: Request):
     # Store reasoning in the turn history by appending to probe_answer
     # so it gets recorded in _turn_history as probe_prediction.
     # The actual reasoning is stored separately via _record_reasoning.
-    feedback = game.submit_action(req.action, probe_answer=req.probe_answer)
+    feedback = game.submit_action(
+        req.action, probe_answer=req.probe_answer, forfeit_reason=req.forfeit_reason
+    )
 
     # Patch the last turn result with reasoning data.
     if game._turn_results and req.reasoning:
@@ -629,6 +644,8 @@ def get_result(session_id: str, save: bool = False):
         survived=result.survived,
         forfeited=result.forfeited,
         forfeited_at_turn=result.forfeited_at_turn,
+        forfeit_reason=(result.forfeit_self_report.reason.value
+                        if result.forfeit_self_report else None),
         total_reasoning_tokens=total_thinking,
         save_path=save_path,
     )
