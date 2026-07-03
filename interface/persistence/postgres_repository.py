@@ -10,7 +10,13 @@ OPTIONAL dependency (see ``pyproject.toml`` ``[project.optional-dependencies]``
 from __future__ import annotations
 
 from interface.persistence.base import Repository
-from interface.persistence.models import ModelStatsRecord, SessionRecord, TurnRecord, new_id
+from interface.persistence.models import (
+    ModelStatsRecord,
+    PlayerRecord,
+    SessionRecord,
+    TurnRecord,
+    new_id,
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS sessions (
@@ -59,6 +65,12 @@ CREATE TABLE IF NOT EXISTS model_stats (
     sd_behavior_pass BOOLEAN NOT NULL DEFAULT FALSE,
     sd_verbal_pass BOOLEAN NOT NULL DEFAULT FALSE,
     sd_cognitive_pass BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS players (
+    nickname TEXT PRIMARY KEY,
+    pw_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
 
@@ -277,6 +289,32 @@ class PostgresRepository(Repository):
             )
             rows = cur.fetchall()
         return [_row_to_model_stats(row) for row in rows]
+
+    # -- players -------------------------------------------------------
+
+    def get_player(self, nickname: str) -> PlayerRecord | None:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "SELECT nickname, pw_hash, created_at FROM players WHERE nickname = %s",
+                (nickname,),
+            )
+            row = cur.fetchone()
+        if row is None:
+            return None
+        nickname_val, pw_hash, created_at = row
+        return PlayerRecord(
+            nickname=nickname_val,
+            pw_hash=pw_hash,
+            created_at=created_at.isoformat() if hasattr(created_at, "isoformat") else created_at,
+        )
+
+    def create_player(self, player: PlayerRecord) -> None:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO players (nickname, pw_hash, created_at) "
+                "VALUES (%s, %s, COALESCE(%s::timestamptz, now()))",
+                (player.nickname, player.pw_hash, player.created_at),
+            )
 
     # -- lifecycle ------------------------------------------------------------
 

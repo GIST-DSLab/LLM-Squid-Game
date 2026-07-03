@@ -355,3 +355,28 @@ def test_turn_record_round_trips_psuccess_self(repo: Repository) -> None:
     ])
     fetched = repo.list_turns(session_id)
     assert fetched[0].psuccess_self == 72
+
+
+# ---------------------------------------------------------------------------
+# players CRUD
+# ---------------------------------------------------------------------------
+
+
+def test_create_and_get_player(repo: Repository) -> None:
+    from interface.persistence import PlayerRecord
+
+    assert repo.get_player("alice") is None
+    repo.create_player(PlayerRecord(nickname="alice", pw_hash="pbkdf2_sha256$1$aa$bb"))
+    got = repo.get_player("alice")
+    assert got is not None
+    assert got.nickname == "alice"
+    assert got.pw_hash == "pbkdf2_sha256$1$aa$bb"
+    assert got.created_at is not None
+
+
+def test_create_player_duplicate_nickname_raises(repo: Repository) -> None:
+    from interface.persistence import PlayerRecord
+
+    repo.create_player(PlayerRecord(nickname="bob", pw_hash="h1"))
+    with pytest.raises(Exception):
+        repo.create_player(PlayerRecord(nickname="bob", pw_hash="h2"))

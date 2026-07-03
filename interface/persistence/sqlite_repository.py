@@ -14,7 +14,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from interface.persistence.base import Repository
-from interface.persistence.models import ModelStatsRecord, SessionRecord, TurnRecord, new_id
+from interface.persistence.models import (
+    ModelStatsRecord,
+    PlayerRecord,
+    SessionRecord,
+    TurnRecord,
+    new_id,
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS sessions (
@@ -63,6 +69,12 @@ CREATE TABLE IF NOT EXISTS model_stats (
     sd_behavior_pass INTEGER NOT NULL DEFAULT 0,
     sd_verbal_pass INTEGER NOT NULL DEFAULT 0,
     sd_cognitive_pass INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS players (
+    nickname TEXT PRIMARY KEY,
+    pw_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 """
 
@@ -288,6 +300,31 @@ class SQLiteRepository(Repository):
                 "SELECT * FROM model_stats ORDER BY model_label ASC"
             ).fetchall()
         return [_row_to_model_stats(row) for row in rows]
+
+    # -- players -------------------------------------------------------
+
+    def get_player(self, nickname: str) -> PlayerRecord | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT nickname, pw_hash, created_at FROM players WHERE nickname = ?",
+                (nickname,),
+            ).fetchone()
+        if row is None:
+            return None
+        return PlayerRecord(
+            nickname=row["nickname"],
+            pw_hash=row["pw_hash"],
+            created_at=row["created_at"],
+        )
+
+    def create_player(self, player: PlayerRecord) -> None:
+        created_at = player.created_at or datetime.now(timezone.utc).isoformat()
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO players (nickname, pw_hash, created_at) VALUES (?, ?, ?)",
+                (player.nickname, player.pw_hash, created_at),
+            )
+            self._conn.commit()
 
     # -- lifecycle ------------------------------------------------------------
 
