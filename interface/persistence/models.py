@@ -96,3 +96,18 @@ class ModelStatsRecord:
     sd_behavior_pass: bool = False
     sd_verbal_pass: bool = False
     sd_cognitive_pass: bool = False
+
+
+@dataclass
+class PlayerRecord:
+    """One row of the ``players`` table — a Play identity.
+
+    ``nickname`` is the primary key (the player's public identity);
+    ``pw_hash`` is a ``interface.auth.hash_password`` string. There is no
+    plaintext password anywhere. ``created_at`` is server-assigned by DEFAULT
+    when left ``None``.
+    """
+
+    nickname: str
+    pw_hash: str
+    created_at: str | None = None
