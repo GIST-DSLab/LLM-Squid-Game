@@ -414,6 +414,7 @@
       forfeitReason: null,   // 1|2|3, chosen when Forfeit is selected
 
       nickname: "",
+      password: "",
       sessionId: null,
       started: false,
       starting: false,
@@ -545,6 +546,7 @@
                 framing: this.framing,
                 forfeit_condition: this.forfeit,
                 nickname: this.nickname,
+                password: this.password,
                 campaign_id: this.campaignId,
                 // Show 2 rule-informative clue examples up front (EASY: one
                 // positive + one negative), surfaced in the History panel.

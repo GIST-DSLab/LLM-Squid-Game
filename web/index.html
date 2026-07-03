@@ -302,9 +302,18 @@
         <h3>Set up your run</h3>
 
         <div class="field">
-          <label for="nickname">Nickname (anonymous, no account needed)</label>
-          <input id="nickname" type="text" x-model="nickname" placeholder="Anonymous" maxlength="32"
+          <label for="nickname">닉네임 (비밀번호로 보호)</label>
+          <input id="nickname" type="text" x-model="nickname" placeholder="닉네임" maxlength="32"
                  @keydown.enter="startGame()" />
+        </div>
+
+        <div class="field">
+          <label for="playpw">Password <span class="muted">(닉네임 보호 · 복구 불가)</span></label>
+          <input id="playpw" type="password" x-model="password" maxlength="64"
+                 placeholder="비밀번호" @keydown.enter="startCampaign()" />
+          <p class="muted" style="font-size:12px;margin-top:4px;">
+            비밀번호는 복구할 수 없습니다. 같은 닉네임은 같은 비밀번호로만 이어서 플레이할 수 있어요.
+          </p>
         </div>
 
         <!-- Game / task selection -->
