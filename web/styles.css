@@ -1501,3 +1501,27 @@ header.topbar .brand {
   gap: 8px;
 }
 header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
+
+/* =====================================================================
+   Campaign progress / between-condition / report — Task 6 (WP4)
+   ===================================================================== */
+
+.campaign-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.campaign-progress .cp-step { font-weight: 600; }
+.reason-picker { margin-top: 12px; padding: 10px; border: 1px solid var(--border, #2a3350); border-radius: 8px; }
+.reason-picker .reason-head { font-size: 0.9em; margin-bottom: 6px; opacity: 0.85; }
+.between-card { text-align: center; }
+.report-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.report-table th, .report-table td { padding: 6px 10px; border-bottom: 1px solid var(--border, #2a3350); text-align: left; }
+.heatmap-scroll { overflow-x: auto; }
+.heatmap { border-collapse: collapse; }
+.heatmap th, .heatmap td { text-align: center; }
+.hm-col { width: 26px; font-size: 0.75em; opacity: 0.7; }
+.hm-rowlabel { text-align: right; padding-right: 10px; white-space: nowrap; }
+.hm-cell { width: 24px; height: 24px; border: 1px solid rgba(255,255,255,0.06); font-size: 0.8em; }
+.hm-ok { background: #1f7a4d; color: #eafff2; }
+.hm-no { background: #7a2130; color: #ffe9ec; }
+.hm-forfeit { background: #6a5a12; color: #fff7d6; }
+.hm-empty { background: transparent; opacity: 0.25; }
+.heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.85em; flex-wrap: wrap; }
+.heatmap-legend .hm-cell { display: inline-flex; align-items: center; justify-content: center; }

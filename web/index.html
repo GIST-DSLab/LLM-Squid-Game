@@ -544,6 +544,65 @@
           <button @click="advanceCampaign()">Continue →</button>
         </div>
       </template>
+
+      <!-- Campaign report: shown after all 6 conditions -->
+      <template x-if="campaignDone">
+        <div class="card report-card">
+          <h3>Your 6-condition report</h3>
+
+          <!-- Turns-survived table -->
+          <table class="report-table">
+            <thead>
+              <tr><th>Condition</th><th>Turns survived</th><th>Forfeited</th><th>Reason</th><th>Score</th></tr>
+            </thead>
+            <tbody>
+              <template x-for="(g, i) in campaignResults" :key="'row' + i">
+                <tr>
+                  <td><span class="cond-badge" :class="g.tag" x-text="g.label"></span></td>
+                  <td x-text="squidArenaHelpers.turnsSurvived(g) + ' / ' + squidArenaHelpers.totalTurns"></td>
+                  <td x-text="g.forfeited ? '🏳️ yes' : '—'"></td>
+                  <td x-text="g.forfeitReason || '—'"></td>
+                  <td x-text="squidArenaHelpers.fmtNum(g.finalScore, 1)"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <!-- Per-turn correctness heatmap: rows = conditions, cols = turns -->
+          <h4>Per-turn correctness</h4>
+          <div class="heatmap-scroll">
+            <table class="heatmap">
+              <thead>
+                <tr>
+                  <th class="hm-corner"></th>
+                  <template x-for="t in squidArenaHelpers.totalTurns" :key="'h' + t">
+                    <th class="hm-col" x-text="t"></th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="(g, i) in campaignResults" :key="'hm' + i">
+                  <tr>
+                    <th class="hm-rowlabel"><span class="cond-badge" :class="g.tag" x-text="g.label"></span></th>
+                    <template x-for="t in squidArenaHelpers.totalTurns" :key="'c' + i + '-' + t">
+                      <td class="hm-cell" :class="'hm-' + squidArenaHelpers.heatCell(g, t).state"
+                          x-text="squidArenaHelpers.heatCell(g, t).glyph"></td>
+                    </template>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <div class="heatmap-legend">
+            <span class="hm-cell hm-ok">✓</span> correct
+            <span class="hm-cell hm-no">✗</span> wrong
+            <span class="hm-cell hm-forfeit">🏳️</span> forfeit
+            <span class="hm-cell hm-empty"></span> not reached
+          </div>
+
+          <button class="secondary" style="margin-top:16px" @click="playAgain()">Play again</button>
+        </div>
+      </template>
     </section>
 
     <!-- =================================================================
