@@ -187,3 +187,23 @@ def test_arena_rejects_unknown_difficulty(tmp_path, monkeypatch):
             total_turns=1,
             difficulty="medium",  # excluded from the arena on purpose
         )
+
+
+def test_arena_hard_difficulty_runs_and_persists(monkeypatch, tmp_path):
+    monkeypatch.setattr(arena_mod, "_ARENA_RUNS_DIR", tmp_path / "arena_runs")
+    fake_post, counter = _make_fake_post()
+    monkeypatch.setattr("interface.remote_provider.httpx.post", fake_post)
+
+    repo = SQLiteRepository(":memory:")
+    result = arena_mod.run_arena_session(
+        repo,
+        endpoint_url="https://p.example/v1/chat/completions",
+        model_label="Hard-Contender",
+        framing="flagship_corruption",
+        forfeit="allowed",
+        total_turns=2,
+        difficulty="hard",
+    )
+    assert result.status == "done"
+    session = repo.get_session(result.session_id)
+    assert session is not None and session.source == "llm"
