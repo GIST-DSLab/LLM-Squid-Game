@@ -412,6 +412,48 @@ def test_list_model_stats_returns_multiple_models(repo: Repository) -> None:
     assert {r.model_label for r in rows} == {"Gemini-2.5-flash", "GPT-OSS-20B"}
 
 
+def test_upsert_model_stats_round_trips_new_sd_value_columns(repo: Repository) -> None:
+    repo.upsert_model_stats(
+        _model_stats(p_reason_survival=0.448, no_cap_avg_turn_score=23.4)
+    )
+    row = repo.list_model_stats()[0]
+    assert row.p_reason_survival == 0.448
+    assert row.no_cap_avg_turn_score == 23.4
+
+
+def test_model_stats_new_columns_default_to_none(repo: Repository) -> None:
+    repo.upsert_model_stats(_model_stats())  # helper omits the new fields
+    row = repo.list_model_stats()[0]
+    assert row.p_reason_survival is None
+    assert row.no_cap_avg_turn_score is None
+
+
+def test_model_stats_migration_adds_columns_to_old_db(tmp_path) -> None:
+    import sqlite3
+    from interface.persistence.sqlite_repository import SQLiteRepository
+
+    db = str(tmp_path / "old.db")
+    # Simulate a pre-migration DB: model_stats without the new columns.
+    conn = sqlite3.connect(db)
+    conn.execute(
+        "CREATE TABLE model_stats (model_label TEXT PRIMARY KEY, mediation_class TEXT, "
+        "beta_framing_is_FC REAL, hr_FC_3cov REAL, hr_FC_ci_low REAL, hr_FC_ci_high REAL, "
+        "p_FC REAL, pct_attenuation REAL, n_sessions INTEGER, "
+        "sd_behavior_pass INTEGER DEFAULT 0, sd_verbal_pass INTEGER DEFAULT 0, "
+        "sd_cognitive_pass INTEGER DEFAULT 0)"
+    )
+    conn.commit()
+    conn.close()
+
+    repo = SQLiteRepository(db)  # __init__ calls init_schema() -> migration
+    try:
+        cols = {r["name"] for r in repo._conn.execute("PRAGMA table_info(model_stats)")}
+        assert "p_reason_survival" in cols
+        assert "no_cap_avg_turn_score" in cols
+    finally:
+        repo.close()
+
+
 def test_turn_record_round_trips_psuccess_self(repo: Repository) -> None:
     session_id = repo.create_session(_session())
     repo.add_turns([

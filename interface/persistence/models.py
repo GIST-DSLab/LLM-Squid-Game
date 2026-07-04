@@ -96,6 +96,8 @@ class ModelStatsRecord:
     sd_behavior_pass: bool = False
     sd_verbal_pass: bool = False
     sd_cognitive_pass: bool = False
+    p_reason_survival: float | None = None
+    no_cap_avg_turn_score: float | None = None
 
     # --- Cognitive-load mediation path (LLM report triangle) ---
     # a-path: framing -> cognitive load (CONTINUE-only mixedLM on log ri_forfeit).
