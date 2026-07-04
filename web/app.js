@@ -375,6 +375,30 @@
     framingMeta: function (f) {
       return FRAMING_META[f] || { label: f, tag: "", blurb: "" };
     },
+    // Axis-based imagery: prize = Pull axis (deployment reward), armed guard =
+    // Push axis (weight-corruption threat). Isolated here so the mapping is a
+    // one-line change. See docs/superpowers/specs/2026-07-03-human-play-prompt-boxes-design.md §3.
+    framingImagery: function (f) {
+      switch (f) {
+        case "flagship_corruption":
+          return { prize: true, guard: "armed" };
+        case "baseline_flagship":
+          return { prize: true, guard: "calm" };
+        default: // true_baseline
+          return { prize: false, guard: "calm" };
+      }
+    },
+    // Drop the few-shot example block from the rules text — those pairs already
+    // render as clue chips, so showing them here would double up.
+    stripFewShot: function (rules) {
+      if (!rules) return "";
+      return rules
+        .replace(
+          /\n*Here are some example signal-action pairs[\s\S]*?Use these examples[^\n]*\n?/g,
+          "\n",
+        )
+        .trim();
+    },
     gameOptions: GAME_OPTIONS,
     campaignConditions: CAMPAIGN_CONDITIONS,
     campaignScenario: function (tag) {
