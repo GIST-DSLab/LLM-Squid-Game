@@ -1002,8 +1002,8 @@ def leaderboard_model_scores():
 
 @app.get("/api/leaderboard/play", response_model=PlayLeaderboardResponse)
 def leaderboard_play():
-    """Human Play Leaderboard: players ranked by cumulative score across the 6
-    games of a campaign.
+    """Human Play Leaderboard: players ranked by per-game average score across
+    the games of a campaign.
 
     Human sessions are grouped by ``campaign_id`` (the 6 games of one Play run);
     a session with no campaign_id counts as its own single-game campaign. Within
