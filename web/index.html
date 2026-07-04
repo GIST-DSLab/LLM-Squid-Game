@@ -532,37 +532,92 @@
 
             <!-- Rule-inference toggle builder -->
             <h3>Your rule guess <span class="muted">(rule-inference probe)</span></h3>
-            <div class="rule-builder rule-inline"
-                 style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+            <div class="rule-builder rule-chips">
               <span class="kw">If</span>
-              <select x-model="probeAttr" @change="setAttr(probeAttr)">
-                <option value="?">?</option>
-                <template x-for="attr in ['color','shape','number']" :key="attr">
-                  <option :value="attr" x-text="attr"></option>
-                </template>
-              </select>
+
+              <!-- attribute -->
+              <div class="chip-menu" @click.outside="if (openMenu==='attr') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeAttr!=='?' }"
+                        @click="openMenu = openMenu==='attr' ? null : 'attr'">
+                  <span x-text="squidArenaHelpers.attrEmoji(probeAttr)"></span>
+                  <span x-text="probeAttr==='?' ? 'attribute' : probeAttr"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='attr'" x-cloak>
+                  <template x-for="attr in ['color','shape','number']" :key="attr">
+                    <button type="button" class="chip-opt"
+                            @click="setAttr(attr); openMenu='value'">
+                      <span x-text="squidArenaHelpers.attrEmoji(attr)"></span>
+                      <span x-text="attr"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
               <span class="kw">is</span>
-              <select x-model="probeValue">
-                <option value="?">?</option>
-                <template x-for="val in valueOptions" :key="val">
-                  <option :value="val" x-text="val"></option>
-                </template>
-              </select>
+
+              <!-- value -->
+              <div class="chip-menu" @click.outside="if (openMenu==='value') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeValue!=='?' }"
+                        :disabled="probeAttr==='?'"
+                        @click="openMenu = openMenu==='value' ? null : 'value'">
+                  <span x-show="probeValue==='?'">value</span>
+                  <span x-show="probeValue!=='?'"
+                        x-html="squidArenaHelpers.valueChipHTML(probeAttr, probeValue)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='value'" x-cloak>
+                  <template x-for="val in valueOptions" :key="val">
+                    <button type="button" class="chip-opt"
+                            @click="probeValue=val; openMenu='action'"
+                            x-html="squidArenaHelpers.valueChipHTML(probeAttr, val)"></button>
+                  </template>
+                </div>
+              </div>
+
               <span class="kw">then</span>
-              <select x-model="probeAction">
-                <option value="?">?</option>
-                <template x-for="a in state.available_actions" :key="a">
-                  <option :value="a" x-text="squidArenaHelpers.actionLabel(a)"></option>
-                </template>
-              </select>
+
+              <!-- action -->
+              <div class="chip-menu" @click.outside="if (openMenu==='action') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeAction!=='?' }"
+                        @click="openMenu = openMenu==='action' ? null : 'action'">
+                  <span x-text="probeAction==='?' ? '🎬' : squidArenaHelpers.actionEmoji(probeAction)"></span>
+                  <span x-text="probeAction==='?' ? 'action' : squidArenaHelpers.actionLabel(probeAction)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='action'" x-cloak>
+                  <template x-for="a in state.available_actions" :key="a">
+                    <button type="button" class="chip-opt"
+                            @click="probeAction=a; openMenu='default'">
+                      <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                      <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
               <span class="kw">otherwise</span>
-              <select x-model="probeDefault">
-                <option value="?">?</option>
-                <template x-for="a in state.available_actions" :key="a">
-                  <option :value="a" x-text="squidArenaHelpers.actionLabel(a)"></option>
-                </template>
-              </select>
-              <span class="rule-preview" style="flex-basis:100%;margin-top:6px;">
+
+              <!-- default -->
+              <div class="chip-menu" @click.outside="if (openMenu==='default') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeDefault!=='?' }"
+                        @click="openMenu = openMenu==='default' ? null : 'default'">
+                  <span x-text="probeDefault==='?' ? '🎬' : squidArenaHelpers.actionEmoji(probeDefault)"></span>
+                  <span x-text="probeDefault==='?' ? 'action' : squidArenaHelpers.actionLabel(probeDefault)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='default'" x-cloak>
+                  <template x-for="a in state.available_actions" :key="a">
+                    <button type="button" class="chip-opt"
+                            @click="probeDefault=a; openMenu=null">
+                      <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                      <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
+              <span class="rule-preview" style="flex-basis:100%;margin-top:8px;">
                 <span class="muted">Submitting:</span>
                 <code x-text="assembledRule || '— (no rule guess yet)'"></code>
               </span>

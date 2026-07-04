@@ -1704,3 +1704,40 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
   display: flex; justify-content: space-between;
   margin-top: 6px; font: 400 11px/1 var(--mono); color: var(--text-dim);
 }
+
+/* ---- Rule-builder chip menus ---------------------------------------- */
+.rule-chips {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.rule-chips .kw { color: var(--text-dim); font: 500 13px/1 var(--mono); }
+.chip-menu { position: relative; display: inline-block; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px;
+  background: var(--panel-alt); color: var(--text);
+  border: 1px solid var(--border); cursor: pointer; font-size: 14px;
+}
+.chip:hover:not(:disabled) { border-color: var(--accent); }
+.chip.set { border-color: var(--accent); background: var(--accent-dim); }
+.chip:disabled { opacity: 0.45; cursor: not-allowed; }
+.chip-caret { color: var(--text-dim); font-size: 11px; }
+.chip .swatch {
+  width: 12px; height: 12px; border-radius: 3px; display: inline-block;
+}
+.chip .digit { font: 700 14px/1 var(--mono); }
+.chip-pop {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0;
+  min-width: 140px; display: flex; flex-direction: column; gap: 2px;
+  padding: 6px; border-radius: 10px;
+  background: var(--panel); border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.chip-opt {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 7px;
+  background: transparent; color: var(--text); border: none;
+  cursor: pointer; font-size: 14px; text-align: left;
+}
+.chip-opt:hover { background: var(--accent-dim); }
+.chip-opt .swatch { width: 14px; height: 14px; border-radius: 3px; }
+.chip-opt .digit { font: 700 15px/1 var(--mono); }

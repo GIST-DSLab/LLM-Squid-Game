@@ -283,6 +283,11 @@
     return r ? r.emoji + " " + r.label : null;
   }
 
+  /** Emoji for a rule-attribute chip. */
+  function attrEmoji(attr) {
+    return { color: "🎨", shape: "🔷", number: "#️⃣" }[attr] || "🎯";
+  }
+
   /** Inner HTML for one value chip in the rule builder: a color swatch,
    * a neutral shape glyph, or a big digit — matching the attribute. */
   function valueChipHTML(attr, val) {
@@ -373,6 +378,7 @@
     actionEmoji,
     actionLabel,
     reasonLabel,
+    attrEmoji,
     valueChipHTML,
     parseStimulus,
     parseClues,
@@ -540,6 +546,7 @@
       probeValue: "?",
       probeAction: "?",
       probeDefault: "?",
+      openMenu: null, // which rule chip popover is open: attr|value|action|default
 
       // Accumulated per-turn history: {turn, stimulus, action, optimal, forfeit}.
       history: [],
@@ -938,6 +945,7 @@
         this.probeValue = "?";
         this.probeAction = "?";
         this.probeDefault = "?";
+        this.openMenu = null;
         this.history = [];
         this.reasoning = "";
         this.psuccess = 50;
