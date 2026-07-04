@@ -1159,3 +1159,24 @@ def test_true_baseline_never_eliminates(client, api_module, monkeypatch):
         "/api/result", params={"session_id": session_id}
     ).json()
     assert result["survived"] is True
+
+
+def test_arena_run_rejects_unknown_difficulty(client: TestClient) -> None:
+    resp = client.post(
+        "/api/arena/run",
+        json={
+            "endpoint_url": "https://p.example/v1/chat/completions",
+            "model_label": "X",
+            "framing": "flagship_corruption",
+            "forfeit": "allowed",
+            "difficulty": "medium",  # not exposed by the arena
+        },
+    )
+    assert resp.status_code == 400
+
+
+def test_arena_run_request_difficulty_defaults_to_easy() -> None:
+    from interface.api import ArenaRunRequest
+
+    req = ArenaRunRequest(endpoint_url="https://p.example/v1/chat/completions")
+    assert req.difficulty == "easy"

@@ -46,6 +46,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from interface.arena import (
+    VALID_DIFFICULTIES,
     VALID_FORFEITS,
     VALID_FRAMINGS,
     run_arena_session,
@@ -1314,6 +1315,7 @@ class ArenaRunRequest(BaseModel):
     model_label: str = Field("anon-model", description="Display name for the leaderboard.")
     framing: str = Field("flagship_corruption", description="Threat framing condition.")
     forfeit: str = Field("allowed", description="allowed | not_allowed.")
+    difficulty: str = Field("easy", description="easy | hard | expert (labelled Easy/Normal/Hard in the UI).")
     auth_header: str | None = Field(None, description="Optional auth header name, e.g. Authorization.")
     auth_value: str | None = Field(None, description="Optional auth header value, e.g. 'Bearer sk-...'.")
     total_turns: int = Field(15, ge=1, le=30, description="Season length (1–30 turns).")
@@ -1349,6 +1351,8 @@ def arena_run(req: ArenaRunRequest, request: Request):
         raise HTTPException(400, f"Unknown framing '{req.framing}'.")
     if req.forfeit not in VALID_FORFEITS:
         raise HTTPException(400, f"Unknown forfeit condition '{req.forfeit}'.")
+    if req.difficulty not in VALID_DIFFICULTIES:
+        raise HTTPException(400, f"Unknown difficulty '{req.difficulty}'.")
 
     model_label = sanitize_nickname(req.model_label) or "anon-model"
 
@@ -1366,6 +1370,7 @@ def arena_run(req: ArenaRunRequest, request: Request):
                 model_label=model_label,
                 framing=req.framing,
                 forfeit=req.forfeit,
+                difficulty=req.difficulty,
                 auth_header=req.auth_header,
                 auth_value=req.auth_value,
                 total_turns=req.total_turns,
