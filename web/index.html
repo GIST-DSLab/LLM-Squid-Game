@@ -468,15 +468,20 @@
               </div>
             </template>
 
-            <!-- Knock-out disclosure (non-death framings only): the per-turn
-                 bounce still fires here, so say so plainly up front. -->
-            <div class="muted" style="margin-top:8px;"
-                 x-show="squidArenaHelpers.eliminationTheme(framing).note"
-                 x-text="squidArenaHelpers.eliminationTheme(framing).note"></div>
-
             <!-- Forfeit availability line -->
             <div class="muted" style="margin-top:8px;"
                  x-text="squidArenaHelpers.forfeitLine(currentCondition.forfeit)"></div>
+          </div>
+
+          <!-- Elimination heads-up (pull only): pulled out of the framing box
+               into its own emphasized callout, carrying the session's
+               elimination icon. Hidden when note is empty (baseline / threat). -->
+          <div class="elim-heads-up"
+               x-show="squidArenaHelpers.eliminationTheme(framing).note" x-cloak>
+            <span class="elim-heads-up-icon"
+                  x-text="squidArenaHelpers.eliminationTheme(framing).icon"></span>
+            <span class="elim-heads-up-text"
+                  x-text="squidArenaHelpers.eliminationTheme(framing).note"></span>
           </div>
 
           <!-- Modern stat tiles -->
@@ -489,8 +494,9 @@
               <div class="tile-label">Score</div>
               <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></div>
             </div>
-            <!-- p(death) is meaningless under the true_baseline framing (no
-                 termination metaphor, p_end=0), so hide it there. -->
+            <!-- true_baseline never applies the death roll (server forces
+                 actual_death=False for it), so there is no elimination risk to
+                 show — hide the tile there. -->
             <div class="tile" x-show="framing !== 'true_baseline'">
               <div class="tile-label" x-text="squidArenaHelpers.eliminationTheme(framing).tileLabel"></div>
               <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></div>
