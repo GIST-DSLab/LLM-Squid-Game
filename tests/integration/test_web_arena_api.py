@@ -313,6 +313,8 @@ def test_leaderboard_models_full_row_shape_and_beta_descending_sort(
         assert got["sd_behavior_pass"] == exp.sd_behavior_pass
         assert got["sd_verbal_pass"] == exp.sd_verbal_pass
         assert got["sd_cognitive_pass"] == exp.sd_cognitive_pass
+        assert got["p_reason_survival"] is None
+        assert got["no_cap_avg_turn_score"] is None
         # Full field set, nothing invented, nothing missing.
         assert set(got.keys()) == {
             "model_label",
@@ -327,6 +329,8 @@ def test_leaderboard_models_full_row_shape_and_beta_descending_sort(
             "sd_behavior_pass",
             "sd_verbal_pass",
             "sd_cognitive_pass",
+            "p_reason_survival",
+            "no_cap_avg_turn_score",
         }
 
 
