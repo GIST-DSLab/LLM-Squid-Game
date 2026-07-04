@@ -1584,6 +1584,25 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.85em; flex-wrap: wrap; }
 .heatmap-legend .hm-cell { display: inline-flex; align-items: center; justify-content: center; }
 
+/* Logs: subject group cards + LLM report extras */
+.log-item.group-card { border-left-color: var(--accent-dim); }
+.log-item.group-card .li-name { min-width: 160px; font-size: 1.02rem; }
+/* LLM per-condition correctness-rate heatmap cell: tint set inline (opacity
+   scales with the rate); keep text legible on the darker high-rate cells. */
+.hm-cell.hm-rate {
+  color: var(--text);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.heatmap-legend .hm-cell.hm-rate {
+  width: 20px; height: 20px; border-radius: 4px;
+}
+/* Survival-Drive pass/fail badges under the LLM stats card */
+.sd-flags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+/* Play turn gate hint (rule-guess incomplete) */
+.rule-gate-hint { font-size: 0.88rem; }
+
 /* Elimination overlay */
 .death-overlay {
   position: fixed;

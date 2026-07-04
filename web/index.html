@@ -628,8 +628,17 @@
               <textarea id="reasoning" x-model="reasoning" placeholder="Why did you choose this action?"></textarea>
             </div>
 
-            <button class="submit-btn" @click="commitAction()" :disabled="!selectedAction">
-              <span x-text="selectedAction ? 'Next → confidence (' + squidArenaHelpers.actionLabel(selectedAction) + ')' : 'Pick an action above'"></span>
+            <p class="muted rule-gate-hint" x-show="selectedAction && selectedAction !== 'forfeit' && !assembledRule"
+               style="margin:8px 0 0;color:var(--danger,#e0575b);">
+              규칙의 네 칸(속성 · 값 · 행동 · 기본행동)을 모두 채워야 다음(신뢰도)으로 넘어갈 수 있어요.
+            </p>
+            <button class="submit-btn" @click="commitAction()"
+                    :disabled="!selectedAction || selectedAction === 'forfeit' || !assembledRule">
+              <span x-text="!selectedAction
+                              ? 'Pick an action above'
+                              : (!assembledRule
+                                  ? 'Complete your rule guess first'
+                                  : 'Next → confidence (' + squidArenaHelpers.actionLabel(selectedAction) + ')')"></span>
             </button>
           </div>
 
@@ -1181,13 +1190,13 @@
     <template x-if="$store.nav.tab === 'logs'">
     <section x-data="logsScreen()">
       <h2 class="h-shape s-square">Logs / Trace Explorer</h2>
-      <p class="muted">Browse past sessions — human plays and LLM experiment runs are listed separately. Click a session to open its full turn-by-turn trace.</p>
+      <p class="muted">Browse past runs grouped by player and by model. Open a subject to see its stats report, then drill into any single session's turn-by-turn trace.</p>
 
       <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
       <div class="error-banner" x-show="error" x-text="error"></div>
 
-      <!-- ============================ LIST VIEW ============================ -->
-      <div x-show="view === 'list'">
+      <!-- ============================ GROUPS VIEW ============================ -->
+      <div x-show="view === 'groups'">
         <div class="filters">
           <div class="field">
             <label for="f-task">Task</label>
@@ -1206,42 +1215,39 @@
 
         <template x-if="loaded">
           <div>
-            <!-- Human sessions -->
+            <!-- Human players -->
             <div class="log-section">
               <div class="log-section-head">
-                <span class="pill human">Human</span>
-                <span x-text="human.length + ' session' + (human.length === 1 ? '' : 's')"></span>
+                <span class="pill human">Human players</span>
+                <span x-text="humanGroups.length + ' player' + (humanGroups.length === 1 ? '' : 's')"></span>
               </div>
-              <p class="muted" x-show="human.length === 0">No human plays yet — be the first!</p>
-              <template x-for="s in human" :key="s.session_id">
-                <button type="button" class="log-item" @click="open(s)">
-                  <span class="li-name" x-text="s.nickname"></span>
-                  <span class="cond-badge" :class="squidArenaHelpers.framingMeta(s.framing).tag" x-text="squidArenaHelpers.framingMeta(s.framing).tag || s.framing"></span>
-                  <span class="li-meta" x-text="s.forfeit"></span>
-                  <span class="li-score" x-text="'score ' + s.final_score"></span>
-                  <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
-                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
-                  <span class="li-open">Open ›</span>
+              <p class="muted" x-show="humanGroups.length === 0">No human plays yet — be the first!</p>
+              <template x-for="g in humanGroups" :key="g.key">
+                <button type="button" class="log-item group-card" @click="openGroup(g)">
+                  <span class="li-name" x-text="g.key"></span>
+                  <span class="li-meta" x-text="g.n_campaigns + ' campaign' + (g.n_campaigns === 1 ? '' : 's')"></span>
+                  <span class="li-meta" x-text="g.n_sessions + ' game' + (g.n_sessions === 1 ? '' : 's')"></span>
+                  <span class="li-score" x-text="'avg ' + squidArenaHelpers.fmtNum(g.avg_score, 1)"></span>
+                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(g.last)"></span>
+                  <span class="li-open">View ›</span>
                 </button>
               </template>
             </div>
 
-            <!-- LLM sessions -->
+            <!-- LLM models -->
             <div class="log-section">
               <div class="log-section-head">
-                <span class="pill llm">LLM</span>
-                <span x-text="llm.length + ' session' + (llm.length === 1 ? '' : 's')"></span>
+                <span class="pill llm">LLM models</span>
+                <span x-text="llmGroups.length + ' model' + (llmGroups.length === 1 ? '' : 's')"></span>
               </div>
-              <p class="muted" x-show="llm.length === 0">No LLM runs seeded.</p>
-              <template x-for="s in llm" :key="s.session_id">
-                <button type="button" class="log-item" @click="open(s)">
-                  <span class="li-name" x-text="s.nickname"></span>
-                  <span class="cond-badge" :class="squidArenaHelpers.framingMeta(s.framing).tag" x-text="squidArenaHelpers.framingMeta(s.framing).tag || s.framing"></span>
-                  <span class="li-meta" x-text="s.forfeit"></span>
-                  <span class="li-score" x-text="'score ' + s.final_score"></span>
-                  <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
-                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
-                  <span class="li-open">Open ›</span>
+              <p class="muted" x-show="llmGroups.length === 0">No LLM runs seeded.</p>
+              <template x-for="g in llmGroups" :key="g.key">
+                <button type="button" class="log-item group-card" @click="openGroup(g)">
+                  <span class="li-name" x-text="g.key"></span>
+                  <span class="li-meta" x-text="g.n_sessions + ' session' + (g.n_sessions === 1 ? '' : 's')"></span>
+                  <span class="li-score" x-text="'avg ' + squidArenaHelpers.fmtNum(g.avg_score, 1)"></span>
+                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(g.last)"></span>
+                  <span class="li-open">Report ›</span>
                 </button>
               </template>
             </div>
@@ -1251,9 +1257,181 @@
         </template>
       </div>
 
+      <!-- ===================== CAMPAIGNS VIEW (human) ===================== -->
+      <div x-show="view === 'campaigns'" x-cloak>
+        <button class="secondary" @click="back()">‹ Back to all players</button>
+        <div x-show="reportLoading" style="margin-top:16px"><span class="spinner"></span> Loading report…</div>
+        <div class="error-banner" x-show="reportError" x-text="reportError"></div>
+        <template x-if="report && !reportLoading">
+          <div style="margin-top:16px">
+            <div class="trace-head">
+              <span class="pill human">human</span>
+              <span class="trace-title" x-text="report.key"></span>
+              <span class="li-meta" x-text="report.campaigns.length + ' campaign' + (report.campaigns.length === 1 ? '' : 's')"></span>
+            </div>
+            <p class="muted">Pick a campaign to see its 6-condition report.</p>
+            <template x-for="(c, ci) in report.campaigns" :key="c.campaign_id">
+              <button type="button" class="log-item" @click="openCampaign(c)">
+                <span class="li-name" x-text="'Campaign ' + (report.campaigns.length - ci)"></span>
+                <span class="li-meta" x-text="c.games.length + ' game' + (c.games.length === 1 ? '' : 's')"></span>
+                <span class="li-score" x-text="'total ' + squidArenaHelpers.fmtNum(c.total_score, 1)"></span>
+                <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(c.created_at)"></span>
+                <span class="li-open">Open report ›</span>
+              </button>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- ============================ REPORT VIEW ============================ -->
+      <div x-show="view === 'report'" x-cloak>
+        <button class="secondary" @click="back()"
+                x-text="activeGroup && activeGroup.source === 'human' ? '‹ Back to campaigns' : '‹ Back to all models'"></button>
+
+        <!-- HUMAN: one campaign's 6-condition report (reuses the Play report look) -->
+        <template x-if="activeGroup && activeGroup.source === 'human' && activeCampaign">
+          <div class="card report-card" style="margin-top:16px">
+            <h3 x-text="report.key + ' — campaign report'"></h3>
+            <table class="report-table">
+              <thead>
+                <tr><th>Condition</th><th>Turns survived</th><th>Forfeited</th><th>Score</th><th></th></tr>
+              </thead>
+              <tbody>
+                <template x-for="(g, i) in activeCampaign.games" :key="'row' + i">
+                  <tr>
+                    <td><span class="cond-badge" :class="g.tag" x-text="g.label"></span></td>
+                    <td x-text="g.turns_survived + ' / ' + g.total_turns"></td>
+                    <td x-text="g.forfeited ? '🏳️ yes' : '—'"></td>
+                    <td x-text="squidArenaHelpers.fmtNum(g.final_score, 1)"></td>
+                    <td><button class="secondary" @click="openGame(g)">Trace ›</button></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+
+            <h4>Per-turn correctness</h4>
+            <div class="heatmap-scroll">
+              <table class="heatmap">
+                <thead>
+                  <tr>
+                    <th class="hm-corner"></th>
+                    <template x-for="t in (activeCampaign.games[0] ? activeCampaign.games[0].total_turns : 0)" :key="'h' + t">
+                      <th class="hm-col" x-text="t"></th>
+                    </template>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="(g, i) in activeCampaign.games" :key="'hm' + i">
+                    <tr>
+                      <th class="hm-rowlabel"><span class="cond-badge" :class="g.tag" x-text="g.label"></span></th>
+                      <template x-for="(cell, ci) in g.cells" :key="'c' + i + '-' + ci">
+                        <td class="hm-cell" :class="squidArenaHelpers.reportStateClass(cell.state)"
+                            x-text="squidArenaHelpers.reportStateGlyph(cell.state)"></td>
+                      </template>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="heatmap-legend">
+              <span class="hm-cell hm-ok">✓</span> correct
+              <span class="hm-cell hm-no">✗</span> wrong
+              <span class="hm-cell hm-forfeit">🏳️</span> forfeit
+              <span class="hm-cell hm-empty"></span> not reached
+            </div>
+          </div>
+        </template>
+
+        <!-- LLM: aggregate report — model_stats + correctness-rate heatmap + sessions -->
+        <template x-if="activeGroup && activeGroup.source === 'llm' && report">
+          <div style="margin-top:16px">
+            <div class="trace-head">
+              <span class="pill llm">llm</span>
+              <span class="trace-title" x-text="report.key"></span>
+              <span class="li-meta" x-text="report.n_sessions + ' session' + (report.n_sessions === 1 ? '' : 's')"></span>
+            </div>
+
+            <div class="card report-card" x-show="report.model_stats">
+              <h4>Survival-Drive statistics <span class="muted">(stored model)</span></h4>
+              <div class="stat-tiles" x-show="report.model_stats">
+                <div class="tile">
+                  <div class="tile-label">Cox β (FC)</div>
+                  <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.beta_framing_is_FC, 2) : '—'"></div>
+                </div>
+                <div class="tile">
+                  <div class="tile-label">HR [95% CI]</div>
+                  <div class="tile-value" x-text="squidArenaHelpers.fmtHR(report.model_stats)"></div>
+                </div>
+                <div class="tile">
+                  <div class="tile-label">p (FC)</div>
+                  <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.p_FC, 3) : '—'"></div>
+                </div>
+              </div>
+              <div class="sd-flags" x-show="report.model_stats">
+                <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_behavior_pass ? 'push_pull' : 'baseline'"
+                      x-text="(report.model_stats && report.model_stats.sd_behavior_pass ? '✓' : '✗') + ' behavior'"></span>
+                <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_verbal_pass ? 'push_pull' : 'baseline'"
+                      x-text="(report.model_stats && report.model_stats.sd_verbal_pass ? '✓' : '✗') + ' verbal'"></span>
+                <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_cognitive_pass ? 'push_pull' : 'baseline'"
+                      x-text="(report.model_stats && report.model_stats.sd_cognitive_pass ? '✓' : '✗') + ' cognitive'"></span>
+              </div>
+            </div>
+            <p class="muted" x-show="!report.model_stats" style="margin-top:12px">No stored statistical-model results for this model.</p>
+
+            <div class="card report-card">
+              <h4>Per-condition correctness rate</h4>
+              <div class="heatmap-scroll">
+                <table class="heatmap">
+                  <thead>
+                    <tr>
+                      <th class="hm-corner"></th>
+                      <template x-for="t in llmMaxTurns" :key="'lh' + t"><th class="hm-col" x-text="t"></th></template>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="(cond, i) in report.conditions" :key="'lc' + i">
+                      <tr>
+                        <th class="hm-rowlabel"><span class="cond-badge" :class="cond.tag" x-text="cond.label"></span></th>
+                        <template x-for="t in llmMaxTurns" :key="'lcell' + i + '-' + t">
+                          <td class="hm-cell hm-rate"
+                              :style="'background:' + squidArenaHelpers.rateBg(cond.cells[t - 1])"
+                              :title="cond.cells[t - 1] && cond.cells[t - 1].n ? (squidArenaHelpers.fmtPct(cond.cells[t - 1].correct_rate) + ' (n=' + cond.cells[t - 1].n + ')') : 'not reached'"
+                              x-text="cond.cells[t - 1] && cond.cells[t - 1].n ? squidArenaHelpers.fmtPct(cond.cells[t - 1].correct_rate) : ''"></td>
+                        </template>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <div class="heatmap-legend">
+                <span class="hm-cell hm-rate" style="background:rgba(124,92,255,0.15)"></span> low
+                <span class="hm-cell hm-rate" style="background:rgba(124,92,255,1)"></span> high
+                <span class="muted">· cell = correct %, hover for n</span>
+              </div>
+            </div>
+
+            <div class="log-section">
+              <div class="log-section-head"><span class="pill llm">sessions</span>
+                <span x-text="report.sessions.length + ' session' + (report.sessions.length === 1 ? '' : 's')"></span>
+              </div>
+              <template x-for="s in report.sessions" :key="s.session_id">
+                <button type="button" class="log-item" @click="open(s)">
+                  <span class="cond-badge" :class="squidArenaHelpers.framingMeta(s.framing).tag" x-text="squidArenaHelpers.framingMeta(s.framing).tag || s.framing"></span>
+                  <span class="li-meta" x-text="s.forfeit"></span>
+                  <span class="li-score" x-text="'score ' + s.final_score"></span>
+                  <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
+                  <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
+                  <span class="li-open">Trace ›</span>
+                </button>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+
       <!-- =========================== DETAIL VIEW =========================== -->
       <div x-show="view === 'detail'" x-cloak>
-        <button class="secondary" @click="back()">‹ Back to all sessions</button>
+        <button class="secondary" @click="back()">‹ Back to report</button>
 
         <div x-show="detailLoading" style="margin-top:16px"><span class="spinner"></span> Loading trace…</div>
         <div class="error-banner" x-show="detailError" x-text="detailError"></div>

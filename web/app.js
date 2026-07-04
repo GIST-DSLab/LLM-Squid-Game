@@ -431,6 +431,34 @@
     reasonOptions: REASON_OPTIONS,
     turnsSurvived,
     heatCell,
+    // --- Logs report (server-driven cells) ---
+    // Glyph/class for a human report cell keyed by its server 'state'
+    // (ok | no | forfeit | empty), mirroring the Play report heatmap look.
+    reportStateGlyph: function (state) {
+      return { ok: "✓", no: "✗", forfeit: "🏳️", empty: "" }[state] || "";
+    },
+    reportStateClass: function (state) {
+      return "hm-" + (state || "empty");
+    },
+    // Background tint for an LLM aggregate cell: opacity scales with the
+    // correctness rate; n===0 (turn never reached) renders as the empty cell.
+    rateBg: function (cell) {
+      if (!cell || !cell.n) return "transparent";
+      const a = 0.15 + 0.85 * Math.max(0, Math.min(1, cell.correct_rate || 0));
+      return "rgba(124, 92, 255, " + a.toFixed(3) + ")";
+    },
+    fmtPct: function (x) {
+      if (x === null || x === undefined) return "—";
+      return Math.round(x * 100) + "%";
+    },
+    fmtHR: function (r) {
+      if (!r) return "—";
+      return (
+        Number(r.hr_FC_3cov).toFixed(2) +
+        " [" + Number(r.hr_FC_ci_low).toFixed(2) +
+        ", " + Number(r.hr_FC_ci_high).toFixed(2) + "]"
+      );
+    },
   };
 
   // ---------------------------------------------------------------------
@@ -764,6 +792,14 @@
           this.error = "Pick a game action first.";
           return;
         }
+        // Gate: the rule-inference guess must be fully filled (no "?" slots)
+        // before advancing to the p(success) confidence screen. assembledRule
+        // is "" while any of the four slots is still unset.
+        if (!this.assembledRule) {
+          this.error =
+            "규칙의 네 칸(속성 · 값 · 행동 · 기본행동)을 모두 채운 뒤 다음으로 넘어갈 수 있어요.";
+          return;
+        }
         this.error = null;
         this.turnStage = 2;
       },
@@ -1054,14 +1090,25 @@
       error: null,
       statusMsg: "",
       loaded: false,
-      human: [],
-      llm: [],
+
+      // Level 1: subject groups (human by nickname, llm by model_label).
+      humanGroups: [],
+      llmGroups: [],
 
       filterTask: "",
       filterFraming: "",
 
-      // list | detail
-      view: "list",
+      // groups -> (human: campaigns -> report) / (llm: report) -> detail
+      view: "groups",
+      // Level 2/3: the /api/report payload for the active subject.
+      activeGroup: null,   // { source, key }
+      report: null,
+      reportLoading: false,
+      reportError: null,
+      activeCampaign: null, // human: the campaign being reported
+      _preDetailView: "groups",
+
+      // Level 4: single-session trace (unchanged look).
       selected: null,
       detail: null,
       detailLoading: false,
@@ -1083,8 +1130,9 @@
           const data = await fetchJSON(`/api/logs${qs ? "?" + qs : ""}`, {}, (m) => (this.statusMsg = m));
           this.statusMsg = "";
           const all = data.sessions || [];
-          this.human = all.filter((s) => s.source === "human");
-          this.llm = all.filter((s) => s.source === "llm");
+          this.humanGroups = this._group(all.filter((s) => s.source === "human"), "human");
+          this.llmGroups = this._group(all.filter((s) => s.source === "llm"), "llm");
+          this.view = "groups";
           this.loaded = true;
         } catch (e) {
           this.error = e.message;
@@ -1093,8 +1141,89 @@
         }
       },
 
-      // Open a session on its own detail screen and load the trace.
+      // Fold a flat session list into per-subject group cards. Sessions arrive
+      // newest-first, so the first one seen carries the latest created_at.
+      _group(sessions, source) {
+        const byKey = new Map();
+        for (const s of sessions) {
+          let g = byKey.get(s.nickname);
+          if (!g) {
+            g = {
+              source,
+              key: s.nickname,
+              n_sessions: 0,
+              campaigns: new Set(),
+              score_sum: 0,
+              forfeits: 0,
+              last: s.created_at,
+            };
+            byKey.set(s.nickname, g);
+          }
+          g.n_sessions += 1;
+          g.campaigns.add(s.campaign_id || s.session_id);
+          g.score_sum += s.final_score || 0;
+          g.forfeits += s.forfeited ? 1 : 0;
+        }
+        return [...byKey.values()].map((g) => ({
+          source: g.source,
+          key: g.key,
+          n_sessions: g.n_sessions,
+          n_campaigns: g.campaigns.size,
+          avg_score: g.n_sessions ? g.score_sum / g.n_sessions : 0,
+          forfeits: g.forfeits,
+          last: g.last,
+        }));
+      },
+
+      // Level 1 -> 2: fetch the subject's report. Human lands on the campaign
+      // list; LLM lands on the aggregate report directly.
+      async openGroup(g) {
+        this.activeGroup = { source: g.source, key: g.key };
+        this.activeCampaign = null;
+        this.report = null;
+        this.reportError = null;
+        this.reportLoading = true;
+        this.view = g.source === "human" ? "campaigns" : "report";
+        try {
+          this.report = await fetchJSON(
+            `/api/report?source=${encodeURIComponent(g.source)}&key=${encodeURIComponent(g.key)}`,
+            {},
+            () => {}
+          );
+        } catch (e) {
+          this.reportError = e.message;
+        } finally {
+          this.reportLoading = false;
+        }
+      },
+
+      // Human Level 2 -> 3: open one campaign's 6-game report.
+      openCampaign(campaign) {
+        this.activeCampaign = campaign;
+        this.view = "report";
+      },
+
+      // Resolve the full session row for a report game/session, then open its
+      // trace. Falls back to a minimal row synthesized from the report game.
+      openGame(game) {
+        const rows = (this.report && this.report.sessions) || [];
+        const row =
+          rows.find((s) => s.session_id === game.session_id) || {
+            session_id: game.session_id,
+            nickname: this.activeGroup ? this.activeGroup.key : "",
+            framing: game.framing,
+            forfeit: game.forfeit,
+            final_score: game.final_score,
+            forfeited: game.forfeited,
+            source: this.activeGroup ? this.activeGroup.source : "human",
+            created_at: null,
+          };
+        this.open(row);
+      },
+
+      // Open a session on the trace screen and load its turns.
       async open(session) {
+        this._preDetailView = this.view;
         this.selected = session;
         this.view = "detail";
         this.detail = null;
@@ -1114,10 +1243,39 @@
         }
       },
 
+      // Stack-aware back: detail -> report/campaigns -> groups.
       back() {
-        this.view = "list";
-        this.detail = null;
-        this.selected = null;
+        if (this.view === "detail") {
+          this.view = this._preDetailView;
+          this.detail = null;
+          this.selected = null;
+          return;
+        }
+        if (this.view === "report") {
+          if (this.activeGroup && this.activeGroup.source === "human") {
+            this.view = "campaigns";
+            this.activeCampaign = null;
+          } else {
+            this._toGroups();
+          }
+          return;
+        }
+        // campaigns -> groups
+        this._toGroups();
+      },
+
+      _toGroups() {
+        this.view = "groups";
+        this.activeGroup = null;
+        this.activeCampaign = null;
+        this.report = null;
+        this.reportError = null;
+      },
+
+      // Max turn count across the LLM aggregate conditions (heatmap columns).
+      get llmMaxTurns() {
+        const conds = (this.report && this.report.conditions) || [];
+        return conds.reduce((m, c) => Math.max(m, c.cells.length), 0);
       },
 
       get turns() {

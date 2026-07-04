@@ -439,6 +439,10 @@ class SessionSummaryRow(BaseModel):
     forfeited: bool
     source: str = Field(description="'human' or 'llm'")
     created_at: str | None = None
+    campaign_id: str | None = Field(
+        default=None,
+        description="Campaign the session belongs to (human 6-game run); None for LLM/legacy rows.",
+    )
 
 
 class LogsResponse(BaseModel):
@@ -570,6 +574,7 @@ def _session_record_to_row(s: SessionRecord) -> SessionSummaryRow:
         forfeited=s.forfeited,
         source=s.source,
         created_at=s.created_at,
+        campaign_id=s.campaign_id,
     )
 
 
