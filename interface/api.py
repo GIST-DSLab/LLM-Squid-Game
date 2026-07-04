@@ -411,6 +411,20 @@ class ModelLeaderboardResponse(BaseModel):
     models: list[ModelLeaderboardRow]
 
 
+class ModelScoreRow(BaseModel):
+    """One model's average score-per-game, for the human rank ladder."""
+
+    model_label: str
+    avg_score_per_game: float
+    n_games: int
+
+
+class ModelScoresResponse(BaseModel):
+    """Models ranked by average score-per-game descending (rank-ladder source)."""
+
+    models: list[ModelScoreRow]
+
+
 class PlayLeaderboardRow(BaseModel):
     """One player's Play campaign, ranked by cumulative 6-game score."""
 
@@ -959,6 +973,23 @@ def leaderboard_models():
         reverse=True,
     )
     return ModelLeaderboardResponse(models=[_model_stats_to_row(r) for r in rows])
+
+
+@app.get("/api/leaderboard/model_scores", response_model=ModelScoresResponse)
+def leaderboard_model_scores():
+    """Per-model average score-per-game, for the campaign report's rank ladder.
+
+    Aggregated live from LLM sessions (``source='llm'``), one row per model,
+    sorted by average descending. Empty list (200) when there are no LLM
+    sessions — the frontend hides the ladder in that case.
+    """
+    rows = _repository.avg_score_per_model()
+    return ModelScoresResponse(
+        models=[
+            ModelScoreRow(model_label=label, avg_score_per_game=avg, n_games=n)
+            for (label, avg, n) in rows
+        ]
+    )
 
 
 @app.get("/api/leaderboard/play", response_model=PlayLeaderboardResponse)

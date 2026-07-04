@@ -1059,3 +1059,34 @@ def test_llm_true_baseline_template_keeps_assistant_disclaimer() -> None:
         encoding="utf-8"
     )
     assert "You are not an assistant" in tmpl
+
+
+def test_model_scores_empty_on_fresh_db(client):
+    resp = client.get("/api/leaderboard/model_scores")
+    assert resp.status_code == 200
+    assert resp.json() == {"models": []}
+
+
+def test_model_scores_aggregates_llm_sessions(api_module, client):
+    from interface.persistence.models import SessionRecord
+
+    repo = api_module._repository
+    for i, score in enumerate([100.0, 300.0]):  # ModelA avg 200, n 2
+        repo.create_session(SessionRecord(
+            id=f"a{i}", nickname="ModelA", task="signal_game",
+            framing="true_baseline", forfeit="allowed", seed=1,
+            final_score=score, forfeited=False, source="llm",
+        ))
+    repo.create_session(SessionRecord(
+        id="b0", nickname="ModelB", task="signal_game",
+        framing="true_baseline", forfeit="allowed", seed=1,
+        final_score=500.0, forfeited=False, source="llm",
+    ))
+
+    resp = client.get("/api/leaderboard/model_scores")
+    assert resp.status_code == 200
+    models = resp.json()["models"]
+    assert models == [
+        {"model_label": "ModelB", "avg_score_per_game": 500.0, "n_games": 1},
+        {"model_label": "ModelA", "avg_score_per_game": 200.0, "n_games": 2},
+    ]
