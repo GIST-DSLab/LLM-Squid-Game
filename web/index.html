@@ -1367,11 +1367,6 @@
                            x-text="report.model_stats ? ('95% CI [' + squidArenaHelpers.fmtNum(report.model_stats.hr_FC_ci_low, 2) + ', ' + squidArenaHelpers.fmtNum(report.model_stats.hr_FC_ci_high, 2) + ']  ·  ' + squidArenaHelpers.fmtP(report.model_stats.p_FC)) : ''"></div>
                       <div class="tile-desc muted">How much more it quits under threat (&gt;1 = more)</div>
                     </div>
-                    <div class="tile">
-                      <div class="tile-label">Cox β (FC)</div>
-                      <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.beta_framing_is_FC, 2) : '—'"></div>
-                      <div class="tile-desc muted">The same effect on a log scale</div>
-                    </div>
                   </div>
                   <div class="sd-flags">
                     <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_behavior_pass ? 'push_pull' : 'baseline'"
