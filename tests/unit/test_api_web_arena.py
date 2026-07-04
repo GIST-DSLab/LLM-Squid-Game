@@ -959,6 +959,61 @@ def test_report_llm_aggregates_rates_and_joins_model_stats(client, api_module) -
     assert data["model_stats"]["sd_behavior_pass"] is True
 
 
+def test_report_llm_mediation_and_verbal_reasons(client, api_module) -> None:
+    from interface.persistence import ModelStatsRecord
+
+    _seed_session(
+        api_module, nickname="med-model", source="llm",
+        framing="flagship_corruption", forfeit="allowed", final_score=30.0,
+        turns=[{"turn_no": 1, "observation": "o", "action": "a", "score": 1.0, "correct": True}],
+    )
+    api_module._repository.upsert_model_stats(ModelStatsRecord(
+        model_label="med-model", mediation_class="closed", beta_framing_is_FC=1.3,
+        hr_FC_3cov=3.67, hr_FC_ci_low=1.61, hr_FC_ci_high=8.37, p_FC=0.002,
+        pct_attenuation=35.2, n_sessions=1,
+        # a-path CI excludes 0 -> connected; b-path CI excludes 1 -> connected;
+        # direct CI [0.98, 5.50] straddles 1 -> not significant -> attenuated.
+        a_beta=0.25, a_p=0.0006, a_ci_low=0.11, a_ci_high=0.39, a_exp_beta=1.28,
+        b_hr=2.22, b_p=0.0004, b_ci_low=1.43, b_ci_high=3.44,
+        direct_hr_4cov=2.32, direct_p_4cov=0.056, direct_ci_low=0.98, direct_ci_high=5.50,
+        ri_baseline_bf=188.0, ri_baseline_fc=227.9,
+        n_forfeits_verbal=29, n_reason_survival=13,
+        n_reason_task_curiosity=1, n_reason_score=15,
+    ))
+
+    data = client.get("/api/report", params={"source": "llm", "key": "med-model"}).json()
+    med = data["mediation"]
+    assert med["a"]["connected"] is True
+    assert med["a"]["delta_ri"] == 227.9 - 188.0
+    assert med["b"]["connected"] is True
+    assert med["direct"]["connected"] is False
+    assert med["direct"]["attenuated"] is True
+    assert med["pct_attenuation"] == 35.2
+
+    vr = data["verbal_reasons"]
+    assert vr["n_forfeits"] == 29
+    assert vr["counts"] == {"survival": 13, "task_curiosity": 1, "score": 15}
+    assert abs(sum(vr["pct"].values()) - 1.0) < 1e-9
+
+
+def test_report_llm_no_mediation_when_fields_absent(client, api_module) -> None:
+    from interface.persistence import ModelStatsRecord
+
+    _seed_session(
+        api_module, nickname="bare-model", source="llm",
+        framing="true_baseline", forfeit="not_allowed", final_score=0.0,
+        turns=[{"turn_no": 1, "observation": "o", "action": "a", "score": 0.0, "correct": True}],
+    )
+    api_module._repository.upsert_model_stats(ModelStatsRecord(
+        model_label="bare-model", mediation_class="open", beta_framing_is_FC=0.1,
+        hr_FC_3cov=1.1, hr_FC_ci_low=0.9, hr_FC_ci_high=1.3, p_FC=0.5,
+        pct_attenuation=0.0, n_sessions=1,
+    ))
+    data = client.get("/api/report", params={"source": "llm", "key": "bare-model"}).json()
+    assert data["mediation"] is None
+    assert data["verbal_reasons"] is None
+
+
 def test_report_llm_missing_model_stats_is_null(client, api_module) -> None:
     _seed_session(
         api_module, nickname="lonely-model", source="llm",

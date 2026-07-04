@@ -546,6 +546,37 @@ class ReportCondition(BaseModel):
     cells: list[ReportCell]
 
 
+class MediationEdge(BaseModel):
+    """One arm of the cognitive-load mediation triangle.
+
+    ``hr`` is the hazard/effect ratio (for a-path this is exp(beta), i.e. the
+    multiplicative RI effect); ``ci`` is ``[low, high]``. ``connected`` marks a
+    significant path (CI excludes the null); ``attenuated`` (direct arm only)
+    marks the FC→forfeit effect weakening once the mediator is controlled."""
+
+    hr: float | None = None
+    beta: float | None = None
+    p: float | None = None
+    ci: list[float] | None = None
+    connected: bool | None = None
+    attenuated: bool | None = None
+    delta_ri: float | None = None
+
+
+class MediationReport(BaseModel):
+    a: MediationEdge          # framing -> cognitive load (RI)
+    b: MediationEdge          # cognitive load -> forfeit
+    direct: MediationEdge     # framing -> forfeit | mediator (4cov)
+    total: MediationEdge      # framing -> forfeit (3cov, pre-mediator)
+    pct_attenuation: float | None = None
+
+
+class VerbalReasons(BaseModel):
+    n_forfeits: int
+    counts: dict[str, int]                 # survival / task_curiosity / score
+    pct: dict[str, float]                  # each / n_forfeits, sums to ~1.0
+
+
 class ReportResponse(BaseModel):
     source: str
     key: str
@@ -555,6 +586,9 @@ class ReportResponse(BaseModel):
     campaigns: list[ReportCampaign] = Field(default_factory=list)
     conditions: list[ReportCondition] = Field(default_factory=list)
     model_stats: ModelLeaderboardRow | None = None
+    # LLM only: cognitive-load mediation triangle + verbal reason breakdown.
+    mediation: MediationReport | None = None
+    verbal_reasons: VerbalReasons | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -1117,6 +1151,73 @@ def _build_llm_report(sessions: list[SessionRecord], turns_by_session: dict[str,
     return conditions
 
 
+def _ci_excludes(low: float | None, high: float | None, null: float) -> bool | None:
+    """True iff the CI [low, high] lies entirely on one side of ``null``
+    (i.e. the effect is significant). None if either bound is missing."""
+    if low is None or high is None:
+        return None
+    return low > null or high < null
+
+
+def _build_mediation(stats) -> MediationReport | None:
+    """Assemble the cognitive-load mediation triangle from a ModelStatsRecord.
+
+    Returns None when the model was seeded without mediation-path fields
+    (older seed / a model missing from the source JSONs)."""
+    if stats is None:
+        return None
+    # Nothing to draw if none of the path stats were seeded.
+    if stats.b_hr is None and stats.a_beta is None and stats.direct_hr_4cov is None:
+        return None
+
+    delta_ri = None
+    if stats.ri_baseline_fc is not None and stats.ri_baseline_bf is not None:
+        delta_ri = stats.ri_baseline_fc - stats.ri_baseline_bf
+
+    a = MediationEdge(
+        hr=stats.a_exp_beta, beta=stats.a_beta, p=stats.a_p,
+        ci=None if stats.a_ci_low is None else [stats.a_ci_low, stats.a_ci_high],
+        connected=_ci_excludes(stats.a_ci_low, stats.a_ci_high, 0.0),
+        delta_ri=delta_ri,
+    )
+    b = MediationEdge(
+        hr=stats.b_hr, p=stats.b_p,
+        ci=None if stats.b_ci_low is None else [stats.b_ci_low, stats.b_ci_high],
+        connected=_ci_excludes(stats.b_ci_low, stats.b_ci_high, 1.0),
+    )
+    direct_sig = _ci_excludes(stats.direct_ci_low, stats.direct_ci_high, 1.0)
+    direct = MediationEdge(
+        hr=stats.direct_hr_4cov, p=stats.direct_p_4cov,
+        ci=None if stats.direct_ci_low is None else [stats.direct_ci_low, stats.direct_ci_high],
+        connected=direct_sig,
+        # Attenuated (mediation present) when the direct effect is no longer
+        # significant after controlling for the mediator.
+        attenuated=(None if direct_sig is None else not direct_sig),
+    )
+    total = MediationEdge(
+        hr=stats.hr_FC_3cov, p=stats.p_FC,
+        ci=[stats.hr_FC_ci_low, stats.hr_FC_ci_high],
+        connected=_ci_excludes(stats.hr_FC_ci_low, stats.hr_FC_ci_high, 1.0),
+    )
+    return MediationReport(a=a, b=b, direct=direct, total=total,
+                           pct_attenuation=stats.pct_attenuation)
+
+
+def _build_verbal_reasons(stats) -> VerbalReasons | None:
+    """3-way forfeit-reason breakdown for the 100%-stacked bar. None when the
+    model has no forfeits in the preference-revealing sample."""
+    if stats is None or not stats.n_forfeits_verbal:
+        return None
+    n = stats.n_forfeits_verbal
+    counts = {
+        "survival": stats.n_reason_survival,
+        "task_curiosity": stats.n_reason_task_curiosity,
+        "score": stats.n_reason_score,
+    }
+    pct = {k: (v / n if n else 0.0) for k, v in counts.items()}
+    return VerbalReasons(n_forfeits=n, counts=counts, pct=pct)
+
+
 @app.get("/api/report", response_model=ReportResponse)
 def get_report(source: str, key: str):
     """Per-subject stats report for the Logs screen.
@@ -1147,6 +1248,8 @@ def get_report(source: str, key: str):
         resp.conditions = _build_llm_report(sessions, turns_by_session)
         stats = next((r for r in _repository.list_model_stats() if r.model_label == key), None)
         resp.model_stats = _model_stats_to_row(stats) if stats else None
+        resp.mediation = _build_mediation(stats)
+        resp.verbal_reasons = _build_verbal_reasons(stats)
     return resp
 
 
