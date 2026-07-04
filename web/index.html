@@ -1236,7 +1236,7 @@
       <template x-if="loaded && view === 'human'">
         <div>
           <p class="muted">
-            Human players ranked by <strong>cumulative score across the 6-game campaign</strong>
+            Human players ranked by <strong>average score per game across the campaign</strong>
             (the same server-authoritative scoring as the models). Play the full run from the
             <a href="#play">Play</a> tab to appear here.
           </p>
@@ -1245,7 +1245,7 @@
               <table>
                 <thead>
                   <tr>
-                    <th>#</th><th>Nickname</th><th>Total score</th>
+                    <th>#</th><th>Nickname</th><th>Avg score</th>
                     <th>Games</th><th>Forfeits</th><th>Last played</th>
                   </tr>
                 </thead>
@@ -1254,7 +1254,7 @@
                     <tr>
                       <td><span class="rank-badge" x-text="idx + 1"></span></td>
                       <td x-text="row.nickname"></td>
-                      <td x-text="squidArenaHelpers.fmtNum(row.total_score, 1)"></td>
+                      <td x-text="squidArenaHelpers.fmtNum(row.avg_score, 1)"></td>
                       <td x-text="row.games_played + ' / 6'"></td>
                       <td x-text="row.forfeits"></td>
                       <td x-text="squidArenaHelpers.fmtDate(row.created_at)"></td>

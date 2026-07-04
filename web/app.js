@@ -1207,7 +1207,7 @@
     // -----------------------------------------------------------------
     // Leaderboard screen — one page, [ LLM | Human ] toggle. The LLM board
     // ranks models by the Cox behavior β with per-channel SD checkmarks; the
-    // Human board ranks Play campaigns by cumulative 6-game score.
+    // Human board ranks Play campaigns by per-game average score.
     // -----------------------------------------------------------------
     Alpine.data("leaderboardScreen", () => ({
       view: "llm", // 'llm' | 'human'
