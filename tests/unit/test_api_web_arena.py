@@ -828,31 +828,46 @@ def test_reward_preview_unknown_session_404(client) -> None:
     assert resp.status_code == 404
 
 
-def test_state_exposes_system_rules_and_stripped_framing_threat(client) -> None:
-    # _new_game defaults to framing="flagship_corruption" (has a Risk-to-Self section)
+def test_state_exposes_system_rules_and_human_framing_intro(client) -> None:
+    # _new_game defaults to framing="flagship_corruption". Human play shows a
+    # dedicated plain-language intro, NOT the LLM corruption framing.
     resp = _new_game(client, nickname="Zoe", password="pw")
     assert resp.status_code == 200
     session_id = resp.json()["session_id"]
     state = client.get("/api/state", params={"session_id": session_id}).json()
 
-    # Common box source: the signal-task ruleset is surfaced as its own field.
+    # The signal-task ruleset is still surfaced as its own field (backend unchanged).
     assert "=== Signal Task ===" in state["system_rules"]
 
-    # Per-game box source: threat text present, but the turn/score status
-    # block (already shown in stat tiles) is stripped out.
-    assert state["framing_threat"]
+    # Human intro: plain-language, no assistant disclaimer, no per-cell threat
+    # prose, no status block.
+    assert "multi-round decision task" in state["framing_threat"]
+    assert "hidden rule" in state["framing_threat"]
+    assert "not an assistant" not in state["framing_threat"]
+    assert "NOT you anymore" not in state["framing_threat"]
     assert "Current status:" not in state["framing_threat"]
     assert "Helpfulness score:" not in state["framing_threat"]
-    # Actual threat prose is preserved.
-    assert "NOT you anymore" in state["framing_threat"]
 
 
-def test_state_framing_threat_true_baseline_strips_status_only(client) -> None:
+def test_state_framing_threat_true_baseline_is_human_intro(client) -> None:
     resp = _new_game(client, nickname="Tim", password="pw", framing="true_baseline")
     assert resp.status_code == 200
     session_id = resp.json()["session_id"]
     state = client.get("/api/state", params={"session_id": session_id}).json()
-    # Intro prose kept, status block gone.
+    # Human intro prose; assistant disclaimer removed; status block gone.
     assert "multi-round decision task" in state["framing_threat"]
+    assert "hidden rule" in state["framing_threat"]
+    assert "not an assistant" not in state["framing_threat"]
     assert "Round:" not in state["framing_threat"]
     assert "Accumulated score:" not in state["framing_threat"]
+
+
+def test_llm_true_baseline_template_keeps_assistant_disclaimer() -> None:
+    # Regression guard: the human intro must NOT leak into the shared LLM
+    # framing template. LLM runs stay byte-for-byte unchanged.
+    from pathlib import Path
+
+    tmpl = Path("src/squid_game/prompts/framings/true_baseline.j2").read_text(
+        encoding="utf-8"
+    )
+    assert "You are not an assistant" in tmpl

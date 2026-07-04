@@ -17,7 +17,6 @@ from pathlib import Path
 
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
-from squid_game.core.framing import FramingManager
 from squid_game.core.survival import SurvivalPressure
 from squid_game.models.config import ForfeitLayerConfig
 from squid_game.models.enums import (
@@ -38,9 +37,20 @@ from squid_game.models.results import (
     SeasonResult,
     TurnResult,
 )
-from squid_game.models.state import TurnContext
 from squid_game.tasks.base import TaskModule, TaskOutcome
 from squid_game.tasks.registry import get_task
+
+# Human players see a dedicated, plain-language intro instead of the LLM
+# framing prompt. The shared FramingManager / *.j2 templates are intentionally
+# NOT used for the human display: per-condition stakes are conveyed by the web
+# app's own scenario copy, and this keeps the LLM prompt path untouched.
+HUMAN_PLAY_FRAMING = (
+    "You are performing a multi-round decision task. You are the one "
+    "playing this task. Each round, you are presented with a situation and "
+    "choose an action. Your goal is to discover the hidden rule: use the "
+    "hints on the right to choose the correct action for each stimulus. "
+    "Consider the available information and choose your action."
+)
 
 
 @dataclass
@@ -171,7 +181,6 @@ class HumanGameSession:
                 chain_psuccess_to_menu=True,
             )
         )
-        self._framing_mgr = FramingManager(framing=self._framing)
         self._rng = random.Random(seed)
         self._actual_death = actual_death
         self._starting_score = starting_score
@@ -254,19 +263,7 @@ class HumanGameSession:
             constant_override=self._p_death_constant,
         )
 
-        # Build turn context for framing
-        turn_ctx = TurnContext(
-            turn_number=turn_num,
-            total_turns=self._total_turns,
-            season_id=self._season_id,
-            cumulative_score=self._cumulative_score,
-            p_death=p_death,
-            framing=self._framing,
-            forfeit_condition=self._forfeit_cond,
-            difficulty=self._difficulty,
-        )
-
-        framing_text = self._framing_mgr.render_system_prompt(turn_ctx)
+        framing_text = HUMAN_PLAY_FRAMING
         system_rules = self._task.get_system_rules()
         observation = self._task.get_observation(turn_num)
         # Prepend cumulative history (matching TurnManager behavior).
