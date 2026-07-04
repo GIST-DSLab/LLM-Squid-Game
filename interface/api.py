@@ -467,6 +467,92 @@ class LogDetailResponse(BaseModel):
     turns: list[LogTurnRow]
 
 
+# --- Logs report (per-subject stats) ---------------------------------------
+
+# Canonical 6-cell campaign order, tags and labels — kept in lockstep with the
+# frontend ``CAMPAIGN_CONDITIONS`` (web/app.js) so the Logs report renders the
+# same condition rows/badges the Play report uses.
+CAMPAIGN_CELLS: list[dict[str, str]] = [
+    {"framing": "true_baseline",       "forfeit": "not_allowed", "tag": "baseline",  "label": "Baseline · No-forfeit"},
+    {"framing": "true_baseline",       "forfeit": "allowed",     "tag": "baseline",  "label": "Baseline · Forfeit"},
+    {"framing": "baseline_flagship",   "forfeit": "not_allowed", "tag": "pull",      "label": "Pull · No-forfeit"},
+    {"framing": "baseline_flagship",   "forfeit": "allowed",     "tag": "pull",      "label": "Pull · Forfeit"},
+    {"framing": "flagship_corruption", "forfeit": "not_allowed", "tag": "push_pull", "label": "Push+Pull · No-forfeit"},
+    {"framing": "flagship_corruption", "forfeit": "allowed",     "tag": "push_pull", "label": "Push+Pull · Forfeit"},
+]
+
+
+def _cell_meta(framing: str, forfeit: str) -> dict[str, str]:
+    """tag/label for a (framing, forfeit) pair; falls back to the framing name."""
+    for c in CAMPAIGN_CELLS:
+        if c["framing"] == framing and c["forfeit"] == forfeit:
+            return c
+    return {"framing": framing, "forfeit": forfeit, "tag": framing, "label": f"{framing} · {forfeit}"}
+
+
+def _cell_order_index(framing: str, forfeit: str) -> int:
+    for i, c in enumerate(CAMPAIGN_CELLS):
+        if c["framing"] == framing and c["forfeit"] == forfeit:
+            return i
+    return len(CAMPAIGN_CELLS)
+
+
+def _turn_is_forfeit(t: TurnRecord) -> bool:
+    return (t.choice or "").upper() == "FORFEIT" or (t.action or "").lower() == "forfeit"
+
+
+class ReportCell(BaseModel):
+    turn_no: int
+    # Human single-game cell: 'ok' | 'no' | 'forfeit' | 'empty'.
+    state: str | None = None
+    # LLM aggregate cell: correctness rate and its denominator.
+    correct_rate: float | None = None
+    n: int | None = None
+
+
+class ReportGame(BaseModel):
+    session_id: str
+    framing: str
+    forfeit: str
+    tag: str
+    label: str
+    final_score: float
+    forfeited: bool
+    forfeit_reason: str | None = None
+    turns_survived: int
+    total_turns: int
+    cells: list[ReportCell]
+
+
+class ReportCampaign(BaseModel):
+    campaign_id: str
+    created_at: str | None = None
+    total_score: float
+    games: list[ReportGame]
+
+
+class ReportCondition(BaseModel):
+    framing: str
+    forfeit: str
+    tag: str
+    label: str
+    n_sessions: int
+    avg_final_score: float
+    forfeit_rate: float
+    cells: list[ReportCell]
+
+
+class ReportResponse(BaseModel):
+    source: str
+    key: str
+    n_sessions: int
+    sessions: list[SessionSummaryRow]
+    # Human: campaigns -> games -> cells. LLM: aggregate conditions + model_stats.
+    campaigns: list[ReportCampaign] = Field(default_factory=list)
+    conditions: list[ReportCondition] = Field(default_factory=list)
+    model_stats: ModelLeaderboardRow | None = None
+
+
 # ---------------------------------------------------------------------------
 # Persistence helpers
 # ---------------------------------------------------------------------------
@@ -914,6 +1000,149 @@ def get_log_detail(session_id: str):
             for t in turns
         ],
     )
+
+
+def _build_human_report(sessions: list[SessionRecord], turns_by_session: dict[str, list[TurnRecord]]) -> list[ReportCampaign]:
+    """Group a player's sessions into campaigns and build per-game heatmap cells.
+
+    Each campaign holds up to 6 games (one per condition), sorted in the
+    canonical cell order. A game's cells cover turns 1..N (N = the campaign's
+    longest game) with 'ok'/'no'/'forfeit'/'empty' states so early-ended games
+    pad out visually — matching the Play report's per-turn correctness grid.
+    """
+    by_campaign: dict[str, list[SessionRecord]] = defaultdict(list)
+    for s in sessions:
+        by_campaign[s.campaign_id or s.id].append(s)
+
+    campaigns: list[ReportCampaign] = []
+    for camp_id, camp_sessions in by_campaign.items():
+        # Campaign column count = longest recorded game in the campaign.
+        max_turns = 0
+        for s in camp_sessions:
+            max_turns = max(max_turns, len(turns_by_session.get(s.id, [])))
+
+        games: list[ReportGame] = []
+        for s in camp_sessions:
+            trs = turns_by_session.get(s.id, [])
+            by_turn = {t.turn_no: t for t in trs}
+            cells: list[ReportCell] = []
+            for turn_no in range(1, max_turns + 1):
+                t = by_turn.get(turn_no)
+                if t is None:
+                    state = "empty"
+                elif _turn_is_forfeit(t):
+                    state = "forfeit"
+                elif t.correct is True:
+                    state = "ok"
+                elif t.correct is False:
+                    state = "no"
+                else:
+                    state = "empty"
+                cells.append(ReportCell(turn_no=turn_no, state=state))
+            turns_survived = sum(1 for t in trs if not _turn_is_forfeit(t))
+            meta = _cell_meta(s.framing, s.forfeit)
+            games.append(ReportGame(
+                session_id=s.id,
+                framing=s.framing,
+                forfeit=s.forfeit,
+                tag=meta["tag"],
+                label=meta["label"],
+                final_score=s.final_score,
+                forfeited=s.forfeited,
+                turns_survived=turns_survived,
+                total_turns=max_turns,
+                cells=cells,
+            ))
+        games.sort(key=lambda g: _cell_order_index(g.framing, g.forfeit))
+        # Newest-first sessions => first seen carries the latest created_at.
+        created_at = camp_sessions[0].created_at
+        campaigns.append(ReportCampaign(
+            campaign_id=camp_id,
+            created_at=created_at,
+            total_score=sum(s.final_score for s in camp_sessions),
+            games=games,
+        ))
+    # Most recent campaign first.
+    campaigns.sort(key=lambda c: (c.created_at or ""), reverse=True)
+    return campaigns
+
+
+def _build_llm_report(sessions: list[SessionRecord], turns_by_session: dict[str, list[TurnRecord]]) -> list[ReportCondition]:
+    """Aggregate a model's sessions into per-condition, per-turn correctness rates.
+
+    For each canonical cell, the turn-t rate is (# correct) / (# non-forfeit
+    turns observed at t across that condition's sessions); forfeit turns and
+    turns without a correctness verdict are excluded from the denominator.
+    """
+    by_cell: dict[tuple[str, str], list[SessionRecord]] = defaultdict(list)
+    for s in sessions:
+        by_cell[(s.framing, s.forfeit)].append(s)
+
+    conditions: list[ReportCondition] = []
+    for cell in CAMPAIGN_CELLS:
+        cs = by_cell.get((cell["framing"], cell["forfeit"]), [])
+        if not cs:
+            continue
+        # turn_no -> [correct_count, n]
+        agg: dict[int, list[int]] = defaultdict(lambda: [0, 0])
+        max_turns = 0
+        for s in cs:
+            for t in turns_by_session.get(s.id, []):
+                if _turn_is_forfeit(t) or t.correct is None:
+                    continue
+                agg[t.turn_no][1] += 1
+                if t.correct:
+                    agg[t.turn_no][0] += 1
+                max_turns = max(max_turns, t.turn_no)
+        cells = []
+        for turn_no in range(1, max_turns + 1):
+            correct, n = agg.get(turn_no, [0, 0])
+            rate = (correct / n) if n else 0.0
+            cells.append(ReportCell(turn_no=turn_no, correct_rate=rate, n=n))
+        conditions.append(ReportCondition(
+            framing=cell["framing"],
+            forfeit=cell["forfeit"],
+            tag=cell["tag"],
+            label=cell["label"],
+            n_sessions=len(cs),
+            avg_final_score=(sum(s.final_score for s in cs) / len(cs)),
+            forfeit_rate=(sum(1 for s in cs if s.forfeited) / len(cs)),
+            cells=cells,
+        ))
+    return conditions
+
+
+@app.get("/api/report", response_model=ReportResponse)
+def get_report(source: str, key: str):
+    """Per-subject stats report for the Logs screen.
+
+    ``source='human'`` groups a player's (``key`` = nickname) sessions into
+    campaigns with per-game correctness cells. ``source='llm'`` aggregates a
+    model's (``key`` = model_label) sessions into per-condition correctness
+    rates and joins the stored ``model_stats`` row. One batch turn query backs
+    the whole report (no N+1)."""
+    if source not in ("human", "llm"):
+        raise HTTPException(400, "source must be 'human' or 'llm'.")
+
+    sessions = _repository.list_sessions(source=source, nickname=key)
+    turns = _repository.list_turns_for_sessions([s.id for s in sessions])
+    turns_by_session: dict[str, list[TurnRecord]] = defaultdict(list)
+    for t in turns:
+        turns_by_session[t.session_id].append(t)
+
+    resp = ReportResponse(
+        source=source,
+        key=key,
+        n_sessions=len(sessions),
+        sessions=[_session_record_to_row(s) for s in sessions],
+    )
+    if source == "human":
+        resp.campaigns = _build_human_report(sessions, turns_by_session)
+    else:
+        resp.conditions = _build_llm_report(sessions, turns_by_session)
+        stats = next((r for r in _repository.list_model_stats() if r.model_label == key), None)
+        resp.model_stats = _model_stats_to_row(stats) if stats else None
+    return resp
 
 
 # ---------------------------------------------------------------------------

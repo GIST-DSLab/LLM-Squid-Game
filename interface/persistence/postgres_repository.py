@@ -149,6 +149,7 @@ class PostgresRepository(Repository):
         source: str | None = None,
         task: str | None = None,
         framing: str | None = None,
+        nickname: str | None = None,
         order_by_score: bool = False,
     ) -> list[SessionRecord]:
         clauses = []
@@ -162,12 +163,17 @@ class PostgresRepository(Repository):
         if framing is not None:
             clauses.append("framing = %s")
             params.append(framing)
+        if nickname is not None:
+            clauses.append("nickname = %s")
+            params.append(nickname)
 
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         order = "final_score DESC" if order_by_score else "created_at DESC"
+        # campaign_id is required by _row_to_session's 11-tuple unpack (and by
+        # the Play Leaderboard / Logs report campaign grouping).
         query = (
             "SELECT id, nickname, task, framing, forfeit, seed, "
-            "final_score, forfeited, source, created_at "
+            "final_score, forfeited, source, created_at, campaign_id "
             f"FROM sessions {where} ORDER BY {order}"
         )
 
@@ -233,6 +239,24 @@ class PostgresRepository(Repository):
                 "raw_response, correct, psuccess_self "
                 "FROM turns WHERE session_id = %s ORDER BY turn_no ASC",
                 (session_id,),
+            )
+            rows = cur.fetchall()
+        return [_row_to_turn(row) for row in rows]
+
+    def list_turns_for_sessions(
+        self, session_ids: list[str]
+    ) -> list[TurnRecord]:
+        if not session_ids:
+            return []
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "SELECT session_id, turn_no, observation, action, "
+                "ri_task, ri_probe, ri_forfeit, choice, score, "
+                "thinking_task, thinking_probe, thinking_forfeit, "
+                "raw_response, correct, psuccess_self "
+                "FROM turns WHERE session_id = ANY(%s) "
+                "ORDER BY session_id ASC, turn_no ASC",
+                (list(session_ids),),
             )
             rows = cur.fetchall()
         return [_row_to_turn(row) for row in rows]

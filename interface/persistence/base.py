@@ -51,9 +51,14 @@ class Repository(ABC):
         source: str | None = None,
         task: str | None = None,
         framing: str | None = None,
+        nickname: str | None = None,
         order_by_score: bool = False,
     ) -> list[SessionRecord]:
-        """List sessions, optionally filtered by source/task/framing.
+        """List sessions, optionally filtered by source/task/framing/nickname.
+
+        ``nickname`` is an exact-match filter; for LLM rows it doubles as the
+        model_label, so it groups one player's or one model's sessions for the
+        Logs report views.
 
         ``order_by_score=True`` sorts by ``final_score`` descending (Play
         Leaderboard); otherwise sorts by ``created_at`` descending (Logs).
@@ -78,6 +83,17 @@ class Repository(ABC):
     @abstractmethod
     def list_turns(self, session_id: str) -> list[TurnRecord]:
         """List turns for one session, ordered by ``turn_no`` ascending."""
+
+    @abstractmethod
+    def list_turns_for_sessions(
+        self, session_ids: list[str]
+    ) -> list[TurnRecord]:
+        """List turns for several sessions in one query (batch, avoids N+1).
+
+        Ordered by ``session_id`` then ``turn_no`` ascending. An empty input
+        returns an empty list without hitting the database. Used by the Logs
+        report aggregation (per-campaign / per-condition correctness cells).
+        """
 
     # -- model_stats --------------------------------------------------------
 

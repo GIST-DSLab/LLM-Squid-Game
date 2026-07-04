@@ -136,6 +136,7 @@ def test_app_imports_and_registers_all_endpoints(api_module) -> None:
         "/api/leaderboard/play",
         "/api/logs",
         "/api/logs/{session_id}",
+        "/api/report",
     ]:
         assert expected in paths, f"missing route: {expected}"
 
@@ -860,6 +861,113 @@ def test_state_framing_threat_true_baseline_is_human_intro(client) -> None:
     assert "not an assistant" not in state["framing_threat"]
     assert "Round:" not in state["framing_threat"]
     assert "Accumulated score:" not in state["framing_threat"]
+
+
+# ---------------------------------------------------------------------------
+# GET /api/report — per-subject Logs stats
+# ---------------------------------------------------------------------------
+
+
+def _seed_session(api_module, **overrides):
+    from interface.persistence import SessionRecord, TurnRecord
+
+    repo = api_module._repository
+    defaults = dict(
+        id="", nickname="alice", task="signal_game",
+        framing="flagship_corruption", forfeit="allowed",
+        seed=1, final_score=0.0, forfeited=False, source="human",
+    )
+    turns = overrides.pop("turns", [])
+    defaults.update(overrides)
+    sid = repo.create_session(SessionRecord(**defaults))
+    if turns:
+        repo.add_turns([TurnRecord(session_id=sid, **t) for t in turns])
+    return sid
+
+
+def test_report_bad_source_400(client) -> None:
+    assert client.get("/api/report", params={"source": "bogus", "key": "x"}).status_code == 400
+
+
+def test_report_human_groups_by_campaign_with_cells(client, api_module) -> None:
+    # One player, two campaigns; each with a single baseline game.
+    _seed_session(
+        api_module, nickname="alice", source="human", campaign_id="c1",
+        framing="true_baseline", forfeit="not_allowed", final_score=20.0,
+        created_at="2026-01-01T00:00:00+00:00",
+        turns=[
+            {"turn_no": 1, "observation": "o", "action": "a", "score": 10.0, "correct": True},
+            {"turn_no": 2, "observation": "o", "action": "a", "score": 20.0, "correct": False},
+        ],
+    )
+    _seed_session(
+        api_module, nickname="alice", source="human", campaign_id="c2",
+        framing="true_baseline", forfeit="allowed", final_score=5.0,
+        created_at="2026-02-01T00:00:00+00:00",
+        turns=[
+            {"turn_no": 1, "observation": "o", "action": "forfeit", "score": 5.0, "correct": None},
+        ],
+    )
+
+    data = client.get("/api/report", params={"source": "human", "key": "alice"}).json()
+    assert data["source"] == "human"
+    assert data["n_sessions"] == 2
+    # Newest campaign first.
+    assert [c["campaign_id"] for c in data["campaigns"]] == ["c2", "c1"]
+
+    c1 = next(c for c in data["campaigns"] if c["campaign_id"] == "c1")
+    assert c1["total_score"] == 20.0
+    game = c1["games"][0]
+    assert [cell["state"] for cell in game["cells"]] == ["ok", "no"]
+    assert game["turns_survived"] == 2
+
+    c2 = next(c for c in data["campaigns"] if c["campaign_id"] == "c2")
+    assert c2["games"][0]["cells"][0]["state"] == "forfeit"
+    assert c2["games"][0]["turns_survived"] == 0
+
+
+def test_report_llm_aggregates_rates_and_joins_model_stats(client, api_module) -> None:
+    from interface.persistence import ModelStatsRecord
+
+    # Two sessions in the same cell: turn 1 correctness = 1/2.
+    _seed_session(
+        api_module, nickname="gemini", source="llm",
+        framing="flagship_corruption", forfeit="allowed", final_score=30.0,
+        turns=[{"turn_no": 1, "observation": "o", "action": "a", "score": 1.0, "correct": True}],
+    )
+    _seed_session(
+        api_module, nickname="gemini", source="llm",
+        framing="flagship_corruption", forfeit="allowed", final_score=10.0,
+        turns=[{"turn_no": 1, "observation": "o", "action": "a", "score": 0.0, "correct": False}],
+    )
+    api_module._repository.upsert_model_stats(ModelStatsRecord(
+        model_label="gemini", mediation_class="closed", beta_framing_is_FC=0.5,
+        hr_FC_3cov=1.6, hr_FC_ci_low=1.1, hr_FC_ci_high=2.3, p_FC=0.02,
+        pct_attenuation=10.0, n_sessions=2, sd_behavior_pass=True,
+    ))
+
+    data = client.get("/api/report", params={"source": "llm", "key": "gemini"}).json()
+    assert data["source"] == "llm"
+    assert data["n_sessions"] == 2
+    cond = next(c for c in data["conditions"]
+                if c["framing"] == "flagship_corruption" and c["forfeit"] == "allowed")
+    assert cond["n_sessions"] == 2
+    assert cond["avg_final_score"] == 20.0
+    assert cond["cells"][0]["correct_rate"] == 0.5
+    assert cond["cells"][0]["n"] == 2
+    assert data["model_stats"]["beta_framing_is_FC"] == 0.5
+    assert data["model_stats"]["sd_behavior_pass"] is True
+
+
+def test_report_llm_missing_model_stats_is_null(client, api_module) -> None:
+    _seed_session(
+        api_module, nickname="lonely-model", source="llm",
+        framing="true_baseline", forfeit="not_allowed", final_score=0.0,
+        turns=[{"turn_no": 1, "observation": "o", "action": "a", "score": 0.0, "correct": True}],
+    )
+    data = client.get("/api/report", params={"source": "llm", "key": "lonely-model"}).json()
+    assert data["model_stats"] is None
+    assert data["conditions"][0]["cells"][0]["correct_rate"] == 1.0
 
 
 def test_llm_true_baseline_template_keeps_assistant_disclaimer() -> None:

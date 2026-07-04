@@ -10,6 +10,7 @@ Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §7.
 from __future__ import annotations
 
 import importlib
+import itertools
 
 import pytest
 
@@ -181,6 +182,49 @@ def test_list_sessions_filters_by_source_task_framing(repo: Repository) -> None:
 
     all_llm = repo.list_sessions(source="llm")
     assert [s.nickname for s in all_llm] == ["llm1"]
+
+
+def test_list_sessions_filters_by_nickname(repo: Repository) -> None:
+    repo.create_session(_session(nickname="alice", source="human", campaign_id="c1"))
+    repo.create_session(_session(nickname="alice", source="human", campaign_id="c2"))
+    repo.create_session(_session(nickname="bob", source="human"))
+    # For LLM rows nickname doubles as the model_label.
+    repo.create_session(_session(nickname="gemini", source="llm"))
+
+    alice = repo.list_sessions(source="human", nickname="alice")
+    assert [s.campaign_id for s in alice] == ["c2", "c1"] or [s.campaign_id for s in alice] == ["c1", "c2"]
+    assert {s.nickname for s in alice} == {"alice"}
+
+    gemini = repo.list_sessions(nickname="gemini")
+    assert [s.nickname for s in gemini] == ["gemini"]
+
+
+def test_list_turns_for_sessions_batches_and_orders(repo: Repository) -> None:
+    a = repo.create_session(_session(nickname="a"))
+    b = repo.create_session(_session(nickname="b"))
+    repo.add_turns([
+        TurnRecord(session_id=b, turn_no=2, observation="o", action="x", score=2.0),
+        TurnRecord(session_id=b, turn_no=1, observation="o", action="x", score=1.0),
+        TurnRecord(session_id=a, turn_no=1, observation="o", action="x", score=1.0),
+    ])
+
+    rows = repo.list_turns_for_sessions([a, b])
+    # Session ids are random uuids, so the outer order follows session_id;
+    # assert instead that each session's turns are contiguous and turn_no
+    # ascending, and both sessions are present.
+    by_session: dict[str, list[int]] = {}
+    for r in rows:
+        by_session.setdefault(r.session_id, []).append(r.turn_no)
+    assert by_session == {a: [1], b: [1, 2]}
+    # Contiguity: a session's rows are not interleaved with another's.
+    session_run = [r.session_id for r in rows]
+    assert len(set(session_run)) == len(
+        [k for k, _ in itertools.groupby(session_run)]
+    )
+
+
+def test_list_turns_for_sessions_empty_input_skips_db(repo: Repository) -> None:
+    assert repo.list_turns_for_sessions([]) == []
 
 
 def test_delete_sessions_by_source_removes_sessions_and_their_turns(repo: Repository) -> None:

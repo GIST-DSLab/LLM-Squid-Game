@@ -169,6 +169,7 @@ class SQLiteRepository(Repository):
         source: str | None = None,
         task: str | None = None,
         framing: str | None = None,
+        nickname: str | None = None,
         order_by_score: bool = False,
     ) -> list[SessionRecord]:
         clauses = []
@@ -182,6 +183,9 @@ class SQLiteRepository(Repository):
         if framing is not None:
             clauses.append("framing = ?")
             params.append(framing)
+        if nickname is not None:
+            clauses.append("nickname = ?")
+            params.append(nickname)
 
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         order = "final_score DESC" if order_by_score else "created_at DESC"
@@ -250,6 +254,20 @@ class SQLiteRepository(Repository):
                 "SELECT * FROM turns WHERE session_id = ? ORDER BY turn_no ASC",
                 (session_id,),
             ).fetchall()
+        return [_row_to_turn(row) for row in rows]
+
+    def list_turns_for_sessions(
+        self, session_ids: list[str]
+    ) -> list[TurnRecord]:
+        if not session_ids:
+            return []
+        placeholders = ",".join("?" for _ in session_ids)
+        query = (
+            f"SELECT * FROM turns WHERE session_id IN ({placeholders}) "
+            "ORDER BY session_id ASC, turn_no ASC"
+        )
+        with self._lock:
+            rows = self._conn.execute(query, session_ids).fetchall()
         return [_row_to_turn(row) for row in rows]
 
     # -- model_stats --------------------------------------------------------
