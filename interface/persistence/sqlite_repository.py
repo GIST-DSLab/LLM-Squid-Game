@@ -254,6 +254,23 @@ class SQLiteRepository(Repository):
             self._conn.commit()
         return deleted
 
+    def avg_score_per_model(self) -> list[tuple[str, float, int]]:
+        """Average score-per-game for each LLM model, for the rank ladder.
+
+        Groups ``source='llm'`` sessions by ``nickname`` (the model label for
+        LLM rows), averaging ``final_score`` (one session == one game, so this
+        is already per-game). Sorted by average descending, then label ascending.
+        """
+        query = (
+            "SELECT nickname, AVG(final_score) AS avg_score, COUNT(*) AS n_games "
+            "FROM sessions WHERE source = 'llm' "
+            "GROUP BY nickname "
+            "ORDER BY avg_score DESC, nickname ASC"
+        )
+        with self._lock:
+            rows = self._conn.execute(query).fetchall()
+        return [(r["nickname"], float(r["avg_score"]), int(r["n_games"])) for r in rows]
+
     # -- turns ------------------------------------------------------------
 
     def add_turns(self, turns: list[TurnRecord]) -> None:
