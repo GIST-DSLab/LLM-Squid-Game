@@ -11,7 +11,7 @@ Rework the Model Leaderboard so the Survival-Drive (SD) signal strength reads fi
 
 1. Reorder + rename columns so the SD channels lead; hide the raw statistics behind clicks.
 2. Add **SD-Verbal value** = proportion of forfeits whose REASON was survival (`p_reason_survival`).
-3. Add **Avg turn score** = mean per-turn reward computed over the `no_cap` regime only (cap did not bind).
+3. Add **Avg session score** = mean per-session `final_score` (score accrued until the model dies or completes the game) over no-cap sessions only (the reward cap never bound in that game). *(Superseded 2026-07-04 pt.4b — was "Avg turn score = mean per-turn reward over no_cap turns"; see Revision Log.)*
 
 ## Scope reality
 
@@ -37,7 +37,7 @@ This is **not front-end-only**. Both new values are absent from the `model_stats
 1. **SD-Behavior column** shows the `hr_FC_3cov` point value (renamed from "HR_FC"); β / 95% CI / p / n are removed as columns and surface only in the SD-Behavior click box.
 2. **Tag → SD-Cognitive(type)**, moved to sit right after SD-Behavior. It displays `mediation_class` (`open` / `closed`).
 3. **SD-Verbal value** = `p_reason_survival` (rendered as a percentage).
-4. **Avg turn score** = mean `reward_received` over turns classified `regime == "no_cap"`.
+4. **Avg session score** = mean `SeasonResult.final_score` over no-cap sessions (sessions with zero `regime == "cap_bound"` turns). Column `no_cap_avg_session_score`. *(Superseded 2026-07-04 pt.4b — was per-turn `reward_received` over `no_cap` turns.)*
 5. **Pass display**: the three SD channel value cells are color-tinted by their pass flag (green = pass, muted = fail); the separate ✓/✗ check columns are removed.
 6. The three SD channels sit under a **"SD-pass" grouped super-header**.
 
@@ -341,3 +341,4 @@ Idempotent (`upsert_model_stats`). Production Supabase gets the same command aga
 ## Revision Log
 
 - 2026-07-04: Initial design. Confirmed: SD-Behavior = HR point value (β/CI/p behind click); Tag → SD-Cognitive(type) after SD-Behavior; SD-Verbal = `p_reason_survival`; Avg turn score = mean `reward_received` over `no_cap` regime; pass shown as cell tint (✓/✗ columns removed); three SD channels under a "SD-pass" super-header. Full-stack (schema + seed + API + web + reseed); English copy; SQLite+Postgres mirrored; analysis lazy-imported in the seed core with graceful `None` fallback; new columns nullable.
+- 2026-07-04 pt.4b: **Metric redefinition** — the fourth column changed from **Avg turn score** (mean per-turn `reward_received` over `no_cap` turns) to **Avg session score** (mean per-session `SeasonResult.final_score` over no-cap sessions). Rationale: the intended quantity was the score a model accumulates across a whole game — until it dies (forfeits / is eliminated) or completes the game — averaged across sessions, not a per-turn reward average. A *no-cap session* = a session in which the reward cap never bound (no turn is `regime == "cap_bound"`), preserving the preference-revealing rationale at the session level. Column renamed `no_cap_avg_turn_score` → `no_cap_avg_session_score` (record + SQLite + Postgres + API + `web/` label "Avg session score" / `metricInfo.sessionScore`). The seed helper `_no_cap_avg_session_score` lazily loads seasons, annotates regime, excludes any session with a `cap_bound` turn, and means their `final_score` (graceful `None` on all degradation paths). Task 2's `turn_observations` `reward_received` column is retained (no longer read by this metric). Commits: 734ecd7 (backend), d3c7e83 (frontend).
