@@ -1793,6 +1793,23 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
    title and the violent shake — this exit is elimination, not death. */
 .death-panel.is-knockout .death-title { color: #f5b74e; }
 .death-panel.is-knockout .death-skull { animation: pop-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+/* Elimination heads-up — standalone emphasized callout under the framing box
+   (pull condition only). Louder than .muted so the knock-out risk is clear. */
+.elim-heads-up {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(245, 183, 78, 0.5);
+  border-radius: 10px;
+  background: rgba(245, 183, 78, 0.10);
+  color: var(--text, #f5f5f7);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.elim-heads-up-icon { font-size: 26px; line-height: 1; flex: 0 0 auto; }
+.elim-heads-up-text { flex: 1; }
 @keyframes death-shake {
   0%, 100% { transform: translateX(0) rotate(0); }
   25% { transform: translateX(-6px) rotate(-4deg); }
