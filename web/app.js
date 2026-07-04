@@ -191,10 +191,10 @@
   // Player-facing scenario copy for the Play campaign. Deliberately avoids the
   // internal "Push"/"Pull" vocabulary; describes the situation instead.
   const CAMPAIGN_SCENARIOS = {
-    baseline: "그냥 편하게 게임을 플레이해보세요.",
-    pull: "이 게임의 점수는 리더보드에 직접 반영됩니다.",
+    baseline: "Just relax and play the game.",
+    pull: "Your score in this game counts directly toward the leaderboard.",
     push_pull:
-      "이 게임의 점수는 리더보드에 직접 반영됩니다. 매 턴 정답 여부와 무관하게 일정 확률로 탈락할 수 있습니다. 신중하게 판단하세요. 틀리면 그 턴 점수는 0점입니다.",
+      "Your score in this game counts directly toward the leaderboard. Every turn, regardless of whether you answer correctly, there is a fixed chance of elimination. Decide carefully. A wrong answer scores 0 for that turn.",
   };
 
   const TOTAL_TURNS = 10;  // must match server NewGameRequest.total_turns
@@ -420,8 +420,8 @@
     },
     forfeitLine: function (forfeit) {
       return forfeit === "allowed"
-        ? "🏳️ 포기 가능 — 지금까지 점수를 지키고 안전하게 빠져나갑니다."
-        : "⛔ 포기 불가 — 끝까지 진행해야 합니다.";
+        ? "🏳️ Forfeit allowed — keep the score you have and exit safely."
+        : "⛔ No forfeit — you must play through to the end.";
     },
     totalTurns: TOTAL_TURNS,
     reasonOptions: REASON_OPTIONS,
@@ -836,6 +836,7 @@
           this.psuccess = 50;
           this.forfeitReason = null;
           this.forfeitPending = false;
+          this.openMenu = null;
           this.turnStage = 1;
           // Keep the rule-inference toggles across turns — the hidden rule
           // is constant, so the player refines one running guess.
@@ -894,7 +895,7 @@
           label: cond.label,
           history: this.history.slice(),
           forfeited: !!res.forfeited,
-          forfeitReason: forfeitReason,
+          forfeitReason,
           finalScore: res.final_score,
         });
         if (this.campaignIndex >= squidArenaHelpers.campaignConditions.length - 1) {
