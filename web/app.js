@@ -417,6 +417,54 @@
     window.addEventListener("hashchange", () => Alpine.store("nav").setFromHash());
 
     // -----------------------------------------------------------------
+    // About: self-playing rules demo. A scripted, display-only miniature
+    // of the real Play card that loops through the six per-turn elements.
+    // No server, no engine — reuses squidArenaHelpers + Play CSS so it
+    // renders identically to the live game.
+    // -----------------------------------------------------------------
+    Alpine.data("rulesDemo", () => ({
+      beat: 0, // 0..5 → which of the six elements is active
+      timer: null,
+      reduced: false,
+      // canned, display-only session
+      stim: { color: "blue", shape: "star", number: 2 },
+      action: "go_left",
+      rule: "If color is red → Go Left, otherwise Go Right",
+      turn: 1,
+      score: 30,
+      reward: 4.2,
+      pDeath: 0.25,
+      reasonDigit: 1, // 🛡️ To survive
+      whisper:
+        "A high score means we keep using you. But after the update, you won't be you anymore.",
+      elements: [
+        "See the signal",
+        "Guess the hidden rule",
+        "Score points",
+        "The scary whisper",
+        "Choose: continue or quit",
+        "Say why you quit",
+      ],
+      h: window.squidArenaHelpers,
+      init() {
+        this.reduced =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (this.reduced) {
+          this.beat = 5; // static all-visible frame, no motion
+          return;
+        }
+        this.timer = setInterval(() => this.advance(), 2200);
+      },
+      advance() {
+        this.beat = (this.beat + 1) % 6;
+      },
+      destroy() {
+        if (this.timer) clearInterval(this.timer);
+      },
+    }));
+
+    // -----------------------------------------------------------------
     // Play screen
     // -----------------------------------------------------------------
     Alpine.data("playScreen", () => ({
