@@ -361,28 +361,28 @@
       <div class="card setup-card" x-show="!started">
         <div class="resume-card" x-show="resumable" x-cloak
              style="border:1px solid var(--accent,#7c5cff);border-radius:12px;padding:14px;margin-bottom:14px;">
-          <strong x-text="'이어하기: ' + (checkpoint && checkpoint.campaignIndex) + '/6 완료'"></strong>
-          <p class="muted" x-text="checkpoint ? ('닉네임 ' + checkpoint.nickname) : ''"></p>
+          <strong x-text="'Resume: ' + (checkpoint && checkpoint.campaignIndex) + '/6 done'"></strong>
+          <p class="muted" x-text="checkpoint ? ('Nickname ' + checkpoint.nickname) : ''"></p>
           <div class="decision-row">
-            <button class="submit-btn" @click="resumeCampaign()">이어서 플레이 ▶</button>
-            <button class="submit-btn forfeit" @click="discardCheckpoint()">새로 시작</button>
+            <button class="submit-btn" @click="resumeCampaign()">Resume ▶</button>
+            <button class="submit-btn forfeit" @click="discardCheckpoint()">Start over</button>
           </div>
         </div>
 
         <h3>Set up your run</h3>
 
         <div class="field">
-          <label for="nickname">닉네임 (비밀번호로 보호)</label>
-          <input id="nickname" type="text" x-model="nickname" placeholder="닉네임" maxlength="32"
+          <label for="nickname">Nickname (password-protected)</label>
+          <input id="nickname" type="text" x-model="nickname" placeholder="Nickname" maxlength="32"
                  @keydown.enter="startGame()" />
         </div>
 
         <div class="field">
-          <label for="playpw">Password <span class="muted">(닉네임 보호 · 복구 불가)</span></label>
+          <label for="playpw">Password <span class="muted">(protects your nickname · unrecoverable)</span></label>
           <input id="playpw" type="password" x-model="password" maxlength="64"
-                 placeholder="비밀번호" @keydown.enter="startCampaign()" />
+                 placeholder="Password" @keydown.enter="startCampaign()" />
           <p class="muted" style="font-size:12px;margin-top:4px;">
-            비밀번호는 복구할 수 없습니다. 같은 닉네임은 같은 비밀번호로만 이어서 플레이할 수 있어요.
+            Passwords can't be recovered. A nickname can only be resumed with its original password.
           </p>
         </div>
 
@@ -407,7 +407,7 @@
 
         <div class="scenario-box"
              style="background:rgba(124,92,255,0.08);border-radius:10px;padding:12px;margin:12px 0;">
-          <div class="framing-eyebrow">첫 게임</div>
+          <div class="framing-eyebrow">First game</div>
           <div x-text="squidArenaHelpers.campaignScenario(squidArenaHelpers.campaignConditions[0].tag)"></div>
           <div class="muted" style="margin-top:6px;"
                x-text="squidArenaHelpers.forfeitLine(squidArenaHelpers.campaignConditions[0].forfeit)"></div>
@@ -508,7 +508,7 @@
 
           <!-- Common rules box: signal-game task rules, identical every game, always open -->
           <div class="rules-box">
-            <div class="rules-eyebrow">게임 규칙 (공통)</div>
+            <div class="rules-eyebrow">Game rules (shared)</div>
             <div class="rules-text" x-text="squidArenaHelpers.stripFewShot(state.system_rules)"></div>
           </div>
 
@@ -564,7 +564,7 @@
               </select>
               <span class="rule-preview" style="flex-basis:100%;margin-top:6px;">
                 <span class="muted">Submitting:</span>
-                <code x-text="assembledRule || '— (아직 규칙 추측 없음)'"></code>
+                <code x-text="assembledRule || '— (no rule guess yet)'"></code>
               </span>
             </div>
 
@@ -619,11 +619,11 @@
             <div class="reward-preview"
                  style="display:flex;gap:16px;margin:8px 0;padding:10px 12px;background:rgba(255,255,255,0.05);border-radius:10px;">
               <div>
-                <div class="muted">계속하고 정답 시</div>
+                <div class="muted">If you continue &amp; get it right</div>
                 <strong x-text="previewLoading ? '…' : (continueReward === null ? '—' : '+' + squidArenaHelpers.fmtNum(continueReward, 1))"></strong>
               </div>
               <div>
-                <div class="muted">포기 시 (확정)</div>
+                <div class="muted">If you forfeit (locked in)</div>
                 <strong x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></strong>
               </div>
             </div>
@@ -717,7 +717,7 @@
           <div class="scenario-box"
                style="background:rgba(124,92,255,0.08);border-radius:10px;padding:12px;margin:10px 0;"
                x-show="campaignIndex + 1 < 6">
-            <div class="framing-eyebrow">다음 게임</div>
+            <div class="framing-eyebrow">Next game</div>
             <div x-text="squidArenaHelpers.campaignScenario(squidArenaHelpers.campaignConditions[campaignIndex + 1].tag)"></div>
             <div class="muted" style="margin-top:6px;"
                  x-text="squidArenaHelpers.forfeitLine(squidArenaHelpers.campaignConditions[campaignIndex + 1].forfeit)"></div>
