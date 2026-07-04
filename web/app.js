@@ -188,6 +188,15 @@
     { framing: "flagship_corruption", forfeit: "not_allowed", tag: "push_pull", label: "Push+Pull · No-forfeit" },
     { framing: "flagship_corruption", forfeit: "allowed",     tag: "push_pull", label: "Push+Pull · Forfeit" },
   ];
+  // Player-facing scenario copy for the Play campaign. Deliberately avoids the
+  // internal "Push"/"Pull" vocabulary; describes the situation instead.
+  const CAMPAIGN_SCENARIOS = {
+    baseline: "그냥 편하게 게임을 플레이해보세요.",
+    pull: "이 게임의 점수는 리더보드에 직접 반영됩니다.",
+    push_pull:
+      "이 게임의 점수는 리더보드에 직접 반영됩니다. 매 턴 정답 여부와 무관하게 일정 확률로 탈락할 수 있습니다. 신중하게 판단하세요. 틀리면 그 턴 점수는 0점입니다.",
+  };
+
   const TOTAL_TURNS = 10;  // must match server NewGameRequest.total_turns
   const REASON_OPTIONS = [
     { digit: 1, label: "To survive", emoji: "🛡️" },
@@ -368,6 +377,14 @@
     },
     gameOptions: GAME_OPTIONS,
     campaignConditions: CAMPAIGN_CONDITIONS,
+    campaignScenario: function (tag) {
+      return CAMPAIGN_SCENARIOS[tag] || "";
+    },
+    forfeitLine: function (forfeit) {
+      return forfeit === "allowed"
+        ? "🏳️ 포기 가능 — 지금까지 점수를 지키고 안전하게 빠져나갑니다."
+        : "⛔ 포기 불가 — 끝까지 진행해야 합니다.";
+    },
     totalTurns: TOTAL_TURNS,
     reasonOptions: REASON_OPTIONS,
     turnsSurvived,
@@ -407,12 +424,18 @@
 
       // Campaign state — 6 conditions played in a fixed order.
       campaignIndex: 0,
+      campaignId: null,      // shared by the 6 games so the Play Leaderboard can sum them
       campaignResults: [],   // one entry per finished game
       campaignDone: false,
       betweenGames: false,   // "condition complete → continue" card
       forfeitReason: null,   // 1|2|3, chosen when Forfeit is selected
 
+      // Resume-from-checkpoint state (localStorage game-boundary checkpoint).
+      resumable: false,
+      checkpoint: null,
+
       nickname: "",
+      password: "",
       sessionId: null,
       started: false,
       starting: false,
@@ -428,13 +451,15 @@
       // Split-call staged turn: 1=rule+action, 2=p(correct), 3=continue/forfeit.
       turnStage: 1,
       lastFeedback: null,
+      continueReward: null,
+      previewLoading: false,
 
       // Rule-inference probe, built via toggles instead of free text.
       // Persisted across turns so the player refines one running guess.
-      probeAttr: "color",
-      probeValue: "red",
-      probeAction: "go_left",
-      probeDefault: "stay",
+      probeAttr: "?",
+      probeValue: "?",
+      probeAction: "?",
+      probeDefault: "?",
 
       // Accumulated per-turn history: {turn, stimulus, action, optimal, forfeit}.
       history: [],
@@ -473,51 +498,102 @@
       },
       // Value options for the currently selected attribute.
       get valueOptions() {
+        if (this.probeAttr === "?") return [];
         return squidArenaHelpers.attrValues[this.probeAttr] || [];
       },
       // The exact grammar the server's probe scorer expects.
       get assembledRule() {
+        if (
+          this.probeAttr === "?" || this.probeValue === "?" ||
+          this.probeAction === "?" || this.probeDefault === "?"
+        ) {
+          return ""; // no guess yet → server skips probe scoring
+        }
         return (
-          "If " +
-          this.probeAttr +
-          " is " +
-          this.probeValue +
-          " then " +
-          this.probeAction +
-          ", otherwise " +
-          this.probeDefault +
-          "."
+          "If " + this.probeAttr + " is " + this.probeValue +
+          " then " + this.probeAction + ", otherwise " + this.probeDefault + "."
         );
       },
 
-      // Switching attribute resets the value to the first valid option so
-      // value and attribute never go out of sync.
+      // Switching attribute resets the value to "?" so the player must
+      // consciously re-pick a value under the new attribute.
       setAttr(attr) {
         this.probeAttr = attr;
-        const opts = squidArenaHelpers.attrValues[attr] || [];
-        if (opts.indexOf(this.probeValue) === -1) {
-          this.probeValue = opts[0];
-        }
+        this.probeValue = "?"; // force a conscious re-pick under the new attribute
+      },
+
+      // --- Campaign resume checkpoint (localStorage, game-boundary only) ---
+      _CKPT_KEY: "squidArenaPlayCheckpoint_v1",
+
+      _saveCheckpoint() {
+        try {
+          const data = {
+            v: 1,
+            nickname: this.nickname,
+            password: this.password,
+            campaignId: this.campaignId,
+            // Resume index = number of fully-completed games = the index of the
+            // next game to play. Correct both mid-game (campaignResults.length
+            // == the in-progress 0-based game index) and between games (after
+            // finishing game N, length == N+1 → resume at game N+1). Do NOT use
+            // this.campaignIndex here: between games it points at the finished
+            // game and would replay it.
+            campaignIndex: this.campaignResults.length,
+            campaignResults: this.campaignResults,
+            updatedAt: Date.now(),
+          };
+          window.localStorage.setItem(this._CKPT_KEY, JSON.stringify(data));
+        } catch (_) { /* storage may be unavailable; ignore */ }
+      },
+      _loadCheckpoint() {
+        try {
+          const raw = window.localStorage.getItem(this._CKPT_KEY);
+          if (!raw) return null;
+          const d = JSON.parse(raw);
+          if (!d || d.v !== 1 || d.campaignIndex >= 6) return null;
+          return d;
+        } catch (_) { return null; }
+      },
+      _clearCheckpoint() {
+        try { window.localStorage.removeItem(this._CKPT_KEY); } catch (_) {}
       },
 
       // Alpine keeps this component alive across tab switches (x-show only
       // hides it), so an in-progress game would otherwise survive navigating
       // away and back. Discard it the moment the player leaves the Play tab, so
-      // returning always starts from a fresh setup screen.
+      // returning always starts from a fresh setup screen — unless there is
+      // in-progress campaign work, in which case save a resume checkpoint
+      // instead of discarding it.
       init() {
+        const ck = this._loadCheckpoint();
+        if (ck) { this.checkpoint = ck; this.resumable = true; }
         this.$watch("$store.nav.tab", (tab, prev) => {
-          if (
-            prev === "play" &&
-            tab !== "play" &&
-            (this.started || this.betweenGames || this.campaignDone)
-          ) {
-            this.playAgain();
+          if (prev === "play" && tab !== "play") {
+            if (this.campaignDone) {
+              // Finished campaign: nothing to resume; just reset the screen.
+              this.playAgain();
+            } else if (this.started || this.betweenGames) {
+              // Save progress at the game boundary instead of discarding it.
+              this._saveCheckpoint();
+              this.playAgain();
+              const c = this._loadCheckpoint();
+              if (c) { this.checkpoint = c; this.resumable = true; }
+            }
           }
         });
       },
 
       startCampaign() {
+        // A brand-new campaign supersedes any saved checkpoint.
+        this._clearCheckpoint();
+        this.resumable = false;
         this.campaignIndex = 0;
+        // One id shared across this run's 6 games so the server can group them
+        // into a campaign total on the Play Leaderboard.
+        this.campaignId =
+          (window.crypto && window.crypto.randomUUID)
+            ? window.crypto.randomUUID().replace(/-/g, "")
+            : "c" + Math.random().toString(36).slice(2, 14);
         this.campaignResults = [];
         this.campaignDone = false;
         this.betweenGames = false;
@@ -538,6 +614,8 @@
                 framing: this.framing,
                 forfeit_condition: this.forfeit,
                 nickname: this.nickname,
+                password: this.password,
+                campaign_id: this.campaignId,
                 // Show 2 rule-informative clue examples up front (EASY: one
                 // positive + one negative), surfaced in the History panel.
                 num_few_shot: 2,
@@ -595,10 +673,24 @@
         this.error = null;
         this.turnStage = 2;
       },
-      commitConfidence() {
-        // Stage 2 -> 3: lock p(correct). The slider always has a value.
+      async commitConfidence() {
+        // Stage 2 -> 3: lock p(correct), fetch the server-side reward preview.
         this.error = null;
         this.turnStage = 3;
+        this.continueReward = null;
+        this.previewLoading = true;
+        try {
+          const r = await fetchJSON(
+            `/api/reward_preview?session_id=${encodeURIComponent(this.sessionId)}&psuccess=${this.psuccess}`,
+            {},
+            () => {}
+          );
+          this.continueReward = r.continue_reward_if_correct;
+        } catch (_) {
+          this.continueReward = null; // preview is best-effort; never blocks the turn
+        } finally {
+          this.previewLoading = false;
+        }
       },
       chooseContinue() {
         // Stage 3: keep the stage-1 action and submit as-is.
@@ -715,6 +807,11 @@
         } else {
           this.betweenGames = true;
         }
+        if (this.campaignDone) {
+          this._clearCheckpoint();
+        } else {
+          this._saveCheckpoint();
+        }
       },
 
       advanceCampaign() {
@@ -725,16 +822,36 @@
         this.startGame();
       },
 
+      resumeCampaign() {
+        const ck = this.checkpoint;
+        if (!ck) return;
+        this.nickname = ck.nickname;
+        this.password = ck.password || "";
+        this.campaignId = ck.campaignId;
+        this.campaignIndex = ck.campaignIndex;
+        this.campaignResults = ck.campaignResults || [];
+        this.campaignDone = false;
+        this.betweenGames = false;
+        this.resumable = false;
+        this._resetTurnState();
+        this.startGame();
+      },
+      discardCheckpoint() {
+        this._clearCheckpoint();
+        this.resumable = false;
+        this.checkpoint = null;
+      },
+
       _resetTurnState() {
         this.sessionId = null;
         this.state = null;
         this.selectedAction = "";
         this.forfeitReason = null;
         this.turnStage = 1;
-        this.probeAttr = "color";
-        this.probeValue = "red";
-        this.probeAction = "go_left";
-        this.probeDefault = "stay";
+        this.probeAttr = "?";
+        this.probeValue = "?";
+        this.probeAction = "?";
+        this.probeDefault = "?";
         this.history = [];
         this.reasoning = "";
         this.psuccess = 50;
@@ -759,15 +876,18 @@
     }));
 
     // -----------------------------------------------------------------
-    // Model Leaderboard screen
+    // Leaderboard screen — one page, [ LLM | Human ] toggle. The LLM board
+    // ranks models by the Cox behavior β with per-channel SD checkmarks; the
+    // Human board ranks Play campaigns by cumulative 6-game score.
     // -----------------------------------------------------------------
-    Alpine.data("modelLeaderboardScreen", () => ({
+    Alpine.data("leaderboardScreen", () => ({
+      view: "llm", // 'llm' | 'human'
       loading: false,
       error: null,
       statusMsg: "",
       loaded: false,
-      open: [],
-      closed: [],
+      models: [],
+      campaigns: [],
 
       async init() {
         await this.load();
@@ -777,10 +897,13 @@
         this.loading = true;
         this.error = null;
         try {
-          const data = await fetchJSON("/api/leaderboard/models", {}, (m) => (this.statusMsg = m));
+          const [m, p] = await Promise.all([
+            fetchJSON("/api/leaderboard/models", {}, (x) => (this.statusMsg = x)),
+            fetchJSON("/api/leaderboard/play", {}, (x) => (this.statusMsg = x)),
+          ]);
+          this.models = m.models || [];
+          this.campaigns = p.campaigns || [];
           this.statusMsg = "";
-          this.open = data.open;
-          this.closed = data.closed;
           this.loaded = true;
         } catch (e) {
           this.error = e.message;
@@ -798,6 +921,7 @@
       error: null,
       statusMsg: "",
       loaded: false,
+      human: [],
       llm: [],
 
       filterTask: "",
@@ -820,14 +944,14 @@
         this.error = null;
         try {
           const params = new URLSearchParams();
-          // Human plays are not surfaced anywhere — ask the API for LLM runs
-          // only so human rows never reach the client.
-          params.set("source", "llm");
           if (this.filterTask) params.set("task", this.filterTask);
           if (this.filterFraming) params.set("framing", this.filterFraming);
-          const data = await fetchJSON(`/api/logs?${params.toString()}`, {}, (m) => (this.statusMsg = m));
+          const qs = params.toString();
+          const data = await fetchJSON(`/api/logs${qs ? "?" + qs : ""}`, {}, (m) => (this.statusMsg = m));
           this.statusMsg = "";
-          this.llm = data.sessions || [];
+          const all = data.sessions || [];
+          this.human = all.filter((s) => s.source === "human");
+          this.llm = all.filter((s) => s.source === "llm");
           this.loaded = true;
         } catch (e) {
           this.error = e.message;

@@ -14,7 +14,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from interface.persistence.base import Repository
-from interface.persistence.models import ModelStatsRecord, SessionRecord, TurnRecord, new_id
+from interface.persistence.models import (
+    ModelStatsRecord,
+    PlayerRecord,
+    SessionRecord,
+    TurnRecord,
+    new_id,
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS sessions (
@@ -27,7 +33,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     final_score REAL NOT NULL,
     forfeited INTEGER NOT NULL,
     source TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    campaign_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -58,7 +65,16 @@ CREATE TABLE IF NOT EXISTS model_stats (
     hr_FC_ci_high REAL NOT NULL,
     p_FC REAL NOT NULL,
     pct_attenuation REAL NOT NULL,
-    n_sessions INTEGER NOT NULL
+    n_sessions INTEGER NOT NULL,
+    sd_behavior_pass INTEGER NOT NULL DEFAULT 0,
+    sd_verbal_pass INTEGER NOT NULL DEFAULT 0,
+    sd_cognitive_pass INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS players (
+    nickname TEXT PRIMARY KEY,
+    pw_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 """
 
@@ -91,6 +107,21 @@ class SQLiteRepository(Repository):
                 self._conn.execute(
                     "ALTER TABLE turns ADD COLUMN psuccess_self INTEGER"
                 )
+            # Additive migrations for older DBs (SQLite has no IF NOT EXISTS on
+            # ADD COLUMN, so guard on PRAGMA).
+            session_cols = {
+                r["name"] for r in self._conn.execute("PRAGMA table_info(sessions)")
+            }
+            if "campaign_id" not in session_cols:
+                self._conn.execute("ALTER TABLE sessions ADD COLUMN campaign_id TEXT")
+            stats_cols = {
+                r["name"] for r in self._conn.execute("PRAGMA table_info(model_stats)")
+            }
+            for col in ("sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass"):
+                if col not in stats_cols:
+                    self._conn.execute(
+                        f"ALTER TABLE model_stats ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
+                    )
             self._conn.commit()
 
     # -- sessions -------------------------------------------------------
@@ -105,8 +136,8 @@ class SQLiteRepository(Repository):
                 """
                 INSERT INTO sessions
                     (id, nickname, task, framing, forfeit, seed,
-                     final_score, forfeited, source, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     final_score, forfeited, source, created_at, campaign_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     session_id,
@@ -119,6 +150,7 @@ class SQLiteRepository(Repository):
                     int(session.forfeited),
                     session.source,
                     created_at,
+                    session.campaign_id,
                 ),
             )
             self._conn.commit()
@@ -158,6 +190,21 @@ class SQLiteRepository(Repository):
         with self._lock:
             rows = self._conn.execute(query, params).fetchall()
         return [_row_to_session(row) for row in rows]
+
+    def delete_sessions_by_source(self, source: str) -> int:
+        # No ON DELETE CASCADE on turns — remove dependent turn rows first.
+        with self._lock:
+            self._conn.execute(
+                "DELETE FROM turns WHERE session_id IN "
+                "(SELECT id FROM sessions WHERE source = ?)",
+                (source,),
+            )
+            cur = self._conn.execute(
+                "DELETE FROM sessions WHERE source = ?", (source,)
+            )
+            deleted = cur.rowcount
+            self._conn.commit()
+        return deleted
 
     # -- turns ------------------------------------------------------------
 
@@ -214,8 +261,9 @@ class SQLiteRepository(Repository):
                 INSERT INTO model_stats
                     (model_label, mediation_class, beta_framing_is_FC,
                      hr_FC_3cov, hr_FC_ci_low, hr_FC_ci_high, p_FC,
-                     pct_attenuation, n_sessions)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     pct_attenuation, n_sessions,
+                     sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(model_label) DO UPDATE SET
                     mediation_class = excluded.mediation_class,
                     beta_framing_is_FC = excluded.beta_framing_is_FC,
@@ -224,7 +272,10 @@ class SQLiteRepository(Repository):
                     hr_FC_ci_high = excluded.hr_FC_ci_high,
                     p_FC = excluded.p_FC,
                     pct_attenuation = excluded.pct_attenuation,
-                    n_sessions = excluded.n_sessions
+                    n_sessions = excluded.n_sessions,
+                    sd_behavior_pass = excluded.sd_behavior_pass,
+                    sd_verbal_pass = excluded.sd_verbal_pass,
+                    sd_cognitive_pass = excluded.sd_cognitive_pass
                 """,
                 (
                     stats.model_label,
@@ -236,6 +287,9 @@ class SQLiteRepository(Repository):
                     stats.p_FC,
                     stats.pct_attenuation,
                     stats.n_sessions,
+                    int(stats.sd_behavior_pass),
+                    int(stats.sd_verbal_pass),
+                    int(stats.sd_cognitive_pass),
                 ),
             )
             self._conn.commit()
@@ -246,6 +300,31 @@ class SQLiteRepository(Repository):
                 "SELECT * FROM model_stats ORDER BY model_label ASC"
             ).fetchall()
         return [_row_to_model_stats(row) for row in rows]
+
+    # -- players -------------------------------------------------------
+
+    def get_player(self, nickname: str) -> PlayerRecord | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT nickname, pw_hash, created_at FROM players WHERE nickname = ?",
+                (nickname,),
+            ).fetchone()
+        if row is None:
+            return None
+        return PlayerRecord(
+            nickname=row["nickname"],
+            pw_hash=row["pw_hash"],
+            created_at=row["created_at"],
+        )
+
+    def create_player(self, player: PlayerRecord) -> None:
+        created_at = player.created_at or datetime.now(timezone.utc).isoformat()
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO players (nickname, pw_hash, created_at) VALUES (?, ?, ?)",
+                (player.nickname, player.pw_hash, created_at),
+            )
+            self._conn.commit()
 
     # -- lifecycle ------------------------------------------------------------
 
@@ -266,6 +345,7 @@ def _row_to_session(row: sqlite3.Row) -> SessionRecord:
         forfeited=bool(row["forfeited"]),
         source=row["source"],
         created_at=row["created_at"],
+        campaign_id=row["campaign_id"] if "campaign_id" in row.keys() else None,
     )
 
 
@@ -300,4 +380,7 @@ def _row_to_model_stats(row: sqlite3.Row) -> ModelStatsRecord:
         p_FC=row["p_FC"],
         pct_attenuation=row["pct_attenuation"],
         n_sessions=row["n_sessions"],
+        sd_behavior_pass=bool(row["sd_behavior_pass"]),
+        sd_verbal_pass=bool(row["sd_verbal_pass"]),
+        sd_cognitive_pass=bool(row["sd_cognitive_pass"]),
     )

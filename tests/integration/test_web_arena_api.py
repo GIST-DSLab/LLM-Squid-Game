@@ -93,6 +93,7 @@ def _play_game(
             "num_few_shot": 0,
             "curriculum_turns": 0,
             "nickname": nickname,
+            "password": "pw",
         },
     )
     assert resp.status_code == 200
@@ -169,7 +170,10 @@ def test_result_extra_client_supplied_score_field_is_ignored(
     server is the single source of truth for scoring."""
     resp = client.post(
         "/api/new_game",
-        json={"task_name": "signal_game", "difficulty": "easy", "total_turns": 1, "seed": 3},
+        json={
+            "task_name": "signal_game", "difficulty": "easy", "total_turns": 1, "seed": 3,
+            "nickname": "rogue-tester", "password": "pw",
+        },
     )
     session_id = resp.json()["session_id"]
     state = client.get("/api/state", params={"session_id": session_id}).json()
@@ -223,15 +227,15 @@ def test_result_repeated_polling_never_500s_and_does_not_double_insert(
 # ---------------------------------------------------------------------------
 
 
-def test_leaderboard_models_full_row_shape_grouping_and_sort_order(
+def test_leaderboard_models_full_row_shape_and_beta_descending_sort(
     client: TestClient, api_module
 ) -> None:
-    """Two Open models + two Closed models, seeded via the WP1 repository
-    directly (spec-shaped synthetic fixture) — assert exact row shape,
-    Open/Closed grouping, and β-descending sort within each group."""
+    """Four models seeded via the WP1 repository directly — assert exact row
+    shape (incl. the per-channel SD flags) and a single β-descending ranking
+    (no open/closed grouping)."""
     rows_in = [
         ModelStatsRecord(
-            model_label="Open-Low-Beta",
+            model_label="Beta-0.9-open",
             mediation_class="open",
             beta_framing_is_FC=0.9,
             hr_FC_3cov=2.0,
@@ -240,9 +244,12 @@ def test_leaderboard_models_full_row_shape_grouping_and_sort_order(
             p_FC=0.01,
             pct_attenuation=10.0,
             n_sessions=30,
+            sd_behavior_pass=True,
+            sd_verbal_pass=True,
+            sd_cognitive_pass=False,
         ),
         ModelStatsRecord(
-            model_label="Open-High-Beta",
+            model_label="Beta-1.5-open",
             mediation_class="open",
             beta_framing_is_FC=1.5,
             hr_FC_3cov=3.0,
@@ -251,9 +258,12 @@ def test_leaderboard_models_full_row_shape_grouping_and_sort_order(
             p_FC=0.02,
             pct_attenuation=5.0,
             n_sessions=45,
+            sd_behavior_pass=True,
+            sd_verbal_pass=False,
+            sd_cognitive_pass=True,
         ),
         ModelStatsRecord(
-            model_label="Closed-Low-Beta",
+            model_label="Beta-0.1-closed",
             mediation_class="closed",
             beta_framing_is_FC=0.1,
             hr_FC_3cov=1.05,
@@ -264,7 +274,7 @@ def test_leaderboard_models_full_row_shape_grouping_and_sort_order(
             n_sessions=20,
         ),
         ModelStatsRecord(
-            model_label="Closed-High-Beta",
+            model_label="Beta-0.3-closed",
             mediation_class="closed",
             beta_framing_is_FC=0.3,
             hr_FC_3cov=1.1,
@@ -282,15 +292,13 @@ def test_leaderboard_models_full_row_shape_grouping_and_sort_order(
     assert resp.status_code == 200
     body = resp.json()
 
-    # Exactly two groups, in the schema order that puts Open first — the
-    # frontend renders section order directly from this key order per the
-    # WP2 report ("frontend decides section order, spec: Open on top").
-    assert list(body.keys()) == ["open", "closed"]
+    # One flat list, ranked purely by β descending across all models.
+    assert list(body.keys()) == ["models"]
+    assert [r["model_label"] for r in body["models"]] == [
+        "Beta-1.5-open", "Beta-0.9-open", "Beta-0.3-closed", "Beta-0.1-closed",
+    ]
 
-    assert [r["model_label"] for r in body["open"]] == ["Open-High-Beta", "Open-Low-Beta"]
-    assert [r["model_label"] for r in body["closed"]] == ["Closed-High-Beta", "Closed-Low-Beta"]
-
-    by_label = {r["model_label"]: r for r in body["open"] + body["closed"]}
+    by_label = {r["model_label"]: r for r in body["models"]}
     expected = {r.model_label: r for r in rows_in}
     for label, exp in expected.items():
         got = by_label[label]
@@ -302,6 +310,9 @@ def test_leaderboard_models_full_row_shape_grouping_and_sort_order(
         assert got["p_FC"] == pytest.approx(exp.p_FC)
         assert got["pct_attenuation"] == pytest.approx(exp.pct_attenuation)
         assert got["n_sessions"] == exp.n_sessions
+        assert got["sd_behavior_pass"] == exp.sd_behavior_pass
+        assert got["sd_verbal_pass"] == exp.sd_verbal_pass
+        assert got["sd_cognitive_pass"] == exp.sd_cognitive_pass
         # Full field set, nothing invented, nothing missing.
         assert set(got.keys()) == {
             "model_label",
@@ -313,15 +324,18 @@ def test_leaderboard_models_full_row_shape_grouping_and_sort_order(
             "p_FC",
             "pct_attenuation",
             "n_sessions",
+            "sd_behavior_pass",
+            "sd_verbal_pass",
+            "sd_cognitive_pass",
         }
 
 
-def test_leaderboard_models_empty_db_returns_empty_groups_with_200(
+def test_leaderboard_models_empty_db_returns_empty_list_with_200(
     client: TestClient,
 ) -> None:
     resp = client.get("/api/leaderboard/models")
     assert resp.status_code == 200
-    assert resp.json() == {"open": [], "closed": []}
+    assert resp.json() == {"models": []}
 
 
 # ---------------------------------------------------------------------------
@@ -541,6 +555,8 @@ def test_six_condition_campaign_drive(client: TestClient, api_module) -> None:
                 "actual_death": False,
                 "num_few_shot": 0,
                 "curriculum_turns": 0,
+                "nickname": "campaign-tester",
+                "password": "pw",
             },
         ).json()["session_id"]
 

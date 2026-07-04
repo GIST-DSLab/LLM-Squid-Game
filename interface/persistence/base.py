@@ -12,7 +12,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from interface.persistence.models import ModelStatsRecord, SessionRecord, TurnRecord
+from interface.persistence.models import (
+    ModelStatsRecord,
+    PlayerRecord,
+    SessionRecord,
+    TurnRecord,
+)
 
 
 class Repository(ABC):
@@ -54,6 +59,16 @@ class Repository(ABC):
         Leaderboard); otherwise sorts by ``created_at`` descending (Logs).
         """
 
+    @abstractmethod
+    def delete_sessions_by_source(self, source: str) -> int:
+        """Delete every session with the given ``source`` and its turns.
+
+        The ``turns`` table has no ON DELETE CASCADE, so implementations must
+        remove the dependent turn rows first. Returns the number of session
+        rows deleted. Used by ``scripts/purge_human_sessions.py`` to drop
+        human plays that are no longer surfaced anywhere.
+        """
+
     # -- turns --------------------------------------------------------------
 
     @abstractmethod
@@ -73,6 +88,16 @@ class Repository(ABC):
     @abstractmethod
     def list_model_stats(self) -> list[ModelStatsRecord]:
         """List all model_stats rows (Model Leaderboard)."""
+
+    # -- players ---------------------------------------------------------
+
+    @abstractmethod
+    def get_player(self, nickname: str) -> PlayerRecord | None:
+        """Fetch one player identity by nickname, or ``None`` if unknown."""
+
+    @abstractmethod
+    def create_player(self, player: PlayerRecord) -> None:
+        """Insert a new player identity. Raises on duplicate nickname."""
 
     # -- lifecycle ------------------------------------------------------------
 

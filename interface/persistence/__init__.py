@@ -16,12 +16,18 @@ Usage::
 
 from interface.persistence.base import Repository
 from interface.persistence.factory import get_repository
-from interface.persistence.models import ModelStatsRecord, SessionRecord, TurnRecord
+from interface.persistence.models import (
+    ModelStatsRecord,
+    PlayerRecord,
+    SessionRecord,
+    TurnRecord,
+)
 
 __all__ = [
     "Repository",
     "SessionRecord",
     "TurnRecord",
     "ModelStatsRecord",
+    "PlayerRecord",
     "get_repository",
 ]

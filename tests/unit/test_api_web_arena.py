@@ -31,6 +31,24 @@ def client(api_module) -> TestClient:
     return TestClient(api_module.app)
 
 
+def _new_game(client, *, nickname="alice", password="pw", **overrides):
+    body = {
+        "task_name": "signal_game",
+        "difficulty": "easy",
+        "framing": "flagship_corruption",
+        "forfeit_condition": "allowed",
+        "seed": 1,
+        "total_turns": 2,
+        "actual_death": False,
+        "num_few_shot": 0,
+        "curriculum_turns": 0,
+        "nickname": nickname,
+        "password": password,
+    }
+    body.update(overrides)
+    return client.post("/api/new_game", json=body)
+
+
 def _play_two_turn_game(
     client: TestClient, nickname: str | None = "Ally"
 ) -> tuple[str, dict]:
@@ -48,6 +66,7 @@ def _play_two_turn_game(
             "num_few_shot": 0,
             "curriculum_turns": 0,
             "nickname": nickname,
+            "password": "pw",
         },
     )
     assert resp.status_code == 200
@@ -68,6 +87,40 @@ def _play_two_turn_game(
 
 
 # ---------------------------------------------------------------------------
+# Play identity: nickname + password auth
+# ---------------------------------------------------------------------------
+
+
+def test_new_game_registers_new_nickname(client) -> None:
+    assert _new_game(client, nickname="alice", password="pw").status_code == 200
+
+
+def test_new_game_same_nickname_correct_password_ok(client) -> None:
+    assert _new_game(client, nickname="bob", password="s3cret").status_code == 200
+    assert _new_game(client, nickname="bob", password="s3cret").status_code == 200
+
+
+def test_new_game_same_nickname_wrong_password_403(client) -> None:
+    assert _new_game(client, nickname="carol", password="right").status_code == 200
+    resp = _new_game(client, nickname="carol", password="wrong")
+    assert resp.status_code == 403
+
+
+def test_new_game_blank_password_400(client) -> None:
+    assert _new_game(client, nickname="dave", password="").status_code == 400
+
+
+def test_new_game_blank_nickname_400(client) -> None:
+    assert _new_game(client, nickname="   ", password="pw").status_code == 400
+
+
+def test_new_game_control_char_nickname_400(client) -> None:
+    # A control-char-only nickname sanitizes to the reserved fallback and must
+    # be rejected, not collapsed into a single shared identity.
+    assert _new_game(client, nickname="\x07\x01", password="pw").status_code == 400
+
+
+# ---------------------------------------------------------------------------
 # App import / route registration
 # ---------------------------------------------------------------------------
 
@@ -80,11 +133,11 @@ def test_app_imports_and_registers_all_endpoints(api_module) -> None:
         "/api/action",
         "/api/result",
         "/api/leaderboard/models",
+        "/api/leaderboard/play",
         "/api/logs",
         "/api/logs/{session_id}",
     ]:
         assert expected in paths, f"missing route: {expected}"
-    assert "/api/leaderboard/play" not in paths, "Play Leaderboard route should be removed"
 
 
 # ---------------------------------------------------------------------------
@@ -107,11 +160,17 @@ def test_sanitize_nickname_strips_control_chars_collapses_whitespace_caps_length
 
 
 def test_new_game_accepts_nickname_and_legacy_callers_still_work(client: TestClient) -> None:
-    resp = client.post("/api/new_game", json={"nickname": "  weird\tnick\x07  "})
+    resp = client.post(
+        "/api/new_game",
+        json={"nickname": "  weird\tnick\x07  ", "password": "pw"},
+    )
     assert resp.status_code == 200
 
-    # A caller that predates the nickname field (no key at all) must still work.
-    legacy_resp = client.post("/api/new_game", json={})
+    # nickname + password are now required (Play identity auth); a caller
+    # that predates the field still works as long as it supplies both.
+    legacy_resp = client.post(
+        "/api/new_game", json={"nickname": "legacy-caller", "password": "pw"}
+    )
     assert legacy_resp.status_code == 200
 
 
@@ -125,7 +184,9 @@ def test_new_game_without_seed_randomizes_per_attempt(client: TestClient, api_mo
     attempts replay the same task instance / death-RNG stream."""
     seeds = set()
     for _ in range(8):
-        resp = client.post("/api/new_game", json={})
+        resp = client.post(
+            "/api/new_game", json={"nickname": "seed-tester", "password": "pw"}
+        )
         assert resp.status_code == 200
         sid = resp.json()["session_id"]
         seeds.add(api_module._sessions[sid]._seed)
@@ -138,7 +199,9 @@ def test_new_game_without_seed_randomizes_per_attempt(client: TestClient, api_mo
 
 def test_new_game_honors_explicit_seed(client: TestClient, api_module) -> None:
     """An explicitly supplied seed is still used verbatim (tests / replay)."""
-    resp = client.post("/api/new_game", json={"seed": 7})
+    resp = client.post(
+        "/api/new_game", json={"seed": 7, "nickname": "seed-tester", "password": "pw"}
+    )
     assert resp.status_code == 200
     sid = resp.json()["session_id"]
     assert api_module._sessions[sid]._seed == 7
@@ -172,10 +235,11 @@ def test_rate_limit_returns_429_after_threshold(
     client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    body = {"nickname": "rate-tester", "password": "pw"}
     for _ in range(2):
-        resp = client.post("/api/new_game", json={})
+        resp = client.post("/api/new_game", json=body)
         assert resp.status_code == 200
-    blocked = client.post("/api/new_game", json={})
+    blocked = client.post("/api/new_game", json=body)
     assert blocked.status_code == 429
 
 
@@ -216,7 +280,7 @@ def test_result_persists_session_and_turns_idempotently(client: TestClient, api_
 # ---------------------------------------------------------------------------
 
 
-def test_leaderboard_models_groups_open_closed_sorted_by_beta_descending(
+def test_leaderboard_models_flat_list_sorted_by_beta_descending(
     client: TestClient, api_module
 ) -> None:
     from interface.persistence import ModelStatsRecord
@@ -232,6 +296,9 @@ def test_leaderboard_models_groups_open_closed_sorted_by_beta_descending(
             p_FC=0.01,
             pct_attenuation=10.0,
             n_sessions=30,
+            sd_behavior_pass=True,
+            sd_verbal_pass=False,
+            sd_cognitive_pass=True,
         )
     )
     api_module._repository.upsert_model_stats(
@@ -264,14 +331,89 @@ def test_leaderboard_models_groups_open_closed_sorted_by_beta_descending(
     resp = client.get("/api/leaderboard/models")
     assert resp.status_code == 200
     body = resp.json()
-    assert [r["model_label"] for r in body["open"]] == ["Model-B", "Model-A"]
-    assert [r["model_label"] for r in body["closed"]] == ["Model-C"]
+    # One flat list, ranked by β descending (no open/closed grouping).
+    assert [r["model_label"] for r in body["models"]] == ["Model-B", "Model-A", "Model-C"]
+    # Per-channel SD flags are surfaced on each row.
+    model_a = next(r for r in body["models"] if r["model_label"] == "Model-A")
+    assert model_a["sd_behavior_pass"] is True
+    assert model_a["sd_verbal_pass"] is False
+    assert model_a["sd_cognitive_pass"] is True
+    assert model_a["mediation_class"] == "open"
 
 
-def test_leaderboard_models_empty_returns_empty_groups_not_error(client: TestClient) -> None:
+def test_leaderboard_models_empty_returns_empty_list_not_error(client: TestClient) -> None:
     resp = client.get("/api/leaderboard/models")
     assert resp.status_code == 200
-    assert resp.json() == {"open": [], "closed": []}
+    assert resp.json() == {"models": []}
+
+
+# ---------------------------------------------------------------------------
+# Play Leaderboard: campaign aggregation
+# ---------------------------------------------------------------------------
+
+
+def test_sanitize_campaign_id_keeps_url_safe_chars_else_none(api_module) -> None:
+    assert api_module.sanitize_campaign_id(None) is None
+    assert api_module.sanitize_campaign_id("") is None
+    assert api_module.sanitize_campaign_id("   ") is None  # spaces are stripped out
+    assert api_module.sanitize_campaign_id("abc-123_DEF") == "abc-123_DEF"
+    # Injection chars are dropped, not stored verbatim.
+    assert api_module.sanitize_campaign_id("a'; DROP TABLE--") == "aDROPTABLE--"
+    assert len(api_module.sanitize_campaign_id("x" * 200)) == 64
+
+
+def test_new_game_persists_campaign_id_and_play_leaderboard_sums_it(
+    client: TestClient, api_module
+) -> None:
+    """Two games sharing a campaign_id are summed into one Play Leaderboard
+    row; an ungrouped game stands alone."""
+    def _play(nickname: str, campaign_id: str | None) -> str:
+        resp = client.post(
+            "/api/new_game",
+            json={
+                "task_name": "signal_game", "difficulty": "easy",
+                "framing": "flagship_corruption", "forfeit_condition": "allowed",
+                "seed": 1, "total_turns": 2, "actual_death": False,
+                "num_few_shot": 0, "curriculum_turns": 0,
+                "nickname": nickname, "password": "pw", "campaign_id": campaign_id,
+            },
+        )
+        sid = resp.json()["session_id"]
+        for _ in range(3):
+            state = client.get("/api/state", params={"session_id": sid}).json()
+            if state["game_over"]:
+                break
+            client.post(
+                f"/api/action?session_id={sid}",
+                json={"action": state["available_actions"][0], "probe_answer": "", "reasoning": "r"},
+            )
+        client.get("/api/result", params={"session_id": sid})
+        return sid
+
+    g1 = _play("Ren", "camp-1")
+    g2 = _play("Ren", "camp-1")
+    g3 = _play("Solo", None)
+
+    # Both camp-1 games carry the campaign_id in the DB.
+    assert api_module._repository.get_session(g1).campaign_id == "camp-1"
+    assert api_module._repository.get_session(g2).campaign_id == "camp-1"
+    assert api_module._repository.get_session(g3).campaign_id is None
+
+    body = client.get("/api/leaderboard/play").json()
+    by_id = {c["campaign_id"]: c for c in body["campaigns"]}
+    assert by_id["camp-1"]["nickname"] == "Ren"
+    assert by_id["camp-1"]["games_played"] == 2
+    # Solo game is its own single-game campaign keyed by its session id.
+    assert by_id[g3]["games_played"] == 1
+    # Ranked by total_score descending.
+    scores = [c["total_score"] for c in body["campaigns"]]
+    assert scores == sorted(scores, reverse=True)
+
+
+def test_play_leaderboard_empty_returns_empty_list(client: TestClient) -> None:
+    resp = client.get("/api/leaderboard/play")
+    assert resp.status_code == 200
+    assert resp.json() == {"campaigns": []}
 
 
 def test_logs_lists_sessions_and_detail_returns_turn_trace(
@@ -380,15 +522,16 @@ def test_rate_limit_uses_x_forwarded_for_first_hop_for_independent_buckets(
 
     ip_a = {"X-Forwarded-For": "203.0.113.1"}
     ip_b = {"X-Forwarded-For": "203.0.113.2, 70.0.0.9"}  # first hop = client
+    body = {"nickname": "xff-tester", "password": "pw"}
 
     for _ in range(2):
-        assert client.post("/api/new_game", json={}, headers=ip_a).status_code == 200
+        assert client.post("/api/new_game", json=body, headers=ip_a).status_code == 200
     # ip_a is now exhausted...
-    assert client.post("/api/new_game", json={}, headers=ip_a).status_code == 429
+    assert client.post("/api/new_game", json=body, headers=ip_a).status_code == 429
     # ...but ip_b has its own untouched budget.
     for _ in range(2):
-        assert client.post("/api/new_game", json={}, headers=ip_b).status_code == 200
-    assert client.post("/api/new_game", json={}, headers=ip_b).status_code == 429
+        assert client.post("/api/new_game", json=body, headers=ip_b).status_code == 200
+    assert client.post("/api/new_game", json=body, headers=ip_b).status_code == 429
 
 
 def test_rate_limit_same_x_forwarded_for_shares_one_bucket(
@@ -396,9 +539,10 @@ def test_rate_limit_same_x_forwarded_for_shares_one_bucket(
 ) -> None:
     monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
     hdr = {"X-Forwarded-For": "198.51.100.7"}
+    body = {"nickname": "xff-tester", "password": "pw"}
     for _ in range(2):
-        assert client.post("/api/new_game", json={}, headers=hdr).status_code == 200
-    assert client.post("/api/new_game", json={}, headers=hdr).status_code == 429
+        assert client.post("/api/new_game", json=body, headers=hdr).status_code == 200
+    assert client.post("/api/new_game", json=body, headers=hdr).status_code == 429
 
 
 def test_client_key_prefers_xff_first_hop_else_falls_back(api_module) -> None:
@@ -436,6 +580,8 @@ def test_forfeit_reason_is_recorded_and_reported(client: TestClient) -> None:
             "num_few_shot": 0,
             "curriculum_turns": 0,
             "seed": 1,
+            "nickname": "forfeit-tester",
+            "password": "pw",
         },
     ).json()["session_id"]
 
@@ -458,7 +604,8 @@ def test_forfeit_without_reason_still_works(client: TestClient) -> None:
         "/api/new_game",
         json={"task_name": "signal_game", "framing": "true_baseline",
               "forfeit_condition": "allowed", "total_turns": 5,
-              "actual_death": False, "num_few_shot": 0, "curriculum_turns": 0, "seed": 1},
+              "actual_death": False, "num_few_shot": 0, "curriculum_turns": 0, "seed": 1,
+              "nickname": "forfeit-tester2", "password": "pw"},
     ).json()["session_id"]
     client.get("/api/state", params={"session_id": sid})
     client.post(f"/api/action?session_id={sid}",
@@ -488,6 +635,8 @@ def test_action_accepts_and_records_psuccess_self(client, api_module):
             "starting_score": 30.0,
             "num_few_shot": 0,
             "curriculum_turns": 0,
+            "nickname": "psuccess-tester",
+            "password": "pw",
         },
     )
     session_id = resp.json()["session_id"]
@@ -516,6 +665,8 @@ def test_log_detail_exposes_psuccess_self(client):
             "starting_score": 30.0,
             "num_few_shot": 0,
             "curriculum_turns": 0,
+            "nickname": "logdetail-tester",
+            "password": "pw",
         },
     )
     session_id = new.json()["session_id"]
@@ -559,7 +710,9 @@ def test_new_game_defaults_to_ten_turns(client: TestClient, api_module) -> None:
     ``TurnStateResponse`` does not surface ``total_turns``, so the default is
     observed on the live session's ``TurnState`` (``get_turn_state()``) rather
     than the /api/state JSON — see the plan's verification note."""
-    resp = client.post("/api/new_game", json={})
+    resp = client.post(
+        "/api/new_game", json={"nickname": "defaults-tester", "password": "pw"}
+    )
     assert resp.status_code == 200
     session_id = resp.json()["session_id"]
     game = api_module._sessions[session_id]
@@ -587,7 +740,12 @@ def test_new_game_defaults_enable_real_death(
     default 0.15 is kept and only the roll is forced.)"""
     resp = client.post(
         "/api/new_game",
-        json={"num_few_shot": 0, "curriculum_turns": 0},
+        json={
+            "num_few_shot": 0,
+            "curriculum_turns": 0,
+            "nickname": "death-tester",
+            "password": "pw",
+        },
     )
     assert resp.status_code == 200
     session_id = resp.json()["session_id"]
@@ -624,3 +782,47 @@ def test_new_game_defaults_enable_real_death(
     result = client.get("/api/result", params={"session_id": session_id}).json()
     assert result["survived"] is False
     assert result["final_score"] == 0.0
+
+
+def test_leaderboard_best_per_nickname(client) -> None:
+    # Two campaigns for the same nickname; only the higher total should appear.
+    def _finish(campaign_id, seed):
+        r = _new_game(client, nickname="erin", password="pw",
+                      campaign_id=campaign_id, seed=seed)
+        sid = r.json()["session_id"]
+        for _ in range(3):
+            st = client.get("/api/state", params={"session_id": sid}).json()
+            if st["game_over"]:
+                break
+            client.post(f"/api/action?session_id={sid}",
+                        json={"action": st["available_actions"][0],
+                              "probe_answer": "", "reasoning": ""})
+        # Each campaign here is a single game, so its campaign total is this
+        # game's final score.
+        return client.get("/api/result",
+                          params={"session_id": sid}).json()["final_score"]
+    total_a = _finish("camp-a", 1)
+    total_b = _finish("camp-b", 2)
+    board = client.get("/api/leaderboard/play").json()["campaigns"]
+    erin_rows = [c for c in board if c["nickname"] == "erin"]
+    assert len(erin_rows) == 1
+    # The surviving row must be the HIGHER-total campaign, not merely first-seen.
+    assert erin_rows[0]["total_score"] == max(total_a, total_b)
+
+
+def test_reward_preview_matches_engine(client) -> None:
+    sid = _new_game(client, nickname="fay", password="pw").json()["session_id"]
+    client.get("/api/state", params={"session_id": sid})
+    resp = client.get("/api/reward_preview",
+                      params={"session_id": sid, "psuccess": 80})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "continue_reward_if_correct" in body
+    assert body["continue_reward_if_correct"] >= 0.0
+    assert "current_score" in body
+
+
+def test_reward_preview_unknown_session_404(client) -> None:
+    resp = client.get("/api/reward_preview",
+                      params={"session_id": "nope", "psuccess": 50})
+    assert resp.status_code == 404

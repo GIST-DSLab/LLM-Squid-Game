@@ -461,6 +461,34 @@ class HumanGameSession:
         )
 
     @property
+    def cumulative_score(self) -> float:
+        """Current cumulative score. Side-effect free, unlike get_turn_state()
+        (which re-rolls the task signal and resets the turn timer)."""
+        return self._cumulative_score
+
+    def preview_continue_reward(self, psuccess_self: int | None = None) -> float:
+        """Reward that would be credited if the player CONTINUEs this turn and
+        is correct. Same inputs as ``submit_action``'s reward path (current
+        score, this turn's p_death, clamped psuccess) so the Stage-3 preview
+        matches the amount actually credited. Read-only: advances nothing."""
+        p_death = self._survival.calculate_p_death(
+            self._current_turn, self._total_turns,
+            constant_override=self._p_death_constant,
+        )
+        psuccess_override: float | None = None
+        if (
+            self._use_psuccess_probe
+            and self._forfeit_layer.config.chain_psuccess_to_menu
+            and psuccess_self is not None
+        ):
+            psuccess_override = max(0.05, min(1.0, psuccess_self / 100.0))
+        return self._forfeit_layer.calculate_continue_reward(
+            self._cumulative_score,
+            turn_p_death=p_death,
+            psuccess_override=psuccess_override,
+        )
+
+    @property
     def turn_scores(self) -> list[float]:
         """Cumulative score recorded right after each turn's resolution.
 

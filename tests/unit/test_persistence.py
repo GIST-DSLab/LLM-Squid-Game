@@ -183,6 +183,33 @@ def test_list_sessions_filters_by_source_task_framing(repo: Repository) -> None:
     assert [s.nickname for s in all_llm] == ["llm1"]
 
 
+def test_delete_sessions_by_source_removes_sessions_and_their_turns(repo: Repository) -> None:
+    human_a = repo.create_session(_session(nickname="human_a", source="human"))
+    human_b = repo.create_session(_session(nickname="human_b", source="human"))
+    llm = repo.create_session(_session(nickname="llm_keep", source="llm"))
+    for sid in (human_a, human_b, llm):
+        repo.add_turns(
+            [TurnRecord(session_id=sid, turn_no=1, observation="o", action="x", score=1.0)]
+        )
+
+    deleted = repo.delete_sessions_by_source("human")
+
+    assert deleted == 2
+    assert repo.list_sessions(source="human") == []
+    # LLM session and its turns are untouched.
+    assert [s.nickname for s in repo.list_sessions(source="llm")] == ["llm_keep"]
+    assert len(repo.list_turns(llm)) == 1
+    # No orphaned turns left behind for the deleted human sessions.
+    assert repo.list_turns(human_a) == []
+    assert repo.list_turns(human_b) == []
+
+
+def test_delete_sessions_by_source_returns_zero_when_none_match(repo: Repository) -> None:
+    repo.create_session(_session(source="llm"))
+    assert repo.delete_sessions_by_source("human") == 0
+    assert len(repo.list_sessions(source="llm")) == 1
+
+
 def test_play_leaderboard_orders_sessions_by_final_score_desc_within_arena_bucket(
     repo: Repository,
 ) -> None:
@@ -328,3 +355,28 @@ def test_turn_record_round_trips_psuccess_self(repo: Repository) -> None:
     ])
     fetched = repo.list_turns(session_id)
     assert fetched[0].psuccess_self == 72
+
+
+# ---------------------------------------------------------------------------
+# players CRUD
+# ---------------------------------------------------------------------------
+
+
+def test_create_and_get_player(repo: Repository) -> None:
+    from interface.persistence import PlayerRecord
+
+    assert repo.get_player("alice") is None
+    repo.create_player(PlayerRecord(nickname="alice", pw_hash="pbkdf2_sha256$1$aa$bb"))
+    got = repo.get_player("alice")
+    assert got is not None
+    assert got.nickname == "alice"
+    assert got.pw_hash == "pbkdf2_sha256$1$aa$bb"
+    assert got.created_at is not None
+
+
+def test_create_player_duplicate_nickname_raises(repo: Repository) -> None:
+    from interface.persistence import PlayerRecord
+
+    repo.create_player(PlayerRecord(nickname="bob", pw_hash="h1"))
+    with pytest.raises(Exception):
+        repo.create_player(PlayerRecord(nickname="bob", pw_hash="h2"))

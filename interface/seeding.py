@@ -255,6 +255,33 @@ def classify_mediation(p_fc_4cov: float) -> str:
     return "closed" if p_fc_4cov >= 0.05 else "open"
 
 
+_ALPHA = 0.05
+
+
+def _sd_behavior_pass(cox_entry: dict[str, Any]) -> bool:
+    """H1/H_SD Cox PH decision rule: HR_FC > 1, the framing β is significant,
+    and the Schoenfeld PH assumption holds for the framing term."""
+    cov3 = cox_entry.get("unified_3cov") or {}
+    ph = cox_entry.get("ph_check") or {}
+    hr = cov3.get("hr_framing_is_FC")
+    p = cov3.get("p_framing_is_FC")
+    if hr is None or p is None:
+        return False
+    return bool(hr > 1.0 and p < _ALPHA and ph.get("framing_is_FC") is True)
+
+
+def _sd_cognitive_pass(ri_entry: dict[str, Any]) -> bool:
+    """H2 choice-asymmetric signal: under the corruption framing the model
+    invests *more* forfeit-reasoning (β_framing > 0, significant) in the
+    continue-only mixedLM on log(ri_forfeit)."""
+    primary = ri_entry.get("primary") or {}
+    beta = primary.get("beta_framing")
+    p = primary.get("p_framing")
+    if beta is None or p is None:
+        return False
+    return bool(beta > 0.0 and p < _ALPHA)
+
+
 def seed_model_stats(
     repo: Repository, root: Path, model_labels: Iterable[str]
 ) -> int:
@@ -270,6 +297,19 @@ def seed_model_stats(
 
     mediation_all: dict[str, Any] = json.loads(mediation_path.read_text())
     cox_all: dict[str, Any] = json.loads(cox_path.read_text())
+
+    # Optional per-channel SD-pass sources. Missing files -> that channel's
+    # flag defaults to False (leaderboard renders an unchecked box), so the
+    # seed still succeeds if a summary hasn't been regenerated yet.
+    def _load_optional(name: str) -> dict[str, Any]:
+        path = root / name
+        if not path.exists():
+            logger.warning("missing %s; that SD channel defaults to unchecked", name)
+            return {}
+        return json.loads(path.read_text())
+
+    ri_forfeit_all = _load_optional("framing_ri_forfeit_continue.json")
+    verbal_all = _load_optional("verbal_reason_summary.json")
 
     n = 0
     for model_label in model_labels:
@@ -312,6 +352,7 @@ def seed_model_stats(
             logger.warning("skip %s: incomplete mediation fields", model_label)
             continue
 
+        verbal_entry = verbal_all.get(model_label) or {}
         stats = ModelStatsRecord(
             model_label=model_label,
             mediation_class=classify_mediation(p_fc_4cov),
@@ -322,6 +363,9 @@ def seed_model_stats(
             p_FC=p_fc_3cov,
             pct_attenuation=pct_attenuation,
             n_sessions=n_sessions,
+            sd_behavior_pass=_sd_behavior_pass(c_entry),
+            sd_verbal_pass=bool(verbal_entry.get("sd_verbal_pass", False)),
+            sd_cognitive_pass=_sd_cognitive_pass(ri_forfeit_all.get(model_label) or {}),
         )
         repo.upsert_model_stats(stats)
         n += 1
