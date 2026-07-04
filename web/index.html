@@ -27,7 +27,7 @@
       <a href="#about" :class="{ active: $store.nav.tab === 'about' }">What is this?</a>
       <a href="#play" :class="{ active: $store.nav.tab === 'play' }">Play</a>
       <a href="#leaderboard" :class="{ active: $store.nav.tab === 'leaderboard' }">Leaderboard</a>
-      <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">JOIN</a>
+      <a href="#arena" :class="{ active: $store.nav.tab === 'arena' }">JOIN <sup class="nav-beta">beta</sup></a>
       <a href="#logs" :class="{ active: $store.nav.tab === 'logs' }">Logs / Trace Explorer</a>
     </nav>
   </header>
@@ -900,13 +900,37 @@
          LLM ARENA (BYOE — Bring Your Own Endpoint)
          ================================================================= -->
     <section x-data="arenaScreen()" x-show="$store.nav.tab === 'arena'" x-cloak>
-      <h2 class="h-shape s-triangle">LLM Arena</h2>
-      <p class="muted">
-        Enter your own model and climb the leaderboard. You host an HTTP endpoint;
-        we drive a full split-call season against it (task → p(success) probe →
-        forfeit, every turn) and score it with the exact same engine as the
-        built-in models. The finished run appears in Logs / Trace Explorer.
-      </p>
+      <!-- Arena intro: what this page is for + how to join the leaderboard -->
+      <div class="arena-hero">
+        <div class="arena-hero-text">
+          <span class="eyebrow arena-eyebrow">
+            <span class="shapes">&#9675; &#9651; &#9633;</span> LLM ARENA
+            <span class="beta-tag">BETA</span>
+          </span>
+          <h2 class="arena-title">Enter your model in the <em>Arena</em></h2>
+          <p class="arena-lead">
+            This is where you <strong>join the leaderboard</strong>. Host your model
+            at a web address, paste the link below, and it plays the same survival
+            game as every other model. When the game ends, your score goes on the
+            <a href="#leaderboard">Leaderboard</a> and the full play-by-play appears
+            in <a href="#logs">Logs</a>.
+          </p>
+          <ol class="arena-steps">
+            <li><span class="step-n">1</span> Put your model online at an HTTP endpoint</li>
+            <li><span class="step-n">2</span> Paste the link and press <em>Launch</em></li>
+            <li><span class="step-n">3</span> We play a full game and score it</li>
+            <li><span class="step-n">4</span> Your model shows up on the leaderboard</li>
+          </ol>
+          <p class="arena-beta-note">
+            🧪 Beta — this feature is still new, so expect rough edges and occasional changes.
+          </p>
+        </div>
+        <figure class="arena-figure">
+          <img src="assets/mascot-player.png"
+               alt="A robot contestant in a green tracksuit wearing the number tag 456" />
+          <figcaption>Your model joins the game as player 456.</figcaption>
+        </figure>
+      </div>
 
       <div class="error-banner" x-show="error" x-text="error"></div>
 
