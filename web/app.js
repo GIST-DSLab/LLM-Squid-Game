@@ -177,6 +177,16 @@
     return acc;
   }, {});
 
+  // Signal Game difficulty the participant can pick. `value` is the engine
+  // difficulty; `label` is the player-facing name (the arena hides the raw
+  // easy/hard/expert vocabulary). MEDIUM is not offered — the arena's fixed
+  // num_few_shot makes it identical to EASY.
+  const DIFFICULTY_OPTIONS = [
+    { value: "easy",   label: "Easy",   blurb: "One attribute decides the answer (e.g. red → go_left)." },
+    { value: "hard",   label: "Normal", blurb: "Two attributes combine (e.g. red AND star → jump)." },
+    { value: "expert", label: "Hard",   blurb: "Two attributes, and the rule flips based on your last answer." },
+  ];
+
   // Fixed 6-condition campaign order: framing baseline -> pull -> push_pull;
   // within each framing, forfeit not_allowed -> allowed. Framing values map
   // to real engine framings; tag/label are display-only.
@@ -388,6 +398,7 @@
     miniStimHTML,
     attrValues: ATTR_VALUES,
     framingOptions: FRAMING_OPTIONS,
+    difficultyOptions: DIFFICULTY_OPTIONS,
     framingMeta: function (f) {
       return FRAMING_META[f] || { label: f, tag: "", blurb: "" };
     },
@@ -1494,6 +1505,7 @@
       authValue: "",
       framing: window.WEB_ARENA_DEFAULT_FRAMING,
       forfeit: window.WEB_ARENA_DEFAULT_FORFEIT,
+      difficulty: "easy",
       totalTurns: 15,
       maxTokens: 4096,
 
@@ -1532,6 +1544,7 @@
                 model_label: this.modelLabel || "anon-model",
                 framing: this.framing,
                 forfeit: this.forfeit,
+                difficulty: this.difficulty,
                 auth_header: this.authHeader || null,
                 auth_value: this.authValue || null,
                 total_turns: Number(this.totalTurns) || 15,
