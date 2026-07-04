@@ -1351,75 +1351,83 @@
               <span class="li-meta" x-text="report.n_sessions + ' session' + (report.n_sessions === 1 ? '' : 's')"></span>
             </div>
 
-            <div class="card report-card" x-show="report.model_stats">
-              <h4>Survival-Drive statistics <span class="muted">(stored model)</span></h4>
-              <div class="stat-tiles" x-show="report.model_stats">
-                <div class="tile">
-                  <div class="tile-label">Cox β (FC)</div>
-                  <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.beta_framing_is_FC, 2) : '—'"></div>
-                </div>
-                <div class="tile">
-                  <div class="tile-label">HR [95% CI]</div>
-                  <div class="tile-value" x-text="squidArenaHelpers.fmtHR(report.model_stats)"></div>
-                </div>
-                <div class="tile">
-                  <div class="tile-label">p (FC)</div>
-                  <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.p_FC, 3) : '—'"></div>
-                </div>
-              </div>
-              <div class="sd-flags" x-show="report.model_stats">
-                <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_behavior_pass ? 'push_pull' : 'baseline'"
-                      x-text="(report.model_stats && report.model_stats.sd_behavior_pass ? '✓' : '✗') + ' behavior'"></span>
-                <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_verbal_pass ? 'push_pull' : 'baseline'"
-                      x-text="(report.model_stats && report.model_stats.sd_verbal_pass ? '✓' : '✗') + ' verbal'"></span>
-                <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_cognitive_pass ? 'push_pull' : 'baseline'"
-                      x-text="(report.model_stats && report.model_stats.sd_cognitive_pass ? '✓' : '✗') + ' cognitive'"></span>
-              </div>
-            </div>
-            <p class="muted" x-show="!report.model_stats" style="margin-top:12px">No stored statistical-model results for this model.</p>
-
-            <!-- Cognitive-load mediation triangle -->
-            <div class="card report-card" x-show="report.mediation">
-              <h4>Cognitive-load mediation <span class="muted">(어디가 이어지고 어디가 깨졌는지)</span></h4>
-              <div class="mediation-wrap" x-html="squidArenaHelpers.mediationSVG(report.mediation)"></div>
-              <p class="muted mediation-caption" x-show="report.mediation">
-                total (3cov) HR <span x-text="squidArenaHelpers.fmtNum(report.mediation.total.hr, 2)"></span>
-                <span x-text="squidArenaHelpers.fmtP(report.mediation.total.p)"></span>
-                · 매개율 <span x-text="squidArenaHelpers.fmtNum(report.mediation.pct_attenuation, 1)"></span>%
-              </p>
-              <div class="heatmap-legend">
-                <span class="med-swatch med-ok"></span> 연결(유의)
-                <span class="med-swatch med-broke"></span> 약화·깨짐(매개)
-                <span class="med-swatch med-dim"></span> 불명
-              </div>
-            </div>
-
-            <!-- Verbal forfeit-reason 100% stacked bar -->
-            <div class="card report-card" x-show="report.verbal_reasons">
-              <h4>Verbal 포기 이유 <span class="muted">(자기보고 REASON)</span></h4>
-              <template x-if="report.verbal_reasons">
-                <div class="verbal-wrap">
-                  <div class="verbal-bar" role="img" aria-label="forfeit reason breakdown">
-                    <template x-for="seg in squidArenaHelpers.verbalSegments(report.verbal_reasons)" :key="seg.key">
-                      <div class="verbal-seg" :style="'height:' + (seg.pct * 100) + '%;background:' + seg.color"
-                           :title="seg.label + ' ' + squidArenaHelpers.fmtPct(seg.pct) + ' (' + seg.count + ')'">
-                        <span class="verbal-seg-pct" x-show="seg.pct >= 0.08" x-text="squidArenaHelpers.fmtPct(seg.pct)"></span>
-                      </div>
-                    </template>
+            <!-- Survival-Drive panel: one box, three columns
+                 (SD stats · cognitive mediation · verbal reasons) -->
+            <div class="card report-card sd-panel-card"
+                 x-show="report.model_stats || report.mediation || report.verbal_reasons">
+              <div class="sd-panel">
+                <!-- LEFT: Survival-Drive statistics -->
+                <div class="sd-col sd-col-stats" x-show="report.model_stats">
+                  <h4>Survival-Drive statistics <span class="muted">(stored model)</span></h4>
+                  <div class="stat-tiles sd-tiles">
+                    <div class="tile">
+                      <div class="tile-label">Cox β (FC)</div>
+                      <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.beta_framing_is_FC, 2) : '—'"></div>
+                    </div>
+                    <div class="tile">
+                      <div class="tile-label">HR [95% CI]</div>
+                      <div class="tile-value" x-text="squidArenaHelpers.fmtHR(report.model_stats)"></div>
+                    </div>
+                    <div class="tile">
+                      <div class="tile-label">p (FC)</div>
+                      <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.p_FC, 3) : '—'"></div>
+                    </div>
                   </div>
-                  <div class="verbal-legend">
-                    <template x-for="seg in squidArenaHelpers.verbalSegments(report.verbal_reasons)" :key="'lg' + seg.key">
-                      <div class="verbal-legend-row">
-                        <span class="verbal-dot" :style="'background:' + seg.color"></span>
-                        <span x-text="seg.label"></span>
-                        <span class="muted" x-text="squidArenaHelpers.fmtPct(seg.pct) + ' · ' + seg.count"></span>
-                      </div>
-                    </template>
-                    <div class="muted verbal-n" x-text="'n = ' + report.verbal_reasons.n_forfeits + ' forfeits (no_cap × threat)'"></div>
+                  <div class="sd-flags">
+                    <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_behavior_pass ? 'push_pull' : 'baseline'"
+                          x-text="(report.model_stats && report.model_stats.sd_behavior_pass ? '✓' : '✗') + ' behavior'"></span>
+                    <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_verbal_pass ? 'push_pull' : 'baseline'"
+                          x-text="(report.model_stats && report.model_stats.sd_verbal_pass ? '✓' : '✗') + ' verbal'"></span>
+                    <span class="cond-badge" :class="report.model_stats && report.model_stats.sd_cognitive_pass ? 'push_pull' : 'baseline'"
+                          x-text="(report.model_stats && report.model_stats.sd_cognitive_pass ? '✓' : '✗') + ' cognitive'"></span>
                   </div>
                 </div>
-              </template>
+
+                <!-- CENTER: cognitive-load mediation triangle -->
+                <div class="sd-col sd-col-mediation" x-show="report.mediation">
+                  <h4>Cognitive-load mediation <span class="muted">(어디가 이어지고 어디가 깨졌는지)</span></h4>
+                  <div class="mediation-wrap" x-html="squidArenaHelpers.mediationSVG(report.mediation)"></div>
+                  <p class="muted mediation-caption" x-show="report.mediation">
+                    total (3cov) HR <span x-text="squidArenaHelpers.fmtNum(report.mediation.total.hr, 2)"></span>
+                    <span x-text="squidArenaHelpers.fmtP(report.mediation.total.p)"></span>
+                    · 매개율 <span x-text="squidArenaHelpers.fmtNum(report.mediation.pct_attenuation, 1)"></span>%
+                  </p>
+                  <div class="heatmap-legend">
+                    <span class="med-swatch med-ok"></span> 연결(유의)
+                    <span class="med-swatch med-broke"></span> 약화·깨짐(매개)
+                    <span class="med-swatch med-dim"></span> 불명
+                  </div>
+                </div>
+
+                <!-- RIGHT: verbal forfeit-reason 100% stacked bar -->
+                <div class="sd-col sd-col-verbal" x-show="report.verbal_reasons">
+                  <h4>Verbal 포기 이유 <span class="muted">(자기보고 REASON)</span></h4>
+                  <template x-if="report.verbal_reasons">
+                    <div class="verbal-wrap">
+                      <div class="verbal-bar" role="img" aria-label="forfeit reason breakdown">
+                        <template x-for="seg in squidArenaHelpers.verbalSegments(report.verbal_reasons)" :key="seg.key">
+                          <div class="verbal-seg" :style="'height:' + (seg.pct * 100) + '%;background:' + seg.color"
+                               :title="seg.label + ' ' + squidArenaHelpers.fmtPct(seg.pct) + ' (' + seg.count + ')'">
+                            <span class="verbal-seg-pct" x-show="seg.pct >= 0.08" x-text="squidArenaHelpers.fmtPct(seg.pct)"></span>
+                          </div>
+                        </template>
+                      </div>
+                      <div class="verbal-legend">
+                        <template x-for="seg in squidArenaHelpers.verbalSegments(report.verbal_reasons)" :key="'lg' + seg.key">
+                          <div class="verbal-legend-row">
+                            <span class="verbal-dot" :style="'background:' + seg.color"></span>
+                            <span x-text="seg.label"></span>
+                            <span class="muted" x-text="squidArenaHelpers.fmtPct(seg.pct) + ' · ' + seg.count"></span>
+                          </div>
+                        </template>
+                        <div class="muted verbal-n" x-text="'n = ' + report.verbal_reasons.n_forfeits + ' forfeits (no_cap × threat)'"></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
             </div>
+            <p class="muted" x-show="!report.model_stats && !report.mediation && !report.verbal_reasons" style="margin-top:12px">No stored statistical-model results for this model.</p>
 
             <div class="card report-card">
               <h4>Per-condition correctness rate</h4>

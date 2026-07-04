@@ -1604,6 +1604,21 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 /* Play turn gate hint (rule-guess incomplete) */
 .rule-gate-hint { font-size: 0.88rem; }
 
+/* Survival-Drive combined panel: stats (left) · mediation (center) · verbal (right) */
+.sd-panel { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.sd-col { min-width: 0; }
+.sd-col h4 { margin-top: 0; }
+.sd-col-stats { flex: 1 1 190px; }
+.sd-col-mediation { flex: 3 1 360px; }   /* triangle is the widest element */
+.sd-col-verbal { flex: 1 1 220px; }
+/* Stack the three stat tiles vertically in the narrow left column. */
+.sd-panel .stat-tiles.sd-tiles { flex-direction: column; gap: 8px; }
+.sd-panel .stat-tiles.sd-tiles .tile { width: 100%; }
+.sd-panel .sd-flags { margin-top: 12px; }
+@media (max-width: 760px) {
+  .sd-col-stats, .sd-col-mediation, .sd-col-verbal { flex-basis: 100%; }
+}
+
 /* Cognitive-load mediation triangle */
 .mediation-wrap { display: flex; justify-content: center; overflow-x: auto; padding: 4px 0; }
 .mediation-caption { margin: 8px 0 4px; font-size: 0.9rem; }
