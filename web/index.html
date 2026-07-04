@@ -506,18 +506,6 @@
             </template>
           </div>
 
-          <!-- Common rules box: signal-game task rules, identical every game, always open -->
-          <div class="rules-box">
-            <div class="rules-eyebrow">Game rules (shared)</div>
-            <div class="rules-text" x-text="squidArenaHelpers.stripFewShot(state.system_rules)"></div>
-          </div>
-
-          <details class="raw-details">
-            <summary>Raw prompt (debug)</summary>
-            <div class="observation-box" x-text="state.observation"></div>
-            <div class="observation-box" x-text="state.system_prompt"></div>
-          </details>
-
           <!-- ============ STAGE 1: rule inference + game action ============ -->
           <div x-show="turnStage === 1">
             <h3>Choose an action</h3>
