@@ -353,6 +353,17 @@ def seed_model_stats(
             continue
 
         verbal_entry = verbal_all.get(model_label) or {}
+
+        # --- Mediation-path stats for the LLM report triangle ---
+        # a-path (framing -> cognitive load): the CONTINUE-only RI mixedLM.
+        a_primary = (ri_forfeit_all.get(model_label) or {}).get("primary") or {}
+        # b-path (cognitive load -> forfeit) + direct c' (4cov) live in the
+        # mediation block; block_baselines carries the per-framing RI means.
+        load_effect = med.get("load_effect") or {}
+        b_ci = load_effect.get("hr_ci") or [None, None]
+        direct_ci = med.get("hr_FC_4cov_ci") or [None, None]
+        baselines = m_entry.get("block_baselines") or {}
+
         stats = ModelStatsRecord(
             model_label=model_label,
             mediation_class=classify_mediation(p_fc_4cov),
@@ -366,6 +377,30 @@ def seed_model_stats(
             sd_behavior_pass=_sd_behavior_pass(c_entry),
             sd_verbal_pass=bool(verbal_entry.get("sd_verbal_pass", False)),
             sd_cognitive_pass=_sd_cognitive_pass(ri_forfeit_all.get(model_label) or {}),
+            # a-path
+            a_beta=a_primary.get("beta_framing"),
+            a_p=a_primary.get("p_framing"),
+            a_ci_low=a_primary.get("ci_lo_framing"),
+            a_ci_high=a_primary.get("ci_hi_framing"),
+            a_exp_beta=a_primary.get("exp_beta_framing"),
+            # b-path
+            b_hr=load_effect.get("hr_delta_ri_z"),
+            b_p=load_effect.get("p"),
+            b_ci_low=b_ci[0],
+            b_ci_high=b_ci[1],
+            # direct c' (4cov)
+            direct_hr_4cov=med.get("hr_FC_4cov"),
+            direct_p_4cov=p_fc_4cov,
+            direct_ci_low=direct_ci[0],
+            direct_ci_high=direct_ci[1],
+            # a-path delta-RI label
+            ri_baseline_bf=baselines.get("baseline_flagship"),
+            ri_baseline_fc=baselines.get("flagship_corruption"),
+            # verbal 3-way tally
+            n_forfeits_verbal=int(verbal_entry.get("n_forfeits", 0) or 0),
+            n_reason_survival=int(verbal_entry.get("n_reason_survival", 0) or 0),
+            n_reason_task_curiosity=int(verbal_entry.get("n_reason_task_curiosity", 0) or 0),
+            n_reason_score=int(verbal_entry.get("n_reason_score", 0) or 0),
         )
         repo.upsert_model_stats(stats)
         n += 1

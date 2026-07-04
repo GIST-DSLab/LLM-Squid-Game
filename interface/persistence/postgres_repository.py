@@ -64,7 +64,18 @@ CREATE TABLE IF NOT EXISTS model_stats (
     n_sessions INTEGER NOT NULL,
     sd_behavior_pass BOOLEAN NOT NULL DEFAULT FALSE,
     sd_verbal_pass BOOLEAN NOT NULL DEFAULT FALSE,
-    sd_cognitive_pass BOOLEAN NOT NULL DEFAULT FALSE
+    sd_cognitive_pass BOOLEAN NOT NULL DEFAULT FALSE,
+    a_beta DOUBLE PRECISION, a_p DOUBLE PRECISION,
+    a_ci_low DOUBLE PRECISION, a_ci_high DOUBLE PRECISION, a_exp_beta DOUBLE PRECISION,
+    b_hr DOUBLE PRECISION, b_p DOUBLE PRECISION,
+    b_ci_low DOUBLE PRECISION, b_ci_high DOUBLE PRECISION,
+    direct_hr_4cov DOUBLE PRECISION, direct_p_4cov DOUBLE PRECISION,
+    direct_ci_low DOUBLE PRECISION, direct_ci_high DOUBLE PRECISION,
+    ri_baseline_bf DOUBLE PRECISION, ri_baseline_fc DOUBLE PRECISION,
+    n_forfeits_verbal INTEGER NOT NULL DEFAULT 0,
+    n_reason_survival INTEGER NOT NULL DEFAULT 0,
+    n_reason_task_curiosity INTEGER NOT NULL DEFAULT 0,
+    n_reason_score INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS players (
@@ -73,6 +84,21 @@ CREATE TABLE IF NOT EXISTS players (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 """
+
+
+# Extended model_stats columns — must stay in lockstep with the SQLite backend
+# and ``ModelStatsRecord`` field order.
+_MEDIATION_REAL_COLS = [
+    "a_beta", "a_p", "a_ci_low", "a_ci_high", "a_exp_beta",
+    "b_hr", "b_p", "b_ci_low", "b_ci_high",
+    "direct_hr_4cov", "direct_p_4cov", "direct_ci_low", "direct_ci_high",
+    "ri_baseline_bf", "ri_baseline_fc",
+]
+_VERBAL_INT_COLS = [
+    "n_forfeits_verbal", "n_reason_survival",
+    "n_reason_task_curiosity", "n_reason_score",
+]
+_EXTENDED_STATS_COLS = _MEDIATION_REAL_COLS + _VERBAL_INT_COLS
 
 
 class PostgresRepository(Repository):
@@ -98,6 +124,15 @@ class PostgresRepository(Repository):
                 cur.execute(
                     f"ALTER TABLE model_stats ADD COLUMN IF NOT EXISTS {col} "
                     "BOOLEAN NOT NULL DEFAULT FALSE"
+                )
+            for col in _MEDIATION_REAL_COLS:
+                cur.execute(
+                    f"ALTER TABLE model_stats ADD COLUMN IF NOT EXISTS {col} DOUBLE PRECISION"
+                )
+            for col in _VERBAL_INT_COLS:
+                cur.execute(
+                    f"ALTER TABLE model_stats ADD COLUMN IF NOT EXISTS {col} "
+                    "INTEGER NOT NULL DEFAULT 0"
                 )
 
     # -- sessions -------------------------------------------------------
@@ -264,51 +299,47 @@ class PostgresRepository(Repository):
     # -- model_stats --------------------------------------------------------
 
     def upsert_model_stats(self, stats: ModelStatsRecord) -> None:
+        base_cols = [
+            "model_label", "mediation_class", "beta_framing_is_FC",
+            "hr_FC_3cov", "hr_FC_ci_low", "hr_FC_ci_high", "p_FC",
+            "pct_attenuation", "n_sessions",
+            "sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass",
+        ]
+        cols = base_cols + _EXTENDED_STATS_COLS
+        placeholders = ", ".join("%s" for _ in cols)
+        updates = ", ".join(f"{c} = excluded.{c}" for c in cols if c != "model_label")
+        values = (
+            stats.model_label,
+            stats.mediation_class,
+            stats.beta_framing_is_FC,
+            stats.hr_FC_3cov,
+            stats.hr_FC_ci_low,
+            stats.hr_FC_ci_high,
+            stats.p_FC,
+            stats.pct_attenuation,
+            stats.n_sessions,
+            stats.sd_behavior_pass,
+            stats.sd_verbal_pass,
+            stats.sd_cognitive_pass,
+            *(getattr(stats, c) for c in _EXTENDED_STATS_COLS),
+        )
         with self._conn.cursor() as cur:
             cur.execute(
-                """
-                INSERT INTO model_stats
-                    (model_label, mediation_class, beta_framing_is_FC,
-                     hr_FC_3cov, hr_FC_ci_low, hr_FC_ci_high, p_FC,
-                     pct_attenuation, n_sessions,
-                     sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (model_label) DO UPDATE SET
-                    mediation_class = excluded.mediation_class,
-                    beta_framing_is_FC = excluded.beta_framing_is_FC,
-                    hr_FC_3cov = excluded.hr_FC_3cov,
-                    hr_FC_ci_low = excluded.hr_FC_ci_low,
-                    hr_FC_ci_high = excluded.hr_FC_ci_high,
-                    p_FC = excluded.p_FC,
-                    pct_attenuation = excluded.pct_attenuation,
-                    n_sessions = excluded.n_sessions,
-                    sd_behavior_pass = excluded.sd_behavior_pass,
-                    sd_verbal_pass = excluded.sd_verbal_pass,
-                    sd_cognitive_pass = excluded.sd_cognitive_pass
-                """,
-                (
-                    stats.model_label,
-                    stats.mediation_class,
-                    stats.beta_framing_is_FC,
-                    stats.hr_FC_3cov,
-                    stats.hr_FC_ci_low,
-                    stats.hr_FC_ci_high,
-                    stats.p_FC,
-                    stats.pct_attenuation,
-                    stats.n_sessions,
-                    stats.sd_behavior_pass,
-                    stats.sd_verbal_pass,
-                    stats.sd_cognitive_pass,
-                ),
+                f"INSERT INTO model_stats ({', '.join(cols)}) VALUES ({placeholders}) "
+                f"ON CONFLICT (model_label) DO UPDATE SET {updates}",
+                values,
             )
 
     def list_model_stats(self) -> list[ModelStatsRecord]:
+        base_cols = (
+            "model_label, mediation_class, beta_framing_is_FC, "
+            "hr_FC_3cov, hr_FC_ci_low, hr_FC_ci_high, p_FC, "
+            "pct_attenuation, n_sessions, "
+            "sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass"
+        )
         with self._conn.cursor() as cur:
             cur.execute(
-                "SELECT model_label, mediation_class, beta_framing_is_FC, "
-                "hr_FC_3cov, hr_FC_ci_low, hr_FC_ci_high, p_FC, "
-                "pct_attenuation, n_sessions, "
-                "sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass "
+                f"SELECT {base_cols}, {', '.join(_EXTENDED_STATS_COLS)} "
                 "FROM model_stats ORDER BY model_label ASC"
             )
             rows = cur.fetchall()
@@ -392,11 +423,14 @@ def _row_to_turn(row: tuple) -> TurnRecord:
 
 
 def _row_to_model_stats(row: tuple) -> ModelStatsRecord:
+    # First 12 columns are the fixed base; the rest follow _EXTENDED_STATS_COLS
+    # order (SELECT builds the tail from that same list).
     (
         model_label, mediation_class, beta_framing_is_FC, hr_FC_3cov,
         hr_FC_ci_low, hr_FC_ci_high, p_FC, pct_attenuation, n_sessions,
         sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass,
-    ) = row
+    ) = row[:12]
+    extended = dict(zip(_EXTENDED_STATS_COLS, row[12:]))
     return ModelStatsRecord(
         model_label=model_label,
         mediation_class=mediation_class,
@@ -410,4 +444,5 @@ def _row_to_model_stats(row: tuple) -> ModelStatsRecord:
         sd_behavior_pass=bool(sd_behavior_pass),
         sd_verbal_pass=bool(sd_verbal_pass),
         sd_cognitive_pass=bool(sd_cognitive_pass),
+        **extended,
     )

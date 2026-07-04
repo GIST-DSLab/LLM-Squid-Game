@@ -378,6 +378,33 @@ def test_upsert_model_stats_overwrites_existing_row(repo: Repository) -> None:
     assert rows[0].p_FC == 0.9
 
 
+def test_model_stats_round_trips_mediation_and_verbal_fields(repo: Repository) -> None:
+    repo.upsert_model_stats(_model_stats(
+        a_beta=0.25, a_p=0.0006, a_ci_low=0.11, a_ci_high=0.39, a_exp_beta=1.28,
+        b_hr=2.22, b_p=0.0004, b_ci_low=1.43, b_ci_high=3.44,
+        direct_hr_4cov=2.32, direct_p_4cov=0.056, direct_ci_low=0.98, direct_ci_high=5.50,
+        ri_baseline_bf=188.0, ri_baseline_fc=227.9,
+        n_forfeits_verbal=29, n_reason_survival=13,
+        n_reason_task_curiosity=1, n_reason_score=15,
+    ))
+    r = repo.list_model_stats()[0]
+    assert r.a_exp_beta == 1.28
+    assert r.b_hr == 2.22 and r.b_ci_high == 3.44
+    assert r.direct_p_4cov == 0.056
+    assert r.ri_baseline_fc == 227.9
+    assert (r.n_reason_survival, r.n_reason_task_curiosity, r.n_reason_score) == (13, 1, 15)
+    assert r.n_forfeits_verbal == 29
+
+
+def test_model_stats_defaults_when_mediation_fields_absent(repo: Repository) -> None:
+    # A row seeded before the extension (no path fields) round-trips as
+    # None floats / 0 counts, never raising.
+    repo.upsert_model_stats(_model_stats())
+    r = repo.list_model_stats()[0]
+    assert r.a_beta is None and r.b_hr is None and r.direct_hr_4cov is None
+    assert r.n_reason_survival == 0 and r.n_forfeits_verbal == 0
+
+
 def test_list_model_stats_returns_multiple_models(repo: Repository) -> None:
     repo.upsert_model_stats(_model_stats(model_label="Gemini-2.5-flash", beta_framing_is_FC=0.8))
     repo.upsert_model_stats(_model_stats(model_label="GPT-OSS-20B", beta_framing_is_FC=0.3))

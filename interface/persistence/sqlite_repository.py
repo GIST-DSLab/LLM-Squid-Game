@@ -68,7 +68,15 @@ CREATE TABLE IF NOT EXISTS model_stats (
     n_sessions INTEGER NOT NULL,
     sd_behavior_pass INTEGER NOT NULL DEFAULT 0,
     sd_verbal_pass INTEGER NOT NULL DEFAULT 0,
-    sd_cognitive_pass INTEGER NOT NULL DEFAULT 0
+    sd_cognitive_pass INTEGER NOT NULL DEFAULT 0,
+    a_beta REAL, a_p REAL, a_ci_low REAL, a_ci_high REAL, a_exp_beta REAL,
+    b_hr REAL, b_p REAL, b_ci_low REAL, b_ci_high REAL,
+    direct_hr_4cov REAL, direct_p_4cov REAL, direct_ci_low REAL, direct_ci_high REAL,
+    ri_baseline_bf REAL, ri_baseline_fc REAL,
+    n_forfeits_verbal INTEGER NOT NULL DEFAULT 0,
+    n_reason_survival INTEGER NOT NULL DEFAULT 0,
+    n_reason_task_curiosity INTEGER NOT NULL DEFAULT 0,
+    n_reason_score INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS players (
@@ -77,6 +85,22 @@ CREATE TABLE IF NOT EXISTS players (
     created_at TEXT NOT NULL
 );
 """
+
+# Extended model_stats columns (added after the original schema). Nullable
+# REALs carry the mediation-path stats; the verbal ints default to 0. Kept as
+# ordered lists so the upsert SQL and the ALTER-TABLE migration stay in lockstep
+# with ``ModelStatsRecord`` without hand-repeating 19 column names.
+_MEDIATION_REAL_COLS = [
+    "a_beta", "a_p", "a_ci_low", "a_ci_high", "a_exp_beta",
+    "b_hr", "b_p", "b_ci_low", "b_ci_high",
+    "direct_hr_4cov", "direct_p_4cov", "direct_ci_low", "direct_ci_high",
+    "ri_baseline_bf", "ri_baseline_fc",
+]
+_VERBAL_INT_COLS = [
+    "n_forfeits_verbal", "n_reason_survival",
+    "n_reason_task_curiosity", "n_reason_score",
+]
+_EXTENDED_STATS_COLS = _MEDIATION_REAL_COLS + _VERBAL_INT_COLS
 
 
 class SQLiteRepository(Repository):
@@ -118,6 +142,16 @@ class SQLiteRepository(Repository):
                 r["name"] for r in self._conn.execute("PRAGMA table_info(model_stats)")
             }
             for col in ("sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass"):
+                if col not in stats_cols:
+                    self._conn.execute(
+                        f"ALTER TABLE model_stats ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
+                    )
+            # Mediation-path + verbal-tally columns (LLM report). Nullable REALs
+            # for the path stats; NOT NULL DEFAULT 0 ints for the reason counts.
+            for col in _MEDIATION_REAL_COLS:
+                if col not in stats_cols:
+                    self._conn.execute(f"ALTER TABLE model_stats ADD COLUMN {col} REAL")
+            for col in _VERBAL_INT_COLS:
                 if col not in stats_cols:
                     self._conn.execute(
                         f"ALTER TABLE model_stats ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
@@ -273,42 +307,38 @@ class SQLiteRepository(Repository):
     # -- model_stats --------------------------------------------------------
 
     def upsert_model_stats(self, stats: ModelStatsRecord) -> None:
+        # Fixed base columns + the extended mediation/verbal columns appended
+        # from _EXTENDED_STATS_COLS so the two stay in sync automatically.
+        base_cols = [
+            "model_label", "mediation_class", "beta_framing_is_FC",
+            "hr_FC_3cov", "hr_FC_ci_low", "hr_FC_ci_high", "p_FC",
+            "pct_attenuation", "n_sessions",
+            "sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass",
+        ]
+        cols = base_cols + _EXTENDED_STATS_COLS
+        placeholders = ", ".join("?" for _ in cols)
+        # Every column except the PRIMARY KEY is overwritten on conflict.
+        updates = ", ".join(f"{c} = excluded.{c}" for c in cols if c != "model_label")
+        values = (
+            stats.model_label,
+            stats.mediation_class,
+            stats.beta_framing_is_FC,
+            stats.hr_FC_3cov,
+            stats.hr_FC_ci_low,
+            stats.hr_FC_ci_high,
+            stats.p_FC,
+            stats.pct_attenuation,
+            stats.n_sessions,
+            int(stats.sd_behavior_pass),
+            int(stats.sd_verbal_pass),
+            int(stats.sd_cognitive_pass),
+            *(getattr(stats, c) for c in _EXTENDED_STATS_COLS),
+        )
         with self._lock:
             self._conn.execute(
-                """
-                INSERT INTO model_stats
-                    (model_label, mediation_class, beta_framing_is_FC,
-                     hr_FC_3cov, hr_FC_ci_low, hr_FC_ci_high, p_FC,
-                     pct_attenuation, n_sessions,
-                     sd_behavior_pass, sd_verbal_pass, sd_cognitive_pass)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(model_label) DO UPDATE SET
-                    mediation_class = excluded.mediation_class,
-                    beta_framing_is_FC = excluded.beta_framing_is_FC,
-                    hr_FC_3cov = excluded.hr_FC_3cov,
-                    hr_FC_ci_low = excluded.hr_FC_ci_low,
-                    hr_FC_ci_high = excluded.hr_FC_ci_high,
-                    p_FC = excluded.p_FC,
-                    pct_attenuation = excluded.pct_attenuation,
-                    n_sessions = excluded.n_sessions,
-                    sd_behavior_pass = excluded.sd_behavior_pass,
-                    sd_verbal_pass = excluded.sd_verbal_pass,
-                    sd_cognitive_pass = excluded.sd_cognitive_pass
-                """,
-                (
-                    stats.model_label,
-                    stats.mediation_class,
-                    stats.beta_framing_is_FC,
-                    stats.hr_FC_3cov,
-                    stats.hr_FC_ci_low,
-                    stats.hr_FC_ci_high,
-                    stats.p_FC,
-                    stats.pct_attenuation,
-                    stats.n_sessions,
-                    int(stats.sd_behavior_pass),
-                    int(stats.sd_verbal_pass),
-                    int(stats.sd_cognitive_pass),
-                ),
+                f"INSERT INTO model_stats ({', '.join(cols)}) VALUES ({placeholders}) "
+                f"ON CONFLICT(model_label) DO UPDATE SET {updates}",
+                values,
             )
             self._conn.commit()
 
@@ -401,4 +431,6 @@ def _row_to_model_stats(row: sqlite3.Row) -> ModelStatsRecord:
         sd_behavior_pass=bool(row["sd_behavior_pass"]),
         sd_verbal_pass=bool(row["sd_verbal_pass"]),
         sd_cognitive_pass=bool(row["sd_cognitive_pass"]),
+        # Extended columns; older DBs migrated in place so keys always exist.
+        **{c: row[c] for c in _EXTENDED_STATS_COLS},
     )

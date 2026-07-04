@@ -97,6 +97,33 @@ class ModelStatsRecord:
     sd_verbal_pass: bool = False
     sd_cognitive_pass: bool = False
 
+    # --- Cognitive-load mediation path (LLM report triangle) ---
+    # a-path: framing -> cognitive load (CONTINUE-only mixedLM on log ri_forfeit).
+    a_beta: float | None = None
+    a_p: float | None = None
+    a_ci_low: float | None = None
+    a_ci_high: float | None = None
+    a_exp_beta: float | None = None
+    # b-path: cognitive load (delta_ri_z) -> forfeit (Cox load_effect).
+    b_hr: float | None = None
+    b_p: float | None = None
+    b_ci_low: float | None = None
+    b_ci_high: float | None = None
+    # direct c': framing -> forfeit controlling for the mediator (4cov).
+    direct_hr_4cov: float | None = None
+    direct_p_4cov: float | None = None
+    direct_ci_low: float | None = None
+    direct_ci_high: float | None = None
+    # a-path delta-RI label: per-framing block RI baselines.
+    ri_baseline_bf: float | None = None
+    ri_baseline_fc: float | None = None
+
+    # --- Verbal forfeit-reason 3-way tally (no_cap x threat forfeits) ---
+    n_forfeits_verbal: int = 0
+    n_reason_survival: int = 0
+    n_reason_task_curiosity: int = 0
+    n_reason_score: int = 0
+
 
 @dataclass
 class PlayerRecord:
