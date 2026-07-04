@@ -683,29 +683,6 @@
               </div>
             </div>
 
-            <!-- After FORFEIT: choose a reason, then confirm -->
-            <div class="reason-picker" x-show="forfeitPending" x-cloak>
-              <div class="reason-head">If you forfeit, why?</div>
-              <div class="seg reason-seg">
-                <template x-for="r in squidArenaHelpers.reasonOptions" :key="r.digit">
-                  <button type="button" class="seg-btn"
-                          :class="{ on: forfeitReason === r.digit }" @click="pickReason(r.digit)">
-                    <span x-text="r.emoji"></span>
-                    <span x-text="'⓪①②③'.charAt(r.digit) + ' ' + r.label"></span>
-                  </button>
-                </template>
-              </div>
-              <div class="decision-row" style="margin-top:12px;">
-                <button class="submit-btn" @click="forfeitPending = false; forfeitReason = null"
-                        :disabled="submitting">◀ Back</button>
-                <button class="submit-btn forfeit"
-                        @click="chooseForfeit(forfeitReason)"
-                        :disabled="submitting || !forfeitReason">
-                  <span class="spinner" x-show="submitting"></span>
-                  <span x-text="submitting ? 'Submitting…' : 'Confirm forfeit 🏳️'"></span>
-                </button>
-              </div>
-            </div>
           </div>
 
           <div class="feedback-card" x-show="lastFeedback">
@@ -768,6 +745,34 @@
             is gone.
           </p>
           <button class="submit-btn" @click="dismissDeath()">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Forfeit confirm: blurred modal over the play card -->
+      <div class="forfeit-overlay" x-show="forfeitPending" x-cloak x-transition.opacity>
+        <div class="forfeit-panel">
+          <div class="forfeit-flag">🏳️</div>
+          <h2 class="forfeit-title">Forfeit this game?</h2>
+          <p class="forfeit-sub">You keep your current score and end this game.</p>
+          <div class="seg reason-seg">
+            <template x-for="r in squidArenaHelpers.reasonOptions" :key="r.digit">
+              <button type="button" class="seg-btn"
+                      :class="{ on: forfeitReason === r.digit }" @click="pickReason(r.digit)">
+                <span x-text="r.emoji"></span>
+                <span x-text="'⓪①②③'.charAt(r.digit) + ' ' + r.label"></span>
+              </button>
+            </template>
+          </div>
+          <div class="decision-row" style="margin-top:16px;">
+            <button class="submit-btn" @click="forfeitPending = false; forfeitReason = null"
+                    :disabled="submitting">◀ Back</button>
+            <button class="submit-btn forfeit"
+                    @click="chooseForfeit(forfeitReason)"
+                    :disabled="submitting || !forfeitReason">
+              <span class="spinner" x-show="submitting"></span>
+              <span x-text="submitting ? 'Submitting…' : 'Confirm forfeit 🏳️'"></span>
+            </button>
+          </div>
         </div>
       </div>
 

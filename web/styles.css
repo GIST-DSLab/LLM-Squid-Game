@@ -1763,3 +1763,22 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
   font: 700 12px/1 var(--mono); color: var(--text-dim);
   background: var(--panel);
 }
+
+/* ---- Forfeit confirm overlay (mirrors .death-overlay) --------------- */
+.forfeit-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8, 6, 10, 0.72);
+  backdrop-filter: blur(4px);
+}
+.forfeit-panel {
+  text-align: center; padding: 28px 26px; max-width: 380px; width: 90%;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+}
+.forfeit-flag { font-size: 48px; line-height: 1; }
+.forfeit-title {
+  font-family: var(--font-display); letter-spacing: 0.04em;
+  color: var(--text); margin: 10px 0 6px;
+}
+.forfeit-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 18px; }
