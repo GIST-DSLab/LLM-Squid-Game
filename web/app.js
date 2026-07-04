@@ -1085,9 +1085,10 @@
       },
 
       async buildLadder() {
+        this.rankLadder = null;
         // Player's own number is local: mean finalScore across games played.
         const games = this.campaignResults.length;
-        if (games === 0) { this.rankLadder = null; return; }
+        if (games === 0) { return; }
         const total = this.campaignResults.reduce((s, g) => s + (g.finalScore || 0), 0);
         const you = { label: this.nickname || "You", score: total / games };
         try {
