@@ -1126,6 +1126,16 @@
             <button type="button" class="seg-btn" :class="{ on: forfeit === 'not_allowed' }" @click="forfeit = 'not_allowed'">⛔ Not allowed</button>
           </div>
 
+          <label class="muted" style="margin-top:14px; display:block;">Difficulty</label>
+          <div class="cond-cards">
+            <template x-for="opt in squidArenaHelpers.difficultyOptions" :key="opt.value">
+              <div class="cond-card" :class="{ on: difficulty === opt.value }" @click="difficulty = opt.value">
+                <span class="cond-label" x-text="opt.label"></span>
+                <span class="cond-blurb" x-text="opt.blurb"></span>
+              </div>
+            </template>
+          </div>
+
           <div class="field" style="margin-top:14px; max-width:180px;">
             <label for="a-turns">Turns</label>
             <input id="a-turns" type="number" min="1" max="30" x-model.number="totalTurns" />
