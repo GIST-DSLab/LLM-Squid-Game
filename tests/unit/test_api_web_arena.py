@@ -431,8 +431,8 @@ def test_new_game_persists_campaign_id_and_play_leaderboard_sums_it(
     assert by_id["camp-1"]["games_played"] == 2
     # Solo game is its own single-game campaign keyed by its session id.
     assert by_id[g3]["games_played"] == 1
-    # Ranked by total_score descending.
-    scores = [c["total_score"] for c in body["campaigns"]]
+    # Ranked by avg_score descending.
+    scores = [c["avg_score"] for c in body["campaigns"]]
     assert scores == sorted(scores, reverse=True)
 
 
@@ -440,6 +440,27 @@ def test_play_leaderboard_empty_returns_empty_list(client: TestClient) -> None:
     resp = client.get("/api/leaderboard/play")
     assert resp.status_code == 200
     assert resp.json() == {"campaigns": []}
+
+
+def test_play_leaderboard_uses_average_not_sum(client, api_module) -> None:
+    """The board reports per-game average (total / games_played), not the sum.
+    A campaign of two games scoring 10 and 30 must show 20.0, never 40.0."""
+    _seed_session(
+        api_module, nickname="avgtester", source="human",
+        campaign_id="camp-avg", final_score=10.0,
+        created_at="2026-03-01T00:00:00+00:00",
+    )
+    _seed_session(
+        api_module, nickname="avgtester", source="human",
+        campaign_id="camp-avg", final_score=30.0,
+        created_at="2026-03-02T00:00:00+00:00",
+    )
+
+    body = client.get("/api/leaderboard/play").json()
+    row = next(c for c in body["campaigns"] if c["campaign_id"] == "camp-avg")
+    assert row["games_played"] == 2
+    assert row["avg_score"] == 20.0          # mean, not the 40.0 sum
+    assert "total_score" not in row          # field renamed, not duplicated
 
 
 def test_logs_lists_sessions_and_detail_returns_turn_trace(
@@ -832,8 +853,9 @@ def test_leaderboard_best_per_nickname(client) -> None:
     board = client.get("/api/leaderboard/play").json()["campaigns"]
     erin_rows = [c for c in board if c["nickname"] == "erin"]
     assert len(erin_rows) == 1
-    # The surviving row must be the HIGHER-total campaign, not merely first-seen.
-    assert erin_rows[0]["total_score"] == max(total_a, total_b)
+    # Each campaign here is a single game, so its per-game average equals that
+    # game's final score; the surviving row is still the higher-scoring campaign.
+    assert erin_rows[0]["avg_score"] == max(total_a, total_b)
 
 
 def test_reward_preview_matches_engine(client) -> None:

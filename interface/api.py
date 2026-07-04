@@ -426,18 +426,18 @@ class ModelScoresResponse(BaseModel):
 
 
 class PlayLeaderboardRow(BaseModel):
-    """One player's Play campaign, ranked by cumulative 6-game score."""
+    """One player's Play campaign, ranked by per-game average score."""
 
     campaign_id: str = Field(description="Campaign id, or the session id for an ungrouped one-off game")
     nickname: str
-    total_score: float = Field(description="Sum of final_score across the campaign's games")
+    avg_score: float = Field(description="Mean final_score per game across the campaign's games")
     games_played: int = Field(description="Number of games in the campaign (up to 6)")
     forfeits: int = Field(description="How many of those games ended in forfeit")
     created_at: str | None = Field(default=None, description="Most recent play time in the campaign")
 
 
 class PlayLeaderboardResponse(BaseModel):
-    """Human Play Leaderboard: campaigns ranked by total_score descending."""
+    """Human Play Leaderboard: campaigns ranked by avg_score descending."""
 
     campaigns: list[PlayLeaderboardRow]
 
@@ -1007,7 +1007,8 @@ def leaderboard_play():
 
     Human sessions are grouped by ``campaign_id`` (the 6 games of one Play run);
     a session with no campaign_id counts as its own single-game campaign. Within
-    a campaign the final scores are summed, and campaigns are ranked descending.
+    a campaign the final scores are averaged per game, and campaigns are ranked
+    by that average descending.
     """
     sessions = _repository.list_sessions(source="human")  # newest-first
     campaigns: dict[str, dict] = {}
@@ -1020,24 +1021,31 @@ def leaderboard_play():
             agg = {
                 "campaign_id": key,
                 "nickname": s.nickname,
-                "total_score": 0.0,
+                "_total": 0.0,
                 "games_played": 0,
                 "forfeits": 0,
                 "created_at": s.created_at,
             }
             campaigns[key] = agg
-        agg["total_score"] += s.final_score
+        agg["_total"] += s.final_score
         agg["games_played"] += 1
         agg["forfeits"] += 1 if s.forfeited else 0
 
-    # Best-per-nickname: keep only each nickname's highest-total campaign.
+    # Per-game average = campaign total / games played. games_played >= 1 by
+    # construction (a campaign exists only because a session created it); guard
+    # defensively anyway. Drop the running total so only response fields remain.
+    for agg in campaigns.values():
+        played = agg["games_played"]
+        agg["avg_score"] = agg.pop("_total") / played if played else 0.0
+
+    # Best-per-nickname: keep only each nickname's highest-average campaign.
     best_by_nick: dict[str, dict] = {}
     for agg in campaigns.values():
         cur = best_by_nick.get(agg["nickname"])
-        if cur is None or agg["total_score"] > cur["total_score"]:
+        if cur is None or agg["avg_score"] > cur["avg_score"]:
             best_by_nick[agg["nickname"]] = agg
 
-    ranked = sorted(best_by_nick.values(), key=lambda a: a["total_score"], reverse=True)
+    ranked = sorted(best_by_nick.values(), key=lambda a: a["avg_score"], reverse=True)
     return PlayLeaderboardResponse(campaigns=[PlayLeaderboardRow(**a) for a in ranked])
 
 
