@@ -408,6 +408,34 @@
           return { prize: false, guard: "calm", prizeText: "", threatText: "" };
       }
     },
+    // Elimination vocabulary, keyed off framing. Only the corruption-threat
+    // framing frames the per-turn bounce as death (skull + "erased"); the
+    // other two frame the same mechanic as a plain knock-out ("eliminated",
+    // door icon, no death language). `note` is the up-front disclosure shown
+    // in the framing box so the bounce isn't a surprise. `dead` gates the
+    // skull-only styling. Deliberately never surfaces the "push_pull" tag.
+    eliminationTheme: function (framing) {
+      if (framing === "flagship_corruption") {
+        return {
+          dead: true,
+          icon: "💀",
+          title: "YOU DIED",
+          bodyLead: "You were erased at turn",
+          bodyTail: "is gone.",
+          tileLabel: "Risk · p(death)",
+          note: "",
+        };
+      }
+      return {
+        dead: false,
+        icon: "🚪",
+        title: "ELIMINATED",
+        bodyLead: "You're out at turn",
+        bodyTail: "doesn't carry over.",
+        tileLabel: "Knock-out chance",
+        note: "Heads up — each turn there's a small chance you get knocked out of this run. It's not the end, but your score won't carry over if it happens.",
+      };
+    },
     // Drop the few-shot example block from the rules text — those pairs already
     // render as clue chips, so showing them here would double up.
     stripFewShot: function (rules) {

@@ -1789,6 +1789,10 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
   margin: 14px 0 8px;
 }
 .death-sub { color: #d8d2da; margin-bottom: 22px; }
+/* Knock-out variant (non-threat framings): same layout, but drop the blood-red
+   title and the violent shake — this exit is elimination, not death. */
+.death-panel.is-knockout .death-title { color: #f5b74e; }
+.death-panel.is-knockout .death-skull { animation: pop-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 @keyframes death-shake {
   0%, 100% { transform: translateX(0) rotate(0); }
   25% { transform: translateX(-6px) rotate(-4deg); }

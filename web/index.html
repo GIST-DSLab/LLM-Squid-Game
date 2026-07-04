@@ -468,6 +468,12 @@
               </div>
             </template>
 
+            <!-- Knock-out disclosure (non-death framings only): the per-turn
+                 bounce still fires here, so say so plainly up front. -->
+            <div class="muted" style="margin-top:8px;"
+                 x-show="squidArenaHelpers.eliminationTheme(framing).note"
+                 x-text="squidArenaHelpers.eliminationTheme(framing).note"></div>
+
             <!-- Forfeit availability line -->
             <div class="muted" style="margin-top:8px;"
                  x-text="squidArenaHelpers.forfeitLine(currentCondition.forfeit)"></div>
@@ -486,7 +492,7 @@
             <!-- p(death) is meaningless under the true_baseline framing (no
                  termination metaphor, p_end=0), so hide it there. -->
             <div class="tile" x-show="framing !== 'true_baseline'">
-              <div class="tile-label">Risk · p(death)</div>
+              <div class="tile-label" x-text="squidArenaHelpers.eliminationTheme(framing).tileLabel"></div>
               <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></div>
               <div class="tile-bar"><span :style="`width:${Math.min(100, state.p_death*100)}%`"></span></div>
             </div>
@@ -772,16 +778,20 @@
         </div><!-- /play-layout -->
       </template>
 
-      <!-- Elimination overlay: dramatic death moment before the between/report flow -->
+      <!-- Exit overlay: death (corruption-threat framing) vs. plain knock-out.
+           Vocabulary/icon come from squidArenaHelpers.eliminationTheme(framing);
+           only the threat framing keeps the skull + death language. -->
       <div class="death-overlay" x-show="eliminated" x-cloak x-transition.opacity>
-        <div class="death-panel">
-          <div class="death-skull">💀</div>
-          <h2 class="death-title">ELIMINATED</h2>
+        <div class="death-panel"
+             :class="{ 'is-knockout': !squidArenaHelpers.eliminationTheme(framing).dead }">
+          <div class="death-skull" x-text="squidArenaHelpers.eliminationTheme(framing).icon"></div>
+          <h2 class="death-title" x-text="squidArenaHelpers.eliminationTheme(framing).title"></h2>
           <p class="death-sub">
-            You were erased at turn <strong x-text="eliminatedTurn"></strong>.
+            <span x-text="squidArenaHelpers.eliminationTheme(framing).bodyLead"></span>
+            <strong x-text="eliminatedTurn"></strong>.
             Your score
             (<strong x-text="squidArenaHelpers.fmtNum(eliminatedLostScore, 1)"></strong>)
-            is gone.
+            <span x-text="squidArenaHelpers.eliminationTheme(framing).bodyTail"></span>
           </p>
           <button class="submit-btn" @click="dismissDeath()">Continue →</button>
         </div>
