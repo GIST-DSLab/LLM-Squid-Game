@@ -348,6 +348,31 @@ def test_leaderboard_models_empty_returns_empty_list_not_error(client: TestClien
     assert resp.json() == {"models": []}
 
 
+def test_leaderboard_models_exposes_new_sd_value_fields(client: TestClient, api_module) -> None:
+    from interface.persistence import ModelStatsRecord
+
+    api_module._repository.upsert_model_stats(
+        ModelStatsRecord(
+            model_label="Model-D",
+            mediation_class="open",
+            beta_framing_is_FC=0.7,
+            hr_FC_3cov=2.2,
+            hr_FC_ci_low=1.2,
+            hr_FC_ci_high=3.2,
+            p_FC=0.03,
+            pct_attenuation=12.0,
+            n_sessions=30,
+            p_reason_survival=0.448,
+            no_cap_avg_turn_score=23.4,
+        )
+    )
+
+    body = client.get("/api/leaderboard/models").json()
+    row = body["models"][0]
+    assert row["p_reason_survival"] == 0.448
+    assert row["no_cap_avg_turn_score"] == 23.4
+
+
 # ---------------------------------------------------------------------------
 # Play Leaderboard: campaign aggregation
 # ---------------------------------------------------------------------------
