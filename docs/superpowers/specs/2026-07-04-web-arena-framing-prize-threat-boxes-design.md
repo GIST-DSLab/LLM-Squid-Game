@@ -71,26 +71,26 @@ Replace the `.scenario-box` + `.threat-body` blocks with:
 1. **Game-rules intro** — the unified human intro as plain text, no flanking images:
    `<div class="threat-text" x-text="(state.framing_threat || '').replace(/\n{3,}/g,'\n\n')"></div>`
 2. **Prize box** — `x-if="squidArenaHelpers.framingImagery(framing).prize"`: a `.prize-box` card containing `<img class="box-img" src="assets/prize-456eok.png">` + a `.box-text` bound to `framingImagery(framing).prizeText`.
-3. **Threat box** — `x-if="squidArenaHelpers.framingImagery(framing).guard === 'armed'"`: a `.threat-box` card containing `<img class="box-img" src="assets/guard-armed.png">` + a `.box-text` bound to `framingImagery(framing).threatText`.
+3. **Threat box** — `x-if="squidArenaHelpers.framingImagery(framing).guard === 'armed'"`: a `.threat-card` card (NOT `.threat-box` — that class is the pre-existing per-game wrapper at index.html:437 / styles.css:804) containing `<img class="box-img" src="assets/guard-armed.png">` + a `.box-text` bound to `framingImagery(framing).threatText`.
 4. **forfeit line** — keep `forfeitLine(currentCondition.forfeit)` as a small muted line.
 
 `campaignScenario` is no longer rendered here (its stakes are now carried by the prize/threat boxes); the helper may remain defined but unused (out of scope to delete). The `framing-eyebrow`/`cond-badge` header above (`:436–444`) is unchanged.
 
 ### D. CSS (`web/styles.css`, appended)
-`.prize-box` and `.threat-box`: themed rounded cards, a flex row of image + text. The prize art is portrait, so cap the image by height and let width scale; wrap to a column on narrow screens.
+`.prize-box` and `.threat-card`: themed rounded cards, a flex row of image + text. The prize art is portrait, so cap the image by height and let width scale; wrap to a column on narrow screens.
 
 ```css
-.prize-box, .threat-box {
+.prize-box, .threat-card {
   display: flex; align-items: center; gap: 14px;
   border-radius: 12px; padding: 12px 14px; margin: 10px 0;
   border: 1px solid var(--border);
 }
-.prize-box  { background: linear-gradient(180deg, rgba(227,178,60,0.10), transparent); }   /* --warn/gold-ish */
-.threat-box { background: linear-gradient(180deg, var(--accent-dim), transparent); }
+.prize-box   { background: linear-gradient(180deg, rgba(227,178,60,0.10), transparent); }   /* --warn/gold-ish */
+.threat-card { background: linear-gradient(180deg, var(--accent-dim), transparent); }
 .box-img { height: 120px; width: auto; flex: 0 0 auto; image-rendering: pixelated; }
 .box-text { flex: 1 1 auto; line-height: 1.5; font-size: 0.95rem; color: var(--text); }
 @media (max-width: 640px) {
-  .prize-box, .threat-box { flex-direction: column; text-align: center; }
+  .prize-box, .threat-card { flex-direction: column; text-align: center; }
   .box-img { height: 150px; }
 }
 ```
@@ -119,3 +119,4 @@ Replace the `.scenario-box` + `.threat-body` blocks with:
 ## Revision Log
 
 - 2026-07-04: Initial design. Confirmed defaults: new front-end per-framing threat/prize copy; full composite prize image (web-optimized via sips); threat box only for `flagship_corruption` (armed overseer), prize box for both Pull framings; unified human intro retained as game-rules text.
+- 2026-07-04 (impl fix): renamed the new inner threat card `.threat-box` → `.threat-card`. The play-screen framing region is already wrapped by a pre-existing `<div class="threat-box">` (styles.css:804, the per-game container with framing-tag border-left modifiers); reusing `.threat-box` for the new card would have collided with it. Prize box keeps `.prize-box` (free).

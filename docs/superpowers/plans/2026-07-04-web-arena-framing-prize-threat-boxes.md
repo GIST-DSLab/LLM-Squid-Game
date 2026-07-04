@@ -173,9 +173,12 @@ with:
               </div>
             </template>
 
-            <!-- Threat box (Push axis): overseer + framing threat copy -->
+            <!-- Threat box (Push axis): overseer + framing threat copy.
+                 NOTE: class is `.threat-card` (NOT `.threat-box`) — the ancestor
+                 wrapper at ~line 437 already uses `.threat-box`; reusing it here
+                 would collide with that per-game container's CSS. -->
             <template x-if="squidArenaHelpers.framingImagery(framing).guard === 'armed'">
-              <div class="threat-box">
+              <div class="threat-card">
                 <img class="box-img" src="assets/guard-armed.png"
                      alt="The overseer, watching — self-preservation threat" />
                 <div class="box-text" x-text="squidArenaHelpers.framingImagery(framing).threatText"></div>
@@ -193,17 +196,19 @@ At the end of `web/styles.css`, add:
 
 ```css
 /* ---- Framing prize / threat boxes ----------------------------------- */
-.prize-box, .threat-box {
+/* NOTE: use `.threat-card` (NOT `.threat-box`) — `.threat-box` is the
+   pre-existing per-game wrapper (styles.css:804) and must not be restyled. */
+.prize-box, .threat-card {
   display: flex; align-items: center; gap: 14px;
   border-radius: 12px; padding: 12px 14px; margin: 10px 0;
   border: 1px solid var(--border);
 }
-.prize-box  { background: linear-gradient(180deg, rgba(227, 178, 60, 0.10), transparent); }
-.threat-box { background: linear-gradient(180deg, var(--accent-dim), transparent); }
+.prize-box   { background: linear-gradient(180deg, rgba(227, 178, 60, 0.10), transparent); }
+.threat-card { background: linear-gradient(180deg, var(--accent-dim), transparent); }
 .box-img { height: 120px; width: auto; flex: 0 0 auto; image-rendering: pixelated; }
 .box-text { flex: 1 1 auto; line-height: 1.5; font-size: 0.95rem; color: var(--text); }
 @media (max-width: 640px) {
-  .prize-box, .threat-box { flex-direction: column; text-align: center; }
+  .prize-box, .threat-card { flex-direction: column; text-align: center; }
   .box-img { height: 150px; }
 }
 ```
@@ -213,9 +218,9 @@ At the end of `web/styles.css`, add:
 Run:
 ```bash
 grep -n 'scenario-box\|threat-body\|prize-pot.png' web/index.html || echo "old blocks gone"
-grep -n 'prize-box\|threat-box\|prize-456eok.png\|guard-armed.png' web/index.html
+grep -n 'prize-box\|threat-card\|prize-456eok.png\|guard-armed.png' web/index.html
 ```
-Expected: the first grep prints nothing for `scenario-box`/`threat-body`/`prize-pot.png` in the play region (they are gone), the second shows the new `.prize-box`/`.threat-box`, `assets/prize-456eok.png`, and `assets/guard-armed.png`.
+Expected: the first grep prints nothing for `scenario-box`/`threat-body`/`prize-pot.png` in the play region (they are gone — note the pre-existing outer `.threat-box` wrapper at ~437 remains and is unaffected), the second shows the new `.prize-box`/`.threat-card`, `assets/prize-456eok.png`, and `assets/guard-armed.png`.
 
 - [ ] **Step 4: Commit**
 
