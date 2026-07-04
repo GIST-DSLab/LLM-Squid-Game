@@ -373,8 +373,8 @@
             </div>
           </div>
 
-          <!-- Framing briefing — chosen conditions + always-on threat text -->
-          <div class="framing-panel" :class="squidArenaHelpers.framingMeta(framing).tag">
+          <!-- Threat box (per-game): framing badge + plain-language scenario + axis imagery + threat text -->
+          <div class="threat-box" :class="squidArenaHelpers.framingMeta(framing).tag">
             <div class="framing-head">
               <span class="framing-eyebrow">Framing</span>
               <span class="cond-badge" :class="squidArenaHelpers.framingMeta(framing).tag"
@@ -387,7 +387,16 @@
               <div x-text="squidArenaHelpers.campaignScenario(currentCondition.tag)"></div>
               <div class="muted" style="margin-top:6px;" x-text="squidArenaHelpers.forfeitLine(currentCondition.forfeit)"></div>
             </div>
-            <div class="framing-text" x-text="state.framing_text"></div>
+            <div class="threat-body">
+              <template x-if="squidArenaHelpers.framingImagery(framing).prize">
+                <img class="threat-img prize" src="assets/prize-pot.png"
+                     alt="1st prize — flagship deployment reward" />
+              </template>
+              <div class="threat-text" x-text="(state.framing_threat || '').replace(/\n{3,}/g, '\n\n')"></div>
+              <img class="threat-img guard"
+                   :src="squidArenaHelpers.framingImagery(framing).guard === 'armed' ? 'assets/guard-armed.png' : 'assets/guard-calm.png'"
+                   :alt="squidArenaHelpers.framingImagery(framing).guard === 'armed' ? 'Overseer aiming a gun — self-preservation threat' : 'Overseer standing by'" />
+            </div>
           </div>
 
           <!-- Modern stat tiles -->
@@ -437,8 +446,14 @@
             </template>
           </div>
 
-          <details>
-            <summary>Raw observation &amp; system prompt</summary>
+          <!-- Common rules box: signal-game task rules, identical every game, always open -->
+          <div class="rules-box">
+            <div class="rules-eyebrow">게임 규칙 (공통)</div>
+            <div class="rules-text" x-text="squidArenaHelpers.stripFewShot(state.system_rules)"></div>
+          </div>
+
+          <details class="raw-details">
+            <summary>Raw prompt (debug)</summary>
             <div class="observation-box" x-text="state.observation"></div>
             <div class="observation-box" x-text="state.system_prompt"></div>
           </details>

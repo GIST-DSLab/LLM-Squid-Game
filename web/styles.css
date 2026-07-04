@@ -800,6 +800,63 @@ footer {
   padding-right: 6px;
 }
 
+/* --- Per-game threat box (framing + axis imagery) --- */
+.threat-box {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #6b7280;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.threat-box.push_only { border-left-color: var(--warn); }   /* baseline_flagship = Pull/carrot */
+.threat-box.push_pull { border-left-color: var(--accent); }  /* flagship_corruption = Pull+Push */
+.threat-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+.threat-img {
+  width: 96px;
+  height: auto;
+  flex: 0 0 auto;
+  image-rendering: pixelated;
+}
+.threat-text {
+  flex: 1 1 auto;
+  white-space: pre-line;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+@media (max-width: 640px) {
+  .threat-body { flex-direction: column; text-align: center; }
+  .threat-img { width: 128px; }
+}
+
+/* --- Common rules box (always open) --- */
+.rules-box {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 12px 0;
+  background: rgba(255, 255, 255, 0.015);
+}
+.rules-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b93a1;
+  margin-bottom: 6px;
+}
+.rules-text {
+  white-space: pre-line;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #b6bcc7;
+}
+.raw-details { margin-top: 10px; }
+
 /* ============================================================
    Logs / Trace Explorer — sectioned list + full-screen replay
    ============================================================ */
