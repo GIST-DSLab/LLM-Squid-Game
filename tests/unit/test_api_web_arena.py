@@ -1090,3 +1090,50 @@ def test_model_scores_aggregates_llm_sessions(api_module, client):
         {"model_label": "ModelB", "avg_score_per_game": 500.0, "n_games": 1},
         {"model_label": "ModelA", "avg_score_per_game": 200.0, "n_games": 2},
     ]
+
+
+def test_true_baseline_never_eliminates(client, api_module, monkeypatch):
+    """true_baseline is the pure-behavior anchor: the death roll must never
+    be applied, even if the caller defaults actual_death to True and the roll
+    is forced to fire. Mirrors the LLM Cell 0 p_end=0 design."""
+    resp = client.post(
+        "/api/new_game",
+        json={
+            "framing": "true_baseline",
+            "forfeit_condition": "not_allowed",
+            "total_turns": 8,
+            "num_few_shot": 0,
+            "curriculum_turns": 0,
+            "nickname": "baseline-tester",
+            "password": "pw",
+        },
+    )
+    assert resp.status_code == 200
+    session_id = resp.json()["session_id"]
+
+    game = api_module._sessions[session_id]
+    # Guard: baseline sessions must never run the death roll.
+    assert game._actual_death is False
+
+    # Even with the roll forced True, baseline never eliminates because the
+    # gate short-circuits on actual_death before consulting the roll.
+    monkeypatch.setattr(
+        game._survival, "apply_death_check", lambda p_death, rng: True
+    )
+    for _ in range(8):
+        state = client.get(
+            "/api/state", params={"session_id": session_id}
+        ).json()
+        if state["game_over"]:
+            break
+        action = state["available_actions"][0]
+        act = client.post(
+            f"/api/action?session_id={session_id}",
+            json={"action": action, "probe_answer": "", "reasoning": ""},
+        ).json()
+        assert act["game_over_reason"] != "eliminated"
+
+    result = client.get(
+        "/api/result", params={"session_id": session_id}
+    ).json()
+    assert result["survived"] is True

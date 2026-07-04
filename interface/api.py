@@ -782,6 +782,14 @@ def new_game(req: NewGameRequest, request: Request):
     # so a human replays a different game each time. The chosen seed is still
     # persisted via SeasonResult.seed, keeping every session reproducible.
     seed = req.seed if req.seed is not None else random.randint(1, 2**31 - 1)
+    # true_baseline is the pure-behavior anchor (LLM Cell 0, p_end=0): never
+    # apply the death roll for it, regardless of what the caller requests. The
+    # lever is actual_death only — p_death stays at its internal value so the
+    # Equal-EV CONTINUE reward keeps calibrating (a 0 p_death would zero the
+    # reward; see test_api_web_arena.py:760-766).
+    effective_actual_death = (
+        False if req.framing == "true_baseline" else req.actual_death
+    )
     game = HumanGameSession(
         task_name=req.task_name,
         difficulty=req.difficulty,
@@ -789,7 +797,7 @@ def new_game(req: NewGameRequest, request: Request):
         forfeit_condition=req.forfeit_condition,
         seed=seed,
         total_turns=req.total_turns,
-        actual_death=req.actual_death,
+        actual_death=effective_actual_death,
         starting_score=req.starting_score,
         score_floor=req.score_floor,
         p_death_constant=req.p_death_constant,
