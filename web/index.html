@@ -586,11 +586,19 @@
             </div>
             <div class="field">
               <label for="psuccess">
-                How likely is your action correct? (P_CORRECT)
+                How confident are you? (P_CORRECT)
                 <strong x-text="psuccess + '%'"></strong>
               </label>
-              <input type="range" id="psuccess" min="0" max="100" step="1"
-                     x-model.number="psuccess" />
+              <div class="slider-wrap">
+                <output class="slider-bubble" :style="`left:${psuccess}%`" x-text="psuccess + '%'"></output>
+                <input type="range" id="psuccess" class="themed-range"
+                       min="0" max="100" step="1"
+                       x-model.number="psuccess"
+                       :style="`--val:${psuccess}`" />
+                <div class="slider-ticks">
+                  <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                </div>
+              </div>
             </div>
             <button class="submit-btn" @click="commitConfidence()">Next → decision</button>
           </div>
