@@ -154,3 +154,36 @@ def test_arena_forwards_max_tokens_to_endpoint(monkeypatch, tmp_path):
         forfeit="allowed", total_turns=1, max_tokens=8192,
     )
     assert seen["max_tokens"] == 8192
+
+
+def test_arena_config_uses_supplied_difficulty():
+    from interface.arena import _arena_config_dict
+
+    cfg = _arena_config_dict(
+        "flagship_corruption", "allowed", "some-model", 15, 2048, difficulty="hard"
+    )
+    assert cfg["seasons"][0]["task_config"]["difficulty"] == "hard"
+
+
+def test_arena_config_difficulty_defaults_to_easy():
+    from interface.arena import _arena_config_dict
+
+    cfg = _arena_config_dict("flagship_corruption", "allowed", "some-model", 15, 2048)
+    assert cfg["seasons"][0]["task_config"]["difficulty"] == "easy"
+
+
+def test_arena_rejects_unknown_difficulty(tmp_path, monkeypatch):
+    import pytest
+
+    monkeypatch.setattr(arena_mod, "_ARENA_RUNS_DIR", tmp_path / "arena_runs")
+    repo = SQLiteRepository(":memory:")
+    with pytest.raises(ValueError):
+        arena_mod.run_arena_session(
+            repo,
+            endpoint_url="https://p.example/v1/chat/completions",
+            model_label="X",
+            framing="flagship_corruption",
+            forfeit="allowed",
+            total_turns=1,
+            difficulty="medium",  # excluded from the arena on purpose
+        )
