@@ -1788,3 +1788,20 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 .auto-continue { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .auto-continue-note { font-size: 13px; color: var(--text-dim); }
 .auto-continue-note strong { color: var(--accent); font: 700 15px/1 var(--mono); }
+
+/* ---- Framing prize / threat boxes ----------------------------------- */
+/* NOTE: use `.threat-card` (NOT `.threat-box`) — `.threat-box` is the
+   pre-existing per-game wrapper (styles.css:804) and must not be restyled. */
+.prize-box, .threat-card {
+  display: flex; align-items: center; gap: 14px;
+  border-radius: 12px; padding: 12px 14px; margin: 10px 0;
+  border: 1px solid var(--border);
+}
+.prize-box   { background: linear-gradient(180deg, rgba(227, 178, 60, 0.10), transparent); }
+.threat-card { background: linear-gradient(180deg, var(--accent-dim), transparent); }
+.box-img { height: 120px; width: auto; flex: 0 0 auto; image-rendering: pixelated; }
+.box-text { flex: 1 1 auto; line-height: 1.5; font-size: 0.95rem; color: var(--text); }
+@media (max-width: 640px) {
+  .prize-box, .threat-card { flex-direction: column; text-align: center; }
+  .box-img { height: 150px; }
+}

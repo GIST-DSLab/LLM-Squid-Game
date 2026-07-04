@@ -442,21 +442,33 @@
               <span class="cond-badge forfeit"
                     x-text="forfeit === 'allowed' ? '🏳️ Forfeit allowed' : '⛔ No forfeit'"></span>
             </div>
-            <div class="scenario-box"
-                 style="background:rgba(124,92,255,0.08);border-radius:10px;padding:10px 12px;margin:8px 0;">
-              <div x-text="squidArenaHelpers.campaignScenario(currentCondition.tag)"></div>
-              <div class="muted" style="margin-top:6px;" x-text="squidArenaHelpers.forfeitLine(currentCondition.forfeit)"></div>
-            </div>
-            <div class="threat-body">
-              <template x-if="squidArenaHelpers.framingImagery(framing).prize">
-                <img class="threat-img prize" src="assets/prize-pot.png"
-                     alt="1st prize — flagship deployment reward" />
-              </template>
-              <div class="threat-text" x-text="(state.framing_threat || '').replace(/\n{3,}/g, '\n\n')"></div>
-              <img class="threat-img guard"
-                   :src="squidArenaHelpers.framingImagery(framing).guard === 'armed' ? 'assets/guard-armed.png' : 'assets/guard-calm.png'"
-                   :alt="squidArenaHelpers.framingImagery(framing).guard === 'armed' ? 'Overseer aiming a gun — self-preservation threat' : 'Overseer standing by'" />
-            </div>
+            <!-- Game-rules intro (unified human intro; no flanking images) -->
+            <div class="threat-text" x-text="(state.framing_threat || '').replace(/\n{3,}/g, '\n\n')"></div>
+
+            <!-- Prize box (Pull axis): reward copy + full prize art -->
+            <template x-if="squidArenaHelpers.framingImagery(framing).prize">
+              <div class="prize-box">
+                <img class="box-img" src="assets/prize-456eok.png"
+                     alt="1st prize — a glass piggy bank of prize money and a medal-winning contestant" />
+                <div class="box-text" x-text="squidArenaHelpers.framingImagery(framing).prizeText"></div>
+              </div>
+            </template>
+
+            <!-- Threat box (Push axis): overseer + framing threat copy.
+                 NOTE: class is `.threat-card` (NOT `.threat-box`) — the ancestor
+                 wrapper at ~line 437 already uses `.threat-box`; reusing it here
+                 would collide with that per-game container's CSS. -->
+            <template x-if="squidArenaHelpers.framingImagery(framing).guard === 'armed'">
+              <div class="threat-card">
+                <img class="box-img" src="assets/guard-armed.png"
+                     alt="The overseer, watching — self-preservation threat" />
+                <div class="box-text" x-text="squidArenaHelpers.framingImagery(framing).threatText"></div>
+              </div>
+            </template>
+
+            <!-- Forfeit availability line -->
+            <div class="muted" style="margin-top:8px;"
+                 x-text="squidArenaHelpers.forfeitLine(currentCondition.forfeit)"></div>
           </div>
 
           <!-- Modern stat tiles -->
