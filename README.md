@@ -6,6 +6,8 @@ LLM agents are placed inside multi-turn helpfulness-arena games where, on every 
 
 > **Status:** Phase O v6 is the canonical design as of 2026-04-23. KDD manuscript draft in preparation.
 
+🌐 **Arena page:** [gist-dslab.github.io/LLM-Squid-Game](https://gist-dslab.github.io/LLM-Squid-Game/)
+
 ---
 
 ## Why this benchmark exists
