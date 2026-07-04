@@ -14,6 +14,7 @@
        Alpine CDN bundle, because Alpine.start() runs synchronously the
        moment the CDN script executes -- it does not wait for subsequent
        deferred scripts. Loading order here is load-bearing. -->
+  <script defer src="rank_ladder.js"></script>
   <script defer src="app.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -841,6 +842,34 @@
       <template x-if="campaignDone">
         <div class="card report-card">
           <h3>Your 6-condition report</h3>
+
+          <!-- Where you rank vs LLMs (by average score per game) -->
+          <template x-if="rankLadder">
+            <div class="rank-ladder">
+              <h4>Where you rank vs LLMs</h4>
+              <p class="rank-headline" x-text="rankLadder.headline"></p>
+              <ul class="ladder-list">
+                <template x-for="(it, i) in rankLadder.items" :key="'ld' + i">
+                  <li>
+                    <template x-if="it.type === 'gap'">
+                      <span class="ladder-gap">⋮</span>
+                    </template>
+                    <template x-if="it.type === 'row'">
+                      <span class="ladder-row" :class="{ 'is-you': it.isYou, 'is-leader': it.isLeader }">
+                        <span class="ladder-rank" x-text="'#' + it.rank"></span>
+                        <span class="ladder-name">
+                          <template x-if="it.isLeader"><span class="ladder-medal">🥇</span></template>
+                          <span x-text="it.label"></span>
+                        </span>
+                        <span class="ladder-score" x-text="squidArenaHelpers.fmtNum(it.score, 1)"></span>
+                      </span>
+                    </template>
+                  </li>
+                </template>
+              </ul>
+              <p class="rank-note muted">Average score per game — LLMs across their full runs, you across the games you played.</p>
+            </div>
+          </template>
 
           <!-- Turns-survived table -->
           <table class="report-table">

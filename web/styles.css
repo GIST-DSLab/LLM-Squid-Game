@@ -1992,3 +1992,25 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
   .prize-box, .threat-card { flex-direction: column; text-align: center; }
   .box-img { height: 150px; }
 }
+
+/* Human-vs-LLM rank ladder (campaign report) */
+.rank-ladder { margin: 4px 0 20px; }
+.rank-ladder .rank-headline { font-weight: 600; margin: 4px 0 12px; }
+.ladder-list { list-style: none; padding: 0; margin: 0; }
+.ladder-list li { margin: 0; }
+.ladder-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px; border-radius: 8px;
+  border: 1px solid transparent;
+}
+.ladder-rank { width: 3ch; font-variant-numeric: tabular-nums; opacity: 0.7; }
+.ladder-name { flex: 1; display: flex; align-items: center; gap: 6px; }
+.ladder-score { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ladder-row.is-leader .ladder-name { font-weight: 600; }
+.ladder-row.is-you {
+  border-color: currentColor;
+  background: var(--panel-alt);
+  font-weight: 700;
+}
+.ladder-gap { display: block; text-align: center; opacity: 0.5; padding: 2px 0; }
+.rank-note { font-size: 0.85em; margin-top: 8px; }
