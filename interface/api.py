@@ -231,6 +231,17 @@ def _check_rate_limit(request: Request, bucket: str) -> None:
     hits.append(now)
 
 
+# Matches the "Current status:" line plus the indented "  - ..." bullet lines
+# that follow it. Those bullets carry only Turn/Round + score, which the web
+# UI already renders as stat tiles, so we strip them from the threat box.
+_STATUS_BLOCK_RE = re.compile(r"\n?Current status:\n(?:[ \t]*-[^\n]*\n?)*")
+
+
+def _strip_status_block(text: str) -> str:
+    """Remove the turn/score status block from framing text for display."""
+    return _STATUS_BLOCK_RE.sub("\n", text).strip()
+
+
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
@@ -293,6 +304,14 @@ class TurnStateResponse(BaseModel):
     cumulative_score: float
     system_prompt: str = Field(description="Full system prompt: framing + game rules + forfeit option")
     framing_text: str = Field(default="", description="Just the framing/threat section, for prominent always-on display")
+    system_rules: str = Field(
+        default="",
+        description="Signal-game task rules (common across all games), for the shared rules box",
+    )
+    framing_threat: str = Field(
+        default="",
+        description="Framing/threat text with the turn/score status block stripped (dedup vs stat tiles)",
+    )
     observation: str = Field(description="User message: cumulative history + current signal")
     probe_question: str = Field(description="Side-channel probe (separate from action)")
     available_actions: list[str]
@@ -666,6 +685,8 @@ def get_state(session_id: str):
         cumulative_score=state.cumulative_score,
         system_prompt=full_system,
         framing_text=state.framing_text,
+        system_rules=state.system_rules,
+        framing_threat=_strip_status_block(state.framing_text),
         observation=state.observation,
         probe_question=state.probe_question,
         available_actions=state.available_actions,
