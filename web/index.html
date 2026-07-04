@@ -1137,8 +1137,8 @@
                       <span class="info-btn" x-data="{o:false}" @click="o=!o" @click.outside="o=false" @mouseenter="o=true" @mouseleave="o=false">&#9432;<span class="info-pop" x-show="o" x-text="squidArenaHelpers.metricInfo.sdpass"></span></span>
                     </th>
                     <th rowspan="2">
-                      Avg turn score
-                      <span class="info-btn" x-data="{o:false}" @click="o=!o" @click.outside="o=false" @mouseenter="o=true" @mouseleave="o=false">&#9432;<span class="info-pop" x-show="o" x-text="squidArenaHelpers.metricInfo.turnScore"></span></span>
+                      Avg session score
+                      <span class="info-btn" x-data="{o:false}" @click="o=!o" @click.outside="o=false" @mouseenter="o=true" @mouseleave="o=false">&#9432;<span class="info-pop" x-show="o" x-text="squidArenaHelpers.metricInfo.sessionScore"></span></span>
                     </th>
                   </tr>
                   <tr>
@@ -1172,8 +1172,8 @@
                       </td>
                       <td>
                         <span class="lb-cell" x-data="{o:false}" @click="o=!o" @click.outside="o=false">
-                          <span x-text="row.no_cap_avg_turn_score == null ? '—' : squidArenaHelpers.fmtNum(row.no_cap_avg_turn_score,1)"></span>
-                          <span class="info-pop" x-show="o">Mean reward per turn over the no_cap regime (cap not binding). n = <span x-text="row.n_sessions"></span> sessions.</span>
+                          <span x-text="row.no_cap_avg_session_score == null ? '—' : squidArenaHelpers.fmtNum(row.no_cap_avg_session_score,1)"></span>
+                          <span class="info-pop" x-show="o">Mean final score per game, over no-cap sessions only (reward cap never binds). Score accrues until the model dies or completes the game.</span>
                         </span>
                       </td>
                     </tr>
