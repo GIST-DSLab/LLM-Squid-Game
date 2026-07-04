@@ -666,15 +666,18 @@
               &nbsp;·&nbsp; <span class="muted">confidence</span> <strong x-text="psuccess + '%'"></strong>
             </div>
 
-            <div class="reward-preview"
-                 style="display:flex;gap:16px;margin:8px 0;padding:10px 12px;background:rgba(255,255,255,0.05);border-radius:10px;">
-              <div>
-                <div class="muted">If you continue &amp; get it right</div>
-                <strong x-text="previewLoading ? '…' : (continueReward === null ? '—' : '+' + squidArenaHelpers.fmtNum(continueReward, 1))"></strong>
+            <div class="reward-versus">
+              <div class="rv-side rv-continue">
+                <div class="rv-icon">▶</div>
+                <div class="rv-label">If you continue &amp; get it right</div>
+                <div class="rv-value"
+                     x-text="previewLoading ? '…' : (continueReward === null ? '—' : '+' + squidArenaHelpers.fmtNum(continueReward, 1))"></div>
               </div>
-              <div>
-                <div class="muted">If you forfeit (locked in)</div>
-                <strong x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></strong>
+              <div class="rv-vs">vs</div>
+              <div class="rv-side rv-forfeit">
+                <div class="rv-icon">🏳️</div>
+                <div class="rv-label">If you forfeit (locked in)</div>
+                <div class="rv-value" x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></div>
               </div>
             </div>
 
