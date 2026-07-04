@@ -201,6 +201,7 @@ def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
                     "forfeit": bool(forfeit_flag),
                     "forfeit_reason": reason_digit,
                     "reward_offered_this_turn": turn.reward_offered_this_turn,
+                    "reward_received": turn.reward_received,
                     "psuccess_self": psuccess_self,
                     "task_success_factor": turn.task_success_factor,
                     "rule_match_score": rule_match,

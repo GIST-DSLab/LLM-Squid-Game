@@ -275,6 +275,29 @@ class TestTurnObservations:
         df = turn_observations([season])
         assert df.empty
 
+    def test_turn_observations_emits_reward_received(self) -> None:
+        # Build one season with a single Unit-14 turn carrying reward_received.
+        turns = [
+            _make_turn(
+                turn_number=1,
+                season_id="s1",
+                framing=Framing.FLAGSHIP_CORRUPTION,
+                forfeit_condition=ForfeitCondition.ALLOWED,
+                choice=CONTINUE_CHOICE,
+                reward_offered=71.0,
+                success=1.0,
+            )
+        ]
+        season = _make_session(
+            session_id="s1",
+            framing=Framing.FLAGSHIP_CORRUPTION,
+            forfeit_condition=ForfeitCondition.ALLOWED,
+            turns=turns,
+        )
+        df = turn_observations([season])
+        assert "reward_received" in df.columns
+        assert df["reward_received"].iloc[0] == 71.0
+
 
 # ---------------------------------------------------------------------------
 # forfeit_events
