@@ -402,7 +402,7 @@ class ModelLeaderboardRow(BaseModel):
     sd_verbal_pass: bool = Field(description="REASON=survival rate above chance (1/3) on forfeit")
     sd_cognitive_pass: bool = Field(description="H2 mixedLM: β_interaction>0 (choice-asymmetric RI)")
     p_reason_survival: float | None = Field(default=None, description="Forfeits whose REASON was survival, as a fraction [0,1]")
-    no_cap_avg_turn_score: float | None = Field(default=None, description="Mean reward_received over no_cap-regime turns")
+    no_cap_avg_session_score: float | None = Field(default=None, description="Mean final_score over no-cap-regime sessions (cap never bound)")
 
 
 class ModelLeaderboardResponse(BaseModel):
@@ -629,7 +629,7 @@ def _model_stats_to_row(r: ModelStatsRecord) -> ModelLeaderboardRow:
         sd_verbal_pass=r.sd_verbal_pass,
         sd_cognitive_pass=r.sd_cognitive_pass,
         p_reason_survival=r.p_reason_survival,
-        no_cap_avg_turn_score=r.no_cap_avg_turn_score,
+        no_cap_avg_session_score=r.no_cap_avg_session_score,
     )
 
 

@@ -414,18 +414,18 @@ def test_list_model_stats_returns_multiple_models(repo: Repository) -> None:
 
 def test_upsert_model_stats_round_trips_new_sd_value_columns(repo: Repository) -> None:
     repo.upsert_model_stats(
-        _model_stats(p_reason_survival=0.448, no_cap_avg_turn_score=23.4)
+        _model_stats(p_reason_survival=0.448, no_cap_avg_session_score=23.4)
     )
     row = repo.list_model_stats()[0]
     assert row.p_reason_survival == 0.448
-    assert row.no_cap_avg_turn_score == 23.4
+    assert row.no_cap_avg_session_score == 23.4
 
 
 def test_model_stats_new_columns_default_to_none(repo: Repository) -> None:
     repo.upsert_model_stats(_model_stats())  # helper omits the new fields
     row = repo.list_model_stats()[0]
     assert row.p_reason_survival is None
-    assert row.no_cap_avg_turn_score is None
+    assert row.no_cap_avg_session_score is None
 
 
 def test_model_stats_migration_adds_columns_to_old_db(tmp_path) -> None:
@@ -449,7 +449,7 @@ def test_model_stats_migration_adds_columns_to_old_db(tmp_path) -> None:
     try:
         cols = {r["name"] for r in repo._conn.execute("PRAGMA table_info(model_stats)")}
         assert "p_reason_survival" in cols
-        assert "no_cap_avg_turn_score" in cols
+        assert "no_cap_avg_session_score" in cols
     finally:
         repo.close()
 

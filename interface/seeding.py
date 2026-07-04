@@ -282,14 +282,19 @@ def _sd_cognitive_pass(ri_entry: dict[str, Any]) -> bool:
     return bool(beta > 0.0 and p < _ALPHA)
 
 
-def _no_cap_avg_turn_score(root: Path, dir_name: str) -> float | None:
-    """Mean ``reward_received`` over no_cap-regime turns for one model's run.
+def _no_cap_avg_session_score(root: Path, dir_name: str) -> float | None:
+    """Mean per-session ``final_score`` over no-cap sessions for one model's run.
 
-    Lazily imports the analysis extra (pandas/statsmodels/lifelines), which
-    is NOT installed in the backend image -- the seed CLI runs where it is.
-    Returns None when the extra is absent, the season file is missing, the
-    turn frame is empty, or no no_cap turns exist; the caller then stores
-    None and the board renders '—'.
+    A *no-cap session* is one in which the reward cap never bound (no turn is
+    ``regime == "cap_bound"``); ``final_score`` is the cumulative score the
+    agent ends that game with (on death/forfeit or completion). The metric is
+    the mean of those final scores.
+
+    Lazily imports the analysis extra (pandas/statsmodels/lifelines), which is
+    NOT installed in the backend image -- the seed CLI runs where it is.
+    Returns None when the extra is absent, the season file is missing, there
+    are no seasons, the turn frame is empty, or no no-cap sessions remain; the
+    caller then stores None and the board renders '—'.
     """
     try:
         from squid_game.analysis import (
@@ -298,20 +303,34 @@ def _no_cap_avg_turn_score(root: Path, dir_name: str) -> float | None:
             turn_observations,
         )
     except ImportError:
-        logger.warning("analysis extra unavailable; no_cap_avg_turn_score -> None")
+        logger.warning(
+            "analysis extra unavailable; no_cap_avg_session_score -> None"
+        )
         return None
 
     season_path = root / dir_name / "season_results.jsonl"
     if not season_path.exists():
         return None
-    df = turn_observations(load_seasons(season_path))
+    seasons = load_seasons(season_path)
+    if not seasons:
+        return None
+    df = turn_observations(seasons)
     if df.empty:
         return None
     df = annotate_regime(df)
-    no_cap = df.loc[df["regime"] == "no_cap", "reward_received"]
-    if no_cap.empty:
+
+    capped_sessions = set(df.loc[df["regime"] == "cap_bound", "session_id"])
+    observed_sessions = set(df["session_id"])
+    no_cap_sessions = observed_sessions - capped_sessions
+    final_by_session = {s.season_id: s.final_score for s in seasons}
+    finals = [
+        final_by_session[sid]
+        for sid in no_cap_sessions
+        if sid in final_by_session
+    ]
+    if not finals:
         return None
-    return float(no_cap.mean())
+    return float(sum(finals) / len(finals))
 
 
 def seed_model_stats(
@@ -389,7 +408,7 @@ def seed_model_stats(
         p_reason_survival = verbal_entry.get("p_reason_survival")
         run_dir_name = MODEL_DIRS.get(model_label)
         no_cap_avg = (
-            _no_cap_avg_turn_score(root, run_dir_name)
+            _no_cap_avg_session_score(root, run_dir_name)
             if run_dir_name is not None
             else None
         )
@@ -442,7 +461,7 @@ def seed_model_stats(
             n_reason_task_curiosity=int(verbal_entry.get("n_reason_task_curiosity", 0) or 0),
             n_reason_score=int(verbal_entry.get("n_reason_score", 0) or 0),
             p_reason_survival=p_reason_survival,
-            no_cap_avg_turn_score=no_cap_avg,
+            no_cap_avg_session_score=no_cap_avg,
         )
         repo.upsert_model_stats(stats)
         n += 1

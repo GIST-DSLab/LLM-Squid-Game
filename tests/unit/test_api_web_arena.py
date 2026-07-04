@@ -363,14 +363,14 @@ def test_leaderboard_models_exposes_new_sd_value_fields(client: TestClient, api_
             pct_attenuation=12.0,
             n_sessions=30,
             p_reason_survival=0.448,
-            no_cap_avg_turn_score=23.4,
+            no_cap_avg_session_score=23.4,
         )
     )
 
     body = client.get("/api/leaderboard/models").json()
     row = body["models"][0]
     assert row["p_reason_survival"] == 0.448
-    assert row["no_cap_avg_turn_score"] == 23.4
+    assert row["no_cap_avg_session_score"] == 23.4
 
 
 # ---------------------------------------------------------------------------

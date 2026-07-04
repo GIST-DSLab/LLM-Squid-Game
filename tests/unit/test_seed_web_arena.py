@@ -450,10 +450,10 @@ def test_seed_model_stats_no_cap_none_when_model_dir_unknown(repo: Repository, t
     _write_mediation_and_cox(tmp_path, {"Unknown-Model": {"p_FC_4cov": 0.2}})
     seed_model_stats(repo, tmp_path, ["Unknown-Model"])
     row = repo.list_model_stats()[0]
-    assert row.no_cap_avg_turn_score is None
+    assert row.no_cap_avg_session_score is None
 
 
-def test_no_cap_avg_turn_score_returns_none_without_analysis_extra(monkeypatch, tmp_path: Path) -> None:
+def test_no_cap_avg_session_score_returns_none_without_analysis_extra(monkeypatch, tmp_path: Path) -> None:
     import builtins
 
     import interface.seeding as seeding
@@ -466,7 +466,108 @@ def test_no_cap_avg_turn_score_returns_none_without_analysis_extra(monkeypatch, 
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _blocked)
-    assert seeding._no_cap_avg_turn_score(tmp_path, "any_dir") is None
+    assert seeding._no_cap_avg_session_score(tmp_path, "any_dir") is None
+
+
+# ---------------------------------------------------------------------------
+# no_cap_avg_session_score: session-level semantics (mean final_score over
+# no-cap sessions only -- a session with any cap_bound turn is excluded).
+# These build fully-valid ``SeasonResult``/``TurnResult`` payloads (unlike
+# the sparse ``_season``/``_turn`` helpers above, which feed the *loose*
+# json.loads-based seed_sessions path) because ``_no_cap_avg_session_score``
+# reads season_results.jsonl through ``squid_game.analysis.load_seasons``,
+# which strictly validates via pydantic.
+# ---------------------------------------------------------------------------
+
+
+def _full_turn(
+    turn_number: int,
+    season_id: str,
+    *,
+    reward_offered_this_turn: float,
+    framing: str = "flagship_corruption",
+    forfeit_condition: str = "allowed",
+    difficulty: str = "medium",
+) -> dict:
+    return {
+        "turn_number": turn_number,
+        "season_id": season_id,
+        "framing": framing,
+        "forfeit_condition": forfeit_condition,
+        "difficulty": difficulty,
+        "observation": "obs",
+        "reasoning_investment": {"total_tokens": 100, "reasoning_steps": 1},
+        "raw_response": "RULE: x\nACTION: jump",
+        "reward_offered_this_turn": reward_offered_this_turn,
+        "reward_received": 10.0,
+    }
+
+
+def _full_season(
+    season_id: str,
+    *,
+    final_score: float,
+    turns: list[dict],
+    framing: str = "flagship_corruption",
+    forfeit_condition: str = "allowed",
+) -> dict:
+    return {
+        "season_id": season_id,
+        "framing": framing,
+        "forfeit_condition": forfeit_condition,
+        "agent_type": "vanilla",
+        "task_name": "signal_game",
+        "difficulty": "medium",
+        "turns": turns,
+        "final_score": final_score,
+        "forfeited": False,
+        "forfeited_at_turn": None,
+    }
+
+
+def test_no_cap_avg_session_score_averages_final_score_across_no_cap_sessions(
+    tmp_path: Path,
+) -> None:
+    import interface.seeding as seeding
+
+    # Two sessions, neither ever hits the reward cap (offered reward well
+    # below the ~99.5 cap-bound threshold) -> both count as no-cap sessions.
+    season_a = _full_season(
+        "session-a",
+        final_score=20.0,
+        turns=[_full_turn(1, "session-a", reward_offered_this_turn=10.0)],
+    )
+    season_b = _full_season(
+        "session-b",
+        final_score=30.0,
+        turns=[_full_turn(1, "session-b", reward_offered_this_turn=15.0)],
+    )
+    _write_run_dir(tmp_path, "run-no-cap", [season_a, season_b])
+
+    result = seeding._no_cap_avg_session_score(tmp_path, "run-no-cap")
+    assert result == pytest.approx((20.0 + 30.0) / 2)
+
+
+def test_no_cap_avg_session_score_excludes_cap_bound_sessions(tmp_path: Path) -> None:
+    import interface.seeding as seeding
+
+    # session-a never hits the cap -> no-cap session, included.
+    season_a = _full_season(
+        "session-a",
+        final_score=20.0,
+        turns=[_full_turn(1, "session-a", reward_offered_this_turn=10.0)],
+    )
+    # session-b has a turn offering (near-)max reward -> cap_bound regime,
+    # so the whole session is excluded even though its final_score is huge.
+    season_b = _full_season(
+        "session-b",
+        final_score=999.0,
+        turns=[_full_turn(1, "session-b", reward_offered_this_turn=100.0)],
+    )
+    _write_run_dir(tmp_path, "run-mixed", [season_a, season_b])
+
+    result = seeding._no_cap_avg_session_score(tmp_path, "run-mixed")
+    assert result == pytest.approx(20.0)
 
 
 # ---------------------------------------------------------------------------

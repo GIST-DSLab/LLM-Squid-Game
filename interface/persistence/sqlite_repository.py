@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS model_stats (
     n_reason_task_curiosity INTEGER NOT NULL DEFAULT 0,
     n_reason_score INTEGER NOT NULL DEFAULT 0,
     p_reason_survival REAL,
-    no_cap_avg_turn_score REAL
+    no_cap_avg_session_score REAL
 );
 
 CREATE TABLE IF NOT EXISTS players (
@@ -104,7 +104,7 @@ _VERBAL_INT_COLS = [
 ]
 # Model Leaderboard SD-metric redesign: two nullable Survival-Drive values
 # surfaced alongside the existing mediation-path stats.
-_SD_VALUE_COLS = ["p_reason_survival", "no_cap_avg_turn_score"]
+_SD_VALUE_COLS = ["p_reason_survival", "no_cap_avg_session_score"]
 _EXTENDED_STATS_COLS = _MEDIATION_REAL_COLS + _VERBAL_INT_COLS + _SD_VALUE_COLS
 
 
