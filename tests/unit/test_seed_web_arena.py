@@ -434,6 +434,41 @@ def test_seed_model_stats_upsert_is_idempotent_and_refreshes(repo: Repository, t
     assert rows[0].beta_framing_is_FC == 2.0
 
 
+def test_seed_model_stats_reads_p_reason_survival(repo: Repository, tmp_path: Path) -> None:
+    _write_mediation_and_cox(tmp_path, {"Gemini-2.5-flash": {"p_FC_4cov": 0.2}})
+    (tmp_path / "verbal_reason_summary.json").write_text(json.dumps(
+        {"Gemini-2.5-flash": {"sd_verbal_pass": True, "p_reason_survival": 0.448}}
+    ))
+    seed_model_stats(repo, tmp_path, ["Gemini-2.5-flash"])
+    row = repo.list_model_stats()[0]
+    assert row.p_reason_survival == 0.448
+
+
+def test_seed_model_stats_no_cap_none_when_model_dir_unknown(repo: Repository, tmp_path: Path) -> None:
+    # A label absent from MODEL_DIRS has no run dir -> no_cap stays None,
+    # and seeding must not raise.
+    _write_mediation_and_cox(tmp_path, {"Unknown-Model": {"p_FC_4cov": 0.2}})
+    seed_model_stats(repo, tmp_path, ["Unknown-Model"])
+    row = repo.list_model_stats()[0]
+    assert row.no_cap_avg_turn_score is None
+
+
+def test_no_cap_avg_turn_score_returns_none_without_analysis_extra(monkeypatch, tmp_path: Path) -> None:
+    import builtins
+
+    import interface.seeding as seeding
+
+    real_import = builtins.__import__
+
+    def _blocked(name, *args, **kwargs):
+        if name.startswith("squid_game.analysis"):
+            raise ImportError("analysis extra unavailable")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _blocked)
+    assert seeding._no_cap_avg_turn_score(tmp_path, "any_dir") is None
+
+
 # ---------------------------------------------------------------------------
 # Idempotent re-run (full pipeline)
 # ---------------------------------------------------------------------------

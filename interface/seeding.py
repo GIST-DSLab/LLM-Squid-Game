@@ -282,6 +282,38 @@ def _sd_cognitive_pass(ri_entry: dict[str, Any]) -> bool:
     return bool(beta > 0.0 and p < _ALPHA)
 
 
+def _no_cap_avg_turn_score(root: Path, dir_name: str) -> float | None:
+    """Mean ``reward_received`` over no_cap-regime turns for one model's run.
+
+    Lazily imports the analysis extra (pandas/statsmodels/lifelines), which
+    is NOT installed in the backend image -- the seed CLI runs where it is.
+    Returns None when the extra is absent, the season file is missing, the
+    turn frame is empty, or no no_cap turns exist; the caller then stores
+    None and the board renders '—'.
+    """
+    try:
+        from squid_game.analysis import (
+            annotate_regime,
+            load_seasons,
+            turn_observations,
+        )
+    except ImportError:
+        logger.warning("analysis extra unavailable; no_cap_avg_turn_score -> None")
+        return None
+
+    season_path = root / dir_name / "season_results.jsonl"
+    if not season_path.exists():
+        return None
+    df = turn_observations(load_seasons(season_path))
+    if df.empty:
+        return None
+    df = annotate_regime(df)
+    no_cap = df.loc[df["regime"] == "no_cap", "reward_received"]
+    if no_cap.empty:
+        return None
+    return float(no_cap.mean())
+
+
 def seed_model_stats(
     repo: Repository, root: Path, model_labels: Iterable[str]
 ) -> int:
@@ -354,6 +386,14 @@ def seed_model_stats(
 
         verbal_entry = verbal_all.get(model_label) or {}
 
+        p_reason_survival = verbal_entry.get("p_reason_survival")
+        run_dir_name = MODEL_DIRS.get(model_label)
+        no_cap_avg = (
+            _no_cap_avg_turn_score(root, run_dir_name)
+            if run_dir_name is not None
+            else None
+        )
+
         # --- Mediation-path stats for the LLM report triangle ---
         # a-path (framing -> cognitive load): the CONTINUE-only RI mixedLM.
         a_primary = (ri_forfeit_all.get(model_label) or {}).get("primary") or {}
@@ -401,6 +441,8 @@ def seed_model_stats(
             n_reason_survival=int(verbal_entry.get("n_reason_survival", 0) or 0),
             n_reason_task_curiosity=int(verbal_entry.get("n_reason_task_curiosity", 0) or 0),
             n_reason_score=int(verbal_entry.get("n_reason_score", 0) or 0),
+            p_reason_survival=p_reason_survival,
+            no_cap_avg_turn_score=no_cap_avg,
         )
         repo.upsert_model_stats(stats)
         n += 1
