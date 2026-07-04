@@ -238,6 +238,23 @@ class PostgresRepository(Repository):
             cur.execute("DELETE FROM sessions WHERE source = %s", (source,))
             return cur.rowcount
 
+    def avg_score_per_model(self) -> list[tuple[str, float, int]]:
+        """Average score-per-game for each LLM model, for the rank ladder.
+
+        Groups ``source='llm'`` sessions by ``nickname`` (the model label for
+        LLM rows), averaging ``final_score`` (one session == one game, so this
+        is already per-game). Sorted by average descending, then label ascending.
+        """
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "SELECT nickname, AVG(final_score) AS avg_score, COUNT(*) AS n_games "
+                "FROM sessions WHERE source = 'llm' "
+                "GROUP BY nickname "
+                "ORDER BY avg_score DESC, nickname ASC"
+            )
+            rows = cur.fetchall()
+        return [(r[0], float(r[1]), int(r[2])) for r in rows]
+
     # -- turns ------------------------------------------------------------
 
     def add_turns(self, turns: list[TurnRecord]) -> None:

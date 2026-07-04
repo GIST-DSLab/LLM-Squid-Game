@@ -74,6 +74,15 @@ class Repository(ABC):
         human plays that are no longer surfaced anywhere.
         """
 
+    @abstractmethod
+    def avg_score_per_model(self) -> list[tuple[str, float, int]]:
+        """Average score-per-game for each LLM model, for the rank ladder.
+
+        Groups ``source='llm'`` sessions by ``nickname`` (the model label for
+        LLM rows), averaging ``final_score`` (one session == one game, so this
+        is already per-game). Sorted by average descending, then label ascending.
+        """
+
     # -- turns --------------------------------------------------------------
 
     @abstractmethod
