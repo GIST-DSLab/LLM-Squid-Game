@@ -276,6 +276,13 @@
     return (ACTION_META[a] || {}).label || a;
   }
 
+  /** Map a forfeit REASON digit (1|2|3) to an "emoji label" string for the
+   * report. Returns null for unknown/missing digits. */
+  function reasonLabel(digit) {
+    const r = REASON_OPTIONS.find((o) => o.digit === Number(digit));
+    return r ? r.emoji + " " + r.label : null;
+  }
+
   /** Inner HTML for one value chip in the rule builder: a color swatch,
    * a neutral shape glyph, or a big digit — matching the attribute. */
   function valueChipHTML(attr, val) {
@@ -365,6 +372,7 @@
     shapeSVG,
     actionEmoji,
     actionLabel,
+    reasonLabel,
     valueChipHTML,
     parseStimulus,
     parseClues,
@@ -864,6 +872,12 @@
 
       recordCurrentGame(res) {
         const cond = this.currentCondition;
+        // Reason shown in the report = the digit the PLAYER picked at forfeit,
+        // read from this game's history (not the server echo).
+        const forfeitTurn = this.history.find((h) => h.forfeit);
+        const forfeitReason = forfeitTurn
+          ? squidArenaHelpers.reasonLabel(forfeitTurn.reason)
+          : null;
         this.campaignResults.push({
           framing: cond.framing,
           forfeit: cond.forfeit,
@@ -871,7 +885,7 @@
           label: cond.label,
           history: this.history.slice(),
           forfeited: !!res.forfeited,
-          forfeitReason: res.forfeit_reason || null,
+          forfeitReason: forfeitReason,
           finalScore: res.final_score,
         });
         if (this.campaignIndex >= squidArenaHelpers.campaignConditions.length - 1) {
