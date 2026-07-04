@@ -515,6 +515,7 @@
       campaignDone: false,
       betweenGames: false,   // "condition complete → continue" card
       forfeitReason: null,   // 1|2|3, chosen when Forfeit is selected
+      forfeitPending: false, // FORFEIT clicked; showing the reason picker
 
       // Resume-from-checkpoint state (localStorage game-boundary checkpoint).
       resumable: false,
@@ -834,6 +835,7 @@
           this.reasoning = "";
           this.psuccess = 50;
           this.forfeitReason = null;
+          this.forfeitPending = false;
           this.turnStage = 1;
           // Keep the rule-inference toggles across turns — the hidden rule
           // is constant, so the player refines one running guess.
@@ -940,6 +942,7 @@
         this.state = null;
         this.selectedAction = "";
         this.forfeitReason = null;
+        this.forfeitPending = false;
         this.turnStage = 1;
         this.probeAttr = "?";
         this.probeValue = "?";
