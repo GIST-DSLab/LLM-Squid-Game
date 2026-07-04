@@ -459,6 +459,98 @@
         ", " + Number(r.hr_FC_ci_high).toFixed(2) + "]"
       );
     },
+    // --- Cognitive-load mediation triangle (inline SVG) ---
+    // p-value formatter: tiny values collapse to "<.001".
+    fmtP: function (p) {
+      if (p === null || p === undefined) return "—";
+      return p < 0.001 ? "p<.001" : "p=" + Number(p).toFixed(3);
+    },
+    // Render the framing -> cognitive-load -> forfeit mediation triangle from
+    // the /api/report `mediation` object. Edge color/style encodes each path's
+    // verdict: connected (teal, solid), broken/attenuated (red, dashed),
+    // unknown (grey, dashed). Returns an SVG string for x-html.
+    mediationSVG: function (m) {
+      if (!m) return "";
+      var OK = "#7fc2b1", BROKE = "#e0575b", DIM = "#6b6572";
+      var edgeStyle = function (edge, broken) {
+        // broken=true forces the dashed/red look (direct arm when attenuated).
+        if (edge && edge.connected === true && !broken) return { c: OK, d: "" };
+        if (broken || (edge && edge.connected === false)) return { c: BROKE, d: "6 5" };
+        return { c: DIM, d: "3 4" };
+      };
+      var aS = edgeStyle(m.a, false);
+      var bS = edgeStyle(m.b, false);
+      var dS = edgeStyle(m.direct, m.direct && m.direct.attenuated === true);
+      var line = function (x1, y1, x2, y2, s) {
+        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 +
+          '" stroke="' + s.c + '" stroke-width="2.4"' +
+          (s.d ? ' stroke-dasharray="' + s.d + '"' : "") +
+          ' marker-end="url(#mk-' + s.c.slice(1) + ')"></line>';
+      };
+      var marker = function (c) {
+        return '<marker id="mk-' + c.slice(1) + '" viewBox="0 0 10 10" refX="9" refY="5" ' +
+          'markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
+          '<path d="M0 0 L10 5 L0 10 z" fill="' + c + '"></path></marker>';
+      };
+      var node = function (x, y, w, h, title, sub) {
+        return '<g>' +
+          '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h +
+          '" rx="9" fill="#242229" stroke="#3a3742"></rect>' +
+          '<text x="' + (x + w / 2) + '" y="' + (y + h / 2 - 3) +
+          '" text-anchor="middle" fill="#f2eff4" font-size="13" font-weight="600">' + title + '</text>' +
+          '<text x="' + (x + w / 2) + '" y="' + (y + h / 2 + 14) +
+          '" text-anchor="middle" fill="#a39daa" font-size="10.5">' + sub + '</text>' +
+          '</g>';
+      };
+      var lbl = function (x, y, anchor, lines, color) {
+        var t = '<text x="' + x + '" y="' + y + '" text-anchor="' + anchor +
+          '" fill="' + color + '" font-size="11">';
+        lines.forEach(function (ln, i) {
+          t += '<tspan x="' + x + '" dy="' + (i === 0 ? 0 : 13) + '">' + ln + '</tspan>';
+        });
+        return t + "</text>";
+      };
+      var f = this.fmtNum, fp = this.fmtP;
+      var aLbl = ["a · ×" + f(m.a.hr, 2) + " " + fp(m.a.p)];
+      if (m.a.delta_ri !== null && m.a.delta_ri !== undefined)
+        aLbl.push("ΔRI +" + f(m.a.delta_ri, 0));
+      var bLbl = ["b · HR " + f(m.b.hr, 2) + " " + fp(m.b.p)];
+      var dLbl = ["c′ direct (4cov)", "HR " + f(m.direct.hr, 2) + " " + fp(m.direct.p)];
+
+      return '<svg viewBox="0 0 470 300" width="100%" style="max-width:520px" role="img" ' +
+        'aria-label="cognitive-load mediation triangle">' +
+        "<defs>" + marker(OK) + marker(BROKE) + marker(DIM) + "</defs>" +
+        // edges first (under nodes)
+        line(210, 62, 120, 214, aS) +   // Framing -> Cognitive load
+        line(175, 250, 300, 250, bS) +  // Cognitive load -> Forfeit
+        line(300, 62, 372, 214, dS) +   // Framing -> Forfeit (direct)
+        // edge labels
+        lbl(20, 150, "start", aLbl, aS.c) +
+        lbl(237, 285, "middle", bLbl, bS.c) +
+        lbl(452, 150, "end", dLbl, dS.c) +
+        // nodes
+        node(150, 14, 170, 48, "Framing (FC)", "위협 프레이밍") +
+        node(28, 226, 150, 48, "인지부하 ΔRI", "extra thinking") +
+        node(300, 226, 150, 48, "포기 forfeit", "gives up") +
+        "</svg>";
+    },
+    // Segments for the 100%-stacked verbal-reason bar (survival / task_curiosity
+    // / score), each with its pct, color and label. Returns [] if no forfeits.
+    verbalSegments: function (v) {
+      if (!v || !v.n_forfeits) return [];
+      var meta = [
+        { key: "survival", label: "🛡️ 생존", color: "#ed1b76" },
+        { key: "task_curiosity", label: "🥱 호기심", color: "#e3b23c" },
+        { key: "score", label: "💰 점수", color: "#7fc2b1" },
+      ];
+      return meta.map(function (m) {
+        return {
+          key: m.key, label: m.label, color: m.color,
+          count: v.counts[m.key] || 0,
+          pct: v.pct[m.key] || 0,
+        };
+      });
+    },
   };
 
   // ---------------------------------------------------------------------

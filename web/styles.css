@@ -12,6 +12,7 @@
   --ok: #7fc2b1;
   --warn: #e3b23c;
   --gold: #e3b23c;
+  --danger: #e0575b;
   --font: "Sora", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-display: "Chakra Petch", "Sora", sans-serif;
   --mono: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -1602,6 +1603,31 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 
 /* Play turn gate hint (rule-guess incomplete) */
 .rule-gate-hint { font-size: 0.88rem; }
+
+/* Cognitive-load mediation triangle */
+.mediation-wrap { display: flex; justify-content: center; overflow-x: auto; padding: 4px 0; }
+.mediation-caption { margin: 8px 0 4px; font-size: 0.9rem; }
+.med-swatch { display: inline-block; width: 22px; height: 0; border-top-width: 3px; border-top-style: solid; vertical-align: middle; margin-right: 2px; }
+.med-ok { border-top-color: var(--ok); }
+.med-broke { border-top-color: var(--danger); border-top-style: dashed; }
+.med-dim { border-top-color: var(--text-dim); border-top-style: dashed; }
+
+/* Verbal forfeit-reason 100% stacked bar */
+.verbal-wrap { display: flex; align-items: stretch; gap: 20px; margin-top: 6px; }
+.verbal-bar {
+  width: 64px; height: 220px; border-radius: 8px; overflow: hidden;
+  display: flex; flex-direction: column-reverse; border: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.verbal-seg {
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  transition: height 0.3s ease;
+}
+.verbal-seg-pct { font-size: 0.72rem; font-weight: 600; color: #0e0d11; }
+.verbal-legend { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.verbal-legend-row { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+.verbal-dot { width: 12px; height: 12px; border-radius: 3px; flex: 0 0 auto; }
+.verbal-n { margin-top: 6px; font-size: 0.82rem; }
 
 /* Elimination overlay */
 .death-overlay {
