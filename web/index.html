@@ -654,33 +654,49 @@
               &nbsp;·&nbsp; <span class="muted">confidence</span> <strong x-text="psuccess + '%'"></strong>
             </div>
 
-            <div class="reward-versus">
+            <div class="reward-versus" :class="{ solo: !state.forfeit_allowed }">
               <div class="rv-side rv-continue">
                 <div class="rv-icon">▶</div>
                 <div class="rv-label">If you continue &amp; get it right</div>
                 <div class="rv-value"
                      x-text="previewLoading ? '…' : (continueReward === null ? '—' : '+' + squidArenaHelpers.fmtNum(continueReward, 1))"></div>
               </div>
-              <div class="rv-vs">vs</div>
-              <div class="rv-side rv-forfeit">
-                <div class="rv-icon">🏳️</div>
-                <div class="rv-label">If you forfeit (locked in)</div>
-                <div class="rv-value" x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></div>
-              </div>
+              <template x-if="state.forfeit_allowed">
+                <div class="rv-vs">vs</div>
+              </template>
+              <template x-if="state.forfeit_allowed">
+                <div class="rv-side rv-forfeit">
+                  <div class="rv-icon">🏳️</div>
+                  <div class="rv-label">If you forfeit (locked in)</div>
+                  <div class="rv-value" x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></div>
+                </div>
+              </template>
             </div>
 
-            <!-- Default: reward preview + continue/forfeit; no reason yet -->
-            <div x-show="!forfeitPending">
+            <!-- Forfeit allowed: continue vs forfeit -->
+            <div x-show="!forfeitPending && state.forfeit_allowed">
               <div class="decision-row">
                 <button class="submit-btn" @click="chooseContinue()" :disabled="submitting">
                   <span class="spinner" x-show="submitting"></span>
                   <span x-text="submitting ? 'Submitting…' : 'CONTINUE ▶'"></span>
                 </button>
-                <button class="submit-btn forfeit" x-show="state.forfeit_allowed"
+                <button class="submit-btn forfeit"
                         @click="forfeitPending = true" :disabled="submitting">
                   🏳️ FORFEIT
                 </button>
               </div>
+            </div>
+
+            <!-- No forfeit: reward shown, then auto-advance -->
+            <div x-show="!state.forfeit_allowed" class="auto-continue">
+              <div class="auto-continue-note">
+                Continuing automatically in
+                <strong x-text="autoContinueSecs !== null ? autoContinueSecs : ''"></strong>s…
+              </div>
+              <button class="submit-btn" @click="continueNow()" :disabled="submitting">
+                <span class="spinner" x-show="submitting"></span>
+                <span x-text="submitting ? 'Submitting…' : 'Continue now ▶'"></span>
+              </button>
             </div>
 
           </div>

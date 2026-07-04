@@ -1782,3 +1782,9 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
   color: var(--text); margin: 10px 0 6px;
 }
 .forfeit-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 18px; }
+
+/* ---- No-forfeit auto-advance ---------------------------------------- */
+.reward-versus.solo { max-width: 260px; margin-left: auto; margin-right: auto; }
+.auto-continue { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.auto-continue-note { font-size: 13px; color: var(--text-dim); }
+.auto-continue-note strong { color: var(--accent); font: 700 15px/1 var(--mono); }

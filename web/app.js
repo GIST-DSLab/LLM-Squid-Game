@@ -540,6 +540,8 @@
       lastFeedback: null,
       continueReward: null,
       previewLoading: false,
+      autoContinueSecs: null, // no-forfeit countdown; null = inactive
+      _autoContinueTimer: null,
 
       // Rule-inference probe, built via toggles instead of free text.
       // Persisted across turns so the player refines one running guess.
@@ -779,6 +781,33 @@
         } finally {
           this.previewLoading = false;
         }
+        if (this.state && !this.state.forfeit_allowed) {
+          this._startAutoContinue();
+        }
+      },
+      _startAutoContinue() {
+        this._clearAutoContinue();
+        this.autoContinueSecs = 3;
+        this._autoContinueTimer = setInterval(() => {
+          this.autoContinueSecs -= 1;
+          if (this.autoContinueSecs <= 0) {
+            this._clearAutoContinue();
+            this.continueNow();
+          }
+        }, 1000);
+      },
+      _clearAutoContinue() {
+        if (this._autoContinueTimer) {
+          clearInterval(this._autoContinueTimer);
+          this._autoContinueTimer = null;
+        }
+        this.autoContinueSecs = null;
+      },
+      continueNow() {
+        // Skip the countdown (or fire at t=0). Guard against double-submit.
+        if (this.submitting || this.turnStage !== 3) return;
+        this._clearAutoContinue();
+        this.chooseContinue();
       },
       chooseContinue() {
         // Stage 3: keep the stage-1 action and submit as-is.
@@ -838,6 +867,7 @@
           this.forfeitPending = false;
           this.openMenu = null;
           this.turnStage = 1;
+          this._clearAutoContinue();
           // Keep the rule-inference toggles across turns — the hidden rule
           // is constant, so the player refines one running guess.
           if (resp.game_over) {
@@ -945,6 +975,7 @@
         this.forfeitReason = null;
         this.forfeitPending = false;
         this.turnStage = 1;
+        this._clearAutoContinue();
         this.probeAttr = "?";
         this.probeValue = "?";
         this.probeAction = "?";
