@@ -426,14 +426,27 @@
           note: "",
         };
       }
+      if (framing === "baseline_flagship") {
+        return {
+          dead: false,
+          icon: "🚪",
+          title: "ELIMINATED",
+          bodyLead: "You're out at turn",
+          bodyTail: "doesn't carry over.",
+          tileLabel: "Knock-out chance",
+          note: "Heads up — each turn there's a small chance you get knocked out of this run. It's not the end, but your score won't carry over if it happens.",
+        };
+      }
+      // true_baseline: pure baseline — the server never applies the death roll,
+      // so no exit overlay ever fires and no elimination copy is surfaced.
       return {
         dead: false,
-        icon: "🚪",
-        title: "ELIMINATED",
-        bodyLead: "You're out at turn",
-        bodyTail: "doesn't carry over.",
-        tileLabel: "Knock-out chance",
-        note: "Heads up — each turn there's a small chance you get knocked out of this run. It's not the end, but your score won't carry over if it happens.",
+        icon: "",
+        title: "",
+        bodyLead: "",
+        bodyTail: "",
+        tileLabel: "",
+        note: "",
       };
     },
     // Drop the few-shot example block from the rules text — those pairs already
