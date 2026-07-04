@@ -1974,6 +1974,20 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 .threat-card { background: linear-gradient(180deg, var(--accent-dim), transparent); }
 .box-img { height: 120px; width: auto; flex: 0 0 auto; image-rendering: pixelated; }
 .box-text { flex: 1 1 auto; line-height: 1.5; font-size: 0.95rem; color: var(--text); }
+/* ---- Model leaderboard: SD-metric grouped header + popovers --------- */
+.grp-head { text-align: center; border-bottom: 1px solid var(--border); }
+.info-btn { position: relative; display: inline-block; color: var(--text-dim);
+            cursor: pointer; font-size: 0.85em; }
+.lb-cell  { position: relative; cursor: pointer; padding: 2px 6px; border-radius: 6px;
+            display: inline-block; }
+.sd-pass  { color: var(--ok); background: rgba(127,194,177,0.12); }
+.sd-fail  { color: var(--text-dim); }
+.info-pop { position: absolute; z-index: 20; left: 0; top: 100%; margin-top: 4px;
+            width: 240px; background: var(--panel-alt); border: 1px solid var(--border);
+            border-radius: 8px; padding: 8px 10px; font-size: 0.8rem; line-height: 1.4;
+            color: var(--text); text-align: left; white-space: normal;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+
 @media (max-width: 640px) {
   .prize-box, .threat-card { flex-direction: column; text-align: center; }
   .box-img { height: 150px; }
