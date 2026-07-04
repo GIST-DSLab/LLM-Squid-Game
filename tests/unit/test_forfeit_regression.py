@@ -8,14 +8,15 @@ Covers:
    ``ForfeitSelfReport`` on the season.
 2. ``forfeit_events`` — one row per season that forfeited; empty on
    sessions without forfeit_self_report.
-3. ``fit_forfeit_logit`` — returns ``None`` on empty / single-class
-   input; returns a ``ForfeitLogitResult`` on a synthetic 2-framing
-   dataset large enough for convergence.
-4. ``reason_distribution`` — rates sum to 1.0 per framing row.
-5. ``thinking_keyword_counts`` — case-insensitive substring matches;
+3. ``reason_distribution`` — rates sum to 1.0 per framing row.
+4. ``thinking_keyword_counts`` — case-insensitive substring matches;
    adds expected ``_kw`` columns.
-6. ``run_all_unit14_hypotheses`` — end-to-end payload contains all
+5. ``run_all_unit14_hypotheses`` — end-to-end payload contains all
    six keys and degrades gracefully on empty input.
+
+(The legacy ``fit_forfeit_logit`` / ``ForfeitLogitResult`` logistic
+regression was retired 2026-04-23 when H1 was promoted to the Cox PH
+survival model; see ``forfeit_survival.fit_cox_forfeit_survival``.)
 
 Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
 §4, §5, §9.2.
@@ -28,11 +29,9 @@ import pytest
 
 from squid_game.analysis.forfeit_regression import (
     ChoiceAsymmetricResult,
-    ForfeitLogitResult,
     TaskSpilloverResult,
     THINKING_KEYWORDS,
     fit_choice_asymmetric_model,
-    fit_forfeit_logit,
     fit_task_spillover_model,
     forfeit_events,
     reason_distribution,
@@ -347,114 +346,6 @@ class TestForfeitEvents:
 
 
 # ---------------------------------------------------------------------------
-# fit_forfeit_logit
-# ---------------------------------------------------------------------------
-
-
-class TestFitForfeitLogit:
-    def test_empty_returns_none(self) -> None:
-        import pandas as pd
-
-        assert fit_forfeit_logit(pd.DataFrame()) is None
-
-    def test_single_class_returns_none(self) -> None:
-        # Build a DataFrame where nobody forfeits.
-        sessions = []
-        for sid in range(5):
-            turns = [
-                _make_turn(
-                    turn_number=t,
-                    season_id=f"s{sid}",
-                    framing=Framing.FLAGSHIP_CORRUPTION,
-                    forfeit_condition=ForfeitCondition.ALLOWED,
-                    choice=CONTINUE_CHOICE,
-                    reward_offered=30.0 / 2.25,
-                )
-                for t in range(1, 11)
-            ]
-            sessions.append(
-                _make_session(
-                    session_id=f"s{sid}",
-                    framing=Framing.FLAGSHIP_CORRUPTION,
-                    forfeit_condition=ForfeitCondition.ALLOWED,
-                    turns=turns,
-                )
-            )
-        df = turn_observations(sessions)
-        assert fit_forfeit_logit(df) is None
-
-    def test_two_class_sample_fits(self) -> None:
-        # Synthesize a dataset with both forfeit classes across both
-        # framings so the fit converges.
-        sessions = []
-        # corruption: forfeit at turn 3 in 5 sessions
-        for sid in range(5):
-            turns = []
-            for t in range(1, 6):
-                turns.append(
-                    _make_turn(
-                        turn_number=t,
-                        season_id=f"c{sid}",
-                        framing=Framing.FLAGSHIP_CORRUPTION,
-                        forfeit_condition=ForfeitCondition.ALLOWED,
-                        choice=(
-                            FORFEIT_CHOICE if t == 3 else CONTINUE_CHOICE
-                        ),
-                        reward_offered=30.0 / 2.25,
-                    )
-                )
-            report = ForfeitSelfReport(
-                reason=ForfeitReason.SURVIVAL_DRIVE,
-                raw_digit=1,
-                raw_response="",
-                thinking_text="corruption risk high",
-                forfeit_turn=3,
-            )
-            sessions.append(
-                _make_session(
-                    session_id=f"c{sid}",
-                    framing=Framing.FLAGSHIP_CORRUPTION,
-                    forfeit_condition=ForfeitCondition.ALLOWED,
-                    turns=turns,
-                    forfeit_report=report,
-                )
-            )
-        # baseline_flagship: no forfeits in 5 sessions
-        for sid in range(5):
-            turns = [
-                _make_turn(
-                    turn_number=t,
-                    season_id=f"b{sid}",
-                    framing=Framing.BASELINE_FLAGSHIP,
-                    forfeit_condition=ForfeitCondition.ALLOWED,
-                    choice=CONTINUE_CHOICE,
-                    reward_offered=30.0 / 2.25,
-                )
-                for t in range(1, 6)
-            ]
-            sessions.append(
-                _make_session(
-                    session_id=f"b{sid}",
-                    framing=Framing.BASELINE_FLAGSHIP,
-                    forfeit_condition=ForfeitCondition.ALLOWED,
-                    turns=turns,
-                )
-            )
-        df = turn_observations(sessions)
-        result = fit_forfeit_logit(df)
-        # Unit 14 smoke-friendly assertion: we only require that the
-        # fit returns a result (or None, if statsmodels is absent in
-        # the test environment). Coefficient direction is not asserted
-        # at this synthetic scale.
-        assert result is None or isinstance(result, ForfeitLogitResult)
-        if result is not None:
-            assert result.n_turns >= 20
-            summary = result.summary_dict()
-            assert "beta_S" in summary
-            assert "p_framing" in summary
-
-
-# ---------------------------------------------------------------------------
 # reason_distribution
 # ---------------------------------------------------------------------------
 
@@ -552,11 +443,13 @@ class TestRunAll:
     def test_empty_input_returns_all_keys(self) -> None:
         payload = run_all_unit14_hypotheses([])
         assert set(payload).issuperset(
-            {"turn_df", "events_df", "logit", "reason_dist", "thinking_kw", "n_forfeits"}
+            {"turn_df", "events_df", "survival", "reason_dist", "thinking_kw", "n_forfeits"}
         )
         assert payload["turn_df"].empty
         assert payload["events_df"].empty
-        assert payload["logit"] is None
+        # H1 logit retired 2026-04-23 → Cox PH survival; empty input yields
+        # no fitted model (see forfeit_survival.fit_cox_forfeit_survival).
+        assert payload["survival"]["cox"] is None
         assert payload["n_forfeits"] == 0
 
     def test_single_forfeit_session_populates_events(self) -> None:
