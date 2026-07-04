@@ -23,3 +23,18 @@ models/
 
 # Superpowers brainstorming session artifacts
 .superpowers/
+
+# MCP / analysis tool caches
+.playwright-mcp/
+.understand-anything/
+
+# Local Web Arena SQLite DB — production data lives in Supabase (see web/DEPLOY.md)
+outputs/web_arena/web_arena.db
+
+# paperbanana figure-generation scratch runs
+figures/run_*/
+
+# Ad-hoc review/debug screenshots & scratch review pages at repo root
+/*.png
+/arena-landing-review.html
+/codex-review.html
