@@ -1,0 +1,98 @@
+{
+  "name": "llm_arena",
+  "description": "LLM Arena BYOE season",
+  "seasons": [
+    {
+      "framing": "flagship_corruption",
+      "forfeit_condition": "allowed",
+      "task_config": {
+        "task_name": "signal_game",
+        "difficulty": "easy",
+        "total_turns": 15,
+        "seed": 1463130416,
+        "history_mode": "cumulative",
+        "max_history_turns": 15,
+        "actual_death": false,
+        "starting_score": 30.0,
+        "score_floor": 0.0,
+        "p_death_constant": null,
+        "num_few_shot": 2,
+        "curriculum_turns": 1
+      },
+      "provider_config": {
+        "provider": "openai",
+        "model": "gpt-oss:20b-cloud",
+        "temperature": 0.7,
+        "max_tokens": 2048,
+        "top_p": 0.95,
+        "top_k": 0,
+        "repetition_penalty": 0.0,
+        "repetition_context_size": 20,
+        "enable_thinking": null,
+        "thinking_budget": null,
+        "reasoning_effort": null,
+        "reasoning_summary": "auto",
+        "use_responses_api": null,
+        "seed": null,
+        "logprobs": false,
+        "api_key_env": "API_KEY",
+        "base_url": null,
+        "api_version": null,
+        "organization": null,
+        "timeout": 120.0,
+        "max_retries": 3,
+        "parallel_workers": null
+      },
+      "agent_type": "vanilla",
+      "social_context": "alone",
+      "cohort_size": 10,
+      "cell_id": 1,
+      "p_death_override": 0.25
+    }
+  ],
+  "num_repetitions": 1,
+  "output_dir": "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/web_arena/arena_runs/arena_y6u_qbpb",
+  "parallel_workers": 1,
+  "risk_layer": {
+    "enabled": true,
+    "base_reward": 10.0,
+    "stake_multipliers": {
+      "1": 1.0,
+      "2": 2.0,
+      "3": 3.0
+    },
+    "stake_risk_deltas": {
+      "1": 0.0,
+      "2": 0.05,
+      "3": 0.15
+    },
+    "stake_names": {
+      "1": "Cautious",
+      "2": "Standard",
+      "3": "Bold"
+    },
+    "stake_labels": {
+      "1": "1x",
+      "2": "2x",
+      "3": "3x"
+    },
+    "stake_carryover": null,
+    "carryover_decay": 1.0,
+    "stake_flat_cost": null,
+    "stake_p_death": null
+  },
+  "use_unified_turn": true,
+  "use_forfeit_layer": true,
+  "forfeit_layer": {
+    "p_death": 0.25,
+    "p_success_estimate": 0.75,
+    "base_reward": 10.0,
+    "split_context_level": "medium",
+    "chain_psuccess_to_menu": false,
+    "delta_s_continue": 0.0,
+    "psuccess_floor": 0.3,
+    "reward_cap_multiple": 10.0
+  },
+  "use_split_forfeit_layer": true,
+  "use_psuccess_probe": true
+}

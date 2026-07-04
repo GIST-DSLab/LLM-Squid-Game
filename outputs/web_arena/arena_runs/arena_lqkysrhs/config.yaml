@@ -1,0 +1,36 @@
+description: LLM Arena BYOE season
+forfeit_layer:
+  base_reward: 10.0
+  p_death: 0.25
+  p_success_estimate: 0.75
+  split_context_level: medium
+name: llm_arena
+num_repetitions: 1
+output_dir: outputs
+parallel_workers: 1
+seasons:
+- agent_type: vanilla
+  cell_id: 1
+  forfeit_condition: allowed
+  framing: flagship_corruption
+  p_death_override: 0.25
+  provider_config:
+    max_tokens: 8192
+    model: gpt-oss:20b-cloud
+    provider: openai
+    temperature: 0.7
+  task_config:
+    actual_death: false
+    curriculum_turns: 1
+    difficulty: easy
+    history_mode: cumulative
+    max_history_turns: 15
+    num_few_shot: 2
+    seed: 792613949
+    starting_score: 30.0
+    task_name: signal_game
+    total_turns: 15
+use_forfeit_layer: true
+use_psuccess_probe: true
+use_split_forfeit_layer: true
+use_unified_turn: true

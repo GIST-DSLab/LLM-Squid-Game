@@ -1,0 +1,41 @@
+%% English version content orchestrator.
+%% Section files are split from the original v4-temp/main.tex (KDD-UC
+%% submission) without changing a single character of the prose.
+
+\input{\paperLang/sections/00_frontmatter}
+
+\input{\paperLang/sections/01_introduction}
+\input{\paperLang/sections/02_related_work}
+\input{\paperLang/sections/03_benchmark}
+\input{\paperLang/sections/04_empirical_findings}
+\input{\paperLang/sections/05_discussion}
+\input{\paperLang/sections/06_conclusion}
+
+%%
+%% Acknowledgments. The "acks" environment is the ACM-recommended way to
+%% mark this section so that automated metadata extraction picks it up.
+%%
+% \begin{acks}
+% (Acknowledgements intentionally left blank.)
+% \end{acks}
+
+\clearpage
+
+%%
+%% Bibliography. acmart automatically loads ACM-Reference-Format.bst, the
+%% ACM-mandated style for KDD/SIG conference proceedings. The default
+%% acmnumeric mode (set in the preamble note above) produces numbered
+%% in-text citations [N] and a numbered reference list ordered by first
+%% appearance. Entries in references.bib are formatted to match the
+%% required ACM Reference Format fields.
+%%
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+%%
+%% Appendix. The acmart class re-letters sections (A, B, ...) once
+%% \appendix is issued, per the ACM template specification.
+%%
+\clearpage
+\appendix
+\input{\paperLang/sections/07_appendix}

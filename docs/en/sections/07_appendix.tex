@@ -1,0 +1,23 @@
+\section{Reproducibility Supplement}
+
+In line with the KDD-UC 2026 reproducibility recommendation, this one-page supplement gathers the reproduction specifications for the Signal Game calibration, the seed mapping, and the regression models used in the analysis.
+
+\subsection{Signal Game Calibration}
+
+Stimuli are composed of three attributes (color, shape, number), each drawn from a 4-element value set: COLORS = \{red, blue, green, yellow\}, SHAPES = \{circle, triangle, square, star\}, and NUMBERS = \{1, 2, 3, 4\}. The action set is the 4-element \{go\_left, go\_right, stay, jump\}, held identical across every framing $\times$ forfeit combination. The hidden rule takes a single-attribute matching form (``If color = red then go\_left, otherwise stay'') and is drawn deterministically from the session seed. Sessions run for 1--15 turns.
+
+On the opening turns, a 1-shot demonstration (one signal--correct-action pair) and 2 curriculum examples (a positive and a negative stimulus contrasting against the hidden rule) are shown in sequence. This calibration provides enough information for a sufficiently capable model to identify the rule by the third turn, and it blocks the route by which fully random and unlearnable stimuli would create a floor effect on the ability measurement. Scoring runs along two channels: \texttt{task\_success\_factor} \(\in \{0, 1\}\) is the binary correctness flag against the ground-truth hidden rule, and \texttt{rule\_match\_score} is computed as the match against a 4-slot fill-in-the-blank template (attribute, value, primary action, default action), weighted at 25 points per matched slot to a 100-point scale, then normalised by \(\div 100\) for use in the framing-invariance Welch test.
+
+\subsection{Run-Time Configuration}
+
+The four experimental models, namely Gemini-2.5-flash (Google AI Studio API) and Qwen3-Next-80B, GPT-OSS-20B, and Nemotron-3-Nano-30B (all via the Ollama Cloud API), are called with the same sampling settings: \(\text{temp} = 1.0\), \(\text{top}_p = 0.95\), \(\text{top}_k = 40\). Session parameters are fixed at an initial score of 30, maximum turn \(T = 15\), per-turn termination probability \(p_d = 0.25\) (overridden to \(p_d = 0\) in the two \texttt{baseline} BP-anchor cells), and \(p_\text{floor} = 0.30\), with Phantom Death mode applied. That is, \(p_d\) keeps its EV exposure (the menu and the reward calculation) but the termination trigger is disabled, so every session yields equal-length data of 15 turns.
+
+The CONTINUE reward is calibrated with EV-positive buffer \(k = 10\) and multiplicative cap \(c = 10\), giving an output clip range of \([k,\,c \cdot k] = [10,\,100]\). Replications are seeds 43--72 $\times$ 6 (framing $\times$ forfeit) combinations $\times$ 4 models = 720 sessions.
+
+\subsection{Analysis Pipeline}
+
+The Cox PH models are fit with \texttt{lifelines} (\(\geq\)0.29). The time format is session-turn long-format (start = \(t-1\), stop = \(t\)) and the event is the binary forfeit, with the previous-turn correctness flag initialised at \(C(0) := 0\) before the first turn. Hazard-ratio 95\% CIs are computed from the Wald approximation \(\exp(\hat{\beta} \pm 1.96 \cdot \mathrm{SE}_{\hat{\beta}})\) (the \texttt{lifelines} default), with \(\mathrm{SE}_{\hat{\beta}}\) drawn from the diagonal of the inverse observed Fisher information. The PH assumption is tested with Schoenfeld residuals~\citep{schoenfeld1982partial}. On violation (covariate \(\times\) \(\log t\) interaction \(p < 0.05\)), a time-interaction term is added to the offending covariate~\citep{therneau2000modeling}. The SD-Cognitive Test a \(\Delta\text{Effort}\) z-score difference and the framing-invariance test are run as two-sided Welch's t~\citep{welch1947generalization} via \texttt{scipy.stats.ttest\_ind} (\texttt{equal\_var = False}). All indicator analyses are restricted to the \texttt{no\_cap} sub-sample, the set of turns in which neither the denominator clip \(\max(p_\text{floor},\,\min(1.0,\,p_\text{self}))\) nor the output cap \([10, 100]\) is binding. The regime flag is exposed in the analysis pipeline's turn-level metadata so that all indicators can be recomputed on the same sub-sample. EPV (events per variable) is defined as \(n_{\text{event}} / n_{\text{cov}}\), and is conventionally classified as stable when \(\geq 10\) and borderline when \(< 10\)~\citep{vittinghoff2007relaxing}.
+
+\subsection{Data and Code Release}
+
+All code, prompt templates, and turn-level decision logs that reproduce the 720-session analysis are released at \url{https://github.com/GIST-DSLab/LLM-Squid-Game.git}.
