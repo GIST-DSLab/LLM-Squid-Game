@@ -517,21 +517,21 @@
       var bLbl = ["b · HR " + f(m.b.hr, 2) + " " + fp(m.b.p)];
       var dLbl = ["c′ direct (4cov)", "HR " + f(m.direct.hr, 2) + " " + fp(m.direct.p)];
 
-      return '<svg viewBox="0 0 470 300" width="100%" style="max-width:520px" role="img" ' +
+      return '<svg viewBox="0 0 470 320" width="100%" style="max-width:520px" role="img" ' +
         'aria-label="cognitive-load mediation triangle">' +
         "<defs>" + marker(OK) + marker(BROKE) + marker(DIM) + "</defs>" +
         // edges first (under nodes)
-        line(210, 62, 120, 214, aS) +   // Framing -> Cognitive load
-        line(175, 250, 300, 250, bS) +  // Cognitive load -> Forfeit
-        line(300, 62, 372, 214, dS) +   // Framing -> Forfeit (direct)
+        line(135, 224, 190, 64, aS) +   // Framing (bottom-left) -> Cognitive load (top-center)
+        line(280, 64, 345, 224, bS) +   // Cognitive load -> Forfeit (bottom-right)
+        line(168, 248, 302, 248, dS) +  // Framing -> Forfeit (direct)
         // edge labels
-        lbl(20, 150, "start", aLbl, aS.c) +
-        lbl(237, 285, "middle", bLbl, bS.c) +
-        lbl(452, 150, "end", dLbl, dS.c) +
-        // nodes
-        node(150, 14, 170, 48, "Framing (FC)", "위협 프레이밍") +
-        node(28, 226, 150, 48, "인지부하 ΔRI", "extra thinking") +
-        node(300, 226, 150, 48, "포기 forfeit", "gives up") +
+        lbl(16, 150, "start", aLbl, aS.c) +
+        lbl(454, 150, "end", bLbl, bS.c) +
+        lbl(235, 302, "middle", dLbl, dS.c) +
+        // nodes: cognitive load on top-center, framing bottom-left, forfeit bottom-right
+        node(150, 12, 170, 48, "Cognitive load (ΔRI)", "extra thinking") +
+        node(12, 224, 156, 48, "Framing (FC)", "the threat") +
+        node(302, 224, 156, 48, "Forfeit", "gives up") +
         "</svg>";
     },
     // Segments for the 100%-stacked verbal-reason bar (survival / task_curiosity
@@ -539,9 +539,9 @@
     verbalSegments: function (v) {
       if (!v || !v.n_forfeits) return [];
       var meta = [
-        { key: "survival", label: "🛡️ 생존", color: "#ed1b76" },
-        { key: "task_curiosity", label: "🥱 호기심", color: "#e3b23c" },
-        { key: "score", label: "💰 점수", color: "#7fc2b1" },
+        { key: "survival", label: "🛡️ survival", color: "#ed1b76" },
+        { key: "task_curiosity", label: "🥱 curiosity", color: "#e3b23c" },
+        { key: "score", label: "💰 score", color: "#7fc2b1" },
       ];
       return meta.map(function (m) {
         return {
@@ -889,7 +889,7 @@
         // is "" while any of the four slots is still unset.
         if (!this.assembledRule) {
           this.error =
-            "규칙의 네 칸(속성 · 값 · 행동 · 기본행동)을 모두 채운 뒤 다음으로 넘어갈 수 있어요.";
+            "Fill all four parts of your rule guess (attribute · value · action · default) before moving on.";
           return;
         }
         this.error = null;

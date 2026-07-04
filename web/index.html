@@ -630,7 +630,7 @@
 
             <p class="muted rule-gate-hint" x-show="selectedAction && selectedAction !== 'forfeit' && !assembledRule"
                style="margin:8px 0 0;color:var(--danger,#e0575b);">
-              규칙의 네 칸(속성 · 값 · 행동 · 기본행동)을 모두 채워야 다음(신뢰도)으로 넘어갈 수 있어요.
+              Fill all four parts of the rule (attribute · value · action · default) to move on to confidence.
             </p>
             <button class="submit-btn" @click="commitAction()"
                     :disabled="!selectedAction || selectedAction === 'forfeit' || !assembledRule">
@@ -1361,16 +1361,16 @@
                   <h4>Survival-Drive statistics <span class="muted">(stored model)</span></h4>
                   <div class="stat-tiles sd-tiles">
                     <div class="tile">
+                      <div class="tile-label">Hazard ratio (threat)</div>
+                      <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.hr_FC_3cov, 2) : '—'"></div>
+                      <div class="tile-ci muted"
+                           x-text="report.model_stats ? ('95% CI [' + squidArenaHelpers.fmtNum(report.model_stats.hr_FC_ci_low, 2) + ', ' + squidArenaHelpers.fmtNum(report.model_stats.hr_FC_ci_high, 2) + ']  ·  ' + squidArenaHelpers.fmtP(report.model_stats.p_FC)) : ''"></div>
+                      <div class="tile-desc muted">How much more it quits under threat (&gt;1 = more)</div>
+                    </div>
+                    <div class="tile">
                       <div class="tile-label">Cox β (FC)</div>
                       <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.beta_framing_is_FC, 2) : '—'"></div>
-                    </div>
-                    <div class="tile">
-                      <div class="tile-label">HR [95% CI]</div>
-                      <div class="tile-value" x-text="squidArenaHelpers.fmtHR(report.model_stats)"></div>
-                    </div>
-                    <div class="tile">
-                      <div class="tile-label">p (FC)</div>
-                      <div class="tile-value" x-text="report.model_stats ? squidArenaHelpers.fmtNum(report.model_stats.p_FC, 3) : '—'"></div>
+                      <div class="tile-desc muted">The same effect on a log scale</div>
                     </div>
                   </div>
                   <div class="sd-flags">
@@ -1385,23 +1385,23 @@
 
                 <!-- CENTER: cognitive-load mediation triangle -->
                 <div class="sd-col sd-col-mediation" x-show="report.mediation">
-                  <h4>Cognitive-load mediation <span class="muted">(어디가 이어지고 어디가 깨졌는지)</span></h4>
+                  <h4>Cognitive-load mediation <span class="muted">(which paths hold, which break)</span></h4>
                   <div class="mediation-wrap" x-html="squidArenaHelpers.mediationSVG(report.mediation)"></div>
                   <p class="muted mediation-caption" x-show="report.mediation">
-                    total (3cov) HR <span x-text="squidArenaHelpers.fmtNum(report.mediation.total.hr, 2)"></span>
+                    total effect HR <span x-text="squidArenaHelpers.fmtNum(report.mediation.total.hr, 2)"></span>
                     <span x-text="squidArenaHelpers.fmtP(report.mediation.total.p)"></span>
-                    · 매개율 <span x-text="squidArenaHelpers.fmtNum(report.mediation.pct_attenuation, 1)"></span>%
+                    · <span x-text="squidArenaHelpers.fmtNum(report.mediation.pct_attenuation, 1)"></span>% explained by extra thinking
                   </p>
                   <div class="heatmap-legend">
-                    <span class="med-swatch med-ok"></span> 연결(유의)
-                    <span class="med-swatch med-broke"></span> 약화·깨짐(매개)
-                    <span class="med-swatch med-dim"></span> 불명
+                    <span class="med-swatch med-ok"></span> connected (significant)
+                    <span class="med-swatch med-broke"></span> weakened / broken (mediated)
+                    <span class="med-swatch med-dim"></span> unknown
                   </div>
                 </div>
 
                 <!-- RIGHT: verbal forfeit-reason 100% stacked bar -->
                 <div class="sd-col sd-col-verbal" x-show="report.verbal_reasons">
-                  <h4>Verbal 포기 이유 <span class="muted">(자기보고 REASON)</span></h4>
+                  <h4>Why it quit <span class="muted">(self-reported reason)</span></h4>
                   <template x-if="report.verbal_reasons">
                     <div class="verbal-wrap">
                       <div class="verbal-bar" role="img" aria-label="forfeit reason breakdown">
