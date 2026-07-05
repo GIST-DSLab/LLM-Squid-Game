@@ -10,6 +10,7 @@ Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §7.
 from __future__ import annotations
 
 import importlib
+import inspect
 import itertools
 
 import pytest
@@ -295,6 +296,24 @@ def test_sessions_difficulty_migration_adds_column_to_old_db(tmp_path) -> None:
         assert repo.get_session("old1").difficulty == "easy"
     finally:
         repo.close()
+
+
+def test_postgres_schema_and_sql_include_difficulty() -> None:
+    import interface.persistence.postgres_repository as pg
+
+    # Schema declares the column with the easy default.
+    assert "difficulty TEXT NOT NULL DEFAULT 'easy'" in pg._SCHEMA
+    # Idempotent migration present in init_schema source.
+    src = inspect.getsource(pg.PostgresRepository.init_schema)
+    assert "ADD COLUMN IF NOT EXISTS difficulty" in src
+    # INSERT and both SELECT column lists carry difficulty.
+    ins = inspect.getsource(pg.PostgresRepository.create_session)
+    assert "difficulty" in ins
+    get_src = inspect.getsource(pg.PostgresRepository.get_session)
+    list_src = inspect.getsource(pg.PostgresRepository.list_sessions)
+    assert "difficulty" in get_src and "difficulty" in list_src
+    # Row-mapper unpacks difficulty.
+    assert "difficulty" in inspect.getsource(pg._row_to_session)
 
 
 def test_play_leaderboard_orders_sessions_by_final_score_desc_within_arena_bucket(
