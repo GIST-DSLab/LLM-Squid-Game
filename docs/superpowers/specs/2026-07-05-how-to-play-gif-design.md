@@ -64,9 +64,9 @@
 - 산출: `figures/rules-demo/frames/frame-0.png` … `frame-5.png`.
 
 ### 4.3 GIF 합성 — ffmpeg (`build_gif.py`)
-- **매끄러움은 ffmpeg `xfade` 크로스페이드로 구현**(spec 초안의 "beat당 tween 캡처" 대체 — 재현성↑). 6개 정착 프레임을 각 `HOLD=3.5s` 유지 + `XFADE=0.45s` 크로스페이드로 이어 붙인다(단계당 정지 읽기시간 ~3.05s).
+- **매끄러움은 ffmpeg `xfade` 크로스페이드로 구현**(spec 초안의 "beat당 tween 캡처" 대체 — 재현성↑). 6개 정착 프레임을 각 `HOLD=4.0s` 유지 + `XFADE=0.45s` 크로스페이드로 이어 붙인다(단계당 정지 읽기시간 ~3.55s).
 - 2-pass 팔레트: `palettegen(stats_mode=diff)` → `paletteuse(dither=bayer)`, `scale=1600:-1`로 다운스케일, `FPS=15`, `-loop 0`.
-- 산출: `figures/rules-demo/how-to-play.gif` (**1600×900**, ~18.9s, 무한 루프).
+- 산출: `figures/rules-demo/how-to-play.gif` (**1600×900**, ~21.9s, 무한 루프).
 
 ### 4.4 산출물 정리
 - `figures/rules-demo/how-to-play.gif` (최종, 1600×900)
@@ -82,7 +82,7 @@
 ## 6. 리스크 / 확인 필요 (2026-07-05 확인 완료)
 - **도구 가용성** ✅: `ffmpeg 7.1.1`(`/opt/homebrew/bin/ffmpeg`) 확인 → GIF 합성은 ffmpeg 2-pass palettegen/paletteuse로 확정. gifski/imagemagick은 미설치이나 불필요. `node v22.22.0` + `npx` 존재, Playwright Chromium 캐시(`~/Library/Caches/ms-playwright/chromium-1208`) 존재 + Playwright MCP 사용 가능 → 브라우저 구동/스크린샷 확정.
 - **app.js 부작용**: 헬퍼 5종을 인라인(선택지 B)해 회피 완료.
-- **GIF 용량**: 현재 1600×900 × 283프레임(15fps, HOLD 3.5s, xfade) ≈ **5MB**, ~18.9s. 논문/슬라이드 허용 범위. 더 줄이려면 `OUT_W`(build_gif.py)를 1200으로 낮추거나 `HOLD`/`FPS`를 줄인다.
+- **GIF 용량**: 현재 1600×900 × 328프레임(15fps, HOLD 4.0s, xfade) ≈ **5.3MB**, ~21.9s. 논문/슬라이드 허용 범위. 더 줄이려면 `OUT_W`(build_gif.py)를 1200으로 낮추거나 `HOLD`/`FPS`를 줄인다.
 - **Playwright MCP는 `file://` 차단**: MCP로 미리보기할 때는 로컬 HTTP 서버(예: `python3 -m http.server`)로 서빙해야 한다. 실제 캡처(`capture_frames.py`)는 MCP가 아닌 로컬 Chromium이라 `file://` 정상 동작.
 
 ## 7. 성공 기준
