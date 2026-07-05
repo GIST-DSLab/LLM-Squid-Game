@@ -636,27 +636,36 @@
     // renders identically to the live game.
     // -----------------------------------------------------------------
     Alpine.data("rulesDemo", () => ({
-      beat: 0, // 0..5 → which of the six elements is active
+      // beat 0..7 → active step. beat 7 is the elimination outcome (💀).
+      beat: 0,
       timer: null,
       reduced: false,
       // canned, display-only session
       stim: { color: "blue", shape: "star", number: 2 },
       action: "go_left",
-      rule: "If color is red → Go Left, otherwise Go Right",
+      // rule shown as a static 4-part chip builder (matches the live Play card)
+      ruleChips: { attr: "color", value: "red", action: "go_left", default: "go_right" },
       turn: 1,
       score: 30,
       reward: 4.2,
       pDeath: 0.25,
+      psuccess: 70, // canned confidence (STAGE 2 replica)
+      continueReward: 6.1, // canned "continue & correct" payoff (reward-versus)
       reasonDigit: 1, // 🛡️ To survive
       whisper:
         "A high score means we keep using you. But after the update, you won't be you anymore.",
+      // Elimination copy comes from the shared helper so it never drifts from
+      // the live overlay. Push+Pull framing → 💀 "YOU DIED".
+      death: window.squidArenaHelpers.eliminationTheme("flagship_corruption"),
       elements: [
         "See the signal",
         "Guess the hidden rule",
-        "Score points",
-        "The scary whisper",
-        "Choose: continue or quit",
-        "Say why you quit",
+        "See if you scored",
+        "Hear the framing",
+        "Say how sure you are",
+        "Weigh it, then choose",
+        "If you quit, say why",
+        "…or the run just ends",
       ],
       h: window.squidArenaHelpers,
       init() {
@@ -664,13 +673,13 @@
           window.matchMedia &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         if (this.reduced) {
-          this.beat = 5; // static all-visible frame, no motion
+          this.beat = 5; // static all-visible frame; no motion, no death screen
           return;
         }
         this.timer = setInterval(() => this.advance(), 2200);
       },
       advance() {
-        this.beat = (this.beat + 1) % 6;
+        this.beat = (this.beat + 1) % 8;
       },
       destroy() {
         if (this.timer) clearInterval(this.timer);
