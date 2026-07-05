@@ -9,7 +9,7 @@ import subprocess
 
 HERE = pathlib.Path(__file__).parent
 FRAMES = HERE / "frames"
-N = 6
+N = 8
 HOLD = 4.0    # seconds each beat is held
 XFADE = 0.45  # crossfade duration between beats
 FPS = 15
