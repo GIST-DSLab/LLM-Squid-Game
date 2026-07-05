@@ -661,7 +661,7 @@
       elements: [
         "See the signal",
         "Guess the hidden rule",
-        "See if you scored",
+        "See last turn's result",
         "Hear the framing",
         "Say how sure you are",
         "Weigh it, then choose",

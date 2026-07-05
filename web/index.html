@@ -195,7 +195,8 @@
               </div>
             </div>
 
-            <!-- beat 2: feedback — mirrors the live Play feedback-card (emoji · verdict · reward · score · muted note) -->
+            <!-- beat 2: last turn's result — mirrors the live Play feedback-card,
+                 which shows the PREVIOUS turn's outcome (lastFeedback), not this turn's -->
             <div class="feedback-card rd-block" :class="{ hot: beat === 2 }" x-show="beat >= 2">
               <div class="fb-head">
                 <span class="fb-emoji" x-text="h.actionEmoji(action)"></span>
@@ -203,7 +204,7 @@
                 <span class="fb-reward">reward <strong x-text="h.fmtNum(reward,1)"></strong></span>
                 <span class="fb-reward">score <strong x-text="h.fmtNum(score,1)"></strong></span>
               </div>
-              <p class="muted">Your action was correct. Score change: +<span x-text="h.fmtNum(reward,0)"></span>.</p>
+              <p class="muted">Last turn was correct — score change +<span x-text="h.fmtNum(reward,0)"></span>.</p>
             </div>
 
             <!-- beat 4: confidence slider replica (STAGE 2) -->
