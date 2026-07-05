@@ -631,7 +631,8 @@
 
     // -----------------------------------------------------------------
     // About: self-playing rules demo. A scripted, display-only miniature
-    // of the real Play card that loops through the six per-turn elements.
+    // of the real Play card that loops through the eight demo steps
+    // (the last is the elimination ending, not an every-turn step).
     // No server, no engine — reuses squidArenaHelpers + Play CSS so it
     // renders identically to the live game.
     // -----------------------------------------------------------------
