@@ -704,6 +704,11 @@
     Alpine.data("playScreen", () => ({
       task: window.WEB_ARENA_DEFAULT_TASK,
 
+      // Campaign-level Signal Game difficulty (engine easy|hard|expert;
+      // labelled Easy/Normal/Hard). Chosen once on the setup screen and held
+      // constant across all 6 games of the campaign.
+      difficulty: "easy",
+
       // Campaign state — 6 conditions played in a fixed order.
       campaignIndex: 0,
       campaignId: null,      // shared by the 6 games so the Play Leaderboard can sum them
@@ -815,10 +820,11 @@
       _saveCheckpoint() {
         try {
           const data = {
-            v: 1,
+            v: 2,
             nickname: this.nickname,
             password: this.password,
             campaignId: this.campaignId,
+            difficulty: this.difficulty,
             // Resume index = number of fully-completed games = the index of the
             // next game to play. Correct both mid-game (campaignResults.length
             // == the in-progress 0-based game index) and between games (after
@@ -837,7 +843,7 @@
           const raw = window.localStorage.getItem(this._CKPT_KEY);
           if (!raw) return null;
           const d = JSON.parse(raw);
-          if (!d || d.v !== 1 || d.campaignIndex >= 6) return null;
+          if (!d || (d.v !== 1 && d.v !== 2) || d.campaignIndex >= 6) return null;
           return d;
         } catch (_) { return null; }
       },
@@ -903,6 +909,7 @@
                 nickname: this.nickname,
                 password: this.password,
                 campaign_id: this.campaignId,
+                difficulty: this.difficulty,
                 // Show 2 rule-informative clue examples up front (EASY: one
                 // positive + one negative), surfaced in the History panel.
                 num_few_shot: 2,
@@ -1175,6 +1182,7 @@
         this.nickname = ck.nickname;
         this.password = ck.password || "";
         this.campaignId = ck.campaignId;
+        this.difficulty = ck.difficulty || "easy";
         this.campaignIndex = ck.campaignIndex;
         this.campaignResults = ck.campaignResults || [];
         this.campaignDone = false;
