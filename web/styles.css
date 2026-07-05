@@ -2035,3 +2035,36 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 }
 .ladder-gap { display: block; text-align: center; opacity: 0.5; padding: 2px 0; }
 .rank-note { font-size: 0.85em; margin-top: 8px; }
+
+/* ---- about-tab "How to play" demo: elimination + render-sync replicas ---- */
+
+/* .rd-death is a card-scoped stand-in for .death-overlay (which is
+   position:fixed full-screen and cannot be reused inside the demo card). */
+.rd-card { position: relative; }
+.rd-death {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(10, 8, 12, 0.92);
+  border-radius: inherit;
+  backdrop-filter: blur(3px);
+}
+.rd-death-skull { font-size: 56px; line-height: 1; }
+.rd-death .death-title { margin: 0; }
+.rd-death .death-sub { margin: 0; max-width: 34ch; }
+
+/* Rule chips in the demo are display-only — drop the interactive affordance. */
+.rd-chips { margin-top: 10px; }
+.rd-chips .chip { cursor: default; }
+
+/* Confidence slider is display-only; keep it looking active, not greyed out. */
+.rd-confidence { margin-top: 10px; }
+.rd-confidence .rd-block-label { margin-bottom: 8px; }
+.rd-confidence .themed-range:disabled { opacity: 1; cursor: default; }
