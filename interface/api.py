@@ -721,6 +721,7 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
                     forfeited=result.forfeited,
                     source="human",
                     campaign_id=_campaigns.get(session_id),
+                    difficulty=result.difficulty.value,
                 )
             )
         except Exception:

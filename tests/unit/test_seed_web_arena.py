@@ -201,6 +201,19 @@ def test_build_session_record_falls_back_to_run_dir_timestamp_when_turn_timestam
     assert session.created_at == "2026-01-01T00:00:00+00:00"
 
 
+def test_build_session_record_carries_difficulty() -> None:
+    season = _season("seasD", final_score=10.0, forfeited=False, turns=[_turn(1)])
+    session = build_session_record(season, "Test-Model", fallback_created_at="2026-01-01T00:00:00+00:00")
+    assert session.difficulty == "medium"
+
+
+def test_build_session_record_difficulty_defaults_when_absent() -> None:
+    season = _season("seasE", final_score=10.0, forfeited=False, turns=[_turn(1)])
+    del season["difficulty"]
+    session = build_session_record(season, "Test-Model", fallback_created_at="2026-01-01T00:00:00+00:00")
+    assert session.difficulty == "easy"
+
+
 def test_build_turn_records_derives_running_cumulative_score_without_hardcoded_base() -> None:
     # base (implicit starting score) = final_score - sum(reward) = 250 - 120 = 130
     season = _season(
