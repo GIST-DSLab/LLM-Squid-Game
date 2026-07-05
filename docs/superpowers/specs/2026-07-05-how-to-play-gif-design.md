@@ -79,10 +79,9 @@
 ## 5. 손대지 않는 것
 - `web/index.html`, `web/app.js`, `web/styles.css`의 프로덕션 동작(라이브 데모 그대로). 캡처 HTML은 스타일을 **읽기만** 한다.
 
-## 6. 리스크 / 확인 필요
-- **도구 가용성**: ffmpeg/gifski/magick 중 최소 하나 필요. 없으면 `brew install`(사용자 확인) 또는 Playwright 내장 스크린샷 후 대체 합성 경로.
-- **app.js 부작용**: 4.1 선택지 A가 안전한지 로드 테스트 필요. 부작용 있으면 선택지 B로.
-- **iCloud .pth quirk / venv**: Playwright는 node 기반 MCP를 쓰거나 별도 설치. 파이썬 의존과 무관하게 진행.
+## 6. 리스크 / 확인 필요 (2026-07-05 확인 완료)
+- **도구 가용성** ✅: `ffmpeg 7.1.1`(`/opt/homebrew/bin/ffmpeg`) 확인 → GIF 합성은 ffmpeg 2-pass palettegen/paletteuse로 확정. gifski/imagemagick은 미설치이나 불필요. `node v22.22.0` + `npx` 존재, Playwright Chromium 캐시(`~/Library/Caches/ms-playwright/chromium-1208`) 존재 + Playwright MCP 사용 가능 → 브라우저 구동/스크린샷 확정.
+- **app.js 부작용**: 4.1 선택지 A가 안전한지 로드 테스트 필요. 부작용 있으면 선택지 B(헬퍼 5종 인라인)로.
 - **GIF 용량**: 2400×1200 × ~20프레임이면 수 MB일 수 있음. 논문/슬라이드 허용 범위지만, 필요 시 폭 축소(1200×600) 버전도 함께 생성.
 
 ## 7. 성공 기준
