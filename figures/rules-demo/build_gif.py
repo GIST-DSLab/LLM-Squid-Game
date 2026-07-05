@@ -10,9 +10,9 @@ import subprocess
 HERE = pathlib.Path(__file__).parent
 FRAMES = HERE / "frames"
 N = 6
-HOLD = 2.0    # seconds each beat is held
+HOLD = 3.5    # seconds each beat is held
 XFADE = 0.45  # crossfade duration between beats
-FPS = 24
+FPS = 15
 OUT_W = 1600  # downscale width for the final GIF (source frames are 2560 wide)
 
 MP4 = HERE / "_intermediate.mp4"
