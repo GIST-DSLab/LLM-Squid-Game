@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     forfeited INTEGER NOT NULL,
     source TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    campaign_id TEXT
+    campaign_id TEXT,
+    difficulty TEXT NOT NULL DEFAULT 'easy'
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -143,6 +144,10 @@ class SQLiteRepository(Repository):
             }
             if "campaign_id" not in session_cols:
                 self._conn.execute("ALTER TABLE sessions ADD COLUMN campaign_id TEXT")
+            if "difficulty" not in session_cols:
+                self._conn.execute(
+                    "ALTER TABLE sessions ADD COLUMN difficulty TEXT NOT NULL DEFAULT 'easy'"
+                )
             stats_cols = {
                 r["name"] for r in self._conn.execute("PRAGMA table_info(model_stats)")
             }
@@ -180,8 +185,8 @@ class SQLiteRepository(Repository):
                 """
                 INSERT INTO sessions
                     (id, nickname, task, framing, forfeit, seed,
-                     final_score, forfeited, source, created_at, campaign_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     final_score, forfeited, source, created_at, campaign_id, difficulty)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     session_id,
@@ -195,6 +200,7 @@ class SQLiteRepository(Repository):
                     session.source,
                     created_at,
                     session.campaign_id,
+                    session.difficulty,
                 ),
             )
             self._conn.commit()
@@ -421,6 +427,7 @@ def _row_to_session(row: sqlite3.Row) -> SessionRecord:
         source=row["source"],
         created_at=row["created_at"],
         campaign_id=row["campaign_id"] if "campaign_id" in row.keys() else None,
+        difficulty=row["difficulty"] if "difficulty" in row.keys() else "easy",
     )
 
 

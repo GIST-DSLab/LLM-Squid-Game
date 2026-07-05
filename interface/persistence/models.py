@@ -45,6 +45,9 @@ class SessionRecord:
     # a player's cumulative score across the campaign. ``None`` for LLM runs
     # and for legacy human rows written before this column existed.
     campaign_id: str | None = None
+    # Signal Game difficulty this session was played at (easy | hard | expert).
+    # Defaults to "easy" for legacy rows written before this column existed.
+    difficulty: str = "easy"
 
 
 @dataclass

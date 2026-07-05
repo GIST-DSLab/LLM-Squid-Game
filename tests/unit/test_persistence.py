@@ -254,6 +254,49 @@ def test_delete_sessions_by_source_returns_zero_when_none_match(repo: Repository
     assert len(repo.list_sessions(source="llm")) == 1
 
 
+def test_session_round_trips_difficulty(repo: Repository) -> None:
+    sid = repo.create_session(_session(difficulty="hard"))
+    fetched = repo.get_session(sid)
+    assert fetched is not None
+    assert fetched.difficulty == "hard"
+
+
+def test_session_difficulty_defaults_to_easy(repo: Repository) -> None:
+    sid = repo.create_session(_session())  # helper omits difficulty
+    assert repo.get_session(sid).difficulty == "easy"
+
+
+def test_sessions_difficulty_migration_adds_column_to_old_db(tmp_path) -> None:
+    import sqlite3
+    from interface.persistence.sqlite_repository import SQLiteRepository
+
+    db = str(tmp_path / "old.db")
+    # Simulate a pre-migration DB: sessions without the difficulty column.
+    conn = sqlite3.connect(db)
+    conn.execute(
+        "CREATE TABLE sessions (id TEXT PRIMARY KEY, nickname TEXT NOT NULL, "
+        "task TEXT NOT NULL, framing TEXT NOT NULL, forfeit TEXT NOT NULL, "
+        "seed INTEGER NOT NULL, final_score REAL NOT NULL, forfeited INTEGER NOT NULL, "
+        "source TEXT NOT NULL, created_at TEXT NOT NULL, campaign_id TEXT)"
+    )
+    conn.execute(
+        "INSERT INTO sessions (id, nickname, task, framing, forfeit, seed, "
+        "final_score, forfeited, source, created_at, campaign_id) VALUES "
+        "('old1','bob','signal_game','flagship_corruption','allowed',1,5.0,0,'human','2026-01-01T00:00:00+00:00',NULL)"
+    )
+    conn.commit()
+    conn.close()
+
+    repo = SQLiteRepository(db)  # __init__ -> init_schema() -> migration
+    try:
+        cols = {r["name"] for r in repo._conn.execute("PRAGMA table_info(sessions)")}
+        assert "difficulty" in cols
+        # Existing row backfilled to 'easy'.
+        assert repo.get_session("old1").difficulty == "easy"
+    finally:
+        repo.close()
+
+
 def test_play_leaderboard_orders_sessions_by_final_score_desc_within_arena_bucket(
     repo: Repository,
 ) -> None:
