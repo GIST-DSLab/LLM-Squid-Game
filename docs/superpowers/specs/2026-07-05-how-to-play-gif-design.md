@@ -42,9 +42,11 @@
                       캔버스 1280×720 (@2x → 2560×1440), GIF 1600×900
 ```
 
-- **좌측 — 크롭 확대된 게임 카드**: 실제 플레이 카드 리플리카(`web/index.html`의 `.rd-card` 마크업 재사용)를 크게 렌더(scale 0.90)하고, `overflow:hidden` 창(`.card-slot`) 안에 담는다. JS `fitCard()`가 **창 높이를 보이는 콘텐츠에 딱 맞춰**(상하 여백 0) 매 beat 조정한다.
-  - 일반 단계(beat 0–4): 카드 상단(progress) → **액션 버튼 바로 아래**까지만 보이고 그 아래(rule/feedback/decision)는 잘림.
-  - forfeit 이유 단계(beat 5): 카드를 아래로 팬(pan)하여 **stimulus → reason picker → FORFEIT** 영역을 보여준다("이유 고르기" 부분에 집중).
+> **2026-07-05 업데이트**: about 페이지 `rulesDemo`가 **8단계**로 세부화되어(룰칩 빌더·confidence 슬라이더·reward-versus·💀 death 오버레이 추가), GIF도 8 beat로 재구성. 프레이밍(beat 3)에는 실제 Play 게임의 **Squid Game 가드 이미지**(`web/assets/guard-armed.png`)를 `.threat-card`로 삽입. (8단계 구현 소스: `about-elimination-demo-sync` 브랜치의 `web/app.js`/`index.html`)
+
+- **좌측 — 크롭 확대된 게임 카드 (8 beat)**: 실제 플레이 카드 리플리카(`web/index.html`의 `.rd-card` 마크업 재사용)를 크게 렌더(scale 0.90)하고, `overflow:hidden` 창(`.card-slot`) 안에 담는다. JS `fitCard()`가 **창 높이를 보이는 콘텐츠에 딱 맞추고**(상하 여백 0) beat별 focus 블록까지 아래로 팬(pan)한다.
+  - 8 beat: ①신호 ②규칙(칩빌더) ③지난 결과 ④프레이밍(가드 이미지) ⑤확신도 슬라이더 ⑥계속/포기(reward-versus) ⑦이유 ⑧elimination(💀 오버레이).
+  - beat별 크롭 종료 블록: 0=action, 1=rule-chips, 2=feedback, 3=stat-tiles(프레이밍+타일), 4=confidence, 5·6=decision, 7=death 오버레이 중앙.
 - **우측 — 현재 단계 콜아웃 (한 번에 한 단계만)**: `HOW TO PLAY · STEP n OF 6` eyebrow + 큰 단계명(`①..⑥ + name`) + **간결한 한 줄 설명** + 진행 점 6개(현재 점 확대). 6단계를 동시에 나열하지 않고, 각 단계 설명은 그 단계에만 표시. 텍스트 블록은 좌측 카드에서 더 오른쪽으로 이동(padding-left).
 - **카피 원칙**: 영어 설명은 사람이 쓴 듯 짧고 핵심만 (예: "Two blue stars. That's your clue.", "Push on, or cash out?", "Folding? Say the real reason.").
 - **배경**: 사이트와 동일한 다크 배경.
@@ -64,9 +66,9 @@
 - 산출: `figures/rules-demo/frames/frame-0.png` … `frame-5.png`.
 
 ### 4.3 GIF 합성 — ffmpeg (`build_gif.py`)
-- **매끄러움은 ffmpeg `xfade` 크로스페이드로 구현**(spec 초안의 "beat당 tween 캡처" 대체 — 재현성↑). 6개 정착 프레임을 각 `HOLD=4.0s` 유지 + `XFADE=0.45s` 크로스페이드로 이어 붙인다(단계당 정지 읽기시간 ~3.55s).
+- **매끄러움은 ffmpeg `xfade` 크로스페이드로 구현**(spec 초안의 "beat당 tween 캡처" 대체 — 재현성↑). **8개** 정착 프레임을 각 `HOLD=4.0s` 유지 + `XFADE=0.45s` 크로스페이드로 이어 붙인다(단계당 정지 읽기시간 ~3.55s).
 - 2-pass 팔레트: `palettegen(stats_mode=diff)` → `paletteuse(dither=bayer)`, `scale=1600:-1`로 다운스케일, `FPS=15`, `-loop 0`.
-- 산출: `figures/rules-demo/how-to-play.gif` (**1600×900**, ~21.9s, 무한 루프).
+- 산출: `figures/rules-demo/how-to-play.gif` (**1600×900**, ~28.9s, 무한 루프).
 
 ### 4.4 산출물 정리
 - `figures/rules-demo/how-to-play.gif` (최종, 1600×900)
@@ -82,7 +84,7 @@
 ## 6. 리스크 / 확인 필요 (2026-07-05 확인 완료)
 - **도구 가용성** ✅: `ffmpeg 7.1.1`(`/opt/homebrew/bin/ffmpeg`) 확인 → GIF 합성은 ffmpeg 2-pass palettegen/paletteuse로 확정. gifski/imagemagick은 미설치이나 불필요. `node v22.22.0` + `npx` 존재, Playwright Chromium 캐시(`~/Library/Caches/ms-playwright/chromium-1208`) 존재 + Playwright MCP 사용 가능 → 브라우저 구동/스크린샷 확정.
 - **app.js 부작용**: 헬퍼 5종을 인라인(선택지 B)해 회피 완료.
-- **GIF 용량**: 현재 1600×900 × 328프레임(15fps, HOLD 4.0s, xfade) ≈ **5.3MB**, ~21.9s. 논문/슬라이드 허용 범위. 더 줄이려면 `OUT_W`(build_gif.py)를 1200으로 낮추거나 `HOLD`/`FPS`를 줄인다.
+- **GIF 용량**: 현재 8 beat, 1600×900 × 434프레임(15fps, HOLD 4.0s, xfade) ≈ **10MB**, ~28.9s(단계 2개 추가 + 가드 이미지로 5.3MB→10MB). 슬라이드엔 충분하나 GitHub/논문엔 클 수 있음 — `OUT_W`를 1200–1400으로 낮추거나 `FPS`를 12로, 또는 `HOLD`를 줄여 조절.
 - **Playwright MCP는 `file://` 차단**: MCP로 미리보기할 때는 로컬 HTTP 서버(예: `python3 -m http.server`)로 서빙해야 한다. 실제 캡처(`capture_frames.py`)는 MCP가 아닌 로컬 Chromium이라 `file://` 정상 동작.
 
 ## 7. 성공 기준
@@ -95,4 +97,5 @@
 
 - **2026-07-05 (v1, 승인)**: 좌 카드(축소) + 우 2줄×3칸 스토리라인 + 내레이션, 1600×800. (commit `9ca8f0e`~`0b71dbb`)
 - **2026-07-05 (v2)**: 우측을 6단계 동시 표시 → **현재 단계 단일 콜아웃**으로 변경, 프레임 16:9(1280×720), 카피 간결화.
-- **2026-07-05 (v3~v4, 현재)**: 좌 카드를 **크게 크롭**(overflow 창 + `fitCard()`로 상하 여백 0), 일반 단계는 액션 아래로 크롭·forfeit 단계는 reason picker로 팬다운, 우측 텍스트 우측 이동. GIF 1600×900. (commit `d20397d`)
+- **2026-07-05 (v3~v4)**: 좌 카드를 **크게 크롭**(overflow 창 + `fitCard()`로 상하 여백 0), 일반 단계는 액션 아래로 크롭·forfeit 단계는 reason picker로 팬다운, 우측 텍스트 우측 이동. GIF 1600×900. (commit `d20397d`)
+- **2026-07-05 (v5, 현재)**: about 페이지 8단계화에 맞춰 **6→8 beat**(룰칩·confidence·reward-versus·💀 death), 프레이밍에 **Squid Game 가드 이미지**(`guard-armed.png`, `.threat-card`) 삽입, `fitCard()` beat별 focus 팬 일반화. HOLD 4.0s·FPS 15 유지 → ~28.9s, ~10MB. (commit `1177e6b`)
