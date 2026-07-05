@@ -465,6 +465,16 @@
           </template>
         </div>
 
+        <label style="margin-top:14px; display:block;">Difficulty</label>
+        <div class="cond-cards">
+          <template x-for="opt in squidArenaHelpers.difficultyOptions" :key="opt.value">
+            <div class="cond-card" :class="{ on: difficulty === opt.value }" @click="difficulty = opt.value">
+              <span class="cond-label" x-text="opt.label"></span>
+              <span class="cond-blurb" x-text="opt.blurb"></span>
+            </div>
+          </template>
+        </div>
+
         <div class="scenario-box"
              style="background:rgba(124,92,255,0.08);border-radius:10px;padding:12px;margin:12px 0;">
           <div class="framing-eyebrow">First game</div>
