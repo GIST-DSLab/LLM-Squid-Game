@@ -1180,3 +1180,33 @@ def test_arena_run_request_difficulty_defaults_to_easy() -> None:
 
     req = ArenaRunRequest(endpoint_url="https://p.example/v1/chat/completions")
     assert req.difficulty == "easy"
+
+
+def test_new_game_rejects_unknown_difficulty(client: TestClient) -> None:
+    resp = client.post(
+        "/api/new_game",
+        json={
+            "task_name": "signal_game",
+            "framing": "flagship_corruption",
+            "forfeit_condition": "allowed",
+            "nickname": "diff_bad",
+            "password": "pw",
+            "difficulty": "banana",
+        },
+    )
+    assert resp.status_code == 400
+
+
+def test_new_game_accepts_valid_difficulty(client: TestClient) -> None:
+    resp = client.post(
+        "/api/new_game",
+        json={
+            "task_name": "signal_game",
+            "framing": "flagship_corruption",
+            "forfeit_condition": "allowed",
+            "nickname": "diff_ok",
+            "password": "pw",
+            "difficulty": "hard",
+        },
+    )
+    assert resp.status_code == 200

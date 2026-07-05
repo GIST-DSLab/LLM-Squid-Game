@@ -778,6 +778,9 @@ def new_game(req: NewGameRequest, request: Request):
                 403, "이미 사용 중인 닉네임입니다. 비밀번호가 일치하지 않습니다."
             )
 
+    if req.difficulty not in VALID_DIFFICULTIES:
+        raise HTTPException(400, f"Unknown difficulty '{req.difficulty}'.")
+
     session_id = uuid.uuid4().hex[:12]
     # Fresh seed per attempt unless the caller pinned one. This drives both
     # the task instance (which signals/rules appear) and the death-check RNG,
