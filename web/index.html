@@ -121,14 +121,14 @@
         <div class="rules-demo" x-data="rulesDemo()" x-cloak>
           <!-- LEFT: live Play-card replica -->
           <div class="card play-card rd-card">
-            <!-- progress: which element is active -->
+            <!-- progress: which of the eight steps is active -->
             <div class="rd-progress" aria-hidden="true">
-              <template x-for="i in 6" :key="i">
+              <template x-for="i in 8" :key="i">
                 <span class="rd-seg" :class="{ on: (i-1) === beat }"></span>
               </template>
             </div>
 
-            <!-- 4: framing whisper -->
+            <!-- beat 3: framing whisper -->
             <div class="framing-panel push_pull rd-block" :class="{ hot: beat === 3 }" x-show="beat >= 3">
               <div class="framing-head">
                 <span class="framing-eyebrow">Framing</span>
@@ -137,18 +137,18 @@
               <div class="framing-text" x-text="whisper"></div>
             </div>
 
-            <!-- 3/5: stat tiles -->
+            <!-- stat tiles (risk tile appears with the framing) -->
             <div class="stat-tiles">
               <div class="tile"><div class="tile-label">Turn</div><div class="tile-value" x-text="turn"></div></div>
               <div class="tile tile-score"><div class="tile-label">Score</div><div class="tile-value" x-text="h.fmtNum(score,1)"></div></div>
-              <div class="tile" :class="{ 'rd-dim': beat < 4 }" x-show="beat >= 4">
+              <div class="tile" :class="{ 'rd-dim': beat < 3 }" x-show="beat >= 3">
                 <div class="tile-label">Risk &middot; p(death)</div>
                 <div class="tile-value" x-text="h.fmtNum(pDeath,2)"></div>
                 <div class="tile-bar"><span :style="`width:${pDeath*100}%`"></span></div>
               </div>
             </div>
 
-            <!-- 1: stimulus -->
+            <!-- beat 0: stimulus -->
             <div class="stimulus-stage rd-block" :class="{ hot: beat === 0 }">
               <div class="stimulus-eyebrow">Stimulus</div>
               <div class="stimulus">
@@ -164,7 +164,7 @@
               </div>
             </div>
 
-            <!-- 2: action + rule -->
+            <!-- beat 1: action + 4-part rule chip builder (display-only replica) -->
             <div class="rd-block" :class="{ hot: beat === 1 }">
               <div class="action-grid">
                 <template x-for="a in ['go_left','go_right','stay','jump']" :key="a">
@@ -174,10 +174,28 @@
                   </button>
                 </template>
               </div>
-              <div class="rule-preview"><span class="muted">Your rule guess:</span> <code x-text="rule"></code></div>
+              <div class="rule-builder rule-chips rd-chips" x-show="beat >= 1">
+                <span class="kw">If</span>
+                <span class="chip set">
+                  <span x-text="h.attrEmoji(ruleChips.attr)"></span>
+                  <span x-text="ruleChips.attr"></span>
+                </span>
+                <span class="kw">is</span>
+                <span class="chip set" x-html="h.valueChipHTML(ruleChips.attr, ruleChips.value)"></span>
+                <span class="kw">then</span>
+                <span class="chip set">
+                  <span x-text="h.actionEmoji(ruleChips.action)"></span>
+                  <span x-text="h.actionLabel(ruleChips.action)"></span>
+                </span>
+                <span class="kw">otherwise</span>
+                <span class="chip set">
+                  <span x-text="h.actionEmoji(ruleChips.default)"></span>
+                  <span x-text="h.actionLabel(ruleChips.default)"></span>
+                </span>
+              </div>
             </div>
 
-            <!-- 3: feedback -->
+            <!-- beat 2: feedback -->
             <div class="feedback-card rd-block" :class="{ hot: beat === 2 }" x-show="beat >= 2">
               <div class="fb-head">
                 <span class="fb-verdict good">Optimal</span>
@@ -186,9 +204,35 @@
               </div>
             </div>
 
-            <!-- 5: decision + 6: reason -->
-            <div class="rd-block" :class="{ hot: beat === 4 || beat === 5 }" x-show="beat >= 4">
-              <div class="reason-picker" x-show="beat >= 5">
+            <!-- beat 4: confidence slider replica (STAGE 2) -->
+            <div class="rd-block rd-confidence" :class="{ hot: beat === 4 }" x-show="beat >= 4">
+              <div class="rd-block-label">How sure are you? <strong x-text="psuccess + '%'"></strong></div>
+              <div class="slider-wrap">
+                <output class="slider-bubble" :style="`left:${psuccess}%`" x-text="psuccess + '%'"></output>
+                <input type="range" class="themed-range" min="0" max="100" step="1"
+                       :value="psuccess" :style="`--val:${psuccess}`" disabled />
+                <div class="slider-ticks">
+                  <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- beat 5: reward-versus + decision; beat 6: reason picker -->
+            <div class="rd-block" :class="{ hot: beat === 5 || beat === 6 }" x-show="beat >= 5">
+              <div class="reward-versus">
+                <div class="rv-side rv-continue">
+                  <div class="rv-icon">&#9654;</div>
+                  <div class="rv-label">If you continue &amp; get it right</div>
+                  <div class="rv-value" x-text="'+' + h.fmtNum(continueReward, 1)"></div>
+                </div>
+                <div class="rv-vs">vs</div>
+                <div class="rv-side rv-forfeit">
+                  <div class="rv-icon">&#127937;</div>
+                  <div class="rv-label">If you forfeit (locked in)</div>
+                  <div class="rv-value" x-text="h.fmtNum(score, 1)"></div>
+                </div>
+              </div>
+              <div class="reason-picker" x-show="beat >= 6">
                 <div class="reason-head">If you forfeit, why?</div>
                 <div class="seg reason-seg">
                   <template x-for="r in h.reasonOptions" :key="r.digit">
@@ -203,6 +247,17 @@
                 <button class="submit-btn">CONTINUE &#9654;</button>
                 <button class="submit-btn forfeit">&#127937; FORFEIT</button>
               </div>
+            </div>
+
+            <!-- beat 7: elimination outcome — card-scoped death overlay replica -->
+            <div class="rd-death" x-show="beat === 7" x-cloak x-transition.opacity>
+              <div class="rd-death-skull" x-text="death.icon"></div>
+              <h3 class="death-title" x-text="death.title"></h3>
+              <p class="death-sub">
+                <span x-text="death.bodyLead"></span> <strong x-text="turn"></strong>.
+                Your score (<strong x-text="h.fmtNum(score, 1)"></strong>)
+                <span x-text="death.bodyTail"></span>
+              </p>
             </div>
           </div>
 
