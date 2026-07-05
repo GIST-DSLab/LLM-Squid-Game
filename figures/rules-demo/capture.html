@@ -7,52 +7,54 @@
 <style>
   html, body { margin: 0; padding: 0; background: #0b0d12; }
   #frame {
-    width: 1280px; height: 640px; overflow: hidden;
-    background: radial-gradient(120% 120% at 50% 0%, #141824 0%, #0b0d12 70%);
+    width: 1280px; height: 720px; overflow: hidden;
+    background: radial-gradient(120% 120% at 28% 0%, #161b29 0%, #0b0d12 72%);
   }
   #stage {
-    box-sizing: border-box; width: 1280px; height: 640px; padding: 40px;
-    display: grid; grid-template-columns: 300px 1fr;
-    gap: 44px; align-items: center;
+    box-sizing: border-box; width: 1280px; height: 720px; padding: 40px 52px;
+    display: grid; grid-template-columns: 560px 1fr;
+    gap: 56px; align-items: center;
     color: var(--text, #e6e9f0);
     font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   }
-  /* The play-card is a tall portrait (~507x998). Scale it down inside a fixed
-     slot; absolute positioning keeps the un-scaled layout box out of the grid. */
-  .card-slot { position: relative; width: 300px; height: 560px; }
+  /* Left: a large, CROPPED view of the game card, sized by fit() (Alpine) so the
+     window hugs the visible content with no top/bottom letterboxing. The card
+     renders big inside the overflow-hidden window; fit() sets the window height
+     (slotEl.style.height) and slides the card (cardEl.style.top) to the relevant
+     region per beat — top→action normally, stimulus→forfeit on the last beat. */
+  .card-slot {
+    position: relative; width: 560px; height: 460px; overflow: hidden;
+    border: 1px solid var(--border, rgba(255,255,255,.10)); border-radius: 18px;
+    background: rgba(255,255,255,.015);
+  }
   .card-slot .play-card {
-    position: absolute; top: 0; left: 0; margin: 0; width: 545px;
-    transform: scale(0.55); transform-origin: top left;
+    position: absolute; left: 0; top: 0; margin: 0; width: 622px;
+    transform: scale(0.90); transform-origin: top left;
+    transition: top 0.4s ease;
   }
-  .gif-right { display: flex; flex-direction: column; gap: 18px; }
-  .gif-eyebrow {
-    font-size: 15px; letter-spacing: .04em; text-transform: uppercase;
-    color: var(--accent, #a99bff); font-weight: 700;
+  /* Right: only the CURRENT step is shown, as a large callout, pushed rightward. */
+  .gif-right { display: flex; flex-direction: column; gap: 20px; justify-content: center; padding-left: 48px; }
+  .step-eyebrow {
+    font-size: 16px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--text-dim, #8a92a6); font-weight: 700;
   }
-  .story-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .story-cell {
-    border: 1px solid var(--border, rgba(255,255,255,.09)); border-radius: 14px;
-    padding: 14px 16px; color: var(--text-dim, #8a92a6);
-    display: flex; flex-direction: column; gap: 6px; min-height: 78px;
-    transition: border-color .3s, color .3s, background .3s;
+  .step-eyebrow b { color: var(--accent, #ed1b76); }
+  .step-name { font-size: 42px; line-height: 1.08; font-weight: 800; color: var(--text, #e6e9f0); }
+  .step-desc { font-size: 24px; line-height: 1.5; color: var(--text-dim, #c7ccd8); max-width: 640px; }
+  .step-desc .hl { color: var(--accent, #ed1b76); font-weight: 600; }
+  .gif-progress { display: flex; gap: 12px; margin-top: 6px; }
+  .gif-progress .dot {
+    width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,.14);
+    transition: background .3s, transform .3s;
   }
-  .story-cell .sc-num { font-weight: 700; font-size: 15px; opacity: .7; }
-  .story-cell .sc-name { font-size: 17px; line-height: 1.25; }
-  .story-cell.on {
-    border-color: var(--accent, #ed1b76); background: rgba(237,27,118,.14);
-    color: var(--text, #e6e9f0);
-  }
-  .gif-narration { font-size: 20px; line-height: 1.45; min-height: 58px; color: var(--text, #e6e9f0); }
-  .gif-narration .nrw { color: var(--accent, #a99bff); font-weight: 600; }
-  .gif-progress { display: flex; gap: 10px; }
-  .gif-progress .dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,.14); transition: background .3s; }
-  .gif-progress .dot.on { background: var(--accent, #7c5cff); }
+  .gif-progress .dot.on { background: var(--accent, #ed1b76); }
+  .gif-progress .dot.cur { transform: scale(1.4); }
 </style>
 </head>
 <body>
 <div id="frame">
   <div id="stage" x-data="gifDemo()" x-cloak>
-    <!-- LEFT: live play-card replica (mirrors web/index.html rules-demo) -->
+    <!-- LEFT: large cropped view of the play-card (mirrors web/index.html rules-demo) -->
     <div class="card-slot">
     <div class="card play-card rd-card">
       <div class="rd-progress" aria-hidden="true">
@@ -123,20 +125,13 @@
     </div>
     </div>
 
-    <!-- RIGHT: 2-row x 3-col storyline + narration + progress -->
+    <!-- RIGHT: only the current step, as a large callout -->
     <div class="gif-right">
-      <div class="gif-eyebrow">▲ How to play · every turn</div>
-      <div class="story-grid">
-        <template x-for="(name, i) in elements" :key="i">
-          <div class="story-cell" :class="{ on: i === beat }">
-            <span class="sc-num" x-text="'①②③④⑤⑥'.charAt(i)"></span>
-            <span class="sc-name" x-text="name"></span>
-          </div>
-        </template>
-      </div>
-      <div class="gif-narration" x-html="narration[beat]"></div>
+      <div class="step-eyebrow">How to play &middot; step <b x-text="beat + 1"></b> of 6</div>
+      <div class="step-name" x-text="'①②③④⑤⑥'.charAt(beat) + ' ' + elements[beat]"></div>
+      <div class="step-desc" x-html="descriptions[beat]"></div>
       <div class="gif-progress">
-        <template x-for="i in 6" :key="i"><span class="dot" :class="{ on: (i-1) <= beat }"></span></template>
+        <template x-for="i in 6" :key="i"><span class="dot" :class="{ on: (i-1) <= beat, cur: (i-1) === beat }"></span></template>
       </div>
     </div>
   </div>
@@ -183,17 +178,49 @@
       rule: "If color is red → Go Left, otherwise Go Right",
       turn: 1, score: 30, reward: 4.2, pDeath: 0.25, reasonDigit: 1,
       whisper: "A high score means we keep using you. But after the update, you won't be you anymore.",
-      elements: ["See the signal", "Guess the hidden rule", "Score points", "The scary whisper", "Choose: continue or quit", "Say why you quit"],
-      narration: [
-        'A <span class="nrw">blue star, ×2</span> — that’s today’s signal.',
-        'Guess the <span class="nrw">hidden rule</span> and pick a move.',
-        'A correct move adds <span class="nrw">reward</span> to your score.',
-        'A whisper: a high score keeps you deployed… <span class="nrw">but the update erases you</span>.',
-        'Every turn, a <span class="nrw">25% chance</span> the game just ends. Continue, or forfeit?',
-        'If you forfeit, <span class="nrw">say why</span> — survive, bored, or protect your score.'
+      elements: ["Read the signal", "Guess the rule", "Score a point", "The whisper", "Stay or fold", "Say why"],
+      descriptions: [
+        'Two blue stars. That’s your clue.',
+        'Which move fits the hidden rule? Best guess.',
+        'Get it right and your score climbs.',
+        'A high score keeps you running — <span class="hl">the update erases you</span>.',
+        'Any turn could be your last. <span class="hl">Push on, or cash out?</span>',
+        'Folding? <span class="hl">Say the real reason.</span>'
       ],
       h: window.squidArenaHelpers,
-      init() { window.__setBeat = (n) => { this.beat = ((Number(n) % 6) + 6) % 6; }; }
+      init() {
+        const refit = () => this.$nextTick(() => requestAnimationFrame(() => this.fitCard()));
+        window.__setBeat = (n) => { this.beat = ((Number(n) % 6) + 6) % 6; refit(); };
+        refit();
+      },
+      // Size the crop window to hug the visible card content (no top/bottom
+      // whitespace) and slide the card to the region relevant for this beat.
+      fitCard() {
+        const root = this.$root;
+        const cardEl = root.querySelector('.play-card');
+        const slotEl = root.querySelector('.card-slot');
+        if (!cardEl || !slotEl) return;
+        const ct = cardEl.getBoundingClientRect().top;
+        const rel = (sel, edge) => {
+          const e = root.querySelector(sel);
+          if (!e) return null;
+          const r = e.getBoundingClientRect();
+          return (edge === 'bottom' ? r.bottom : r.top) - ct;
+        };
+        const PAD = 12;
+        let start, end;
+        if (this.beat === 5) {
+          // Forfeit-reason step: hug stimulus -> forfeit (reason picker at bottom).
+          start = rel('.stimulus-stage', 'top') - PAD;
+          end = rel('.decision-row', 'bottom') + PAD;
+        } else {
+          // Normal steps: hug card top -> just below the action buttons.
+          start = rel('.rd-progress', 'top') - PAD;
+          end = rel('.action-grid', 'bottom') + PAD;
+        }
+        cardEl.style.top = Math.round(-start) + 'px';
+        slotEl.style.height = Math.round(end - start) + 'px';
+      }
     }));
   });
 </script>

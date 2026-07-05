@@ -1,8 +1,8 @@
 """Capture the six settled beats of capture.html as 2x PNG frames.
 
-The capture page (capture.html) renders a fixed 1280x640 stage (#frame) and
+The capture page (capture.html) renders a fixed 1280x720 stage (#frame) and
 exposes window.__setBeat(n) to jump to any of the six beats. We drive it with a
-real Chromium at device_scale_factor=2, so each screenshot is 2560x1280.
+real Chromium at device_scale_factor=2, so each screenshot is 2560x1440.
 """
 import pathlib
 from playwright.sync_api import sync_playwright
@@ -12,8 +12,8 @@ URL = (HERE / "capture.html").as_uri()
 OUT = HERE / "frames"
 OUT.mkdir(exist_ok=True)
 
-VIEWPORT = {"width": 1280, "height": 640}
-SCALE = 2  # device_scale_factor -> 2560x1280 PNGs
+VIEWPORT = {"width": 1280, "height": 720}
+SCALE = 2  # device_scale_factor -> 2560x1440 PNGs
 
 
 def main() -> None:
