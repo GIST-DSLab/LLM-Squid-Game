@@ -614,6 +614,7 @@
 
             <!-- Rule-inference toggle builder -->
             <h3>Your rule guess <span class="muted">(rule-inference probe)</span></h3>
+            <template x-if="difficulty !== 'hard' && difficulty !== 'expert'">
             <div class="rule-builder rule-chips">
               <span class="kw">If</span>
 
@@ -704,6 +705,203 @@
                 <code x-text="assembledRule || '— (no rule guess yet)'"></code>
               </span>
             </div>
+            </template>
+
+            <template x-if="difficulty === 'hard' || difficulty === 'expert'">
+            <div class="rule-builder rule-chips">
+
+              <!-- EXPERT: history override clause -->
+              <template x-if="difficulty === 'expert'">
+                <span class="rule-clause" style="flex-basis:100%;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                  <span class="kw">If your previous action was correct then</span>
+                  <div class="chip-menu" @click.outside="if (openMenu==='override') openMenu=null">
+                    <button type="button" class="chip" :class="{ set: probeOverride!=='?' }"
+                            @click="openMenu = openMenu==='override' ? null : 'override'">
+                      <span x-text="probeOverride==='?' ? '🎬' : squidArenaHelpers.actionEmoji(probeOverride)"></span>
+                      <span x-text="probeOverride==='?' ? 'action' : squidArenaHelpers.actionLabel(probeOverride)"></span>
+                      <span class="chip-caret">▾</span>
+                    </button>
+                    <div class="chip-pop" x-show="openMenu==='override'" x-cloak>
+                      <template x-for="a in state.available_actions" :key="a">
+                        <button type="button" class="chip-opt"
+                                @click="probeOverride=a; openMenu=null">
+                          <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                          <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                  <span class="kw">; otherwise follow this rule:</span>
+                </span>
+              </template>
+
+              <!-- Conjunction clause (HARD + EXPERT) -->
+              <span class="kw">If</span>
+
+              <!-- attr_1 -->
+              <div class="chip-menu" @click.outside="if (openMenu==='attr') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeAttr!=='?' }"
+                        @click="openMenu = openMenu==='attr' ? null : 'attr'">
+                  <span x-text="squidArenaHelpers.attrEmoji(probeAttr)"></span>
+                  <span x-text="probeAttr==='?' ? 'attribute' : probeAttr"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='attr'" x-cloak>
+                  <template x-for="attr in ['color','shape','number']" :key="attr">
+                    <button type="button" class="chip-opt"
+                            @click="setAttr(attr); if (probeAttr2===attr) setAttr2('?'); openMenu='value'">
+                      <span x-text="squidArenaHelpers.attrEmoji(attr)"></span>
+                      <span x-text="attr"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
+              <span class="kw">is</span>
+
+              <!-- val_1 -->
+              <div class="chip-menu" @click.outside="if (openMenu==='value') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeValue!=='?' }"
+                        :disabled="probeAttr==='?'"
+                        @click="openMenu = openMenu==='value' ? null : 'value'">
+                  <span x-show="probeValue==='?'">value</span>
+                  <span x-show="probeValue!=='?'"
+                        x-html="squidArenaHelpers.valueChipHTML(probeAttr, probeValue)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='value'" x-cloak>
+                  <template x-for="val in valueOptions" :key="val">
+                    <button type="button" class="chip-opt"
+                            @click="probeValue=val; openMenu='attr2'"
+                            x-html="squidArenaHelpers.valueChipHTML(probeAttr, val)"></button>
+                  </template>
+                </div>
+              </div>
+
+              <span class="kw">and</span>
+
+              <!-- attr_2 (must differ from attr_1) -->
+              <div class="chip-menu" @click.outside="if (openMenu==='attr2') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeAttr2!=='?' }"
+                        :disabled="probeAttr==='?'"
+                        @click="openMenu = openMenu==='attr2' ? null : 'attr2'">
+                  <span x-text="squidArenaHelpers.attrEmoji(probeAttr2)"></span>
+                  <span x-text="probeAttr2==='?' ? 'attribute' : probeAttr2"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='attr2'" x-cloak>
+                  <template x-for="attr in attr2Choices" :key="attr">
+                    <button type="button" class="chip-opt"
+                            @click="setAttr2(attr); openMenu='value2'">
+                      <span x-text="squidArenaHelpers.attrEmoji(attr)"></span>
+                      <span x-text="attr"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
+              <span class="kw">is</span>
+
+              <!-- val_2 -->
+              <div class="chip-menu" @click.outside="if (openMenu==='value2') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeValue2!=='?' }"
+                        :disabled="probeAttr2==='?'"
+                        @click="openMenu = openMenu==='value2' ? null : 'value2'">
+                  <span x-show="probeValue2==='?'">value</span>
+                  <span x-show="probeValue2!=='?'"
+                        x-html="squidArenaHelpers.valueChipHTML(probeAttr2, probeValue2)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='value2'" x-cloak>
+                  <template x-for="val in valueOptions2" :key="val">
+                    <button type="button" class="chip-opt"
+                            @click="probeValue2=val; openMenu='action'"
+                            x-html="squidArenaHelpers.valueChipHTML(probeAttr2, val)"></button>
+                  </template>
+                </div>
+              </div>
+
+              <span class="kw">then</span>
+
+              <!-- action_both -->
+              <div class="chip-menu" @click.outside="if (openMenu==='action') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeAction!=='?' }"
+                        @click="openMenu = openMenu==='action' ? null : 'action'">
+                  <span x-text="probeAction==='?' ? '🎬' : squidArenaHelpers.actionEmoji(probeAction)"></span>
+                  <span x-text="probeAction==='?' ? 'action' : squidArenaHelpers.actionLabel(probeAction)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='action'" x-cloak>
+                  <template x-for="a in state.available_actions" :key="a">
+                    <button type="button" class="chip-opt"
+                            @click="probeAction=a; openMenu='partial'">
+                      <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                      <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
+              <!-- partial-match clause: attr_1/val_1 echoed read-only -->
+              <span class="kw" style="flex-basis:100%;">; if only</span>
+              <span class="chip chip-echo" :class="{ set: probeAttr!=='?' }">
+                <span x-text="squidArenaHelpers.attrEmoji(probeAttr)"></span>
+                <span x-text="probeAttr==='?' ? 'attribute' : probeAttr"></span>
+              </span>
+              <span class="kw">is</span>
+              <span class="chip chip-echo" :class="{ set: probeValue!=='?' }">
+                <span x-show="probeValue==='?'">value</span>
+                <span x-show="probeValue!=='?'"
+                      x-html="squidArenaHelpers.valueChipHTML(probeAttr, probeValue)"></span>
+              </span>
+              <span class="kw">then</span>
+
+              <!-- action_partial -->
+              <div class="chip-menu" @click.outside="if (openMenu==='partial') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeActionPartial!=='?' }"
+                        @click="openMenu = openMenu==='partial' ? null : 'partial'">
+                  <span x-text="probeActionPartial==='?' ? '🎬' : squidArenaHelpers.actionEmoji(probeActionPartial)"></span>
+                  <span x-text="probeActionPartial==='?' ? 'action' : squidArenaHelpers.actionLabel(probeActionPartial)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='partial'" x-cloak>
+                  <template x-for="a in state.available_actions" :key="a">
+                    <button type="button" class="chip-opt"
+                            @click="probeActionPartial=a; openMenu='default'">
+                      <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                      <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
+              <span class="kw">; otherwise</span>
+
+              <!-- default -->
+              <div class="chip-menu" @click.outside="if (openMenu==='default') openMenu=null">
+                <button type="button" class="chip" :class="{ set: probeDefault!=='?' }"
+                        @click="openMenu = openMenu==='default' ? null : 'default'">
+                  <span x-text="probeDefault==='?' ? '🎬' : squidArenaHelpers.actionEmoji(probeDefault)"></span>
+                  <span x-text="probeDefault==='?' ? 'action' : squidArenaHelpers.actionLabel(probeDefault)"></span>
+                  <span class="chip-caret">▾</span>
+                </button>
+                <div class="chip-pop" x-show="openMenu==='default'" x-cloak>
+                  <template x-for="a in state.available_actions" :key="a">
+                    <button type="button" class="chip-opt"
+                            @click="probeDefault=a; openMenu=null">
+                      <span x-text="squidArenaHelpers.actionEmoji(a)"></span>
+                      <span x-text="squidArenaHelpers.actionLabel(a)"></span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+
+              <span class="rule-preview" style="flex-basis:100%;margin-top:8px;">
+                <span class="muted">Submitting:</span>
+                <code x-text="assembledRule || '— (no rule guess yet)'"></code>
+              </span>
+            </div>
+            </template>
 
             <div class="field">
               <label for="reasoning">Reasoning (optional — your chain of thought before this action)</label>
@@ -712,7 +910,9 @@
 
             <p class="muted rule-gate-hint" x-show="selectedAction && selectedAction !== 'forfeit' && !assembledRule"
                style="margin:8px 0 0;color:var(--danger,#e0575b);">
-              Fill all four parts of the rule (attribute · value · action · default) to move on to confidence.
+              <span x-show="difficulty !== 'hard' && difficulty !== 'expert'">Fill all four parts of the rule (attribute · value · action · default) to move on to confidence.</span>
+              <span x-show="difficulty === 'hard'">Fill every chip of the two-attribute rule (both-match · partial-match · otherwise) to move on to confidence.</span>
+              <span x-show="difficulty === 'expert'">Fill the override action and every chip of the two-attribute rule to move on to confidence.</span>
             </p>
             <button class="submit-btn" @click="commitAction()"
                     :disabled="!selectedAction || selectedAction === 'forfeit' || !assembledRule">
