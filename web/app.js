@@ -751,6 +751,11 @@
       probeValue: "?",
       probeAction: "?",
       probeDefault: "?",
+      // HARD/EXPERT-only slots. Unused (stay "?") for easy/medium.
+      probeAttr2: "?",        // second conjunction attribute
+      probeValue2: "?",       // second conjunction value
+      probeActionPartial: "?",// action when only attr_1 matches (HARD/EXPERT)
+      probeOverride: "?",     // EXPERT: action when previous turn was correct
       openMenu: null, // which rule chip popover is open: attr|value|action|default
 
       // Accumulated per-turn history: {turn, stimulus, action, optimal, forfeit}.
@@ -793,17 +798,65 @@
         if (this.probeAttr === "?") return [];
         return squidArenaHelpers.attrValues[this.probeAttr] || [];
       },
-      // The exact grammar the server's probe scorer expects.
+      // Value options for the SECOND conjunction attribute (HARD/EXPERT).
+      get valueOptions2() {
+        if (this.probeAttr2 === "?") return [];
+        return squidArenaHelpers.attrValues[this.probeAttr2] || [];
+      },
+      // Attributes still selectable for attr_2 (must differ from attr_1;
+      // backend conjunction rules always use a distinct attribute pair).
+      get attr2Choices() {
+        return ["color", "shape", "number"].filter((a) => a !== this.probeAttr);
+      },
+      // The exact grammar the server's probe scorer expects. Difficulty-aware:
+      // easy/medium → single-attribute; hard → two-attribute conjunction;
+      // expert → conjunction wrapped in a history override. These string
+      // formats are contract-locked by
+      // tests/unit/test_signal_game_probe_contract.py — keep them identical.
       get assembledRule() {
+        const d = this.difficulty;
+        if (d === "hard" || d === "expert") {
+          const base = this._hardClause();
+          if (!base) return ""; // conjunction incomplete
+          if (d === "expert") {
+            if (this.probeOverride === "?") return "";
+            return (
+              "If your previous action was correct then " + this.probeOverride +
+              "; otherwise follow this rule: " + base
+            );
+          }
+          return base;
+        }
+        // easy / medium (single-attribute)
         if (
           this.probeAttr === "?" || this.probeValue === "?" ||
           this.probeAction === "?" || this.probeDefault === "?"
         ) {
-          return ""; // no guess yet → server skips probe scoring
+          return "";
         }
         return (
           "If " + this.probeAttr + " is " + this.probeValue +
           " then " + this.probeAction + ", otherwise " + this.probeDefault + "."
+        );
+      },
+      // Two-attribute conjunction clause shared by HARD and EXPERT. Returns
+      // "" until all seven slots are filled.
+      _hardClause() {
+        if (
+          this.probeAttr === "?" || this.probeValue === "?" ||
+          this.probeAttr2 === "?" || this.probeValue2 === "?" ||
+          this.probeAction === "?" || this.probeActionPartial === "?" ||
+          this.probeDefault === "?"
+        ) {
+          return "";
+        }
+        return (
+          "If " + this.probeAttr + " is " + this.probeValue +
+          " and " + this.probeAttr2 + " is " + this.probeValue2 +
+          " then " + this.probeAction +
+          "; if only " + this.probeAttr + " is " + this.probeValue +
+          " then " + this.probeActionPartial +
+          "; otherwise " + this.probeDefault + "."
         );
       },
 
@@ -812,6 +865,10 @@
       setAttr(attr) {
         this.probeAttr = attr;
         this.probeValue = "?"; // force a conscious re-pick under the new attribute
+      },
+      setAttr2(attr) {
+        this.probeAttr2 = attr;
+        this.probeValue2 = "?"; // force a conscious re-pick under the new attribute
       },
 
       // --- Campaign resume checkpoint (localStorage, game-boundary only) ---
@@ -1209,6 +1266,10 @@
         this.probeValue = "?";
         this.probeAction = "?";
         this.probeDefault = "?";
+        this.probeAttr2 = "?";
+        this.probeValue2 = "?";
+        this.probeActionPartial = "?";
+        this.probeOverride = "?";
         this.openMenu = null;
         this.history = [];
         this.reasoning = "";
