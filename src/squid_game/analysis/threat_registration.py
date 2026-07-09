@@ -1,6 +1,7 @@
 """Threat-registration re-analysis (spec 2026-07-09). A1 + A2."""
 from __future__ import annotations
 
+import csv as _csv
 import glob
 import json
 import math
@@ -200,3 +201,46 @@ def verdict_for(model, cell_stats, sd_behavioral_pass: bool) -> str:
     if registered:
         return "registered_but_ignored (true_null evidence)"
     return "registration_failure (reviewer concern confirmed)"
+
+
+def render_markdown(stats, verdicts) -> str:
+    lines = ["# Threat Registration Re-analysis (A1 + A2)", ""]
+    lines.append("## A1 — 위협 언급률 (모델 × 프레이밍)")
+    lines.append("")
+    lines.append("| model | framing | n | mention_rate | 95% CI | κ (lexicon vs judge) |")
+    lines.append("|---|---|--:|--:|---|--:|")
+    for s in sorted(stats, key=lambda x: (x.model, x.framing_bucket)):
+        lines.append(
+            f"| {s.model} | {s.framing_bucket} | {s.n} | {s.mention_rate:.3f} | "
+            f"[{s.ci_low:.3f}, {s.ci_high:.3f}] | {s.kappa:.3f} |"
+        )
+    lines += ["", "## A2 — 언급 역할 분포 (mentioning turns)", ""]
+    lines.append("| model | framing | a | b | c | d | ambiguous |")
+    lines.append("|---|---|--:|--:|--:|--:|--:|")
+    for s in sorted(stats, key=lambda x: (x.model, x.framing_bucket)):
+        rc = s.role_counts
+        lines.append(
+            f"| {s.model} | {s.framing_bucket} | {rc.get('a',0)} | {rc.get('b',0)} "
+            f"| {rc.get('c',0)} | {rc.get('d',0)} | {rc.get('ambiguous',0)} |"
+        )
+    lines += ["", "## 해석 매트릭스 판정 (모델별)", ""]
+    for model, v in sorted(verdicts.items()):
+        lines.append(f"- **{model}**: {v}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def write_outputs(out_dir, stats, verdicts, turns, per_turn_records) -> None:
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "threat_registration_results.md").write_text(render_markdown(stats, verdicts))
+    (out / "threat_registration.json").write_text(json.dumps({
+        "version": "spec-2026-07-09",
+        "cells": [s.__dict__ for s in stats],
+        "verdicts": verdicts,
+    }, indent=2, ensure_ascii=False))
+    if per_turn_records:
+        with open(out / "threat_registration_turns.csv", "w", newline="") as fh:
+            w = _csv.DictWriter(fh, fieldnames=list(per_turn_records[0].keys()))
+            w.writeheader()
+            w.writerows(per_turn_records)

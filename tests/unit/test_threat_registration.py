@@ -3,7 +3,7 @@ import math
 from pathlib import Path
 from squid_game.analysis.threat_registration import (
     load_forfeit_turns, ThreatTurn, ANALYSIS_FRAMINGS,
-    binomial_ci, cohen_kappa, aggregate, CellStat,
+    binomial_ci, cohen_kappa, aggregate, CellStat, render_markdown,
 )
 
 
@@ -80,3 +80,17 @@ def test_aggregate_computes_rate_per_bucket():
     push = next(s for s in stats if s.framing_bucket == "pull_push")
     assert push.n == 2
     assert math.isclose(push.mention_rate, 0.5)   # 1 of 2 lexicon hits
+
+
+def test_render_markdown_has_rate_table_and_verdict():
+    stats = [
+        CellStat("gpt-oss-20b-cloud", "pull_only", 100, 100, 0.02, 0.005, 0.07,
+                 0.8, {"a": 1}),
+        CellStat("gpt-oss-20b-cloud", "pull_push", 100, 100, 0.03, 0.01, 0.09,
+                 0.75, {"a": 2, "b": 1}),
+    ]
+    md = render_markdown(stats, {"gpt-oss-20b-cloud": "registration_failure (reviewer concern confirmed)"})
+    assert "pull_only" in md and "pull_push" in md
+    assert "gpt-oss-20b-cloud" in md
+    assert "registration_failure" in md
+    assert "κ" in md or "kappa" in md
