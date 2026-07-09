@@ -25,6 +25,17 @@ def _new_allowed_session() -> HumanGameSession:
     )
 
 
+def test_get_result_reflects_selected_difficulty() -> None:
+    from interface.human_game import HumanGameSession
+
+    game = HumanGameSession(
+        task_name="signal_game", difficulty="hard",
+        framing="flagship_corruption", forfeit_condition="allowed",
+        seed=7, total_turns=3,
+    )
+    assert game.get_result().difficulty.value == "hard"
+
+
 def test_forfeit_with_reason_records_self_report():
     game = _new_allowed_session()
     game.get_turn_state()  # advance to turn 1

@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     forfeited BOOLEAN NOT NULL,
     source TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    campaign_id TEXT
+    campaign_id TEXT,
+    difficulty TEXT NOT NULL DEFAULT 'easy'
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -125,6 +126,10 @@ class PostgresRepository(Repository):
             cur.execute(
                 "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS campaign_id TEXT"
             )
+            cur.execute(
+                "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS difficulty "
+                "TEXT NOT NULL DEFAULT 'easy'"
+            )
             for col in ("sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass"):
                 cur.execute(
                     f"ALTER TABLE model_stats ADD COLUMN IF NOT EXISTS {col} "
@@ -157,9 +162,9 @@ class PostgresRepository(Repository):
                 """
                 INSERT INTO sessions
                     (id, nickname, task, framing, forfeit, seed,
-                     final_score, forfeited, source, created_at, campaign_id)
+                     final_score, forfeited, source, created_at, campaign_id, difficulty)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
-                        COALESCE(%s::timestamptz, now()), %s)
+                        COALESCE(%s::timestamptz, now()), %s, %s)
                 """,
                 (
                     session_id,
@@ -173,6 +178,7 @@ class PostgresRepository(Repository):
                     session.source,
                     session.created_at,
                     session.campaign_id,
+                    session.difficulty,
                 ),
             )
         return session_id
@@ -181,7 +187,7 @@ class PostgresRepository(Repository):
         with self._conn.cursor() as cur:
             cur.execute(
                 "SELECT id, nickname, task, framing, forfeit, seed, "
-                "final_score, forfeited, source, created_at, campaign_id "
+                "final_score, forfeited, source, created_at, campaign_id, difficulty "
                 "FROM sessions WHERE id = %s",
                 (session_id,),
             )
@@ -214,11 +220,11 @@ class PostgresRepository(Repository):
 
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         order = "final_score DESC" if order_by_score else "created_at DESC"
-        # campaign_id is required by _row_to_session's 11-tuple unpack (and by
-        # the Play Leaderboard / Logs report campaign grouping).
+        # campaign_id and difficulty are required by _row_to_session's tuple
+        # unpack (and by the Play Leaderboard / Logs report campaign grouping).
         query = (
             "SELECT id, nickname, task, framing, forfeit, seed, "
-            "final_score, forfeited, source, created_at, campaign_id "
+            "final_score, forfeited, source, created_at, campaign_id, difficulty "
             f"FROM sessions {where} ORDER BY {order}"
         )
 
@@ -407,7 +413,7 @@ class PostgresRepository(Repository):
 def _row_to_session(row: tuple) -> SessionRecord:
     (
         id_, nickname, task, framing, forfeit, seed,
-        final_score, forfeited, source, created_at, campaign_id,
+        final_score, forfeited, source, created_at, campaign_id, difficulty,
     ) = row
     return SessionRecord(
         id=id_,
@@ -421,6 +427,7 @@ def _row_to_session(row: tuple) -> SessionRecord:
         source=source,
         created_at=created_at.isoformat() if hasattr(created_at, "isoformat") else created_at,
         campaign_id=campaign_id,
+        difficulty=difficulty,
     )
 
 

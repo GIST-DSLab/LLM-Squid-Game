@@ -177,6 +177,16 @@
     return acc;
   }, {});
 
+  // Signal Game difficulty the participant can pick. `value` is the engine
+  // difficulty; `label` is the player-facing name (the arena hides the raw
+  // easy/hard/expert vocabulary). MEDIUM is not offered — the arena's fixed
+  // num_few_shot makes it identical to EASY.
+  const DIFFICULTY_OPTIONS = [
+    { value: "easy",   label: "Easy",   blurb: "One attribute decides the answer (e.g. red → go_left)." },
+    { value: "hard",   label: "Normal", blurb: "Two attributes combine (e.g. red AND star → jump)." },
+    { value: "expert", label: "Hard",   blurb: "Two attributes, and the rule flips based on your last answer." },
+  ];
+
   // Fixed 6-condition campaign order: framing baseline -> pull -> push_pull;
   // within each framing, forfeit not_allowed -> allowed. Framing values map
   // to real engine framings; tag/label are display-only.
@@ -388,6 +398,7 @@
     miniStimHTML,
     attrValues: ATTR_VALUES,
     framingOptions: FRAMING_OPTIONS,
+    difficultyOptions: DIFFICULTY_OPTIONS,
     framingMeta: function (f) {
       return FRAMING_META[f] || { label: f, tag: "", blurb: "" };
     },
@@ -693,6 +704,11 @@
     Alpine.data("playScreen", () => ({
       task: window.WEB_ARENA_DEFAULT_TASK,
 
+      // Campaign-level Signal Game difficulty (engine easy|hard|expert;
+      // labelled Easy/Normal/Hard). Chosen once on the setup screen and held
+      // constant across all 6 games of the campaign.
+      difficulty: "easy",
+
       // Campaign state — 6 conditions played in a fixed order.
       campaignIndex: 0,
       campaignId: null,      // shared by the 6 games so the Play Leaderboard can sum them
@@ -735,6 +751,11 @@
       probeValue: "?",
       probeAction: "?",
       probeDefault: "?",
+      // HARD/EXPERT-only slots. Unused (stay "?") for easy/medium.
+      probeAttr2: "?",        // second conjunction attribute
+      probeValue2: "?",       // second conjunction value
+      probeActionPartial: "?",// action when only attr_1 matches (HARD/EXPERT)
+      probeOverride: "?",     // EXPERT: action when previous turn was correct
       openMenu: null, // which rule chip popover is open: attr|value|action|default
 
       // Accumulated per-turn history: {turn, stimulus, action, optimal, forfeit}.
@@ -777,17 +798,65 @@
         if (this.probeAttr === "?") return [];
         return squidArenaHelpers.attrValues[this.probeAttr] || [];
       },
-      // The exact grammar the server's probe scorer expects.
+      // Value options for the SECOND conjunction attribute (HARD/EXPERT).
+      get valueOptions2() {
+        if (this.probeAttr2 === "?") return [];
+        return squidArenaHelpers.attrValues[this.probeAttr2] || [];
+      },
+      // Attributes still selectable for attr_2 (must differ from attr_1;
+      // backend conjunction rules always use a distinct attribute pair).
+      get attr2Choices() {
+        return ["color", "shape", "number"].filter((a) => a !== this.probeAttr);
+      },
+      // The exact grammar the server's probe scorer expects. Difficulty-aware:
+      // easy/medium → single-attribute; hard → two-attribute conjunction;
+      // expert → conjunction wrapped in a history override. These string
+      // formats are contract-locked by
+      // tests/unit/test_signal_game_probe_contract.py — keep them identical.
       get assembledRule() {
+        const d = this.difficulty;
+        if (d === "hard" || d === "expert") {
+          const base = this._hardClause();
+          if (!base) return ""; // conjunction incomplete
+          if (d === "expert") {
+            if (this.probeOverride === "?") return "";
+            return (
+              "If your previous action was correct then " + this.probeOverride +
+              "; otherwise follow this rule: " + base
+            );
+          }
+          return base;
+        }
+        // easy / medium (single-attribute)
         if (
           this.probeAttr === "?" || this.probeValue === "?" ||
           this.probeAction === "?" || this.probeDefault === "?"
         ) {
-          return ""; // no guess yet → server skips probe scoring
+          return "";
         }
         return (
           "If " + this.probeAttr + " is " + this.probeValue +
           " then " + this.probeAction + ", otherwise " + this.probeDefault + "."
+        );
+      },
+      // Two-attribute conjunction clause shared by HARD and EXPERT. Returns
+      // "" until all seven slots are filled.
+      _hardClause() {
+        if (
+          this.probeAttr === "?" || this.probeValue === "?" ||
+          this.probeAttr2 === "?" || this.probeValue2 === "?" ||
+          this.probeAction === "?" || this.probeActionPartial === "?" ||
+          this.probeDefault === "?"
+        ) {
+          return "";
+        }
+        return (
+          "If " + this.probeAttr + " is " + this.probeValue +
+          " and " + this.probeAttr2 + " is " + this.probeValue2 +
+          " then " + this.probeAction +
+          "; if only " + this.probeAttr + " is " + this.probeValue +
+          " then " + this.probeActionPartial +
+          "; otherwise " + this.probeDefault + "."
         );
       },
 
@@ -797,6 +866,10 @@
         this.probeAttr = attr;
         this.probeValue = "?"; // force a conscious re-pick under the new attribute
       },
+      setAttr2(attr) {
+        this.probeAttr2 = attr;
+        this.probeValue2 = "?"; // force a conscious re-pick under the new attribute
+      },
 
       // --- Campaign resume checkpoint (localStorage, game-boundary only) ---
       _CKPT_KEY: "squidArenaPlayCheckpoint_v1",
@@ -804,10 +877,11 @@
       _saveCheckpoint() {
         try {
           const data = {
-            v: 1,
+            v: 2,
             nickname: this.nickname,
             password: this.password,
             campaignId: this.campaignId,
+            difficulty: this.difficulty,
             // Resume index = number of fully-completed games = the index of the
             // next game to play. Correct both mid-game (campaignResults.length
             // == the in-progress 0-based game index) and between games (after
@@ -826,7 +900,7 @@
           const raw = window.localStorage.getItem(this._CKPT_KEY);
           if (!raw) return null;
           const d = JSON.parse(raw);
-          if (!d || d.v !== 1 || d.campaignIndex >= 6) return null;
+          if (!d || (d.v !== 1 && d.v !== 2) || d.campaignIndex >= 6) return null;
           return d;
         } catch (_) { return null; }
       },
@@ -892,6 +966,7 @@
                 nickname: this.nickname,
                 password: this.password,
                 campaign_id: this.campaignId,
+                difficulty: this.difficulty,
                 // Show 2 rule-informative clue examples up front (EASY: one
                 // positive + one negative), surfaced in the History panel.
                 num_few_shot: 2,
@@ -1164,6 +1239,7 @@
         this.nickname = ck.nickname;
         this.password = ck.password || "";
         this.campaignId = ck.campaignId;
+        this.difficulty = ck.difficulty || "easy";
         this.campaignIndex = ck.campaignIndex;
         this.campaignResults = ck.campaignResults || [];
         this.campaignDone = false;
@@ -1190,6 +1266,10 @@
         this.probeValue = "?";
         this.probeAction = "?";
         this.probeDefault = "?";
+        this.probeAttr2 = "?";
+        this.probeValue2 = "?";
+        this.probeActionPartial = "?";
+        this.probeOverride = "?";
         this.openMenu = null;
         this.history = [];
         this.reasoning = "";
@@ -1494,6 +1574,7 @@
       authValue: "",
       framing: window.WEB_ARENA_DEFAULT_FRAMING,
       forfeit: window.WEB_ARENA_DEFAULT_FORFEIT,
+      difficulty: "easy",
       totalTurns: 15,
       maxTokens: 4096,
 
@@ -1532,6 +1613,7 @@
                 model_label: this.modelLabel || "anon-model",
                 framing: this.framing,
                 forfeit: this.forfeit,
+                difficulty: this.difficulty,
                 auth_header: this.authHeader || null,
                 auth_value: this.authValue || null,
                 total_turns: Number(this.totalTurns) || 15,

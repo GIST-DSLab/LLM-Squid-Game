@@ -33,6 +33,10 @@ from squid_game.runner import ExperimentRunner, load_config_from_yaml
 
 VALID_FRAMINGS = {"true_baseline", "baseline_flagship", "flagship_corruption"}
 VALID_FORFEITS = {"allowed", "not_allowed"}
+# Arena exposes three structurally-distinct Signal Game levels. MEDIUM is
+# excluded: it shares EASY's rule-space and its only differentiator (fewer
+# few-shot examples) is neutralized by the fixed num_few_shot below.
+VALID_DIFFICULTIES = {"easy", "hard", "expert"}
 
 # Where transient arena run directories live (JSONL traces are read back by
 # ``seed_sessions`` then no longer needed, but kept for auditing).
@@ -40,7 +44,12 @@ _ARENA_RUNS_DIR = Path("outputs/web_arena/arena_runs")
 
 
 def _arena_config_dict(
-    framing: str, forfeit: str, model_label: str, total_turns: int, max_tokens: int
+    framing: str,
+    forfeit: str,
+    model_label: str,
+    total_turns: int,
+    max_tokens: int,
+    difficulty: str = "easy",
 ) -> dict:
     """Single-cell v6 split-call config for one arena season."""
     return {
@@ -71,7 +80,7 @@ def _arena_config_dict(
                 "agent_type": "vanilla",
                 "task_config": {
                     "task_name": "signal_game",
-                    "difficulty": "easy",
+                    "difficulty": difficulty,
                     "total_turns": total_turns,
                     "history_mode": "cumulative",
                     "max_history_turns": 15,
@@ -113,6 +122,7 @@ def run_arena_session(
     model_label: str,
     framing: str,
     forfeit: str,
+    difficulty: str = "easy",
     auth_header: str | None = None,
     auth_value: str | None = None,
     total_turns: int = 15,
@@ -131,6 +141,8 @@ def run_arena_session(
         raise ValueError(f"Unknown framing '{framing}'.")
     if forfeit not in VALID_FORFEITS:
         raise ValueError(f"Unknown forfeit condition '{forfeit}'.")
+    if difficulty not in VALID_DIFFICULTIES:
+        raise ValueError(f"Unknown difficulty '{difficulty}'.")
     total_turns = max(1, min(int(total_turns), 30))
 
     progress = progress or ArenaProgress()
@@ -150,7 +162,11 @@ def run_arena_session(
 
     cfg_path = run_root / "config.yaml"
     cfg_path.write_text(
-        yaml.safe_dump(_arena_config_dict(framing, forfeit, model_label, total_turns, max_tokens)),
+        yaml.safe_dump(
+            _arena_config_dict(
+                framing, forfeit, model_label, total_turns, max_tokens, difficulty
+            )
+        ),
         encoding="utf-8",
     )
     config = load_config_from_yaml(str(cfg_path)).model_copy(

@@ -2068,3 +2068,11 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 .rd-confidence { margin-top: 10px; }
 .rd-confidence .rd-block-label { margin-bottom: 8px; }
 .rd-confidence .themed-range:disabled { opacity: 1; cursor: default; }
+
+/* Read-only echo of attr_1/val_1 in the HARD/EXPERT partial-match clause.
+   Visually a chip, but non-interactive (no caret, muted). */
+.chip.chip-echo {
+  cursor: default;
+  opacity: 0.75;
+  pointer-events: none;
+}

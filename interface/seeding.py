@@ -136,6 +136,7 @@ def build_session_record(season: dict[str, Any], model_label: str, fallback_crea
         forfeited=bool(season["forfeited"]),
         source="llm",
         created_at=created_at,
+        difficulty=season.get("difficulty", "easy"),
     )
 
 
