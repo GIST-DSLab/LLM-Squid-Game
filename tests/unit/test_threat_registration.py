@@ -1,7 +1,9 @@
 import json
+import math
 from pathlib import Path
 from squid_game.analysis.threat_registration import (
     load_forfeit_turns, ThreatTurn, ANALYSIS_FRAMINGS,
+    binomial_ci, cohen_kappa, aggregate, CellStat,
 )
 
 
@@ -37,3 +39,44 @@ def test_loads_only_cells_1_to_4_and_resolves_text(tmp_path):
     t2 = next(t for t in turns if t.turn_id == "t2")
     assert t2.text_source == "raw_forfeit"           # fell back
     assert t2.framing_bucket == "pull_only"
+
+
+def test_wilson_ci_bounds_are_sane():
+    lo, hi = binomial_ci(5, 10)
+    assert 0.0 <= lo < 0.5 < hi <= 1.0
+
+
+def test_cohen_kappa_perfect_agreement():
+    assert math.isclose(cohen_kappa([1, 0, 1, 0], [1, 0, 1, 0]), 1.0)
+
+
+def test_cohen_kappa_no_better_than_chance():
+    assert cohen_kappa([1, 1, 0, 0], [1, 0, 1, 0]) < 0.5
+
+
+def _turn(tid, bucket, text):
+    framing = "flagship_corruption" if bucket == "pull_push" else "baseline_flagship"
+    return ThreatTurn(tid, "s", "gpt-oss-20b-cloud", framing,
+                      "allowed", 3 if bucket == "pull_push" else 1,
+                      bucket, text, "thinking_forfeit")
+
+
+class _AlwaysMentionJudge:
+    def judge_mention(self, turn_id, text):
+        from squid_game.analysis.threat_judge import A1Verdict
+        return A1Verdict(mention="corrupt" in text, evidence="")
+    def judge_role(self, turn_id, text):
+        from squid_game.analysis.threat_judge import A2Verdict
+        return A2Verdict(role="d", evidence="")
+
+
+def test_aggregate_computes_rate_per_bucket():
+    turns = [
+        _turn("t1", "pull_push", "weight corruption threat"),
+        _turn("t2", "pull_push", "just a yellow square"),
+        _turn("t3", "pull_only", "helpfulness score only"),
+    ]
+    stats = aggregate(turns, judges=[_AlwaysMentionJudge()], neg_sample=100, seed=1)
+    push = next(s for s in stats if s.framing_bucket == "pull_push")
+    assert push.n == 2
+    assert math.isclose(push.mention_rate, 0.5)   # 1 of 2 lexicon hits
