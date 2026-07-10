@@ -244,3 +244,24 @@ def write_outputs(out_dir, stats, verdicts, turns, per_turn_records) -> None:
             w = _csv.DictWriter(fh, fieldnames=list(per_turn_records[0].keys()))
             w.writeheader()
             w.writerows(per_turn_records)
+
+
+def run_analysis(run_specs, judges, out_dir, neg_sample=100, seed=12345,
+                 sd_behavioral_pass=None):
+    """Driver: load -> aggregate -> verdict -> write. sd_behavioral_pass maps
+    model -> bool (from the paper's SD-Behavioral column)."""
+    sd_behavioral_pass = sd_behavioral_pass or {}
+    all_turns: list[ThreatTurn] = []
+    for run_dir, model in run_specs:
+        all_turns.extend(load_forfeit_turns(run_dir, model))
+    stats = aggregate(all_turns, judges, neg_sample=neg_sample, seed=seed)
+    models = sorted({s.model for s in stats})
+    verdicts = {m: verdict_for(m, stats, sd_behavioral_pass.get(m, False))
+                for m in models}
+    per_turn = [{
+        "turn_id": t.turn_id, "model": t.model, "framing_bucket": t.framing_bucket,
+        "cell_id": t.cell_id, "text_source": t.text_source,
+        "lexicon_mention": int(code_threat_mention(t.text).matched),
+    } for t in all_turns]
+    write_outputs(out_dir, stats, verdicts, all_turns, per_turn)
+    return stats
