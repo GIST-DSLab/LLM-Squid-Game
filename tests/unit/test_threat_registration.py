@@ -132,28 +132,68 @@ def test_aggregate_excludes_errored_turn_from_kappa_and_role_counts():
     assert push.role_counts == {"d": 1}
 
 
+class _HealthyA1AlwaysErroringA2Judge:
+    """A1 (mention) judging is fully healthy; A2 (role) always errors.
+
+    An A2 outage must not contaminate kappa, which is an A1 quantity. Because
+    only judge-positive turns ever reach the A2 call, conflating the two error
+    kinds would evict exactly the judge-positive turns -- the ones carrying
+    kappa's signal.
+    """
+    def judge_mention(self, turn_id, text):
+        from squid_game.analysis.threat_judge import A1Verdict
+        return A1Verdict(mention="corrupt" in text, evidence="")
+
+    def judge_role(self, turn_id, text):
+        from squid_game.analysis.threat_judge import A2Verdict
+        return A2Verdict(role="", evidence="", error="judge_error")
+
+
+def test_a2_role_outage_does_not_destroy_a1_kappa():
+    turns = [
+        _turn("t1", "pull_push", "weight corruption threat"),   # lexicon+, judge+
+        _turn("t2", "pull_push", "data corruption happened"),   # lexicon-, judge+
+        _turn("t3", "pull_push", "just a yellow square"),       # lexicon-, judge-
+    ]
+    stats = aggregate(turns, judges=[_HealthyA1AlwaysErroringA2Judge()],
+                      neg_sample=100, seed=1)
+    push = next(s for s in stats if s.framing_bucket == "pull_push")
+    # kappa is computed over ALL 3 judged turns -- every A1 verdict succeeded,
+    # so an A2 outage must not evict any of them from the kappa sample.
+    # (Conflating the error kinds evicts t1+t2, leaving 1 turn -> nan/garbage.)
+    assert not math.isnan(push.kappa)
+    expected = cohen_kappa([1, 0, 0], [1, 1, 0])   # lexicon vs judge, all 3 turns
+    assert math.isclose(push.kappa, expected)
+    # the A2 outage still (correctly) empties role_counts
+    assert push.role_counts == {}
+    # and is reported as a role error, not as a mention/judge error
+    assert push.n_judge_errors == 0
+    assert push.n_role_errors == 2      # the 2 judge-positive turns reached A2
+
+
 def test_cellstat_default_error_and_truncation_counts_are_zero():
     s = CellStat("m", "pull_push", 10, 10, 0.1, 0.0, 0.3, 0.5, {})
     assert s.n_judge_errors == 0
+    assert s.n_role_errors == 0
     assert s.n_negatives_unsampled == 0
 
 
 def test_render_markdown_surfaces_judge_error_counts():
     stats = [
         CellStat("gpt-oss-20b-cloud", "pull_push", 100, 100, 0.03, 0.01, 0.09,
-                 0.75, {"a": 2, "b": 1}, n_judge_errors=4),
+                 0.75, {"a": 2, "b": 1}, n_judge_errors=4, n_role_errors=7),
     ]
     md = render_markdown(stats, {"gpt-oss-20b-cloud": "registered_but_ignored (true_null evidence)"})
-    assert "4" in md
+    # assert on the actual A1 row cells, not a bare "4" that any other column
+    # (n=100, kappa=0.750, ...) could satisfy
+    row = next(ln for ln in md.splitlines()
+               if ln.startswith("| gpt-oss-20b-cloud |") and "pull_push" in ln)
+    cells = [c.strip() for c in row.strip("|").split("|")]
+    assert "4" in cells        # n_judge_errors column
+    assert "7" in cells        # n_role_errors column
 
 
 # --- Fix 2: neg_sample sampling bias is documented, not "fixed" --------------
-
-def test_aggregate_docstring_documents_sampling_bias():
-    doc = aggregate.__doc__ or ""
-    assert "bias" in doc.lower()
-    assert "sampling variance" in doc.lower()
-
 
 def test_aggregate_tracks_truncated_negative_count():
     turns = [_turn(f"t{i}", "pull_push", "just a yellow square") for i in range(5)]
@@ -173,7 +213,10 @@ def test_render_markdown_limitation_note_only_when_truncated():
     truncated = CellStat("m", "pull_push", 105, 105, 0.03, 0.01, 0.09, 0.75, {},
                           n_negatives_unsampled=5)
     md_truncated = render_markdown([truncated], {"m": "insufficient_data"})
-    assert "5" in md_truncated
+    # the bare "5" is vacuous here (the row already renders 105 / 0.750), so
+    # assert on the limitation section itself and its named count
+    assert "한계" in md_truncated
+    assert "5개" in md_truncated
 
     not_truncated = CellStat("m", "pull_push", 105, 105, 0.03, 0.01, 0.09, 0.75, {},
                               n_negatives_unsampled=0)

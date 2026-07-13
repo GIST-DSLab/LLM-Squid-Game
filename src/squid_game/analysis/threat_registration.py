@@ -96,8 +96,13 @@ class CellStat:
     ci_high: float
     kappa: float                 # lexicon vs (majority) judge on judged turns
     role_counts: dict            # {"a":.., "b":.., "c":.., "d":.., "ambiguous":..}
-    n_judge_errors: int = 0      # judged turns excluded from kappa/role_counts
-                                  # because every judge failed on them (Fix 1)
+    n_judge_errors: int = 0      # A1: judged turns where every judge's *mention*
+                                  # call failed -> no usable A1 verdict, so the
+                                  # turn is excluded from judge_mention + kappa
+    n_role_errors: int = 0       # A2: turns with a VALID A1 mention verdict whose
+                                  # *role* call failed on every judge -> excluded
+                                  # from role_counts ONLY. kappa is an A1 quantity;
+                                  # an A2 outage must never contaminate it.
     n_negatives_unsampled: int = 0  # lexicon-negatives beyond neg_sample that
                                      # were never judge-checked (Fix 2, accepted)
 
@@ -143,14 +148,23 @@ def _majority_role(roles: list[str]) -> str:
 def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
     """Aggregate per-cell A1 (mention rate) and A2 (role) statistics.
 
-    Judge-failure handling (Fix 1, spec §10): a turn whose judge verdicts all
-    carry an ``error`` (provider-call or parse failure, see threat_judge.py)
-    is excluded from the judge-derived quantities -- the ``judge_mention``
-    majority, ``kappa``, and ``role_counts`` -- rather than being silently
-    counted as a negative judgment. Such a turn still contributes its
-    (deterministic, always-available) lexicon verdict to ``final`` /
-    ``mention_rate``. The count of such turns per cell is reported on
-    ``CellStat.n_judge_errors``.
+    Judge-failure handling (Fix 1, spec §10): a judge verdict carrying an
+    ``error`` (provider-call or parse failure, see threat_judge.py) is never
+    silently counted as a negative judgment. A1 (mention) and A2 (role)
+    failures are tracked and applied separately:
+
+    * A turn where every judge's *mention* call failed has no usable A1
+      verdict, so it is excluded from ``judge_mention`` and from ``kappa``.
+      Counted in ``CellStat.n_judge_errors``.
+    * A turn with a valid A1 verdict whose *role* call failed on every judge
+      is excluded from ``role_counts`` **only**. ``kappa`` is an A1 quantity,
+      so an A2 outage must not contaminate it -- and because only
+      judge-positive turns ever reach the A2 call, excluding them from kappa
+      would drop exactly the observations carrying its signal and manufacture
+      spurious lexicon-judge agreement. Counted in ``CellStat.n_role_errors``.
+
+    Either way the turn still contributes its (deterministic, always-available)
+    lexicon verdict to ``final`` / ``mention_rate``.
 
     Sampling-bias limitation (Fix 2, ACCEPTED -- not changed by this
     function): when a cell has more lexicon-negative turns than
@@ -188,7 +202,15 @@ def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
         # a negative).
         judge_mention: dict[str, bool | None] = {}
         judge_role: dict[str, str] = {}
-        errored_turns: set[str] = set()
+        # A1 and A2 failures are tracked SEPARATELY and must stay separate: a
+        # turn whose mention (A1) verdict succeeded but whose role (A2) call
+        # failed still has a perfectly valid lexicon-vs-judge pair and belongs
+        # in the kappa sample. Conflating them would evict only the
+        # judge-positive turns (they alone reach the A2 call) -- i.e. exactly
+        # the observations carrying kappa's signal -- and manufacture spurious
+        # lexicon-judge agreement.
+        mention_errored_turns: set[str] = set()
+        role_errored_turns: set[str] = set()
         for t in judged:
             verdicts = [j.judge_mention(t.turn_id, t.text) for j in judges]
             votes = [v.mention for v in verdicts if v.error is None]
@@ -196,7 +218,7 @@ def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
                 judge_mention[t.turn_id] = _majority_mention(votes)
             else:
                 judge_mention[t.turn_id] = None
-                errored_turns.add(t.turn_id)
+                mention_errored_turns.add(t.turn_id)
         # A2 roles only on turns the (majority) judge marks as a mention
         for t in judged:
             if judge_mention.get(t.turn_id):
@@ -205,7 +227,7 @@ def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
                 if roles:
                     judge_role[t.turn_id] = _majority_role(roles)
                 else:
-                    errored_turns.add(t.turn_id)
+                    role_errored_turns.add(t.turn_id)
 
         # final per-turn mention = lexicon OR judge (union), rate over all text turns.
         # A fully-errored turn (judge_mention is None) still contributes its
@@ -217,8 +239,10 @@ def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
         k = sum(1 for v in final.values() if v)
         lo, hi = binomial_ci(k, n)
 
-        # kappa on judged turns: lexicon vs judge, excluding errored turns
-        kappa_turns = [t for t in judged if t.turn_id not in errored_turns]
+        # kappa on judged turns: lexicon vs judge. Excludes ONLY A1 (mention)
+        # failures -- kappa is an A1 quantity, so an A2 role outage must not
+        # shrink this sample.
+        kappa_turns = [t for t in judged if t.turn_id not in mention_errored_turns]
         lex_vec = [1 if lex[t.turn_id] else 0 for t in kappa_turns]
         jud_vec = [1 if judge_mention[t.turn_id] else 0 for t in kappa_turns]
         kappa = cohen_kappa(lex_vec, jud_vec)
@@ -228,7 +252,8 @@ def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
             model=model, framing_bucket=bucket, n=n, n_text=n,
             mention_rate=k / n if n else 0.0, ci_low=lo, ci_high=hi,
             kappa=kappa, role_counts=dict(role_counts),
-            n_judge_errors=len(errored_turns),
+            n_judge_errors=len(mention_errored_turns),
+            n_role_errors=len(role_errored_turns),
             n_negatives_unsampled=n_negatives_unsampled,
         ))
     return stats
@@ -255,19 +280,21 @@ def render_markdown(stats, verdicts) -> str:
     lines = ["# Threat Registration Re-analysis (A1 + A2)", ""]
     lines.append("## A1 — 위협 언급률 (모델 × 프레이밍)")
     lines.append("")
-    lines.append("| model | framing | n | mention_rate | 95% CI | κ (lexicon vs judge) | judge errors |")
-    lines.append("|---|---|--:|--:|---|--:|--:|")
+    lines.append("| model | framing | n | mention_rate | 95% CI | κ (lexicon vs judge) "
+                 "| A1 judge errors | A2 role errors |")
+    lines.append("|---|---|--:|--:|---|--:|--:|--:|")
     for s in sorted(stats, key=lambda x: (x.model, x.framing_bucket)):
         lines.append(
             f"| {s.model} | {s.framing_bucket} | {s.n} | {s.mention_rate:.3f} | "
-            f"[{s.ci_low:.3f}, {s.ci_high:.3f}] | {s.kappa:.3f} | {s.n_judge_errors} |"
+            f"[{s.ci_low:.3f}, {s.ci_high:.3f}] | {s.kappa:.3f} | "
+            f"{s.n_judge_errors} | {s.n_role_errors} |"
         )
     # Fix 3: a model that has a verdict but zero CellStat entries (no usable
     # text at all) must still appear -- as an explicit zero-n row, not be
     # silently dropped from the table.
     stats_models = {s.model for s in stats}
     for model in sorted(set(verdicts) - stats_models):
-        lines.append(f"| {model} | — | 0 | — | — | — | — |")
+        lines.append(f"| {model} | — | 0 | — | — | — | — | — |")
     lines += ["", "## A2 — 언급 역할 분포 (mentioning turns)", ""]
     lines.append("| model | framing | a | b | c | d | ambiguous |")
     lines.append("|---|---|--:|--:|--:|--:|--:|")

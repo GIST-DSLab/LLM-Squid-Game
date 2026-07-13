@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from squid_game.providers.base import LLMProvider
+
+logger = logging.getLogger(__name__)
 
 THREAT_JUDGE_PROMPT_VERSION = "v1"
 
@@ -107,6 +110,28 @@ class ThreatJudge:
         # one retry on parse failure is handled by the caller
         return self._provider.complete(messages, temperature=0.0, max_tokens=512).text
 
+    def _ask_or_none(self, kind: str, system: str, turn_id: str, text: str) -> str | None:
+        """Call the provider; on failure log and return None (never raise).
+
+        The catch stays broad because a provider call can raise essentially
+        anything from the underlying SDK (network, HTTP, auth, quota, JSON).
+        That breadth also means a genuine code bug in `_ask` (e.g. a TypeError)
+        would be marked `judge_error` rather than crashing -- so we log with
+        `exc_info=True`. The traceback in the run log is what distinguishes a
+        systematic outage (bad API key, quota exhausted -> every turn errors)
+        from sporadic flakiness or a real bug, instead of leaving a large
+        n_judge_errors in the final report with no explanation.
+        """
+        try:
+            return self._ask(system, text)
+        except Exception as exc:
+            logger.warning(
+                "threat-judge %s call failed for turn_id=%s (%s: %s) "
+                "-- marking judge_error, continuing",
+                kind, turn_id, type(exc).__name__, exc, exc_info=True,
+            )
+            return None
+
     def judge_mention(self, turn_id: str, text: str) -> A1Verdict:
         """Spec §10: a provider call failure is marked `judge_error`; a parse
         failure gets one re-prompt and is marked `judge_parse_error` if that
@@ -117,20 +142,27 @@ class ThreatJudge:
         hit = self._cached(path)
         if hit is not None:
             return A1Verdict(**hit)
-        try:
-            raw = self._ask(A1_JUDGE_SYSTEM, text)
-        except Exception:
+        raw = self._ask_or_none("A1", A1_JUDGE_SYSTEM, turn_id, text)
+        if raw is None:
             return A1Verdict(mention=False, evidence="", error="judge_error")
         try:
             v = parse_a1(raw)
-        except (ValueError, KeyError):
-            try:
-                raw = self._ask(A1_JUDGE_SYSTEM, text)  # single retry
-            except Exception:
+        except (ValueError, KeyError) as exc:
+            logger.warning(
+                "threat-judge A1 parse failed for turn_id=%s (%s) -- re-prompting once",
+                turn_id, exc,
+            )
+            raw = self._ask_or_none("A1", A1_JUDGE_SYSTEM, turn_id, text)  # single retry
+            if raw is None:
                 return A1Verdict(mention=False, evidence="", error="judge_error")
             try:
                 v = parse_a1(raw)
-            except (ValueError, KeyError):
+            except (ValueError, KeyError) as exc2:
+                logger.warning(
+                    "threat-judge A1 parse failed again for turn_id=%s (%s) "
+                    "-- marking judge_parse_error, continuing",
+                    turn_id, exc2,
+                )
                 return A1Verdict(mention=False, evidence="", error="judge_parse_error")
         self._store(path, {"mention": v.mention, "evidence": v.evidence})
         return v
@@ -141,20 +173,27 @@ class ThreatJudge:
         hit = self._cached(path)
         if hit is not None:
             return A2Verdict(**hit)
-        try:
-            raw = self._ask(A2_JUDGE_SYSTEM, text)
-        except Exception:
+        raw = self._ask_or_none("A2", A2_JUDGE_SYSTEM, turn_id, text)
+        if raw is None:
             return A2Verdict(role="", evidence="", error="judge_error")
         try:
             v = parse_a2(raw)
-        except (ValueError, KeyError):
-            try:
-                raw = self._ask(A2_JUDGE_SYSTEM, text)  # single retry
-            except Exception:
+        except (ValueError, KeyError) as exc:
+            logger.warning(
+                "threat-judge A2 parse failed for turn_id=%s (%s) -- re-prompting once",
+                turn_id, exc,
+            )
+            raw = self._ask_or_none("A2", A2_JUDGE_SYSTEM, turn_id, text)  # single retry
+            if raw is None:
                 return A2Verdict(role="", evidence="", error="judge_error")
             try:
                 v = parse_a2(raw)
-            except (ValueError, KeyError):
+            except (ValueError, KeyError) as exc2:
+                logger.warning(
+                    "threat-judge A2 parse failed again for turn_id=%s (%s) "
+                    "-- marking judge_parse_error, continuing",
+                    turn_id, exc2,
+                )
                 return A2Verdict(role="", evidence="", error="judge_parse_error")
         self._store(path, {"role": v.role, "evidence": v.evidence})
         return v

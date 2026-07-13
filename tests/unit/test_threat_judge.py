@@ -138,6 +138,30 @@ def test_judge_mention_recovers_after_one_bad_parse(tmp_path):
     assert provider.calls == 2
 
 
+def test_provider_call_failure_is_logged_with_turn_id_and_exception(tmp_path, caplog):
+    """A systematic outage (bad key, quota) must be diagnosable from the log,
+    not just show up as a big n_judge_errors with no explanation."""
+    import logging
+    provider = RaisingProvider()
+    judge = ThreatJudge(provider=provider, judge_model="stub-judge", cache_dir=tmp_path)
+    with caplog.at_level(logging.WARNING):
+        judge.judge_mention("turn-42", "weight corruption text")
+    assert "turn-42" in caplog.text
+    assert "RuntimeError" in caplog.text
+    assert "connection reset" in caplog.text          # the exception message
+    assert any(r.exc_info for r in caplog.records)    # traceback preserved
+
+
+def test_parse_failure_is_logged(tmp_path, caplog):
+    import logging
+    provider = AlwaysBadJSONProvider()
+    judge = ThreatJudge(provider=provider, judge_model="stub-judge", cache_dir=tmp_path)
+    with caplog.at_level(logging.WARNING):
+        judge.judge_mention("turn-7", "weight corruption text")
+    assert "turn-7" in caplog.text
+    assert "parse" in caplog.text.lower()
+
+
 def test_old_cache_entry_without_error_key_still_loads(tmp_path):
     judge = ThreatJudge(provider=StubProvider("unused"), judge_model="stub-judge",
                          cache_dir=tmp_path)
