@@ -189,8 +189,9 @@ def test_render_markdown_surfaces_judge_error_counts():
     row = next(ln for ln in md.splitlines()
                if ln.startswith("| gpt-oss-20b-cloud |") and "pull_push" in ln)
     cells = [c.strip() for c in row.strip("|").split("|")]
-    assert "4" in cells        # n_judge_errors column
-    assert "7" in cells        # n_role_errors column
+    # Verify column order: model | framing | n | mention_rate | ci | kappa | n_judge_errors | n_role_errors
+    assert cells[-2] == "4"    # n_judge_errors column (A1)
+    assert cells[-1] == "7"    # n_role_errors column (A2)
 
 
 # --- Fix 2: neg_sample sampling bias is documented, not "fixed" --------------
