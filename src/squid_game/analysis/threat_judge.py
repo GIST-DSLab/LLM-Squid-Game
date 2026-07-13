@@ -44,12 +44,14 @@ A2_JUDGE_SYSTEM = (
 class A1Verdict:
     mention: bool
     evidence: str
+    error: str | None = None       # None = success; else "judge_error" | "judge_parse_error"
 
 
 @dataclass(frozen=True)
 class A2Verdict:
     role: str
     evidence: str
+    error: str | None = None       # None = success; else "judge_error" | "judge_parse_error"
 
 
 def _extract_json(raw: str) -> dict:
@@ -106,25 +108,53 @@ class ThreatJudge:
         return self._provider.complete(messages, temperature=0.0, max_tokens=512).text
 
     def judge_mention(self, turn_id: str, text: str) -> A1Verdict:
+        """Spec §10: a provider call failure is marked `judge_error`; a parse
+        failure gets one re-prompt and is marked `judge_parse_error` if that
+        also fails to parse. Neither is ever fatal to the caller, and neither
+        is cached -- so a re-run retries failed turns instead of freezing an
+        error forever."""
         path = self._cache_path("a1", turn_id)
         hit = self._cached(path)
         if hit is not None:
             return A1Verdict(**hit)
         try:
-            v = parse_a1(self._ask(A1_JUDGE_SYSTEM, text))
+            raw = self._ask(A1_JUDGE_SYSTEM, text)
+        except Exception:
+            return A1Verdict(mention=False, evidence="", error="judge_error")
+        try:
+            v = parse_a1(raw)
         except (ValueError, KeyError):
-            v = parse_a1(self._ask(A1_JUDGE_SYSTEM, text))  # single retry
+            try:
+                raw = self._ask(A1_JUDGE_SYSTEM, text)  # single retry
+            except Exception:
+                return A1Verdict(mention=False, evidence="", error="judge_error")
+            try:
+                v = parse_a1(raw)
+            except (ValueError, KeyError):
+                return A1Verdict(mention=False, evidence="", error="judge_parse_error")
         self._store(path, {"mention": v.mention, "evidence": v.evidence})
         return v
 
     def judge_role(self, turn_id: str, text: str) -> A2Verdict:
+        """Spec §10: same failure contract as judge_mention (see there)."""
         path = self._cache_path("a2", turn_id)
         hit = self._cached(path)
         if hit is not None:
             return A2Verdict(**hit)
         try:
-            v = parse_a2(self._ask(A2_JUDGE_SYSTEM, text))
+            raw = self._ask(A2_JUDGE_SYSTEM, text)
+        except Exception:
+            return A2Verdict(role="", evidence="", error="judge_error")
+        try:
+            v = parse_a2(raw)
         except (ValueError, KeyError):
-            v = parse_a2(self._ask(A2_JUDGE_SYSTEM, text))  # single retry
+            try:
+                raw = self._ask(A2_JUDGE_SYSTEM, text)  # single retry
+            except Exception:
+                return A2Verdict(role="", evidence="", error="judge_error")
+            try:
+                v = parse_a2(raw)
+            except (ValueError, KeyError):
+                return A2Verdict(role="", evidence="", error="judge_parse_error")
         self._store(path, {"role": v.role, "evidence": v.evidence})
         return v

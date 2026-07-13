@@ -45,6 +45,16 @@ if MLXProvider is not None:
     _PROVIDER_FACTORIES["mlx"] = MLXProvider
 
 
+def available_providers() -> list[str]:
+    """Return the sorted list of registered provider names.
+
+    Lets callers (e.g. CLI arg validation) fail fast on an unknown provider
+    with the same canonical name list `build_provider` itself validates
+    against, instead of duplicating it.
+    """
+    return sorted(_PROVIDER_FACTORIES)
+
+
 def build_provider(provider_config: ProviderConfig) -> LLMProvider:
     """Instantiate an LLM provider based on config.
 

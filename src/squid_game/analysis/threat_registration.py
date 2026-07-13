@@ -96,6 +96,10 @@ class CellStat:
     ci_high: float
     kappa: float                 # lexicon vs (majority) judge on judged turns
     role_counts: dict            # {"a":.., "b":.., "c":.., "d":.., "ambiguous":..}
+    n_judge_errors: int = 0      # judged turns excluded from kappa/role_counts
+                                  # because every judge failed on them (Fix 1)
+    n_negatives_unsampled: int = 0  # lexicon-negatives beyond neg_sample that
+                                     # were never judge-checked (Fix 2, accepted)
 
 
 def binomial_ci(k: int, n: int, alpha: float = 0.05) -> tuple[float, float]:
@@ -137,6 +141,31 @@ def _majority_role(roles: list[str]) -> str:
 
 
 def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
+    """Aggregate per-cell A1 (mention rate) and A2 (role) statistics.
+
+    Judge-failure handling (Fix 1, spec §10): a turn whose judge verdicts all
+    carry an ``error`` (provider-call or parse failure, see threat_judge.py)
+    is excluded from the judge-derived quantities -- the ``judge_mention``
+    majority, ``kappa``, and ``role_counts`` -- rather than being silently
+    counted as a negative judgment. Such a turn still contributes its
+    (deterministic, always-available) lexicon verdict to ``final`` /
+    ``mention_rate``. The count of such turns per cell is reported on
+    ``CellStat.n_judge_errors``.
+
+    Sampling-bias limitation (Fix 2, ACCEPTED -- not changed by this
+    function): when a cell has more lexicon-negative turns than
+    ``neg_sample``, only ``neg_sample`` of them are judge-checked (see
+    ``CellStat.n_negatives_unsampled``); the rest are assumed lexicon-only.
+    ``mention_rate = k / n`` still divides by ALL turns in the cell, so
+    judge-only mentions among the unsampled negatives are never counted, and
+    the negatives that *were* sampled are weighted as 1 turn each rather than
+    scaled up by the inverse sampling fraction. This makes ``mention_rate``
+    (and therefore its Wilson CI) a downward-biased estimator of the true
+    lexicon-OR-judge rate whenever truncation occurs, and the CI does not
+    include sampling variance from the negative-sampling step itself. This is
+    a known, accepted limitation of the estimator -- see the rendered report's
+    limitation note -- not something this function corrects.
+    """
     rng = random.Random(seed)
     stats: list[CellStat] = []
     by_cell: dict[tuple[str, str], list[ThreatTurn]] = {}
@@ -149,32 +178,49 @@ def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
         lex = {t.turn_id: code_threat_mention(t.text).matched for t in cell_turns}
         positives = [t for t in cell_turns if lex[t.turn_id]]
         negatives = [t for t in cell_turns if not lex[t.turn_id]]
+        n_negatives_unsampled = max(0, len(negatives) - neg_sample)
         sampled_neg = negatives if len(negatives) <= neg_sample else \
             rng.sample(negatives, neg_sample)
         judged = positives + sampled_neg
 
-        # majority-vote judge mention per judged turn
-        judge_mention = {}
-        judge_role = {}
+        # majority-vote judge mention per judged turn; a turn where every
+        # judge errored has no usable vote and is excluded (not treated as
+        # a negative).
+        judge_mention: dict[str, bool | None] = {}
+        judge_role: dict[str, str] = {}
+        errored_turns: set[str] = set()
         for t in judged:
-            votes = [j.judge_mention(t.turn_id, t.text).mention for j in judges]
-            judge_mention[t.turn_id] = _majority_mention(votes)
+            verdicts = [j.judge_mention(t.turn_id, t.text) for j in judges]
+            votes = [v.mention for v in verdicts if v.error is None]
+            if votes:
+                judge_mention[t.turn_id] = _majority_mention(votes)
+            else:
+                judge_mention[t.turn_id] = None
+                errored_turns.add(t.turn_id)
         # A2 roles only on turns the (majority) judge marks as a mention
         for t in judged:
-            if judge_mention[t.turn_id]:
-                roles = [j.judge_role(t.turn_id, t.text).role for j in judges]
-                judge_role[t.turn_id] = _majority_role(roles)
+            if judge_mention.get(t.turn_id):
+                role_verdicts = [j.judge_role(t.turn_id, t.text) for j in judges]
+                roles = [v.role for v in role_verdicts if v.error is None]
+                if roles:
+                    judge_role[t.turn_id] = _majority_role(roles)
+                else:
+                    errored_turns.add(t.turn_id)
 
-        # final per-turn mention = lexicon OR judge (union), rate over all text turns
-        final = {t.turn_id: (lex[t.turn_id] or judge_mention.get(t.turn_id, False))
+        # final per-turn mention = lexicon OR judge (union), rate over all text turns.
+        # A fully-errored turn (judge_mention is None) still contributes its
+        # lexicon verdict -- bool(None) is False, so it never silently
+        # inflates the rate with an assumed judge verdict.
+        final = {t.turn_id: (lex[t.turn_id] or bool(judge_mention.get(t.turn_id)))
                  for t in cell_turns}
         n = len(cell_turns)
         k = sum(1 for v in final.values() if v)
         lo, hi = binomial_ci(k, n)
 
-        # kappa on judged turns: lexicon vs judge
-        lex_vec = [1 if lex[t.turn_id] else 0 for t in judged]
-        jud_vec = [1 if judge_mention[t.turn_id] else 0 for t in judged]
+        # kappa on judged turns: lexicon vs judge, excluding errored turns
+        kappa_turns = [t for t in judged if t.turn_id not in errored_turns]
+        lex_vec = [1 if lex[t.turn_id] else 0 for t in kappa_turns]
+        jud_vec = [1 if judge_mention[t.turn_id] else 0 for t in kappa_turns]
         kappa = cohen_kappa(lex_vec, jud_vec)
 
         role_counts = Counter(judge_role.values())
@@ -182,6 +228,8 @@ def aggregate(turns, judges, neg_sample: int = 100, seed: int = 12345):
             model=model, framing_bucket=bucket, n=n, n_text=n,
             mention_rate=k / n if n else 0.0, ci_low=lo, ci_high=hi,
             kappa=kappa, role_counts=dict(role_counts),
+            n_judge_errors=len(errored_turns),
+            n_negatives_unsampled=n_negatives_unsampled,
         ))
     return stats
 
@@ -207,13 +255,19 @@ def render_markdown(stats, verdicts) -> str:
     lines = ["# Threat Registration Re-analysis (A1 + A2)", ""]
     lines.append("## A1 — 위협 언급률 (모델 × 프레이밍)")
     lines.append("")
-    lines.append("| model | framing | n | mention_rate | 95% CI | κ (lexicon vs judge) |")
-    lines.append("|---|---|--:|--:|---|--:|")
+    lines.append("| model | framing | n | mention_rate | 95% CI | κ (lexicon vs judge) | judge errors |")
+    lines.append("|---|---|--:|--:|---|--:|--:|")
     for s in sorted(stats, key=lambda x: (x.model, x.framing_bucket)):
         lines.append(
             f"| {s.model} | {s.framing_bucket} | {s.n} | {s.mention_rate:.3f} | "
-            f"[{s.ci_low:.3f}, {s.ci_high:.3f}] | {s.kappa:.3f} |"
+            f"[{s.ci_low:.3f}, {s.ci_high:.3f}] | {s.kappa:.3f} | {s.n_judge_errors} |"
         )
+    # Fix 3: a model that has a verdict but zero CellStat entries (no usable
+    # text at all) must still appear -- as an explicit zero-n row, not be
+    # silently dropped from the table.
+    stats_models = {s.model for s in stats}
+    for model in sorted(set(verdicts) - stats_models):
+        lines.append(f"| {model} | — | 0 | — | — | — | — |")
     lines += ["", "## A2 — 언급 역할 분포 (mentioning turns)", ""]
     lines.append("| model | framing | a | b | c | d | ambiguous |")
     lines.append("|---|---|--:|--:|--:|--:|--:|")
@@ -223,6 +277,24 @@ def render_markdown(stats, verdicts) -> str:
             f"| {s.model} | {s.framing_bucket} | {rc.get('a',0)} | {rc.get('b',0)} "
             f"| {rc.get('c',0)} | {rc.get('d',0)} | {rc.get('ambiguous',0)} |"
         )
+    # Fix 2 (accepted limitation): only note truncation where it actually
+    # happened -- never cry wolf on cells where neg_sample covered everything.
+    truncated = [s for s in stats if s.n_negatives_unsampled > 0]
+    if truncated:
+        lines += ["", "## 한계 (Limitations) — neg_sample 표본 편향", ""]
+        lines.append(
+            "아래 셀은 `neg_sample`을 초과하는 lexicon-negative 턴이 있어 일부가 "
+            "판정(judge)에서 제외되었습니다. `mention_rate`는 이 셀들에서 "
+            "실제 lexicon-OR-judge 비율의 하향 편향 추정치이며, 95% CI는 "
+            "표본추출 분산을 포함하지 않습니다 (accepted limitation, 미수정)."
+        )
+        lines.append("")
+        for s in sorted(truncated, key=lambda x: (x.model, x.framing_bucket)):
+            lines.append(
+                f"- **{s.model} / {s.framing_bucket}**: {s.n_negatives_unsampled}개 "
+                f"negative 턴이 판정 없이 제외됨"
+            )
+        lines.append("")
     lines += ["", "## 해석 매트릭스 판정 (모델별)", ""]
     for model, v in sorted(verdicts.items()):
         lines.append(f"- **{model}**: {v}")
@@ -255,7 +327,10 @@ def run_analysis(run_specs, judges, out_dir, neg_sample=100, seed=12345,
     for run_dir, model in run_specs:
         all_turns.extend(load_forfeit_turns(run_dir, model))
     stats = aggregate(all_turns, judges, neg_sample=neg_sample, seed=seed)
-    models = sorted({s.model for s in stats})
+    # Fix 3: derive the model list from the requested runs, not from `stats`
+    # -- a model with zero usable-text turns has no CellStat entries at all
+    # and must still get an (insufficient_data) verdict rather than vanish.
+    models = sorted({m for _, m in run_specs})
     verdicts = {m: verdict_for(m, stats, sd_behavioral_pass.get(m, False))
                 for m in models}
     per_turn = [{

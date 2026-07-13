@@ -13,7 +13,7 @@ import argparse
 from pathlib import Path
 
 from squid_game.models.config import ProviderConfig
-from squid_game.providers.factory import build_provider
+from squid_game.providers.factory import available_providers, build_provider
 from squid_game.analysis.threat_judge import ThreatJudge
 from squid_game.analysis.threat_registration import run_analysis
 
@@ -22,6 +22,22 @@ SD_BEHAVIORAL_PASS = {
     "gemini-2.5-flash": True, "qwen3-next-80b-cloud": True,
     "gpt-oss-20b-cloud": False, "nemotron-3-nano-30b-cloud": False,
 }
+
+
+def validate_judge_specs(judge_specs: list[tuple[str, str, str]]) -> None:
+    """Fail fast on an unknown --judge provider (Fix 4).
+
+    Without this, a typo in the provider name surfaces as an obscure
+    failure deep inside provider construction / the judging run, instead of
+    a clear usage error up front.
+    """
+    valid = available_providers()
+    for provider, _model, _key_env in judge_specs:
+        if provider.lower() not in valid:
+            raise SystemExit(
+                f"Unknown --judge provider '{provider}'. "
+                f"Valid choices: {', '.join(valid)}"
+            )
 
 
 def main() -> None:
@@ -35,6 +51,8 @@ def main() -> None:
     ap.add_argument("--neg-sample", type=int, default=100)
     ap.add_argument("--seed", type=int, default=12345)
     args = ap.parse_args()
+
+    validate_judge_specs(args.judge)
 
     cache_root = Path(args.out) / "judge_cache"
     judges = []
