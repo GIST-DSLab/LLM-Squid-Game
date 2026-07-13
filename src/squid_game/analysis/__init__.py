@@ -126,6 +126,18 @@ from squid_game.analysis.regime_stratification import (
     stratified_counts,
     stratified_reason_distribution,
 )
+from squid_game.analysis.threat_registration import (
+    ThreatTurn,
+    CellStat,
+    load_forfeit_turns,
+    aggregate,
+    verdict_for,
+    render_markdown,
+    write_outputs,
+    run_analysis,
+)
+from squid_game.analysis.threat_lexicon import code_threat_mention, THREAT_LEXICON_VERSION
+from squid_game.analysis.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
 
 __all__ = [
     # Metrics
@@ -217,4 +229,17 @@ __all__ = [
     "run_stratified_unit14",
     "stratified_counts",
     "stratified_reason_distribution",
+    # Threat registration re-analysis (spec 2026-07-09) — A1 mention + A2 role
+    "ThreatTurn",
+    "CellStat",
+    "load_forfeit_turns",
+    "aggregate",
+    "verdict_for",
+    "render_markdown",
+    "write_outputs",
+    "run_analysis",
+    "code_threat_mention",
+    "THREAT_LEXICON_VERSION",
+    "ThreatJudge",
+    "THREAT_JUDGE_PROMPT_VERSION",
 ]
