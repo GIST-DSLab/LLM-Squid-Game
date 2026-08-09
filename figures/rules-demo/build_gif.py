@@ -5,6 +5,7 @@ seconds (ffmpeg xfade), then downscaled to OUT_W and encoded as a looping
 GIF via a generated palette for clean colors.
 """
 import pathlib
+import shutil
 import subprocess
 
 HERE = pathlib.Path(__file__).parent
@@ -54,6 +55,14 @@ def build_gif() -> None:
          "-loop", "0", str(GIF)],
         check=True,
     )
+    # Lossless post-optimization: gifsicle -O3 stores only inter-frame pixel
+    # diffs, so the long static holds (dozens of identical frames) collapse to
+    # near-nothing. No change to resolution, colors, dither, or timing.
+    if shutil.which("gifsicle"):
+        subprocess.run(["gifsicle", "-O3", "-b", str(GIF)], check=True)
+    else:
+        print("note: gifsicle not found — skipped lossless -O3 optimization "
+              "(install with `brew install gifsicle` to shrink the file).")
 
 
 if __name__ == "__main__":
