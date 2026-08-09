@@ -34,7 +34,8 @@ outputs/web_arena/web_arena.db
 # paperbanana figure-generation scratch runs
 figures/run_*/
 
-# Ad-hoc review/debug screenshots & scratch review pages at repo root
+# Ad-hoc review/debug screenshots & scratch review pages. Kept out of the repo
+# root (and out of git) under screenshots/ — see screenshots/README.md.
+/screenshots/*
+!/screenshots/README.md
 /*.png
-/arena-landing-review.html
-/codex-review.html
