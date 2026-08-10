@@ -966,6 +966,13 @@
                 nickname: this.nickname,
                 password: this.password,
                 campaign_id: this.campaignId,
+                // 0-based position in the 6-game campaign. The server uses it
+                // to pick this game's hidden-rule attribute family so the six
+                // games don't all share one. Correct at every call site:
+                // advanceCampaign() increments campaignIndex just before
+                // startGame(), and resumeCampaign() restores the checkpoint's
+                // index (= campaignResults.length, the unfinished game).
+                campaign_index: this.campaignIndex,
                 difficulty: this.difficulty,
                 // Show 2 rule-informative clue examples up front (EASY: one
                 // positive + one negative), surfaced in the History panel.
