@@ -9,13 +9,17 @@ processes (a resuming player must meet the same family again).
 from __future__ import annotations
 
 from collections import Counter
+from random import Random
 
+import interface.rule_schedule as rule_schedule
 from interface.rule_schedule import (
     CAMPAIGN_GAME_COUNT,
     RULE_FAMILY_COUNT,
     campaign_rule_schedule,
     rule_index_for,
 )
+from squid_game.models.enums import Difficulty
+from squid_game.tasks.signal_game.rules import generate_rules
 
 
 def test_schedule_is_balanced_over_many_campaigns() -> None:
@@ -78,3 +82,64 @@ def test_rule_index_for_falls_back_to_seed_without_campaign() -> None:
 def test_blank_campaign_id_takes_the_fallback_path() -> None:
     """``sanitize_campaign_id`` can hand back None; empty str must not crash."""
     assert rule_index_for("", 3, 42) == rule_index_for(None, 0, 42)
+
+
+def test_rule_family_count_matches_generate_rules() -> None:
+    """Pins ``RULE_FAMILY_COUNT`` to the real rule generator's output size.
+
+    ``rule_schedule.py`` is deliberately stdlib-pure (see its module
+    docstring) and cannot import ``squid_game`` to derive
+    ``RULE_FAMILY_COUNT`` from ``generate_rules()`` directly, so the two
+    are coupled by hand instead. This test is the tripwire for that
+    coupling: if a 4th candidate rule is ever added to
+    ``generate_rules()`` without updating ``RULE_FAMILY_COUNT`` to match,
+    the arena would silently never schedule a game onto the new family
+    (``campaign_rule_schedule`` would keep sampling from
+    ``range(RULE_FAMILY_COUNT)`` regardless of how many rules
+    ``generate_rules()`` actually returns) -- this test fails instead.
+    """
+    for difficulty in Difficulty:
+        rules = generate_rules(difficulty, Random(0))
+        assert len(rules) == RULE_FAMILY_COUNT, (
+            f"{difficulty}: generate_rules() returned {len(rules)} rules "
+            f"but RULE_FAMILY_COUNT={RULE_FAMILY_COUNT}; update the constant "
+            "in interface/rule_schedule.py to match"
+        )
+
+
+def test_reshuffle_fallback_still_balances_and_avoids_repeats(monkeypatch) -> None:
+    """Forces the ``_MAX_RESHUFFLES``-exhaustion rotation fallback.
+
+    With ``_MAX_RESHUFFLES`` patched to 0, the redraw loop in
+    ``campaign_rule_schedule`` never runs, so any campaign whose initial
+    two blocks collide (second block's first family == first block's
+    last family) falls straight through to the rotation fallback at the
+    end of the function. Over the 300 campaign ids below, roughly a
+    third naturally collide on the first draw and take that branch,
+    so this exercises the fallback path -- not just the common case --
+    while still checking both invariants (balance, no adjacent repeat)
+    that the un-patched property tests above already check for the
+    common path.
+    """
+    monkeypatch.setattr(rule_schedule, "_MAX_RESHUFFLES", 0)
+    for i in range(300):
+        schedule = campaign_rule_schedule(f"fallback-campaign-{i}")
+        assert len(schedule) == CAMPAIGN_GAME_COUNT
+        assert Counter(schedule) == {f: 2 for f in range(RULE_FAMILY_COUNT)}
+        adjacent = [
+            (a, b) for a, b in zip(schedule, schedule[1:]) if a == b
+        ]
+        assert adjacent == [], f"fallback-campaign-{i} repeats: {schedule}"
+
+
+def test_campaign_game_count_is_derived_from_rule_family_count() -> None:
+    """``CAMPAIGN_GAME_COUNT`` documents the schedule length; it does not set it.
+
+    ``campaign_rule_schedule`` builds the schedule out of two blocks of
+    ``RULE_FAMILY_COUNT`` families each, so its length is always
+    ``2 * RULE_FAMILY_COUNT`` regardless of what ``CAMPAIGN_GAME_COUNT``
+    is set to -- changing the constant alone would not change the
+    schedule length. This test pins the relationship so the constant
+    cannot silently drift out of sync with the value it documents.
+    """
+    assert CAMPAIGN_GAME_COUNT == 2 * RULE_FAMILY_COUNT
