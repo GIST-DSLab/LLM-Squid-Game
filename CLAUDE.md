@@ -204,6 +204,7 @@ configs/
 scripts/          # analyze_phase3, analyze_threat_registration, orchestrate_posthoc,
                   # plot_*, thinking_analysis, seed_web_arena, shard helpers
 interface/        # Web Arena backend — api.py (FastAPI), arena.py, human_game.py,
+                  # rule_schedule.py (campaign hidden-rule family rotation),
                   # persistence/ (SQLite + Postgres mirrored), seeding.py
 web/              # Web Arena frontend — index.html, app.js, styles.css (Alpine.js, no build)
 docs/
