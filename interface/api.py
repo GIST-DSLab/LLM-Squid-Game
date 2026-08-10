@@ -53,6 +53,7 @@ from interface.arena import (
 )
 from interface.auth import hash_password, verify_password
 from interface.human_game import HumanGameSession
+from interface.rule_schedule import rule_index_for
 from interface.persistence import (
     ModelStatsRecord,
     PlayerRecord,
@@ -289,6 +290,16 @@ class NewGameRequest(BaseModel):
             "Optional client-supplied id shared by the 6 games of one Play "
             "campaign, so the Play Leaderboard can sum a player's cumulative "
             "score. Sanitized like the nickname; omitted for one-off games."
+        ),
+    )
+    campaign_index: int = Field(
+        default=0,
+        ge=0,
+        description=(
+            "0-based position of this game within the Play campaign. Picks "
+            "the hidden rule's attribute family from the campaign schedule "
+            "(interface/rule_schedule.py) so the six games do not all share "
+            "one family. Ignored for one-off games (no campaign_id)."
         ),
     )
 
@@ -795,6 +806,12 @@ def new_game(req: NewGameRequest, request: Request):
     effective_actual_death = (
         False if req.framing == "true_baseline" else req.actual_death
     )
+    # Rotate the hidden rule's attribute family across a campaign's six games.
+    # Derived from the sanitized campaign id (the value actually stored), so a
+    # reload or a resume lands on the same family; games with no campaign fall
+    # back to their own seed. See interface/rule_schedule.py.
+    campaign_id = sanitize_campaign_id(req.campaign_id)
+    rule_index = rule_index_for(campaign_id, req.campaign_index, seed)
     game = HumanGameSession(
         task_name=req.task_name,
         difficulty=req.difficulty,
@@ -808,10 +825,11 @@ def new_game(req: NewGameRequest, request: Request):
         p_death_constant=req.p_death_constant,
         num_few_shot=req.num_few_shot,
         curriculum_turns=req.curriculum_turns,
+        rule_index=rule_index,
     )
     _sessions[session_id] = game
     _nicknames[session_id] = nick
-    _campaigns[session_id] = sanitize_campaign_id(req.campaign_id)
+    _campaigns[session_id] = campaign_id
     return NewGameResponse(
         session_id=session_id,
         message=f"Game started. Use GET /api/state?session_id={session_id} to see Turn 1.",

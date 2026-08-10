@@ -1210,3 +1210,79 @@ def test_new_game_accepts_valid_difficulty(client: TestClient) -> None:
         },
     )
     assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Campaign rule-family rotation
+# ---------------------------------------------------------------------------
+
+
+def _active_rule_attribute(api_module, session_id: str) -> str:
+    """Attribute family of a live session's hidden rule.
+
+    Read straight off the in-process session: the API deliberately never
+    exposes the ground-truth rule to the client, so there is nothing in the
+    response body to assert on.
+    """
+    session = api_module._sessions[session_id]
+    return session._task.get_active_rule_description().lower().split()[1]
+
+
+def test_campaign_games_rotate_the_rule_attribute(api_module, client) -> None:
+    """The six games of one campaign use each family exactly twice, and never
+    the same family twice in a row."""
+    attributes = []
+    for index in range(6):
+        resp = _new_game(
+            client,
+            nickname="rotator",
+            password="pw",
+            campaign_id="camp-rotation-1",
+            campaign_index=index,
+        )
+        assert resp.status_code == 200, resp.text
+        attributes.append(
+            _active_rule_attribute(api_module, resp.json()["session_id"])
+        )
+
+    from collections import Counter
+
+    assert Counter(attributes) == {"color": 2, "shape": 2, "number": 2}
+    assert all(a != b for a, b in zip(attributes, attributes[1:]))
+
+
+def test_same_campaign_index_is_stable_across_restarts(api_module, client) -> None:
+    """Reloading mid-campaign (new seed, same campaign_index) keeps the family."""
+    first = _new_game(
+        client,
+        nickname="resumer",
+        password="pw",
+        campaign_id="camp-resume-1",
+        campaign_index=3,
+        seed=11,
+    )
+    second = _new_game(
+        client,
+        nickname="resumer",
+        password="pw",
+        campaign_id="camp-resume-1",
+        campaign_index=3,
+        seed=99,
+    )
+    assert first.status_code == 200 and second.status_code == 200
+    assert _active_rule_attribute(
+        api_module, first.json()["session_id"]
+    ) == _active_rule_attribute(api_module, second.json()["session_id"])
+
+
+def test_new_game_without_campaign_index_still_works(client) -> None:
+    """Backward compatible: older clients omit the field entirely."""
+    resp = _new_game(client, nickname="legacy", password="pw")
+    assert resp.status_code == 200, resp.text
+
+
+def test_negative_campaign_index_is_rejected(client) -> None:
+    resp = _new_game(
+        client, nickname="bad", password="pw", campaign_index=-1
+    )
+    assert resp.status_code == 422
