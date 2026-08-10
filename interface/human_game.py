@@ -148,6 +148,7 @@ class HumanGameSession:
         curriculum_turns: int = 0,
         use_psuccess_probe: bool = True,
         forfeit_layer_config: ForfeitLayerConfig | None = None,
+        rule_index: int | None = None,
     ) -> None:
         _ensure_registered()
 
@@ -161,9 +162,13 @@ class HumanGameSession:
 
         # Core components (same as GameEngine)
         self._task: TaskModule = get_task(task_name)()
+        # rule_index rotates the hidden-rule attribute family across the six
+        # games of a Play campaign (see interface/rule_schedule.py). None
+        # keeps the task module's historical index-0 behaviour.
         self._task.initialize(
             difficulty=self._difficulty,
             seed=seed,
+            rule_index=rule_index,
             num_few_shot=num_few_shot,
             curriculum_turns=curriculum_turns,
         )
