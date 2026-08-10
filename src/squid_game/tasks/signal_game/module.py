@@ -127,7 +127,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         _difficulty: Current difficulty setting.
         _rng: Seeded RNG for deterministic behaviour.
         _rules: All candidate rules generated for this session.
-        _active_rule_index: Index into ``_rules`` for the currently active rule.
+        _active_rule_index: Index into ``_rules`` for the currently active
+            rule. Defaults to 0; ``initialize(rule_index=...)`` overrides it
+            so Web Arena can give each campaign game a different attribute
+            family.
         _current_signal: The signal presented on the current turn.
         _turn_history: Ordered list of completed turn records.
         _cumulative_score: Running score across turns.
@@ -137,6 +140,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._difficulty: Difficulty | None = None
         self._rng: random.Random | None = None
         self._rules: list[Rule] = []
+        self._requested_rule_index: int | None = None
         self._active_rule_index: int = 0
         self._current_signal: Signal | None = None
         self._turn_history: list[_TurnRecord] = []
@@ -184,12 +188,20 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self,
         difficulty: Difficulty,
         seed: int | None = None,
+        rule_index: int | None = None,
         **kwargs,
     ) -> None:
         """Set up the Signal Game for a new session.
 
         Creates a dedicated RNG instance and generates rules appropriate
         for the requested difficulty.
+
+        Args:
+            difficulty: Controls the complexity of the generated rules.
+            seed: Seed for this module's dedicated RNG.
+            rule_index: Which candidate rule becomes the active one. None
+                keeps the historical behaviour (index 0), which is what the
+                LLM experiment path relies on. Out-of-range values wrap.
 
         Keyword Args:
             num_few_shot: Override the number of few-shot examples at Turn 1.
@@ -200,7 +212,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._difficulty = difficulty
         self._rng = random.Random(seed)
         self._rules = generate_rules(difficulty, self._rng)
-        self._active_rule_index = 0
+        self._requested_rule_index = rule_index
+        self._active_rule_index = self._resolve_rule_index()
         self._current_signal = None
         self._turn_history = []
         self._cumulative_score = 0.0
@@ -210,9 +223,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
     def reset(self) -> None:
         """Reset turn state for a new season, keeping the same config.
 
-        Note: ``_num_few_shot`` and ``_curriculum_turns`` are intentionally
-        preserved — they are per-session config set in ``initialize()``,
-        not per-season state.
+        Note: ``_num_few_shot``, ``_curriculum_turns`` and
+        ``_requested_rule_index`` are intentionally preserved — they are
+        per-session config set in ``initialize()``, not per-season state.
         """
         if self._difficulty is None or self._rng is None:
             raise RuntimeError(
@@ -221,7 +234,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         # Regenerate rules with the current RNG state so successive
         # seasons within the same session remain deterministic but differ.
         self._rules = generate_rules(self._difficulty, self._rng)
-        self._active_rule_index = 0
+        self._active_rule_index = self._resolve_rule_index()
         self._current_signal = None
         self._turn_history = []
         self._cumulative_score = 0.0
@@ -1097,6 +1110,17 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             desc,
         )
         return Signal(**random_vals)
+
+    def _resolve_rule_index(self) -> int:
+        """Clamp the requested rule index into ``_rules`` range.
+
+        None (the LLM experiment path, which never passes one) means index 0.
+        Modulo rather than an exception so a future difficulty producing fewer
+        candidate rules degrades instead of crashing a live session.
+        """
+        if self._requested_rule_index is None or not self._rules:
+            return 0
+        return self._requested_rule_index % len(self._rules)
 
     def _ensure_initialized(self) -> None:
         """Raise if initialize() has not been called."""

@@ -593,3 +593,81 @@ class TestDeterminism:
             a.prepare(state, ctx).metadata["signal"]
             == b.prepare(state, ctx).metadata["signal"]
         )
+
+
+# ---------------------------------------------------------------------------
+# Active rule selection (Web Arena campaign rule-family rotation)
+# ---------------------------------------------------------------------------
+
+
+def _rule_attribute(module: SignalGameModule) -> str:
+    """First attribute named by the active rule description.
+
+    ``"If color is red then go_left, otherwise stay."`` -> ``"color"``.
+    """
+    return module.get_active_rule_description().lower().split()[1]
+
+
+def test_default_rule_index_is_zero_regression_guard() -> None:
+    """No rule_index means index 0 — the LLM experiment path must not move.
+
+    ``core/engine.py`` never passes rule_index, so this pins the behaviour the
+    2026-04-22 canonical runs were produced under.
+    """
+    m = SignalGameModule()
+    m.initialize(difficulty=Difficulty.EASY, seed=42)
+    assert _rule_attribute(m) == "color"
+    assert m.get_active_rule_description() == (
+        "If color is red then go_left, otherwise stay."
+    )
+
+
+@pytest.mark.parametrize(
+    "rule_index,expected_attribute",
+    [(0, "color"), (1, "shape"), (2, "number")],
+)
+def test_rule_index_selects_the_attribute_family(
+    rule_index: int, expected_attribute: str
+) -> None:
+    m = SignalGameModule()
+    m.initialize(difficulty=Difficulty.EASY, seed=42, rule_index=rule_index)
+    assert _rule_attribute(m) == expected_attribute
+
+
+def test_rule_index_wraps_when_out_of_range() -> None:
+    """Defensive: a future difficulty with fewer candidate rules must not
+    raise IndexError."""
+    m = SignalGameModule()
+    m.initialize(difficulty=Difficulty.EASY, seed=42, rule_index=5)
+    assert _rule_attribute(m) == "number"  # 5 % 3 == 2
+
+
+def test_reset_preserves_rule_index() -> None:
+    m = SignalGameModule()
+    m.initialize(difficulty=Difficulty.EASY, seed=42, rule_index=2)
+    m.reset()
+    assert _rule_attribute(m) == "number"
+
+
+@pytest.mark.parametrize(
+    "difficulty,rule_index,expected_count",
+    [
+        (Difficulty.EASY, 1, 3),
+        (Difficulty.EASY, 2, 3),
+        (Difficulty.HARD, 1, 5),
+        (Difficulty.HARD, 2, 5),
+    ],
+)
+def test_few_shot_examples_work_for_every_family(
+    difficulty: Difficulty, rule_index: int, expected_count: int
+) -> None:
+    """few-shot construction re-parses the rule description with a regex, so
+    it must hold for shape/number rules too — not just the colour rule that
+    used to be the only reachable one."""
+    m = SignalGameModule()
+    m.initialize(difficulty=difficulty, seed=42, rule_index=rule_index)
+    examples = m.generate_few_shot_examples()
+    assert len(examples) == expected_count
+    active = m._rules[rule_index]
+    for signal, action in examples:
+        assert action == active.evaluate(signal)
