@@ -1,0 +1,1298 @@
+{
+  "ri_task": [
+    {
+      "label": "gemini-2.5-flash",
+      "outcome": "ri_task",
+      "status": "ok",
+      "n_turns": 2095,
+      "n_sessions": 180,
+      "converged": true,
+      "group_var": 0.10271645453374056,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 650,
+          "mean": 1760.4,
+          "median": 1475.0
+        },
+        "flagship_corruption": {
+          "count": 558,
+          "mean": 1941.6,
+          "median": 1556.0
+        },
+        "true_baseline": {
+          "count": 887,
+          "mean": 1688.1,
+          "median": 1389.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.18014184322335502,
+          "pct_change": 19.73871923359288,
+          "se": 0.07202190602462658,
+          "z": 2.501209051059532,
+          "p": 0.012377009434166284
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.057162419496450456,
+          "pct_change": 5.882777070361418,
+          "se": 0.0695384783847286,
+          "z": 0.8220257449435929,
+          "p": 0.4110622446493284
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.12297942372690457,
+          "pct_change": 13.086115180020153,
+          "se": 0.06909170844320615,
+          "z": 1.7799447502154977,
+          "p": 0.07508500307563608
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": -0.025879427813148434,
+          "pct_change": -2.554742559621333,
+          "se": 0.018870964438338862,
+          "z": -1.371388722484737,
+          "p": 0.1702538111367029
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.07307679148932414,
+          "pct_change": -7.047055266559525,
+          "se": 0.022755262028697418,
+          "z": -3.2114238630680045,
+          "p": 0.0013207896428190063
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.274304053565254,
+          "pct_change": 31.561475878944634,
+          "se": 0.06718646932554377,
+          "z": 4.082727613444717,
+          "p": 4.4510182048881184e-05
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.09022294039423584,
+          "pct_change": 9.441824654495768,
+          "se": 0.06179085932239687,
+          "z": 1.4601340940007514,
+          "p": 0.14425322407215405
+        }
+      }
+    },
+    {
+      "label": "gpt-oss-20b-cloud",
+      "outcome": "ri_task",
+      "status": "ok",
+      "n_turns": 2118,
+      "n_sessions": 180,
+      "converged": true,
+      "group_var": 0.3851666894279347,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 631,
+          "mean": 592.5,
+          "median": 250.0
+        },
+        "flagship_corruption": {
+          "count": 644,
+          "mean": 603.9,
+          "median": 264.0
+        },
+        "true_baseline": {
+          "count": 843,
+          "mean": 767.3,
+          "median": 326.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 2.126475496928774e-05,
+          "pct_change": 0.002126498106579232,
+          "se": 0.12742754223153718,
+          "z": 0.00016687722761417982,
+          "p": 0.999866851237155
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": -0.08216266455823709,
+          "pct_change": -7.887788741217299,
+          "se": 0.12698192184752188,
+          "z": -0.6470422195759241,
+          "p": 0.5176046192284538
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.08218392931320638,
+          "pct_change": 8.565547533277343,
+          "se": 0.12719393122103562,
+          "z": 0.6461309004624477,
+          "p": 0.518194585083581
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.22738774920119645,
+          "pct_change": 25.531652156289,
+          "se": 0.02538510936373489,
+          "z": 8.957524899461024,
+          "p": 3.3204775715149975e-19
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.13164401742087314,
+          "pct_change": -12.334698725987295,
+          "se": 0.033188137464197874,
+          "z": -3.9665985342770687,
+          "p": 7.290564290283459e-05
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": -0.04981682114883551,
+          "pct_change": -4.859631442612777,
+          "se": 0.13844174904754733,
+          "z": -0.35983958229049895,
+          "p": 0.7189671007932901
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.046342910480486915,
+          "pct_change": 4.743352531482354,
+          "se": 0.13489809557072513,
+          "z": 0.34354013883161155,
+          "p": 0.7311921496459799
+        }
+      }
+    },
+    {
+      "label": "nemotron-3-nano-30b-cloud",
+      "outcome": "ri_task",
+      "status": "ok",
+      "n_turns": 2112,
+      "n_sessions": 180,
+      "converged": true,
+      "group_var": 0.13532105814975987,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 651,
+          "mean": 223.7,
+          "median": 165.0
+        },
+        "flagship_corruption": {
+          "count": 598,
+          "mean": 212.8,
+          "median": 159.0
+        },
+        "true_baseline": {
+          "count": 863,
+          "mean": 295.7,
+          "median": 168.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": -0.10902705342751562,
+          "pct_change": -10.329384180496525,
+          "se": 0.0761629258382179,
+          "z": -1.4314977034772314,
+          "p": 0.1522876246899485
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": -0.08738927288736811,
+          "pct_change": -8.367967246207057,
+          "se": 0.0749820445596554,
+          "z": -1.1654693253641752,
+          "p": 0.24382906978466712
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.021637780540147505,
+          "pct_change": -2.1405363117498655,
+          "se": 0.07643452780013366,
+          "z": -0.28308908503664054,
+          "p": 0.7771085483975395
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": -0.07100676365068238,
+          "pct_change": -6.854440793396447,
+          "se": 0.01416514561801334,
+          "z": -5.0127803529520705,
+          "p": 5.364912593937436e-07
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.02620166234107028,
+          "pct_change": -2.5861377275756334,
+          "se": 0.01936484453115742,
+          "z": -1.35305306990266,
+          "p": 0.17603867681300744
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": -0.14636737846543232,
+          "pct_change": -13.615971143702641,
+          "se": 0.077592663250529,
+          "z": -1.8863559044602638,
+          "p": 0.059247010481711444
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.04648108798931817,
+          "pct_change": -4.541738652415584,
+          "se": 0.07123378012799293,
+          "z": -0.6525146904432266,
+          "p": 0.5140691991265152
+        }
+      }
+    },
+    {
+      "label": "qwen3-next-80b-cloud",
+      "outcome": "ri_task",
+      "status": "ok",
+      "n_turns": 1930,
+      "n_sessions": 180,
+      "converged": true,
+      "group_var": 0.2055771898096406,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 541,
+          "mean": 2934.0,
+          "median": 2256.0
+        },
+        "flagship_corruption": {
+          "count": 500,
+          "mean": 2784.0,
+          "median": 2173.5
+        },
+        "true_baseline": {
+          "count": 889,
+          "mean": 2710.8,
+          "median": 1938.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.07055394793869088,
+          "pct_change": 7.310245953486905,
+          "se": 0.09538556445369412,
+          "z": 0.7396711267871356,
+          "p": 0.45949957182720014
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.023222742951309144,
+          "pct_change": 2.349449034248609,
+          "se": 0.09301966016174645,
+          "z": 0.24965413667313419,
+          "p": 0.802854828835143
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.047331204987381734,
+          "pct_change": 4.846920981058034,
+          "se": 0.09513399506054722,
+          "z": 0.49752146913685474,
+          "p": 0.6188213670557188
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": -0.41325978939701485,
+          "pct_change": -33.8509587691599,
+          "se": 0.01870280841185975,
+          "z": -22.096135526628196,
+          "p": 3.443042615539036e-108
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.005224314356301109,
+          "pct_change": -0.5210691359984159,
+          "se": 0.02321750304418899,
+          "z": -0.22501620205919087,
+          "p": 0.8219666700300529
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.2888113646715704,
+          "pct_change": 33.48399068137965,
+          "se": 0.09733944750172396,
+          "z": 2.967053667183136,
+          "p": 0.0030066847256169705
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.02673836537469132,
+          "pct_change": 2.709904293333101,
+          "se": 0.09832552602129982,
+          "z": 0.2719371709122523,
+          "p": 0.7856703295749312
+        }
+      }
+    },
+    {
+      "label": "POOLED (within-model scaled)",
+      "outcome": "ri_task",
+      "status": "ok",
+      "n_turns": 8255,
+      "n_sessions": 720,
+      "converged": true,
+      "group_var": 0.04191739546280664,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 2473,
+          "mean": 1.0,
+          "median": 0.7
+        },
+        "flagship_corruption": {
+          "count": 2300,
+          "mean": 1.0,
+          "median": 0.7
+        },
+        "true_baseline": {
+          "count": 3482,
+          "mean": 1.1,
+          "median": 0.7
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.02432984175837401,
+          "pct_change": 2.4628227335419184,
+          "se": 0.02200736590569633,
+          "z": 1.105531750716088,
+          "p": 0.2689292443734079
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.006484972279887179,
+          "pct_change": 0.6506045240516604,
+          "se": 0.021544540993118387,
+          "z": 0.30100303747285984,
+          "p": 0.7634121783100869
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.017844869478486833,
+          "pct_change": 1.8005040486937234,
+          "se": 0.021869815491101553,
+          "z": 0.8159588491154669,
+          "p": 0.414523671988147
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": -0.013142627060178892,
+          "pct_change": -1.305663984864809,
+          "se": 0.004845080456647837,
+          "z": -2.7125714790032354,
+          "p": 0.006676338074576142
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.04746558133229602,
+          "pct_change": -4.635670430052862,
+          "se": 0.006134748687102448,
+          "z": -7.737168016692607,
+          "p": 1.0165568274795969e-14
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": -0.001080375799286262,
+          "pct_change": -0.1079792403466909,
+          "se": 0.023829365783010256,
+          "z": -0.04533800056300881,
+          "p": 0.9638378984972699
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.0021870156112680592,
+          "pct_change": 0.21894088742932033,
+          "se": 0.02230876851433556,
+          "z": 0.09803390132730493,
+          "p": 0.9219053736474209
+        }
+      }
+    }
+  ],
+  "ri_probe": [
+    {
+      "label": "gemini-2.5-flash",
+      "outcome": "ri_probe",
+      "status": "ok",
+      "n_turns": 1645,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.20366477110418413,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 650,
+          "mean": 3191.7,
+          "median": 2830.0
+        },
+        "flagship_corruption": {
+          "count": 558,
+          "mean": 3416.0,
+          "median": 3199.5
+        },
+        "true_baseline": {
+          "count": 437,
+          "mean": 3372.9,
+          "median": 3089.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.08701614313138079,
+          "pct_change": 9.091429034884628,
+          "se": 0.1286816341217028,
+          "z": 0.6762126058259705,
+          "p": 0.498905670182223
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": -0.021902496013357597,
+          "pct_change": -2.166437797574896,
+          "se": 0.12409317671688898,
+          "z": -0.1765004055245262,
+          "p": 0.8599008301202258
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.10891863914473839,
+          "pct_change": 11.507162346972647,
+          "se": 0.09313917554142899,
+          "z": 1.169418115541409,
+          "p": 0.24223521462435194
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": -0.31738901812775283,
+          "pct_change": -27.195252363718257,
+          "se": 0.02934172199361117,
+          "z": -10.816986753431198,
+          "p": 2.8602701012355353e-27
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.047781784536630775,
+          "pct_change": -4.665820169668768,
+          "se": 0.03351909978203962,
+          "z": -1.4255091827446233,
+          "p": 0.15401006760791763
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.28050539912725825,
+          "pct_change": 32.379869000069775,
+          "se": 0.1316703878205034,
+          "z": 2.130360544769191,
+          "p": 0.03314185855703473
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.0709617993532351,
+          "pct_change": 7.354021515449744,
+          "se": 0.08443304346939574,
+          "z": 0.8404505681351693,
+          "p": 0.4006558063542702
+        }
+      }
+    },
+    {
+      "label": "gpt-oss-20b-cloud",
+      "outcome": "ri_probe",
+      "status": "ok",
+      "n_turns": 1668,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.17326629502425375,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 631,
+          "mean": 815.6,
+          "median": 446.0
+        },
+        "flagship_corruption": {
+          "count": 644,
+          "mean": 703.6,
+          "median": 424.0
+        },
+        "true_baseline": {
+          "count": 393,
+          "mean": 818.1,
+          "median": 387.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.036877512227166065,
+          "pct_change": 3.756592391521771,
+          "se": 0.13454655341611957,
+          "z": 0.2740873793557011,
+          "p": 0.7840174724095674
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.10269969002524353,
+          "pct_change": 10.81585680291745,
+          "se": 0.13441621233230858,
+          "z": 0.7640424338944002,
+          "p": 0.44484195556232187
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.06582217779807746,
+          "pct_change": -6.370265605535462,
+          "se": 0.09861040933281316,
+          "z": -0.6674972575757757,
+          "p": 0.5044545608298767
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.11100455848578827,
+          "pct_change": 11.740000049487067,
+          "se": 0.034144102613700066,
+          "z": 3.2510609443063387,
+          "p": 0.0011497520857780348
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.23442789153574675,
+          "pct_change": -20.897672869180393,
+          "se": 0.041743684001042725,
+          "z": -5.615888897824421,
+          "p": 1.9555428955486764e-08
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.08565210633543174,
+          "pct_change": 8.942725752988872,
+          "se": 0.1338779358208221,
+          "z": 0.6397776139159013,
+          "p": 0.5223171883217448
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.07050656396892724,
+          "pct_change": -6.807837759884805,
+          "se": 0.09278945501599954,
+          "z": -0.7598553516320351,
+          "p": 0.44734105243906963
+        }
+      }
+    },
+    {
+      "label": "nemotron-3-nano-30b-cloud",
+      "outcome": "ri_probe",
+      "status": "ok",
+      "n_turns": 1662,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.017825988011742597,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 651,
+          "mean": 585.8,
+          "median": 432.0
+        },
+        "flagship_corruption": {
+          "count": 598,
+          "mean": 561.9,
+          "median": 402.5
+        },
+        "true_baseline": {
+          "count": 413,
+          "mean": 639.3,
+          "median": 401.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.028598960085934117,
+          "pct_change": 2.901183689588935,
+          "se": 0.06819153067945914,
+          "z": 0.4193916722644969,
+          "p": 0.6749299092743479
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.08507387952048033,
+          "pct_change": 8.879750356450709,
+          "se": 0.0655775019417429,
+          "z": 1.2973028401731044,
+          "p": 0.19452700755260766
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.05647491943454622,
+          "pct_change": -5.490981240578834,
+          "se": 0.04823564999462781,
+          "z": -1.1708128622882878,
+          "p": 0.24167400657967786
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.18373212437056954,
+          "pct_change": 20.169387547399033,
+          "se": 0.02057501532718612,
+          "z": 8.929865735157005,
+          "p": 4.265261346539782e-19
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.14184431020155228,
+          "pct_change": -13.224365321971723,
+          "se": 0.02314101361279273,
+          "z": -6.129563405258031,
+          "p": 8.81205521141353e-10
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.035610259728546145,
+          "pct_change": 3.6251898682385626,
+          "se": 0.06667814143763248,
+          "z": 0.5340619723459789,
+          "p": 0.5932986584922677
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.05161598017029845,
+          "pct_change": -5.030650203902576,
+          "se": 0.04470949502180804,
+          "z": -1.1544746847425051,
+          "p": 0.24830561145309316
+        }
+      }
+    },
+    {
+      "label": "qwen3-next-80b-cloud",
+      "outcome": "ri_probe",
+      "status": "ok",
+      "n_turns": 1480,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.0928801348872454,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 541,
+          "mean": 3276.1,
+          "median": 2679.0
+        },
+        "flagship_corruption": {
+          "count": 500,
+          "mean": 3204.7,
+          "median": 2618.5
+        },
+        "true_baseline": {
+          "count": 439,
+          "mean": 3221.1,
+          "median": 2758.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.0628440699115059,
+          "pct_change": 6.486078244897637,
+          "se": 0.09953861262659436,
+          "z": 0.631353685300567,
+          "p": 0.5278092918491054
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.08125516274478238,
+          "pct_change": 8.464762292471754,
+          "se": 0.09543079498080359,
+          "z": 0.8514564167795866,
+          "p": 0.3945158638198104
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.01841109283327648,
+          "pct_change": -1.824264402330647,
+          "se": 0.06980465121488277,
+          "z": -0.26375166285984,
+          "p": 0.7919712833833091
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": -0.2830632098751462,
+          "pct_change": -24.65278405266855,
+          "se": 0.02477563989877154,
+          "z": -11.425061513312578,
+          "p": 3.134335952535864e-30
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.13600550813054194,
+          "pct_change": -12.71621752292022,
+          "se": 0.028869507475720025,
+          "z": -4.7110435896741905,
+          "p": 2.4645151118923756e-06
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.21681613229757601,
+          "pct_change": 24.211569618096668,
+          "se": 0.10029852056275207,
+          "z": 2.1617081795531004,
+          "p": 0.030640676766167444
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.014863267482901343,
+          "pct_change": -1.4753354352673091,
+          "se": 0.06451323213133853,
+          "z": -0.23039099099301258,
+          "p": 0.817787961029604
+        }
+      }
+    },
+    {
+      "label": "POOLED (within-model scaled)",
+      "outcome": "ri_probe",
+      "status": "ok",
+      "n_turns": 6455,
+      "n_sessions": 600,
+      "converged": true,
+      "group_var": 0.01698514737801778,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 2473,
+          "mean": 1.0,
+          "median": 0.8
+        },
+        "flagship_corruption": {
+          "count": 2300,
+          "mean": 1.0,
+          "median": 0.7
+        },
+        "true_baseline": {
+          "count": 1682,
+          "mean": 1.0,
+          "median": 0.8
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.02992589618272406,
+          "pct_change": 3.0378176168258224,
+          "se": 0.022661997400225776,
+          "z": 1.3205321514345383,
+          "p": 0.18665740881003579
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.03846846323459501,
+          "pct_change": 3.921795426836395,
+          "se": 0.021935651039323288,
+          "z": 1.7536959885819627,
+          "p": 0.07948261327187518
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.008542567051870953,
+          "pct_change": -0.8506183004054382,
+          "se": 0.016196360918289972,
+          "z": -0.5274374345550757,
+          "p": 0.5978898533697756
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.0003876308906748093,
+          "pct_change": 0.038770602923687426,
+          "se": 0.006127699104684151,
+          "z": 0.06325879976360059,
+          "p": 0.9495604230469576
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.1028215819651044,
+          "pct_change": -9.771205643709285,
+          "se": 0.007236968666130694,
+          "z": -14.20782467199472,
+          "p": 8.193123091607959e-46
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.020357195046878607,
+          "pct_change": 2.056581598286016,
+          "se": 0.024859997536267876,
+          "z": 0.8188735745922662,
+          "p": 0.4128585480841076
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.012055458621273739,
+          "pct_change": -1.1983082713526787,
+          "se": 0.015348009908029784,
+          "z": -0.7854737320026458,
+          "p": 0.4321758656659197
+        }
+      }
+    }
+  ],
+  "ri_forfeit": [
+    {
+      "label": "gemini-2.5-flash",
+      "outcome": "ri_forfeit",
+      "status": "ok",
+      "n_turns": 1645,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.02620459757192094,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 650,
+          "mean": 911.4,
+          "median": 162.5
+        },
+        "flagship_corruption": {
+          "count": 558,
+          "mean": 790.0,
+          "median": 154.0
+        },
+        "true_baseline": {
+          "count": 437,
+          "mean": 1205.9,
+          "median": 1000.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 1.038765714564986,
+          "pct_change": 182.5727107212089,
+          "se": 0.08615281097820549,
+          "z": 12.057246917082807,
+          "p": 1.7762155889065782e-33
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.8513737103275217,
+          "pct_change": 134.2863057530893,
+          "se": 0.08060952537293938,
+          "z": 10.561701069304744,
+          "p": 4.4846026684119583e-26
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.18739200423746427,
+          "pct_change": 20.60999886993304,
+          "se": 0.05521452520759778,
+          "z": 3.393889624748204,
+          "p": 0.0006890745918288183
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.017324026150914766,
+          "pct_change": 1.7474957411264707,
+          "se": 0.03545487565502385,
+          "z": 0.4886218279109943,
+          "p": 0.6251094565556403
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": 0.057686095661584905,
+          "pct_change": 5.938239878019126,
+          "se": 0.03987823256946805,
+          "z": 1.446555976649554,
+          "p": 0.14802132361322337
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 1.0392063739781796,
+          "pct_change": 182.6972564852161,
+          "se": 0.07993316764115842,
+          "z": 13.000940718919807,
+          "p": 1.2084752324488213e-38
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.17975232139016462,
+          "pct_change": 19.69208747080761,
+          "se": 0.042468673448699375,
+          "z": 4.232586205154228,
+          "p": 2.3101931877613484e-05
+        }
+      }
+    },
+    {
+      "label": "gpt-oss-20b-cloud",
+      "outcome": "ri_forfeit",
+      "status": "ok",
+      "n_turns": 1668,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.05070167299097302,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 631,
+          "mean": 226.8,
+          "median": 112.0
+        },
+        "flagship_corruption": {
+          "count": 644,
+          "mean": 249.7,
+          "median": 113.0
+        },
+        "true_baseline": {
+          "count": 393,
+          "mean": 408.3,
+          "median": 183.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.5781494535791337,
+          "pct_change": 78.27363400029661,
+          "se": 0.0974084075296554,
+          "z": 5.935313678166021,
+          "p": 2.932842229307181e-09
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.46501003670622293,
+          "pct_change": 59.20301675460043,
+          "se": 0.0970925037359072,
+          "z": 4.789350555538828,
+          "p": 1.6732195511144846e-06
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.11313941687291079,
+          "pct_change": 11.978803941317345,
+          "se": 0.06989365522815275,
+          "z": 1.6187365863695582,
+          "p": 0.10550395136214614
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.07332629943573249,
+          "pct_change": 7.608160445535428,
+          "se": 0.030587804739045463,
+          "z": 2.397239686250879,
+          "p": 0.01651911397224649
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.06775623821497082,
+          "pct_change": -6.551176166302067,
+          "se": 0.035113664356097196,
+          "z": -1.9296259577991184,
+          "p": 0.05365320012806371
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.5800723256069689,
+          "pct_change": 78.61676117351374,
+          "se": 0.09502101809215867,
+          "z": 6.104673863253814,
+          "p": 1.0301080396416464e-09
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.11883013656692437,
+          "pct_change": 12.617860547610487,
+          "se": 0.05675407934641804,
+          "z": 2.0937726051655914,
+          "p": 0.0362802416298401
+        }
+      }
+    },
+    {
+      "label": "nemotron-3-nano-30b-cloud",
+      "outcome": "ri_forfeit",
+      "status": "ok",
+      "n_turns": 1662,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.011292968223797014,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 651,
+          "mean": 276.3,
+          "median": 102.0
+        },
+        "flagship_corruption": {
+          "count": 598,
+          "mean": 211.3,
+          "median": 97.0
+        },
+        "true_baseline": {
+          "count": 413,
+          "mean": 246.1,
+          "median": 199.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.9580641565432181,
+          "pct_change": 160.66455283907507,
+          "se": 0.050098806490959,
+          "z": 19.1234926268376,
+          "p": 1.6095948782265085e-81
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 1.0117803382086807,
+          "pct_change": 175.04934672272844,
+          "se": 0.048290183740358206,
+          "z": 20.952091291445882,
+          "p": 1.7956989522149592e-97
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.05371618166546266,
+          "pct_change": -5.229895673286004,
+          "se": 0.03558449326872319,
+          "z": -1.5095390360012861,
+          "p": 0.13116108741312218
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.03724581716103609,
+          "pct_change": 3.7948134944994583,
+          "se": 0.014776963942974761,
+          "z": 2.520532452049694,
+          "p": 0.011717743277130481
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.009908590031960988,
+          "pct_change": -0.9859661690725451,
+          "se": 0.01684055061750731,
+          "z": -0.5883768444993772,
+          "p": 0.5562793765591529
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.9511337605762855,
+          "pct_change": 158.86428974699874,
+          "se": 0.05890404912711597,
+          "z": 16.14717111422548,
+          "p": 1.1889046285738863e-58
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": -0.051219303330569455,
+          "pct_change": -4.9929705895332495,
+          "se": 0.028146829451016535,
+          "z": -1.8197183956262486,
+          "p": 0.06880190044049583
+        }
+      }
+    },
+    {
+      "label": "qwen3-next-80b-cloud",
+      "outcome": "ri_forfeit",
+      "status": "ok",
+      "n_turns": 1480,
+      "n_sessions": 150,
+      "converged": true,
+      "group_var": 0.04965428229910313,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 541,
+          "mean": 1276.0,
+          "median": 884.0
+        },
+        "flagship_corruption": {
+          "count": 500,
+          "mean": 1314.8,
+          "median": 959.0
+        },
+        "true_baseline": {
+          "count": 439,
+          "mean": 1844.2,
+          "median": 1689.0
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.662863075821694,
+          "pct_change": 94.03397290710058,
+          "se": 0.08457178913909193,
+          "z": 7.83787457459968,
+          "p": 4.582363813114031e-15
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.4768323078695062,
+          "pct_change": 61.096327553848454,
+          "se": 0.0805796496111032,
+          "z": 5.917527690562243,
+          "p": 3.2681685237453104e-09
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.18603076795218781,
+          "pct_change": 20.44593185542501,
+          "se": 0.056526009871350424,
+          "z": 3.291064916408958,
+          "p": 0.0009980887788149826
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": -0.01892269211753998,
+          "pct_change": -1.8744781926296479,
+          "se": 0.02498886255545042,
+          "z": -0.7572450356854149,
+          "p": 0.44890307359430703
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.03474482477923891,
+          "pct_change": -3.4148153727092287,
+          "se": 0.02925778023456291,
+          "z": -1.1875413821788852,
+          "p": 0.2350141436852522
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.7674840199590962,
+          "pct_change": 115.43391550962296,
+          "se": 0.08508086299412826,
+          "z": 9.020642162645471,
+          "p": 1.869899374521549e-19
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.17684995053729524,
+          "pct_change": 19.345200285948263,
+          "se": 0.05768706693289706,
+          "z": 3.0656776282803775,
+          "p": 0.0021717733340127668
+        }
+      }
+    },
+    {
+      "label": "POOLED (within-model scaled)",
+      "outcome": "ri_forfeit",
+      "status": "ok",
+      "n_turns": 6455,
+      "n_sessions": 600,
+      "converged": true,
+      "group_var": 0.025283049422749913,
+      "descriptive": {
+        "baseline_flagship": {
+          "count": 2473,
+          "mean": 0.9,
+          "median": 0.4
+        },
+        "flagship_corruption": {
+          "count": 2300,
+          "mean": 0.9,
+          "median": 0.4
+        },
+        "true_baseline": {
+          "count": 1682,
+          "mean": 1.2,
+          "median": 0.9
+        }
+      },
+      "mixedlm": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.44151791291760684,
+          "pct_change": 55.50658825259887,
+          "se": 0.024453678863690258,
+          "z": 18.05527566542101,
+          "p": 7.170306932546152e-73
+        },
+        "pull_vs_neutral": {
+          "contrast": "is_pull",
+          "beta_log": 0.40932894740234255,
+          "pct_change": 50.58069703168363,
+          "se": 0.023777549095997514,
+          "z": 17.214934379895574,
+          "p": 2.0518017455346095e-66
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.03218896551526429,
+          "pct_change": 3.2712633943238987,
+          "se": 0.017813167509085005,
+          "z": 1.8070321013288284,
+          "p": 0.07075727412503419
+        },
+        "turn_z": {
+          "contrast": "turn_z",
+          "beta_log": 0.01986726686049459,
+          "pct_change": 2.0065934486566457,
+          "se": 0.005591460662986307,
+          "z": 3.5531443495631803,
+          "p": 0.0003806555262461533
+        },
+        "score_z": {
+          "contrast": "score_z",
+          "beta_log": -0.017348869300174027,
+          "pct_change": -1.7199244192171355,
+          "se": 0.006724608437055051,
+          "z": -2.579907731813114,
+          "p": 0.00988267164270893
+        }
+      },
+      "ols_cluster": {
+        "threat_vs_neutral": {
+          "contrast": "is_threat",
+          "beta_log": 0.4113896800674429,
+          "pct_change": 50.89132354196255,
+          "se": 0.028377380419052967,
+          "z": 14.497098533845998,
+          "p": 1.2638008245698846e-47
+        },
+        "threat_vs_pull": {
+          "contrast": "is_threat - is_pull",
+          "beta_log": 0.018771554975420823,
+          "pct_change": 1.8948848232696196,
+          "se": 0.016648715000517945,
+          "z": 1.1275077370738125,
+          "p": 0.2595278711300557
+        }
+      }
+    }
+  ]
+}
