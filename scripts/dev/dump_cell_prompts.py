@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.framing import FramingManager
-from squid_game.core.risk_choice_layer import RiskChoiceLayer
+from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
 from squid_game.models.config import RiskLayerConfig
 from squid_game.models.enums import Difficulty, ForfeitCondition, Framing, SocialContext
 from squid_game.models.state import TurnContext

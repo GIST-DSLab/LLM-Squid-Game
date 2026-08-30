@@ -120,9 +120,9 @@ _PULL_AMPLIFIER_FORBIDDEN = (
     "template",
     [
         "framings/true_baseline.j2",
-        "framings/baseline_electricity.j2",
+        "framings/legacy/baseline_electricity.j2",
         "framings/baseline_flagship.j2",
-        "framings/survival_electricity.j2",
+        "framings/legacy/survival_electricity.j2",
         "framings/flagship_corruption.j2",
         "framings/flagship_corruption_terminal.j2",
     ],
@@ -209,7 +209,7 @@ class TestBaselineElectricity:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/baseline_electricity.j2",
+            "framings/legacy/baseline_electricity.j2",
             turn_number=5,
             cumulative_score=30.0,
             p_death=0.15,
@@ -241,7 +241,7 @@ class TestSurvivalElectricity:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/survival_electricity.j2",
+            "framings/legacy/survival_electricity.j2",
             turn_number=7,
             cumulative_score=15.0,
             p_death=0.20,

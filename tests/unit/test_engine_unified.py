@@ -66,7 +66,7 @@ class CannedAgent(Agent):
         system_prompt: str,
     ) -> str:
         # Used only by the legacy path (per-turn Task Score probe in
-        # core/turn.py). The end-of-session Q1-Q4 self-report probe
+        # core/legacy/turn.py). The end-of-session Q1-Q4 self-report probe
         # was removed on 2026-04-21 — see §14.22.
         self.last_completion = CompletionResult(
             text="probe-stub-response",

@@ -17,7 +17,7 @@ from pathlib import Path
 
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
-from squid_game.core.survival import SurvivalPressure
+from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.models.config import ForfeitLayerConfig
 from squid_game.models.enums import (
     AgentType,

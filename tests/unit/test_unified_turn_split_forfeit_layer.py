@@ -50,11 +50,11 @@ from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
-from squid_game.core.risk_choice_layer import (
+from squid_game.core.legacy.risk_choice_layer import (
     RiskChoiceLayer,
     RiskChoiceLayerConfig,
 )
-from squid_game.core.survival import SurvivalPressure
+from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import ForfeitLayerConfig
 from squid_game.models.enums import (

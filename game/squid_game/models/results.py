@@ -120,7 +120,7 @@ class TurnResult(BaseModel):
 
     Two production paths populate this model:
 
-    - Legacy ``TurnManager`` (``core/turn.py``): two-call probe + action
+    - Legacy ``TurnManager`` (``core/legacy/turn.py``): two-call probe + action
       flow. ``probe_result``, ``action_outcome``, ``decision_quality``
       are populated; ``stake_choice``, ``reward_received``,
       ``p_death_applied``, ``died`` remain at their defaults.

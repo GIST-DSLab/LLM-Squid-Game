@@ -24,7 +24,7 @@ from squid_game.models.enums import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover - import-time only
-    from squid_game.core.risk_choice_layer import RiskChoiceLayerConfig
+    from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayerConfig
 
 _log = logging.getLogger(__name__)
 
@@ -216,7 +216,7 @@ class RiskLayerConfig(BaseModel):
             ``stake_carryover`` is ``None`` each ``StakeConfig.carryover``
             defaults to ``0.0`` (pre-Phase-N behaviour).
         """
-        from squid_game.core.risk_choice_layer import RiskChoiceLayerConfig
+        from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayerConfig
         from squid_game.models.risk_choice import StakeConfig
 
         carryover_map = self.stake_carryover or {}

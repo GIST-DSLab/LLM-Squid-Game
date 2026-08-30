@@ -19,10 +19,10 @@ from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
-from squid_game.core.risk_choice_layer import RiskChoiceLayer
-from squid_game.core.social import CohortState
-from squid_game.core.survival import SurvivalPressure
-from squid_game.core.turn import TurnManager
+from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
+from squid_game.core.legacy.social import CohortState
+from squid_game.core.legacy.survival import SurvivalPressure
+from squid_game.core.legacy.turn import TurnManager
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import (
     ForfeitLayerConfig,

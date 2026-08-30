@@ -17,8 +17,8 @@ from squid_game.core.engine import GameEngine
 from squid_game.core.forfeit import ForfeitController, ForfeitError
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
-from squid_game.core.survival import SurvivalPressure
-from squid_game.core.turn import TurnManager
+from squid_game.core.legacy.survival import SurvivalPressure
+from squid_game.core.legacy.turn import TurnManager
 
 __all__ = [
     "CoTCollector",

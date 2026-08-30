@@ -173,7 +173,7 @@ still-missing `phase3_psuccess_probe_smoke.yaml`) must set the same values to re
 
 ### Legacy (archived)
 
-Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. `game/squid_game/core/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
+Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. `game/squid_game/core/legacy/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
 
 ⚠️ **There is no `archive/` directory and no `docs/design/` tree in this repository** — neither has ever been tracked in git. Earlier revisions of this file cited `docs/design/v6/paper/*` and `archive/analysis-deprecated/*`; those paths do not resolve. The deprecated `analysis/{regression,mediation}.py` modules are simply absent from the tree, and the design lineage (Unit 11 → 13 → 14 → 15 → 16 → 17) is documented only in code docstrings and the LaTeX paper under `docs/en/`.
 

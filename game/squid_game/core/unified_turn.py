@@ -11,7 +11,7 @@
     Phase 7: Death roll                (skipped in Phantom Death mode)
     Phase 8: Build & record TurnResult
 
-Compared to the legacy ``TurnManager`` (``core/turn.py``) this manager
+Compared to the legacy ``TurnManager`` (``core/legacy/turn.py``) this manager
 collapses probe + action into a single LLM call. The probe channel is
 removed because the X-axis instrument is now the Risk Choice Layer
 (stake distribution + α_stake), not probe-derived rule comprehension.
@@ -48,8 +48,8 @@ from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
-from squid_game.core.risk_choice_layer import RiskChoiceLayer
-from squid_game.core.survival import SurvivalPressure
+from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
+from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.models.forfeit_choice import (
     CONTINUE_CHOICE,
     FORFEIT_CHOICE,

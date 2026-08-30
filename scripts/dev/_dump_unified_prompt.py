@@ -21,8 +21,8 @@ from squid_game.core.cot_collector import CoTCollector
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
-from squid_game.core.risk_choice_layer import RiskChoiceLayer, RiskChoiceLayerConfig
-from squid_game.core.survival import SurvivalPressure
+from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer, RiskChoiceLayerConfig
+from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.enums import Difficulty, Framing, ForfeitCondition
 from squid_game.models.state import GameState, TurnContext

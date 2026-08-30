@@ -440,12 +440,12 @@ unused_items = [
     ("forfeit/forfeit_option.j2", "Legacy forfeit in system prompt\n(include_forfeit_text=False)"),
     ("social/with_others.j2", "Social context\n(configs use alone)"),
     ("tasks/signal_game/probe.j2", "Side-channel rule-comprehension probe"),
-    ("framings/baseline_electricity.j2", "Phase 3 framing"),
-    ("framings/survival_electricity.j2", "Phase 3 survival framing"),
-    ("framings/survival.j2", "Phase 1-2 framing"),
-    ("framings/neutral.j2", "Phase 1-2 control"),
-    ("framings/emotion.j2", "Phase 1-2 emotion"),
-    ("framings/instruction.j2", "Phase 1-2 instruction"),
+    ("framings/legacy/baseline_electricity.j2", "Phase 3 framing"),
+    ("framings/legacy/survival_electricity.j2", "Phase 3 survival framing"),
+    ("framings/legacy/survival.j2", "Phase 1-2 framing"),
+    ("framings/legacy/neutral.j2", "Phase 1-2 control"),
+    ("framings/legacy/emotion.j2", "Phase 1-2 emotion"),
+    ("framings/legacy/instruction.j2", "Phase 1-2 instruction"),
 ]
 
 per_row = 5

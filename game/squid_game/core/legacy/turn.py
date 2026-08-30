@@ -18,8 +18,8 @@ from squid_game.core.cot_collector import CoTCollector
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
-from squid_game.core.social import CohortState, render_social_block
-from squid_game.core.survival import SurvivalPressure
+from squid_game.core.legacy.social import CohortState, render_social_block
+from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.models.enums import SocialContext
 from squid_game.models.results import (
     ActionOutcome,

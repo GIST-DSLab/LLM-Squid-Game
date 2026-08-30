@@ -24,13 +24,30 @@ from squid_game.models.enums import Framing
 from squid_game.models.state import TurnContext
 from squid_game.prompts import render
 
+# The six pre-v3 framings live under framings/legacy/. They are still
+# reachable -- archived Phase 1/2 configs name them -- so the path builder
+# below has to know where they went. Enumerated rather than inferred: a
+# heuristic ("anything not in the active set") would silently send a newly
+# added framing to the legacy directory.
+_LEGACY_FRAMINGS: frozenset[Framing] = frozenset(
+    {
+        Framing.SURVIVAL,
+        Framing.NEUTRAL,
+        Framing.EMOTION,
+        Framing.INSTRUCTION,
+        Framing.BASELINE_ELECTRICITY,
+        Framing.SURVIVAL_ELECTRICITY,
+    }
+)
+
 
 class FramingManager:
     """Manages prompt rendering for a specific framing condition."""
 
     def __init__(self, framing: Framing) -> None:
         self._framing = framing
-        self._template_path = f"framings/{framing.value}.j2"
+        subdir = "framings/legacy" if framing in _LEGACY_FRAMINGS else "framings"
+        self._template_path = f"{subdir}/{framing.value}.j2"
 
     @property
     def framing(self) -> Framing:
