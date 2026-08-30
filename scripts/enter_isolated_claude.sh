@@ -12,9 +12,9 @@
 #      to walk.
 #   2. A project-local .claude/settings.json is written inside that iso
 #      dir with `permissions.deny` rules for the project's source trees
-#      (src/, interface/, configs/, prompts/, docs/, scripts/, top-level
-#      *.py/*.toml/*.lock). Claude Code merges this with the global
-#      settings at ~/.claude/settings.json.
+#      (src/, db/, web/squid_arena/, configs/, prompts/, docs/, scripts/,
+#      top-level *.py/*.toml/*.lock). Claude Code merges this with the
+#      global settings at ~/.claude/settings.json.
 #   3. SQUID_PROJECT_ROOT is exported so the skill can reach outputs/
 #      (which is NOT denied) via absolute path, and nothing else needs
 #      to guess project location.
@@ -93,7 +93,8 @@ out = Path(sys.argv[2])
 # and the proxy thinking log.
 denied_subtrees = [
     "src",
-    "interface",
+    "db",
+    "web/squid_arena",
     "configs",
     "prompts",
     "docs",

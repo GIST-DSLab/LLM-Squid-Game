@@ -2,7 +2,7 @@
 
 These dataclasses are the driver-agnostic wire format used by the
 ``Repository`` interface (see ``db/squid_store/base.py``). Neither
-consumer (``interface/api.py`` / a future seed script) nor either backend
+consumer (``web/squid_arena/api.py`` / a future seed script) nor either backend
 (SQLite, Postgres) should need anything beyond these shapes.
 
 Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §7.
@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 def new_id() -> str:
     """Generate a short, URL-safe session id (same convention as
-    ``interface/human_game.py``'s ``season_id``)."""
+    ``web/squid_arena/human_game.py``'s ``season_id``)."""
     return uuid.uuid4().hex[:12]
 
 
