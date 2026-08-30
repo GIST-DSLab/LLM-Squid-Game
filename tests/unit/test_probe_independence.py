@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from squid_game.analysis.manipulation_check import (
+from squid_game.analysis.shared.manipulation_check import (
     TurnMatchedResult,
     check_discovery_timing_independence,
     check_probe_independence,

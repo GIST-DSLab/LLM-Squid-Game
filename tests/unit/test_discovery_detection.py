@@ -1,6 +1,6 @@
 """Unit tests for Phase O Unit 13 implicit rule-discovery detection.
 
-Tests for ``squid_game.analysis.discovery_detection``. The module
+Tests for ``squid_game.analysis.shared.discovery_detection``. The module
 consumes per-turn ``rule_match_score`` (already computed upstream by
 ``SignalGameModule.score_probe``) and produces the per-session
 ``DiscoveryFeatures`` tuple used by the Unit 13 H4/H5/H6 hypotheses.
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from squid_game.analysis.discovery_detection import (
+from squid_game.analysis.shared.discovery_detection import (
     DISCOVERY_MATCH_THRESHOLD,
     DiscoveryFeatures,
     compute_session_features,

@@ -43,7 +43,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from squid_game.analysis.loaders import (  # noqa: E402
+from squid_game.analysis.shared.loaders import (  # noqa: E402
     discover_season_jsonl,
     load_seasons,
     to_long_dataframe,
@@ -53,7 +53,7 @@ from squid_game.analysis.forfeit_regression import (  # noqa: E402
     run_all_unit14_hypotheses,
     run_all_unit15_hypotheses,
 )
-from squid_game.analysis.manipulation_check import (  # noqa: E402
+from squid_game.analysis.shared.manipulation_check import (  # noqa: E402
     check_discovery_timing_independence,
     check_probe_independence,
     check_probe_turn_matched_independence,

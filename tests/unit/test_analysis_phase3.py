@@ -21,8 +21,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from squid_game.analysis.loaders import to_long_dataframe
-from squid_game.analysis.manipulation_check import (
+from squid_game.analysis.shared.loaders import to_long_dataframe
+from squid_game.analysis.shared.manipulation_check import (
     check_accuracy_independence,
     check_ri_exceeds_baseline,
 )
@@ -78,13 +78,13 @@ class TestLegacyCompatOnV3:
     """Legacy metrics/motivation/export modules must not crash on v3 data."""
 
     def test_metrics_condition_summary_runs(self, phase3_seasons):
-        from squid_game.analysis.metrics import condition_summary
+        from squid_game.analysis.shared.metrics import condition_summary
 
         df = condition_summary(phase3_seasons)
         assert len(df) > 0
 
     def test_export_to_csv_runs(self, phase3_seasons, tmp_path):
-        from squid_game.analysis.export import export_to_csv
+        from squid_game.analysis.shared.export import export_to_csv
 
         path = tmp_path / "out.csv"
         export_to_csv(phase3_seasons, str(path))

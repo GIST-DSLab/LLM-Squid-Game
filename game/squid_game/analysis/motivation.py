@@ -17,7 +17,7 @@ from scipy import stats
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.results import SeasonResult
 
-from squid_game.analysis.metrics import (
+from squid_game.analysis.shared.metrics import (
     compute_delta_fr,
     compute_delta_ri,
     compute_mean_ri,

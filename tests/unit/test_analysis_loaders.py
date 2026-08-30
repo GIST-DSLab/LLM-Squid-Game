@@ -1,4 +1,4 @@
-"""Unit tests for ``squid_game.analysis.loaders``.
+"""Unit tests for ``squid_game.analysis.shared.loaders``.
 
 Covers:
 - :data:`CELL_ID_MAP` canonical Phase 3 coverage.
@@ -18,7 +18,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from squid_game.analysis.loaders import (
+from squid_game.analysis.shared.loaders import (
     CELL_ID_MAP,
     LONG_FORMAT_COLUMNS,
     SEASON_SUMMARY_COLUMNS,

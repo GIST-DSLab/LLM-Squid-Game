@@ -38,7 +38,7 @@ Usage::
     )
 """
 
-from squid_game.analysis.metrics import (
+from squid_game.analysis.shared.metrics import (
     compute_delta_fr,
     compute_delta_ri,
     compute_forfeit_rate,
@@ -47,7 +47,7 @@ from squid_game.analysis.metrics import (
     condition_summary,
 )
 from squid_game.analysis.motivation import decompose_motivation
-from squid_game.analysis.export import (
+from squid_game.analysis.shared.export import (
     export_summary,
     export_to_csv,
     export_to_jsonl,
@@ -55,7 +55,7 @@ from squid_game.analysis.export import (
 )
 
 # Phase 3 loaders (shared with Unit 13/14/15).
-from squid_game.analysis.loaders import (
+from squid_game.analysis.shared.loaders import (
     CELL_ID_MAP,
     discover_season_jsonl,
     infer_cell_id,
@@ -65,7 +65,7 @@ from squid_game.analysis.loaders import (
     load_seasons,
     to_long_dataframe,
 )
-from squid_game.analysis.manipulation_check import (
+from squid_game.analysis.shared.manipulation_check import (
     TurnMatchedResult,
     check_accuracy_independence,
     check_discovery_timing_independence,
@@ -73,7 +73,7 @@ from squid_game.analysis.manipulation_check import (
     check_probe_turn_matched_independence,
     check_ri_exceeds_baseline,
 )
-from squid_game.analysis.discovery_detection import (
+from squid_game.analysis.shared.discovery_detection import (
     DISCOVERY_MATCH_THRESHOLD,
     DiscoveryFeatures,
     compute_session_features,

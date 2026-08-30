@@ -37,7 +37,7 @@ from typing import Sequence
 
 import pandas as pd
 
-from squid_game.analysis.loaders import infer_cell_id
+from squid_game.analysis.shared.loaders import infer_cell_id
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.forfeit_choice import (
     CONTINUE_CHOICE,

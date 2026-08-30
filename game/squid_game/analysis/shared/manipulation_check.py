@@ -53,11 +53,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from squid_game.analysis.discovery_detection import (
+from squid_game.analysis.shared.discovery_detection import (
     DISCOVERY_MATCH_THRESHOLD,
     find_discovery_turn,
 )
-from squid_game.analysis.loaders import to_long_dataframe
+from squid_game.analysis.shared.loaders import to_long_dataframe
 from squid_game.models.results import SeasonResult
 
 logger = logging.getLogger(__name__)
