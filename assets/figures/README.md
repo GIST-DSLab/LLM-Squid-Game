@@ -22,7 +22,7 @@
 ### 재현
 
 ```bash
-cd figures/rules-demo
+cd assets/figures/rules-demo
 # 1) 8개 beat 프레임 캡처 (뷰포트 1280×720 @2x → 2560×1440 PNG)
 uv run --with playwright python -m playwright install chromium
 uv run --with playwright python capture_frames.py

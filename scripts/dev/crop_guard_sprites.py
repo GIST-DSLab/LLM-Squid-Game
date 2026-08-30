@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
-FIG = ROOT / "figures"
+FIG = ROOT / "assets" / "figures"
 OUT = ROOT / "web" / "assets"
 
 # Source figures are 1792x2400. Boxes are (left, upper, right, lower).

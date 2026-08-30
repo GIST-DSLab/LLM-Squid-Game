@@ -8,18 +8,13 @@ Produces 5 diagrams:
   d4_6cell_factorial.excalidraw            — v4 rewrite (was 5-cell)
   d6_mtmm_motivation.excalidraw            — v4 rewrite (was α_stake based)
 
-# BUG (found in P3+P4 Task 5 review, not fixed here -- see main() below):
-# asset_dir is built from Path(__file__).resolve().parents[1], which from
-# this file's location (scripts/plots/gen_v4_diagrams.py) resolves to
-# scripts/, not the repo root. The actual output directory is therefore
-# scripts/ + "docs"/"design"/"v4"/"assets", not the repo-root "docs" /
-# "design" / "v4" / "assets" directory where the three build_*_diagram.py
-# scripts in this directory write. parents[1] would need to be parents[2]
-# to reach the repo root. Left unfixed here because correcting it changes
-# what an executed script writes to disk, which is a runtime behaviour
-# change out of scope for a dead-reference cleanup task; P6 Task 3 owns
-# repointing both this script's and the build_*_diagram.py scripts' write
-# targets when it reorganises the assets directory.
+# BUG FIXED (P6 Task 3; was flagged but deliberately left unfixed by P3+P4
+# Task 5 -- see main() below): asset_dir used to be built from
+# Path(__file__).resolve().parents[1], which from this file's location
+# (scripts/plots/gen_v4_diagrams.py) resolves to the scripts/ directory,
+# not the repo root -- one level short of where the three sibling
+# build_*_diagram.py scripts in this directory write. parents[1] is now
+# parents[2], reaching the repo root as documented and as the siblings do.
 
 Palette values match .claude/skills/excalidraw-diagram/references/color-palette.md.
 """
@@ -1117,7 +1112,7 @@ def build_mtmm() -> list[dict]:
 # ---------- main ----------
 
 def main():
-    asset_dir = Path(__file__).resolve().parents[1] / "docs" / "design" / "v4" / "assets"
+    asset_dir = Path(__file__).resolve().parents[2] / "docs" / "design" / "v4" / "assets"
 
     random.seed(42)
     write_excal(build_overview(),    asset_dir / "d0_experiment_overview.excalidraw")

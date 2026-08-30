@@ -32,11 +32,11 @@ models/
 outputs/web_arena/web_arena.db
 
 # paperbanana figure-generation scratch runs
-figures/run_*/
+assets/figures/run_*/
 
 # Ad-hoc review/debug captures and scratch review pages. Nothing in the build,
 # the paper, or the deployed site reads from here; figures a document depends on
-# live in figures/ or web/frontend/assets/.
+# live in assets/figures/ or web/frontend/assets/.
 /.scratch/
 /*.png
 
