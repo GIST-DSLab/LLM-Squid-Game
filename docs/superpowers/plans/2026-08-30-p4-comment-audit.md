@@ -205,14 +205,22 @@ untouched (P6 Task 5's territory).
 
 Not fixed, out of scope, flagged only: a related but distinct family of bare
 (no personal-machine-path, no `scripts/` prefix) dead references —
-`golden-wobbling-quilt.md` cited without a path in six files
-(`models/config.py:88`, `tests/unit/test_framing_templates.py` ×3,
-`tests/unit/test_risk_choice_layer.py`, `tests/unit/test_phase3_configs.py`'s
-module-level skip already covers the seventh) and an `outputs/20260420_0459_.../`
-run-directory reference in `tests/unit/test_stake_carryover.py:339` that
-does not exist on disk. Neither matches this task's grep pattern nor the
-dispatch's named class-3 pattern; noted for a future pass rather than swept
-here to avoid scope creep beyond what was assigned.
+`golden-wobbling-quilt.md` cited without a path, **7 hits across 5 files**:
+`game/squid_game/models/config.py:88`,
+`tests/unit/test_framing_templates.py:65,631,713` (×3),
+`tests/unit/test_risk_choice_layer.py:550`,
+`game/squid_game/prompts/framings/flagship_corruption.j2:3`, and
+`game/squid_game/prompts/framings/flagship_corruption_terminal.j2:4`. The two
+`.j2` template citations are left alone deliberately: they match neither the
+Step 1 marker pattern (no TODO/LEGACY/etc. keyword) nor the dispatch's named
+class-3 pattern (no personal-machine path), so fixing them here would be
+scope creep beyond what was assigned — flagged so a later task can pick them
+up rather than rediscover them. (`tests/unit/test_phase3_configs.py`'s own
+`golden-wobbling-quilt.md` citation is a **separate** hit, inside the
+class-3 personal-path family — see that file's row in the class-3
+disposition table above; it was corrected, not left alone.) Also flagged,
+same reasoning: an `outputs/20260420_0459_.../` run-directory reference in
+`tests/unit/test_stake_carryover.py:339` that does not exist on disk.
 
 ## Queued class 2 — `pyproject.toml:26`
 
