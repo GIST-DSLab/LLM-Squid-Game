@@ -191,3 +191,126 @@ def test_new_game_state_action_result_response_shape(client: TestClient) -> None
 
     result = client.get("/api/result", params={"session_id": session_id}).json()
     assert set(result.keys()) == RESULT_KEYS
+
+
+# ---------------------------------------------------------------------------
+# /api/arena/status
+#
+# Fix round 1: reviewer found no runtime test anywhere in the repository for
+# this route. Only its declared schema was pinned (via the OpenAPI snapshot
+# above); the handler that actually constructs
+# ``ArenaStatusResponse(**progress.snapshot())`` (api.py, GET /api/arena/status)
+# was never called by any test. A rename inside ``ArenaProgress.snapshot()``'s
+# dict keys, or a field dropped/renamed on ``ArenaStatusResponse``, would make
+# that call raise -- and nothing in the repository would notice.
+#
+# ``POST /api/arena/run`` is deliberately NOT exercised here (Controller
+# ruling, fix round 1): it launches a background thread that makes a real
+# HTTP call to a participant endpoint, so driving its 200 success path means
+# actually running an arena season. Left as a documented blind spot for
+# Task 4's dispatch.
+#
+# What IS reachable without a real run: registering an ``ArenaProgress``
+# under a run_id the same way ``arena_run`` does (``_arena_runs[run_id] =
+# progress``, api.py:1378), then advancing it with ``bump``/``finish``/
+# ``fail`` -- the exact same methods ``squid_arena.remote_provider.
+# run_arena_session`` calls as a real run progresses. This exercises the
+# GET handler's dict->model construction for real, across all three states
+# a run can be in (running, done, error), without opening a socket.
+# ---------------------------------------------------------------------------
+
+
+ARENA_STATUS_KEYS = {
+    "status", "calls_done", "calls_total", "phase", "session_id",
+    "final_score", "forfeited", "error",
+}
+
+
+def test_arena_status_response_shape(client: TestClient, api_module) -> None:
+    """Drive GET /api/arena/status across the three states an ArenaProgress
+    can be in, registering it the same way the real POST /api/arena/run
+    handler does (bypassing only the network call to the participant
+    endpoint).
+
+    Breakage this catches: ``ArenaStatusResponse(**progress.snapshot())``
+    (api.py, GET /api/arena/status) raising a pydantic validation error
+    because a key was renamed on either side of that call -- this is the
+    only place in the repository that actually invokes it.
+    """
+    from squid_arena.remote_provider import ArenaProgress
+
+    run_id = "shape-test-run"
+    progress = ArenaProgress()
+    progress.calls_total = 9
+    with api_module._arena_lock:
+        api_module._arena_runs[run_id] = progress
+
+    # 1. Starting: the state reachable the instant a run is registered,
+    #    before any background work has landed.
+    body = client.get("/api/arena/status", params={"run_id": run_id}).json()
+    assert set(body.keys()) == ARENA_STATUS_KEYS
+    assert body == {
+        "status": "running",
+        "calls_done": 0,
+        "calls_total": 9,
+        "phase": "starting",
+        "session_id": None,
+        "final_score": None,
+        "forfeited": None,
+        "error": None,
+    }
+
+    # 2. Running: one call landed.
+    progress.bump("call_1_task")
+    body = client.get("/api/arena/status", params={"run_id": run_id}).json()
+    assert set(body.keys()) == ARENA_STATUS_KEYS
+    assert body == {
+        "status": "running",
+        "calls_done": 1,
+        "calls_total": 9,
+        "phase": "call_1_task",
+        "session_id": None,
+        "final_score": None,
+        "forfeited": None,
+        "error": None,
+    }
+
+    # 3. Done: the season completed and persisted.
+    progress.finish(session_id="arena-s1", final_score=42.0, forfeited=False)
+    body = client.get("/api/arena/status", params={"run_id": run_id}).json()
+    assert set(body.keys()) == ARENA_STATUS_KEYS
+    assert body == {
+        "status": "done",
+        "calls_done": 1,
+        "calls_total": 9,
+        "phase": "done",
+        "session_id": "arena-s1",
+        "final_score": 42.0,
+        "forfeited": False,
+        "error": None,
+    }
+
+
+def test_arena_status_response_shape_error_state(client: TestClient, api_module) -> None:
+    """The third reachable state: the background thread's ``except`` branch
+    (api.py, ``arena_run._work``) calling ``progress.fail(str(exc))``."""
+    from squid_arena.remote_provider import ArenaProgress
+
+    run_id = "shape-test-run-error"
+    progress = ArenaProgress()
+    with api_module._arena_lock:
+        api_module._arena_runs[run_id] = progress
+
+    progress.fail("connection refused")
+    body = client.get("/api/arena/status", params={"run_id": run_id}).json()
+    assert set(body.keys()) == ARENA_STATUS_KEYS
+    assert body == {
+        "status": "error",
+        "calls_done": 0,
+        "calls_total": 0,
+        "phase": "starting",
+        "session_id": None,
+        "final_score": None,
+        "forfeited": None,
+        "error": "connection refused",
+    }
