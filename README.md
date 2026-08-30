@@ -108,7 +108,7 @@ src/squid_game/
 configs/experiment/   # 87 YAML configs (canonical family: phase3_split_forfeit_*)
 scripts/              # run / resume / analyze / plot / orchestrate
 interface/            # FastAPI Web Arena backend (api.py) — the live-demo API
-web/                  # Static Web Arena frontend (HTML/JS) — the live-demo site
+web/frontend/         # Static Web Arena frontend (HTML/JS) — the live-demo site
 tests/                # 29 unit + 5 integration test files (offline, deterministic)
 docs/design/v6/       # Canonical design doc + paper sections + appendices
 ```
@@ -123,11 +123,11 @@ The interactive arena at [gist-dslab.github.io/LLM-Squid-Game](https://gist-dsla
 
 | Piece | Source | Hosted on | Config |
 |---|---|---|---|
-| **Frontend** (static HTML/JS) | `web/` | **GitHub Pages** | `.github/workflows/deploy-pages.yml` — deploys on push to `main` touching `web/**`, or manual `workflow_dispatch` |
+| **Frontend** (static HTML/JS) | `web/frontend/` | **GitHub Pages** | `.github/workflows/deploy-pages.yml` — deploys on push to `main` touching `web/frontend/**`, or manual `workflow_dispatch` |
 | **Backend** (FastAPI + Docker) | `interface/api.py` | **Render** (free plan) | `render.yaml` — Blueprint on `branch: main`; health check `/api/leaderboard/models` |
 | **Database** (Postgres) | — | **Supabase** (free tier) | Render env var `WEB_ARENA_DSN` (connection URI); local dev falls back to SQLite at `outputs/web_arena/web_arena.db` |
 
-The frontend calls the backend URL in `web/config.js`, and the backend must allow that origin via Render's `WEB_ARENA_CORS_ORIGINS` env var — these two must match. **Redeploys are triggered by pushing to `main`** (Render auto-redeploys from git; the Pages workflow reruns): a plain "restart" does not pull new code, and Supabase (managed Postgres) only needs the seed/backup scripts re-run when the DB schema or seed data changes, not for frontend/backend code changes.
+The frontend calls the backend URL in `web/frontend/config.js`, and the backend must allow that origin via Render's `WEB_ARENA_CORS_ORIGINS` env var — these two must match. **Redeploys are triggered by pushing to `main`** (Render auto-redeploys from git; the Pages workflow reruns): a plain "restart" does not pull new code, and Supabase (managed Postgres) only needs the seed/backup scripts re-run when the DB schema or seed data changes, not for frontend/backend code changes.
 
 Full walkthrough — env vars, CORS matching, seeding, backups, platform swaps — in [`web/DEPLOY.md`](./web/DEPLOY.md).
 

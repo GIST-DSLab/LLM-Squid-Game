@@ -20,10 +20,6 @@ notebooks/
 # The static frontend is deployed to Pages, not baked into the API image.
 # web/squid_arena/ (the backend) must stay in the context -- see Dockerfile.
 web/frontend/
-web/*.html
-web/*.js
-web/*.css
-web/assets/
 web/DEPLOY.md
 
 # Python cruft

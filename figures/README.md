@@ -10,8 +10,8 @@
 ④ Hear the framing · ⑤ How sure are you? · ⑥ Weigh it, then choose ·
 ⑦ If you quit, say why · ⑧ …or the run just ends.
 
-- **좌측**: 실제 플레이 카드 리플리카(프로덕션 `web/`의 마크업·`web/styles.css`·`web/assets/`
-  재사용)를 **크게 크롭**해 보여준다 — 크롭 창이 각 단계의 관련 영역에 상하 여백 없이 맞춰지고
+- **좌측**: 실제 플레이 카드 리플리카(프로덕션 `web/frontend/`의 마크업·`web/frontend/styles.css`·
+  `web/frontend/assets/` 재사용)를 **크게 크롭**해 보여준다 — 크롭 창이 각 단계의 관련 영역에 상하 여백 없이 맞춰지고
   beat별 focus 블록까지 아래로 팬한다. **프레이밍(④)** 에는 실제 Play 게임과 동일하게
   Squid Game 가드 이미지(`guard-armed.png`)를 `.threat-card`로 넣는다.
 - **우측**: 8단계를 동시에 나열하지 않고 **현재 단계 하나만** 큰 콜아웃(단계명 + 간결한
@@ -30,7 +30,7 @@ uv run --with playwright python capture_frames.py
 uv run python build_gif.py
 ```
 
-- `capture.html` — 캡처 소스(프로덕션 `web/`는 수정하지 않음; `../../web/styles.css` 재사용,
+- `capture.html` — 캡처 소스(프로덕션 `web/frontend/`는 수정하지 않음; `../../web/frontend/styles.css` 재사용,
   헬퍼는 인라인, Alpine은 CDN, `window.__setBeat(n)`으로 beat 제어, `fitCard()`로 크롭 창 맞춤)
 - `capture_frames.py` — Playwright 캡처 (device_scale_factor=2)
 - `build_gif.py` — ffmpeg 합성 (`HOLD`/`XFADE`/`FPS`/`OUT_W` 상수로 타이밍·크기 조정)

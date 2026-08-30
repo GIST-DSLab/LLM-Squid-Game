@@ -495,7 +495,7 @@ class LogDetailResponse(BaseModel):
 # --- Logs report (per-subject stats) ---------------------------------------
 
 # Canonical 6-cell campaign order, tags and labels — kept in lockstep with the
-# frontend ``CAMPAIGN_CONDITIONS`` (web/app.js) so the Logs report renders the
+# frontend ``CAMPAIGN_CONDITIONS`` (web/frontend/app.js) so the Logs report renders the
 # same condition rows/badges the Play report uses.
 CAMPAIGN_CELLS: list[dict[str, str]] = [
     {"framing": "true_baseline",       "forfeit": "not_allowed", "tag": "baseline",  "label": "Baseline · No-forfeit"},

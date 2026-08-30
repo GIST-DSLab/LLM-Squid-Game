@@ -1,11 +1,11 @@
 """Contract test: the exact rule string the web rule-builder submits as
 ``probe_answer`` must score 100 against ``SignalGameModule.score_probe``.
 
-Frontend (``web/app.js`` ``assembledRule``) and backend
+Frontend (``web/frontend/app.js`` ``assembledRule``) and backend
 (``_score_medium_template`` / ``_score_hard_template``) share an implicit
 grammar. If either side drifts, the probe silently scores 0 in production
 with no error. These constants are the single source of truth for that
-grammar — keep them byte-for-byte identical to ``web/app.js``.
+grammar — keep them byte-for-byte identical to ``web/frontend/app.js``.
 """
 
 import re
@@ -13,7 +13,7 @@ import re
 from squid_game.models.enums import Difficulty
 from squid_game.tasks.signal_game.module import SignalGameModule
 
-# MUST stay in sync with web/app.js `assembledRule`. Braces are Python
+# MUST stay in sync with web/frontend/app.js `assembledRule`. Braces are Python
 # str.format slots; the surrounding literal text is the contract.
 FRONTEND_HARD_FORMAT = (
     "If {a1} is {v1} and {a2} is {v2} then {both}; "

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { buildRankLadder } = require("../../web/rank_ladder.js");
+const { buildRankLadder } = require("../../web/frontend/rank_ladder.js");
 
 const MODELS = [
   { model_label: "Gemini", avg_score_per_game: 536 },

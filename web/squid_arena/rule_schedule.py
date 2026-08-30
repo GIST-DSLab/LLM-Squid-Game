@@ -1,7 +1,7 @@
 """Deterministic hidden-rule attribute schedule for Web Arena campaigns.
 
 A human Play campaign is six games long (``CAMPAIGN_CONDITIONS`` in
-``web/app.js``). ``SignalGameModule`` always activated rule index 0, so every
+``web/frontend/app.js``). ``SignalGameModule`` always activated rule index 0, so every
 game in a campaign shared one attribute family — colour on EASY, colour+shape
 on HARD/EXPERT — and a player who cracked the family in game 1 carried that
 knowledge into the other five. This module hands each game a different index.
@@ -21,7 +21,7 @@ import random
 # two-attribute pairs), so a family index is always in ``range(3)``.
 RULE_FAMILY_COUNT = 3
 
-# Length of one Play campaign. Mirrors ``CAMPAIGN_CONDITIONS`` in web/app.js.
+# Length of one Play campaign. Mirrors ``CAMPAIGN_CONDITIONS`` in web/frontend/app.js.
 CAMPAIGN_GAME_COUNT = 6
 
 # Redraw attempts before falling back to a rotation at the block boundary.

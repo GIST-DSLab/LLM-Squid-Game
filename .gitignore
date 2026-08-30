@@ -36,7 +36,7 @@ figures/run_*/
 
 # Ad-hoc review/debug captures and scratch review pages. Nothing in the build,
 # the paper, or the deployed site reads from here; figures a document depends on
-# live in figures/ or web/assets/.
+# live in figures/ or web/frontend/assets/.
 /.scratch/
 /*.png
 

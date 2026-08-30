@@ -28,6 +28,6 @@ services:
       # Comma-separated list of allowed CORS origins. Must include the
       # GitHub Pages origin the frontend is served from, e.g.
       # "https://irregular6612.github.io". See web/DEPLOY.md for the exact
-      # value and how it must line up with web/config.js.
+      # value and how it must line up with web/frontend/config.js.
       - key: WEB_ARENA_CORS_ORIGINS
         sync: false

@@ -1,8 +1,8 @@
-# Deploy the Web Arena static frontend (web/) to GitHub Pages.
+# Deploy the Web Arena static frontend (web/frontend/) to GitHub Pages.
 #
-# Publishes ONLY the web/ directory — not the whole repo. Uses the official
-# Pages actions (configure-pages / upload-pages-artifact / deploy-pages), so
-# no gh-pages branch or third-party action is involved.
+# Publishes ONLY the web/frontend/ directory — not the whole repo. Uses the
+# official Pages actions (configure-pages / upload-pages-artifact /
+# deploy-pages), so no gh-pages branch or third-party action is involved.
 #
 # Trigger: push to the repo's default branch (main). To also deploy from
 # feat/web-arena while this branch is under review (before merging to main),
@@ -21,7 +21,7 @@ on:
     branches:
       - main
     paths:
-      - "web/**"
+      - "web/frontend/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch: {}
 
@@ -49,10 +49,10 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload web/ as Pages artifact
+      - name: Upload web/frontend as Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: web/frontend
 
       - name: Deploy to GitHub Pages
         id: deployment
