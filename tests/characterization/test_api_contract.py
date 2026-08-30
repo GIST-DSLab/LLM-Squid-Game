@@ -69,7 +69,9 @@ def api_module(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
     monkeypatch.delenv("WEB_ARENA_CORS_ORIGINS", raising=False)
     import squid_arena.api as api
+    import squid_arena.deps as deps
 
+    importlib.reload(deps)
     reloaded = importlib.reload(api)
     yield reloaded
     reloaded._repository.close()
