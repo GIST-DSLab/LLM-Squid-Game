@@ -13,7 +13,7 @@ from pathlib import Path
 
 from scipy.stats import norm
 
-from squid_game.analysis.threat_lexicon import code_threat_mention
+from squid_game.analysis.semantic.lexicon import code_threat_mention
 
 ANALYSIS_FRAMINGS = {
     "baseline_flagship": "pull_only",

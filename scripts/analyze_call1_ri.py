@@ -22,7 +22,7 @@ from squid_game.analysis.cognitive.ri_call1 import (
     fit_one,
     render_report,
 )
-from scripts._ri_dataset import load_all
+from squid_game.analysis.semantic.dataset import load_all
 
 
 def main() -> None:

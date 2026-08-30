@@ -14,8 +14,8 @@ from pathlib import Path
 
 from squid_game.models.config import ProviderConfig
 from squid_game.providers.factory import available_providers, build_provider
-from squid_game.analysis.threat_judge import ThreatJudge
-from squid_game.analysis.threat_registration import run_analysis
+from squid_game.analysis.semantic.threat_judge import ThreatJudge
+from squid_game.analysis.semantic.threat_registration import run_analysis
 
 # Paper SD-Behavioral pass/fail (docs/en/sections/04_empirical_findings.tex).
 SD_BEHAVIORAL_PASS = {

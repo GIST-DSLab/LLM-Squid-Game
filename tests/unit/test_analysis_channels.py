@@ -140,3 +140,26 @@ def test_call1_script_is_a_thin_cli() -> None:
     source = (REPO_ROOT / "scripts" / "analyze_call1_ri.py").read_text(encoding="utf-8")
     assert "from squid_game.analysis.cognitive.ri_call1 import" in source
     assert len(source.splitlines()) < 150
+
+
+def test_semantic_channel_exists_and_is_complete() -> None:
+    expected = {
+        "dataset.py",
+        "embeddings.py",
+        "lexicon.py",
+        "threat_registration.py",
+        "threat_judge.py",
+        "__init__.py",
+    }
+    assert {p.name for p in (ANALYSIS / "semantic").glob("*.py")} == expected
+
+
+def test_probe_scripts_are_thin_clis() -> None:
+    for name in ("probe_reasoning_embeddings.py", "probe_lexicon.py"):
+        source = (REPO_ROOT / "scripts" / name).read_text(encoding="utf-8")
+        assert "squid_game.analysis.semantic" in source, name
+        assert len(source.splitlines()) < 150, name
+
+
+def test_the_ri_dataset_helper_left_scripts() -> None:
+    assert not (REPO_ROOT / "scripts" / "_ri_dataset.py").exists()

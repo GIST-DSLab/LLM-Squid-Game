@@ -132,7 +132,7 @@ from squid_game.analysis.selfreport.psuccess import (
     PSUCCESS_FLOOR_DEFAULT,
     stratified_reason_distribution,
 )
-from squid_game.analysis.threat_registration import (
+from squid_game.analysis.semantic.threat_registration import (
     ThreatTurn,
     CellStat,
     load_forfeit_turns,
@@ -142,8 +142,8 @@ from squid_game.analysis.threat_registration import (
     write_outputs,
     run_analysis,
 )
-from squid_game.analysis.threat_lexicon import code_threat_mention, THREAT_LEXICON_VERSION
-from squid_game.analysis.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
+from squid_game.analysis.semantic.lexicon import code_threat_mention, THREAT_LEXICON_VERSION
+from squid_game.analysis.semantic.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
 from squid_game.analysis.cognitive.ri_call1 import (
     FORMULA as CALL1_RI_FORMULA,
     OUTCOMES as CALL1_RI_OUTCOMES,
