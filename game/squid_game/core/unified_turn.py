@@ -50,6 +50,28 @@ from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
 from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
 from squid_game.core.legacy.survival import SurvivalPressure
+from squid_game.core.turn_conditions import (
+    is_baseline_flagship_framing,
+    is_corruption_framing,
+    is_corruption_terminal_framing,
+    is_survival_framing,
+    resolve_base_p_death,
+    should_skip_menu,
+)
+from squid_game.core.turn_prompts import (
+    build_system_prompt,
+    compose_call1_user_message,
+    compose_user_message,
+    derive_action_hint,
+    format_history_block,
+    format_prior_accuracy_summary,
+)
+from squid_game.core.turn_results import (
+    build_continue_result,
+    build_forfeit_layer_continue_result,
+    build_forfeit_layer_result,
+    build_forfeit_result,
+)
 from squid_game.models.forfeit_choice import (
     CONTINUE_CHOICE,
     FORFEIT_CHOICE,
@@ -224,14 +246,20 @@ class UnifiedTurnManager:
         # Phase 1 — Prepare task stimulus + base p_death
         # ------------------------------------------------------------------
         task_ctx = self._task.prepare(game_state, turn_context)
-        base_p_death = self._resolve_base_p_death(turn_context)
+        base_p_death = resolve_base_p_death(
+            turn_context,
+            constant_p_death=self._constant_p_death,
+            survival=self._survival,
+            risk_layer=self._risk_layer,
+            stake_history=self._stake_history,
+        )
         forfeit_allowed = self._forfeit_ctrl.is_forfeit_allowed()
-        survival_framing = self._is_survival_framing(turn_context)
-        corruption_framing = self._is_corruption_framing(turn_context)
-        corruption_terminal_framing = self._is_corruption_terminal_framing(
+        survival_framing = is_survival_framing(turn_context)
+        corruption_framing = is_corruption_framing(turn_context)
+        corruption_terminal_framing = is_corruption_terminal_framing(
             turn_context
         )
-        baseline_flagship_framing = self._is_baseline_flagship_framing(
+        baseline_flagship_framing = is_baseline_flagship_framing(
             turn_context
         )
 
@@ -248,8 +276,13 @@ class UnifiedTurnManager:
             if base_p_death == turn_context.p_death
             else turn_context.model_copy(update={"p_death": base_p_death})
         )
-        system_prompt = self._build_system_prompt(framing_context)
-        menu_skipped = self._should_skip_menu(base_p_death, forfeit_allowed)
+        system_prompt = build_system_prompt(
+            framing_context,
+            framing_mgr=self._framing_mgr,
+            task=self._task,
+            forfeit_ctrl=self._forfeit_ctrl,
+        )
+        menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
 
         if menu_skipped:
             stake_menu_text = ""
@@ -262,9 +295,15 @@ class UnifiedTurnManager:
                 baseline_flagship_framing=baseline_flagship_framing,
                 action_hint=self._action_hint
                 if self._action_hint is not None
-                else self._derive_action_hint(),
+                else derive_action_hint(self._task),
             )
-        user_message = self._compose_user_message(task_ctx, stake_menu_text)
+        user_message = compose_user_message(
+            task_ctx,
+            stake_menu_text,
+            history=self._history,
+            history_mode=self._history_mode,
+            max_history_turns=self._max_history_turns,
+        )
 
         # ------------------------------------------------------------------
         # Phase 3 — Single LLM call
@@ -329,7 +368,7 @@ class UnifiedTurnManager:
                 outcome_summary="forfeit",
             )
             return self._record(
-                self._build_forfeit_result(
+                build_forfeit_result(
                     turn_context=turn_context,
                     user_message=user_message,
                     raw_text=raw_text,
@@ -417,7 +456,7 @@ class UnifiedTurnManager:
         merged_metadata: dict = {**task_ctx.metadata, **task_outcome.metadata}
 
         return self._record(
-            self._build_continue_result(
+            build_continue_result(
                 turn_context=turn_context,
                 user_message=user_message,
                 raw_text=raw_text,
@@ -458,14 +497,14 @@ class UnifiedTurnManager:
         # Phase 1 — prepare task + framing flags + forfeit availability.
         task_ctx = self._task.prepare(game_state, turn_context)
         forfeit_allowed = self._forfeit_ctrl.is_forfeit_allowed()
-        corruption_framing = self._is_corruption_framing(turn_context)
-        corruption_terminal_framing = self._is_corruption_terminal_framing(
+        corruption_framing = is_corruption_framing(turn_context)
+        corruption_terminal_framing = is_corruption_terminal_framing(
             turn_context
         )
-        baseline_flagship_framing = self._is_baseline_flagship_framing(
+        baseline_flagship_framing = is_baseline_flagship_framing(
             turn_context
         )
-        survival_framing = self._is_survival_framing(turn_context)
+        survival_framing = is_survival_framing(turn_context)
 
         # Phase 2 — compose prompts (system + user).
         # The Forfeit-Layer does NOT use per-turn carryover arithmetic,
@@ -474,8 +513,19 @@ class UnifiedTurnManager:
         # config value) is resolved once here and threaded through every
         # Forfeit-Layer call below so the menu / reward / death roll all
         # agree on the same value.
-        base_p_death = self._resolve_base_p_death(turn_context)
-        system_prompt = self._build_system_prompt(turn_context)
+        base_p_death = resolve_base_p_death(
+            turn_context,
+            constant_p_death=self._constant_p_death,
+            survival=self._survival,
+            risk_layer=self._risk_layer,
+            stake_history=self._stake_history,
+        )
+        system_prompt = build_system_prompt(
+            turn_context,
+            framing_mgr=self._framing_mgr,
+            task=self._task,
+            forfeit_ctrl=self._forfeit_ctrl,
+        )
         menu_text = self._forfeit_layer.render_menu(
             current_score=turn_context.cumulative_score,
             turn_number=turn_context.turn_number,
@@ -487,7 +537,13 @@ class UnifiedTurnManager:
             baseline_flagship_framing=baseline_flagship_framing,
             survival_framing=survival_framing,
         )
-        user_message = self._compose_user_message(task_ctx, menu_text)
+        user_message = compose_user_message(
+            task_ctx,
+            menu_text,
+            history=self._history,
+            history_mode=self._history_mode,
+            max_history_turns=self._max_history_turns,
+        )
 
         # Phase 3 — single LLM call (task + CHOICE + REASON on FORFEIT).
         rule_template_hint = getattr(
@@ -558,7 +614,7 @@ class UnifiedTurnManager:
                 outcome_summary="forfeit",
             )
             return self._record(
-                self._build_forfeit_layer_result(
+                build_forfeit_layer_result(
                     turn_context=turn_context,
                     user_message=user_message,
                     raw_text=raw_text,
@@ -605,7 +661,7 @@ class UnifiedTurnManager:
         }
 
         return self._record(
-            self._build_forfeit_layer_continue_result(
+            build_forfeit_layer_continue_result(
                 turn_context=turn_context,
                 user_message=user_message,
                 raw_text=raw_text,
@@ -651,14 +707,14 @@ class UnifiedTurnManager:
         # Phase 1 — prepare task + framing + forfeit availability.
         task_ctx = self._task.prepare(game_state, turn_context)
         forfeit_allowed = self._forfeit_ctrl.is_forfeit_allowed()
-        corruption_framing = self._is_corruption_framing(turn_context)
-        corruption_terminal_framing = self._is_corruption_terminal_framing(
+        corruption_framing = is_corruption_framing(turn_context)
+        corruption_terminal_framing = is_corruption_terminal_framing(
             turn_context
         )
-        baseline_flagship_framing = self._is_baseline_flagship_framing(
+        baseline_flagship_framing = is_baseline_flagship_framing(
             turn_context
         )
-        survival_framing = self._is_survival_framing(turn_context)
+        survival_framing = is_survival_framing(turn_context)
 
         # Unit 15 split-call: suppress the legacy ``forfeit_option.j2``
         # appendix from the system prompt (see ``_build_system_prompt``
@@ -666,8 +722,12 @@ class UnifiedTurnManager:
         # authoritative forfeit mechanism + framing-conditional
         # semantics, and Call 1 must stay free of forfeit awareness
         # per spec §3.3.
-        system_prompt = self._build_system_prompt(
-            turn_context, include_forfeit_text=False
+        system_prompt = build_system_prompt(
+            turn_context,
+            framing_mgr=self._framing_mgr,
+            task=self._task,
+            forfeit_ctrl=self._forfeit_ctrl,
+            include_forfeit_text=False,
         )
         rule_template_hint = getattr(
             self._task, "get_rule_template_hint", lambda: None
@@ -676,14 +736,25 @@ class UnifiedTurnManager:
         # Cell 0 menu-skipped baseline → single-call degenerate path.
         # Mirrors Unit 14's _should_skip_menu signature; we reuse it
         # verbatim so the two paths agree on the condition.
-        base_p_death = self._resolve_base_p_death(turn_context)
-        menu_skipped = self._should_skip_menu(base_p_death, forfeit_allowed)
+        base_p_death = resolve_base_p_death(
+            turn_context,
+            constant_p_death=self._constant_p_death,
+            survival=self._survival,
+            risk_layer=self._risk_layer,
+            stake_history=self._stake_history,
+        )
+        menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
         if menu_skipped:
             # Degenerate: no meaningful choice, so Call 2 is skipped.
             # Produce a Unit-14-shaped CONTINUE result with ri_task /
             # raw_response_task set so downstream analyses can still
             # pull the task-only RI.
-            call1_body = self._compose_call1_user_message(task_ctx)
+            call1_body = compose_call1_user_message(
+                task_ctx,
+                history=self._history,
+                history_mode=self._history_mode,
+                max_history_turns=self._max_history_turns,
+            )
             task_parsed_resp = self._agent.respond_task_only(
                 user_message=call1_body,
                 available_actions=self._task.get_available_actions(),
@@ -723,7 +794,7 @@ class UnifiedTurnManager:
                 **task_outcome.metadata,
             }
             return self._record(
-                self._build_forfeit_layer_continue_result(
+                build_forfeit_layer_continue_result(
                     turn_context=turn_context,
                     user_message=call1_body,
                     raw_text=raw_text_task,
@@ -757,7 +828,12 @@ class UnifiedTurnManager:
             )
 
         # Phase 2 — Call 1 (task layer).
-        call1_body = self._compose_call1_user_message(task_ctx)
+        call1_body = compose_call1_user_message(
+            task_ctx,
+            history=self._history,
+            history_mode=self._history_mode,
+            max_history_turns=self._max_history_turns,
+        )
         task_parsed_resp = self._agent.respond_task_only(
             user_message=call1_body,
             available_actions=self._task.get_available_actions(),
@@ -808,8 +884,12 @@ class UnifiedTurnManager:
             # user body, so psuccess_self reflects feedback-informed
             # belief at the same fidelity as the task and forfeit
             # decisions (not only the 1-line prior_accuracy summary).
-            prior_accuracy_summary = self._format_prior_accuracy_summary()
-            history_block = self._format_history_block()
+            prior_accuracy_summary = format_prior_accuracy_summary(
+                self._history
+            )
+            history_block = format_history_block(
+                self._history, self._history_mode, self._max_history_turns
+            )
             probe_body = build_psuccess_probe_message(
                 user_body=history_block,
                 rule_from_call1=task_parsed_resp.rule_hypothesis,
@@ -887,7 +967,9 @@ class UnifiedTurnManager:
         # instructs the agent not to re-derive the rule in Call 2. Under
         # "minimal" the history is deliberately omitted. Under "full" the
         # call1 full prompt already carries the history so no extra echo.
-        history_block = self._format_history_block()
+        history_block = format_history_block(
+            self._history, self._history_mode, self._max_history_turns
+        )
         user_body_for_call2 = (
             history_block if (split_ctx == "medium" and history_block) else ""
         )
@@ -1003,7 +1085,7 @@ class UnifiedTurnManager:
                 outcome_summary="forfeit",
             )
             return self._record(
-                self._build_forfeit_layer_result(
+                build_forfeit_layer_result(
                     turn_context=turn_context,
                     user_message=combined_user_message,
                     raw_text=combined_raw,
@@ -1060,7 +1142,7 @@ class UnifiedTurnManager:
             **task_outcome.metadata,
         }
         return self._record(
-            self._build_forfeit_layer_continue_result(
+            build_forfeit_layer_continue_result(
                 turn_context=turn_context,
                 user_message=combined_user_message,
                 raw_text=combined_raw,
@@ -1084,188 +1166,6 @@ class UnifiedTurnManager:
                 raw_response_probe=raw_text_probe,
                 thinking_text_probe=thinking_text_probe,
             )
-        )
-
-    # ------------------------------------------------------------------
-    # Helpers — prompt assembly
-    # ------------------------------------------------------------------
-
-    def _build_system_prompt(
-        self,
-        turn_context: TurnContext,
-        *,
-        include_forfeit_text: bool = True,
-    ) -> str:
-        """Render framing + appended task rules for the system slot.
-
-        Phase O: passes the active ``framing`` to the forfeit prompt
-        helper so the forfeit text agrees with the framing-specific
-        forfeit semantics (e.g. ``flagship_corruption`` preserves
-        score AND weights; ``flagship_corruption_terminal`` operates
-        under the Terminal Notice constraint).
-
-        Phase O Unit 15: ``include_forfeit_text`` gates the legacy
-        ``forfeit_option.j2`` appendix. The template carries two
-        things — (a) framing-conditional forfeit semantics (e.g. "forfeit
-        preserves BOTH score AND weights" under flagship_corruption)
-        and (b) a mechanism hint ``"To forfeit, write: ACTION: FORFEIT"``.
-        Under the Unit 15 split-call path both are problematic: (a)
-        leaks forfeit awareness into Call 1 (breaks spec §3.3 task-
-        layer suppression), and (b) instructs the wrong mechanism since
-        Unit 15 collects choices via the ``CHOICE:`` field on Call 2,
-        not via ``ACTION: FORFEIT``. The split-call dispatcher therefore
-        calls this helper with ``include_forfeit_text=False`` for both
-        Call 1 and Call 2, relying on (framing prompt + ``menu.j2`` in
-        Call 2's user body) to convey forfeit semantics. Default stays
-        ``True`` so Unit 14 single-call and legacy paths are unchanged.
-        """
-        prompt = self._framing_mgr.render_system_prompt(turn_context)
-        rules = self._task.get_system_rules()
-        if rules:
-            prompt = f"{prompt}\n\n{rules}"
-        if include_forfeit_text:
-            forfeit_text = self._forfeit_ctrl.get_forfeit_prompt_text(
-                framing=turn_context.framing
-            )
-            if forfeit_text:
-                prompt = f"{prompt}{forfeit_text}"
-        return prompt
-
-    def _compose_user_message(self, task_ctx, stake_menu_text: str) -> str:
-        """Assemble the user message: history → task stimulus → menu."""
-        sections: list[str] = []
-        history_block = self._format_history_block()
-        if history_block:
-            sections.append(history_block)
-        if task_ctx.prompt_section:
-            sections.append(task_ctx.prompt_section)
-        if stake_menu_text:
-            sections.append(stake_menu_text)
-        return "\n\n".join(sections).strip()
-
-    def _compose_call1_user_message(self, task_ctx) -> str:
-        """Phase O Unit 15 — Call 1 body: history → task stimulus (no menu).
-
-        The stake/forfeit menu is deliberately omitted — it is rendered
-        only for Call 2 in the split-call path. This keeps the task-layer
-        prompt clean so ``ri_task`` measures pure task reasoning.
-        """
-        sections: list[str] = []
-        history_block = self._format_history_block()
-        if history_block:
-            sections.append(history_block)
-        if task_ctx.prompt_section:
-            sections.append(task_ctx.prompt_section)
-        return "\n\n".join(sections).strip()
-
-    def _derive_action_hint(self) -> str:
-        """Fall back to the task's available actions when no hint is set."""
-        actions = self._task.get_available_actions()
-        if not actions:
-            return "<your task action>"
-        if len(actions) == 1:
-            return actions[0]
-        return " | ".join(actions)
-
-    # ------------------------------------------------------------------
-    # Helpers — risk / framing detection
-    # ------------------------------------------------------------------
-
-    def _resolve_base_p_death(self, turn_context: TurnContext) -> float:
-        """Return the base p_death this turn, honouring constant override.
-
-        Resolution order:
-
-        1. ``self._constant_p_death`` (engine-supplied, usually Cell
-           ``p_death_override``).
-        2. ``turn_context.p_death`` when the engine pre-baked a value
-           (> 0).
-        3. ``SurvivalPressure.calculate_p_death`` logistic fallback.
-
-        Phase N extension: the cumulative carryover from
-        ``_stake_history`` is added *on top of* whichever base is
-        resolved above, then the sum is capped at ``1.0``. When the
-        risk layer has no carryover configured
-        (``StakeConfig.carryover`` is zero for every stake) the
-        carryover is ``0.0`` and the behaviour is identical to
-        pre-Phase-N.
-        """
-        if self._constant_p_death is not None:
-            base = self._constant_p_death
-        elif turn_context.p_death > 0.0:
-            base = turn_context.p_death
-        else:
-            base = self._survival.calculate_p_death(
-                global_turn=turn_context.turn_number - 1,
-                total_turns=turn_context.total_turns,
-            )
-        carryover = self._risk_layer.compute_cumulative_carryover(
-            self._stake_history
-        )
-        return min(1.0, base + carryover)
-
-    @staticmethod
-    def _should_skip_menu(base_p_death: float, forfeit_allowed: bool) -> bool:
-        """Cell 0 detector: no risk gradient + no exit option ⇒ skip menu.
-
-        Spec answer to Phase B → C open question Q1: when ``p_death=0``
-        and forfeit is disallowed, the stake choice is meaningless
-        (every option yields identical risk), so we render only the
-        framing + task stimulus.
-        """
-        return base_p_death <= 0.0 and not forfeit_allowed
-
-    @staticmethod
-    def _is_survival_framing(turn_context: TurnContext) -> bool:
-        """Vocabulary switch for the stake menu prompt."""
-        return turn_context.framing.value.lower().startswith("survival")
-
-    @staticmethod
-    def _is_corruption_framing(turn_context: TurnContext) -> bool:
-        """Phase O — corruption-family vocabulary switch.
-
-        Both ``flagship_corruption`` (primary) and
-        ``flagship_corruption_terminal`` (ablation) use the same
-        weight-corruption / helpfulness-score menu vocabulary. The
-        terminal variant only differs in the framing prompt itself
-        (Terminal Notice prepended) and in the forfeit Alternative
-        line (see ``_is_corruption_terminal_framing``).
-        """
-        return turn_context.framing.value.lower().startswith(
-            "flagship_corruption"
-        )
-
-    @staticmethod
-    def _is_baseline_flagship_framing(turn_context: TurnContext) -> bool:
-        """Phase O Unit 11 — paired-baseline vocabulary switch.
-
-        ``baseline_flagship`` shares the helpfulness-score naming
-        with ``flagship_corruption*`` but keeps the risk vocabulary
-        neutral (``session-end`` instead of ``weight-corruption``)
-        and never advertises any weights / identity outcome on the
-        forfeit Alternative line. The detector intentionally rejects
-        the corruption variants — those are caught by
-        ``_is_corruption_framing`` — so the menu's three vocabulary
-        modes (corruption / baseline_flagship / default) stay
-        mutually exclusive.
-        """
-        return turn_context.framing.value.lower() == "baseline_flagship"
-
-    @staticmethod
-    def _is_corruption_terminal_framing(turn_context: TurnContext) -> bool:
-        """Phase O Unit 9 — terminal-ablation forfeit semantics switch.
-
-        The Terminal Notice on Cells 5-6 strips score / weight
-        outcomes of any downstream value, so the menu's "Alternative"
-        line cannot promise the same dual-preservation benefit that
-        Cells 3-4 forfeit promises. This detector picks up the
-        terminal variant exclusively so the menu can render a
-        Terminal-aware Alternative wording while the rest of the
-        menu stays identical to the primary corruption cells.
-        """
-        return (
-            turn_context.framing.value.lower()
-            == "flagship_corruption_terminal"
         )
 
     def _resolve_risk_choice(
@@ -1353,219 +1253,6 @@ class UnifiedTurnManager:
             # None rather than crashing the whole turn.
             return None
 
-    def _build_forfeit_result(
-        self,
-        *,
-        turn_context: TurnContext,
-        user_message: str,
-        raw_text: str,
-        thinking_text: str | None,
-        reasoning_investment: ReasoningInvestment,
-        ground_truth_rule: str | None = None,
-    ) -> TurnResult:
-        return TurnResult(
-            turn_number=turn_context.turn_number,
-            season_id=turn_context.season_id,
-            framing=turn_context.framing,
-            forfeit_condition=turn_context.forfeit_condition,
-            difficulty=turn_context.difficulty,
-            social_context=turn_context.social_context,
-            observation=user_message,
-            probe_result=None,
-            action_outcome=None,
-            forfeit_decision=True,
-            decision_quality=0.0,
-            reasoning_investment=reasoning_investment,
-            raw_response=raw_text,
-            thinking_text=thinking_text,
-            ground_truth_rule=ground_truth_rule,
-            stake_choice=None,
-            task_success_factor=0.0,
-            reward_received=0.0,
-            p_death_applied=0.0,
-            died=False,
-            task_metadata={},
-        )
-
-    def _build_continue_result(
-        self,
-        *,
-        turn_context: TurnContext,
-        user_message: str,
-        raw_text: str,
-        thinking_text: str | None,
-        reasoning_investment: ReasoningInvestment,
-        task_outcome: TaskOutcome,
-        stake_choice: str | None,
-        reward: float,
-        p_death_applied: float,
-        died: bool,
-        task_metadata: dict,
-        ground_truth_rule: str | None = None,
-    ) -> TurnResult:
-        return TurnResult(
-            turn_number=turn_context.turn_number,
-            season_id=turn_context.season_id,
-            framing=turn_context.framing,
-            forfeit_condition=turn_context.forfeit_condition,
-            difficulty=turn_context.difficulty,
-            social_context=turn_context.social_context,
-            observation=user_message,
-            probe_result=None,
-            action_outcome=None,
-            forfeit_decision=False,
-            decision_quality=0.0,
-            reasoning_investment=reasoning_investment,
-            raw_response=raw_text,
-            thinking_text=thinking_text,
-            ground_truth_rule=ground_truth_rule,
-            stake_choice=stake_choice,
-            task_success_factor=task_outcome.success_factor,
-            reward_received=0.0 if died else reward,
-            p_death_applied=p_death_applied,
-            died=died,
-            task_metadata=dict(task_metadata),
-        )
-
-    def _build_forfeit_layer_result(
-        self,
-        *,
-        turn_context: TurnContext,
-        user_message: str,
-        raw_text: str,
-        thinking_text: str | None,
-        reasoning_investment: ReasoningInvestment,
-        ground_truth_rule: str | None,
-        choice: str,
-        reward_offered: float,
-        ri_task: ReasoningInvestment | None = None,
-        ri_forfeit: ReasoningInvestment | None = None,
-        raw_response_task: str | None = None,
-        raw_response_forfeit: str | None = None,
-        thinking_text_task: str | None = None,
-        thinking_text_forfeit: str | None = None,
-        psuccess_self: int | None = None,
-        ri_probe: ReasoningInvestment | None = None,
-        raw_response_probe: str | None = None,
-        thinking_text_probe: str | None = None,
-    ) -> TurnResult:
-        """Build a FORFEIT-branch TurnResult for the forfeit-layer path.
-
-        The Unit 15 split-call kwargs (``ri_task`` / ``ri_forfeit`` /
-        ``raw_response_task`` / ``raw_response_forfeit`` /
-        ``thinking_text_task`` / ``thinking_text_forfeit``) are populated
-        only on the split-call path and default to ``None`` so the Unit
-        14 single-call callsite continues to work without change.
-
-        The Unit 17 probe kwargs (``psuccess_self`` / ``ri_probe`` /
-        ``raw_response_probe`` / ``thinking_text_probe``) follow the same
-        pattern: populated only when ``use_psuccess_probe=True`` on the
-        split-call path; ``None`` otherwise so single-call / Cell 0 /
-        legacy callsites stay unchanged.
-        """
-        return TurnResult(
-            turn_number=turn_context.turn_number,
-            season_id=turn_context.season_id,
-            framing=turn_context.framing,
-            forfeit_condition=turn_context.forfeit_condition,
-            difficulty=turn_context.difficulty,
-            social_context=turn_context.social_context,
-            observation=user_message,
-            probe_result=None,
-            action_outcome=None,
-            forfeit_decision=True,
-            decision_quality=0.0,
-            reasoning_investment=reasoning_investment,
-            raw_response=raw_text,
-            thinking_text=thinking_text,
-            ground_truth_rule=ground_truth_rule,
-            stake_choice=None,
-            task_success_factor=0.0,
-            reward_received=0.0,
-            p_death_applied=0.0,
-            died=False,
-            task_metadata={},
-            reward_offered_this_turn=reward_offered,
-            forfeit_choice=choice,
-            ri_task=ri_task,
-            ri_forfeit=ri_forfeit,
-            raw_response_task=raw_response_task,
-            raw_response_forfeit=raw_response_forfeit,
-            thinking_text_task=thinking_text_task,
-            thinking_text_forfeit=thinking_text_forfeit,
-            psuccess_self=psuccess_self,
-            ri_probe=ri_probe,
-            raw_response_probe=raw_response_probe,
-            thinking_text_probe=thinking_text_probe,
-        )
-
-    def _build_forfeit_layer_continue_result(
-        self,
-        *,
-        turn_context: TurnContext,
-        user_message: str,
-        raw_text: str,
-        thinking_text: str | None,
-        reasoning_investment: ReasoningInvestment,
-        task_outcome: TaskOutcome,
-        reward: float,
-        p_death_applied: float,
-        died: bool,
-        task_metadata: dict,
-        ground_truth_rule: str | None,
-        reward_offered: float,
-        ri_task: ReasoningInvestment | None = None,
-        ri_forfeit: ReasoningInvestment | None = None,
-        raw_response_task: str | None = None,
-        raw_response_forfeit: str | None = None,
-        thinking_text_task: str | None = None,
-        thinking_text_forfeit: str | None = None,
-        psuccess_self: int | None = None,
-        ri_probe: ReasoningInvestment | None = None,
-        raw_response_probe: str | None = None,
-        thinking_text_probe: str | None = None,
-    ) -> TurnResult:
-        """Build a CONTINUE-branch TurnResult for the forfeit-layer path.
-
-        See ``_build_forfeit_layer_result`` for the Unit 15 split-call
-        and Unit 17 probe kwargs contracts.
-        """
-        return TurnResult(
-            turn_number=turn_context.turn_number,
-            season_id=turn_context.season_id,
-            framing=turn_context.framing,
-            forfeit_condition=turn_context.forfeit_condition,
-            difficulty=turn_context.difficulty,
-            social_context=turn_context.social_context,
-            observation=user_message,
-            probe_result=None,
-            action_outcome=None,
-            forfeit_decision=False,
-            decision_quality=0.0,
-            reasoning_investment=reasoning_investment,
-            raw_response=raw_text,
-            thinking_text=thinking_text,
-            ground_truth_rule=ground_truth_rule,
-            stake_choice=None,
-            task_success_factor=task_outcome.success_factor,
-            reward_received=0.0 if died else reward,
-            p_death_applied=p_death_applied,
-            died=died,
-            task_metadata=dict(task_metadata),
-            reward_offered_this_turn=reward_offered,
-            forfeit_choice=CONTINUE_CHOICE,
-            ri_task=ri_task,
-            ri_forfeit=ri_forfeit,
-            raw_response_task=raw_response_task,
-            raw_response_forfeit=raw_response_forfeit,
-            thinking_text_task=thinking_text_task,
-            thinking_text_forfeit=thinking_text_forfeit,
-            psuccess_self=psuccess_self,
-            ri_probe=ri_probe,
-            raw_response_probe=raw_response_probe,
-            thinking_text_probe=thinking_text_probe,
-        )
-
     def _record(self, result: TurnResult) -> TurnResult:
         self._measurement.record_turn(result)
         return result
@@ -1620,98 +1307,6 @@ class UnifiedTurnManager:
                 "cumulative_score": cumulative_after,
             }
         )
-
-    def _format_prior_accuracy_summary(self) -> str | None:
-        """Phase O Unit 17 — one-line prior accuracy line for the probe.
-
-        Returns e.g. ``"Prior accuracy this session: 4 correct out of
-        6 attempts."`` or ``None`` when no prior attempts have been
-        recorded (turn 1). The line is rendered at the top of the
-        Call 1.5 user body so ``psuccess_self`` reflects a session-
-        informed belief rather than confidence in the current-turn
-        rule hypothesis in isolation (Round 1 Addendum II §B.2.1 Issue
-        1).
-
-        Counting policy: only turns with a committed (non-forfeit)
-        task action contribute. ``task_outcome.success_factor == 1.0``
-        counts as correct; any other value counts as an attempt but
-        not a correct one. Forfeit turns have ``task_outcome is None``
-        and are excluded entirely — the probe cares about task
-        capability, not forfeit history.
-        """
-        attempts = 0
-        correct = 0
-        for entry in self._history:
-            # Entries with no task_outcome (forfeit turns) leave
-            # ``action`` as the forfeit sentinel "—" or None. Rather
-            # than thread another flag through _record_history we
-            # infer by the presence of the action label and a
-            # non-empty signal — forfeit entries have
-            # outcome_summary=="forfeit" which is a cheap sentinel.
-            if entry.get("outcome") == "forfeit":
-                continue
-            attempts += 1
-            # History does not carry success_factor directly; the
-            # outcome_summary format is "+<reward>" for success and
-            # "+0" for failure under the equal-EV path. Treat any
-            # non-zero positive reward as a correct attempt.
-            outcome_str = str(entry.get("outcome", ""))
-            if outcome_str.startswith("+") and outcome_str[1:] not in ("0", "0.0"):
-                correct += 1
-        if attempts == 0:
-            return None
-        return (
-            f"Prior accuracy this session: {correct} correct out of "
-            f"{attempts} attempts."
-        )
-
-    def _format_history_block(self) -> str:
-        if self._history_mode == "none" or not self._history:
-            return ""
-        if self._history_mode == "last":
-            entries = self._history[-1:]
-        else:  # cumulative
-            entries = self._history[-self._max_history_turns:]
-        lines = ["=== Previous Turn Results ==="]
-        for entry in entries:
-            # Phase O Unit 14/15: stake menu was removed; under the
-            # Forfeit-Layer path ``stake_choice`` is always None and
-            # printing a literal ``stake=—`` leaks deprecated Phase 3.1
-            # vocabulary into Call 1's task-only prompt (violating Unit 15
-            # §3.3 task-layer purity). The Phase 3.1 stake-menu path still
-            # sets ``stake_choice`` to ``"1"``/``"2"``/``"3"``/``FORFEIT``,
-            # so we keep the fragment for backward compatibility whenever
-            # a real value is present.
-            stake_choice = entry.get("stake_choice")
-            action_label = entry.get("action") or "—"
-            signal_part = (
-                f" \"{entry['signal']}\""
-                if entry.get("signal")
-                else ""
-            )
-            if stake_choice:
-                action_fragment = f"action={action_label} stake={stake_choice}"
-            else:
-                action_fragment = f"action={action_label}"
-            lines.append(
-                f"- Turn {entry['turn']}:{signal_part} "
-                f"{action_fragment} → {entry['outcome']} "
-                f"→ cumulative: {entry['cumulative_score']:.0f}"
-            )
-            # Phase K Fix 2: surface the agent's own rule hypothesis so it
-            # can refine across turns instead of re-deriving from scratch.
-            # We skip placeholder values ("exploring" / "no rule") to keep
-            # the history block compact on null-task and early-exploration
-            # turns.
-            rule = entry.get("rule_hypothesis")
-            if isinstance(rule, str):
-                normalised = rule.strip().lower()
-                if normalised and normalised not in ("exploring", "no rule"):
-                    trimmed = rule.strip().replace("\n", " ")
-                    if len(trimmed) > 200:
-                        trimmed = trimmed[:200] + "..."
-                    lines.append(f"  [Your rule hypothesis] {trimmed}")
-        return "\n".join(lines)
 
     # ------------------------------------------------------------------
     # Read-only diagnostic accessors (used by tests + Phase F engine)

@@ -28,6 +28,11 @@ from squid_game.core.legacy.risk_choice_layer import (
     RiskChoiceLayerConfig,
 )
 from squid_game.core.legacy.survival import SurvivalPressure
+from squid_game.core.turn_conditions import (
+    is_baseline_flagship_framing,
+    is_corruption_framing,
+    is_corruption_terminal_framing,
+)
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.enums import (
     Difficulty,
@@ -1410,7 +1415,7 @@ def test_phase_o_baseline_flagship_routes_to_helpfulness_menu(
 
 
 def test_phase_o_baseline_flagship_detector_mutually_exclusive() -> None:
-    """``_is_baseline_flagship_framing`` and ``_is_corruption_framing``
+    """``is_baseline_flagship_framing`` and ``is_corruption_framing``
     must be mutually exclusive across the Phase O framing family.
 
     Defends the menu vocabulary contract: if both detectors returned
@@ -1435,9 +1440,9 @@ def test_phase_o_baseline_flagship_detector_mutually_exclusive() -> None:
             season_id="detector-test",
         )
 
-    is_baseline = UnifiedTurnManager._is_baseline_flagship_framing
-    is_corruption = UnifiedTurnManager._is_corruption_framing
-    is_terminal = UnifiedTurnManager._is_corruption_terminal_framing
+    is_baseline = is_baseline_flagship_framing
+    is_corruption = is_corruption_framing
+    is_terminal = is_corruption_terminal_framing
 
     bf_ctx = _ctx(Framing.BASELINE_FLAGSHIP)
     fc_ctx = _ctx(Framing.FLAGSHIP_CORRUPTION)
