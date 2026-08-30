@@ -17,6 +17,7 @@ import argparse
 import json
 from pathlib import Path
 
+from scripts.analysis._cli import add_aggregate_root_argument
 from squid_game.analysis.cognitive.ri_call1 import (
     OUTCOMES,
     fit_one,
@@ -27,10 +28,8 @@ from squid_game.analysis.semantic.dataset import load_all
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--root",
-        type=Path,
-        default=Path("outputs/final_results"),
+    add_aggregate_root_argument(
+        parser,
         help="Directory holding the per-model run directories.",
     )
     parser.add_argument(

@@ -24,6 +24,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from scripts.analysis._cli import add_aggregate_root_argument
 from squid_game.analysis.semantic.dataset import load_all
 from squid_game.analysis.semantic.embeddings import (
     DEFAULT_SBERT,
@@ -36,7 +37,7 @@ from squid_game.analysis.semantic.embeddings import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path("outputs/final_results"))
+    add_aggregate_root_argument(parser)
     parser.add_argument("--out", type=Path, default=Path("outputs/reasoning_probe"))
     parser.add_argument(
         "--label", action="append", choices=sorted(LABELS), dest="labels"

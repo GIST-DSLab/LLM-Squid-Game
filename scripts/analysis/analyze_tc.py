@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from scripts.analysis._cli import add_aggregate_root_argument
 from squid_game.analysis.cognitive.ri_task import run_all_tc_indicators
 
 logger = logging.getLogger("analyze_tc")
@@ -73,11 +74,7 @@ def _verbal_tc_rate(run_root: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--threshold", type=float, default=90.0)
-    parser.add_argument(
-        "--root",
-        type=Path,
-        default=Path("outputs/final_results"),
-    )
+    add_aggregate_root_argument(parser)
     args = parser.parse_args()
 
     aggregate: dict = {

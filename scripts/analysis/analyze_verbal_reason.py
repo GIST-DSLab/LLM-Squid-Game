@@ -36,6 +36,8 @@ import json
 import logging
 from pathlib import Path
 
+from scripts.analysis._cli import add_aggregate_root_argument
+
 logger = logging.getLogger("analyze_verbal_reason")
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -117,8 +119,11 @@ def analyze_one_model(label: str, csv_path: Path) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--results-root", default="outputs/final_results",
+    add_aggregate_root_argument(
+        parser,
+        flag="--results-root",
+        type_=None,
+        default="outputs/final_results",
         help="Directory holding the per-model run dirs (default outputs/final_results).",
     )
     args = parser.parse_args()
