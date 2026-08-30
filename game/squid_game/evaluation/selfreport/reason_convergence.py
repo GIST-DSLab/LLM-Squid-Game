@@ -1,7 +1,7 @@
 """Phase O Unit 14 analysis — self-report convergence + thinking-trace keywords.
 
 Operates on the turn-level frame and forfeit-event frame built by
-:mod:`squid_game.analysis.shared.loaders` (``turn_observations`` /
+:mod:`squid_game.evaluation.shared.loaders` (``turn_observations`` /
 ``forfeit_events`` moved there in the 2026-08-30 channel split, P2 Task 4,
 because every channel consumes them) and produces:
 
@@ -10,7 +10,7 @@ because every channel consumes them) and produces:
 2. ``run_all_unit14_hypotheses(seasons)`` — driver that composes the
    flat payload consumed by the analysis markdown renderer. As of
    2026-04-23, H1 estimation is delegated to
-   :func:`squid_game.analysis.behavioral.survival.run_h1_survival_hypothesis`
+   :func:`squid_game.evaluation.behavioral.survival.run_h1_survival_hypothesis`
    (Cox PH + Kaplan-Meier); the legacy logistic H1 has been retired.
 3. ``fit_framing_ri_forfeit_continue`` — §3-revised continue-only
    mixedLM on ``log(ri_forfeit + 1)`` (sub-threshold SD-cognitive
@@ -26,9 +26,9 @@ this repository.
 
 This module was ``forfeit_regression.py`` until the 2026-08-30 channel
 split (P2 Task 4); ``turn_observations`` / ``forfeit_events`` moved to
-:mod:`squid_game.analysis.shared.loaders`, and the H2 cognitive model
+:mod:`squid_game.evaluation.shared.loaders`, and the H2 cognitive model
 (``fit_choice_asymmetric_model``, ``fit_task_spillover_model``) moved to
-:mod:`squid_game.analysis.cognitive.ri_forfeit`.
+:mod:`squid_game.evaluation.cognitive.ri_forfeit`.
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ from typing import Sequence
 
 import pandas as pd
 
-from squid_game.analysis.behavioral.survival import run_h1_survival_hypothesis
-from squid_game.analysis.shared.loaders import (
+from squid_game.evaluation.behavioral.survival import run_h1_survival_hypothesis
+from squid_game.evaluation.shared.loaders import (
     _BASELINE_FRAMINGS,
     _CORRUPTION_FRAMINGS_WITH_TERMINAL,
     _MIN_TURNS_FOR_LOGIT,
@@ -142,7 +142,7 @@ def run_all_unit14_hypotheses(
         - ``turn_df``: per-turn DataFrame (may be empty).
         - ``events_df``: per-forfeit-event DataFrame (may be empty).
         - ``survival``: H1 Cox PH + KM payload from
-          :func:`squid_game.analysis.behavioral.survival.run_h1_survival_hypothesis`.
+          :func:`squid_game.evaluation.behavioral.survival.run_h1_survival_hypothesis`.
           Contains ``{"cox": CoxSurvivalResult | None, "km": DataFrame,
           "survival_frame": DataFrame, "regime": str}``.
         - ``reason_dist``: P(reason|framing) DataFrame (H_conv_*).

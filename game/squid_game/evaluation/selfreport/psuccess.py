@@ -7,19 +7,19 @@ survival:
 
 - ``compute_floor_bound`` / ``compute_ev_delta_s`` — the two
   ``psuccess_self``-derived columns consumed by
-  :func:`squid_game.analysis.behavioral.regime.annotate_regime`.
+  :func:`squid_game.evaluation.behavioral.regime.annotate_regime`.
 - ``stratified_reason_distribution`` — per-regime reason-digit
   conditional distribution, built on top of
-  :func:`squid_game.analysis.selfreport.reason_convergence.reason_distribution`.
+  :func:`squid_game.evaluation.selfreport.reason_convergence.reason_distribution`.
 
 This module was ``regime_stratification.py`` until the 2026-08-30
 channel split (P2 Task 5). Fix round 1 (same day) relocated
 ``compute_floor_bound`` / ``compute_ev_delta_s`` here from
-:func:`squid_game.analysis.behavioral.regime.annotate_regime`, which had
+:func:`squid_game.evaluation.behavioral.regime.annotate_regime`, which had
 kept reading ``psuccess_self`` directly inside the behavioural module —
 the cross-channel mixing this phase exists to eliminate. ``cap_bound``
 and the ``_classify`` regime-labelling logic stayed in
-:mod:`squid_game.analysis.behavioral.regime`, since they read only
+:mod:`squid_game.evaluation.behavioral.regime`, since they read only
 ``reward_offered_this_turn`` (an observed, not self-reported, value)
 and the already-computed ``cap_bound`` / ``ev_delta_s`` columns.
 
@@ -32,7 +32,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis.selfreport.reason_convergence import reason_distribution
+from squid_game.evaluation.selfreport.reason_convergence import reason_distribution
 
 # ---------------------------------------------------------------------------
 # Canonical Forfeit-Layer parameters (spec §4.2 / appendix_C.2).

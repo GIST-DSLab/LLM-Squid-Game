@@ -2,7 +2,7 @@
 
 The embedding pipeline, the label definitions, the session-grouped CV
 probe fit, the permutation-null test, and the report renderer live in
-``squid_game.analysis.semantic.embeddings`` -- this script only parses
+``squid_game.evaluation.semantic.embeddings`` -- this script only parses
 arguments, loads the turn-level frame, builds the embedding bank once,
 loops over the requested (model-grouping, label, channel) cells, and
 writes the JSON / Markdown report to disk.
@@ -25,8 +25,8 @@ import numpy as np
 import pandas as pd
 
 from scripts.analysis._cli import add_aggregate_root_argument
-from squid_game.analysis.semantic.dataset import load_all
-from squid_game.analysis.semantic.embeddings import (
+from squid_game.evaluation.semantic.dataset import load_all
+from squid_game.evaluation.semantic.embeddings import (
     DEFAULT_SBERT,
     LABELS,
     build_embedding_bank,

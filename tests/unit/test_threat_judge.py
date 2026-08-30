@@ -1,5 +1,5 @@
 # tests/unit/test_threat_judge.py
-from squid_game.analysis.semantic.threat_judge import (
+from squid_game.evaluation.semantic.threat_judge import (
     ThreatJudge, parse_a1, parse_a2, A1Verdict, A2Verdict,
     THREAT_JUDGE_PROMPT_VERSION, A2_ROLE_DEFINITIONS,
 )

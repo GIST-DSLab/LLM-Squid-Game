@@ -474,7 +474,7 @@ def test_no_cap_avg_session_score_returns_none_without_analysis_extra(monkeypatc
     real_import = builtins.__import__
 
     def _blocked(name, *args, **kwargs):
-        if name.startswith("squid_game.analysis"):
+        if name.startswith("squid_game.evaluation"):
             raise ImportError("analysis extra unavailable")
         return real_import(name, *args, **kwargs)
 
@@ -488,7 +488,7 @@ def test_no_cap_avg_session_score_returns_none_without_analysis_extra(monkeypatc
 # These build fully-valid ``SeasonResult``/``TurnResult`` payloads (unlike
 # the sparse ``_season``/``_turn`` helpers above, which feed the *loose*
 # json.loads-based seed_sessions path) because ``_no_cap_avg_session_score``
-# reads season_results.jsonl through ``squid_game.analysis.load_seasons``,
+# reads season_results.jsonl through ``squid_game.evaluation.load_seasons``,
 # which strictly validates via pydantic.
 # ---------------------------------------------------------------------------
 

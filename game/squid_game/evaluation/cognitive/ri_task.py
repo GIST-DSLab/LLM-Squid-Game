@@ -13,7 +13,7 @@ Implements the TC indicator pipeline (added 2026-04-25):
     rule-mastery covariate, sister of §1 Cox HR(FC/BF).
 
 All functions consume the per-turn DataFrame produced by
-:func:`squid_game.analysis.shared.loaders.turn_observations` (or the
+:func:`squid_game.evaluation.shared.loaders.turn_observations` (or the
 on-disk ``phase3_analysis/unit14_turn_observations.csv``). Functions
 degrade gracefully when ``statsmodels``/``lifelines`` are missing or
 the sample is too small.
@@ -124,7 +124,7 @@ class TCCoxResult:
         ``β_M > 0`` AND ``p_M < 0.05`` AND verbal triangulation
         (P(REASON=2 | forfeit) elevated, see §2.4 V4 / §6.5 V4).
 
-    Sister of :class:`squid_game.analysis.behavioral.survival.CoxSurvivalResult`. Same
+    Sister of :class:`squid_game.evaluation.behavioral.survival.CoxSurvivalResult`. Same
     ``framing_is_FC`` / ``score_prev`` covariates so β_FC / β_S are
     directly comparable to §1.
     """
@@ -628,7 +628,7 @@ def fit_tc_cox_rule_mastery(
 
     where ``M(t-1) = 1{rule_match_score[t-1] >= threshold}``.
 
-    Sister of :func:`squid_game.analysis.behavioral.survival.fit_cox_forfeit_survival` — same
+    Sister of :func:`squid_game.evaluation.behavioral.survival.fit_cox_forfeit_survival` — same
     framing / score covariates so β_F / β_S remain interpretable
     relative to §1. The ``M`` covariate is the **objective**
     rule-mastery indicator (subjective ``correct[t-1]`` is in §6 main).

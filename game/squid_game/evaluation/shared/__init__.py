@@ -16,7 +16,7 @@ import from a channel package (``cognitive/``, ``selfreport/``,
 ``discovery_detection`` and ``manipulation_check`` all import nothing
 from any of the four. ``mtmm`` is the sole exception: it imports
 ``baseline_persistence_behavioral`` from
-``squid_game.analysis.behavioral.baseline_persistence``. That is by
+``squid_game.evaluation.behavioral.baseline_persistence``. That is by
 design, not a crack in the layering -- design spec Sec 3.2 puts MTMM
 above the channels precisely so its triangulation structure (it calls
 each channel's estimator rather than re-implementing them) is visible

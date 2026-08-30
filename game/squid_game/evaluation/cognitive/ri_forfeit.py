@@ -1,7 +1,7 @@
 """Phase O Unit 15 analysis — choice-asymmetric H2 cognitive model.
 
 Operates on the turn-level frame built by
-:func:`squid_game.analysis.shared.loaders.turn_observations` and fits the
+:func:`squid_game.evaluation.shared.loaders.turn_observations` and fits the
 Split-Call H2 mixed-effects models on the ``ri_task`` / ``ri_forfeit``
 thinking-token channels:
 
@@ -24,10 +24,10 @@ originating plan document is not present in this repository.
 
 This module was ``forfeit_regression.py`` until the 2026-08-30 channel
 split (P2 Task 4): ``turn_observations`` / ``forfeit_events`` moved to
-:mod:`squid_game.analysis.shared.loaders` (consumed by every channel),
+:mod:`squid_game.evaluation.shared.loaders` (consumed by every channel),
 and the self-report REASON-digit convergence functions (including
 ``fit_framing_ri_forfeit_continue``) moved to
-:mod:`squid_game.analysis.selfreport.reason_convergence`.
+:mod:`squid_game.evaluation.selfreport.reason_convergence`.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from typing import Sequence
 
 import pandas as pd
 
-from squid_game.analysis.shared.loaders import _MIN_TURNS_FOR_LOGIT, turn_observations
+from squid_game.evaluation.shared.loaders import _MIN_TURNS_FOR_LOGIT, turn_observations
 from squid_game.models.enums import ForfeitCondition
 from squid_game.models.results import SeasonResult
 

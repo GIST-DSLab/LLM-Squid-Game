@@ -298,7 +298,7 @@ def _no_cap_avg_session_score(root: Path, dir_name: str) -> float | None:
     caller then stores None and the board renders '—'.
     """
     try:
-        from squid_game.analysis import (
+        from squid_game.evaluation import (
             annotate_regime,
             load_seasons,
             turn_observations,

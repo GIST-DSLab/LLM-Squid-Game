@@ -15,7 +15,7 @@ from scipy import stats
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.results import SeasonResult
 
-from squid_game.analysis.shared.metrics import (
+from squid_game.evaluation.shared.metrics import (
     ComponentEstimate,
     compute_delta_fr,
     compute_delta_ri,
@@ -26,7 +26,7 @@ from squid_game.analysis.shared.metrics import (
     _probe_score,
     _turn_reward,
 )
-from squid_game.analysis.behavioral.baseline_persistence import (
+from squid_game.evaluation.behavioral.baseline_persistence import (
     baseline_persistence_behavioral,
 )
 
@@ -35,7 +35,7 @@ from squid_game.analysis.behavioral.baseline_persistence import (
 # Phase-aware framing resolution
 # ---------------------------------------------------------------------------
 #
-# ``_baseline_framing_for`` moved to ``squid_game.analysis.shared.metrics``
+# ``_baseline_framing_for`` moved to ``squid_game.evaluation.shared.metrics``
 # on 2026-08-30 (P2 Task 7) -- both this module and
 # ``behavioral.baseline_persistence`` need it, and this module already
 # imports ``baseline_persistence_behavioral`` from that module, so a local
@@ -64,7 +64,7 @@ def _threat_framing_for(seasons: list[SeasonResult]) -> Framing:
 # Data container
 # ---------------------------------------------------------------------------
 #
-# ``ComponentEstimate`` moved to ``squid_game.analysis.shared.metrics`` on
+# ``ComponentEstimate`` moved to ``squid_game.evaluation.shared.metrics`` on
 # 2026-08-30 (P2 Task 7), for the same circular-import reason as
 # ``_baseline_framing_for`` above -- imported in the block at the top of
 # this file.
@@ -74,7 +74,7 @@ def _threat_framing_for(seasons: list[SeasonResult]) -> Framing:
 # Helpers
 # ---------------------------------------------------------------------------
 #
-# ``_bootstrap_mean_ci`` moved to ``squid_game.analysis.shared.metrics`` on
+# ``_bootstrap_mean_ci`` moved to ``squid_game.evaluation.shared.metrics`` on
 # 2026-08-30 (P2 Task 7), for the same circular-import reason as
 # ``_baseline_framing_for`` above -- imported in the block at the top of
 # this file. ``_bootstrap_diff_ci`` below is unaffected: it is used only
@@ -287,7 +287,7 @@ def _baseline_persistence_cognitive(
     Phase O design rationale (v4 §6.7 Option C, 2026-04-21): this is
     half of the two-factor BP mapping. The behavioural companion —
     non-forfeit rate in Cell 5 — is computed by
-    :func:`squid_game.analysis.behavioral.baseline_persistence.baseline_persistence_behavioral`.
+    :func:`squid_game.evaluation.behavioral.baseline_persistence.baseline_persistence_behavioral`.
     The two components are reported separately (no composite scalar)
     because one is a token count and the other a probability; forcing
     an equivalence weight introduces arbitrariness that a simple

@@ -8,9 +8,9 @@ triangulator that sits above all four channels.
 
 It was ``motivation._baseline_persistence_behavioral`` until the
 2026-08-30 channel split (P2 Task 7), when ``motivation.py`` moved to
-:mod:`squid_game.analysis.shared.mtmm`. The leading underscore was
+:mod:`squid_game.evaluation.shared.mtmm`. The leading underscore was
 dropped on the move -- the function is now called from outside its
-defining module (:mod:`squid_game.analysis.shared.mtmm`), so the
+defining module (:mod:`squid_game.evaluation.shared.mtmm`), so the
 private-name convention was no longer accurate.
 
 The cognitive twin, ``_baseline_persistence_cognitive``, stays in
@@ -20,7 +20,7 @@ mirroring the move for the cognitive one would be a spec change, not a
 refactor this task is scoped to make.
 
 ``ComponentEstimate``, ``_bootstrap_mean_ci`` and ``_baseline_framing_for``
-now live in :mod:`squid_game.analysis.shared.metrics` rather than in
+now live in :mod:`squid_game.evaluation.shared.metrics` rather than in
 this module or in ``shared.mtmm``: both this module and ``shared.mtmm``
 need them, and ``shared.mtmm`` already imports
 ``baseline_persistence_behavioral`` from here, so defining them in
@@ -36,7 +36,7 @@ import numpy as np
 from squid_game.models.enums import ForfeitCondition
 from squid_game.models.results import SeasonResult
 
-from squid_game.analysis.shared.metrics import (
+from squid_game.evaluation.shared.metrics import (
     ComponentEstimate,
     _baseline_framing_for,
     _bootstrap_mean_ci,

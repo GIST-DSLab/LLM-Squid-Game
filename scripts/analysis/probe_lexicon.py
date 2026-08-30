@@ -1,7 +1,7 @@
 """CLI for eyeballing the frozen threat lexicon and the leakage mask.
 
 The lexicon patterns, the mask-set definitions, and the masking function
-live in ``squid_game.analysis.semantic.lexicon`` -- this script only reads
+live in ``squid_game.evaluation.semantic.lexicon`` -- this script only reads
 one piece of text (``--text``, ``--file``, or stdin), runs the frozen
 threat-mention check against it, and prints the raw text next to its
 masked form for the requested mask sets.
@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from squid_game.analysis.semantic.lexicon import (
+from squid_game.evaluation.semantic.lexicon import (
     MASK_SETS,
     build_masker,
     code_threat_mention,

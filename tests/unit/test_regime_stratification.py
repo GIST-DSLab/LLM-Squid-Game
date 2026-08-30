@@ -18,7 +18,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis.behavioral.regime import (
+from squid_game.evaluation.behavioral.regime import (
     CAP_EPSILON,
     REWARD_CEILING_DEFAULT,
     annotate_events_regime,
@@ -26,7 +26,7 @@ from squid_game.analysis.behavioral.regime import (
     filter_regime,
     stratified_counts,
 )
-from squid_game.analysis.selfreport.psuccess import (
+from squid_game.evaluation.selfreport.psuccess import (
     P_DEATH_DEFAULT,
     PSUCCESS_FLOOR_DEFAULT,
     compute_ev_delta_s,

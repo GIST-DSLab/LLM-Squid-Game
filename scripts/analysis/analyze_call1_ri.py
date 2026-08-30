@@ -1,7 +1,7 @@
 """CLI for the Call-1 reasoning-investment regression.
 
 The model and its report (design, formula, fitting, contrasts, Markdown
-rendering) live in ``squid_game.analysis.cognitive.ri_call1`` — this
+rendering) live in ``squid_game.evaluation.cognitive.ri_call1`` — this
 script only loads the turn-level frame, runs the fit per model and
 pooled, and writes the CSV / JSON / Markdown report to disk.
 
@@ -18,12 +18,12 @@ import json
 from pathlib import Path
 
 from scripts.analysis._cli import add_aggregate_root_argument
-from squid_game.analysis.cognitive.ri_call1 import (
+from squid_game.evaluation.cognitive.ri_call1 import (
     OUTCOMES,
     fit_one,
     render_report,
 )
-from squid_game.analysis.semantic.dataset import load_all
+from squid_game.evaluation.semantic.dataset import load_all
 
 
 def main() -> None:

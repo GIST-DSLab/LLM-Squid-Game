@@ -27,11 +27,11 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from squid_game.analysis.shared.loaders import (
+from squid_game.evaluation.shared.loaders import (
     forfeit_events,
     turn_observations,
 )
-from squid_game.analysis.cognitive.ri_forfeit import (
+from squid_game.evaluation.cognitive.ri_forfeit import (
     ChoiceAsymmetricResult,
     TaskSpilloverResult,
     fit_choice_asymmetric_model,
@@ -39,7 +39,7 @@ from squid_game.analysis.cognitive.ri_forfeit import (
     run_all_unit15_hypotheses,
     unit15_descriptive_summary,
 )
-from squid_game.analysis.selfreport.reason_convergence import (
+from squid_game.evaluation.selfreport.reason_convergence import (
     THINKING_KEYWORDS,
     reason_distribution,
     run_all_unit14_hypotheses,

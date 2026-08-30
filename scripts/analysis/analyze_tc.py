@@ -20,7 +20,7 @@ from pathlib import Path
 import pandas as pd
 
 from scripts.analysis._cli import add_aggregate_root_argument
-from squid_game.analysis.cognitive.ri_task import run_all_tc_indicators
+from squid_game.evaluation.cognitive.ri_task import run_all_tc_indicators
 
 logger = logging.getLogger("analyze_tc")
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")

@@ -115,7 +115,7 @@ set above. ``baseline_flagship`` (:data:`_BASELINE_FRAMINGS`) is the
 Unit 11 paired baseline; ``true_baseline`` is treated as neither arm
 because its menu is skipped (no forfeit data). Consumed by
 :func:`turn_observations` (this module) and by
-:func:`squid_game.analysis.selfreport.reason_convergence.fit_framing_ri_forfeit_continue`.
+:func:`squid_game.evaluation.selfreport.reason_convergence.fit_framing_ri_forfeit_continue`.
 """
 
 

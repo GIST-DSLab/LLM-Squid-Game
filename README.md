@@ -111,7 +111,7 @@ game/squid_game/
   agents/      # vanilla, memory, tom, tuned
   providers/   # cloud + local inference adapters
   prompts/     # framings, forfeit_layer, tasks, probes (Jinja2 templates)
-  analysis/    # Cox PH, mixedLM, KM survival, MTMM motivation decomposition
+  evaluation/  # Cox PH, mixedLM, KM survival, MTMM motivation decomposition
 configs/experiment/   # 5 YAML configs (canonical family: phase3_split_forfeit_*)
 scripts/              # run / resume / analyze / plot / orchestrate
 web/squid_arena/      # FastAPI Web Arena backend (api.py) — the live-demo API

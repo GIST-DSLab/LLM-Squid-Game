@@ -1,7 +1,7 @@
 """Phase O Unit 13 session-level hypothesis tests (H1–H6).
 
 Operates on the raw :class:`SeasonResult` list produced by
-:func:`squid_game.analysis.shared.loaders.load_seasons` and produces:
+:func:`squid_game.evaluation.shared.loaders.load_seasons` and produces:
 
 1. ``session_features(seasons)`` — a per-session feature DataFrame
    (one row per session) with the six H1–H6 input variables:
@@ -32,8 +32,8 @@ from typing import Iterable, Sequence
 import pandas as pd
 from scipy import stats
 
-from squid_game.analysis.shared.discovery_detection import compute_session_features
-from squid_game.analysis.shared.loaders import _CORRUPTION_FRAMINGS, infer_cell_id
+from squid_game.evaluation.shared.discovery_detection import compute_session_features
+from squid_game.evaluation.shared.loaders import _CORRUPTION_FRAMINGS, infer_cell_id
 from squid_game.models.enums import Framing
 from squid_game.models.results import SeasonResult
 

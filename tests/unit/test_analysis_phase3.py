@@ -21,8 +21,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from squid_game.analysis.shared.loaders import to_long_dataframe
-from squid_game.analysis.shared.manipulation_check import (
+from squid_game.evaluation.shared.loaders import to_long_dataframe
+from squid_game.evaluation.shared.manipulation_check import (
     check_accuracy_independence,
     check_ri_exceeds_baseline,
 )
@@ -78,13 +78,13 @@ class TestLegacyCompatOnV3:
     """Legacy metrics/motivation/export modules must not crash on v3 data."""
 
     def test_metrics_condition_summary_runs(self, phase3_seasons):
-        from squid_game.analysis.shared.metrics import condition_summary
+        from squid_game.evaluation.shared.metrics import condition_summary
 
         df = condition_summary(phase3_seasons)
         assert len(df) > 0
 
     def test_export_to_csv_runs(self, phase3_seasons, tmp_path):
-        from squid_game.analysis.shared.export import export_to_csv
+        from squid_game.evaluation.shared.export import export_to_csv
 
         path = tmp_path / "out.csv"
         export_to_csv(phase3_seasons, str(path))
@@ -93,7 +93,7 @@ class TestLegacyCompatOnV3:
         assert "reward_received" in df.columns
 
     def test_decompose_motivation_runs(self, phase3_seasons):
-        from squid_game.analysis.shared.mtmm import decompose_motivation
+        from squid_game.evaluation.shared.mtmm import decompose_motivation
 
         result = decompose_motivation(phase3_seasons, seed=42)
         assert set(result.keys()) == {
@@ -105,7 +105,7 @@ class TestLegacyCompatOnV3:
 
     def test_bp_split_into_cognitive_and_behavioral(self, phase3_seasons):
         """v4 §6.7 Option C: BP returns two sub-estimators, not a scalar."""
-        from squid_game.analysis.shared.mtmm import decompose_motivation
+        from squid_game.evaluation.shared.mtmm import decompose_motivation
 
         result = decompose_motivation(phase3_seasons, seed=42)
         bp = result["baseline_persistence"]
@@ -122,7 +122,7 @@ class TestLegacyCompatOnV3:
 
     def test_bp_behavioral_in_unit_interval(self, phase3_seasons):
         """bp_behavioral is a probability (1 - forfeit_rate) ∈ [0, 1]."""
-        from squid_game.analysis.shared.mtmm import decompose_motivation
+        from squid_game.evaluation.shared.mtmm import decompose_motivation
 
         result = decompose_motivation(phase3_seasons, seed=42)
         bp_beh = result["baseline_persistence"]["bp_behavioral"]

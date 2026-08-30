@@ -1,6 +1,6 @@
 # scripts/analysis/
 
-Thin CLIs over `squid_game.analysis`. The statistics live in the package;
+Thin CLIs over `squid_game.evaluation`. The statistics live in the package;
 these files own argparse, output paths, and report emission only.
 
 `analyze_phase3.py` is the canonical pipeline — the golden-snapshot harness

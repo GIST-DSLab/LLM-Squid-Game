@@ -44,30 +44,30 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from squid_game.analysis.shared.loaders import (  # noqa: E402
+from squid_game.evaluation.shared.loaders import (  # noqa: E402
     discover_season_jsonl,
     load_seasons,
     to_long_dataframe,
     to_season_summary_dataframe,
 )
-from squid_game.analysis.selfreport.reason_convergence import (  # noqa: E402
+from squid_game.evaluation.selfreport.reason_convergence import (  # noqa: E402
     run_all_unit14_hypotheses,
 )
-from squid_game.analysis.cognitive.ri_forfeit import (  # noqa: E402
+from squid_game.evaluation.cognitive.ri_forfeit import (  # noqa: E402
     run_all_unit15_hypotheses,
 )
-from squid_game.analysis.shared.manipulation_check import (  # noqa: E402
+from squid_game.evaluation.shared.manipulation_check import (  # noqa: E402
     check_discovery_timing_independence,
     check_probe_independence,
     check_probe_turn_matched_independence,
     check_accuracy_independence,
     check_ri_exceeds_baseline,
 )
-from squid_game.analysis.shared.mtmm import decompose_motivation  # noqa: E402
-from squid_game.analysis.behavioral.session_tests import (  # noqa: E402
+from squid_game.evaluation.shared.mtmm import decompose_motivation  # noqa: E402
+from squid_game.evaluation.behavioral.session_tests import (  # noqa: E402
     run_all_unit13_hypotheses,
 )
-from squid_game.analysis.behavioral.regime import (  # noqa: E402
+from squid_game.evaluation.behavioral.regime import (  # noqa: E402
     run_stratified_unit14,
 )
 from squid_game.models.enums import Framing, ForfeitCondition  # noqa: E402

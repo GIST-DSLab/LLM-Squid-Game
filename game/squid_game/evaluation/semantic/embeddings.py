@@ -35,7 +35,7 @@ preserves the within-session label structure that grouped CV exploits.
 The reported p-value is the fraction of permuted runs reaching the
 observed AUROC.
 
-*Leakage masking.*  See ``squid_game.analysis.semantic.lexicon``.  Every
+*Leakage masking.*  See ``squid_game.evaluation.semantic.lexicon``.  Every
 probe is fit raw and masked.
 
 The model, its embedding pipeline, and its report rendering live here;
@@ -52,7 +52,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis.semantic.lexicon import build_masker, mask_text
+from squid_game.evaluation.semantic.lexicon import build_masker, mask_text
 
 DEFAULT_SBERT = "sentence-transformers/all-MiniLM-L6-v2"
 SCALAR_FEATURES = (

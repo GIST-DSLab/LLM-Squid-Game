@@ -49,8 +49,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis import discover_season_jsonl, load_seasons
-from squid_game.analysis.shared.loaders import turn_observations
+from squid_game.evaluation import discover_season_jsonl, load_seasons
+from squid_game.evaluation.shared.loaders import turn_observations
 
 logger = logging.getLogger("analyze_cognitive_load_mediation")
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")

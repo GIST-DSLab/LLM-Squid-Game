@@ -67,7 +67,7 @@ def preprocess(csv_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     ].copy()
 
     # 4-step chain — mirrors
-    # game/squid_game/analysis/selfreport/reason_convergence.py
+    # game/squid_game/evaluation/selfreport/reason_convergence.py
     # :fit_framing_ri_forfeit_continue exactly (single source of truth at
     # §3.2 + §3.6 (I1)).
     sub = cells_13[

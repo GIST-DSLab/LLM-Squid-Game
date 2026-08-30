@@ -43,9 +43,9 @@ import numpy as np
 import pandas as pd
 
 from scripts.plots._style import apply_house_style, save_figure
-from squid_game.analysis import discover_season_jsonl, load_seasons
-from squid_game.analysis.shared.loaders import turn_observations
-from squid_game.analysis.behavioral.regime import annotate_regime
+from squid_game.evaluation import discover_season_jsonl, load_seasons
+from squid_game.evaluation.shared.loaders import turn_observations
+from squid_game.evaluation.behavioral.regime import annotate_regime
 from squid_game.models.enums import Framing
 
 logger = logging.getLogger("plot_ri_trajectories")

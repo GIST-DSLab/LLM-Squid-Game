@@ -26,7 +26,7 @@ Contract:
 - ``annotate_regime`` adds four columns to a turn-level DataFrame
   (``cap_bound``, ``floor_bound``, ``ev_delta_s``, ``regime``) without
   modifying any existing columns. ``floor_bound`` and ``ev_delta_s``
-  are computed by :mod:`squid_game.analysis.selfreport.psuccess`
+  are computed by :mod:`squid_game.evaluation.selfreport.psuccess`
   (they read the agent's self-reported ``psuccess_self``); only
   ``cap_bound`` (reads the observed ``reward_offered_this_turn``) and
   the ``regime`` classification are computed in this module.
@@ -35,7 +35,7 @@ Contract:
 - ``filter_regime`` returns a view of a turn-level DataFrame restricted
   to one regime.
 - ``stratified_reason_distribution`` (in
-  :mod:`squid_game.analysis.selfreport.psuccess`) cross-tabulates
+  :mod:`squid_game.evaluation.selfreport.psuccess`) cross-tabulates
   reason digits by regime × framing.
 - ``run_stratified_unit14`` wraps :func:`fit_cox_forfeit_survival` on
   each regime subset (2026-04-23: logistic H1 retired, Cox PH primary).
@@ -48,7 +48,7 @@ insufficient power in a regime subset → ``None`` fit with a note.
 This module was ``regime_stratification.py`` until the 2026-08-30
 channel split (P2 Task 5): the self-report REASON-digit stratifier
 (``stratified_reason_distribution``) moved to
-:mod:`squid_game.analysis.selfreport.psuccess`, since it cross-tabs
+:mod:`squid_game.evaluation.selfreport.psuccess`, since it cross-tabs
 the agent's self-reported REASON digit rather than reading choice or
 survival data. Fix round 1 (same day) moved ``compute_floor_bound`` /
 ``compute_ev_delta_s`` there too, along with the
@@ -71,18 +71,18 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis.shared.loaders import (
+from squid_game.evaluation.shared.loaders import (
     forfeit_events,
     turn_observations,
 )
-from squid_game.analysis.selfreport.psuccess import (
+from squid_game.evaluation.selfreport.psuccess import (
     P_DEATH_DEFAULT,
     PSUCCESS_FLOOR_DEFAULT,
     compute_ev_delta_s,
     compute_floor_bound,
     stratified_reason_distribution,
 )
-from squid_game.analysis.behavioral.survival import (
+from squid_game.evaluation.behavioral.survival import (
     CoxSurvivalResult,
     fit_cox_forfeit_survival,
 )
@@ -176,7 +176,7 @@ def annotate_regime(
 
     # floor_bound / ev_delta_s: both read the agent's self-reported
     # psuccess_self, so their computation lives in
-    # squid_game.analysis.selfreport.psuccess (P2 Task 5 fix round 1).
+    # squid_game.evaluation.selfreport.psuccess (P2 Task 5 fix round 1).
     out["floor_bound"] = compute_floor_bound(
         out, psuccess_floor=psuccess_floor, psuccess_col=psuccess_col
     )

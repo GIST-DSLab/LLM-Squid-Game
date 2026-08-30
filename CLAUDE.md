@@ -192,7 +192,7 @@ Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`ba
 ## Directory Structure
 
 ```
-game/squid_game/      # game tier — engine, tasks, agents, providers, prompts, analysis
+game/squid_game/      # game tier — engine, tasks, agents, providers, prompts, evaluation
   core/           # engine, unified_turn (Split-Call), forfeit_layer, framing
                   # legacy/  — risk_choice_layer.py, turn.py, social.py, survival.py
                   #            (replay-only for archived configs; see "Legacy (archived)" below)
@@ -202,7 +202,8 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
   providers/      # openai, anthropic, gemini, ollama_cloud, mlx_server, cuda_server, mlx, ollama, local
   prompts/        # framings/ (+ framings/legacy/, 6 archived), forfeit_layer/, tasks/,
                   # user_message/, probes/, social/
-  analysis/       # measurement-channel decomposition (P2) — shared/ (loaders, metrics,
+  evaluation/     # measurement-channel decomposition (P2; renamed from analysis/ 2026-08-31)
+                  # — shared/ (loaders, metrics,
                   # export, mtmm, discovery_detection, manipulation_check),
                   # cognitive/ (ri_task, ri_forfeit, ri_call1),
                   # selfreport/ (psuccess, reason_convergence), behavioral/ (regime,
@@ -365,7 +366,7 @@ by all turns, so it is downward-biased there and the Wilson CI excludes sampling
 
 ### Public API
 
-`from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` (84 symbols).
+`from squid_game.evaluation import ...` — see `game/squid_game/evaluation/__init__.py` (84 symbols).
 
 - **H1 is a Cox PH, not a logit.** `fit_forfeit_logit` / `ForfeitLogitResult` were **deleted**
   (2026-04-23); `behavioral.survival.fit_cox_forfeit_survival` (time-varying

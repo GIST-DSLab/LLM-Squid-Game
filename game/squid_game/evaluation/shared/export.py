@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 
 from squid_game.models.results import SeasonResult
-from squid_game.analysis.shared.metrics import condition_summary, _probe_score, _turn_reward
+from squid_game.evaluation.shared.metrics import condition_summary, _probe_score, _turn_reward
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +95,7 @@ def _flatten_to_rows(
     column preserves the legacy logistic-schedule value for backward
     compatibility; v3 runs should read ``p_death_applied`` instead.
     """
-    from squid_game.analysis.shared.loaders import infer_cell_id
+    from squid_game.evaluation.shared.loaders import infer_cell_id
 
     rows: list[dict] = []
     for season in seasons:

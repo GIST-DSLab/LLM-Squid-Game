@@ -64,7 +64,7 @@ from typing import Sequence
 
 import pandas as pd
 
-from squid_game.analysis.shared.loaders import turn_observations
+from squid_game.evaluation.shared.loaders import turn_observations
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.results import SeasonResult
 
@@ -558,7 +558,7 @@ def run_h1_survival_hypothesis(
     # Delayed import — behavioral.regime imports fit_cox_forfeit_survival
     # from this module, so we can only resolve its annotate_regime at call
     # time to avoid a circular import at module load.
-    from squid_game.analysis.behavioral.regime import annotate_regime
+    from squid_game.evaluation.behavioral.regime import annotate_regime
 
     turn_df = turn_observations(seasons)
     if regime is not None and "regime" not in turn_df.columns:

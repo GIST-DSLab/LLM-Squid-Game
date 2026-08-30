@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from squid_game.analysis.semantic.threat_registration import run_analysis
-from squid_game.analysis.semantic.threat_judge import A1Verdict, A2Verdict
+from squid_game.evaluation.semantic.threat_registration import run_analysis
+from squid_game.evaluation.semantic.threat_judge import A1Verdict, A2Verdict
 
 
 class _StubJudge:

@@ -1,4 +1,8 @@
-"""Analysis pipeline for the LLM Squid Game benchmark.
+"""Evaluation pipeline for the LLM Squid Game benchmark.
+
+Renamed from ``squid_game.analysis`` (2026-08-31): the package holds the
+measurement channels that score a completed run, not the game that
+produces it. ``scripts/analysis/`` remains the CLI layer on top.
 
 Exposes Phase 1/2 legacy helpers (forfeit rate, RI summary, 4-component
 motivation decomposition, JSONL/CSV export) plus the current Phase O
@@ -29,7 +33,7 @@ CONTINUE/FORFEIT decision made inapplicable.
 
 Usage::
 
-    from squid_game.analysis import (
+    from squid_game.evaluation import (
         # Phase O Unit 15 primary (H2 choice-asymmetric)
         fit_choice_asymmetric_model,
         # Phase O Unit 14 — H1 Cox PH survival primary (2026-04-23)
@@ -49,7 +53,7 @@ Usage::
 # --- shared/ (cross-channel: metrics, export, loaders, checks -- all
 # channel-independent -- plus MTMM, the one shared/ module that is not:
 # it imports behavioral.baseline_persistence by design, see shared/__init__.py) ---
-from squid_game.analysis.shared.metrics import (
+from squid_game.evaluation.shared.metrics import (
     compute_delta_fr,
     compute_delta_ri,
     compute_forfeit_rate,
@@ -57,8 +61,8 @@ from squid_game.analysis.shared.metrics import (
     compute_mean_task_score,
     condition_summary,
 )
-from squid_game.analysis.shared.mtmm import decompose_motivation
-from squid_game.analysis.shared.export import (
+from squid_game.evaluation.shared.mtmm import decompose_motivation
+from squid_game.evaluation.shared.export import (
     export_summary,
     export_to_csv,
     export_to_jsonl,
@@ -66,7 +70,7 @@ from squid_game.analysis.shared.export import (
 )
 
 # Phase 3 loaders (shared with Unit 13/14/15).
-from squid_game.analysis.shared.loaders import (
+from squid_game.evaluation.shared.loaders import (
     CELL_ID_MAP,
     discover_season_jsonl,
     forfeit_events,
@@ -78,7 +82,7 @@ from squid_game.analysis.shared.loaders import (
     to_long_dataframe,
     turn_observations,
 )
-from squid_game.analysis.shared.manipulation_check import (
+from squid_game.evaluation.shared.manipulation_check import (
     TurnMatchedResult,
     check_accuracy_independence,
     check_discovery_timing_independence,
@@ -86,7 +90,7 @@ from squid_game.analysis.shared.manipulation_check import (
     check_probe_turn_matched_independence,
     check_ri_exceeds_baseline,
 )
-from squid_game.analysis.shared.discovery_detection import (
+from squid_game.evaluation.shared.discovery_detection import (
     DISCOVERY_MATCH_THRESHOLD,
     DiscoveryFeatures,
     compute_session_features,
@@ -94,7 +98,7 @@ from squid_game.analysis.shared.discovery_detection import (
 )
 
 # --- cognitive/ (RI = thinking_tokens) ---
-from squid_game.analysis.cognitive.ri_forfeit import (
+from squid_game.evaluation.cognitive.ri_forfeit import (
     ChoiceAsymmetricResult,
     TaskSpilloverResult,
     fit_choice_asymmetric_model,
@@ -102,7 +106,7 @@ from squid_game.analysis.cognitive.ri_forfeit import (
     run_all_unit15_hypotheses,
     unit15_descriptive_summary,
 )
-from squid_game.analysis.cognitive.ri_call1 import (
+from squid_game.evaluation.cognitive.ri_call1 import (
     FORMULA as CALL1_RI_FORMULA,
     OUTCOMES as CALL1_RI_OUTCOMES,
     fit_one as fit_call1_ri_one,
@@ -110,20 +114,20 @@ from squid_game.analysis.cognitive.ri_call1 import (
 )
 
 # --- selfreport/ (REASON digit, psuccess_self) ---
-from squid_game.analysis.selfreport.reason_convergence import (
+from squid_game.evaluation.selfreport.reason_convergence import (
     THINKING_KEYWORDS,
     reason_distribution,
     run_all_unit14_hypotheses,
     thinking_keyword_counts,
 )
-from squid_game.analysis.selfreport.psuccess import (
+from squid_game.evaluation.selfreport.psuccess import (
     P_DEATH_DEFAULT,
     PSUCCESS_FLOOR_DEFAULT,
     stratified_reason_distribution,
 )
 
 # --- behavioral/ (choice, survival) ---
-from squid_game.analysis.behavioral.session_tests import (
+from squid_game.evaluation.behavioral.session_tests import (
     UnitThirteenResult,
     run_all_unit13_hypotheses,
     session_features,
@@ -134,14 +138,14 @@ from squid_game.analysis.behavioral.session_tests import (
     test_h5_forfeit_gap,
     test_h6_post_discovery_engagement,
 )
-from squid_game.analysis.behavioral.survival import (
+from squid_game.evaluation.behavioral.survival import (
     CoxSurvivalResult,
     build_survival_frame,
     fit_cox_forfeit_survival,
     km_forfeit_curves,
     run_h1_survival_hypothesis,
 )
-from squid_game.analysis.behavioral.regime import (
+from squid_game.evaluation.behavioral.regime import (
     CAP_EPSILON,
     REWARD_CEILING_DEFAULT,
     StratifiedCoxResult,
@@ -155,7 +159,7 @@ from squid_game.analysis.behavioral.regime import (
 )
 
 # --- semantic/ (text, embeddings) ---
-from squid_game.analysis.semantic.threat_registration import (
+from squid_game.evaluation.semantic.threat_registration import (
     ThreatTurn,
     CellStat,
     load_forfeit_turns,
@@ -165,8 +169,8 @@ from squid_game.analysis.semantic.threat_registration import (
     write_outputs,
     run_analysis,
 )
-from squid_game.analysis.semantic.lexicon import code_threat_mention, THREAT_LEXICON_VERSION
-from squid_game.analysis.semantic.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
+from squid_game.evaluation.semantic.lexicon import code_threat_mention, THREAT_LEXICON_VERSION
+from squid_game.evaluation.semantic.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
 
 __all__ = [
     # Metrics
