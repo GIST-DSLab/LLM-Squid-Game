@@ -168,9 +168,9 @@ def test_new_game_state_action_result_response_shape(client: TestClient) -> None
     ``forfeit``), forgets to declare one (letting an internal attribute
     leak into the JSON body), or wires a route to the wrong response
     model. None of that is caught by a bare ``resp.status_code == 200``
-    (Cell 5 of the six-cell grid would still return 200 with a mangled
-    body), and unlike the OpenAPI check this exercises the route handler
-    itself, not just its declared signature.
+    (the handler would still return 200 with a mangled body), and unlike
+    the OpenAPI check this exercises the route handler itself, not just
+    its declared signature.
     """
     started = _new_game(client)
     assert set(started.keys()) == NEW_GAME_KEYS
