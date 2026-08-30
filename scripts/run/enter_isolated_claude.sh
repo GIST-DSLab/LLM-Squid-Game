@@ -24,18 +24,18 @@
 #
 # Usage:
 #
-#   scripts/enter_isolated_claude.sh                   # default iso dir
-#   scripts/enter_isolated_claude.sh ~/my-iso-sg       # custom iso dir
-#   scripts/enter_isolated_claude.sh ~/my-iso-sg arg1  # extra claude args
+#   scripts/run/enter_isolated_claude.sh                   # default iso dir
+#   scripts/run/enter_isolated_claude.sh ~/my-iso-sg       # custom iso dir
+#   scripts/run/enter_isolated_claude.sh ~/my-iso-sg arg1  # extra claude args
 #
 # Before running, start the servers:
 #
-#   scripts/start_servers.sh
+#   scripts/run/start_servers.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # --- resolve iso dir ---------------------------------------------------------
 

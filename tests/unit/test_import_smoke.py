@@ -73,9 +73,9 @@ SKIPPED: dict[str, str] = {
     # Module-level side effects: these three write .excalidraw files into
     # docs/design/v4/assets/ at import time, with no __main__ guard. Importing
     # them would make the test suite dirty the working tree.
-    "scripts.build_llm_experience_diagram": "writes a .excalidraw file at import time",
-    "scripts.build_posthoc_analysis_diagram": "writes a .excalidraw file at import time",
-    "scripts.build_prompt_flow_diagram": "writes a .excalidraw file at import time",
+    "scripts.plots.build_llm_experience_diagram": "writes a .excalidraw file at import time",
+    "scripts.plots.build_posthoc_analysis_diagram": "writes a .excalidraw file at import time",
+    "scripts.plots.build_prompt_flow_diagram": "writes a .excalidraw file at import time",
 }
 
 
@@ -146,7 +146,7 @@ def test_the_walk_actually_finds_the_tree() -> None:
     # successor modules are the walk-discoverability check now.
     assert "squid_game.analysis.cognitive.ri_forfeit" in MODULE_NAMES
     assert "squid_game.analysis.selfreport.reason_convergence" in MODULE_NAMES
-    assert "scripts.analyze_phase3" in MODULE_NAMES
+    assert "scripts.analysis.analyze_phase3" in MODULE_NAMES
     assert "squid_arena.api" in MODULE_NAMES
     assert "squid_store.factory" in MODULE_NAMES
 

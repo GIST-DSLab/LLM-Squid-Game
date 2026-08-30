@@ -62,14 +62,14 @@ def test_runner_main_loads_dotenv() -> None:
 
 def test_shims_do_not_parse_arguments() -> None:
     """A shim that builds its own parser is a second entry point again."""
-    for shim in ("main.py", "scripts/run_experiment.py"):
+    for shim in ("main.py", "scripts/run/run_experiment.py"):
         source = (REPO_ROOT / shim).read_text(encoding="utf-8")
         assert "ArgumentParser" not in source, shim
         assert "add_argument" not in source, shim
 
 
 def test_shims_delegate_to_the_runner() -> None:
-    for shim in ("main.py", "scripts/run_experiment.py"):
+    for shim in ("main.py", "scripts/run/run_experiment.py"):
         source = (REPO_ROOT / shim).read_text(encoding="utf-8")
         assert "from squid_game.runner import main" in source, shim
 

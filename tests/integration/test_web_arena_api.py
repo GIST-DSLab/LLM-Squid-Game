@@ -412,7 +412,7 @@ def _seed_one_llm_session(
     helpers — the same path production seeding uses. Returns the session id
     (== the engine's ``season_id``)."""
     from squid_game.runner import ExperimentRunner, load_config_from_yaml
-    from scripts.seed_web_arena import seed_sessions
+    from scripts.arena.seed_web_arena import seed_sessions
 
     yaml_path = tmp_path / "wp6_llm_season.yaml"
     yaml_path.write_text(yaml.safe_dump(_LLM_SEASON_YAML), encoding="utf-8")

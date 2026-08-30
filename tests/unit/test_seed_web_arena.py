@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from squid_store import Repository, SessionRecord, get_repository
-from scripts.seed_web_arena import (
+from scripts.arena.seed_web_arena import (
     build_session_record,
     build_turn_records,
     classify_mediation,

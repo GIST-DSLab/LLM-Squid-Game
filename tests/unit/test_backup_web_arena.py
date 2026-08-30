@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from squid_store import SessionRecord, TurnRecord, ModelStatsRecord
 from squid_store.sqlite_repository import SQLiteRepository
-from scripts.backup_web_arena import mirror_repository
+from scripts.arena.backup_web_arena import mirror_repository
 
 
 def _seed_source() -> SQLiteRepository:

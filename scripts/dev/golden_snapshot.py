@@ -157,7 +157,7 @@ def model_label(run: Path) -> str:
 
 def run_analysis(run: Path) -> None:
     subprocess.run(
-        [sys.executable, "scripts/analyze_phase3.py", str(run), "--model", model_label(run)],
+        [sys.executable, "scripts/analysis/analyze_phase3.py", str(run), "--model", model_label(run)],
         cwd=REPO_ROOT,
         check=True,
     )

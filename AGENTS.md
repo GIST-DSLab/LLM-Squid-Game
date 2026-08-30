@@ -18,7 +18,7 @@ uv sync                              # Install dependencies
 uv run squid-game --config <path>    # Canonical entry point
 ```
 
-`python main.py --config <path>` and `python scripts/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
+`python main.py --config <path>` and `python scripts/run/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
 
 ## Testing
 
@@ -235,7 +235,7 @@ FDR correction: Benjamini–Hochberg across the 5-hypothesis family.
 uv sync --extra analysis --extra dev
 
 # Single CLI runs primary + secondary + exploratory on one output directory
-uv run python scripts/analyze_phase3.py outputs/<run>/ --model <model-label>
+uv run python scripts/analysis/analyze_phase3.py outputs/<run>/ --model <model-label>
 ```
 
 Outputs land in `outputs/<run>/phase3_analysis/`:
@@ -249,7 +249,7 @@ Outputs land in `outputs/<run>/phase3_analysis/`:
 For cross-model xlsx aggregation:
 
 ```bash
-uv run python scripts/orchestrate_posthoc.py
+uv run python scripts/analysis/orchestrate_posthoc.py
 ```
 
 produces `outputs/posthoc_summary.xlsx` (19 sheets). See `docs/design/v6/POSTHOC_ANALYSIS.md` for the full sheet reference.

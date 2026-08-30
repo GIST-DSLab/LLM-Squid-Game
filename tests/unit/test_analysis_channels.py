@@ -158,7 +158,7 @@ def test_call1_script_is_a_thin_cli() -> None:
     the statistics stopped living in scripts/, and a threshold states that
     without freezing the CLI's internals.
     """
-    source = (REPO_ROOT / "scripts" / "analyze_call1_ri.py").read_text(encoding="utf-8")
+    source = (REPO_ROOT / "scripts" / "analysis" / "analyze_call1_ri.py").read_text(encoding="utf-8")
     assert "from squid_game.analysis.cognitive.ri_call1 import" in source
     assert len(source.splitlines()) < 150
 
@@ -177,7 +177,7 @@ def test_semantic_channel_exists_and_is_complete() -> None:
 
 def test_probe_scripts_are_thin_clis() -> None:
     for name in ("probe_reasoning_embeddings.py", "probe_lexicon.py"):
-        source = (REPO_ROOT / "scripts" / name).read_text(encoding="utf-8")
+        source = (REPO_ROOT / "scripts" / "analysis" / name).read_text(encoding="utf-8")
         assert "squid_game.analysis.semantic" in source, name
         assert len(source.splitlines()) < 150, name
 

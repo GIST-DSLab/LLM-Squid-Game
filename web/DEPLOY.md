@@ -81,7 +81,7 @@ valid (if boring) state for a first deploy.
 
 **Backing up live plays:** the deployed site's human/LLM plays live only in
 Supabase (not in git). Periodically mirror them to a local SQLite snapshot with
-`scripts/backup_web_arena.py --source-dsn "$WEB_ARENA_DSN"` (the inverse of the
+`scripts/arena/backup_web_arena.py --source-dsn "$WEB_ARENA_DSN"` (the inverse of the
 seed script; idempotent, skips sessions already backed up) so new live plays are
 not lost.
 

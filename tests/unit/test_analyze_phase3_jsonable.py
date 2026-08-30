@@ -28,7 +28,7 @@ import pytest
 @pytest.fixture(scope="module")
 def cli_module():
     root = Path(__file__).resolve().parents[2]
-    script_path = root / "scripts" / "analyze_phase3.py"
+    script_path = root / "scripts" / "analysis" / "analyze_phase3.py"
     spec = importlib.util.spec_from_file_location(
         "analyze_phase3_jsonable_test", script_path
     )

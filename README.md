@@ -36,7 +36,7 @@ uv run squid-game --config <config>.yaml --dry-run
 
 API keys for cloud providers (Gemini, OpenAI, Anthropic, Ollama Cloud) are loaded from a project-local `.env` via `python-dotenv`.
 
-`python main.py --config <path>` and `python scripts/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
+`python main.py --config <path>` and `python scripts/run/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
 
 ---
 
@@ -72,10 +72,10 @@ uv run squid-game --config configs/experiment/phase3_split_forfeit_qwen3next_n30
 
 # Statistical analysis on a completed run
 uv sync --extra analysis
-uv run python scripts/analyze_phase3.py outputs/<run>/ --model <model-label>
+uv run python scripts/analysis/analyze_phase3.py outputs/<run>/ --model <model-label>
 
 # Cross-model aggregation -> outputs/posthoc_summary.xlsx (19 sheets)
-uv run python scripts/orchestrate_posthoc.py
+uv run python scripts/analysis/orchestrate_posthoc.py
 ```
 
 Interrupted runs resume cleanly with `--resume <output_dir>`; the runner scans `season_results.jsonl`, deletes orphan trace files, and replays only the missing `(framing, forfeit, seed)` tuples.

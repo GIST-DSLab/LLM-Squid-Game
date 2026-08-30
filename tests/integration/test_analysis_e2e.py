@@ -43,7 +43,7 @@ def _stake2_response(_idx: int, _messages: list[dict[str, str]]) -> str:
 def _load_cli_module():
     """Load ``scripts/analyze_phase3.py`` as an importable module."""
     root = Path(__file__).resolve().parents[2]
-    script_path = root / "scripts" / "analyze_phase3.py"
+    script_path = root / "scripts" / "analysis" / "analyze_phase3.py"
     assert script_path.exists(), f"CLI missing: {script_path}"
     spec = importlib.util.spec_from_file_location(
         "analyze_phase3_e2e", script_path

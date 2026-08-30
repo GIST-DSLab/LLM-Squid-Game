@@ -6,7 +6,7 @@
 # This script is idempotent: if a server is already healthy on its port,
 # it is left untouched. Intended to be run FROM THE PROJECT ROOT by the
 # developer before entering an isolated claude session via
-# scripts/enter_isolated_claude.sh.
+# scripts/run/enter_isolated_claude.sh.
 #
 # Ports (override via env):
 #   SQUID_GAME_PORT   game API   (default 8502)
@@ -18,7 +18,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$PROJECT_ROOT"
 
 GAME_PORT="${SQUID_GAME_PORT:-8502}"
@@ -73,7 +73,7 @@ cat <<EOF
   proxy        : http://127.0.0.1:$PROXY_PORT (health: /_proxy/health)
   thinking log : $PROJECT_ROOT/outputs/api_sessions/thinking_traces/api_calls.jsonl
 
-Next: run scripts/enter_isolated_claude.sh [iso_dir] from any shell to open
+Next: run scripts/run/enter_isolated_claude.sh [iso_dir] from any shell to open
 an isolated Claude Code session wired to these servers.
 To stop:  scripts/stop_servers.sh
 EOF

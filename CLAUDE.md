@@ -18,7 +18,7 @@ uv sync                              # Install dependencies
 uv run squid-game --config <path>    # Canonical entry point
 ```
 
-`python main.py --config <path>` and `python scripts/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
+`python main.py --config <path>` and `python scripts/run/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
 
 ## Testing
 
@@ -302,7 +302,7 @@ pointers with empties and corrupts the data in the repository.
 uv sync --extra analysis --extra dev
 
 # Single CLI runs primary + secondary + exploratory on one output directory
-uv run python scripts/analyze_phase3.py outputs/<run>/ --model <model-label>
+uv run python scripts/analysis/analyze_phase3.py outputs/<run>/ --model <model-label>
 ```
 
 Outputs land in `outputs/<run>/phase3_analysis/`:
@@ -316,10 +316,10 @@ Outputs land in `outputs/<run>/phase3_analysis/`:
 For cross-model xlsx aggregation:
 
 ```bash
-uv run python scripts/orchestrate_posthoc.py
+uv run python scripts/analysis/orchestrate_posthoc.py
 ```
 
-produces `outputs/posthoc_summary.xlsx` (19 sheets). (`docs/design/v6/POSTHOC_ANALYSIS.md`, cited by earlier revisions as the sheet reference, does not exist — read `scripts/orchestrate_posthoc.py` for the sheet list.)
+produces `outputs/posthoc_summary.xlsx` (19 sheets). (`docs/design/v6/POSTHOC_ANALYSIS.md`, cited by earlier revisions as the sheet reference, does not exist — read `scripts/analysis/orchestrate_posthoc.py` for the sheet list.)
 
 ### Cluster C threat registration (2026-07-13)
 
@@ -329,7 +329,7 @@ registered)? A1 = mention rate (frozen lexicon v1 + LLM judge, Cohen's κ betwee
 A2 = mention role (a restatement / b acknowledge-then-dismiss / c EV item / d forfeit motive).
 
 ```bash
-uv run python scripts/analyze_threat_registration.py --run <run_dir> --judge <spec> --out <dir>
+uv run python scripts/analysis/analyze_threat_registration.py --run <run_dir> --judge <spec> --out <dir>
 ```
 
 Standalone CLI — **not** wired into `analyze_phase3.py`. Known accepted limitation: when a

@@ -2,10 +2,10 @@
 # Sequential experiment pipeline with battery guard.
 # Monitors current qwen4b run, then auto-starts qwen9b.
 #
-# Usage: nohup bash scripts/run_pipeline.sh > outputs/pipeline.log 2>&1 &
+# Usage: nohup bash scripts/run/run_pipeline.sh > outputs/pipeline.log 2>&1 &
 
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 BATTERY_MIN=20
 CHECK_INTERVAL=60
@@ -54,7 +54,7 @@ else
         log "═══ Qwen 3.5:4b already done (${DONE}/160). Skipping. ═══"
     else
         log "═══ Step 1: Resuming Qwen 3.5:4b (${DONE}/160)... ═══"
-        uv run python scripts/resume_experiment.py \
+        uv run python scripts/run/resume_experiment.py \
             configs/experiment/qwen4b_4x2_n20.yaml \
             outputs/20260319_2242_qwen3.5-4b_signal-game &
         wait_with_battery_guard $!
@@ -73,7 +73,7 @@ if ! battery_ok; then
 fi
 
 # Use resume script so it can be re-run safely if interrupted.
-uv run python scripts/resume_experiment.py \
+uv run python scripts/run/resume_experiment.py \
     configs/experiment/qwen9b_4x2_n20.yaml &
 wait_with_battery_guard $!
 
