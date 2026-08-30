@@ -21,9 +21,22 @@ Phase G runner wiring will rely on.
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason=(
+        "Pins archived designs whose YAML was never committed: Phase 3 "
+        "baseline/survival_electricity 5-cell, Phase N carryover, and the "
+        "Phase O 7-cell flagship_corruption_terminal ablation. Unlike the v6 "
+        "configs these cannot be restored -- no run output records them, so "
+        "the only source would be these assertions themselves. Kept rather "
+        "than deleted: drop this marker if the original YAML resurfaces. The "
+        "live v6 contract is tests/unit/test_v6_configs.py."
+    )
+)
+
 from pathlib import Path
 
-import pytest
 import yaml
 
 from squid_game.models.config import (

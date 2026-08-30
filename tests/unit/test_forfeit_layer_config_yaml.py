@@ -17,9 +17,21 @@ Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason=(
+        "Pins configs/experiment/phase3_forfeit_layer_smoke.yaml, the Unit 14 "
+        "single-call 2x2+1 topology superseded by the Unit 15 Split-Call path. "
+        "The YAML was never committed and no run output records it, so it "
+        "cannot be restored. Kept rather than deleted: drop this marker if the "
+        "original YAML resurfaces. The live v6 contract is "
+        "tests/unit/test_v6_configs.py."
+    )
+)
+
 from pathlib import Path
 
-import pytest
 import yaml
 
 from squid_game.models.config import (
