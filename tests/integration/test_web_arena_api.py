@@ -1,6 +1,6 @@
 """Integration tests for the Web Arena backend (WP6).
 
-Exercises ``interface/api.py`` (WP2) end-to-end through FastAPI's
+Exercises ``web/squid_arena/api.py`` (WP2) end-to-end through FastAPI's
 ``TestClient`` against a fresh temp-file SQLite DB per test (never a
 network, never a shared/real DB). Complements WP2's own smoke suite
 (``tests/unit/test_api_web_arena.py``) with deeper, spec-shaped coverage

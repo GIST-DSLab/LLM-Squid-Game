@@ -24,7 +24,7 @@ Design goals:
 
 Run:
 
-    uv run uvicorn interface.anthropic_proxy:app --port 8765
+    uv run uvicorn squid_arena.anthropic_proxy:app --port 8765
 
 Env:
 

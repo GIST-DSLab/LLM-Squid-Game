@@ -1,4 +1,4 @@
-"""Unit tests for interface/auth.py password hashing (stdlib pbkdf2)."""
+"""Unit tests for web/squid_arena/auth.py password hashing (stdlib pbkdf2)."""
 from __future__ import annotations
 
 import pytest

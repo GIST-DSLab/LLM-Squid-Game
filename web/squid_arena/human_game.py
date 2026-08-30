@@ -61,7 +61,7 @@ class SelfReport:
     by the v6 ``ForfeitSelfReport`` (a differently-shaped, forfeit-turn-only
     model — see ``squid_game.models.forfeit_choice``), so this module keeps
     a thin structural stand-in locally to preserve ``set_self_report()``'s
-    existing public shape for callers such as ``interface/app.py``. Not a
+    existing public shape for callers such as ``web/squid_arena/app.py``. Not a
     pydantic model: it is never round-tripped through ``SeasonResult``
     validation (that class has no matching field for it), only held for
     local bookkeeping.
@@ -163,7 +163,7 @@ class HumanGameSession:
         # Core components (same as GameEngine)
         self._task: TaskModule = get_task(task_name)()
         # rule_index rotates the hidden-rule attribute family across the six
-        # games of a Play campaign (see interface/rule_schedule.py). None
+        # games of a Play campaign (see web/squid_arena/rule_schedule.py). None
         # keeps the task module's historical index-0 behaviour.
         self._task.initialize(
             difficulty=self._difficulty,
@@ -176,7 +176,7 @@ class HumanGameSession:
         self._forfeit_ctrl = ForfeitController(self._forfeit_cond)
         self._use_psuccess_probe = use_psuccess_probe
         # equal-EV reward parity with the LLM split-call path. Defaults mirror
-        # interface/arena.py's forfeit_layer block + chain_psuccess_to_menu=True.
+        # web/squid_arena/arena.py's forfeit_layer block + chain_psuccess_to_menu=True.
         self._forfeit_layer = ForfeitLayer(
             forfeit_layer_config
             or ForfeitLayerConfig(

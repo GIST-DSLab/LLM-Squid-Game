@@ -1,6 +1,6 @@
 """Merge proxy-captured thinking traces into canonical per-session turn JSONL.
 
-The Anthropic proxy (`interface/anthropic_proxy.py`) appends one record per
+The Anthropic proxy (`web/squid_arena/anthropic_proxy.py`) appends one record per
 API call to `$SQUID_THINKING_LOG_DIR/api_calls.jsonl`. The game server writes
 `SeasonResult` objects — each containing a `turns` list of `TurnResult` —
 to `outputs/api_sessions/season_results.jsonl`. This script joins the two

@@ -2,7 +2,7 @@
 
 Thin command-line wrapper around ``squid_arena.seeding`` (the importable seed
 core, which ``squid_arena.arena`` also reuses to persist live LLM Arena runs).
-The reusable helpers live in ``interface/seeding.py`` — shipped inside the
+The reusable helpers live in ``web/squid_arena/seeding.py`` — shipped inside the
 backend image — because ``scripts/`` is excluded from the Docker build; this
 file re-exports them so the seed command and its tests keep importing from
 ``scripts.seed_web_arena``.
@@ -13,7 +13,7 @@ Imports the existing LLM experiment outputs
 Web Arena persistence layer. Depends ONLY on the WP1 repository interface, so
 it works unmodified against both the local SQLite fallback and the Postgres
 (Supabase) production backend. Idempotent (skip-existing sessions, upsert
-model_stats) — safe to re-run. See ``interface/seeding.py`` for the full
+model_stats) — safe to re-run. See ``web/squid_arena/seeding.py`` for the full
 Closed/Open classification + idempotency notes.
 
 Usage::
@@ -35,11 +35,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_ROOT = REPO_ROOT / "outputs" / "final_results"
 
-# `interface` is a plain top-level package (not pip-installed), so running
-# this script directly (`uv run python scripts/seed_web_arena.py`, per the
-# project convention -- see interface/api.py, interface/app.py) needs the
-# repo root on sys.path. Not needed when imported as `scripts.seed_web_arena`
-# (e.g. from tests), where pytest's rootdir is already on sys.path.
+# `scripts/` is not a package, so running this script directly (`uv run
+# python scripts/seed_web_arena.py`, per the project convention -- see
+# web/squid_arena/api.py, web/squid_arena/app.py) needs the repo root on
+# sys.path. Not needed when imported as `scripts.seed_web_arena` (e.g. from
+# tests), where pytest's rootdir is already on sys.path.
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 

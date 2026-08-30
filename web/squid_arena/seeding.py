@@ -14,10 +14,10 @@ Turns existing LLM experiment outputs into Web Arena persistence rows
       mediation_class = 'closed' iff p_FC_4cov >= 0.05 (the ΔRI mediator
       renders the framing effect β_FC non-significant), else 'open'.
 
-This module lives in the ``interface`` package (shipped in the backend image)
-rather than under ``scripts/`` (excluded from the Docker build) because
-``interface.arena`` reuses ``seed_sessions`` to persist live LLM Arena runs —
-a runtime dependency, not a CLI-only one. The thin CLI wrapper
+This module lives in the ``squid_arena`` package (shipped in the backend
+image) rather than under ``scripts/`` (excluded from the Docker build)
+because ``squid_arena.arena`` reuses ``seed_sessions`` to persist live LLM
+Arena runs — a runtime dependency, not a CLI-only one. The thin CLI wrapper
 ``scripts/seed_web_arena.py`` re-exports these names for the seed command and
 its tests. It depends ONLY on the WP1 repository interface, never on a
 concrete DB driver, so it works unmodified against both the local SQLite

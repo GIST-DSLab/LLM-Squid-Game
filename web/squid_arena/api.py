@@ -136,7 +136,7 @@ _encoding = tiktoken.get_encoding("cl100k_base")
 # Reads WEB_ARENA_DSN, falls back to a local SQLite file.
 _repository = get_repository()
 
-# LLM Arena: live progress per background run_id (see interface/arena.py).
+# LLM Arena: live progress per background run_id (see web/squid_arena/arena.py).
 _arena_runs: dict[str, "ArenaProgress"] = {}
 _arena_lock = threading.Lock()
 
@@ -291,7 +291,7 @@ class NewGameRequest(BaseModel):
         description=(
             "0-based position of this game within the Play campaign. Picks "
             "the hidden rule's attribute family from the campaign schedule "
-            "(interface/rule_schedule.py) so the six games do not all share "
+            "(web/squid_arena/rule_schedule.py) so the six games do not all share "
             "one family. Ignored for one-off games (no campaign_id)."
         ),
     )
@@ -802,7 +802,7 @@ def new_game(req: NewGameRequest, request: Request):
     # Rotate the hidden rule's attribute family across a campaign's six games.
     # Derived from the sanitized campaign id (the value actually stored), so a
     # reload or a resume lands on the same family; games with no campaign fall
-    # back to their own seed. See interface/rule_schedule.py.
+    # back to their own seed. See web/squid_arena/rule_schedule.py.
     campaign_id = sanitize_campaign_id(req.campaign_id)
     rule_index = rule_index_for(campaign_id, req.campaign_index, seed)
     game = HumanGameSession(

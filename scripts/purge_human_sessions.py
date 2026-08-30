@@ -2,7 +2,7 @@
 
 Human records are no longer surfaced anywhere (the Logs explorer is LLM-only
 and the Play Leaderboard was removed), and new human plays are no longer
-persisted (see ``PERSIST_HUMAN_SESSIONS`` in interface/api.py). This one-off
+persisted (see ``PERSIST_HUMAN_SESSIONS`` in web/squid_arena/api.py). This one-off
 cleanup drops the human rows that were written before that change.
 
 Works against whatever backend ``WEB_ARENA_DSN`` selects (local SQLite or

@@ -103,7 +103,7 @@ def test_rule_family_count_matches_generate_rules() -> None:
         assert len(rules) == RULE_FAMILY_COUNT, (
             f"{difficulty}: generate_rules() returned {len(rules)} rules "
             f"but RULE_FAMILY_COUNT={RULE_FAMILY_COUNT}; update the constant "
-            "in interface/rule_schedule.py to match"
+            "in web/squid_arena/rule_schedule.py to match"
         )
 
 
