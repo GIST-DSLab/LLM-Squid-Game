@@ -73,6 +73,29 @@ def test_regime_stratification_actually_split() -> None:
     assert (ANALYSIS / "behavioral" / "regime.py").exists()
     assert (ANALYSIS / "selfreport" / "psuccess.py").exists()
 
+    # Pin the channel boundary (fix round 1): behavioral/regime.py must
+    # not itself index a DataFrame on the agent's self-reported
+    # psuccess_self -- that read belongs to selfreport/psuccess.py's
+    # compute_floor_bound / compute_ev_delta_s. The one allowed mention
+    # is the psuccess_col default value passed through to them.
+    regime_source = (ANALYSIS / "behavioral" / "regime.py").read_text(
+        encoding="utf-8"
+    )
+    assert regime_source.count('"psuccess_self"') == 1
+    assert 'out["psuccess_self"]' not in regime_source
+    assert "out[psuccess_col]" not in regime_source
+    assert "df[psuccess_col]" not in regime_source
+
+    # And selfreport/psuccess.py must not read the survival/cap columns
+    # that stay in the behavioural module.
+    psuccess_source = (ANALYSIS / "selfreport" / "psuccess.py").read_text(
+        encoding="utf-8"
+    )
+    assert 'df["cap_bound"]' not in psuccess_source
+    assert 'df["forfeit"]' not in psuccess_source
+    assert "CAP_EPSILON" not in psuccess_source
+    assert "reward_ceiling" not in psuccess_source
+
 
 def test_the_framing_sets_are_defined_once() -> None:
     """A split that copies the constants is a split that will drift apart."""

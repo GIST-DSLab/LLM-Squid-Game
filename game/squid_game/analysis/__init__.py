@@ -117,8 +117,6 @@ from squid_game.analysis.behavioral.survival import (
 )
 from squid_game.analysis.behavioral.regime import (
     CAP_EPSILON,
-    P_DEATH_DEFAULT,
-    PSUCCESS_FLOOR_DEFAULT,
     REWARD_CEILING_DEFAULT,
     StratifiedCoxResult,
     StratifiedLogitResult,
@@ -130,6 +128,8 @@ from squid_game.analysis.behavioral.regime import (
     stratified_counts,
 )
 from squid_game.analysis.selfreport.psuccess import (
+    P_DEATH_DEFAULT,
+    PSUCCESS_FLOOR_DEFAULT,
     stratified_reason_distribution,
 )
 from squid_game.analysis.threat_registration import (

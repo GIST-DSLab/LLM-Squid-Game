@@ -25,7 +25,11 @@ config).
 Contract:
 - ``annotate_regime`` adds four columns to a turn-level DataFrame
   (``cap_bound``, ``floor_bound``, ``ev_delta_s``, ``regime``) without
-  modifying any existing columns.
+  modifying any existing columns. ``floor_bound`` and ``ev_delta_s``
+  are computed by :mod:`squid_game.analysis.selfreport.psuccess`
+  (they read the agent's self-reported ``psuccess_self``); only
+  ``cap_bound`` (reads the observed ``reward_offered_this_turn``) and
+  the ``regime`` classification are computed in this module.
 - ``annotate_events_regime`` joins those columns onto a forfeit-event
   DataFrame via ``(session_id, forfeit_turn)``.
 - ``filter_regime`` returns a view of a turn-level DataFrame restricted
@@ -46,7 +50,16 @@ channel split (P2 Task 5): the self-report REASON-digit stratifier
 (``stratified_reason_distribution``) moved to
 :mod:`squid_game.analysis.selfreport.psuccess`, since it cross-tabs
 the agent's self-reported REASON digit rather than reading choice or
-survival data.
+survival data. Fix round 1 (same day) moved ``compute_floor_bound`` /
+``compute_ev_delta_s`` there too, along with the
+``PSUCCESS_FLOOR_DEFAULT`` / ``P_DEATH_DEFAULT`` constants they use:
+``annotate_regime`` had kept computing ``floor_bound`` and
+``ev_delta_s`` inline from ``psuccess_self``, which is the same
+self-report channel mixing this split exists to eliminate.
+``annotate_regime`` now calls into ``selfreport.psuccess`` for those
+two columns and keeps only ``cap_bound`` (observed reward) and the
+``regime`` classification (derived from ``cap_bound`` / ``ev_delta_s``,
+not from ``psuccess_self`` directly).
 """
 
 from __future__ import annotations
@@ -62,7 +75,13 @@ from squid_game.analysis.shared.loaders import (
     forfeit_events,
     turn_observations,
 )
-from squid_game.analysis.selfreport.psuccess import stratified_reason_distribution
+from squid_game.analysis.selfreport.psuccess import (
+    P_DEATH_DEFAULT,
+    PSUCCESS_FLOOR_DEFAULT,
+    compute_ev_delta_s,
+    compute_floor_bound,
+    stratified_reason_distribution,
+)
 from squid_game.analysis.behavioral.survival import (
     CoxSurvivalResult,
     fit_cox_forfeit_survival,
@@ -82,13 +101,6 @@ logger = logging.getLogger(__name__)
 #: treated as cap-bound (the menu renders as an integer, so the raw float
 #: may be ``100.0`` exactly but we allow a tiny tolerance).
 REWARD_CEILING_DEFAULT: float = 100.0
-
-#: Floor-clamp threshold on ``psuccess_self / 100`` in the chained
-#: formula (``ForfeitLayerConfig.psuccess_floor``).
-PSUCCESS_FLOOR_DEFAULT: float = 0.3
-
-#: Canonical per-turn ``p_death`` under Unit 14+.
-P_DEATH_DEFAULT: float = 0.25
 
 #: Numerical tolerance for cap-binding detection.
 CAP_EPSILON: float = 0.5
@@ -162,20 +174,15 @@ def annotate_regime(
             reward_col,
         )
 
-    # floor_bound: psuccess_self < psuccess_floor × 100
-    if psuccess_col in out.columns:
-        ps = pd.to_numeric(out[psuccess_col], errors="coerce")
-        out["floor_bound"] = (ps < psuccess_floor * 100).fillna(False)
-    else:
-        out["floor_bound"] = False
-
-    # ev_delta_s = (1 - p_d) × reward - p_d × S
-    if reward_col in out.columns and score_col in out.columns:
-        reward = pd.to_numeric(out[reward_col], errors="coerce")
-        score = pd.to_numeric(out[score_col], errors="coerce")
-        out["ev_delta_s"] = (1.0 - p_death) * reward - p_death * score
-    else:
-        out["ev_delta_s"] = np.nan
+    # floor_bound / ev_delta_s: both read the agent's self-reported
+    # psuccess_self, so their computation lives in
+    # squid_game.analysis.selfreport.psuccess (P2 Task 5 fix round 1).
+    out["floor_bound"] = compute_floor_bound(
+        out, psuccess_floor=psuccess_floor, psuccess_col=psuccess_col
+    )
+    out["ev_delta_s"] = compute_ev_delta_s(
+        out, p_death=p_death, reward_col=reward_col, score_col=score_col
+    )
 
     # regime classification
     def _classify(row: pd.Series) -> str:
