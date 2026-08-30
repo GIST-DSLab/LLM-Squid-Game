@@ -34,10 +34,10 @@ outputs/web_arena/web_arena.db
 # paperbanana figure-generation scratch runs
 figures/run_*/
 
-# Ad-hoc review/debug screenshots & scratch review pages. Kept out of the repo
-# root (and out of git) under screenshots/ — see screenshots/README.md.
-/screenshots/*
-!/screenshots/README.md
+# Ad-hoc review/debug captures and scratch review pages. Nothing in the build,
+# the paper, or the deployed site reads from here; figures a document depends on
+# live in figures/ or web/assets/.
+/.scratch/
 /*.png
 
 # SentenceBERT embedding cache for scripts/probe_reasoning_embeddings.py.
