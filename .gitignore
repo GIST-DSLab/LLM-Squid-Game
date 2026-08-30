@@ -43,3 +43,8 @@ assets/figures/run_*/
 # SentenceBERT embedding cache for scripts/analysis/probe_reasoning_embeddings.py.
 # Regenerable from the turn traces; ~13 MB per (channel, mask variant).
 results/reasoning_probe/_embedding_cache/
+
+# analyze_call1_ri.py dumps its input frame beside the report. Nothing in the
+# repo reads it -- load_all() rebuilds it from outputs/final_results/ on every
+# run -- so the 1.3 MB copy was tracked for no consumer. Untracked 2026-08-31.
+results/call1_ri_analysis/turn_observations.csv
