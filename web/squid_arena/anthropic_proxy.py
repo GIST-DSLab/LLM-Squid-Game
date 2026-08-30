@@ -52,7 +52,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 UPSTREAM_URL = os.environ.get("ANTHROPIC_UPSTREAM_URL", "https://api.anthropic.com").rstrip("/")
 
-_default_log_dir = Path(__file__).resolve().parent.parent / "outputs" / "api_sessions" / "thinking_traces"
+_default_log_dir = Path(__file__).resolve().parents[2] / "outputs" / "api_sessions" / "thinking_traces"
 LOG_DIR = Path(os.environ.get("SQUID_THINKING_LOG_DIR", str(_default_log_dir)))
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / "api_calls.jsonl"

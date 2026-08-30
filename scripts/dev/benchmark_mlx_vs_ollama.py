@@ -6,6 +6,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def run_experiment(config_path: str, label: str) -> dict:
     """Run experiment and return timing info."""
@@ -16,7 +18,7 @@ def run_experiment(config_path: str, label: str) -> dict:
     t0 = time.time()
     result = subprocess.run(
         ["uv", "run", "squid-game", "--config", config_path],
-        capture_output=True, text=True, cwd=Path(__file__).parent.parent,
+        capture_output=True, text=True, cwd=REPO_ROOT,
     )
     total_elapsed = time.time() - t0
 
@@ -45,7 +47,7 @@ def run_experiment(config_path: str, label: str) -> dict:
     load_seconds = (load_end - load_start) if (load_start and load_end) else None
 
     # Parse per-turn timestamps from result
-    base = Path(__file__).parent.parent / output_dir
+    base = REPO_ROOT / output_dir
     result_file = base / "experiment_result.json"
     with open(result_file) as f:
         data = json.load(f)

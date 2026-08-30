@@ -75,8 +75,9 @@ SKIPPED: dict[str, str] = {
     # Optional dependency, not declared in any pyproject extra.
     "squid_arena.app": "needs streamlit, which is not a declared dependency",
     # Module-level side effects: these three write .excalidraw files into
-    # docs/design/v4/assets/ at import time, with no __main__ guard. Importing
-    # them would make the test suite dirty the working tree.
+    # assets/figures/v4/ at import time (repointed from docs/design/v4/assets/
+    # by the P1 fix-wave, 2026-08-30, Ruling C40), with no __main__ guard.
+    # Importing them would make the test suite dirty the working tree.
     "scripts.plots.build_llm_experience_diagram": "writes a .excalidraw file at import time",
     "scripts.plots.build_posthoc_analysis_diagram": "writes a .excalidraw file at import time",
     "scripts.plots.build_prompt_flow_diagram": "writes a .excalidraw file at import time",
@@ -178,6 +179,17 @@ def test_importing_writes_nothing_into_outputs() -> None:
     (``.gitignore:32``). If a later change hardcodes either path and stops
     honouring the env var, the fixture would go on passing while quietly
     doing nothing -- this test is what fails instead.
+
+    The second assertion below is widened past just the correct
+    ``outputs/api_sessions`` path (P1 fix-wave, 2026-08-30): before that fix,
+    ``anthropic_proxy.LOG_DIR``'s ``__file__``-anchor was one level too
+    shallow and its unsandboxed default resolved to
+    ``<repo>/web/outputs/api_sessions/thinking_traces`` instead of
+    ``<repo>/outputs/api_sessions/thinking_traces``. A check against only the
+    correct path would have stayed green through that whole regression --
+    the wrong-location write never lands under ``outputs/api_sessions``, so
+    it would never trip -- which is exactly how the bug went unnoticed. The
+    ``web/outputs`` check below is what would have caught it.
     """
     proxy = importlib.import_module("squid_arena.anthropic_proxy")
     importlib.import_module("squid_arena.api")
@@ -187,3 +199,4 @@ def test_importing_writes_nothing_into_outputs() -> None:
         f"anthropic_proxy.LOG_DIR escaped the sandbox: {proxy.LOG_DIR}"
     )
     assert not (outputs / "api_sessions").exists()
+    assert not (REPO_ROOT / "web" / "outputs").exists()

@@ -46,6 +46,18 @@ def _cors_origins() -> list[str]:
 # In-memory session store (single-server, for local use).
 # ---------------------------------------------------------------------------
 
+# Reload-cascade exposure (Ruling C36): every module-scope singleton below --
+# ``_sessions``, ``_nicknames``, ``_campaigns``, ``_arena_runs`` and
+# ``_rate_limit_hits`` here, and ``_repository`` further down -- is
+# initialized once at import time and lost if this module is ever reloaded
+# (``importlib.reload``, a dev-server autoreloader, or re-import under a
+# fresh module identity in a test). That is exactly the hazard that forced
+# Ruling C36 to keep ``_repository`` eager rather than lazy -- switching it
+# to lazy init would itself be a behaviour change -- and
+# ``tests/unit/test_import_smoke.py`` sandboxes only ``_repository``'s copy
+# of it explicitly. Production is unaffected (the app process imports this
+# module exactly once), but the same reset-on-reload trap applies to every
+# dict below it, not just the repository handle.
 _sessions: dict[str, HumanGameSession] = {}
 
 # Nickname per API session_id (kept out of HumanGameSession — that class

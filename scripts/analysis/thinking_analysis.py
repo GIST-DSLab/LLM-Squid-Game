@@ -35,7 +35,7 @@ from typing import Any
 import numpy as np
 from scipy import stats
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # ---------------------------------------------------------------------------
 # Thinking detection

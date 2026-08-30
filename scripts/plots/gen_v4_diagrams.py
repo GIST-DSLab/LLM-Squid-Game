@@ -15,6 +15,17 @@ Produces 5 diagrams:
 # not the repo root -- one level short of where the three sibling
 # build_*_diagram.py scripts in this directory write. parents[1] is now
 # parents[2], reaching the repo root as documented and as the siblings do.
+#
+# REPOINTED (P1 fix-wave, 2026-08-30, Ruling C40): Ruling C15 originally
+# ordered this whole family's write target repointed to
+# assets/figures/v4/ -- generated diagram artefacts have a different
+# lifetime than docs/design/, the hand-authored specification of record,
+# and the two should not share a directory. P6 Task 3 fixed the
+# parents[1] off-by-one above (so this file's output rejoined its three
+# siblings) but substituted that for the repoint, leaving all four
+# writing into docs/design/v4/assets/ instead. This fix wave carries out
+# the original order: asset_dir now points at assets/figures/v4/, matching
+# the three build_*_diagram.py siblings.
 
 Palette values match .claude/skills/excalidraw-diagram/references/color-palette.md.
 """
@@ -1112,7 +1123,7 @@ def build_mtmm() -> list[dict]:
 # ---------- main ----------
 
 def main():
-    asset_dir = Path(__file__).resolve().parents[2] / "docs" / "design" / "v4" / "assets"
+    asset_dir = Path(__file__).resolve().parents[2] / "assets" / "figures" / "v4"
 
     random.seed(42)
     write_excal(build_overview(),    asset_dir / "d0_experiment_overview.excalidraw")

@@ -39,7 +39,7 @@ from dataclasses import is_dataclass, asdict
 from pathlib import Path
 from typing import Any, Sequence
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402

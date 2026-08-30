@@ -483,7 +483,8 @@ out = {
     "files": {},
 }
 
-target = Path("docs/design/v4/assets/phase_o_unit15_16_prompt_flow.excalidraw")
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+target = _REPO_ROOT / "assets" / "figures" / "v4" / "phase_o_unit15_16_prompt_flow.excalidraw"
 target.parent.mkdir(parents=True, exist_ok=True)
 target.write_text(json.dumps(out, indent=2))
 print(f"wrote {target}  ({len(elements)} elements)")

@@ -39,6 +39,7 @@ from typing import Sequence
 
 import pandas as pd
 
+from squid_game.analysis.behavioral.survival import run_h1_survival_hypothesis
 from squid_game.analysis.shared.loaders import (
     _BASELINE_FRAMINGS,
     _CORRUPTION_FRAMINGS_WITH_TERMINAL,
@@ -156,13 +157,6 @@ def run_all_unit14_hypotheses(
     promoted to Cox PH. Downstream renderers and orchestrators must now
     read ``payload["survival"]["cox"]`` instead.
     """
-    # Delayed import avoids the behavioral.survival ↔ forfeit_regression
-    # cycle at module load time; behavioral.survival imports
-    # ``turn_observations`` from this module.
-    from squid_game.analysis.behavioral.survival import (
-        run_h1_survival_hypothesis,
-    )
-
     turn_df = turn_observations(seasons)
     events_df = forfeit_events(seasons)
     survival = run_h1_survival_hypothesis(seasons)

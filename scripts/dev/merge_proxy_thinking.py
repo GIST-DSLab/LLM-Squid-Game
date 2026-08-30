@@ -41,7 +41,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-_REPO = Path(__file__).resolve().parent.parent
+_REPO = Path(__file__).resolve().parents[2]
 _DEFAULT_PROXY_LOG = _REPO / "outputs" / "api_sessions" / "thinking_traces" / "api_calls.jsonl"
 _DEFAULT_SEASONS = _REPO / "outputs" / "api_sessions" / "season_results.jsonl"
 _DEFAULT_OUT = _REPO / "outputs" / "api_sessions" / "turns_merged"

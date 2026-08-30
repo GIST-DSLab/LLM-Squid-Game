@@ -7,9 +7,9 @@ from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 FIG = ROOT / "assets" / "figures"
-OUT = ROOT / "web" / "assets"
+OUT = ROOT / "web" / "frontend" / "assets"
 
 # Source figures are 1792x2400. Boxes are (left, upper, right, lower).
 GUARD_SRC = FIG / "gun_vs_nogun_forfeit.png"   # 2-panel: armed (top), calm (bottom)

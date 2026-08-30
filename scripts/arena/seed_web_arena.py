@@ -46,7 +46,7 @@ from squid_arena.seeding import (  # noqa: F401
     seed_sessions,
 )
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ROOT = REPO_ROOT / "outputs" / "final_results"
 
 logger = logging.getLogger("seed_web_arena")

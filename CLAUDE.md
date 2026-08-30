@@ -26,7 +26,7 @@ uv run squid-game --config <path>    # Canonical entry point
 uv sync --extra dev                                              # Install pytest + pytest-asyncio
 uv run pytest tests/unit                                         # Unit suite (59 files, no network)
 uv run pytest tests/integration                                  # E2E suite (7 files, deterministic)
-uv run pytest tests/unit/test_forfeit_regression.py -k cox_ph    # Single test by keyword
+uv run pytest tests/unit/test_forfeit_regression.py -k ChoiceAsymmetricModel  # Single test by keyword
 uv run pytest -x --ff                                            # Stop on first failure, run failed first
 ```
 
@@ -203,10 +203,12 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
   prompts/        # framings/ (+ framings/legacy/, 6 archived), forfeit_layer/, tasks/,
                   # user_message/, probes/, social/
   analysis/       # measurement-channel decomposition (P2) — shared/ (loaders, metrics,
-                  # export, mtmm), cognitive/ (ri_task, ri_forfeit, ri_call1),
-                  # selfreport/ (psuccess, forfeit_reason), behavioral/ (regime,
-                  # baseline_persistence, session_tests), semantic/ (threat_registration,
-                  # threat_lexicon, threat_judge, discovery_detection); facade re-exports
+                  # export, mtmm, discovery_detection, manipulation_check),
+                  # cognitive/ (ri_task, ri_forfeit, ri_call1),
+                  # selfreport/ (psuccess, reason_convergence), behavioral/ (regime,
+                  # baseline_persistence, session_tests, survival — the H1 Cox PH
+                  # primary), semantic/ (dataset, embeddings, lexicon,
+                  # threat_registration, threat_judge); facade re-exports
                   # 84 symbols, see "Public API" below
 configs/
   tasks/          # signal_game, voting_room, navigation
@@ -276,7 +278,7 @@ outputs and committed them (see "Key experiment configs" above). Current state:
 
 ### Git LFS
 
-`outputs/**/*_turns.jsonl` (723 files, the raw session data) are **Git LFS** objects.
+`outputs/**/*_turns.jsonl` (722 files, the raw session data) are **Git LFS** objects.
 A freshly created git worktree does **not** run the LFS smudge filter, so these files
 materialize as **0 bytes** — `git status` shows them as modified, and analysis silently
 reports zero turns. Recover with `git checkout -- outputs/ && git lfs checkout outputs/`.
@@ -366,12 +368,15 @@ by all turns, so it is downward-biased there and the Wilson CI excludes sampling
 `from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` (84 symbols).
 
 - **H1 is a Cox PH, not a logit.** `fit_forfeit_logit` / `ForfeitLogitResult` were **deleted**
-  (2026-04-23); `forfeit_survival.fit_cox_forfeit_survival` (time-varying `CoxTimeVaryingFitter`
-  on the `no_cap` regime of Cells 1+3) supersedes them. Earlier revisions of this file listed
-  `fit_forfeit_logit` as a live export — it does not exist.
+  (2026-04-23); `behavioral.survival.fit_cox_forfeit_survival` (time-varying
+  `CoxTimeVaryingFitter` on the `no_cap` regime of Cells 1+3) supersedes them and is re-exported
+  by the facade. Earlier revisions of this file listed `fit_forfeit_logit` as a live export — it
+  does not exist.
 - Two live modules are **absent from `__all__`** and reachable only via their scripts:
-  `tc_regression.py` (→ `scripts/analyze_tc.py`) and
-  `forfeit_regression.fit_framing_ri_forfeit_continue` (→ `scripts/analyze_framing_ri_forfeit_continue.py`).
+  `cognitive.ri_task`'s `fit_tc_*` / `run_all_tc_indicators` functions (→
+  `scripts/analysis/analyze_tc.py`) and `selfreport.reason_convergence.fit_framing_ri_forfeit_continue`
+  (→ `scripts/analysis/analyze_framing_ri_forfeit_continue.py`). Both modules are the P2 successors
+  of the old flat `tc_regression.py` / `forfeit_regression.py`, neither of which exists any more.
 - `loaders.CELL_ID_MAP` is **stale** — it maps to the Phase-3 legacy `*_electricity` framings, so
   `infer_cell_id()` returns `None` for Cells 1–5 on every v6 run and the `cell_id` column in the
   exported CSVs is null. The hypothesis tests key on `is_corruption` / `is_baseline_flagship` /

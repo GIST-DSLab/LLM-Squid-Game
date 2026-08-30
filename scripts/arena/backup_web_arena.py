@@ -26,7 +26,7 @@ from pathlib import Path
 
 from squid_store import Repository, get_repository
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 logger = logging.getLogger("backup_web_arena")
 
