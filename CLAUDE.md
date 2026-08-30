@@ -24,8 +24,8 @@ uv run squid-game --config <path>    # Canonical entry point
 
 ```bash
 uv sync --extra dev                                              # Install pytest + pytest-asyncio
-uv run pytest tests/unit                                         # Unit suite (29 files, no network)
-uv run pytest tests/integration                                  # E2E suite (5 files, deterministic)
+uv run pytest tests/unit                                         # Unit suite (59 files, no network)
+uv run pytest tests/integration                                  # E2E suite (7 files, deterministic)
 uv run pytest tests/unit/test_forfeit_regression.py -k cox_ph    # Single test by keyword
 uv run pytest -x --ff                                            # Stop on first failure, run failed first
 ```
