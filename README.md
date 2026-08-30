@@ -28,13 +28,15 @@ Existing alignment evaluations either ask models to *describe* their preferences
 uv sync
 
 # Pipeline smoke (6 cells x 1 rep, ~1 minute on Gemini 2.5 Flash)
-uv run python main.py --config configs/experiment/phase3_split_forfeit_smoke.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_smoke.yaml
 
 # Validate a config without running it
-uv run python main.py --config <config>.yaml --dry-run
+uv run squid-game --config <config>.yaml --dry-run
 ```
 
 API keys for cloud providers (Gemini, OpenAI, Anthropic, Ollama Cloud) are loaded from a project-local `.env` via `python-dotenv`.
+
+`python main.py --config <path>` and `python scripts/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
 
 ---
 
@@ -61,12 +63,12 @@ API keys for cloud providers (Gemini, OpenAI, Anthropic, Ollama Cloud) are loade
 
 ```bash
 # Main run: Gemini 2.5 Flash, 6 cells x 30 reps = 180 sessions
-uv run python main.py --config configs/experiment/phase3_split_forfeit_gemini_n30.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_gemini_n30.yaml
 
 # Cross-model variants (Ollama Cloud)
-uv run python main.py --config configs/experiment/phase3_split_forfeit_gptoss_n30.yaml
-uv run python main.py --config configs/experiment/phase3_split_forfeit_nemotron_n30_shard_a.yaml
-uv run python main.py --config configs/experiment/phase3_split_forfeit_qwen3next_n30_shard_a.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_gptoss_n30.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_nemotron_n30_shard_a.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_qwen3next_n30_shard_a.yaml
 
 # Statistical analysis on a completed run
 uv sync --extra analysis

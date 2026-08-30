@@ -939,7 +939,18 @@ def _print_dry_run(config: ExperimentConfig) -> None:
 
 
 def main() -> None:
-    """Package entry point (registered in pyproject.toml)."""
+    """The single entry point (registered as the ``squid-game`` console script).
+
+    ``load_dotenv()`` lives here, not in a wrapper, because the wrappers are
+    not the only way in: ``uv run squid-game`` reaches this function
+    directly. Loading here means every path -- console script, ``main.py``,
+    ``scripts/run_experiment.py`` -- sees the same environment, which was
+    not true before: only ``main.py`` loaded ``.env``, so whether your API
+    keys were present depended on which command you happened to type.
+    """
+    from dotenv import load_dotenv
+
+    load_dotenv()
     run_experiment_cli()
 
 

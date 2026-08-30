@@ -14,9 +14,11 @@ The system runs LLM agents through multi-turn helpfulness-arena games with a 3(f
 
 ```bash
 # Python 3.12 required (pyproject.toml: requires-python = ">=3.12")
-uv sync                    # Install dependencies
-python main.py             # Run main entry point
+uv sync                              # Install dependencies
+uv run squid-game --config <path>    # Canonical entry point
 ```
+
+`python main.py --config <path>` and `python scripts/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
 
 ## Testing
 
@@ -39,16 +41,16 @@ Integration tests inject a `StubProvider` (`tests/integration/conftest.py`) via 
 ### Cloud provider mode (v6 canonical — Gemini / Ollama Cloud)
 ```bash
 # Main run (Gemini 2.5 Flash, 6 cells × 30 reps = 180 sessions)
-uv run python main.py --config configs/experiment/phase3_split_forfeit_gemini_n30.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_gemini_n30.yaml
 
 # Pipeline smoke (6 cells × 1 rep)
-uv run python main.py --config configs/experiment/phase3_split_forfeit_smoke.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_smoke.yaml
 
 # Resume an interrupted run
-uv run python main.py --config <config>.yaml --resume outputs/<output_dir>/
+uv run squid-game --config <config>.yaml --resume outputs/<output_dir>/
 
 # Dry-run (validate config only)
-uv run python main.py --config <config>.yaml --dry-run
+uv run squid-game --config <config>.yaml --dry-run
 ```
 
 ### MLX Server mode (local Qwen3 variants)
@@ -61,7 +63,7 @@ uv run python3 -m mlx_lm server \
   --temp 1.0 --top-p 0.95 --top-k 20
 
 # 2. Run experiment against it
-uv run python main.py --config <config>.yaml
+uv run squid-game --config <config>.yaml
 ```
 
 ### Key experiment configs (v6 canonical family) — ⚠️ ALL MISSING FROM DISK
