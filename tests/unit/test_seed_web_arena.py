@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from interface.persistence import Repository, SessionRecord, get_repository
+from squid_store import Repository, SessionRecord, get_repository
 from scripts.seed_web_arena import (
     build_session_record,
     build_turn_records,

@@ -37,7 +37,7 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from interface.persistence import ModelStatsRecord
+from squid_store import ModelStatsRecord
 
 
 # ---------------------------------------------------------------------------

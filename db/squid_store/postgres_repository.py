@@ -9,8 +9,8 @@ OPTIONAL dependency (see ``pyproject.toml`` ``[project.optional-dependencies]``
 
 from __future__ import annotations
 
-from interface.persistence.base import Repository
-from interface.persistence.models import (
+from squid_store.base import Repository
+from squid_store.models import (
     ModelStatsRecord,
     PlayerRecord,
     SessionRecord,

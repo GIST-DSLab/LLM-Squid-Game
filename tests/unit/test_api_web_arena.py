@@ -284,7 +284,7 @@ def test_result_persists_session_and_turns_idempotently(client: TestClient, api_
 def test_leaderboard_models_flat_list_sorted_by_beta_descending(
     client: TestClient, api_module
 ) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     api_module._repository.upsert_model_stats(
         ModelStatsRecord(
@@ -349,7 +349,7 @@ def test_leaderboard_models_empty_returns_empty_list_not_error(client: TestClien
 
 
 def test_leaderboard_models_exposes_new_sd_value_fields(client: TestClient, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     api_module._repository.upsert_model_stats(
         ModelStatsRecord(
@@ -916,7 +916,7 @@ def test_state_framing_threat_true_baseline_is_human_intro(client) -> None:
 
 
 def _seed_session(api_module, **overrides):
-    from interface.persistence import SessionRecord, TurnRecord
+    from squid_store import SessionRecord, TurnRecord
 
     repo = api_module._repository
     defaults = dict(
@@ -974,7 +974,7 @@ def test_report_human_groups_by_campaign_with_cells(client, api_module) -> None:
 
 
 def test_report_llm_aggregates_rates_and_joins_model_stats(client, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     # Two sessions in the same cell: turn 1 correctness = 1/2.
     _seed_session(
@@ -1007,7 +1007,7 @@ def test_report_llm_aggregates_rates_and_joins_model_stats(client, api_module) -
 
 
 def test_report_llm_mediation_and_verbal_reasons(client, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     _seed_session(
         api_module, nickname="med-model", source="llm",
@@ -1044,7 +1044,7 @@ def test_report_llm_mediation_and_verbal_reasons(client, api_module) -> None:
 
 
 def test_report_llm_no_mediation_when_fields_absent(client, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     _seed_session(
         api_module, nickname="bare-model", source="llm",
@@ -1090,7 +1090,7 @@ def test_model_scores_empty_on_fresh_db(client):
 
 
 def test_model_scores_aggregates_llm_sessions(api_module, client):
-    from interface.persistence.models import SessionRecord
+    from squid_store.models import SessionRecord
 
     repo = api_module._repository
     for i, score in enumerate([100.0, 300.0]):  # ModelA avg 200, n 2

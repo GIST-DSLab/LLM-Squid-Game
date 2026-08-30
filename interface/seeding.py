@@ -1,7 +1,7 @@
 """Web Arena seed core (WP3) — importable seed helpers.
 
 Turns existing LLM experiment outputs into Web Arena persistence rows
-(``interface/persistence``, WP1):
+(``squid_store``, WP1):
 
 - ``outputs/final_results/<run_dir>/season_results.jsonl`` (one run dir per
   model, see ``MODEL_DIRS``) -> ``sessions`` + ``turns`` rows with
@@ -46,7 +46,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from interface.persistence import ModelStatsRecord, Repository, SessionRecord, TurnRecord
+from squid_store import ModelStatsRecord, Repository, SessionRecord, TurnRecord
 
 logger = logging.getLogger("seed_web_arena")
 

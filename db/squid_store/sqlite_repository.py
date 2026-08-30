@@ -13,8 +13,8 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
-from interface.persistence.base import Repository
-from interface.persistence.models import (
+from squid_store.base import Repository
+from squid_store.models import (
     ModelStatsRecord,
     PlayerRecord,
     SessionRecord,

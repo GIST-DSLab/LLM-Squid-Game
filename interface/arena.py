@@ -26,7 +26,7 @@ from pathlib import Path
 
 import yaml
 
-from interface.persistence.base import Repository
+from squid_store.base import Repository
 from interface.remote_provider import ArenaProgress, RemoteProvider
 from interface.seeding import seed_sessions
 from squid_game.runner import ExperimentRunner, load_config_from_yaml

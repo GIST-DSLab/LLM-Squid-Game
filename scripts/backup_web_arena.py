@@ -2,7 +2,7 @@
 
 Inverse of scripts/seed_web_arena.py: reads sessions/turns/model_stats from a
 source Repository and writes them to a destination Repository, both obtained
-via interface.persistence.get_repository (so it works Postgres->SQLite,
+via squid_store.get_repository (so it works Postgres->SQLite,
 SQLite->SQLite, etc). Idempotent: sessions already present in the destination
 (by id) are skipped; model_stats are upserted. Only durable rows are copied —
 this is a backup/analysis snapshot, not a live sync.
@@ -29,7 +29,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from interface.persistence import Repository, get_repository  # noqa: E402
+from squid_store import Repository, get_repository  # noqa: E402
 
 logger = logging.getLogger("backup_web_arena")
 

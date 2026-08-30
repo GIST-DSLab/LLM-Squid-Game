@@ -10,7 +10,7 @@ real Core Engine + VanillaAgent parser run unmodified.
 from __future__ import annotations
 
 import interface.arena as arena_mod
-from interface.persistence.sqlite_repository import SQLiteRepository
+from squid_store.sqlite_repository import SQLiteRepository
 from interface.remote_provider import ArenaProgress
 
 

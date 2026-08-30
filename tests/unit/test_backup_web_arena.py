@@ -1,8 +1,8 @@
 """Unit test for scripts/backup_web_arena.py — mirror one Repository to another."""
 from __future__ import annotations
 
-from interface.persistence import SessionRecord, TurnRecord, ModelStatsRecord
-from interface.persistence.sqlite_repository import SQLiteRepository
+from squid_store import SessionRecord, TurnRecord, ModelStatsRecord
+from squid_store.sqlite_repository import SQLiteRepository
 from scripts.backup_web_arena import mirror_repository
 
 

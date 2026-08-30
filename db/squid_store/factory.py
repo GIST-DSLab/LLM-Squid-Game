@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 
-from interface.persistence.base import Repository
+from squid_store.base import Repository
 
 DEFAULT_SQLITE_PATH = "outputs/web_arena/web_arena.db"
 
@@ -23,10 +23,10 @@ def get_repository(dsn: str | None = None) -> Repository:
         dsn = os.environ.get("WEB_ARENA_DSN")
 
     if dsn and dsn.startswith(("postgres://", "postgresql://")):
-        from interface.persistence.postgres_repository import PostgresRepository
+        from squid_store.postgres_repository import PostgresRepository
 
         return PostgresRepository(dsn)
 
-    from interface.persistence.sqlite_repository import SQLiteRepository
+    from squid_store.sqlite_repository import SQLiteRepository
 
     return SQLiteRepository(dsn or DEFAULT_SQLITE_PATH)

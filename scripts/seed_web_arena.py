@@ -43,7 +43,7 @@ DEFAULT_ROOT = REPO_ROOT / "outputs" / "final_results"
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from interface.persistence import get_repository  # noqa: E402
+from squid_store import get_repository  # noqa: E402
 
 # Re-exported from the importable seed core so existing callers and tests can
 # keep importing these from ``scripts.seed_web_arena``.

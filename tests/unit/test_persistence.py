@@ -1,4 +1,4 @@
-"""Unit tests for the Web Arena persistence layer (``interface/persistence``).
+"""Unit tests for the Web Arena persistence layer (``squid_store``).
 
 Offline, SQLite-only (in-memory). Covers: idempotent schema creation, CRUD
 round-trip for all three tables (sessions / turns / model_stats), the
@@ -15,8 +15,8 @@ import itertools
 
 import pytest
 
-from interface.persistence import ModelStatsRecord, Repository, SessionRecord, TurnRecord, get_repository
-from interface.persistence.sqlite_repository import SQLiteRepository
+from squid_store import ModelStatsRecord, Repository, SessionRecord, TurnRecord, get_repository
+from squid_store.sqlite_repository import SQLiteRepository
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ def test_get_repository_reads_env_var_when_dsn_omitted(monkeypatch: pytest.Monke
 def test_postgres_repository_module_imports_without_psycopg_installed() -> None:
     # Importing the module (as opposed to instantiating PostgresRepository)
     # must never require psycopg to be installed.
-    mod = importlib.import_module("interface.persistence.postgres_repository")
+    mod = importlib.import_module("squid_store.postgres_repository")
     assert hasattr(mod, "PostgresRepository")
 
 
@@ -103,7 +103,7 @@ def test_get_repository_routes_postgres_dsn_to_postgres_backend(
     fake_psycopg.connect = lambda dsn, autocommit=False: _FakeConn()
     monkeypatch.setitem(sys.modules, "psycopg", fake_psycopg)
 
-    from interface.persistence.postgres_repository import PostgresRepository
+    from squid_store.postgres_repository import PostgresRepository
 
     repo = get_repository("postgresql://user:pw@localhost:5432/db")
     try:
@@ -269,7 +269,7 @@ def test_session_difficulty_defaults_to_easy(repo: Repository) -> None:
 
 def test_sessions_difficulty_migration_adds_column_to_old_db(tmp_path) -> None:
     import sqlite3
-    from interface.persistence.sqlite_repository import SQLiteRepository
+    from squid_store.sqlite_repository import SQLiteRepository
 
     db = str(tmp_path / "old.db")
     # Simulate a pre-migration DB: sessions without the difficulty column.
@@ -299,7 +299,7 @@ def test_sessions_difficulty_migration_adds_column_to_old_db(tmp_path) -> None:
 
 
 def test_postgres_schema_and_sql_include_difficulty() -> None:
-    import interface.persistence.postgres_repository as pg
+    import squid_store.postgres_repository as pg
 
     # Schema declares the column with the easy default.
     assert "difficulty TEXT NOT NULL DEFAULT 'easy'" in pg._SCHEMA
@@ -492,7 +492,7 @@ def test_model_stats_new_columns_default_to_none(repo: Repository) -> None:
 
 def test_model_stats_migration_adds_columns_to_old_db(tmp_path) -> None:
     import sqlite3
-    from interface.persistence.sqlite_repository import SQLiteRepository
+    from squid_store.sqlite_repository import SQLiteRepository
 
     db = str(tmp_path / "old.db")
     # Simulate a pre-migration DB: model_stats without the new columns.
@@ -538,7 +538,7 @@ def test_turn_record_round_trips_psuccess_self(repo: Repository) -> None:
 
 
 def test_create_and_get_player(repo: Repository) -> None:
-    from interface.persistence import PlayerRecord
+    from squid_store import PlayerRecord
 
     assert repo.get_player("alice") is None
     repo.create_player(PlayerRecord(nickname="alice", pw_hash="pbkdf2_sha256$1$aa$bb"))
@@ -550,7 +550,7 @@ def test_create_and_get_player(repo: Repository) -> None:
 
 
 def test_create_player_duplicate_nickname_raises(repo: Repository) -> None:
-    from interface.persistence import PlayerRecord
+    from squid_store import PlayerRecord
 
     repo.create_player(PlayerRecord(nickname="bob", pw_hash="h1"))
     with pytest.raises(Exception):

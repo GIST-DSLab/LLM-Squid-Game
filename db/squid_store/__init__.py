@@ -8,15 +8,15 @@ WP3 (seed script) should import only from this package, never from
 
 Usage::
 
-    from interface.persistence import get_repository, SessionRecord
+    from squid_store import get_repository, SessionRecord
 
     repo = get_repository()  # reads WEB_ARENA_DSN, falls back to SQLite
     repo.create_session(SessionRecord(...))
 """
 
-from interface.persistence.base import Repository
-from interface.persistence.factory import get_repository
-from interface.persistence.models import (
+from squid_store.base import Repository
+from squid_store.factory import get_repository
+from squid_store.models import (
     ModelStatsRecord,
     PlayerRecord,
     SessionRecord,

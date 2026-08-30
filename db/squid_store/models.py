@@ -1,7 +1,7 @@
 """Data records for the Web Arena persistence layer.
 
 These dataclasses are the driver-agnostic wire format used by the
-``Repository`` interface (see ``interface/persistence/base.py``). Neither
+``Repository`` interface (see ``db/squid_store/base.py``). Neither
 consumer (``interface/api.py`` / a future seed script) nor either backend
 (SQLite, Postgres) should need anything beyond these shapes.
 

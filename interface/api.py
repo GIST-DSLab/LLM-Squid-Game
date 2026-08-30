@@ -21,7 +21,7 @@ experiments.
 
 Scoring is always computed server-side via HumanGameSession — this module
 never accepts a client-submitted final score. Persistence uses WP1's
-driver-agnostic Repository interface (``interface/persistence``) only;
+driver-agnostic Repository interface (``squid_store``) only;
 never a concrete DB driver.
 """
 
@@ -54,7 +54,7 @@ from interface.arena import (
 from interface.auth import hash_password, verify_password
 from interface.human_game import HumanGameSession
 from interface.rule_schedule import rule_index_for
-from interface.persistence import (
+from squid_store import (
     ModelStatsRecord,
     PlayerRecord,
     SessionRecord,
@@ -139,7 +139,7 @@ PERSIST_HUMAN_SESSIONS = True
 # Token counter for reasoning text.
 _encoding = tiktoken.get_encoding("cl100k_base")
 
-# Module-level repository singleton (driver-agnostic; see interface/persistence).
+# Module-level repository singleton (driver-agnostic; see squid_store).
 # Reads WEB_ARENA_DSN, falls back to a local SQLite file.
 _repository = get_repository()
 

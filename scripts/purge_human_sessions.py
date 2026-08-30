@@ -6,7 +6,7 @@ persisted (see ``PERSIST_HUMAN_SESSIONS`` in interface/api.py). This one-off
 cleanup drops the human rows that were written before that change.
 
 Works against whatever backend ``WEB_ARENA_DSN`` selects (local SQLite or
-production Postgres) via interface.persistence.get_repository. The ``turns``
+production Postgres) via squid_store.get_repository. The ``turns``
 table has no ON DELETE CASCADE, so the repository method removes dependent
 turn rows first.
 
@@ -33,7 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from interface.persistence import get_repository  # noqa: E402
+from squid_store import get_repository  # noqa: E402
 
 logger = logging.getLogger("purge_human_sessions")
 

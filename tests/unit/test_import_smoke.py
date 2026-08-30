@@ -1,10 +1,11 @@
 """Every module in the tree must still import after the restructure.
 
-P1 rewrites imports across ``src/``, ``scripts/`` and ``interface/`` and
-removes eleven ``sys.path`` hacks. A module that neither the unit suite nor
-``scripts/analyze_phase3.py`` reaches can acquire a broken import while both
-of those nets stay green -- the golden snapshot only exercises the analysis
-entry point, and most of ``scripts/`` has no test at all.
+P1 rewrites imports across ``src/``, ``scripts/``, ``interface/`` and
+``db/`` and removes eleven ``sys.path`` hacks. A module that neither the
+unit suite nor ``scripts/analyze_phase3.py`` reaches can acquire a broken
+import while both of those nets stay green -- the golden snapshot only
+exercises the analysis entry point, and most of ``scripts/`` has no test
+at all.
 
 This test closes that hole the cheapest way there is: walk the tree and
 import every module found.
@@ -25,12 +26,12 @@ Three rules keep it honest:
    redirects the two that are redirectable; the three that are not are
    skipped and named.
 
-An audit of module-scope filesystem calls across ``src/``, ``scripts/`` and
-``interface/``::
+An audit of module-scope filesystem calls across ``src/``, ``scripts/``,
+``interface/`` and ``db/``::
 
     grep -rn --include='*.py' -E \\
       '^[A-Za-z_][^ =]*.*(\\.mkdir\\(|sqlite3\\.connect|\\.write_text\\(|\\.touch\\(|makedirs\\(|get_repository\\(\\))' \\
-      src scripts interface
+      src scripts interface db
 
 finds exactly five hits: the three ``build_*_diagram`` scripts (skipped),
 ``interface/anthropic_proxy.py:57`` and ``interface/api.py:144`` (both
@@ -60,6 +61,7 @@ PACKAGE_ROOTS: list[tuple[str, Path]] = [
     ("src", REPO_ROOT / "src"),
     ("scripts", REPO_ROOT),
     ("interface", REPO_ROOT),
+    ("db", REPO_ROOT / "db"),
 ]
 
 # Module name -> why it is not imported here. One line each; nothing else is
@@ -142,6 +144,7 @@ def test_the_walk_actually_finds_the_tree() -> None:
     assert "squid_game.analysis.forfeit_regression" in MODULE_NAMES
     assert "scripts.analyze_phase3" in MODULE_NAMES
     assert "interface.api" in MODULE_NAMES
+    assert "squid_store.base" in MODULE_NAMES
 
 
 def test_skip_list_names_only_modules_that_exist() -> None:

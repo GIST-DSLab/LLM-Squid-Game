@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from interface.persistence.models import (
+from squid_store.models import (
     ModelStatsRecord,
     PlayerRecord,
     SessionRecord,

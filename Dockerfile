@@ -31,6 +31,7 @@ RUN uv sync --frozen --no-install-project --extra postgres --no-dev
 
 # Now copy the actual source and install the project itself.
 COPY src ./src
+COPY db ./db
 COPY interface ./interface
 RUN uv sync --frozen --extra postgres --no-dev
 
