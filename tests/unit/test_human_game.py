@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from interface.human_game import HumanGameSession
+from squid_arena.human_game import HumanGameSession
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.models.config import ForfeitLayerConfig
 from squid_game.models.forfeit_choice import CONTINUE_CHOICE, ForfeitReason
@@ -26,7 +26,7 @@ def _new_allowed_session() -> HumanGameSession:
 
 
 def test_get_result_reflects_selected_difficulty() -> None:
-    from interface.human_game import HumanGameSession
+    from squid_arena.human_game import HumanGameSession
 
     game = HumanGameSession(
         task_name="signal_game", difficulty="hard",

@@ -27,7 +27,7 @@ jobs:
           #
           # It does not claim the suite ignores outputs/ entirely: as of
           # 2026-08-30 tests/unit/test_import_smoke.py asserts that importing
-          # interface.anthropic_proxy and interface.api creates nothing under
+          # squid_arena.anthropic_proxy and squid_arena.api creates nothing under
           # outputs/. That check only stats paths and needs no LFS content.
           lfs: false
 

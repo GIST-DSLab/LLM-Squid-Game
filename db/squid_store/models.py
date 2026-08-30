@@ -135,7 +135,7 @@ class PlayerRecord:
     """One row of the ``players`` table — a Play identity.
 
     ``nickname`` is the primary key (the player's public identity);
-    ``pw_hash`` is a ``interface.auth.hash_password`` string. There is no
+    ``pw_hash`` is a ``squid_arena.auth.hash_password`` string. There is no
     plaintext password anywhere. ``created_at`` is server-assigned by DEFAULT
     when left ``None``.
     """

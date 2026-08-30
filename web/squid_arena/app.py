@@ -1,20 +1,12 @@
 """Streamlit web interface for human players.
 
 Run with:
-    streamlit run interface/app.py
+    streamlit run web/squid_arena/app.py
 """
-
-import sys
-from pathlib import Path
-
-# Ensure project root is on sys.path so squid_game is importable.
-_project_root = str(Path(__file__).resolve().parent.parent)
-if _project_root not in sys.path:
-    sys.path.insert(0, _project_root)
 
 import streamlit as st
 
-from interface.human_game import HumanGameSession
+from squid_arena.human_game import HumanGameSession
 
 # ---------------------------------------------------------------------------
 # Page config

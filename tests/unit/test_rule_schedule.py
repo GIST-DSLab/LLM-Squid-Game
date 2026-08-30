@@ -11,8 +11,8 @@ from __future__ import annotations
 from collections import Counter
 from random import Random
 
-import interface.rule_schedule as rule_schedule
-from interface.rule_schedule import (
+import squid_arena.rule_schedule as rule_schedule
+from squid_arena.rule_schedule import (
     CAMPAIGN_GAME_COUNT,
     RULE_FAMILY_COUNT,
     campaign_rule_schedule,

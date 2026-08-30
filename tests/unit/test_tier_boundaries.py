@@ -27,6 +27,17 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+@pytest.fixture(autouse=True)
+def _sandbox_repository(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """``squid_arena.api`` opens a repository at import time; keep it in RAM.
+
+    Without this the import falls back to outputs/web_arena/web_arena.db --
+    the live dev database -- and runs init_schema against it.
+    """
+    monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
+    monkeypatch.setenv("SQUID_THINKING_LOG_DIR", str(tmp_path / "thinking_traces"))
+
+
 def _toplevel_imports(package_dir: Path) -> set[str]:
     """Every top-level module name imported anywhere under ``package_dir``."""
     names: set[str] = set()
@@ -79,3 +90,26 @@ def test_squid_store_depends_on_no_other_tier() -> None:
     assert "squid_arena" not in imported
     assert "squid_game" not in imported
     assert "interface" not in imported
+
+
+def test_squid_arena_imports_under_its_own_name() -> None:
+    module = importlib.import_module("squid_arena.api")
+    assert module.app is not None
+
+
+def test_squid_arena_lives_in_the_web_tier() -> None:
+    module = importlib.import_module("squid_arena")
+    assert Path(module.__file__).parent == REPO_ROOT / "web" / "squid_arena"
+
+
+def test_the_old_interface_package_is_gone() -> None:
+    assert not (REPO_ROOT / "interface").exists()
+    assert importlib.util.find_spec("interface") is None
+
+
+def test_squid_arena_touches_no_sys_path() -> None:
+    """The tier packages exist so nothing has to rewrite sys.path any more."""
+    for path in (REPO_ROOT / "web" / "squid_arena").rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        assert "sys.path" not in path.read_text(encoding="utf-8"), path

@@ -14,7 +14,7 @@ brief's coverage list:
     - GET /api/logs + GET /api/logs/{id} (human + llm sources, turn trace,
       404)
 
-The ``WEB_ARENA_DSN`` env var must be set *before* ``interface.api`` is
+The ``WEB_ARENA_DSN`` env var must be set *before* ``squid_arena.api`` is
 imported (it builds a module-level ``_repository`` singleton at import
 time) — every test uses the ``api_module`` fixture, which sets the env var
 and then ``importlib.reload``s the module, mirroring the pattern in
@@ -47,7 +47,7 @@ from squid_store import ModelStatsRecord
 
 @pytest.fixture
 def api_module(tmp_path, monkeypatch: pytest.MonkeyPatch):
-    """Reload ``interface.api`` against a fresh temp-file SQLite DB.
+    """Reload ``squid_arena.api`` against a fresh temp-file SQLite DB.
 
     A distinct ``tmp_path`` per test gives full isolation without relying on
     ``:memory:`` semantics — this is a real (if throwaway) SQLite file that
@@ -56,7 +56,7 @@ def api_module(tmp_path, monkeypatch: pytest.MonkeyPatch):
     dsn = str(tmp_path / "web_arena_test.db")
     monkeypatch.setenv("WEB_ARENA_DSN", dsn)
     monkeypatch.delenv("WEB_ARENA_CORS_ORIGINS", raising=False)
-    import interface.api as api
+    import squid_arena.api as api
 
     reloaded = importlib.reload(api)
     yield reloaded

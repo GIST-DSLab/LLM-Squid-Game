@@ -469,7 +469,7 @@ def test_seed_model_stats_no_cap_none_when_model_dir_unknown(repo: Repository, t
 def test_no_cap_avg_session_score_returns_none_without_analysis_extra(monkeypatch, tmp_path: Path) -> None:
     import builtins
 
-    import interface.seeding as seeding
+    import squid_arena.seeding as seeding
 
     real_import = builtins.__import__
 
@@ -541,7 +541,7 @@ def _full_season(
 def test_no_cap_avg_session_score_averages_final_score_across_no_cap_sessions(
     tmp_path: Path,
 ) -> None:
-    import interface.seeding as seeding
+    import squid_arena.seeding as seeding
 
     # Two sessions, neither ever hits the reward cap (offered reward well
     # below the ~99.5 cap-bound threshold) -> both count as no-cap sessions.
@@ -562,7 +562,7 @@ def test_no_cap_avg_session_score_averages_final_score_across_no_cap_sessions(
 
 
 def test_no_cap_avg_session_score_excludes_cap_bound_sessions(tmp_path: Path) -> None:
-    import interface.seeding as seeding
+    import squid_arena.seeding as seeding
 
     # session-a never hits the cap -> no-cap session, included.
     season_a = _full_season(

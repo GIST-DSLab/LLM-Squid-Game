@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start the Squid-Game game API server and the Anthropic thinking-capture
 # proxy as background processes. Both run inside the project's uv env
-# because they import project code (interface/api.py, interface/anthropic_proxy.py).
+# because they import project code (web/squid_arena/api.py, web/squid_arena/anthropic_proxy.py).
 #
 # This script is idempotent: if a server is already healthy on its port,
 # it is left untouched. Intended to be run FROM THE PROJECT ROOT by the
@@ -60,11 +60,11 @@ start_if_needed() {
 
 start_if_needed "game_api" "$GAME_PORT" \
   "http://127.0.0.1:$GAME_PORT/docs" \
-  "exec uv run uvicorn interface.api:app --host 127.0.0.1 --port $GAME_PORT --log-level warning"
+  "exec uv run uvicorn squid_arena.api:app --host 127.0.0.1 --port $GAME_PORT --log-level warning"
 
 start_if_needed "proxy" "$PROXY_PORT" \
   "http://127.0.0.1:$PROXY_PORT/_proxy/health" \
-  "exec uv run uvicorn interface.anthropic_proxy:app --host 127.0.0.1 --port $PROXY_PORT --log-level warning"
+  "exec uv run uvicorn squid_arena.anthropic_proxy:app --host 127.0.0.1 --port $PROXY_PORT --log-level warning"
 
 cat <<EOF
 [start_servers] ready.

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from interface.auth import hash_password, verify_password
+from squid_arena.auth import hash_password, verify_password
 
 
 def test_hash_then_verify_roundtrip() -> None:

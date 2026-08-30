@@ -18,10 +18,10 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def api_module(monkeypatch: pytest.MonkeyPatch):
-    """Reload ``interface.api`` against a fresh in-memory repository."""
+    """Reload ``squid_arena.api`` against a fresh in-memory repository."""
     monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
     monkeypatch.delenv("WEB_ARENA_CORS_ORIGINS", raising=False)
-    import interface.api as api
+    import squid_arena.api as api
 
     return importlib.reload(api)
 
@@ -221,7 +221,7 @@ def test_cors_origins_default_list_is_non_empty(api_module) -> None:
 def test_cors_origins_reads_env_var_override(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
     monkeypatch.setenv("WEB_ARENA_CORS_ORIGINS", "https://example.com, https://foo.bar")
-    import interface.api as api
+    import squid_arena.api as api
 
     reloaded = importlib.reload(api)
     assert reloaded._cors_origins() == ["https://example.com", "https://foo.bar"]
@@ -733,7 +733,7 @@ def test_log_detail_exposes_psuccess_self(client):
 
 
 def test_arena_request_max_tokens_default_and_bounds():
-    from interface.api import ArenaRunRequest
+    from squid_arena.api import ArenaRunRequest
     import pytest as _pytest
     from pydantic import ValidationError
 
@@ -1176,7 +1176,7 @@ def test_arena_run_rejects_unknown_difficulty(client: TestClient) -> None:
 
 
 def test_arena_run_request_difficulty_defaults_to_easy() -> None:
-    from interface.api import ArenaRunRequest
+    from squid_arena.api import ArenaRunRequest
 
     req = ArenaRunRequest(endpoint_url="https://p.example/v1/chat/completions")
     assert req.difficulty == "easy"

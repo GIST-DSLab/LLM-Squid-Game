@@ -2,7 +2,7 @@
 
 Two independently deployable pieces:
 
-- **Backend** (`interface/api.py`, FastAPI) — containerized via the repo-root
+- **Backend** (`web/squid_arena/api.py`, FastAPI) — containerized via the repo-root
   `Dockerfile`, deployed to **Render** (free tier) via `render.yaml`.
 - **Frontend** (`web/`, static HTML/JS) — deployed to **GitHub Pages** via
   `.github/workflows/deploy-pages.yml`.
@@ -23,7 +23,7 @@ below.
 # a normal filesystem, and NOT needed inside Docker/Render (no iCloud there).
 chflags nohidden .venv/lib/python3.12/site-packages/*.pth
 
-uv run --no-sync uvicorn interface.api:app --port 8502
+uv run --no-sync uvicorn squid_arena.api:app --port 8502
 ```
 
 With no `WEB_ARENA_DSN` set, the backend falls back to a local SQLite file
@@ -38,7 +38,7 @@ python -m http.server 5500
 
 Open `http://localhost:5500`. `web/config.js` already defaults
 `window.WEB_ARENA_API` to `http://localhost:8502`, and the backend's default
-CORS allow-list (`interface/api.py::_DEFAULT_CORS_ORIGINS`) already includes
+CORS allow-list (`web/squid_arena/api.py::_DEFAULT_CORS_ORIGINS`) already includes
 `http://localhost:5500` — no env vars needed for local dev.
 
 ## 2. Backend deploy — Render
@@ -129,7 +129,7 @@ backend will be blocked by the browser:
 | Frontend -> backend URL | `web/config.js` -> `window.WEB_ARENA_API` | The Render service URL, e.g. `https://squid-game-web-arena-api.onrender.com` |
 | Backend -> allowed origin | Render dashboard env var `WEB_ARENA_CORS_ORIGINS` | The GitHub Pages origin, e.g. `https://irregular6612.github.io` |
 
-`interface/api.py::_DEFAULT_CORS_ORIGINS` already includes
+`web/squid_arena/api.py::_DEFAULT_CORS_ORIGINS` already includes
 `https://irregular6612.github.io` as a hardcoded fallback, so leaving
 `WEB_ARENA_CORS_ORIGINS` unset on Render still works for the default Pages
 account origin — but set it explicitly in the dashboard for clarity, and

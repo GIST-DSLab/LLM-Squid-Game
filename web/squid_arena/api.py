@@ -13,7 +13,7 @@ Endpoints:
     GET  /api/logs/{session_id}   — turn-by-turn trace for one session
 
 Run:
-    uv run uvicorn interface.api:app --port 8502
+    uv run uvicorn squid_arena.api:app --port 8502
 
 The reasoning field in /api/action captures the agent's thinking process,
 stored as thinking_text in TurnResult for RI analysis comparable to LLM
@@ -28,32 +28,25 @@ never a concrete DB driver.
 import os
 import random
 import re
-import sys
 import threading
 import time
 import uuid
 from collections import defaultdict
-from pathlib import Path
-
-# Ensure project root is on sys.path.
-_project_root = str(Path(__file__).resolve().parent.parent)
-if _project_root not in sys.path:
-    sys.path.insert(0, _project_root)
 
 import tiktoken
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from interface.arena import (
+from squid_arena.arena import (
     VALID_DIFFICULTIES,
     VALID_FORFEITS,
     VALID_FRAMINGS,
     run_arena_session,
 )
-from interface.auth import hash_password, verify_password
-from interface.human_game import HumanGameSession
-from interface.rule_schedule import rule_index_for
+from squid_arena.auth import hash_password, verify_password
+from squid_arena.human_game import HumanGameSession
+from squid_arena.rule_schedule import rule_index_for
 from squid_store import (
     ModelStatsRecord,
     PlayerRecord,
@@ -61,7 +54,7 @@ from squid_store import (
     TurnRecord,
     get_repository,
 )
-from interface.remote_provider import ArenaProgress
+from squid_arena.remote_provider import ArenaProgress
 
 app = FastAPI(
     title="LLM Squid Game API",

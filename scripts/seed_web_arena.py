@@ -1,7 +1,7 @@
 """Seed CLI for the Web Arena DB (WP3).
 
-Thin command-line wrapper around ``interface.seeding`` (the importable seed
-core, which ``interface.arena`` also reuses to persist live LLM Arena runs).
+Thin command-line wrapper around ``squid_arena.seeding`` (the importable seed
+core, which ``squid_arena.arena`` also reuses to persist live LLM Arena runs).
 The reusable helpers live in ``interface/seeding.py`` — shipped inside the
 backend image — because ``scripts/`` is excluded from the Docker build; this
 file re-exports them so the seed command and its tests keep importing from
@@ -47,7 +47,7 @@ from squid_store import get_repository  # noqa: E402
 
 # Re-exported from the importable seed core so existing callers and tests can
 # keep importing these from ``scripts.seed_web_arena``.
-from interface.seeding import (  # noqa: E402,F401
+from squid_arena.seeding import (  # noqa: E402,F401
     MODEL_DIRS,
     build_session_record,
     build_turn_records,

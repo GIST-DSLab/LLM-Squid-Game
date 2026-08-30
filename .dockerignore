@@ -1,6 +1,7 @@
 # Keep the backend image lean — only pyproject.toml, uv.lock, README.md,
-# src/, and interface/ are actually needed to run `uvicorn interface.api:app`
-# (see Dockerfile). Everything below is excluded from the build context.
+# src/, db/, and web/squid_arena/ are actually needed to run
+# `uvicorn squid_arena.api:app` (see Dockerfile). Everything below is
+# excluded from the build context.
 
 .git
 .github
@@ -15,7 +16,15 @@ configs/
 scripts/
 tests/
 notebooks/
-web/
+
+# The static frontend is deployed to Pages, not baked into the API image.
+# web/squid_arena/ (the backend) must stay in the context -- see Dockerfile.
+web/frontend/
+web/*.html
+web/*.js
+web/*.css
+web/assets/
+web/DEPLOY.md
 
 # Python cruft
 __pycache__/

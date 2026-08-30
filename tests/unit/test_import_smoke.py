@@ -1,6 +1,6 @@
 """Every module in the tree must still import after the restructure.
 
-P1 rewrites imports across ``src/``, ``scripts/``, ``interface/`` and
+P1 rewrites imports across ``src/``, ``scripts/``, ``web/squid_arena/`` and
 ``db/`` and removes eleven ``sys.path`` hacks. A module that neither the
 unit suite nor ``scripts/analyze_phase3.py`` reaches can acquire a broken
 import while both of those nets stay green -- the golden snapshot only
@@ -27,16 +27,16 @@ Three rules keep it honest:
    skipped and named.
 
 An audit of module-scope filesystem calls across ``src/``, ``scripts/``,
-``interface/`` and ``db/``::
+``web/squid_arena/`` and ``db/``::
 
     grep -rn --include='*.py' -E \\
       '^[A-Za-z_][^ =]*.*(\\.mkdir\\(|sqlite3\\.connect|\\.write_text\\(|\\.touch\\(|makedirs\\(|get_repository\\(\\))' \\
-      src scripts interface db
+      src scripts web/squid_arena db
 
 finds exactly five hits: the three ``build_*_diagram`` scripts (skipped),
-``interface/anthropic_proxy.py:57`` and ``interface/api.py:144`` (both
-sandboxed by the fixture). Re-run it after any restructure step that moves
-code into a new module.
+``web/squid_arena/anthropic_proxy.py:57`` and ``web/squid_arena/api.py:144``
+(both sandboxed by the fixture). Re-run it after any restructure step that
+moves code into a new module.
 
 The environment assumed is the documented baseline,
 ``uv sync --extra dev --extra analysis`` (see
@@ -60,15 +60,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOTS: list[tuple[str, Path]] = [
     ("src", REPO_ROOT / "src"),
     ("scripts", REPO_ROOT),
-    ("interface", REPO_ROOT),
     ("db", REPO_ROOT / "db"),
+    ("web/squid_arena", REPO_ROOT / "web"),
 ]
 
 # Module name -> why it is not imported here. One line each; nothing else is
 # skipped. Keep this list short and keep every entry justified.
 SKIPPED: dict[str, str] = {
     # Optional dependency, not declared in any pyproject extra.
-    "interface.app": "needs streamlit, which is not a declared dependency",
+    "squid_arena.app": "needs streamlit, which is not a declared dependency",
     # Module-level side effects: these three write .excalidraw files into
     # docs/design/v4/assets/ at import time, with no __main__ guard. Importing
     # them would make the test suite dirty the working tree.
@@ -88,16 +88,16 @@ def _sandbox_module_scope_side_effects(
     module scope, so they can stay covered rather than skipped -- a skip in
     the test whose entire purpose is coverage is the worse trade.
 
-    ``interface.anthropic_proxy`` (line 57) does
+    ``squid_arena.anthropic_proxy`` (line 57) does
     ``LOG_DIR.mkdir(parents=True, exist_ok=True)`` on
     ``SQUID_THINKING_LOG_DIR``, defaulting to
     ``<repo>/outputs/api_sessions/thinking_traces``. This test is the only
     importer of that module in the repo, and the directories it created were
     invisible to ``git status`` because git does not track empty directories.
 
-    ``interface.api`` (line 144) does ``_repository = get_repository()``,
+    ``squid_arena.api`` (line 144) does ``_repository = get_repository()``,
     which with no ``WEB_ARENA_DSN`` falls back to
-    ``outputs/web_arena/web_arena.db`` (``persistence/factory.py:16,32``) and
+    ``outputs/web_arena/web_arena.db`` (``squid_store/factory.py:16,32``) and
     runs ``mkdir`` + ``sqlite3.connect`` + ``init_schema()`` -- an
     ``executescript`` and guarded ``ALTER TABLE``s -- against the live dev
     DB. That path is gitignored, so ``git status`` could not see it either.
@@ -106,7 +106,7 @@ def _sandbox_module_scope_side_effects(
 
     The hazard is order-dependent, which is why it went unnoticed: in a full
     ``pytest tests/unit`` run, ``test_api_web_arena.py`` imports
-    ``interface.api`` first inside a fixture that already sets
+    ``squid_arena.api`` first inside a fixture that already sets
     ``WEB_ARENA_DSN=":memory:"``, so this test gets a harmless cache hit.
     Running this file ALONE is what opens the real DB.
     """
@@ -143,8 +143,8 @@ def test_the_walk_actually_finds_the_tree() -> None:
     assert "squid_game.runner" in MODULE_NAMES
     assert "squid_game.analysis.forfeit_regression" in MODULE_NAMES
     assert "scripts.analyze_phase3" in MODULE_NAMES
-    assert "interface.api" in MODULE_NAMES
-    assert "squid_store.base" in MODULE_NAMES
+    assert "squid_arena.api" in MODULE_NAMES
+    assert "squid_store.factory" in MODULE_NAMES
 
 
 def test_skip_list_names_only_modules_that_exist() -> None:
@@ -167,8 +167,8 @@ def test_importing_writes_nothing_into_outputs() -> None:
     honouring the env var, the fixture would go on passing while quietly
     doing nothing -- this test is what fails instead.
     """
-    proxy = importlib.import_module("interface.anthropic_proxy")
-    importlib.import_module("interface.api")
+    proxy = importlib.import_module("squid_arena.anthropic_proxy")
+    importlib.import_module("squid_arena.api")
 
     outputs = REPO_ROOT / "outputs"
     assert not proxy.LOG_DIR.is_relative_to(outputs), (

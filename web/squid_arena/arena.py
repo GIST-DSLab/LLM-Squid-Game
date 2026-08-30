@@ -27,8 +27,8 @@ from pathlib import Path
 import yaml
 
 from squid_store.base import Repository
-from interface.remote_provider import ArenaProgress, RemoteProvider
-from interface.seeding import seed_sessions
+from squid_arena.remote_provider import ArenaProgress, RemoteProvider
+from squid_arena.seeding import seed_sessions
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
 
 VALID_FRAMINGS = {"true_baseline", "baseline_flagship", "flagship_corruption"}
