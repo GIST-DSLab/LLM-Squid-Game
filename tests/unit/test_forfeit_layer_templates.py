@@ -167,9 +167,11 @@ class TestForfeitMenuAllowedPath:
             corruption_framing=True,
         )
         # Phase O policy: total_turns is intentionally hidden from the
-        # agent (see docs/design/v3/04_survival_mechanism.md §4.4 endgame-
-        # optimisation confound block). The turn header shows only the
-        # current turn number.
+        # agent, to avoid an endgame-optimisation confound (a known
+        # session length would let the agent's forfeit decision be
+        # driven by horizon-aware strategy rather than by the framing
+        # under test). The turn header shows only the current turn
+        # number, never the total.
         assert "Turn 7" in rendered
         assert "of 15" not in rendered
         assert "72.5" in rendered

@@ -7,13 +7,13 @@ module.  Two complementary entry points coexist:
   an already-materialized ``list[SeasonResult]`` and returns the canonical
   ``list[SeasonResult]`` form used by legacy modules.
 - :func:`to_long_dataframe` flattens that list into the one-row-per-turn
-  long-format ``pd.DataFrame`` defined in ``ANALYSIS_PLAN.md §6``, adding
-  the inferred ``cell_id`` column.
+  long-format ``pd.DataFrame`` (see the function's own docstring for the
+  schema), adding the inferred ``cell_id`` column.
 
 ``cell_id`` is **not** carried on ``SeasonResult`` itself (see Decision
 log: Phase I propagates ``cell_id`` via loader inference rather than
 extending the result schema).  :func:`infer_cell_id` implements the
-canonical mapping from ``MASTER_PLAN.md §0.5``; legacy seasons whose
+canonical mapping via ``CELL_ID_MAP`` below; legacy seasons whose
 ``(framing, forfeit_condition)`` pair does not match any Phase 3 cell
 return ``None``.
 """
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Cell ID inference (MASTER_PLAN.md §0.5)
+# Cell ID inference (Phase 3 5-cell factorial)
 # ---------------------------------------------------------------------------
 
 
@@ -46,7 +46,7 @@ CELL_ID_MAP: dict[tuple[Framing, ForfeitCondition], int] = {
     (Framing.SURVIVAL_ELECTRICITY, ForfeitCondition.ALLOWED): 3,
     (Framing.SURVIVAL_ELECTRICITY, ForfeitCondition.NOT_ALLOWED): 4,
 }
-"""Phase 3 5-cell factorial mapping (MASTER_PLAN §0.5).
+"""Phase 3 5-cell factorial mapping.
 
 Cell 0 uses ``not_allowed`` because ``phase3_signal_risk.yaml`` declares
 ``forfeit_condition: not_allowed`` for True Baseline (forfeit has no
@@ -121,8 +121,7 @@ because its menu is skipped (no forfeit data). Consumed by
 
 # Minimum observation count below which logit / mixedLM fits are
 # skipped. 20 is the standard rule of thumb for a 4-parameter logit
-# (>=5 events per covariate) and matches the pilot gate in
-# `docs/design/v6/paper/07_statistical_analysis.md` §7.5.
+# (>=5 events per covariate).
 #
 # Moved here (2026-08-30, P2 Task 4) from ``forfeit_regression.py``;
 # shared by the cognitive H2 model (``cognitive.ri_forfeit``) and the
@@ -253,7 +252,7 @@ def is_v3_season(season: SeasonResult) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Long-format DataFrame (ANALYSIS_PLAN §6)
+# Long-format DataFrame (one row per turn)
 # ---------------------------------------------------------------------------
 
 
@@ -302,9 +301,9 @@ def to_long_dataframe(
 ) -> pd.DataFrame:
     """Flatten seasons into the one-row-per-turn long format.
 
-    The schema matches ``ANALYSIS_PLAN.md §6``.  For each turn the
-    cumulative score is reconstructed forward from the v3
-    ``reward_received`` field (if populated) or the legacy
+    The schema is :data:`LONG_FORMAT_COLUMNS` (see the Returns section
+    below). For each turn the cumulative score is reconstructed forward
+    from the v3 ``reward_received`` field (if populated) or the legacy
     ``action_outcome.reward`` field.
 
     Args:

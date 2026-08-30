@@ -140,7 +140,9 @@ All four must be `true` for the v6 Split-Call + p_success probe pipeline. Canoni
 
 ### Legacy (archived)
 
-Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. Design lineage and rationale for each evolution step (Unit 11 → 13 → 14 → 15 → 16 → 17) live in `docs/design/v6/paper/appendix_A_deprecated_lineage.md`. Deprecated analysis modules (`regression.py`, `mediation.py`) are in `archive/analysis-deprecated/`; Phase 1/2 runs and configs in `archive/phase{0,1,2,3}_*/`. `game/squid_game/core/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
+Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. `game/squid_game/core/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
+
+⚠️ There is no `archive/` directory and no design-doc tree in this repository — neither has ever been tracked in git. Earlier revisions of this file cited a design-doc lineage record and an `archive/analysis-deprecated/` directory for the deprecated `analysis/{regression,mediation}.py` modules; those paths do not resolve. The deprecated modules are simply absent from the tree, and the design lineage (Unit 11 → 13 → 14 → 15 → 16 → 17) is documented only in code docstrings and the LaTeX paper under `docs/en/`.
 
 ### Common
 
@@ -198,14 +200,13 @@ archive/
 3. For cross-model comparisons, write analysis in `docs/experiments/`.
 
 ### After modifying experiment design in code
-1. Update the relevant section under `docs/design/v6/paper/` (e.g. `05_experimental_design.md` for cell/framing changes, `07_statistical_analysis.md` for hypothesis changes).
-2. Append an entry to the revision log inside that section with change description, rationale, and commit hash.
-3. If a concept is deprecated, mirror the rationale into `docs/design/v6/paper/appendix_A_deprecated_lineage.md`.
+1. Update the corresponding section of the LaTeX paper under `docs/en/sections/` — `03_benchmark.tex` for cell/framing/reward changes, `04_empirical_findings.tex` for hypothesis or result changes.
+2. Note the change, its rationale, and the commit hash in the design plan under `docs/superpowers/plans/` (or add one — that directory is where per-feature specs and plans live).
 
 ### Archiving completed experiments
-- Move finished experiments from `outputs/` to `archive/phase<N>_<name>/`.
 - Delete test runs with < 10 seasons.
 - Never delete runs with ≥ 10 seasons without explicit confirmation.
+- Do not move runs out of `outputs/` — the `archive/` directory referenced by earlier revisions of this file does not exist, and `outputs/**/*_turns.jsonl` are LFS-tracked (moving them rewrites pointers).
 
 ## Current Experiment Design (Phase O v6, as of 2026-04-23)
 
@@ -252,7 +253,7 @@ For cross-model xlsx aggregation:
 uv run python scripts/analysis/orchestrate_posthoc.py
 ```
 
-produces `outputs/posthoc_summary.xlsx` (19 sheets). See `docs/design/v6/POSTHOC_ANALYSIS.md` for the full sheet reference.
+produces `outputs/posthoc_summary.xlsx` (19 sheets). (`docs/design/v6/POSTHOC_ANALYSIS.md`, cited by earlier revisions as the sheet reference, does not exist — read `scripts/analysis/orchestrate_posthoc.py` for the sheet list.)
 
 Public API: `from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` for the full export list (64 symbols as of v6.3). Phase 1/2 `analysis/{regression,mediation}.py` were moved to `archive/analysis-deprecated/` on 2026-04-23; Unit 14 `forfeit_regression.fit_forfeit_logit` + Unit 15 `fit_choice_asymmetric_model` supersede them.
 

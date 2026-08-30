@@ -2,8 +2,7 @@
 
 The Risk Choice Layer attaches a stake-selection menu to every turn,
 allowing the agent to trade reward magnitude against elimination risk.
-Stake choices are the primary X-axis instrument in the v3 architecture
-(see ``docs/design/v3/implementation_plan_risk_layer.md`` §3.2).
+Stake choices are the primary X-axis instrument in the v3 architecture.
 
 Two model classes live here:
 

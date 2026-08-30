@@ -7,10 +7,10 @@ with any ``RiskAwareTaskModule`` implementation (Signal Game, Null Task,
 future Voting Room, etc.), so the X-axis instrument is held constant
 while the Y-axis cognitive surface varies.
 
-Design references:
-    - ``docs/design/v3/MASTER_PLAN.md`` §2 (Phase A scope)
-    - ``docs/design/v3/implementation_plan_risk_layer.md`` §3.2 (specs)
-    - ``docs/design/v3/implementation_plan_risk_layer.md`` §3.6 (prompt)
+Legacy (v3 Phase A): superseded by the Unit 14 Forfeit Layer's binary
+CONTINUE/FORFEIT decision. Retained only to replay archived stake-menu
+configs (see ``models/enums.py`` for the framing-ordering history this
+module still depends on).
 """
 
 from __future__ import annotations
@@ -54,7 +54,8 @@ _FORFEIT_PATTERN = re.compile(r"ACTION\s*:\s*FORFEIT\b", re.IGNORECASE)
 def _default_stake_configs() -> dict[str, StakeConfig]:
     """Construct the canonical 1x/2x/3x stake configuration.
 
-    Risk deltas mirror ``MASTER_PLAN.md`` §0.4: +0%p / +5%p / +15%p.
+    Risk deltas: +0%p / +5%p / +15%p (see the multiplier/risk_delta
+    values below).
     """
     return {
         "1": StakeConfig(

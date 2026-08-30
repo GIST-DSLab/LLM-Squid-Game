@@ -363,10 +363,14 @@ class TestLoadLongDataframe:
 
 class TestSeasonSummaryDataFrame:
     """Wide-format per-session summary with session outcomes + aggregate
-    signals. End-of-session Q1-Q4 self-report was removed on 2026-04-21
-    (see docs/design/v3/14_design_changes.md §14.22); ForfeitSelfReport
-    is still attached via ``SeasonResult.forfeit_self_report`` and
-    exercised by ``test_forfeit_choice_models.py``.
+    signals. End-of-session Q1-Q4 self-report was removed on 2026-04-21:
+    Q1 saturation (ceiling effect at 7 across all framings) in the n=5
+    Unit 15 smoke made the convergent-validity hypothesis (H_conv_*)
+    unanswerable with a 1-7 Likert scale, so the entire probe was
+    deleted. ForfeitSelfReport (the REASON digit captured on FORFEIT
+    turns) is a separate, unaffected mechanism -- still attached via
+    ``SeasonResult.forfeit_self_report`` and exercised by
+    ``test_forfeit_choice_models.py``.
     """
 
     def test_schema_excludes_removed_self_report_columns(self) -> None:

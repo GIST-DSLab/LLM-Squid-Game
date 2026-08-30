@@ -13,6 +13,13 @@ matplotlib.use("Agg")
 
 from scripts.plots._style import apply_house_style, save_figure
 
+# spec: lost -- OUT_DIR and GEMINI_DIRS below name a Phase 3 legacy
+# archive tree and pre-restructure output directories. Neither the
+# archive tree nor these specific run directories exist in this
+# repository (the archive tree has never existed in git history at
+# all), so this script cannot run against the current repository
+# state; kept per the no-delete-legacy-code constraint rather than
+# rewritten to a fabricated, plausible-looking replacement path.
 OUT_DIR = "archive/phase3_cum_hist_2x2x2/0406-2 diagram"
 
 GEMINI_DIRS = {

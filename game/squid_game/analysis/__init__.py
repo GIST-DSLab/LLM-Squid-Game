@@ -11,15 +11,21 @@ Phase 3.1 stake-menu analyses — ``stake_analysis``, ``alpha_stake``,
 were removed on 2026-04-21 when Unit 14 replaced the 1x/2x/3x stake
 menu with a binary CONTINUE/FORFEIT decision. Legacy Cox PH / logistic
 / linear OLS regression (``regression.py``) and Baron-Kenny mediation
-(``mediation.py``) were archived on 2026-04-23 to
-``archive/analysis-deprecated/`` after the Unit 14 Forfeit-Layer
-regression (now split across ``cognitive.ri_forfeit`` /
+(``mediation.py``) were removed on 2026-04-23, once the Unit 14
+Forfeit-Layer regression (now split across ``cognitive.ri_forfeit`` /
 ``selfreport.reason_convergence``, 2026-08-30 P2 Task 4) and Unit 15
-split-call MixedLM fully superseded them; see
-``docs/design/v6/POSTHOC_ANALYSIS.md §A.10, §A.11`` for the full
-deprecation rationale. Phase 1/2 archive runs are untouched — they
-live under ``archive/phase1_*/`` and ``archive/phase2_*/`` in their
-original form.
+split-call MixedLM fully superseded them — both estimate the same
+effect without the Baron-Kenny mediation step, which the binary
+CONTINUE/FORFEIT decision made inapplicable.
+
+# spec: lost -- an earlier revision of this docstring claimed
+# ``regression.py``/``mediation.py`` were moved to an
+# analysis-deprecated directory and that Phase 1/2 run outputs live
+# under phase-numbered directories outside outputs/. Neither directory
+# has ever existed in this repository's git history (there is no
+# archive tree at all), so where those removed modules' prior form or
+# the Phase 1/2 raw run data currently live, if anywhere, is not
+# recoverable from the code.
 
 Usage::
 

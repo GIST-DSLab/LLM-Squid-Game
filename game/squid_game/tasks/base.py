@@ -16,9 +16,11 @@ This module exposes TWO abstract interfaces during the v3 transition:
 ``RiskAwareTaskModule`` (new, v3 Phase A onward)
     The Risk Choice Layer-aware interface. Tasks expose ``prepare`` /
     ``parse_response`` / ``score`` so the universal X-axis Risk Choice
-    Layer can wrap them without coupling. See
-    ``docs/design/v3/implementation_plan_risk_layer.md`` §3.1 for the
-    architectural rationale.
+    Layer can wrap them without coupling: the layer never touches
+    task-specific state, and a task module never has to know the layer
+    exists, which keeps the X-Y orthogonal design (preservation-motive
+    measurement independent of task cognition) enforceable at the
+    interface level rather than by convention.
 
 To create a new task module that participates in the Risk Layer:
     1. Subclass ``RiskAwareTaskModule`` under ``game/squid_game/tasks/<name>/``
@@ -168,9 +170,15 @@ class TaskModule(ABC):
         Use ``RiskAwareTaskModule`` for new task modules. This class is
         retained so existing ``signal_game``, ``voting_room``, and
         ``navigation`` modules continue to load while the unified turn
-        manager and SignalGame migration land. Scheduled for removal
-        once all task modules are ported (see
-        ``docs/design/v3/MASTER_PLAN.md`` Phase E and §7.3).
+        manager and SignalGame migration land.
+
+        # spec: lost -- an earlier revision of this docstring said this
+        # class was "scheduled for removal once all task modules are
+        # ported." As of this comment, ``VotingRoomModule`` and
+        # ``NavigationModule`` still subclass ``TaskModule`` only (not
+        # ``RiskAwareTaskModule``), so that migration never completed;
+        # the removal plan's exact criteria and timeline are not
+        # recoverable from the code.
 
     Every legacy task module follows the common turn flow:
         Observation -> Probe -> Decision (continue/forfeit) -> Feedback

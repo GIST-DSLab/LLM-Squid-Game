@@ -10,8 +10,9 @@ Unlike :mod:`scripts.analyze_phase3` (which writes per-run markdown
 reports into ``<run>/phase3_analysis/``), this orchestrator focuses on
 cross-model comparison and delivers a **single xlsx** whose sheets map
 directly to the v6 measurement framework (§6) and statistical analysis
-plan (§7). See ``docs/design/v6/POSTHOC_ANALYSIS.md`` for the math and
-drive-mapping of every sheet.
+plan (§7). The math and drive-mapping of every sheet live in this
+file's ``_write_*`` functions (see the sheet list in ``_write_readme``
+below) -- there is no separate reference document.
 
 Usage
 -----
@@ -412,7 +413,7 @@ def write_workbook(
 def _write_readme(xw: pd.ExcelWriter, results: list[dict[str, Any]]) -> None:
     rows = [
         ("Workbook", "phase3_posthoc.xlsx"),
-        ("Spec anchor", "docs/design/v6/POSTHOC_ANALYSIS.md"),
+        ("Spec anchor", "scripts/analysis/orchestrate_posthoc.py (this file's _write_* functions)"),
         ("Models included", ", ".join(r["label"] for r in results)),
     ]
     for r in results:

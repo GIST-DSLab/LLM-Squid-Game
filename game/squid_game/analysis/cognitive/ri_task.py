@@ -1,7 +1,6 @@
 """Phase O §6 — Task Curiosity (TC) rule-mastery regression.
 
-Implements the TC indicator pipeline specified in
-``docs/design/v6/paper/metric.md`` §6 (added 2026-04-25):
+Implements the TC indicator pipeline (added 2026-04-25):
 
 - **Model A (§6.3 식 A)** — Cell 0 baseline, TC-pure regime:
     ``ri_task[t] ~ correct[t-1] + turn + (1|session)``

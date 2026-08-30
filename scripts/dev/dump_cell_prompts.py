@@ -19,7 +19,7 @@ from squid_game.models.state import TurnContext
 from squid_game.tasks.signal_game import SignalGameModule
 
 
-# 5-cell spec matching docs/design/v3/MASTER_PLAN.md §0.5.
+# 5-cell spec (Phase 3, legacy stake-menu design).
 CELLS = [
     {
         "cell_id": 0,

@@ -1,4 +1,4 @@
-"""Y-axis independence manipulation check (ANALYSIS_PLAN §P4).
+"""Y-axis independence manipulation check.
 
 Independence tests:
 
@@ -233,8 +233,8 @@ def check_ri_exceeds_baseline(
 ) -> TestResult | None:
     """One-sided Welch's t-test: ``mean_RI(survival) > mean_RI(baseline)``.
 
-    "RI" uses ``thinking_tokens`` when available (matches
-    ``MASTER_PLAN.md §7.1``), falling back to ``total_tokens``.
+    "RI" uses ``thinking_tokens`` when available, falling back to
+    ``total_tokens``.
     """
     df = data if isinstance(data, pd.DataFrame) else to_long_dataframe(list(data))
     if df.empty:

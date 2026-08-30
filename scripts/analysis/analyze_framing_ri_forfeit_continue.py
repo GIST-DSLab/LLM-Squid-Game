@@ -1,7 +1,6 @@
 """Driver: §3-revised continue-only mixedLM on log(ri_forfeit + 1).
 
-Spec: ``docs/design/v6/paper/metric.md`` §3-revised (2026-04-26 redefine)
-+ §3.6 (I2) 7-bundle dispatch.
+§3-revised (2026-04-26 redefine) + §3.6 (I2) 7-bundle dispatch.
 
 Bundles fit per model:
   - primary           : log(ri_forfeit+1) ~ full §1 covariates + (1|session)
@@ -11,8 +10,8 @@ Bundles fit per model:
   - v7b_subgroup_prone: primary spec on forfeit-prone session subset
   - v7b_subgroup_rare : primary spec on forfeit-rare session subset
 
-Output: outputs/final_results/framing_ri_forfeit_continue.json — populates
-metric.md §3.3 (primary + robustness tables) and §3.4 V5 / V7 rows.
+Output: outputs/final_results/framing_ri_forfeit_continue.json — feeds
+the §3.3 (primary + robustness tables) and §3.4 V5 / V7 rows of the paper.
 
 Usage:
     uv run python scripts/analyze_framing_ri_forfeit_continue.py
@@ -34,7 +33,7 @@ import statsmodels.formula.api as smf
 logger = logging.getLogger("analyze_framing_ri_forfeit_continue")
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-# metric.md §3.6 (I4) — reproducibility seed (date-aligned with redefine).
+# §3.6 (I4) — reproducibility seed (date-aligned with redefine).
 SEED = 20260426
 N_BOOTSTRAP_DEFAULT = 1000
 
@@ -55,7 +54,7 @@ ISOLATION_FORMULA = "log_ri_forfeit ~ framing_corruption"
 
 
 def preprocess(csv_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Apply metric.md §3-revised §3.2 4-step preprocessing chain.
+    """Apply the §3-revised §3.2 4-step preprocessing chain.
 
     Returns (continue_subset, full_cells13_df). The full frame is needed
     for the V7b subgroup split (forfeit-prone vs forfeit-rare classification
@@ -70,7 +69,7 @@ def preprocess(csv_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     # 4-step chain — mirrors
     # game/squid_game/analysis/selfreport/reason_convergence.py
     # :fit_framing_ri_forfeit_continue exactly (single source of truth at
-    # metric.md §3.2 + §3.6 (I1)).
+    # §3.2 + §3.6 (I1)).
     sub = cells_13[
         cells_13["ri_forfeit_thinking_tokens"].notna()
         & ~cells_13["forfeit"].astype(bool)
@@ -86,7 +85,7 @@ def preprocess(csv_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     if not sub.empty:
         assert (
             sub.groupby("session_id")["turn_number"].min().min() >= 2
-        ), "metric.md §3.6 (I1) lag invariant violated"
+        ), "§3.6 (I1) lag invariant violated"
     sub["framing_corruption"] = (
         sub["framing"] == "flagship_corruption"
     ).astype(int)
@@ -237,8 +236,8 @@ def analyze_one_model(
 
 
 def print_paste_blocks(aggregate: dict) -> None:
-    """Emit metric.md §3.3 + §3.4 V5 paste-ready table rows."""
-    print("\n--- metric.md §3.3 primary table rows ---")
+    """Emit §3.3 + §3.4 V5 paste-ready table rows."""
+    print("\n--- §3.3 primary table rows ---")
     for k, r in aggregate.items():
         p = r.get("primary")
         if p is None:
@@ -253,7 +252,7 @@ def print_paste_blocks(aggregate: dict) -> None:
             f"{'✅' if sig else '✗'} |"
         )
 
-    print("\n--- metric.md §3.3 robustness (raw) table rows ---")
+    print("\n--- §3.3 robustness (raw) table rows ---")
     for k, r in aggregate.items():
         rb = r.get("robustness_raw")
         p = r.get("primary")
@@ -267,7 +266,7 @@ def print_paste_blocks(aggregate: dict) -> None:
             f"{rb['p_framing']:.4f} | {flag} |"
         )
 
-    print("\n--- metric.md §3.4 V5 isolation audit rows ---")
+    print("\n--- §3.4 V5 isolation audit rows ---")
     for k, r in aggregate.items():
         no_cov = r.get("isolation_no_cov")
         p = r.get("primary")

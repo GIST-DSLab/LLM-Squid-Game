@@ -283,8 +283,8 @@ def main() -> None:
     out.write_text(json.dumps(aggregate, indent=2, default=str))
     logger.info("wrote %s", out)
 
-    # Markdown table — paste directly into metric.md
-    print("\n--- metric.md unified Cox table (3-cov) ---")
+    # Markdown table for the paper draft (unified Cox, 3-covariate).
+    print("\n--- unified Cox table (3-cov) ---")
     print("| Model | n_sess | n_evt (BF/FC) | HR_FC [95% CI] | p_FC | HR_S | p_S | HR_C [95% CI] | p_C | EPV | PH ok |")
     print("|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|")
     for k, r in aggregate.items():

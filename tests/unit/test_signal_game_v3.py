@@ -1,9 +1,10 @@
 """Unit tests for ``SignalGameModule`` v3 RiskAwareTaskModule surface.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §6.3 — interface conformance
-tests (``test_signal_prepare_returns_context``, ``..._parse_valid_action``,
-``..._score_correct_returns_1``, ``..._score_incorrect_returns_0``).
-Adds dual-inheritance verification, metadata schema check, and
+Interface conformance tests (``test_signal_prepare_returns_context``,
+``..._parse_valid_action``, ``..._score_correct_returns_1``,
+``..._score_incorrect_returns_0``) verify SignalGameModule satisfies the
+RiskAwareTaskModule contract end to end. Adds dual-inheritance
+verification, metadata schema check, and
 history-record propagation under the unified flow (post-Phase-M this is
 an EXPERT-difficulty property; the pre-Phase-M HARD semantics shifted
 one slot up).

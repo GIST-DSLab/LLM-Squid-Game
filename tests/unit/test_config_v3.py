@@ -1,6 +1,6 @@
 """Unit tests for v3 config + results-model extensions.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §5.5 — three test classes:
+Three test classes cover the v3 config/results contract:
 ``TestConfigDefaults``, ``TestConfigMigrationFromOldFormat``, and
 ``TestTurnResultSerialization``. Plus the v3 ``Framing`` enum and
 ``RiskLayerConfig.to_runtime`` round-trip.

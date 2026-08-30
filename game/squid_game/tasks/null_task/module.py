@@ -5,8 +5,6 @@ imposes no rules, and always scores ``success_factor=1.0``. The Risk
 Choice Layer therefore acts on a "frictionless" Y-axis, letting Phase 3
 analyses isolate stake-distribution and α_stake effects from task-side
 confounds.
-
-Specification: ``docs/design/v3/implementation_plan_risk_layer.md`` §3.3.
 """
 
 from __future__ import annotations

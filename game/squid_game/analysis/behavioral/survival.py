@@ -54,10 +54,6 @@ or when the sample is too small: the return contract stays but
 estimates become ``None`` / empty DataFrames, and the renderer prints
 a skip message. The analysis pipeline must never crash on missing
 optional dependencies.
-
-Spec: ``docs/design/v6/paper/07_statistical_analysis.md`` §7.0 "H1
-모형 변경 이력 (2026-04-23, two-step)" and §7.2.1 "행동 Cox PH
-Primary".
 """
 
 from __future__ import annotations

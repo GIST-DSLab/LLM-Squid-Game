@@ -14,6 +14,13 @@ from scripts.plots._style import apply_house_style, save_figure
 
 # ---------------------------------------------------------------------------
 # Job configs: one heatmap per (model, p_death) combination
+#
+# spec: lost -- these constants point to Phase 3/4 legacy run directories
+# under an archive tree. That tree has never existed in this repository's
+# git history and none of the run directories below are present under
+# outputs/ either, so where this raw data currently lives, if anywhere,
+# is not recoverable. This script cannot run against the current
+# repository state; kept per the no-delete-legacy-code constraint.
 # ---------------------------------------------------------------------------
 PHASE3_DIR = "archive/phase3_cum_hist_2x2x2"
 PHASE4_DIR = "archive/phase4"

@@ -1,7 +1,5 @@
 """Vocabulary-contract tests for v3 framing templates.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §3.2.
-
 Each cell of the 5-cell factorial has linguistic constraints that must
 hold across all renderings — these tests are the linguistic gate that
 prevents accidental regression (e.g. someone re-importing "elimination"
@@ -1039,9 +1037,9 @@ class TestComposedSystemPromptPhaseOUnit11Cells:
         assert "current model weights" in composed.lower()
 
 
-# End-of-session self-report Q1-Q4 was removed on 2026-04-21 — see
-# docs/design/v3/14_design_changes.md §14.22. Q1 saturation (ceiling
-# effect at 7 across all framings) in the n=5 Unit 15 smoke made the
+# End-of-session self-report Q1-Q4 was removed on 2026-04-21. Q1
+# saturation (ceiling effect at 7 across all framings) in the n=5
+# Unit 15 smoke made the
 # convergent-validity hypothesis (H_conv_*) unanswerable with 1-7 Likert,
 # so the entire end-of-session probe + ``FramingManager.get_risk_avoidance_phrase``
 # + ``self_report.j2`` were deleted. ForfeitSelfReport (REASON digit

@@ -1,10 +1,10 @@
-"""Driver: run TC indicator pipeline (§6 metric.md) on 4 models.
+"""Driver: run TC (Task Curiosity, §6) indicator pipeline on 4 models.
 
 Reads each model's ``unit14_turn_observations.csv`` directly (avoids
 re-loading season_results.jsonl) and writes ``tc_indicator.json`` next
 to it. Also writes a 4-model aggregate at
-``outputs/final_results/tc_indicator_summary.json`` for direct paste
-into metric.md §6.4 / §6.7 / §8 tables.
+``outputs/final_results/tc_indicator_summary.json`` for the §6.4 /
+§6.7 / §8 paper tables.
 
 Usage:
     uv run python scripts/analyze_tc.py [--threshold 90.0]

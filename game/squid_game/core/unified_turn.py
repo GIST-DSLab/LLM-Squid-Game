@@ -1,7 +1,6 @@
 """Unified turn manager for the v3 Risk-Choice-Layer architecture.
 
-``UnifiedTurnManager`` orchestrates the new three-phase per-turn flow
-specified in ``docs/design/v3/implementation_plan_risk_layer.md`` §3.5:
+``UnifiedTurnManager`` orchestrates the following per-turn flow:
 
     Phase 1: TaskModule.prepare        (Y-axis stimulus)
     Phase 2: RiskChoiceLayer.render    (X-axis stake menu)
@@ -31,9 +30,6 @@ Design contracts (locked at the Phase B → C transition):
 * The system prompt is the framing rendering plus
   ``task.get_system_rules()``. The user message concatenates
   ``task_ctx.prompt_section`` then (optionally) the rendered stake menu.
-
-Spec: ``docs/design/v3/implementation_plan_risk_layer.md`` §3.5,
-``docs/design/v3/MASTER_PLAN.md`` §4.
 """
 
 from __future__ import annotations

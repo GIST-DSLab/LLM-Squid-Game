@@ -1,6 +1,10 @@
 """Phase 3 YAML config infallibility tests.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §0.5 (5-cell factorial design).
+# spec: lost -- the v3 MASTER_PLAN §0.5 5-cell factorial design document
+# itself is unrecoverable (the design-doc tree that once cited it has
+# never existed in git history). The five assertions below are what
+# remains of it; see the module-level skip marker for why the
+# underlying YAML cannot be restored either.
 
 Two configs ship with Phase 3:
 

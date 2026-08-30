@@ -651,9 +651,8 @@ class SeasonConfig(BaseModel):
     A season represents one complete run of a task under a specific
     framing x forfeit condition combination.
 
-    From v3 onwards, two optional fields turn ``SeasonConfig`` into the
-    ``CellConfig`` from ``MASTER_PLAN.md`` §5.2 without introducing a
-    new class:
+    From v3 onwards, two optional fields let ``SeasonConfig`` also serve
+    as a per-cell configuration, without introducing a separate class:
 
     - ``cell_id`` labels the season as Cell 0–4 (or arbitrary integer)
       for Phase 3 reporting and analysis grouping.

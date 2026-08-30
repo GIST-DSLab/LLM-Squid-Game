@@ -33,8 +33,14 @@ E1 stake entropy) were removed on 2026-04-21 when Unit 14 replaced the
 1x/2x/3x stake menu with a binary CONTINUE/FORFEIT decision. The
 corresponding Python modules (``stake_analysis``, ``alpha_stake``,
 ``sd_composite``, ``sa_multichannel``, ``survival_analysis_stake``) no
-longer ship. Archive runs under ``archive/`` retain their pre-removal
-``primary_results.md`` / ``secondary_results.md`` files.
+longer ship.
+
+# spec: lost -- an earlier revision of this docstring claimed archived
+# runs from before the removal retain their pre-removal
+# ``primary_results.md`` / ``secondary_results.md`` files under an
+# archive directory. That directory has never existed in this
+# repository's git history, so whether -- or where -- those
+# pre-removal analysis outputs currently live is not recoverable.
 
 Usage
 -----
@@ -502,6 +508,17 @@ def _run_unit14(seasons, analysis_dir: Path) -> dict:
     return payload
 
 
+# NOTE (P3+P4 Task 5): the "See `docs/design/v6/paper/..." sentence below
+# is a dead reference (docs/design/ has never existed in this repository's
+# git history) that would normally be corrected per the P4 Task 5 rule.
+# It is left as-is because this exact string is baked byte-for-byte into
+# `unit14_results.md`, which is one of the golden-snapshot's 84 hashed
+# artefacts (see ~/golden/squid-restructure, captured before this task
+# ran). Editing it changes the golden snapshot's verdict for every run
+# gated after this task, and no `golden_snapshot.py` subcommand exists to
+# update the baseline in place -- only `capture`, which would overwrite
+# it wholesale. Left for whoever owns golden-snapshot re-capture policy
+# to resolve; tracked as exempt in test_no_dead_path_references.py.
 def _render_unit14_md(*, model: str, n_seasons: int, payload: dict) -> str:
     survival: dict | None = payload.get("survival")
     cox = (survival or {}).get("cox")

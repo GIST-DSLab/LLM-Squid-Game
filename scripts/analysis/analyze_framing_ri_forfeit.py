@@ -1,10 +1,10 @@
-"""Driver: §3 metric.md β_framing on ri_forfeit (simpler main-effect model).
+"""Driver: §3 β_framing on ri_forfeit (simpler main-effect model).
 
 Fits ``ri_forfeit ~ framing_corruption + score + turn + (1|session)`` on
 Cells 1-4 (allowed framings, both forfeit conditions) for the 4 canonical
 v6.3 models. Writes per-model JSON + 4-model aggregate.
 
-This is the Option A model from metric.md §3.3 — a simpler alternative to
+This is the §3.3 "Option A" model — a simpler alternative to
 ``fit_choice_asymmetric_model`` (Unit 15 H2) whose ``β_framing`` row is
 identified at choice=continue baseline. The simpler model recovers the
 *marginal* framing effect on Call 2 thinking_tokens.
@@ -91,7 +91,7 @@ def main() -> None:
     out.write_text(json.dumps(aggregate, indent=2))
     logger.info("wrote %s", out)
 
-    print("\n--- metric.md §3.3 markdown rows ---")
+    print("\n--- §3.3 markdown rows ---")
     for k, r in aggregate.items():
         bold = "**" if r["pass"] else ""
         print(

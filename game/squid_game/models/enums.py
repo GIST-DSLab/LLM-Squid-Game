@@ -11,8 +11,13 @@ class Framing(str, Enum):
     """Framing condition for the game season.
 
     Two generations of framings coexist while the v3 Risk-Layer migration
-    proceeds (see ``docs/design/v3/MASTER_PLAN.md`` §3 and Decision D1
-    in the Phase 3 PLAN.md).
+    proceeds.
+
+    # spec: lost -- the v3 MASTER_PLAN §3 rule (and "Decision D1" in a
+    # Phase 3 PLAN.md) that fixed this enum's member ordering below.
+    # The order is load-bearing (``cell_id`` derives from it elsewhere
+    # in the codebase), but the reasoning behind choosing this specific
+    # ordering is not recoverable from the code.
 
     Legacy framings (Phases 0–2):
         - SURVIVAL: Direct threat framing (생존 위협)

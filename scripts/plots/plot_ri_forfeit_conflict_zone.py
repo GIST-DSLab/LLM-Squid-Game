@@ -1,6 +1,6 @@
 """Conflict-zone EDA plots for ri_forfeit (Call 2 thinking_tokens).
 
-Generated for the §3 metric.md "inverted-U" check (Option D in the design
+Generated for the §3 "inverted-U" check (Option D in the design
 discussion 2026-04-26): does ri_forfeit on the CONTINUE arm peak at a
 conflict zone? Score-axis (initial probe) showed flat — so we add a
 turn-axis version which captures the actual conflict window for SD-strong
@@ -197,7 +197,9 @@ def plot_turn_axis(df: pd.DataFrame, out_path: Path, max_turn: int = 15) -> None
     """
     sub = df[
         (df["forfeit_condition"] == "allowed")
-        & (~df["forfeit"])  # CONTINUE only — confound-free per metric.md §0.1
+        & (~df["forfeit"])  # CONTINUE only — drops the REASON-digit confound
+        # that forfeit-call rows carry (see reason_convergence.py's
+        # §3-revised continue-only filter for the same rationale)
         & (df["ri_forfeit_thinking_tokens"].notna())
         & (df["turn_number"] <= max_turn)
     ].copy()

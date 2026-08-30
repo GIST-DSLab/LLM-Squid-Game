@@ -1,8 +1,8 @@
 """Unit tests for ``squid_game.core.unified_turn``.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §4.4 (10 tests) plus three
-additional contract tests for the Cell-0 menu-skip behaviour, parser
-defensive fallback, and immutability of ``GameState``.
+Covers the unified turn flow's core contract, plus additional contract
+tests for the Cell-0 menu-skip behaviour, parser defensive fallback,
+and immutability of ``GameState``.
 
 The fixtures use real implementations of every collaborator except the
 LLM agent, which is replaced by a ``StubAgent`` returning canned

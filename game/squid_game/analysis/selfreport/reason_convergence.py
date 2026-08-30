@@ -21,8 +21,7 @@ when their input is insufficient. The analysis module must never crash
 the pipeline; missing optional dependencies degrade gracefully.
 
 Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§4, §5, §9.2; H1 Cox promotion — ``docs/design/v6/paper/07_statistical_analysis.md``
-§7.0 변경 이력 (2026-04-23).
+§4, §5, §9.2. (H1 Cox promotion is item 2 above.)
 
 This module was ``forfeit_regression.py`` until the 2026-08-30 channel
 split (P2 Task 4); ``turn_observations`` / ``forfeit_events`` moved to
@@ -72,7 +71,6 @@ THINKING_KEYWORDS: dict[str, tuple[str, ...]] = {
 # The turn-level logit ``P(forfeit) ~ S + framing + S:framing + turn`` and
 # its ``ForfeitLogitResult`` dataclass were retired when H1 was promoted to
 # a Cox PH survival model on the no_cap regime (see
-# ``docs/design/v6/paper/07_statistical_analysis.md`` §7.0 변경 이력 and
 # ``behavioral.survival.fit_cox_forfeit_survival``). The v6 canonical source
 # observed that the forfeit signal concentrates in timing rather than rate;
 # a rate-focused logistic compresses the 2-turn mean forfeit-turn shift
@@ -182,7 +180,7 @@ def run_all_unit14_hypotheses(
 # ---------------------------------------------------------------------------
 # §3-revised — Sub-threshold SD Cognitive Indicator (continue-only subset)
 # ---------------------------------------------------------------------------
-# Spec: docs/design/v6/paper/metric.md §3-revised (2026-04-26 redefine).
+# §3-revised (2026-04-26 redefine).
 # Replaces deprecated standalone §3 (Cells 1-4 raw ri_forfeit, 4/4 n.s.)
 # with continue-only subset + log-transform to (a) drop REASON-digit
 # confound on forfeit-call rows, (b) normalize right-skew of token count,
@@ -251,8 +249,8 @@ def fit_framing_ri_forfeit_continue(
 ) -> FramingRiForfeitContinueResult | None:
     """Fit the §3-revised continue-only mixedLM on log(ri_forfeit + 1).
 
-    Spec: ``docs/design/v6/paper/metric.md`` §3-revised (2026-04-26
-    redefine).
+    See :class:`FramingRiForfeitContinueResult` above for the model
+    formula, decision rule, and the continue-subset caveat.
 
     Returns ``None`` when:
     - statsmodels / numpy not installed,
@@ -274,7 +272,7 @@ def fit_framing_ri_forfeit_continue(
     if turn_df.empty or "ri_forfeit_thinking_tokens" not in turn_df.columns:
         return None
 
-    # 4-step preprocessing chain — metric.md §3-revised §3.2 + §3.6 (I1).
+    # 4-step preprocessing chain (§3-revised §3.2 + §3.6 (I1)):
     # (1) Cells 1+3 filter: BF/FC framings × ALLOWED × non-null ri_forfeit.
     # (2) Continue-subset filter: ~forfeit (CONTINUE choice only).
     # (3) Lag covariate: correct_prev = task_success_factor.shift(1) within
