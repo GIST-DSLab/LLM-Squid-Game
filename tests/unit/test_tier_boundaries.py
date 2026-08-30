@@ -113,3 +113,26 @@ def test_squid_arena_touches_no_sys_path() -> None:
         if "__pycache__" in path.parts:
             continue
         assert "sys.path" not in path.read_text(encoding="utf-8"), path
+
+
+def test_squid_game_lives_in_the_game_tier() -> None:
+    module = importlib.import_module("squid_game")
+    assert Path(module.__file__).parent == REPO_ROOT / "game" / "squid_game"
+
+
+def test_the_src_directory_is_gone() -> None:
+    assert not (REPO_ROOT / "src").exists()
+
+
+def test_squid_game_depends_on_no_higher_tier() -> None:
+    """The engine must not reach up into the web or db tiers.
+
+    ``core/measurement.py`` and ``analysis/motivation.py`` contain the word
+    "persistence", but as the psychological construct (Baseline
+    Persistence), not the storage layer -- which is exactly why this check
+    reads import statements rather than grepping for the word.
+    """
+    imported = _toplevel_imports(REPO_ROOT / "game" / "squid_game")
+    assert "squid_arena" not in imported
+    assert "squid_store" not in imported
+    assert "interface" not in imported

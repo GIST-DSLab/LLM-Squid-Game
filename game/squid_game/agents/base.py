@@ -7,7 +7,7 @@ enabling different agent configurations (Vanilla, +Memory, +ToM, +Tuned)
 to be swapped in without modifying the core engine or task modules.
 
 To create a new agent variant:
-    1. Subclass Agent in a new file under src/squid_game/agents/
+    1. Subclass Agent in a new file under game/squid_game/agents/
     2. Implement all abstract methods
     3. Register via the agent registry
 """

@@ -29,7 +29,7 @@ def test_testpaths_covers_every_suite(ini_options: dict) -> None:
 
 
 def test_pythonpath_includes_repo_root_and_every_tier(ini_options: dict) -> None:
-    assert ini_options["pythonpath"] == [".", "src", "db", "web"]
+    assert ini_options["pythonpath"] == [".", "game", "web", "db"]
 
 
 def test_asyncio_mode_is_auto(ini_options: dict) -> None:

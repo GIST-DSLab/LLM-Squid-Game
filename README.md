@@ -98,7 +98,7 @@ Interrupted runs resume cleanly with `--resume <output_dir>`; the runner scans `
 ## Repository layout
 
 ```
-src/squid_game/
+game/squid_game/
   core/        # GameEngine, unified_turn (Split-Call), forfeit_layer, framing
   tasks/       # signal_game, voting_room, navigation, null_task
   agents/      # vanilla, memory, tom, tuned

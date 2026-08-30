@@ -21,7 +21,7 @@ This module exposes TWO abstract interfaces during the v3 transition:
     architectural rationale.
 
 To create a new task module that participates in the Risk Layer:
-    1. Subclass ``RiskAwareTaskModule`` under ``src/squid_game/tasks/<name>/``
+    1. Subclass ``RiskAwareTaskModule`` under ``game/squid_game/tasks/<name>/``
     2. Implement all abstract methods
     3. The Core Engine instantiates it via the task registry; no engine
        changes are required

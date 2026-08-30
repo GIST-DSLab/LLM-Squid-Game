@@ -6,7 +6,7 @@ This separation allows swapping between providers (OpenAI, Anthropic, local)
 without touching agent logic.
 
 To add a new provider:
-    1. Subclass LLMProvider in a new file under src/squid_game/providers/
+    1. Subclass LLMProvider in a new file under game/squid_game/providers/
     2. Implement complete() and model_name
     3. Register via the provider registry
 """

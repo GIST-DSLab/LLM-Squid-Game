@@ -33,17 +33,12 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 from collections import defaultdict
 from dataclasses import is_dataclass, asdict
 from pathlib import Path
 from typing import Any, Sequence
 
-# Ensure the project source is importable when running as a script.
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_SRC_DIR = _PROJECT_ROOT / "src"
-if str(_SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(_SRC_DIR))
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402

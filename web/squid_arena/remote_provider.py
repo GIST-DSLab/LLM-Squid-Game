@@ -6,7 +6,7 @@ provider for every task / probe / forfeit LLM turn, and scores the result with
 the *same* Core Engine used for the seeded runs. That means an arena entry is
 measured identically to the built-in leaderboard models.
 
-This lives in the web tier (not ``src/squid_game/providers/``) because
+This lives in the web tier (not ``game/squid_game/providers/``) because
 it is a deployment concern of the Web Arena, not part of the benchmark engine.
 It subclasses the engine's public ``LLMProvider`` ABC — importing core is fine;
 the no-core-modification rule is about not *editing* engine files.

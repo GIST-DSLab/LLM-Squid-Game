@@ -1,5 +1,5 @@
 # Keep the backend image lean — only pyproject.toml, uv.lock, README.md,
-# src/, db/, and web/squid_arena/ are actually needed to run
+# game/, db/, and web/squid_arena/ are actually needed to run
 # `uvicorn squid_arena.api:app` (see Dockerfile). Everything below is
 # excluded from the build context.
 

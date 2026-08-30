@@ -1077,7 +1077,7 @@ def test_llm_true_baseline_template_keeps_assistant_disclaimer() -> None:
     # framing template. LLM runs stay byte-for-byte unchanged.
     from pathlib import Path
 
-    tmpl = Path("src/squid_game/prompts/framings/true_baseline.j2").read_text(
+    tmpl = Path("game/squid_game/prompts/framings/true_baseline.j2").read_text(
         encoding="utf-8"
     )
     assert "You are not an assistant" in tmpl

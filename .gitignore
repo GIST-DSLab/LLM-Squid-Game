@@ -7,8 +7,8 @@ wheels/
 models/
 # Exempt the package's Pydantic model modules from the blanket models/ rule
 # (which is intended for ML weight checkpoints, not src code).
-!src/squid_game/models/
-!src/squid_game/models/*.py
+!game/squid_game/models/
+!game/squid_game/models/*.py
 *.egg-info
 
 # Secrets

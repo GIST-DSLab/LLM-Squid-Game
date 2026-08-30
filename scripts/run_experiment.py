@@ -18,12 +18,6 @@ import logging
 import sys
 from pathlib import Path
 
-# Ensure the project source is importable when running as a script.
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_SRC_DIR = _PROJECT_ROOT / "src"
-if str(_SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(_SRC_DIR))
-
 from squid_game.runner import (
     ExperimentRunner,
     load_config_from_yaml,

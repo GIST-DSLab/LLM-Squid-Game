@@ -30,7 +30,7 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-install-project --extra postgres --no-dev
 
 # Now copy the actual source and install the project itself.
-COPY src ./src
+COPY game ./game
 COPY db ./db
 COPY web/squid_arena ./web/squid_arena
 RUN uv sync --frozen --extra postgres --no-dev

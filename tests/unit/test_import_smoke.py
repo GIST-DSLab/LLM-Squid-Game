@@ -1,7 +1,8 @@
 """Every module in the tree must still import after the restructure.
 
-P1 rewrites imports across ``src/``, ``scripts/``, ``web/squid_arena/`` and
-``db/`` and removes eleven ``sys.path`` hacks. A module that neither the
+P1 rewrites imports across ``game/squid_game/``, ``scripts/``,
+``web/squid_arena/`` and ``db/squid_store/`` and removes eleven
+``sys.path`` hacks. A module that neither the
 unit suite nor ``scripts/analyze_phase3.py`` reaches can acquire a broken
 import while both of those nets stay green -- the golden snapshot only
 exercises the analysis entry point, and most of ``scripts/`` has no test
@@ -26,12 +27,12 @@ Three rules keep it honest:
    redirects the two that are redirectable; the three that are not are
    skipped and named.
 
-An audit of module-scope filesystem calls across ``src/``, ``scripts/``,
-``web/squid_arena/`` and ``db/``::
+An audit of module-scope filesystem calls across ``game/squid_game/``,
+``scripts/``, ``web/squid_arena/`` and ``db/squid_store/``::
 
     grep -rn --include='*.py' -E \\
       '^[A-Za-z_][^ =]*.*(\\.mkdir\\(|sqlite3\\.connect|\\.write_text\\(|\\.touch\\(|makedirs\\(|get_repository\\(\\))' \\
-      src scripts web/squid_arena db
+      game scripts web/squid_arena db
 
 finds exactly five hits: the three ``build_*_diagram`` scripts (skipped),
 ``web/squid_arena/anthropic_proxy.py:57`` and ``web/squid_arena/api.py:144``
@@ -58,9 +59,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # Roots to walk, paired with the directory their module paths are relative to.
 PACKAGE_ROOTS: list[tuple[str, Path]] = [
-    ("src", REPO_ROOT / "src"),
     ("scripts", REPO_ROOT),
-    ("db", REPO_ROOT / "db"),
+    ("game/squid_game", REPO_ROOT / "game"),
+    ("db/squid_store", REPO_ROOT / "db"),
     ("web/squid_arena", REPO_ROOT / "web"),
 ]
 
