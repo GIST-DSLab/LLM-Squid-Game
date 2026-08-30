@@ -40,7 +40,9 @@ Usage::
     )
 """
 
-# --- shared/ (cross-channel: metrics, MTMM, export, loaders, checks) ---
+# --- shared/ (cross-channel: metrics, export, loaders, checks -- all
+# channel-independent -- plus MTMM, the one shared/ module that is not:
+# it imports behavioral.baseline_persistence by design, see shared/__init__.py) ---
 from squid_game.analysis.shared.metrics import (
     compute_delta_fr,
     compute_delta_ri,
