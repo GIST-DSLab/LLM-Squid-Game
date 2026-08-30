@@ -30,22 +30,33 @@ SEARCH_ROOTS = ("game", "web", "db", "scripts", "tests")
 # Ruling C15: scripts/plots/build_*_diagram.py write .excalidraw files
 # into docs/design/v4/assets/ at runtime -- a live write path, not a
 # dead documentation citation. test_import_smoke.py documents the same
-# path in its SKIPPED list for the same reason. P6 Task 3 owns
-# repointing this when it reorganises assets/.
+# path in its SKIPPED list for the same reason.
 #
-# gen_v4_diagrams.py is NOT in this set, on review: its asset_dir is
-# built from Path(__file__).resolve().parents[1], which from
-# scripts/plots/gen_v4_diagrams.py resolves to scripts/, not the repo
-# root -- an off-by-one (parents[1] should be parents[2]) that makes it
-# write to a different, non-overlapping directory than the three
-# scripts below. Its docstring was corrected in place instead (see that
-# file) to describe the actual behaviour and flag the bug, rather than
-# being exempted on the same rationale as the three genuine C15 cases.
+# gen_v4_diagrams.py joined this set in P6 Task 5. At P3+P4 Task 5 it was
+# deliberately left OUT: its asset_dir was built from
+# Path(__file__).resolve().parents[1], which from
+# scripts/plots/gen_v4_diagrams.py resolved to scripts/, not the repo
+# root -- an off-by-one that made it write to a different,
+# non-overlapping directory than the three scripts below, so exempting
+# it then would have hidden a real bug behind the same rationale as the
+# three genuine C15 cases. P6 Task 3 fixed that off-by-one
+# (parents[1] -> parents[2], proven by running the script); its
+# asset_dir now resolves to the same repo-root-relative
+# docs/design/v4/assets/ the three siblings write to. The original
+# reason for the exclusion is gone, so the exclusion is gone too --
+# gen_v4_diagrams.py is now a fourth genuine live-write path, not a
+# dead reference and not a bug report. (It happens to build that path
+# from split segments -- "docs" / "design" / ... -- rather than the
+# literal substring "docs/design/", so DEAD does not even match its
+# current source; the file is listed here anyway so its status reflects
+# what it actually is, not an accident of string formatting that a
+# future edit could flip.)
 _C15_LIVE_WRITE_PATH_FILES = frozenset(
     {
         "scripts/plots/build_llm_experience_diagram.py",
         "scripts/plots/build_posthoc_analysis_diagram.py",
         "scripts/plots/build_prompt_flow_diagram.py",
+        "scripts/plots/gen_v4_diagrams.py",
         "tests/unit/test_import_smoke.py",
     }
 )

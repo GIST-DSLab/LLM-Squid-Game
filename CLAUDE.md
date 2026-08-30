@@ -194,38 +194,62 @@ Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`ba
 ```
 game/squid_game/      # game tier — engine, tasks, agents, providers, prompts, analysis
   core/           # engine, unified_turn (Split-Call), forfeit_layer, framing
-                  # (risk_choice_layer.py: legacy — replay-only for archived configs)
+                  # legacy/  — risk_choice_layer.py, turn.py, social.py, survival.py
+                  #            (replay-only for archived configs; see "Legacy (archived)" below)
   tasks/          # signal_game/, voting_room/, navigation/, null_task/
   agents/         # vanilla, memory, tom, tuned, _parsing, _thinking_utils
   models/         # config, results, enums (Framing / ForfeitCondition / Difficulty)
   providers/      # openai, anthropic, gemini, ollama_cloud, mlx_server, cuda_server, mlx, ollama, local
-  prompts/        # framings/, forfeit_layer/, tasks/, user_message/, probes/, social/
-  analysis/       # forfeit_survival (H1 Cox PH), forfeit_regression (H2/R1 mixedLM),
-                  # regime_stratification (Unit 17.10), motivation (MTMM + BP sub-estimators),
-                  # threat_registration + threat_lexicon + threat_judge (Cluster C, 2026-07),
-                  # discovery_detection, manipulation_check, loaders, metrics, export,
-                  # tc_regression, unit13_hypotheses (demoted to Appendix A.4)
+  prompts/        # framings/ (+ framings/legacy/, 6 archived), forfeit_layer/, tasks/,
+                  # user_message/, probes/, social/
+  analysis/       # measurement-channel decomposition (P2) — shared/ (loaders, metrics,
+                  # export, mtmm), cognitive/ (ri_task, ri_forfeit, ri_call1),
+                  # selfreport/ (psuccess, forfeit_reason), behavioral/ (regime,
+                  # baseline_persistence, session_tests), semantic/ (threat_registration,
+                  # threat_lexicon, threat_judge, discovery_detection); facade re-exports
+                  # 84 symbols, see "Public API" below
 configs/
   tasks/          # signal_game, voting_room, navigation
   providers/      # openai, anthropic, local
   experiment/     # 5 of the 6 canonical v6 configs restored (P0); see
                   # "Missing experiment configs" below for the one gap
-scripts/          # analyze_phase3, analyze_threat_registration, orchestrate_posthoc,
-                  # plot_*, thinking_analysis, seed_web_arena, shard helpers
-web/squid_arena/  # web tier — FastAPI Web Arena backend (api.py), arena.py, human_game.py,
-                  # rule_schedule.py (campaign hidden-rule family rotation), seeding.py,
+scripts/          # 6 categories (enforced by test_scripts_taxonomy.py), no top-level .py:
+                  # analysis/ (analyze_phase3, analyze_threat_registration, orchestrate_posthoc,
+                  # tc_regression scripts), arena/ (seed/backup/purge web-arena data),
+                  # dev/ (golden_snapshot, dump_*, benchmark, one-off tools), plots/
+                  # (build_*_diagram, gen_v4_diagrams, plot_*), render/ (render_excalidraw),
+                  # run/ (run_experiment, resume_experiment, start_servers.sh)
+web/squid_arena/  # web tier — FastAPI Web Arena backend: api.py (app assembly + router
+                  # wiring, 134 lines), schemas.py, deps.py, reporting.py,
+                  # routes_{game,leaderboard,logs,arena}.py, arena.py, human_game.py,
+                  # rule_schedule.py (campaign hidden-rule family rotation), seeding.py —
                   # served on Render
 web/frontend/     # web tier — static frontend (GitHub Pages) — index.html, app.js,
                   # styles.css (Alpine.js, no build)
 db/squid_store/   # db tier — repository interface + SQLite/Postgres backends
-                  # (mirrored under interface/persistence/ before P1)
+tests/
+  unit/           # ~1200 tests, no network (see "Testing" above)
+  integration/    # StubProvider-driven E2E, offline and deterministic
+  characterization/  # 14 tests — the pre-restructure behavioural safety net (turn-flow
+                      # across all 6 cells, Web Arena API contract); do not weaken
+  # tests/web/ (a single Node rank_ladder test) was deleted, not relocated — the repo has
+  # no package.json or Node test runner (P3+P4)
 docs/
-  en/             # LaTeX paper — content.tex + sections/01_introduction … 07_appendix
-  superpowers/    # plans/ + specs/ (per-feature design + implementation plans)
-outputs/
+  paper/          # LaTeX manuscript — content.tex + sections/01_introduction … 07_appendix
+  design/         # specification of record, kept current with the code — starts empty;
+                  # see docs/design/README.md for why
+  reports/        # dated findings, never revised after publication (HTML + standalone .md)
+  history/        # plans/ + specs/ — append-only implementation record, one per feature
+                  # (not docs/superpowers/plans/, which no longer exists in this repository)
+outputs/          # raw session data only (LFS), never regenerated, never git-add'ed by hand
   final_results/  # v6 main run outputs (2026-04-22) — 4 models × signal-game.
                   # *_turns.jsonl are Git LFS files; see "Git LFS" below.
   web_arena/      # local SQLite dev DB (untracked)
+results/          # regenerable analysis artefacts, separated from outputs/ (P6) —
+                  # call1_ri_analysis/, reasoning_probe/ (each rebuildable by the command
+                  # named in its own README)
+assets/           # brand/ (GistLab Logo) + figures/ (*.png, *.svg, rules-demo/) —
+                  # separated from paper figures under docs/paper/ (P6)
 ```
 
 ### Missing experiment configs (⚠️ one file still missing, as of P0 2026-08-30)
@@ -339,7 +363,7 @@ by all turns, so it is downward-biased there and the Wilson CI excludes sampling
 
 ### Public API
 
-`from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` (80 symbols).
+`from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` (84 symbols).
 
 - **H1 is a Cox PH, not a logit.** `fit_forfeit_logit` / `ForfeitLogitResult` were **deleted**
   (2026-04-23); `forfeit_survival.fit_cox_forfeit_survival` (time-varying `CoxTimeVaryingFitter`
