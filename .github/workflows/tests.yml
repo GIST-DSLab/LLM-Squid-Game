@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The suite never reads outputs/, and those files are Git LFS
+          # objects totalling 666 MB. Skipping the smudge keeps CI fast and
+          # keeps a CI checkout from ever writing empty pointers back.
+          lfs: false
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --extra dev --extra analysis
+
+      - name: Unit suite
+        run: uv run pytest tests/unit -q
