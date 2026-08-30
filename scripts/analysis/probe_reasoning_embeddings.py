@@ -12,7 +12,7 @@ Usage
     uv run python -m scripts.analysis.probe_reasoning_embeddings \
         --label forfeit --label threat \
         --channel task \
-        --out outputs/reasoning_probe
+        --out results/reasoning_probe
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ from squid_game.analysis.semantic.embeddings import (
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     add_aggregate_root_argument(parser)
-    parser.add_argument("--out", type=Path, default=Path("outputs/reasoning_probe"))
+    parser.add_argument("--out", type=Path, default=Path("results/reasoning_probe"))
     parser.add_argument(
         "--label", action="append", choices=sorted(LABELS), dest="labels"
     )

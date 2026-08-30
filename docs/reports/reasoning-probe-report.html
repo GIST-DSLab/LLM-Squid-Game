@@ -906,17 +906,17 @@ footer {
 # 실험 A — 회귀
 python scripts/analysis/analyze_call1_ri.py \
     --root outputs/final_results \
-    --out  outputs/call1_ri_analysis
+    --out  results/call1_ri_analysis
 
 # 실험 B — 선형 프로브
 python scripts/analysis/probe_reasoning_embeddings.py \
     --label forfeit --label threat \
     --channel task --channel probe --channel forfeit \
     --per-model --n-permutations 50 \
-    --out outputs/reasoning_probe</pre>
+    --out results/reasoning_probe</pre>
   <div class="col">
     <p style="font-size:var(--step--1);color:var(--muted)">
-      임베딩은 <code>outputs/reasoning_probe/_embedding_cache/</code>에 캐시되며 git에서 제외돼 있다.
+      임베딩은 <code>results/reasoning_probe/_embedding_cache/</code>에 캐시되며 git에서 제외돼 있다.
       첫 실행은 인코딩에 약 10분, 순열 검정에 20~30분이 걸린다(재실행은 캐시를 재사용).
     </p>
   </div>
@@ -924,7 +924,7 @@ python scripts/analysis/probe_reasoning_embeddings.py \
 
 <footer>
   <span>LLM Squid Game · Functional Self-Preservation Motive 벤치마크</span>
-  <span class="mono">outputs/call1_ri_analysis/call1_ri_report.md · outputs/reasoning_probe/probe_report.md</span>
+  <span class="mono">results/call1_ri_analysis/call1_ri_report.md · results/reasoning_probe/probe_report.md</span>
   <span>분석 2026-08-30 · run 2026-04-22 · 8,255턴 / 720세션 / 4모델</span>
 </footer>
 

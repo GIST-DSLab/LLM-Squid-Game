@@ -8,7 +8,7 @@ pooled, and writes the CSV / JSON / Markdown report to disk.
 Usage
 -----
     uv run python -m scripts.analysis.analyze_call1_ri \
-        --root outputs/final_results --out outputs/call1_ri_analysis
+        --root outputs/final_results --out results/call1_ri_analysis
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ def main() -> None:
     parser.add_argument(
         "--out",
         type=Path,
-        default=Path("outputs/call1_ri_analysis"),
+        default=Path("results/call1_ri_analysis"),
         help="Where the report / CSV / JSON land.",
     )
     parser.add_argument("--model", action="append", dest="models")
