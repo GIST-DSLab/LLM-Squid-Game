@@ -123,7 +123,7 @@ def model_label(run: Path) -> str:
     Not ``run.name``: that is the run DIRECTORY name
     (``20260422_0218_gemini-2.5-flash_signal-game``), while the artefacts
     carry the model label (``gemini-2.5-flash``). Passing the directory name
-    rewrites the label in nine artefacts per run and leaves the whole golden
+    rewrites the label in seven artefacts per run and leaves the whole golden
     snapshot a mislabelled copy of the paper's results.
 
     The label is the path-safe slug of ``seasons[0].provider_config.model``,

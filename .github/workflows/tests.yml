@@ -20,9 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The suite never reads outputs/, and those files are Git LFS
-          # objects totalling 666 MB. Skipping the smudge keeps CI fast and
-          # keeps a CI checkout from ever writing empty pointers back.
+          # The suite never reads the LFS PAYLOADS under outputs/ -- 666 MB
+          # of *_turns.jsonl session data -- so the smudge is pure cost, and
+          # skipping it also keeps a CI checkout from ever writing empty
+          # pointers back over them.
+          #
+          # It does not claim the suite ignores outputs/ entirely: as of
+          # 2026-08-30 tests/unit/test_import_smoke.py asserts that importing
+          # interface.anthropic_proxy and interface.api creates nothing under
+          # outputs/. That check only stats paths and needs no LFS content.
           lfs: false
 
       - uses: astral-sh/setup-uv@v5

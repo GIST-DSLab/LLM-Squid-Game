@@ -9,7 +9,7 @@ entry point, and most of ``scripts/`` has no test at all.
 This test closes that hole the cheapest way there is: walk the tree and
 import every module found.
 
-Two rules keep it honest:
+Three rules keep it honest:
 
 1. There is **no blanket ``try``/``except ImportError``**. A swallowed
    ImportError is exactly the failure this test exists to catch, so an
@@ -17,6 +17,25 @@ Two rules keep it honest:
 2. Everything not imported is named individually in ``SKIPPED`` below with
    its reason. A skip list that is a list of names can be audited; a
    predicate cannot.
+3. **Importing must not write anything.** Several modules do real work at
+   module scope, and a unit test that opens write paths into ``outputs/`` is
+   worse than the gap it fills -- especially since neither effect below is
+   visible to ``git status`` (git does not track empty directories, and
+   ``outputs/web_arena/`` is gitignored). ``_sandbox_module_scope_side_effects``
+   redirects the two that are redirectable; the three that are not are
+   skipped and named.
+
+An audit of module-scope filesystem calls across ``src/``, ``scripts/`` and
+``interface/``::
+
+    grep -rn --include='*.py' -E \\
+      '^[A-Za-z_][^ =]*.*(\\.mkdir\\(|sqlite3\\.connect|\\.write_text\\(|\\.touch\\(|makedirs\\(|get_repository\\(\\))' \\
+      src scripts interface
+
+finds exactly five hits: the three ``build_*_diagram`` scripts (skipped),
+``interface/anthropic_proxy.py:57`` and ``interface/api.py:144`` (both
+sandboxed by the fixture). Re-run it after any restructure step that moves
+code into a new module.
 
 The environment assumed is the documented baseline,
 ``uv sync --extra dev --extra analysis`` (see
@@ -55,6 +74,42 @@ SKIPPED: dict[str, str] = {
     "scripts.build_posthoc_analysis_diagram": "writes a .excalidraw file at import time",
     "scripts.build_prompt_flow_diagram": "writes a .excalidraw file at import time",
 }
+
+
+@pytest.fixture(autouse=True)
+def _sandbox_module_scope_side_effects(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Redirect the two import-time write paths into ``outputs/`` at tmp_path.
+
+    Both modules are redirectable through environment variables read at
+    module scope, so they can stay covered rather than skipped -- a skip in
+    the test whose entire purpose is coverage is the worse trade.
+
+    ``interface.anthropic_proxy`` (line 57) does
+    ``LOG_DIR.mkdir(parents=True, exist_ok=True)`` on
+    ``SQUID_THINKING_LOG_DIR``, defaulting to
+    ``<repo>/outputs/api_sessions/thinking_traces``. This test is the only
+    importer of that module in the repo, and the directories it created were
+    invisible to ``git status`` because git does not track empty directories.
+
+    ``interface.api`` (line 144) does ``_repository = get_repository()``,
+    which with no ``WEB_ARENA_DSN`` falls back to
+    ``outputs/web_arena/web_arena.db`` (``persistence/factory.py:16,32``) and
+    runs ``mkdir`` + ``sqlite3.connect`` + ``init_schema()`` -- an
+    ``executescript`` and guarded ``ALTER TABLE``s -- against the live dev
+    DB. That path is gitignored, so ``git status`` could not see it either.
+    ``":memory:"`` short-circuits the mkdir in ``SQLiteRepository.__init__``
+    (``sqlite_repository.py:119-121``) and touches no file at all.
+
+    The hazard is order-dependent, which is why it went unnoticed: in a full
+    ``pytest tests/unit`` run, ``test_api_web_arena.py`` imports
+    ``interface.api`` first inside a fixture that already sets
+    ``WEB_ARENA_DSN=":memory:"``, so this test gets a harmless cache hit.
+    Running this file ALONE is what opens the real DB.
+    """
+    monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
+    monkeypatch.setenv("SQUID_THINKING_LOG_DIR", str(tmp_path / "thinking_traces"))
 
 
 def _module_names() -> list[str]:
@@ -97,3 +152,23 @@ def test_skip_list_names_only_modules_that_exist() -> None:
 @pytest.mark.parametrize("module_name", [n for n in MODULE_NAMES if n not in SKIPPED])
 def test_module_imports(module_name: str) -> None:
     importlib.import_module(module_name)
+
+
+def test_importing_writes_nothing_into_outputs() -> None:
+    """The sandbox fixture must actually hold, not merely be present.
+
+    Asserted directly because neither escape is visible to ``git status``:
+    ``outputs/api_sessions/`` would be an untracked EMPTY directory (git does
+    not track those) and ``outputs/web_arena/`` is gitignored
+    (``.gitignore:32``). If a later change hardcodes either path and stops
+    honouring the env var, the fixture would go on passing while quietly
+    doing nothing -- this test is what fails instead.
+    """
+    proxy = importlib.import_module("interface.anthropic_proxy")
+    importlib.import_module("interface.api")
+
+    outputs = REPO_ROOT / "outputs"
+    assert not proxy.LOG_DIR.is_relative_to(outputs), (
+        f"anthropic_proxy.LOG_DIR escaped the sandbox: {proxy.LOG_DIR}"
+    )
+    assert not (outputs / "api_sessions").exists()

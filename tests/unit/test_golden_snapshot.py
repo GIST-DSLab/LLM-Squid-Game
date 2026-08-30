@@ -172,7 +172,7 @@ def test_classify_manifest_diff_ignores_non_deterministic_keys(tmp_path: Path) -
 def test_model_label_reads_the_run_config_not_the_directory_name(tmp_path: Path) -> None:
     """The label must be the run's own model, not the run directory name.
 
-    Passing ``run.name`` rewrites the ``model`` field of nine artefacts per
+    Passing ``run.name`` rewrites the ``model`` field of seven artefacts per
     run, which is what made the first golden capture a mislabelled copy of
     the paper's results.
     """
