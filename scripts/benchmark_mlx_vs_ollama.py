@@ -15,7 +15,7 @@ def run_experiment(config_path: str, label: str) -> dict:
 
     t0 = time.time()
     result = subprocess.run(
-        ["uv", "run", "python", "main.py", "--config", config_path],
+        ["uv", "run", "squid-game", "--config", config_path],
         capture_output=True, text=True, cwd=Path(__file__).parent.parent,
     )
     total_elapsed = time.time() - t0
