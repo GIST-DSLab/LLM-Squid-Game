@@ -55,3 +55,20 @@ def test_behavioral_estimators_are_reachable_through_the_facade() -> None:
     module = importlib.import_module("squid_game.analysis")
     assert module.fit_cox_forfeit_survival is not None
     assert module.run_all_unit13_hypotheses is not None
+
+
+def test_cognitive_channel_holds_the_ri_estimators() -> None:
+    expected = {"ri_task.py", "ri_call1.py", "__init__.py"}
+    assert {p.name for p in (ANALYSIS / "cognitive").glob("*.py")} >= expected
+
+
+def test_call1_script_is_a_thin_cli() -> None:
+    """The model belongs in the package; the script owns only the CLI.
+
+    Pinned by size rather than by naming every function: the point is that
+    the statistics stopped living in scripts/, and a threshold states that
+    without freezing the CLI's internals.
+    """
+    source = (REPO_ROOT / "scripts" / "analyze_call1_ri.py").read_text(encoding="utf-8")
+    assert "from squid_game.analysis.cognitive.ri_call1 import" in source
+    assert len(source.splitlines()) < 150

@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from squid_game.analysis.tc_regression import run_all_tc_indicators
+from squid_game.analysis.cognitive.ri_task import run_all_tc_indicators
 
 logger = logging.getLogger("analyze_tc")
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")

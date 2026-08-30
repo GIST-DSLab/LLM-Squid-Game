@@ -138,6 +138,12 @@ from squid_game.analysis.threat_registration import (
 )
 from squid_game.analysis.threat_lexicon import code_threat_mention, THREAT_LEXICON_VERSION
 from squid_game.analysis.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
+from squid_game.analysis.cognitive.ri_call1 import (
+    FORMULA as CALL1_RI_FORMULA,
+    OUTCOMES as CALL1_RI_OUTCOMES,
+    fit_one as fit_call1_ri_one,
+    render_report as render_call1_ri_report,
+)
 
 __all__ = [
     # Metrics
@@ -242,4 +248,11 @@ __all__ = [
     "THREAT_LEXICON_VERSION",
     "ThreatJudge",
     "THREAT_JUDGE_PROMPT_VERSION",
+    # Phase O Unit 17 — Call-1 reasoning-investment regression (cognitive
+    # channel): does threat framing raise task-solving effort before the
+    # forfeit decision is even on the table?
+    "CALL1_RI_FORMULA",
+    "CALL1_RI_OUTCOMES",
+    "fit_call1_ri_one",
+    "render_call1_ri_report",
 ]
