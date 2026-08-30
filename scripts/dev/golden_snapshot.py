@@ -82,22 +82,82 @@ def build_manifest(roots: list[Path], previous: dict | None = None) -> dict:
     return {"files": files}
 
 
-def compare_manifest(roots: list[Path], golden: dict) -> list[str]:
-    """Return the keys whose deterministic content no longer matches."""
+def classify_manifest_diff(roots: list[Path], golden: dict) -> dict[str, list[str]]:
+    """Split the difference against ``golden`` into changed / missing / new keys.
+
+    ``new`` matters as much as the other two: a restructure step that starts
+    emitting an extra artefact has changed the pipeline's output, and a gate
+    that only looks at the golden manifest's own keys would never see it.
+    Keys the golden manifest recorded as non-deterministic are ignored in
+    every category, including ``new`` (they are present in golden, so they
+    are not new).
+    """
     current = build_manifest(roots)
-    mismatches = []
+    changed: list[str] = []
+    missing: list[str] = []
     for key, entry in golden["files"].items():
         if not entry["deterministic"]:
             continue
         now = current["files"].get(key)
-        if now is None or now["sha256"] != entry["sha256"]:
-            mismatches.append(key)
-    return sorted(mismatches)
+        if now is None:
+            missing.append(key)
+        elif now["sha256"] != entry["sha256"]:
+            changed.append(key)
+    new = [key for key in current["files"] if key not in golden["files"]]
+    return {
+        "changed": sorted(changed),
+        "missing": sorted(missing),
+        "new": sorted(new),
+    }
+
+
+def compare_manifest(roots: list[Path], golden: dict) -> list[str]:
+    """Return every key that no longer matches: changed, missing, or new."""
+    diff = classify_manifest_diff(roots, golden)
+    return sorted(diff["changed"] + diff["missing"] + diff["new"])
+
+
+def model_label(run: Path) -> str:
+    """The ``--model`` label the run's own committed artefacts were produced with.
+
+    Not ``run.name``: that is the run DIRECTORY name
+    (``20260422_0218_gemini-2.5-flash_signal-game``), while the artefacts
+    carry the model label (``gemini-2.5-flash``). Passing the directory name
+    rewrites the label in nine artefacts per run and leaves the whole golden
+    snapshot a mislabelled copy of the paper's results.
+
+    The label is the path-safe slug of ``seasons[0].provider_config.model``,
+    using the same substitution ``runner.ExperimentRunner`` applies when it
+    names the output directory (``:`` and ``/`` -> ``-``). Three of the four
+    canonical runs need it: ``gpt-oss:20b-cloud`` is written
+    ``gpt-oss-20b-cloud`` in every committed artefact.
+
+    Fails loudly rather than falling back to ``run.name``: a silent fallback
+    is what produced the mislabelled snapshot in the first place.
+    """
+    config_path = run / "experiment_config.json"
+    if not config_path.exists():
+        raise SystemExit(f"{run.name}: no experiment_config.json, cannot resolve the model label")
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    try:
+        raw = config["seasons"][0]["provider_config"]["model"]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise SystemExit(
+            f"{run.name}: experiment_config.json has no "
+            f"seasons[0].provider_config.model ({exc!r}); "
+            "refusing to guess the model label"
+        ) from exc
+    if not raw:
+        raise SystemExit(
+            f"{run.name}: seasons[0].provider_config.model is empty; "
+            "refusing to guess the model label"
+        )
+    return str(raw).replace(":", "-").replace("/", "-")
 
 
 def run_analysis(run: Path) -> None:
     subprocess.run(
-        [sys.executable, "scripts/analyze_phase3.py", str(run), "--model", run.name],
+        [sys.executable, "scripts/analyze_phase3.py", str(run), "--model", model_label(run)],
         cwd=REPO_ROOT,
         check=True,
     )
@@ -137,11 +197,13 @@ def cmd_verify(golden: Path, skip_analysis: bool = False) -> int:
     if not skip_analysis:
         for run in runs:
             run_analysis(run)
-    mismatches = compare_manifest([run / ARTEFACT_SUBDIR for run in runs], manifest)
-    if mismatches:
-        print(f"GOLDEN MISMATCH ({len(mismatches)}):")
-        for key in mismatches:
-            print(f"  {key}")
+    diff = classify_manifest_diff([run / ARTEFACT_SUBDIR for run in runs], manifest)
+    total = sum(len(keys) for keys in diff.values())
+    if total:
+        print(f"GOLDEN MISMATCH ({total}):")
+        for category in ("changed", "missing", "new"):
+            for key in diff[category]:
+                print(f"  {category}: {key}")
         return 1
     checked = sum(1 for v in manifest["files"].values() if v["deterministic"])
     print(f"golden snapshot matches: {checked} deterministic artefacts")

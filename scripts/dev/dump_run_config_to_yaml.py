@@ -23,6 +23,13 @@ RUNS_DIR = REPO_ROOT / "outputs" / "final_results"
 CONFIG_DIR = REPO_ROOT / "configs" / "experiment"
 
 # Run directory substring -> config filename the rest of the codebase expects.
+#
+# The filename is what the rest of the codebase refers to; the config's own
+# internal `name:` field is whatever the 2026-04-22 run recorded and is
+# deliberately NOT edited to match. The two disagree for the gemini main run,
+# which recorded `name: phase3_psuccess_probe_n30` and is dumped to
+# `phase3_split_forfeit_gemini_n30.yaml` -- that is the run's own name, not a
+# dumper bug; rewriting it would stop the file being a verbatim restore.
 RUN_TO_CONFIG = {
     "gemini-2.5-flash": "phase3_split_forfeit_gemini_n30.yaml",
     "gpt-oss-20b-cloud": "phase3_split_forfeit_gptoss_n30.yaml",
@@ -51,7 +58,9 @@ HEADER = """\
 
 
 def find_run(substring: str) -> Path:
-    matches = sorted(p for p in RUNS_DIR.iterdir() if substring in p.name)
+    # outputs/final_results/ is a mixed namespace -- it holds loose top-level
+    # files alongside the four run directories -- so filter to directories.
+    matches = sorted(p for p in RUNS_DIR.iterdir() if p.is_dir() and substring in p.name)
     if not matches:
         raise SystemExit(f"no run directory matching {substring!r} under {RUNS_DIR}")
     if len(matches) > 1:
