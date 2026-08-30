@@ -31,8 +31,12 @@ RUN_TO_CONFIG = {
 }
 
 # The smoke config is the gemini main run at a single repetition. It is the
-# only derived file here; every value other than name, description,
-# num_repetitions and parallel_workers is copied verbatim.
+# only derived file here; every value other than name, description, and
+# num_repetitions is copied verbatim. parallel_workers stays at the source
+# run's value (6) -- tests/unit/test_split_forfeit_config_yaml.py pins
+# "six seasons => six workers" for this exact file, and that pre-existing,
+# unskipped test is the only surviving record of the original smoke
+# config's intended parallel_workers.
 SMOKE_SOURCE = "gemini-2.5-flash"
 SMOKE_NAME = "phase3_split_forfeit_smoke"
 
@@ -73,7 +77,6 @@ def smoke_payload(payload: dict) -> dict:
         "the six canonical cells at one repetition each."
     )
     payload["num_repetitions"] = 1
-    payload["parallel_workers"] = 1
     return payload
 
 
@@ -101,8 +104,9 @@ def main() -> int:
         CONFIG_DIR / f"{SMOKE_NAME}.yaml",
         smoke_payload(payload),
         run.name,
-        "#\n# Derived: num_repetitions 30 -> 1, parallel_workers 6 -> 1.\n"
-        "# Every other value is copied verbatim from the main run.\n",
+        "#\n# Derived: num_repetitions 30 -> 1.\n"
+        "# Every other value (including parallel_workers) is copied verbatim "
+        "from the main run.\n",
     ))
 
     for path, payload, source, extra in targets:
