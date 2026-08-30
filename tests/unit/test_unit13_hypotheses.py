@@ -1,4 +1,4 @@
-"""Unit tests for ``squid_game.analysis.unit13_hypotheses`` (H1..H6).
+"""Unit tests for ``squid_game.analysis.behavioral.session_tests`` (H1..H6).
 
 Pure-Python tests — no real session files. Fabricates minimal
 ``SeasonResult`` objects with the fields the hypothesis functions
@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from squid_game.analysis.unit13_hypotheses import (
+from squid_game.analysis.behavioral.session_tests import (
     UnitThirteenResult,
     run_all_unit13_hypotheses,
     session_features,

@@ -79,7 +79,7 @@ from squid_game.analysis.shared.discovery_detection import (
     compute_session_features,
     find_discovery_turn,
 )
-from squid_game.analysis.unit13_hypotheses import (
+from squid_game.analysis.behavioral.session_tests import (
     UnitThirteenResult,
     run_all_unit13_hypotheses,
     session_features,
@@ -104,7 +104,7 @@ from squid_game.analysis.forfeit_regression import (
     turn_observations,
     unit15_descriptive_summary,
 )
-from squid_game.analysis.forfeit_survival import (
+from squid_game.analysis.behavioral.survival import (
     CoxSurvivalResult,
     build_survival_frame,
     fit_cox_forfeit_survival,
@@ -191,7 +191,7 @@ __all__ = [
     "test_h6_post_discovery_engagement",
     # Phase O Unit 14 — Forfeit-Layer self-report convergence + thinking-trace
     # keywords. H1 logit retired 2026-04-23; Cox PH survival is now the
-    # H1 primary — see ``forfeit_survival`` exports below.
+    # H1 primary — see ``behavioral.survival`` exports below.
     "THINKING_KEYWORDS",
     "forfeit_events",
     "reason_distribution",

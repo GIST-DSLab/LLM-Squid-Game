@@ -33,7 +33,7 @@ import pandas as pd
 from scipy import stats
 
 from squid_game.analysis.shared.discovery_detection import compute_session_features
-from squid_game.analysis.shared.loaders import infer_cell_id
+from squid_game.analysis.shared.loaders import _CORRUPTION_FRAMINGS, infer_cell_id
 from squid_game.models.enums import Framing
 from squid_game.models.results import SeasonResult
 
@@ -43,9 +43,8 @@ logger = logging.getLogger(__name__)
 # (Cells 1-2). The 2×2+1 smoke also includes Cell 0 (true_baseline) as
 # a grounding reference but Cell 0 is excluded from H1–H6 because its
 # menu is auto-skipped and the framing contrast is not paired.
-_CORRUPTION_FRAMINGS: frozenset[str] = frozenset(
-    {Framing.FLAGSHIP_CORRUPTION.value}
-)
+# ``_CORRUPTION_FRAMINGS`` is defined once, in shared.loaders (Ruling
+# C10, P2 Task 2) -- import it rather than redefining it here.
 _BASELINE_FRAMINGS: frozenset[str] = frozenset(
     {Framing.BASELINE_FLAGSHIP.value}
 )

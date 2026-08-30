@@ -55,7 +55,7 @@ from squid_game.analysis.forfeit_regression import (
     reason_distribution,
     turn_observations,
 )
-from squid_game.analysis.forfeit_survival import (
+from squid_game.analysis.behavioral.survival import (
     CoxSurvivalResult,
     fit_cox_forfeit_survival,
 )

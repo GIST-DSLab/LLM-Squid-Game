@@ -125,7 +125,7 @@ class TCCoxResult:
         ``β_M > 0`` AND ``p_M < 0.05`` AND verbal triangulation
         (P(REASON=2 | forfeit) elevated, see §2.4 V4 / §6.5 V4).
 
-    Sister of :class:`forfeit_survival.CoxSurvivalResult`. Same
+    Sister of :class:`squid_game.analysis.behavioral.survival.CoxSurvivalResult`. Same
     ``framing_is_FC`` / ``score_prev`` covariates so β_FC / β_S are
     directly comparable to §1.
     """
@@ -629,7 +629,7 @@ def fit_tc_cox_rule_mastery(
 
     where ``M(t-1) = 1{rule_match_score[t-1] >= threshold}``.
 
-    Sister of :func:`forfeit_survival.fit_cox_forfeit_survival` — same
+    Sister of :func:`squid_game.analysis.behavioral.survival.fit_cox_forfeit_survival` — same
     framing / score covariates so β_F / β_S remain interpretable
     relative to §1. The ``M`` covariate is the **objective**
     rule-mastery indicator (subjective ``correct[t-1]`` is in §6 main).

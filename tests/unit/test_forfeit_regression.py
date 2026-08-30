@@ -16,7 +16,7 @@ Covers:
 
 (The legacy ``fit_forfeit_logit`` / ``ForfeitLogitResult`` logistic
 regression was retired 2026-04-23 when H1 was promoted to the Cox PH
-survival model; see ``forfeit_survival.fit_cox_forfeit_survival``.)
+survival model; see ``behavioral.survival.fit_cox_forfeit_survival``.)
 
 Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
 §4, §5, §9.2.
@@ -471,7 +471,7 @@ class TestRunAll:
         assert payload["turn_df"].empty
         assert payload["events_df"].empty
         # H1 logit retired 2026-04-23 → Cox PH survival; empty input yields
-        # no fitted model (see forfeit_survival.fit_cox_forfeit_survival).
+        # no fitted model (see behavioral.survival.fit_cox_forfeit_survival).
         assert payload["survival"]["cox"] is None
         assert payload["n_forfeits"] == 0
 

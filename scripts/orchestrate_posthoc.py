@@ -61,7 +61,7 @@ from squid_game.analysis.shared.manipulation_check import (  # noqa: E402
     check_ri_exceeds_baseline,
 )
 from squid_game.analysis.motivation import decompose_motivation  # noqa: E402
-from squid_game.analysis.unit13_hypotheses import (  # noqa: E402
+from squid_game.analysis.behavioral.session_tests import (  # noqa: E402
     run_all_unit13_hypotheses,
 )
 from squid_game.analysis.regime_stratification import (  # noqa: E402

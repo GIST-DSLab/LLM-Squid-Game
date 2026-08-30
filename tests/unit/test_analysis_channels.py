@@ -44,3 +44,14 @@ def test_the_flat_layout_is_gone() -> None:
     """A module left at the top level is a module nobody assigned a channel."""
     stray = {p.name for p in ANALYSIS.glob("*.py")} - {"__init__.py"}
     assert stray == set()
+
+
+def test_behavioral_channel_holds_choice_and_survival() -> None:
+    expected = {"survival.py", "session_tests.py", "__init__.py"}
+    assert {p.name for p in (ANALYSIS / "behavioral").glob("*.py")} >= expected
+
+
+def test_behavioral_estimators_are_reachable_through_the_facade() -> None:
+    module = importlib.import_module("squid_game.analysis")
+    assert module.fit_cox_forfeit_survival is not None
+    assert module.run_all_unit13_hypotheses is not None

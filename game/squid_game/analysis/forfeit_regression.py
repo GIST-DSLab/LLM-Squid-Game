@@ -7,7 +7,7 @@ Operates on a list of :class:`SeasonResult` and produces three artefacts:
    turn_number, score_before_turn (used as ``S`` in downstream models),
    forfeit (binary), forfeit_reason (nullable digit), reward_offered_this_turn,
    rule_match_score, thinking_tokens, and a corruption indicator. This
-   frame is consumed by both :mod:`.forfeit_survival` (H1 Cox PH, 2026-04-23
+   frame is consumed by both :mod:`squid_game.analysis.behavioral.survival` (H1 Cox PH, 2026-04-23
    primary) and :func:`fit_choice_asymmetric_model` (H2 mixedLM, §7.1).
 2. ``forfeit_events(seasons)`` — one row per forfeit event with the
    parsed digit, the reason enum, the forfeit turn, the final score,
@@ -17,7 +17,7 @@ Operates on a list of :class:`SeasonResult` and produces three artefacts:
 4. ``run_all_unit14_hypotheses(seasons)`` — driver that composes the
    flat payload consumed by the analysis markdown renderer. As of
    2026-04-23, H1 estimation is delegated to
-   :func:`squid_game.analysis.forfeit_survival.run_h1_survival_hypothesis`
+   :func:`squid_game.analysis.behavioral.survival.run_h1_survival_hypothesis`
    (Cox PH + Kaplan-Meier); the legacy logistic H1 has been retired.
 
 Backward compat: all functions return ``None`` (or empty DataFrames)
@@ -269,7 +269,7 @@ def forfeit_events(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
 # its ``ForfeitLogitResult`` dataclass were retired when H1 was promoted to
 # a Cox PH survival model on the no_cap regime (see
 # ``docs/design/v6/paper/07_statistical_analysis.md`` §7.0 변경 이력 and
-# ``forfeit_survival.fit_cox_forfeit_survival``). The v6 canonical source
+# ``behavioral.survival.fit_cox_forfeit_survival``). The v6 canonical source
 # observed that the forfeit signal concentrates in timing rather than rate;
 # a rate-focused logistic compresses the 2-turn mean forfeit-turn shift
 # into a scalar and dilutes identification. The Cox HR(FC/BF) with
@@ -338,7 +338,7 @@ def run_all_unit14_hypotheses(
         - ``turn_df``: per-turn DataFrame (may be empty).
         - ``events_df``: per-forfeit-event DataFrame (may be empty).
         - ``survival``: H1 Cox PH + KM payload from
-          :func:`squid_game.analysis.forfeit_survival.run_h1_survival_hypothesis`.
+          :func:`squid_game.analysis.behavioral.survival.run_h1_survival_hypothesis`.
           Contains ``{"cox": CoxSurvivalResult | None, "km": DataFrame,
           "survival_frame": DataFrame, "regime": str}``.
         - ``reason_dist``: P(reason|framing) DataFrame (H_conv_*).
@@ -353,10 +353,10 @@ def run_all_unit14_hypotheses(
     promoted to Cox PH. Downstream renderers and orchestrators must now
     read ``payload["survival"]["cox"]`` instead.
     """
-    # Delayed import avoids the forfeit_survival ↔ forfeit_regression
-    # cycle at module load time; forfeit_survival imports
+    # Delayed import avoids the behavioral.survival ↔ forfeit_regression
+    # cycle at module load time; behavioral.survival imports
     # ``turn_observations`` from this module.
-    from squid_game.analysis.forfeit_survival import (
+    from squid_game.analysis.behavioral.survival import (
         run_h1_survival_hypothesis,
     )
 

@@ -55,6 +55,28 @@ absent so :func:`infer_cell_id` returns ``None`` for them.
 """
 
 
+# ---------------------------------------------------------------------------
+# Corruption vs baseline framing contrast (Unit 13/14 H1-H6 arms)
+# ---------------------------------------------------------------------------
+
+
+_CORRUPTION_FRAMINGS: frozenset[str] = frozenset(
+    {Framing.FLAGSHIP_CORRUPTION.value}
+)
+"""The "push" framing arm for the Unit 13 session-level H1-H6 battery.
+
+Moved here (2026-08-30, P2 Task 2 / Ruling C10) from
+``behavioral.session_tests`` so exactly one copy exists across the
+analysis package -- a second, independently-edited copy previously
+lived in ``forfeit_regression.py`` and additionally included
+``Framing.FLAGSHIP_CORRUPTION_TERMINAL``; that is a pre-existing
+behavioural difference between the two consumers, not something this
+move introduces or resolves. This constant preserves the narrower
+``behavioral.session_tests`` value; ``forfeit_regression`` still
+defines its own copy until Task 4 reconciles it against this one.
+"""
+
+
 def infer_cell_id(
     framing: Framing,
     forfeit_condition: ForfeitCondition,
