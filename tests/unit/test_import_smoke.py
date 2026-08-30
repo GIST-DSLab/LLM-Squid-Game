@@ -35,9 +35,13 @@ An audit of module-scope filesystem calls across ``game/squid_game/``,
       game scripts web/squid_arena db
 
 finds exactly five hits: the three ``build_*_diagram`` scripts (skipped),
-``web/squid_arena/anthropic_proxy.py:57`` and ``web/squid_arena/api.py:144``
-(both sandboxed by the fixture). Re-run it after any restructure step that
-moves code into a new module.
+``web/squid_arena/anthropic_proxy.py:57`` and ``web/squid_arena/deps.py:84``
+(both sandboxed by the fixture). ``web/squid_arena/deps.py:84`` replaces the
+former ``web/squid_arena/api.py:144`` hit -- P5 Task 4 moved the module-scope
+``_repository = get_repository()`` singleton out of ``api.py`` into
+``deps.py`` (Ruling C3); ``squid_arena.api`` still triggers the same side
+effect transitively, since it imports ``squid_arena.deps``. Re-run it after
+any restructure step that moves code into a new module.
 
 The environment assumed is the documented baseline,
 ``uv sync --extra dev --extra analysis`` (see
@@ -96,20 +100,24 @@ def _sandbox_module_scope_side_effects(
     importer of that module in the repo, and the directories it created were
     invisible to ``git status`` because git does not track empty directories.
 
-    ``squid_arena.api`` (line 144) does ``_repository = get_repository()``,
+    ``squid_arena.deps`` (line 84) does ``_repository = get_repository()``,
     which with no ``WEB_ARENA_DSN`` falls back to
     ``outputs/web_arena/web_arena.db`` (``squid_store/factory.py:16,32``) and
     runs ``mkdir`` + ``sqlite3.connect`` + ``init_schema()`` -- an
     ``executescript`` and guarded ``ALTER TABLE``s -- against the live dev
     DB. That path is gitignored, so ``git status`` could not see it either.
     ``":memory:"`` short-circuits the mkdir in ``SQLiteRepository.__init__``
-    (``sqlite_repository.py:119-121``) and touches no file at all.
+    (``sqlite_repository.py:119-121``) and touches no file at all. P5 Task 4
+    moved this statement out of ``squid_arena.api`` (formerly line 144) into
+    ``squid_arena.deps`` (Ruling C3); importing ``squid_arena.api`` still
+    triggers it transitively, since ``api.py`` imports ``deps`` at its own
+    top level.
 
     The hazard is order-dependent, which is why it went unnoticed: in a full
     ``pytest tests/unit`` run, ``test_api_web_arena.py`` imports
-    ``squid_arena.api`` first inside a fixture that already sets
-    ``WEB_ARENA_DSN=":memory:"``, so this test gets a harmless cache hit.
-    Running this file ALONE is what opens the real DB.
+    ``squid_arena.api`` (and so ``squid_arena.deps``) first, inside a fixture
+    that already sets ``WEB_ARENA_DSN=":memory:"``, so this test gets a
+    harmless cache hit. Running this file ALONE is what opens the real DB.
     """
     monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
     monkeypatch.setenv("SQUID_THINKING_LOG_DIR", str(tmp_path / "thinking_traces"))

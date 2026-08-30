@@ -52,12 +52,25 @@ def api_module(tmp_path, monkeypatch: pytest.MonkeyPatch):
     A distinct ``tmp_path`` per test gives full isolation without relying on
     ``:memory:`` semantics — this is a real (if throwaway) SQLite file that
     is deleted along with the rest of pytest's tmp dir.
+
+    P5 Task 4 moved the module-scope ``_repository`` singleton (and the rest
+    of the in-memory session store) out of ``api.py`` into ``squid_arena.deps``
+    (Ruling C3). ``importlib.reload`` does not cascade into modules a reloaded
+    module merely imports by name, so reloading ``api`` alone would keep
+    reusing whatever repository ``deps`` built on its first-ever import in
+    this process -- including one a prior test already closed. Reload
+    ``deps`` first (recreating ``_repository`` from the DSN just set above),
+    then ``api`` (which re-binds its re-exported names to the fresh ``deps``
+    state), restoring the exact per-test isolation this fixture had before
+    the split.
     """
     dsn = str(tmp_path / "web_arena_test.db")
     monkeypatch.setenv("WEB_ARENA_DSN", dsn)
     monkeypatch.delenv("WEB_ARENA_CORS_ORIGINS", raising=False)
     import squid_arena.api as api
+    import squid_arena.deps as deps
 
+    importlib.reload(deps)
     reloaded = importlib.reload(api)
     yield reloaded
     reloaded._repository.close()

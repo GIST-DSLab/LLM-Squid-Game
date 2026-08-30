@@ -18,11 +18,25 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def api_module(monkeypatch: pytest.MonkeyPatch):
-    """Reload ``squid_arena.api`` against a fresh in-memory repository."""
+    """Reload ``squid_arena.api`` against a fresh in-memory repository.
+
+    P5 Task 4 moved the module-scope ``_repository`` singleton (and the rest
+    of the in-memory session store) out of ``api.py`` into ``squid_arena.deps``
+    (Ruling C3). ``importlib.reload`` does not cascade into modules a reloaded
+    module merely imports by name, so reloading ``api`` alone would keep
+    reusing whatever repository ``deps`` built on its first-ever import in
+    this process -- including one a prior test already closed. Reload
+    ``deps`` first (recreating ``_repository`` from the env var just set
+    above), then ``api`` (which re-binds its re-exported names to the fresh
+    ``deps`` state), restoring the exact per-test isolation this fixture had
+    before the split.
+    """
     monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
     monkeypatch.delenv("WEB_ARENA_CORS_ORIGINS", raising=False)
     import squid_arena.api as api
+    import squid_arena.deps as deps
 
+    importlib.reload(deps)
     return importlib.reload(api)
 
 
@@ -235,7 +249,7 @@ def test_cors_origins_reads_env_var_override(monkeypatch: pytest.MonkeyPatch) ->
 def test_rate_limit_returns_429_after_threshold(
     client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    monkeypatch.setattr("squid_arena.deps._RATE_LIMIT_MAX", 2)
     body = {"nickname": "rate-tester", "password": "pw"}
     for _ in range(2):
         resp = client.post("/api/new_game", json=body)
@@ -565,7 +579,7 @@ def test_rate_limit_uses_x_forwarded_for_first_hop_for_independent_buckets(
     request.client.host, so bucketing must key on X-Forwarded-For: two
     distinct client IPs get independent budgets.
     """
-    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    monkeypatch.setattr("squid_arena.deps._RATE_LIMIT_MAX", 2)
 
     ip_a = {"X-Forwarded-For": "203.0.113.1"}
     ip_b = {"X-Forwarded-For": "203.0.113.2, 70.0.0.9"}  # first hop = client
@@ -584,7 +598,7 @@ def test_rate_limit_uses_x_forwarded_for_first_hop_for_independent_buckets(
 def test_rate_limit_same_x_forwarded_for_shares_one_bucket(
     client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    monkeypatch.setattr("squid_arena.deps._RATE_LIMIT_MAX", 2)
     hdr = {"X-Forwarded-For": "198.51.100.7"}
     body = {"nickname": "xff-tester", "password": "pw"}
     for _ in range(2):
