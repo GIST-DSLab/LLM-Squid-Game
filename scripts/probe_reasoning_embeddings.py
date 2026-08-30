@@ -40,7 +40,7 @@ raw and masked.
 
 Usage
 -----
-    uv run python scripts/probe_reasoning_embeddings.py \
+    uv run python -m scripts.probe_reasoning_embeddings \
         --label forfeit --label threat \
         --channel task \
         --out outputs/reasoning_probe
@@ -51,16 +51,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _ri_dataset import load_all  # noqa: E402
-from probe_lexicon import build_masker, mask_text  # noqa: E402
+from scripts._ri_dataset import load_all
+from scripts.probe_lexicon import build_masker, mask_text
 
 DEFAULT_SBERT = "sentence-transformers/all-MiniLM-L6-v2"
 SCALAR_FEATURES = (

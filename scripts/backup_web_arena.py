@@ -21,15 +21,12 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 from datetime import datetime
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+from squid_store import Repository, get_repository
 
-from squid_store import Repository, get_repository  # noqa: E402
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 logger = logging.getLogger("backup_web_arena")
 

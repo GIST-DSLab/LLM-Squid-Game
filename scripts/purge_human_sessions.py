@@ -26,14 +26,8 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
-from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-from squid_store import get_repository  # noqa: E402
+from squid_store import get_repository
 
 logger = logging.getLogger("purge_human_sessions")
 

@@ -140,7 +140,7 @@ All four must be `true` for the v6 Split-Call + p_success probe pipeline. Canoni
 
 ### Legacy (archived)
 
-Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. Design lineage and rationale for each evolution step (Unit 11 → 13 → 14 → 15 → 16 → 17) live in `docs/design/v6/paper/appendix_A_deprecated_lineage.md`. Deprecated analysis modules (`regression.py`, `mediation.py`) are in `archive/analysis-deprecated/`; Phase 1/2 runs and configs in `archive/phase{0,1,2,3}_*/`. `src/squid_game/core/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
+Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. Design lineage and rationale for each evolution step (Unit 11 → 13 → 14 → 15 → 16 → 17) live in `docs/design/v6/paper/appendix_A_deprecated_lineage.md`. Deprecated analysis modules (`regression.py`, `mediation.py`) are in `archive/analysis-deprecated/`; Phase 1/2 runs and configs in `archive/phase{0,1,2,3}_*/`. `game/squid_game/core/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
 
 ### Common
 
@@ -157,7 +157,7 @@ Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`ba
 ## Directory Structure
 
 ```
-src/squid_game/
+game/squid_game/
   core/           # engine, unified_turn (Split-Call), forfeit_layer, framing
                   # (risk_choice_layer.py: legacy — replay-only for archived configs)
   tasks/          # signal_game/, voting_room/, navigation/, null_task/
@@ -254,7 +254,7 @@ uv run python scripts/orchestrate_posthoc.py
 
 produces `outputs/posthoc_summary.xlsx` (19 sheets). See `docs/design/v6/POSTHOC_ANALYSIS.md` for the full sheet reference.
 
-Public API: `from squid_game.analysis import ...` — see `src/squid_game/analysis/__init__.py` for the full export list (64 symbols as of v6.3). Phase 1/2 `analysis/{regression,mediation}.py` were moved to `archive/analysis-deprecated/` on 2026-04-23; Unit 14 `forfeit_regression.fit_forfeit_logit` + Unit 15 `fit_choice_asymmetric_model` supersede them.
+Public API: `from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` for the full export list (64 symbols as of v6.3). Phase 1/2 `analysis/{regression,mediation}.py` were moved to `archive/analysis-deprecated/` on 2026-04-23; Unit 14 `forfeit_regression.fit_forfeit_logit` + Unit 15 `fit_choice_asymmetric_model` supersede them.
 
 Canonical analysis reference (v6.3): **`docs/design/v6/POSTHOC_ANALYSIS.md`**.
 Legacy v3 ANALYSIS_PLAN is archived at **`archive/deprecated-docs/v3_ANALYSIS_PLAN.md`**.

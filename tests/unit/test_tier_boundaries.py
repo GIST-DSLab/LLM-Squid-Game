@@ -136,3 +136,21 @@ def test_squid_game_depends_on_no_higher_tier() -> None:
     assert "squid_arena" not in imported
     assert "squid_store" not in imported
     assert "interface" not in imported
+
+
+def test_no_module_rewrites_sys_path() -> None:
+    """The tier packages are installed; nothing needs to patch sys.path.
+
+    Thirteen call sites did before P1. The count is asserted as zero rather
+    than as a shrinking number, because "fewer" is not a property anyone can
+    hold onto -- the next person to add one would still pass a threshold test.
+    """
+    offenders: list[str] = []
+    for base in ("game", "web", "db", "scripts", "tests"):
+        for path in (REPO_ROOT / base).rglob("*.py"):
+            if "__pycache__" in path.parts or path.name == "test_tier_boundaries.py":
+                continue
+            source = path.read_text(encoding="utf-8")
+            if "sys.path.insert" in source or "sys.path.append" in source:
+                offenders.append(str(path.relative_to(REPO_ROOT)))
+    assert offenders == []

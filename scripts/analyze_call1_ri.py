@@ -35,7 +35,7 @@ specification check that does not depend on MixedLM convergence.
 
 Usage
 -----
-    uv run python scripts/analyze_call1_ri.py \
+    uv run python -m scripts.analyze_call1_ri \
         --root outputs/final_results --out outputs/call1_ri_analysis
 """
 
@@ -43,15 +43,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _ri_dataset import load_all  # noqa: E402
+from scripts._ri_dataset import load_all
 
 FORMULA = (
     "log_ri ~ is_threat + is_pull + turn_z + score_z + forfeit_allowed"

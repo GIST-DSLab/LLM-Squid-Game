@@ -20,7 +20,7 @@ framing template + forfeit-menu wording are rendered.
 
 Usage::
 
-    uv run python scripts/_trace_split_forfeit_production.py [cell_id]
+    uv run python -m scripts._trace_split_forfeit_production [cell_id]
 
 ``cell_id`` defaults to 3 (``flagship_corruption × allowed``). Pass 0-4
 to inspect any other cell.
@@ -32,11 +32,8 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-# Make the tests module importable so we can reuse the StubProvider.
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
-from tests.integration.conftest import StubProvider  # noqa: E402
+from squid_game.runner import ExperimentRunner, load_config_from_yaml
+from tests.integration.conftest import StubProvider
 
 SEPARATOR = "=" * 78
 CANNED_TASK = (
@@ -68,9 +65,6 @@ def _section(title: str, body: str) -> None:
 
 
 def main() -> None:
-    # Local imports so the sys.path insertion above takes effect first.
-    from squid_game.runner import ExperimentRunner, load_config_from_yaml
-
     target_cell = int(sys.argv[1]) if len(sys.argv) > 1 else 3
 
     config = load_config_from_yaml(

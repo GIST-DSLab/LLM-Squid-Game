@@ -29,25 +29,13 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_ROOT = REPO_ROOT / "outputs" / "final_results"
-
-# `scripts/` is not a package, so running this script directly (`uv run
-# python scripts/seed_web_arena.py`, per the project convention -- see
-# web/squid_arena/api.py, web/squid_arena/app.py) needs the repo root on
-# sys.path. Not needed when imported as `scripts.seed_web_arena` (e.g. from
-# tests), where pytest's rootdir is already on sys.path.
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-from squid_store import get_repository  # noqa: E402
+from squid_store import get_repository
 
 # Re-exported from the importable seed core so existing callers and tests can
 # keep importing these from ``scripts.seed_web_arena``.
-from squid_arena.seeding import (  # noqa: E402,F401
+from squid_arena.seeding import (  # noqa: F401
     MODEL_DIRS,
     build_session_record,
     build_turn_records,
@@ -57,6 +45,9 @@ from squid_arena.seeding import (  # noqa: E402,F401
     seed_model_stats,
     seed_sessions,
 )
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_ROOT = REPO_ROOT / "outputs" / "final_results"
 
 logger = logging.getLogger("seed_web_arena")
 

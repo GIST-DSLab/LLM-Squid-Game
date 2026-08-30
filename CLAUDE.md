@@ -34,9 +34,11 @@ Integration tests inject a `StubProvider` (`tests/integration/conftest.py`) via 
 
 ## Running Experiments
 
-> ⚠️ **The `configs/experiment/` directory is currently EMPTY**, so none of the `--config`
-> commands in this section run as written. The config files were never committed to git.
-> See "Missing experiment configs" under Directory Structure before attempting a run.
+> ⚠️ **`configs/experiment/` was empty from repo creation until P0 (2026-08-30).** P0 restored
+> five of the six v6-canonical config files from the 2026-04-22 run outputs and committed them,
+> so every `--config` command below now runs as written. The sixth,
+> `phase3_psuccess_probe_smoke.yaml`, is still missing — no run output exists to dump it from.
+> See "Missing experiment configs" under Directory Structure for the current gap.
 
 ### Cloud provider mode (v6 canonical — Gemini / Ollama Cloud)
 ```bash
@@ -66,17 +68,19 @@ uv run python3 -m mlx_lm server \
 uv run squid-game --config <config>.yaml
 ```
 
-### Key experiment configs (v6 canonical family) — ⚠️ ALL MISSING FROM DISK
+### Key experiment configs (v6 canonical family) — 5 of 6 RESTORED (P0, 2026-08-30)
 
-These are the config filenames the scripts and the 2026-04-22 runs refer to. **None of them
-currently exist** (`configs/experiment/` is empty); they are listed so a restored or recreated
-config can be given the name the rest of the codebase already expects.
+These are the config filenames the scripts and the 2026-04-22 runs refer to. Five now live in
+`configs/experiment/`, recreated from the 2026-04-22 run outputs; each is a single unsharded
+file, not the `_shard_a`/`_shard_b` pair earlier revisions of this file described.
 
-- `phase3_split_forfeit_gemini_n30.yaml` — **canonical main run** (Gemini 2.5 Flash)
-- `phase3_split_forfeit_gptoss_n30.yaml` — KDD UC cross-model (GPT-OSS-20B via Ollama Cloud)
-- `phase3_split_forfeit_{nemotron,qwen3next}_n30_shard_{a,b}.yaml` — sharded main runs (Ollama Cloud)
-- `phase3_split_forfeit_smoke.yaml` — 6 cells × 1 rep pipeline smoke
-- `phase3_psuccess_probe_smoke.yaml` — Unit 17 Call 1.5 probe integrity smoke
+- `phase3_split_forfeit_gemini_n30.yaml` — **canonical main run** (Gemini 2.5 Flash) — present
+- `phase3_split_forfeit_gptoss_n30.yaml` — KDD UC cross-model (GPT-OSS-20B via Ollama Cloud) — present
+- `phase3_split_forfeit_nemotron_n30.yaml` — main run (Ollama Cloud) — present
+- `phase3_split_forfeit_qwen3next_n30.yaml` — main run (Ollama Cloud) — present
+- `phase3_split_forfeit_smoke.yaml` — 6 cells × 1 rep pipeline smoke — present
+- `phase3_psuccess_probe_smoke.yaml` — Unit 17 Call 1.5 probe integrity smoke — ⚠️ **still
+  missing**; no run output records it, so it could not be recreated the way the other five were.
 
 ### Provider types
 - `gemini` / `openai` / `anthropic` — cloud API providers
@@ -159,15 +163,17 @@ use_split_forfeit_layer: true
 use_psuccess_probe: true     # Unit 17 Call 1.5
 ```
 
-All four must be `true` for the v6 Split-Call + p_success probe pipeline. The canonical configs
-set them accordingly — but those config files are **missing from disk** (see "Missing experiment
-configs"), so any recreated config must set all four explicitly, plus `delta_s_continue: 10`,
-`p_death: 0.25`, `starting_score: 30`, `psuccess_floor: 0.3`, `base_reward: 10`,
-`reward_cap_multiple: 10` to reproduce the 2026-04-22 runs.
+All four must be `true` for the v6 Split-Call + p_success probe pipeline. The five restored
+canonical configs (see "Missing experiment configs" below) set them accordingly, plus
+`delta_s_continue: 10`, `p_death: 0.25`, `starting_score: 30`, `psuccess_floor: 0.3`,
+`base_reward: 10`, `reward_cap_multiple: 10` — verified against
+`configs/experiment/phase3_split_forfeit_gemini_n30.yaml`. Any newly recreated config (for the
+still-missing `phase3_psuccess_probe_smoke.yaml`) must set the same values to reproduce the
+2026-04-22 runs.
 
 ### Legacy (archived)
 
-Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. `src/squid_game/core/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
+Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`baseline_electricity`/`survival_electricity`), and Phase 3.1 (1x/2x/3x stake menu + `α_stake`) are all inactive. `game/squid_game/core/risk_choice_layer.py` is retained **only** to replay archived stake-menu configs and is not reachable from any canonical v6 config.
 
 ⚠️ **There is no `archive/` directory and no `docs/design/` tree in this repository** — neither has ever been tracked in git. Earlier revisions of this file cited `docs/design/v6/paper/*` and `archive/analysis-deprecated/*`; those paths do not resolve. The deprecated `analysis/{regression,mediation}.py` modules are simply absent from the tree, and the design lineage (Unit 11 → 13 → 14 → 15 → 16 → 17) is documented only in code docstrings and the LaTeX paper under `docs/en/`.
 
@@ -186,7 +192,7 @@ Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`ba
 ## Directory Structure
 
 ```
-src/squid_game/
+game/squid_game/      # game tier — engine, tasks, agents, providers, prompts, analysis
   core/           # engine, unified_turn (Split-Call), forfeit_layer, framing
                   # (risk_choice_layer.py: legacy — replay-only for archived configs)
   tasks/          # signal_game/, voting_room/, navigation/, null_task/
@@ -202,13 +208,17 @@ src/squid_game/
 configs/
   tasks/          # signal_game, voting_room, navigation
   providers/      # openai, anthropic, local
-  experiment/     # ⚠️ EMPTY — see "Missing experiment configs" below
+  experiment/     # 5 of the 6 canonical v6 configs restored (P0); see
+                  # "Missing experiment configs" below for the one gap
 scripts/          # analyze_phase3, analyze_threat_registration, orchestrate_posthoc,
                   # plot_*, thinking_analysis, seed_web_arena, shard helpers
-interface/        # Web Arena backend — api.py (FastAPI), arena.py, human_game.py,
-                  # rule_schedule.py (campaign hidden-rule family rotation),
-                  # persistence/ (SQLite + Postgres mirrored), seeding.py
-web/              # Web Arena frontend — index.html, app.js, styles.css (Alpine.js, no build)
+web/squid_arena/  # web tier — FastAPI Web Arena backend (api.py), arena.py, human_game.py,
+                  # rule_schedule.py (campaign hidden-rule family rotation), seeding.py,
+                  # served on Render
+web/frontend/     # web tier — static frontend (GitHub Pages) — index.html, app.js,
+                  # styles.css (Alpine.js, no build)
+db/squid_store/   # db tier — repository interface + SQLite/Postgres backends
+                  # (mirrored under interface/persistence/ before P1)
 docs/
   en/             # LaTeX paper — content.tex + sections/01_introduction … 07_appendix
   superpowers/    # plans/ + specs/ (per-feature design + implementation plans)
@@ -218,19 +228,27 @@ outputs/
   web_arena/      # local SQLite dev DB (untracked)
 ```
 
-### Missing experiment configs (⚠️ known gap)
+### Missing experiment configs (⚠️ one file still missing, as of P0 2026-08-30)
 
-`configs/experiment/` is **empty and has never been tracked in git**, yet scripts hardcode
-paths into it (`scripts/_trace_split_forfeit_production.py`, `dump_gemini_smoke_prompt.py`,
-`benchmark_mlx_vs_ollama.py`) and the run commands above name files inside it. Consequences:
+`configs/experiment/` was **empty and untracked in git from repo creation until P0**, even
+though scripts hardcode paths into it (`scripts/_trace_split_forfeit_production.py`,
+`dump_gemini_smoke_prompt.py`, `benchmark_mlx_vs_ollama.py`) and the run commands above name
+files inside it. P0 recreated five of the six v6-canonical files from the 2026-04-22 run
+outputs and committed them (see "Key experiment configs" above). Current state:
 
-- **No `main.py --config …` command in this file currently runs as written.** The config
-  files must be restored (or recreated) first.
-- `tests/unit/test_phase3_configs.py` and `test_forfeit_layer_config_yaml.py` fail for this
-  reason (5 failures) — this is the *actual* cause, not a venv/extras problem.
+- **`uv run squid-game --config …` now runs as written** for every config named in "Key
+  experiment configs" above except `phase3_psuccess_probe_smoke.yaml`, which is still missing.
+- `tests/unit/test_phase3_configs.py` and `test_forfeit_layer_config_yaml.py` no longer fail
+  for this reason — the v6-canonical cases they cover now find their YAML. Both files retain a
+  small number of `pytest.mark.skip` cases pinning **archived** designs (Phase 3
+  baseline/survival_electricity, Phase N carryover, the Phase O `flagship_corruption_terminal`
+  ablation, and the pre-Split-Call `phase3_forfeit_layer_smoke.yaml`) whose YAML was never
+  committed and cannot be recreated the way the v6 family was, since no run output records them.
 - The canonical parameters are recoverable from the run outputs and code defaults:
   `k(delta_s_continue) = 10`, `p_d = 0.25`, `S₀ = 30`, `psuccess_floor = 0.3`,
-  `base_reward = 10`, `reward_cap_multiple = 10`, and the four `use_*` flags below.
+  `base_reward = 10`, `reward_cap_multiple = 10`, and the four `use_*` flags above — this is
+  how `phase3_psuccess_probe_smoke.yaml` would need to be recreated, if a run output for it
+  ever surfaces.
 
 ### Git LFS
 
@@ -264,18 +282,18 @@ pointers with empties and corrupts the data in the repository.
 - **Reward**: Correct → EV-positive calibrated CONTINUE reward (`k = 10`; clamped to `[base_reward, reward_cap_multiple × base_reward]`); Incorrect → 0.
 - **Forfeit**: On FORFEIT the current score `S` is preserved and the session ends.
 - **RI proxy**: `ri_task`, `ri_probe`, `ri_forfeit` — each `thinking_tokens` tallied per call.
-- **Canonical configs**: `phase3_split_forfeit_gemini_n30.yaml` (main run) + sharded Ollama Cloud variants for Nemotron / Qwen3-Next / GPT-OSS. ⚠️ **Missing from disk** — see above.
-- **Smoke configs**: `phase3_split_forfeit_smoke.yaml` (pipeline), `phase3_psuccess_probe_smoke.yaml` (Unit 17 probe integrity). ⚠️ **Missing from disk.**
+- **Canonical configs**: `phase3_split_forfeit_gemini_n30.yaml` (main run) + unsharded Ollama Cloud variants for Nemotron / Qwen3-Next / GPT-OSS. Restored by P0 (2026-08-30) — see "Missing experiment configs" above.
+- **Smoke configs**: `phase3_split_forfeit_smoke.yaml` (pipeline) — restored. `phase3_psuccess_probe_smoke.yaml` (Unit 17 probe integrity) — ⚠️ **still missing from disk.**
 
 ### Primary Hypotheses (pre-registered, 5)
 
 - **H1 / H_SD** — Cox PH: `λ(t | X) = λ₀(t) · exp(β_FC + β_S · S)` (no_cap regime, Cells 1+3). Decision rule: `HR(flagship_corruption / baseline_flagship) > 1` **and** Schoenfeld PH assumption passes. **Primary FSPM timing signal.**
 - **H2 / H_choice_asymmetric** — mixedLM: `ri_forfeit ~ choice × framing + score + turn + (1 | session)` (allowed cells only). Decision rule: `β_interaction > 0`. **Primary FSPM cognitive-asymmetry signal.**
 - **R1 / H_task_spillover** — `ri_task ~ framing + turn + score + (1 | session)`; expect `β_framing` n.s. (rules out TC / general anxiety spillover).
-- **R2 / BP_audit** — Cell 5 non-forfeit rate ≥ 0.9 (one-sample, 1-sided proportion test); detects baseline drift. ⚠️ **The test is NOT implemented.** No proportion test exists in `src/` or `scripts/`; `motivation._baseline_persistence_behavioral` produces only the descriptive rate + bootstrap CI. Treat R2 as unadjudicated until the test is written.
+- **R2 / BP_audit** — Cell 5 non-forfeit rate ≥ 0.9 (one-sample, 1-sided proportion test); detects baseline drift. ⚠️ **The test is NOT implemented.** No proportion test exists in `game/` or `scripts/`; `motivation._baseline_persistence_behavioral` produces only the descriptive rate + bootstrap CI. Treat R2 as unadjudicated until the test is written.
 - **R3 / H_D3** — Welch t on `rule_match_score` (Unit 17.11, `manipulation_check.check_probe_independence`); expect n.s. with `|d| < 0.2` — the Y-axis manipulation check. The legacy `task_success_factor` variant is retained but is **survivorship-contaminated** (forfeit truncates sessions at pre-discovery turns, so early-forfeiting cells look less accurate as an artefact) — do not report it as the primary R3.
 
-⚠️ **FDR correction is NOT implemented.** No Benjamini–Hochberg / `multipletests` call exists anywhere in `src/` or `scripts/`. The 5-hypothesis family is currently reported **uncorrected**. (Deferred by decision, 2026-07-13 — do not silently claim FDR control in the paper.)
+⚠️ **FDR correction is NOT implemented.** No Benjamini–Hochberg / `multipletests` call exists anywhere in `game/` or `scripts/`. The 5-hypothesis family is currently reported **uncorrected**. (Deferred by decision, 2026-07-13 — do not silently claim FDR control in the paper.)
 
 ### Analysis Pipeline (v6.3, 2026-04-23)
 
@@ -321,7 +339,7 @@ by all turns, so it is downward-biased there and the Wilson CI excludes sampling
 
 ### Public API
 
-`from squid_game.analysis import ...` — see `src/squid_game/analysis/__init__.py` (80 symbols).
+`from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` (80 symbols).
 
 - **H1 is a Cox PH, not a logit.** `fit_forfeit_logit` / `ForfeitLogitResult` were **deleted**
   (2026-04-23); `forfeit_survival.fit_cox_forfeit_survival` (time-varying `CoxTimeVaryingFitter`
