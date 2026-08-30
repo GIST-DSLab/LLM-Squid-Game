@@ -24,7 +24,7 @@ Decision rule for TC-driven forfeit (Cox §6.7): ``β_M > 0``,
 elevated.
 
 The module is intentionally side-effect-free; orchestration / disk I/O
-is the caller's responsibility (see ``scripts/analyze_tc.py``).
+is the caller's responsibility (see ``scripts/analysis/analyze_tc.py``).
 """
 
 from __future__ import annotations

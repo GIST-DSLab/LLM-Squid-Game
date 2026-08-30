@@ -4,7 +4,7 @@ Translates raw_response, probe_result.response, and observation fields.
 Also performs survival keyword analysis across framings.
 
 Usage:
-    uv run python scripts/translate_trajectories.py \
+    uv run python scripts/dev/translate_trajectories.py \
         --input outputs/20260326_0025_gemini-2.5-flash_signal-game \
         --output outputs/20260326_0025_gemini-2.5-flash_signal-game/korean-ver
 """

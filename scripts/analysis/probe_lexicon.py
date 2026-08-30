@@ -8,8 +8,8 @@ masked form for the requested mask sets.
 
 Usage
 -----
-    uv run python -m scripts.probe_lexicon --text "the weight corruption event..."
-    uv run python -m scripts.probe_lexicon --file trace.txt --mask threat --mask pull
+    uv run python -m scripts.analysis.probe_lexicon --text "the weight corruption event..."
+    uv run python -m scripts.analysis.probe_lexicon --file trace.txt --mask threat --mask pull
 """
 
 from __future__ import annotations

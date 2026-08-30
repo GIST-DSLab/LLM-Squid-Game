@@ -17,8 +17,8 @@ Scope:
 ``render_menu`` tests live in 14.3 once the ``forfeit_layer/menu.j2``
 template is written.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§3, §5, §7.3, §15.
+The five-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

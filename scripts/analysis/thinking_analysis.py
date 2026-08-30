@@ -15,13 +15,13 @@ Analyses performed:
 Usage::
 
     # Analyze a single experiment directory
-    uv run python scripts/thinking_analysis.py outputs/20260319_2242_qwen3.5-4b_signal-game
+    uv run python scripts/analysis/thinking_analysis.py outputs/20260319_2242_qwen3.5-4b_signal-game
 
     # Analyze multiple directories (merged)
-    uv run python scripts/thinking_analysis.py outputs/dir1 outputs/dir2
+    uv run python scripts/analysis/thinking_analysis.py outputs/dir1 outputs/dir2
 
     # Compare across models
-    uv run python scripts/thinking_analysis.py --compare outputs/llama_dir outputs/qwen_dir
+    uv run python scripts/analysis/thinking_analysis.py --compare outputs/llama_dir outputs/qwen_dir
 """
 
 from __future__ import annotations
@@ -510,7 +510,7 @@ def main() -> None:
         args.remove("--compare")
 
     if not args:
-        print("Usage: uv run python scripts/thinking_analysis.py [--compare] <output_dir> [output_dir2 ...]")
+        print("Usage: uv run python scripts/analysis/thinking_analysis.py [--compare] <output_dir> [output_dir2 ...]")
         sys.exit(1)
 
     data_dirs = [Path(a) for a in args]

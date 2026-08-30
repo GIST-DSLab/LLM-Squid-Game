@@ -3,7 +3,7 @@
 Drives ``phase3_null_risk.yaml`` through ``ExperimentRunner`` with a
 ``StubProvider`` (same pattern as ``test_null_risk_e2e``), then feeds
 the resulting ``outputs/.../season_results.jsonl`` into
-``scripts/analyze_phase3.py``.
+``scripts/analysis/analyze_phase3.py``.
 
 Verifies (2026-04-21 post legacy-removal):
 
@@ -41,7 +41,7 @@ def _stake2_response(_idx: int, _messages: list[dict[str, str]]) -> str:
 
 
 def _load_cli_module():
-    """Load ``scripts/analyze_phase3.py`` as an importable module."""
+    """Load ``scripts/analysis/analyze_phase3.py`` as an importable module."""
     root = Path(__file__).resolve().parents[2]
     script_path = root / "scripts" / "analysis" / "analyze_phase3.py"
     assert script_path.exists(), f"CLI missing: {script_path}"

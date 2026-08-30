@@ -5,7 +5,7 @@ core, which ``squid_arena.arena`` also reuses to persist live LLM Arena runs).
 The reusable helpers live in ``web/squid_arena/seeding.py`` — shipped inside the
 backend image — because ``scripts/`` is excluded from the Docker build; this
 file re-exports them so the seed command and its tests keep importing from
-``scripts.seed_web_arena``.
+``scripts.arena.seed_web_arena``.
 
 Imports the existing LLM experiment outputs
 (``outputs/final_results/<run_dir>/season_results.jsonl`` +
@@ -18,9 +18,9 @@ Closed/Open classification + idempotency notes.
 
 Usage::
 
-    uv run python scripts/seed_web_arena.py
-    uv run python scripts/seed_web_arena.py --dsn outputs/web_arena/web_arena.db
-    uv run python scripts/seed_web_arena.py --root outputs/final_results --dsn /tmp/scratch.db
+    uv run python scripts/arena/seed_web_arena.py
+    uv run python scripts/arena/seed_web_arena.py --dsn outputs/web_arena/web_arena.db
+    uv run python scripts/arena/seed_web_arena.py --root outputs/final_results --dsn /tmp/scratch.db
 
 Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
 """
@@ -34,7 +34,7 @@ from pathlib import Path
 from squid_store import get_repository
 
 # Re-exported from the importable seed core so existing callers and tests can
-# keep importing these from ``scripts.seed_web_arena``.
+# keep importing these from ``scripts.arena.seed_web_arena``.
 from squid_arena.seeding import (  # noqa: F401
     MODEL_DIRS,
     build_session_record,

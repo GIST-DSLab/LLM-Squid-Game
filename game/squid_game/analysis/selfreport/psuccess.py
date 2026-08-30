@@ -23,8 +23,8 @@ and the ``_classify`` regime-labelling logic stayed in
 ``reward_offered_this_turn`` (an observed, not self-reported, value)
 and the already-computed ``cap_bound`` / ``ev_delta_s`` columns.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§4, §5, §9.2.
+The two functions above are the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

@@ -13,14 +13,14 @@ turn rows first.
 Usage::
 
     # dry-run against the live DB (reports the count, deletes nothing)
-    uv run --no-sync python scripts/purge_human_sessions.py \
+    uv run --no-sync python scripts/arena/purge_human_sessions.py \
         --dsn "$WEB_ARENA_DSN" --dry-run
 
     # actually delete
-    uv run --no-sync python scripts/purge_human_sessions.py --dsn "$WEB_ARENA_DSN"
+    uv run --no-sync python scripts/arena/purge_human_sessions.py --dsn "$WEB_ARENA_DSN"
 
     # no --dsn -> local SQLite fallback (outputs/web_arena/web_arena.db)
-    uv run --no-sync python scripts/purge_human_sessions.py
+    uv run --no-sync python scripts/arena/purge_human_sessions.py
 """
 from __future__ import annotations
 

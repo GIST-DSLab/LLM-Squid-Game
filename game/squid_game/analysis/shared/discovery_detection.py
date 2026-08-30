@@ -32,9 +32,9 @@ corruption framing should reduce post-discovery engagement (agents
 who already cracked the rule have nothing intrinsically interesting
 left and, under threat, lower their cognitive investment).
 
-Design references:
-    - Plan: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-13-simplification.md``
-      §5 (discovery detection algorithm), §7 (H4/H5/H6 hypotheses).
+The discovery-detection algorithm and its H4/H5/H6 hypotheses are
+described above; the originating plan document is not present in this
+repository.
 """
 
 from __future__ import annotations

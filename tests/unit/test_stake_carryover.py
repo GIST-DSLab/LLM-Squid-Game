@@ -1,10 +1,9 @@
 """Phase N — cumulative carryover integration contract.
 
 This module is the single landmark file for the Phase N carryover
-contract (plan: ``/Users/bagjuhyeon/.claude/plans/phase-n-cumulative-carryover.md``
-§6). It exercises the full flow end-to-end across multiple turns and
-validates the two integration properties that the per-component unit
-tests cannot see:
+contract. It exercises the full flow end-to-end across multiple turns
+and validates the two integration properties that the per-component
+unit tests cannot see:
 
 1. **Multi-turn trajectory** — simulate the expected p_death rise for
    the pilot parameters ``{1:0, 2:0.02, 3:0.05}`` with ``decay=1.0``
@@ -16,9 +15,14 @@ tests cannot see:
    per-season fresh-manager invariant (``core/engine.py`` Phase F) is
    verified at the integration level here.
 
-The eight tests enumerated in the plan §6 map onto this file plus the
-component-level unit tests; see the docstring of each test for the
-cross-reference.
+# spec: lost -- this docstring claimed "the eight tests enumerated in
+# the plan §6" map onto this file plus the component-level unit tests.
+# This file alone has 13 tests, so the plan's 8-test split across this
+# file and the others is not recoverable from the code; the turn
+# 5/10/15 dynamics table above (base=0.35/0.60/0.85) is independently
+# verified by ``test_turn_5_matches_plan_table`` /
+# ``test_turn_10_matches_plan_table`` / ``test_turn_15_approaches_saturation``
+# below and is not part of what was lost.
 """
 
 from __future__ import annotations

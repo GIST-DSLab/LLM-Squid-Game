@@ -37,7 +37,7 @@ Outputs:
     stdout — markdown table for §3a paste-in.
 
 Usage:
-    uv run python scripts/analyze_unified_cox_with_load.py
+    uv run python scripts/analysis/analyze_unified_cox_with_load.py
 """
 
 from __future__ import annotations

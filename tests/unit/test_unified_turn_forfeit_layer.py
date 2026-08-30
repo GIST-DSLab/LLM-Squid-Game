@@ -20,8 +20,8 @@ Scope:
    (regression sanity — covered implicitly by existing 533 tests, but
    an explicit assertion here makes the invariant explicit).
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§3, §5, §7.3, §11.
+The seven-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

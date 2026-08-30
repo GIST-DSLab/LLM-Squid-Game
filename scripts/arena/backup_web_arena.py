@@ -1,6 +1,6 @@
 """Mirror the live Web Arena DB (Supabase/Postgres) to a local SQLite file.
 
-Inverse of scripts/seed_web_arena.py: reads sessions/turns/model_stats from a
+Inverse of scripts/arena/seed_web_arena.py: reads sessions/turns/model_stats from a
 source Repository and writes them to a destination Repository, both obtained
 via squid_store.get_repository (so it works Postgres->SQLite,
 SQLite->SQLite, etc). Idempotent: sessions already present in the destination
@@ -10,11 +10,11 @@ this is a backup/analysis snapshot, not a live sync.
 Usage::
 
     # Supabase -> dated local SQLite (default dest)
-    uv run --no-sync python scripts/backup_web_arena.py \
+    uv run --no-sync python scripts/arena/backup_web_arena.py \
         --source-dsn "$WEB_ARENA_DSN"
 
     # explicit destination
-    uv run --no-sync python scripts/backup_web_arena.py \
+    uv run --no-sync python scripts/arena/backup_web_arena.py \
         --source-dsn "postgresql://..." --dest outputs/web_arena/backup.db
 """
 from __future__ import annotations

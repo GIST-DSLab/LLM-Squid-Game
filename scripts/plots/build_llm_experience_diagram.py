@@ -1,6 +1,6 @@
 """Build an Excalidraw diagram showing LLM-experienced paths in Phase O Unit 15+16.
 
-Derived from scripts/build_prompt_flow_diagram.py, but re-oriented so every
+Derived from scripts/plots/build_prompt_flow_diagram.py, but re-oriented so every
 branch the LLM may traverse during a session is visible:
   - Framing choice in system prompt (3 active + 1 unused)
   - Per-turn Call 1 (always)
@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
-# Color palette (copied from scripts/build_prompt_flow_diagram.py)
+# Color palette (copied from scripts/plots/build_prompt_flow_diagram.py)
 # --------------------------------------------------------------------------- #
 C_TITLE = "#1e40af"
 C_SUBTITLE = "#3b82f6"

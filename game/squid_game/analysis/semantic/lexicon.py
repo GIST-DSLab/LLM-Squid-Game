@@ -8,7 +8,7 @@ Shared Pull tokens (flagship, helpfulness score) are deliberately excluded
 because they appear in baseline_flagship too and do not discriminate framing.
 
 This module also carries the leakage-control masking used by the semantic
-channel's embedding probe (merged from ``scripts/probe_lexicon.py``, P2
+channel's embedding probe (merged from ``scripts/analysis/probe_lexicon.py``, P2
 Task 6, 2026-08-30) -- see ``build_masker`` / ``mask_text`` below.
 """
 from __future__ import annotations
@@ -53,7 +53,7 @@ def code_threat_mention(text: str) -> LexiconResult:
 
 # --------------------------------------------------------------------
 # Leakage-control masking for the reasoning-trace linear probe
-# (merged from ``scripts/probe_lexicon.py``, P2 Task 6, 2026-08-30).
+# (merged from ``scripts/analysis/probe_lexicon.py``, P2 Task 6, 2026-08-30).
 #
 # Why this exists
 # ----------------

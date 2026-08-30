@@ -22,7 +22,7 @@ Three plots are generated, each writing a separate PNG:
 
 Usage::
 
-    uv run python scripts/plot_ri_trajectories.py \\
+    uv run python scripts/plots/plot_ri_trajectories.py \\
       --run gemini-2.5-flash outputs/final_results/20260422_0218_gemini-2.5-flash_signal-game \\
       --run gpt-oss-20b outputs/20260422_0902_gpt-oss-20b-cloud_signal-game \\
       --run nemotron-3-nano-30b outputs/20260422_0902_nemotron-3-nano-30b-cloud_signal-game \\

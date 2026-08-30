@@ -6,8 +6,8 @@ on runs whose schema predates or postdates the current models.
 
 Two consumers share this module:
 
-* ``scripts/analyze_call1_ri.py``   — mixedLM on ``log1p(ri_task)``.
-* ``scripts/probe_reasoning_embeddings.py`` — SentenceBERT + linear probe.
+* ``scripts/analysis/analyze_call1_ri.py``   — mixedLM on ``log1p(ri_task)``.
+* ``scripts/analysis/probe_reasoning_embeddings.py`` — SentenceBERT + linear probe.
 
 Score reconstruction
 --------------------

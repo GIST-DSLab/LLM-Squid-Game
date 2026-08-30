@@ -23,7 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 analysis = ["statsmodels>=0.14", "lifelines>=0.29"]
-# SentenceBERT linear-probe pipeline (scripts/probe_reasoning_embeddings.py).
+# SentenceBERT linear-probe pipeline (scripts/analysis/probe_reasoning_embeddings.py).
 probe = ["sentence-transformers>=3.0", "scikit-learn>=1.4"]
 local = ["vllm>=0.4"]
 mlx = ["mlx-lm>=0.19"]

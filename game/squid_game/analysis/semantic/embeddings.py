@@ -40,7 +40,7 @@ probe is fit raw and masked.
 
 The model, its embedding pipeline, and its report rendering live here;
 orchestration (argparse, the channel/label variant loop, disk I/O) is the
-caller's responsibility -- see ``scripts/probe_reasoning_embeddings.py``.
+caller's responsibility -- see ``scripts/analysis/probe_reasoning_embeddings.py``.
 """
 
 from __future__ import annotations
@@ -469,7 +469,7 @@ def render_report(results: list[dict]) -> str:
         "`scalar_baseline` = probe on (turn, score, ri_task, psuccess_self)"
         " only. The embedding must beat it to have read the *content*.",
         "`embedding_masked` = surface framing vocabulary removed"
-        " (see `scripts/probe_lexicon.py`).",
+        " (see `scripts/analysis/probe_lexicon.py`).",
         "`null` = session-level label-shuffle AUROC mean;"
         " `p` = permutation p-value.",
         "",

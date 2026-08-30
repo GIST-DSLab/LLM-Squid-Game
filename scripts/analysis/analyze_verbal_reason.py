@@ -8,7 +8,7 @@ reasons (1=SD, 2=TC, 3=SA)?
 CONTINUE reward is capped at [10, 100]; at high scores the cap binds, EV(continue)
 flips negative, and a rational agent forfeits regardless of survival preference.
 Those ``cap_bound`` forfeits are rationality-revealing, not preference-revealing,
-so — like ``scripts/analyze_unified_cox.py`` (the SD-behaviour channel) — this
+so — like ``scripts/analysis/analyze_unified_cox.py`` (the SD-behaviour channel) — this
 driver counts only ``regime == "no_cap"`` forfeits in the threat cells
 (``framing in {baseline_flagship, flagship_corruption}``, i.e. Cells 1+3). Pooling
 in the cap_bound forfeits dilutes the survival rate (they are score-attachment
@@ -25,7 +25,7 @@ same convention as the other analyze_* summaries that seed the web-arena
 ``model_stats`` table.
 
 Usage:
-    uv run python scripts/analyze_verbal_reason.py
+    uv run python scripts/analysis/analyze_verbal_reason.py
 """
 
 from __future__ import annotations

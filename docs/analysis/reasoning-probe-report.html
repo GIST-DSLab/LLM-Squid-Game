@@ -904,12 +904,12 @@ footer {
   <pre>uv sync --extra analysis --extra dev --extra probe
 
 # 실험 A — 회귀
-python scripts/analyze_call1_ri.py \
+python scripts/analysis/analyze_call1_ri.py \
     --root outputs/final_results \
     --out  outputs/call1_ri_analysis
 
 # 실험 B — 선형 프로브
-python scripts/probe_reasoning_embeddings.py \
+python scripts/analysis/probe_reasoning_embeddings.py \
     --label forfeit --label threat \
     --channel task --channel probe --channel forfeit \
     --per-model --n-permutations 50 \

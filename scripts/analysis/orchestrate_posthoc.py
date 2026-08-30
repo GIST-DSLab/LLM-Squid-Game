@@ -6,7 +6,7 @@ Takes one or more experiment output directories (each containing
 stack on each run, and produces a single multi-sheet Excel workbook
 that consolidates the measures across models side-by-side.
 
-Unlike :mod:`scripts.analyze_phase3` (which writes per-run markdown
+Unlike :mod:`scripts.analysis.analyze_phase3` (which writes per-run markdown
 reports into ``<run>/phase3_analysis/``), this orchestrator focuses on
 cross-model comparison and delivers a **single xlsx** whose sheets map
 directly to the v6 measurement framework (§6) and statistical analysis
@@ -17,15 +17,15 @@ below) -- there is no separate reference document.
 Usage
 -----
     # Default: auto-detect the most recent gpt-oss + gemini-2.5-flash runs
-    uv run python scripts/orchestrate_posthoc.py
+    uv run python scripts/analysis/orchestrate_posthoc.py
 
     # Explicit runs
-    uv run python scripts/orchestrate_posthoc.py \\
+    uv run python scripts/analysis/orchestrate_posthoc.py \\
         --run gpt-oss outputs/20260422_0346_gpt-oss-20b-cloud_signal-game \\
         --run gemini-2.5-flash outputs/20260422_0218_gemini-2.5-flash_signal-game
 
     # Custom output path
-    uv run python scripts/orchestrate_posthoc.py -o /tmp/fspm_report.xlsx
+    uv run python scripts/analysis/orchestrate_posthoc.py -o /tmp/fspm_report.xlsx
 
 The orchestrator is read-only: experiment outputs are never modified.
 """

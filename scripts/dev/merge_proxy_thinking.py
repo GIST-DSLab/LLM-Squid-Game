@@ -7,11 +7,11 @@ to `outputs/api_sessions/season_results.jsonl`. This script joins the two
 by `(session_id, turn_number)` and emits one canonical
 `{session_id}_turns.jsonl` per session in the *exact* same format MLX /
 Ollama experiments produce (so downstream scripts like
-`scripts/thinking_analysis.py` do not need to change).
+`scripts/analysis/thinking_analysis.py` do not need to change).
 
 Usage:
 
-    uv run python scripts/merge_proxy_thinking.py \
+    uv run python scripts/dev/merge_proxy_thinking.py \
         --proxy-log outputs/api_sessions/thinking_traces/api_calls.jsonl \
         --season-results outputs/api_sessions/season_results.jsonl \
         --out-dir outputs/api_sessions/turns_merged

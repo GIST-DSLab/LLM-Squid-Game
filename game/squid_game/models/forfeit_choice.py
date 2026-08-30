@@ -28,8 +28,8 @@ Three model classes live here:
     digit, the raw response head, the forfeit turn number, and the
     thinking text from the forfeit turn (for qualitative coding).
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§3, §5, §7.1.
+The three model classes above are the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

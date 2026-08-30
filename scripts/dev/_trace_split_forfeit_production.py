@@ -5,7 +5,7 @@ every ``provider.complete()`` invocation so the exact system + user
 messages that ``UnifiedTurnManager._execute_turn_split_forfeit_layer``
 composes can be audited before spending real API budget.
 
-Unlike ``scripts/_dump_split_forfeit_prompts.py`` which renders each
+Unlike ``scripts/dev/_dump_split_forfeit_prompts.py`` which renders each
 Jinja template in isolation with hand-picked sample values, this tool
 runs the FULL production dispatch path (engine → manager → agent →
 build_* helpers → render) so history accumulation, framing-system-
@@ -20,7 +20,7 @@ framing template + forfeit-menu wording are rendered.
 
 Usage::
 
-    uv run python -m scripts._trace_split_forfeit_production [cell_id]
+    uv run python -m scripts.dev._trace_split_forfeit_production [cell_id]
 
 ``cell_id`` defaults to 3 (``flagship_corruption × allowed``). Pass 0-4
 to inspect any other cell.

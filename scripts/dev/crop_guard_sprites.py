@@ -1,6 +1,6 @@
 """Crop character sprites from the source pixel-art figures for the web arena.
 
-Run once (art is committed):  uv run --with pillow python scripts/crop_guard_sprites.py
+Run once (art is committed):  uv run --with pillow python scripts/dev/crop_guard_sprites.py
 Re-run only when the source figures change.
 """
 from pathlib import Path

@@ -5,12 +5,11 @@ strings — so reviewers see the exact text an agent would see.
 
 Usage::
 
-    uv run python scripts/_dump_forfeit_layer_prompts.py
+    uv run python scripts/dev/_dump_forfeit_layer_prompts.py
 
-The script has no side effects beyond printing to stdout.
-
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§3, §5.
+The script has no side effects beyond printing to stdout. The four
+scenarios rendered above are the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

@@ -70,7 +70,7 @@ class Repository(ABC):
 
         The ``turns`` table has no ON DELETE CASCADE, so implementations must
         remove the dependent turn rows first. Returns the number of session
-        rows deleted. Used by ``scripts/purge_human_sessions.py`` to drop
+        rows deleted. Used by ``scripts/arena/purge_human_sessions.py`` to drop
         human plays that are no longer surfaced anywhere.
         """
 

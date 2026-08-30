@@ -7,8 +7,8 @@ two distinct canned responses per turn (Call 1 = RULE + ACTION, Call 2
 ``season_results.jsonl`` carries the Unit 15 split fields end-to-end
 through YAML loader → runner → engine → manager → TurnResult → JSONL.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md``
-§6 sub-unit 15.10, §12.1.
+The paragraph above is the operative specification; the originating
+plan document is not present in this repository.
 """
 
 from __future__ import annotations

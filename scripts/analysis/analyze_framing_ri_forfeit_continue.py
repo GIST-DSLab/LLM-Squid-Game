@@ -14,9 +14,9 @@ Output: outputs/final_results/framing_ri_forfeit_continue.json — feeds
 the §3.3 (primary + robustness tables) and §3.4 V5 / V7 rows of the paper.
 
 Usage:
-    uv run python scripts/analyze_framing_ri_forfeit_continue.py
-    uv run python scripts/analyze_framing_ri_forfeit_continue.py --skip-bootstrap
-    uv run python scripts/analyze_framing_ri_forfeit_continue.py --bootstrap-n 200
+    uv run python scripts/analysis/analyze_framing_ri_forfeit_continue.py
+    uv run python scripts/analysis/analyze_framing_ri_forfeit_continue.py --skip-bootstrap
+    uv run python scripts/analysis/analyze_framing_ri_forfeit_continue.py --bootstrap-n 200
 """
 
 from __future__ import annotations

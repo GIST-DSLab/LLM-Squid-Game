@@ -1,4 +1,4 @@
-"""Unit tests for ``scripts/seed_web_arena.py`` (WP3 seed script).
+"""Unit tests for ``scripts/arena/seed_web_arena.py`` (WP3 seed script).
 
 Offline, deterministic: seeds a TINY synthetic fixture (a couple of fake
 season records + a minimal mediation/cox JSON) into an in-memory SQLite

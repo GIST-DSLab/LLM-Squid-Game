@@ -401,9 +401,9 @@ class TestPhaseOFlagshipConfig:
 
     The config is purely additive: Phase N + canonical configs are
     unchanged (verified separately by ``TestCanonicalConfigsHaveNoCarryover``
-    and ``TestPhaseNCarryoverSmokeConfig``).
-
-    Plan: /Users/bagjuhyeon/.claude/plans/golden-wobbling-quilt.md.
+    and ``TestPhaseNCarryoverSmokeConfig``). Its YAML was never
+    committed (see the module-level skip marker above), so this class
+    is skipped along with the rest of the module.
     """
 
     @pytest.fixture

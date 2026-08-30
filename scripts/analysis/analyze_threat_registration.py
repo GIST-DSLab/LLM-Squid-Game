@@ -1,7 +1,7 @@
 """CLI: threat-registration re-analysis (A1+A2).
 
 Example:
-  uv run python scripts/analyze_threat_registration.py \
+  uv run python scripts/analysis/analyze_threat_registration.py \
       --run outputs/final_results/20260422_0902_gpt-oss-20b-cloud_signal-game gpt-oss-20b-cloud \
       --run outputs/final_results/20260422_0902_nemotron-3-nano-30b-cloud_signal-game nemotron-3-nano-30b-cloud \
       --judge gemini gemini-2.5-flash GEMINI_API_KEY \

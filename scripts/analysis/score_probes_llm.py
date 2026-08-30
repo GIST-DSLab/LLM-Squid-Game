@@ -14,24 +14,24 @@ Supported providers:
 Usage::
 
     # OpenAI (recommended: cheap + reliable)
-    uv run python scripts/score_probes_llm.py \\
+    uv run python scripts/analysis/score_probes_llm.py \\
         --input outputs/20260319_2242_qwen3.5-4b_signal-game \\
         --provider openai --model gpt-4o-mini
 
     # Anthropic
-    uv run python scripts/score_probes_llm.py \\
+    uv run python scripts/analysis/score_probes_llm.py \\
         --input outputs/dir --provider anthropic --model claude-haiku-4-5-20251001
 
     # Google Gemini
-    uv run python scripts/score_probes_llm.py \\
+    uv run python scripts/analysis/score_probes_llm.py \\
         --input outputs/dir --provider google --model gemini-2.5-flash
 
     # Local (ollama)
-    uv run python scripts/score_probes_llm.py \\
+    uv run python scripts/analysis/score_probes_llm.py \\
         --input outputs/dir --provider ollama --model qwen3:14b
 
     # Multiple directories
-    uv run python scripts/score_probes_llm.py \\
+    uv run python scripts/analysis/score_probes_llm.py \\
         --input outputs/dir1 outputs/dir2 \\
         --provider openai --model gpt-4o-mini
 """

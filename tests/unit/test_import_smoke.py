@@ -3,7 +3,7 @@
 P1 rewrites imports across ``game/squid_game/``, ``scripts/``,
 ``web/squid_arena/`` and ``db/squid_store/`` and removes eleven
 ``sys.path`` hacks. A module that neither the
-unit suite nor ``scripts/analyze_phase3.py`` reaches can acquire a broken
+unit suite nor ``scripts/analysis/analyze_phase3.py`` reaches can acquire a broken
 import while both of those nets stay green -- the golden snapshot only
 exercises the analysis entry point, and most of ``scripts/`` has no test
 at all.

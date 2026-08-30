@@ -19,8 +19,8 @@ Backward compat: all functions return ``None`` (or empty DataFrames)
 when their input is insufficient. The analysis module must never crash
 the pipeline; missing optional dependencies degrade gracefully.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md``
-§5.1.
+The four functions above are the operative specification; the
+originating plan document is not present in this repository.
 
 This module was ``forfeit_regression.py`` until the 2026-08-30 channel
 split (P2 Task 4): ``turn_observations`` / ``forfeit_events`` moved to
@@ -105,8 +105,8 @@ def fit_choice_asymmetric_model(
 ) -> ChoiceAsymmetricResult | None:
     """Fit the Unit 15 mixed-effects interaction model on RI_forfeit.
 
-    Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md``
-    §5.1.
+    Model: ``ri_forfeit ~ choice * framing + score + turn + (1|session)``
+    (H_choice_asymmetric, see the module docstring item 1 above).
 
     Returns ``None`` when:
     - statsmodels is not installed,

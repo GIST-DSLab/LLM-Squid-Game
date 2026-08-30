@@ -9,7 +9,7 @@ the second copy of the CLI.
 Usage::
 
     uv run squid-game --config configs/experiment/v6_signal_game.yaml
-    python scripts/run_experiment.py --config configs/experiment/v6_signal_game.yaml
+    python scripts/run/run_experiment.py --config configs/experiment/v6_signal_game.yaml
 """
 
 from squid_game.runner import main

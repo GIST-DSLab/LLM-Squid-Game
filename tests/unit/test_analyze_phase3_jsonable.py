@@ -1,4 +1,4 @@
-"""Regression tests for ``_jsonable`` in ``scripts/analyze_phase3.py``.
+"""Regression tests for ``_jsonable`` in ``scripts/analysis/analyze_phase3.py``.
 
 Unit 14 `_run_unit14` builds a three-way keyword convergence blob by
 ``groupby(["framing", "reason"])`` and serialises the resulting

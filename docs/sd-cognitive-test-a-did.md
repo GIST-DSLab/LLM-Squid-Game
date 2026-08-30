@@ -5,7 +5,7 @@ Difference-in-Differences(이중차분) + Welch t-test.
 
 - 정의: `docs/en/sections/03_benchmark.tex:53`
 - 결과값: `docs/en/sections/04_empirical_findings.tex:32-35`
-- 구현: `scripts/analyze_unified_cox_with_load.py:70-114` (`_compute_session_delta_ri`)
+- 구현: `scripts/analysis/analyze_unified_cox_with_load.py:70-114` (`_compute_session_delta_ri`)
 
 ---
 

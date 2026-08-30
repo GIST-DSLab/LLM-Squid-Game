@@ -8,13 +8,12 @@ cells.
 
 Usage::
 
-    uv run python scripts/_dump_split_forfeit_prompts.py
+    uv run python scripts/dev/_dump_split_forfeit_prompts.py
 
 The script has no side effects beyond printing to stdout. Mirrors
-``scripts/_dump_forfeit_layer_prompts.py`` for Unit 14.
-
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md``
-§3.1, §3.2, §3.4, §6 sub-unit 15.11.
+``scripts/dev/_dump_forfeit_layer_prompts.py`` for Unit 14. The six
+scenarios rendered above are the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

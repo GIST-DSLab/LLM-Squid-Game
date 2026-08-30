@@ -34,7 +34,7 @@ A cluster-robust OLS (session clusters) is fit alongside as a
 specification check that does not depend on MixedLM convergence.
 
 The module is intentionally side-effect-free; orchestration / disk I/O
-is the caller's responsibility (see ``scripts/analyze_call1_ri.py``).
+is the caller's responsibility (see ``scripts/analysis/analyze_call1_ri.py``).
 """
 
 from __future__ import annotations

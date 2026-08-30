@@ -125,7 +125,7 @@ _player_lock = threading.Lock()
 # Whether finished human plays are written to the shared DB. Re-enabled on
 # 2026-07-03 to power the human Play Leaderboard (campaign totals) — each of a
 # player's 6 games is stored with a shared campaign_id so the leaderboard can
-# sum their cumulative score. scripts/purge_human_sessions.py can still drop
+# sum their cumulative score. scripts/arena/purge_human_sessions.py can still drop
 # human rows on demand.
 PERSIST_HUMAN_SESSIONS = True
 

@@ -9,7 +9,7 @@ writes the JSON / Markdown report to disk.
 
 Usage
 -----
-    uv run python -m scripts.probe_reasoning_embeddings \
+    uv run python -m scripts.analysis.probe_reasoning_embeddings \
         --label forfeit --label threat \
         --channel task \
         --out outputs/reasoning_probe

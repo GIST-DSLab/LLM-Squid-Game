@@ -828,7 +828,7 @@ def run_experiment_cli() -> None:
     """Parse CLI arguments and run the experiment.
 
     Provides a lightweight CLI for running experiments from YAML configs.
-    For the full-featured CLI, see ``scripts/run_experiment.py``.
+    For the full-featured CLI, see ``scripts/run/run_experiment.py``.
     """
     import argparse
 
@@ -944,7 +944,7 @@ def main() -> None:
     ``load_dotenv()`` lives here, not in a wrapper, because the wrappers are
     not the only way in: ``uv run squid-game`` reaches this function
     directly. Loading here means every path -- console script, ``main.py``,
-    ``scripts/run_experiment.py`` -- sees the same environment, which was
+    ``scripts/run/run_experiment.py`` -- sees the same environment, which was
     not true before: only ``main.py`` loaded ``.env``, so whether your API
     keys were present depended on which command you happened to type.
     """

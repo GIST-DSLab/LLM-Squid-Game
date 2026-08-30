@@ -9,8 +9,8 @@ Three stacked sections:
                               which Call-1 / Call-2 / Probe / State signals
                               are analysed over time
 
-Companion to scripts/build_prompt_flow_diagram.py and
-scripts/build_llm_experience_diagram.py.
+Companion to scripts/plots/build_prompt_flow_diagram.py and
+scripts/plots/build_llm_experience_diagram.py.
 """
 
 from __future__ import annotations

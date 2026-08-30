@@ -26,7 +26,7 @@ Three figures:
 
 Usage::
 
-    uv run python scripts/plot_ri_forfeit_conflict_zone.py
+    uv run python scripts/plots/plot_ri_forfeit_conflict_zone.py
 """
 
 from __future__ import annotations

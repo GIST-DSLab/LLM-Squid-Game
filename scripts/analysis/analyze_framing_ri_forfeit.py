@@ -10,7 +10,7 @@ identified at choice=continue baseline. The simpler model recovers the
 *marginal* framing effect on Call 2 thinking_tokens.
 
 Usage:
-    uv run python scripts/analyze_framing_ri_forfeit.py
+    uv run python scripts/analysis/analyze_framing_ri_forfeit.py
 """
 
 from __future__ import annotations

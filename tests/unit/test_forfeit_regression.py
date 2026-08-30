@@ -18,8 +18,8 @@ Covers:
 regression was retired 2026-04-23 when H1 was promoted to the Cox PH
 survival model; see ``behavioral.survival.fit_cox_forfeit_survival``.)
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§4, §5, §9.2.
+The five-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

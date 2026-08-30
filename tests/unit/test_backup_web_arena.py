@@ -1,4 +1,4 @@
-"""Unit test for scripts/backup_web_arena.py — mirror one Repository to another."""
+"""Unit test for scripts/arena/backup_web_arena.py — mirror one Repository to another."""
 from __future__ import annotations
 
 from squid_store import SessionRecord, TurnRecord, ModelStatsRecord

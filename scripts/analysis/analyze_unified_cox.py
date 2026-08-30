@@ -22,7 +22,7 @@ Diagnostics emitted per model:
     - Side-by-side delta with 2-covariate baseline
 
 Usage:
-    uv run python scripts/analyze_unified_cox.py
+    uv run python scripts/analysis/analyze_unified_cox.py
 """
 
 from __future__ import annotations

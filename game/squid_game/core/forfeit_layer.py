@@ -33,8 +33,8 @@ Design contracts (align with ``RiskChoiceLayer`` patterns where possible):
   never raise on malformed input — they log and return a fallback so
   a single parse failure does not crash a whole session.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§3, §5, §7.3.
+The design behind the runtime is summarized above (numbered items 1-3);
+the originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

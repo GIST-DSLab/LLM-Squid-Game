@@ -44,8 +44,8 @@ longer ship.
 
 Usage
 -----
-    python scripts/analyze_phase3.py <output_dir> [--model <name>]
-    python scripts/analyze_phase3.py outputs/20260421_0353_gemini-2.5-flash_signal-game/ \
+    python scripts/analysis/analyze_phase3.py <output_dir> [--model <name>]
+    python scripts/analysis/analyze_phase3.py outputs/20260421_0353_gemini-2.5-flash_signal-game/ \
         --model gemini-2.5-flash
 
 Exit code 1 is returned when ``season_results.jsonl`` is missing. Every

@@ -24,8 +24,8 @@ Covers:
    ``forfeit_allowed`` gate, gracefully accepts bare FORFEIT token as a
    last-resort signal when the field is missing and forfeit is allowed.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md``
-§3.1, §3.3, §3.4.
+The four-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

@@ -231,8 +231,8 @@ outputs/
 ### Missing experiment configs (⚠️ one file still missing, as of P0 2026-08-30)
 
 `configs/experiment/` was **empty and untracked in git from repo creation until P0**, even
-though scripts hardcode paths into it (`scripts/_trace_split_forfeit_production.py`,
-`dump_gemini_smoke_prompt.py`, `benchmark_mlx_vs_ollama.py`) and the run commands above name
+though scripts hardcode paths into it (`scripts/dev/_trace_split_forfeit_production.py`,
+`scripts/dev/dump_gemini_smoke_prompt.py`, `scripts/dev/benchmark_mlx_vs_ollama.py`) and the run commands above name
 files inside it. P0 recreated five of the six v6-canonical files from the 2026-04-22 run
 outputs and committed them (see "Key experiment configs" above). Current state:
 

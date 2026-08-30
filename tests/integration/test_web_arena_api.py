@@ -23,7 +23,7 @@ and then ``importlib.reload``s the module, mirroring the pattern in
 For the one scenario that needs a real ``source='llm'`` session (the logs
 test), a full LLM season is driven through ``ExperimentRunner`` with the
 offline ``StubProvider`` (``tests/integration/conftest.py``) and then
-imported into the same repository via ``scripts/seed_web_arena.py``'s
+imported into the same repository via ``scripts/arena/seed_web_arena.py``'s
 helpers — the same code path production seeding uses — so the turn trace
 asserted against is genuine engine output, not a hand-rolled fixture.
 """

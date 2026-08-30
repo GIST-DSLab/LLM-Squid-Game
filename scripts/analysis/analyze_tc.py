@@ -7,7 +7,7 @@ to it. Also writes a 4-model aggregate at
 §6.7 / §8 paper tables.
 
 Usage:
-    uv run python scripts/analyze_tc.py [--threshold 90.0]
+    uv run python scripts/analysis/analyze_tc.py [--threshold 90.0]
 """
 
 from __future__ import annotations

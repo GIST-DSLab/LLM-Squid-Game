@@ -40,6 +40,6 @@ figures/run_*/
 /.scratch/
 /*.png
 
-# SentenceBERT embedding cache for scripts/probe_reasoning_embeddings.py.
+# SentenceBERT embedding cache for scripts/analysis/probe_reasoning_embeddings.py.
 # Regenerable from the turn traces; ~13 MB per (channel, mask variant).
 outputs/reasoning_probe/_embedding_cache/

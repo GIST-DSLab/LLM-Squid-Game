@@ -1,7 +1,7 @@
 """One entry point, one dotenv load.
 
 Three paths reached the same runner -- ``main.py``, the ``squid-game``
-console script, and ``scripts/run_experiment.py`` -- but only ``main.py``
+console script, and ``scripts/run/run_experiment.py`` -- but only ``main.py``
 called ``load_dotenv()``. Which path you happened to use decided whether
 your API keys were in the environment. These tests pin the fix: the dotenv
 load lives inside ``runner.main()``, and the other two are shims that own

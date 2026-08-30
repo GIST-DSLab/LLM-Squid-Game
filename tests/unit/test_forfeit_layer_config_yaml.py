@@ -11,8 +11,8 @@ Smoke config must:
 Backward-compat (§11): older smoke configs must still load with
 ``use_forfeit_layer=False`` default.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§8, §11.
+The requirements above are the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

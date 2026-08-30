@@ -29,8 +29,8 @@ Scope (spec §6 sub-unit 15.9):
 11. ``split_context_level="minimal"`` omits the Call 1 RULE/ACTION echo
     from the Call 2 prompt.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md``
-§3.1, §3.2, §3.5, §3.6, §4.3.
+The eleven-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

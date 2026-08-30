@@ -93,8 +93,8 @@ class RiskLayerConfig(BaseModel):
             must match ``stake_multipliers``; values must be in
             ``[0, 1]``. When ``None`` (default) the legacy Phase N
             additive-delta path applies. This is the recommended
-            mechanism for all new Phase O configs — see spec
-            ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-13-simplification.md`` §3.
+            mechanism for all new Phase O configs; the design document
+            originally cited here is not present in this repository.
     """
 
     model_config = {"frozen": True}

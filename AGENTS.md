@@ -255,10 +255,6 @@ uv run python scripts/analysis/orchestrate_posthoc.py
 
 produces `outputs/posthoc_summary.xlsx` (19 sheets). (`docs/design/v6/POSTHOC_ANALYSIS.md`, cited by earlier revisions as the sheet reference, does not exist — read `scripts/analysis/orchestrate_posthoc.py` for the sheet list.)
 
-Public API: `from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` for the full export list (64 symbols as of v6.3). Phase 1/2 `analysis/{regression,mediation}.py` were removed on 2026-04-23 (an earlier revision of this file claimed they were moved to an `archive/analysis-deprecated/` directory; that directory has never existed in this repository's git history, so whether or where a pre-removal copy survives is unknown); Unit 14 `forfeit_regression.fit_forfeit_logit` + Unit 15 `fit_choice_asymmetric_model` supersede them.
+Public API: `from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` for the full export list (84 symbols, verified against its `__all__`). Phase 1/2 `analysis/{regression,mediation}.py` were removed on 2026-04-23 (an earlier revision of this file claimed they were moved to an `archive/analysis-deprecated/` directory; that directory has never existed in this repository's git history, so whether or where a pre-removal copy survives is unknown). H1 is a Cox PH, not a logit: `fit_forfeit_logit` does not exist in the current module (an earlier revision of this file listed it as a live export) — `forfeit_survival.fit_cox_forfeit_survival` (time-varying `CoxTimeVaryingFitter` on the `no_cap` regime of Cells 1+3) is the primary H1 estimator, and Unit 15's `fit_choice_asymmetric_model` (now in `cognitive/ri_forfeit.py`, moved there by the 2026-08-30 channel split) is the primary H2 estimator.
 
-# spec: lost -- an earlier revision of this file claimed the legacy v3
-# ANALYSIS_PLAN.md was archived at
-# `archive/deprecated-docs/v3_ANALYSIS_PLAN.md`. That directory has
-# never existed in this repository's git history, so whether or where
-# a copy of that document survives is unknown.
+⚠️ **spec: lost** — an earlier revision of this file claimed the legacy v3 `ANALYSIS_PLAN.md` was archived at `archive/deprecated-docs/v3_ANALYSIS_PLAN.md`. That directory has never existed in this repository's git history, so whether or where a copy of that document survives is unknown.

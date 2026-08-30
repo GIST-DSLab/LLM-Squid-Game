@@ -28,9 +28,14 @@ Parallel construction to ``tests/unit/test_forfeit_layer_config_yaml.py``
 them separate makes Unit 14 / Unit 15 regressions isolable and lets the
 two smokes diverge in calibration without silently masking each other.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit.md``
-(Unit 15 split-call), Unit 16 BP cell add (commit ``4d50c52``), and
-``.claude/plans/next_session_v4_waves_4_5.md`` Task 5.
+# spec: lost -- this docstring cited a Unit 16 BP-cell-add commit
+# (``4d50c52``) as the origin of the 6-cell 2x3 factorial in item 4
+# above; that commit hash does not resolve in this repository's git
+# history (``git cat-file -t 4d50c52`` fails), so which commit actually
+# introduced Cell 5 is not recoverable from the code. The six numbered
+# requirements above remain the operative specification; the
+# originating plan documents (both citations were personal-machine
+# paths) are not present in this repository.
 """
 
 from __future__ import annotations

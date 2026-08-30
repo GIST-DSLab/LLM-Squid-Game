@@ -17,8 +17,8 @@ lives in 14.2 and has its own test module. Scope:
 7. ``SeasonResult.forfeit_self_report`` backward compat (defaults
    to ``None``) + JSON round-trip when populated.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§3, §5, §7.1, §11.
+The seven-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

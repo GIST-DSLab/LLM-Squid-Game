@@ -7,7 +7,7 @@ pooled, and writes the CSV / JSON / Markdown report to disk.
 
 Usage
 -----
-    uv run python -m scripts.analyze_call1_ri \
+    uv run python -m scripts.analysis.analyze_call1_ri \
         --root outputs/final_results --out outputs/call1_ri_analysis
 """
 

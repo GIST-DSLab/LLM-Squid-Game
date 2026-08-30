@@ -18,8 +18,8 @@ Covers:
    - When False: legacy STAKE field is preserved (Unit 13 configs
      keep working).
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§3, §5, §7.2, §11.
+The two-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations

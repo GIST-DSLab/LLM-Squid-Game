@@ -18,7 +18,7 @@ This module lives in the ``squid_arena`` package (shipped in the backend
 image) rather than under ``scripts/`` (excluded from the Docker build)
 because ``squid_arena.arena`` reuses ``seed_sessions`` to persist live LLM
 Arena runs — a runtime dependency, not a CLI-only one. The thin CLI wrapper
-``scripts/seed_web_arena.py`` re-exports these names for the seed command and
+``scripts/arena/seed_web_arena.py`` re-exports these names for the seed command and
 its tests. It depends ONLY on the WP1 repository interface, never on a
 concrete DB driver, so it works unmodified against both the local SQLite
 fallback and the Postgres (Supabase) production backend.
@@ -51,7 +51,7 @@ from squid_store import ModelStatsRecord, Repository, SessionRecord, TurnRecord
 logger = logging.getLogger("seed_web_arena")
 
 # Run-dir -> model-label map. Source of truth:
-# scripts/analyze_unified_cox_with_load.py::MODEL_DIRS. Copied (not
+# scripts/analysis/analyze_unified_cox_with_load.py::MODEL_DIRS. Copied (not
 # imported) so this module stays decoupled from the `analysis` extra's
 # heavy deps (pandas/statsmodels/lifelines, see `uv sync --extra analysis`)
 # -- it only needs the stdlib and the persistence layer.

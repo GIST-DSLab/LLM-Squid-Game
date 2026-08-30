@@ -20,8 +20,9 @@ Backward compat: all functions return ``None`` (or empty DataFrames)
 when their input is insufficient. The analysis module must never crash
 the pipeline; missing optional dependencies degrade gracefully.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§4, §5, §9.2. (H1 Cox promotion is item 2 above.)
+The three items above are the operative specification (H1 Cox
+promotion is item 2); the originating plan document is not present in
+this repository.
 
 This module was ``forfeit_regression.py`` until the 2026-08-30 channel
 split (P2 Task 4); ``turn_observations`` / ``forfeit_events`` moved to
