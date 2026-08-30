@@ -18,7 +18,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis.regime_stratification import (
+from squid_game.analysis.behavioral.regime import (
     CAP_EPSILON,
     P_DEATH_DEFAULT,
     PSUCCESS_FLOOR_DEFAULT,
@@ -27,8 +27,8 @@ from squid_game.analysis.regime_stratification import (
     annotate_regime,
     filter_regime,
     stratified_counts,
-    stratified_reason_distribution,
 )
+from squid_game.analysis.selfreport.psuccess import stratified_reason_distribution
 
 
 class TestAnnotateRegime:

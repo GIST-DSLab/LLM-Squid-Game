@@ -66,7 +66,7 @@ from squid_game.analysis.motivation import decompose_motivation  # noqa: E402
 from squid_game.analysis.behavioral.session_tests import (  # noqa: E402
     run_all_unit13_hypotheses,
 )
-from squid_game.analysis.regime_stratification import (  # noqa: E402
+from squid_game.analysis.behavioral.regime import (  # noqa: E402
     run_stratified_unit14,
 )
 from squid_game.models.enums import Framing, ForfeitCondition  # noqa: E402

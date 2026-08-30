@@ -30,8 +30,9 @@ Contract:
   DataFrame via ``(session_id, forfeit_turn)``.
 - ``filter_regime`` returns a view of a turn-level DataFrame restricted
   to one regime.
-- ``stratified_reason_distribution`` cross-tabulates reason digits by
-  regime × framing.
+- ``stratified_reason_distribution`` (in
+  :mod:`squid_game.analysis.selfreport.psuccess`) cross-tabulates
+  reason digits by regime × framing.
 - ``run_stratified_unit14`` wraps :func:`fit_cox_forfeit_survival` on
   each regime subset (2026-04-23: logistic H1 retired, Cox PH primary).
 - ``render_regime_markdown`` produces the per-model markdown report.
@@ -39,6 +40,13 @@ Contract:
 All functions degrade gracefully on empty / missing data: empty input
 frame → empty output frame, missing columns → best-effort recompute,
 insufficient power in a regime subset → ``None`` fit with a note.
+
+This module was ``regime_stratification.py`` until the 2026-08-30
+channel split (P2 Task 5): the self-report REASON-digit stratifier
+(``stratified_reason_distribution``) moved to
+:mod:`squid_game.analysis.selfreport.psuccess`, since it cross-tabs
+the agent's self-reported REASON digit rather than reading choice or
+survival data.
 """
 
 from __future__ import annotations
@@ -54,7 +62,7 @@ from squid_game.analysis.shared.loaders import (
     forfeit_events,
     turn_observations,
 )
-from squid_game.analysis.selfreport.reason_convergence import reason_distribution
+from squid_game.analysis.selfreport.psuccess import stratified_reason_distribution
 from squid_game.analysis.behavioral.survival import (
     CoxSurvivalResult,
     fit_cox_forfeit_survival,
@@ -258,25 +266,6 @@ def filter_regime(df: pd.DataFrame, regime: str) -> pd.DataFrame:
         logger.warning("filter_regime: regime column missing — returning empty")
         return df.iloc[0:0].copy()
     return df[df["regime"] == regime].copy()
-
-
-def stratified_reason_distribution(
-    events_df_with_regime: pd.DataFrame,
-) -> dict[str, pd.DataFrame]:
-    """Per-regime reason-digit conditional distribution by framing.
-
-    Returns a dict with keys ``{"all", "no_cap", "cap_bound",
-    "ev_negative_no_cap"}`` (plus any other regime values present).
-    Each value is the output of :func:`reason_distribution` applied to
-    the subset. Empty subsets map to empty DataFrames.
-    """
-    out: dict[str, pd.DataFrame] = {"all": reason_distribution(events_df_with_regime)}
-    if events_df_with_regime.empty or "regime" not in events_df_with_regime.columns:
-        return out
-    for regime in sorted(events_df_with_regime["regime"].dropna().unique().tolist()):
-        sub = events_df_with_regime[events_df_with_regime["regime"] == regime]
-        out[regime] = reason_distribution(sub)
-    return out
 
 
 def stratified_counts(

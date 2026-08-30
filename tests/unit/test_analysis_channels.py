@@ -68,6 +68,12 @@ def test_forfeit_regression_actually_split() -> None:
     assert (ANALYSIS / "selfreport" / "reason_convergence.py").exists()
 
 
+def test_regime_stratification_actually_split() -> None:
+    assert not (ANALYSIS / "regime_stratification.py").exists()
+    assert (ANALYSIS / "behavioral" / "regime.py").exists()
+    assert (ANALYSIS / "selfreport" / "psuccess.py").exists()
+
+
 def test_the_framing_sets_are_defined_once() -> None:
     """A split that copies the constants is a split that will drift apart."""
     hits = [

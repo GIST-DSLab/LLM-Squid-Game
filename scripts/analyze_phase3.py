@@ -82,7 +82,7 @@ from squid_game.analysis.selfreport.reason_convergence import (  # noqa: E402
 from squid_game.analysis.cognitive.ri_forfeit import (  # noqa: E402
     run_all_unit15_hypotheses,
 )
-from squid_game.analysis.regime_stratification import (  # noqa: E402
+from squid_game.analysis.behavioral.regime import (  # noqa: E402
     render_regime_markdown,
     run_stratified_unit14,
 )
@@ -868,7 +868,7 @@ def analyze(output_dir: Path, *, model: str | None) -> Path:
     )
 
     # Phase O Unit 17.10 — Regime-stratified Unit 14 (no-cap vs
-    # cap-bound). See analysis/regime_stratification.py for the
+    # cap-bound). See analysis/behavioral/regime.py for the
     # rationale. Outputs:
     #   - regime_stratified_turn_observations.csv  (turn-level with
     #     cap_bound / floor_bound / ev_delta_s / regime columns)

@@ -115,7 +115,7 @@ from squid_game.analysis.behavioral.survival import (
     km_forfeit_curves,
     run_h1_survival_hypothesis,
 )
-from squid_game.analysis.regime_stratification import (
+from squid_game.analysis.behavioral.regime import (
     CAP_EPSILON,
     P_DEATH_DEFAULT,
     PSUCCESS_FLOOR_DEFAULT,
@@ -128,6 +128,8 @@ from squid_game.analysis.regime_stratification import (
     render_regime_markdown,
     run_stratified_unit14,
     stratified_counts,
+)
+from squid_game.analysis.selfreport.psuccess import (
     stratified_reason_distribution,
 )
 from squid_game.analysis.threat_registration import (

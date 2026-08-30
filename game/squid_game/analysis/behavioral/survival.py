@@ -45,7 +45,7 @@ Workflow:
    list of :class:`SeasonResult`, invokes
    :func:`shared.loaders.turn_observations` to build the per-turn
    DataFrame, annotates per-turn regime via
-   :func:`regime_stratification.annotate_regime`, and returns a dict
+   :func:`behavioral.regime.annotate_regime`, and returns a dict
    ``{"cox": CoxSurvivalResult | None, "km": pd.DataFrame,
    "survival_frame": pd.DataFrame}``.
 
@@ -113,7 +113,7 @@ def build_survival_frame(
         DataFrame with the schema emitted by
         :func:`shared.loaders.turn_observations`, augmented with
         a per-turn ``regime`` column (via
-        :func:`regime_stratification.annotate_regime`). Must contain
+        :func:`behavioral.regime.annotate_regime`). Must contain
         ``session_id``, ``framing``, ``forfeit_condition``,
         ``turn_number``, ``score_before_turn``, ``forfeit``, and
         ``regime``.
@@ -559,10 +559,10 @@ def run_h1_survival_hypothesis(
     passed the annotation is skipped (equivalent to the legacy
     all-forfeits analysis, retained for diagnostic use).
     """
-    # Delayed import — regime_stratification imports fit_cox_forfeit_survival
+    # Delayed import — behavioral.regime imports fit_cox_forfeit_survival
     # from this module, so we can only resolve its annotate_regime at call
     # time to avoid a circular import at module load.
-    from squid_game.analysis.regime_stratification import annotate_regime
+    from squid_game.analysis.behavioral.regime import annotate_regime
 
     turn_df = turn_observations(seasons)
     if regime is not None and "regime" not in turn_df.columns:
