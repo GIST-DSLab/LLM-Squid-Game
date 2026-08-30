@@ -1,7 +1,7 @@
 """The analysis CLIs share one aggregate-root argument, defined once.
 
 Measured fact (P3+P4 Task 3, fix round 1 -- see the "P3+P4 Task 3" section
-of docs/superpowers/plans/2026-08-30-p0-baseline.md for the full
+of docs/history/plans/2026-08-30-p0-baseline.md for the full
 population table over every argparse-using script under
 scripts/analysis/): the phase plan anticipated a single-run ``run_dir`` +
 ``--model`` + ``--out`` contract consuming ``load_seasons``, but that

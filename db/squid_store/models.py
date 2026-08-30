@@ -5,7 +5,7 @@ These dataclasses are the driver-agnostic wire format used by the
 consumer (``web/squid_arena/api.py`` / a future seed script) nor either backend
 (SQLite, Postgres) should need anything beyond these shapes.
 
-Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §7.
+Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §7.
 """
 
 from __future__ import annotations

@@ -9,7 +9,7 @@ with ``source='llm'``, per-turn action/score/RI derivation, timestamp
 fallback, and idempotent re-seeding (row counts unchanged, human rows
 untouched).
 
-Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
+Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
 """
 
 from __future__ import annotations

@@ -17,7 +17,7 @@ from squid_game.providers.factory import available_providers, build_provider
 from squid_game.analysis.semantic.threat_judge import ThreatJudge
 from squid_game.analysis.semantic.threat_registration import run_analysis
 
-# Paper SD-Behavioral pass/fail (docs/en/sections/04_empirical_findings.tex).
+# Paper SD-Behavioral pass/fail (docs/paper/sections/04_empirical_findings.tex).
 SD_BEHAVIORAL_PASS = {
     "gemini-2.5-flash": True, "qwen3-next-80b-cloud": True,
     "gpt-oss-20b-cloud": False, "nemotron-3-nano-30b-cloud": False,

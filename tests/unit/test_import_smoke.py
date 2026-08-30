@@ -45,7 +45,7 @@ any restructure step that moves code into a new module.
 
 The environment assumed is the documented baseline,
 ``uv sync --extra dev --extra analysis`` (see
-``docs/superpowers/plans/2026-08-30-p0-baseline.md``). ``matplotlib`` arrives
+``docs/history/plans/2026-08-30-p0-baseline.md``). ``matplotlib`` arrives
 transitively with ``lifelines``, so the ``plot_*`` scripts import under it.
 Running the suite without the ``analysis`` extra will fail this test rather
 than skip it -- that is deliberate: a missing extra silently narrows

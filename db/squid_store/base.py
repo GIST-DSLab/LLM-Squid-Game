@@ -5,7 +5,7 @@ never on a concrete DB driver. Two backends implement it:
 ``SQLiteRepository`` (stdlib ``sqlite3``, local dev / tests) and
 ``PostgresRepository`` (``psycopg`` v3, production — Supabase free tier).
 
-Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §6, §7, §8.
+Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §6, §7, §8.
 """
 
 from __future__ import annotations

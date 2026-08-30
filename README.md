@@ -113,8 +113,8 @@ web/squid_arena/      # FastAPI Web Arena backend (api.py) — the live-demo API
 web/frontend/         # Static Web Arena frontend (HTML/JS) — the live-demo site
 db/squid_store/       # Repository interface + SQLite/Postgres backends
 tests/                # 29 unit + 5 integration test files (offline, deterministic)
-docs/en/               # LaTeX paper — content.tex + sections/
-docs/superpowers/      # plans/ + specs/ (per-feature design + implementation plans)
+docs/paper/            # LaTeX paper — content.tex + sections/
+docs/history/          # plans/ + specs/ (per-feature design + implementation plans)
 ```
 
 For day-to-day operational guidance (turn-flow internals, hypothesis decision rules, analysis CLI outputs, archiving conventions), see [`CLAUDE.md`](./CLAUDE.md).

@@ -33,7 +33,7 @@ LLM ``season_id``). ``model_stats`` rows are upserted via WP1's
 ``upsert_model_stats`` (``INSERT ... ON CONFLICT DO UPDATE``), so re-running
 always refreshes them in place.
 
-Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
+Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
 """
 
 from __future__ import annotations

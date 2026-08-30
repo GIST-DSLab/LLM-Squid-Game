@@ -1,7 +1,7 @@
 """Shared CLI argument-building helper for scripts/analysis/ drivers.
 
 Measured fact (P3+P4 Task 3, fix round 1 -- see the "P3+P4 Task 3" section
-of docs/superpowers/plans/2026-08-30-p0-baseline.md for the full
+of docs/history/plans/2026-08-30-p0-baseline.md for the full
 population table over every argparse-using script in this directory):
 the analysis CLIs do NOT share the single-run ``run_dir`` + ``--model`` +
 ``--out`` contract the phase plan anticipated -- only

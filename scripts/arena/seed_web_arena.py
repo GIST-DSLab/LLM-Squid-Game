@@ -22,7 +22,7 @@ Usage::
     uv run python scripts/arena/seed_web_arena.py --dsn outputs/web_arena/web_arena.db
     uv run python scripts/arena/seed_web_arena.py --root outputs/final_results --dsn /tmp/scratch.db
 
-Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
+Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
 """
 
 from __future__ import annotations

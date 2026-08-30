@@ -4,7 +4,7 @@ Offline, SQLite-only (in-memory). Covers: idempotent schema creation, CRUD
 round-trip for all three tables (sessions / turns / model_stats), the
 play-leaderboard ordering query, and model_stats upsert overwrite semantics.
 
-Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §7.
+Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §7.
 """
 
 from __future__ import annotations
