@@ -5,6 +5,15 @@ on:
     branches: ["**"]
   pull_request:
 
+permissions:
+  contents: read
+
+env:
+  # Pin the interpreter. Without this uv picks the newest runner interpreter
+  # satisfying requires-python = ">=3.12", so the CI baseline could drift off
+  # the 3.12 the P0 baseline was measured on.
+  UV_PYTHON: "3.12"
+
 jobs:
   unit:
     runs-on: ubuntu-latest
@@ -23,5 +32,14 @@ jobs:
       - name: Install
         run: uv sync --extra dev --extra analysis
 
+      # The analysis code degrades silently: forfeit_regression catches
+      # ImportError and returns None, and the covering tests then skip. A run
+      # without statsmodels/lifelines is therefore GREEN with the mixedLM and
+      # Cox paths untested. Fail here instead, before the suite can hide it.
+      - name: Assert the analysis extras resolved
+        run: uv run --extra dev --extra analysis python -c "import statsmodels, lifelines"
+
+      # The extras must be repeated on `uv run`: it re-syncs the environment
+      # for the invocation and would otherwise drop them again.
       - name: Unit suite
-        run: uv run pytest tests/unit -q
+        run: uv run --extra dev --extra analysis pytest tests/unit -q
