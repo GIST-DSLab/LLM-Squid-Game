@@ -127,7 +127,7 @@ def test_the_src_directory_is_gone() -> None:
 def test_squid_game_depends_on_no_higher_tier() -> None:
     """The engine must not reach up into the web or db tiers.
 
-    ``core/measurement.py`` and ``analysis/motivation.py`` contain the word
+    ``core/measurement.py`` and ``analysis/shared/mtmm.py`` contain the word
     "persistence", but as the psychological construct (Baseline
     Persistence), not the storage layer -- which is exactly why this check
     reads import statements rather than grepping for the word.

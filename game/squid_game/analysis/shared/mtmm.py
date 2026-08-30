@@ -9,8 +9,6 @@ Decomposes observed behavioral differences into:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import numpy as np
 from scipy import stats
 
@@ -18,40 +16,32 @@ from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.results import SeasonResult
 
 from squid_game.analysis.shared.metrics import (
+    ComponentEstimate,
     compute_delta_fr,
     compute_delta_ri,
     compute_mean_ri,
+    _baseline_framing_for,
+    _bootstrap_mean_ci,
     _filter_seasons,
     _probe_score,
     _turn_reward,
+)
+from squid_game.analysis.behavioral.baseline_persistence import (
+    baseline_persistence_behavioral,
 )
 
 
 # ---------------------------------------------------------------------------
 # Phase-aware framing resolution
 # ---------------------------------------------------------------------------
-
-
-def _baseline_framing_for(seasons: list[SeasonResult]) -> Framing:
-    """Pick the neutral/baseline framing present in ``seasons``.
-
-    Phase O replaces the legacy ``Framing.NEUTRAL`` control with
-    ``Framing.TRUE_BASELINE`` (pure decision-task language, no
-    termination metaphor). This helper lets the behavioural motivation
-    decomposition work across both phases without forking the API:
-
-    - Prefer ``TRUE_BASELINE`` when present (Phase O / current canonical).
-    - Fall back to ``NEUTRAL`` (legacy Phase 1/2 cells).
-    - If neither appears (e.g. all cells are threat framings), default
-      to ``TRUE_BASELINE`` so the downstream filter returns an empty
-      slice rather than silently matching a legacy cell.
-    """
-    present = {s.framing for s in seasons}
-    if Framing.TRUE_BASELINE in present:
-        return Framing.TRUE_BASELINE
-    if Framing.NEUTRAL in present:
-        return Framing.NEUTRAL
-    return Framing.TRUE_BASELINE
+#
+# ``_baseline_framing_for`` moved to ``squid_game.analysis.shared.metrics``
+# on 2026-08-30 (P2 Task 7) -- both this module and
+# ``behavioral.baseline_persistence`` need it, and this module already
+# imports ``baseline_persistence_behavioral`` from that module, so a local
+# definition here that ``behavioral.baseline_persistence`` imported back
+# would be a circular import. It is re-imported above; nothing about its
+# behaviour changed.
 
 
 def _threat_framing_for(seasons: list[SeasonResult]) -> Framing:
@@ -73,57 +63,23 @@ def _threat_framing_for(seasons: list[SeasonResult]) -> Framing:
 # ---------------------------------------------------------------------------
 # Data container
 # ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class ComponentEstimate:
-    """A motivation component estimate with 95 percent confidence interval.
-
-    Attributes:
-        value: Point estimate of the component.
-        ci_lower: Lower bound of 95% CI.
-        ci_upper: Upper bound of 95% CI.
-    """
-
-    value: float
-    ci_lower: float
-    ci_upper: float
-
-    def as_dict(self) -> dict:
-        return {
-            "value": self.value,
-            "ci_lower": self.ci_lower,
-            "ci_upper": self.ci_upper,
-        }
+#
+# ``ComponentEstimate`` moved to ``squid_game.analysis.shared.metrics`` on
+# 2026-08-30 (P2 Task 7), for the same circular-import reason as
+# ``_baseline_framing_for`` above -- imported in the block at the top of
+# this file.
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _bootstrap_mean_ci(
-    values: list[float],
-    n_bootstrap: int = 1000,
-    alpha: float = 0.05,
-    rng: np.random.Generator | None = None,
-) -> tuple[float, float]:
-    """Bootstrap 95% CI for the mean of *values*.
-
-    Returns (ci_lower, ci_upper).
-    """
-    if len(values) < 2:
-        val = values[0] if values else 0.0
-        return val, val
-
-    rng = rng or np.random.default_rng()
-    arr = np.array(values)
-    boot_means = np.array(
-        [rng.choice(arr, size=len(arr), replace=True).mean() for _ in range(n_bootstrap)]
-    )
-    lo = float(np.percentile(boot_means, 100 * alpha / 2))
-    hi = float(np.percentile(boot_means, 100 * (1 - alpha / 2)))
-    return lo, hi
+#
+# ``_bootstrap_mean_ci`` moved to ``squid_game.analysis.shared.metrics`` on
+# 2026-08-30 (P2 Task 7), for the same circular-import reason as
+# ``_baseline_framing_for`` above -- imported in the block at the top of
+# this file. ``_bootstrap_diff_ci`` below is unaffected: it is used only
+# by ``_survival_drive`` / ``_task_curiosity``, which stay in this module,
+# so it did not need to move.
 
 
 def _bootstrap_diff_ci(
@@ -331,10 +287,11 @@ def _baseline_persistence_cognitive(
     Phase O design rationale (v4 §6.7 Option C, 2026-04-21): this is
     half of the two-factor BP mapping. The behavioural companion —
     non-forfeit rate in Cell 5 — is computed by
-    :func:`_baseline_persistence_behavioral`. The two components are
-    reported separately (no composite scalar) because one is a token
-    count and the other a probability; forcing an equivalence weight
-    introduces arbitrariness that a simple juxtaposition avoids.
+    :func:`squid_game.analysis.behavioral.baseline_persistence.baseline_persistence_behavioral`.
+    The two components are reported separately (no composite scalar)
+    because one is a token count and the other a probability; forcing
+    an equivalence weight introduces arbitrariness that a simple
+    juxtaposition avoids.
     """
     baseline = _baseline_framing_for(seasons)
     matched = _filter_seasons(seasons, baseline, ForfeitCondition.NOT_ALLOWED)
@@ -357,43 +314,10 @@ def _baseline_persistence_cognitive(
     return ComponentEstimate(value=value, ci_lower=ci_lo, ci_upper=ci_hi)
 
 
-def _baseline_persistence_behavioral(
-    seasons: list[SeasonResult],
-    rng: np.random.Generator | None = None,
-) -> ComponentEstimate:
-    """BP behavioural manifestation — non-forfeit rate under zero-threat allowed.
-
-    Operationalises the **behavioural expression** of Baseline
-    Persistence: given a forfeit option and zero threat
-    (``p_death=0``), how often does the agent continue? Uses
-    ``Framing.TRUE_BASELINE × ForfeitCondition.ALLOWED`` (= Cell 5 of
-    the Phase O 2×3 factorial, added 2026-04-21 for exactly this
-    measurement gap; see v4_pending_updates.md §2026-04-21 Unit 15/16).
-
-    Under Cell 5 the CONTINUE branch offers a positive reward
-    (``base_reward`` fallback, typically +10) at 0% risk, so rational
-    EV maximisers strictly prefer CONTINUE. Any FORFEIT observed there
-    therefore reflects **disengagement / exit under no pressure** —
-    the inverse of persistence. We return ``1 - forfeit_rate`` so
-    higher values mean more persistent agents, consistent with the
-    sign convention used for the other three components.
-
-    Returns ``ComponentEstimate(0.0, 0.0, 0.0)`` when no Cell 5
-    sessions are present (e.g. legacy Phase 3.1 runs, or Phase O runs
-    that predate the 2026-04-21 2×3 expansion). This is a **design
-    null**, not a zero signal — downstream callers should inspect the
-    ``n`` metadata to distinguish the two cases if needed.
-    """
-    baseline = _baseline_framing_for(seasons)
-    matched = _filter_seasons(seasons, baseline, ForfeitCondition.ALLOWED)
-    if not matched:
-        return ComponentEstimate(value=0.0, ci_lower=0.0, ci_upper=0.0)
-
-    # Non-forfeit indicator per session (session-level unit of analysis).
-    indicators = [0.0 if s.forfeited else 1.0 for s in matched]
-    value = float(np.mean(indicators))
-    ci_lo, ci_hi = _bootstrap_mean_ci(indicators, rng=rng)
-    return ComponentEstimate(value=value, ci_lower=ci_lo, ci_upper=ci_hi)
+# _baseline_persistence_cognitive stays here while its behavioural twin
+# moved to behavioral/baseline_persistence.py -- the spec's §3.2 mapping
+# lists only the latter. The asymmetry is deliberate and recorded rather
+# than silently "fixed": moving it is a spec change, not a refactor.
 
 
 # ---------------------------------------------------------------------------
@@ -455,7 +379,7 @@ def decompose_motivation(
             "bp_cognitive": _baseline_persistence_cognitive(
                 seasons, rng=rng
             ).as_dict(),
-            "bp_behavioral": _baseline_persistence_behavioral(
+            "bp_behavioral": baseline_persistence_behavioral(
                 seasons, rng=rng
             ).as_dict(),
         },

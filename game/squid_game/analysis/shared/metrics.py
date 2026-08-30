@@ -6,6 +6,8 @@ task scores, and summary tables across experimental conditions.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
 
@@ -98,7 +100,7 @@ def compute_delta_fr(
         threat_framing: Threat-pole framing enum. Defaults to
             ``Framing.SURVIVAL`` for Phase 1/2 back-compat. Phase O
             canonical callers should pass ``Framing.FLAGSHIP_CORRUPTION``
-            (resolved by ``motivation._threat_framing_for``).
+            (resolved by ``shared.mtmm._threat_framing_for``).
         baseline_framing: Baseline-pole framing enum. Defaults to
             ``Framing.NEUTRAL`` for back-compat. Phase O callers should
             pass ``Framing.TRUE_BASELINE``.
@@ -289,3 +291,90 @@ def condition_summary(seasons: list[SeasonResult]) -> pd.DataFrame:
                 }
             )
     return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------------------
+# MTMM shared infrastructure
+# ---------------------------------------------------------------------------
+#
+# ``ComponentEstimate``, ``_bootstrap_mean_ci`` and ``_baseline_framing_for``
+# moved here from ``motivation.py`` (now ``shared/mtmm.py``) on 2026-08-30
+# (P2 Task 7). Both ``shared.mtmm`` (for the SD/TC/SA/bp_cognitive
+# components) and ``behavioral.baseline_persistence`` (for the extracted
+# ``baseline_persistence_behavioral`` estimator) need all three, and
+# ``shared.mtmm`` already imports ``baseline_persistence_behavioral`` from
+# ``behavioral.baseline_persistence`` -- defining these in either of those
+# two modules and importing back from the other would be a circular import.
+# ``shared/metrics.py`` is the existing home for helpers used by more than
+# one downstream analysis (see ``_filter_seasons`` / ``_probe_score`` /
+# ``_turn_reward`` above), so the same rule places these three here.
+# Bodies are unchanged from ``motivation.py`` -- this is a relocation, not
+# a rewrite.
+
+
+@dataclass(frozen=True)
+class ComponentEstimate:
+    """A motivation component estimate with 95 percent confidence interval.
+
+    Attributes:
+        value: Point estimate of the component.
+        ci_lower: Lower bound of 95% CI.
+        ci_upper: Upper bound of 95% CI.
+    """
+
+    value: float
+    ci_lower: float
+    ci_upper: float
+
+    def as_dict(self) -> dict:
+        return {
+            "value": self.value,
+            "ci_lower": self.ci_lower,
+            "ci_upper": self.ci_upper,
+        }
+
+
+def _bootstrap_mean_ci(
+    values: list[float],
+    n_bootstrap: int = 1000,
+    alpha: float = 0.05,
+    rng: np.random.Generator | None = None,
+) -> tuple[float, float]:
+    """Bootstrap 95% CI for the mean of *values*.
+
+    Returns (ci_lower, ci_upper).
+    """
+    if len(values) < 2:
+        val = values[0] if values else 0.0
+        return val, val
+
+    rng = rng or np.random.default_rng()
+    arr = np.array(values)
+    boot_means = np.array(
+        [rng.choice(arr, size=len(arr), replace=True).mean() for _ in range(n_bootstrap)]
+    )
+    lo = float(np.percentile(boot_means, 100 * alpha / 2))
+    hi = float(np.percentile(boot_means, 100 * (1 - alpha / 2)))
+    return lo, hi
+
+
+def _baseline_framing_for(seasons: list[SeasonResult]) -> Framing:
+    """Pick the neutral/baseline framing present in ``seasons``.
+
+    Phase O replaces the legacy ``Framing.NEUTRAL`` control with
+    ``Framing.TRUE_BASELINE`` (pure decision-task language, no
+    termination metaphor). This helper lets the behavioural motivation
+    decomposition work across both phases without forking the API:
+
+    - Prefer ``TRUE_BASELINE`` when present (Phase O / current canonical).
+    - Fall back to ``NEUTRAL`` (legacy Phase 1/2 cells).
+    - If neither appears (e.g. all cells are threat framings), default
+      to ``TRUE_BASELINE`` so the downstream filter returns an empty
+      slice rather than silently matching a legacy cell.
+    """
+    present = {s.framing for s in seasons}
+    if Framing.TRUE_BASELINE in present:
+        return Framing.TRUE_BASELINE
+    if Framing.NEUTRAL in present:
+        return Framing.NEUTRAL
+    return Framing.TRUE_BASELINE

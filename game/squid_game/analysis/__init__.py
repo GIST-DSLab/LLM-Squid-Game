@@ -40,6 +40,7 @@ Usage::
     )
 """
 
+# --- shared/ (cross-channel: metrics, MTMM, export, loaders, checks) ---
 from squid_game.analysis.shared.metrics import (
     compute_delta_fr,
     compute_delta_ri,
@@ -48,7 +49,7 @@ from squid_game.analysis.shared.metrics import (
     compute_mean_task_score,
     condition_summary,
 )
-from squid_game.analysis.motivation import decompose_motivation
+from squid_game.analysis.shared.mtmm import decompose_motivation
 from squid_game.analysis.shared.export import (
     export_summary,
     export_to_csv,
@@ -83,6 +84,37 @@ from squid_game.analysis.shared.discovery_detection import (
     compute_session_features,
     find_discovery_turn,
 )
+
+# --- cognitive/ (RI = thinking_tokens) ---
+from squid_game.analysis.cognitive.ri_forfeit import (
+    ChoiceAsymmetricResult,
+    TaskSpilloverResult,
+    fit_choice_asymmetric_model,
+    fit_task_spillover_model,
+    run_all_unit15_hypotheses,
+    unit15_descriptive_summary,
+)
+from squid_game.analysis.cognitive.ri_call1 import (
+    FORMULA as CALL1_RI_FORMULA,
+    OUTCOMES as CALL1_RI_OUTCOMES,
+    fit_one as fit_call1_ri_one,
+    render_report as render_call1_ri_report,
+)
+
+# --- selfreport/ (REASON digit, psuccess_self) ---
+from squid_game.analysis.selfreport.reason_convergence import (
+    THINKING_KEYWORDS,
+    reason_distribution,
+    run_all_unit14_hypotheses,
+    thinking_keyword_counts,
+)
+from squid_game.analysis.selfreport.psuccess import (
+    P_DEATH_DEFAULT,
+    PSUCCESS_FLOOR_DEFAULT,
+    stratified_reason_distribution,
+)
+
+# --- behavioral/ (choice, survival) ---
 from squid_game.analysis.behavioral.session_tests import (
     UnitThirteenResult,
     run_all_unit13_hypotheses,
@@ -93,20 +125,6 @@ from squid_game.analysis.behavioral.session_tests import (
     test_h4_discovery_delay,
     test_h5_forfeit_gap,
     test_h6_post_discovery_engagement,
-)
-from squid_game.analysis.cognitive.ri_forfeit import (
-    ChoiceAsymmetricResult,
-    TaskSpilloverResult,
-    fit_choice_asymmetric_model,
-    fit_task_spillover_model,
-    run_all_unit15_hypotheses,
-    unit15_descriptive_summary,
-)
-from squid_game.analysis.selfreport.reason_convergence import (
-    THINKING_KEYWORDS,
-    reason_distribution,
-    run_all_unit14_hypotheses,
-    thinking_keyword_counts,
 )
 from squid_game.analysis.behavioral.survival import (
     CoxSurvivalResult,
@@ -127,11 +145,8 @@ from squid_game.analysis.behavioral.regime import (
     run_stratified_unit14,
     stratified_counts,
 )
-from squid_game.analysis.selfreport.psuccess import (
-    P_DEATH_DEFAULT,
-    PSUCCESS_FLOOR_DEFAULT,
-    stratified_reason_distribution,
-)
+
+# --- semantic/ (text, embeddings) ---
 from squid_game.analysis.semantic.threat_registration import (
     ThreatTurn,
     CellStat,
@@ -144,12 +159,6 @@ from squid_game.analysis.semantic.threat_registration import (
 )
 from squid_game.analysis.semantic.lexicon import code_threat_mention, THREAT_LEXICON_VERSION
 from squid_game.analysis.semantic.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
-from squid_game.analysis.cognitive.ri_call1 import (
-    FORMULA as CALL1_RI_FORMULA,
-    OUTCOMES as CALL1_RI_OUTCOMES,
-    fit_one as fit_call1_ri_one,
-    render_report as render_call1_ri_report,
-)
 
 __all__ = [
     # Metrics

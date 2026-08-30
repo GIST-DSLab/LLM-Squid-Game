@@ -17,7 +17,7 @@ must satisfy:
    (``true_baseline × not_allowed``). Cell 5 renders the forfeit menu at
    ``p_death=0`` so rational agents strictly prefer CONTINUE and any
    observed FORFEIT is a pure disengagement signal feeding BP_behavioral
-   in ``motivation.py``.
+   in ``behavioral/baseline_persistence.py``.
 5. Keep ``starting_score=30.0`` on every season so the equal-EV formula
    is valid from turn 1.
 6. Match ``parallel_workers`` to the cell count (six seasons ⇒ six

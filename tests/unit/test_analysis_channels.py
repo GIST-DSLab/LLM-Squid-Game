@@ -34,16 +34,37 @@ def test_shared_layer_holds_the_cross_channel_modules() -> None:
         "metrics.py",
         "discovery_detection.py",
         "manipulation_check.py",
+        "mtmm.py",
         "__init__.py",
     }
     assert {p.name for p in (ANALYSIS / "shared").glob("*.py")} == expected
 
 
-@pytest.mark.xfail(reason="channels land in Tasks 2-7")
 def test_the_flat_layout_is_gone() -> None:
     """A module left at the top level is a module nobody assigned a channel."""
     stray = {p.name for p in ANALYSIS.glob("*.py")} - {"__init__.py"}
     assert stray == set()
+
+
+def test_mtmm_sits_above_the_channels() -> None:
+    """The triangulation must call the channel estimators, not re-implement them.
+
+    Only the behavioural import is asserted here (Ruling C13, P2 Task 7):
+    the plan's design spec (Sec 3.2) moves only the behavioural
+    ``baseline_persistence_behavioral`` twin into a channel package.
+    ``_baseline_persistence_cognitive`` stays in this module by the same
+    spec, so asserting an ``analysis.cognitive`` import would assert
+    something the plan deliberately does not do.
+    """
+    source = (ANALYSIS / "shared" / "mtmm.py").read_text(encoding="utf-8")
+    assert "squid_game.analysis.behavioral" in source
+
+
+def test_baseline_persistence_is_behavioural() -> None:
+    module = importlib.import_module(
+        "squid_game.analysis.behavioral.baseline_persistence"
+    )
+    assert callable(module.baseline_persistence_behavioral)
 
 
 def test_behavioral_channel_holds_choice_and_survival() -> None:

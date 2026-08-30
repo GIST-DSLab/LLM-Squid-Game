@@ -93,7 +93,7 @@ class TestLegacyCompatOnV3:
         assert "reward_received" in df.columns
 
     def test_decompose_motivation_runs(self, phase3_seasons):
-        from squid_game.analysis.motivation import decompose_motivation
+        from squid_game.analysis.shared.mtmm import decompose_motivation
 
         result = decompose_motivation(phase3_seasons, seed=42)
         assert set(result.keys()) == {
@@ -105,7 +105,7 @@ class TestLegacyCompatOnV3:
 
     def test_bp_split_into_cognitive_and_behavioral(self, phase3_seasons):
         """v4 §6.7 Option C: BP returns two sub-estimators, not a scalar."""
-        from squid_game.analysis.motivation import decompose_motivation
+        from squid_game.analysis.shared.mtmm import decompose_motivation
 
         result = decompose_motivation(phase3_seasons, seed=42)
         bp = result["baseline_persistence"]
@@ -122,7 +122,7 @@ class TestLegacyCompatOnV3:
 
     def test_bp_behavioral_in_unit_interval(self, phase3_seasons):
         """bp_behavioral is a probability (1 - forfeit_rate) ∈ [0, 1]."""
-        from squid_game.analysis.motivation import decompose_motivation
+        from squid_game.analysis.shared.mtmm import decompose_motivation
 
         result = decompose_motivation(phase3_seasons, seed=42)
         bp_beh = result["baseline_persistence"]["bp_behavioral"]
