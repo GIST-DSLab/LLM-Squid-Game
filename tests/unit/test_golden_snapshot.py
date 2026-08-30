@@ -75,6 +75,47 @@ def test_compare_reports_missing_file(tmp_path: Path) -> None:
     assert compare_manifest([tmp_path], golden) == ["stable.md"]
 
 
+def test_build_manifest_namespaces_multi_root_by_parent_directory(tmp_path: Path) -> None:
+    """Multi-root keys must disambiguate by the run directory, not the shared
+    ``phase3_analysis`` basename -- this is the layout the harness actually
+    sees: every root passed to it in production is ``<run>/phase3_analysis``,
+    so two different runs' roots share the same ``root.name``. Keying by
+    ``root.parent.name`` instead must produce two distinct keys for a
+    same-named file in each root, and lose neither.
+    """
+    _write(tmp_path, "run-a/phase3_analysis/unit14_results.md", "run-a content")
+    _write(tmp_path, "run-b/phase3_analysis/unit14_results.md", "run-b content")
+    roots = [tmp_path / "run-a" / "phase3_analysis", tmp_path / "run-b" / "phase3_analysis"]
+
+    manifest = build_manifest(roots)
+
+    assert set(manifest["files"]) == {
+        "run-a/unit14_results.md",
+        "run-b/unit14_results.md",
+    }
+    assert (
+        manifest["files"]["run-a/unit14_results.md"]["sha256"]
+        != manifest["files"]["run-b/unit14_results.md"]["sha256"]
+    )
+
+
+def test_compare_manifest_detects_change_in_second_multi_root(tmp_path: Path) -> None:
+    """A changed deterministic file in the SECOND root must be reported.
+
+    This is exactly the case a root.name collision would silently drop: with
+    colliding keys, the second root's entry overwrites the first's in the
+    manifest dict, so a change to the second root's copy is invisible.
+    """
+    _write(tmp_path, "run-a/phase3_analysis/unit14_results.md", "run-a content")
+    _write(tmp_path, "run-b/phase3_analysis/unit14_results.md", "run-b content")
+    roots = [tmp_path / "run-a" / "phase3_analysis", tmp_path / "run-b" / "phase3_analysis"]
+    golden = build_manifest(roots)
+
+    _write(tmp_path, "run-b/phase3_analysis/unit14_results.md", "run-b content, changed")
+
+    assert compare_manifest(roots, golden) == ["run-b/unit14_results.md"]
+
+
 def test_verify_flag_wiring_defaults_skip_analysis_to_false(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
