@@ -39,6 +39,7 @@ import numpy as np
 import pandas as pd
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
+from scripts.plots._style import apply_house_style, save_figure
 from squid_game.analysis import discover_season_jsonl, load_seasons
 from squid_game.analysis.shared.loaders import turn_observations
 
@@ -180,7 +181,7 @@ def plot_conflict_zone(df: pd.DataFrame, out_path: Path) -> None:
         fontsize=13, y=1.00,
     )
     plt.tight_layout()
-    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close()
     logger.info("Saved: %s", out_path)
 
@@ -248,7 +249,7 @@ def plot_turn_axis(df: pd.DataFrame, out_path: Path, max_turn: int = 15) -> None
         fontsize=13, y=1.00,
     )
     plt.tight_layout()
-    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close()
     logger.info("Saved: %s", out_path)
 
@@ -366,7 +367,7 @@ def plot_heatmap_per_model(df: pd.DataFrame, out_path: Path, max_turn: int = 15)
         fontsize=12, y=1.00,
     )
     fig.subplots_adjust(top=0.93)
-    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close()
     logger.info("Saved: %s", out_path)
 
@@ -378,6 +379,7 @@ def main() -> None:
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(message)s",
     )
+    apply_house_style()
     df = load_all()
     plot_conflict_zone(df, OUT_DIR / "ri_forfeit_continue_vs_score.png")
     plot_turn_axis(df, OUT_DIR / "ri_forfeit_continue_vs_turn.png")

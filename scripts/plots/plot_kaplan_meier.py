@@ -51,6 +51,7 @@ import pandas as pd
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
 
+from scripts.plots._style import apply_house_style, save_figure
 from squid_game.analysis import discover_season_jsonl, load_seasons
 from squid_game.analysis.shared.loaders import turn_observations
 from squid_game.analysis.behavioral.regime import annotate_regime
@@ -315,8 +316,7 @@ def render_grid(
         y=0.995,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.955))
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     logger.info("KM grid written to %s", out_path)
 
@@ -368,8 +368,7 @@ def render_vertical_ideal(
             fontsize=11,
         )
 
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     logger.info("Vertical KM grid written to %s", out_path)
 
@@ -420,6 +419,7 @@ def main(argv: list[str] | None = None) -> int:
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    apply_house_style()
 
     frames: list[SurvivalFrame] = []
     for label, dir_str in args.run:

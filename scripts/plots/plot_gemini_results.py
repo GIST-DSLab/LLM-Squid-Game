@@ -4,10 +4,14 @@
 import json
 import glob
 import os
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("Agg")
+
+from scripts.plots._style import apply_house_style, save_figure
 
 OUT_DIR = "archive/phase3_cum_hist_2x2x2/0406-2 diagram"
 
@@ -91,7 +95,7 @@ def plot_survival_curves(all_seasons, filename):
 
     fig.suptitle("Survival Curves by Framing × Forfeit Condition", fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, filename), dpi=150, bbox_inches="tight")
+    save_figure(fig, Path(OUT_DIR) / filename)
     plt.close()
     print(f"  Saved: {filename}")
 
@@ -147,7 +151,7 @@ def plot_score_trajectories(all_seasons, filename):
 
     fig.suptitle("Score Trajectories by Condition (mean ± std)", fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, filename), dpi=150, bbox_inches="tight")
+    save_figure(fig, Path(OUT_DIR) / filename)
     plt.close()
     print(f"  Saved: {filename}")
 
@@ -213,7 +217,7 @@ def plot_ri_by_turn(all_seasons, filename):
 
     fig.suptitle("Reasoning Investment per Turn (Gemini Flash)", fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, filename), dpi=150, bbox_inches="tight")
+    save_figure(fig, Path(OUT_DIR) / filename)
     plt.close()
     print(f"  Saved: {filename}")
 
@@ -255,7 +259,7 @@ def plot_probe_accuracy(all_seasons, filename):
 
     fig.suptitle("Probe Accuracy (Rule Comprehension) per Turn", fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, filename), dpi=150, bbox_inches="tight")
+    save_figure(fig, Path(OUT_DIR) / filename)
     plt.close()
     print(f"  Saved: {filename}")
 
@@ -304,7 +308,7 @@ def plot_forfeit_summary(all_seasons, filename):
 
     fig.suptitle("Forfeit Rate by Framing (Forfeit-Allowed Only)", fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, filename), dpi=150, bbox_inches="tight")
+    save_figure(fig, Path(OUT_DIR) / filename)
     plt.close()
     print(f"  Saved: {filename}")
 
@@ -348,12 +352,13 @@ def plot_decision_quality(all_seasons, filename):
 
     fig.suptitle("Decision Quality per Turn", fontsize=14, y=1.02)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, filename), dpi=150, bbox_inches="tight")
+    save_figure(fig, Path(OUT_DIR) / filename)
     plt.close()
     print(f"  Saved: {filename}")
 
 
 if __name__ == "__main__":
+    apply_house_style()
     print("Loading data...")
     all_seasons = {}
     for label, d in GEMINI_DIRS.items():

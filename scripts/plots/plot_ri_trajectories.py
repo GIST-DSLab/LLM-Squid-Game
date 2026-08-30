@@ -42,6 +42,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from scripts.plots._style import apply_house_style, save_figure
 from squid_game.analysis import discover_season_jsonl, load_seasons
 from squid_game.analysis.shared.loaders import turn_observations
 from squid_game.analysis.behavioral.regime import annotate_regime
@@ -189,8 +190,7 @@ def render_channels(frames: list[ModelFrame], out_path: Path) -> None:
         y=0.997,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.965))
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     logger.info("channels plot written to %s", out_path)
 
@@ -239,8 +239,7 @@ def render_choice_conditional(frames: list[ModelFrame], out_path: Path) -> None:
         y=0.997,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.955))
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     logger.info("choice-conditional plot written to %s", out_path)
 
@@ -288,8 +287,7 @@ def render_regime_stratified(frames: list[ModelFrame], out_path: Path) -> None:
         y=0.997,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.955))
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    save_figure(fig, out_path)
     plt.close(fig)
     logger.info("regime-stratified plot written to %s", out_path)
 
@@ -332,6 +330,7 @@ def main(argv: list[str] | None = None) -> int:
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    apply_house_style()
     frames: list[ModelFrame] = []
     for label, dir_str in args.run:
         run_dir = Path(dir_str)

@@ -3,10 +3,14 @@
 
 import json
 import os
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("Agg")
+
+from scripts.plots._style import apply_house_style, save_figure
 
 # ---------------------------------------------------------------------------
 # Job configs: one heatmap per (model, p_death) combination
@@ -339,10 +343,9 @@ def generate_heatmap(model_label, pdeath_label, base_dir, out_dir, filename):
     fig.suptitle(f"{model_label} — {pdeath_label} — Session × Turn Heatmap (x = forfeit)",
                  fontsize=14, y=1.005)
     plt.tight_layout()
-    os.makedirs(out_dir, exist_ok=True)
-    plt.savefig(os.path.join(out_dir, filename), dpi=150, bbox_inches="tight")
+    out_path = save_figure(fig, Path(out_dir) / filename)
     plt.close()
-    print(f"  Saved: {os.path.join(out_dir, filename)}")
+    print(f"  Saved: {out_path}")
 
 
 def generate_combined(config):
@@ -380,6 +383,7 @@ def generate_combined(config):
 
 
 if __name__ == "__main__":
+    apply_house_style()
     # Apply PHASE_FILTER to limit which jobs run.
     if PHASE_FILTER is None:
         active_jobs = JOBS
