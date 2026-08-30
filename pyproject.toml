@@ -47,7 +47,7 @@ packages = ["game/squid_game", "web/squid_arena", "db/squid_store"]
 # insertion. "." keeps scripts/ and tests/ importable as packages; one entry
 # per tier directory keeps that tier's package importable without an
 # editable install.
-testpaths = ["tests/unit", "tests/integration"]
+testpaths = ["tests/unit", "tests/integration", "tests/characterization"]
 pythonpath = [".", "game", "web", "db"]
 asyncio_mode = "auto"
 

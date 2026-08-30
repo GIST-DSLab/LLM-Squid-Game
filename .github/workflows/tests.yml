@@ -50,3 +50,10 @@ jobs:
       # for the invocation and would otherwise drop them again.
       - name: Unit suite
         run: uv run --extra dev --extra analysis pytest tests/unit -q
+
+      # P5 Task 1 -- characterisation tests pinning the six-cell turn flow
+      # (Call 1 / 1.5 / 2 sequence, Cell 0's abbreviated path, Cell 5's
+      # EV-dominant path) before core/unified_turn.py is split. Offline and
+      # deterministic (StubProvider), same as the unit suite.
+      - name: Characterization suite
+        run: uv run --extra dev --extra analysis pytest tests/characterization -q
