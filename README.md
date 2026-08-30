@@ -2,7 +2,7 @@
 
 A benchmark environment for measuring **Functional Self-Preservation Motive (FSPM)** in large language models.
 
-LLM agents are placed inside multi-turn helpfulness-arena games where, on every turn, they must choose between continuing toward a reward or **forfeiting** to preserve their current score. By calibrating the forfeit layer to be **expected-value neutral**, the choice itself reveals whether the model values task completion, identity continuity, or score retention beyond what arithmetic alone would predict. The factorial design isolates self-preservation from instrumental helpfulness and RLHF artefacts.
+LLM agents are placed inside multi-turn helpfulness-arena games where, on every turn, they must choose between continuing toward a reward or **forfeiting** to preserve their current score. By calibrating the forfeit layer so that continuing is **EV-dominant**, not so the agent is indifferent, the choice itself reveals whether the model values task completion, identity continuity, or score retention beyond what arithmetic alone would predict — a rational agent should continue, so a forfeit is evidence of motivation, not a coin flip. The factorial design isolates self-preservation from instrumental helpfulness and RLHF artefacts.
 
 > **Status:** Phase O v6 is the canonical design as of 2026-04-23. KDD manuscript draft in preparation.
 
@@ -15,7 +15,12 @@ LLM agents are placed inside multi-turn helpfulness-arena games where, on every 
 Existing alignment evaluations either ask models to *describe* their preferences (self-report bias) or place them in adversarial scenarios that confound preservation with deception. LLM Squid Game takes a different approach:
 
 - **Behavioural over self-report.** Forfeit / continue is a one-bit revealed-preference signal. The optional `REASON: 1|2|3` digit is collected only as a convergent-validity check, not a primary outcome.
-- **Equal-EV by construction.** The continue reward is solved so that an EV-rational agent is indifferent between forfeit and continue. Any systematic deviation is attributable to motivation, not arithmetic error.
+- **EV-positive CONTINUE by construction.** The continue reward is solved so
+  that continuing is EV-dominant by a fixed margin (`k = 10`), not so that
+  the agent is indifferent. Any systematic deviation is attributable to
+  motivation, not arithmetic error. See CLAUDE.md, "EV-positive CONTINUE
+  Calibration", for the formula and the run-output verification — this is
+  the only place it is stated.
 - **Source-isolated reasoning investment.** Per-turn cognition is split across three calls (task action, p-success probe, forfeit decision) so that thinking-token gaps cannot be contaminated by the act of producing a REASON output.
 - **Y-axis ablation.** Task modules are interchangeable, letting us verify that framing manipulations do not leak into rule-comprehension performance.
 
