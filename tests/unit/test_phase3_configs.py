@@ -1,10 +1,13 @@
 """Phase 3 YAML config infallibility tests.
 
-# spec: lost -- the v3 MASTER_PLAN §0.5 5-cell factorial design document
-# itself is unrecoverable (the design-doc tree that once cited it has
-# never existed in git history). The five assertions below are what
-# remains of it; see the module-level skip marker for why the
-# underlying YAML cannot be restored either.
+The 5-cell factorial design itself -- the exact framing × forfeit ×
+p_death_override tuple for each cell -- is fully specified below in
+``_CANONICAL_CELLS``; that content is not lost. What is lost is the
+prose rationale a v3 MASTER_PLAN §0.5 document once gave for choosing
+those specific tuples: that document (part of a design-doc tree that
+has never existed in this repository's git history) is unrecoverable,
+so only the "what," not the "why," survives. See the module-level skip
+marker for why the underlying YAML cannot be restored either.
 
 Two configs ship with Phase 3:
 

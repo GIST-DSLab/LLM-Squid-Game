@@ -255,7 +255,10 @@ uv run python scripts/analysis/orchestrate_posthoc.py
 
 produces `outputs/posthoc_summary.xlsx` (19 sheets). (`docs/design/v6/POSTHOC_ANALYSIS.md`, cited by earlier revisions as the sheet reference, does not exist — read `scripts/analysis/orchestrate_posthoc.py` for the sheet list.)
 
-Public API: `from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` for the full export list (64 symbols as of v6.3). Phase 1/2 `analysis/{regression,mediation}.py` were moved to `archive/analysis-deprecated/` on 2026-04-23; Unit 14 `forfeit_regression.fit_forfeit_logit` + Unit 15 `fit_choice_asymmetric_model` supersede them.
+Public API: `from squid_game.analysis import ...` — see `game/squid_game/analysis/__init__.py` for the full export list (64 symbols as of v6.3). Phase 1/2 `analysis/{regression,mediation}.py` were removed on 2026-04-23 (an earlier revision of this file claimed they were moved to an `archive/analysis-deprecated/` directory; that directory has never existed in this repository's git history, so whether or where a pre-removal copy survives is unknown); Unit 14 `forfeit_regression.fit_forfeit_logit` + Unit 15 `fit_choice_asymmetric_model` supersede them.
 
-Canonical analysis reference (v6.3): **`docs/design/v6/POSTHOC_ANALYSIS.md`**.
-Legacy v3 ANALYSIS_PLAN is archived at **`archive/deprecated-docs/v3_ANALYSIS_PLAN.md`**.
+# spec: lost -- an earlier revision of this file claimed the legacy v3
+# ANALYSIS_PLAN.md was archived at
+# `archive/deprecated-docs/v3_ANALYSIS_PLAN.md`. That directory has
+# never existed in this repository's git history, so whether or where
+# a copy of that document survives is unknown.

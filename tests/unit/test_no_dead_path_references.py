@@ -29,17 +29,23 @@ SEARCH_ROOTS = ("game", "web", "db", "scripts", "tests")
 
 # Ruling C15: scripts/plots/build_*_diagram.py write .excalidraw files
 # into docs/design/v4/assets/ at runtime -- a live write path, not a
-# dead documentation citation. gen_v4_diagrams.py is the same family
-# (writes to the same directory, via a __main__-guarded driver, hence
-# not in test_import_smoke.py's SKIPPED list). test_import_smoke.py
-# documents the same path in that SKIPPED list for the same reason.
-# P6 Task 3 owns repointing this when it reorganises assets/.
+# dead documentation citation. test_import_smoke.py documents the same
+# path in its SKIPPED list for the same reason. P6 Task 3 owns
+# repointing this when it reorganises assets/.
+#
+# gen_v4_diagrams.py is NOT in this set, on review: its asset_dir is
+# built from Path(__file__).resolve().parents[1], which from
+# scripts/plots/gen_v4_diagrams.py resolves to scripts/, not the repo
+# root -- an off-by-one (parents[1] should be parents[2]) that makes it
+# write to a different, non-overlapping directory than the three
+# scripts below. Its docstring was corrected in place instead (see that
+# file) to describe the actual behaviour and flag the bug, rather than
+# being exempted on the same rationale as the three genuine C15 cases.
 _C15_LIVE_WRITE_PATH_FILES = frozenset(
     {
         "scripts/plots/build_llm_experience_diagram.py",
         "scripts/plots/build_posthoc_analysis_diagram.py",
         "scripts/plots/build_prompt_flow_diagram.py",
-        "scripts/plots/gen_v4_diagrams.py",
         "tests/unit/test_import_smoke.py",
     }
 )

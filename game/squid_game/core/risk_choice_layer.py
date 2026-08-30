@@ -9,8 +9,7 @@ while the Y-axis cognitive surface varies.
 
 Legacy (v3 Phase A): superseded by the Unit 14 Forfeit Layer's binary
 CONTINUE/FORFEIT decision. Retained only to replay archived stake-menu
-configs (see ``models/enums.py`` for the framing-ordering history this
-module still depends on).
+configs.
 """
 
 from __future__ import annotations

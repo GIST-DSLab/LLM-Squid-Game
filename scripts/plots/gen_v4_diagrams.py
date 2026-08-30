@@ -1,12 +1,25 @@
 """
 Generate v4 Excalidraw diagrams for the LLM Squid Game paper.
 
-Produces 5 diagrams under docs/design/v4/assets/:
+Produces 5 diagrams:
   d0_experiment_overview.excalidraw        — NEW, experiment at-a-glance
   d1_architecture_overview.excalidraw      — v4 rewrite (was v3)
   d2_split_call_flow.excalidraw            — v4 rewrite (was d2_unified_turn_flow)
   d4_6cell_factorial.excalidraw            — v4 rewrite (was 5-cell)
   d6_mtmm_motivation.excalidraw            — v4 rewrite (was α_stake based)
+
+# BUG (found in P3+P4 Task 5 review, not fixed here -- see main() below):
+# asset_dir is built from Path(__file__).resolve().parents[1], which from
+# this file's location (scripts/plots/gen_v4_diagrams.py) resolves to
+# scripts/, not the repo root. The actual output directory is therefore
+# scripts/ + "docs"/"design"/"v4"/"assets", not the repo-root "docs" /
+# "design" / "v4" / "assets" directory where the three build_*_diagram.py
+# scripts in this directory write. parents[1] would need to be parents[2]
+# to reach the repo root. Left unfixed here because correcting it changes
+# what an executed script writes to disk, which is a runtime behaviour
+# change out of scope for a dead-reference cleanup task; P6 Task 3 owns
+# repointing both this script's and the build_*_diagram.py scripts' write
+# targets when it reorganises the assets directory.
 
 Palette values match .claude/skills/excalidraw-diagram/references/color-palette.md.
 """
