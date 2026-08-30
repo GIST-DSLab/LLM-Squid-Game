@@ -27,19 +27,23 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from squid_game.analysis.forfeit_regression import (
+from squid_game.analysis.shared.loaders import (
+    forfeit_events,
+    turn_observations,
+)
+from squid_game.analysis.cognitive.ri_forfeit import (
     ChoiceAsymmetricResult,
     TaskSpilloverResult,
-    THINKING_KEYWORDS,
     fit_choice_asymmetric_model,
     fit_task_spillover_model,
-    forfeit_events,
+    run_all_unit15_hypotheses,
+    unit15_descriptive_summary,
+)
+from squid_game.analysis.selfreport.reason_convergence import (
+    THINKING_KEYWORDS,
     reason_distribution,
     run_all_unit14_hypotheses,
-    run_all_unit15_hypotheses,
     thinking_keyword_counts,
-    turn_observations,
-    unit15_descriptive_summary,
 )
 from squid_game.models.enums import (
     AgentType,

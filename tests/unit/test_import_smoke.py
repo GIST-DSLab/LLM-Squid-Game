@@ -142,7 +142,10 @@ def test_the_walk_actually_finds_the_tree() -> None:
     """
     assert len(MODULE_NAMES) > 100
     assert "squid_game.runner" in MODULE_NAMES
-    assert "squid_game.analysis.forfeit_regression" in MODULE_NAMES
+    # forfeit_regression.py was split 2026-08-30 (P2 Task 4); its two
+    # successor modules are the walk-discoverability check now.
+    assert "squid_game.analysis.cognitive.ri_forfeit" in MODULE_NAMES
+    assert "squid_game.analysis.selfreport.reason_convergence" in MODULE_NAMES
     assert "scripts.analyze_phase3" in MODULE_NAMES
     assert "squid_arena.api" in MODULE_NAMES
     assert "squid_store.factory" in MODULE_NAMES

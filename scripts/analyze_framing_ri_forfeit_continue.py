@@ -67,7 +67,8 @@ def preprocess(csv_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         & (df["forfeit_condition"] == "allowed")
     ].copy()
 
-    # 4-step chain — mirrors game/squid_game/analysis/forfeit_regression.py
+    # 4-step chain — mirrors
+    # game/squid_game/analysis/selfreport/reason_convergence.py
     # :fit_framing_ri_forfeit_continue exactly (single source of truth at
     # metric.md §3.2 + §3.6 (I1)).
     sub = cells_13[

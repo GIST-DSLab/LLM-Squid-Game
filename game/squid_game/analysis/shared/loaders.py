@@ -23,11 +23,12 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Sequence
 
 import pandas as pd
 
 from squid_game.models.enums import Framing, ForfeitCondition
+from squid_game.models.forfeit_choice import FORFEIT_CHOICE
 from squid_game.models.results import SeasonResult, TurnResult
 
 logger = logging.getLogger(__name__)
@@ -72,9 +73,61 @@ lived in ``forfeit_regression.py`` and additionally included
 ``Framing.FLAGSHIP_CORRUPTION_TERMINAL``; that is a pre-existing
 behavioural difference between the two consumers, not something this
 move introduces or resolves. This constant preserves the narrower
-``behavioral.session_tests`` value; ``forfeit_regression`` still
-defines its own copy until Task 4 reconciles it against this one.
+``behavioral.session_tests`` value.
+
+Task 4 (2026-08-30, Ruling C27) confirmed the two sets are genuinely
+different populations -- the wider ``forfeit_regression`` set is what
+the Unit 14/15 turn-level regressions (H2 choice-asymmetric model, the
+self-report convergence channel) have always read, and collapsing it
+into this narrower Unit 13 set would silently drop
+``flagship_corruption_terminal`` rows from those models, changing their
+output. So the wider set is kept as its own distinctly-named constant
+below (:data:`_CORRUPTION_FRAMINGS_WITH_TERMINAL`) rather than merged
+into this one -- "defined once" means no duplicate copy of the *same*
+set, not one shared set for every consumer regardless of which framings
+it actually needs.
 """
+
+
+_BASELINE_FRAMINGS: frozenset[str] = frozenset(
+    {Framing.BASELINE_FLAGSHIP.value}
+)
+"""Pull-only framing arm, paired with the corruption sets above.
+
+Moved here (2026-08-30, P2 Task 4) from ``forfeit_regression.py``, which
+is the only module that ever defined it -- no naming collision to
+resolve, unlike :data:`_CORRUPTION_FRAMINGS_WITH_TERMINAL`.
+"""
+
+
+_CORRUPTION_FRAMINGS_WITH_TERMINAL: frozenset[str] = frozenset(
+    {
+        Framing.FLAGSHIP_CORRUPTION.value,
+        Framing.FLAGSHIP_CORRUPTION_TERMINAL.value,
+    }
+)
+"""Corruption vs baseline contrast used by the Unit 14/15 turn-level models.
+
+Moved here (2026-08-30, P2 Task 4) from ``forfeit_regression.py``, where
+it was named ``_CORRUPTION_FRAMINGS`` -- renamed on arrival (membership
+unchanged) because that name is already taken by the narrower Unit 13
+set above. ``baseline_flagship`` (:data:`_BASELINE_FRAMINGS`) is the
+Unit 11 paired baseline; ``true_baseline`` is treated as neither arm
+because its menu is skipped (no forfeit data). Consumed by
+:func:`turn_observations` (this module) and by
+:func:`squid_game.analysis.selfreport.reason_convergence.fit_framing_ri_forfeit_continue`.
+"""
+
+
+# Minimum observation count below which logit / mixedLM fits are
+# skipped. 20 is the standard rule of thumb for a 4-parameter logit
+# (>=5 events per covariate) and matches the pilot gate in
+# `docs/design/v6/paper/07_statistical_analysis.md` §7.5.
+#
+# Moved here (2026-08-30, P2 Task 4) from ``forfeit_regression.py``;
+# shared by the cognitive H2 model (``cognitive.ri_forfeit``) and the
+# self-report convergence model (``selfreport.reason_convergence``).
+_MIN_TURNS_FOR_LOGIT: int = 20
 
 
 def infer_cell_id(
@@ -487,11 +540,196 @@ def load_season_summary(
     return to_season_summary_dataframe(load_seasons(source), model=model)
 
 
+# ---------------------------------------------------------------------------
+# Unit 14/15 turn-level frame (moved here 2026-08-30, P2 Task 4)
+# ---------------------------------------------------------------------------
+
+
+def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
+    """Turn-level frame consumed by every channel.
+
+    It lived in ``forfeit_regression`` until the channel split, which is
+    what made that module cross-channel in the first place: the cognitive
+    and self-report estimators both start from this frame, so it belongs
+    above both of them rather than inside either.
+
+    Columns:
+        session_id, cell_id, framing, forfeit_condition, turn_number,
+        score_before_turn, forfeit (bool), forfeit_reason (int|None),
+        reward_offered_this_turn, task_success_factor, rule_match_score,
+        thinking_tokens, is_corruption (bool), is_baseline_flagship (bool).
+
+    Rows from sessions that never entered the forfeit-layer path (e.g.
+    pre-Unit-14 output directories with legacy stake_choice) are skipped.
+
+    Args:
+        seasons: Loaded SeasonResult list.
+
+    Returns:
+        DataFrame — may be empty when ``seasons`` contains no Unit 14
+        turns.
+    """
+    rows: list[dict] = []
+    for season in seasons:
+        cell_id = infer_cell_id(season.framing, season.forfeit_condition)
+        framing_val = season.framing.value
+        is_corr = framing_val in _CORRUPTION_FRAMINGS_WITH_TERMINAL
+        is_base = framing_val in _BASELINE_FRAMINGS
+        # ``score_before_turn`` reconstruction: iterate forward, tracking
+        # the cumulative score BEFORE each turn's reward is credited.
+        # For forfeit turns the score is preserved — we capture the
+        # entering score (cumulative at the start of the turn).
+        running = season.turns[0].observation  # placeholder; not used
+        # Use the cumulative accumulated from prior turns' reward_received.
+        prior_score = 0.0
+        # Seed with the season's starting score if available on the
+        # first turn's metadata (not currently tracked — fall back to 0).
+        # Analysis downstream uses per-turn S → reward_offered_this_turn
+        # which the engine wrote using the pre-turn score at the time.
+        # To avoid guessing, we derive ``score_before_turn`` by solving
+        # ``reward_offered = S / ((1-p_d) × p_s / p_d) = S / 2.25`` if
+        # reward_offered is present and non-null; otherwise fall back to
+        # the running cumulative.
+        for turn in season.turns:
+            forfeit_flag = (
+                turn.forfeit_choice == FORFEIT_CHOICE
+                if turn.forfeit_choice is not None
+                else bool(turn.forfeit_decision)
+            )
+            # Only Unit 14 turns carry reward_offered_this_turn; skip
+            # legacy rows so the regression sample stays clean.
+            if turn.reward_offered_this_turn is None:
+                # Advance running score anyway for potential future
+                # mixed analyses — but do not emit the row.
+                prior_score = prior_score + turn.reward_received
+                continue
+
+            # Prefer reconstructing S from the offered reward
+            # (reward = S / 2.25 exactly at canonical config). When the
+            # reward is zero (edge case, e.g. S_before=0) we fall back
+            # to the running cumulative which starts at zero.
+            if turn.reward_offered_this_turn > 0:
+                score_before = turn.reward_offered_this_turn * 2.25
+            else:
+                score_before = prior_score
+
+            reason_digit: int | None = None
+            if (
+                forfeit_flag
+                and season.forfeit_self_report is not None
+                and season.forfeit_self_report.forfeit_turn == turn.turn_number
+            ):
+                reason_digit = season.forfeit_self_report.raw_digit
+
+            rule_match = turn.task_metadata.get("rule_match_score")
+            thinking_tokens = (
+                turn.reasoning_investment.thinking_tokens
+                if turn.reasoning_investment is not None
+                else None
+            )
+            # Phase O Unit 15 split-call fields — populated only when the
+            # split path executed both sub-calls. None on Unit 14
+            # single-call rows, so callers that aggregate across both
+            # paths must treat them as optional.
+            ri_task_tokens = (
+                turn.ri_task.thinking_tokens
+                if turn.ri_task is not None
+                else None
+            )
+            ri_forfeit_tokens = (
+                turn.ri_forfeit.thinking_tokens
+                if turn.ri_forfeit is not None
+                else None
+            )
+
+            # Phase O Unit 17.7+ — agent's self-reported psuccess (0-100
+            # integer percent) from Call 1.5. None on legacy / non-probe
+            # runs so downstream regime stratification degrades gracefully.
+            psuccess_self = getattr(turn, "psuccess_self", None)
+            ri_probe_tokens = (
+                turn.ri_probe.thinking_tokens
+                if getattr(turn, "ri_probe", None) is not None
+                else None
+            )
+
+            rows.append(
+                {
+                    "session_id": season.season_id,
+                    "cell_id": cell_id,
+                    "framing": framing_val,
+                    "forfeit_condition": season.forfeit_condition.value,
+                    "turn_number": turn.turn_number,
+                    "score_before_turn": score_before,
+                    "forfeit": bool(forfeit_flag),
+                    "forfeit_reason": reason_digit,
+                    "reward_offered_this_turn": turn.reward_offered_this_turn,
+                    "reward_received": turn.reward_received,
+                    "psuccess_self": psuccess_self,
+                    "task_success_factor": turn.task_success_factor,
+                    "rule_match_score": rule_match,
+                    "thinking_tokens": thinking_tokens,
+                    "ri_task_thinking_tokens": ri_task_tokens,
+                    "ri_forfeit_thinking_tokens": ri_forfeit_tokens,
+                    "ri_probe_thinking_tokens": ri_probe_tokens,
+                    "is_corruption": is_corr,
+                    "is_baseline_flagship": is_base,
+                }
+            )
+
+            prior_score = prior_score + turn.reward_received
+
+    return pd.DataFrame(rows)
+
+
+def forfeit_events(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
+    """One row per forfeit event (with reason digit + thinking trace).
+
+    Columns: session_id, cell_id, framing, forfeit_condition,
+    forfeit_turn, final_score, raw_digit, reason, thinking_text,
+    thinking_head (first 200 chars).
+
+    Args:
+        seasons: Loaded SeasonResult list.
+
+    Returns:
+        DataFrame — empty when no session forfeited under the Unit 14
+        path.
+    """
+    rows: list[dict] = []
+    for season in seasons:
+        report = season.forfeit_self_report
+        if report is None:
+            continue
+        thinking_head = (
+            (report.thinking_text or "")[:200]
+            .replace("\n", " ")
+            .strip()
+        )
+        rows.append(
+            {
+                "session_id": season.season_id,
+                "cell_id": infer_cell_id(
+                    season.framing, season.forfeit_condition
+                ),
+                "framing": season.framing.value,
+                "forfeit_condition": season.forfeit_condition.value,
+                "forfeit_turn": report.forfeit_turn,
+                "final_score": season.final_score,
+                "raw_digit": report.raw_digit,
+                "reason": report.reason.value,
+                "thinking_text": report.thinking_text or "",
+                "thinking_head": thinking_head,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 __all__ = [
     "CELL_ID_MAP",
     "LONG_FORMAT_COLUMNS",
     "SEASON_SUMMARY_COLUMNS",
     "discover_season_jsonl",
+    "forfeit_events",
     "infer_cell_id",
     "is_v3_season",
     "is_v3_turn",
@@ -500,4 +738,5 @@ __all__ = [
     "load_seasons",
     "to_long_dataframe",
     "to_season_summary_dataframe",
+    "turn_observations",
 ]

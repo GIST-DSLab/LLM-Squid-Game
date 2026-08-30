@@ -58,8 +58,47 @@ def test_behavioral_estimators_are_reachable_through_the_facade() -> None:
 
 
 def test_cognitive_channel_holds_the_ri_estimators() -> None:
-    expected = {"ri_task.py", "ri_call1.py", "__init__.py"}
+    expected = {"ri_task.py", "ri_call1.py", "ri_forfeit.py", "__init__.py"}
     assert {p.name for p in (ANALYSIS / "cognitive").glob("*.py")} >= expected
+
+
+def test_forfeit_regression_actually_split() -> None:
+    assert not (ANALYSIS / "forfeit_regression.py").exists()
+    assert (ANALYSIS / "cognitive" / "ri_forfeit.py").exists()
+    assert (ANALYSIS / "selfreport" / "reason_convergence.py").exists()
+
+
+def test_the_framing_sets_are_defined_once() -> None:
+    """A split that copies the constants is a split that will drift apart."""
+    hits = [
+        path.name
+        for path in ANALYSIS.rglob("*.py")
+        if "_CORRUPTION_FRAMINGS: frozenset" in path.read_text(encoding="utf-8")
+    ]
+    assert hits == ["loaders.py"]
+
+
+def test_shared_loaders_owns_turn_observations() -> None:
+    loaders = importlib.import_module("squid_game.analysis.shared.loaders")
+    assert callable(loaders.turn_observations)
+    assert callable(loaders.forfeit_events)
+
+
+def test_selfreport_channel_holds_reason_convergence() -> None:
+    expected = {"reason_convergence.py", "__init__.py"}
+    assert {p.name for p in (ANALYSIS / "selfreport").glob("*.py")} >= expected
+
+
+def test_selfreport_estimators_are_reachable_through_the_facade() -> None:
+    module = importlib.import_module("squid_game.analysis")
+    assert module.reason_distribution is not None
+    assert module.run_all_unit14_hypotheses is not None
+
+
+def test_cognitive_estimators_are_reachable_through_the_facade() -> None:
+    module = importlib.import_module("squid_game.analysis")
+    assert module.fit_choice_asymmetric_model is not None
+    assert module.fit_task_spillover_model is not None
 
 
 def test_call1_script_is_a_thin_cli() -> None:

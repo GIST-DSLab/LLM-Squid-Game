@@ -14,7 +14,7 @@ Implements the TC indicator pipeline specified in
     rule-mastery covariate, sister of §1 Cox HR(FC/BF).
 
 All functions consume the per-turn DataFrame produced by
-:func:`squid_game.analysis.forfeit_regression.turn_observations` (or the
+:func:`squid_game.analysis.shared.loaders.turn_observations` (or the
 on-disk ``phase3_analysis/unit14_turn_observations.csv``). Functions
 degrade gracefully when ``statsmodels``/``lifelines`` are missing or
 the sample is too small.
@@ -48,7 +48,7 @@ _ALLOWED_FRAMINGS: frozenset[str] = frozenset(
     {_BASELINE_FRAMING, _CORRUPTION_FRAMING}
 )
 
-# Min observations gates (matches forfeit_regression _MIN_TURNS_FOR_LOGIT).
+# Min observations gates (matches shared.loaders._MIN_TURNS_FOR_LOGIT).
 _MIN_TURNS_FOR_MIXEDLM: int = 20
 _MIN_EVENTS_FOR_COX: int = 10
 

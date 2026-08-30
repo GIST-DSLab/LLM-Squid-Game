@@ -52,7 +52,7 @@ from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
 
 from squid_game.analysis import discover_season_jsonl, load_seasons
-from squid_game.analysis.forfeit_regression import turn_observations
+from squid_game.analysis.shared.loaders import turn_observations
 from squid_game.analysis.regime_stratification import annotate_regime
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.results import SeasonResult

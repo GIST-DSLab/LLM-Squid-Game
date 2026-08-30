@@ -12,8 +12,10 @@ were removed on 2026-04-21 when Unit 14 replaced the 1x/2x/3x stake
 menu with a binary CONTINUE/FORFEIT decision. Legacy Cox PH / logistic
 / linear OLS regression (``regression.py``) and Baron-Kenny mediation
 (``mediation.py``) were archived on 2026-04-23 to
-``archive/analysis-deprecated/`` after Unit 14 `forfeit_regression`
-and Unit 15 split-call MixedLM fully superseded them; see
+``archive/analysis-deprecated/`` after the Unit 14 Forfeit-Layer
+regression (now split across ``cognitive.ri_forfeit`` /
+``selfreport.reason_convergence``, 2026-08-30 P2 Task 4) and Unit 15
+split-call MixedLM fully superseded them; see
 ``docs/design/v6/POSTHOC_ANALYSIS.md §A.10, §A.11`` for the full
 deprecation rationale. Phase 1/2 archive runs are untouched — they
 live under ``archive/phase1_*/`` and ``archive/phase2_*/`` in their
@@ -58,12 +60,14 @@ from squid_game.analysis.shared.export import (
 from squid_game.analysis.shared.loaders import (
     CELL_ID_MAP,
     discover_season_jsonl,
+    forfeit_events,
     infer_cell_id,
     is_v3_season,
     is_v3_turn,
     load_long_dataframe,
     load_seasons,
     to_long_dataframe,
+    turn_observations,
 )
 from squid_game.analysis.shared.manipulation_check import (
     TurnMatchedResult,
@@ -90,19 +94,19 @@ from squid_game.analysis.behavioral.session_tests import (
     test_h5_forfeit_gap,
     test_h6_post_discovery_engagement,
 )
-from squid_game.analysis.forfeit_regression import (
+from squid_game.analysis.cognitive.ri_forfeit import (
     ChoiceAsymmetricResult,
     TaskSpilloverResult,
-    THINKING_KEYWORDS,
     fit_choice_asymmetric_model,
     fit_task_spillover_model,
-    forfeit_events,
+    run_all_unit15_hypotheses,
+    unit15_descriptive_summary,
+)
+from squid_game.analysis.selfreport.reason_convergence import (
+    THINKING_KEYWORDS,
     reason_distribution,
     run_all_unit14_hypotheses,
-    run_all_unit15_hypotheses,
     thinking_keyword_counts,
-    turn_observations,
-    unit15_descriptive_summary,
 )
 from squid_game.analysis.behavioral.survival import (
     CoxSurvivalResult,
@@ -169,6 +173,11 @@ __all__ = [
     "load_long_dataframe",
     "load_seasons",
     "to_long_dataframe",
+    # Phase O Unit 14/15 — turn-level frame + forfeit events, consumed by
+    # every channel below (moved here from `forfeit_regression.py` on
+    # 2026-08-30, P2 Task 4 channel split).
+    "forfeit_events",
+    "turn_observations",
     # Phase 3 P4 — manipulation check (legacy task_success_factor-based)
     "check_accuracy_independence",
     "check_ri_exceeds_baseline",
@@ -195,15 +204,14 @@ __all__ = [
     "test_h4_discovery_delay",
     "test_h5_forfeit_gap",
     "test_h6_post_discovery_engagement",
-    # Phase O Unit 14 — Forfeit-Layer self-report convergence + thinking-trace
-    # keywords. H1 logit retired 2026-04-23; Cox PH survival is now the
-    # H1 primary — see ``behavioral.survival`` exports below.
+    # Phase O Unit 14 — self-report channel: Forfeit-Layer REASON-digit
+    # convergence + thinking-trace keywords (``selfreport.reason_convergence``).
+    # H1 logit retired 2026-04-23; Cox PH survival is now the H1 primary —
+    # see ``behavioral.survival`` exports below.
     "THINKING_KEYWORDS",
-    "forfeit_events",
     "reason_distribution",
     "run_all_unit14_hypotheses",
     "thinking_keyword_counts",
-    "turn_observations",
     # Phase O — H1 Cox PH survival (2026-04-23 primary)
     "CoxSurvivalResult",
     "build_survival_frame",

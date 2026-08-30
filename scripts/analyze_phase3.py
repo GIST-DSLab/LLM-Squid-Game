@@ -76,8 +76,10 @@ from squid_game.analysis.behavioral.session_tests import (  # noqa: E402
     run_all_unit13_hypotheses,
 )
 from squid_game.analysis.motivation import decompose_motivation  # noqa: E402
-from squid_game.analysis.forfeit_regression import (  # noqa: E402
+from squid_game.analysis.selfreport.reason_convergence import (  # noqa: E402
     run_all_unit14_hypotheses,
+)
+from squid_game.analysis.cognitive.ri_forfeit import (  # noqa: E402
     run_all_unit15_hypotheses,
 )
 from squid_game.analysis.regime_stratification import (  # noqa: E402

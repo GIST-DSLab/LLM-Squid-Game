@@ -50,11 +50,11 @@ from typing import Sequence
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis.forfeit_regression import (
+from squid_game.analysis.shared.loaders import (
     forfeit_events,
-    reason_distribution,
     turn_observations,
 )
+from squid_game.analysis.selfreport.reason_convergence import reason_distribution
 from squid_game.analysis.behavioral.survival import (
     CoxSurvivalResult,
     fit_cox_forfeit_survival,
@@ -125,7 +125,7 @@ def annotate_regime(
 
     Args:
         df: Input turn-level DataFrame (e.g. the output of
-            :func:`forfeit_regression.turn_observations` or the long-
+            :func:`loaders.turn_observations` or the long-
             format returned by :func:`loaders.to_long_dataframe`).
         p_death: Canonical per-turn death probability.
         reward_ceiling: Cap threshold for ``cap_bound``.
@@ -197,7 +197,7 @@ def annotate_events_regime(
     but can under partial runs), ``regime`` is set to ``"unknown"``.
 
     Args:
-        events_df: Output of :func:`forfeit_regression.forfeit_events`.
+        events_df: Output of :func:`loaders.forfeit_events`.
         turn_df_with_regime: Output of :func:`annotate_regime` applied
             to the Unit 14 turn observations.
 

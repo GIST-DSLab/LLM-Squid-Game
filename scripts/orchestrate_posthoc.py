@@ -49,8 +49,10 @@ from squid_game.analysis.shared.loaders import (  # noqa: E402
     to_long_dataframe,
     to_season_summary_dataframe,
 )
-from squid_game.analysis.forfeit_regression import (  # noqa: E402
+from squid_game.analysis.selfreport.reason_convergence import (  # noqa: E402
     run_all_unit14_hypotheses,
+)
+from squid_game.analysis.cognitive.ri_forfeit import (  # noqa: E402
     run_all_unit15_hypotheses,
 )
 from squid_game.analysis.shared.manipulation_check import (  # noqa: E402

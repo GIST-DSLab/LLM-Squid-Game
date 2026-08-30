@@ -43,7 +43,7 @@ Workflow:
    observed no_cap turn) so callers can render per-framing curves.
 4. ``run_h1_survival_hypothesis(seasons)`` — driver that accepts a
    list of :class:`SeasonResult`, invokes
-   :func:`forfeit_regression.turn_observations` to build the per-turn
+   :func:`shared.loaders.turn_observations` to build the per-turn
    DataFrame, annotates per-turn regime via
    :func:`regime_stratification.annotate_regime`, and returns a dict
    ``{"cox": CoxSurvivalResult | None, "km": pd.DataFrame,
@@ -68,7 +68,7 @@ from typing import Sequence
 
 import pandas as pd
 
-from squid_game.analysis.forfeit_regression import turn_observations
+from squid_game.analysis.shared.loaders import turn_observations
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.results import SeasonResult
 
@@ -111,7 +111,7 @@ def build_survival_frame(
     ----------
     turn_df
         DataFrame with the schema emitted by
-        :func:`forfeit_regression.turn_observations`, augmented with
+        :func:`shared.loaders.turn_observations`, augmented with
         a per-turn ``regime`` column (via
         :func:`regime_stratification.annotate_regime`). Must contain
         ``session_id``, ``framing``, ``forfeit_condition``,

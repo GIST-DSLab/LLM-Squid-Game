@@ -38,8 +38,9 @@ jobs:
       - name: Install
         run: uv sync --extra dev --extra analysis
 
-      # The analysis code degrades silently: forfeit_regression catches
-      # ImportError and returns None, and the covering tests then skip. A run
+      # The analysis code degrades silently: cognitive.ri_forfeit and
+      # selfreport.reason_convergence catch ImportError and return None,
+      # and the covering tests then skip. A run
       # without statsmodels/lifelines is therefore GREEN with the mixedLM and
       # Cox paths untested. Fail here instead, before the suite can hide it.
       - name: Assert the analysis extras resolved

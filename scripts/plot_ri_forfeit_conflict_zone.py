@@ -40,7 +40,7 @@ import pandas as pd
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
 from squid_game.analysis import discover_season_jsonl, load_seasons
-from squid_game.analysis.forfeit_regression import turn_observations
+from squid_game.analysis.shared.loaders import turn_observations
 
 logger = logging.getLogger("plot_ri_forfeit_conflict_zone")
 
