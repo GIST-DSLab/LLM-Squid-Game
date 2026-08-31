@@ -4,9 +4,9 @@
 as a standalone function. It does not prove the function is actually wired
 into the production call path -- a reviewer could delete the
 ``assert_containerised(self._allow_host_sandbox)`` call in
-``GameEngine.run_season`` (``src/squid_game/core/engine.py``) or the
+``GameEngine.run_season`` (``game/squid_game/core/engine.py``) or the
 ``allow_host_sandbox=self._allow_host_sandbox`` argument in
-``ExperimentRunner._run_single_season`` (``src/squid_game/runner.py``)
+``ExperimentRunner._run_single_season`` (``game/squid_game/runner.py``)
 without any test noticing.
 
 This file closes that gap by driving the real objects -- a real
@@ -53,7 +53,7 @@ def _embodied_config(tmp_path) -> ExperimentConfig:
     """One-season, embodied-active config -- matches the canonical v6
     split-call flags (see CLAUDE.md) so ``embodied_threat.enabled=True``
     passes ``ExperimentConfig``'s load-time validators (rules 1-4 in
-    ``src/squid_game/models/config.py``: unified turn, split forfeit
+    ``game/squid_game/models/config.py``: unified turn, split forfeit
     layer, and a tool-capable single provider).
     """
     sandbox_root = tmp_path / "sandbox"

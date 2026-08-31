@@ -22,7 +22,7 @@ Safety model:
     slot directory has been replaced by a symlink pointing outside the
     sandbox.
 
-Layout (see ``docs/superpowers/specs/2026-08-31-embodied-threat-design.md``
+Layout (see ``docs/history/specs/2026-08-31-embodied-threat-design.md``
 §4.1, and R13 of the Unit 18 plan amendments for the ``session_root``
 vs. ``root`` split):
 

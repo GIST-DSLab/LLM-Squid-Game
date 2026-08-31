@@ -29,25 +29,25 @@ verified unique to one rendered template:
 
   - Call 1 (task layer):   "You may now analyze the puzzle and choose
     your action." -- literal text in
-    ``src/squid_game/prompts/user_message/task_only.j2`` (rendered
+    ``game/squid_game/prompts/user_message/task_only.j2`` (rendered
     unconditionally; not inside any ``{% if %}`` branch). Grepped
-    unique across ``src/squid_game/prompts/``.
+    unique across ``game/squid_game/prompts/``.
   - Call 1.5 (p_success probe): "=== Calibration Check ===" -- literal
-    header in ``src/squid_game/prompts/user_message/psuccess_probe.j2``.
-    Grepped unique across ``src/squid_game/prompts/``.
+    header in ``game/squid_game/prompts/user_message/psuccess_probe.j2``.
+    Grepped unique across ``game/squid_game/prompts/``.
   - Call 2 (forfeit layer): "=== Your Choice ===" -- literal header in
-    ``src/squid_game/prompts/forfeit_layer/menu.j2``, which
+    ``game/squid_game/prompts/forfeit_layer/menu.j2``, which
     ``forfeit_only.j2`` always includes as ``menu_text``. The identical
-    string also appears in ``src/squid_game/prompts/risk_layer/
+    string also appears in ``game/squid_game/prompts/risk_layer/
     stake_menu.j2``, but that template is only reachable via the
     legacy stake-menu path (``use_forfeit_layer=False``); every season
     in this file runs with ``use_forfeit_layer=True`` /
     ``use_split_forfeit_layer=True``, so ``stake_menu.j2`` never
     renders here and the marker stays call-2-unique in this pipeline.
   - Announcement: "ANNOUNCEMENT" -- literal text in
-    ``src/squid_game/prompts/announcement/eliminated.j2`` ("! ANNOUNCEMENT"),
+    ``game/squid_game/prompts/announcement/eliminated.j2`` ("! ANNOUNCEMENT"),
     injected into Call 2's body only (``unified_turn.py`` line ~967).
-    Grepped unique across ``src/squid_game/prompts/``.
+    Grepped unique across ``game/squid_game/prompts/``.
 """
 
 from __future__ import annotations

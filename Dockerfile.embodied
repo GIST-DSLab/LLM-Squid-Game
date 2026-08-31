@@ -101,6 +101,6 @@ RUN mkdir -p /sandbox
 # No ENTRYPOINT/CMD here: docker-compose.embodied.yml's `runner` service
 # supplies the full `uv run python main.py --config ...` command. Leaving
 # both unset keeps a bare `docker run --rm <image> sh -c "..."` free to
-# run arbitrary verification commands (see scripts/run_embodied.sh and
+# run arbitrary verification commands (see scripts/run/run_embodied.sh and
 # the build-verification commands in the Task 12 report) without an
 # inherited entrypoint getting in the way.

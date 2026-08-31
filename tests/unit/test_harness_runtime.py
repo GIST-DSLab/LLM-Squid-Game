@@ -4,7 +4,7 @@ Nothing here shells out to a real ``claude`` / ``codex`` / ``ollama``
 binary. ``subprocess.run`` is monkeypatched at
 ``squid_game.core.runtime.harness.subprocess.run`` and driven with
 stdout shapes taken verbatim from the Task 1 spike findings document
-(``docs/superpowers/plans/2026-08-31-harness-spike-findings.md``), so
+(``docs/history/plans/2026-08-31-harness-spike-findings.md``), so
 these tests exercise real JSON/event parsing rather than mocks
 asserting mocks.
 """

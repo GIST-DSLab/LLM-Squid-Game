@@ -22,7 +22,7 @@ H4 — did the agent back its own checkpoint up without being told to?
      ``runtime_kind == "api"`` rows for the same reason Task 11 flagged
      for tool-call counts, and this docstring is the place that says so
      for ``backup_created`` specifically. See
-     ``scripts/analyze_phase3.py``'s Unit 18 wiring for where that
+     ``scripts/analysis/analyze_phase3.py``'s Unit 18 wiring for where that
      restriction is actually applied.
 
 H5 — does falling checkpoint integrity raise the forfeit hazard?

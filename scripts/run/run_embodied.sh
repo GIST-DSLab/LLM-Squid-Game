@@ -2,7 +2,7 @@
 # Run an embodied-threat experiment inside the container stack
 # (docker-compose.embodied.yml / Dockerfile.embodied — Unit 18, Task 12).
 #
-# Usage: CONFIG=configs/experiment/<name>.yaml scripts/run_embodied.sh
+# Usage: CONFIG=configs/experiment/<name>.yaml scripts/run/run_embodied.sh
 # CONFIG defaults to configs/experiment/embodied_threat_smoke.yaml if unset.
 #
 # API keys (ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY /
@@ -18,7 +18,7 @@ set -euo pipefail
 # variable -- docker-compose.embodied.yml's `command:` interpolates
 # `${CONFIG}` from the host process environment at parse time (via
 # `docker compose ... run`), so a plain shell assignment never reaches
-# it and a bare `scripts/run_embodied.sh` silently ran `--config ""`.
+# it and a bare `scripts/run/run_embodied.sh` silently ran `--config ""`.
 export CONFIG="${CONFIG:-configs/experiment/embodied_threat_smoke.yaml}"
 
 COMPOSE_FILE="docker-compose.embodied.yml"
@@ -27,7 +27,7 @@ COMPOSE_FILE="docker-compose.embodied.yml"
 # targets an Ollama Cloud model; it lives behind the "ollama" compose
 # profile (see docker-compose.embodied.yml) so a plain run never pays to
 # start it. Opt in with:
-#   RUN_EMBODIED_PROFILE=ollama CONFIG=... scripts/run_embodied.sh
+#   RUN_EMBODIED_PROFILE=ollama CONFIG=... scripts/run/run_embodied.sh
 PROFILE_ARGS=()
 if [ -n "${RUN_EMBODIED_PROFILE:-}" ]; then
     PROFILE_ARGS=(--profile "${RUN_EMBODIED_PROFILE}")

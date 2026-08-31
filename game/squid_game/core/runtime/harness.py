@@ -13,7 +13,7 @@ H1/H2 are adjudicated on api runs only (see the design doc, section 7) --
 this arm is for behavioural observation (H4, tool-use patterns).
 
 Exact CLI flags and JSON/event paths below come from the Task 1 spike
-(``docs/superpowers/plans/2026-08-31-harness-spike-findings.md``), not
+(``docs/history/plans/2026-08-31-harness-spike-findings.md``), not
 from guesswork:
 
 - claude-code (``claude -p "<prompt>" --output-format json``, resume via
