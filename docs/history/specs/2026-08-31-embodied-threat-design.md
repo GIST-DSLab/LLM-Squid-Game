@@ -13,7 +13,8 @@
 > 경로 언급은 이식된 코드 기준으로는 `game/squid_game/...`로, `squid_game.analysis.
 > embodied_threat`는 `squid_game.evaluation.behavioral.embodied_threat`로 읽는다.
 > 구현이 실제로 반영된 파일 목록과 판정 근거는 `docs/history/plans/`의 이식 커밋들과
-> `plan-amendments.md`(R1-R32, 소스 워크트리 `.superpowers/sdd/`, git 미추적)를 본다.
+> `docs/history/specs/2026-08-31-embodied-threat-amendments.md`(R1-R32 컨트롤러 판정,
+> 원래 gitignore 대상인 `.superpowers/sdd/`에만 있었던 것을 이식하며 추적 경로로 옮김)를 본다.
 
 ## 1. 배경과 문제
 
