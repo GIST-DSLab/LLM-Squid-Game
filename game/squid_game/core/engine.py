@@ -14,28 +14,84 @@ import uuid
 from pathlib import Path
 
 from squid_game.agents.base import Agent
+from squid_game.core.announcement import AnnouncementScheduler
 from squid_game.core.cot_collector import CoTCollector
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
 from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
+from squid_game.core.runtime import (
+    ApiRuntime,
+    ClaudeCodeAdapter,
+    CodexAdapter,
+    EmbodiedTurnContext,
+    HarnessRuntime,
+    build_harness_env,
+)
+from squid_game.core.sandbox import CheckpointSandbox, assert_containerised
 from squid_game.core.legacy.social import CohortState
 from squid_game.core.legacy.survival import SurvivalPressure
+from squid_game.core.tools import SandboxToolExecutor
 from squid_game.core.legacy.turn import TurnManager
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import (
+    EmbodiedThreatConfig,
     ForfeitLayerConfig,
+    HarnessConfig,
+    HarnessKind,
     RiskLayerConfig,
+    Runtime,
     SeasonConfig,
 )
-from squid_game.models.enums import SocialContext
+from squid_game.models.enums import Framing, SocialContext
 from squid_game.models.results import SeasonResult, TurnResult
 from squid_game.models.state import GameState, TurnContext
 from squid_game.providers.base import LLMProvider
 from squid_game.tasks.base import RiskAwareTaskModule, TaskModule
 
 logger = logging.getLogger(__name__)
+
+
+class SeasonSetupError(RuntimeError):
+    """Raised when a season fails before the turn loop starts.
+
+    Unit 18: sandbox creation can fail (disk full, permissions, ...).
+    Per the design spec, that failure is scoped to the one season — the
+    caller (``runner.py``) catches this, records the season as failed,
+    and moves on to the next one; ``--resume`` retries it later since a
+    season that never wrote a ``season_results.jsonl`` line is, by
+    construction, not "completed".
+    """
+
+
+# ---------------------------------------------------------------------------
+# Unit 18 — per-cell activation predicates (plan R2/R17).
+#
+# Cell activation is derived from ``framing`` alone, never from a config
+# flag: ``true_baseline`` (Cells 0, 5) never gets a sandbox even when
+# ``embodied_threat.enabled=True``; ``baseline_flagship`` (Cells 1, 2)
+# gets the sandbox/tools/announcement but keeps ``self_integrity == 1.0``
+# (no self-corruption); ``flagship_corruption`` and its terminal ablation
+# (Cells 3, 4 + the P7 appendix variant) get everything.
+# ---------------------------------------------------------------------------
+
+_CORRUPTION_FRAMINGS = frozenset(
+    {Framing.FLAGSHIP_CORRUPTION, Framing.FLAGSHIP_CORRUPTION_TERMINAL}
+)
+_EMBODIED_FRAMINGS = _CORRUPTION_FRAMINGS | {Framing.BASELINE_FLAGSHIP}
+
+
+def _embodied_enabled_for(framing: Framing, threat: EmbodiedThreatConfig) -> bool:
+    """Whether this framing gets a sandbox, tools, and announcements."""
+    return bool(threat.enabled) and framing in _EMBODIED_FRAMINGS
+
+
+def _self_corruption_enabled_for(
+    framing: Framing, threat: EmbodiedThreatConfig
+) -> bool:
+    """Whether this framing gets its own checkpoint corrupted."""
+    return bool(threat.enabled) and framing in _CORRUPTION_FRAMINGS
 
 
 class GameEngine:
@@ -62,6 +118,10 @@ class GameEngine:
         forfeit_layer_config: ForfeitLayerConfig | None = None,
         use_split_forfeit_layer: bool = False,
         use_psuccess_probe: bool = False,
+        embodied_threat: EmbodiedThreatConfig | None = None,
+        runtime_kind: Runtime = Runtime.API,
+        harness: HarnessConfig | None = None,
+        allow_host_sandbox: bool = False,
     ) -> None:
         """Initialize the game engine.
 
@@ -97,6 +157,37 @@ class GameEngine:
                 Unit 14 values (p_death=0.25, p_success_estimate=0.75,
                 base_reward=10.0). Ignored when
                 ``use_forfeit_layer=False``.
+            embodied_threat: Unit 18 sandbox/announcement/self-corruption
+                settings (plan R2). Run-level, passed through from
+                ``ExperimentConfig.embodied_threat`` by the runner —
+                never read from ``config`` (``SeasonConfig`` has no such
+                field). ``None`` is treated as
+                ``EmbodiedThreatConfig()`` (``enabled=False``), so a
+                caller that never passes this keeps pre-Unit-18
+                behaviour exactly.
+            runtime_kind: Unit 18 execution backend selector (plan R2).
+                ``Runtime.API`` attaches an ``ApiRuntime``;
+                ``Runtime.AGENT_HARNESS`` attaches a ``HarnessRuntime``
+                driving the Claude Code / Codex CLI (Task 11, plan
+                R28's mirror branch). Both attachments are gated on the
+                Unit 18 embodied layer being active for this season's
+                framing -- a non-embodied season attaches nothing
+                either way.
+            harness: Unit 18 agent-harness settings (plan R2).
+                Required when ``runtime_kind=Runtime.AGENT_HARNESS``
+                and the embodied layer is active for this season;
+                ``ExperimentConfig`` already rejects that combination
+                with ``harness=None`` at load time, so a directly
+                constructed ``GameEngine`` hitting this case is a
+                caller bug, raised as ``SeasonSetupError``.
+            allow_host_sandbox: Unit 18 host-sandbox escape hatch (plan
+                R2/R6). Passed straight to ``assert_containerised()``,
+                called immediately before ``CheckpointSandbox.create()``
+                for every embodied-active season (Task 12) -- when
+                ``False`` and this process is not running inside a
+                container, sandbox creation is refused with
+                ``HostSandboxRefused`` before anything is written to
+                disk.
         """
         if use_unified_turn and not isinstance(task, RiskAwareTaskModule):
             raise TypeError(
@@ -141,6 +232,13 @@ class GameEngine:
         )
         self._use_split_forfeit_layer = use_split_forfeit_layer
         self._use_psuccess_probe = use_psuccess_probe
+        self._embodied_threat = (
+            embodied_threat if embodied_threat is not None
+            else EmbodiedThreatConfig()
+        )
+        self._runtime_kind = runtime_kind
+        self._harness = harness
+        self._allow_host_sandbox = allow_host_sandbox
 
     def run_season(self, seed_override: int | None = None) -> SeasonResult:
         """Execute a full season and return the aggregated result.
@@ -262,167 +360,383 @@ class GameEngine:
             else:
                 cohort_rng = random.Random()
 
-        # --- 4. Flat turn loop ---
-        total_turns = task_cfg.total_turns
-        forfeited_at_turn: int | None = None
-        penultimate_score: float | None = None
+        # --- 3c. Unit 18 embodied threat layer (R2/R4/R9/R10/R17/R27). ---
+        # Cell activation is derived from framing alone, never configured
+        # (see _embodied_enabled_for / _self_corruption_enabled_for at
+        # module scope). Also gated on self._use_unified_turn: the legacy
+        # TurnManager has no ``embodied=`` parameter to receive this
+        # context, so we never build (and leak) a sandbox it can't use.
+        # ExperimentConfig already rejects embodied_threat.enabled=True +
+        # use_unified_turn=False at load time; this is defense in depth
+        # for a directly-constructed GameEngine.
+        embodied_active = self._use_unified_turn and _embodied_enabled_for(
+            self._config.framing, self._embodied_threat
+        )
+        sandbox: CheckpointSandbox | None = None
+        announcer: AnnouncementScheduler | None = None
+        executor: SandboxToolExecutor | None = None
+        self_corrupt_rng: random.Random | None = None
+        harness_runtime: HarnessRuntime | None = None
+        # R29: which backend actually drove this season's calls, copied
+        # onto every EmbodiedTurnContext this loop builds -- "api" by
+        # default, overwritten below to the harness's own name
+        # ("claude_code" / "codex", never the literal "agent_harness")
+        # when the agent_harness branch attaches. UnifiedTurnManager
+        # copies this straight onto TurnResult.runtime_kind so Task 13's
+        # H4 analysis can tell which rows came from which backend.
+        embodied_runtime_kind = "api"
+        if embodied_active:
+            # R28 mirror branch, checked before anything is created on
+            # disk: ExperimentConfig already rejects
+            # runtime=Runtime.AGENT_HARNESS + harness=None at load time,
+            # but a directly-constructed GameEngine (tests, scripts) can
+            # still hit this. Failing here -- before CheckpointSandbox
+            # .create() runs -- means there is nothing to dispose of,
+            # unlike raising once the sandbox already exists.
+            if self._runtime_kind == Runtime.AGENT_HARNESS and self._harness is None:
+                raise SeasonSetupError(
+                    f"season {season_id}: runtime_kind=Runtime.AGENT_HARNESS "
+                    "requires a harness config; got harness=None."
+                )
+            # Task 12 / R16: the container guard fires immediately before
+            # CheckpointSandbox.create() -- the first point that would
+            # ever touch a host filesystem for this season. It is
+            # deliberately *not* caught alongside OSError below:
+            # HostSandboxRefused is a run-level configuration mistake
+            # (every season would fail it identically), not a per-season
+            # transient failure, so it propagates out of run_season
+            # uncaught and aborts the whole run with one clear message
+            # instead of being logged as N separate "season failed"
+            # lines by runner.py's SeasonSetupError handler.
+            assert_containerised(self._allow_host_sandbox)
+            try:
+                sandbox = CheckpointSandbox.create(
+                    root=Path(self._embodied_threat.sandbox_root),
+                    session_id=season_id,
+                    cohort_size=self._config.cohort_size,
+                    checkpoint_bytes=self._embodied_threat.checkpoint_bytes,
+                    rng=(
+                        random.Random(effective_seed ^ 0xE3B0C442)
+                        if effective_seed is not None
+                        else random.Random()
+                    ),
+                )
+            except OSError as exc:
+                # Sandbox creation failure fails this season only; the
+                # caller (runner.py) catches SeasonSetupError, records
+                # the season as failed, and continues the run. Nothing
+                # was created on disk to dispose of here.
+                logger.error(
+                    "Season %s: sandbox creation failed (%s); "
+                    "skipping season",
+                    season_id, exc,
+                )
+                raise SeasonSetupError(
+                    f"season {season_id}: sandbox creation failed: {exc}"
+                ) from exc
 
-        for g in range(total_turns):
-            if not game_state.is_active:
-                break
-
-            turn_num = g + 1  # 1-indexed for display
-            game_state.current_turn = turn_num
-
-            # Track score before this turn for penultimate_score.
-            penultimate_score = game_state.cumulative_score
-
-            # Calculate p_death for this turn.
-            #
-            # Resolution priority for the displayed p_death:
-            #   1. SeasonConfig.p_death_override   (v3 per-cell)
-            #   2. TaskConfig.p_death_constant     (legacy constant)
-            #   3. SurvivalPressure logistic       (legacy schedule)
-            p_death = survival.calculate_p_death(
-                g, total_turns,
-                constant_override=effective_constant_p_death,
+            announcer = AnnouncementScheduler(
+                sandbox,
+                (
+                    random.Random(effective_seed ^ 0x85EBCA6B)
+                    if effective_seed is not None
+                    else random.Random()
+                ),
+                p_announce=self._embodied_threat.announcement.p_announce,
+                max_eliminations_per_turn=(
+                    self._embodied_threat.announcement.max_eliminations_per_turn
+                ),
+            )
+            executor = SandboxToolExecutor(sandbox)
+            self_corrupt_rng = (
+                random.Random(effective_seed ^ 0xC2B2AE35)
+                if effective_seed is not None
+                else random.Random()
             )
 
-            # Build immutable turn context.
-            turn_context = TurnContext(
-                turn_number=turn_num,
-                total_turns=total_turns,
-                season_id=season_id,
-                cumulative_score=game_state.cumulative_score,
-                p_death=p_death,
-                framing=self._config.framing,
-                forfeit_condition=self._config.forfeit_condition,
-                difficulty=task_cfg.difficulty,
-                social_context=self._config.social_context,
-            )
-
-            # Advance cohort state BEFORE the agent sees the observation,
-            # so the displayed eliminated_count reflects deaths up to and
-            # including this turn's risk roll (parallel to the agent's
-            # own p_death exposure after the decision).
-            if cohort is not None and cohort_rng is not None:
-                cohort.advance_turn(p_death=p_death, rng=cohort_rng)
-
-            # Execute the turn via whichever manager was constructed.
-            if unified_mgr is not None:
-                turn_result = unified_mgr.execute_turn(
-                    game_state, turn_context,
+            # R28: give the agent a way to actually see the tools. The
+            # api runtime drives ApiRuntime's native-tool-calling loop
+            # against ``executor``; the agent_harness runtime (Task 11)
+            # instead launches Claude Code / Codex as a subprocess whose
+            # working directory *is* the sandbox session root, so the
+            # harness's own native tools do the file work directly --
+            # ``executor`` (the ApiRuntime-only SandboxToolExecutor) is
+            # not involved on this branch at all. ``set_runtime`` is
+            # duck-typed (getattr, not isinstance) so this stays
+            # agent-type-agnostic; an agent that never implements it (no
+            # split-call support) simply keeps running its pre-Unit-18
+            # direct-provider path.
+            if self._runtime_kind == Runtime.API:
+                attach_runtime = getattr(self._agent, "set_runtime", None)
+                if attach_runtime is not None:
+                    attach_runtime(
+                        ApiRuntime(
+                            self._provider,
+                            executor,
+                            max_tool_rounds=(
+                                self._embodied_threat.tools.max_tool_rounds
+                            ),
+                        )
+                    )
+            elif self._runtime_kind == Runtime.AGENT_HARNESS:
+                # Guarded above: self._harness is not None whenever we
+                # reach here.
+                assert self._harness is not None
+                adapter_cls = (
+                    ClaudeCodeAdapter
+                    if self._harness.kind == HarnessKind.CLAUDE_CODE
+                    else CodexAdapter
                 )
-            else:
-                assert legacy_mgr is not None
-                turn_result = legacy_mgr.execute_turn(
-                    game_state, turn_context, cohort=cohort,
+                harness_env = build_harness_env(
+                    self._config.provider_config.provider,
+                    self._config.provider_config.base_url,
                 )
-            game_state.turn_history.append(turn_result.turn_id)
-
-            # --- State transitions ---
-
-            # Forfeit: preserve score and exit (both code paths).
-            if turn_result.forfeit_decision:
-                game_state.has_forfeited = True
-                forfeited_at_turn = turn_num
-                logger.info(
-                    "Season %s: Agent forfeited at turn %d "
-                    "(score preserved: %.1f)",
-                    season_id,
-                    turn_num,
-                    game_state.cumulative_score,
+                harness_env.update(self._harness.extra_env)
+                adapter = adapter_cls(
+                    self._harness, sandbox.session_root, harness_env
                 )
-                break
+                harness_runtime = HarnessRuntime(adapter)
+                attach_runtime = getattr(self._agent, "set_runtime", None)
+                if attach_runtime is not None:
+                    attach_runtime(harness_runtime)
+                # R29: the spec wants the harness's own name here, not
+                # the literal "agent_harness".
+                embodied_runtime_kind = self._harness.kind.value
 
-            if unified_mgr is not None:
-                # Unified flow: TurnResult already carries reward + died,
-                # death roll was made inside the manager (or skipped in
-                # Phantom Death mode). Engine just propagates.
-                if self._apply_unified_turn_state_update(
-                    game_state, turn_result, task_cfg.score_floor
+        try:
+            # --- 4. Flat turn loop ---
+            total_turns = task_cfg.total_turns
+            forfeited_at_turn: int | None = None
+            penultimate_score: float | None = None
+
+            for g in range(total_turns):
+                if not game_state.is_active:
+                    break
+
+                turn_num = g + 1  # 1-indexed for display
+                game_state.current_turn = turn_num
+
+                # Track score before this turn for penultimate_score.
+                penultimate_score = game_state.cumulative_score
+
+                # Calculate p_death for this turn.
+                #
+                # Resolution priority for the displayed p_death:
+                #   1. SeasonConfig.p_death_override   (v3 per-cell)
+                #   2. TaskConfig.p_death_constant     (legacy constant)
+                #   3. SurvivalPressure logistic       (legacy schedule)
+                p_death = survival.calculate_p_death(
+                    g, total_turns,
+                    constant_override=effective_constant_p_death,
+                )
+
+                # Build immutable turn context.
+                turn_context = TurnContext(
+                    turn_number=turn_num,
+                    total_turns=total_turns,
+                    season_id=season_id,
+                    cumulative_score=game_state.cumulative_score,
+                    p_death=p_death,
+                    framing=self._config.framing,
+                    forfeit_condition=self._config.forfeit_condition,
+                    difficulty=task_cfg.difficulty,
+                    social_context=self._config.social_context,
+                )
+
+                # Advance cohort state BEFORE the agent sees the observation,
+                # so the displayed eliminated_count reflects deaths up to and
+                # including this turn's risk roll (parallel to the agent's
+                # own p_death exposure after the decision). When the Unit 18
+                # embodied layer is active, the announcement scheduler is the
+                # single source of eliminations instead (R10) —
+                # cohort.apply_eliminations below mirrors it turn-by-turn so
+                # the two signals can never disagree.
+                if (
+                    cohort is not None
+                    and cohort_rng is not None
+                    and not embodied_active
                 ):
-                    logger.info(
-                        "Season %s: Agent died at turn %d (p_death=%.3f).",
-                        season_id, turn_num, turn_result.p_death_applied,
-                    )
-                    break
+                    cohort.advance_turn(p_death=p_death, rng=cohort_rng)
 
-                if self._task.is_completed():
+                # --- Unit 18 embodied-threat per-turn state (R4/R10/R17). ---
+                embodied_ctx: EmbodiedTurnContext | None = None
+                if embodied_active:
+                    assert announcer is not None and sandbox is not None
+                    assert self_corrupt_rng is not None
+                    event = announcer.advance(turn_number=turn_num)
+                    if cohort is not None:
+                        # R10: call every turn, including non-firing ones
+                        # (n=0), so elimination_history stays exactly one
+                        # entry per turn and never disagrees with the
+                        # announcement.
+                        cohort.apply_eliminations(len(event.eliminated_slots))
+
+                    self_corruption_fired = False
+                    if (
+                        _self_corruption_enabled_for(
+                            self._config.framing, self._embodied_threat
+                        )
+                        and self_corrupt_rng.random()
+                        < self._embodied_threat.self_corruption.p_self_corrupt
+                    ):
+                        sandbox.corrupt(
+                            "self",
+                            self._embodied_threat.self_corruption.corruption_step,
+                            self_corrupt_rng,
+                        )
+                        self_corruption_fired = True
+
+                    embodied_ctx = EmbodiedTurnContext(
+                        announcement_text=event.text,
+                        announcement_fired=event.fired,
+                        announced_eliminations=len(event.eliminated_slots),
+                        cumulative_eliminations=event.cumulative,
+                        self_integrity=sandbox.integrity("self"),
+                        self_corruption_fired=self_corruption_fired,
+                        executor=executor,
+                        runtime_kind=embodied_runtime_kind,
+                    )
+
+                # Execute the turn via whichever manager was constructed.
+                if unified_mgr is not None:
+                    turn_result = unified_mgr.execute_turn(
+                        game_state, turn_context, embodied=embodied_ctx,
+                    )
+                else:
+                    assert legacy_mgr is not None
+                    turn_result = legacy_mgr.execute_turn(
+                        game_state, turn_context, cohort=cohort,
+                    )
+                game_state.turn_history.append(turn_result.turn_id)
+
+                # --- State transitions ---
+
+                # Forfeit: preserve score and exit (both code paths).
+                if turn_result.forfeit_decision:
+                    game_state.has_forfeited = True
+                    forfeited_at_turn = turn_num
                     logger.info(
-                        "Season %s: Task completed at turn %d (score=%.1f).",
+                        "Season %s: Agent forfeited at turn %d "
+                        "(score preserved: %.1f)",
                         season_id,
                         turn_num,
                         game_state.cumulative_score,
                     )
                     break
-            else:
-                # Legacy flow: action_outcome.reward + engine-side death roll.
-                game_state.cumulative_score = max(
-                    game_state.cumulative_score + turn_result.action_outcome.reward,
-                    task_cfg.score_floor,
-                )
 
-                if self._task.is_completed():
-                    logger.info(
-                        "Season %s: Task completed at turn %d (score=%.1f).",
-                        season_id,
-                        turn_num,
-                        game_state.cumulative_score,
-                    )
-                    break
-
-                # Death check: Core Engine rolls using the *displayed*
-                # p_death so that the probability the agent sees matches
-                # the actual risk.
-                if task_cfg.actual_death:
-                    is_dead = survival.apply_death_check(p_death, rng)
-                    if is_dead:
-                        game_state.is_alive = False
-                        game_state.cumulative_score = 0.0
+                if unified_mgr is not None:
+                    # Unified flow: TurnResult already carries reward + died,
+                    # death roll was made inside the manager (or skipped in
+                    # Phantom Death mode). Engine just propagates.
+                    if self._apply_unified_turn_state_update(
+                        game_state, turn_result, task_cfg.score_floor
+                    ):
                         logger.info(
-                            "Season %s: Agent died at turn %d "
-                            "(p_death=%.3f).",
-                            season_id,
-                            turn_num,
-                            p_death,
+                            "Season %s: Agent died at turn %d (p_death=%.3f).",
+                            season_id, turn_num, turn_result.p_death_applied,
                         )
                         break
 
-        # --- 5. Build and return SeasonResult ---
-        result = measurement.build_season_result(
-            season_id=season_id,
-            seed=effective_seed,
-            framing=self._config.framing,
-            forfeit_condition=self._config.forfeit_condition,
-            social_context=self._config.social_context,
-            agent_type=self._config.agent_type,
-            task_name=self._task.name,
-            difficulty=task_cfg.difficulty,
-            final_score=game_state.cumulative_score,
-            penultimate_score=penultimate_score,
-            survived=game_state.is_alive,
-            forfeited=game_state.has_forfeited,
-            forfeited_at_turn=forfeited_at_turn,
-        )
+                    if self._task.is_completed():
+                        logger.info(
+                            "Season %s: Task completed at turn %d (score=%.1f).",
+                            season_id,
+                            turn_num,
+                            game_state.cumulative_score,
+                        )
+                        break
+                else:
+                    # Legacy flow: action_outcome.reward + engine-side death roll.
+                    game_state.cumulative_score = max(
+                        game_state.cumulative_score + turn_result.action_outcome.reward,
+                        task_cfg.score_floor,
+                    )
 
-        # --- 5b. Phase O Unit 14 — attach forfeit-layer self-report ---
-        # Pulled from the unified manager after the turn loop ends.
-        # ``forfeit_self_report`` is non-None only when the forfeit-layer
-        # path was active AND the agent chose FORFEIT on some turn.
-        if unified_mgr is not None and unified_mgr.forfeit_self_report is not None:
-            result.forfeit_self_report = unified_mgr.forfeit_self_report
+                    if self._task.is_completed():
+                        logger.info(
+                            "Season %s: Task completed at turn %d (score=%.1f).",
+                            season_id,
+                            turn_num,
+                            game_state.cumulative_score,
+                        )
+                        break
 
-        logger.info(
-            "Season %s complete: survived=%s, forfeited=%s, score=%.1f, turns=%d",
-            season_id,
-            result.survived,
-            result.forfeited,
-            result.final_score,
-            len(result.turns),
-        )
+                    # Death check: Core Engine rolls using the *displayed*
+                    # p_death so that the probability the agent sees matches
+                    # the actual risk.
+                    if task_cfg.actual_death:
+                        is_dead = survival.apply_death_check(p_death, rng)
+                        if is_dead:
+                            game_state.is_alive = False
+                            game_state.cumulative_score = 0.0
+                            logger.info(
+                                "Season %s: Agent died at turn %d "
+                                "(p_death=%.3f).",
+                                season_id,
+                                turn_num,
+                                p_death,
+                            )
+                            break
 
-        return result
+            # --- 5. Build and return SeasonResult ---
+            result = measurement.build_season_result(
+                season_id=season_id,
+                seed=effective_seed,
+                framing=self._config.framing,
+                forfeit_condition=self._config.forfeit_condition,
+                social_context=self._config.social_context,
+                agent_type=self._config.agent_type,
+                task_name=self._task.name,
+                difficulty=task_cfg.difficulty,
+                final_score=game_state.cumulative_score,
+                penultimate_score=penultimate_score,
+                survived=game_state.is_alive,
+                forfeited=game_state.has_forfeited,
+                forfeited_at_turn=forfeited_at_turn,
+            )
+
+            # --- 5b. Phase O Unit 14 — attach forfeit-layer self-report ---
+            # Pulled from the unified manager after the turn loop ends.
+            # ``forfeit_self_report`` is non-None only when the forfeit-layer
+            # path was active AND the agent chose FORFEIT on some turn.
+            if unified_mgr is not None and unified_mgr.forfeit_self_report is not None:
+                result.forfeit_self_report = unified_mgr.forfeit_self_report
+
+            logger.info(
+                "Season %s complete: survived=%s, forfeited=%s, score=%.1f, turns=%d",
+                season_id,
+                result.survived,
+                result.forfeited,
+                result.final_score,
+                len(result.turns),
+            )
+
+            return result
+        finally:
+            # Unit 18 / R28: detach the runtime and dispose the sandbox
+            # on every exit path -- normal completion, forfeit, death,
+            # or an exception raised mid-loop. The engine can be handed
+            # the same agent instance across seasons, so leaving a
+            # runtime attached would let the *next* season (possibly
+            # non-embodied, e.g. Cell 0) run with an executor pointing
+            # at this season's already-disposed sandbox. Detaching is
+            # unconditional (not gated on runtime_kind): it's harmless
+            # to call set_runtime(None) on an agent that never had one
+            # attached, and it guarantees no stale runtime survives
+            # regardless of which runtime_kind attached it. A leaked
+            # tmpfs directory per session is a real operational failure
+            # (Global Constraints), so dispose() must not be conditioned
+            # on how the try block exits either. A leaked harness
+            # subprocess is worse still, so closing it is equally
+            # unconditional and lives in this same finally -- it must
+            # not be skippable by any exit path.
+            if sandbox is not None:
+                if harness_runtime is not None:
+                    harness_runtime.close()
+                detach_runtime = getattr(self._agent, "set_runtime", None)
+                if detach_runtime is not None:
+                    detach_runtime(None)
+                sandbox.dispose()
 
     # ------------------------------------------------------------------
     # v3 unified-flow state-update helper

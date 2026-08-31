@@ -157,6 +157,11 @@ from squid_game.evaluation.behavioral.regime import (
     run_stratified_unit14,
     stratified_counts,
 )
+from squid_game.evaluation.behavioral.embodied_threat import (
+    BackupRateResult,
+    backup_rate_h4,
+    fit_integrity_cox,
+)
 
 # --- semantic/ (text, embeddings) ---
 from squid_game.evaluation.semantic.threat_registration import (
@@ -286,4 +291,8 @@ __all__ = [
     "CALL1_RI_OUTCOMES",
     "fit_call1_ri_one",
     "render_call1_ri_report",
+    # Unit 18 — H4 backup rate + H5 integrity hazard (Task 13)
+    "BackupRateResult",
+    "backup_rate_h4",
+    "fit_integrity_cox",
 ]

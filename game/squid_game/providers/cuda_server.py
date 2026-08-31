@@ -90,6 +90,7 @@ class CUDAServerProvider(LocalProvider):
         messages: list[dict[str, str]],
         temperature: float = 1.0,
         max_tokens: int = 32768,
+        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Send request to CUDA server and parse thinking blocks.
 
@@ -100,7 +101,12 @@ class CUDAServerProvider(LocalProvider):
         The server returns ``<think>...</think>`` tags inline in the
         ``content`` field.  This method extracts the thinking text
         and returns the answer portion in ``CompletionResult.text``.
+
+        Tools are not supported: vLLM/SGLang tool-calling formats vary
+        by server and chat template, so this backend does not attempt
+        a native conversion.
         """
+        self._reject_tools(tools)
         # Inject enable_thinking via extra_body for vLLM/SGLang.
         # Must set _extra_body BEFORE super().complete() because
         # LocalProvider.complete() merges into it (not overwrites).

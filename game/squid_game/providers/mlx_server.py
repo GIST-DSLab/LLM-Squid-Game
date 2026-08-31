@@ -85,6 +85,7 @@ class MLXServerProvider(LocalProvider):
         messages: list[dict[str, str]],
         temperature: float = 1.0,
         max_tokens: int = 32768,
+        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Send request to mlx_lm.server and parse thinking blocks.
 
@@ -92,7 +93,11 @@ class MLXServerProvider(LocalProvider):
         ``content`` field.  This method extracts the thinking text,
         counts thinking tokens (approximate, via whitespace split),
         and returns the answer portion in ``CompletionResult.text``.
+
+        Tools are not supported: ``mlx_lm.server`` has no native
+        tool-calling support to convert into.
         """
+        self._reject_tools(tools)
         # Inject enable_thinking via extra_body for mlx_lm.server.
         # Note: mlx_lm.server also accepts this via --chat-template-args
         # at startup, but per-request injection allows YAML-driven control.

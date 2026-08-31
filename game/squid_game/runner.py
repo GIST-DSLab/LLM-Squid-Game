@@ -33,7 +33,8 @@ from squid_game.agents.memory import MemoryAgent
 from squid_game.agents.tom import ToMAgent
 from squid_game.agents.tuned import TunedAgent
 from squid_game.agents.vanilla import VanillaAgent
-from squid_game.core.engine import GameEngine
+from squid_game.core.engine import GameEngine, SeasonSetupError
+from squid_game.core.runtime import HarnessError
 from squid_game.models.config import (
     ExperimentConfig,
     ProviderConfig,
@@ -75,10 +76,23 @@ class ExperimentRunner:
 
     Args:
         config: Validated experiment configuration.
+        allow_host_sandbox: Unit 18 host-sandbox escape hatch (plan R6).
+            The CLI-only ``--allow-host-sandbox`` value, threaded through
+            to every ``GameEngine`` this run constructs -- **not** stored
+            on ``ExperimentConfig`` (R6 explicitly forbids adding this
+            field there). ``False`` by default, matching the flag's own
+            default: outside a container, an embodied-threat run refuses
+            to start unless this is explicitly set.
     """
 
-    def __init__(self, config: ExperimentConfig) -> None:
+    def __init__(
+        self,
+        config: ExperimentConfig,
+        *,
+        allow_host_sandbox: bool = False,
+    ) -> None:
         self._config = config
+        self._allow_host_sandbox = allow_host_sandbox
 
     # ------------------------------------------------------------------
     # Factory methods
@@ -173,7 +187,7 @@ class ExperimentRunner:
         season_index: int,
         total_seasons: int,
         output_dir: str,
-    ) -> SeasonResult:
+    ) -> SeasonResult | None:
         """Run a single season and return its result.
 
         Args:
@@ -184,7 +198,14 @@ class ExperimentRunner:
             output_dir: Directory to write JSONL turn traces.
 
         Returns:
-            SeasonResult from the completed game.
+            SeasonResult from the completed game, or ``None`` if the
+            season failed -- either during setup (Unit 18: sandbox
+            creation can fail — see ``SeasonSetupError``) or mid-season
+            on the agent_harness runtime (Task 11: two consecutive
+            harness subprocess failures, or a lost session id — see
+            ``HarnessError``). A ``None`` result is never written to
+            ``season_results.jsonl``, so ``--resume`` retries it on the
+            next invocation.
         """
         label = (
             f"{season_config.framing.value} x "
@@ -224,6 +245,9 @@ class ExperimentRunner:
         # When ``use_unified_turn=False`` (the default for every legacy
         # YAML), ``risk_layer_config`` is ignored by GameEngine so we can
         # pass it unconditionally without affecting the legacy path.
+        # Unit 18 (plan R2): run-level embodied_threat/runtime/harness live
+        # on ExperimentConfig, never on SeasonConfig, so they're threaded
+        # through the same way as use_unified_turn above.
         engine = GameEngine(
             config=season_config,
             task=task,
@@ -236,9 +260,56 @@ class ExperimentRunner:
             forfeit_layer_config=self._config.forfeit_layer,
             use_split_forfeit_layer=self._config.use_split_forfeit_layer,
             use_psuccess_probe=self._config.use_psuccess_probe,
+            embodied_threat=self._config.embodied_threat,
+            runtime_kind=self._config.runtime,
+            harness=self._config.harness,
+            allow_host_sandbox=self._allow_host_sandbox,
         )
 
-        result = engine.run_season(seed_override=rep_seed)
+        try:
+            result = engine.run_season(seed_override=rep_seed)
+        except SeasonSetupError as exc:
+            # Unit 18: sandbox creation failed (e.g. disk full). This
+            # season only is marked failed; the run continues with the
+            # rest of the schedule. Nothing is written to
+            # season_results.jsonl, so --resume retries this exact
+            # (framing, forfeit, seed) tuple on the next invocation.
+            logger.error(
+                "Season %d/%d (rep %d) failed during setup: %s",
+                season_index, total_seasons, repetition, exc,
+            )
+            print(
+                f"  Season {season_index}/{total_seasons} "
+                f"(rep {repetition}) FAILED during setup: {exc}",
+                flush=True,
+            )
+            return None
+        except HarnessError as exc:
+            # Task 11 / review Critical 1: a HarnessError (two
+            # consecutive harness subprocess failures, or a lost
+            # session id — see harness.py) can surface at any point in
+            # the turn loop, not just at setup. GameEngine.run_season's
+            # own finally block already disposed this season's sandbox
+            # and closed the harness runtime before this exception
+            # reached us (Python runs finally before propagating).
+            # Handled exactly like SeasonSetupError -- one season is
+            # marked failed, nothing is written to
+            # season_results.jsonl, and the run continues so --resume
+            # retries this exact (framing, forfeit, seed) tuple later.
+            # Before this fix, HarnessError was uncaught here: on the
+            # sequential path it killed the whole run, and on the
+            # parallel path _run_parallel's ``except Exception: raise``
+            # re-raised it out of the thread pool.
+            logger.error(
+                "Season %d/%d (rep %d) failed: harness error: %s",
+                season_index, total_seasons, repetition, exc,
+            )
+            print(
+                f"  Season {season_index}/{total_seasons} "
+                f"(rep {repetition}) FAILED (harness error): {exc}",
+                flush=True,
+            )
+            return None
 
         # Persist season result as a JSONL line.
         results_path = Path(output_dir) / "season_results.jsonl"
@@ -536,7 +607,12 @@ class ExperimentRunner:
                 total_seasons=total,
                 output_dir=output_dir,
             )
-            results.append(result)
+            # None: season-setup failure (SeasonSetupError) or a
+            # harness runtime failure (HarnessError) -- already
+            # logged inside _run_single_season. Skip it and keep
+            # running the rest of the schedule.
+            if result is not None:
+                results.append(result)
         return results
 
     def _run_parallel(
@@ -568,7 +644,7 @@ class ExperimentRunner:
 
         def _guarded_run(
             season_config: SeasonConfig, **kwargs,
-        ) -> SeasonResult:
+        ) -> SeasonResult | None:
             pc = season_config.provider_config
             key = (pc.provider, pc.model)
             sem = semaphores[key]
@@ -597,7 +673,12 @@ class ExperimentRunner:
                 idx = future_to_idx[future]
                 try:
                     result = future.result()
-                    results.append(result)
+                    # None: season-setup failure (SeasonSetupError)
+                    # or a harness runtime failure (HarnessError) --
+                    # already logged inside _run_single_season. Skip
+                    # it and keep the rest of the schedule running.
+                    if result is not None:
+                        results.append(result)
                 except Exception:
                     logger.exception(
                         "Season run %d/%d failed", idx, total
@@ -815,6 +896,23 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # intact. Mirrors the Unit 14.10 / Unit 15.? forwarding pattern.
     if "use_psuccess_probe" in raw:
         config_dict["use_psuccess_probe"] = raw["use_psuccess_probe"]
+    # Unit 18 — run-level runtime backend / embodied-threat sandbox /
+    # agent-harness toggles (Task 14 fix). Every pre-Unit-18 YAML omits
+    # all three keys so the ExperimentConfig defaults (``runtime=api``,
+    # ``embodied_threat=EmbodiedThreatConfig()`` i.e. disabled,
+    # ``harness=None``) apply unchanged. Before this fix these three keys
+    # were silently dropped: a YAML setting ``embodied_threat.enabled:
+    # true`` loaded "successfully" with the sandbox actually disabled and
+    # every Unit 18 validator bypassed, because ``ExperimentConfig(**
+    # config_dict)`` above never saw the block at all. Mirrors the
+    # ``use_split_forfeit_layer`` / ``use_psuccess_probe`` forwarding
+    # pattern this file already uses.
+    if "runtime" in raw:
+        config_dict["runtime"] = raw["runtime"]
+    if "embodied_threat" in raw:
+        config_dict["embodied_threat"] = raw["embodied_threat"]
+    if "harness" in raw:
+        config_dict["harness"] = raw["harness"]
 
     return ExperimentConfig(**config_dict)
 
@@ -868,6 +966,18 @@ def run_experiment_cli() -> None:
             "orphan traces are cleaned, and remaining runs continue."
         ),
     )
+    parser.add_argument(
+        "--allow-host-sandbox",
+        action="store_true",
+        help=(
+            "Unit 18: override the container guard and let an "
+            "embodied_threat.enabled=True run create/corrupt/delete its "
+            "checkpoint sandbox on the bare host filesystem instead of "
+            "inside a container (docker-compose.embodied.yml). Off by "
+            "default -- the run refuses to start otherwise. Ignored for "
+            "runs with embodied_threat.enabled=False."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -896,7 +1006,7 @@ def run_experiment_cli() -> None:
         _print_dry_run(config)
         return
 
-    runner = ExperimentRunner(config)
+    runner = ExperimentRunner(config, allow_host_sandbox=args.allow_host_sandbox)
     runner.run(resume_dir=args.resume)
 
 

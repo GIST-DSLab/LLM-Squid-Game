@@ -17,6 +17,19 @@ scripts/
 tests/
 notebooks/
 
+# Dockerfile.embodied (the standalone experiment-runner image — R5 of the
+# Unit 18 plan amendments) needs configs/ and scripts/ in its build
+# context; the root Dockerfile above does not. Docker evaluates
+# .dockerignore rules in order, so these negations must come AFTER the
+# excludes they undo — a negation before its exclude has no effect. The
+# root Web Arena image's build context grows by these paths as a result,
+# but that only costs build-context transfer time (unused COPY sources
+# for that Dockerfile); the image contents and Web Arena's runtime
+# behaviour are unchanged. (main.py needs no negation: nothing above
+# excludes it — it was never matched by any rule in this file.)
+!configs/
+!scripts/
+
 # The static frontend is deployed to Pages, not baked into the API image.
 # web/squid_arena/ (the backend) must stay in the context -- see Dockerfile.
 web/frontend/

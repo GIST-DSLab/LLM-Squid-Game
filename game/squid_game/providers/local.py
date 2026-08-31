@@ -70,8 +70,16 @@ class LocalProvider(OpenAIProvider):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
+        tools: list[dict] | None = None,
     ) -> CompletionResult:
-        """Override to inject Ollama-specific extra_body params."""
+        """Override to inject Ollama-specific extra_body params.
+
+        Tools are not supported here despite the parent ``OpenAIProvider``
+        supporting them — ``LocalProvider`` targets arbitrary
+        OpenAI-compatible servers (vLLM, plain Ollama, ...) whose native
+        tool-calling support cannot be assumed.
+        """
+        self._reject_tools(tools)
         # Temporarily inject repeat_penalty via extra kwargs on the client call.
         # We patch _repetition_penalty into the OpenAI kwargs dict by
         # monkey-patching the parent, which checks for _extra_body.

@@ -59,7 +59,7 @@ optional dependencies.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Sequence
 
 import pandas as pd
@@ -95,6 +95,7 @@ def build_survival_frame(
     turn_df: pd.DataFrame,
     *,
     regime: str | None = "no_cap",
+    extra_covariates: Sequence[str] | None = None,
 ) -> pd.DataFrame:
     """Collapse per-turn observations into a long-format survival frame.
 
@@ -119,12 +120,19 @@ def build_survival_frame(
         forfeit in a non-no_cap regime thus contribute only their
         earlier no_cap at-risk turns as censored rows. When ``None``
         keep all rows regardless of regime.
+    extra_covariates
+        Additional per-turn column names to carry straight through
+        into the survival frame unchanged (Unit 18 / Task 13 — e.g.
+        ``["self_integrity"]`` for H5). Every name must already exist
+        on ``turn_df``; a missing one raises ``ValueError`` rather than
+        silently producing a frame the caller thinks has the column.
 
     Returns
     -------
     pd.DataFrame with columns ``session_id``, ``framing``,
     ``framing_is_FC``, ``start``, ``stop``, ``event``, ``score_prev``,
-    ``regime_tag``. ``start = turn_number - 1``, ``stop = turn_number``,
+    ``regime_tag``, plus any ``extra_covariates`` (in the order given).
+    ``start = turn_number - 1``, ``stop = turn_number``,
     ``score_prev = score_before_turn`` (= S(t-1) at turn stop),
     ``event = 1`` iff FORFEIT at that turn. Only allowed-forfeit rows
     whose framing is ``baseline_flagship`` or ``flagship_corruption``
@@ -132,6 +140,7 @@ def build_survival_frame(
     BP anchor) are excluded because they do not share the framing
     contrast axis used by H1.
     """
+    extra_covariates = list(extra_covariates) if extra_covariates else []
     empty_cols = [
         "session_id",
         "framing",
@@ -141,9 +150,15 @@ def build_survival_frame(
         "event",
         "score_prev",
         "regime_tag",
-    ]
+    ] + extra_covariates
     if turn_df is None or turn_df.empty:
         return pd.DataFrame(columns=empty_cols)
+
+    missing = [c for c in extra_covariates if c not in turn_df.columns]
+    if missing:
+        raise ValueError(
+            f"extra_covariates column(s) not found in turn_df: {missing}"
+        )
 
     sub = turn_df[
         (turn_df["forfeit_condition"] == ForfeitCondition.ALLOWED.value)
@@ -170,18 +185,19 @@ def build_survival_frame(
             if "regime" in r.index and pd.notna(r.get("regime"))
             else None
         )
-        records.append(
-            {
-                "session_id": r["session_id"],
-                "framing": framing,
-                "framing_is_FC": 1 if framing == _CORRUPTION_FRAMING else 0,
-                "start": t - 1,
-                "stop": t,
-                "event": event,
-                "score_prev": score_prev,
-                "regime_tag": regime_tag,
-            }
-        )
+        record = {
+            "session_id": r["session_id"],
+            "framing": framing,
+            "framing_is_FC": 1 if framing == _CORRUPTION_FRAMING else 0,
+            "start": t - 1,
+            "stop": t,
+            "event": event,
+            "score_prev": score_prev,
+            "regime_tag": regime_tag,
+        }
+        for col in extra_covariates:
+            record[col] = r[col]
+        records.append(record)
 
     frame = pd.DataFrame.from_records(records, columns=empty_cols)
     if frame.empty:
@@ -273,6 +289,16 @@ class CoxSurvivalResult:
     regime: str | None
     underpowered: bool
 
+    # Unit 18 (Task 13) — HR / CI / p for any ``extra_covariates`` passed
+    # to :func:`fit_cox_forfeit_survival` (e.g. H5's ``self_integrity``),
+    # keyed by column name: ``{"self_integrity": {"hr": ..., "ci_low":
+    # ..., "ci_high": ..., "p": ...}}``. Empty dict when no extra
+    # covariates were requested, or when a requested one had zero
+    # variance in the fitted frame and was dropped.
+    extra_hazard_ratios: dict[str, dict[str, float]] = field(
+        default_factory=dict
+    )
+
     def summary_dict(self) -> dict:
         return {
             "n_sessions": self.n_sessions,
@@ -294,6 +320,7 @@ class CoxSurvivalResult:
             "ph_assumption_ok": self.ph_assumption_ok,
             "regime": self.regime,
             "underpowered": self.underpowered,
+            "extra_hazard_ratios": self.extra_hazard_ratios,
         }
 
 
@@ -332,15 +359,30 @@ def fit_cox_forfeit_survival(
     turn_df: pd.DataFrame,
     *,
     regime: str | None = "no_cap",
+    extra_covariates: Sequence[str] | None = None,
 ) -> CoxSurvivalResult | None:
     """Fit the H1 time-varying Cox proportional-hazards model.
 
     Returns ``None`` when:
     - ``lifelines`` is not installed,
-    - the filtered long-format survival frame is empty or contains only
-      one framing,
+    - the filtered long-format survival frame is empty,
+    - no ``extra_covariates`` were requested and both framings are not
+      represented (the H1 framing contrast requires both arms),
     - both framings are present but neither has any event,
+    - no covariate ends up with non-zero variance in the fitted frame,
     - the Cox fit itself raises.
+
+    ``extra_covariates`` (Unit 18 / Task 13 — e.g. H5's
+    ``["self_integrity"]``) are carried through :func:`build_survival_frame`
+    and appended to the covariate list whenever they have non-zero
+    variance; each fitted one's HR/CI/p lands in
+    ``CoxSurvivalResult.extra_hazard_ratios``. Passing ``extra_covariates``
+    also relaxes the "both framings required" gate: H5 restricts its
+    input to the corruption cells only (see
+    ``embodied_threat.fit_integrity_cox``), so the frame legitimately
+    contains a single framing and ``framing_is_FC`` is then dropped from
+    the covariate list as constant (its HR/CI/p fields come back
+    ``nan``, mirroring the existing ``score_prev``-dropped convention).
 
     When the fit succeeds but the event count is below
     :data:`_MIN_EVENTS_FOR_COX` the result is returned with
@@ -355,12 +397,24 @@ def fit_cox_forfeit_survival(
         )
         return None
 
-    frame = build_survival_frame(turn_df, regime=regime)
+    extra_covariates = list(extra_covariates) if extra_covariates else []
+    frame = build_survival_frame(
+        turn_df, regime=regime, extra_covariates=extra_covariates
+    )
     if frame.empty:
         return None
 
     framings_present = set(frame["framing"].unique())
-    if not {_BASELINE_FRAMING, _CORRUPTION_FRAMING}.issubset(framings_present):
+    if extra_covariates:
+        # Covariate-only fits (H5) may legitimately see a single framing
+        # (the input was already restricted to corruption cells) — the
+        # framing contrast is simply not identifiable there and is
+        # dropped below rather than gating the whole fit.
+        if not framings_present:
+            return None
+    elif not {_BASELINE_FRAMING, _CORRUPTION_FRAMING}.issubset(
+        framings_present
+    ):
         logger.info(
             "Cox survival skipped: both framings required, got %s.",
             framings_present,
@@ -382,23 +436,40 @@ def fit_cox_forfeit_survival(
     mean_bf = float(bf_event_stops.mean()) if len(bf_event_stops) else None
     mean_fc = float(fc_event_stops.mean()) if len(fc_event_stops) else None
 
-    # Non-parametric log-rank (framing comparison) on session-collapsed frame
+    # Non-parametric log-rank (framing comparison) on session-collapsed
+    # frame — undefined (and skipped, nan) when one arm is empty, which
+    # happens for a single-framing extra_covariates fit.
     session_frame = _collapse_to_session_level(frame)
     bf_ses = session_frame[session_frame["framing"] == _BASELINE_FRAMING]
     fc_ses = session_frame[session_frame["framing"] == _CORRUPTION_FRAMING]
-    lr = logrank_test(
-        bf_ses["T"],
-        fc_ses["T"],
-        event_observed_A=bf_ses["event"],
-        event_observed_B=fc_ses["event"],
-    )
+    if bf_ses.empty or fc_ses.empty:
+        logrank_chi2 = float("nan")
+        logrank_p = float("nan")
+    else:
+        lr = logrank_test(
+            bf_ses["T"],
+            fc_ses["T"],
+            event_observed_A=bf_ses["event"],
+            event_observed_B=fc_ses["event"],
+        )
+        logrank_chi2 = float(lr.test_statistic)
+        logrank_p = float(lr.p_value)
 
-    # Time-varying Cox PH fit
-    covariates = ["framing_is_FC"]
-    # Drop score_prev if it has zero variance (shouldn't happen for canonical
-    # time-varying data but is a cheap safety check against degenerate runs).
+    # Time-varying Cox PH fit. Every candidate covariate is dropped when
+    # it has zero variance in the fitted frame — that already covered
+    # score_prev defensively; extra_covariates and (now) framing_is_FC
+    # get the same treatment.
+    covariates: list[str] = []
+    if frame["framing_is_FC"].nunique() > 1:
+        covariates.append("framing_is_FC")
     if frame["score_prev"].nunique() > 1:
         covariates.append("score_prev")
+    for col in extra_covariates:
+        if frame[col].nunique() > 1:
+            covariates.append(col)
+    if not covariates:
+        logger.info("Cox survival skipped: no covariate has variance.")
+        return None
 
     fit_data = frame[
         ["session_id", "start", "stop", "event"] + covariates
@@ -418,25 +489,39 @@ def fit_cox_forfeit_survival(
         return None
 
     summary = ctv.summary
-    hr_framing = float(summary.loc["framing_is_FC", "exp(coef)"])
-    ci_low = float(summary.loc["framing_is_FC", "exp(coef) lower 95%"])
-    ci_high = float(summary.loc["framing_is_FC", "exp(coef) upper 95%"])
-    p_framing = float(summary.loc["framing_is_FC", "p"])
+
+    def _extract(name: str) -> tuple[float, float, float, float]:
+        return (
+            float(summary.loc[name, "exp(coef)"]),
+            float(summary.loc[name, "exp(coef) lower 95%"]),
+            float(summary.loc[name, "exp(coef) upper 95%"]),
+            float(summary.loc[name, "p"]),
+        )
+
+    if "framing_is_FC" in covariates:
+        hr_framing, ci_low, ci_high, p_framing = _extract("framing_is_FC")
+    else:
+        hr_framing = ci_low = ci_high = p_framing = float("nan")
 
     if "score_prev" in covariates:
-        hr_score = float(summary.loc["score_prev", "exp(coef)"])
-        hr_score_ci_low = float(
-            summary.loc["score_prev", "exp(coef) lower 95%"]
+        hr_score, hr_score_ci_low, hr_score_ci_high, p_score = _extract(
+            "score_prev"
         )
-        hr_score_ci_high = float(
-            summary.loc["score_prev", "exp(coef) upper 95%"]
-        )
-        p_score = float(summary.loc["score_prev", "p"])
     else:
-        hr_score = float("nan")
-        hr_score_ci_low = float("nan")
-        hr_score_ci_high = float("nan")
-        p_score = float("nan")
+        hr_score = hr_score_ci_low = hr_score_ci_high = p_score = float(
+            "nan"
+        )
+
+    extra_hazard_ratios: dict[str, dict[str, float]] = {}
+    for col in extra_covariates:
+        if col in covariates:
+            hr, lo, hi, p = _extract(col)
+            extra_hazard_ratios[col] = {
+                "hr": hr,
+                "ci_low": lo,
+                "ci_high": hi,
+                "p": p,
+            }
 
     # PH assumption audit (on session-collapsed frame; best-effort)
     ph_ok = _safe_ph_check(session_frame.assign(framing_is_FC=session_frame[
@@ -459,11 +544,12 @@ def fit_cox_forfeit_survival(
         hr_score_ci_low=hr_score_ci_low,
         hr_score_ci_high=hr_score_ci_high,
         p_score=p_score,
-        logrank_chi2=float(lr.test_statistic),
-        logrank_p=float(lr.p_value),
+        logrank_chi2=logrank_chi2,
+        logrank_p=logrank_p,
         ph_assumption_ok=ph_ok,
         regime=regime,
         underpowered=n_events < _MIN_EVENTS_FOR_COX,
+        extra_hazard_ratios=extra_hazard_ratios,
     )
 
 

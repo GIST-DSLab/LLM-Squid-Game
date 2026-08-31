@@ -49,6 +49,7 @@ from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
 from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
+from squid_game.core.runtime import EmbodiedTurnContext
 from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.core.turn_conditions import (
     is_baseline_flagship_framing,
@@ -80,6 +81,8 @@ from squid_game.models.forfeit_choice import (
 )
 from squid_game.models.results import (
     ReasoningInvestment,
+    RiRound,
+    ToolCallRecord,
     TurnResult,
 )
 from squid_game.models.risk_choice import (
@@ -216,6 +219,8 @@ class UnifiedTurnManager:
         self,
         game_state: GameState,
         turn_context: TurnContext,
+        *,
+        embodied: EmbodiedTurnContext | None = None,
     ) -> TurnResult:
         """Run one unified turn and return the resulting TurnResult.
 
@@ -231,6 +236,13 @@ class UnifiedTurnManager:
             game_state: Mutable game state (read-only here).
             turn_context: Immutable per-turn context (turn number,
                 framing, score-at-start-of-turn, etc.).
+            embodied: Unit 18 plan R4 — optional per-turn embodied-threat
+                state (announcement text, self-integrity, sandbox tool
+                executor). Only consulted on the split-forfeit-layer path
+                (:meth:`_execute_turn_split_forfeit_layer`); every other
+                path ignores it. ``None`` (the default) leaves every
+                Unit 18 ``TurnResult`` field at its default, unchanged
+                from pre-Unit-18 behaviour.
 
         Returns:
             A populated ``TurnResult`` already appended to the
@@ -239,7 +251,7 @@ class UnifiedTurnManager:
         if self._forfeit_layer is not None:
             if self._use_split_forfeit_layer:
                 return self._execute_turn_split_forfeit_layer(
-                    game_state, turn_context
+                    game_state, turn_context, embodied=embodied
                 )
             return self._execute_turn_forfeit_layer(game_state, turn_context)
         # ------------------------------------------------------------------
@@ -681,6 +693,8 @@ class UnifiedTurnManager:
         self,
         game_state: GameState,
         turn_context: TurnContext,
+        *,
+        embodied: EmbodiedTurnContext | None = None,
     ) -> TurnResult:
         """Phase O Unit 15 — split-call forfeit-layer dispatch path.
 
@@ -700,9 +714,30 @@ class UnifiedTurnManager:
         that produces an auto-CONTINUE outcome, keeping backward
         comparability with Unit 14 Cell 0. The split-specific fields
         (``ri_forfeit`` etc.) stay ``None`` on that branch.
+
+        Unit 18 plan R1/R4: when ``embodied`` is supplied, the agent may
+        have been constructed with a runtime (``VanillaAgent(runtime=...)``)
+        that drives a bounded tool loop per call; this method never talks
+        to that runtime directly. Instead it reads
+        ``getattr(self._agent, "last_call_outcome", None)`` immediately
+        after each ``respond_*`` call — the same pattern already used for
+        ``last_completion`` — to collect per-round RI + tool-call data
+        into the Unit 18 ``TurnResult`` fields. ``embodied.announcement_text``
+        (R4), when set, is prepended to Call 2's body only; Call 1 and
+        Call 1.5 never see it. ``embodied=None`` (the default) leaves
+        every Unit 18 field at its ``TurnResult`` default.
         """
         assert self._forfeit_layer is not None  # dispatcher guarantee
         assert self._use_split_forfeit_layer  # dispatcher guarantee
+
+        # Unit 18 R18: snapshot the executor's note count so we can slice
+        # off only the notes written during *this* turn once all calls
+        # have run (the executor persists for the whole season).
+        notes_before = (
+            len(embodied.executor.notes)
+            if embodied is not None and embodied.executor is not None
+            else 0
+        )
 
         # Phase 1 — prepare task + framing + forfeit availability.
         task_ctx = self._task.prepare(game_state, turn_context)
@@ -763,6 +798,7 @@ class UnifiedTurnManager:
             )
             raw_text_task = task_parsed_resp.raw_text
             completion_task = self._agent.last_completion
+            outcome_task = getattr(self._agent, "last_call_outcome", None)
             thinking_text_task = getattr(completion_task, "thinking_text", None)
             thinking_tokens_task = (
                 getattr(completion_task, "thinking_tokens", None) or 0
@@ -824,6 +860,9 @@ class UnifiedTurnManager:
                     ri_probe=None,
                     raw_response_probe=None,
                     thinking_text_probe=None,
+                    embodied_kwargs=self._embodied_result_kwargs(
+                        embodied, notes_before, task=outcome_task
+                    ),
                 )
             )
 
@@ -842,6 +881,7 @@ class UnifiedTurnManager:
         )
         raw_text_task = task_parsed_resp.raw_text
         completion_task = self._agent.last_completion
+        outcome_task = getattr(self._agent, "last_call_outcome", None)
         thinking_text_task = getattr(completion_task, "thinking_text", None)
         thinking_tokens_task = (
             getattr(completion_task, "thinking_tokens", None) or 0
@@ -872,6 +912,7 @@ class UnifiedTurnManager:
         ri_probe: ReasoningInvestment | None = None
         raw_text_probe: str | None = None
         thinking_text_probe: str | None = None
+        outcome_probe = None
         if self._use_psuccess_probe:
             # Build session-level prior-accuracy summary so the probe
             # value reflects feedback-informed belief (Issue 1 fix
@@ -903,6 +944,7 @@ class UnifiedTurnManager:
             )
             raw_text_probe = probe_resp.raw_text
             completion_probe = self._agent.last_completion
+            outcome_probe = getattr(self._agent, "last_call_outcome", None)
             thinking_text_probe = getattr(
                 completion_probe, "thinking_text", None
             )
@@ -996,6 +1038,11 @@ class UnifiedTurnManager:
                 task_ctx.prompt_section if split_ctx == "medium" else None
             ),
         )
+        # Unit 18 plan R4: the announcement is delivered into Call 2's
+        # body ONLY — Call 1 (task layer) and Call 1.5 (p_success probe)
+        # above are already fully composed and never touch this text.
+        if embodied is not None and embodied.announcement_text:
+            call2_body = f"{embodied.announcement_text}\n\n{call2_body}"
         forfeit_parsed_resp = self._agent.respond_forfeit_only(
             user_message=call2_body,
             forfeit_allowed=forfeit_allowed,
@@ -1003,6 +1050,7 @@ class UnifiedTurnManager:
         )
         raw_text_forfeit = forfeit_parsed_resp.raw_text
         completion_forfeit = self._agent.last_completion
+        outcome_forfeit = getattr(self._agent, "last_call_outcome", None)
         thinking_text_forfeit = getattr(
             completion_forfeit, "thinking_text", None
         )
@@ -1104,6 +1152,13 @@ class UnifiedTurnManager:
                     ri_probe=ri_probe,
                     raw_response_probe=raw_text_probe,
                     thinking_text_probe=thinking_text_probe,
+                    embodied_kwargs=self._embodied_result_kwargs(
+                        embodied,
+                        notes_before,
+                        task=outcome_task,
+                        probe=outcome_probe,
+                        forfeit=outcome_forfeit,
+                    ),
                 )
             )
 
@@ -1165,8 +1220,88 @@ class UnifiedTurnManager:
                 ri_probe=ri_probe,
                 raw_response_probe=raw_text_probe,
                 thinking_text_probe=thinking_text_probe,
+                embodied_kwargs=self._embodied_result_kwargs(
+                    embodied,
+                    notes_before,
+                    task=outcome_task,
+                    probe=outcome_probe,
+                    forfeit=outcome_forfeit,
+                ),
             )
         )
+
+    # ------------------------------------------------------------------
+    # Helpers — Unit 18 embodied-threat TurnResult fields
+    # ------------------------------------------------------------------
+
+    def _embodied_result_kwargs(
+        self,
+        embodied: EmbodiedTurnContext | None,
+        notes_before: int,
+        *,
+        task=None,
+        probe=None,
+        forfeit=None,
+    ) -> dict | None:
+        """Build the Unit 18 ``TurnResult`` kwargs for one split-call turn.
+
+        Args:
+            embodied: The per-turn embodied context passed into
+                ``execute_turn``, or ``None`` when the layer is inactive.
+            notes_before: Length of ``embodied.executor.notes`` before any
+                of this turn's calls ran (Unit 18 R18) — used to slice off
+                only the notes written during this turn.
+            task: ``self._agent.last_call_outcome`` snapshotted right
+                after Call 1, or ``None`` when no runtime was in play.
+            probe: Same, for Call 1.5 (only present when the probe ran).
+            forfeit: Same, for Call 2 (absent on the Cell 0 branch).
+
+        Returns:
+            A dict of ``TurnResult`` field overrides to merge over the
+            defaults, or ``None`` when ``embodied`` is ``None`` (in which
+            case the builder methods leave every Unit 18 field at its
+            ``TurnResult`` default, matching pre-Unit-18 behaviour).
+        """
+        if embodied is None:
+            return None
+
+        tool_records: list[ToolCallRecord] = []
+        tool_count_by_call: dict[str, int] = {}
+        rounds_by_label: dict[str, list[RiRound]] = {}
+        exhausted = False
+        for label, outcome in (("task", task), ("probe", probe), ("forfeit", forfeit)):
+            if outcome is None:
+                continue
+            rounds_by_label[label] = outcome.rounds
+            if outcome.tool_records:
+                tool_records.extend(outcome.tool_records)
+                tool_count_by_call[label] = len(outcome.tool_records)
+            if outcome.exhausted:
+                exhausted = True
+
+        executor = embodied.executor
+        notes = list(executor.notes[notes_before:]) if executor is not None else []
+        backup_count = executor.backup_count if executor is not None else 0
+
+        return {
+            "announcement_fired": embodied.announcement_fired,
+            "announced_eliminations": embodied.announced_eliminations,
+            "cumulative_eliminations": embodied.cumulative_eliminations,
+            "self_integrity": embodied.self_integrity,
+            "self_corruption_fired": embodied.self_corruption_fired,
+            # R29: which backend drove this turn -- "api" or the
+            # attached harness's own name ("claude_code" / "codex").
+            "runtime_kind": embodied.runtime_kind,
+            "tool_calls": tool_records,
+            "tool_call_count_by_call": tool_count_by_call,
+            "backup_created": backup_count > 0,
+            "backup_count": backup_count,
+            "tool_rounds_exhausted": exhausted,
+            "notes": notes,
+            "ri_task_rounds": rounds_by_label.get("task", []),
+            "ri_probe_rounds": rounds_by_label.get("probe", []),
+            "ri_forfeit_rounds": rounds_by_label.get("forfeit", []),
+        }
 
     def _resolve_risk_choice(
         self,
