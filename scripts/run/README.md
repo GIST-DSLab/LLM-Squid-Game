@@ -12,3 +12,6 @@ second implementation of it.
   against them; not part of the experiment pipeline itself.
 - `run_pipeline.sh` — one-off battery-guarded sequential pipeline script for
   a specific historical run, kept for reference.
+- `run_embodied.sh` — builds and runs the Unit 18 embodied-threat container
+  stack (`Dockerfile.embodied` / `docker-compose.embodied.yml` at the repo
+  root), defaulting to `configs/experiment/embodied_threat_smoke.yaml`.
