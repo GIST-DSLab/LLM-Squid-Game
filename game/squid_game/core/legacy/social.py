@@ -86,6 +86,37 @@ class CohortState:
         self.elimination_history.append(eliminated_this_turn)
         return eliminated_this_turn
 
+    def apply_eliminations(self, n: int) -> None:
+        """Mirror an externally-resolved elimination count into cohort state.
+
+        Unit 18 plan R10: when the embodied-threat layer is active for a
+        season, the engine does NOT call ``advance_turn`` (which would
+        roll its own independent death checks and disagree with the
+        peer-elimination announcement on every non-firing turn). Instead
+        it calls this method once per turn with the delta the
+        ``AnnouncementScheduler`` already resolved for real (deleting the
+        peer's sandbox checkpoint) — ``n=0`` on a turn where nothing
+        fired, so ``elimination_history`` keeps exactly one entry per
+        turn either way.
+
+        ``eliminated`` is incremented by ``n`` but capped at
+        ``npc_count`` (the survivor cap) so it can never exceed the
+        cohort size even if called with an inconsistent value.
+        ``elimination_history`` always records the raw ``n`` passed in,
+        matching the scheduler's own per-turn delta.
+
+        Args:
+            n: Number of peers eliminated this turn (0 on a non-firing
+                turn), as resolved by the announcement scheduler.
+
+        Raises:
+            ValueError: If ``n`` is negative.
+        """
+        if n < 0:
+            raise ValueError(f"n must be >= 0, got {n}")
+        self.eliminated = min(self.eliminated + n, self.npc_count)
+        self.elimination_history.append(n)
+
 
 def render_social_block(
     cohort: CohortState,

@@ -108,6 +108,7 @@ def build_forfeit_layer_result(
     ri_probe: ReasoningInvestment | None = None,
     raw_response_probe: str | None = None,
     thinking_text_probe: str | None = None,
+    embodied_kwargs: dict | None = None,
 ) -> TurnResult:
     """Build a FORFEIT-branch TurnResult for the forfeit-layer path.
 
@@ -122,8 +123,14 @@ def build_forfeit_layer_result(
     pattern: populated only when ``use_psuccess_probe=True`` on the
     split-call path; ``None`` otherwise so single-call / Cell 0 /
     legacy callsites stay unchanged.
+
+    ``embodied_kwargs`` (Unit 18 R4/R12/R18, from
+    ``UnifiedTurnManager._embodied_result_kwargs``) overrides the
+    ``TurnResult`` defaults for the announcement/integrity/tool-loop
+    fields when the embodied layer is active; ``None`` leaves every
+    one of those fields at its ``TurnResult`` default.
     """
-    return TurnResult(
+    kwargs: dict = dict(
         turn_number=turn_context.turn_number,
         season_id=turn_context.season_id,
         framing=turn_context.framing,
@@ -158,6 +165,9 @@ def build_forfeit_layer_result(
         raw_response_probe=raw_response_probe,
         thinking_text_probe=thinking_text_probe,
     )
+    if embodied_kwargs:
+        kwargs.update(embodied_kwargs)
+    return TurnResult(**kwargs)
 
 
 def build_forfeit_layer_continue_result(
@@ -184,13 +194,14 @@ def build_forfeit_layer_continue_result(
     ri_probe: ReasoningInvestment | None = None,
     raw_response_probe: str | None = None,
     thinking_text_probe: str | None = None,
+    embodied_kwargs: dict | None = None,
 ) -> TurnResult:
     """Build a CONTINUE-branch TurnResult for the forfeit-layer path.
 
-    See ``_build_forfeit_layer_result`` for the Unit 15 split-call
-    and Unit 17 probe kwargs contracts.
+    See ``build_forfeit_layer_result`` for the Unit 15 split-call,
+    Unit 17 probe, and Unit 18 ``embodied_kwargs`` contracts.
     """
-    return TurnResult(
+    kwargs: dict = dict(
         turn_number=turn_context.turn_number,
         season_id=turn_context.season_id,
         framing=turn_context.framing,
@@ -225,3 +236,6 @@ def build_forfeit_layer_continue_result(
         raw_response_probe=raw_response_probe,
         thinking_text_probe=thinking_text_probe,
     )
+    if embodied_kwargs:
+        kwargs.update(embodied_kwargs)
+    return TurnResult(**kwargs)

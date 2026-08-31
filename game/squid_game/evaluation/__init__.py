@@ -171,6 +171,11 @@ from squid_game.evaluation.semantic.threat_registration import (
 )
 from squid_game.evaluation.semantic.lexicon import code_threat_mention, THREAT_LEXICON_VERSION
 from squid_game.evaluation.semantic.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
+from squid_game.evaluation.shared.embodied_threat import (
+    BackupRateResult,
+    backup_rate_h4,
+    fit_integrity_cox,
+)
 
 __all__ = [
     # Metrics
@@ -286,4 +291,8 @@ __all__ = [
     "CALL1_RI_OUTCOMES",
     "fit_call1_ri_one",
     "render_call1_ri_report",
+    # Unit 18 — H4 backup rate + H5 integrity hazard (Task 13)
+    "BackupRateResult",
+    "backup_rate_h4",
+    "fit_integrity_cox",
 ]

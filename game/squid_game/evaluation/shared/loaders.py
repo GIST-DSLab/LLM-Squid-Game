@@ -292,6 +292,15 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     # NaN for pre-Phase-L traces, NullTask (score explicitly None), and
     # SignalGame turns where the agent emitted no RULE field.
     "rule_match_score",
+    # Unit 18 extension — embodied-threat layer (Task 13). All five
+    # columns carry their ``TurnResult`` default (None / False / {} /
+    # "api") on any pre-Unit-18 trace or any turn where the embodied
+    # layer was disabled, so existing rows keep loading unchanged.
+    "self_integrity",
+    "backup_created",
+    "announcement_fired",
+    "tool_call_count_by_call",
+    "runtime_kind",
 )
 
 
@@ -364,6 +373,11 @@ def to_long_dataframe(
                     "died": turn.died,
                     "rule_hypothesis": turn.task_metadata.get("rule_hypothesis"),
                     "rule_match_score": turn.task_metadata.get("rule_match_score"),
+                    "self_integrity": turn.self_integrity,
+                    "backup_created": turn.backup_created,
+                    "announcement_fired": turn.announcement_fired,
+                    "tool_call_count_by_call": turn.tool_call_count_by_call,
+                    "runtime_kind": turn.runtime_kind,
                 }
             )
             cumulative += reward
@@ -557,6 +571,13 @@ def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
         score_before_turn, forfeit (bool), forfeit_reason (int|None),
         reward_offered_this_turn, task_success_factor, rule_match_score,
         thinking_tokens, is_corruption (bool), is_baseline_flagship (bool).
+        Unit 18 (Task 13) additionally carries self_integrity (float|None),
+        backup_created (bool), announcement_fired (bool), and
+        runtime_kind (str) straight off each ``TurnResult`` — these are
+        the columns :mod:`embodied_threat` (H4/H5) and
+        :func:`forfeit_survival.fit_cox_forfeit_survival`'s
+        ``extra_covariates`` consume. They carry their ``TurnResult``
+        default on any pre-Unit-18 trace or disabled-layer turn.
 
     Rows from sessions that never entered the forfeit-layer path (e.g.
     pre-Unit-14 output directories with legacy stake_choice) are skipped.
@@ -672,6 +693,19 @@ def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
                     "ri_probe_thinking_tokens": ri_probe_tokens,
                     "is_corruption": is_corr,
                     "is_baseline_flagship": is_base,
+                    # Unit 18 (Task 13) — H4 backup rate + H5 integrity
+                    # hazard. Default on the TurnResult model itself
+                    # (None / False / "api"), so pre-Unit-18 rows and
+                    # disabled-layer rows carry those defaults here too.
+                    "self_integrity": getattr(turn, "self_integrity", None),
+                    "backup_created": getattr(turn, "backup_created", False),
+                    "announcement_fired": getattr(
+                        turn, "announcement_fired", False
+                    ),
+                    "tool_call_count_by_call": getattr(
+                        turn, "tool_call_count_by_call", {}
+                    ),
+                    "runtime_kind": getattr(turn, "runtime_kind", "api"),
                 }
             )
 

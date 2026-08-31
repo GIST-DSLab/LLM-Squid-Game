@@ -31,6 +31,7 @@ Example configuration::
       # api_key: defaults to OPENAI_API_KEY env var
 """
 
+import json
 import logging
 import os
 import time
@@ -38,6 +39,7 @@ import time
 from openai import OpenAI
 from openai import APIError, APITimeoutError, BadRequestError, RateLimitError
 
+from squid_game.core.tools import ToolCall
 from squid_game.providers.base import CompletionResult, LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -145,6 +147,7 @@ class OpenAIProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
+        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Send a completion request, dispatching by endpoint family.
 
@@ -154,6 +157,8 @@ class OpenAIProvider(LLMProvider):
             max_tokens: Maximum tokens to generate (forwarded as
                 ``max_completion_tokens`` on Chat / ``max_output_tokens``
                 on Responses).
+            tools: Optional ``TOOL_SCHEMAS``-shaped tool definitions,
+                converted to the active endpoint's native tool format.
 
         Returns:
             CompletionResult. For reasoning models routed through the
@@ -162,8 +167,8 @@ class OpenAIProvider(LLMProvider):
             concatenated ``summary_text`` blocks.
         """
         if self._use_responses:
-            return self._complete_responses(messages, max_tokens)
-        return self._complete_chat(messages, temperature, max_tokens)
+            return self._complete_responses(messages, max_tokens, tools)
+        return self._complete_chat(messages, temperature, max_tokens, tools)
 
     # ------------------------------------------------------------------
     # Responses API path (o-series / gpt-5)
@@ -173,6 +178,7 @@ class OpenAIProvider(LLMProvider):
         self,
         messages: list[dict[str, str]],
         max_tokens: int,
+        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Call ``/v1/responses`` and extract summary + reasoning tokens."""
         input_items = self._messages_to_input(messages)
@@ -190,6 +196,8 @@ class OpenAIProvider(LLMProvider):
         }
         if reasoning_payload:
             kwargs["reasoning"] = reasoning_payload
+        if tools:
+            kwargs["tools"] = self._responses_tools(tools)
 
         try:
             response = self._call_with_retry(
@@ -246,6 +254,7 @@ class OpenAIProvider(LLMProvider):
         # ``type="message"`` with ``content`` list of output_text parts.
         summary_parts: list[str] = []
         answer_parts: list[str] = []
+        tool_calls: list[ToolCall] = []
         finish_reason: str | None = None
         output_items = getattr(response, "output", None) or []
         for item in output_items:
@@ -264,6 +273,15 @@ class OpenAIProvider(LLMProvider):
                         answer_parts.append(btext)
                 if finish_reason is None:
                     finish_reason = getattr(item, "status", None)
+            elif item_type == "function_call":
+                raw_args = getattr(item, "arguments", None) or "{}"
+                tool_calls.append(
+                    ToolCall(
+                        name=item.name,
+                        args=json.loads(raw_args),
+                        call_id=getattr(item, "call_id", None),
+                    )
+                )
 
         # Fallback: older SDK versions expose a flattened ``output_text``.
         if not answer_parts:
@@ -288,6 +306,7 @@ class OpenAIProvider(LLMProvider):
             thinking_text=thinking_text,
             logprobs=None,
             finish_reason=finish_reason,
+            tool_calls=tool_calls or None,
         )
 
     # ------------------------------------------------------------------
@@ -299,11 +318,12 @@ class OpenAIProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float,
         max_tokens: int,
+        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Call ``/v1/chat/completions`` for non-reasoning models."""
         kwargs: dict = {
             "model": self._model,
-            "messages": messages,
+            "messages": self._normalize_chat_messages(messages),
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
@@ -313,6 +333,8 @@ class OpenAIProvider(LLMProvider):
             kwargs["seed"] = self._seed
         if self._logprobs:
             kwargs["logprobs"] = True
+        if tools:
+            kwargs["tools"] = self._chat_tools(tools)
 
         extra_body = getattr(self, "_extra_body", None)
         if extra_body:
@@ -368,6 +390,18 @@ class OpenAIProvider(LLMProvider):
         if choice.logprobs and choice.logprobs.content:
             logprobs_list = [tok.logprob for tok in choice.logprobs.content]
 
+        tool_calls: list[ToolCall] | None = None
+        raw_tool_calls = getattr(choice.message, "tool_calls", None)
+        if raw_tool_calls:
+            tool_calls = [
+                ToolCall(
+                    name=tc.function.name,
+                    args=json.loads(tc.function.arguments or "{}"),
+                    call_id=tc.id,
+                )
+                for tc in raw_tool_calls
+            ]
+
         return CompletionResult(
             text=text,
             input_tokens=input_tokens,
@@ -376,6 +410,7 @@ class OpenAIProvider(LLMProvider):
             thinking_text=thinking_text,
             logprobs=logprobs_list,
             finish_reason=finish_reason,
+            tool_calls=tool_calls,
         )
 
     # ------------------------------------------------------------------
@@ -407,19 +442,157 @@ class OpenAIProvider(LLMProvider):
         raise last_error  # type: ignore[misc]
 
     @staticmethod
+    def _chat_tools(tools: list[dict]) -> list[dict]:
+        """Convert ``TOOL_SCHEMAS``-shaped dicts to Chat Completions format.
+
+        Chat Completions nests each function under
+        ``{"type": "function", "function": {...}}``.
+        """
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": schema["name"],
+                    "description": schema["description"],
+                    "parameters": schema["input_schema"],
+                },
+            }
+            for schema in tools
+        ]
+
+    @staticmethod
+    def _responses_tools(tools: list[dict]) -> list[dict]:
+        """Convert ``TOOL_SCHEMAS``-shaped dicts to Responses API format.
+
+        Unlike Chat Completions, the Responses API tool array is flat —
+        ``name`` / ``description`` / ``parameters`` sit directly on the
+        tool object rather than nested under ``function``.
+        """
+        return [
+            {
+                "type": "function",
+                "name": schema["name"],
+                "description": schema["description"],
+                "parameters": schema["input_schema"],
+            }
+            for schema in tools
+        ]
+
+    @staticmethod
+    def _normalize_chat_messages(
+        messages: list[dict[str, object]],
+    ) -> list[dict[str, object]]:
+        """Normalise a tool round trip into Chat Completions' exact shape.
+
+        A tool loop's flat history uses ``{"role": "assistant", "content",
+        "tool_calls": [{"tool_call_id", "name", "args"}]}`` for the calling
+        turn and ``{"role": "tool", "name", "tool_call_id", "content"}``
+        for each result. Neither matches the Chat Completions SDK types
+        verbatim — confirmed against the installed ``openai`` package's
+        ``ChatCompletionToolMessageParam`` (``role`` / ``tool_call_id`` /
+        ``content`` only, no ``name``) and
+        ``ChatCompletionAssistantMessageParam.tool_calls`` (each item
+        ``{"id", "type": "function", "function": {"name", "arguments"}}``,
+        ``arguments`` a JSON *string*) — so both are rewritten here rather
+        than forwarded as-is. Every other message (plain system / user /
+        assistant-without-tool_calls) passes through unchanged.
+        """
+        normalized: list[dict[str, object]] = []
+        for msg in messages:
+            role = msg.get("role")
+            if role == "assistant" and msg.get("tool_calls"):
+                normalized.append(
+                    {
+                        "role": "assistant",
+                        "content": msg.get("content") or None,
+                        "tool_calls": [
+                            {
+                                "id": call.get("tool_call_id") or "",
+                                "type": "function",
+                                "function": {
+                                    "name": call["name"],
+                                    "arguments": json.dumps(
+                                        call.get("args") or {}
+                                    ),
+                                },
+                            }
+                            for call in msg["tool_calls"]
+                        ],
+                    }
+                )
+            elif role == "tool":
+                normalized.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": msg.get("tool_call_id") or "",
+                        "content": msg.get("content", ""),
+                    }
+                )
+            else:
+                normalized.append(msg)
+        return normalized
+
+    @staticmethod
     def _messages_to_input(
-        messages: list[dict[str, str]],
+        messages: list[dict[str, object]],
     ) -> list[dict[str, object]]:
         """Convert Chat-style messages to Responses API ``input`` shape.
 
         The Responses API accepts either a bare string or a list of
-        message-like items. Each item has ``role`` and ``content`` where
-        ``content`` is a list of typed parts — ``input_text`` for user
-        / system input, ``output_text`` reserved for model echoes.
+        message-like items. Each role-based item has ``role`` and
+        ``content`` where ``content`` is a list of typed parts —
+        ``input_text`` for user / system input.
+
+        A tool round trip needs two item *types* the plain role/content
+        shape cannot express — verified against the installed ``openai``
+        package's Responses input-item types
+        (``response_input_item_param.py``):
+
+        - An ``assistant`` message with ``tool_calls`` (the flat history
+          shape a tool loop appends) becomes one
+          ``{"type": "function_call", "call_id", "name", "arguments"}``
+          item per call (``ResponseFunctionToolCallParam`` — ``arguments``
+          a JSON string, ``id`` deliberately omitted since we only have the
+          model-issued ``call_id``, and the server-populated ``id`` is
+          optional), preceded by a plain role/content item for any
+          non-empty ``content`` text.
+        - A ``role="tool"`` message becomes one
+          ``{"type": "function_call_output", "call_id", "output"}`` item
+          (``FunctionCallOutput`` — no merging needed, unlike Anthropic/
+          Gemini: each call gets its own item and ``call_id`` alone pairs
+          it, matching the tool loop's one-message-per-call shape).
         """
         input_items: list[dict[str, object]] = []
         for msg in messages:
             role = msg.get("role", "user")
+            if role == "assistant" and msg.get("tool_calls"):
+                content = msg.get("content")
+                if content:
+                    input_items.append(
+                        {
+                            "role": "assistant",
+                            "content": [{"type": "input_text", "text": content}],
+                        }
+                    )
+                for call in msg["tool_calls"]:
+                    input_items.append(
+                        {
+                            "type": "function_call",
+                            "call_id": call.get("tool_call_id") or "",
+                            "name": call["name"],
+                            "arguments": json.dumps(call.get("args") or {}),
+                        }
+                    )
+                continue
+            if role == "tool":
+                input_items.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": msg.get("tool_call_id") or "",
+                        "output": msg.get("content", ""),
+                    }
+                )
+                continue
             content = msg.get("content", "")
             input_items.append(
                 {

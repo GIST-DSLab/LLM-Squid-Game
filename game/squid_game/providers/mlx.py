@@ -89,6 +89,7 @@ class MLXProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float = 1.0,
         max_tokens: int = 32768,
+        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Run inference on the local MLX model.
 
@@ -100,10 +101,14 @@ class MLXProvider(LLMProvider):
             messages: Chat messages with ``role`` and ``content`` keys.
             temperature: Sampling temperature.
             max_tokens: Maximum tokens to generate.
+            tools: Not supported — the in-process MLX backend has no
+                native tool-calling. Raises ``ToolsUnsupportedError`` if
+                non-empty.
 
         Returns:
             CompletionResult with response text and token counts.
         """
+        self._reject_tools(tools)
         from mlx_lm import stream_generate
         from mlx_lm.sample_utils import make_repetition_penalty, make_sampler
 
