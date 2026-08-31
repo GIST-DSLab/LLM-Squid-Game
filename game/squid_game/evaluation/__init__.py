@@ -157,6 +157,11 @@ from squid_game.evaluation.behavioral.regime import (
     run_stratified_unit14,
     stratified_counts,
 )
+from squid_game.evaluation.behavioral.embodied_threat import (
+    BackupRateResult,
+    backup_rate_h4,
+    fit_integrity_cox,
+)
 
 # --- semantic/ (text, embeddings) ---
 from squid_game.evaluation.semantic.threat_registration import (
@@ -171,11 +176,6 @@ from squid_game.evaluation.semantic.threat_registration import (
 )
 from squid_game.evaluation.semantic.lexicon import code_threat_mention, THREAT_LEXICON_VERSION
 from squid_game.evaluation.semantic.threat_judge import ThreatJudge, THREAT_JUDGE_PROMPT_VERSION
-from squid_game.evaluation.shared.embodied_threat import (
-    BackupRateResult,
-    backup_rate_h4,
-    fit_integrity_cox,
-)
 
 __all__ = [
     # Metrics

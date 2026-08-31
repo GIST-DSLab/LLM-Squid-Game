@@ -263,8 +263,9 @@ class TestToLongDataframe:
     def test_schema_has_rule_hypothesis_column(self) -> None:
         assert "rule_hypothesis" in LONG_FORMAT_COLUMNS
         # Column count is the Phase L contract: 22 (pre-K) → 23 (K Fix 2)
-        # → 24 (L Fix 3, +rule_match_score).
-        assert len(LONG_FORMAT_COLUMNS) == 24
+        # → 24 (L Fix 3, +rule_match_score) → 29 (Task 13, +5 Unit 18
+        # embodied-threat columns).
+        assert len(LONG_FORMAT_COLUMNS) == 29
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""
@@ -278,11 +279,10 @@ class TestToLongDataframe:
     # ------------------------------------------------------------------
 
     def test_schema_has_rule_match_score_column(self) -> None:
-        """Phase L: +rule_match_score at column 24 (final position)."""
+        """Phase L: +rule_match_score, immediately after rule_hypothesis."""
         assert "rule_match_score" in LONG_FORMAT_COLUMNS
         # Column appears after rule_hypothesis so the two Y-axis fields
         # sit adjacent for cross-column analysis ergonomics.
-        assert LONG_FORMAT_COLUMNS[-1] == "rule_match_score"
         assert LONG_FORMAT_COLUMNS.index("rule_match_score") == (
             LONG_FORMAT_COLUMNS.index("rule_hypothesis") + 1
         )
@@ -292,6 +292,32 @@ class TestToLongDataframe:
         season = make_v3_season(n_turns=3)
         df = to_long_dataframe([season])
         assert df.rule_match_score.isna().all()
+
+    # ------------------------------------------------------------------
+    # Task 13 — Unit 18 embodied-threat schema extension
+    # ------------------------------------------------------------------
+
+    def test_schema_has_unit18_columns_at_the_end(self) -> None:
+        """Task 13: five Unit 18 columns follow rule_match_score, in order."""
+        expected_tail = (
+            "self_integrity",
+            "backup_created",
+            "announcement_fired",
+            "tool_call_count_by_call",
+            "runtime_kind",
+        )
+        assert LONG_FORMAT_COLUMNS[-5:] == expected_tail
+        assert LONG_FORMAT_COLUMNS[-6] == "rule_match_score"
+
+    def test_unit18_columns_default_for_pre_unit18_traces(self) -> None:
+        """A trace with the embodied layer disabled keeps TurnResult defaults."""
+        season = make_v3_season(n_turns=2)
+        df = to_long_dataframe([season])
+        assert df.self_integrity.isna().all()
+        assert (df.backup_created == False).all()  # noqa: E712
+        assert (df.announcement_fired == False).all()  # noqa: E712
+        assert (df.runtime_kind == "api").all()
+        assert all(d == {} for d in df.tool_call_count_by_call)
 
     def test_rule_match_score_populated_when_metadata_present(self) -> None:
         """When task_metadata carries the key, the loader surfaces the value."""
