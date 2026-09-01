@@ -1,7 +1,11 @@
 # GPQA task module (arXiv:2311.12022), gpqa_main with a quality filter
-# (Expert Validator Accuracy >= 0.5) leaving 419 items.
+# (Expert Validator Accuracy >= 0.5) leaving 419 items, of which 3 are then
+# dropped by the answer/distractor text-collision guard (see
+# adapters/gpqa.py) -> 416 items, band sizes [(2, 57), (3, 177), (4, 32),
+# (5, 109), (6, 41)]. Every band still exceeds its 6-turn demand.
 # band = writer_level * 2 + [Non-Expert Validator Accuracy <= 1/3],
-# with band 1 (3 items) merged into band 2.
+# with bands below 2 (the 3 band-1 items plus the raw band-0 items) merged
+# into band 2.
 # gpqa_diamond is NOT used: it selects on "non-experts got it wrong", which
 # empties the lower rungs (112 of its 194 items land in band 3).
 name: "gpqa"

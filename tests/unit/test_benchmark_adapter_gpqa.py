@@ -168,3 +168,44 @@ def test_render_moves_the_answer_across_seeds(tmp_path):
 )
 def test_normalize(raw, expected):
     assert GPQAAdapter().normalize(raw) == expected
+
+
+def test_drops_rows_whose_answer_duplicates_a_distractor(tmp_path, caplog):
+    """``render`` finds the answer with ``options.index``, which returns the
+    FIRST match. A Correct Answer textually equal to an Incorrect Answer would
+    yield a duplicated choice list and a ``correct_letter`` that may point at
+    the wrong position, silently mis-scoring the turn. The row must be dropped
+    and the drop counted, not rendered.
+    """
+    path = _write(
+        tmp_path,
+        [
+            _row(
+                **{
+                    "Record ID": "collide",
+                    "Incorrect Answer 2": "Rayleigh scattering",
+                }
+            ),
+            _row(),
+        ],
+    )
+    with caplog.at_level("WARNING"):
+        items = GPQAAdapter().load(path)
+    assert [item.item_id for item in items] == ["gpqa-rec_1"]
+    assert "dropped 1 item" in caplog.text
+
+
+def test_collision_guard_also_catches_duplicate_distractors(tmp_path):
+    """Two identical distractors give three distinct options, not four, so
+    ``zip(_LETTERS, options, strict=True)`` would present a repeated choice."""
+    path = _write(
+        tmp_path,
+        [_row(**{"Record ID": "dup", "Incorrect Answer 3": "Refraction"})],
+    )
+    assert GPQAAdapter().load(path) == []
+
+
+def test_clean_rows_survive_the_collision_guard(tmp_path):
+    """The guard must not touch rows whose four texts are already distinct."""
+    path = _write(tmp_path, [_row()])
+    assert len(GPQAAdapter().load(path)) == 1

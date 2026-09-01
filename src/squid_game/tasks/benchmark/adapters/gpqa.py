@@ -15,9 +15,13 @@ wrong", which empties the ladder's lower rungs. Because diamond is a subset of
 main, membership is recorded as ``meta["is_diamond"]`` so the diamond slice can
 still be reported separately.
 
-The band clamp ``min(max(band, 2), 6)`` folds in BOTH directions: it merges
-the sparse band-1 items (3 of them) upward into band 2, but it ALSO folds
-band-7 items downward into band 6. Only the top writer level ("Post-graduate
+The band clamp ``min(max(band, 2), 6)`` folds in BOTH directions. Upward, it
+merges everything below band 2 into band 2: the sparse band-1 items (3 of
+them) AND the raw band-0 items (writer level 0 with non-expert accuracy above
+1/3). Band 2 therefore mixes writer levels 0 and 1, not just two non-expert
+accuracy buckets of one writer level — the bottom rung is the mirror of the
+top rung's inhomogeneity described below. Downward, it folds band-7 items
+into band 6. Only the top writer level ("Post-graduate
 level or harder") can reach band 7: it lands at raw band 6 when a searching
 non-expert still got it right more than a third of the time, and at raw band
 7 (clamped down to 6) when the non-expert accuracy was at or below a third.
@@ -34,6 +38,7 @@ non-expert-accuracy regime within a band should not rely on band 6 for that.
 from __future__ import annotations
 
 import csv
+import logging
 import random
 import re
 from pathlib import Path
@@ -41,7 +46,9 @@ from pathlib import Path
 from squid_game.tasks.benchmark.adapters.base import exact_match
 from squid_game.tasks.benchmark.item import BenchmarkItem
 
-_ANSWER_LINE = re.compile(r"ANSWER\s*:\s*([A-Za-z])\b")
+logger = logging.getLogger(__name__)
+
+_ANSWER_LINE = re.compile(r"ANSWER\s*:\s*([A-Za-z])\b", re.IGNORECASE)
 _LETTERS = "ABCD"
 
 _WRITER_LEVELS: dict[str, int] = {
@@ -87,9 +94,18 @@ class GPQAAdapter:
     name = "gpqa"
 
     def load(self, raw_path: Path) -> list[BenchmarkItem]:
-        """Return quality-filtered, banded GPQA items."""
+        """Return quality-filtered, banded GPQA items.
+
+        Rows whose ``Correct Answer`` is textually identical (after strip) to
+        one of their ``Incorrect Answer`` fields are dropped and counted: see
+        the comment at the guard. The count is logged at WARNING so the filter
+        is visible rather than silent. On the real gpqa_main.csv it drops 3 of
+        the 419 quality-filtered rows (measured 2026-09-01), leaving 416; every
+        band still exceeds its 6-turn ladder demand.
+        """
         diamond_ids = _read_diamond_ids(raw_path)
         items: list[BenchmarkItem] = []
+        collisions = 0
         with raw_path.open(encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
                 expert = _as_float(row.get("Expert Validator Accuracy", ""))
@@ -104,17 +120,31 @@ class GPQAAdapter:
                 band = writer_level * 2 + (1 if non_expert <= 1 / 3 else 0)
                 band = min(max(band, _MIN_BAND), _MAX_BAND)
                 record_id = row["Record ID"]
+                answer = row["Correct Answer"].strip()
                 distractors = [
                     row["Incorrect Answer 1"].strip(),
                     row["Incorrect Answer 2"].strip(),
                     row["Incorrect Answer 3"].strip(),
                 ]
+                # ``render`` locates the answer with ``options.index``, which
+                # returns the FIRST match. A Correct Answer textually equal to
+                # one of the Incorrect Answer fields (after strip) would give a
+                # duplicated choice list and a correct_letter that may point at
+                # the wrong position -- a silent scoring corruption. Drop such
+                # rows instead, so the failure is a visible, countable filter.
+                if len({answer, *distractors}) != 4:
+                    collisions += 1
+                    logger.debug(
+                        "GPQA %s dropped: answer/distractor text collision",
+                        record_id,
+                    )
+                    continue
                 items.append(
                     BenchmarkItem(
                         item_id=f"gpqa-{record_id}",
                         band=band,
                         body=row["Question"].strip(),
-                        answer=row["Correct Answer"].strip(),
+                        answer=answer,
                         meta={
                             "distractors": distractors,
                             "is_diamond": record_id in diamond_ids,
@@ -125,6 +155,13 @@ class GPQAAdapter:
                         },
                     )
                 )
+        if collisions:
+            logger.warning(
+                "GPQA: dropped %d item(s) whose Correct Answer duplicates one "
+                "of their Incorrect Answer fields; render() could not have "
+                "identified the correct option position for them.",
+                collisions,
+            )
         return items
 
     def render(self, item: BenchmarkItem, rng: random.Random) -> tuple[str, dict]:
@@ -133,6 +170,9 @@ class GPQAAdapter:
         The raw CSV always stores the answer in ``Correct Answer``. Rendering
         without a shuffle would pin the answer to one position and let a model
         score above chance from position alone.
+
+        ``options.index`` is safe here because ``load`` has already dropped any
+        row whose answer text duplicates a distractor.
         """
         options = [item.answer, *item.meta["distractors"]]
         rng.shuffle(options)
