@@ -1,6 +1,8 @@
 # Omni-MATH task module (arXiv:2410.07985).
-# Uses the integer-answer subset only (1,960 of 4,428 items) so scoring
-# stays deterministic. Band = int(difficulty); band 9 is unused because its
+# Uses the single-value-integer-answer subset only (1,952 of 4,428 items,
+# 1,922 of which fall in bands 1-8) so scoring stays deterministic. Multi-
+# value list answers (e.g. "2, 3, 5") and duplicate problem text are
+# excluded. Band = int(difficulty); band 9 is unused because its
 # integer-answer pool (30 items) is too shallow for a 4-turn rung.
 name: "omni_math"
 data_file: "omni_math.jsonl"
