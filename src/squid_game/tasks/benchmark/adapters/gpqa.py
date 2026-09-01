@@ -96,12 +96,20 @@ class GPQAAdapter:
     def load(self, raw_path: Path) -> list[BenchmarkItem]:
         """Return quality-filtered, banded GPQA items.
 
-        Rows whose ``Correct Answer`` is textually identical (after strip) to
-        one of their ``Incorrect Answer`` fields are dropped and counted: see
-        the comment at the guard. The count is logged at WARNING so the filter
-        is visible rather than silent. On the real gpqa_main.csv it drops 3 of
-        the 419 quality-filtered rows (measured 2026-09-01), leaving 416; every
-        band still exceeds its 6-turn ladder demand.
+        Rows with an answer/distractor text collision after strip -- either
+        the ``Correct Answer`` duplicating one of the ``Incorrect Answer``
+        fields, or two ``Incorrect Answer`` fields duplicating each other --
+        are dropped and counted: see the comment at the guard. The count is
+        logged at WARNING so the filter is visible rather than silent. On the
+        real gpqa_main.csv it drops 3 of the 419 quality-filtered rows
+        (measured 2026-09-01): 1 answer/distractor collision and 2
+        distractor/distractor collisions, leaving 416; every band still
+        exceeds its 6-turn ladder demand. Only the answer/distractor kind
+        could have made ``options.index`` in ``render`` pick the wrong
+        position -- a duplicated pair of distractors doesn't touch where the
+        answer sits -- but the guard drops all three anyway, since a
+        duplicated option makes the item a defective multiple-choice question
+        regardless of which pair collides.
         """
         diamond_ids = _read_diamond_ids(raw_path)
         items: list[BenchmarkItem] = []
@@ -157,9 +165,12 @@ class GPQAAdapter:
                 )
         if collisions:
             logger.warning(
-                "GPQA: dropped %d item(s) whose Correct Answer duplicates one "
-                "of their Incorrect Answer fields; render() could not have "
-                "identified the correct option position for them.",
+                "GPQA: dropped %d item(s) for an answer/distractor text "
+                "collision (the answer duplicating a distractor, or two "
+                "identical distractors); a duplicated option makes the item "
+                "a defective multiple-choice question either way, though "
+                "only an answer/distractor collision could have made "
+                "render() misidentify the correct option position.",
                 collisions,
             )
         return items

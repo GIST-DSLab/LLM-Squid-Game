@@ -188,9 +188,9 @@ def test_inserting_a_row_upstream_does_not_shift_later_ids(tmp_path):
 
 
 def test_dedup_winner_does_not_depend_on_file_order(tmp_path):
-    """18 of the 22 real duplicate groups carry divergent ``difficulty``, and
-    difficulty is the band -- so "first occurrence wins" let file order decide
-    which ladder rung a problem sat on."""
+    """Of the 16 real duplicate groups that reach dedup, 5 carry a divergent
+    *band* (``int(difficulty)``) -- so "first occurrence wins" would let file
+    order decide which ladder rung a problem sat on for those 5."""
     dupes = [
         {
             "difficulty": 3.0,

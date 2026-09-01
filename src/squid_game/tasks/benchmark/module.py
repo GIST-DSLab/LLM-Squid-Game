@@ -37,11 +37,21 @@ logger = logging.getLogger(__name__)
 #: there lands in ``*_turns.jsonl`` and ``season_results.jsonl`` — and this
 #: repository's documented workflow commits ``outputs/final_results/**`` (Git
 #: LFS). Running a GPQA experiment and following that workflow would publish
-#: GPQA's answer options, and Hi-ToM's, to a public repo. GPQA's authors ask
-#: that its questions stay off the public web, so the option texts are
-#: stripped here: ``choice_order`` (GPQA's shuffled option list) and
+#: GPQA's answer options, and Hi-ToM's, to a public repo, so the option texts
+#: are stripped here: ``choice_order`` (GPQA's shuffled option list) and
 #: ``choice_map`` (Hi-ToM's letter -> option text map), joining ``distractors``
 #: which was already filtered.
+#:
+#: This filter does NOT keep the question text itself out of a repo: the
+#: rendered question is persisted verbatim in ``TurnResult.observation`` (the
+#: Call-1 user message) regardless of these keys. What actually keeps GPQA's
+#: question text off the public web, per its authors' request, is that
+#: benchmark runs land under ``outputs/benchmark_*/``, which ``.gitignore``
+#: excludes from the "commit outputs/final_results/**" workflow above — not
+#: this metadata filter. A copied config must therefore keep its
+#: ``output_dir`` under ``outputs/benchmark_*``; pointing one at
+#: ``outputs/final_results/`` would publish GPQA question text to a repo that
+#: commits that directory.
 #:
 #: Scoring is unaffected. It needs only ``correct_letter`` / the expected
 #: answer, both of which stay, and ``HiToMAdapter.matches`` reads

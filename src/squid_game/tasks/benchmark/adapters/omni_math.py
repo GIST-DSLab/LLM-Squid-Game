@@ -19,8 +19,10 @@ permissive comma/space strip, since a model may legitimately format a single
 integer answer with a thousands separator or stray whitespace.
 
 ``load`` also deduplicates by problem text: 22 problems in the raw file appear
-twice with identical text, which would otherwise let ``SeededSampler`` draw the
-same question twice in one session under different ``item_id``s.
+twice with identical text. Of those, 16 duplicate groups survive the
+integer-answer and band filters above and actually reach dedup; it is those 16
+that would otherwise let ``SeededSampler`` draw the same question twice in one
+session under different ``item_id``s.
 
 Both the ``item_id`` and the dedup winner are derived from CONTENT, never from
 the row's position in the file. ``SeededSampler`` documents that "items are
@@ -32,14 +34,19 @@ at the same seed drew a different question set while claiming reproduction —
 and the manifest mismatch that would have hinted at it is only a
 ``logger.warning``.
 
-The dedup rule matters just as much as the id: 18 of the 22 duplicate groups
-carry DIVERGENT metadata across their two rows, ``difficulty`` included (e.g.
-1.5 vs 3.0), and ``difficulty`` is the band. A "first occurrence wins" rule
-therefore let file order decide which ladder rung a problem sits on. The
-winner is now the row with the smallest ``(difficulty, answer, source,
-domain)`` tuple — a total order over fields the item itself carries, so it is
-identical under any input ordering; when the tuple ties, the two candidate
-items are field-for-field identical and the choice is immaterial.
+The dedup rule matters just as much as the id. Of the 16 duplicate groups that
+reach dedup, 13 carry a divergent ``(difficulty, answer, source, domain)``
+tiebreak key across their two rows, 8 of those carry divergent ``difficulty``
+(e.g. 1.5 vs 3.0), and 5 carry a divergent *band* (``int(difficulty)``) — the
+figure that actually matters, since a "first occurrence wins" rule would let
+file order decide which ladder rung a problem sits on only for those 5. (18 of
+the raw file's 22 duplicate groups carry divergent metadata of some kind
+before the integer-answer/band filters are applied; the narrower counts above
+are what ``load`` actually dedups over.) The winner is now the row with the
+smallest ``(difficulty, answer, source, domain)`` tuple — a total order over
+fields the item itself carries, so it is identical under any input ordering;
+when the tuple ties, the two candidate items are field-for-field identical and
+the choice is immaterial.
 """
 
 from __future__ import annotations

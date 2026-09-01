@@ -262,7 +262,14 @@ diamond 파일이 옆에 있을 때만 `meta["is_diamond"]`를 채운다 — 없
 것이라 `.gitignore`의 `outputs/benchmark_*/`로 제외한다. 코드 쪽 짝은
 `src/squid_game/tasks/benchmark/module.py`의 `_UNPERSISTED_META_KEYS`로,
 GPQA의 선택지 목록(`choice_order`)과 Hi-ToM의 선택지 텍스트(`choice_map`)를
-턴 메타데이터에서 제거한다 (채점에는 `correct_letter`만 필요하다).
+턴 메타데이터에서 제거한다 (채점에는 `correct_letter`만 필요하다). 이 메타데이터
+필터는 렌더링된 문제 본문 자체는 지우지 않는다 — `TurnResult.observation`이
+Call-1 사용자 메시지로 그대로 채워지므로 문제 텍스트는 각 턴에 남는다. GPQA
+질문이 리포에 들어가지 않는 실질적 이유는 이 메타데이터 필터가 아니라
+`outputs/benchmark_*/` 디렉터리 네이밍과 그에 대한 `.gitignore` 규칙이다. 따라서
+config를 복사해 쓸 때는 `output_dir`을 반드시 `outputs/benchmark_*` 하위로
+유지해야 한다 — `outputs/final_results/`로 잡으면 GPQA 문제 텍스트를 이 리포에
+커밋하게 된다.
 
 ### Git LFS
 
