@@ -80,3 +80,30 @@ def test_item_order_does_not_depend_on_input_order():
     assert [forward.draw(1).item_id for _ in range(8)] == [
         reversed_pool.draw(1).item_id for _ in range(8)
     ]
+
+
+def test_validate_capacity_reports_every_short_band_not_just_the_first():
+    # Bands 1 and 3 are both too shallow for their ladder demand; band 2 is
+    # sufficient. A stop-at-first implementation would only ever mention
+    # band 1 and never reach band 3 — this pins that both are surfaced in a
+    # single raised error.
+    config = BenchmarkTaskConfig(
+        name="t",
+        data_file="t.jsonl",
+        total_turns=9,
+        ladder=[
+            {"band": 1, "turns": 3},
+            {"band": 2, "turns": 2},
+            {"band": 3, "turns": 4},
+        ],
+    )
+    ladder = DifficultyLadder.from_config(config)
+    items = _items(1, 2) + _items(2, 5) + _items(3, 1)
+    sampler = SeededSampler(items, seed=1)
+
+    with pytest.raises(InsufficientPoolError) as excinfo:
+        sampler.validate_capacity(ladder)
+
+    message = str(excinfo.value)
+    assert "band 1" in message
+    assert "band 3" in message

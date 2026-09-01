@@ -63,13 +63,23 @@ class SeededSampler:
     def validate_capacity(self, ladder: DifficultyLadder) -> None:
         """Fail fast when a band cannot supply the whole season.
 
+        Checks every band the ladder demands and reports every shortfall in
+        one error, rather than stopping at the first short band. This is the
+        gate that runs before a long unattended run (up to 180 sessions), and
+        a pool that is shallow across several bands is entirely plausible —
+        surfacing them all at once saves a fix-and-rerun cycle per band.
+
         Raises:
             InsufficientPoolError: If any band's pool is smaller than the
-                number of turns the ladder assigns to it.
+                number of turns the ladder assigns to it. The message names
+                every short band, each with its demand and actual pool size.
         """
+        shortfalls = []
         for band, needed in sorted(ladder.demand().items()):
             available = self.pool_size(band)
             if available < needed:
-                raise InsufficientPoolError(
+                shortfalls.append(
                     f"band {band} needs {needed} items but the pool holds {available}"
                 )
+        if shortfalls:
+            raise InsufficientPoolError("; ".join(shortfalls))
