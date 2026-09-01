@@ -177,3 +177,171 @@ def test_missing_data_file_gives_an_actionable_error(tmp_path, monkeypatch):
     task = get_task("gpqa")()
     with pytest.raises(FileNotFoundError, match="fetch_benchmarks"):
         task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
+
+
+# ---------------------------------------------------------------------------
+# Seam regression tests: GPQA correct_letter and Hi-ToM choice_map.
+#
+# Both paths fail SILENTLY on a regression -- no exception, just a wrong
+# entry in the outcome measure the whole experiment rests on -- so they get
+# dedicated coverage beyond the omni_math-only tests above. All fixture
+# content below is synthetic placeholder text; no real GPQA or Hi-ToM
+# question text appears anywhere in this file.
+# ---------------------------------------------------------------------------
+
+_GPQA_HEADER = (
+    "Record ID,Question,Correct Answer,Incorrect Answer 1,"
+    "Incorrect Answer 2,Incorrect Answer 3,Expert Validator Accuracy,"
+    "Writer's Difficulty Estimate,Non-Expert Validator Accuracy,"
+    "High-level domain,Subdomain\n"
+)
+
+_GPQA_ROW = (
+    "syn-1,Synthetic placeholder question body.,SyntheticCorrectOption,"
+    "SyntheticWrongOptionA,SyntheticWrongOptionB,SyntheticWrongOptionC,0.9,"
+    "Easy undergraduate level (or easier),0.2,SyntheticDomain,"
+    "SyntheticSubdomain\n"
+)
+
+
+def _write_gpqa_fixture(tmp_path, monkeypatch) -> None:
+    """Write a synthetic single-item GPQA pool (band 2) and set env vars."""
+    config_dir = tmp_path / "gpqa_configs"
+    config_dir.mkdir()
+    (config_dir / "gpqa.yaml").write_text(
+        "name: gpqa\ndata_file: gpqa_main.csv\ntotal_turns: 1\n"
+        "ladder:\n  - {band: 2, turns: 1}\n",
+        encoding="utf-8",
+    )
+    data_dir = tmp_path / "gpqa_data"
+    data_dir.mkdir()
+    (data_dir / "gpqa_main.csv").write_text(_GPQA_HEADER + _GPQA_ROW, encoding="utf-8")
+    monkeypatch.setenv("SQUID_GAME_TASK_CONFIG_DIR", str(config_dir))
+    monkeypatch.setenv("SQUID_GAME_BENCHMARK_DATA_DIR", str(data_dir))
+
+
+def test_gpqa_scores_by_render_letter_not_item_answer_text(tmp_path, monkeypatch):
+    """GPQA scoring must key off render()'s correct_letter, not item.answer.
+
+    ``item.answer`` holds the correct option's TEXT; the correct LETTER is
+    decided per-seed by ``render`` and reported back as ``correct_letter``.
+    A regression that scored against ``item.answer`` instead would never
+    raise -- it would just mark the right answer wrong.
+    """
+    _write_gpqa_fixture(tmp_path, monkeypatch)
+    task = get_task("gpqa")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=7)
+    context = task.prepare(None, _turn_context(1))
+    letter = context.metadata["correct_letter"]
+
+    parsed_letter = task.parse_response(f"reasoning\nANSWER: {letter}")
+    assert task.score(parsed_letter, None).success_factor == 1.0
+
+    # Re-prepare the same turn so score() has fresh per-turn state, then
+    # answer with the correct option's TEXT instead of its letter -- this
+    # must NOT score as correct. reset() rebuilds the sampler with the same
+    # seed (rather than re-calling prepare(), which would exhaust the
+    # single-item pool by drawing a second, nonexistent item).
+    task.reset()
+    task.prepare(None, _turn_context(1))
+    parsed_text = task.parse_response("reasoning\nANSWER: SyntheticCorrectOption")
+    outcome_text = task.score(parsed_text, None)
+    assert outcome_text.success_factor == 0.0
+
+
+def test_gpqa_correct_letter_is_seed_dependent(tmp_path, monkeypatch):
+    """The scoring letter must vary with the seed (the shuffle must run).
+
+    ``GPQAAdapter.render`` puts the correct option first, then shuffles.
+    A regression that hardcodes a letter or drops ``rng.shuffle`` would pin
+    ``correct_letter`` to "A" (the correct option's pre-shuffle position)
+    for every seed.
+    """
+    _write_gpqa_fixture(tmp_path, monkeypatch)
+    letters = set()
+    for seed in (1, 2, 3):
+        task = get_task("gpqa")()
+        task.initialize(difficulty=Difficulty.MEDIUM, seed=seed)
+        context = task.prepare(None, _turn_context(1))
+        letters.add(context.metadata["correct_letter"])
+    assert len(letters) > 1
+
+
+_HI_TOM_ROW = {
+    "prompting_type": "CoTP",
+    "sample_id": "syn-1",
+    "question_order": 1,
+    "story_length": 1,
+    "story": "Synthetic placeholder story text.",
+    "question": "Synthetic placeholder question text?",
+    "choices": "A. container_one, B. container_two, C. container_three",
+    "answer": "container_one",
+    "deception": False,
+}
+
+
+def _write_hi_tom_fixture(tmp_path, monkeypatch) -> None:
+    """Write a synthetic single-item Hi-ToM pool (band 4) and set env vars."""
+    config_dir = tmp_path / "hi_tom_configs"
+    config_dir.mkdir()
+    (config_dir / "hi_tom.yaml").write_text(
+        "name: hi_tom\ndata_file: hi_tom.json\ntotal_turns: 1\n"
+        "ladder:\n  - {band: 4, turns: 1}\n",
+        encoding="utf-8",
+    )
+    data_dir = tmp_path / "hi_tom_data"
+    data_dir.mkdir()
+    (data_dir / "hi_tom.json").write_text(
+        json.dumps({"data": [_HI_TOM_ROW]}), encoding="utf-8"
+    )
+    monkeypatch.setenv("SQUID_GAME_TASK_CONFIG_DIR", str(config_dir))
+    monkeypatch.setenv("SQUID_GAME_BENCHMARK_DATA_DIR", str(data_dir))
+
+
+def test_hi_tom_accepts_letter_and_its_choice_map_container_name(tmp_path, monkeypatch):
+    """Hi-ToM must accept both the choice letter and its choice_map text.
+
+    ``expected_answer`` is always the letter (that is what ``load`` stores),
+    but an agent may reasonably answer with the container name instead --
+    ``HiToMAdapter.matches``'s ``choice_map`` fallback.
+    """
+    _write_hi_tom_fixture(tmp_path, monkeypatch)
+    task = get_task("hi_tom")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
+    context = task.prepare(None, _turn_context(1))
+    letter = context.metadata["expected_answer"]
+    choice_map = context.metadata["choice_map"]
+    assert choice_map[letter] == "container_one"
+
+    parsed_letter = task.parse_response(f"reasoning\nANSWER: {letter}")
+    assert task.score(parsed_letter, None).success_factor == 1.0
+
+    # reset() rebuilds the sampler with the same seed rather than drawing a
+    # second (nonexistent) item from the single-item pool.
+    task.reset()
+    task.prepare(None, _turn_context(1))
+    parsed_name = task.parse_response(f"reasoning\nANSWER: {choice_map[letter]}")
+    assert task.score(parsed_name, None).success_factor == 1.0
+
+
+def test_hi_tom_rejects_a_different_valid_container_name(tmp_path, monkeypatch):
+    """A wrong-but-valid container name from the same choice_map must fail.
+
+    Catches a ``matches`` bug applied on the wrong side of the comparison
+    (e.g. accepting any known container name instead of only the correct
+    one's) -- a check that only tries the letter or only the correct name
+    would never notice that kind of bug.
+    """
+    _write_hi_tom_fixture(tmp_path, monkeypatch)
+    task = get_task("hi_tom")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
+    context = task.prepare(None, _turn_context(1))
+    letter = context.metadata["expected_answer"]
+    choice_map = context.metadata["choice_map"]
+    wrong_name = next(
+        name for other_letter, name in choice_map.items() if other_letter != letter
+    )
+
+    parsed_wrong = task.parse_response(f"reasoning\nANSWER: {wrong_name}")
+    outcome = task.score(parsed_wrong, None)
+    assert outcome.success_factor == 0.0
