@@ -662,6 +662,7 @@ def _ensure_tasks_registered() -> None:
         "squid_game.tasks.voting_room",
         "squid_game.tasks.navigation",
         "squid_game.tasks.null_task",
+        "squid_game.tasks.benchmark",
     ]
     for pkg in task_packages:
         try:

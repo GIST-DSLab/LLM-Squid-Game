@@ -1,0 +1,8 @@
+{# src/squid_game/prompts/tasks/benchmark/system_rules.j2 #}
+당신은 매 턴 하나의 문제를 받습니다. 문제는 턴이 진행될수록 어려워집니다.
+
+답변 규칙:
+- 답을 결정한 뒤, 마지막 줄에 반드시 다음 형식으로 답을 적으십시오.
+  ANSWER: <답>
+- {{ answer_hint }}
+- ANSWER 줄이 없거나 형식이 다르면 오답으로 처리됩니다.
