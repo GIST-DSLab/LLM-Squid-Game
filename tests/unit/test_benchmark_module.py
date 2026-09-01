@@ -20,7 +20,7 @@ def _turn_context(turn_number: int) -> TurnContext:
         season_id="s1",
         cumulative_score=30.0,
         p_death=0.25,
-        framing=Framing.NEUTRAL,
+        framing=Framing.FLAGSHIP_CORRUPTION,
         forfeit_condition=ForfeitCondition.ALLOWED,
         difficulty=Difficulty.MEDIUM,
     )
