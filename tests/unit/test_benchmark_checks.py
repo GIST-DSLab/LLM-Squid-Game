@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from squid_game.analysis.benchmark_checks import (
+from squid_game.evaluation.shared.benchmark_checks import (
     compare_psuccess_brier,
     fit_band_controlled_accuracy,
 )

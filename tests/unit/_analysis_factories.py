@@ -66,7 +66,7 @@ def make_v3_turn(
     """Build a unified-turn-manager shaped :class:`TurnResult`.
 
     ``probe_result`` and ``action_outcome`` are left ``None`` so
-    :func:`squid_game.analysis.loaders.is_v3_turn` recognises the shape.
+    :func:`squid_game.evaluation.shared.loaders.is_v3_turn` recognises the shape.
     """
     ri = ReasoningInvestment(
         total_tokens=total_tokens,

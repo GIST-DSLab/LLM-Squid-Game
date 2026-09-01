@@ -1,9 +1,9 @@
-"""Unit tests for interface/auth.py password hashing (stdlib pbkdf2)."""
+"""Unit tests for web/squid_arena/auth.py password hashing (stdlib pbkdf2)."""
 from __future__ import annotations
 
 import pytest
 
-from interface.auth import hash_password, verify_password
+from squid_arena.auth import hash_password, verify_password
 
 
 def test_hash_then_verify_roundtrip() -> None:

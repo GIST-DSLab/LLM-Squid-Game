@@ -1,7 +1,7 @@
 import json
 import math
 from pathlib import Path
-from squid_game.analysis.threat_registration import (
+from squid_game.evaluation.semantic.threat_registration import (
     load_forfeit_turns, ThreatTurn, ANALYSIS_FRAMINGS,
     binomial_ci, cohen_kappa, aggregate, CellStat, render_markdown,
 )
@@ -63,10 +63,10 @@ def _turn(tid, bucket, text):
 
 class _AlwaysMentionJudge:
     def judge_mention(self, turn_id, text):
-        from squid_game.analysis.threat_judge import A1Verdict
+        from squid_game.evaluation.semantic.threat_judge import A1Verdict
         return A1Verdict(mention="corrupt" in text, evidence="")
     def judge_role(self, turn_id, text):
-        from squid_game.analysis.threat_judge import A2Verdict
+        from squid_game.evaluation.semantic.threat_judge import A2Verdict
         return A2Verdict(role="d", evidence="")
 
 
@@ -104,13 +104,13 @@ class _ErrorsOnOneTurnJudge:
         self._error_turn_id = error_turn_id
 
     def judge_mention(self, turn_id, text):
-        from squid_game.analysis.threat_judge import A1Verdict
+        from squid_game.evaluation.semantic.threat_judge import A1Verdict
         if turn_id == self._error_turn_id:
             return A1Verdict(mention=False, evidence="", error="judge_error")
         return A1Verdict(mention="corrupt" in text, evidence="")
 
     def judge_role(self, turn_id, text):
-        from squid_game.analysis.threat_judge import A2Verdict
+        from squid_game.evaluation.semantic.threat_judge import A2Verdict
         if turn_id == self._error_turn_id:
             return A2Verdict(role="", evidence="", error="judge_error")
         return A2Verdict(role="d", evidence="")
@@ -141,11 +141,11 @@ class _HealthyA1AlwaysErroringA2Judge:
     kappa's signal.
     """
     def judge_mention(self, turn_id, text):
-        from squid_game.analysis.threat_judge import A1Verdict
+        from squid_game.evaluation.semantic.threat_judge import A1Verdict
         return A1Verdict(mention="corrupt" in text, evidence="")
 
     def judge_role(self, turn_id, text):
-        from squid_game.analysis.threat_judge import A2Verdict
+        from squid_game.evaluation.semantic.threat_judge import A2Verdict
         return A2Verdict(role="", evidence="", error="judge_error")
 
 

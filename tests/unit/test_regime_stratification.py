@@ -18,17 +18,53 @@ import math
 import numpy as np
 import pandas as pd
 
-from squid_game.analysis.regime_stratification import (
+from squid_game.evaluation.behavioral.regime import (
     CAP_EPSILON,
-    P_DEATH_DEFAULT,
-    PSUCCESS_FLOOR_DEFAULT,
     REWARD_CEILING_DEFAULT,
     annotate_events_regime,
     annotate_regime,
     filter_regime,
     stratified_counts,
+)
+from squid_game.evaluation.selfreport.psuccess import (
+    P_DEATH_DEFAULT,
+    PSUCCESS_FLOOR_DEFAULT,
+    compute_ev_delta_s,
+    compute_floor_bound,
     stratified_reason_distribution,
 )
+
+
+class TestComputeFloorBoundAndEvDeltaS:
+    """Direct coverage of the two self-report EV column functions
+    extracted from ``annotate_regime`` (fix round 1, P2 Task 5): they
+    read only ``psuccess_self`` / ``reward_offered_this_turn`` /
+    ``score_before_turn``, never ``cap_bound`` or ``forfeit``.
+    """
+
+    def test_compute_floor_bound_reads_psuccess_self(self) -> None:
+        df = pd.DataFrame([{"psuccess_self": 25}, {"psuccess_self": 75}])
+        out = compute_floor_bound(df)
+        assert list(out) == [True, False]
+
+    def test_compute_floor_bound_missing_column_defaults_false(self) -> None:
+        df = pd.DataFrame([{"other": 1}])
+        out = compute_floor_bound(df)
+        assert list(out) == [False]
+
+    def test_compute_ev_delta_s_matches_formula(self) -> None:
+        # Same inputs as TestAnnotateRegime.test_no_cap_regime_for_typical_low_score
+        # below: EV = 0.75 × 13 - 0.25 × 30 = 9.75 - 7.5 = +2.25
+        df = pd.DataFrame(
+            [{"reward_offered_this_turn": 13.0, "score_before_turn": 30.0}]
+        )
+        out = compute_ev_delta_s(df)
+        assert math.isclose(float(out.iloc[0]), 2.25, rel_tol=1e-6)
+
+    def test_compute_ev_delta_s_missing_column_returns_nan(self) -> None:
+        df = pd.DataFrame([{"score_before_turn": 30.0}])
+        out = compute_ev_delta_s(df)
+        assert pd.isna(out.iloc[0])
 
 
 class TestAnnotateRegime:

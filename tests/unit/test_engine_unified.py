@@ -1,9 +1,10 @@
 """Unit tests for ``GameEngine`` v3 unified-flow wiring (Phase F).
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §7.3 — engine wiring tests
-(``test_engine_wiring_signal_game``, ``test_engine_wiring_null_task``,
-``test_engine_run_session_end_to_end``). Plus three Phase F-specific
-tests (forfeit/death branch, p_death_override priority, score floor).
+Engine wiring tests (``test_engine_wiring_signal_game``,
+``test_engine_wiring_null_task``, ``test_engine_run_session_end_to_end``)
+verify the engine drives SignalGame and NullTask through a full session
+via the unified turn path. Plus three Phase F-specific tests (forfeit/
+death branch, p_death_override priority, score floor).
 
 The engine still depends on a real ``Agent``; we use a ``StubAgent``
 (reused from ``test_unified_turn.py``-style design) that emits canned
@@ -65,7 +66,7 @@ class CannedAgent(Agent):
         system_prompt: str,
     ) -> str:
         # Used only by the legacy path (per-turn Task Score probe in
-        # core/turn.py). The end-of-session Q1-Q4 self-report probe
+        # core/legacy/turn.py). The end-of-session Q1-Q4 self-report probe
         # was removed on 2026-04-21 — see §14.22.
         self.last_completion = CompletionResult(
             text="probe-stub-response",

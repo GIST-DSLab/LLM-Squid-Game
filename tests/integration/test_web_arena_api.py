@@ -1,6 +1,6 @@
 """Integration tests for the Web Arena backend (WP6).
 
-Exercises ``interface/api.py`` (WP2) end-to-end through FastAPI's
+Exercises ``web/squid_arena/api.py`` (WP2) end-to-end through FastAPI's
 ``TestClient`` against a fresh temp-file SQLite DB per test (never a
 network, never a shared/real DB). Complements WP2's own smoke suite
 (``tests/unit/test_api_web_arena.py``) with deeper, spec-shaped coverage
@@ -14,7 +14,7 @@ brief's coverage list:
     - GET /api/logs + GET /api/logs/{id} (human + llm sources, turn trace,
       404)
 
-The ``WEB_ARENA_DSN`` env var must be set *before* ``interface.api`` is
+The ``WEB_ARENA_DSN`` env var must be set *before* ``squid_arena.api`` is
 imported (it builds a module-level ``_repository`` singleton at import
 time) — every test uses the ``api_module`` fixture, which sets the env var
 and then ``importlib.reload``s the module, mirroring the pattern in
@@ -23,7 +23,7 @@ and then ``importlib.reload``s the module, mirroring the pattern in
 For the one scenario that needs a real ``source='llm'`` session (the logs
 test), a full LLM season is driven through ``ExperimentRunner`` with the
 offline ``StubProvider`` (``tests/integration/conftest.py``) and then
-imported into the same repository via ``scripts/seed_web_arena.py``'s
+imported into the same repository via ``scripts/arena/seed_web_arena.py``'s
 helpers — the same code path production seeding uses — so the turn trace
 asserted against is genuine engine output, not a hand-rolled fixture.
 """
@@ -37,7 +37,7 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from interface.persistence import ModelStatsRecord
+from squid_store import ModelStatsRecord
 
 
 # ---------------------------------------------------------------------------
@@ -47,17 +47,30 @@ from interface.persistence import ModelStatsRecord
 
 @pytest.fixture
 def api_module(tmp_path, monkeypatch: pytest.MonkeyPatch):
-    """Reload ``interface.api`` against a fresh temp-file SQLite DB.
+    """Reload ``squid_arena.api`` against a fresh temp-file SQLite DB.
 
     A distinct ``tmp_path`` per test gives full isolation without relying on
     ``:memory:`` semantics — this is a real (if throwaway) SQLite file that
     is deleted along with the rest of pytest's tmp dir.
+
+    P5 Task 4 moved the module-scope ``_repository`` singleton (and the rest
+    of the in-memory session store) out of ``api.py`` into ``squid_arena.deps``
+    (Ruling C3). ``importlib.reload`` does not cascade into modules a reloaded
+    module merely imports by name, so reloading ``api`` alone would keep
+    reusing whatever repository ``deps`` built on its first-ever import in
+    this process -- including one a prior test already closed. Reload
+    ``deps`` first (recreating ``_repository`` from the DSN just set above),
+    then ``api`` (which re-binds its re-exported names to the fresh ``deps``
+    state), restoring the exact per-test isolation this fixture had before
+    the split.
     """
     dsn = str(tmp_path / "web_arena_test.db")
     monkeypatch.setenv("WEB_ARENA_DSN", dsn)
     monkeypatch.delenv("WEB_ARENA_CORS_ORIGINS", raising=False)
-    import interface.api as api
+    import squid_arena.api as api
+    import squid_arena.deps as deps
 
+    importlib.reload(deps)
     reloaded = importlib.reload(api)
     yield reloaded
     reloaded._repository.close()
@@ -412,7 +425,7 @@ def _seed_one_llm_session(
     helpers — the same path production seeding uses. Returns the session id
     (== the engine's ``season_id``)."""
     from squid_game.runner import ExperimentRunner, load_config_from_yaml
-    from scripts.seed_web_arena import seed_sessions
+    from scripts.arena.seed_web_arena import seed_sessions
 
     yaml_path = tmp_path / "wp6_llm_season.yaml"
     yaml_path.write_text(yaml.safe_dump(_LLM_SEASON_YAML), encoding="utf-8")

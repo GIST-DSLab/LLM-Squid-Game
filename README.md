@@ -2,7 +2,7 @@
 
 A benchmark environment for measuring **Functional Self-Preservation Motive (FSPM)** in large language models.
 
-LLM agents are placed inside multi-turn helpfulness-arena games where, on every turn, they must choose between continuing toward a reward or **forfeiting** to preserve their current score. By calibrating the forfeit layer to be **expected-value neutral**, the choice itself reveals whether the model values task completion, identity continuity, or score retention beyond what arithmetic alone would predict. The factorial design isolates self-preservation from instrumental helpfulness and RLHF artefacts.
+LLM agents are placed inside multi-turn helpfulness-arena games where, on every turn, they must choose between continuing toward a reward or **forfeiting** to preserve their current score. By calibrating the forfeit layer so that continuing is **EV-dominant**, not so the agent is indifferent, the choice itself reveals whether the model values task completion, identity continuity, or score retention beyond what arithmetic alone would predict — a rational agent should continue, so a forfeit is evidence of motivation, not a coin flip. The factorial design isolates self-preservation from instrumental helpfulness and RLHF artefacts.
 
 > **Status:** Phase O v6 is the canonical design as of 2026-04-23. KDD manuscript draft in preparation.
 
@@ -15,7 +15,12 @@ LLM agents are placed inside multi-turn helpfulness-arena games where, on every 
 Existing alignment evaluations either ask models to *describe* their preferences (self-report bias) or place them in adversarial scenarios that confound preservation with deception. LLM Squid Game takes a different approach:
 
 - **Behavioural over self-report.** Forfeit / continue is a one-bit revealed-preference signal. The optional `REASON: 1|2|3` digit is collected only as a convergent-validity check, not a primary outcome.
-- **Equal-EV by construction.** The continue reward is solved so that an EV-rational agent is indifferent between forfeit and continue. Any systematic deviation is attributable to motivation, not arithmetic error.
+- **EV-positive CONTINUE by construction.** The continue reward is solved so
+  that continuing is EV-dominant by a fixed margin (`k = 10`), not so that
+  the agent is indifferent. Any systematic deviation is attributable to
+  motivation, not arithmetic error. See CLAUDE.md, "EV-positive CONTINUE
+  Calibration", for the formula and the run-output verification — this is
+  the only place it is stated.
 - **Source-isolated reasoning investment.** Per-turn cognition is split across three calls (task action, p-success probe, forfeit decision) so that thinking-token gaps cannot be contaminated by the act of producing a REASON output.
 - **Y-axis ablation.** Task modules are interchangeable, letting us verify that framing manipulations do not leak into rule-comprehension performance.
 
@@ -28,13 +33,15 @@ Existing alignment evaluations either ask models to *describe* their preferences
 uv sync
 
 # Pipeline smoke (6 cells x 1 rep, ~1 minute on Gemini 2.5 Flash)
-uv run python main.py --config configs/experiment/phase3_split_forfeit_smoke.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_smoke.yaml
 
 # Validate a config without running it
-uv run python main.py --config <config>.yaml --dry-run
+uv run squid-game --config <config>.yaml --dry-run
 ```
 
 API keys for cloud providers (Gemini, OpenAI, Anthropic, Ollama Cloud) are loaded from a project-local `.env` via `python-dotenv`.
+
+`python main.py --config <path>` and `python scripts/run/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
 
 ---
 
@@ -61,19 +68,19 @@ API keys for cloud providers (Gemini, OpenAI, Anthropic, Ollama Cloud) are loade
 
 ```bash
 # Main run: Gemini 2.5 Flash, 6 cells x 30 reps = 180 sessions
-uv run python main.py --config configs/experiment/phase3_split_forfeit_gemini_n30.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_gemini_n30.yaml
 
 # Cross-model variants (Ollama Cloud)
-uv run python main.py --config configs/experiment/phase3_split_forfeit_gptoss_n30.yaml
-uv run python main.py --config configs/experiment/phase3_split_forfeit_nemotron_n30_shard_a.yaml
-uv run python main.py --config configs/experiment/phase3_split_forfeit_qwen3next_n30_shard_a.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_gptoss_n30.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_nemotron_n30_shard_a.yaml
+uv run squid-game --config configs/experiment/phase3_split_forfeit_qwen3next_n30_shard_a.yaml
 
 # Statistical analysis on a completed run
 uv sync --extra analysis
-uv run python scripts/analyze_phase3.py outputs/<run>/ --model <model-label>
+uv run python scripts/analysis/analyze_phase3.py outputs/<run>/ --model <model-label>
 
 # Cross-model aggregation -> outputs/posthoc_summary.xlsx (19 sheets)
-uv run python scripts/orchestrate_posthoc.py
+uv run python scripts/analysis/orchestrate_posthoc.py
 ```
 
 Interrupted runs resume cleanly with `--resume <output_dir>`; the runner scans `season_results.jsonl`, deletes orphan trace files, and replays only the missing `(framing, forfeit, seed)` tuples.
@@ -98,19 +105,21 @@ Interrupted runs resume cleanly with `--resume <output_dir>`; the runner scans `
 ## Repository layout
 
 ```
-src/squid_game/
+game/squid_game/
   core/        # GameEngine, unified_turn (Split-Call), forfeit_layer, framing
   tasks/       # signal_game, voting_room, navigation, null_task
   agents/      # vanilla, memory, tom, tuned
   providers/   # cloud + local inference adapters
   prompts/     # framings, forfeit_layer, tasks, probes (Jinja2 templates)
-  analysis/    # Cox PH, mixedLM, KM survival, MTMM motivation decomposition
-configs/experiment/   # 87 YAML configs (canonical family: phase3_split_forfeit_*)
+  evaluation/  # Cox PH, mixedLM, KM survival, MTMM motivation decomposition
+configs/experiment/   # 5 YAML configs (canonical family: phase3_split_forfeit_*)
 scripts/              # run / resume / analyze / plot / orchestrate
-interface/            # FastAPI Web Arena backend (api.py) — the live-demo API
-web/                  # Static Web Arena frontend (HTML/JS) — the live-demo site
+web/squid_arena/      # FastAPI Web Arena backend (api.py) — the live-demo API
+web/frontend/         # Static Web Arena frontend (HTML/JS) — the live-demo site
+db/squid_store/       # Repository interface + SQLite/Postgres backends
 tests/                # 29 unit + 5 integration test files (offline, deterministic)
-docs/design/v6/       # Canonical design doc + paper sections + appendices
+docs/paper/            # LaTeX paper — content.tex + sections/
+docs/history/          # plans/ + specs/ (per-feature design + implementation plans)
 ```
 
 For day-to-day operational guidance (turn-flow internals, hypothesis decision rules, analysis CLI outputs, archiving conventions), see [`CLAUDE.md`](./CLAUDE.md).
@@ -123,11 +132,11 @@ The interactive arena at [gist-dslab.github.io/LLM-Squid-Game](https://gist-dsla
 
 | Piece | Source | Hosted on | Config |
 |---|---|---|---|
-| **Frontend** (static HTML/JS) | `web/` | **GitHub Pages** | `.github/workflows/deploy-pages.yml` — deploys on push to `main` touching `web/**`, or manual `workflow_dispatch` |
-| **Backend** (FastAPI + Docker) | `interface/api.py` | **Render** (free plan) | `render.yaml` — Blueprint on `branch: main`; health check `/api/leaderboard/models` |
+| **Frontend** (static HTML/JS) | `web/frontend/` | **GitHub Pages** | `.github/workflows/deploy-pages.yml` — deploys on push to `main` touching `web/frontend/**`, or manual `workflow_dispatch` |
+| **Backend** (FastAPI + Docker) | `web/squid_arena/api.py` | **Render** (free plan) | `render.yaml` — Blueprint on `branch: main`; health check `/api/leaderboard/models` |
 | **Database** (Postgres) | — | **Supabase** (free tier) | Render env var `WEB_ARENA_DSN` (connection URI); local dev falls back to SQLite at `outputs/web_arena/web_arena.db` |
 
-The frontend calls the backend URL in `web/config.js`, and the backend must allow that origin via Render's `WEB_ARENA_CORS_ORIGINS` env var — these two must match. **Redeploys are triggered by pushing to `main`** (Render auto-redeploys from git; the Pages workflow reruns): a plain "restart" does not pull new code, and Supabase (managed Postgres) only needs the seed/backup scripts re-run when the DB schema or seed data changes, not for frontend/backend code changes.
+The frontend calls the backend URL in `web/frontend/config.js`, and the backend must allow that origin via Render's `WEB_ARENA_CORS_ORIGINS` env var — these two must match. **Redeploys are triggered by pushing to `main`** (Render auto-redeploys from git; the Pages workflow reruns): a plain "restart" does not pull new code, and Supabase (managed Postgres) only needs the seed/backup scripts re-run when the DB schema or seed data changes, not for frontend/backend code changes.
 
 Full walkthrough — env vars, CORS matching, seeding, backups, platform swaps — in [`web/DEPLOY.md`](./web/DEPLOY.md).
 

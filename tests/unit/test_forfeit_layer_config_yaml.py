@@ -11,15 +11,27 @@ Smoke config must:
 Backward-compat (§11): older smoke configs must still load with
 ``use_forfeit_layer=False`` default.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§8, §11.
+The requirements above are the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason=(
+        "Pins configs/experiment/phase3_forfeit_layer_smoke.yaml, the Unit 14 "
+        "single-call 2x2+1 topology superseded by the Unit 15 Split-Call path. "
+        "The YAML was never committed and no run output records it, so it "
+        "cannot be restored. Kept rather than deleted: drop this marker if the "
+        "original YAML resurfaces. The live v6 contract is "
+        "tests/unit/test_v6_configs.py."
+    )
+)
+
 from pathlib import Path
 
-import pytest
 import yaml
 
 from squid_game.models.config import (

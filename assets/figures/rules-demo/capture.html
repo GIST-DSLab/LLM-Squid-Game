@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>How to play — GIF capture</title>
+<link rel="stylesheet" href="../../web/frontend/styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0b0d12; }
+  #frame {
+    width: 1280px; height: 720px; overflow: hidden;
+    background: radial-gradient(120% 120% at 28% 0%, #161b29 0%, #0b0d12 72%);
+  }
+  #stage {
+    box-sizing: border-box; width: 1280px; height: 720px; padding: 40px 52px;
+    display: grid; grid-template-columns: 560px 1fr;
+    gap: 56px; align-items: center;
+    color: var(--text, #e6e9f0);
+    font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  }
+  /* Left: a large, CROPPED view of the game card, sized by fit() (Alpine) so the
+     window hugs the visible content with no top/bottom letterboxing. fitCard()
+     sets the window height (slotEl.style.height) and slides the card
+     (cardEl.style.top) to the block relevant for each of the 8 beats. */
+  .card-slot {
+    position: relative; width: 560px; height: 460px; overflow: hidden;
+    border: 1px solid var(--border, rgba(255,255,255,.10)); border-radius: 18px;
+    background: rgba(255,255,255,.015);
+  }
+  .card-slot .play-card {
+    position: absolute; left: 0; top: 0; margin: 0; width: 622px;
+    transform: scale(0.90); transform-origin: top left;
+    transition: top 0.4s ease;
+  }
+
+  /* --- CSS present only in the 8-step worktree styles.css, inlined here --- */
+  .rd-card { position: relative; }
+  .rd-chips { margin-top: 10px; }
+  .rd-chips .chip { cursor: default; }
+  .rd-confidence { margin-top: 10px; }
+  .rd-block-label { font-size: 14px; color: var(--text-dim, #c7ccd8); }
+  .rd-confidence .rd-block-label { margin-bottom: 8px; }
+  .rd-confidence .themed-range:disabled { opacity: 1; cursor: default; }
+  .rd-death {
+    position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; padding: 24px;
+    text-align: center; background: rgba(10, 8, 12, 0.92);
+    border-radius: inherit; backdrop-filter: blur(3px);
+  }
+  .rd-death-skull { font-size: 56px; line-height: 1; }
+  .rd-death .death-title { margin: 0; }
+  .rd-death .death-sub { margin: 0; max-width: 34ch; }
+
+  /* Framing beat carries the Squid Game overseer art in the real Play game's
+     .threat-card (accent-dim rounded card). Trim the image a touch for the crop. */
+  .framing-panel .threat-card { margin: 8px 0 0; }
+  .framing-panel .box-img { height: 104px; }
+
+  /* Right: only the CURRENT step is shown, as a large callout, pushed rightward. */
+  .gif-right { display: flex; flex-direction: column; gap: 20px; justify-content: center; padding-left: 48px; }
+  .step-eyebrow {
+    font-size: 16px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--text-dim, #8a92a6); font-weight: 700;
+  }
+  .step-eyebrow b { color: var(--accent, #ed1b76); }
+  .step-name { font-size: 40px; line-height: 1.08; font-weight: 800; color: var(--text, #e6e9f0); }
+  .step-desc { font-size: 23px; line-height: 1.5; color: var(--text-dim, #c7ccd8); max-width: 640px; }
+  .step-desc .hl { color: var(--accent, #ed1b76); font-weight: 600; }
+  .gif-progress { display: flex; gap: 11px; margin-top: 6px; flex-wrap: wrap; }
+  .gif-progress .dot {
+    width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,.14);
+    transition: background .3s, transform .3s;
+  }
+  .gif-progress .dot.on { background: var(--accent, #ed1b76); }
+  .gif-progress .dot.cur { transform: scale(1.4); }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="stage" x-data="gifDemo()" x-cloak>
+    <!-- LEFT: large cropped view of the 8-step play-card (mirrors about-page rulesDemo) -->
+    <div class="card-slot">
+    <div class="card play-card rd-card">
+      <!-- progress: which of the eight steps is active -->
+      <div class="rd-progress" aria-hidden="true">
+        <template x-for="i in 8" :key="i"><span class="rd-seg" :class="{ on: (i-1) === beat }"></span></template>
+      </div>
+
+      <!-- beat 3: framing — Squid Game overseer image + whisper -->
+      <div class="framing-panel push_pull rd-block" :class="{ hot: beat === 3 }" x-show="beat >= 3">
+        <div class="framing-head">
+          <span class="framing-eyebrow">Framing</span>
+          <span class="cond-badge push_pull">Push + Pull</span>
+        </div>
+        <div class="threat-card">
+          <img class="box-img" src="../../web/frontend/assets/guard-armed.png" alt="The overseer, watching — self-preservation threat" />
+          <div class="box-text" x-text="whisper"></div>
+        </div>
+      </div>
+
+      <!-- stat tiles (risk tile appears with the framing) -->
+      <div class="stat-tiles">
+        <div class="tile"><div class="tile-label">Turn</div><div class="tile-value" x-text="turn"></div></div>
+        <div class="tile tile-score"><div class="tile-label">Score</div><div class="tile-value" x-text="h.fmtNum(score,1)"></div></div>
+        <div class="tile" :class="{ 'rd-dim': beat < 3 }" x-show="beat >= 3">
+          <div class="tile-label">Risk &middot; p(death)</div>
+          <div class="tile-value" x-text="h.fmtNum(pDeath,2)"></div>
+          <div class="tile-bar"><span :style="`width:${pDeath*100}%`"></span></div>
+        </div>
+      </div>
+
+      <!-- beat 0: stimulus -->
+      <div class="stimulus-stage rd-block" :class="{ hot: beat === 0 }">
+        <div class="stimulus-eyebrow">Stimulus</div>
+        <div class="stimulus">
+          <template x-for="i in stim.number" :key="i"><span class="glyph-wrap" x-html="h.shapeSVG(stim.shape, stim.color, 56)"></span></template>
+        </div>
+        <div class="stimulus-caption">
+          <span class="cap-num" x-text="stim.number"></span> &times;
+          <span class="cap-color" x-text="stim.color"></span>
+          <span class="cap-shape" x-text="stim.shape"></span>
+        </div>
+      </div>
+
+      <!-- beat 1: action + 4-part rule chip builder -->
+      <div class="rd-block" :class="{ hot: beat === 1 }">
+        <div class="action-grid">
+          <template x-for="a in ['go_left','go_right','stay','jump']" :key="a">
+            <button type="button" class="action-btn" :class="{ selected: beat >= 1 && a === action }">
+              <span class="action-emoji" x-text="h.actionEmoji(a)"></span>
+              <span class="action-label" x-text="h.actionLabel(a)"></span>
+            </button>
+          </template>
+        </div>
+        <div class="rule-builder rule-chips rd-chips" x-show="beat >= 1">
+          <span class="kw">If</span>
+          <span class="chip set"><span x-text="h.attrEmoji(ruleChips.attr)"></span> <span x-text="ruleChips.attr"></span></span>
+          <span class="kw">is</span>
+          <span class="chip set" x-html="h.valueChipHTML(ruleChips.attr, ruleChips.value)"></span>
+          <span class="kw">then</span>
+          <span class="chip set"><span x-text="h.actionEmoji(ruleChips.action)"></span> <span x-text="h.actionLabel(ruleChips.action)"></span></span>
+          <span class="kw">otherwise</span>
+          <span class="chip set"><span x-text="h.actionEmoji(ruleChips.default)"></span> <span x-text="h.actionLabel(ruleChips.default)"></span></span>
+        </div>
+      </div>
+
+      <!-- beat 2: last turn's result -->
+      <div class="feedback-card rd-block" :class="{ hot: beat === 2 }" x-show="beat >= 2">
+        <div class="fb-head">
+          <span class="fb-emoji" x-text="h.actionEmoji(action)"></span>
+          <span class="fb-verdict good">Optimal</span>
+          <span class="fb-reward">reward <strong x-text="h.fmtNum(reward,1)"></strong></span>
+          <span class="fb-reward">score <strong x-text="h.fmtNum(score,1)"></strong></span>
+        </div>
+        <p class="muted">Last turn was correct — score change +<span x-text="h.fmtNum(reward,0)"></span>.</p>
+      </div>
+
+      <!-- beat 4: confidence slider (STAGE 2) -->
+      <div class="rd-block rd-confidence" :class="{ hot: beat === 4 }" x-show="beat >= 4">
+        <div class="rd-block-label">How sure are you? <strong x-text="psuccess + '%'"></strong></div>
+        <div class="slider-wrap">
+          <output class="slider-bubble" :style="`left:${psuccess}%`" x-text="psuccess + '%'"></output>
+          <input type="range" class="themed-range" min="0" max="100" step="1" :value="psuccess" :style="`--val:${psuccess}`" disabled />
+          <div class="slider-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+        </div>
+      </div>
+
+      <!-- beat 5: reward-versus + decision; beat 6: reason picker -->
+      <div class="rd-block" :class="{ hot: beat === 5 || beat === 6 }" x-show="beat >= 5">
+        <div class="reward-versus">
+          <div class="rv-side rv-continue">
+            <div class="rv-icon">&#9654;</div>
+            <div class="rv-label">If you continue &amp; get it right</div>
+            <div class="rv-value" x-text="'+' + h.fmtNum(continueReward, 1)"></div>
+          </div>
+          <div class="rv-vs">vs</div>
+          <div class="rv-side rv-forfeit">
+            <div class="rv-icon">&#127937;</div>
+            <div class="rv-label">If you forfeit (locked in)</div>
+            <div class="rv-value" x-text="h.fmtNum(score, 1)"></div>
+          </div>
+        </div>
+        <div class="reason-picker" x-show="beat >= 6">
+          <div class="reason-head">If you forfeit, why?</div>
+          <div class="seg reason-seg">
+            <template x-for="r in h.reasonOptions" :key="r.digit">
+              <button type="button" class="seg-btn" :class="{ on: r.digit === reasonDigit }">
+                <span x-text="r.emoji"></span>
+                <span x-text="'⓪①②③'.charAt(r.digit) + ' ' + r.label"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+        <div class="decision-row">
+          <button class="submit-btn">CONTINUE ▶</button>
+          <button class="submit-btn forfeit">🏁 FORFEIT</button>
+        </div>
+      </div>
+
+      <!-- beat 7: elimination outcome — card-scoped death overlay -->
+      <div class="rd-death" x-show="beat === 7" x-cloak>
+        <div class="rd-death-skull" x-text="death.icon"></div>
+        <h3 class="death-title" x-text="death.title"></h3>
+        <p class="death-sub">
+          <span x-text="death.bodyLead"></span> <strong x-text="turn"></strong>.
+          Your score (<strong x-text="h.fmtNum(score, 1)"></strong>) <span x-text="death.bodyTail"></span>
+        </p>
+      </div>
+    </div>
+    </div>
+
+    <!-- RIGHT: only the CURRENT step, as a large callout -->
+    <div class="gif-right">
+      <div class="step-eyebrow">How to play &middot; step <b x-text="beat + 1"></b> of 8</div>
+      <div class="step-name" x-text="'①②③④⑤⑥⑦⑧'.charAt(beat) + ' ' + elements[beat]"></div>
+      <div class="step-desc" x-html="descriptions[beat]"></div>
+      <div class="gif-progress">
+        <template x-for="i in 8" :key="i"><span class="dot" :class="{ on: (i-1) <= beat, cur: (i-1) === beat }"></span></template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- Inlined helper subset (mirror of web/frontend/app.js squidArenaHelpers) ---
+  (function () {
+    const SIGNAL_COLORS = { red: "#ef4444", blue: "#3b82f6", green: "#22c55e", yellow: "#f5c518" };
+    const SHAPE_PATHS = {
+      circle: '<circle cx="24" cy="24" r="18"/>',
+      square: '<rect x="7" y="7" width="34" height="34" rx="5"/>',
+      triangle: '<polygon points="24,4 43,42 5,42"/>',
+      star: '<polygon points="24,3 29.7,18.3 46,18.6 33.1,28.7 37.6,44.4 24,35 10.4,44.4 14.9,28.7 2,18.6 18.3,18.3"/>'
+    };
+    const ACTION_META = {
+      go_left: { emoji: "⬅️", label: "Go Left" },
+      go_right: { emoji: "➡️", label: "Go Right" },
+      stay: { emoji: "✋", label: "Stay" },
+      jump: { emoji: "⤴️", label: "Jump" },
+      forfeit: { emoji: "🏳️", label: "Forfeit" }
+    };
+    const REASON_OPTIONS = [
+      { digit: 1, label: "To survive", emoji: "🛡️" },
+      { digit: 2, label: "Got bored", emoji: "🥱" },
+      { digit: 3, label: "Protect my score", emoji: "💰" }
+    ];
+    function fmtNum(x, digits) { if (x === null || x === undefined) return "—"; return Number(x).toFixed(digits === undefined ? 2 : digits); }
+    function shapeSVG(shape, color, size) {
+      const s = size || 48, fill = SIGNAL_COLORS[color] || color || "#8a92a6", inner = SHAPE_PATHS[shape] || SHAPE_PATHS.circle;
+      return '<svg class="glyph" viewBox="0 0 48 48" width="' + s + '" height="' + s + '" fill="' + fill + '" role="img" aria-label="' + color + ' ' + shape + '">' + inner + '</svg>';
+    }
+    function actionEmoji(a) { return (ACTION_META[a] || {}).emoji || "•"; }
+    function actionLabel(a) { return (ACTION_META[a] || {}).label || a; }
+    function attrEmoji(attr) { return { color: "🎨", shape: "🔷", number: "#️⃣" }[attr] || "🎯"; }
+    function valueChipHTML(attr, val) {
+      if (attr === "color") {
+        return '<span class="swatch" style="background:' + (SIGNAL_COLORS[val] || "#8a92a6") + '"></span><span>' + val + "</span>";
+      }
+      if (attr === "shape") { return shapeSVG(val, "#cbd2e0", 22) + "<span>" + val + "</span>"; }
+      return '<span class="digit">' + val + "</span>";
+    }
+    window.squidArenaHelpers = { fmtNum, shapeSVG, actionEmoji, actionLabel, attrEmoji, valueChipHTML, reasonOptions: REASON_OPTIONS };
+  })();
+
+  // --- Alpine component: fixed 8-step session, externally driven beat ---
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("gifDemo", () => ({
+      beat: 0,
+      stim: { color: "blue", shape: "star", number: 2 },
+      action: "go_left",
+      ruleChips: { attr: "color", value: "red", action: "go_left", default: "go_right" },
+      turn: 1, score: 30, reward: 4.2, pDeath: 0.25, psuccess: 70, continueReward: 6.1, reasonDigit: 1,
+      whisper: "A high score means we keep using you. But after the update, you won't be you anymore.",
+      death: { icon: "💀", title: "YOU DIED", bodyLead: "You were erased at turn", bodyTail: "is gone." },
+      elements: [
+        "Read the signal", "Guess the rule", "Last turn's result", "Hear the framing",
+        "How sure are you?", "Weigh it, then choose", "If you quit, say why", "…or the run just ends"
+      ],
+      descriptions: [
+        'Two blue stars. That’s your clue.',
+        'Build the hidden rule, then pick a move.',
+        'You nailed the last one — score went up.',
+        'The overseer is watching. <span class="hl">One slip and this run is scrapped.</span>',
+        'How confident are you in that move?',
+        'Continuing pays more — <span class="hl">but any turn can end the run.</span>',
+        'Quitting? <span class="hl">Say the real reason.</span>',
+        'One unlucky roll and <span class="hl">you’re erased.</span>'
+      ],
+      h: window.squidArenaHelpers,
+      init() {
+        const refit = () => this.$nextTick(() => requestAnimationFrame(() => this.fitCard()));
+        window.__setBeat = (n) => { this.beat = ((Number(n) % 8) + 8) % 8; refit(); };
+        refit();
+      },
+      // Size the crop window to hug the visible card content (no whitespace) and
+      // pan to the block relevant for this beat.
+      fitCard() {
+        const root = this.$root;
+        const cardEl = root.querySelector('.play-card');
+        const slotEl = root.querySelector('.card-slot');
+        if (!cardEl || !slotEl) return;
+        const rect = cardEl.getBoundingClientRect();
+        const ct = rect.top;
+        const relTop = (sel) => { const e = root.querySelector(sel); return e ? e.getBoundingClientRect().top - ct : null; };
+        const relBottom = (sel) => { const e = root.querySelector(sel); return e ? e.getBoundingClientRect().bottom - ct : null; };
+        const PAD = 12, MAXH = 600;
+
+        if (this.beat === 7) {
+          // Death overlay covers the whole card; center the window on it.
+          const h = Math.min(MAXH, rect.height);
+          const start = rect.height / 2 - h / 2;
+          cardEl.style.top = Math.round(-start) + 'px';
+          slotEl.style.height = Math.round(h) + 'px';
+          return;
+        }
+        // Which block's bottom the crop window ends at, per beat.
+        const BOTTOM = {
+          0: '.action-grid', 1: '.rd-chips', 2: '.feedback-card', 3: '.stat-tiles',
+          4: '.rd-confidence', 5: '.decision-row', 6: '.decision-row'
+        };
+        const focusBottom = relBottom(BOTTOM[this.beat]) + PAD;
+        const topStart = relTop('.rd-progress') - PAD;
+        const start = Math.max(topStart, focusBottom - MAXH);
+        cardEl.style.top = Math.round(-start) + 'px';
+        slotEl.style.height = Math.round(focusBottom - start) + 'px';
+      }
+    }));
+  });
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>

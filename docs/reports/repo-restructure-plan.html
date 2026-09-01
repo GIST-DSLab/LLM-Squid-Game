@@ -1,0 +1,1185 @@
+<title>저장소 구조 정비 계획</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #F1F4F3;
+    --surface:    #FBFCFB;
+    --surface-2:  #E8EDEB;
+    --ink:        #16211F;
+    --muted:      #5C6B68;
+    --faint:      #8A9A96;
+    --rule:       #D3DBD8;
+    --accent:     #17605B;
+    --accent-wash:#DDEAE8;
+    --crit:       #9E3B2C;
+    --crit-wash:  #F3E2DE;
+    --warn:       #9A6C1E;
+    --warn-wash:  #F2E9D8;
+    --ok:         #3B6E4E;
+    --ok-wash:    #DFEAE1;
+
+    --f-display: "Gowun Batang", "Nanum Myeongjo", Georgia, serif;
+    --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --col: 74ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0F1513;
+      --surface:    #161F1D;
+      --surface-2:  #1D2926;
+      --ink:        #E2E9E6;
+      --muted:      #9AAAA5;
+      --faint:      #6E7F7B;
+      --rule:       #2B3936;
+      --accent:     #5FB3AA;
+      --accent-wash:#12302D;
+      --crit:       #D98B7B;
+      --crit-wash:  #34201C;
+      --warn:       #D2AC63;
+      --warn-wash:  #2E2618;
+      --ok:         #7FB891;
+      --ok-wash:    #1A2A20;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #0F1513;
+    --surface:    #161F1D;
+    --surface-2:  #1D2926;
+    --ink:        #E2E9E6;
+    --muted:      #9AAAA5;
+    --faint:      #6E7F7B;
+    --rule:       #2B3936;
+    --accent:     #5FB3AA;
+    --accent-wash:#12302D;
+    --crit:       #D98B7B;
+    --crit-wash:  #34201C;
+    --warn:       #D2AC63;
+    --warn-wash:  #2E2618;
+    --ok:         #7FB891;
+    --ok-wash:    #1A2A20;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px 120px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    display: grid;
+    gap: 26px;
+    padding: 72px 0 40px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: clamp(38px, 6.4vw, 62px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+
+  .standfirst {
+    max-width: 64ch;
+    font-size: 17.5px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 8px;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 14px 16px 16px;
+  }
+
+  .stat b {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 23px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .stat span {
+    display: block;
+    font-size: 12.5px;
+    color: var(--faint);
+    margin-top: 3px;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 62px; }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+  }
+
+  .sec-head .n {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: clamp(24px, 3.2vw, 31px);
+    line-height: 1.22;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: var(--f-body);
+    font-weight: 600;
+    font-size: 17px;
+    margin: 0 0 8px;
+    line-height: 1.45;
+  }
+
+  p { max-width: var(--col); margin: 0 0 16px; }
+  p:last-child { margin-bottom: 0; }
+
+  .lede { font-size: 17px; color: var(--muted); }
+
+  code, .path {
+    font-family: var(--f-mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 2px;
+    word-break: break-word;
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  /* ---------- index ---------- */
+
+  .index {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 40px;
+  }
+
+  .index a {
+    background: var(--surface);
+    padding: 15px 16px 17px;
+    text-decoration: none;
+    color: var(--ink);
+    display: block;
+    transition: background 140ms ease;
+  }
+
+  .index a:hover { background: var(--accent-wash); }
+
+  .index a i {
+    display: block;
+    font-style: normal;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 3px;
+  }
+
+  .index a b { font-weight: 500; font-size: 15px; }
+
+  /* ---------- tree ---------- */
+
+  .tree-grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 900px) {
+    .tree-grid.pair { grid-template-columns: 1fr 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+  }
+
+  .panel > header {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  pre {
+    margin: 0;
+    padding: 18px 16px 20px;
+    overflow-x: auto;
+    font-family: var(--f-mono);
+    font-size: 12.6px;
+    line-height: 1.78;
+    color: var(--ink);
+  }
+
+  pre .c { color: var(--faint); }
+  pre .add { color: var(--ok); font-weight: 500; }
+  pre .del { color: var(--crit); }
+  pre .dir { color: var(--accent); }
+
+  /* ---------- findings ---------- */
+
+  .findings { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+
+  .finding {
+    display: grid;
+    gap: 6px 20px;
+    padding: 24px 0 26px 18px;
+    border-bottom: 1px solid var(--rule);
+    border-left: 3px solid var(--rule);
+    position: relative;
+  }
+
+  .finding[data-sev="crit"] { border-left-color: var(--crit); }
+  .finding[data-sev="warn"] { border-left-color: var(--warn); }
+  .finding[data-sev="low"]  { border-left-color: var(--faint); }
+
+  @media (min-width: 920px) {
+    .finding {
+      grid-template-columns: 108px minmax(0, 1fr);
+      align-items: start;
+    }
+    .finding .meta { grid-row: span 3; }
+  }
+
+  .meta { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; }
+
+  .fid {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chip {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border: 1px solid currentColor;
+  }
+
+  .chip.crit { color: var(--crit); background: var(--crit-wash); }
+  .chip.warn { color: var(--warn); background: var(--warn-wash); }
+  .chip.low  { color: var(--muted); background: var(--surface-2); }
+
+  .finding p { margin: 0 0 10px; }
+  .finding p:last-child { margin-bottom: 0; }
+
+  .evidence {
+    font-family: var(--f-mono);
+    font-size: 12.4px;
+    line-height: 1.7;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 10px 13px;
+    margin-top: 12px;
+    max-width: var(--col);
+    overflow-x: auto;
+  }
+
+  .evidence b { color: var(--ink); font-weight: 600; }
+
+  .fix {
+    max-width: var(--col);
+    margin-top: 12px;
+    padding-left: 13px;
+    border-left: 2px solid var(--accent);
+    color: var(--ink);
+  }
+
+  .fix strong { font-weight: 600; color: var(--accent); }
+
+  /* ---------- table ---------- */
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 620px; }
+
+  th, td {
+    text-align: left;
+    padding: 11px 15px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    font-size: 14.5px;
+  }
+
+  th {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--surface-2);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.mono, th.mono { font-family: var(--f-mono); font-size: 12.6px; }
+
+  /* ---------- phases ---------- */
+
+  .phases { display: grid; gap: 20px; }
+
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    display: grid;
+    gap: 0;
+  }
+
+  .phase > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
+
+  .phase .pn {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  .phase h3 { margin: 0; font-size: 17.5px; }
+
+  .phase .cost {
+    margin-left: auto;
+    font-family: var(--f-mono);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .phase .body { padding: 18px 20px 22px; }
+
+  .phase ul { margin: 0 0 14px; padding-left: 20px; max-width: var(--col); }
+  .phase li { margin-bottom: 7px; }
+  .phase li:last-child { margin-bottom: 0; }
+
+  .verify {
+    font-family: var(--f-mono);
+    font-size: 12.4px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 10px 13px;
+    overflow-x: auto;
+    color: var(--muted);
+  }
+
+  .verify b { color: var(--ink); font-weight: 500; display: block; }
+
+  /* ---------- callout ---------- */
+
+  .danger {
+    border: 1px solid var(--crit);
+    background: var(--crit-wash);
+    padding: 20px 22px 22px;
+  }
+
+  .danger h3 { color: var(--crit); }
+  .danger ul { margin: 0; padding-left: 20px; max-width: var(--col); }
+  .danger li { margin-bottom: 8px; }
+  .danger li:last-child { margin-bottom: 0; }
+
+  .questions { display: grid; gap: 14px; }
+
+  .q {
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+    max-width: var(--col);
+  }
+
+  .q b { display: block; font-weight: 600; margin-bottom: 3px; }
+  .q span { color: var(--muted); font-size: 15px; }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--f-mono);
+    font-size: 12px;
+    color: var(--faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">LLM Squid Game · 구조 감사 2026-08-30</div>
+    <h1>저장소 구조 정비 계획</h1>
+    <p class="standfirst">
+      현재 트리를 실측해 15건의 구조 결함을 확인했다. 코드는 건강하지만 <em>코드 주변</em>이
+      무너져 있다 — 실험 설정이 git 밖에 있고, 루트 문서 3개가 서로 다른 설계를 주장하며,
+      1,006개 테스트가 CI 없이 방치돼 있다. 아래는 진단과 4단계 실행 계획이다.
+      <strong>이 문서는 계획서이며, 파일은 아직 하나도 수정되지 않았다.</strong>
+    </p>
+
+    <div class="stat-strip">
+      <div class="stat"><b>1,006</b><span>수집된 테스트 (CI 미연결)</span></div>
+      <div class="stat"><b>0</b><span>configs/experiment 파일</span></div>
+      <div class="stat"><b>46</b><span>죽은 docs/design 경로 참조</span></div>
+      <div class="stat"><b>42</b><span>평면 scripts/*.py</span></div>
+      <div class="stat"><b>104</b><span>sdd/*.diff 사본</span></div>
+      <div class="stat"><b>666&thinsp;MB</b><span>outputs/ (LFS)</span></div>
+    </div>
+
+    <nav class="index">
+      <a href="#snapshot"><i>01</i><b>현재 구조</b></a>
+      <a href="#findings"><i>02</i><b>진단 15건</b></a>
+      <a href="#target"><i>03</i><b>목표 트리</b></a>
+      <a href="#moves"><i>04</i><b>이동 대장</b></a>
+      <a href="#plan"><i>05</i><b>4단계 실행</b></a>
+      <a href="#donot"><i>06</i><b>금지 사항</b></a>
+      <a href="#open"><i>07</i><b>결정 필요</b></a>
+    </nav>
+  </header>
+
+  <!-- ============ 01 ============ -->
+  <section id="snapshot">
+    <div class="sec-head"><span class="n">01</span><h2>지금 무엇이 어디에 있는가</h2></div>
+
+    <p class="lede">
+      추적 파일은 <code>outputs/</code> 834개, <code>src/</code> 98개, <code>docs/</code> 83개,
+      <code>tests/</code> 57개, <code>scripts/</code> 47개 순이다. 즉 저장소 파일의 대다수가
+      코드가 아니라 <em>산출물</em>이며, 그 산출물이 코드와 같은 층위에 놓여 있다.
+    </p>
+
+    <div class="tree-grid">
+      <div class="panel">
+        <header><span>현재 루트</span><span>실측 2026-08-30</span></header>
+<pre><span class="dir">src/squid_game/</span>      <span class="c">98 files — core, tasks, agents, models, providers, prompts, analysis</span>
+<span class="dir">interface/</span>          <span class="c">15 files — Web Arena 백엔드. src/ 밖의 최상위 패키지 (!)</span>
+<span class="dir">web/</span>                <span class="c">Alpine.js 프론트엔드 (빌드 없음) + assets/ 13 MB</span>
+<span class="dir">scripts/</span>            <span class="c">42 .py + 3 sh — 실행·분석·플롯·운영·덤프가 한 폴더</span>
+<span class="dir">configs/</span>
+  <span class="dir">providers/</span>        <span class="c">3 yaml</span>
+  <span class="dir">tasks/</span>            <span class="c">3 yaml</span>
+  <span class="del">experiment/</span>       <span class="del">비어 있음 — 한 번도 커밋된 적 없음</span>
+<span class="dir">tests/</span>              <span class="c">unit 44 + integration 7 + web 1(.mjs, 고아)</span>
+<span class="dir">outputs/</span>            <span class="c">666 MB — 원시 세션(LFS) + 분석 산출물이 혼재</span>
+  <span class="dir">final_results/</span>    <span class="c">런 4개 디렉터리 + 크로스모델 집계 JSON 8개가 같은 층</span>
+  <span class="dir">call1_ri_analysis/</span> <span class="c">분석 산출물</span>
+  <span class="dir">reasoning_probe/</span>  <span class="c">분석 산출물</span>
+  <span class="dir">web_arena/</span>        <span class="c">로컬 SQLite (ignored)</span>
+<span class="dir">figures/</span>            <span class="c">51 MB — 논문 그림 + GIST 로고 원본(.ai) + 데모 프레임</span>
+<span class="dir">screenshots/</span>        <span class="c">README.md 한 개만 추적. 나머지는 로컬 스크래치</span>
+<span class="dir">docs/</span>
+  <span class="dir">en/</span>               <span class="c">LaTeX 논문 (content.tex + 8 sections)</span>
+  <span class="dir">analysis/</span>         <span class="c">리포트 HTML</span>
+  <span class="dir">superpowers/</span>      <span class="c">1.9 MB — plans 40 + sdd 104 diff + brainstorm</span>
+  <span class="dir">todo/</span>            <span class="c">미추적</span>
+README.md  CLAUDE.md  AGENTS.md   <span class="c">각 9.5 / 22 / 16 KB — 내용 상충</span>
+main.py  Dockerfile  render.yaml  <span class="c">.github/ 에는 Pages 배포 워크플로 1개뿐</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 ============ -->
+  <section id="findings">
+    <div class="sec-head"><span class="n">02</span><h2>진단</h2></div>
+
+    <p class="lede">
+      심각도 순으로 15건. 각 항목의 <em>근거</em>는 이번 감사에서 직접 실행한 명령의 출력이다.
+      추측으로 적은 항목은 없다.
+    </p>
+
+    <div class="findings">
+
+      <article class="finding" data-sev="crit">
+        <div class="meta"><span class="fid">F-01</span><span class="chip crit">차단</span></div>
+        <div>
+          <h3>실험 설정이 저장소 밖에 있다</h3>
+          <p>
+            <code>configs/experiment/</code>는 비어 있고 git에 한 번도 추적된 적이 없다.
+            그런데 9개 파일이 이 경로를 하드코딩한다. 결과적으로 README·CLAUDE.md에 적힌
+            <em>모든</em> <code>main.py --config</code> 커맨드가 실행 불가이고,
+            2026-04-22 정규 런은 현재 저장소만으로는 재현할 수 없다.
+          </p>
+          <div class="evidence">
+            <b>$ ls configs/experiment</b> → (empty)<br>
+            <b>$ grep -rl "configs/experiment" scripts tests</b> → 9 files
+            (resume_experiment, benchmark_mlx_vs_ollama, dump_gemini_smoke_prompt,
+            _trace_split_forfeit_production, test_phase3_configs, test_split_forfeit_config_yaml,
+            test_signal_risk_e2e, test_analysis_e2e, test_null_risk_e2e)
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — 정규 파라미터(<code>delta_s_continue: 10</code>,
+            <code>p_death: 0.25</code>, <code>starting_score: 30</code>,
+            <code>psuccess_floor: 0.3</code>, <code>base_reward: 10</code>,
+            <code>reward_cap_multiple: 10</code> + <code>use_*</code> 4개)로 6종 YAML을 재작성해
+            커밋한다. 설정은 산출물이 아니라 코드가 의존하는 1급 자산이므로 <code>.gitignore</code>
+            대상이 되어서는 안 된다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="crit">
+        <div class="meta"><span class="fid">F-02</span><span class="chip crit">차단</span></div>
+        <div>
+          <h3>루트 문서 3개가 서로 다른 설계를 주장한다</h3>
+          <p>
+            README.md와 AGENTS.md는 보상 계산을 <em>Equal-EV</em>라고 서술한다. CLAUDE.md는
+            같은 항목을 "Equal-EV로 부르지 말 것 — <code>k = 10</code>인 EV-positive"라고 명시하고,
+            논문 표기까지 금지한다. 셋 다 루트에 있고, 어느 것이 진실인지 파일만 봐서는 알 수 없다.
+          </p>
+          <div class="evidence">
+            <b>README.md:16</b> "Equal-EV by construction. ... an EV-rational agent is indifferent"<br>
+            <b>AGENTS.md:8</b> "an Equal-EV forfeit layer"<br>
+            <b>CLAUDE.md</b> "⚠️ Do not describe this as 'Equal-EV' in the paper."
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — 설계 사실의 SSOT를 <code>docs/design/</code> 한 곳으로 옮기고,
+            README/CLAUDE/AGENTS는 그곳을 <em>가리키기만</em> 한다. AGENTS.md는 CLAUDE.md의
+            구식 사본이므로 심볼릭 참조 한 줄로 축약하는 편이 낫다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="crit">
+        <div class="meta"><span class="fid">F-03</span><span class="chip crit">차단</span></div>
+        <div>
+          <h3>코드 46곳이 존재하지 않는 문서 경로를 가리킨다</h3>
+          <p>
+            <code>docs/design/v6/paper/metric.md</code>, <code>docs/design/v4/assets/</code> 같은
+            경로가 docstring과 문서에 46회 등장하지만 <code>docs/design/</code> 트리는 존재하지 않는다.
+            <code>archive/</code>도 15회. 분석 드라이버의 사양이 어디 적혀 있는지 코드가
+            거짓말을 하고 있는 상태다.
+          </p>
+          <div class="evidence">
+            <b>$ grep -rn "docs/design" src scripts *.md | wc -l</b> → 46<br>
+            영향 파일: analyze_phase3, orchestrate_posthoc, analyze_framing_ri_forfeit_continue,
+            gen_v4_diagrams, forfeit_survival, forfeit_regression, tc_regression, analysis/__init__ 외
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — 두 갈래 중 택1. (a) 원본 설계 문서를 복원해
+            <code>docs/design/</code>을 실재하게 만든다. (b) 원본이 없다면 참조를 일괄 치환하고,
+            사양을 되살릴 수 없는 곳은 <code># spec: lost</code>로 정직하게 표시한다.
+            지금처럼 방치하면 다음 분석자가 반드시 헛돈다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="crit">
+        <div class="meta"><span class="fid">F-04</span><span class="chip crit">차단</span></div>
+        <div>
+          <h3>테스트 1,006개가 CI에 연결돼 있지 않다</h3>
+          <p>
+            <code>.github/workflows/</code>에는 GitHub Pages 배포 워크플로 하나뿐이다.
+            pytest는 로컬에서만 돈다. 게다가 <code>pyproject.toml</code>에
+            <code>[tool.pytest.ini_options]</code>가 없고 루트 <code>conftest.py</code>도 없어,
+            <code>from interface...</code> import는 pytest의 rootdir 삽입이라는 부작용에
+            우연히 기대고 있다.
+          </p>
+          <div class="evidence">
+            <b>$ pytest --collect-only -q tests</b> → 1006 tests collected in 37.97s (수집 오류 0)<br>
+            <b>$ ls .github/workflows</b> → deploy-pages.yml<br>
+            <b>$ grep "tool.pytest" pyproject.toml</b> → (없음)
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — <code>[tool.pytest.ini_options]</code>에
+            <code>testpaths</code>, <code>pythonpath = ["."]</code>, <code>asyncio_mode</code>를
+            명시하고, unit 스위트를 도는 CI 워크플로를 추가한다. 구조 개편의 <em>전제 조건</em>이다:
+            안전망 없이 파일을 옮기면 회귀를 감지할 방법이 없다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="warn">
+        <div class="meta"><span class="fid">F-05</span><span class="chip warn">구조</span></div>
+        <div>
+          <h3><code>interface/</code>가 패키지 경계 밖에 있다</h3>
+          <p>
+            <code>pyproject.toml</code>의 wheel은 <code>src/squid_game</code>만 포함한다.
+            그런데 <code>interface/</code>는 <code>squid_game</code>을 12곳에서 import하고,
+            테스트·스크립트는 <code>from interface.persistence import ...</code>로 되받는다.
+            설치된 패키지가 아니므로 11개 파일이 <code>sys.path</code>를 직접 조작해 이를 메운다.
+          </p>
+          <div class="evidence">
+            <b>$ grep -rl "sys.path" scripts tests interface</b> → 11 files<br>
+            <b>scripts/seed_web_arena.py:44</b> <code>sys.path.insert(0, str(REPO_ROOT))</code><br>
+            <b>pyproject:</b> packages = ["src/squid_game"] — interface는 미포함
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — <code>src/squid_arena/</code>로 승격해 정식 패키지로 만든다.
+            import 경로가 고정되면 <code>sys.path</code> 해킹 11곳이 모두 사라지고,
+            Dockerfile/render.yaml은 모듈 경로 한 줄만 바뀐다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="warn">
+        <div class="meta"><span class="fid">F-06</span><span class="chip warn">구조</span></div>
+        <div>
+          <h3><code>scripts/</code> 42개가 한 층에 평면으로 쌓여 있다</h3>
+          <p>
+            성격이 전혀 다른 다섯 부류가 섞여 있다 — 실험 실행(2), 분석 드라이버(11),
+            플롯·다이어그램(9), Web Arena 운영(4), 프롬프트 덤프·일회성 도구(16).
+            <code>_</code> 접두사가 내부용을 표시하지만 5개뿐이고 규칙이 일관되지 않다.
+            새로 온 사람이 "정규 파이프라인"과 "2026-04-26에 한 번 돌린 것"을 구별할 수 없다.
+          </p>
+          <div class="evidence">
+            정규: analyze_phase3, orchestrate_posthoc ·
+            일회성: analyze_unified_cox / _with_load / _ph_audit,
+            analyze_framing_ri_forfeit / _continue, generate_manual_scores,
+            translate_trajectories, gen_v4_diagrams
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — <code>run/ · analysis/ · plots/ · arena/ · dev/</code> 5개
+            하위 디렉터리로 분류한다. 파일 내용은 건드리지 않고 위치만 옮기므로 위험이 낮고,
+            정규 진입점이 즉시 눈에 띄게 된다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="warn">
+        <div class="meta"><span class="fid">F-07</span><span class="chip warn">구조</span></div>
+        <div>
+          <h3>진입점이 3개다</h3>
+          <p>
+            <code>main.py</code>(dotenv 로드 후 runner 호출), <code>scripts/run_experiment.py</code>,
+            그리고 <code>pyproject</code>의 콘솔 스크립트 <code>squid-game =
+            squid_game.runner:main</code>. 셋 다 같은 곳으로 가지만 <code>.env</code> 로드 여부가
+            다르다 — 어느 것으로 실행했느냐에 따라 API 키가 잡히기도, 안 잡히기도 한다.
+          </p>
+          <p class="fix">
+            <strong>조치</strong> — <code>runner.main()</code> 안에서 <code>load_dotenv()</code>를
+            호출하도록 올리고, <code>main.py</code>는 얇은 shim으로 남기거나 삭제한다.
+            정규 진입점은 콘솔 스크립트 하나로 문서화한다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="warn">
+        <div class="meta"><span class="fid">F-08</span><span class="chip warn">데이터</span></div>
+        <div>
+          <h3><code>outputs/</code>가 원시 데이터와 분석 산출물을 섞는다</h3>
+          <p>
+            <code>outputs/final_results/</code> 안에 런 디렉터리 4개와 크로스모델 집계 JSON 8개가
+            같은 층에 놓여 있고, <code>call1_ri_analysis/</code>·<code>reasoning_probe/</code>는
+            <code>outputs/</code> 최상위에 따로 떠 있다. 원시 데이터(재생성 불가, LFS)와
+            분석 산출물(재생성 가능)의 수명이 완전히 다른데 같은 규칙으로 다뤄진다.
+          </p>
+          <div class="evidence">
+            <b>outputs/final_results/</b> 런 4개 + cognitive_load_mediation.json,
+            unified_cox_summary.json, tc_indicator_summary.json 등 8개 파일<br>
+            <b>추적 파일 834개 · 666 MB · *_turns.jsonl은 LFS</b>
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — <em>LFS 파일은 그대로 두고</em>, 재생성 가능한 분석 산출물만
+            <code>results/</code>로 분리한다. 원시 세션 데이터는 <code>outputs/final_results/</code>
+            경로를 유지한다 (F-금지 1 참조).
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="warn">
+        <div class="meta"><span class="fid">F-09</span><span class="chip warn">잡음</span></div>
+        <div>
+          <h3><code>docs/superpowers/sdd/</code>에 diff 사본 104개</h3>
+          <p>
+            848&thinsp;KB의 <code>review-&lt;sha&gt;..&lt;sha&gt;.diff</code> 파일들이다.
+            내용은 전부 git 히스토리에서 <code>git diff</code> 한 줄로 재생성된다.
+            검색 결과를 오염시키고, 문서 디렉터리를 실제 문서가 아닌 것으로 채운다.
+          </p>
+          <div class="evidence">
+            <b>$ find docs/superpowers/sdd -name "*.diff" | wc -l</b> → 104<br>
+            <b>$ du -sh docs/superpowers/sdd</b> → 848K
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — diff 파일은 삭제하고 <code>.gitignore</code>에
+            <code>docs/**/review-*.diff</code>를 추가한다. 리뷰 <em>보고서</em>(task-N-report.md)는
+            판단 기록이므로 보존한다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="warn">
+        <div class="meta"><span class="fid">F-10</span><span class="chip warn">구조</span></div>
+        <div>
+          <h3>레거시 모듈이 현역 코드와 같은 층에 섞여 있다</h3>
+          <p>
+            <code>core/risk_choice_layer.py</code>는 CLAUDE.md 스스로 "replay-only, 정규 v6 설정에서
+            도달 불가"라고 적어 두었지만 <code>engine.py</code>와 <code>unified_turn.py</code>가
+            최상단에서 무조건 import한다. <code>turn.py</code>(구 턴 흐름), <code>social.py</code>,
+            <code>survival.py</code>도 같은 상황이다. Phase 1/2/3 유물과 v6 현역을 이름만으로는
+            구별할 수 없다.
+          </p>
+          <div class="evidence">
+            <b>engine.py:22</b> <code>from squid_game.core.risk_choice_layer import RiskChoiceLayer</code><br>
+            <b>unified_turn.py:55</b> 동일 · <b>models/config.py:219</b> 동일<br>
+            <code>prompts/framings/</code>에 비활성 framing 6종(survival, neutral, emotion,
+            instruction, *_electricity)이 현역 3종과 나란히 존재
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — <code>core/legacy/</code>, <code>prompts/framings/legacy/</code>로
+            격리한다. 삭제가 아니라 <em>표지</em>다: 아카이브 설정 재생 능력은 유지하되,
+            읽는 사람이 무엇이 현역인지 즉시 알게 한다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="warn">
+        <div class="meta"><span class="fid">F-11</span><span class="chip warn">잡음</span></div>
+        <div>
+          <h3><code>figures/</code> 51&thinsp;MB에 성격이 다른 자산 3종이 섞여 있다</h3>
+          <p>
+            논문 그림(PNG/SVG), GIST 연구실 로고 원본(<code>.ai</code> + PNG 10 + SVG 10),
+            웹 데모용 GIF 프레임 시퀀스가 한 폴더에 있다. 로고 원본은 브랜드 자산이지
+            그림이 아니고, 프레임은 <code>how-to-play.gif</code>의 중간 산출물이다.
+          </p>
+          <p class="fix">
+            <strong>조치</strong> — <code>assets/brand/</code>(로고), <code>assets/figures/</code>
+            (논문 그림)로 나누고 프레임 시퀀스는 ignore 한다. <code>web/assets/</code>(13 MB)와의
+            중복도 이때 함께 확인한다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="low">
+        <div class="meta"><span class="fid">F-12</span><span class="chip low">잡음</span></div>
+        <div>
+          <h3><code>tests/web/rank_ladder.test.mjs</code>가 고아 상태다</h3>
+          <p>
+            <code>package.json</code>도, 러너도, CI 연결도 없다. 이 파일을 언급하는 유일한 곳은
+            2026-07-04 계획 문서다. 실행된 적 없는 테스트는 통과한 테스트로 오인되기 쉽다.
+          </p>
+          <div class="evidence">
+            <b>$ ls package.json</b> → No such file<br>
+            <b>$ grep -r "rank_ladder.test"</b> → docs/superpowers/plans/… 3 hits only
+          </div>
+          <p class="fix">
+            <strong>조치</strong> — <code>node --test</code>로 돌릴 최소 <code>package.json</code>을
+            두어 CI에 붙이거나, 유지할 의사가 없다면 삭제한다. 현 상태 유지는 최악의 선택지다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="low">
+        <div class="meta"><span class="fid">F-13</span><span class="chip low">문서</span></div>
+        <div>
+          <h3>CLAUDE.md의 사실 기술이 트리와 어긋난다</h3>
+          <p>
+            "unit suite (29 files)"라고 적혀 있으나 실제 44개다. <code>agents/_thinking_utils</code>로
+            표기됐지만 실제 파일은 <code>providers/thinking_utils.py</code>다.
+            <code>loaders.CELL_ID_MAP</code>이 stale하다는 사실은 문서에 적혀 있으나 코드는 그대로다.
+          </p>
+          <p class="fix">
+            <strong>조치</strong> — 구조 개편 완료 후 CLAUDE.md를 한 번에 갱신한다.
+            개편 전에 고치면 두 번 고치게 된다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="low">
+        <div class="meta"><span class="fid">F-14</span><span class="chip low">잡음</span></div>
+        <div>
+          <h3>루트에 사실상 로컬 스크래치 디렉터리가 두 개 있다</h3>
+          <p>
+            <code>screenshots/</code>는 <code>README.md</code> 한 개만 추적되고 나머지는 전부
+            ignore된다. <code>.playwright-mcp/</code>는 110개 항목이 루트에 쌓여 있다(ignore됨).
+            추적 대상이 1개인 디렉터리가 루트 한 칸을 차지할 이유는 없다.
+          </p>
+          <p class="fix">
+            <strong>조치</strong> — <code>screenshots/</code>를 <code>.scratch/screenshots/</code>
+            아래로 통합하고 README의 설명은 CONTRIBUTING 쪽으로 옮긴다. 우선순위는 낮다.
+          </p>
+        </div>
+      </article>
+
+      <article class="finding" data-sev="low">
+        <div class="meta"><span class="fid">F-15</span><span class="chip low">문서</span></div>
+        <div>
+          <h3><code>docs/</code>가 논문·리포트·작업기록을 구분하지 않는다</h3>
+          <p>
+            <code>docs/en/</code>(LaTeX 논문), <code>docs/analysis/</code>(HTML 리포트),
+            <code>docs/superpowers/</code>(작업 기록), 그리고 루트에 떠 있는
+            <code>cluster-c-cot-analysis.md</code>·<code>sd-cognitive-test-a-did.md</code>가
+            같은 층에 있다. <code>docs/en/</code>이라는 이름은 한국어 <code>docs/ko/</code>가
+            있을 것을 암시하지만 없다.
+          </p>
+          <p class="fix">
+            <strong>조치</strong> — <code>paper/ · design/ · reports/ · history/</code> 4분할.
+            <code>en/</code> → <code>paper/</code> 개명으로 존재하지 않는 대칭 암시를 없앤다.
+          </p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ 03 ============ -->
+  <section id="target">
+    <div class="sec-head"><span class="n">03</span><h2>목표 트리</h2></div>
+
+    <p class="lede">
+      원칙 하나: <strong>수명이 다른 것은 같은 디렉터리에 두지 않는다.</strong>
+      코드 · 설정 · 원시 데이터 · 재생성 가능한 산출물 · 문서 · 작업 기록 — 다섯 갈래를 분리한다.
+      <code>src/squid_game/</code> 내부는 이미 건강하므로 거의 손대지 않는다.
+    </p>
+
+    <div class="tree-grid">
+      <div class="panel">
+        <header><span>제안 구조</span><span><span class="add">＋신설</span> · <span class="del">－제거</span></span></header>
+<pre><span class="dir">src/</span>
+  <span class="dir">squid_game/</span>          <span class="c">벤치마크 엔진 — 구조 유지</span>
+    core/                <span class="c">engine, unified_turn, forfeit_layer, framing …</span>
+      <span class="add">legacy/</span>            <span class="add">← risk_choice_layer, turn, social, survival</span>
+    tasks/ agents/ models/ providers/ analysis/
+    prompts/
+      framings/          <span class="c">현역 3종만</span>
+        <span class="add">legacy/</span>          <span class="add">← survival, neutral, emotion, instruction, *_electricity</span>
+  <span class="add">squid_arena/</span>          <span class="add">← interface/ 승격. sys.path 해킹 11곳 소멸</span>
+
+<span class="dir">configs/</span>
+  providers/  tasks/
+  <span class="add">experiment/</span>          <span class="add">← v6 정규 6종 복원 + git 추적 (F-01)</span>
+
+<span class="dir">scripts/</span>              <span class="c">42개 → 5분류</span>
+  <span class="add">run/</span>                 <span class="add">run_experiment, resume_experiment</span>
+  <span class="add">analysis/</span>            <span class="add">analyze_*, orchestrate_posthoc</span>
+  <span class="add">plots/</span>               <span class="add">plot_*, build_*_diagram, gen_v4_diagrams</span>
+  <span class="add">arena/</span>               <span class="add">seed / backup / purge_web_arena</span>
+  <span class="add">dev/</span>                 <span class="add">_dump_*, _trace_*, benchmark_*, crop_*</span>
+
+<span class="dir">tests/</span>               unit/ integration/ web/  <span class="c">+ pytest 설정 명시</span>
+
+<span class="dir">outputs/</span>             <span class="c">원시 세션 데이터 전용 (LFS) — 경로 그대로 유지</span>
+  final_results/&lt;run&gt;/
+<span class="add">results/</span>             <span class="add">← 재생성 가능한 분석 산출물 (call1_ri, reasoning_probe, posthoc)</span>
+
+<span class="add">assets/</span>
+  <span class="add">brand/</span>               <span class="add">← figures/GistLab Logo</span>
+  <span class="add">figures/</span>             <span class="add">← 논문 그림</span>
+<span class="dir">web/</span>                 <span class="c">프론트엔드 — 유지</span>
+
+<span class="dir">docs/</span>
+  <span class="add">paper/</span>               <span class="add">← docs/en (LaTeX)</span>
+  <span class="add">design/</span>              <span class="add">설계 SSOT — 죽은 참조 46건의 목적지 (F-02, F-03)</span>
+  <span class="add">reports/</span>             <span class="add">← analysis/, 루트에 떠 있던 *.md</span>
+  <span class="add">history/</span>             <span class="add">← superpowers/plans (diff 104개는 삭제)</span>
+
+README.md  CLAUDE.md         <span class="c">둘 다 docs/design/ 을 가리키는 얇은 문서로</span>
+<span class="del">AGENTS.md</span>                   <span class="del">CLAUDE.md 참조 한 줄로 축약</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 ============ -->
+  <section id="moves">
+    <div class="sec-head"><span class="n">04</span><h2>이동 대장</h2></div>
+
+    <p class="lede">
+      실제로 손대는 경로 전부. "영향"은 이동 후 반드시 함께 고쳐야 하는 참조를 뜻한다.
+    </p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>단계</th><th class="mono">현재</th><th class="mono">이후</th><th>영향</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>P1</td><td class="mono">(없음)</td><td class="mono">configs/experiment/*.yaml</td>
+            <td>신규 6종. 테스트 5건이 이때 통과로 전환</td>
+          </tr>
+          <tr>
+            <td>P1</td><td class="mono">AGENTS.md</td><td class="mono">docs/design/ + 포인터</td>
+            <td>Equal-EV 서술 정정 (F-02)</td>
+          </tr>
+          <tr>
+            <td>P2</td><td class="mono">scripts/*.py</td><td class="mono">scripts/{run,analysis,plots,arena,dev}/</td>
+            <td>README·CLAUDE 커맨드 경로, <code>run_pipeline.sh</code></td>
+          </tr>
+          <tr>
+            <td>P3</td><td class="mono">interface/</td><td class="mono">src/squid_arena/</td>
+            <td>Dockerfile, render.yaml, 테스트 5개, 스크립트 4개, sys.path 11곳</td>
+          </tr>
+          <tr>
+            <td>P4</td><td class="mono">docs/en/</td><td class="mono">docs/paper/</td>
+            <td>LaTeX <code>\input</code> 경로, 그림 상대 경로</td>
+          </tr>
+          <tr>
+            <td>P4</td><td class="mono">docs/superpowers/sdd/*.diff</td><td class="mono">삭제 + ignore</td>
+            <td>없음 (git 히스토리에서 재생성 가능)</td>
+          </tr>
+          <tr>
+            <td>P4</td><td class="mono">outputs/{call1_ri_analysis,reasoning_probe}/</td><td class="mono">results/</td>
+            <td>probe·regression 스크립트의 출력 경로 기본값</td>
+          </tr>
+          <tr>
+            <td>P4</td><td class="mono">figures/GistLab Logo/</td><td class="mono">assets/brand/</td>
+            <td>web/index.html, 논문 그림 참조</td>
+          </tr>
+          <tr>
+            <td>P4</td><td class="mono">core/{risk_choice_layer,turn,social,survival}.py</td><td class="mono">core/legacy/</td>
+            <td>engine.py, unified_turn.py, models/config.py의 import 3곳</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 05 ============ -->
+  <section id="plan">
+    <div class="sec-head"><span class="n">05</span><h2>실행 계획</h2></div>
+
+    <p class="lede">
+      순서에 의미가 있다. P1은 파일을 <em>옮기지 않고</em> 안전망을 세우는 단계다.
+      안전망 없이 P2 이후로 가면 회귀를 감지할 수 없다. 각 단계는 독립 커밋 단위이며,
+      되돌리려면 해당 커밋만 revert 하면 된다.
+    </p>
+
+    <div class="phases">
+
+      <article class="phase">
+        <header>
+          <span class="pn">P1</span>
+          <h3>안전망 — 이동 없음</h3>
+          <span class="cost">위험 낮음 · 반나절</span>
+        </header>
+        <div class="body">
+          <ul>
+            <li><code>configs/experiment/</code> 6종 복원·커밋 (F-01) — 정규 파라미터는 CLAUDE.md에 복구되어 있다.</li>
+            <li><code>[tool.pytest.ini_options]</code>에 <code>testpaths</code>·<code>pythonpath</code>·<code>asyncio_mode</code> 명시 (F-04).</li>
+            <li>unit 스위트를 도는 CI 워크플로 추가. 이 시점의 통과/실패 목록을 <em>기준선</em>으로 커밋 메시지에 기록.</li>
+            <li>루트 문서 SSOT 정리: <code>docs/design/</code> 신설, Equal-EV 서술 정정 (F-02).</li>
+          </ul>
+          <div class="verify">
+            <b>검증</b>uv run pytest tests/unit -q  # 기준선 대비 신규 실패 0<br>
+            uv run python main.py --config configs/experiment/phase3_split_forfeit_smoke.yaml --dry-run
+          </div>
+        </div>
+      </article>
+
+      <article class="phase">
+        <header>
+          <span class="pn">P2</span>
+          <h3>scripts 분류</h3>
+          <span class="cost">위험 낮음 · 반나절</span>
+        </header>
+        <div class="body">
+          <ul>
+            <li>42개 <code>.py</code>를 5개 하위 디렉터리로 <code>git mv</code>. 파일 내용은 무수정.</li>
+            <li><code>run_pipeline.sh</code>, <code>start_servers.sh</code>의 경로 갱신.</li>
+            <li>README·CLAUDE.md의 커맨드 예시 갱신.</li>
+            <li>각 하위 디렉터리에 3–5줄 <code>README.md</code>: 정규 파이프라인인가, 일회성인가.</li>
+          </ul>
+          <div class="verify">
+            <b>검증</b>uv run python scripts/analysis/analyze_phase3.py outputs/final_results/&lt;run&gt;/ --model gemini-2.5-flash<br>
+            grep -rn "scripts/" README.md CLAUDE.md docs/  # 잔존 구경로 0
+          </div>
+        </div>
+      </article>
+
+      <article class="phase">
+        <header>
+          <span class="pn">P3</span>
+          <h3>interface → src/squid_arena</h3>
+          <span class="cost">위험 중간 · 하루</span>
+        </header>
+        <div class="body">
+          <ul>
+            <li><code>git mv interface src/squid_arena</code> 후 <code>pyproject</code> wheel packages에 추가.</li>
+            <li><code>from interface.</code> → <code>from squid_arena.</code> 일괄 치환 (테스트 5, 스크립트 4).</li>
+            <li><code>sys.path.insert</code> 11곳 제거 — 설치된 패키지가 되면 불필요해진다.</li>
+            <li>Dockerfile·render.yaml의 uvicorn 대상 모듈 경로 갱신.</li>
+          </ul>
+          <div class="verify">
+            <b>검증</b>uv run pytest tests/unit tests/integration -q<br>
+            docker build -t squid-arena . &amp;&amp; docker run -p 8000:8000 squid-arena  # /api/leaderboard/models 200<br>
+            grep -rn "sys.path" src scripts tests  # 0
+          </div>
+        </div>
+      </article>
+
+      <article class="phase">
+        <header>
+          <span class="pn">P4</span>
+          <h3>문서·산출물·레거시 정리</h3>
+          <span class="cost">위험 낮음(단, LFS 주의) · 하루</span>
+        </header>
+        <div class="body">
+          <ul>
+            <li><code>docs/</code> 4분할, <code>sdd/*.diff</code> 104개 삭제 + ignore 규칙 (F-09, F-15).</li>
+            <li>죽은 <code>docs/design</code> 참조 46건 일괄 정정 또는 <code>spec: lost</code> 표시 (F-03).</li>
+            <li>분석 산출물만 <code>results/</code>로 분리. <strong>LFS 원시 데이터는 이동하지 않는다.</strong></li>
+            <li><code>core/legacy/</code>, <code>prompts/framings/legacy/</code> 격리 (F-10).</li>
+            <li>마지막에 CLAUDE.md 사실 기술 일괄 갱신 (F-13).</li>
+          </ul>
+          <div class="verify">
+            <b>검증</b>git lfs ls-files | wc -l  # 개편 전후 동일해야 함<br>
+            uv run pytest -q &amp;&amp; grep -rn "docs/design/v6" src scripts | wc -l  # 0
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ 06 ============ -->
+  <section id="donot">
+    <div class="sec-head"><span class="n">06</span><h2>하지 말 것</h2></div>
+
+    <div class="danger">
+      <h3>이 개편에서 건드리면 안 되는 것</h3>
+      <ul>
+        <li>
+          <strong>LFS 파일 이동 금지.</strong> <code>outputs/**/*_turns.jsonl</code> 723개는 LFS
+          객체다. 워크트리에서 smudge 필터가 돌지 않으면 0바이트로 실체화되고, 그 상태로
+          <code>git add outputs/</code> 하면 포인터가 빈 파일로 덮여 데이터가 파괴된다.
+          <em>분석 산출물만</em> 옮기고 원시 데이터는 경로를 유지한다.
+        </li>
+        <li>
+          <strong>≥10 시즌 런 삭제 금지.</strong> 2026-04-22 정규 런 4종은 재현 비용이 크다.
+          "정리"의 대상이 아니다.
+        </li>
+        <li>
+          <strong>P1을 건너뛰고 이동부터 시작 금지.</strong> CI 기준선이 없으면 P3의
+          import 치환이 무엇을 깨뜨렸는지 알 방법이 없다.
+        </li>
+        <li>
+          <strong>프레임워크·의존성 교체 금지.</strong> 이번 작업은 <em>배치</em>만 바꾼다.
+          FastAPI·Alpine.js·pydantic은 그대로 둔다.
+        </li>
+        <li>
+          <strong>레거시 코드 삭제 금지.</strong> <code>risk_choice_layer</code> 계열은 아카이브
+          설정 재생 경로다. <code>legacy/</code>로 <em>표시</em>하되 지우지 않는다.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 07 ============ -->
+  <section id="open">
+    <div class="sec-head"><span class="n">07</span><h2>착수 전 결정 필요</h2></div>
+
+    <div class="questions">
+      <div class="q">
+        <b>1. <code>docs/design/</code> 원본이 어딘가에 남아 있는가?</b>
+        <span>
+          46건의 참조가 가리키는 <code>v6/paper/metric.md</code> 등이 다른 로컬 경로나
+          이전 브랜치에 있다면 복원이 최선이다. 없다면 사양을 코드에서 역으로 재구성해야 하며,
+          P4의 비용이 크게 달라진다.
+        </span>
+      </div>
+      <div class="q">
+        <b>2. <code>configs/experiment/</code>는 복원인가 재작성인가?</b>
+        <span>
+          런 산출물에서 파라미터는 복구되지만 <code>parallel_workers</code>·<code>max_turns</code>
+          같은 운영 항목은 추정이 된다. 원본 YAML을 보유 중이라면 그쪽이 정확하다.
+        </span>
+      </div>
+      <div class="q">
+        <b>3. <code>squid_arena</code>라는 패키지 이름으로 괜찮은가?</b>
+        <span>
+          대안: <code>squid_game.arena</code> 서브패키지로 흡수. 흡수하면 배포 단위가 하나로
+          줄지만, 벤치마크 엔진과 웹 서비스의 의존성이 섞인다 (FastAPI가 엔진 설치에 딸려 온다).
+        </span>
+      </div>
+      <div class="q">
+        <b>4. <code>tests/web/rank_ladder.test.mjs</code>는 살릴 것인가?</b>
+        <span>
+          살린다면 최소 <code>package.json</code> + <code>node --test</code> CI 잡이 필요하다.
+          아니면 P4에서 삭제한다.
+        </span>
+      </div>
+      <div class="q">
+        <b>5. 브랜치 전략은?</b>
+        <span>
+          현재 <code>linear-probe</code> 브랜치에 미병합 분석 작업이 있다. 구조 개편은 경로를
+          대량으로 바꾸므로 병합 충돌이 크다 — <code>linear-probe</code>를 먼저 정리한 뒤
+          개편 브랜치를 여는 편이 안전하다.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>실측 기준 2026-08-30 · 브랜치 linear-probe · HEAD 5bc9aa3</span>
+    <span>파일 변경 없음 — 계획 문서</span>
+  </footer>
+
+</div>

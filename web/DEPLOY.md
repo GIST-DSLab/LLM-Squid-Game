@@ -2,13 +2,13 @@
 
 Two independently deployable pieces:
 
-- **Backend** (`interface/api.py`, FastAPI) — containerized via the repo-root
+- **Backend** (`web/squid_arena/api.py`, FastAPI) — containerized via the repo-root
   `Dockerfile`, deployed to **Render** (free tier) via `render.yaml`.
-- **Frontend** (`web/`, static HTML/JS) — deployed to **GitHub Pages** via
+- **Frontend** (`web/frontend/`, static HTML/JS) — deployed to **GitHub Pages** via
   `.github/workflows/deploy-pages.yml`.
 
 They talk to each other over plain HTTPS: the frontend calls the backend URL
-configured in `web/config.js`, and the backend allows that frontend's origin
+configured in `web/frontend/config.js`, and the backend allows that frontend's origin
 via CORS (`WEB_ARENA_CORS_ORIGINS`). Getting those two values to match is the
 one thing you must not get wrong — see [CORS <-> config.js](#cors--configjs-must-match)
 below.
@@ -23,22 +23,22 @@ below.
 # a normal filesystem, and NOT needed inside Docker/Render (no iCloud there).
 chflags nohidden .venv/lib/python3.12/site-packages/*.pth
 
-uv run --no-sync uvicorn interface.api:app --port 8502
+uv run --no-sync uvicorn squid_arena.api:app --port 8502
 ```
 
 With no `WEB_ARENA_DSN` set, the backend falls back to a local SQLite file
 (`outputs/web_arena/web_arena.db`) — no Postgres needed for local dev.
 
-**Frontend** (from `web/`, in a separate terminal):
+**Frontend** (from `web/frontend/`, in a separate terminal):
 
 ```bash
-cd web
+cd web/frontend
 python -m http.server 5500
 ```
 
-Open `http://localhost:5500`. `web/config.js` already defaults
+Open `http://localhost:5500`. `web/frontend/config.js` already defaults
 `window.WEB_ARENA_API` to `http://localhost:8502`, and the backend's default
-CORS allow-list (`interface/api.py::_DEFAULT_CORS_ORIGINS`) already includes
+CORS allow-list (`web/squid_arena/api.py::_DEFAULT_CORS_ORIGINS`) already includes
 `http://localhost:5500` — no env vars needed for local dev.
 
 ## 2. Backend deploy — Render
@@ -81,7 +81,7 @@ valid (if boring) state for a first deploy.
 
 **Backing up live plays:** the deployed site's human/LLM plays live only in
 Supabase (not in git). Periodically mirror them to a local SQLite snapshot with
-`scripts/backup_web_arena.py --source-dsn "$WEB_ARENA_DSN"` (the inverse of the
+`scripts/arena/backup_web_arena.py --source-dsn "$WEB_ARENA_DSN"` (the inverse of the
 seed script; idempotent, skips sessions already backed up) so new live plays are
 not lost.
 
@@ -96,21 +96,21 @@ env vars; the Dockerfile itself needs no changes.
 ## 3. Frontend deploy — GitHub Pages
 
 1. One-time repo setting: **Settings -> Pages -> Source -> "GitHub Actions"**.
-2. `.github/workflows/deploy-pages.yml` deploys **only** `web/` (via
-   `actions/upload-pages-artifact` with `path: web`) on every push to `main`
-   that touches `web/**`. It also supports manual runs
+2. `.github/workflows/deploy-pages.yml` deploys **only** `web/frontend/` (via
+   `actions/upload-pages-artifact` with `path: web/frontend`) on every push
+   to `main` that touches `web/frontend/**`. It also supports manual runs
    (`workflow_dispatch`) from any branch via the Actions tab's "Run workflow"
    button — use that to deploy `feat/web-arena` without merging, or
    temporarily add `feat/web-arena` to the workflow's `branches:` list (revert
    before merging).
 3. Before the first deploy (or whenever the Render URL changes), update
-   `web/config.js`:
+   `web/frontend/config.js`:
 
    ```js
    window.WEB_ARENA_API = "https://squid-game-web-arena-api.onrender.com";
    ```
 
-   Commit that change — `web/config.js` is the single, deliberately simple
+   Commit that change — `web/frontend/config.js` is the single, deliberately simple
    knob for the backend URL (no build step / env injection for the static
    site). Push to `main` (or run the workflow manually) to redeploy.
 4. Resulting Pages URL for the `irregular6612` account:
@@ -126,10 +126,10 @@ backend will be blocked by the browser:
 
 | Knob | Set where | Value |
 |---|---|---|
-| Frontend -> backend URL | `web/config.js` -> `window.WEB_ARENA_API` | The Render service URL, e.g. `https://squid-game-web-arena-api.onrender.com` |
+| Frontend -> backend URL | `web/frontend/config.js` -> `window.WEB_ARENA_API` | The Render service URL, e.g. `https://squid-game-web-arena-api.onrender.com` |
 | Backend -> allowed origin | Render dashboard env var `WEB_ARENA_CORS_ORIGINS` | The GitHub Pages origin, e.g. `https://irregular6612.github.io` |
 
-`interface/api.py::_DEFAULT_CORS_ORIGINS` already includes
+`web/squid_arena/api.py::_DEFAULT_CORS_ORIGINS` already includes
 `https://irregular6612.github.io` as a hardcoded fallback, so leaving
 `WEB_ARENA_CORS_ORIGINS` unset on Render still works for the default Pages
 account origin — but set it explicitly in the dashboard for clarity, and
@@ -139,14 +139,14 @@ different account.
 If Pages serves the site from a project path (`https://irregular6612.github.io/<repo>/`)
 rather than the account root, the **origin** for CORS purposes is still just
 `https://irregular6612.github.io` (CORS matches scheme + host + port, not
-path) — no change needed there; only `web/config.js`'s backend URL needs to
+path) — no change needed there; only `web/frontend/config.js`'s backend URL needs to
 be correct.
 
 ## Verification checklist after deploying
 
 - [ ] `curl https://<render-url>/api/leaderboard/models` returns JSON (not a
       CORS or 5xx error) when called from a browser on the Pages origin.
-- [ ] `web/config.js`'s `WEB_ARENA_API` points at the live Render URL.
+- [ ] `web/frontend/config.js`'s `WEB_ARENA_API` points at the live Render URL.
 - [ ] Render's `WEB_ARENA_CORS_ORIGINS` includes the exact Pages origin.
 - [ ] `WEB_ARENA_DSN` is set (Postgres) if you need results to survive a
       redeploy.

@@ -2,7 +2,7 @@
 """preview_continue_reward mirrors the reward submit_action would credit."""
 from __future__ import annotations
 
-from interface.human_game import HumanGameSession
+from squid_arena.human_game import HumanGameSession
 
 
 def _session() -> HumanGameSession:

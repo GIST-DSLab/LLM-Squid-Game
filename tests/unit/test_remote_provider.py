@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from interface.remote_provider import RemoteEndpointError, RemoteProvider
+from squid_arena.remote_provider import RemoteEndpointError, RemoteProvider
 
 
 def test_parse_openai_chat_shape_with_reasoning_and_usage():

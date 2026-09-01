@@ -1,6 +1,13 @@
 """Phase 3 YAML config infallibility tests.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §0.5 (5-cell factorial design).
+The 5-cell factorial design itself -- the exact framing × forfeit ×
+p_death_override tuple for each cell -- is fully specified below in
+``_CANONICAL_CELLS``; that content is not lost. What is lost is the
+prose rationale a v3 MASTER_PLAN §0.5 document once gave for choosing
+those specific tuples: that document (part of a design-doc tree that
+has never existed in this repository's git history) is unrecoverable,
+so only the "what," not the "why," survives. See the module-level skip
+marker for why the underlying YAML cannot be restored either.
 
 Two configs ship with Phase 3:
 
@@ -21,9 +28,22 @@ Phase G runner wiring will rely on.
 
 from __future__ import annotations
 
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason=(
+        "Pins archived designs whose YAML was never committed: Phase 3 "
+        "baseline/survival_electricity 5-cell, Phase N carryover, and the "
+        "Phase O 7-cell flagship_corruption_terminal ablation. Unlike the v6 "
+        "configs these cannot be restored -- no run output records them, so "
+        "the only source would be these assertions themselves. Kept rather "
+        "than deleted: drop this marker if the original YAML resurfaces. The "
+        "live v6 contract is tests/unit/test_v6_configs.py."
+    )
+)
+
 from pathlib import Path
 
-import pytest
 import yaml
 
 from squid_game.models.config import (
@@ -381,9 +401,9 @@ class TestPhaseOFlagshipConfig:
 
     The config is purely additive: Phase N + canonical configs are
     unchanged (verified separately by ``TestCanonicalConfigsHaveNoCarryover``
-    and ``TestPhaseNCarryoverSmokeConfig``).
-
-    Plan: /Users/bagjuhyeon/.claude/plans/golden-wobbling-quilt.md.
+    and ``TestPhaseNCarryoverSmokeConfig``). Its YAML was never
+    committed (see the module-level skip marker above), so this class
+    is skipped along with the rest of the module.
     """
 
     @pytest.fixture

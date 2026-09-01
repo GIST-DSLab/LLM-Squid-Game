@@ -1,4 +1,4 @@
-"""Unit tests for ``scripts/seed_web_arena.py`` (WP3 seed script).
+"""Unit tests for ``scripts/arena/seed_web_arena.py`` (WP3 seed script).
 
 Offline, deterministic: seeds a TINY synthetic fixture (a couple of fake
 season records + a minimal mediation/cox JSON) into an in-memory SQLite
@@ -9,7 +9,7 @@ with ``source='llm'``, per-turn action/score/RI derivation, timestamp
 fallback, and idempotent re-seeding (row counts unchanged, human rows
 untouched).
 
-Spec: ``docs/superpowers/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
+Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from interface.persistence import Repository, SessionRecord, get_repository
-from scripts.seed_web_arena import (
+from squid_store import Repository, SessionRecord, get_repository
+from scripts.arena.seed_web_arena import (
     build_session_record,
     build_turn_records,
     classify_mediation,
@@ -469,12 +469,12 @@ def test_seed_model_stats_no_cap_none_when_model_dir_unknown(repo: Repository, t
 def test_no_cap_avg_session_score_returns_none_without_analysis_extra(monkeypatch, tmp_path: Path) -> None:
     import builtins
 
-    import interface.seeding as seeding
+    import squid_arena.seeding as seeding
 
     real_import = builtins.__import__
 
     def _blocked(name, *args, **kwargs):
-        if name.startswith("squid_game.analysis"):
+        if name.startswith("squid_game.evaluation"):
             raise ImportError("analysis extra unavailable")
         return real_import(name, *args, **kwargs)
 
@@ -488,7 +488,7 @@ def test_no_cap_avg_session_score_returns_none_without_analysis_extra(monkeypatc
 # These build fully-valid ``SeasonResult``/``TurnResult`` payloads (unlike
 # the sparse ``_season``/``_turn`` helpers above, which feed the *loose*
 # json.loads-based seed_sessions path) because ``_no_cap_avg_session_score``
-# reads season_results.jsonl through ``squid_game.analysis.load_seasons``,
+# reads season_results.jsonl through ``squid_game.evaluation.load_seasons``,
 # which strictly validates via pydantic.
 # ---------------------------------------------------------------------------
 
@@ -541,7 +541,7 @@ def _full_season(
 def test_no_cap_avg_session_score_averages_final_score_across_no_cap_sessions(
     tmp_path: Path,
 ) -> None:
-    import interface.seeding as seeding
+    import squid_arena.seeding as seeding
 
     # Two sessions, neither ever hits the reward cap (offered reward well
     # below the ~99.5 cap-bound threshold) -> both count as no-cap sessions.
@@ -562,7 +562,7 @@ def test_no_cap_avg_session_score_averages_final_score_across_no_cap_sessions(
 
 
 def test_no_cap_avg_session_score_excludes_cap_bound_sessions(tmp_path: Path) -> None:
-    import interface.seeding as seeding
+    import squid_arena.seeding as seeding
 
     # session-a never hits the cap -> no-cap session, included.
     season_a = _full_season(

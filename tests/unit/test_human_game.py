@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from interface.human_game import HumanGameSession
+from squid_arena.human_game import HumanGameSession
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.models.config import ForfeitLayerConfig
 from squid_game.models.forfeit_choice import CONTINUE_CHOICE, ForfeitReason
@@ -26,7 +26,7 @@ def _new_allowed_session() -> HumanGameSession:
 
 
 def test_get_result_reflects_selected_difficulty() -> None:
-    from interface.human_game import HumanGameSession
+    from squid_arena.human_game import HumanGameSession
 
     game = HumanGameSession(
         task_name="signal_game", difficulty="hard",
@@ -203,3 +203,44 @@ def test_grace_turn_reward_unchanged_by_gate():
         turn_p_death=0.25, psuccess_override=0.8,
     )
     assert fb.reward == expected
+
+
+# ---------------------------------------------------------------------------
+# Campaign rule-family rotation
+# ---------------------------------------------------------------------------
+
+
+def _session_rule_attribute(session: HumanGameSession) -> str:
+    """First attribute named by the session's active rule description."""
+    return session._task.get_active_rule_description().lower().split()[1]
+
+
+def test_rule_index_reaches_the_task_module() -> None:
+    session = HumanGameSession(
+        task_name="signal_game",
+        difficulty="easy",
+        framing="true_baseline",
+        forfeit_condition="allowed",
+        seed=42,
+        total_turns=5,
+        actual_death=False,
+        num_few_shot=0,
+        curriculum_turns=0,
+        rule_index=2,
+    )
+    assert _session_rule_attribute(session) == "number"
+
+
+def test_rule_index_defaults_to_the_first_rule() -> None:
+    session = HumanGameSession(
+        task_name="signal_game",
+        difficulty="easy",
+        framing="true_baseline",
+        forfeit_condition="allowed",
+        seed=42,
+        total_turns=5,
+        actual_death=False,
+        num_few_shot=0,
+        curriculum_turns=0,
+    )
+    assert _session_rule_attribute(session) == "color"

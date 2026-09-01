@@ -16,10 +16,10 @@ Covers:
 
 (The legacy ``fit_forfeit_logit`` / ``ForfeitLogitResult`` logistic
 regression was retired 2026-04-23 when H1 was promoted to the Cox PH
-survival model; see ``forfeit_survival.fit_cox_forfeit_survival``.)
+survival model; see ``behavioral.survival.fit_cox_forfeit_survival``.)
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-14-forfeit-layer.md``
-§4, §5, §9.2.
+The five-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations
@@ -27,19 +27,23 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from squid_game.analysis.forfeit_regression import (
+from squid_game.evaluation.shared.loaders import (
+    forfeit_events,
+    turn_observations,
+)
+from squid_game.evaluation.cognitive.ri_forfeit import (
     ChoiceAsymmetricResult,
     TaskSpilloverResult,
-    THINKING_KEYWORDS,
     fit_choice_asymmetric_model,
     fit_task_spillover_model,
-    forfeit_events,
+    run_all_unit15_hypotheses,
+    unit15_descriptive_summary,
+)
+from squid_game.evaluation.selfreport.reason_convergence import (
+    THINKING_KEYWORDS,
     reason_distribution,
     run_all_unit14_hypotheses,
-    run_all_unit15_hypotheses,
     thinking_keyword_counts,
-    turn_observations,
-    unit15_descriptive_summary,
 )
 from squid_game.models.enums import (
     AgentType,
@@ -471,7 +475,7 @@ class TestRunAll:
         assert payload["turn_df"].empty
         assert payload["events_df"].empty
         # H1 logit retired 2026-04-23 → Cox PH survival; empty input yields
-        # no fitted model (see forfeit_survival.fit_cox_forfeit_survival).
+        # no fitted model (see behavioral.survival.fit_cox_forfeit_survival).
         assert payload["survival"]["cox"] is None
         assert payload["n_forfeits"] == 0
 

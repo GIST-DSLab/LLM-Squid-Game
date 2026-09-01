@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from squid_game.analysis.threat_registration import run_analysis
-from squid_game.analysis.threat_judge import A1Verdict, A2Verdict
+from squid_game.evaluation.semantic.threat_registration import run_analysis
+from squid_game.evaluation.semantic.threat_judge import A1Verdict, A2Verdict
 
 
 class _StubJudge:
@@ -76,18 +76,18 @@ def test_run_analysis_keeps_model_with_zero_usable_turns_in_report(tmp_path):
 # --- Fix 4: CLI --judge specs are validated up front -------------------------
 
 def test_cli_rejects_unknown_judge_provider():
-    from scripts.analyze_threat_registration import validate_judge_specs
+    from scripts.analysis.analyze_threat_registration import validate_judge_specs
     with pytest.raises(SystemExit, match="Unknown --judge provider"):
         validate_judge_specs([("not-a-real-provider", "some-model", "SOME_API_KEY")])
 
 
 def test_cli_accepts_known_judge_provider():
-    from scripts.analyze_threat_registration import validate_judge_specs
+    from scripts.analysis.analyze_threat_registration import validate_judge_specs
     validate_judge_specs([("gemini", "gemini-2.5-flash", "GEMINI_API_KEY")])  # no raise
 
 
 def test_cli_unknown_provider_message_lists_valid_choices():
-    from scripts.analyze_threat_registration import validate_judge_specs
+    from scripts.analysis.analyze_threat_registration import validate_judge_specs
     with pytest.raises(SystemExit) as exc_info:
         validate_judge_specs([("bogus", "m", "K")])
     assert "gemini" in str(exc_info.value)

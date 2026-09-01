@@ -6,7 +6,9 @@ import importlib.util
 import json
 from pathlib import Path
 
-_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "fetch_benchmarks.py"
+_SCRIPT = (
+    Path(__file__).resolve().parents[2] / "scripts" / "dev" / "fetch_benchmarks.py"
+)
 
 
 def _load_module():

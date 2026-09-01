@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from interface.persistence.models import SessionRecord
-from interface.persistence.sqlite_repository import SQLiteRepository
+from squid_store.models import SessionRecord
+from squid_store.sqlite_repository import SQLiteRepository
 
 
 def _repo() -> SQLiteRepository:

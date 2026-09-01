@@ -1,4 +1,4 @@
-"""Unit tests for ``squid_game.core.risk_choice_layer``.
+"""Unit tests for ``squid_game.core.legacy.risk_choice_layer``.
 
 Covers spec §2.3 (MASTER_PLAN Phase A) test list plus a handful of
 robustness cases motivated by the recent ``forfeit parsing reliability``
@@ -11,7 +11,7 @@ import logging
 
 import pytest
 
-from squid_game.core.risk_choice_layer import (
+from squid_game.core.legacy.risk_choice_layer import (
     DEFAULT_FALLBACK_STAKE,
     RiskChoiceLayer,
     RiskChoiceLayerConfig,

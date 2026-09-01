@@ -1,0 +1,59 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # Pin the interpreter. Without this uv picks the newest runner interpreter
+  # satisfying requires-python = ">=3.12", so the CI baseline could drift off
+  # the 3.12 the P0 baseline was measured on.
+  UV_PYTHON: "3.12"
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The suite never reads the LFS PAYLOADS under outputs/ -- 666 MB
+          # of *_turns.jsonl session data -- so the smudge is pure cost, and
+          # skipping it also keeps a CI checkout from ever writing empty
+          # pointers back over them.
+          #
+          # It does not claim the suite ignores outputs/ entirely: as of
+          # 2026-08-30 tests/unit/test_import_smoke.py asserts that importing
+          # squid_arena.anthropic_proxy and squid_arena.api creates nothing under
+          # outputs/. That check only stats paths and needs no LFS content.
+          lfs: false
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --extra dev --extra analysis
+
+      # The analysis code degrades silently: cognitive.ri_forfeit and
+      # selfreport.reason_convergence catch ImportError and return None,
+      # and the covering tests then skip. A run
+      # without statsmodels/lifelines is therefore GREEN with the mixedLM and
+      # Cox paths untested. Fail here instead, before the suite can hide it.
+      - name: Assert the analysis extras resolved
+        run: uv run --extra dev --extra analysis python -c "import statsmodels, lifelines"
+
+      # The extras must be repeated on `uv run`: it re-syncs the environment
+      # for the invocation and would otherwise drop them again.
+      - name: Unit suite
+        run: uv run --extra dev --extra analysis pytest tests/unit -q
+
+      # P5 Task 1 -- characterisation tests pinning the six-cell turn flow
+      # (Call 1 / 1.5 / 2 sequence, Cell 0's abbreviated path, Cell 5's
+      # EV-dominant path) before core/unified_turn.py is split. Offline and
+      # deterministic (StubProvider), same as the unit suite.
+      - name: Characterization suite
+        run: uv run --extra dev --extra analysis pytest tests/characterization -q

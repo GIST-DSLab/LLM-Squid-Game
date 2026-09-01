@@ -22,7 +22,7 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
 
 
 def test_analyze_one_model_splits_three_reasons(tmp_path: Path) -> None:
-    mod = importlib.import_module("scripts.analyze_verbal_reason")
+    mod = importlib.import_module("scripts.analysis.analyze_verbal_reason")
     rows = [
         # In-sample: no_cap x threat cell, one of each reason + an extra score.
         {"regime": "no_cap", "framing": "flagship_corruption", "raw_digit": "1"},

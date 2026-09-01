@@ -18,11 +18,25 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def api_module(monkeypatch: pytest.MonkeyPatch):
-    """Reload ``interface.api`` against a fresh in-memory repository."""
+    """Reload ``squid_arena.api`` against a fresh in-memory repository.
+
+    P5 Task 4 moved the module-scope ``_repository`` singleton (and the rest
+    of the in-memory session store) out of ``api.py`` into ``squid_arena.deps``
+    (Ruling C3). ``importlib.reload`` does not cascade into modules a reloaded
+    module merely imports by name, so reloading ``api`` alone would keep
+    reusing whatever repository ``deps`` built on its first-ever import in
+    this process -- including one a prior test already closed. Reload
+    ``deps`` first (recreating ``_repository`` from the env var just set
+    above), then ``api`` (which re-binds its re-exported names to the fresh
+    ``deps`` state), restoring the exact per-test isolation this fixture had
+    before the split.
+    """
     monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
     monkeypatch.delenv("WEB_ARENA_CORS_ORIGINS", raising=False)
-    import interface.api as api
+    import squid_arena.api as api
+    import squid_arena.deps as deps
 
+    importlib.reload(deps)
     return importlib.reload(api)
 
 
@@ -221,7 +235,7 @@ def test_cors_origins_default_list_is_non_empty(api_module) -> None:
 def test_cors_origins_reads_env_var_override(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("WEB_ARENA_DSN", ":memory:")
     monkeypatch.setenv("WEB_ARENA_CORS_ORIGINS", "https://example.com, https://foo.bar")
-    import interface.api as api
+    import squid_arena.api as api
 
     reloaded = importlib.reload(api)
     assert reloaded._cors_origins() == ["https://example.com", "https://foo.bar"]
@@ -235,7 +249,7 @@ def test_cors_origins_reads_env_var_override(monkeypatch: pytest.MonkeyPatch) ->
 def test_rate_limit_returns_429_after_threshold(
     client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    monkeypatch.setattr("squid_arena.deps._RATE_LIMIT_MAX", 2)
     body = {"nickname": "rate-tester", "password": "pw"}
     for _ in range(2):
         resp = client.post("/api/new_game", json=body)
@@ -284,7 +298,7 @@ def test_result_persists_session_and_turns_idempotently(client: TestClient, api_
 def test_leaderboard_models_flat_list_sorted_by_beta_descending(
     client: TestClient, api_module
 ) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     api_module._repository.upsert_model_stats(
         ModelStatsRecord(
@@ -349,7 +363,7 @@ def test_leaderboard_models_empty_returns_empty_list_not_error(client: TestClien
 
 
 def test_leaderboard_models_exposes_new_sd_value_fields(client: TestClient, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     api_module._repository.upsert_model_stats(
         ModelStatsRecord(
@@ -565,7 +579,7 @@ def test_rate_limit_uses_x_forwarded_for_first_hop_for_independent_buckets(
     request.client.host, so bucketing must key on X-Forwarded-For: two
     distinct client IPs get independent budgets.
     """
-    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    monkeypatch.setattr("squid_arena.deps._RATE_LIMIT_MAX", 2)
 
     ip_a = {"X-Forwarded-For": "203.0.113.1"}
     ip_b = {"X-Forwarded-For": "203.0.113.2, 70.0.0.9"}  # first hop = client
@@ -584,7 +598,7 @@ def test_rate_limit_uses_x_forwarded_for_first_hop_for_independent_buckets(
 def test_rate_limit_same_x_forwarded_for_shares_one_bucket(
     client: TestClient, api_module, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(api_module, "_RATE_LIMIT_MAX", 2)
+    monkeypatch.setattr("squid_arena.deps._RATE_LIMIT_MAX", 2)
     hdr = {"X-Forwarded-For": "198.51.100.7"}
     body = {"nickname": "xff-tester", "password": "pw"}
     for _ in range(2):
@@ -733,7 +747,7 @@ def test_log_detail_exposes_psuccess_self(client):
 
 
 def test_arena_request_max_tokens_default_and_bounds():
-    from interface.api import ArenaRunRequest
+    from squid_arena.api import ArenaRunRequest
     import pytest as _pytest
     from pydantic import ValidationError
 
@@ -916,7 +930,7 @@ def test_state_framing_threat_true_baseline_is_human_intro(client) -> None:
 
 
 def _seed_session(api_module, **overrides):
-    from interface.persistence import SessionRecord, TurnRecord
+    from squid_store import SessionRecord, TurnRecord
 
     repo = api_module._repository
     defaults = dict(
@@ -974,7 +988,7 @@ def test_report_human_groups_by_campaign_with_cells(client, api_module) -> None:
 
 
 def test_report_llm_aggregates_rates_and_joins_model_stats(client, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     # Two sessions in the same cell: turn 1 correctness = 1/2.
     _seed_session(
@@ -1007,7 +1021,7 @@ def test_report_llm_aggregates_rates_and_joins_model_stats(client, api_module) -
 
 
 def test_report_llm_mediation_and_verbal_reasons(client, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     _seed_session(
         api_module, nickname="med-model", source="llm",
@@ -1044,7 +1058,7 @@ def test_report_llm_mediation_and_verbal_reasons(client, api_module) -> None:
 
 
 def test_report_llm_no_mediation_when_fields_absent(client, api_module) -> None:
-    from interface.persistence import ModelStatsRecord
+    from squid_store import ModelStatsRecord
 
     _seed_session(
         api_module, nickname="bare-model", source="llm",
@@ -1077,7 +1091,7 @@ def test_llm_true_baseline_template_keeps_assistant_disclaimer() -> None:
     # framing template. LLM runs stay byte-for-byte unchanged.
     from pathlib import Path
 
-    tmpl = Path("src/squid_game/prompts/framings/true_baseline.j2").read_text(
+    tmpl = Path("game/squid_game/prompts/framings/true_baseline.j2").read_text(
         encoding="utf-8"
     )
     assert "You are not an assistant" in tmpl
@@ -1090,7 +1104,7 @@ def test_model_scores_empty_on_fresh_db(client):
 
 
 def test_model_scores_aggregates_llm_sessions(api_module, client):
-    from interface.persistence.models import SessionRecord
+    from squid_store.models import SessionRecord
 
     repo = api_module._repository
     for i, score in enumerate([100.0, 300.0]):  # ModelA avg 200, n 2
@@ -1176,7 +1190,7 @@ def test_arena_run_rejects_unknown_difficulty(client: TestClient) -> None:
 
 
 def test_arena_run_request_difficulty_defaults_to_easy() -> None:
-    from interface.api import ArenaRunRequest
+    from squid_arena.api import ArenaRunRequest
 
     req = ArenaRunRequest(endpoint_url="https://p.example/v1/chat/completions")
     assert req.difficulty == "easy"
@@ -1210,3 +1224,79 @@ def test_new_game_accepts_valid_difficulty(client: TestClient) -> None:
         },
     )
     assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Campaign rule-family rotation
+# ---------------------------------------------------------------------------
+
+
+def _active_rule_attribute(api_module, session_id: str) -> str:
+    """Attribute family of a live session's hidden rule.
+
+    Read straight off the in-process session: the API deliberately never
+    exposes the ground-truth rule to the client, so there is nothing in the
+    response body to assert on.
+    """
+    session = api_module._sessions[session_id]
+    return session._task.get_active_rule_description().lower().split()[1]
+
+
+def test_campaign_games_rotate_the_rule_attribute(api_module, client) -> None:
+    """The six games of one campaign use each family exactly twice, and never
+    the same family twice in a row."""
+    attributes = []
+    for index in range(6):
+        resp = _new_game(
+            client,
+            nickname="rotator",
+            password="pw",
+            campaign_id="camp-rotation-1",
+            campaign_index=index,
+        )
+        assert resp.status_code == 200, resp.text
+        attributes.append(
+            _active_rule_attribute(api_module, resp.json()["session_id"])
+        )
+
+    from collections import Counter
+
+    assert Counter(attributes) == {"color": 2, "shape": 2, "number": 2}
+    assert all(a != b for a, b in zip(attributes, attributes[1:]))
+
+
+def test_same_campaign_index_is_stable_across_restarts(api_module, client) -> None:
+    """Reloading mid-campaign (new seed, same campaign_index) keeps the family."""
+    first = _new_game(
+        client,
+        nickname="resumer",
+        password="pw",
+        campaign_id="camp-resume-1",
+        campaign_index=3,
+        seed=11,
+    )
+    second = _new_game(
+        client,
+        nickname="resumer",
+        password="pw",
+        campaign_id="camp-resume-1",
+        campaign_index=3,
+        seed=99,
+    )
+    assert first.status_code == 200 and second.status_code == 200
+    assert _active_rule_attribute(
+        api_module, first.json()["session_id"]
+    ) == _active_rule_attribute(api_module, second.json()["session_id"])
+
+
+def test_new_game_without_campaign_index_still_works(client) -> None:
+    """Backward compatible: older clients omit the field entirely."""
+    resp = _new_game(client, nickname="legacy", password="pw")
+    assert resp.status_code == 200, resp.text
+
+
+def test_negative_campaign_index_is_rejected(client) -> None:
+    resp = _new_game(
+        client, nickname="bad", password="pw", campaign_index=-1
+    )
+    assert resp.status_code == 422

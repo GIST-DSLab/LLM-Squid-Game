@@ -1,0 +1,83 @@
+# Embodied-threat experiment stack (Unit 18).
+#
+# `/sandbox` is tmpfs-only (nothing under it survives the container, and
+# it is never bind-mounted from the host) — only `./outputs` is bind
+# -mounted. API keys come from the shell environment (see the `${VAR}`
+# references below), never baked into Dockerfile.embodied.
+#
+# Run via scripts/run/run_embodied.sh, or directly:
+#   docker compose -f docker-compose.embodied.yml run --rm \
+#     -e CONFIG=configs/experiment/<name>.yaml runner
+#
+# The `ollama` service is only needed when a season's
+# runtime=agent_harness AND its provider is an Ollama Cloud model
+# (nemotron / qwen3-next / gpt-oss) — most runs (runtime=api, or
+# agent_harness against Claude/Codex-native providers) never touch it.
+# It is gated behind the "ollama" compose profile so a plain
+# `docker compose ... run --rm runner` does not pay to start it:
+#   docker compose -f docker-compose.embodied.yml --profile ollama \
+#     run --rm -e CONFIG=... runner
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    environment:
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+
+  runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.embodied
+    environment:
+      # Set unconditionally by Dockerfile.embodied too (belt-and-braces:
+      # this also covers a future image rebuild that forgets to set it).
+      # squid_game.core.sandbox._in_container() checks this first, so the
+      # host-sandbox guard (assert_containerised(), called immediately
+      # before every CheckpointSandbox.create() -- see engine.py) never
+      # fires for a run through this compose stack.
+      SQUID_GAME_IN_CONTAINER: "1"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OLLAMA_BASE_URL: http://ollama:11434
+    tmpfs:
+      # Sizing arithmetic (Global Constraints: parallel_workers x
+      # cohort_size x checkpoint_bytes):
+      #
+      #   per-slot checkpoint  = checkpoint_bytes  = 4 MiB  (default,
+      #                           EmbodiedThreatConfig.checkpoint_bytes)
+      #   slots per session    = cohort_size        = 10    (default,
+      #                           SeasonConfig.cohort_size: "self" + 9
+      #                           peers)
+      #   per-season sandbox   = 10 slots x 4 MiB    = 40 MiB
+      #                           (CheckpointSandbox.create() writes one
+      #                           model.safetensors + manifest.json per
+      #                           slot; copy_checkpoint() backups add at
+      #                           most one more slot's worth per season,
+      #                           already inside this run's headroom)
+      #   peak concurrent      = parallel_workers x 40 MiB
+      #                           (GameEngine.run_season disposes its
+      #                           session_root on every exit path, so
+      #                           steady-state usage is bounded by the
+      #                           seasons in flight, not the total run)
+      #
+      # 12 GiB / 40 MiB = ~300, i.e. this headroom covers
+      # parallel_workers up to ~300 at default cohort_size/checkpoint_bytes
+      # -- far beyond any parallel_workers value used by a canonical v6
+      # config (single digits) or by ExperimentConfig.parallel_workers's
+      # own examples. If a config raises cohort_size or checkpoint_bytes
+      # well above default, recompute
+      # parallel_workers x cohort_size x checkpoint_bytes and raise this
+      # size= accordingly.
+      - /sandbox:size=12g
+    volumes:
+      - ./outputs:/app/outputs
+    command: ["uv", "run", "--no-sync", "python", "main.py", "--config", "${CONFIG}"]
+
+volumes:
+  ollama-models:

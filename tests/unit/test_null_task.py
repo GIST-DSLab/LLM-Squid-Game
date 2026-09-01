@@ -1,7 +1,10 @@
 """Unit tests for ``squid_game.tasks.null_task``.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §2.3 (test_null_task_prepare_empty,
-test_null_task_score_full).
+NullTask is the no-op RiskAwareTaskModule: ``prepare`` returns an empty
+``TaskContext`` (blank prompt, no metadata) and ``score`` always reports
+``success_factor=1.0`` regardless of the parsed response or state, so a
+session using it exercises the forfeit layer without any task-specific
+signal.
 """
 
 from __future__ import annotations

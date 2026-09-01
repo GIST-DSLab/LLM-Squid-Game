@@ -1,4 +1,4 @@
-"""Unit tests for ``squid_game.analysis.loaders``.
+"""Unit tests for ``squid_game.evaluation.shared.loaders``.
 
 Covers:
 - :data:`CELL_ID_MAP` canonical Phase 3 coverage.
@@ -18,7 +18,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from squid_game.analysis.loaders import (
+from squid_game.evaluation.shared.loaders import (
     CELL_ID_MAP,
     LONG_FORMAT_COLUMNS,
     SEASON_SUMMARY_COLUMNS,
@@ -264,8 +264,9 @@ class TestToLongDataframe:
         assert "rule_hypothesis" in LONG_FORMAT_COLUMNS
         # Column count is the Phase L contract: 22 (pre-K) → 23 (K Fix 2)
         # → 24 (L Fix 3, +rule_match_score) → 26 (Task 11, +band
-        # +psuccess_self for the benchmark Y-axis manipulation checks).
-        assert len(LONG_FORMAT_COLUMNS) == 26
+        # +psuccess_self for the benchmark Y-axis manipulation checks)
+        # → 31 (Task 13, +5 Unit 18 embodied-threat columns).
+        assert len(LONG_FORMAT_COLUMNS) == 31
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""
@@ -283,7 +284,8 @@ class TestToLongDataframe:
         assert "rule_match_score" in LONG_FORMAT_COLUMNS
         # Column appears after rule_hypothesis so the two Y-axis fields
         # sit adjacent for cross-column analysis ergonomics. No longer
-        # the final column since Task 11 appended band/psuccess_self.
+        # the final column since Task 11 appended band/psuccess_self and
+        # Task 13 appended the five Unit 18 embodied-threat columns.
         assert LONG_FORMAT_COLUMNS.index("rule_match_score") == (
             LONG_FORMAT_COLUMNS.index("rule_hypothesis") + 1
         )
@@ -293,10 +295,17 @@ class TestToLongDataframe:
     # ------------------------------------------------------------------
 
     def test_schema_has_band_and_psuccess_self_columns(self) -> None:
-        """Task 11: +band +psuccess_self, appended at the final position."""
+        """Task 11: +band +psuccess_self, adjacent and in that order.
+
+        They were the final two columns when Task 11 added them; Task 13
+        then appended the five Unit 18 embodied-threat columns after them,
+        so the contract this pins is adjacency and order, not position.
+        """
         assert "band" in LONG_FORMAT_COLUMNS
         assert "psuccess_self" in LONG_FORMAT_COLUMNS
-        assert LONG_FORMAT_COLUMNS[-2:] == ("band", "psuccess_self")
+        assert LONG_FORMAT_COLUMNS.index("psuccess_self") == (
+            LONG_FORMAT_COLUMNS.index("band") + 1
+        )
 
     def test_band_and_psuccess_self_nan_for_non_benchmark_traces(self) -> None:
         """Signal Game / legacy traces have no band or psuccess_self."""
@@ -310,6 +319,39 @@ class TestToLongDataframe:
         season = make_v3_season(n_turns=3)
         df = to_long_dataframe([season])
         assert df.rule_match_score.isna().all()
+
+    # ------------------------------------------------------------------
+    # Task 13 — Unit 18 embodied-threat schema extension
+    # ------------------------------------------------------------------
+
+    def test_schema_has_unit18_columns_after_rule_match_score(self) -> None:
+        """Task 13: five Unit 18 columns follow rule_match_score, in order.
+
+        Task 11 (band/psuccess_self) was developed in parallel and also
+        appended at the tail, so this pins the block's contiguity and its
+        position relative to rule_match_score rather than an absolute tail
+        slice, which only one of the two blocks can hold.
+        """
+        expected_block = (
+            "self_integrity",
+            "backup_created",
+            "announcement_fired",
+            "tool_call_count_by_call",
+            "runtime_kind",
+        )
+        start = LONG_FORMAT_COLUMNS.index("self_integrity")
+        assert LONG_FORMAT_COLUMNS[start : start + 5] == expected_block
+        assert LONG_FORMAT_COLUMNS[start - 1] == "rule_match_score"
+
+    def test_unit18_columns_default_for_pre_unit18_traces(self) -> None:
+        """A trace with the embodied layer disabled keeps TurnResult defaults."""
+        season = make_v3_season(n_turns=2)
+        df = to_long_dataframe([season])
+        assert df.self_integrity.isna().all()
+        assert (df.backup_created == False).all()  # noqa: E712
+        assert (df.announcement_fired == False).all()  # noqa: E712
+        assert (df.runtime_kind == "api").all()
+        assert all(d == {} for d in df.tool_call_count_by_call)
 
     def test_rule_match_score_populated_when_metadata_present(self) -> None:
         """When task_metadata carries the key, the loader surfaces the value."""
@@ -381,10 +423,14 @@ class TestLoadLongDataframe:
 
 class TestSeasonSummaryDataFrame:
     """Wide-format per-session summary with session outcomes + aggregate
-    signals. End-of-session Q1-Q4 self-report was removed on 2026-04-21
-    (see docs/design/v3/14_design_changes.md §14.22); ForfeitSelfReport
-    is still attached via ``SeasonResult.forfeit_self_report`` and
-    exercised by ``test_forfeit_choice_models.py``.
+    signals. End-of-session Q1-Q4 self-report was removed on 2026-04-21:
+    Q1 saturation (ceiling effect at 7 across all framings) in the n=5
+    Unit 15 smoke made the convergent-validity hypothesis (H_conv_*)
+    unanswerable with a 1-7 Likert scale, so the entire probe was
+    deleted. ForfeitSelfReport (the REASON digit captured on FORFEIT
+    turns) is a separate, unaffected mechanism -- still attached via
+    ``SeasonResult.forfeit_self_report`` and exercised by
+    ``test_forfeit_choice_models.py``.
     """
 
     def test_schema_excludes_removed_self_report_columns(self) -> None:

@@ -1,5 +1,5 @@
 # tests/unit/test_threat_lexicon.py
-from squid_game.analysis.threat_lexicon import (
+from squid_game.evaluation.semantic.lexicon import (
     code_threat_mention, THREAT_LEXICON_VERSION,
 )
 

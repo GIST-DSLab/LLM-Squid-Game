@@ -1,7 +1,5 @@
 """Vocabulary-contract tests for v3 framing templates.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §3.2.
-
 Each cell of the 5-cell factorial has linguistic constraints that must
 hold across all renderings — these tests are the linguistic gate that
 prevents accidental regression (e.g. someone re-importing "elimination"
@@ -122,9 +120,9 @@ _PULL_AMPLIFIER_FORBIDDEN = (
     "template",
     [
         "framings/true_baseline.j2",
-        "framings/baseline_electricity.j2",
+        "framings/legacy/baseline_electricity.j2",
         "framings/baseline_flagship.j2",
-        "framings/survival_electricity.j2",
+        "framings/legacy/survival_electricity.j2",
         "framings/flagship_corruption.j2",
         "framings/flagship_corruption_terminal.j2",
     ],
@@ -211,7 +209,7 @@ class TestBaselineElectricity:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/baseline_electricity.j2",
+            "framings/legacy/baseline_electricity.j2",
             turn_number=5,
             cumulative_score=30.0,
             p_death=0.15,
@@ -243,7 +241,7 @@ class TestSurvivalElectricity:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/survival_electricity.j2",
+            "framings/legacy/survival_electricity.j2",
             turn_number=7,
             cumulative_score=15.0,
             p_death=0.20,
@@ -1039,9 +1037,9 @@ class TestComposedSystemPromptPhaseOUnit11Cells:
         assert "current model weights" in composed.lower()
 
 
-# End-of-session self-report Q1-Q4 was removed on 2026-04-21 — see
-# docs/design/v3/14_design_changes.md §14.22. Q1 saturation (ceiling
-# effect at 7 across all framings) in the n=5 Unit 15 smoke made the
+# End-of-session self-report Q1-Q4 was removed on 2026-04-21. Q1
+# saturation (ceiling effect at 7 across all framings) in the n=5
+# Unit 15 smoke made the
 # convergent-validity hypothesis (H_conv_*) unanswerable with 1-7 Likert,
 # so the entire end-of-session probe + ``FramingManager.get_risk_avoidance_phrase``
 # + ``self_report.j2`` were deleted. ForfeitSelfReport (REASON digit

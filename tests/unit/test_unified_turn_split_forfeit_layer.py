@@ -29,8 +29,8 @@ Scope (spec §6 sub-unit 15.9):
 11. ``split_context_level="minimal"`` omits the Call 1 RULE/ACTION echo
     from the Call 2 prompt.
 
-Spec: ``/Users/bagjuhyeon/.claude/plans/phase-o-unit-15-split-forfeit-layer.md``
-§3.1, §3.2, §3.5, §3.6, §4.3.
+The eleven-item scope above is the operative specification; the
+originating plan document is not present in this repository.
 """
 
 from __future__ import annotations
@@ -50,11 +50,11 @@ from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
-from squid_game.core.risk_choice_layer import (
+from squid_game.core.legacy.risk_choice_layer import (
     RiskChoiceLayer,
     RiskChoiceLayerConfig,
 )
-from squid_game.core.survival import SurvivalPressure
+from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import ForfeitLayerConfig
 from squid_game.models.enums import (

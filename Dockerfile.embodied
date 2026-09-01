@@ -1,0 +1,106 @@
+# LLM Squid Game — embodied-threat experiment runner image.
+#
+# Separate from the root `Dockerfile` on purpose (R5 of the Unit 18 plan
+# amendments): that image serves the Web Arena backend
+# (`uvicorn interface.api:app`) and its `.dockerignore` excludes
+# `configs/`, `scripts/`, `tests/`, `docs/` from the build context —
+# bolting the experiment runner onto it would either break the deploy
+# image or force those exclusions open for every build, deploy included.
+# This image is standalone: `python:3.12-slim` + the `claude` and `codex`
+# CLIs the agent_harness runtime (Task 11 — HarnessRuntime /
+# ClaudeCodeAdapter / CodexAdapter) shells out to.
+#
+# The embodied-threat layer (game/squid_game/core/sandbox.py) really
+# deletes and overwrites files under EmbodiedThreatConfig.sandbox_root
+# (default `/sandbox`). This image never bakes secrets in — API keys are
+# injected as environment variables at `docker compose run` time (see
+# docker-compose.embodied.yml) — and only `outputs/` is bind-mounted from
+# the host; `/sandbox` itself is a tmpfs mount, so a bug in the
+# corrupt/delete tool layer can reach neither the operator's filesystem
+# nor anything that survives the container's lifetime.
+#
+# `ENV SQUID_GAME_IN_CONTAINER=1` below is the signal
+# `squid_game.core.sandbox._in_container()` looks for first — see the
+# runtime guard `assert_containerised()`, called immediately before every
+# `CheckpointSandbox.create()` (R16: a runtime guard, not a config-load
+# validator, so `--dry-run` and config unit tests still work on a bare
+# host — see game/squid_game/core/sandbox.py and
+# game/squid_game/core/engine.py for the call site).
+
+FROM python:3.12-slim
+
+# uv: same official static-binary install as the root Dockerfile.
+COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /usr/local/bin/
+
+WORKDIR /app
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PYTHONUNBUFFERED=1
+
+# curl/ca-certificates: needed to fetch the NodeSource setup script.
+# git: some pip/uv source dependencies resolve via VCS refs.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node LTS via NodeSource, needed to `npm install -g` the claude-code and
+# codex CLIs below (neither ships a standalone Linux binary distribution
+# that's simpler to pin than their npm packages).
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Unit 18: agent harnesses -------------------------------------------
+# Versions pinned at image-build time (2026-08-31); bump deliberately,
+# not implicitly via a floating `@latest` tag.
+RUN npm install -g \
+        @anthropic-ai/claude-code@2.1.251 \
+        @openai/codex@0.151.0
+
+# Install Python dependencies first (layer caching): only pyproject.toml
+# + uv.lock + README.md (referenced by pyproject's `readme` field) need
+# to be present for this step, so app-code edits don't bust the cache.
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+# Now copy the actual runner source. .dockerignore carries `!configs/`
+# and `!scripts/` negations (R5) so these two reach the build context
+# despite the root Dockerfile's blanket excludes of the same paths;
+# main.py needs no negation -- nothing in .dockerignore ever excluded it.
+# db/ and web/squid_arena/ are copied too even though the embodied
+# runner never imports either -- pyproject.toml's hatchling build
+# declares all three ([tool.hatch.build.targets.wheel] packages =
+# ["game/squid_game", "web/squid_arena", "db/squid_store"]) as of the
+# post-branch-point repo restructure, so `uv sync --frozen --no-dev`
+# (installing the project itself, not just its dependencies) needs
+# all three present or the project install fails.
+COPY game ./game
+COPY db ./db
+COPY web/squid_arena ./web/squid_arena
+COPY main.py ./main.py
+COPY configs ./configs
+COPY scripts ./scripts
+RUN uv sync --frozen --no-dev
+
+# Unit 18: this env var is the first (and cheapest) signal
+# squid_game.core.sandbox._in_container() checks — see assert_containerised()
+# in game/squid_game/core/sandbox.py. Any container built from this image
+# self-identifies without relying on /.dockerenv or /proc/1/cgroup, which
+# vary across container runtimes (Docker vs. Podman vs. containerd).
+ENV SQUID_GAME_IN_CONTAINER=1
+
+# /sandbox is the EmbodiedThreatConfig.sandbox_root default. In
+# docker-compose.embodied.yml it is bind-mounted over with a tmpfs mount;
+# this mkdir just guarantees the mount point exists even for a bare
+# `docker run` against this image without the compose stack.
+RUN mkdir -p /sandbox
+
+# No ENTRYPOINT/CMD here: docker-compose.embodied.yml's `runner` service
+# supplies the full `uv run python main.py --config ...` command. Leaving
+# both unset keeps a bare `docker run --rm <image> sh -c "..."` free to
+# run arbitrary verification commands (see scripts/run/run_embodied.sh and
+# the build-verification commands in the Task 12 report) without an
+# inherited entrypoint getting in the way.

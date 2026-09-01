@@ -1,6 +1,6 @@
 """Unit tests for v3 config + results-model extensions.
 
-Spec: ``docs/design/v3/MASTER_PLAN.md`` §5.5 — three test classes:
+Three test classes cover the v3 config/results contract:
 ``TestConfigDefaults``, ``TestConfigMigrationFromOldFormat``, and
 ``TestTurnResultSerialization``. Plus the v3 ``Framing`` enum and
 ``RiskLayerConfig.to_runtime`` round-trip.
@@ -22,7 +22,7 @@ import pytest
 import yaml
 
 from squid_game.core.framing import FramingManager
-from squid_game.core.risk_choice_layer import RiskChoiceLayerConfig
+from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayerConfig
 from squid_game.models.config import (
     ExperimentConfig,
     ProviderConfig,

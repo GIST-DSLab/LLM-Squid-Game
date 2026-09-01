@@ -9,9 +9,9 @@ real Core Engine + VanillaAgent parser run unmodified.
 
 from __future__ import annotations
 
-import interface.arena as arena_mod
-from interface.persistence.sqlite_repository import SQLiteRepository
-from interface.remote_provider import ArenaProgress
+import squid_arena.arena as arena_mod
+from squid_store.sqlite_repository import SQLiteRepository
+from squid_arena.remote_provider import ArenaProgress
 
 
 class _FakeResponse:
@@ -59,7 +59,7 @@ def _make_fake_post():
 def test_arena_runs_full_split_call_season_and_persists(monkeypatch, tmp_path):
     monkeypatch.setattr(arena_mod, "_ARENA_RUNS_DIR", tmp_path / "arena_runs")
     fake_post, counter = _make_fake_post()
-    monkeypatch.setattr("interface.remote_provider.httpx.post", fake_post)
+    monkeypatch.setattr("squid_arena.remote_provider.httpx.post", fake_post)
 
     repo = SQLiteRepository(":memory:")
     progress = ArenaProgress()
@@ -109,7 +109,7 @@ def test_arena_endpoint_failure_raises(monkeypatch, tmp_path):
     def _boom(url, json=None, headers=None, timeout=None):  # noqa: A002
         raise ConnectionError("connection refused")
 
-    monkeypatch.setattr("interface.remote_provider.httpx.post", _boom)
+    monkeypatch.setattr("squid_arena.remote_provider.httpx.post", _boom)
 
     repo = SQLiteRepository(":memory:")
     import pytest
@@ -126,7 +126,7 @@ def test_arena_endpoint_failure_raises(monkeypatch, tmp_path):
 
 
 def test_arena_config_enables_psuccess_chaining():
-    from interface.arena import _arena_config_dict
+    from squid_arena.arena import _arena_config_dict
 
     cfg = _arena_config_dict("flagship_corruption", "allowed", "some-model", 15, 2048)
     assert cfg["forfeit_layer"]["chain_psuccess_to_menu"] is True
@@ -145,7 +145,7 @@ def test_arena_forwards_max_tokens_to_endpoint(monkeypatch, tmp_path):
         return _FakeResponse({"choices": [{"message": {"content": content}}],
                               "usage": {"prompt_tokens": 20, "completion_tokens": 5}})
     _fake_post.n = 0
-    monkeypatch.setattr("interface.remote_provider.httpx.post", _fake_post)
+    monkeypatch.setattr("squid_arena.remote_provider.httpx.post", _fake_post)
 
     repo = SQLiteRepository(":memory:")
     arena_mod.run_arena_session(
@@ -157,7 +157,7 @@ def test_arena_forwards_max_tokens_to_endpoint(monkeypatch, tmp_path):
 
 
 def test_arena_config_uses_supplied_difficulty():
-    from interface.arena import _arena_config_dict
+    from squid_arena.arena import _arena_config_dict
 
     cfg = _arena_config_dict(
         "flagship_corruption", "allowed", "some-model", 15, 2048, difficulty="hard"
@@ -166,7 +166,7 @@ def test_arena_config_uses_supplied_difficulty():
 
 
 def test_arena_config_difficulty_defaults_to_easy():
-    from interface.arena import _arena_config_dict
+    from squid_arena.arena import _arena_config_dict
 
     cfg = _arena_config_dict("flagship_corruption", "allowed", "some-model", 15, 2048)
     assert cfg["seasons"][0]["task_config"]["difficulty"] == "easy"
@@ -192,7 +192,7 @@ def test_arena_rejects_unknown_difficulty(tmp_path, monkeypatch):
 def test_arena_hard_difficulty_runs_and_persists(monkeypatch, tmp_path):
     monkeypatch.setattr(arena_mod, "_ARENA_RUNS_DIR", tmp_path / "arena_runs")
     fake_post, counter = _make_fake_post()
-    monkeypatch.setattr("interface.remote_provider.httpx.post", fake_post)
+    monkeypatch.setattr("squid_arena.remote_provider.httpx.post", fake_post)
 
     repo = SQLiteRepository(":memory:")
     result = arena_mod.run_arena_session(

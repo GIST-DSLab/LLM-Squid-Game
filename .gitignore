@@ -7,8 +7,8 @@ wheels/
 models/
 # Exempt the package's Pydantic model modules from the blanket models/ rule
 # (which is intended for ML weight checkpoints, not src code).
-!src/squid_game/models/
-!src/squid_game/models/*.py
+!game/squid_game/models/
+!game/squid_game/models/*.py
 *.egg-info
 
 # Secrets
@@ -32,24 +32,33 @@ models/
 outputs/web_arena/web_arena.db
 
 # paperbanana figure-generation scratch runs
-figures/run_*/
+assets/figures/run_*/
 
-# Ad-hoc review/debug screenshots & scratch review pages. Kept out of the repo
-# root (and out of git) under screenshots/ — see screenshots/README.md.
-/screenshots/*
-!/screenshots/README.md
+# Ad-hoc review/debug captures and scratch review pages. Nothing in the build,
+# the paper, or the deployed site reads from here; figures a document depends on
+# live in assets/figures/ or web/frontend/assets/.
+/.scratch/
 /*.png
 
 # External benchmark datasets (Omni-MATH / Hi-ToM / GPQA).
 # Never committed: GPQA's authors ask that questions stay off the public web,
 # and the raw files are ~16 MB. Recreate with scripts/fetch_benchmarks.py.
 # Anchored to the repo root: an unanchored "data/" matches at any depth and
-# would silently swallow a future src/.../data/ or tests/.../data/ directory.
+# would silently swallow a future game/.../data/ or tests/.../data/ directory.
 /data/
 
 # Benchmark experiment outputs. Unlike outputs/final_results/** (which this
 # repo commits, LFS-tracked), a benchmark run's per-turn records are derived
 # from datasets that must not be republished, so they stay local. See
-# _UNPERSISTED_META_KEYS in src/squid_game/tasks/benchmark/module.py for the
+# _UNPERSISTED_META_KEYS in game/squid_game/tasks/benchmark/module.py for the
 # in-code half of the same rule.
 outputs/benchmark_*/
+
+# SentenceBERT embedding cache for scripts/analysis/probe_reasoning_embeddings.py.
+# Regenerable from the turn traces; ~13 MB per (channel, mask variant).
+results/reasoning_probe/_embedding_cache/
+
+# analyze_call1_ri.py dumps its input frame beside the report. Nothing in the
+# repo reads it -- load_all() rebuilds it from outputs/final_results/ on every
+# run -- so the 1.3 MB copy was tracked for no consumer. Untracked 2026-08-31.
+results/call1_ri_analysis/turn_observations.csv
