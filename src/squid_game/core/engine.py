@@ -161,11 +161,17 @@ class GameEngine:
         effective_seed = seed_override if seed_override is not None else task_cfg.seed
 
         # --- 1. Initialize task ---
+        # ``total_turns`` is passed so a task that sizes its own resources per
+        # season (the benchmark modules' difficulty ladder) can validate the
+        # season length at startup instead of failing mid-run. Every task
+        # module's ``initialize`` accepts ``**kwargs``, so this is inert for
+        # the ones that do not use it.
         self._task.initialize(
             difficulty=task_cfg.difficulty,
             seed=effective_seed,
             num_few_shot=task_cfg.num_few_shot,
             curriculum_turns=task_cfg.curriculum_turns,
+            total_turns=task_cfg.total_turns,
         )
 
         # --- 2. Create core components ---

@@ -88,8 +88,31 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
 
         ``difficulty`` and the legacy ``num_few_shot`` / ``curriculum_turns``
         kwargs are ignored: difficulty is carried by the ladder instead.
+
+        ``total_turns`` (supplied by ``GameEngine.run_season`` from the
+        EXPERIMENT yaml) is checked against the ladder here. The two numbers
+        are independent: ``BenchmarkTaskConfig`` validates the ladder against
+        the TASK yaml's own ``total_turns``, so an experiment configured for
+        more turns than the ladder covers passes every config validator, then
+        clamps to the top rung in ``band_for_turn`` and raises
+        ``PoolExhaustedError`` mid-season — killing an unattended run part-way
+        through. Fail at startup with a message that names both numbers.
+
+        Raises:
+            ValueError: If the season is longer than the ladder covers.
         """
-        del difficulty, kwargs
+        del difficulty
+        total_turns = kwargs.get("total_turns")
+        if isinstance(total_turns, int) and total_turns > self._ladder.total_turns:
+            raise ValueError(
+                f"benchmark task '{self.name}': the experiment config asks for "
+                f"{total_turns} turns but the difficulty ladder in "
+                f"configs/tasks/{self.name}.yaml covers only "
+                f"{self._ladder.total_turns}. Every turn past the ladder's end "
+                "clamps to its top band and would exhaust that band's item "
+                "pool mid-season. Extend the ladder or lower the experiment's "
+                "total_turns."
+            )
         raw_path = resolve_data_file(self._config.data_file)
         if self._items is None:
             self._items = self._adapter.load(raw_path)

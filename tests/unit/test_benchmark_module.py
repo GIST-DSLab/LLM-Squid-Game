@@ -417,3 +417,92 @@ def test_scoring_still_works_without_the_stripped_keys(tmp_path, monkeypatch):
     task.prepare(None, _turn_context(1))
     parsed = task.parse_response("reasoning\nANSWER: container_one")
     assert task.score(parsed, None).success_factor == 1.0
+
+
+# ---------------------------------------------------------------------------
+# The experiment yaml's total_turns and the task yaml's are independent, and
+# only the latter is validated against the ladder (BenchmarkTaskConfig).
+# A longer experiment used to pass every config validator, clamp to the top
+# rung in band_for_turn, and then raise PoolExhaustedError mid-season --
+# killing an unattended run part-way through. initialize() fails fast now,
+# with GameEngine.run_season supplying total_turns from the experiment config.
+# ---------------------------------------------------------------------------
+
+
+def _write_omni_env(tmp_path, monkeypatch, ladder_turns: int = 4) -> None:
+    """Point the task config / data env vars at a synthetic 2-band pool."""
+    config_dir = tmp_path / "m1_configs"
+    config_dir.mkdir()
+    per_band = ladder_turns // 2
+    (config_dir / "omni_math.yaml").write_text(
+        "name: omni_math\n"
+        "data_file: omni_math.jsonl\n"
+        f"total_turns: {ladder_turns}\n"
+        "ladder:\n"
+        f"  - {{band: 1, turns: {per_band}}}\n"
+        f"  - {{band: 2, turns: {per_band}}}\n",
+        encoding="utf-8",
+    )
+    data_dir = tmp_path / "m1_data"
+    data_dir.mkdir()
+    rows = [
+        {
+            "difficulty": float(band),
+            "problem": f"m1 band{band} item{index}",
+            "answer": str(band * 100 + index),
+            "domain": ["d"],
+            "source": "synthetic",
+        }
+        for band in (1, 2)
+        for index in range(4)
+    ]
+    (data_dir / "omni_math.jsonl").write_text(
+        "\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8"
+    )
+    monkeypatch.setenv("SQUID_GAME_TASK_CONFIG_DIR", str(config_dir))
+    monkeypatch.setenv("SQUID_GAME_BENCHMARK_DATA_DIR", str(data_dir))
+
+
+def test_initialize_rejects_a_season_longer_than_the_ladder(tmp_path, monkeypatch):
+    _write_omni_env(tmp_path, monkeypatch, ladder_turns=4)
+    task = get_task("omni_math")()
+    with pytest.raises(ValueError) as excinfo:
+        task.initialize(difficulty=Difficulty.MEDIUM, seed=1, total_turns=40)
+    message = str(excinfo.value)
+    assert "40" in message
+    assert "4" in message
+    assert "omni_math" in message
+
+
+def test_initialize_accepts_a_season_the_ladder_exactly_covers(tmp_path, monkeypatch):
+    _write_omni_env(tmp_path, monkeypatch, ladder_turns=4)
+    task = get_task("omni_math")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=1, total_turns=4)
+    assert task.prepare(None, _turn_context(1)).metadata["turn"] == 1
+
+
+def test_initialize_accepts_a_shorter_season(tmp_path, monkeypatch):
+    """A season shorter than the ladder is fine -- it just stops early."""
+    _write_omni_env(tmp_path, monkeypatch, ladder_turns=4)
+    task = get_task("omni_math")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=1, total_turns=2)
+    assert task.prepare(None, _turn_context(1)).metadata["turn"] == 1
+
+
+def test_initialize_still_works_without_total_turns(tmp_path, monkeypatch):
+    """Direct callers that pass no total_turns keep the old behaviour."""
+    _write_omni_env(tmp_path, monkeypatch, ladder_turns=4)
+    task = get_task("omni_math")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
+    assert task.prepare(None, _turn_context(1)).metadata["turn"] == 1
+
+
+def test_shipped_configs_do_not_trip_the_ladder_check():
+    """The four benchmark_*.yaml configs all run 30 turns; each task yaml's
+    ladder must cover exactly that, or the check fires on a real run."""
+    from squid_game.tasks.benchmark.config import load_task_config
+    from squid_game.tasks.benchmark.ladder import DifficultyLadder
+
+    for name in ("omni_math", "hi_tom", "gpqa"):
+        ladder = DifficultyLadder.from_config(load_task_config(name))
+        assert ladder.total_turns >= 30, name
