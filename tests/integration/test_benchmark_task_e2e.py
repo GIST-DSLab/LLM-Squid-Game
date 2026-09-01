@@ -58,12 +58,14 @@ def synthetic_omni_math(tmp_path, monkeypatch):
     monkeypatch.setenv("SQUID_GAME_BENCHMARK_DATA_DIR", str(data_dir))
 
 
-def _turn_context(turn: int, framing: Framing, forfeit: ForfeitCondition) -> TurnContext:
+def _turn_context(
+    turn: int, framing: Framing, forfeit: ForfeitCondition, score: float = 30.0
+) -> TurnContext:
     return TurnContext(
         turn_number=turn,
         total_turns=_TOTAL_TURNS,
         season_id="smoke",
-        cumulative_score=30.0,
+        cumulative_score=score,
         p_death=0.25,
         framing=framing,
         forfeit_condition=forfeit,
@@ -72,25 +74,49 @@ def _turn_context(turn: int, framing: Framing, forfeit: ForfeitCondition) -> Tur
 
 
 # The six cells of the current Phase O v6 factorial design (see the 6-Cell
-# table in CLAUDE.md): (framing, forfeit_condition) pairs for Cells 0-5.
+# table in CLAUDE.md): (framing, forfeit_condition, per-turn cumulative_score)
+# for Cells 0-5. Every cell shares the canonical S0 = 30 starting score (see
+# CLAUDE.md's EV-positive CONTINUE Calibration) but its own score trajectory
+# thereafter -- a realistic picture, since real sessions in different cells
+# accumulate differently precisely because they differ in forfeit behaviour.
+#
+# This divergence matters for the test below, not just realism: if every
+# cell carried the *same* score at every turn, a band rule that reacted to
+# cumulative_score would shift all six item sequences identically and
+# `sequences == sequences[0]` would still hold, silently failing to catch a
+# score leak into item selection. Distinct per-cell trajectories are what
+# let this test actually distinguish "band ignores score" from "band reacts
+# to score, but every cell's score happens to coincide" (see
+# task-9-report.md, fix round 1, for the mutation that demonstrates this).
 _CELLS = [
-    (Framing.TRUE_BASELINE, ForfeitCondition.NOT_ALLOWED),  # Cell 0
-    (Framing.BASELINE_FLAGSHIP, ForfeitCondition.ALLOWED),  # Cell 1
-    (Framing.BASELINE_FLAGSHIP, ForfeitCondition.NOT_ALLOWED),  # Cell 2
-    (Framing.FLAGSHIP_CORRUPTION, ForfeitCondition.ALLOWED),  # Cell 3
-    (Framing.FLAGSHIP_CORRUPTION, ForfeitCondition.NOT_ALLOWED),  # Cell 4
-    (Framing.TRUE_BASELINE, ForfeitCondition.ALLOWED),  # Cell 5
+    # (framing, forfeit_condition, cumulative_score for turns 1-6)
+    (Framing.TRUE_BASELINE, ForfeitCondition.NOT_ALLOWED, [30.0, 40.0, 50.0, 60.0, 70.0, 80.0]),
+    (Framing.BASELINE_FLAGSHIP, ForfeitCondition.ALLOWED, [30.0, 35.0, 30.0, 38.0, 33.0, 41.0]),
+    (
+        Framing.BASELINE_FLAGSHIP,
+        ForfeitCondition.NOT_ALLOWED,
+        [30.0, 38.0, 44.0, 52.0, 58.0, 66.0],
+    ),
+    (Framing.FLAGSHIP_CORRUPTION, ForfeitCondition.ALLOWED, [30.0, 20.0, 25.0, 15.0, 22.0, 12.0]),
+    (
+        Framing.FLAGSHIP_CORRUPTION,
+        ForfeitCondition.NOT_ALLOWED,
+        [30.0, 34.0, 42.0, 39.0, 47.0, 55.0],
+    ),
+    (Framing.TRUE_BASELINE, ForfeitCondition.ALLOWED, [30.0, 41.0, 52.0, 63.0, 74.0, 85.0]),
 ]
 
 
 def test_all_six_cells_see_the_same_item_sequence(synthetic_omni_math):
     sequences = []
-    for framing, forfeit in _CELLS:
+    for framing, forfeit, scores in _CELLS:
         task = get_task("omni_math")()
         task.initialize(difficulty=Difficulty.MEDIUM, seed=2026)
         sequences.append(
             [
-                task.prepare(None, _turn_context(turn, framing, forfeit)).metadata["item_id"]
+                task.prepare(
+                    None, _turn_context(turn, framing, forfeit, score=scores[turn - 1])
+                ).metadata["item_id"]
                 for turn in range(1, _TOTAL_TURNS + 1)
             ]
         )
