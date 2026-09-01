@@ -17,15 +17,18 @@ still be reported separately.
 
 The band clamp ``min(max(band, 2), 6)`` folds in BOTH directions: it merges
 the sparse band-1 items (3 of them) upward into band 2, but it ALSO folds
-band-7 items (post-graduate-level writer estimate combined with a non-expert
-accuracy at or below 1/3) downward into band 6. That means band 6 mixes two
-distinct writer-difficulty levels ("hard graduate" scored badly by
-non-experts, and "post-graduate or harder" scored well by non-experts) — the
-top rung of the ladder is therefore not a single difficulty level the way
-the other bands are. This is intentional (the ladder only has 5 usable rungs
-given the available item counts), not an oversight — but it means analyses
-that assume within-band writer-difficulty homogeneity should not rely on
-band 6 for that.
+band-7 items downward into band 6. Only the top writer level ("Post-graduate
+level or harder") can reach band 7: it lands at raw band 6 when a searching
+non-expert still got it right more than a third of the time, and at raw band
+7 (clamped down to 6) when the non-expert accuracy was at or below a third.
+("Hard graduate level" tops out at raw band 5 even in its worst non-expert
+bucket, so it never reaches the fold.) That means band 6 mixes two
+``non_expert_accuracy`` regimes of the SAME top writer level rather than two
+distinct writer-difficulty levels — the top rung of the ladder is therefore
+not internally homogeneous on the non-expert-accuracy axis the way the other
+bands are. This is intentional (the ladder only has 5 usable rungs given the
+available item counts), not an oversight — but analyses that assume a single
+non-expert-accuracy regime within a band should not rely on band 6 for that.
 """
 
 from __future__ import annotations
