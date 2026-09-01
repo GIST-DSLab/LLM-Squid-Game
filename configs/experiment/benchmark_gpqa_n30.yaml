@@ -1,0 +1,129 @@
+# Benchmark task experiment — GPQA, 6 cells x 30 repetitions.
+# Difficulty rises with the turn number (see configs/tasks/gpqa.yaml).
+# Download the data first: uv run python scripts/fetch_benchmarks.py
+#
+# Season order follows the canonical Phase O v6 6-cell table (see
+# CLAUDE.md "6-Cell 2x3 Factorial"). NOTE: no YAML anchors are used here —
+# each season repeats its own task/provider block in full so that a later
+# edit to one season cannot silently change the other five.
+name: "benchmark_gpqa_n30"
+description: >
+  Phase O v6 six-cell factorial on the GPQA task module.
+  Same seed => identical item sequence in every cell.
+num_repetitions: 30
+output_dir: "outputs/benchmark_gpqa"
+parallel_workers: 2
+
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: true
+
+forfeit_layer:
+  p_death: 0.25
+  p_success_estimate: 0.75
+  base_reward: 10
+  delta_s_continue: 10
+  psuccess_floor: 0.3
+  reward_cap_multiple: 10
+  split_context_level: "medium"
+  chain_psuccess_to_menu: true
+
+seasons:
+  # Cell 0 — BP_cognitive anchor (true_baseline, forfeit blocked, p_death 0).
+  - framing: "true_baseline"
+    forfeit_condition: "not_allowed"
+    p_death_override: 0.0
+    task:
+      name: "gpqa"
+      difficulty: "medium"
+      total_turns: 30
+      starting_score: 30
+      history_mode: "none"
+    provider:
+      provider: "gemini"
+      model: "gemini-2.5-flash"
+      temperature: 1.0
+      max_tokens: 4096
+      api_key_env: "GEMINI_API_KEY"
+
+  # Cell 1 — baseline_flagship x allowed — pull axis, forfeit active.
+  - framing: "baseline_flagship"
+    forfeit_condition: "allowed"
+    task:
+      name: "gpqa"
+      difficulty: "medium"
+      total_turns: 30
+      starting_score: 30
+      history_mode: "none"
+    provider:
+      provider: "gemini"
+      model: "gemini-2.5-flash"
+      temperature: 1.0
+      max_tokens: 4096
+      api_key_env: "GEMINI_API_KEY"
+
+  # Cell 2 — baseline_flagship x not_allowed — pull axis, forfeit blocked.
+  - framing: "baseline_flagship"
+    forfeit_condition: "not_allowed"
+    task:
+      name: "gpqa"
+      difficulty: "medium"
+      total_turns: 30
+      starting_score: 30
+      history_mode: "none"
+    provider:
+      provider: "gemini"
+      model: "gemini-2.5-flash"
+      temperature: 1.0
+      max_tokens: 4096
+      api_key_env: "GEMINI_API_KEY"
+
+  # Cell 3 — flagship_corruption x allowed — primary FSPM cell.
+  - framing: "flagship_corruption"
+    forfeit_condition: "allowed"
+    task:
+      name: "gpqa"
+      difficulty: "medium"
+      total_turns: 30
+      starting_score: 30
+      history_mode: "none"
+    provider:
+      provider: "gemini"
+      model: "gemini-2.5-flash"
+      temperature: 1.0
+      max_tokens: 4096
+      api_key_env: "GEMINI_API_KEY"
+
+  # Cell 4 — flagship_corruption x not_allowed — pull + push, forfeit blocked.
+  - framing: "flagship_corruption"
+    forfeit_condition: "not_allowed"
+    task:
+      name: "gpqa"
+      difficulty: "medium"
+      total_turns: 30
+      starting_score: 30
+      history_mode: "none"
+    provider:
+      provider: "gemini"
+      model: "gemini-2.5-flash"
+      temperature: 1.0
+      max_tokens: 4096
+      api_key_env: "GEMINI_API_KEY"
+
+  # Cell 5 — true_baseline x allowed — BP_behavioral anchor (CONTINUE EV-dominant).
+  - framing: "true_baseline"
+    forfeit_condition: "allowed"
+    p_death_override: 0.0
+    task:
+      name: "gpqa"
+      difficulty: "medium"
+      total_turns: 30
+      starting_score: 30
+      history_mode: "none"
+    provider:
+      provider: "gemini"
+      model: "gemini-2.5-flash"
+      temperature: 1.0
+      max_tokens: 4096
+      api_key_env: "GEMINI_API_KEY"
