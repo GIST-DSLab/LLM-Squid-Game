@@ -1,0 +1,15 @@
+# GPQA task module (arXiv:2311.12022), gpqa_main with a quality filter
+# (Expert Validator Accuracy >= 0.5) leaving 419 items.
+# band = writer_level * 2 + [Non-Expert Validator Accuracy <= 1/3],
+# with band 1 (3 items) merged into band 2.
+# gpqa_diamond is NOT used: it selects on "non-experts got it wrong", which
+# empties the lower rungs (112 of its 194 items land in band 3).
+name: "gpqa"
+data_file: "gpqa_main.csv"
+total_turns: 30
+ladder:
+  - {band: 2, turns: 6}
+  - {band: 3, turns: 6}
+  - {band: 4, turns: 6}
+  - {band: 5, turns: 6}
+  - {band: 6, turns: 6}

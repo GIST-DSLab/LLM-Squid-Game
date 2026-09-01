@@ -1,0 +1,16 @@
+# Omni-MATH task module (arXiv:2410.07985).
+# Uses the integer-answer subset only (1,960 of 4,428 items) so scoring
+# stays deterministic. Band = int(difficulty); band 9 is unused because its
+# integer-answer pool (30 items) is too shallow for a 4-turn rung.
+name: "omni_math"
+data_file: "omni_math.jsonl"
+total_turns: 30
+ladder:
+  - {band: 1, turns: 4}
+  - {band: 2, turns: 4}
+  - {band: 3, turns: 4}
+  - {band: 4, turns: 4}
+  - {band: 5, turns: 4}
+  - {band: 6, turns: 4}
+  - {band: 7, turns: 3}
+  - {band: 8, turns: 3}
