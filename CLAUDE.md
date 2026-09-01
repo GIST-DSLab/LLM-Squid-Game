@@ -32,9 +32,12 @@ Integration tests inject a `StubProvider` (`tests/integration/conftest.py`) via 
 
 ## Running Experiments
 
-> ⚠️ **The `configs/experiment/` directory is currently EMPTY**, so none of the `--config`
-> commands in this section run as written. The config files were never committed to git.
-> See "Missing experiment configs" under Directory Structure before attempting a run.
+> ⚠️ **The `phase3_*` canonical configs this section names are still missing from
+> `configs/experiment/`**, so the `--config` commands below do not run as written. Four
+> `benchmark_*.yaml` configs were added 2026-09-01 and do run once
+> `scripts/fetch_benchmarks.py` has populated `data/benchmarks/` — see "벤치마크 과제
+> (2026-09-01)" under Directory Structure.
+> See "Missing experiment configs" under Directory Structure before attempting a phase3 run.
 
 ### Cloud provider mode (v6 canonical — Gemini / Ollama Cloud)
 ```bash
@@ -201,7 +204,7 @@ src/squid_game/
 configs/
   tasks/          # signal_game, voting_room, navigation
   providers/      # openai, anthropic, local
-  experiment/     # ⚠️ EMPTY — see "Missing experiment configs" below
+  experiment/     # benchmark_*.yaml (Task 10, 2026-09-01); phase3_* canonical configs still missing — see "Missing experiment configs" below
 scripts/          # analyze_phase3, analyze_threat_registration, orchestrate_posthoc,
                   # plot_*, thinking_analysis, seed_web_arena, shard helpers
 interface/        # Web Arena backend — api.py (FastAPI), arena.py, human_game.py,
@@ -218,12 +221,17 @@ outputs/
 
 ### Missing experiment configs (⚠️ known gap)
 
-`configs/experiment/` is **empty and has never been tracked in git**, yet scripts hardcode
-paths into it (`scripts/_trace_split_forfeit_production.py`, `dump_gemini_smoke_prompt.py`,
-`benchmark_mlx_vs_ollama.py`) and the run commands above name files inside it. Consequences:
+The `phase3_*` v6 canonical configs (see "Cloud provider mode" above) are **missing from
+`configs/experiment/` and have never been tracked in git**; four `benchmark_*.yaml` configs
+were added 2026-09-01 in commit `3f45077` and are tracked. Scripts still hardcode paths into
+this directory (`scripts/_trace_split_forfeit_production.py`, `dump_gemini_smoke_prompt.py`,
+`benchmark_mlx_vs_ollama.py`), and the phase3 run commands above name files inside it that do
+not exist. Consequences:
 
-- **No `main.py --config …` command in this file currently runs as written.** The config
-  files must be restored (or recreated) first.
+- **No `phase3_*` `main.py --config …` command in the "Running Experiments" section above
+  currently runs as written.** Those config files must be restored (or recreated) first. The
+  `benchmark_*.yaml` commands in "벤치마크 과제 (2026-09-01)" below do run, once
+  `scripts/fetch_benchmarks.py` has populated `data/benchmarks/`.
 - `tests/unit/test_phase3_configs.py` and `test_forfeit_layer_config_yaml.py` fail for this
   reason (5 failures) — this is the *actual* cause, not a venv/extras problem.
 - The canonical parameters are recoverable from the run outputs and code defaults:
