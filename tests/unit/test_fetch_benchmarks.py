@@ -6,8 +6,6 @@ import importlib.util
 import json
 from pathlib import Path
 
-import pytest
-
 _SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "fetch_benchmarks.py"
 
 
@@ -47,3 +45,28 @@ def test_write_manifest_records_entries(tmp_path: Path):
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert payload["entries"][0]["name"] == "omni_math"
     assert "fetched_at" in payload
+
+
+def test_count_rows_handles_csv_cells_with_embedded_newlines(tmp_path: Path):
+    """Regression test for the naive-line-count bug: a quoted CSV cell that
+    contains an embedded newline must still count as a single data row, not
+    two. This is synthetic content only — no real benchmark question text.
+    """
+    mod = _load_module()
+    target = tmp_path / "synthetic.csv"
+    target.write_text(
+        "header_a,header_b\n"
+        '"single-line cell",1\n'
+        '"this cell\nspans two physical lines",2\n'
+        '"single-line cell again",3\n',
+        encoding="utf-8",
+    )
+    # Physical line count minus the header would be 4 (the embedded newline
+    # in row 2 adds an extra physical line); the true data-row count, parsed
+    # as CSV, is 3. The two numbers must differ for this test to actually
+    # discriminate the correct implementation from the naive one.
+    physical_line_count = sum(1 for _ in target.open(encoding="utf-8"))
+    naive_count = physical_line_count - 1
+    true_row_count = 3
+    assert naive_count != true_row_count
+    assert mod.count_rows(target) == true_row_count
