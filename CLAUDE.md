@@ -187,7 +187,7 @@ Phase 1/2 (4-framing `survival`/`neutral`/`emotion`/`instruction`), Phase 3 (`ba
 src/squid_game/
   core/           # engine, unified_turn (Split-Call), forfeit_layer, framing
                   # (risk_choice_layer.py: legacy — replay-only for archived configs)
-  tasks/          # signal_game/, voting_room/, navigation/, null_task/
+  tasks/          # signal_game/, voting_room/, navigation/, null_task/, benchmark/
   agents/         # vanilla, memory, tom, tuned, _parsing, _thinking_utils
   models/         # config, results, enums (Framing / ForfeitCondition / Difficulty)
   providers/      # openai, anthropic, gemini, ollama_cloud, mlx_server, cuda_server, mlx, ollama, local
@@ -196,7 +196,8 @@ src/squid_game/
                   # regime_stratification (Unit 17.10), motivation (MTMM + BP sub-estimators),
                   # threat_registration + threat_lexicon + threat_judge (Cluster C, 2026-07),
                   # discovery_detection, manipulation_check, loaders, metrics, export,
-                  # tc_regression, unit13_hypotheses (demoted to Appendix A.4)
+                  # tc_regression, unit13_hypotheses (demoted to Appendix A.4),
+                  # benchmark_checks (밴드 통제 정답률 + p_self Brier)
 configs/
   tasks/          # signal_game, voting_room, navigation
   providers/      # openai, anthropic, local
@@ -228,6 +229,19 @@ paths into it (`scripts/_trace_split_forfeit_production.py`, `dump_gemini_smoke_
 - The canonical parameters are recoverable from the run outputs and code defaults:
   `k(delta_s_continue) = 10`, `p_d = 0.25`, `S₀ = 30`, `psuccess_floor = 0.3`,
   `base_reward = 10`, `reward_cap_multiple = 10`, and the four `use_*` flags below.
+
+### 벤치마크 과제 (2026-09-01)
+
+외부 벤치마크 세 개가 Task Module로 편입되어 있다: `omni_math` · `hi_tom` · `gpqa`.
+원본 데이터는 리포에 없다 (GPQA는 원저자가 평문 노출 금지를 요청). 먼저 받아야 한다.
+
+```bash
+uv run python scripts/fetch_benchmarks.py --which omni_math,hi_tom,gpqa
+uv run python main.py --config configs/experiment/benchmark_gpqa_n30.yaml
+```
+
+난이도는 턴 번호에만 의존하는 고정 사다리로 오른다 (`configs/tasks/<task>.yaml`의 `ladder`).
+설계 근거는 `docs/superpowers/specs/2026-09-01-benchmark-task-modules-design.md`.
 
 ### Git LFS
 
