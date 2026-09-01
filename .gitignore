@@ -39,3 +39,8 @@ figures/run_*/
 /screenshots/*
 !/screenshots/README.md
 /*.png
+
+# External benchmark datasets (Omni-MATH / Hi-ToM / GPQA).
+# Never committed: GPQA's authors ask that questions stay off the public web,
+# and the raw files are ~16 MB. Recreate with scripts/fetch_benchmarks.py.
+data/
