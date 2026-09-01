@@ -77,3 +77,70 @@ def test_brier_ignores_turns_without_a_probe():
 def test_empty_frame_raises():
     with pytest.raises(ValueError):
         fit_band_controlled_accuracy(pd.DataFrame())
+
+
+# ---------------------------------------------------------------------------
+# Fix round 1 — convergence flag, effect sizes, empty-after-dropna guards
+# ---------------------------------------------------------------------------
+
+
+def test_accuracy_check_reports_converged_flag():
+    """``converged`` is populated (True or False, never missing) on a fit
+    that returns a result at all — mirrors forfeit_regression's
+    ``ChoiceAsymmetricResult.converged`` / ``TaskSpilloverResult.converged``.
+    """
+    result = fit_band_controlled_accuracy(_frame(seed=7))
+    assert result is not None
+    assert isinstance(result.converged, bool)
+
+
+def test_accuracy_check_reports_framing_effect_sizes():
+    """``effect_sizes`` is keyed identically to the ``C(framing)`` p_values
+    so a researcher can pair each contrast's significance with its Cohen's
+    d for the project's joint (p, d) convention.
+    """
+    result = fit_band_controlled_accuracy(_frame(seed=8))
+    assert result is not None
+    framing_terms = [n for n in result.p_values if n.startswith("C(framing)")]
+    assert framing_terms
+    assert set(result.effect_sizes) == set(framing_terms)
+
+
+def test_brier_reports_cohens_d():
+    result = compare_psuccess_brier(_frame(seed=9, framing_effect=0.0))
+    assert isinstance(result.cohens_d, float)
+
+
+def test_brier_reports_a_larger_cohens_d_for_a_calibration_gap():
+    """The effect size, not just the p-value, should move with the gap."""
+    matched = compare_psuccess_brier(_frame(seed=10, framing_effect=0.0))
+
+    gapped_frame = _frame(seed=10)
+    death = gapped_frame["framing"] == "death"
+    gapped_frame.loc[death, "psuccess_self"] = 99
+    gapped_frame.loc[death, "task_success_factor"] = 0
+    gapped = compare_psuccess_brier(gapped_frame)
+
+    assert abs(gapped.cohens_d) > abs(matched.cohens_d)
+
+
+def test_accuracy_check_raises_clear_error_when_band_is_entirely_null():
+    """A non-benchmark long-format slice has ``band`` null on every row
+    (per ``loaders.LONG_FORMAT_COLUMNS``'s own docstring). Before Fix 3 this
+    surfaced as a cryptic ``ValueError: negative dimensions are not
+    allowed`` from deep inside numpy/statsmodels; it should now name the
+    real cause instead.
+    """
+    frame = _frame(seed=11)
+    frame["band"] = None
+    with pytest.raises(ValueError, match="no rows remain"):
+        fit_band_controlled_accuracy(frame)
+
+
+def test_brier_raises_clear_error_when_psuccess_self_is_entirely_null():
+    """An all-Cell-0 slice has ``psuccess_self`` null on every row (Cell 0
+    skips the probe together with Call 2)."""
+    frame = _frame(seed=12)
+    frame["psuccess_self"] = None
+    with pytest.raises(ValueError, match="no rows remain"):
+        compare_psuccess_brier(frame)
