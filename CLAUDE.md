@@ -203,7 +203,7 @@ src/squid_game/
                   # tc_regression, unit13_hypotheses (demoted to Appendix A.4),
                   # benchmark_checks (밴드 통제 정답률 + p_self Brier)
 configs/
-  tasks/          # signal_game, voting_room, navigation
+  tasks/          # signal_game, voting_room, navigation, omni_math, hi_tom, gpqa
   providers/      # openai, anthropic, local
   experiment/     # benchmark_*.yaml (Task 10, 2026-09-01); phase3_* canonical configs still missing — see "Missing experiment configs" below
 scripts/          # analyze_phase3, analyze_threat_registration, orchestrate_posthoc,
@@ -245,12 +245,24 @@ not exist. Consequences:
 원본 데이터는 리포에 없다 (GPQA는 원저자가 평문 노출 금지를 요청). 먼저 받아야 한다.
 
 ```bash
-uv run python scripts/fetch_benchmarks.py --which omni_math,hi_tom,gpqa
+uv run python scripts/fetch_benchmarks.py --which omni_math,hi_tom,gpqa,gpqa_diamond
 uv run python main.py --config configs/experiment/benchmark_gpqa_n30.yaml
 ```
 
+`gpqa_diamond`를 빼면 안 된다. diamond는 main의 부분집합이고 GPQA 어댑터는
+diamond 파일이 옆에 있을 때만 `meta["is_diamond"]`를 채운다 — 없으면 전 문항이
+`is_diamond=False`가 되어 "실제로 diamond가 아님"과 구별되지 않는다.
+(`--which`를 생략하면 스크립트 기본값이 네 개 모두를 받는다.)
+
 난이도는 턴 번호에만 의존하는 고정 사다리로 오른다 (`configs/tasks/<task>.yaml`의 `ladder`).
 설계 근거는 `docs/superpowers/specs/2026-09-01-benchmark-task-modules-design.md`.
+
+**벤치마크 실행 결과는 커밋하지 않는다.** `outputs/final_results/**`는 이 리포가
+커밋하는 대상이지만, 벤치마크 런의 산출물은 재배포가 금지된 데이터셋에서 파생된
+것이라 `.gitignore`의 `outputs/benchmark_*/`로 제외한다. 코드 쪽 짝은
+`src/squid_game/tasks/benchmark/module.py`의 `_UNPERSISTED_META_KEYS`로,
+GPQA의 선택지 목록(`choice_order`)과 Hi-ToM의 선택지 텍스트(`choice_map`)를
+턴 메타데이터에서 제거한다 (채점에는 `correct_letter`만 필요하다).
 
 ### Git LFS
 
@@ -266,6 +278,10 @@ pointers with empties and corrupts the data in the repository.
 ### After running an experiment
 1. Output lands in `outputs/final_results/YYYYMMDD_HHMM_<model>_<task>/`.
 2. Write `experiment_report.md` inside the output directory (forfeit rate, per-call RI, key findings).
+3. ⚠️ **Benchmark runs are the exception to step 1's "commit the output" convention.**
+   `outputs/benchmark_*/` is gitignored and must stay that way: its per-turn records derive
+   from datasets that must not be republished (GPQA above all). See "벤치마크 과제
+   (2026-09-01)" for the code-side half (`_UNPERSISTED_META_KEYS`).
 
 ### After modifying experiment design in code
 1. Update the corresponding section of the LaTeX paper under `docs/en/sections/` — `03_benchmark.tex` for cell/framing/reward changes, `04_empirical_findings.tex` for hypothesis or result changes.

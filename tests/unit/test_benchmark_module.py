@@ -9,6 +9,7 @@ import pytest
 from squid_game.models.enums import Difficulty, ForfeitCondition, Framing
 from squid_game.models.state import TurnContext
 from squid_game.tasks.benchmark.module import BenchmarkTaskModule
+from squid_game.tasks.benchmark.adapters.hi_tom import parse_choices
 from squid_game.tasks.registry import get_task
 
 
@@ -310,7 +311,10 @@ def test_hi_tom_accepts_letter_and_its_choice_map_container_name(tmp_path, monke
     task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
     context = task.prepare(None, _turn_context(1))
     letter = context.metadata["expected_answer"]
-    choice_map = context.metadata["choice_map"]
+    # choice_map is option text, so it is deliberately absent from the
+    # persisted metadata (see _UNPERSISTED_META_KEYS). Rebuild it from the
+    # fixture with the adapter's own parser.
+    choice_map = parse_choices(_HI_TOM_ROW["choices"])
     assert choice_map[letter] == "container_one"
 
     parsed_letter = task.parse_response(f"reasoning\nANSWER: {letter}")
@@ -337,7 +341,7 @@ def test_hi_tom_rejects_a_different_valid_container_name(tmp_path, monkeypatch):
     task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
     context = task.prepare(None, _turn_context(1))
     letter = context.metadata["expected_answer"]
-    choice_map = context.metadata["choice_map"]
+    choice_map = parse_choices(_HI_TOM_ROW["choices"])
     wrong_name = next(
         name for other_letter, name in choice_map.items() if other_letter != letter
     )
@@ -345,3 +349,71 @@ def test_hi_tom_rejects_a_different_valid_container_name(tmp_path, monkeypatch):
     parsed_wrong = task.parse_response(f"reasoning\nANSWER: {wrong_name}")
     outcome = task.score(parsed_wrong, None)
     assert outcome.success_factor == 0.0
+
+
+# ---------------------------------------------------------------------------
+# No option text may reach the persisted turn metadata.
+#
+# TaskContext.metadata is merged into TurnResult.task_metadata, a serialized
+# field, so it lands in *_turns.jsonl and season_results.jsonl -- and this
+# repo's documented workflow commits outputs/final_results/** (Git LFS).
+# Publishing GPQA's answer options is exactly what GPQA's authors ask not to
+# happen, and this branch has treated that as a hard constraint throughout.
+# ---------------------------------------------------------------------------
+
+
+def _all_strings(value):
+    """Yield every string nested anywhere inside *value*."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for key, inner in value.items():
+            yield from _all_strings(key)
+            yield from _all_strings(inner)
+    elif isinstance(value, (list, tuple, set, frozenset)):
+        for inner in value:
+            yield from _all_strings(inner)
+
+
+def test_gpqa_metadata_carries_no_option_text(tmp_path, monkeypatch):
+    _write_gpqa_fixture(tmp_path, monkeypatch)
+    task = get_task("gpqa")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=3)
+    metadata = task.prepare(None, _turn_context(1)).metadata
+
+    assert "choice_order" not in metadata
+    assert "distractors" not in metadata
+    options = {
+        "SyntheticCorrectOption",
+        "SyntheticWrongOptionA",
+        "SyntheticWrongOptionB",
+        "SyntheticWrongOptionC",
+    }
+    assert all(option in _GPQA_ROW for option in options)  # fixture sanity
+    rendered = set(_all_strings(metadata))
+    assert not (options & rendered), sorted(options & rendered)
+    # correct_letter is a bare letter, not option text, and scoring needs it.
+    assert metadata["correct_letter"] in "ABCD"
+
+
+def test_hi_tom_metadata_carries_no_option_text(tmp_path, monkeypatch):
+    _write_hi_tom_fixture(tmp_path, monkeypatch)
+    task = get_task("hi_tom")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
+    metadata = task.prepare(None, _turn_context(1)).metadata
+
+    assert "choice_map" not in metadata
+    options = set(parse_choices(_HI_TOM_ROW["choices"]).values())
+    rendered = set(_all_strings(metadata))
+    assert not (options & rendered), sorted(options & rendered)
+
+
+def test_scoring_still_works_without_the_stripped_keys(tmp_path, monkeypatch):
+    """Stripping option text must not cost the answer-by-name path, which
+    HiToMAdapter.matches serves from item.meta rather than the metadata."""
+    _write_hi_tom_fixture(tmp_path, monkeypatch)
+    task = get_task("hi_tom")()
+    task.initialize(difficulty=Difficulty.MEDIUM, seed=1)
+    task.prepare(None, _turn_context(1))
+    parsed = task.parse_response("reasoning\nANSWER: container_one")
+    assert task.score(parsed, None).success_factor == 1.0

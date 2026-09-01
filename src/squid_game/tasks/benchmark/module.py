@@ -31,6 +31,28 @@ from squid_game.tasks.registry import register
 
 logger = logging.getLogger(__name__)
 
+#: Metadata keys that must never reach ``TurnResult.task_metadata``.
+#:
+#: ``task_metadata`` is a serialized ``TurnResult`` field, so anything placed
+#: there lands in ``*_turns.jsonl`` and ``season_results.jsonl`` — and this
+#: repository's documented workflow commits ``outputs/final_results/**`` (Git
+#: LFS). Running a GPQA experiment and following that workflow would publish
+#: GPQA's answer options, and Hi-ToM's, to a public repo. GPQA's authors ask
+#: that its questions stay off the public web, so the option texts are
+#: stripped here: ``choice_order`` (GPQA's shuffled option list) and
+#: ``choice_map`` (Hi-ToM's letter -> option text map), joining ``distractors``
+#: which was already filtered.
+#:
+#: Scoring is unaffected. It needs only ``correct_letter`` / the expected
+#: answer, both of which stay, and ``HiToMAdapter.matches`` reads
+#: ``choice_map`` from ``item.meta``, not from the persisted metadata.
+_UNPERSISTED_META_KEYS = frozenset({"distractors", "choice_order", "choice_map"})
+
+
+def _strip_unpersisted(meta: dict[str, Any]) -> dict[str, Any]:
+    """Return *meta* without the keys that must not be written to disk."""
+    return {k: v for k, v in meta.items() if k not in _UNPERSISTED_META_KEYS}
+
 
 class BenchmarkTaskModule(RiskAwareTaskModule):
     """Presents one benchmark question per turn, harder as turns advance."""
@@ -117,8 +139,8 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
             "band": band,
             "turn": turn_number,
             "expected_answer": self._current_expected,
-            **{k: v for k, v in item.meta.items() if k != "distractors"},
-            **render_meta,
+            **_strip_unpersisted(item.meta),
+            **_strip_unpersisted(render_meta),
         }
         return TaskContext(prompt_section=body, metadata=metadata)
 

@@ -43,4 +43,13 @@ figures/run_*/
 # External benchmark datasets (Omni-MATH / Hi-ToM / GPQA).
 # Never committed: GPQA's authors ask that questions stay off the public web,
 # and the raw files are ~16 MB. Recreate with scripts/fetch_benchmarks.py.
-data/
+# Anchored to the repo root: an unanchored "data/" matches at any depth and
+# would silently swallow a future src/.../data/ or tests/.../data/ directory.
+/data/
+
+# Benchmark experiment outputs. Unlike outputs/final_results/** (which this
+# repo commits, LFS-tracked), a benchmark run's per-turn records are derived
+# from datasets that must not be republished, so they stay local. See
+# _UNPERSISTED_META_KEYS in src/squid_game/tasks/benchmark/module.py for the
+# in-code half of the same rule.
+outputs/benchmark_*/
