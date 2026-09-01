@@ -5,7 +5,23 @@
 # Season order follows the canonical Phase O v6 6-cell table (see
 # CLAUDE.md "6-Cell 2x3 Factorial"). NOTE: no YAML anchors are used here —
 # each season repeats its own task/provider block in full so that a later
-# edit to one season cannot silently change the other five.
+# edit to one season cannot silently change the other five. What the
+# anchors would have guaranteed is instead pinned by
+# tests/unit/test_benchmark_experiment_configs.py, which asserts all six
+# task blocks are identical except for p_death_override.
+#
+# seed: 42 matches the canonical v6 signal-game run
+# (outputs/final_results/20260422_0218_gemini-2.5-flash_signal-game/
+# experiment_config.json). It is required, not decorative: the runner
+# derives rep_seed = seed + repetition, so without it every repetition
+# runs at internal seed 0 (identical 30-item sequence in all 30 reps,
+# item effects confounded with turn number) and --resume collapses all
+# 30 reps of a cell onto one (framing, forfeit, social, seed) key.
+#
+# actual_death: false is Phantom Death, also matching the canonical run.
+# TaskConfig.actual_death defaults to True; left at the default, cells
+# 1-4 (p_death 0.25) survive to turn 30 with probability 0.75^29 ~ 0.02%,
+# so the 30-turn difficulty ladder would never leave its first rung.
 name: "benchmark_omni_math_n30"
 description: >
   Phase O v6 six-cell factorial on the Omni-MATH task module.
@@ -40,6 +56,8 @@ seasons:
       total_turns: 30
       starting_score: 30
       history_mode: "none"
+      seed: 42
+      actual_death: false
     provider:
       provider: "gemini"
       model: "gemini-2.5-flash"
@@ -56,6 +74,8 @@ seasons:
       total_turns: 30
       starting_score: 30
       history_mode: "none"
+      seed: 42
+      actual_death: false
     provider:
       provider: "gemini"
       model: "gemini-2.5-flash"
@@ -72,6 +92,8 @@ seasons:
       total_turns: 30
       starting_score: 30
       history_mode: "none"
+      seed: 42
+      actual_death: false
     provider:
       provider: "gemini"
       model: "gemini-2.5-flash"
@@ -88,6 +110,8 @@ seasons:
       total_turns: 30
       starting_score: 30
       history_mode: "none"
+      seed: 42
+      actual_death: false
     provider:
       provider: "gemini"
       model: "gemini-2.5-flash"
@@ -104,6 +128,8 @@ seasons:
       total_turns: 30
       starting_score: 30
       history_mode: "none"
+      seed: 42
+      actual_death: false
     provider:
       provider: "gemini"
       model: "gemini-2.5-flash"
@@ -121,6 +147,8 @@ seasons:
       total_turns: 30
       starting_score: 30
       history_mode: "none"
+      seed: 42
+      actual_death: false
     provider:
       provider: "gemini"
       model: "gemini-2.5-flash"

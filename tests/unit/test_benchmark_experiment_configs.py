@@ -105,3 +105,64 @@ def test_p_death_override_only_on_bp_anchor_cells(name):
     config = load_config_from_yaml(str(_CONFIG_DIR / name))
     overrides = [season.p_death_override for season in config.seasons]
     assert overrides == [0.0, None, None, None, None, 0.0]
+
+
+@pytest.mark.parametrize("name", _NAMES)
+def test_every_season_carries_the_canonical_seed(name):
+    """Without ``seed`` the runner sets ``rep_seed = None`` and the module
+    falls back to internal seed 0, so all N repetitions of a cell replay the
+    identical item sequence (item effects confounded with turn number) and
+    ``--resume`` collapses them onto one ``(framing, forfeit, social, seed)``
+    key. 42 is the seed the canonical v6 signal-game run used (see
+    ``outputs/final_results/20260422_0218_gemini-2.5-flash_signal-game/
+    experiment_config.json``)."""
+    config = load_config_from_yaml(str(_CONFIG_DIR / name))
+    seeds = [season.task_config.seed for season in config.seasons]
+    assert all(seed is not None for seed in seeds), seeds
+    assert seeds == [42] * 6
+
+
+@pytest.mark.parametrize("name", _NAMES)
+def test_every_season_runs_phantom_death(name):
+    """``TaskConfig.actual_death`` defaults to True. Left at the default,
+    cells 1-4 (p_death 0.25) reach turn 30 with probability 0.75**29, so the
+    30-turn difficulty ladder would essentially never leave its first rung —
+    and ``validate_capacity`` would not notice, because it checks the
+    ladder's demand rather than what a session reaches. The canonical v6 run
+    also used ``actual_death: False``."""
+    config = load_config_from_yaml(str(_CONFIG_DIR / name))
+    assert [season.task_config.actual_death for season in config.seasons] == [False] * 6
+
+
+@pytest.mark.parametrize("name", _NAMES)
+def test_all_six_task_blocks_are_identical(name):
+    """The six seasons deliberately repeat their task block in full instead
+    of sharing a YAML anchor, so one cell can be edited without silently
+    changing the other five. This test is what the anchor would have
+    guaranteed: 516 lines of near-duplicate YAML across four files is exactly
+    the surface on which a missing ``seed`` / ``actual_death`` slipped past
+    six times per file.
+
+    ``p_death_override`` is a season-level field (not part of ``task:``) and
+    legitimately differs on the two BP anchor cells; it is covered by
+    ``test_p_death_override_only_on_bp_anchor_cells``.
+    """
+    config = load_config_from_yaml(str(_CONFIG_DIR / name))
+    blocks = [
+        season.task_config.model_dump() for season in config.seasons
+    ]
+    for index, block in enumerate(blocks[1:], start=1):
+        assert block == blocks[0], f"season {index} task block diverges"
+
+
+@pytest.mark.parametrize("name", _NAMES)
+def test_all_six_provider_blocks_are_identical(name):
+    """Same rationale as the task-block test: a cross-cell comparison is only
+    valid when every cell talks to the same model with the same decoding
+    parameters."""
+    config = load_config_from_yaml(str(_CONFIG_DIR / name))
+    blocks = [
+        season.provider_config.model_dump() for season in config.seasons
+    ]
+    for index, block in enumerate(blocks[1:], start=1):
+        assert block == blocks[0], f"season {index} provider block diverges"
