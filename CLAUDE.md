@@ -70,8 +70,9 @@ uv run python main.py --config <config>.yaml
 ### Key experiment configs (v6 canonical family) — ⚠️ ALL MISSING FROM DISK
 
 These are the config filenames the scripts and the 2026-04-22 runs refer to. **None of them
-currently exist** (`configs/experiment/` is empty); they are listed so a restored or recreated
-config can be given the name the rest of the codebase already expects.
+currently exist** (`configs/experiment/` holds only the `benchmark_*.yaml` configs, none of
+these `phase3_*` ones); they are listed so a restored or recreated config can be given the name
+the rest of the codebase already expects.
 
 - `phase3_split_forfeit_gemini_n30.yaml` — **canonical main run** (Gemini 2.5 Flash)
 - `phase3_split_forfeit_gptoss_n30.yaml` — KDD UC cross-model (GPT-OSS-20B via Ollama Cloud)
