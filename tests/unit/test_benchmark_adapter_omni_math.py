@@ -11,6 +11,7 @@ from squid_game.tasks.benchmark.adapters.omni_math import OmniMathAdapter
 
 
 def _write(tmp_path, rows):
+    tmp_path.mkdir(parents=True, exist_ok=True)
     path = tmp_path / "omni_math.jsonl"
     path.write_text(
         "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n",
@@ -131,3 +132,95 @@ def test_duplicate_problem_text_is_deduplicated(tmp_path):
     items = OmniMathAdapter().load(path)
     assert len(items) == 1
     assert items[0].meta["source"] == "s"
+
+
+# ---------------------------------------------------------------------------
+# item_id / dedup must not depend on the row's position in the raw file.
+# SeededSampler documents that sorting by item_id makes a reproduced run
+# immune to a change in file order; that guarantee held for GPQA (Record ID)
+# and Hi-ToM (sample_id) but not here while the id was the line index.
+# ---------------------------------------------------------------------------
+
+
+def _plain_rows():
+    return [
+        {"difficulty": 1.0, "problem": "alpha", "answer": "1", "domain": ["d"], "source": "s"},
+        {"difficulty": 2.0, "problem": "beta", "answer": "2", "domain": ["d"], "source": "s"},
+        {"difficulty": 3.0, "problem": "gamma", "answer": "3", "domain": ["d"], "source": "s"},
+    ]
+
+
+def test_item_id_is_derived_from_the_problem_text(tmp_path):
+    """Same problem text -> same id, regardless of where the row sits."""
+    first = OmniMathAdapter().load(_write(tmp_path / "a", _plain_rows()))
+    second = OmniMathAdapter().load(
+        _write(tmp_path / "b", list(reversed(_plain_rows())))
+    )
+    assert {item.body: item.item_id for item in first} == {
+        item.body: item.item_id for item in second
+    }
+
+
+def test_inserting_a_row_upstream_does_not_shift_later_ids(tmp_path):
+    """The concrete regression: a row prepended to the raw file used to
+    renumber every id after it, so a re-run at seed 42 silently drew a
+    different question set while claiming reproduction."""
+    before = {
+        item.body: item.item_id
+        for item in OmniMathAdapter().load(_write(tmp_path / "before", _plain_rows()))
+    }
+    with_insert = [
+        {
+            "difficulty": 1.0,
+            "problem": "brand new",
+            "answer": "9",
+            "domain": ["d"],
+            "source": "s",
+        },
+        *_plain_rows(),
+    ]
+    after = {
+        item.body: item.item_id
+        for item in OmniMathAdapter().load(_write(tmp_path / "after", with_insert))
+    }
+    for body, item_id in before.items():
+        assert after[body] == item_id
+
+
+def test_dedup_winner_does_not_depend_on_file_order(tmp_path):
+    """18 of the 22 real duplicate groups carry divergent ``difficulty``, and
+    difficulty is the band -- so "first occurrence wins" let file order decide
+    which ladder rung a problem sat on."""
+    dupes = [
+        {
+            "difficulty": 3.0,
+            "problem": "same",
+            "answer": "7",
+            "domain": ["d"],
+            "source": "fermat",
+        },
+        {
+            "difficulty": 1.0,
+            "problem": "same",
+            "answer": "7",
+            "domain": ["d"],
+            "source": "pascal",
+        },
+    ]
+    forward = OmniMathAdapter().load(_write(tmp_path / "fwd", dupes))
+    reverse = OmniMathAdapter().load(_write(tmp_path / "rev", list(reversed(dupes))))
+    assert len(forward) == len(reverse) == 1
+    assert forward[0].band == reverse[0].band
+    assert forward[0].meta == reverse[0].meta
+    assert forward[0].item_id == reverse[0].item_id
+
+
+def test_duplicate_problem_text_still_yields_one_item(tmp_path):
+    path = _write(
+        tmp_path,
+        [
+            {"difficulty": 2.0, "problem": "dup", "answer": "5", "domain": ["d"], "source": "s"},
+            {"difficulty": 2.0, "problem": "dup", "answer": "5", "domain": ["d"], "source": "s"},
+        ],
+    )
+    assert len(OmniMathAdapter().load(path)) == 1

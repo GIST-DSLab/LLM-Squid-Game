@@ -18,14 +18,33 @@ only at load time — ``normalize`` (reading a model's own answer) keeps the
 permissive comma/space strip, since a model may legitimately format a single
 integer answer with a thousands separator or stray whitespace.
 
-``load`` also deduplicates by problem text (keeping the first occurrence):
-16 problems in the raw file appear twice under distinct row indices with
-identical text, which would otherwise let ``SeededSampler`` draw the same
-question twice in one session under different ``item_id``s.
+``load`` also deduplicates by problem text: 22 problems in the raw file appear
+twice with identical text, which would otherwise let ``SeededSampler`` draw the
+same question twice in one session under different ``item_id``s.
+
+Both the ``item_id`` and the dedup winner are derived from CONTENT, never from
+the row's position in the file. ``SeededSampler`` documents that "items are
+sorted by ``item_id`` before shuffling so a change in file order does not
+silently change a 'reproduced' run", which was true for GPQA (``Record ID``)
+and Hi-ToM (``sample_id``) but false here while the id was the raw line index.
+Inserting or reordering one upstream row shifted every later id, so a re-run
+at the same seed drew a different question set while claiming reproduction —
+and the manifest mismatch that would have hinted at it is only a
+``logger.warning``.
+
+The dedup rule matters just as much as the id: 18 of the 22 duplicate groups
+carry DIVERGENT metadata across their two rows, ``difficulty`` included (e.g.
+1.5 vs 3.0), and ``difficulty`` is the band. A "first occurrence wins" rule
+therefore let file order decide which ladder rung a problem sits on. The
+winner is now the row with the smallest ``(difficulty, answer, source,
+domain)`` tuple — a total order over fields the item itself carries, so it is
+identical under any input ordering; when the tuple ties, the two candidate
+items are field-for-field identical and the choice is immaterial.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 import re
@@ -54,6 +73,17 @@ def _strip_latex(text: str) -> str:
     cleaned = cleaned.replace("$", "").replace("\\,", "").replace("{,}", "")
     cleaned = cleaned.replace(",", "").replace(" ", "")
     return cleaned.strip()
+
+
+def _problem_id(problem: str) -> str:
+    """Return a stable, content-derived ``item_id`` for *problem*.
+
+    Truncated to 12 hex characters: measured on the 4,406 distinct problem
+    texts in the released file, that prefix has no collisions, and a short id
+    keeps the per-turn metadata readable.
+    """
+    digest = hashlib.sha1(problem.encode("utf-8")).hexdigest()
+    return f"omni-{digest[:12]}"
 
 
 def _single_value_integer(raw: str) -> str | None:
@@ -86,13 +116,16 @@ class OmniMathAdapter:
     def load(self, raw_path: Path) -> list[BenchmarkItem]:
         """Return single-value-integer items with ``band = int(difficulty)``.
 
-        Deduplicates by problem text (first occurrence wins) so the same
-        question cannot be drawn twice under two different ``item_id``s.
+        Both the ``item_id`` and the dedup winner are derived from content,
+        never from the row's position in the file — see the module docstring
+        for why.
         """
-        items: list[BenchmarkItem] = []
-        seen_problems: set[str] = set()
+        # problem text -> (tie-break key, item). The key is built only from
+        # fields the item itself carries, so the winner of a duplicate group
+        # is the same whatever order the rows arrived in.
+        chosen: dict[str, tuple[tuple, BenchmarkItem]] = {}
         with raw_path.open(encoding="utf-8") as handle:
-            for index, line in enumerate(handle):
+            for line in handle:
                 line = line.strip()
                 if not line:
                     continue
@@ -105,24 +138,29 @@ class OmniMathAdapter:
                 if band < 1 or band > _MAX_BAND:
                     continue
                 problem = str(row["problem"]).strip()
-                if problem in seen_problems:
-                    continue
-                seen_problems.add(problem)
-                domain = row.get("domain") or []
-                items.append(
-                    BenchmarkItem(
-                        item_id=f"omni-{index}",
-                        band=band,
-                        body=problem,
-                        answer=answer,
-                        meta={
-                            "omni_difficulty": difficulty,
-                            "source": row.get("source", ""),
-                            "domain": domain[0] if isinstance(domain, list) and domain else "",
-                        },
-                    )
+                domain_list = row.get("domain") or []
+                domain = (
+                    domain_list[0]
+                    if isinstance(domain_list, list) and domain_list
+                    else ""
                 )
-        return items
+                source = str(row.get("source", ""))
+                item = BenchmarkItem(
+                    item_id=_problem_id(problem),
+                    band=band,
+                    body=problem,
+                    answer=answer,
+                    meta={
+                        "omni_difficulty": difficulty,
+                        "source": source,
+                        "domain": domain,
+                    },
+                )
+                key = (difficulty, answer, source, domain)
+                prior = chosen.get(problem)
+                if prior is None or key < prior[0]:
+                    chosen[problem] = (key, item)
+        return [item for _, item in chosen.values()]
 
     def render(self, item: BenchmarkItem, rng: random.Random) -> tuple[str, dict]:
         """Present the problem verbatim; Omni-MATH needs no seeded variation."""
