@@ -152,6 +152,7 @@ class SplitStubAgent(Agent):
         available_actions: list[str],
         system_prompt: str,
         rule_template_hint: str | None = None,
+        response_format_override: str | None = None,
     ) -> TaskOnlyResponse:
         if not self._task_queue:
             raise AssertionError(
@@ -167,6 +168,7 @@ class SplitStubAgent(Agent):
                 "available_actions": list(available_actions),
                 "system_prompt": system_prompt,
                 "rule_template_hint": rule_template_hint,
+                "response_format_override": response_format_override,
             }
         )
         self.last_completion = CompletionResult(

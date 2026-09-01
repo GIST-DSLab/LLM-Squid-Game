@@ -160,6 +160,22 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
         """Benchmark answers are free-form; there is no action menu."""
         return []
 
+    def get_response_format_override(self) -> str:
+        """Return the Call 1 response-format block for this task type.
+
+        ``UnifiedTurnManager`` passes this to ``task_only.j2``, which then
+        renders it in place of the RULE + ACTION directives. Without it an
+        empty :meth:`get_available_actions` is read as the NullTask
+        ACCEPT-only sentinel and the agent is told, in the same turn, both
+        that ACCEPT is its only valid response and (from the system rules)
+        that it must emit ``ANSWER:``. That contradiction made instruction
+        compliance a determinant of ``task_success_factor``.
+        """
+        return render(
+            "tasks/benchmark/response_format.j2",
+            answer_hint=self.answer_hint,
+        )
+
 
 @register("omni_math")
 class OmniMathTask(BenchmarkTaskModule):

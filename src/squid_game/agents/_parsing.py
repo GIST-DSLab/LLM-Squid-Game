@@ -421,6 +421,7 @@ def build_task_only_message(
     user_body: str,
     available_actions: list[str],
     rule_template_hint: str | None = None,
+    response_format_override: str | None = None,
 ) -> str:
     """Render the Unit 15 Call 1 (task layer) user message.
 
@@ -438,6 +439,12 @@ def build_task_only_message(
             → NullTask ACCEPT-only sentinel branch.
         rule_template_hint: Phase L difficulty-aware RULE template, or
             ``None`` to fall back to the free-form placeholder.
+        response_format_override: Task-supplied response-format block. When
+            non-empty it replaces the RULE + ACTION directives and
+            suppresses the NullTask ACCEPT-only sentinel — used by task
+            types whose answer is free-form rather than an action pick
+            (the external-benchmark modules). ``None`` (the default)
+            renders the template exactly as before.
 
     Returns:
         Fully rendered Call 1 user-message string.
@@ -449,6 +456,7 @@ def build_task_only_message(
         user_body=user_body,
         available_actions=list(available_actions),
         rule_template_hint=rule_template_hint,
+        response_format_override=response_format_override,
     )
 
 

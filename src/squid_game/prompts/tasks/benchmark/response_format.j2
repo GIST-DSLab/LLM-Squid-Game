@@ -1,0 +1,21 @@
+{# src/squid_game/prompts/tasks/benchmark/response_format.j2
+
+   Call 1 response-format block for the external-benchmark task modules,
+   injected into ``user_message/task_only.j2`` via the task module's
+   ``get_response_format_override()``.
+
+   The benchmark answer is free-form, not a pick from an action menu, so
+   the default RULE + ACTION block does not apply. Before this override
+   existed the modules' empty ``available_actions`` list was read as the
+   NullTask ACCEPT-only sentinel and the agent was told, in the same
+   turn, both that ACCEPT was its only valid response and (from
+   ``tasks/benchmark/system_rules.j2``) that it must emit ``ANSWER:``.
+
+   Wording is kept consistent with ``system_rules.j2`` so the proximate
+   instruction and the system rules agree.
+#}마지막 줄에 반드시 다음 형식으로 답을 적으십시오:
+
+ANSWER: <답>
+
+{{ answer_hint }}
+ANSWER 줄이 없거나 형식이 다르면 오답으로 처리됩니다.

@@ -177,6 +177,7 @@ class VanillaAgent(Agent):
         available_actions: list[str],
         system_prompt: str,
         rule_template_hint: str | None = None,
+        response_format_override: str | None = None,
     ) -> TaskOnlyResponse:
         """Phase O Unit 15 — Call 1 of the split-call flow.
 
@@ -184,11 +185,17 @@ class VanillaAgent(Agent):
         response contract is RULE + ACTION only (no STAKE / CHOICE /
         REASON). ``last_completion`` is overwritten so the manager can
         snapshot RI_task immediately after return.
+
+        ``response_format_override`` (2026-09-01) lets a task module
+        replace the RULE + ACTION directives with its own block; the
+        external-benchmark modules use it to ask for ``ANSWER:``. When it
+        is ``None`` the rendered message is unchanged.
         """
         rendered = build_task_only_message(
             user_body=user_message,
             available_actions=available_actions,
             rule_template_hint=rule_template_hint,
+            response_format_override=response_format_override,
         )
         messages = [
             {"role": "system", "content": system_prompt},

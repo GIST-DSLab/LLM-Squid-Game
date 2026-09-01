@@ -155,6 +155,7 @@ class Agent(ABC):
         available_actions: list[str],
         system_prompt: str,
         rule_template_hint: str | None = None,
+        response_format_override: str | None = None,
     ) -> "TaskOnlyResponse":
         """Phase O Unit 15 — Call 1 (task layer) of the split-call flow.
 
@@ -174,6 +175,9 @@ class Agent(ABC):
             system_prompt: Framing system prompt + task rules.
             rule_template_hint: Difficulty-aware RULE slot template or
                 ``None`` for the free-form fallback.
+            response_format_override: Task-supplied response-format block
+                replacing RULE + ACTION (external-benchmark task types),
+                or ``None`` for the standard Call 1 contract.
 
         Returns:
             Parsed :class:`TaskOnlyResponse` with RULE + ACTION fields

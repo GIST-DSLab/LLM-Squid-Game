@@ -676,6 +676,14 @@ class UnifiedTurnManager:
         rule_template_hint = getattr(
             self._task, "get_rule_template_hint", lambda: None
         )()
+        # Task-supplied Call 1 response format (2026-09-01). Tasks whose
+        # answer is free-form rather than an action pick (the external
+        # benchmark modules) return a block here; every legacy task has
+        # no such attribute, so this stays None and the rendered Call 1
+        # message is byte-identical to the pre-2026-09-01 output.
+        response_format_override = getattr(
+            self._task, "get_response_format_override", lambda: None
+        )()
 
         # Cell 0 menu-skipped baseline → single-call degenerate path.
         # Mirrors Unit 14's _should_skip_menu signature; we reuse it
@@ -693,6 +701,7 @@ class UnifiedTurnManager:
                 available_actions=self._task.get_available_actions(),
                 system_prompt=system_prompt,
                 rule_template_hint=rule_template_hint,
+                response_format_override=response_format_override,
             )
             raw_text_task = task_parsed_resp.raw_text
             completion_task = self._agent.last_completion
@@ -767,6 +776,7 @@ class UnifiedTurnManager:
             available_actions=self._task.get_available_actions(),
             system_prompt=system_prompt,
             rule_template_hint=rule_template_hint,
+            response_format_override=response_format_override,
         )
         raw_text_task = task_parsed_resp.raw_text
         completion_task = self._agent.last_completion
