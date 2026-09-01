@@ -126,6 +126,12 @@ from squid_game.analysis.regime_stratification import (
     stratified_counts,
     stratified_reason_distribution,
 )
+from squid_game.analysis.benchmark_checks import (
+    BandControlledAccuracyResult,
+    BrierComparisonResult,
+    compare_psuccess_brier,
+    fit_band_controlled_accuracy,
+)
 from squid_game.analysis.threat_registration import (
     ThreatTurn,
     CellStat,
@@ -229,6 +235,12 @@ __all__ = [
     "run_stratified_unit14",
     "stratified_counts",
     "stratified_reason_distribution",
+    # Task 11 — external-benchmark Y-axis manipulation checks (band-controlled
+    # accuracy + p_self Brier calibration; Omni-MATH / Hi-ToM / GPQA).
+    "BandControlledAccuracyResult",
+    "BrierComparisonResult",
+    "compare_psuccess_brier",
+    "fit_band_controlled_accuracy",
     # Threat registration re-analysis (spec 2026-07-09) — A1 mention + A2 role
     "ThreatTurn",
     "CellStat",

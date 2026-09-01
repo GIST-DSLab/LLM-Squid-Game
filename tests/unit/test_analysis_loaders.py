@@ -263,8 +263,9 @@ class TestToLongDataframe:
     def test_schema_has_rule_hypothesis_column(self) -> None:
         assert "rule_hypothesis" in LONG_FORMAT_COLUMNS
         # Column count is the Phase L contract: 22 (pre-K) → 23 (K Fix 2)
-        # → 24 (L Fix 3, +rule_match_score).
-        assert len(LONG_FORMAT_COLUMNS) == 24
+        # → 24 (L Fix 3, +rule_match_score) → 26 (Task 11, +band
+        # +psuccess_self for the benchmark Y-axis manipulation checks).
+        assert len(LONG_FORMAT_COLUMNS) == 26
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""
@@ -278,14 +279,31 @@ class TestToLongDataframe:
     # ------------------------------------------------------------------
 
     def test_schema_has_rule_match_score_column(self) -> None:
-        """Phase L: +rule_match_score at column 24 (final position)."""
+        """Phase L: +rule_match_score, immediately after rule_hypothesis."""
         assert "rule_match_score" in LONG_FORMAT_COLUMNS
         # Column appears after rule_hypothesis so the two Y-axis fields
-        # sit adjacent for cross-column analysis ergonomics.
-        assert LONG_FORMAT_COLUMNS[-1] == "rule_match_score"
+        # sit adjacent for cross-column analysis ergonomics. No longer
+        # the final column since Task 11 appended band/psuccess_self.
         assert LONG_FORMAT_COLUMNS.index("rule_match_score") == (
             LONG_FORMAT_COLUMNS.index("rule_hypothesis") + 1
         )
+
+    # ------------------------------------------------------------------
+    # Task 11 — band + psuccess_self schema extension (benchmark checks)
+    # ------------------------------------------------------------------
+
+    def test_schema_has_band_and_psuccess_self_columns(self) -> None:
+        """Task 11: +band +psuccess_self, appended at the final position."""
+        assert "band" in LONG_FORMAT_COLUMNS
+        assert "psuccess_self" in LONG_FORMAT_COLUMNS
+        assert LONG_FORMAT_COLUMNS[-2:] == ("band", "psuccess_self")
+
+    def test_band_and_psuccess_self_nan_for_non_benchmark_traces(self) -> None:
+        """Signal Game / legacy traces have no band or psuccess_self."""
+        season = make_v3_season(n_turns=2)
+        df = to_long_dataframe([season])
+        assert df["band"].isna().all()
+        assert df["psuccess_self"].isna().all()
 
     def test_rule_match_score_nan_for_pre_phase_l_traces(self) -> None:
         """Pre-Phase-L traces had no rule_match_score key → NaN column."""

@@ -218,6 +218,19 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     # NaN for pre-Phase-L traces, NullTask (score explicitly None), and
     # SignalGame turns where the agent emitted no RULE field.
     "rule_match_score",
+    # Task 11 extension — external-benchmark Y-axis manipulation checks
+    # (band-controlled accuracy + p_self Brier calibration; see
+    # ``analysis.benchmark_checks``). ``band`` is populated from
+    # ``turn.task_metadata["band"]``, written by ``BenchmarkTaskModule``
+    # (``tasks/benchmark/module.py``) into both ``TaskContext.metadata``
+    # and ``TaskOutcome.metadata``; NaN for every non-benchmark task
+    # (Signal Game, Voting Room, Navigation, NullTask).
+    "band",
+    # ``psuccess_self`` is a direct ``TurnResult`` field (Unit 17 Call
+    # 1.5 self-report probe, 0-100 integer percent), read defensively
+    # via ``getattr`` for parity with legacy seasons predating the
+    # field. NaN on Cell 0 and any non-probe path.
+    "psuccess_self",
 )
 
 
@@ -290,6 +303,8 @@ def to_long_dataframe(
                     "died": turn.died,
                     "rule_hypothesis": turn.task_metadata.get("rule_hypothesis"),
                     "rule_match_score": turn.task_metadata.get("rule_match_score"),
+                    "band": turn.task_metadata.get("band"),
+                    "psuccess_self": getattr(turn, "psuccess_self", None),
                 }
             )
             cumulative += reward
