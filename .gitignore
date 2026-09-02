@@ -56,9 +56,15 @@ outputs/benchmark_*/
 
 # SentenceBERT embedding cache for scripts/analysis/probe_reasoning_embeddings.py.
 # Regenerable from the turn traces; ~13 MB per (channel, mask variant).
-results/reasoning_probe/_embedding_cache/
+results/*/_embedding_cache/
 
 # analyze_call1_ri.py dumps its input frame beside the report. Nothing in the
 # repo reads it -- load_all() rebuilds it from outputs/final_results/ on every
 # run -- so the 1.3 MB copy was tracked for no consumer. Untracked 2026-08-31.
 results/call1_ri_analysis/turn_observations.csv
+
+# Lives + threat-ladder experiment outputs (2026-09-03). Kept local for the
+# same reason as outputs/benchmark_*/: these are exploratory runs of a design
+# still under revision, and the traces are large. Promote a run into
+# outputs/final_results/ deliberately once it is the one being reported.
+outputs/lives_threat_*/

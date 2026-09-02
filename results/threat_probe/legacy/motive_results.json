@@ -1,0 +1,192 @@
+{
+  "POOLED": {
+    "probe": {
+      "r2": 0.27496664059523257,
+      "spearman": 0.5355844542289618,
+      "mae": 0.5756873172510507,
+      "coefficients": {
+        "mean_ri_task": -0.3736346451812184,
+        "mean_ri_forfeit": 0.6248285740098065,
+        "delta_ri_task": 0.20431694264013228,
+        "delta_ri_forfeit": -0.7354287639488506,
+        "forfeit_time": -0.1968365562908719,
+        "forfeited": -0.025364836497053345,
+        "cox_risk_score": 0.1861069762873273,
+        "accuracy": -0.07783259480450708,
+        "lives_lost": 2.0194839173657903e-29,
+        "n_turns": -0.196836556290852
+      },
+      "n_sessions": 675,
+      "n_levels": 3,
+      "alpha": 4.400946029896559,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.006291393689452545,
+        "null_p95": 0.0018120781612591449,
+        "p_value": 0.004975124378109453
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 2.217954441968967,
+      "ci_lower": 1.871514364029669,
+      "ci_upper": 2.628524793182878,
+      "p_value": 3.828067317709731e-20,
+      "n_events": 239
+    }
+  },
+  "gemini-2.5-flash": {
+    "probe": {
+      "r2": 0.5148602546791534,
+      "spearman": 0.6785710903955344,
+      "mae": 0.4619836333212564,
+      "coefficients": {
+        "mean_ri_task": -0.6456252022126389,
+        "mean_ri_forfeit": 0.37213243818649894,
+        "delta_ri_task": 0.8228907475026433,
+        "delta_ri_forfeit": -1.6121742531413994,
+        "forfeit_time": -0.3451797171569666,
+        "forfeited": 0.44628600096617027,
+        "cox_risk_score": 0.501528185452048,
+        "accuracy": -0.13898475125903703,
+        "lives_lost": -5.428782977549959e-27,
+        "n_turns": -0.34517971715694384
+      },
+      "n_sessions": 180,
+      "n_levels": 3,
+      "alpha": 0.4017810718680167,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.022367858736109872,
+        "null_p95": 0.004402833009027962,
+        "p_value": 0.004975124378109453
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 2.6645069882520565,
+      "ci_lower": 1.8682887198380416,
+      "ci_upper": 3.8000537149630143,
+      "p_value": 6.275484339910358e-08,
+      "n_events": 61
+    }
+  },
+  "gpt-oss-20b-cloud": {
+    "probe": {
+      "r2": 0.5541194155642511,
+      "spearman": 0.6631192593135828,
+      "mae": 0.46241367548709367,
+      "coefficients": {
+        "mean_ri_task": -0.03844696581660125,
+        "mean_ri_forfeit": 0.5778799685802376,
+        "delta_ri_task": -0.079975991619516,
+        "delta_ri_forfeit": -0.12734559611551843,
+        "forfeit_time": -0.19683170246224097,
+        "forfeited": -0.04478255344048219,
+        "cox_risk_score": -0.9174326653907418,
+        "accuracy": -0.42122008240522735,
+        "lives_lost": 1.5603668705271614e-28,
+        "n_turns": -0.1968317024622399
+      },
+      "n_sessions": 180,
+      "n_levels": 3,
+      "alpha": 1.387463743579257,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.02166873917762549,
+        "null_p95": -0.0033650723828124573,
+        "p_value": 0.004975124378109453
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 1.7918899740339282,
+      "ci_lower": 1.3162488279444367,
+      "ci_upper": 2.439409335739104,
+      "p_value": 0.0002107078347471477,
+      "n_events": 65
+    }
+  },
+  "nemotron-3-nano-30b-cloud": {
+    "probe": {
+      "r2": 0.4065904969251306,
+      "spearman": 0.6157604319970562,
+      "mae": 0.5156287007428954,
+      "coefficients": {
+        "mean_ri_task": -0.037182472460482785,
+        "mean_ri_forfeit": 1.237834293661504,
+        "delta_ri_task": -0.07713432335090946,
+        "delta_ri_forfeit": -0.6072790993320505,
+        "forfeit_time": -0.32419365499727276,
+        "forfeited": -0.4374683447983497,
+        "cox_risk_score": -0.7604853944006393,
+        "accuracy": -0.2726918759344722,
+        "lives_lost": 0.0,
+        "n_turns": -0.3241936549973062
+      },
+      "n_sessions": 166,
+      "n_levels": 3,
+      "alpha": 0.6579332246575679,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.02340151219019867,
+        "null_p95": 0.001807765757650039,
+        "p_value": 0.004975124378109453
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 1.9545215939460048,
+      "ci_lower": 1.3953634465760423,
+      "ci_upper": 2.737748842837447,
+      "p_value": 9.714281479487216e-05,
+      "n_events": 57
+    }
+  },
+  "qwen3-next-80b-cloud": {
+    "probe": {
+      "r2": 0.3304780741254021,
+      "spearman": 0.6679513171784534,
+      "mae": 0.5142768225215457,
+      "coefficients": {
+        "mean_ri_task": 0.08206076390156303,
+        "mean_ri_forfeit": 0.39519092027820574,
+        "delta_ri_task": -0.01968477526553939,
+        "delta_ri_forfeit": -0.6903019234897159,
+        "forfeit_time": -0.2406903004952389,
+        "forfeited": -0.13171164329107998,
+        "cox_risk_score": 0.26397016262216544,
+        "accuracy": -0.030694709526771245,
+        "lives_lost": 0.0,
+        "n_turns": -0.24069030049524062
+      },
+      "n_sessions": 149,
+      "n_levels": 3,
+      "alpha": 6.616605189201726,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.03393221327869367,
+        "null_p95": -0.001147923014570735,
+        "p_value": 0.004975124378109453
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 2.8221282292722147,
+      "ci_lower": 1.9330157559667627,
+      "ci_upper": 4.1201980469486,
+      "p_value": 7.715517784419374e-08,
+      "n_events": 56
+    }
+  }
+}
