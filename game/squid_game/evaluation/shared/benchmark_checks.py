@@ -164,22 +164,44 @@ def fit_band_controlled_accuracy(
         )
     frame["task_success_factor"] = frame["task_success_factor"].astype(float)
 
+    formula = "task_success_factor ~ C(framing) + band"
+    note = "linear probability model with session random intercept"
+    converged: bool
     try:
-        model = smf.mixedlm(
-            "task_success_factor ~ C(framing) + band",
-            data=frame,
-            groups=frame["session_id"],
-        )
+        model = smf.mixedlm(formula, data=frame, groups=frame["session_id"])
         fit = model.fit(method="lbfgs", maxiter=200)
+        converged = bool(fit.converged) if hasattr(fit, "converged") else True
     except Exception as exc:  # noqa: BLE001 - defensive, matches forfeit_regression
-        logger.warning("Band-controlled accuracy mixedLM fit failed: %s", exc)
-        return None
+        # A binary outcome with a near-zero between-session variance makes
+        # the random-effects covariance singular; on some BLAS builds
+        # (observed on the Linux CI runner, not on macOS) statsmodels then
+        # raises ``Singular matrix`` from the Hessian instead of merely
+        # warning. The same linear probability model with session-clustered
+        # standard errors answers the same question without the random
+        # intercept, so fall back to it and flag ``converged=False`` rather
+        # than dropping the check entirely.
+        logger.warning(
+            "Band-controlled accuracy mixedLM fit failed (%s); "
+            "falling back to OLS with session-clustered SEs",
+            exc,
+        )
+        try:
+            fit = smf.ols(formula, data=frame).fit(
+                cov_type="cluster", cov_kwds={"groups": frame["session_id"]}
+            )
+        except Exception as exc2:  # noqa: BLE001
+            logger.warning("Band-controlled accuracy OLS fallback failed: %s", exc2)
+            return None
+        converged = False
+        note = (
+            "linear probability model with session-clustered SEs "
+            f"(mixedlm fallback: {exc})"
+        )
 
     coefficients = {name: float(value) for name, value in fit.params.items()}
     p_values = {name: float(value) for name, value in fit.pvalues.items()}
     framing_terms = [name for name in p_values if name.startswith("C(framing)")]
     passed = all(p_values[name] >= ALPHA for name in framing_terms)
-    converged = bool(fit.converged) if hasattr(fit, "converged") else True
 
     return BandControlledAccuracyResult(
         coefficients=coefficients,
@@ -188,7 +210,7 @@ def fit_band_controlled_accuracy(
         passed=passed,
         converged=converged,
         effect_sizes=_framing_effect_sizes(frame),
-        note="linear probability model with session random intercept",
+        note=note,
     )
 
 

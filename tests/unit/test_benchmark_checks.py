@@ -106,6 +106,31 @@ def test_accuracy_check_reports_framing_effect_sizes():
     assert set(result.effect_sizes) == set(framing_terms)
 
 
+def test_accuracy_check_falls_back_to_clustered_ols_when_mixedlm_raises(monkeypatch):
+    """A singular random-effects covariance (seen on the Linux CI BLAS with
+    statsmodels 0.14.6) raises inside ``mixedlm``; the check must then fall
+    back to OLS with session-clustered SEs, keep the ``C(framing)`` terms, and
+    flag ``converged=False`` instead of returning ``None``.
+    """
+    import statsmodels.formula.api as smf
+
+    from squid_game.evaluation.shared import benchmark_checks
+
+    def _boom(*args, **kwargs):
+        raise np.linalg.LinAlgError("Singular matrix")
+
+    monkeypatch.setattr(benchmark_checks.smf, "mixedlm", _boom)
+    assert benchmark_checks.smf.ols is smf.ols  # the fallback path is untouched
+    result = fit_band_controlled_accuracy(_frame(seed=8))
+    assert result is not None
+    assert result.converged is False
+    assert "fallback" in result.note
+    framing_terms = [n for n in result.p_values if n.startswith("C(framing)")]
+    assert framing_terms
+    assert set(result.effect_sizes) == set(framing_terms)
+    assert result.n_turns == 240
+
+
 def test_brier_reports_cohens_d():
     result = compare_psuccess_brier(_frame(seed=9, framing_effect=0.0))
     assert isinstance(result.cohens_d, float)
