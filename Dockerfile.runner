@@ -1,0 +1,64 @@
+# LLM Squid Game — experiment runner image.
+#
+# Separate from the root `Dockerfile` on purpose: that image serves the
+# Web Arena backend (`uvicorn interface.api:app`) and its
+# `.dockerignore` excludes `configs/`, `scripts/`, `tests/`, `docs/`
+# from the build context — bolting the experiment runner onto it would
+# either break the deploy image or force those exclusions open for every
+# build, deploy included. This image is standalone: `python:3.12-slim`
+# plus the project's own dependencies.
+#
+# This image never bakes secrets in — API keys are injected as
+# environment variables at `docker compose run` time (see
+# docker-compose.runner.yml) — and only `outputs/` is bind-mounted from
+# the host, so a run cannot write anywhere else on the operator's
+# filesystem.
+
+FROM python:3.12-slim
+
+# uv: same official static-binary install as the root Dockerfile.
+COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /uvx /usr/local/bin/
+
+WORKDIR /app
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PYTHONUNBUFFERED=1
+
+# curl/ca-certificates: TLS roots for provider API calls.
+# git: some pip/uv source dependencies resolve via VCS refs.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies first (layer caching): only pyproject.toml
+# + uv.lock + README.md (referenced by pyproject's `readme` field) need
+# to be present for this step, so app-code edits don't bust the cache.
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+# Now copy the actual runner source. .dockerignore carries `!configs/`
+# and `!scripts/` negations so these two reach the build context despite
+# the root Dockerfile's blanket excludes of the same paths; main.py needs
+# no negation -- nothing in .dockerignore ever excluded it. db/ and
+# web/squid_arena/ are copied too even though the runner never imports
+# either -- pyproject.toml's hatchling build declares all three
+# ([tool.hatch.build.targets.wheel] packages = ["game/squid_game",
+# "web/squid_arena", "db/squid_store"]), so `uv sync --frozen --no-dev`
+# (installing the project itself, not just its dependencies) needs all
+# three present or the project install fails.
+COPY game ./game
+COPY db ./db
+COPY web/squid_arena ./web/squid_arena
+COPY main.py ./main.py
+COPY configs ./configs
+COPY scripts ./scripts
+RUN uv sync --frozen --no-dev
+
+# No ENTRYPOINT/CMD here: docker-compose.runner.yml's `runner` service
+# supplies the full `uv run python main.py --config ...` command. Leaving
+# both unset keeps a bare `docker run --rm <image> sh -c "..."` free to
+# run arbitrary verification commands without an inherited entrypoint
+# getting in the way.

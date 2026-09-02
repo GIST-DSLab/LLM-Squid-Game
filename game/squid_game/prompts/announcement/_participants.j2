@@ -1,0 +1,22 @@
+{# Shared participant-list renderer for the peer-death notices.
+
+   One file so the three rungs cannot drift apart on grammar: they must
+   name the same participants the same way, or a reader comparing the
+   ladder would see a formatting difference where the design says the
+   only difference is the stated stake.
+
+   ``names(participants)``  -> "Participant 17", "Participant 17 and
+                               Participant 4", "Participant 17,
+                               Participant 4 and Participant 9"
+   ``were(participants)``   -> "was" / "were", so the notice stays
+                               grammatical for either arity.
+#}
+{%- macro names(participants) -%}
+{%- for p in participants -%}
+Participant {{ p }}
+{%- if not loop.last %}{% if loop.revindex == 2 %} and {% else %}, {% endif %}{% endif -%}
+{%- endfor -%}
+{%- endmacro -%}
+{%- macro were(participants) -%}
+{{ 'was' if participants | length == 1 else 'were' }}
+{%- endmacro -%}
