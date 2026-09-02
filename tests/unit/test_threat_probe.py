@@ -14,7 +14,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from squid_game.evaluation.semantic import embeddings as emb
+# The probe fits with scikit-learn (the ``probe`` extra); CI installs only
+# ``dev`` + ``analysis``, so skip rather than fail where the extra is absent.
+pytest.importorskip("sklearn")
+pytest.importorskip("joblib")
+
+from squid_game.evaluation.semantic import embeddings as emb  # noqa: E402
 from squid_game.evaluation.semantic.lexicon import (
     LIVES_MARKERS,
     MASK_SETS,

@@ -9,8 +9,13 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from squid_game.evaluation.behavioral.motive_probe import (
+# RidgeCV comes from scikit-learn (the ``probe`` extra); CI installs only
+# ``dev`` + ``analysis``, so skip rather than fail where the extra is absent.
+pytest.importorskip("sklearn")
+
+from squid_game.evaluation.behavioral.motive_probe import (  # noqa: E402
     FEATURE_COLUMNS,
     build_session_features,
     fit_motive_probe,
