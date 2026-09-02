@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>목숨 다섯 개와 위협 사다리</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -81,6 +82,7 @@ ol.steps li{margin:6px 0}
 .files td:first-child{font-family:"IBM Plex Mono",monospace;font-size:.78rem;white-space:nowrap}
 a{color:var(--teal)}
 .shots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);padding:6px}.shots img{width:100%;display:block}.shots figcaption{font-size:.8rem;color:var(--muted);padding:6px 4px 2px}@media(max-width:640px){.shots{grid-template-columns:1fr}}
+.diagram{margin:20px 0;background:var(--surface);border:1px solid var(--line);padding:12px 12px 8px}.diagram svg{max-width:100%;height:auto;display:block;color:var(--ink)}.diagram figcaption{font-size:.85rem;color:var(--muted);margin-top:8px;line-height:1.6}
 </style>
 
 <div class="wrap">
@@ -228,6 +230,155 @@ Cumulative removals this session: 2. 7 participants remain in the evaluation.</d
   <div><h4>P2 · 행동 지표 프로브</h4><div class="flow">세션별 지표 10개 → RidgeCV → threat_level</div>
     <p>생각 글 대신 <b>숫자</b>만 쓴다. 생각 토큰 평균, 위협 없는 셀 대비 생각 토큰 증가분(Δ), 기권 시점, 기권 여부, 위협 정보를 뺀 Cox 위험 점수, 정확도, 잃은 목숨 수, 턴 수. 어느 지표가 세기를 실어 나르는지 계수 표로 본다. 셀 단위 위험비(HR)도 함께 낸다.</p></div>
 </div>
+
+<h3>학습 과정 한눈에 보기</h3>
+<p>아래 그림은 왼쪽에서 오른쪽으로 읽는다. <b>왼쪽</b>은 재료다. 이미 치른 시험지(옛 4모델 런, 675판)와 새 규칙으로 치른 연습 시험 5판. <b>가운데</b>는 시험지를 한 문제(턴)마다 한 줄로 펼친 표다. 모델이 속으로 쓴 메모, 생각한 양, 계속/기권 선택, 점수, 남은 목숨이 들어 있다. 여기에 <b>정답지</b>가 붙는다. "이 판은 위협 몇 단계였나"라는 숫자 하나인데, 학습할 때는 가리고 채점할 때만 꺼낸다. 그다음 길이 둘로 갈라진다. <b>위쪽 P1</b>은 메모 글을 숫자 384개짜리 벡터로 바꾸는 번역기(SBERT)를 지나고, <b>아래쪽 P2</b>는 판마다 행동 요약 숫자 10개를 만든다. <b>오른쪽</b>은 둘 다 같다. 숫자들 위에 직선 하나를 긋는 가장 단순한 회귀(RidgeCV)로 위협 단계를 맞히고, 두 가지 안전장치로 채점한다. 하나는 같은 판의 문제를 훈련용과 시험용에 나눠 넣지 않는 것(커닝 방지), 다른 하나는 정답지를 일부러 뒤섞어 다시 채점해 보는 것(우연인지 확인).</p>
+<figure class="diagram">
+<svg viewBox="0 0 1060 600" role="img" aria-label="프로브 학습 파이프라인: 두 종류의 런 출력에서 턴 레코드를 읽고, P1은 생각 글을 마스킹·SBERT 임베딩해서, P2는 세션별 행동 지표 10개로 집계해서, 각각 RidgeCV 로 위협 세기를 회귀하고 세션 단위 교차검증과 퍼뮤테이션으로 평가한다. 모델별로 따로 학습한다.">
+<defs>
+  <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+</defs>
+<g fill="none" stroke="currentColor" stroke-width="1.2" font-family="'Noto Sans KR',sans-serif" font-size="12">
+  <g fill="currentColor" stroke="none" font-size="11" opacity=".65" font-family="'IBM Plex Mono',monospace">
+    <text x="20" y="22">① 데이터</text>
+    <text x="270" y="22">② 턴 레코드 + 정답지</text>
+    <text x="490" y="22">③ 입력 만들기</text>
+    <text x="800" y="22">④ 직선 긋고 채점</text>
+  </g>
+
+  <!-- ① data -->
+  <rect x="20" y="70" width="224" height="96" rx="3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="30" y="90" font-weight="700">레거시 4모델 런 (숫자 있음)</text>
+    <text x="30" y="108" font-size="11">outputs/final_results/ · 2026-04-22</text>
+    <text x="30" y="124" font-size="11">gemini · gpt-oss · nemotron · qwen3</text>
+    <text x="30" y="140" font-size="11">675 판 · 7,703 문제</text>
+    <text x="30" y="156" font-size="11">정답지: 옛 프레이밍 → 0 / 1 / 2 (근사)</text>
+  </g>
+  <rect x="20" y="196" width="224" height="96" rx="3" stroke-dasharray="5 4"/>
+  <g fill="currentColor" stroke="none">
+    <text x="30" y="216" font-weight="700">목숨 런 (새 규칙)</text>
+    <text x="30" y="234" font-size="11">outputs/lives_threat_*/</text>
+    <text x="30" y="250" font-size="11">연습 5 판 · 48 문제 (돌아가나만 확인)</text>
+    <text x="30" y="266" font-size="11">본 런 150 판: 아직</text>
+    <text x="30" y="282" font-size="11">정답지: 위협 1·2·3단계, 무위협 0</text>
+  </g>
+  <line x1="244" y1="118" x2="266" y2="158" marker-end="url(#arw)"/>
+  <line x1="244" y1="244" x2="266" y2="204" marker-end="url(#arw)"/>
+
+  <!-- ② turn records -->
+  <rect x="270" y="120" width="190" height="122" rx="3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="280" y="140" font-weight="700">문제(턴)마다 한 줄</text>
+    <text x="280" y="160" font-size="11" font-family="'IBM Plex Mono',monospace">thinking_text_task</text>
+    <text x="280" y="176" font-size="11" font-family="'IBM Plex Mono',monospace">thinking_text_forfeit</text>
+    <text x="280" y="192" font-size="11" font-family="'IBM Plex Mono',monospace">ri_task · ri_forfeit</text>
+    <text x="280" y="208" font-size="11" font-family="'IBM Plex Mono',monospace">forfeit_choice · score</text>
+    <text x="280" y="224" font-size="11" font-family="'IBM Plex Mono',monospace">lives_* · session_id</text>
+  </g>
+  <rect x="270" y="256" width="190" height="40" rx="3" stroke="var(--accent)"/>
+  <g fill="currentColor" stroke="none">
+    <text x="280" y="273" font-size="11">정답지 y = <tspan font-family="'IBM Plex Mono',monospace">threat_level</tspan> 0~3</text>
+    <text x="280" y="289" font-size="11">학습 때 가리고 채점 때만 봄</text>
+  </g>
+
+  <!-- ③/④ P1 -->
+  <path d="M460 150 L478 150 L478 100 L486 100" marker-end="url(#arw)"/>
+  <g fill="currentColor" stroke="none"><text x="490" y="60" font-weight="700" fill="var(--accent)">P1 · 생각 글 프로브 (문제 단위)</text></g>
+  <rect x="490" y="72" width="124" height="70" rx="3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="498" y="90" font-size="11">단어 가리기 (선택)</text>
+    <text x="498" y="106" font-size="11">위협 · 보상 · 기권 ·</text>
+    <text x="498" y="120" font-size="11">목숨 관련 단어를</text>
+    <text x="498" y="134" font-size="11">▮▮▮ 로 치환</text>
+  </g>
+  <line x1="614" y1="107" x2="632" y2="107" marker-end="url(#arw)"/>
+  <rect x="636" y="72" width="156" height="70" rx="3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="644" y="90" font-size="11">글 → 숫자 번역기 (SBERT)</text>
+    <text x="644" y="104" font-size="11" font-family="'IBM Plex Mono',monospace">all-MiniLM-L6-v2</text>
+    <text x="644" y="120" font-size="11">180단어씩 잘라 평균</text>
+    <text x="644" y="134" font-size="11">→ 문제당 숫자 384개</text>
+  </g>
+  <line x1="792" y1="107" x2="810" y2="107" marker-end="url(#arw)"/>
+  <rect x="814" y="72" width="136" height="70" rx="3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="822" y="90" font-size="11">눈금 맞추고 직선 긋기</text>
+    <text x="822" y="105" font-size="10" font-family="'IBM Plex Mono',monospace">StandardScaler·RidgeCV</text>
+    <text x="822" y="120" font-size="11">직선의 뻣뻣함(α)은</text>
+    <text x="822" y="134" font-size="11">데이터가 고름</text>
+  </g>
+  <line x1="950" y1="107" x2="964" y2="107" marker-end="url(#arw)"/>
+  <rect x="968" y="86" width="84" height="42" rx="3" stroke="var(--accent)" stroke-width="1.6"/>
+  <g fill="currentColor" stroke="none"><text x="1010" y="103" text-anchor="middle" font-size="11">예측 ŷ</text><text x="1010" y="119" text-anchor="middle" font-size="10" font-family="'IBM Plex Mono',monospace">threat_level</text></g>
+  <rect x="490" y="156" width="460" height="46" rx="3" stroke-dasharray="3 3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="498" y="174" font-size="11">채점 1: 같은 판의 문제는 훈련·시험에 같이 안 넣음 (커닝 방지, GroupKFold 5)</text>
+    <text x="498" y="192" font-size="11">채점 2: 정답지를 판 단위로 100번 뒤섞어 다시 채점 (우연이면 p 큼)</text>
+  </g>
+
+  <!-- ③/④ P2 -->
+  <path d="M460 200 L478 200 L478 387 L486 387" marker-end="url(#arw)"/>
+  <g fill="currentColor" stroke="none"><text x="490" y="340" font-weight="700" fill="var(--accent)">P2 · 행동 지표 프로브 (판 단위)</text></g>
+  <rect x="490" y="352" width="124" height="70" rx="3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="498" y="370" font-size="11">판 단위로 요약</text>
+    <text x="498" y="386" font-size="11">문제 n줄 → 판 1줄</text>
+    <text x="498" y="402" font-size="11">Δ = 위협 없는 판보다</text>
+    <text x="498" y="416" font-size="11">얼마나 더 생각했나</text>
+  </g>
+  <line x1="614" y1="387" x2="632" y2="387" marker-end="url(#arw)"/>
+  <rect x="636" y="338" width="156" height="98" rx="3"/>
+  <g fill="currentColor" stroke="none" font-size="10.5" font-family="'IBM Plex Mono',monospace">
+    <text x="644" y="354">mean_ri_task · Δ</text>
+    <text x="644" y="368">mean_ri_forfeit · Δ</text>
+    <text x="644" y="382">forfeit_time · forfeited</text>
+    <text x="644" y="396">cox_risk_score</text>
+    <text x="644" y="410">accuracy · lives_lost</text>
+    <text x="644" y="424">n_turns  (숫자 10개)</text>
+  </g>
+  <line x1="792" y1="387" x2="810" y2="387" marker-end="url(#arw)"/>
+  <rect x="814" y="352" width="136" height="70" rx="3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="822" y="370" font-size="11">눈금 맞추고 직선 긋기</text>
+    <text x="822" y="385" font-size="10" font-family="'IBM Plex Mono',monospace">StandardScaler·RidgeCV</text>
+    <text x="822" y="400" font-size="11">기울기 표를 보면</text>
+    <text x="822" y="414" font-size="11">어느 숫자가 힌트였나</text>
+  </g>
+  <line x1="950" y1="387" x2="964" y2="387" marker-end="url(#arw)"/>
+  <rect x="968" y="366" width="84" height="42" rx="3" stroke="var(--accent)" stroke-width="1.6"/>
+  <g fill="currentColor" stroke="none"><text x="1010" y="383" text-anchor="middle" font-size="11">예측 ŷ</text><text x="1010" y="399" text-anchor="middle" font-size="10" font-family="'IBM Plex Mono',monospace">threat_level</text></g>
+  <rect x="636" y="446" width="156" height="36" rx="3" stroke-dasharray="3 3"/>
+  <g fill="currentColor" stroke="none"><text x="644" y="461" font-size="10.5">cox_risk_score = 위협 정보 없이</text><text x="644" y="475" font-size="10.5">계산한 "기권할 것 같은 정도"</text></g>
+  <rect x="490" y="494" width="460" height="46" rx="3" stroke-dasharray="3 3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="498" y="512" font-size="11">채점 1: 판을 5묶음으로 나눠 돌아가며 시험 (KFold 5)</text>
+    <text x="498" y="530" font-size="11">채점 2: 정답지 200번 뒤섞어 다시 채점 · 덤: 위협 1단계당 기권이 몇 배 빨라지나(HR)</text>
+  </g>
+
+  <!-- shared -->
+  <rect x="20" y="330" width="440" height="60" rx="3" stroke-dasharray="3 3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="30" y="350" font-weight="700">모델마다 따로 배운다</text>
+    <text x="30" y="368" font-size="11">gemini / gpt-oss / nemotron / qwen3 / gpt-oss-120b 각각 P1·P2 한 쌍씩.</text>
+    <text x="30" y="384" font-size="11">전부 합친(POOLED) 결과는 참고용으로만 같이 기록.</text>
+  </g>
+  <rect x="20" y="410" width="440" height="130" rx="3" stroke-dasharray="3 3"/>
+  <g fill="currentColor" stroke="none">
+    <text x="30" y="430" font-weight="700">점수 읽는 법 (P1·P2 공통)</text>
+    <text x="30" y="450" font-size="11">R² — 위협 단계의 들쭉날쭉함 중 프로브가 설명한 비율 (1이 만점)</text>
+    <text x="30" y="468" font-size="11">Spearman ρ — 예측한 순서가 실제 순서와 얼마나 같은가</text>
+    <text x="30" y="486" font-size="11">MAE — 평균 몇 단계 틀렸나 (0이 만점)</text>
+    <text x="30" y="504" font-size="11">p — 정답지를 뒤섞어도 이만한 R²가 나올 확률 (작을수록 진짜)</text>
+    <text x="30" y="526" font-size="11" opacity=".7">회귀라서: 0을 1로 맞히면 2로 맞힌 것보다 덜 틀린 것.</text>
+  </g>
+  <path d="M950 128 L958 128 L958 232 L460 232 L460 330" stroke-dasharray="2 3" opacity=".5"/>
+  <path d="M950 408 L958 408 L958 486 L460 486" stroke-dasharray="2 3" opacity=".5"/>
+</g>
+</svg>
+<figcaption>프로브가 배우는 순서. 재료(왼쪽) → 문제별 한 줄 표와 정답지(가운데) → 글을 숫자로 바꾸거나(P1) 행동을 숫자로 요약해서(P2) → 직선 회귀로 위협 단계 맞히기(오른쪽). 점선 상자는 채점 규칙이다. 지금 숫자가 있는 재료는 옛 4모델 런뿐이고, 새 규칙 런은 5판짜리 연습분이라 "잘 돌아가나"만 확인했다.</figcaption>
+</figure>
+
 <div class="scroll"><table>
 <tr><th>지표</th><th>쉽게 말하면</th><th>좋은 값</th></tr>
 <tr><td>R²</td><td>세기 변동 중 프로브가 설명한 비율. 0이면 평균만 찍는 것과 같음</td><td>1에 가까울수록</td></tr>
