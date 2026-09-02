@@ -22,7 +22,6 @@ import time
 from anthropic import Anthropic
 from anthropic import APIError, APITimeoutError, RateLimitError
 
-from squid_game.core.tools import ToolCall
 from squid_game.providers.base import CompletionResult, LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -82,7 +81,6 @@ class AnthropicProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Send a messages request with retry on transient failures.
 
@@ -92,15 +90,8 @@ class AnthropicProvider(LLMProvider):
         Args:
             messages: Chat messages with ``role`` and ``content`` keys.
                 Messages with ``role="system"`` are extracted automatically.
-                A message may also carry a list-of-blocks ``content``
-                (e.g. ``tool_result`` blocks from a prior tool round) —
-                passed through unchanged.
             temperature: Sampling temperature.
             max_tokens: Maximum tokens to generate.
-            tools: Optional ``TOOL_SCHEMAS``-shaped tool definitions.
-                Anthropic's native tool format is ``name`` / ``description``
-                / ``input_schema`` — identical to ``TOOL_SCHEMAS`` — so no
-                conversion is needed; passed straight through.
 
         Returns:
             CompletionResult containing response text and token usage.
@@ -122,8 +113,6 @@ class AnthropicProvider(LLMProvider):
             kwargs["top_k"] = self._top_k
         if system_text:
             kwargs["system"] = system_text
-        if tools:
-            kwargs["tools"] = tools
 
         # Extended thinking support (Claude 3.5+).
         # Anthropic requires temperature=1.0 when thinking is enabled.
@@ -156,11 +145,10 @@ class AnthropicProvider(LLMProvider):
         else:
             raise last_error  # type: ignore[misc]
 
-        # Extract text, thinking tokens, and tool calls from content blocks.
+        # Extract text and thinking tokens from content blocks.
         text_parts: list[str] = []
         thinking_text_parts: list[str] = []
         thinking_tokens = 0
-        tool_calls: list[ToolCall] = []
         for block in response.content:
             if block.type == "text":
                 text_parts.append(block.text)
@@ -169,10 +157,6 @@ class AnthropicProvider(LLMProvider):
                     block, "input_tokens", len(block.thinking) // 4
                 )
                 thinking_text_parts.append(block.thinking)
-            elif block.type == "tool_use":
-                tool_calls.append(
-                    ToolCall(name=block.name, args=block.input, call_id=block.id)
-                )
 
         text = "\n".join(text_parts)
         thinking_text = "\n".join(thinking_text_parts) if thinking_text_parts else None
@@ -189,7 +173,6 @@ class AnthropicProvider(LLMProvider):
             thinking_tokens=thinking_tokens,
             thinking_text=thinking_text,
             finish_reason=finish_reason,
-            tool_calls=tool_calls or None,
         )
 
     @staticmethod
@@ -202,76 +185,15 @@ class AnthropicProvider(LLMProvider):
         top-level ``system`` parameter rather than as a message with
         ``role="system"``.
 
-        Also converts a tool round trip's flat history shape into
-        Anthropic's native blocks — confirmed against the installed
-        ``anthropic`` package's request types
-        (``anthropic.types.message_param.MessageParam.role`` is
-        ``Literal["user", "assistant", "system"]``: there is **no**
-        ``"tool"`` role, so a flat ``{"role": "tool", ...}`` message would
-        be rejected outright):
-
-        - An ``assistant`` message carrying ``tool_calls`` (each item
-          ``{"tool_call_id", "name", "args"}``) becomes an assistant
-          message whose ``content`` is a block list — a ``text`` block for
-          any non-empty ``content``, then one
-          ``{"type": "tool_use", "id", "name", "input"}`` block per call
-          (``ToolUseBlockParam``: ``id`` / ``input`` / ``name`` all
-          required).
-        - A ``role="tool"`` message becomes a
-          ``{"type": "tool_result", "tool_use_id", "content"}`` block
-          (``ToolResultBlockParam`` — no ``name`` field) inside a ``user``
-          message. The Messages API requires strictly alternating
-          user/assistant turns (documented, and matches the multi-tool
-          example in Anthropic's own tool-use docs, where several
-          ``tool_result`` blocks from one round are batched into a single
-          ``user`` turn) — so consecutive ``tool`` messages are buffered
-          and flushed together into one ``user`` turn rather than emitted
-          as separate turns.
-
         Returns:
             A tuple of (concatenated system text, remaining messages).
         """
         system_parts: list[str] = []
         converted: list[dict[str, object]] = []
-        pending_results: list[dict[str, object]] = []
-
-        def flush_pending() -> None:
-            if pending_results:
-                converted.append(
-                    {"role": "user", "content": list(pending_results)}
-                )
-                pending_results.clear()
 
         for msg in messages:
-            role = msg["role"]
-            if role == "system":
-                flush_pending()
+            if msg["role"] == "system":
                 system_parts.append(msg["content"])
-            elif role == "tool":
-                pending_results.append(
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": msg.get("tool_call_id") or "",
-                        "content": msg.get("content", ""),
-                    }
-                )
-            elif role == "assistant" and msg.get("tool_calls"):
-                flush_pending()
-                blocks: list[dict[str, object]] = []
-                if msg.get("content"):
-                    blocks.append({"type": "text", "text": msg["content"]})
-                for call in msg["tool_calls"]:
-                    blocks.append(
-                        {
-                            "type": "tool_use",
-                            "id": call.get("tool_call_id") or "",
-                            "name": call["name"],
-                            "input": call.get("args") or {},
-                        }
-                    )
-                converted.append({"role": "assistant", "content": blocks})
             else:
-                flush_pending()
                 converted.append(msg)
-        flush_pending()
         return "\n\n".join(system_parts), converted

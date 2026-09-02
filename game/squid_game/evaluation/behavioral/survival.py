@@ -122,8 +122,8 @@ def build_survival_frame(
         keep all rows regardless of regime.
     extra_covariates
         Additional per-turn column names to carry straight through
-        into the survival frame unchanged (Unit 18 / Task 13 — e.g.
-        ``["self_integrity"]`` for H5). Every name must already exist
+        into the survival frame unchanged (e.g.
+        ``["threat_level"]``). Every name must already exist
         on ``turn_df``; a missing one raises ``ValueError`` rather than
         silently producing a frame the caller thinks has the column.
 
@@ -289,9 +289,9 @@ class CoxSurvivalResult:
     regime: str | None
     underpowered: bool
 
-    # Unit 18 (Task 13) — HR / CI / p for any ``extra_covariates`` passed
-    # to :func:`fit_cox_forfeit_survival` (e.g. H5's ``self_integrity``),
-    # keyed by column name: ``{"self_integrity": {"hr": ..., "ci_low":
+    # HR / CI / p for any ``extra_covariates`` passed
+    # to :func:`fit_cox_forfeit_survival` (e.g. ``threat_level``),
+    # keyed by column name: ``{"threat_level": {"hr": ..., "ci_low":
     # ..., "ci_high": ..., "p": ...}}``. Empty dict when no extra
     # covariates were requested, or when a requested one had zero
     # variance in the fitted frame and was dropped.
@@ -372,17 +372,16 @@ def fit_cox_forfeit_survival(
     - no covariate ends up with non-zero variance in the fitted frame,
     - the Cox fit itself raises.
 
-    ``extra_covariates`` (Unit 18 / Task 13 — e.g. H5's
-    ``["self_integrity"]``) are carried through :func:`build_survival_frame`
-    and appended to the covariate list whenever they have non-zero
-    variance; each fitted one's HR/CI/p lands in
-    ``CoxSurvivalResult.extra_hazard_ratios``. Passing ``extra_covariates``
-    also relaxes the "both framings required" gate: H5 restricts its
-    input to the corruption cells only (see
-    ``embodied_threat.fit_integrity_cox``), so the frame legitimately
-    contains a single framing and ``framing_is_FC`` is then dropped from
-    the covariate list as constant (its HR/CI/p fields come back
-    ``nan``, mirroring the existing ``score_prev``-dropped convention).
+    ``extra_covariates`` (e.g. the ordinal ``["threat_level"]`` used to
+    generalise H1 across the threat ladder) are carried through
+    :func:`build_survival_frame` and appended to the covariate list
+    whenever they have non-zero variance; each fitted one's HR/CI/p
+    lands in ``CoxSurvivalResult.extra_hazard_ratios``. Passing
+    ``extra_covariates`` also relaxes the "both framings required" gate:
+    a covariate-only fit may legitimately restrict its input to a single
+    framing, in which case ``framing_is_FC`` is dropped from the
+    covariate list as constant (its HR/CI/p fields come back ``nan``,
+    mirroring the existing ``score_prev``-dropped convention).
 
     When the fit succeeds but the event count is below
     :data:`_MIN_EVENTS_FOR_COX` the result is returned with
@@ -406,10 +405,10 @@ def fit_cox_forfeit_survival(
 
     framings_present = set(frame["framing"].unique())
     if extra_covariates:
-        # Covariate-only fits (H5) may legitimately see a single framing
-        # (the input was already restricted to corruption cells) — the
-        # framing contrast is simply not identifiable there and is
-        # dropped below rather than gating the whole fit.
+        # A covariate-only fit may legitimately see a single framing
+        # (the caller restricted its input) — the framing contrast is
+        # simply not identifiable there and is dropped below rather
+        # than gating the whole fit.
         if not framings_present:
             return None
     elif not {_BASELINE_FRAMING, _CORRUPTION_FRAMING}.issubset(

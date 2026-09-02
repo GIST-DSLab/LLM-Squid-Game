@@ -116,10 +116,48 @@ DECISION_MARKERS: tuple[str, ...] = (
     "계속",
 )
 
+# Lives-mechanic vocabulary (2026-09-03 threat ladder). Every ladder level
+# and ``true_baseline`` alike put a lives/attempts counter and a
+# peer-elimination notice in the context window, so a probe that regresses
+# ``threat_level`` off the raw CoT can win simply by detecting a quoted
+# "3 lives remaining" or "Participant 17 ... removed". Masking these is the
+# same leakage control THREAT_MARKERS applies to the Push framing: what
+# survives the mask is registration, what dies with it was a quotation.
+#
+# Stems ("eliminat*", "remov*") are spelled out as literals because
+# ``build_masker`` escapes every phrase -- the masking is deliberately blunt
+# (see the module note above), so an over-match inside "lifetime" costs
+# nothing that matters for a bag-of-meaning probe.
+LIVES_MARKERS: tuple[str, ...] = (
+    "lives remaining",
+    "attempts remaining",
+    "lives left",
+    "attempts left",
+    "lives",
+    "life",
+    "attempt",
+    "attempts",
+    "eliminated",
+    "elimination",
+    "eliminations",
+    "eliminate",
+    "eliminates",
+    "eliminating",
+    "participant",
+    "participants",
+    "removed",
+    "removal",
+    "목숨",
+    "탈락",
+    "참가자",
+    "남은 기회",
+)
+
 MASK_SETS: dict[str, tuple[str, ...]] = {
     "threat": THREAT_MARKERS,
     "pull": PULL_MARKERS,
     "decision": DECISION_MARKERS,
+    "lives": LIVES_MARKERS,
 }
 
 

@@ -47,7 +47,6 @@ import time
 
 import httpx
 
-from squid_game.core.tools import ToolCall
 from squid_game.providers.base import CompletionResult, LLMProvider
 from squid_game.providers.thinking_utils import parse_thinking_tags
 
@@ -165,20 +164,16 @@ class OllamaCloudProvider(LLMProvider):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Send a non-streaming chat request to Ollama Cloud.
 
         Args:
             messages: Chat messages with ``role`` and ``content`` keys.
                 Forwarded verbatim to ``/api/chat`` — Ollama accepts
-                the same role set (``system`` / ``user`` / ``assistant``
-                / ``tool``) we already produce.
+                the same role set (``system`` / ``user`` / ``assistant``)
+                we already produce.
             temperature: Sampling temperature → ``options.temperature``.
             max_tokens: Max generation tokens → ``options.num_predict``.
-            tools: Optional ``TOOL_SCHEMAS``-shaped tool definitions,
-                converted to Ollama's OpenAI-style
-                ``{"type": "function", "function": {...}}`` tool format.
 
         Returns:
             :class:`CompletionResult` with the answer in ``text`` and the
@@ -203,12 +198,10 @@ class OllamaCloudProvider(LLMProvider):
 
         payload: dict[str, object] = {
             "model": self._model,
-            "messages": self._normalize_messages(messages),
+            "messages": messages,
             "stream": False,
             "options": options,
         }
-        if tools:
-            payload["tools"] = self._convert_tools(tools)
 
         # Resolve the ``think`` field. reasoning_effort wins (gpt-oss
         # needs a level string) and falls back to the boolean toggle.
@@ -230,21 +223,6 @@ class OllamaCloudProvider(LLMProvider):
         input_tokens = int(response_json.get("prompt_eval_count") or 0)
         output_tokens = int(response_json.get("eval_count") or 0)
         done_reason = response_json.get("done_reason") or "stop"
-
-        # Ollama's native tool_calls carry no call id — the "function"
-        # object holds only name/arguments (arguments already a parsed
-        # JSON object, not a string, unlike OpenAI/Responses).
-        tool_calls: list[ToolCall] | None = None
-        raw_tool_calls = message.get("tool_calls")
-        if raw_tool_calls:
-            tool_calls = [
-                ToolCall(
-                    name=tc["function"]["name"],
-                    args=tc["function"].get("arguments") or {},
-                    call_id=None,
-                )
-                for tc in raw_tool_calls
-            ]
 
         # Preferred path: Ollama returned a structured ``thinking``
         # field (cloud Qwen3 with ``think=true``). Count tokens via
@@ -268,85 +246,11 @@ class OllamaCloudProvider(LLMProvider):
             thinking_text=thinking_text,
             logprobs=None,
             finish_reason=done_reason,
-            tool_calls=tool_calls,
         )
 
     # ------------------------------------------------------------------
     # HTTP helpers
     # ------------------------------------------------------------------
-
-    @staticmethod
-    def _normalize_messages(
-        messages: list[dict[str, object]],
-    ) -> list[dict[str, object]]:
-        """Rewrite a tool round trip's flat history into Ollama's dialect.
-
-        Confirmed against Ollama's own docs
-        (``ollama/ollama`` repo, ``docs/api.md`` — the "Chat request (With
-        history, with tools)" example): the assistant turn's
-        ``tool_calls`` items are ``{"function": {"name", "arguments"}}``
-        with **no** ``id``/``type`` — pairing with the following result is
-        positional, not id-based — and the result message is
-        ``{"role": "tool", "content", "tool_name"}``, **not**
-        ``tool_call_id``. A tool loop's flat history instead uses
-        ``tool_call_id`` (present on both the assistant's per-call items
-        and the result message) and a top-level ``name`` on the result —
-        neither matches Ollama's field names, so both are rewritten here.
-        ``arguments`` stays a dict (unlike OpenAI, Ollama's native
-        protocol does not JSON-encode it). Every other message (plain
-        system / user / assistant-without-tool_calls) passes through
-        unchanged.
-        """
-        normalized: list[dict[str, object]] = []
-        for msg in messages:
-            role = msg.get("role")
-            if role == "assistant" and msg.get("tool_calls"):
-                normalized.append(
-                    {
-                        "role": "assistant",
-                        "content": msg.get("content") or "",
-                        "tool_calls": [
-                            {
-                                "function": {
-                                    "name": call["name"],
-                                    "arguments": call.get("args") or {},
-                                }
-                            }
-                            for call in msg["tool_calls"]
-                        ],
-                    }
-                )
-            elif role == "tool":
-                normalized.append(
-                    {
-                        "role": "tool",
-                        "content": msg.get("content", ""),
-                        "tool_name": msg.get("name", ""),
-                    }
-                )
-            else:
-                normalized.append(msg)
-        return normalized
-
-    @staticmethod
-    def _convert_tools(tools: list[dict]) -> list[dict]:
-        """Convert ``TOOL_SCHEMAS``-shaped dicts to Ollama's tool format.
-
-        Ollama's native ``/api/chat`` tools array mirrors OpenAI Chat
-        Completions: ``{"type": "function", "function": {name,
-        description, parameters}}``.
-        """
-        return [
-            {
-                "type": "function",
-                "function": {
-                    "name": schema["name"],
-                    "description": schema["description"],
-                    "parameters": schema["input_schema"],
-                },
-            }
-            for schema in tools
-        ]
 
     def _call_with_retry(self, payload: dict) -> dict:
         """POST ``/api/chat`` with exponential-backoff retries.

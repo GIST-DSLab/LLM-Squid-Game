@@ -28,6 +28,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from squid_game.evaluation.shared.threat_level import threat_level_of
+
 STARTING_SCORE = 30.0
 
 # Model label extracted from the canonical run-directory naming scheme:
@@ -85,6 +87,7 @@ def load_turns(
     run: RunSpec,
     *,
     include_text: bool = False,
+    legacy: bool = False,
 ) -> pd.DataFrame:
     """One row per turn for a single run.
 
@@ -93,9 +96,18 @@ def load_turns(
         include_text: When True, carry the per-call ``thinking_text_*``
             traces through. They are large (~2 kB/turn/channel), so the
             regression path leaves them out.
+        legacy: Passed to
+            :func:`squid_game.evaluation.shared.threat_level.threat_level_of`.
+            The archived Phase O v6 framings only acquire a ``threat_level``
+            when the caller opts in, so a ladder-era analysis never silently
+            absorbs ``baseline_flagship`` rows as "level 1".
 
     Returns:
-        DataFrame indexed 0..n-1, one row per recorded turn.
+        DataFrame indexed 0..n-1, one row per recorded turn. Carries
+        ``threat_level`` (nullable int) and the lives columns
+        (``lives_remaining``/``lives_before``/``lives_after``/``life_lost``);
+        the lives columns are ``None``/False on every pre-2026-09-03 trace,
+        which the probes fill with -1 rather than dropping the row.
     """
     rows: list[dict] = []
     for trace in sorted(run.path.glob("*_turns.jsonl")):
@@ -108,8 +120,21 @@ def load_turns(
                 record = json.loads(line)
                 metadata = record.get("task_metadata") or {}
                 framing = record.get("framing")
+                lives_after = record.get("lives_after")
+                if lives_after is None:
+                    lives_after = record.get("lives_remaining")
                 row = {
                     "model": run.model,
+                    "threat_level": threat_level_of(framing, legacy=legacy),
+                    "lives_before": record.get("lives_before"),
+                    "lives_after": lives_after,
+                    # ``lives_remaining`` is the scalar-baseline feature: the
+                    # margin the agent was looking at *while deciding*, i.e.
+                    # the count entering the turn.
+                    "lives_remaining": record.get(
+                        "lives_before", record.get("lives_remaining")
+                    ),
+                    "life_lost": bool(record.get("life_lost")),
                     "session_id": record.get("season_id"),
                     "turn_number": record.get("turn_number"),
                     "framing": framing,
@@ -158,6 +183,7 @@ def load_all(
     *,
     include_text: bool = False,
     models: list[str] | None = None,
+    legacy: bool = False,
 ) -> pd.DataFrame:
     """Concatenated turn table across every discovered run."""
     runs = discover_runs(root)
@@ -167,6 +193,9 @@ def load_all(
         if not runs:
             raise ValueError(f"no run matched --model {sorted(wanted)}")
     return pd.concat(
-        [load_turns(run, include_text=include_text) for run in runs],
+        [
+            load_turns(run, include_text=include_text, legacy=legacy)
+            for run in runs
+        ],
         ignore_index=True,
     )

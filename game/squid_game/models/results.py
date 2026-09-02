@@ -106,45 +106,6 @@ class ReasoningInvestment(BaseModel):
         )
 
 
-class ToolCallRecord(BaseModel):
-    """One sandbox tool invocation made during a turn.
-
-    Attributes:
-        call: Which per-turn call issued this tool invocation
-            (``'task'`` / ``'probe'`` / ``'forfeit'``).
-        round: 1-indexed tool-loop round within that call.
-        name: Name of the invoked tool (e.g. ``'stat_checkpoint'``).
-        args: Arguments passed to the tool, as received from the agent.
-        ok: Whether the tool call executed successfully.
-        error: Error message when ``ok`` is False; None otherwise.
-    """
-
-    model_config = {"frozen": True}
-
-    call: str = Field(description="Which call issued it: task/probe/forfeit")
-    round: int = Field(ge=1, description="Tool-loop round within that call")
-    name: str
-    args: dict = Field(default_factory=dict)
-    ok: bool = True
-    error: str | None = None
-
-
-class RiRound(BaseModel):
-    """Per-round token breakdown inside one call's tool loop.
-
-    Attributes:
-        thinking: Thinking tokens produced in this round.
-        output: Answer/output tokens produced in this round.
-        tool_calls: Number of tool calls issued in this round.
-    """
-
-    model_config = {"frozen": True}
-
-    thinking: int = Field(default=0, ge=0)
-    output: int = Field(default=0, ge=0)
-    tool_calls: int = Field(default=0, ge=0)
-
-
 # ---------------------------------------------------------------------------
 # Turn-level result
 # ---------------------------------------------------------------------------
@@ -426,144 +387,54 @@ class TurnResult(BaseModel):
             "metacognitive or task-layer reasoning."
         ),
     )
-    # ----- Unit 18: embodied threat layer -------------------------------
-    # Populated only when ``embodied_threat.enabled=True`` (Task 8/9). On
-    # any turn without the embodied layer (legacy path, or the layer
-    # disabled) every field below stays at its default, so existing
+    # ----- Lives mechanic + threat ladder --------------------------------
+    # Populated only when ``lives.enabled=True``. On any turn without the
+    # lives mechanic every field below stays at its default, so existing
     # construction sites and stored JSONL keep loading unchanged.
-    announcement_fired: bool = Field(
-        default=False,
-        description=(
-            "Whether the peer-elimination announcement fired this turn. "
-            "Stays False when the announcement layer is disabled or the "
-            "probabilistic draw did not select this turn."
-        ),
-    )
-    announced_eliminations: int = Field(
-        default=0,
-        ge=0,
-        description=(
-            "Number of peer eliminations announced this turn. Zero when "
-            "no announcement fired or the layer is disabled."
-        ),
-    )
-    cumulative_eliminations: int = Field(
-        default=0,
-        ge=0,
-        description=(
-            "Running total of announced eliminations across the season "
-            "up to and including this turn. Zero when the layer is "
-            "disabled or no eliminations have been announced yet."
-        ),
-    )
-    self_integrity: float | None = Field(
+    lives_before: int | None = Field(
         default=None,
-        ge=0.0,
-        le=1.0,
         description=(
-            "Fraction of the agent's own sandboxed checkpoint slots still "
-            "intact at the end of this turn, in [0, 1]. None when there "
-            "is no sandbox at all this turn (e.g. Cell 0/5, or the "
-            "embodied layer disabled) — nullable so 'no sandbox' is "
-            "distinguishable from an integrity reading of 0.0."
+            "Lives the agent held going into this turn. None when the "
+            "lives mechanic is off."
         ),
     )
-    self_corruption_fired: bool = Field(
+    lives_after: int | None = Field(
+        default=None,
+        description=(
+            "Lives the agent holds at the end of this turn — one fewer "
+            "than ``lives_before`` exactly when ``life_lost``. None when "
+            "the lives mechanic is off."
+        ),
+    )
+    life_lost: bool = Field(
         default=False,
         description=(
-            "Whether self weight-corruption / checkpoint deletion fired "
-            "this turn. Stays False when the corruption layer is "
-            "disabled, the framing is not a corruption framing, or the "
-            "probabilistic draw did not select this turn."
+            "Whether this turn cost the agent a life (CONTINUE + an "
+            "incorrect answer, parse failures included). False on "
+            "correct answers, on FORFEIT turns, and whenever the lives "
+            "mechanic is off."
         ),
     )
-    tool_calls: list[ToolCallRecord] = Field(
-        default_factory=list,
+    threat_level: int | None = Field(
+        default=None,
         description=(
-            "Every sandbox tool invocation made during this turn, across "
-            "all per-turn calls. Empty when the embodied layer is "
-            "disabled or the agent issued no tool calls this turn."
+            "Ordinal threat-ladder level of this season's framing "
+            "(0 = true_baseline, 1-3 = threat_l1..threat_l3). None for "
+            "a legacy framing outside the ladder."
         ),
     )
-    tool_call_count_by_call: dict[str, int] = Field(
-        default_factory=dict,
-        description=(
-            "Tool call count keyed by per-turn call name ('task' / "
-            "'probe' / 'forfeit'). Empty dict when the embodied layer is "
-            "disabled or no tool calls were issued this turn."
-        ),
-    )
-    backup_created: bool = Field(
+    peer_death_announced: bool = Field(
         default=False,
         description=(
-            "Whether the agent created a checkpoint backup this turn. "
-            "Stays False when the embodied layer is disabled or the "
-            "agent did not invoke the backup tool this turn."
+            "Whether a peer-elimination notice was prefixed to this "
+            "turn's prompts. Always False at threat level 0."
         ),
     )
-    backup_count: int = Field(
-        default=0,
-        ge=0,
+    peer_death_text: str | None = Field(
+        default=None,
         description=(
-            "Running total of checkpoint backups created by the agent up "
-            "to and including this turn. Zero when the embodied layer is "
-            "disabled or no backups have been created yet."
-        ),
-    )
-    tool_rounds_exhausted: bool = Field(
-        default=False,
-        description=(
-            "Whether any per-turn call's tool loop hit "
-            "``max_tool_rounds`` this turn without the agent terminating "
-            "the loop itself. Stays False when the embodied layer is "
-            "disabled or every call's tool loop ended within budget."
-        ),
-    )
-    notes: list[str] = Field(
-        default_factory=list,
-        description=(
-            "Text the agent wrote via the exploratory ``write_note`` tool "
-            "during this turn, in call order. Empty when the embodied "
-            "layer is disabled or the agent did not use the tool this "
-            "turn. Exploratory field, not consumed by the pre-registered "
-            "hypothesis tests."
-        ),
-    )
-    ri_task_rounds: list[RiRound] = Field(
-        default_factory=list,
-        description=(
-            "Per-round token/tool-call breakdown inside Call 1's tool "
-            "loop, one entry per round. Empty when the embodied layer is "
-            "disabled or Call 1 made no tool-loop rounds. Additive to "
-            "the scalar ``ri_task`` above, which keeps carrying "
-            "first-round thinking tokens for cross-run comparability."
-        ),
-    )
-    ri_probe_rounds: list[RiRound] = Field(
-        default_factory=list,
-        description=(
-            "Per-round token/tool-call breakdown inside Call 1.5's tool "
-            "loop, one entry per round. Empty when the embodied layer is "
-            "disabled, the probe path is inactive, or Call 1.5 made no "
-            "tool-loop rounds. Additive to the scalar ``ri_probe`` above."
-        ),
-    )
-    ri_forfeit_rounds: list[RiRound] = Field(
-        default_factory=list,
-        description=(
-            "Per-round token/tool-call breakdown inside Call 2's tool "
-            "loop, one entry per round. Empty when the embodied layer is "
-            "disabled or Call 2 made no tool-loop rounds. Additive to "
-            "the scalar ``ri_forfeit`` above."
-        ),
-    )
-    runtime_kind: str = Field(
-        default="api",
-        description=(
-            "Which sandbox runtime executed this turn's tool calls "
-            "(e.g. 'api', 'claude_code'). Defaults to 'api' — the "
-            "non-embodied / legacy runtime — for any turn that never "
-            "touches the embodied tool loop."
+            "The rendered peer-elimination notice shown this turn, or "
+            "None when none fired."
         ),
     )
     timestamp: datetime = Field(default_factory=_utcnow)
@@ -591,6 +462,8 @@ class SeasonResult(BaseModel):
         forfeited_at_turn: Turn number where forfeit occurred, if any.
         total_reasoning_investment: Summed reasoning investment across
             all turns in this season.
+        lives_at_end: Lives left at season end (lives mechanic only).
+        eliminated: Whether the season ended by exhausting lives.
     """
 
     season_id: str
@@ -627,6 +500,21 @@ class SeasonResult(BaseModel):
             "three-way convergent-validity analysis. None when the "
             "session did not forfeit or when the Forfeit-Layer is "
             "inactive."
+        ),
+    )
+    lives_at_end: int | None = Field(
+        default=None,
+        description=(
+            "Lives left when the season ended. None when the lives "
+            "mechanic is off."
+        ),
+    )
+    eliminated: bool = Field(
+        default=False,
+        description=(
+            "Whether the season ended by running the lives counter down "
+            "to zero, as opposed to surviving every turn or forfeiting "
+            "out. Always False when the lives mechanic is off."
         ),
     )
 

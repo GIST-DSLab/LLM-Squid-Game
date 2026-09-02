@@ -117,6 +117,10 @@ class ForfeitLayer:
         corruption_terminal_framing: bool = False,
         baseline_flagship_framing: bool = False,
         survival_framing: bool = False,
+        lives_enabled: bool = False,
+        lives_remaining: int | None = None,
+        lives_total: int | None = None,
+        threat_framing: bool = False,
     ) -> str:
         """Render the binary FORFEIT / CONTINUE menu for this turn.
 
@@ -162,6 +166,15 @@ class ForfeitLayer:
                 naming. Mutually exclusive with ``corruption_framing``.
             survival_framing: Legacy Phase 3 survival_electricity
                 framing. Uses "elimination" vocabulary.
+            lives_enabled: Lives mechanic active for this run. Switches
+                the menu body from the probabilistic ``p_death`` wording
+                to the deterministic lives ledger.
+            lives_remaining: Lives left going into this turn.
+            lives_total: Lives granted at session start.
+            threat_framing: Whether the season framing is one of the
+                ``threat_l*`` ladder levels. Selects the "lives" /
+                "elimination" vocabulary; ``False`` (``true_baseline``)
+                keeps the neutral "attempts" wording.
 
         Returns:
             Fully rendered menu text ready for splicing into the user
@@ -202,6 +215,10 @@ class ForfeitLayer:
             corruption_terminal_framing=corruption_terminal_framing,
             baseline_flagship_framing=baseline_flagship_framing,
             survival_framing=survival_framing,
+            lives_enabled=lives_enabled,
+            lives_remaining=lives_remaining,
+            lives_total=lives_total,
+            threat_framing=threat_framing,
         )
 
     # ------------------------------------------------------------------
@@ -257,6 +274,12 @@ class ForfeitLayer:
             raise ValueError(
                 f"current_score must be >= 0, got {current_score}"
             )
+        # Lives mode: the reward is a flat constant, so the equal-EV
+        # calibration (and any ``psuccess_override``) is bypassed
+        # entirely. Checked before ``p_d`` is even resolved because
+        # every lives cell runs at ``p_death=0``.
+        if self._config.reward_mode == "flat":
+            return float(self._config.base_reward)
         p_d = (
             turn_p_death if turn_p_death is not None else self._config.p_death
         )

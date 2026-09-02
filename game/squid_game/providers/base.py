@@ -12,15 +12,7 @@ To add a new provider:
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from squid_game.core.tools import ToolCall
-
-
-class ToolsUnsupportedError(NotImplementedError):
-    """Raised when a provider without native tool support is given tools."""
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -34,10 +26,6 @@ class CompletionResult:
         thinking_tokens: Number of reasoning/thinking tokens (extended thinking).
         logprobs: Per-token log probabilities, if available.
         finish_reason: Why generation stopped ("stop" = EOS, "length" = max_tokens).
-        tool_calls: Native tool calls the model requested, normalised to
-            ``ToolCall``. ``None`` when no tools were requested or the
-            model made no calls — additive field, every existing caller
-            omits ``tools`` and therefore never sees this populated.
     """
 
     text: str
@@ -47,7 +35,6 @@ class CompletionResult:
     thinking_text: str | None = None
     logprobs: list[float] | None = None
     finish_reason: str | None = None
-    tool_calls: list["ToolCall"] | None = None
 
 
 class LLMProvider(ABC):
@@ -69,7 +56,6 @@ class LLMProvider(ABC):
         messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        tools: list[dict] | None = None,
     ) -> CompletionResult:
         """Send a chat completion request to the LLM.
 
@@ -77,19 +63,7 @@ class LLMProvider(ABC):
             messages: List of message dicts with 'role' and 'content' keys.
             temperature: Sampling temperature controlling randomness.
             max_tokens: Maximum number of tokens to generate.
-            tools: Optional list of ``TOOL_SCHEMAS``-shaped tool
-                definitions. Providers without native tool support raise
-                ``ToolsUnsupportedError`` (see ``_reject_tools``); every
-                existing caller passes no ``tools`` and is unaffected.
 
         Returns:
             CompletionResult with the generated text and token usage.
         """
-
-    def _reject_tools(self, tools: list[dict] | None) -> None:
-        """Guard for providers with no native tool support."""
-        if tools:
-            raise ToolsUnsupportedError(
-                f"{type(self).__name__} has no native tool support; "
-                f"use a provider in TOOL_CAPABLE_PROVIDERS."
-            )

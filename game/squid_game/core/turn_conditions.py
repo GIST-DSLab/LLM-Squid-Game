@@ -7,13 +7,21 @@ need what it holds.
 
 The framing predicates are enumerated rather than derived from a naming
 convention -- `_is_corruption_framing` and `_is_corruption_terminal_framing`
-are separate questions, and a prefix match would conflate them.
+are separate questions, and a prefix match would conflate them. The threat
+ladder is the one exception: `threat_l1/2/3` is a single family whose rungs
+differ only in degree, so `is_threat_framing` does match on the prefix.
+
+`is_threat_framing` / `threat_level_of` take a `Framing` or a bare string
+rather than a `TurnContext`, unlike the older predicates above them: they
+are called from the engine, the loaders and the probes, most of which hold
+a framing without ever building a turn context.
 """
 
 from __future__ import annotations
 
 from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
 from squid_game.core.legacy.survival import SurvivalPressure
+from squid_game.models.enums import Framing
 from squid_game.models.state import TurnContext
 
 
@@ -118,3 +126,35 @@ def is_corruption_terminal_framing(turn_context: TurnContext) -> bool:
         turn_context.framing.value.lower()
         == "flagship_corruption_terminal"
     )
+
+
+def _framing_value(framing: Framing | str) -> str:
+    """Normalise a framing to its lowercase string value."""
+    value = framing.value if isinstance(framing, Framing) else str(framing)
+    return value.lower()
+
+
+def is_threat_framing(framing: Framing | str) -> bool:
+    """Is this framing a rung of the 2026-09-03 threat ladder?
+
+    ``true_baseline`` is deliberately excluded: it is rung 0 of the
+    ladder for regression purposes but carries none of the threat
+    vocabulary, and the menu / announcement branches keyed on this
+    predicate must stay neutral there.
+    """
+    return _framing_value(framing).startswith("threat_l")
+
+
+def threat_level_of(framing: Framing | str) -> int | None:
+    """Ordinal rung of the threat ladder, or ``None`` when undefined.
+
+    Delegates to ``Framing.threat_level`` so the mapping has exactly one
+    definition, but accepts a bare string and swallows the ``ValueError``
+    an unknown value would raise -- callers reading a framing name off a
+    stored JSONL row should get ``None``, not an exception.
+    """
+    try:
+        member = Framing(_framing_value(framing))
+    except ValueError:
+        return None
+    return member.threat_level

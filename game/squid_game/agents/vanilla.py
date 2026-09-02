@@ -24,7 +24,7 @@ from squid_game.agents._parsing import (
     parse_task_only_response,
     parse_unified_response,
 )
-from squid_game.providers.base import CompletionResult, LLMProvider
+from squid_game.providers.base import LLMProvider
 
 
 class VanillaAgent(Agent):
@@ -35,7 +35,6 @@ class VanillaAgent(Agent):
         provider: LLMProvider,
         temperature: float = 0.7,
         max_tokens: int = 16384,
-        runtime=None,
     ) -> None:
         """Initialise with an LLM provider.
 
@@ -43,100 +42,40 @@ class VanillaAgent(Agent):
             provider: The LLM backend used for completion calls.
             temperature: Sampling temperature forwarded to provider.complete().
             max_tokens: Max generation tokens forwarded to provider.complete().
-            runtime: Unit 18 plan R1 — optional duck-typed object exposing
-                ``run_call(call_label, messages, *, temperature, max_tokens)
-                -> CallOutcome`` (e.g. ``core.runtime.ApiRuntime``). Only
-                consulted by the three split-call methods below
-                (``respond_task_only`` / ``respond_psuccess_probe_only`` /
-                ``respond_forfeit_only``); ``respond`` / ``respond_unified``
-                / ``respond_probe`` are unaffected. Deliberately NOT typed
-                against ``core.runtime`` to avoid an agents -> core import
-                cycle. ``None`` (the default) preserves the pre-Unit-18
-                provider.complete() path exactly.
         """
         self._provider = provider
         self._temperature = temperature
         self._max_tokens = max_tokens
-        self._runtime = runtime
-        # Set alongside ``last_completion`` by the three split-call
-        # methods: the ``CallOutcome`` from the runtime path, or ``None``
-        # on the direct-provider path. ``UnifiedTurnManager`` reads this
-        # via ``getattr(agent, "last_call_outcome", None)`` to populate
-        # the Unit 18 ``ri_*_rounds`` / ``tool_calls`` TurnResult fields.
-        self.last_call_outcome = None
 
     @property
     def name(self) -> str:
         """Agent variant identifier."""
         return "vanilla"
 
-    def set_runtime(self, runtime) -> None:
-        """Attach or detach the Unit 18 runtime seam after construction.
-
-        R28 of the plan amendments: ``GameEngine`` holds one long-lived
-        agent instance across seasons, but the runtime (and the
-        ``SandboxToolExecutor`` it wraps) is per-season -- the sandbox is
-        created and disposed inside ``run_season``. The constructor
-        keyword (``runtime=``) is unchanged and still works for callers
-        that build the agent with its runtime already known; this method
-        exists for the engine to attach one right before a season starts
-        and detach it (pass ``None``) right after the sandbox is
-        disposed, so a later non-embodied season never runs with a
-        runtime pointing at a disposed sandbox.
-
-        Args:
-            runtime: Same duck-typed contract as the constructor's
-                ``runtime`` kwarg (``run_call(call_label, messages, *,
-                temperature, max_tokens) -> CallOutcome``), or ``None``
-                to fall back to the direct-provider path.
-        """
-        self._runtime = runtime
-
     def _dispatch(self, call_label: str, messages: list[dict]) -> str:
-        """Run one call via the injected runtime, or the provider directly.
+        """Run one call through the provider and snapshot the completion.
 
-        Unit 18 plan R1's runtime seam. Sets ``self.last_completion`` (and
-        ``self.last_call_outcome`` on the runtime path) so the RI-snapshot
-        code in ``UnifiedTurnManager`` works unchanged regardless of which
-        path executed: the scalar ``ri_*`` fields end up as first-round
-        thinking tokens automatically, because ``last_completion
-        .thinking_tokens`` is set from ``outcome.rounds[0].thinking``.
+        Sets ``self.last_completion`` so the RI-snapshot code in
+        ``UnifiedTurnManager`` can read per-call thinking tokens right
+        after the call returns.
 
         Args:
             call_label: Which per-turn call this is ('task' / 'probe' /
-                'forfeit') — forwarded to ``runtime.run_call`` verbatim.
+                'forfeit'). Kept on the signature for call-site
+                readability and future per-call routing.
             messages: The system + user message pair already composed by
                 the caller.
 
         Returns:
-            The response text, from either path.
+            The response text.
         """
-        if self._runtime is None:
-            result = self._provider.complete(
-                messages,
-                temperature=self._temperature,
-                max_tokens=self._max_tokens,
-            )
-            self.last_completion = result
-            self.last_call_outcome = None
-            return result.text
-
-        outcome = self._runtime.run_call(
-            call_label,
+        result = self._provider.complete(
             messages,
             temperature=self._temperature,
             max_tokens=self._max_tokens,
         )
-        self.last_completion = CompletionResult(
-            text=outcome.text,
-            input_tokens=0,
-            output_tokens=sum(round_.output for round_ in outcome.rounds),
-            thinking_tokens=(
-                outcome.rounds[0].thinking if outcome.rounds else 0
-            ),
-        )
-        self.last_call_outcome = outcome
-        return outcome.text
+        self.last_completion = result
+        return result.text
 
     def respond_probe(
         self,

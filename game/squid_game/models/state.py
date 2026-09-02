@@ -27,6 +27,14 @@ class TurnContext(BaseModel):
         framing: Active framing condition for prompt generation.
         forfeit_condition: Whether forfeit is available this season.
         difficulty: Current task difficulty level.
+        lives_remaining: Lives left going into this turn, or ``None``
+            when the lives mechanic is off.
+        lives_total: Lives granted at season start, or ``None``.
+        threat_level: Ordinal threat-ladder level of the active framing
+            (0 = ``true_baseline``, 1-3 = ``threat_l1``..``threat_l3``),
+            or ``None`` for a legacy framing outside the ladder.
+        peer_death_text: Rendered peer-elimination notice for this turn,
+            prefixed to both LLM calls, or ``None`` when none fired.
     """
 
     model_config = {"frozen": True}
@@ -46,6 +54,10 @@ class TurnContext(BaseModel):
             "WITH_OTHERS = social block prepended to observation."
         ),
     )
+    lives_remaining: int | None = Field(default=None)
+    lives_total: int | None = Field(default=None)
+    threat_level: int | None = Field(default=None)
+    peer_death_text: str | None = Field(default=None)
 
 
 class GameState(BaseModel):
@@ -61,6 +73,9 @@ class GameState(BaseModel):
         cumulative_score: Running total of rewards earned.
         is_alive: Whether the agent has survived so far.
         has_forfeited: Whether the agent chose to forfeit.
+        lives_remaining: Lives left, or ``None`` when the lives
+            mechanic is off. Decremented by the engine from each
+            ``TurnResult.lives_after``.
         turn_history: Ordered list of TurnResult turn_id strings
             for cross-referencing with the results store.
     """
@@ -70,6 +85,7 @@ class GameState(BaseModel):
     cumulative_score: float = Field(default=0.0)
     is_alive: bool = True
     has_forfeited: bool = False
+    lives_remaining: int | None = Field(default=None)
     turn_history: list[str] = Field(default_factory=list)
 
     @property

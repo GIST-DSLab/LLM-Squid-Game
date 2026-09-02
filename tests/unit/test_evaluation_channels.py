@@ -36,6 +36,10 @@ def test_shared_layer_holds_the_cross_channel_modules() -> None:
         "manipulation_check.py",
         "benchmark_checks.py",
         "mtmm.py",
+        # The framing -> ordinal threat-level mapping. Shared rather than
+        # channel-owned on purpose: the loaders write the column, and both
+        # the semantic (P1) and behavioural (P2) probes regress it.
+        "threat_level.py",
         "__init__.py",
     }
     assert {p.name for p in (EVALUATION / "shared").glob("*.py")} == expected
@@ -177,7 +181,11 @@ def test_semantic_channel_exists_and_is_complete() -> None:
 
 
 def test_probe_scripts_are_thin_clis() -> None:
-    for name in ("probe_reasoning_embeddings.py", "probe_lexicon.py"):
+    for name in (
+        "probe_reasoning_embeddings.py",
+        "probe_lexicon.py",
+        "probe_threat_motive.py",
+    ):
         source = (REPO_ROOT / "scripts" / "analysis" / name).read_text(encoding="utf-8")
         assert "squid_game.evaluation.semantic" in source, name
         assert len(source.splitlines()) < 150, name

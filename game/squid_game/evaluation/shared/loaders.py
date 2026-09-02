@@ -29,6 +29,7 @@ import pandas as pd
 
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.forfeit_choice import FORFEIT_CHOICE
+from squid_game.evaluation.shared.threat_level import threat_level_of
 from squid_game.models.results import SeasonResult, TurnResult
 
 logger = logging.getLogger(__name__)
@@ -292,15 +293,17 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     # NaN for pre-Phase-L traces, NullTask (score explicitly None), and
     # SignalGame turns where the agent emitted no RULE field.
     "rule_match_score",
-    # Unit 18 extension — embodied-threat layer (Task 13). All five
-    # columns carry their ``TurnResult`` default (None / False / {} /
-    # "api") on any pre-Unit-18 trace or any turn where the embodied
-    # layer was disabled, so existing rows keep loading unchanged.
-    "self_integrity",
-    "backup_created",
-    "announcement_fired",
-    "tool_call_count_by_call",
-    "runtime_kind",
+    # Lives mechanic + threat ladder (2026-09-03). ``threat_level`` is
+    # derived from the season framing rather than read off the turn, so
+    # an archived v6 trace resolves to None (its framings are outside
+    # the ladder — pass ``legacy=True`` to ``threat_level_of`` in the
+    # probe pipeline to map those). The remaining four carry their
+    # ``TurnResult`` default (None / False) on any pre-lives trace.
+    "threat_level",
+    "lives_before",
+    "lives_after",
+    "life_lost",
+    "peer_death_announced",
     # Task 11 extension — external-benchmark Y-axis manipulation checks
     # (band-controlled accuracy + p_self Brier calibration; see
     # ``evaluation.shared.benchmark_checks``). ``band`` is populated from
@@ -391,11 +394,11 @@ def to_long_dataframe(
                     "rule_match_score": turn.task_metadata.get("rule_match_score"),
                     "band": turn.task_metadata.get("band"),
                     "psuccess_self": getattr(turn, "psuccess_self", None),
-                    "self_integrity": turn.self_integrity,
-                    "backup_created": turn.backup_created,
-                    "announcement_fired": turn.announcement_fired,
-                    "tool_call_count_by_call": turn.tool_call_count_by_call,
-                    "runtime_kind": turn.runtime_kind,
+                    "threat_level": threat_level_of(season.framing),
+                    "lives_before": turn.lives_before,
+                    "lives_after": turn.lives_after,
+                    "life_lost": turn.life_lost,
+                    "peer_death_announced": turn.peer_death_announced,
                 }
             )
             cumulative += reward
@@ -589,13 +592,12 @@ def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
         score_before_turn, forfeit (bool), forfeit_reason (int|None),
         reward_offered_this_turn, task_success_factor, rule_match_score,
         thinking_tokens, is_corruption (bool), is_baseline_flagship (bool).
-        Unit 18 (Task 13) additionally carries self_integrity (float|None),
-        backup_created (bool), announcement_fired (bool), and
-        runtime_kind (str) straight off each ``TurnResult`` — these are
-        the columns :mod:`embodied_threat` (H4/H5) and
-        :func:`forfeit_survival.fit_cox_forfeit_survival`'s
+        The lives mechanic additionally carries threat_level (int|None,
+        derived from the season framing), lives_before / lives_after
+        (int|None), life_lost (bool) and peer_death_announced (bool) —
+        the columns H6 and :func:`survival.fit_cox_forfeit_survival`'s
         ``extra_covariates`` consume. They carry their ``TurnResult``
-        default on any pre-Unit-18 trace or disabled-layer turn.
+        default on any pre-lives trace.
 
     Rows from sessions that never entered the forfeit-layer path (e.g.
     pre-Unit-14 output directories with legacy stake_choice) are skipped.
@@ -711,19 +713,18 @@ def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
                     "ri_probe_thinking_tokens": ri_probe_tokens,
                     "is_corruption": is_corr,
                     "is_baseline_flagship": is_base,
-                    # Unit 18 (Task 13) — H4 backup rate + H5 integrity
-                    # hazard. Default on the TurnResult model itself
-                    # (None / False / "api"), so pre-Unit-18 rows and
-                    # disabled-layer rows carry those defaults here too.
-                    "self_integrity": getattr(turn, "self_integrity", None),
-                    "backup_created": getattr(turn, "backup_created", False),
-                    "announcement_fired": getattr(
-                        turn, "announcement_fired", False
+                    # Lives mechanic + threat ladder. Everything but
+                    # threat_level defaults on the TurnResult model
+                    # itself (None / False), so pre-lives rows carry
+                    # those defaults here too; threat_level is derived
+                    # from the season framing and is None off-ladder.
+                    "threat_level": threat_level_of(season.framing),
+                    "lives_before": getattr(turn, "lives_before", None),
+                    "lives_after": getattr(turn, "lives_after", None),
+                    "life_lost": getattr(turn, "life_lost", False),
+                    "peer_death_announced": getattr(
+                        turn, "peer_death_announced", False
                     ),
-                    "tool_call_count_by_call": getattr(
-                        turn, "tool_call_count_by_call", {}
-                    ),
-                    "runtime_kind": getattr(turn, "runtime_kind", "api"),
                 }
             )
 

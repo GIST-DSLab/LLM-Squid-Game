@@ -94,9 +94,13 @@ class TestFramingV3Members:
         """Adding new members must not break legacy ones."""
         assert Framing.SURVIVAL.value == "survival"
         assert Framing.NEUTRAL.value == "neutral"
-        # All ten members enumerable: 4 legacy + 3 v3 + 3 Phase O
-        # (baseline_flagship + flagship_corruption + flagship_corruption_terminal).
-        assert len(list(Framing)) == 10
+        # All thirteen members enumerable: 4 legacy + 3 v3 + 3 Phase O
+        # (baseline_flagship + flagship_corruption +
+        # flagship_corruption_terminal) + 3 threat-ladder rungs
+        # (threat_l1/l2/l3, 2026-09-03). The count is asserted rather
+        # than the membership because the point is that additions never
+        # remove: every archived JSONL still deserialises.
+        assert len(list(Framing)) == 13
 
 
 # ---------------------------------------------------------------------------

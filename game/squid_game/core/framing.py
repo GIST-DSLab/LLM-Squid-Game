@@ -73,4 +73,11 @@ class FramingManager:
             framing=context.framing.value,
             forfeit_condition=context.forfeit_condition.value,
             difficulty=context.difficulty.value,
+            # Lives mechanic — every threat-ladder template and
+            # ``true_baseline`` render the remaining-lives line from
+            # these. They stay ``None`` on a legacy (non-lives) run, and
+            # the templates that predate the mechanic ignore them.
+            lives_remaining=context.lives_remaining,
+            lives_total=context.lives_total,
+            threat_level=context.threat_level,
         )
