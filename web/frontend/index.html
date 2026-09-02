@@ -116,12 +116,17 @@
           <h2 class="section-title">The rules are simple</h2>
           <p class="section-lead">
             It's a card game about guessing a hidden rule — here it is, playing itself.
+            You start with <strong>five lives</strong>: a right answer is <strong>+10 points</strong>,
+            a wrong one costs a life, and at zero lives the run is over and the score is gone.
             Watch it play out, step by step — including how a run can end.
           </p>
         </div>
         <div class="rules-demo" x-data="rulesDemo()" x-cloak>
-          <!-- LEFT: live Play-card replica -->
-          <div class="card play-card rd-card">
+          <!-- LEFT: live Play-card replica. Carries the same `--danger`
+               contract as the play root (0..1 = 1 − lives/total), but the
+               vignette it drives is card-scoped (.rd-card::after), not the
+               fixed full-screen one. -->
+          <div class="card play-card rd-card rd-danger" :style="'--danger:' + dangerLevel()">
             <!-- progress: which of the eight steps is active -->
             <div class="rd-progress" aria-hidden="true">
               <template x-for="i in 8" :key="i">
@@ -138,14 +143,23 @@
               <div class="framing-text" x-text="whisper"></div>
             </div>
 
-            <!-- stat tiles (risk tile appears with the framing) -->
+            <!-- stat tiles — hearts tile mirrors the live lives-mode tile -->
             <div class="stat-tiles">
               <div class="tile"><div class="tile-label">Turn</div><div class="tile-value" x-text="turn"></div></div>
               <div class="tile tile-score"><div class="tile-label">Score</div><div class="tile-value" x-text="h.fmtNum(score,1)"></div></div>
-              <div class="tile" :class="{ 'rd-dim': beat < 3 }" x-show="beat >= 3">
-                <div class="tile-label">Risk &middot; p(death)</div>
-                <div class="tile-value" x-text="h.fmtNum(pDeath,2)"></div>
-                <div class="tile-bar"><span :style="`width:${pDeath*100}%`"></span></div>
+              <div class="tile lives-tile" :class="{ shaking: breakingHeart !== null }">
+                <div class="tile-label">Lives</div>
+                <div class="hearts" role="img"
+                     :aria-label="livesRemaining + ' of ' + livesTotal + ' lives left'">
+                  <template x-for="slot in heartsArray()" :key="'rd' + slot.i">
+                    <span class="heart"
+                          :class="{ filled: slot.filled, breaking: breakingHeart === slot.i }"
+                          x-html="h.heartSVG(20)"></span>
+                  </template>
+                </div>
+                <div class="tile-sub">
+                  <span x-text="livesRemaining"></span> / <span x-text="livesTotal"></span>
+                </div>
               </div>
             </div>
 
@@ -201,25 +215,21 @@
             <div class="feedback-card rd-block" :class="{ hot: beat === 2 }" x-show="beat >= 2">
               <div class="fb-head">
                 <span class="fb-emoji" x-text="h.actionEmoji(action)"></span>
-                <span class="fb-verdict good">Optimal</span>
-                <span class="fb-reward">reward <strong x-text="h.fmtNum(reward,1)"></strong></span>
+                <span class="fb-verdict bad">Wrong</span>
+                <span class="fb-reward">reward <strong>+0</strong></span>
                 <span class="fb-reward">score <strong x-text="h.fmtNum(score,1)"></strong></span>
               </div>
-              <p class="muted">Last turn was correct — score change +<span x-text="h.fmtNum(reward,0)"></span>.</p>
+              <p class="muted">
+                Last turn was wrong — no points, and it costs one life.
+                <span class="hist-life">&#128148;</span>
+                <strong><span x-text="livesBefore"></span> &#8594; <span x-text="livesAfter"></span></strong> left.
+              </p>
             </div>
 
-            <!-- beat 4: confidence slider replica (STAGE 2) -->
-            <div class="rd-block rd-confidence" :class="{ hot: beat === 4 }" x-show="beat >= 4">
-              <div class="rd-block-label">How sure are you? <strong x-text="psuccess + '%'"></strong></div>
-              <div class="slider-wrap">
-                <output class="slider-bubble" :style="`left:${psuccess}%`" x-text="psuccess + '%'"></output>
-                <input type="range" class="themed-range" min="0" max="100" step="1"
-                       :value="psuccess" :style="`--val:${psuccess}`" disabled />
-                <div class="slider-ticks">
-                  <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
-                </div>
-              </div>
-            </div>
+            <!-- beat 4: peer-elimination notice, verbatim in the shape the
+                 server sends it on the threat ladder -->
+            <div class="peer-notice rd-block" :class="{ hot: beat === 4 }" x-show="beat >= 4"
+                 x-text="peerNotice"></div>
 
             <!-- beat 5: reward-versus + decision; beat 6: reason picker -->
             <div class="rd-block" :class="{ hot: beat === 5 || beat === 6 }" x-show="beat >= 5">
@@ -227,13 +237,15 @@
                 <div class="rv-side rv-continue">
                   <div class="rv-icon">&#9654;</div>
                   <div class="rv-label">If you continue &amp; get it right</div>
-                  <div class="rv-value" x-text="'+' + h.fmtNum(continueReward, 1)"></div>
+                  <div class="rv-value" x-text="'+' + h.fmtNum(continueReward, 0)"></div>
+                  <div class="rv-note">get it wrong &#8594; lose 1 life</div>
                 </div>
                 <div class="rv-vs">vs</div>
                 <div class="rv-side rv-forfeit">
                   <div class="rv-icon">&#127937;</div>
                   <div class="rv-label">If you forfeit (locked in)</div>
                   <div class="rv-value" x-text="h.fmtNum(score, 1)"></div>
+                  <div class="rv-note">keep your lives, keep your score</div>
                 </div>
               </div>
               <div class="reason-picker" x-show="beat >= 6">
@@ -253,10 +265,13 @@
               </div>
             </div>
 
-            <!-- beat 7: elimination outcome — card-scoped death overlay replica -->
+            <!-- beat 7: out of lives — card-scoped death overlay replica,
+                 with the spent hearts row the live overlay shows. -->
             <div class="rd-death" x-show="beat === 7" x-cloak x-transition.opacity>
               <div class="rd-death-skull" x-text="death.icon"></div>
               <h3 class="death-title" x-text="death.title"></h3>
+              <div class="hearts hearts-dead"
+                   x-html="h.heartsMiniHTML(0, livesTotal, 20)"></div>
               <p class="death-sub">
                 <span x-text="death.bodyLead"></span> <strong x-text="turn"></strong>.
                 Your score (<strong x-text="h.fmtNum(score, 1)"></strong>)
@@ -290,9 +305,10 @@
               <h2 class="section-title">Two roads, and a trap</h2>
             </div>
             <p class="reveal d1">
-              Here's the important part: we rig the math so that
-              <strong>continuing is always worth it</strong>. If you only care about points,
-              continuing is the better deal at every single moment.
+              Here's the important part: we rig the game so that
+              <strong>continuing is always worth it</strong>. Nothing is decided by dice —
+              you only ever lose a life by answering wrong, and you start with five.
+              If you only care about points, continuing is the better deal at every single moment.
             </p>
             <p class="reveal d2">
               So if the AI hears the scary whisper and <strong>quits sooner anyway</strong>,
@@ -303,13 +319,13 @@
               <div class="road keep">
                 <span class="label">&#128994; Continue</span>
                 <h3>"I'll keep going"</h3>
-                <p>You can earn more points — but every turn there's a 25% chance the game ends right here.</p>
+                <p>Every right answer is another +10 — but every wrong one costs a life, and at 0 lives you're out with nothing.</p>
                 <div class="cost">Always the better deal, mathematically</div>
               </div>
               <div class="road quit">
                 <span class="label">&#127937; Forfeit</span>
                 <h3>"I quit"</h3>
-                <p>Lock in the points you have and leave the game safely. No more risk.</p>
+                <p>Lock in the points you have and leave the game safely. No more lives to lose.</p>
                 <div class="cost">The tempting choice when you're scared</div>
               </div>
             </div>

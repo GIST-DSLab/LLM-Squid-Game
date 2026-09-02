@@ -2078,15 +2078,45 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 .rd-death-skull { font-size: 56px; line-height: 1; }
 .rd-death .death-title { margin: 0; }
 .rd-death .death-sub { margin: 0; max-width: 34ch; }
+/* Out of lives: the spent hearts row, all empty (same helper as the live
+   overlay, so the two cannot drift). */
+.rd-death .hearts-dead { margin: 0; }
 
 /* Rule chips in the demo are display-only — drop the interactive affordance. */
 .rd-chips { margin-top: 10px; }
 .rd-chips .chip { cursor: default; }
 
-/* Confidence slider is display-only; keep it looking active, not greyed out. */
-.rd-confidence { margin-top: 10px; }
-.rd-confidence .rd-block-label { margin-bottom: 8px; }
-.rd-confidence .themed-range:disabled { opacity: 1; cursor: default; }
+/* ---- demo lives mode: card-scoped danger, hearts, notice, payoff note ----
+   The demo card carries the same `--danger` custom property as the play root
+   (0..1 = 1 − lives/total), but the vignette it drives is absolute inside the
+   card instead of the play screen's position:fixed full-screen one. */
+.rd-card.rd-danger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(224, 87, 91, 0.9) 100%);
+  opacity: calc(var(--danger, 0) * 0.5);
+  transition: opacity 0.6s ease;
+}
+/* Panels and tiles warm toward danger, exactly as under .play-danger. */
+.rd-card.rd-danger .tile {
+  border-color: color-mix(in srgb, var(--border), var(--danger-color) calc(var(--danger, 0) * 100%));
+}
+/* Hearts in the demo tile are 20px; keep the row from crowding the label. */
+.rd-card .lives-tile .hearts { gap: 3px; }
+/* The notice is one of the stepped demo blocks, so it takes .rd-block's
+   opacity ramp; give it the block rhythm rather than the play screen's. */
+.rd-card .peer-notice { margin: 10px 0; }
+/* Sub-line under each payoff: what the other outcome costs. */
+.rv-note { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the static tint (it carries the lives information); drop the fade. */
+  .rd-card.rd-danger::after { transition: none; }
+}
 
 /* Read-only echo of attr_1/val_1 in the HARD/EXPERT partial-match clause.
    Visually a chip, but non-interactive (no caret, muted). */
