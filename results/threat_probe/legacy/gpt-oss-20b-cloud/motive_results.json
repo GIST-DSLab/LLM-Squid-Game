@@ -1,0 +1,38 @@
+{
+  "probe": {
+    "r2": 0.5541194155642511,
+    "spearman": 0.6631192593135828,
+    "mae": 0.46241367548709367,
+    "coefficients": {
+      "mean_ri_task": -0.03844696581660125,
+      "mean_ri_forfeit": 0.5778799685802376,
+      "delta_ri_task": -0.079975991619516,
+      "delta_ri_forfeit": -0.12734559611551843,
+      "forfeit_time": -0.19683170246224097,
+      "forfeited": -0.04478255344048219,
+      "cox_risk_score": -0.9174326653907418,
+      "accuracy": -0.42122008240522735,
+      "lives_lost": 1.5603668705271614e-28,
+      "n_turns": -0.1968317024622399
+    },
+    "n_sessions": 180,
+    "n_levels": 3,
+    "alpha": 1.387463743579257,
+    "permutation": {
+      "n_permutations_requested": 200,
+      "n_permutations": 200,
+      "null_mean": -0.02166873917762549,
+      "null_p95": -0.0033650723828124573,
+      "p_value": 0.004975124378109453
+    },
+    "notes": []
+  },
+  "hazard": {
+    "status": "ok",
+    "hazard_ratio": 1.7918899740339282,
+    "ci_lower": 1.3162488279444367,
+    "ci_upper": 2.439409335739104,
+    "p_value": 0.0002107078347471477,
+    "n_events": 65
+  }
+}
