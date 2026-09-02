@@ -806,6 +806,10 @@ def test_new_game_defaults_enable_real_death(
             "curriculum_turns": 0,
             "nickname": "death-tester",
             "password": "pw",
+            # Legacy p_death path: human play now defaults to the lives
+            # mechanic, which executes no death roll at all (elimination is
+            # the lives ledger hitting zero — see test_api_web_arena_lives.py).
+            "lives_enabled": False,
         },
     )
     assert resp.status_code == 200
@@ -1142,6 +1146,8 @@ def test_true_baseline_never_eliminates(client, api_module, monkeypatch):
             "curriculum_turns": 0,
             "nickname": "baseline-tester",
             "password": "pw",
+            # Legacy p_death path (see the note in the death-roll test above).
+            "lives_enabled": False,
         },
     )
     assert resp.status_code == 200

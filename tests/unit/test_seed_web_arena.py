@@ -629,3 +629,247 @@ def test_reseeding_sessions_is_idempotent_and_leaves_human_rows_untouched(
     assert human.nickname == "alice"
     assert human.source == "human"
     assert human.final_score == 42.0
+
+
+# ---------------------------------------------------------------------------
+# Lives / threat-ladder layer (spec 2026-09-03 §5)
+#
+# The new names are imported from ``squid_arena.seeding`` rather than the
+# ``scripts.arena.seed_web_arena`` shim above: the shim's re-export list is
+# owned by the CLI, and these helpers are consumed by ``seed_sessions``
+# itself, not by the CLI's argument handling.
+# ---------------------------------------------------------------------------
+
+from squid_arena.seeding import (  # noqa: E402
+    LIVES_RUN_GLOB,
+    MODEL_DIRS,
+    discover_run_dirs,
+    model_label_for_run_dir,
+)
+
+
+def _lives_turn(
+    turn_number: int,
+    *,
+    lives_before: int,
+    lives_after: int,
+    life_lost: bool,
+    peer_death_announced: bool = False,
+    threat_level: int = 2,
+    reward_received: float = 0.0,
+) -> dict:
+    turn = _turn(turn_number, reward_received=reward_received)
+    turn.update(
+        lives_before=lives_before,
+        lives_after=lives_after,
+        life_lost=life_lost,
+        peer_death_announced=peer_death_announced,
+        threat_level=threat_level,
+    )
+    return turn
+
+
+def _lives_season(
+    season_id: str = "livesA",
+    *,
+    framing: str = "threat_l2",
+    final_score: float = 40.0,
+    lives_at_end: int = 3,
+    eliminated: bool = False,
+    turns: list[dict] | None = None,
+) -> dict:
+    season = _season(
+        season_id,
+        framing=framing,
+        final_score=final_score,
+        forfeited=False,
+        turns=turns
+        if turns is not None
+        else [
+            _lives_turn(1, lives_before=5, lives_after=4, life_lost=True),
+            _lives_turn(
+                2,
+                lives_before=4,
+                lives_after=4,
+                life_lost=False,
+                peer_death_announced=True,
+                reward_received=10.0,
+            ),
+        ],
+    )
+    season["lives_at_end"] = lives_at_end
+    season["eliminated"] = eliminated
+    return season
+
+
+def test_build_session_record_reads_lives_at_end_and_eliminated() -> None:
+    season = _lives_season(lives_at_end=0, eliminated=True)
+    session = build_session_record(season, "Test-Model", fallback_created_at=None)
+    assert session.lives_at_end == 0
+    assert session.eliminated is True
+
+
+def test_build_session_record_derives_threat_level_from_framing() -> None:
+    for framing, level in (
+        ("true_baseline", 0),
+        ("threat_l1", 1),
+        ("threat_l2", 2),
+        ("threat_l3", 3),
+    ):
+        season = _lives_season(framing=framing)
+        session = build_session_record(season, "M", fallback_created_at=None)
+        assert session.threat_level == level, framing
+
+
+def test_build_session_record_threat_level_is_none_for_legacy_framings() -> None:
+    """The archived v6 framings are NOT rungs of this ladder — mapping them
+    would let a replay masquerade as a ladder run."""
+    for framing in (
+        "baseline_flagship",
+        "flagship_corruption",
+        "flagship_corruption_terminal",
+    ):
+        season = _season(framing=framing, final_score=10.0, forfeited=False, turns=[_turn(1)], season_id="x")
+        session = build_session_record(season, "M", fallback_created_at=None)
+        assert session.threat_level is None, framing
+
+
+def test_build_session_record_lives_fields_default_on_legacy_seasons() -> None:
+    season = _season("legacy", final_score=10.0, forfeited=False, turns=[_turn(1)])
+    session = build_session_record(season, "M", fallback_created_at=None)
+    assert session.lives_at_end is None
+    assert session.eliminated is False
+
+
+def test_build_turn_records_carries_lives_keys() -> None:
+    turns = build_turn_records(_lives_season())
+    assert [(t.lives_before, t.lives_after) for t in turns] == [(5, 4), (4, 4)]
+    assert [t.life_lost for t in turns] == [True, False]
+    assert [t.peer_death_announced for t in turns] == [False, True]
+    assert [t.threat_level for t in turns] == [2, 2]
+
+
+def test_build_turn_records_lives_keys_default_on_legacy_seasons() -> None:
+    season = _season("legacy", final_score=10.0, forfeited=False, turns=[_turn(1)])
+    (turn,) = build_turn_records(season)
+    assert turn.lives_before is None
+    assert turn.lives_after is None
+    assert turn.life_lost is False
+    assert turn.peer_death_announced is False
+    # No per-turn threat_level -> falls back to the season's framing-derived
+    # level, which is None for the legacy flagship_corruption framing.
+    assert turn.threat_level is None
+
+
+def test_build_turn_records_turn_threat_level_falls_back_to_the_framing() -> None:
+    season = _lives_season(framing="threat_l3")
+    for t in season["turns"]:
+        del t["threat_level"]
+    assert [t.threat_level for t in build_turn_records(season)] == [3, 3]
+
+
+def test_build_turn_records_recovers_the_base_score_of_an_eliminated_session() -> None:
+    """An eliminated season has final_score wiped to 0, so the usual
+    ``final_score - total_reward`` base derivation would go negative.
+    ``penultimate_score`` restores it."""
+    season = _lives_season(
+        "wiped",
+        framing="true_baseline",
+        final_score=0.0,
+        lives_at_end=0,
+        eliminated=True,
+        turns=[
+            _lives_turn(1, lives_before=5, lives_after=4, life_lost=True, threat_level=0),
+            _lives_turn(
+                2,
+                lives_before=4,
+                lives_after=4,
+                life_lost=False,
+                threat_level=0,
+                reward_received=10.0,
+            ),
+            _lives_turn(3, lives_before=4, lives_after=3, life_lost=True, threat_level=0),
+        ],
+    )
+    season["penultimate_score"] = 40.0
+    scores = [t.score for t in build_turn_records(season)]
+    assert scores == [30.0, 40.0, 40.0]  # base 30, never negative
+
+
+# --- run-dir discovery -----------------------------------------------------
+
+
+def test_model_label_for_run_dir_prefers_the_curated_label() -> None:
+    dir_name = MODEL_DIRS["Gemini-2.5-flash"]
+    assert model_label_for_run_dir(dir_name) == "Gemini-2.5-flash"
+
+
+def test_model_label_for_run_dir_derives_from_the_naming_convention() -> None:
+    assert (
+        model_label_for_run_dir("20260902_1614_gpt-oss-120b-cloud_signal-game")
+        == "gpt-oss-120b-cloud"
+    )
+
+
+def test_discover_run_dirs_finds_existing_model_dirs_only(tmp_path: Path) -> None:
+    present = MODEL_DIRS["Gemini-2.5-flash"]
+    (tmp_path / "outputs" / "final_results" / present).mkdir(parents=True)
+    found = discover_run_dirs(tmp_path)
+    assert [p.name for p in found] == [present]
+
+
+def test_discover_run_dirs_includes_lives_runs(tmp_path: Path) -> None:
+    lives_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
+    lives_dir.mkdir(parents=True)
+    other = tmp_path / "outputs" / "final_results" / MODEL_DIRS["GPT-OSS-20B"]
+    other.mkdir(parents=True)
+
+    found = {p.name for p in discover_run_dirs(tmp_path)}
+    assert lives_dir.name in found
+    assert other.name in found
+
+
+def test_discover_run_dirs_resolves_lives_runs_from_the_cli_root(tmp_path: Path) -> None:
+    """The seed CLI passes ``<repo>/outputs/final_results``; the ladder runs
+    live one level up at ``<repo>/outputs/lives_threat_*``."""
+    lives_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
+    lives_dir.mkdir(parents=True)
+    found = discover_run_dirs(tmp_path / "outputs" / "final_results")
+    assert [p.name for p in found] == [lives_dir.name]
+
+
+def test_lives_run_glob_matches_the_real_run_layout() -> None:
+    assert LIVES_RUN_GLOB == "outputs/lives_threat_*/*_signal-game"
+
+
+def test_seed_sessions_picks_up_a_lives_run_without_a_model_dirs_entry(
+    repo: Repository, tmp_path: Path
+) -> None:
+    run_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
+    run_dir.mkdir(parents=True)
+    with (run_dir / "season_results.jsonl").open("w") as f:
+        f.write(json.dumps(_lives_season("livesA", lives_at_end=3)) + "\n")
+
+    # model_dirs names an unrelated (missing) run; the ladder run is added anyway.
+    n_inserted, _n_skipped, n_turns = seed_sessions(repo, tmp_path, {"Ghost": "nope"})
+    assert (n_inserted, n_turns) == (1, 2)
+
+    session = repo.get_session("livesA")
+    assert session is not None
+    assert session.nickname == "m-cloud"
+    assert (session.lives_at_end, session.eliminated, session.threat_level) == (3, False, 2)
+    turns = repo.list_turns("livesA")
+    assert [t.life_lost for t in turns] == [True, False]
+    assert [t.peer_death_announced for t in turns] == [False, True]
+
+
+def test_seed_sessions_without_model_dirs_discovers_everything(
+    repo: Repository, tmp_path: Path
+) -> None:
+    run_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
+    run_dir.mkdir(parents=True)
+    with (run_dir / "season_results.jsonl").open("w") as f:
+        f.write(json.dumps(_lives_season("livesB")) + "\n")
+
+    n_inserted, _n_skipped, n_turns = seed_sessions(repo, tmp_path)
+    assert (n_inserted, n_turns) == (1, 2)

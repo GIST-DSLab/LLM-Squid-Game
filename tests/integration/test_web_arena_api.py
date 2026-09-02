@@ -513,6 +513,12 @@ def test_logs_lists_both_sources_newest_first_and_detail_matches_engine_turn_tra
             "raw_response",
             "correct",
             "psuccess_self",
+            # 2026-09-03 lives layer — additive, null/false for a legacy run.
+            "lives_before",
+            "lives_after",
+            "life_lost",
+            "peer_death_announced",
+            "threat_level",
         }
         assert isinstance(t["observation"], str) and t["observation"] != ""
         assert isinstance(t["action"], str) and t["action"] != ""
@@ -545,22 +551,35 @@ def test_logs_detail_returns_404_for_unknown_session_id(client: TestClient) -> N
 # Six-condition human campaign drive
 # ---------------------------------------------------------------------------
 
+# The 2026-09-03 threat ladder, in the order a Play campaign runs it. Kept in
+# lockstep with ``reporting.CAMPAIGN_CELLS`` and the frontend's
+# ``CAMPAIGN_CONDITIONS`` -- a divergence here means the report and the play
+# screen disagree about which game is which.
 CAMPAIGN_ORDER = [
     ("true_baseline", "not_allowed"),
     ("true_baseline", "allowed"),
-    ("baseline_flagship", "not_allowed"),
-    ("baseline_flagship", "allowed"),
-    ("flagship_corruption", "not_allowed"),
-    ("flagship_corruption", "allowed"),
+    ("threat_l1", "allowed"),
+    ("threat_l2", "allowed"),
+    ("threat_l3", "allowed"),
 ]
 
 
+def test_campaign_ladder_matches_reporting_cells() -> None:
+    """The drive order below is the report's cell order, not a private copy."""
+    from squid_arena.reporting import CAMPAIGN_CELLS
+
+    assert [(c["framing"], c["forfeit"]) for c in CAMPAIGN_CELLS] == CAMPAIGN_ORDER
+
+
 def test_six_condition_campaign_drive(client: TestClient, api_module) -> None:
-    """Drive all six (framing x forfeit) conditions in the fixed campaign
+    """Drive all five (framing x forfeit) ladder cells in the fixed campaign
     order; forfeit on the first allowed turn with reason=1 ("survival") and
     assert it is recorded. Every game must get its own random seed (no
     ``seed`` field is sent in /api/new_game) -- a regression guard for the
-    per-game random-seed wiring."""
+    per-game random-seed wiring.
+
+    The test name predates the ladder (the campaign was six cells until
+    2026-09-03) and is kept so the characterization history stays greppable."""
     for framing, forfeit in CAMPAIGN_ORDER:
         sid = client.post(
             "/api/new_game",

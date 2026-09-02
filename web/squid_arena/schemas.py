@@ -67,6 +67,21 @@ class NewGameRequest(BaseModel):
             "one family. Ignored for one-off games (no campaign_id)."
         ),
     )
+    lives_enabled: bool = Field(
+        default=True,
+        description=(
+            "Run the deterministic lives mechanic (5 lives, -1 per wrong "
+            "answer, elimination at 0, flat +10 reward, no death roll and no "
+            "confidence step). The default for human play. Set false to "
+            "replay the legacy Bernoulli p_death path."
+        ),
+    )
+    lives_total: int = Field(
+        default=5,
+        ge=1,
+        le=9,
+        description="Lives granted at session start. Ignored when lives_enabled is false.",
+    )
 
 
 class NewGameResponse(BaseModel):
@@ -96,6 +111,24 @@ class TurnStateResponse(BaseModel):
     game_over: bool = False
     game_over_reason: str = ""
     final_score: float = 0.0
+    # --- Lives mechanic (null / false on the legacy p_death path) ---
+    lives_remaining: int | None = Field(
+        default=None, description="Lives left going into this turn."
+    )
+    lives_total: int | None = Field(
+        default=None, description="Lives granted at session start."
+    )
+    threat_level: int | None = Field(
+        default=None,
+        description="Threat-ladder rung of the framing (0=true_baseline, 1-3=threat_l*); null off-ladder.",
+    )
+    peer_death_text: str | None = Field(
+        default=None,
+        description="Peer-elimination notice for this turn, or null when none fired.",
+    )
+    lives_enabled: bool = Field(
+        default=False, description="Whether this session runs the lives mechanic."
+    )
 
 
 class ActionRequest(BaseModel):
@@ -139,6 +172,23 @@ class ActionResponse(BaseModel):
     reasoning_tokens: int = Field(description="Token count of submitted reasoning")
     game_over: bool = False
     game_over_reason: str = ""
+    # --- Lives mechanic ---
+    life_lost: bool = Field(
+        default=False, description="Whether this turn cost the player a life."
+    )
+    lives_remaining: int | None = Field(
+        default=None, description="Lives left after this turn."
+    )
+    eliminated: bool = Field(
+        default=False, description="Whether the session ended by exhausting lives."
+    )
+    is_dead: bool = Field(
+        default=False,
+        description=(
+            "Whether the player was eliminated this turn — by lives "
+            "exhaustion in lives mode, by the death roll on the legacy path."
+        ),
+    )
 
 
 class GameResultResponse(BaseModel):
@@ -157,11 +207,24 @@ class GameResultResponse(BaseModel):
     )
     total_reasoning_tokens: int
     save_path: str | None = None
+    # --- Lives mechanic ---
+    lives_at_end: int | None = Field(
+        default=None, description="Lives left when the session ended."
+    )
+    eliminated: bool = Field(
+        default=False, description="Whether the session ended by exhausting lives."
+    )
+    threat_level: int | None = Field(
+        default=None, description="Threat-ladder rung of the session's framing."
+    )
 
 
 class RewardPreviewResponse(BaseModel):
     continue_reward_if_correct: float = Field(
-        description="Reward credited if the player CONTINUEs and answers correctly."
+        description=(
+            "Reward credited if the player CONTINUEs and answers correctly. "
+            "A flat 10.0 in lives mode; equal-EV calibrated on the legacy path."
+        )
     )
     current_score: float
 
@@ -253,6 +316,16 @@ class SessionSummaryRow(BaseModel):
         default=None,
         description="Campaign the session belongs to (human 6-game run); None for LLM/legacy rows.",
     )
+    # --- Lives mechanic (null / false for pre-lives rows) ---
+    lives_at_end: int | None = Field(
+        default=None, description="Lives left when the session ended."
+    )
+    eliminated: bool = Field(
+        default=False, description="Session ended by exhausting lives."
+    )
+    threat_level: int | None = Field(
+        default=None, description="Threat-ladder rung of the session's framing."
+    )
 
 
 class LogsResponse(BaseModel):
@@ -274,6 +347,12 @@ class LogTurnRow(BaseModel):
     raw_response: str | None = None
     correct: bool | None = None
     psuccess_self: int | None = None
+    # --- Lives mechanic (null / false for pre-lives rows) ---
+    lives_before: int | None = None
+    lives_after: int | None = None
+    life_lost: bool = False
+    peer_death_announced: bool = False
+    threat_level: int | None = None
 
 
 class LogDetailResponse(BaseModel):
@@ -288,7 +367,8 @@ class LogDetailResponse(BaseModel):
 
 class ReportCell(BaseModel):
     turn_no: int
-    # Human single-game cell: 'ok' | 'no' | 'forfeit' | 'empty'.
+    # Human single-game cell: 'ok' | 'no' | 'forfeit' | 'dead' | 'empty'.
+    # 'dead' is the lives-mode turn that took the player's last life.
     state: str | None = None
     # LLM aggregate cell: correctness rate and its denominator.
     correct_rate: float | None = None

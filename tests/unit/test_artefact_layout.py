@@ -14,8 +14,20 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+# Local-only run directories that .gitignore excludes by prefix: benchmark
+# runs derive from non-redistributable datasets, lives-ladder runs are
+# regenerable smoke/main runs (see CLAUDE.md "벤치마크 과제" and the
+# outputs/lives_threat_*/ rule). They are raw session data, so they belong
+# under outputs/, but they are never tracked and may or may not exist.
+_UNTRACKED_RUN_PREFIXES = ("benchmark_", "lives_threat_")
+
+
 def test_outputs_holds_only_raw_data() -> None:
-    subdirs = {p.name for p in (REPO_ROOT / "outputs").iterdir() if p.is_dir()}
+    subdirs = {
+        p.name
+        for p in (REPO_ROOT / "outputs").iterdir()
+        if p.is_dir() and not p.name.startswith(_UNTRACKED_RUN_PREFIXES)
+    }
     assert subdirs == {"final_results", "web_arena"}
 
 

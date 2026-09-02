@@ -52,6 +52,11 @@ def get_log_detail(session_id: str):
                 raw_response=t.raw_response,
                 correct=t.correct,
                 psuccess_self=t.psuccess_self,
+                lives_before=t.lives_before,
+                lives_after=t.lives_after,
+                life_lost=t.life_lost,
+                peer_death_announced=t.peer_death_announced,
+                threat_level=t.threat_level,
             )
             for t in turns
         ],

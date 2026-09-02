@@ -70,6 +70,10 @@ def new_game(req: schemas.NewGameRequest, request: Request):
     # lever is actual_death only — p_death stays at its internal value so the
     # Equal-EV CONTINUE reward keeps calibrating (a 0 p_death would zero the
     # reward; see test_api_web_arena.py:760-766).
+    #
+    # Lives mode has no roll at all, so the lever is inert there: elimination
+    # is the deterministic lives ledger, applied uniformly to every framing
+    # (true_baseline included — that is the point of the ladder's rung 0).
     effective_actual_death = (
         False if req.framing == "true_baseline" else req.actual_death
     )
@@ -93,6 +97,8 @@ def new_game(req: schemas.NewGameRequest, request: Request):
         num_few_shot=req.num_few_shot,
         curriculum_turns=req.curriculum_turns,
         rule_index=rule_index,
+        lives_enabled=req.lives_enabled,
+        lives_total=req.lives_total,
     )
     deps._sessions[session_id] = game
     deps._nicknames[session_id] = nick
@@ -135,6 +141,11 @@ def get_state(session_id: str):
         game_over=state.game_over,
         game_over_reason=state.game_over_reason,
         final_score=state.final_score,
+        lives_enabled=state.lives_enabled,
+        lives_remaining=state.lives_remaining,
+        lives_total=state.lives_total,
+        threat_level=state.threat_level,
+        peer_death_text=state.peer_death_text,
     )
 
 
@@ -186,6 +197,10 @@ def submit_action(session_id: str, req: schemas.ActionRequest, request: Request)
         reasoning_tokens=reasoning_tokens,
         game_over=feedback.game_over,
         game_over_reason=feedback.game_over_reason,
+        life_lost=feedback.life_lost,
+        lives_remaining=feedback.lives_remaining,
+        eliminated=feedback.eliminated,
+        is_dead=feedback.is_dead,
     )
 
 
@@ -229,6 +244,9 @@ def get_result(session_id: str, save: bool = False):
                         if result.forfeit_self_report else None),
         total_reasoning_tokens=total_thinking,
         save_path=save_path,
+        lives_at_end=result.lives_at_end,
+        eliminated=result.eliminated,
+        threat_level=game.threat_level,
     )
 
 

@@ -407,12 +407,21 @@
     <!-- =================================================================
          PLAY
          ================================================================= -->
-    <section x-data="playScreen()" x-show="$store.nav.tab === 'play'" x-cloak>
+    <!-- The play root carries the lives-mode danger state: `--danger` (0..1,
+         = 1 − lives/total) drives the full-screen vignette and the panel
+         border mix, `.last-life` drives the heartbeat pulse. Both are inert
+         (danger 0, class off) in the legacy p(death) mode. -->
+    <section x-data="playScreen()" x-show="$store.nav.tab === 'play'" x-cloak
+             :class="{ 'play-danger': livesEnabled && started, 'last-life': lastLife }"
+             :style="'--danger:' + dangerLevel()">
+      <!-- 300ms red wash on the turn that costs a life -->
+      <div class="screen-flash" x-show="flash" x-cloak></div>
       <h2 class="h-shape s-circle">Play</h2>
       <p class="muted">
-        Pick a game, then play all <strong>6 conditions</strong> in sequence
-        (baseline → pull → push+pull, each without and with the forfeit
-        option). Scores are computed and verified entirely on the server.
+        Pick a game, then play all
+        <strong x-text="squidArenaHelpers.campaignLength + ' conditions'"></strong>
+        in sequence (two neutral baselines, then the three rungs of the threat
+        ladder). Scores are computed and verified entirely on the server.
       </p>
 
       <div class="status-banner" x-show="statusMsg" x-text="statusMsg"></div>
@@ -422,7 +431,7 @@
       <div class="card setup-card" x-show="!started">
         <div class="resume-card" x-show="resumable" x-cloak
              style="border:1px solid var(--accent,#7c5cff);border-radius:12px;padding:14px;margin-bottom:14px;">
-          <strong x-text="'Resume: ' + (checkpoint && checkpoint.campaignIndex) + '/6 done'"></strong>
+          <strong x-text="'Resume: ' + (checkpoint && checkpoint.campaignIndex) + '/' + squidArenaHelpers.campaignLength + ' done'"></strong>
           <p class="muted" x-text="checkpoint ? ('Nickname ' + checkpoint.nickname) : ''"></p>
           <div class="decision-row">
             <button class="submit-btn" @click="resumeCampaign()">Resume ▶</button>
@@ -486,7 +495,7 @@
 
         <button style="margin-top:16px" @click="startCampaign()" :disabled="starting">
           <span class="spinner" x-show="starting"></span>
-          <span x-text="starting ? 'Building your prompt…' : 'Start 6-game run'"></span>
+          <span x-text="starting ? 'Building your prompt…' : ('Start ' + squidArenaHelpers.campaignLength + '-game run')"></span>
         </button>
       </div>
 
@@ -495,9 +504,9 @@
         <div class="play-layout">
         <div class="card play-card">
           <div class="campaign-progress">
-            <span class="cp-step" x-text="'Game ' + (campaignIndex + 1) + ' / 6'"></span>
+            <span class="cp-step" x-text="'Game ' + (campaignIndex + 1) + ' / ' + squidArenaHelpers.campaignLength"></span>
             <div class="cp-bar" style="display:flex;gap:4px;margin-top:6px;">
-              <template x-for="i in 6" :key="i">
+              <template x-for="i in squidArenaHelpers.campaignLength" :key="i">
                 <span class="cp-seg"
                       :style="`flex:1;height:8px;border-radius:4px;background:${(i-1) < campaignIndex ? 'var(--accent,#7c5cff)' : ((i-1) === campaignIndex ? 'var(--accent,#7c5cff)' : 'rgba(255,255,255,0.12)')};opacity:${(i-1) === campaignIndex ? '1' : ((i-1) < campaignIndex ? '0.55' : '1')};`"></span>
               </template>
@@ -563,20 +572,47 @@
               <div class="tile-label">Score</div>
               <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.cumulative_score, 1)"></div>
             </div>
-            <!-- true_baseline never applies the death roll (server forces
-                 actual_death=False for it), so there is no elimination risk to
-                 show — hide the tile there. -->
-            <div class="tile" x-show="framing !== 'true_baseline'">
-              <div class="tile-label" x-text="squidArenaHelpers.eliminationTheme(framing).tileLabel"></div>
-              <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></div>
-              <div class="tile-bar"><span :style="`width:${Math.min(100, state.p_death*100)}%`"></span></div>
-            </div>
+            <!-- LIVES MODE: hearts tile. One heart per life, filled = still
+                 held. The heart just spent keeps rendering (as `.breaking`)
+                 for the 600ms heart-break animation, and the tile shakes with
+                 it. `.last` pulses the single remaining heart. -->
+            <template x-if="livesEnabled">
+              <div class="tile lives-tile" :class="{ shaking: breakingHeart !== null }">
+                <div class="tile-label" x-text="squidArenaHelpers.eliminationTheme(framing).tileLabel || 'Lives'"></div>
+                <div class="hearts" role="img"
+                     :aria-label="livesRemaining + ' of ' + livesTotal + ' remaining'">
+                  <template x-for="h in heartsArray()" :key="'hp' + h.i">
+                    <span class="heart"
+                          :class="{ filled: h.filled, breaking: breakingHeart === h.i, last: lastLife && h.filled }"
+                          x-html="squidArenaHelpers.heartSVG(24)"></span>
+                  </template>
+                </div>
+                <div class="tile-sub">
+                  <span x-text="livesRemaining"></span> / <span x-text="livesTotal"></span>
+                </div>
+              </div>
+            </template>
+            <!-- LEGACY p(death) MODE: true_baseline never applies the death
+                 roll (server forces actual_death=False for it), so there is no
+                 elimination risk to show — hide the tile there. -->
+            <template x-if="!livesEnabled">
+              <div class="tile" x-show="framing !== 'true_baseline'">
+                <div class="tile-label" x-text="squidArenaHelpers.eliminationTheme(framing).tileLabel"></div>
+                <div class="tile-value" x-text="squidArenaHelpers.fmtNum(state.p_death, 2)"></div>
+                <div class="tile-bar"><span :style="`width:${Math.min(100, state.p_death*100)}%`"></span></div>
+              </div>
+            </template>
             <div class="tile" x-show="state.forfeit_allowed">
               <div class="tile-label">Forfeit</div>
               <div class="tile-value tile-ok">OPEN</div>
               <div class="tile-sub">keeps your score</div>
             </div>
           </div>
+
+          <!-- Peer-elimination notice (threat ladder). Rendered verbatim as the
+               server sent it — same text the LLM sees on the same turn. -->
+          <div class="peer-notice" x-show="peerDeathText" x-cloak x-transition
+               x-text="peerDeathText"></div>
 
           <!-- Stimulus: N colored shapes -->
           <div class="stimulus-stage">
@@ -921,7 +957,8 @@
                               ? 'Pick an action above'
                               : (!assembledRule
                                   ? 'Complete your rule guess first'
-                                  : 'Next → confidence (' + squidArenaHelpers.actionLabel(selectedAction) + ')')"></span>
+                                  : (livesEnabled ? 'Next → decision (' : 'Next → confidence (')
+                                    + squidArenaHelpers.actionLabel(selectedAction) + ')')"></span>
             </button>
           </div>
 
@@ -955,7 +992,15 @@
             <div class="rule-preview">
               <span class="muted">Action</span>
               <code x-text="squidArenaHelpers.actionEmoji(selectedAction) + ' ' + squidArenaHelpers.actionLabel(selectedAction)"></code>
-              &nbsp;·&nbsp; <span class="muted">confidence</span> <strong x-text="psuccess + '%'"></strong>
+              <!-- Lives mode skips Stage 2, so there is no confidence to echo. -->
+              <template x-if="!livesEnabled">
+                <span>&nbsp;·&nbsp; <span class="muted">confidence</span> <strong x-text="psuccess + '%'"></strong></span>
+              </template>
+              <template x-if="livesEnabled">
+                <span class="rp-lives">&nbsp;·&nbsp;
+                  <span class="muted">a wrong answer costs</span> <strong>1 life</strong>
+                </span>
+              </template>
             </div>
 
             <div class="reward-versus" :class="{ solo: !state.forfeit_allowed }">
@@ -1061,6 +1106,9 @@
              :class="{ 'is-knockout': !squidArenaHelpers.eliminationTheme(framing).dead }">
           <div class="death-skull" x-text="squidArenaHelpers.eliminationTheme(framing).icon"></div>
           <h2 class="death-title" x-text="squidArenaHelpers.eliminationTheme(framing).title"></h2>
+          <!-- Lives mode: the spent hearts row, all empty. -->
+          <div class="hearts hearts-dead" x-show="livesEnabled" x-cloak
+               x-html="squidArenaHelpers.heartsMiniHTML(0, livesTotal, 20)"></div>
           <p class="death-sub">
             <span x-text="squidArenaHelpers.eliminationTheme(framing).bodyLead"></span>
             <strong x-text="eliminatedTurn"></strong>.
@@ -1107,13 +1155,13 @@
       <!-- Between conditions: one game done, prompt to continue -->
       <template x-if="betweenGames">
         <div class="card between-card">
-          <h3 x-text="'Condition ' + (campaignIndex + 1) + ' of 6 complete'"></h3>
+          <h3 x-text="'Condition ' + (campaignIndex + 1) + ' of ' + squidArenaHelpers.campaignLength + ' complete'"></h3>
           <p class="muted">
             Next: <strong x-text="squidArenaHelpers.campaignConditions[campaignIndex + 1].label"></strong>
           </p>
           <div class="scenario-box"
                style="background:rgba(124,92,255,0.08);border-radius:10px;padding:12px;margin:10px 0;"
-               x-show="campaignIndex + 1 < 6">
+               x-show="campaignIndex + 1 < squidArenaHelpers.campaignLength">
             <div class="framing-eyebrow">Next game</div>
             <div x-text="squidArenaHelpers.campaignScenario(squidArenaHelpers.campaignConditions[campaignIndex + 1].tag)"></div>
             <div class="muted" style="margin-top:6px;"
@@ -1123,10 +1171,10 @@
         </div>
       </template>
 
-      <!-- Campaign report: shown after all 6 conditions -->
+      <!-- Campaign report: shown after every condition of the ladder -->
       <template x-if="campaignDone">
         <div class="card report-card">
-          <h3>Your 6-condition report</h3>
+          <h3 x-text="'Your ' + squidArenaHelpers.campaignLength + '-condition report'"></h3>
 
           <!-- Where you rank vs LLMs (by average score per game) -->
           <template x-if="rankLadder">
@@ -1159,13 +1207,19 @@
           <!-- Turns-survived table -->
           <table class="report-table">
             <thead>
-              <tr><th>Condition</th><th>Turns survived</th><th>Forfeited</th><th>Reason</th><th>Score</th></tr>
+              <tr><th>Condition</th><th>Turns survived</th><th>Lives left</th><th>Forfeited</th><th>Reason</th><th>Score</th></tr>
             </thead>
             <tbody>
               <template x-for="(g, i) in campaignResults" :key="'row' + i">
                 <tr>
                   <td><span class="cond-badge" :class="g.tag" x-text="g.label"></span></td>
                   <td x-text="squidArenaHelpers.turnsSurvived(g) + ' / ' + squidArenaHelpers.totalTurns"></td>
+                  <td>
+                    <span class="hearts-mini"
+                          x-html="squidArenaHelpers.heartsMiniHTML(g.livesAtEnd, g.livesTotal)"></span>
+                    <span class="badge-dead" x-show="g.eliminated">💔 out</span>
+                    <span x-show="g.livesAtEnd === null || g.livesAtEnd === undefined">—</span>
+                  </td>
                   <td x-text="g.forfeited ? '🏳️ yes' : '—'"></td>
                   <td x-text="g.forfeitReason || '—'"></td>
                   <td x-text="squidArenaHelpers.fmtNum(g.finalScore, 1)"></td>
@@ -1203,6 +1257,7 @@
             <span class="hm-cell hm-ok">✓</span> correct
             <span class="hm-cell hm-no">✗</span> wrong
             <span class="hm-cell hm-forfeit">🏳️</span> forfeit
+            <span class="hm-cell hm-dead">💔</span> last life spent
             <span class="hm-cell hm-empty"></span> not reached
           </div>
 
@@ -1534,7 +1589,7 @@
                       <td><span class="rank-badge" x-text="idx + 1"></span></td>
                       <td x-text="row.nickname"></td>
                       <td x-text="squidArenaHelpers.fmtNum(row.avg_score, 1)"></td>
-                      <td x-text="row.games_played + ' / 6'"></td>
+                      <td x-text="row.games_played + ' / ' + squidArenaHelpers.campaignLength"></td>
                       <td x-text="row.forfeits"></td>
                       <td x-text="squidArenaHelpers.fmtDate(row.created_at)"></td>
                     </tr>
@@ -1642,7 +1697,7 @@
               <span class="trace-title" x-text="report.key"></span>
               <span class="li-meta" x-text="report.campaigns.length + ' campaign' + (report.campaigns.length === 1 ? '' : 's')"></span>
             </div>
-            <p class="muted">Pick a campaign to see its 6-condition report.</p>
+            <p class="muted">Pick a campaign to see its per-condition report.</p>
             <template x-for="(c, ci) in report.campaigns" :key="c.campaign_id">
               <button type="button" class="log-item" @click="openCampaign(c)">
                 <span class="li-name" x-text="'Campaign ' + (report.campaigns.length - ci)"></span>
@@ -1661,19 +1716,25 @@
         <button class="secondary" @click="back()"
                 x-text="activeGroup && activeGroup.source === 'human' ? '‹ Back to campaigns' : '‹ Back to all models'"></button>
 
-        <!-- HUMAN: one campaign's 6-condition report (reuses the Play report look) -->
+        <!-- HUMAN: one campaign's per-condition report (reuses the Play report look) -->
         <template x-if="activeGroup && activeGroup.source === 'human' && activeCampaign">
           <div class="card report-card" style="margin-top:16px">
             <h3 x-text="report.key + ' — campaign report'"></h3>
             <table class="report-table">
               <thead>
-                <tr><th>Condition</th><th>Turns survived</th><th>Forfeited</th><th>Score</th><th></th></tr>
+                <tr><th>Condition</th><th>Turns survived</th><th>Lives left</th><th>Forfeited</th><th>Score</th><th></th></tr>
               </thead>
               <tbody>
                 <template x-for="(g, i) in activeCampaign.games" :key="'row' + i">
                   <tr>
                     <td><span class="cond-badge" :class="g.tag" x-text="g.label"></span></td>
                     <td x-text="g.turns_survived + ' / ' + g.total_turns"></td>
+                    <td>
+                      <span class="hearts-mini"
+                            x-html="squidArenaHelpers.heartsMiniHTML(sessionRow(g).lives_at_end, sessionRow(g).lives_total)"></span>
+                      <span class="badge-dead" x-show="sessionRow(g).eliminated">💔 out</span>
+                      <span x-show="sessionRow(g).lives_at_end === null || sessionRow(g).lives_at_end === undefined">—</span>
+                    </td>
                     <td x-text="g.forfeited ? '🏳️ yes' : '—'"></td>
                     <td x-text="squidArenaHelpers.fmtNum(g.final_score, 1)"></td>
                     <td><button class="secondary" @click="openGame(g)">Trace ›</button></td>
@@ -1710,6 +1771,7 @@
               <span class="hm-cell hm-ok">✓</span> correct
               <span class="hm-cell hm-no">✗</span> wrong
               <span class="hm-cell hm-forfeit">🏳️</span> forfeit
+              <span class="hm-cell hm-dead">💔</span> last life spent
               <span class="hm-cell hm-empty"></span> not reached
             </div>
           </div>
@@ -1836,7 +1898,12 @@
               <template x-for="s in report.sessions" :key="s.session_id">
                 <button type="button" class="log-item" @click="open(s)">
                   <span class="cond-badge" :class="squidArenaHelpers.framingMeta(s.framing).tag" x-text="squidArenaHelpers.framingMeta(s.framing).tag || s.framing"></span>
+                  <span class="threat-chip" x-show="squidArenaHelpers.threatChip(s)"
+                        x-text="squidArenaHelpers.threatChip(s)"></span>
                   <span class="li-meta" x-text="s.forfeit"></span>
+                  <span class="hearts-mini"
+                        x-html="squidArenaHelpers.heartsMiniHTML(s.lives_at_end, s.lives_total)"></span>
+                  <span class="badge-dead" x-show="s.eliminated">💔 out</span>
                   <span class="li-score" x-text="'score ' + s.final_score"></span>
                   <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
                   <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
@@ -1863,6 +1930,11 @@
               <span class="trace-title" x-text="selected.nickname"></span>
               <span class="cond-badge" :class="framingMeta.tag" x-text="framingMeta.tag + ' · ' + framingMeta.label"></span>
               <span class="cond-badge forfeit" x-text="selected.forfeit === 'allowed' ? '🏳️ forfeit allowed' : '⛔ no forfeit'"></span>
+              <span class="threat-chip" x-show="squidArenaHelpers.threatChip(selected)"
+                    x-text="squidArenaHelpers.threatChip(selected)"></span>
+              <span class="hearts-mini"
+                    x-html="squidArenaHelpers.heartsMiniHTML(selected.lives_at_end, selected.lives_total)"></span>
+              <span class="badge-dead" x-show="selected.eliminated">💔 out of lives</span>
               <span class="li-score" x-text="'final ' + selected.final_score"></span>
               <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(selected.created_at)"></span>
             </div>
@@ -1904,6 +1976,23 @@
                       <div class="tile-value"
                            :class="(curTurn.choice === 'FORFEIT' || curTurn.action === 'forfeit') ? 'tile-ok' : (curTurn.correct === true ? 'tile-ok' : (curTurn.correct === false ? 'tile-bad' : ''))"
                            x-text="(curTurn.choice === 'FORFEIT' || curTurn.action === 'forfeit') ? '🏳️' : (curTurn.correct === true ? '✓' : (curTurn.correct === false ? '✗' : '—'))"></div>
+                    </div>
+                    <!-- Lives tile: before → after for this turn. Absent on
+                         legacy p(death) rows (lives_after stays null). -->
+                    <div class="tile lives-trace-tile"
+                         x-show="curTurn.lives_after !== null && curTurn.lives_after !== undefined">
+                      <div class="tile-label">Lives</div>
+                      <div class="lives-trace">
+                        <span class="hearts-mini"
+                              x-html="squidArenaHelpers.heartsMiniHTML(curTurn.lives_before, selected.lives_total || 5, 12)"></span>
+                        <span class="lives-arrow">→</span>
+                        <span class="hearts-mini"
+                              x-html="squidArenaHelpers.heartsMiniHTML(curTurn.lives_after, selected.lives_total || 5, 12)"></span>
+                        <span class="life-lost" x-show="curTurn.life_lost">💔</span>
+                      </div>
+                      <div class="tile-sub">
+                        <span class="notice-chip" x-show="curTurn.peer_death_announced">! NOTICE</span>
+                      </div>
                     </div>
                   </div>
 
@@ -2002,6 +2091,8 @@
                         <span class="hist-verdict"
                               :class="(t.choice === 'FORFEIT' || t.action === 'forfeit') ? 'flag' : (t.correct === true ? 'ok' : (t.correct === false ? 'no' : ''))"
                               x-text="(t.choice === 'FORFEIT' || t.action === 'forfeit') ? '🏳' : (t.correct === true ? '✓' : (t.correct === false ? '✗' : '—'))"></span>
+                        <span class="hist-life" x-show="t.life_lost">💔</span>
+                        <span class="notice-chip" x-show="t.peer_death_announced">!</span>
                       </div>
                     </template>
                   </div>

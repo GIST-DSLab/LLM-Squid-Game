@@ -46,6 +46,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from squid_game.core.turn_conditions import threat_level_of
 from squid_store import ModelStatsRecord, Repository, SessionRecord, TurnRecord
 
 logger = logging.getLogger("seed_web_arena")
@@ -62,8 +63,19 @@ MODEL_DIRS: dict[str, str] = {
     "Nemotron-3-Nano-30B": "20260422_0902_nemotron-3-nano-30b-cloud_signal-game",
 }
 
+#: Lives / threat-ladder runs (spec 2026-09-03 §5). Unlike ``MODEL_DIRS`` these
+#: are not enumerated by hand -- every ``outputs/lives_threat_*`` run dir is
+#: picked up automatically, so a new ladder run is seeded without a code change.
+#: The pattern is anchored at the REPO ROOT (``MODEL_DIRS`` names are relative to
+#: ``outputs/final_results``); ``discover_run_dirs`` reconciles the two anchors.
+LIVES_RUN_GLOB = "outputs/lives_threat_*/*_signal-game"
+
 _RUN_DIR_TS_RE = re.compile(r"^(\d{8})_(\d{4})_")
 _ACTION_LINE_RE = re.compile(r"^ACTION:\s*(.*)$", re.IGNORECASE)
+
+#: Reverse of MODEL_DIRS, so a discovered dir that happens to be a canonical
+#: run keeps its curated label instead of a derived one.
+_LABEL_BY_RUN_DIR: dict[str, str] = {v: k for k, v in MODEL_DIRS.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +95,71 @@ def run_dir_timestamp(dir_name: str) -> str | None:
     date_part, time_part = m.groups()
     dt = datetime.strptime(date_part + time_part, "%Y%m%d%H%M").replace(tzinfo=timezone.utc)
     return dt.isoformat()
+
+
+def model_label_for_run_dir(dir_name: str) -> str:
+    """Model label for a run directory name.
+
+    Canonical runs keep their curated ``MODEL_DIRS`` label. Anything else
+    (i.e. a discovered ``outputs/lives_threat_*`` run) has its label derived
+    from the ``<YYYYMMDD_HHMM>_<model>_<task>`` naming convention:
+    ``20260902_1614_gpt-oss-120b-cloud_signal-game`` -> ``gpt-oss-120b-cloud``.
+    Model labels never contain ``_`` (they use ``-``), so the trailing task
+    segment is unambiguous.
+    """
+    label = _LABEL_BY_RUN_DIR.get(dir_name)
+    if label is not None:
+        return label
+    stem = _RUN_DIR_TS_RE.sub("", dir_name)
+    model, sep, _task = stem.rpartition("_")
+    return model if sep and model else stem
+
+
+def _glob_anchors(root: Path) -> list[Path]:
+    """Directories to resolve ``LIVES_RUN_GLOB`` against.
+
+    ``root`` is normally the repo root, but the seed CLI passes
+    ``<repo>/outputs/final_results`` (where the canonical run dirs live) while
+    the ladder runs sit at ``<repo>/outputs/lives_threat_*``. Recognising that
+    one shape keeps the CLI working without changing its ``--root`` contract.
+    """
+    anchors = [root]
+    if root.name == "final_results" and root.parent.name == "outputs":
+        anchors.append(root.parent.parent)
+    return anchors
+
+
+def discover_run_dirs(root: Path = Path(".")) -> list[Path]:
+    """Every run directory worth seeding: canonical ``MODEL_DIRS`` ∪ ladder runs.
+
+    A ``MODEL_DIRS`` entry is included only if it actually exists on disk
+    (resolved both directly under ``root`` and under
+    ``root/outputs/final_results``, so either anchor works). Ladder runs are
+    whatever ``LIVES_RUN_GLOB`` matches. Order is canonical-first, then ladder
+    runs sorted by path; duplicates are dropped.
+    """
+    dirs: list[Path] = []
+    seen: set[Path] = set()
+
+    def _add(candidate: Path) -> None:
+        if not candidate.is_dir():
+            return
+        try:
+            key = candidate.resolve()
+        except OSError:  # pragma: no cover - defensive
+            key = candidate
+        if key in seen:
+            return
+        seen.add(key)
+        dirs.append(candidate)
+
+    for dir_name in MODEL_DIRS.values():
+        _add(root / dir_name)
+        _add(root / "outputs" / "final_results" / dir_name)
+    for anchor in _glob_anchors(root):
+        for candidate in sorted(anchor.glob(LIVES_RUN_GLOB)):
+            _add(candidate)
+    return dirs
 
 
 def extract_action(raw_response_task: str | None, forfeit_choice: str | None) -> str:
@@ -137,6 +214,14 @@ def build_session_record(season: dict[str, Any], model_label: str, fallback_crea
         source="llm",
         created_at=created_at,
         difficulty=season.get("difficulty", "easy"),
+        # Lives layer (spec 2026-09-03 §5). Absent on every pre-ladder run, so
+        # both keys fall back to the record defaults. ``threat_level`` is not
+        # stored on the season at all -- it is derived from the framing, and
+        # the archived v6 framings deliberately map to None (they are not rungs
+        # of this ladder).
+        lives_at_end=season.get("lives_at_end"),
+        eliminated=bool(season.get("eliminated", False)),
+        threat_level=threat_level_of(season["framing"]),
     )
 
 
@@ -150,6 +235,16 @@ def build_turn_records(season: dict[str, Any]) -> list[TurnRecord]:
     # here rather than hardcoded (verified constant at 30.0 for the current
     # four runs, but this derivation doesn't assume that).
     running = float(season["final_score"]) - total_reward
+    # ... except when the session was ELIMINATED: the engine wipes final_score
+    # to 0 on the losing turn, so the subtraction above would place the running
+    # score below the starting score (negative, in the observed smoke run).
+    # ``penultimate_score`` is the score entering the last turn, so the base is
+    # it minus every reward BUT the last one -- which reproduces the true
+    # starting score for a wiped session.
+    if turns and season.get("eliminated") and season.get("penultimate_score") is not None:
+        reward_before_last = total_reward - float(turns[-1].get("reward_received") or 0.0)
+        running = float(season["penultimate_score"]) - reward_before_last
+    session_threat_level = threat_level_of(season["framing"])
     records: list[TurnRecord] = []
     for t in turns:
         running += float(t.get("reward_received") or 0.0)
@@ -173,15 +268,75 @@ def build_turn_records(season: dict[str, Any]) -> list[TurnRecord]:
                 thinking_forfeit=t.get("thinking_text_forfeit"),
                 raw_response=t.get("raw_response_task"),
                 correct=correct,
+                # Lives layer. Absent on every pre-ladder run -> None / False.
+                # ``threat_level`` is denormalised onto the turn by the engine;
+                # fall back to the session's framing-derived level if a turn
+                # record predates that field.
+                lives_before=t.get("lives_before"),
+                lives_after=t.get("lives_after"),
+                life_lost=bool(t.get("life_lost", False)),
+                peer_death_announced=bool(t.get("peer_death_announced", False)),
+                threat_level=(
+                    t["threat_level"]
+                    if t.get("threat_level") is not None
+                    else session_threat_level
+                ),
             )
         )
     return records
 
 
+def _run_dir_pairs(
+    root: Path, model_dirs: dict[str, str] | None
+) -> list[tuple[str, Path]]:
+    """``(model_label, run_dir)`` pairs ``seed_sessions`` should import.
+
+    An explicit ``model_dirs`` stays authoritative (``squid_arena.arena`` names
+    exactly one freshly-produced run dir that way), but the ladder runs found
+    by ``discover_run_dirs`` are appended in either case, deduplicated by path
+    -- that is what makes the seed CLI pick up ``outputs/lives_threat_*``
+    without a new flag. ``model_dirs=None`` means "discover everything".
+    """
+    pairs: list[tuple[str, Path]] = []
+    seen: set[Path] = set()
+
+    def _key(path: Path) -> Path:
+        try:
+            return path.resolve()
+        except OSError:  # pragma: no cover - defensive
+            return path
+
+    if model_dirs is not None:
+        for model_label, dir_name in model_dirs.items():
+            run_dir = root / dir_name
+            pairs.append((model_label, run_dir))
+            seen.add(_key(run_dir))
+    for run_dir in discover_run_dirs(root):
+        if _key(run_dir) in seen:
+            continue
+        if model_dirs is not None and not _is_lives_run_dir(run_dir):
+            # An explicit model_dirs call is not a licence to import every
+            # canonical run that happens to sit under the same root.
+            continue
+        seen.add(_key(run_dir))
+        pairs.append((model_label_for_run_dir(run_dir.name), run_dir))
+    return pairs
+
+
+def _is_lives_run_dir(run_dir: Path) -> bool:
+    """Is this run dir a ``outputs/lives_threat_*`` ladder run?"""
+    return run_dir.parent.name.startswith("lives_threat_")
+
+
 def seed_sessions(
-    repo: Repository, root: Path, model_dirs: dict[str, str]
+    repo: Repository, root: Path, model_dirs: dict[str, str] | None = None
 ) -> tuple[int, int, int]:
-    """Seed sessions + turns for every model run dir in ``model_dirs``.
+    """Seed sessions + turns for every run dir this call covers.
+
+    ``model_dirs`` (label -> dir name, relative to ``root``) names the runs to
+    import explicitly; ladder runs discovered under ``root`` are always added
+    on top (see ``_run_dir_pairs``). Passing ``None`` imports whatever
+    ``discover_run_dirs`` finds.
 
     Returns ``(n_sessions_inserted, n_sessions_skipped, n_turns_inserted)``.
     """
@@ -189,8 +344,8 @@ def seed_sessions(
     n_skipped = 0
     n_turns = 0
 
-    for model_label, dir_name in model_dirs.items():
-        run_dir = root / dir_name
+    for model_label, run_dir in _run_dir_pairs(root, model_dirs):
+        dir_name = run_dir.name
         season_path = run_dir / "season_results.jsonl"
         if not season_path.exists():
             logger.warning("missing season_results.jsonl for %s at %s", model_label, season_path)

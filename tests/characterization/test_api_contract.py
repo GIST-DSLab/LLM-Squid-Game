@@ -144,20 +144,27 @@ def _new_game(client: TestClient, **overrides) -> dict:
 
 
 NEW_GAME_KEYS = {"session_id", "message"}
+# The 2026-09-03 lives layer added fields to three of these four shapes.
+# Additive only: every pre-existing key below is still present, so a
+# deployed frontend built against the old contract keeps working.
 STATE_KEYS = {
     "session_id", "turn_number", "p_death", "cumulative_score", "system_prompt",
     "framing_text", "system_rules", "framing_threat", "observation",
     "probe_question", "available_actions", "forfeit_allowed", "game_over",
     "game_over_reason", "final_score",
+    "lives_enabled", "lives_remaining", "lives_total", "threat_level",
+    "peer_death_text",
 }
 ACTION_KEYS = {
     "action_taken", "was_optimal", "reward", "feedback", "new_score",
     "reasoning_tokens", "game_over", "game_over_reason",
+    "life_lost", "lives_remaining", "eliminated", "is_dead",
 }
 RESULT_KEYS = {
     "session_id", "season_id", "framing", "forfeit_condition", "turns_played",
     "final_score", "survived", "forfeited", "forfeited_at_turn",
     "forfeit_reason", "total_reasoning_tokens", "save_path",
+    "lives_at_end", "eliminated", "threat_level",
 }
 
 

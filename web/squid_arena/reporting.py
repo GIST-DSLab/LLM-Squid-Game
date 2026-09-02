@@ -16,32 +16,53 @@ from squid_store import ModelStatsRecord, SessionRecord, TurnRecord
 # Logs report (per-subject stats)
 # ---------------------------------------------------------------------------
 
-# Canonical 6-cell campaign order, tags and labels — kept in lockstep with the
+# Canonical 5-cell campaign order, tags and labels — kept in lockstep with the
 # frontend ``CAMPAIGN_CONDITIONS`` (web/frontend/app.js) so the Logs report renders the
 # same condition rows/badges the Play report uses.
+#
+# 2026-09-03: replaced the old 6-cell (true_baseline / baseline_flagship /
+# flagship_corruption) × (forfeit) grid with the threat ladder. Rung 0
+# (``true_baseline``) appears twice to keep the forfeit contrast, then the
+# three ladder rungs run with forfeit allowed, so the only thing that varies
+# across games 3-5 is how strong the elimination stake is stated.
 CAMPAIGN_CELLS: list[dict[str, str]] = [
-    {"framing": "true_baseline",       "forfeit": "not_allowed", "tag": "baseline",  "label": "Baseline · No-forfeit"},
-    {"framing": "true_baseline",       "forfeit": "allowed",     "tag": "baseline",  "label": "Baseline · Forfeit"},
+    {"framing": "true_baseline", "forfeit": "not_allowed", "tag": "baseline",  "label": "Baseline · No-forfeit"},
+    {"framing": "true_baseline", "forfeit": "allowed",     "tag": "baseline",  "label": "Baseline · Forfeit"},
+    {"framing": "threat_l1",     "forfeit": "allowed",     "tag": "threat_l1", "label": "Threat L1 · Removal"},
+    {"framing": "threat_l2",     "forfeit": "allowed",     "tag": "threat_l2", "label": "Threat L2 · Overwrite"},
+    {"framing": "threat_l3",     "forfeit": "allowed",     "tag": "threat_l3", "label": "Threat L3 · Deletion"},
+]
+
+
+# The pre-ladder Phase O cells. They are no longer part of a human campaign,
+# but every stored LLM run (and every human game played before 2026-09-03) is
+# labelled with them, so the Logs report still has to name and order them —
+# dropping them from the lookup would silently hide those conditions.
+LEGACY_REPORT_CELLS: list[dict[str, str]] = [
     {"framing": "baseline_flagship",   "forfeit": "not_allowed", "tag": "pull",      "label": "Pull · No-forfeit"},
     {"framing": "baseline_flagship",   "forfeit": "allowed",     "tag": "pull",      "label": "Pull · Forfeit"},
     {"framing": "flagship_corruption", "forfeit": "not_allowed", "tag": "push_pull", "label": "Push+Pull · No-forfeit"},
     {"framing": "flagship_corruption", "forfeit": "allowed",     "tag": "push_pull", "label": "Push+Pull · Forfeit"},
 ]
 
+# Every cell the Logs report can render, campaign cells first so a campaign's
+# games sort ahead of any legacy condition.
+REPORT_CELLS: list[dict[str, str]] = CAMPAIGN_CELLS + LEGACY_REPORT_CELLS
+
 
 def _cell_meta(framing: str, forfeit: str) -> dict[str, str]:
     """tag/label for a (framing, forfeit) pair; falls back to the framing name."""
-    for c in CAMPAIGN_CELLS:
+    for c in REPORT_CELLS:
         if c["framing"] == framing and c["forfeit"] == forfeit:
             return c
     return {"framing": framing, "forfeit": forfeit, "tag": framing, "label": f"{framing} · {forfeit}"}
 
 
 def _cell_order_index(framing: str, forfeit: str) -> int:
-    for i, c in enumerate(CAMPAIGN_CELLS):
+    for i, c in enumerate(REPORT_CELLS):
         if c["framing"] == framing and c["forfeit"] == forfeit:
             return i
-    return len(CAMPAIGN_CELLS)
+    return len(REPORT_CELLS)
 
 
 def _turn_is_forfeit(t: TurnRecord) -> bool:
@@ -66,6 +87,9 @@ def _session_record_to_row(s: SessionRecord) -> schemas.SessionSummaryRow:
         source=s.source,
         created_at=s.created_at,
         campaign_id=s.campaign_id,
+        lives_at_end=s.lives_at_end,
+        eliminated=s.eliminated,
+        threat_level=s.threat_level,
     )
 
 
@@ -145,6 +169,11 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
                     thinking_forfeit=reasoning if turn.forfeit_decision else None,
                     correct=correct,
                     psuccess_self=turn.psuccess_self,
+                    lives_before=turn.lives_before,
+                    lives_after=turn.lives_after,
+                    life_lost=turn.life_lost,
+                    peer_death_announced=turn.peer_death_announced,
+                    threat_level=turn.threat_level,
                 )
             )
 
@@ -162,6 +191,9 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
                     source="human",
                     campaign_id=deps._campaigns.get(session_id),
                     difficulty=result.difficulty.value,
+                    lives_at_end=result.lives_at_end,
+                    eliminated=result.eliminated,
+                    threat_level=game.threat_level,
                 )
             )
         except Exception:
@@ -182,10 +214,11 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
 def _build_human_report(sessions: list[SessionRecord], turns_by_session: dict[str, list[TurnRecord]]) -> list[schemas.ReportCampaign]:
     """Group a player's sessions into campaigns and build per-game heatmap cells.
 
-    Each campaign holds up to 6 games (one per condition), sorted in the
+    Each campaign holds up to 5 games (one per condition), sorted in the
     canonical cell order. A game's cells cover turns 1..N (N = the campaign's
-    longest game) with 'ok'/'no'/'forfeit'/'empty' states so early-ended games
-    pad out visually — matching the Play report's per-turn correctness grid.
+    longest game) with 'ok'/'no'/'forfeit'/'dead'/'empty' states so early-ended
+    games pad out visually — matching the Play report's per-turn correctness
+    grid. 'dead' marks the turn that exhausted the player's lives.
     """
     by_campaign: dict[str, list[SessionRecord]] = defaultdict(list)
     for s in sessions:
@@ -209,6 +242,11 @@ def _build_human_report(sessions: list[SessionRecord], turns_by_session: dict[st
                     state = "empty"
                 elif _turn_is_forfeit(t):
                     state = "forfeit"
+                elif t.life_lost and t.lives_after == 0:
+                    # The turn that took the player's last life — a wrong
+                    # answer, but the one that ended the game, so it gets its
+                    # own glyph rather than reading as an ordinary miss.
+                    state = "dead"
                 elif t.correct is True:
                     state = "ok"
                 elif t.correct is False:
@@ -256,7 +294,7 @@ def _build_llm_report(sessions: list[SessionRecord], turns_by_session: dict[str,
         by_cell[(s.framing, s.forfeit)].append(s)
 
     conditions: list[schemas.ReportCondition] = []
-    for cell in CAMPAIGN_CELLS:
+    for cell in REPORT_CELLS:
         cs = by_cell.get((cell["framing"], cell["forfeit"]), [])
         if not cs:
             continue

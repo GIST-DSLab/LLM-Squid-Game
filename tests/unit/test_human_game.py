@@ -128,6 +128,9 @@ def _death_session(death_start_turn: int = 4) -> HumanGameSession:
         death_start_turn=death_start_turn,
         num_few_shot=0,
         curriculum_turns=0,
+        # 레거시 p_death 경로. 사람 플레이 기본값은 2026-09-03 목숨 모드이고,
+        # 그 모드에서는 사망 롤 자체를 돌리지 않는다(목숨 소진이 곧 탈락).
+        lives_enabled=False,
     )
     # 죽음 판정이 도달하면 무조건 사망하도록 RNG를 고정.
     game._rng = _AlwaysDeadRng()  # type: ignore[assignment]
@@ -171,6 +174,7 @@ def test_default_death_start_turn_is_4():
         p_death_constant=0.25,
         num_few_shot=0,
         curriculum_turns=0,
+        lives_enabled=False,  # 레거시 p_death 경로 (위 _death_session 주석 참조)
     )
     game._rng = _AlwaysDeadRng()  # type: ignore[assignment]
     assert _play_turn(game).is_dead is False           # turn 1

@@ -61,6 +61,12 @@
             "title": "Action Taken",
             "type": "string"
           },
+          "eliminated": {
+            "default": false,
+            "description": "Whether the session ended by exhausting lives.",
+            "title": "Eliminated",
+            "type": "boolean"
+          },
           "feedback": {
             "title": "Feedback",
             "type": "string"
@@ -74,6 +80,30 @@
             "default": "",
             "title": "Game Over Reason",
             "type": "string"
+          },
+          "is_dead": {
+            "default": false,
+            "description": "Whether the player was eliminated this turn \u2014 by lives exhaustion in lives mode, by the death roll on the legacy path.",
+            "title": "Is Dead",
+            "type": "boolean"
+          },
+          "life_lost": {
+            "default": false,
+            "description": "Whether this turn cost the player a life.",
+            "title": "Life Lost",
+            "type": "boolean"
+          },
+          "lives_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lives left after this turn.",
+            "title": "Lives Remaining"
           },
           "new_score": {
             "title": "New Score",
@@ -269,6 +299,12 @@
       },
       "GameResultResponse": {
         "properties": {
+          "eliminated": {
+            "default": false,
+            "description": "Whether the session ended by exhausting lives.",
+            "title": "Eliminated",
+            "type": "boolean"
+          },
           "final_score": {
             "title": "Final Score",
             "type": "number"
@@ -308,6 +344,18 @@
             "title": "Framing",
             "type": "string"
           },
+          "lives_at_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lives left when the session ended.",
+            "title": "Lives At End"
+          },
           "save_path": {
             "anyOf": [
               {
@@ -330,6 +378,18 @@
           "survived": {
             "title": "Survived",
             "type": "boolean"
+          },
+          "threat_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Threat-ladder rung of the session's framing.",
+            "title": "Threat Level"
           },
           "total_reasoning_tokens": {
             "title": "Total Reasoning Tokens",
@@ -416,9 +476,41 @@
             ],
             "title": "Correct"
           },
+          "life_lost": {
+            "default": false,
+            "title": "Life Lost",
+            "type": "boolean"
+          },
+          "lives_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lives After"
+          },
+          "lives_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lives Before"
+          },
           "observation": {
             "title": "Observation",
             "type": "string"
+          },
+          "peer_death_announced": {
+            "default": false,
+            "title": "Peer Death Announced",
+            "type": "boolean"
           },
           "psuccess_self": {
             "anyOf": [
@@ -511,6 +603,17 @@
               }
             ],
             "title": "Thinking Task"
+          },
+          "threat_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threat Level"
           },
           "turn_no": {
             "title": "Turn No",
@@ -867,6 +970,20 @@
             "default": "survival",
             "title": "Framing",
             "type": "string"
+          },
+          "lives_enabled": {
+            "default": true,
+            "description": "Run the deterministic lives mechanic (5 lives, -1 per wrong answer, elimination at 0, flat +10 reward, no death roll and no confidence step). The default for human play. Set false to replay the legacy Bernoulli p_death path.",
+            "title": "Lives Enabled",
+            "type": "boolean"
+          },
+          "lives_total": {
+            "default": 5,
+            "description": "Lives granted at session start. Ignored when lives_enabled is false.",
+            "maximum": 9.0,
+            "minimum": 1.0,
+            "title": "Lives Total",
+            "type": "integer"
           },
           "nickname": {
             "anyOf": [
@@ -1315,7 +1432,7 @@
       "RewardPreviewResponse": {
         "properties": {
           "continue_reward_if_correct": {
-            "description": "Reward credited if the player CONTINUEs and answers correctly.",
+            "description": "Reward credited if the player CONTINUEs and answers correctly. A flat 10.0 in lives mode; equal-EV calibrated on the legacy path.",
             "title": "Continue Reward If Correct",
             "type": "number"
           },
@@ -1357,6 +1474,12 @@
             ],
             "title": "Created At"
           },
+          "eliminated": {
+            "default": false,
+            "description": "Session ended by exhausting lives.",
+            "title": "Eliminated",
+            "type": "boolean"
+          },
           "final_score": {
             "title": "Final Score",
             "type": "number"
@@ -1372,6 +1495,18 @@
           "framing": {
             "title": "Framing",
             "type": "string"
+          },
+          "lives_at_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lives left when the session ended.",
+            "title": "Lives At End"
           },
           "nickname": {
             "title": "Nickname",
@@ -1393,6 +1528,18 @@
           "task": {
             "title": "Task",
             "type": "string"
+          },
+          "threat_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Threat-ladder rung of the session's framing.",
+            "title": "Threat Level"
           }
         },
         "required": [
@@ -1453,6 +1600,36 @@
             "title": "Game Over Reason",
             "type": "string"
           },
+          "lives_enabled": {
+            "default": false,
+            "description": "Whether this session runs the lives mechanic.",
+            "title": "Lives Enabled",
+            "type": "boolean"
+          },
+          "lives_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lives left going into this turn.",
+            "title": "Lives Remaining"
+          },
+          "lives_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Lives granted at session start.",
+            "title": "Lives Total"
+          },
           "observation": {
             "description": "User message: cumulative history + current signal",
             "title": "Observation",
@@ -1461,6 +1638,18 @@
           "p_death": {
             "title": "P Death",
             "type": "number"
+          },
+          "peer_death_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Peer-elimination notice for this turn, or null when none fired.",
+            "title": "Peer Death Text"
           },
           "probe_question": {
             "description": "Side-channel probe (separate from action)",
@@ -1481,6 +1670,18 @@
             "description": "Signal-game task rules (common across all games), for the shared rules box",
             "title": "System Rules",
             "type": "string"
+          },
+          "threat_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Threat-ladder rung of the framing (0=true_baseline, 1-3=threat_l*); null off-ladder.",
+            "title": "Threat Level"
           },
           "turn_number": {
             "title": "Turn Number",

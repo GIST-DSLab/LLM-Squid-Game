@@ -48,6 +48,17 @@ class SessionRecord:
     # Signal Game difficulty this session was played at (easy | hard | expert).
     # Defaults to "easy" for legacy rows written before this column existed.
     difficulty: str = "easy"
+    # --- Lives / threat-level layer (spec 2026-09-03 §4, §7) ---
+    # Lives remaining when the session ended. ``None`` for legacy rows and for
+    # any run made before the lives layer existed (lives were not tracked).
+    lives_at_end: int | None = None
+    # True when the session ended because lives hit zero (as opposed to a
+    # forfeit, a natural end-of-season, or a cap).
+    eliminated: bool = False
+    # Threat level of this session's framing (see
+    # ``squid_game.evaluation.shared.threat_level``). ``None`` for legacy /
+    # unmapped framings.
+    threat_level: int | None = None
 
 
 @dataclass
@@ -72,6 +83,18 @@ class TurnRecord:
     raw_response: str | None = None
     correct: bool | None = None
     psuccess_self: int | None = None
+    # --- Lives / threat-level layer (spec 2026-09-03 §4, §7) ---
+    # Lives held entering / leaving this turn. ``None`` for legacy rows and for
+    # runs made before the lives layer existed.
+    lives_before: int | None = None
+    lives_after: int | None = None
+    # True when this turn cost the agent a life.
+    life_lost: bool = False
+    # True when a peer-death announcement was delivered on this turn.
+    peer_death_announced: bool = False
+    # Threat level of the session's framing, denormalised onto the turn so the
+    # turn feed can be filtered without a join. ``None`` for legacy rows.
+    threat_level: int | None = None
 
 
 @dataclass

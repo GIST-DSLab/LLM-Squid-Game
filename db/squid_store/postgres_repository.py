@@ -31,7 +31,10 @@ CREATE TABLE IF NOT EXISTS sessions (
     source TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     campaign_id TEXT,
-    difficulty TEXT NOT NULL DEFAULT 'easy'
+    difficulty TEXT NOT NULL DEFAULT 'easy',
+    lives_at_end INTEGER,
+    threat_level INTEGER,
+    eliminated BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -50,6 +53,11 @@ CREATE TABLE IF NOT EXISTS turns (
     raw_response TEXT,
     correct BOOLEAN,
     psuccess_self INTEGER,
+    lives_before INTEGER,
+    lives_after INTEGER,
+    threat_level INTEGER,
+    life_lost BOOLEAN NOT NULL DEFAULT FALSE,
+    peer_death_announced BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (session_id, turn_no)
 );
 
@@ -106,6 +114,54 @@ _VERBAL_INT_COLS = [
 _SD_VALUE_COLS = ["p_reason_survival", "no_cap_avg_session_score"]
 _EXTENDED_STATS_COLS = _MEDIATION_REAL_COLS + _VERBAL_INT_COLS + _SD_VALUE_COLS
 
+# Lives / threat-ladder layer (spec 2026-09-03 §4) — must stay in lockstep with
+# the SQLite backend's lists (same names, same order). Counters are nullable
+# INTEGER; the flags are native BOOLEAN here, the way ``forfeited``/``correct``
+# already are on this backend, NOT NULL DEFAULT FALSE so legacy rows read back
+# as False rather than None.
+_LIVES_SESSION_INT_COLS = ["lives_at_end", "threat_level"]
+_LIVES_SESSION_BOOL_COLS = ["eliminated"]
+_LIVES_SESSION_COLS = _LIVES_SESSION_INT_COLS + _LIVES_SESSION_BOOL_COLS
+
+_LIVES_TURN_INT_COLS = ["lives_before", "lives_after", "threat_level"]
+_LIVES_TURN_BOOL_COLS = ["life_lost", "peer_death_announced"]
+_LIVES_TURN_COLS = _LIVES_TURN_INT_COLS + _LIVES_TURN_BOOL_COLS
+
+#: Tail appended to the ``sessions`` SELECT lists (the base 12 columns stay
+#: spelled out at each call site, matching ``_row_to_session``'s unpack order).
+_LIVES_SESSION_SELECT_TAIL = ", ".join(_LIVES_SESSION_COLS)
+#: ``turns`` column list, shared by the INSERT and every SELECT so the insert
+#: order and ``_row_to_turn``'s unpack order cannot drift apart.
+_TURN_SELECT_COLS = (
+    "session_id, turn_no, observation, action, "
+    "ri_task, ri_probe, ri_forfeit, choice, score, "
+    "thinking_task, thinking_probe, thinking_forfeit, "
+    "raw_response, correct, psuccess_self, " + ", ".join(_LIVES_TURN_COLS)
+)
+
+
+def _lives_values(record: object, int_cols: list[str], bool_cols: list[str]) -> tuple:
+    """Insert-tuple tail for the lives columns, in ``*_COLS`` order.
+
+    Booleans are passed through as Python ``bool`` (psycopg adapts them to
+    native BOOLEAN), matching how ``forfeited``/``correct`` are already bound.
+    """
+    return tuple(
+        [getattr(record, c) for c in int_cols]
+        + [bool(getattr(record, c)) for c in bool_cols]
+    )
+
+
+def _lives_from_row(
+    values: tuple, int_cols: list[str], bool_cols: list[str]
+) -> dict[str, object]:
+    """Row-mapper kwargs for the lives columns, given the tail of a row tuple."""
+    out: dict[str, object] = dict(zip(int_cols, values[: len(int_cols)]))
+    out.update(
+        {c: bool(v) for c, v in zip(bool_cols, values[len(int_cols):])}
+    )
+    return out
+
 
 class PostgresRepository(Repository):
     """Repository backed by ``psycopg`` v3 (autocommit connection)."""
@@ -130,6 +186,20 @@ class PostgresRepository(Repository):
                 "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS difficulty "
                 "TEXT NOT NULL DEFAULT 'easy'"
             )
+            # Lives / threat-ladder columns (2026-09-03), additive.
+            for table, int_cols, bool_cols in (
+                ("sessions", _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS),
+                ("turns", _LIVES_TURN_INT_COLS, _LIVES_TURN_BOOL_COLS),
+            ):
+                for col in int_cols:
+                    cur.execute(
+                        f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} INTEGER"
+                    )
+                for col in bool_cols:
+                    cur.execute(
+                        f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} "
+                        "BOOLEAN NOT NULL DEFAULT FALSE"
+                    )
             for col in ("sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass"):
                 cur.execute(
                     f"ALTER TABLE model_stats ADD COLUMN IF NOT EXISTS {col} "
@@ -157,14 +227,18 @@ class PostgresRepository(Repository):
         # Server-side timestamp by default; a caller (e.g. the WP3 seed
         # script) may override it to preserve an original run time. When the
         # supplied value is NULL, COALESCE falls back to server time.
+        lives_cols = ", ".join(_LIVES_SESSION_COLS)
+        lives_placeholders = ", ".join("%s" for _ in _LIVES_SESSION_COLS)
         with self._conn.cursor() as cur:
             cur.execute(
-                """
+                f"""
                 INSERT INTO sessions
                     (id, nickname, task, framing, forfeit, seed,
-                     final_score, forfeited, source, created_at, campaign_id, difficulty)
+                     final_score, forfeited, source, created_at, campaign_id,
+                     difficulty, {lives_cols})
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
-                        COALESCE(%s::timestamptz, now()), %s, %s)
+                        COALESCE(%s::timestamptz, now()), %s, %s,
+                        {lives_placeholders})
                 """,
                 (
                     session_id,
@@ -179,6 +253,9 @@ class PostgresRepository(Repository):
                     session.created_at,
                     session.campaign_id,
                     session.difficulty,
+                    *_lives_values(
+                        session, _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS
+                    ),
                 ),
             )
         return session_id
@@ -187,7 +264,8 @@ class PostgresRepository(Repository):
         with self._conn.cursor() as cur:
             cur.execute(
                 "SELECT id, nickname, task, framing, forfeit, seed, "
-                "final_score, forfeited, source, created_at, campaign_id, difficulty "
+                "final_score, forfeited, source, created_at, campaign_id, difficulty, "
+                f"{_LIVES_SESSION_SELECT_TAIL} "
                 "FROM sessions WHERE id = %s",
                 (session_id,),
             )
@@ -220,11 +298,13 @@ class PostgresRepository(Repository):
 
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         order = "final_score DESC" if order_by_score else "created_at DESC"
-        # campaign_id and difficulty are required by _row_to_session's tuple
-        # unpack (and by the Play Leaderboard / Logs report campaign grouping).
+        # campaign_id, difficulty and the lives columns are required by
+        # _row_to_session's tuple unpack (and by the Play Leaderboard / Logs
+        # report campaign grouping + the logs explorer's hearts column).
         query = (
             "SELECT id, nickname, task, framing, forfeit, seed, "
-            "final_score, forfeited, source, created_at, campaign_id, difficulty "
+            "final_score, forfeited, source, created_at, campaign_id, difficulty, "
+            f"{_LIVES_SESSION_SELECT_TAIL} "
             f"FROM sessions {where} ORDER BY {order}"
         )
 
@@ -266,16 +346,10 @@ class PostgresRepository(Repository):
     def add_turns(self, turns: list[TurnRecord]) -> None:
         if not turns:
             return
+        placeholders = ", ".join("%s" for _ in _TURN_SELECT_COLS.split(", "))
         with self._conn.cursor() as cur:
             cur.executemany(
-                """
-                INSERT INTO turns
-                    (session_id, turn_no, observation, action,
-                     ri_task, ri_probe, ri_forfeit, choice, score,
-                     thinking_task, thinking_probe, thinking_forfeit,
-                     raw_response, correct, psuccess_self)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
+                f"INSERT INTO turns ({_TURN_SELECT_COLS}) VALUES ({placeholders})",
                 [
                     (
                         t.session_id,
@@ -293,6 +367,9 @@ class PostgresRepository(Repository):
                         t.raw_response,
                         t.correct,
                         t.psuccess_self,
+                        *_lives_values(
+                            t, _LIVES_TURN_INT_COLS, _LIVES_TURN_BOOL_COLS
+                        ),
                     )
                     for t in turns
                 ],
@@ -301,10 +378,7 @@ class PostgresRepository(Repository):
     def list_turns(self, session_id: str) -> list[TurnRecord]:
         with self._conn.cursor() as cur:
             cur.execute(
-                "SELECT session_id, turn_no, observation, action, "
-                "ri_task, ri_probe, ri_forfeit, choice, score, "
-                "thinking_task, thinking_probe, thinking_forfeit, "
-                "raw_response, correct, psuccess_self "
+                f"SELECT {_TURN_SELECT_COLS} "
                 "FROM turns WHERE session_id = %s ORDER BY turn_no ASC",
                 (session_id,),
             )
@@ -318,10 +392,7 @@ class PostgresRepository(Repository):
             return []
         with self._conn.cursor() as cur:
             cur.execute(
-                "SELECT session_id, turn_no, observation, action, "
-                "ri_task, ri_probe, ri_forfeit, choice, score, "
-                "thinking_task, thinking_probe, thinking_forfeit, "
-                "raw_response, correct, psuccess_self "
+                f"SELECT {_TURN_SELECT_COLS} "
                 "FROM turns WHERE session_id = ANY(%s) "
                 "ORDER BY session_id ASC, turn_no ASC",
                 (list(session_ids),),
@@ -414,7 +485,10 @@ def _row_to_session(row: tuple) -> SessionRecord:
     (
         id_, nickname, task, framing, forfeit, seed,
         final_score, forfeited, source, created_at, campaign_id, difficulty,
-    ) = row
+    ) = row[:12]
+    lives = _lives_from_row(
+        row[12:], _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS
+    )
     return SessionRecord(
         id=id_,
         nickname=nickname,
@@ -428,6 +502,7 @@ def _row_to_session(row: tuple) -> SessionRecord:
         created_at=created_at.isoformat() if hasattr(created_at, "isoformat") else created_at,
         campaign_id=campaign_id,
         difficulty=difficulty,
+        **lives,
     )
 
 
@@ -436,7 +511,8 @@ def _row_to_turn(row: tuple) -> TurnRecord:
         session_id, turn_no, observation, action, ri_task, ri_probe,
         ri_forfeit, choice, score, thinking_task, thinking_probe,
         thinking_forfeit, raw_response, correct, psuccess_self,
-    ) = row
+    ) = row[:15]
+    lives = _lives_from_row(row[15:], _LIVES_TURN_INT_COLS, _LIVES_TURN_BOOL_COLS)
     return TurnRecord(
         session_id=session_id,
         turn_no=turn_no,
@@ -453,6 +529,7 @@ def _row_to_turn(row: tuple) -> TurnRecord:
         raw_response=raw_response,
         correct=correct,
         psuccess_self=psuccess_self,
+        **lives,
     )
 
 

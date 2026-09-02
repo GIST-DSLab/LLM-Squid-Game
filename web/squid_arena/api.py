@@ -61,8 +61,18 @@ from squid_arena.deps import (
     sanitize_campaign_id,
     sanitize_nickname,
 )
+from squid_arena.human_game import (
+    LIVES_FLAT_REWARD,
+    LIVES_TOTAL_DEFAULT,
+    PEER_DEATH_COHORT_SIZE,
+    PEER_DEATH_SEED_XOR,
+    HumanGameSession,
+    human_threat_text,
+)
 from squid_arena.reporting import (
     CAMPAIGN_CELLS,
+    LEGACY_REPORT_CELLS,
+    REPORT_CELLS,
     _build_human_report,
     _build_llm_report,
     _build_mediation,

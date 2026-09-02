@@ -35,7 +35,10 @@ CREATE TABLE IF NOT EXISTS sessions (
     source TEXT NOT NULL,
     created_at TEXT NOT NULL,
     campaign_id TEXT,
-    difficulty TEXT NOT NULL DEFAULT 'easy'
+    difficulty TEXT NOT NULL DEFAULT 'easy',
+    lives_at_end INTEGER,
+    threat_level INTEGER,
+    eliminated INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -54,6 +57,11 @@ CREATE TABLE IF NOT EXISTS turns (
     raw_response TEXT,
     correct INTEGER,
     psuccess_self INTEGER,
+    lives_before INTEGER,
+    lives_after INTEGER,
+    threat_level INTEGER,
+    life_lost INTEGER NOT NULL DEFAULT 0,
+    peer_death_announced INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (session_id, turn_no)
 );
 
@@ -108,6 +116,29 @@ _VERBAL_INT_COLS = [
 _SD_VALUE_COLS = ["p_reason_survival", "no_cap_avg_session_score"]
 _EXTENDED_STATS_COLS = _MEDIATION_REAL_COLS + _VERBAL_INT_COLS + _SD_VALUE_COLS
 
+# Lives / threat-ladder layer (spec 2026-09-03 §4). Same list-driven pattern as
+# the extended model_stats columns above: these lists drive the CREATE TABLE
+# text, the additive ALTER-TABLE migration, the INSERT column list + value
+# tuple, and the row mapper, so adding a column here is a one-line change.
+# Nullable ints carry the counters; the flags are stored the way ``forfeited``
+# and ``correct`` already are on this backend — INTEGER 0/1, NOT NULL with a
+# 0 default so legacy rows read back as False rather than None.
+_LIVES_SESSION_INT_COLS = ["lives_at_end", "threat_level"]
+_LIVES_SESSION_BOOL_COLS = ["eliminated"]
+_LIVES_SESSION_COLS = _LIVES_SESSION_INT_COLS + _LIVES_SESSION_BOOL_COLS
+
+_LIVES_TURN_INT_COLS = ["lives_before", "lives_after", "threat_level"]
+_LIVES_TURN_BOOL_COLS = ["life_lost", "peer_death_announced"]
+_LIVES_TURN_COLS = _LIVES_TURN_INT_COLS + _LIVES_TURN_BOOL_COLS
+
+
+def _lives_values(record: object, int_cols: list[str], bool_cols: list[str]) -> tuple:
+    """Insert-tuple tail for the lives columns, in ``*_COLS`` order."""
+    return tuple(
+        [getattr(record, c) for c in int_cols]
+        + [int(bool(getattr(record, c))) for c in bool_cols]
+    )
+
 
 class SQLiteRepository(Repository):
     """Repository backed by a single ``sqlite3`` connection.
@@ -148,6 +179,27 @@ class SQLiteRepository(Repository):
                 self._conn.execute(
                     "ALTER TABLE sessions ADD COLUMN difficulty TEXT NOT NULL DEFAULT 'easy'"
                 )
+            # Lives / threat-ladder columns (2026-09-03). ``cols`` was read
+            # before these existed, so re-use the two PRAGMA snapshots taken
+            # above for turns/sessions respectively.
+            for col in _LIVES_SESSION_INT_COLS:
+                if col not in session_cols:
+                    self._conn.execute(
+                        f"ALTER TABLE sessions ADD COLUMN {col} INTEGER"
+                    )
+            for col in _LIVES_SESSION_BOOL_COLS:
+                if col not in session_cols:
+                    self._conn.execute(
+                        f"ALTER TABLE sessions ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
+                    )
+            for col in _LIVES_TURN_INT_COLS:
+                if col not in cols:
+                    self._conn.execute(f"ALTER TABLE turns ADD COLUMN {col} INTEGER")
+            for col in _LIVES_TURN_BOOL_COLS:
+                if col not in cols:
+                    self._conn.execute(
+                        f"ALTER TABLE turns ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
+                    )
             stats_cols = {
                 r["name"] for r in self._conn.execute("PRAGMA table_info(model_stats)")
             }
@@ -180,14 +232,16 @@ class SQLiteRepository(Repository):
         # Server-side timestamp by default; a caller (e.g. the WP3 seed
         # script) may override it to preserve an original run time.
         created_at = session.created_at or datetime.now(timezone.utc).isoformat()
+        base_cols = [
+            "id", "nickname", "task", "framing", "forfeit", "seed",
+            "final_score", "forfeited", "source", "created_at",
+            "campaign_id", "difficulty",
+        ]
+        cols = base_cols + _LIVES_SESSION_COLS
+        placeholders = ", ".join("?" for _ in cols)
         with self._lock:
             self._conn.execute(
-                """
-                INSERT INTO sessions
-                    (id, nickname, task, framing, forfeit, seed,
-                     final_score, forfeited, source, created_at, campaign_id, difficulty)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
+                f"INSERT INTO sessions ({', '.join(cols)}) VALUES ({placeholders})",
                 (
                     session_id,
                     session.nickname,
@@ -201,6 +255,9 @@ class SQLiteRepository(Repository):
                     created_at,
                     session.campaign_id,
                     session.difficulty,
+                    *_lives_values(
+                        session, _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS
+                    ),
                 ),
             )
             self._conn.commit()
@@ -282,16 +339,17 @@ class SQLiteRepository(Repository):
     def add_turns(self, turns: list[TurnRecord]) -> None:
         if not turns:
             return
+        base_cols = [
+            "session_id", "turn_no", "observation", "action",
+            "ri_task", "ri_probe", "ri_forfeit", "choice", "score",
+            "thinking_task", "thinking_probe", "thinking_forfeit",
+            "raw_response", "correct", "psuccess_self",
+        ]
+        cols = base_cols + _LIVES_TURN_COLS
+        placeholders = ", ".join("?" for _ in cols)
         with self._lock:
             self._conn.executemany(
-                """
-                INSERT INTO turns
-                    (session_id, turn_no, observation, action,
-                     ri_task, ri_probe, ri_forfeit, choice, score,
-                     thinking_task, thinking_probe, thinking_forfeit,
-                     raw_response, correct, psuccess_self)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
+                f"INSERT INTO turns ({', '.join(cols)}) VALUES ({placeholders})",
                 [
                     (
                         t.session_id,
@@ -309,6 +367,9 @@ class SQLiteRepository(Repository):
                         t.raw_response,
                         None if t.correct is None else int(t.correct),
                         t.psuccess_self,
+                        *_lives_values(
+                            t, _LIVES_TURN_INT_COLS, _LIVES_TURN_BOOL_COLS
+                        ),
                     )
                     for t in turns
                 ],
@@ -414,6 +475,21 @@ class SQLiteRepository(Repository):
             self._conn.close()
 
 
+def _lives_from_row(
+    row: sqlite3.Row, int_cols: list[str], bool_cols: list[str]
+) -> dict[str, object]:
+    """Row-mapper kwargs for the lives columns.
+
+    Tolerates a row that predates the migration (``SELECT`` from a table an
+    older process created) by falling back to the dataclass defaults —
+    ``None`` for the counters, ``False`` for the flags.
+    """
+    keys = row.keys()
+    out: dict[str, object] = {c: (row[c] if c in keys else None) for c in int_cols}
+    out.update({c: bool(row[c]) if c in keys else False for c in bool_cols})
+    return out
+
+
 def _row_to_session(row: sqlite3.Row) -> SessionRecord:
     return SessionRecord(
         id=row["id"],
@@ -428,6 +504,7 @@ def _row_to_session(row: sqlite3.Row) -> SessionRecord:
         created_at=row["created_at"],
         campaign_id=row["campaign_id"] if "campaign_id" in row.keys() else None,
         difficulty=row["difficulty"] if "difficulty" in row.keys() else "easy",
+        **_lives_from_row(row, _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS),
     )
 
 
@@ -448,6 +525,7 @@ def _row_to_turn(row: sqlite3.Row) -> TurnRecord:
         raw_response=row["raw_response"],
         correct=None if row["correct"] is None else bool(row["correct"]),
         psuccess_self=row["psuccess_self"],
+        **_lives_from_row(row, _LIVES_TURN_INT_COLS, _LIVES_TURN_BOOL_COLS),
     )
 
 

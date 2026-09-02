@@ -85,6 +85,14 @@ Supabase (not in git). Periodically mirror them to a local SQLite snapshot with
 seed script; idempotent, skips sessions already backed up) so new live plays are
 not lost.
 
+**Schema migrations (2026-09-03, lives mechanic):** `init_schema()` runs additive
+`ALTER TABLE … ADD COLUMN IF NOT EXISTS` on startup, so a redeploy migrates
+Supabase in place. Columns added: `sessions.lives_at_end INTEGER`,
+`sessions.eliminated BOOLEAN`, `sessions.threat_level INTEGER`,
+`turns.lives_before INTEGER`, `turns.lives_after INTEGER`, `turns.life_lost BOOLEAN`,
+`turns.peer_death_announced BOOLEAN`, `turns.threat_level INTEGER`. Legacy rows
+read back as NULL / FALSE.
+
 ### Swapping platforms
 
 The Dockerfile only assumes `$PORT`, `WEB_ARENA_DSN`, `WEB_ARENA_CORS_ORIGINS`
