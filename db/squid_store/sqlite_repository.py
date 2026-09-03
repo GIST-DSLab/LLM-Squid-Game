@@ -8,6 +8,7 @@ persist across calls) and guarded with a lock.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 import threading
 from datetime import datetime, timezone
@@ -38,7 +39,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     difficulty TEXT NOT NULL DEFAULT 'easy',
     lives_at_end INTEGER,
     threat_level INTEGER,
-    eliminated INTEGER NOT NULL DEFAULT 0
+    eliminated INTEGER NOT NULL DEFAULT 0,
+    settings TEXT
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -131,6 +133,40 @@ _LIVES_TURN_INT_COLS = ["lives_before", "lives_after", "threat_level"]
 _LIVES_TURN_BOOL_COLS = ["life_lost", "peer_death_announced"]
 _LIVES_TURN_COLS = _LIVES_TURN_INT_COLS + _LIVES_TURN_BOOL_COLS
 
+# Run-settings snapshot (spec 2026-09-03 web-logs-settings). One nullable JSON
+# column on ``sessions``. SQLite has no JSON type, so the dict is stored as a
+# ``json.dumps`` TEXT blob and parsed back on read; the Postgres backend uses a
+# native JSONB column for the same field. Kept as a named constant (rather than
+# folded into the lives lists) because those lists are typed INTEGER and drive
+# the int/bool value helpers.
+_SETTINGS_SESSION_COL = "settings"
+
+
+def _settings_to_db(settings: dict | None) -> str | None:
+    """Serialise a settings snapshot for the TEXT column (``None`` stays NULL)."""
+    return None if settings is None else json.dumps(settings)
+
+
+def _settings_from_row(row: sqlite3.Row) -> dict | None:
+    """Parse the ``settings`` TEXT column back into a dict.
+
+    Tolerates a row that predates the migration (column absent) and a NULL /
+    unparseable value, both of which read back as ``None`` — the same thing a
+    legacy row means.
+    """
+    if _SETTINGS_SESSION_COL not in row.keys():
+        return None
+    raw = row[_SETTINGS_SESSION_COL]
+    if raw is None:
+        return None
+    if isinstance(raw, dict):  # pragma: no cover - defensive
+        return raw
+    try:
+        parsed = json.loads(raw)
+    except (TypeError, ValueError):  # pragma: no cover - defensive
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
 
 def _lives_values(record: object, int_cols: list[str], bool_cols: list[str]) -> tuple:
     """Insert-tuple tail for the lives columns, in ``*_COLS`` order."""
@@ -192,6 +228,10 @@ class SQLiteRepository(Repository):
                     self._conn.execute(
                         f"ALTER TABLE sessions ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0"
                     )
+            if _SETTINGS_SESSION_COL not in session_cols:
+                self._conn.execute(
+                    f"ALTER TABLE sessions ADD COLUMN {_SETTINGS_SESSION_COL} TEXT"
+                )
             for col in _LIVES_TURN_INT_COLS:
                 if col not in cols:
                     self._conn.execute(f"ALTER TABLE turns ADD COLUMN {col} INTEGER")
@@ -237,7 +277,7 @@ class SQLiteRepository(Repository):
             "final_score", "forfeited", "source", "created_at",
             "campaign_id", "difficulty",
         ]
-        cols = base_cols + _LIVES_SESSION_COLS
+        cols = base_cols + _LIVES_SESSION_COLS + [_SETTINGS_SESSION_COL]
         placeholders = ", ".join("?" for _ in cols)
         with self._lock:
             self._conn.execute(
@@ -258,6 +298,7 @@ class SQLiteRepository(Repository):
                     *_lives_values(
                         session, _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS
                     ),
+                    _settings_to_db(session.settings),
                 ),
             )
             self._conn.commit()
@@ -505,6 +546,7 @@ def _row_to_session(row: sqlite3.Row) -> SessionRecord:
         campaign_id=row["campaign_id"] if "campaign_id" in row.keys() else None,
         difficulty=row["difficulty"] if "difficulty" in row.keys() else "easy",
         **_lives_from_row(row, _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS),
+        settings=_settings_from_row(row),
     )
 
 

@@ -1924,6 +1924,9 @@
                   <span class="li-meta" x-text="s.forfeited ? 'forfeited' : 'completed'"></span>
                   <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(s.created_at)"></span>
                   <span class="li-open">Trace ›</span>
+                  <!-- Second line: model · task · difficulty · seed, read off
+                       the run-settings snapshot (nickname as the fallback). -->
+                  <span class="li-settings" x-text="squidArenaHelpers.sessionMetaLine(s)"></span>
                 </button>
               </template>
             </div>
@@ -1953,7 +1956,41 @@
               <span class="badge-dead" x-show="selected.eliminated">💔 out of lives</span>
               <span class="li-score" x-text="'final ' + selected.final_score"></span>
               <span class="li-meta muted" x-text="squidArenaHelpers.fmtDate(selected.created_at)"></span>
+              <!-- Run settings at a glance: task · difficulty · seed · turns.
+                   Empty (and hidden) for a legacy row with no snapshot. -->
+              <span class="li-meta settings-inline"
+                    x-show="squidArenaHelpers.settingsSummary(selected.settings)"
+                    x-text="squidArenaHelpers.settingsSummary(selected.settings)"></span>
             </div>
+
+            <!-- Full run-settings snapshot (spec 2026-09-03 web-logs-settings).
+                 Collapsed by default so the trace stays the focus. -->
+            <details class="settings-panel">
+              <summary>
+                <span class="settings-caret" aria-hidden="true">▸</span>
+                Run settings
+                <span class="settings-runtime" x-show="selected.settings && selected.settings.runtime"
+                      x-text="selected.settings && selected.settings.runtime"></span>
+              </summary>
+              <div class="settings-body">
+                <div class="settings-empty" x-show="!selected.settings">
+                  settings not recorded (legacy run)
+                </div>
+                <template x-for="g in squidArenaHelpers.settingsGroups(selected.settings)" :key="g.title">
+                  <div class="settings-group">
+                    <div class="settings-group-title" x-text="g.title"></div>
+                    <dl class="settings-grid">
+                      <template x-for="r in g.rows" :key="r.key">
+                        <div class="settings-row">
+                          <dt x-text="r.label"></dt>
+                          <dd x-text="r.value"></dd>
+                        </div>
+                      </template>
+                    </dl>
+                  </div>
+                </template>
+              </div>
+            </details>
 
             <!-- Turn strip navigator -->
             <div class="turn-strip">

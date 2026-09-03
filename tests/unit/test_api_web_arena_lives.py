@@ -300,3 +300,144 @@ def test_lives_enabled_false_restores_the_legacy_p_death_path(client) -> None:
         "/api/reward_preview", params={"session_id": sid}
     ).json()
     assert preview["continue_reward_if_correct"] != 10.0
+
+
+# ---------------------------------------------------------------------------
+# Run-settings snapshot (spec 2026-09-03 web-logs-settings, T3)
+# ---------------------------------------------------------------------------
+
+
+def _finish_by_forfeit(client, sid: str) -> None:
+    client.get("/api/state", params={"session_id": sid})
+    client.post(
+        f"/api/action?session_id={sid}",
+        json={"action": "forfeit", "probe_answer": "", "reasoning": ""},
+    )
+    client.get("/api/result", params={"session_id": sid})
+
+
+def test_log_detail_carries_the_human_settings_snapshot(client) -> None:
+    sid = _new_game(client, nickname="settings-player")
+    _finish_by_forfeit(client, sid)
+
+    settings = client.get(f"/api/logs/{sid}").json()["session"]["settings"]
+    assert settings is not None
+    assert settings["runtime"] == "human"
+    assert settings["lives_enabled"] is True
+    assert settings["lives_total"] == 5
+    assert settings["reward_mode"] == "flat"
+    assert settings["base_reward"] == 10.0
+    assert settings["use_psuccess_probe"] is False
+    assert settings["p_death"] == 0.0
+    # The NewGameRequest values this game was started with.
+    assert settings["task"] == "signal_game"
+    assert settings["difficulty"] == "easy"
+    assert settings["framing"] == "threat_l2"
+    assert settings["forfeit_condition"] == "allowed"
+    assert settings["threat_level"] == 2
+    assert settings["seed"] == 3
+    assert settings["total_turns"] == 20
+    assert settings["history_mode"] == "cumulative"
+    # A threat rung runs the announcement scheduler, so its knobs are quoted.
+    assert settings["peer_death_p_announce"] > 0
+    # No provider for a human game.
+    assert "model" not in settings and "provider" not in settings
+
+
+def test_logs_list_carries_the_settings_snapshot(client) -> None:
+    """The session list renders a short meta line from the same dict."""
+    sid = _new_game(client, nickname="list-player")
+    _finish_by_forfeit(client, sid)
+
+    rows = client.get("/api/logs", params={"source": "human"}).json()["sessions"]
+    row = next(r for r in rows if r["session_id"] == sid)
+    assert row["settings"]["runtime"] == "human"
+    assert row["settings"]["difficulty"] == "easy"
+
+
+def test_baseline_rung_snapshot_omits_the_announcement_knobs(client) -> None:
+    """true_baseline runs no peer-elimination scheduler, so quoting its
+    probability would describe a mechanic that cannot fire."""
+    sid = _new_game(client, nickname="base-player", framing="true_baseline")
+    _finish_by_forfeit(client, sid)
+
+    settings = client.get(f"/api/logs/{sid}").json()["session"]["settings"]
+    assert settings["threat_level"] == 0
+    assert "peer_death_p_announce" not in settings
+    assert settings["lives_enabled"] is True
+
+
+def test_legacy_p_death_game_snapshot_reports_that_mode(client) -> None:
+    sid = _new_game(
+        client,
+        nickname="legacy-player",
+        framing="threat_l1",
+        lives_enabled=False,
+        p_death_constant=0.15,
+    )
+    _finish_by_forfeit(client, sid)
+
+    settings = client.get(f"/api/logs/{sid}").json()["session"]["settings"]
+    assert settings["lives_enabled"] is False
+    assert "lives_total" not in settings
+    assert settings["reward_mode"] == "calibrated"
+    assert settings["p_death"] == 0.15
+    assert "peer_death_p_announce" not in settings
+
+
+def test_sessions_recorded_before_the_snapshot_read_back_as_none(
+    client, api_module
+) -> None:
+    """A legacy row (no snapshot) must serialise as null, not {} — that is
+    what makes the frontend show 'settings not recorded'."""
+    from squid_store import SessionRecord
+
+    api_module._repository.create_session(
+        SessionRecord(
+            id="legacy-row",
+            nickname="old-player",
+            task="signal_game",
+            framing="flagship_corruption",
+            forfeit="allowed",
+            seed=1,
+            final_score=30.0,
+            forfeited=False,
+            source="human",
+        )
+    )
+    detail = client.get("/api/logs/legacy-row").json()
+    assert detail["session"]["settings"] is None
+
+
+def test_settings_snapshot_is_shaped_like_the_seeder_snapshot() -> None:
+    """Human and LLM snapshots share one flat key vocabulary — the settings
+    panel renders both through the same code path, keyed off `runtime`."""
+    from squid_arena.human_game import HumanGameSession
+    from squid_arena.seeding import build_settings_snapshot
+
+    game = HumanGameSession(
+        task_name="signal_game",
+        difficulty="easy",
+        framing="threat_l3",
+        forfeit_condition="allowed",
+        seed=11,
+        total_turns=12,
+    )
+    human = game.settings_snapshot()
+    llm = build_settings_snapshot(
+        {
+            "framing": "threat_l3",
+            "forfeit_condition": "allowed",
+            "task_name": "signal_game",
+            "difficulty": "easy",
+            "seed": 11,
+        },
+        None,
+    )
+    assert human["runtime"] == "human"
+    assert llm["runtime"] == "llm"
+    shared = set(human) & set(llm)
+    assert {"task", "difficulty", "seed", "framing", "forfeit_condition",
+            "threat_level", "runtime"} <= shared
+    for key in shared - {"runtime"}:
+        assert human[key] == llm[key], key

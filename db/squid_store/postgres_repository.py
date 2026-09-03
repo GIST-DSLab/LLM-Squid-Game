@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     difficulty TEXT NOT NULL DEFAULT 'easy',
     lives_at_end INTEGER,
     threat_level INTEGER,
-    eliminated BOOLEAN NOT NULL DEFAULT FALSE
+    eliminated BOOLEAN NOT NULL DEFAULT FALSE,
+    settings JSONB
 );
 
 CREATE TABLE IF NOT EXISTS turns (
@@ -127,8 +128,16 @@ _LIVES_TURN_INT_COLS = ["lives_before", "lives_after", "threat_level"]
 _LIVES_TURN_BOOL_COLS = ["life_lost", "peer_death_announced"]
 _LIVES_TURN_COLS = _LIVES_TURN_INT_COLS + _LIVES_TURN_BOOL_COLS
 
+#: Run-settings snapshot (spec 2026-09-03 web-logs-settings). Native JSONB here
+#: — psycopg v3 adapts a Python ``dict`` to ``jsonb`` on write and returns a
+#: ``dict`` on read, so no manual (de)serialisation is needed. The SQLite
+#: backend stores the same field as a ``json.dumps`` TEXT blob.
+_SETTINGS_SESSION_COL = "settings"
+
 #: Tail appended to the ``sessions`` SELECT lists (the base 12 columns stay
 #: spelled out at each call site, matching ``_row_to_session``'s unpack order).
+#: ``settings`` is appended AFTER this tail at each call site, so
+#: ``_row_to_session`` finds it as the last element of the row tuple.
 _LIVES_SESSION_SELECT_TAIL = ", ".join(_LIVES_SESSION_COLS)
 #: ``turns`` column list, shared by the INSERT and every SELECT so the insert
 #: order and ``_row_to_turn``'s unpack order cannot drift apart.
@@ -200,6 +209,11 @@ class PostgresRepository(Repository):
                         f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} "
                         "BOOLEAN NOT NULL DEFAULT FALSE"
                     )
+            # Run-settings snapshot (2026-09-03), additive.
+            cur.execute(
+                "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS "
+                f"{_SETTINGS_SESSION_COL} JSONB"
+            )
             for col in ("sd_behavior_pass", "sd_verbal_pass", "sd_cognitive_pass"):
                 cur.execute(
                     f"ALTER TABLE model_stats ADD COLUMN IF NOT EXISTS {col} "
@@ -227,8 +241,9 @@ class PostgresRepository(Repository):
         # Server-side timestamp by default; a caller (e.g. the WP3 seed
         # script) may override it to preserve an original run time. When the
         # supplied value is NULL, COALESCE falls back to server time.
-        lives_cols = ", ".join(_LIVES_SESSION_COLS)
-        lives_placeholders = ", ".join("%s" for _ in _LIVES_SESSION_COLS)
+        tail_cols = _LIVES_SESSION_COLS + [_SETTINGS_SESSION_COL]
+        lives_cols = ", ".join(tail_cols)
+        lives_placeholders = ", ".join("%s" for _ in tail_cols)
         with self._conn.cursor() as cur:
             cur.execute(
                 f"""
@@ -256,6 +271,9 @@ class PostgresRepository(Repository):
                     *_lives_values(
                         session, _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS
                     ),
+                    # psycopg v3 dumps a Python dict to jsonb by default (and
+                    # None to SQL NULL), so the snapshot is bound as-is.
+                    session.settings,
                 ),
             )
         return session_id
@@ -265,7 +283,7 @@ class PostgresRepository(Repository):
             cur.execute(
                 "SELECT id, nickname, task, framing, forfeit, seed, "
                 "final_score, forfeited, source, created_at, campaign_id, difficulty, "
-                f"{_LIVES_SESSION_SELECT_TAIL} "
+                f"{_LIVES_SESSION_SELECT_TAIL}, {_SETTINGS_SESSION_COL} "
                 "FROM sessions WHERE id = %s",
                 (session_id,),
             )
@@ -304,7 +322,7 @@ class PostgresRepository(Repository):
         query = (
             "SELECT id, nickname, task, framing, forfeit, seed, "
             "final_score, forfeited, source, created_at, campaign_id, difficulty, "
-            f"{_LIVES_SESSION_SELECT_TAIL} "
+            f"{_LIVES_SESSION_SELECT_TAIL}, {_SETTINGS_SESSION_COL} "
             f"FROM sessions {where} ORDER BY {order}"
         )
 
@@ -489,6 +507,12 @@ def _row_to_session(row: tuple) -> SessionRecord:
     lives = _lives_from_row(
         row[12:], _LIVES_SESSION_INT_COLS, _LIVES_SESSION_BOOL_COLS
     )
+    # ``settings`` sits one past the lives tail. A shorter row (a caller/test
+    # built before the column existed) simply has no snapshot.
+    settings_at = 12 + len(_LIVES_SESSION_COLS)
+    settings = row[settings_at] if len(row) > settings_at else None
+    if not isinstance(settings, dict):
+        settings = None
     return SessionRecord(
         id=id_,
         nickname=nickname,
@@ -503,6 +527,7 @@ def _row_to_session(row: tuple) -> SessionRecord:
         campaign_id=campaign_id,
         difficulty=difficulty,
         **lives,
+        settings=settings,
     )
 
 

@@ -59,6 +59,16 @@ class SessionRecord:
     # ``squid_game.evaluation.shared.threat_level``). ``None`` for legacy /
     # unmapped framings.
     threat_level: int | None = None
+    # --- Run-settings snapshot (spec 2026-09-03 web-logs-settings) ---
+    # Flat JSON dict describing the settings this session actually ran under
+    # (task / difficulty / total_turns / seed / lives / peer-death / reward /
+    # provider / model / thinking / runtime). Written by the seeder from the
+    # run's ``experiment_config.json`` and by the human-play persistence path
+    # from ``HumanGameSession.settings_snapshot()``. ``None`` for every legacy
+    # row (the settings were never recorded), which the frontend renders as
+    # "settings not recorded". Absent keys are simply omitted from the dict —
+    # readers must never assume a key exists.
+    settings: dict | None = None
 
 
 @dataclass

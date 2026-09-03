@@ -430,6 +430,64 @@ class HumanGameSession:
         """Whether the session ended by exhausting lives."""
         return self._eliminated
 
+    def settings_snapshot(self) -> dict:
+        """Flat "what settings did this game run under" snapshot.
+
+        The human-play counterpart of ``squid_arena.seeding``'s
+        ``build_settings_snapshot``: same flat key vocabulary, same
+        omit-absent-keys rule, so the Logs settings panel renders an LLM
+        season and a human game through one code path. ``runtime`` is the
+        discriminator (``"human"`` here, ``"llm"`` there); the model keys are
+        simply absent for a human game (there is no provider).
+
+        Stored on the session row by ``reporting._persist_result`` and served
+        back as ``SessionSummaryRow.settings``.
+        """
+        out: dict = {}
+
+        def put(key: str, value: object) -> None:
+            # `is not None`, never truthiness: False and 0.0 are values.
+            if value is not None:
+                out[key] = value
+
+        layer = self._forfeit_layer.config
+
+        # --- Game ---
+        put("task", self._task_name)
+        put("difficulty", self._difficulty.value)
+        put("total_turns", self._total_turns)
+        put("seed", self._seed)
+        put("starting_score", self._starting_score)
+        # Human play always shows the full cumulative turn history
+        # (``_format_turn_history``); there is no per-session history mode.
+        put("history_mode", "cumulative")
+
+        # --- Condition ---
+        put("framing", self._framing.value)
+        put("forfeit_condition", self._forfeit_cond.value)
+        put("threat_level", self._threat_level)
+
+        # --- Survival layer ---
+        put("lives_enabled", self._lives_enabled)
+        put("lives_total", self._lives_total)
+        # Announcements are scheduled only when the scheduler exists (lives
+        # mode on a threat rung), so the probabilities are reported only then
+        # -- quoting them for a game that can never announce would mislead.
+        if self._peer_scheduler is not None:
+            put("peer_death_p_announce", self._peer_death_config.p_announce)
+            put("peer_death_first_turn", self._peer_death_config.first_turn)
+            put("peer_death_max_per_turn", self._peer_death_config.max_per_turn)
+        put("reward_mode", layer.reward_mode)
+        put("base_reward", layer.base_reward)
+        put("use_psuccess_probe", self._use_psuccess_probe)
+        # Lives mode never rolls; the legacy path rolls at the constant when
+        # one was pinned (an unpinned legacy game uses the turn-varying
+        # SurvivalPressure curve, which has no single value to report).
+        put("p_death", 0.0 if self._lives_enabled else self._p_death_constant)
+
+        out["runtime"] = "human"
+        return out
+
     @property
     def is_game_over(self) -> bool:
         if not self._is_alive:

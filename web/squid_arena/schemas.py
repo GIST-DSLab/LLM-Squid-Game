@@ -326,6 +326,21 @@ class SessionSummaryRow(BaseModel):
     threat_level: int | None = Field(
         default=None, description="Threat-ladder rung of the session's framing."
     )
+    # --- Run-settings snapshot (null for legacy rows recorded before it) ---
+    settings: dict | None = Field(
+        default=None,
+        description=(
+            "Flat snapshot of the settings this session ran under: task, "
+            "difficulty, total_turns, seed, starting_score, history_mode, "
+            "framing, forfeit_condition, threat_level, lives_*, peer_death_*, "
+            "reward_mode, base_reward, use_psuccess_probe, p_death, provider, "
+            "model, temperature, enable_thinking, reasoning_effort, "
+            "thinking_budget, max_tokens, and runtime ('llm' | 'human'). "
+            "Keys with no recorded value are OMITTED, so consumers must not "
+            "assume any key is present. Null for sessions recorded before "
+            "this snapshot existed."
+        ),
+    )
 
 
 class LogsResponse(BaseModel):

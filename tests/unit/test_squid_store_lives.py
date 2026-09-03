@@ -19,8 +19,33 @@ from squid_store import postgres_repository as pg
 from squid_store.sqlite_repository import (
     _LIVES_SESSION_COLS,
     _LIVES_TURN_COLS,
+    _SETTINGS_SESSION_COL,
     SQLiteRepository,
 )
+
+#: A representative run-settings snapshot (spec 2026-09-03 web-logs-settings).
+_SETTINGS = {
+    "run_name": "lives_threat_smoke",
+    "task": "signal_game",
+    "difficulty": "medium",
+    "total_turns": 30,
+    "seed": 43,
+    "starting_score": 30.0,
+    "history_mode": "cumulative",
+    "framing": "threat_l2",
+    "forfeit_condition": "allowed",
+    "threat_level": 2,
+    "lives_enabled": True,
+    "lives_total": 5,
+    "peer_death_p_announce": 0.35,
+    "reward_mode": "flat",
+    "base_reward": 10.0,
+    "use_psuccess_probe": False,
+    "provider": "ollama_cloud",
+    "model": "gpt-oss:120b-cloud",
+    "enable_thinking": True,
+    "runtime": "llm",
+}
 
 # The schema as it stood BEFORE the lives layer (copied literally from
 # sqlite_repository._SCHEMA at commit-time). A DB created with this must be
@@ -171,6 +196,46 @@ def test_sqlite_legacy_records_default_to_none_and_false() -> None:
 
 
 # ---------------------------------------------------------------------------
+# SQLite — run-settings snapshot (sessions.settings)
+# ---------------------------------------------------------------------------
+
+
+def test_sqlite_settings_round_trips_as_a_dict() -> None:
+    repo = SQLiteRepository(":memory:")
+    repo.create_session(_session(settings=_SETTINGS))
+    got = repo.get_session("sess-lives")
+    assert got is not None
+    assert got.settings == _SETTINGS
+    # Types survive the TEXT round-trip (not stringified).
+    assert got.settings["lives_total"] == 5
+    assert got.settings["lives_enabled"] is True
+    assert got.settings["base_reward"] == 10.0
+
+
+def test_sqlite_list_sessions_carries_settings() -> None:
+    """The logs list reads list_sessions, not get_session."""
+    repo = SQLiteRepository(":memory:")
+    repo.create_session(_session(settings=_SETTINGS))
+    (row,) = repo.list_sessions(source="llm")
+    assert row.settings == _SETTINGS
+
+
+def test_sqlite_settings_defaults_to_none() -> None:
+    repo = SQLiteRepository(":memory:")
+    repo.create_session(_session(id="no-settings"))
+    got = repo.get_session("no-settings")
+    assert got is not None
+    assert got.settings is None
+
+
+def test_sqlite_settings_accepts_an_empty_snapshot() -> None:
+    """An empty dict is a real (if uninformative) snapshot, not 'unrecorded'."""
+    repo = SQLiteRepository(":memory:")
+    repo.create_session(_session(id="empty", settings={}))
+    assert repo.get_session("empty").settings == {}
+
+
+# ---------------------------------------------------------------------------
 # SQLite — additive migration of a pre-lives database
 # ---------------------------------------------------------------------------
 
@@ -221,6 +286,36 @@ def test_sqlite_init_schema_migrates_a_pre_lives_database(tmp_path: Path) -> Non
         repo.create_session(_session(lives_at_end=1, eliminated=False, threat_level=3))
         repo.add_turns([_turn(lives_before=2, lives_after=1, life_lost=True)])
         assert repo.get_session("sess-lives").threat_level == 3
+    finally:
+        repo.close()
+
+
+def test_sqlite_init_schema_migrates_settings_onto_an_old_database(tmp_path: Path) -> None:
+    """``sessions.settings`` is added to a DB that predates it, and the rows
+    already there read back as 'settings not recorded' (None)."""
+    db_path = tmp_path / "old-settings.db"
+    conn = sqlite3.connect(db_path)
+    conn.executescript(_OLD_SCHEMA)
+    conn.execute(
+        "INSERT INTO sessions (id, nickname, task, framing, forfeit, seed, "
+        "final_score, forfeited, source, created_at, campaign_id, difficulty) "
+        "VALUES ('old-2', 'nick', 'signal_game', 'flagship_corruption', "
+        "'allowed', 7, 40.0, 0, 'llm', '2026-04-22T02:18:00+00:00', NULL, 'easy')"
+    )
+    conn.commit()
+    conn.close()
+
+    assert _SETTINGS_SESSION_COL not in _table_columns(db_path, "sessions")
+
+    repo = SQLiteRepository(str(db_path))
+    try:
+        assert _SETTINGS_SESSION_COL in _table_columns(db_path, "sessions")
+        legacy = repo.get_session("old-2")
+        assert legacy is not None
+        assert legacy.settings is None
+        # …and the migrated DB accepts a snapshot-bearing row.
+        repo.create_session(_session(settings=_SETTINGS))
+        assert repo.get_session("sess-lives").settings == _SETTINGS
     finally:
         repo.close()
 
@@ -329,6 +424,41 @@ def test_postgres_select_lists_end_with_the_lives_columns() -> None:
         src = inspect.getsource(method)
         assert "campaign_id, difficulty" in src, method.__name__
         assert "_LIVES_SESSION_SELECT_TAIL" in src, method.__name__
+
+
+def test_postgres_declares_settings_as_jsonb() -> None:
+    """SQLite stores the snapshot as TEXT; Postgres uses a native JSONB column
+    (psycopg adapts dict <-> jsonb, so no manual json.dumps on this backend)."""
+    assert pg._SETTINGS_SESSION_COL == _SETTINGS_SESSION_COL
+    assert "settings JSONB" in pg._SCHEMA
+
+    stub = _StubPostgresRepository()
+    pg.PostgresRepository.init_schema(stub)
+    sql = "\n".join(stub._conn.statements)
+    assert "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS settings JSONB" in sql
+
+
+def test_postgres_session_selects_append_settings_after_the_lives_tail() -> None:
+    import inspect
+
+    for method in (
+        pg.PostgresRepository.get_session,
+        pg.PostgresRepository.list_sessions,
+    ):
+        src = inspect.getsource(method)
+        assert "{_LIVES_SESSION_SELECT_TAIL}, {_SETTINGS_SESSION_COL}" in src, method.__name__
+
+
+def test_postgres_row_to_session_reads_the_settings_column() -> None:
+    base = (
+        "sess-lives", "nick", "signal_game", "threat_l2", "allowed", 43,
+        0.0, False, "llm", "2026-09-02T16:14:00+00:00", None, "easy",
+        0, 2, True,  # lives_at_end, threat_level, eliminated
+    )
+    assert pg._row_to_session(base + (_SETTINGS,)).settings == _SETTINGS
+    assert pg._row_to_session(base + (None,)).settings is None
+    # A row from before the column existed (no settings element at all).
+    assert pg._row_to_session(base).settings is None
 
 
 def test_postgres_row_mappers_read_the_lives_tail() -> None:

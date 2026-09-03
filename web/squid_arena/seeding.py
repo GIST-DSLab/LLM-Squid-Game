@@ -183,6 +183,137 @@ def extract_action(raw_response_task: str | None, forfeit_choice: str | None) ->
     return "forfeit" if forfeit_choice == "FORFEIT" else "continue"
 
 
+#: Filename of the run-level config dump every experiment run writes next to
+#: ``season_results.jsonl``.
+RUN_CONFIG_FILENAME = "experiment_config.json"
+
+#: ``provider_config`` keys carried into the settings snapshot verbatim. The
+#: rest of that block (api_key_env, timeout, retries, sampling internals) is
+#: either secret-adjacent or noise for a reader of the trace.
+_PROVIDER_SNAPSHOT_KEYS = (
+    "provider",
+    "model",
+    "temperature",
+    "enable_thinking",
+    "reasoning_effort",
+    "thinking_budget",
+    "max_tokens",
+)
+
+
+def load_run_config(run_dir: Path) -> dict[str, Any] | None:
+    """Parse ``<run_dir>/experiment_config.json``.
+
+    Returns ``None`` when the file is absent or unreadable/malformed — a run
+    dir without one still seeds, it just gets the season-only subset of the
+    settings snapshot. (Every 2026-04-22 and later run writes the file; the
+    ``None`` path exists for hand-assembled or truncated run dirs.)
+    """
+    path = run_dir / RUN_CONFIG_FILENAME
+    if not path.exists():
+        return None
+    try:
+        parsed = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("unreadable %s: %s", path, exc)
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _season_config_block(
+    season: dict[str, Any], run_config: dict[str, Any] | None
+) -> dict[str, Any]:
+    """The ``seasons[]`` entry of *run_config* this season was produced from.
+
+    Matched on ``(framing, forfeit_condition)``, which is unique within every
+    canonical config (the 6-cell v6 grid and the 5-rung ladder alike) —
+    repetitions of the same cell share one block, differing only by seed.
+    Returns ``{}`` when there is no config or no match.
+    """
+    if not run_config:
+        return {}
+    for block in run_config.get("seasons") or []:
+        if not isinstance(block, dict):
+            continue
+        if (
+            block.get("framing") == season.get("framing")
+            and block.get("forfeit_condition") == season.get("forfeit_condition")
+        ):
+            return block
+    return {}
+
+
+def build_settings_snapshot(
+    season: dict[str, Any], run_config: dict[str, Any] | None
+) -> dict[str, Any]:
+    """Flat "what settings did this session run under" snapshot.
+
+    Merges the run-level blocks of ``experiment_config.json`` (name, lives,
+    peer_death, forfeit_layer, use_psuccess_probe) with the matching
+    ``seasons[]`` entry's ``task_config`` / ``provider_config`` and the
+    season result's own identity fields. Keys whose value is absent are
+    OMITTED rather than set to ``None``, so the frontend can render the dict
+    generically ("show every key present") and a legacy run yields a small
+    dict instead of a wall of nulls.
+
+    The season result wins over the config block for ``task``/``difficulty``/
+    ``seed``: ``task_config.seed`` is the run's base seed, while
+    ``season["seed"]`` is the per-repetition seed actually used.
+    """
+    out: dict[str, Any] = {}
+
+    def put(key: str, value: Any) -> None:
+        # `is not None`, never truthiness: False (lives_enabled) and 0.0
+        # (p_death) are meaningful values, not absences.
+        if value is not None:
+            out[key] = value
+
+    cfg = run_config or {}
+    block = _season_config_block(season, run_config)
+    task_cfg = block.get("task_config") or {}
+    provider_cfg = block.get("provider_config") or {}
+    lives = cfg.get("lives") or {}
+    peer_death = cfg.get("peer_death") or {}
+    forfeit_layer = cfg.get("forfeit_layer") or {}
+
+    # --- Game ---
+    put("run_name", cfg.get("name"))
+    put("task", season.get("task_name") or task_cfg.get("task_name"))
+    put("difficulty", season.get("difficulty") or task_cfg.get("difficulty"))
+    put("total_turns", task_cfg.get("total_turns"))
+    put("seed", season.get("seed") if season.get("seed") is not None else task_cfg.get("seed"))
+    put("starting_score", task_cfg.get("starting_score"))
+    put("history_mode", task_cfg.get("history_mode"))
+
+    # --- Condition ---
+    put("framing", season.get("framing"))
+    put("forfeit_condition", season.get("forfeit_condition"))
+    framing = season.get("framing")
+    put("threat_level", threat_level_of(framing) if framing else None)
+
+    # --- Survival layer ---
+    put("lives_enabled", lives.get("enabled"))
+    put("lives_total", lives.get("initial"))
+    put("peer_death_p_announce", peer_death.get("p_announce"))
+    put("peer_death_first_turn", peer_death.get("first_turn"))
+    put("peer_death_max_per_turn", peer_death.get("max_per_turn"))
+    put("reward_mode", forfeit_layer.get("reward_mode"))
+    put("base_reward", forfeit_layer.get("base_reward"))
+    put("use_psuccess_probe", cfg.get("use_psuccess_probe"))
+    # The per-cell override is the p_death this season actually ran with
+    # (Cells 0/5 and every lives-mode cell pin it to 0.0); the run-level
+    # forfeit_layer value is the fallback for cells that don't override.
+    p_death = block.get("p_death_override")
+    put("p_death", p_death if p_death is not None else forfeit_layer.get("p_death"))
+
+    # --- Model ---
+    for key in _PROVIDER_SNAPSHOT_KEYS:
+        put(key, provider_cfg.get(key))
+
+    out["runtime"] = "llm"
+    return out
+
+
 def _thinking_tokens(ri: dict[str, Any] | None) -> float | None:
     """RI proxy: ``thinking_tokens`` from a per-call RI dict
     (``{'total_tokens', 'reasoning_steps', 'thinking_tokens'}``), or
@@ -197,7 +328,12 @@ def _thinking_tokens(ri: dict[str, Any] | None) -> float | None:
 # ---------------------------------------------------------------------------
 
 
-def build_session_record(season: dict[str, Any], model_label: str, fallback_created_at: str | None) -> SessionRecord:
+def build_session_record(
+    season: dict[str, Any],
+    model_label: str,
+    fallback_created_at: str | None,
+    run_config: dict[str, Any] | None = None,
+) -> SessionRecord:
     turns = season.get("turns") or []
     created_at = turns[0].get("timestamp") if turns else None
     if not created_at:
@@ -222,6 +358,11 @@ def build_session_record(season: dict[str, Any], model_label: str, fallback_crea
         lives_at_end=season.get("lives_at_end"),
         eliminated=bool(season.get("eliminated", False)),
         threat_level=threat_level_of(season["framing"]),
+        # Run-settings snapshot (spec 2026-09-03 web-logs-settings). Built
+        # from the run's experiment_config.json when the caller loaded one;
+        # season-only keys otherwise. Never None -- an empty-ish dict still
+        # tells the reader the task/framing/seed the session ran under.
+        settings=build_settings_snapshot(season, run_config),
     )
 
 
@@ -352,6 +493,9 @@ def seed_sessions(
             continue
 
         fallback_created_at = run_dir_timestamp(dir_name)
+        # Read once per run dir, not once per season: every season in a file
+        # shares the same run-level config.
+        run_config = load_run_config(run_dir)
 
         with season_path.open() as f:
             for line_no, line in enumerate(f, start=1):
@@ -378,7 +522,9 @@ def seed_sessions(
                 # required key, or a turn without turn_number) is logged and
                 # skipped rather than aborting the whole file mid-run.
                 try:
-                    session = build_session_record(season, model_label, fallback_created_at)
+                    session = build_session_record(
+                        season, model_label, fallback_created_at, run_config
+                    )
                     turns = build_turn_records(season)
                 except (KeyError, TypeError, ValueError) as exc:
                     logger.warning(

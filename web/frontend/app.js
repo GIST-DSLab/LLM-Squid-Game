@@ -212,6 +212,129 @@
     return lvl === undefined ? null : lvl;
   }
 
+  // --- Run-settings snapshot (spec 2026-09-03 web-logs-settings) -----------
+  // `session.settings` is a FLAT dict written by the seeder (LLM seasons) or
+  // by HumanGameSession.settings_snapshot() (human games). Keys with no
+  // recorded value are omitted server-side, so everything here is
+  // presence-driven: never assume a key exists, and never render a "—" row
+  // for one that doesn't. Legacy rows carry `settings === null` entirely.
+  const SETTINGS_GROUPS = [
+    {
+      title: "Game",
+      keys: ["run_name", "task", "difficulty", "framing", "forfeit_condition",
+             "total_turns", "seed", "starting_score", "history_mode"],
+    },
+    {
+      title: "Survival",
+      keys: ["lives_enabled", "lives_total", "peer_death_p_announce",
+             "peer_death_first_turn", "peer_death_max_per_turn", "reward_mode",
+             "base_reward", "threat_level", "use_psuccess_probe", "p_death"],
+    },
+    {
+      title: "Model",
+      keys: ["provider", "model", "temperature", "enable_thinking",
+             "reasoning_effort", "thinking_budget", "max_tokens", "runtime"],
+    },
+  ];
+
+  const SETTINGS_LABELS = {
+    run_name: "Run",
+    task: "Task",
+    difficulty: "Difficulty",
+    total_turns: "Turns",
+    seed: "Seed",
+    starting_score: "Start score",
+    history_mode: "History",
+    framing: "Framing",
+    forfeit_condition: "Forfeit",
+    lives_enabled: "Lives mode",
+    lives_total: "Lives",
+    peer_death_p_announce: "Notice chance",
+    peer_death_first_turn: "Notices from turn",
+    peer_death_max_per_turn: "Notices per turn",
+    reward_mode: "Reward mode",
+    base_reward: "Base reward",
+    threat_level: "Threat level",
+    use_psuccess_probe: "Confidence probe",
+    p_death: "p(elimination)",
+    provider: "Provider",
+    model: "Model",
+    temperature: "Temperature",
+    enable_thinking: "Thinking",
+    reasoning_effort: "Reasoning effort",
+    thinking_budget: "Thinking budget",
+    max_tokens: "Max tokens",
+    runtime: "Runtime",
+  };
+
+  function settingsLabel(key) {
+    return SETTINGS_LABELS[key] || key.replace(/_/g, " ");
+  }
+
+  /** Human-readable cell value. Booleans read as on/off (the panel is prose,
+   * not JSON); numbers drop a trailing ".00" so 30 shows as "30". */
+  function settingsValue(v) {
+    if (v === true) return "on";
+    if (v === false) return "off";
+    if (v === null || v === undefined) return "—";
+    if (typeof v === "number") {
+      return Number.isInteger(v) ? String(v) : String(Number(v.toFixed(3)));
+    }
+    return String(v);
+  }
+
+  /** Grouped {title, rows:[{key,label,value}]} view of a settings snapshot.
+   * Empty groups are dropped; any key not named in SETTINGS_GROUPS lands in a
+   * trailing "Other" group so a newly recorded setting is never invisible. */
+  function settingsGroups(settings) {
+    if (!settings || typeof settings !== "object") return [];
+    const claimed = {};
+    const out = [];
+    SETTINGS_GROUPS.forEach(function (g) {
+      const rows = [];
+      g.keys.forEach(function (k) {
+        claimed[k] = true;
+        if (Object.prototype.hasOwnProperty.call(settings, k)) {
+          rows.push({ key: k, label: settingsLabel(k), value: settingsValue(settings[k]) });
+        }
+      });
+      if (rows.length) out.push({ title: g.title, rows: rows });
+    });
+    const rest = Object.keys(settings)
+      .filter(function (k) { return !claimed[k]; })
+      .sort()
+      .map(function (k) {
+        return { key: k, label: settingsLabel(k), value: settingsValue(settings[k]) };
+      });
+    if (rest.length) out.push({ title: "Other", rows: rest });
+    return out;
+  }
+
+  /** One-line "task · difficulty · seed N · 30 turns" for the trace header. */
+  function settingsSummary(settings) {
+    if (!settings) return "";
+    const parts = [];
+    if (settings.task) parts.push(String(settings.task).replace(/_/g, " "));
+    if (settings.difficulty) parts.push(settings.difficulty);
+    if (settings.seed !== undefined && settings.seed !== null) parts.push("seed " + settings.seed);
+    if (settings.total_turns) parts.push(settings.total_turns + " turns");
+    return parts.join(" · ");
+  }
+
+  /** Short "model · task · difficulty · seed" meta for a session list row.
+   * Falls back to the row's nickname when no model was recorded (human games
+   * and legacy rows), so the line is never empty. */
+  function sessionMetaLine(session) {
+    if (!session) return "";
+    const s = session.settings || {};
+    const parts = [];
+    parts.push(s.model || session.nickname || "");
+    if (s.task || session.task) parts.push(String(s.task || session.task).replace(/_/g, " "));
+    if (s.difficulty) parts.push(s.difficulty);
+    if (session.seed !== undefined && session.seed !== null) parts.push("seed " + session.seed);
+    return parts.filter(Boolean).join(" · ");
+  }
+
   // Signal Game difficulty the participant can pick. `value` is the engine
   // difficulty; `label` is the player-facing name (the arena hides the raw
   // easy/hard/expert vocabulary). MEDIUM is not offered — the arena's fixed
@@ -508,6 +631,9 @@
     heartSVG,
     heartsMiniHTML,
     threatLevelOf,
+    settingsGroups,
+    settingsSummary,
+    sessionMetaLine,
     // Threat-level chip text for a session row: prefer the server's stored
     // threat_level, fall back to the framing name for rows written before the
     // column existed. Returns "" for legacy framings (no rung at all).

@@ -90,6 +90,9 @@ def _session_record_to_row(s: SessionRecord) -> schemas.SessionSummaryRow:
         lives_at_end=s.lives_at_end,
         eliminated=s.eliminated,
         threat_level=s.threat_level,
+        # Run-settings snapshot; reaches both the logs list and the trace
+        # header, since both render through this one mapper.
+        settings=s.settings,
     )
 
 
@@ -194,6 +197,7 @@ def _persist_result(session_id: str, game: HumanGameSession) -> None:
                     lives_at_end=result.lives_at_end,
                     eliminated=result.eliminated,
                     threat_level=game.threat_level,
+                    settings=game.settings_snapshot(),
                 )
             )
         except Exception:

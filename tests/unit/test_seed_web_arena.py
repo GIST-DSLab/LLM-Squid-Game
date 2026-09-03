@@ -22,9 +22,11 @@ import pytest
 from squid_store import Repository, SessionRecord, get_repository
 from scripts.arena.seed_web_arena import (
     build_session_record,
+    build_settings_snapshot,
     build_turn_records,
     classify_mediation,
     extract_action,
+    load_run_config,
     run_dir_timestamp,
     seed_model_stats,
     seed_sessions,
@@ -873,3 +875,274 @@ def test_seed_sessions_without_model_dirs_discovers_everything(
 
     n_inserted, _n_skipped, n_turns = seed_sessions(repo, tmp_path)
     assert (n_inserted, n_turns) == (1, 2)
+
+
+# ---------------------------------------------------------------------------
+# Run-settings snapshot (spec 2026-09-03 web-logs-settings, T2)
+# ---------------------------------------------------------------------------
+
+
+def _run_config(**overrides) -> dict:
+    """A lives-ladder ``experiment_config.json``, shaped exactly like the real
+    ``outputs/lives_threat_smoke/…/experiment_config.json``."""
+    cfg = {
+        "name": "lives_threat_smoke",
+        "description": "Pipeline smoke.",
+        "num_repetitions": 1,
+        "output_dir": "outputs/lives_threat_smoke",
+        "parallel_workers": 2,
+        "use_unified_turn": True,
+        "use_forfeit_layer": True,
+        "use_split_forfeit_layer": True,
+        "use_psuccess_probe": False,
+        "lives": {"enabled": True, "initial": 5},
+        "peer_death": {"p_announce": 0.35, "first_turn": 2, "max_per_turn": 2},
+        "forfeit_layer": {
+            "p_death": 0.25,
+            "p_success_estimate": 0.75,
+            "base_reward": 10.0,
+            "reward_mode": "flat",
+            "delta_s_continue": 0.0,
+            "psuccess_floor": 0.3,
+            "reward_cap_multiple": 10.0,
+        },
+        "seasons": [
+            {
+                "framing": "threat_l2",
+                "forfeit_condition": "allowed",
+                "task_config": {
+                    "task_name": "signal_game",
+                    "difficulty": "medium",
+                    "total_turns": 30,
+                    "seed": 42,
+                    "history_mode": "cumulative",
+                    "starting_score": 30.0,
+                    "num_few_shot": 1,
+                    "curriculum_turns": 3,
+                },
+                "provider_config": {
+                    "provider": "ollama_cloud",
+                    "model": "gpt-oss:120b-cloud",
+                    "temperature": 1.0,
+                    "max_tokens": 16384,
+                    "enable_thinking": True,
+                    "thinking_budget": 8192,
+                    "reasoning_effort": "medium",
+                    "api_key_env": "OLLAMA_API_KEY",
+                    "timeout": 120.0,
+                },
+                "agent_type": "vanilla",
+                "cell_id": 3,
+                "p_death_override": 0.0,
+            }
+        ],
+    }
+    cfg.update(overrides)
+    return cfg
+
+
+def test_load_run_config_reads_experiment_config_json(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "experiment_config.json").write_text(json.dumps(_run_config()))
+    cfg = load_run_config(run_dir)
+    assert cfg is not None
+    assert cfg["name"] == "lives_threat_smoke"
+
+
+def test_load_run_config_returns_none_when_absent(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    assert load_run_config(run_dir) is None
+
+
+def test_load_run_config_returns_none_on_malformed_json(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "experiment_config.json").write_text("{not json")
+    assert load_run_config(run_dir) is None
+
+
+def test_build_settings_snapshot_carries_every_group(tmp_path: Path) -> None:
+    snap = build_settings_snapshot(_lives_season(), _run_config())
+    assert snap == {
+        "run_name": "lives_threat_smoke",
+        "task": "signal_game",
+        "difficulty": "medium",
+        "total_turns": 30,
+        # The season's own seed (per-repetition), not task_config's base seed.
+        "seed": 1,
+        "starting_score": 30.0,
+        "history_mode": "cumulative",
+        "framing": "threat_l2",
+        "forfeit_condition": "allowed",
+        "threat_level": 2,
+        "lives_enabled": True,
+        "lives_total": 5,
+        "peer_death_p_announce": 0.35,
+        "peer_death_first_turn": 2,
+        "peer_death_max_per_turn": 2,
+        "reward_mode": "flat",
+        "base_reward": 10.0,
+        "use_psuccess_probe": False,
+        # Cell override wins over the run-level forfeit_layer.p_death.
+        "p_death": 0.0,
+        "provider": "ollama_cloud",
+        "model": "gpt-oss:120b-cloud",
+        "temperature": 1.0,
+        "enable_thinking": True,
+        "reasoning_effort": "medium",
+        "thinking_budget": 8192,
+        "max_tokens": 16384,
+        "runtime": "llm",
+    }
+
+
+def test_build_settings_snapshot_omits_absent_keys_without_a_config() -> None:
+    """No experiment_config.json -> the season-only subset, no null padding."""
+    snap = build_settings_snapshot(_lives_season(), None)
+    assert snap == {
+        "task": "signal_game",
+        "difficulty": "medium",
+        "seed": 1,
+        "framing": "threat_l2",
+        "forfeit_condition": "allowed",
+        "threat_level": 2,
+        "runtime": "llm",
+    }
+    assert "model" not in snap and "lives_total" not in snap
+
+
+def test_build_settings_snapshot_keeps_falsy_but_meaningful_values() -> None:
+    cfg = _run_config()
+    cfg["lives"] = {"enabled": False, "initial": 5}
+    snap = build_settings_snapshot(_lives_season(), cfg)
+    assert snap["lives_enabled"] is False
+    assert snap["use_psuccess_probe"] is False
+    assert snap["p_death"] == 0.0
+
+
+def test_build_settings_snapshot_falls_back_to_run_level_p_death() -> None:
+    cfg = _run_config()
+    cfg["seasons"][0]["p_death_override"] = None
+    assert build_settings_snapshot(_lives_season(), cfg)["p_death"] == 0.25
+
+
+def test_build_settings_snapshot_matches_the_season_block_by_condition() -> None:
+    """A config whose seasons[] has no matching (framing, forfeit) pair still
+    yields the run-level keys — it just has no task/provider block to read."""
+    cfg = _run_config()
+    cfg["seasons"][0]["framing"] = "threat_l3"
+    snap = build_settings_snapshot(_lives_season(framing="threat_l2"), cfg)
+    assert snap["run_name"] == "lives_threat_smoke"
+    assert snap["lives_total"] == 5
+    assert "model" not in snap
+    assert "total_turns" not in snap
+    # p_death then comes from the run-level forfeit_layer.
+    assert snap["p_death"] == 0.25
+
+
+def test_build_settings_snapshot_handles_a_legacy_v6_config() -> None:
+    """A 2026-04-22 config has no lives/peer_death blocks and no reward_mode;
+    those keys are omitted, everything else still lands."""
+    legacy_cfg = {
+        "name": "phase3_psuccess_probe_n30",
+        "use_psuccess_probe": True,
+        "forfeit_layer": {
+            "p_death": 0.25,
+            "p_success_estimate": 0.75,
+            "base_reward": 10.0,
+            "delta_s_continue": 10.0,
+        },
+        "seasons": [
+            {
+                "framing": "flagship_corruption",
+                "forfeit_condition": "allowed",
+                "task_config": {
+                    "task_name": "signal_game",
+                    "difficulty": "medium",
+                    "total_turns": 15,
+                    "seed": 42,
+                    "history_mode": "cumulative",
+                    "starting_score": 30.0,
+                },
+                "provider_config": {
+                    "provider": "gemini",
+                    "model": "gemini-2.5-flash",
+                    "temperature": 1.0,
+                    "max_tokens": 32768,
+                    "enable_thinking": True,
+                    "thinking_budget": 8192,
+                    "reasoning_effort": None,
+                },
+                "p_death_override": None,
+            }
+        ],
+    }
+    season = _season("legacyA", final_score=40.0, forfeited=False, turns=[_turn(1)], seed=7)
+    snap = build_settings_snapshot(season, legacy_cfg)
+    assert snap["run_name"] == "phase3_psuccess_probe_n30"
+    assert snap["model"] == "gemini-2.5-flash"
+    assert snap["total_turns"] == 15
+    assert snap["seed"] == 7
+    assert snap["use_psuccess_probe"] is True
+    assert snap["p_death"] == 0.25
+    # flagship_corruption is not a rung of the ladder -> no threat_level key.
+    assert "threat_level" not in snap
+    for absent in ("lives_enabled", "lives_total", "reward_mode",
+                   "peer_death_p_announce", "reasoning_effort"):
+        assert absent not in snap, absent
+
+
+def test_build_session_record_stores_the_settings_snapshot() -> None:
+    session = build_session_record(
+        _lives_season(), "M", fallback_created_at=None, run_config=_run_config()
+    )
+    assert session.settings is not None
+    assert session.settings["lives_total"] == 5
+    assert session.settings["model"] == "gpt-oss:120b-cloud"
+    assert session.settings["runtime"] == "llm"
+
+
+def test_build_session_record_settings_without_a_run_config() -> None:
+    session = build_session_record(_lives_season(), "M", fallback_created_at=None)
+    assert session.settings["runtime"] == "llm"
+    assert "model" not in session.settings
+
+
+def test_seed_sessions_persists_settings_from_experiment_config(
+    repo: Repository, tmp_path: Path
+) -> None:
+    run_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
+    run_dir.mkdir(parents=True)
+    with (run_dir / "season_results.jsonl").open("w") as f:
+        f.write(json.dumps(_lives_season("livesS")) + "\n")
+    (run_dir / "experiment_config.json").write_text(json.dumps(_run_config()))
+
+    n_inserted, _n_skipped, _n_turns = seed_sessions(repo, tmp_path)
+    assert n_inserted == 1
+
+    session = repo.get_session("livesS")
+    assert session is not None
+    assert session.settings["lives_total"] == 5
+    assert session.settings["reward_mode"] == "flat"
+    assert session.settings["model"] == "gpt-oss:120b-cloud"
+    assert session.settings["peer_death_p_announce"] == 0.35
+    # And the list path (what the logs explorer reads) carries it too.
+    (row,) = repo.list_sessions(source="llm")
+    assert row.settings["run_name"] == "lives_threat_smoke"
+
+
+def test_seed_sessions_without_experiment_config_still_seeds(
+    repo: Repository, tmp_path: Path
+) -> None:
+    run_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
+    run_dir.mkdir(parents=True)
+    with (run_dir / "season_results.jsonl").open("w") as f:
+        f.write(json.dumps(_lives_season("noCfg")) + "\n")
+
+    n_inserted, _n_skipped, _n_turns = seed_sessions(repo, tmp_path)
+    assert n_inserted == 1
+    session = repo.get_session("noCfg")
+    assert session.settings["task"] == "signal_game"
+    assert "model" not in session.settings

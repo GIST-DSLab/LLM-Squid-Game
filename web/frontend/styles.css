@@ -2324,3 +2324,111 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
   .screen-flash { display: none; }
   .play-danger::after { transition: none; }
 }
+
+/* ===================================================================
+   Run-settings snapshot — Logs explorer (spec 2026-09-03 web-logs-settings)
+   Trace header inline summary + collapsible "Run settings" panel + the
+   session-list second meta line.
+   =================================================================== */
+
+.settings-inline {
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.01em;
+}
+
+/* Session-list rows carry a second line, so they must wrap. Every existing
+   row fits on one line, so this only takes effect for the new span. */
+.log-item { flex-wrap: wrap; }
+.li-settings {
+  flex-basis: 100%;
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+}
+.li-settings:empty { display: none; }
+
+.settings-panel {
+  margin: 0 0 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.settings-panel > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  user-select: none;
+}
+.settings-panel > summary::-webkit-details-marker { display: none; }
+.settings-panel > summary:hover { color: var(--text); background: var(--panel-alt); }
+.settings-caret {
+  display: inline-block;
+  transition: transform 0.15s;
+  color: var(--accent);
+}
+.settings-panel[open] .settings-caret { transform: rotate(90deg); }
+.settings-runtime {
+  margin-left: auto;
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-alt);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.settings-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px 22px;
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--border);
+}
+.settings-empty {
+  grid-column: 1 / -1;
+  padding: 6px 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+.settings-group-title {
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.settings-grid { margin: 0; }
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(88px, 38%) 1fr;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.82rem;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row dt { color: var(--text-dim); }
+.settings-row dd {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-caret { transition: none; }
+}
