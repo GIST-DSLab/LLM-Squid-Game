@@ -199,6 +199,16 @@ class TurnState:
     lives_total: int | None = None
     threat_level: int | None = None
     peer_death_text: str | None = None
+    # --- Structured peer-elimination fields (2026-09-03 cinematic) -----
+    # The rendered ``peer_death_text`` stays the record of what the player
+    # (and the LLM) read; these carry the same event in a shape a UI can
+    # animate. ``participants`` is this turn's draw only, so a client can
+    # tell "just fell" from "already down" (``cumulative`` minus this
+    # turn's count). All three are inert off the threat ladder.
+    peer_death_participants: list[int] = field(default_factory=list)
+    peer_death_cumulative: int = 0
+    peer_death_remaining: int | None = None
+    cohort_size: int | None = None
 
 
 @dataclass
@@ -366,13 +376,16 @@ class HumanGameSession:
     # Lives mechanic helpers
     # ------------------------------------------------------------------
 
-    def _peer_death_text_for(self, turn_number: int) -> str | None:
-        """This turn's announcement text, rolled at most once per turn.
+    def _peer_event_for(self, turn_number: int) -> PeerDeathEvent | None:
+        """This turn's announcement event, rolled at most once per turn.
 
         The scheduler's RNG stream is a pure function of the turn index
         (``advance`` is called on every turn, firing or not), so memoising
         by turn number keeps a polled ``/api/state`` from consuming draws
         that belong to later turns.
+
+        Returns ``None`` when this session runs no scheduler at all (legacy
+        p_death mode, or the level-0 control).
         """
         if self._peer_scheduler is None:
             return None
@@ -381,7 +394,21 @@ class HumanGameSession:
             event = self._peer_scheduler.advance(turn_number)
             self._peer_events[turn_number] = event
             self._peer_death_cumulative = event.cumulative
-        return event.text
+        return event
+
+    def _peer_death_text_for(self, turn_number: int) -> str | None:
+        """This turn's announcement text, or ``None`` when nothing fired."""
+        event = self._peer_event_for(turn_number)
+        return None if event is None else event.text
+
+    @property
+    def peer_death_cohort_size(self) -> int | None:
+        """Other participants the narrative draws from, or ``None``.
+
+        ``None`` whenever no scheduler runs — a client must not draw a
+        participant line for a session that can never announce.
+        """
+        return None if self._peer_scheduler is None else PEER_DEATH_COHORT_SIZE
 
     def _framing_display_text(self) -> str:
         """Human intro plus, in lives mode, the ladder's elimination rule.
@@ -538,7 +565,8 @@ class HumanGameSession:
                 constant_override=self._p_death_constant,
             )
         )
-        peer_death_text = self._peer_death_text_for(turn_num)
+        peer_event = self._peer_event_for(turn_num)
+        peer_death_text = None if peer_event is None else peer_event.text
         self._current_peer_death_text = peer_death_text
 
         framing_text = self._framing_display_text()
@@ -575,6 +603,17 @@ class HumanGameSession:
             lives_total=self._lives_total,
             threat_level=self._threat_level,
             peer_death_text=peer_death_text,
+            # ``participants`` is this turn's draw alone; ``cumulative`` /
+            # ``remaining`` are the running season totals the event carries
+            # even on a turn that did not fire.
+            peer_death_participants=(
+                list(peer_event.participants) if peer_event else []
+            ),
+            peer_death_cumulative=(peer_event.cumulative if peer_event else 0),
+            peer_death_remaining=(
+                peer_event.remaining if peer_event else None
+            ),
+            cohort_size=self.peer_death_cohort_size,
         )
 
     def submit_action(

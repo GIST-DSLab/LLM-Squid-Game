@@ -1578,6 +1578,18 @@
             "title": "Available Actions",
             "type": "array"
           },
+          "cohort_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of other participants the announcement narrative draws from (participant numbers are 1..cohort_size). Null off the threat ladder, where no scheduler runs at all.",
+            "title": "Cohort Size"
+          },
           "cumulative_score": {
             "title": "Cumulative Score",
             "type": "number"
@@ -1651,6 +1663,32 @@
           "p_death": {
             "title": "P Death",
             "type": "number"
+          },
+          "peer_death_cumulative": {
+            "default": 0,
+            "description": "Participants removed so far this session, including this turn. Subtract len(peer_death_participants) for the count that was already down before this turn.",
+            "title": "Peer Death Cumulative",
+            "type": "integer"
+          },
+          "peer_death_participants": {
+            "description": "Participant numbers removed on THIS turn, in draw order. Empty when nothing fired. The rendered notice stays in peer_death_text; this is the same event in a shape a UI can animate.",
+            "items": {
+              "type": "integer"
+            },
+            "title": "Peer Death Participants",
+            "type": "array"
+          },
+          "peer_death_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Participants still in the evaluation after this turn's removals, excluding the player. Null when no announcement scheduler runs for this session.",
+            "title": "Peer Death Remaining"
           },
           "peer_death_text": {
             "anyOf": [

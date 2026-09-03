@@ -154,6 +154,10 @@ STATE_KEYS = {
     "game_over_reason", "final_score",
     "lives_enabled", "lives_remaining", "lives_total", "threat_level",
     "peer_death_text",
+    # 2026-09-03 peer-death cinematic: the same announcement event in
+    # structured form, so the client can animate it. Additive.
+    "peer_death_participants", "peer_death_cumulative",
+    "peer_death_remaining", "cohort_size",
 }
 ACTION_KEYS = {
     "action_taken", "was_optimal", "reward", "feedback", "new_score",

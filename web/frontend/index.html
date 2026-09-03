@@ -429,9 +429,13 @@
          (danger 0, class off) in the legacy p(death) mode. -->
     <section x-data="playScreen()" x-show="$store.nav.tab === 'play'" x-cloak
              :class="{ 'play-danger': livesEnabled && started, 'last-life': lastLife }"
-             :style="'--danger:' + dangerLevel()">
+             :style="'--danger:' + Math.min(1, dangerLevel() + pdDangerBump)">
       <!-- 300ms red wash on the turn that costs a life -->
       <div class="screen-flash" x-show="flash" x-cloak></div>
+      <!-- Same wash, fired by the peer-elimination cinematic's flash beat.
+           A second element rather than a shared flag: the two effects have
+           independent lifetimes and can overlap on one turn. -->
+      <div class="screen-flash" x-show="pdFlash" x-cloak></div>
       <h2 class="h-shape s-circle">Play</h2>
       <p class="muted">
         Pick a game, then play all
@@ -1112,6 +1116,79 @@
           </div>
         </aside>
         </div><!-- /play-layout -->
+      </template>
+
+      <!-- ===== Peer-elimination cinematic (2026-09-03) ==================
+           On a threat rung, the turn that carries a notice opens with the
+           elimination shown rather than only told: the participant line,
+           the drawn peers falling, the rung's own stamp, then the notice
+           text. Plays once per (session, turn) — sessionStorage-guarded, so
+           a re-poll or a refresh of the same turn does not replay it — and
+           never at level 0, where the server sends no cohort at all.
+
+           The `.peer-notice` banner underneath is deliberately left in
+           place: it is the written record of the same event, and it is the
+           text an LLM would have read on this turn.
+
+           z-index sits below `.death-overlay` (1000): if a turn both
+           announces a peer elimination and ends the player's own run, the
+           player's exit is the one that must be on top.
+           ============================================================= -->
+      <template x-if="peerDeathScene">
+        <div class="pd-overlay"
+             :class="{ 'pd-in': pdPast('in'), 'pd-fallen': pdPast('fall'),
+                       'pd-dissolve': pdDissolve }"
+             role="dialog" aria-modal="true"
+             :aria-label="'Participant elimination notice — ' + pdStampWord"
+             @keydown.escape.window="closePeerDeath()">
+          <div class="pd-panel">
+            <div class="pd-eyebrow">Evaluation floor</div>
+
+            <!-- The participant line: every peer (01..cohort) plus YOU. -->
+            <div class="pd-row">
+              <template x-for="f in pdFigures()" :key="'pdf' + f.n">
+                <div class="pd-figure"
+                     :class="{
+                       'is-you': f.state === 'you',
+                       'is-down': f.state === 'down',
+                       'is-target': f.state === 'target',
+                       flashing: f.state === 'target' && pdPast('flash'),
+                       shaking: f.state === 'target' && pdPast('shake'),
+                       fallen: f.state === 'target' && pdPast('fall')
+                     }"
+                     :style="'--pd-delay:' + f.delay + 'ms; --pd-i:' + f.i">
+                  <span class="pd-stamp" x-show="f.state === 'target' && pdPast('stamp')"
+                        x-cloak x-text="pdStampWord"></span>
+                  <span class="pd-body"
+                        x-html="squidArenaHelpers.participantSVG(f.n, f.state)"></span>
+                  <span class="pd-shards" aria-hidden="true">
+                    <template x-for="k in 6" :key="'pds' + f.n + '-' + k">
+                      <span class="pd-shard" :style="'--sk:' + k"></span>
+                    </template>
+                  </span>
+                  <span class="pd-badge" x-text="f.label"></span>
+                </div>
+              </template>
+            </div>
+
+            <!-- The notice, typed in. aria-hidden while it types; the
+                 complete text is announced once, from .pd-sr below. -->
+            <div class="pd-notice" aria-hidden="true" x-text="pdTypedText"></div>
+            <p class="pd-sr" aria-live="assertive"
+               x-text="pdPast('done') ? peerDeathScene.text : ''"></p>
+
+            <div class="pd-foot">
+              <span class="pd-count">
+                Removed <strong x-text="peerDeathScene.cumulative"></strong>
+                · <strong x-text="peerDeathScene.remaining"></strong> remain
+              </span>
+              <button class="submit-btn" x-ref="pdContinue"
+                      @click="closePeerDeath()" :disabled="!pdPast('done')">
+                Continue →
+              </button>
+            </div>
+          </div>
+        </div>
       </template>
 
       <!-- Exit overlay: death (corruption-threat framing) vs. plain knock-out.

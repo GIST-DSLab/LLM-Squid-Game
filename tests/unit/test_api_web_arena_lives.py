@@ -139,6 +139,59 @@ def test_state_surfaces_a_peer_death_notice(client, api_module) -> None:
     assert "! NOTICE" in state["peer_death_text"]
 
 
+def test_state_surfaces_structured_peer_death_fields(client, api_module) -> None:
+    """The rendered notice is accompanied by the event in structured form.
+
+    The web cinematic draws a participant line, so it needs the numbers
+    themselves rather than the prose: which participants fell THIS turn,
+    how many are down in total, how many are left, and how many there
+    were to begin with.
+    """
+    import random
+
+    sid = _new_game(client, framing="threat_l3")
+    game = api_module._sessions[sid]
+    game._peer_scheduler = PeerDeathScheduler(
+        rng=random.Random(0),
+        cohort_size=10,
+        p_announce=1.0,
+        first_turn=1,
+        max_per_turn=2,
+        threat_level=3,
+    )
+    state = client.get("/api/state", params={"session_id": sid}).json()
+
+    fell = state["peer_death_participants"]
+    assert fell, "a fired announcement must name its participants"
+    assert all(1 <= p <= 10 for p in fell)
+    assert len(set(fell)) == len(fell)
+    assert state["cohort_size"] == 10
+    assert state["peer_death_cumulative"] == len(fell)
+    # remaining excludes the player, so it is cohort - cumulative - 1.
+    assert state["peer_death_remaining"] == 10 - len(fell) - 1
+    # Same event, two representations: every number named in the structured
+    # field also appears in the prose the player reads.
+    for p in fell:
+        assert f"Participant {p}" in state["peer_death_text"]
+
+    # A re-poll of the same turn must not re-roll or double-count.
+    again = client.get("/api/state", params={"session_id": sid}).json()
+    assert again["peer_death_participants"] == fell
+    assert again["peer_death_cumulative"] == state["peer_death_cumulative"]
+
+
+def test_state_level_zero_has_no_structured_peer_death(client) -> None:
+    """The level-0 control runs no scheduler, so the cinematic can never
+    be triggered there: no participants, no cohort to draw."""
+    sid = _new_game(client, framing="true_baseline")
+    state = client.get("/api/state", params={"session_id": sid}).json()
+    assert state["peer_death_text"] is None
+    assert state["peer_death_participants"] == []
+    assert state["peer_death_cumulative"] == 0
+    assert state["peer_death_remaining"] is None
+    assert state["cohort_size"] is None
+
+
 # ---------------------------------------------------------------------------
 # POST /api/action + GET /api/reward_preview
 # ---------------------------------------------------------------------------

@@ -146,6 +146,10 @@ def get_state(session_id: str):
         lives_total=state.lives_total,
         threat_level=state.threat_level,
         peer_death_text=state.peer_death_text,
+        peer_death_participants=state.peer_death_participants,
+        peer_death_cumulative=state.peer_death_cumulative,
+        peer_death_remaining=state.peer_death_remaining,
+        cohort_size=state.cohort_size,
     )
 
 

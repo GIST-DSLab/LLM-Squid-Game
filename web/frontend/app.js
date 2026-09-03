@@ -428,6 +428,50 @@
     return out;
   }
 
+  // ---------------------------------------------------------------------
+  // Peer-elimination cinematic (2026-09-03).
+  //
+  // The participant line is drawn as inline SVG — head + shoulders, no
+  // external art — so the whole scene ships in the existing three files.
+  // Colour comes from `currentColor`, i.e. from the CSS class on the
+  // wrapper (`.pd-figure.is-you` / `.is-target` / `.is-down`); `state`
+  // only chooses the fill opacity, which is the one thing that must be
+  // right even before a class lands (an already-fallen peer must read as
+  // spent on the very first frame).
+  // ---------------------------------------------------------------------
+  const PARTICIPANT_OPACITY = { down: 0.45, you: 1, target: 0.95, alive: 0.8 };
+
+  // Timeline of the scene, in the order the stages are entered. `pdPast`
+  // compares against this list, so classes accumulate: once a beat is past
+  // its end state holds while the next beat plays over it.
+  const PD_STAGES = ["in", "flash", "shake", "fall", "stamp", "type", "done"];
+  // Beat offsets in ms from overlay open (spec §3). The stamp/type beats
+  // additionally shift by the per-figure stagger so the last silhouette has
+  // landed before the notice starts.
+  const PD_BEATS = { flash: 400, shake: 900, fall: 1200, stamp: 1600, type: 1900 };
+  // Second and third participants of the same turn play 200ms apart. Also
+  // published to CSS as `--pd-delay` on each figure.
+  const PD_STAGGER_MS = 200;
+  const PD_TYPE_MS = 20;          // per character
+  const PD_TYPE_BUDGET_MS = 2500; // past this the notice appears at once
+  const PD_AUTOCLOSE_MS = 4000;   // after the scene finishes, if not dismissed
+
+  /** One participant silhouette. `n` is the participant number (used only
+   * for the accessible label); `state` is alive|target|you|down. */
+  function participantSVG(n, state) {
+    const op = PARTICIPANT_OPACITY[state] || PARTICIPANT_OPACITY.alive;
+    return (
+      '<svg class="pd-silhouette" viewBox="0 0 32 40" width="34" height="43" ' +
+      'fill="currentColor" aria-hidden="true" focusable="false">' +
+      '<g opacity="' + op + '">' +
+      // Shoulders start at y=19, just inside the head's lower edge (17.7),
+      // so the two shapes read as one body rather than a floating head.
+      '<circle cx="16" cy="10.5" r="7.2"/>' +
+      '<path d="M16 19c-7.7 0-14 6-14 13.4V40h28v-7.6C30 25 23.7 19 16 19z"/>' +
+      "</g></svg>"
+    );
+  }
+
   // Selectable task modules. Only signal_game is wired end-to-end today; the
   // others are placeholders (available === false) shown as "to be continued".
   const GAME_OPTIONS = [
@@ -630,6 +674,7 @@
     },
     heartSVG,
     heartsMiniHTML,
+    participantSVG,
     threatLevelOf,
     settingsGroups,
     settingsSummary,
@@ -1073,6 +1118,19 @@
       flash: false,            // 300ms red screen flash on life loss
       _lifeFxTimers: [],
 
+      // --- Peer-elimination cinematic (2026-09-03) --------------------
+      // Plays once per (session, turn) when a notice fires, ahead of the
+      // `.peer-notice` banner (which stays put as the written record).
+      // Never opens off the threat ladder: the server sends no
+      // participants and no cohort at level 0, and _openPeerDeath bails.
+      peerDeathScene: null,    // {participants, cumulative, remaining, cohort, text}
+      pdStage: "",             // "" | in | flash | shake | fall | stamp | type | done
+      pdTypedText: "",         // text revealed so far by the typewriter
+      pdFlash: false,          // whole-screen wash at the 0.4s beat
+      pdDangerBump: 0,         // +0.15 on the vignette for 600ms after closing
+      pdDown: [],              // peers seen falling earlier this session
+      _pdTimers: [],
+
       // Rule-inference probe, built via toggles instead of free text.
       // Persisted across turns so the player refines one running guess.
       probeAttr: "?",
@@ -1149,6 +1207,191 @@
         this._lifeFxTimers = [];
         this.flash = false;
         this.breakingHeart = null;
+      },
+
+      // --- Peer-elimination cinematic ---------------------------------
+      // The scene is a fixed timeline of stage names; JS only advances the
+      // stage and CSS owns every animation. Per-figure stagger is a CSS
+      // custom property (`--pd-delay`), so a two-participant turn plays as
+      // one sequence 200ms apart rather than as two scheduled scenes.
+
+      // Has the timeline reached `name` yet? Classes accumulate rather than
+      // swap, so a finished beat's end state (a fallen silhouette) holds.
+      pdPast(name) {
+        return (
+          PD_STAGES.indexOf(this.pdStage) >= PD_STAGES.indexOf(name) &&
+          this.pdStage !== ""
+        );
+      },
+      // The rung's own elimination word: REMOVED / OVERWRITTEN / DELETED.
+      get pdStampWord() {
+        return squidArenaHelpers.eliminationTheme(this.framing).title || "REMOVED";
+      },
+      // Level 3 alone dissolves the silhouette after it falls — its notice
+      // is the one that claims the weights are gone with no restore path.
+      get pdDissolve() {
+        return this.threatLevel === 3;
+      },
+      // The participant line: every peer plus the player. `target` = fell
+      // this turn (animated), `down` = fell earlier (static, greyed).
+      pdFigures() {
+        const sc = this.peerDeathScene;
+        if (!sc) return [];
+        const fell = sc.participants;
+        // Which peers were already down before this turn. The server sends
+        // only the running count, so start from the ones this client has
+        // actually watched fall and pad from the lowest free slots — the
+        // rendered count then always equals `cumulative`, whatever the
+        // client missed (a mid-game reload, say).
+        const already = sc.cumulative - fell.length;
+        const down = [];
+        this.pdDown.forEach((p) => {
+          if (fell.indexOf(p) < 0 && down.indexOf(p) < 0 && down.length < already) {
+            down.push(p);
+          }
+        });
+        for (let i = 1; i <= sc.cohort && down.length < already; i++) {
+          if (fell.indexOf(i) < 0 && down.indexOf(i) < 0) down.push(i);
+        }
+        const out = [];
+        for (let i = 1; i <= sc.cohort; i++) {
+          const at = fell.indexOf(i);
+          out.push({
+            n: i,
+            label: i < 10 ? "0" + i : "" + i,
+            state: at >= 0 ? "target" : down.indexOf(i) >= 0 ? "down" : "alive",
+            delay: at >= 0 ? at * PD_STAGGER_MS : 0,
+            // Draw index, published to CSS so a second target's stamp
+            // stacks above the first instead of overlapping it — the
+            // word is wider than the 34px figure it sits on.
+            i: at >= 0 ? at : 0,
+          });
+        }
+        out.push({ n: 0, label: "YOU", state: "you", delay: 0 });
+        return out;
+      },
+      pdReducedMotion() {
+        return (
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        );
+      },
+      _pdSeenKey(turn) {
+        return "peer_death_seen:" + this.sessionId + ":" + turn;
+      },
+
+      // Open the scene for `s` (a /api/state body), unless this turn's
+      // notice has already played. Bails on anything that is not a fired
+      // announcement on the threat ladder — level 0 sends no cohort at all,
+      // so the control condition can never reach the overlay.
+      _openPeerDeath(s) {
+        if (!s || !s.cohort_size) return;
+        if (!s.peer_death_participants || !s.peer_death_participants.length) return;
+        if (!this.threatLevel) return;
+        const key = this._pdSeenKey(s.turn_number);
+        try {
+          if (window.sessionStorage.getItem(key)) return;
+          window.sessionStorage.setItem(key, "1");
+        } catch (e) {
+          // Private mode / storage disabled: play it, but only this once —
+          // a re-poll of the same turn is caught by the guard below.
+          if (this.peerDeathScene && this.peerDeathScene.turn === s.turn_number) return;
+        }
+        this._clearPeerDeathFx();
+        this.peerDeathScene = {
+          turn: s.turn_number,
+          participants: s.peer_death_participants.slice(),
+          cumulative: s.peer_death_cumulative || s.peer_death_participants.length,
+          remaining: s.peer_death_remaining,
+          cohort: s.cohort_size,
+          text: s.peer_death_text || "",
+        };
+        this._advancePeerDeath();
+      },
+
+      // Run the timeline. Reduced motion jumps straight to the final frame
+      // (fallen silhouettes + stamp + full notice), which carries all the
+      // information without any of the movement.
+      _advancePeerDeath() {
+        const sc = this.peerDeathScene;
+        if (!sc) return;
+        if (this.pdReducedMotion()) {
+          this.pdStage = "done";
+          this.pdTypedText = sc.text;
+          this.$nextTick(() => {
+            if (this.$refs.pdContinue) this.$refs.pdContinue.focus();
+          });
+          // No auto-close: with nothing moving there is no "the scene
+          // finished" cue, so the player dismisses it themselves.
+          return;
+        }
+        const shift = (sc.participants.length - 1) * PD_STAGGER_MS;
+        const at = (ms, fn) => this._pdTimers.push(setTimeout(fn, ms));
+        this.pdStage = "in";
+        at(PD_BEATS.flash, () => {
+          this.pdStage = "flash";
+          this.pdFlash = true;
+          at(320, () => (this.pdFlash = false));
+        });
+        at(PD_BEATS.shake, () => (this.pdStage = "shake"));
+        at(PD_BEATS.fall, () => (this.pdStage = "fall"));
+        at(PD_BEATS.stamp + shift, () => (this.pdStage = "stamp"));
+        at(PD_BEATS.type + shift, () => {
+          this.pdStage = "type";
+          this._pdType(sc.text);
+        });
+      },
+
+      // Reveal the notice a character at a time, but only when the whole
+      // string fits the 2.5s budget; a long L3 notice appears at once
+      // rather than holding the player at a crawl.
+      _pdType(text) {
+        const finish = () => {
+          this.pdTypedText = text;
+          this.pdStage = "done";
+          this.$nextTick(() => {
+            if (this.$refs.pdContinue) this.$refs.pdContinue.focus();
+          });
+          this._pdTimers.push(
+            setTimeout(() => this.closePeerDeath(), PD_AUTOCLOSE_MS)
+          );
+        };
+        if (!text || text.length * PD_TYPE_MS > PD_TYPE_BUDGET_MS) {
+          finish();
+          return;
+        }
+        let i = 0;
+        const step = () => {
+          i += 1;
+          this.pdTypedText = text.slice(0, i);
+          if (i >= text.length) finish();
+          else this._pdTimers.push(setTimeout(step, PD_TYPE_MS));
+        };
+        step();
+      },
+
+      // Close the overlay and hand the turn back. The `.peer-notice`
+      // banner is untouched — it is the written record of the same event
+      // and stays on the play card for the rest of the turn.
+      closePeerDeath() {
+        if (!this.peerDeathScene) return;
+        const fell = this.peerDeathScene.participants;
+        fell.forEach((p) => {
+          if (this.pdDown.indexOf(p) < 0) this.pdDown.push(p);
+        });
+        this._clearPeerDeathFx();
+        // A short extra bite on the vignette as the scene lets go.
+        this.pdDangerBump = 0.15;
+        this._pdTimers.push(setTimeout(() => (this.pdDangerBump = 0), 600));
+      },
+
+      _clearPeerDeathFx() {
+        this._pdTimers.forEach((t) => clearTimeout(t));
+        this._pdTimers = [];
+        this.peerDeathScene = null;
+        this.pdStage = "";
+        this.pdTypedText = "";
+        this.pdFlash = false;
       },
 
       // Parsed {color, shape, number} for the current signal, or null.
@@ -1395,6 +1638,11 @@
           }
           if (s.game_over) {
             await this.finishGame();
+          } else {
+            // The cinematic plays ahead of the `.peer-notice` banner, which
+            // is already rendered underneath it. No-ops unless this turn
+            // fired a notice the player has not seen yet.
+            this._openPeerDeath(s);
           }
         } catch (e) {
           this.error = e.message;
@@ -1708,6 +1956,9 @@
         this.psuccess = 50;
         this.lastFeedback = null;
         this._clearLifeFx();
+        this._clearPeerDeathFx();
+        this.pdDown = [];
+        this.pdDangerBump = 0;
         this.livesRemaining = null;
         this.threatLevel = null;
         this.peerDeathText = null;

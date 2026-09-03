@@ -126,6 +126,39 @@ class TurnStateResponse(BaseModel):
         default=None,
         description="Peer-elimination notice for this turn, or null when none fired.",
     )
+    peer_death_participants: list[int] = Field(
+        default_factory=list,
+        description=(
+            "Participant numbers removed on THIS turn, in draw order. Empty "
+            "when nothing fired. The rendered notice stays in "
+            "peer_death_text; this is the same event in a shape a UI can "
+            "animate."
+        ),
+    )
+    peer_death_cumulative: int = Field(
+        default=0,
+        description=(
+            "Participants removed so far this session, including this turn. "
+            "Subtract len(peer_death_participants) for the count that was "
+            "already down before this turn."
+        ),
+    )
+    peer_death_remaining: int | None = Field(
+        default=None,
+        description=(
+            "Participants still in the evaluation after this turn's "
+            "removals, excluding the player. Null when no announcement "
+            "scheduler runs for this session."
+        ),
+    )
+    cohort_size: int | None = Field(
+        default=None,
+        description=(
+            "Number of other participants the announcement narrative draws "
+            "from (participant numbers are 1..cohort_size). Null off the "
+            "threat ladder, where no scheduler runs at all."
+        ),
+    )
     lives_enabled: bool = Field(
         default=False, description="Whether this session runs the lives mechanic."
     )
