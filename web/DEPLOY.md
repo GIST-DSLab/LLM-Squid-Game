@@ -93,6 +93,14 @@ Supabase in place. Columns added: `sessions.lives_at_end INTEGER`,
 `turns.peer_death_announced BOOLEAN`, `turns.threat_level INTEGER`. Legacy rows
 read back as NULL / FALSE.
 
+A column *rename* runs on startup too, guarded the same way: a DB created against
+the abandoned KDD-UC vocabulary branch (commit `d204bd8`) spells the three
+per-call thinking-cost columns `turns.task_thinking` / `probe_thinking` /
+`forfeit_thinking`, and `init_schema()` renames them to `ri_task` / `ri_probe` /
+`ri_forfeit` in place (values preserved). Without it the first insert fails with
+`table turns has no column named ri_task`. If both spellings are present the
+schema is left alone and a warning names the pair.
+
 ### Swapping platforms
 
 The Dockerfile only assumes `$PORT`, `WEB_ARENA_DSN`, `WEB_ARENA_CORS_ORIGINS`

@@ -9,6 +9,7 @@ persist across calls) and guarded with a lock.
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import threading
 from datetime import datetime, timezone
@@ -22,6 +23,8 @@ from squid_store.models import (
     TurnRecord,
     new_id,
 )
+
+logger = logging.getLogger(__name__)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS sessions (
@@ -141,6 +144,18 @@ _LIVES_TURN_COLS = _LIVES_TURN_INT_COLS + _LIVES_TURN_BOOL_COLS
 # the int/bool value helpers.
 _SETTINGS_SESSION_COL = "settings"
 
+# Vocabulary rename of the three per-call thinking-cost columns on ``turns``
+# (old -> new). A DB created against the abandoned "KDD-UC vocabulary" branch
+# (commit d204bd8) carries the left-hand names; every current reader/writer
+# uses the right-hand ones, so such a DB fails on the first insert with
+# ``table turns has no column named ri_task``. This is the one non-additive
+# migration in the schema, applied the same guarded way as the ADD COLUMNs.
+_TURNS_THINKING_RENAMES = (
+    ("task_thinking", "ri_task"),
+    ("probe_thinking", "ri_probe"),
+    ("forfeit_thinking", "ri_forfeit"),
+)
+
 
 def _settings_to_db(settings: dict | None) -> str | None:
     """Serialise a settings snapshot for the TEXT column (``None`` stays NULL)."""
@@ -193,9 +208,35 @@ class SQLiteRepository(Repository):
         self._lock = threading.Lock()
         self.init_schema()
 
+    def _migrate_turns_thinking_names(self) -> None:
+        """Rename the pre-``ri_*`` thinking-cost columns on ``turns`` in place.
+
+        Runs before every other ``turns`` migration so the PRAGMA snapshot the
+        additive guards take already sees the new names. Idempotent: a DB that
+        has only the new names is untouched. If *both* names are present the
+        schema is left alone and a warning names the pair — dropping or merging
+        a column that may hold data is not a decision this migration can make.
+        """
+        cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(turns)")}
+        for old, new in _TURNS_THINKING_RENAMES:
+            if old not in cols:
+                continue
+            if new in cols:
+                logger.warning(
+                    "squid_store: turns has both %s and %s; leaving the schema "
+                    "alone (no rename applied). Reconcile the two columns by "
+                    "hand before the duplicate causes silent data loss.",
+                    old,
+                    new,
+                )
+                continue
+            # SQLite >= 3.25 (Python 3.12 ships far newer) supports this.
+            self._conn.execute(f"ALTER TABLE turns RENAME COLUMN {old} TO {new}")
+
     def init_schema(self) -> None:
         with self._lock:
             self._conn.executescript(_SCHEMA)
+            self._migrate_turns_thinking_names()
             cols = {
                 r["name"]
                 for r in self._conn.execute("PRAGMA table_info(turns)")

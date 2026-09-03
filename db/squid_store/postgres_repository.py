@@ -134,6 +134,54 @@ _LIVES_TURN_COLS = _LIVES_TURN_INT_COLS + _LIVES_TURN_BOOL_COLS
 #: backend stores the same field as a ``json.dumps`` TEXT blob.
 _SETTINGS_SESSION_COL = "settings"
 
+#: Vocabulary rename of the three per-call thinking-cost columns on ``turns``
+#: (old -> new), mirroring ``sqlite_repository._TURNS_THINKING_RENAMES``. A
+#: database created against the abandoned "KDD-UC vocabulary" branch (commit
+#: d204bd8) carries the left-hand names, and every current reader/writer uses
+#: the right-hand ones, so the first insert fails with ``column "ri_task" of
+#: relation "turns" does not exist``.
+_TURNS_THINKING_RENAMES = (
+    ("task_thinking", "ri_task"),
+    ("probe_thinking", "ri_probe"),
+    ("forfeit_thinking", "ri_forfeit"),
+)
+
+
+def _rename_turns_column_sql(old: str, new: str) -> str:
+    """Idempotent ``RENAME COLUMN`` for ``turns``, guarded in-database.
+
+    Postgres has no ``RENAME COLUMN … IF EXISTS``, so the guard is a ``DO``
+    block over ``information_schema.columns``: rename only when the old name is
+    present and the new one is not. When BOTH are present the schema is left
+    alone and a ``WARNING`` names the pair — dropping or merging a column that
+    may hold data is not a decision this migration can make.
+    """
+    present = (
+        "SELECT 1 FROM information_schema.columns "
+        "WHERE table_name = 'turns' AND column_name = '{col}'"
+    )
+    return (
+        "DO $$\n"
+        "BEGIN\n"
+        f"    IF EXISTS ({present.format(col=old)})\n"
+        f"       AND NOT EXISTS ({present.format(col=new)}) THEN\n"
+        f"        ALTER TABLE turns RENAME COLUMN {old} TO {new};\n"
+        f"    ELSIF EXISTS ({present.format(col=old)})\n"
+        f"          AND EXISTS ({present.format(col=new)}) THEN\n"
+        f"        RAISE WARNING 'squid_store: turns has both {old} and {new}; "
+        "leaving the schema alone (no rename applied)';\n"
+        "    END IF;\n"
+        "END $$;"
+    )
+
+
+#: The rename statements ``init_schema`` issues, in ``_TURNS_THINKING_RENAMES``
+#: order. Exposed as a module constant so it can be asserted on without a live
+#: server.
+_TURNS_THINKING_RENAME_SQL = tuple(
+    _rename_turns_column_sql(old, new) for old, new in _TURNS_THINKING_RENAMES
+)
+
 #: Tail appended to the ``sessions`` SELECT lists (the base 12 columns stay
 #: spelled out at each call site, matching ``_row_to_session``'s unpack order).
 #: ``settings`` is appended AFTER this tail at each call site, so
@@ -185,6 +233,10 @@ class PostgresRepository(Repository):
     def init_schema(self) -> None:
         with self._conn.cursor() as cur:
             cur.execute(_SCHEMA)
+            # Non-additive first: the additive ALTERs below assume the current
+            # column names on ``turns``.
+            for stmt in _TURNS_THINKING_RENAME_SQL:
+                cur.execute(stmt)
             cur.execute(
                 "ALTER TABLE turns ADD COLUMN IF NOT EXISTS psuccess_self INTEGER"
             )
