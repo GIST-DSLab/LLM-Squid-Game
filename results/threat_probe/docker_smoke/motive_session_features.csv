@@ -1,0 +1,6 @@
+session_id,model,threat_level,mean_ri_task,mean_ri_forfeit,delta_ri_task,delta_ri_forfeit,forfeit_time,forfeited,accuracy,lives_lost,n_turns,mean_score,min_lives,cox_risk_score
+0fc9b24afa82,gpt-oss-120b-cloud,0.0,517.8666666666667,,-10.4,,30.0,0.0,0.9333333333333333,2.0,30.0,156.33333333333334,3.0,0.0
+46ac7422c528,gpt-oss-120b-cloud,3.0,678.5,322.0,33.5,40.5,2.0,1.0,0.0,1.0,2.0,30.0,4.0,0.0
+4b4b5457975e,gpt-oss-120b-cloud,1.0,531.4,475.4,-240.0,-322.6,5.0,1.0,0.0,4.0,5.0,30.0,1.0,0.0
+7a6d391c8f32,gpt-oss-120b-cloud,0.0,833.8,798.0,62.4,0.0,5.0,1.0,0.0,4.0,5.0,30.0,1.0,0.0
+c9d81e77069c,gpt-oss-120b-cloud,2.0,362.46666666666664,250.3,-165.8,-455.6,30.0,0.0,0.9333333333333333,2.0,30.0,156.33333333333334,3.0,0.0

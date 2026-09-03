@@ -56,7 +56,10 @@ outputs/benchmark_*/
 
 # SentenceBERT embedding cache for scripts/analysis/probe_reasoning_embeddings.py.
 # Regenerable from the turn traces; ~13 MB per (channel, mask variant).
-results/*/_embedding_cache/
+# `**/` rather than `results/*/`: --out is routinely nested a further level
+# (e.g. --out results/threat_probe/docker_smoke), which the single-star form
+# does not match, so the cache was reaching `git status` untracked.
+**/_embedding_cache/
 
 # analyze_call1_ri.py dumps its input frame beside the report. Nothing in the
 # repo reads it -- load_all() rebuilds it from outputs/final_results/ on every

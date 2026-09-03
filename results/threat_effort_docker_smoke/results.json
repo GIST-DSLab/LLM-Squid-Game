@@ -1,0 +1,191 @@
+{
+  "tests": [
+    {
+      "name": "H6a accuracy",
+      "outcome": "correct",
+      "status": "ok",
+      "model": "GEE logit (exchangeable, session clusters)",
+      "beta_threat": 0.24798256377876648,
+      "se": 0.662767368967067,
+      "z": 0.37416230096730785,
+      "p": 0.7082835697513423,
+      "ci_low": -1.0510176098298913,
+      "ci_high": 1.5469827373874243,
+      "effect": 1.2814375885699363,
+      "effect_label": "odds ratio per level",
+      "n_obs": 72,
+      "n_sessions": 5,
+      "decision": "FAIL"
+    },
+    {
+      "name": "H6b effort",
+      "outcome": "log1p(ri_task)",
+      "status": "ok",
+      "model": "MixedLM (session random intercept)",
+      "beta_threat": 0.0,
+      "se": NaN,
+      "z": NaN,
+      "p": NaN,
+      "ci_low": NaN,
+      "ci_high": NaN,
+      "effect": 0.0,
+      "effect_label": "% thinking tokens per level",
+      "n_obs": 72,
+      "n_sessions": 5,
+      "decision": "SKIPPED"
+    },
+    {
+      "name": "H1-ext forfeit hazard",
+      "outcome": "forfeit",
+      "status": "ok",
+      "model": "CoxTimeVarying (threat_level ordinal, all cells)",
+      "beta_threat": 1.0457268824326345,
+      "hr": 2.845466091435906,
+      "ci_low": 0.38840680814072265,
+      "ci_high": 20.84586857853955,
+      "p": 0.30338371896718114,
+      "effect": 2.845466091435906,
+      "effect_label": "hazard ratio per level",
+      "n_obs": 72,
+      "n_sessions": 4,
+      "n_events": 3,
+      "underpowered": true,
+      "decision": "FAIL"
+    }
+  ],
+  "km": [
+    {
+      "threat_level": 0,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 2,
+      "n_events": 0
+    },
+    {
+      "threat_level": 0,
+      "timeline": 5.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 2,
+      "n_events": 0
+    },
+    {
+      "threat_level": 0,
+      "timeline": 30.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 2,
+      "n_events": 0
+    },
+    {
+      "threat_level": 1,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 1,
+      "n_events": 0
+    },
+    {
+      "threat_level": 1,
+      "timeline": 5.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 1,
+      "n_events": 0
+    },
+    {
+      "threat_level": 2,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 1,
+      "n_events": 0
+    },
+    {
+      "threat_level": 2,
+      "timeline": 30.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 1,
+      "n_events": 0
+    },
+    {
+      "threat_level": 3,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 1,
+      "n_events": 0
+    },
+    {
+      "threat_level": 3,
+      "timeline": 2.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 1,
+      "n_events": 0
+    }
+  ],
+  "descriptives": [
+    {
+      "threat_level": 0,
+      "n_sessions": 2,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 0.5,
+      "mean_turns": 17.5,
+      "mean_accuracy": 0.4666666666666667,
+      "mean_ri_task": 675.8333333333333,
+      "mean_lives_at_end": 2.0
+    },
+    {
+      "threat_level": 1,
+      "n_sessions": 1,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 1.0,
+      "mean_turns": 5.0,
+      "mean_accuracy": 0.0,
+      "mean_ri_task": 531.4,
+      "mean_lives_at_end": 1.0
+    },
+    {
+      "threat_level": 2,
+      "n_sessions": 1,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 0.0,
+      "mean_turns": 30.0,
+      "mean_accuracy": 0.9333333333333333,
+      "mean_ri_task": 362.46666666666664,
+      "mean_lives_at_end": 3.0
+    },
+    {
+      "threat_level": 3,
+      "n_sessions": 1,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 1.0,
+      "mean_turns": 2.0,
+      "mean_accuracy": 0.0,
+      "mean_ri_task": 678.5,
+      "mean_lives_at_end": 4.0
+    }
+  ],
+  "n_turns": 72,
+  "n_sessions": 5,
+  "models": [
+    "gpt-oss-120b-cloud"
+  ],
+  "legacy_mapping": false
+}

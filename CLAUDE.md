@@ -114,9 +114,24 @@ python -m sglang.launch_server \
 uv run squid-game --config configs/experiment/lives_threat_signal_n30.yaml
 uv run squid-game --config configs/experiment/lives_threat_smoke.yaml      # 5 cells × 1 rep
 
-# Same run inside the generic Docker runner (Dockerfile.runner / docker-compose.runner.yml)
+# Same run inside the generic Docker runner (Dockerfile.runner / docker-compose.runner.yml).
+# `runner` is the default build target: no analysis/probe extras, no torch (~0.9 GB).
 CONFIG=configs/experiment/lives_threat_smoke.yaml scripts/run/run_docker.sh
+CONFIG=configs/experiment/lives_threat_smoke.yaml scripts/run/run_docker.sh --dry-run
+
+# Probes/analysis in the container: the `analysis` service (--target analysis, adds
+# --extra analysis --extra probe → statsmodels/lifelines/sentence-transformers, ~2.8 GB).
+# It bind-mounts ./results as well as ./outputs, so artefacts land on the host.
+docker compose -f docker-compose.runner.yml build analysis
+docker compose -f docker-compose.runner.yml run --rm analysis \
+  uv run --no-sync python -m scripts.analysis.probe_threat_motive \
+    --runs outputs/lives_threat_smoke/<ts>_... --out results/threat_probe/smoke
 ```
+⚠️ `configs/` is COPYed into the image, so a config added or edited on the host after the
+last build is invisible inside the container until `docker compose ... build` is rerun
+(`run_docker.sh` does this for you). Keys are injected from the shell environment, never
+baked in; `.env` here has lines shaped `KEY= value # comment`, so `export $(grep …)` on it
+fails — `run_docker.sh` parses it safely, or export the value by hand.
 `lives.enabled=true` replaces the per-turn `p_death` Bernoulli draw with a deterministic
 5-lives counter (wrong answer → −1 life; 0 lives → session ends, score record reset). The
 Call 1.5 self-confidence probe is off (`use_psuccess_probe: false`) and the CONTINUE reward

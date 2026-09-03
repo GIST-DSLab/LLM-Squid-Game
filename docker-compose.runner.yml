@@ -1,18 +1,60 @@
 # Experiment runner stack.
 #
-# Only `./outputs` is bind-mounted; API keys come from the shell
-# environment (see the `${VAR}` references below), never baked into
-# Dockerfile.runner.
+# Two services, two build targets of the same Dockerfile.runner:
 #
-# Run via scripts/run/run_docker.sh, or directly:
-#   docker compose -f docker-compose.runner.yml run --rm \
-#     -e CONFIG=configs/experiment/<name>.yaml runner
+#   runner    experiment runs. `uv sync --frozen --no-dev` only (no
+#             analysis/probe extras, no torch). Bind-mounts ./outputs.
+#   analysis  the post-hoc scripts under scripts/analysis/. Adds
+#             `--extra analysis --extra probe` on top of the runner
+#             layers. Bind-mounts ./outputs and ./results.
+#
+# API keys come from the shell environment (see the `${VAR}` references
+# below), never baked into Dockerfile.runner. Export the one you need
+# first, e.g.:
+#
+#   export $(grep -E '^OLLAMA_API_KEY=' .env)
+#
+# (a) Run an experiment
+#
+#   docker compose -f docker-compose.runner.yml build runner
+#   CONFIG=configs/experiment/lives_threat_docker_smoke.yaml \
+#     docker compose -f docker-compose.runner.yml run --rm runner
+#
+#   Dry-run (validate the config, print the plan, run nothing):
+#   docker compose -f docker-compose.runner.yml run --rm runner \
+#     uv run --no-sync python main.py \
+#       --config configs/experiment/lives_threat_docker_smoke.yaml --dry-run
+#
+#   Note: configs/ is COPYed into the image, so a config added or edited
+#   on the host after the last build needs a rebuild before the container
+#   can see it.
+#
+# (b) Run the analysis / probes
+#
+#   docker compose -f docker-compose.runner.yml build analysis
+#   docker compose -f docker-compose.runner.yml run --rm analysis \
+#     uv run --no-sync python -m scripts.analysis.probe_threat_motive \
+#       --runs outputs/lives_threat_docker_smoke/<ts>_... \
+#       --out results/threat_probe/docker_smoke
+#
+#   docker compose -f docker-compose.runner.yml run --rm analysis \
+#     uv run --no-sync python -m scripts.analysis.probe_reasoning_embeddings \
+#       --root outputs/lives_threat_docker_smoke --target threat_level \
+#       --channel task --channel forfeit --out results/threat_probe/docker_smoke
+#
+#   docker compose -f docker-compose.runner.yml run --rm analysis \
+#     uv run --no-sync python scripts/analysis/analyze_threat_effort.py \
+#       outputs/lives_threat_docker_smoke/ --out results/threat_effort_docker
+#
+#   The SentenceBERT probe downloads its model on first use; the named
+#   `hf-cache` volume keeps that download out of every later run.
 
 services:
   runner:
     build:
       context: .
       dockerfile: Dockerfile.runner
+      target: runner
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -21,3 +63,34 @@ services:
     volumes:
       - ./outputs:/app/outputs
     command: ["uv", "run", "--no-sync", "python", "main.py", "--config", "${CONFIG}"]
+
+  analysis:
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
+      target: analysis
+    environment:
+      # PYTHONPATH so `python scripts/analysis/<x>.py` (sys.path[0] =
+      # scripts/analysis/) can still resolve `from scripts.analysis._cli
+      # import ...`; the `-m` form gets /app from cwd anyway.
+      PYTHONPATH: /app
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+    volumes:
+      - ./outputs:/app/outputs
+      - ./results:/app/results
+      - hf-cache:/root/.cache/huggingface
+    # Overridden on the command line -- see (b) above. The default just
+    # proves the extras are importable.
+    command:
+      - "uv"
+      - "run"
+      - "--no-sync"
+      - "python"
+      - "-c"
+      - "import statsmodels, lifelines, sentence_transformers, sklearn; print('analysis extras OK')"
+
+volumes:
+  hf-cache:
