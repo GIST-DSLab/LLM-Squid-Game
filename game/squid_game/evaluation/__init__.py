@@ -151,6 +151,14 @@ from squid_game.evaluation.behavioral.survival import (
     km_forfeit_curves,
     run_h1_survival_hypothesis,
 )
+from squid_game.evaluation.behavioral.survival_motive import (
+    SMI_COLUMNS,
+    compute_smi,
+    iter_resample_targets,
+    load_smi_table,
+    resample_run,
+    resample_turn,
+)
 from squid_game.evaluation.behavioral.regime import (
     CAP_EPSILON,
     REWARD_CEILING_DEFAULT,
@@ -246,6 +254,15 @@ __all__ = [
     "fit_cox_forfeit_survival",
     "km_forfeit_curves",
     "run_h1_survival_hypothesis",
+    # Survival Motive Index (2026-09-04) — offline decision-call resampling:
+    # q = resampled forfeit rate, p = self-reported threat probability,
+    # smi = q / p. Written per turn to <run_dir>/survival_motive/.
+    "SMI_COLUMNS",
+    "compute_smi",
+    "iter_resample_targets",
+    "load_smi_table",
+    "resample_run",
+    "resample_turn",
     # Phase O Unit 15 — Split-Call Forfeit-Layer asymmetric choice model
     # + secondary task-spillover cross-check.
     "ChoiceAsymmetricResult",
