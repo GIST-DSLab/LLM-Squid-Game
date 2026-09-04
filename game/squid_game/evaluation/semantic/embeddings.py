@@ -603,6 +603,11 @@ def build_embedding_bank(
     """
     bank: dict[tuple[str, str], np.ndarray] = {}
     masker = build_masker(mask_sets) if mask_sets else None
+    # The ``p_threat`` set exists to hide the SMI label's denominator, and
+    # that denominator is a number ("about 30%"), not only a word -- so the
+    # numeric pass is switched on by the set that asks for it rather than
+    # by a separate flag callers could forget.
+    mask_numbers = "p_threat" in mask_sets
     mask_tag = "-".join(sorted(mask_sets)) if mask_sets else "none"
     for channel in channels:
         raw_texts = frame[f"text_{channel}"].fillna("").tolist()
@@ -616,7 +621,7 @@ def build_embedding_bank(
         )
         if masker is not None:
             bank[(channel, "embedding_masked")] = embed_texts(
-                [mask_text(t, masker) for t in raw_texts],
+                [mask_text(t, masker, mask_numbers=mask_numbers) for t in raw_texts],
                 sbert_model=args.sbert_model,
                 words_per_chunk=args.words_per_chunk,
                 batch_size=args.batch_size,

@@ -511,7 +511,12 @@ uv run python -m scripts.analysis.probe_reasoning_embeddings --target smi \
 Step 2 writes `<run>/survival_motive/{resamples.jsonl, smi_turns.csv}`; `smi_turns.csv` is the
 probe input and also the place to check what fraction of turns was dropped for `p = 0`.
 `p_threat_self` is deliberately **not** in the probe's scalar baseline (it is the label's
-denominator — leakage).
+denominator — leakage). For the same reason `--target smi` defaults its masked variant to
+`DEFAULT_MASK_SETS + ("p_threat",)` plus numeric masking (`mask_text(..., mask_numbers=True)`
+replaces every bare 0–999 with `[NUM]`), because the confidence CoT *is* the derivation of `p`
+and the decision-call CoT can quote the `P_THREAT: N` line — without it a "masked" SMI probe
+could still win by reading `1/p`. An explicit `--mask` overrides the default; the effective
+sets are printed at startup.
 
 ⚠️ **The confidence question's wording is still under evaluation.** A 2026-09-04 pilot
 (`weekly-report/0910/2026-09-04-confidence-prompt-pilot.html`) found the current "threatened"

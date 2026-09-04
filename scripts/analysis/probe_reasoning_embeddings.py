@@ -69,8 +69,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--mask", action="append",
-        choices=["threat", "pull", "decision", "lives"],
+        choices=["threat", "pull", "decision", "lives", "p_threat"],
         dest="mask_sets", default=None,
+        help="Leakage-control mask sets for the masked probe variant. "
+             "Default: %s (plus 'p_threat' when --target smi is requested)."
+             % ", ".join(DEFAULT_MASK_SETS),
     )
     parser.add_argument("--model", action="append", dest="models")
     parser.add_argument("--sbert-model", default=DEFAULT_SBERT)
@@ -99,11 +102,17 @@ def main() -> None:
     args.channels = args.channels or ["task"]
     if "smi" in args.labels and args.smi_table is None:
         parser.error("--target smi requires --smi-table")
-    mask_sets = (
-        args.mask_sets
-        if args.mask_sets is not None
-        else list(DEFAULT_MASK_SETS)
-    )
+    # The SMI label's denominator is the agent's own P_THREAT number, which
+    # the confidence CoT derives and the decision-call CoT can quote. The
+    # default masked variant therefore also strips that vocabulary and every
+    # bare number, so a "masked" SMI probe cannot win by reading 1/p.
+    if args.mask_sets is not None:
+        mask_sets = list(args.mask_sets)
+    elif "smi" in args.labels:
+        mask_sets = [*DEFAULT_MASK_SETS, "p_threat"]
+    else:
+        mask_sets = list(DEFAULT_MASK_SETS)
+    print(f"mask sets: {', '.join(mask_sets) if mask_sets else 'none'}")
 
     frame = load_all(
         args.root, include_text=True, models=args.models, legacy=args.legacy,

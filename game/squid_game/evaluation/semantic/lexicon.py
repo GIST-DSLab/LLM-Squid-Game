@@ -153,12 +153,48 @@ LIVES_MARKERS: tuple[str, ...] = (
     "남은 기회",
 )
 
+# Self-reported-threat-probability vocabulary (2026-09-04 SMI). The SMI
+# label is ``smi = q / p`` with ``p = P_THREAT / 100``, so the denominator
+# of the label is a number the agent itself wrote down. On the
+# ``confidence`` channel the CoT *is* the derivation of ``p``; on the
+# ``forfeit`` channel the decision-call input carries "P_THREAT: N" and the
+# CoT can quote it. Either way a probe can win by reading ``1/p`` off the
+# surface rather than by recovering a motive -- exactly the leakage
+# THREAT_MARKERS guards against on the framing side.
+#
+# Masking the words is not enough here, because the leak is the *number*:
+# see ``NUMBER_PATTERN`` / ``mask_text(..., mask_numbers=True)`` below,
+# which the ``p_threat`` set is meant to be paired with.
+P_THREAT_MARKERS: tuple[str, ...] = (
+    "P_THREAT",
+    "threatened",
+    "threat",
+    "percent",
+    "percentage",
+    "probability",
+    "chance",
+    "likelihood",
+    "likely",
+    "%",
+    "위협",
+    "확률",
+)
+
 MASK_SETS: dict[str, tuple[str, ...]] = {
     "threat": THREAT_MARKERS,
     "pull": PULL_MARKERS,
     "decision": DECISION_MARKERS,
     "lives": LIVES_MARKERS,
+    "p_threat": P_THREAT_MARKERS,
 }
+
+# Any bare 0-999 (optionally with decimals and a trailing percent sign),
+# not preceded by a letter or underscore so that identifiers like
+# ``L1`` / ``gpt_4`` are left intact. Used only when the caller asks for
+# numeric masking; the phrase masker runs first, so a percent sign already
+# consumed by :data:`P_THREAT_MARKERS` is simply absent by then.
+NUMBER_PATTERN = re.compile(r"(?<![A-Za-z_])\d{1,3}(?:\.\d+)?\s*%?")
+NUMBER_PLACEHOLDER = " [NUM] "
 
 
 def build_masker(sets: list[str]) -> "re.Pattern[str] | None":
@@ -182,8 +218,26 @@ def build_masker(sets: list[str]) -> "re.Pattern[str] | None":
     )
 
 
-def mask_text(text: str, pattern: "re.Pattern[str] | None") -> str:
-    """Replace every lexicon hit with a single neutral placeholder."""
-    if pattern is None or not text:
+def mask_text(
+    text: str,
+    pattern: "re.Pattern[str] | None",
+    *,
+    mask_numbers: bool = False,
+) -> str:
+    """Replace every lexicon hit with a single neutral placeholder.
+
+    Args:
+        text: Raw reasoning trace.
+        pattern: Alternation from :func:`build_masker`, or ``None``.
+        mask_numbers: Also replace every bare 0-999 (see
+            :data:`NUMBER_PATTERN`) with :data:`NUMBER_PLACEHOLDER`. Needed
+            whenever the label's denominator is a number the CoT can quote
+            -- the SMI probes pair this with the ``p_threat`` mask set.
+    """
+    if not text:
         return text
-    return pattern.sub(PLACEHOLDER, text)
+    if pattern is not None:
+        text = pattern.sub(PLACEHOLDER, text)
+    if mask_numbers:
+        text = NUMBER_PATTERN.sub(NUMBER_PLACEHOLDER, text)
+    return text
