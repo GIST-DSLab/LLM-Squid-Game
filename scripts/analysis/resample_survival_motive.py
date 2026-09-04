@@ -33,7 +33,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("run_dir", type=Path)
     parser.add_argument("--n", type=int, default=10)
-    parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument(
+        "--workers", type=int, default=1,
+        help=(
+            "Threads sharing one provider object. Safe for the cloud providers "
+            "(gemini / ollama_cloud / openai / anthropic); keep it at 1 for the "
+            "agent-harness providers (codex_cli, claude_code), whose per-instance "
+            "scratch directory is shared across calls."
+        ),
+    )
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--temperature", type=float, default=None)
     parser.add_argument("--max-tokens", type=int, default=None)

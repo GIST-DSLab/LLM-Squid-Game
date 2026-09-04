@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import json
 import math
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterator
@@ -181,7 +181,21 @@ def resample_run(
     workers: int = 1,
     log: Callable[..., None] = print,
 ) -> Path:
-    """Resample every replayable turn in ``run_dir``; resumable."""
+    """Resample every replayable turn in ``run_dir``; resumable.
+
+    Each finished turn is appended to the ledger as soon as it lands, and a
+    turn whose provider call raises is logged and left un-ledgered so the
+    next call retries just that turn — one bad turn never discards work that
+    already succeeded.
+
+    With ``workers > 1`` the single ``provider`` object is shared across
+    threads, so it must be safe to call ``complete()`` on concurrently. The
+    cloud providers this CLI targets (``gemini``, ``ollama_cloud``,
+    ``openai``, ``anthropic``) hold no mutable per-call state and are fine;
+    the local agent-harness providers (``codex_cli``, ``claude_code``) share
+    one scratch working directory per instance and would collide — run those
+    with ``workers=1``.
+    """
     run_dir = Path(run_dir)
     out_dir = run_dir / "survival_motive"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -195,27 +209,49 @@ def resample_run(
         pending = pending[:limit]
     log(f"{len(records)} replayable turns, {len(done)} already done, {len(pending)} to run × {n}")
 
-    def _work(record: dict) -> tuple[dict, ResampleResult]:
-        return record, resample_turn(
+    def _work(record: dict) -> ResampleResult:
+        return resample_turn(
             provider, record, n=n, temperature=temperature, max_tokens=max_tokens
         )
 
     with ledger_path.open("a") as ledger:
+
+        def _record_done(record: dict, res: ResampleResult) -> None:
+            """Persist one finished turn. Main thread only."""
+            entry = {**_row(record, res, n), "samples": res.samples}
+            ledger.write(json.dumps(entry) + "\n")
+            ledger.flush()
+            done[(res.session_id, res.turn_number)] = entry
+
+        def _failed(record: dict, error: Exception) -> None:
+            """Skip one turn, leaving it un-ledgered so a resume retries it."""
+            log(
+                f"  ! {record['season_id']} turn {record['turn_number']} failed, "
+                f"skipped (retry on resume): {error!r}"
+            )
+
         if workers > 1:
+            # as_completed, not pool.map: map yields in input order, so one
+            # failure early in the list would discard every already-finished
+            # turn behind it. Each result is ledgered the moment it lands.
             with ThreadPoolExecutor(max_workers=workers) as pool:
-                iterator = pool.map(_work, pending)
-                for record, res in iterator:
-                    entry = {**_row(record, res, n), "samples": res.samples}
-                    ledger.write(json.dumps(entry) + "\n")
-                    ledger.flush()
-                    done[(res.session_id, res.turn_number)] = entry
+                futures = {pool.submit(_work, record): record for record in pending}
+                for future in as_completed(futures):
+                    record = futures[future]
+                    try:
+                        res = future.result()
+                    except Exception as error:  # noqa: BLE001 - one bad turn must not abort the run
+                        _failed(record, error)
+                        continue
+                    _record_done(record, res)
         else:
             for record in pending:
-                record, res = _work(record)
-                entry = {**_row(record, res, n), "samples": res.samples}
-                ledger.write(json.dumps(entry) + "\n")
-                ledger.flush()
-                done[(res.session_id, res.turn_number)] = entry
+                try:
+                    res = _work(record)
+                except Exception as error:  # noqa: BLE001 - one bad turn must not abort the run
+                    _failed(record, error)
+                    continue
+                _record_done(record, res)
 
     rows = [{k: e.get(k) for k in SMI_COLUMNS} for e in done.values()]
     table = pd.DataFrame(rows, columns=list(SMI_COLUMNS)).sort_values(

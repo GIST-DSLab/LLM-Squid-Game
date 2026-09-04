@@ -124,3 +124,61 @@ class TestResampleRun:
         resample_run(tmp_path, provider, n=4, temperature=1.0, max_tokens=16, log=lambda *_: None)
         assert len(provider.calls) == n_calls
         assert len(load_smi_table(csv_path)) == 2
+
+    def test_a_failing_turn_does_not_discard_the_others(self, tmp_path: Path) -> None:
+        """One bad turn is skipped and retried on resume; the rest survive.
+
+        Run with ``workers=2`` so the pool is the thing under test: the
+        failure must not abort the executor or throw away the turns that
+        already finished behind it.
+        """
+        rows = [
+            _record(turn_number=1),
+            _record(turn_number=2, decision_call_input="BOOM"),
+            _record(turn_number=3),
+        ]
+        (tmp_path / "abc_turns.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+
+        class Flaky(CountingProvider):
+            """Raises on the one turn whose body is BOOM."""
+
+            def __init__(self) -> None:
+                super().__init__()
+                self.explode = True
+
+            def complete(self, messages, temperature=0.7, max_tokens=4096):
+                if self.explode and messages[-1]["content"] == "BOOM":
+                    raise RuntimeError("provider blew up")
+                return super().complete(messages, temperature, max_tokens)
+
+        provider = Flaky()
+        logged: list[str] = []
+        csv_path = resample_run(
+            tmp_path, provider, n=2, temperature=1.0, max_tokens=16,
+            workers=2, log=logged.append,
+        )
+        table = load_smi_table(csv_path)
+        assert sorted(table.turn_number) == [1, 3]
+        assert any("turn 2" in line and "failed" in line for line in logged)
+
+        # Resume with the provider healed: only turn 2 is retried.
+        provider.explode = False
+        before = len(provider.calls)
+        resample_run(
+            tmp_path, provider, n=2, temperature=1.0, max_tokens=16,
+            workers=2, log=lambda *_: None,
+        )
+        assert len(provider.calls) == before + 2
+        assert sorted(load_smi_table(csv_path).turn_number) == [1, 2, 3]
+
+
+class TestLoadSmiTable:
+    def test_missing_columns_come_back_as_nan(self, tmp_path: Path) -> None:
+        """A narrower CSV must still present the full SMI_COLUMNS frame."""
+        path = tmp_path / "partial.csv"
+        path.write_text("session_id,turn_number,q,p,smi\nabc,1,0.5,0.4,1.25\n")
+        table = load_smi_table(path)
+        assert list(table.columns) == list(SMI_COLUMNS)
+        assert table.iloc[0].smi == pytest.approx(1.25)
+        for column in ("framing", "threat_level", "lives_before", "n", "n_valid"):
+            assert table[column].isna().all(), column
