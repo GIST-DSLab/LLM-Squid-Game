@@ -48,6 +48,12 @@ def _provider_config(run_dir: Path) -> ProviderConfig:
 
 
 def main() -> None:
+    # Same reason as ``squid_game.runner.main``: the provider keys live in
+    # ``.env``, and this CLI rebuilds a real provider, so it must load the
+    # file itself rather than depend on the caller's shell.
+    from dotenv import load_dotenv
+
+    load_dotenv()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("run_dir", type=Path)
     parser.add_argument("--n", type=int, default=10)
