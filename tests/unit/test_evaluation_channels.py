@@ -84,7 +84,7 @@ def test_behavioral_estimators_are_reachable_through_the_facade() -> None:
 
 
 def test_cognitive_channel_holds_the_ri_estimators() -> None:
-    expected = {"ri_task.py", "ri_call1.py", "ri_forfeit.py", "__init__.py"}
+    expected = {"ri_task.py", "ri_task_call.py", "ri_forfeit.py", "__init__.py"}
     assert {p.name for p in (EVALUATION / "cognitive").glob("*.py")} >= expected
 
 
@@ -156,15 +156,15 @@ def test_cognitive_estimators_are_reachable_through_the_facade() -> None:
     assert module.fit_task_spillover_model is not None
 
 
-def test_call1_script_is_a_thin_cli() -> None:
+def test_task_call_script_is_a_thin_cli() -> None:
     """The model belongs in the package; the script owns only the CLI.
 
     Pinned by size rather than by naming every function: the point is that
     the statistics stopped living in scripts/, and a threshold states that
     without freezing the CLI's internals.
     """
-    source = (REPO_ROOT / "scripts" / "analysis" / "analyze_call1_ri.py").read_text(encoding="utf-8")
-    assert "from squid_game.evaluation.cognitive.ri_call1 import" in source
+    source = (REPO_ROOT / "scripts" / "analysis" / "analyze_task_call_ri.py").read_text(encoding="utf-8")
+    assert "from squid_game.evaluation.cognitive.ri_task_call import" in source
     assert len(source.splitlines()) < 150
 
 

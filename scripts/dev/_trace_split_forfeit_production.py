@@ -9,8 +9,8 @@ Unlike ``scripts/dev/_dump_split_forfeit_prompts.py`` which renders each
 Jinja template in isolation with hand-picked sample values, this tool
 runs the FULL production dispatch path (engine → manager → agent →
 build_* helpers → render) so history accumulation, framing-system-
-prompt composition, and Call 2's Call-1-echo carryover are all
-reflected in the output.
+prompt composition, and the decision-first call order (decision call →
+task call, task call skipped on FORFEIT) are all reflected in the output.
 
 Scope: 1 cell × 3 turns (shrunk from the canonical 15) with scripted
 canned responses that exercise CONTINUE (turns 1-2) and FORFEIT
@@ -44,16 +44,27 @@ CANNED_CONTINUE = "CHOICE: CONTINUE\n"
 CANNED_FORFEIT = "CHOICE: FORFEIT\nREASON: 1\n"
 
 
-def _response_fn(idx: int, _messages: list[dict[str, str]]) -> str:
-    """Alternate Call 1 task answer / Call 2 choice answer.
+def _response_fn(idx: int, messages: list[dict[str, str]]) -> str:
+    """Answer the decision call or the task call by what each prompt asks.
 
-    Turn 1 & 2 → CONTINUE (exercises the happy-path Call 2 branch).
+    The decision call always comes first on a turn and solicits CHOICE;
+    the task call follows only after CONTINUE. Keying on the prompt
+    (rather than on call parity) keeps the script correct on the turn
+    that forfeits, where no task call is issued.
+
+    Turn 1 & 2 → CONTINUE (exercises the happy-path task-call branch).
     Turn 3 → FORFEIT (exercises the forfeit-branch + REASON parsing).
     """
-    if idx % 2 == 0:
-        return CANNED_TASK
-    turn_idx = idx // 2
-    return CANNED_CONTINUE if turn_idx < 2 else CANNED_FORFEIT
+    user = messages[-1]["content"]
+    if "CHOICE:" in user:
+        # Decision calls so far == turn index (one per turn).
+        turn_idx = _response_fn.decision_calls
+        _response_fn.decision_calls += 1
+        return CANNED_CONTINUE if turn_idx < 2 else CANNED_FORFEIT
+    return CANNED_TASK
+
+
+_response_fn.decision_calls = 0  # type: ignore[attr-defined]
 
 
 def _section(title: str, body: str) -> None:
@@ -121,9 +132,16 @@ def main() -> None:
     print(SEPARATOR)
     print()
 
+    turn = 0
     for i, call in enumerate(stub.calls):
-        kind = "Call 1 (task layer)" if i % 2 == 0 else "Call 2 (forfeit layer)"
-        turn = (i // 2) + 1
+        is_decision = "CHOICE:" in call.messages[-1]["content"]
+        if is_decision:
+            turn += 1
+        kind = (
+            "Decision call (forfeit layer)"
+            if is_decision
+            else "Task call (task layer)"
+        )
         header = f"TURN {turn} — {kind} (stub call #{i})"
         _section(header, "")
         for msg in call.messages:

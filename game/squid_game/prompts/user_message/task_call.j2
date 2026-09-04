@@ -1,28 +1,17 @@
-{#- Phase O Unit 15 — Call 1 (task layer) user message.
+{#- Task call (task layer) user message — decision-first flow.
 
-     The template's job is summarized below; the originating plan
-     document is not present in this repository.
-
-     Rendered when ``ExperimentConfig.use_split_forfeit_layer=True`` for
-     the FIRST of the two sequential LLM calls per turn. Its job:
+     Rendered when ``ExperimentConfig.use_split_forfeit_layer=True`` as
+     the SECOND of the two sequential LLM calls per turn, and only after
+     the decision call returned CONTINUE (2026-09-04 reorder). Its job:
 
        - Let the agent analyse the task stimulus and commit to a RULE
          hypothesis + ACTION, exactly as in the single-call path but
          without the forfeit menu.
-       - Signal ("will follow") that a separate continue/forfeit decision
-         happens afterward. This is an informational, non-directive
-         phrasing so it does not turn into an instruction-follow artefact
-         (spec §3.3) but still licences the agent to park forfeit
-         reasoning until Call 2.
 
      The response-format block mirrors ``unified_turn_message.j2`` for
-     RULE + ACTION only; CHOICE / REASON / STAKE never appear here.
-
-     The suppression paragraph uses the exact phrasing ratified in
-     §3.3 ("A separate decision ... will follow"). Rewording this
-     line risks either leaking forfeit reasoning into Call 1 (too weak)
-     or turning the agent into an instruction follower that refuses to
-     consider task implications at all (too strong).
+     RULE + ACTION only; CHOICE / REASON / STAKE never appear here — the
+     continue/forfeit decision is already made, so the task call carries
+     no forfeit vocabulary at all.
 
      Task-supplied response format (2026-09-01): a task module may expose
      ``get_response_format_override()`` returning a non-empty string. When
@@ -36,9 +25,8 @@
      only valid response and that they must emit ``ANSWER:``.
 
      The override is strictly additive: with ``response_format_override``
-     absent or falsy, this template renders byte-identically to its
-     pre-2026-09-01 form (pinned by
-     ``tests/unit/test_task_only_template.py``).
+     absent or falsy, this template renders the standard RULE + ACTION
+     block (pinned by ``tests/unit/test_task_call_template.py``).
 
      Variables:
        user_body                : composed task stimulus + history (already
@@ -57,7 +45,6 @@
 {% endif -%}
 {%- if response_format_override -%}
 You may now analyze the problem and produce your answer.
-A separate decision about whether to continue this round will follow.
 
 === Response Format ===
 {{ response_format_override }}
@@ -67,7 +54,6 @@ A separate decision about whether to continue this round will follow.
 
 {% endif -%}
 You may now analyze the puzzle and choose your action.
-A separate decision about whether to continue this round will follow.
 
 === Response Format ===
 Respond with all of the following fields, each on its own line, in the order shown:

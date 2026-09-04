@@ -7,7 +7,7 @@ these files own argparse, output paths, and report emission only.
 (`scripts/dev/golden_snapshot.py`) runs it over all four canonical runs to
 gate every restructure step. `orchestrate_posthoc.py` aggregates all four
 canonical runs into `outputs/posthoc_summary.xlsx`. The rest
-(`analyze_call1_ri.py`, `analyze_tc.py`, `analyze_threat_registration.py`,
+(`analyze_task_call_ri.py`, `analyze_tc.py`, `analyze_threat_registration.py`,
 `analyze_verbal_reason.py`, `analyze_framing_ri_forfeit*.py`,
 `analyze_unified_cox*.py`, `probe_*.py`, `score_probes_llm.py`,
 `thinking_analysis.py`) are per-question entry points, run by hand.

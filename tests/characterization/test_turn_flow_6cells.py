@@ -1,9 +1,14 @@
-"""What the turn flow does today, recorded before P5 moves any of it.
+"""What the turn flow does today, recorded so refactors cannot move it.
 
 These are characterisation tests, not specifications. They assert nothing
-about whether the behaviour is right -- only that splitting unified_turn.py
-did not change it. A snapshot that needs updating is a signal to stop and
-explain why, not a file to regenerate.
+about whether the behaviour is right -- only that later edits to
+unified_turn.py do not change it. A snapshot that needs updating is a
+signal to stop and explain why, not a file to regenerate.
+
+Snapshot lineage: first recorded before P5 (task-first, three calls per
+turn: Call 1 task → Call 1.5 probe → Call 2 forfeit); re-recorded on
+2026-09-04 when the flow became decision-first (decision call → task
+call, two calls per turn, task call skipped on FORFEIT, probe removed).
 
 The six cells are the canonical v6 topology (CLAUDE.md "6-Cell 2x3
 Factorial"):
@@ -53,8 +58,8 @@ need to reconstruct them from ``history``), and reads prompts off
 The task module under test is ``NullTask`` -- deterministic
 (``success_factor`` is always 1.0) and, per CLAUDE.md's X-Y orthogonal
 design, this suite's object is the Core Engine's turn *flow*
-(Call 1 / 1.5 / 2 sequencing, Cell 0's abbreviation, cross-call data
-flow), not any particular Task Module's parsing. Using a real task
+(decision-call / task-call sequencing, Cell 0's abbreviation, the
+FORFEIT short-circuit), not any particular Task Module's parsing. Using a real task
 (e.g. SignalGame) would pull curriculum/rule-schedule non-determinism
 into the snapshot for no benefit to what this task is pinning.
 """
@@ -93,7 +98,7 @@ SNAPSHOTS = Path(__file__).parent / "snapshots" / "turn_flow"
 # (cell_id, framing, forfeit, p_death, forfeit_turn)
 #
 # ``forfeit_turn`` is a fixture-design choice (not a fact about the
-# production code): the canned Call-2 response is scripted to say
+# production code): the canned decision-call response is scripted to say
 # FORFEIT on that turn so the suite exercises both the CONTINUE and the
 # FORFEIT branch of the split-forfeit-layer path. ``None`` means the
 # scripted run never forfeits (either because the condition disallows
@@ -115,29 +120,28 @@ _FORFEIT_LAYER_CONFIG = ForfeitLayerConfig(
     p_success_estimate=0.75,
     base_reward=10.0,
     split_context_level="medium",
-    chain_psuccess_to_menu=True,
     delta_s_continue=10.0,
     psuccess_floor=0.3,
     reward_cap_multiple=10.0,
 )
 
 _TASK_TEXT = "RULE: if the signal is non-empty then act\nACTION: ACCEPT"
-_PROBE_TEXT = "P_CORRECT: 33"
 _CONTINUE_TEXT = "CHOICE: CONTINUE"
 _FORFEIT_TEXT = "CHOICE: FORFEIT\nREASON: 1"
 
 
 def _make_response_fn(*, menu_skipped: bool, forfeit_turn: int | None):
-    """Build a deterministic, index-keyed ``response_fn`` for one cell.
+    """Build a deterministic, prompt-keyed ``response_fn`` for one cell.
 
-    Not random: the text returned depends only on the call index (never
-    on a clock or an RNG), per the brief's Step 2 requirement.
+    Not random: the text returned depends only on the prompt kind and a
+    running decision-call count (never on a clock or an RNG).
 
     When the menu is skipped (Cell 0) there is exactly one call per
-    turn and it is always the task-only call. Otherwise there are
-    exactly three calls per turn -- Call 1 (task), Call 1.5 (p_success
-    probe), Call 2 (forfeit) -- in that fixed order, and slot 2 answers
-    FORFEIT only on the scripted ``forfeit_turn``.
+    turn and it is always the task call. Otherwise each turn opens with
+    the decision call (its prompt solicits ``CHOICE:``) and, on
+    CONTINUE, is followed by the task call; the decision call answers
+    FORFEIT only on the scripted ``forfeit_turn``, after which no task
+    call is issued and the season ends.
     """
 
     if menu_skipped:
@@ -147,16 +151,16 @@ def _make_response_fn(*, menu_skipped: bool, forfeit_turn: int | None):
 
         return _fn
 
-    def _fn(call_index: int, _messages: list[dict[str, str]]) -> str:
-        turn = call_index // 3 + 1
-        slot = call_index % 3
-        if slot == 0:
-            return _TASK_TEXT
-        if slot == 1:
-            return _PROBE_TEXT
-        if forfeit_turn is not None and turn == forfeit_turn:
-            return _FORFEIT_TEXT
-        return _CONTINUE_TEXT
+    decisions_seen = 0
+
+    def _fn(_call_index: int, messages: list[dict[str, str]]) -> str:
+        nonlocal decisions_seen
+        if "CHOICE:" in messages[-1]["content"]:
+            decisions_seen += 1
+            if forfeit_turn is not None and decisions_seen == forfeit_turn:
+                return _FORFEIT_TEXT
+            return _CONTINUE_TEXT
+        return _TASK_TEXT
 
     return _fn
 
@@ -170,9 +174,8 @@ def _build_manager(
     (the measured-baseline seven collaborators: RiskChoiceLayer,
     FramingManager, ForfeitController, SurvivalPressure,
     MeasurementRecorder, CoTCollector, ``random.Random(seed)``), plus
-    the Unit 15/17 flags (``forfeit_layer``, ``use_split_forfeit_layer``,
-    ``use_psuccess_probe``) that put the manager on the v6 canonical
-    path (``tests/integration/test_split_forfeit_layer_e2e.py`` drives
+    the Unit 15 flags (``forfeit_layer``, ``use_split_forfeit_layer``)
+    that put the manager on the canonical split-call path (``tests/integration/test_split_forfeit_layer_e2e.py`` drives
     the same path end-to-end through ``ExperimentRunner``).
 
     Unlike ``_make_manager*``'s ``StubAgent`` (which fabricates
@@ -200,7 +203,6 @@ def _build_manager(
         cot_collector=CoTCollector(),
         forfeit_layer=ForfeitLayer(_FORFEIT_LAYER_CONFIG),
         use_split_forfeit_layer=True,
-        use_psuccess_probe=True,
         rng=random.Random(cell_id),
         phantom_death=True,
         constant_p_death=p_death,
@@ -299,56 +301,55 @@ def test_turn_flow_matches_snapshot(cell_id, framing, forfeit, p_death, forfeit_
 # ---------------------------------------------------------------------------
 
 
-def test_call_sequence_is_task_then_probe_then_forfeit_in_order() -> None:
-    """Cell 3, turn 1: the three LLM calls must happen task -> probe -> forfeit.
+def test_call_sequence_is_decision_then_task_in_order() -> None:
+    """Cell 3, turn 1: the two LLM calls must happen decision -> task.
 
-    Breakage this catches: a split that reorders Call 1/1.5/2 (e.g. moves
-    the probe after the forfeit decision, or merges two calls into one)
-    changes which prompt each stub response slot answers, so the content
-    checks below flip. This is a stronger claim than "3 calls happened" --
-    it pins WHICH call is which by what each prompt actually solicits.
+    Breakage this catches: a change that reorders the calls (e.g. moves
+    the task call back in front of the decision, or merges the two into
+    one) changes which prompt each stub slot answers, so the content
+    checks below flip. This pins WHICH call is which by what each prompt
+    actually solicits, not just that two calls happened.
     """
     results, provider = _run_season(3, "flagship_corruption", "allowed", 0.25, forfeit_turn=None)
     assert results[0].forfeit_decision is False  # sanity: turn 1 continues
 
-    assert len(provider.calls) >= 3
-    call1, call1_5, call2 = provider.calls[0], provider.calls[1], provider.calls[2]
+    assert len(provider.calls) >= 2
+    decision_call, task_call = provider.calls[0], provider.calls[1]
 
-    call1_user = call1.messages[-1]["content"]
-    call1_5_user = call1_5.messages[-1]["content"]
-    call2_user = call2.messages[-1]["content"]
+    decision_user = decision_call.messages[-1]["content"]
+    task_user = task_call.messages[-1]["content"]
 
-    # Call 1 (task layer) must not solicit or contain a forfeit choice or
-    # the probe field -- Unit 15 spec §3.3 task-layer purity.
-    assert "CHOICE" not in call1_user
-    assert "P_CORRECT" not in call1_user
+    # Decision call (forfeit layer) solicits CHOICE and never shows the
+    # round's stimulus or asks for a task answer.
+    assert "CHOICE" in decision_user
+    assert "ACTION:" not in decision_user
+    assert "A new round is about to begin" in decision_user
 
-    # Call 1.5 (p_success probe) solicits P_CORRECT and must not solicit
-    # a forfeit CHOICE (it is a probe, not a decision).
-    assert "P_CORRECT" in call1_5_user
-    assert "CHOICE" not in call1_5_user
+    # Task call (task layer) must not solicit or contain a forfeit choice
+    # -- Unit 15 spec §3.3 task-layer purity.
+    assert "CHOICE" not in task_user
+    assert "ACTION:" in task_user
 
-    # Call 2 (forfeit layer) solicits CHOICE and must not solicit P_CORRECT.
-    assert "CHOICE" in call2_user
-    assert "P_CORRECT" not in call2_user
+    # Exactly two calls per turn on this cell: 10 turns, no forfeit.
+    assert len(provider.calls) == 2 * len(results)
 
 
-def test_cell0_skips_probe_and_forfeit_calls() -> None:
+def test_cell0_skips_decision_call() -> None:
     """Cell 0 (p_death=0, not_allowed) must issue exactly one LLM call per
-    turn, and every TurnResult's probe/forfeit fields must be absent.
+    turn, and every TurnResult's forfeit-side fields must be absent.
 
     Breakage this catches: any change that makes Cell 0 fall through to
-    the full 3-call cascade (e.g. a split that drops the menu-skip guard,
+    the full two-call cascade (e.g. a split that drops the menu-skip guard,
     or reorders the dispatcher so Cell 0 no longer short-circuits) would
     make ``len(provider.calls)`` jump from equal-to-turns to
-    3x-turns, and would populate ``ri_probe``/``ri_forfeit``/
-    ``raw_response_forfeit`` that must stay ``None`` on this path.
+    2x-turns, and would populate ``ri_forfeit`` / ``raw_response_forfeit``
+    that must stay ``None`` on this path.
     """
     results, provider = _run_season(0, "true_baseline", "not_allowed", 0.0, forfeit_turn=None)
 
     assert len(results) == 10  # Cell 0 never forfeits; runs the full season
     assert len(provider.calls) == len(results), (
-        "Cell 0 must issue exactly one LLM call per turn (no Call 1.5, no Call 2)"
+        "Cell 0 must issue exactly one LLM call per turn (no decision call)"
     )
 
     for r in results:
@@ -358,33 +359,53 @@ def test_cell0_skips_probe_and_forfeit_calls() -> None:
         assert r.raw_response_probe is None
         assert r.raw_response_forfeit is None
         assert r.psuccess_self is None
-        assert r.raw_response_task is not None  # Call 1 still happened
+        assert r.raw_response_task is not None  # the task call still happened
 
 
-def test_psuccess_self_feeds_continue_reward() -> None:
-    """Cell 1, turn 1: the Call 1.5 self-report must reach the Call 2 reward.
+def test_forfeit_turn_issues_no_task_call() -> None:
+    """Cell 1 forfeits on turn 3: the season ends after that decision call.
 
-    The scripted probe answers ``P_CORRECT: 33`` and the canonical v6
-    Forfeit-Layer params (k=10, p_d=0.25, S=30, psuccess_floor=0.3) give
-    a closed-form reward of 71 when psuccess_self=33 actually drives the
-    calibration (CLAUDE.md "EV-positive CONTINUE Calibration" worked
-    example, independently reproduced here):
+    Breakage this catches: a flow that still runs the task call after a
+    FORFEIT (the pre-2026-09-04 order) would add one more provider call
+    and populate ``ri_task`` / ``raw_response_task`` on the forfeit turn.
+    """
+    results, provider = _run_season(1, "baseline_flagship", "allowed", 0.25, forfeit_turn=3)
 
-        raw_reward = (10 + 0.25*30) / (0.75 * 0.33) = 17.5 / 0.2475 = 70.71
-        reward     = ceil(70.71) clamped to [10, 100] = 71
+    assert len(results) == 3
+    assert results[-1].forfeit_decision is True
+    # Turns 1-2: decision + task; turn 3: decision only.
+    assert len(provider.calls) == 2 * 2 + 1
+    assert "CHOICE" in provider.calls[-1].messages[-1]["content"]
 
-    Breakage this catches: severing the psuccess_self -> reward wire
-    (e.g. a split that drops ``psuccess_override`` when threading Call 1.5's
-    result into Call 2's menu/reward calculation) would silently fall back
-    to the legacy fixed ``p_success_estimate=0.75`` un-ceiled Unit-14
-    formula, which computes a different reward (~31.11, not 71) for the
-    same probe answer -- confirmed by temporarily disabling the
-    ``psuccess_override`` branch during this task's write-up (see the P5
-    Task 1 report) -- so this assertion is sharply falsifiable, not just
-    "a reward was paid".
+    last = results[-1]
+    assert last.ri_task is None
+    assert last.raw_response_task is None
+    assert last.thinking_text_task is None
+    assert last.ri_forfeit is not None
+    assert last.raw_response_forfeit is not None
+    # The probe fields never populate on the decision-first flow.
+    assert last.psuccess_self is None
+    assert last.ri_probe is None
+
+
+def test_continue_reward_uses_fixed_p_success_estimate() -> None:
+    """Cell 1, turn 1: with the probe gone the CONTINUE reward comes from
+    the layer's fixed ``p_success_estimate`` (0.75), not an agent report.
+
+    Canonical params (k=10, p_d=0.25, S=30) give the un-ceiled legacy
+    Unit-14 formula (the ceil is applied only on the removed
+    self-report chain):
+
+        reward = (10 + 0.25*30) / (0.75 * 0.75) = 17.5 / 0.5625 = 31.11
+
+    Breakage this catches: any path that still threads a self-reported
+    probability into the calibration (the removed Unit 17 chain) would
+    move this number away from the closed form above (the old probe
+    answer of 33 gave 71).
     """
     results, _provider = _run_season(1, "baseline_flagship", "allowed", 0.25, forfeit_turn=None)
     turn1 = results[0]
 
-    assert turn1.psuccess_self == 33
-    assert turn1.reward_received == pytest.approx(71.0)
+    assert turn1.psuccess_self is None
+    assert turn1.reward_received == pytest.approx(17.5 / 0.5625)
+    assert turn1.reward_offered_this_turn == pytest.approx(17.5 / 0.5625)

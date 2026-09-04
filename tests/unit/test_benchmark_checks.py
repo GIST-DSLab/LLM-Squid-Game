@@ -164,7 +164,7 @@ def test_accuracy_check_raises_clear_error_when_band_is_entirely_null():
 
 def test_brier_raises_clear_error_when_psuccess_self_is_entirely_null():
     """An all-Cell-0 slice has ``psuccess_self`` null on every row (Cell 0
-    skips the probe together with Call 2)."""
+    skips the decision call)."""
     frame = _frame(seed=12)
     frame["psuccess_self"] = None
     with pytest.raises(ValueError, match="no rows remain"):

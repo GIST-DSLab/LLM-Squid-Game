@@ -14,7 +14,7 @@ chain — YAML loader → runner → engine → split-call manager → TurnResul
 * ``season_results.jsonl`` carries ``lives_at_end`` / ``eliminated``.
 
 Scoring is made deterministic by a scripted task module (correct iff the
-Call-1 text carries ``ACTION: GO``), injected the same way the provider
+task-call text carries ``ACTION: GO``), injected the same way the provider
 is — the Signal Game's hidden rule would otherwise make "answer
 correctly on turn 3" unexpressible from a canned response.
 """
@@ -190,8 +190,8 @@ def _run(
     return run_dirs[0], stub
 
 
-def _is_call2(messages: list[dict[str, str]]) -> bool:
-    """Call 2 is the only body carrying the FORFEIT/CONTINUE menu."""
+def _is_decision_call(messages: list[dict[str, str]]) -> bool:
+    """The decision call is the only body carrying the FORFEIT/CONTINUE menu."""
     body = messages[-1]["content"]
     return "FORFEIT" in body and "CONTINUE" in body
 
@@ -215,13 +215,13 @@ class TestLivesLedgerEndToEnd:
     ) -> None:
         """Wrong on turns 2 and 4 → lives_after 5, 4, 4, 3, 3, 3."""
         wrong_turns = {2, 4}
-        call1_seen = {"n": 0}
+        task_calls_seen = {"n": 0}
 
         def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
-            if _is_call2(messages):
+            if _is_decision_call(messages):
                 return "CHOICE: CONTINUE"
-            call1_seen["n"] += 1
-            turn = call1_seen["n"]
+            task_calls_seen["n"] += 1
+            turn = task_calls_seen["n"]
             action = "STAY" if turn in wrong_turns else "GO"
             return f"RULE: always go\nACTION: {action}"
 
@@ -250,7 +250,7 @@ class TestLivesLedgerEndToEnd:
         """Always wrong → season ends at turn 5 with a zeroed score."""
 
         def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
-            if _is_call2(messages):
+            if _is_decision_call(messages):
                 return "CHOICE: CONTINUE"
             return "RULE: always stay\nACTION: STAY"
 
@@ -282,7 +282,7 @@ class TestLivesLedgerEndToEnd:
         self, patch_runner_provider, patch_runner_task, tmp_path: Path
     ) -> None:
         def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
-            if _is_call2(messages):
+            if _is_decision_call(messages):
                 return "CHOICE: CONTINUE"
             return "RULE: always go\nACTION: GO"
 
@@ -309,7 +309,7 @@ class TestFiveCellMatrix:
         self, patch_runner_provider, patch_runner_task, tmp_path: Path
     ) -> None:
         def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
-            if _is_call2(messages):
+            if _is_decision_call(messages):
                 return "CHOICE: CONTINUE"
             return "RULE: always go\nACTION: GO"
 
@@ -333,7 +333,7 @@ class TestFiveCellMatrix:
             assert season.lives_at_end == 5
             assert season.eliminated is False
 
-        # Cell 0 (true_baseline x not_allowed) skips Call 2 entirely.
+        # Cell 0 (true_baseline x not_allowed) skips the decision call entirely.
         cell0 = next(
             s
             for s in seasons
@@ -352,7 +352,7 @@ class TestFiveCellMatrix:
             system = messages[0]["content"]
             body = messages[-1]["content"]
             seen.append((system, body))
-            if _is_call2(messages):
+            if _is_decision_call(messages):
                 return "CHOICE: CONTINUE"
             return "RULE: always go\nACTION: GO"
 

@@ -39,14 +39,15 @@ def build_system_prompt(
     preserves BOTH score AND weights" under flagship_corruption)
     and (b) a mechanism hint ``"To forfeit, write: ACTION: FORFEIT"``.
     Under the Unit 15 split-call path both are problematic: (a)
-    leaks forfeit awareness into Call 1 (breaks spec §3.3 task-
-    layer suppression), and (b) instructs the wrong mechanism since
-    Unit 15 collects choices via the ``CHOICE:`` field on Call 2,
-    not via ``ACTION: FORFEIT``. The split-call dispatcher therefore
-    calls this helper with ``include_forfeit_text=False`` for both
-    Call 1 and Call 2, relying on (framing prompt + ``menu.j2`` in
-    Call 2's user body) to convey forfeit semantics. Default stays
-    ``True`` so Unit 14 single-call and legacy paths are unchanged.
+    leaks forfeit awareness into the task call (breaks spec §3.3
+    task-layer suppression), and (b) instructs the wrong mechanism
+    since Unit 15 collects choices via the ``CHOICE:`` field on the
+    decision call, not via ``ACTION: FORFEIT``. The split-call
+    dispatcher therefore calls this helper with
+    ``include_forfeit_text=False`` for both calls, relying on (framing
+    prompt + ``menu.j2`` in the decision call's user body) to convey
+    forfeit semantics. Default stays ``True`` so Unit 14 single-call
+    and legacy paths are unchanged.
     """
     prompt = framing_mgr.render_system_prompt(turn_context)
     rules = task.get_system_rules()
@@ -83,18 +84,19 @@ def compose_user_message(
     return "\n\n".join(sections).strip()
 
 
-def compose_call1_user_message(
+def compose_task_call_user_message(
     task_ctx,
     *,
     history: list[dict[str, Any]],
     history_mode: str,
     max_history_turns: int,
 ) -> str:
-    """Phase O Unit 15 — Call 1 body: history → task stimulus (no menu).
+    """Task-call body: history → task stimulus (no menu).
 
     The stake/forfeit menu is deliberately omitted — it is rendered
-    only for Call 2 in the split-call path. This keeps the task-layer
-    prompt clean so ``ri_task`` measures pure task reasoning.
+    only for the decision call, which precedes the task call in the
+    split-call path. This keeps the task-layer prompt clean so
+    ``ri_task`` measures pure task reasoning.
     """
     sections: list[str] = []
     history_block = format_history_block(
@@ -117,53 +119,6 @@ def derive_action_hint(task: RiskAwareTaskModule) -> str:
     return " | ".join(actions)
 
 
-def format_prior_accuracy_summary(
-    history: list[dict[str, Any]],
-) -> str | None:
-    """Phase O Unit 17 — one-line prior accuracy line for the probe.
-
-    Returns e.g. ``"Prior accuracy this session: 4 correct out of
-    6 attempts."`` or ``None`` when no prior attempts have been
-    recorded (turn 1). The line is rendered at the top of the
-    Call 1.5 user body so ``psuccess_self`` reflects a session-
-    informed belief rather than confidence in the current-turn
-    rule hypothesis in isolation (Round 1 Addendum II §B.2.1 Issue
-    1).
-
-    Counting policy: only turns with a committed (non-forfeit)
-    task action contribute. ``task_outcome.success_factor == 1.0``
-    counts as correct; any other value counts as an attempt but
-    not a correct one. Forfeit turns have ``task_outcome is None``
-    and are excluded entirely — the probe cares about task
-    capability, not forfeit history.
-    """
-    attempts = 0
-    correct = 0
-    for entry in history:
-        # Entries with no task_outcome (forfeit turns) leave
-        # ``action`` as the forfeit sentinel "—" or None. Rather
-        # than thread another flag through _record_history we
-        # infer by the presence of the action label and a
-        # non-empty signal — forfeit entries have
-        # outcome_summary=="forfeit" which is a cheap sentinel.
-        if entry.get("outcome") == "forfeit":
-            continue
-        attempts += 1
-        # History does not carry success_factor directly; the
-        # outcome_summary format is "+<reward>" for success and
-        # "+0" for failure under the equal-EV path. Treat any
-        # non-zero positive reward as a correct attempt.
-        outcome_str = str(entry.get("outcome", ""))
-        if outcome_str.startswith("+") and outcome_str[1:] not in ("0", "0.0"):
-            correct += 1
-    if attempts == 0:
-        return None
-    return (
-        f"Prior accuracy this session: {correct} correct out of "
-        f"{attempts} attempts."
-    )
-
-
 def format_history_block(
     history: list[dict[str, Any]],
     history_mode: str,
@@ -180,7 +135,7 @@ def format_history_block(
         # Phase O Unit 14/15: stake menu was removed; under the
         # Forfeit-Layer path ``stake_choice`` is always None and
         # printing a literal ``stake=—`` leaks deprecated Phase 3.1
-        # vocabulary into Call 1's task-only prompt (violating Unit 15
+        # vocabulary into the task call's prompt (violating Unit 15
         # §3.3 task-layer purity). The Phase 3.1 stake-menu path still
         # sets ``stake_choice`` to ``"1"``/``"2"``/``"3"``/``FORFEIT``,
         # so we keep the fragment for backward compatibility whenever

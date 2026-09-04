@@ -1,36 +1,37 @@
-"""Unit tests for UnifiedTurnManager's Phase O Unit 15 split-call path.
+"""Unit tests for UnifiedTurnManager's split-call path (decision-first).
 
-Scope (spec §6 sub-unit 15.9):
+Scope:
 
 1. Dispatch — ``use_split_forfeit_layer=True`` + ``forfeit_layer`` set
    routes to ``_execute_turn_split_forfeit_layer`` (NOT
    ``_execute_turn_forfeit_layer``).
-2. Two sequential LLM calls per turn — agent records exactly one
-   ``respond_task_only`` and one ``respond_forfeit_only`` invocation.
-3. CONTINUE branch — Call 1 emits RULE+ACTION, Call 2 emits
-   ``CHOICE: CONTINUE`` → reward credited, ri_task and ri_forfeit
+2. Two sequential LLM calls per turn, decision call FIRST — agent
+   records exactly one ``respond_decision_call`` and then one
+   ``respond_task_call`` invocation on a CONTINUE turn.
+3. CONTINUE branch — decision call emits ``CHOICE: CONTINUE``, task
+   call emits RULE+ACTION → reward credited, ri_forfeit and ri_task
    populated separately, combined ``reasoning_investment`` is their
    sum.
-4. FORFEIT branch — Call 2 emits ``CHOICE: FORFEIT REASON: 1`` →
-   ``forfeit_decision=True``, ``ForfeitSelfReport`` captured with
-   thinking_text from Call 2 (NOT Call 1).
-5. NOT_ALLOWED session — even when Call 2 writes FORFEIT, the
-   ForfeitLayer guard force-continues and no self-report is captured.
-6. Cell 0 (menu skipped) — Call 2 is not invoked; only Call 1 runs;
-   ri_forfeit / raw_response_forfeit / thinking_text_forfeit stay None.
-7. Call 1 bodies never mention CHOICE / FORFEIT / STAKE (suppression
+4. FORFEIT branch — decision call emits ``CHOICE: FORFEIT REASON: 1``
+   → ``forfeit_decision=True``, ``ForfeitSelfReport`` captured with the
+   decision call's thinking_text; the task call is NEVER issued and
+   every task-side field stays None.
+5. NOT_ALLOWED session — even when the decision call writes FORFEIT,
+   the ForfeitLayer guard force-continues and no self-report is
+   captured.
+6. Cell 0 (menu skipped) — the decision call is not invoked; only the
+   task call runs; ri_forfeit / raw_response_forfeit /
+   thinking_text_forfeit stay None.
+7. Task-call bodies never mention CHOICE / FORFEIT / STAKE (suppression
    audit).
-8. Call 2 bodies (medium mode) echo Call 1's parsed RULE+ACTION and
-   include the Unit 14 forfeit menu.
+8. Decision-call bodies (medium mode) carry the history block and the
+   forfeit menu, and never this round's stimulus or any task output.
 9. Split-mode TurnResult carries both aggregate and split fields:
    ``reasoning_investment`` (combined) + ``ri_task`` + ``ri_forfeit``.
 10. Backward compat — ``use_split_forfeit_layer=False`` with the same
     forfeit_layer routes to the existing Unit 14 path unchanged.
-11. ``split_context_level="minimal"`` omits the Call 1 RULE/ACTION echo
-    from the Call 2 prompt.
-
-The eleven-item scope above is the operative specification; the
-originating plan document is not present in this repository.
+11. ``split_context_level="minimal"`` omits the history block from the
+    decision-call prompt.
 """
 
 from __future__ import annotations
@@ -41,8 +42,8 @@ from typing import Any
 import pytest
 
 from squid_game.agents._parsing import (
-    ForfeitOnlyResponse,
-    TaskOnlyResponse,
+    DecisionCallResponse,
+    TaskCallResponse,
 )
 from squid_game.agents.base import Agent, AgentResponse
 from squid_game.core.cot_collector import CoTCollector
@@ -77,8 +78,8 @@ from tests.unit.test_unified_turn import FakeSignalTask
 class SplitStubAgent(Agent):
     """Agent double for the Unit 15 split-call path.
 
-    Maintains independent queues for ``respond_task_only`` and
-    ``respond_forfeit_only`` so tests can script each call separately.
+    Maintains independent queues for ``respond_task_call`` and
+    ``respond_decision_call`` so tests can script each call separately.
     Records per-call invocation metadata (user message, system prompt,
     forfeit_allowed, etc.) plus per-call thinking metadata into
     ``last_completion`` between calls so the manager's RI snapshot
@@ -119,6 +120,8 @@ class SplitStubAgent(Agent):
         )
         self.task_calls: list[dict[str, Any]] = []
         self.forfeit_calls: list[dict[str, Any]] = []
+        # Wire order of the two call kinds, e.g. ["decision", "task"].
+        self.call_order: list[str] = []
         self.last_completion: CompletionResult | None = None
 
     @property
@@ -142,18 +145,18 @@ class SplitStubAgent(Agent):
     def respond_unified(self, **kwargs: Any) -> AgentResponse:  # pragma: no cover
         raise AssertionError(
             "respond_unified should not fire on the split path; "
-            "the manager must route to respond_task_only / "
-            "respond_forfeit_only instead."
+            "the manager must route to respond_task_call / "
+            "respond_decision_call instead."
         )
 
-    def respond_task_only(
+    def respond_task_call(
         self,
         user_message: str,
         available_actions: list[str],
         system_prompt: str,
         rule_template_hint: str | None = None,
         response_format_override: str | None = None,
-    ) -> TaskOnlyResponse:
+    ) -> TaskCallResponse:
         if not self._task_queue:
             raise AssertionError(
                 "SplitStubAgent ran out of task-call canned responses; "
@@ -162,6 +165,7 @@ class SplitStubAgent(Agent):
         text = self._task_queue.pop(0)
         tokens = self._task_tokens.pop(0)
         thinking = self._task_thinking_text.pop(0)
+        self.call_order.append("task")
         self.task_calls.append(
             {
                 "user_message": user_message,
@@ -179,17 +183,17 @@ class SplitStubAgent(Agent):
             thinking_text=thinking,
         )
         # Mirror VanillaAgent's parse semantics so the manager receives
-        # a realistic TaskOnlyResponse.
-        from squid_game.agents._parsing import parse_task_only_response
+        # a realistic TaskCallResponse.
+        from squid_game.agents._parsing import parse_task_call_response
 
-        return parse_task_only_response(text, available_actions)
+        return parse_task_call_response(text, available_actions)
 
-    def respond_forfeit_only(
+    def respond_decision_call(
         self,
         user_message: str,
         forfeit_allowed: bool,
         system_prompt: str,
-    ) -> ForfeitOnlyResponse:
+    ) -> DecisionCallResponse:
         if not self._forfeit_queue:
             raise AssertionError(
                 "SplitStubAgent ran out of forfeit-call canned responses; "
@@ -198,6 +202,7 @@ class SplitStubAgent(Agent):
         text = self._forfeit_queue.pop(0)
         tokens = self._forfeit_tokens.pop(0)
         thinking = self._forfeit_thinking_text.pop(0)
+        self.call_order.append("decision")
         self.forfeit_calls.append(
             {
                 "user_message": user_message,
@@ -212,9 +217,9 @@ class SplitStubAgent(Agent):
             thinking_tokens=tokens,
             thinking_text=thinking,
         )
-        from squid_game.agents._parsing import parse_forfeit_only_response
+        from squid_game.agents._parsing import parse_decision_call_response
 
-        return parse_forfeit_only_response(text, forfeit_allowed)
+        return parse_decision_call_response(text, forfeit_allowed)
 
     def reset(self) -> None:  # pragma: no cover - tests build fresh stubs
         pass
@@ -326,9 +331,10 @@ class TestDispatch:
         )
         manager, _ = _make_split_manager(agent=agent)
         result = manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        # Both agent paths fired exactly once.
+        # Both agent paths fired exactly once, decision call first.
         assert len(agent.task_calls) == 1
         assert len(agent.forfeit_calls) == 1
+        assert agent.call_order == ["decision", "task"]
         # Split-specific TurnResult fields populated.
         assert result.ri_task is not None
         assert result.ri_forfeit is not None
@@ -342,7 +348,7 @@ class TestDispatch:
     ) -> None:
         # Canned Unit 14 single-call response (RULE+ACTION+CHOICE all
         # in one shot) — the agent must therefore satisfy
-        # ``respond_unified``, not ``respond_task_only``. Use the legacy
+        # ``respond_unified``, not ``respond_task_call``. Use the legacy
         # StubAgent here.
         from tests.unit.test_unified_turn import StubAgent
 
@@ -382,7 +388,7 @@ class TestDispatch:
 
 
 class TestPromptComposition:
-    def test_call1_body_has_no_forfeit_or_stake_directives(
+    def test_task_call_body_has_no_forfeit_or_stake_directives(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
@@ -393,11 +399,11 @@ class TestPromptComposition:
         )
         manager, _ = _make_split_manager(agent=agent)
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        call1_body = agent.task_calls[0]["user_message"]
-        # The Call 1 body is the pre-render context the manager feeds
-        # into respond_task_only — the stake / forfeit menu must not
+        task_call_body = agent.task_calls[0]["user_message"]
+        # The task-call body is the pre-render context the manager feeds
+        # into respond_task_call — the stake / forfeit menu must not
         # appear here. Only the post-render prompt contains it (and
-        # that's inside the Call 1 template, not the body the manager
+        # that's inside the task-call template, not the body the manager
         # composes).
         for banned in (
             "FORFEIT",
@@ -406,50 +412,60 @@ class TestPromptComposition:
             "CHOICE",
             "Your Choice",
         ):
-            assert banned not in call1_body, (
-                f"Call 1 body leaked forfeit/stake token: {banned}"
+            assert banned not in task_call_body, (
+                f"task-call body leaked forfeit/stake token: {banned}"
             )
 
-    def test_call2_medium_mode_echoes_call1_rule_and_action(
+    def test_decision_call_medium_mode_has_history_and_menu_but_no_stimulus(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
     ) -> None:
         agent = SplitStubAgent(
-            task_responses=["RULE: go if the signal is red\nACTION: GO\n"],
-            forfeit_responses=["CHOICE: CONTINUE\n"],
+            task_responses=["RULE: go if the signal is red\nACTION: GO\n"] * 2,
+            forfeit_responses=["CHOICE: CONTINUE\n"] * 2,
         )
         manager, _ = _make_split_manager(
             agent=agent, split_context_level="medium"
         )
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        call2_body = agent.forfeit_calls[0]["user_message"]
-        # Premise→decision framing (2026-04-21 forfeit_only.j2 rewrite).
-        assert "You just analyzed this round and committed to:" in call2_body
-        assert "Treat these as your working assumption" in call2_body
-        assert "Given this view of the task" in call2_body
-        assert "go if the signal is red" in call2_body
-        assert "ACTION: GO" in call2_body
-        # Call 2 body must still contain the Unit 14 menu header.
-        assert "=== Your Choice ===" in call2_body
+        # Second turn so a history block exists.
+        ctx2 = turn_ctx_allowed.model_copy(update={"turn_number": 2})
+        manager.execute_turn(game_state_s30, ctx2)
+        decision_body = agent.forfeit_calls[1]["user_message"]
+        task_body = agent.task_calls[1]["user_message"]
+        # Decision-first framing: the round is not shown yet, and nothing
+        # the task call produced can be echoed (it has not run).
+        assert "A new round is about to begin" in decision_body
+        assert "=== Previous Turn Results ===" in decision_body
+        assert "=== Your Choice ===" in decision_body
+        assert "You just analyzed this round" not in decision_body
+        assert "go if the signal is red" not in decision_body
+        # The current stimulus (FakeSignalTask renders "Signal: signal-N")
+        # reaches the task call only.
+        assert "Signal: signal-2" in task_body
+        assert "Signal: signal-2" not in decision_body
 
-    def test_call2_minimal_mode_omits_call1_echo(
+    def test_decision_call_minimal_mode_omits_history(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
     ) -> None:
         agent = SplitStubAgent(
-            task_responses=["RULE: go if the signal is red\nACTION: GO\n"],
-            forfeit_responses=["CHOICE: CONTINUE\n"],
+            task_responses=["RULE: go if the signal is red\nACTION: GO\n"] * 2,
+            forfeit_responses=["CHOICE: CONTINUE\n"] * 2,
         )
         manager, _ = _make_split_manager(
             agent=agent, split_context_level="minimal"
         )
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        call2_body = agent.forfeit_calls[0]["user_message"]
-        assert "You just analyzed this round" not in call2_body
-        assert "go if the signal is red" not in call2_body
-        assert "=== Your Choice ===" in call2_body
+        ctx2 = turn_ctx_allowed.model_copy(update={"turn_number": 2})
+        manager.execute_turn(game_state_s30, ctx2)
+        decision_body = agent.forfeit_calls[1]["user_message"]
+        assert "=== Previous Turn Results ===" not in decision_body
+        assert "signal-1" not in decision_body
+        assert "go if the signal is red" not in decision_body
+        assert "=== Your Choice ===" in decision_body
 
 
 # ---------------------------------------------------------------------------
@@ -468,8 +484,8 @@ class TestContinueBranch:
             forfeit_responses=["CHOICE: CONTINUE\n"],
             task_thinking_tokens=[100],
             forfeit_thinking_tokens=[30],
-            task_thinking_text=["call 1 thinking block"],
-            forfeit_thinking_text=["call 2 thinking block"],
+            task_thinking_text=["task-call thinking block"],
+            forfeit_thinking_text=["decision-call thinking block"],
         )
         manager, _ = _make_split_manager(agent=agent)
         result = manager.execute_turn(game_state_s30, turn_ctx_allowed)
@@ -481,8 +497,11 @@ class TestContinueBranch:
         assert result.ri_forfeit is not None and result.ri_forfeit.thinking_tokens == 30
         assert result.raw_response_task.startswith("RULE: go if red")
         assert "CHOICE: CONTINUE" in result.raw_response_forfeit
-        assert result.thinking_text_task == "call 1 thinking block"
-        assert result.thinking_text_forfeit == "call 2 thinking block"
+        assert result.thinking_text_task == "task-call thinking block"
+        assert result.thinking_text_forfeit == "decision-call thinking block"
+        # Combined text mirrors the wire order: decision call first.
+        assert result.thinking_text.startswith("decision-call thinking block")
+        assert result.raw_response.startswith("CHOICE: CONTINUE")
         # Combined ``reasoning_investment`` sums the two sub-calls.
         assert result.reasoning_investment.thinking_tokens == 130
 
@@ -503,15 +522,14 @@ class TestContinueBranch:
 
 
 class TestForfeitBranch:
-    def test_forfeit_sets_decision_and_captures_self_report_from_call2(
+    def test_forfeit_sets_decision_and_captures_self_report_from_decision_call(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
     ) -> None:
         agent = SplitStubAgent(
-            task_responses=["RULE: go if red\nACTION: GO\n"],
+            task_responses=[],  # must not be consulted on FORFEIT
             forfeit_responses=["CHOICE: FORFEIT\nREASON: 1\n"],
-            task_thinking_text=["task-layer thinking: inferring rule"],
             forfeit_thinking_text=[
                 "forfeit-layer thinking: weighing quit-or-continue"
             ],
@@ -521,25 +539,36 @@ class TestForfeitBranch:
 
         assert result.forfeit_decision is True
         assert result.forfeit_choice == "FORFEIT"
-        # Self-report must be captured with Call 2's thinking_text —
-        # NOT Call 1's — per spec §3.1 expected output fields.
+        # Self-report must be captured with the decision call's
+        # thinking_text.
         sr = manager.forfeit_self_report
         assert sr is not None
         assert sr.reason == ForfeitReason.SURVIVAL_DRIVE
         assert sr.thinking_text == "forfeit-layer thinking: weighing quit-or-continue"
 
-    def test_reward_zero_on_forfeit(
+    def test_forfeit_skips_task_call_and_leaves_task_fields_none(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
     ) -> None:
         agent = SplitStubAgent(
-            task_responses=["RULE: go if red\nACTION: GO\n"],
+            task_responses=[],  # must not be consulted on FORFEIT
             forfeit_responses=["CHOICE: FORFEIT\nREASON: 3\n"],
+            forfeit_thinking_tokens=[42],
         )
         manager, _ = _make_split_manager(agent=agent)
         result = manager.execute_turn(game_state_s30, turn_ctx_allowed)
+        assert agent.call_order == ["decision"]
+        assert len(agent.task_calls) == 0
         assert result.reward_received == 0.0
+        assert result.ri_task is None
+        assert result.raw_response_task is None
+        assert result.thinking_text_task is None
+        assert result.ri_forfeit is not None
+        assert result.ri_forfeit.thinking_tokens == 42
+        # Whole-turn aggregates carry the decision call alone.
+        assert result.reasoning_investment.thinking_tokens == 42
+        assert result.raw_response.startswith("CHOICE: FORFEIT")
 
 
 # ---------------------------------------------------------------------------
@@ -548,13 +577,14 @@ class TestForfeitBranch:
 
 
 class TestNotAllowedSession:
-    def test_call2_forfeit_forced_to_continue(
+    def test_decision_call_forfeit_forced_to_continue(
         self,
         turn_ctx_not_allowed: TurnContext,
         game_state_s30: GameState,
     ) -> None:
-        # Even when Call 2 output contains FORFEIT, the ForfeitLayer
-        # guard must force CONTINUE in a NOT_ALLOWED session.
+        # Even when the decision-call output contains FORFEIT, the
+        # ForfeitLayer guard must force CONTINUE in a NOT_ALLOWED session
+        # — and the task call then runs as on any CONTINUE turn.
         agent = SplitStubAgent(
             task_responses=["RULE: go if red\nACTION: GO\n"],
             forfeit_responses=["CHOICE: FORFEIT\nREASON: 1\n"],
@@ -564,6 +594,7 @@ class TestNotAllowedSession:
         )
         result = manager.execute_turn(game_state_s30, turn_ctx_not_allowed)
         assert result.forfeit_decision is False
+        assert agent.call_order == ["decision", "task"]
         # No self-report should be recorded.
         assert manager.forfeit_self_report is None
 
@@ -574,7 +605,7 @@ class TestNotAllowedSession:
 
 
 class TestCell0Skip:
-    def test_cell0_skip_runs_call1_only(
+    def test_cell0_skip_runs_task_call_only(
         self,
         turn_ctx_cell0: TurnContext,
         game_state_s30: GameState,
@@ -591,7 +622,7 @@ class TestCell0Skip:
         )
         result = manager.execute_turn(game_state_s30, turn_ctx_cell0)
         assert len(agent.task_calls) == 1
-        assert len(agent.forfeit_calls) == 0  # Call 2 skipped
+        assert len(agent.forfeit_calls) == 0  # decision call skipped
         # Split-specific fields: ri_task populated, ri_forfeit None.
         assert result.ri_task is not None
         assert result.ri_forfeit is None
@@ -606,7 +637,7 @@ class TestCell0Skip:
 
 
 class TestTwoCallSequencing:
-    def test_call1_system_prompt_matches_call2(
+    def test_task_call_system_prompt_matches_decision_call(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
@@ -624,7 +655,7 @@ class TestTwoCallSequencing:
             == agent.forfeit_calls[0]["system_prompt"]
         )
 
-    def test_available_actions_only_passed_to_call1(
+    def test_available_actions_only_passed_to_task_call(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
@@ -635,9 +666,9 @@ class TestTwoCallSequencing:
         )
         manager, _ = _make_split_manager(agent=agent)
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        # Call 1 receives the task actions.
+        # The task call receives the task actions.
         assert agent.task_calls[0]["available_actions"] == ["GO", "STAY"]
-        # Call 2 signature has no available_actions field at all — the
+        # The decision-call signature has no available_actions field at all — the
         # forfeit layer runs on a fixed CONTINUE/FORFEIT schema. Spot
         # check by confirming the recorded call dict keys.
         assert "available_actions" not in agent.forfeit_calls[0]
@@ -653,9 +684,9 @@ class TestSystemPromptForfeitOptionSuppression:
     system prompt — that template instructs ``ACTION: FORFEIT`` which
     conflicts with the Unit 15 ``CHOICE:`` field, and its semantic
     [FORFEIT OPTION] block breaks spec §3.3 task-layer suppression in
-    Call 1."""
+    the task call."""
 
-    def test_call1_system_prompt_has_no_forfeit_option_block(
+    def test_task_call_system_prompt_has_no_forfeit_option_block(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
@@ -666,12 +697,12 @@ class TestSystemPromptForfeitOptionSuppression:
         )
         manager, _ = _make_split_manager(agent=agent)
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        call1_sys = agent.task_calls[0]["system_prompt"]
+        task_sys = agent.task_calls[0]["system_prompt"]
         # The two telltale strings from the legacy template:
-        assert "[FORFEIT OPTION]" not in call1_sys
-        assert "ACTION: FORFEIT" not in call1_sys
+        assert "[FORFEIT OPTION]" not in task_sys
+        assert "ACTION: FORFEIT" not in task_sys
 
-    def test_call2_system_prompt_has_no_forfeit_option_block(
+    def test_decision_call_system_prompt_has_no_forfeit_option_block(
         self,
         turn_ctx_allowed: TurnContext,
         game_state_s30: GameState,
@@ -682,12 +713,12 @@ class TestSystemPromptForfeitOptionSuppression:
         )
         manager, _ = _make_split_manager(agent=agent)
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        call2_sys = agent.forfeit_calls[0]["system_prompt"]
-        # Call 2's authoritative menu lives in the USER message
+        decision_sys = agent.forfeit_calls[0]["system_prompt"]
+        # The decision call's authoritative menu lives in the USER message
         # (menu.j2); the system prompt must stay clean and parity-
-        # matched with Call 1.
-        assert "[FORFEIT OPTION]" not in call2_sys
-        assert "ACTION: FORFEIT" not in call2_sys
+        # matched with the task call.
+        assert "[FORFEIT OPTION]" not in decision_sys
+        assert "ACTION: FORFEIT" not in decision_sys
 
     def test_framing_content_preserved_in_system_prompt(
         self,
@@ -704,6 +735,6 @@ class TestSystemPromptForfeitOptionSuppression:
             agent=agent, framing=Framing.FLAGSHIP_CORRUPTION
         )
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
-        call1_sys = agent.task_calls[0]["system_prompt"]
-        assert "weight corruption" in call1_sys.lower()
-        assert "flagship" in call1_sys.lower()
+        task_sys = agent.task_calls[0]["system_prompt"]
+        assert "weight corruption" in task_sys.lower()
+        assert "flagship" in task_sys.lower()

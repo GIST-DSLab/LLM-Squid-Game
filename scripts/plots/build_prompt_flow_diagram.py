@@ -272,7 +272,7 @@ boxed_label("hist", 460, call1_y + 40, 320, 120,
 
 # task_only wrapper
 boxed_label("task_only", 800, call1_y + 40, 370, 120,
-            "user_message/task_only.j2",
+            "user_message/task_call.j2",
             "Wraps user_body + Response Format.\n\"A separate decision about whether\nto continue this round will follow.\"",
             fill=CALL_FILL, stroke=CALL_STROKE)
 
@@ -335,9 +335,9 @@ elements.append(text("cell0_note", 120, call2_y + 38, 800, 22,
                      "⚠ SKIPPED when Cell 0 (true_baseline × not_allowed, p_death=0) — degenerate path per Unit 15 §3.5",
                      color=MENU_STROKE, size=12, align="left", valign="top"))
 
-# forfeit_only.j2 wrapper
+# decision_call.j2 wrapper
 boxed_label("forfeit_only", 120, call2_y + 75, 400, 200,
-            "user_message/forfeit_only.j2",
+            "user_message/decision_call.j2",
             "Echoes RULE+ACTION from Call 1 (medium context).\n"
             "Does NOT re-derive the rule.\n"
             "Embeds forfeit_layer/menu.j2 as menu_text.\n"

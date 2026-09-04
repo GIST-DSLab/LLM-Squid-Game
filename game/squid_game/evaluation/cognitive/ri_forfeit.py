@@ -255,7 +255,7 @@ def fit_task_spillover_model(
     """Fit the Unit 15 secondary mixedLM on RI_task.
 
     Hypothesis H_task_spillover (spec §2.2, positive form of
-    H_task_invariance): does threat framing increase Call 1 task-layer
+    H_task_invariance): does threat framing increase task-call (task-layer)
     reasoning tokens even though rule-inference does not change the
     random p_death draw? A positive ``β_framing`` would be framing-
     spillover evidence — weaker than the primary H_choice_asymmetric

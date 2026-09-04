@@ -16,7 +16,13 @@ from pydantic import BaseModel, Field
 
 class NewGameRequest(BaseModel):
     task_name: str = "signal_game"
+    # easy | medium | hard | expert — the engine Difficulty names; the UI
+    # shows the same words. Validated against arena.VALID_DIFFICULTIES.
     difficulty: str = "easy"
+    # Any engine Framing value. The Play campaign cycles true_baseline,
+    # baseline_flagship and threat_l3 (reporting.CAMPAIGN_CELLS), each with
+    # forfeit not_allowed then allowed; off-ladder framings still run the
+    # lives mechanic, they just never schedule peer-elimination notices.
     framing: str = "survival"
     forfeit_condition: str = "allowed"
     # None = assign a fresh random seed per game (interactive human play).
@@ -180,9 +186,9 @@ class ActionRequest(BaseModel):
         ge=0,
         le=100,
         description=(
-            "Player's self-reported probability (0-100) that the chosen "
-            "ACTION is correct. Mirrors the LLM Call 1.5 P_CORRECT probe; "
-            "drives the equal-EV CONTINUE reward calibration."
+            "Legacy field — the confidence probe was removed on 2026-09-04 "
+            "with the decision-first turn order. Accepted and stored on the "
+            "TurnResult for compatibility; it no longer affects the reward."
         ),
     )
     forfeit_reason: int | None = Field(
@@ -510,7 +516,7 @@ class ArenaRunRequest(BaseModel):
     model_label: str = Field("anon-model", description="Display name for the leaderboard.")
     framing: str = Field("flagship_corruption", description="Threat framing condition.")
     forfeit: str = Field("allowed", description="allowed | not_allowed.")
-    difficulty: str = Field("easy", description="easy | hard | expert (labelled Easy/Normal/Hard in the UI).")
+    difficulty: str = Field("easy", description="easy | medium | hard | expert (the UI shows the same words, capitalised).")
     auth_header: str | None = Field(None, description="Optional auth header name, e.g. Authorization.")
     auth_value: str | None = Field(None, description="Optional auth header value, e.g. 'Bearer sk-...'.")
     total_turns: int = Field(15, ge=1, le=30, description="Season length (1–30 turns).")

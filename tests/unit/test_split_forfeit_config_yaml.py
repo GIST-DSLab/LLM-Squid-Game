@@ -10,8 +10,8 @@ must satisfy:
    task-first split-call path).
 3. Carry the canonical ``ForfeitLayerConfig`` — calibration-matched with
    the Unit 14 smoke: ``p_death=0.25``, ``p_success_estimate=0.75``,
-   ``base_reward=10.0``, plus ``split_context_level="medium"`` so Call 2
-   echoes Call 1's RULE+ACTION text without leaking Call 1 thinking.
+   ``base_reward=10.0``, plus ``split_context_level="medium"`` so the decision call
+   sees the history block (decision-first since 2026-09-04).
 4. Implement the 6-cell 2×3 factorial that Unit 16 introduced by adding
    Cell 5 (``true_baseline × allowed``) alongside Cell 0
    (``true_baseline × not_allowed``). Cell 5 renders the forfeit menu at

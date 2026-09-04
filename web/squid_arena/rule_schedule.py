@@ -1,10 +1,12 @@
 """Deterministic hidden-rule attribute schedule for Web Arena campaigns.
 
-A human Play campaign is six games long (``CAMPAIGN_CONDITIONS`` in
-``web/frontend/app.js``). ``SignalGameModule`` always activated rule index 0, so every
-game in a campaign shared one attribute family — colour on EASY, colour+shape
-on HARD/EXPERT — and a player who cracked the family in game 1 carried that
-knowledge into the other five. This module hands each game a different index.
+A human Play campaign is six games long — 3 framings × 2 forfeit conditions
+(``CAMPAIGN_CONDITIONS`` in ``web/frontend/app.js``, mirrored by
+``reporting.CAMPAIGN_CELLS``). ``SignalGameModule`` always activated rule index
+0, so every game in a campaign shared one attribute family — colour on
+EASY/MEDIUM, colour+shape on HARD/EXPERT — and a player who cracked the family
+in game 1 carried that knowledge into the other five. This module hands each
+game a different index.
 
 Pure functions over the standard library: no squid_game imports, no server
 state. The schedule is derived from the campaign id alone, so it survives a
@@ -21,7 +23,8 @@ import random
 # two-attribute pairs), so a family index is always in ``range(3)``.
 RULE_FAMILY_COUNT = 3
 
-# Length of one Play campaign. Mirrors ``CAMPAIGN_CONDITIONS`` in web/frontend/app.js.
+# Length of one Play campaign (3 framings × 2 forfeit conditions). Mirrors
+# ``CAMPAIGN_CONDITIONS`` in web/frontend/app.js and ``reporting.CAMPAIGN_CELLS``.
 CAMPAIGN_GAME_COUNT = 6
 
 # Redraw attempts before falling back to a rotation at the block boundary.

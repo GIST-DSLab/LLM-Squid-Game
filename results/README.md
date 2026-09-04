@@ -3,7 +3,7 @@
 Analysis artefacts, all regenerable. Delete anything here and the command
 named in the subdirectory's own report will rebuild it.
 
-- `call1_ri_analysis/` — `uv run python -m scripts.analysis.analyze_call1_ri`
+- `call1_ri_analysis/` — `uv run python -m scripts.analysis.analyze_task_call_ri`
 - `reasoning_probe/` — `uv run --extra probe python -m scripts.analysis.probe_reasoning_embeddings`
 
 The phase-3 artefacts the golden snapshot gates on are NOT here: they live

@@ -119,10 +119,9 @@ def build_forfeit_layer_result(
     14 single-call callsite continues to work without change.
 
     The Unit 17 probe kwargs (``psuccess_self`` / ``ri_probe`` /
-    ``raw_response_probe`` / ``thinking_text_probe``) follow the same
-    pattern: populated only when ``use_psuccess_probe=True`` on the
-    split-call path; ``None`` otherwise so single-call / Cell 0 /
-    legacy callsites stay unchanged.
+    ``raw_response_probe`` / ``thinking_text_probe``) are retained for
+    the data model only — the probe was removed from the turn flow on
+    2026-09-04, so no live callsite passes them and they stay ``None``.
 
     ``lives_kwargs`` (from
     ``UnifiedTurnManager._lives_result_kwargs``) overrides the

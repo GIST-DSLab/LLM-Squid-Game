@@ -14,7 +14,7 @@ where the block baseline is the per-framing mean of ri_forfeit_thinking_tokens
 across all turns of all sessions in the *not_allowed* counterpart cell:
     block_baseline(BF) = mean ri_forfeit in Cell 2 (BF·not_allowed)
     block_baseline(FC) = mean ri_forfeit in Cell 4 (FC·not_allowed)
-This subtracts away the rubber-stamp Call-2 cost (no-decision baseline,
+This subtracts away the rubber-stamp decision-call cost (no-decision baseline,
 ~7-32% of allowed-cell ri_forfeit), isolating the decision-deliberation
 component.
 

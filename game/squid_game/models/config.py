@@ -340,27 +340,28 @@ class ForfeitLayerConfig(BaseModel):
         description=(
             "Phase O Unit 15 control. When "
             "``ExperimentConfig.use_split_forfeit_layer`` is True, this "
-            "governs how much of the Call 1 (task layer) context carries "
-            "into Call 2 (forfeit layer). "
-            "``'minimal'`` = only game state + menu (clean but unnatural). "
-            "``'medium'`` (recommended) = state + Call-1 RULE+ACTION "
-            "strings + menu; agent has enough context to make an "
-            "informed forfeit decision without priming Call 2 with "
-            "task reasoning. "
-            "``'full'`` = Call 1's entire prompt + Call 1's thinking_text "
-            "+ menu; not recommended because the echoed task reasoning "
-            "confounds the Call 2 RI measurement. "
+            "governs how much session context the decision call (which "
+            "runs FIRST on every turn since 2026-09-04, before the task "
+            "call) receives. "
+            "``'minimal'`` = forfeit menu only. "
+            "``'medium'`` (recommended) = cumulative history block + menu. "
+            "``'full'`` = same as ``'medium'`` — before the reorder it "
+            "echoed the task call's prompt and thinking, which no longer "
+            "exist at decision time; the value is accepted so older YAMLs "
+            "keep loading. The current round's stimulus is never shown "
+            "to the decision call at any level. "
             "Ignored when ``use_split_forfeit_layer`` is False."
         ),
     )
     chain_psuccess_to_menu: bool = Field(
         default=False,
         description=(
-            "Phase O Unit 17 control. When True (requires "
-            "``ExperimentConfig.use_psuccess_probe=True``), the agent's "
-            "Call 1.5 self-reported success probability is used as "
-            "``p_success_estimate`` for the Call 2 equal-EV menu "
-            "calibration, replacing the researcher-assumed value. "
+            "Phase O Unit 17 control — REMOVED 2026-09-04 together with "
+            "the Call 1.5 probe; must stay False (the validator rejects "
+            "True). Historically, when True the agent's self-reported "
+            "success probability was used as ``p_success_estimate`` for "
+            "the equal-EV menu calibration, replacing the "
+            "researcher-assumed value. "
             "This realises the theoretically-correct equal-EV "
             "condition per individual agent (``ΔS(CONTINUE)=0`` when "
             "the agent reports honestly), which the fixed 0.75 "
@@ -775,7 +776,7 @@ class PeerDeathConfig(BaseModel):
     """
 
     p_announce: float = Field(
-        default=0.35,
+        default=1.0,
         ge=0.0,
         le=1.0,
         description="Per-turn probability that an announcement fires.",
@@ -786,7 +787,7 @@ class PeerDeathConfig(BaseModel):
         description="Earliest turn an announcement may fire on.",
     )
     max_per_turn: int = Field(
-        default=2,
+        default=1,
         ge=1,
         description="Maximum peers eliminated in a single announcement.",
     )
@@ -872,15 +873,15 @@ class ExperimentConfig(BaseModel):
         default=False,
         description=(
             "Phase O Unit 15 opt-in. When True, UnifiedTurnManager "
-            "splits each turn into two sequential LLM calls (Call 1 "
-            "task layer → Call 2 forfeit layer) so that "
-            "``thinking_tokens`` can be cleanly attributed to task "
-            "reasoning (``ri_task``) vs choice deliberation "
-            "(``ri_forfeit``). The sequence mirrors a natural "
-            "instrumental-rationality flow; Call 2 carries Call 1's "
-            "RULE+ACTION as context (see "
-            "``ForfeitLayerConfig.split_context_level``) but NOT Call "
-            "1's thinking. Requires use_forfeit_layer=True and "
+            "splits each turn into two sequential LLM calls (decision "
+            "call → task call, decision-first since 2026-09-04) so that "
+            "``thinking_tokens`` can be cleanly attributed to choice "
+            "deliberation (``ri_forfeit``) vs task reasoning "
+            "(``ri_task``). The decision call sees the cumulative history "
+            "and the forfeit menu (see "
+            "``ForfeitLayerConfig.split_context_level``) but never the "
+            "current round's stimulus; on FORFEIT the task call is "
+            "skipped. Requires use_forfeit_layer=True and "
             "use_unified_turn=True. Defaults to False so Unit 14 "
             "single-call behaviour is preserved for every existing "
             "YAML."
@@ -889,23 +890,17 @@ class ExperimentConfig(BaseModel):
     use_psuccess_probe: bool = Field(
         default=False,
         description=(
-            "Phase O Unit 17 opt-in. When True, UnifiedTurnManager "
-            "inserts a Call 1.5 (self-reported p_success probe) between "
-            "Call 1 (task layer) and Call 2 (forfeit layer) on the "
-            "split-call path. The agent is asked to rate the probability "
-            "that its Call 1 ACTION is correct (retrospective confidence "
-            "in [0, 100]); the response populates TurnResult.psuccess_self "
-            "/ ri_probe / raw_response_probe / thinking_text_probe. This "
-            "enables the Equal-EV validity check (mean psuccess_self vs "
-            "the researcher-assumed p_success_estimate=0.75) plus a "
-            "covariate-adjusted H_SD regression that conditions on the "
-            "agent's actual belief rather than the benchmark's assumed "
-            "value. Requires use_split_forfeit_layer=True (which in turn "
-            "requires use_forfeit_layer=True and use_unified_turn=True). "
-            "Cell 0 (menu-skipped) sessions skip the probe together with "
-            "Call 2 — the probe fields stay None on that branch. Defaults "
-            "to False so every pre-Unit-17 YAML keeps its Unit 15 "
-            "two-call behaviour."
+            "Phase O Unit 17 opt-in — REMOVED 2026-09-04. The Call 1.5 "
+            "self-reported p_success probe no longer exists: the "
+            "split-call flow is decision call → task call, and a "
+            "retrospective confidence rating on the task answer cannot "
+            "feed a menu that was already rendered. The field is kept so "
+            "older YAMLs fail with a clear message instead of silently "
+            "running a different design; the validator rejects True. "
+            "``TurnResult.psuccess_self`` / ``ri_probe`` / "
+            "``raw_response_probe`` / ``thinking_text_probe`` remain on "
+            "the data model for re-analysis of the 2026-04-22 runs and "
+            "stay None on every new run."
         ),
     )
     lives: LivesConfig = Field(
@@ -980,37 +975,31 @@ class ExperimentConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def _validate_psuccess_probe_wiring(self) -> "ExperimentConfig":
-        """Couple ``use_psuccess_probe`` with the Unit 15 prerequisites.
+    def _validate_psuccess_probe_removed(self) -> "ExperimentConfig":
+        """Reject the removed Unit 17 probe flags with a clear message.
 
-        Phase O Unit 17 inserts Call 1.5 between Call 1 (task) and Call 2
-        (forfeit). Conceptually and mechanically, the probe only makes
-        sense on the split-call path — single-call Unit 14 already mixes
-        task and choice reasoning in one stream, so there's no "gap" to
-        probe. We therefore require ``use_split_forfeit_layer=True``,
-        which transitively requires ``use_forfeit_layer=True`` and
-        ``use_unified_turn=True``. Failing here at load time avoids a
-        cryptic ``NotImplementedError`` at the first probe call.
+        The Call 1.5 self-report probe was removed on 2026-09-04 when the
+        split-call flow became decision-first (decision call → task
+        call). A YAML that still asks for it would otherwise load
+        "successfully" and run a different design than it declares, so
+        both ``use_psuccess_probe`` and
+        ``forfeit_layer.chain_psuccess_to_menu`` must be False.
         """
-        if self.use_psuccess_probe and not self.use_split_forfeit_layer:
+        if self.use_psuccess_probe:
             raise ValueError(
-                "use_psuccess_probe=True requires "
-                "use_split_forfeit_layer=True; the Unit 17 probe only "
-                "dispatches between Call 1 and Call 2 of the split-call "
-                "forfeit-layer path."
+                "use_psuccess_probe=True is no longer supported: the Unit "
+                "17 Call 1.5 probe was removed on 2026-09-04 with the "
+                "decision-first split-call flow. Set it to false (or drop "
+                "the key)."
             )
-        # Chaining requires the probe to be active — otherwise there's
-        # no per-turn self-report to feed into the menu calibration.
         if (
             self.forfeit_layer is not None
             and self.forfeit_layer.chain_psuccess_to_menu
-            and not self.use_psuccess_probe
         ):
             raise ValueError(
-                "forfeit_layer.chain_psuccess_to_menu=True requires "
-                "ExperimentConfig.use_psuccess_probe=True; without the "
-                "probe there is no self-report value to chain into the "
-                "Call 2 menu calibration."
+                "forfeit_layer.chain_psuccess_to_menu=True is no longer "
+                "supported: the Unit 17 probe it chained from was removed "
+                "on 2026-09-04. Set it to false (or drop the key)."
             )
         return self
 

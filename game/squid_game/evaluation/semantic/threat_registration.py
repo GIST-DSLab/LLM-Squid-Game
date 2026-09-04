@@ -54,7 +54,7 @@ def _resolve_text(rec: dict) -> tuple[str, str]:
 
 
 def load_forfeit_turns(run_dir: str | Path, model: str) -> list[ThreatTurn]:
-    """Load Cells 1-4 Call 2 reasoning turns from a run directory."""
+    """Load Cells 1-4 decision-call reasoning turns from a run directory."""
     out: list[ThreatTurn] = []
     for path in sorted(glob.glob(os.path.join(str(run_dir), "*_turns.jsonl"))):
         with open(path) as fh:

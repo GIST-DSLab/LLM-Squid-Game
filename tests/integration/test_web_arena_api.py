@@ -406,10 +406,11 @@ _LLM_SEASON_YAML: dict = {
 
 
 def _alternating_split_response(idx: int, _messages: list[dict[str, str]]) -> str:
-    """Call 1 (task) / Call 2 (forfeit) canned split-call responses; turn 1
-    continues, turn 2 forfeits with a REASON digit so ``choice`` is non-null
-    on at least one turn."""
-    if idx % 2 == 0:
+    """Decision-call / task-call canned split-call responses (decision first);
+    turn 1 continues, turn 2 forfeits with a REASON digit so ``choice`` is
+    non-null on at least one turn. Call 0 = turn-1 decision, call 1 = turn-1
+    task, call 2 = turn-2 decision (FORFEIT ends the season; no task call)."""
+    if idx % 2 == 1:
         return "RULE: if the signal is red go_left otherwise stay\nACTION: go_left"
     turn_index = idx // 2
     if turn_index == 0:
@@ -522,14 +523,15 @@ def test_logs_lists_both_sources_newest_first_and_detail_matches_engine_turn_tra
         }
         assert isinstance(t["observation"], str) and t["observation"] != ""
         assert isinstance(t["action"], str) and t["action"] != ""
-        # The split-call architecture always issues both Call 1 (task) and
-        # Call 2 (forfeit) every turn, regardless of the outcome -- so both
-        # ri_task and ri_forfeit are populated on every turn (the StubProvider
-        # returns thinking_tokens=15 for every call). ri_probe stays null
-        # because this fixture config doesn't opt into the Unit 17 probe.
-        assert t["ri_task"] == 15.0
+        # Decision-first split-call: the decision call runs every turn, so
+        # ri_forfeit is always populated (the StubProvider returns
+        # thinking_tokens=15 for every call); the task call runs only after
+        # CONTINUE, so ri_task is populated on turn 1 and null on the
+        # FORFEIT turn. ri_probe stays null (the probe was removed).
         assert t["ri_forfeit"] == 15.0
         assert t["ri_probe"] is None
+    assert turns[0]["ri_task"] == 15.0
+    assert turns[1]["ri_task"] is None
     # Turn 1: agent chose CONTINUE.
     assert turns[0]["choice"] == "CONTINUE"
     # Turn 2: agent chose FORFEIT (REASON: 1).

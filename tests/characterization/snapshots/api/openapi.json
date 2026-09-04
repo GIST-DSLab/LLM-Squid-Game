@@ -162,7 +162,7 @@
           },
           "difficulty": {
             "default": "easy",
-            "description": "easy | hard | expert (labelled Easy/Normal/Hard in the UI).",
+            "description": "easy | medium | hard | expert (the UI shows the same words, capitalised).",
             "title": "Difficulty",
             "type": "string"
           },

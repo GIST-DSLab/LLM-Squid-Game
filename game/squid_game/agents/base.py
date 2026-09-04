@@ -20,9 +20,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from squid_game.agents._parsing import (
-        ForfeitOnlyResponse,
-        PSuccessProbeResponse,
-        TaskOnlyResponse,
+        DecisionCallResponse,
+        TaskCallResponse,
     )
     from squid_game.providers.base import CompletionResult
 
@@ -149,27 +148,28 @@ class Agent(ABC):
             "Use use_unified_turn=False or add a respond_unified override."
         )
 
-    def respond_task_only(
+    def respond_task_call(
         self,
         user_message: str,
         available_actions: list[str],
         system_prompt: str,
         rule_template_hint: str | None = None,
         response_format_override: str | None = None,
-    ) -> "TaskOnlyResponse":
-        """Phase O Unit 15 — Call 1 (task layer) of the split-call flow.
+    ) -> "TaskCallResponse":
+        """Task call (task layer) of the split-call flow.
 
-        Solicits RULE + ACTION only. The manager must store
-        ``last_completion`` between this call and the Call 2 companion
-        so RI_task can be captured cleanly.
+        Solicits RULE + ACTION only. Issued AFTER the decision call
+        (2026-09-04 decision-first flow) and only when that call
+        returned CONTINUE. The manager snapshots ``last_completion``
+        immediately after return so ``ri_task`` is captured cleanly.
 
         Concrete default raises :class:`NotImplementedError` — variants
         that have not opted into the unified-turn family have nothing
         sensible to do here. :class:`VanillaAgent` overrides this.
 
         Args:
-            user_message: Call 1 user body (history + task stimulus),
-                composed by ``UnifiedTurnManager._compose_user_message``.
+            user_message: Task-call user body (history + task stimulus),
+                composed by ``compose_task_call_user_message``.
             available_actions: Task actions; empty list → NullTask
                 ACCEPT-only branch.
             system_prompt: Framing system prompt + task rules.
@@ -177,10 +177,10 @@ class Agent(ABC):
                 ``None`` for the free-form fallback.
             response_format_override: Task-supplied response-format block
                 replacing RULE + ACTION (external-benchmark task types),
-                or ``None`` for the standard Call 1 contract.
+                or ``None`` for the standard task-call contract.
 
         Returns:
-            Parsed :class:`TaskOnlyResponse` with RULE + ACTION fields
+            Parsed :class:`TaskCallResponse` with RULE + ACTION fields
             + forfeit anomaly flag.
 
         Raises:
@@ -188,38 +188,40 @@ class Agent(ABC):
                 split-call path.
         """
         raise NotImplementedError(
-            f"{type(self).__name__} does not implement respond_task_only. "
+            f"{type(self).__name__} does not implement respond_task_call. "
             "Use use_split_forfeit_layer=False or add an override."
         )
 
-    def respond_forfeit_only(
+    def respond_decision_call(
         self,
         user_message: str,
         forfeit_allowed: bool,
         system_prompt: str,
-    ) -> "ForfeitOnlyResponse":
-        """Phase O Unit 15 — Call 2 (forfeit layer) of the split-call flow.
+    ) -> "DecisionCallResponse":
+        """Decision call (forfeit layer) of the split-call flow.
 
-        Solicits CHOICE (and REASON digit on FORFEIT). The manager must
-        inspect ``last_completion`` immediately after this call to record
-        RI_forfeit.
+        Solicits CHOICE (and REASON digit on FORFEIT). Issued FIRST on
+        every turn (2026-09-04 decision-first flow), before the agent
+        sees the round's stimulus. The manager must inspect
+        ``last_completion`` immediately after this call to record
+        ``ri_forfeit``.
 
         Concrete default raises :class:`NotImplementedError`.
         :class:`VanillaAgent` overrides this.
 
         Args:
-            user_message: Call 2 user body (optional Call 1 echo per
-                ``split_context_level`` + Unit 14 forfeit menu).
+            user_message: Decision-call user body (optional history
+                block per ``split_context_level`` + forfeit menu).
             forfeit_allowed: Whether the session offers the FORFEIT
                 option; gates the CHOICE schema. The parser honours
                 this even if the model writes FORFEIT in a not_allowed
                 session.
-            system_prompt: Same framing system prompt used for Call 1
-                (consistency prerequisite — any divergence would
+            system_prompt: Same framing system prompt used for the task
+                call (consistency prerequisite — any divergence would
                 confound RI interpretation).
 
         Returns:
-            Parsed :class:`ForfeitOnlyResponse` with CHOICE field.
+            Parsed :class:`DecisionCallResponse` with CHOICE field.
             REASON digit parsing is performed by the caller via
             ``ForfeitLayer.parse_forfeit_reason`` on the raw text.
 
@@ -228,49 +230,8 @@ class Agent(ABC):
                 split-call path.
         """
         raise NotImplementedError(
-            f"{type(self).__name__} does not implement respond_forfeit_only. "
+            f"{type(self).__name__} does not implement respond_decision_call. "
             "Use use_split_forfeit_layer=False or add an override."
-        )
-
-    def respond_psuccess_probe_only(
-        self,
-        user_message: str,
-        system_prompt: str,
-    ) -> "PSuccessProbeResponse":
-        """Phase O Unit 17 — Call 1.5 (self-report p_success probe).
-
-        Fires between Call 1 (task) and Call 2 (forfeit) when the
-        split-call path is combined with
-        ``ExperimentConfig.use_psuccess_probe=True``. Solicits a single
-        ``P_CORRECT: XX`` line where XX ∈ [0, 100] is the agent's own
-        retrospective confidence that its Call 1 ACTION is correct.
-        The manager snapshots ``last_completion`` immediately after
-        return to record ``ri_probe``.
-
-        Concrete default raises :class:`NotImplementedError` — variants
-        that do not support the probe path have nothing sensible to do
-        here. :class:`VanillaAgent` overrides this.
-
-        Args:
-            user_message: Call 1.5 user body composed via
-                :func:`build_psuccess_probe_message` (echoes Call 1 RULE
-                + ACTION + calibration question + response-format
-                directive).
-            system_prompt: The same framing system prompt used by Call
-                1 and Call 2 for this turn.
-
-        Returns:
-            Parsed :class:`PSuccessProbeResponse` (psuccess_self plus
-            raw text).
-
-        Raises:
-            NotImplementedError: Subclass has not implemented the
-                probe path.
-        """
-        raise NotImplementedError(
-            f"{type(self).__name__} does not implement "
-            "respond_psuccess_probe_only. Use use_psuccess_probe=False "
-            "or add an override."
         )
 
     @abstractmethod

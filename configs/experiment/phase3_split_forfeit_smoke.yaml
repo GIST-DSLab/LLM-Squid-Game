@@ -306,9 +306,9 @@ forfeit_layer:
   p_success_estimate: 0.75
   base_reward: 10.0
   split_context_level: medium
-  chain_psuccess_to_menu: true
+  chain_psuccess_to_menu: false   # probe removed 2026-09-04
   delta_s_continue: 10.0
   psuccess_floor: 0.3
   reward_cap_multiple: 10.0
 use_split_forfeit_layer: true
-use_psuccess_probe: true
+use_psuccess_probe: false   # Call 1.5 probe removed 2026-09-04 (decision-first flow)

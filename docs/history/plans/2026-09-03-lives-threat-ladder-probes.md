@@ -295,3 +295,19 @@ def test_lives_rejects_positive_p_death_override(minimal_experiment_kwargs_with_
 - [ ] `docs/paper/sections/03_benchmark.tex` and `04_empirical_findings.tex` per spec §9.
 - [ ] `docs/reports/2026-09-03-lives-threat-ladder.html` — ELI5 report (Korean), sections: 무엇을 바꿨나 / 목숨 규칙 / 위협 3단계 예시 / 프로브 2종이 뭘 하나 / 스모크 결과 숫자 / 다음 할 일. Include the smoke numbers (forfeit rate per level, mean lives at end, accuracy, mean `ri_task`, probe R²/ρ).
 - [ ] Commit `docs: lives/threat-ladder redesign, ELI5 report`.
+
+## 2026-09-03 addendum — H6c Cox and the lives covariate (competing risks)
+
+Under the lives design a session can leave by forfeit, by elimination (0 lives) or by the
+turn cap. The H6c Cox keeps forfeit as the event and treats elimination as censoring, i.e. it
+estimates the **cause-specific** forfeit hazard. That censoring is only non-informative
+conditional on the lives count, so `fit_forfeit_hazard` now offers `lives_before` as a
+time-varying covariate. On the flat-reward lives runs it turns out to be redundant:
+`lives_before == 5 − (t − 1) + (S − 30) / 10` holds on 100 % of allowed-cell turns of the
+gpt-oss, glm-5.3-flash and gemini-2.5-flash 5×2 runs, so inside every risk set it is collinear
+with `score_prev` and lifelines reports a singular matrix. The fit therefore falls back to
+`threat_level + score_prev`, records `lives_covariate=False` with a `lives_note`, and the
+report says so. `score_prev` already conditions on lives there. Descriptive companions
+(Aalen–Johansen cumulative incidence for forfeit vs elimination, Gray's test) are not
+implemented; the two K-M curves in the threat-ladder report are per-cause (forfeit, elimination)
+and should not be merged into one "exit" curve.

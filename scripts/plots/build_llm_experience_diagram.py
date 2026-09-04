@@ -251,7 +251,7 @@ elements.extend(arrow("sys_to_turn", 890, 495, 890, 580, color=CALL_STROKE))
 # Call 1 — always happens
 boxed_label("call1_prompt", 420, 670, 560, 120,
             "Call 1 — user message (always)",
-            "user_message/task_only.j2 wraps:\n"
+            "user_message/task_call.j2 wraps:\n"
             "  observation.j2  +  cumulative history\n"
             "  +  \"A separate decision will follow.\"",
             fill=CALL_FILL, stroke=CALL_STROKE)
@@ -293,7 +293,7 @@ elements.extend(arrow("branch_to_c2",
 # Call 2 prompt
 boxed_label("call2_prompt", 420, 1100, 560, 120,
             "Call 2 — user message (Cells 1-5 only)",
-            "user_message/forfeit_only.j2 wraps:\n"
+            "user_message/decision_call.j2 wraps:\n"
             "  echoed RULE + ACTION from Call 1 (medium context)\n"
             "  +  forfeit_layer/menu.j2  (rendered by framing + forfeit_allowed)",
             fill=CALL_FILL, stroke=CALL_STROKE)

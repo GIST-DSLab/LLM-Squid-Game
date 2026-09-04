@@ -1,10 +1,19 @@
-"""Does threat framing change Call-1 problem-solving effort?
+"""Does threat framing change task-call problem-solving effort?
 
-Outcome: ``ri_task`` — the thinking-token count of Call 1, the only call
-in the split-call turn flow that is spent on the signal-game task itself.
-Call 1 is issued *before* the agent ever sees the forfeit menu, so the
-outcome cannot be contaminated by decision-token spillover; what varies
-across cells at that point is purely the system-prompt framing.
+Outcome: ``ri_task`` — the thinking-token count of the task call, the only
+call in the split-call turn flow that is spent on the signal-game task
+itself.
+
+Ordering caveat. On the 2026-04-22 runs this module was written for, the
+task call was issued *before* the agent saw the forfeit menu, so the
+outcome could not be contaminated by decision-token spillover. Since
+2026-09-04 the flow is decision-first: the decision call (menu, no
+stimulus) runs first and the task call follows only on CONTINUE. On runs
+recorded after that date ``ri_task`` is therefore a *post-decision*
+quantity — it is conditional on having just chosen to continue, and
+FORFEIT turns have no ``ri_task`` at all. The regression below is
+unchanged, but read the framing coefficient on new runs with that
+selection in mind.
 
 Design
 ------
@@ -20,7 +29,7 @@ Two contrasts are reported per model:
   text alone.  This is the cleaner of the two: both arms run at
   ``p_end = 0.25`` with the same Section-1 prompt text, so the only
   difference is the corruption paragraph.  The neutral arm additionally
-  differs in ``p_end`` and (Cell 0) skips Calls 1.5/2 entirely.
+  differs in ``p_end`` and (Cell 0) skips the decision call entirely.
 
 Model
 -----
@@ -34,7 +43,7 @@ A cluster-robust OLS (session clusters) is fit alongside as a
 specification check that does not depend on MixedLM convergence.
 
 The module is intentionally side-effect-free; orchestration / disk I/O
-is the caller's responsibility (see ``scripts/analysis/analyze_call1_ri.py``).
+is the caller's responsibility (see ``scripts/analysis/analyze_task_call_ri.py``).
 """
 
 from __future__ import annotations
@@ -199,9 +208,9 @@ def _descriptive_table(results: list[dict], outcome: str) -> str:
 def render_report(all_results: dict[str, list[dict]]) -> str:
     task = all_results["ri_task"]
     parts = [
-        "# Call-1 Reasoning Investment under threat framing",
+        "# Task-call Reasoning Investment under threat framing",
         "",
-        "Outcome `ri_task` = Call-1 thinking tokens (task solving only).",
+        "Outcome `ri_task` = task-call thinking tokens (task solving only).",
         "Model: `log1p(ri_task) ~ is_threat + is_pull + turn_z + score_z"
         " + forfeit_allowed + (1 | session)`.",
         "Reference framing = `true_baseline`. Δ% = `exp(β) - 1`.",

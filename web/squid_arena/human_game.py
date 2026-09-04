@@ -286,9 +286,9 @@ class HumanGameSession:
         self._survival = SurvivalPressure()
         self._forfeit_ctrl = ForfeitController(self._forfeit_cond)
         # Lives mechanic — the 2026-09-03 default for human play. When on,
-        # the Bernoulli death roll and the Unit 17 confidence probe are both
-        # inert: lives are lost deterministically by answering incorrectly
-        # and the CONTINUE reward is the flat ``base_reward``.
+        # the Bernoulli death roll is inert: lives are lost deterministically
+        # by answering incorrectly and the CONTINUE reward is the flat
+        # ``base_reward``.
         self._lives_enabled = bool(lives_enabled)
         self._lives_total: int | None = (
             int(lives_total) if self._lives_enabled else None
@@ -296,18 +296,21 @@ class HumanGameSession:
         self._lives_remaining: int | None = self._lives_total
         self._eliminated = False
         self._threat_level = threat_level_of(self._framing)
-        self._use_psuccess_probe = use_psuccess_probe and not self._lives_enabled
-        # equal-EV reward parity with the LLM split-call path. Defaults mirror
-        # web/squid_arena/arena.py's forfeit_layer block + chain_psuccess_to_menu=True.
-        # In lives mode ``reward_mode="flat"`` short-circuits that calibration
-        # so every correct answer pays the same +10 the engine pays.
+        # The Unit 17 confidence probe was removed on 2026-09-04 together
+        # with the decision-first turn order (decide → act). The parameter
+        # is accepted for backward compatibility but is always inert: no
+        # ``psuccess_self`` ever reaches the reward calibration.
+        self._use_psuccess_probe = False
+        # Reward parity with the LLM split-call path. Defaults mirror
+        # web/squid_arena/arena.py's forfeit_layer block. In lives mode
+        # ``reward_mode="flat"`` short-circuits the calibration so every
+        # correct answer pays the same +10 the engine pays.
         self._forfeit_layer = ForfeitLayer(
             forfeit_layer_config
             or ForfeitLayerConfig(
                 p_death=0.25,
                 p_success_estimate=0.75,
                 base_reward=LIVES_FLAT_REWARD if self._lives_enabled else 10.0,
-                chain_psuccess_to_menu=True,
                 reward_mode=(reward_mode if self._lives_enabled else "calibrated"),
             )
         )
@@ -416,18 +419,26 @@ class HumanGameSession:
         The intro is kept ahead of the rule text rather than replaced by it:
         it is the only place the player is told how the task itself works,
         and the existing web UI renders this one string as its framing box.
+
+        Off-ladder framings (``baseline_flagship`` — the campaign's
+        reward-only condition — and the legacy ones) have no elimination
+        rule of their own, but under the lives mechanic they still lose
+        lives and still end at zero, so the player must be told. They get
+        the level-0 attempts sentence: it states the mechanic without any
+        of the ladder's threat vocabulary, which is exactly what a no-threat
+        condition should read.
         """
-        threat = (
-            human_threat_text(
-                self._framing.value,
-                self._lives_remaining
-                if self._lives_remaining is not None
-                else 0,
-                self._lives_total or 0,
-            )
-            if self._lives_enabled
-            else ""
+        if not self._lives_enabled:
+            return HUMAN_PLAY_FRAMING
+        lives_remaining = (
+            self._lives_remaining if self._lives_remaining is not None else 0
         )
+        lives_total = self._lives_total or 0
+        threat = human_threat_text(
+            self._framing.value, lives_remaining, lives_total
+        )
+        if not threat and self._threat_level is None:
+            threat = human_threat_text("true_baseline", lives_remaining, lives_total)
         if not threat:
             return HUMAN_PLAY_FRAMING
         return f"{HUMAN_PLAY_FRAMING}\n\n{threat}"
@@ -642,7 +653,9 @@ class HumanGameSession:
             "peer_death_text": self._current_peer_death_text,
         }
 
-        # Phase O Unit 17 — same guard/clamp as unified_turn.py:865-871.
+        # The probe is gone (2026-09-04); ``_use_psuccess_probe`` is always
+        # False so this override never engages and the calibrated reward
+        # uses the layer's fixed ``p_success_estimate``.
         psuccess_override: float | None = None
         if (
             self._use_psuccess_probe
@@ -840,8 +853,10 @@ class HumanGameSession:
     def preview_continue_reward(self, psuccess_self: int | None = None) -> float:
         """Reward that would be credited if the player CONTINUEs this turn and
         is correct. Same inputs as ``submit_action``'s reward path (current
-        score, this turn's p_death, clamped psuccess) so the Stage-3 preview
-        matches the amount actually credited. Read-only: advances nothing.
+        score, this turn's p_death) so the decision-stage preview matches the
+        amount actually credited. Read-only: advances nothing. The
+        ``psuccess_self`` argument is inert since the 2026-09-04 probe
+        removal.
 
         In lives mode the layer's ``reward_mode="flat"`` short-circuits the
         calibration, so this returns the constant ``base_reward`` (+10)

@@ -1189,10 +1189,51 @@ def test_arena_run_rejects_unknown_difficulty(client: TestClient) -> None:
             "model_label": "X",
             "framing": "flagship_corruption",
             "forfeit": "allowed",
-            "difficulty": "medium",  # not exposed by the arena
+            "difficulty": "insane",  # not an engine Difficulty
         },
     )
     assert resp.status_code == 400
+
+
+def test_arena_accepts_medium_with_the_engine_default_few_shot() -> None:
+    """MEDIUM is playable and keeps its one-example definition: the arena
+    config leaves num_few_shot unset for it (engine default) instead of the
+    fixed 2 the other levels get, which would collapse it into EASY."""
+    from squid_arena import arena as arena_mod
+
+    assert "medium" in arena_mod.VALID_DIFFICULTIES
+    medium = arena_mod._arena_config_dict(
+        "true_baseline", "allowed", "M", 5, 1024, "medium"
+    )["seasons"][0]["task_config"]
+    easy = arena_mod._arena_config_dict(
+        "true_baseline", "allowed", "M", 5, 1024, "easy"
+    )["seasons"][0]["task_config"]
+    assert medium["difficulty"] == "medium"
+    assert medium["num_few_shot"] is None
+    assert easy["num_few_shot"] == 2
+
+
+def test_unhandled_backend_error_is_a_json_500_with_cors_headers(api_module) -> None:
+    """A crash inside a route must reach the browser as `HTTP 500: <detail>`.
+
+    Starlette's default 500 is emitted outside CORSMiddleware, so a cross-
+    origin frontend sees it as an opaque network failure ("Failed to fetch")
+    and its cold-start retry loop hides the real error. The handler in api.py
+    turns it into JSON inside the CORS layer.
+    """
+    from fastapi.testclient import TestClient as _TC
+
+    @api_module.app.get("/api/_test_boom")
+    def _boom():
+        raise RuntimeError("kaboom")
+
+    c = _TC(api_module.app, raise_server_exceptions=False)
+    origin = api_module._DEFAULT_CORS_ORIGINS[0]
+    resp = c.get("/api/_test_boom", headers={"Origin": origin})
+    assert resp.status_code == 500
+    assert resp.headers.get("access-control-allow-origin") == origin
+    assert "RuntimeError" in resp.json()["detail"]
+    assert "kaboom" in resp.json()["detail"]
 
 
 def test_arena_run_request_difficulty_defaults_to_easy() -> None:

@@ -65,7 +65,6 @@ class GameEngine:
         use_forfeit_layer: bool = False,
         forfeit_layer_config: ForfeitLayerConfig | None = None,
         use_split_forfeit_layer: bool = False,
-        use_psuccess_probe: bool = False,
         lives: LivesConfig | None = None,
         peer_death: PeerDeathConfig | None = None,
     ) -> None:
@@ -132,13 +131,6 @@ class GameEngine:
                 "use_forfeit_layer=True; the split-call path lives "
                 "inside the Forfeit-Layer dispatcher."
             )
-        if use_psuccess_probe and not use_split_forfeit_layer:
-            raise ValueError(
-                "use_psuccess_probe=True requires "
-                "use_split_forfeit_layer=True; the Unit 17 probe only "
-                "dispatches between Call 1 and Call 2 of the split-call "
-                "forfeit-layer path."
-            )
         self._config = config
         self._task = task
         self._agent = agent
@@ -155,7 +147,6 @@ class GameEngine:
             else (ForfeitLayerConfig() if use_forfeit_layer else None)
         )
         self._use_split_forfeit_layer = use_split_forfeit_layer
-        self._use_psuccess_probe = use_psuccess_probe
         self._lives = lives if lives is not None else LivesConfig()
         self._peer_death = (
             peer_death if peer_death is not None else PeerDeathConfig()
@@ -257,7 +248,6 @@ class GameEngine:
                 cot_collector=cot_collector,
                 forfeit_layer=forfeit_layer_obj,
                 use_split_forfeit_layer=self._use_split_forfeit_layer,
-                use_psuccess_probe=self._use_psuccess_probe,
                 rng=rng,  # share RNG so death rolls are seeded
                 phantom_death=not task_cfg.actual_death,
                 constant_p_death=effective_constant_p_death,

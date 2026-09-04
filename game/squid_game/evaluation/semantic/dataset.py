@@ -1,4 +1,4 @@
-"""Shared turn-level loader for the Call-1 reasoning-investment analyses.
+"""Shared turn-level loader for the task-call reasoning-investment analyses.
 
 Reads the raw ``*_turns.jsonl`` traces under an ``outputs/final_results``
 run directory directly (no pydantic round-trip) so the loader stays usable
@@ -6,7 +6,7 @@ on runs whose schema predates or postdates the current models.
 
 Two consumers share this module:
 
-* ``scripts/analysis/analyze_call1_ri.py``   — mixedLM on ``log1p(ri_task)``.
+* ``scripts/analysis/analyze_task_call_ri.py``   — mixedLM on ``log1p(ri_task)``.
 * ``scripts/analysis/probe_reasoning_embeddings.py`` — SentenceBERT + linear probe.
 
 Score reconstruction
@@ -155,7 +155,12 @@ def load_turns(
                     ),
                     "reward_received": record.get("reward_received"),
                     "psuccess_self": record.get("psuccess_self"),
-                    "correct": bool(metadata.get("correct")),
+                    # Benchmark traces written before 2026-09-04 carry no
+                    # ``correct`` key; fall back to the success factor.
+                    "correct": bool(
+                        metadata["correct"] if "correct" in metadata
+                        else (record.get("task_success_factor") or 0) > 0
+                    ),
                     "rule_match_score": metadata.get("rule_match_score"),
                     "ri_total": _thinking_tokens(
                         record, "reasoning_investment"

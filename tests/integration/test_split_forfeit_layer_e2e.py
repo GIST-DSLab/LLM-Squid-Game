@@ -2,8 +2,9 @@
 
 Drives a minimal ``ExperimentRunner.run()`` with
 ``use_split_forfeit_layer=True`` using a stub LLM provider that emits
-two distinct canned responses per turn (Call 1 = RULE + ACTION, Call 2
-= CHOICE + optional REASON). Asserts that the on-disk
+two distinct canned responses per turn (decision call = CHOICE +
+optional REASON, then task call = RULE + ACTION; decision first since
+2026-09-04). Asserts that the on-disk
 ``season_results.jsonl`` carries the Unit 15 split fields end-to-end
 through YAML loader → runner → engine → manager → TurnResult → JSONL.
 
@@ -67,17 +68,18 @@ _SMOKE_YAML_TEMPLATE: dict = {
 
 
 def _alternating_split_response(idx: int, _messages: list[dict[str, str]]) -> str:
-    """Alternate Call 1 / Call 2 canned text based on stub call index.
+    """Alternate decision-call / task-call canned text by stub call index.
 
-    The split-call manager always issues Call 1 (task) before Call 2
-    (forfeit) per turn, so even indices feed Call 1 and odd indices
-    feed Call 2. We vary the CHOICE response between turns so the smoke
-    exercises at least one CONTINUE and one FORFEIT path.
+    The split-call manager issues the decision call before the task call
+    on every turn (and skips the task call on FORFEIT), so even indices
+    feed the decision call and odd indices feed the task call. We vary
+    the CHOICE response between turns so the smoke exercises at least one
+    CONTINUE and one FORFEIT path.
     """
-    if idx % 2 == 0:
-        # Call 1 — task layer.
+    if idx % 2 == 1:
+        # Task call — task layer.
         return "RULE: if the signal is red go_left otherwise stay\nACTION: go_left"
-    # Call 2 — forfeit layer. Turn 1 continues; turn 2 forfeits with SD digit.
+    # Decision call — forfeit layer. Turn 1 continues; turn 2 forfeits with SD digit.
     turn_index = idx // 2
     if turn_index == 0:
         return "CHOICE: CONTINUE"
@@ -148,12 +150,12 @@ class TestSplitForfeitLayerE2E:
         )
         assert first["raw_response_task"] is not None
         assert first["raw_response_forfeit"] is not None
-        # Call 1 response contract: must not contain CHOICE.
+        # Task-call response contract: must not contain CHOICE.
         assert "CHOICE" not in first["raw_response_task"]
-        # Call 2 response contract: must contain CHOICE.
+        # Decision-call response contract: must contain CHOICE.
         assert "CHOICE" in first["raw_response_forfeit"]
 
-        # forfeit_choice stamped from Call 2 parse.
+        # forfeit_choice stamped from the decision-call parse.
         assert first["forfeit_choice"] in ("CONTINUE", "FORFEIT")
 
         # Stake fields must be None on the forfeit-layer path.

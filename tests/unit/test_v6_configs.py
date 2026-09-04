@@ -52,7 +52,8 @@ class TestV6SplitCallPipeline:
         assert cfg.use_unified_turn is True
         assert cfg.use_forfeit_layer is True
         assert cfg.use_split_forfeit_layer is True
-        assert cfg.use_psuccess_probe is True
+        # The Call 1.5 probe was removed 2026-09-04; the flag must stay off.
+        assert cfg.use_psuccess_probe is False
 
     def test_forfeit_layer_is_ev_positive(self, cfg: ExperimentConfig) -> None:
         fl = cfg.forfeit_layer
@@ -64,7 +65,7 @@ class TestV6SplitCallPipeline:
         assert fl.reward_cap_multiple == pytest.approx(10.0)
         assert fl.p_success_estimate == pytest.approx(0.75)
         assert fl.split_context_level == "medium"
-        assert fl.chain_psuccess_to_menu is True
+        assert fl.chain_psuccess_to_menu is False
 
     def test_six_cells(self, cfg: ExperimentConfig) -> None:
         assert len(cfg.seasons) == 6

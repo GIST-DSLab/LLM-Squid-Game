@@ -456,7 +456,7 @@ track_row("tr_call1", section_c_y + 40,
           [
               "ri_task, thinking_text_task  ->  H_D3 accuracy, BP_cognitive baseline (Cell 0)",
               "rule_match_score per turn  ->  discovery_turn (H_D5), gap_to_forfeit",
-              "ACTION + RULE hypothesis  ->  echoed into Call 2 forfeit_only.j2",
+              "ACTION + RULE hypothesis  ->  echoed into Call 2 decision_call.j2",
               "(Cell 0 loop-locks here; no Call 2 follows)",
           ])
 

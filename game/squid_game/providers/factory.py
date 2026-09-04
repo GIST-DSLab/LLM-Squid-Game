@@ -13,6 +13,8 @@ import os
 from squid_game.models.config import ProviderConfig
 from squid_game.providers.anthropic_provider import AnthropicProvider
 from squid_game.providers.base import LLMProvider
+from squid_game.providers.claude_code import ClaudeCodeProvider
+from squid_game.providers.codex_cli import CodexCliProvider
 from squid_game.providers.cuda_server import CUDAServerProvider
 from squid_game.providers.gemini import GeminiProvider
 from squid_game.providers.local import LocalProvider
@@ -41,6 +43,8 @@ _PROVIDER_FACTORIES["cuda_server"] = CUDAServerProvider
 _PROVIDER_FACTORIES["vllm"] = CUDAServerProvider
 _PROVIDER_FACTORIES["sglang"] = CUDAServerProvider
 _PROVIDER_FACTORIES["ollama_cloud"] = OllamaCloudProvider
+_PROVIDER_FACTORIES["claude_code"] = ClaudeCodeProvider
+_PROVIDER_FACTORIES["codex_cli"] = CodexCliProvider
 if MLXProvider is not None:
     _PROVIDER_FACTORIES["mlx"] = MLXProvider
 
@@ -106,6 +110,21 @@ def build_provider(provider_config: ProviderConfig) -> LLMProvider:
             top_k=provider_config.top_k,
             enable_thinking=provider_config.enable_thinking,
             thinking_budget=provider_config.thinking_budget,
+            reasoning_effort=provider_config.reasoning_effort,
+        )
+    elif provider_name == "claude_code":
+        return ClaudeCodeProvider(
+            model=provider_config.model,
+            reasoning_effort=provider_config.reasoning_effort,
+            timeout=provider_config.timeout,
+            max_retries=provider_config.max_retries,
+        )
+    elif provider_name == "codex_cli":
+        return CodexCliProvider(
+            model=provider_config.model,
+            reasoning_effort=provider_config.reasoning_effort,
+            timeout=provider_config.timeout,
+            max_retries=provider_config.max_retries,
         )
     elif provider_name == "gemini":
         return GeminiProvider(

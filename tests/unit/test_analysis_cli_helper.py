@@ -29,7 +29,7 @@ ANALYSIS = REPO_ROOT / "scripts" / "analysis"
 # The four scripts measured (Step 1) to genuinely share the aggregate-root
 # argument's meaning. Confirmed by direct reading, not assumed.
 CONVERTED = [
-    "analyze_call1_ri.py",
+    "analyze_task_call_ri.py",
     "probe_reasoning_embeddings.py",
     "analyze_tc.py",
     "analyze_verbal_reason.py",

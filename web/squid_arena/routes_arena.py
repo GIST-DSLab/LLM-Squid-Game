@@ -42,7 +42,7 @@ def arena_run(req: schemas.ArenaRunRequest, request: Request):
 
     run_id = uuid.uuid4().hex[:12]
     progress = ArenaProgress()
-    progress.calls_total = req.total_turns * 3
+    progress.calls_total = req.total_turns * 2  # decision call + task call per turn
     with deps._arena_lock:
         deps._arena_runs[run_id] = progress
 

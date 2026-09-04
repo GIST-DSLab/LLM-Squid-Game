@@ -63,11 +63,19 @@ def make_frame(
                     if rng.random() < p:
                         died_turn = t
                         break
+            # Lives follow the engine: −1 on a wrong answer. Kept at ≥ 1 so
+            # elimination stays under ``elimination_beta``'s control, but
+            # varying across sessions at a fixed turn so a time-varying
+            # Cox can identify the covariate inside each risk set.
+            lives = 5
             for turn in range(1, turns + 1):
                 logit = -0.2 + accuracy_beta * level + offset
                 correct = bool(
                     rng.random() < 1.0 / (1.0 + np.exp(-logit))
                 )
+                lives_before = lives
+                if not correct:
+                    lives = max(1, lives - 1)
                 ri = float(
                     np.exp(
                         5.0
@@ -89,8 +97,8 @@ def make_frame(
                         "forfeit": forfeit_turn == turn,
                         "died": died_turn == turn,
                         "score_before_turn": score,
-                        "lives_before": max(0, 5 - (turn - 1) // 4),
-                        "lives_after": max(0, 5 - turn // 4),
+                        "lives_before": lives_before,
+                        "lives_after": lives,
                     }
                 )
                 if correct:
@@ -343,6 +351,65 @@ class TestForfeitHazard:
         )
         assert result["beta_threat"] == pytest.approx(np.log(result["hr"]))
         assert result["effect_label"] == "hazard ratio per level"
+
+    def test_lives_enter_the_hazard_as_a_covariate(self) -> None:
+        result = te.fit_forfeit_hazard(
+            make_frame(forfeit_beta=1.0, sessions_per_level=30, turns=15)
+        )
+        assert result["status"] == "ok"
+        assert result["lives_covariate"] is True
+        assert "lives_before" in result["model"]
+        assert result["hr_lives"] > 0
+        assert result["hr_lives_ci_low"] <= result["hr_lives"] <= result["hr_lives_ci_high"]
+        assert 0.0 <= result["p_lives"] <= 1.0
+
+    def test_a_run_without_lives_still_fits_on_threat_alone(self) -> None:
+        frame = make_frame(forfeit_beta=1.0, sessions_per_level=30, turns=15)
+        frame["lives_before"] = None
+        result = te.fit_forfeit_hazard(frame)
+        assert result["status"] == "ok"
+        assert result["lives_covariate"] is False
+        assert "hr_lives" not in result
+        assert "lives_before" not in result["model"]
+
+    def test_partially_missing_lives_drop_the_covariate_not_the_rows(
+        self,
+    ) -> None:
+        frame = make_frame(forfeit_beta=1.0, sessions_per_level=30, turns=15)
+        frame.loc[frame.index[:5], "lives_before"] = np.nan
+        result = te.fit_forfeit_hazard(frame)
+        assert result["status"] == "ok"
+        assert result["lives_covariate"] is False
+        assert result["n_obs"] == len(frame)
+
+    def test_engine_exact_lives_fall_back_to_score_with_a_note(self) -> None:
+        # Real lives runs: score = 30 + 10·correct, lives = 5 − wrong, so
+        # lives is a linear function of score inside every risk set.
+        frame = make_frame(forfeit_beta=1.0, sessions_per_level=30, turns=15)
+        frame = frame.sort_values(["session_id", "turn_number"])
+        prev_correct = (
+            frame.groupby("session_id")["correct"].cumsum()
+            - frame["correct"].astype(int)
+        )
+        frame["score_before_turn"] = 30.0 + 10.0 * prev_correct
+        # No floor: the engine ends a session at 0 lives, so the exact
+        # identity holds on every recorded turn.
+        frame["lives_before"] = 5 - ((frame["turn_number"] - 1) - prev_correct)
+        result = te.fit_forfeit_hazard(frame)
+        assert result["status"] == "ok"
+        assert result["lives_covariate"] is False
+        assert "collinear" in result["lives_note"]
+        assert "hr_lives" not in result
+        text = te.render_report(
+            {"tests": [result], "n_turns": 1, "n_sessions": 1, "models": []}
+        )
+        assert "collinear" in text
+
+    def test_the_report_names_the_lives_hazard(self) -> None:
+        frame = make_frame(forfeit_beta=1.0, sessions_per_level=30, turns=15)
+        text = te.render_report(te.run_h6(frame))
+        assert "lives_before" in text
+        assert "HR per life" in text
 
 
 # ---------------------------------------------------------------------------

@@ -30,7 +30,8 @@ def test_split_call_flags_are_on(name):
     assert config.use_unified_turn is True
     assert config.use_forfeit_layer is True
     assert config.use_split_forfeit_layer is True
-    assert config.use_psuccess_probe is True
+    # The Call 1.5 probe was removed 2026-09-04; the flag must stay off.
+    assert config.use_psuccess_probe is False
 
 
 @pytest.mark.parametrize("name", _NAMES)

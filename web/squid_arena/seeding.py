@@ -165,7 +165,7 @@ def discover_run_dirs(root: Path = Path(".")) -> list[Path]:
 def extract_action(raw_response_task: str | None, forfeit_choice: str | None) -> str:
     """Best-effort action label for one turn.
 
-    The Call-1 (task) raw response normally contains an ``ACTION: <label>``
+    The task-call raw response normally contains an ``ACTION: <label>``
     line, e.g. ``'RULE: If Color is blue then jump...\\nACTION: stay'``.
     Falls back to the last non-empty line when no ``ACTION:`` marker is
     present (observed on a few malformed Ollama Cloud responses), and to
@@ -317,7 +317,8 @@ def build_settings_snapshot(
 def _thinking_tokens(ri: dict[str, Any] | None) -> float | None:
     """RI proxy: ``thinking_tokens`` from a per-call RI dict
     (``{'total_tokens', 'reasoning_steps', 'thinking_tokens'}``), or
-    ``None`` when the call didn't happen (e.g. Cell 0 skips Call 1.5/2)."""
+    ``None`` when the call didn't happen (e.g. Cell 0 skips the decision call;
+    every run since 2026-09-04 has no probe call; a FORFEIT turn has no task call)."""
     if not ri:
         return None
     return ri.get("thinking_tokens")

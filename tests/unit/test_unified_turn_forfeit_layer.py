@@ -357,7 +357,7 @@ class TestHistoryBlockNoStakeLeakInForfeitLayerPath:
     Under ``use_forfeit_layer=True`` the stake menu is removed (Unit 14),
     so every history entry has ``stake_choice=None``. The history block
     previously hard-coded ``stake={stake_label}`` with ``—`` as the fallback,
-    leaking deprecated Phase 3.1 vocabulary into Call 1's task-only prompt
+    leaking deprecated Phase 3.1 vocabulary into the task call's prompt
     (Unit 15 §3.3 task-layer purity violation). The formatter now omits
     the stake fragment when stake_choice is falsy.
     """

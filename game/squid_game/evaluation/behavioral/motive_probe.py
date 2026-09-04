@@ -137,7 +137,7 @@ def _turn_matched_baseline(
 
     ``allowed_only`` restricts the reference to forfeit-allowed level-0 cells,
     which is the only comparable reference for ``ri_forfeit``: the
-    not-allowed cells skip Call 2 entirely and have no ``ri_forfeit`` at all.
+    not-allowed cells skip the decision call entirely and have no ``ri_forfeit`` at all.
     """
     base = frame[frame["threat_level"] == 0]
     if allowed_only:

@@ -22,7 +22,7 @@ H6a accuracy  ``correct ~ threat_level + turn`` — statsmodels GEE logit,
               structure. Decision: ``beta_threat > 0``.
 H6b effort    ``log1p(ri_task) ~ threat_level + turn`` — MixedLM with a
               per-session random intercept, mirroring
-              :mod:`evaluation.cognitive.ri_call1`. ``ri_task`` is Call
+              :mod:`evaluation.cognitive.ri_task_call`. ``ri_task`` is the task call's
               1's thinking-token count, spent before the agent ever sees
               the forfeit menu, so it cannot be contaminated by
               decision-token spillover. ``log1p`` because the token
@@ -580,8 +580,30 @@ def _survival_view(frame: pd.DataFrame) -> pd.DataFrame:
     return sub
 
 
+def _lives_covariate_usable(sub: pd.DataFrame) -> bool:
+    """Whether ``lives_before`` can enter the Cox fit.
+
+    Elimination (running out of lives) is a competing exit, and a session
+    that is bleeding lives is under more pressure than one that is not,
+    so treating it as plain censoring is only defensible once the lives
+    count is conditioned on. The covariate is used when every row
+    carries it (an archived pre-lives run has it all-null; a mixed frame
+    drops the covariate rather than the rows) and it varies.
+    """
+    if "lives_before" not in sub.columns:
+        return False
+    lives = pd.to_numeric(sub["lives_before"], errors="coerce")
+    return bool(lives.notna().all() and lives.nunique() > 1)
+
+
 def fit_forfeit_hazard(frame: pd.DataFrame) -> dict[str, Any]:
-    """Cox forfeit hazard with ``threat_level`` as an ordinal covariate."""
+    """Cox forfeit hazard with ``threat_level`` as an ordinal covariate.
+
+    ``lives_before`` (the hearts left at the start of the turn) rides
+    along as a time-varying covariate whenever the frame carries it —
+    see :func:`_lives_covariate_usable` for why — so the ladder HR is a
+    cause-specific forfeit hazard conditional on the lives count.
+    """
     name, outcome = "H1-ext forfeit hazard", "forfeit"
     sub = _survival_view(frame)
     if sub.empty:
@@ -591,22 +613,67 @@ def fit_forfeit_hazard(frame: pd.DataFrame) -> dict[str, Any]:
     if not sub["forfeit"].any():
         return _skipped(name, outcome, "no forfeit events")
 
+    covariates = ["threat_level"]
+    use_lives = _lives_covariate_usable(sub)
+    lives_note: str | None = None
+    if use_lives:
+        sub["lives_before"] = pd.to_numeric(sub["lives_before"]).astype(float)
+        covariates.append("lives_before")
+
     result: CoxSurvivalResult | None = fit_cox_forfeit_survival(
-        sub, regime=None, extra_covariates=["threat_level"]
+        sub, regime=None, extra_covariates=covariates
     )
+    if result is None and use_lives:
+        # Under the flat +10 reward every session's score is
+        # 30 + 10 · (correct so far) and its lives are 5 − (wrong so far),
+        # with correct + wrong = turns played, so inside a risk set
+        # (fixed turn) lives_before is an exact linear function of
+        # score_prev and the design matrix is singular. Conditioning on
+        # score_prev already conditions on lives there; fall back and
+        # say so rather than report the ladder HR as unavailable.
+        use_lives = False
+        covariates = ["threat_level"]
+        lives_note = (
+            "lives_before dropped: collinear with score_prev inside every "
+            "risk set (flat reward makes both linear in the correct-answer "
+            "count), so score_prev already conditions on the lives count"
+        )
+        logger.info("H1-ext: %s", lives_note)
+        result = fit_cox_forfeit_survival(
+            sub, regime=None, extra_covariates=covariates
+        )
     if result is None:
         return _skipped(name, outcome, "cox fit unavailable")
     extra = result.extra_hazard_ratios.get("threat_level")
     if extra is None:
         return _skipped(name, outcome, "threat_level dropped by the fit")
+    lives = result.extra_hazard_ratios.get("lives_before") if use_lives else None
 
     hr = float(extra["hr"])
     p = float(extra["p"])
+    model = (
+        "CoxTimeVarying (threat_level ordinal + lives_before, all cells)"
+        if lives is not None
+        else "CoxTimeVarying (threat_level ordinal, all cells)"
+    )
+    lives_fields: dict[str, Any] = {"lives_covariate": lives is not None}
+    if lives_note is not None:
+        lives_fields["lives_note"] = lives_note
+    if lives is not None:
+        lives_fields.update(
+            {
+                "hr_lives": float(lives["hr"]),
+                "hr_lives_ci_low": float(lives["ci_low"]),
+                "hr_lives_ci_high": float(lives["ci_high"]),
+                "p_lives": float(lives["p"]),
+            }
+        )
     return {
         "name": name,
         "outcome": outcome,
         "status": "ok",
-        "model": "CoxTimeVarying (threat_level ordinal, all cells)",
+        "model": model,
+        **lives_fields,
         # Reported on the log-hazard scale so the sign rule matches the
         # other two tests; the HR is the interpretable form.
         "beta_threat": float(np.log(hr)) if hr > 0 else float("nan"),
@@ -739,6 +806,22 @@ def render_report(results: dict[str, Any]) -> str:
             f"{test.get('n_obs')}/{test.get('n_sessions')} | "
             f"{test.get('decision')} |"
         )
+    for test in results.get("tests", []):
+        if test.get("status") == "ok" and test.get("lives_note"):
+            lines += ["", f"{test['name']}: {test['lives_note']}."]
+        if test.get("status") == "ok" and test.get("lives_covariate"):
+            lines += [
+                "",
+                f"{test['name']} conditions on `lives_before` (hearts at "
+                f"the start of the turn): HR per life "
+                f"{_fmt(test.get('hr_lives'), 3)} "
+                f"[{_fmt(test.get('hr_lives_ci_low'), 3)}, "
+                f"{_fmt(test.get('hr_lives_ci_high'), 3)}], "
+                f"p = {_fmt(test.get('p_lives'), 4)}. Elimination is a "
+                "competing exit; with lives in the model it is treated as "
+                "censoring conditional on the lives count, and the ladder "
+                "HR reads as a cause-specific forfeit hazard.",
+            ]
     lines += [
         "",
         "Decision rule: `beta_threat > 0` (`HR > 1` for the hazard) at "

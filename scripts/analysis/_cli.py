@@ -12,7 +12,7 @@ What genuinely repeats, four times, is a different argument: an
 *aggregate* root directory -- "the directory holding the per-model run
 directories" (as opposed to a single run directory), default
 ``outputs/final_results`` -- spelled ``--root`` (``type=Path``) in
-``analyze_call1_ri.py``, ``probe_reasoning_embeddings.py`` and
+``analyze_task_call_ri.py``, ``probe_reasoning_embeddings.py`` and
 ``analyze_tc.py``, and ``--results-root`` (plain ``str``) in
 ``analyze_verbal_reason.py``.
 
@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 # The value three of the four callers share verbatim
-# (``analyze_call1_ri.py``, ``probe_reasoning_embeddings.py``,
+# (``analyze_task_call_ri.py``, ``probe_reasoning_embeddings.py``,
 # ``analyze_tc.py``): ``--root``, ``type=Path``,
 # ``default=Path("outputs/final_results")``. The fourth
 # (``analyze_verbal_reason.py``) overrides every one of these.

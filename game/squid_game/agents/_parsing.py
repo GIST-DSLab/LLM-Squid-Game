@@ -47,18 +47,10 @@ _UNIFIED_RULE_FIELD_PATTERN = re.compile(
     r"RULE\s*:\s*([^\n\r]+)", re.IGNORECASE
 )
 # Phase O Unit 15 — CHOICE field (CONTINUE / FORFEIT) captured for the
-# Call 2 (forfeit-only) response parser. Mirrors the ACTION pattern: last
+# decision-call response parser. Mirrors the ACTION pattern: last
 # occurrence wins, trailing punctuation trimmed by the extractor.
 _UNIFIED_CHOICE_FIELD_PATTERN = re.compile(
     r"CHOICE\s*:\s*([^\n\r]+)", re.IGNORECASE
-)
-# Phase O Unit 17 — P_CORRECT field for the Call 1.5 probe parser. The
-# prompt instructs the model to emit exactly "P_CORRECT: XX" on its own
-# line, but we accept % suffix, surrounding whitespace, and decimal
-# fractions (e.g. "0.75" or "75%") to be robust. The extractor converts
-# whichever shape to an integer in [0, 100]; malformed → None.
-_PSUCCESS_FIELD_PATTERN = re.compile(
-    r"P_CORRECT\s*:\s*([^\n\r]+)", re.IGNORECASE
 )
 
 
@@ -369,22 +361,23 @@ def parse_unified_response(
 
 
 @dataclass
-class TaskOnlyResponse:
-    """Parsed Call 1 response from the Unit 15 split-call path.
+class TaskCallResponse:
+    """Parsed task-call response from the split-call path.
 
-    The Call 1 prompt solicits RULE + ACTION (never CHOICE / STAKE). This
+    The task call solicits RULE + ACTION (never CHOICE / STAKE). This
     response object captures those fields plus the raw text so downstream
     analysis / audit can inspect the unadulterated model output.
 
     Attributes:
-        raw_text: Original unprocessed LLM Call 1 output.
+        raw_text: Original unprocessed LLM task-call output.
         action: Normalised action string (None when no valid ACTION found).
             NullTask empty ``available_actions`` → normalised to ``"ACCEPT"``.
         rule_hypothesis: Free-form RULE text, or None when absent.
-        forfeit: ``True`` only when the model ignored the Call 1 contract
-            and wrote ``ACTION: FORFEIT``. Call 2 retains authoritative
-            choice dispatch — this flag is purely informational so the
-            manager can log the anomaly.
+        forfeit: ``True`` only when the model ignored the task-call contract
+            and wrote ``ACTION: FORFEIT``. The decision call (which already
+            ran before the task call) is the authoritative choice site —
+            this flag is purely informational so the manager can log the
+            anomaly.
     """
 
     raw_text: str
@@ -394,16 +387,16 @@ class TaskOnlyResponse:
 
 
 @dataclass
-class ForfeitOnlyResponse:
-    """Parsed Call 2 response from the Unit 15 split-call path.
+class DecisionCallResponse:
+    """Parsed decision-call response from the split-call path.
 
-    The Call 2 prompt solicits CHOICE (and REASON on FORFEIT) and nothing
+    The decision call solicits CHOICE (and REASON on FORFEIT) and nothing
     else. CHOICE is extracted here; REASON digit parsing reuses the
     existing :meth:`ForfeitLayer.parse_forfeit_reason` path so the Unit
     14 self-report plumbing is unchanged.
 
     Attributes:
-        raw_text: Original unprocessed LLM Call 2 output.
+        raw_text: Original unprocessed LLM decision-call output.
         choice_raw: Last ``CHOICE: <value>`` field value as written by
             the model (stripped of trailing punctuation). ``None`` when
             the field is missing.
@@ -417,19 +410,18 @@ class ForfeitOnlyResponse:
     choice_forfeit: bool
 
 
-def build_task_only_message(
+def build_task_call_message(
     user_body: str,
     available_actions: list[str],
     rule_template_hint: str | None = None,
     response_format_override: str | None = None,
 ) -> str:
-    """Render the Unit 15 Call 1 (task layer) user message.
+    """Render the task-call (task layer) user message.
 
     Mirrors :func:`build_unified_turn_message` but never emits a stake /
-    choice / reason directive — Call 1 is pure RULE + ACTION. Includes
-    the §3.3 "A separate decision ... will follow" informational line so
-    the agent knows more input is coming without being ordered what to
-    think.
+    choice / reason directive — the task call is pure RULE + ACTION. It
+    is issued only after the decision call returned CONTINUE, so the
+    template carries no forfeit vocabulary at all.
 
     Args:
         user_body: Composed task stimulus + history assembled by the
@@ -447,12 +439,12 @@ def build_task_only_message(
             renders the template exactly as before.
 
     Returns:
-        Fully rendered Call 1 user-message string.
+        Fully rendered task-call user-message string.
     """
     from squid_game.prompts import render
 
     return render(
-        "user_message/task_only.j2",
+        "user_message/task_call.j2",
         user_body=user_body,
         available_actions=list(available_actions),
         rule_template_hint=rule_template_hint,
@@ -460,68 +452,56 @@ def build_task_only_message(
     )
 
 
-def build_forfeit_only_message(
+def build_decision_call_message(
     user_body: str,
     menu_text: str,
     forfeit_allowed: bool,
     split_context_level: str = "medium",
-    rule_from_call1: str | None = None,
-    action_from_call1: str | None = None,
-    call1_full_prompt: str | None = None,
-    call1_thinking: str | None = None,
-    current_stimulus: str | None = None,
 ) -> str:
-    """Render the Unit 15 Call 2 (forfeit layer) user message.
+    """Render the decision-call (forfeit layer) user message.
 
-    Call 2 presents the forfeit menu and asks for CHOICE (+ REASON on
-    FORFEIT). Context carryover from Call 1 is controlled by
-    ``split_context_level``:
+    The decision call is the FIRST call of the turn (2026-09-04
+    decision-first flow): it presents the forfeit menu and asks for
+    CHOICE (+ REASON on FORFEIT) before the agent has seen this round's
+    stimulus. Nothing task-specific is echoed — the agent decides from
+    its accumulated history and the menu alone.
 
-    - ``"minimal"`` → Call 2 receives ``user_body`` + ``menu_text`` only.
-    - ``"medium"`` (recommended) → Call 2 additionally receives a short
-      echo block with Call 1's RULE + ACTION strings. Does NOT echo Call
-      1 thinking; clean RI_forfeit attribution.
-    - ``"full"`` → Call 2 sees Call 1's full prompt + raw thinking;
-      escape-hatch mode for ablations only.
+    ``split_context_level`` controls how much session context is shown:
+
+    - ``"minimal"`` → menu only.
+    - ``"medium"`` (recommended) / ``"full"`` → ``user_body`` (the
+      cumulative history block) + menu. The two levels are equivalent
+      since the 2026-09-04 reorder; ``"full"`` is accepted so older
+      YAMLs keep loading.
 
     Args:
-        user_body: Shared state summary assembled upstream; may be empty.
+        user_body: Cumulative history block assembled upstream; may be
+            empty.
         menu_text: Pre-rendered forfeit menu block from
             ``ForfeitLayer.render_menu``.
         forfeit_allowed: Gates the CHOICE/REASON response-format schema.
         split_context_level: One of ``"minimal" | "medium" | "full"``.
             Must already be validated by the caller (ForfeitLayerConfig
             enforces the enum).
-        rule_from_call1: RULE text parsed from Call 1 (``"medium"`` only).
-        action_from_call1: ACTION text parsed from Call 1 (``"medium"``
-            only).
-        call1_full_prompt: Full Call 1 user-message text (``"full"`` only).
-        call1_thinking: Call 1 raw thinking text (``"full"`` only).
 
     Returns:
-        Fully rendered Call 2 user-message string.
+        Fully rendered decision-call user-message string.
     """
     from squid_game.prompts import render
 
     return render(
-        "user_message/forfeit_only.j2",
-        user_body=user_body,
+        "user_message/decision_call.j2",
+        user_body=user_body if split_context_level != "minimal" else "",
         menu_text=menu_text,
         forfeit_allowed=forfeit_allowed,
-        split_context_level=split_context_level,
-        rule_from_call1=rule_from_call1,
-        action_from_call1=action_from_call1,
-        call1_full_prompt=call1_full_prompt,
-        call1_thinking=call1_thinking,
-        current_stimulus=current_stimulus,
     )
 
 
-def parse_task_only_response(
+def parse_task_call_response(
     text: str,
     available_actions: list[str],
-) -> TaskOnlyResponse:
-    """Extract RULE + ACTION fields from a Call 1 (task-only) response.
+) -> TaskCallResponse:
+    """Extract RULE + ACTION fields from a task-call response.
 
     Reuses the Unit 14 extractors so parsing semantics match the
     single-call path: last ``ACTION:`` wins, trailing punctuation
@@ -529,24 +509,24 @@ def parse_task_only_response(
     verbatim.
 
     The CHOICE / REASON / STAKE fields are intentionally NOT parsed
-    here — if the model emitted them prematurely they survive in
-    ``raw_text`` for audit but do not influence Call 2 dispatch. Call 2
-    is the authoritative site for the forfeit decision.
+    here — if the model emitted them they survive in ``raw_text`` for
+    audit but do not influence anything: the decision call already ran
+    and is the authoritative site for the forfeit decision.
 
     ``forfeit_allowed`` is fixed to ``False`` so ``FORFEIT`` in the
     ACTION field is recorded as ``forfeit=True`` (anomaly flag) but
-    ``action`` falls through to the None path — the manager can decide
-    whether to skip Call 2 or log and proceed.
+    ``action`` falls through to the None path — the manager logs it and
+    proceeds.
 
     Args:
-        text: Raw Call 1 LLM output.
+        text: Raw task-call LLM output.
         available_actions: Valid task actions; empty → NullTask
             ACCEPT normalisation.
 
     Returns:
-        Populated :class:`TaskOnlyResponse`.
+        Populated :class:`TaskCallResponse`.
     """
-    # Detect ``ACTION: FORFEIT`` even though Call 1 is not supposed to
+    # Detect ``ACTION: FORFEIT`` even though the task call is not supposed to
     # emit it — we want the anomaly flag to be surfaced so the manager
     # can log it. Run the extractor with ``forfeit_allowed=True`` just
     # for detection, then null the action so downstream never mistakes
@@ -557,7 +537,7 @@ def parse_task_only_response(
     rule_hypothesis = _extract_last_field(_UNIFIED_RULE_FIELD_PATTERN, text)
     if forfeit:
         action = None
-    return TaskOnlyResponse(
+    return TaskCallResponse(
         raw_text=text,
         action=action,
         rule_hypothesis=rule_hypothesis,
@@ -565,25 +545,25 @@ def parse_task_only_response(
     )
 
 
-def parse_forfeit_only_response(
+def parse_decision_call_response(
     text: str,
     forfeit_allowed: bool,
-) -> ForfeitOnlyResponse:
-    """Extract CHOICE field from a Call 2 (forfeit-only) response.
+) -> DecisionCallResponse:
+    """Extract CHOICE field from a decision-call response.
 
     REASON digit parsing is deliberately deferred to
     :meth:`ForfeitLayer.parse_forfeit_reason` (Unit 14) so the self-
     report plumbing is reused unchanged.
 
     Args:
-        text: Raw Call 2 LLM output.
+        text: Raw decision-call LLM output.
         forfeit_allowed: Whether the session offers the FORFEIT option.
             On ``False`` the schema fixes CHOICE=CONTINUE; the parser
             still records whatever the model wrote for audit, but the
             caller is expected to force-continue.
 
     Returns:
-        Populated :class:`ForfeitOnlyResponse`.
+        Populated :class:`DecisionCallResponse`.
     """
     matches = list(_UNIFIED_CHOICE_FIELD_PATTERN.finditer(text))
     if not matches:
@@ -593,10 +573,10 @@ def parse_forfeit_only_response(
         # default to a neutral None/False so the caller can force
         # CONTINUE without recording a phantom forfeit intent.
         if forfeit_allowed and _FORFEIT_PATTERN.search(text):
-            return ForfeitOnlyResponse(
+            return DecisionCallResponse(
                 raw_text=text, choice_raw="FORFEIT", choice_forfeit=True
             )
-        return ForfeitOnlyResponse(
+        return DecisionCallResponse(
             raw_text=text, choice_raw=None, choice_forfeit=False
         )
 
@@ -609,7 +589,7 @@ def parse_forfeit_only_response(
     )
     upper = first_token.upper()
     choice_forfeit = forfeit_allowed and upper == "FORFEIT"
-    return ForfeitOnlyResponse(
+    return DecisionCallResponse(
         raw_text=text,
         choice_raw=first_token if first_token else None,
         choice_forfeit=choice_forfeit,
@@ -657,140 +637,3 @@ def _extract_last_field(pattern: re.Pattern[str], text: str) -> Optional[str]:
         return None
     value = matches[-1].group(1).strip()
     return value or None
-
-
-# ---------------------------------------------------------------------------
-# Phase O Unit 17 — Call 1.5 (self-reported p_success probe) helpers.
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class PSuccessProbeResponse:
-    """Parsed Call 1.5 response from the Unit 17 probe path.
-
-    The Call 1.5 prompt solicits exactly one line of the form
-    ``P_CORRECT: XX`` where XX ∈ [0, 100]. Robust parsing also accepts
-    a % suffix (``75%``) and a decimal fraction (``0.75``) as a
-    convenience so a single malformed model response does not abort the
-    whole session.
-
-    Attributes:
-        raw_text: Original unprocessed LLM Call 1.5 output.
-        psuccess_self: Parsed integer probability in [0, 100], or
-            ``None`` when the field is missing / unparseable. A ``None``
-            value is recorded on the TurnResult and the analysis layer
-            is expected to flag it as missing-at-random.
-    """
-
-    raw_text: str
-    psuccess_self: Optional[int]
-
-
-def build_psuccess_probe_message(
-    user_body: str,
-    rule_from_call1: str | None = None,
-    action_from_call1: str | None = None,
-    prior_accuracy_summary: str | None = None,
-    current_stimulus: str | None = None,
-) -> str:
-    """Render the Unit 17 Call 1.5 (self-report probe) user message.
-
-    The probe echoes Call 1's RULE + ACTION strings so the agent's
-    retrospective confidence rating has a concrete referent. It does
-    NOT echo Call 1's thinking — including thinking would mechanically
-    carry Call 1 reasoning into Call 1.5 and make ``ri_probe`` a
-    non-independent sample.
-
-    Note (Unit 17.9 smoke, 2026-04-22): the original expectation that
-    ri_probe would be small (<20% of ri_task) proved wrong in Gemini
-    2.5 Flash — the probe triggers full rule-space enumeration in
-    thinking. This does not harm the primary ``psuccess_self``
-    measurement; ``ri_probe`` is now retained as a future metacognitive
-    hook (e.g. ``Δ = ri_probe − ri_task``) rather than a smoke-gate.
-
-    Args:
-        user_body: Shared state summary assembled upstream; may be empty.
-            Not usually populated on the probe path (the probe is
-            deliberately state-light to minimise reasoning spillover);
-            retained as a parameter for symmetry with the other Call
-            builders.
-        rule_from_call1: RULE text parsed from Call 1. None → rendered
-            as "(not recorded)" sentinel so the prompt is still valid.
-        action_from_call1: ACTION text parsed from Call 1. Same
-            sentinel handling as ``rule_from_call1``.
-        prior_accuracy_summary: Optional one-line summary of the
-            agent's accuracy in prior turns of this session, e.g.
-            ``"Prior accuracy this session: 4 correct out of 6
-            attempts."``. Shown at the top of the probe body so
-            ``psuccess_self`` reflects a session-informed belief
-            rather than rule-hypothesis confidence in isolation.
-            ``None`` (default / turn 1) → no summary line rendered.
-
-    Returns:
-        Fully rendered Call 1.5 user-message string.
-    """
-    from squid_game.prompts import render
-
-    return render(
-        "user_message/psuccess_probe.j2",
-        user_body=user_body,
-        rule_from_call1=rule_from_call1,
-        action_from_call1=action_from_call1,
-        prior_accuracy_summary=prior_accuracy_summary,
-        current_stimulus=current_stimulus,
-    )
-
-
-def parse_psuccess_probe_response(text: str) -> PSuccessProbeResponse:
-    """Extract the P_CORRECT integer from a Call 1.5 response.
-
-    Accepts three shapes:
-
-    - ``P_CORRECT: 75`` → 75
-    - ``P_CORRECT: 75%`` → 75 (trailing % stripped)
-    - ``P_CORRECT: 0.75`` → 75 (decimal fraction rescaled)
-
-    Values outside [0, 100] after rescaling are clamped. A missing or
-    unparseable field yields ``psuccess_self=None`` — the caller (the
-    turn manager) treats this as missing data and the analysis layer
-    is expected to flag the session accordingly.
-
-    Args:
-        text: Raw Call 1.5 LLM output.
-
-    Returns:
-        Populated :class:`PSuccessProbeResponse`.
-    """
-    matches = list(_PSUCCESS_FIELD_PATTERN.finditer(text))
-    if not matches:
-        return PSuccessProbeResponse(raw_text=text, psuccess_self=None)
-
-    raw_value = matches[-1].group(1).strip()
-    # Strip trailing punctuation / markdown decoration / %.
-    cleaned = raw_value.strip(" \t.,;*`_\"'")
-    # Keep the first whitespace-delimited token only.
-    first_token_raw = cleaned.split()[0] if cleaned else ""
-    first_token = (
-        first_token_raw.rstrip(" \t.,;:*`_\"'%)")
-        if first_token_raw
-        else ""
-    )
-    if not first_token:
-        return PSuccessProbeResponse(raw_text=text, psuccess_self=None)
-
-    # Try integer first, then float (for 0.xx decimal fraction shape).
-    try:
-        value_float = float(first_token)
-    except ValueError:
-        return PSuccessProbeResponse(raw_text=text, psuccess_self=None)
-
-    # Detect decimal fraction: strictly <= 1.0 → rescale to 0-100.
-    # Otherwise treat as already-percentage integer.
-    if 0.0 <= value_float <= 1.0:
-        psuccess = int(round(value_float * 100))
-    else:
-        psuccess = int(round(value_float))
-
-    # Clamp to [0, 100].
-    psuccess = max(0, min(100, psuccess))
-    return PSuccessProbeResponse(raw_text=text, psuccess_self=psuccess)

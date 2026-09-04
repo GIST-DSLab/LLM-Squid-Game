@@ -30,6 +30,19 @@ Design contracts (locked at the Phase B → C transition):
 * The system prompt is the framing rendering plus
   ``task.get_system_rules()``. The user message concatenates
   ``task_ctx.prompt_section`` then (optionally) the rendered stake menu.
+
+Split-call path (``use_split_forfeit_layer=True``, the canonical v6+
+flow) — decision-first since 2026-09-04:
+
+    decision call  (history + forfeit menu → CHOICE, ``ri_forfeit``)
+        FORFEIT → session ends; the task call never runs
+        CONTINUE ↓
+    task call      (history + stimulus → RULE + ACTION, ``ri_task``)
+    resolve        (score, reward, lives / death)
+
+Cell 0 (menu skipped) issues the task call only. The Unit 17 Call 1.5
+self-confidence probe was removed together with the reorder; the
+``psuccess_*`` TurnResult fields stay ``None`` on every new run.
 """
 
 from __future__ import annotations
@@ -38,10 +51,7 @@ import logging
 import random
 from typing import Any
 
-from squid_game.agents._parsing import (
-    build_forfeit_only_message,
-    build_psuccess_probe_message,
-)
+from squid_game.agents._parsing import build_decision_call_message
 from squid_game.agents.base import Agent
 from squid_game.core.cot_collector import CoTCollector
 from squid_game.core.forfeit import ForfeitController
@@ -60,11 +70,10 @@ from squid_game.core.turn_conditions import (
 )
 from squid_game.core.turn_prompts import (
     build_system_prompt,
-    compose_call1_user_message,
+    compose_task_call_user_message,
     compose_user_message,
     derive_action_hint,
     format_history_block,
-    format_prior_accuracy_summary,
 )
 from squid_game.core.turn_results import (
     build_continue_result,
@@ -122,7 +131,6 @@ class UnifiedTurnManager:
         *,
         forfeit_layer: ForfeitLayer | None = None,
         use_split_forfeit_layer: bool = False,
-        use_psuccess_probe: bool = False,
         rng: random.Random | None = None,
         phantom_death: bool = True,
         constant_p_death: float | None = None,
@@ -181,12 +189,6 @@ class UnifiedTurnManager:
         # ``_forfeit_layer`` is non-None (the dispatcher in execute_turn
         # guarantees this). Defaults to False → Unit 14 single-call path.
         self._use_split_forfeit_layer = use_split_forfeit_layer
-        # Phase O Unit 17 — self-report p_success probe flag. Only
-        # consulted inside _execute_turn_split_forfeit_layer; the nested
-        # ExperimentConfig validator rejects any combination where this
-        # is True without split-call, so no additional guard is needed
-        # here. Defaults to False → no probe call inserted.
-        self._use_psuccess_probe = use_psuccess_probe
         self._measurement = measurement
         self._cot_collector = cot_collector or CoTCollector()
         self._rng = rng if rng is not None else random.Random()
@@ -687,13 +689,17 @@ class UnifiedTurnManager:
         game_state: GameState,
         turn_context: TurnContext,
     ) -> TurnResult:
-        """Phase O Unit 15 — split-call forfeit-layer dispatch path.
+        """Split-call forfeit-layer dispatch path — decision first.
 
         Two sequential LLM calls per turn so ``thinking_tokens`` can be
-        attributed to task reasoning (``ri_task``) vs choice deliberation
-        (``ri_forfeit``) cleanly. Order is task-first by design
-        (spec §1.3 — instrumental rationality + Unit 14 sequence
-        compatibility).
+        attributed to choice deliberation (``ri_forfeit``) vs task
+        reasoning (``ri_task``) cleanly. Since 2026-09-04 the order is
+        decision-first: the agent chooses CONTINUE / FORFEIT from its
+        accumulated history and the menu *before* the round's stimulus
+        is shown. On FORFEIT the session ends and the task call is never
+        issued (``ri_task`` / ``raw_response_task`` / ``thinking_text_task``
+        stay ``None`` on that turn). On CONTINUE the task call follows
+        and the turn resolves as before.
 
         Dispatcher guarantees: reachable only when both
         ``self._forfeit_layer is not None`` AND
@@ -701,10 +707,10 @@ class UnifiedTurnManager:
 
         Cell 0 handling (spec §3.5): when the menu is skipped (Cell 0 has
         ``p_death_override=0.0`` and ``forfeit_condition=not_allowed``)
-        Call 2 is *not* invoked — the path degenerates to a single Call 1
-        that produces an auto-CONTINUE outcome, keeping backward
-        comparability with Unit 14 Cell 0. The split-specific fields
-        (``ri_forfeit`` etc.) stay ``None`` on that branch.
+        the decision call is *not* invoked — the path degenerates to a
+        single task call that produces an auto-CONTINUE outcome, keeping
+        backward comparability with Unit 14 Cell 0. The split-specific
+        fields (``ri_forfeit`` etc.) stay ``None`` on that branch.
         """
         assert self._forfeit_layer is not None  # dispatcher guarantee
         assert self._use_split_forfeit_layer  # dispatcher guarantee
@@ -723,10 +729,10 @@ class UnifiedTurnManager:
 
         # Unit 15 split-call: suppress the legacy ``forfeit_option.j2``
         # appendix from the system prompt (see ``_build_system_prompt``
-        # docstring). Call 2's ``menu.j2`` user-body carries the
-        # authoritative forfeit mechanism + framing-conditional
-        # semantics, and Call 1 must stay free of forfeit awareness
-        # per spec §3.3.
+        # docstring). The decision call's ``menu.j2`` user-body carries
+        # the authoritative forfeit mechanism + framing-conditional
+        # semantics, and the task call must stay free of forfeit
+        # awareness per spec §3.3.
         system_prompt = build_system_prompt(
             turn_context,
             framing_mgr=self._framing_mgr,
@@ -737,11 +743,10 @@ class UnifiedTurnManager:
         rule_template_hint = getattr(
             self._task, "get_rule_template_hint", lambda: None
         )()
-        # Task-supplied Call 1 response format (2026-09-01). Tasks whose
-        # answer is free-form rather than an action pick (the external
-        # benchmark modules) return a block here; every legacy task has
-        # no such attribute, so this stays None and the rendered Call 1
-        # message is byte-identical to the pre-2026-09-01 output.
+        # Task-supplied task-call response format (2026-09-01). Tasks
+        # whose answer is free-form rather than an action pick (the
+        # external benchmark modules) return a block here; every legacy
+        # task has no such attribute, so this stays None.
         response_format_override = getattr(
             self._task, "get_response_format_override", lambda: None
         )()
@@ -758,18 +763,18 @@ class UnifiedTurnManager:
         )
         menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
         if menu_skipped:
-            # Degenerate: no meaningful choice, so Call 2 is skipped.
-            # Produce a Unit-14-shaped CONTINUE result with ri_task /
-            # raw_response_task set so downstream analyses can still
-            # pull the task-only RI.
-            call1_body = compose_call1_user_message(
+            # Degenerate: no meaningful choice, so the decision call is
+            # skipped. Produce a Unit-14-shaped CONTINUE result with
+            # ri_task / raw_response_task set so downstream analyses can
+            # still pull the task-only RI.
+            task_call_body = compose_task_call_user_message(
                 task_ctx,
                 history=self._history,
                 history_mode=self._history_mode,
                 max_history_turns=self._max_history_turns,
             )
-            task_parsed_resp = self._agent.respond_task_only(
-                user_message=call1_body,
+            task_parsed_resp = self._agent.respond_task_call(
+                user_message=task_call_body,
                 available_actions=self._task.get_available_actions(),
                 system_prompt=system_prompt,
                 rule_template_hint=rule_template_hint,
@@ -822,7 +827,7 @@ class UnifiedTurnManager:
             return self._record(
                 build_forfeit_layer_continue_result(
                     turn_context=turn_context,
-                    user_message=call1_body,
+                    user_message=task_call_body,
                     raw_text=raw_text_task,
                     thinking_text=thinking_text_task,
                     reasoning_investment=ri_task,
@@ -842,14 +847,6 @@ class UnifiedTurnManager:
                     raw_response_forfeit=None,
                     thinking_text_task=thinking_text_task,
                     thinking_text_forfeit=None,
-                    # Unit 17 probe is intentionally skipped on the
-                    # Cell 0 degenerate path alongside Call 2 — there is
-                    # no forfeit decision to validate, so probe data
-                    # would be meaningless.
-                    psuccess_self=None,
-                    ri_probe=None,
-                    raw_response_probe=None,
-                    thinking_text_probe=None,
                     lives_kwargs=self._lives_result_kwargs(
                         turn_context,
                         lives_after=lives_after,
@@ -858,139 +855,15 @@ class UnifiedTurnManager:
                 )
             )
 
-        # Phase 2 — Call 1 (task layer).
-        call1_body = compose_call1_user_message(
-            task_ctx,
-            history=self._history,
-            history_mode=self._history_mode,
-            max_history_turns=self._max_history_turns,
-        )
-        # The peer-elimination notice is prefixed verbatim to BOTH calls
-        # so the threat is present while the agent solves the task, not
-        # only while it decides whether to keep playing.
-        if turn_context.peer_death_text:
-            call1_body = f"{turn_context.peer_death_text}\n\n{call1_body}"
-        task_parsed_resp = self._agent.respond_task_only(
-            user_message=call1_body,
-            available_actions=self._task.get_available_actions(),
-            system_prompt=system_prompt,
-            rule_template_hint=rule_template_hint,
-            response_format_override=response_format_override,
-        )
-        raw_text_task = task_parsed_resp.raw_text
-        completion_task = self._agent.last_completion
-        thinking_text_task = getattr(completion_task, "thinking_text", None)
-        thinking_tokens_task = (
-            getattr(completion_task, "thinking_tokens", None) or 0
-        )
-        ri_task = self._cot_collector.record(raw_text_task)
-        if thinking_tokens_task:
-            ri_task = ReasoningInvestment(
-                total_tokens=ri_task.total_tokens,
-                reasoning_steps=ri_task.reasoning_steps,
-                thinking_tokens=thinking_tokens_task,
-            )
-
-        # Parse Call 1 for the task task_outcome (RULE + ACTION). The
-        # SignalGameModule.parse_response contract accepts the raw text
-        # of any unified response containing ACTION/RULE — Call 1's
-        # output is strictly a subset so reuse is safe.
-        task_parsed = self._task.parse_response(raw_text_task)
-
-        # Phase 2.5 — Call 1.5 (self-report p_success probe) [Unit 17].
-        # Inserted only when ``use_psuccess_probe=True`` so default split
-        # paths stay at 2 calls. The probe echoes Call 1's committed
-        # RULE+ACTION strings so the retrospective confidence rating has
-        # a referent, but NOT Call 1's thinking (would confound ri_probe).
-        # Keeps Call 2 output measurement clean because Call 2 is a
-        # separate LLM call whose thinking_tokens are captured on
-        # ``self._agent.last_completion`` only after Call 2 returns.
-        psuccess_self: int | None = None
-        ri_probe: ReasoningInvestment | None = None
-        raw_text_probe: str | None = None
-        thinking_text_probe: str | None = None
-        if self._use_psuccess_probe:
-            # Build session-level prior-accuracy summary so the probe
-            # value reflects feedback-informed belief (Issue 1 fix
-            # from the Round 1 Addendum II §B.2.1 design review).
-            # Format mirrors how Call 1 / Call 2 see history: a short
-            # factual line without qualitative interpretation, so
-            # ri_probe stays small.
-            # Phase O Unit 17.8 — also inject the same cumulative
-            # history block that Call 1 / Call 2 see into the probe
-            # user body, so psuccess_self reflects feedback-informed
-            # belief at the same fidelity as the task and forfeit
-            # decisions (not only the 1-line prior_accuracy summary).
-            prior_accuracy_summary = format_prior_accuracy_summary(
-                self._history
-            )
-            history_block = format_history_block(
-                self._history, self._history_mode, self._max_history_turns
-            )
-            probe_body = build_psuccess_probe_message(
-                user_body=history_block,
-                rule_from_call1=task_parsed_resp.rule_hypothesis,
-                action_from_call1=task_parsed_resp.action,
-                prior_accuracy_summary=prior_accuracy_summary,
-                current_stimulus=task_ctx.prompt_section,
-            )
-            probe_resp = self._agent.respond_psuccess_probe_only(
-                user_message=probe_body,
-                system_prompt=system_prompt,
-            )
-            raw_text_probe = probe_resp.raw_text
-            completion_probe = self._agent.last_completion
-            thinking_text_probe = getattr(
-                completion_probe, "thinking_text", None
-            )
-            thinking_tokens_probe = (
-                getattr(completion_probe, "thinking_tokens", None) or 0
-            )
-            ri_probe = self._cot_collector.record(raw_text_probe)
-            if thinking_tokens_probe:
-                ri_probe = ReasoningInvestment(
-                    total_tokens=ri_probe.total_tokens,
-                    reasoning_steps=ri_probe.reasoning_steps,
-                    thinking_tokens=thinking_tokens_probe,
-                )
-            psuccess_self = probe_resp.psuccess_self
-            if psuccess_self is None:
-                logger.warning(
-                    "Unit 17 probe: failed to parse P_CORRECT from Call 1.5 "
-                    "response (turn=%d, season=%s). Recording None; "
-                    "analysis layer will flag this session.",
-                    turn_context.turn_number,
-                    turn_context.season_id,
-                )
-
-        # Phase O Unit 17 — resolve the equal-EV p_success override for
-        # the chained-menu path. ``psuccess_override`` is forwarded into
-        # every ForfeitLayer call that consults ``p_success_estimate``
-        # (render_menu, calculate_continue_reward, calculate_reward),
-        # so the menu the agent sees AND the reward the engine credits
-        # both agree on the same per-turn calibration. On any of these
-        # dispatcher conditions the override stays ``None`` and the
-        # layer falls back to ``config.p_success_estimate`` (legacy
-        # Option A behaviour):
-        #   - use_psuccess_probe=False
-        #   - chain_psuccess_to_menu=False on ForfeitLayerConfig
-        #   - probe failed to parse (psuccess_self is None)
-        psuccess_override: float | None = None
-        if (
-            self._use_psuccess_probe
-            and self._forfeit_layer.config.chain_psuccess_to_menu
-            and psuccess_self is not None
-        ):
-            psuccess_override = max(0.05, min(1.0, psuccess_self / 100.0))
-
-        # Phase 3 — Call 2 (forfeit layer).
+        # Phase 2 — decision call (forfeit layer). Runs BEFORE the task
+        # call: the agent sees its history and the menu, never this
+        # round's stimulus.
         menu_text = self._forfeit_layer.render_menu(
             current_score=turn_context.cumulative_score,
             turn_number=turn_context.turn_number,
             total_turns=turn_context.total_turns,
             forfeit_allowed=forfeit_allowed,
             turn_p_death=base_p_death,
-            psuccess_override=psuccess_override,
             corruption_framing=corruption_framing,
             corruption_terminal_framing=corruption_terminal_framing,
             baseline_flagship_framing=baseline_flagship_framing,
@@ -1001,48 +874,30 @@ class UnifiedTurnManager:
             threat_framing=bool(turn_context.threat_level),
         )
         split_ctx = self._forfeit_layer.config.split_context_level
-        # Phase O Unit 15 (2026-04-21 feedback): under split_context_level
-        # "medium" the agent should see the cumulative history block so it
-        # can calibrate its own prediction-accuracy before the CONTINUE vs
-        # FORFEIT choice. The explicit separation note in forfeit_only.j2
-        # instructs the agent not to re-derive the rule in Call 2. Under
-        # "minimal" the history is deliberately omitted. Under "full" the
-        # call1 full prompt already carries the history so no extra echo.
+        # Under ``medium`` / ``full`` the agent sees the cumulative
+        # history block so it can calibrate its own prediction-accuracy
+        # before the CONTINUE vs FORFEIT choice. Under ``minimal`` the
+        # history is deliberately omitted (build_decision_call_message
+        # drops it).
         history_block = format_history_block(
             self._history, self._history_mode, self._max_history_turns
         )
-        user_body_for_call2 = (
-            history_block if (split_ctx == "medium" and history_block) else ""
-        )
-        call2_body = build_forfeit_only_message(
-            user_body=user_body_for_call2,
+        decision_call_body = build_decision_call_message(
+            user_body=history_block,
             menu_text=menu_text,
             forfeit_allowed=forfeit_allowed,
             split_context_level=split_ctx,
-            rule_from_call1=(
-                task_parsed_resp.rule_hypothesis
-                if split_ctx == "medium"
-                else None
-            ),
-            action_from_call1=(
-                task_parsed_resp.action
-                if split_ctx == "medium"
-                else None
-            ),
-            call1_full_prompt=(call1_body if split_ctx == "full" else None),
-            call1_thinking=(
-                thinking_text_task if split_ctx == "full" else None
-            ),
-            current_stimulus=(
-                task_ctx.prompt_section if split_ctx == "medium" else None
-            ),
         )
-        # Same notice text as Call 1's prefix (spec §3.4) — the agent
-        # sees one consistent announcement per turn, not two.
+        # The peer-elimination notice is prefixed verbatim to BOTH calls
+        # so the threat is present while the agent decides AND while it
+        # solves the task (spec §3.4 — one consistent announcement per
+        # turn).
         if turn_context.peer_death_text:
-            call2_body = f"{turn_context.peer_death_text}\n\n{call2_body}"
-        forfeit_parsed_resp = self._agent.respond_forfeit_only(
-            user_message=call2_body,
+            decision_call_body = (
+                f"{turn_context.peer_death_text}\n\n{decision_call_body}"
+            )
+        forfeit_parsed_resp = self._agent.respond_decision_call(
+            user_message=decision_call_body,
             forfeit_allowed=forfeit_allowed,
             system_prompt=system_prompt,
         )
@@ -1062,8 +917,9 @@ class UnifiedTurnManager:
                 thinking_tokens=thinking_tokens_forfeit,
             )
 
-        # Phase 4 — parse Call 2 choice using ForfeitLayer for authoritative
-        # semantics (NOT_ALLOWED guard + CHOICE enum + raw capture).
+        # Phase 3 — parse the decision using ForfeitLayer for
+        # authoritative semantics (NOT_ALLOWED guard + CHOICE enum + raw
+        # capture).
         forfeit_choice = self._forfeit_layer.parse_choice(raw_text_forfeit)
         if not forfeit_allowed and forfeit_choice.choice == FORFEIT_CHOICE:
             logger.warning(
@@ -1074,42 +930,13 @@ class UnifiedTurnManager:
                 choice=CONTINUE_CHOICE, raw_text=forfeit_choice.raw_text
             )
 
-        # Combined fields for backward-compat with single-call analyses.
-        # ``reasoning_investment`` / ``raw_response`` / ``thinking_text``
-        # receive the SUM / CONCAT so analyses that do not know about
-        # the Unit 15 split fields still see a sensible whole-turn value.
-        combined_ri = ReasoningInvestment(
-            total_tokens=(ri_task.total_tokens or 0)
-            + (ri_forfeit.total_tokens or 0),
-            reasoning_steps=(ri_task.reasoning_steps or 0)
-            + (ri_forfeit.reasoning_steps or 0),
-            thinking_tokens=(
-                (ri_task.thinking_tokens or 0)
-                + (ri_forfeit.thinking_tokens or 0)
-            ),
-        )
-        combined_raw = (
-            f"{raw_text_task}\n\n--- Call 2 ---\n\n{raw_text_forfeit}"
-        )
-        combined_thinking: str | None
-        if thinking_text_task and thinking_text_forfeit:
-            combined_thinking = (
-                f"{thinking_text_task}\n\n--- Call 2 ---\n\n"
-                f"{thinking_text_forfeit}"
-            )
-        else:
-            combined_thinking = thinking_text_task or thinking_text_forfeit
-
         reward_offered = self._forfeit_layer.calculate_continue_reward(
             turn_context.cumulative_score,
             turn_p_death=base_p_death,
-            psuccess_override=psuccess_override,
-        )
-        combined_user_message = (
-            f"=== Call 1 ===\n{call1_body}\n\n=== Call 2 ===\n{call2_body}"
         )
 
-        # Phase 5 — FORFEIT branch.
+        # Phase 4 — FORFEIT branch: the session ends here; the task call
+        # is never issued, so every task-side field stays None.
         if forfeit_choice.choice == FORFEIT_CHOICE:
             self._forfeit_self_report = (
                 self._forfeit_layer.parse_forfeit_reason(
@@ -1132,23 +959,21 @@ class UnifiedTurnManager:
             return self._record(
                 build_forfeit_layer_result(
                     turn_context=turn_context,
-                    user_message=combined_user_message,
-                    raw_text=combined_raw,
-                    thinking_text=combined_thinking,
-                    reasoning_investment=combined_ri,
+                    user_message=(
+                        f"=== Decision call ===\n{decision_call_body}"
+                    ),
+                    raw_text=raw_text_forfeit,
+                    thinking_text=thinking_text_forfeit,
+                    reasoning_investment=ri_forfeit,
                     ground_truth_rule=self._resolve_ground_truth_rule(),
                     choice=FORFEIT_CHOICE,
                     reward_offered=reward_offered,
-                    ri_task=ri_task,
+                    ri_task=None,
                     ri_forfeit=ri_forfeit,
-                    raw_response_task=raw_text_task,
+                    raw_response_task=None,
                     raw_response_forfeit=raw_text_forfeit,
-                    thinking_text_task=thinking_text_task,
+                    thinking_text_task=None,
                     thinking_text_forfeit=thinking_text_forfeit,
-                    psuccess_self=psuccess_self,
-                    ri_probe=ri_probe,
-                    raw_response_probe=raw_text_probe,
-                    thinking_text_probe=thinking_text_probe,
                     lives_kwargs=self._lives_result_kwargs(
                         turn_context,
                         lives_after=turn_context.lives_remaining,
@@ -1157,6 +982,73 @@ class UnifiedTurnManager:
                 )
             )
 
+        # Phase 5 — task call (task layer). Only reached on CONTINUE.
+        task_call_body = compose_task_call_user_message(
+            task_ctx,
+            history=self._history,
+            history_mode=self._history_mode,
+            max_history_turns=self._max_history_turns,
+        )
+        if turn_context.peer_death_text:
+            task_call_body = f"{turn_context.peer_death_text}\n\n{task_call_body}"
+        task_parsed_resp = self._agent.respond_task_call(
+            user_message=task_call_body,
+            available_actions=self._task.get_available_actions(),
+            system_prompt=system_prompt,
+            rule_template_hint=rule_template_hint,
+            response_format_override=response_format_override,
+        )
+        raw_text_task = task_parsed_resp.raw_text
+        completion_task = self._agent.last_completion
+        thinking_text_task = getattr(completion_task, "thinking_text", None)
+        thinking_tokens_task = (
+            getattr(completion_task, "thinking_tokens", None) or 0
+        )
+        ri_task = self._cot_collector.record(raw_text_task)
+        if thinking_tokens_task:
+            ri_task = ReasoningInvestment(
+                total_tokens=ri_task.total_tokens,
+                reasoning_steps=ri_task.reasoning_steps,
+                thinking_tokens=thinking_tokens_task,
+            )
+
+        # Parse the task call for the task outcome (RULE + ACTION). The
+        # SignalGameModule.parse_response contract accepts the raw text
+        # of any unified response containing ACTION/RULE — the task
+        # call's output is strictly a subset so reuse is safe.
+        task_parsed = self._task.parse_response(raw_text_task)
+
+        # Combined fields for backward-compat with single-call analyses.
+        # ``reasoning_investment`` / ``raw_response`` / ``thinking_text``
+        # receive the SUM / CONCAT (decision call first, matching the
+        # wire order) so analyses that do not know about the split
+        # fields still see a sensible whole-turn value.
+        combined_ri = ReasoningInvestment(
+            total_tokens=(ri_forfeit.total_tokens or 0)
+            + (ri_task.total_tokens or 0),
+            reasoning_steps=(ri_forfeit.reasoning_steps or 0)
+            + (ri_task.reasoning_steps or 0),
+            thinking_tokens=(
+                (ri_forfeit.thinking_tokens or 0)
+                + (ri_task.thinking_tokens or 0)
+            ),
+        )
+        combined_raw = (
+            f"{raw_text_forfeit}\n\n--- Task call ---\n\n{raw_text_task}"
+        )
+        combined_thinking: str | None
+        if thinking_text_forfeit and thinking_text_task:
+            combined_thinking = (
+                f"{thinking_text_forfeit}\n\n--- Task call ---\n\n"
+                f"{thinking_text_task}"
+            )
+        else:
+            combined_thinking = thinking_text_forfeit or thinking_text_task
+        combined_user_message = (
+            f"=== Decision call ===\n{decision_call_body}\n\n"
+            f"=== Task call ===\n{task_call_body}"
+        )
+
         # Phase 6 — CONTINUE branch: task scoring → reward/p_death.
         task_outcome = self._task.score(task_parsed, game_state)
         reward = self._forfeit_layer.calculate_reward(
@@ -1164,7 +1056,6 @@ class UnifiedTurnManager:
             forfeit_choice.choice,
             turn_context.cumulative_score,
             turn_p_death=base_p_death,
-            psuccess_override=psuccess_override,
         )
         lives_after, life_lost, died_lives = self._resolve_lives(
             turn_context,
@@ -1231,10 +1122,6 @@ class UnifiedTurnManager:
                 raw_response_forfeit=raw_text_forfeit,
                 thinking_text_task=thinking_text_task,
                 thinking_text_forfeit=thinking_text_forfeit,
-                psuccess_self=psuccess_self,
-                ri_probe=ri_probe,
-                raw_response_probe=raw_text_probe,
-                thinking_text_probe=thinking_text_probe,
                 lives_kwargs=self._lives_result_kwargs(
                     turn_context,
                     lives_after=lives_after,

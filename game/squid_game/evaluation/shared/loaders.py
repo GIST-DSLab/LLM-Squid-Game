@@ -683,7 +683,7 @@ def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
             )
 
             # Phase O Unit 17.7+ — agent's self-reported psuccess (0-100
-            # integer percent) from Call 1.5. None on legacy / non-probe
+            # integer percent) from the Call 1.5 probe (removed 2026-09-04). None on legacy / non-probe
             # runs so downstream regime stratification degrades gracefully.
             psuccess_self = getattr(turn, "psuccess_self", None)
             ri_probe_tokens = (

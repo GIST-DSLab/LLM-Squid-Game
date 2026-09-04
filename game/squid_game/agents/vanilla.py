@@ -9,19 +9,16 @@ This serves as the Phase-1 control agent for the 3x2 factorial design.
 
 from squid_game.agents.base import Agent, AgentResponse
 from squid_game.agents._parsing import (
-    ForfeitOnlyResponse,
-    PSuccessProbeResponse,
-    TaskOnlyResponse,
+    DecisionCallResponse,
+    TaskCallResponse,
     build_action_message,
-    build_forfeit_only_message,
+    build_decision_call_message,
     build_probe_message,
-    build_psuccess_probe_message,
-    build_task_only_message,
+    build_task_call_message,
     build_unified_turn_message,
-    parse_forfeit_only_response,
-    parse_psuccess_probe_response,
+    parse_decision_call_response,
     parse_response,
-    parse_task_only_response,
+    parse_task_call_response,
     parse_unified_response,
 )
 from squid_game.providers.base import LLMProvider
@@ -196,27 +193,27 @@ class VanillaAgent(Agent):
             forfeit=parsed.forfeit and forfeit_allowed,
         )
 
-    def respond_task_only(
+    def respond_task_call(
         self,
         user_message: str,
         available_actions: list[str],
         system_prompt: str,
         rule_template_hint: str | None = None,
         response_format_override: str | None = None,
-    ) -> TaskOnlyResponse:
-        """Phase O Unit 15 — Call 1 of the split-call flow.
+    ) -> TaskCallResponse:
+        """Task call of the split-call flow (runs after the decision call).
 
-        Issues a single LLM call with the ``task_only.j2`` template; the
+        Issues a single LLM call with the ``task_call.j2`` template; the
         response contract is RULE + ACTION only (no STAKE / CHOICE /
         REASON). ``last_completion`` is overwritten so the manager can
-        snapshot RI_task immediately after return.
+        snapshot ``ri_task`` immediately after return.
 
         ``response_format_override`` (2026-09-01) lets a task module
         replace the RULE + ACTION directives with its own block; the
         external-benchmark modules use it to ask for ``ANSWER:``. When it
         is ``None`` the rendered message is unchanged.
         """
-        rendered = build_task_only_message(
+        rendered = build_task_call_message(
             user_body=user_message,
             available_actions=available_actions,
             rule_template_hint=rule_template_hint,
@@ -227,49 +224,29 @@ class VanillaAgent(Agent):
             {"role": "user", "content": rendered},
         ]
         text = self._dispatch("task", messages)
-        return parse_task_only_response(text, available_actions)
+        return parse_task_call_response(text, available_actions)
 
-    def respond_forfeit_only(
+    def respond_decision_call(
         self,
         user_message: str,
         forfeit_allowed: bool,
         system_prompt: str,
-    ) -> ForfeitOnlyResponse:
-        """Phase O Unit 15 — Call 2 of the split-call flow.
+    ) -> DecisionCallResponse:
+        """Decision call of the split-call flow (runs first on every turn).
 
         The caller has already baked split_context_level into
-        ``user_message`` via :func:`build_forfeit_only_message`; this
+        ``user_message`` via :func:`build_decision_call_message`; this
         method is deliberately thin so the manager retains full control
-        over Call 2 composition. ``last_completion`` is overwritten so
-        the manager can snapshot RI_forfeit immediately after return.
+        over decision-call composition. ``last_completion`` is
+        overwritten so the manager can snapshot ``ri_forfeit``
+        immediately after return.
         """
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
         ]
         text = self._dispatch("forfeit", messages)
-        return parse_forfeit_only_response(text, forfeit_allowed)
-
-    def respond_psuccess_probe_only(
-        self,
-        user_message: str,
-        system_prompt: str,
-    ) -> PSuccessProbeResponse:
-        """Phase O Unit 17 — Call 1.5 of the split-call probe flow.
-
-        The caller has already baked Call 1's RULE + ACTION echo into
-        ``user_message`` via :func:`build_psuccess_probe_message`;
-        this method is deliberately thin so the manager retains full
-        control over probe composition. ``last_completion`` is
-        overwritten so the manager can snapshot RI_probe immediately
-        after return.
-        """
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message},
-        ]
-        text = self._dispatch("probe", messages)
-        return parse_psuccess_probe_response(text)
+        return parse_decision_call_response(text, forfeit_allowed)
 
     def reset(self) -> None:
         """No-op: vanilla agent carries no state between sessions."""

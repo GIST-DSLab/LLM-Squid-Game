@@ -155,9 +155,9 @@ def test_bands_increase_monotonically(synthetic_omni_math):
 # VanillaAgent -> StubProvider, with a real benchmark task module.
 #
 # The three tests above call prepare / parse_response / score directly, so
-# _compose_call1_user_message, build_task_only_message, _build_system_prompt,
-# parse_task_only_response and _record_history were entirely untested for this
-# task type. That is how a Call 1 prompt reached the shipped state telling the
+# _compose_task_call_user_message, build_task_call_message, _build_system_prompt,
+# parse_task_call_response and _record_history were entirely untested for this
+# task type. That is how a task-call prompt reached the shipped state telling the
 # agent both "ACCEPT is the only valid task response" and "you must emit
 # ANSWER:" in the same turn.
 # ---------------------------------------------------------------------------
@@ -173,7 +173,7 @@ _E2E_YAML: dict = {
     "use_unified_turn": True,
     "use_forfeit_layer": True,
     "use_split_forfeit_layer": True,
-    "use_psuccess_probe": True,
+    "use_psuccess_probe": False,
     "forfeit_layer": {
         "p_death": 0.25,
         "p_success_estimate": 0.75,
@@ -182,7 +182,7 @@ _E2E_YAML: dict = {
         "psuccess_floor": 0.3,
         "reward_cap_multiple": 10,
         "split_context_level": "medium",
-        "chain_psuccess_to_menu": True,
+        "chain_psuccess_to_menu": False,
     },
     "seasons": [
         {
@@ -251,24 +251,22 @@ def synthetic_three_turn_omni_math(tmp_path, monkeypatch):
     monkeypatch.setenv("SQUID_GAME_BENCHMARK_DATA_DIR", str(data_dir))
 
 
-def _benchmark_response(idx: int, messages: list[dict[str, str]]) -> str:
-    """Answer Call 1 correctly; keep Call 1.5 and Call 2 minimal.
+def _benchmark_response(_idx: int, messages: list[dict[str, str]]) -> str:
+    """Answer the task call correctly; keep the decision call minimal.
 
-    The three calls per turn are Call 1 (task), Call 1.5 (p_success probe)
-    and Call 2 (forfeit). The synthetic pool puts exactly one item in each
-    band and its answer equals the band, and the ladder is band = turn, so
-    the correct answer for turn N is N. The stub reads it back out of the
-    prompt instead of hardcoding, which keeps the test honest about what the
-    agent is actually shown.
+    The two calls per turn are the decision call (forfeit menu, first) and
+    the task call (second, only after CONTINUE). The synthetic pool puts
+    exactly one item in each band and its answer equals the band, and the
+    ladder is band = turn, so the correct answer for turn N is N. The stub
+    reads it back out of the prompt instead of hardcoding, which keeps the
+    test honest about what the agent is actually shown.
     """
     body = messages[-1]["content"]
-    if idx % 3 == 0:
-        marker = "synthetic e2e band "
-        band = body[body.index(marker) + len(marker)]
-        return f"working through it\nANSWER: {band}"
-    if idx % 3 == 1:
-        return "P_CORRECT: 80"
-    return "CHOICE: CONTINUE"
+    if "CHOICE:" in body:
+        return "CHOICE: CONTINUE"
+    marker = "synthetic e2e band "
+    band = body[body.index(marker) + len(marker)]
+    return f"working through it\nANSWER: {band}"
 
 
 def test_full_season_through_the_engine_asks_for_answer_not_accept(
@@ -276,7 +274,7 @@ def test_full_season_through_the_engine_asks_for_answer_not_accept(
 ):
     """One StubProvider-driven season through GameEngine.
 
-    Asserts the Call 1 user message the model actually receives instructs
+    Asserts the task-call user message the model actually receives instructs
     ANSWER: and does NOT carry NullTask's ACCEPT-only sentinel, and that a
     compliant response scores 1.0 on every turn.
     """
@@ -291,14 +289,14 @@ def test_full_season_through_the_engine_asks_for_answer_not_accept(
 
     ExperimentRunner(config).run()
 
-    # --- The Call 1 prompt the model was actually handed -------------------
-    call1_bodies = [
+    # --- The task-call prompt the model was actually handed ----------------
+    task_call_bodies = [
         call.messages[-1]["content"]
-        for index, call in enumerate(stub.calls)
-        if index % 3 == 0
+        for call in stub.calls
+        if "CHOICE:" not in call.messages[-1]["content"]
     ]
-    assert len(call1_bodies) == _E2E_TOTAL_TURNS
-    for body in call1_bodies:
+    assert len(task_call_bodies) == _E2E_TOTAL_TURNS
+    for body in task_call_bodies:
         assert "ANSWER:" in body, body
         assert _ACCEPT_ONLY_SENTENCE not in body, body
         assert "ACTION: ACCEPT" not in body, body
@@ -331,7 +329,7 @@ def test_full_season_through_the_engine_asks_for_answer_not_accept(
     assert season.seed == 42 + 1  # runner derives rep_seed = seed + repetition
 
 
-def test_engine_call1_system_prompt_carries_the_benchmark_rules(
+def test_engine_task_call_system_prompt_carries_the_benchmark_rules(
     synthetic_three_turn_omni_math, patch_runner_provider, tmp_path
 ):
     """_build_system_prompt must reach the model with the ANSWER: contract."""

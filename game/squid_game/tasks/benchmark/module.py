@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 #:
 #: This filter does NOT keep the question text itself out of a repo: the
 #: rendered question is persisted verbatim in ``TurnResult.observation`` (the
-#: Call-1 user message) regardless of these keys. What actually keeps GPQA's
+#: task-call user message) regardless of these keys. What actually keeps GPQA's
 #: question text off the public web, per its authors' request, is that
 #: benchmark runs land under ``outputs/benchmark_*/``, which ``.gitignore``
 #: excludes from the "commit outputs/final_results/**" workflow above — not
@@ -196,6 +196,9 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
             success_factor=1.0 if correct else 0.0,
             metadata={
                 "dataset": self.name,
+                # Same key the Signal Game writes, so every loader that
+                # reads ``task_metadata["correct"]`` sees benchmark turns too.
+                "correct": bool(correct),
                 "item_id": self._current_item.item_id if self._current_item else "",
                 "band": self._current_item.band if self._current_item else 0,
                 "parsed_answer": parsed_response,
@@ -216,9 +219,9 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
         return []
 
     def get_response_format_override(self) -> str:
-        """Return the Call 1 response-format block for this task type.
+        """Return the task-call response-format block for this task type.
 
-        ``UnifiedTurnManager`` passes this to ``task_only.j2``, which then
+        ``UnifiedTurnManager`` passes this to ``task_call.j2``, which then
         renders it in place of the RULE + ACTION directives. Without it an
         empty :meth:`get_available_actions` is read as the NullTask
         ACCEPT-only sentinel and the agent is told, in the same turn, both

@@ -239,7 +239,6 @@ class ExperimentRunner:
             use_forfeit_layer=self._config.use_forfeit_layer,
             forfeit_layer_config=self._config.forfeit_layer,
             use_split_forfeit_layer=self._config.use_split_forfeit_layer,
-            use_psuccess_probe=self._config.use_psuccess_probe,
             lives=self._config.lives,
             peer_death=self._config.peer_death,
         )
@@ -823,10 +822,10 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # first Unit 14.8 smoke.
     if "use_split_forfeit_layer" in raw:
         config_dict["use_split_forfeit_layer"] = raw["use_split_forfeit_layer"]
-    # Phase O Unit 17 — self-report p_success probe opt-in. Every
-    # pre-Unit-17 YAML omits this key so the ExperimentConfig default
-    # (``use_psuccess_probe=False``) keeps the Unit 15 two-call path
-    # intact. Mirrors the Unit 14.10 / Unit 15.? forwarding pattern.
+    # ``use_psuccess_probe`` is forwarded only so the ExperimentConfig
+    # validator can reject ``true`` with a clear message: the Unit 17
+    # Call 1.5 probe was removed on 2026-09-04 together with the
+    # decision-first reorder of the split-call flow.
     if "use_psuccess_probe" in raw:
         config_dict["use_psuccess_probe"] = raw["use_psuccess_probe"]
     # Run-level lives mechanic + peer-death schedule. Every pre-lives

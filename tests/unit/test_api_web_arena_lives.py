@@ -318,16 +318,220 @@ def test_human_report_marks_the_fatal_turn_dead(client, api_module) -> None:
     assert states == ["no", "no", "no", "no", "dead"]
 
 
-def test_campaign_cells_are_the_five_cell_ladder(api_module) -> None:
+def test_campaign_cells_are_three_framings_by_two_forfeits(api_module) -> None:
+    """The 6-game campaign: each framing with forfeit blocked, then allowed.
+
+    Order is load-bearing — the frontend's CAMPAIGN_CONDITIONS plays the
+    cells in this sequence and the Logs report sorts games by it.
+    """
+    from squid_arena.rule_schedule import CAMPAIGN_GAME_COUNT
+
     assert [
         (c["framing"], c["forfeit"]) for c in api_module.CAMPAIGN_CELLS
     ] == [
         ("true_baseline", "not_allowed"),
         ("true_baseline", "allowed"),
-        ("threat_l1", "allowed"),
-        ("threat_l2", "allowed"),
+        ("baseline_flagship", "not_allowed"),
+        ("baseline_flagship", "allowed"),
+        ("threat_l3", "not_allowed"),
         ("threat_l3", "allowed"),
     ]
+    assert len(api_module.CAMPAIGN_CELLS) == CAMPAIGN_GAME_COUNT
+    # The rungs the campaign no longer plays stay renderable for rows
+    # recorded under the five-cell ladder / the threat_l2 interim design.
+    legacy = {(c["framing"], c["forfeit"]) for c in api_module.LEGACY_REPORT_CELLS}
+    assert ("threat_l1", "allowed") in legacy
+    assert ("threat_l2", "allowed") in legacy
+    assert ("threat_l2", "not_allowed") in legacy
+
+
+# ---------------------------------------------------------------------------
+# Peer-elimination notice on the wire (Task 1) and the campaign's
+# off-ladder reward-only cell (Task 3)
+# ---------------------------------------------------------------------------
+
+
+def _first_announce_turn(api_module, seed: int, level: int, turns: int = 20):
+    """(turn, event) of the first notice a human game with *seed* schedules.
+
+    Mirrors HumanGameSession's own scheduler construction so the test knows
+    which turn to look at without probing private state.
+    """
+    import random
+
+    from squid_game.models.config import PeerDeathConfig
+
+    cfg = PeerDeathConfig()
+    sched = PeerDeathScheduler(
+        rng=random.Random(seed ^ api_module.PEER_DEATH_SEED_XOR),
+        cohort_size=api_module.PEER_DEATH_COHORT_SIZE,
+        p_announce=cfg.p_announce,
+        first_turn=cfg.first_turn,
+        max_per_turn=cfg.max_per_turn,
+        threat_level=level,
+    )
+    for t in range(1, turns + 1):
+        ev = sched.advance(t)
+        if ev.fired:
+            return t, ev
+    raise AssertionError(f"seed {seed} never announces within {turns} turns")
+
+
+def test_state_carries_the_peer_death_notice_on_its_turn(client, api_module) -> None:
+    """A threat_l2 game emits peer_death_text + the structured fields on the
+    scheduled turn, and nothing before it. This is the contract the frontend
+    banner (`.peer-notice`) and cinematic (`_openPeerDeath`) render from."""
+    seed = 3
+    fire_turn, ev = _first_announce_turn(api_module, seed, level=2)
+    sid = _new_game(client, seed=seed, framing="threat_l2", total_turns=20)
+    for turn in range(1, fire_turn):
+        state = client.get("/api/state", params={"session_id": sid}).json()
+        assert state["turn_number"] == turn
+        assert state["peer_death_text"] is None
+        assert state["peer_death_participants"] == []
+        assert state["cohort_size"] == api_module.PEER_DEATH_COHORT_SIZE
+        _answer(client, api_module, sid, correct=True)
+
+    state = client.get("/api/state", params={"session_id": sid}).json()
+    assert state["turn_number"] == fire_turn
+    assert state["threat_level"] == 2
+    assert state["lives_enabled"] is True
+    assert state["peer_death_text"] == ev.text
+    assert "NOTICE" in state["peer_death_text"]
+    assert state["peer_death_participants"] == list(ev.participants)
+    assert state["peer_death_cumulative"] == ev.cumulative
+    assert state["peer_death_remaining"] == ev.remaining
+    # A second poll of the same turn must not re-roll the schedule.
+    again = client.get("/api/state", params={"session_id": sid}).json()
+    assert again["peer_death_text"] == state["peer_death_text"]
+    assert again["peer_death_participants"] == state["peer_death_participants"]
+
+
+@pytest.mark.parametrize("framing", ["true_baseline", "baseline_flagship"])
+def test_no_threat_cells_never_announce(client, api_module, framing) -> None:
+    """Level 0 and the off-ladder reward-only cell run no scheduler: no text,
+    no participants and — the frontend's guard — no cohort at all."""
+    sid = _new_game(client, seed=3, framing=framing, total_turns=12)
+    for _ in range(12):
+        state = client.get("/api/state", params={"session_id": sid}).json()
+        if state["game_over"]:
+            break
+        assert state["peer_death_text"] is None
+        assert state["peer_death_participants"] == []
+        assert state["cohort_size"] is None
+        _answer(client, api_module, sid, correct=True)
+
+
+def test_reward_only_cell_runs_the_lives_mechanic_and_tells_the_player(
+    client, api_module
+) -> None:
+    """baseline_flagship is off the threat ladder (threat_level None) but the
+    campaign plays it under the lives mechanic, so the HUD fields must be
+    populated and the framing text must state the attempts rule."""
+    sid = _new_game(client, seed=3, framing="baseline_flagship", forfeit_condition="not_allowed")
+    state = client.get("/api/state", params={"session_id": sid}).json()
+    assert state["threat_level"] is None
+    assert state["lives_enabled"] is True
+    assert state["lives_remaining"] == 5
+    assert state["lives_total"] == 5
+    assert state["forfeit_allowed"] is False
+    assert "5 attempts" in state["framing_threat"]
+    for word in ("life", "lives", "death", "eliminat"):
+        assert word not in state["framing_threat"].lower()
+
+    act = _answer(client, api_module, sid, correct=False)
+    assert act["life_lost"] is True
+    assert act["lives_remaining"] == 4
+    state = client.get("/api/state", params={"session_id": sid}).json()
+    assert state["lives_remaining"] == 4
+    assert "4 attempts" not in state["framing_threat"]  # the sentence states the total
+    assert "5 attempts" in state["framing_threat"]
+
+
+def test_every_campaign_cell_starts_a_game(client, api_module) -> None:
+    for i, cell in enumerate(api_module.CAMPAIGN_CELLS):
+        sid = _new_game(
+            client,
+            nickname="cells",
+            framing=cell["framing"],
+            forfeit_condition=cell["forfeit"],
+            campaign_id="cells-campaign",
+            campaign_index=i,
+        )
+        state = client.get("/api/state", params={"session_id": sid}).json()
+        assert state["turn_number"] == 1
+        assert state["lives_remaining"] == 5
+        assert state["forfeit_allowed"] is (cell["forfeit"] == "allowed")
+
+
+# ---------------------------------------------------------------------------
+# Campaign game boundary (Task 2): game 2 starts after game 1 is persisted
+# ---------------------------------------------------------------------------
+
+
+def test_second_campaign_game_starts_after_first_is_finished_and_persisted(
+    client, api_module
+) -> None:
+    """The exact sequence the frontend runs at the game-1 → game-2 boundary:
+    new_game(index 0) → play out → GET /api/result (persists the row and
+    the player) → new_game(index 1, same campaign / nickname / password) →
+    GET /api/state. Every hop must answer 200."""
+    cid = "boundary-campaign"
+    sid1 = _new_game(
+        client, nickname="boundary", framing="true_baseline",
+        forfeit_condition="not_allowed", campaign_id=cid, campaign_index=0,
+        total_turns=10,
+    )
+    for _ in range(5):  # five misses: eliminated, exactly as a lost game 1 ends
+        _answer(client, api_module, sid1, correct=False)
+    res = client.get("/api/result", params={"session_id": sid1})
+    assert res.status_code == 200, res.text
+    assert res.json()["eliminated"] is True
+
+    resp = client.post(
+        "/api/new_game",
+        json={
+            "task_name": "signal_game", "difficulty": "easy",
+            "framing": "true_baseline", "forfeit_condition": "allowed",
+            "nickname": "boundary", "password": "pw",
+            "campaign_id": cid, "campaign_index": 1, "num_few_shot": 2,
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    sid2 = resp.json()["session_id"]
+    assert sid2 != sid1
+    state = client.get("/api/state", params={"session_id": sid2})
+    assert state.status_code == 200, state.text
+    assert state.json()["turn_number"] == 1
+    assert state.json()["lives_remaining"] == 5
+    assert api_module._campaigns[sid2] == cid
+    # A wrong password on game 2 is a real 403 with a message, not a crash.
+    bad = client.post(
+        "/api/new_game",
+        json={
+            "framing": "true_baseline", "forfeit_condition": "allowed",
+            "nickname": "boundary", "password": "wrong",
+            "campaign_id": cid, "campaign_index": 1,
+        },
+    )
+    assert bad.status_code == 403
+    assert bad.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
+# Difficulty (Task 4): the four engine levels are all playable by a human
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("difficulty", ["easy", "medium", "hard", "expert"])
+def test_new_game_accepts_every_engine_difficulty(client, api_module, difficulty) -> None:
+    sid = _new_game(client, nickname="diff", difficulty=difficulty, num_few_shot=None)
+    state = client.get("/api/state", params={"session_id": sid})
+    assert state.status_code == 200, state.text
+    assert api_module._sessions[sid]._difficulty.value == difficulty
+    assert api_module._sessions[sid].settings_snapshot()["difficulty"] == difficulty
+    # Any answer resolves: the level's rule-space is wired end to end.
+    _answer(client, api_module, sid, correct=True)
 
 
 # ---------------------------------------------------------------------------

@@ -35,8 +35,11 @@ Every symbol below is re-exported from deps.py/schemas.py by explicit name
 ``squid_arena.api.<name>`` (tests included) keep working unchanged.
 """
 
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from squid_arena import deps, routes_arena, routes_game, routes_leaderboard, routes_logs
 from squid_arena.deps import (
@@ -120,6 +123,32 @@ app = FastAPI(
     description="REST API for external agents to play the Squid Game benchmark.",
     version="1.0.0",
 )
+
+_log = logging.getLogger("squid_arena.api")
+
+
+# Unhandled exceptions become a JSON 500 *inside* the CORS layer.
+#
+# Starlette answers an uncaught exception from its outermost
+# ServerErrorMiddleware, which sits outside CORSMiddleware, so the plain-text
+# 500 it sends carries no Access-Control-Allow-Origin header. A browser on
+# the GitHub Pages origin then reports the request as a network failure
+# ("TypeError: Failed to fetch") and the frontend's cold-start retry loop
+# spins on it, hiding both the status and the traceback. Registered BEFORE
+# ``add_middleware(CORSMiddleware)`` below: Starlette wraps the last-added
+# middleware outermost, so CORS ends up around this handler and stamps the
+# 500 like any other response. The traceback is still logged.
+@app.middleware("http")
+async def _unhandled_error_as_json(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as exc:  # noqa: BLE001 — deliberately catch-all
+        _log.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Internal server error: {type(exc).__name__}: {exc}"},
+        )
+
 
 app.add_middleware(
     CORSMiddleware,

@@ -26,23 +26,22 @@ class _FakeResponse:
 
 
 def _make_fake_post():
-    """Return a fake httpx.post that cycles task -> probe -> forfeit answers.
+    """Return a fake httpx.post that cycles decision -> task answers.
 
-    The split-call pipeline issues exactly three calls per turn in that order
-    (Call 1 task, Call 1.5 probe, Call 2 forfeit), so a modulo-3 counter maps
-    each POST to the answer shape that turn's phase expects.
+    The split-call pipeline issues exactly two calls per turn in that order
+    (decision call, then task call — decision-first since 2026-09-04), so a
+    modulo-2 counter maps each POST to the answer shape that turn's phase
+    expects. Every decision is CONTINUE, so the task call always follows.
     """
     counter = {"n": 0}
 
     def _fake_post(url, json=None, headers=None, timeout=None):  # noqa: A002
-        phase = counter["n"] % 3
+        phase = counter["n"] % 2
         counter["n"] += 1
         if phase == 0:
-            content = "RULE: if the signal is red then go_left otherwise stay\nACTION: go_left"
-        elif phase == 1:
-            content = "P_CORRECT: 60"
-        else:
             content = "CHOICE: CONTINUE"
+        else:
+            content = "RULE: if the signal is red then go_left otherwise stay\nACTION: go_left"
         payload = {
             "choices": [{"message": {"content": content, "reasoning_content": "brief rationale"}}],
             "usage": {
@@ -78,10 +77,10 @@ def test_arena_runs_full_split_call_season_and_persists(monkeypatch, tmp_path):
     assert result.status == "done"
     assert result.session_id
     assert isinstance(result.final_score, float)
-    # 2 turns x 3 calls (task/probe/forfeit) = 6 endpoint round-trips.
-    assert counter["n"] == 6
-    assert result.calls_done == 6
-    assert result.calls_total == 6
+    # 2 turns x 2 calls (decision/task) = 4 endpoint round-trips.
+    assert counter["n"] == 4
+    assert result.calls_done == 4
+    assert result.calls_total == 4
 
     # -- Persisted like a seeded LLM run: session + turns are queryable. --
     session = repo.get_session(result.session_id)
@@ -125,11 +124,14 @@ def test_arena_endpoint_failure_raises(monkeypatch, tmp_path):
         )
 
 
-def test_arena_config_enables_psuccess_chaining():
+def test_arena_config_has_no_psuccess_probe():
+    """The Call 1.5 probe was removed 2026-09-04: the arena config must not
+    opt into it (the ExperimentConfig validator would reject it)."""
     from squid_arena.arena import _arena_config_dict
 
     cfg = _arena_config_dict("flagship_corruption", "allowed", "some-model", 15, 2048)
-    assert cfg["forfeit_layer"]["chain_psuccess_to_menu"] is True
+    assert not cfg.get("use_psuccess_probe")
+    assert not cfg["forfeit_layer"].get("chain_psuccess_to_menu")
 
 
 def test_arena_forwards_max_tokens_to_endpoint(monkeypatch, tmp_path):
@@ -185,7 +187,7 @@ def test_arena_rejects_unknown_difficulty(tmp_path, monkeypatch):
             framing="flagship_corruption",
             forfeit="allowed",
             total_turns=1,
-            difficulty="medium",  # excluded from the arena on purpose
+            difficulty="insane",  # not an engine Difficulty
         )
 
 

@@ -4,7 +4,7 @@ endpoint and persist it to the leaderboard/logs.
 Strategy — reuse the real experiment pipeline, swap only the provider:
 
 * Build a single-cell ``ExperimentConfig`` with the canonical v6 split-call
-  flags (unified turn + forfeit layer + split forfeit + p_success probe).
+  flags (unified turn + forfeit layer + split forfeit, decision-first).
 * Subclass ``ExperimentRunner`` and override ``_create_provider`` so the
   season is driven by a :class:`RemoteProvider` instead of a cloud provider.
   Everything else — the agent, its parsing, the engine's 3-call turn flow,
@@ -33,10 +33,13 @@ from squid_game.runner import ExperimentRunner, load_config_from_yaml
 
 VALID_FRAMINGS = {"true_baseline", "baseline_flagship", "flagship_corruption"}
 VALID_FORFEITS = {"allowed", "not_allowed"}
-# Arena exposes three structurally-distinct Signal Game levels. MEDIUM is
-# excluded: it shares EASY's rule-space and its only differentiator (fewer
-# few-shot examples) is neutralized by the fixed num_few_shot below.
-VALID_DIFFICULTIES = {"easy", "hard", "expert"}
+# Every engine Signal Game level, under its engine name (the UI labels them
+# Easy / Medium / Hard / Expert, the same words). MEDIUM shares EASY's
+# single-attribute rule-space and differs only in showing one worked example
+# instead of three, so ``_arena_config_dict`` leaves ``num_few_shot`` at the
+# engine default for it rather than the fixed 2 the other levels get —
+# otherwise the level would be indistinguishable from EASY.
+VALID_DIFFICULTIES = {"easy", "medium", "hard", "expert"}
 
 # Where transient arena run directories live (JSONL traces are read back by
 # ``seed_sessions`` then no longer needed, but kept for auditing).
@@ -61,13 +64,11 @@ def _arena_config_dict(
         "use_unified_turn": True,
         "use_forfeit_layer": True,
         "use_split_forfeit_layer": True,
-        "use_psuccess_probe": True,
         "forfeit_layer": {
             "p_death": 0.25,
             "p_success_estimate": 0.75,
             "base_reward": 10.0,
             "split_context_level": "medium",
-            "chain_psuccess_to_menu": True,
         },
         "seasons": [
             {
@@ -85,7 +86,9 @@ def _arena_config_dict(
                     "history_mode": "cumulative",
                     "max_history_turns": 15,
                     "actual_death": False,
-                    "num_few_shot": 2,
+                    # MEDIUM is defined by its single example (engine
+                    # default); pinning 2 would collapse it into EASY.
+                    "num_few_shot": None if difficulty == "medium" else 2,
                     "curriculum_turns": 1,
                     "starting_score": 30.0,
                     # A fresh random seed per run: varied scenarios while
@@ -146,7 +149,9 @@ def run_arena_session(
     total_turns = max(1, min(int(total_turns), 30))
 
     progress = progress or ArenaProgress()
-    progress.calls_total = total_turns * len(("task", "probe", "forfeit"))
+    # Decision call + task call per turn (the Call 1.5 probe was removed
+    # 2026-09-04); a FORFEIT ends the run early so this is an upper bound.
+    progress.calls_total = total_turns * len(("decision", "task"))
 
     provider = RemoteProvider(
         endpoint_url,

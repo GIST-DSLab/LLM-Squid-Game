@@ -7,7 +7,7 @@ v6.3 models. Writes per-model JSON + 4-model aggregate.
 This is the §3.3 "Option A" model — a simpler alternative to
 ``fit_choice_asymmetric_model`` (Unit 15 H2) whose ``β_framing`` row is
 identified at choice=continue baseline. The simpler model recovers the
-*marginal* framing effect on Call 2 thinking_tokens.
+*marginal* framing effect on decision call thinking_tokens.
 
 Usage:
     uv run python scripts/analysis/analyze_framing_ri_forfeit.py

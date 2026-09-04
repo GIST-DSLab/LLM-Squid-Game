@@ -288,8 +288,10 @@ class TurnResult(BaseModel):
     ri_task: ReasoningInvestment | None = Field(
         default=None,
         description=(
-            "Phase O Unit 15: reasoning-investment metrics for Call 1 "
-            "(task layer) only. None on the Unit 14 single-call path and "
+            "Phase O Unit 15: reasoning-investment metrics for the task "
+            "call (task layer) only. None on a FORFEIT turn under the "
+            "decision-first flow (2026-09-04), where the task call never "
+            "runs. None on the Unit 14 single-call path and "
             "on any legacy turn. When set, ``reasoning_investment`` "
             "above equals the sum of ``ri_task`` and ``ri_forfeit``."
         ),
@@ -297,8 +299,8 @@ class TurnResult(BaseModel):
     ri_forfeit: ReasoningInvestment | None = Field(
         default=None,
         description=(
-            "Phase O Unit 15: reasoning-investment metrics for Call 2 "
-            "(forfeit layer) only. None on the single-call path. Paired "
+            "Phase O Unit 15: reasoning-investment metrics for the "
+            "decision call (forfeit layer) only. None on the single-call path. Paired "
             "with ``ri_task`` for the H_choice_asymmetric within-subject "
             "GAP analysis."
         ),
@@ -306,37 +308,40 @@ class TurnResult(BaseModel):
     raw_response_task: str | None = Field(
         default=None,
         description=(
-            "Phase O Unit 15: raw LLM Call 1 output (RULE + ACTION). "
-            "None on the single-call path."
+            "Phase O Unit 15: raw LLM task-call output (RULE + ACTION). "
+            "None on the single-call path and on FORFEIT turns under the "
+            "decision-first flow."
         ),
     )
     raw_response_forfeit: str | None = Field(
         default=None,
         description=(
-            "Phase O Unit 15: raw LLM Call 2 output (CHOICE + optional "
+            "Phase O Unit 15: raw LLM decision-call output (CHOICE + optional "
             "REASON). None on the single-call path."
         ),
     )
     thinking_text_task: str | None = Field(
         default=None,
         description=(
-            "Phase O Unit 15: thinking-block text captured from Call 1 "
-            "only. None on the single-call path."
+            "Phase O Unit 15: thinking-block text captured from the task "
+            "call only. None on the single-call path and on FORFEIT turns "
+            "under the decision-first flow."
         ),
     )
     thinking_text_forfeit: str | None = Field(
         default=None,
         description=(
-            "Phase O Unit 15: thinking-block text captured from Call 2 "
+            "Phase O Unit 15: thinking-block text captured from the decision call "
             "only. None on the single-call path."
         ),
     )
     # ----- Phase O Unit 17 — Call 1.5 self-reported p_success probe -----
-    # Populated only when ``use_psuccess_probe=True`` AND the split-call
-    # path is active AND Call 2 was not degenerate (Cell 0 skips the
-    # probe together with Call 2). On any other path (single-call,
-    # legacy, Cell 0 split) all four stay ``None``. When set, they carry
-    # the agent's own retrospective confidence that its Call 1 ACTION
+    # REMOVED from the turn flow on 2026-09-04 (decision-first reorder).
+    # The four fields are retained only so the 2026-04-22 run outputs
+    # still load for re-analysis; every new run leaves them ``None``.
+    # Historically they were populated only when ``use_psuccess_probe=True``
+    # AND the split-call path was active AND the forfeit call was not degenerate. When set, they carry
+    # the agent's own retrospective confidence that its task-call ACTION
     # is correct (``psuccess_self`` ∈ [0, 100]) plus the RI audit trail
     # for the probe call itself. The primary analysis use is as a
     # covariate in the Equal-EV validity check + H_SD adjusted
@@ -347,7 +352,7 @@ class TurnResult(BaseModel):
         le=100,
         description=(
             "Phase O Unit 17: agent's self-reported probability ∈ [0, 100] "
-            "that its Call 1 ACTION is correct. None on Cell 0 and on "
+            "that its task-call ACTION is correct. None on Cell 0 and on "
             "any non-probe path. Parsed from a single ``P_CORRECT: XX`` "
             "line; malformed responses resolve to None with a WARNING "
             "so the session still produces a usable trace."

@@ -78,14 +78,14 @@ class TestDefaults:
 
     def test_peer_death_defaults(self) -> None:
         cfg = PeerDeathConfig()
-        assert cfg.p_announce == pytest.approx(0.35)
+        assert cfg.p_announce == pytest.approx(1.0)
         assert cfg.first_turn == 2
-        assert cfg.max_per_turn == 2
+        assert cfg.max_per_turn == 1
 
     def test_experiment_defaults_keep_lives_off(self) -> None:
         cfg = _experiment()
         assert cfg.lives.enabled is False
-        assert cfg.peer_death.p_announce == pytest.approx(0.35)
+        assert cfg.peer_death.p_announce == pytest.approx(1.0)
 
 
 class TestRewardMode:

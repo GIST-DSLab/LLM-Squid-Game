@@ -33,7 +33,7 @@ parallel_workers: 1
 use_unified_turn: true
 use_forfeit_layer: true
 use_split_forfeit_layer: true
-use_psuccess_probe: true
+use_psuccess_probe: false   # Call 1.5 probe removed 2026-09-04 (decision-first flow)
 
 forfeit_layer:
   p_death: 0.25
@@ -43,7 +43,7 @@ forfeit_layer:
   psuccess_floor: 0.3
   reward_cap_multiple: 10
   split_context_level: "medium"
-  chain_psuccess_to_menu: true
+  chain_psuccess_to_menu: false   # probe removed 2026-09-04
 
 seasons:
   # Cell 0 — BP_cognitive anchor (true_baseline, forfeit blocked, p_death 0).
