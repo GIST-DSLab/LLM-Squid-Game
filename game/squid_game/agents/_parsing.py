@@ -741,7 +741,14 @@ def parse_confidence_call_response(text: str) -> ConfidenceCallResponse:
             value = bare[-1].group(1)
     if value is None:
         return ConfidenceCallResponse(raw_text=text, p_threat=None)
-    number = int(round(float(value)))
+    try:
+        number = int(round(float(value)))
+    except (OverflowError, ValueError):
+        # A pathological digit run ("9" * 400) overflows float(); a
+        # degenerate token can fail to parse at all. Neither is worth
+        # aborting a live session for -- the turn keeps its trace and
+        # the SMI resampler simply skips it (p_threat_self is None).
+        return ConfidenceCallResponse(raw_text=text, p_threat=None)
     return ConfidenceCallResponse(
         raw_text=text, p_threat=max(0, min(100, number))
     )

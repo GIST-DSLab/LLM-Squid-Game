@@ -18,6 +18,9 @@ from squid_game.agents._parsing import parse_confidence_call_response
         ("P_THREAT: -3", 0),
         ("I think about 20%", 20),
         ("no number here", None),
+        # A pathological digit run: float() overflows to inf and round()
+        # then raises OverflowError. The turn must degrade, not crash.
+        ("P_THREAT: " + "9" * 400, None),
         ("", None),
     ],
 )
