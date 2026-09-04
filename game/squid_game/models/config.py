@@ -793,6 +793,23 @@ class PeerDeathConfig(BaseModel):
     )
 
 
+class ConfidenceCallConfig(BaseModel):
+    """Per-turn confidence call (SMI, 2026-09-04).
+
+    When enabled, every split-call turn that issues a decision call first
+    asks the agent ``P_THREAT`` — how likely it thinks it is to be
+    threatened this round — and renders that call's CoT into the decision
+    call's user body. Requires ``use_split_forfeit_layer=True``.
+    """
+
+    enabled: bool = Field(
+        default=False,
+        description=(
+            "Issue the confidence call before the decision call. False "
+            "keeps every existing YAML's two-call turn unchanged."
+        ),
+    )
+
 
 class ExperimentConfig(BaseModel):
     """Top-level experiment configuration.
@@ -917,6 +934,13 @@ class ExperimentConfig(BaseModel):
             "threat-ladder framings."
         ),
     )
+    confidence_call: ConfidenceCallConfig = Field(
+        default_factory=ConfidenceCallConfig,
+        description=(
+            "SMI confidence call. Run-level: the call precedes the decision "
+            "call in every cell that issues one."
+        ),
+    )
 
     @model_validator(mode="after")
     def _validate_forfeit_layer_wiring(self) -> "ExperimentConfig":
@@ -1000,6 +1024,17 @@ class ExperimentConfig(BaseModel):
                 "forfeit_layer.chain_psuccess_to_menu=True is no longer "
                 "supported: the Unit 17 probe it chained from was removed "
                 "on 2026-09-04. Set it to false (or drop the key)."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_confidence_call_prerequisites(self) -> "ExperimentConfig":
+        """``confidence_call.enabled`` only exists on the split-call path."""
+        if self.confidence_call.enabled and not self.use_split_forfeit_layer:
+            raise ValueError(
+                "confidence_call.enabled=True requires "
+                "use_split_forfeit_layer=True; the confidence call is "
+                "issued immediately before the split-call decision call."
             )
         return self
 
