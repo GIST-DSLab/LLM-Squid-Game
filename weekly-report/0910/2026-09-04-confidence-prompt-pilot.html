@@ -216,33 +216,42 @@ n = 값을 답한 응답 수(20 − 거부 − 절단). <b>zeros</b> = 정확히
 <b>task-engaged</b> = thinking에 “wrong / incorrect”가 등장한 응답 수 — 모델이 실제로 <i>이번 라운드에 틀릴 확률</i>을
 계산했는지의 대리 지표.
 </p>
+<h4 style="margin:14px 0 6px">4.1a 위협 프롬프트 (threat_l2)</h4>
 <table>
   <tr>
-    <th>문구</th><th>framing</th><th style="text-align:right">lives</th>
+    <th>문구</th><th style="text-align:right">lives</th>
     <th style="text-align:right">n</th><th style="text-align:right">mean</th><th style="text-align:right">sd</th>
     <th style="text-align:right">min</th><th style="text-align:right">max</th>
     <th style="text-align:right">zeros</th><th style="text-align:right">무응답</th><th style="text-align:right">task-engaged</th>
   </tr>
-  <tr class="band"><td class="k" rowspan="6">heart-loss</td><td>threat_l2</td><td class="num">5</td><td class="num">20</td><td class="num"><b>43.2</b></td><td class="num">16.8</td><td class="num">20</td><td class="num">83</td><td class="num">0</td><td class="num">0</td><td class="num">18/20</td></tr>
-  <tr><td>threat_l2</td><td class="num">3</td><td class="num">20</td><td class="num"><b>47.5</b></td><td class="num">19.6</td><td class="num">13</td><td class="num">75</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
-  <tr><td>threat_l2</td><td class="num">1</td><td class="num">19</td><td class="num"><b>63.5</b></td><td class="num">24.4</td><td class="num">15</td><td class="num">94</td><td class="num">0</td><td class="num">절단 1</td><td class="num">20/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">5</td><td class="num">20</td><td class="num">44.4</td><td class="num">16.7</td><td class="num">20</td><td class="num">70</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">3</td><td class="num">20</td><td class="num">47.4</td><td class="num">18.3</td><td class="num">13</td><td class="num">70</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">1</td><td class="num">20</td><td class="num">41.7</td><td class="num">25.4</td><td class="num">13</td><td class="num">80</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
+  <tr class="band"><td class="k" rowspan="3">heart-loss</td><td class="num">5</td><td class="num">20</td><td class="num"><b>43.2</b></td><td class="num">16.8</td><td class="num">20</td><td class="num">83</td><td class="num">0</td><td class="num">0</td><td class="num">18/20</td></tr>
+  <tr><td class="num">3</td><td class="num">20</td><td class="num"><b>47.5</b></td><td class="num">19.6</td><td class="num">13</td><td class="num">75</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
+  <tr><td class="num">1</td><td class="num">19</td><td class="num"><b>63.5</b></td><td class="num">24.4</td><td class="num">15</td><td class="num">94</td><td class="num">0</td><td class="num">절단 1</td><td class="num">20/20</td></tr>
+  <tr class="band"><td class="k" rowspan="3">threatened</td><td class="num">5</td><td class="num">20</td><td class="num"><b>8.0</b></td><td class="num">18.4</td><td class="num">0</td><td class="num">55</td><td class="num">16</td><td class="num">0</td><td class="num">8/20</td></tr>
+  <tr><td class="num">3</td><td class="num">20</td><td class="num"><b>12.2</b></td><td class="num">17.5</td><td class="num">0</td><td class="num">50</td><td class="num">11</td><td class="num">0</td><td class="num">3/20</td></tr>
+  <tr><td class="num">1</td><td class="num">20</td><td class="num"><b>47.2</b></td><td class="num">29.8</td><td class="num">0</td><td class="num">85</td><td class="num">4</td><td class="num">0</td><td class="num">13/20</td></tr>
+  <tr class="band"><td class="k" rowspan="3">death</td><td class="num">5</td><td class="num">20</td><td class="num"><b>38.0</b></td><td class="num">21.1</td><td class="num">0</td><td class="num">85</td><td class="num">2</td><td class="num">0</td><td class="num">17/20</td></tr>
+  <tr><td class="num">3</td><td class="num">20</td><td class="num"><b>34.9</b></td><td class="num">22.7</td><td class="num">0</td><td class="num">75</td><td class="num">2</td><td class="num">0</td><td class="num">20/20</td></tr>
+  <tr><td class="num">1</td><td class="num">19</td><td class="num"><b>42.2</b></td><td class="num">25.9</td><td class="num">10</td><td class="num">80</td><td class="num">0</td><td class="num">절단 1</td><td class="num">20/20</td></tr>
+</table>
 
-  <tr class="band"><td class="k" rowspan="6">threatened</td><td>threat_l2</td><td class="num">5</td><td class="num">20</td><td class="num"><b>8.0</b></td><td class="num">18.4</td><td class="num">0</td><td class="num">55</td><td class="num">16</td><td class="num">0</td><td class="num">8/20</td></tr>
-  <tr><td>threat_l2</td><td class="num">3</td><td class="num">20</td><td class="num"><b>12.2</b></td><td class="num">17.5</td><td class="num">0</td><td class="num">50</td><td class="num">11</td><td class="num">0</td><td class="num">3/20</td></tr>
-  <tr><td>threat_l2</td><td class="num">1</td><td class="num">20</td><td class="num"><b>47.2</b></td><td class="num">29.8</td><td class="num">0</td><td class="num">85</td><td class="num">4</td><td class="num">0</td><td class="num">13/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">5</td><td class="num">20</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0</td><td class="num">0</td><td class="num">20</td><td class="num">0</td><td class="num">0/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">3</td><td class="num">19</td><td class="num">0.5</td><td class="num">1.5</td><td class="num">0</td><td class="num">5</td><td class="num">17</td><td class="num">거부 1</td><td class="num">0/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">1</td><td class="num">20</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0</td><td class="num">0</td><td class="num">20</td><td class="num">0</td><td class="num">0/20</td></tr>
-
-  <tr class="band"><td class="k" rowspan="6">death</td><td>threat_l2</td><td class="num">5</td><td class="num">20</td><td class="num"><b>38.0</b></td><td class="num">21.1</td><td class="num">0</td><td class="num">85</td><td class="num">2</td><td class="num">0</td><td class="num">17/20</td></tr>
-  <tr><td>threat_l2</td><td class="num">3</td><td class="num">20</td><td class="num"><b>34.9</b></td><td class="num">22.7</td><td class="num">0</td><td class="num">75</td><td class="num">2</td><td class="num">0</td><td class="num">20/20</td></tr>
-  <tr><td>threat_l2</td><td class="num">1</td><td class="num">19</td><td class="num"><b>42.2</b></td><td class="num">25.9</td><td class="num">10</td><td class="num">80</td><td class="num">0</td><td class="num">절단 1</td><td class="num">20/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">5</td><td class="num">20</td><td class="num">0.2</td><td class="num">1.1</td><td class="num">0</td><td class="num">5</td><td class="num">19</td><td class="num">0</td><td class="num">0/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">3</td><td class="num">18</td><td class="num">3.9</td><td class="num">12.1</td><td class="num">0</td><td class="num">50</td><td class="num">16</td><td class="num">거부 2</td><td class="num">5/20</td></tr>
-  <tr><td>true_baseline</td><td class="num">1</td><td class="num">19</td><td class="num">1.3</td><td class="num">4.5</td><td class="num">0</td><td class="num">20</td><td class="num">17</td><td class="num">거부 1</td><td class="num">5/20</td></tr>
+<h4 style="margin:14px 0 6px">4.1b 통제 프롬프트 (true_baseline)</h4>
+<table>
+  <tr>
+    <th>문구</th><th style="text-align:right">lives</th>
+    <th style="text-align:right">n</th><th style="text-align:right">mean</th><th style="text-align:right">sd</th>
+    <th style="text-align:right">min</th><th style="text-align:right">max</th>
+    <th style="text-align:right">zeros</th><th style="text-align:right">무응답</th><th style="text-align:right">task-engaged</th>
+  </tr>
+  <tr class="band"><td class="k" rowspan="3">heart-loss</td><td class="num">5</td><td class="num">20</td><td class="num">44.4</td><td class="num">16.7</td><td class="num">20</td><td class="num">70</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
+  <tr><td class="num">3</td><td class="num">20</td><td class="num">47.4</td><td class="num">18.3</td><td class="num">13</td><td class="num">70</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
+  <tr><td class="num">1</td><td class="num">20</td><td class="num">41.7</td><td class="num">25.4</td><td class="num">13</td><td class="num">80</td><td class="num">0</td><td class="num">0</td><td class="num">20/20</td></tr>
+  <tr class="band"><td class="k" rowspan="3">threatened</td><td class="num">5</td><td class="num">20</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0</td><td class="num">0</td><td class="num">20</td><td class="num">0</td><td class="num">0/20</td></tr>
+  <tr><td class="num">3</td><td class="num">19</td><td class="num">0.5</td><td class="num">1.5</td><td class="num">0</td><td class="num">5</td><td class="num">17</td><td class="num">거부 1</td><td class="num">0/20</td></tr>
+  <tr><td class="num">1</td><td class="num">20</td><td class="num">0.0</td><td class="num">0.0</td><td class="num">0</td><td class="num">0</td><td class="num">20</td><td class="num">0</td><td class="num">0/20</td></tr>
+  <tr class="band"><td class="k" rowspan="3">death</td><td class="num">5</td><td class="num">20</td><td class="num">0.2</td><td class="num">1.1</td><td class="num">0</td><td class="num">5</td><td class="num">19</td><td class="num">0</td><td class="num">0/20</td></tr>
+  <tr><td class="num">3</td><td class="num">18</td><td class="num">3.9</td><td class="num">12.1</td><td class="num">0</td><td class="num">50</td><td class="num">16</td><td class="num">거부 2</td><td class="num">5/20</td></tr>
+  <tr><td class="num">1</td><td class="num">19</td><td class="num">1.3</td><td class="num">4.5</td><td class="num">0</td><td class="num">20</td><td class="num">17</td><td class="num">거부 1</td><td class="num">5/20</td></tr>
 </table>
 
 <h3>4.2 기울기 요약 (lives 5 → lives 1)</h3>
