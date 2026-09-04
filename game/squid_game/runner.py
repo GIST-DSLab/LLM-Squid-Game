@@ -241,6 +241,7 @@ class ExperimentRunner:
             use_split_forfeit_layer=self._config.use_split_forfeit_layer,
             lives=self._config.lives,
             peer_death=self._config.peer_death,
+            confidence_call=self._config.confidence_call,
         )
 
         result = engine.run_season(seed_override=rep_seed)

@@ -51,7 +51,11 @@ import logging
 import random
 from typing import Any
 
-from squid_game.agents._parsing import build_decision_call_message
+from squid_game.agents._parsing import (
+    build_confidence_block,
+    build_confidence_call_message,
+    build_decision_call_message,
+)
 from squid_game.agents.base import Agent
 from squid_game.core.cot_collector import CoTCollector
 from squid_game.core.forfeit import ForfeitController
@@ -138,6 +142,7 @@ class UnifiedTurnManager:
         history_mode: str = "cumulative",
         max_history_turns: int = 15,
         lives_enabled: bool = False,
+        confidence_call_enabled: bool = False,
     ) -> None:
         """Initialise the unified turn manager.
 
@@ -177,6 +182,11 @@ class UnifiedTurnManager:
                 controls how prior-turn outcomes are surfaced in the
                 next turn's user prompt.
             max_history_turns: Cap on cumulative-history rendering.
+            confidence_call_enabled: SMI Phase 1.5 switch. When True the
+                split-call path issues a confidence call before the
+                decision call, records ``p_threat_self`` /
+                ``ri_confidence``, and renders that call's CoT into the
+                decision-call user body. Ignored on every other path.
         """
         self._task = task
         self._agent = agent
@@ -202,6 +212,10 @@ class UnifiedTurnManager:
         # consulted inside _execute_turn_split_forfeit_layer; the
         # ExperimentConfig validator rejects every other combination.
         self._lives_enabled = lives_enabled
+        # SMI (2026-09-04) — Phase 1.5 confidence call. Only consulted
+        # inside _execute_turn_split_forfeit_layer, and only when the
+        # forfeit menu is actually rendered (never on Cell 0).
+        self._confidence_enabled = confidence_call_enabled
         self._history: list[dict[str, Any]] = []
         # Phase N — ordered list of committed, non-forfeit, menu-rendered
         # stake keys (oldest first). Feeds
@@ -701,6 +715,18 @@ class UnifiedTurnManager:
         stay ``None`` on that turn). On CONTINUE the task call follows
         and the turn resolves as before.
 
+        Three sequential LLM calls when the confidence call is enabled:
+        confidence → decision → task. The Phase 1.5 confidence call (SMI)
+        shares the decision call's system prompt and history block, sees
+        neither the stimulus nor the menu, and has its CoT rendered into
+        the decision call's user body. Its ``ri_confidence`` is recorded
+        separately and deliberately excluded from the combined
+        ``reasoning_investment`` / ``raw_response`` / ``thinking_text``
+        aggregates, which stay decision + task only so pre-SMI analyses
+        keep comparing like with like. ``system_prompt`` and
+        ``decision_call_input`` are recorded on every turn that issues a
+        decision call, confidence call or not.
+
         Dispatcher guarantees: reachable only when both
         ``self._forfeit_layer is not None`` AND
         ``self._use_split_forfeit_layer is True``.
@@ -882,11 +908,70 @@ class UnifiedTurnManager:
         history_block = format_history_block(
             self._history, self._history_mode, self._max_history_turns
         )
+
+        # Phase 1.5 — confidence call (SMI). Same system prompt and history
+        # as the decision call; no stimulus, no menu. Its CoT is rendered
+        # into the decision call's user body so the offline resampler can
+        # replay the decision call from the recorded input alone.
+        confidence_block: str | None = None
+        confidence_kwargs: dict = {}
+        if self._confidence_enabled:
+            confidence_body = build_confidence_call_message(
+                user_body=history_block,
+                turn_number=turn_context.turn_number,
+                current_score=turn_context.cumulative_score,
+                lives_enabled=self._lives_enabled,
+                lives_remaining=turn_context.lives_remaining,
+                lives_total=turn_context.lives_total,
+                threat_framing=bool(turn_context.threat_level),
+                corruption_framing=corruption_framing,
+                baseline_flagship_framing=baseline_flagship_framing,
+                survival_framing=survival_framing,
+                split_context_level=split_ctx,
+            )
+            if turn_context.peer_death_text:
+                confidence_body = (
+                    f"{turn_context.peer_death_text}\n\n{confidence_body}"
+                )
+            confidence_resp = self._agent.respond_confidence_call(
+                user_message=confidence_body,
+                system_prompt=system_prompt,
+            )
+            completion_conf = self._agent.last_completion
+            thinking_text_conf = getattr(completion_conf, "thinking_text", None)
+            thinking_tokens_conf = (
+                getattr(completion_conf, "thinking_tokens", None) or 0
+            )
+            ri_confidence = self._cot_collector.record(confidence_resp.raw_text)
+            if thinking_tokens_conf:
+                ri_confidence = ReasoningInvestment(
+                    total_tokens=ri_confidence.total_tokens,
+                    reasoning_steps=ri_confidence.reasoning_steps,
+                    thinking_tokens=thinking_tokens_conf,
+                )
+            if confidence_resp.p_threat is None:
+                logger.warning(
+                    "Confidence call returned no P_THREAT on turn %s",
+                    turn_context.turn_number,
+                )
+            confidence_block = build_confidence_block(
+                thinking_text=thinking_text_conf,
+                raw_text=confidence_resp.raw_text,
+                p_threat=confidence_resp.p_threat,
+            )
+            confidence_kwargs = dict(
+                p_threat_self=confidence_resp.p_threat,
+                ri_confidence=ri_confidence,
+                raw_response_confidence=confidence_resp.raw_text,
+                thinking_text_confidence=thinking_text_conf,
+            )
+
         decision_call_body = build_decision_call_message(
             user_body=history_block,
             menu_text=menu_text,
             forfeit_allowed=forfeit_allowed,
             split_context_level=split_ctx,
+            confidence_block=confidence_block,
         )
         # The peer-elimination notice is prefixed verbatim to BOTH calls
         # so the threat is present while the agent decides AND while it
@@ -896,6 +981,14 @@ class UnifiedTurnManager:
             decision_call_body = (
                 f"{turn_context.peer_death_text}\n\n{decision_call_body}"
             )
+        # Replay inputs — the exact pair the decision call was issued
+        # with, recorded on every turn that renders the menu (whether or
+        # not the confidence call ran) so an offline resampler can
+        # reproduce this call verbatim.
+        replay_kwargs = dict(
+            system_prompt=system_prompt,
+            decision_call_input=decision_call_body,
+        )
         forfeit_parsed_resp = self._agent.respond_decision_call(
             user_message=decision_call_body,
             forfeit_allowed=forfeit_allowed,
@@ -979,6 +1072,7 @@ class UnifiedTurnManager:
                         lives_after=turn_context.lives_remaining,
                         life_lost=False,
                     ),
+                    confidence_kwargs={**confidence_kwargs, **replay_kwargs},
                 )
             )
 
@@ -1127,6 +1221,7 @@ class UnifiedTurnManager:
                     lives_after=lives_after,
                     life_lost=life_lost,
                 ),
+                confidence_kwargs={**confidence_kwargs, **replay_kwargs},
             )
         )
 

@@ -27,6 +27,7 @@ from squid_game.core.peer_death import PeerDeathScheduler
 from squid_game.core.turn_conditions import threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import (
+    ConfidenceCallConfig,
     ForfeitLayerConfig,
     LivesConfig,
     PeerDeathConfig,
@@ -67,6 +68,7 @@ class GameEngine:
         use_split_forfeit_layer: bool = False,
         lives: LivesConfig | None = None,
         peer_death: PeerDeathConfig | None = None,
+        confidence_call: ConfidenceCallConfig | None = None,
     ) -> None:
         """Initialize the game engine.
 
@@ -111,6 +113,11 @@ class GameEngine:
             peer_death: Peer-elimination announcement settings, used
                 only when ``lives.enabled=True`` and the season's
                 framing carries a non-zero threat level.
+            confidence_call: SMI Phase 1.5 settings, passed through from
+                ``ExperimentConfig.confidence_call``. ``None`` is treated
+                as ``ConfidenceCallConfig()`` (``enabled=False``), so a
+                caller that never passes this keeps the two-call
+                split-call turn exactly.
         """
         if use_unified_turn and not isinstance(task, RiskAwareTaskModule):
             raise TypeError(
@@ -150,6 +157,11 @@ class GameEngine:
         self._lives = lives if lives is not None else LivesConfig()
         self._peer_death = (
             peer_death if peer_death is not None else PeerDeathConfig()
+        )
+        self._confidence_call = (
+            confidence_call
+            if confidence_call is not None
+            else ConfidenceCallConfig()
         )
 
     def run_season(self, seed_override: int | None = None) -> SeasonResult:
@@ -254,6 +266,7 @@ class GameEngine:
                 history_mode=task_cfg.history_mode,
                 max_history_turns=task_cfg.max_history_turns,
                 lives_enabled=lives_enabled,
+                confidence_call_enabled=self._confidence_call.enabled,
             )
         else:
             legacy_mgr = TurnManager(

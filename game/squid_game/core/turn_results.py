@@ -109,6 +109,7 @@ def build_forfeit_layer_result(
     raw_response_probe: str | None = None,
     thinking_text_probe: str | None = None,
     lives_kwargs: dict | None = None,
+    confidence_kwargs: dict | None = None,
 ) -> TurnResult:
     """Build a FORFEIT-branch TurnResult for the forfeit-layer path.
 
@@ -128,6 +129,9 @@ def build_forfeit_layer_result(
     ``TurnResult`` defaults for the lives-ledger and threat-ladder
     fields; ``None`` leaves every one of those fields at its
     ``TurnResult`` default.
+
+    ``confidence_kwargs`` carries the SMI confidence fields and the
+    replay inputs; None leaves them at their defaults.
     """
     kwargs: dict = dict(
         turn_number=turn_context.turn_number,
@@ -166,6 +170,8 @@ def build_forfeit_layer_result(
     )
     if lives_kwargs:
         kwargs.update(lives_kwargs)
+    if confidence_kwargs:
+        kwargs.update(confidence_kwargs)
     return TurnResult(**kwargs)
 
 
@@ -194,11 +200,13 @@ def build_forfeit_layer_continue_result(
     raw_response_probe: str | None = None,
     thinking_text_probe: str | None = None,
     lives_kwargs: dict | None = None,
+    confidence_kwargs: dict | None = None,
 ) -> TurnResult:
     """Build a CONTINUE-branch TurnResult for the forfeit-layer path.
 
     See ``build_forfeit_layer_result`` for the Unit 15 split-call,
-    Unit 17 probe, and lives ``lives_kwargs`` contracts.
+    Unit 17 probe, lives ``lives_kwargs``, and SMI
+    ``confidence_kwargs`` contracts.
     """
     kwargs: dict = dict(
         turn_number=turn_context.turn_number,
@@ -237,4 +245,6 @@ def build_forfeit_layer_continue_result(
     )
     if lives_kwargs:
         kwargs.update(lives_kwargs)
+    if confidence_kwargs:
+        kwargs.update(confidence_kwargs)
     return TurnResult(**kwargs)
