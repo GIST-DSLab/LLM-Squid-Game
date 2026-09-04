@@ -171,14 +171,19 @@ def test_confidence_call_pipeline(
     assert len(table) == len(threat)
     assert (table.q == 0.5).all() and (table.p == 0.4).all()
     assert table.smi.round(6).eq(1.25).all()
-    # The replayed input is byte-identical to the recorded one.
-    recorded = {
-        (t["season_id"], t["turn_number"]): t["decision_call_input"]
-        for t in threat
+    # The replayed call is byte-identical to the recorded one -- BOTH
+    # messages. Checking only the user body would let a drifted system
+    # prompt through, and the system prompt is where the framing (the whole
+    # experimental manipulation) lives.
+    recorded_system = {
+        t["decision_call_input"]: t["system_prompt"] for t in threat
     }
     assert len(replay.calls) == 4 * len(threat)
     for call in replay.calls:
-        assert call.messages[-1]["content"] in recorded.values()
+        body = call.messages[-1]["content"]
+        assert body in recorded_system
+        assert call.messages[0]["role"] == "system"
+        assert call.messages[0]["content"] == recorded_system[body]
 
     # --- probe frame merge ----------------------------------------------------
     frame = load_all(tmp_path / "out", include_text=True, smi_table=csv)
