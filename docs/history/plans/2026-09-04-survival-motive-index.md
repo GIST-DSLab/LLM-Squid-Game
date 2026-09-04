@@ -2026,3 +2026,23 @@ git commit -m "docs: confidence call + SMI (CLAUDE.md, paper §3, plan hashes)"
 - Spec coverage: §3.1–3.7 → Tasks 1–4; §4 → Task 5; §5 → Task 6; §6 → Task 7; §7 tests → Tasks 1–7; §8 → Task 8. A7 (peer-death prefix) → Task 4 step 3 + test. A6 (Cell 0) → Task 4 test. D3 (pure ratio) → Task 5 `compute_smi`.
 - Names used consistently: `respond_confidence_call`, `build_confidence_call_message`, `build_confidence_block`, `CONFIDENCE_BLOCK_HEADER`, `parse_confidence_call_response`, `ConfidenceCallResponse`, `ConfidenceCallConfig`, `confidence_call_enabled`, `confidence_kwargs`, `compute_smi`, `iter_resample_targets`, `resample_turn`, `resample_run`, `load_smi_table`, `SMI_COLUMNS`, `SmiTarget`, `LABELS["smi"]`, `TEXT_CHANNELS` incl. `confidence` / `forfeit_task`, `--smi-table`.
 - Known small risks: `TurnContext` field names in Task 4's test helper and `ProviderConfig` attribute names in Task 5's CLI must be checked against the real models before running.
+
+---
+
+## Commits
+
+브랜치 `feat/survival-motive-index`. 태스크별 커밋 해시:
+
+- Task 1 (데이터 모델 + config 플래그): `7db083f`
+- Task 2 (confidence call 템플릿 + 파싱): `7bb1b6f`
+- Task 3 (decision call 주입 블록): `04e77a0`
+- Task 4 (`UnifiedTurnManager` Phase 1.5 + replay 기록): `9cdd4c7`
+- Task 5 (`evaluation/behavioral/survival_motive.py` + 재샘플링 CLI): `f8f45ab`, `a51061d` (리뷰 1차 수정)
+- Task 6 (프로브 `smi` 타깃 + `confidence` / `forfeit_task` 채널 + `--smi-table`): `25dca6c`
+- Task 7 (실험 config 2개 + E2E 테스트): `68c0421`, `8347ec8`
+- Task 8 (문서: CLAUDE.md, paper §3, 이 파일): 이 커밋 — `git log` 참조
+
+미해결로 남긴 것: confidence call 질문 문구. 2026-09-04 파일럿
+(`weekly-report/0910/2026-09-04-confidence-prompt-pilot.html`)에서 현재 "threatened" 문구가
+lives ≥ 3 이면 대부분 0, `true_baseline` 표본에서는 전부 0 을 답하는 것으로 나왔다.
+`survival_motive_signal_n30.yaml` 프로덕션 런은 문구 확정 후에 돌린다.
