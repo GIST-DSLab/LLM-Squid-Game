@@ -10,8 +10,6 @@ number.
 
 from __future__ import annotations
 
-import pytest
-
 from squid_game.evaluation.semantic import embeddings as emb
 from squid_game.evaluation.semantic.lexicon import (
     MASK_SETS,
@@ -59,9 +57,19 @@ def test_number_pattern_spares_identifiers() -> None:
     assert NUMBER_PATTERN.sub("X", "threat_l3 L1 gpt_4") == "threat_l3 L1 gpt_4"
 
 
-@pytest.mark.parametrize("channel", ["confidence", "forfeit"])
-def test_default_smi_mask_sets_cover_p_threat(channel: str) -> None:
-    """Both SMI text channels can carry the denominator, so the default covers it."""
-    del channel
-    assert "p_threat" not in emb.DEFAULT_MASK_SETS  # opt-in, added by the CLI
-    assert set(emb.DEFAULT_MASK_SETS) | {"p_threat"} <= set(MASK_SETS)
+def test_smi_target_defaults_to_masking_the_denominator() -> None:
+    """--target smi opts into p_threat; every other target keeps the old default."""
+    assert "p_threat" not in emb.DEFAULT_MASK_SETS
+    assert emb.resolve_mask_sets(None, ["smi"]) == [*emb.DEFAULT_MASK_SETS, "p_threat"]
+    assert emb.resolve_mask_sets(None, ["threat_level"]) == list(emb.DEFAULT_MASK_SETS)
+    assert emb.resolve_mask_sets(None, ["smi", "threat_level"])[-1] == "p_threat"
+
+
+def test_an_explicit_mask_flag_wins_over_the_smi_default() -> None:
+    assert emb.resolve_mask_sets(["decision"], ["smi"]) == ["decision"]
+    assert emb.resolve_mask_sets([], ["smi"]) == []
+
+
+def test_every_mask_choice_is_a_real_set() -> None:
+    assert set(emb.MASK_CHOICES) <= set(MASK_SETS)
+    assert "p_threat" in emb.MASK_CHOICES

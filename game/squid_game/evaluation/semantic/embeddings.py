@@ -88,6 +88,29 @@ DEFAULT_SBERT = "sentence-transformers/all-MiniLM-L6-v2"
 #: ``lives`` is in it for the same reason on ``threat_level``.
 DEFAULT_MASK_SETS: tuple[str, ...] = ("threat", "pull", "decision", "lives")
 
+#: Mask choices the CLI offers, in the order they are documented.
+MASK_CHOICES: tuple[str, ...] = (*DEFAULT_MASK_SETS, "p_threat")
+
+
+def resolve_mask_sets(
+    requested: list[str] | None, labels: list[str]
+) -> list[str]:
+    """The mask sets the masked probe variant should use.
+
+    An explicit ``--mask`` always wins. Otherwise the default is
+    :data:`DEFAULT_MASK_SETS`, plus ``p_threat`` whenever ``smi`` is among
+    the targets: ``smi = q / p`` with ``p = P_THREAT / 100``, the confidence
+    CoT *is* the derivation of ``p``, and the decision-call CoT can quote the
+    ``P_THREAT: N`` line — so without that set (and the numeric masking it
+    switches on in :func:`build_embedding_bank`) a "masked" SMI probe could
+    still win by reading ``1/p``.
+    """
+    if requested is not None:
+        return list(requested)
+    if "smi" in labels:
+        return [*DEFAULT_MASK_SETS, "p_threat"]
+    return list(DEFAULT_MASK_SETS)
+
 #: Channel-independent half of the scalar baseline. The channel's own
 #: reasoning-investment column (``ri_task`` / ``ri_probe`` / ``ri_forfeit``)
 #: is appended per cell by :func:`_scalar_matrix`.

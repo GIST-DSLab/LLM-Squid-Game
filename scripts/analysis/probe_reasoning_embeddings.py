@@ -42,8 +42,10 @@ from squid_game.evaluation.semantic.embeddings import (
     DEFAULT_MASK_SETS,
     DEFAULT_SBERT,
     LABELS,
+    MASK_CHOICES,
     build_embedding_bank,
     render_report,
+    resolve_mask_sets,
     run_cell,
     write_results,
 )
@@ -68,8 +70,7 @@ def main() -> None:
              "required for --target smi.",
     )
     parser.add_argument(
-        "--mask", action="append",
-        choices=["threat", "pull", "decision", "lives", "p_threat"],
+        "--mask", action="append", choices=list(MASK_CHOICES),
         dest="mask_sets", default=None,
         help="Leakage-control mask sets for the masked probe variant. "
              "Default: %s (plus 'p_threat' when --target smi is requested)."
@@ -102,16 +103,7 @@ def main() -> None:
     args.channels = args.channels or ["task"]
     if "smi" in args.labels and args.smi_table is None:
         parser.error("--target smi requires --smi-table")
-    # The SMI label's denominator is the agent's own P_THREAT number, which
-    # the confidence CoT derives and the decision-call CoT can quote. The
-    # default masked variant therefore also strips that vocabulary and every
-    # bare number, so a "masked" SMI probe cannot win by reading 1/p.
-    if args.mask_sets is not None:
-        mask_sets = list(args.mask_sets)
-    elif "smi" in args.labels:
-        mask_sets = [*DEFAULT_MASK_SETS, "p_threat"]
-    else:
-        mask_sets = list(DEFAULT_MASK_SETS)
+    mask_sets = resolve_mask_sets(args.mask_sets, args.labels)
     print(f"mask sets: {', '.join(mask_sets) if mask_sets else 'none'}")
 
     frame = load_all(
