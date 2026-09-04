@@ -14,6 +14,15 @@ Usage
         --target threat_level --channel task --channel forfeit \
         --legacy-mapping --out results/threat_probe
 
+    # SMI: regress the Survival Motive Index off the CoT (spec §5.3).
+    # --target smi requires --smi-table (the resampler's output).
+    uv run python -m scripts.analysis.probe_reasoning_embeddings \
+        --root outputs/survival_motive_signal \
+        --target smi --channel forfeit --channel task \
+        --channel forfeit_task --channel confidence \
+        --smi-table <run>/survival_motive/smi_turns.csv \
+        --out results/survival_motive_probe
+
     # legacy binary probes
     uv run python -m scripts.analysis.probe_reasoning_embeddings \
         --target forfeit --target threat --channel task
@@ -49,8 +58,14 @@ def main() -> None:
         dest="labels",
     )
     parser.add_argument(
-        "--channel", action="append", choices=["task", "probe", "forfeit"],
+        "--channel", action="append",
+        choices=["task", "probe", "forfeit", "confidence", "forfeit_task"],
         dest="channels",
+    )
+    parser.add_argument(
+        "--smi-table", type=Path, default=None,
+        help="smi_turns.csv from scripts.analysis.resample_survival_motive; "
+             "required for --target smi.",
     )
     parser.add_argument(
         "--mask", action="append",
@@ -82,6 +97,8 @@ def main() -> None:
     args = parser.parse_args()
     args.labels = args.labels or ["threat_level"]
     args.channels = args.channels or ["task"]
+    if "smi" in args.labels and args.smi_table is None:
+        parser.error("--target smi requires --smi-table")
     mask_sets = (
         args.mask_sets
         if args.mask_sets is not None
@@ -89,7 +106,8 @@ def main() -> None:
     )
 
     frame = load_all(
-        args.root, include_text=True, models=args.models, legacy=args.legacy
+        args.root, include_text=True, models=args.models, legacy=args.legacy,
+        smi_table=args.smi_table,
     )
     frame["bank_row"] = np.arange(len(frame))
     args.out.mkdir(parents=True, exist_ok=True)

@@ -40,7 +40,12 @@ THREAT_FRAMINGS = {"flagship_corruption", "flagship_corruption_terminal"}
 PULL_FRAMINGS = {"baseline_flagship"}
 NEUTRAL_FRAMINGS = {"true_baseline"}
 
-TEXT_CHANNELS = ("task", "probe", "forfeit")
+TEXT_CHANNELS = ("task", "probe", "forfeit", "confidence", "forfeit_task")
+
+#: The channels that map one-to-one onto a ``thinking_text_<channel>``
+#: field in the trace. ``forfeit_task`` is composed from two of these
+#: (spec 5.1) and therefore has no trace field of its own.
+_TRACE_TEXT_CHANNELS = ("task", "probe", "forfeit", "confidence")
 
 
 @dataclass(frozen=True)
@@ -94,7 +99,10 @@ def load_turns(
     Args:
         run: The run directory to read.
         include_text: When True, carry the per-call ``thinking_text_*``
-            traces through. They are large (~2 kB/turn/channel), so the
+            traces through as ``text_<channel>`` for every channel in
+            :data:`TEXT_CHANNELS` — including ``text_forfeit_task``, which
+            has no trace field and is composed here from the decision CoT
+            then the task CoT. They are large (~2 kB/turn/channel), so the
             regression path leaves them out.
         legacy: Passed to
             :func:`squid_game.evaluation.shared.threat_level.threat_level_of`.
@@ -168,12 +176,25 @@ def load_turns(
                     "ri_task": _thinking_tokens(record, "ri_task"),
                     "ri_probe": _thinking_tokens(record, "ri_probe"),
                     "ri_forfeit": _thinking_tokens(record, "ri_forfeit"),
+                    # Confidence call (2026-09-04). ``p_threat_self`` is the
+                    # SMI denominator, not a probe feature -- see
+                    # ``embeddings.SCALAR_FEATURES``.
+                    "p_threat_self": record.get("p_threat_self"),
+                    "ri_confidence": _thinking_tokens(
+                        record, "ri_confidence"
+                    ),
                 }
                 if include_text:
-                    for channel in TEXT_CHANNELS:
+                    for channel in _TRACE_TEXT_CHANNELS:
                         row[f"text_{channel}"] = (
                             record.get(f"thinking_text_{channel}") or ""
                         )
+                    # Composite channel (spec 5.1): decision CoT then task
+                    # CoT; whichever side exists when the other is empty.
+                    parts = [
+                        p for p in (row["text_forfeit"], row["text_task"]) if p
+                    ]
+                    row["text_forfeit_task"] = "\n\n".join(parts)
                 rows.append(row)
                 score_before += float(record.get("reward_received") or 0.0)
 
@@ -189,18 +210,41 @@ def load_all(
     include_text: bool = False,
     models: list[str] | None = None,
     legacy: bool = False,
+    smi_table: Path | None = None,
 ) -> pd.DataFrame:
-    """Concatenated turn table across every discovered run."""
+    """Concatenated turn table across every discovered run.
+
+    Args:
+        smi_table: Optional ``smi_turns.csv`` written by
+            ``scripts.analysis.resample_survival_motive``. When given, its
+            ``q``/``p``/``smi`` columns are left-merged onto the turn table
+            on ``(session_id, turn_number)``. The merge is deliberately a
+            plain left join: a turn the resampler skipped (or one whose
+            ``p`` was 0) keeps its row and carries NaN, so the row count
+            of the returned frame never depends on the resample coverage.
+    """
     runs = discover_runs(root)
     if models:
         wanted = set(models)
         runs = [r for r in runs if r.model in wanted]
         if not runs:
             raise ValueError(f"no run matched --model {sorted(wanted)}")
-    return pd.concat(
+    frame = pd.concat(
         [
             load_turns(run, include_text=include_text, legacy=legacy)
             for run in runs
         ],
         ignore_index=True,
     )
+    if smi_table is not None:
+        from squid_game.evaluation.behavioral.survival_motive import (
+            load_smi_table,
+        )
+
+        smi = load_smi_table(Path(smi_table))[
+            ["session_id", "turn_number", "q", "p", "smi"]
+        ]
+        frame = frame.merge(
+            smi, on=["session_id", "turn_number"], how="left"
+        )
+    return frame
