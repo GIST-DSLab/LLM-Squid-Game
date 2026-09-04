@@ -263,5 +263,13 @@ def resample_run(
 
 
 def load_smi_table(path: Path) -> pd.DataFrame:
-    """Read ``smi_turns.csv``; missing :data:`SMI_COLUMNS` come back as NaN."""
-    return pd.read_csv(path).reindex(columns=list(SMI_COLUMNS))
+    """Read ``smi_turns.csv``; missing :data:`SMI_COLUMNS` come back as NaN.
+
+    ``session_id`` is forced to ``str``: an all-digit season id would
+    otherwise be inferred as int64 here and stay ``str`` in the turn frame,
+    so the probe's merge on ``(session_id, turn_number)`` would silently
+    match nothing.
+    """
+    return pd.read_csv(path, dtype={"session_id": str}).reindex(
+        columns=list(SMI_COLUMNS)
+    )

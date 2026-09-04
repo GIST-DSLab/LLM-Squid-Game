@@ -182,3 +182,69 @@ class TestLoadSmiTable:
         assert table.iloc[0].smi == pytest.approx(1.25)
         for column in ("framing", "threat_level", "lives_before", "n", "n_valid"):
             assert table[column].isna().all(), column
+
+    def test_all_digit_session_id_stays_a_string(self, tmp_path: Path) -> None:
+        """An all-digit season id must not be inferred as int64.
+
+        The turn frame carries ``session_id`` as ``str``, so an int64 column
+        here would make the probe's merge match nothing — silently, with no
+        error and an all-NaN ``smi``.
+        """
+        path = tmp_path / "digits.csv"
+        path.write_text(
+            "session_id,turn_number,q,p,smi\n123456789012,1,0.5,0.4,1.25\n"
+        )
+        table = load_smi_table(path)
+        assert table["session_id"].dtype == object
+        assert table.iloc[0].session_id == "123456789012"
+
+
+class TestResampleCliGuards:
+    """``--workers`` and provider-seed guards (both must exit 2)."""
+
+    @staticmethod
+    def _run_dir(tmp_path: Path, **provider_over) -> Path:
+        run_dir = tmp_path / "run"
+        run_dir.mkdir()
+        provider = {
+            "provider": "ollama_cloud", "model": "gpt-oss:120b-cloud",
+            "temperature": 1.0, "max_tokens": 512,
+        }
+        provider.update(provider_over)
+        (run_dir / "experiment_config.json").write_text(
+            json.dumps({"seasons": [{"provider_config": provider}]})
+        )
+        return run_dir
+
+    def _main(self, monkeypatch, argv: list[str]) -> None:
+        from scripts.analysis import resample_survival_motive as cli
+
+        monkeypatch.setattr("sys.argv", ["resample_survival_motive", *argv])
+        cli.main()
+
+    @pytest.mark.parametrize("provider", ["codex_cli", "claude_code"])
+    def test_workers_gt_1_rejected_for_shared_workdir_providers(
+        self, tmp_path: Path, monkeypatch, capsys, provider: str
+    ) -> None:
+        run_dir = self._run_dir(tmp_path, provider=provider)
+        with pytest.raises(SystemExit) as exc:
+            self._main(monkeypatch, [str(run_dir), "--workers", "2", "--dry-run"])
+        assert exc.value.code == 2
+        assert "workdir" in capsys.readouterr().err
+
+    def test_workers_gt_1_allowed_for_cloud_providers(
+        self, tmp_path: Path, monkeypatch, capsys
+    ) -> None:
+        run_dir = self._run_dir(tmp_path)
+        self._main(monkeypatch, [str(run_dir), "--workers", "4", "--dry-run"])
+        assert "replayable turns" in capsys.readouterr().out
+
+    def test_fixed_provider_seed_rejected(
+        self, tmp_path: Path, monkeypatch, capsys
+    ) -> None:
+        """A seeded provider returns the same completion N times → q ∈ {0, 1}."""
+        run_dir = self._run_dir(tmp_path, seed=7)
+        with pytest.raises(SystemExit) as exc:
+            self._main(monkeypatch, [str(run_dir), "--dry-run"])
+        assert exc.value.code == 2
+        assert "seed" in capsys.readouterr().err

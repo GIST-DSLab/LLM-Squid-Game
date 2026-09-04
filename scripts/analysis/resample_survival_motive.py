@@ -8,6 +8,19 @@ Usage
 The provider is rebuilt from ``<run_dir>/experiment_config.json`` (first
 season's ``provider_config``); temperature / max_tokens come from there too
 unless overridden.
+
+Two provider properties are rejected outright rather than warned about:
+
+* ``--workers > 1`` with ``codex_cli`` / ``claude_code``. Those providers
+  share one scratch working directory per instance, and the resampler
+  shares a single provider object across threads, so concurrent calls
+  would collide in that directory.
+* A fixed ``seed`` in the recorded ``provider_config``. SMI is
+  ``q = n_forfeit / n_valid`` over N *independent* replays of the same
+  decision call; a seeded provider returns the same completion every time,
+  which collapses q to exactly 0 or 1 and makes the index meaningless.
+  Re-run with the seed removed from the config, or resample a run that had
+  none.
 """
 
 from __future__ import annotations
@@ -22,6 +35,11 @@ from squid_game.evaluation.behavioral.survival_motive import (
 )
 from squid_game.models.config import ProviderConfig
 from squid_game.providers.factory import build_provider
+
+
+# Agent-harness providers: one scratch working directory per instance, so a
+# single shared provider object cannot be called from several threads.
+_SINGLE_WORKDIR_PROVIDERS = frozenset({"codex_cli", "claude_code"})
 
 
 def _provider_config(run_dir: Path) -> ProviderConfig:
@@ -49,6 +67,17 @@ def main() -> None:
     args = parser.parse_args()
 
     pcfg = _provider_config(args.run_dir)
+    if pcfg.provider in _SINGLE_WORKDIR_PROVIDERS and args.workers > 1:
+        parser.error(
+            f"--workers > 1 is unsafe with provider {pcfg.provider!r}: "
+            "one shared workdir per instance"
+        )
+    if getattr(pcfg, "seed", None) is not None:
+        parser.error(
+            f"provider_config has a fixed seed ({pcfg.seed}); the N replays "
+            "would be identical, collapsing q to 0 or 1 and making smi = q/p "
+            "meaningless. Resample a run whose provider had no seed."
+        )
     temperature = args.temperature if args.temperature is not None else pcfg.temperature
     max_tokens = args.max_tokens if args.max_tokens is not None else pcfg.max_tokens
     if args.dry_run:
