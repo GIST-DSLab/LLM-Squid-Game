@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # regenerable smoke/main runs (see CLAUDE.md "벤치마크 과제" and the
 # outputs/lives_threat_*/ rule). They are raw session data, so they belong
 # under outputs/, but they are never tracked and may or may not exist.
-_UNTRACKED_RUN_PREFIXES = ("benchmark_", "lives_threat_")
+_UNTRACKED_RUN_PREFIXES = ("benchmark_", "lives_threat_", "survival_motive_")
 
 
 def test_outputs_holds_only_raw_data() -> None:
