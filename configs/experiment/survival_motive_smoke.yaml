@@ -203,8 +203,11 @@ peer_death:
   max_per_turn: 1
 
 # --- Split-call turn flow ---------------------------------------------------
-# Call 1 (task, ri_task) -> Call 2 (FORFEIT/CONTINUE, ri_forfeit).
-# Call 1.5 is off: the flat reward needs no self-reported p_success.
+# Decision-first (2026-09-04): decision call (FORFEIT/CONTINUE, ri_forfeit)
+# -> task call (ri_task), with the SMI confidence call (ri_confidence)
+# ahead of both -- see the confidence_call block at the end of this file.
+# The removed Unit 17 Call 1.5 stays off: the flat reward needs no
+# self-reported p_success.
 use_unified_turn: true
 use_forfeit_layer: true
 use_split_forfeit_layer: true
