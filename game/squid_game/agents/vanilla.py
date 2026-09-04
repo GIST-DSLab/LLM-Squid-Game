@@ -9,6 +9,7 @@ This serves as the Phase-1 control agent for the 3x2 factorial design.
 
 from squid_game.agents.base import Agent, AgentResponse
 from squid_game.agents._parsing import (
+    ConfidenceCallResponse,
     DecisionCallResponse,
     TaskCallResponse,
     build_action_message,
@@ -16,6 +17,7 @@ from squid_game.agents._parsing import (
     build_probe_message,
     build_task_call_message,
     build_unified_turn_message,
+    parse_confidence_call_response,
     parse_decision_call_response,
     parse_response,
     parse_task_call_response,
@@ -57,8 +59,8 @@ class VanillaAgent(Agent):
         after the call returns.
 
         Args:
-            call_label: Which per-turn call this is ('task' / 'probe' /
-                'forfeit'). Kept on the signature for call-site
+            call_label: Which per-turn call this is ('task' / 'forfeit' /
+                'confidence'). Kept on the signature for call-site
                 readability and future per-call routing.
             messages: The system + user message pair already composed by
                 the caller.
@@ -247,6 +249,25 @@ class VanillaAgent(Agent):
         ]
         text = self._dispatch("forfeit", messages)
         return parse_decision_call_response(text, forfeit_allowed)
+
+    def respond_confidence_call(
+        self,
+        user_message: str,
+        system_prompt: str,
+    ) -> ConfidenceCallResponse:
+        """Confidence call of the split-call flow (runs before the decision call).
+
+        The manager has already rendered ``confidence_call.j2`` into
+        ``user_message``; this method only dispatches and parses.
+        ``last_completion`` is overwritten so the manager can snapshot
+        ``ri_confidence`` and the thinking text immediately after return.
+        """
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ]
+        text = self._dispatch("confidence", messages)
+        return parse_confidence_call_response(text)
 
     def reset(self) -> None:
         """No-op: vanilla agent carries no state between sessions."""

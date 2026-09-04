@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from squid_game.agents._parsing import (
+        ConfidenceCallResponse,
         DecisionCallResponse,
         TaskCallResponse,
     )
@@ -232,6 +233,23 @@ class Agent(ABC):
         raise NotImplementedError(
             f"{type(self).__name__} does not implement respond_decision_call. "
             "Use use_split_forfeit_layer=False or add an override."
+        )
+
+    def respond_confidence_call(
+        self,
+        user_message: str,
+        system_prompt: str,
+    ) -> "ConfidenceCallResponse":
+        """Confidence call (SMI) — issued before the decision call.
+
+        Solicits a single ``P_THREAT: <0-100>`` line. The manager must
+        inspect ``last_completion`` immediately after this call to record
+        ``ri_confidence`` and the CoT that is then rendered into the
+        decision call. Concrete default raises
+        :class:`NotImplementedError`; :class:`VanillaAgent` overrides it.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} does not implement the confidence call"
         )
 
     @abstractmethod
