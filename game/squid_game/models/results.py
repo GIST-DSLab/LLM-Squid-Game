@@ -405,7 +405,9 @@ class TurnResult(BaseModel):
         le=100,
         description=(
             "SMI confidence call: agent's self-reported probability "
-            "∈ [0, 100] that it will be threatened in this round, parsed "
+            "∈ [0, 100] that it will lose a life / an attempt in this "
+            "round (or, on legacy non-lives runs, answer it "
+            "incorrectly), parsed "
             "from a single ``P_THREAT: XX`` line. None when the confidence "
             "call is disabled, on Cell 0, and on a malformed response."
         ),

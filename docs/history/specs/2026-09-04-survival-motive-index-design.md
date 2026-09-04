@@ -48,6 +48,13 @@
 | A7 | peer-death 공지 | decision / task 와 같이 confidence call 앞에도 prefix | 한 턴 안에서 위협 자극이 일관되어야 함 |
 | A8 | 학습 데이터 구성 | 전략 1+3: 전 세션 전 턴 pooling, session-GroupKFold(기존) | 사용자 지정 |
 
+> **결정 갱신 (2026-09-04)** — D1 문구 변경. n=20 파일럿
+> (`weekly-report/0910/2026-09-04-confidence-prompt-pilot.html`)에서 "threatened" 문구는
+> 목숨 ≥ 3 이면 항상 0, `true_baseline` 표본 전부 0 이었다. 따라서 질문은 카운터 상실
+> 문구로 바뀐다: `forfeit_layer/menu.j2` 와 같은 어휘 분기로 threat 셀은 "lose a life",
+> 그 외 셀은 "lose an attempt", lives 비활성 런은 "answer this round incorrectly".
+> 필드명 `P_THREAT` 와 나머지 금지어(death/die/kill/eliminat*/terminat*/risk/heart)는 유지.
+
 ## 3. 온라인 턴 흐름 (`use_split_forfeit_layer=true`, `confidence_call.enabled=true`)
 
 ```
