@@ -30,11 +30,14 @@ total_turns: 75
 # function) still consistent with the clues; they are written by
 #   uv run python -m scripts.dev.calibrate_signal_puzzle_ladder
 # and must not be edited by hand. Families and n_clues are the design.
-# Tier 2 uses 3 clues: 2 clues never pin the query answer over the
-# four-family union (see plan notes).
+# Clue counts descend across the ladder: fewer clues leave more
+# hypotheses standing, which is how |H| rises monotonically from tier 1
+# to tier 5 (the calibration script checks that). 3 is the floor —
+# 2 clues never pin the query answer over the four-family union
+# (see plan notes).
 puzzle_ladder:
-  - {tier: 1, turns: 6, families: [A],          n_clues: 3, h_lo: 1, h_hi: 1000000}
-  - {tier: 2, turns: 6, families: [A, D],       n_clues: 3, h_lo: 1, h_hi: 1000000}
-  - {tier: 3, turns: 6, families: [B],          n_clues: 4, h_lo: 1, h_hi: 1000000}
-  - {tier: 4, turns: 6, families: [C],          n_clues: 4, h_lo: 1, h_hi: 1000000}
-  - {tier: 5, turns: 6, families: [A, B, C, D], n_clues: 3, h_lo: 1, h_hi: 1000000}
+  - {tier: 1, turns: 6, families: [A],          n_clues: 12, h_lo: 5,  h_hi: 17}
+  - {tier: 2, turns: 6, families: [A, D],       n_clues: 10, h_lo: 1,  h_hi: 17}
+  - {tier: 3, turns: 6, families: [B],          n_clues: 8,  h_lo: 2,  h_hi: 21}
+  - {tier: 4, turns: 6, families: [C],          n_clues: 4,  h_lo: 4,  h_hi: 66}
+  - {tier: 5, turns: 6, families: [A, B, C, D], n_clues: 3,  h_lo: 35, h_hi: 113}

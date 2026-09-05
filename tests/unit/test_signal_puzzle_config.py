@@ -86,6 +86,8 @@ class TestRepoYaml:
         assert [s.families for s in cfg.puzzle_ladder] == [
             ["A"], ["A", "D"], ["B"], ["C"], ["A", "B", "C", "D"]
         ]
-        # tier 2 carries 3 clues, not 2: two clues never pin the query answer
-        # over the four-family union (measured in Task 2).
-        assert [s.n_clues for s in cfg.puzzle_ladder] == [3, 3, 4, 4, 3]
+        # Clue counts descend so that |H| rises across the ladder; 3 is the
+        # floor because two clues never pin the query answer over the
+        # four-family union (measured in Task 2). Written by
+        # scripts/dev/calibrate_signal_puzzle_ladder.py (Task 5).
+        assert [s.n_clues for s in cfg.puzzle_ladder] == [12, 10, 8, 4, 3]
