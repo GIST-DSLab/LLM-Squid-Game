@@ -7,7 +7,6 @@ import pytest
 from squid_game.models.enums import Difficulty, ForfeitCondition, Framing
 from squid_game.models.state import GameState, TurnContext
 from squid_game.tasks.signal_game.module import SignalGameModule
-from squid_game.tasks.signal_game.puzzle import enumerate_hypotheses
 from squid_game.tasks.signal_game.rules import ACTIONS
 
 
@@ -146,7 +145,33 @@ class TestScore:
         assert out.metadata["rule_match_score"] == 0.0
         assert out.metadata["rule_parsed_family"] is None
 
-    def test_partial_hypothesis_scores_between(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+    def test_rule_parse_failed_flag(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        """Spec §8.3: an unparseable RULE scores 0.0 and is flagged as such."""
+        md = puzzle_task.prepare(state, _ctx(1)).metadata
+        act = md["correct_action"]
+
+        bad = puzzle_task.score(puzzle_task.parse_response(
+            f"RULE: it depends on colour somehow\nACTION: {act}"), state)
+        assert bad.metadata["rule_parse_failed"] is True
+        assert bad.metadata["rule_match_score"] == 0.0
+
+        good = puzzle_task.score(puzzle_task.parse_response(
+            f"RULE: {md['hidden_rule']}\nACTION: {act}"), state)
+        assert good.metadata["rule_parse_failed"] is False
+        assert good.metadata["rule_match_score"] == 100.0
+
+        # The explicit "I don't know" placeholders are parse failures too.
+        placeholder = puzzle_task.score(puzzle_task.parse_response(
+            f"RULE: exploring\nACTION: {act}"), state)
+        assert placeholder.metadata["rule_parse_failed"] is True
+        assert placeholder.metadata["rule_match_score"] == 0.0
+
+        # No RULE at all is not a parse failure — nothing was submitted.
+        missing = puzzle_task.score(puzzle_task.parse_response(f"ACTION: {act}"), state)
+        assert missing.metadata["rule_parse_failed"] is None
+        assert missing.metadata["rule_match_score"] is None
+
+    def test_action_swapped_hypothesis_scores_zero(self, puzzle_task: SignalGameModule, state: GameState) -> None:
         md = puzzle_task.prepare(state, _ctx(1)).metadata
         # Same rule but with the two actions swapped -> 0 % agreement.
         rule = md["hidden_rule"]
@@ -166,3 +191,23 @@ class TestSequentialUnchanged:
         m.initialize(difficulty=Difficulty.EASY, seed=42)
         md = m.prepare(state, _ctx(1)).metadata
         assert "puzzle_tier" not in md and "clues" not in md
+
+    def test_sequential_score_has_no_puzzle_keys(self, state: GameState) -> None:
+        m = SignalGameModule()
+        m.initialize(difficulty=Difficulty.EASY, seed=42)
+        md = m.prepare(state, _ctx(1)).metadata
+        out = m.score(m.parse_response(
+            f"RULE: {md['hidden_rule']}\nACTION: {md['correct_action']}"), state)
+        for key in ("puzzle_tier", "rule_family", "n_consistent_hypotheses",
+                    "rule_parsed_family", "rule_parse_failed"):
+            assert key not in out.metadata, key
+        assert out.metadata["rule_match_score"] is not None
+
+    def test_sequential_placeholder_rule_still_scores_zero(self, state: GameState) -> None:
+        """The "exploring" / "no rule" short-circuit is untouched off puzzle mode."""
+        m = SignalGameModule()
+        m.initialize(difficulty=Difficulty.EASY, seed=42)
+        md = m.prepare(state, _ctx(1)).metadata
+        out = m.score(m.parse_response(
+            f"RULE: exploring\nACTION: {md['correct_action']}"), state)
+        assert out.metadata["rule_match_score"] == 0.0

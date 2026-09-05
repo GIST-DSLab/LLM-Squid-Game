@@ -50,6 +50,7 @@ from squid_game.tasks.signal_game.signals import (
 )
 from squid_game.tasks.signal_game.puzzle import (
     Puzzle,
+    PuzzleRule,
     functional_match_score,
     generate_puzzle,
     parse_rule_text,
@@ -774,8 +775,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             ``per_turn_puzzle`` mode ``rule_match_score`` comes from
             :meth:`score_probe_functional` instead, and the metadata
             also carries ``puzzle_tier``, ``rule_family``,
-            ``n_consistent_hypotheses`` and ``rule_parsed_family``
-            (the family the agent's RULE parsed as, or ``None``).
+            ``n_consistent_hypotheses``, ``rule_parsed_family`` (the
+            family the agent's RULE parsed as, or ``None``) and
+            ``rule_parse_failed`` (spec §8.3 — ``True`` when the RULE
+            text did not parse and so scored ``0.0``, ``False`` when it
+            did, ``None`` when no RULE was emitted at all, mirroring
+            ``rule_match_score``).
         """
         self._ensure_initialized()
         del state  # unused; signature mirrors the ABC
@@ -805,14 +810,20 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         # backward compatible.
         rule_match_score: float | None = None
         rule_parsed_family: str | None = None
+        rule_parse_failed: bool | None = None
         if isinstance(rule_hypothesis, str) and rule_hypothesis.strip():
             normalised = rule_hypothesis.strip().lower()
-            if normalised in ("exploring", "no rule"):
-                rule_match_score = 0.0
-            elif self._signal_mode == "per_turn_puzzle":
+            if self._signal_mode == "per_turn_puzzle":
+                # Parse once and reuse: the family letter and the
+                # functional score are two readings of the same parse.
+                # "exploring" / "no rule" need no special case here —
+                # they parse as None, which is exactly a parse failure.
                 parsed = parse_rule_text(rule_hypothesis)
+                rule_parse_failed = parsed is None
                 rule_parsed_family = parsed.family if parsed is not None else None
-                rule_match_score = self.score_probe_functional(rule_hypothesis)
+                rule_match_score = self._functional_match(parsed)
+            elif normalised in ("exploring", "no rule"):
+                rule_match_score = 0.0
             else:
                 rule_match_score = self.score_probe(rule_hypothesis)
 
@@ -846,6 +857,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     "rule_family": self._current_puzzle.rule.family,
                     "n_consistent_hypotheses": self._current_puzzle.n_consistent,
                     "rule_parsed_family": rule_parsed_family,
+                    "rule_parse_failed": rule_parse_failed,
                 }
             )
         return TaskOutcome(success_factor=success_factor, metadata=metadata)
@@ -953,13 +965,20 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         parsed hypothesis agrees with this turn's hidden rule (spec §8).
 
         Unparseable text scores 0.0, as does a call made before any
-        puzzle has been prepared.
+        puzzle has been prepared. :meth:`score` does not go through this
+        wrapper — it parses once itself and calls
+        :meth:`_functional_match` — so the RULE text is never parsed
+        twice per turn.
         """
         self._ensure_initialized()
         if self._current_puzzle is None:
             return 0.0
-        parsed = parse_rule_text(response)
-        if parsed is None:
+        return self._functional_match(parse_rule_text(response))
+
+    def _functional_match(self, parsed: PuzzleRule | None) -> float:
+        """Agreement (0-100) between an already-parsed hypothesis and
+        this turn's puzzle rule; 0.0 when either is missing."""
+        if parsed is None or self._current_puzzle is None:
             return 0.0
         return functional_match_score(parsed, self._current_puzzle.rule)
 
