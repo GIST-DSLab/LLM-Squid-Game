@@ -1,0 +1,20 @@
+=== Signal Task ===
+Each round you will see a few example signals, each paired with the action that this round's hidden rule assigns to it, followed by one new signal. Choose the action the same rule assigns to the new signal.
+
+A signal has three attributes:
+- Color: [{{ colors_str }}]
+- Shape: [{{ shapes_str }}]
+- Number: [{{ numbers_str }}]
+
+Available actions: [{{ actions_str }}]
+
+The hidden rule changes every round. Each round's rule takes one of these forms (which one is not announced):
+  1. "If <attribute> is <value> then <action>, otherwise <action>."
+  2. "If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action>; if only <attr_1> is <val_1> then <action>; otherwise <action>."
+  3. "If <attr_1> is <val_1> then <action>; else if <attr_2> is <val_2> then <action>; otherwise <action>."
+     (The first clause whose condition holds decides the action.)
+  4. "If number is <condition> then <action>, otherwise <action>."
+     (<condition> is one of: at least N, at most N, odd, even.)
+The actions named inside one rule are all different from each other.
+All examples in a round follow that round's rule, and the examples always determine the correct action for the new signal.
+===================
