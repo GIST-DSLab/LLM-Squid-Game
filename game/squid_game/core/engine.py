@@ -113,7 +113,7 @@ class GameEngine:
             peer_death: Peer-elimination announcement settings, used
                 only when ``lives.enabled=True`` and the season's
                 framing carries a non-zero threat level.
-            confidence_call: SMI Phase 1.5 settings, passed through from
+            confidence_call: SDI Phase 1.5 settings, passed through from
                 ``ExperimentConfig.confidence_call``. ``None`` is treated
                 as ``ConfidenceCallConfig()`` (``enabled=False``), so a
                 caller that never passes this keeps the two-call
@@ -267,6 +267,7 @@ class GameEngine:
                 max_history_turns=task_cfg.max_history_turns,
                 lives_enabled=lives_enabled,
                 confidence_call_enabled=self._confidence_call.enabled,
+                confidence_condition=self._confidence_call.condition,
             )
         else:
             legacy_mgr = TurnManager(

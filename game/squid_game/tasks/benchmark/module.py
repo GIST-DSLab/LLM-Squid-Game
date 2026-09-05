@@ -108,11 +108,24 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
         ``PoolExhaustedError`` mid-season — killing an unattended run part-way
         through. Fail at startup with a message that names both numbers.
 
+        ``fit_ladder=True`` (Web Arena human play only) compresses the
+        config ladder to ``total_turns`` with
+        :meth:`DifficultyLadder.fitted`, so a short interactive game still
+        climbs every band. The experiment engine never passes it: LLM
+        seasons keep the config ladder verbatim.
+
         Raises:
             ValueError: If the season is longer than the ladder covers.
         """
         del difficulty
         total_turns = kwargs.get("total_turns")
+        self._ladder = DifficultyLadder.from_config(self._config)
+        if (
+            kwargs.get("fit_ladder")
+            and isinstance(total_turns, int)
+            and 0 < total_turns < self._ladder.total_turns
+        ):
+            self._ladder = self._ladder.fitted(total_turns)
         if isinstance(total_turns, int) and total_turns > self._ladder.total_turns:
             raise ValueError(
                 f"benchmark task '{self.name}': the experiment config asks for "
@@ -141,6 +154,11 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
     def is_completed(self) -> bool:
         """Benchmark seasons always play out their configured turns."""
         return False
+
+    @property
+    def ladder(self) -> DifficultyLadder:
+        """The turn -> band ladder in force for this session."""
+        return self._ladder
 
     def _build_sampler(self) -> None:
         assert self._items is not None

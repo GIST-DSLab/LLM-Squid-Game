@@ -35,6 +35,19 @@ COPY db ./db
 COPY web/squid_arena ./web/squid_arena
 RUN uv sync --frozen --extra postgres --no-dev
 
+# Benchmark tasks on the web (2026-09-05). The Omni-MATH human task reads its
+# difficulty ladder from configs/tasks/omni_math.yaml and its questions from
+# data/benchmarks/omni_math.jsonl; neither is Python, so neither was copied
+# above. The fetch script is stdlib-only and Omni-MATH is a public download
+# (no token), so the questions are pulled at build time instead of being
+# committed. GPQA is deliberately NOT fetched: it must never be served to a
+# public page. If the download fails the image still builds; POST /api/new_game
+# for omni_math then answers 503 with the fetch command.
+COPY configs/tasks ./configs/tasks
+COPY scripts/dev/fetch_benchmarks.py ./scripts/dev/fetch_benchmarks.py
+RUN python scripts/dev/fetch_benchmarks.py --which omni_math --out data/benchmarks \
+    || echo "WARNING: Omni-MATH download failed; omni_math will be unavailable"
+
 # Render (and most PaaS hosts) inject $PORT at runtime; default to 8502 for
 # local `docker run` parity with the non-Docker dev workflow.
 ENV PORT=8502

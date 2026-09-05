@@ -82,3 +82,19 @@ class TestTurnResultConfidenceFields:
         constraints = {type(m).__name__: m for m in info.metadata}
         assert "Ge" in constraints and constraints["Ge"].ge == 0
         assert "Le" in constraints and constraints["Le"].le == 100
+
+
+class TestConfidenceCondition:
+    def test_default_is_heart_loss(self) -> None:
+        assert ConfidenceCallConfig().condition == "heart_loss"
+        assert _experiment().confidence_call.condition == "heart_loss"
+
+    def test_gunshot_from_yaml_dict(self) -> None:
+        cfg = _experiment(
+            confidence_call={"enabled": True, "condition": "gunshot_seungpil"}
+        )
+        assert cfg.confidence_call.condition == "gunshot_seungpil"
+
+    def test_unknown_condition_rejected(self) -> None:
+        with pytest.raises(ValueError):
+            _experiment(confidence_call={"enabled": True, "condition": "death"})

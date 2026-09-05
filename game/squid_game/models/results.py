@@ -392,19 +392,19 @@ class TurnResult(BaseModel):
             "metacognitive or task-layer reasoning."
         ),
     )
-    # ----- Confidence call + replay inputs (2026-09-04, SMI) -------------
+    # ----- Confidence call + replay inputs (2026-09-04, SDI) -------------
     # Populated only when ``confidence_call.enabled=True`` AND the split-
     # call decision call ran on this turn (Cell 0 never issues it). The
     # two replay fields below are written on EVERY split-call turn that
     # issued a decision call, so the offline resampler
-    # (``evaluation/behavioral/survival_motive.py``) can re-send the
+    # (``evaluation/behavioral/survival_drive.py``) can re-send the
     # decision call byte-for-byte.
     p_threat_self: int | None = Field(
         default=None,
         ge=0,
         le=100,
         description=(
-            "SMI confidence call: agent's self-reported probability "
+            "SDI confidence call: agent's self-reported probability "
             "∈ [0, 100] that it will lose a life / an attempt in this "
             "round (or, on legacy non-lives runs, answer it "
             "incorrectly), parsed "
@@ -415,19 +415,19 @@ class TurnResult(BaseModel):
     ri_confidence: ReasoningInvestment | None = Field(
         default=None,
         description=(
-            "SMI: reasoning-investment metrics for the confidence call "
+            "SDI: reasoning-investment metrics for the confidence call "
             "only. Not folded into ``reasoning_investment`` (which stays "
             "the decision + task sum for backward compatibility)."
         ),
     )
     raw_response_confidence: str | None = Field(
         default=None,
-        description="SMI: raw confidence-call output (ideally ``P_THREAT: XX``).",
+        description="SDI: raw confidence-call output (ideally ``P_THREAT: XX``).",
     )
     thinking_text_confidence: str | None = Field(
         default=None,
         description=(
-            "SMI: thinking-block text of the confidence call. This is the "
+            "SDI: thinking-block text of the confidence call. This is the "
             "CoT that is rendered into the decision call's user body."
         ),
     )

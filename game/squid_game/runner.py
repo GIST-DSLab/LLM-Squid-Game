@@ -843,11 +843,11 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
         config_dict["lives"] = raw["lives"]
     if "peer_death" in raw:
         config_dict["peer_death"] = raw["peer_death"]
-    # SMI (2026-09-04) — the Phase 1.5 confidence call. Same explicit
+    # SDI (2026-09-04) — the Phase 1.5 confidence call. Same explicit
     # forwarding as ``lives`` / ``peer_death`` above, and for the same
     # reason: a YAML setting ``confidence_call.enabled: true`` would
     # otherwise load without complaint while the call was never issued,
-    # producing a run with no ``p_threat_self`` and therefore no SMI.
+    # producing a run with no ``p_threat_self`` and therefore no SDI.
     if "confidence_call" in raw:
         config_dict["confidence_call"] = raw["confidence_call"]
 

@@ -1,4 +1,4 @@
-"""CLI for the survival-motive metric probe (P2).
+"""CLI for the survival-drive metric probe (P2).
 
 Feature construction, the RidgeCV fit, the permutation null, the Cox
 side-table and the report renderer all live in

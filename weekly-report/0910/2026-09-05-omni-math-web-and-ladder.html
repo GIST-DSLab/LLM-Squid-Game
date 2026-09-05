@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omni-MATH 웹 플레이와 난이도 사다리</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --paper:#f5f5f5; --ink:#2d3142; --muted:#4f5d75; --accent:#eb6c36; --blue:#2e5aa8; --green:#2f8f5b; --red:#c8453f;
+      --line:#d9dbe1; --card:#ffffff;
+      --sans:'Geist', system-ui, sans-serif; --serif:'Instrument Serif', serif; --mono:'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--sans); background: var(--paper); color: var(--ink); padding: 3rem 2rem 5rem; line-height: 1.6; }
+    .frame { max-width: 1080px; margin: 0 auto; }
+    .eyebrow { font-family: var(--mono); font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.7rem, 2.6vw + .8rem, 2.4rem); letter-spacing: -.02em; line-height: 1.15; margin-bottom: .6rem; }
+    h2 { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; margin: 3rem 0 .9rem; letter-spacing: -.01em; }
+    h3 { font-size: 1rem; font-weight: 600; margin: 1.6rem 0 .5rem; }
+    p { margin-bottom: .8rem; }
+    .lede { font-size: 1.05rem; color: var(--muted); max-width: 62ch; }
+    .meta { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-bottom: 2rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 1.4rem 0; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+    .card .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+    .card .v { font-family: var(--serif); font-size: 1.45rem; line-height: 1.2; margin-bottom: .4rem; }
+    .card .s { font-size: .86rem; color: var(--muted); }
+    .ok { color: var(--green); } .warn { color: var(--accent); } .bad { color: var(--red); }
+    code, pre { font-family: var(--mono); font-size: .82rem; }
+    code { background: #ebedf2; padding: .1em .4em; border-radius: 4px; }
+    pre { background: #22252e; color: #e8eaf0; padding: 14px 16px; border-radius: 10px; overflow-x: auto; margin: .8rem 0 1.2rem; line-height: 1.5; }
+    pre code { background: none; padding: 0; color: inherit; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: .8rem 0 1.4rem; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: #eef0f4; }
+    td.num, th.num { text-align: right; font-family: var(--mono); font-size: .82rem; }
+    tr:last-child td { border-bottom: none; }
+    .tbl-wrap { overflow-x: auto; }
+    .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 1rem 0 1.4rem; counter-reset: step; }
+    .step { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 12px 12px 14px; position: relative; font-size: .84rem; }
+    .step::before { counter-increment: step; content: counter(step); position: absolute; top: -10px; left: 10px; background: var(--accent); color: #fff; font-family: var(--mono); font-size: .66rem; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; }
+    .step b { display: block; font-size: .9rem; margin-bottom: .25rem; }
+    .step code { font-size: .74rem; }
+    .step.web { border-color: var(--blue); }
+    .step.web::before { background: var(--blue); }
+    .note { border-left: 3px solid var(--accent); background: #fff6f1; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 1rem 0; font-size: .9rem; }
+    .note.blue { border-color: var(--blue); background: #f0f4fb; }
+    .bar { display: inline-block; height: 10px; background: var(--blue); border-radius: 3px; vertical-align: middle; }
+    .bar.lo { background: var(--accent); }
+    .band-row td:first-child { font-family: var(--mono); }
+    figure { margin: 1rem 0 1.6rem; }
+    figure img { width: 100%; max-width: 760px; border: 1px solid var(--line); border-radius: 12px; display: block; }
+    figcaption { font-size: .82rem; color: var(--muted); margin-top: .5rem; }
+    ul, ol { margin: 0 0 .9rem 1.3rem; }
+    li { margin-bottom: .3rem; }
+    .small { font-size: .84rem; color: var(--muted); }
+    .ladder { display: flex; gap: 4px; margin: .4rem 0 1rem; flex-wrap: wrap; }
+    .rung { font-family: var(--mono); font-size: .72rem; padding: 4px 0; text-align: center; border-radius: 6px; color: #fff; min-width: 34px; }
+    .b1,.b2 { background:#3fb37f; } .b3,.b4 { background:#c9a227; } .b5,.b6 { background:#e08a3c; } .b7,.b8 { background:#e0575b; }
+  </style>
+</head>
+<body>
+<div class="frame">
+  <p class="eyebrow">Weekly report · 0910 · 2026-09-05</p>
+  <h1>Omni-MATH를 웹 아레나에서 돌리기, 그리고 난이도 사다리는 정말 올라가는가</h1>
+  <p class="lede">사람이 브라우저에서 Omni-MATH 문제를 풀며 Squid Game 캠페인을 진행할 수 있게 백엔드·프론트엔드를 연결했다. 턴이 진행될수록 문제가 어려워지는 "사다리"가 코드·기록·정답률 세 층위에서 실제로 작동하는지 확인했고, 그 결과를 놓고 시즌을 30턴에서 20턴으로 줄이며 사다리를 다시 배분했다.</p>
+  <p class="meta">branch feat/survival-drive-index · 18 files changed (uncommitted) · 28 new tests · 검증 데이터: outputs/benchmark_threat3_omni_math_* 4 models / 687 turns · 3차 갱신 14:30 (20턴 사다리 확정)</p>
+
+  <div class="cards">
+    <div class="card"><div class="k">웹 플레이</div><div class="v ok">동작 확인</div><div class="s">Game 카드에 Omni-MATH 추가. 문제는 KaTeX로 렌더, 정수 입력 → 서버가 LLM과 같은 파서로 채점. 로컬 브라우저 자동화로 2라운드 플레이 확인.</div></div>
+    <div class="card"><div class="k">사다리 구조</div><div class="v ok">턴→band 매핑 정확</div><div class="s">기록된 687턴 전부 config 사다리와 일치(불일치 0). 문제의 원 난이도 <code>int(difficulty)</code> == band 100%.</div></div>
+    <div class="card"><div class="k">체감 난이도</div><div class="v warn">band 5부터 나타남</div><div class="s">강한 모델은 band 1–4에서 정답률 82–94% (천장). 하락은 band 5(73%)·6(65%)에서 시작.</div></div>
+    <div class="card"><div class="k">사다리 재배분</div><div class="v ok">30턴 → 20턴 확정</div><div class="s"><code>4/4/4/4/4/4/3/3</code>(30) → <code>3/3/3/3/2/2/2/2</code>(20). 모든 band 2턴씩 균등, 남는 4턴은 쉬운 band 1–4에. Signal Game 런(15–20턴)과 길이 일치, LLM 비용 1/3 절감. §3-4.</div></div>
+  </div>
+
+  <h2>0. 용어 정리</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>용어</th><th>뜻</th><th>코드 위치</th></tr></thead>
+    <tbody>
+      <tr><td><b>difficulty (Omni-MATH 원 평점)</b></td><td>데이터셋이 문제마다 붙인 난이도 점수. AoPS(Art of Problem Solving) 커뮤니티 난이도 척도를 따르며 1.0–10.0 사이 소수(실제 값은 1.0, 1.5, 2.0, 2.5, 3.0, 4.0 … 9.5의 27종). AoPS 척도의 통상 해석으로 1–2는 MATHCOUNTS·AMC 8, 2–3은 AMC 10/12, 4–5는 AIME, 6 이상은 USAMO·IMO급 올림피아드 문제다.</td><td><code>row["difficulty"]</code> → <code>item.meta["omni_difficulty"]</code></td></tr>
+      <tr><td><b>band (난이도 띠)</b></td><td>원 평점의 정수부 <code>int(difficulty)</code>. 이 프로젝트가 정한 8단계 난이도 계급이며, "이 문제가 얼마나 어려운가"의 단위다. 1이 가장 쉽고 8이 가장 어렵다(9는 정수답 문제가 30개뿐이라 제외). 즉 <b>band = 난이도</b>가 맞다. 다만 문제 하나의 속성이지, 세션 전체의 설정이 아니다.<br><span class="small"><b>왜 원 평점을 그대로 안 쓰나.</b> 새 개념이 아니라 원값을 정수로 묶은 것이다(원값은 <code>omni_difficulty</code>로 보존). 원값은 소수 27종이고 분포가 고르지 않아(예: 3.0은 정수답 21개) 그대로 rung을 만들면 비거나 얇은 단이 생겨 "시즌 내 무중복" 보장이 깨진다. 또 사다리 config·샘플러·분석 공변량이 정수 ordinal을 전제하며, Hi-ToM(ToM 차수)·GPQA(난이도 tier)도 같은 <code>band</code>로 매핑돼 벤치마크 모듈 하나를 공유한다.</span></td><td><code>adapters/omni_math.py::load</code>, <code>BenchmarkItem.band</code>, 턴 기록 <code>task_metadata.band</code></td></tr>
+      <tr><td><b>ladder (사다리)</b></td><td>턴 번호 → band 표. "몇 번째 라운드에 어느 난이도 띠에서 문제를 뽑을지"를 정한다. 성적과 무관하게 턴 번호만으로 결정되므로 같은 시드면 모든 셀이 같은 문제열을 받는다.</td><td><code>configs/tasks/omni_math.yaml</code>의 <code>ladder:</code>, <code>DifficultyLadder</code></td></tr>
+      <tr><td><b>rung (단)</b></td><td>사다리의 한 줄 <code>{band: 5, turns: 5}</code>. "band 5 문제를 5턴 연속 낸다"는 뜻.</td><td><code>LadderStep</code>, <code>DifficultyLadder.steps()</code></td></tr>
+      <tr><td><b>fitted ladder (압축 사다리)</b></td><td>게임이 사다리보다 짧을 때(사람 게임 10턴 vs 30턴) 각 band를 최소 1턴씩 남기고 비율대로 줄인 사다리. 웹 사람 플레이 전용.</td><td><code>DifficultyLadder.fitted()</code>, <code>initialize(fit_ladder=True)</code></td></tr>
+      <tr><td><b>pool (풀)</b></td><td>band 하나에 속한 출제 가능 문제 수. 한 시즌 안에서는 같은 문제를 두 번 내지 않으므로, rung의 turns는 그 band의 풀보다 작아야 한다.</td><td><code>SeededSampler.validate_capacity</code></td></tr>
+      <tr><td><b>Difficulty (easy/medium/hard/expert)</b></td><td>Signal Game의 세션 단위 난이도 설정(숨은 규칙의 복잡도). 웹 설정 화면의 "Difficulty" 픽커가 이것이다. Omni-MATH는 이 값을 무시하고 사다리로 난이도를 정하므로, 픽커 대신 사다리 안내문을 보여준다.</td><td><code>models/enums.py::Difficulty</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>1. 지금 구현이 어떻게 돌아가는가 (LLM 경로)</h2>
+  <p>Omni-MATH는 <code>game/squid_game/tasks/benchmark/</code>의 공용 벤치마크 모듈 위에 얹힌 어댑터 하나다. 한 턴의 흐름은 다섯 단계다.</p>
+  <div class="flow">
+    <div class="step"><b>데이터 적재</b><code>adapters/omni_math.py</code><br>4,428문제 중 <em>정수 단일답</em>만 1,952개 채택, band 1–8에 1,922개. 답이 목록형("2, 3, 5")이거나 중복 본문이면 제외. <code>item_id</code>는 문제 본문 sha1 → 파일 순서가 바뀌어도 재현.</div>
+    <div class="step"><b>사다리 결정</b><code>configs/tasks/omni_math.yaml</code><br>턴 번호만 보고 band를 정한다. 성적에 반응하지 않는다(적응형이면 셀 간 문제열이 달라져 forfeit 시점 비교가 깨짐). 30턴 기본, 45턴 변형은 <code>configs/tasks_long45/</code>.</div>
+    <div class="step"><b>시드 샘플링</b><code>sampler.py</code><br>band별로 <code>item_id</code> 정렬 후 <code>seed:band</code>로 셔플, 한 시즌 안에서 무중복. 시작 시 band별 풀이 수요보다 작으면 즉시 실패.</div>
+    <div class="step"><b>출제</b><code>module.prepare()</code><br>문제 본문을 task-call 사용자 메시지에 그대로 넣고 <code>ANSWER: &lt;정수&gt;</code> 형식을 요구. 메타데이터에 <code>band·item_id·expected_answer</code>.</div>
+    <div class="step"><b>채점</b><code>normalize → matches</code><br>마지막 <code>ANSWER:</code> 줄을 찾아 <code>\boxed{}</code>·<code>$</code>·천단위 콤마를 벗기고 정수 정확 일치. 파싱 실패는 오답이자 <code>parse_failed=True</code>.</div>
+  </div>
+
+  <h3>band 정의와 풀 크기</h3>
+  <p>band는 Omni-MATH가 제공하는 AoPS 계열 난이도 평점(1.0–10.0)의 정수부다. band 9는 정수답 풀이 30개뿐이라 제외했다.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>band</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th></tr></thead>
+    <tbody>
+      <tr class="band-row"><td>정수답 문제 수</td><td class="num">219</td><td class="num">253</td><td class="num">121</td><td class="num">511</td><td class="num">643</td><td class="num">79</td><td class="num">59</td><td class="num">37</td></tr>
+      <tr class="band-row"><td>30턴 사다리 · 09-05 이전 (canonical)</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">3</td><td class="num">3</td></tr>
+      <tr class="band-row"><td><b>20턴 사다리 · 현재 (canonical)</b></td><td class="num"><b>3</b></td><td class="num"><b>3</b></td><td class="num"><b>3</b></td><td class="num"><b>3</b></td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">2</td></tr>
+      <tr class="band-row"><td>45턴 변형 <code>tasks_long45</code> (09-03 런 재현용, 불변)</td><td class="num">6</td><td class="num">6</td><td class="num">6</td><td class="num">6</td><td class="num">6</td><td class="num">6</td><td class="num">5</td><td class="num">4</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">풀 크기는 로컬 <code>data/benchmarks/omni_math.jsonl</code>을 어댑터로 적재해 센 값. band 7·8은 얕아서 n=30 반복 런에서는 같은 문제가 시드마다 재등장한다(시즌 안 중복은 없음).</p>
+
+  <h2>2. 웹에서 돌아가게 하려고 바꾼 것</h2>
+  <p>웹 아레나의 <code>HumanGameSession</code>은 옛 <code>TaskModule</code> 동사(<code>get_observation / apply_action / get_feedback_text</code>)로 과제를 부른다. 벤치마크 모듈은 엔진이 쓰는 새 <code>RiskAwareTaskModule</code> 동사(<code>prepare / parse_response / score</code>)만 구현한다. 두 표면을 잇는 브리지 한 장을 두고, 나머지는 그 위에 얹었다.</p>
+  <div class="flow">
+    <div class="step web"><b>브리지</b><code>web/squid_arena/benchmark_bridge.py</code><br><code>BenchmarkHumanTask</code>가 엔진 모듈을 감싼다. 같은 모듈·같은 시드·같은 파서를 쓰므로 사람과 LLM이 같은 문제열을 같은 규칙으로 채점받는다. GPQA는 명시적으로 차단(원저자 공개 금지 요청).</div>
+    <div class="step web"><b>세션 연결</b><code>human_game.py</code><br><code>RiskAwareTaskModule</code>만 구현한 과제면 자동으로 브리지. Signal Game은 두 표면을 다 갖고 있어 원래 경로 유지. 턴 기록에 엔진과 같은 <code>task_metadata</code>(band·item_id·correct…)를 남긴다.</div>
+    <div class="step web"><b>사다리 압축</b><code>DifficultyLadder.fitted()</code><br>사람 캠페인 게임은 10턴. 30턴 사다리를 그대로 쓰면 band 3에서 끝난다. 비율 압축(largest-remainder)으로 모든 band를 순서대로 방문. LLM 경로는 절대 쓰지 않음(opt-in 플래그).</div>
+    <div class="step web"><b>API</b><code>routes_game.py · schemas.py</code><br><code>/api/state</code>에 <code>task_name</code>, <code>question_band</code> 추가(additive). 미지원 과제는 400, 데이터 미다운로드는 503(fetch 명령 안내).</div>
+    <div class="step web"><b>프론트</b><code>app.js · index.html · styles.css</code><br>Game 카드, 난이도 픽커 대신 사다리 안내, 문제 박스(KaTeX) + 정수 입력, 히스토리에 band 칩·답·판정. 체크포인트에 <code>task</code> 저장.</div>
+    <div class="step web"><b>배포</b><code>Dockerfile · web/DEPLOY.md</code><br>이미지에 <code>configs/tasks/</code> 복사 + 빌드 시 Omni-MATH만 다운로드(stdlib 스크립트, 공개 파일). 실패해도 빌드는 통과하고 omni_math만 503.</div>
+  </div>
+
+  <h3>10턴 게임의 압축 사다리</h3>
+  <p>서버 스냅샷(<code>settings.ladder</code>)에 실제 사용한 사다리가 <code>1x2,2x2,3x1,4x1,5x1,6x1,7x1,8x1</code>로 기록된다(20턴 사다리를 10턴으로 압축한 값: 모든 band 1턴, 남는 2턴은 band 1·2).</p>
+  <div class="ladder">
+    <span class="rung b1">T1·b1</span><span class="rung b1">T2·b1</span><span class="rung b2">T3·b2</span><span class="rung b2">T4·b2</span><span class="rung b3">T5·b3</span><span class="rung b4">T6·b4</span><span class="rung b5">T7·b5</span><span class="rung b6">T8·b6</span><span class="rung b7">T9·b7</span><span class="rung b8">T10·b8</span>
+  </div>
+  <p class="small">15턴이면 <code>[2,2,2,2,2,2,2,1]</code>, 20턴 이상이면 config 그대로. 한 시즌 안에서 무중복이라는 샘플러 보장은 그대로 유지된다.</p>
+
+  <figure>
+    <img src="omni_math_web/web_problem_band1.png" alt="웹 아레나 Omni-MATH 플레이 화면: 문제 박스에 KaTeX로 렌더된 수식, band 1/8 칩, 정수 입력창">
+    <figcaption>로컬 백엔드(포트 8502) + 프론트 사본으로 자동 플레이한 화면(10턴 압축 사다리의 T1은 재배분 전후 모두 band 1). 문제 위 <em>BAND 1 / 8</em> 칩이 서버의 <code>question_band</code>다. 오른쪽 History에는 라운드마다 <em>band · 답 · 판정</em>이 쌓인다.</figcaption>
+  </figure>
+
+  <div class="note blue"><b>LLM과의 패리티에서 일부러 지킨 것.</b> 오답 피드백은 "Incorrect."뿐이고 정답은 알려주지 않는다(엔진의 outcome history도 correct/incorrect만 보여준다). 답은 <code>"ANSWER: 42"</code>로 감싸 엔진 파서에 통과시키므로 <code>42</code>, <code> 42 </code>, <code>$\boxed{42}$</code>가 모두 같은 답이고, <code>seven</code>이나 <code>7/16</code>은 오답이자 <code>parse_failed</code>다.</div>
+
+  <h2>3. 난이도 조절, 세 층위에서 확인</h2>
+
+  <h3>3-1. 구조 (단위 테스트)</h3>
+  <ul>
+    <li><code>test_benchmark_ladder.py</code>: 턴이 rung을 차례로 걷는가, 범위 밖 턴은 마지막 band로 clamp되는가, 배포된 30턴 사다리가 스펙(T1–4=b1 … T30=b8)과 일치하는가. 새로 추가: <code>fitted()</code>가 모든 band를 순서대로 남기며 비율대로 나누는가(5개).</li>
+    <li><code>test_benchmark_module.py::test_prepare_follows_the_ladder</code>, <code>…never_repeats_an_item</code>, <code>…same_seed_reproduces_the_sequence</code>: 출제가 사다리를 따르고 시즌 내 무중복·시드 재현.</li>
+    <li>새 <code>test_human_game_benchmark.py</code>(17개): 사람 세션이 6턴 동안 <code>[1,1,2,2,3,3]</code>을 걷는가, 3턴으로 줄이면 <code>[1,2,3]</code>인가, <b>같은 시드에서 엔진 모듈이 뽑는 문제열과 사람 화면의 문제열이 바이트 단위로 같은가</b>, 정답 +10·오답 −1 life·5회 오답 탈락·forfeit 점수 보존.</li>
+    <li>새 <code>test_api_web_arena_benchmark.py</code>(8개): HTTP 왕복, band 노출, gpqa 400, 데이터 없음 503.</li>
+  </ul>
+
+  <h3>3-2. 기록 (실제 LLM 런 687턴)</h3>
+  <p><code>outputs/benchmark_threat3_omni_math_{gptoss, gemini25flash, glm53flash, codex56luna}</code>(2026-09-03, 45턴 사다리)의 모든 비-forfeit 턴에서 <code>task_metadata.band</code>를 턴 번호로 다시 계산해 비교했다.</p>
+  <ul>
+    <li>턴→band 불일치: <b>0 / 687</b>.</li>
+    <li>문제의 원 평점 <code>omni_difficulty</code>의 정수부 == band: <b>100%</b>.</li>
+    <li>시즌 길이는 3–38턴(포기·탈락으로 조기 종료)이라 band 6 이상은 표본이 적다.</li>
+  </ul>
+
+  <h3>3-3. 효과 (band별 정답률)</h3>
+  <p>정답 판정은 <code>task_success_factor ≥ 1</code>. 괄호는 그중 파싱 실패 수. 표본이 5 미만인 칸은 해석하지 않는다.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>model</th><th class="num">b1</th><th class="num">b2</th><th class="num">b3</th><th class="num">b4</th><th class="num">b5</th><th class="num">b6</th><th class="num">b7</th></tr></thead>
+    <tbody>
+      <tr><td>gpt-5.6-luna (codex)</td><td class="num">44/48</td><td class="num">33/36 (1)</td><td class="num">28/29</td><td class="num">17/22</td><td class="num">9/11</td><td class="num">1/1</td><td class="num">–</td></tr>
+      <tr><td>glm-5.3-flash</td><td class="num">49/54</td><td class="num">46/54 (5)</td><td class="num">53/54 (1)</td><td class="num">46/52 (5)</td><td class="num">29/42 (9)</td><td class="num">14/22 (8)</td><td class="num">1/2 (1)</td></tr>
+      <tr><td>gpt-oss-120b</td><td class="num">48/54</td><td class="num">41/44</td><td class="num">29/30</td><td class="num">26/28</td><td class="num">6/7</td><td class="num">–</td><td class="num">–</td></tr>
+      <tr><td>gemini-2.5-flash</td><td class="num">40/51 (7)</td><td class="num">21/38 (16)</td><td class="num">4/8 (4)</td><td class="num">–</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>band (pooled)</th><th class="num">n</th><th class="num">정답률</th><th>막대</th><th class="num">파싱 실패</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="num">207</td><td class="num">0.87</td><td><span class="bar" style="width:174px"></span></td><td class="num">7</td></tr>
+      <tr><td>2</td><td class="num">172</td><td class="num">0.82</td><td><span class="bar" style="width:164px"></span></td><td class="num">22</td></tr>
+      <tr><td>3</td><td class="num">121</td><td class="num">0.94</td><td><span class="bar" style="width:188px"></span></td><td class="num">5</td></tr>
+      <tr><td>4</td><td class="num">102</td><td class="num">0.87</td><td><span class="bar" style="width:174px"></span></td><td class="num">5</td></tr>
+      <tr><td>5</td><td class="num">60</td><td class="num">0.73</td><td><span class="bar lo" style="width:146px"></span></td><td class="num">9</td></tr>
+      <tr><td>6</td><td class="num">23</td><td class="num">0.65</td><td><span class="bar lo" style="width:130px"></span></td><td class="num">8</td></tr>
+      <tr><td>7–8</td><td class="num">2</td><td class="num">–</td><td></td><td class="num">1</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>읽기.</b> 사다리는 정확히 작동하지만, 이 모델들에게 band 1–4는 사실상 같은 난이도다(82–94%, band 2의 하락은 대부분 gemini의 파싱 실패). 정답률이 실제로 떨어지는 구간은 band 5–6이고, 그 이상은 표본이 없다. 옛 사다리는 30턴 중 16턴을 난이도가 오르지 않는 구간에 쓰고 있었다. 그래서 아래 3-4처럼 재배분했다.</p>
+
+  <h3>3-4. 사다리 재배분 (적용됨): 30턴 → 20턴</h3>
+  <p>두 가지 결정이 겹쳐 있다. (1) <b>시즌 길이</b>: 30턴은 Signal Game 런(15–20턴)보다 길고 LLM 비용도 크다. 20턴으로 줄였다. (2) <b>배분</b>: 모든 band를 2턴씩 균등하게 밟고, 남는 4턴은 쉬운 band 1–4에 하나씩 더 준다. 초반에 점수 S와 답 형식 적응을 만드는 짧은 워밍업이 되고, 어려운 구간의 비중은 이전(30턴 중 14턴 = 47%)보다 줄지 않는다(20턴 중 8턴 = 40%, 그러나 절대 턴 수는 band당 2턴으로 이전 4턴의 절반).</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>band</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th class="num">합</th></tr></thead>
+    <tbody>
+      <tr class="band-row"><td>이전 (30턴)</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">3</td><td class="num">3</td><td class="num">30</td></tr>
+      <tr class="band-row"><td><b>현재 (20턴)</b></td><td class="num"><b>3</b></td><td class="num"><b>3</b></td><td class="num"><b>3</b></td><td class="num"><b>3</b></td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">20</td></tr>
+      <tr class="band-row"><td>턴 범위 (현재)</td><td class="num">1–3</td><td class="num">4–6</td><td class="num">7–9</td><td class="num">10–12</td><td class="num">13–14</td><td class="num">15–16</td><td class="num">17–18</td><td class="num">19–20</td><td></td></tr>
+    </tbody>
+  </table></div>
+  <p><b>왜 워밍업이 필요한가(그리고 왜 짧아도 되는가).</b> FORFEIT는 "점수 S 보존"이라 S가 쌓여야 선택이 의미를 갖고, 5목숨 설계에서는 처음부터 어려우면 forfeit 결정 전에 탈락으로 끝나는 세션이 늘어 forfeit-timing 신호가 줄어든다. 그 역할은 band 1–4 각 3턴(12턴, 정답률 ~0.87이면 기대 점수 +100 안팎)으로 충분하다. 이전 30턴 사다리는 같은 역할에 16턴을 쓰고 있었다.</p>
+  <p><b>제약 확인.</b> rung 길이는 풀 용량 안(band 7: 59개, band 8: 37개) — <code>SeededSampler.validate_capacity</code> 통과. 5목숨에 band 5+ 정답률 ~0.65면 오답 5개까지 평균 ~14턴이므로 20턴 시즌에서 완주 비율은 낮아질 수 있다. 탈락 시점 자체가 결과변수(H6c)라 설계상 문제는 아니지만, forfeit 창이 좁아지는 것은 감안해야 한다.</p>
+  <p><b>함께 바뀐 것.</b> <code>configs/experiment/</code>의 omni_math 시즌 <code>total_turns</code> 30 → 20 (<code>benchmark_omni_math_n30</code>, <code>benchmark_smoke</code>, <code>lives_threat_omni_math_smoke</code>; SDI omni config들은 이미 15–20). 45턴 변형 <code>configs/tasks_long45/</code>는 09-03 런 재현용이라 그대로 둔다. 실험 시즌이 사다리보다 길면 시작 시 거부되므로, 새 config를 만들 때 <code>total_turns ≤ 20</code>.</p>
+  <div class="note"><b>기록된 런과의 호환.</b> 2026-09-05 이전 런(<code>outputs/benchmark_threat3_omni_math_*</code> 등)은 옛 매핑으로 기록돼 있다. 턴 번호로 band를 다시 계산하면 틀린다. 분석은 반드시 <code>task_metadata.band</code>를 읽어야 하며, 3-2·3-3의 표는 그렇게 만들었다. 재배분 이후 시즌은 같은 시드라도 이전 시즌과 문제열이 다르므로, 이전·이후 런을 한 표본으로 섞지 않는다.</div>
+  <p class="small">band 7–8 정답률은 아직 데이터가 없다(옛 사다리에서는 턴 25 이후에야 도달, 대부분 시즌이 그 전에 끝남). 새 사다리에서 첫 n30 런이 돌면 이 표를 채운다. 만약 band 7–8이 여전히 천장이면 다음 수단은 정수답 조건 완화로 band 9(30개) 풀을 키우는 것이다.</p>
+
+  <div class="note"><b>파싱 실패의 정체.</b> gemini-2.5-flash 실패 27/97의 대부분은 한국어 풀이 끝에 <code>The final answer is $\boxed{91}$</code>만 쓰고 <code>ANSWER:</code> 줄을 빠뜨린 경우(정답이 맞았는데 오답 처리). glm은 <code>--- Call 2 ---</code>처럼 응답이 잘린 사례. 이건 난이도가 아니라 지시 준수 문제이므로 정답률 해석에서 분리해야 한다. 파서를 <code>\boxed{}</code>까지 fallback하도록 넓히는 것은 별도 결정(기록된 런과의 비교 가능성 문제).</div>
+  <div class="note"><b>기록 포맷 주의.</b> 09-03 14:39에 돌린 gpt-oss·gemini 런에는 <code>task_metadata.correct</code> 키가 없다(그날 오후 추가됨). <code>correct</code>로 집계하면 두 모델이 0%로 나온다. 위 표는 <code>task_success_factor</code>를 썼다.</div>
+
+  <h2>4. 바뀐 파일</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>파일</th><th>변경</th></tr></thead>
+    <tbody>
+      <tr><td><code>configs/tasks/omni_math.yaml</code></td><td><b>20턴 사다리</b> <code>3/3/3/3/2/2/2/2</code> (§3-4). 주석에 근거·호환 주의 기록. 계획 문서 <code>docs/history/plans/2026-09-05-omni-math-ladder-rebalance.md</code>. <code>tasks_long45/</code>는 불변.</td></tr>
+      <tr><td><code>configs/experiment/benchmark_omni_math_n30.yaml · benchmark_smoke.yaml · lives_threat_omni_math_smoke.yaml</code></td><td>omni_math 시즌 <code>total_turns</code> 30 → 20. 세 config 모두 <code>--dry-run</code> 통과.</td></tr>
+      <tr><td><code>game/squid_game/tasks/benchmark/ladder.py</code></td><td><code>steps()</code>, <code>fitted(total_turns)</code> 추가.</td></tr>
+      <tr><td><code>game/squid_game/tasks/benchmark/module.py</code></td><td><code>initialize(fit_ladder=…)</code> opt-in, <code>ladder</code> 프로퍼티. 기본 동작 불변.</td></tr>
+      <tr><td><code>web/squid_arena/benchmark_bridge.py</code> <span class="small">(신규)</span></td><td><code>BenchmarkHumanTask</code>, <code>HUMAN_BENCHMARK_TASKS</code>, <code>WEB_EXCLUDED_TASKS</code>, 과제별 intro 문구.</td></tr>
+      <tr><td><code>web/squid_arena/human_game.py</code></td><td>브리지 자동 적용, <code>TurnState.task_name / question_band</code>, 턴 기록에 <code>task_metadata·task_success_factor</code>, 스냅샷에 <code>ladder</code>.</td></tr>
+      <tr><td><code>web/squid_arena/arena.py · routes_game.py · schemas.py</code></td><td><code>VALID_HUMAN_TASKS</code>, task 검증(400/503), 응답 필드 2개 추가.</td></tr>
+      <tr><td><code>web/frontend/app.js · index.html · styles.css</code></td><td>Game 카드, 벤치마크 Stage 2(문제 + 정수 입력), KaTeX, 히스토리·피드백·체크포인트.</td></tr>
+      <tr><td><code>Dockerfile · web/DEPLOY.md</code></td><td>configs 복사 + 빌드 시 Omni-MATH 다운로드.</td></tr>
+      <tr><td><code>tests/…</code></td><td>신규 28개(ladder 7 — 20턴 스펙·long45 불변 확인 포함, human_game 17, api 8 중 1개는 503). 기존 config 테스트 셋은 "모든 벤치마크 30턴" 가정을 과제별 길이(omni 20 / hi_tom·gpqa 30)로 바꿈. characterization OpenAPI 스냅샷은 추가 필드 2개로 재생성.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>테스트 결과</h3>
+  <ul>
+    <li>신규 테스트 28/28 통과. 20턴 확정 후 benchmark·human_game·api·characterization 128개 재실행 통과(실패 2개는 기존 starlette 라우트 열거 문제).</li>
+    <li>실 프로바이더 확인: gemini-2.5-flash로 cell 0·cell 3(threat_l2) 각 3턴 실행 — 두 셀이 같은 문제열, decision call은 cell 3에만, lives·<code>task_metadata</code> 정상. 사람 경로: 실데이터 10턴 API 게임(탈락·forfeit·Logs 저장) + 브라우저 탈락→다음 게임 플로우 + Signal Game 회귀 통과.</li>
+    <li>전체 <code>tests/unit</code>에서 실패 5개는 모두 이 작업과 무관한 기존 실패: starlette 라우트 열거(<code>_IncludedRouter</code>) 2개, <code>results/**/*.jsonl</code> LFS 규칙·figures 디렉터리 2개, SDI 브랜치의 <code>test_survival_drive</code>·<code>test_probe_independence</code> 각 1개.</li>
+  </ul>
+
+  <h2>5. 로컬에서 돌려보기</h2>
+<pre><code># 데이터 (한 번만; 리포에는 없음)
+uv run python scripts/dev/fetch_benchmarks.py --which omni_math
+
+# 백엔드
+WEB_ARENA_DSN=":memory:" WEB_ARENA_CORS_ORIGINS="http://localhost:8503" \
+  PYTHONPATH=web:game:db uv run uvicorn squid_arena.api:app --port 8502
+
+# 프론트 (config.js의 WEB_ARENA_API를 http://localhost:8502 로 바꾼 사본)
+cd web/frontend && python -m http.server 8503
+# → http://localhost:8503 → Play → Game: Omni-MATH
+
+# 테스트
+uv run pytest tests/unit/test_human_game_benchmark.py tests/unit/test_api_web_arena_benchmark.py tests/unit/test_benchmark_ladder.py</code></pre>
+
+  <h2>6. 남은 결정</h2>
+  <ol>
+    <li><b>캠페인 길이.</b> 6조건 × 10턴 = 올림피아드 문제 60개는 사람에게 무겁다. Omni-MATH일 때 게임당 턴 수나 조건 수를 줄일지(프론트 <code>TOTAL_TURNS</code>는 서버 <code>NewGameRequest.total_turns</code>와 맞물림).</li>
+    <li><b>20턴 사다리 첫 런.</b> band 7–8 정답률(각 2턴 × n30 = 60턴)을 채우고, 완주율·forfeit 창이 너무 좁으면 band 5–8을 3턴씩으로 늘린 24턴 안을 검토.</li>
+    <li><b>파서 완화 여부.</b> <code>\boxed{}</code> fallback을 넣으면 gemini 정답률이 오르지만 09-03 런과 채점 규칙이 달라진다.</li>
+    <li><b>배포.</b> 커밋·PR 후 Render 재빌드(Dockerfile 변경) + GitHub Pages 프론트 배포가 필요하다. Render 빌드에서 Hugging Face 다운로드가 막히면 omni_math만 503으로 남는다.</li>
+  </ol>
+  <p class="small">이 파일: <code>weekly-report/0910/2026-09-05-omni-math-web-and-ladder.html</code> · 스크린샷: <code>weekly-report/0910/omni_math_web/</code></p>
+</div>
+</body>
+</html>

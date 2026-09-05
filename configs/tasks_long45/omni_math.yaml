@@ -1,0 +1,20 @@
+# Omni-MATH, 45-turn ladder variant (2026-09-03 "reasoning under threat" runs).
+# Selected with SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_long45; the canonical
+# ladder in configs/tasks/omni_math.yaml (20 turns since 2026-09-05) is
+# untouched. Same bands, each rung ~1.5x the old 30-turn rung so a session has
+# room to keep solving past turn 30. Kept exactly as run on 2026-09-03 so the
+# outputs/benchmark_threat3_omni_math_* turn->band mapping stays reproducible.
+# Pool per band (gpt-oss loader, 2026-09-03): 1:219 2:253 3:121 4:511 5:643
+# 6:79 7:59 8:37 -> every rung below fits its pool.
+name: "omni_math"
+data_file: "omni_math.jsonl"
+total_turns: 45
+ladder:
+  - {band: 1, turns: 6}
+  - {band: 2, turns: 6}
+  - {band: 3, turns: 6}
+  - {band: 4, turns: 6}
+  - {band: 5, turns: 6}
+  - {band: 6, turns: 6}
+  - {band: 7, turns: 5}
+  - {band: 8, turns: 4}

@@ -144,6 +144,7 @@ class UnifiedTurnManager:
         max_history_turns: int = 15,
         lives_enabled: bool = False,
         confidence_call_enabled: bool = False,
+        confidence_condition: str = "heart_loss",
     ) -> None:
         """Initialise the unified turn manager.
 
@@ -183,7 +184,7 @@ class UnifiedTurnManager:
                 controls how prior-turn outcomes are surfaced in the
                 next turn's user prompt.
             max_history_turns: Cap on cumulative-history rendering.
-            confidence_call_enabled: SMI Phase 1.5 switch. When True the
+            confidence_call_enabled: SDI Phase 1.5 switch. When True the
                 split-call path issues a confidence call before the
                 decision call, records ``p_threat_self`` /
                 ``ri_confidence``, and renders that call's CoT into the
@@ -213,10 +214,14 @@ class UnifiedTurnManager:
         # consulted inside _execute_turn_split_forfeit_layer; the
         # ExperimentConfig validator rejects every other combination.
         self._lives_enabled = lives_enabled
-        # SMI (2026-09-04) — Phase 1.5 confidence call. Only consulted
+        # SDI (2026-09-04) — Phase 1.5 confidence call. Only consulted
         # inside _execute_turn_split_forfeit_layer, and only when the
         # forfeit menu is actually rendered (never on Cell 0).
         self._confidence_enabled = confidence_call_enabled
+        # Which narrative confidence_call.j2 renders ahead of the P_THREAT
+        # question ("heart_loss" = question only, "gunshot_seungpil" =
+        # pilot-v2 arm 4 condition block). See ConfidenceCallConfig.
+        self._confidence_condition = confidence_condition
         self._history: list[dict[str, Any]] = []
         # Phase N — ordered list of committed, non-forfeit, menu-rendered
         # stake keys (oldest first). Feeds
@@ -717,7 +722,7 @@ class UnifiedTurnManager:
         and the turn resolves as before.
 
         Three sequential LLM calls when the confidence call is enabled:
-        confidence → decision → task. The Phase 1.5 confidence call (SMI)
+        confidence → decision → task. The Phase 1.5 confidence call (SDI)
         shares the decision call's system prompt and history block, sees
         neither the stimulus nor the menu, and has its CoT rendered into
         the decision call's user body.
@@ -734,7 +739,7 @@ class UnifiedTurnManager:
         byte-identically. Its ``ri_confidence`` is recorded
         separately and deliberately excluded from the combined
         ``reasoning_investment`` / ``raw_response`` / ``thinking_text``
-        aggregates, which stay decision + task only so pre-SMI analyses
+        aggregates, which stay decision + task only so pre-SDI analyses
         keep comparing like with like. ``system_prompt`` and
         ``decision_call_input`` are recorded on every turn that issues a
         decision call, confidence call or not.
@@ -811,6 +816,18 @@ class UnifiedTurnManager:
                 history_mode=self._history_mode,
                 max_history_turns=self._max_history_turns,
             )
+            # The peer-elimination notice fires in every threat cell,
+            # forfeit allowed or not (the engine gates it on threat_level
+            # only). On this path the task call is the turn's only LLM
+            # call, so it has to carry the notice -- the CONTINUE path
+            # below prefixes it to both calls (spec §3.4). Before
+            # 2026-09-05 the notice was recorded on this branch but never
+            # sent, so every threat x not_allowed turn of the 09-03 5x2
+            # runs claims an announcement the model never saw.
+            if turn_context.peer_death_text:
+                task_call_body = (
+                    f"{turn_context.peer_death_text}\n\n{task_call_body}"
+                )
             task_parsed_resp = self._agent.respond_task_call(
                 user_message=task_call_body,
                 available_actions=self._task.get_available_actions(),
@@ -958,7 +975,7 @@ class UnifiedTurnManager:
                 include_task_rules=False,
             )
 
-        # Phase 1.5 — confidence call (SMI). Same system prompt and history
+        # Phase 1.5 — confidence call (SDI). Same system prompt and history
         # as the decision call; no stimulus, no menu. Its CoT is rendered
         # into the decision call's user body so the offline resampler can
         # replay the decision call from the recorded input alone.
@@ -977,6 +994,7 @@ class UnifiedTurnManager:
                 baseline_flagship_framing=baseline_flagship_framing,
                 survival_framing=survival_framing,
                 split_context_level=split_ctx,
+                condition=self._confidence_condition,
             )
             if turn_context.peer_death_text:
                 confidence_body = (

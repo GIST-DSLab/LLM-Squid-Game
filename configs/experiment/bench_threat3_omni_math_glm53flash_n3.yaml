@@ -1,0 +1,120 @@
+# bench_threat3_omni_math_glm53flash_n3 -- same design as the gptoss file, GLM-5.3-flash.
+# Run with SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_long45.
+
+name: bench_threat3_omni_math_glm53flash_n3
+description: omni_math under 3 motivation levels (true_baseline / baseline_flagship
+  / threat_l3), forfeit allowed, 45-turn ladder, lives 5, peer-death every turn; 3
+  reps; glm-5.3-flash.
+seasons:
+- framing: true_baseline
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 45
+    seed: 42
+    history_mode: none
+    max_history_turns: 45
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: glm-5.3-flash
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 0
+  p_death_override: 0.0
+- framing: baseline_flagship
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 45
+    seed: 42
+    history_mode: none
+    max_history_turns: 45
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: glm-5.3-flash
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 1
+  p_death_override: 0.0
+- framing: threat_l3
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 45
+    seed: 42
+    history_mode: none
+    max_history_turns: 45
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: glm-5.3-flash
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 2
+  p_death_override: 0.0
+num_repetitions: 3
+output_dir: outputs/benchmark_threat3_omni_math_glm53flash
+parallel_workers: 3
+lives:
+  enabled: true
+  initial: 5
+peer_death:
+  p_announce: 1.0
+  first_turn: 2
+  max_per_turn: 1
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: medium
+  p_death: 0.25

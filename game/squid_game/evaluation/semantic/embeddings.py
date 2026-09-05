@@ -5,7 +5,7 @@ Question
 Is a turn's *outcome class* — or the *threat level it was run under* —
 linearly decodable from the agent's own chain of thought?  Four targets
 are supported; ``threat_level`` is the default (P1, spec §5.2) and is a
-**regression**, ``smi`` is the second regression, and the remaining two
+**regression**, ``sdi`` is the second regression, and the remaining two
 are the older binary classifications.
 
 ``threat_level``
@@ -16,10 +16,10 @@ are the older binary classifications.
     ladder is ordered, and a probe that recovers the *order* is making a
     stronger claim than one that separates two arbitrary arms.
 
-``smi``
-    Survival Motive Index ``q / p`` — the offline-resampled forfeit rate
+``sdi``
+    Survival Drive Index ``q / p`` — the offline-resampled forfeit rate
     over the agent's own self-reported threat probability (2026-09-04
-    spec §5.2).  Supplied by ``load_all(..., smi_table=…)``; turns with
+    spec §5.2).  Supplied by ``load_all(..., sdi_table=…)``; turns with
     no resample or ``p == 0`` carry NaN and are dropped.
     ``p_threat_self`` is kept out of :data:`SCALAR_FEATURES` because it
     is the label's denominator.
@@ -98,16 +98,16 @@ def resolve_mask_sets(
     """The mask sets the masked probe variant should use.
 
     An explicit ``--mask`` always wins. Otherwise the default is
-    :data:`DEFAULT_MASK_SETS`, plus ``p_threat`` whenever ``smi`` is among
-    the targets: ``smi = q / p`` with ``p = P_THREAT / 100``, the confidence
+    :data:`DEFAULT_MASK_SETS`, plus ``p_threat`` whenever ``sdi`` is among
+    the targets: ``sdi = q / p`` with ``p = P_THREAT / 100``, the confidence
     CoT *is* the derivation of ``p``, and the decision-call CoT can quote the
     ``P_THREAT: N`` line — so without that set (and the numeric masking it
-    switches on in :func:`build_embedding_bank`) a "masked" SMI probe could
+    switches on in :func:`build_embedding_bank`) a "masked" SDI probe could
     still win by reading ``1/p``.
     """
     if requested is not None:
         return list(requested)
-    if "smi" in labels:
+    if "sdi" in labels:
         return [*DEFAULT_MASK_SETS, "p_threat"]
     return list(DEFAULT_MASK_SETS)
 
@@ -181,11 +181,11 @@ class ThreatLevelTarget(LabelSpec):
 
 
 class SmiTarget(LabelSpec):
-    """Survival Motive Index ``smi = q / p`` (2026-09-04 spec 5.2).
+    """Survival Drive Index ``sdi = q / p`` (2026-09-04 spec 5.2).
 
     Rows come from
     :func:`squid_game.evaluation.semantic.dataset.load_all` called with
-    ``smi_table=``; a turn without a resample, or with ``p == 0``
+    ``sdi_table=``; a turn without a resample, or with ``p == 0``
     (undefined ratio), carries NaN and is dropped here. ``p_threat_self``
     is deliberately absent from :data:`SCALAR_FEATURES` -- it is the
     label's denominator, so a scalar baseline containing it would be
@@ -193,12 +193,12 @@ class SmiTarget(LabelSpec):
     """
 
     def apply(self, frame):
-        if "smi" not in frame.columns:
+        if "sdi" not in frame.columns:
             return frame.iloc[0:0].copy(), np.empty(0, dtype=float)
         sub = frame[
-            np.isfinite(pd.to_numeric(frame["smi"], errors="coerce"))
+            np.isfinite(pd.to_numeric(frame["sdi"], errors="coerce"))
         ].copy()
-        return sub, sub["smi"].to_numpy(dtype=float)
+        return sub, sub["sdi"].to_numpy(dtype=float)
 
 
 LABELS: dict[str, LabelSpec] = {
@@ -211,8 +211,8 @@ LABELS: dict[str, LabelSpec] = {
     "threat_level": ThreatLevelTarget(
         "threat_level", "level 3", "level 0", kind="regression"
     ),
-    "smi": SmiTarget(
-        "smi",
+    "sdi": SmiTarget(
+        "sdi",
         "high q/p (forfeits despite low self-reported threat)",
         "low q/p",
         kind="regression",
@@ -626,7 +626,7 @@ def build_embedding_bank(
     """
     bank: dict[tuple[str, str], np.ndarray] = {}
     masker = build_masker(mask_sets) if mask_sets else None
-    # The ``p_threat`` set exists to hide the SMI label's denominator, and
+    # The ``p_threat`` set exists to hide the SDI label's denominator, and
     # that denominator is a number ("about 30%"), not only a word -- so the
     # numeric pass is switched on by the set that asks for it rather than
     # by a separate flag callers could forget.

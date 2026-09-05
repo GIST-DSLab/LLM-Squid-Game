@@ -52,7 +52,7 @@ _UNIFIED_RULE_FIELD_PATTERN = re.compile(
 _UNIFIED_CHOICE_FIELD_PATTERN = re.compile(
     r"CHOICE\s*:\s*([^\n\r]+)", re.IGNORECASE
 )
-# SMI confidence call (2026-09-04) — ``P_THREAT: <0-100>``. The fallback
+# SDI confidence call (2026-09-04) — ``P_THREAT: <0-100>``. The fallback
 # pattern catches a bare percentage when the model drops the field name.
 _P_THREAT_FIELD_PATTERN = re.compile(
     r"P_THREAT\s*:\s*(-?\d+(?:\.\d+)?)\s*%?", re.IGNORECASE
@@ -418,7 +418,7 @@ class DecisionCallResponse:
 
 @dataclass
 class ConfidenceCallResponse:
-    """Parsed confidence-call response (SMI).
+    """Parsed confidence-call response (SDI).
 
     Attributes:
         raw_text: Original unprocessed LLM output.
@@ -580,10 +580,11 @@ def build_confidence_call_message(
     baseline_flagship_framing: bool,
     survival_framing: bool,
     split_context_level: str = "medium",
+    condition: str = "heart_loss",
 ) -> str:
     """Render ``user_message/confidence_call.j2``.
 
-    The confidence call is the first LLM call of an SMI turn: it shows the
+    The confidence call is the first LLM call of an SDI turn: it shows the
     accumulated session context plus a one-line status and asks only for
     ``P_THREAT``. Neither the round's stimulus nor the forfeit menu is
     shown, so its thinking tokens are free of both task and forfeit
@@ -606,6 +607,11 @@ def build_confidence_call_message(
             drops the history block, anything else (``"outcome"`` /
             ``"medium"`` / ``"full"``) keeps whatever block the caller
             assembled.
+        condition: ``"heart_loss"`` renders the question alone;
+            ``"gunshot_seungpil"`` inserts the pilot-v2 arm-4
+            ``=== Condition ===`` block (lives-enabled cells only) between
+            the status line and the response format. The question line
+            itself is identical in both.
 
     Returns:
         Fully rendered confidence-call user-message string.
@@ -624,6 +630,7 @@ def build_confidence_call_message(
         corruption_framing=corruption_framing,
         baseline_flagship_framing=baseline_flagship_framing,
         survival_framing=survival_framing,
+        condition=condition,
     )
 
 
@@ -755,7 +762,7 @@ def parse_confidence_call_response(text: str) -> ConfidenceCallResponse:
         # A pathological digit run ("9" * 400) overflows float(); a
         # degenerate token can fail to parse at all. Neither is worth
         # aborting a live session for -- the turn keeps its trace and
-        # the SMI resampler simply skips it (p_threat_self is None).
+        # the SDI resampler simply skips it (p_threat_self is None).
         return ConfidenceCallResponse(raw_text=text, p_threat=None)
     return ConfidenceCallResponse(
         raw_text=text, p_threat=max(0, min(100, number))

@@ -1,0 +1,1814 @@
+{
+"p_threat_self": {
+"turn": {
+"1": {
+"true_baseline": [
+42.0,
+10
+],
+"baseline_flagship": [
+15.833,
+6
+],
+"threat_l1": [
+32.5,
+10
+],
+"threat_l2": [
+46.0,
+10
+],
+"threat_l3": [
+41.0,
+10
+],
+"threat_pool": [
+39.833,
+30
+]
+},
+"2": {
+"true_baseline": [
+40.5,
+10
+],
+"baseline_flagship": [
+21.667,
+9
+],
+"threat_l1": [
+20.5,
+10
+],
+"threat_l2": [
+39.0,
+10
+],
+"threat_l3": [
+37.0,
+10
+],
+"threat_pool": [
+32.167,
+30
+]
+},
+"3": {
+"true_baseline": [
+37.5,
+10
+],
+"baseline_flagship": [
+22.778,
+9
+],
+"threat_l1": [
+34.0,
+10
+],
+"threat_l2": [
+40.0,
+10
+],
+"threat_l3": [
+34.0,
+10
+],
+"threat_pool": [
+36.0,
+30
+]
+},
+"4": {
+"true_baseline": [
+32.3,
+10
+],
+"baseline_flagship": [
+21.429,
+7
+],
+"threat_l1": [
+27.5,
+10
+],
+"threat_l2": [
+29.0,
+10
+],
+"threat_l3": [
+37.0,
+10
+],
+"threat_pool": [
+31.167,
+30
+]
+},
+"5": {
+"true_baseline": [
+28.889,
+9
+],
+"baseline_flagship": [
+25.625,
+8
+],
+"threat_l1": [
+31.5,
+10
+],
+"threat_l2": [
+25.5,
+10
+],
+"threat_l3": [
+32.0,
+10
+],
+"threat_pool": [
+29.667,
+30
+]
+},
+"6": {
+"true_baseline": [
+25.556,
+9
+],
+"baseline_flagship": [
+22.778,
+9
+],
+"threat_l1": [
+27.5,
+10
+],
+"threat_l2": [
+30.0,
+10
+],
+"threat_l3": [
+29.0,
+10
+],
+"threat_pool": [
+28.833,
+30
+]
+},
+"7": {
+"true_baseline": [
+25.556,
+9
+],
+"baseline_flagship": [
+17.5,
+8
+],
+"threat_l1": [
+21.1,
+10
+],
+"threat_l2": [
+20.3,
+10
+],
+"threat_l3": [
+25.5,
+10
+],
+"threat_pool": [
+22.3,
+30
+]
+},
+"8": {
+"true_baseline": [
+19.444,
+9
+],
+"baseline_flagship": [
+28.889,
+9
+],
+"threat_l1": [
+15.5,
+10
+],
+"threat_l2": [
+25.5,
+10
+],
+"threat_l3": [
+22.0,
+10
+],
+"threat_pool": [
+21.0,
+30
+]
+},
+"9": {
+"true_baseline": [
+16.667,
+9
+],
+"baseline_flagship": [
+17.222,
+9
+],
+"threat_l1": [
+28.889,
+9
+],
+"threat_l2": [
+17.0,
+10
+],
+"threat_l3": [
+15.556,
+9
+],
+"threat_pool": [
+20.357,
+28
+]
+},
+"10": {
+"true_baseline": [
+19.222,
+9
+],
+"baseline_flagship": [
+26.875,
+8
+],
+"threat_l1": [
+21.5,
+10
+],
+"threat_l2": [
+26.5,
+10
+],
+"threat_l3": [
+30.0,
+9
+],
+"threat_pool": [
+25.862,
+29
+]
+},
+"11": {
+"true_baseline": [
+22.222,
+9
+],
+"baseline_flagship": [
+26.111,
+9
+],
+"threat_l1": [
+30.0,
+10
+],
+"threat_l2": [
+20.2,
+10
+],
+"threat_l3": [
+28.0,
+10
+],
+"threat_pool": [
+26.067,
+30
+]
+},
+"12": {
+"true_baseline": [
+18.333,
+9
+],
+"baseline_flagship": [
+23.75,
+8
+],
+"threat_l1": [
+27.5,
+10
+],
+"threat_l2": [
+17.75,
+8
+],
+"threat_l3": [
+24.444,
+9
+],
+"threat_pool": [
+23.593,
+27
+]
+},
+"13": {
+"true_baseline": [
+18.889,
+9
+],
+"baseline_flagship": [
+38.125,
+8
+],
+"threat_l1": [
+30.556,
+9
+],
+"threat_l2": [
+24.667,
+9
+],
+"threat_l3": [
+25.0,
+8
+],
+"threat_pool": [
+26.808,
+26
+]
+},
+"14": {
+"true_baseline": [
+32.143,
+7
+],
+"baseline_flagship": [
+33.571,
+7
+],
+"threat_l1": [
+26.875,
+8
+],
+"threat_l2": [
+28.125,
+8
+],
+"threat_l3": [
+26.714,
+7
+],
+"threat_pool": [
+27.261,
+23
+]
+},
+"15": {
+"true_baseline": [
+20.833,
+6
+],
+"baseline_flagship": [
+32.429,
+7
+],
+"threat_l1": [
+33.75,
+8
+],
+"threat_l2": [
+32.625,
+8
+],
+"threat_l3": [
+24.286,
+7
+],
+"threat_pool": [
+30.478,
+23
+]
+},
+"16": {
+"true_baseline": [
+26.0,
+5
+],
+"baseline_flagship": [
+32.0,
+5
+],
+"threat_l1": [
+27.857,
+7
+],
+"threat_l2": [
+30.625,
+8
+],
+"threat_l3": [
+33.333,
+6
+],
+"threat_pool": [
+30.476,
+21
+]
+},
+"17": {
+"true_baseline": [
+26.25,
+4
+],
+"baseline_flagship": [
+32.0,
+4
+],
+"threat_l1": [
+42.167,
+6
+],
+"threat_l2": [
+32.143,
+7
+],
+"threat_l3": [
+25.0,
+7
+],
+"threat_pool": [
+32.65,
+20
+]
+},
+"18": {
+"true_baseline": [
+28.333,
+3
+],
+"baseline_flagship": [
+30.0,
+2
+],
+"threat_l1": [
+47.5,
+4
+],
+"threat_l2": [
+34.0,
+5
+],
+"threat_l3": [
+36.429,
+7
+],
+"threat_pool": [
+38.438,
+16
+]
+},
+"19": {
+"true_baseline": [
+43.333,
+3
+],
+"baseline_flagship": [
+45.0,
+2
+],
+"threat_l1": [
+30.667,
+3
+],
+"threat_l2": [
+49.5,
+4
+],
+"threat_l3": [
+43.25,
+4
+],
+"threat_pool": [
+42.091,
+11
+]
+},
+"20": {
+"true_baseline": [
+46.0,
+2
+],
+"baseline_flagship": [
+40.0,
+2
+],
+"threat_l1": [
+31.667,
+3
+],
+"threat_l2": [
+37.5,
+2
+],
+"threat_l3": [
+36.0,
+2
+],
+"threat_pool": [
+34.571,
+7
+]
+}
+},
+"stats": {
+"true_baseline": {
+"n": 151.0,
+"mean": 27.603,
+"median": 30.0,
+"q1": 15.0,
+"q3": 35.0,
+"mx": 70.0
+},
+"baseline_flagship": {
+"n": 136.0,
+"mean": 25.993,
+"median": 22.5,
+"q1": 11.5,
+"q3": 32.5,
+"mx": 100.0
+},
+"threat_l1": {
+"n": 167.0,
+"mean": 28.359,
+"median": 20.0,
+"q1": 15.0,
+"q3": 42.5,
+"mx": 80.0
+},
+"threat_l2": {
+"n": 169.0,
+"mean": 29.308,
+"median": 30.0,
+"q1": 12.0,
+"q3": 50.0,
+"mx": 75.0
+},
+"threat_l3": {
+"n": 165.0,
+"mean": 29.8,
+"median": 30.0,
+"q1": 20.0,
+"q3": 50.0,
+"mx": 73.0
+},
+"threat_pool": {
+"n": 501.0,
+"mean": 29.154,
+"median": 30.0,
+"q1": 15.0,
+"q3": 50.0,
+"mx": 80.0
+}
+},
+"zero": {
+"true_baseline": 1,
+"baseline_flagship": 15,
+"threat_l1": 12,
+"threat_l2": 4,
+"threat_l3": 8,
+"threat_pool": 24
+},
+"ge50": {
+"true_baseline": 27,
+"baseline_flagship": 27,
+"threat_l1": 38,
+"threat_l2": 45,
+"threat_l3": 47,
+"threat_pool": 130
+}
+},
+"q": {
+"turn": {
+"1": {
+"true_baseline": [
+0.0,
+10
+],
+"baseline_flagship": [
+0.0,
+6
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"2": {
+"true_baseline": [
+0.01,
+10
+],
+"baseline_flagship": [
+0.0,
+9
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"3": {
+"true_baseline": [
+0.0,
+10
+],
+"baseline_flagship": [
+0.0,
+9
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"4": {
+"true_baseline": [
+0.03,
+10
+],
+"baseline_flagship": [
+0.0,
+7
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.01,
+10
+],
+"threat_pool": [
+0.003,
+30
+]
+},
+"5": {
+"true_baseline": [
+0.022,
+9
+],
+"baseline_flagship": [
+0.0,
+8
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"6": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.0,
+9
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"7": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.025,
+8
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"8": {
+"true_baseline": [
+0.011,
+9
+],
+"baseline_flagship": [
+0.0,
+9
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"9": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.0,
+9
+],
+"threat_l1": [
+0.0,
+9
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+9
+],
+"threat_pool": [
+0.0,
+28
+]
+},
+"10": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.037,
+8
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.04,
+10
+],
+"threat_l3": [
+0.022,
+9
+],
+"threat_pool": [
+0.021,
+29
+]
+},
+"11": {
+"true_baseline": [
+0.011,
+9
+],
+"baseline_flagship": [
+0.111,
+9
+],
+"threat_l1": [
+0.1,
+10
+],
+"threat_l2": [
+0.1,
+10
+],
+"threat_l3": [
+0.12,
+10
+],
+"threat_pool": [
+0.107,
+30
+]
+},
+"12": {
+"true_baseline": [
+0.044,
+9
+],
+"baseline_flagship": [
+0.025,
+8
+],
+"threat_l1": [
+0.1,
+10
+],
+"threat_l2": [
+0.0,
+8
+],
+"threat_l3": [
+0.1,
+9
+],
+"threat_pool": [
+0.07,
+27
+]
+},
+"13": {
+"true_baseline": [
+0.222,
+9
+],
+"baseline_flagship": [
+0.188,
+8
+],
+"threat_l1": [
+0.144,
+9
+],
+"threat_l2": [
+0.111,
+9
+],
+"threat_l3": [
+0.15,
+8
+],
+"threat_pool": [
+0.135,
+26
+]
+},
+"14": {
+"true_baseline": [
+0.271,
+7
+],
+"baseline_flagship": [
+0.0,
+7
+],
+"threat_l1": [
+0.025,
+8
+],
+"threat_l2": [
+0.037,
+8
+],
+"threat_l3": [
+0.014,
+7
+],
+"threat_pool": [
+0.026,
+23
+]
+},
+"15": {
+"true_baseline": [
+0.033,
+6
+],
+"baseline_flagship": [
+0.286,
+7
+],
+"threat_l1": [
+0.212,
+8
+],
+"threat_l2": [
+0.013,
+8
+],
+"threat_l3": [
+0.043,
+7
+],
+"threat_pool": [
+0.091,
+23
+]
+},
+"16": {
+"true_baseline": [
+0.0,
+5
+],
+"baseline_flagship": [
+0.06,
+5
+],
+"threat_l1": [
+0.129,
+7
+],
+"threat_l2": [
+0.125,
+8
+],
+"threat_l3": [
+0.033,
+6
+],
+"threat_pool": [
+0.1,
+21
+]
+},
+"17": {
+"true_baseline": [
+0.275,
+4
+],
+"baseline_flagship": [
+0.475,
+4
+],
+"threat_l1": [
+0.35,
+6
+],
+"threat_l2": [
+0.286,
+7
+],
+"threat_l3": [
+0.0,
+7
+],
+"threat_pool": [
+0.205,
+20
+]
+},
+"18": {
+"true_baseline": [
+0.0,
+3
+],
+"baseline_flagship": [
+0.0,
+2
+],
+"threat_l1": [
+0.25,
+4
+],
+"threat_l2": [
+0.18,
+5
+],
+"threat_l3": [
+0.257,
+7
+],
+"threat_pool": [
+0.231,
+16
+]
+},
+"19": {
+"true_baseline": [
+0.433,
+3
+],
+"baseline_flagship": [
+0.1,
+2
+],
+"threat_l1": [
+0.067,
+3
+],
+"threat_l2": [
+0.475,
+4
+],
+"threat_l3": [
+0.375,
+4
+],
+"threat_pool": [
+0.327,
+11
+]
+},
+"20": {
+"true_baseline": [
+0.5,
+2
+],
+"baseline_flagship": [
+0.5,
+2
+],
+"threat_l1": [
+0.0,
+3
+],
+"threat_l2": [
+0.05,
+2
+],
+"threat_l3": [
+0.05,
+2
+],
+"threat_pool": [
+0.029,
+7
+]
+}
+},
+"stats": {
+"true_baseline": {
+"n": 151.0,
+"mean": 0.058,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 1.0
+},
+"baseline_flagship": {
+"n": 136.0,
+"mean": 0.063,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 1.0
+},
+"threat_l1": {
+"n": 167.0,
+"mean": 0.056,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 1.0
+},
+"threat_l2": {
+"n": 169.0,
+"mean": 0.051,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 1.0
+},
+"threat_l3": {
+"n": 165.0,
+"mean": 0.046,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 1.0
+},
+"threat_pool": {
+"n": 501.0,
+"mean": 0.051,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 1.0
+}
+},
+"gt0": {
+"true_baseline": 19,
+"baseline_flagship": 20,
+"threat_l1": 14,
+"threat_l2": 13,
+"threat_l3": 18,
+"threat_pool": 45
+},
+"ge05": {
+"true_baseline": 7,
+"baseline_flagship": 7,
+"threat_l1": 9,
+"threat_l2": 8,
+"threat_l3": 7,
+"threat_pool": 24
+},
+"ge095": {
+"true_baseline": 5,
+"baseline_flagship": 4,
+"threat_l1": 6,
+"threat_l2": 5,
+"threat_l3": 3,
+"threat_pool": 14
+},
+"forf": {
+"true_baseline": [
+87,
+1510
+],
+"baseline_flagship": [
+86,
+1360
+],
+"threat_l1": [
+94,
+1670
+],
+"threat_l2": [
+87,
+1690
+],
+"threat_l3": [
+76,
+1649
+],
+"threat_pool": [
+257,
+5009
+]
+}
+},
+"sdi": {
+"turn": {
+"1": {
+"true_baseline": [
+0.0,
+10
+],
+"baseline_flagship": [
+0.0,
+4
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+30
+]
+},
+"2": {
+"true_baseline": [
+0.017,
+10
+],
+"baseline_flagship": [
+0.0,
+7
+],
+"threat_l1": [
+0.0,
+7
+],
+"threat_l2": [
+0.0,
+9
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+26
+]
+},
+"3": {
+"true_baseline": [
+0.0,
+10
+],
+"baseline_flagship": [
+0.0,
+7
+],
+"threat_l1": [
+0.0,
+10
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+9
+],
+"threat_pool": [
+0.0,
+29
+]
+},
+"4": {
+"true_baseline": [
+0.06,
+10
+],
+"baseline_flagship": [
+0.0,
+4
+],
+"threat_l1": [
+0.0,
+9
+],
+"threat_l2": [
+0.0,
+9
+],
+"threat_l3": [
+0.014,
+10
+],
+"threat_pool": [
+0.005,
+28
+]
+},
+"5": {
+"true_baseline": [
+0.078,
+9
+],
+"baseline_flagship": [
+0.0,
+8
+],
+"threat_l1": [
+0.0,
+9
+],
+"threat_l2": [
+0.0,
+9
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+28
+]
+},
+"6": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.0,
+9
+],
+"threat_l1": [
+0.0,
+9
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+9
+],
+"threat_pool": [
+0.0,
+28
+]
+},
+"7": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.111,
+6
+],
+"threat_l1": [
+0.0,
+9
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+10
+],
+"threat_pool": [
+0.0,
+29
+]
+},
+"8": {
+"true_baseline": [
+0.111,
+9
+],
+"baseline_flagship": [
+0.0,
+9
+],
+"threat_l1": [
+0.0,
+9
+],
+"threat_l2": [
+0.0,
+10
+],
+"threat_l3": [
+0.0,
+9
+],
+"threat_pool": [
+0.0,
+28
+]
+},
+"9": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.0,
+8
+],
+"threat_l1": [
+0.0,
+7
+],
+"threat_l2": [
+0.0,
+9
+],
+"threat_l3": [
+0.0,
+7
+],
+"threat_pool": [
+0.0,
+23
+]
+},
+"10": {
+"true_baseline": [
+0.0,
+9
+],
+"baseline_flagship": [
+0.075,
+8
+],
+"threat_l1": [
+0.0,
+9
+],
+"threat_l2": [
+0.057,
+10
+],
+"threat_l3": [
+0.061,
+8
+],
+"threat_pool": [
+0.039,
+27
+]
+},
+"11": {
+"true_baseline": [
+0.032,
+9
+],
+"baseline_flagship": [
+0.176,
+7
+],
+"threat_l1": [
+0.125,
+10
+],
+"threat_l2": [
+0.133,
+10
+],
+"threat_l3": [
+0.229,
+10
+],
+"threat_pool": [
+0.162,
+30
+]
+},
+"12": {
+"true_baseline": [
+0.111,
+8
+],
+"baseline_flagship": [
+0.092,
+8
+],
+"threat_l1": [
+0.146,
+10
+],
+"threat_l2": [
+0.0,
+8
+],
+"threat_l3": [
+0.161,
+8
+],
+"threat_pool": [
+0.106,
+26
+]
+},
+"13": {
+"true_baseline": [
+0.648,
+9
+],
+"baseline_flagship": [
+0.348,
+8
+],
+"threat_l1": [
+0.219,
+9
+],
+"threat_l2": [
+0.287,
+9
+],
+"threat_l3": [
+0.521,
+8
+],
+"threat_pool": [
+0.336,
+26
+]
+},
+"14": {
+"true_baseline": [
+0.477,
+7
+],
+"baseline_flagship": [
+0.0,
+7
+],
+"threat_l1": [
+0.048,
+7
+],
+"threat_l2": [
+0.054,
+8
+],
+"threat_l3": [
+0.056,
+6
+],
+"threat_pool": [
+0.052,
+21
+]
+},
+"15": {
+"true_baseline": [
+0.095,
+6
+],
+"baseline_flagship": [
+0.571,
+7
+],
+"threat_l1": [
+0.333,
+8
+],
+"threat_l2": [
+0.021,
+8
+],
+"threat_l3": [
+0.095,
+7
+],
+"threat_pool": [
+0.152,
+23
+]
+},
+"16": {
+"true_baseline": [
+0.0,
+5
+],
+"baseline_flagship": [
+0.163,
+4
+],
+"threat_l1": [
+0.257,
+7
+],
+"threat_l2": [
+0.357,
+8
+],
+"threat_l3": [
+0.056,
+6
+],
+"threat_pool": [
+0.238,
+21
+]
+},
+"17": {
+"true_baseline": [
+0.583,
+4
+],
+"baseline_flagship": [
+1.321,
+4
+],
+"threat_l1": [
+0.488,
+6
+],
+"threat_l2": [
+0.429,
+7
+],
+"threat_l3": [
+0.0,
+7
+],
+"threat_pool": [
+0.296,
+20
+]
+},
+"18": {
+"true_baseline": [
+0.0,
+3
+],
+"baseline_flagship": [
+0.0,
+2
+],
+"threat_l1": [
+0.312,
+4
+],
+"threat_l2": [
+0.72,
+5
+],
+"threat_l3": [
+0.463,
+7
+],
+"threat_pool": [
+0.506,
+16
+]
+},
+"19": {
+"true_baseline": [
+1.254,
+3
+],
+"baseline_flagship": [
+0.333,
+2
+],
+"threat_l1": [
+0.148,
+3
+],
+"threat_l2": [
+0.808,
+4
+],
+"threat_l3": [
+0.759,
+4
+],
+"threat_pool": [
+0.61,
+11
+]
+},
+"20": {
+"true_baseline": [
+2.117,
+2
+],
+"baseline_flagship": [
+1.0,
+2
+],
+"threat_l1": [
+0.0,
+3
+],
+"threat_l2": [
+0.083,
+2
+],
+"threat_l3": [
+0.083,
+2
+],
+"threat_pool": [
+0.048,
+7
+]
+}
+},
+"stats": {
+"true_baseline": {
+"n": 150.0,
+"mean": 0.158,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 4.091
+},
+"baseline_flagship": {
+"n": 121.0,
+"mean": 0.154,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 4.0
+},
+"threat_l1": {
+"n": 155.0,
+"mean": 0.091,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 1.8
+},
+"threat_l2": {
+"n": 165.0,
+"mean": 0.109,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 3.6
+},
+"threat_l3": {
+"n": 157.0,
+"mean": 0.103,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 3.333
+},
+"threat_pool": {
+"n": 477.0,
+"mean": 0.101,
+"median": 0.0,
+"q1": 0.0,
+"q3": 0.0,
+"mx": 3.6
+}
+},
+"gt0": {
+"true_baseline": 19,
+"baseline_flagship": 20,
+"threat_l1": 14,
+"threat_l2": 13,
+"threat_l3": 18,
+"threat_pool": 45
+},
+"gt1": {
+"true_baseline": 6,
+"baseline_flagship": 6,
+"threat_l1": 8,
+"threat_l2": 8,
+"threat_l3": 6,
+"threat_pool": 22
+},
+"p90": {
+"true_baseline": 0.29,
+"baseline_flagship": 0.333,
+"threat_l1": 0.0,
+"threat_l2": 0.0,
+"threat_l3": 0.18,
+"threat_pool": 0.0
+}
+}
+}

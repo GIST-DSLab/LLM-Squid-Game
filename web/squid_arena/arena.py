@@ -27,6 +27,7 @@ from pathlib import Path
 import yaml
 
 from squid_store.base import Repository
+from squid_arena.benchmark_bridge import HUMAN_BENCHMARK_TASKS
 from squid_arena.remote_provider import ArenaProgress, RemoteProvider
 from squid_arena.seeding import seed_sessions
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
@@ -40,6 +41,11 @@ VALID_FORFEITS = {"allowed", "not_allowed"}
 # engine default for it rather than the fixed 2 the other levels get —
 # otherwise the level would be indistinguishable from EASY.
 VALID_DIFFICULTIES = {"easy", "medium", "hard", "expert"}
+
+# Task modules a human may start through POST /api/new_game. signal_game is
+# the original arena task; the benchmark entries come from the bridge that
+# adapts the engine's RiskAwareTaskModule benchmarks to human play.
+VALID_HUMAN_TASKS = frozenset({"signal_game"}) | HUMAN_BENCHMARK_TASKS
 
 # Where transient arena run directories live (JSONL traces are read back by
 # ``seed_sessions`` then no longer needed, but kept for auditing).

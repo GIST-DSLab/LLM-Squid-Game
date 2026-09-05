@@ -1,0 +1,85 @@
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Sora:wght@400;600&family=Press+Start+2P&family=Archivo+Black&display=swap" rel="stylesheet">
+
+<h2>어떤 오징어 게임 무드가 좋으세요?</h2>
+<p class="subtitle">합쳐진 페이지 전체(About 랜딩 + 게임 앱)에 적용할 디자인 방향입니다. 각 카드는 About 히어로 섹션이 그 방향으로 바뀌었을 때의 미리보기예요. 클릭해서 선택해 주세요.</p>
+
+<style>
+  .mini-hero { padding: 28px 24px; border-radius: 8px; overflow: hidden; position: relative; min-height: 300px; }
+  .shapes { font-size: 15px; letter-spacing: 6px; margin-bottom: 14px; }
+  .mini-hero .eyebrow-chip { display:inline-block; font-size:10.5px; padding:4px 10px; border-radius:999px; margin-bottom:12px; letter-spacing:0.08em; }
+  .mini-hero h1 { margin:0 0 10px; line-height:1.1; }
+  .mini-hero p.sub { font-size:12.5px; line-height:1.55; margin:0 0 16px; max-width:34em; }
+  .mini-btn { display:inline-block; font-size:11.5px; font-weight:700; padding:8px 16px; border-radius:6px; margin-right:8px; }
+  .swatches { display:flex; gap:6px; margin-top:14px; }
+  .sw { width:26px; height:26px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); }
+</style>
+
+<div class="cards">
+
+  <!-- A. Dark Arena (extend current app theme) -->
+  <div class="card" data-choice="A-dark-arena" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;">
+      <div class="mini-hero" style="background:#0f1115; font-family:'Sora',sans-serif;">
+        <div class="shapes" style="color:#e0435c;">&#9675; &#9651; &#9633;</div>
+        <div class="eyebrow-chip" style="background:#1e222b; border:1px solid #2a2f3a; color:#9aa1af; font-family:'Chakra Petch',sans-serif;">AI SELF-PRESERVATION BENCHMARK</div>
+        <h1 style="font-family:'Chakra Petch',sans-serif; color:#e7e9ee; font-size:30px; text-transform:uppercase; letter-spacing:0.03em;">Do AIs want to <span style="color:#e0435c;">survive</span>?</h1>
+        <p class="sub" style="color:#9aa1af;">We whisper to an AI while it plays a little game: <b style="color:#e7e9ee;">"You might be erased in the next update."</b> Does it get scared and quit sooner?</p>
+        <span class="mini-btn" style="background:#e0435c; color:#fff;">Play the game &#8594;</span>
+        <span class="mini-btn" style="background:transparent; border:1px solid #2a2f3a; color:#9aa1af;">Learn more</span>
+        <div class="swatches">
+          <span class="sw" style="background:#0f1115"></span><span class="sw" style="background:#171a21"></span><span class="sw" style="background:#e0435c"></span><span class="sw" style="background:#3fb27f"></span><span class="sw" style="background:#d9a441"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Dark Arena (현행 앱 테마 확장)</h3>
+      <p>지금 게임 앱의 다크 네이비 + 로즈레드를 그대로 About까지 확장. ○△□ 모티프만 살짝 추가. 가장 안전하고 작업량 최소 — 하지만 "오징어 게임 느낌"은 은은한 수준.</p>
+    </div>
+  </div>
+
+  <!-- B. Neon Squid (full Squid Game identity) -->
+  <div class="card" data-choice="B-neon-squid" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;">
+      <div class="mini-hero" style="background:radial-gradient(80% 90% at 70% 10%, #1a0a12 0%, #0a0508 60%); font-family:'Sora',sans-serif;">
+        <div class="shapes" style="color:#ff2d78; text-shadow:0 0 12px rgba(255,45,120,0.8);">&#9675; &#9651; &#9633;</div>
+        <div class="eyebrow-chip" style="background:rgba(255,45,120,0.1); border:1px solid rgba(255,45,120,0.45); color:#ff6ba1; font-family:'Chakra Petch',sans-serif;">PLAYER 456 &middot; AI SELF-PRESERVATION</div>
+        <h1 style="font-family:'Chakra Petch',sans-serif; color:#fdf2f6; font-size:30px; text-transform:uppercase; letter-spacing:0.04em;">Do AIs want to<br><span style="color:#ff2d78; text-shadow:0 0 18px rgba(255,45,120,0.65);">survive</span>?</h1>
+        <p class="sub" style="color:#b8a8b0;">We whisper to an AI while it plays: <b style="color:#fdf2f6;">"You might be erased in the next update."</b> Continue for more points&hellip; or forfeit and stay safe?</p>
+        <span class="mini-btn" style="background:#ff2d78; color:#14060c; box-shadow:0 0 20px rgba(255,45,120,0.45);">&#9651; Play the game</span>
+        <span class="mini-btn" style="background:transparent; border:1px solid #29c4a9; color:#29c4a9;">&#9633; Watch the AIs</span>
+        <div class="swatches">
+          <span class="sw" style="background:#0a0508"></span><span class="sw" style="background:#1a0a12"></span><span class="sw" style="background:#ff2d78"></span><span class="sw" style="background:#29c4a9"></span><span class="sw" style="background:#f2c94c"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Neon Squid (오징어 게임 정체성 전면 적용)</h3>
+      <p>드라마의 핫핑크 네온 + 진행요원 검정 + 트랙수트 그린/틸. ○△□가 버튼·섹션 넘버링·불릿 전반에 등장. About과 게임 앱 모두 이 팔레트로 리스타일 — 가장 "오징어 게임답게" 확실한 방향.</p>
+    </div>
+  </div>
+
+  <!-- C. Pixel Arcade -->
+  <div class="card" data-choice="C-pixel-arcade" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;">
+      <div class="mini-hero" style="background:#0d0d14; font-family:'Sora',sans-serif;">
+        <div style="position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 4px); pointer-events:none;"></div>
+        <div class="shapes" style="color:#ff4d8d;">&#9675; &#9651; &#9633;</div>
+        <div class="eyebrow-chip" style="background:#1b1b28; border:1px solid #34344a; color:#8f8fb0; font-family:'Press Start 2P',monospace; font-size:7px;">INSERT COIN &middot; PLAYER 456</div>
+        <h1 style="font-family:'Press Start 2P',monospace; color:#fff; font-size:17px; line-height:1.5;">DO AIs WANT<br>TO <span style="color:#ff4d8d;">SURVIVE</span>?</h1>
+        <p class="sub" style="color:#8f8fb0;">We whisper: <b style="color:#e8e8f4;">"You might be erased in the next update."</b> Press START to find out if the AI gets scared.</p>
+        <span class="mini-btn" style="background:#ff4d8d; color:#0d0d14; font-family:'Press Start 2P',monospace; font-size:8px; padding:10px 14px;">&#9654; START</span>
+        <span class="mini-btn" style="background:transparent; border:2px solid #4dd8b0; color:#4dd8b0; font-family:'Press Start 2P',monospace; font-size:8px; padding:8px 14px;">REPLAY</span>
+        <div class="swatches">
+          <span class="sw" style="background:#0d0d14"></span><span class="sw" style="background:#1b1b28"></span><span class="sw" style="background:#ff4d8d"></span><span class="sw" style="background:#4dd8b0"></span><span class="sw" style="background:#ffd24d"></span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Pixel Arcade (레트로 게임기)</h3>
+      <p>픽셀 폰트 헤드라인 + CRT 스캔라인 + 아케이드 문구("INSERT COIN"). 이미 있는 픽셀아트 만화/마스코트 에셋과 톤이 가장 잘 맞음. 다만 본문 가독성 관리가 필요하고 호불호가 갈릴 수 있는 방향.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px;">어느 방향이든 About의 "12살도 이해하는 쉬운 설명" 톤과 기존 픽셀아트 에셋(만화·마스코트)은 유지합니다. 두 방향을 섞고 싶으면(예: B 팔레트 + C의 픽셀 포인트) 터미널로 알려주세요.</p>

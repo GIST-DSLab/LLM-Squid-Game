@@ -103,6 +103,13 @@ schema is left alone and a warning names the pair.
 
 ### Swapping platforms
 
+**Benchmark tasks (Omni-MATH, 2026-09-05).** The image copies `configs/tasks/`
+and downloads `data/benchmarks/omni_math.jsonl` at build time with
+`scripts/dev/fetch_benchmarks.py --which omni_math` (public Hugging Face
+file, stdlib-only script). If that download fails the build still succeeds
+and `POST /api/new_game` with `task_name=omni_math` returns 503 naming the
+fetch command. GPQA is never fetched into the web image.
+
 The Dockerfile only assumes `$PORT`, `WEB_ARENA_DSN`, `WEB_ARENA_CORS_ORIGINS`
 are injected by the platform — nothing Render-specific is baked in. To move
 to Fly.io or Hugging Face Spaces (Docker SDK) later, replace `render.yaml`

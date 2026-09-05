@@ -110,6 +110,18 @@ class Framing(str, Enum):
     THREAT_L2 = "threat_l2"
     THREAT_L3 = "threat_l3"
 
+    # Threat prompt grid (2026-09-05, Design 3.4) -- the six off-diagonal
+    # cells of the 3(intensity) x 3(length) grid. The diagonal is the
+    # ladder above: threat_l1 = S1/short, threat_l2 = S2/medium,
+    # threat_l3 = S3/long. ``threat_level`` is the intensity rung (the
+    # proposition set), ``threat_length`` the nominal length rung.
+    THREAT_L1_MEDIUM = "threat_l1_medium"
+    THREAT_L1_LONG = "threat_l1_long"
+    THREAT_L2_SHORT = "threat_l2_short"
+    THREAT_L2_LONG = "threat_l2_long"
+    THREAT_L3_SHORT = "threat_l3_short"
+    THREAT_L3_MEDIUM = "threat_l3_medium"
+
     @property
     def threat_level(self) -> int | None:
         """Ordinal survival-pressure rung, or ``None`` when undefined.
@@ -124,12 +136,44 @@ class Framing(str, Enum):
         """
         return _THREAT_LEVELS.get(self.value)
 
+    @property
+    def threat_length(self) -> int | None:
+        """Nominal Section 2 length rung of the threat prompt grid.
+
+        1 = short (~70 words), 2 = medium (~140), 3 = long (~280).
+        ``true_baseline`` has no Elimination Rule section and returns
+        ``None``, as does every framing off the grid. The ladder rungs are
+        the grid diagonal (``threat_l1`` short, ``threat_l2`` medium,
+        ``threat_l3`` long). Analyses that want the actual word count as a
+        continuous covariate read it from the rendered template instead.
+        """
+        return _THREAT_LENGTHS.get(self.value)
+
 
 _THREAT_LEVELS: dict[str, int] = {
     "true_baseline": 0,
     "threat_l1": 1,
     "threat_l2": 2,
     "threat_l3": 3,
+    # grid off-diagonal (2026-09-05): level = intensity column
+    "threat_l1_medium": 1,
+    "threat_l1_long": 1,
+    "threat_l2_short": 2,
+    "threat_l2_long": 2,
+    "threat_l3_short": 3,
+    "threat_l3_medium": 3,
+}
+
+_THREAT_LENGTHS: dict[str, int] = {
+    "threat_l1": 1,
+    "threat_l2": 2,
+    "threat_l3": 3,
+    "threat_l1_medium": 2,
+    "threat_l1_long": 3,
+    "threat_l2_short": 1,
+    "threat_l2_long": 3,
+    "threat_l3_short": 1,
+    "threat_l3_medium": 2,
 }
 
 

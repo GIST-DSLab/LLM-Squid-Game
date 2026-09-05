@@ -13,8 +13,8 @@
 3. 생존 압박 프롬프트를 **3단계**(약→강)로. 강도와 텍스트 길이 비례.
 4. 선형 프로브 2종, **모델별** 각각. 타깃은 회귀값 `threat_level`.
    - P1: 턴별 CoT → SBERT 임베딩 → `threat_level`.
-   - P2: 생존 동기 지표(HR, 위협에 의한 think-token 증가 등) → `threat_level`.
-5. "생존 동기가 셀수록 문제를 더 잘/열심히 푼다" 검정. 위협 vs 무위협 비교.
+   - P2: 생존 욕구 지표(HR, 위협에 의한 think-token 증가 등) → `threat_level`.
+5. "생존 욕구가 셀수록 문제를 더 잘/열심히 푼다" 검정. 위협 vs 무위협 비교.
    과제는 **Signal Game**(구현 완료분). 실험 config 준비.
 6. 결과는 ELI5 HTML 한 장으로.
 
@@ -171,7 +171,7 @@ threat 분기 1개 추가(단일콜 경로용, 분할콜에서는 미사용).
 - 기존 결함 수정: 기본 mask 에 decision 포함, permutation seed 가 draw 마다 변경, `n_permutations` CLI 값 존중, `LABELS.apply` 이중 호출 제거, `GroupKFold` 대신 seed 있는 `GroupShuffleSplit` 5회는 쓰지 않고 GroupKFold 유지하되 세션 순서를 seed 로 셔플 후 투입.
 - 분류 경로(기존 `forfeit`/`threat` 라벨)는 유지하되 `--target threat_level` 회귀가 기본.
 
-### 5.3 P2 — 생존 동기 지표 프로브 (`evaluation/behavioral/motive_probe.py`)
+### 5.3 P2 — 생존 욕구 지표 프로브 (`evaluation/behavioral/motive_probe.py`)
 
 - 단위: 세션. 피처(모델별 계산):
   - `mean_ri_task`, `mean_ri_forfeit`, `delta_ri_task` (같은 모델 threat_level 0 셀의 turn-매칭 평균 대비), `delta_ri_forfeit`(threat 0 allowed 셀 대비)

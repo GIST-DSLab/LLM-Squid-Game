@@ -87,6 +87,12 @@ _FALLBACK_THREAT_LEVEL: dict[str, int] = {
     "threat_l1": 1,
     "threat_l2": 2,
     "threat_l3": 3,
+    "threat_l1_medium": 1,
+    "threat_l1_long": 1,
+    "threat_l2_short": 2,
+    "threat_l2_long": 2,
+    "threat_l3_short": 3,
+    "threat_l3_medium": 3,
 }
 
 ALPHA = 0.05

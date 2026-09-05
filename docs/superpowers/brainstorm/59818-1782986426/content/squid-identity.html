@@ -1,0 +1,86 @@
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Sora:wght@400;600;700&family=Spline+Sans+Mono:wght@500&display=swap" rel="stylesheet">
+
+<h2>오징어 게임 정체성, 어떤 결로 살릴까요?</h2>
+<p class="subtitle">픽셀 없이, 드라마의 시각 언어(○△□ · 진행요원 핑크 · 트랙수트 틸 · 파스텔 계단)로만 구성한 3가지 방향입니다. 모두 About 히어로 미리보기 — 클릭해서 선택해 주세요.</p>
+
+<style>
+  .mini-hero { padding: 26px 24px; border-radius: 8px; overflow: hidden; position: relative; min-height: 310px; }
+  .eyebrow-chip { display:inline-block; font-size:10.5px; padding:4px 11px; border-radius:999px; margin-bottom:12px; letter-spacing:0.1em; font-family:'Spline Sans Mono',monospace; }
+  .mini-hero h1 { margin:0 0 10px; line-height:1.12; }
+  .mini-hero p.sub { font-size:12.5px; line-height:1.55; margin:0 0 16px; max-width:33em; }
+  .mini-btn { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; padding:9px 16px; border-radius:8px; margin-right:8px; font-family:'Sora',sans-serif; }
+  .swatches { display:flex; gap:6px; margin-top:14px; }
+  .sw { width:26px; height:26px; border-radius:6px; border:1px solid rgba(128,128,128,0.35); }
+  .ptag { display:inline-grid; place-items:center; width:34px; height:22px; border-radius:4px; font-family:'Spline Sans Mono',monospace; font-size:11px; font-weight:700; }
+</style>
+
+<div class="cards">
+
+  <!-- A. Neon Squid (strong) -->
+  <div class="card" data-choice="neon-strong" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;">
+      <div class="mini-hero" style="background:radial-gradient(85% 95% at 72% 8%, #1c0a13 0%, #0a0508 62%); font-family:'Sora',sans-serif;">
+        <div style="font-size:16px; letter-spacing:7px; color:#ff2d78; text-shadow:0 0 14px rgba(255,45,120,0.85); margin-bottom:12px;">&#9675; &#9651; &#9633;</div>
+        <div class="eyebrow-chip" style="background:rgba(255,45,120,0.1); border:1px solid rgba(255,45,120,0.5); color:#ff6ba1;">AI SELF-PRESERVATION BENCHMARK</div>
+        <h1 style="font-family:'Chakra Petch',sans-serif; color:#fdf2f6; font-size:29px; text-transform:uppercase;">Do AIs want to<br><span style="color:#ff2d78; text-shadow:0 0 20px rgba(255,45,120,0.7);">survive</span>?</h1>
+        <p class="sub" style="color:#b8a8b0;">We whisper to an AI while it plays: <b style="color:#fff;">"You might be erased in the next update."</b> Does it get scared and quit sooner?</p>
+        <span class="mini-btn" style="background:#ff2d78; color:#14060c; box-shadow:0 0 22px rgba(255,45,120,0.5);">&#9651; Play the game</span>
+        <span class="mini-btn" style="border:1px solid #2fbfa4; color:#2fbfa4;">&#9633; Watch the AIs</span>
+        <div class="swatches"><span class="sw" style="background:#0a0508"></span><span class="sw" style="background:#1c0a13"></span><span class="sw" style="background:#ff2d78"></span><span class="sw" style="background:#2fbfa4"></span><span class="sw" style="background:#f2c94c"></span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Neon Strong (네온 전면)</h3>
+      <p>핫핑크 글로우를 히어로·버튼·포인트 전반에 사용. 임팩트는 가장 크지만, 긴 페이지에서 계속 보면 피로할 수 있고 "게임 방송/e스포츠" 쪽으로 읽힐 여지도 있음.</p>
+    </div>
+  </div>
+
+  <!-- B. Dark Stage (subtle neon) -->
+  <div class="card" data-choice="dark-stage" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;">
+      <div class="mini-hero" style="background:linear-gradient(180deg,#131217 0%,#0e0d11 100%); font-family:'Sora',sans-serif;">
+        <div style="position:absolute; top:-40px; right:-30px; width:220px; height:220px; background:radial-gradient(circle, rgba(237,27,118,0.14), transparent 65%);"></div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <span style="font-size:14px; letter-spacing:5px; color:#ed1b76;">&#9675; &#9651; &#9633;</span>
+          <span class="ptag" style="background:#1d3a35; color:#e8f4ef; border:1px solid #2d5a50;">456</span>
+        </div>
+        <div class="eyebrow-chip" style="background:#1a1920; border:1px solid #2e2c36; color:#a39daa;">AI SELF-PRESERVATION BENCHMARK</div>
+        <h1 style="font-family:'Chakra Petch',sans-serif; color:#f2eff4; font-size:29px; text-transform:uppercase;">Do AIs want to <span style="color:#ed1b76;">survive</span>?</h1>
+        <p class="sub" style="color:#a39daa;">We whisper to an AI while it plays: <b style="color:#f2eff4;">"You might be erased in the next update."</b> Continue for more points&hellip; or forfeit and stay safe?</p>
+        <span class="mini-btn" style="background:#ed1b76; color:#fff;">&#9651; Play the game</span>
+        <span class="mini-btn" style="border:1px solid #3d6b60; color:#7fc2b1;">&#9633; Watch the AIs</span>
+        <div class="swatches"><span class="sw" style="background:#0e0d11"></span><span class="sw" style="background:#1a1920"></span><span class="sw" style="background:#ed1b76"></span><span class="sw" style="background:#2d5a50"></span><span class="sw" style="background:#e3b23c"></span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Dark Stage (은은한 네온) (추천)</h3>
+      <p>드라마 게임장처럼 어두운 무대 위에 진행요원 핑크(#ED1B76)를 "정확히 필요한 곳"에만. 글로우는 배경의 은은한 라디얼 하나뿐, 버튼은 솔리드. 트랙수트 틸은 참가자 번호표(456)·보조 액션에. 세련되고 오래 봐도 안 피로함.</p>
+    </div>
+  </div>
+
+  <!-- C. Pastel Stairwell -->
+  <div class="card" data-choice="pastel-stairwell" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;">
+      <div class="mini-hero" style="background:linear-gradient(165deg,#f6dfe4 0%,#f2e6da 55%,#d9e6e2 100%); font-family:'Sora',sans-serif;">
+        <div style="position:absolute; right:-24px; top:20px; width:150px; height:150px; opacity:0.5;">
+          <div style="position:absolute; width:46px; height:46px; border:5px solid #e8829e; border-radius:50%; top:0; left:30px;"></div>
+          <div style="position:absolute; width:0; height:0; border-left:26px solid transparent; border-right:26px solid transparent; border-bottom:45px solid #8fbdb1; top:58px; left:0;"></div>
+          <div style="position:absolute; width:44px; height:44px; background:#e3b23c; opacity:0.85; top:64px; left:72px;"></div>
+        </div>
+        <div class="eyebrow-chip" style="background:rgba(255,255,255,0.6); border:1px solid #dbb6bd; color:#b0526b;">AI SELF-PRESERVATION BENCHMARK</div>
+        <h1 style="font-family:'Chakra Petch',sans-serif; color:#3c3138; font-size:29px; text-transform:uppercase;">Do AIs want to <span style="color:#d64f7e;">survive</span>?</h1>
+        <p class="sub" style="color:#6f6068;">We whisper to an AI while it plays: <b style="color:#3c3138;">"You might be erased in the next update."</b> Does it get scared and quit sooner?</p>
+        <span class="mini-btn" style="background:#d64f7e; color:#fff;">&#9651; Play the game</span>
+        <span class="mini-btn" style="border:1px solid #8fbdb1; color:#4f7d70;">&#9633; Watch the AIs</span>
+        <div class="swatches"><span class="sw" style="background:#f6dfe4"></span><span class="sw" style="background:#d9e6e2"></span><span class="sw" style="background:#d64f7e"></span><span class="sw" style="background:#8fbdb1"></span><span class="sw" style="background:#e3b23c"></span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Pastel Stairwell (에셔 계단 파스텔)</h3>
+      <p>드라마에서 가장 아이코닉한 파스텔 계단 미로(핑크·민트·크림)를 라이트 테마로. 아는 사람에겐 즉시 "오징어 게임". 다만 라이트 랜딩 → 다크 게임 앱으로 넘어갈 때 톤 점프가 생김(이질감을 "게임장 입장" 연출로 살릴 수는 있음).</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px;">공통: ○△□를 섹션 넘버링·불릿·버튼 아이콘으로 시스템화하고, 참가자 번호표(456) 배지, "무궁화꽃" 카운트다운 같은 디테일로 정체성을 보강합니다. 픽셀아트 에셋(만화·마스코트)은 어느 방향에서도 삽화로 유지. 섞기 제안도 환영 — 예: "B 기반 + C의 파스텔을 About 섹션 배경에만".</p>

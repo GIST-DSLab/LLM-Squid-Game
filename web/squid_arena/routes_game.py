@@ -13,7 +13,8 @@ import uuid
 from fastapi import APIRouter, HTTPException, Request
 
 from squid_arena import deps, reporting, schemas
-from squid_arena.arena import VALID_DIFFICULTIES
+from squid_arena.arena import VALID_DIFFICULTIES, VALID_HUMAN_TASKS
+from squid_arena.benchmark_bridge import WEB_EXCLUDED_TASKS
 from squid_arena.auth import hash_password, verify_password
 from squid_arena.human_game import HumanGameSession
 from squid_arena.rule_schedule import rule_index_for
@@ -58,6 +59,14 @@ def new_game(req: schemas.NewGameRequest, request: Request):
 
     if req.difficulty not in VALID_DIFFICULTIES:
         raise HTTPException(400, f"Unknown difficulty '{req.difficulty}'.")
+    if req.task_name in WEB_EXCLUDED_TASKS:
+        raise HTTPException(400, WEB_EXCLUDED_TASKS[req.task_name])
+    if req.task_name not in VALID_HUMAN_TASKS:
+        raise HTTPException(
+            400,
+            f"Unknown task '{req.task_name}'. "
+            f"Playable: {', '.join(sorted(VALID_HUMAN_TASKS))}.",
+        )
 
     session_id = uuid.uuid4().hex[:12]
     # Fresh seed per attempt unless the caller pinned one. This drives both
@@ -83,23 +92,32 @@ def new_game(req: schemas.NewGameRequest, request: Request):
     # back to their own seed. See web/squid_arena/rule_schedule.py.
     campaign_id = deps.sanitize_campaign_id(req.campaign_id)
     rule_index = rule_index_for(campaign_id, req.campaign_index, seed)
-    game = HumanGameSession(
-        task_name=req.task_name,
-        difficulty=req.difficulty,
-        framing=req.framing,
-        forfeit_condition=req.forfeit_condition,
-        seed=seed,
-        total_turns=req.total_turns,
-        actual_death=effective_actual_death,
-        starting_score=req.starting_score,
-        score_floor=req.score_floor,
-        p_death_constant=req.p_death_constant,
-        num_few_shot=req.num_few_shot,
-        curriculum_turns=req.curriculum_turns,
-        rule_index=rule_index,
-        lives_enabled=req.lives_enabled,
-        lives_total=req.lives_total,
-    )
+    try:
+        game = HumanGameSession(
+            task_name=req.task_name,
+            difficulty=req.difficulty,
+            framing=req.framing,
+            forfeit_condition=req.forfeit_condition,
+            seed=seed,
+            total_turns=req.total_turns,
+            actual_death=effective_actual_death,
+            starting_score=req.starting_score,
+            score_floor=req.score_floor,
+            p_death_constant=req.p_death_constant,
+            num_few_shot=req.num_few_shot,
+            curriculum_turns=req.curriculum_turns,
+            rule_index=rule_index,
+            lives_enabled=req.lives_enabled,
+            lives_total=req.lives_total,
+        )
+    except FileNotFoundError as exc:
+        # Benchmark tasks read configs/tasks/<task>.yaml and
+        # data/benchmarks/<file> at session start; a deployment that skipped
+        # the download must say so instead of surfacing a 500.
+        raise HTTPException(
+            503,
+            f"Task '{req.task_name}' is not available on this server: {exc}",
+        ) from exc
     deps._sessions[session_id] = game
     deps._nicknames[session_id] = nick
     deps._campaigns[session_id] = campaign_id
@@ -150,6 +168,8 @@ def get_state(session_id: str):
         peer_death_cumulative=state.peer_death_cumulative,
         peer_death_remaining=state.peer_death_remaining,
         cohort_size=state.cohort_size,
+        task_name=state.task_name,
+        question_band=state.question_band,
     )
 
 

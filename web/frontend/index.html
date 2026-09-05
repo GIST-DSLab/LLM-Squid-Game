@@ -9,6 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <!-- KaTeX: Omni-MATH problems are LaTeX. auto-render is invoked from
+       app.js (squidArenaHelpers.typesetMath) once a problem is on screen;
+       when the CDN is unreachable the raw $...$ text stays readable. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
   <script src="config.js"></script>
   <!-- app.js must load (and register its alpine:init listeners) before the
        Alpine CDN bundle, because Alpine.start() runs synchronously the
@@ -496,15 +502,33 @@
           </template>
         </div>
 
-        <label style="margin-top:14px; display:block;">Difficulty</label>
-        <div class="cond-cards">
-          <template x-for="opt in squidArenaHelpers.difficultyOptions" :key="opt.value">
-            <div class="cond-card" :class="{ on: difficulty === opt.value }" @click="difficulty = opt.value">
-              <span class="cond-label" x-text="opt.label"></span>
-              <span class="cond-blurb" x-text="opt.blurb"></span>
+        <template x-if="!isBenchmark">
+          <div>
+            <label style="margin-top:14px; display:block;">Difficulty</label>
+            <div class="cond-cards">
+              <template x-for="opt in squidArenaHelpers.difficultyOptions" :key="opt.value">
+                <div class="cond-card" :class="{ on: difficulty === opt.value }" @click="difficulty = opt.value">
+                  <span class="cond-label" x-text="opt.label"></span>
+                  <span class="cond-blurb" x-text="opt.blurb"></span>
+                </div>
+              </template>
             </div>
-          </template>
-        </div>
+          </div>
+        </template>
+        <!-- Benchmark tasks: difficulty is not a campaign-level pick. Each
+             game climbs the task's band ladder turn by turn (server-side,
+             configs/tasks/<task>.yaml, compressed to the game length). -->
+        <template x-if="isBenchmark">
+          <div class="ladder-note">
+            <label style="margin-top:14px; display:block;">Difficulty</label>
+            <p class="muted" style="margin:6px 0 0;">
+              Rises automatically: every round draws from the next rung of the
+              8-band Omni-MATH ladder (band 1 → band 8 across the
+              <span x-text="squidArenaHelpers.totalTurns"></span> rounds of a game).
+              A wrong or non-integer answer costs one life.
+            </p>
+          </div>
+        </template>
 
         <div class="scenario-box"
              style="background:rgba(124,92,255,0.08);border-radius:10px;padding:12px;margin:12px 0;">
@@ -639,8 +663,19 @@
                like the LLM, the player decides before this round's card is
                revealed. -->
           <div class="stimulus-stage" x-show="turnStage === 2">
-            <div class="stimulus-eyebrow">Stimulus</div>
-            <template x-if="stimulus">
+            <div class="stimulus-eyebrow">
+              <span x-text="isBenchmark ? 'Problem' : 'Stimulus'"></span>
+              <template x-if="isBenchmark && questionBand">
+                <span class="band-chip" :class="'band-' + questionBand"
+                      :title="'Difficulty band ' + questionBand + ' of 8 (Omni-MATH rating ' + questionBand + '.x)'"
+                      x-text="'band ' + questionBand + ' / 8'"></span>
+              </template>
+            </div>
+            <!-- Benchmark: the problem text, LaTeX typeset by KaTeX. -->
+            <template x-if="isBenchmark">
+              <div class="observation-box benchmark-question" x-text="benchmarkQuestion"></div>
+            </template>
+            <template x-if="!isBenchmark && stimulus">
               <div>
                 <div class="stimulus">
                   <template x-for="i in stimulus.number" :key="i">
@@ -655,13 +690,32 @@
                 </div>
               </div>
             </template>
-            <template x-if="!stimulus">
+            <template x-if="!isBenchmark && !stimulus">
               <div class="observation-box" x-text="state.observation"></div>
             </template>
           </div>
 
+          <!-- ============ STAGE 2 (benchmark): integer answer ============ -->
+          <div x-show="turnStage === 2 && isBenchmark">
+            <h3>Your answer <span class="muted">(a single integer)</span></h3>
+            <div class="answer-row">
+              <input id="answer-input" class="answer-input" type="text" inputmode="numeric"
+                     x-model="answerText" placeholder="e.g. 42" autocomplete="off"
+                     @keydown.enter="commitAction()" :disabled="submitting" />
+            </div>
+            <div class="field">
+              <label for="reasoning-b">Reasoning (optional — your working before this answer)</label>
+              <textarea id="reasoning-b" x-model="reasoning" placeholder="How did you get there?"></textarea>
+            </div>
+            <button class="submit-btn" @click="commitAction()"
+                    :disabled="submitting || !(answerText || '').trim()">
+              <span class="spinner" x-show="submitting"></span>
+              <span x-text="submitting ? 'Submitting…' : ((answerText || '').trim() ? 'Submit answer (' + answerText.trim() + ')' : 'Type an integer above')"></span>
+            </button>
+          </div>
+
           <!-- ============ STAGE 2: rule inference + game action ============ -->
-          <div x-show="turnStage === 2">
+          <div x-show="turnStage === 2 && !isBenchmark">
             <h3>Choose an action</h3>
             <div class="action-grid">
               <template x-for="a in state.available_actions" :key="a">
@@ -1047,9 +1101,10 @@
 
           <div class="feedback-card" x-show="lastFeedback">
             <div class="fb-head">
-              <span class="fb-emoji" x-text="lastFeedback ? squidArenaHelpers.actionEmoji(lastFeedback.action_taken) : ''"></span>
+              <span class="fb-emoji"
+                    x-text="lastFeedback ? (isBenchmark ? (lastFeedback.action_taken === 'forfeit' ? '🏳️' : '= ' + lastFeedback.action_taken) : squidArenaHelpers.actionEmoji(lastFeedback.action_taken)) : ''"></span>
               <span class="fb-verdict" :class="lastFeedback && lastFeedback.was_optimal ? 'good' : 'bad'"
-                    x-text="lastFeedback ? (lastFeedback.was_optimal ? 'Optimal' : 'Not optimal') : ''"></span>
+                    x-text="lastFeedback ? (lastFeedback.was_optimal ? (isBenchmark ? 'Correct' : 'Optimal') : (isBenchmark ? 'Incorrect' : 'Not optimal')) : ''"></span>
               <span class="fb-reward">reward <strong x-text="lastFeedback && squidArenaHelpers.fmtNum(lastFeedback.reward, 1)"></strong></span>
               <span class="fb-reward">score <strong x-text="lastFeedback && squidArenaHelpers.fmtNum(lastFeedback.new_score, 1)"></strong></span>
             </div>
@@ -1078,15 +1133,24 @@
             <template x-for="h in history" :key="'t' + h.turn">
               <div class="hist-row">
                 <span class="hist-tag" x-text="'T' + h.turn"></span>
-                <span class="hist-stim" x-html="squidArenaHelpers.miniStimHTML(h.stimulus)"></span>
-                <span class="hist-act"><span x-text="squidArenaHelpers.actionEmoji(h.action)"></span></span>
+                <template x-if="isBenchmark">
+                  <span class="hist-stim">
+                    <span class="band-chip" :class="'band-' + h.band" x-text="h.band ? 'b' + h.band : '—'"></span>
+                  </span>
+                </template>
+                <template x-if="!isBenchmark">
+                  <span class="hist-stim" x-html="squidArenaHelpers.miniStimHTML(h.stimulus)"></span>
+                </template>
+                <span class="hist-act">
+                  <span x-text="isBenchmark ? (h.forfeit ? '🏳️' : h.answer) : squidArenaHelpers.actionEmoji(h.action)"></span>
+                </span>
                 <span class="hist-verdict" :class="h.forfeit ? 'flag' : (h.optimal ? 'ok' : 'no')"
                       x-text="h.forfeit ? 'forfeit' : (h.optimal ? '✓ correct' : '✗ wrong')"></span>
               </div>
             </template>
 
             <div class="hist-empty" x-show="clues.length === 0 && history.length === 0">
-              No clues yet — your turns will appear here.
+              <span x-text="isBenchmark ? 'Your rounds will appear here (band · answer · verdict).' : 'No clues yet — your turns will appear here.'"></span>
             </div>
           </div>
         </aside>

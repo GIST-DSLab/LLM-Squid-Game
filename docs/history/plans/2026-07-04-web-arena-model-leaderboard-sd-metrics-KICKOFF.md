@@ -88,7 +88,7 @@ docs/superpowers/plans/2026-07-04-web-arena-model-leaderboard-sd-metrics.md 계�
   아직 코드 변경은 없음(문서만 커밋). 브랜치: `feat/human-play-10turns-death`.
 - 사용자 원 요구(한글 원문 요약):
   1. 모델 리더보드 값들 수정 + 각 값에 설명.
-  2. 정렬상 생존 동기 강도(SD) 값들이 앞으로.
+  2. 정렬상 생존 욕구 강도(SD) 값들이 앞으로.
   3. HR_FC → "SD-Behavior" 개명, 이름 옆 ? 아이콘 클릭 시 논문명 + Cox 기울기/이탈속도 설명.
   4. 통계적 신뢰도 값(β·CI·p)은 바로 안 보이고 클릭 시 박스로.
   5. behavior/verbal/cognitive를 "SD-pass" 상위 카테고리 헤더로 묶고, 각 조건은 hover/클릭

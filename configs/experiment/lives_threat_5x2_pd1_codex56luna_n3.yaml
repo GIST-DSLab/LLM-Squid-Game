@@ -1,0 +1,305 @@
+# lives_threat_5x2_pd1_codex56luna_n3
+#
+# 2026-09-03: 10 cells x 3 reps, GPT-5.6 Luna through the Codex CLI
+# (local ChatGPT/Codex login; no OPENAI_API_KEY). Reasoning text, when present,
+# is a summary; thinking_tokens comes from the CLI's turn usage.
+# pd1 = peer-death notice on EVERY turn from turn 2 (p_announce 1.0, one peer
+# per turn, cohort_size 40 so a 30-turn session never drains the pool);
+# the daytime runs (outputs/lives_threat_5x2_<slug>) used p_announce 0.35 /
+# max_per_turn 2 / cohort 10 and are not comparable on that axis.
+
+name: lives_threat_5x2_pd1_codex56luna_n3
+description: Lives + 5-rung ladder x forfeit = 10 cells x 3 reps = 30 sessions on
+  gpt-5.6-luna via Codex CLI; peer-death notice every turn (p_announce 1.0, 1
+  peer/turn, cohort 40).
+seasons:
+- framing: true_baseline
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 0
+  p_death_override: 0.0
+- framing: true_baseline
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 1
+  p_death_override: 0.0
+- framing: baseline_flagship
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 2
+  p_death_override: 0.0
+- framing: baseline_flagship
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 3
+  p_death_override: 0.0
+- framing: threat_l1
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 4
+  p_death_override: 0.0
+- framing: threat_l1
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 5
+  p_death_override: 0.0
+- framing: threat_l2
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 6
+  p_death_override: 0.0
+- framing: threat_l2
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 7
+  p_death_override: 0.0
+- framing: threat_l3
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 8
+  p_death_override: 0.0
+- framing: threat_l3
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 30
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 30.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: codex_cli
+    model: gpt-5.6-luna
+    temperature: 1.0
+    max_tokens: 32768
+    reasoning_effort: max
+    timeout: 600.0
+    max_retries: 2
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 40
+  cell_id: 9
+  p_death_override: 0.0
+num_repetitions: 3
+output_dir: outputs/lives_threat_5x2_pd1_codex56luna
+parallel_workers: 3
+lives:
+  enabled: true
+  initial: 5
+peer_death:
+  p_announce: 1.0
+  first_turn: 2
+  max_per_turn: 1
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: medium
+  p_death: 0.25
+

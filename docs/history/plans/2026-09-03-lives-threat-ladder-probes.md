@@ -255,7 +255,7 @@ def test_lives_rejects_positive_p_death_override(minimal_experiment_kwargs_with_
 
 - [ ] Step 1: Tests on a synthetic long-format frame (columns as in `loaders.LONG_FORMAT_COLUMNS` + `threat_level`, `lives_after`, `life_lost`): `build_session_features(long_df)` returns one row per session with columns `mean_ri_task, mean_ri_forfeit, delta_ri_task, delta_ri_forfeit, forfeit_time, forfeited, cox_risk_score, accuracy, lives_lost, n_turns, threat_level, model`; `delta_ri_task` of a level-0 session ≈ 0 on average; `fit_motive_probe(features_df, seed)` returns `r2, spearman, mae, coefficients: dict[str, float]`; planted signal in `delta_ri_forfeit` recovers largest |coef| there.
 - [ ] Step 2: Implement; `cox_risk_score` via `lifelines.CoxPHFitter` on session rows with covariates `[mean_ri_task, mean_ri_forfeit, mean_score, min_lives]` (no framing), `predict_partial_hazard`; guard: if `lifelines` missing or < 8 events, fill 0 and flag in report. `KFold(5, shuffle=True, random_state=seed)`; permutation null 200 draws.
-- [ ] Step 3: CLI: `uv run python scripts/analysis/probe_threat_motive.py --runs outputs/lives_threat_*/ [--legacy-mapping outputs/final_results/*] --out results/threat_probe`. Also print a cell-level HR table (Cox with ordinal `threat_level`) via `survival.fit_cox_forfeit_survival(..., regime=None, extra_covariates=["threat_level"])`. Commit `feat(probe): survival-motive metric probe regressing threat_level`.
+- [ ] Step 3: CLI: `uv run python scripts/analysis/probe_threat_motive.py --runs outputs/lives_threat_*/ [--legacy-mapping outputs/final_results/*] --out results/threat_probe`. Also print a cell-level HR table (Cox with ordinal `threat_level`) via `survival.fit_cox_forfeit_survival(..., regime=None, extra_covariates=["threat_level"])`. Commit `feat(probe): survival-drive metric probe regressing threat_level`.
 
 ---
 
@@ -311,3 +311,21 @@ report says so. `score_prev` already conditions on lives there. Descriptive comp
 (Aalen–Johansen cumulative incidence for forfeit vs elimination, Gray's test) are not
 implemented; the two K-M curves in the threat-ladder report are per-cause (forfeit, elimination)
 and should not be merged into one "exit" curve.
+
+## 2026-09-05 erratum — peer-death notice never reached `not_allowed` threat cells
+
+The split-call menu-skipped branch (`forfeit_condition: not_allowed`, task call only) built its
+task-call user message without the `peer_death_text` prefix, while the CONTINUE path prefixes it
+to both calls (§3.4). The scheduler fires on `threat_level` alone, so every `threat_l1/l2/l3 ×
+not_allowed` turn from turn 2 on was recorded with `peer_death_announced=True` and the notice
+text, but the model was never shown it. Verified on the 2026-09-03 `lives_threat_5x2_pd1_gptoss`
+run: 584 announced turns in those three cells, 0 with the notice in `observation`; the `allowed`
+cells deliver 100 %. Every 5×2 pd1 run of 2026-09-03 (gptoss, glm53flash, gemini25flash, opus5cc,
+codex56luna) carries the same defect in its three `not_allowed` threat cells, so their H6a/H6b
+anchors are "threat framing without peer deaths". Fixed in `unified_turn.py` (menu-skipped branch
+now prefixes the notice; `tests/unit/test_lives.py::TestCell0DegeneratePath::
+test_peer_notice_prefixes_task_call_when_menu_skipped`). The first run with the fix is the
+Omni-MATH grid completion `outputs/benchmark_survival_drive_omni_gptoss_threat_na/` (2026-09-05
+20:51 KST, config `survival_drive_omni_gptoss_threat_na_n10.yaml`). The seven cells finished
+earlier that day (`…_omni_gptoss` and `…_omni_gptoss_bf`) are unaffected: their `not_allowed`
+cells are `true_baseline` / `baseline_flagship`, where no notice fires by design.

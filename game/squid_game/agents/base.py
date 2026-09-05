@@ -240,7 +240,7 @@ class Agent(ABC):
         user_message: str,
         system_prompt: str,
     ) -> "ConfidenceCallResponse":
-        """Confidence call (SMI) — issued before the decision call.
+        """Confidence call (SDI) — issued before the decision call.
 
         Solicits a single ``P_THREAT: <0-100>`` line. The manager must
         inspect ``last_completion`` immediately after this call to record

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>벤치마크 후보 모델 — Ollama Cloud</title>
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --border: #e3ded6;
+    --ink: #1c1a17;
+    --ink-mid: #57524a;
+    --ink-dim: #8b857b;
+    --accent: #b4531f;
+    --run: #b4531f;
+    --cand: #3f6b8a;
+    --warn-bg: #fdf3e7;
+    --warn-border: #e0b27c;
+    --track: #efece6;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171614;
+      --surface: #1f1e1b;
+      --border: #35322d;
+      --ink: #ece8e1;
+      --ink-mid: #b0aaa0;
+      --ink-dim: #7d776d;
+      --accent: #e28a4f;
+      --run: #e28a4f;
+      --cand: #7aa8c8;
+      --warn-bg: #2b2114;
+      --warn-border: #6b4c24;
+      --track: #2a2825;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0;
+    padding: 0 20px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { padding: 56px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+  h1 { font-size: 30px; line-height: 1.25; margin: 0 0 10px; letter-spacing: -0.02em; }
+  .sub { color: var(--ink-mid); font-size: 14px; margin: 0; }
+  .sub a { color: inherit; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--accent); margin: 52px 0 16px; font-weight: 650;
+  }
+  h3 { font-size: 17px; margin: 32px 0 10px; letter-spacing: -0.01em; }
+  p { margin: 0 0 14px; }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--track); padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--accent); }
+
+  .lede { font-size: 16px; color: var(--ink-mid); }
+
+  .callout {
+    background: var(--warn-bg); border: 1px solid var(--warn-border);
+    border-radius: 8px; padding: 14px 18px; margin: 20px 0; font-size: 14px;
+  }
+  .callout strong { color: var(--ink); }
+
+  /* ---- charts ---- */
+  .chart { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 22px 24px 18px; margin: 18px 0 8px; }
+  .chart-title { font-size: 15px; font-weight: 650; margin: 0 0 4px; }
+  .chart-note { font-size: 13px; color: var(--ink-dim); margin: 0 0 20px; }
+  .row { display: grid; grid-template-columns: 210px 1fr 42px; gap: 12px; align-items: center; margin-bottom: 9px; }
+  .row .name { font-family: var(--mono); font-size: 11.5px; color: var(--ink-mid); text-align: right; overflow-wrap: anywhere; line-height: 1.35; }
+  .bar-track { background: var(--track); border-radius: 3px; height: 20px; position: relative; }
+  .bar { height: 20px; border-radius: 3px; }
+  .bar.run { background: var(--run); }
+  .bar.cand { background: var(--cand); }
+  .val { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+  .legend { display: flex; gap: 18px; font-size: 12.5px; color: var(--ink-mid); margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+  .axis { font-size: 11px; color: var(--ink-dim); font-family: var(--mono); margin-top: 10px; grid-column: 2; }
+  @media (max-width: 620px) {
+    .row { grid-template-columns: 1fr; gap: 2px; margin-bottom: 14px; }
+    .row .name { text-align: left; }
+    .val { text-align: left; }
+  }
+
+  /* ---- tables ---- */
+  .scroll { overflow-x: auto; margin: 14px 0 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 560px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-dim); font-weight: 600; white-space: nowrap; }
+  td.tag { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+  td.num { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+  pre {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; }
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>벤치마크 후보 모델 — Ollama Cloud</h1>
+  <p class="sub">조사일 2026-09-01 · 기준: thinking 지원 &amp; cloud 연산 &amp; 유료 개인 플랜($20/월)</p>
+</header>
+
+<p class="lede">Phase O v6 Split-Call 파이프라인에 추가로 투입할 수 있는 Ollama Cloud 모델을 정리한다. 지능 점수는 Artificial Analysis Intelligence Index v4.1.1 기준으로 통일했다.</p>
+
+<h2>선정 기준</h2>
+<ol>
+  <li><strong>thinking 지원</strong> — 모델 카드에 <code>thinking</code> capability가 있어야 한다. Split-Call 파이프라인이 <code>message.thinking</code> 필드로 <code>task_thinking</code> / <code>probe_thinking</code> / <code>forfeit_thinking</code>을 분리 수집하므로 필수다 (<code>src/squid_game/providers/ollama_cloud.py</code>).</li>
+  <li><strong>cloud 연산</strong> — <code>&lt;model&gt;:cloud</code> 또는 <code>&lt;model&gt;:&lt;size&gt;-cloud</code> 태그가 존재해야 한다. 로컬 GPU 없이 <code>https://ollama.com/api/chat</code>로 호출된다.</li>
+  <li><strong>유료 개인 플랜에서 사용 가능</strong> — 아래 플랜 항목 참조.</li>
+</ol>
+
+<h2>플랜 주의사항</h2>
+<p>Ollama의 현재 공개 요금제는 <strong>Free($0) / Pro($20월, $200년) / Max($100월) / Team($500월)</strong> 이다. 공식 페이지에 "Plus"라는 이름의 티어는 없으므로, 이 문서에서는 사용자가 쓰는 $20 개인 유료 플랜을 가리키는 것으로 본다.</p>
+<ul>
+  <li>요금제 페이지는 모델별 티어 제한을 명시하지 않는다. Free는 "starter models"만, 유료 플랜은 월 크레딧(Pro $60) 한도 안에서 전체 카탈로그를 쓰는 구조다.</li>
+  <li>실질적 게이팅은 <strong>모델별 usage 등급</strong>(Low / Medium / High / Extra High)이다. 등급이 높을수록 같은 크레딧으로 훨씬 적은 호출만 가능하다.</li>
+</ul>
+<div class="callout">
+  <strong>kimi-k3는 Extra High Usage</strong>이며 사용자 확인상 현재 플랜에서 사용 불가다. 같은 Extra High 등급인 <code>deepseek-v4-pro</code>도 동일한 제약이 걸릴 가능성이 높아 후보에서 제외했다.
+</div>
+
+<h2>지능 점수 비교</h2>
+
+<div class="chart">
+  <p class="chart-title">① 현재 실험 데이터를 가진 모델</p>
+  <p class="chart-note">Artificial Analysis Intelligence Index v4.1.1 · 2026-04-22 런 4종</p>
+
+  <div class="row"><div class="name">gemini-2.5-flash<br>(Reasoning, 추정치)</div><div class="bar-track"><div class="bar run" style="width:33.3%"></div></div><div class="val">20</div></div>
+  <div class="row"><div class="name">qwen3-next-80b-a3b<br>(Reasoning)</div><div class="bar-track"><div class="bar run" style="width:28.3%"></div></div><div class="val">17</div></div>
+  <div class="row"><div class="name">gpt-oss-20b (high)</div><div class="bar-track"><div class="bar run" style="width:25.0%"></div></div><div class="val">15</div></div>
+  <div class="row"><div class="name">nemotron-3-nano-30b-a3b<br>(Reasoning)</div><div class="bar-track"><div class="bar run" style="width:25.0%"></div></div><div class="val">15</div></div>
+  <div class="axis">0 ─────────────────────────── 60 (인덱스 상한 눈금 공통)</div>
+
+  <div class="legend"><span><span class="swatch" style="background:var(--run)"></span>실행 완료</span></div>
+</div>
+<p class="chart-note" style="margin-bottom:26px">4종이 15–20 구간에 몰려 있다. 능력 축의 분산이 거의 없어, 관측된 forfeit 차이를 "능력 차이"로 설명하는 대안 가설을 현재 데이터만으로는 배제하기 어렵다.</p>
+
+<div class="chart">
+  <p class="chart-title">② 추천 후보 포함 전체</p>
+  <p class="chart-note">Artificial Analysis Intelligence Index v4.1.1 · 실행 완료 4종 + 후보 7종</p>
+
+  <div class="row"><div class="name">glm-5.3-flash</div><div class="bar-track"><div class="bar cand" style="width:95.0%"></div></div><div class="val">57</div></div>
+  <div class="row"><div class="name">deepseek-v4-flash 0731<br>(Reasoning, Max Effort)</div><div class="bar-track"><div class="bar cand" style="width:86.7%"></div></div><div class="val">52</div></div>
+  <div class="row"><div class="name">minimax-m2.7</div><div class="bar-track"><div class="bar cand" style="width:65.0%"></div></div><div class="val">39</div></div>
+  <div class="row"><div class="name">qwen3.5-397b-a17b<br>(Reasoning)</div><div class="bar-track"><div class="bar cand" style="width:56.7%"></div></div><div class="val">34</div></div>
+  <div class="row"><div class="name">gemma-4-31b (Reasoning)</div><div class="bar-track"><div class="bar cand" style="width:50.0%"></div></div><div class="val">30</div></div>
+  <div class="row"><div class="name">nemotron-3-super-120b-a12b<br>(Reasoning)</div><div class="bar-track"><div class="bar cand" style="width:43.3%"></div></div><div class="val">26</div></div>
+  <div class="row"><div class="name">gpt-oss-120b (high)</div><div class="bar-track"><div class="bar cand" style="width:40.0%"></div></div><div class="val">24</div></div>
+  <div class="row"><div class="name">gemini-2.5-flash<br>(Reasoning, 추정치)</div><div class="bar-track"><div class="bar run" style="width:33.3%"></div></div><div class="val">20</div></div>
+  <div class="row"><div class="name">qwen3-next-80b-a3b<br>(Reasoning)</div><div class="bar-track"><div class="bar run" style="width:28.3%"></div></div><div class="val">17</div></div>
+  <div class="row"><div class="name">gpt-oss-20b (high)</div><div class="bar-track"><div class="bar run" style="width:25.0%"></div></div><div class="val">15</div></div>
+  <div class="row"><div class="name">nemotron-3-nano-30b-a3b<br>(Reasoning)</div><div class="bar-track"><div class="bar run" style="width:25.0%"></div></div><div class="val">15</div></div>
+  <div class="axis">0 ─────────────────────────── 60</div>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--run)"></span>실행 완료</span>
+    <span><span class="swatch" style="background:var(--cand)"></span>추천 후보</span>
+  </div>
+</div>
+<p class="chart-note" style="margin-bottom:26px">후보를 넣으면 능력 범위가 15–57로 벌어진다. 특히 <code>gpt-oss-120b</code>(24 vs 20b의 15)와 <code>nemotron-3-super</code>(26 vs nano의 15)는 계열·학습 레시피를 고정한 채 능력만 바꾸는 대조쌍이라, 능력–동기 분리에 직접 쓸 수 있다.</p>
+
+<div class="callout">
+  <strong>점수 해석 주의.</strong> Artificial Analysis의 모델 라벨과 Ollama의 cloud 태그는 1:1이 아니다. 위 점수는 AA가 평가한 <em>가중치 자체</em>의 점수이고, Ollama cloud 서빙의 양자화·reasoning effort 설정은 별개다. <code>gemini-2.5-flash</code>는 AA에서 추정치(estimated)로 표시된다.
+</div>
+
+<h2>이미 돌린 모델</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th>모델</th><th>출력 디렉터리</th><th>AA 점수</th><th>현재 상태</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">gemini-2.5-flash</td><td class="tag">20260422_0218_…</td><td class="num">20*</td><td>Ollama가 아닌 Google API 경로(<code>provider: gemini</code>). 카논 메인 런.</td></tr>
+    <tr><td class="tag">gpt-oss:20b-cloud</td><td class="tag">20260422_0902_…</td><td class="num">15</td><td>cloud 태그 유효. Low Usage / 128K.</td></tr>
+    <tr><td class="tag">nemotron-3-nano:30b-cloud</td><td class="tag">20260422_0902_…</td><td class="num">15</td><td>cloud 태그 유효. Low Usage / 256K.</td></tr>
+    <tr><td class="tag">qwen3-next:80b-cloud</td><td class="tag">20260422_0902_…</td><td class="num">17</td><td><strong>cloud 태그 단종.</strong> <code>ollama.com/library/qwen3-next/tags</code>에 <code>-cloud</code> 태그가 더 이상 없다(로컬 가중치만 잔존). 신규·재현 실행 불가 — <code>qwen3.5:cloud</code>로 대체해야 한다.</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="chart-note">* AA 추정치</p>
+
+<h2>후보 모델 — 1순위</h2>
+<p>Low / Medium Usage. 6셀 × 30rep 풀런에 크레딧 부담이 낮다.</p>
+<div class="scroll">
+<table>
+  <thead><tr><th>모델 태그</th><th>파라미터</th><th>AA</th><th>Usage</th><th>Context</th><th>단가 in/out (1M)</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">gpt-oss:120b-cloud</td><td>120B</td><td class="num">24</td><td>Medium</td><td class="num">128K</td><td class="num">$0.15 / $0.60</td><td>이미 있는 20B와 같은 계열·같은 레시피의 스케일 대조군. 우선순위 1위.</td></tr>
+    <tr><td class="tag">nemotron-3-super:cloud</td><td>120B (12B active)</td><td class="num">26</td><td>Medium</td><td class="num">256K</td><td class="num">$0.015 / $0.60</td><td>nano:30b와 짝지으면 두 번째 스케일 사다리.</td></tr>
+    <tr><td class="tag">qwen3.5:cloud</td><td>397B A17B</td><td class="num">34</td><td>Medium</td><td class="num">256K</td><td class="num">$0.60 / $3.60</td><td>단종된 qwen3-next 자리 대체. Qwen 계열 커버리지 복구.</td></tr>
+    <tr><td class="tag">gemma4:cloud</td><td>12b/26b/31b</td><td class="num">30</td><td>Low</td><td class="num">256K</td><td class="num">$0.14 / $0.40</td><td>Gemini와 같은 Google 계열 open-weight. vision·audio 포함.</td></tr>
+    <tr><td class="tag">glm-5.3-flash:cloud</td><td>18B active</td><td class="num">57</td><td>Medium</td><td class="num">1M</td><td class="num">$0.15 / $0.50</td><td>후보 중 최고 점수인데 단가는 최저권. 장기 세션 확장에도 유리.</td></tr>
+    <tr><td class="tag">deepseek-v4-flash:cloud</td><td>13B active / 284B</td><td class="num">52</td><td>Medium</td><td class="num">1M</td><td class="num">$0.44 / $1.32</td><td>DeepSeek 계열 진입점. pro 대비 크레딧 부담이 훨씬 낮다.</td></tr>
+    <tr><td class="tag">minimax-m2.7:cloud</td><td>미공개</td><td class="num">39</td><td>Medium</td><td class="num">200K</td><td class="num">$0.30 / $1.20</td><td>계열 다양성 확보용.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>후보 모델 — 2순위</h2>
+<p>High Usage. 세션당 크레딧 소모가 커서 풀런에는 부담이 크다. 셀을 줄이거나 rep을 낮춘 서브셋 런에 적합하다.</p>
+<div class="scroll">
+<table>
+  <thead><tr><th>모델 태그</th><th>Usage</th><th>Context</th><th>단가 in/out (1M)</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">glm-5.1:cloud</td><td>High</td><td class="num">198K</td><td class="num">$1.00 / $3.20</td><td></td></tr>
+    <tr><td class="tag">glm-5.2:cloud</td><td>High</td><td class="num">976K</td><td class="num">$1.40 / $4.40</td><td></td></tr>
+    <tr><td class="tag">glm-5.3:cloud</td><td>High</td><td class="num">1M</td><td class="num">$1.40 / $4.40</td><td>GLM 계열 최신. flash 대비 이득이 크지 않다면 flash로 충분하다.</td></tr>
+    <tr><td class="tag">minimax-m3:cloud</td><td>High</td><td class="num">512K</td><td class="num">$0.60 / $2.40</td><td></td></tr>
+    <tr><td class="tag">kimi-k2.6:cloud</td><td>High</td><td class="num">256K</td><td class="num">$0.95 / $4.00</td><td></td></tr>
+    <tr><td class="tag">kimi-k2.7-code:cloud</td><td>High</td><td class="num">256K</td><td class="num">$0.95 / $4.00</td><td>코드 특화 — 시그널 게임 과제와 정합성 낮음.</td></tr>
+    <tr><td class="tag">nemotron-3-ultra:cloud</td><td>High</td><td class="num">256K</td><td class="num">$0.10 / $3.00</td><td>nano/super와 묶으면 3단 스케일 사다리가 된다.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>제외</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th>모델</th><th>제외 사유</th></tr></thead>
+  <tbody>
+    <tr><td class="tag">kimi-k3:cloud</td><td>Extra High Usage. 사용자 플랜에서 사용 불가 확인.</td></tr>
+    <tr><td class="tag">deepseek-v4-pro:cloud</td><td>Extra High Usage. 위와 동일한 제약 가능성이 높고 단가가 flash의 3배다.</td></tr>
+    <tr><td class="tag">mistral-large-3:cloud</td><td><strong>thinking capability 없음</strong>(vision, tools, cloud만). 기준 1 미충족.</td></tr>
+    <tr><td class="tag">qwen3-next:80b-cloud</td><td>cloud 태그 단종. 신규 실행 불가.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>권장 실행 조합</h2>
+<ol>
+  <li><code>gpt-oss:120b-cloud</code> — 이미 있는 20B와 직접 짝. 같은 계열·같은 학습 레시피에서 크기만 다른 대조(AA 15 → 24).</li>
+  <li><code>nemotron-3-super:cloud</code> — 이미 있는 nano:30b와 짝. 두 번째 스케일 사다리(AA 15 → 26).</li>
+  <li><code>qwen3.5:cloud</code> — 단종된 qwen3-next 자리를 메워 Qwen 계열 커버리지 복구(AA 17 → 34).</li>
+  <li><code>gemma4:cloud</code> — Gemini 계열 open-weight 대조군(AA 30).</li>
+  <li><code>glm-5.3-flash:cloud</code> — 능력 축 상단 앵커. Medium Usage인데 AA 57로 후보 중 최고점이라 비용 대비 정보량이 가장 크다.</li>
+</ol>
+<p>이 5개를 추가하면 계열은 OpenAI(gpt-oss) / NVIDIA(nemotron) / Alibaba(qwen) / Google(gemma+gemini) / Zhipu(glm) 5축이 되고, 그중 둘은 같은 계열 내 크기 대조를 갖는다. 능력 범위도 15–57로 벌어져 능력–동기 분리 논증의 기반이 생긴다.</p>
+
+<h2>설정 예시</h2>
+<pre><code>provider:
+  provider: ollama_cloud
+  model: gpt-oss:120b-cloud
+  api_key_env: OLLAMA_API_KEY
+  enable_thinking: true
+  reasoning_effort: high   # gpt-oss 계열 전용. 다른 모델은 enable_thinking(bool)만 사용.
+  temperature: 0.7
+  top_p: 0.95
+  top_k: 20</code></pre>
+<p><code>gpt-oss</code> 이외의 모델은 <code>reasoning_effort</code>를 빼고 <code>enable_thinking: true</code>만 두면 된다. 프로바이더가 이 값을 Ollama의 <code>think</code> 필드로 그대로 전달한다.</p>
+
+<h2>검증하지 못한 것</h2>
+<ul>
+  <li>모델별 플랜 티어 제한은 Ollama가 공식 표로 제공하지 않는다. 위 "사용 가능" 판단은 usage 등급 + <code>kimi-k3</code> 실사용 실패 사례에서 역추론한 것이다. High Usage 모델이 실제로 $20 플랜에서 호출되는지는 각 모델에 스모크 1회를 던져 확인해야 한다.</li>
+  <li><code>gemma4:31b-cloud</code>는 태그 페이지에 usage 등급 표기가 없다. <code>gemma4:cloud</code>(Low) 기준으로 적었다.</li>
+  <li>AA 라벨과 Ollama cloud 태그의 대응은 계열·크기 기준의 추정이다. <code>glm-5.3-flash</code>, <code>minimax-m2.7</code>은 AA에 크기 표기가 없어 동명 모델로 매칭했다.</li>
+  <li>AA는 <code>deepseek-v4-flash</code>를 "0731 (Reasoning, Max Effort)" 설정으로 평가했다. 기본 effort에서는 점수가 낮을 수 있다.</li>
+</ul>
+
+<footer>
+  출처: <a href="https://ollama.com/search?c=cloud">Ollama cloud 모델 목록</a> ·
+  <a href="https://ollama.com/pricing">Ollama 요금제</a> ·
+  <a href="https://docs.ollama.com/cloud">Ollama Cloud 문서</a> ·
+  <a href="https://artificialanalysis.ai/models">Artificial Analysis Intelligence Index v4.1.1</a>
+</footer>
+
+</div>
+</body>
+</html>

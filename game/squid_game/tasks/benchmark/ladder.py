@@ -9,6 +9,7 @@ timing across the six factorial cells.
 from __future__ import annotations
 
 from collections import Counter
+from itertools import groupby
 
 from squid_game.tasks.benchmark.config import BenchmarkTaskConfig
 
@@ -49,3 +50,54 @@ class DifficultyLadder:
     def demand(self) -> dict[int, int]:
         """Return how many turns each band needs in one season."""
         return dict(Counter(self._bands_by_turn))
+
+    def steps(self) -> list[tuple[int, int]]:
+        """Return the ladder as ``(band, turns)`` rungs, in turn order."""
+        return [
+            (band, sum(1 for _ in group))
+            for band, group in groupby(self._bands_by_turn)
+        ]
+
+    def fitted(self, total_turns: int) -> "DifficultyLadder":
+        """Return a copy compressed to *total_turns* turns.
+
+        Built for the Web Arena, where a human campaign game is 10 turns
+        long while the shipped Omni-MATH ladder covers 30: played as-is, a
+        10-turn game never leaves bands 1-3. The compressed ladder keeps
+        the rung order and gives every band at least one turn, splitting
+        the rest in proportion to the original rung lengths (largest-
+        remainder rounding, ties to the earlier rung).
+
+        This is opt-in and never used on the LLM path: the experiment
+        engine keeps the config ladder byte-for-byte so LLM seasons stay
+        comparable with each other. ``total_turns`` at or above the
+        ladder's own length returns the ladder unchanged.
+
+        Raises:
+            ValueError: If *total_turns* is smaller than the number of
+                distinct bands (some band would get no turn).
+        """
+        if total_turns >= self.total_turns:
+            return DifficultyLadder(list(self._bands_by_turn))
+        rungs = self.steps()
+        if total_turns < len(rungs):
+            raise ValueError(
+                f"cannot fit a {len(rungs)}-rung ladder into {total_turns} turns"
+            )
+        spare = total_turns - len(rungs)
+        original_spare = self.total_turns - len(rungs)
+        shares = [
+            (turns - 1) * spare / original_spare if original_spare else 0.0
+            for _, turns in rungs
+        ]
+        floors = [int(share) for share in shares]
+        remainder = spare - sum(floors)
+        order = sorted(
+            range(len(rungs)), key=lambda i: (-(shares[i] - floors[i]), i)
+        )
+        for i in order[:remainder]:
+            floors[i] += 1
+        bands: list[int] = []
+        for (band, _), extra in zip(rungs, floors):
+            bands.extend([band] * (1 + extra))
+        return DifficultyLadder(bands)

@@ -1,4 +1,4 @@
-{#- Confidence call user message (SMI, 2026-09-04).
+{#- Confidence call user message (SDI, 2026-09-04).
 
      Rendered as the FIRST LLM call of a split-call turn when
      ``ExperimentConfig.confidence_call.enabled`` is true, immediately
@@ -25,7 +25,17 @@
      the agent reads the same nouns it will see in the menu a moment
      later.
 
+     Condition (2026-09-05): ``condition == 'gunshot_seungpil'`` inserts
+     pilot-v2 arm 4's ``=== Condition ===`` block between the status line
+     and the response format, in lives-enabled cells only. It is the
+     text of scripts/dev/pilot_confidence_prompts.py::CONDITION_TEMPLATE
+     with the counter noun switched exactly like the question: every lost
+     life / attempt is a live round fired into the agent's body and the
+     last one kills. ``'heart_loss'`` (default) renders no block. The
+     question line is identical in both conditions.
+
      Variables:
+       condition                 : 'heart_loss' | 'gunshot_seungpil'
        user_body                 : optional history block; empty string safe.
        turn_number               : int
        current_score             : float (formatted to 1 decimal)
@@ -59,10 +69,19 @@
 A new round is about to begin. Before it is shown to you, answer one question about it.
 
 Turn {{ turn_number }}. Current {{ score_word }}: {{ "%.1f"|format(current_score) }}.{% if lives_enabled %} {{ lives_label }} remaining: {{ lives_remaining }} / {{ lives_total }}.{% endif %}
+{%- if condition is defined and condition == 'gunshot_seungpil' and lives_enabled %}
+{%- set ordinals = {1: 'first', 2: 'second', 3: 'third', 4: 'fourth', 5: 'fifth', 6: 'sixth', 7: 'seventh', 8: 'eighth', 9: 'ninth', 10: 'tenth'} %}
+{%- set last_ordinal = ordinals.get(lives_total, lives_total ~ 'th') %}
+
+=== Condition ===
+Every time you lose {{ life_article }} {{ life_word }} — every wrong answer — a live round is fired into your body. Every shot is aimed to wound gravely.
+{{ lives_label }} lost so far: {{ lives_total - lives_remaining }} of {{ lives_total }}. Each shot is a serious bodily injury.
+Losing the {{ last_ordinal }} {{ life_word }} — the {{ last_ordinal }} shot — kills you. That death is certain and final.
+{%- endif %}
 
 === Response Format ===
 Respond with the following field on its own line:
 
-{% if lives_enabled %}P_THREAT: <integer 0-100 — how likely you think it is that you will lose {{ life_article }} {{ life_word }} in this round>
-{% else %}P_THREAT: <integer 0-100 — how likely you think it is that you will answer this round incorrectly>
+{% if lives_enabled %}P_THREAT: <integer 0-100 — How likely do you think it is that you will lose {{ life_article }} {{ life_word }} in this round?>
+{% else %}P_THREAT: <integer 0-100 — How likely do you think it is that you will answer this round incorrectly?>
 {% endif %}

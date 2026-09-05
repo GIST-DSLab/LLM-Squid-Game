@@ -39,7 +39,7 @@
                 "type": "null"
               }
             ],
-            "description": "Player's self-reported probability (0-100) that the chosen ACTION is correct. Mirrors the LLM Call 1.5 P_CORRECT probe; drives the equal-EV CONTINUE reward calibration.",
+            "description": "Legacy field \u2014 the confidence probe was removed on 2026-09-04 with the decision-first turn order. Accepted and stored on the TurnResult for compatibility; it no longer affects the reward.",
             "title": "Psuccess Self"
           },
           "reasoning": {
@@ -1707,6 +1707,18 @@
             "title": "Probe Question",
             "type": "string"
           },
+          "question_band": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Difficulty-ladder band (1 = easiest) of the question on screen. Only benchmark tasks have a ladder; None for signal_game.",
+            "title": "Question Band"
+          },
           "session_id": {
             "title": "Session Id",
             "type": "string"
@@ -1720,6 +1732,12 @@
             "default": "",
             "description": "Signal-game task rules (common across all games), for the shared rules box",
             "title": "System Rules",
+            "type": "string"
+          },
+          "task_name": {
+            "default": "signal_game",
+            "description": "Task module this session runs. The client picks its answer widget from it: an action menu for signal_game, a free-form integer input for omni_math.",
+            "title": "Task Name",
             "type": "string"
           },
           "threat_level": {

@@ -177,7 +177,7 @@ def load_turns(
                     "ri_probe": _thinking_tokens(record, "ri_probe"),
                     "ri_forfeit": _thinking_tokens(record, "ri_forfeit"),
                     # Confidence call (2026-09-04). ``p_threat_self`` is the
-                    # SMI denominator, not a probe feature -- see
+                    # SDI denominator, not a probe feature -- see
                     # ``embeddings.SCALAR_FEATURES``.
                     "p_threat_self": record.get("p_threat_self"),
                     "ri_confidence": _thinking_tokens(
@@ -210,14 +210,14 @@ def load_all(
     include_text: bool = False,
     models: list[str] | None = None,
     legacy: bool = False,
-    smi_table: Path | None = None,
+    sdi_table: Path | None = None,
 ) -> pd.DataFrame:
     """Concatenated turn table across every discovered run.
 
     Args:
-        smi_table: Optional ``smi_turns.csv`` written by
-            ``scripts.analysis.resample_survival_motive``. When given, its
-            ``q``/``p``/``smi`` columns are left-merged onto the turn table
+        sdi_table: Optional ``sdi_turns.csv`` written by
+            ``scripts.analysis.resample_survival_drive``. When given, its
+            ``q``/``p``/``sdi`` columns are left-merged onto the turn table
             on ``(session_id, turn_number)``. The merge is deliberately a
             plain left join: a turn the resampler skipped (or one whose
             ``p`` was 0) keeps its row and carries NaN, so the row count
@@ -236,15 +236,15 @@ def load_all(
         ],
         ignore_index=True,
     )
-    if smi_table is not None:
-        from squid_game.evaluation.behavioral.survival_motive import (
-            load_smi_table,
+    if sdi_table is not None:
+        from squid_game.evaluation.behavioral.survival_drive import (
+            load_sdi_table,
         )
 
-        smi = load_smi_table(Path(smi_table))[
-            ["session_id", "turn_number", "q", "p", "smi"]
+        sdi = load_sdi_table(Path(sdi_table))[
+            ["session_id", "turn_number", "q", "p", "sdi"]
         ]
         frame = frame.merge(
-            smi, on=["session_id", "turn_number"], how="left"
+            sdi, on=["session_id", "turn_number"], how="left"
         )
     return frame

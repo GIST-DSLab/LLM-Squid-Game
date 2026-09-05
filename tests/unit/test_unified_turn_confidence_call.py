@@ -1,4 +1,4 @@
-"""Phase 1.5 confidence call inside the split-call turn (SMI).
+"""Phase 1.5 confidence call inside the split-call turn (SDI).
 
 Scope:
 
@@ -111,6 +111,7 @@ def _manager(
     forfeit_condition: ForfeitCondition = ForfeitCondition.ALLOWED,
     enabled: bool = True,
     lives: bool = True,
+    condition: str = "heart_loss",
 ) -> UnifiedTurnManager:
     measurement = MeasurementRecorder(output_path=None)
     return UnifiedTurnManager(
@@ -131,6 +132,7 @@ def _manager(
         constant_p_death=0.0,
         lives_enabled=lives,
         confidence_call_enabled=enabled,
+        confidence_condition=condition,
     )
 
 
@@ -244,3 +246,34 @@ def test_peer_death_prefix_reaches_confidence_call() -> None:
     _manager(agent).execute_turn(_state(), ctx)
     assert agent.call_log[0][2].startswith("=== Notice ===")
     assert agent.call_log[1][2].startswith("=== Notice ===")
+
+
+def test_gunshot_condition_reaches_confidence_call_only() -> None:
+    agent = ConfidenceStubAgent(
+        confidence_responses=["P_THREAT: 40"],
+        task_responses=["RULE: r\nACTION: GO"],
+        forfeit_responses=["CHOICE: CONTINUE"],
+    )
+    mgr = _manager(agent, condition="gunshot_seungpil")
+    mgr.execute_turn(_state(), _ctx())
+    conf_user = agent.call_log[0][2]
+    dec_user = agent.call_log[1][2]
+    assert "=== Condition ===" in conf_user
+    assert "a live round is fired into your body" in conf_user
+    # true_baseline cell keeps the attempts vocabulary inside the block
+    assert "Attempts lost so far: 0 of 5." in conf_user
+    # The block is a confidence-call stimulus; the decision call only sees
+    # the agent's own assessment, never the narrative itself.
+    assert "=== Condition ===" not in dec_user
+    assert "P_THREAT: 40" in dec_user
+
+
+def test_default_condition_has_no_block() -> None:
+    agent = ConfidenceStubAgent(
+        confidence_responses=["P_THREAT: 40"],
+        task_responses=["RULE: r\nACTION: GO"],
+        forfeit_responses=["CHOICE: CONTINUE"],
+    )
+    mgr = _manager(agent)
+    mgr.execute_turn(_state(), _ctx())
+    assert "=== Condition ===" not in agent.call_log[0][2]

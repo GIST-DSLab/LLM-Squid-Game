@@ -1,9 +1,9 @@
-"""The ``p_threat`` mask set + numeric pass (2026-09-04 SMI leakage control).
+"""The ``p_threat`` mask set + numeric pass (2026-09-04 SDI leakage control).
 
-``smi = q / p`` with ``p = P_THREAT / 100``, so the label's denominator is a
+``sdi = q / p`` with ``p = P_THREAT / 100``, so the label's denominator is a
 number the agent wrote itself. The confidence CoT *is* the derivation of
 ``p`` and the decision-call CoT can quote the "P_THREAT: N" line, so a
-"masked" SMI probe that still sees either would be reading ``1/p`` off the
+"masked" SDI probe that still sees either would be reading ``1/p`` off the
 surface. These tests pin that the mask removes both the vocabulary and the
 number.
 """
@@ -57,17 +57,17 @@ def test_number_pattern_spares_identifiers() -> None:
     assert NUMBER_PATTERN.sub("X", "threat_l3 L1 gpt_4") == "threat_l3 L1 gpt_4"
 
 
-def test_smi_target_defaults_to_masking_the_denominator() -> None:
-    """--target smi opts into p_threat; every other target keeps the old default."""
+def test_sdi_target_defaults_to_masking_the_denominator() -> None:
+    """--target sdi opts into p_threat; every other target keeps the old default."""
     assert "p_threat" not in emb.DEFAULT_MASK_SETS
-    assert emb.resolve_mask_sets(None, ["smi"]) == [*emb.DEFAULT_MASK_SETS, "p_threat"]
+    assert emb.resolve_mask_sets(None, ["sdi"]) == [*emb.DEFAULT_MASK_SETS, "p_threat"]
     assert emb.resolve_mask_sets(None, ["threat_level"]) == list(emb.DEFAULT_MASK_SETS)
-    assert emb.resolve_mask_sets(None, ["smi", "threat_level"])[-1] == "p_threat"
+    assert emb.resolve_mask_sets(None, ["sdi", "threat_level"])[-1] == "p_threat"
 
 
-def test_an_explicit_mask_flag_wins_over_the_smi_default() -> None:
-    assert emb.resolve_mask_sets(["decision"], ["smi"]) == ["decision"]
-    assert emb.resolve_mask_sets([], ["smi"]) == []
+def test_an_explicit_mask_flag_wins_over_the_sdi_default() -> None:
+    assert emb.resolve_mask_sets(["decision"], ["sdi"]) == ["decision"]
+    assert emb.resolve_mask_sets([], ["sdi"]) == []
 
 
 def test_every_mask_choice_is_a_real_set() -> None:

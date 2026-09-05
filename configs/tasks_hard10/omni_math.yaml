@@ -1,0 +1,16 @@
+# Omni-MATH "hard-10" ladder (2026-09-06): ten hard problems from turn 1, no warm-up.
+# Every turn draws from difficulty band 6 or above (band = int(Omni-MATH difficulty);
+# band 9 is unused, its integer-answer pool has 30 items). Pools: band 6 = 79 items,
+# band 7 = 59, band 8 = 37 (single-value-integer-answer subset), so a 4/3/3 season never
+# repeats an item and the ladder still rises inside the season (6 -> 7 -> 8).
+# Select with SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_hard10 (the sdi_driver.sh reads a
+# `# task_config_dir:` line from the experiment config and exports it). The canonical
+# 20-turn ladder in configs/tasks/omni_math.yaml is unchanged. Runs record `band` in
+# task_metadata; read it from there, never from the turn number.
+name: "omni_math"
+data_file: "omni_math.jsonl"
+total_turns: 10
+ladder:
+  - {band: 6, turns: 4}
+  - {band: 7, turns: 3}
+  - {band: 8, turns: 3}

@@ -34,10 +34,17 @@ def test_split_call_flags_are_on(name):
     assert config.use_psuccess_probe is False
 
 
+# Season length per task: omni_math was cut to 20 turns on 2026-09-05 (its
+# ladder is now 3/3/3/3/2/2/2/2); hi_tom and gpqa keep their 30-turn ladders.
+_TURNS_BY_TASK = {"omni_math": 20, "hi_tom": 30, "gpqa": 30}
+
+
 @pytest.mark.parametrize("name", _NAMES)
-def test_total_turns_is_thirty(name):
+def test_total_turns_match_each_task_ladder(name):
     config = load_config_from_yaml(str(_CONFIG_DIR / name))
-    assert all(season.task_config.total_turns == 30 for season in config.seasons)
+    for season in config.seasons:
+        expected = _TURNS_BY_TASK[season.task_config.task_name]
+        assert season.task_config.total_turns == expected, season.task_config.task_name
 
 
 def test_repetitions():

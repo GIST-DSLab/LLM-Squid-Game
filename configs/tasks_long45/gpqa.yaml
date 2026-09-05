@@ -1,0 +1,13 @@
+# GPQA (main), 45-turn ladder variant (2026-09-03 "reasoning under threat" runs).
+# Selected with SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_long45; canonical
+# 30-turn ladder in configs/tasks/gpqa.yaml untouched. Pool per band after the
+# adapter's clamp: 2:57 3:177 4:32 5:109 6:41 -> 9 turns per band fits.
+name: "gpqa"
+data_file: "gpqa_main.csv"
+total_turns: 45
+ladder:
+  - {band: 2, turns: 9}
+  - {band: 3, turns: 9}
+  - {band: 4, turns: 9}
+  - {band: 5, turns: 9}
+  - {band: 6, turns: 9}

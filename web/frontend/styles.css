@@ -2709,3 +2709,44 @@ header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .settings-caret { transition: none; }
 }
+
+
+/* ---------------------------------------------------------------------
+   Benchmark tasks on the web (Omni-MATH, 2026-09-05)
+   --------------------------------------------------------------------- */
+.benchmark-question {
+  max-height: 420px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.benchmark-question .katex-display { margin: 10px 0; overflow-x: auto; }
+.answer-row { margin: 8px 0 12px; }
+.answer-input {
+  width: 100%;
+  max-width: 320px;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
+  font-size: 22px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+}
+.answer-input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+.band-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.band-chip.band-1, .band-chip.band-2 { border-color: #3fb37f; color: #3fb37f; }
+.band-chip.band-3, .band-chip.band-4 { border-color: #c9a227; color: #c9a227; }
+.band-chip.band-5, .band-chip.band-6 { border-color: #e08a3c; color: #e08a3c; }
+.band-chip.band-7, .band-chip.band-8 { border-color: #e0575b; color: #e0575b; }
+.ladder-note { margin-top: 4px; }

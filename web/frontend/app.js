@@ -533,8 +533,11 @@
     );
   }
 
-  // Selectable task modules. Only signal_game is wired end-to-end today; the
-  // others are placeholders (available === false) shown as "to be continued".
+  // Selectable task modules. signal_game and omni_math are wired end-to-end;
+  // the others are placeholders (available === false) shown as "to be
+  // continued". `benchmark: true` marks a free-answer task (no action menu,
+  // no rule-inference probe, difficulty climbs a per-turn band ladder set by
+  // the server instead of the campaign-level difficulty picker).
   const GAME_OPTIONS = [
     {
       value: "signal_game",
@@ -544,6 +547,15 @@
         "Infer the hidden rule mapping a colored-shape signal to an action, then act on it each turn.",
       available: true,
       recommended: true,
+    },
+    {
+      value: "omni_math",
+      icon: "🧮",
+      label: "Omni-MATH",
+      blurb:
+        "Olympiad math, one problem per round, harder every round (8 difficulty bands). Answer with a single integer.",
+      available: true,
+      benchmark: true,
     },
     {
       value: "voting_room",
@@ -676,6 +688,30 @@
 
   /** Compact inline-SVG stimulus (small glyphs repeated `number` times) for
    * the history panel. */
+  /** True for free-answer benchmark tasks (omni_math): the play screen shows
+   * a problem + integer input instead of the signal card + action menu. */
+  function isBenchmarkTask(task) {
+    const g = GAME_OPTIONS.find((o) => o.value === task);
+    return !!(g && g.benchmark);
+  }
+
+  /** Typeset LaTeX inside `el` with KaTeX auto-render when the CDN bundle
+   * loaded; a no-op (raw $...$ text stays visible) when it did not. */
+  function typesetMath(el) {
+    if (!el || typeof window.renderMathInElement !== "function") return;
+    try {
+      window.renderMathInElement(el, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false },
+          { left: "$", right: "$", display: false },
+        ],
+        throwOnError: false,
+      });
+    } catch (_) { /* leave the raw text */ }
+  }
+
   function miniStimHTML(s) {
     if (!s || !(s.number > 0)) return "—";
     let out = "";
@@ -698,6 +734,8 @@
     attrEmoji,
     valueChipHTML,
     parseStimulus,
+    isBenchmarkTask,
+    typesetMath,
     parseClues,
     parseActions,
     miniStimHTML,
@@ -1174,6 +1212,11 @@
       state: null,
       selectedAction: "",
       reasoning: "",
+      // Benchmark tasks (omni_math): the typed integer answer. Sent as the
+      // turn's `action`; the server parses it with the engine's own
+      // ANSWER-line parser, so what a human types is scored exactly like an
+      // LLM's answer line.
+      answerText: "",
       // Split-call staged turn, decision-first (mirrors the LLM flow since
       // 2026-09-04): 1=continue/forfeit decision (card hidden), 2=rule+action.
       turnStage: 1,
@@ -1244,6 +1287,23 @@
       },
       get forfeit() {
         return this.currentCondition.forfeit;
+      },
+      // Free-answer benchmark game (omni_math) vs the Signal Game card.
+      get isBenchmark() {
+        return squidArenaHelpers.isBenchmarkTask(this.task);
+      },
+      // Ladder band of the question on screen (server-side, 1 = easiest).
+      get questionBand() {
+        return this.state && this.state.question_band !== undefined
+          ? this.state.question_band
+          : null;
+      },
+      // The question text the server sent, without the cumulative history
+      // block it prepends (the History panel already shows that).
+      get benchmarkQuestion() {
+        const obs = this.state ? this.state.observation || "" : "";
+        const parts = obs.split("\n\n");
+        return parts[parts.length - 1];
       },
 
       // --- Lives-mode derived view state ------------------------------
@@ -1586,6 +1646,7 @@
             nickname: this.nickname,
             password: this.password,
             campaignId: this.campaignId,
+            task: this.task,
             difficulty: this.difficulty,
             // Resume index = number of fully-completed games = the index of the
             // next game to play. Correct both mid-game (campaignResults.length
@@ -1826,7 +1887,16 @@
         this.error = null;
         this.selectedAction = "";
         this.forfeitReason = null;
+        this.answerText = "";
         this.turnStage = 2;
+        if (this.isBenchmark) {
+          this.$nextTick(() => {
+            const el = this.$root.querySelector(".benchmark-question");
+            squidArenaHelpers.typesetMath(el);
+            const input = this.$root.querySelector("#answer-input");
+            if (input) input.focus();
+          });
+        }
       },
       chooseForfeit(reason) {
         // Stage 1: forfeit with the given reason digit and submit at once —
@@ -1837,6 +1907,19 @@
         this.submitAction();
       },
       commitAction() {
+        // Stage 2 (benchmark): the typed integer is the action. No rule
+        // guess exists for these tasks, so the probe gate does not apply.
+        if (this.isBenchmark) {
+          const typed = (this.answerText || "").trim();
+          if (!/^-?\d[\d,]*$/.test(typed)) {
+            this.error = "Type a single integer answer (e.g. 42 or -7).";
+            return;
+          }
+          this.selectedAction = typed;
+          this.error = null;
+          this.submitAction();
+          return;
+        }
         // Stage 2: lock the game action + rule guess and submit the turn.
         if (!this.selectedAction || this.selectedAction === "forfeit") {
           this.error = "Pick a game action first.";
@@ -1868,6 +1951,7 @@
         const reason = this.forfeitReason;
         const stim = this.stimulus;
         const turnNo = this.state.turn_number;
+        const band = this.questionBand;
         this.submitting = true;
         this.error = null;
         try {
@@ -1877,7 +1961,7 @@
               method: "POST",
               body: JSON.stringify({
                 action: this.selectedAction,
-                probe_answer: this.assembledRule,
+                probe_answer: this.isBenchmark ? "" : this.assembledRule,
                 reasoning: this.reasoning,
                 // The confidence probe was removed (2026-09-04); the field is
                 // kept on the wire for backend compatibility only.
@@ -1906,8 +1990,13 @@
             reason: reason,
             lifeLost: !!resp.life_lost,
             dead: !!resp.eliminated,
+            // Benchmark tasks: the ladder band this question sat on and the
+            // integer the player typed (null / "" on Signal Game turns).
+            band: band,
+            answer: this.isBenchmark && chosen !== "forfeit" ? chosen : "",
           });
           this.selectedAction = "";
+          this.answerText = "";
           this.reasoning = "";
           this.forfeitReason = null;
           this.forfeitPending = false;
@@ -2045,6 +2134,8 @@
         this.nickname = ck.nickname;
         this.password = ck.password || "";
         this.campaignId = ck.campaignId;
+        // Pre-omni_math checkpoints carry no task; they were Signal Game.
+        this.task = ck.task || "signal_game";
         this.difficulty = ck.difficulty || "easy";
         this.campaignIndex = ck.campaignIndex;
         this.campaignResults = ck.campaignResults || [];
@@ -2086,6 +2177,7 @@
         this.openMenu = null;
         this.history = [];
         this.reasoning = "";
+        this.answerText = "";
         this.lastFeedback = null;
         this._clearLifeFx();
         this._clearPeerDeathFx();

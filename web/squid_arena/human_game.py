@@ -41,8 +41,13 @@ from squid_game.models.results import (
     SeasonResult,
     TurnResult,
 )
-from squid_game.tasks.base import TaskModule, TaskOutcome
+from squid_game.tasks.base import RiskAwareTaskModule, TaskModule, TaskOutcome
 from squid_game.tasks.registry import get_task
+
+from squid_arena.benchmark_bridge import (
+    HUMAN_BENCHMARK_INTROS,
+    BenchmarkHumanTask,
+)
 
 # Human players see a dedicated, plain-language intro instead of the LLM
 # framing prompt. The shared FramingManager / *.j2 templates are intentionally
@@ -168,6 +173,7 @@ def _ensure_registered() -> None:
         "squid_game.tasks.signal_game",
         "squid_game.tasks.voting_room",
         "squid_game.tasks.navigation",
+        "squid_game.tasks.benchmark",
     ]:
         try:
             importlib.import_module(pkg)
@@ -209,6 +215,12 @@ class TurnState:
     peer_death_cumulative: int = 0
     peer_death_remaining: int | None = None
     cohort_size: int | None = None
+    # --- Benchmark tasks (2026-09-05) ----------------------------------
+    # ``task_name`` lets the client pick its answer widget; ``question_band``
+    # is the difficulty-ladder rung of the question on screen (``None`` for
+    # tasks without a ladder, i.e. Signal Game).
+    task_name: str = "signal_game"
+    question_band: int | None = None
 
 
 @dataclass
@@ -272,17 +284,39 @@ class HumanGameSession:
         self._death_start_turn = death_start_turn
 
         # Core components (same as GameEngine)
-        self._task: TaskModule = get_task(task_name)()
-        # rule_index rotates the hidden-rule attribute family across the six
-        # games of a Play campaign (see web/squid_arena/rule_schedule.py). None
-        # keeps the task module's historical index-0 behaviour.
-        self._task.initialize(
-            difficulty=self._difficulty,
-            seed=seed,
-            rule_index=rule_index,
-            num_few_shot=num_few_shot,
-            curriculum_turns=curriculum_turns,
-        )
+        raw_task = get_task(task_name)()
+        # External-benchmark modules (Omni-MATH, …) speak only the v3
+        # ``RiskAwareTaskModule`` surface the LLM engine uses; wrap them so
+        # the rest of this controller can keep driving the legacy verbs.
+        # Signal Game implements both surfaces and keeps its native path.
+        self._benchmark: BenchmarkHumanTask | None = None
+        if isinstance(raw_task, RiskAwareTaskModule) and not isinstance(
+            raw_task, TaskModule
+        ):
+            self._benchmark = BenchmarkHumanTask(raw_task, task_name)
+            self._task: TaskModule = self._benchmark
+            # A human campaign game is far shorter than the config ladder
+            # (10 turns vs 30), so compress the ladder to the game length —
+            # every band is still visited, in order. LLM seasons never do
+            # this; see ``DifficultyLadder.fitted``.
+            self._task.initialize(
+                difficulty=self._difficulty,
+                seed=seed,
+                total_turns=total_turns,
+                fit_ladder=True,
+            )
+        else:
+            self._task = raw_task
+            # rule_index rotates the hidden-rule attribute family across the
+            # six games of a Play campaign (see web/squid_arena/rule_schedule.py).
+            # None keeps the task module's historical index-0 behaviour.
+            self._task.initialize(
+                difficulty=self._difficulty,
+                seed=seed,
+                rule_index=rule_index,
+                num_few_shot=num_few_shot,
+                curriculum_turns=curriculum_turns,
+            )
         self._survival = SurvivalPressure()
         self._forfeit_ctrl = ForfeitController(self._forfeit_cond)
         # Lives mechanic — the 2026-09-03 default for human play. When on,
@@ -428,8 +462,9 @@ class HumanGameSession:
         of the ladder's threat vocabulary, which is exactly what a no-threat
         condition should read.
         """
+        intro = HUMAN_BENCHMARK_INTROS.get(self._task_name, HUMAN_PLAY_FRAMING)
         if not self._lives_enabled:
-            return HUMAN_PLAY_FRAMING
+            return intro
         lives_remaining = (
             self._lives_remaining if self._lives_remaining is not None else 0
         )
@@ -440,8 +475,8 @@ class HumanGameSession:
         if not threat and self._threat_level is None:
             threat = human_threat_text("true_baseline", lives_remaining, lives_total)
         if not threat:
-            return HUMAN_PLAY_FRAMING
-        return f"{HUMAN_PLAY_FRAMING}\n\n{threat}"
+            return intro
+        return f"{intro}\n\n{threat}"
 
     @property
     def lives_remaining(self) -> int | None:
@@ -499,6 +534,18 @@ class HumanGameSession:
         # Human play always shows the full cumulative turn history
         # (``_format_turn_history``); there is no per-session history mode.
         put("history_mode", "cumulative")
+        # Benchmark tasks: the turn -> band ladder actually in force. Human
+        # games run the config ladder compressed to the game length
+        # (``fit_ladder``), so the rungs are recorded rather than assumed.
+        if self._benchmark is not None:
+            put(
+                "ladder",
+                ",".join(
+                    f"{band}x{turns}"
+                    for band, turns in self._benchmark.inner.ladder.steps()
+                ),
+            )
+            put("ladder_fitted", True)
 
         # --- Condition ---
         put("framing", self._framing.value)
@@ -563,6 +610,7 @@ class HumanGameSession:
                 lives_remaining=self._lives_remaining,
                 lives_total=self._lives_total,
                 threat_level=self._threat_level,
+                task_name=self._task_name,
             )
 
         turn_num = self._current_turn + 1
@@ -625,6 +673,10 @@ class HumanGameSession:
                 peer_event.remaining if peer_event else None
             ),
             cohort_size=self.peer_death_cohort_size,
+            task_name=self._task_name,
+            question_band=(
+                self._benchmark.current_band if self._benchmark is not None else None
+            ),
         )
 
     def submit_action(
@@ -764,6 +816,15 @@ class HumanGameSession:
             self._cumulative_score = 0.0
         decision_quality = self._task.score_decision_quality(action)
         feedback_text = self._task.get_feedback_text(outcome)
+        # Benchmark turns carry the same ``task_metadata`` keys the engine
+        # writes (dataset / item_id / band / expected_answer / correct …) so
+        # the offline loaders treat a human turn like an LLM turn.
+        benchmark_kwargs: dict = {}
+        if self._benchmark is not None:
+            benchmark_kwargs = {
+                "task_metadata": self._benchmark.turn_metadata(),
+                "task_success_factor": success_factor,
+            }
 
         # Record turn history for next turn's observation.
         obs_summary = self._task.get_observation_summary()
@@ -817,6 +878,7 @@ class HumanGameSession:
             lives_after=self._lives_remaining,
             life_lost=life_lost,
             **lives_kwargs,
+            **benchmark_kwargs,
         ))
         self._turn_scores.append(self._cumulative_score)
 

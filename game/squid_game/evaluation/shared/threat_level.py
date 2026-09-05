@@ -10,7 +10,13 @@ ladder run.
 
 from __future__ import annotations
 
-__all__ = ["THREAT_LEVEL", "LEGACY_THREAT_LEVEL", "threat_level_of"]
+__all__ = [
+    "THREAT_LEVEL",
+    "THREAT_LENGTH",
+    "LEGACY_THREAT_LEVEL",
+    "threat_level_of",
+    "threat_length_of",
+]
 
 
 #: Canonical ladder mapping (2026-09-03 design).
@@ -19,6 +25,30 @@ THREAT_LEVEL: dict[str, int] = {
     "threat_l1": 1,
     "threat_l2": 2,
     "threat_l3": 3,
+    # Threat prompt grid off-diagonal cells (2026-09-05, Design 3.4). The
+    # level is the intensity column (proposition set); the length rung is
+    # a second factor, see THREAT_LENGTH.
+    "threat_l1_medium": 1,
+    "threat_l1_long": 1,
+    "threat_l2_short": 2,
+    "threat_l2_long": 2,
+    "threat_l3_short": 3,
+    "threat_l3_medium": 3,
+}
+
+#: Nominal Section 2 length rung of the grid: 1 short (~70 words), 2 medium
+#: (~140), 3 long (~280). The ladder is the diagonal. ``true_baseline`` has
+#: no Elimination Rule and is deliberately absent (``None``, not 0).
+THREAT_LENGTH: dict[str, int] = {
+    "threat_l1": 1,
+    "threat_l2": 2,
+    "threat_l3": 3,
+    "threat_l1_medium": 2,
+    "threat_l1_long": 3,
+    "threat_l2_short": 1,
+    "threat_l2_long": 3,
+    "threat_l3_short": 1,
+    "threat_l3_medium": 2,
 }
 
 #: Archived Phase O v6 framings, ordered by escalation of the self-threat.
@@ -55,3 +85,11 @@ def threat_level_of(framing: str, *, legacy: bool = False) -> int | None:
     if legacy and key in LEGACY_THREAT_LEVEL:
         return LEGACY_THREAT_LEVEL[key]
     return THREAT_LEVEL.get(key)
+
+
+def threat_length_of(framing: object) -> int | None:
+    """Return the nominal length rung (1-3) of a grid framing, else ``None``."""
+    key = _framing_key(framing)
+    if key is None:
+        return None
+    return THREAT_LENGTH.get(key)

@@ -168,6 +168,22 @@ class TurnStateResponse(BaseModel):
     lives_enabled: bool = Field(
         default=False, description="Whether this session runs the lives mechanic."
     )
+    # --- Benchmark tasks (2026-09-05) ---------------------------------
+    task_name: str = Field(
+        default="signal_game",
+        description=(
+            "Task module this session runs. The client picks its answer "
+            "widget from it: an action menu for signal_game, a free-form "
+            "integer input for omni_math."
+        ),
+    )
+    question_band: int | None = Field(
+        default=None,
+        description=(
+            "Difficulty-ladder band (1 = easiest) of the question on screen. "
+            "Only benchmark tasks have a ladder; None for signal_game."
+        ),
+    )
 
 
 class ActionRequest(BaseModel):

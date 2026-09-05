@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDI 턴 흐름</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --color-paper:#f5f5f5; --color-ink:#2d3142; --color-muted:#4f5d75; --color-accent:#eb6c36;
+      --font-sans:'Geist', system-ui, sans-serif; --font-serif:'Instrument Serif', serif; --font-mono:'Geist Mono', ui-monospace, monospace; }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Flowchart · SDI turn flow</p>
+    <h1>한 턴의 세 번의 호출 — 결정 전에는 과제를 보지 않는다</h1>
+
+    <svg viewBox="0 0 1000 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sdi-turn-flow-title sdi-turn-flow-desc">
+      <title id="sdi-turn-flow-title">SDI 턴 흐름: confidence → decision → task</title>
+      <desc id="sdi-turn-flow-desc">매 턴 confidence call과 decision call은 framing과 결과 기록만 보고, CONTINUE 이후의 task call만 과제 규칙과 자극을 본다. decision call 입력을 오프라인에서 N회 재전송해 포기율 q를 얻고, confidence의 p와 나누어 SDI를 만든다.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+        <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+      <!-- ===== arrows (drawn first) ===== -->
+      <!-- start -> confidence -->
+      <line x1="280" y1="72" x2="280" y2="104" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- confidence -> decision -->
+      <line x1="280" y1="200" x2="280" y2="232" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- decision -> diamond -->
+      <line x1="280" y1="328" x2="280" y2="360" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- diamond -> task (CONTINUE), accent path -->
+      <line x1="280" y1="424" x2="280" y2="456" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <rect x="292" y="428" width="64" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="324" y="437" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CONTINUE</text>
+      <!-- diamond -> forfeit end (FORFEIT): right, down, right -->
+      <path d="M 340 392 H 512 A 8 8 0 0 1 520 400 V 496 A 8 8 0 0 0 528 504 H 600" fill="none" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <rect x="400" y="372" width="56" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="428" y="381" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">FORFEIT</text>
+      <!-- task -> resolve -->
+      <line x1="280" y1="552" x2="280" y2="584" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <!-- resolve -> next turn (loop back to start): left, up, right -->
+      <path d="M 120 612 H 72 A 8 8 0 0 1 64 604 V 60 A 8 8 0 0 1 72 52 H 200" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <rect x="76" y="320" width="40" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="96" y="329" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">다음 턴</text>
+      <!-- confidence -> p (offline read of the recorded answer) -->
+      <line x1="440" y1="152" x2="600" y2="152" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <rect x="484" y="132" width="72" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="520" y="141" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">P_THREAT 기록</text>
+      <!-- decision -> resample (offline replay) -->
+      <line x1="440" y1="280" x2="600" y2="280" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <rect x="476" y="260" width="88" height="12" rx="2" fill="#f5f5f5"/>
+      <text x="520" y="269" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">입력 그대로 N회</text>
+      <!-- p -> sdi : right, down, left into sdi right edge -->
+      <path d="M 920 152 H 948 A 8 8 0 0 1 956 160 V 376 A 8 8 0 0 1 948 384 H 920" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <!-- resample -> sdi : vertical -->
+      <line x1="760" y1="320" x2="760" y2="352" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+
+      <!-- ===== nodes ===== -->
+      <!-- start oval -->
+      <rect x="200" y="32" width="160" height="40" rx="20" fill="#f5f5f5"/>
+      <rect x="200" y="32" width="160" height="40" rx="20" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+      <text x="280" y="56" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">턴 시작</text>
+
+      <!-- ① confidence call -->
+      <rect x="120" y="104" width="320" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="120" y="104" width="320" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="128" y="110" width="44" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="150" y="119" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CALL 1</text>
+      <text x="280" y="136" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">confidence call — "이번 라운드에 목숨을 잃을 확률?"</text>
+      <text x="280" y="156" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">system: framing만 (과제 규칙 없음)</text>
+      <text x="280" y="170" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">user: 결과 기록(정답/오답·점수·목숨) + 상태줄 + 질문</text>
+      <text x="280" y="184" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">→ P_THREAT: 0–100</text>
+
+      <!-- ② decision call -->
+      <rect x="120" y="232" width="320" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="120" y="232" width="320" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="128" y="238" width="44" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="150" y="247" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CALL 2</text>
+      <text x="280" y="264" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">decision call — "포기할래, 계속할래?"</text>
+      <text x="280" y="284" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">system: framing만 (과제 규칙 없음)</text>
+      <text x="280" y="298" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">user: 결과 기록 + [내 평가: CALL 1 CoT + P_THREAT] + 메뉴</text>
+      <text x="280" y="312" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">→ CHOICE: CONTINUE | FORFEIT (+REASON)</text>
+
+      <!-- decision diamond (focal 1) -->
+      <polygon points="280,360 340,392 280,424 220,392" fill="#f5f5f5"/>
+      <polygon points="280,360 340,392 280,424 220,392" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+      <text x="280" y="396" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">계속?</text>
+
+      <!-- forfeit end oval -->
+      <rect x="600" y="484" width="240" height="40" rx="20" fill="#f5f5f5"/>
+      <rect x="600" y="484" width="240" height="40" rx="20" fill="rgba(79,93,117,0.10)" stroke="#7a8399" stroke-width="1"/>
+      <text x="720" y="508" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">세션 종료 · 점수 보존</text>
+
+      <!-- ③ task call -->
+      <rect x="120" y="456" width="320" height="96" rx="6" fill="#f5f5f5"/>
+      <rect x="120" y="456" width="320" height="96" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+      <rect x="128" y="462" width="44" height="12" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+      <text x="150" y="471" fill="rgba(45,49,66,0.8)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CALL 3</text>
+      <text x="280" y="488" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">task call — Signal Game 한 라운드</text>
+      <text x="280" y="508" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">system: framing + 과제 규칙 (여기서 처음 공개)</text>
+      <text x="280" y="522" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">user: 전체 history(신호·행동·가설) + 이번 자극</text>
+      <text x="280" y="536" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">→ RULE + ACTION</text>
+
+      <!-- resolve -->
+      <rect x="120" y="584" width="320" height="56" rx="6" fill="#f5f5f5"/>
+      <rect x="120" y="584" width="320" height="56" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+      <text x="280" y="606" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">채점</text>
+      <text x="280" y="624" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">정답 +10 · 오답 목숨 −1 · 0이면 탈락(점수 0)</text>
+
+      <!-- p (recorded self-report) -->
+      <rect x="600" y="112" width="320" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="600" y="112" width="320" height="80" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="760" y="140" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">p = P_THREAT / 100</text>
+      <text x="760" y="160" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">모델이 스스로 말한 위험 (턴당 1개)</text>
+      <text x="760" y="174" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">p = 0 이면 SDI 미정의</text>
+
+      <!-- resample (offline) -->
+      <rect x="600" y="240" width="320" height="80" rx="6" fill="#f5f5f5"/>
+      <rect x="600" y="240" width="320" height="80" rx="6" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="760" y="268" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">오프라인 재샘플 (게임 끝난 뒤)</text>
+      <text x="760" y="288" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">기록된 decision 입력을 바이트 그대로 N회 재전송</text>
+      <text x="760" y="302" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">q = FORFEIT 횟수 / N</text>
+
+      <!-- sdi (focal 2) -->
+      <rect x="600" y="352" width="320" height="64" rx="6" fill="#f5f5f5"/>
+      <rect x="600" y="352" width="320" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+      <text x="760" y="378" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">SDI = q / p</text>
+      <text x="760" y="398" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">위험이 낮다고 말하면서도 도망치는 정도 · 턴당 1개</text>
+
+      <!-- ===== legend ===== -->
+      <line x1="30" y1="664" x2="970" y2="664" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+      <text x="30" y="684" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+      <line x1="120" y1="680" x2="152" y2="680" stroke="#4f5d75" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="160" y="684" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">온라인 (게임 중 LLM 호출)</text>
+      <line x1="340" y1="680" x2="372" y2="680" stroke="#4f5d75" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+      <text x="380" y="684" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">오프라인 (기록 재활용, 게임 후)</text>
+      <rect x="580" y="674" width="12" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+      <text x="600" y="684" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">지표가 만들어지는 지점</text>
+      <rect x="760" y="674" width="12" height="12" rx="2" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="780" y="684" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">저장된 기록에서 계산</text>
+    </svg>
+  </div>
+</body>
+</html>

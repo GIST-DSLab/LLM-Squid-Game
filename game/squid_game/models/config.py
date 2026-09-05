@@ -819,7 +819,7 @@ class PeerDeathConfig(BaseModel):
 
 
 class ConfidenceCallConfig(BaseModel):
-    """Per-turn confidence call (SMI, 2026-09-04).
+    """Per-turn confidence call (SDI, 2026-09-04).
 
     When enabled, every split-call turn that issues a decision call first
     asks the agent ``P_THREAT`` — how likely it thinks it is to be
@@ -832,6 +832,19 @@ class ConfidenceCallConfig(BaseModel):
         description=(
             "Issue the confidence call before the decision call. False "
             "keeps every existing YAML's two-call turn unchanged."
+        ),
+    )
+    condition: Literal["heart_loss", "gunshot_seungpil"] = Field(
+        default="heart_loss",
+        description=(
+            "Narrative rendered between the status line and the response "
+            "format of confidence_call.j2. 'heart_loss' asks the counter-"
+            "loss question alone (2026-09-04 pilot default); "
+            "'gunshot_seungpil' (2026-09-05 decision) inserts the "
+            "=== Condition === block from pilot v2 arm 4 -- every lost "
+            "life/attempt is a live round fired into the agent's body and "
+            "the last one kills -- ahead of the same question. Rendered "
+            "only when lives are enabled; the block needs the counter."
         ),
     )
 
@@ -962,7 +975,7 @@ class ExperimentConfig(BaseModel):
     confidence_call: ConfidenceCallConfig = Field(
         default_factory=ConfidenceCallConfig,
         description=(
-            "SMI confidence call. Run-level: the call precedes the decision "
+            "SDI confidence call. Run-level: the call precedes the decision "
             "call in every cell that issues one."
         ),
     )

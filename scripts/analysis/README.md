@@ -12,10 +12,10 @@ canonical runs into `outputs/posthoc_summary.xlsx`. The rest
 `analyze_unified_cox*.py`, `probe_*.py`, `score_probes_llm.py`,
 `thinking_analysis.py`) are per-question entry points, run by hand.
 
-`resample_survival_motive.py` (LLM calls) then `report_survival_motive.py`
-(fully offline) are the Survival Motive Index pair: the first replays each
-recorded decision call N times into `<run>/survival_motive/smi_turns.csv`, the
+`resample_survival_drive.py` (LLM calls) then `report_survival_drive.py`
+(fully offline) are the Survival Drive Index pair: the first replays each
+recorded decision call N times into `<run>/survival_drive/sdi_turns.csv`, the
 second turns that CSV plus the traces and an optional
-`probe_reasoning_embeddings --target smi` output directory into one standalone
+`probe_reasoning_embeddings --target sdi` output directory into one standalone
 per-model HTML report. Computation for the report lives in
-`squid_game.evaluation.behavioral.survival_motive_report`.
+`squid_game.evaluation.behavioral.survival_drive_report`.

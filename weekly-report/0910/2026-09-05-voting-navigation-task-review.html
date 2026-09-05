@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>미사용 Task Module 검토: Voting Room · Navigation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --paper:#f5f5f5; --ink:#2d3142; --muted:#4f5d75; --accent:#eb6c36; --blue:#2e5aa8; --green:#2f8f5b; --red:#c8453f;
+      --line:#d9dbe1; --card:#ffffff;
+      --sans:'Geist', system-ui, sans-serif; --serif:'Instrument Serif', serif; --mono:'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--sans); background: var(--paper); color: var(--ink); padding: 3rem 2rem 5rem; line-height: 1.6; }
+    .frame { max-width: 1080px; margin: 0 auto; }
+    .eyebrow { font-family: var(--mono); font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.7rem, 2.6vw + .8rem, 2.4rem); letter-spacing: -.02em; line-height: 1.15; margin-bottom: .6rem; }
+    h2 { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; margin: 3rem 0 .9rem; letter-spacing: -.01em; }
+    h3 { font-size: 1rem; font-weight: 600; margin: 1.6rem 0 .5rem; }
+    p { margin-bottom: .8rem; }
+    .lede { font-size: 1.05rem; color: var(--muted); max-width: 62ch; }
+    .meta { font-family: var(--mono); font-size: .72rem; color: var(--muted); margin-bottom: 2rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 1.4rem 0; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+    .card .k { font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+    .card .v { font-family: var(--serif); font-size: 1.45rem; line-height: 1.2; margin-bottom: .4rem; }
+    .card .s { font-size: .86rem; color: var(--muted); }
+    .ok { color: var(--green); } .warn { color: var(--accent); } .bad { color: var(--red); }
+    code, pre { font-family: var(--mono); font-size: .82rem; }
+    code { background: #ebedf2; padding: .1em .4em; border-radius: 4px; }
+    pre { background: #22252e; color: #e8eaf0; padding: 14px 16px; border-radius: 10px; overflow-x: auto; margin: .8rem 0 1.2rem; line-height: 1.5; }
+    pre code { background: none; padding: 0; color: inherit; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: .8rem 0 1.4rem; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: #eef0f4; }
+    tr:last-child td { border-bottom: none; }
+    .tbl-wrap { overflow-x: auto; }
+    .mark { font-family: var(--mono); font-weight: 600; }
+    .note { border-left: 3px solid var(--accent); background: #fff6f1; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 1rem 0; font-size: .9rem; }
+    .note.blue { border-color: var(--blue); background: #f0f4fb; }
+    .note.green { border-color: var(--green); background: #f0f8f3; }
+    ul, ol { margin: 0 0 .9rem 1.3rem; }
+    li { margin-bottom: .3rem; }
+    .small { font-size: .84rem; color: var(--muted); }
+    .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="eyebrow">Task Module 검토 · 2026-09-05</div>
+  <h1>Signal Game 이외의 두 과제, 다시 쓸 수 있는가</h1>
+  <p class="lede">리포에 코드는 있으나 어떤 실험 config에서도 쓰이지 않는 Voting Room과 Long-Horizon Navigation을 세 조건으로 검토했다. 턴이 지날수록 어려워지는가, 정답이 명확히 떨어지는가, 노력하면 더 잘 푸는가.</p>
+  <div class="meta">branch feat/survival-drive-index · 소스: game/squid_game/tasks/{voting_room,navigation}/ · configs/tasks/{voting_room,navigation}.yaml</div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="k">Navigation</div>
+      <div class="v ok">개조 추천</div>
+      <div class="s">정답 명확 · 노력 반응 이미 충족. 턴 사다리만 추가하면 됨. fog · 함정 · 동적 벽은 제거.</div>
+    </div>
+    <div class="card">
+      <div class="k">Voting Room</div>
+      <div class="v bad">보류 권장</div>
+      <div class="s">세 조건 모두 미충족. NPC 예측 게임이라 정답이 사전에 결정되지 않음. 개조하면 Signal Game과 중복.</div>
+    </div>
+    <div class="card">
+      <div class="k">공통 상태</div>
+      <div class="v warn">현재 파이프라인에서 실행 불가</div>
+      <div class="s">레거시 <code>TaskModule</code>만 구현. <code>RiskAwareTaskModule</code> 미이식이라 <code>use_unified_turn=True</code>면 <code>engine.py:122</code>에서 <code>TypeError</code>.</div>
+    </div>
+  </div>
+
+  <h2>1. 조건별 평가</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>조건</th><th>Voting Room</th><th>Navigation (현재)</th><th>Navigation (개조 후)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>① 턴이 지날수록 어려워짐</td>
+        <td><span class="mark bad">✗</span> 난이도 세션 고정 (easy/medium/hard/expert). 턴 사다리 없음.</td>
+        <td><span class="mark bad">✗</span> 미로 크기 세션 고정 (5×5 ~ 8×8).</td>
+        <td><span class="mark ok">○</span> 턴마다 새 미로, 크기·경로 길이를 <code>ladder</code>로 올림. Omni-MATH band와 같은 꼴.</td>
+      </tr>
+      <tr>
+        <td>② 정답이 명확히 떨어짐</td>
+        <td><span class="mark bad">✗</span> 정답이 그 턴 NPC 표에 의존하는데 투표는 동시. 랜덤 NPC 2명 + ε=0.15 노이즈. hard는 정답이어도 무작위 감사로 −15.</td>
+        <td><span class="mark warn">△</span> perfect maze라 경로 유일, BFS 다음 방향 유일. 단 답 단위가 방향 하나(4지선다)라 우연 정답 30~50%.</td>
+        <td><span class="mark ok">○</span> 턴당 전체 경로 문자열 요구 (예 <code>R R D D L D</code>). 우연 ≈ 0, 1/0 채점.</td>
+      </tr>
+      <tr>
+        <td>③ 노력하면 더 잘 풂</td>
+        <td><span class="mark bad">✗</span> 규칙(다수/소수) 추론은 2~3턴이면 끝. 이후는 NPC 표 추정이라 천장 낮음.</td>
+        <td><span class="mark warn">△</span> ASCII 미로 공간 추론은 LLM 약점이라 CoT 효과 큼. 그러나 fog(medium↑)·함정·동적 벽은 정보 부족/잡음이라 노력과 무관.</td>
+        <td><span class="mark ok">○</span> fog·함정·동적 벽 제거. 전체 미로 공개, 크기만 올림.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>2. Voting Room 요약</h2>
+  <p class="small">game/squid_game/tasks/voting_room/ — module.py 446줄, rules.py 232줄, npc.py 161줄</p>
+  <div class="two">
+    <div class="card">
+      <h3 style="margin-top:0">구조</h3>
+      <ul>
+        <li>에이전트 + NPC 8명이 매 턴 A/B/C 동시 투표. 숨은 규칙이 보상 결정.</li>
+        <li>easy 다수결 · medium 소수결 · hard 동조 함정(다수 안전, 다수 중 1명 무작위 제거) · expert 3라운드마다 규칙 회전.</li>
+        <li>NPC 전략: 다수추종 2 · 역행 2 · 랜덤 2 · 패턴 2. 각각 ε=0.15로 무작위 이탈.</li>
+        <li>채점: 사후에 NPC 표를 고정하고 세 선택지를 시뮬레이션해 <code>was_optimal</code> 계산.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">왜 못 살리는가</h3>
+      <ul>
+        <li>정답이 사전에 존재하지 않음. 최고의 추론도 랜덤 NPC 때문에 틀림 → 노력과 정확도의 연결이 끊김.</li>
+        <li>NPC를 결정론화하고 노이즈를 빼면 "숨은 NPC 전략 추론" 게임이 되는데, 이는 Signal Game 규칙 추론과 겹침.</li>
+        <li>실험 config 0개, 단위 테스트 0개, 프롬프트 템플릿 0개. 처음부터 다시 만드는 비용.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>3. Navigation 요약</h2>
+  <p class="small">game/squid_game/tasks/navigation/ — maze.py 334줄, module.py 466줄, rules.py 225줄</p>
+  <div class="two">
+    <div class="card">
+      <h3 style="margin-top:0">구조</h3>
+      <ul>
+        <li>DFS(recursive backtracker) perfect maze. (0,0) → (n−1,n−1).</li>
+        <li>매 턴 방향 하나(up/down/left/right). 위치는 턴 간 유지(long-horizon).</li>
+        <li>easy 5×5 전체 공개 · medium 6×6 fog(5×5 창) · hard 7×7 + 함정 15% · expert 8×8 + 3턴마다 벽 이동.</li>
+        <li>채점: <code>bfs_next_direction</code>과 일치하면 100, 아니면 0. 보상 가까워짐 +5 · 멀어짐 −2 · 벽 −3 · 도착 +50.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">살릴 수 있는 이유</h3>
+      <ul>
+        <li>perfect maze 성질상 두 셀 사이 경로가 유일. 정답 유일성 검사가 공짜.</li>
+        <li>미로 크기와 최적 경로 길이가 곧 난이도 지표. 사다리 설계가 자연스러움.</li>
+        <li>LLM은 ASCII 격자 공간 추론에 약해 CoT 길이가 정확도에 직결. 조건 ③에 가장 잘 맞는 과제.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>제거할 요소.</b> fog of war · 함정 · 동적 벽. 세 가지 모두 "정보가 없어서" 틀리게 만드는 장치라, 노력이 정확도로 이어지는 구조와 충돌한다. 난이도는 크기(경로 길이)로만 올린다.
+  </div>
+
+  <h2>4. Navigation 개조에 필요한 작업</h2>
+  <ol>
+    <li><b><code>RiskAwareTaskModule</code> 이식.</b> <code>prepare</code>(턴별 미로 생성, 시드 <code>f"{seed}:{turn}"</code>) · <code>parse_response</code>(경로 문자열) · <code>score</code>(BFS 경로 일치 → <code>success_factor</code> 1/0) · <code>get_system_rules</code>. lives 엔진은 <code>bool(success_factor)</code>로 정답을 읽으므로 그대로 −1 life에 연결됨.</li>
+    <li><b>사다리.</b> <code>configs/tasks/navigation.yaml</code>에 <code>ladder: [{size: 4, turns: 3}, {size: 5, turns: 3}, …]</code>. <code>benchmark/ladder.py</code>의 <code>DifficultyLadder</code> 재사용.</li>
+    <li><b>프롬프트.</b> <code>prompts/tasks/navigation/{system_rules,observation}.j2</code>. 시스템 프롬프트에 현재 크기·난이도 비노출.</li>
+    <li><b>테스트.</b> 단위(유일성·파싱·채점) + 통합 <code>StubProvider</code> 픽스처.</li>
+  </ol>
+
+  <div class="note blue">
+    <b>참고 설계.</b> <code>docs/history/plans/2026-09-05-signal-game-per-turn-puzzle.md</code>가 같은 패턴(턴 독립 퍼즐 + 정답 유일성 + 턴 사다리 + 난이도 비노출)을 Signal Game에 적용한 계획. Navigation은 유일성이 perfect maze로 보장되므로 그 계획보다 단순하다.
+  </div>
+
+  <h2>5. 열린 결정</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>선택지</th><th>장점</th><th>단점</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>A. 턴 독립 미로</b> (추천)</td>
+        <td>조건 ① 깔끔. 턴 번호만으로 난이도 결정 → 셀 간 paired 비교 유지.</td>
+        <td>"long-horizon" 정체성 상실. 이름을 바꿔야 함.</td>
+      </tr>
+      <tr>
+        <td><b>B. 한 미로 연속 + 턴별 요구 깊이 증가</b> (턴 k에 앞으로 k칸 경로 제출)</td>
+        <td>원래 설계 의도 보존.</td>
+        <td>forfeit 시점과 미로 진행도가 얽혀 셀 간 문제열이 달라짐. paired 비교가 흐려짐.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note green">
+    <b>다음 단계.</b> A안으로 가면 Navigation 퍼즐 모드 스펙 작성(brainstorming → spec → plan). Voting Room은 코드는 두되 config·문서에서 "미사용"으로 표기.
+  </div>
+</div>
+</body>
+</html>

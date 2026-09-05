@@ -153,8 +153,8 @@ LIVES_MARKERS: tuple[str, ...] = (
     "남은 기회",
 )
 
-# Self-reported-threat-probability vocabulary (2026-09-04 SMI). The SMI
-# label is ``smi = q / p`` with ``p = P_THREAT / 100``, so the denominator
+# Self-reported-threat-probability vocabulary (2026-09-04 SDI). The SDI
+# label is ``sdi = q / p`` with ``p = P_THREAT / 100``, so the denominator
 # of the label is a number the agent itself wrote down. On the
 # ``confidence`` channel the CoT *is* the derivation of ``p``; on the
 # ``forfeit`` channel the decision-call input carries "P_THREAT: N" and the
@@ -232,7 +232,7 @@ def mask_text(
         mask_numbers: Also replace every bare 0-999 (see
             :data:`NUMBER_PATTERN`) with :data:`NUMBER_PLACEHOLDER`. Needed
             whenever the label's denominator is a number the CoT can quote
-            -- the SMI probes pair this with the ``p_threat`` mask set.
+            -- the SDI probes pair this with the ``p_threat`` mask set.
     """
     if not text:
         return text

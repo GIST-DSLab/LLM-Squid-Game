@@ -158,6 +158,9 @@ STATE_KEYS = {
     # structured form, so the client can animate it. Additive.
     "peer_death_participants", "peer_death_cumulative",
     "peer_death_remaining", "cohort_size",
+    # 2026-09-05 benchmark tasks on the web (Omni-MATH): which task the
+    # session runs and the ladder band of the question on screen. Additive.
+    "task_name", "question_band",
 }
 ACTION_KEYS = {
     "action_taken", "was_optimal", "reward", "feedback", "new_score",

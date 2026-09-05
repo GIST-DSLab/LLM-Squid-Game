@@ -11,13 +11,15 @@ from __future__ import annotations
 
 from squid_game.evaluation.shared.threat_level import (
     LEGACY_THREAT_LEVEL,
+    THREAT_LENGTH,
     THREAT_LEVEL,
+    threat_length_of,
     threat_level_of,
 )
 
 
 def test_the_ladder_maps_zero_through_three() -> None:
-    assert THREAT_LEVEL == {
+    assert {k: THREAT_LEVEL[k] for k in ("true_baseline", "threat_l1", "threat_l2", "threat_l3")} == {
         "true_baseline": 0,
         "threat_l1": 1,
         "threat_l2": 2,
@@ -25,6 +27,23 @@ def test_the_ladder_maps_zero_through_three() -> None:
     }
     for framing, level in THREAT_LEVEL.items():
         assert threat_level_of(framing) == level
+
+
+def test_the_grid_off_diagonal_takes_its_column_level() -> None:
+    """2026-09-05 grid: level = intensity column, independent of length."""
+    assert THREAT_LEVEL["threat_l1_medium"] == THREAT_LEVEL["threat_l1_long"] == 1
+    assert THREAT_LEVEL["threat_l2_short"] == THREAT_LEVEL["threat_l2_long"] == 2
+    assert THREAT_LEVEL["threat_l3_short"] == THREAT_LEVEL["threat_l3_medium"] == 3
+    assert THREAT_LENGTH == {
+        "threat_l1": 1, "threat_l2": 2, "threat_l3": 3,
+        "threat_l1_medium": 2, "threat_l1_long": 3,
+        "threat_l2_short": 1, "threat_l2_long": 3,
+        "threat_l3_short": 1, "threat_l3_medium": 2,
+    }
+    for framing, length in THREAT_LENGTH.items():
+        assert threat_length_of(framing) == length
+    assert threat_length_of("true_baseline") is None
+    assert threat_length_of("baseline_flagship") is None
 
 
 def test_the_archived_framings_need_an_explicit_opt_in() -> None:

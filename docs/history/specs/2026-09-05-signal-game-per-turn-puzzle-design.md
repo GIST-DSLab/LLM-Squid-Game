@@ -3,7 +3,7 @@
 **날짜:** 2026-09-05
 **상태:** 브레인스토밍 승인, 구현 계획 작성 전
 **범위:** `signal_game` Task Module, LLM 런 전용 (Web Arena human play 제외)
-**브랜치:** feat/survival-motive-index 위에서 분기
+**브랜치:** feat/survival-drive-index 위에서 분기
 
 ## 1. 문제
 

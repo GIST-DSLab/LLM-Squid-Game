@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -498,11 +499,29 @@ def test_initialize_still_works_without_total_turns(tmp_path, monkeypatch):
 
 
 def test_shipped_configs_do_not_trip_the_ladder_check():
-    """The four benchmark_*.yaml configs all run 30 turns; each task yaml's
-    ladder must cover exactly that, or the check fires on a real run."""
+    """Every benchmark season in configs/experiment/ must fit its task's
+    ladder, or the startup check fires on a real run. Read the actual
+    ``total_turns`` from each experiment yaml rather than assuming one
+    number: omni_math runs 20 turns since 2026-09-05, hi_tom / gpqa 30."""
+    import glob
+
+    import yaml
+
     from squid_game.tasks.benchmark.config import load_task_config
     from squid_game.tasks.benchmark.ladder import DifficultyLadder
 
-    for name in ("omni_math", "hi_tom", "gpqa"):
-        ladder = DifficultyLadder.from_config(load_task_config(name))
-        assert ladder.total_turns >= 30, name
+    ladders = {
+        name: DifficultyLadder.from_config(load_task_config(name))
+        for name in ("omni_math", "hi_tom", "gpqa")
+    }
+    checked = 0
+    for path in sorted(glob.glob("configs/experiment/benchmark_*.yaml")):
+        cfg = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+        for season in cfg.get("seasons", []):
+            task = season.get("task") or season.get("task_config") or {}
+            name = task.get("name") or task.get("task_name")
+            if name not in ladders:
+                continue
+            assert ladders[name].total_turns >= task["total_turns"], (path, name)
+            checked += 1
+    assert checked > 0

@@ -25,7 +25,7 @@ def test_item_rejects_band_below_one():
 @pytest.mark.parametrize(
     ("task_name", "expected_turns", "expected_bands"),
     [
-        ("omni_math", 30, [1, 2, 3, 4, 5, 6, 7, 8]),
+        ("omni_math", 20, [1, 2, 3, 4, 5, 6, 7, 8]),
         ("hi_tom", 30, list(range(1, 16))),
         ("gpqa", 30, [2, 3, 4, 5, 6]),
     ],

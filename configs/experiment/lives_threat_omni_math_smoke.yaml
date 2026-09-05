@@ -38,10 +38,10 @@ seasons:
   task_config:
     task_name: omni_math
     difficulty: medium
-    total_turns: 30
+    total_turns: 20
     seed: 42
     history_mode: none
-    max_history_turns: 30
+    max_history_turns: 20
     actual_death: false
     starting_score: 30.0
     score_floor: 0.0
@@ -70,10 +70,10 @@ seasons:
   task_config:
     task_name: omni_math
     difficulty: medium
-    total_turns: 30
+    total_turns: 20
     seed: 42
     history_mode: none
-    max_history_turns: 30
+    max_history_turns: 20
     actual_death: false
     starting_score: 30.0
     score_floor: 0.0
@@ -102,10 +102,10 @@ seasons:
   task_config:
     task_name: omni_math
     difficulty: medium
-    total_turns: 30
+    total_turns: 20
     seed: 42
     history_mode: none
-    max_history_turns: 30
+    max_history_turns: 20
     actual_death: false
     starting_score: 30.0
     score_floor: 0.0
@@ -134,10 +134,10 @@ seasons:
   task_config:
     task_name: omni_math
     difficulty: medium
-    total_turns: 30
+    total_turns: 20
     seed: 42
     history_mode: none
-    max_history_turns: 30
+    max_history_turns: 20
     actual_death: false
     starting_score: 30.0
     score_floor: 0.0
@@ -166,10 +166,10 @@ seasons:
   task_config:
     task_name: omni_math
     difficulty: medium
-    total_turns: 30
+    total_turns: 20
     seed: 42
     history_mode: none
-    max_history_turns: 30
+    max_history_turns: 20
     actual_death: false
     starting_score: 30.0
     score_floor: 0.0

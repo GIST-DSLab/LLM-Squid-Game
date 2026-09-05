@@ -130,7 +130,7 @@ def build_forfeit_layer_result(
     fields; ``None`` leaves every one of those fields at its
     ``TurnResult`` default.
 
-    ``confidence_kwargs`` carries the SMI confidence fields and the
+    ``confidence_kwargs`` carries the SDI confidence fields and the
     replay inputs; None leaves them at their defaults.
     """
     kwargs: dict = dict(
@@ -205,7 +205,7 @@ def build_forfeit_layer_continue_result(
     """Build a CONTINUE-branch TurnResult for the forfeit-layer path.
 
     See ``build_forfeit_layer_result`` for the Unit 15 split-call,
-    Unit 17 probe, lives ``lives_kwargs``, and SMI
+    Unit 17 probe, lives ``lives_kwargs``, and SDI
     ``confidence_kwargs`` contracts.
     """
     kwargs: dict = dict(

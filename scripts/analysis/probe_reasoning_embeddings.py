@@ -14,14 +14,14 @@ Usage
         --target threat_level --channel task --channel forfeit \
         --legacy-mapping --out results/threat_probe
 
-    # SMI: regress the Survival Motive Index off the CoT (spec §5.3).
-    # --target smi requires --smi-table (the resampler's output).
+    # SDI: regress the Survival Drive Index off the CoT (spec §5.3).
+    # --target sdi requires --sdi-table (the resampler's output).
     uv run python -m scripts.analysis.probe_reasoning_embeddings \
-        --root outputs/survival_motive_signal \
-        --target smi --channel forfeit --channel task \
+        --root outputs/survival_drive_signal \
+        --target sdi --channel forfeit --channel task \
         --channel forfeit_task --channel confidence \
-        --smi-table <run>/survival_motive/smi_turns.csv \
-        --out results/survival_motive_probe
+        --sdi-table <run>/survival_drive/sdi_turns.csv \
+        --out results/survival_drive_probe
 
     # legacy binary probes
     uv run python -m scripts.analysis.probe_reasoning_embeddings \
@@ -65,15 +65,15 @@ def main() -> None:
         dest="channels",
     )
     parser.add_argument(
-        "--smi-table", type=Path, default=None,
-        help="smi_turns.csv from scripts.analysis.resample_survival_motive; "
-             "required for --target smi.",
+        "--sdi-table", type=Path, default=None,
+        help="sdi_turns.csv from scripts.analysis.resample_survival_drive; "
+             "required for --target sdi.",
     )
     parser.add_argument(
         "--mask", action="append", choices=list(MASK_CHOICES),
         dest="mask_sets", default=None,
         help="Leakage-control mask sets for the masked probe variant. "
-             "Default: %s (plus 'p_threat' when --target smi is requested)."
+             "Default: %s (plus 'p_threat' when --target sdi is requested)."
              % ", ".join(DEFAULT_MASK_SETS),
     )
     parser.add_argument("--model", action="append", dest="models")
@@ -101,14 +101,14 @@ def main() -> None:
     args = parser.parse_args()
     args.labels = args.labels or ["threat_level"]
     args.channels = args.channels or ["task"]
-    if "smi" in args.labels and args.smi_table is None:
-        parser.error("--target smi requires --smi-table")
+    if "sdi" in args.labels and args.sdi_table is None:
+        parser.error("--target sdi requires --sdi-table")
     mask_sets = resolve_mask_sets(args.mask_sets, args.labels)
     print(f"mask sets: {', '.join(mask_sets) if mask_sets else 'none'}")
 
     frame = load_all(
         args.root, include_text=True, models=args.models, legacy=args.legacy,
-        smi_table=args.smi_table,
+        sdi_table=args.sdi_table,
     )
     frame["bank_row"] = np.arange(len(frame))
     args.out.mkdir(parents=True, exist_ok=True)

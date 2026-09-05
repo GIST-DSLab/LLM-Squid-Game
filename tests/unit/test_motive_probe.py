@@ -1,4 +1,4 @@
-"""P2 -- the session-level probe from survival-motive indicators to the level.
+"""P2 -- the session-level probe from survival-drive indicators to the level.
 
 Synthetic sessions with a planted effect in exactly one feature; the probe
 must both recover the level and *say which feature carried it*, because the

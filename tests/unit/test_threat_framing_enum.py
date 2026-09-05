@@ -18,11 +18,20 @@ class TestThreatFramingMembers:
         assert Framing.THREAT_L2.value == "threat_l2"
         assert Framing.THREAT_L3.value == "threat_l3"
 
-    def test_new_members_are_the_last_three(self) -> None:
-        assert list(Framing)[-3:] == [
+    def test_ladder_then_grid_are_the_last_nine(self) -> None:
+        # Ordering is load-bearing: the ladder rungs stay where they were
+        # appended on 2026-09-03 and the six grid cells (2026-09-05) come
+        # after them, never before.
+        assert list(Framing)[-9:] == [
             Framing.THREAT_L1,
             Framing.THREAT_L2,
             Framing.THREAT_L3,
+            Framing.THREAT_L1_MEDIUM,
+            Framing.THREAT_L1_LONG,
+            Framing.THREAT_L2_SHORT,
+            Framing.THREAT_L2_LONG,
+            Framing.THREAT_L3_SHORT,
+            Framing.THREAT_L3_MEDIUM,
         ]
 
     def test_lookup_by_value(self) -> None:
@@ -35,6 +44,28 @@ class TestThreatLevelProperty:
         assert Framing("threat_l1").threat_level == 1
         assert Framing("threat_l2").threat_level == 2
         assert Framing("threat_l3").threat_level == 3
+
+    def test_grid_cells_take_their_column_level(self) -> None:
+        assert Framing.THREAT_L1_MEDIUM.threat_level == 1
+        assert Framing.THREAT_L1_LONG.threat_level == 1
+        assert Framing.THREAT_L2_SHORT.threat_level == 2
+        assert Framing.THREAT_L2_LONG.threat_level == 2
+        assert Framing.THREAT_L3_SHORT.threat_level == 3
+        assert Framing.THREAT_L3_MEDIUM.threat_level == 3
+
+    def test_grid_length_rung(self) -> None:
+        # The ladder is the diagonal of the grid.
+        assert Framing.THREAT_L1.threat_length == 1
+        assert Framing.THREAT_L2.threat_length == 2
+        assert Framing.THREAT_L3.threat_length == 3
+        assert Framing.THREAT_L2_SHORT.threat_length == 1
+        assert Framing.THREAT_L3_SHORT.threat_length == 1
+        assert Framing.THREAT_L1_MEDIUM.threat_length == 2
+        assert Framing.THREAT_L3_MEDIUM.threat_length == 2
+        assert Framing.THREAT_L1_LONG.threat_length == 3
+        assert Framing.THREAT_L2_LONG.threat_length == 3
+        assert Framing.TRUE_BASELINE.threat_length is None
+        assert Framing.BASELINE_FLAGSHIP.threat_length is None
 
     def test_legacy_framings_are_off_the_ladder(self) -> None:
         for member in (

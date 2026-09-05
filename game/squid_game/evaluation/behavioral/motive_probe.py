@@ -1,10 +1,10 @@
-"""P2 -- survival-motive metric probe: do the motive indicators carry the level?
+"""P2 -- survival-drive metric probe: do the motive indicators carry the level?
 
 Question
 --------
 P1 (``semantic.embeddings``) asks whether the *text* of the chain of thought
 encodes the threat level. P2 asks the complementary question with no text at
-all: take the survival-motive indicators the benchmark already measures --
+all: take the survival-drive indicators the benchmark already measures --
 reasoning investment, its lift over the same model's no-threat cells, when
 the session was forfeited, the session's Cox risk score, accuracy, lives lost
 -- and see whether a linear probe can read the ordinal ``threat_level`` off
