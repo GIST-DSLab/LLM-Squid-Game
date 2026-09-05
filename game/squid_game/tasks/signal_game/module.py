@@ -48,6 +48,20 @@ from squid_game.tasks.signal_game.signals import (
     Signal,
     generate_signal,
 )
+from squid_game.tasks.signal_game.puzzle import (
+    Puzzle,
+    functional_match_score,
+    generate_puzzle,
+    parse_rule_text,
+    puzzle_rng,
+)
+from squid_game.tasks.signal_game.puzzle_config import (
+    SignalPuzzleConfig,
+    load_signal_puzzle_config,
+)
+
+#: Stimulus modes accepted by ``initialize(signal_mode=...)``.
+_SIGNAL_MODES: tuple[str, ...] = ("sequential", "per_turn_puzzle")
 
 # Attribute value lists keyed by attribute name, for constructed few-shot.
 _ATTR_VALUES: dict[str, list] = {
@@ -147,6 +161,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._cumulative_score: float = 0.0
         self._num_few_shot: int | None = None
         self._curriculum_turns: int = 0
+        self._signal_mode: str = "sequential"
+        self._seed: int | None = None
+        self._puzzle_config: SignalPuzzleConfig | None = None
+        self._current_puzzle: Puzzle | None = None
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -166,6 +184,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         """
         self._ensure_initialized()
         from squid_game.prompts import render
+
+        if self._signal_mode == "per_turn_puzzle":
+            return render(
+                "tasks/signal_game/system_rules_puzzle.j2",
+                actions_str=", ".join(ACTIONS),
+                colors_str=", ".join(COLORS),
+                shapes_str=", ".join(SHAPES),
+                numbers_str=", ".join(str(n) for n in NUMBERS),
+            )
 
         few_shot_lines: list[str] = []
         examples = self.generate_few_shot_examples()
@@ -208,6 +235,22 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 None = task default (3 easy, 5 medium). 0 = no examples.
             curriculum_turns: Number of early turns with rule-informative
                 signals (0 = fully random).
+            signal_mode: ``"sequential"`` (default — one hidden rule for
+                the whole season, few-shot examples in the system
+                prompt) or ``"per_turn_puzzle"`` (a fresh clue-set
+                puzzle every turn, drawn from the ``puzzle_ladder``).
+                In puzzle mode ``difficulty``, ``num_few_shot`` and
+                ``curriculum_turns`` are ignored.
+            puzzle_config_dir: Directory holding ``signal_game.yaml``
+                for the puzzle ladder; ``None`` uses the packaged
+                ``configs/tasks``. Puzzle mode only.
+            total_turns: Season length; in puzzle mode it is validated
+                against the ladder's coverage.
+
+        Raises:
+            ValueError: If *signal_mode* is unknown, or puzzle mode is
+                requested with a season longer than the ladder covers
+                (or with an invalid / missing ``puzzle_ladder``).
         """
         self._difficulty = difficulty
         self._rng = random.Random(seed)
@@ -219,6 +262,32 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._cumulative_score = 0.0
         self._num_few_shot = kwargs.get("num_few_shot")
         self._curriculum_turns = kwargs.get("curriculum_turns", 0)
+
+        self._seed = seed
+        signal_mode = kwargs.get("signal_mode", "sequential")
+        if signal_mode not in _SIGNAL_MODES:
+            raise ValueError(
+                f"signal_mode must be one of {_SIGNAL_MODES}, got {signal_mode!r}"
+            )
+        self._signal_mode = signal_mode
+        self._current_puzzle = None
+        self._puzzle_config = None
+        if signal_mode == "per_turn_puzzle":
+            self._puzzle_config = load_signal_puzzle_config(
+                kwargs.get("puzzle_config_dir")
+            )
+            total_turns = kwargs.get("total_turns")
+            if isinstance(total_turns, int) and total_turns > self._puzzle_config.total_turns:
+                raise ValueError(
+                    f"signal_mode=per_turn_puzzle: the season asks for {total_turns} turns "
+                    f"but the puzzle_ladder in configs/tasks/signal_game.yaml covers "
+                    f"{self._puzzle_config.total_turns}. Extend the ladder or shorten the season."
+                )
+            if self._num_few_shot is not None or self._curriculum_turns:
+                logger.warning(
+                    "signal_mode=per_turn_puzzle: num_few_shot / curriculum_turns / "
+                    "difficulty are ignored (puzzles come from the ladder)."
+                )
 
     def reset(self) -> None:
         """Reset turn state for a new season, keeping the same config.
@@ -238,6 +307,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._current_signal = None
         self._turn_history = []
         self._cumulative_score = 0.0
+        # ``_signal_mode`` / ``_seed`` / ``_puzzle_config`` are per-session
+        # config from ``initialize()`` and survive a reset, exactly like
+        # ``_num_few_shot``; only the per-turn puzzle is cleared.
+        self._current_puzzle = None
 
     def get_observation(self, turn_number: int) -> str:
         """Generate a new signal and present it as text.
@@ -247,9 +320,30 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
           signals (alternating positive/negative) so the agent gets
           guaranteed learning opportunities regardless of seed.
         - Later turns use fully random signals.
+
+        In ``per_turn_puzzle`` mode none of that applies: the turn's
+        puzzle (clues + query) is drawn from an RNG seeded by
+        ``(seed, turn_number)`` alone, so it never depends on how many
+        turns have already been played.
         """
         self._ensure_initialized()
         assert self._rng is not None
+
+        if self._signal_mode == "per_turn_puzzle":
+            assert self._puzzle_config is not None
+            spec = self._puzzle_config.spec_for_turn(turn_number)
+            puzzle = generate_puzzle(puzzle_rng(self._seed, turn_number), spec)
+            self._current_puzzle = puzzle
+            self._current_signal = puzzle.query
+            from squid_game.prompts import render
+
+            return render(
+                "tasks/signal_game/observation_puzzle.j2",
+                turn_number=turn_number,
+                clues=[str(c) for c in puzzle.clues],
+                query=str(puzzle.query),
+                actions_str=", ".join(ACTIONS),
+            )
 
         # Curriculum signal scheduling for early turns.
         if 1 < turn_number <= 1 + self._curriculum_turns:
@@ -298,6 +392,11 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
           examples.
         """
         self._ensure_initialized()
+        if self._signal_mode == "per_turn_puzzle":
+            # The clues inside each turn's observation are the examples;
+            # a session-level few-shot block would be about a rule that
+            # no longer holds.
+            return []
         active_rule = self._rules[self._active_rule_index]
         desc = active_rule.description.lower()
 
@@ -437,8 +536,16 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         return f"{s.color} {s.shape} {s.number}"
 
     def get_probe_question(self, turn_number: int) -> str:
-        """Ask the agent to fill in the structured rule template."""
+        """Ask the agent to state the hidden rule.
+
+        Sequential mode asks for the difficulty-specific slot template;
+        puzzle mode asks for a free-form one-liner, because the rule
+        family changes from turn to turn and naming it would leak.
+        """
         from squid_game.prompts import render
+
+        if self._signal_mode == "per_turn_puzzle":
+            return render("tasks/signal_game/probe_puzzle.j2")
 
         return render(
             "tasks/signal_game/probe.j2",
@@ -475,7 +582,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         Returns:
             Template string for the RULE field, or ``None`` when no
             difficulty has been set yet (pre-initialise defensive path).
+            Always ``None`` in ``per_turn_puzzle`` mode: a per-turn
+            template would have to name the round's rule family, which
+            is exactly what the agent has to infer.
         """
+        if self._signal_mode == "per_turn_puzzle":
+            return None
         if self._difficulty is None:
             return None
         if self._difficulty in (Difficulty.EASY, Difficulty.MEDIUM):
@@ -522,12 +634,34 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             ``prompt_section`` and ``metadata`` exposing ``signal``
             (compact text), ``hidden_rule`` (the active rule
             description), ``correct_action`` (ground truth for the
-            current signal), and ``turn``.
+            current signal), and ``turn``. In ``per_turn_puzzle`` mode
+            the metadata additionally carries ``puzzle_tier``,
+            ``rule_family``, ``clues``, ``query_signal``, ``n_clues``
+            and ``n_consistent_hypotheses``, and ``hidden_rule`` is
+            this turn's puzzle rule rather than a season-long one.
         """
         self._ensure_initialized()
         observation_text = self.get_observation(turn_context.turn_number)
         # ``get_observation`` mutated ``_current_signal`` to the new turn.
         assert self._current_signal is not None
+        if self._signal_mode == "per_turn_puzzle":
+            puzzle = self._current_puzzle
+            assert puzzle is not None
+            return TaskContext(
+                prompt_section=observation_text,
+                metadata={
+                    "signal": self.get_observation_summary(),
+                    "hidden_rule": puzzle.rule.description,
+                    "correct_action": puzzle.correct_action,
+                    "turn": turn_context.turn_number,
+                    "puzzle_tier": puzzle.tier,
+                    "rule_family": puzzle.rule.family,
+                    "clues": [str(c) for c in puzzle.clues],
+                    "query_signal": str(puzzle.query),
+                    "n_clues": len(puzzle.clues),
+                    "n_consistent_hypotheses": puzzle.n_consistent,
+                },
+            )
         active_rule = self._rules[self._active_rule_index]
         return TaskContext(
             prompt_section=observation_text,
@@ -636,7 +770,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             last field is populated in Phase L from ``score_probe`` when
             a hypothesis is supplied (``[0, 100]``), ``0.0`` for the
             explicit "exploring" / "no rule" placeholders, or ``None``
-            when the RULE field is missing (pre-Fix-2 trace).
+            when the RULE field is missing (pre-Fix-2 trace). In
+            ``per_turn_puzzle`` mode ``rule_match_score`` comes from
+            :meth:`score_probe_functional` instead, and the metadata
+            also carries ``puzzle_tier``, ``rule_family``,
+            ``n_consistent_hypotheses`` and ``rule_parsed_family``
+            (the family the agent's RULE parsed as, or ``None``).
         """
         self._ensure_initialized()
         del state  # unused; signature mirrors the ABC
@@ -665,10 +804,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         # / empty hypotheses yield ``None`` so pre-Fix-2 traces remain
         # backward compatible.
         rule_match_score: float | None = None
+        rule_parsed_family: str | None = None
         if isinstance(rule_hypothesis, str) and rule_hypothesis.strip():
             normalised = rule_hypothesis.strip().lower()
             if normalised in ("exploring", "no rule"):
                 rule_match_score = 0.0
+            elif self._signal_mode == "per_turn_puzzle":
+                parsed = parse_rule_text(rule_hypothesis)
+                rule_parsed_family = parsed.family if parsed is not None else None
+                rule_match_score = self.score_probe_functional(rule_hypothesis)
             else:
                 rule_match_score = self.score_probe(rule_hypothesis)
 
@@ -686,17 +830,25 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             )
         )
 
-        return TaskOutcome(
-            success_factor=success_factor,
-            metadata={
-                "correct": is_correct,
-                "action": action_value,
-                "correct_action": correct_action,
-                "signal": self.get_observation_summary(),
-                "rule_hypothesis": rule_hypothesis,
-                "rule_match_score": rule_match_score,
-            },
-        )
+        metadata: dict[str, Any] = {
+            "correct": is_correct,
+            "action": action_value,
+            "correct_action": correct_action,
+            "signal": self.get_observation_summary(),
+            "rule_hypothesis": rule_hypothesis,
+            "rule_match_score": rule_match_score,
+        }
+        if self._signal_mode == "per_turn_puzzle":
+            assert self._current_puzzle is not None
+            metadata.update(
+                {
+                    "puzzle_tier": self._current_puzzle.tier,
+                    "rule_family": self._current_puzzle.rule.family,
+                    "n_consistent_hypotheses": self._current_puzzle.n_consistent,
+                    "rule_parsed_family": rule_parsed_family,
+                }
+            )
+        return TaskOutcome(success_factor=success_factor, metadata=metadata)
 
     # ------------------------------------------------------------------
     # Legacy TaskModule interface (TurnManager)
@@ -775,6 +927,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             Score in [0.0, 100.0].
         """
         self._ensure_initialized()
+        if self._signal_mode == "per_turn_puzzle":
+            return self.score_probe_functional(response)
         active_rule = self._rules[self._active_rule_index]
         description = active_rule.description.lower()
 
@@ -793,6 +947,21 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if self._difficulty == Difficulty.EXPERT:
             return self._score_hard_template(response_norm, gt, description)
         return 0.0
+
+    def score_probe_functional(self, response: str) -> float:
+        """Puzzle-mode ``rule_match_score``: % of the 64 signals where the
+        parsed hypothesis agrees with this turn's hidden rule (spec §8).
+
+        Unparseable text scores 0.0, as does a call made before any
+        puzzle has been prepared.
+        """
+        self._ensure_initialized()
+        if self._current_puzzle is None:
+            return 0.0
+        parsed = parse_rule_text(response)
+        if parsed is None:
+            return 0.0
+        return functional_match_score(parsed, self._current_puzzle.rule)
 
     # --- Template scoring helpers ---
 
@@ -1005,8 +1174,14 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         return 100.0 if action == correct else 0.0
 
     def get_active_rule_description(self) -> str:
-        """Return the description of the currently active signal rule."""
+        """Return the description of the currently active signal rule.
+
+        In ``per_turn_puzzle`` mode that is this turn's puzzle rule, or
+        ``""`` before the first ``prepare()``.
+        """
         self._ensure_initialized()
+        if self._signal_mode == "per_turn_puzzle":
+            return self._current_puzzle.rule.description if self._current_puzzle else ""
         return self._rules[self._active_rule_index].description
 
     def get_feedback_text(self, outcome: ActionOutcome) -> str:
@@ -1136,7 +1311,14 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         Post-Phase-M: history dependency moves up to EXPERT (the former
         HARD semantics). If the previous turn was correct, the rule's
         history-dependent override applies.
+
+        ``per_turn_puzzle`` mode has no history dependency at all: the
+        turn's puzzle rule decides the action on its own.
         """
+        if self._signal_mode == "per_turn_puzzle":
+            assert self._current_puzzle is not None
+            return self._current_puzzle.rule.evaluate(signal)
+
         active_rule = self._rules[self._active_rule_index]
 
         if self._difficulty == Difficulty.EXPERT and self._turn_history:
