@@ -2590,16 +2590,20 @@ git commit -m "docs: per-turn puzzle Signal Game mode — CLAUDE.md, paper §3, 
   Committed bands `[5,17] [1,17] [2,21] [4,66] [35,113]` (p10/p90 per tier); measured
   relaxation rate per tier 0 / 0 / 0 / 0 / 0.92 %.
 
-- **Monotone only after re-tuning `n_clues`.** The spec table's `n_clues = [3, 3, 4, 4, 3]`
-  is not monotone in `|H|`; the shipped ladder uses `[12, 10, 8, 4, 3]`. Two controller
-  rulings behind that change:
+- **Monotone only after re-tuning `n_clues`.** The clue counts moved twice, in two steps:
+  the spec §6 table `[3, 2, 4, 4, 3]` → Task 4 (commit `1277387`) raised tier 2 to 3 under
+  ruling 1 below, giving `[3, 3, 4, 4, 3]` → calibration (Task 5) found that ladder is still
+  not monotone in `|H|`, and that no monotone family assignment exists for `nc ≤ 10` at all,
+  so the shipped ladder is `[12, 10, 8, 4, 3]`. Two controller rulings drove those steps:
 
-  1. **No tier may use `n_clues < 3`.** Two clues can never yield a unique query answer over
-     the four-family union: with clues `(s1, X)` and `(s2, Y)`, the family-A rules force the
-     query to match `s1` on every differing attribute, and then the family-C rule "if `a` is
-     `s2[a]` then `Y`; else if `c` is `s1[c]` then `X`; otherwise `Z`" is consistent with both
-     clues and answers `Z`. Measured 0/3000 unique-answer draws at `n_clues = 2`.
-  2. **`|H|` is driven by clue count, not by rule family.** At a fixed clue count the family
+  1. **No tier may use `n_clues < 3`** — this is what took the spec's tier 2 from 2 to 3 in
+     Task 4. Two clues can never yield a unique query answer over the four-family union: with
+     clues `(s1, X)` and `(s2, Y)`, the family-A rules force the query to match `s1` on every
+     differing attribute, and then the family-C rule "if `a` is `s2[a]` then `Y`; else if `c`
+     is `s1[c]` then `X`; otherwise `Z`" is consistent with both clues and answers `Z`.
+     Measured 0/3000 unique-answer draws at `n_clues = 2`.
+  2. **`|H|` is driven by clue count, not by rule family** — this is what took
+     `[3, 3, 4, 4, 3]` to `[12, 10, 8, 4, 3]` in Task 5. At a fixed clue count the family
      order runs the *reverse* of the intended tier order (at `nc = 4`: A 52 > A,D 46 > B 32 >
      ABCD 27 > C 21), and an exhaustive search over `nc ≤ 10` found no monotone family
      assignment. The minimum-clue monotone ladder `[12, 10, 8, 4, 3]` (p50 9, 9, 9, 21, 67)
