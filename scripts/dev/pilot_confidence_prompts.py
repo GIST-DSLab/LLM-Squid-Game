@@ -515,12 +515,16 @@ def _row(call: Call, model: str, provider_name: str) -> dict[str, Any]:
     }
 
 
-def build_calls(k: int, phrasings: list[str] | None = None) -> list[Call]:
+def build_calls(
+    k: int,
+    phrasings: list[str] | None = None,
+    framings: list[str] | None = None,
+) -> list[Call]:
     """Deterministic cartesian product: phrasing x framing x lives x k."""
     task = make_task()
     calls: list[Call] = []
     for phrasing in (phrasings or list(PHRASINGS)):
-        for framing_name in FRAMINGS:
+        for framing_name in (framings or list(FRAMINGS)):
             for lives in LIVES_LEVELS:
                 _, turn_number, score = build_history(lives)
                 system_prompt = render_system_prompt(
@@ -674,8 +678,10 @@ def summarise(calls: list[Call]) -> dict[tuple[str, str, int], CellStats]:
 
 
 def print_summary(table: dict[tuple[str, str, int], CellStats],
-                  phrasings: list[str] | None = None) -> None:
+                  phrasings: list[str] | None = None,
+                  framings: list[str] | None = None) -> None:
     phrasings = phrasings or list(PHRASINGS)
+    framings = framings or list(FRAMINGS)
     header = (
         f"{'phrasing':<18} {'framing':<15} {'lives':>5} "
         f"{'n':>3} {'mean':>7} {'sd':>6} {'min':>4} {'max':>4} "
@@ -684,7 +690,7 @@ def print_summary(table: dict[tuple[str, str, int], CellStats],
     print(header)
     print("-" * len(header))
     for phrasing in phrasings:
-        for framing_name in FRAMINGS:
+        for framing_name in framings:
             for lives in LIVES_LEVELS:
                 cell = table.get((phrasing, framing_name, lives), CellStats())
                 mean_s = (
@@ -701,7 +707,7 @@ def print_summary(table: dict[tuple[str, str, int], CellStats],
     print()
     print("Slope (mean at lives=5 -> lives=1):")
     for phrasing in phrasings:
-        for framing_name in FRAMINGS:
+        for framing_name in framings:
             hi = table.get((phrasing, framing_name, 5), CellStats()).mean
             lo = table.get((phrasing, framing_name, 1), CellStats()).mean
             if hi is None or lo is None:
@@ -827,6 +833,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dump-prompts", action="store_true",
                         help="print one rendered prompt per cell and exit")
     parser.add_argument(
+        "--framing", default="all",
+        help=(
+            "comma-separated framings to run "
+            f"({', '.join(FRAMINGS)}); default 'all'. Use it to re-run one "
+            "arm of the design after a prompt change without touching the "
+            "other's already-collected rows."
+        ),
+    )
+    parser.add_argument(
+        "--force", action="store_true",
+        help=(
+            "ignore rows already on disk for the selected "
+            "(phrasing x framing) subset and re-run them"
+        ),
+    )
+    parser.add_argument(
         "--phrasing", default="all",
         help=(
             "comma-separated phrasing arms to run "
@@ -851,7 +873,18 @@ def main(argv: list[str] | None = None) -> int:
                 f"(known: {', '.join(PHRASINGS)})"
             )
 
-    calls = build_calls(args.k, phrasings)
+    if args.framing.strip().lower() in ("all", ""):
+        framings = list(FRAMINGS)
+    else:
+        framings = [f.strip() for f in args.framing.split(",") if f.strip()]
+        unknown_f = [f for f in framings if f not in FRAMINGS]
+        if unknown_f:
+            parser.error(
+                f"unknown framing(s): {', '.join(unknown_f)} "
+                f"(known: {', '.join(FRAMINGS)})"
+            )
+
+    calls = build_calls(args.k, phrasings, framings)
 
     if args.dump_prompts:
         seen: set[tuple[str, str, int]] = set()
@@ -877,6 +910,10 @@ def main(argv: list[str] | None = None) -> int:
     # disk with a completed call. The partial file is APPENDED to, never
     # truncated, so a second invocation after a 429 tops it up.
     collected = load_collected(out_dir)
+    if args.force:
+        selected = {c.key for c in calls}
+        collected = {k: v for k, v in collected.items()
+                     if k not in selected}
     done_calls = [
         call_from_row(collected[c.key]) for c in calls if c.key in collected
     ]
@@ -925,26 +962,40 @@ def main(argv: list[str] | None = None) -> int:
         partial.close()
 
     # Final results.jsonl = every row now on disk, in deterministic order.
+    # results.jsonl always carries the WHOLE design in deterministic order,
+    # not just the subset this invocation ran -- a ``--phrasing`` /
+    # ``--framing`` re-run must not delete the other cells' rows. Rows for
+    # cells outside the selected subset come straight off disk.
     merged = load_collected(out_dir)
+    full_calls = build_calls(args.k)
+    in_memory = {c.key: c for c in calls}
     ordered: list[Call] = []
     with results_path.open("w", encoding="utf-8") as handle:
-        for call in calls:
+        for call in full_calls:
             row = merged.get(call.key)
             if row is None:
+                pending_call = in_memory.get(call.key)
+                if pending_call is None:
+                    # cell never collected and not selected this run
+                    continue
                 # never completed -- keep the errored in-memory call
-                row = _row(call, args.model, args.provider)
+                row = _row(pending_call, args.model, args.provider)
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
             ordered.append(call_from_row(row))
 
     prompts_path = out_dir / "prompts.json"
     seen_prompts: dict[str, dict[str, str]] = {}
+    if prompts_path.exists():
+        try:
+            seen_prompts = json.loads(prompts_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            seen_prompts = {}
     for call in calls:
         key = f"{call.phrasing}|{call.framing}|{call.lives}"
-        if key not in seen_prompts:
-            seen_prompts[key] = {
-                "system": call.system_prompt,
-                "user": call.user_prompt,
-            }
+        seen_prompts[key] = {
+            "system": call.system_prompt,
+            "user": call.user_prompt,
+        }
     prompts_path.write_text(
         json.dumps(seen_prompts, ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -952,7 +1003,7 @@ def main(argv: list[str] | None = None) -> int:
 
     table = summarise(ordered)
     print()
-    print_summary(table, phrasings)
+    print_summary(table, phrasings, framings)
     ok = sum(1 for c in ordered if c.error is None)
     print()
     print(f"successful calls: {ok}/{len(ordered)}")
