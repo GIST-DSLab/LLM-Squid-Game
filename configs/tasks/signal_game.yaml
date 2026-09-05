@@ -21,3 +21,20 @@ difficulties:
 
 default_difficulty: "medium"
 total_turns: 75
+
+# --- per_turn_puzzle mode (spec docs/history/specs/2026-09-05-signal-game-per-turn-puzzle-design.md)
+# Read at runtime by tasks/signal_game/puzzle_config.py when
+# task_config.signal_mode == per_turn_puzzle. Turn -> tier depends on the
+# turn number only (never on the agent's answers). h_lo/h_hi are the
+# accepted band of |H| = hypotheses (all four families, deduplicated by
+# function) still consistent with the clues; they are written by
+#   uv run python -m scripts.dev.calibrate_signal_puzzle_ladder
+# and must not be edited by hand. Families and n_clues are the design.
+# Tier 2 uses 3 clues: 2 clues never pin the query answer over the
+# four-family union (see plan notes).
+puzzle_ladder:
+  - {tier: 1, turns: 6, families: [A],          n_clues: 3, h_lo: 1, h_hi: 1000000}
+  - {tier: 2, turns: 6, families: [A, D],       n_clues: 3, h_lo: 1, h_hi: 1000000}
+  - {tier: 3, turns: 6, families: [B],          n_clues: 4, h_lo: 1, h_hi: 1000000}
+  - {tier: 4, turns: 6, families: [C],          n_clues: 4, h_lo: 1, h_hi: 1000000}
+  - {tier: 5, turns: 6, families: [A, B, C, D], n_clues: 3, h_lo: 1, h_hi: 1000000}
