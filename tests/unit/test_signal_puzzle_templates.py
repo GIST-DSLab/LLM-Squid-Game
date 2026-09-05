@@ -14,15 +14,56 @@ _SYS_KW = dict(
 )
 
 
+# One distinctive, whole-line marker per family shape. Each line is unique to its
+# family, so deleting any single family from the template fails the test — a bare
+# `"AND" in out` would not, since the substring could survive elsewhere.
+_SINGLE_ATTRIBUTE_FORM = '"If <attribute> is <value> then <action>, otherwise <action>."'
+_CONJUNCTION_FORM = (
+    '"If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action>; '
+    "if only <attr_1> is <val_1> then <action>; otherwise <action>.\""
+)
+_PRIORITISED_FORM = (
+    '"If <attr_1> is <val_1> then <action>; '
+    "else if <attr_2> is <val_2> then <action>; otherwise <action>.\""
+)
+_NUMBER_PREDICATE_FORM = '"If number is <condition> then <action>, otherwise <action>."'
+
+_FAMILY_FORMS = (
+    _SINGLE_ATTRIBUTE_FORM,
+    _CONJUNCTION_FORM,
+    _PRIORITISED_FORM,
+    _NUMBER_PREDICATE_FORM,
+)
+
+
 class TestSystemRules:
     def test_lists_all_four_families_and_priority_rule(self) -> None:
         out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
-        assert "otherwise <action>" in out
-        assert "AND" in out
-        assert "else if" in out
-        assert "If number is <condition>" in out
+        # Every family shape must be present, each pinned to its own full line.
+        for form in _FAMILY_FORMS:
+            assert form in out, f"missing family shape: {form}"
+        # ...and they must be four *distinct* shapes, not the same line repeated.
+        assert len(set(_FAMILY_FORMS)) == 4
+        # The conjunction family keeps its partial-match branch.
+        assert "if only <attr_1> is <val_1> then <action>" in out
+        # The prioritised family keeps its first-clause-wins gloss.
         assert "first clause whose condition holds" in out
+        # The number-predicate family keeps its condition vocabulary.
+        assert "<condition> is one of: at least N, at most N, odd, even." in out
         assert "changes every round" in out
+
+    def test_each_family_shape_is_individually_required(self) -> None:
+        """Deleting any one family from the template must fail the suite.
+
+        Simulates each single-family deletion against the real rendered prompt and
+        asserts the marker set no longer holds — the property `"AND" in out` lacked.
+        """
+        out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
+        for dropped in _FAMILY_FORMS:
+            mutated = out.replace(dropped, "")
+            assert not all(form in mutated for form in _FAMILY_FORMS), (
+                f"removing {dropped!r} left every family marker satisfied"
+            )
 
     def test_never_names_the_current_family_or_clue_count(self) -> None:
         out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
