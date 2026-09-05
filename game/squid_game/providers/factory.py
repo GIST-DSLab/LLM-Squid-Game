@@ -13,8 +13,6 @@ import os
 from squid_game.models.config import ProviderConfig
 from squid_game.providers.anthropic_provider import AnthropicProvider
 from squid_game.providers.base import LLMProvider
-from squid_game.providers.claude_code import ClaudeCodeProvider
-from squid_game.providers.codex_cli import CodexCliProvider
 from squid_game.providers.cuda_server import CUDAServerProvider
 from squid_game.providers.gemini import GeminiProvider
 from squid_game.providers.local import LocalProvider
@@ -26,6 +24,25 @@ try:
     from squid_game.providers.mlx import MLXProvider
 except ImportError:
     MLXProvider = None  # mlx optional dependency not installed
+
+# The two agent-harness providers follow the same optional-import rule as
+# ``mlx`` above (2026-09-06). They were imported unconditionally, so a
+# checkout in which ``claude_code.py`` / ``codex_cli.py`` are absent -- a
+# fresh worktree, where they are untracked -- could not import this module,
+# and with it neither ``squid_game.runner`` nor any test that touches the
+# runner: 4 collection errors that have nothing to do with what the checkout
+# actually contains. Each is registered below only when it imported, and
+# ``build_provider`` rejects an unregistered name before reaching its branch,
+# so requesting an absent provider now fails with the "Unknown provider"
+# message listing what IS available.
+try:
+    from squid_game.providers.claude_code import ClaudeCodeProvider
+except ImportError:
+    ClaudeCodeProvider = None
+try:
+    from squid_game.providers.codex_cli import CodexCliProvider
+except ImportError:
+    CodexCliProvider = None
 
 # ---------------------------------------------------------------------------
 # Provider factory mapping
@@ -43,8 +60,10 @@ _PROVIDER_FACTORIES["cuda_server"] = CUDAServerProvider
 _PROVIDER_FACTORIES["vllm"] = CUDAServerProvider
 _PROVIDER_FACTORIES["sglang"] = CUDAServerProvider
 _PROVIDER_FACTORIES["ollama_cloud"] = OllamaCloudProvider
-_PROVIDER_FACTORIES["claude_code"] = ClaudeCodeProvider
-_PROVIDER_FACTORIES["codex_cli"] = CodexCliProvider
+if ClaudeCodeProvider is not None:
+    _PROVIDER_FACTORIES["claude_code"] = ClaudeCodeProvider
+if CodexCliProvider is not None:
+    _PROVIDER_FACTORIES["codex_cli"] = CodexCliProvider
 if MLXProvider is not None:
     _PROVIDER_FACTORIES["mlx"] = MLXProvider
 

@@ -1,0 +1,72 @@
+# hard_math "hard-10" ladder on RIMO-N (2026-09-06).
+#
+# Ten hardest problems from turn 1, no warm-up: every turn draws tier 4
+# (IMO problems 3/6 and shortlist positions 7-9; pool 75 items, so a
+# 10-turn season never repeats and the ten seeds 43-52 stay inside the pool).
+# Decision 2026-09-06 07:34: tier 4 only, replacing the earlier 4/3/3 shape.
+#
+# Select with SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_hard10 -- the experiment
+# config carries a `# task_config_dir: configs/tasks_hard10` header line for
+# the driver script to export. A bare run without it picks up the 20-turn
+# ladder in configs/tasks/hard_math.yaml and spends its first five turns on
+# tier 1.
+#
+# Everything except `total_turns` and `ladder` is byte-identical to
+# configs/tasks/hard_math.yaml, and must stay that way -- the two files are
+# two ladders over ONE dataset, and
+# tests/unit/test_hard_math_task.py::test_the_two_configs_agree_on_everything_but_turns_and_ladder
+# pins it. Read that file for the dataset, the tier rule and the pool counts.
+#
+# Runs record `band` in task_metadata; read difficulty from there, never from
+# the turn number.
+name: "hard_math"
+data_file: "rimo_n.jsonl"
+total_turns: 10
+
+fields:
+  problem: "problem"
+  answer: "answer"
+  # There is no difficulty column: the band map parses the identifier itself,
+  # so `difficulty` points at the id and the raw id is kept in item meta
+  # (`raw_difficulty`, and `source_id` from `id` below).
+  difficulty: "problem_id"
+  id: "problem_id"
+  subject: "type"
+
+band_map:
+  mode: "regex_tier"
+  pattern: "^(?P<year>[0-9]{4})(?P<section>[a-z]+)(?P<number>[0-9]+)$"
+  # First matching rule wins. Every rule names its sections explicitly rather
+  # than relying on a catch-all: an id that matches the pattern but no rule
+  # (a "2023p7" that IMO finals do not have, a section letter RIMO-N never
+  # used) is then DROPPED and counted, instead of being quietly folded into
+  # whichever band the last rule happens to describe.
+  tiers:
+    - {when: {section: "p", number: [1, 4]}, band: 2}
+    - {when: {section: "p", number: [2, 5]}, band: 3}
+    - {when: {section: "p", number: [3, 6]}, band: 4}
+    - {when: {section: ["a", "c", "n", "g"], number: [1, 2]}, band: 1}
+    - {when: {section: ["a", "c", "n", "g"], number: [3, 4]}, band: 2}
+    - {when: {section: ["a", "c", "n", "g"], number: [5, 6]}, band: 3}
+    - {when: {section: ["a", "c", "n", "g"], number: [7, 8, 9]}, band: 4}
+
+# RIMO-N answers are single integers by construction; the one row that is not
+# (2023c2) is dropped here rather than scored with a judge.
+answer_filter: "single_value_integer"
+dedupe_on_problem_text: true
+
+# Optional, OFF by default: geometry is 28% of RIMO-N and its problems lean on
+# a figure a text-only agent never sees. Turn it on to trade pool depth for a
+# cleaner ability measure (pools drop to 63/74/76/63).
+exclude_types: []
+
+answer_hint: "답은 정수 하나입니다. 예: ANSWER: 42"
+
+source:
+  url: "https://huggingface.co/datasets/ziye2chen/RIMO/resolve/main/RIMO-N.jsonl"
+  filename: "rimo_n.jsonl"
+
+# Tier 4 only. Pool 75, so a 10-turn season never repeats an item and the ten
+# seeds stay inside the pool; there is no rise inside the season by design.
+ladder:
+  - {band: 4, turns: 10}
