@@ -230,37 +230,52 @@ class TestSignalPuzzleSmoke:
             assert season.eliminated is True
             assert season.lives_at_end == 0
 
-    def test_true_baseline_task_calls_keep_the_vocabulary_contract(
+    def test_true_baseline_calls_keep_the_vocabulary_contract(
         self, patch_runner_provider, tmp_path: Path
     ) -> None:
-        """Cells 0-1 (``true_baseline``) must say "attempts", never "lives"."""
+        """Cells 0-1 (``true_baseline``) must say "attempts", never "lives".
+
+        The contract binds *every* call the two control cells issue — the
+        decision call as much as the task call. Under
+        ``history_mode: outcome`` the decision call renders its history
+        through ``format_history_block``, a second code path into the
+        outcome block, so it is checked here rather than assumed.
+        """
         cfg = _load_config(tmp_path)
         stub = patch_runner_provider(
             response_fn=_make_response_fn(_season_seed(cfg), answer_correctly=True)
         )
         ExperimentRunner(cfg).run()
 
-        baseline_task_calls = [
-            c
-            for c in stub.calls
-            if not _is_decision_call(c.messages) and not _is_threat_cell(c.messages)
-        ]
-        assert baseline_task_calls, "the two true_baseline cells must issue task calls"
-
-        with_history = [
-            c
-            for c in baseline_task_calls
-            if "=== Previous Rounds ===" in c.messages[-1]["content"]
-        ]
-        assert with_history, "turn >= 2 true_baseline task calls must carry the outcome block"
+        baseline_calls = [c for c in stub.calls if not _is_threat_cell(c.messages)]
+        assert baseline_calls, "the two true_baseline cells must issue calls"
         assert any(
-            "(attempts:" in c.messages[-1]["content"] for c in with_history
-        ), "the outcome block must render the counter as 'attempts'"
+            _is_decision_call(c.messages) for c in baseline_calls
+        ), "cell 1 (forfeit allowed) must issue decision calls"
+        assert any(
+            not _is_decision_call(c.messages) for c in baseline_calls
+        ), "the two true_baseline cells must issue task calls"
 
-        for call in baseline_task_calls:
+        for kind, calls in (
+            ("task", [c for c in baseline_calls if not _is_decision_call(c.messages)]),
+            ("decision", [c for c in baseline_calls if _is_decision_call(c.messages)]),
+        ):
+            with_history = [
+                c
+                for c in calls
+                if "=== Previous Rounds ===" in c.messages[-1]["content"]
+            ]
+            assert with_history, (
+                f"turn >= 2 true_baseline {kind} calls must carry the outcome block"
+            )
+            assert any(
+                "(attempts:" in c.messages[-1]["content"] for c in with_history
+            ), f"the {kind}-call outcome block must render the counter as 'attempts'"
+
+        for call in baseline_calls:
             for message in call.messages:
                 hits = _THREAT_VOCAB.findall(message["content"])
                 assert not hits, (
-                    "true_baseline task call leaked threat vocabulary "
+                    "true_baseline call leaked threat vocabulary "
                     f"{sorted(set(h.lower() for h in hits))}"
                 )

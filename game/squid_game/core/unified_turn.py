@@ -179,9 +179,12 @@ class UnifiedTurnManager:
             action_hint: Optional placeholder text passed to the stake
                 menu (e.g. ``"<choose A or B>"`` for Voting). Defaults
                 to ``RiskChoiceLayer``'s built-in placeholder.
-            history_mode: ``"cumulative"`` / ``"last"`` / ``"none"`` —
-                controls how prior-turn outcomes are surfaced in the
-                next turn's user prompt.
+            history_mode: ``"cumulative"`` / ``"last"`` / ``"none"`` /
+                ``"outcome"`` — controls how prior-turn outcomes are
+                surfaced in the next turn's user prompt. ``"outcome"``
+                (2026-09-05) renders the outcome-only block
+                (round, verdict, cumulative score, lives) so the task
+                call sees no signal, action or rule hypothesis.
             max_history_turns: Cap on cumulative-history rendering.
             confidence_call_enabled: SMI Phase 1.5 switch. When True the
                 split-call path issues a confidence call before the
@@ -947,8 +950,17 @@ class UnifiedTurnManager:
                 )
             )
         else:
+            # ``lives_label`` matters here too: with
+            # ``history_mode="outcome"`` (2026-09-05) format_history_block
+            # delegates to the outcome block, which prints a lives
+            # counter. ``true_baseline`` must say "attempts".
             history_block = format_history_block(
-                self._history, self._history_mode, self._max_history_turns
+                self._history,
+                self._history_mode,
+                self._max_history_turns,
+                lives_label=(
+                    "lives" if turn_context.threat_level else "attempts"
+                ),
             )
         # The pre-decision system prompt. With
         # ``task_rules_before_decision=False`` the confidence and

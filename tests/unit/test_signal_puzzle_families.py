@@ -5,11 +5,9 @@ from __future__ import annotations
 import pytest
 
 from squid_game.tasks.signal_game.puzzle import (
-    ATTR_VALUES,
     FAMILIES,
     SIGNAL_INDEX,
     SIGNAL_SPACE,
-    PuzzleRule,
     count_distinct_functions,
     enumerate_hypotheses,
     make_rule_a,

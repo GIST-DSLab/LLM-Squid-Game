@@ -49,6 +49,25 @@ class TestInitialize:
                          total_turns=30, num_few_shot=1, curriculum_turns=3)
         assert "ignored" in caplog.text
 
+    def test_puzzle_mode_requires_a_seed(self) -> None:
+        # ``puzzle_rng(None, t)`` seeds ``random.Random("None:t")``, so an
+        # unset seed would hand every repetition the identical 30 puzzles.
+        # runner.py:220 passes ``None`` straight through whenever
+        # ``task_config.seed`` is omitted, so this is reachable from YAML.
+        m = SignalGameModule()
+        with pytest.raises(ValueError, match="requires a seed"):
+            m.initialize(
+                difficulty=Difficulty.MEDIUM,
+                seed=None,
+                signal_mode="per_turn_puzzle",
+                total_turns=30,
+            )
+
+    def test_sequential_mode_still_accepts_no_seed(self) -> None:
+        m = SignalGameModule()
+        m.initialize(difficulty=Difficulty.MEDIUM, seed=None)
+        assert m.get_rule_template_hint() is not None
+
     def test_unknown_mode_rejected(self) -> None:
         with pytest.raises(ValueError):
             SignalGameModule().initialize(difficulty=Difficulty.MEDIUM, seed=1, signal_mode="nope")

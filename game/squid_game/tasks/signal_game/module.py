@@ -274,6 +274,19 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._current_puzzle = None
         self._puzzle_config = None
         if signal_mode == "per_turn_puzzle":
+            if seed is None:
+                # Every puzzle is drawn from ``random.Random(f"{seed}:{turn}")``
+                # (puzzle.puzzle_rng), so a ``None`` seed makes the literal
+                # string "None:1" … and every repetition of every cell then
+                # plays the identical 30 puzzles. ``runner.py`` passes the
+                # config seed straight through when it is unset, so this is
+                # reachable from YAML alone.
+                raise ValueError(
+                    "signal_mode: per_turn_puzzle requires a seed — puzzles are "
+                    "drawn from random.Random(f\"{seed}:{turn}\"), so seed=None "
+                    "gives every repetition the identical puzzles. Set "
+                    "task_config.seed in the experiment config."
+                )
             self._puzzle_config = load_signal_puzzle_config(
                 kwargs.get("puzzle_config_dir")
             )
@@ -285,9 +298,11 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     f"{self._puzzle_config.total_turns}. Extend the ladder or shorten the season."
                 )
             if self._num_few_shot is not None or self._curriculum_turns:
+                # ``difficulty`` is a required positional, so "explicitly set"
+                # is undetectable for it; only these two knobs trigger here.
                 logger.warning(
-                    "signal_mode=per_turn_puzzle: num_few_shot / curriculum_turns / "
-                    "difficulty are ignored (puzzles come from the ladder)."
+                    "signal_mode=per_turn_puzzle: num_few_shot / curriculum_turns "
+                    "are ignored (puzzles come from the ladder)."
                 )
 
     def reset(self) -> None:
@@ -303,8 +318,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             )
         # Regenerate rules with the current RNG state so successive
         # seasons within the same session remain deterministic but differ.
-        self._rules = generate_rules(self._difficulty, self._rng)
-        self._active_rule_index = self._resolve_rule_index()
+        # Puzzle mode never consults ``_rules`` / ``_active_rule_index``
+        # (each turn's rule comes from ``puzzle_rng(seed, turn)``), so the
+        # work is skipped there rather than done and discarded.
+        if self._signal_mode != "per_turn_puzzle":
+            self._rules = generate_rules(self._difficulty, self._rng)
+            self._active_rule_index = self._resolve_rule_index()
         self._current_signal = None
         self._turn_history = []
         self._cumulative_score = 0.0

@@ -8,7 +8,8 @@ the unit tests call it directly.
 Four stateless rule families over the 4x4x4 signal grid:
 
     A  single      If <attr> is <val> then X, otherwise Z.
-    B  conjunction If <a1> is <v1> AND <a2> is <v2> then X; if only <a1> is <v1> then Y; otherwise Z.
+    B  conjunction If <a1> is <v1> AND <a2> is <v2> then X;
+                   if only <a1> is <v1> then Y; otherwise Z.
     C  two_branch  If <a1> is <v1> then X; else if <a2> is <v2> then Y; otherwise Z.
     D  number_pred If number is <pred> then X, otherwise Z.
 
@@ -313,26 +314,41 @@ _ACT = "(" + "|".join(ACTIONS) + ")"
 _ATTR = "(color|shape|number)"
 _VAL = r"([a-z]+|[1-9])"
 _SEP = r"[\s,;.]*"
+#: Models routinely write "... is red, then jump" / "... is red; then jump".
+#: The separator before ``then`` is optional punctuation, never meaning.
+_THEN = r"[,;]?\s+then"
+#: Likewise "otherwise, stay" / "else, stay" — the comma is decoration.
+_ELSE = r"(?:otherwise|else),?\s+"
 
 # Most specific first so "AND" rules are not swallowed by the family-C
 # pattern and two-branch rules are not swallowed by family A.
 _RE_B = re.compile(
-    rf"if {_ATTR} is {_VAL} and {_ATTR} is {_VAL} then {_ACT}{_SEP}"
-    rf"if only {_ATTR} is {_VAL} then {_ACT}{_SEP}(?:otherwise|else) {_ACT}"
+    rf"if {_ATTR} is {_VAL} and {_ATTR} is {_VAL}{_THEN} {_ACT}{_SEP}"
+    rf"if only {_ATTR} is {_VAL}{_THEN} {_ACT}{_SEP}{_ELSE}{_ACT}"
 )
 _RE_C = re.compile(
-    rf"if {_ATTR} is {_VAL} then {_ACT}{_SEP}(?:else )?if {_ATTR} is {_VAL} then {_ACT}{_SEP}"
-    rf"(?:otherwise|else) {_ACT}"
+    rf"if {_ATTR} is {_VAL}{_THEN} {_ACT}{_SEP}"
+    rf"(?:else )?if {_ATTR} is {_VAL}{_THEN} {_ACT}{_SEP}{_ELSE}{_ACT}"
 )
-_RE_D = re.compile(rf"if number is (.+?) then {_ACT}{_SEP}(?:otherwise|else) {_ACT}")
-_RE_A = re.compile(rf"if {_ATTR} is {_VAL} then {_ACT}{_SEP}(?:otherwise|else) {_ACT}")
+_RE_D = re.compile(rf"if number is (.+?){_THEN} {_ACT}{_SEP}{_ELSE}{_ACT}")
+_RE_A = re.compile(rf"if {_ATTR} is {_VAL}{_THEN} {_ACT}{_SEP}{_ELSE}{_ACT}")
 
 #: Free-form spellings of the family-D predicates, mapped back onto the
 #: canonical labels in ``NUMBER_PREDICATES``.
 _PRED_SYNONYMS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"^(?:at least|>=|greater than or equal to|no less than) ?([1-4])$"), "at least {0}"),
+    (
+        re.compile(
+            r"^(?:at least|>=|greater than or equal to|no less than) ?([1-4])$"
+        ),
+        "at least {0}",
+    ),
     (re.compile(r"^([1-4]) or (?:more|higher|greater)$"), "at least {0}"),
-    (re.compile(r"^(?:at most|<=|less than or equal to|no more than) ?([1-4])$"), "at most {0}"),
+    (
+        re.compile(
+            r"^(?:at most|<=|less than or equal to|no more than) ?([1-4])$"
+        ),
+        "at most {0}",
+    ),
     (re.compile(r"^([1-4]) or (?:less|lower|fewer)$"), "at most {0}"),
     (re.compile(r"^(?:an )?odd(?: number)?$"), "odd"),
     (re.compile(r"^(?:an )?even(?: number)?$"), "even"),
@@ -344,6 +360,14 @@ def _normalise(text: str) -> str:
     text = re.sub(r"^\s*rule\s*:\s*", "", text)
     text = text.replace("colour", "color")
     text = re.sub(r"\bthe\b", " ", text)
+    # "the signal's color" / "signal color" -> "color". Only stripped when
+    # it directly precedes an attribute name, so a stray "signal" elsewhere
+    # is left alone.
+    text = re.sub(
+        r"\bsignal(?:['\u2019]?s)?\s+(?=(?:color|colour|shape|number)\b)",
+        " ",
+        text,
+    )
     # "number >= 3" -> "number is >= 3" so the family-D grammar sees it.
     text = re.sub(r"number\s*(>=|<=)", r"number is \1", text)
     text = re.sub(r"[^a-z0-9_<>=,;.\s]", " ", text)

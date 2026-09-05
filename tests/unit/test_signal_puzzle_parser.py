@@ -94,6 +94,47 @@ class TestParseVariants:
         # space; the parser must return None, never raise.
         assert parse_rule_text(text) is None
 
+    #: Punctuation an LLM actually produces around ``then`` / ``otherwise``,
+    #: plus the "the signal's <attr>" possessive. Each must land on the same
+    #: rule as the comma-free canonical form it is paired with.
+    _PUNCTUATION_VARIANTS = [
+        (
+            "If color is red, then jump, otherwise stay.",
+            "If color is red then jump, otherwise stay.",
+        ),
+        (
+            "If color is red then jump; otherwise, stay.",
+            "If color is red then jump, otherwise stay.",
+        ),
+        (
+            "If the color is red then jump. Otherwise, stay.",
+            "If color is red then jump, otherwise stay.",
+        ),
+        (
+            "If number is at least 3, then jump, otherwise stay.",
+            "If number is at least 3 then jump, otherwise stay.",
+        ),
+        (
+            "If the signal's color is red then jump, otherwise stay.",
+            "If color is red then jump, otherwise stay.",
+        ),
+        (
+            "If color is red then jump, otherwise stay.",
+            "If color is red then jump, otherwise stay.",
+        ),
+    ]
+
+    @pytest.mark.parametrize("text,canonical", _PUNCTUATION_VARIANTS)
+    def test_punctuation_variants_match_the_comma_free_form(
+        self, text: str, canonical: str
+    ) -> None:
+        expected = parse_rule_text(canonical)
+        assert expected is not None, canonical
+        parsed = parse_rule_text(text)
+        assert parsed is not None, text
+        assert parsed.family == expected.family
+        assert parsed.vector == expected.vector
+
     def test_degenerate_hypothesis_still_parses(self) -> None:
         # Agents may state a same-action rule; scoring handles it.
         parsed = parse_rule_text("If color is red then stay, otherwise stay.")

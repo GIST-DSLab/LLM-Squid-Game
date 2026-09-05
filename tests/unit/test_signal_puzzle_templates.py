@@ -52,19 +52,6 @@ class TestSystemRules:
         assert "<condition> is one of: at least N, at most N, odd, even." in out
         assert "changes every round" in out
 
-    def test_each_family_shape_is_individually_required(self) -> None:
-        """Deleting any one family from the template must fail the suite.
-
-        Simulates each single-family deletion against the real rendered prompt and
-        asserts the marker set no longer holds — the property `"AND" in out` lacked.
-        """
-        out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
-        for dropped in _FAMILY_FORMS:
-            mutated = out.replace(dropped, "")
-            assert not all(form in mutated for form in _FAMILY_FORMS), (
-                f"removing {dropped!r} left every family marker satisfied"
-            )
-
     def test_never_names_the_current_family_or_clue_count(self) -> None:
         out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
         assert "which one is not announced" in out

@@ -212,7 +212,10 @@ families, ~5.7k rules). Difficulty follows a turn-indexed `puzzle_ladder` in
 conjunction → two-branch → all families mixed); the system prompt lists all four family shapes
 and never says which one the round uses. `|H|` (hypotheses still consistent) is stored per turn
 as `n_consistent_hypotheses`, and `rule_match_score` becomes a functional match (share of the 64
-signals where the parsed RULE agrees with the truth). Bands `h_lo/h_hi` are written by
+signals where the parsed RULE agrees with the truth); the long-format export carries
+`puzzle_tier`, `rule_family`, `n_consistent_hypotheses` and `n_clues` (the count actually
+served, so the generator's upward relaxation — ~2.8 % of tier-5 turns go to 4 clues — is
+visible in the data). Bands `h_lo/h_hi` are written by
 `scripts/dev/calibrate_signal_puzzle_ladder.py`, never by hand. The shipped `n_clues` are
 `[12, 10, 8, 4, 3]` — descending, because `|H|` is driven by the clue count rather than by the
 rule family, and two clues can never pin the query answer down to one action. Pair it with

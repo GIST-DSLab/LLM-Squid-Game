@@ -267,9 +267,9 @@ class TestToLongDataframe:
         # +psuccess_self for the benchmark Y-axis manipulation checks)
         # → 31 (2026-09-03, +5 lives/threat-ladder columns, which
         # replaced Task 13's five Unit 18 columns one-for-one)
-        # → 34 (2026-09-05, +puzzle_tier +rule_family
-        # +n_consistent_hypotheses).
-        assert len(LONG_FORMAT_COLUMNS) == 34
+        # → 35 (2026-09-05, +puzzle_tier +rule_family
+        # +n_consistent_hypotheses +n_clues).
+        assert len(LONG_FORMAT_COLUMNS) == 35
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""
@@ -322,28 +322,50 @@ class TestToLongDataframe:
     # ------------------------------------------------------------------
 
     def test_schema_has_puzzle_columns_at_the_tail(self) -> None:
-        assert LONG_FORMAT_COLUMNS[-3:] == (
+        assert LONG_FORMAT_COLUMNS[-4:] == (
             "puzzle_tier",
             "rule_family",
             "n_consistent_hypotheses",
+            "n_clues",
         )
 
     def test_puzzle_columns_nan_for_sequential_traces(self) -> None:
         season = make_v3_season(n_turns=2)
         df = to_long_dataframe([season])
-        for col in ("puzzle_tier", "rule_family", "n_consistent_hypotheses"):
+        for col in (
+            "puzzle_tier",
+            "rule_family",
+            "n_consistent_hypotheses",
+            "n_clues",
+        ):
             assert df[col].isna().all(), col
 
     def test_puzzle_columns_read_task_metadata(self) -> None:
         season = make_v3_season(n_turns=1)
         turn = season.turns[0]
         turn.task_metadata.update(
-            {"puzzle_tier": 3, "rule_family": "B", "n_consistent_hypotheses": 17}
+            {
+                "puzzle_tier": 3,
+                "rule_family": "B",
+                "n_consistent_hypotheses": 17,
+                "n_clues": 8,
+            }
         )
         df = to_long_dataframe([season])
         assert df.loc[0, "puzzle_tier"] == 3
         assert df.loc[0, "rule_family"] == "B"
         assert df.loc[0, "n_consistent_hypotheses"] == 17
+        assert df.loc[0, "n_clues"] == 8
+
+    def test_n_clues_records_the_served_count_not_the_ladder(self) -> None:
+        """Tier 5 relaxes 12 -> 4 clues on ~2.8% of turns; the export shows it."""
+        season = make_v3_season(n_turns=1)
+        season.turns[0].task_metadata.update(
+            {"puzzle_tier": 5, "rule_family": "C", "n_consistent_hypotheses": 40,
+             "n_clues": 4}
+        )
+        df = to_long_dataframe([season])
+        assert df.loc[0, "n_clues"] == 4
 
     def test_rule_match_score_nan_for_pre_phase_l_traces(self) -> None:
         """Pre-Phase-L traces had no rule_match_score key → NaN column."""

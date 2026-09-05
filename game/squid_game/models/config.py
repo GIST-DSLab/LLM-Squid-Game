@@ -698,8 +698,11 @@ class TaskConfig(BaseModel):
             "(2026-09-05): every turn is an independent induction puzzle "
             "(fresh rule + clue set + query) drawn from the puzzle_ladder "
             "in configs/tasks/signal_game.yaml; difficulty, num_few_shot "
-            "and curriculum_turns are ignored in that mode. Other tasks "
-            "ignore the field."
+            "and curriculum_turns are ignored in that mode. 'per_turn_puzzle' "
+            "REQUIRES `seed` to be set: puzzles are drawn from "
+            "random.Random(f'{seed}:{turn}'), so seed=None would give every "
+            "repetition the identical puzzles (SignalGameModule.initialize "
+            "raises). Other tasks ignore the field."
         ),
     )
 

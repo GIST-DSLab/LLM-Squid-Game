@@ -30,11 +30,13 @@ total_turns: 75
 # function) still consistent with the clues; they are written by
 #   uv run python -m scripts.dev.calibrate_signal_puzzle_ladder
 # and must not be edited by hand. Families and n_clues are the design.
-# Clue counts descend across the ladder: fewer clues leave more
-# hypotheses standing, which is how |H| rises monotonically from tier 1
-# to tier 5 (the calibration script checks that). 3 is the floor —
-# 2 clues never pin the query answer over the four-family union
-# (see plan notes).
+# Clue counts descend across the ladder (12 -> 3): fewer clues leave more
+# hypotheses standing, which is how |H| stays non-decreasing from tier 1
+# to tier 5 (the calibration script checks that). It is not strictly
+# increasing: the measured p50 is 9, 9, 9, 21, 67, so tiers 1-3 share a
+# median and separate only on their upper tails (h_hi 17, 17, 21).
+# 3 clues is the floor — 2 never pin the query answer over the
+# four-family union (see plan notes).
 puzzle_ladder:
   - {tier: 1, turns: 6, families: [A],          n_clues: 12, h_lo: 5,  h_hi: 17}
   - {tier: 2, turns: 6, families: [A, D],       n_clues: 10, h_lo: 1,  h_hi: 17}
