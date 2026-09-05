@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import itertools
 import random
+import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import lru_cache
@@ -302,3 +303,118 @@ def puzzle_rng(seed: int | None, turn_number: int) -> random.Random:
     consumer's stream (peer-death scheduler, legacy signal draws).
     """
     return random.Random(f"{seed}:{turn_number}")
+
+
+# ---------------------------------------------------------------------------
+# Free-form RULE parsing and functional scoring
+# ---------------------------------------------------------------------------
+
+_ACT = "(" + "|".join(ACTIONS) + ")"
+_ATTR = "(color|shape|number)"
+_VAL = r"([a-z]+|[1-9])"
+_SEP = r"[\s,;.]*"
+
+# Most specific first so "AND" rules are not swallowed by the family-C
+# pattern and two-branch rules are not swallowed by family A.
+_RE_B = re.compile(
+    rf"if {_ATTR} is {_VAL} and {_ATTR} is {_VAL} then {_ACT}{_SEP}"
+    rf"if only {_ATTR} is {_VAL} then {_ACT}{_SEP}(?:otherwise|else) {_ACT}"
+)
+_RE_C = re.compile(
+    rf"if {_ATTR} is {_VAL} then {_ACT}{_SEP}(?:else )?if {_ATTR} is {_VAL} then {_ACT}{_SEP}"
+    rf"(?:otherwise|else) {_ACT}"
+)
+_RE_D = re.compile(rf"if number is (.+?) then {_ACT}{_SEP}(?:otherwise|else) {_ACT}")
+_RE_A = re.compile(rf"if {_ATTR} is {_VAL} then {_ACT}{_SEP}(?:otherwise|else) {_ACT}")
+
+#: Free-form spellings of the family-D predicates, mapped back onto the
+#: canonical labels in ``NUMBER_PREDICATES``.
+_PRED_SYNONYMS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^(?:at least|>=|greater than or equal to|no less than) ?([1-4])$"), "at least {0}"),
+    (re.compile(r"^([1-4]) or (?:more|higher|greater)$"), "at least {0}"),
+    (re.compile(r"^(?:at most|<=|less than or equal to|no more than) ?([1-4])$"), "at most {0}"),
+    (re.compile(r"^([1-4]) or (?:less|lower|fewer)$"), "at most {0}"),
+    (re.compile(r"^(?:an )?odd(?: number)?$"), "odd"),
+    (re.compile(r"^(?:an )?even(?: number)?$"), "even"),
+)
+
+
+def _normalise(text: str) -> str:
+    text = text.lower()
+    text = re.sub(r"^\s*rule\s*:\s*", "", text)
+    text = text.replace("colour", "color")
+    text = re.sub(r"\bthe\b", " ", text)
+    # "number >= 3" -> "number is >= 3" so the family-D grammar sees it.
+    text = re.sub(r"number\s*(>=|<=)", r"number is \1", text)
+    text = re.sub(r"[^a-z0-9_<>=,;.\s]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _typed(attr: str, raw: str) -> str | int | None:
+    """Coerce a matched value token, or ``None`` if it is off the grid."""
+    if attr == "number":
+        return int(raw) if raw.isdigit() and int(raw) in NUMBERS else None
+    return raw if raw in ATTR_VALUES[attr] else None
+
+
+def _predicate_label(raw: str) -> str | None:
+    raw = raw.strip()
+    for pattern, template in _PRED_SYNONYMS:
+        m = pattern.match(raw)
+        if m:
+            return template.format(*m.groups())
+    return None
+
+
+def parse_rule_text(text: str) -> PuzzleRule | None:
+    """Parse an agent's one-line RULE into a :class:`PuzzleRule`.
+
+    Returns ``None`` when no family grammar matches or a slot holds a
+    value outside the game (unknown colour, number 5, unknown action).
+    Action distinctness is NOT enforced — a degenerate hypothesis is a
+    legitimate (low-scoring) thing for an agent to say.
+    """
+    s = _normalise(text)
+    if not s:
+        return None
+
+    m = _RE_B.search(s)
+    if m:
+        a1, v1, a2, v2, x, a1b, v1b, y, z = m.groups()
+        tv1, tv2 = _typed(a1, v1), _typed(a2, v2)
+        if tv1 is None or tv2 is None or (a1b, v1b) != (a1, v1) or a1 == a2:
+            return None
+        return make_rule_b(a1, tv1, a2, tv2, x, y, z)
+
+    m = _RE_C.search(s)
+    if m:
+        a1, v1, x, a2, v2, y, z = m.groups()
+        tv1, tv2 = _typed(a1, v1), _typed(a2, v2)
+        if tv1 is None or tv2 is None:
+            return None
+        return make_rule_c(a1, tv1, a2, tv2, x, y, z)
+
+    m = _RE_A.search(s)
+    if m:
+        attr, val, x, z = m.groups()
+        tv = _typed(attr, val)
+        if tv is not None:
+            return make_rule_a(attr, tv, x, z)
+        # Fall through: "number is odd" also matches the family-A shape
+        # because "odd" is a bare word, but only family D can type it.
+
+    m = _RE_D.search(s)
+    if m:
+        raw_pred, x, z = m.groups()
+        label = _predicate_label(raw_pred)
+        if label is None:
+            return None
+        return make_rule_d(label, x, z)
+
+    return None
+
+
+def functional_match_score(hypothesis: PuzzleRule, truth: PuzzleRule) -> float:
+    """Percentage of the 64 signals on which the two rules agree."""
+    agree = sum(a == b for a, b in zip(hypothesis.vector, truth.vector, strict=True))
+    return 100.0 * agree / len(SIGNAL_SPACE)
