@@ -3,6 +3,7 @@
 # hand each finished run to scripts/run/smi_pipeline_tail.sh (resample -> probe -> HTML).
 #
 # Usage:  scripts/run/smi_driver.sh <tag>=<config.yaml>:<label> [<tag>=<config>:<label> ...]
+#   the run root is read from each config's output_dir (works for outputs/survival_motive_* and outputs/benchmark_*)
 #   e.g.  scripts/run/smi_driver.sh \
 #           gptoss=configs/experiment/survival_motive_signal_gptoss_n10.yaml:"gpt-oss:120b — 5셀×10반복×20턴" \
 #           glm53=configs/experiment/survival_motive_signal_glm53_n5.yaml:"glm-5.3 — 5셀×5반복×15턴"
@@ -17,15 +18,16 @@ cd "$REPO" || exit 1
 K1=${OLLAMA_API_KEY:-$(grep '^OLLAMA_API_KEY=' .env | cut -d= -f2 | awk '{print $1}')}
 export OLLAMA_API_KEY="$K1"
 export PYTHONPATH="$REPO/game:$REPO/db:$REPO/web"
-typeset -A CFG LABEL TOTAL
+typeset -A CFG LABEL TOTAL OUT
 for spec in "$@"; do
   tag=${spec%%=*}; rest=${spec#*=}; cfg=${rest%%:*}; label=${rest#*:}
   CFG[$tag]="$cfg"; LABEL[$tag]="$label"
   reps=$(grep '^num_repetitions:' "$cfg" | awk '{print $2}')
   cells=$(grep -c '^- framing:' "$cfg")
   TOTAL[$tag]=$((reps * cells))
+  OUT[$tag]=$(grep '^output_dir:' "$cfg" | awk '{print $2}')
 done
-rundir() { local d; d=$(ls -td "$REPO/outputs/survival_motive_signal_$1"/*/ 2>/dev/null | head -1); echo "${d%/}"; }
+rundir() { local d; d=$(ls -td "$REPO/${OUT[$1]}"/*/ 2>/dev/null | head -1); echo "${d%/}"; }
 seasons_done() { local d; d=$(rundir "$1"); [ -n "$d" ] && wc -l < "$d/season_results.jsonl" 2>/dev/null | tr -d ' ' || echo 0; }
 probe() { curl -s -o /dev/null -w "%{http_code}" -m 60 -H "Authorization: Bearer $K1" -H "Content-Type: application/json" \
   https://ollama.com/api/chat -d '{"model":"gpt-oss:20b","messages":[{"role":"user","content":"OK"}],"stream":false,"options":{"num_predict":4}}'; }
@@ -35,7 +37,7 @@ while true; do
   for t in ${(k)CFG}; do
     if [ "$(seasons_done $t)" -ge "${TOTAL[$t]}" ] && [ ! -f "$LOGS/tail_started_$t" ]; then
       touch "$LOGS/tail_started_$t"
-      (nohup "$REPO/scripts/run/smi_pipeline_tail.sh" "$t" "${LABEL[$t]}" > "$LOGS/pipeline_$t.log" 2>&1 &)
+      (nohup "$REPO/scripts/run/smi_pipeline_tail.sh" "$t" "${LABEL[$t]}" 10 "$(rundir $t)" > "$LOGS/pipeline_$t.log" 2>&1 &)
       log "$t: online complete ($(seasons_done $t)/${TOTAL[$t]}) — tail started"
     fi
   done
