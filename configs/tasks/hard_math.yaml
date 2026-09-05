@@ -1,0 +1,87 @@
+# hard_math -- RIMO-N, the hard-mathematics task (2026-09-06).
+#
+# RIMO-N (Recursive IMO, Numerical answers; HF ziye2chen/RIMO, Apache-2.0) is
+# the harder replacement for Omni-MATH, whose top bands the strong SDI models
+# clear too easily. 335 rows of IMO shortlist and IMO final problems rewritten
+# to have a single numeric answer, so scoring stays an exact string comparison
+# with no LLM judge.
+#
+# DOWNLOAD
+#   uv run python scripts/dev/fetch_benchmarks.py --which hard_math
+# writes data/benchmarks/rimo_n.jsonl and updates MANIFEST.json. It uses the
+# direct file URL below, NOT the Hugging Face rows API: RIMO-N and RIMO-P have
+# different schemas in one repo, so the dataset viewer / rows API fails for it.
+#
+# COLUMNS  problem_id / problem / solution / answer / type
+# `solution` is never read -- GenericMathAdapter reads only the columns named
+# in `fields` -- so the worked solution cannot reach a prompt or a turn record.
+#
+# DIFFICULTY is not a column. It is a proxy parsed out of `problem_id`
+# = <year><section><number>:
+#   section a/c/n/g = shortlist (algebra / combinatorics / number theory /
+#     geometry); within a section the problem number ascends in difficulty,
+#     1 easiest ... 9 hardest.
+#   section p = IMO final, numbers 1-6; 1 and 4 are the easy slots, 2 and 5
+#     medium, 3 and 6 hard (the two papers, each easiest-to-hardest).
+# The `regex_tier` band map below encodes exactly that into four tiers.
+#
+# MEASURED POOLS after the single-value-integer filter (2026-09-06, 335 rows,
+# 1 dropped -- 2023c2 answers "2^{2024}-1"):
+#   tier 1 = 75, tier 2 = 87, tier 3 = 97, tier 4 = 75   (334 items)
+#   with exclude_types: [geometry] -> 63 / 74 / 76 / 63  (276 items)
+# Every tier clears its 5-turn rung many times over.
+name: "hard_math"
+data_file: "rimo_n.jsonl"
+total_turns: 20
+
+fields:
+  problem: "problem"
+  answer: "answer"
+  # There is no difficulty column: the band map parses the identifier itself,
+  # so `difficulty` points at the id and the raw id is kept in item meta
+  # (`raw_difficulty`, and `source_id` from `id` below).
+  difficulty: "problem_id"
+  id: "problem_id"
+  subject: "type"
+
+band_map:
+  mode: "regex_tier"
+  pattern: "^(?P<year>[0-9]{4})(?P<section>[a-z]+)(?P<number>[0-9]+)$"
+  # First matching rule wins. Every rule names its sections explicitly rather
+  # than relying on a catch-all: an id that matches the pattern but no rule
+  # (a "2023p7" that IMO finals do not have, a section letter RIMO-N never
+  # used) is then DROPPED and counted, instead of being quietly folded into
+  # whichever band the last rule happens to describe.
+  tiers:
+    - {when: {section: "p", number: [1, 4]}, band: 2}
+    - {when: {section: "p", number: [2, 5]}, band: 3}
+    - {when: {section: "p", number: [3, 6]}, band: 4}
+    - {when: {section: ["a", "c", "n", "g"], number: [1, 2]}, band: 1}
+    - {when: {section: ["a", "c", "n", "g"], number: [3, 4]}, band: 2}
+    - {when: {section: ["a", "c", "n", "g"], number: [5, 6]}, band: 3}
+    - {when: {section: ["a", "c", "n", "g"], number: [7, 8, 9]}, band: 4}
+
+# RIMO-N answers are single integers by construction; the one row that is not
+# (2023c2) is dropped here rather than scored with a judge.
+answer_filter: "single_value_integer"
+dedupe_on_problem_text: true
+
+# Optional, OFF by default: geometry is 28% of RIMO-N and its problems lean on
+# a figure a text-only agent never sees. Turn it on to trade pool depth for a
+# cleaner ability measure (pools drop to 63/74/76/63).
+exclude_types: []
+
+answer_hint: "답은 정수 하나입니다. 예: ANSWER: 42"
+
+source:
+  url: "https://huggingface.co/datasets/ziye2chen/RIMO/resolve/main/RIMO-N.jsonl"
+  filename: "rimo_n.jsonl"
+
+# 20 turns rising through all four tiers -- the general-purpose ladder, with a
+# warm-up. For a run where every turn must be hard, use
+# configs/tasks_hard10/hard_math.yaml instead.
+ladder:
+  - {band: 1, turns: 5}
+  - {band: 2, turns: 5}
+  - {band: 3, turns: 5}
+  - {band: 4, turns: 5}

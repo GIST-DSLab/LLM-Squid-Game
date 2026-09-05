@@ -51,68 +51,35 @@ the choice is immaterial.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import random
-import re
 from pathlib import Path
 
+from squid_game.tasks.benchmark.adapters._math_text import (
+    INTEGER as _INTEGER,
+    THOUSANDS_GROUPED as _THOUSANDS_GROUPED,
+    content_item_id,
+    last_answer_line,
+    single_value_integer as _single_value_integer,
+    strip_latex as _strip_latex,
+)
 from squid_game.tasks.benchmark.adapters.base import exact_match
 from squid_game.tasks.benchmark.item import BenchmarkItem
 
 #: Bands 1-8 only. Band 9's integer-answer pool holds 30 items, too few for a rung.
 _MAX_BAND = 8
 
-_ANSWER_LINE = re.compile(r"ANSWER\s*:\s*(.+)", re.IGNORECASE)
-_INTEGER = re.compile(r"^-?\d{1,12}$")
-_THOUSANDS_GROUPED = re.compile(r"^-?\d{1,3}(,\d{3})+$")
+# ``_strip_latex`` / ``_single_value_integer`` / the two regexes moved to
+# ``_math_text`` (2026-09-06) when ``GenericMathAdapter`` needed the identical
+# behaviour; they are re-exported under their old private names so that this
+# module's public behaviour, and anything importing them, is unchanged.
 
-
-def _strip_latex(text: str) -> str:
-    """Remove the LaTeX wrappers models habitually add around a number.
-
-    Used by ``normalize`` to read a model's own answer text, where a
-    permissive comma/space strip is the right call (a model may write a
-    single integer as ``"1,024"`` or with stray whitespace).
-    """
-    cleaned = text.strip()
-    cleaned = re.sub(r"\\boxed\s*\{(.*)\}", r"\1", cleaned)
-    cleaned = cleaned.replace("$", "").replace("\\,", "").replace("{,}", "")
-    cleaned = cleaned.replace(",", "").replace(" ", "")
-    return cleaned.strip()
+__all__ = ["OmniMathAdapter"]
 
 
 def _problem_id(problem: str) -> str:
-    """Return a stable, content-derived ``item_id`` for *problem*.
-
-    Truncated to 12 hex characters: measured on the 4,406 distinct problem
-    texts in the released file, that prefix has no collisions, and a short id
-    keeps the per-turn metadata readable.
-    """
-    digest = hashlib.sha1(problem.encode("utf-8")).hexdigest()
-    return f"omni-{digest[:12]}"
-
-
-def _single_value_integer(raw: str) -> str | None:
-    """Return the integer string if *raw* is a single-value integer answer.
-
-    Unlike ``_strip_latex``, this rejects any answer containing internal
-    whitespace (a multi-value list such as ``"2, 3, 5"``) and any answer
-    containing a comma that is not a thousands separator (``"0,1,3,4,6"``).
-    A comma is accepted only when the whole string matches the standard
-    thousands-grouping shape (``"4,002,001"``, ``"982,982"``).
-    """
-    text = raw.strip()
-    text = re.sub(r"\\boxed\s*\{(.*)\}", r"\1", text)
-    text = text.replace("$", "").replace("\\,", "").replace("{,}", "")
-    text = text.strip()
-    if re.search(r"\s", text):
-        return None
-    if "," in text:
-        if not _THOUSANDS_GROUPED.match(text):
-            return None
-        text = text.replace(",", "")
-    return text if _INTEGER.match(text) else None
+    """Return a stable, content-derived ``item_id`` for *problem*."""
+    return content_item_id("omni", problem)
 
 
 class OmniMathAdapter:
@@ -176,10 +143,10 @@ class OmniMathAdapter:
 
     def normalize(self, raw: str) -> str | None:
         """Extract the final ``ANSWER:`` line and normalise it to an integer."""
-        found = _ANSWER_LINE.findall(raw or "")
-        if not found:
+        found = last_answer_line(raw)
+        if found is None:
             return None
-        candidate = _strip_latex(found[-1])
+        candidate = _strip_latex(found)
         return candidate if _INTEGER.match(candidate) else None
 
     def matches(self, parsed: str, expected: str, item: BenchmarkItem) -> bool:

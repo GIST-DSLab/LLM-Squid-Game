@@ -19,6 +19,7 @@ from typing import Any
 from squid_game.prompts import render
 from squid_game.tasks.base import RiskAwareTaskModule, TaskContext, TaskOutcome
 from squid_game.tasks.benchmark.adapters.base import DatasetAdapter
+from squid_game.tasks.benchmark.adapters.generic_math import GenericMathAdapter
 from squid_game.tasks.benchmark.adapters.gpqa import GPQAAdapter
 from squid_game.tasks.benchmark.adapters.hi_tom import HiToMAdapter
 from squid_game.tasks.benchmark.adapters.omni_math import OmniMathAdapter
@@ -56,7 +57,14 @@ logger = logging.getLogger(__name__)
 #: Scoring is unaffected. It needs only ``correct_letter`` / the expected
 #: answer, both of which stay, and ``HiToMAdapter.matches`` reads
 #: ``choice_map`` from ``item.meta``, not from the persisted metadata.
-_UNPERSISTED_META_KEYS = frozenset({"distractors", "choice_order", "choice_map"})
+#: ``solution`` (2026-09-06) joins them for RIMO-N, whose rows carry a full
+#: worked solution alongside the answer. ``GenericMathAdapter`` never reads
+#: that column in the first place -- it reads only the columns named in
+#: ``fields`` -- so this is a second guard rather than the mechanism, and it
+#: also covers any future adapter that puts a solution in ``item.meta``.
+_UNPERSISTED_META_KEYS = frozenset(
+    {"distractors", "choice_order", "choice_map", "solution"}
+)
 
 
 def _strip_unpersisted(meta: dict[str, Any]) -> dict[str, Any]:
@@ -75,14 +83,34 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
     answer_hint: str = "답은 한 줄로만 적으십시오."
 
     def __init__(self) -> None:
-        self._adapter: DatasetAdapter = self.adapter_factory()
         self._config = load_task_config(self.name)
+        self._adapter: DatasetAdapter = self._build_adapter()
         self._ladder = DifficultyLadder.from_config(self._config)
         self._items: list[BenchmarkItem] | None = None
         self._seed: int = 0
         self._sampler: SeededSampler | None = None
         self._current_item: BenchmarkItem | None = None
         self._current_expected: str | None = None
+
+    def _build_adapter(self) -> DatasetAdapter:
+        """Construct this task's adapter.
+
+        The three hand-written adapters take no arguments, so the default is
+        just ``adapter_factory()``. A YAML-described task overrides this to
+        hand its adapter the loaded config -- see :class:`GenericMathTask`.
+        ``self._config`` is already set when this runs.
+        """
+        return self.adapter_factory()
+
+    @property
+    def effective_answer_hint(self) -> str:
+        """Return the answer-format hint, YAML overriding the class default.
+
+        A generic task's answer format follows from its ``answer_filter``,
+        which lives in the YAML; letting the YAML carry the hint too keeps a
+        dataset swap from needing a code edit.
+        """
+        return self._config.answer_hint or self.answer_hint
 
     # ------------------------------------------------------------------
     # Engine compatibility shims
@@ -211,7 +239,7 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
         """Return the shared answer-format rules."""
         return render(
             "tasks/benchmark/system_rules.j2",
-            answer_hint=self.answer_hint,
+            answer_hint=self.effective_answer_hint,
         )
 
     def get_available_actions(self) -> list[str]:
@@ -231,7 +259,7 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
         """
         return render(
             "tasks/benchmark/response_format.j2",
-            answer_hint=self.answer_hint,
+            answer_hint=self.effective_answer_hint,
         )
 
 
@@ -260,3 +288,60 @@ class GPQATask(BenchmarkTaskModule):
     name = "gpqa"
     adapter_factory = GPQAAdapter
     answer_hint = "선택지 문자 하나(A~D)로 답하십시오. 예: ANSWER: C"
+
+
+class GenericMathTask(BenchmarkTaskModule):
+    """A benchmark task whose dataset is described in YAML, not in code.
+
+    Subclass, set ``name``, and ship ``configs/tasks/<name>.yaml`` carrying
+    ``fields`` / ``band_map`` / ``answer_filter``; no adapter code is needed.
+    :func:`register_generic_math_task` does the subclassing for you.
+    """
+
+    adapter_factory = GenericMathAdapter  # documentation; see _build_adapter
+    answer_hint = "답은 한 줄로만 적으십시오. 예: ANSWER: 42"
+
+    def _build_adapter(self) -> DatasetAdapter:
+        """Hand the loaded task config to the config-driven adapter."""
+        return GenericMathAdapter(self._config)
+
+
+def register_generic_math_task(
+    name: str, answer_hint: str | None = None
+) -> type[GenericMathTask]:
+    """Create and register a :class:`GenericMathTask` subclass called *name*.
+
+    The one line of code a new YAML-described benchmark still costs. Kept
+    separate from the ``@register`` decorator so that adding a second hard
+    dataset alongside ``hard_math`` (an ablation on a different source, say)
+    is a single call rather than a copied class body.
+    """
+    attrs: dict[str, Any] = {
+        "name": name,
+        "__doc__": f"YAML-described benchmark task '{name}'.",
+    }
+    if answer_hint is not None:
+        attrs["answer_hint"] = answer_hint
+    cls = type(
+        "".join(part.capitalize() for part in name.split("_")) + "Task",
+        (GenericMathTask,),
+        attrs,
+    )
+    return register(name)(cls)
+
+
+@register("hard_math")
+class HardMathTask(GenericMathTask):
+    """The hard-mathematics slot (2026-09-06).
+
+    Omni-MATH's top bands are too easy for the strong models in the SDI
+    design, so this task holds whichever harder dataset the source review
+    settles on (HARP / DeepMath-103K / OlymMATH / BeyondAIME / the AIME and
+    HMMT 2025-26 sets are the candidates). Nothing here names a dataset: the
+    choice lives entirely in ``configs/tasks/hard_math.yaml`` (20-turn
+    ladder) and ``configs/tasks_hard10/hard_math.yaml`` (10 turns, all hard),
+    selected with ``$SQUID_GAME_TASK_CONFIG_DIR``.
+    """
+
+    name = "hard_math"
+    answer_hint = "답은 정수 하나입니다. 예: ANSWER: 42"

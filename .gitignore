@@ -45,7 +45,17 @@ assets/figures/run_*/
 # and the raw files are ~16 MB. Recreate with scripts/fetch_benchmarks.py.
 # Anchored to the repo root: an unanchored "data/" matches at any depth and
 # would silently swallow a future game/.../data/ or tests/.../data/ directory.
-/data/
+#
+# One exception (2026-09-06): hard_math_fixture.jsonl is 20 synthetic,
+# obviously-fake items written by hand for the hard_math unit tests and
+# --dry-run. It is not a dataset and republishing it costs nothing, but it
+# must be tracked or a fresh clone cannot run tests/unit/test_hard_math_task.py.
+# git cannot re-include a file under an excluded directory, so the parent
+# directories are un-excluded and their contents re-excluded instead.
+/data/*
+!/data/benchmarks/
+/data/benchmarks/*
+!/data/benchmarks/hard_math_fixture.jsonl
 
 # Benchmark experiment outputs. Unlike outputs/final_results/** (which this
 # repo commits, LFS-tracked), a benchmark run's per-turn records are derived
