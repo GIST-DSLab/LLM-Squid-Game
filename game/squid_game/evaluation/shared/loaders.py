@@ -320,6 +320,15 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     # via ``getattr`` for parity with legacy seasons predating the
     # field. NaN on Cell 0 and any non-probe path.
     "psuccess_self",
+    # 2026-09-05 — Signal Game per-turn puzzle mode. All three come from
+    # ``turn.task_metadata`` written by ``SignalGameModule`` in
+    # ``signal_mode: per_turn_puzzle``; NaN on sequential-mode traces,
+    # the benchmark tasks and NullTask. ``n_consistent_hypotheses`` is
+    # the puzzle's difficulty index |H| (spec §5) and is meant as an
+    # extra covariate for R3 / H6a.
+    "puzzle_tier",
+    "rule_family",
+    "n_consistent_hypotheses",
 )
 
 
@@ -399,6 +408,11 @@ def to_long_dataframe(
                     "lives_after": turn.lives_after,
                     "life_lost": turn.life_lost,
                     "peer_death_announced": turn.peer_death_announced,
+                    "puzzle_tier": turn.task_metadata.get("puzzle_tier"),
+                    "rule_family": turn.task_metadata.get("rule_family"),
+                    "n_consistent_hypotheses": turn.task_metadata.get(
+                        "n_consistent_hypotheses"
+                    ),
                 }
             )
             cumulative += reward
