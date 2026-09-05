@@ -346,7 +346,7 @@ class TestManagerWiringKnobsOn:
             assert "=== Previous Rounds ===" in second[1]
             # Turn 1 answered STAY against correct_action GO → incorrect.
             assert "- Round 1: incorrect" in second[1]
-            assert "(lives: 4/5)" in second[1]
+            assert "(attempts: 4/5)" in second[1]  # true_baseline → attempts vocabulary
 
     def test_task_call_body_keeps_the_full_history(
         self, agent: ConfidenceStubAgent
@@ -404,3 +404,33 @@ class TestManagerWiringKnobsOffIsByteIdentical:
         expected = format_history_block(after_turn_one, "cumulative", 15)
         assert expected
         assert expected in _by_kind(a, "decision")[1][1]
+
+
+# ---------------------------------------------------------------------------
+# 2b. lives_label — control cells must not say "lives"
+# ---------------------------------------------------------------------------
+
+
+class TestOutcomeHistoryLivesLabel:
+    _HISTORY = [
+        {
+            "turn": 1,
+            "outcome": "+0",
+            "correct": False,
+            "cumulative_score": 30.0,
+            "lives_after": 4,
+            "lives_total": 5,
+        }
+    ]
+
+    def test_default_label_is_lives(self) -> None:
+        assert format_outcome_history_block(self._HISTORY, 10).endswith(
+            "(lives: 4/5)"
+        )
+
+    def test_control_label_attempts(self) -> None:
+        rendered = format_outcome_history_block(
+            self._HISTORY, 10, lives_label="attempts"
+        )
+        assert rendered.endswith("(attempts: 4/5)")
+        assert "lives" not in rendered

@@ -932,6 +932,9 @@ class UnifiedTurnManager:
                     if self._history_mode == "last"
                     else self._history,
                     self._max_history_turns,
+                    lives_label=(
+                        "lives" if turn_context.threat_level else "attempts"
+                    ),
                 )
             )
         else:

@@ -191,6 +191,8 @@ _TERMINAL_OUTCOMES = ("forfeit", "eliminated", "died")
 def format_outcome_history_block(
     history: list[dict[str, Any]],
     max_history_turns: int,
+    *,
+    lives_label: str = "lives",
 ) -> str:
     """Render the outcome-only history block for the pre-decision calls.
 
@@ -215,6 +217,10 @@ def format_outcome_history_block(
     Args:
         history: Manager history buffer (oldest first).
         max_history_turns: Cap; only the last N entries are rendered.
+        lives_label: Word used in the counter suffix. The threat cells say
+            ``"lives"``; ``true_baseline`` must say ``"attempts"`` to honour
+            its no-life/death vocabulary contract (the same switch
+            ``menu.j2`` and ``confidence_call.j2`` make).
 
     Returns:
         The rendered block, or ``""`` when there is no history.
@@ -244,6 +250,6 @@ def format_outcome_history_block(
         lives_after = entry.get("lives_after")
         lives_total = entry.get("lives_total")
         if lives_after is not None and lives_total is not None:
-            line += f" (lives: {lives_after}/{lives_total})"
+            line += f" ({lives_label}: {lives_after}/{lives_total})"
         lines.append(line)
     return "\n".join(lines)
