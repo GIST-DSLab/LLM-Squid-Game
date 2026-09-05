@@ -78,6 +78,22 @@ class TestParseVariants:
     def test_unparseable_returns_none(self, text: str) -> None:
         assert parse_rule_text(text) is None
 
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "If number is at least 1 then jump, otherwise stay.",
+            "If number is at most 4 then jump, otherwise stay.",
+            "If number >= 1 then jump, otherwise stay.",
+            "If number <= 4 then jump, otherwise stay.",
+            "If number is 1 or more then jump, otherwise stay.",
+            "If number is 4 or less then jump, otherwise stay.",
+        ],
+    )
+    def test_undefined_number_predicate_returns_none(self, text: str) -> None:
+        # Grammatical, but always true over 1..4 -> not a hypothesis in the
+        # space; the parser must return None, never raise.
+        assert parse_rule_text(text) is None
+
     def test_degenerate_hypothesis_still_parses(self) -> None:
         # Agents may state a same-action rule; scoring handles it.
         parsed = parse_rule_text("If color is red then stay, otherwise stay.")

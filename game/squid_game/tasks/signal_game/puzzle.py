@@ -358,11 +358,18 @@ def _typed(attr: str, raw: str) -> str | int | None:
 
 
 def _predicate_label(raw: str) -> str | None:
+    """Canonical ``NUMBER_PREDICATES`` label for a free-form predicate.
+
+    ``None`` when the text names no predicate, or names one that is
+    grammatical but outside the hypothesis space ("at least 1" and
+    "at most 4" are always true over 1..4, so they are not rules).
+    """
     raw = raw.strip()
     for pattern, template in _PRED_SYNONYMS:
         m = pattern.match(raw)
         if m:
-            return template.format(*m.groups())
+            label = template.format(*m.groups())
+            return label if label in _PREDICATE_BY_LABEL else None
     return None
 
 
