@@ -607,9 +607,12 @@ class TaskConfig(BaseModel):
         seed: Optional random seed for reproducibility.
         history_mode: How much turn history to show the agent.
             "none" = no history, "last" = previous turn only (original),
-            "cumulative" = all past turns' (signal, action, outcome).
+            "cumulative" = all past turns' (signal, action, outcome),
+            "outcome" = round / verdict / score / lives only.
         max_history_turns: Maximum number of past turns to include when
             history_mode is "cumulative".
+        signal_mode: Signal Game stimulus mode ("sequential" |
+            "per_turn_puzzle"); ignored by other tasks.
     """
 
     model_config = {"frozen": True}
@@ -620,7 +623,13 @@ class TaskConfig(BaseModel):
     seed: int | None = None
     history_mode: str = Field(
         default="cumulative",
-        description="'none' | 'last' (original) | 'cumulative'",
+        description=(
+            "'none' | 'last' (original) | 'cumulative' | 'outcome'. "
+            "'outcome' (2026-09-05) renders only round / verdict / score / "
+            "lives for the task call — no signal, action or rule hypothesis "
+            "— which is what the per-turn puzzle mode wants, since earlier "
+            "rounds' puzzles carry no information about the current one."
+        ),
     )
     max_history_turns: int = Field(default=15, ge=0)
     actual_death: bool = Field(
@@ -681,6 +690,27 @@ class TaskConfig(BaseModel):
             "opportunity regardless of seed."
         ),
     )
+    signal_mode: Literal["sequential", "per_turn_puzzle"] = Field(
+        default="sequential",
+        description=(
+            "Signal Game only. 'sequential' (default, legacy): one hidden "
+            "rule per season learned from feedback. 'per_turn_puzzle' "
+            "(2026-09-05): every turn is an independent induction puzzle "
+            "(fresh rule + clue set + query) drawn from the puzzle_ladder "
+            "in configs/tasks/signal_game.yaml; difficulty, num_few_shot "
+            "and curriculum_turns are ignored in that mode. Other tasks "
+            "ignore the field."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _validate_history_mode(self) -> "TaskConfig":
+        allowed = ("none", "last", "cumulative", "outcome")
+        if self.history_mode not in allowed:
+            raise ValueError(
+                f"history_mode must be one of {allowed}, got {self.history_mode!r}"
+            )
+        return self
 
 
 class SeasonConfig(BaseModel):

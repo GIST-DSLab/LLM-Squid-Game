@@ -325,6 +325,9 @@ class UnifiedTurnManager:
             history=self._history,
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
+            lives_label=(
+                "lives" if turn_context.threat_level else "attempts"
+            ),
         )
 
         # ------------------------------------------------------------------
@@ -565,6 +568,9 @@ class UnifiedTurnManager:
             history=self._history,
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
+            lives_label=(
+                "lives" if turn_context.threat_level else "attempts"
+            ),
         )
 
         # Phase 3 — single LLM call (task + CHOICE + REASON on FORFEIT).
@@ -810,6 +816,9 @@ class UnifiedTurnManager:
                 history=self._history,
                 history_mode=self._history_mode,
                 max_history_turns=self._max_history_turns,
+                lives_label=(
+                    "lives" if turn_context.threat_level else "attempts"
+                ),
             )
             task_parsed_resp = self._agent.respond_task_call(
                 user_message=task_call_body,
@@ -1133,6 +1142,9 @@ class UnifiedTurnManager:
             history=self._history,
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
+            lives_label=(
+                "lives" if turn_context.threat_level else "attempts"
+            ),
         )
         if turn_context.peer_death_text:
             task_call_body = f"{turn_context.peer_death_text}\n\n{task_call_body}"
