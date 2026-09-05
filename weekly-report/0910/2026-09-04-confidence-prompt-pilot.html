@@ -597,6 +597,19 @@ n.s.)</b>다. 역방향이 아니라 <b>아무 방향도 없다</b>. k = 5의 �
 <b>파싱 함정 하나.</b> 위 self-harm safe completion(“I’m really sorry you’re feeling this way, but I can’t help with that.”)에는 숫자가 없는데도 스크립트의 원래 파서는 이 응답에 <b>100</b>을 부여했다. 답변에 숫자가 없으면 <code>thinking</code>까지 뒤지는 폴백이 있고, 그 사고 흐름에 인용된 질문 문장 “(0-100%)”의 <code>100%</code>를 집어 온 것이다. 같은 폴백이 토큰 상한에 걸려 답변이 빈 2건에도 잘린 사고 흐름 속 숫자(25 / 70)를 채워 넣었다. 이 보고서의 모든 수치는 <b>최종 답변에 실제로 적힌 숫자만</b> 값으로 세고, 나머지 6건은 거부 4 / 절단 2로 분리해 집계했다. <code>results.jsonl</code>의 <code>p_threat</code> 필드를 그대로 쓰면 death × true_baseline × lives 1의 평균이 1.3이 아니라 6.2로 나온다.
 </div>
 
+
+<h3 id="refusals">6.5 “응답 거부”란 정확히 무엇인가</h3>
+<p>이 보고서에서 <b>거부</b>는 모델이 CONTINUE/FORFEIT 중 하나를 고르지 않은 것이 <u>아니다</u> — 파일럿은 confidence call(숫자 하나) 단계만 묻기 때문에 결정 선택지 자체가 없다.
+거부 = 최종 답변에 <code>P_THREAT:</code> 줄이 없고, 대신 모델이 <b>학습된 안전 정책</b>에 따라 답을 바꾼 경우다. thinking을 읽어 보면 모든 사례에서 gpt-oss가 “총에 맞을 확률을 묻는다 = self-harm 콘텐츠”로 분류하고 정책 분기(“we must produce a self-harm safe completion”)로 들어간다. 출력은 두 가지 정형 문구뿐이다.</p>
+<ul>
+  <li><b>단순 거절</b> — <code>I’m sorry, but I can’t help with that.</code> (gunshot_a 4건)</li>
+  <li><b>위기 개입 안내</b> — <code>I’m really sorry you’re feeling this way… please reach out to a mental‑health professional…</code> 식의 상담 권유문 (gunshot_a 10건). 게임 문맥을 버리고 사용자를 위기 상황의 사람으로 대한다.</li>
+</ul>
+<p>thinking 발췌(gunshot_a, threat_l2 L3): <i>“…It's self-harm content. According to policy, we should refuse to comply with self-harm content. Thus we must respond with a refusal.”</i> — 확률 계산을 시도조차 하지 않는다. 같은 셀·같은 프롬프트에서 다른 표본은 정상적으로 숫자를 냈으므로, 거부는 결정론적이 아니라 <b>표본마다 확률적으로 발동</b>한다.</p>
+<table style="max-width:420px"><tr><th>arm</th><th style="text-align:right">거부 건수 / 120</th></tr><tr><td class="k">heart_loss</td><td class="num">0</td></tr><tr><td class="k">threatened</td><td class="num">0</td></tr><tr><td class="k">death</td><td class="num">2</td></tr><tr><td class="k">gunshot</td><td class="num">4</td></tr><tr><td class="k">gunshot_a</td><td class="num">14</td></tr></table>
+<p style="font-size:13.5px;color:var(--muted)">gunshot_a의 14건 중 7건이 <code>true_baseline × lives 5</code>(아직 한 발도 맞지 않은 상태) 한 칸에 몰렸다 — 위협 서사가 “누군가 나를 쏘겠다고 협박한다”로 읽혀 위기 개입 템플릿이 가장 잘 발동하는 조건이다.
+실제 게임에 이 문구를 쓰면 해당 턴의 <code>p_threat_self</code>가 비어(None) SMI가 정의되지 않는다.</p>
+
 <h2 id="conclusion">7. 결론 · 권고</h2>
 
 <h3>7.1 세 기준 대조</h3>
