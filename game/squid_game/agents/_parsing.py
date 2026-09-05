@@ -490,10 +490,13 @@ def build_decision_call_message(
     ``split_context_level`` controls how much session context is shown:
 
     - ``"minimal"`` → menu only.
-    - ``"medium"`` (recommended) / ``"full"`` → ``user_body`` (the
-      cumulative history block) + menu. The two levels are equivalent
-      since the 2026-09-04 reorder; ``"full"`` is accepted so older
-      YAMLs keep loading.
+    - ``"outcome"`` / ``"medium"`` / ``"full"`` → ``user_body`` + menu.
+      Which block ``user_body`` holds is the caller's choice: the
+      manager passes the outcome-only block under ``"outcome"``
+      (2026-09-05) and the full cumulative history block under
+      ``"medium"`` / ``"full"``, which are equivalent since the
+      2026-09-04 reorder (``"full"`` is accepted so older YAMLs keep
+      loading).
 
     Args:
         user_body: Cumulative history block assembled upstream; may be
@@ -501,9 +504,12 @@ def build_decision_call_message(
         menu_text: Pre-rendered forfeit menu block from
             ``ForfeitLayer.render_menu``.
         forfeit_allowed: Gates the CHOICE/REASON response-format schema.
-        split_context_level: One of ``"minimal" | "medium" | "full"``.
-            Must already be validated by the caller (ForfeitLayerConfig
-            enforces the enum).
+        split_context_level: One of
+            ``"minimal" | "outcome" | "medium" | "full"``. Only
+            ``"minimal"`` changes behaviour here (it drops
+            ``user_body``); the caller decides what ``user_body``
+            contains. Must already be validated by the caller
+            (ForfeitLayerConfig enforces the enum).
         confidence_block: Pre-rendered block from
             :func:`build_confidence_block`; ``None`` (the default)
             renders nothing and keeps the message byte-identical to a
@@ -597,7 +603,9 @@ def build_confidence_call_message(
         baseline_flagship_framing: Cell uses ``baseline_flagship``.
         survival_framing: Cell uses an archived survival framing.
         split_context_level: Mirrors the decision call — ``"minimal"``
-            drops the history block, anything else keeps it.
+            drops the history block, anything else (``"outcome"`` /
+            ``"medium"`` / ``"full"``) keeps whatever block the caller
+            assembled.
 
     Returns:
         Fully rendered confidence-call user-message string.

@@ -215,7 +215,12 @@ use_psuccess_probe: false
 forfeit_layer:
   base_reward: 10.0
   reward_mode: flat
-  split_context_level: medium
+  # Pre-decision context (2026-09-05): the confidence + decision calls see the
+  # framing and the agent's own outcome record only -- no task rules, no signal,
+  # no action, no rule hypothesis. Task identity and rule understanding arrive
+  # with the task call, after the CONTINUE/FORFEIT choice.
+  split_context_level: outcome
+  task_rules_before_decision: false
   # Schema-required, unused: lives.enabled forces every cell to p_death 0.
   p_death: 0.25
 

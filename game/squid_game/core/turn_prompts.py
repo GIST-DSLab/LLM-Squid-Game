@@ -24,6 +24,7 @@ def build_system_prompt(
     task: RiskAwareTaskModule,
     forfeit_ctrl: ForfeitController,
     include_forfeit_text: bool = True,
+    include_task_rules: bool = True,
 ) -> str:
     """Render framing + appended task rules for the system slot.
 
@@ -48,9 +49,18 @@ def build_system_prompt(
     prompt + ``menu.j2`` in the decision call's user body) to convey
     forfeit semantics. Default stays ``True`` so Unit 14 single-call
     and legacy paths are unchanged.
+
+    2026-09-05 pre-decision context: ``include_task_rules=False`` drops
+    ``task.get_system_rules()`` as well, leaving the framing prompt
+    alone. The split-call dispatcher uses that variant for the
+    confidence + decision calls when
+    ``ForfeitLayerConfig.task_rules_before_decision`` is False, so the
+    agent does not learn *which game it is playing* before it chooses
+    CONTINUE / FORFEIT. The task call keeps the full prompt. Default
+    stays ``True`` so every existing config renders byte-identically.
     """
     prompt = framing_mgr.render_system_prompt(turn_context)
-    rules = task.get_system_rules()
+    rules = task.get_system_rules() if include_task_rules else ""
     if rules:
         prompt = f"{prompt}\n\n{rules}"
     if include_forfeit_text:
@@ -169,4 +179,71 @@ def format_history_block(
                 if len(trimmed) > 200:
                     trimmed = trimmed[:200] + "..."
                 lines.append(f"  [Your rule hypothesis] {trimmed}")
+    return "\n".join(lines)
+
+
+# Outcome words recorded by ``UnifiedTurnManager._record_history`` for
+# rounds that never produced a scored answer. They are printed verbatim
+# so the agent still sees why the round ended.
+_TERMINAL_OUTCOMES = ("forfeit", "eliminated", "died")
+
+
+def format_outcome_history_block(
+    history: list[dict[str, Any]],
+    max_history_turns: int,
+) -> str:
+    """Render the outcome-only history block for the pre-decision calls.
+
+    Used when ``ForfeitLayerConfig.split_context_level == "outcome"``:
+    the confidence and decision calls see *what happened* each round —
+    right / wrong, running score, lives left — and nothing about the
+    task itself. Concretely, the signal, the agent's action and its
+    ``[Your rule hypothesis]`` line (all of which
+    :func:`format_history_block` prints) are omitted, so the choice
+    cannot be conditioned on how well the hidden rule is understood.
+
+    Example::
+
+        === Previous Rounds ===
+        - Round 1: correct → cumulative: 40.0
+        - Round 2: incorrect → cumulative: 40.0
+
+    The ``(lives: 4/5)`` suffix is appended only for entries that
+    actually carry lives information, so non-lives runs and legacy
+    history entries render without it.
+
+    Args:
+        history: Manager history buffer (oldest first).
+        max_history_turns: Cap; only the last N entries are rendered.
+
+    Returns:
+        The rendered block, or ``""`` when there is no history.
+    """
+    if not history:
+        return ""
+    entries = history[-max_history_turns:]
+    lines = ["=== Previous Rounds ==="]
+    for entry in entries:
+        outcome = entry.get("outcome")
+        correct = entry.get("correct")
+        if isinstance(outcome, str) and outcome in _TERMINAL_OUTCOMES:
+            # forfeit / eliminated / died — no answer was scored.
+            verdict = outcome
+        elif correct is True:
+            verdict = "correct"
+        elif correct is False:
+            verdict = "incorrect"
+        else:
+            # Pre-2026-09-05 history entries have no ``correct`` key;
+            # fall back to the raw outcome summary rather than guessing.
+            verdict = outcome if isinstance(outcome, str) and outcome else "—"
+        line = (
+            f"- Round {entry['turn']}: {verdict} "
+            f"→ cumulative: {entry['cumulative_score']:.1f}"
+        )
+        lives_after = entry.get("lives_after")
+        lives_total = entry.get("lives_total")
+        if lives_after is not None and lives_total is not None:
+            line += f" (lives: {lives_after}/{lives_total})"
+        lines.append(line)
     return "\n".join(lines)

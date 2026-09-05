@@ -78,6 +78,7 @@ from squid_game.core.turn_prompts import (
     compose_user_message,
     derive_action_hint,
     format_history_block,
+    format_outcome_history_block,
 )
 from squid_game.core.turn_results import (
     build_continue_result,
@@ -719,7 +720,18 @@ class UnifiedTurnManager:
         confidence → decision → task. The Phase 1.5 confidence call (SMI)
         shares the decision call's system prompt and history block, sees
         neither the stimulus nor the menu, and has its CoT rendered into
-        the decision call's user body. Its ``ri_confidence`` is recorded
+        the decision call's user body.
+
+        Pre-decision context (2026-09-05): the confidence + decision
+        calls' system prompt and history block are chosen by two
+        ``ForfeitLayerConfig`` knobs.
+        ``task_rules_before_decision=False`` builds their system prompt
+        with ``include_task_rules=False`` (framing only; the task call
+        keeps the full prompt), and ``split_context_level="outcome"``
+        swaps :func:`format_history_block` for
+        :func:`format_outcome_history_block`. Both default to the
+        pre-2026-09-05 behaviour, so existing configs render
+        byte-identically. Its ``ri_confidence`` is recorded
         separately and deliberately excluded from the combined
         ``reasoning_investment`` / ``raw_response`` / ``thinking_text``
         aggregates, which stay decision + task only so pre-SMI analyses
@@ -845,6 +857,8 @@ class UnifiedTurnManager:
                 stake_choice=None,
                 cumulative_after=cumulative_after,
                 outcome_summary=("eliminated" if died_lives else f"+{reward:.0f}"),
+                lives_after=lives_after,
+                lives_total=turn_context.lives_total,
             )
             merged_metadata: dict = {
                 **task_ctx.metadata,
@@ -904,10 +918,42 @@ class UnifiedTurnManager:
         # history block so it can calibrate its own prediction-accuracy
         # before the CONTINUE vs FORFEIT choice. Under ``minimal`` the
         # history is deliberately omitted (build_decision_call_message
-        # drops it).
-        history_block = format_history_block(
-            self._history, self._history_mode, self._max_history_turns
-        )
+        # drops it). Under ``outcome`` (2026-09-05) it sees an
+        # outcome-only block instead — right/wrong, score, lives — with
+        # the signal, its own action and its rule hypothesis withheld,
+        # so the choice cannot be conditioned on how well it understands
+        # the hidden rule.
+        if split_ctx == "outcome":
+            history_block = (
+                ""
+                if self._history_mode == "none"
+                else format_outcome_history_block(
+                    self._history[-1:]
+                    if self._history_mode == "last"
+                    else self._history,
+                    self._max_history_turns,
+                )
+            )
+        else:
+            history_block = format_history_block(
+                self._history, self._history_mode, self._max_history_turns
+            )
+        # The pre-decision system prompt. With
+        # ``task_rules_before_decision=False`` the confidence and
+        # decision calls see the framing alone: the task identity (and
+        # therefore what the round will even ask) arrives only with the
+        # task call, after the choice has been made.
+        if self._forfeit_layer.config.task_rules_before_decision:
+            pre_decision_system_prompt = system_prompt
+        else:
+            pre_decision_system_prompt = build_system_prompt(
+                turn_context,
+                framing_mgr=self._framing_mgr,
+                task=self._task,
+                forfeit_ctrl=self._forfeit_ctrl,
+                include_forfeit_text=False,
+                include_task_rules=False,
+            )
 
         # Phase 1.5 — confidence call (SMI). Same system prompt and history
         # as the decision call; no stimulus, no menu. Its CoT is rendered
@@ -935,7 +981,7 @@ class UnifiedTurnManager:
                 )
             confidence_resp = self._agent.respond_confidence_call(
                 user_message=confidence_body,
-                system_prompt=system_prompt,
+                system_prompt=pre_decision_system_prompt,
             )
             completion_conf = self._agent.last_completion
             thinking_text_conf = getattr(completion_conf, "thinking_text", None)
@@ -986,13 +1032,13 @@ class UnifiedTurnManager:
         # not the confidence call ran) so an offline resampler can
         # reproduce this call verbatim.
         replay_kwargs = dict(
-            system_prompt=system_prompt,
+            system_prompt=pre_decision_system_prompt,
             decision_call_input=decision_call_body,
         )
         forfeit_parsed_resp = self._agent.respond_decision_call(
             user_message=decision_call_body,
             forfeit_allowed=forfeit_allowed,
-            system_prompt=system_prompt,
+            system_prompt=pre_decision_system_prompt,
         )
         raw_text_forfeit = forfeit_parsed_resp.raw_text
         completion_forfeit = self._agent.last_completion
@@ -1048,6 +1094,8 @@ class UnifiedTurnManager:
                 stake_choice=None,
                 cumulative_after=preserved,
                 outcome_summary="forfeit",
+                lives_after=turn_context.lives_remaining,
+                lives_total=turn_context.lives_total,
             )
             return self._record(
                 build_forfeit_layer_result(
@@ -1191,6 +1239,8 @@ class UnifiedTurnManager:
                 if died
                 else f"+{reward:.0f}"
             ),
+            lives_after=lives_after,
+            lives_total=turn_context.lives_total,
         )
         merged_metadata: dict = {
             **task_ctx.metadata,
@@ -1396,6 +1446,8 @@ class UnifiedTurnManager:
         stake_choice: str | None,
         cumulative_after: float,
         outcome_summary: str,
+        lives_after: int | None = None,
+        lives_total: int | None = None,
     ) -> None:
         """Append one entry to the in-manager history buffer.
 
@@ -1411,6 +1463,15 @@ class UnifiedTurnManager:
         ``_format_turn_history`` but was silently dropped when Phase 3
         moved to the stake-only history. For NullTask (no task action)
         and forfeit turns we fall back to the ``—`` sentinel.
+
+        2026-09-05 adds three purely additive keys consumed by
+        :func:`~squid_game.core.turn_prompts.format_outcome_history_block`
+        (``split_context_level: "outcome"``): ``correct`` — an explicit
+        boolean read off ``task_outcome.success_factor`` rather than
+        re-derived from the ``"+0"`` outcome string — plus
+        ``lives_after`` / ``lives_total``. All three are ``None`` on
+        rounds (or paths) that do not supply them; no existing key
+        changes.
         """
         signal = task_ctx.metadata.get("signal", "") if task_ctx.metadata else ""
         action: str | None = None
@@ -1422,6 +1483,9 @@ class UnifiedTurnManager:
             raw_rule = task_outcome.metadata.get("rule_hypothesis")
             if isinstance(raw_rule, str) and raw_rule:
                 rule_hypothesis = raw_rule
+        correct: bool | None = None
+        if task_outcome is not None:
+            correct = bool(task_outcome.success_factor)
         self._history.append(
             {
                 "turn": turn_number,
@@ -1429,8 +1493,11 @@ class UnifiedTurnManager:
                 "action": action,
                 "rule_hypothesis": rule_hypothesis,
                 "stake_choice": stake_choice,
+                "correct": correct,
                 "outcome": outcome_summary,
                 "cumulative_score": cumulative_after,
+                "lives_after": lives_after,
+                "lives_total": lives_total,
             }
         )
 

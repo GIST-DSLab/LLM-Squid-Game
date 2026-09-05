@@ -335,22 +335,47 @@ class ForfeitLayerConfig(BaseModel):
             "pressure lives in the lives ledger rather than the payoff."
         ),
     )
-    split_context_level: Literal["minimal", "medium", "full"] = Field(
+    split_context_level: Literal[
+        "minimal", "outcome", "medium", "full"
+    ] = Field(
         default="medium",
         description=(
             "Phase O Unit 15 control. When "
             "``ExperimentConfig.use_split_forfeit_layer`` is True, this "
-            "governs how much session context the decision call (which "
-            "runs FIRST on every turn since 2026-09-04, before the task "
-            "call) receives. "
+            "governs how much session context the confidence and "
+            "decision calls (which run FIRST on every turn since "
+            "2026-09-04, before the task call) receive. "
             "``'minimal'`` = forfeit menu only. "
-            "``'medium'`` (recommended) = cumulative history block + menu. "
+            "``'outcome'`` (2026-09-05) = outcome-only history block "
+            "(round, correct/incorrect/forfeit, cumulative score, lives) "
+            "+ menu; the signal, the agent's action and its rule "
+            "hypothesis are withheld so the pre-decision context carries "
+            "no information about how well the hidden rule is "
+            "understood. "
+            "``'medium'`` (legacy default) = full cumulative history "
+            "block + menu. "
             "``'full'`` = same as ``'medium'`` — before the reorder it "
             "echoed the task call's prompt and thinking, which no longer "
             "exist at decision time; the value is accepted so older YAMLs "
             "keep loading. The current round's stimulus is never shown "
             "to the decision call at any level. "
             "Ignored when ``use_split_forfeit_layer`` is False."
+        ),
+    )
+    task_rules_before_decision: bool = Field(
+        default=True,
+        description=(
+            "2026-09-05 pre-decision context control. When True (the "
+            "default, legacy behaviour) the confidence and decision "
+            "calls share the task call's system prompt — framing prompt "
+            "+ ``TaskModule.get_system_rules()``. When False they "
+            "receive the framing prompt ONLY, so the agent does not "
+            "learn which game it is playing until after it has chosen "
+            "CONTINUE / FORFEIT. The task call always keeps the full "
+            "prompt. Pairs with ``split_context_level: 'outcome'``: "
+            "together they leave the pre-decision context carrying the "
+            "framing and the agent's own outcome record and nothing "
+            "else. Ignored when ``use_split_forfeit_layer`` is False."
         ),
     )
     chain_psuccess_to_menu: bool = Field(
