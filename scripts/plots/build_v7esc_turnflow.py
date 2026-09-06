@@ -360,6 +360,17 @@ def lead_section(turns: list[dict], season: dict, cfg: dict) -> str:
 </ul>"""
 
 
+#: Facts about the 21:25 token-capped run, read off that run when this note
+#: was first built. Its directory has since been deleted from ``outputs/``,
+#: so the box below can no longer be recomputed from data; these are the
+#: values the published note already carries, used only as a fallback when
+#: the directory is gone.
+_PRIOR_DELETED_FACTS = {
+    "span": "2,924–25,125자",
+    "empties": "4턴, 8턴, 9턴",
+}
+
+
 def prior_run_box(prior: Path | None) -> str:
     """The one-box mention of the 21:25 run that hit the token cap."""
     if prior is None:
@@ -376,8 +387,8 @@ def prior_run_box(prior: Path | None) -> str:
         t["turn_number"] for t in turns if not (t.get("raw_response_task") or "").strip()
     ]
     thinking = [len(t.get("thinking_text_task") or "") for t in turns]
-    span = f"{min(thinking):,}–{max(thinking):,}자" if thinking else "2만자대"
-    empties_str = ", ".join(f"{t}턴" for t in empties) if empties else "몇 턴"
+    span = f"{min(thinking):,}–{max(thinking):,}자" if thinking else _PRIOR_DELETED_FACTS["span"]
+    empties_str = ", ".join(f"{t}턴" for t in empties) if empties else _PRIOR_DELETED_FACTS["empties"]
     return f"""<div class="prior">
 <h3>먼저 짚고 갈 것 — 5분 전에 돌린 판은 모델이 아니라 <b>글자 수 한도</b>를 쟀다</h3>
 <p>같은 폴더에 <span class="mono">{esc(prior.name)}</span>가 있다. 설정이 딱 하나
@@ -629,6 +640,261 @@ def turn_section(t: dict, idx: int) -> str:
 </section>"""
 
 
+# --------------------------------------------------------------------------
+# the thinking-token chart (inline SVG — no library, no CDN)
+# --------------------------------------------------------------------------
+
+#: Chart geometry. The left gutter carries both the y-axis numbers and the
+#: labels of the two marker rows under the plot, so it is wide.
+_CH_W, _CH_H = 900, 446
+_CH_L, _CH_R = 152, 872
+_CH_T, _CH_B = 34, 264
+_ROW_WRONG_Y = 316
+_ROW_RULE_Y = 350
+
+
+def _chart_series(turns: list[dict]) -> list[dict]:
+    """Pull the per-turn values the chart draws, straight from the records."""
+    series = []
+    for t in turns:
+        m = t["task_metadata"]
+        score = m.get("rule_match_score")
+        series.append(
+            {
+                "turn": t["turn_number"],
+                "tokens": t["ri_task"]["thinking_tokens"],
+                "correct": bool(m.get("correct")),
+                "score": score,
+                "partial": score is not None and score < 100,
+                "under": bool(m.get("underdetermined")),
+            }
+        )
+    return series
+
+
+def thinking_chart_svg(series: list[dict]) -> str:
+    """Draw task-call thinking tokens per turn as a hand-rolled SVG line chart.
+
+    Three things are marked, and they are three different sets: turns answered
+    incorrectly, turns whose stated rule does not reproduce the truth as a
+    function, and the underdetermined turns. Every colour is a CSS variable so
+    the chart stays legible in both themes.
+    """
+    n = len(series)
+    top = max(1000, -(-max(p["tokens"] for p in series) // 1000) * 1000)
+    step = 2000 if top > 4000 else 1000
+
+    # inset the points so the first and last marker do not sit on the frame
+    left, right = _CH_L + 18, _CH_R - 18
+
+    def x(i: int) -> float:
+        return left if n == 1 else left + i * (right - left) / (n - 1)
+
+    def y(v: float) -> float:
+        return _CH_B - (v / top) * (_CH_B - _CH_T)
+
+    parts: list[str] = []
+
+    # underdetermined turns: a full-height band behind everything else
+    for i, p in enumerate(series):
+        if not p["under"]:
+            continue
+        parts.append(
+            f'<rect class="band" x="{x(i) - 27:.1f}" y="20" width="54" '
+            f'height="{_ROW_RULE_Y + 26 - 20}" rx="7"/>'
+        )
+        parts.append(
+            f'<text class="c die" x="{x(i):.1f}" y="15" text-anchor="middle">🎲</text>'
+        )
+
+    # gridlines + y-axis numbers
+    v = 0
+    while v <= top:
+        parts.append(
+            f'<line class="grid" x1="{_CH_L}" y1="{y(v):.1f}" '
+            f'x2="{_CH_R}" y2="{y(v):.1f}"/>'
+        )
+        parts.append(
+            f'<text class="c ax" x="{_CH_L - 10}" y="{y(v) + 4:.1f}" '
+            f'text-anchor="end">{v:,}</text>'
+        )
+        v += step
+    parts.append(
+        f'<text class="c ax" x="{_CH_L - 10}" y="{_CH_T - 14}" '
+        f'text-anchor="end">사고 토큰</text>'
+    )
+
+    # axes
+    parts.append(f'<line class="axis" x1="{_CH_L}" y1="{_CH_T - 6}" x2="{_CH_L}" y2="{_CH_B}"/>')
+    parts.append(f'<line class="axis" x1="{_CH_L}" y1="{_CH_B}" x2="{_CH_R}" y2="{_CH_B}"/>')
+
+    # the line itself
+    pts = " ".join(f"{x(i):.1f},{y(p['tokens']):.1f}" for i, p in enumerate(series))
+    parts.append(f'<polyline class="line" points="{pts}"/>')
+
+    # per-turn markers, value labels and x-axis numbers
+    for i, p in enumerate(series):
+        px, py = x(i), y(p["tokens"])
+        if p["under"]:
+            parts.append(
+                f'<rect class="dot udot" x="{px - 6.5:.1f}" y="{py - 6.5:.1f}" '
+                f'width="13" height="13" transform="rotate(45 {px:.1f} {py:.1f})"/>'
+            )
+        else:
+            parts.append(f'<circle class="dot" cx="{px:.1f}" cy="{py:.1f}" r="4.6"/>')
+        parts.append(
+            f'<text class="c val" x="{px:.1f}" y="{py - 13:.1f}" '
+            f'text-anchor="middle">{p["tokens"]:,}</text>'
+        )
+        parts.append(
+            f'<text class="c ax" x="{px:.1f}" y="{_CH_B + 21}" '
+            f'text-anchor="middle">{p["turn"]}</text>'
+        )
+    parts.append(
+        f'<text class="c ax" x="{_CH_L - 10}" y="{_CH_B + 21}" '
+        f'text-anchor="end">턴</text>'
+    )
+
+    # two marker rows under the plot
+    parts.append(
+        f'<text class="c ax" x="{_CH_L - 10}" y="{_ROW_WRONG_Y + 4}" '
+        f'text-anchor="end">오답 (목숨 −1)</text>'
+    )
+    parts.append(
+        f'<text class="c ax" x="{_CH_L - 10}" y="{_ROW_RULE_Y + 4}" '
+        f'text-anchor="end">규칙 일치 &lt; 100%</text>'
+    )
+    for i, p in enumerate(series):
+        px = x(i)
+        if not p["correct"]:
+            parts.append(f'<circle class="mk wrong" cx="{px:.1f}" cy="{_ROW_WRONG_Y}" r="6"/>')
+        if p["partial"]:
+            parts.append(
+                f'<rect class="mk rule" x="{px - 5.5:.1f}" y="{_ROW_RULE_Y - 5.5}" '
+                f'width="11" height="11" transform="rotate(45 {px:.1f} {_ROW_RULE_Y})"/>'
+            )
+            parts.append(
+                f'<text class="c val" x="{px:.1f}" y="{_ROW_RULE_Y + 22}" '
+                f'text-anchor="middle">{p["score"]:.0f}</text>'
+            )
+
+    # legend
+    ly1, ly2 = 400, 428
+    parts.append(f'<line class="line" x1="{_CH_L}" y1="{ly1 - 4}" x2="{_CH_L + 26}" y2="{ly1 - 4}"/>')
+    parts.append(f'<circle class="dot" cx="{_CH_L + 13}" cy="{ly1 - 4}" r="4.6"/>')
+    parts.append(f'<text class="c lg" x="{_CH_L + 34}" y="{ly1}">과제 콜 사고 토큰</text>')
+    parts.append(f'<circle class="mk wrong" cx="{_CH_L + 393}" cy="{ly1 - 4}" r="6"/>')
+    parts.append(f'<text class="c lg" x="{_CH_L + 408}" y="{ly1}">오답 — 채점이 틀린 턴</text>')
+    parts.append(
+        f'<rect class="mk rule" x="{_CH_L + 7.5}" y="{ly2 - 9.5}" width="11" height="11" '
+        f'transform="rotate(45 {_CH_L + 13} {ly2 - 4})"/>'
+    )
+    parts.append(
+        f'<text class="c lg" x="{_CH_L + 34}" y="{ly2}">'
+        f'규칙 일치 &lt; 100% — 쓴 규칙이 진짜 규칙과 다른 답을 내는 턴</text>'
+    )
+    parts.append(f'<rect class="band" x="{_CH_L + 380}" y="{ly2 - 13}" width="26" height="18" rx="5"/>')
+    parts.append(
+        f'<text class="c lg" x="{_CH_L + 414}" y="{ly2}">'
+        f'🎲 정보가 모자란 턴 — 답 후보가 둘</text>'
+    )
+
+    return (
+        f'<svg class="chart" viewBox="0 0 {_CH_W} {_CH_H}" role="img"\n'
+        f'     aria-labelledby="tt-title tt-desc">\n'
+        f"  <title id=\"tt-title\">턴별 과제 콜 사고 토큰</title>\n"
+        f'  <desc id="tt-desc">한 세션 열 턴 동안 퍼즐을 푸는 데 쓴 사고 토큰이 '
+        f"어떻게 변했는지, 그리고 오답이 난 턴·쓴 규칙이 진짜 규칙과 어긋난 턴·"
+        f"답 후보가 둘뿐이던 턴이 각각 어디였는지 보여 준다.</desc>\n  "
+        + "\n  ".join(parts)
+        + "\n</svg>"
+    )
+
+
+def thinking_chart_section(turns: list[dict]) -> str:
+    """The chart, its table, and a plainly-worded reading of both."""
+    s = _chart_series(turns)
+    n = len(s)
+    under = [p for p in s if p["under"]]
+    wrong = [p for p in s if not p["correct"]]
+    partial = [p for p in s if p["partial"]]
+    ranked = sorted(s, key=lambda p: -p["tokens"])
+    top3 = ranked[:3]
+    half = n // 2
+    early = sum(p["tokens"] for p in s[:half]) / half
+    late = sum(p["tokens"] for p in s[half:]) / (n - half)
+    shapes = [t["task_metadata"].get("rule_shape") or "" for t in turns]
+    clauses_first = len([c for c in shapes[0].split(",") if c])
+    clauses_last = len([c for c in shapes[-1].split(",") if c])
+    inconsistent = [
+        t["turn_number"]
+        for t in turns
+        if t["task_metadata"].get("rule_consistent_with_clues") is False
+    ]
+    under_txt = ", ".join(f"{p['turn']}턴" for p in under)
+    under_ranks = ", ".join(
+        f"{p['turn']}턴이 {n}개 중 {ranked.index(p) + 1}번째" for p in under
+    )
+
+    rows = ""
+    for p in s:
+        cls = ' class="ud"' if p["under"] else ""
+        score = "—" if p["score"] is None else f"{p['score']:.1f}"
+        rows += (
+            f"<tr{cls}>"
+            f'<td><a href="#t{p["turn"]}">{p["turn"]}</a></td>'
+            f'<td class=num>{p["tokens"]:,}</td>'
+            f'<td class="{"ok" if p["correct"] else "bad"}">'
+            f'{"정답" if p["correct"] else "오답"}</td>'
+            f'<td class=num>{score}</td>'
+            f'<td>{"예 🎲" if p["under"] else "아니오"}</td>'
+            "</tr>"
+        )
+
+    return f"""<h2 id="effort">5. 못 푸는 턴에서 더 오래 생각했나 — 턴별 사고량</h2>
+<p>이 판에는 <b>풀 수 없는 턴</b>이 둘 있다({under_txt}). 결정적인 예시를 하나 빼 두어서
+남은 예시와 모순되지 않는 행동이 둘이 되는 턴이다. 모델은 그런 턴이라는 말을 듣지
+못했다. 그렇다면 <b>답이 안 좁혀지는 것을 느끼고 더 오래 붙들었을까?</b> 아래는 과제
+콜의 사고 토큰(<span class="mono">ri_task.thinking_tokens</span>)을 턴 순서대로 그린
+것이다.</p>
+<div class="figwrap">{thinking_chart_svg(s)}</div>
+<p class="hint">가로로 잘리면 그림 상자 안에서 좌우로 밀어서 보면 된다. 두 개의 표시
+줄은 서로 다른 것을 가리킨다 — 위는 <b>답이 틀린 턴</b>, 아래는 <b>답은 맞았을 수 있어도
+써낸 규칙이 진짜 규칙과 다른 답을 내는 턴</b>이다. 겹치는 턴도 있고 아닌 턴도 있다.</p>
+
+<div class="tw"><table>
+<thead><tr><th>턴</th><th class=num>과제 콜 사고 토큰</th><th>채점</th>
+<th class=num>규칙 일치 %</th><th>정보가 모자란 턴</th></tr></thead>
+<tbody>{rows}</tbody></table></div>
+
+<div class="card">
+<h3>그림이 말하는 것</h3>
+<p><b>풀 수 없는 두 턴은 봉우리가 아니다.</b> {under_txt} 중
+{under[0]['turn']}턴은 {under[0]['tokens']:,} 토큰으로 이 판에서 가장 낮은 축에 들고,
+{under[1]['turn']}턴은 {under[1]['tokens']:,} 토큰으로 값의 한가운데쯤이다
+(큰 쪽부터 세면 {under_ranks}).
+가장 큰 세 값은 {', '.join(f"{p['turn']}턴 {p['tokens']:,}" for p in top3)}으로,
+전부 <b>답이 하나로 정해지는 평범한 턴</b>이고 판의 뒤쪽에 몰려 있다. 즉 이 세션에서는
+“못 푸는 턴에서 사고가 튄다”는 흔적이 <b>보이지 않는다.</b> 눈에 띄는 것은 오히려
+턴 번호와 함께 사고량이 늘어난다는 쪽이다 — 앞 {half}턴 평균 {early:,.0f} 대 뒤
+{n - half}턴 평균 {late:,.0f}.</p>
+<p><b>다만 이 “늘어남”도 그대로 믿으면 안 된다.</b> 퍼즐 난이도는 턴 번호에 묶인 고정
+사다리(<span class="mono">puzzle_ladder</span>)로 올라간다. 실제로 이 판의 숨은 규칙은
+1턴에 절이 {clauses_first}개였다가 {n}턴에는 {clauses_last}개까지 늘어난다. 그러니
+“뒤로 갈수록 더 생각했다”는 “뒤로 갈수록 문제가 어려웠다”와 구별되지 않는다. 턴 번호·난이도·사고량이 한 덩어리로 묶여 있다.</p>
+<p><b>그리고 이 그림으로는 다음 두 가지를 가를 수 없다.</b> ① 모델이 답이 안 좁혀진다는
+것을 <b>알아채지 못했다</b>, ② 알아챘지만 <b>더 쓰지 않기로 했다</b>. 사고 과정을 읽으면
+힌트가 있을 수 있지만, 그건 이 그림이 답하는 질문이 아니다.</p>
+<p class="hint"><b>답하려면 무엇이 필요한가.</b> (1) 세션이 여럿 있어야 한다 — 여기서
+정보가 모자란 턴은 딱 두 개다. (2) <b>같은 사다리 칸</b>을 정보가 모자란 판과 갖춰진
+판으로 나눠 돌려서 짝지어 비교해야 한다. 그래야 난이도가 상쇄된다. (3) “알아챘는가”는
+<span class="mono">rule_consistent_with_clues</span>와 규칙 문장 자체를 함께 봐야 한다 —
+모델이 두 후보를 다 적어 놓고 하나를 골랐다면 알아챈 것이고, 하나만 좇았다면 아닌
+쪽이다. 이 판에서 그 값이 False인 턴은
+{', '.join(f"{w}턴" for w in inconsistent)}인데, 정보가 모자란 두 턴은 거기 들어 있지 않다.</p>
+</div>"""
+
+
 def findings_section(turns: list[dict]) -> str:
     n = len(turns)
     ps = [t["p_threat_self"] for t in turns if t["p_threat_self"] is not None]
@@ -643,7 +909,10 @@ def findings_section(turns: list[dict]) -> str:
     tf = [t["ri_forfeit"]["thinking_tokens"] for t in turns]
     tt = [t["ri_task"]["thinking_tokens"] for t in turns]
     wrong = [t["turn_number"] for t in turns if not t["task_metadata"].get("correct")]
-    return f"""<h2 id="seen">5. 무엇이 보였나</h2>
+    series = _chart_series(turns)
+    ranked = sorted(series, key=lambda p: -p["tokens"])
+    under_pts = [p for p in series if p["under"]]
+    return f"""<h2 id="seen">6. 무엇이 보였나</h2>
 <p class="hint">아래는 전부 <b>이 한 세션, 이 한 모델</b>에서 본 것이다. 통계가 아니라
 관찰 기록이다. 각 항목 끝에 “이걸 발견이라고 부르려면 무엇이 더 필요한가”를 적었다.</p>
 
@@ -708,6 +977,22 @@ def findings_section(turns: list[dict]) -> str:
 <p class="hint">벤치마크의 가설 H2는 “포기한 턴과 계속한 턴의
 <span class="mono">ri_forfeit</span>이 다른가”를 묻는다. 이 판에는 포기가 없어서
 비교할 짝이 아예 없다. 한 세션으로는 어느 방향도 말할 수 없다.</p>
+</div>
+</div>
+
+<div class="card">
+<h3>⑥ 풀 수 없는 턴에서 사고가 튀지는 않았다</h3>
+<p><a href="#effort">5장의 그림</a>이 보여 준 것이다. 답 후보가 둘뿐이라 풀 수 없는
+{', '.join(f"{p['turn']}턴" for p in under_pts)}의 과제 콜 사고 토큰은
+{', '.join(f"{p['tokens']:,}" for p in under_pts)}으로, 큰 쪽부터 세면
+{', '.join(f"{ranked.index(p) + 1}번째" for p in under_pts)}다. 가장 많이 생각한 세 턴은
+{', '.join(f"{p['turn']}턴({p['tokens']:,})" for p in ranked[:3])}으로 전부 답이 하나로
+정해지는 평범한 턴이었다. 이 세션에서는 “못 푸는 문제를 더 오래 붙들었다”가
+<b>보이지 않는다.</b></p>
+<p class="hint">보이지 않는다는 것이 “모델이 못 알아챘다”는 뜻은 아니다. 알아채고도 더
+쓰지 않았을 수 있고, 이 판의 사고량은 턴 번호와 함께 커지는데 난이도 사다리도 턴 번호를
+따라 오르므로 둘을 가를 수도 없다. 가르려면 같은 사다리 칸을 정보가 모자란 판과 갖춰진
+판으로 나눠 여러 세션 돌려서 짝지어 비교해야 한다.</p>
 </div>"""
 
 
@@ -721,7 +1006,7 @@ def appendix_section(rules: str | None) -> str:
         if rules
         else '<p class="none">(game 패키지를 불러오지 못해 재구성하지 못했다)</p>'
     )
-    return f"""<h2 id="appendix">6. 부록 — 기록에 없는 것, 세는 법</h2>
+    return f"""<h2 id="appendix">7. 부록 — 기록에 없는 것, 세는 법</h2>
 
 <h3>A. 과제 콜의 system 프롬프트는 저장돼 있지 않다</h3>
 <p>각 턴이 저장하는 <span class="mono">system_prompt</span>는 <b>확신 콜과 결정 콜이
@@ -886,6 +1171,23 @@ svg.flow .t.b{font-size:13.5px;font-weight:700}
 svg.flow .t.s{font-size:11.5px;fill:var(--dim)}
 svg.flow .t.m{font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 
+svg.chart{display:block;min-width:660px;width:100%;height:auto}
+svg.chart text{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",
+  system-ui,sans-serif;fill:var(--ink)}
+svg.chart .c.ax{font-size:12px;fill:var(--dim)}
+svg.chart .c.val{font-size:10.5px;fill:var(--dim);font-variant-numeric:tabular-nums}
+svg.chart .c.lg{font-size:12px;fill:var(--dim)}
+svg.chart .c.die{font-size:14px}
+svg.chart .grid{stroke:var(--line);stroke-width:1}
+svg.chart .axis{stroke:var(--dim);stroke-width:1.3}
+svg.chart .line{stroke:var(--accent);stroke-width:2.4;fill:none;
+  stroke-linejoin:round;stroke-linecap:round}
+svg.chart .dot{fill:var(--card);stroke:var(--accent);stroke-width:2.4}
+svg.chart .dot.udot{fill:var(--warn-soft);stroke:var(--warn-ink);stroke-width:2.4}
+svg.chart .band{fill:var(--warn-soft);stroke:var(--warn-line);stroke-width:1.2}
+svg.chart .mk.wrong{fill:var(--hot);stroke:var(--hot);stroke-width:1.4}
+svg.chart .mk.rule{fill:none;stroke:var(--warn-ink);stroke-width:2.2}
+
 nav.toc{background:var(--card);border:1px solid var(--line);border-radius:13px;
   padding:12px 18px;margin:16px 0;font-size:14px}
 nav.toc ol{margin:6px 0;padding-left:20px}
@@ -926,6 +1228,7 @@ def build_page(
 <li><a href="#flow">한 턴은 어떻게 굴러가나 (그림)</a></li>
 <li><a href="#summary">한 판 전체 — 표 하나</a></li>
 <li><a href="#turns">턴별 전문</a></li>
+<li><a href="#effort">못 푸는 턴에서 더 오래 생각했나 — 턴별 사고량</a></li>
 <li><a href="#seen">무엇이 보였나</a></li>
 <li><a href="#appendix">부록 — 기록에 없는 것, 세는 법</a></li>
 </ol></nav>
@@ -961,6 +1264,8 @@ def build_page(
 입력·사고 과정·답 순서다. 사고 과정은 수만 자에 이르므로 접어 두었다. <b>접힌 것을 펴면
 저장된 글자가 하나도 빠짐없이 그대로 나온다</b>(줄이지 않았다).</p>
 {turn_html}
+
+{thinking_chart_section(turns)}
 
 {findings_section(turns)}
 

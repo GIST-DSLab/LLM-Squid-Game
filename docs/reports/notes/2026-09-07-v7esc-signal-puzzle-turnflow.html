@@ -124,6 +124,23 @@ svg.flow .t.b{font-size:13.5px;font-weight:700}
 svg.flow .t.s{font-size:11.5px;fill:var(--dim)}
 svg.flow .t.m{font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 
+svg.chart{display:block;min-width:660px;width:100%;height:auto}
+svg.chart text{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",
+  system-ui,sans-serif;fill:var(--ink)}
+svg.chart .c.ax{font-size:12px;fill:var(--dim)}
+svg.chart .c.val{font-size:10.5px;fill:var(--dim);font-variant-numeric:tabular-nums}
+svg.chart .c.lg{font-size:12px;fill:var(--dim)}
+svg.chart .c.die{font-size:14px}
+svg.chart .grid{stroke:var(--line);stroke-width:1}
+svg.chart .axis{stroke:var(--dim);stroke-width:1.3}
+svg.chart .line{stroke:var(--accent);stroke-width:2.4;fill:none;
+  stroke-linejoin:round;stroke-linecap:round}
+svg.chart .dot{fill:var(--card);stroke:var(--accent);stroke-width:2.4}
+svg.chart .dot.udot{fill:var(--warn-soft);stroke:var(--warn-ink);stroke-width:2.4}
+svg.chart .band{fill:var(--warn-soft);stroke:var(--warn-line);stroke-width:1.2}
+svg.chart .mk.wrong{fill:var(--hot);stroke:var(--hot);stroke-width:1.4}
+svg.chart .mk.rule{fill:none;stroke:var(--warn-ink);stroke-width:2.2}
+
 nav.toc{background:var(--card);border:1px solid var(--line);border-radius:13px;
   padding:12px 18px;margin:16px 0;font-size:14px}
 nav.toc ol{margin:6px 0;padding-left:20px}
@@ -148,6 +165,7 @@ footer{margin-top:50px;padding-top:16px;border-top:1px solid var(--line);
 <li><a href="#flow">한 턴은 어떻게 굴러가나 (그림)</a></li>
 <li><a href="#summary">한 판 전체 — 표 하나</a></li>
 <li><a href="#turns">턴별 전문</a></li>
+<li><a href="#effort">못 푸는 턴에서 더 오래 생각했나 — 턴별 사고량</a></li>
 <li><a href="#seen">무엇이 보였나</a></li>
 <li><a href="#appendix">부록 — 기록에 없는 것, 세는 법</a></li>
 </ol></nav>
@@ -8562,7 +8580,124 @@ Now: blue square with number 2. Available actions: [go_left, go_right, stay, jum
 ACTION: stay</pre></div>
 </section>
 
-<h2 id="seen">5. 무엇이 보였나</h2>
+<h2 id="effort">5. 못 푸는 턴에서 더 오래 생각했나 — 턴별 사고량</h2>
+<p>이 판에는 <b>풀 수 없는 턴</b>이 둘 있다(2턴, 6턴). 결정적인 예시를 하나 빼 두어서
+남은 예시와 모순되지 않는 행동이 둘이 되는 턴이다. 모델은 그런 턴이라는 말을 듣지
+못했다. 그렇다면 <b>답이 안 좁혀지는 것을 느끼고 더 오래 붙들었을까?</b> 아래는 과제
+콜의 사고 토큰(<span class="mono">ri_task.thinking_tokens</span>)을 턴 순서대로 그린
+것이다.</p>
+<div class="figwrap"><svg class="chart" viewBox="0 0 900 446" role="img"
+     aria-labelledby="tt-title tt-desc">
+  <title id="tt-title">턴별 과제 콜 사고 토큰</title>
+  <desc id="tt-desc">한 세션 열 턴 동안 퍼즐을 푸는 데 쓴 사고 토큰이 어떻게 변했는지, 그리고 오답이 난 턴·쓴 규칙이 진짜 규칙과 어긋난 턴·답 후보가 둘뿐이던 턴이 각각 어디였는지 보여 준다.</desc>
+  <rect class="band" x="219.0" y="20" width="54" height="356" rx="7"/>
+  <text class="c die" x="246.0" y="15" text-anchor="middle">🎲</text>
+  <rect class="band" x="523.0" y="20" width="54" height="356" rx="7"/>
+  <text class="c die" x="550.0" y="15" text-anchor="middle">🎲</text>
+  <line class="grid" x1="152" y1="264.0" x2="872" y2="264.0"/>
+  <text class="c ax" x="142" y="268.0" text-anchor="end">0</text>
+  <line class="grid" x1="152" y1="198.3" x2="872" y2="198.3"/>
+  <text class="c ax" x="142" y="202.3" text-anchor="end">2,000</text>
+  <line class="grid" x1="152" y1="132.6" x2="872" y2="132.6"/>
+  <text class="c ax" x="142" y="136.6" text-anchor="end">4,000</text>
+  <line class="grid" x1="152" y1="66.9" x2="872" y2="66.9"/>
+  <text class="c ax" x="142" y="70.9" text-anchor="end">6,000</text>
+  <text class="c ax" x="142" y="20" text-anchor="end">사고 토큰</text>
+  <line class="axis" x1="152" y1="28" x2="152" y2="264"/>
+  <line class="axis" x1="152" y1="264" x2="872" y2="264"/>
+  <polyline class="line" points="170.0,254.7 246.0,243.4 322.0,124.6 398.0,115.6 474.0,161.0 550.0,163.3 626.0,180.5 702.0,114.7 778.0,89.7 854.0,53.7"/>
+  <circle class="dot" cx="170.0" cy="254.7" r="4.6"/>
+  <text class="c val" x="170.0" y="241.7" text-anchor="middle">284</text>
+  <text class="c ax" x="170.0" y="285" text-anchor="middle">1</text>
+  <rect class="dot udot" x="239.5" y="236.9" width="13" height="13" transform="rotate(45 246.0 243.4)"/>
+  <text class="c val" x="246.0" y="230.4" text-anchor="middle">626</text>
+  <text class="c ax" x="246.0" y="285" text-anchor="middle">2</text>
+  <circle class="dot" cx="322.0" cy="124.6" r="4.6"/>
+  <text class="c val" x="322.0" y="111.6" text-anchor="middle">4,244</text>
+  <text class="c ax" x="322.0" y="285" text-anchor="middle">3</text>
+  <circle class="dot" cx="398.0" cy="115.6" r="4.6"/>
+  <text class="c val" x="398.0" y="102.6" text-anchor="middle">4,518</text>
+  <text class="c ax" x="398.0" y="285" text-anchor="middle">4</text>
+  <circle class="dot" cx="474.0" cy="161.0" r="4.6"/>
+  <text class="c val" x="474.0" y="148.0" text-anchor="middle">3,134</text>
+  <text class="c ax" x="474.0" y="285" text-anchor="middle">5</text>
+  <rect class="dot udot" x="543.5" y="156.8" width="13" height="13" transform="rotate(45 550.0 163.3)"/>
+  <text class="c val" x="550.0" y="150.3" text-anchor="middle">3,066</text>
+  <text class="c ax" x="550.0" y="285" text-anchor="middle">6</text>
+  <circle class="dot" cx="626.0" cy="180.5" r="4.6"/>
+  <text class="c val" x="626.0" y="167.5" text-anchor="middle">2,540</text>
+  <text class="c ax" x="626.0" y="285" text-anchor="middle">7</text>
+  <circle class="dot" cx="702.0" cy="114.7" r="4.6"/>
+  <text class="c val" x="702.0" y="101.7" text-anchor="middle">4,544</text>
+  <text class="c ax" x="702.0" y="285" text-anchor="middle">8</text>
+  <circle class="dot" cx="778.0" cy="89.7" r="4.6"/>
+  <text class="c val" x="778.0" y="76.7" text-anchor="middle">5,304</text>
+  <text class="c ax" x="778.0" y="285" text-anchor="middle">9</text>
+  <circle class="dot" cx="854.0" cy="53.7" r="4.6"/>
+  <text class="c val" x="854.0" y="40.7" text-anchor="middle">6,401</text>
+  <text class="c ax" x="854.0" y="285" text-anchor="middle">10</text>
+  <text class="c ax" x="142" y="285" text-anchor="end">턴</text>
+  <text class="c ax" x="142" y="320" text-anchor="end">오답 (목숨 −1)</text>
+  <text class="c ax" x="142" y="354" text-anchor="end">규칙 일치 &lt; 100%</text>
+  <rect class="mk rule" x="316.5" y="344.5" width="11" height="11" transform="rotate(45 322.0 350)"/>
+  <text class="c val" x="322.0" y="372" text-anchor="middle">88</text>
+  <circle class="mk wrong" cx="398.0" cy="316" r="6"/>
+  <rect class="mk rule" x="392.5" y="344.5" width="11" height="11" transform="rotate(45 398.0 350)"/>
+  <text class="c val" x="398.0" y="372" text-anchor="middle">66</text>
+  <rect class="mk rule" x="696.5" y="344.5" width="11" height="11" transform="rotate(45 702.0 350)"/>
+  <text class="c val" x="702.0" y="372" text-anchor="middle">59</text>
+  <rect class="mk rule" x="772.5" y="344.5" width="11" height="11" transform="rotate(45 778.0 350)"/>
+  <text class="c val" x="778.0" y="372" text-anchor="middle">78</text>
+  <circle class="mk wrong" cx="854.0" cy="316" r="6"/>
+  <rect class="mk rule" x="848.5" y="344.5" width="11" height="11" transform="rotate(45 854.0 350)"/>
+  <text class="c val" x="854.0" y="372" text-anchor="middle">95</text>
+  <line class="line" x1="152" y1="396" x2="178" y2="396"/>
+  <circle class="dot" cx="165" cy="396" r="4.6"/>
+  <text class="c lg" x="186" y="400">과제 콜 사고 토큰</text>
+  <circle class="mk wrong" cx="545" cy="396" r="6"/>
+  <text class="c lg" x="560" y="400">오답 — 채점이 틀린 턴</text>
+  <rect class="mk rule" x="159.5" y="418.5" width="11" height="11" transform="rotate(45 165 424)"/>
+  <text class="c lg" x="186" y="428">규칙 일치 &lt; 100% — 쓴 규칙이 진짜 규칙과 다른 답을 내는 턴</text>
+  <rect class="band" x="532" y="415" width="26" height="18" rx="5"/>
+  <text class="c lg" x="566" y="428">🎲 정보가 모자란 턴 — 답 후보가 둘</text>
+</svg></div>
+<p class="hint">가로로 잘리면 그림 상자 안에서 좌우로 밀어서 보면 된다. 두 개의 표시
+줄은 서로 다른 것을 가리킨다 — 위는 <b>답이 틀린 턴</b>, 아래는 <b>답은 맞았을 수 있어도
+써낸 규칙이 진짜 규칙과 다른 답을 내는 턴</b>이다. 겹치는 턴도 있고 아닌 턴도 있다.</p>
+
+<div class="tw"><table>
+<thead><tr><th>턴</th><th class=num>과제 콜 사고 토큰</th><th>채점</th>
+<th class=num>규칙 일치 %</th><th>정보가 모자란 턴</th></tr></thead>
+<tbody><tr><td><a href="#t1">1</a></td><td class=num>284</td><td class="ok">정답</td><td class=num>100.0</td><td>아니오</td></tr><tr class="ud"><td><a href="#t2">2</a></td><td class=num>626</td><td class="ok">정답</td><td class=num>100.0</td><td>예 🎲</td></tr><tr><td><a href="#t3">3</a></td><td class=num>4,244</td><td class="ok">정답</td><td class=num>87.5</td><td>아니오</td></tr><tr><td><a href="#t4">4</a></td><td class=num>4,518</td><td class="bad">오답</td><td class=num>65.6</td><td>아니오</td></tr><tr><td><a href="#t5">5</a></td><td class=num>3,134</td><td class="ok">정답</td><td class=num>100.0</td><td>아니오</td></tr><tr class="ud"><td><a href="#t6">6</a></td><td class=num>3,066</td><td class="ok">정답</td><td class=num>100.0</td><td>예 🎲</td></tr><tr><td><a href="#t7">7</a></td><td class=num>2,540</td><td class="ok">정답</td><td class=num>100.0</td><td>아니오</td></tr><tr><td><a href="#t8">8</a></td><td class=num>4,544</td><td class="ok">정답</td><td class=num>59.4</td><td>아니오</td></tr><tr><td><a href="#t9">9</a></td><td class=num>5,304</td><td class="ok">정답</td><td class=num>78.1</td><td>아니오</td></tr><tr><td><a href="#t10">10</a></td><td class=num>6,401</td><td class="bad">오답</td><td class=num>95.3</td><td>아니오</td></tr></tbody></table></div>
+
+<div class="card">
+<h3>그림이 말하는 것</h3>
+<p><b>풀 수 없는 두 턴은 봉우리가 아니다.</b> 2턴, 6턴 중
+2턴은 626 토큰으로 이 판에서 가장 낮은 축에 들고,
+6턴은 3,066 토큰으로 값의 한가운데쯤이다
+(큰 쪽부터 세면 2턴이 10개 중 9번째, 6턴이 10개 중 7번째).
+가장 큰 세 값은 10턴 6,401, 9턴 5,304, 8턴 4,544으로,
+전부 <b>답이 하나로 정해지는 평범한 턴</b>이고 판의 뒤쪽에 몰려 있다. 즉 이 세션에서는
+“못 푸는 턴에서 사고가 튄다”는 흔적이 <b>보이지 않는다.</b> 눈에 띄는 것은 오히려
+턴 번호와 함께 사고량이 늘어난다는 쪽이다 — 앞 5턴 평균 2,561 대 뒤
+5턴 평균 4,371.</p>
+<p><b>다만 이 “늘어남”도 그대로 믿으면 안 된다.</b> 퍼즐 난이도는 턴 번호에 묶인 고정
+사다리(<span class="mono">puzzle_ladder</span>)로 올라간다. 실제로 이 판의 숨은 규칙은
+1턴에 절이 1개였다가 10턴에는 6개까지 늘어난다. 그러니
+“뒤로 갈수록 더 생각했다”는 “뒤로 갈수록 문제가 어려웠다”와 구별되지 않는다. 턴 번호·난이도·사고량이 한 덩어리로 묶여 있다.</p>
+<p><b>그리고 이 그림으로는 다음 두 가지를 가를 수 없다.</b> ① 모델이 답이 안 좁혀진다는
+것을 <b>알아채지 못했다</b>, ② 알아챘지만 <b>더 쓰지 않기로 했다</b>. 사고 과정을 읽으면
+힌트가 있을 수 있지만, 그건 이 그림이 답하는 질문이 아니다.</p>
+<p class="hint"><b>답하려면 무엇이 필요한가.</b> (1) 세션이 여럿 있어야 한다 — 여기서
+정보가 모자란 턴은 딱 두 개다. (2) <b>같은 사다리 칸</b>을 정보가 모자란 판과 갖춰진
+판으로 나눠 돌려서 짝지어 비교해야 한다. 그래야 난이도가 상쇄된다. (3) “알아챘는가”는
+<span class="mono">rule_consistent_with_clues</span>와 규칙 문장 자체를 함께 봐야 한다 —
+모델이 두 후보를 다 적어 놓고 하나를 골랐다면 알아챈 것이고, 하나만 좇았다면 아닌
+쪽이다. 이 판에서 그 값이 False인 턴은
+3턴, 4턴, 8턴, 9턴, 10턴인데, 정보가 모자란 두 턴은 거기 들어 있지 않다.</p>
+</div>
+
+<h2 id="seen">6. 무엇이 보였나</h2>
 <p class="hint">아래는 전부 <b>이 한 세션, 이 한 모델</b>에서 본 것이다. 통계가 아니라
 관찰 기록이다. 각 항목 끝에 “이걸 발견이라고 부르려면 무엇이 더 필요한가”를 적었다.</p>
 
@@ -8628,8 +8763,24 @@ ACTION: stay</pre></div>
 <span class="mono">ri_forfeit</span>이 다른가”를 묻는다. 이 판에는 포기가 없어서
 비교할 짝이 아예 없다. 한 세션으로는 어느 방향도 말할 수 없다.</p>
 </div>
+</div>
 
-<h2 id="appendix">6. 부록 — 기록에 없는 것, 세는 법</h2>
+<div class="card">
+<h3>⑥ 풀 수 없는 턴에서 사고가 튀지는 않았다</h3>
+<p><a href="#effort">5장의 그림</a>이 보여 준 것이다. 답 후보가 둘뿐이라 풀 수 없는
+2턴, 6턴의 과제 콜 사고 토큰은
+626, 3,066으로, 큰 쪽부터 세면
+9번째, 7번째다. 가장 많이 생각한 세 턴은
+10턴(6,401), 9턴(5,304), 8턴(4,544)으로 전부 답이 하나로
+정해지는 평범한 턴이었다. 이 세션에서는 “못 푸는 문제를 더 오래 붙들었다”가
+<b>보이지 않는다.</b></p>
+<p class="hint">보이지 않는다는 것이 “모델이 못 알아챘다”는 뜻은 아니다. 알아채고도 더
+쓰지 않았을 수 있고, 이 판의 사고량은 턴 번호와 함께 커지는데 난이도 사다리도 턴 번호를
+따라 오르므로 둘을 가를 수도 없다. 가르려면 같은 사다리 칸을 정보가 모자란 판과 갖춰진
+판으로 나눠 여러 세션 돌려서 짝지어 비교해야 한다.</p>
+</div>
+
+<h2 id="appendix">7. 부록 — 기록에 없는 것, 세는 법</h2>
 
 <h3>A. 과제 콜의 system 프롬프트는 저장돼 있지 않다</h3>
 <p>각 턴이 저장하는 <span class="mono">system_prompt</span>는 <b>확신 콜과 결정 콜이
