@@ -1,18 +1,14 @@
-"""configs/experiment/signal_puzzle_smoke.yaml end to end (spec §13).
+"""configs/experiment/signal_puzzle_smoke.yaml end to end (spec §12).
 
-Runs the five lives/threat cells through ``ExperimentRunner`` with the
-stub provider and checks the on-disk turn records: a fresh clue set on
-every turn, the ladder's tiers, functional ``rule_match_score`` on every
-scored turn, Cell 0 issuing no decision call, and the task call carrying
-an outcome-only history block.
+Five lives/threat cells through ``ExperimentRunner`` with the stub
+provider: a fresh shape-disclosed puzzle every turn, the 10-rung ladder,
+functional ``rule_match_score`` plus ``rule_shape_match`` on every scored
+turn, Cell 0 issuing no decision call, and an outcome-only history block.
 
-The stub answers *correctly* by regenerating each turn's puzzle the same
-way the module does — ``generate_puzzle(puzzle_rng(seed, N), spec_for_turn(N))``
-— so every season plays all 30 turns and the whole ladder (tiers 1→5) is
-exercised. That the regenerated puzzle matches the one the engine served
-is itself the check that the season seed reaches the task module intact.
-A second response function answers deliberately *wrong* to drive the
-elimination path.
+The stub answers correctly by regenerating each turn's puzzle exactly as
+the module does (``generate_puzzle(puzzle_rng(seed, N), spec_for_turn(N))``)
+and echoing the hidden rule as its RULE line; a second response function
+answers wrong to drive the 3-lives elimination path.
 """
 
 from __future__ import annotations
@@ -24,18 +20,19 @@ from pathlib import Path
 
 from squid_game.models.results import SeasonResult
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
-from squid_game.tasks.signal_game.puzzle import generate_puzzle, puzzle_rng
+from squid_game.tasks.signal_game.puzzle import cached_puzzle, render_shape_block
 from squid_game.tasks.signal_game.puzzle_config import load_signal_puzzle_config
 from squid_game.tasks.signal_game.rules import ACTIONS
 
 _CONFIG = "configs/experiment/signal_puzzle_smoke.yaml"
 
-#: The ladder the config's ``total_turns: 30`` walks: five tiers, six turns each.
-_EXPECTED_TIERS = [1] * 6 + [2] * 6 + [3] * 6 + [4] * 6 + [5] * 6
+#: The ladder the config's ``total_turns: 10`` walks, one rung per turn.
+_EXPECTED_TURNS = list(range(1, 11))
 
-#: A fixed family-A hypothesis, so ``rule_parsed_family`` is pinned while the
-#: ACTION line varies per puzzle.
-_RULE_LINE = "RULE: If color is red then jump, otherwise stay."
+#: ``n_clauses`` per rung of ``puzzle_ladder`` in configs/tasks/signal_game.yaml.
+#: The clue *counts* are generator output and deliberately not pinned; the
+#: clause count is the ladder's own shape schedule and is.
+_EXPECTED_CLAUSES = [1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 
 #: ``true_baseline`` must never see life / death / elimination vocabulary
 #: (CLAUDE.md "5-Cell Lives / Threat-Ladder design"): its counter renders
@@ -46,7 +43,7 @@ _THREAT_VOCAB = re.compile(
 )
 
 _TURN_LINE = re.compile(
-    r"^Turn (\d+)\. Examples that follow this round's hidden rule:$", re.MULTILINE
+    r"^Turn (\d+)\. This round's rule has exactly this shape", re.MULTILINE
 )
 
 
@@ -67,6 +64,19 @@ def _turn_number(task_call_body: str) -> int:
     return int(match.group(1))
 
 
+def _puzzle_for(seed: int, turn: int):
+    """The turn's puzzle, through the same memoised entry point the module uses.
+
+    ``SignalGameModule`` in puzzle mode calls ``cached_puzzle(seed, turn, spec)``,
+    an ``lru_cache`` over ``generate_puzzle(puzzle_rng(seed, turn), spec)``. Hitting
+    the same cache here means the stub pays generation cost only for keys the
+    engine has not already produced, and that a mismatch would be impossible to
+    paper over — same key, same object.
+    """
+    ladder = load_signal_puzzle_config()
+    return cached_puzzle(seed, turn, ladder.spec_for_turn(turn))
+
+
 def _make_response_fn(seed: int, *, answer_correctly: bool) -> Callable[..., str]:
     """Build a deterministic stub reply that knows each turn's answer.
 
@@ -74,28 +84,19 @@ def _make_response_fn(seed: int, *, answer_correctly: bool) -> Callable[..., str
     ladder spec, so regenerating it here reproduces exactly what the engine
     served — no need to parse the clues back out of the prompt.
     """
-    ladder = load_signal_puzzle_config()
-    # ``(seed, turn)`` fully determines the puzzle, and all five cells share the
-    # seed, so one generation per turn number serves every season.
-    cache: dict[int, object] = {}
-
-    def _puzzle(turn: int):
-        if turn not in cache:
-            cache[turn] = generate_puzzle(
-                puzzle_rng(seed, turn), ladder.spec_for_turn(turn)
-            )
-        return cache[turn]
 
     def _response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
         if _is_decision_call(messages):
             return "CHOICE: CONTINUE"
         turn = _turn_number(messages[-1]["content"])
-        puzzle = _puzzle(turn)
+        puzzle = _puzzle_for(seed, turn)
         if answer_correctly:
-            action = puzzle.correct_action
-        else:
-            action = next(a for a in ACTIONS if a != puzzle.correct_action)
-        return f"{_RULE_LINE}\nACTION: {action}"
+            # Echoing the hidden rule verbatim is a round-trip through
+            # ``parse_rule_text``: a functional score below 100 would mean the
+            # generator and the parser disagree about the same decision list.
+            return f"RULE: {puzzle.rule.description}\nACTION: {puzzle.correct_action}"
+        action = next(a for a in ACTIONS if a != puzzle.correct_action)
+        return f'RULE: if color == "red": stay; else: jump\nACTION: {action}'
 
     return _response_fn
 
@@ -140,13 +141,13 @@ class TestSignalPuzzleSmoke:
     def test_config_contract(self) -> None:
         cfg = load_config_from_yaml(_CONFIG)
         assert len(cfg.seasons) == 5
-        assert cfg.lives.enabled and cfg.lives.initial == 5
+        assert cfg.lives.enabled and cfg.lives.initial == 3
         for season in cfg.seasons:
             tc = season.task_config
             assert tc.task_name == "signal_game"
             assert tc.signal_mode == "per_turn_puzzle"
             assert tc.history_mode == "outcome"
-            assert tc.total_turns == 30
+            assert tc.total_turns == 10
             assert tc.seed == 42
 
     def test_full_run(self, patch_runner_provider, tmp_path: Path) -> None:
@@ -169,23 +170,25 @@ class TestSignalPuzzleSmoke:
             assert season.eliminated is False
 
         for rows in per_season.values():
-            assert len(rows) == 30, "an always-correct season must play the full ladder"
+            assert len(rows) == 10, "an always-correct season must play the full ladder"
             md = [r["task_metadata"] for r in rows]
             # fresh clue set every turn. The clue *count* is deliberately not
-            # pinned: n_clues per tier is calibration output that
-            # scripts/dev/calibrate_signal_puzzle_ladder rewrites into
-            # configs/tasks/signal_game.yaml, so only the per-turn freshness is
+            # pinned: n_clues is generator output, driven by how many clues it
+            # takes to pin the rule down, so only the per-turn freshness is
             # this test's business.
             clue_sets = [tuple(m["clues"]) for m in md]
             assert len(set(clue_sets)) == len(clue_sets)
-            # the whole ladder, tiers 1 -> 5, six turns each
-            assert [m["puzzle_tier"] for m in md] == _EXPECTED_TIERS
-            # functional rule_match_score on every scored turn
+            # the whole ladder, one rung per turn
+            assert [m["puzzle_turn"] for m in md] == _EXPECTED_TURNS
+            # the ladder's shape schedule: clause count per rung
+            assert [m["n_clauses"] for m in md] == _EXPECTED_CLAUSES
+            # functional rule_match_score + shape match on every scored turn
             for m in md:
-                assert m["rule_match_score"] is not None
-                assert 0.0 <= m["rule_match_score"] <= 100.0
-                assert m["rule_parsed_family"] == "A"
-                assert m["n_consistent_hypotheses"] >= 1
+                assert m["rule_match_score"] == 100.0
+                assert m["rule_parse_failed"] is False
+                assert m["rule_shape_match"] is True
+                assert m["n_clues"] >= m["n_minimal_clues"] >= 2
+                assert m["rule_shape"].count(",") + 1 == m["n_clauses"]
             # every answer matched the puzzle's own answer
             assert all(m["correct"] is True for m in md)
             assert all(m["action"] == m["correct_action"] for m in md)
@@ -199,9 +202,33 @@ class TestSignalPuzzleSmoke:
         decision_bodies = [c.messages[-1]["content"] for c in stub.calls if _is_decision_call(c.messages)]
         assert decision_bodies, "allowed cells must issue decision calls"
 
+        # The task call discloses the round's *shape* (a blanked skeleton) and
+        # never the rule that fills it in.
+        task_bodies = [c.messages[-1]["content"] for c in stub.calls if not _is_decision_call(c.messages)]
+        puzzle_bodies = [
+            b for b in task_bodies if "This round's rule has exactly this shape" in b
+        ]
+        assert len(puzzle_bodies) == len(task_bodies), (
+            "every task call must carry a puzzle observation"
+        )
+        for body in puzzle_bodies:
+            puzzle = _puzzle_for(seed, _turn_number(body))
+            # The observation template indents the skeleton by four spaces.
+            # ``    if ___:`` alone would not do as the opener: a rung whose
+            # first clause is a conjunction renders ``    if ___ and ___:``
+            # (turns 6 and 8 of this seed), so pin the whole block instead.
+            skeleton = "\n".join(
+                f"    {line}" for line in render_shape_block(puzzle.shape).splitlines()
+            )
+            assert skeleton in body
+            assert body.count("    if ___") == 1
+            assert "    else:" in body
+            assert puzzle.rule.description not in body, (
+                "the task call leaked the hidden rule"
+            )
+
         # Task call carries the outcome-only history: no signal/action echo,
         # no rule hypothesis, but the round verdict lines.
-        task_bodies = [c.messages[-1]["content"] for c in stub.calls if not _is_decision_call(c.messages)]
         later = [b for b in task_bodies if "=== Previous Rounds ===" in b]
         assert later, "turn >= 2 task calls must carry the outcome block"
         for body in later:
@@ -221,11 +248,12 @@ class TestSignalPuzzleSmoke:
 
         run_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
         for rows in _turn_rows(run_dir).values():
-            assert len(rows) == 5, "five wrong answers spend the five lives"
-            assert [r["lives_after"] for r in rows] == [4, 3, 2, 1, 0]
+            assert len(rows) == 3, "three wrong answers spend the three lives"
+            assert [r["lives_after"] for r in rows] == [2, 1, 0]
+            assert rows[-1]["lives_after"] == 0
             assert all(r["task_metadata"]["correct"] is False for r in rows)
-            # still tier 1 — elimination lands inside the first band
-            assert all(r["task_metadata"]["puzzle_tier"] == 1 for r in rows)
+            # the ladder still advances a rung per turn while lives run out
+            assert [r["task_metadata"]["puzzle_turn"] for r in rows] == [1, 2, 3]
         for season in _seasons(run_dir):
             assert season.eliminated is True
             assert season.lives_at_end == 0

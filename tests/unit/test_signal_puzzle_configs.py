@@ -21,7 +21,8 @@ PUZZLE_CONFIGS = [
 @pytest.mark.parametrize("name", PUZZLE_CONFIGS)
 def test_every_season_is_puzzle_mode_with_outcome_history(name: str) -> None:
     cfg = load_config_from_yaml(str(CONFIG_DIR / name))
-    assert cfg.lives.enabled and cfg.lives.initial == 5
+    assert cfg.lives.enabled
+    assert cfg.lives.initial == 3
     assert cfg.use_split_forfeit_layer and not cfg.use_psuccess_probe
     assert cfg.forfeit_layer.reward_mode == "flat"
     for season in cfg.seasons:
@@ -29,7 +30,8 @@ def test_every_season_is_puzzle_mode_with_outcome_history(name: str) -> None:
         assert tc.task_name == "signal_game"
         assert tc.signal_mode == "per_turn_puzzle"
         assert tc.history_mode == "outcome"
-        assert tc.total_turns == 30
+        assert tc.total_turns == 10
+        assert tc.max_history_turns == 10
         assert tc.num_few_shot is None and tc.curriculum_turns == 0
         assert season.p_death_override in (None, 0.0)
 
