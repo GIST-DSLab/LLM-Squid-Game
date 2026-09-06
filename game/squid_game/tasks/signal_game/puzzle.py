@@ -538,6 +538,9 @@ _ATOM_PARITY = re.compile(r"^number\s*%\s*2\s*==\s*([01])$")
 _CLAUSE_SPLIT = re.compile(r"(?:^|;|\n)\s*(?=(?:if|elif|else)\b)")
 _CLAUSE_RE = re.compile(rf"^(if|elif)\s+(.+?)\s*:\s*(?:action\s*=\s*)?({_ACTION_RE})\b")
 _ELSE_RE = re.compile(rf"^else\s*:\s*(?:action\s*=\s*)?({_ACTION_RE})\b")
+#: A second action token in the text left over after a clause match makes the
+#: clause ambiguous (``go_left is wrong, go_right``), so the parse is refused.
+_TRAILING_ACTION_RE = re.compile(rf"\b(?:{_ACTION_RE})\b")
 
 
 def _normalise_rule_text(text: str) -> str:
@@ -549,12 +552,15 @@ def _normalise_rule_text(text: str) -> str:
     s = re.sub(r"\botherwise\b", "else:", s)
     s = re.sub(r"\belse if\b", "elif", s)
     s = re.sub(r"\bthen\b", ":", s)
-    s = re.sub(r"\b(color|shape|number)\s+is\s+(?=odd\b|even\b)", r"\1 is ", s)
-    s = re.sub(r"\bnumber is odd\b", "number % 2 == 1", s)
-    s = re.sub(r"\bnumber is even\b", "number % 2 == 0", s)
-    s = re.sub(r"\b(color|shape|number)\s+is\s+", r"\1 == ", s)
+    s = re.sub(r"\bnumber\s+is\s+odd\b", "number % 2 == 1", s)
+    s = re.sub(r"\bnumber\s+is\s+even\b", "number % 2 == 0", s)
+    # Comparators before the generic ``is`` rewrite, so that "number is at least 3"
+    # becomes "number is >= 3" and not "number == at least 3".
     s = re.sub(r"\bat least\s+([1-4])", r">= \1", s)
     s = re.sub(r"\bat most\s+([1-4])", r"<= \1", s)
+    # ``is`` in front of a comparator is filler ("number is >= 3"), not an equality.
+    s = re.sub(r"\b(color|shape|number)\s+is\s+(?=[<>=%])", r"\1 ", s)
+    s = re.sub(r"\b(color|shape|number)\s+is\s+", r"\1 == ", s)
     s = re.sub(r"\bnumber\s*(>=|<=)\s*([1-4])", r"number \1 \2", s)
     s = re.sub(r"\belse\s*:\s*:", "else:", s)
     return s
@@ -588,7 +594,7 @@ def _parse_condition(text: str) -> Condition | None:
     atoms = [_parse_atom(p) for p in parts]
     if any(a is None for a in atoms):
         return None
-    return CONJUNCTION_BY_ATOMS.get(frozenset(a.label for a in atoms if a is not None))
+    return CONJUNCTION_BY_ATOMS.get(frozenset(a.label for a in atoms))
 
 
 def parse_rule_text(text: str) -> PuzzleRule | None:
@@ -599,8 +605,12 @@ def parse_rule_text(text: str) -> PuzzleRule | None:
     quotes optional, case-insensitive, and the v1 prose spellings
     (``color is red then stay; otherwise jump``). Returns ``None`` when
     there is no ``if`` clause, no ``else``, a value or action off the
-    grid, or a conjunction on one attribute. The shape is NOT checked
-    against the round's shape; callers compare ``.shape`` themselves.
+    grid, or a conjunction on one attribute. Harmless trailing prose
+    after an action is tolerated (``stay  (my best guess)``), but a
+    remainder containing a *second* action token is ambiguous
+    (``go_left is wrong, go_right``) and is refused too. The shape is
+    NOT checked against the round's shape; callers compare ``.shape``
+    themselves.
     """
     s = _normalise_rule_text(text)
     if not s:
@@ -611,10 +621,14 @@ def parse_rule_text(text: str) -> PuzzleRule | None:
     for chunk in chunks:
         m = _ELSE_RE.match(chunk)
         if m:
+            if _TRAILING_ACTION_RE.search(chunk[m.end():]):
+                return None
             else_action = m.group(1)
             break
         m = _CLAUSE_RE.match(chunk)
         if not m:
+            return None
+        if _TRAILING_ACTION_RE.search(chunk[m.end():]):
             return None
         if (m.group(1) == "if") != (not clauses):
             return None

@@ -83,6 +83,74 @@ class TestExactForms:
         assert parsed is not None and parsed.shape == (1,)
 
 
+class TestProseAndSpacingVariants:
+    """Spec §8 tolerance: v1 prose comparators, parity words, British spelling, spacing."""
+
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            (
+                "if number is at least 3: jump; else: stay",
+                PuzzleRule(clauses=((_c("number >= 3"), "jump"),), else_action="stay"),
+            ),
+            (
+                "if number is at most 2: jump; else: stay",
+                PuzzleRule(clauses=((_c("number <= 2"), "jump"),), else_action="stay"),
+            ),
+            (
+                "if number is odd: jump; else: stay",
+                PuzzleRule(clauses=((_c("number % 2 == 1"), "jump"),), else_action="stay"),
+            ),
+            (
+                "if number is even: jump; else: stay",
+                PuzzleRule(clauses=((_c("number % 2 == 0"), "jump"),), else_action="stay"),
+            ),
+            (
+                'if colour == "red": jump; else: stay',
+                PuzzleRule(clauses=((_c('color == "red"'), "jump"),), else_action="stay"),
+            ),
+            (
+                "if number>=3: jump; else: stay",
+                PuzzleRule(clauses=((_c("number >= 3"), "jump"),), else_action="stay"),
+            ),
+        ],
+    )
+    def test_variant_matches_intended_rule(self, text: str, expected: PuzzleRule) -> None:
+        parsed = parse_rule_text(text)
+        assert parsed is not None, text
+        assert parsed.vector == expected.vector, text
+        assert parsed.shape == expected.shape, text
+
+    def test_at_least_at_most_evaluate(self) -> None:
+        at_least = parse_rule_text("if number is at least 3: jump; else: stay")
+        assert at_least is not None
+        assert at_least.evaluate(_sig("red", "star", 3)) == "jump"
+        assert at_least.evaluate(_sig("red", "star", 2)) == "stay"
+        at_most = parse_rule_text("if number is at most 2: jump; else: stay")
+        assert at_most is not None
+        assert at_most.evaluate(_sig("red", "star", 2)) == "jump"
+        assert at_most.evaluate(_sig("red", "star", 3)) == "stay"
+
+
+class TestAmbiguousTrailingText:
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "if color == red: go_left is wrong, go_right; else: stay",
+            'if color == "red": stay; else: jump  -- or maybe go_left',
+        ],
+    )
+    def test_second_action_token_in_remainder_is_refused(self, text: str) -> None:
+        assert parse_rule_text(text) is None
+
+    def test_harmless_trailing_prose_still_parses(self) -> None:
+        parsed = parse_rule_text('if color == "red": stay  (my best guess); else: jump')
+        assert parsed is not None
+        assert parsed.shape == (1,)
+        assert parsed.evaluate(_sig("red", "star", 1)) == "stay"
+        assert parsed.evaluate(_sig("blue", "star", 1)) == "jump"
+
+
 class TestFailures:
     @pytest.mark.parametrize(
         "text",
