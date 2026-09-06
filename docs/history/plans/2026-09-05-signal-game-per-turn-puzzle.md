@@ -2572,3 +2572,61 @@ Fill in the two placeholders with the real values before committing.
 git add CLAUDE.md docs/paper/sections/03_benchmark.tex docs/history/plans/2026-09-05-signal-game-per-turn-puzzle.md
 git commit -m "docs: per-turn puzzle Signal Game mode — CLAUDE.md, paper §3, plan notes"
 ```
+
+## Implementation notes
+
+- **Calibrated bands (Task 5, `--seeds 200 --turns-per-tier 6`, 1 m 35 s).** Printed table:
+
+  ```
+  tier     n    min    p10    p50    p90    max
+     1  1200      1      5      9     17     38
+     2  1200      1      1      9     17     46
+     3  1200      1      2      9     21     63
+     4  1200      1      4     21     66    143
+     5  1200      3     35     67    113    144
+  monotone: yes
+  ```
+
+  Committed bands `[5,17] [1,17] [2,21] [4,66] [35,113]` (p10/p90 per tier); measured
+  relaxation rate per tier 0 / 0 / 0 / 0 / 0.92 %.
+
+- **Monotone only after re-tuning `n_clues`.** The clue counts moved twice, in two steps:
+  the spec §6 table `[3, 2, 4, 4, 3]` → Task 4 (commit `1277387`) raised tier 2 to 3 under
+  ruling 1 below, giving `[3, 3, 4, 4, 3]` → calibration (Task 5) found that ladder is still
+  not monotone in `|H|`, and that no monotone family assignment exists for `nc ≤ 10` at all,
+  so the shipped ladder is `[12, 10, 8, 4, 3]`. Two controller rulings drove those steps:
+
+  1. **No tier may use `n_clues < 3`** — this is what took the spec's tier 2 from 2 to 3 in
+     Task 4. Two clues can never yield a unique query answer over the four-family union: with
+     clues `(s1, X)` and `(s2, Y)`, the family-A rules force the query to match `s1` on every
+     differing attribute, and then the family-C rule "if `a` is `s2[a]` then `Y`; else if `c`
+     is `s1[c]` then `X`; otherwise `Z`" is consistent with both clues and answers `Z`.
+     Measured 0/3000 unique-answer draws at `n_clues = 2`.
+  2. **`|H|` is driven by clue count, not by rule family** — this is what took
+     `[3, 3, 4, 4, 3]` to `[12, 10, 8, 4, 3]` in Task 5. At a fixed clue count the family
+     order runs the *reverse* of the intended tier order (at `nc = 4`: A 52 > A,D 46 > B 32 >
+     ABCD 27 > C 21), and an exhaustive search over `nc ≤ 10` found no monotone family
+     assignment. The minimum-clue monotone ladder `[12, 10, 8, 4, 3]` (p50 9, 9, 9, 21, 67)
+     was therefore adopted; family placement is unchanged from the spec. The strictly
+     increasing alternative `[16, 12, 8, 4, 3]` (p50 5, 7, 9, 21, 67) is available if the
+     pilot wants tiers 1–3 separated on the index. The pilot (spec §14) re-tunes `n_clues`.
+
+- **Other shipped deviations.** `history_mode: outcome` carries a `lives_label` through to the
+  task call so `true_baseline` renders the counter as "attempts" (vocabulary contract).
+  `rule_parse_failed` is `None` — not `True` — when the response emitted no RULE line at all.
+
+- **Commits** (branch `feat/signal-game-per-turn-puzzle`, in order):
+  `7ee9182` Task 1 hypothesis space (`puzzle.py`) · `7066d13` Task 2 generator ·
+  `6ef3ae3` Task 3 parser (+ `c4e89d6` `parse_rule_text` returns `None` for undefined number
+  predicates) · `1277387` Task 4 `puzzle_ladder` loader · `1d7834e` Task 6 templates
+  (+ `caef89b` test tightening) · `8bf341a` Task 7 config surface (`signal_mode`,
+  `history_mode: outcome`, `lives_label` passthrough) · `b9c0174` Task 8 module branch
+  (+ `30103b6` `rule_parse_failed`, single parse) · `f28a631` Task 10 long-format columns ·
+  `744b5a0` Task 9 smoke config + E2E (+ `553c42d` stub plays all 30 turns) ·
+  `a01dec3` Task 11 pilot + n30 configs · `1d62feb` Task 5 calibration script + calibrated
+  bands · Task 12 docs commit (this file, `CLAUDE.md`, `docs/paper/sections/03_benchmark.tex`).
+
+- **Pilot (spec §14) is NOT part of this plan's gate**; it runs after merge:
+  `uv run squid-game --config configs/experiment/signal_puzzle_pilot_gptoss_n10.yaml`, then
+  `uv run python scripts/analysis/analyze_phase3.py outputs/signal_puzzle_pilot_gptoss/<run>/ --model gpt-oss-120b`
+  and read accuracy / `ri_task` by `puzzle_tier` from `long_format.csv`.

@@ -266,8 +266,10 @@ class TestToLongDataframe:
         # → 24 (L Fix 3, +rule_match_score) → 26 (Task 11, +band
         # +psuccess_self for the benchmark Y-axis manipulation checks)
         # → 31 (2026-09-03, +5 lives/threat-ladder columns, which
-        # replaced Task 13's five Unit 18 columns one-for-one).
-        assert len(LONG_FORMAT_COLUMNS) == 31
+        # replaced Task 13's five Unit 18 columns one-for-one)
+        # → 36 (2026-09-06, v2 puzzle: puzzle_turn, rule_shape, n_clues,
+        # n_minimal_clues, rule_shape_match replace the four v1 columns).
+        assert len(LONG_FORMAT_COLUMNS) == 36
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""
@@ -314,6 +316,50 @@ class TestToLongDataframe:
         df = to_long_dataframe([season])
         assert df["band"].isna().all()
         assert df["psuccess_self"].isna().all()
+
+    # ------------------------------------------------------------------
+    # 2026-09-05 — Signal Game per-turn puzzle mode (spec §10, §15)
+    # ------------------------------------------------------------------
+
+    def test_schema_has_puzzle_columns_at_the_tail(self) -> None:
+        assert LONG_FORMAT_COLUMNS[-5:] == (
+            "puzzle_turn",
+            "rule_shape",
+            "n_clues",
+            "n_minimal_clues",
+            "rule_shape_match",
+        )
+
+    def test_puzzle_columns_nan_for_sequential_traces(self) -> None:
+        season = make_v3_season(n_turns=2)
+        df = to_long_dataframe([season])
+        for col in (
+            "puzzle_turn",
+            "rule_shape",
+            "n_clues",
+            "n_minimal_clues",
+            "rule_shape_match",
+        ):
+            assert df[col].isna().all(), col
+
+    def test_puzzle_columns_read_task_metadata(self) -> None:
+        season = make_v3_season(n_turns=1)
+        turn = season.turns[0]
+        turn.task_metadata.update(
+            {
+                "puzzle_turn": 3,
+                "rule_shape": "1,2",
+                "n_clues": 8,
+                "n_minimal_clues": 7,
+                "rule_shape_match": True,
+            }
+        )
+        df = to_long_dataframe([season])
+        assert df.loc[0, "puzzle_turn"] == 3
+        assert df.loc[0, "rule_shape"] == "1,2"
+        assert df.loc[0, "n_clues"] == 8
+        assert df.loc[0, "n_minimal_clues"] == 7
+        assert bool(df.loc[0, "rule_shape_match"]) is True
 
     def test_rule_match_score_nan_for_pre_phase_l_traces(self) -> None:
         """Pre-Phase-L traces had no rule_match_score key → NaN column."""

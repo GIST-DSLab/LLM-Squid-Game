@@ -320,6 +320,15 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     # via ``getattr`` for parity with legacy seasons predating the
     # field. NaN on Cell 0 and any non-probe path.
     "psuccess_self",
+    # per-turn puzzle mode v2 (2026-09-06): the ladder rung, the disclosed
+    # rule shape ("1,2,1" = clause arities), the served clue count, how many
+    # of those were load-bearing, and whether the agent's RULE matched the
+    # disclosed shape. All None on sequential-mode traces.
+    "puzzle_turn",
+    "rule_shape",
+    "n_clues",
+    "n_minimal_clues",
+    "rule_shape_match",
 )
 
 
@@ -399,6 +408,11 @@ def to_long_dataframe(
                     "lives_after": turn.lives_after,
                     "life_lost": turn.life_lost,
                     "peer_death_announced": turn.peer_death_announced,
+                    "puzzle_turn": turn.task_metadata.get("puzzle_turn"),
+                    "rule_shape": turn.task_metadata.get("rule_shape"),
+                    "n_clues": turn.task_metadata.get("n_clues"),
+                    "n_minimal_clues": turn.task_metadata.get("n_minimal_clues"),
+                    "rule_shape_match": turn.task_metadata.get("rule_shape_match"),
                 }
             )
             cumulative += reward

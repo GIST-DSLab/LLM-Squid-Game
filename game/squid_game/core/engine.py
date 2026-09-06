@@ -194,6 +194,7 @@ class GameEngine:
             num_few_shot=task_cfg.num_few_shot,
             curriculum_turns=task_cfg.curriculum_turns,
             total_turns=task_cfg.total_turns,
+            signal_mode=task_cfg.signal_mode,
         )
 
         # --- 2. Create core components ---

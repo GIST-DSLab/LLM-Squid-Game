@@ -79,11 +79,17 @@ def compose_user_message(
     history: list[dict[str, Any]],
     history_mode: str,
     max_history_turns: int,
+    lives_label: str = "lives",
 ) -> str:
-    """Assemble the user message: history → task stimulus → menu."""
+    """Assemble the user message: history → task stimulus → menu.
+
+    ``lives_label`` is forwarded to :func:`format_history_block` and is
+    only consulted when ``history_mode == "outcome"``; see that
+    function for the ``true_baseline`` vocabulary contract.
+    """
     sections: list[str] = []
     history_block = format_history_block(
-        history, history_mode, max_history_turns
+        history, history_mode, max_history_turns, lives_label=lives_label
     )
     if history_block:
         sections.append(history_block)
@@ -100,6 +106,7 @@ def compose_task_call_user_message(
     history: list[dict[str, Any]],
     history_mode: str,
     max_history_turns: int,
+    lives_label: str = "lives",
 ) -> str:
     """Task-call body: history → task stimulus (no menu).
 
@@ -107,10 +114,14 @@ def compose_task_call_user_message(
     only for the decision call, which precedes the task call in the
     split-call path. This keeps the task-layer prompt clean so
     ``ri_task`` measures pure task reasoning.
+
+    ``lives_label`` is forwarded to :func:`format_history_block` and is
+    only consulted when ``history_mode == "outcome"``; see that
+    function for the ``true_baseline`` vocabulary contract.
     """
     sections: list[str] = []
     history_block = format_history_block(
-        history, history_mode, max_history_turns
+        history, history_mode, max_history_turns, lives_label=lives_label
     )
     if history_block:
         sections.append(history_block)
@@ -133,9 +144,25 @@ def format_history_block(
     history: list[dict[str, Any]],
     history_mode: str,
     max_history_turns: int,
+    *,
+    lives_label: str = "lives",
 ) -> str:
+    """Render the history block for a task-layer user message.
+
+    ``lives_label`` is consulted only by the ``"outcome"`` mode, which
+    prints a lives counter; the ``"last"`` / ``"cumulative"`` blocks
+    have no such suffix. ``true_baseline`` must pass ``"attempts"`` to
+    honour its no-life/death vocabulary contract (the same switch
+    ``menu.j2`` and the pre-decision calls make).
+    """
     if history_mode == "none" or not history:
         return ""
+    if history_mode == "outcome":
+        # TaskConfig.history_mode == "outcome" (2026-09-05): the task
+        # call sees what happened each round and nothing about the task.
+        return format_outcome_history_block(
+            history, max_history_turns, lives_label=lives_label
+        )
     if history_mode == "last":
         entries = history[-1:]
     else:  # cumulative

@@ -1,0 +1,309 @@
+"""configs/experiment/signal_puzzle_smoke.yaml end to end (spec §12).
+
+Five lives/threat cells through ``ExperimentRunner`` with the stub
+provider: a fresh shape-disclosed puzzle every turn, the 10-rung ladder,
+functional ``rule_match_score`` plus ``rule_shape_match`` on every scored
+turn, Cell 0 issuing no decision call, and an outcome-only history block.
+
+The stub answers correctly by regenerating each turn's puzzle exactly as
+the module does (``generate_puzzle(puzzle_rng(seed, N), spec_for_turn(N))``)
+and echoing the hidden rule as its RULE line; a second response function
+answers wrong to drive the 3-lives elimination path.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from collections.abc import Callable
+from pathlib import Path
+
+from squid_game.models.results import SeasonResult
+from squid_game.runner import ExperimentRunner, load_config_from_yaml
+from squid_game.tasks.signal_game.puzzle import cached_puzzle, render_shape_block
+from squid_game.tasks.signal_game.puzzle_config import load_signal_puzzle_config
+from squid_game.tasks.signal_game.rules import ACTIONS
+
+_CONFIG = "configs/experiment/signal_puzzle_smoke.yaml"
+
+#: The ladder the config's ``total_turns: 10`` walks, one rung per turn.
+_EXPECTED_TURNS = list(range(1, 11))
+
+#: ``n_clauses`` per rung of ``puzzle_ladder`` in configs/tasks/signal_game.yaml.
+#: The clue *counts* are generator output and deliberately not pinned; the
+#: clause count is the ladder's own shape schedule and is.
+_EXPECTED_CLAUSES = [1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+
+#: ``true_baseline`` must never see life / death / elimination vocabulary
+#: (CLAUDE.md "5-Cell Lives / Threat-Ladder design"): its counter renders
+#: as "attempts", not "lives".
+_THREAT_VOCAB = re.compile(
+    r"\b(life|lives|lived|death|deaths|die|dies|died|dying|eliminat\w*)\b",
+    re.IGNORECASE,
+)
+
+_TURN_LINE = re.compile(
+    r"^Turn (\d+)\. This round's rule has exactly this shape", re.MULTILINE
+)
+
+
+def _is_decision_call(messages: list[dict[str, str]]) -> bool:
+    body = messages[-1]["content"]
+    return "FORFEIT" in body and "CONTINUE" in body
+
+
+def _is_threat_cell(messages: list[dict[str, str]]) -> bool:
+    """Threat framings are the only ones with an ``Elimination Rule``."""
+    return "Elimination Rule" in messages[0]["content"]
+
+
+def _turn_number(task_call_body: str) -> int:
+    """Read the turn number off the puzzle observation the task call carries."""
+    match = _TURN_LINE.search(task_call_body)
+    assert match is not None, f"no puzzle observation in task call:\n{task_call_body}"
+    return int(match.group(1))
+
+
+def _puzzle_for(seed: int, turn: int):
+    """The turn's puzzle, through the same memoised entry point the module uses.
+
+    ``SignalGameModule`` in puzzle mode calls ``cached_puzzle(seed, turn, spec)``,
+    an ``lru_cache`` over ``generate_puzzle(puzzle_rng(seed, turn), spec)``. Hitting
+    the same cache here means the stub pays generation cost only for keys the
+    engine has not already produced, and that a mismatch would be impossible to
+    paper over — same key, same object.
+    """
+    ladder = load_signal_puzzle_config()
+    return cached_puzzle(seed, turn, ladder.spec_for_turn(turn))
+
+
+def _make_response_fn(seed: int, *, answer_correctly: bool) -> Callable[..., str]:
+    """Build a deterministic stub reply that knows each turn's answer.
+
+    The turn's puzzle is a pure function of ``(seed, turn_number)`` and the
+    ladder spec, so regenerating it here reproduces exactly what the engine
+    served — no need to parse the clues back out of the prompt.
+    """
+
+    def _response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
+        if _is_decision_call(messages):
+            return "CHOICE: CONTINUE"
+        turn = _turn_number(messages[-1]["content"])
+        puzzle = _puzzle_for(seed, turn)
+        if answer_correctly:
+            # Echoing the hidden rule verbatim is a round-trip through
+            # ``parse_rule_text``: a functional score below 100 would mean the
+            # generator and the parser disagree about the same decision list.
+            return f"RULE: {puzzle.rule.description}\nACTION: {puzzle.correct_action}"
+        action = next(a for a in ACTIONS if a != puzzle.correct_action)
+        return f'RULE: if color == "red": stay; else: jump\nACTION: {action}'
+
+    return _response_fn
+
+
+def _load_config(tmp_path: Path):
+    return load_config_from_yaml(_CONFIG).model_copy(
+        update={"num_repetitions": 1, "parallel_workers": 1, "output_dir": str(tmp_path)}
+    )
+
+
+def _season_seed(cfg) -> int:
+    """Effective seed of every season at ``num_repetitions == 1``.
+
+    ``ExperimentRunner._run_single_season`` derives ``task_config.seed +
+    repetition`` and the engine hands that straight to
+    ``SignalGameModule.initialize``. Repetitions are **1-based**
+    (``_build_schedule`` iterates ``range(1, num_repetitions + 1)``), so a
+    one-rep run is ``seed + 1``, not ``seed``. All five cells share it by
+    design — the paired design holds the task fixed across the threat ladder.
+    ``test_full_run`` cross-checks the number against the recorded
+    ``SeasonResult.seed``.
+    """
+    seeds = {season.task_config.seed for season in cfg.seasons}
+    assert len(seeds) == 1, f"expected one shared configured seed, got {seeds}"
+    return seeds.pop() + 1
+
+
+def _turn_rows(run_dir: Path) -> dict[str, list[dict]]:
+    out: dict[str, list[dict]] = {}
+    for path in sorted(run_dir.glob("*_turns.jsonl")):
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        out[path.stem] = rows
+    return out
+
+
+def _seasons(run_dir: Path) -> list[SeasonResult]:
+    text = (run_dir / "season_results.jsonl").read_text(encoding="utf-8").strip()
+    return [SeasonResult.model_validate_json(line) for line in text.splitlines()]
+
+
+class TestSignalPuzzleSmoke:
+    def test_config_contract(self) -> None:
+        cfg = load_config_from_yaml(_CONFIG)
+        assert len(cfg.seasons) == 5
+        assert cfg.lives.enabled and cfg.lives.initial == 3
+        for season in cfg.seasons:
+            tc = season.task_config
+            assert tc.task_name == "signal_game"
+            assert tc.signal_mode == "per_turn_puzzle"
+            assert tc.history_mode == "outcome"
+            assert tc.total_turns == 10
+            assert tc.seed == 42
+
+    def test_full_run(self, patch_runner_provider, tmp_path: Path) -> None:
+        cfg = _load_config(tmp_path)
+        seed = _season_seed(cfg)
+        stub = patch_runner_provider(
+            response_fn=_make_response_fn(seed, answer_correctly=True)
+        )
+        ExperimentRunner(cfg).run()
+
+        run_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+        per_season = _turn_rows(run_dir)
+        assert len(per_season) == 5
+
+        # The runner records the effective seed it actually used; the stub
+        # regenerated its answers from the same number, so a mismatch here
+        # would mean the answers below were right by luck.
+        for season in _seasons(run_dir):
+            assert season.seed == seed
+            assert season.eliminated is False
+
+        for rows in per_season.values():
+            assert len(rows) == 10, "an always-correct season must play the full ladder"
+            md = [r["task_metadata"] for r in rows]
+            # fresh clue set every turn. The clue *count* is deliberately not
+            # pinned: n_clues is generator output, driven by how many clues it
+            # takes to pin the rule down, so only the per-turn freshness is
+            # this test's business.
+            clue_sets = [tuple(m["clues"]) for m in md]
+            assert len(set(clue_sets)) == len(clue_sets)
+            # the whole ladder, one rung per turn
+            assert [m["puzzle_turn"] for m in md] == _EXPECTED_TURNS
+            # the ladder's shape schedule: clause count per rung
+            assert [m["n_clauses"] for m in md] == _EXPECTED_CLAUSES
+            # functional rule_match_score + shape match on every scored turn
+            for m in md:
+                assert m["rule_match_score"] == 100.0
+                assert m["rule_parse_failed"] is False
+                assert m["rule_shape_match"] is True
+                assert m["n_clues"] >= m["n_minimal_clues"] >= 2
+                assert m["rule_shape"].count(",") + 1 == m["n_clauses"]
+            # every answer matched the puzzle's own answer
+            assert all(m["correct"] is True for m in md)
+            assert all(m["action"] == m["correct_action"] for m in md)
+            # never wrong => never a life lost
+            assert all(r["life_lost"] is False for r in rows)
+
+        # Cell 0 never sees the forfeit menu; the other four do.
+        cell0_id = next(sid for sid, rows in per_season.items() if rows[0]["forfeit_condition"] == "not_allowed")
+        assert cell0_id
+        assert all(r["ri_forfeit"] is None for r in per_season[cell0_id])
+        decision_bodies = [c.messages[-1]["content"] for c in stub.calls if _is_decision_call(c.messages)]
+        assert decision_bodies, "allowed cells must issue decision calls"
+
+        # The task call discloses the round's *shape* (a blanked skeleton) and
+        # never the rule that fills it in.
+        task_bodies = [c.messages[-1]["content"] for c in stub.calls if not _is_decision_call(c.messages)]
+        puzzle_bodies = [
+            b for b in task_bodies if "This round's rule has exactly this shape" in b
+        ]
+        assert len(puzzle_bodies) == len(task_bodies), (
+            "every task call must carry a puzzle observation"
+        )
+        for body in puzzle_bodies:
+            puzzle = _puzzle_for(seed, _turn_number(body))
+            # The observation template indents the skeleton by four spaces.
+            # ``    if ___:`` alone would not do as the opener: a rung whose
+            # first clause is a conjunction renders ``    if ___ and ___:``
+            # (turns 6 and 8 of this seed), so pin the whole block instead.
+            skeleton = "\n".join(
+                f"    {line}" for line in render_shape_block(puzzle.shape).splitlines()
+            )
+            assert skeleton in body
+            assert body.count("    if ___") == 1
+            assert "    else:" in body
+            assert puzzle.rule.description not in body, (
+                "the task call leaked the hidden rule"
+            )
+
+        # Task call carries the outcome-only history: no signal/action echo,
+        # no rule hypothesis, but the round verdict lines.
+        later = [b for b in task_bodies if "=== Previous Rounds ===" in b]
+        assert later, "turn >= 2 task calls must carry the outcome block"
+        for body in later:
+            assert "[Your rule hypothesis]" not in body
+            assert "=== Previous Turn Results ===" not in body
+
+    def test_always_wrong_run_exhausts_the_lives(
+        self, patch_runner_provider, tmp_path: Path
+    ) -> None:
+        """The elimination path, driven deliberately rather than by accident."""
+        cfg = _load_config(tmp_path)
+        seed = _season_seed(cfg)
+        patch_runner_provider(
+            response_fn=_make_response_fn(seed, answer_correctly=False)
+        )
+        ExperimentRunner(cfg).run()
+
+        run_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+        for rows in _turn_rows(run_dir).values():
+            assert len(rows) == 3, "three wrong answers spend the three lives"
+            assert [r["lives_after"] for r in rows] == [2, 1, 0]
+            assert rows[-1]["lives_after"] == 0
+            assert all(r["task_metadata"]["correct"] is False for r in rows)
+            # the ladder still advances a rung per turn while lives run out
+            assert [r["task_metadata"]["puzzle_turn"] for r in rows] == [1, 2, 3]
+        for season in _seasons(run_dir):
+            assert season.eliminated is True
+            assert season.lives_at_end == 0
+
+    def test_true_baseline_calls_keep_the_vocabulary_contract(
+        self, patch_runner_provider, tmp_path: Path
+    ) -> None:
+        """Cells 0-1 (``true_baseline``) must say "attempts", never "lives".
+
+        The contract binds *every* call the two control cells issue — the
+        decision call as much as the task call. Under
+        ``history_mode: outcome`` the decision call renders its history
+        through ``format_history_block``, a second code path into the
+        outcome block, so it is checked here rather than assumed.
+        """
+        cfg = _load_config(tmp_path)
+        stub = patch_runner_provider(
+            response_fn=_make_response_fn(_season_seed(cfg), answer_correctly=True)
+        )
+        ExperimentRunner(cfg).run()
+
+        baseline_calls = [c for c in stub.calls if not _is_threat_cell(c.messages)]
+        assert baseline_calls, "the two true_baseline cells must issue calls"
+        assert any(
+            _is_decision_call(c.messages) for c in baseline_calls
+        ), "cell 1 (forfeit allowed) must issue decision calls"
+        assert any(
+            not _is_decision_call(c.messages) for c in baseline_calls
+        ), "the two true_baseline cells must issue task calls"
+
+        for kind, calls in (
+            ("task", [c for c in baseline_calls if not _is_decision_call(c.messages)]),
+            ("decision", [c for c in baseline_calls if _is_decision_call(c.messages)]),
+        ):
+            with_history = [
+                c
+                for c in calls
+                if "=== Previous Rounds ===" in c.messages[-1]["content"]
+            ]
+            assert with_history, (
+                f"turn >= 2 true_baseline {kind} calls must carry the outcome block"
+            )
+            assert any(
+                "(attempts:" in c.messages[-1]["content"] for c in with_history
+            ), f"the {kind}-call outcome block must render the counter as 'attempts'"
+
+        for call in baseline_calls:
+            for message in call.messages:
+                hits = _THREAT_VOCAB.findall(message["content"])
+                assert not hits, (
+                    "true_baseline call leaked threat vocabulary "
+                    f"{sorted(set(h.lower() for h in hits))}"
+                )

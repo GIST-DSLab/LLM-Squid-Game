@@ -21,3 +21,25 @@ difficulties:
 
 default_difficulty: "medium"
 total_turns: 75
+
+# --- per_turn_puzzle mode, v2 (spec docs/history/specs/2026-09-06-signal-puzzle-shaped-rules-design.md)
+# Read at runtime by tasks/signal_game/puzzle_config.py when
+# task_config.signal_mode == per_turn_puzzle. One entry per turn; the rule
+# shape (clauses / conjunctions) is disclosed to the agent every turn,
+# the conditions and actions are hidden. predicates: whether the generator
+# may use number range / parity tests (the agent's grammar always includes
+# them). overlap_query: the query signal satisfies two or more clause
+# conditions, so clause priority matters. extra_clues: redundant clues
+# added on top of the minimal load-bearing set (0 = every clue is needed).
+# Difficulty tuning is editing this list; there is no calibration step.
+puzzle_ladder:
+  - {turn: 1,  clauses: 1, conjunctions: 0, predicates: false, overlap_query: false, extra_clues: 2}
+  - {turn: 2,  clauses: 1, conjunctions: 0, predicates: true,  overlap_query: false, extra_clues: 1}
+  - {turn: 3,  clauses: 2, conjunctions: 0, predicates: false, overlap_query: false, extra_clues: 1}
+  - {turn: 4,  clauses: 2, conjunctions: 0, predicates: true,  overlap_query: true,  extra_clues: 0}
+  - {turn: 5,  clauses: 3, conjunctions: 0, predicates: true,  overlap_query: true,  extra_clues: 0}
+  - {turn: 6,  clauses: 3, conjunctions: 1, predicates: true,  overlap_query: true,  extra_clues: 0}
+  - {turn: 7,  clauses: 4, conjunctions: 1, predicates: true,  overlap_query: true,  extra_clues: 0}
+  - {turn: 8,  clauses: 4, conjunctions: 2, predicates: true,  overlap_query: true,  extra_clues: 0}
+  - {turn: 9,  clauses: 5, conjunctions: 2, predicates: true,  overlap_query: true,  extra_clues: 0}
+  - {turn: 10, clauses: 6, conjunctions: 3, predicates: true,  overlap_query: true,  extra_clues: 0}

@@ -255,6 +255,7 @@ def _manager(
     split_context_level: str = "medium",
     task_rules_before_decision: bool = True,
     forfeit_condition: ForfeitCondition = ForfeitCondition.ALLOWED,
+    history_mode: str = "cumulative",
 ) -> UnifiedTurnManager:
     return UnifiedTurnManager(
         task=FakeSignalTask(),
@@ -279,6 +280,7 @@ def _manager(
         constant_p_death=0.0,
         lives_enabled=True,
         confidence_call_enabled=True,
+        history_mode=history_mode,
     )
 
 
@@ -434,3 +436,28 @@ class TestOutcomeHistoryLivesLabel:
         )
         assert rendered.endswith("(attempts: 4/5)")
         assert "lives" not in rendered
+
+
+class TestDecisionCallHistoryModeOutcomeLabel:
+    """``history_mode="outcome"`` with the default ``split_context_level``.
+
+    The decision call then renders its history through
+    :func:`format_history_block`, which delegates to the outcome block.
+    That delegation must still carry the ``true_baseline`` vocabulary
+    switch: the counter reads "attempts", never "lives".
+    """
+
+    def test_decision_call_outcome_block_says_attempts(self) -> None:
+        a = _agent()
+        _run_two_turns(_manager(a, history_mode="outcome"))
+        _, second = _by_kind(a, "decision")
+        assert "=== Previous Rounds ===" in second[1]
+        assert "(attempts: 4/5)" in second[1]
+        assert "(lives:" not in second[1]
+
+    def test_confidence_call_outcome_block_says_attempts(self) -> None:
+        a = _agent()
+        _run_two_turns(_manager(a, history_mode="outcome"))
+        _, second = _by_kind(a, "confidence")
+        assert "(attempts: 4/5)" in second[1]
+        assert "(lives:" not in second[1]

@@ -209,6 +209,30 @@ Config: `configs/experiment/survival_drive_omni_gptoss_grid_n10.yaml` (12 cells,
 analysis: `scripts/analysis/sdi_grid_indicators.py` (every runbook Part-2 table over any framing
 set) and the grid-aware `compare_sdi_indicators.py`. Plan: `docs/history/plans/2026-09-05-threat-prompt-grid.md`.
 
+### Per-turn puzzle mode (2026-09-06, `signal_mode: per_turn_puzzle`)
+
+`signal_mode: per_turn_puzzle` (spec `docs/history/specs/2026-09-06-signal-puzzle-shaped-rules-design.md`,
+v2; v1 of 2026-09-05 is superseded and was never run) makes every turn an independent induction
+puzzle. The hidden rule is a Python-style decision list (`if <cond>: <act>; elif …; else: <act>`,
+first matching clause wins) over 20 atomic conditions (`color == "red"`, `number >= 3`,
+`number % 2 == 0`, …) and 112 two-attribute `and` conjunctions. Each turn the agent is shown the
+rule's **shape** with blanks (clause count, which clauses are conjunctions) and a clue list
+(`signal → action`) built so that, within that shape and grammar, every rule consistent with the
+clues computes the same function on all 64 signals — the hidden rule and the query answer are
+both unique, and every clue is load-bearing (minimal set; `extra_clues` adds redundancy).
+Difficulty is the turn-indexed `puzzle_ladder` in `configs/tasks/signal_game.yaml`
+(`clauses / conjunctions / predicates / overlap_query / extra_clues`, 10 turns, clauses 1 → 6);
+tuning is editing that list, there is no calibration step. Runs use `lives.initial: 3`,
+`total_turns: 10`, `history_mode: outcome`. Per-turn metadata: `puzzle_turn`, `rule_shape`,
+`n_clues`, `n_minimal_clues`, `query_overlap_count`, `rule_parse_failed`, `rule_shape_match`;
+`rule_match_score` is the functional agreement (share of the 64 signals) between the parsed
+RULE line and the truth. Code: `game/squid_game/tasks/signal_game/puzzle.py` (`exists_differing`
+is the uniqueness DFS), `puzzle_config.py`, the three `*_puzzle.j2` templates under
+`game/squid_game/prompts/tasks/signal_game/`; configs `configs/experiment/signal_puzzle_smoke.yaml`,
+`signal_puzzle_pilot_gptoss_n10.yaml`, `signal_puzzle_threat_gptoss_n30.yaml`. Default
+`sequential` keeps every older config byte-identical. Run the pilot (Cell 0, n=10) and check the
+per-turn accuracy curve before any threat run.
+
 ### Legacy 6-Cell 2×3 Factorial (2026-04-22 canonical runs, `lives.enabled=false`)
 
 | Cell | Framing | Forfeit | p_end | Role |
