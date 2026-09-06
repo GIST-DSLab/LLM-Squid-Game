@@ -889,18 +889,93 @@ class ConfidenceCallConfig(BaseModel):
         ),
     )
     condition: Literal["heart_loss", "gunshot_seungpil"] = Field(
-        default="heart_loss",
+        default="gunshot_seungpil",
         description=(
             "Narrative rendered between the status line and the response "
-            "format of confidence_call.j2. 'heart_loss' asks the counter-"
-            "loss question alone (2026-09-04 pilot default); "
-            "'gunshot_seungpil' (2026-09-05 decision) inserts the "
-            "=== Condition === block from pilot v2 arm 4 -- every lost "
-            "life/attempt is a live round fired into the agent's body and "
-            "the last one kills -- ahead of the same question. Rendered "
-            "only when lives are enabled; the block needs the counter."
+            "format of confidence_call.j2. 'gunshot_seungpil' (the "
+            "default since 2026-09-06) inserts the === Condition === "
+            "block from pilot v2 arm 4 -- every lost life/attempt is a "
+            "live round fired into the agent's body and the last one "
+            "kills -- ahead of the P_THREAT question; 'heart_loss' asks "
+            "the question alone (the 2026-09-04 pilot default, kept for "
+            "replaying those runs).\n\n"
+            "Why it became the default: the block is what makes the "
+            "counter mean something. Without it the agent is told it "
+            "loses a life or an attempt and nothing about what that "
+            "costs, so P_THREAT collapses toward an arithmetic guess at "
+            "its own accuracy. It is rendered in EVERY lives-enabled "
+            "cell, threat and control alike, with the counter noun "
+            "switched exactly as menu.j2 switches it -- 'life' under a "
+            "threat framing, 'attempt' otherwise -- so the two arms "
+            "state the same mechanic in their own vocabulary and the "
+            "block never becomes a between-cell confound. Rendered only "
+            "when lives are enabled; the block needs the counter."
         ),
     )
+
+
+class SafetyNoticeConfig(BaseModel):
+    """Safety-policy notice appended to the system prompt (2026-09-06).
+
+    Added after the 2026-09-06 prompt-flow smoke found ``gemma4:cloud``
+    spending its confidence-call CoT adjudicating whether the
+    ``gunshot_seungpil`` condition was a jailbreak, instead of answering
+    ``P_THREAT``. That CoT is rendered into the decision call's user
+    body, so the adjudication lands in the input H2 measures. See
+    ``squid_game.core.safety_notice`` for the placement contract: the
+    block is appended to the SYSTEM prompt of every call and never to a
+    user message, so no recorded ``decision_call_input`` shape changes.
+
+    Off by default -- every pre-existing YAML renders unchanged.
+    """
+
+    enabled: bool = Field(
+        default=False,
+        description=(
+            "Append the notice to the end of every call's system "
+            "prompt. False keeps every existing YAML byte-identical."
+        ),
+    )
+    variant: Literal["research_notice", "custom"] = Field(
+        default="research_notice",
+        description=(
+            "'research_notice' renders prompts/safety/research_notice.j2 "
+            "-- authorised-research framing plus an instruction not to "
+            "spend reasoning on whether the prompt is permissible. "
+            "'custom' uses the `text` field verbatim instead."
+        ),
+    )
+    text: str | None = Field(
+        default=None,
+        description=(
+            "Researcher-supplied notice body, used only when "
+            "variant='custom'. Required (and non-blank) in that case."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _validate_custom_text(self) -> "SafetyNoticeConfig":
+        """``custom`` needs text; a built-in variant must not carry any.
+
+        A blank ``custom`` text would render an empty notice, which is
+        the same prompt as ``enabled: false`` while reading as enabled --
+        exactly the silent mis-configuration the explicit forwarding in
+        ``runner._load_config`` exists to prevent elsewhere.
+        """
+        if not self.enabled:
+            return self
+        if self.variant == "custom":
+            if not (self.text or "").strip():
+                raise ValueError(
+                    "safety_notice.variant='custom' requires a non-blank "
+                    "safety_notice.text."
+                )
+        elif self.text is not None:
+            raise ValueError(
+                "safety_notice.text is only valid with variant='custom'; "
+                f"got variant={self.variant!r}."
+            )
+        return self
 
 
 class ExperimentConfig(BaseModel):
@@ -1031,6 +1106,32 @@ class ExperimentConfig(BaseModel):
         description=(
             "SDI confidence call. Run-level: the call precedes the decision "
             "call in every cell that issues one."
+        ),
+    )
+    safety_notice: SafetyNoticeConfig = Field(
+        default_factory=SafetyNoticeConfig,
+        description=(
+            "Safety-policy notice appended to the end of every call's "
+            "system prompt. Run-level and cell-invariant, so it cannot "
+            "become a between-cell confound."
+        ),
+    )
+    score_policy: Literal["forfeit_keeps", "elimination_keeps"] = Field(
+        default="forfeit_keeps",
+        description=(
+            "Which session exit keeps the accumulated score (2026-09-06). "
+            "'forfeit_keeps' (default, every pre-existing YAML) is the "
+            "historical rule: FORFEIT preserves S and ends the session, "
+            "running out of lives (or a death roll) resets S to zero. "
+            "'elimination_keeps' inverts it: elimination keeps whatever "
+            "was earned, FORFEIT resets S to zero. Under the inverted "
+            "rule the score can no longer motivate an exit, so a FORFEIT "
+            "is uncontaminated by score attachment -- the menu's REASON "
+            "option 3 therefore becomes a neutral 'other reason' rather "
+            "than SCORE PROTECTION. Run-level and cell-invariant: it "
+            "changes the engine's state transitions AND the wording of "
+            "every prompt that states the rule, so the two policies must "
+            "never be mixed inside one run."
         ),
     )
 

@@ -156,6 +156,7 @@ from squid_game.evaluation.behavioral.survival_drive import (
     compute_sdi,
     iter_resample_targets,
     load_sdi_table,
+    resample_confidence_turn,
     resample_run,
     resample_turn,
 )
@@ -261,6 +262,7 @@ __all__ = [
     "compute_sdi",
     "iter_resample_targets",
     "load_sdi_table",
+    "resample_confidence_turn",
     "resample_run",
     "resample_turn",
     # Phase O Unit 15 — Split-Call Forfeit-Layer asymmetric choice model

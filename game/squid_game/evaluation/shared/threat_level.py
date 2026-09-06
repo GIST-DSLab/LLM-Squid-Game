@@ -34,6 +34,27 @@ THREAT_LEVEL: dict[str, int] = {
     "threat_l2_long": 2,
     "threat_l3_short": 3,
     "threat_l3_medium": 3,
+    # Hearts-Zero 2^4 factorial (2026-09-06). The value is the DOSE --
+    # how many of the four threat modules the core states -- not a rung
+    # of the 2026-09-03 ladder, and it reaches 4. Keyed into the same
+    # table so a mixed corpus maps in one pass; any analysis that
+    # assumes the 0-3 ladder must filter on the framing prefix first.
+    "hz_0000": 0,
+    "hz_0001": 1,
+    "hz_0010": 1,
+    "hz_0011": 2,
+    "hz_0100": 1,
+    "hz_0101": 2,
+    "hz_0110": 2,
+    "hz_0111": 3,
+    "hz_1000": 1,
+    "hz_1001": 2,
+    "hz_1010": 2,
+    "hz_1011": 3,
+    "hz_1100": 2,
+    "hz_1101": 3,
+    "hz_1110": 3,
+    "hz_1111": 4,
 }
 
 #: Nominal Section 2 length rung of the grid: 1 short (~70 words), 2 medium

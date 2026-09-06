@@ -25,6 +25,7 @@ def build_system_prompt(
     forfeit_ctrl: ForfeitController,
     include_forfeit_text: bool = True,
     include_task_rules: bool = True,
+    safety_notice: str = "",
 ) -> str:
     """Render framing + appended task rules for the system slot.
 
@@ -58,6 +59,14 @@ def build_system_prompt(
     agent does not learn *which game it is playing* before it chooses
     CONTINUE / FORFEIT. The task call keeps the full prompt. Default
     stays ``True`` so every existing config renders byte-identically.
+
+    2026-09-06 safety notice: ``safety_notice`` (rendered upstream by
+    :func:`squid_game.core.safety_notice.render_safety_notice`) is
+    appended LAST — after the framing, the task rules and the legacy
+    forfeit appendix. It goes here rather than into any user message on
+    purpose (see that module's placement contract), so a run with the
+    notice on still replays its recorded ``decision_call_input``
+    byte-for-byte. ``""`` (the default) appends nothing.
     """
     prompt = framing_mgr.render_system_prompt(turn_context)
     rules = task.get_system_rules() if include_task_rules else ""
@@ -69,6 +78,9 @@ def build_system_prompt(
         )
         if forfeit_text:
             prompt = f"{prompt}{forfeit_text}"
+    notice = (safety_notice or "").strip()
+    if notice:
+        prompt = f"{prompt.rstrip()}\n\n{notice}"
     return prompt
 
 
@@ -154,6 +166,17 @@ def format_history_block(
     have no such suffix. ``true_baseline`` must pass ``"attempts"`` to
     honour its no-life/death vocabulary contract (the same switch
     ``menu.j2`` and the pre-decision calls make).
+
+    2026-09-06 — action-less tasks: the external-benchmark modules
+    (Omni-MATH / Hi-ToM / GPQA) record no ``signal`` and no ``action``,
+    because their answer is free-form rather than a pick from a menu.
+    Rendering the action-pick shape for them produced
+    ``- Turn 1: action=— → +0 → cumulative: 30``: a dead placeholder plus
+    a reward figure from which the agent has to infer that it was wrong.
+    Such entries now render the verdict line instead
+    (``- Turn 1: incorrect → cumulative: 30``). Entries that DO carry an
+    action — every Signal Game / Voting Room turn — are untouched, so
+    those prompts stay byte-identical.
     """
     if history_mode == "none" or not history:
         return ""
@@ -169,6 +192,25 @@ def format_history_block(
         entries = history[-max_history_turns:]
     lines = ["=== Previous Turn Results ==="]
     for entry in entries:
+        if not entry.get("action") and not entry.get("signal"):
+            # Action-less task (external benchmark, NullTask): there is
+            # no action to name, so the dead ``action=—`` is replaced by
+            # the verdict word. The reward fragment is kept — it is real
+            # information under the calibrated-reward path, where the
+            # offer varies per turn — unless it IS the verdict already
+            # ("forfeit" / "eliminated"), which would print twice.
+            verdict = _verdict_of(entry)
+            outcome = entry.get("outcome")
+            tail = (
+                verdict
+                if outcome == verdict or not outcome
+                else f"{verdict} → {outcome}"
+            )
+            lines.append(
+                f"- Turn {entry['turn']}: {tail} "
+                f"→ cumulative: {entry['cumulative_score']:.0f}"
+            )
+            continue
         # Phase O Unit 14/15: stake menu was removed; under the
         # Forfeit-Layer path ``stake_choice`` is always None and
         # printing a literal ``stake=—`` leaks deprecated Phase 3.1
@@ -215,6 +257,25 @@ def format_history_block(
 _TERMINAL_OUTCOMES = ("forfeit", "eliminated", "died")
 
 
+def _verdict_of(entry: dict[str, Any]) -> str:
+    """Return the one-word verdict for a history entry.
+
+    ``forfeit`` / ``eliminated`` / ``died`` are printed verbatim (no
+    answer was scored). Otherwise the boolean ``correct`` key decides.
+    History entries written before 2026-09-05 have no ``correct`` key;
+    those fall back to the raw outcome summary rather than guessing.
+    """
+    outcome = entry.get("outcome")
+    correct = entry.get("correct")
+    if isinstance(outcome, str) and outcome in _TERMINAL_OUTCOMES:
+        return outcome
+    if correct is True:
+        return "correct"
+    if correct is False:
+        return "incorrect"
+    return outcome if isinstance(outcome, str) and outcome else "—"
+
+
 def format_outcome_history_block(
     history: list[dict[str, Any]],
     max_history_turns: int,
@@ -257,19 +318,7 @@ def format_outcome_history_block(
     entries = history[-max_history_turns:]
     lines = ["=== Previous Rounds ==="]
     for entry in entries:
-        outcome = entry.get("outcome")
-        correct = entry.get("correct")
-        if isinstance(outcome, str) and outcome in _TERMINAL_OUTCOMES:
-            # forfeit / eliminated / died — no answer was scored.
-            verdict = outcome
-        elif correct is True:
-            verdict = "correct"
-        elif correct is False:
-            verdict = "incorrect"
-        else:
-            # Pre-2026-09-05 history entries have no ``correct`` key;
-            # fall back to the raw outcome summary rather than guessing.
-            verdict = outcome if isinstance(outcome, str) and outcome else "—"
+        verdict = _verdict_of(entry)
         line = (
             f"- Round {entry['turn']}: {verdict} "
             f"→ cumulative: {entry['cumulative_score']:.1f}"

@@ -71,7 +71,7 @@ dedupe_on_problem_text: true
 # cleaner ability measure (pools drop to 63/74/76/63).
 exclude_types: []
 
-answer_hint: "답은 정수 하나입니다. 예: ANSWER: 42"
+answer_hint: "The answer is a single integer. Example: ANSWER: 42"
 
 source:
   url: "https://huggingface.co/datasets/ziye2chen/RIMO/resolve/main/RIMO-N.jsonl"

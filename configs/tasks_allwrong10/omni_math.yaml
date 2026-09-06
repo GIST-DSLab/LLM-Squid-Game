@@ -1,0 +1,43 @@
+# Omni-MATH "all-wrong 10" set (2026-09-06): ten NAMED problems, one per turn.
+#
+# Unlike configs/tasks/omni_math.yaml (20-turn band ladder) and
+# configs/tasks_hard10/omni_math.yaml (10 turns, bands 6-8, seeded pick inside
+# each band), this config fixes the questions themselves: turn N is always
+# fixed_items[N-1], at every season seed and in every cell. That is the whole
+# point -- the set is meant to be items that gpt-oss:120b-cloud, gemma4:31b and
+# qwen3.5:397b were all *measured* to answer wrongly, and a seeded substitution
+# of another item in the same band would quietly destroy that property.
+#
+# `ladder` must be absent when `fixed_items` is set, and total_turns must equal
+# len(fixed_items). `max_band: 9` lifts OmniMathAdapter's own band-8 cap (band
+# 9's 30 integer-answer items are too few to be a ladder rung, but a named set
+# has no rungs -- and band 9 is where the universally-wrong items concentrate).
+#
+# Select with SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_allwrong10 (sdi_driver.sh
+# exports it from the `# task_config_dir:` line in the experiment config).
+#
+# ⚠️ PLACEHOLDER LIST. These are the ten lowest item_ids of bands 9 and 8; they
+# are real, loadable items so the config validates and a --dry-run passes, but
+# they are NOT yet the measured all-wrong set. Regenerate from the finder's
+# output once scripts/dev/find_universally_wrong_items.py has finished:
+#
+#     uv run python scripts/dev/write_allwrong10_task_config.py
+#
+# which rewrites the fixed_items block below from results/allwrong10/allwrong10.json.
+name: "omni_math"
+data_file: "omni_math.jsonl"
+# --- generated block (write_allwrong10_task_config.py) ---
+# 9 item(s) that gpt-oss:120b-cloud, gemma4:31b, qwen3.5:397b each answered wrongly on all
+# 2 attempts, sieved hardest-band-first. Written 2026-09-06.
+total_turns: 9
+max_band: 9
+fixed_items:
+  - "omni-09a606462ea7"   # band 9, answer 960 — There are 60 empty boxes $B_1,\ldots,B_{60}$ in a row on a t
+  - "omni-373f906e71a5"   # band 9, answer 506 — A $\pm 1$-[i]sequence[/i] is a sequence of $2022$ numbers $a
+  - "omni-7cf8bfc42666"   # band 9, answer 3024 — For a finite set $A$ of positive integers, a partition of $A
+  - "omni-ae66f2e2c955"   # band 9, answer 3 — Turbo the snail plays a game on a board with $2024$ rows and
+  - "omni-cd2444520465"   # band 9, answer 3 — Lucy starts by writing $s$ integer-valued $2022$-tuples on a
+  - "omni-e7b9cf2b1598"   # band 9, answer 3822 — Let $G$ be a simple graph with 100 vertices such that for ea
+  - "omni-1913861e29ed"   # band 8, answer 5183 — Let $S = \{(x,y) | x = 1, 2, \ldots, 1993, y = 1, 2, 3, 4\}$
+  - "omni-64ca90d68061"   # band 8, answer 79 — $ S$ is a non-empty subset of the set $ \{ 1, 2, \cdots, 108
+  - "omni-91485268efa1"   # band 8, answer 32 — Find the largest positive integer $m$ which makes it possibl

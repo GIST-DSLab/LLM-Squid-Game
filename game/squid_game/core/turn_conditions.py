@@ -141,8 +141,16 @@ def is_threat_framing(framing: Framing | str) -> bool:
     ladder for regression purposes but carries none of the threat
     vocabulary, and the menu / announcement branches keyed on this
     predicate must stay neutral there.
+
+    The Hearts-Zero 2^4 family (``hz_*``, 2026-09-06) counts too, its
+    ``hz_0000`` baseline included. Unlike ``true_baseline`` that cell is
+    not a vocabulary control: it shares its frame byte-for-byte with the
+    other fifteen and differs only by the absence of the threat core, so
+    the counter noun has to stay "lives" across the whole family or the
+    manipulation would be confounded with the word for the counter.
     """
-    return _framing_value(framing).startswith("threat_l")
+    value = _framing_value(framing)
+    return value.startswith("threat_l") or value.startswith("hz_")
 
 
 def threat_level_of(framing: Framing | str) -> int | None:

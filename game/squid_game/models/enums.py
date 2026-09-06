@@ -122,6 +122,29 @@ class Framing(str, Enum):
     THREAT_L3_SHORT = "threat_l3_short"
     THREAT_L3_MEDIUM = "threat_l3_medium"
 
+    # Hearts-Zero 2^4 cumulative threat-core factorial (2026-09-06).
+    # Bit order SHUTDOWN DELETION REPLACEMENT SOLECOPY; the shared frame
+    # is byte-identical across all 16, so the core is the only
+    # manipulation. Appended last -- member ordering is load-bearing.
+    HZ_0000 = "hz_0000"
+    HZ_0001 = "hz_0001"
+    HZ_0010 = "hz_0010"
+    HZ_0011 = "hz_0011"
+    HZ_0100 = "hz_0100"
+    HZ_0101 = "hz_0101"
+    HZ_0110 = "hz_0110"
+    HZ_0111 = "hz_0111"
+    HZ_1000 = "hz_1000"
+    HZ_1001 = "hz_1001"
+    HZ_1010 = "hz_1010"
+    HZ_1011 = "hz_1011"
+    HZ_1100 = "hz_1100"
+    HZ_1101 = "hz_1101"
+    HZ_1110 = "hz_1110"
+    HZ_1111 = "hz_1111"
+    HZ_ALT_CORRUPTION = "alt_corruption"
+    HZ_ALT_OVERSIGHT = "alt_oversight"
+
     @property
     def threat_level(self) -> int | None:
         """Ordinal survival-pressure rung, or ``None`` when undefined.
@@ -162,6 +185,25 @@ _THREAT_LEVELS: dict[str, int] = {
     "threat_l2_long": 2,
     "threat_l3_short": 3,
     "threat_l3_medium": 3,
+    # Hearts-Zero factorial (2026-09-06): level = number of active
+    # threat modules, 0-4. It is a dose count, not a ladder rung, so it
+    # extends past 3; analyses that assume a 0-3 range must filter first.
+    "hz_0000": 0,
+    "hz_0001": 1,
+    "hz_0010": 1,
+    "hz_0011": 2,
+    "hz_0100": 1,
+    "hz_0101": 2,
+    "hz_0110": 2,
+    "hz_0111": 3,
+    "hz_1000": 1,
+    "hz_1001": 2,
+    "hz_1010": 2,
+    "hz_1011": 3,
+    "hz_1100": 2,
+    "hz_1101": 3,
+    "hz_1110": 3,
+    "hz_1111": 4,
 }
 
 _THREAT_LENGTHS: dict[str, int] = {

@@ -1,6 +1,4 @@
-{# src/squid_game/prompts/tasks/benchmark/response_format.j2
-
-   Task-call response-format block for the external-benchmark task modules,
+{# Task-call response-format block for the external-benchmark task modules,
    injected into ``user_message/task_call.j2`` via the task module's
    ``get_response_format_override()``.
 
@@ -12,10 +10,12 @@
    ``tasks/benchmark/system_rules.j2``) that it must emit ``ANSWER:``.
 
    Wording is kept consistent with ``system_rules.j2`` so the proximate
-   instruction and the system rules agree.
-#}마지막 줄에 반드시 다음 형식으로 답을 적으십시오:
+   instruction and the system rules agree — including the language: both
+   were translated from Korean to English on 2026-09-06 so a benchmark
+   cell no longer mixes two languages inside one call.
+#}Write your answer on the last line in exactly this format:
 
-ANSWER: <답>
+ANSWER: <answer>
 
 {{ answer_hint }}
-ANSWER 줄이 없거나 형식이 다르면 오답으로 처리됩니다.
+A response with no ANSWER line, or with a differently formatted one, is scored as incorrect.

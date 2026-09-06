@@ -436,7 +436,8 @@ class TurnResult(BaseModel):
         description=(
             "Replay: the system prompt sent with the decision call (framing "
             "+ task rules, no forfeit appendix). None on turns without a "
-            "decision call."
+            "decision call. The confidence call, when issued, is sent with "
+            "this SAME system prompt, so it is the replay prompt for both."
         ),
     )
     decision_call_input: str | None = Field(
@@ -445,6 +446,17 @@ class TurnResult(BaseModel):
             "Replay: the exact user-message body sent to the decision call "
             "(peer-death prefix included). None on turns without a "
             "decision call."
+        ),
+    )
+    confidence_call_input: str | None = Field(
+        default=None,
+        description=(
+            "Replay (2026-09-06): the exact user-message body sent to the "
+            "confidence call (peer-death prefix included). Pairs with "
+            "``system_prompt``, which the two pre-decision calls share, so "
+            "the confidence call is replayable byte-for-byte the way the "
+            "decision call already was. None when the confidence call was "
+            "not issued."
         ),
     )
     # ----- Lives mechanic + threat ladder --------------------------------

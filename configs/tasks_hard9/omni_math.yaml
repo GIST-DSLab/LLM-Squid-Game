@@ -1,0 +1,14 @@
+# Omni-MATH "band-9 only" ladder (2026-09-06 09:10): ten problems, every one drawn from difficulty
+# band 9 (band = int(Omni-MATH difficulty)); seeded draws without replacement, so each of the ten
+# season seeds (43-52) gets its own 10-of-pool subset while every cell with the same seed still sees
+# the same items in the same order (paired design). Pool: band 8 = 37 items, band 9 = 30 items
+# (single-value-integer-answer subset), both >= 10. Replaces the fixed 10-item "all-wrong" set
+# (results/allwrong10/), which would have given every session the identical problems.
+# Select with SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_hard9 (sdi_driver.sh exports it from the
+# `# task_config_dir:` header of the experiment config). Runs record `band` in task_metadata.
+name: "omni_math"
+data_file: "omni_math.jsonl"
+total_turns: 10
+max_band: 9
+ladder:
+  - {band: 9, turns: 10}

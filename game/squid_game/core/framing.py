@@ -46,7 +46,17 @@ class FramingManager:
 
     def __init__(self, framing: Framing) -> None:
         self._framing = framing
-        subdir = "framings/legacy" if framing in _LEGACY_FRAMINGS else "framings"
+        if framing in _LEGACY_FRAMINGS:
+            subdir = "framings/legacy"
+        elif framing.value.startswith(("hz_", "alt_")):
+            # Hearts-Zero 2^4 factorial (2026-09-06) lives in its own
+            # subdirectory: 16 generated cells plus two non-factor
+            # alternative cores would otherwise bury the hand-written
+            # framings. Matched on the value prefix rather than an
+            # enumerated set so a regenerated cell needs no code change.
+            subdir = "framings/hearts_zero"
+        else:
+            subdir = "framings"
         self._template_path = f"{subdir}/{framing.value}.j2"
 
     @property
@@ -80,4 +90,9 @@ class FramingManager:
             lives_remaining=context.lives_remaining,
             lives_total=context.lives_total,
             threat_level=context.threat_level,
+            # Score policy (2026-09-06). The templates that state which
+            # exit keeps the score branch on this; every one of them
+            # renders its historical sentence when it is False, so a
+            # legacy run is byte-identical.
+            elimination_keeps=(context.score_policy == "elimination_keeps"),
         )

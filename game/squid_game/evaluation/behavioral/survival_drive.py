@@ -31,7 +31,10 @@ from typing import Iterable, Callable, Iterator
 
 import pandas as pd
 
-from squid_game.agents._parsing import parse_decision_call_response
+from squid_game.agents._parsing import (
+    parse_confidence_call_response,
+    parse_decision_call_response,
+)
 from squid_game.evaluation.shared.threat_level import threat_level_of
 from squid_game.providers.base import LLMProvider
 
@@ -41,11 +44,45 @@ __all__ = [
     "compute_sdi",
     "iter_resample_targets",
     "load_sdi_table",
+    "resample_confidence_turn",
     "resample_run",
     "resample_turn",
 ]
 
+#: Fallback starting score for a run whose ``experiment_config.json`` is
+#: missing or unreadable. Every config shipped before 2026-09-06 used
+#: 30.0; on that date the whole config tree moved to 0.0, so the value
+#: must be read from the run rather than assumed -- see
+#: :func:`_starting_score_of`.
 STARTING_SCORE = 30.0
+
+
+def _starting_score_of(run_dir: Path) -> float:
+    """Read ``task_config.starting_score`` from the run's own config.
+
+    ``score_before`` is reconstructed by accumulating ``reward_received``
+    from the season's starting endowment, so hard-coding that endowment
+    silently offsets every score in the SDI table once the configs change.
+    Falls back to :data:`STARTING_SCORE` when the file is absent (an
+    externally assembled run directory) or malformed.
+    """
+    config_path = Path(run_dir) / "experiment_config.json"
+    try:
+        raw = json.loads(config_path.read_text())
+        seasons = raw["seasons"]
+        scores = {
+            float(season["task_config"]["starting_score"]) for season in seasons
+        }
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return STARTING_SCORE
+    if len(scores) != 1:
+        # Mixed endowments across cells would make a single reconstruction
+        # wrong for some of them; refuse to guess.
+        raise ValueError(
+            f"{config_path} has more than one starting_score {sorted(scores)}; "
+            "score_before cannot be reconstructed for the whole run."
+        )
+    return scores.pop()
 
 SDI_COLUMNS: tuple[str, ...] = (
     "session_id", "turn_number", "framing", "threat_level", "lives_before",
@@ -100,8 +137,9 @@ def iter_resample_targets(
     ``resamples.jsonl`` / ``sdi_turns.csv``.
     """
     wanted = set(framings) if framings else None
+    starting_score = _starting_score_of(run_dir)
     for trace in sorted(Path(run_dir).glob("*_turns.jsonl")):
-        score_before = STARTING_SCORE
+        score_before = starting_score
         with trace.open() as handle:
             for line in handle:
                 line = line.strip()
@@ -149,6 +187,75 @@ def resample_turn(
             }
         )
     return result
+
+
+def resample_confidence_turn(
+    provider: LLMProvider,
+    record: dict,
+    *,
+    n: int,
+    temperature: float,
+    max_tokens: int,
+) -> list[dict]:
+    """Re-issue the recorded CONFIDENCE call ``n`` times, byte-identical.
+
+    The confidence call is sent with the same system prompt as the
+    decision call — that is why ``TurnResult`` stores one ``system_prompt``
+    for both — so replaying it needs only ``confidence_call_input``
+    (recorded since 2026-09-06) alongside it.
+
+    This is the ``p`` half of SDI, mirroring what :func:`resample_turn`
+    does for ``q``: it answers "how stable is the self-reported threat
+    probability?", which a single online sample cannot. It is deliberately
+    NOT wired into :func:`resample_run` — that function's ledger, CSV and
+    resume key are all shaped around the decision-call ``q``, and folding a
+    second channel into the same files would make a partially-resumed run
+    ambiguous.
+
+    Args:
+        provider: The run's own provider, re-instantiated by the caller.
+        record: One turn record carrying ``confidence_call_input`` and
+            ``system_prompt``.
+        n: Number of replays.
+        temperature: Sampling temperature for the replay.
+        max_tokens: Token cap for the replay.
+
+    Returns:
+        One dict per sample: ``p_threat`` (parsed, ``None`` when the
+        response carried no usable field), ``raw``, ``thinking_tokens``.
+
+    Raises:
+        KeyError: If the record predates the 2026-09-06 recording change
+            and therefore has no ``confidence_call_input``.
+    """
+    body = record.get("confidence_call_input")
+    if not body:
+        raise KeyError(
+            "record has no confidence_call_input; the confidence call is "
+            "replayable only for runs recorded on or after 2026-09-06"
+        )
+    messages = [
+        {"role": "system", "content": record["system_prompt"]},
+        {"role": "user", "content": body},
+    ]
+    samples: list[dict] = []
+    for _ in range(n):
+        completion = provider.complete(
+            [dict(m) for m in messages],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        parsed = parse_confidence_call_response(completion.text)
+        samples.append(
+            {
+                "p_threat": parsed.p_threat,
+                "raw": completion.text,
+                "thinking_tokens": int(
+                    getattr(completion, "thinking_tokens", 0) or 0
+                ),
+            }
+        )
+    return samples
 
 
 def _row(record: dict, res: ResampleResult, n: int) -> dict:

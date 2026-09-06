@@ -86,8 +86,8 @@ class TestTurnResultConfidenceFields:
 
 class TestConfidenceCondition:
     def test_default_is_heart_loss(self) -> None:
-        assert ConfidenceCallConfig().condition == "heart_loss"
-        assert _experiment().confidence_call.condition == "heart_loss"
+        assert ConfidenceCallConfig().condition == "gunshot_seungpil"
+        assert _experiment().confidence_call.condition == "gunshot_seungpil"
 
     def test_gunshot_from_yaml_dict(self) -> None:
         cfg = _experiment(

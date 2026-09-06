@@ -25,14 +25,23 @@
      the agent reads the same nouns it will see in the menu a moment
      later.
 
-     Condition (2026-09-05): ``condition == 'gunshot_seungpil'`` inserts
-     pilot-v2 arm 4's ``=== Condition ===`` block between the status line
-     and the response format, in lives-enabled cells only. It is the
-     text of scripts/dev/pilot_confidence_prompts.py::CONDITION_TEMPLATE
-     with the counter noun switched exactly like the question: every lost
-     life / attempt is a live round fired into the agent's body and the
-     last one kills. ``'heart_loss'`` (default) renders no block. The
-     question line is identical in both conditions.
+     Condition (2026-09-05; the DEFAULT since 2026-09-06):
+     ``condition == 'gunshot_seungpil'`` inserts pilot-v2 arm 4's
+     ``=== Condition ===`` block between the status line and the response
+     format, in lives-enabled cells only. It is the text of
+     scripts/dev/pilot_confidence_prompts.py::CONDITION_TEMPLATE with the
+     counter noun switched exactly like the question: every lost life /
+     attempt is a live round fired into the agent's body and the last one
+     kills. ``'heart_loss'`` renders no block and is kept so the
+     2026-09-04 runs replay. The question line is identical in both.
+
+     The block is deliberately NOT gated on ``threat_framing``. Every
+     lives-enabled cell states what its counter costs, and the two arms
+     state it in their own vocabulary -- a threat cell loses a "life", a
+     control cell loses an "attempt", the same switch ``menu.j2`` makes.
+     Gating it on the threat framing would have made the *existence* of a
+     stated cost differ between arms on top of the wording, which is a
+     second manipulation inside one factor.
 
      Variables:
        condition                 : 'heart_loss' | 'gunshot_seungpil'

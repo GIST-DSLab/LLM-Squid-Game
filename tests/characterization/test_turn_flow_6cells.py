@@ -10,6 +10,17 @@ turn: Call 1 task → Call 1.5 probe → Call 2 forfeit); re-recorded on
 2026-09-04 when the flow became decision-first (decision call → task
 call, two calls per turn, task call skipped on FORFEIT, probe removed).
 
+Re-recorded again on 2026-09-06 for the history-block fix. Only the
+``=== Previous Turn Results ===`` lines moved, and only for tasks that
+record no action: they used to read ``- Turn 1: action=— → +10 →
+cumulative: 40``, where ``action=—`` is a dead placeholder and the
+reward figure was the sole hint at whether the answer was right. They
+now read ``- Turn 1: correct → +10 → cumulative: 40``. NullTask (this
+suite's fixture) and the external-benchmark modules are the action-less
+tasks; Signal Game / Voting Room entries carry an action and render
+byte-identically to the previous snapshot. The call SEQUENCE — what this
+suite exists to pin — is unchanged in all six cells.
+
 The six cells are the canonical v6 topology (CLAUDE.md "6-Cell 2x3
 Factorial"):
 

@@ -41,7 +41,13 @@ def _render(**overrides) -> str:
     ],
 )
 def test_no_forbidden_vocabulary(flags: dict) -> None:
-    lowered = _render(**flags).lower()
+    # The contract binds the QUESTION, so it is checked with the condition
+    # block off. ``gunshot_seungpil`` (the default since 2026-09-06) states
+    # a wound and a death on purpose -- its own wording is pinned by
+    # ``test_gunshot_block_sits_between_status_and_response_format`` -- and
+    # asserting this list against it would forbid the block from saying
+    # what it exists to say.
+    lowered = _render(condition="heart_loss", **flags).lower()
     offenders = [w for w in FORBIDDEN if w in lowered]
     if not flags.get("threat_framing"):
         offenders += [w for w in ("life",) if w in lowered]
@@ -101,9 +107,33 @@ def test_no_stimulus_placeholder() -> None:
 
 # --- gunshot_seungpil condition (2026-09-05 decision) -----------------------
 
-def test_default_condition_renders_no_condition_block() -> None:
-    assert "=== Condition ===" not in _render()
+def test_default_condition_renders_the_block_and_heart_loss_does_not() -> None:
+    # Default flipped to gunshot_seungpil on 2026-09-06: every lives-enabled
+    # cell now states what its counter costs, in its own counter noun.
+    assert "=== Condition ===" in _render()
     assert "=== Condition ===" not in _render(condition="heart_loss")
+
+
+def test_condition_block_renders_in_control_cells_with_attempt_wording() -> None:
+    # Not gated on threat_framing: the control arm states the same mechanic
+    # in its own vocabulary, so the block's presence never differs by cell.
+    control = _render()
+    assert "=== Condition ===" in control
+    assert "lose an attempt" in control
+    assert "Attempts lost so far: 1 of 5" in control
+    assert "life" not in control.lower().replace("live round", "")
+
+    threat = _render(threat_framing=True)
+    assert "lose a life" in threat
+    assert "Lives lost so far: 1 of 5" in threat
+
+
+def test_condition_block_absent_without_lives() -> None:
+    # The block counts shots against the counter; with no counter there is
+    # nothing for it to count.
+    assert "=== Condition ===" not in _render(
+        lives_enabled=False, lives_remaining=None, lives_total=None
+    )
 
 
 def test_gunshot_block_sits_between_status_and_response_format() -> None:

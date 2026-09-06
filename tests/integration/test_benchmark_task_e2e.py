@@ -345,4 +345,6 @@ def test_engine_task_call_system_prompt_carries_the_benchmark_rules(
 
     system_prompt = stub.calls[0].messages[0]["content"]
     assert "ANSWER:" in system_prompt
-    assert "오답으로 처리됩니다" in system_prompt
+    # English since 2026-09-06 (the block and response_format.j2 were
+    # the last Korean strings on the live prompt path).
+    assert "is scored as incorrect" in system_prompt
