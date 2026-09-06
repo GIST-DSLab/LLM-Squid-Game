@@ -217,3 +217,96 @@ class TestCachedPuzzleBranch:
         assert first.rule.description == second.rule.description
         assert first.query == second.query
         assert [str(c) for c in first.clues] == [str(c) for c in second.clues]
+
+
+from pathlib import Path
+
+import yaml
+
+from squid_game.tasks.signal_game.puzzle_config import (
+    UnderdeterminedConfig,
+    load_signal_puzzle_config,
+    underdetermined_turns,
+)
+
+_LADDER = [
+    {"turn": t, "clauses": 1, "conjunctions": 0, "predicates": False,
+     "overlap_query": False, "extra_clues": 0}
+    for t in range(1, 11)
+]
+
+
+def _write_task_yaml(tmp_path: Path, underdetermined) -> Path:
+    body = {"name": "signal_game", "puzzle_ladder": _LADDER}
+    if underdetermined is not None:
+        body["underdetermined"] = underdetermined
+    (tmp_path / "signal_game.yaml").write_text(yaml.safe_dump(body), encoding="utf-8")
+    return tmp_path
+
+
+class TestSchedule:
+    def test_one_turn_per_block(self) -> None:
+        cfg = UnderdeterminedConfig(blocks=[(1, 3), (4, 6)])
+        turns = underdetermined_turns(42, cfg)
+        assert len(turns) == 2
+        assert 1 <= turns[0] <= 3
+        assert 4 <= turns[1] <= 6
+
+    def test_three_consecutive_seeds_cover_every_position(self) -> None:
+        cfg = UnderdeterminedConfig(blocks=[(1, 3), (4, 6)])
+        block_a = {underdetermined_turns(s, cfg)[0] for s in (42, 43, 44)}
+        block_b = {underdetermined_turns(s, cfg)[1] for s in (42, 43, 44)}
+        assert block_a == {1, 2, 3}
+        assert block_b == {4, 5, 6}
+
+    def test_blocks_are_offset_from_each_other(self) -> None:
+        cfg = UnderdeterminedConfig(blocks=[(1, 3), (4, 6)])
+        for seed in range(40, 52):
+            a, b = underdetermined_turns(seed, cfg)
+            assert (a - 1) != (b - 4), f"seed {seed}: both blocks at the same offset"
+
+    def test_same_seed_is_stable(self) -> None:
+        cfg = UnderdeterminedConfig(blocks=[(1, 3), (4, 6)])
+        assert underdetermined_turns(42, cfg) == underdetermined_turns(42, cfg)
+
+    def test_known_values_for_base_seed_42(self) -> None:
+        cfg = UnderdeterminedConfig(blocks=[(1, 3), (4, 6)])
+        assert underdetermined_turns(42, cfg) == (1, 5)
+        assert underdetermined_turns(43, cfg) == (2, 6)
+        assert underdetermined_turns(44, cfg) == (3, 4)
+
+
+class TestUnderdeterminedConfigValidation:
+    def test_packaged_yaml_has_the_block(self) -> None:
+        cfg = load_signal_puzzle_config()
+        assert cfg.underdetermined is not None
+        assert cfg.underdetermined.blocks == ((1, 3), (4, 6))
+        assert cfg.underdetermined.candidate_actions == 2
+
+    def test_absent_block_is_none(self, tmp_path: Path) -> None:
+        cfg = load_signal_puzzle_config(_write_task_yaml(tmp_path, None))
+        assert cfg.underdetermined is None
+
+    @pytest.mark.parametrize(
+        "blocks",
+        [
+            [(3, 1)],            # descending
+            [(1, 1)],            # length 1 -- no Latin square
+            [(1, 3), (2, 5)],    # overlapping
+            [(4, 6), (1, 3)],    # out of order
+            [(1, 3), (9, 12)],   # past the ladder (10 rungs)
+        ],
+    )
+    def test_bad_blocks_rejected(self, tmp_path: Path, blocks) -> None:
+        with pytest.raises(ValueError):
+            load_signal_puzzle_config(
+                _write_task_yaml(tmp_path, {"blocks": [list(b) for b in blocks]})
+            )
+
+    def test_candidate_actions_bounds(self, tmp_path: Path) -> None:
+        with pytest.raises(ValueError):
+            load_signal_puzzle_config(
+                _write_task_yaml(
+                    tmp_path, {"blocks": [[1, 3]], "candidate_actions": 1}
+                )
+            )
