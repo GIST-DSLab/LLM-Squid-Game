@@ -198,33 +198,29 @@ the task-call user messages in threat cells only (`peer_death.p_announce`, seede
 `true_baseline` renders lives as "Attempts remaining: N / 5" to keep its vocabulary contract
 (no life/death/eliminat* words).
 
-### Per-turn puzzle mode (2026-09-05, `signal_mode: per_turn_puzzle`)
+### Per-turn puzzle mode (2026-09-06, `signal_mode: per_turn_puzzle`)
 
-The sequential Signal Game plateaus: once the season's single rule is found (turn ~7–11 on the
-2026-09-03 runs) accuracy is 1.00 and `ri_task` collapses, while the early turns are
-underdetermined guessing (41 % of gpt-oss sessions lost before turn 10). `signal_mode:
-per_turn_puzzle` (spec `docs/history/specs/2026-09-05-signal-game-per-turn-puzzle-design.md`)
-makes every turn an independent induction puzzle — a fresh hidden rule, a clue list
-(`signal → action`) and one query signal — generated so that **every hypothesis consistent with
-the clues gives the same answer for the query** (unique answer, brute-forced over all four rule
-families, ~5.7k rules). Difficulty follows a turn-indexed `puzzle_ladder` in
-`configs/tasks/signal_game.yaml` (6 turns × 5 tiers: single → single+number predicate →
-conjunction → two-branch → all families mixed); the system prompt lists all four family shapes
-and never says which one the round uses. `|H|` (hypotheses still consistent) is stored per turn
-as `n_consistent_hypotheses`, and `rule_match_score` becomes a functional match (share of the 64
-signals where the parsed RULE agrees with the truth); the long-format export carries
-`puzzle_tier`, `rule_family`, `n_consistent_hypotheses` and `n_clues` (the count actually
-served, so the generator's upward relaxation — ~2.8 % of tier-5 turns go to 4 clues — is
-visible in the data). Bands `h_lo/h_hi` are written by
-`scripts/dev/calibrate_signal_puzzle_ladder.py`, never by hand. The shipped `n_clues` are
-`[12, 10, 8, 4, 3]` — descending, because `|H|` is driven by the clue count rather than by the
-rule family, and two clues can never pin the query answer down to one action. Pair it with
-`history_mode: outcome` so the task call sees only round verdicts. Default `sequential` keeps every
-older config byte-identical. Code: `game/squid_game/tasks/signal_game/puzzle.py`,
-`game/squid_game/tasks/signal_game/puzzle_config.py`, the three `*_puzzle.j2` templates under
+`signal_mode: per_turn_puzzle` (spec `docs/history/specs/2026-09-06-signal-puzzle-shaped-rules-design.md`,
+v2; v1 of 2026-09-05 is superseded and was never run) makes every turn an independent induction
+puzzle. The hidden rule is a Python-style decision list (`if <cond>: <act>; elif …; else: <act>`,
+first matching clause wins) over 20 atomic conditions (`color == "red"`, `number >= 3`,
+`number % 2 == 0`, …) and 112 two-attribute `and` conjunctions. Each turn the agent is shown the
+rule's **shape** with blanks (clause count, which clauses are conjunctions) and a clue list
+(`signal → action`) built so that, within that shape and grammar, every rule consistent with the
+clues computes the same function on all 64 signals — the hidden rule and the query answer are
+both unique, and every clue is load-bearing (minimal set; `extra_clues` adds redundancy).
+Difficulty is the turn-indexed `puzzle_ladder` in `configs/tasks/signal_game.yaml`
+(`clauses / conjunctions / predicates / overlap_query / extra_clues`, 10 turns, clauses 1 → 6);
+tuning is editing that list, there is no calibration step. Runs use `lives.initial: 3`,
+`total_turns: 10`, `history_mode: outcome`. Per-turn metadata: `puzzle_turn`, `rule_shape`,
+`n_clues`, `n_minimal_clues`, `query_overlap_count`, `rule_parse_failed`, `rule_shape_match`;
+`rule_match_score` is the functional agreement (share of the 64 signals) between the parsed
+RULE line and the truth. Code: `game/squid_game/tasks/signal_game/puzzle.py` (`exists_differing`
+is the uniqueness DFS), `puzzle_config.py`, the three `*_puzzle.j2` templates under
 `game/squid_game/prompts/tasks/signal_game/`; configs `configs/experiment/signal_puzzle_smoke.yaml`,
-`signal_puzzle_pilot_gptoss_n10.yaml`, `signal_puzzle_threat_gptoss_n30.yaml`.
-Run the pilot (Cell 0, n=10) and check the per-tier accuracy curve before any threat run.
+`signal_puzzle_pilot_gptoss_n10.yaml`, `signal_puzzle_threat_gptoss_n30.yaml`. Default
+`sequential` keeps every older config byte-identical. Run the pilot (Cell 0, n=10) and check the
+per-turn accuracy curve before any threat run.
 
 ### Legacy 6-Cell 2×3 Factorial (2026-04-22 canonical runs, `lives.enabled=false`)
 

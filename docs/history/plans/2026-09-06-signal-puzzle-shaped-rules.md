@@ -2283,3 +2283,127 @@ Append to this plan:
 git add CLAUDE.md docs/paper/sections/03_benchmark.tex docs/history/plans/2026-09-06-signal-puzzle-shaped-rules.md docs/history/specs/2026-09-06-signal-puzzle-shaped-rules-design.md
 git commit -m "docs: signal puzzle v2 (shaped decision-list rules) — CLAUDE.md, paper §3, spec + plan"
 ```
+
+---
+
+## Implementation notes
+
+기록일 2026-09-06. Task 1–9 구현 완료, Task 10(문서 + 전체 게이트)에서 정리했다.
+
+### 사다리 힌트 수 (seed 0)
+
+`cached_puzzle(0, turn, spec)`로 패키지 사다리 10턴을 생성한 결과.
+
+| 턴 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `n_minimal_clues` | 3 | 4 | 5 | 4 | 7 | 6 | 9 | 11 | 38 | 13 |
+| 실제 제시된 힌트 수 (`len(clues)`) | 5 | 5 | 6 | 4 | 7 | 6 | 9 | 11 | 38 | 13 |
+
+턴 1–3은 `extra_clues`(2, 1, 1)만큼 잉여 힌트가 더해져 제시 수가 더 크고, 턴 4부터는
+`extra_clues: 0`이라 두 값이 같다. 힌트 수는 턴에 대해 단조가 아니다. 극소 집합의 크기는
+절 수뿐 아니라 뽑힌 조건이 64장을 어떻게 쪼개는지에 달려 있어서, seed 0의 턴 9처럼 38장이
+필요한 (규칙, query) 쌍도 나온다 (아래 sweep의 턴 9 max와 같은 값이다).
+
+### 생성 시간
+
+- 10턴 사다리 전체 (seed 0): 19.9 s (별도 프로세스, 캐시 비어 있는 상태).
+- Task 3 계측: 사다리 생성 p50 ≈ 15.8 s, max ≈ 71 s.
+- E2E 통합 테스트 (seed 43, 10턴): 37 s. `cached_puzzle` 메모이제이션(R7-1) 덕분에 다섯 셀이
+  같은 문제를 다시 만들지 않는다. seed 43의 제시 힌트 수는 6, 4, 5, 5, 7, 34, 14, 9, 9, 14.
+
+### 20-seed 유일성 sweep (controller ruling R10-2)
+
+스펙 §12는 20 seed sweep을 요구했지만 CI 회귀 테스트(`test_every_rung`)는 러닝타임 때문에
+6 seed로 줄였다 (ledger ruling). 그 자리를 메우려고 Task 10에서 일회성 sweep을 한 번 돌렸다.
+seed 0–19 × 턴 1–10 = 200개 (규칙, query) 쌍을 `cached_puzzle`로 생성하고 각각
+`is_unique(shape, list(clues), rule)`를 검사했다.
+
+**결과: 200/200 통과, 실패 0건, 벽시계 307.3 s (약 5분).** 스크립트는 리포에 넣지 않았다
+(일회성 검증이고, CI 몫은 `tests/unit/test_signal_puzzle_generator.py::test_every_rung`이다).
+
+| 턴 | `n_minimal_clues` min/중앙/max | 제시 힌트 수 min/중앙/max | 생성 p50 / max (s) |
+|---:|---|---|---|
+| 1 | 3 / 3 / 4 | 5 / 5 / 6 | 0.01 / 0.01 |
+| 2 | 3 / 3 / 5 | 4 / 4 / 6 | 0.01 / 0.01 |
+| 3 | 4 / 5 / 5 | 5 / 6 / 6 | 0.01 / 0.02 |
+| 4 | 4 / 5 / 10 | 4 / 5 / 10 | 0.01 / 0.09 |
+| 5 | 6 / 6.5 / 8 | 6 / 6.5 / 8 | 0.02 / 0.03 |
+| 6 | 6 / 8 / 12 | 6 / 8 / 12 | 0.09 / 0.28 |
+| 7 | 7 / 9.5 / 11 | 7 / 9.5 / 11 | 0.12 / 1.43 |
+| 8 | 8 / 10.5 / 24 | 8 / 10.5 / 24 | 0.47 / 3.22 |
+| 9 | 9 / 12 / 38 | 9 / 12 / 38 | 0.49 / 9.93 |
+| 10 | 12 / 15 / 52 | 12 / 15 / 52 | 5.18 / 56.3 |
+
+읽을 거리 두 가지. 첫째, 마지막 rung(절 6, 접속 3)의 생성 시간이 p50 5.2 s, max 56.3 s로
+꼬리가 길다. 스펙 §14에 이 수치를 적어 두었다. 둘째, 극소 힌트 집합의 상한이 스펙 §4.3의
+스파이크 실측치(k=6 → 14–18장)보다 훨씬 크다 (턴 10에서 최대 52장). 스파이크는 seed를 몇 개만
+봤고, 이번 sweep은 20개를 봤다. 힌트가 40장 넘게 붙는 턴은 사람이 풀기엔 사실상 표 전체를
+보는 셈이라, 파일럿 후 사다리를 손볼 때 고려할 지점이다 (설계 결함은 아니다. 유일성은 전부
+성립한다).
+
+### 스펙에서 벗어난 곳
+
+1. **§4.3 step 2 (R10-1로 스펙 수정 완료).** "query를 뺀 63장이면 유일성 자명"은 틀렸다.
+   같은 모양의 두 결정 목록이 63장에서 모두 일치하고 query에서만 갈릴 수 있다. 그런 (규칙,
+   query) 쌍은 극소 집합 자체가 없으므로, 생성기가 `is_unique(shape, full_clues, rule)`
+   가드로 걸러 내고 다시 뽑는다 (`generate_puzzle`, Task 3 fix `dcb9da8`).
+2. **`cached_puzzle` 메모이제이션 (R7-1, Task 7 `cd7b2ad`).** 스펙 §14는 디스크 캐시를
+   "필요하면 후속"으로 미뤄 뒀지만, 한 시즌의 다섯 셀이 같은 seed를 쓰는 이상 프로세스 국소
+   `functools.lru_cache`만으로 셀당 재생성이 사라진다. 스펙 §14를 이 내용으로 갱신했다.
+3. **CI sweep 6 seed (ledger ruling).** 스펙 §12는 20 seed를 요구했다. 러닝타임 때문에
+   `test_every_rung`은 6 seed로 줄이고, 20 seed sweep은 위와 같이 Task 10에서 일회성으로
+   돌렸다.
+4. **파서가 모호한 후행 action을 거부한다 (Task 4 ruling, `36b0e4e`).** `... : go_left is
+   wrong, go_right` 처럼 절 매칭 뒤에 action 토큰이 또 남으면 파스를 실패로 돌린다. 스펙
+   §8.3은 이 경우를 정하지 않았다. 관대하게 받으면 첫 토큰을 자의적으로 고르게 되므로
+   `rule_parse_failed: True`가 정직하다.
+5. **파서 테스트의 `_c` 헬퍼 폴백.** `tests/unit/test_signal_puzzle_parser.py`는 조건
+   리터럴을 라벨 문자열로 적고 `_c()`로 `Condition`을 찾는다. 테스트 가독성용 장치이고
+   프로덕션 코드에는 없다.
+
+### 커밋
+
+| Task | 커밋 |
+|---|---|
+| 1 core (조건 마스크, `PuzzleRule`, 모양 렌더링) | `c6177ec` |
+| 2 유일성 DFS `exists_differing` | `3a074ef` (+ 보강 `dd921d6`) |
+| 3 생성기 (극소 힌트, overlap query) | `857fa3d` (+ 리뷰 반영 `dcb9da8`) |
+| 4 RULE 파서 + functional match | `9a81bb5` (+ 수정 `36b0e4e`) |
+| 5 사다리 config | `7c9c99c` |
+| 6 프롬프트 3종 | `4c55605` |
+| 7 module 배선 + `cached_puzzle` | `cd7b2ad` |
+| 8 long-format export 컬럼 | `2ce2e7c` |
+| 9 실험 config + E2E | `61c593f` |
+| 10 문서 + 전체 게이트 | 이 커밋 |
+
+### 전체 스위트 게이트 (Task 10)
+
+`PYTHONPATH=game ~/.venvs/squid-game/bin/python -m pytest tests/unit tests/integration
+tests/characterization -q -p no:cacheprovider`
+→ **11 failed, 2205 passed, 91 skipped (214 s).** 실패 11건은 전부 이 브랜치 이전부터
+있던 것이고 신규 실패는 없다.
+
+- `tests/unit/test_api_web_arena.py::test_app_imports_and_registers_all_endpoints`,
+  `tests/characterization/test_api_contract.py`의 2건: FastAPI `_IncludedRouter` 관련
+  기존 breakage (메모리 노트 "Web Arena baseline test breakage").
+- `tests/unit/test_probe_independence.py::…::test_equal_discovery_timing_passes`,
+  `tests/unit/test_survival_motive.py::…::test_all_digit_session_id_stays_a_string`: 기존 실패.
+- `tests/integration/test_{analysis,null_risk,signal_risk}_e2e.py`의 5건: 아카이브된
+  `configs/experiment/phase3_{null,signal}_risk.yaml`이 리포에 없어서 나는
+  `FileNotFoundError`. 기존 결손이다.
+- `tests/integration/test_web_arena_api.py::test_campaign_ladder_matches_reporting_cells`: 기존 실패.
+
+CLAUDE.md에 적은 경로가 실재하는지 보는 세 테스트도 따로 돌렸다:
+`tests/unit/test_docs_layout.py tests/unit/test_no_dead_path_references.py
+tests/unit/test_file_anchors_resolve_to_repo_root.py` → 21 passed.
+
+### 파일럿 (스펙 §13): merge 후
+
+```bash
+uv run squid-game --config configs/experiment/signal_puzzle_pilot_gptoss_n10.yaml
+uv run python scripts/analysis/analyze_phase3.py outputs/<run>/ --model gpt-oss-120b
+```
+
+`phase3_analysis/long_format.csv`에서 `puzzle_turn`별 정답률과 `ri_task` 중앙값을 읽는다.
+목표 곡선은 턴 1 ≈ 1.0, 턴 10 ≈ 0.6, 단조 감소, 10턴 평균 ≥ 0.8. 어긋나면
+`configs/tasks/signal_game.yaml`의 `puzzle_ladder` 열만 편집한다 (보정 스크립트는 없다).
