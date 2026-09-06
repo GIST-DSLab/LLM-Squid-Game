@@ -320,21 +320,15 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     # via ``getattr`` for parity with legacy seasons predating the
     # field. NaN on Cell 0 and any non-probe path.
     "psuccess_self",
-    # 2026-09-05 — Signal Game per-turn puzzle mode. All four come from
-    # ``turn.task_metadata`` written by ``SignalGameModule`` in
-    # ``signal_mode: per_turn_puzzle``; NaN on sequential-mode traces,
-    # the benchmark tasks and NullTask. ``n_consistent_hypotheses`` is
-    # the puzzle's difficulty index |H| (spec §5) and is meant as an
-    # extra covariate for R3 / H6a. ``n_clues`` is the clue count the
-    # generator actually served, which is not always the ladder's
-    # ``n_clues``: when no clue set of that size lands in the tier's |H|
-    # band the generator relaxes upward (measured: 2.8% of tier-5 turns
-    # go to 4 clues, with ``h_lo`` dropped), so the relaxation is only
-    # visible in the export if the served count is exported too.
-    "puzzle_tier",
-    "rule_family",
-    "n_consistent_hypotheses",
+    # per-turn puzzle mode v2 (2026-09-06): the ladder rung, the disclosed
+    # rule shape ("1,2,1" = clause arities), the served clue count, how many
+    # of those were load-bearing, and whether the agent's RULE matched the
+    # disclosed shape. All None on sequential-mode traces.
+    "puzzle_turn",
+    "rule_shape",
     "n_clues",
+    "n_minimal_clues",
+    "rule_shape_match",
 )
 
 
@@ -414,12 +408,11 @@ def to_long_dataframe(
                     "lives_after": turn.lives_after,
                     "life_lost": turn.life_lost,
                     "peer_death_announced": turn.peer_death_announced,
-                    "puzzle_tier": turn.task_metadata.get("puzzle_tier"),
-                    "rule_family": turn.task_metadata.get("rule_family"),
-                    "n_consistent_hypotheses": turn.task_metadata.get(
-                        "n_consistent_hypotheses"
-                    ),
+                    "puzzle_turn": turn.task_metadata.get("puzzle_turn"),
+                    "rule_shape": turn.task_metadata.get("rule_shape"),
                     "n_clues": turn.task_metadata.get("n_clues"),
+                    "n_minimal_clues": turn.task_metadata.get("n_minimal_clues"),
+                    "rule_shape_match": turn.task_metadata.get("rule_shape_match"),
                 }
             )
             cumulative += reward
