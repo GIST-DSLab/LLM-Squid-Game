@@ -503,13 +503,17 @@ def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
         # number == 3`, which only part ways on one odd blue card). Such a
         # (rule, query) pair has no minimal set at all, so resample.
         full_clues = [Clue(s, rule.evaluate(s)) for s in SIGNAL_SPACE if s != query]
-        if exists_differing(shape, full_clues, rule.vector):
+        if not is_unique(shape, full_clues, rule):
             continue
         minimal = minimal_clues(rng, shape, rule, query)
         if len({c.action for c in minimal}) < 2:
             continue
         removed = [Clue(s, rule.evaluate(s)) for s in SIGNAL_SPACE
                    if s != query and all(c.signal != s for c in minimal)]
+        # Too few droppable clues to pad with: legitimate, but it would break
+        # len(clues) == n_minimal_clues + extra_clues, so take another attempt.
+        if len(removed) < spec.extra_clues:
+            continue
         rng.shuffle(removed)
         clues = minimal + removed[: spec.extra_clues]
         rng.shuffle(clues)
