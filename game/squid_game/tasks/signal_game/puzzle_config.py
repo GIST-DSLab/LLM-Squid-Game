@@ -53,7 +53,7 @@ class PuzzleLadderStep(BaseModel):
 class SignalPuzzleConfig(BaseModel):
     """The ``puzzle_ladder`` block: turn number -> spec."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     puzzle_ladder: list[PuzzleLadderStep] = Field(min_length=1)
 

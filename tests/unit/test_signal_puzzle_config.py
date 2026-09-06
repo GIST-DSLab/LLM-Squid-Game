@@ -78,6 +78,16 @@ class TestValidation:
         with pytest.raises(FileNotFoundError):
             load_signal_puzzle_config(tmp_path / "nowhere")
 
+    def test_top_level_typo_key_rejected(self) -> None:
+        """``extra="forbid"``: a misspelled top-level key must not be silently dropped.
+
+        ``load_signal_puzzle_config`` only ever passes ``{"puzzle_ladder": ...}``,
+        so the YAML's other top-level keys (``name``, ``difficulties``, ...) stay
+        ignored; this exercises ``model_validate`` directly.
+        """
+        with pytest.raises(ValueError, match="puzzle_ladders"):
+            SignalPuzzleConfig.model_validate({"puzzle_ladder": _GOOD, "puzzle_ladders": _GOOD})
+
     def test_v1_keys_rejected(self, tmp_path: Path) -> None:
         old = [{"tier": 1, "turns": 6, "families": ["A"], "n_clues": 12, "h_lo": 5, "h_hi": 17}]
         with pytest.raises(ValueError):

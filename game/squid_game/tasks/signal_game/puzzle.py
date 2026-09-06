@@ -539,9 +539,16 @@ _ATOM_PARITY = re.compile(r"^number\s*%\s*2\s*==\s*([01])$")
 _CLAUSE_SPLIT = re.compile(r"(?:^|;|\n)\s*(?=(?:if|elif|else)\b)")
 _CLAUSE_RE = re.compile(rf"^(if|elif)\s+(.+?)\s*:\s*(?:action\s*=\s*)?({_ACTION_RE})\b")
 _ELSE_RE = re.compile(rf"^else\s*:\s*(?:action\s*=\s*)?({_ACTION_RE})\b")
-#: A second action token in the text left over after a clause match makes the
-#: clause ambiguous (``go_left is wrong, go_right``), so the parse is refused.
+#: A *different* action token in the text left over after a clause match makes
+#: the clause ambiguous (``go_left is wrong, go_right``), so the parse is
+#: refused. A repeat of the action just matched (``stay (best guess, stay)``)
+#: adds nothing and is tolerated.
 _TRAILING_ACTION_RE = re.compile(rf"\b(?:{_ACTION_RE})\b")
+
+
+def _ambiguous_remainder(rest: str, action: str) -> bool:
+    """Does *rest* name an action other than the one already matched?"""
+    return any(tok != action for tok in _TRAILING_ACTION_RE.findall(rest))
 
 
 def _normalise_rule_text(text: str) -> str:
@@ -549,6 +556,14 @@ def _normalise_rule_text(text: str) -> str:
     s = re.sub(r"^\s*rule\s*:\s*", "", s, flags=re.IGNORECASE)
     s = s.lower().replace("colour", "color")
     s = s.replace("'", "").replace('"', "")
+    # Parentheses carry no meaning in this grammar, so a wrapped condition
+    # (``if (color == red): stay``) and a parenthesised aside (``stay (my best
+    # guess)``) both normalise to the bare form.
+    s = s.replace("(", " ").replace(")", " ")
+    # A single ``=`` on an attribute is an assignment in Python but an equality
+    # test in every model that writes it; ``number >= 3`` / ``number <= 3`` are
+    # untouched because the lookahead only fires on a bare ``=``.
+    s = re.sub(r"\b(color|shape|number)\s*=\s*(?!=)", r"\1 == ", s)
     # v1 / prose spellings -> Python spellings.
     s = re.sub(r"\botherwise\b", "else:", s)
     s = re.sub(r"\belse if\b", "elif", s)
@@ -608,8 +623,9 @@ def parse_rule_text(text: str) -> PuzzleRule | None:
     there is no ``if`` clause, no ``else``, a value or action off the
     grid, or a conjunction on one attribute. Harmless trailing prose
     after an action is tolerated (``stay  (my best guess)``), but a
-    remainder containing a *second* action token is ambiguous
-    (``go_left is wrong, go_right``) and is refused too. The shape is
+    remainder naming a *different* action is ambiguous
+    (``go_left is wrong, go_right``) and is refused too; a remainder that
+    merely repeats the matched action (``stay (best guess, stay)``) is not. The shape is
     NOT checked against the round's shape; callers compare ``.shape``
     themselves.
     """
@@ -622,14 +638,14 @@ def parse_rule_text(text: str) -> PuzzleRule | None:
     for chunk in chunks:
         m = _ELSE_RE.match(chunk)
         if m:
-            if _TRAILING_ACTION_RE.search(chunk[m.end():]):
+            if _ambiguous_remainder(chunk[m.end():], m.group(1)):
                 return None
             else_action = m.group(1)
             break
         m = _CLAUSE_RE.match(chunk)
         if not m:
             return None
-        if _TRAILING_ACTION_RE.search(chunk[m.end():]):
+        if _ambiguous_remainder(chunk[m.end():], m.group(3)):
             return None
         if (m.group(1) == "if") != (not clauses):
             return None
@@ -652,7 +668,7 @@ def functional_match_score(hypothesis: PuzzleRule, truth: PuzzleRule) -> float:
 
 
 @functools.lru_cache(maxsize=4096)
-def cached_puzzle(seed: int | str, turn_number: int, spec: PuzzleSpec) -> Puzzle:
+def cached_puzzle(seed: int | str | None, turn_number: int, spec: PuzzleSpec) -> Puzzle:
     """``generate_puzzle(puzzle_rng(seed, turn_number), spec)`` memoised per process.
 
     Every cell of a run shares the season seed, so the same puzzle is otherwise

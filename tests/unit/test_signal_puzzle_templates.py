@@ -31,6 +31,14 @@ class TestSystemRules:
             "number % 2 == 1",
         ):
             assert form in out, form
+        # The ranges are bounded so the disclosed grammar matches ATOMS exactly:
+        # `number >= 1` and `number <= 4` are always true and are not in it.
+        assert "number >= <n>, where <n> is 2, 3 or 4" in out
+        assert "number <= <n>, where <n> is 1, 2 or 3" in out
+        assert (
+            "In the three equality forms, <color> is one of the colors listed above, "
+            "<shape> one of the shapes and <n> one of the numbers." in out
+        )
         assert "two different attributes" in out
         assert "first clause whose condition holds" in out
         assert "determine the rule and the correct action" in out

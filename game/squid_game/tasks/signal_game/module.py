@@ -281,7 +281,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 # Every puzzle is drawn from ``random.Random(f"{seed}:{turn}")``
                 # (puzzle.puzzle_rng), so a ``None`` seed makes the literal
                 # string "None:1" … and every repetition of every cell then
-                # plays the identical 30 puzzles. ``runner.py`` passes the
+                # plays the identical 10 puzzles. ``runner.py`` passes the
                 # config seed straight through when it is unset, so this is
                 # reachable from YAML alone.
                 raise ValueError(

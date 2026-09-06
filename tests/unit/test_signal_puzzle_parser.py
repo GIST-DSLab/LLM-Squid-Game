@@ -82,6 +82,34 @@ class TestExactForms:
         parsed = parse_rule_text(text)
         assert parsed is not None and parsed.shape == (1,)
 
+    def test_parenthesised_condition(self) -> None:
+        expected = PuzzleRule(clauses=((_c('color == "red"'), "stay"),), else_action="jump")
+        parsed = parse_rule_text('if (color == "red"): stay; else: jump')
+        assert parsed is not None
+        assert parsed.vector == expected.vector
+        assert parsed.shape == expected.shape
+
+    def test_parenthesised_conjunction(self) -> None:
+        expected = PuzzleRule(
+            clauses=((_c('number >= 3 and shape == "star"'), "go_left"),), else_action="jump"
+        )
+        parsed = parse_rule_text('if (number >= 3 and shape == "star"): go_left; else: jump')
+        assert parsed is not None
+        assert parsed.vector == expected.vector
+        assert parsed.shape == expected.shape
+
+    def test_single_equals_is_an_equality_test(self) -> None:
+        expected = PuzzleRule(clauses=((_c('color == "red"'), "stay"),), else_action="jump")
+        parsed = parse_rule_text('if color = "red": stay; else: jump')
+        assert parsed is not None
+        assert parsed.vector == expected.vector
+        assert parsed.shape == expected.shape
+
+    def test_single_equals_leaves_range_atoms_alone(self) -> None:
+        expected = PuzzleRule(clauses=((_c("number >= 3"), "jump"),), else_action="stay")
+        parsed = parse_rule_text("if number >= 3: jump; else: stay")
+        assert parsed is not None and parsed.vector == expected.vector
+
 
 class TestProseAndSpacingVariants:
     """Spec §8 tolerance: v1 prose comparators, parity words, British spelling, spacing."""
@@ -143,6 +171,19 @@ class TestAmbiguousTrailingText:
     def test_second_action_token_in_remainder_is_refused(self, text: str) -> None:
         assert parse_rule_text(text) is None
 
+    def test_repeated_same_action_in_remainder_still_parses(self) -> None:
+        expected = PuzzleRule(clauses=((_c('color == "red"'), "jump"),), else_action="stay")
+        parsed = parse_rule_text('if color == "red": jump; else: stay (best guess so far, stay)')
+        assert parsed is not None
+        assert parsed.vector == expected.vector
+        assert parsed.shape == expected.shape
+
+    def test_repeated_same_action_after_a_clause_still_parses(self) -> None:
+        expected = PuzzleRule(clauses=((_c('color == "red"'), "stay"),), else_action="jump")
+        parsed = parse_rule_text('if color == "red": stay (still stay); else: jump')
+        assert parsed is not None
+        assert parsed.vector == expected.vector
+
     def test_harmless_trailing_prose_still_parses(self) -> None:
         parsed = parse_rule_text('if color == "red": stay  (my best guess); else: jump')
         assert parsed is not None
@@ -164,6 +205,9 @@ class TestFailures:
             'if color == "red": stay',  # missing else
             'if color == "red" and color == "blue": stay; else: jump',  # same attribute
             "else: jump",  # no clause
+            "elif color == red: stay; else: jump",  # all-elif, no leading if
+            "if number >= 1: stay; else: jump",  # always true, outside the grammar
+            "if number <= 4: stay; else: jump",  # always true, outside the grammar
         ],
     )
     def test_returns_none(self, text: str) -> None:

@@ -36,6 +36,13 @@ LADDER = [
 ]
 
 
+def test_inline_ladder_matches_the_packaged_yaml() -> None:
+    """The inline LADDER above is a copy; pin it to configs/tasks/signal_game.yaml."""
+    from squid_game.tasks.signal_game.puzzle_config import load_signal_puzzle_config
+
+    assert [s.to_spec() for s in load_signal_puzzle_config().puzzle_ladder] == LADDER
+
+
 def _honest(rule) -> bool:
     regions = rule.region_masks()
     if any(r == 0 for r in regions):
