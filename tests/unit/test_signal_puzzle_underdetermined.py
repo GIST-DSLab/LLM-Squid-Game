@@ -6,9 +6,16 @@ Spec: docs/history/specs/2026-09-06-signal-puzzle-underdetermined-turns-design.m
 from __future__ import annotations
 
 import dataclasses
+import textwrap
 
 import pytest
 
+from squid_game.core.engine import GameEngine
+from squid_game.models.config import ProviderConfig, SeasonConfig, TaskConfig
+from squid_game.models.enums import Difficulty, ForfeitCondition, Framing
+from squid_game.models.state import GameState, TurnContext
+from squid_game.runner import load_config_from_yaml
+from squid_game.tasks.signal_game.module import SignalGameModule
 from squid_game.tasks.signal_game.puzzle import (
     SIGNAL_SPACE,
     Clue,
@@ -310,3 +317,147 @@ class TestUnderdeterminedConfigValidation:
                     tmp_path, {"blocks": [[1, 3]], "candidate_actions": 1}
                 )
             )
+
+
+def _ctx(turn: int) -> TurnContext:
+    """Same helper shape as tests/unit/test_signal_game_puzzle_mode.py."""
+    return TurnContext(
+        turn_number=turn, total_turns=10, season_id="s", cumulative_score=0.0,
+        p_death=0.0, framing=Framing.TRUE_BASELINE,
+        forfeit_condition=ForfeitCondition.NOT_ALLOWED, difficulty=Difficulty.MEDIUM,
+    )
+
+
+def _module(**kwargs) -> SignalGameModule:
+    module = SignalGameModule()
+    module.initialize(
+        difficulty=Difficulty.MEDIUM,
+        seed=kwargs.pop("seed", 42),
+        signal_mode=kwargs.pop("signal_mode", "per_turn_puzzle"),
+        total_turns=kwargs.pop("total_turns", 10),
+        **kwargs,
+    )
+    return module
+
+
+@pytest.fixture
+def state() -> GameState:
+    return GameState(season_id="s")
+
+
+class TestModuleWiring:
+    def test_off_by_default(self) -> None:
+        module = _module()
+        assert module._underdetermined_turns == ()
+
+    def test_schedule_computed_from_seed(self) -> None:
+        assert _module(seed=42, underdetermined=True)._underdetermined_turns == (1, 5)
+        assert _module(seed=43, underdetermined=True)._underdetermined_turns == (2, 6)
+
+    def test_rejected_outside_puzzle_mode(self) -> None:
+        with pytest.raises(ValueError, match="per_turn_puzzle"):
+            _module(signal_mode="sequential", underdetermined=True)
+
+    def test_scheduled_turn_gets_an_underdetermined_puzzle(self, state: GameState) -> None:
+        module = _module(seed=42, underdetermined=True)
+        module.prepare(state, _ctx(1))                  # scheduled for seed 42
+        assert module._current_puzzle.n_candidate_actions == 2
+        module.prepare(state, _ctx(2))                  # not scheduled
+        assert module._current_puzzle.n_candidate_actions == 1
+
+    def test_observation_text_is_shaped_like_any_other_turn(self, state: GameState) -> None:
+        module = _module(seed=42, underdetermined=True)
+        text = module.prepare(state, _ctx(1)).prompt_section
+        assert text.startswith("Turn 1. This round's rule has exactly this shape")
+        for word in ("guess", "ambiguous", "cannot", "underdetermined"):
+            assert word not in text.lower()
+
+
+class _StopAfterInitialize(Exception):
+    """Sentinel raised by the spy so ``run_season`` stops at step 1."""
+
+
+class TestConfigAndRunnerWiring:
+    """The YAML -> TaskConfig -> engine -> module path (spec §4.1)."""
+
+    def test_task_config_defaults_to_off(self) -> None:
+        assert TaskConfig(task_name="signal_game").underdetermined is False
+
+    def test_task_config_accepts_true(self) -> None:
+        assert TaskConfig(task_name="signal_game", underdetermined=True).underdetermined is True
+
+    def test_loader_forwards_the_yaml_key(self, tmp_path: Path) -> None:
+        """The silent failure mode: without the runner whitelist entry the
+        key parses fine and is dropped, so the run is quietly determined."""
+        cfg_path = tmp_path / "exp.yaml"
+        cfg_path.write_text(
+            textwrap.dedent("""
+                name: t
+                seasons:
+                - framing: true_baseline
+                  forfeit_condition: not_allowed
+                  task_config:
+                    task_name: signal_game
+                    total_turns: 3
+                    seed: 42
+                    signal_mode: per_turn_puzzle
+                    underdetermined: true
+                  provider_config:
+                    provider: openai
+                    model: stub
+                num_repetitions: 1
+                output_dir: outputs/tmp
+            """),
+            encoding="utf-8",
+        )
+        cfg = load_config_from_yaml(str(cfg_path))
+        assert cfg.seasons[0].task_config.underdetermined is True
+
+    def test_loader_defaults_to_off_when_the_key_is_absent(self, tmp_path: Path) -> None:
+        cfg_path = tmp_path / "exp.yaml"
+        cfg_path.write_text(
+            textwrap.dedent("""
+                name: t
+                seasons:
+                - framing: true_baseline
+                  forfeit_condition: not_allowed
+                  task_config:
+                    task_name: signal_game
+                    total_turns: 3
+                  provider_config:
+                    provider: openai
+                    model: stub
+                num_repetitions: 1
+                output_dir: outputs/tmp
+            """),
+            encoding="utf-8",
+        )
+        cfg = load_config_from_yaml(str(cfg_path))
+        assert cfg.seasons[0].task_config.underdetermined is False
+
+    @pytest.mark.parametrize("flag", [True, False])
+    def test_engine_forwards_the_flag_to_task_initialize(self, flag: bool) -> None:
+        recorded: dict = {}
+        task = SignalGameModule()
+
+        def _spy(**kwargs) -> None:
+            recorded.update(kwargs)
+            raise _StopAfterInitialize
+
+        task.initialize = _spy  # type: ignore[method-assign]
+        season = SeasonConfig(
+            framing=Framing.TRUE_BASELINE,
+            forfeit_condition=ForfeitCondition.NOT_ALLOWED,
+            task_config=TaskConfig(
+                task_name="signal_game",
+                total_turns=10,
+                seed=42,
+                signal_mode="per_turn_puzzle",
+                underdetermined=flag,
+            ),
+            provider_config=ProviderConfig(provider="openai", model="stub"),
+        )
+        engine = GameEngine(config=season, task=task, agent=None, provider=None)
+        with pytest.raises(_StopAfterInitialize):
+            engine.run_season()
+        assert recorded["underdetermined"] is flag

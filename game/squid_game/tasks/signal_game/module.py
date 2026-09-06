@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,9 @@ from squid_game.tasks.signal_game.puzzle import (
 )
 from squid_game.tasks.signal_game.puzzle_config import (
     SignalPuzzleConfig,
+    UnderdeterminedConfig,
     load_signal_puzzle_config,
+    underdetermined_turns,
 )
 
 #: Stimulus modes accepted by ``initialize(signal_mode=...)``.
@@ -168,6 +170,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._seed: int | None = None
         self._puzzle_config: SignalPuzzleConfig | None = None
         self._current_puzzle: Puzzle | None = None
+        self._underdetermined: bool = False
+        self._underdetermined_cfg: UnderdeterminedConfig | None = None
+        self._underdetermined_turns: tuple[int, ...] = ()
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -245,6 +250,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 from the turn-indexed ``puzzle_ladder``).
                 In puzzle mode ``difficulty``, ``num_few_shot`` and
                 ``curriculum_turns`` are ignored.
+            underdetermined: Puzzle mode only — make one turn inside each
+                block of the ``underdetermined`` config in
+                ``configs/tasks/signal_game.yaml`` deliberately unsolvable
+                (one load-bearing clue withheld). Which turn inside each
+                block is derived from *seed*, so the cells of one
+                repetition share the schedule. The agent is never told.
             puzzle_config_dir: Directory holding ``signal_game.yaml``
                 for the puzzle ladder; ``None`` uses the packaged
                 ``configs/tasks``. Puzzle mode only.
@@ -254,7 +265,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         Raises:
             ValueError: If *signal_mode* is unknown, or puzzle mode is
                 requested with a season longer than the ladder covers
-                (or with an invalid / missing ``puzzle_ladder``).
+                (or with an invalid / missing ``puzzle_ladder``), or
+                ``underdetermined`` is set outside puzzle mode / without
+                an ``underdetermined`` block in the task YAML.
         """
         self._difficulty = difficulty
         self._rng = random.Random(seed)
@@ -276,6 +289,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._signal_mode = signal_mode
         self._current_puzzle = None
         self._puzzle_config = None
+        self._underdetermined = bool(kwargs.get("underdetermined", False))
+        self._underdetermined_cfg = None
+        self._underdetermined_turns = ()
+        if self._underdetermined and signal_mode != "per_turn_puzzle":
+            raise ValueError(
+                "task_config.underdetermined requires signal_mode: "
+                "per_turn_puzzle — the flag withholds a clue from a "
+                f"per-turn puzzle, and signal_mode is {signal_mode!r}."
+            )
         if signal_mode == "per_turn_puzzle":
             if seed is None:
                 # Every puzzle is drawn from ``random.Random(f"{seed}:{turn}")``
@@ -300,6 +322,22 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     f"but the puzzle_ladder in configs/tasks/signal_game.yaml covers "
                     f"{self._puzzle_config.total_turns}. Extend the ladder or shorten the season."
                 )
+            if self._underdetermined:
+                ud_cfg = self._puzzle_config.underdetermined
+                if ud_cfg is None:
+                    raise ValueError(
+                        "task_config.underdetermined is set but "
+                        "configs/tasks/signal_game.yaml carries no "
+                        "`underdetermined` block (blocks / candidate_actions)."
+                    )
+                self._underdetermined_cfg = ud_cfg
+                self._underdetermined_turns = underdetermined_turns(seed, ud_cfg)
+                if isinstance(total_turns, int) and max(self._underdetermined_turns) > total_turns:
+                    raise ValueError(
+                        f"underdetermined turns {self._underdetermined_turns} fall "
+                        f"outside a {total_turns}-turn season; shorten the blocks in "
+                        "configs/tasks/signal_game.yaml."
+                    )
             if self._num_few_shot is not None or self._curriculum_turns:
                 # ``difficulty`` is a required positional, so "explicitly set"
                 # is undetectable for it; only these two knobs trigger here.
@@ -355,6 +393,17 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if self._signal_mode == "per_turn_puzzle":
             assert self._puzzle_config is not None
             spec = self._puzzle_config.spec_for_turn(turn_number)
+            if turn_number in self._underdetermined_turns:
+                # One load-bearing clue is withheld this turn (spec §4.3).
+                # The flag rides on the spec because ``cached_puzzle`` keys
+                # its lru_cache on it, so the determined and underdetermined
+                # versions of one (seed, turn) never collide.
+                assert self._underdetermined_cfg is not None
+                spec = replace(
+                    spec,
+                    underdetermined=True,
+                    n_candidate_actions=self._underdetermined_cfg.candidate_actions,
+                )
             # R7-1: memoised per process — every cell of a run shares the
             # season seed, so the same (seed, turn) puzzle would otherwise be
             # regenerated once per cell (1-15 s on the top ladder rungs).
