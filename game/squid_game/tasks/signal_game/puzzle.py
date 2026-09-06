@@ -278,6 +278,9 @@ def exists_differing(
     Prune when the remaining clues carry more distinct labels than the
     remaining clauses + else can serve. Memoised on (position, covered,
     differs).
+
+    ``clues`` is consumed exactly once, so pass a list or tuple rather
+    than a generator.
     """
     clue_label: dict[int, str] = {}
     remaining0 = 0

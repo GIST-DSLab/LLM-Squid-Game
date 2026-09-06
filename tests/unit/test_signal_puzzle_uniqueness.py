@@ -9,6 +9,7 @@ import pytest
 from squid_game.tasks.signal_game.puzzle import (
     ATOMS,
     CONDITION_BY_LABEL,
+    CONJUNCTIONS,
     SIGNAL_SPACE,
     Clue,
     PuzzleRule,
@@ -95,3 +96,88 @@ class TestKnownCases:
         assert exists_differing((1, 1), clues, rule.vector)
         clues_all = [Clue(s, rule.evaluate(s)) for s in SIGNAL_SPACE]
         assert not exists_differing((1, 1), clues_all, rule.vector)
+
+
+# Clue-density ladders spanning the sparse regime (many consistent decision
+# lists -> exists_differing True) and the near-complete regime (the truth is
+# pinned -> False). Task 3's minimal-clue removal queries the dense end, so
+# both directions have to be pinned rather than left incidental.
+_LADDER_DENSE = (3, 6, 10, 16, 24, 40, 52, 63)
+_LADDER_COARSE = (3, 8, 16, 32, 48, 63)
+
+
+class TestAgainstBruteForceAcrossClueDensity:
+    """exists_differing matches enumeration in BOTH directions.
+
+    ``TestAgainstBruteForce`` samples 2-10 clues, which lands on True almost
+    every time; these walk the clue count up to 63 so the False branch — the
+    one ``is_unique`` actually rides during minimal-clue removal — is covered
+    too. Each test asserts that its own seeds produced both outcomes.
+    """
+
+    def test_single_clause_clue_density_ladder(self) -> None:
+        outcomes = set()
+        for n in _LADDER_DENSE:
+            for seed in range(3):
+                rng = random.Random(f"single:{n}:{seed}")
+                rule = PuzzleRule(
+                    clauses=((rng.choice(ATOMS), "stay"),), else_action="jump"
+                )
+                sigs = rng.sample(SIGNAL_SPACE, n)
+                clues = [Clue(s, rule.evaluate(s)) for s in sigs]
+                got = exists_differing((1,), clues, rule.vector)
+                assert got == _brute_force_differs((1,), clues, rule.vector)
+                outcomes.add(got)
+        assert outcomes == {True, False}
+
+    def test_two_clause_clue_density_ladder(self) -> None:
+        outcomes = set()
+        for n in _LADDER_COARSE:
+            for seed in range(2):
+                rng = random.Random(f"two:{n}:{seed}")
+                a, b = rng.sample(ATOMS, 2)
+                acts = rng.sample(ACTIONS, 3)
+                rule = PuzzleRule(
+                    clauses=((a, acts[0]), (b, acts[1])), else_action=acts[2]
+                )
+                sigs = rng.sample(SIGNAL_SPACE, n)
+                clues = [Clue(s, rule.evaluate(s)) for s in sigs]
+                got = exists_differing((1, 1), clues, rule.vector)
+                assert got == _brute_force_differs((1, 1), clues, rule.vector)
+                outcomes.add(got)
+        assert outcomes == {True, False}
+
+    def test_conjunction_shape_clue_density_ladder(self) -> None:
+        outcomes = set()
+        for n in _LADDER_DENSE:
+            for seed in range(3):
+                rng = random.Random(f"conj:{n}:{seed}")
+                rule = PuzzleRule(
+                    clauses=((rng.choice(CONJUNCTIONS), "stay"),), else_action="jump"
+                )
+                sigs = rng.sample(SIGNAL_SPACE, n)
+                clues = [Clue(s, rule.evaluate(s)) for s in sigs]
+                got = exists_differing((2,), clues, rule.vector)
+                assert got == _brute_force_differs((2,), clues, rule.vector)
+                outcomes.add(got)
+        assert outcomes == {True, False}
+
+    def test_mixed_arity_shape(self) -> None:
+        """A (1, 2) shape — one atom clause, one conjunction clause."""
+        outcomes = set()
+        for n in (8, 48):
+            rng = random.Random(f"mixed:{n}")
+            acts = rng.sample(ACTIONS, 3)
+            rule = PuzzleRule(
+                clauses=(
+                    (rng.choice(ATOMS), acts[0]),
+                    (rng.choice(CONJUNCTIONS), acts[1]),
+                ),
+                else_action=acts[2],
+            )
+            sigs = rng.sample(SIGNAL_SPACE, n)
+            clues = [Clue(s, rule.evaluate(s)) for s in sigs]
+            got = exists_differing((1, 2), clues, rule.vector)
+            assert got == _brute_force_differs((1, 2), clues, rule.vector)
+            outcomes.add(got)
+        assert outcomes == {True, False}
