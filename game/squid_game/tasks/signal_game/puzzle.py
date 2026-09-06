@@ -342,6 +342,81 @@ def is_unique(shape: tuple[int, ...], clues: Iterable[Clue], rule: PuzzleRule) -
     return not exists_differing(shape, list(clues), rule.vector)
 
 
+def exists_consistent(shape: tuple[int, ...], clues: Iterable[Clue]) -> bool:
+    """Does any decision list of *shape* agree with every clue in *clues*?
+
+    The same depth-first walk as :func:`exists_differing` with the
+    ``differs`` bookkeeping removed, so the memo key drops to
+    ``(position, covered)`` — ``remaining`` is always
+    ``remaining0 & ~covered``. At each position a clause may be dead
+    (decides no new signal; skipped) or take any condition of that
+    position's arity that decides at least one new signal and whose
+    captured clues all carry one action label. Success means the clues
+    left for ``else`` carry at most one label.
+
+    ``clues`` is consumed exactly once, so pass a list or tuple rather
+    than a generator. Two clues naming different actions for the same
+    signal make the set unsatisfiable by definition.
+    """
+    clue_label: dict[int, str] = {}
+    remaining0 = 0
+    for c in clues:
+        i = SIGNAL_INDEX[c.signal]
+        if clue_label.setdefault(i, c.action) != c.action:
+            return False
+        remaining0 |= 1 << i
+    k = len(shape)
+    memo: dict[tuple[int, int], bool] = {}
+
+    def labels_of(mask: int) -> set[str]:
+        return {clue_label[i] for i in _lowest_bits(mask)}
+
+    def rec(pos: int, covered: int) -> bool:
+        key = (pos, covered)
+        if key in memo:
+            return memo[key]
+        remaining = remaining0 & ~covered
+        labs = labels_of(remaining)
+        result = False
+        if pos == k:
+            result = len(labs) <= 1
+        elif len(labs) <= (k - pos) + 1:
+            if rec(pos + 1, covered):
+                result = True
+            else:
+                for cond in CONDITIONS_BY_ARITY[shape[pos]]:
+                    new = cond.mask & ~covered
+                    if not new:
+                        continue
+                    if len(labels_of(remaining & cond.mask)) > 1:
+                        continue
+                    if rec(pos + 1, covered | cond.mask):
+                        result = True
+                        break
+        memo[key] = result
+        return result
+
+    return rec(0, 0)
+
+
+def candidate_actions(
+    shape: tuple[int, ...], clues: Iterable[Clue], query: Signal
+) -> tuple[str, ...]:
+    """Actions the query can still take under some list consistent with *clues*.
+
+    One reachability query per action: pin the query to that action as an
+    extra clue and ask whether anything in the hypothesis space survives.
+    Length 1 means the clue set determines the answer (the uniqueness the
+    v2 generator guarantees); length >= 2 means the turn is
+    underdetermined and the agent can only guess. Returned in ``ACTIONS``
+    order.
+    """
+    base = list(clues)
+    return tuple(
+        a for a in ACTIONS if exists_consistent(shape, base + [Clue(query, a)])
+    )
+
+
 def enumerate_shape(shape: tuple[int, ...]) -> Iterable[PuzzleRule]:
     """Every decision list of *shape* (brute force; tests only).
 
