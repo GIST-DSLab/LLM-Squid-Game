@@ -758,7 +758,7 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
             "seed", "history_mode", "max_history_turns",
             "actual_death", "starting_score", "score_floor",
             "p_death_constant", "num_few_shot", "curriculum_turns",
-            "signal_mode",
+            "signal_mode", "underdetermined",
         )
         for field_name in _TASK_OPTIONAL_FIELDS:
             if field_name in task_raw:

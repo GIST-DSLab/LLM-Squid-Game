@@ -233,6 +233,58 @@ is the uniqueness DFS), `puzzle_config.py`, the three `*_puzzle.j2` templates un
 `sequential` keeps every older config byte-identical. Run the pilot (Cell 0, n=10) and check the
 per-turn accuracy curve before any threat run.
 
+**Underdetermined turns (2026-09-06).** With `task_config.underdetermined: true`
+one turn inside each block of the `underdetermined` block in
+`configs/tasks/signal_game.yaml` (`blocks: [[1,3],[4,6]]`, `candidate_actions: 2`)
+withholds one load-bearing clue, so the query answer splits exactly two ways and
+the agent can only guess; the answer is still graded against the true rule, so
+such a turn can cost a life. Placement rotates with the season seed
+(`underdetermined_turns(seed, cfg)`, a 3x3 Latin square) and every cell of a
+repetition shares it. **The agent is not told** — prompts are byte-identical.
+Per-turn metadata: `underdetermined`, `n_candidate_actions`, `candidate_actions`,
+`p_guess`, `dropped_clue`, `clue_count_padded`, plus `rule_consistent_with_clues`
+(hypothesis vs the shown clues; `rule_match_score` keeps its truth-relative
+definition). Code: `puzzle.exists_consistent` / `candidate_actions` /
+`generate_underdetermined_puzzle`, `puzzle_config.underdetermined_turns`.
+기본값은 off — 단, 이건 "생성 동작이 off"라는 뜻이지 "출력이 예전과 같다"는 뜻이
+아니다. `module.py:756,962`는 puzzle 모드이기만 하면 플래그와 무관하게
+`_puzzle_metadata()`를 호출하므로, per_turn_puzzle 턴은 항상 그 6개 키(+
+`rule_consistent_with_clues`)를 달고 나온다 (의도된 것이다 — determined 턴에서
+`n_candidate_actions == 1`이 유지되는지가 상시 무결성 체크다). Spec:
+`docs/history/specs/2026-09-06-signal-puzzle-underdetermined-turns-design.md`.
+The pilot target curve is restated: 8 determined turns mean >= 0.8, the two
+underdetermined turns ~ 0.5, all 10 turns >= 0.7.
+
+**분석자 계약 (underdetermined 턴을 다룰 때 반드시 지킬 것).**
+
+1. **정답률·`rule_match_score`·mastery 지표는 `underdetermined == False`로 조건을
+   걸거나 모델에 넣어라.** 이 두 턴은 설계상 풀 수 없는데 채점은 진짜 규칙 기준으로
+   되므로, 조건 없이 집계하면 세션마다 추측 턴 2개가 섞여 들어간다.
+   `to_long_dataframe`는 `underdetermined` · `n_candidate_actions` ·
+   `rule_consistent_with_clues` 세 열을 내보내므로(`shared/loaders.py`) 조건을 걸 수
+   있다. 영향받는 곳: `shared/manipulation_check.py`(R3), `cognitive/ri_task.py`의
+   `rule_match_score >= 90` mastery 지표, `behavioral/threat_effort.py`의 H6a,
+   `shared/discovery_detection.py`.
+2. **`n_minimal_clues`는 underdetermined 행에서 의미가 바뀐다.** 그 행의 값은
+   `base.n_minimal_clues - 1`(`puzzle.py`의 `generate_underdetermined_puzzle`)이며,
+   실제로 보여준 clue 집합의 minimal 크기가 아니다 — 그 집합은 애초에 답을 고정하지
+   않는다. 두 조건을 섞어 이 열을 평균 내지 마라.
+3. **FORFEIT 턴에는 task metadata가 아예 없다.** split-call 경로에서 FORFEIT은 task
+   call 이전에 턴을 끝내고 `build_forfeit_layer_result`(`core/turn_results.py:157`,
+   호출부 `unified_turn.py:1144`)가 `task_metadata={}`를 기록한다. 즉 에이전트가
+   그만둔 바로 그 턴에는 `underdetermined` · `puzzle_turn`이 없다. 대신 스케줄은
+   시드의 순함수이므로 `SeasonResult.seed`로 되계산하면 된다:
+   `underdetermined_turns(season.seed, cfg)` (`puzzle_config`). 포기 시점을
+   underdetermined 턴과 엮는 분석은 반드시 이 재계산을 써야 한다.
+4. **스케줄은 값이 정확히 3개뿐이고 `seed % 3`에 묶여 있다.**
+   `blocks: [[1,3],[4,6]]` 기준으로 `seed % 3 == 0 → (1,5)`, `== 1 → (2,6)`,
+   `== 2 → (3,4)`. 즉 세 반복 중 하나는 두 추측 턴이 **인접**(턴 3과 4)하고, 두 추측
+   턴 사이 간격은 `{4,4,1}`로 `seed % 3`과 교락돼 있다. spec이 말하는 "underdetermined
+   턴 *다음* 턴의 FORFEIT율" 같은 2차 분석은 `seed % 3 == 2` 반복에서는 깨끗한 다음
+   턴이 없다 — 간격을 공변량으로 넣거나 그 반복을 빼라. "Latin square로 반복마다
+   회전"이라는 표현이 시사하는 것보다 독립성이 낮다. 공식은 spec 고정이고 테스트로
+   박혀 있으니 오프셋을 바꾸지 마라.
+
 ### Legacy 6-Cell 2×3 Factorial (2026-04-22 canonical runs, `lives.enabled=false`)
 
 | Cell | Framing | Forfeit | p_end | Role |

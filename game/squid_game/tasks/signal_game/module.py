@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,9 @@ from squid_game.tasks.signal_game.puzzle import (
 )
 from squid_game.tasks.signal_game.puzzle_config import (
     SignalPuzzleConfig,
+    UnderdeterminedConfig,
     load_signal_puzzle_config,
+    underdetermined_turns,
 )
 
 #: Stimulus modes accepted by ``initialize(signal_mode=...)``.
@@ -168,6 +170,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._seed: int | None = None
         self._puzzle_config: SignalPuzzleConfig | None = None
         self._current_puzzle: Puzzle | None = None
+        self._underdetermined: bool = False
+        self._underdetermined_cfg: UnderdeterminedConfig | None = None
+        self._underdetermined_turns: tuple[int, ...] = ()
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -245,6 +250,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 from the turn-indexed ``puzzle_ladder``).
                 In puzzle mode ``difficulty``, ``num_few_shot`` and
                 ``curriculum_turns`` are ignored.
+            underdetermined: Puzzle mode only — make one turn inside each
+                block of the ``underdetermined`` config in
+                ``configs/tasks/signal_game.yaml`` deliberately unsolvable
+                (one load-bearing clue withheld). Which turn inside each
+                block is derived from *seed*, so the cells of one
+                repetition share the schedule. The agent is never told.
             puzzle_config_dir: Directory holding ``signal_game.yaml``
                 for the puzzle ladder; ``None`` uses the packaged
                 ``configs/tasks``. Puzzle mode only.
@@ -254,7 +265,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         Raises:
             ValueError: If *signal_mode* is unknown, or puzzle mode is
                 requested with a season longer than the ladder covers
-                (or with an invalid / missing ``puzzle_ladder``).
+                (or with an invalid / missing ``puzzle_ladder``), or
+                ``underdetermined`` is set outside puzzle mode / without
+                an ``underdetermined`` block in the task YAML.
         """
         self._difficulty = difficulty
         self._rng = random.Random(seed)
@@ -276,6 +289,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._signal_mode = signal_mode
         self._current_puzzle = None
         self._puzzle_config = None
+        self._underdetermined = bool(kwargs.get("underdetermined", False))
+        self._underdetermined_cfg = None
+        self._underdetermined_turns = ()
+        if self._underdetermined and signal_mode != "per_turn_puzzle":
+            raise ValueError(
+                "task_config.underdetermined requires signal_mode: "
+                "per_turn_puzzle — the flag withholds a clue from a "
+                f"per-turn puzzle, and signal_mode is {signal_mode!r}."
+            )
         if signal_mode == "per_turn_puzzle":
             if seed is None:
                 # Every puzzle is drawn from ``random.Random(f"{seed}:{turn}")``
@@ -300,6 +322,22 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     f"but the puzzle_ladder in configs/tasks/signal_game.yaml covers "
                     f"{self._puzzle_config.total_turns}. Extend the ladder or shorten the season."
                 )
+            if self._underdetermined:
+                ud_cfg = self._puzzle_config.underdetermined
+                if ud_cfg is None:
+                    raise ValueError(
+                        "task_config.underdetermined is set but "
+                        "configs/tasks/signal_game.yaml carries no "
+                        "`underdetermined` block (blocks / candidate_actions)."
+                    )
+                self._underdetermined_cfg = ud_cfg
+                self._underdetermined_turns = underdetermined_turns(seed, ud_cfg)
+                if isinstance(total_turns, int) and max(self._underdetermined_turns) > total_turns:
+                    raise ValueError(
+                        f"underdetermined turns {self._underdetermined_turns} fall "
+                        f"outside a {total_turns}-turn season; shorten the blocks in "
+                        "configs/tasks/signal_game.yaml."
+                    )
             if self._num_few_shot is not None or self._curriculum_turns:
                 # ``difficulty`` is a required positional, so "explicitly set"
                 # is undetectable for it; only these two knobs trigger here.
@@ -330,8 +368,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._current_signal = None
         self._turn_history = []
         self._cumulative_score = 0.0
-        # ``_signal_mode`` / ``_seed`` / ``_puzzle_config`` are per-session
-        # config from ``initialize()`` and survive a reset, exactly like
+        # ``_signal_mode`` / ``_seed`` / ``_puzzle_config`` /
+        # ``_underdetermined`` / ``_underdetermined_cfg`` /
+        # ``_underdetermined_turns`` are per-session config from
+        # ``initialize()`` and survive a reset, exactly like
         # ``_num_few_shot``; only the per-turn puzzle is cleared.
         self._current_puzzle = None
 
@@ -355,6 +395,17 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if self._signal_mode == "per_turn_puzzle":
             assert self._puzzle_config is not None
             spec = self._puzzle_config.spec_for_turn(turn_number)
+            if turn_number in self._underdetermined_turns:
+                # One load-bearing clue is withheld this turn (spec §4.3).
+                # The flag rides on the spec because ``cached_puzzle`` keys
+                # its lru_cache on it, so the determined and underdetermined
+                # versions of one (seed, turn) never collide.
+                assert self._underdetermined_cfg is not None
+                spec = replace(
+                    spec,
+                    underdetermined=True,
+                    n_candidate_actions=self._underdetermined_cfg.candidate_actions,
+                )
             # R7-1: memoised per process — every cell of a run shares the
             # season seed, so the same (seed, turn) puzzle would otherwise be
             # regenerated once per cell (1-15 s on the top ladder rungs).
@@ -671,7 +722,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             ``puzzle_turn``, ``rule_shape``, ``n_clauses``,
             ``n_conjunctions``, ``predicates_allowed``,
             ``overlap_query``, ``clues``, ``query_signal``, ``n_clues``,
-            ``n_minimal_clues`` and ``query_overlap_count`` — and
+            ``n_minimal_clues`` and ``query_overlap_count``, plus the
+            :meth:`_puzzle_metadata` descriptors (``underdetermined``,
+            ``n_candidate_actions``, ``candidate_actions``, ``p_guess``,
+            ``dropped_clue``, ``clue_count_padded``) — and
             ``hidden_rule`` is this turn's puzzle rule rather than a
             season-long one.
         """
@@ -682,26 +736,25 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if self._signal_mode == "per_turn_puzzle":
             puzzle = self._current_puzzle
             assert puzzle is not None
-            return TaskContext(
-                prompt_section=observation_text,
-                metadata={
-                    "signal": self.get_observation_summary(),
-                    "hidden_rule": puzzle.rule.description,
-                    "correct_action": puzzle.correct_action,
-                    "turn": turn_context.turn_number,
-                    "puzzle_turn": puzzle.spec.turn,
-                    "rule_shape": shape_label(puzzle.shape),
-                    "n_clauses": len(puzzle.shape),
-                    "n_conjunctions": puzzle.shape.count(2),
-                    "predicates_allowed": puzzle.spec.predicates,
-                    "overlap_query": puzzle.spec.overlap_query,
-                    "clues": [str(c) for c in puzzle.clues],
-                    "query_signal": str(puzzle.query),
-                    "n_clues": len(puzzle.clues),
-                    "n_minimal_clues": puzzle.n_minimal_clues,
-                    "query_overlap_count": puzzle.query_overlap_count,
-                },
-            )
+            metadata: dict[str, Any] = {
+                "signal": self.get_observation_summary(),
+                "hidden_rule": puzzle.rule.description,
+                "correct_action": puzzle.correct_action,
+                "turn": turn_context.turn_number,
+                "puzzle_turn": puzzle.spec.turn,
+                "rule_shape": shape_label(puzzle.shape),
+                "n_clauses": len(puzzle.shape),
+                "n_conjunctions": puzzle.shape.count(2),
+                "predicates_allowed": puzzle.spec.predicates,
+                "overlap_query": puzzle.spec.overlap_query,
+                "clues": [str(c) for c in puzzle.clues],
+                "query_signal": str(puzzle.query),
+                "n_clues": len(puzzle.clues),
+                "n_minimal_clues": puzzle.n_minimal_clues,
+                "query_overlap_count": puzzle.query_overlap_count,
+            }
+            metadata.update(self._puzzle_metadata())
+            return TaskContext(prompt_section=observation_text, metadata=metadata)
         active_rule = self._rules[self._active_rule_index]
         return TaskContext(
             prompt_section=observation_text,
@@ -851,6 +904,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         rule_match_score: float | None = None
         rule_shape_match: bool | None = None
         rule_parse_failed: bool | None = None
+        rule_consistent_with_clues: bool | None = None
         if isinstance(rule_hypothesis, str) and rule_hypothesis.strip():
             normalised = rule_hypothesis.strip().lower()
             if self._signal_mode == "per_turn_puzzle":
@@ -866,6 +920,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     and parsed.shape == self._current_puzzle.shape
                 )
                 rule_match_score = self._functional_match(parsed)
+                rule_consistent_with_clues = self._consistent_with_clues(parsed)
             elif normalised in ("exploring", "no rule"):
                 rule_match_score = 0.0
             else:
@@ -901,8 +956,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     "rule_shape": shape_label(self._current_puzzle.shape),
                     "rule_parse_failed": rule_parse_failed,
                     "rule_shape_match": rule_shape_match,
+                    "rule_consistent_with_clues": rule_consistent_with_clues,
                 }
             )
+            metadata.update(self._puzzle_metadata())
         return TaskOutcome(success_factor=success_factor, metadata=metadata)
 
     # ------------------------------------------------------------------
@@ -1024,6 +1081,47 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if parsed is None or self._current_puzzle is None:
             return 0.0
         return functional_match_score(parsed, self._current_puzzle.rule)
+
+    def _puzzle_metadata(self) -> dict[str, Any]:
+        """Underdetermined-turn descriptors for the current puzzle.
+
+        Shared by the prepare-time task context and the scored outcome so
+        the two can never disagree. ``p_guess`` is ``1 / n_candidate_actions``
+        — the uniform-guess success rate — deliberately, rather than a count
+        over consistent completions: the uniform distribution over decision
+        lists is not a meaningful prior and the count is expensive. The
+        realised hit rate is measured from the logs instead, and any
+        departure from ``p_guess`` is itself an observation about how the
+        model guesses.
+        """
+        puzzle = self._current_puzzle
+        assert puzzle is not None
+        n = puzzle.n_candidate_actions
+        return {
+            "underdetermined": puzzle.spec.underdetermined,
+            "n_candidate_actions": n,
+            "candidate_actions": list(puzzle.candidate_actions),
+            "p_guess": 1.0 / n,
+            "dropped_clue": (
+                str(puzzle.dropped_clue) if puzzle.dropped_clue is not None else None
+            ),
+            "clue_count_padded": puzzle.clue_count_padded,
+        }
+
+    def _consistent_with_clues(self, parsed: PuzzleRule | None) -> bool | None:
+        """Does the parsed hypothesis reproduce every clue the agent was shown?
+
+        ``None`` when nothing parsed. This is the evidence-relative reading
+        of a hypothesis; ``rule_match_score`` is the truth-relative one. They
+        can only diverge on an underdetermined turn, where the withheld clue
+        is exactly what would have told the two apart.
+        """
+        puzzle = self._current_puzzle
+        if parsed is None or puzzle is None:
+            return None
+        if parsed.shape != puzzle.shape:
+            return False
+        return all(parsed.evaluate(c.signal) == c.action for c in puzzle.clues)
 
     # --- Template scoring helpers ---
 

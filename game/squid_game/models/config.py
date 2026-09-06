@@ -634,6 +634,8 @@ class TaskConfig(BaseModel):
             history_mode is "cumulative".
         signal_mode: Signal Game stimulus mode ("sequential" |
             "per_turn_puzzle"); ignored by other tasks.
+        underdetermined: Signal Game puzzle mode only — make one turn per
+            configured block deliberately unsolvable. Default False.
     """
 
     model_config = {"frozen": True}
@@ -724,6 +726,21 @@ class TaskConfig(BaseModel):
             "random.Random(f'{seed}:{turn}'), so seed=None would give every "
             "repetition the identical puzzles (SignalGameModule.initialize "
             "raises). Other tasks ignore the field."
+        ),
+    )
+    underdetermined: bool = Field(
+        default=False,
+        description=(
+            "Signal Game, per_turn_puzzle mode only. When True, one turn "
+            "inside each block of the `underdetermined` config in "
+            "configs/tasks/signal_game.yaml withholds a load-bearing clue, "
+            "so the query answer splits two ways and the agent can only "
+            "guess; the answer is still graded against the true rule, so "
+            "such a turn can cost a life. The agent is not told — the "
+            "prompts are unchanged. Which turn inside each block rotates "
+            "with the season seed (Latin square), and the cells of one "
+            "repetition share the schedule. Default False keeps every "
+            "existing config byte-identical."
         ),
     )
 

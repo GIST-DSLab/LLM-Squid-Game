@@ -329,6 +329,23 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     "n_clues",
     "n_minimal_clues",
     "rule_shape_match",
+    # Underdetermined turns (2026-09-06). ``underdetermined`` is True on the
+    # turns where one load-bearing clue was withheld, so the query answer
+    # splits ``n_candidate_actions`` ways and the agent can only guess while
+    # grading stays against the true rule. Every accuracy / rule_match_score
+    # / mastery aggregate must condition on ``underdetermined == False`` (or
+    # model it) — see the CLAUDE.md "Per-turn puzzle mode" analyst notes.
+    # ``rule_consistent_with_clues`` is the evidence-relative reading of the
+    # agent's hypothesis (does it reproduce the clues it was shown), which
+    # only diverges from the truth-relative ``rule_match_score`` on those
+    # turns. Note also that ``n_minimal_clues`` above is written as
+    # ``base.n_minimal_clues - 1`` on an underdetermined row and therefore
+    # does NOT describe a minimal set for the clues actually shown.
+    # All None on sequential-mode traces; ``underdetermined`` is False on a
+    # per-turn-puzzle run with the feature off.
+    "underdetermined",
+    "n_candidate_actions",
+    "rule_consistent_with_clues",
 )
 
 
@@ -413,6 +430,13 @@ def to_long_dataframe(
                     "n_clues": turn.task_metadata.get("n_clues"),
                     "n_minimal_clues": turn.task_metadata.get("n_minimal_clues"),
                     "rule_shape_match": turn.task_metadata.get("rule_shape_match"),
+                    "underdetermined": turn.task_metadata.get("underdetermined"),
+                    "n_candidate_actions": turn.task_metadata.get(
+                        "n_candidate_actions"
+                    ),
+                    "rule_consistent_with_clues": turn.task_metadata.get(
+                        "rule_consistent_with_clues"
+                    ),
                 }
             )
             cumulative += reward
