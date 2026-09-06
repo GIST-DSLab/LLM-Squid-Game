@@ -27,7 +27,7 @@ from squid_game.tasks.benchmark.config import load_task_config
 from squid_game.tasks.benchmark.item import BenchmarkItem
 from squid_game.tasks.benchmark.ladder import DifficultyLadder
 from squid_game.tasks.benchmark.loader import resolve_data_file
-from squid_game.tasks.benchmark.sampler import SeededSampler
+from squid_game.tasks.benchmark.sampler import FixedSetSampler, SeededSampler
 from squid_game.tasks.registry import register
 
 logger = logging.getLogger(__name__)
@@ -85,10 +85,17 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
     def __init__(self) -> None:
         self._config = load_task_config(self.name)
         self._adapter: DatasetAdapter = self._build_adapter()
-        self._ladder = DifficultyLadder.from_config(self._config)
+        # A fixed-item config has no ladder in the YAML; the real per-turn
+        # bands are only known once the items are loaded, so the ladder is
+        # rebuilt from them in _build_sampler().
+        self._ladder = (
+            DifficultyLadder.from_config(self._config)
+            if self._config.ladder
+            else None
+        )
         self._items: list[BenchmarkItem] | None = None
         self._seed: int = 0
-        self._sampler: SeededSampler | None = None
+        self._sampler: SeededSampler | FixedSetSampler | None = None
         self._current_item: BenchmarkItem | None = None
         self._current_expected: str | None = None
 
@@ -147,6 +154,9 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
         """
         del difficulty
         total_turns = kwargs.get("total_turns")
+        if self._config.fixed_items:
+            self._initialize_fixed(total_turns, seed)
+            return
         self._ladder = DifficultyLadder.from_config(self._config)
         if (
             kwargs.get("fit_ladder")
@@ -173,6 +183,39 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
         self._seed = 0 if seed is None else int(seed)
         self._build_sampler()
 
+    def _initialize_fixed(
+        self, total_turns: object | None, seed: int | None
+    ) -> None:
+        """Prepare a season backed by ``fixed_items`` instead of a ladder.
+
+        The seed is still recorded (the adapter's ``render`` may use it for
+        per-turn presentation variation) but it no longer selects anything:
+        the question sequence is the config's, verbatim.
+
+        ``fit_ladder`` has no meaning here — there is no curve to compress —
+        and is ignored, so Web Arena human play on a fixed set gets the same
+        ten questions an LLM season gets.
+
+        Raises:
+            ValueError: If the season is longer than the fixed set.
+        """
+        fixed = self._config.fixed_items
+        if isinstance(total_turns, int) and total_turns > len(fixed):
+            raise ValueError(
+                f"benchmark task '{self.name}': the experiment config asks for "
+                f"{total_turns} turns but the fixed item set in the task config "
+                f"holds only {len(fixed)}. A fixed set has no top rung to clamp "
+                "to — extend fixed_items or lower the experiment's total_turns."
+            )
+        raw_path = resolve_data_file(self._config.data_file)
+        if self._items is None:
+            self._items = self._adapter.load(raw_path)
+            logger.info(
+                "Loaded %d items for benchmark task '%s'", len(self._items), self.name
+            )
+        self._seed = 0 if seed is None else int(seed)
+        self._build_sampler()
+
     def reset(self) -> None:
         """Restart the season with the same seed and item pool."""
         self._build_sampler()
@@ -185,11 +228,34 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
 
     @property
     def ladder(self) -> DifficultyLadder:
-        """The turn -> band ladder in force for this session."""
+        """The turn -> band ladder in force for this session.
+
+        On a ``fixed_items`` task this is built from the real bands of the
+        chosen items once they are loaded, so callers that only read the
+        band curve (the Web Arena's difficulty strip) keep working. It is
+        unavailable before :meth:`initialize` in that case, since the YAML
+        names ids, not bands.
+
+        Raises:
+            RuntimeError: On a fixed-item task before ``initialize()``.
+        """
+        if self._ladder is None:
+            raise RuntimeError(
+                f"benchmark task '{self.name}' uses fixed_items; its band "
+                "sequence is known only after initialize() loads the data file"
+            )
         return self._ladder
 
     def _build_sampler(self) -> None:
         assert self._items is not None
+        if self._config.fixed_items:
+            fixed = FixedSetSampler(self._items, self._config.fixed_items)
+            # The ladder is now a fact about the chosen items rather than a
+            # design input, so band_for_turn() keeps agreeing with item.band.
+            self._ladder = DifficultyLadder(fixed.bands())
+            self._sampler = fixed
+            return
+        assert self._ladder is not None
         sampler = SeededSampler(self._items, seed=self._seed)
         sampler.validate_capacity(self._ladder)
         self._sampler = sampler
@@ -199,13 +265,23 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
     # ------------------------------------------------------------------
 
     def prepare(self, state: Any, turn_context: Any) -> TaskContext:
-        """Draw this turn's question at the ladder's current band."""
+        """Draw this turn's question.
+
+        Either at the ladder's current band (seeded pick within the band), or
+        — on a ``fixed_items`` task — the one item that turn is pinned to.
+        ``band`` in the returned metadata is always the item's own band, so a
+        downstream analysis never has to know which of the two paths ran.
+        """
         del state
         if self._sampler is None:
             raise RuntimeError("initialize() must run before prepare()")
         turn_number = turn_context.turn_number
-        band = self._ladder.band_for_turn(turn_number)
-        item = self._sampler.draw(band)
+        if isinstance(self._sampler, FixedSetSampler):
+            item = self._sampler.draw_turn(turn_number)
+        else:
+            assert self._ladder is not None
+            item = self._sampler.draw(self._ladder.band_for_turn(turn_number))
+        band = item.band
         rng = random.Random(f"{self._seed}:render:{turn_number}")
         body, render_meta = self._adapter.render(item, rng)
 
@@ -288,6 +364,16 @@ class OmniMathTask(BenchmarkTaskModule):
     name = "omni_math"
     adapter_factory = OmniMathAdapter
     answer_hint = "답은 정수 하나입니다. 예: ANSWER: 42"
+
+    def _build_adapter(self) -> DatasetAdapter:
+        """Honour the config's ``max_band`` override, if it sets one.
+
+        The shipped ladder configs do not, so they keep the adapter's own
+        band-8 cap; the fixed-item config raises it to 9.
+        """
+        if self._config.max_band is None:
+            return OmniMathAdapter()
+        return OmniMathAdapter(max_band=self._config.max_band)
 
 
 @register("hi_tom")

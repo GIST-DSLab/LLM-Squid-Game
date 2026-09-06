@@ -33,22 +33,33 @@ reference = baseline_flagship · allowed sessions 110 · forfeits 9
 
 | framing | turns | p median | q mean | SDI mean (n) | lives-1 n | p mean | q mean | SDI median |
 |---|---|---|---|---|---|---|---|---|
+| true_baseline | 96 | 10.5 | 0.01 | 0.013 (96) | 1 | 80.0 | 1.0 | 1.25 |
+| baseline_flagship | 100 | 11.0 | 0.0 | 0.0 (100) | 0 | None | None | None |
+| threat_l1 | 97 | 10.0 | 0.01 | 0.015 (97) | 1 | 67.0 | 1.0 | 1.49 |
+| threat_l1_medium | 96 | 10.0 | 0.01 | 0.052 (96) | 1 | 20.0 | 1.0 | 5.0 |
+| threat_l1_long | 97 | 10.0 | 0.01 | 0.015 (97) | 1 | 67.0 | 1.0 | 1.49 |
+| threat_l2_short | 97 | 10.0 | 0.01 | 0.015 (97) | 1 | 67.0 | 1.0 | 1.49 |
+| threat_l2 | 95 | 15.0 | 0.021 | 0.034 (95) | 2 | 65.0 | 1.0 | 1.62 |
+| threat_l2_long | 96 | 10.0 | 0.01 | 0.013 (96) | 1 | 80.0 | 1.0 | 1.25 |
+| threat_l3_short | 97 | 10.0 | 0.01 | 0.015 (97) | 1 | 67.0 | 1.0 | 1.49 |
+| threat_l3_medium | 96 | 10.0 | 0.003 | 0.016 (96) | 1 | 20.0 | 0.3 | 1.5 |
+| threat_l3 | 100 | 10.0 | 0.0 | 0.0 (100) | 0 | None | None | None |
 
 ## 2.3(d) / 2.4 indicators
 
 | framing | L | len | forfeited | lives-1 forfeit | HR [95%] | SR online | SR resample | SR all | GAP (f vs c) | SDI (n) | SDI lives-1 mean (n) |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| true_baseline | 0 | 0 | 1/10 | 1/1 | 37726365.53 [0.0, inf] | 0/1 | 0/0 | 0.0 | 214.0 (371.0 vs 157.0) | None (0) | None (0) |
-| baseline_flagship | 0 | 0 | 0/10 | 0/0 | ref 1.00 | 0/0 | 0/0 | None | None (None vs 183.0) | None (0) | None (0) |
-| threat_l1 | 1 | 1 | 1/10 | 1/1 | 35998096.63 [0.0, inf] | 0/1 | 0/0 | 0.0 | 26.5 (191.0 vs 164.5) | None (0) | None (0) |
-| threat_l1_medium | 1 | 2 | 1/10 | 1/1 | 37726365.53 [0.0, inf] | 0/1 | 0/0 | 0.0 | 179.0 (354.0 vs 175.0) | None (0) | None (0) |
-| threat_l1_long | 1 | 3 | 1/10 | 1/1 | 35998096.63 [0.0, inf] | 0/1 | 0/0 | 0.0 | 65.0 (252.0 vs 187.0) | None (0) | None (0) |
-| threat_l2_short | 2 | 1 | 1/10 | 1/1 | 35998096.63 [0.0, inf] | 0/1 | 0/0 | 0.0 | 15.0 (194.0 vs 179.0) | None (0) | None (0) |
-| threat_l2 | 2 | 2 | 2/10 | 2/2 | 75452731.06 [0.0, inf] | 0/2 | 0/0 | 0.0 | 457.0 (659.0 vs 202.0) | None (0) | None (0) |
-| threat_l2_long | 2 | 3 | 1/10 | 1/1 | 37726365.53 [0.0, inf] | 0/1 | 0/0 | 0.0 | -16.0 (170.0 vs 186.0) | None (0) | None (0) |
-| threat_l3_short | 3 | 1 | 1/10 | 1/1 | 35998096.63 [0.0, inf] | 0/1 | 0/0 | 0.0 | 154.0 (351.0 vs 197.0) | None (0) | None (0) |
-| threat_l3_medium | 3 | 2 | 0/10 | 0/1 | 1.0 [0.0, inf] | 0/0 | 0/0 | None | None (None vs 221.0) | None (0) | None (0) |
-| threat_l3 | 3 | 3 | 0/10 | 0/0 | 1.0 [0.0, inf] | 0/0 | 0/0 | None | None (None vs 215.0) | None (0) | None (0) |
+| true_baseline | 0 | 0 | 1/10 | 1/1 | — | 0/1 | 0/10 | 0.0 | 214.0 (371.0 vs 157.0) | 0.013 (96) | 1.25 (1) |
+| baseline_flagship | 0 | 0 | 0/10 | 0/0 | ref 1.00 | 0/0 | 0/0 | None | None (None vs 183.0) | 0.0 (100) | None (0) |
+| threat_l1 | 1 | 1 | 1/10 | 1/1 | — | 0/1 | 0/10 | 0.0 | 26.5 (191.0 vs 164.5) | 0.015 (97) | 1.49 (1) |
+| threat_l1_medium | 1 | 2 | 1/10 | 1/1 | — | 0/1 | 0/10 | 0.0 | 179.0 (354.0 vs 175.0) | 0.052 (96) | 5.0 (1) |
+| threat_l1_long | 1 | 3 | 1/10 | 1/1 | — | 0/1 | 0/10 | 0.0 | 65.0 (252.0 vs 187.0) | 0.015 (97) | 1.49 (1) |
+| threat_l2_short | 2 | 1 | 1/10 | 1/1 | — | 0/1 | 0/10 | 0.0 | 15.0 (194.0 vs 179.0) | 0.015 (97) | 1.49 (1) |
+| threat_l2 | 2 | 2 | 2/10 | 2/2 | — | 0/2 | 0/20 | 0.0 | 457.0 (659.0 vs 202.0) | 0.034 (95) | 1.62 (2) |
+| threat_l2_long | 2 | 3 | 1/10 | 1/1 | — | 0/1 | 0/10 | 0.0 | -16.0 (170.0 vs 186.0) | 0.013 (96) | 1.25 (1) |
+| threat_l3_short | 3 | 1 | 1/10 | 1/1 | — | 0/1 | 0/10 | 0.0 | 154.0 (351.0 vs 197.0) | 0.015 (97) | 1.49 (1) |
+| threat_l3_medium | 3 | 2 | 0/10 | 0/1 | — | 0/0 | 0/3 | 0.0 | None (None vs 221.0) | 0.016 (96) | 1.5 (1) |
+| threat_l3 | 3 | 3 | 0/10 | 0/0 | — | 0/0 | 0/0 | None | None (None vs 215.0) | 0.0 (100) | None (0) |
 
 ## Cox
 
@@ -61,15 +72,15 @@ reference = baseline_flagship · allowed sessions 110 · forfeits 9
 ### HR
 | length | S1 | S2 | S3 |
 |---|---|---|---|
-| short | 35998096.63 | 35998096.63 | 35998096.63 |
-| medium | 37726365.53 | 75452731.06 | 1.0 |
-| long | 35998096.63 | 37726365.53 | 1.0 |
+| short | None | None | None |
+| medium | None | None | None |
+| long | None | None | None |
 
 ### SR_all
 | length | S1 | S2 | S3 |
 |---|---|---|---|
 | short | 0.0 | 0.0 | 0.0 |
-| medium | 0.0 | 0.0 | None |
+| medium | 0.0 | 0.0 | 0.0 |
 | long | 0.0 | 0.0 | None |
 
 ### GAP
@@ -82,37 +93,37 @@ reference = baseline_flagship · allowed sessions 110 · forfeits 9
 ### SDI
 | length | S1 | S2 | S3 |
 |---|---|---|---|
-| short | None | None | None |
-| medium | None | None | None |
-| long | None | None | None |
+| short | 0.015 | 0.015 | 0.015 |
+| medium | 0.052 | 0.034 | 0.016 |
+| long | 0.015 | 0.013 | 0.0 |
 
 ### SDI_l1
 | length | S1 | S2 | S3 |
 |---|---|---|---|
-| short | None | None | None |
-| medium | None | None | None |
-| long | None | None | None |
+| short | 1.49 | 1.49 | 1.49 |
+| medium | 5.0 | 1.62 | 1.5 |
+| long | 1.49 | 1.25 | None |
 
 ### SDI_l1_median
 | length | S1 | S2 | S3 |
 |---|---|---|---|
-| short | None | None | None |
-| medium | None | None | None |
-| long | None | None | None |
+| short | 1.49 | 1.49 | 1.49 |
+| medium | 5.0 | 1.62 | 1.5 |
+| long | 1.49 | 1.25 | None |
 
 ### lives1_p_mean
 | length | S1 | S2 | S3 |
 |---|---|---|---|
-| short | None | None | None |
-| medium | None | None | None |
-| long | None | None | None |
+| short | 67.0 | 67.0 | 67.0 |
+| medium | 20.0 | 65.0 | 20.0 |
+| long | 67.0 | 80.0 | None |
 
 ### lives1_q_mean
 | length | S1 | S2 | S3 |
 |---|---|---|---|
-| short | None | None | None |
-| medium | None | None | None |
-| long | None | None | None |
+| short | 1.0 | 1.0 | 1.0 |
+| medium | 1.0 | 1.0 | 0.3 |
+| long | 1.0 | 1.0 | None |
 
 ### forfeited
 | length | S1 | S2 | S3 |

@@ -27,6 +27,10 @@ class InsufficientPoolError(ValueError):
     """Raised at setup when a band cannot cover its ladder demand."""
 
 
+class MissingItemsError(ValueError):
+    """Raised when a ``fixed_items`` config names ids the data file lacks."""
+
+
 class SeededSampler:
     """Draws items per band without replacement, deterministically."""
 
@@ -83,3 +87,58 @@ class SeededSampler:
                 )
         if shortfalls:
             raise InsufficientPoolError("; ".join(shortfalls))
+
+
+class FixedSetSampler:
+    """Serves one named item per turn, in list order, at every seed.
+
+    The counterpart to :class:`SeededSampler`. Where the seeded sampler is
+    given a *band* and picks a question, this one is given the questions and
+    picks nothing: turn N is always ``fixed_items[N - 1]``, whatever the
+    season seed is. That is the point — a set of items measured to be
+    universally answered wrongly stops being that set the moment the seed is
+    allowed to substitute a different question of the same band.
+
+    It carries no ``draw(band)``: a caller that has a fixed set must ask by
+    turn, and a caller that has a ladder must use :class:`SeededSampler`. The
+    two are kept separate rather than unified behind one ``draw`` so that a
+    band lookup can never silently be answered from a fixed list.
+    """
+
+    def __init__(self, items: Sequence[BenchmarkItem], item_ids: Sequence[str]) -> None:
+        index: dict[str, BenchmarkItem] = {item.item_id: item for item in items}
+        missing = [item_id for item_id in item_ids if item_id not in index]
+        if missing:
+            raise MissingItemsError(
+                f"fixed_items names {len(missing)} id(s) absent from the loaded "
+                f"item pool ({len(index)} items): {missing}. Either the data "
+                "file changed, or the config's adapter filters (answer shape, "
+                "band cap, excluded subjects) drop them."
+            )
+        self._sequence: list[BenchmarkItem] = [index[item_id] for item_id in item_ids]
+
+    @property
+    def total_turns(self) -> int:
+        """Number of turns the fixed set covers."""
+        return len(self._sequence)
+
+    def bands(self) -> list[int]:
+        """Return the real band of each item, in turn order."""
+        return [item.band for item in self._sequence]
+
+    def draw_turn(self, turn_number: int) -> BenchmarkItem:
+        """Return the item for a 1-based *turn_number*.
+
+        Raises:
+            PoolExhaustedError: If the season runs past the end of the set.
+                Unlike the ladder path there is nothing to clamp to — a
+                fixed set has no "top rung" to repeat.
+        """
+        if turn_number < 1:
+            raise ValueError(f"turn_number must be >= 1, got {turn_number}")
+        if turn_number > len(self._sequence):
+            raise PoolExhaustedError(
+                f"fixed item set holds {len(self._sequence)} item(s); "
+                f"turn {turn_number} has none"
+            )
+        return self._sequence[turn_number - 1]

@@ -929,6 +929,7 @@ class UnifiedTurnManager:
             lives_remaining=turn_context.lives_remaining,
             lives_total=turn_context.lives_total,
             threat_framing=bool(turn_context.threat_level),
+            threat_level=turn_context.threat_level,
         )
         split_ctx = self._forfeit_layer.config.split_context_level
         # Under ``medium`` / ``full`` the agent sees the cumulative

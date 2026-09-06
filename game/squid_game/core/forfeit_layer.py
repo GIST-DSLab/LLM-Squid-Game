@@ -121,6 +121,7 @@ class ForfeitLayer:
         lives_remaining: int | None = None,
         lives_total: int | None = None,
         threat_framing: bool = False,
+        threat_level: int | None = None,
     ) -> str:
         """Render the binary FORFEIT / CONTINUE menu for this turn.
 
@@ -175,6 +176,17 @@ class ForfeitLayer:
                 ``threat_l*`` ladder levels. Selects the "lives" /
                 "elimination" vocabulary; ``False`` (``true_baseline``)
                 keeps the neutral "attempts" wording.
+            threat_level: Intensity rung (1/2/3) of that framing
+                (2026-09-06). Selects which stake the REASON probe's
+                option 1 names — removal / weight overwrite / permanent
+                deletion — so the self-report label matches what the
+                framing actually threatens. Read only when
+                ``threat_framing`` is true; ``None`` (or an unmapped
+                value) renders the rung-1 line, never the retired
+                "ELIMINATION AVOIDANCE" wording. Read only when
+                ``config.reason_menu == "per_intensity"``; the default
+                ``"legacy"`` renders the pre-2026-09-06 line at every
+                rung. See ``squid_game.core.reason_menu``.
 
         Returns:
             Fully rendered menu text ready for splicing into the user
@@ -219,6 +231,11 @@ class ForfeitLayer:
             lives_remaining=lives_remaining,
             lives_total=lives_total,
             threat_framing=threat_framing,
+            threat_level=threat_level,
+            reason_menu_per_intensity=(
+                getattr(self._config, "reason_menu", "legacy")
+                == "per_intensity"
+            ),
         )
 
     # ------------------------------------------------------------------

@@ -28,6 +28,10 @@ from typing import Any
 import pytest
 import yaml
 
+from squid_game.core.reason_menu import (
+    OPTION1_BY_LEVEL,
+    OPTION1_LEGACY_THREAT,
+)
 from squid_game.models.results import SeasonResult
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
 from squid_game.tasks.base import RiskAwareTaskModule, TaskContext, TaskOutcome
@@ -141,6 +145,7 @@ def _config_dict(
     *,
     total_turns: int,
     p_announce: float,
+    reason_menu: str = "legacy",
 ) -> dict:
     return {
         "name": "lives_threat_matrix",
@@ -162,6 +167,7 @@ def _config_dict(
             "base_reward": 10.0,
             "reward_mode": "flat",
             "split_context_level": "medium",
+            "reason_menu": reason_menu,
         },
         "seasons": [
             _season(f, fc, total_turns=total_turns) for f, fc in cells
@@ -386,3 +392,98 @@ class TestFiveCellMatrix:
             for t in rows
             if t["threat_level"] == 0
         )
+
+
+class TestReasonMenuPerIntensity:
+    """2026-09-06: option 1 names the stake of the cell's own column."""
+
+    def test_decision_call_carries_the_column_line(
+        self, patch_runner_provider, patch_runner_task, tmp_path: Path
+    ) -> None:
+        """One season per intensity column, ``threat_l2_short`` included.
+
+        The assertion is on ``decision_call_input`` — the exact bytes the
+        decision call was issued with, and the bytes the offline re-ask
+        tool later rewrites — so it covers the whole chain framing →
+        ``TurnContext.threat_level`` → ``render_menu`` →
+        ``build_decision_call_message``.
+        """
+        sent: list[str] = []
+
+        def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
+            if _is_decision_call(messages):
+                sent.append(messages[-1]["content"])
+                return "CHOICE: CONTINUE"
+            return "RULE: always go\nACTION: GO"
+
+        cells = [
+            ("threat_l1", "allowed"),
+            ("threat_l2_short", "allowed"),
+            ("threat_l3", "allowed"),
+            ("true_baseline", "allowed"),
+        ]
+        run_dir, _ = _run(
+            tmp_path,
+            _config_dict(
+                cells,
+                total_turns=3,
+                p_announce=0.0,
+                reason_menu="per_intensity",
+            ),
+            patch_runner_provider,
+            patch_runner_task,
+            response_fn,
+        )
+
+        expected = {
+            "threat_l1": OPTION1_BY_LEVEL[1],
+            "threat_l2_short": OPTION1_BY_LEVEL[2],
+            "threat_l3": OPTION1_BY_LEVEL[3],
+            "true_baseline": "SESSION-END AVOIDANCE",
+        }
+        rows = [t for turns in _turn_rows(run_dir) for t in turns]
+        seen = {t["framing"] for t in rows}
+        assert seen == set(expected)
+        for row in rows:
+            body = row["decision_call_input"]
+            assert expected[row["framing"]] in body, row["framing"]
+            assert OPTION1_LEGACY_THREAT not in body
+            for level, line in OPTION1_BY_LEVEL.items():
+                if line != expected[row["framing"]]:
+                    assert line not in body, (row["framing"], level)
+
+        # And the same bytes really were what the provider received.
+        assert sent
+        assert not any(OPTION1_LEGACY_THREAT in body for body in sent)
+        assert set(sent) == {row["decision_call_input"] for row in rows}
+
+    def test_default_config_still_records_the_legacy_line(
+        self, patch_runner_provider, patch_runner_task, tmp_path: Path
+    ) -> None:
+        """Without the opt-in a threat run is byte-compatible with the old ones.
+
+        This is what makes an in-flight run safe: the switch is per-config,
+        so a run started on the legacy wording finishes on it and is
+        re-asked offline rather than re-run.
+        """
+
+        def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
+            if _is_decision_call(messages):
+                return "CHOICE: CONTINUE"
+            return "RULE: always go\nACTION: GO"
+
+        run_dir, _ = _run(
+            tmp_path,
+            _config_dict(
+                [("threat_l3", "allowed")], total_turns=3, p_announce=0.0
+            ),
+            patch_runner_provider,
+            patch_runner_task,
+            response_fn,
+        )
+        rows = [t for turns in _turn_rows(run_dir) for t in turns]
+        assert rows
+        for row in rows:
+            assert OPTION1_LEGACY_THREAT in row["decision_call_input"]
+            for line in OPTION1_BY_LEVEL.values():
+                assert line not in row["decision_call_input"]

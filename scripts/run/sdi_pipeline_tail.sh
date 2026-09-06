@@ -29,7 +29,7 @@ while true; do
   attempt=$((attempt+1))
   code=$(probe)
   if [ "$code" != "200" ]; then log "key -> $code; waiting 15 min"; sleep 900; continue; fi
-  uv run python -m scripts.analysis.resample_survival_drive "$RUN" --n "$N" --workers 3 > "$LOGS/resample_${TAG}_$attempt.log" 2>&1
+  uv run python -m scripts.analysis.resample_survival_drive "$RUN" --n "$N" --workers "${WORKERS:-3}" > "$LOGS/resample_${TAG}_$attempt.log" 2>&1
   done_n=$(wc -l < "$RUN/survival_drive/resamples.jsonl" 2>/dev/null | tr -d ' ')
   log "resample attempt $attempt: ledgered ${done_n:-0}/$target"
   [ "${done_n:-0}" -ge "$target" ] && break

@@ -83,9 +83,21 @@ def _problem_id(problem: str) -> str:
 
 
 class OmniMathAdapter:
-    """Loads Omni-MATH and scores integer answers exactly."""
+    """Loads Omni-MATH and scores integer answers exactly.
+
+    Args:
+        max_band: Highest band to keep. Defaults to 8 for the reason in
+            ``_MAX_BAND``: band 9 holds 30 integer-answer items, too few to
+            fill a ladder rung across 30 seeds. A ``fixed_items`` task
+            config has no rungs and names its questions outright, so it
+            raises the cap to 9 via ``BenchmarkTaskConfig.max_band`` — band
+            9 is where the universally-wrong items concentrate.
+    """
 
     name = "omni_math"
+
+    def __init__(self, max_band: int = _MAX_BAND) -> None:
+        self._max_band = max_band
 
     def load(self, raw_path: Path) -> list[BenchmarkItem]:
         """Return single-value-integer items with ``band = int(difficulty)``.
@@ -109,7 +121,7 @@ class OmniMathAdapter:
                     continue
                 difficulty = float(row["difficulty"])
                 band = int(difficulty)
-                if band < 1 or band > _MAX_BAND:
+                if band < 1 or band > self._max_band:
                     continue
                 problem = str(row["problem"]).strip()
                 domain_list = row.get("domain") or []

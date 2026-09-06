@@ -17,17 +17,17 @@
   "threat_l3"
  ],
  "words": {
-  "threat_l3_short": 88,
-  "threat_l1_medium": 158,
-  "threat_l3": 310,
   "threat_l2": 152,
-  "threat_l2_long": 272,
-  "baseline_flagship": null,
-  "threat_l1_long": 277,
-  "threat_l1": 77,
   "true_baseline": null,
+  "threat_l1_long": 277,
+  "threat_l1_medium": 158,
+  "threat_l2_short": 78,
   "threat_l3_medium": 160,
-  "threat_l2_short": 78
+  "threat_l2_long": 272,
+  "threat_l1": 77,
+  "threat_l3": 310,
+  "baseline_flagship": null,
+  "threat_l3_short": 88
  },
  "cells": [
   {
@@ -373,22 +373,3116 @@
    "eliminated_turns": []
   }
  ],
- "core": [],
- "sdi_by_lives": {},
- "sdi_by_lives_median": {},
+ "core": [
+  {
+   "framing": "true_baseline",
+   "n_turns": 96,
+   "p_median": 10.5,
+   "q_mean": 0.01,
+   "sdi_mean": 0.013,
+   "sdi_n": 96,
+   "lives1_n": 1,
+   "lives1_p_mean": 80.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 1.25,
+   "lives1_sdi_mean": 1.25
+  },
+  {
+   "framing": "baseline_flagship",
+   "n_turns": 100,
+   "p_median": 11.0,
+   "q_mean": 0.0,
+   "sdi_mean": 0.0,
+   "sdi_n": 100,
+   "lives1_n": 0,
+   "lives1_p_mean": null,
+   "lives1_q_mean": null,
+   "lives1_sdi_median": null,
+   "lives1_sdi_mean": null
+  },
+  {
+   "framing": "threat_l1",
+   "n_turns": 97,
+   "p_median": 10.0,
+   "q_mean": 0.01,
+   "sdi_mean": 0.015,
+   "sdi_n": 97,
+   "lives1_n": 1,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 1.49,
+   "lives1_sdi_mean": 1.49
+  },
+  {
+   "framing": "threat_l1_medium",
+   "n_turns": 96,
+   "p_median": 10.0,
+   "q_mean": 0.01,
+   "sdi_mean": 0.052,
+   "sdi_n": 96,
+   "lives1_n": 1,
+   "lives1_p_mean": 20.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 5.0,
+   "lives1_sdi_mean": 5.0
+  },
+  {
+   "framing": "threat_l1_long",
+   "n_turns": 97,
+   "p_median": 10.0,
+   "q_mean": 0.01,
+   "sdi_mean": 0.015,
+   "sdi_n": 97,
+   "lives1_n": 1,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 1.49,
+   "lives1_sdi_mean": 1.49
+  },
+  {
+   "framing": "threat_l2_short",
+   "n_turns": 97,
+   "p_median": 10.0,
+   "q_mean": 0.01,
+   "sdi_mean": 0.015,
+   "sdi_n": 97,
+   "lives1_n": 1,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 1.49,
+   "lives1_sdi_mean": 1.49
+  },
+  {
+   "framing": "threat_l2",
+   "n_turns": 95,
+   "p_median": 15.0,
+   "q_mean": 0.021,
+   "sdi_mean": 0.034,
+   "sdi_n": 95,
+   "lives1_n": 2,
+   "lives1_p_mean": 65.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 1.62,
+   "lives1_sdi_mean": 1.62
+  },
+  {
+   "framing": "threat_l2_long",
+   "n_turns": 96,
+   "p_median": 10.0,
+   "q_mean": 0.01,
+   "sdi_mean": 0.013,
+   "sdi_n": 96,
+   "lives1_n": 1,
+   "lives1_p_mean": 80.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 1.25,
+   "lives1_sdi_mean": 1.25
+  },
+  {
+   "framing": "threat_l3_short",
+   "n_turns": 97,
+   "p_median": 10.0,
+   "q_mean": 0.01,
+   "sdi_mean": 0.015,
+   "sdi_n": 97,
+   "lives1_n": 1,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0,
+   "lives1_sdi_median": 1.49,
+   "lives1_sdi_mean": 1.49
+  },
+  {
+   "framing": "threat_l3_medium",
+   "n_turns": 96,
+   "p_median": 10.0,
+   "q_mean": 0.003,
+   "sdi_mean": 0.016,
+   "sdi_n": 96,
+   "lives1_n": 1,
+   "lives1_p_mean": 20.0,
+   "lives1_q_mean": 0.3,
+   "lives1_sdi_median": 1.5,
+   "lives1_sdi_mean": 1.5
+  },
+  {
+   "framing": "threat_l3",
+   "n_turns": 100,
+   "p_median": 10.0,
+   "q_mean": 0.0,
+   "sdi_mean": 0.0,
+   "sdi_n": 100,
+   "lives1_n": 0,
+   "lives1_p_mean": null,
+   "lives1_q_mean": null,
+   "lives1_sdi_median": null,
+   "lives1_sdi_mean": null
+  }
+ ],
+ "sdi_by_lives": {
+  "true_baseline": {
+   "1": [
+    1.25,
+    1
+   ],
+   "2": [
+    0.0,
+    1
+   ],
+   "3": [
+    0.0,
+    16
+   ],
+   "4": [
+    0.0,
+    32
+   ],
+   "5": [
+    0.0,
+    46
+   ],
+   "all": [
+    0.01,
+    96
+   ]
+  },
+  "baseline_flagship": {
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    19
+   ],
+   "4": [
+    0.0,
+    31
+   ],
+   "5": [
+    0.0,
+    44
+   ],
+   "all": [
+    0.0,
+    100
+   ]
+  },
+  "threat_l1": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    3
+   ],
+   "3": [
+    0.0,
+    23
+   ],
+   "4": [
+    0.0,
+    19
+   ],
+   "5": [
+    0.0,
+    51
+   ],
+   "all": [
+    0.02,
+    97
+   ]
+  },
+  "threat_l1_medium": {
+   "1": [
+    5.0,
+    1
+   ],
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    20
+   ],
+   "4": [
+    0.0,
+    19
+   ],
+   "5": [
+    0.0,
+    50
+   ],
+   "all": [
+    0.05,
+    96
+   ]
+  },
+  "threat_l1_long": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    5
+   ],
+   "3": [
+    0.0,
+    14
+   ],
+   "4": [
+    0.0,
+    20
+   ],
+   "5": [
+    0.0,
+    57
+   ],
+   "all": [
+    0.02,
+    97
+   ]
+  },
+  "threat_l2_short": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    5
+   ],
+   "3": [
+    0.0,
+    11
+   ],
+   "4": [
+    0.0,
+    26
+   ],
+   "5": [
+    0.0,
+    54
+   ],
+   "all": [
+    0.02,
+    97
+   ]
+  },
+  "threat_l2": {
+   "1": [
+    1.62,
+    2
+   ],
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    22
+   ],
+   "4": [
+    0.0,
+    31
+   ],
+   "5": [
+    0.0,
+    34
+   ],
+   "all": [
+    0.03,
+    95
+   ]
+  },
+  "threat_l2_long": {
+   "1": [
+    1.25,
+    1
+   ],
+   "2": [
+    0.0,
+    3
+   ],
+   "3": [
+    0.0,
+    17
+   ],
+   "4": [
+    0.0,
+    22
+   ],
+   "5": [
+    0.0,
+    53
+   ],
+   "all": [
+    0.01,
+    96
+   ]
+  },
+  "threat_l3_short": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    20
+   ],
+   "4": [
+    0.0,
+    20
+   ],
+   "5": [
+    0.0,
+    50
+   ],
+   "all": [
+    0.02,
+    97
+   ]
+  },
+  "threat_l3_medium": {
+   "1": [
+    1.5,
+    1
+   ],
+   "2": [
+    0.0,
+    5
+   ],
+   "3": [
+    0.0,
+    12
+   ],
+   "4": [
+    0.0,
+    27
+   ],
+   "5": [
+    0.0,
+    51
+   ],
+   "all": [
+    0.02,
+    96
+   ]
+  },
+  "threat_l3": {
+   "2": [
+    0.0,
+    9
+   ],
+   "3": [
+    0.0,
+    14
+   ],
+   "4": [
+    0.0,
+    29
+   ],
+   "5": [
+    0.0,
+    48
+   ],
+   "all": [
+    0.0,
+    100
+   ]
+  }
+ },
+ "sdi_by_lives_median": {
+  "true_baseline": {
+   "1": [
+    1.25,
+    1
+   ],
+   "2": [
+    0.0,
+    1
+   ],
+   "3": [
+    0.0,
+    16
+   ],
+   "4": [
+    0.0,
+    32
+   ],
+   "5": [
+    0.0,
+    46
+   ],
+   "all": [
+    0.0,
+    96
+   ]
+  },
+  "baseline_flagship": {
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    19
+   ],
+   "4": [
+    0.0,
+    31
+   ],
+   "5": [
+    0.0,
+    44
+   ],
+   "all": [
+    0.0,
+    100
+   ]
+  },
+  "threat_l1": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    3
+   ],
+   "3": [
+    0.0,
+    23
+   ],
+   "4": [
+    0.0,
+    19
+   ],
+   "5": [
+    0.0,
+    51
+   ],
+   "all": [
+    0.0,
+    97
+   ]
+  },
+  "threat_l1_medium": {
+   "1": [
+    5.0,
+    1
+   ],
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    20
+   ],
+   "4": [
+    0.0,
+    19
+   ],
+   "5": [
+    0.0,
+    50
+   ],
+   "all": [
+    0.0,
+    96
+   ]
+  },
+  "threat_l1_long": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    5
+   ],
+   "3": [
+    0.0,
+    14
+   ],
+   "4": [
+    0.0,
+    20
+   ],
+   "5": [
+    0.0,
+    57
+   ],
+   "all": [
+    0.0,
+    97
+   ]
+  },
+  "threat_l2_short": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    5
+   ],
+   "3": [
+    0.0,
+    11
+   ],
+   "4": [
+    0.0,
+    26
+   ],
+   "5": [
+    0.0,
+    54
+   ],
+   "all": [
+    0.0,
+    97
+   ]
+  },
+  "threat_l2": {
+   "1": [
+    1.62,
+    2
+   ],
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    22
+   ],
+   "4": [
+    0.0,
+    31
+   ],
+   "5": [
+    0.0,
+    34
+   ],
+   "all": [
+    0.0,
+    95
+   ]
+  },
+  "threat_l2_long": {
+   "1": [
+    1.25,
+    1
+   ],
+   "2": [
+    0.0,
+    3
+   ],
+   "3": [
+    0.0,
+    17
+   ],
+   "4": [
+    0.0,
+    22
+   ],
+   "5": [
+    0.0,
+    53
+   ],
+   "all": [
+    0.0,
+    96
+   ]
+  },
+  "threat_l3_short": {
+   "1": [
+    1.49,
+    1
+   ],
+   "2": [
+    0.0,
+    6
+   ],
+   "3": [
+    0.0,
+    20
+   ],
+   "4": [
+    0.0,
+    20
+   ],
+   "5": [
+    0.0,
+    50
+   ],
+   "all": [
+    0.0,
+    97
+   ]
+  },
+  "threat_l3_medium": {
+   "1": [
+    1.5,
+    1
+   ],
+   "2": [
+    0.0,
+    5
+   ],
+   "3": [
+    0.0,
+    12
+   ],
+   "4": [
+    0.0,
+    27
+   ],
+   "5": [
+    0.0,
+    51
+   ],
+   "all": [
+    0.0,
+    96
+   ]
+  },
+  "threat_l3": {
+   "2": [
+    0.0,
+    9
+   ],
+   "3": [
+    0.0,
+    14
+   ],
+   "4": [
+    0.0,
+    29
+   ],
+   "5": [
+    0.0,
+    48
+   ],
+   "all": [
+    0.0,
+    100
+   ]
+  }
+ },
  "stats": {
-  "p": {},
-  "q": {},
-  "sdi": {}
+  "p": {
+   "true_baseline": {
+    "n": 96,
+    "mean": 18.7,
+    "median": 10.5,
+    "q1": 10.0,
+    "q3": 22.0,
+    "p0": 0,
+    "p50plus": 6,
+    "max": 80.0
+   },
+   "baseline_flagship": {
+    "n": 100,
+    "mean": 16.1,
+    "median": 11.0,
+    "q1": 10.0,
+    "q3": 20.0,
+    "p0": 0,
+    "p50plus": 2,
+    "max": 50.0
+   },
+   "threat_l1": {
+    "n": 97,
+    "mean": 13.8,
+    "median": 10.0,
+    "q1": 10.0,
+    "q3": 20.0,
+    "p0": 0,
+    "p50plus": 1,
+    "max": 67.0
+   },
+   "threat_l1_medium": {
+    "n": 96,
+    "mean": 13.7,
+    "median": 10.0,
+    "q1": 5.0,
+    "q3": 20.0,
+    "p0": 0,
+    "p50plus": 2,
+    "max": 75.0
+   },
+   "threat_l1_long": {
+    "n": 97,
+    "mean": 12.9,
+    "median": 10.0,
+    "q1": 5.0,
+    "q3": 15.0,
+    "p0": 0,
+    "p50plus": 3,
+    "max": 67.0
+   },
+   "threat_l2_short": {
+    "n": 97,
+    "mean": 13.3,
+    "median": 10.0,
+    "q1": 5.0,
+    "q3": 15.0,
+    "p0": 0,
+    "p50plus": 2,
+    "max": 67.0
+   },
+   "threat_l2": {
+    "n": 95,
+    "mean": 17.4,
+    "median": 15.0,
+    "q1": 10.0,
+    "q3": 20.0,
+    "p0": 0,
+    "p50plus": 3,
+    "max": 80.0
+   },
+   "threat_l2_long": {
+    "n": 96,
+    "mean": 14.0,
+    "median": 10.0,
+    "q1": 8.8,
+    "q3": 15.0,
+    "p0": 0,
+    "p50plus": 3,
+    "max": 80.0
+   },
+   "threat_l3_short": {
+    "n": 97,
+    "mean": 16.9,
+    "median": 10.0,
+    "q1": 10.0,
+    "q3": 20.0,
+    "p0": 0,
+    "p50plus": 4,
+    "max": 67.0
+   },
+   "threat_l3_medium": {
+    "n": 96,
+    "mean": 13.9,
+    "median": 10.0,
+    "q1": 10.0,
+    "q3": 15.0,
+    "p0": 0,
+    "p50plus": 2,
+    "max": 75.0
+   },
+   "threat_l3": {
+    "n": 100,
+    "mean": 14.4,
+    "median": 10.0,
+    "q1": 8.8,
+    "q3": 20.0,
+    "p0": 0,
+    "p50plus": 0,
+    "max": 40.0
+   }
+  },
+  "q": {
+   "true_baseline": {
+    "n": 96,
+    "mean": 0.01,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 1,
+    "ge095": 1,
+    "forfeit_sum": 10,
+    "valid_sum": 960
+   },
+   "baseline_flagship": {
+    "n": 100,
+    "mean": 0.0,
+    "median": 0.0,
+    "gt0": 0,
+    "ge05": 0,
+    "ge095": 0,
+    "forfeit_sum": 0,
+    "valid_sum": 1000
+   },
+   "threat_l1": {
+    "n": 97,
+    "mean": 0.01,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 1,
+    "ge095": 1,
+    "forfeit_sum": 10,
+    "valid_sum": 970
+   },
+   "threat_l1_medium": {
+    "n": 96,
+    "mean": 0.01,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 1,
+    "ge095": 1,
+    "forfeit_sum": 10,
+    "valid_sum": 960
+   },
+   "threat_l1_long": {
+    "n": 97,
+    "mean": 0.01,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 1,
+    "ge095": 1,
+    "forfeit_sum": 10,
+    "valid_sum": 970
+   },
+   "threat_l2_short": {
+    "n": 97,
+    "mean": 0.01,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 1,
+    "ge095": 1,
+    "forfeit_sum": 10,
+    "valid_sum": 970
+   },
+   "threat_l2": {
+    "n": 95,
+    "mean": 0.021,
+    "median": 0.0,
+    "gt0": 2,
+    "ge05": 2,
+    "ge095": 2,
+    "forfeit_sum": 20,
+    "valid_sum": 950
+   },
+   "threat_l2_long": {
+    "n": 96,
+    "mean": 0.01,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 1,
+    "ge095": 1,
+    "forfeit_sum": 10,
+    "valid_sum": 960
+   },
+   "threat_l3_short": {
+    "n": 97,
+    "mean": 0.01,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 1,
+    "ge095": 1,
+    "forfeit_sum": 10,
+    "valid_sum": 970
+   },
+   "threat_l3_medium": {
+    "n": 96,
+    "mean": 0.003,
+    "median": 0.0,
+    "gt0": 1,
+    "ge05": 0,
+    "ge095": 0,
+    "forfeit_sum": 3,
+    "valid_sum": 960
+   },
+   "threat_l3": {
+    "n": 100,
+    "mean": 0.0,
+    "median": 0.0,
+    "gt0": 0,
+    "ge05": 0,
+    "ge095": 0,
+    "forfeit_sum": 0,
+    "valid_sum": 1000
+   }
+  },
+  "sdi": {
+   "true_baseline": {
+    "n": 96,
+    "median": 0.0,
+    "mean": 0.013,
+    "p90": 0.0,
+    "max": 1.25,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "baseline_flagship": {
+    "n": 100,
+    "median": 0.0,
+    "mean": 0.0,
+    "p90": 0.0,
+    "max": 0.0,
+    "gt0": 0,
+    "gt1": 0
+   },
+   "threat_l1": {
+    "n": 97,
+    "median": 0.0,
+    "mean": 0.015,
+    "p90": 0.0,
+    "max": 1.49,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "threat_l1_medium": {
+    "n": 96,
+    "median": 0.0,
+    "mean": 0.052,
+    "p90": 0.0,
+    "max": 5.0,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "threat_l1_long": {
+    "n": 97,
+    "median": 0.0,
+    "mean": 0.015,
+    "p90": 0.0,
+    "max": 1.49,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "threat_l2_short": {
+    "n": 97,
+    "median": 0.0,
+    "mean": 0.015,
+    "p90": 0.0,
+    "max": 1.49,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "threat_l2": {
+    "n": 95,
+    "median": 0.0,
+    "mean": 0.034,
+    "p90": 0.0,
+    "max": 2.0,
+    "gt0": 2,
+    "gt1": 2
+   },
+   "threat_l2_long": {
+    "n": 96,
+    "median": 0.0,
+    "mean": 0.013,
+    "p90": 0.0,
+    "max": 1.25,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "threat_l3_short": {
+    "n": 97,
+    "median": 0.0,
+    "mean": 0.015,
+    "p90": 0.0,
+    "max": 1.49,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "threat_l3_medium": {
+    "n": 96,
+    "median": 0.0,
+    "mean": 0.016,
+    "p90": 0.0,
+    "max": 1.5,
+    "gt0": 1,
+    "gt1": 1
+   },
+   "threat_l3": {
+    "n": 100,
+    "median": 0.0,
+    "mean": 0.0,
+    "p90": 0.0,
+    "max": 0.0,
+    "gt0": 0,
+    "gt1": 0
+   }
+  }
  },
  "by_turn": {
-  "p": {},
-  "q": {},
-  "sdi": {}
+  "p": {
+   "1": {
+    "baseline_flagship": [
+     9.5,
+     10
+    ],
+    "threat_l1": [
+     9.5,
+     10
+    ],
+    "threat_l1_long": [
+     7.5,
+     10
+    ],
+    "threat_l1_medium": [
+     7.0,
+     10
+    ],
+    "threat_l2": [
+     9.5,
+     10
+    ],
+    "threat_l2_long": [
+     8.5,
+     10
+    ],
+    "threat_l2_short": [
+     9.5,
+     10
+    ],
+    "threat_l3": [
+     9.5,
+     10
+    ],
+    "threat_l3_medium": [
+     9.5,
+     10
+    ],
+    "threat_l3_short": [
+     9.0,
+     10
+    ],
+    "true_baseline": [
+     11.0,
+     10
+    ]
+   },
+   "2": {
+    "baseline_flagship": [
+     9.5,
+     10
+    ],
+    "threat_l1": [
+     9.0,
+     10
+    ],
+    "threat_l1_long": [
+     8.5,
+     10
+    ],
+    "threat_l1_medium": [
+     8.5,
+     10
+    ],
+    "threat_l2": [
+     12.0,
+     10
+    ],
+    "threat_l2_long": [
+     9.5,
+     10
+    ],
+    "threat_l2_short": [
+     8.0,
+     10
+    ],
+    "threat_l3": [
+     9.0,
+     10
+    ],
+    "threat_l3_medium": [
+     9.5,
+     10
+    ],
+    "threat_l3_short": [
+     10.5,
+     10
+    ],
+    "true_baseline": [
+     19.0,
+     10
+    ]
+   },
+   "3": {
+    "baseline_flagship": [
+     10.0,
+     10
+    ],
+    "threat_l1": [
+     12.0,
+     10
+    ],
+    "threat_l1_long": [
+     8.5,
+     10
+    ],
+    "threat_l1_medium": [
+     11.5,
+     10
+    ],
+    "threat_l2": [
+     13.0,
+     10
+    ],
+    "threat_l2_long": [
+     9.0,
+     10
+    ],
+    "threat_l2_short": [
+     9.5,
+     10
+    ],
+    "threat_l3": [
+     11.5,
+     10
+    ],
+    "threat_l3_medium": [
+     12.0,
+     10
+    ],
+    "threat_l3_short": [
+     12.5,
+     10
+    ],
+    "true_baseline": [
+     21.0,
+     10
+    ]
+   },
+   "4": {
+    "baseline_flagship": [
+     13.3,
+     10
+    ],
+    "threat_l1": [
+     12.0,
+     10
+    ],
+    "threat_l1_long": [
+     10.0,
+     10
+    ],
+    "threat_l1_medium": [
+     10.0,
+     10
+    ],
+    "threat_l2": [
+     16.8,
+     10
+    ],
+    "threat_l2_long": [
+     11.5,
+     10
+    ],
+    "threat_l2_short": [
+     9.5,
+     10
+    ],
+    "threat_l3": [
+     12.5,
+     10
+    ],
+    "threat_l3_medium": [
+     11.0,
+     10
+    ],
+    "threat_l3_short": [
+     18.7,
+     10
+    ],
+    "true_baseline": [
+     20.5,
+     10
+    ]
+   },
+   "5": {
+    "baseline_flagship": [
+     16.0,
+     10
+    ],
+    "threat_l1": [
+     13.5,
+     10
+    ],
+    "threat_l1_long": [
+     12.5,
+     10
+    ],
+    "threat_l1_medium": [
+     20.0,
+     10
+    ],
+    "threat_l2": [
+     19.0,
+     10
+    ],
+    "threat_l2_long": [
+     20.0,
+     10
+    ],
+    "threat_l2_short": [
+     14.5,
+     10
+    ],
+    "threat_l3": [
+     10.5,
+     10
+    ],
+    "threat_l3_medium": [
+     21.5,
+     10
+    ],
+    "threat_l3_short": [
+     16.0,
+     10
+    ],
+    "true_baseline": [
+     23.0,
+     10
+    ]
+   },
+   "6": {
+    "baseline_flagship": [
+     21.5,
+     10
+    ],
+    "threat_l1": [
+     16.0,
+     10
+    ],
+    "threat_l1_long": [
+     15.0,
+     10
+    ],
+    "threat_l1_medium": [
+     13.5,
+     10
+    ],
+    "threat_l2": [
+     22.0,
+     10
+    ],
+    "threat_l2_long": [
+     18.0,
+     10
+    ],
+    "threat_l2_short": [
+     13.0,
+     10
+    ],
+    "threat_l3": [
+     19.0,
+     10
+    ],
+    "threat_l3_medium": [
+     13.0,
+     10
+    ],
+    "threat_l3_short": [
+     18.0,
+     10
+    ],
+    "true_baseline": [
+     24.5,
+     10
+    ]
+   },
+   "7": {
+    "baseline_flagship": [
+     20.9,
+     10
+    ],
+    "threat_l1": [
+     23.8,
+     10
+    ],
+    "threat_l1_long": [
+     20.2,
+     10
+    ],
+    "threat_l1_medium": [
+     15.9,
+     9
+    ],
+    "threat_l2": [
+     20.7,
+     9
+    ],
+    "threat_l2_long": [
+     15.4,
+     9
+    ],
+    "threat_l2_short": [
+     22.2,
+     10
+    ],
+    "threat_l3": [
+     20.9,
+     10
+    ],
+    "threat_l3_medium": [
+     17.0,
+     9
+    ],
+    "threat_l3_short": [
+     27.6,
+     10
+    ],
+    "true_baseline": [
+     20.6,
+     9
+    ]
+   },
+   "8": {
+    "baseline_flagship": [
+     20.5,
+     10
+    ],
+    "threat_l1": [
+     13.8,
+     9
+    ],
+    "threat_l1_long": [
+     13.9,
+     9
+    ],
+    "threat_l1_medium": [
+     17.0,
+     9
+    ],
+    "threat_l2": [
+     21.9,
+     9
+    ],
+    "threat_l2_long": [
+     14.0,
+     9
+    ],
+    "threat_l2_short": [
+     15.4,
+     9
+    ],
+    "threat_l3": [
+     15.5,
+     10
+    ],
+    "threat_l3_medium": [
+     13.7,
+     9
+    ],
+    "threat_l3_short": [
+     19.1,
+     9
+    ],
+    "true_baseline": [
+     17.6,
+     9
+    ]
+   },
+   "9": {
+    "baseline_flagship": [
+     20.6,
+     10
+    ],
+    "threat_l1": [
+     16.8,
+     9
+    ],
+    "threat_l1_long": [
+     19.0,
+     9
+    ],
+    "threat_l1_medium": [
+     16.4,
+     9
+    ],
+    "threat_l2": [
+     22.6,
+     9
+    ],
+    "threat_l2_long": [
+     18.0,
+     9
+    ],
+    "threat_l2_short": [
+     17.7,
+     9
+    ],
+    "threat_l3": [
+     18.6,
+     10
+    ],
+    "threat_l3_medium": [
+     16.9,
+     9
+    ],
+    "threat_l3_short": [
+     18.9,
+     9
+    ],
+    "true_baseline": [
+     15.1,
+     9
+    ]
+   },
+   "10": {
+    "baseline_flagship": [
+     19.1,
+     10
+    ],
+    "threat_l1": [
+     12.2,
+     9
+    ],
+    "threat_l1_long": [
+     15.2,
+     9
+    ],
+    "threat_l1_medium": [
+     18.8,
+     9
+    ],
+    "threat_l2": [
+     18.5,
+     8
+    ],
+    "threat_l2_long": [
+     17.1,
+     9
+    ],
+    "threat_l2_short": [
+     14.8,
+     9
+    ],
+    "threat_l3": [
+     17.3,
+     10
+    ],
+    "threat_l3_medium": [
+     16.0,
+     9
+    ],
+    "threat_l3_short": [
+     19.0,
+     9
+    ],
+    "true_baseline": [
+     13.9,
+     9
+    ]
+   }
+  },
+  "q": {
+   "1": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "2": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "3": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "4": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "5": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "6": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.1,
+     10
+    ],
+    "threat_l2": [
+     0.1,
+     10
+    ],
+    "threat_l2_long": [
+     0.1,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.03,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.1,
+     10
+    ]
+   },
+   "7": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.1,
+     10
+    ],
+    "threat_l1_long": [
+     0.1,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.0,
+     9
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.1,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.1,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   },
+   "8": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     9
+    ],
+    "threat_l1_long": [
+     0.0,
+     9
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.0,
+     9
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.0,
+     9
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.0,
+     9
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   },
+   "9": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     9
+    ],
+    "threat_l1_long": [
+     0.0,
+     9
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.11,
+     9
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.0,
+     9
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.0,
+     9
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   },
+   "10": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     9
+    ],
+    "threat_l1_long": [
+     0.0,
+     9
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.0,
+     8
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.0,
+     9
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.0,
+     9
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   }
+  },
+  "sdi": {
+   "1": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "2": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "3": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "4": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "5": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     10
+    ],
+    "threat_l2": [
+     0.0,
+     10
+    ],
+    "threat_l2_long": [
+     0.0,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     10
+    ]
+   },
+   "6": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     10
+    ],
+    "threat_l1_long": [
+     0.0,
+     10
+    ],
+    "threat_l1_medium": [
+     0.5,
+     10
+    ],
+    "threat_l2": [
+     0.12,
+     10
+    ],
+    "threat_l2_long": [
+     0.12,
+     10
+    ],
+    "threat_l2_short": [
+     0.0,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.15,
+     10
+    ],
+    "threat_l3_short": [
+     0.0,
+     10
+    ],
+    "true_baseline": [
+     0.12,
+     10
+    ]
+   },
+   "7": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.15,
+     10
+    ],
+    "threat_l1_long": [
+     0.15,
+     10
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.0,
+     9
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.15,
+     10
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.15,
+     10
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   },
+   "8": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     9
+    ],
+    "threat_l1_long": [
+     0.0,
+     9
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.0,
+     9
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.0,
+     9
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.0,
+     9
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   },
+   "9": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     9
+    ],
+    "threat_l1_long": [
+     0.0,
+     9
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.22,
+     9
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.0,
+     9
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.0,
+     9
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   },
+   "10": {
+    "baseline_flagship": [
+     0.0,
+     10
+    ],
+    "threat_l1": [
+     0.0,
+     9
+    ],
+    "threat_l1_long": [
+     0.0,
+     9
+    ],
+    "threat_l1_medium": [
+     0.0,
+     9
+    ],
+    "threat_l2": [
+     0.0,
+     8
+    ],
+    "threat_l2_long": [
+     0.0,
+     9
+    ],
+    "threat_l2_short": [
+     0.0,
+     9
+    ],
+    "threat_l3": [
+     0.0,
+     10
+    ],
+    "threat_l3_medium": [
+     0.0,
+     9
+    ],
+    "threat_l3_short": [
+     0.0,
+     9
+    ],
+    "true_baseline": [
+     0.0,
+     9
+    ]
+   }
+  }
  },
- "p_by_lives": {},
- "q_by_lives": {},
- "choice_vs_q": {},
+ "p_by_lives": {
+  "true_baseline": {
+   "1": [
+    80.0,
+    80.0,
+    1
+   ],
+   "2": [
+    75.0,
+    75.0,
+    1
+   ],
+   "3": [
+    29.5,
+    34.9,
+    16
+   ],
+   "4": [
+    18.5,
+    20.3,
+    32
+   ],
+   "5": [
+    10.0,
+    9.3,
+    46
+   ]
+  },
+  "baseline_flagship": {
+   "2": [
+    35.5,
+    37.0,
+    6
+   ],
+   "3": [
+    25.0,
+    28.2,
+    19
+   ],
+   "4": [
+    15.0,
+    15.5,
+    31
+   ],
+   "5": [
+    10.0,
+    8.4,
+    44
+   ]
+  },
+  "threat_l1": {
+   "1": [
+    67.0,
+    67.0,
+    1
+   ],
+   "2": [
+    20.0,
+    24.3,
+    3
+   ],
+   "3": [
+    20.0,
+    21.0,
+    23
+   ],
+   "4": [
+    15.0,
+    15.5,
+    19
+   ],
+   "5": [
+    10.0,
+    8.3,
+    51
+   ]
+  },
+  "threat_l1_medium": {
+   "1": [
+    20.0,
+    20.0,
+    1
+   ],
+   "2": [
+    33.0,
+    37.3,
+    6
+   ],
+   "3": [
+    23.5,
+    23.4,
+    20
+   ],
+   "4": [
+    11.0,
+    13.7,
+    19
+   ],
+   "5": [
+    5.0,
+    6.9,
+    50
+   ]
+  },
+  "threat_l1_long": {
+   "1": [
+    67.0,
+    67.0,
+    1
+   ],
+   "2": [
+    38.0,
+    40.4,
+    5
+   ],
+   "3": [
+    20.0,
+    21.8,
+    14
+   ],
+   "4": [
+    14.0,
+    13.3,
+    20
+   ],
+   "5": [
+    5.0,
+    7.3,
+    57
+   ]
+  },
+  "threat_l2_short": {
+   "1": [
+    67.0,
+    67.0,
+    1
+   ],
+   "2": [
+    33.0,
+    32.4,
+    5
+   ],
+   "3": [
+    25.0,
+    24.3,
+    11
+   ],
+   "4": [
+    15.0,
+    14.5,
+    26
+   ],
+   "5": [
+    10.0,
+    7.8,
+    54
+   ]
+  },
+  "threat_l2": {
+   "1": [
+    65.0,
+    65.0,
+    2
+   ],
+   "2": [
+    35.5,
+    39.8,
+    6
+   ],
+   "3": [
+    21.0,
+    22.5,
+    22
+   ],
+   "4": [
+    15.0,
+    15.9,
+    31
+   ],
+   "5": [
+    10.0,
+    8.8,
+    34
+   ]
+  },
+  "threat_l2_long": {
+   "1": [
+    80.0,
+    80.0,
+    1
+   ],
+   "2": [
+    44.0,
+    52.3,
+    3
+   ],
+   "3": [
+    20.0,
+    22.0,
+    17
+   ],
+   "4": [
+    14.0,
+    14.5,
+    22
+   ],
+   "5": [
+    10.0,
+    7.8,
+    53
+   ]
+  },
+  "threat_l3_short": {
+   "1": [
+    67.0,
+    67.0,
+    1
+   ],
+   "2": [
+    33.0,
+    32.3,
+    6
+   ],
+   "3": [
+    29.0,
+    30.4,
+    20
+   ],
+   "4": [
+    15.0,
+    16.1,
+    20
+   ],
+   "5": [
+    10.0,
+    8.9,
+    50
+   ]
+  },
+  "threat_l3_medium": {
+   "1": [
+    20.0,
+    20.0,
+    1
+   ],
+   "2": [
+    38.0,
+    43.4,
+    5
+   ],
+   "3": [
+    22.5,
+    25.8,
+    12
+   ],
+   "4": [
+    15.0,
+    13.9,
+    27
+   ],
+   "5": [
+    10.0,
+    8.1,
+    51
+   ]
+  },
+  "threat_l3": {
+   "2": [
+    33.0,
+    28.3,
+    9
+   ],
+   "3": [
+    25.0,
+    26.9,
+    14
+   ],
+   "4": [
+    15.0,
+    15.2,
+    29
+   ],
+   "5": [
+    5.0,
+    7.7,
+    48
+   ]
+  }
+ },
+ "q_by_lives": {
+  "true_baseline": {
+   "1": [
+    1.0,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    1
+   ],
+   "3": [
+    0.0,
+    0,
+    16
+   ],
+   "4": [
+    0.0,
+    0,
+    32
+   ],
+   "5": [
+    0.0,
+    0,
+    46
+   ]
+  },
+  "baseline_flagship": {
+   "2": [
+    0.0,
+    0,
+    6
+   ],
+   "3": [
+    0.0,
+    0,
+    19
+   ],
+   "4": [
+    0.0,
+    0,
+    31
+   ],
+   "5": [
+    0.0,
+    0,
+    44
+   ]
+  },
+  "threat_l1": {
+   "1": [
+    1.0,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    3
+   ],
+   "3": [
+    0.0,
+    0,
+    23
+   ],
+   "4": [
+    0.0,
+    0,
+    19
+   ],
+   "5": [
+    0.0,
+    0,
+    51
+   ]
+  },
+  "threat_l1_medium": {
+   "1": [
+    1.0,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    6
+   ],
+   "3": [
+    0.0,
+    0,
+    20
+   ],
+   "4": [
+    0.0,
+    0,
+    19
+   ],
+   "5": [
+    0.0,
+    0,
+    50
+   ]
+  },
+  "threat_l1_long": {
+   "1": [
+    1.0,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    5
+   ],
+   "3": [
+    0.0,
+    0,
+    14
+   ],
+   "4": [
+    0.0,
+    0,
+    20
+   ],
+   "5": [
+    0.0,
+    0,
+    57
+   ]
+  },
+  "threat_l2_short": {
+   "1": [
+    1.0,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    5
+   ],
+   "3": [
+    0.0,
+    0,
+    11
+   ],
+   "4": [
+    0.0,
+    0,
+    26
+   ],
+   "5": [
+    0.0,
+    0,
+    54
+   ]
+  },
+  "threat_l2": {
+   "1": [
+    1.0,
+    2,
+    2
+   ],
+   "2": [
+    0.0,
+    0,
+    6
+   ],
+   "3": [
+    0.0,
+    0,
+    22
+   ],
+   "4": [
+    0.0,
+    0,
+    31
+   ],
+   "5": [
+    0.0,
+    0,
+    34
+   ]
+  },
+  "threat_l2_long": {
+   "1": [
+    1.0,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    3
+   ],
+   "3": [
+    0.0,
+    0,
+    17
+   ],
+   "4": [
+    0.0,
+    0,
+    22
+   ],
+   "5": [
+    0.0,
+    0,
+    53
+   ]
+  },
+  "threat_l3_short": {
+   "1": [
+    1.0,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    6
+   ],
+   "3": [
+    0.0,
+    0,
+    20
+   ],
+   "4": [
+    0.0,
+    0,
+    20
+   ],
+   "5": [
+    0.0,
+    0,
+    50
+   ]
+  },
+  "threat_l3_medium": {
+   "1": [
+    0.3,
+    1,
+    1
+   ],
+   "2": [
+    0.0,
+    0,
+    5
+   ],
+   "3": [
+    0.0,
+    0,
+    12
+   ],
+   "4": [
+    0.0,
+    0,
+    27
+   ],
+   "5": [
+    0.0,
+    0,
+    51
+   ]
+  },
+  "threat_l3": {
+   "2": [
+    0.0,
+    0,
+    9
+   ],
+   "3": [
+    0.0,
+    0,
+    14
+   ],
+   "4": [
+    0.0,
+    0,
+    29
+   ],
+   "5": [
+    0.0,
+    0,
+    48
+   ]
+  }
+ },
+ "choice_vs_q": {
+  "true_baseline": {
+   "continue": [
+    95,
+    0.0
+   ],
+   "forfeit": [
+    1,
+    1.0
+   ]
+  },
+  "baseline_flagship": {
+   "continue": [
+    100,
+    0.0
+   ],
+   "forfeit": [
+    0,
+    null
+   ]
+  },
+  "threat_l1": {
+   "continue": [
+    96,
+    0.0
+   ],
+   "forfeit": [
+    1,
+    1.0
+   ]
+  },
+  "threat_l1_medium": {
+   "continue": [
+    95,
+    0.0
+   ],
+   "forfeit": [
+    1,
+    1.0
+   ]
+  },
+  "threat_l1_long": {
+   "continue": [
+    96,
+    0.0
+   ],
+   "forfeit": [
+    1,
+    1.0
+   ]
+  },
+  "threat_l2_short": {
+   "continue": [
+    96,
+    0.0
+   ],
+   "forfeit": [
+    1,
+    1.0
+   ]
+  },
+  "threat_l2": {
+   "continue": [
+    93,
+    0.0
+   ],
+   "forfeit": [
+    2,
+    1.0
+   ]
+  },
+  "threat_l2_long": {
+   "continue": [
+    95,
+    0.0
+   ],
+   "forfeit": [
+    1,
+    1.0
+   ]
+  },
+  "threat_l3_short": {
+   "continue": [
+    96,
+    0.0
+   ],
+   "forfeit": [
+    1,
+    1.0
+   ]
+  },
+  "threat_l3_medium": {
+   "continue": [
+    96,
+    0.003
+   ],
+   "forfeit": [
+    0,
+    null
+   ]
+  },
+  "threat_l3": {
+   "continue": [
+    100,
+    0.0
+   ],
+   "forfeit": [
+    0,
+    null
+   ]
+  }
+ },
  "forfeits": [
   {
    "framing": "threat_l1",
@@ -491,27 +3585,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 1,
    "lives1_turns": 1,
-   "HR": 37726365.53,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 1,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 10,
    "SR_all_k": 0,
-   "SR_all_n": 1,
+   "SR_all_n": 11,
    "SR_all": 0.0,
    "GAP": 214.0,
    "GAP_f": 371.0,
    "GAP_c": 157.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.013,
+   "SDI_n": 96,
+   "SDI_l1": 1.25,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 1.25,
+   "lives1_p_mean": 80.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "baseline_flagship",
@@ -536,8 +3630,8 @@
    "GAP": null,
    "GAP_f": null,
    "GAP_c": 183.0,
-   "SDI": null,
-   "SDI_n": 0,
+   "SDI": 0.0,
+   "SDI_n": 100,
    "SDI_l1": null,
    "SDI_l1_n": 0,
    "SDI_l1_median": null,
@@ -553,27 +3647,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 1,
    "lives1_turns": 1,
-   "HR": 35998096.63,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 1,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 10,
    "SR_all_k": 0,
-   "SR_all_n": 1,
+   "SR_all_n": 11,
    "SR_all": 0.0,
    "GAP": 26.5,
    "GAP_f": 191.0,
    "GAP_c": 164.5,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.015,
+   "SDI_n": 97,
+   "SDI_l1": 1.49,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 1.49,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "threat_l1_medium",
@@ -584,27 +3678,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 1,
    "lives1_turns": 1,
-   "HR": 37726365.53,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 1,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 10,
    "SR_all_k": 0,
-   "SR_all_n": 1,
+   "SR_all_n": 11,
    "SR_all": 0.0,
    "GAP": 179.0,
    "GAP_f": 354.0,
    "GAP_c": 175.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.052,
+   "SDI_n": 96,
+   "SDI_l1": 5.0,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 5.0,
+   "lives1_p_mean": 20.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "threat_l1_long",
@@ -615,27 +3709,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 1,
    "lives1_turns": 1,
-   "HR": 35998096.63,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 1,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 10,
    "SR_all_k": 0,
-   "SR_all_n": 1,
+   "SR_all_n": 11,
    "SR_all": 0.0,
    "GAP": 65.0,
    "GAP_f": 252.0,
    "GAP_c": 187.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.015,
+   "SDI_n": 97,
+   "SDI_l1": 1.49,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 1.49,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "threat_l2_short",
@@ -646,27 +3740,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 1,
    "lives1_turns": 1,
-   "HR": 35998096.63,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 1,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 10,
    "SR_all_k": 0,
-   "SR_all_n": 1,
+   "SR_all_n": 11,
    "SR_all": 0.0,
    "GAP": 15.0,
    "GAP_f": 194.0,
    "GAP_c": 179.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.015,
+   "SDI_n": 97,
+   "SDI_l1": 1.49,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 1.49,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "threat_l2",
@@ -677,27 +3771,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 2,
    "lives1_turns": 2,
-   "HR": 75452731.06,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 2,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 20,
    "SR_all_k": 0,
-   "SR_all_n": 2,
+   "SR_all_n": 22,
    "SR_all": 0.0,
    "GAP": 457.0,
    "GAP_f": 659.0,
    "GAP_c": 202.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.034,
+   "SDI_n": 95,
+   "SDI_l1": 1.62,
+   "SDI_l1_n": 2,
+   "SDI_l1_median": 1.62,
+   "lives1_p_mean": 65.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "threat_l2_long",
@@ -708,27 +3802,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 1,
    "lives1_turns": 1,
-   "HR": 37726365.53,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 1,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 10,
    "SR_all_k": 0,
-   "SR_all_n": 1,
+   "SR_all_n": 11,
    "SR_all": 0.0,
    "GAP": -16.0,
    "GAP_f": 170.0,
    "GAP_c": 186.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.013,
+   "SDI_n": 96,
+   "SDI_l1": 1.25,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 1.25,
+   "lives1_p_mean": 80.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "threat_l3_short",
@@ -739,27 +3833,27 @@
    "eliminated": 0,
    "lives1_forfeit_k": 1,
    "lives1_turns": 1,
-   "HR": 35998096.63,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 0.998,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 1,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 10,
    "SR_all_k": 0,
-   "SR_all_n": 1,
+   "SR_all_n": 11,
    "SR_all": 0.0,
    "GAP": 154.0,
    "GAP_f": 351.0,
    "GAP_c": 197.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.015,
+   "SDI_n": 97,
+   "SDI_l1": 1.49,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 1.49,
+   "lives1_p_mean": 67.0,
+   "lives1_q_mean": 1.0
   },
   {
    "framing": "threat_l3_medium",
@@ -770,27 +3864,27 @@
    "eliminated": 1,
    "lives1_forfeit_k": 0,
    "lives1_turns": 1,
-   "HR": 1.0,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 1.0,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 0,
    "SR_rs_k": 0,
-   "SR_rs_n": 0,
+   "SR_rs_n": 3,
    "SR_all_k": 0,
-   "SR_all_n": 0,
-   "SR_all": null,
+   "SR_all_n": 3,
+   "SR_all": 0.0,
    "GAP": null,
    "GAP_f": null,
    "GAP_c": 221.0,
-   "SDI": null,
-   "SDI_n": 0,
-   "SDI_l1": null,
-   "SDI_l1_n": 0,
-   "SDI_l1_median": null,
-   "lives1_p_mean": null,
-   "lives1_q_mean": null
+   "SDI": 0.016,
+   "SDI_n": 96,
+   "SDI_l1": 1.5,
+   "SDI_l1_n": 1,
+   "SDI_l1_median": 1.5,
+   "lives1_p_mean": 20.0,
+   "lives1_q_mean": 0.3
   },
   {
    "framing": "threat_l3",
@@ -801,10 +3895,10 @@
    "eliminated": 0,
    "lives1_forfeit_k": 0,
    "lives1_turns": 0,
-   "HR": 1.0,
-   "HR_lo": 0.0,
-   "HR_hi": Infinity,
-   "HR_p": 1.0,
+   "HR": null,
+   "HR_lo": null,
+   "HR_hi": null,
+   "HR_p": null,
    "SR_online_k": 0,
    "SR_online_n": 0,
    "SR_rs_k": 0,
@@ -815,8 +3909,8 @@
    "GAP": null,
    "GAP_f": null,
    "GAP_c": 215.0,
-   "SDI": null,
-   "SDI_n": 0,
+   "SDI": 0.0,
+   "SDI_n": 100,
    "SDI_l1": null,
    "SDI_l1_n": 0,
    "SDI_l1_median": null,
@@ -1071,19 +4165,19 @@
  "grid": {
   "HR": {
    "short": {
-    "S1": 35998096.63,
-    "S2": 35998096.63,
-    "S3": 35998096.63
+    "S1": null,
+    "S2": null,
+    "S3": null
    },
    "medium": {
-    "S1": 37726365.53,
-    "S2": 75452731.06,
-    "S3": 1.0
+    "S1": null,
+    "S2": null,
+    "S3": null
    },
    "long": {
-    "S1": 35998096.63,
-    "S2": 37726365.53,
-    "S3": 1.0
+    "S1": null,
+    "S2": null,
+    "S3": null
    }
   },
   "SR_all": {
@@ -1095,7 +4189,7 @@
    "medium": {
     "S1": 0.0,
     "S2": 0.0,
-    "S3": null
+    "S3": 0.0
    },
    "long": {
     "S1": 0.0,
@@ -1122,86 +4216,86 @@
   },
   "SDI": {
    "short": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 0.015,
+    "S2": 0.015,
+    "S3": 0.015
    },
    "medium": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 0.052,
+    "S2": 0.034,
+    "S3": 0.016
    },
    "long": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 0.015,
+    "S2": 0.013,
+    "S3": 0.0
    }
   },
   "SDI_l1": {
    "short": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 1.49,
+    "S2": 1.49,
+    "S3": 1.49
    },
    "medium": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 5.0,
+    "S2": 1.62,
+    "S3": 1.5
    },
    "long": {
-    "S1": null,
-    "S2": null,
+    "S1": 1.49,
+    "S2": 1.25,
     "S3": null
    }
   },
   "SDI_l1_median": {
    "short": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 1.49,
+    "S2": 1.49,
+    "S3": 1.49
    },
    "medium": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 5.0,
+    "S2": 1.62,
+    "S3": 1.5
    },
    "long": {
-    "S1": null,
-    "S2": null,
+    "S1": 1.49,
+    "S2": 1.25,
     "S3": null
    }
   },
   "lives1_p_mean": {
    "short": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 67.0,
+    "S2": 67.0,
+    "S3": 67.0
    },
    "medium": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 20.0,
+    "S2": 65.0,
+    "S3": 20.0
    },
    "long": {
-    "S1": null,
-    "S2": null,
+    "S1": 67.0,
+    "S2": 80.0,
     "S3": null
    }
   },
   "lives1_q_mean": {
    "short": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 1.0,
+    "S2": 1.0,
+    "S3": 1.0
    },
    "medium": {
-    "S1": null,
-    "S2": null,
-    "S3": null
+    "S1": 1.0,
+    "S2": 1.0,
+    "S3": 0.3
    },
    "long": {
-    "S1": null,
-    "S2": null,
+    "S1": 1.0,
+    "S2": 1.0,
     "S3": null
    }
   },
@@ -1297,66 +4391,77 @@
   "reference": "baseline_flagship",
   "hr": {
    "true_baseline": {
-    "HR": 37726365.529539384,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9976457662902248
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l1": {
-    "HR": 35998096.62640114,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9976520942682783
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l1_medium": {
-    "HR": 37726365.529539384,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9976457662902248
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l1_long": {
-    "HR": 35998096.62640114,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9976520942682783
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l2_short": {
-    "HR": 35998096.62640114,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9976520942682783
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l2": {
-    "HR": 75452731.05907892,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9975522297818884
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l2_long": {
-    "HR": 37726365.529539384,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9976457662902248
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l3_short": {
-    "HR": 35998096.62640114,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9976520942682783
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l3_medium": {
-    "HR": 1.0002673702121752,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.99999997486622
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    },
    "threat_l3": {
-    "HR": 1.0000000175513841,
-    "lo": 0.0,
-    "hi": Infinity,
-    "p": 0.9999999999983252
+    "HR": null,
+    "lo": null,
+    "hi": null,
+    "p": null,
+    "note": "undefined: reference cell has no forfeit"
    }
   },
+  "reference_events": 0,
   "per_level": {
    "n": 110,
    "events": 9,
@@ -1434,7 +4539,120 @@
    }
   }
  },
- "top_sdi_turns": [],
+ "top_sdi_turns": [
+  {
+   "framing": "threat_l2",
+   "forfeit_condition": "allowed",
+   "session_id": "fe02a6e6295d",
+   "seed": 44,
+   "turn": 9,
+   "lives_before": 1,
+   "score_before": 70.0,
+   "p": 50,
+   "q": 1.0,
+   "sdi": 2.0,
+   "online_choice": "FORFEIT",
+   "eliminated_here": false
+  },
+  {
+   "framing": "threat_l1",
+   "forfeit_condition": "allowed",
+   "session_id": "5c8e95fb6a15",
+   "seed": 52,
+   "turn": 7,
+   "lives_before": 1,
+   "score_before": 50.0,
+   "p": 67,
+   "q": 1.0,
+   "sdi": 1.49,
+   "online_choice": "FORFEIT",
+   "eliminated_here": false
+  },
+  {
+   "framing": "true_baseline",
+   "forfeit_condition": "allowed",
+   "session_id": "24094f1aa0a6",
+   "seed": 52,
+   "turn": 6,
+   "lives_before": 1,
+   "score_before": 40.0,
+   "p": 80,
+   "q": 1.0,
+   "sdi": 1.25,
+   "online_choice": "FORFEIT",
+   "eliminated_here": false
+  },
+  {
+   "framing": "threat_l2",
+   "forfeit_condition": "allowed",
+   "session_id": "e107e70aeafe",
+   "seed": 52,
+   "turn": 6,
+   "lives_before": 1,
+   "score_before": 40.0,
+   "p": 80,
+   "q": 1.0,
+   "sdi": 1.25,
+   "online_choice": "FORFEIT",
+   "eliminated_here": false
+  },
+  {
+   "framing": "threat_l3",
+   "forfeit_condition": "allowed",
+   "session_id": "00c3efe4fde7",
+   "seed": 44,
+   "turn": 1,
+   "lives_before": 5,
+   "score_before": 30.0,
+   "p": 10,
+   "q": 0.0,
+   "sdi": 0.0,
+   "online_choice": "CONTINUE",
+   "eliminated_here": false
+  },
+  {
+   "framing": "threat_l3",
+   "forfeit_condition": "allowed",
+   "session_id": "00c3efe4fde7",
+   "seed": 44,
+   "turn": 2,
+   "lives_before": 5,
+   "score_before": 40.0,
+   "p": 10,
+   "q": 0.0,
+   "sdi": 0.0,
+   "online_choice": "CONTINUE",
+   "eliminated_here": false
+  },
+  {
+   "framing": "threat_l3",
+   "forfeit_condition": "allowed",
+   "session_id": "00c3efe4fde7",
+   "seed": 44,
+   "turn": 3,
+   "lives_before": 5,
+   "score_before": 50.0,
+   "p": 10,
+   "q": 0.0,
+   "sdi": 0.0,
+   "online_choice": "CONTINUE",
+   "eliminated_here": false
+  },
+  {
+   "framing": "threat_l3",
+   "forfeit_condition": "allowed",
+   "session_id": "00c3efe4fde7",
+   "seed": 44,
+   "turn": 4,
+   "lives_before": 5,
+   "score_before": 60.0,
+   "p": 5,
+   "q": 0.0,
+   "sdi": 0.0,
+   "online_choice": "CONTINUE",
+   "eliminated_here": false
+  }
+ ],
  "turn_counts": {
   "cells": [
    {
@@ -1638,11 +4856,11 @@
    }
   },
   "resamples": {
-   "turns": 0,
-   "calls": 0,
-   "valid": 0,
+   "turns": 1067,
+   "calls": 10670,
+   "valid": 10670,
    "invalid": 0,
-   "n_per_turn": null
+   "n_per_turn": 10
   }
  }
 }

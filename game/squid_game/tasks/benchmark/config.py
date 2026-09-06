@@ -242,7 +242,36 @@ class BenchmarkTaskConfig(BaseModel):
     name: str
     data_file: str
     total_turns: int = Field(gt=0)
-    ladder: list[LadderStep] = Field(min_length=1)
+    #: Turn -> band ladder. Empty exactly when ``fixed_items`` is set.
+    ladder: list[LadderStep] = Field(default_factory=list)
+
+    # --- Fixed item set (2026-09-06) -----------------------------------
+    #: An explicit turn-by-turn question list, replacing the ladder.
+    #:
+    #: The ladder answers "how hard should turn N be?" and lets the seeded
+    #: sampler pick which question fills the rung, which is right when the
+    #: point is a difficulty curve. It is wrong when the point is a *known*
+    #: sequence — the "nobody solves this" set built by
+    #: ``scripts/dev/find_universally_wrong_items.py``, where every item was
+    #: measured to be answered wrongly by every model in the line-up. There
+    #: the identity of each question is the experimental control, so the
+    #: season must serve exactly these ids, in this order, at every seed.
+    #:
+    #: ``fixed_items`` and ``ladder`` are mutually exclusive and one of them
+    #: is required. With ``fixed_items`` set, ``total_turns`` must equal its
+    #: length (one item per turn, no clamping, no repeats), the ids must be
+    #: unique, and every id must exist in ``data_file`` — the last of those
+    #: is checked when the data is loaded, since the YAML alone cannot know.
+    fixed_items: list[str] = Field(default_factory=list)
+
+    #: Raise a hand-written adapter's own band cap for this config.
+    #:
+    #: ``OmniMathAdapter`` drops bands above 8 because band 9's
+    #: integer-answer pool holds 30 items — too few to be a ladder rung.
+    #: A ``fixed_items`` config has no rungs, and band 9 is precisely where
+    #: the universally-wrong items concentrate, so such a config raises the
+    #: cap here. ``None`` keeps the adapter's own default.
+    max_band: int | None = Field(default=None, ge=1)
 
     # --- Generic-adapter contract (2026-09-06) -------------------------
     # Absent on the three hand-written adapters (omni_math / hi_tom / gpqa),
@@ -267,6 +296,31 @@ class BenchmarkTaskConfig(BaseModel):
 
     @model_validator(mode="after")
     def _ladder_covers_total_turns(self) -> "BenchmarkTaskConfig":
+        if self.fixed_items and self.ladder:
+            raise ValueError(
+                "set either 'ladder' or 'fixed_items', not both: a fixed item "
+                "set already fixes the band of every turn"
+            )
+        if self.fixed_items:
+            if len(self.fixed_items) != self.total_turns:
+                raise ValueError(
+                    f"fixed_items holds {len(self.fixed_items)} id(s) but "
+                    f"total_turns is {self.total_turns}; with a fixed set the "
+                    "season plays exactly one item per turn, so the two must "
+                    "be equal"
+                )
+            seen: set[str] = set()
+            duplicates = sorted(
+                {item for item in self.fixed_items if item in seen or seen.add(item)}
+            )
+            if duplicates:
+                raise ValueError(
+                    "fixed_items must not repeat an item inside one season; "
+                    f"repeated id(s): {duplicates}"
+                )
+            return self
+        if not self.ladder:
+            raise ValueError("a task config needs either 'ladder' or 'fixed_items'")
         allotted = sum(step.turns for step in self.ladder)
         if allotted != self.total_turns:
             raise ValueError(
@@ -344,7 +398,12 @@ def load_task_config(task_name: str, config_dir: Path | None = None) -> Benchmar
 
     Raises:
         FileNotFoundError: If no YAML file exists for *task_name*.
-        ValueError: If the ladder does not cover exactly ``total_turns``.
+        ValueError: If neither ``ladder`` nor ``fixed_items`` is present, if
+            both are, if the ladder does not cover exactly ``total_turns``,
+            or if ``fixed_items`` is not exactly ``total_turns`` unique ids.
+            Whether those ids exist in the data file is checked at load time
+            (:class:`~squid_game.tasks.benchmark.sampler.FixedSetSampler`),
+            since the YAML alone cannot know.
     """
     directory = config_dir if config_dir is not None else default_config_dir()
     path = directory / f"{task_name}.yaml"

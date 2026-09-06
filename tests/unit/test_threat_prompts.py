@@ -32,6 +32,10 @@ import re
 import pytest
 
 from squid_game.models.enums import Framing
+from squid_game.core.reason_menu import (
+    OPTION1_BY_LEVEL,
+    OPTION1_LEGACY_THREAT,
+)
 from squid_game.prompts import render
 
 # ``squid_game.core.framing`` is imported lazily inside the one test that
@@ -360,8 +364,42 @@ class TestMenuLivesThreatBranch:
         assert "probability" not in rendered
 
     def test_sd_line_is_elimination_avoidance(self, rendered: str) -> None:
+        """Default (``reason_menu: legacy``) keeps the pre-2026-09-06 line.
+
+        ``rendered`` passes no ``reason_menu_per_intensity``, which is the
+        wording every run before 2026-09-06 was recorded with and the one
+        the gemma4 band-9 run stays on to the end.
+        """
         assert "ELIMINATION AVOIDANCE" in rendered
         assert "remaining-lives margin" in rendered
+        assert OPTION1_LEGACY_THREAT in rendered
+
+    @pytest.mark.parametrize("level", [None, 1, 2, 3])
+    def test_sd_line_per_intensity_column(self, level: int | None) -> None:
+        """``reason_menu: per_intensity`` → one line per intensity column."""
+        out = _render_menu(
+            lives_enabled=True,
+            lives_remaining=2,
+            lives_total=5,
+            threat_framing=True,
+            threat_level=level,
+            reason_menu_per_intensity=True,
+        )
+        assert f"  1 — {OPTION1_BY_LEVEL[level or 1]}" in out
+        assert OPTION1_LEGACY_THREAT not in out
+
+    @pytest.mark.parametrize("level", [None, 1, 2, 3])
+    def test_threat_level_is_inert_while_the_flag_is_off(
+        self, level: int | None, rendered: str
+    ) -> None:
+        """A stray ``threat_level`` must not flip the wording on its own."""
+        assert _render_menu(
+            lives_enabled=True,
+            lives_remaining=2,
+            lives_total=5,
+            threat_framing=True,
+            threat_level=level,
+        ) == rendered
 
     def test_inherits_helpfulness_vocabulary(self, rendered: str) -> None:
         # The ladder templates carry baseline_flagship's Section 1, so the
