@@ -1,10 +1,11 @@
-"""Puzzle-mode prompt templates never reveal the round's family (spec §7)."""
+"""v2 puzzle templates: grammar disclosed, shape shown, contents hidden (spec §7)."""
 
 from __future__ import annotations
 
 import re
 
 from squid_game.prompts import render
+from squid_game.tasks.signal_game.puzzle import render_shape_block
 
 _SYS_KW = dict(
     colors_str="red, blue, green, yellow",
@@ -14,82 +15,56 @@ _SYS_KW = dict(
 )
 
 
-# One distinctive, whole-line marker per family shape. Each line is unique to its
-# family, so deleting any single family from the template fails the test — a bare
-# `"AND" in out` would not, since the substring could survive elsewhere.
-_SINGLE_ATTRIBUTE_FORM = '"If <attribute> is <value> then <action>, otherwise <action>."'
-_CONJUNCTION_FORM = (
-    '"If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action>; '
-    "if only <attr_1> is <val_1> then <action>; otherwise <action>.\""
-)
-_PRIORITISED_FORM = (
-    '"If <attr_1> is <val_1> then <action>; '
-    "else if <attr_2> is <val_2> then <action>; otherwise <action>.\""
-)
-_NUMBER_PREDICATE_FORM = '"If number is <condition> then <action>, otherwise <action>."'
-
-_FAMILY_FORMS = (
-    _SINGLE_ATTRIBUTE_FORM,
-    _CONJUNCTION_FORM,
-    _PRIORITISED_FORM,
-    _NUMBER_PREDICATE_FORM,
-)
-
-
 class TestSystemRules:
-    def test_lists_all_four_families_and_priority_rule(self) -> None:
+    def test_grammar_and_semantics(self) -> None:
         out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
-        # Every family shape must be present, each pinned to its own full line.
-        for form in _FAMILY_FORMS:
-            assert form in out, f"missing family shape: {form}"
-        # ...and they must be four *distinct* shapes, not the same line repeated.
-        assert len(set(_FAMILY_FORMS)) == 4
-        # The conjunction family keeps its partial-match branch.
-        assert "if only <attr_1> is <val_1> then <action>" in out
-        # The prioritised family keeps its first-clause-wins gloss.
-        assert "first clause whose condition holds" in out
-        # The number-predicate family keeps its condition vocabulary.
-        assert "<condition> is one of: at least N, at most N, odd, even." in out
+        assert "=== Signal Task ===" in out
         assert "changes every round" in out
+        assert "if / elif / else" in out
+        for form in (
+            "color == <color>",
+            "shape == <shape>",
+            "number == <n>",
+            "number >= <n>",
+            "number <= <n>",
+            "number % 2 == 0",
+            "number % 2 == 1",
+        ):
+            assert form in out, form
+        assert "two different attributes" in out
+        assert "first clause whose condition holds" in out
+        assert "determine the rule and the correct action" in out
+        assert "Available actions: [go_left, go_right, stay, jump]" in out
 
-    def test_never_names_the_current_family_or_clue_count(self) -> None:
+    def test_never_names_a_specific_rule(self) -> None:
         out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
-        assert "which one is not announced" in out
-        assert not re.search(r"\b(this round uses|family [ABCD]\b|\d+ examples)", out)
-
-    def test_actions_distinct_sentence_present(self) -> None:
-        out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
-        assert "all different from each other" in out
-
-    def test_examples_determine_answer_sentence_present(self) -> None:
-        out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
-        assert "always determine the correct action" in out
+        assert not re.search(r'== "(red|blue|green|yellow|circle|triangle|square|star)"', out)
+        assert "all different" not in out  # v1 sentence is gone (k >= 4 repeats actions)
 
 
 class TestObservation:
-    def test_renders_clues_then_query(self) -> None:
+    def test_shape_then_clues_then_query(self) -> None:
+        block = render_shape_block((1, 2))
         out = render(
             "tasks/signal_game/observation_puzzle.j2",
-            turn_number=13,
-            clues=["red circle with number 2 → jump", "blue star with number 1 → stay"],
+            turn_number=7,
+            shape_block=block,
+            clues=["red star with number 2 → stay", "blue circle with number 4 → jump"],
             query="green circle with number 3",
             actions_str="go_left, go_right, stay, jump",
         )
-        assert out.startswith("Turn 13.")
-        assert "  - red circle with number 2 → jump\n  - blue star with number 1 → stay" in out
-        assert out.rstrip().endswith("Now: green circle with number 3. Available actions: [go_left, go_right, stay, jump]")
-
-    def test_no_family_or_tier_words(self) -> None:
-        out = render(
-            "tasks/signal_game/observation_puzzle.j2",
-            turn_number=1, clues=["a → b"], query="q", actions_str="x",
+        assert out.startswith("Turn 7. This round's rule has exactly this shape (fill in the blanks):")
+        # the block is indented by four spaces, every line
+        for line in block.splitlines():
+            assert f"    {line}" in out
+        assert out.index("elif ___ and ___:") < out.index("Examples that follow this round's rule:")
+        assert "  - red star with number 2 → stay\n  - blue circle with number 4 → jump\n" in out
+        assert out.rstrip().endswith(
+            "Now: green circle with number 3. Available actions: [go_left, go_right, stay, jump]"
         )
-        assert "tier" not in out.lower()
-        assert "family" not in out.lower()
 
 
 class TestProbe:
-    def test_free_form_question(self) -> None:
+    def test_asks_for_the_shape(self) -> None:
         out = render("tasks/signal_game/probe_puzzle.j2")
-        assert "one line" in out
-        assert "<attribute>" not in out
+        assert "shape" in out and "one line" in out
