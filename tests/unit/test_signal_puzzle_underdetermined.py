@@ -298,17 +298,20 @@ class TestUnderdeterminedConfigValidation:
         assert cfg.underdetermined is None
 
     @pytest.mark.parametrize(
-        "blocks",
+        ("blocks", "message"),
         [
-            [(3, 1)],            # descending
-            [(1, 1)],            # length 1 -- no Latin square
-            [(1, 3), (2, 5)],    # overlapping
-            [(4, 6), (1, 3)],    # out of order
-            [(1, 3), (9, 12)],   # past the ladder (10 rungs)
+            # Each case must be rejected *for its own reason* -- a bare
+            # ``pytest.raises(ValueError)`` passed even when a descending
+            # block was misdiagnosed as a one-turn block.
+            ([(3, 1)], "is reversed"),                       # descending
+            ([(1, 1)], "must span at least"),                # no Latin square
+            ([(1, 3), (2, 5)], "ascending and disjoint"),    # overlapping
+            ([(4, 6), (1, 3)], "ascending and disjoint"),    # out of order
+            ([(1, 3), (9, 12)], "outside the"),              # past the ladder
         ],
     )
-    def test_bad_blocks_rejected(self, tmp_path: Path, blocks) -> None:
-        with pytest.raises(ValueError):
+    def test_bad_blocks_rejected(self, tmp_path: Path, blocks, message) -> None:
+        with pytest.raises(ValueError, match=message):
             load_signal_puzzle_config(
                 _write_task_yaml(tmp_path, {"blocks": [list(b) for b in blocks]})
             )

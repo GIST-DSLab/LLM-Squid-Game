@@ -408,8 +408,12 @@ def candidate_actions(
     extra clue and ask whether anything in the hypothesis space survives.
     Length 1 means the clue set determines the answer (the uniqueness the
     v2 generator guarantees); length >= 2 means the turn is
-    underdetermined and the agent can only guess. Returned in ``ACTIONS``
-    order.
+    underdetermined and the agent can only guess. Length 0 means the clue
+    set is unsatisfiable under *shape* — no decision list of that shape
+    reproduces the clues, so no answer is reachable either. The generator
+    never builds such a set (its clues are read off a real rule), so an
+    empty tuple in practice means a caller passed clues from a different
+    shape. Returned in ``ACTIONS`` order.
     """
     base = list(clues)
     return tuple(
@@ -494,6 +498,14 @@ class Puzzle:
     spec: PuzzleSpec
     clues: tuple[Clue, ...]
     query: Signal
+    #: Size of the minimal (all load-bearing) clue set. On a determined
+    #: puzzle this is exactly ``len(minimal_clue_signals)`` and describes
+    #: the clues shown. On an underdetermined one it is the *base* puzzle's
+    #: count minus the dropped clue, so it is one less than the count of
+    #: load-bearing clues the minimal set would need and does NOT describe
+    #: a minimal set for the clues actually shown — the shown set no longer
+    #: pins the answer at all. Analyses must condition on
+    #: ``spec.underdetermined`` before reading it.
     n_minimal_clues: int
     #: Signals of the load-bearing clues among ``clues`` (the rest are
     #: redundant padding). ``generate_underdetermined_puzzle`` drops one
@@ -703,6 +715,12 @@ def generate_underdetermined_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puz
                 query=base.query,
                 n_minimal_clues=base.n_minimal_clues - 1,
                 minimal_clue_signals=base.minimal_clue_signals - {clue.signal},
+                # ``cands`` was computed before the pad clue was appended,
+                # but it still describes the clues shown: adding a clue is
+                # monotone (candidates can only shrink), and the pad was
+                # accepted only when the count stayed at ``want``, so equal
+                # size implies the same set. Any future pad rule that does
+                # not re-check the count must recompute this instead.
                 candidate_actions=cands,
                 dropped_clue=clue,
                 clue_count_padded=padded,

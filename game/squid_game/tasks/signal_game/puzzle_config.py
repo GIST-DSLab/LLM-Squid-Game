@@ -1,11 +1,22 @@
-"""``puzzle_ladder`` loading for the Signal Game per-turn puzzle mode (v2).
+"""Task-YAML loading for the Signal Game per-turn puzzle mode (v2).
 
-The ladder lives in ``configs/tasks/signal_game.yaml`` and is read at
-runtime, so re-tuning difficulty is a YAML edit: one entry per turn with
-the rule shape (``clauses`` / ``conjunctions``), the condition grammar
-the generator may use (``predicates``), whether the query must sit
-where two or more clauses hold (``overlap_query``) and how many
-redundant clues to add on top of the minimal set (``extra_clues``).
+Two blocks of ``configs/tasks/signal_game.yaml`` are read at runtime, so
+re-tuning is a YAML edit rather than a code change:
+
+``puzzle_ladder``
+    The difficulty ladder — one entry per turn with the rule shape
+    (``clauses`` / ``conjunctions``), the condition grammar the generator
+    may use (``predicates``), whether the query must sit where two or
+    more clauses hold (``overlap_query``) and how many redundant clues to
+    add on top of the minimal set (``extra_clues``).
+
+``underdetermined``
+    Where the deliberately unsolvable turns go (:class:`UnderdeterminedConfig`)
+    — the turn blocks and how many ways the query answer may split. It says
+    only *where* and *how ambiguous*; whether the feature runs at all is the
+    per-experiment ``task_config.underdetermined`` flag. Which turn inside
+    each block is picked is :func:`underdetermined_turns` of the season seed
+    (read its warning about the three-valued schedule before analysing).
 """
 
 from __future__ import annotations
@@ -71,7 +82,12 @@ class UnderdeterminedConfig(BaseModel):
     def _blocks_well_formed(self) -> "UnderdeterminedConfig":
         prev_end = 0
         for start, end in self.blocks:
-            if end - start < 1:
+            if end < start:
+                raise ValueError(
+                    f"underdetermined block ({start}, {end}) is reversed; a block "
+                    "is a closed turn interval [start, end] and needs start <= end"
+                )
+            if end == start:
                 raise ValueError(
                     f"underdetermined block ({start}, {end}) must span at least "
                     "two turns; a one-turn block puts the unsolvable turn in the "
@@ -97,6 +113,22 @@ def underdetermined_turns(seed: int, cfg: UnderdeterminedConfig) -> tuple[int, .
     so block A and block B never sit at the same position within their
     blocks. Over three consecutive seeds a three-turn block visits each of
     its positions exactly once — the Latin square of spec §3.2.
+
+    ⚠️ With the shipped ``blocks: [[1, 3], [4, 6]]`` this yields exactly
+    three schedules, keyed on ``seed % 3``::
+
+        seed % 3 == 0 -> (1, 5)   gap 4
+        seed % 3 == 1 -> (2, 6)   gap 4
+        seed % 3 == 2 -> (3, 4)   gap 1  <-- the two guess turns are ADJACENT
+
+    So one repetition in three puts the two coin flips back to back, and
+    the inter-flip gap is confounded with ``seed % 3``. Any secondary
+    analysis of what happens on the turn *after* an underdetermined turn
+    (the spec's post-guess FORFEIT rate, for one) has no clean
+    post-turn for those repetitions — turn 4 is itself a guess turn.
+    Condition on the gap, or drop the ``seed % 3 == 2`` repetitions from
+    that analysis. The formula is spec-fixed and pinned by tests; do not
+    change the ``+ b`` offset to spread the schedule out.
     """
     return tuple(
         start + (seed + b) % (end - start + 1)
