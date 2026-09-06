@@ -233,6 +233,23 @@ is the uniqueness DFS), `puzzle_config.py`, the three `*_puzzle.j2` templates un
 `sequential` keeps every older config byte-identical. Run the pilot (Cell 0, n=10) and check the
 per-turn accuracy curve before any threat run.
 
+**Underdetermined turns (2026-09-06).** With `task_config.underdetermined: true`
+one turn inside each block of the `underdetermined` block in
+`configs/tasks/signal_game.yaml` (`blocks: [[1,3],[4,6]]`, `candidate_actions: 2`)
+withholds one load-bearing clue, so the query answer splits exactly two ways and
+the agent can only guess; the answer is still graded against the true rule, so
+such a turn can cost a life. Placement rotates with the season seed
+(`underdetermined_turns(seed, cfg)`, a 3x3 Latin square) and every cell of a
+repetition shares it. **The agent is not told** — prompts are byte-identical.
+Per-turn metadata: `underdetermined`, `n_candidate_actions`, `candidate_actions`,
+`p_guess`, `dropped_clue`, `clue_count_padded`, plus `rule_consistent_with_clues`
+(hypothesis vs the shown clues; `rule_match_score` keeps its truth-relative
+definition). Code: `puzzle.exists_consistent` / `candidate_actions` /
+`generate_underdetermined_puzzle`, `puzzle_config.underdetermined_turns`. Default
+off. Spec: `docs/history/specs/2026-09-06-signal-puzzle-underdetermined-turns-design.md`.
+The pilot target curve is restated: 8 determined turns mean >= 0.8, the two
+underdetermined turns ~ 0.5, all 10 turns >= 0.7.
+
 ### Legacy 6-Cell 2×3 Factorial (2026-04-22 canonical runs, `lives.enabled=false`)
 
 | Cell | Framing | Forfeit | p_end | Role |

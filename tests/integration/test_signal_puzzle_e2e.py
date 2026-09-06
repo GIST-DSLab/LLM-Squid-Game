@@ -16,12 +16,16 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 from squid_game.models.results import SeasonResult
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
 from squid_game.tasks.signal_game.puzzle import cached_puzzle, render_shape_block
-from squid_game.tasks.signal_game.puzzle_config import load_signal_puzzle_config
+from squid_game.tasks.signal_game.puzzle_config import (
+    load_signal_puzzle_config,
+    underdetermined_turns,
+)
 from squid_game.tasks.signal_game.rules import ACTIONS
 
 _CONFIG = "configs/experiment/signal_puzzle_smoke.yaml"
@@ -68,13 +72,22 @@ def _puzzle_for(seed: int, turn: int):
     """The turn's puzzle, through the same memoised entry point the module uses.
 
     ``SignalGameModule`` in puzzle mode calls ``cached_puzzle(seed, turn, spec)``,
-    an ``lru_cache`` over ``generate_puzzle(puzzle_rng(seed, turn), spec)``. Hitting
-    the same cache here means the stub pays generation cost only for keys the
-    engine has not already produced, and that a mismatch would be impossible to
-    paper over — same key, same object.
+    an ``lru_cache`` over the generator. Since 2026-09-06 the config also turns on
+    ``underdetermined``, so two turns per season carry a spec with the flag set and
+    a different puzzle behind the same ``(seed, turn)``; this helper applies the
+    identical substitution, so a mismatch would be impossible to paper over —
+    same key, same object.
     """
     ladder = load_signal_puzzle_config()
-    return cached_puzzle(seed, turn, ladder.spec_for_turn(turn))
+    spec = ladder.spec_for_turn(turn)
+    assert ladder.underdetermined is not None
+    if turn in underdetermined_turns(seed, ladder.underdetermined):
+        spec = replace(
+            spec,
+            underdetermined=True,
+            n_candidate_actions=ladder.underdetermined.candidate_actions,
+        )
+    return cached_puzzle(seed, turn, spec)
 
 
 def _make_response_fn(seed: int, *, answer_correctly: bool) -> Callable[..., str]:
@@ -307,3 +320,81 @@ class TestSignalPuzzleSmoke:
                     "true_baseline call leaked threat vocabulary "
                     f"{sorted(set(h.lower() for h in hits))}"
                 )
+
+    def _expected_underdetermined(self, seed: int) -> set[int]:
+        ladder = load_signal_puzzle_config()
+        assert ladder.underdetermined is not None
+        return set(underdetermined_turns(seed, ladder.underdetermined))
+
+    def test_two_underdetermined_turns_per_season(
+        self, patch_runner_provider, tmp_path: Path
+    ) -> None:
+        """Exactly two turns per season are unsolvable, at the scheduled positions."""
+        cfg = _load_config(tmp_path)
+        seed = _season_seed(cfg)
+        expected = self._expected_underdetermined(seed)
+        assert len(expected) == 2
+
+        patch_runner_provider(response_fn=_make_response_fn(seed, answer_correctly=True))
+        ExperimentRunner(cfg).run()
+
+        run_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+        per_season = _turn_rows(run_dir)
+        assert len(per_season) == 5
+        for rows in per_season.values():
+            md = [r["task_metadata"] for r in rows]
+            flagged = {m["puzzle_turn"] for m in md if m["underdetermined"]}
+            assert flagged == expected
+            for m in md:
+                if m["underdetermined"]:
+                    assert m["n_candidate_actions"] == 2
+                    assert m["p_guess"] == 0.5
+                    assert len(m["candidate_actions"]) == 2
+                    assert m["correct_action"] in m["candidate_actions"]
+                else:
+                    assert m["n_candidate_actions"] == 1
+                    assert m["p_guess"] == 1.0
+
+    def test_guessing_the_other_candidate_costs_a_life(
+        self, patch_runner_provider, tmp_path: Path
+    ) -> None:
+        """Grading stays truth-relative: the other consistent action is wrong."""
+        cfg = _load_config(tmp_path)
+        seed = _season_seed(cfg)
+        expected = self._expected_underdetermined(seed)
+
+        def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
+            if _is_decision_call(messages):
+                return "CHOICE: CONTINUE"
+            turn = _turn_number(messages[-1]["content"])
+            puzzle = _puzzle_for(seed, turn)
+            action = puzzle.correct_action
+            if turn in expected:
+                # Evidence-consistent, and still wrong: the coin landed badly.
+                action = next(
+                    a for a in puzzle.candidate_actions if a != puzzle.correct_action
+                )
+            return f"RULE: {puzzle.rule.description}\nACTION: {action}"
+
+        patch_runner_provider(response_fn=response_fn)
+        ExperimentRunner(cfg).run()
+
+        run_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+        for rows in _turn_rows(run_dir).values():
+            assert len(rows) == 10, "two lives lost out of three: the season finishes"
+            wrong = {
+                r["task_metadata"]["puzzle_turn"]
+                for r in rows
+                if r["task_metadata"]["correct"] is False
+            }
+            assert wrong == expected
+            assert rows[-1]["lives_after"] == 1
+            # The hypothesis was consistent with everything it was shown, yet
+            # the answer was graded wrong — the divergence this design exists
+            # to observe.
+            for row in rows:
+                if row["task_metadata"]["puzzle_turn"] in expected:
+                    assert row["task_metadata"]["rule_consistent_with_clues"] is True
+        for season in _seasons(run_dir):
+            assert season.eliminated is False
+            assert season.lives_at_end == 1

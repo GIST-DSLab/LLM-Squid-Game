@@ -1102,7 +1102,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             "n_candidate_actions": n,
             "candidate_actions": list(puzzle.candidate_actions),
             "p_guess": 1.0 / n,
-            "dropped_clue": str(puzzle.dropped_clue) if puzzle.dropped_clue else None,
+            "dropped_clue": (
+                str(puzzle.dropped_clue) if puzzle.dropped_clue is not None else None
+            ),
             "clue_count_padded": puzzle.clue_count_padded,
         }
 

@@ -9,6 +9,12 @@
 # pilot and finally launching signal_puzzle_threat_gptoss_n30.yaml.
 #
 # Model: Ollama Cloud gpt-oss:120b-cloud (needs OLLAMA_API_KEY).
+#
+# Underdetermined turns (2026-09-06): one turn in 1-3 and one in 4-6 withhold a
+# load-bearing clue, so the query answer splits two ways and the agent can only
+# guess; the answer is still graded against the true rule, so those turns can
+# cost a life. Placement rotates with the season seed (Latin square) and is
+# shared by every cell of a repetition. The agent is not told.
 
 name: signal_puzzle_pilot_gptoss_n10
 description: "Difficulty-curve pilot for the per-turn puzzle Signal Game: Cell 0 (no threat, no decision call), gpt-oss-120b, 10 reps x 10 turns."
@@ -18,6 +24,7 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
+    underdetermined: true
     difficulty: medium
     total_turns: 10
     seed: 42

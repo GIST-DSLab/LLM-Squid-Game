@@ -522,6 +522,11 @@ class TestMetadata:
         outcome = module.score(
             ParsedSignalResponse(action=wrong, rule_hypothesis=hypothesis), state
         )
+        # The shape must still match, or the ``False`` above would be the
+        # shape guard firing rather than the clue check — a ladder edit that
+        # changed this rung's shape would otherwise pass this test for the
+        # wrong reason.
+        assert outcome.metadata["rule_shape_match"] is True
         assert outcome.metadata["rule_consistent_with_clues"] is False
 
     def test_rule_consistent_is_none_when_unparsable(self, state: GameState) -> None:
