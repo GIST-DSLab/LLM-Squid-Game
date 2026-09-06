@@ -268,8 +268,11 @@ class TestToLongDataframe:
         # → 31 (2026-09-03, +5 lives/threat-ladder columns, which
         # replaced Task 13's five Unit 18 columns one-for-one)
         # → 36 (2026-09-06, v2 puzzle: puzzle_turn, rule_shape, n_clues,
-        # n_minimal_clues, rule_shape_match replace the four v1 columns).
-        assert len(LONG_FORMAT_COLUMNS) == 36
+        # n_minimal_clues, rule_shape_match replace the four v1 columns)
+        # → 39 (2026-09-06, underdetermined turns: +underdetermined
+        # +n_candidate_actions +rule_consistent_with_clues, the columns
+        # every accuracy aggregate has to condition on).
+        assert len(LONG_FORMAT_COLUMNS) == 39
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""
@@ -322,12 +325,15 @@ class TestToLongDataframe:
     # ------------------------------------------------------------------
 
     def test_schema_has_puzzle_columns_at_the_tail(self) -> None:
-        assert LONG_FORMAT_COLUMNS[-5:] == (
+        assert LONG_FORMAT_COLUMNS[-8:] == (
             "puzzle_turn",
             "rule_shape",
             "n_clues",
             "n_minimal_clues",
             "rule_shape_match",
+            "underdetermined",
+            "n_candidate_actions",
+            "rule_consistent_with_clues",
         )
 
     def test_puzzle_columns_nan_for_sequential_traces(self) -> None:
@@ -339,6 +345,9 @@ class TestToLongDataframe:
             "n_clues",
             "n_minimal_clues",
             "rule_shape_match",
+            "underdetermined",
+            "n_candidate_actions",
+            "rule_consistent_with_clues",
         ):
             assert df[col].isna().all(), col
 
@@ -360,6 +369,47 @@ class TestToLongDataframe:
         assert df.loc[0, "n_clues"] == 8
         assert df.loc[0, "n_minimal_clues"] == 7
         assert bool(df.loc[0, "rule_shape_match"]) is True
+
+    # ------------------------------------------------------------------
+    # 2026-09-06 — underdetermined turns (the columns analyses condition on)
+    # ------------------------------------------------------------------
+
+    def test_underdetermined_columns_read_task_metadata(self) -> None:
+        """Without these three columns no analysis can drop the guess turns.
+
+        An underdetermined turn is graded against the true rule but the
+        clues shown leave the answer open, so it is unsolvable by design.
+        ``to_long_dataframe`` must carry the flag through, otherwise every
+        accuracy / ``rule_match_score`` aggregate silently mixes two
+        unsolvable turns per session in with no way to condition on them.
+        """
+        season = make_v3_season(n_turns=2)
+        season.turns[0].task_metadata.update(
+            {
+                "puzzle_turn": 2,
+                "underdetermined": True,
+                "n_candidate_actions": 2,
+                "rule_consistent_with_clues": True,
+            }
+        )
+        season.turns[1].task_metadata.update(
+            {
+                "puzzle_turn": 3,
+                "underdetermined": False,
+                "n_candidate_actions": 1,
+                "rule_consistent_with_clues": False,
+            }
+        )
+        df = to_long_dataframe([season])
+        assert bool(df.loc[0, "underdetermined"]) is True
+        assert df.loc[0, "n_candidate_actions"] == 2
+        assert bool(df.loc[0, "rule_consistent_with_clues"]) is True
+        assert bool(df.loc[1, "underdetermined"]) is False
+        assert df.loc[1, "n_candidate_actions"] == 1
+        assert bool(df.loc[1, "rule_consistent_with_clues"]) is False
+        # The point of the columns: the determined subset is selectable.
+        determined = df[df["underdetermined"] == False]  # noqa: E712
+        assert list(determined["puzzle_turn"]) == [3]
 
     def test_rule_match_score_nan_for_pre_phase_l_traces(self) -> None:
         """Pre-Phase-L traces had no rule_match_score key → NaN column."""
