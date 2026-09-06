@@ -525,3 +525,109 @@ def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
 
 
 # --- Task 4 appends: parse_rule_text / functional_match_score --------------
+
+
+# ---------------------------------------------------------------------------
+# RULE-line parsing and functional scoring (spec §8)
+# ---------------------------------------------------------------------------
+
+_ACTION_RE = "|".join(re.escape(a) for a in ACTIONS)
+_ATOM_EQ = re.compile(r"^(color|shape|number)\s*==\s*([a-z]+|[1-4])$")
+_ATOM_RANGE = re.compile(r"^number\s*(>=|<=)\s*([1-4])$")
+_ATOM_PARITY = re.compile(r"^number\s*%\s*2\s*==\s*([01])$")
+_CLAUSE_SPLIT = re.compile(r"(?:^|;|\n)\s*(?=(?:if|elif|else)\b)")
+_CLAUSE_RE = re.compile(rf"^(if|elif)\s+(.+?)\s*:\s*(?:action\s*=\s*)?({_ACTION_RE})\b")
+_ELSE_RE = re.compile(rf"^else\s*:\s*(?:action\s*=\s*)?({_ACTION_RE})\b")
+
+
+def _normalise_rule_text(text: str) -> str:
+    s = text.strip()
+    s = re.sub(r"^\s*rule\s*:\s*", "", s, flags=re.IGNORECASE)
+    s = s.lower().replace("colour", "color")
+    s = s.replace("'", "").replace('"', "")
+    # v1 / prose spellings -> Python spellings.
+    s = re.sub(r"\botherwise\b", "else:", s)
+    s = re.sub(r"\belse if\b", "elif", s)
+    s = re.sub(r"\bthen\b", ":", s)
+    s = re.sub(r"\b(color|shape|number)\s+is\s+(?=odd\b|even\b)", r"\1 is ", s)
+    s = re.sub(r"\bnumber is odd\b", "number % 2 == 1", s)
+    s = re.sub(r"\bnumber is even\b", "number % 2 == 0", s)
+    s = re.sub(r"\b(color|shape|number)\s+is\s+", r"\1 == ", s)
+    s = re.sub(r"\bat least\s+([1-4])", r">= \1", s)
+    s = re.sub(r"\bat most\s+([1-4])", r"<= \1", s)
+    s = re.sub(r"\bnumber\s*(>=|<=)\s*([1-4])", r"number \1 \2", s)
+    s = re.sub(r"\belse\s*:\s*:", "else:", s)
+    return s
+
+
+def _parse_atom(text: str) -> Condition | None:
+    t = text.strip()
+    m = _ATOM_EQ.match(t)
+    if m:
+        attr, raw = m.group(1), m.group(2)
+        if attr == "number":
+            label = f"number == {raw}" if raw.isdigit() else None
+        else:
+            label = f'{attr} == "{raw}"'
+        return CONDITION_BY_LABEL.get(label) if label else None
+    m = _ATOM_RANGE.match(t)
+    if m:
+        return CONDITION_BY_LABEL.get(f"number {m.group(1)} {m.group(2)}")
+    m = _ATOM_PARITY.match(t)
+    if m:
+        return CONDITION_BY_LABEL.get(f"number % 2 == {m.group(1)}")
+    return None
+
+
+def _parse_condition(text: str) -> Condition | None:
+    parts = [p.strip() for p in re.split(r"\band\b", text)]
+    if len(parts) == 1:
+        return _parse_atom(parts[0])
+    if len(parts) != 2:
+        return None
+    atoms = [_parse_atom(p) for p in parts]
+    if any(a is None for a in atoms):
+        return None
+    return CONJUNCTION_BY_ATOMS.get(frozenset(a.label for a in atoms if a is not None))
+
+
+def parse_rule_text(text: str) -> PuzzleRule | None:
+    """Parse an agent's RULE text (one line or a Python block) into a decision list.
+
+    Accepts ``if / elif / else`` with ``:`` separators, ``action = x``
+    or bare ``x`` after the colon, ``;`` or newlines between clauses,
+    quotes optional, case-insensitive, and the v1 prose spellings
+    (``color is red then stay; otherwise jump``). Returns ``None`` when
+    there is no ``if`` clause, no ``else``, a value or action off the
+    grid, or a conjunction on one attribute. The shape is NOT checked
+    against the round's shape; callers compare ``.shape`` themselves.
+    """
+    s = _normalise_rule_text(text)
+    if not s:
+        return None
+    chunks = [c.strip() for c in _CLAUSE_SPLIT.split(s) if c and c.strip()]
+    clauses: list[tuple[Condition, str]] = []
+    else_action: str | None = None
+    for chunk in chunks:
+        m = _ELSE_RE.match(chunk)
+        if m:
+            else_action = m.group(1)
+            break
+        m = _CLAUSE_RE.match(chunk)
+        if not m:
+            return None
+        if (m.group(1) == "if") != (not clauses):
+            return None
+        cond = _parse_condition(m.group(2))
+        if cond is None:
+            return None
+        clauses.append((cond, m.group(3)))
+    if not clauses or else_action is None:
+        return None
+    return PuzzleRule(clauses=tuple(clauses), else_action=else_action)
+
+
+def functional_match_score(hypothesis: PuzzleRule, truth: PuzzleRule) -> float:
+    """Percentage of the 64 signals on which the two rules agree."""
+    agree = sum(a == b for a, b in zip(hypothesis.vector, truth.vector, strict=True))
+    return 100.0 * agree / len(SIGNAL_SPACE)

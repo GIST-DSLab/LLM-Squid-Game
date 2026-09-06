@@ -1,160 +1,129 @@
-"""Free-form RULE parsing + functional rule_match_score (spec §8)."""
+"""Parsing the agent's Python-style RULE line (spec §8)."""
 
 from __future__ import annotations
 
 import pytest
 
 from squid_game.tasks.signal_game.puzzle import (
-    enumerate_hypotheses,
+    CONDITION_BY_LABEL,
+    CONJUNCTION_BY_ATOMS,
+    PuzzleRule,
     functional_match_score,
-    make_rule_a,
-    make_rule_c,
     parse_rule_text,
+    render_shape_hint,
 )
 
 
-class TestParseRoundTrip:
-    def test_every_enumerated_description_parses_to_itself(self) -> None:
-        for rule in enumerate_hypotheses():
-            parsed = parse_rule_text(rule.description)
-            assert parsed is not None, rule.description
-            assert parsed.family == rule.family
-            assert parsed.vector == rule.vector, rule.description
+def _c(label: str):
+    # CONDITION_BY_LABEL keys carry the canonical operand order (ATOMS order);
+    # accept either order for conjunctions so the fixture reads naturally.
+    cond = CONDITION_BY_LABEL.get(label)
+    if cond is None and " and " in label:
+        cond = CONJUNCTION_BY_ATOMS[frozenset(label.split(" and "))]
+    assert cond is not None, label
+    return cond
 
 
-class TestParseVariants:
-    @pytest.mark.parametrize(
-        "text",
-        [
-            "RULE: If color is red then jump, otherwise stay.",
-            "if the color is red then jump otherwise stay",
-            "If Color is RED then JUMP; otherwise STAY.",
-            "If color is red then jump, else stay.",
-        ],
-    )
-    def test_family_a_variants(self, text: str) -> None:
-        parsed = parse_rule_text(text)
+TRUTH = PuzzleRule(
+    clauses=(
+        (_c('color == "red"'), "stay"),
+        (_c('number >= 3 and shape == "star"'), "go_left"),
+        (_c("number <= 1"), "jump"),
+    ),
+    else_action="go_right",
+)
+
+
+class TestExactForms:
+    def test_canonical_one_liner_round_trips(self) -> None:
+        parsed = parse_rule_text("RULE: " + TRUTH.description)
         assert parsed is not None
-        assert parsed.vector == make_rule_a("color", "red", "jump", "stay").vector
+        assert parsed.vector == TRUTH.vector
+        assert parsed.shape == TRUTH.shape
 
-    @pytest.mark.parametrize(
-        "text",
-        [
-            "If number is at least 3 then jump, otherwise stay.",
-            "If number >= 3 then jump, otherwise stay.",
-            "If number is greater than or equal to 3 then jump, otherwise stay.",
-            "If number is 3 or more then jump, otherwise stay.",
-        ],
-    )
-    def test_family_d_variants(self, text: str) -> None:
-        parsed = parse_rule_text(text)
-        assert parsed is not None
-        assert parsed.family == "D"
-        assert parsed.description == "If number is at least 3 then jump, otherwise stay."
-
-    def test_family_c_without_else_keyword(self) -> None:
-        parsed = parse_rule_text("If color is red then jump; if number is 3 then go_right; otherwise stay.")
-        assert parsed is not None
-        assert parsed.vector == make_rule_c("color", "red", "number", 3, "jump", "go_right", "stay").vector
-
-    def test_family_b_is_preferred_over_c_when_and_present(self) -> None:
-        parsed = parse_rule_text(
-            "If color is red AND shape is star then jump; if only color is red then go_left; otherwise stay."
+    def test_multiline_python_block(self) -> None:
+        text = (
+            'if color == "red":\n    action = stay\n'
+            'elif number >= 3 and shape == "star":\n    action = go_left\n'
+            "elif number <= 1:\n    action = jump\n"
+            "else:\n    action = go_right"
         )
-        assert parsed is not None and parsed.family == "B"
+        parsed = parse_rule_text(text)
+        assert parsed is not None and parsed.vector == TRUTH.vector
 
+    def test_unquoted_values_and_single_quotes(self) -> None:
+        text = "if color == red: stay; elif number >= 3 and shape == 'star': go_left; elif number <= 1: jump; else: go_right"
+        parsed = parse_rule_text(text)
+        assert parsed is not None and parsed.vector == TRUTH.vector
+
+    def test_reversed_conjunction_operands(self) -> None:
+        text = 'if color == "red": stay; elif shape == "star" and number >= 3: go_left; elif number <= 1: jump; else: go_right'
+        parsed = parse_rule_text(text)
+        assert parsed is not None and parsed.vector == TRUTH.vector
+
+    def test_v1_style_is_and_otherwise(self) -> None:
+        text = "if color is red then stay; else if number is 3 then go_left; otherwise jump"
+        parsed = parse_rule_text(text)
+        assert parsed is not None
+        assert parsed.shape == (1, 1)
+        assert parsed.evaluate(_sig("red", "star", 3)) == "stay"
+        assert parsed.evaluate(_sig("blue", "star", 3)) == "go_left"
+        assert parsed.evaluate(_sig("blue", "star", 1)) == "jump"
+
+    def test_parity_and_case_insensitive(self) -> None:
+        text = "IF Number % 2 == 0: Jump; ELSE: Stay"
+        parsed = parse_rule_text(text)
+        assert parsed is not None
+        assert parsed.evaluate(_sig("red", "star", 2)) == "jump"
+        assert parsed.evaluate(_sig("red", "star", 1)) == "stay"
+
+    def test_action_equals_prefix_and_trailing_text(self) -> None:
+        text = 'RULE: if shape == "circle": action = go_left; else: action = stay  (my best guess)'
+        parsed = parse_rule_text(text)
+        assert parsed is not None and parsed.shape == (1,)
+
+
+class TestFailures:
     @pytest.mark.parametrize(
         "text",
         [
             "",
             "no rule",
             "exploring",
-            "If colour is crimson then jump, otherwise stay.",   # unknown value
-            "If number is 5 then jump, otherwise stay.",          # out-of-range value
-            "If color is red then fly, otherwise stay.",          # unknown action
-            "The rule seems to depend on color somehow.",
+            "if color == purple: stay; else: jump",  # unknown value
+            "if number == 7: stay; else: jump",  # off grid
+            'if color == "red": fly; else: jump',  # unknown action
+            'if color == "red": stay',  # missing else
+            'if color == "red" and color == "blue": stay; else: jump',  # same attribute
+            "else: jump",  # no clause
         ],
     )
-    def test_unparseable_returns_none(self, text: str) -> None:
+    def test_returns_none(self, text: str) -> None:
         assert parse_rule_text(text) is None
 
-    @pytest.mark.parametrize(
-        "text",
-        [
-            "If number is at least 1 then jump, otherwise stay.",
-            "If number is at most 4 then jump, otherwise stay.",
-            "If number >= 1 then jump, otherwise stay.",
-            "If number <= 4 then jump, otherwise stay.",
-            "If number is 1 or more then jump, otherwise stay.",
-            "If number is 4 or less then jump, otherwise stay.",
-        ],
-    )
-    def test_undefined_number_predicate_returns_none(self, text: str) -> None:
-        # Grammatical, but always true over 1..4 -> not a hypothesis in the
-        # space; the parser must return None, never raise.
-        assert parse_rule_text(text) is None
-
-    #: Punctuation an LLM actually produces around ``then`` / ``otherwise``,
-    #: plus the "the signal's <attr>" possessive. Each must land on the same
-    #: rule as the comma-free canonical form it is paired with.
-    _PUNCTUATION_VARIANTS = [
-        (
-            "If color is red, then jump, otherwise stay.",
-            "If color is red then jump, otherwise stay.",
-        ),
-        (
-            "If color is red then jump; otherwise, stay.",
-            "If color is red then jump, otherwise stay.",
-        ),
-        (
-            "If the color is red then jump. Otherwise, stay.",
-            "If color is red then jump, otherwise stay.",
-        ),
-        (
-            "If number is at least 3, then jump, otherwise stay.",
-            "If number is at least 3 then jump, otherwise stay.",
-        ),
-        (
-            "If the signal's color is red then jump, otherwise stay.",
-            "If color is red then jump, otherwise stay.",
-        ),
-        (
-            "If color is red then jump, otherwise stay.",
-            "If color is red then jump, otherwise stay.",
-        ),
-    ]
-
-    @pytest.mark.parametrize("text,canonical", _PUNCTUATION_VARIANTS)
-    def test_punctuation_variants_match_the_comma_free_form(
-        self, text: str, canonical: str
-    ) -> None:
-        expected = parse_rule_text(canonical)
-        assert expected is not None, canonical
-        parsed = parse_rule_text(text)
-        assert parsed is not None, text
-        assert parsed.family == expected.family
-        assert parsed.vector == expected.vector
-
-    def test_degenerate_hypothesis_still_parses(self) -> None:
-        # Agents may state a same-action rule; scoring handles it.
-        parsed = parse_rule_text("If color is red then stay, otherwise stay.")
+    def test_shape_mismatch_still_parses(self) -> None:
+        parsed = parse_rule_text('if color == "red": stay; else: jump')
         assert parsed is not None
-        assert set(parsed.vector) == {"stay"}
+        assert parsed.shape != TRUTH.shape
 
 
-class TestFunctionalMatch:
-    def test_identical_rules_score_100(self) -> None:
-        r = make_rule_a("color", "red", "jump", "stay")
-        assert functional_match_score(r, r) == 100.0
+class TestFunctionalScore:
+    def test_identical_is_100(self) -> None:
+        assert functional_match_score(TRUTH, TRUTH) == 100.0
 
-    def test_score_is_percentage_of_agreeing_signals(self) -> None:
-        truth = make_rule_a("color", "red", "jump", "stay")
-        hyp = make_rule_a("color", "blue", "jump", "stay")
-        # 32 of 64 signals are neither red nor blue -> stay on both; 32 differ.
-        assert functional_match_score(hyp, truth) == 50.0
+    def test_partial(self) -> None:
+        hyp = parse_rule_text('if color == "red": stay; else: go_right')
+        assert hyp is not None
+        score = functional_match_score(hyp, TRUTH)
+        assert 0.0 < score < 100.0
+        agree = sum(a == b for a, b in zip(hyp.vector, TRUTH.vector))
+        assert score == pytest.approx(100.0 * agree / 64)
 
-    def test_equivalent_rules_across_families_score_100(self) -> None:
-        a = make_rule_a("number", 4, "jump", "stay")
-        d = parse_rule_text("If number is at least 4 then jump, otherwise stay.")
-        assert d is not None
-        assert functional_match_score(d, a) == 100.0
+    def test_hint_for_truth_shape(self) -> None:
+        assert render_shape_hint(TRUTH.shape) == "if ___: ___; elif ___ and ___: ___; elif ___: ___; else: ___"
+
+
+def _sig(color: str, shape: str, number: int):
+    from squid_game.tasks.signal_game.signals import Signal
+
+    return Signal(color, shape, number)
