@@ -51,10 +51,12 @@ from squid_game.tasks.signal_game.signals import (
 from squid_game.tasks.signal_game.puzzle import (
     Puzzle,
     PuzzleRule,
+    cached_puzzle,
     functional_match_score,
-    generate_puzzle,
     parse_rule_text,
-    puzzle_rng,
+    render_shape_block,
+    render_shape_hint,
+    shape_label,
 )
 from squid_game.tasks.signal_game.puzzle_config import (
     SignalPuzzleConfig,
@@ -238,8 +240,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 signals (0 = fully random).
             signal_mode: ``"sequential"`` (default — one hidden rule for
                 the whole season, few-shot examples in the system
-                prompt) or ``"per_turn_puzzle"`` (a fresh clue-set
-                puzzle every turn, drawn from the ``puzzle_ladder``).
+                prompt) or ``"per_turn_puzzle"`` (a fresh
+                shape-disclosed decision-list puzzle every turn, drawn
+                from the turn-indexed ``puzzle_ladder``).
                 In puzzle mode ``difficulty``, ``num_few_shot`` and
                 ``curriculum_turns`` are ignored.
             puzzle_config_dir: Directory holding ``signal_game.yaml``
@@ -352,7 +355,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if self._signal_mode == "per_turn_puzzle":
             assert self._puzzle_config is not None
             spec = self._puzzle_config.spec_for_turn(turn_number)
-            puzzle = generate_puzzle(puzzle_rng(self._seed, turn_number), spec)
+            # R7-1: memoised per process — every cell of a run shares the
+            # season seed, so the same (seed, turn) puzzle would otherwise be
+            # regenerated once per cell (1-15 s on the top ladder rungs).
+            puzzle = cached_puzzle(self._seed, turn_number, spec)
             self._current_puzzle = puzzle
             self._current_signal = puzzle.query
             from squid_game.prompts import render
@@ -360,6 +366,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             return render(
                 "tasks/signal_game/observation_puzzle.j2",
                 turn_number=turn_number,
+                shape_block=render_shape_block(puzzle.shape),
                 clues=[str(c) for c in puzzle.clues],
                 query=str(puzzle.query),
                 actions_str=", ".join(ACTIONS),
@@ -559,8 +566,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         """Ask the agent to state the hidden rule.
 
         Sequential mode asks for the difficulty-specific slot template;
-        puzzle mode asks for a free-form one-liner, because the rule
-        family changes from turn to turn and naming it would leak.
+        puzzle mode asks for the round's already-disclosed shape filled
+        in, because the shape changes from turn to turn and only the
+        blanks are hidden.
         """
         from squid_game.prompts import render
 
@@ -602,12 +610,16 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         Returns:
             Template string for the RULE field, or ``None`` when no
             difficulty has been set yet (pre-initialise defensive path).
-            Always ``None`` in ``per_turn_puzzle`` mode: a per-turn
-            template would have to name the round's rule family, which
-            is exactly what the agent has to infer.
+            In ``per_turn_puzzle`` mode it is the round's already-disclosed
+            shape rendered as a one-line RULE template, and ``None`` until
+            ``prepare`` has drawn this turn's puzzle.
         """
         if self._signal_mode == "per_turn_puzzle":
-            return None
+            # The round's disclosed shape, as a one-line RULE template
+            # (spec §7.3). ``None`` until ``prepare`` has drawn a puzzle.
+            if self._current_puzzle is None:
+                return None
+            return render_shape_hint(self._current_puzzle.shape)
         if self._difficulty is None:
             return None
         if self._difficulty in (Difficulty.EASY, Difficulty.MEDIUM):
@@ -655,10 +667,13 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             (compact text), ``hidden_rule`` (the active rule
             description), ``correct_action`` (ground truth for the
             current signal), and ``turn``. In ``per_turn_puzzle`` mode
-            the metadata additionally carries ``puzzle_tier``,
-            ``rule_family``, ``clues``, ``query_signal``, ``n_clues``
-            and ``n_consistent_hypotheses``, and ``hidden_rule`` is
-            this turn's puzzle rule rather than a season-long one.
+            the metadata additionally carries the spec §9 keys —
+            ``puzzle_turn``, ``rule_shape``, ``n_clauses``,
+            ``n_conjunctions``, ``predicates_allowed``,
+            ``overlap_query``, ``clues``, ``query_signal``, ``n_clues``,
+            ``n_minimal_clues`` and ``query_overlap_count`` — and
+            ``hidden_rule`` is this turn's puzzle rule rather than a
+            season-long one.
         """
         self._ensure_initialized()
         observation_text = self.get_observation(turn_context.turn_number)
@@ -674,12 +689,17 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     "hidden_rule": puzzle.rule.description,
                     "correct_action": puzzle.correct_action,
                     "turn": turn_context.turn_number,
-                    "puzzle_tier": puzzle.tier,
-                    "rule_family": puzzle.rule.family,
+                    "puzzle_turn": puzzle.spec.turn,
+                    "rule_shape": shape_label(puzzle.shape),
+                    "n_clauses": len(puzzle.shape),
+                    "n_conjunctions": puzzle.shape.count(2),
+                    "predicates_allowed": puzzle.spec.predicates,
+                    "overlap_query": puzzle.spec.overlap_query,
                     "clues": [str(c) for c in puzzle.clues],
                     "query_signal": str(puzzle.query),
                     "n_clues": len(puzzle.clues),
-                    "n_consistent_hypotheses": puzzle.n_consistent,
+                    "n_minimal_clues": puzzle.n_minimal_clues,
+                    "query_overlap_count": puzzle.query_overlap_count,
                 },
             )
         active_rule = self._rules[self._active_rule_index]
@@ -793,13 +813,14 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             when the RULE field is missing (pre-Fix-2 trace). In
             ``per_turn_puzzle`` mode ``rule_match_score`` comes from
             :meth:`score_probe_functional` instead, and the metadata
-            also carries ``puzzle_tier``, ``rule_family``,
-            ``n_consistent_hypotheses``, ``rule_parsed_family`` (the
-            family the agent's RULE parsed as, or ``None``) and
+            also carries ``puzzle_turn``, ``rule_shape``,
             ``rule_parse_failed`` (spec §8.3 — ``True`` when the RULE
             text did not parse and so scored ``0.0``, ``False`` when it
             did, ``None`` when no RULE was emitted at all, mirroring
-            ``rule_match_score``).
+            ``rule_match_score``) and ``rule_shape_match`` (``True``
+            when the parsed RULE has this round's disclosed shape,
+            ``False`` when it parsed to a different shape or did not
+            parse, ``None`` when no RULE was emitted).
         """
         self._ensure_initialized()
         del state  # unused; signature mirrors the ABC
@@ -828,18 +849,22 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         # / empty hypotheses yield ``None`` so pre-Fix-2 traces remain
         # backward compatible.
         rule_match_score: float | None = None
-        rule_parsed_family: str | None = None
+        rule_shape_match: bool | None = None
         rule_parse_failed: bool | None = None
         if isinstance(rule_hypothesis, str) and rule_hypothesis.strip():
             normalised = rule_hypothesis.strip().lower()
             if self._signal_mode == "per_turn_puzzle":
-                # Parse once and reuse: the family letter and the
-                # functional score are two readings of the same parse.
+                # Parse once and reuse: the shape check and the functional
+                # score are two readings of the same parse.
                 # "exploring" / "no rule" need no special case here —
                 # they parse as None, which is exactly a parse failure.
                 parsed = parse_rule_text(rule_hypothesis)
                 rule_parse_failed = parsed is None
-                rule_parsed_family = parsed.family if parsed is not None else None
+                rule_shape_match = (
+                    parsed is not None
+                    and self._current_puzzle is not None
+                    and parsed.shape == self._current_puzzle.shape
+                )
                 rule_match_score = self._functional_match(parsed)
             elif normalised in ("exploring", "no rule"):
                 rule_match_score = 0.0
@@ -872,11 +897,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             assert self._current_puzzle is not None
             metadata.update(
                 {
-                    "puzzle_tier": self._current_puzzle.tier,
-                    "rule_family": self._current_puzzle.rule.family,
-                    "n_consistent_hypotheses": self._current_puzzle.n_consistent,
-                    "rule_parsed_family": rule_parsed_family,
+                    "puzzle_turn": self._current_puzzle.spec.turn,
+                    "rule_shape": shape_label(self._current_puzzle.shape),
                     "rule_parse_failed": rule_parse_failed,
+                    "rule_shape_match": rule_shape_match,
                 }
             )
         return TaskOutcome(success_factor=success_factor, metadata=metadata)

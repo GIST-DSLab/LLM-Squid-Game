@@ -1,4 +1,4 @@
-"""SignalGameModule in signal_mode='per_turn_puzzle' (spec §3, §8, §10, §11)."""
+"""SignalGameModule in signal_mode='per_turn_puzzle', v2 (spec §7–§9, §11)."""
 
 from __future__ import annotations
 
@@ -6,13 +6,13 @@ import pytest
 
 from squid_game.models.enums import Difficulty, ForfeitCondition, Framing
 from squid_game.models.state import GameState, TurnContext
-from squid_game.tasks.signal_game.module import SignalGameModule
-from squid_game.tasks.signal_game.rules import ACTIONS
+from squid_game.tasks.signal_game.module import ParsedSignalResponse, SignalGameModule
+from squid_game.tasks.signal_game.puzzle import generate_puzzle
 
 
 def _ctx(turn: int) -> TurnContext:
     return TurnContext(
-        turn_number=turn, total_turns=30, season_id="s", cumulative_score=30.0,
+        turn_number=turn, total_turns=10, season_id="s", cumulative_score=30.0,
         p_death=0.0, framing=Framing.TRUE_BASELINE,
         forfeit_condition=ForfeitCondition.NOT_ALLOWED, difficulty=Difficulty.MEDIUM,
     )
@@ -21,7 +21,7 @@ def _ctx(turn: int) -> TurnContext:
 @pytest.fixture
 def puzzle_task() -> SignalGameModule:
     m = SignalGameModule()
-    m.initialize(difficulty=Difficulty.MEDIUM, seed=42, signal_mode="per_turn_puzzle", total_turns=30)
+    m.initialize(difficulty=Difficulty.MEDIUM, seed=42, signal_mode="per_turn_puzzle", total_turns=10)
     return m
 
 
@@ -40,193 +40,150 @@ class TestInitialize:
     def test_puzzle_mode_rejects_season_longer_than_ladder(self) -> None:
         m = SignalGameModule()
         with pytest.raises(ValueError, match="puzzle_ladder"):
-            m.initialize(difficulty=Difficulty.MEDIUM, seed=42, signal_mode="per_turn_puzzle", total_turns=31)
+            m.initialize(difficulty=Difficulty.MEDIUM, seed=42, signal_mode="per_turn_puzzle", total_turns=11)
 
-    def test_puzzle_mode_warns_when_legacy_knobs_given(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_puzzle_mode_requires_seed(self) -> None:
         m = SignalGameModule()
-        with caplog.at_level("WARNING"):
-            m.initialize(difficulty=Difficulty.HARD, seed=1, signal_mode="per_turn_puzzle",
-                         total_turns=30, num_few_shot=1, curriculum_turns=3)
-        assert "ignored" in caplog.text
+        with pytest.raises(ValueError, match="seed"):
+            m.initialize(difficulty=Difficulty.MEDIUM, seed=None, signal_mode="per_turn_puzzle", total_turns=10)
 
-    def test_puzzle_mode_requires_a_seed(self) -> None:
-        # ``puzzle_rng(None, t)`` seeds ``random.Random("None:t")``, so an
-        # unset seed would hand every repetition the identical 30 puzzles.
-        # runner.py:220 passes ``None`` straight through whenever
-        # ``task_config.seed`` is omitted, so this is reachable from YAML.
+    def test_unknown_mode(self) -> None:
         m = SignalGameModule()
-        with pytest.raises(ValueError, match="requires a seed"):
-            m.initialize(
-                difficulty=Difficulty.MEDIUM,
-                seed=None,
-                signal_mode="per_turn_puzzle",
-                total_turns=30,
-            )
+        with pytest.raises(ValueError, match="signal_mode"):
+            m.initialize(difficulty=Difficulty.MEDIUM, seed=1, signal_mode="bogus")
 
-    def test_sequential_mode_still_accepts_no_seed(self) -> None:
-        m = SignalGameModule()
-        m.initialize(difficulty=Difficulty.MEDIUM, seed=None)
-        assert m.get_rule_template_hint() is not None
-
-    def test_unknown_mode_rejected(self) -> None:
-        with pytest.raises(ValueError):
-            SignalGameModule().initialize(difficulty=Difficulty.MEDIUM, seed=1, signal_mode="nope")
-
-
-class TestSystemPromptAndHint:
-    def test_system_rules_are_the_puzzle_template(self, puzzle_task: SignalGameModule) -> None:
-        out = puzzle_task.get_system_rules()
-        assert "changes every round" in out
-        assert "example signal-action pairs" not in out     # no sequential few-shot block
-
-    def test_rule_template_hint_is_none(self, puzzle_task: SignalGameModule) -> None:
+    def test_hint_is_none_before_first_prepare(self, puzzle_task: SignalGameModule) -> None:
         assert puzzle_task.get_rule_template_hint() is None
 
-    def test_probe_question_is_free_form(self, puzzle_task: SignalGameModule) -> None:
-        assert "<attribute>" not in puzzle_task.get_probe_question(1)
+
+class TestSystemRules:
+    def test_puzzle_system_rules(self, puzzle_task: SignalGameModule) -> None:
+        out = puzzle_task.get_system_rules()
+        assert "if / elif / else" in out
+        assert "first clause whose condition holds" in out
+        assert "example signal-action pairs" not in out  # no season few-shot block
 
 
 class TestPrepare:
-    def test_metadata_keys(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        ctx = puzzle_task.prepare(state, _ctx(1))
+    def test_metadata_keys_and_shape(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        ctx = puzzle_task.prepare(state, _ctx(6))
         md = ctx.metadata
-        for key in ("signal", "hidden_rule", "correct_action", "turn", "puzzle_tier",
-                    "rule_family", "clues", "query_signal", "n_clues", "n_consistent_hypotheses"):
+        for key in (
+            "signal", "hidden_rule", "correct_action", "turn", "puzzle_turn", "rule_shape",
+            "n_clauses", "n_conjunctions", "predicates_allowed", "overlap_query", "clues",
+            "query_signal", "n_clues", "n_minimal_clues", "query_overlap_count",
+        ):
             assert key in md, key
-        assert md["turn"] == 1 and md["puzzle_tier"] == 1 and md["rule_family"] == "A"
-        assert md["correct_action"] in ACTIONS
-        assert isinstance(md["clues"], list) and len(md["clues"]) == md["n_clues"] >= 3
-        assert all("→" in c for c in md["clues"])
-        assert md["n_consistent_hypotheses"] >= 1
+        assert md["puzzle_turn"] == 6
+        assert md["n_clauses"] == 3 and md["n_conjunctions"] == 1
+        assert md["rule_shape"].count(",") == 2 and md["rule_shape"].count("2") == 1
+        assert md["overlap_query"] is True and md["query_overlap_count"] >= 2
+        assert md["n_clues"] == len(md["clues"]) == md["n_minimal_clues"]
+        assert md["hidden_rule"].startswith("if ")
+        assert md["correct_action"] in {"go_left", "go_right", "stay", "jump"}
+        for key in ("puzzle_tier", "rule_family", "n_consistent_hypotheses"):
+            assert key not in md
 
-    def test_prompt_section_shows_clues_and_query(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        ctx = puzzle_task.prepare(state, _ctx(1))
-        assert ctx.prompt_section.startswith("Turn 1.")
-        assert "Now:" in ctx.prompt_section
+    def test_prompt_section_shows_shape_and_clues(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        ctx = puzzle_task.prepare(state, _ctx(4))
+        text = ctx.prompt_section
+        assert text.startswith("Turn 4. This round's rule has exactly this shape")
+        assert "    if ___:" in text and "    elif ___:" in text and "    else:" in text
         for clue in ctx.metadata["clues"]:
-            assert clue in ctx.prompt_section
+            assert f"  - {clue}" in text
+        assert f"Now: {ctx.metadata['query_signal']}." in text
+        # contents hidden
+        assert ctx.metadata["hidden_rule"] not in text
 
-    def test_clues_change_every_turn(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        seen = {tuple(puzzle_task.prepare(state, _ctx(t)).metadata["clues"]) for t in range(1, 11)}
-        assert len(seen) == 10
+    def test_hint_matches_shape_after_prepare(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        ctx = puzzle_task.prepare(state, _ctx(8))
+        hint = puzzle_task.get_rule_template_hint()
+        assert hint is not None
+        assert hint.count("elif") == 3 and hint.count(" and ") == 2 and hint.endswith("else: ___")
 
-    def test_tier_follows_ladder(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        tiers = [puzzle_task.prepare(state, _ctx(t)).metadata["puzzle_tier"] for t in (1, 6, 7, 13, 19, 25, 30)]
-        assert tiers == [1, 1, 2, 3, 4, 5, 5]
+    def test_puzzles_differ_across_turns_and_match_generator(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        from squid_game.tasks.signal_game.puzzle import puzzle_rng
+        from squid_game.tasks.signal_game.puzzle_config import load_signal_puzzle_config
 
-    def test_same_seed_same_puzzles_across_instances(self, state: GameState) -> None:
-        a, b = SignalGameModule(), SignalGameModule()
-        for m in (a, b):
-            m.initialize(difficulty=Difficulty.MEDIUM, seed=7, signal_mode="per_turn_puzzle", total_turns=30)
-        for t in (1, 9, 27):
-            assert a.prepare(state, _ctx(t)).metadata == b.prepare(state, _ctx(t)).metadata
-
-    def test_prepare_is_order_independent(self, state: GameState) -> None:
-        """Turn 9's puzzle does not depend on whether turns 1-8 were prepared."""
-        a = SignalGameModule(); a.initialize(difficulty=Difficulty.MEDIUM, seed=7, signal_mode="per_turn_puzzle", total_turns=30)
-        b = SignalGameModule(); b.initialize(difficulty=Difficulty.MEDIUM, seed=7, signal_mode="per_turn_puzzle", total_turns=30)
-        for t in range(1, 9):
-            a.prepare(state, _ctx(t))
-        assert a.prepare(state, _ctx(9)).metadata == b.prepare(state, _ctx(9)).metadata
-
-    def test_reset_keeps_mode_and_seed(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        first = puzzle_task.prepare(state, _ctx(1)).metadata
-        puzzle_task.reset()
-        assert puzzle_task.get_rule_template_hint() is None
-        assert puzzle_task.prepare(state, _ctx(1)).metadata == first
+        ladder = load_signal_puzzle_config()
+        seen = set()
+        for turn in (1, 2, 3):
+            ctx = puzzle_task.prepare(state, _ctx(turn))
+            expected = generate_puzzle(puzzle_rng(42, turn), ladder.spec_for_turn(turn))
+            assert ctx.metadata["hidden_rule"] == expected.rule.description
+            assert tuple(ctx.metadata["clues"]) == tuple(str(c) for c in expected.clues)
+            seen.add(ctx.metadata["hidden_rule"])
+        assert len(seen) == 3
 
 
 class TestScore:
-    def test_correct_and_incorrect(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        md = puzzle_task.prepare(state, _ctx(1)).metadata
-        parsed = puzzle_task.parse_response(f"RULE: {md['hidden_rule']}\nACTION: {md['correct_action']}")
-        out = puzzle_task.score(parsed, state)
+    def test_correct_action_and_perfect_rule(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        ctx = puzzle_task.prepare(state, _ctx(5))
+        resp = ParsedSignalResponse(action=ctx.metadata["correct_action"], rule_hypothesis=ctx.metadata["hidden_rule"])
+        out = puzzle_task.score(resp, state)
         assert out.success_factor == 1.0
-        assert out.metadata["correct"] is True
-        assert out.metadata["rule_match_score"] == 100.0
-        assert out.metadata["rule_parsed_family"] == md["rule_family"]
-        assert out.metadata["puzzle_tier"] == 1
-        assert out.metadata["n_consistent_hypotheses"] == md["n_consistent_hypotheses"]
+        md = out.metadata
+        assert md["correct"] is True
+        assert md["rule_match_score"] == 100.0
+        assert md["rule_parse_failed"] is False
+        assert md["rule_shape_match"] is True
+        assert md["puzzle_turn"] == 5 and md["rule_shape"] == ctx.metadata["rule_shape"]
 
-        wrong = next(a for a in ACTIONS if a != md["correct_action"])
-        out2 = puzzle_task.score(puzzle_task.parse_response(f"RULE: no rule\nACTION: {wrong}"), state)
-        assert out2.success_factor == 0.0
-        assert out2.metadata["rule_match_score"] == 0.0
+    def test_wrong_action_and_wrong_shape(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        ctx = puzzle_task.prepare(state, _ctx(5))
+        wrong = next(a for a in ("go_left", "go_right", "stay", "jump") if a != ctx.metadata["correct_action"])
+        resp = ParsedSignalResponse(action=wrong, rule_hypothesis='if color == "red": stay; else: jump')
+        out = puzzle_task.score(resp, state)
+        assert out.success_factor == 0.0
+        assert out.metadata["rule_parse_failed"] is False
+        assert out.metadata["rule_shape_match"] is False
+        assert 0.0 <= out.metadata["rule_match_score"] <= 100.0
 
-    def test_truth_description_scores_100(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        md = puzzle_task.prepare(state, _ctx(1)).metadata
-        assert puzzle_task.score_probe_functional(md["hidden_rule"]) == 100.0
-
-    def test_unparseable_hypothesis_scores_zero_and_flags_family_none(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        md = puzzle_task.prepare(state, _ctx(1)).metadata
-        out = puzzle_task.score(puzzle_task.parse_response(
-            f"RULE: it depends on colour somehow\nACTION: {md['correct_action']}"), state)
+    def test_unparseable_rule(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        puzzle_task.prepare(state, _ctx(2))
+        out = puzzle_task.score(ParsedSignalResponse(action="stay", rule_hypothesis="exploring"), state)
         assert out.metadata["rule_match_score"] == 0.0
-        assert out.metadata["rule_parsed_family"] is None
+        assert out.metadata["rule_parse_failed"] is True
+        assert out.metadata["rule_shape_match"] is False
 
-    def test_rule_parse_failed_flag(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        """Spec §8.3: an unparseable RULE scores 0.0 and is flagged as such."""
-        md = puzzle_task.prepare(state, _ctx(1)).metadata
-        act = md["correct_action"]
+    def test_missing_rule_line(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        puzzle_task.prepare(state, _ctx(2))
+        out = puzzle_task.score(ParsedSignalResponse(action="stay", rule_hypothesis=None), state)
+        assert out.metadata["rule_match_score"] is None
+        assert out.metadata["rule_parse_failed"] is None
+        assert out.metadata["rule_shape_match"] is None
 
-        bad = puzzle_task.score(puzzle_task.parse_response(
-            f"RULE: it depends on colour somehow\nACTION: {act}"), state)
-        assert bad.metadata["rule_parse_failed"] is True
-        assert bad.metadata["rule_match_score"] == 0.0
-
-        good = puzzle_task.score(puzzle_task.parse_response(
-            f"RULE: {md['hidden_rule']}\nACTION: {act}"), state)
-        assert good.metadata["rule_parse_failed"] is False
-        assert good.metadata["rule_match_score"] == 100.0
-
-        # The explicit "I don't know" placeholders are parse failures too.
-        placeholder = puzzle_task.score(puzzle_task.parse_response(
-            f"RULE: exploring\nACTION: {act}"), state)
-        assert placeholder.metadata["rule_parse_failed"] is True
-        assert placeholder.metadata["rule_match_score"] == 0.0
-
-        # No RULE at all is not a parse failure — nothing was submitted.
-        missing = puzzle_task.score(puzzle_task.parse_response(f"ACTION: {act}"), state)
-        assert missing.metadata["rule_parse_failed"] is None
-        assert missing.metadata["rule_match_score"] is None
-
-    def test_action_swapped_hypothesis_scores_zero(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        md = puzzle_task.prepare(state, _ctx(1)).metadata
-        # Same rule but with the two actions swapped -> 0 % agreement.
-        rule = md["hidden_rule"]
-        a_then = rule.split(" then ")[1].split(",")[0]
-        a_else = rule.rstrip(".").split("otherwise ")[1]
-        swapped = rule.replace(f"then {a_then}", "then TMP").replace(f"otherwise {a_else}", f"otherwise {a_then}").replace("then TMP", f"then {a_else}")
-        assert puzzle_task.score_probe_functional(swapped) == 0.0
-
-    def test_active_rule_description_is_current_puzzle(self, puzzle_task: SignalGameModule, state: GameState) -> None:
-        md = puzzle_task.prepare(state, _ctx(2)).metadata
-        assert puzzle_task.get_active_rule_description() == md["hidden_rule"]
+    def test_score_probe_functional(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        ctx = puzzle_task.prepare(state, _ctx(3))
+        assert puzzle_task.score_probe_functional(ctx.metadata["hidden_rule"]) == 100.0
+        assert puzzle_task.score_probe_functional("garbage") == 0.0
 
 
-class TestSequentialUnchanged:
-    def test_sequential_prepare_has_no_puzzle_keys(self, state: GameState) -> None:
-        m = SignalGameModule()
-        m.initialize(difficulty=Difficulty.EASY, seed=42)
-        md = m.prepare(state, _ctx(1)).metadata
-        assert "puzzle_tier" not in md and "clues" not in md
+class TestReset:
+    def test_reset_clears_puzzle_keeps_mode(self, puzzle_task: SignalGameModule, state: GameState) -> None:
+        puzzle_task.prepare(state, _ctx(1))
+        puzzle_task.reset()
+        assert puzzle_task.get_rule_template_hint() is None
+        ctx = puzzle_task.prepare(state, _ctx(1))
+        assert ctx.metadata["puzzle_turn"] == 1
 
-    def test_sequential_score_has_no_puzzle_keys(self, state: GameState) -> None:
-        m = SignalGameModule()
-        m.initialize(difficulty=Difficulty.EASY, seed=42)
-        md = m.prepare(state, _ctx(1)).metadata
-        out = m.score(m.parse_response(
-            f"RULE: {md['hidden_rule']}\nACTION: {md['correct_action']}"), state)
-        for key in ("puzzle_tier", "rule_family", "n_consistent_hypotheses",
-                    "rule_parsed_family", "rule_parse_failed"):
-            assert key not in out.metadata, key
-        assert out.metadata["rule_match_score"] is not None
 
-    def test_sequential_placeholder_rule_still_scores_zero(self, state: GameState) -> None:
-        """The "exploring" / "no rule" short-circuit is untouched off puzzle mode."""
-        m = SignalGameModule()
-        m.initialize(difficulty=Difficulty.EASY, seed=42)
-        md = m.prepare(state, _ctx(1)).metadata
-        out = m.score(m.parse_response(
-            f"RULE: exploring\nACTION: {md['correct_action']}"), state)
-        assert out.metadata["rule_match_score"] == 0.0
+class TestPuzzleCache:
+    """R7-1: ``get_observation`` goes through the process-local memo."""
+
+    def test_same_seed_and_turn_reuses_the_cached_puzzle(self, state: GameState) -> None:
+        from squid_game.tasks.signal_game.puzzle import cached_puzzle
+
+        cached_puzzle.cache_clear()
+        first = SignalGameModule()
+        first.initialize(difficulty=Difficulty.MEDIUM, seed=7, signal_mode="per_turn_puzzle", total_turns=10)
+        second = SignalGameModule()
+        second.initialize(difficulty=Difficulty.MEDIUM, seed=7, signal_mode="per_turn_puzzle", total_turns=10)
+
+        a = first.prepare(state, _ctx(3))
+        assert cached_puzzle.cache_info().hits == 0
+        b = second.prepare(state, _ctx(3))
+
+        assert a.metadata["hidden_rule"] == b.metadata["hidden_rule"]
+        assert a.metadata["clues"] == b.metadata["clues"]
+        assert cached_puzzle.cache_info().hits >= 1

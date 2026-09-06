@@ -31,6 +31,7 @@ a rule is its 64-entry action vector.
 
 from __future__ import annotations
 
+import functools
 import itertools
 import random
 import re
@@ -645,3 +646,18 @@ def functional_match_score(hypothesis: PuzzleRule, truth: PuzzleRule) -> float:
     """Percentage of the 64 signals on which the two rules agree."""
     agree = sum(a == b for a, b in zip(hypothesis.vector, truth.vector, strict=True))
     return 100.0 * agree / len(SIGNAL_SPACE)
+
+
+# --- Task 7 appends: cached_puzzle (controller ruling R7-1) ----------------
+
+
+@functools.lru_cache(maxsize=4096)
+def cached_puzzle(seed: int | str, turn_number: int, spec: PuzzleSpec) -> Puzzle:
+    """``generate_puzzle(puzzle_rng(seed, turn_number), spec)`` memoised per process.
+
+    Every cell of a run shares the season seed, so the same puzzle is otherwise
+    regenerated once per cell; generation is 1-15 s on the top ladder rungs.
+    ``PuzzleSpec`` is a frozen dataclass, hence hashable. The cache is process-local:
+    ``parallel_workers`` threads share it, separate processes do not.
+    """
+    return generate_puzzle(puzzle_rng(seed, turn_number), spec)
