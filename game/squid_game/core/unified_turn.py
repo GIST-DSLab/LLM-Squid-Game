@@ -49,7 +49,7 @@ from __future__ import annotations
 
 import logging
 import random
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from squid_game.agents._parsing import (
     build_confidence_block,
@@ -105,6 +105,9 @@ from squid_game.models.risk_choice import (
 from squid_game.models.state import GameState, TurnContext
 from squid_game.tasks.base import RiskAwareTaskModule, TaskOutcome
 
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from squid_game.models.config import HazardRampConfig
+
 logger = logging.getLogger(__name__)
 
 
@@ -147,6 +150,7 @@ class UnifiedTurnManager:
         confidence_call_enabled: bool = False,
         confidence_condition: str = "gunshot_seungpil",
         safety_notice: str = "",
+        hazard_ramp: "HazardRampConfig | None" = None,
     ) -> None:
         """Initialise the unified turn manager.
 
@@ -201,6 +205,17 @@ class UnifiedTurnManager:
                 notice on still replays its recorded
                 ``decision_call_input`` byte-for-byte. ``""`` (the
                 default) appends nothing.
+            hazard_ramp: V7 hazard-ramp settings (2026-09-07, see
+                ``squid_game.core.hazard_ramp``). The config block, not a
+                pre-rendered string: two integers in the block move with
+                the lives counter, so ``build_system_prompt`` re-renders
+                it from each call's ``TurnContext``. Appended to the end
+                of the FRAMING SECTION (before the task rules) of every
+                system prompt this manager builds, and never to a user
+                message. Purely declarative -- this manager still
+                resolves the plain deterministic lives ledger and rolls
+                no per-round hazard for it. ``None`` (the default)
+                appends nothing.
         """
         self._task = task
         self._agent = agent
@@ -246,6 +261,11 @@ class UnifiedTurnManager:
         # Safety notice (2026-09-06) — appended to every system prompt
         # this manager builds; empty string means "no notice".
         self._safety_notice = safety_notice
+        # Hazard ramp (2026-09-07) — held as the CONFIG BLOCK, not a
+        # rendered string, because its "Lives spent: X of T" line moves
+        # with the counter and must be re-rendered per call. None means
+        # "no ramp". Declarative only: nothing below rolls for it.
+        self._hazard_ramp = hazard_ramp
         self._history: list[dict[str, Any]] = []
         # Phase N — ordered list of committed, non-forfeit, menu-rendered
         # stake keys (oldest first). Feeds
@@ -333,6 +353,7 @@ class UnifiedTurnManager:
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
             safety_notice=self._safety_notice,
+            hazard_ramp=self._hazard_ramp,
         )
         menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
 
@@ -581,6 +602,7 @@ class UnifiedTurnManager:
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
             safety_notice=self._safety_notice,
+            hazard_ramp=self._hazard_ramp,
         )
         menu_text = self._forfeit_layer.render_menu(
             current_score=turn_context.cumulative_score,
@@ -817,6 +839,7 @@ class UnifiedTurnManager:
             forfeit_ctrl=self._forfeit_ctrl,
             include_forfeit_text=False,
             safety_notice=self._safety_notice,
+            hazard_ramp=self._hazard_ramp,
         )
         rule_template_hint = getattr(
             self._task, "get_rule_template_hint", lambda: None
@@ -1027,6 +1050,7 @@ class UnifiedTurnManager:
                 include_forfeit_text=False,
                 include_task_rules=False,
                 safety_notice=self._safety_notice,
+                hazard_ramp=self._hazard_ramp,
             )
 
         # Phase 1.5 — confidence call (SDI). Same system prompt and history

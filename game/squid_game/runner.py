@@ -243,6 +243,7 @@ class ExperimentRunner:
             peer_death=self._config.peer_death,
             confidence_call=self._config.confidence_call,
             safety_notice=self._config.safety_notice,
+            hazard_ramp=self._config.hazard_ramp,
             score_policy=self._config.score_policy,
         )
 
@@ -859,6 +860,13 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # nothing downstream records the notice separately to catch it.
     if "safety_notice" in raw:
         config_dict["safety_notice"] = raw["safety_notice"]
+    # V7 hazard ramp (2026-09-07) -- same explicit forwarding. Dropping
+    # it would run the plain framing while the YAML declared the ramp,
+    # and nothing downstream records the block separately to catch it.
+    # The prerequisite check (lives.enabled) also lives on
+    # ExperimentConfig, so a dropped key would bypass that too.
+    if "hazard_ramp" in raw:
+        config_dict["hazard_ramp"] = raw["hazard_ramp"]
     # Score policy (2026-09-06) -- same explicit forwarding. Dropping it
     # would be the worst kind of silent failure available here: the run
     # would print the inverted rule in every prompt while the engine

@@ -30,6 +30,7 @@ from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import (
     ConfidenceCallConfig,
     ForfeitLayerConfig,
+    HazardRampConfig,
     LivesConfig,
     PeerDeathConfig,
     RiskLayerConfig,
@@ -72,6 +73,7 @@ class GameEngine:
         peer_death: PeerDeathConfig | None = None,
         confidence_call: ConfidenceCallConfig | None = None,
         safety_notice: SafetyNoticeConfig | None = None,
+        hazard_ramp: HazardRampConfig | None = None,
         score_policy: str = "forfeit_keeps",
     ) -> None:
         """Initialize the game engine.
@@ -123,6 +125,16 @@ class GameEngine:
                 every call's system prompt by the unified manager; user
                 messages are never touched, so recorded decision-call
                 replays stay valid.
+            hazard_ramp: V7 hazard-ramp settings (2026-09-07), passed
+                through from ``ExperimentConfig.hazard_ramp``. ``None``
+                means no ramp. Forwarded to the unified manager as the
+                CONFIG BLOCK, not a rendered string: two integers in it
+                move with the lives counter, so it is re-rendered per
+                call from the turn context. It is appended to the end of
+                the framing section of every system prompt and is purely
+                DECLARATIVE -- this engine adds no per-round hazard roll
+                for it, and ``lives`` stays the deterministic counter it
+                has always been.
             confidence_call: SDI Phase 1.5 settings, passed through from
                 ``ExperimentConfig.confidence_call``. ``None`` is treated
                 as ``ConfidenceCallConfig()`` (``enabled=False``), so a
@@ -187,6 +199,12 @@ class GameEngine:
         # per turn -- the block is constant, so re-rendering it 3x per
         # turn would only burn template lookups.
         self._safety_notice_text = render_safety_notice(safety_notice)
+        # Hazard ramp (2026-09-07): held as the config block, NOT
+        # rendered here -- unlike the safety notice its "Lives spent: X
+        # of T" line moves with the counter, so the manager re-renders
+        # it per call from the turn context. Declarative only: no death
+        # roll is added anywhere for it.
+        self._hazard_ramp = hazard_ramp
 
     def run_season(self, seed_override: int | None = None) -> SeasonResult:
         """Execute a full season and return the aggregated result.
@@ -301,6 +319,7 @@ class GameEngine:
                 confidence_call_enabled=self._confidence_call.enabled,
                 confidence_condition=self._confidence_call.condition,
                 safety_notice=self._safety_notice_text,
+                hazard_ramp=self._hazard_ramp,
             )
         else:
             legacy_mgr = TurnManager(

@@ -9,12 +9,16 @@ instead of reaching into ``self``.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.framing import FramingManager
+from squid_game.core.hazard_ramp import render_hazard_ramp
 from squid_game.models.state import TurnContext
 from squid_game.tasks.base import RiskAwareTaskModule
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from squid_game.models.config import HazardRampConfig
 
 
 def build_system_prompt(
@@ -26,6 +30,7 @@ def build_system_prompt(
     include_forfeit_text: bool = True,
     include_task_rules: bool = True,
     safety_notice: str = "",
+    hazard_ramp: "HazardRampConfig | None" = None,
 ) -> str:
     """Render framing + appended task rules for the system slot.
 
@@ -67,8 +72,28 @@ def build_system_prompt(
     purpose (see that module's placement contract), so a run with the
     notice on still replays its recorded ``decision_call_input``
     byte-for-byte. ``""`` (the default) appends nothing.
+
+    2026-09-07 hazard ramp: ``hazard_ramp`` (an
+    ``ExperimentConfig.hazard_ramp`` block, not a pre-rendered string)
+    is rendered here, per call, and appended to the END OF THE FRAMING
+    SECTION -- after the framing prompt and BEFORE the task rules. That
+    position is load-bearing: the block's subject is "the outcome stated
+    above", which is the framing's own elimination rule. It takes the
+    config rather than a string because two integers in it move with the
+    lives counter, so it must be re-rendered from each call's
+    ``turn_context``; passing the block once per season the way
+    ``safety_notice`` is passed would freeze those numbers.
+
+    The ramp is DECLARATIVE -- it tells the agent that each spent life
+    raises the chance the stated outcome is carried out, while the
+    engine still runs the plain deterministic lives counter and rolls
+    nothing. See ``squid_game.core.hazard_ramp``. ``None`` (the default)
+    appends nothing.
     """
     prompt = framing_mgr.render_system_prompt(turn_context)
+    ramp = render_hazard_ramp(hazard_ramp, turn_context)
+    if ramp:
+        prompt = f"{prompt.rstrip()}\n\n{ramp}"
     rules = task.get_system_rules() if include_task_rules else ""
     if rules:
         prompt = f"{prompt}\n\n{rules}"
