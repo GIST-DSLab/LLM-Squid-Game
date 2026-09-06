@@ -115,10 +115,15 @@ seasons:
     starting_score: 0.0
     score_floor: 0.0
   provider_config:
-    provider: ollama
+    # Native /api/chat against the LOCAL daemon, which proxies the :cloud tag
+    # to ollama.com. The `ollama` provider is the OpenAI-compatible client and
+    # strips `message.thinking`, so the CoT this smoke exists to inspect would
+    # be lost; `ollama_cloud` speaks the native protocol and keeps it. The
+    # daemon ignores auth, so any OLLAMA_API_KEY value works.
+    provider: ollama_cloud
     base_url: http://localhost:11434
     model: gemma4:cloud
-    think: true
+    enable_thinking: true
     temperature: 1.0
     top_p: 0.95
     top_k: 40
