@@ -246,5 +246,112 @@ def puzzle_rng(seed: int | None, turn_number: int) -> random.Random:
 
 
 # --- Task 2 appends: exists_differing / is_unique -------------------------
+
+
+# ---------------------------------------------------------------------------
+# Functional uniqueness within a disclosed shape (spec §4)
+# ---------------------------------------------------------------------------
+
+
+def _lowest_bits(mask: int) -> Iterable[int]:
+    while mask:
+        low = mask & -mask
+        yield low.bit_length() - 1
+        mask ^= low
+
+
+def exists_differing(
+    shape: tuple[int, ...],
+    clues: Iterable[Clue],
+    truth: tuple[str, ...],
+) -> bool:
+    """Does some decision list of *shape*, consistent with *clues*, compute a
+    different 64-vector than *truth*?
+
+    Depth-first search over clause positions (spec §4.2). State: position,
+    the grid mask already decided by earlier clauses, the mask of clues no
+    earlier clause captured, and whether the list already differs from
+    *truth* somewhere. At each position a clause may be dead (decides no new
+    signal; skipped) or use any condition of the position's arity that
+    decides at least one new signal and whose captured clues all share one
+    label; the action is that label (or any action if it captured none).
+    Prune when the remaining clues carry more distinct labels than the
+    remaining clauses + else can serve. Memoised on (position, covered,
+    differs).
+    """
+    clue_label: dict[int, str] = {}
+    remaining0 = 0
+    for c in clues:
+        i = SIGNAL_INDEX[c.signal]
+        clue_label[i] = c.action
+        remaining0 |= 1 << i
+    truth_mask: dict[str, int] = {a: 0 for a in ACTIONS}
+    for i, a in enumerate(truth):
+        truth_mask[a] |= 1 << i
+    k = len(shape)
+    memo: dict[tuple[int, int, bool], bool] = {}
+
+    def labels_of(mask: int) -> set[str]:
+        return {clue_label[i] for i in _lowest_bits(mask)}
+
+    def rec(pos: int, covered: int, remaining: int, differs: bool) -> bool:
+        key = (pos, covered, differs)
+        if key in memo:
+            return memo[key]
+        labs = labels_of(remaining)
+        result = False
+        if pos == k:
+            if len(labs) <= 1:
+                candidates = [next(iter(labs))] if labs else list(ACTIONS)
+                free = FULL_MASK & ~covered
+                for a in candidates:
+                    if differs or (free & ~truth_mask[a]):
+                        result = True
+                        break
+        elif len(labs) <= (k - pos) + 1:
+            if rec(pos + 1, covered, remaining, differs):
+                result = True
+            else:
+                for cond in CONDITIONS_BY_ARITY[shape[pos]]:
+                    new = cond.mask & ~covered
+                    if not new:
+                        continue
+                    fired = labels_of(remaining & cond.mask)
+                    if len(fired) > 1:
+                        continue
+                    candidates = [next(iter(fired))] if fired else list(ACTIONS)
+                    for a in candidates:
+                        d = differs or bool(new & ~truth_mask[a])
+                        if rec(pos + 1, covered | cond.mask, remaining & ~cond.mask, d):
+                            result = True
+                            break
+                    if result:
+                        break
+        memo[key] = result
+        return result
+
+    return rec(0, 0, remaining0, False)
+
+
+def is_unique(shape: tuple[int, ...], clues: Iterable[Clue], rule: PuzzleRule) -> bool:
+    """Spec §4.1: every list of *shape* consistent with *clues* equals *rule* as a function."""
+    return not exists_differing(shape, list(clues), rule.vector)
+
+
+def enumerate_shape(shape: tuple[int, ...]) -> Iterable[PuzzleRule]:
+    """Every decision list of *shape* (brute force; tests only).
+
+    Conditions may repeat and actions are unconstrained, matching the
+    hypothesis space of :func:`exists_differing`.
+    """
+    pools = [CONDITIONS_BY_ARITY[a] for a in shape]
+    for conds in itertools.product(*pools):
+        for acts in itertools.product(ACTIONS, repeat=len(shape) + 1):
+            yield PuzzleRule(
+                clauses=tuple(zip(conds, acts[:-1], strict=True)),
+                else_action=acts[-1],
+            )
+
+
 # --- Task 3 appends: PuzzleSpec / Puzzle / sample_rule / minimal_clues / generate_puzzle
 # --- Task 4 appends: parse_rule_text / functional_match_score --------------
