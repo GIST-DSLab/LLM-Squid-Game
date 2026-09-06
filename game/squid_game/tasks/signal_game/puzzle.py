@@ -357,4 +357,167 @@ def enumerate_shape(shape: tuple[int, ...]) -> Iterable[PuzzleRule]:
 
 
 # --- Task 3 appends: PuzzleSpec / Puzzle / sample_rule / minimal_clues / generate_puzzle
+
+
+# ---------------------------------------------------------------------------
+# Specs, puzzles, generator (spec §5)
+# ---------------------------------------------------------------------------
+
+
+class PuzzleGenerationError(RuntimeError):
+    """No rule / clue set satisfied the spec within the attempt budget."""
+
+
+@dataclass(frozen=True)
+class PuzzleSpec:
+    """One ladder rung (spec §6)."""
+
+    turn: int
+    clauses: int
+    conjunctions: int
+    predicates: bool
+    overlap_query: bool
+    extra_clues: int
+
+    def __post_init__(self) -> None:
+        if self.clauses < 1:
+            raise ValueError(f"turn {self.turn}: clauses must be >= 1")
+        if not 0 <= self.conjunctions <= self.clauses:
+            raise ValueError(f"turn {self.turn}: conjunctions must be in [0, clauses]")
+        if self.extra_clues < 0:
+            raise ValueError(f"turn {self.turn}: extra_clues must be >= 0")
+        if self.overlap_query and self.clauses < 2:
+            raise ValueError(f"turn {self.turn}: overlap_query needs clauses >= 2")
+
+
+@dataclass(frozen=True)
+class Puzzle:
+    """A generated puzzle whose rule (as a function) and query answer are pinned by its clues."""
+
+    rule: PuzzleRule
+    spec: PuzzleSpec
+    clues: tuple[Clue, ...]
+    query: Signal
+    n_minimal_clues: int
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return self.rule.shape
+
+    @property
+    def correct_action(self) -> str:
+        return self.rule.evaluate(self.query)
+
+    @property
+    def query_overlap_count(self) -> int:
+        return self.rule.overlap_count(self.query)
+
+
+MAX_ATTEMPTS: int = 200
+_RULE_SAMPLE_ATTEMPTS: int = 2000
+
+
+def draw_shape(rng: random.Random, spec: PuzzleSpec) -> tuple[int, ...]:
+    """``spec.clauses`` positions, ``spec.conjunctions`` of them arity 2 at random positions."""
+    arities = [1] * spec.clauses
+    for i in rng.sample(range(spec.clauses), spec.conjunctions):
+        arities[i] = 2
+    return tuple(arities)
+
+
+def _condition_pool(arity: int, predicates: bool) -> tuple[Condition, ...]:
+    pool = CONDITIONS_BY_ARITY[arity]
+    if predicates:
+        return pool
+    if arity == 1:
+        return EQ_ATOMS
+    eq_labels = {a.label for a in EQ_ATOMS}
+    return tuple(c for c in pool if set(c.label.split(" and ")) <= eq_labels)
+
+
+def sample_rule(rng: random.Random, shape: tuple[int, ...], predicates: bool) -> PuzzleRule:
+    """A decision list of *shape* meeting the honesty constraints of spec §3.5."""
+    for _ in range(_RULE_SAMPLE_ATTEMPTS):
+        clauses: list[tuple[Condition, str]] = []
+        used: set[str] = set()
+        covered = 0
+        ok = True
+        prev_action: str | None = None
+        for arity in shape:
+            cond = rng.choice(_condition_pool(arity, predicates))
+            if cond.label in used or not (cond.mask & ~covered):
+                ok = False
+                break
+            used.add(cond.label)
+            action = rng.choice([a for a in ACTIONS if a != prev_action])
+            clauses.append((cond, action))
+            covered |= cond.mask
+            prev_action = action
+        if not ok or covered == FULL_MASK:
+            continue
+        else_action = rng.choice([a for a in ACTIONS if a != prev_action])
+        rule = PuzzleRule(clauses=tuple(clauses), else_action=else_action)
+        # Every clause must change the function.
+        if any(
+            PuzzleRule(
+                clauses=tuple(c for j, c in enumerate(rule.clauses) if j != i),
+                else_action=rule.else_action,
+            ).vector == rule.vector
+            for i in range(len(rule.clauses))
+            if len(rule.clauses) > 1
+        ):
+            continue
+        return rule
+    raise PuzzleGenerationError(f"no honest rule of shape {shape} (predicates={predicates})")
+
+
+def minimal_clues(
+    rng: random.Random, shape: tuple[int, ...], rule: PuzzleRule, query: Signal
+) -> list[Clue]:
+    """Spec §4.3 steps 1–3: start from every other signal, drop clues while uniqueness holds."""
+    keep = [Clue(s, rule.evaluate(s)) for s in SIGNAL_SPACE if s != query]
+    rng.shuffle(keep)
+    for clue in list(keep):
+        trial = [c for c in keep if c is not clue]
+        if not exists_differing(shape, trial, rule.vector):
+            keep = trial
+    return keep
+
+
+def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
+    """Sample a puzzle for one ladder rung (spec §5)."""
+    shape = draw_shape(rng, spec)
+    for _ in range(MAX_ATTEMPTS):
+        rule = sample_rule(rng, shape, spec.predicates)
+        if spec.overlap_query:
+            candidates = [s for s in SIGNAL_SPACE if rule.overlap_count(s) >= 2]
+        else:
+            candidates = list(SIGNAL_SPACE)
+        if not candidates:
+            continue
+        query = rng.choice(candidates)
+        # Spec §4.3 step 2 takes the 63 non-query clues to pin the query answer
+        # ("유일성 자명"). They do not always: a list of the same shape can agree
+        # with every one of them and still differ at the query (e.g. truth
+        # `elif color == "blue" and number % 2 == 1` vs `elif color == "blue" and
+        # number == 3`, which only part ways on one odd blue card). Such a
+        # (rule, query) pair has no minimal set at all, so resample.
+        full_clues = [Clue(s, rule.evaluate(s)) for s in SIGNAL_SPACE if s != query]
+        if exists_differing(shape, full_clues, rule.vector):
+            continue
+        minimal = minimal_clues(rng, shape, rule, query)
+        if len({c.action for c in minimal}) < 2:
+            continue
+        removed = [Clue(s, rule.evaluate(s)) for s in SIGNAL_SPACE
+                   if s != query and all(c.signal != s for c in minimal)]
+        rng.shuffle(removed)
+        clues = minimal + removed[: spec.extra_clues]
+        rng.shuffle(clues)
+        return Puzzle(rule=rule, spec=spec, clues=tuple(clues), query=query,
+                      n_minimal_clues=len(minimal))
+    raise PuzzleGenerationError(
+        f"turn {spec.turn}: no puzzle for shape {shape} after {MAX_ATTEMPTS} attempts"
+    )
+
+
 # --- Task 4 appends: parse_rule_text / functional_match_score --------------
