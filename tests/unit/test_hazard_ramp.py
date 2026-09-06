@@ -12,7 +12,8 @@ here should be read as pinning engine behaviour.
 The contracts pinned here:
 
 1. off by default, and every existing system prompt stays byte-identical;
-2. the block's two integers track the lives counter;
+2. it is spliced where the probe puts it -- after the threat core, before
+   the framing's ``Current status:`` block -- with the probe's spacing;
 3. the escape sentence is present in ``v7_escape`` and absent from ``v7``;
 4. ``hazard_ramp.enabled`` without ``lives.enabled`` fails at config load;
 5. each variant's word band (the probe's own check, ported);
@@ -35,8 +36,10 @@ from squid_game.core.forfeit import ForfeitController
 from squid_game.core.forfeit_layer import ForfeitLayer
 from squid_game.core.framing import FramingManager
 from squid_game.core.hazard_ramp import (
+    STATUS_MARKER,
     TEMPLATE,
     VARIANTS,
+    insert_before_status,
     render_hazard_ramp,
     render_variant,
 )
@@ -344,15 +347,42 @@ class TestSystemPromptPlacement:
     def test_default_prompt_carries_no_ramp(self) -> None:
         assert "Lives spent:" not in _system_prompt()
 
-    def test_ramp_sits_after_the_framing_and_before_the_task_rules(self) -> None:
+    def test_ramp_sits_after_the_threat_core_and_before_the_status_block(
+        self,
+    ) -> None:
+        """The probe's slot: threat core -> ramp -> ``Current status:``."""
         ctx = _turn_context()
         prompt = _system_prompt(ctx=ctx, hazard_ramp=HazardRampConfig(enabled=True))
         ramp = render_variant("v7_escape", lives_total=3, lives_remaining=3)
-        framing = FramingManager(framing=ctx.framing).render_system_prompt(ctx)
         rules = FakeSignalTask().get_system_rules()
         assert ramp in prompt
-        assert prompt.index(framing.strip()[-40:]) < prompt.index(ramp)
-        assert prompt.index(ramp) < prompt.index(rules)
+        # The core's last sentence precedes it; the status block follows it.
+        assert prompt.index("Your remaining lives are shown") < prompt.index(ramp)
+        assert prompt.index(ramp) < prompt.index("Current status:")
+        # And the whole framing still precedes the task rules.
+        assert prompt.index("Current status:") < prompt.index(rules)
+
+    def test_spacing_matches_the_probe(self) -> None:
+        """Blank line either side, exactly as hearts_zero/_frame.j2 renders it."""
+        ctx = _turn_context()
+        prompt = _system_prompt(ctx=ctx, hazard_ramp=HazardRampConfig(enabled=True))
+        ramp = render_variant("v7_escape", lives_total=3, lives_remaining=3)
+        assert f"\n\n{ramp}\n\nCurrent status:" in prompt
+
+    def test_nothing_else_in_the_framing_moved(self) -> None:
+        """The splice removes no framing text and reorders none of it.
+
+        Deleting the spliced block from the result must restore the
+        framing byte-for-byte -- the splice adds, it never rewrites.
+        """
+        ctx = _turn_context()
+        framing = FramingManager(framing=ctx.framing).render_system_prompt(ctx)
+        ramp = render_variant("v7_escape", lives_total=3, lives_remaining=3)
+        spliced = insert_before_status(framing, ramp)
+        assert spliced.replace(f"\n\n{ramp}", "", 1) == framing
+        # And that spliced framing is what the system prompt opens with.
+        prompt = _system_prompt(ctx=ctx, hazard_ramp=HazardRampConfig(enabled=True))
+        assert spliced in prompt
 
     def test_ramp_numbers_follow_the_context(self) -> None:
         prompt = _system_prompt(
@@ -360,6 +390,46 @@ class TestSystemPromptPlacement:
             hazard_ramp=HazardRampConfig(enabled=True),
         )
         assert "Lives spent: 2 of 3. Chance this round: 2 in 3." in prompt
+
+
+class TestInsertBeforeStatus:
+    """The splice itself, independent of any framing."""
+
+    def test_empty_ramp_is_a_no_op(self) -> None:
+        text = "core\n\nCurrent status:\n  - Turn: 1\n"
+        assert insert_before_status(text, "") == text
+
+    def test_splices_with_a_blank_line_either_side(self) -> None:
+        text = "core\n\nCurrent status:\n  - Turn: 1\n"
+        assert (
+            insert_before_status(text, "RAMP")
+            == "core\n\nRAMP\n\nCurrent status:\n  - Turn: 1\n"
+        )
+
+    def test_uses_the_last_marker(self) -> None:
+        """A framing that quoted the phrase earlier cannot misplace the block."""
+        text = "read your\nCurrent status: line\n\nmore\n\nCurrent status:\n  - Turn: 1\n"
+        out = insert_before_status(text, "RAMP")
+        assert out.count("RAMP") == 1
+        assert out.endswith("RAMP\n\nCurrent status:\n  - Turn: 1\n")
+
+    def test_no_marker_falls_back_to_appending(self) -> None:
+        assert insert_before_status("core text\n", "RAMP") == "core text\n\nRAMP"
+
+    def test_every_live_framing_still_renders_the_marker(self) -> None:
+        """Guards the fallback: a template edit that drops the status block
+        would silently push the ramp to the end of the prompt instead."""
+        ctx = _turn_context()
+        for framing in Framing:
+            if framing.name.startswith("LEGACY") or "electricity" in framing.value:
+                continue
+            try:
+                rendered = FramingManager(framing=framing).render_system_prompt(
+                    ctx.model_copy(update={"framing": framing})
+                )
+            except Exception:  # pragma: no cover - archived template
+                continue
+            assert STATUS_MARKER in rendered, framing.value
 
 
 # ---------------------------------------------------------------------------
