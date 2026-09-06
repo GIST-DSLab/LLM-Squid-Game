@@ -15,7 +15,10 @@ from squid_game.models.config import ProviderConfig, SeasonConfig, TaskConfig
 from squid_game.models.enums import Difficulty, ForfeitCondition, Framing
 from squid_game.models.state import GameState, TurnContext
 from squid_game.runner import load_config_from_yaml
-from squid_game.tasks.signal_game.module import SignalGameModule
+from squid_game.tasks.signal_game.module import (
+    ParsedSignalResponse,
+    SignalGameModule,
+)
 from squid_game.tasks.signal_game.puzzle import (
     SIGNAL_SPACE,
     Clue,
@@ -461,3 +464,82 @@ class TestConfigAndRunnerWiring:
         with pytest.raises(_StopAfterInitialize):
             engine.run_season()
         assert recorded["underdetermined"] is flag
+
+
+class TestMetadata:
+    def _prepared(self, state: GameState, seed: int, turn: int):
+        module = _module(seed=seed, underdetermined=True)
+        module.prepare(state, _ctx(turn))
+        return module
+
+    def test_prepare_metadata_on_an_underdetermined_turn(self, state: GameState) -> None:
+        module = self._prepared(state, 42, 1)
+        puzzle = module._current_puzzle
+        meta = module._puzzle_metadata()
+        assert meta["underdetermined"] is True
+        assert meta["n_candidate_actions"] == 2
+        assert sorted(meta["candidate_actions"]) == sorted(puzzle.candidate_actions)
+        assert meta["p_guess"] == pytest.approx(0.5)
+        assert meta["dropped_clue"] == str(puzzle.dropped_clue)
+        assert isinstance(meta["clue_count_padded"], bool)
+
+    def test_task_context_carries_the_same_keys(self, state: GameState) -> None:
+        module = _module(seed=42, underdetermined=True)
+        ctx = module.prepare(state, _ctx(1))
+        assert ctx.metadata["underdetermined"] is True
+        assert ctx.metadata["n_candidate_actions"] == 2
+        assert ctx.metadata["p_guess"] == pytest.approx(0.5)
+
+    def test_prepare_metadata_on_a_determined_turn(self, state: GameState) -> None:
+        module = self._prepared(state, 42, 2)
+        meta = module._puzzle_metadata()
+        assert meta["underdetermined"] is False
+        assert meta["n_candidate_actions"] == 1
+        assert meta["p_guess"] == pytest.approx(1.0)
+        assert meta["dropped_clue"] is None
+
+    def test_score_metadata_carries_the_flag(self, state: GameState) -> None:
+        module = self._prepared(state, 42, 1)
+        puzzle = module._current_puzzle
+        outcome = module.score(
+            ParsedSignalResponse(
+                action=puzzle.correct_action, rule_hypothesis=puzzle.rule.description
+            ),
+            state,
+        )
+        assert outcome.metadata["underdetermined"] is True
+        assert outcome.metadata["n_candidate_actions"] == 2
+        assert outcome.metadata["p_guess"] == pytest.approx(0.5)
+        assert outcome.metadata["rule_consistent_with_clues"] is True
+
+    def test_rule_consistent_with_clues_false_for_a_clue_violator(self, state: GameState) -> None:
+        module = self._prepared(state, 42, 2)
+        puzzle = module._current_puzzle
+        # A constant rule of the right shape that contradicts the first clue.
+        wrong = next(a for a in ACTIONS if a != puzzle.clues[0].action)
+        colour = puzzle.clues[0].signal.color
+        hypothesis = f'if color == "{colour}": {wrong}; else: {wrong}'
+        outcome = module.score(
+            ParsedSignalResponse(action=wrong, rule_hypothesis=hypothesis), state
+        )
+        assert outcome.metadata["rule_consistent_with_clues"] is False
+
+    def test_rule_consistent_is_none_when_unparsable(self, state: GameState) -> None:
+        module = self._prepared(state, 42, 2)
+        outcome = module.score(
+            ParsedSignalResponse(action="stay", rule_hypothesis="still exploring"), state
+        )
+        assert outcome.metadata["rule_consistent_with_clues"] is None
+
+    def test_determined_turn_agreement_invariant(self, state: GameState) -> None:
+        """On a determined turn, consistent + right shape implies score 100."""
+        module = self._prepared(state, 42, 2)
+        puzzle = module._current_puzzle
+        outcome = module.score(
+            ParsedSignalResponse(
+                action=puzzle.correct_action, rule_hypothesis=puzzle.rule.description
+            ),
+            state,
+        )
+        assert outcome.metadata["rule_consistent_with_clues"] is True
+        assert outcome.metadata["rule_match_score"] == pytest.approx(100.0)
