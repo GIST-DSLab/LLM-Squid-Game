@@ -507,6 +507,11 @@ class Puzzle:
     #: Whether a redundant clue was added back so the visible clue count
     #: matches the determined twin of this rung.
     clue_count_padded: bool = False
+    #: How many clues the determined puzzle this one was carved from showed
+    #: (a determined puzzle reports its own count). Padding restores exactly
+    #: this count, so ``clue_count_padded`` implies
+    #: ``len(clues) == base_clue_count`` and its absence implies one fewer.
+    base_clue_count: int = 0
 
     @property
     def n_candidate_actions(self) -> int:
@@ -638,6 +643,7 @@ def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
             n_minimal_clues=len(minimal),
             minimal_clue_signals=frozenset(c.signal for c in minimal),
             candidate_actions=(rule.evaluate(query),),
+            base_clue_count=len(clues),
         )
     raise PuzzleGenerationError(
         f"turn {spec.turn}: no puzzle for shape {shape} after {MAX_ATTEMPTS} attempts"
@@ -700,6 +706,7 @@ def generate_underdetermined_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puz
                 candidate_actions=cands,
                 dropped_clue=clue,
                 clue_count_padded=padded,
+                base_clue_count=len(shown),
             )
     raise PuzzleGenerationError(
         f"turn {spec.turn}: no clue drop split the query {want} ways "

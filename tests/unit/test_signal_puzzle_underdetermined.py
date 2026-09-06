@@ -5,6 +5,8 @@ Spec: docs/history/specs/2026-09-06-signal-puzzle-underdetermined-turns-design.m
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 from squid_game.tasks.signal_game.puzzle import (
@@ -146,18 +148,35 @@ class TestGenerateUnderdetermined:
         assert puzzle.query not in {c.signal for c in puzzle.clues}
 
     @pytest.mark.parametrize("spec", _UD_SPECS, ids=lambda s: f"turn{s.turn}")
-    def test_clue_count_matches_the_unique_twin_when_padded(self, spec: PuzzleSpec) -> None:
+    def test_padding_restores_the_base_puzzles_clue_count(
+        self, spec: PuzzleSpec
+    ) -> None:
+        """One clue out, one clue in: the round shows what its base showed.
+
+        There is no single "unique twin" to rebuild: the generator resamples a
+        fresh base whenever no load-bearing drop splits the query
+        ``n_candidate_actions`` ways, so ``generate_puzzle(puzzle_rng(42,
+        turn), spec)`` is the FIRST base sampled, not the one this puzzle was
+        carved from. The base's clue count is therefore recorded on the puzzle
+        and compared against directly — an off-by-one pad, or a pad that never
+        appends while ``clue_count_padded`` stays True, fails here.
+        """
         puzzle = generate_underdetermined_puzzle(puzzle_rng(42, spec.turn), spec)
+        assert puzzle.base_clue_count > 0
         if puzzle.clue_count_padded:
-            # The twin is the determined puzzle this one was carved from, which
-            # is NOT generate_puzzle(puzzle_rng(42, turn), spec): the generator
-            # resamples a fresh base whenever no single load-bearing drop splits
-            # the query n_candidate_actions ways, and each base has its own
-            # minimal-set size. A determined puzzle of any rung shows exactly
-            # n_minimal + extra_clues clues, and padding restores that count
-            # (one load-bearing clue out, one redundant clue in), so this is the
-            # invariant the twin comparison was reaching for.
-            assert len(puzzle.clues) == puzzle.n_minimal_clues + 1 + spec.extra_clues
+            assert len(puzzle.clues) == puzzle.base_clue_count
+        else:
+            assert len(puzzle.clues) == puzzle.base_clue_count - 1
+
+    @pytest.mark.parametrize("spec", _UD_SPECS, ids=lambda s: f"turn{s.turn}")
+    def test_determined_puzzle_reports_its_own_clue_count(
+        self, spec: PuzzleSpec
+    ) -> None:
+        determined = dataclasses.replace(
+            spec, underdetermined=False, n_candidate_actions=1
+        )
+        puzzle = generate_puzzle(puzzle_rng(42, spec.turn), determined)
+        assert puzzle.base_clue_count == len(puzzle.clues)
 
     def test_unique_puzzle_reports_one_candidate(self) -> None:
         spec = PuzzleSpec(turn=5, clauses=3, conjunctions=0, predicates=True,
