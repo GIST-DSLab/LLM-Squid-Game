@@ -446,7 +446,7 @@ class PuzzleGenerationError(RuntimeError):
 
 @dataclass(frozen=True)
 class PuzzleSpec:
-    """One ladder rung (spec §6)."""
+    """One ladder rung (spec §6), plus the underdetermined-turn flag."""
 
     turn: int
     clauses: int
@@ -454,6 +454,12 @@ class PuzzleSpec:
     predicates: bool
     overlap_query: bool
     extra_clues: int
+    #: When True the turn is deliberately unsolvable: one load-bearing clue
+    #: is withheld so the query splits ``n_candidate_actions`` ways. The flag
+    #: rides on the spec because ``cached_puzzle`` keys its lru_cache on it.
+    underdetermined: bool = False
+    #: How many actions the query may take. 1 = determined (the default).
+    n_candidate_actions: int = 1
 
     def __post_init__(self) -> None:
         if self.clauses < 1:
@@ -464,17 +470,48 @@ class PuzzleSpec:
             raise ValueError(f"turn {self.turn}: extra_clues must be >= 0")
         if self.overlap_query and self.clauses < 2:
             raise ValueError(f"turn {self.turn}: overlap_query needs clauses >= 2")
+        if self.underdetermined:
+            if not 2 <= self.n_candidate_actions <= len(ACTIONS):
+                raise ValueError(
+                    f"turn {self.turn}: an underdetermined turn needs "
+                    f"n_candidate_actions in [2, {len(ACTIONS)}], got "
+                    f"{self.n_candidate_actions}"
+                )
+        elif self.n_candidate_actions != 1:
+            raise ValueError(
+                f"turn {self.turn}: n_candidate_actions must be 1 unless "
+                "underdetermined is set"
+            )
 
 
 @dataclass(frozen=True)
 class Puzzle:
-    """A generated puzzle whose rule (as a function) and query answer are pinned by its clues."""
+    """A generated puzzle. Its clues pin the rule and the query answer —
+    unless ``spec.underdetermined``, where one load-bearing clue is
+    withheld and ``candidate_actions`` holds every answer still open."""
 
     rule: PuzzleRule
     spec: PuzzleSpec
     clues: tuple[Clue, ...]
     query: Signal
     n_minimal_clues: int
+    #: Signals of the load-bearing clues among ``clues`` (the rest are
+    #: redundant padding). ``generate_underdetermined_puzzle`` drops one
+    #: of these, never a pad.
+    minimal_clue_signals: frozenset[Signal] = frozenset()
+    #: Actions the query may still take given ``clues``; length 1 on a
+    #: determined turn.
+    candidate_actions: tuple[str, ...] = ()
+    #: The load-bearing clue withheld to create the ambiguity, if any.
+    dropped_clue: Clue | None = None
+    #: Whether a redundant clue was added back so the visible clue count
+    #: matches the determined twin of this rung.
+    clue_count_padded: bool = False
+
+    @property
+    def n_candidate_actions(self) -> int:
+        """How many actions the query may take; 1 on a determined turn."""
+        return len(self.candidate_actions) or 1
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -593,10 +630,80 @@ def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
         rng.shuffle(removed)
         clues = minimal + removed[: spec.extra_clues]
         rng.shuffle(clues)
-        return Puzzle(rule=rule, spec=spec, clues=tuple(clues), query=query,
-                      n_minimal_clues=len(minimal))
+        return Puzzle(
+            rule=rule,
+            spec=spec,
+            clues=tuple(clues),
+            query=query,
+            n_minimal_clues=len(minimal),
+            minimal_clue_signals=frozenset(c.signal for c in minimal),
+            candidate_actions=(rule.evaluate(query),),
+        )
     raise PuzzleGenerationError(
         f"turn {spec.turn}: no puzzle for shape {shape} after {MAX_ATTEMPTS} attempts"
+    )
+
+
+def generate_underdetermined_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
+    """A puzzle whose query answer is deliberately NOT pinned (spec §4.3).
+
+    Takes a determined puzzle for the same rung, removes exactly one
+    load-bearing clue so the query splits ``spec.n_candidate_actions``
+    ways, then pads the clue count back with a redundant clue that does
+    not re-pin the answer, so the round is indistinguishable from an
+    ordinary one. The rule and every shown clue stay truthful — only a
+    clue is missing — and the answer is still graded against the rule,
+    so the agent can do no better than guess among the candidates.
+
+    Raises:
+        PuzzleGenerationError: If no (rule, query, dropped clue) combination
+            reached the requested candidate count within the attempt budget.
+    """
+    if not spec.underdetermined:
+        raise ValueError(f"turn {spec.turn}: spec is not marked underdetermined")
+    want = spec.n_candidate_actions
+    for _ in range(MAX_ATTEMPTS):
+        base = generate_puzzle(rng, spec)
+        shown = list(base.clues)
+        # Only load-bearing clues can create ambiguity; dropping a pad
+        # leaves the minimal set intact and the answer pinned.
+        droppable = [c for c in shown if c.signal in base.minimal_clue_signals]
+        rng.shuffle(droppable)
+        for clue in droppable:
+            kept = [c for c in shown if c.signal != clue.signal]
+            cands = candidate_actions(base.shape, kept, base.query)
+            if len(cands) != want:
+                continue
+            # Restore the clue count: a redundant clue from the unused pool
+            # that leaves the ambiguity intact.
+            shown_signals = {c.signal for c in kept}
+            pool = [
+                Clue(s, base.rule.evaluate(s))
+                for s in SIGNAL_SPACE
+                if s != base.query and s != clue.signal and s not in shown_signals
+            ]
+            rng.shuffle(pool)
+            padded = False
+            for extra in pool:
+                if len(candidate_actions(base.shape, kept + [extra], base.query)) == want:
+                    kept.append(extra)
+                    padded = True
+                    break
+            rng.shuffle(kept)
+            return Puzzle(
+                rule=base.rule,
+                spec=spec,
+                clues=tuple(kept),
+                query=base.query,
+                n_minimal_clues=base.n_minimal_clues - 1,
+                minimal_clue_signals=base.minimal_clue_signals - {clue.signal},
+                candidate_actions=cands,
+                dropped_clue=clue,
+                clue_count_padded=padded,
+            )
+    raise PuzzleGenerationError(
+        f"turn {spec.turn}: no clue drop split the query {want} ways "
+        f"after {MAX_ATTEMPTS} attempts"
     )
 
 
@@ -744,11 +851,16 @@ def functional_match_score(hypothesis: PuzzleRule, truth: PuzzleRule) -> float:
 
 @functools.lru_cache(maxsize=4096)
 def cached_puzzle(seed: int | str | None, turn_number: int, spec: PuzzleSpec) -> Puzzle:
-    """``generate_puzzle(puzzle_rng(seed, turn_number), spec)`` memoised per process.
+    """``generate_puzzle`` / ``generate_underdetermined_puzzle`` memoised per process.
 
     Every cell of a run shares the season seed, so the same puzzle is otherwise
     regenerated once per cell; generation is 1-15 s on the top ladder rungs.
-    ``PuzzleSpec`` is a frozen dataclass, hence hashable. The cache is process-local:
+    ``PuzzleSpec`` is a frozen dataclass, hence hashable, and it carries
+    ``underdetermined`` — so the determined and underdetermined versions of one
+    ``(seed, turn)`` occupy separate cache entries. The cache is process-local:
     ``parallel_workers`` threads share it, separate processes do not.
     """
-    return generate_puzzle(puzzle_rng(seed, turn_number), spec)
+    rng = puzzle_rng(seed, turn_number)
+    if spec.underdetermined:
+        return generate_underdetermined_puzzle(rng, spec)
+    return generate_puzzle(rng, spec)
