@@ -13,15 +13,22 @@ answers wrong to drive the 3-lives elimination path.
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 from collections.abc import Callable
 from dataclasses import replace
+from functools import lru_cache
 from pathlib import Path
 
 from squid_game.models.results import SeasonResult
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
-from squid_game.tasks.signal_game.puzzle import cached_puzzle, render_shape_block
+from squid_game.tasks.signal_game.puzzle import (
+    CONDITIONS_BY_ARITY,
+    PuzzleRule,
+    cached_puzzle,
+    render_shape_block,
+)
 from squid_game.tasks.signal_game.puzzle_config import (
     load_signal_puzzle_config,
     underdetermined_turns,
@@ -88,6 +95,57 @@ def _puzzle_for(seed: int, turn: int):
             n_candidate_actions=ladder.underdetermined.candidate_actions,
         )
     return cached_puzzle(seed, turn, spec)
+
+
+@lru_cache(maxsize=None)
+def _consistent_witness(seed: int, turn: int, target: str) -> PuzzleRule:
+    """A rule of the turn's shape that fits every shown clue yet answers *target*.
+
+    This is the hypothesis an honest solver can arrive at on an
+    underdetermined turn: the withheld clue is exactly what would have
+    ruled it out, so nothing the agent was shown contradicts it, and it
+    still disagrees with the truth at the query. Sending it as the RULE
+    line is what makes ``rule_consistent_with_clues is True`` informative
+    — the true rule would satisfy that field on *every* turn and so pins
+    nothing.
+
+    Found by walking condition tuples of the shape and *solving* each
+    clause's action rather than enumerating action assignments: a signal
+    is decided by the first clause whose condition holds, so every clue
+    forces the action of exactly one slot, and the query's slot is free
+    unless a clue already claimed it. Brute-forcing the 2^(k+1) action
+    assignments too costs 56 s at the ``(2, 1, 1)`` rung this config
+    schedules; solving them costs 57 ms.
+    """
+    puzzle = _puzzle_for(seed, turn)
+    n_slots = len(puzzle.shape)
+    pools = [CONDITIONS_BY_ARITY[arity] for arity in puzzle.shape]
+    for conds in itertools.product(*pools):
+
+        def deciding_slot(signal) -> int:
+            for i, cond in enumerate(conds):
+                if cond.holds(signal):
+                    return i
+            return n_slots
+
+        forced: dict[int, str] = {}
+        for clue in puzzle.clues:
+            if forced.setdefault(deciding_slot(clue.signal), clue.action) != clue.action:
+                break  # two clues want different actions from one slot
+        else:
+            query_slot = deciding_slot(puzzle.query)
+            if forced.get(query_slot, target) != target:
+                continue
+            forced[query_slot] = target
+            actions = [forced.get(i, target) for i in range(n_slots + 1)]
+            return PuzzleRule(
+                clauses=tuple(zip(conds, actions[:-1], strict=True)),
+                else_action=actions[-1],
+            )
+    raise AssertionError(
+        f"seed {seed} turn {turn}: no rule of shape {puzzle.shape} fits the clues "
+        f"and answers {target!r}, yet candidate_actions offered it"
+    )
 
 
 def _make_response_fn(seed: int, *, answer_correctly: bool) -> Callable[..., str]:
@@ -159,6 +217,7 @@ class TestSignalPuzzleSmoke:
             tc = season.task_config
             assert tc.task_name == "signal_game"
             assert tc.signal_mode == "per_turn_puzzle"
+            assert tc.underdetermined is True
             assert tc.history_mode == "outcome"
             assert tc.total_turns == 10
             assert tc.seed == 42
@@ -368,13 +427,17 @@ class TestSignalPuzzleSmoke:
                 return "CHOICE: CONTINUE"
             turn = _turn_number(messages[-1]["content"])
             puzzle = _puzzle_for(seed, turn)
-            action = puzzle.correct_action
-            if turn in expected:
-                # Evidence-consistent, and still wrong: the coin landed badly.
-                action = next(
-                    a for a in puzzle.candidate_actions if a != puzzle.correct_action
-                )
-            return f"RULE: {puzzle.rule.description}\nACTION: {action}"
+            if turn not in expected:
+                return f"RULE: {puzzle.rule.description}\nACTION: {puzzle.correct_action}"
+            # Evidence-consistent, and still wrong: the coin landed badly.
+            # Both the hypothesis and the action come from the witness, so
+            # the reply is what a solver that guessed the other branch would
+            # actually have written — not the true rule with a swapped action.
+            action = next(
+                a for a in puzzle.candidate_actions if a != puzzle.correct_action
+            )
+            rule = _consistent_witness(seed, turn, action)
+            return f"RULE: {rule.description}\nACTION: {action}"
 
         patch_runner_provider(response_fn=response_fn)
         ExperimentRunner(cfg).run()
@@ -390,11 +453,23 @@ class TestSignalPuzzleSmoke:
             assert wrong == expected
             assert rows[-1]["lives_after"] == 1
             # The hypothesis was consistent with everything it was shown, yet
-            # the answer was graded wrong — the divergence this design exists
-            # to observe.
+            # it disagrees with the truth — the divergence this design exists
+            # to observe. The pairing is the whole point: consistency alone
+            # says nothing (the true rule satisfies it on every turn), so it
+            # is asserted together with a functional score below 100. Shape
+            # match rules out the third reading, that consistency held
+            # because the hypothesis was not of the disclosed shape.
             for row in rows:
-                if row["task_metadata"]["puzzle_turn"] in expected:
-                    assert row["task_metadata"]["rule_consistent_with_clues"] is True
+                md = row["task_metadata"]
+                if md["puzzle_turn"] in expected:
+                    assert md["rule_consistent_with_clues"] is True
+                    assert md["rule_shape_match"] is True
+                    assert md["rule_match_score"] < 100.0
+                else:
+                    # the contrast: on a determined turn the same solver has
+                    # nothing left to guess, and consistency implies the truth
+                    assert md["rule_consistent_with_clues"] is True
+                    assert md["rule_match_score"] == 100.0
         for season in _seasons(run_dir):
             assert season.eliminated is False
             assert season.lives_at_end == 1
