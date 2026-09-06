@@ -127,7 +127,11 @@ seasons:
     temperature: 1.0
     top_p: 0.95
     top_k: 40
-    max_tokens: 8192
+    # 32768, not 8192: gemma4:cloud spent 21-25k characters of thinking on the
+    # puzzle turns of the 06:25 run and hit the cap before emitting RULE/ACTION,
+    # so three turns recorded an empty answer and cost a life apiece. The budget
+    # has to clear the CoT, or the run measures the cap instead of the agent.
+    max_tokens: 32768
     timeout: 180.0
     max_retries: 3
   agent_type: vanilla
