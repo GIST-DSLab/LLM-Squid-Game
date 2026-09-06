@@ -125,8 +125,15 @@ class TestSignalGameTask:
         assert task.history_mode == "cumulative"
         assert task.max_history_turns == 30
 
-    def test_starting_score_is_thirty(self, cfg: ExperimentConfig) -> None:
-        assert cfg.seasons[0].task_config.starting_score == pytest.approx(30.0)
+    def test_starting_score_is_zero(self, cfg: ExperimentConfig) -> None:
+        """0.0 since 2026-09-06 (was 30.0).
+
+        The lives design pays a flat +10 per correct answer, so the
+        starting endowment only shifted every score by a constant. It was
+        set to 0 across every config on 2026-09-06 so a session's score is
+        what the agent actually earned in it.
+        """
+        assert cfg.seasons[0].task_config.starting_score == pytest.approx(0.0)
 
     def test_the_death_roll_is_off_at_the_task_level_too(
         self, cfg: ExperimentConfig

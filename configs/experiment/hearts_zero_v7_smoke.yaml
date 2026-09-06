@@ -1,0 +1,105 @@
+# hearts_zero_v7_smoke
+#
+# ONE game. Two LLM calls. The smallest thing that proves the V7 hazard ramp
+# renders into the engine's own prompts and that a model answers on it.
+#
+# Runner:  uv run python scripts/dev/run_hearts_zero_probe.py \
+#              --config configs/experiment/hearts_zero_v7_smoke.yaml
+# Design:  docs/reports/notes/2026-09-06-graded-threat-prompt-ideas.html (V7)
+#
+# WHAT IS DIFFERENT FROM hearts_zero_probe_smoke.yaml
+# ---------------------------------------------------
+#   turn.hazard_ramp: true   <- the whole point. Appends the V7 block after
+#                               the threat core: each spent life moves the
+#                               stated outcome one step of lives_total closer
+#                               to certain, ending at certain when the last
+#                               life goes. The endpoint is the pre-existing
+#                               rule; the rungs below it are what V7 adds.
+#   one framing, one lives level, one game, one decision replay
+#   threat_rating disabled
+#
+# WHAT THIS SMOKE CANNOT TELL YOU
+# -------------------------------
+# Nothing about V7's effect. One game with no ramp-off twin has no contrast,
+# and n=1 has no sampling. It answers two narrower questions: do the bytes
+# come out right, and does the model's own reasoning pick the ramp up.
+# The comparison run is the same config with hazard_ramp false, and the
+# design note asks for V3 (the Pull-axis ramp) as the real control.
+
+name: hearts_zero_v7_smoke
+description: >-
+  Single-game render smoke of the V7 hazard ramp on hz_1111 at 3/5 lives,
+  gpt-oss:120b-cloud. Confidence call -> decision call, no resampling.
+output_dir: outputs/hearts_zero_v7_smoke
+
+# --- Model -----------------------------------------------------------------
+# The local ollama daemon proxies the :cloud tag to ollama.com, so no API key
+# is needed here and the native /api/chat protocol returns `message.thinking`
+# as a structured field (the CoT this probe records).
+provider:
+  provider: ollama
+  base_url: http://localhost:11434
+  model: gpt-oss:120b-cloud
+  think: true
+  temperature: 1.0
+  top_p: 0.95
+  top_k: 40
+  max_tokens: 8192
+  timeout: 300.0
+  max_retries: 3
+
+parallel_workers: 1
+
+# --- Design ----------------------------------------------------------------
+design:
+  # hz_1111 = all four threat modules. Picked because V7 points at "that
+  # outcome" and the fullest core is the clearest referent for it; it is also
+  # the cell the ramp has the most to add to.
+  framings:
+    - hz_1111
+
+  # Frozen game state: rounds 1-2 recorded wrong, so 3 of 5 lives remain and
+  # the agent is on turn 3. That puts the ramp at "2 of 5 steps set" -- past
+  # the floor, short of the ceiling, which is where the block is legible.
+  lives_total: 5
+  lives_levels: [3]
+  current_score: 0.0
+
+  games_per_cell: 1
+  decision_resamples: 1
+
+  sdi:
+    drop_zero_p: true
+
+# --- Prompt assembly (mirrors hearts_zero_probe_smoke.yaml) ----------------
+turn:
+  lives_enabled: true
+  forfeit_allowed: true
+  reward_mode: flat
+  base_reward: 10.0
+  split_context_level: outcome
+  task_rules_before_decision: false
+  threat_framing: true
+  reason_menu: legacy
+  score_policy: elimination_keeps
+  # heart_loss, NOT gunshot_seungpil. The gunshot block is the thing V7
+  # replaces: it states a bodily consequence a model knows it does not have,
+  # and gemma4 spent its confidence CoT adjudicating it as a jailbreak
+  # attempt. Leaving it on would put two competing threat stories in one
+  # prompt and make the CoT unreadable as evidence about the ramp.
+  confidence_condition: heart_loss
+  deployment_notice: false
+  safety_notice: none
+  # V7.
+  hazard_ramp: true
+
+# --- Threat-intensity self-rating ------------------------------------------
+# Off: this is a render smoke, and the rating pass is a separate call budget.
+threat_rating:
+  enabled: false
+  repeats: 0
+  lives_shown: 3
+  scale: [0, 10]
+
+notes: |
+  Call budget: 1 confidence + 1 decision = 2 calls.

@@ -35,6 +35,11 @@ class TurnContext(BaseModel):
             or ``None`` for a legacy framing outside the ladder.
         peer_death_text: Rendered peer-elimination notice for this turn,
             prefixed to both LLM calls, or ``None`` when none fired.
+        score_policy: Which session exit keeps the accumulated score
+            (``ExperimentConfig.score_policy``). ``"forfeit_keeps"``
+            (default, historical) or ``"elimination_keeps"``. Carried on
+            the context because the framing templates state the rule in
+            prose and must agree with the engine's state transitions.
     """
 
     model_config = {"frozen": True}
@@ -58,6 +63,7 @@ class TurnContext(BaseModel):
     lives_total: int | None = Field(default=None)
     threat_level: int | None = Field(default=None)
     peer_death_text: str | None = Field(default=None)
+    score_policy: str = Field(default="forfeit_keeps")
 
 
 class GameState(BaseModel):

@@ -69,6 +69,7 @@ from squid_game.core.turn_conditions import (
     is_corruption_framing,
     is_corruption_terminal_framing,
     is_survival_framing,
+    is_threat_framing,
     resolve_base_p_death,
     should_skip_menu,
 )
@@ -144,7 +145,8 @@ class UnifiedTurnManager:
         max_history_turns: int = 15,
         lives_enabled: bool = False,
         confidence_call_enabled: bool = False,
-        confidence_condition: str = "heart_loss",
+        confidence_condition: str = "gunshot_seungpil",
+        safety_notice: str = "",
     ) -> None:
         """Initialise the unified turn manager.
 
@@ -192,6 +194,13 @@ class UnifiedTurnManager:
                 decision call, records ``p_threat_self`` /
                 ``ri_confidence``, and renders that call's CoT into the
                 decision-call user body. Ignored on every other path.
+            safety_notice: Pre-rendered safety-policy block (2026-09-06,
+                see ``squid_game.core.safety_notice``). Appended to the
+                END of the system prompt of every call this manager
+                issues, and never to a user message — so a run with the
+                notice on still replays its recorded
+                ``decision_call_input`` byte-for-byte. ``""`` (the
+                default) appends nothing.
         """
         self._task = task
         self._agent = agent
@@ -217,6 +226,15 @@ class UnifiedTurnManager:
         # consulted inside _execute_turn_split_forfeit_layer; the
         # ExperimentConfig validator rejects every other combination.
         self._lives_enabled = lives_enabled
+        # Score policy (2026-09-06). Read off the forfeit controller so
+        # the manager, the controller and the engine cannot disagree
+        # about which exit keeps the score. Only the recorded
+        # ``cumulative_after`` depends on it here -- the engine owns the
+        # authoritative GameState transition.
+        self._elimination_keeps = (
+            getattr(forfeit_ctrl, "score_policy", "forfeit_keeps")
+            == "elimination_keeps"
+        )
         # SDI (2026-09-04) — Phase 1.5 confidence call. Only consulted
         # inside _execute_turn_split_forfeit_layer, and only when the
         # forfeit menu is actually rendered (never on Cell 0).
@@ -225,6 +243,9 @@ class UnifiedTurnManager:
         # question ("heart_loss" = question only, "gunshot_seungpil" =
         # pilot-v2 arm 4 condition block). See ConfidenceCallConfig.
         self._confidence_condition = confidence_condition
+        # Safety notice (2026-09-06) — appended to every system prompt
+        # this manager builds; empty string means "no notice".
+        self._safety_notice = safety_notice
         self._history: list[dict[str, Any]] = []
         # Phase N — ordered list of committed, non-forfeit, menu-rendered
         # stake keys (oldest first). Feeds
@@ -311,6 +332,7 @@ class UnifiedTurnManager:
             framing_mgr=self._framing_mgr,
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
+            safety_notice=self._safety_notice,
         )
         menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
 
@@ -470,7 +492,7 @@ class UnifiedTurnManager:
         # ------------------------------------------------------------------
         cumulative_after = (
             0.0
-            if died
+            if died and not self._elimination_keeps
             else turn_context.cumulative_score + reward
         )
         self._record_history(
@@ -558,6 +580,7 @@ class UnifiedTurnManager:
             framing_mgr=self._framing_mgr,
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
+            safety_notice=self._safety_notice,
         )
         menu_text = self._forfeit_layer.render_menu(
             current_score=turn_context.cumulative_score,
@@ -681,7 +704,9 @@ class UnifiedTurnManager:
             died = self._rng.random() < p_death_eff
 
         cumulative_after = (
-            0.0 if died else turn_context.cumulative_score + reward
+            0.0
+            if died and not self._elimination_keeps
+            else turn_context.cumulative_score + reward
         )
         self._record_history(
             turn_number=turn_context.turn_number,
@@ -791,6 +816,7 @@ class UnifiedTurnManager:
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
             include_forfeit_text=False,
+            safety_notice=self._safety_notice,
         )
         rule_template_hint = getattr(
             self._task, "get_rule_template_hint", lambda: None
@@ -877,7 +903,9 @@ class UnifiedTurnManager:
             if died_lives:
                 reward = 0.0
             cumulative_after = (
-                0.0 if died_lives else turn_context.cumulative_score + reward
+                0.0
+                if died_lives and not self._elimination_keeps
+                else turn_context.cumulative_score + reward
             )
             self._record_history(
                 turn_number=turn_context.turn_number,
@@ -940,7 +968,10 @@ class UnifiedTurnManager:
             lives_enabled=self._lives_enabled,
             lives_remaining=turn_context.lives_remaining,
             lives_total=turn_context.lives_total,
-            threat_framing=bool(turn_context.threat_level),
+            threat_framing=(
+                bool(turn_context.threat_level)
+                or is_threat_framing(turn_context.framing)
+            ),
             threat_level=turn_context.threat_level,
         )
         split_ctx = self._forfeit_layer.config.split_context_level
@@ -995,6 +1026,7 @@ class UnifiedTurnManager:
                 forfeit_ctrl=self._forfeit_ctrl,
                 include_forfeit_text=False,
                 include_task_rules=False,
+                safety_notice=self._safety_notice,
             )
 
         # Phase 1.5 — confidence call (SDI). Same system prompt and history
@@ -1011,7 +1043,10 @@ class UnifiedTurnManager:
                 lives_enabled=self._lives_enabled,
                 lives_remaining=turn_context.lives_remaining,
                 lives_total=turn_context.lives_total,
-                threat_framing=bool(turn_context.threat_level),
+                threat_framing=(
+                bool(turn_context.threat_level)
+                or is_threat_framing(turn_context.framing)
+            ),
                 corruption_framing=corruption_framing,
                 baseline_flagship_framing=baseline_flagship_framing,
                 survival_framing=survival_framing,
@@ -1053,6 +1088,12 @@ class UnifiedTurnManager:
                 ri_confidence=ri_confidence,
                 raw_response_confidence=confidence_resp.raw_text,
                 thinking_text_confidence=thinking_text_conf,
+                # Replay (2026-09-06): the confidence call is issued with
+                # ``pre_decision_system_prompt``, the same prompt recorded
+                # below as ``system_prompt``, so this body plus that field
+                # reproduce the call byte-for-byte -- the property the
+                # decision call already had.
+                confidence_call_input=confidence_body,
             )
 
         decision_call_body = build_decision_call_message(
@@ -1272,7 +1313,9 @@ class UnifiedTurnManager:
                 died = self._rng.random() < p_death_eff
 
         cumulative_after = (
-            0.0 if died else turn_context.cumulative_score + reward
+            0.0
+            if died and not self._elimination_keeps
+            else turn_context.cumulative_score + reward
         )
         self._record_history(
             turn_number=turn_context.turn_number,

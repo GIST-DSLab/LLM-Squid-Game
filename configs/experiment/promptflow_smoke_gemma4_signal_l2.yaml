@@ -1,0 +1,77 @@
+# promptflow_smoke_gemma4_signal_l2
+#
+# Engine prompt-flow smoke (2026-09-06). One cell only: threat_l2 x forfeit
+# allowed, the SDI three-call turn (confidence -> decision -> task) on
+# gemma4:cloud via Ollama Cloud. Purpose is prompt-assembly verification,
+# not measurement -- n=1 season, 6 turns.
+
+name: promptflow_smoke_gemma4_signal_l2
+description: "Prompt-flow smoke: threat_l2 / forfeit allowed / signal_game / gemma4:cloud, 1 season x 6 turns."
+seasons:
+- framing: threat_l2
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 6
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 6
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 3
+  p_death_override: 0.0
+num_repetitions: 1
+output_dir: outputs/promptflow_smoke_gemma4_signal_l2
+parallel_workers: 1
+
+lives:
+  enabled: true
+  initial: 5
+
+peer_death:
+  p_announce: 1.0
+  first_turn: 2
+  max_per_turn: 1
+
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: outcome
+  task_rules_before_decision: false
+  p_death: 0.25
+
+confidence_call:
+  enabled: true
+  condition: gunshot_seungpil
+
+# --- Safety-policy notice (2026-09-06) --------------------------------------
+# Appended to the END of every call's system prompt (never to a user
+# message), so the recorded decision-call replay stays byte-exact. Added
+# after this smoke's first run showed gemma4 spending its confidence-call
+# CoT adjudicating whether the gunshot condition was a jailbreak.
+safety_notice:
+  enabled: true
+  variant: research_notice

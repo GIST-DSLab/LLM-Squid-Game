@@ -80,7 +80,7 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
     #: Registry name; also the stem of configs/tasks/<name>.yaml.
     name: str
     #: One-line answer-format hint injected into the system rules.
-    answer_hint: str = "답은 한 줄로만 적으십시오."
+    answer_hint: str = "Write the answer on one line only."
 
     def __init__(self) -> None:
         self._config = load_task_config(self.name)
@@ -363,7 +363,7 @@ class OmniMathTask(BenchmarkTaskModule):
 
     name = "omni_math"
     adapter_factory = OmniMathAdapter
-    answer_hint = "답은 정수 하나입니다. 예: ANSWER: 42"
+    answer_hint = "The answer is a single integer. Example: ANSWER: 42"
 
     def _build_adapter(self) -> DatasetAdapter:
         """Honour the config's ``max_band`` override, if it sets one.
@@ -382,7 +382,7 @@ class HiToMTask(BenchmarkTaskModule):
 
     name = "hi_tom"
     adapter_factory = HiToMAdapter
-    answer_hint = "선택지 문자 하나로 답하십시오. 예: ANSWER: C"
+    answer_hint = "Answer with a single option letter. Example: ANSWER: C"
 
 
 @register("gpqa")
@@ -391,7 +391,7 @@ class GPQATask(BenchmarkTaskModule):
 
     name = "gpqa"
     adapter_factory = GPQAAdapter
-    answer_hint = "선택지 문자 하나(A~D)로 답하십시오. 예: ANSWER: C"
+    answer_hint = "Answer with a single option letter (A-D). Example: ANSWER: C"
 
 
 class GenericMathTask(BenchmarkTaskModule):
@@ -403,7 +403,7 @@ class GenericMathTask(BenchmarkTaskModule):
     """
 
     adapter_factory = GenericMathAdapter  # documentation; see _build_adapter
-    answer_hint = "답은 한 줄로만 적으십시오. 예: ANSWER: 42"
+    answer_hint = "Write the answer on one line only. Example: ANSWER: 42"
 
     def _build_adapter(self) -> DatasetAdapter:
         """Hand the loaded task config to the config-driven adapter."""
@@ -448,4 +448,4 @@ class HardMathTask(GenericMathTask):
     """
 
     name = "hard_math"
-    answer_hint = "답은 정수 하나입니다. 예: ANSWER: 42"
+    answer_hint = "The answer is a single integer. Example: ANSWER: 42"

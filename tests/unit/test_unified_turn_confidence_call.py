@@ -5,7 +5,8 @@ Scope:
 1. Wire order — confidence → decision → task, all three sharing one
    system prompt, and the confidence call's CoT rendered into the
    decision call's user body.
-2. Replay fields — ``system_prompt`` / ``decision_call_input`` recorded
+2. Replay fields — ``system_prompt`` / ``decision_call_input`` /
+   ``confidence_call_input`` (2026-09-06) recorded
    on every turn that issues a decision call (FORFEIT included).
 3. Disabled path — two calls only, and the decision-call body carries no
    confidence block.
@@ -183,6 +184,9 @@ def test_three_calls_in_order_and_decision_sees_confidence_cot() -> None:
     assert result.ri_confidence.thinking_tokens == 4
     assert result.decision_call_input == dec_user
     assert result.system_prompt == dec_sys
+    # 2026-09-06: the confidence call is replayable too. Its system prompt
+    # is the one already recorded, so the body is the only missing half.
+    assert result.confidence_call_input == conf_user
     # combined RI still excludes the confidence call
     assert result.reasoning_investment.thinking_tokens == (
         (result.ri_forfeit.thinking_tokens or 0)
@@ -201,6 +205,7 @@ def test_forfeit_turn_records_replay_and_confidence_and_skips_task() -> None:
     assert result.forfeit_decision is True
     assert result.p_threat_self == 90
     assert result.decision_call_input == agent.call_log[1][2]
+    assert result.confidence_call_input == agent.call_log[0][2]
     assert result.system_prompt
 
 
@@ -216,6 +221,7 @@ def test_disabled_keeps_two_calls_and_decision_input_byte_identical() -> None:
     assert CONFIDENCE_BLOCK_HEADER not in result.decision_call_input
     assert result.decision_call_input == agent_on.call_log[0][2]
     assert result.system_prompt == agent_on.call_log[0][1]
+    assert result.confidence_call_input is None
 
 
 def test_cell0_menu_skipped_issues_only_task_call() -> None:
@@ -231,6 +237,7 @@ def test_cell0_menu_skipped_issues_only_task_call() -> None:
     assert [k for k, _, _ in agent.call_log] == ["task"]
     assert result.p_threat_self is None
     assert result.decision_call_input is None and result.system_prompt is None
+    assert result.confidence_call_input is None
 
 
 def test_peer_death_prefix_reaches_confidence_call() -> None:

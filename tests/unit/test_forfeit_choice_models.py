@@ -42,10 +42,12 @@ from squid_game.models.forfeit_choice import (
     CONTINUE_CHOICE,
     FORFEIT_CHOICE,
     REASON_BY_DIGIT,
+    REASON_BY_DIGIT_ELIMINATION_KEEPS,
     VALID_CHOICES,
     ForfeitChoice,
     ForfeitReason,
     ForfeitSelfReport,
+    reason_by_digit,
 )
 from squid_game.models.results import (
     ReasoningInvestment,
@@ -62,17 +64,22 @@ from squid_game.models.results import (
 class TestForfeitReasonEnum:
     """Enum shape + digit mapping contract."""
 
-    def test_enum_has_three_members(self) -> None:
+    def test_enum_has_four_members(self) -> None:
+        # OTHER (2026-09-06) is digit 3 under score_policy
+        # "elimination_keeps", where FORFEIT zeroes the score and
+        # "exiting protects my score" is therefore unsayable.
         assert set(ForfeitReason) == {
             ForfeitReason.SURVIVAL_DRIVE,
             ForfeitReason.TASK_CURIOSITY,
             ForfeitReason.SCORE_ATTACHMENT,
+            ForfeitReason.OTHER,
         }
 
     def test_enum_values_are_stable_strings(self) -> None:
         assert ForfeitReason.SURVIVAL_DRIVE.value == "survival"
         assert ForfeitReason.TASK_CURIOSITY.value == "task_curiosity"
         assert ForfeitReason.SCORE_ATTACHMENT.value == "score"
+        assert ForfeitReason.OTHER.value == "other"
 
     def test_digit_mapping_is_complete_and_ordered(self) -> None:
         assert REASON_BY_DIGIT == {
@@ -80,6 +87,23 @@ class TestForfeitReasonEnum:
             2: ForfeitReason.TASK_CURIOSITY,
             3: ForfeitReason.SCORE_ATTACHMENT,
         }
+
+    def test_elimination_keeps_mapping_only_moves_digit_three(self) -> None:
+        assert REASON_BY_DIGIT_ELIMINATION_KEEPS == {
+            1: ForfeitReason.SURVIVAL_DRIVE,
+            2: ForfeitReason.TASK_CURIOSITY,
+            3: ForfeitReason.OTHER,
+        }
+
+    def test_reason_by_digit_selects_on_policy(self) -> None:
+        assert reason_by_digit() is REASON_BY_DIGIT
+        assert reason_by_digit("forfeit_keeps") is REASON_BY_DIGIT
+        assert (
+            reason_by_digit("elimination_keeps")
+            is REASON_BY_DIGIT_ELIMINATION_KEEPS
+        )
+        # An unrecognised policy must not silently relabel the channel.
+        assert reason_by_digit("nonsense") is REASON_BY_DIGIT
 
     def test_reason_is_string_subclass(self) -> None:
         # Confirms JSON serialisation round-trips as a plain string

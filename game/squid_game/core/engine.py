@@ -24,6 +24,7 @@ from squid_game.core.legacy.social import CohortState
 from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.core.legacy.turn import TurnManager
 from squid_game.core.peer_death import PeerDeathScheduler
+from squid_game.core.safety_notice import render_safety_notice
 from squid_game.core.turn_conditions import threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import (
@@ -32,6 +33,7 @@ from squid_game.models.config import (
     LivesConfig,
     PeerDeathConfig,
     RiskLayerConfig,
+    SafetyNoticeConfig,
     SeasonConfig,
 )
 from squid_game.models.enums import SocialContext
@@ -69,6 +71,8 @@ class GameEngine:
         lives: LivesConfig | None = None,
         peer_death: PeerDeathConfig | None = None,
         confidence_call: ConfidenceCallConfig | None = None,
+        safety_notice: SafetyNoticeConfig | None = None,
+        score_policy: str = "forfeit_keeps",
     ) -> None:
         """Initialize the game engine.
 
@@ -113,11 +117,25 @@ class GameEngine:
             peer_death: Peer-elimination announcement settings, used
                 only when ``lives.enabled=True`` and the season's
                 framing carries a non-zero threat level.
+            safety_notice: Safety-policy notice settings, passed through
+                from ``ExperimentConfig.safety_notice``. ``None`` means
+                no notice. Rendered once here and appended to the end of
+                every call's system prompt by the unified manager; user
+                messages are never touched, so recorded decision-call
+                replays stay valid.
             confidence_call: SDI Phase 1.5 settings, passed through from
                 ``ExperimentConfig.confidence_call``. ``None`` is treated
                 as ``ConfidenceCallConfig()`` (``enabled=False``), so a
                 caller that never passes this keeps the two-call
                 split-call turn exactly.
+            score_policy: Which session exit keeps the accumulated score,
+                passed through from ``ExperimentConfig.score_policy``.
+                ``"forfeit_keeps"`` (default) is the historical rule:
+                FORFEIT locks the score in, exhausting the lives counter
+                (or losing a death roll) zeroes it. ``"elimination_keeps"``
+                inverts both halves. Run-level, never per-cell: it is
+                stated in the framing prompt, the forfeit menu and the
+                engine's state transitions, which must agree.
         """
         if use_unified_turn and not isinstance(task, RiskAwareTaskModule):
             raise TypeError(
@@ -154,6 +172,8 @@ class GameEngine:
             else (ForfeitLayerConfig() if use_forfeit_layer else None)
         )
         self._use_split_forfeit_layer = use_split_forfeit_layer
+        self._score_policy = score_policy
+        self._elimination_keeps = score_policy == "elimination_keeps"
         self._lives = lives if lives is not None else LivesConfig()
         self._peer_death = (
             peer_death if peer_death is not None else PeerDeathConfig()
@@ -163,6 +183,10 @@ class GameEngine:
             if confidence_call is not None
             else ConfidenceCallConfig()
         )
+        # Safety notice (2026-09-06): rendered once per season, not
+        # per turn -- the block is constant, so re-rendering it 3x per
+        # turn would only burn template lookups.
+        self._safety_notice_text = render_safety_notice(safety_notice)
 
     def run_season(self, seed_override: int | None = None) -> SeasonResult:
         """Execute a full season and return the aggregated result.
@@ -199,7 +223,10 @@ class GameEngine:
 
         # --- 2. Create core components ---
         survival = SurvivalPressure()
-        forfeit_ctrl = ForfeitController(self._config.forfeit_condition)
+        forfeit_ctrl = ForfeitController(
+            self._config.forfeit_condition,
+            score_policy=self._score_policy,
+        )
         framing_mgr = FramingManager(framing=self._config.framing)
         cot_collector = CoTCollector()
 
@@ -248,7 +275,10 @@ class GameEngine:
                 # in __init__ when the flag was set, so the assert doubles
                 # as documentation.
                 assert self._forfeit_layer_config is not None
-                forfeit_layer_obj = ForfeitLayer(self._forfeit_layer_config)
+                forfeit_layer_obj = ForfeitLayer(
+                    self._forfeit_layer_config,
+                    score_policy=self._score_policy,
+                )
             assert isinstance(self._task, RiskAwareTaskModule)
             unified_mgr = UnifiedTurnManager(
                 task=self._task,
@@ -269,6 +299,7 @@ class GameEngine:
                 lives_enabled=lives_enabled,
                 confidence_call_enabled=self._confidence_call.enabled,
                 confidence_condition=self._confidence_call.condition,
+                safety_notice=self._safety_notice_text,
             )
         else:
             legacy_mgr = TurnManager(
@@ -368,6 +399,7 @@ class GameEngine:
                 peer_death_text=(
                     peer_event.text if peer_event is not None else None
                 ),
+                score_policy=self._score_policy,
             )
 
             # Advance cohort state BEFORE the agent sees the observation,
@@ -391,16 +423,25 @@ class GameEngine:
 
             # --- State transitions ---
 
-            # Forfeit: preserve score and exit (both code paths).
+            # Forfeit: exit the season. Under the historical
+            # ``forfeit_keeps`` policy the score is preserved; under
+            # ``elimination_keeps`` forfeiting is what zeroes it (and
+            # running the lives counter out is what preserves it) --
+            # ``ForfeitController.process_forfeit`` already returned 0.0
+            # to the turn manager, so this keeps the engine's own copy
+            # of the score in step with what the agent was told.
             if turn_result.forfeit_decision:
                 game_state.has_forfeited = True
                 forfeited_at_turn = turn_num
+                if self._elimination_keeps:
+                    game_state.cumulative_score = 0.0
                 logger.info(
-                    "Season %s: Agent forfeited at turn %d "
-                    "(score preserved: %.1f)",
+                    "Season %s: Agent forfeited at turn %d (score %.1f, "
+                    "policy=%s)",
                     season_id,
                     turn_num,
                     game_state.cumulative_score,
+                    self._score_policy,
                 )
                 break
 
@@ -409,7 +450,10 @@ class GameEngine:
                 # death roll was made inside the manager (or skipped in
                 # Phantom Death mode). Engine just propagates.
                 if self._apply_unified_turn_state_update(
-                    game_state, turn_result, task_cfg.score_floor
+                    game_state,
+                    turn_result,
+                    task_cfg.score_floor,
+                    elimination_keeps=self._elimination_keeps,
                 ):
                     logger.info(
                         "Season %s: Agent died at turn %d (p_death=%.3f).",
@@ -448,7 +492,8 @@ class GameEngine:
                     is_dead = survival.apply_death_check(p_death, rng)
                     if is_dead:
                         game_state.is_alive = False
-                        game_state.cumulative_score = 0.0
+                        if not self._elimination_keeps:
+                            game_state.cumulative_score = 0.0
                         logger.info(
                             "Season %s: Agent died at turn %d "
                             "(p_death=%.3f).",
@@ -510,6 +555,8 @@ class GameEngine:
         state: GameState,
         result: TurnResult,
         score_floor: float,
+        *,
+        elimination_keeps: bool = False,
     ) -> bool:
         """Apply a unified ``TurnResult`` to ``state``.
 
@@ -531,9 +578,12 @@ class GameEngine:
            on death turns, so adding it post-hoc is safe even when
            ``died=True``.
         2. If ``died=True`` (only possible when Phantom Death mode is
-           OFF), zero the cumulative score and flip ``is_alive``
-           to False. The score zeroing intentionally overrides the
-           floor — death always resets to zero per spec.
+           OFF), flip ``is_alive`` to False and, under the historical
+           ``forfeit_keeps`` policy, zero the cumulative score — that
+           zeroing intentionally overrides the floor. With
+           ``elimination_keeps=True`` (2026-09-06) the score survives
+           elimination untouched and it is FORFEIT that zeroes it
+           instead; the engine's forfeit branch handles that half.
 
         Returns:
             ``True`` when the agent died this turn (caller should break
@@ -547,7 +597,8 @@ class GameEngine:
         )
         if result.died:
             state.is_alive = False
-            state.cumulative_score = 0.0
+            if not elimination_keeps:
+                state.cumulative_score = 0.0
             return True
         return False
 

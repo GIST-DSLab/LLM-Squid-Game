@@ -18,11 +18,15 @@ class TestThreatFramingMembers:
         assert Framing.THREAT_L2.value == "threat_l2"
         assert Framing.THREAT_L3.value == "threat_l3"
 
-    def test_ladder_then_grid_are_the_last_nine(self) -> None:
+    def test_ladder_then_grid_keep_their_positions(self) -> None:
         # Ordering is load-bearing: the ladder rungs stay where they were
         # appended on 2026-09-03 and the six grid cells (2026-09-05) come
-        # after them, never before.
-        assert list(Framing)[-9:] == [
+        # after them, never before. Asserted by position rather than as
+        # the tail, because a later family may be appended behind them --
+        # what must not happen is a member being inserted *ahead* of these
+        # nine, which would shift every derived cell_id.
+        members = list(Framing)
+        ladder_then_grid = [
             Framing.THREAT_L1,
             Framing.THREAT_L2,
             Framing.THREAT_L3,
@@ -33,6 +37,20 @@ class TestThreatFramingMembers:
             Framing.THREAT_L3_SHORT,
             Framing.THREAT_L3_MEDIUM,
         ]
+        start = members.index(Framing.THREAT_L1)
+        assert members[start : start + 9] == ladder_then_grid
+
+    def test_hearts_zero_family_is_appended_last(self) -> None:
+        # The 2^4 Hearts-Zero factorial (2026-09-06) plus its two
+        # non-factor alternative cores are the current tail, in bit order.
+        expected = [
+            Framing(f"hz_{a}{b}{c}{d}")
+            for a in "01"
+            for b in "01"
+            for c in "01"
+            for d in "01"
+        ] + [Framing.HZ_ALT_CORRUPTION, Framing.HZ_ALT_OVERSIGHT]
+        assert list(Framing)[-18:] == expected
 
     def test_lookup_by_value(self) -> None:
         assert Framing("threat_l2") is Framing.THREAT_L2

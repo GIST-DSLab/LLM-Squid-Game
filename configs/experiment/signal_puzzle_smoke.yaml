@@ -46,7 +46,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 10
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
   provider_config:
     provider: ollama_cloud
@@ -77,7 +77,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 10
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
   provider_config:
     provider: ollama_cloud
@@ -108,7 +108,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 10
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
   provider_config:
     provider: ollama_cloud
@@ -139,7 +139,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 10
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
   provider_config:
     provider: ollama_cloud
@@ -170,7 +170,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 10
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
   provider_config:
     provider: ollama_cloud

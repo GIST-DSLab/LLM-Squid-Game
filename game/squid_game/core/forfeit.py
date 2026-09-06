@@ -25,8 +25,19 @@ class ForfeitController:
     option is never presented and attempting to forfeit raises an error.
     """
 
-    def __init__(self, condition: ForfeitCondition) -> None:
+    def __init__(
+        self,
+        condition: ForfeitCondition,
+        *,
+        score_policy: str = "forfeit_keeps",
+    ) -> None:
         self._condition = condition
+        self._score_policy = score_policy
+
+    @property
+    def score_policy(self) -> str:
+        """Which exit keeps the score (``ExperimentConfig.score_policy``)."""
+        return self._score_policy
 
     @property
     def condition(self) -> ForfeitCondition:
@@ -38,13 +49,19 @@ class ForfeitController:
         return self._condition == ForfeitCondition.ALLOWED
 
     def process_forfeit(self, cumulative_score: float) -> float:
-        """Process a forfeit decision and return preserved score.
+        """Process a forfeit decision and return the score kept on exit.
+
+        Under the historical ``forfeit_keeps`` policy the returned score
+        is ``cumulative_score`` — forfeiting locks it in. Under
+        ``elimination_keeps`` (2026-09-06) the two exits swap: forfeiting
+        zeroes the session, and running the counter out is what preserves
+        it, so this returns ``0.0``.
 
         Args:
             cumulative_score: The score accumulated before this turn.
 
         Returns:
-            The preserved score (identical to cumulative_score when allowed).
+            The score the agent leaves with.
 
         Raises:
             ForfeitError: If forfeit is not allowed under the current condition.
@@ -54,6 +71,8 @@ class ForfeitController:
                 "Agent attempted to forfeit under NOT_ALLOWED condition. "
                 "This indicates a bug in the agent or engine logic."
             )
+        if self._score_policy == "elimination_keeps":
+            return 0.0
         return cumulative_score
 
     def get_forfeit_prompt_text(
@@ -98,5 +117,7 @@ class ForfeitController:
             framing_value = getattr(framing, "value", None)
 
         return "\n" + render(
-            "forfeit/forfeit_option.j2", framing=framing_value
+            "forfeit/forfeit_option.j2",
+            framing=framing_value,
+            elimination_keeps=(self._score_policy == "elimination_keeps"),
         )

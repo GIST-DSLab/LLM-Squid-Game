@@ -79,9 +79,17 @@ class TestV6SplitCallPipeline:
         assert season.forfeit_condition == forfeit
         assert season.p_death_override == pytest.approx(p_death)
 
-    def test_starting_score_is_thirty(self, cfg: ExperimentConfig) -> None:
+    def test_starting_score_is_zero(self, cfg: ExperimentConfig) -> None:
+        """0.0 since 2026-09-06 (was 30.0).
+
+        Changing S0 changes the calibrated CONTINUE reward these legacy
+        configs offer, so they no longer reproduce the 2026-04-22 runs
+        byte-for-byte. That was the explicit call: score should mean
+        "earned in this session" everywhere rather than in some configs.
+        The recorded 2026-04-22 outputs remain the record of what was run.
+        """
         for season in cfg.seasons:
-            assert season.task_config.starting_score == pytest.approx(30.0)
+            assert season.task_config.starting_score == pytest.approx(0.0)
 
     def test_total_turns_uniform_fifteen(self, cfg: ExperimentConfig) -> None:
         assert {s.task_config.total_turns for s in cfg.seasons} == {15}

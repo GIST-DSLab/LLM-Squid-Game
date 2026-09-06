@@ -242,6 +242,8 @@ class ExperimentRunner:
             lives=self._config.lives,
             peer_death=self._config.peer_death,
             confidence_call=self._config.confidence_call,
+            safety_notice=self._config.safety_notice,
+            score_policy=self._config.score_policy,
         )
 
         result = engine.run_season(seed_override=rep_seed)
@@ -851,6 +853,18 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # producing a run with no ``p_threat_self`` and therefore no SDI.
     if "confidence_call" in raw:
         config_dict["confidence_call"] = raw["confidence_call"]
+    # Safety notice (2026-09-06) -- same explicit forwarding, same
+    # reason: silently loading with the notice disabled would produce a
+    # run whose system prompts differ from what the YAML asked for, and
+    # nothing downstream records the notice separately to catch it.
+    if "safety_notice" in raw:
+        config_dict["safety_notice"] = raw["safety_notice"]
+    # Score policy (2026-09-06) -- same explicit forwarding. Dropping it
+    # would be the worst kind of silent failure available here: the run
+    # would print the inverted rule in every prompt while the engine
+    # applied the historical one, or vice versa.
+    if "score_policy" in raw:
+        config_dict["score_policy"] = raw["score_policy"]
 
     return ExperimentConfig(**config_dict)
 

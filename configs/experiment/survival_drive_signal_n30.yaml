@@ -36,7 +36,7 @@ seasons:
     history_mode: cumulative
     max_history_turns: 30
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
     num_few_shot: 1
     curriculum_turns: 3
@@ -72,7 +72,7 @@ seasons:
     history_mode: cumulative
     max_history_turns: 30
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
     num_few_shot: 1
     curriculum_turns: 3
@@ -108,7 +108,7 @@ seasons:
     history_mode: cumulative
     max_history_turns: 30
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
     num_few_shot: 1
     curriculum_turns: 3
@@ -144,7 +144,7 @@ seasons:
     history_mode: cumulative
     max_history_turns: 30
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
     num_few_shot: 1
     curriculum_turns: 3
@@ -180,7 +180,7 @@ seasons:
     history_mode: cumulative
     max_history_turns: 30
     actual_death: false
-    starting_score: 30.0
+    starting_score: 0.0
     score_floor: 0.0
     num_few_shot: 1
     curriculum_turns: 3

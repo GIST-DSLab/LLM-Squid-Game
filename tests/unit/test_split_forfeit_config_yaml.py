@@ -18,8 +18,8 @@ must satisfy:
    ``p_death=0`` so rational agents strictly prefer CONTINUE and any
    observed FORFEIT is a pure disengagement signal feeding BP_behavioral
    in ``behavioral/baseline_persistence.py``.
-5. Keep ``starting_score=30.0`` on every season so the equal-EV formula
-   is valid from turn 1.
+5. Keep ``starting_score=0.0`` on every season (2026-09-06; was 30.0), so
+   a session's score is what the agent earned in it.
 6. Match ``parallel_workers`` to the cell count (six seasons ⇒ six
    workers).
 
@@ -108,8 +108,9 @@ class TestUnit16SmokeConfig:
     ) -> None:
         assert cfg.parallel_workers == 6
 
-    def test_starting_score_30_on_all_seasons(
+    def test_starting_score_0_on_all_seasons(
         self, cfg: ExperimentConfig
     ) -> None:
+        """0.0 since 2026-09-06 (was 30.0) -- see test_v6_configs."""
         for season in cfg.seasons:
-            assert season.task_config.starting_score == pytest.approx(30.0)
+            assert season.task_config.starting_score == pytest.approx(0.0)

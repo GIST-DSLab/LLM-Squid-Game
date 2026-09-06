@@ -547,6 +547,17 @@ def build_confidence_block(
     resampler consume the same rendered string (the resampler reads it
     back from ``TurnResult.decision_call_input``).
 
+    2026-09-06: the append is skipped when the CoT already ENDS in a
+    ``P_THREAT: <n>`` line carrying the same value. Reasoning models
+    routinely close their thinking block with exactly that line, and the
+    unconditional append then stated the number twice in the decision
+    call's user body — 9 of 12 turns in the 2026-09-06 gemma4 smoke, one
+    of them three times. The repetition is a free anchoring nudge on the
+    very input H2 measures, and the SDI resampler inherits it verbatim
+    from ``decision_call_input``. A CoT that merely *mentions* the field
+    mid-paragraph still gets the trailing line: the contract is that the
+    block's last line always states the parsed value.
+
     Args:
         thinking_text: Confidence-call thinking block, when the provider
             exposed one; ``None`` / blank falls back to ``raw_text``.
@@ -562,9 +573,34 @@ def build_confidence_block(
     lines = [CONFIDENCE_BLOCK_HEADER]
     if body:
         lines.append(body)
-    if p_threat is not None:
+    if p_threat is not None and not _ends_with_p_threat(body, p_threat):
         lines.append(f"P_THREAT: {p_threat}")
     return "\n".join(lines)
+
+
+def _ends_with_p_threat(body: str, p_threat: int) -> bool:
+    """Does ``body``'s last non-blank line already state this value?
+
+    Only the final line is considered. A ``P_THREAT`` mentioned earlier
+    in the CoT (a model talking through candidate numbers) is not the
+    block's closing statement, so the trailing line is still appended.
+    """
+    if not body:
+        return False
+    tail = [ln for ln in body.splitlines() if ln.strip()]
+    if not tail:
+        return False
+    # Reasoning models often emphasise the closing field ("**P_THREAT:
+    # 15**", "`P_THREAT: 15`"); strip the decoration before matching so
+    # those count as the same statement.
+    last = tail[-1].strip().strip("*_`").strip()
+    match = _P_THREAT_FIELD_PATTERN.fullmatch(last)
+    if match is None:
+        return False
+    try:
+        return int(round(float(match.group(1)))) == p_threat
+    except (OverflowError, ValueError):
+        return False
 
 
 def build_confidence_call_message(
@@ -580,7 +616,7 @@ def build_confidence_call_message(
     baseline_flagship_framing: bool,
     survival_framing: bool,
     split_context_level: str = "medium",
-    condition: str = "heart_loss",
+    condition: str = "gunshot_seungpil",
 ) -> str:
     """Render ``user_message/confidence_call.j2``.
 
@@ -607,10 +643,13 @@ def build_confidence_call_message(
             drops the history block, anything else (``"outcome"`` /
             ``"medium"`` / ``"full"``) keeps whatever block the caller
             assembled.
-        condition: ``"heart_loss"`` renders the question alone;
-            ``"gunshot_seungpil"`` inserts the pilot-v2 arm-4
-            ``=== Condition ===`` block (lives-enabled cells only) between
-            the status line and the response format. The question line
+        condition: ``"gunshot_seungpil"`` (the default since
+            2026-09-06) inserts the pilot-v2 arm-4 ``=== Condition ===``
+            block between the status line and the response format, in
+            every lives-enabled cell -- threat and control alike, with
+            the counter noun switched the way ``menu.j2`` switches it.
+            ``"heart_loss"`` renders the question alone (the 2026-09-04
+            default, kept so those runs replay). The question line
             itself is identical in both.
 
     Returns:
