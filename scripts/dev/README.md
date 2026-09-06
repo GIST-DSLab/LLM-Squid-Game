@@ -14,4 +14,3 @@ result depends on.
   `translate_trajectories.py`, `extract_probes_for_review.py`,
   `generate_manual_scores.py`, `merge_proxy_thinking.py` — one-off utilities
   used once for a specific task and kept for reference.
-- `calibrate_signal_puzzle_ladder.py` — prints the |H| quantiles per puzzle tier and the puzzle_ladder YAML block for `configs/tasks/signal_game.yaml`.

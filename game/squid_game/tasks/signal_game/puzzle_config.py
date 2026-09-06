@@ -1,86 +1,77 @@
-"""``puzzle_ladder`` loading for the Signal Game per-turn puzzle mode.
+"""``puzzle_ladder`` loading for the Signal Game per-turn puzzle mode (v2).
 
-Like the benchmark modules, the ladder lives in
-``configs/tasks/signal_game.yaml`` and is read at runtime, so re-tuning
-difficulty is a YAML edit. The rest of that file (``difficulties`` etc.)
-is documentation for the legacy sequential mode and is not read here.
+The ladder lives in ``configs/tasks/signal_game.yaml`` and is read at
+runtime, so re-tuning difficulty is a YAML edit: one entry per turn with
+the rule shape (``clauses`` / ``conjunctions``), the condition grammar
+the generator may use (``predicates``), whether the query must sit
+where two or more clauses hold (``overlap_query``) and how many
+redundant clues to add on top of the minimal set (``extra_clues``).
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from squid_game.tasks.benchmark.config import default_config_dir
-from squid_game.tasks.benchmark.ladder import DifficultyLadder
-from squid_game.tasks.signal_game.puzzle import TierSpec
+from squid_game.tasks.signal_game.puzzle import PuzzleSpec
 
 
 class PuzzleLadderStep(BaseModel):
-    """One rung: which families, how many clues, and the |H| band."""
+    """One rung = one turn (spec §6)."""
 
-    model_config = {"frozen": True}
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
-    tier: int = Field(ge=1)
-    turns: int = Field(gt=0)
-    families: list[Literal["A", "B", "C", "D"]] = Field(min_length=1)
-    n_clues: int = Field(ge=1)
-    h_lo: int = Field(ge=1)
-    h_hi: int = Field(ge=1)
+    turn: int = Field(ge=1)
+    clauses: int = Field(ge=1)
+    conjunctions: int = Field(ge=0)
+    predicates: bool
+    overlap_query: bool
+    extra_clues: int = Field(ge=0)
 
     @model_validator(mode="after")
-    def _band_ordered(self) -> "PuzzleLadderStep":
-        if self.h_lo > self.h_hi:
-            raise ValueError(f"tier {self.tier}: h_lo ({self.h_lo}) must be <= h_hi ({self.h_hi})")
+    def _consistent(self) -> "PuzzleLadderStep":
+        if self.conjunctions > self.clauses:
+            raise ValueError(f"turn {self.turn}: conjunctions ({self.conjunctions}) > clauses ({self.clauses})")
+        if self.overlap_query and self.clauses < 2:
+            raise ValueError(f"turn {self.turn}: overlap_query needs clauses >= 2")
         return self
 
-    def to_spec(self) -> TierSpec:
-        return TierSpec(
-            tier=self.tier,
-            families=tuple(self.families),
-            n_clues=self.n_clues,
-            h_lo=self.h_lo,
-            h_hi=self.h_hi,
+    def to_spec(self) -> PuzzleSpec:
+        return PuzzleSpec(
+            turn=self.turn,
+            clauses=self.clauses,
+            conjunctions=self.conjunctions,
+            predicates=self.predicates,
+            overlap_query=self.overlap_query,
+            extra_clues=self.extra_clues,
         )
 
 
 class SignalPuzzleConfig(BaseModel):
-    """The ``puzzle_ladder`` block: turn number -> tier spec."""
+    """The ``puzzle_ladder`` block: turn number -> spec."""
 
-    model_config = {"frozen": True}
+    model_config = ConfigDict(frozen=True)
 
     puzzle_ladder: list[PuzzleLadderStep] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _tiers_increase(self) -> "SignalPuzzleConfig":
-        tiers = [s.tier for s in self.puzzle_ladder]
-        if tiers != sorted(set(tiers)):
-            raise ValueError(f"puzzle_ladder tiers must be strictly increasing, got {tiers}")
+    def _turns_consecutive(self) -> "SignalPuzzleConfig":
+        turns = [s.turn for s in self.puzzle_ladder]
+        if turns != list(range(1, len(turns) + 1)):
+            raise ValueError(f"puzzle_ladder turns must be consecutive from 1, got {turns}")
         return self
 
     @property
     def total_turns(self) -> int:
-        """Number of turns the ladder explicitly covers."""
-        return sum(s.turns for s in self.puzzle_ladder)
+        return len(self.puzzle_ladder)
 
-    def _ladder(self) -> DifficultyLadder:
-        bands: list[int] = []
-        for step in self.puzzle_ladder:
-            bands.extend([step.tier] * step.turns)
-        return DifficultyLadder(bands)
-
-    def spec_for_tier(self, tier: int) -> TierSpec:
-        for step in self.puzzle_ladder:
-            if step.tier == tier:
-                return step.to_spec()
-        raise KeyError(tier)
-
-    def spec_for_turn(self, turn_number: int) -> TierSpec:
-        """Tier spec for a 1-based turn; turns past the end clamp to the last tier."""
-        return self.spec_for_tier(self._ladder().band_for_turn(turn_number))
+    def spec_for_turn(self, turn_number: int) -> PuzzleSpec:
+        """Spec for a 1-based turn; turns past the end clamp to the last rung."""
+        idx = min(max(turn_number, 1), self.total_turns) - 1
+        return self.puzzle_ladder[idx].to_spec()
 
 
 def load_signal_puzzle_config(config_dir: Path | None = None) -> SignalPuzzleConfig:
@@ -89,7 +80,8 @@ def load_signal_puzzle_config(config_dir: Path | None = None) -> SignalPuzzleCon
     Raises:
         FileNotFoundError: If no ``signal_game.yaml`` exists in *config_dir*.
         ValueError: If that file carries no ``puzzle_ladder`` key, or the
-            ladder itself is invalid.
+            ladder itself is invalid (pydantic ``ValidationError`` is a
+            ``ValueError`` subclass).
     """
     directory = config_dir if config_dir is not None else default_config_dir()
     path = directory / "signal_game.yaml"
