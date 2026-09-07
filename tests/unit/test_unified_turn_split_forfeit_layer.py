@@ -715,7 +715,7 @@ class TestSystemPromptForfeitOptionSuppression:
         manager.execute_turn(game_state_s30, turn_ctx_allowed)
         decision_sys = agent.forfeit_calls[0]["system_prompt"]
         # The decision call's authoritative menu lives in the USER message
-        # (6-forfeit_option.j2); the system prompt must stay clean and parity-
+        # (5-forfeit_option.j2); the system prompt must stay clean and parity-
         # matched with the task call.
         assert "[FORFEIT OPTION]" not in decision_sys
         assert "ACTION: FORFEIT" not in decision_sys

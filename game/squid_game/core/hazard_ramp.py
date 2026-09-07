@@ -3,7 +3,7 @@
 Name vs key
 -----------
 
-The template was renamed ``prompts/3-threat_section.j2`` on 2026-09-07
+The template was renamed ``prompts/2-threat_section.j2`` on 2026-09-07
 (the number is its slot in the assembled system prompt; see
 ``prompts/README.md``), but this module and its config block are still
 ``hazard_ramp`` / ``hazard_ramp:`` -- renaming the key would break every
@@ -87,7 +87,7 @@ Adding a variant
 ----------------
 
 Widen the ``{% if variant == ... %}`` gate in
-``prompts/3-threat_section.j2``, add the name to
+``prompts/2-threat_section.j2``, add the name to
 :data:`VARIANTS`, and widen the ``variant`` Literal on
 ``HazardRampConfig``. ``tests/unit/test_hazard_ramp.py`` pins the three
 together and pins each variant's word band.
@@ -112,7 +112,7 @@ __all__ = [
 ]
 
 #: Template carrying both variants, gated on the ``variant`` name.
-TEMPLATE: str = "3-threat_section.j2"
+TEMPLATE: str = "2-threat_section.j2"
 
 #: Known variant names. Keep in sync with the ``variant`` Literal on
 #: ``HazardRampConfig`` and with the gate inside :data:`TEMPLATE`.

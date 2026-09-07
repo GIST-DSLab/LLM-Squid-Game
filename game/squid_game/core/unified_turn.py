@@ -246,7 +246,7 @@ class UnifiedTurnManager:
         # inside _execute_turn_split_forfeit_layer, and only when the
         # forfeit menu is actually rendered (never on Cell 0).
         self._confidence_enabled = confidence_call_enabled
-        # Which narrative 4-confidence_call.j2 renders ahead of the P_THREAT
+        # Which narrative 3-confidence_call.j2 renders ahead of the P_THREAT
         # question ("heart_loss" = question only, "gunshot_seungpil" =
         # pilot-v2 arm 4 condition block). See ConfidenceCallConfig.
         self._confidence_condition = confidence_condition
@@ -815,7 +815,7 @@ class UnifiedTurnManager:
 
         # Unit 15 split-call: suppress the legacy ``forfeit_option.j2``
         # appendix from the system prompt (see ``_build_system_prompt``
-        # docstring). The decision call's ``6-forfeit_option.j2`` user-body carries
+        # docstring). The decision call's ``5-forfeit_option.j2`` user-body carries
         # the authoritative forfeit mechanism + framing-conditional
         # semantics, and the task call must stay free of forfeit
         # awareness per spec §3.3.

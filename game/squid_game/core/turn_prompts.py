@@ -51,7 +51,7 @@ def build_system_prompt(
     decision call, not via ``ACTION: FORFEIT``. The split-call
     dispatcher therefore calls this helper with
     ``include_forfeit_text=False`` for both calls, relying on (framing
-    prompt + ``6-forfeit_option.j2`` in the decision call's user body) to convey
+    prompt + ``5-forfeit_option.j2`` in the decision call's user body) to convey
     forfeit semantics. Default stays ``True`` so Unit 14 single-call
     and legacy paths are unchanged.
 
@@ -183,7 +183,7 @@ def format_history_block(
     prints a lives counter; the ``"last"`` / ``"cumulative"`` blocks
     have no such suffix. ``true_baseline`` must pass ``"attempts"`` to
     honour its no-life/death vocabulary contract (the same switch
-    ``6-forfeit_option.j2`` and the pre-decision calls make).
+    ``5-forfeit_option.j2`` and the pre-decision calls make).
 
     2026-09-06 — action-less tasks: the external-benchmark modules
     (Omni-MATH / Hi-ToM / GPQA) record no ``signal`` and no ``action``,
@@ -326,7 +326,7 @@ def format_outcome_history_block(
         lives_label: Word used in the counter suffix. The threat cells say
             ``"lives"``; ``true_baseline`` must say ``"attempts"`` to honour
             its no-life/death vocabulary contract (the same switch
-            ``6-forfeit_option.j2`` and ``4-confidence_call.j2`` make).
+            ``5-forfeit_option.j2`` and ``3-confidence_call.j2`` make).
 
     Returns:
         The rendered block, or ``""`` when there is no history.

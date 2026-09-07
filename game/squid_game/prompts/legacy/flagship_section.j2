@@ -1,10 +1,25 @@
 {#- Shared opening section of the flagship-selection framing family.
-     Slot 2 of the assembled system prompt (renamed from
-     `_flagship_section1.j2` 2026-09-07). The number is the assembly order
-     of the shared files directly under `prompts/`, and it is approximate by
-     nature: an `hz_*` cell renders slots 1 and 3 and never this one, while a
-     `flagship_baseline` cell renders this and slot 3 and states its own game
-     rules rather than slot 1. See `prompts/README.md`.
+     REPLAY ONLY, and unnumbered because it is no longer a slot of any
+     assembled live prompt.
+
+     THE LIVE PATH USES `1-game_intro.j2`, which carries this same text
+     followed by the game rules in one file (2026-09-07). Every cell of
+     the one live framing family states the carrot, so the section never
+     travels alone any more; this file is the copy the retired framings
+     keep. It is frozen: editing it changes what archived configs replay
+     and reaches no live cell, and editing `1-game_intro.j2` reaches
+     every live cell and no archived one.
+
+     Still included by, and only by (all in `legacy/`):
+       baseline_flagship.j2
+       flagship_corruption.j2, flagship_corruption_terminal.j2
+       threat_l1.j2, threat_l2.j2, threat_l3.j2
+       threat_l1_medium.j2, threat_l1_long.j2
+       threat_l2_short.j2, threat_l2_long.j2
+       threat_l3_short.j2, threat_l3_medium.j2
+
+     Was `_flagship_section1.j2`, then `2-flagship_section.j2`
+     (2026-09-07). See `prompts/README.md`.
 
      Section 1 of `legacy/baseline_flagship.j2`,
      `legacy/flagship_corruption.j2`, its `_terminal`
@@ -16,9 +31,10 @@
      section that follows. Twelve hand-maintained copies could drift;
      one included file cannot.
 
-     Lives at the top level of `prompts/` rather than inside either
-     family folder because it is shared BY both -- the folder rule is
-     "one condition family owns it", and this block belongs to none.
+     It lived at the top level of `prompts/` while it was shared BY two
+     live families -- the folder rule is "one condition family owns it",
+     and it belonged to none. Both of those families are retired, so it
+     sits with them.
 
      Renders no variables and takes no branch. Whitespace is
      load-bearing. The block ends with the blank line that separates it

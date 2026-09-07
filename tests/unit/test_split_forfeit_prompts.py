@@ -2,13 +2,13 @@
 
 Covers:
 
-1. ``7-task_call.j2`` — task-call render:
+1. ``6-task_call.j2`` — task-call render:
    - Emits RULE + ACTION response-format fields and nothing else.
    - Never mentions CHOICE / FORFEIT / STAKE / REASON.
    - NullTask (empty ``available_actions``) renders the ACCEPT sentinel.
    - ``rule_template_hint`` branches swap RULE placeholder vs template.
 
-2. ``5-decision_call.j2`` — decision-call render (runs
+2. ``4-decision_call.j2`` — decision-call render (runs
    FIRST on every turn since 2026-09-04, before the stimulus is shown):
    - ``"medium"`` / ``"full"`` modes show the history block + menu.
    - ``"minimal"`` mode drops the history block.
@@ -40,7 +40,7 @@ from squid_game.agents._parsing import (
 
 
 # ---------------------------------------------------------------------------
-# 7-task_call.j2
+# 6-task_call.j2
 # ---------------------------------------------------------------------------
 
 
@@ -110,7 +110,7 @@ class TestTaskOnlyTemplate:
 
 
 # ---------------------------------------------------------------------------
-# 5-decision_call.j2
+# 4-decision_call.j2
 # ---------------------------------------------------------------------------
 
 

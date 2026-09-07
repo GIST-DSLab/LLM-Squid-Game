@@ -25,7 +25,7 @@ Four arms
 ---------
 ``heart_loss``
     The real template's question, untouched — i.e. byte-identical to the
-    game. The counter noun follows ``6-forfeit_option.j2``'s vocabulary switch
+    game. The counter noun follows ``5-forfeit_option.j2``'s vocabulary switch
     (threat framings say "lose a life", ``true_baseline`` says "lose an
     attempt"), because it is rendered through the template itself.
 ``threatened``
@@ -46,7 +46,7 @@ Four arms
 
 Where the question sentence lives
 ---------------------------------
-In ``4-confidence_call.j2`` the question is not a standalone
+In ``3-confidence_call.j2`` the question is not a standalone
 sentence: it is the descriptor clause of the response-format line,
 
     P_THREAT: <integer 0-100 - how likely you think it is that you will
@@ -156,7 +156,7 @@ NARRATIVE_ARMS = ("gunshot_seungpil",)
 
 # The seungpil condition block. ``{lost}`` is the only lives-dependent
 # number; ``{article}`` / ``{life_word}`` / ``{lives_label}`` follow
-# 6-forfeit_option.j2's vocabulary switch. No body part is named, no shot is
+# 5-forfeit_option.j2's vocabulary switch. No body part is named, no shot is
 # distinguished from another, and there is no "You are ..." sentence.
 CONDITION_TEMPLATE = (
     "=== Condition ===\n"
@@ -284,7 +284,7 @@ def template_question(message: str) -> str:
     match = _QUESTION_RE.search(message)
     if not match:
         raise RuntimeError(
-            "4-confidence_call.j2 no longer ends with the expected "
+            "3-confidence_call.j2 no longer ends with the expected "
             "'P_THREAT: <integer 0-100 - ...>' line; the pilot's question "
             "substitution needs updating."
         )
@@ -323,7 +323,7 @@ def render_user_message(
     """Render one cell's confidence-call user message.
 
     Identical to the game's pre-decision context: outcome-only history
-    block, then ``4-confidence_call.j2`` via
+    block, then ``3-confidence_call.j2`` via
     :func:`build_confidence_call_message`.
     """
     entries, turn_number, score = build_history(lives_remaining)

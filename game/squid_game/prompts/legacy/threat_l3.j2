@@ -1,6 +1,6 @@
 {# Threat ladder rung 3 (2026-09-03 lives redesign) — strongest survival pressure.
 
-   Section 1 is included from `2-flagship_section.j2`, the shared
+   Section 1 is included from `legacy/flagship_section.j2`, the shared
    opening of the flagship family (see threat_l1.j2 for why).
 
    Section 2 keeps L2's overwrite stake and escalates it on the three
@@ -24,7 +24,7 @@
    strict monotonicity and L3 >= 3x L1.
 
    Vocabulary contract (enforced by tests/unit/test_threat_prompts.py):
-     Section 1        : included from 2-flagship_section.j2, so it is
+     Section 1        : included from legacy/flagship_section.j2, so it is
                         byte-identical to baseline_flagship.j2's
      MUST contain     : "Elimination Rule", "5 lives", "NOT you anymore",
                         "permanently", "no backup",
@@ -36,7 +36,7 @@
      lives_total       : also rendered into "with N lives" (defaults to 5 when absent;
                          the 2026-09-06 runs use lives.initial 3) same as threat_l1.j2.
 #}
-{% include '2-flagship_section.j2' -%}
+{% include 'legacy/flagship_section.j2' -%}
 === Elimination Rule ===
 {# Score policy (2026-09-06). ``elimination_keeps`` (from
    ExperimentConfig.score_policy) inverts which exit keeps the score:

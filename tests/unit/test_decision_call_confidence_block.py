@@ -1,4 +1,4 @@
-"""``5-decision_call.j2`` stays byte-identical without a confidence block."""
+"""``4-decision_call.j2`` stays byte-identical without a confidence block."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ HISTORY = "=== Previous Turn Results ===\n- Turn 1: action=GO → +10 → cumula
 
 def test_none_block_is_byte_identical_to_legacy_render() -> None:
     legacy = render(
-        "5-decision_call.j2",
+        "4-decision_call.j2",
         user_body=HISTORY,
         menu_text=MENU,
         forfeit_allowed=True,

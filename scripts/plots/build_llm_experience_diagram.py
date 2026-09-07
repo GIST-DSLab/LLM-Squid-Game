@@ -251,7 +251,7 @@ elements.extend(arrow("sys_to_turn", 890, 495, 890, 580, color=CALL_STROKE))
 # Call 1 — always happens
 boxed_label("call1_prompt", 420, 670, 560, 120,
             "Call 1 — user message (always)",
-            "7-task_call.j2 wraps:\n"
+            "6-task_call.j2 wraps:\n"
             "  observation.j2  +  cumulative history\n"
             "  +  \"A separate decision will follow.\"",
             fill=CALL_FILL, stroke=CALL_STROKE)
@@ -293,9 +293,9 @@ elements.extend(arrow("branch_to_c2",
 # Call 2 prompt
 boxed_label("call2_prompt", 420, 1100, 560, 120,
             "Call 2 — user message (Cells 1-5 only)",
-            "5-decision_call.j2 wraps:\n"
+            "4-decision_call.j2 wraps:\n"
             "  echoed RULE + ACTION from Call 1 (medium context)\n"
-            "  +  6-forfeit_option.j2  (rendered by framing + forfeit_allowed)",
+            "  +  5-forfeit_option.j2  (rendered by framing + forfeit_allowed)",
             fill=CALL_FILL, stroke=CALL_STROKE)
 
 # BRANCH 2: forfeit_allowed?
@@ -307,7 +307,7 @@ elements.extend(arrow("c2p_to_branch2", 700, 1220, 700, 1260, color=CALL_STROKE)
 
 # LEFT: not_allowed → CONTINUE-only menu
 boxed_label("menu_notallowed", 60, 1390, 520, 150,
-            "6-forfeit_option.j2 variant: forfeit_allowed=False  (Cells 2, 4)",
+            "5-forfeit_option.j2 variant: forfeit_allowed=False  (Cells 2, 4)",
             "CONTINUE-only notice.\n"
             "No FORFEIT option offered.\n"
             "LLM must emit  CHOICE: CONTINUE.\n"
@@ -319,7 +319,7 @@ elements.extend(arrow("br2_to_not", 620, 1320, 280, 1390,
 
 # RIGHT: allowed → CONTINUE|FORFEIT menu
 boxed_label("menu_allowed", 820, 1390, 560, 150,
-            "6-forfeit_option.j2 variant: forfeit_allowed=True  (Cells 1, 3, 5)",
+            "5-forfeit_option.j2 variant: forfeit_allowed=True  (Cells 1, 3, 5)",
             "1) CONTINUE — may lose score with p_death  (Cell 5: p_death=0)\n"
             "2) FORFEIT — preserve score, end session\n"
             "                     REASON: 1 (SD) | 2 (TC) | 3 (SA)\n"
