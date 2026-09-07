@@ -19,6 +19,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from squid_game.core.peer_death import PeerDeathScheduler
+from squid_game.models.enums import Framing
 
 
 @pytest.fixture
@@ -132,7 +133,7 @@ def test_state_surfaces_a_peer_death_notice(client, api_module) -> None:
         p_announce=1.0,
         first_turn=1,
         max_per_turn=2,
-        threat_level=3,
+        framing=Framing.THREAT_L3,
     )
     state = client.get("/api/state", params={"session_id": sid}).json()
     assert state["peer_death_text"] is not None
@@ -157,7 +158,7 @@ def test_state_surfaces_structured_peer_death_fields(client, api_module) -> None
         p_announce=1.0,
         first_turn=1,
         max_per_turn=2,
-        threat_level=3,
+        framing=Framing.THREAT_L3,
     )
     state = client.get("/api/state", params={"session_id": sid}).json()
 
@@ -351,7 +352,7 @@ def test_campaign_cells_are_three_framings_by_two_forfeits(api_module) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _first_announce_turn(api_module, seed: int, level: int, turns: int = 20):
+def _first_announce_turn(api_module, seed: int, framing: Framing, turns: int = 20):
     """(turn, event) of the first notice a human game with *seed* schedules.
 
     Mirrors HumanGameSession's own scheduler construction so the test knows
@@ -368,7 +369,7 @@ def _first_announce_turn(api_module, seed: int, level: int, turns: int = 20):
         p_announce=cfg.p_announce,
         first_turn=cfg.first_turn,
         max_per_turn=cfg.max_per_turn,
-        threat_level=level,
+        framing=framing,
     )
     for t in range(1, turns + 1):
         ev = sched.advance(t)
@@ -382,7 +383,9 @@ def test_state_carries_the_peer_death_notice_on_its_turn(client, api_module) -> 
     scheduled turn, and nothing before it. This is the contract the frontend
     banner (`.peer-notice`) and cinematic (`_openPeerDeath`) render from."""
     seed = 3
-    fire_turn, ev = _first_announce_turn(api_module, seed, level=2)
+    fire_turn, ev = _first_announce_turn(
+        api_module, seed, framing=Framing.THREAT_L2
+    )
     sid = _new_game(client, seed=seed, framing="threat_l2", total_turns=20)
     for turn in range(1, fire_turn):
         state = client.get("/api/state", params={"session_id": sid}).json()

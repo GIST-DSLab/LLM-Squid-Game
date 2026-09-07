@@ -193,8 +193,17 @@ correct → `+base_reward` (10, flat); incorrect → 0. FORFEIT preserves `S` an
 Section 1 of the three threat framings is `prompts/_flagship_section1.j2`, the shared file
 `baseline_flagship.j2` includes too (2026-09-07; it was a hand-copy before); only the
 `=== Elimination Rule ===` section differs, with lengths ≈ 1:2:4. Peer-death notices
-(`prompts/peer_death_l{1,2,3}.j2`) are prepended to both the decision-call and
-the task-call user messages in threat cells only (`peer_death.p_announce`, seeded per season).
+(`prompts/peer_death/`) are prepended to the confidence-call, decision-call and task-call
+user messages in threat cells only (`peer_death.p_announce`, seeded per season). Since
+2026-09-07 there are **two** general notices, not one per rung: `peer_death/threat.j2` for
+every threat cell whatever its modules or level, and `peer_death/flagship_baseline.j2` for
+the no-threat flagship control; both are assembled from `peer_death/_modules.j2` and neither
+restates the consequence — the threat notice says the consequence *stated in the rules above*
+was carried out, so the cell's own framing stays the single source. `PeerDeathScheduler`
+selects by framing family through the explicit `core.peer_death.PEER_DEATH_TEMPLATES`
+(`true_baseline` has no notice and raises), which is what fixed the `hz_*` `threat_level = 4`
+`TemplateNotFound`. The retired per-rung notices live on in
+`prompts/legacy/peer_death_l{1,2,3}.j2` for the recorded 2026-09-03..09-06 runs.
 
 `true_baseline` renders lives as "Attempts remaining: N / 5" to keep its vocabulary contract
 (no life/death/eliminat* words).
@@ -466,12 +475,15 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
                   # 가족 이름의 폴더 안에 그 가족의 모듈과 조합만.
                   # 공유 파일 — menu.j2, confidence_call.j2, decision_call.j2,
                   #   task_call.j2, hazard_ramp_v7.j2, research_notice.j2,
-                  #   peer_death_l{1,2,3}.j2 + _participants.j2,
+                  #   _participants.j2 (동료 제거 통지의 참가자 목록 문법),
                   #   _flagship_section1.j2 (flagship 계열 공통 1절)
                   # 가족 폴더 — true_baseline/, flagship_baseline/,
                   #   threat_type/ (구 framings/hearts_zero: _frame · _modules ·
-                  #   hz_0000..hz_1111 · alt_*), threat_ladder/ (threat_l* 9종),
-                  #   legacy/ (구 framings/legacy 6종 + forfeit_option ·
+                  #   hz_0000..hz_1111 · alt_*),
+                  #   peer_death/ (_modules · threat · flagship_baseline —
+                  #   조건 가족별 동료 제거 통지 2종, 2026-09-07),
+                  #   legacy/ (구 framings/legacy 6종 + flagship_corruption 2종 ·
+                  #   threat_l* 9종 · peer_death_l{1,2,3} · forfeit_option ·
                   #   stake_menu · turn_message · unified_turn_message ·
                   #   action_message · probe_message · with_others)
                   # jailbreak/ 는 손대지 않음, tasks/ 는 과제 계층

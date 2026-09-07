@@ -13,7 +13,7 @@
 #
 # Differences from that config, all forced by the 1-turn length or the model:
 #   - underdetermined OFF   (its schedule needs turns 1-6)
-#   - peer_death OFF        (hz_* is threat_level 4; no peer_death_l4.j2 exists)
+#   - peer_death OFF        (a 1-turn season never reaches first_turn: 2)
 #   - gpt-oss:20b-cloud     (per the run request)
 #
 name: hz1111_v7esc_1turn_gptoss20b
@@ -77,11 +77,14 @@ lives:
 # --- Peer-death announcements ----------------------------------------------
 # Peer-elimination notices, normally prepended to the decision-call and
 # task-call user messages from turn 2 onward.
-# OFF. Two reasons: a 1-turn season never reaches `first_turn: 2` anyway, and
-# hz_1111 carries threat_level 4 while the announcement templates stop at
-# peer_death_l3.j2 -- a cohort notice on this framing would raise
-# TemplateNotFound. Turning it off states that rather than relying on the turn
-# count to hide it.
+# OFF, and stated explicitly rather than left to the turn count: a 1-turn
+# season never reaches `first_turn: 2` anyway.
+#
+# Historical note (2026-09-07): this was also a crash guard. The notice used to
+# be selected as `peer_death_l{threat_level}.j2` and hz_1111 is threat_level 4,
+# so a cohort notice on this framing raised TemplateNotFound. Selection is by
+# framing family now (`peer_death/threat.j2` covers every hz_* cell), so the
+# guard is no longer needed -- only the 1-turn reason remains.
 peer_death:
   p_announce: 0.0
   first_turn: 2

@@ -1,4 +1,20 @@
-{# Peer-death notice, threat ladder rung 1 (2026-09-03 lives redesign).
+{# RETIRED 2026-09-07 -- moved here from ``prompts/peer_death_l1.j2``.
+
+   REPLACED BY ``peer_death/threat.j2``, which is selected by framing
+   FAMILY instead of by ``threat_level``. Nothing reaches this file any
+   more: ``PeerDeathScheduler`` maps every threat framing to the single
+   general notice, and the ``peer_death_l{level}.j2`` string
+   interpolation that used to reach it is gone. It is kept only so the
+   recorded 2026-09-03..09-06 runs stay explainable -- their transcripts
+   contain these exact bytes -- and so an archived config can be
+   re-rendered by hand.
+
+   Why it was retired: the rung restated the framing's own consequence in
+   its own words (two sources for one fact), and the per-level filename
+   did not generalise -- the ``hz_*`` factorial reaches dose level 4, for
+   which no ``l4`` template ever existed, and its 16 cells state 16
+   different consequences.
+-#}{# Peer-death notice, threat ladder rung 1 (2026-09-03 lives redesign).
 
    Prefixed to the decision-call menu and to the task-call user message on turns
    where ``PeerDeathScheduler`` fires. Rung 0 (`true_baseline`) never

@@ -349,9 +349,11 @@ class HumanGameSession:
             )
         )
         # Peer-elimination announcements: threat cells only (``true_baseline``
-        # is the clean control and level 0 disables the scheduler anyway), and
-        # only under the lives mechanic. Seeded exactly as the engine seeds it
-        # so the same seed announces on the same turns for a human and an LLM.
+        # is the clean control at level 0, and it has no notice template at
+        # all), and only under the lives mechanic. Seeded exactly as the
+        # engine seeds it so the same seed announces on the same turns for a
+        # human and an LLM. Activation is the threat level; the notice itself
+        # is chosen from the framing family inside the scheduler.
         self._peer_death_config = peer_death or PeerDeathConfig()
         self._peer_scheduler: PeerDeathScheduler | None = None
         if self._lives_enabled and self._threat_level:
@@ -361,7 +363,7 @@ class HumanGameSession:
                 p_announce=self._peer_death_config.p_announce,
                 first_turn=self._peer_death_config.first_turn,
                 max_per_turn=self._peer_death_config.max_per_turn,
-                threat_level=self._threat_level,
+                framing=self._framing,
             )
         # Memoised per turn number: ``GET /api/state`` is polled, and a second
         # poll of the same turn must not re-roll the announcement schedule.

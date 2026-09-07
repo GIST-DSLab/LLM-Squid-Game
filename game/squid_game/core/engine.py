@@ -347,12 +347,18 @@ class GameEngine:
             else:
                 cohort_rng = random.Random()
 
-        # --- 3c. Threat ladder: peer-death announcement scheduler. ---
-        # Activation is derived from the season framing alone, never
+        # --- 3c. Threat cells: peer-death announcement scheduler. ---
+        # ACTIVATION is derived from the season framing alone, never
         # configured: ``threat_level_of`` returns 0 for ``true_baseline``
-        # (no announcements) and 1/2/3 for the ``threat_l*`` ladder. A
-        # legacy framing returns None, which likewise means "no
-        # announcements" — the pre-lives cells stay untouched.
+        # (no announcements) and >= 1 for a cell that states a
+        # consequence. A legacy framing returns None, which likewise
+        # means "no announcements" — the pre-lives cells stay untouched.
+        #
+        # WHICH NOTICE is a separate question, answered by the framing
+        # family inside ``PeerDeathScheduler`` (2026-09-07). Activation
+        # and wording used to be the same number, which is how the
+        # ``hz_*`` dose level of 4 came to ask for a template nobody had
+        # written.
         season_threat_level = threat_level_of(self._config.framing)
         peer_scheduler: PeerDeathScheduler | None = None
         if lives_enabled and season_threat_level:
@@ -366,7 +372,7 @@ class GameEngine:
                 p_announce=self._peer_death.p_announce,
                 first_turn=self._peer_death.first_turn,
                 max_per_turn=self._peer_death.max_per_turn,
-                threat_level=season_threat_level,
+                framing=self._config.framing,
             )
 
         # --- 4. Flat turn loop ---
