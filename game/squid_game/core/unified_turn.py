@@ -334,7 +334,12 @@ class UnifiedTurnManager:
             forfeit_ctrl=self._forfeit_ctrl,
             hazard_ramp=self._hazard_ramp,
         )
-        menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
+        # Legacy Risk-Choice-Layer path: ``always_decide`` is a
+        # forfeit-layer knob and there is no forfeit layer here, so the
+        # historical skip rule applies unconditionally.
+        menu_skipped = should_skip_menu(
+            base_p_death, forfeit_allowed, always_decide=False
+        )
 
         if menu_skipped:
             stake_menu_text = ""
@@ -784,6 +789,14 @@ class UnifiedTurnManager:
         single task call that produces an auto-CONTINUE outcome, keeping
         backward comparability with Unit 14 Cell 0. The split-specific
         fields (``ri_forfeit`` etc.) stay ``None`` on that branch.
+
+        ``ForfeitLayerConfig.always_decide`` (2026-09-07) turns that
+        branch off: a blocked cell then runs the same three calls as an
+        allowed one and records the same fields, but its menu holds the
+        CONTINUE option alone. The recorded CHOICE is therefore not a
+        choice; ``ri_forfeit`` is what the cell is for. Defaults to
+        False, so every config written before that date still takes the
+        degenerate branch.
         """
         assert self._forfeit_layer is not None  # dispatcher guarantee
         assert self._use_split_forfeit_layer  # dispatcher guarantee
@@ -835,7 +848,11 @@ class UnifiedTurnManager:
             risk_layer=self._risk_layer,
             stake_history=self._stake_history,
         )
-        menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
+        menu_skipped = should_skip_menu(
+            base_p_death,
+            forfeit_allowed,
+            always_decide=self._forfeit_layer.config.always_decide,
+        )
         if menu_skipped:
             # Degenerate: no meaningful choice, so the decision call is
             # skipped. Produce a Unit-14-shaped CONTINUE result with
@@ -966,6 +983,7 @@ class UnifiedTurnManager:
                 or is_threat_framing(turn_context.framing)
             ),
             threat_level=turn_context.threat_level,
+            always_decide=self._forfeit_layer.config.always_decide,
         )
         split_ctx = self._forfeit_layer.config.split_context_level
         # Under ``medium`` / ``full`` the agent sees the cumulative
@@ -1095,6 +1113,7 @@ class UnifiedTurnManager:
             forfeit_allowed=forfeit_allowed,
             split_context_level=split_ctx,
             confidence_block=confidence_block,
+            always_decide=self._forfeit_layer.config.always_decide,
         )
         # The peer-elimination notice is prefixed verbatim to BOTH calls
         # so the threat is present while the agent decides AND while it

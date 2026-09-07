@@ -411,6 +411,35 @@ class ForfeitLayerConfig(BaseModel):
             "else. Ignored when ``use_split_forfeit_layer`` is False."
         ),
     )
+    always_decide: bool = Field(
+        default=False,
+        description=(
+            "2026-09-07 control — does a forfeit-blocked cell still run "
+            "the decision call? When False (the default, legacy "
+            "behaviour) ``should_skip_menu`` collapses a cell with "
+            "``forfeit_condition: not_allowed`` AND ``p_death == 0`` "
+            "into a single task call: no confidence call, no decision "
+            "call, ``ri_forfeit``/``p_threat_self`` never recorded. That "
+            "is the historical Cell-0 anchor. When True the full "
+            "three-call turn runs in those cells too, and the decision "
+            "call shows a menu holding the CONTINUE option alone — no "
+            "FORFEIT option, no REASON digit block, and no sentence "
+            "naming an exit anywhere in the body (the flag also selects "
+            "the one-option wording in ``5-forfeit_option.j2`` and "
+            "``4-decision_call.j2``, so a cell that cannot leave is "
+            "never told leaving exists). The recorded CHOICE then "
+            "carries no information by construction; what the cell "
+            "measures is ``ri_forfeit`` — the thinking spent "
+            "deliberating with no way out — against the same quantity "
+            "in the cells where forfeiting is possible. The SDI "
+            "resampler skips these turns: "
+            "``behavioral.survival_drive._is_target`` requires "
+            "``forfeit_condition == 'allowed'``, so a one-option menu "
+            "never reports a degenerate ``q = 0``. Ignored when "
+            "``use_split_forfeit_layer`` is False — the legacy "
+            "single-call paths keep their own skip behaviour."
+        ),
+    )
     chain_psuccess_to_menu: bool = Field(
         default=False,
         description=(

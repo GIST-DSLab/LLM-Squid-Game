@@ -478,6 +478,7 @@ def build_decision_call_message(
     forfeit_allowed: bool,
     split_context_level: str = "medium",
     confidence_block: Optional[str] = None,
+    always_decide: bool = False,
 ) -> str:
     """Render the decision-call (forfeit layer) user message.
 
@@ -514,6 +515,12 @@ def build_decision_call_message(
             :func:`build_confidence_block`; ``None`` (the default)
             renders nothing and keeps the message byte-identical to a
             run without the confidence call.
+        always_decide: ``ForfeitLayerConfig.always_decide``
+            (2026-09-07). Read only when ``forfeit_allowed`` is False,
+            where it selects the framing sentence that names no exit —
+            the blocked cell under that flag must never be told an exit
+            exists. ``False`` (the default) keeps the legacy sentence,
+            so every pre-2026-09-07 render is byte-identical.
 
     Returns:
         Fully rendered decision-call user-message string.
@@ -526,6 +533,7 @@ def build_decision_call_message(
         menu_text=menu_text,
         forfeit_allowed=forfeit_allowed,
         confidence_block=confidence_block,
+        always_decide=always_decide,
     )
 
 

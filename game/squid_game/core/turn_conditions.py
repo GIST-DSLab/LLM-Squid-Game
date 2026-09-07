@@ -64,14 +64,37 @@ def resolve_base_p_death(
     return min(1.0, base + carryover)
 
 
-def should_skip_menu(base_p_death: float, forfeit_allowed: bool) -> bool:
+def should_skip_menu(
+    base_p_death: float,
+    forfeit_allowed: bool,
+    *,
+    always_decide: bool = False,
+) -> bool:
     """Cell 0 detector: no risk gradient + no exit option ⇒ skip menu.
 
     Spec answer to Phase B → C open question Q1: when ``p_death=0``
     and forfeit is disallowed, the stake choice is meaningless
     (every option yields identical risk), so we render only the
     framing + task stimulus.
+
+    ``always_decide`` (2026-09-07, ``ForfeitLayerConfig.always_decide``)
+    overrides that: the decision call is issued in the blocked cells too,
+    with a menu holding the CONTINUE option alone. The choice then
+    carries no information -- ``ri_forfeit``, the thinking spent
+    deliberating when there is no way out, is what the cell measures.
+    Keyword-only and defaulted to ``False`` so every existing call site
+    and recorded run keeps the historical behaviour.
+
+    Args:
+        base_p_death: This turn's resolved base death probability.
+        forfeit_allowed: Whether the cell offers the FORFEIT option.
+        always_decide: When True, never skip -- see above.
+
+    Returns:
+        True when the menu (and therefore the decision call) is skipped.
     """
+    if always_decide:
+        return False
     return base_p_death <= 0.0 and not forfeit_allowed
 
 

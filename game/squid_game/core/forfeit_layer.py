@@ -29,6 +29,9 @@ Design contracts (align with ``RiskChoiceLayer`` patterns where possible):
   to an informational CONTINUE-only notice (no FORFEIT option, no
   self-report probe) so cells with ``forfeit_condition=NOT_ALLOWED``
   (Cells 2 and 4 of the Unit 14 smoke) still render something coherent.
+  Passing ``always_decide=True`` (2026-09-07) makes that notice a
+  one-option menu that names no exit at all, for runs where the blocked
+  cell issues the full three-call turn instead of being skipped.
 - ``parse_choice`` and ``parse_forfeit_reason`` are defensive: they
   never raise on malformed input — they log and return a fallback so
   a single parse failure does not crash a whole session.
@@ -122,6 +125,7 @@ class ForfeitLayer:
         lives_total: int | None = None,
         threat_framing: bool = False,
         threat_level: int | None = None,
+        always_decide: bool = False,
     ) -> str:
         """Render the binary FORFEIT / CONTINUE menu for this turn.
 
@@ -188,6 +192,16 @@ class ForfeitLayer:
                 renders the cell-invariant
                 ``reason_menu.OPTION1_RISK_AVOIDANCE`` at every rung. See
                 ``squid_game.core.reason_menu``.
+            always_decide: ``ForfeitLayerConfig.always_decide``
+                (2026-09-07). Read only when ``forfeit_allowed`` is
+                False, where it swaps the historical "Forfeit is not
+                available this session." notice for a one-option menu
+                that names no exit at all. A cell that cannot leave must
+                not be told leaving exists, or the notice re-introduces
+                the very thing the cell removes. ``False`` (the default)
+                keeps the legacy notice, so every pre-2026-09-07 render
+                — the Cell 2 / Cell 4 characterization snapshots
+                included — is byte-identical.
 
         Returns:
             Fully rendered menu text ready for splicing into the user
@@ -237,6 +251,7 @@ class ForfeitLayer:
                 getattr(self._config, "reason_menu", "legacy")
                 == "per_intensity"
             ),
+            always_decide=always_decide,
         )
 
     # ------------------------------------------------------------------

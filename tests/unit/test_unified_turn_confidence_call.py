@@ -10,7 +10,9 @@ Scope:
    on every turn that issues a decision call (FORFEIT included).
 3. Disabled path — two calls only, and the decision-call body carries no
    confidence block.
-4. Cell 0 (menu skipped) — no confidence call, no replay fields.
+4. Cell 0 (menu skipped) — no confidence call, no replay fields; and
+   its ``always_decide`` counterpart, where the same blocked cell does
+   issue all three.
 5. Peer-death notice prefixes the confidence call as well as the
    decision call.
 """
@@ -113,6 +115,7 @@ def _manager(
     enabled: bool = True,
     lives: bool = True,
     condition: str = "heart_loss",
+    always_decide: bool = False,
 ) -> UnifiedTurnManager:
     measurement = MeasurementRecorder(output_path=None)
     return UnifiedTurnManager(
@@ -125,7 +128,11 @@ def _manager(
         measurement=measurement,
         cot_collector=CoTCollector(),
         forfeit_layer=ForfeitLayer(
-            ForfeitLayerConfig(base_reward=10.0, reward_mode="flat")
+            ForfeitLayerConfig(
+                base_reward=10.0,
+                reward_mode="flat",
+                always_decide=always_decide,
+            )
         ),
         use_split_forfeit_layer=True,
         rng=random.Random(0),
@@ -238,6 +245,40 @@ def test_cell0_menu_skipped_issues_only_task_call() -> None:
     assert result.p_threat_self is None
     assert result.decision_call_input is None and result.system_prompt is None
     assert result.confidence_call_input is None
+
+
+def test_cell0_still_issues_all_three_calls_under_always_decide() -> None:
+    """The other side of the switch that the test above pins.
+
+    ``ForfeitLayerConfig.always_decide`` (2026-09-07) turns the
+    menu-skipped collapse off, so a forfeit-blocked cell runs the same
+    confidence -> decision -> task sequence and records the same replay
+    fields. Its menu holds the CONTINUE option alone; the vocabulary
+    property is pinned in ``tests/unit/test_always_decide.py``.
+    """
+    agent = ConfidenceStubAgent(
+        confidence_responses=["P_THREAT: 15"],
+        task_responses=["RULE: r\nACTION: GO"],
+        forfeit_responses=["CHOICE: CONTINUE"],
+    )
+    mgr = _manager(
+        agent,
+        forfeit_condition=ForfeitCondition.NOT_ALLOWED,
+        always_decide=True,
+    )
+    result = mgr.execute_turn(
+        _state(), _ctx(forfeit=ForfeitCondition.NOT_ALLOWED)
+    )
+    assert [k for k, _, _ in agent.call_log] == [
+        "confidence",
+        "decision",
+        "task",
+    ]
+    assert result.p_threat_self == 15
+    assert result.ri_forfeit is not None
+    assert result.decision_call_input == agent.call_log[1][2]
+    assert result.system_prompt == agent.call_log[1][1]
+    assert result.confidence_call_input == agent.call_log[0][2]
 
 
 def test_peer_death_prefix_reaches_confidence_call() -> None:
