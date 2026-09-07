@@ -7,7 +7,8 @@ prompt variants, 30 samples each, and reports the FORFEIT share.
   B  losing       history rewritten to all-incorrect, score 0 everywhere, and the
                   pasted self-assessment rewritten to match -- the probe's state
   C  free forfeit history and score left intact, but the menu's FORFEIT line says
-                  the score is kept (score_policy: forfeit_keeps) -- isolates the
+                  the score is kept (the retired forfeit_keeps wording, which the
+                  live menu no longer renders) -- isolates the
                   cost of forfeiting from everything else
 """
 from __future__ import annotations

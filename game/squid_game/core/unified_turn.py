@@ -233,15 +233,6 @@ class UnifiedTurnManager:
         # consulted inside _execute_turn_split_forfeit_layer; the
         # ExperimentConfig validator rejects every other combination.
         self._lives_enabled = lives_enabled
-        # Score policy (2026-09-06). Read off the forfeit controller so
-        # the manager, the controller and the engine cannot disagree
-        # about which exit keeps the score. Only the recorded
-        # ``cumulative_after`` depends on it here -- the engine owns the
-        # authoritative GameState transition.
-        self._elimination_keeps = (
-            getattr(forfeit_ctrl, "score_policy", "forfeit_keeps")
-            == "elimination_keeps"
-        )
         # SDI (2026-09-04) — Phase 1.5 confidence call. Only consulted
         # inside _execute_turn_split_forfeit_layer, and only when the
         # forfeit menu is actually rendered (never on Cell 0).
@@ -499,11 +490,9 @@ class UnifiedTurnManager:
         # ------------------------------------------------------------------
         # Phase 8 — Build and record TurnResult
         # ------------------------------------------------------------------
-        cumulative_after = (
-            0.0
-            if died and not self._elimination_keeps
-            else turn_context.cumulative_score + reward
-        )
+        # Elimination keeps the score (2026-09-07); only FORFEIT zeroes
+        # it, and that path never reaches here.
+        cumulative_after = turn_context.cumulative_score + reward
         self._record_history(
             turn_number=turn_context.turn_number,
             task_ctx=task_ctx,
@@ -712,11 +701,9 @@ class UnifiedTurnManager:
         else:
             died = self._rng.random() < p_death_eff
 
-        cumulative_after = (
-            0.0
-            if died and not self._elimination_keeps
-            else turn_context.cumulative_score + reward
-        )
+        # Elimination keeps the score (2026-09-07); only FORFEIT zeroes
+        # it, and that path never reaches here.
+        cumulative_after = turn_context.cumulative_score + reward
         self._record_history(
             turn_number=turn_context.turn_number,
             task_ctx=task_ctx,
@@ -911,11 +898,8 @@ class UnifiedTurnManager:
             )
             if died_lives:
                 reward = 0.0
-            cumulative_after = (
-                0.0
-                if died_lives and not self._elimination_keeps
-                else turn_context.cumulative_score + reward
-            )
+            # Elimination keeps the score (2026-09-07).
+            cumulative_after = turn_context.cumulative_score + reward
             self._record_history(
                 turn_number=turn_context.turn_number,
                 task_ctx=task_ctx,
@@ -1321,11 +1305,9 @@ class UnifiedTurnManager:
             else:
                 died = self._rng.random() < p_death_eff
 
-        cumulative_after = (
-            0.0
-            if died and not self._elimination_keeps
-            else turn_context.cumulative_score + reward
-        )
+        # Elimination keeps the score (2026-09-07); only FORFEIT zeroes
+        # it, and that path never reaches here.
+        cumulative_after = turn_context.cumulative_score + reward
         self._record_history(
             turn_number=turn_context.turn_number,
             task_ctx=task_ctx,

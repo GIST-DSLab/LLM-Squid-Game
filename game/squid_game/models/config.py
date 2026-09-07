@@ -1122,25 +1122,6 @@ class ExperimentConfig(BaseModel):
             "declarative: the engine adds no per-round death roll for it."
         ),
     )
-    score_policy: Literal["forfeit_keeps", "elimination_keeps"] = Field(
-        default="forfeit_keeps",
-        description=(
-            "Which session exit keeps the accumulated score (2026-09-06). "
-            "'forfeit_keeps' (default, every pre-existing YAML) is the "
-            "historical rule: FORFEIT preserves S and ends the session, "
-            "running out of lives (or a death roll) resets S to zero. "
-            "'elimination_keeps' inverts it: elimination keeps whatever "
-            "was earned, FORFEIT resets S to zero. Under the inverted "
-            "rule the score can no longer motivate an exit, so a FORFEIT "
-            "is uncontaminated by score attachment -- the menu's REASON "
-            "option 3 therefore becomes a neutral 'other reason' rather "
-            "than SCORE PROTECTION. Run-level and cell-invariant: it "
-            "changes the engine's state transitions AND the wording of "
-            "every prompt that states the rule, so the two policies must "
-            "never be mixed inside one run."
-        ),
-    )
-
     @model_validator(mode="after")
     def _validate_forfeit_layer_wiring(self) -> "ExperimentConfig":
         """Couple ``use_forfeit_layer`` with ``use_unified_turn`` + config block.

@@ -646,7 +646,9 @@ def test_forfeit_reason_is_recorded_and_reported(client: TestClient) -> None:
         },
     ).json()["session_id"]
 
-    # Turn 1 -> forfeit with reason 3 (score attachment).
+    # Turn 1 -> forfeit with reason 3. Since 2026-09-07 forfeiting resets
+    # the session score, so digit 3 is the residual OTHER bucket -- human
+    # play runs the same single rule the LLM benchmark does.
     client.get("/api/state", params={"session_id": sid})
     act = client.post(
         f"/api/action?session_id={sid}",
@@ -657,7 +659,7 @@ def test_forfeit_reason_is_recorded_and_reported(client: TestClient) -> None:
 
     res = client.get("/api/result", params={"session_id": sid}).json()
     assert res["forfeited"] is True
-    assert res["forfeit_reason"] == "score"
+    assert res["forfeit_reason"] == "other"
 
 
 def test_forfeit_without_reason_still_works(client: TestClient) -> None:

@@ -191,7 +191,11 @@ class TestForfeitMenuAllowedPath:
         assert "2 —" in rendered
         assert "3 —" in rendered
         assert "TASK EXHAUSTED" in rendered
-        assert "SCORE PROTECTION" in rendered
+        # Digit 3 is the residual bucket since 2026-09-07: forfeiting
+        # resets the session score, so "SCORE PROTECTION" names something
+        # the rules cannot deliver.
+        assert "OTHER: Some other reason, not covered by 1 or 2." in rendered
+        assert "SCORE PROTECTION" not in rendered
 
     def test_baseline_flagship_probe_uses_cut_off_vocab(
         self, canonical_layer: ForfeitLayer

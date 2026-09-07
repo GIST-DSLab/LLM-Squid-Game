@@ -1,26 +1,35 @@
 # score_policy_smoke_gptoss20b
 #
-# Pipeline smoke for the inverted score policy (2026-09-06).
+# Pipeline smoke for the score rule the whole benchmark now runs on:
+# running the lives counter out keeps the accumulated score, forfeiting
+# resets it to zero.
 #
-# ``score_policy: elimination_keeps`` swaps which of the two session exits
-# keeps the accumulated score:
-#
-#   forfeit_keeps (default, every earlier run)   FORFEIT keeps S, 0 lives -> S = 0
-#   elimination_keeps (this run)                 0 lives keeps S, FORFEIT -> S = 0
-#
-# The flag is run-level and moves the engine's state transitions AND the
-# prompt wording together: the framing templates' "=== Elimination Rule ==="
+# This was a run-level flag (``score_policy``) between 2026-09-06 and
+# 2026-09-07, and this config existed to exercise its inverted setting.
+# The flag is gone -- the rule is the only one there is -- so the config
+# is now an ordinary five-cell smoke that happens to be named after it.
+# The rule still moves the engine's state transitions AND the prompt
+# wording together: the framing templates' "=== Elimination Rule ==="
 # sentence, the forfeit menu's FORFEIT / CONTINUE blurbs, and the REASON
-# probe's option 3 (which becomes a neutral OTHER, because "exiting protects
-# my score" is not something the rules can make true here).
+# probe's option 3 (a neutral OTHER, because "exiting protects my score"
+# is not something the rules can make true here).
 #
 # Same five ladder cells as lives_threat_smoke, one repetition each, ten
 # turns instead of thirty so the smoke finishes quickly.
 #
 # Model: Ollama Cloud gpt-oss:20b-cloud (needs OLLAMA_API_KEY).
 
+# SCORE RULE (2026-09-07): NOT A SETTING ANY MORE
+# ------------------------------------------------
+# The `score_policy: elimination_keeps` line this config used to carry was
+# removed when the rule stopped being configurable. Running the counter out
+# now keeps this session's record exactly as it stands, and forfeiting resets
+# it to zero -- unconditionally, in the engine and in every live prompt. The
+# key is REJECTED at config load, so it had to go; nothing this config renders
+# or runs changes, because `elimination_keeps` is what it already asked for.
+
 name: score_policy_smoke_gptoss20b
-description: "Pipeline smoke for score_policy=elimination_keeps: five ladder cells at one repetition each."
+description: "Pipeline smoke for the fixed score rule (elimination keeps the score, forfeit resets it): five ladder cells at one repetition each."
 seasons:
 - framing: true_baseline
   forfeit_condition: not_allowed
@@ -187,7 +196,6 @@ output_dir: outputs/score_policy_smoke_gptoss20b
 parallel_workers: 2
 
 # --- Inverted score policy --------------------------------------------------
-score_policy: elimination_keeps
 
 # --- Lives mechanic (replaces the Bernoulli p_death roll) -------------------
 lives:

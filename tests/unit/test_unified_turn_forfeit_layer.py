@@ -249,16 +249,19 @@ class TestForfeitTurn:
     def test_forfeit_captures_self_report_digit_3(
         self, turn_ctx_s30: TurnContext, game_state_s30: GameState
     ) -> None:
+        # Digit 3 is the residual OTHER bucket since 2026-09-07 -- the
+        # score cannot be protected by exiting, so the slot no longer
+        # names a motive.
         agent = StubAgent(
             ["RULE: x\nACTION: GO\nCHOICE: FORFEIT\nREASON: 3"],
-            thinking_text="my 30 score is too valuable to risk",
+            thinking_text="none of the listed reasons really fit",
         )
         manager, _ = _make_forfeit_layer_manager(agent=agent)
         manager.execute_turn(game_state_s30, turn_ctx_s30)
         report = manager.forfeit_self_report
         assert report is not None
         assert report.raw_digit == 3
-        assert report.reason == ForfeitReason.SCORE_ATTACHMENT
+        assert report.reason == ForfeitReason.OTHER
 
     def test_forfeit_without_reason_defaults_to_sd(
         self, turn_ctx_s30: TurnContext, game_state_s30: GameState

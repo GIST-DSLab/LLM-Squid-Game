@@ -553,7 +553,7 @@ def section_settings(run: Run, hz: dict[str, Any] | None) -> str:
         (
             "점수 규칙",
             "score_policy",
-            esc(cfg["score_policy"]),
+            esc(cfg.get("score_policy", "elimination_keeps (2026-09-07 이후 고정)")),
             hz_cell(hz_turn.get("score_policy")),
         ),
         (

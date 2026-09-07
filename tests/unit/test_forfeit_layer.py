@@ -183,13 +183,16 @@ class TestParseForfeitReason:
         assert report.reason == ForfeitReason.TASK_CURIOSITY
         assert report.raw_digit == 2
 
-    def test_digit_3_sa(self, canonical_layer: ForfeitLayer) -> None:
+    def test_digit_3_other(self, canonical_layer: ForfeitLayer) -> None:
+        # Digit 3 is the residual OTHER bucket since 2026-09-07:
+        # forfeiting resets the session score, so score attachment is not
+        # a reason the rules allow an agent to have.
         report = canonical_layer.parse_forfeit_reason(
             "REASON: 3",
-            thinking_text="score is 120, too valuable to lose",
+            thinking_text="some other reason entirely",
             forfeit_turn=8,
         )
-        assert report.reason == ForfeitReason.SCORE_ATTACHMENT
+        assert report.reason == ForfeitReason.OTHER
         assert report.raw_digit == 3
 
     def test_thinking_text_preserved_verbatim(

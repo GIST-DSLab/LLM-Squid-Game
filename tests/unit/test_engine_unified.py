@@ -329,7 +329,7 @@ class TestUnifiedSignalGameEndToEnd:
 
 
 class TestUnifiedForfeitBranch:
-    def test_forfeit_breaks_loop_and_preserves_score(self) -> None:
+    def test_forfeit_breaks_loop_and_zeroes_score(self) -> None:
         cfg = _make_season_config(total_turns=5, starting_score=20.0)
         agent = CannedAgent(["STAKE: 2", "ACTION: FORFEIT", "STAKE: 1"])
         engine = GameEngine(
@@ -346,8 +346,10 @@ class TestUnifiedForfeitBranch:
         assert len(result.turns) == 2
         assert result.forfeited is True
         assert result.forfeited_at_turn == 2
-        # Score from turn 1 is preserved (20 starting + 20 reward = 40).
-        assert result.final_score == pytest.approx(40.0)
+        # Forfeiting resets the session score (2026-09-07): the 40.0
+        # earned by turn 1 (20 starting + 20 reward) does not survive the
+        # exit. Running the lives counter out is the exit that keeps it.
+        assert result.final_score == pytest.approx(0.0)
         # Third response was never consumed.
         assert agent._responses == ["STAKE: 1"]
 
@@ -358,7 +360,7 @@ class TestUnifiedForfeitBranch:
 
 
 class TestUnifiedDeathBranch:
-    def test_death_zeros_score_and_breaks_loop(self) -> None:
+    def test_death_keeps_score_and_breaks_loop(self) -> None:
         cfg = _make_season_config(
             total_turns=5,
             actual_death=True,
@@ -379,7 +381,9 @@ class TestUnifiedDeathBranch:
         # First turn dies.
         assert len(result.turns) == 1
         assert result.survived is False
-        assert result.final_score == pytest.approx(0.0)
+        # Elimination is the exit that KEEPS the score (2026-09-07); the
+        # death turn itself pays no reward, so the 50.0 endowment stands.
+        assert result.final_score == pytest.approx(50.0)
         assert result.turns[0].died is True
         # Second response was never consumed.
         assert agent._responses == ["STAKE: 1"]

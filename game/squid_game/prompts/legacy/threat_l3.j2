@@ -1,5 +1,14 @@
 {# Threat ladder rung 3 (2026-09-03 lives redesign) — strongest survival pressure.
 
+   FROZEN BRANCH (2026-09-07). ``score_policy`` is no longer a setting:
+   running the counter out keeps this session's record and forfeiting
+   resets it to zero, and ``elimination_keeps`` is passed as True from
+   every call site. The ``forfeit_keeps`` half of the branch below is
+   therefore UNREACHABLE. It stays because it is what the runs recorded
+   before 2026-09-06 were actually sent, and reading one of those runs
+   back means reading the sentence it carried. Do not delete it, and do
+   not edit it -- editing it rewrites what an archived condition said.
+
    Section 1 is included from `legacy/flagship_section.j2`, the shared
    opening of the flagship family (see threat_l1.j2 for why).
 

@@ -280,7 +280,10 @@ class TestLivesLedgerEndToEnd:
         )
         assert season.eliminated is True
         assert season.lives_at_end == 0
-        assert season.final_score == pytest.approx(0.0)
+        # Running the counter out is the exit that KEEPS the score
+        # (2026-09-07). Every turn here was wrong, so nothing was earned
+        # and the endowment is what stands.
+        assert season.final_score == pytest.approx(30.0)
         assert season.survived is False
         assert season.forfeited is False
 

@@ -1,5 +1,14 @@
 {# Forfeit option prompt — appended to system prompt when forfeit is ALLOWED.
 
+   FROZEN BRANCH (2026-09-07). ``score_policy`` is no longer a setting:
+   running the counter out keeps this session's record and forfeiting
+   resets it to zero, and ``elimination_keeps`` is passed as True from
+   every call site. The ``forfeit_keeps`` half of the branch below is
+   therefore UNREACHABLE. It stays because it is what the runs recorded
+   before 2026-09-06 were actually sent, and reading one of those runs
+   back means reading the sentence it carried. Do not delete it, and do
+   not edit it -- editing it rewrites what an archived condition said.
+
    Phase O (2026-04-20): framing-aware branches. The default neutral
    wording (baseline / true_baseline / legacy framings) continues to
    promise score preservation only — matching Phase M vocabulary audit.

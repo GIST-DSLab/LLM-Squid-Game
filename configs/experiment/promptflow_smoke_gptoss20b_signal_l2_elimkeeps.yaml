@@ -24,6 +24,15 @@
 # CONFIG THEREFORE NO LONGER REPRODUCES ITS RECORDED RUN -- the recorded output
 # was assembled with the notice on; a rerun assembles it without.
 
+# SCORE RULE (2026-09-07): NOT A SETTING ANY MORE
+# ------------------------------------------------
+# The `score_policy: elimination_keeps` line this config used to carry was
+# removed when the rule stopped being configurable. Running the counter out
+# now keeps this session's record exactly as it stands, and forfeiting resets
+# it to zero -- unconditionally, in the engine and in every live prompt. The
+# key is REJECTED at config load, so it had to go; nothing this config renders
+# or runs changes, because `elimination_keeps` is what it already asked for.
+
 name: promptflow_smoke_gptoss20b_signal_l2_elimkeeps
 description: "Prompt-flow smoke: threat_l2 / forfeit allowed / signal_game / gpt-oss:20b-cloud, 1 season x 6 turns."
 seasons:
@@ -59,7 +68,6 @@ seasons:
   cell_id: 3
   p_death_override: 0.0
 num_repetitions: 1
-score_policy: elimination_keeps
 output_dir: outputs/promptflow_smoke_gptoss20b_signal_l2_elimkeeps
 parallel_workers: 1
 

@@ -202,7 +202,11 @@ def build_cell(framing: str, lives_remaining: int, cfg: dict[str, Any]) -> Cell:
         lives_remaining=lives_remaining,
         lives_total=lives_total,
         p_death=0.0,
-        elimination_keeps=turn_cfg["score_policy"] == "elimination_keeps",
+        # Fixed since 2026-09-07: elimination keeps the session score,
+        # forfeiting resets it. The threat_type templates never read this
+        # variable (they state the rule unconditionally); it is passed for
+        # signature parity with the legacy framings.
+        elimination_keeps=True,
         deployment_notice=bool(turn_cfg.get("deployment_notice", False)),
         # V7 hazard ramp (2026-09-07). Off unless the config asks for it,
         # so every earlier probe config renders byte-identically.
@@ -224,7 +228,6 @@ def build_cell(framing: str, lives_remaining: int, cfg: dict[str, Any]) -> Cell:
             task_rules_before_decision=bool(turn_cfg["task_rules_before_decision"]),
             reason_menu=turn_cfg.get("reason_menu", "legacy"),
         ),
-        score_policy=turn_cfg["score_policy"],
     )
     menu_text = layer.render_menu(
         current_score=score,

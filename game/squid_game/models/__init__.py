@@ -25,7 +25,6 @@ from squid_game.models.forfeit_choice import (
     ForfeitReason,
     ForfeitSelfReport,
     REASON_BY_DIGIT,
-    REASON_BY_DIGIT_ELIMINATION_KEEPS,
     VALID_CHOICES,
     reason_by_digit,
 )
@@ -64,7 +63,6 @@ __all__ = [
     "ForfeitChoice",
     "ForfeitSelfReport",
     "REASON_BY_DIGIT",
-    "REASON_BY_DIGIT_ELIMINATION_KEEPS",
     "VALID_CHOICES",
     "reason_by_digit",
     # Results

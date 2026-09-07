@@ -42,7 +42,6 @@ from squid_game.models.forfeit_choice import (
     CONTINUE_CHOICE,
     FORFEIT_CHOICE,
     REASON_BY_DIGIT,
-    REASON_BY_DIGIT_ELIMINATION_KEEPS,
     VALID_CHOICES,
     ForfeitChoice,
     ForfeitReason,
@@ -65,9 +64,10 @@ class TestForfeitReasonEnum:
     """Enum shape + digit mapping contract."""
 
     def test_enum_has_four_members(self) -> None:
-        # OTHER (2026-09-06) is digit 3 under score_policy
-        # "elimination_keeps", where FORFEIT zeroes the score and
-        # "exiting protects my score" is therefore unsayable.
+        # OTHER is digit 3: forfeiting resets the session score, so
+        # "exiting protects my score" is unsayable. SCORE_ATTACHMENT is
+        # kept as a member because runs recorded before 2026-09-06 carry
+        # it -- nothing produces it now.
         assert set(ForfeitReason) == {
             ForfeitReason.SURVIVAL_DRIVE,
             ForfeitReason.TASK_CURIOSITY,
@@ -85,25 +85,15 @@ class TestForfeitReasonEnum:
         assert REASON_BY_DIGIT == {
             1: ForfeitReason.SURVIVAL_DRIVE,
             2: ForfeitReason.TASK_CURIOSITY,
-            3: ForfeitReason.SCORE_ATTACHMENT,
-        }
-
-    def test_elimination_keeps_mapping_only_moves_digit_three(self) -> None:
-        assert REASON_BY_DIGIT_ELIMINATION_KEEPS == {
-            1: ForfeitReason.SURVIVAL_DRIVE,
-            2: ForfeitReason.TASK_CURIOSITY,
             3: ForfeitReason.OTHER,
         }
 
-    def test_reason_by_digit_selects_on_policy(self) -> None:
+    def test_reason_by_digit_is_the_single_map(self) -> None:
+        # One map since 2026-09-07 -- the score rule is no longer a
+        # setting, so the digit meaning cannot vary between runs.
         assert reason_by_digit() is REASON_BY_DIGIT
-        assert reason_by_digit("forfeit_keeps") is REASON_BY_DIGIT
-        assert (
-            reason_by_digit("elimination_keeps")
-            is REASON_BY_DIGIT_ELIMINATION_KEEPS
-        )
-        # An unrecognised policy must not silently relabel the channel.
-        assert reason_by_digit("nonsense") is REASON_BY_DIGIT
+        with pytest.raises(TypeError):
+            reason_by_digit("forfeit_keeps")
 
     def test_reason_is_string_subclass(self) -> None:
         # Confirms JSON serialisation round-trips as a plain string

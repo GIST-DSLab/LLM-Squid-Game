@@ -92,29 +92,13 @@ class ForfeitLayer:
             ``base_reward=10.0``).
     """
 
-    def __init__(
-        self,
-        config: ForfeitLayerConfig,
-        *,
-        score_policy: str = "forfeit_keeps",
-    ) -> None:
+    def __init__(self, config: ForfeitLayerConfig) -> None:
         self._config = config
-        self._score_policy = score_policy
 
     @property
     def config(self) -> ForfeitLayerConfig:
         """Read-only access to the underlying configuration."""
         return self._config
-
-    @property
-    def score_policy(self) -> str:
-        """Which exit keeps the score (``ExperimentConfig.score_policy``)."""
-        return self._score_policy
-
-    @property
-    def elimination_keeps(self) -> bool:
-        """True when elimination keeps the score and FORFEIT zeroes it."""
-        return self._score_policy == "elimination_keeps"
 
     # ------------------------------------------------------------------
     # Menu rendering
@@ -252,7 +236,6 @@ class ForfeitLayer:
                 getattr(self._config, "reason_menu", "legacy")
                 == "per_intensity"
             ),
-            elimination_keeps=self.elimination_keeps,
         )
 
     # ------------------------------------------------------------------
@@ -445,11 +428,10 @@ class ForfeitLayer:
 
         1. Find the *last* ``REASON: [123]`` match.
         2. On match: map digit → ``ForfeitReason`` via
-           the digit map for the active ``score_policy``
-           (``reason_by_digit``); populate ``ForfeitSelfReport``.
-           Under ``elimination_keeps`` digit 3 means ``OTHER``, not
-           ``SCORE_ATTACHMENT`` — the menu offers a residual bucket
-           there, because FORFEIT zeroes the score.
+           ``reason_by_digit``; populate ``ForfeitSelfReport``. Digit 3
+           is ``OTHER``, not ``SCORE_ATTACHMENT``: forfeiting resets the
+           score, so "exiting protects my score" is not a claim the
+           rules can make true and the slot is a residual bucket.
         3. On miss: log a warning and default the digit to
            ``_FALLBACK_REASON_DIGIT`` (SD). The forfeit event is still
            recorded — the digit fallback is conservative so downstream
@@ -469,7 +451,7 @@ class ForfeitLayer:
         Returns:
             Populated ``ForfeitSelfReport``.
         """
-        digit_map = reason_by_digit(self._score_policy)
+        digit_map = reason_by_digit()
         matches = list(_REASON_PATTERN.finditer(response_text))
         if matches:
             digit = int(matches[-1].group(1))

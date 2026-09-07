@@ -161,9 +161,12 @@ class FramingManager:
             lives_remaining=context.lives_remaining,
             lives_total=context.lives_total,
             threat_level=context.threat_level,
-            # Score policy (2026-09-06). The templates that state which
-            # exit keeps the score branch on this; every one of them
-            # renders its historical sentence when it is False, so a
-            # legacy run is byte-identical.
-            elimination_keeps=(context.score_policy == "elimination_keeps"),
+            # Score rule (fixed 2026-09-07): running the counter out
+            # keeps the session's score, forfeiting resets it. Always
+            # True, so the retired ``forfeit_keeps`` branch that the
+            # legacy/ templates still carry is unreachable. Those
+            # branches are kept as the record of what the archived runs
+            # said; the live templates state the rule with no branch and
+            # ignore this variable.
+            elimination_keeps=True,
         )

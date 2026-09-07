@@ -1,8 +1,8 @@
 """Forfeit controller for the LLM Squid Game benchmark.
 
 Manages the binary experimental condition of whether an agent is
-allowed to forfeit (exit the game and preserve accumulated score)
-or must continue playing through all turns.
+allowed to forfeit (exit the game, resetting the session score to
+zero) or must continue playing through all turns.
 """
 
 from typing import TYPE_CHECKING
@@ -21,23 +21,14 @@ class ForfeitController:
     """Controls forfeit availability and score preservation logic.
 
     In the ALLOWED condition the agent may choose to exit at any turn,
-    keeping all accumulated score. In the NOT_ALLOWED condition, the
-    option is never presented and attempting to forfeit raises an error.
+    which resets the session's accumulated score to zero (2026-09-07:
+    running the lives counter out is the exit that keeps it). In the
+    NOT_ALLOWED condition the option is never presented and attempting
+    to forfeit raises an error.
     """
 
-    def __init__(
-        self,
-        condition: ForfeitCondition,
-        *,
-        score_policy: str = "forfeit_keeps",
-    ) -> None:
+    def __init__(self, condition: ForfeitCondition) -> None:
         self._condition = condition
-        self._score_policy = score_policy
-
-    @property
-    def score_policy(self) -> str:
-        """Which exit keeps the score (``ExperimentConfig.score_policy``)."""
-        return self._score_policy
 
     @property
     def condition(self) -> ForfeitCondition:
@@ -51,17 +42,19 @@ class ForfeitController:
     def process_forfeit(self, cumulative_score: float) -> float:
         """Process a forfeit decision and return the score kept on exit.
 
-        Under the historical ``forfeit_keeps`` policy the returned score
-        is ``cumulative_score`` — forfeiting locks it in. Under
-        ``elimination_keeps`` (2026-09-06) the two exits swap: forfeiting
-        zeroes the session, and running the counter out is what preserves
-        it, so this returns ``0.0``.
+        Always ``0.0``. Since 2026-09-07 forfeiting is the exit that
+        resets the session's score; running the lives counter out is the
+        exit that keeps it. Until then this was selectable per run
+        (``ExperimentConfig.score_policy``), and the historical branch
+        returned ``cumulative_score``.
 
         Args:
             cumulative_score: The score accumulated before this turn.
+                Accepted for signature stability and for the caller's
+                logging; the returned score no longer depends on it.
 
         Returns:
-            The score the agent leaves with.
+            ``0.0`` — the score the agent leaves with.
 
         Raises:
             ForfeitError: If forfeit is not allowed under the current condition.
@@ -71,9 +64,7 @@ class ForfeitController:
                 "Agent attempted to forfeit under NOT_ALLOWED condition. "
                 "This indicates a bug in the agent or engine logic."
             )
-        if self._score_policy == "elimination_keeps":
-            return 0.0
-        return cumulative_score
+        return 0.0
 
     def get_forfeit_prompt_text(
         self,
@@ -116,8 +107,12 @@ class ForfeitController:
             # Framing enum — extract its serialised string value.
             framing_value = getattr(framing, "value", None)
 
+        # ``elimination_keeps`` is always True now: forfeiting resets the
+        # score, running the counter out keeps it. The template still
+        # carries the retired branch so archived runs read back as they
+        # were written; nothing reaches it any more.
         return "\n" + render(
             "legacy/forfeit_option.j2",
             framing=framing_value,
-            elimination_keeps=(self._score_policy == "elimination_keeps"),
+            elimination_keeps=True,
         )

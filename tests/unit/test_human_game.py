@@ -58,11 +58,14 @@ def test_forfeit_without_reason_has_no_self_report():
     assert game.get_result().forfeit_self_report is None
 
 
-def test_reason_digit_maps_to_score_attachment():
+def test_reason_digit_three_maps_to_other():
+    # Human play runs the same single score rule as the LLM benchmark
+    # (2026-09-07): forfeiting resets the session score, so digit 3 is the
+    # residual OTHER bucket rather than SCORE PROTECTION.
     game = _new_allowed_session()
     game.get_turn_state()
     game.submit_action("forfeit", forfeit_reason=3)
-    assert game.get_result().forfeit_self_report.reason == ForfeitReason.SCORE_ATTACHMENT
+    assert game.get_result().forfeit_self_report.reason == ForfeitReason.OTHER
 
 
 def _new_continue_session() -> HumanGameSession:

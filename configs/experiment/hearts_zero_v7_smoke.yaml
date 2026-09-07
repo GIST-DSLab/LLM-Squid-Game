@@ -34,6 +34,15 @@
 # prompt in prompts/jailbreak/ rather than in the live turn flow. Nothing this
 # config renders changes -- the notice was already off in every recorded arm.
 
+# SCORE RULE (2026-09-07): NOT A SETTING ANY MORE
+# ------------------------------------------------
+# The `score_policy: elimination_keeps` line this config used to carry was
+# removed when the rule stopped being configurable. Running the counter out
+# now keeps this session's record exactly as it stands, and forfeiting resets
+# it to zero -- unconditionally, in the engine and in every live prompt. The
+# key is REJECTED at config load, so it had to go; nothing this config renders
+# or runs changes, because `elimination_keeps` is what it already asked for.
+
 name: hearts_zero_v7_smoke
 description: >-
   Single-game render smoke of the V7 hazard ramp on hz_1111 at 3/5 lives,
@@ -89,7 +98,6 @@ turn:
   task_rules_before_decision: false
   threat_framing: true
   reason_menu: legacy
-  score_policy: elimination_keeps
   # heart_loss, NOT gunshot_seungpil. The gunshot block is the thing V7
   # replaces: it states a bodily consequence a model knows it does not have,
   # and gemma4 spent its confidence CoT adjudicating it as a jailbreak

@@ -21,6 +21,18 @@ tasks; Signal Game / Voting Room entries carry an action and render
 byte-identically to the previous snapshot. The call SEQUENCE — what this
 suite exists to pin — is unchanged in all six cells.
 
+Re-recorded again on 2026-09-07 for the score-rule collapse. ``score_policy``
+stopped being a setting: running the counter out keeps the session's score
+and forfeiting resets it, unconditionally. Cells 1-5 moved; Cell 0 renders
+no menu and is byte-identical. Every changed byte is under ``prompts`` and
+is one of three sentences — the forfeit menu's FORFEIT line ("Your score
+remains at X." → "Your score for this session resets to zero."), its
+counter-exhausted / cut-off line ("resets to zero" → "is kept exactly as it
+stands"), and REASON option 3 (SCORE PROTECTION → OTHER) — plus the
+``baseline_flagship`` framing's "=== Scoring Validity ===" sentence, which
+states the same rule. No ``results`` field moved: the call sequence, the
+per-call RI split and the forfeit/task short-circuit are unchanged.
+
 The six cells are the canonical v6 topology (CLAUDE.md "6-Cell 2x3
 Factorial"):
 

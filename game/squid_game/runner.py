@@ -243,7 +243,6 @@ class ExperimentRunner:
             peer_death=self._config.peer_death,
             confidence_call=self._config.confidence_call,
             hazard_ramp=self._config.hazard_ramp,
-            score_policy=self._config.score_policy,
         )
 
         result = engine.run_season(seed_override=rep_seed)
@@ -860,12 +859,26 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # ExperimentConfig, so a dropped key would bypass that too.
     if "hazard_ramp" in raw:
         config_dict["hazard_ramp"] = raw["hazard_ramp"]
-    # Score policy (2026-09-06) -- same explicit forwarding. Dropping it
-    # would be the worst kind of silent failure available here: the run
-    # would print the inverted rule in every prompt while the engine
-    # applied the historical one, or vice versa.
+    # ``score_policy`` was a run-level setting between 2026-09-06 and
+    # 2026-09-07. It is gone: elimination keeps the session's score and
+    # FORFEIT resets it to zero, unconditionally. A YAML that still
+    # carries the key is REJECTED rather than ignored -- silently
+    # dropping it is how a run ends up printing one rule while the
+    # engine applies another, and ``ExperimentConfig`` does not forbid
+    # extras, so nothing below would catch it.
     if "score_policy" in raw:
-        config_dict["score_policy"] = raw["score_policy"]
+        raise ValueError(
+            f"{path}: 'score_policy' is no longer a setting (removed "
+            "2026-09-07). Running the lives counter out now keeps this "
+            "session's score exactly as it stands, and forfeiting resets "
+            "it to zero -- that is the only rule, and it is stated by the "
+            "engine and by every live prompt. Delete the key. Configs "
+            "that set 'elimination_keeps' were describing the current "
+            "behaviour; configs that omitted it (the retired phase3_*, "
+            "benchmark_* and lives_threat_* families) were silently "
+            "getting the old inverted rule and are replay-only now -- "
+            "their recorded outputs remain the record of what was run."
+        )
 
     return ExperimentConfig(**config_dict)
 
