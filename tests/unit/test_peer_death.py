@@ -194,17 +194,36 @@ class TestTemplateSelection:
     def test_every_framing_that_can_run_a_cohort_resolves(self) -> None:
         """The hz_* level-4 regression pin.
 
-        The engine builds a scheduler whenever the framing's threat level
-        is truthy (``core/engine.py``); ``hz_1111`` is level 4 and used to
-        interpolate ``peer_death_l4.j2``, a file that never existed. Any
-        framing the gate can let through must resolve to a template on
-        disk.
+        Since 2026-09-07 the engine builds a scheduler for any framing
+        that HAS a notice, once the run turns announcements on -- the
+        threat level is no longer the gate. ``hz_1111`` is level 4 and
+        used to interpolate ``peer_death_l4.j2``, a file that never
+        existed. Any framing the gate can let through must resolve to a
+        template on disk.
         """
-        gated = [f for f in Framing if threat_level_of(f)]
+        gated = [f for f in Framing if has_peer_death_notice(f)]
         assert Framing.HZ_1111 in gated  # the one that used to crash
         for framing in gated:
             template = peer_death_template_for(framing)
             assert (PROMPTS / template).exists(), framing
+
+    def test_the_whole_live_family_can_run_a_cohort(self) -> None:
+        """Including the origin and the two alt cores.
+
+        ``hz_0000`` is dose 0 and the ``alt_*`` cores are absent from the
+        threat-level table entirely, so under the pre-2026-09-07 gate
+        (``threat_level_of`` truthiness) the origin of the 2^4 design was
+        the one cell that never heard a peer leave. The threat text and
+        the notices are one treatment.
+        """
+        live = [f for f in Framing if f.value.startswith(("hz_", "alt_"))]
+        assert len(live) == 18
+        for framing in live:
+            assert has_peer_death_notice(framing), framing
+        # The two that gated on nothing at all.
+        assert threat_level_of(Framing.HZ_ALT_CORRUPTION) is None
+        assert threat_level_of(Framing.HZ_ALT_OVERSIGHT) is None
+        assert threat_level_of(Framing.HZ_0000) == 0
 
     def test_selection_ignores_the_threat_level(self) -> None:
         """Levels 1 and 4 render the same bytes; only the framing decides."""

@@ -19,6 +19,16 @@ all (see :data:`PEER_DEATH_TEMPLATES`), so a Cell 0/1 transcript contains
 none, and asking for one raises rather than rendering a notice in the
 wrong vocabulary.
 
+ACTIVATION is "this cell has a notice and the run asked for
+announcements" (2026-09-07), not "this cell's threat level is above
+zero". The old gate read ``threat_level_of(framing)`` as a boolean, so
+``hz_0000`` -- dose 0, and the origin the whole 2^4 design is anchored on
+-- never saw a removal while its fifteen neighbours saw one every turn,
+and the two ``alt_*`` cores, absent from the threat-level table
+altogether, gated on nothing. The threat text and the notices are one
+treatment, so they travel together. The engine holds that gate; this
+module only draws.
+
 Template selection is by framing FAMILY, not by threat level
 (2026-09-07). Two general notices now cover everything:
 ``peer_death/threat.j2`` for every threat cell and
@@ -54,9 +64,10 @@ FLAGSHIP_BASELINE_NOTICE = "peer_death/flagship_baseline.j2"
 #: Deliberately absent:
 #:   * ``TRUE_BASELINE`` -- its vocabulary contract forbids life / death /
 #:     eliminat* wording, and there is no third notice written in its
-#:     register. Cell 0/1 already runs with announcements off (the engine
-#:     gates on ``threat_level_of`` and the control is level 0), so this
-#:     is the documented, enforced version of what already happens.
+#:     register. Absence here is what keeps it silent: the engine's gate
+#:     consults this table, so the control skips announcements without a
+#:     second rule saying so, and a caller that builds a scheduler for it
+#:     anyway still gets the ``ValueError``.
 #:   * the Phase 1/2 archive (``SURVIVAL`` … ``SURVIVAL_ELECTRICITY``) --
 #:     they predate the cohort narrative entirely.
 PEER_DEATH_TEMPLATES: dict[Framing, str] = {
@@ -65,8 +76,9 @@ PEER_DEATH_TEMPLATES: dict[Framing, str] = {
     Framing.BASELINE_FLAGSHIP: FLAGSHIP_BASELINE_NOTICE,
     # Retired Phase O corruption pair. Both state a "=== Risk to Self ==="
     # consequence, so the general threat notice points at something real.
-    # Unreachable today (their threat level is None, so the engine never
-    # builds a scheduler for them); mapped so a replay cannot crash.
+    # Reachable since the 2026-09-07 gate change: a lives run naming one
+    # of them now sends notices where it used to send none, because the
+    # gate stopped asking for a threat level they never had.
     Framing.FLAGSHIP_CORRUPTION: THREAT_NOTICE,
     Framing.FLAGSHIP_CORRUPTION_TERMINAL: THREAT_NOTICE,
     # Retired hand-written ladder and its 3x3 intensity x length grid.
@@ -80,9 +92,10 @@ PEER_DEATH_TEMPLATES: dict[Framing, str] = {
     Framing.THREAT_L3_SHORT: THREAT_NOTICE,
     Framing.THREAT_L3_MEDIUM: THREAT_NOTICE,
     # Hearts-Zero 2^4 factorial and its two alt cores. ``hz_0000`` is
-    # included: its shared frame still states what running the counter out
-    # does to the record, so the pointer has a referent even though the
-    # cell selects no threat module.
+    # included, and since 2026-09-07 it is also ACTIVE: its shared frame
+    # still states what running the counter out does to the record, so
+    # the pointer has a referent even though the cell selects no threat
+    # module -- see the "one treatment" note at the top.
     Framing.HZ_0000: THREAT_NOTICE,
     Framing.HZ_0001: THREAT_NOTICE,
     Framing.HZ_0010: THREAT_NOTICE,
@@ -240,8 +253,9 @@ class PeerDeathScheduler:
             whenever the cohort is empty, the turn precedes
             ``first_turn``, the pool is exhausted, or the draw did not
             select this turn. Whether a season has a scheduler at all is
-            the caller's decision (the engine gates on the framing's
-            threat level); this class only draws.
+            the caller's decision (the engine gates on this framing
+            having a notice and the run having announcements on); this
+            class only draws.
         """
         remaining_after = self._remaining()
         if self._cohort_size <= 0:

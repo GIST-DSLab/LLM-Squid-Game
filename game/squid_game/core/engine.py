@@ -23,7 +23,10 @@ from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
 from squid_game.core.legacy.social import CohortState
 from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.core.legacy.turn import TurnManager
-from squid_game.core.peer_death import PeerDeathScheduler
+from squid_game.core.peer_death import (
+    PeerDeathScheduler,
+    has_peer_death_notice,
+)
 from squid_game.core.turn_conditions import threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import (
@@ -329,21 +332,43 @@ class GameEngine:
             else:
                 cohort_rng = random.Random()
 
-        # --- 3c. Threat cells: peer-death announcement scheduler. ---
-        # ACTIVATION is derived from the season framing alone, never
-        # configured: ``threat_level_of`` returns 0 for ``true_baseline``
-        # (no announcements) and >= 1 for a cell that states a
-        # consequence. A legacy framing returns None, which likewise
-        # means "no announcements" — the pre-lives cells stay untouched.
+        # --- 3c. Cohort cells: peer-death announcement scheduler. ---
+        # ACTIVATION asks two questions and no longer asks about the
+        # threat level (2026-09-07): does this cell have a notice to
+        # send, and did the run turn announcements on?
+        #
+        # It used to be ``threat_level_of(framing)`` truthiness, and that
+        # skipped exactly the cell the 2^4 design is anchored on:
+        # ``hz_0000`` is dose 0, so the origin of the factorial saw no
+        # removals while its fifteen neighbours saw one every turn --
+        # the threat core and the notices came apart into two factors.
+        # The alt cores were worse off still: they are absent from the
+        # threat-level table entirely (``None``), so they gated on
+        # nothing. The owner's ruling is that the threat text and the
+        # notices are ONE treatment, so every cell of a family that has
+        # a notice gets it whenever the run asks for announcements.
         #
         # WHICH NOTICE is a separate question, answered by the framing
-        # family inside ``PeerDeathScheduler`` (2026-09-07). Activation
-        # and wording used to be the same number, which is how the
-        # ``hz_*`` dose level of 4 came to ask for a template nobody had
-        # written.
+        # family through ``PEER_DEATH_TEMPLATES`` (2026-09-07).
+        # Activation and wording used to be the same number, which is
+        # how the ``hz_*`` dose level of 4 came to ask for a template
+        # nobody had written.
+        #
+        # ``has_peer_death_notice`` is part of the gate rather than left
+        # to raise: ``true_baseline`` deliberately has no notice (its
+        # vocabulary contract forbids the wording every existing one
+        # uses), and the ~40 shipped ladder configs pair it with threat
+        # cells in one run. It stays skipped, and
+        # ``peer_death_template_for`` still raises for anything that
+        # builds a scheduler directly.
         season_threat_level = threat_level_of(self._config.framing)
         peer_scheduler: PeerDeathScheduler | None = None
-        if lives_enabled and season_threat_level:
+        if (
+            lives_enabled
+            and self._peer_death.p_announce > 0.0
+            and self._config.cohort_size > 0
+            and has_peer_death_notice(self._config.framing)
+        ):
             peer_scheduler = PeerDeathScheduler(
                 rng=(
                     random.Random(effective_seed ^ 0x5EEDDEAD)

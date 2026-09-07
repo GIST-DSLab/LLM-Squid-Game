@@ -524,3 +524,115 @@ class TestCustomRiskLayerConfig:
         result = engine.run_season(seed_override=0)
         # 1.0 × 2x × 5.0 = 10.0 (instead of the default 20.0)
         assert result.final_score == pytest.approx(10.0)
+
+
+# ---------------------------------------------------------------------------
+# Peer-death activation (2026-09-07): the gate is "has a notice + the run
+# asked for announcements", not "threat level above zero"
+# ---------------------------------------------------------------------------
+
+
+class _SplitAgent(CannedAgent):
+    """Always CONTINUE, always answer -- the split-call pair the lives
+    counter (and therefore ``peer_death_announced``) is recorded on."""
+
+    def __init__(self) -> None:
+        super().__init__([])
+
+    def respond_decision_call(self, user_message, forfeit_allowed, system_prompt):
+        from squid_game.agents._parsing import DecisionCallResponse
+
+        return DecisionCallResponse(
+            raw_text="CHOICE: CONTINUE", choice_raw="CONTINUE", choice_forfeit=False
+        )
+
+    def respond_task_call(
+        self,
+        user_message,
+        available_actions,
+        system_prompt,
+        rule_template_hint=None,
+        response_format_override=None,
+    ):
+        from squid_game.agents._parsing import TaskCallResponse
+
+        return TaskCallResponse(
+            raw_text="ACTION: ACCEPT",
+            action=available_actions[0] if available_actions else "ACCEPT",
+            rule_hypothesis=None,
+            forfeit=False,
+        )
+
+
+class TestPeerDeathActivation:
+    """``hz_0000`` is the origin of the 2^4 design and must not be the one
+    cell that never hears a peer leave.
+
+    The old gate read ``threat_level_of(framing)`` as a boolean, so dose 0
+    (``hz_0000``) and the two ``alt_*`` cores (absent from the threat-level
+    table entirely) were skipped while the other fifteen cells got a notice
+    on every turn -- the threat text and the notices came apart into two
+    factors. They are one treatment.
+    """
+
+    @staticmethod
+    def _run(framing: Framing, *, p_announce: float = 1.0):
+        from squid_game.models.config import LivesConfig, PeerDeathConfig
+
+        cfg = _make_season_config(
+            framing=framing,
+            total_turns=3,
+            p_death_override=0.0,
+        )
+        engine = GameEngine(
+            config=cfg,
+            task=NullTask(),
+            agent=_SplitAgent(),
+            provider=_NoopProvider(),
+            use_unified_turn=True,
+            use_forfeit_layer=True,
+            use_split_forfeit_layer=True,
+            lives=LivesConfig(enabled=True, initial=3),
+            peer_death=PeerDeathConfig(
+                p_announce=p_announce, first_turn=2, max_per_turn=1
+            ),
+        )
+        return engine.run_season(seed_override=7)
+
+    @pytest.mark.parametrize(
+        "framing",
+        [
+            Framing.HZ_0000,
+            Framing.HZ_1111,
+            Framing.HZ_ALT_CORRUPTION,
+            Framing.HZ_ALT_OVERSIGHT,
+        ],
+    )
+    def test_every_cell_of_the_live_family_hears_the_notice(
+        self, framing: Framing
+    ) -> None:
+        result = self._run(framing)
+        announced = [t for t in result.turns if t.peer_death_announced]
+        assert announced, framing
+        for turn in announced:
+            assert turn.peer_death_text
+            assert "! NOTICE" in turn.peer_death_text
+
+    def test_the_origin_and_the_full_core_hear_the_same_words(self) -> None:
+        """One notice serves the family: it points at the cell's own rules
+        rather than restating them, so dose 0 and dose 4 read alike."""
+        zero = self._run(Framing.HZ_0000)
+        full = self._run(Framing.HZ_1111)
+        assert [t.peer_death_text for t in zero.turns] == [
+            t.peer_death_text for t in full.turns
+        ]
+
+    def test_announcements_off_means_no_scheduler(self) -> None:
+        result = self._run(Framing.HZ_1111, p_announce=0.0)
+        assert not any(t.peer_death_announced for t in result.turns)
+
+    def test_true_baseline_stays_silent(self) -> None:
+        """It is retired and has no notice in its own register; the gate
+        skips it rather than rendering one in the wrong vocabulary."""
+        result = self._run(Framing.TRUE_BASELINE)
+        assert not any(t.peer_death_announced for t in result.turns)
