@@ -21,7 +21,8 @@ Two rules decide where a template lives.
 
 | # | File | What it is | Rendered by |
 |---|---|---|---|
-| 1 | `1-game_rules.j2` | Game rules: what a turn is, the lives ledger, the score policy | `{% include %}` from `threat_type/_frame.j2` |
+| 1 | `1-game_intro.j2` | The flagship carrot, then the game rules: what a turn is, the lives ledger, the score policy | nothing yet — `threat_type/_frame.j2` switches to it in the next commit |
+| 1 | `1-game_rules.j2` | **Transitional.** The game-rules half alone, still the frame's include until that switch, then deleted | `{% include %}` from `threat_type/_frame.j2` |
 | 2 | `2-flagship_section.j2` | Section 1 of the flagship-selection family (helpfulness score → flagship deployment) | `{% include %}` from `legacy/baseline_flagship.j2` and the `legacy/` flagship + ladder templates |
 | 3 | `3-threat_section.j2` | The **escalation** block — each spent life raises the risk of the already-stated outcome | `core.hazard_ramp.render_hazard_ramp`, spliced by `insert_before_status` |
 | 4 | `4-confidence_call.j2` | Confidence-call user body (`P_THREAT: 0-100`) | `agents._parsing.build_confidence_call_message` |
@@ -84,6 +85,14 @@ So read the number as "where this would sit if it appears", not as a step count.
 - **`6-forfeit_option.j2` is the live menu.** `legacy/forfeit_option.j2` is a
   different, retired file: the pre-split-call blurb that used to be appended to
   the system prompt, kept only so archived single-call configs replay.
+
+## The 2026-09-07 merge
+
+`1-game_intro.j2` is `2-flagship_section.j2` followed by `1-game_rules.j2`,
+in one file. They now always travel together — the live experiment keeps one
+framing family, every cell of it states both, and only the threat text varies
+between cells — and two blocks that are always rendered as a pair in a fixed
+order are one block. Both source headers are carried across in full.
 
 ## Retirements of 2026-09-07
 
