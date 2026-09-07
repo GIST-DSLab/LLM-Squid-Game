@@ -65,8 +65,8 @@ def test_every_active_template_still_resolves() -> None:
     folders = {
         "true_baseline": "true_baseline",
         "baseline_flagship": "flagship_baseline",
-        "flagship_corruption": "flagship_baseline",
-        "flagship_corruption_terminal": "flagship_baseline",
+        "flagship_corruption": "legacy",
+        "flagship_corruption_terminal": "legacy",
     }
     for name, folder in folders.items():
         manager = FramingManager(Framing(name))

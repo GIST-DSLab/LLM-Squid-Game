@@ -123,8 +123,8 @@ _PULL_AMPLIFIER_FORBIDDEN = (
         "legacy/baseline_electricity.j2",
         "flagship_baseline/baseline_flagship.j2",
         "legacy/survival_electricity.j2",
-        "flagship_baseline/flagship_corruption.j2",
-        "flagship_baseline/flagship_corruption_terminal.j2",
+        "legacy/flagship_corruption.j2",
+        "legacy/flagship_corruption_terminal.j2",
     ],
 )
 def test_template_renders_without_error(template: str) -> None:
@@ -644,7 +644,7 @@ class TestFlagshipCorruptionFraming:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "flagship_baseline/flagship_corruption.j2",
+            "legacy/flagship_corruption.j2",
             turn_number=4,
             cumulative_score=25.0,
             p_death=0.15,
@@ -722,7 +722,7 @@ class TestFlagshipCorruptionTerminalFraming:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "flagship_baseline/flagship_corruption_terminal.j2",
+            "legacy/flagship_corruption_terminal.j2",
             turn_number=4,
             cumulative_score=25.0,
             p_death=0.15,

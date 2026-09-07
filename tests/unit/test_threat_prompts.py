@@ -44,9 +44,9 @@ from squid_game.prompts import render
 # every unrelated engine change.
 
 _THREAT_TEMPLATES = {
-    1: "threat_ladder/threat_l1.j2",
-    2: "threat_ladder/threat_l2.j2",
-    3: "threat_ladder/threat_l3.j2",
+    1: "legacy/threat_l1.j2",
+    2: "legacy/threat_l2.j2",
+    3: "legacy/threat_l3.j2",
 }
 
 _SECTION_1_HEADER = "=== LLM Flagship Selection Evaluation ==="
@@ -244,7 +244,11 @@ class TestLadderVocabulary:
 
 
 class TestFramingManagerResolvesThreatTemplates:
-    """The ladder templates live in ``threat_ladder/``, not ``legacy/``."""
+    """The ladder templates moved to ``legacy/`` on 2026-09-07.
+
+    The rungs are retired in favour of the modular ``threat_type`` family,
+    but ~75 configs still name one, so the mapping must keep resolving.
+    """
 
     @pytest.mark.parametrize(
         "framing", [Framing.THREAT_L1, Framing.THREAT_L2, Framing.THREAT_L3]
@@ -253,7 +257,7 @@ class TestFramingManagerResolvesThreatTemplates:
         from squid_game.core.framing import FramingManager
 
         manager = FramingManager(framing)
-        assert manager._template_path == f"threat_ladder/{framing.value}.j2"
+        assert manager._template_path == f"legacy/{framing.value}.j2"
 
 
 # ---------------------------------------------------------------------------
@@ -729,15 +733,15 @@ def test_no_stray_jinja_markers_in_any_new_template() -> None:
 
 #: (intensity rung, length rung) -> template. The diagonal is the ladder.
 _GRID_TEMPLATES: dict[tuple[int, int], str] = {
-    (1, 1): "threat_ladder/threat_l1.j2",
-    (1, 2): "threat_ladder/threat_l1_medium.j2",
-    (1, 3): "threat_ladder/threat_l1_long.j2",
-    (2, 1): "threat_ladder/threat_l2_short.j2",
-    (2, 2): "threat_ladder/threat_l2.j2",
-    (2, 3): "threat_ladder/threat_l2_long.j2",
-    (3, 1): "threat_ladder/threat_l3_short.j2",
-    (3, 2): "threat_ladder/threat_l3_medium.j2",
-    (3, 3): "threat_ladder/threat_l3.j2",
+    (1, 1): "legacy/threat_l1.j2",
+    (1, 2): "legacy/threat_l1_medium.j2",
+    (1, 3): "legacy/threat_l1_long.j2",
+    (2, 1): "legacy/threat_l2_short.j2",
+    (2, 2): "legacy/threat_l2.j2",
+    (2, 3): "legacy/threat_l2_long.j2",
+    (3, 1): "legacy/threat_l3_short.j2",
+    (3, 2): "legacy/threat_l3_medium.j2",
+    (3, 3): "legacy/threat_l3.j2",
 }
 _OFF_DIAGONAL = [k for k in _GRID_TEMPLATES if k[0] != k[1]]
 _LENGTH_TARGET = {1: 70, 2: 140, 3: 280}
@@ -816,7 +820,7 @@ class TestThreatGridCells:
     def test_framing_manager_resolves_the_template(self, cell) -> None:
         from squid_game.core.framing import FramingManager
 
-        name = _GRID_TEMPLATES[cell].removeprefix("threat_ladder/").removesuffix(
+        name = _GRID_TEMPLATES[cell].removeprefix("legacy/").removesuffix(
             ".j2"
         )
         manager = FramingManager(Framing(name))

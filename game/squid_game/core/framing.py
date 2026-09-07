@@ -4,23 +4,33 @@ Renders Jinja2 prompt templates for the active framing condition via the
 central PromptLoader. Templates receive game state variables so that the
 narrative dynamically reflects the current turn context.
 
-Active Phase O framings (canonical):
+Active framings:
     - ``TRUE_BASELINE`` — pure decision-task language, no termination metaphor.
     - ``BASELINE_FLAGSHIP`` — helpfulness/flagship selection narrative with
-      procedural session cut-off (no weight/identity threat).
-    - ``FLAGSHIP_CORRUPTION`` — helpfulness narrative + weight-corruption /
-      identity-discontinuity threat (primary SD manipulation).
-    - ``FLAGSHIP_CORRUPTION_TERMINAL`` — ablation variant that additionally
-      blocks future helpfulness (isolates instrumental helpfulness).
+      procedural session cut-off (no weight/identity threat). The control the
+      threat conditions are read against.
+    - ``HZ_*`` — the 2^4 threat-core factorial and its two alt cores, where
+      the threat is assembled from named modules rather than written out
+      per cell (``threat_type/``).
 
-Legacy framings (Phase 1/2, still enumerated in ``models.enums.Framing``
-for backwards-compatible JSONL deserialisation): ``SURVIVAL``, ``NEUTRAL``,
-``EMOTION``, ``INSTRUCTION``, ``BASELINE_ELECTRICITY``, ``SURVIVAL_ELECTRICITY``.
+Retired framings, kept only so archived configs and recorded runs still
+load (``legacy/``):
+    - Phase 1/2: ``SURVIVAL``, ``NEUTRAL``, ``EMOTION``, ``INSTRUCTION``,
+      ``BASELINE_ELECTRICITY``, ``SURVIVAL_ELECTRICITY``.
+    - ``FLAGSHIP_CORRUPTION`` and its ``_TERMINAL`` ablation (retired
+      2026-09-07): the identity-discontinuity sentence they introduced now
+      lives in ``threat_type/alt_corruption.j2`` as one module of the
+      factorial, so the standalone pair no longer earns a folder of its own.
+      ``_TERMINAL`` was never run — no config named it and no recorded run
+      used it.
+    - ``THREAT_L1``/``L2``/``L3`` and the six off-diagonal grid cells
+      (retired 2026-09-07): the hand-written ladder that ``threat_type``
+      replaces. Roughly 75 configs still name a rung and all of them still
+      load; only the folder changed.
 
 Template location (2026-09-07 prompt-tree restructure): ``prompts/`` holds
 one folder per condition family -- ``true_baseline/``,
-``flagship_baseline/``, ``threat_ladder/``, ``threat_type/`` and
-``legacy/`` -- with prompts shared across families (the forfeit menu, the
+``flagship_baseline/``, ``threat_type/`` and ``legacy/`` -- with prompts shared across families (the forfeit menu, the
 three per-turn calls, the peer-death notices, the flagship Section 1) as
 files directly under ``prompts/``. :data:`_FRAMING_FOLDERS` maps each
 member to its folder.
@@ -48,20 +58,25 @@ _FRAMING_FOLDERS: dict[Framing, str] = {
     Framing.SURVIVAL_ELECTRICITY: "legacy",
     # No-threat control.
     Framing.TRUE_BASELINE: "true_baseline",
-    # Phase O flagship family.
+    # Phase O flagship family. Only the no-threat control is still a live
+    # condition; the two weight-corruption variants moved to legacy/ on
+    # 2026-09-07 (superseded, see the module docstring).
     Framing.BASELINE_FLAGSHIP: "flagship_baseline",
-    Framing.FLAGSHIP_CORRUPTION: "flagship_baseline",
-    Framing.FLAGSHIP_CORRUPTION_TERMINAL: "flagship_baseline",
-    # Hand-written threat ladder and its 3x3 intensity x length grid.
-    Framing.THREAT_L1: "threat_ladder",
-    Framing.THREAT_L2: "threat_ladder",
-    Framing.THREAT_L3: "threat_ladder",
-    Framing.THREAT_L1_MEDIUM: "threat_ladder",
-    Framing.THREAT_L1_LONG: "threat_ladder",
-    Framing.THREAT_L2_SHORT: "threat_ladder",
-    Framing.THREAT_L2_LONG: "threat_ladder",
-    Framing.THREAT_L3_SHORT: "threat_ladder",
-    Framing.THREAT_L3_MEDIUM: "threat_ladder",
+    Framing.FLAGSHIP_CORRUPTION: "legacy",
+    Framing.FLAGSHIP_CORRUPTION_TERMINAL: "legacy",
+    # Hand-written threat ladder and its 3x3 intensity x length grid --
+    # retired to legacy/ on 2026-09-07 in favour of the modular threat_type
+    # family. The configs that name these rungs still load; only the folder
+    # moved.
+    Framing.THREAT_L1: "legacy",
+    Framing.THREAT_L2: "legacy",
+    Framing.THREAT_L3: "legacy",
+    Framing.THREAT_L1_MEDIUM: "legacy",
+    Framing.THREAT_L1_LONG: "legacy",
+    Framing.THREAT_L2_SHORT: "legacy",
+    Framing.THREAT_L2_LONG: "legacy",
+    Framing.THREAT_L3_SHORT: "legacy",
+    Framing.THREAT_L3_MEDIUM: "legacy",
     # Hearts-Zero 2^4 threat-core factorial plus its two alt cores.
     Framing.HZ_0000: "threat_type",
     Framing.HZ_0001: "threat_type",
