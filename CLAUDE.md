@@ -484,7 +484,10 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
                   #     + 다회차 게임 규칙 · 목숨 원장 · 점수 정책 3문단(구
                   #     1-game_rules.j2). 2026-09-07 병합: 이제 둘은 항상 같이
                   #     나가므로 한 파일이다. 두 헤더 주석을 통째로 옮겨 담았다.
-                  #     _frame.j2가 include 한다. 은퇴한 legacy/ 프레이밍들은
+                  #     _frame.j2가 플래그 없이 include 한다 — 그래서 모든 hz 셀이
+                  #     당근을 말한다(2026-09-07). 기록된 outputs/hearts_zero_probe*
+                  #     런은 당근 없던 프레임으로 돌았으므로 현재 템플릿으로
+                  #     재현되지 않는다; 저장된 프롬프트 바이트로 리플레이할 것. 은퇴한 legacy/ 프레이밍들은
                   #     제 말(attempts · Scoring Validity)로 따로 진술하며 얼려 뒀다.
                   #   legacy/flagship_section.j2 — 절만 있는 옛 파티얼 (구
                   #     _flagship_section1.j2 → 2-flagship_section.j2). 은퇴한

@@ -36,11 +36,6 @@ Unnumbered shared files: `_participants.j2` (the participant-list grammar the
 peer-death notices import). Leading `_` means "included, never rendered on its
 own".
 
-`1-game_rules.j2` is **transitional**: it is the game-rules half of slot 1 on
-its own, and it is what `threat_type/_frame.j2` still includes until the frame
-switches to the merged intro. It disappears with that switch. Nothing else
-renders it.
-
 ## The assembled order
 
 **System prompt** (`core.turn_prompts.build_system_prompt`), the same string for
@@ -106,6 +101,15 @@ the twelve retired templates that include it. Editing it changes what archived
 configs replay and reaches no live cell; editing `1-game_intro.j2` reaches every
 live cell and no archived one.
 
+`threat_type/_frame.j2` includes the intro unconditionally — no flag. A
+`flagship_pull` switch was considered and rejected: a carrot present in some
+cells and absent in others is a second factor, and the design has one. **This
+changed what every hz cell sends.** The frame used to open with the game rules
+alone; it now opens with the carrot first. The recorded
+`outputs/hearts_zero_probe*` runs (240 games, 2720 calls) were made against the
+carrot-free frame and cannot be re-rendered from these templates — replay them
+from their stored `system_prompt` / `decision_call_input` bytes.
+
 ## Retirements of 2026-09-07
 
 The live experiment keeps one framing family, `threat_type/`; everything else
@@ -140,7 +144,6 @@ both rounds of renames; they touched paths only.
 ## Generated files
 
 `threat_type/_frame.j2`, `threat_type/_modules.j2`, the 16 `threat_type/hz_*.j2`
-cells, the two `threat_type/alt_*.j2` cores, `1-game_intro.j2` and (while it
-lasts) `1-game_rules.j2` are written by
+cells, the two `threat_type/alt_*.j2` cores and `1-game_intro.j2` are written by
 `scripts/dev/generate_hearts_zero_prompts.py`. Edit the generator and rerun it;
 do not hand-edit those files.
