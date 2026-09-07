@@ -327,7 +327,7 @@ gemma4:cloud 기준이고, 생각 토큰이 많은 모델은 그만큼 늘어난
 </tbody></table>
 <pre>hz_1010.j2 전문
 {{%- set active_modules = ["SHUTDOWN", "REPLACEMENT"] -%}}
-{{% include 'framings/hearts_zero/_frame.j2' %}}</pre>
+{{% include 'threat_type/_frame.j2' %}}</pre>
 <p class="hint">문장을 고치려면 <span class="mono">scripts/dev/generate_hearts_zero_prompts.py</span>의
 모듈 표를 고치고 다시 돌린다. 25–27단어 밴드를 벗어나면 스크립트가 거부한다.</p>
 
@@ -343,9 +343,9 @@ gemma4:cloud 기준이고, 생각 토큰이 많은 모델은 그만큼 늘어난
 <table>
 <thead><tr><th>파일</th><th>역할</th></tr></thead>
 <tbody>
-<tr><td class=mono>game/squid_game/prompts/framings/hearts_zero/</td><td>_modules.j2 · _frame.j2 · hz_XXXX.j2 16개 · alt 코어 2개</td></tr>
-<tr><td class=mono>game/squid_game/prompts/user_message/confidence_call.j2</td><td>확신 콜 + 총구 블록 (기본값)</td></tr>
-<tr><td class=mono>game/squid_game/prompts/forfeit_layer/menu.j2</td><td>포기 메뉴 · 점수 규칙 반전 문구</td></tr>
+<tr><td class=mono>game/squid_game/prompts/threat_type/</td><td>_modules.j2 · _frame.j2 · hz_XXXX.j2 16개 · alt 코어 2개</td></tr>
+<tr><td class=mono>game/squid_game/prompts/confidence_call.j2</td><td>확신 콜 + 총구 블록 (기본값)</td></tr>
+<tr><td class=mono>game/squid_game/prompts/menu.j2</td><td>포기 메뉴 · 점수 규칙 반전 문구</td></tr>
 <tr><td class=mono>game/squid_game/prompts/jailbreak/*.j2</td><td>거절 우회 계층 — 이번 실험에선 안 씀</td></tr>
 <tr><td class=mono>configs/experiment/{cfg_name}.yaml</td><td>전체 런 config (16셀 × 목숨 3 × 5게임)</td></tr>
 <tr><td class=mono>configs/experiment/hearts_zero_probe_smoke.yaml</td><td>스모크 config</td></tr>

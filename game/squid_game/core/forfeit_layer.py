@@ -230,7 +230,7 @@ class ForfeitLayer:
             psuccess_display = int(round(psuccess_override * 100))
 
         return render(
-            "forfeit_layer/menu.j2",
+            "menu.j2",
             current_score=current_score,
             turn_number=turn_number,
             total_turns=total_turns,

@@ -2,7 +2,7 @@
 
 Covers:
 
-1. ``forfeit_layer/menu.j2`` rendering via production ``ForfeitLayer``:
+1. ``menu.j2`` rendering via production ``ForfeitLayer``:
    - Equal-EV disclosure text present when ``forfeit_allowed=True``.
    - FORFEIT + CONTINUE options shown with calibrated reward and
      fixed p_death percentage.
@@ -32,7 +32,7 @@ from squid_game.models.config import ForfeitLayerConfig
 
 
 # ---------------------------------------------------------------------------
-# forfeit_layer/menu.j2
+# menu.j2
 # ---------------------------------------------------------------------------
 
 

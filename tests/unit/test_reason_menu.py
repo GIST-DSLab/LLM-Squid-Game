@@ -250,10 +250,10 @@ class TestControlBranchesUnchanged:
         }
         if flag:
             kwargs[flag] = True
-        baseline = render("forfeit_layer/menu.j2", **kwargs)
+        baseline = render("menu.j2", **kwargs)
         assert (
             render(
-                "forfeit_layer/menu.j2",
+                "menu.j2",
                 threat_level=level,
                 reason_menu_per_intensity=True,
                 **kwargs,

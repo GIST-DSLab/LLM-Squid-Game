@@ -16,7 +16,7 @@ def render(template_path: str, **kwargs: object) -> str:
     """Render a prompt template relative to prompts/.
 
     Args:
-        template_path: e.g. "forfeit/forfeit_option.j2"
+        template_path: e.g. "legacy/forfeit_option.j2"
         **kwargs: Template variables.
     """
     template = _env.get_template(template_path)

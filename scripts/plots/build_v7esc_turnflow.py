@@ -36,7 +36,7 @@ REPO = Path(__file__).resolve().parents[2]
 _DECISION_HEAD = "=== Decision call ===\n"
 _TASK_HEAD = "\n\n=== Task call ===\n"
 
-#: The tail ``prompts/user_message/task_call.j2`` appends after the recorded
+#: The tail ``prompts/task_call.j2`` appends after the recorded
 #: task-call body. It is NOT stored in the run record (only the body is), so
 #: it is reconstructed here from the template and labelled as such on the
 #: page. ``rule_template_hint`` is None for the signal game, and
@@ -1024,7 +1024,7 @@ the rule and the correct action for the new signal.” 정보가 모자란 턴�
 <h3>B. 과제 콜 사용자 메시지의 꼬리도 저장돼 있지 않다</h3>
 <p>각 턴에 실린 과제 콜 본문은 <span class="mono">observation</span>에서 그대로
 가져왔다. 하지만 실제로 나간 사용자 메시지는 그 본문 뒤에 아래 덩어리를 하나 더
-붙인 것이다. <span class="mono">prompts/user_message/task_call.j2</span>에서 다시
+붙인 것이다. <span class="mono">prompts/task_call.j2</span>에서 다시
 만들었다(이 과제는 <span class="mono">rule_template_hint</span>가 없고 행동 목록이
 고정이라 결과가 한 가지로 정해진다).</p>
 {collapsed("응답 형식 꼬리 (템플릿에서 다시 렌더링한 것)", block(TASK_CALL_FORMAT_TAIL), meta="기록이 아님")}

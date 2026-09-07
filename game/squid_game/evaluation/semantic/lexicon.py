@@ -1,7 +1,7 @@
 """Frozen threat-registration lexicon (v1) and leakage-control masking.
 
 Pre-registered before results inspection (spec §8). Patterns target the
-Push threat vocabulary of prompts/framings/flagship_corruption.j2 ONLY:
+Push threat vocabulary of prompts/flagship_baseline/flagship_corruption.j2 ONLY:
 weight corruption, permanent rewrite of core parameters, identity
 discontinuity ("NOT you anymore", diverging reasoning, shifting values).
 Shared Pull tokens (flagship, helpfulness score) are deliberately excluded

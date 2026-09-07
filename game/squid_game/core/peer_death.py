@@ -145,7 +145,7 @@ class PeerDeathScheduler:
         remaining_after = self._remaining()
 
         text = render(
-            f"announcement/peer_death_l{self._threat_level}.j2",
+            f"peer_death_l{self._threat_level}.j2",
             participants=participants,
             cumulative=self._cumulative,
             remaining=remaining_after,

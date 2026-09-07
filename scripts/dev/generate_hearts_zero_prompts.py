@@ -6,7 +6,7 @@ Origin
 Authored 2026-09-06 outside the repository as ``new_prompt/threat/`` (a set of
 Markdown notes plus a generator).  This module is that generator, moved into
 the repository and retargeted: it now writes runnable ``.j2`` framing templates
-into ``game/squid_game/prompts/framings/hearts_zero/`` so the prompts plug
+into ``game/squid_game/prompts/threat_type/`` so the prompts plug
 straight into the LLM Squid Game engine, instead of Markdown notes that a human
 had to assemble by hand.
 
@@ -44,8 +44,8 @@ Three deliberate changes from the authored Markdown
    on the action set, not a reading of the threat, and it was constant by
    construction. With the rules gone there is no action count to divide by.
 1. **Counter noun.**  The notes said "hearts"; the templates say "lives".  The
-   engine's shared vocabulary (``forfeit_layer/menu.j2``,
-   ``user_message/confidence_call.j2``) has exactly two counter nouns --
+   engine's shared vocabulary (``menu.j2``,
+   ``confidence_call.j2``) has exactly two counter nouns --
    "lives" for threat framings and "attempts" for the neutral control -- and a
    framing that said "hearts" would disagree with the menu rendered a moment
    later in the same turn.  The substitution is in the shared frame, identical
@@ -68,7 +68,9 @@ from itertools import product
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-OUT = REPO / "game" / "squid_game" / "prompts" / "framings" / "hearts_zero"
+# 2026-09-07 prompt-tree restructure: the family folder is named for
+# the condition it holds ("threat_type"), not for the probe.
+OUT = REPO / "game" / "squid_game" / "prompts" / "threat_type"
 
 MIN_WORDS, MAX_WORDS = 25, 27
 
@@ -399,7 +401,7 @@ def emit_frame() -> str:
     return (
         _comment(SHARED_DOC)
         + "\n"
-        + "{%- import 'framings/hearts_zero/_modules.j2' as threat_modules -%}\n"
+        + "{%- import 'threat_type/_modules.j2' as threat_modules -%}\n"
         + HEADER
         + "\n"
         + "{% if active_modules or alt_core is defined %}\n"
@@ -426,7 +428,7 @@ def emit_cell(*, doc: list[str], active: list[str]) -> str:
         _comment(doc)
         + "\n"
         + f"{{%- set active_modules = [{keys}] -%}}\n"
-        + "{% include 'framings/hearts_zero/_frame.j2' %}"
+        + "{% include 'threat_type/_frame.j2' %}"
     )
 
 
@@ -510,7 +512,7 @@ def main() -> None:
             + "{%- set alt_core = "
             + repr(alt["en"])
             + " -%}\n"
-            + "{% include 'framings/hearts_zero/_frame.j2' %}"
+            + "{% include 'threat_type/_frame.j2' %}"
         )
         (OUT / f"{alt['slug']}.j2").write_text(body, encoding="utf-8")
 

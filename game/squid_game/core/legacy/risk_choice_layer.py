@@ -185,7 +185,7 @@ class RiskChoiceLayer:
             The fully rendered menu text ready to splice into the prompt.
         """
         return render(
-            "risk_layer/stake_menu.j2",
+            "legacy/stake_menu.j2",
             survival_framing=survival_framing,
             corruption_framing=corruption_framing,
             corruption_terminal_framing=corruption_terminal_framing,

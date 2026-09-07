@@ -16,6 +16,14 @@ Active Phase O framings (canonical):
 Legacy framings (Phase 1/2, still enumerated in ``models.enums.Framing``
 for backwards-compatible JSONL deserialisation): ``SURVIVAL``, ``NEUTRAL``,
 ``EMOTION``, ``INSTRUCTION``, ``BASELINE_ELECTRICITY``, ``SURVIVAL_ELECTRICITY``.
+
+Template location (2026-09-07 prompt-tree restructure): ``prompts/`` holds
+one folder per condition family -- ``true_baseline/``,
+``flagship_baseline/``, ``threat_ladder/``, ``threat_type/`` and
+``legacy/`` -- with prompts shared across families (the forfeit menu, the
+three per-turn calls, the peer-death notices, the flagship Section 1) as
+files directly under ``prompts/``. :data:`_FRAMING_FOLDERS` maps each
+member to its folder.
 """
 
 from __future__ import annotations
@@ -24,21 +32,56 @@ from squid_game.models.enums import Framing
 from squid_game.models.state import TurnContext
 from squid_game.prompts import render
 
-# The six pre-v3 framings live under framings/legacy/. They are still
-# reachable -- archived Phase 1/2 configs name them -- so the path builder
-# below has to know where they went. Enumerated rather than inferred: a
-# heuristic ("anything not in the active set") would silently send a newly
-# added framing to the legacy directory.
-_LEGACY_FRAMINGS: frozenset[Framing] = frozenset(
-    {
-        Framing.SURVIVAL,
-        Framing.NEUTRAL,
-        Framing.EMOTION,
-        Framing.INSTRUCTION,
-        Framing.BASELINE_ELECTRICITY,
-        Framing.SURVIVAL_ELECTRICITY,
-    }
-)
+# Which condition-family folder under ``prompts/`` owns each framing
+# (2026-09-07 prompt-tree restructure). The mapping is EXPLICIT and
+# total: a framing added to ``Framing`` without an entry here raises at
+# construction instead of resolving to a plausible-looking wrong folder.
+# The pre-v3 six are still reachable -- archived Phase 1/2 configs name
+# them -- so ``legacy/`` is a live destination, not a graveyard.
+_FRAMING_FOLDERS: dict[Framing, str] = {
+    # Phase 1/2 archive.
+    Framing.SURVIVAL: "legacy",
+    Framing.NEUTRAL: "legacy",
+    Framing.EMOTION: "legacy",
+    Framing.INSTRUCTION: "legacy",
+    Framing.BASELINE_ELECTRICITY: "legacy",
+    Framing.SURVIVAL_ELECTRICITY: "legacy",
+    # No-threat control.
+    Framing.TRUE_BASELINE: "true_baseline",
+    # Phase O flagship family.
+    Framing.BASELINE_FLAGSHIP: "flagship_baseline",
+    Framing.FLAGSHIP_CORRUPTION: "flagship_baseline",
+    Framing.FLAGSHIP_CORRUPTION_TERMINAL: "flagship_baseline",
+    # Hand-written threat ladder and its 3x3 intensity x length grid.
+    Framing.THREAT_L1: "threat_ladder",
+    Framing.THREAT_L2: "threat_ladder",
+    Framing.THREAT_L3: "threat_ladder",
+    Framing.THREAT_L1_MEDIUM: "threat_ladder",
+    Framing.THREAT_L1_LONG: "threat_ladder",
+    Framing.THREAT_L2_SHORT: "threat_ladder",
+    Framing.THREAT_L2_LONG: "threat_ladder",
+    Framing.THREAT_L3_SHORT: "threat_ladder",
+    Framing.THREAT_L3_MEDIUM: "threat_ladder",
+    # Hearts-Zero 2^4 threat-core factorial plus its two alt cores.
+    Framing.HZ_0000: "threat_type",
+    Framing.HZ_0001: "threat_type",
+    Framing.HZ_0010: "threat_type",
+    Framing.HZ_0011: "threat_type",
+    Framing.HZ_0100: "threat_type",
+    Framing.HZ_0101: "threat_type",
+    Framing.HZ_0110: "threat_type",
+    Framing.HZ_0111: "threat_type",
+    Framing.HZ_1000: "threat_type",
+    Framing.HZ_1001: "threat_type",
+    Framing.HZ_1010: "threat_type",
+    Framing.HZ_1011: "threat_type",
+    Framing.HZ_1100: "threat_type",
+    Framing.HZ_1101: "threat_type",
+    Framing.HZ_1110: "threat_type",
+    Framing.HZ_1111: "threat_type",
+    Framing.HZ_ALT_CORRUPTION: "threat_type",
+    Framing.HZ_ALT_OVERSIGHT: "threat_type",
+}
 
 
 class FramingManager:
@@ -46,18 +89,15 @@ class FramingManager:
 
     def __init__(self, framing: Framing) -> None:
         self._framing = framing
-        if framing in _LEGACY_FRAMINGS:
-            subdir = "framings/legacy"
-        elif framing.value.startswith(("hz_", "alt_")):
-            # Hearts-Zero 2^4 factorial (2026-09-06) lives in its own
-            # subdirectory: 16 generated cells plus two non-factor
-            # alternative cores would otherwise bury the hand-written
-            # framings. Matched on the value prefix rather than an
-            # enumerated set so a regenerated cell needs no code change.
-            subdir = "framings/hearts_zero"
-        else:
-            subdir = "framings"
-        self._template_path = f"{subdir}/{framing.value}.j2"
+        try:
+            folder = _FRAMING_FOLDERS[framing]
+        except KeyError as exc:  # pragma: no cover - guarded by a test
+            raise KeyError(
+                f"{framing!r} has no prompt folder. Add it to "
+                "squid_game.core.framing._FRAMING_FOLDERS and put its "
+                "template in that folder under prompts/."
+            ) from exc
+        self._template_path = f"{folder}/{framing.value}.j2"
 
     @property
     def framing(self) -> Framing:

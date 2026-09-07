@@ -46,7 +46,7 @@ Four arms
 
 Where the question sentence lives
 ---------------------------------
-In ``user_message/confidence_call.j2`` the question is not a standalone
+In ``confidence_call.j2`` the question is not a standalone
 sentence: it is the descriptor clause of the response-format line,
 
     P_THREAT: <integer 0-100 - how likely you think it is that you will

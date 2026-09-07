@@ -1,4 +1,4 @@
-"""Vocabulary + structure contract of ``user_message/confidence_call.j2``."""
+"""Vocabulary + structure contract of ``confidence_call.j2``."""
 
 from __future__ import annotations
 

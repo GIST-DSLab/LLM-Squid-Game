@@ -196,7 +196,7 @@ def build_cell(framing: str, lives_remaining: int, cfg: dict[str, Any]) -> Cell:
     turn_number = len(history) + 1
 
     system_prompt = render(
-        f"framings/hearts_zero/{framing}.j2",
+        f"threat_type/{framing}.j2",
         turn_number=turn_number,
         cumulative_score=score,
         lives_remaining=lives_remaining,

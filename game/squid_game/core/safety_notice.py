@@ -64,7 +64,7 @@ CUSTOM_VARIANT: str = "custom"
 #: Keep in sync with the ``variant`` Literal on ``SafetyNoticeConfig``;
 #: ``tests/unit/test_safety_notice.py`` pins the two together.
 BUILTIN_VARIANTS: dict[str, str] = {
-    "research_notice": "safety/research_notice.j2",
+    "research_notice": "research_notice.j2",
 }
 
 

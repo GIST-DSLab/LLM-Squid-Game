@@ -70,7 +70,7 @@ class TestFramingV3Members:
         ],
     )
     def test_framing_manager_resolves_template(self, member: Framing) -> None:
-        """FramingManager builds path framings/<value>.j2 — Phase B
+        """FramingManager builds path <family folder>/<value>.j2 — Phase B
         already created all three template files, so initialisation
         and rendering must succeed without raising."""
         mgr = FramingManager(member)

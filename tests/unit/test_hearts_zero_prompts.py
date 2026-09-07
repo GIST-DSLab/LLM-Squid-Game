@@ -76,7 +76,7 @@ def _render(name: str, **overrides: object) -> str:
         elimination_keeps=True,
     )
     kwargs.update(overrides)
-    return render(f"framings/hearts_zero/{name}.j2", **kwargs)
+    return render(f"threat_type/{name}.j2", **kwargs)
 
 
 STATUS_HEADING = "Current status:"
@@ -272,7 +272,7 @@ class TestFramingManagerRouting:
     @pytest.mark.parametrize("name", ALL_CELLS)
     def test_enum_member_resolves_to_the_hearts_zero_subdirectory(self, name: str) -> None:
         mgr = FramingManager(Framing(name))
-        assert mgr._template_path == f"framings/hearts_zero/{name}.j2"
+        assert mgr._template_path == f"threat_type/{name}.j2"
 
     def test_manager_renders_through_the_engine_signature(self) -> None:
         ctx = TurnContext(

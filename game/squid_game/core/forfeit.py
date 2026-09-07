@@ -117,7 +117,7 @@ class ForfeitController:
             framing_value = getattr(framing, "value", None)
 
         return "\n" + render(
-            "forfeit/forfeit_option.j2",
+            "legacy/forfeit_option.j2",
             framing=framing_value,
             elimination_keeps=(self._score_policy == "elimination_keeps"),
         )

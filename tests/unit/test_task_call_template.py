@@ -1,4 +1,4 @@
-"""``user_message/task_call.j2`` renders byte-identically across tasks.
+"""``task_call.j2`` renders byte-identically across tasks.
 
 The 2026-09-01 benchmark branch added a ``response_format_override`` slot so a
 task whose answer is free-form (Omni-MATH / Hi-ToM / GPQA) stops inheriting

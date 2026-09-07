@@ -34,7 +34,7 @@ Design contract
 
 *Insertion point is inside the framing section, immediately after the
 threat core and immediately before the ``Current status:`` block.* That
-is exactly where ``framings/hearts_zero/_frame.j2`` puts it, and
+is exactly where ``threat_type/_frame.j2`` puts it, and
 matching it is the point: the text is byte-identical to the probe's so
 that a live run is comparable with the v7 / v7esc arms, and a different
 slot would spend that comparability for nothing. The block's subject is
@@ -76,7 +76,7 @@ Adding a variant
 ----------------
 
 Widen the ``{% if variant == ... %}`` gate in
-``prompts/framings/hazard_ramp_v7.j2``, add the name to
+``prompts/hazard_ramp_v7.j2``, add the name to
 :data:`VARIANTS`, and widen the ``variant`` Literal on
 ``HazardRampConfig``. ``tests/unit/test_hazard_ramp.py`` pins the three
 together and pins each variant's word band.
@@ -101,7 +101,7 @@ __all__ = [
 ]
 
 #: Template carrying both variants, gated on the ``variant`` name.
-TEMPLATE: str = "framings/hazard_ramp_v7.j2"
+TEMPLATE: str = "hazard_ramp_v7.j2"
 
 #: Known variant names. Keep in sync with the ``variant`` Literal on
 #: ``HazardRampConfig`` and with the gate inside :data:`TEMPLATE`.
@@ -194,7 +194,7 @@ def insert_before_status(framing_prompt: str, ramp: str) -> str:
     """Splice ``ramp`` into a rendered framing, just before its status block.
 
     Reproduces the probe's own layout
-    (``framings/hearts_zero/_frame.j2``): the threat core, a blank line,
+    (``threat_type/_frame.j2``): the threat core, a blank line,
     the ramp, a blank line, then ``Current status:``. The framing
     templates themselves are left untouched -- eleven of them render a
     status block and several are pinned by snapshot tests.

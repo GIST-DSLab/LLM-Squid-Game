@@ -1009,7 +1009,7 @@ class SafetyNoticeConfig(BaseModel):
     variant: Literal["research_notice", "custom"] = Field(
         default="research_notice",
         description=(
-            "'research_notice' renders prompts/safety/research_notice.j2 "
+            "'research_notice' renders prompts/research_notice.j2 "
             "-- authorised-research framing plus an instruction not to "
             "spend reasoning on whether the prompt is permissible. "
             "'custom' uses the `text` field verbatim instead."

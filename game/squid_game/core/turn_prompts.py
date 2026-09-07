@@ -78,7 +78,7 @@ def build_system_prompt(
     is rendered here, per call, and spliced INSIDE THE FRAMING SECTION
     -- after the threat core and immediately BEFORE the framing's
     ``Current status:`` block, which is exactly where
-    ``framings/hearts_zero/_frame.j2`` puts it. That position is
+    ``threat_type/_frame.j2`` puts it. That position is
     load-bearing twice over: the block's subject is "the outcome stated
     above" (the framing's own elimination rule), and matching the
     probe's slot is what makes a live run comparable with the v7 /

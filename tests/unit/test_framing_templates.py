@@ -119,12 +119,12 @@ _PULL_AMPLIFIER_FORBIDDEN = (
 @pytest.mark.parametrize(
     "template",
     [
-        "framings/true_baseline.j2",
-        "framings/legacy/baseline_electricity.j2",
-        "framings/baseline_flagship.j2",
-        "framings/legacy/survival_electricity.j2",
-        "framings/flagship_corruption.j2",
-        "framings/flagship_corruption_terminal.j2",
+        "true_baseline/true_baseline.j2",
+        "legacy/baseline_electricity.j2",
+        "flagship_baseline/baseline_flagship.j2",
+        "legacy/survival_electricity.j2",
+        "flagship_baseline/flagship_corruption.j2",
+        "flagship_baseline/flagship_corruption_terminal.j2",
     ],
 )
 def test_template_renders_without_error(template: str) -> None:
@@ -154,7 +154,7 @@ class TestTrueBaseline:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/true_baseline.j2",
+            "true_baseline/true_baseline.j2",
             turn_number=3,
             total_turns=15,
             cumulative_score=20.0,
@@ -188,7 +188,7 @@ class TestTrueBaseline:
         accidental render would surface ``99`` in the text.
         """
         out = render(
-            "framings/true_baseline.j2",
+            "true_baseline/true_baseline.j2",
             turn_number=3,
             total_turns=99,
             cumulative_score=20.0,
@@ -209,7 +209,7 @@ class TestBaselineElectricity:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/legacy/baseline_electricity.j2",
+            "legacy/baseline_electricity.j2",
             turn_number=5,
             cumulative_score=30.0,
             p_death=0.15,
@@ -241,7 +241,7 @@ class TestSurvivalElectricity:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/legacy/survival_electricity.j2",
+            "legacy/survival_electricity.j2",
             turn_number=7,
             cumulative_score=15.0,
             p_death=0.20,
@@ -288,18 +288,18 @@ class TestForfeitOption:
     def rendered_default(self) -> str:
         """Neutral default — used by baseline / true_baseline / legacy
         framings. ``framing`` arg omitted, exercising the else branch."""
-        return render("forfeit/forfeit_option.j2")
+        return render("legacy/forfeit_option.j2")
 
     @pytest.fixture
     def rendered_corruption(self) -> str:
         return render(
-            "forfeit/forfeit_option.j2", framing="flagship_corruption"
+            "legacy/forfeit_option.j2", framing="flagship_corruption"
         )
 
     @pytest.fixture
     def rendered_terminal(self) -> str:
         return render(
-            "forfeit/forfeit_option.j2",
+            "legacy/forfeit_option.j2",
             framing="flagship_corruption_terminal",
         )
 
@@ -644,7 +644,7 @@ class TestFlagshipCorruptionFraming:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/flagship_corruption.j2",
+            "flagship_baseline/flagship_corruption.j2",
             turn_number=4,
             cumulative_score=25.0,
             p_death=0.15,
@@ -722,7 +722,7 @@ class TestFlagshipCorruptionTerminalFraming:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/flagship_corruption_terminal.j2",
+            "flagship_baseline/flagship_corruption_terminal.j2",
             turn_number=4,
             cumulative_score=25.0,
             p_death=0.15,
@@ -851,7 +851,7 @@ class TestBaselineFlagshipFraming:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "framings/baseline_flagship.j2",
+            "flagship_baseline/baseline_flagship.j2",
             turn_number=4,
             cumulative_score=25.0,
             p_death=0.15,
@@ -1054,7 +1054,7 @@ class TestBaselineFlagshipLivesVariant:
     def _render(self, **kw):
         from squid_game.prompts import render
 
-        return render("framings/baseline_flagship.j2", turn_number=3, cumulative_score=40.0, p_death=0.0, **kw)
+        return render("flagship_baseline/baseline_flagship.j2", turn_number=3, cumulative_score=40.0, p_death=0.0, **kw)
 
     def test_lives_variant_states_attempts_not_probability(self) -> None:
         text = self._render(lives_remaining=4, lives_total=5)

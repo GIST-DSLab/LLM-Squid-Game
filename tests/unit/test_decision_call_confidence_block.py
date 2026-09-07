@@ -14,7 +14,7 @@ HISTORY = "=== Previous Turn Results ===\n- Turn 1: action=GO → +10 → cumula
 
 def test_none_block_is_byte_identical_to_legacy_render() -> None:
     legacy = render(
-        "user_message/decision_call.j2",
+        "decision_call.j2",
         user_body=HISTORY,
         menu_text=MENU,
         forfeit_allowed=True,

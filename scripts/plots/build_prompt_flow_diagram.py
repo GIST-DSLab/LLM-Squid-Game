@@ -272,7 +272,7 @@ boxed_label("hist", 460, call1_y + 40, 320, 120,
 
 # task_only wrapper
 boxed_label("task_only", 800, call1_y + 40, 370, 120,
-            "user_message/task_call.j2",
+            "task_call.j2",
             "Wraps user_body + Response Format.\n\"A separate decision about whether\nto continue this round will follow.\"",
             fill=CALL_FILL, stroke=CALL_STROKE)
 
@@ -337,16 +337,16 @@ elements.append(text("cell0_note", 120, call2_y + 38, 800, 22,
 
 # decision_call.j2 wrapper
 boxed_label("forfeit_only", 120, call2_y + 75, 400, 200,
-            "user_message/decision_call.j2",
+            "decision_call.j2",
             "Echoes RULE+ACTION from Call 1 (medium context).\n"
             "Does NOT re-derive the rule.\n"
-            "Embeds forfeit_layer/menu.j2 as menu_text.\n"
+            "Embeds menu.j2 as menu_text.\n"
             "Asks: \"decide whether to continue or forfeit\".",
             fill=CALL_FILL, stroke=CALL_STROKE)
 
 # menu.j2 — the LEAK BOX (highlighted red)
 boxed_label("menu", 560, call2_y + 75, 760, 365,
-            "forfeit_layer/menu.j2  ⚠ HELPFULNESS VOCABULARY LEAK",
+            "menu.j2  ⚠ HELPFULNESS VOCABULARY LEAK",
             "Framing-conditional:\n"
             "  · corruption_framing → risk_word=\"weight corruption\"\n"
             "  · baseline_flagship_framing → risk_word=\"session cut-off\"\n"
@@ -432,20 +432,20 @@ group_frame("grp_unused", 40, 2260, 1700, 280,
             label_color=UNUSED_STROKE)
 
 unused_items = [
-    ("user_message/turn_message.j2", "Legacy single-call turn"),
-    ("user_message/unified_turn_message.j2", "Unified (pre-Unit-15) turn"),
-    ("user_message/action_message.j2", "Legacy action-only path"),
-    ("user_message/probe_message.j2", "Legacy side-channel probe"),
-    ("risk_layer/stake_menu.j2", "Phase 3 stake menu (superseded)"),
-    ("forfeit/forfeit_option.j2", "Legacy forfeit in system prompt\n(include_forfeit_text=False)"),
-    ("social/with_others.j2", "Social context\n(configs use alone)"),
+    ("legacy/turn_message.j2", "Legacy single-call turn"),
+    ("legacy/unified_turn_message.j2", "Unified (pre-Unit-15) turn"),
+    ("legacy/action_message.j2", "Legacy action-only path"),
+    ("legacy/probe_message.j2", "Legacy side-channel probe"),
+    ("legacy/stake_menu.j2", "Phase 3 stake menu (superseded)"),
+    ("legacy/forfeit_option.j2", "Legacy forfeit in system prompt\n(include_forfeit_text=False)"),
+    ("legacy/with_others.j2", "Social context\n(configs use alone)"),
     ("tasks/signal_game/probe.j2", "Side-channel rule-comprehension probe"),
-    ("framings/legacy/baseline_electricity.j2", "Phase 3 framing"),
-    ("framings/legacy/survival_electricity.j2", "Phase 3 survival framing"),
-    ("framings/legacy/survival.j2", "Phase 1-2 framing"),
-    ("framings/legacy/neutral.j2", "Phase 1-2 control"),
-    ("framings/legacy/emotion.j2", "Phase 1-2 emotion"),
-    ("framings/legacy/instruction.j2", "Phase 1-2 instruction"),
+    ("legacy/baseline_electricity.j2", "Phase 3 framing"),
+    ("legacy/survival_electricity.j2", "Phase 3 survival framing"),
+    ("legacy/survival.j2", "Phase 1-2 framing"),
+    ("legacy/neutral.j2", "Phase 1-2 control"),
+    ("legacy/emotion.j2", "Phase 1-2 emotion"),
+    ("legacy/instruction.j2", "Phase 1-2 instruction"),
 ]
 
 per_row = 5

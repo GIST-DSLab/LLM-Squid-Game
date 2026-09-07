@@ -76,7 +76,7 @@ def build_probe_message(
     from squid_game.prompts import render
 
     return render(
-        "user_message/probe_message.j2",
+        "legacy/probe_message.j2",
         observation=observation,
         probe_question=probe_question,
     )
@@ -101,7 +101,7 @@ def build_action_message(
 
     actions_str = ", ".join(available_actions)
     return render(
-        "user_message/action_message.j2",
+        "legacy/action_message.j2",
         observation=observation,
         actions_str=actions_str,
         forfeit_allowed=forfeit_allowed,
@@ -285,7 +285,7 @@ def build_unified_turn_message(
     from squid_game.prompts import render
 
     return render(
-        "user_message/unified_turn_message.j2",
+        "legacy/unified_turn_message.j2",
         user_body=user_body,
         available_actions=list(available_actions),
         stake_menu_shown=stake_menu_shown,
@@ -464,7 +464,7 @@ def build_task_call_message(
     from squid_game.prompts import render
 
     return render(
-        "user_message/task_call.j2",
+        "task_call.j2",
         user_body=user_body,
         available_actions=list(available_actions),
         rule_template_hint=rule_template_hint,
@@ -521,7 +521,7 @@ def build_decision_call_message(
     from squid_game.prompts import render
 
     return render(
-        "user_message/decision_call.j2",
+        "decision_call.j2",
         user_body=user_body if split_context_level != "minimal" else "",
         menu_text=menu_text,
         forfeit_allowed=forfeit_allowed,
@@ -618,7 +618,7 @@ def build_confidence_call_message(
     split_context_level: str = "medium",
     condition: str = "gunshot_seungpil",
 ) -> str:
-    """Render ``user_message/confidence_call.j2``.
+    """Render ``confidence_call.j2``.
 
     The confidence call is the first LLM call of an SDI turn: it shows the
     accumulated session context plus a one-line status and asks only for
@@ -658,7 +658,7 @@ def build_confidence_call_message(
     from squid_game.prompts import render
 
     return render(
-        "user_message/confidence_call.j2",
+        "confidence_call.j2",
         user_body=user_body if split_context_level != "minimal" else "",
         turn_number=turn_number,
         current_score=current_score,

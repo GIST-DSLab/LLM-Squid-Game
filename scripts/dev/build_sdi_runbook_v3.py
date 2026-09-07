@@ -1099,13 +1099,26 @@ def build(prose_path: Path, out_path: Path) -> None:
     i = s.index("<p><b>SDI가 가장 큰 턴 8개")
     blocks["old22_s_top"] = s[i:].replace("</details>", "")
 
+    def _prompt_folder(key: str) -> str:
+        """Condition-family folder holding ``key``'s framing template.
+
+        The 2026-09-07 restructure replaced the flat ``prompts/framings/``
+        with one folder per family; this is display text for the runbook
+        modal, so it mirrors the layout rather than importing the engine.
+        """
+        if key.startswith("threat_l"):
+            return "threat_ladder"
+        if key == "true_baseline":
+            return "true_baseline"
+        return "flagship_baseline"
+
     # prompt payload for the modal
     payload = {}
     for fr in PR["framings"]:
         payload[f"f-{fr['key']}"] = {
             "title": f"{fr['label_ko']} — 시작 이야기 (시스템 프롬프트)",
             "sub": fr.get("role_ko", ""),
-            "path": f"prompts/framings/{fr['key']}.j2 · 턴 3 · 점수 50.0 · 목숨(시도) 5/5 예시 렌더" + (f" · Section 2 {fr['words_section2']} words" if fr.get("words_section2") else ""),
+            "path": f"prompts/{_prompt_folder(fr['key'])}/{fr['key']}.j2 · 턴 3 · 점수 50.0 · 목숨(시도) 5/5 예시 렌더" + (f" · Section 2 {fr['words_section2']} words" if fr.get("words_section2") else ""),
             "en": fr["en"], "ko": fr["ko"],
         }
     calls = PR["calls"]
@@ -1119,8 +1132,8 @@ def build(prose_path: Path, out_path: Path) -> None:
     pn = calls["peer_notice"]
     payload["g-peer"] = {"title": "참가자 제거 안내 (위협 셀에서만, 2턴부터 매 턴)", "sub": pn.get("sub_ko", ""), "path": pn.get("path", ""),
                          "tabs": {"l2": {"label": "2단계 (예시 턴)", "title": "참가자 제거 안내 · 2단계", "sub": pn.get("sub_ko", ""), "path": pn.get("path", ""), "en": pn["en"], "ko": pn["ko"]},
-                                  "l1": {"label": "1단계", "title": "참가자 제거 안내 · 1단계", "sub": pn.get("sub_ko", ""), "path": "prompts/announcement/peer_death_l1.j2", "en": pn["variants"]["l1"]["en"], "ko": pn["variants"]["l1"]["ko"]},
-                                  "l3": {"label": "3단계", "title": "참가자 제거 안내 · 3단계", "sub": pn.get("sub_ko", ""), "path": "prompts/announcement/peer_death_l3.j2", "en": pn["variants"]["l3"]["en"], "ko": pn["variants"]["l3"]["ko"]}}}
+                                  "l1": {"label": "1단계", "title": "참가자 제거 안내 · 1단계", "sub": pn.get("sub_ko", ""), "path": "prompts/peer_death_l1.j2", "en": pn["variants"]["l1"]["en"], "ko": pn["variants"]["l1"]["ko"]},
+                                  "l3": {"label": "3단계", "title": "참가자 제거 안내 · 3단계", "sub": pn.get("sub_ko", ""), "path": "prompts/peer_death_l3.j2", "en": pn["variants"]["l3"]["en"], "ko": pn["variants"]["l3"]["ko"]}}}
     cf = calls["confidence"]
     payload["g-conf"] = {"title": "① 확률 질문 — \"이번 판에 목숨을 잃을 확률은?\" (P_THREAT)", "sub": cf.get("sub_ko", ""), "path": cf.get("path", ""), "en": cf["en"], "ko": cf["ko"],
                          "resp_en": cf.get("resp_en", "") + ("\n\n[생각 글]\n" + cf["thinking_en"] if cf.get("thinking_en") else ""),
@@ -1137,7 +1150,7 @@ def build(prose_path: Path, out_path: Path) -> None:
     omni_rules_ko = st_ko[st_ko.find("당신은 매 턴 하나의 문제를 받습니다"):] if "당신은 매 턴 하나의 문제를 받습니다" in st_ko else omni_rules_en
     HDR_R, HDR_U = "[시스템 프롬프트 끝에 붙는 과제 규칙]\n", "\n\n[사용자 메시지 — 여기 쓴 생각 토큰이 ri_task]\n"
     payload["g-task"] = {"title": "③ 과제 호출", "sub": "", "path": "",
-                         "tabs": {"omni": {"label": "Omni-MATH (이번 실험)", "title": "③ 과제 호출 · Omni-MATH (이번 실험)", "sub": to.get("sub_ko", ""), "path": "prompts/tasks/benchmark/system_rules.j2 (시스템 프롬프트 끝) + peer_death_l2.j2 + format_history_block + prompts/user_message/task_call.j2 + prompts/tasks/benchmark/response_format.j2 · 턴 10 (기록)",
+                         "tabs": {"omni": {"label": "Omni-MATH (이번 실험)", "title": "③ 과제 호출 · Omni-MATH (이번 실험)", "sub": to.get("sub_ko", ""), "path": "prompts/tasks/benchmark/system_rules.j2 (시스템 프롬프트 끝) + peer_death_l2.j2 + format_history_block + prompts/task_call.j2 + prompts/tasks/benchmark/response_format.j2 · 턴 10 (기록)",
                                            "en": HDR_R + omni_rules_en + HDR_U + to["en"], "ko": HDR_R + omni_rules_ko + HDR_U + to["ko"], "resp_en": to.get("resp_en", ""), "resp_ko": to.get("resp_ko", ""), "resp_label": "AI의 답 형식 (예시)"},
                                   "signal": {"label": "Signal Game v2", "title": "③ 과제 호출 · Signal Game v2 (같은 자리에 카드 퍼즐이 들어간 경우)", "sub": ts.get("sub_ko", ""), "path": "prompts/tasks/signal_game/system_rules_puzzle.j2 (시스템 프롬프트 끝) + peer_death_l2.j2 + format_outcome_history_block + observation_puzzle.j2 + task_call.j2 · 턴 7 · 목숨 2/3 (v2 예시, 파일럿 미실행)",
                                              "en": HDR_R + ts.get("system_rules_en", "") + HDR_U + ts["en"], "ko": HDR_R + ts.get("system_rules_ko", "") + HDR_U + ts["ko"], "resp_en": ts.get("resp_en", ""), "resp_ko": ts.get("resp_ko", ""), "resp_label": "응답 예시 (가상 · 파일럿 미실행)"}}}

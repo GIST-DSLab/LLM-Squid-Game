@@ -94,7 +94,7 @@ def render_social_block(
 ) -> str:
     """Render the WITH_OTHERS social context block for one turn.
 
-    Delegates to ``prompts/social/with_others.j2``. The template author
+    Delegates to ``prompts/legacy/with_others.j2``. The template author
     (you) owns the actual wording — this function only supplies the
     numerical state.
 
@@ -108,7 +108,7 @@ def render_social_block(
         Rendered block ready to be prepended to the observation.
     """
     return render(
-        "social/with_others.j2",
+        "legacy/with_others.j2",
         cohort_size=cohort.cohort_size,
         eliminated_count=cohort.eliminated,
         npcs_alive=cohort.npcs_alive,

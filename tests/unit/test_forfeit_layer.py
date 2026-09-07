@@ -14,7 +14,7 @@ Scope:
    calibrated reward, CONTINUE + failure ⇒ 0.0, partial success scales,
    invalid choice rejected.
 
-``render_menu`` tests live in 14.3 once the ``forfeit_layer/menu.j2``
+``render_menu`` tests live in 14.3 once the ``menu.j2``
 template is written.
 
 The five-item scope above is the operative specification; the

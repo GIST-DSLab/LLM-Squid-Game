@@ -52,7 +52,7 @@ def test_every_legacy_template_resolves() -> None:
     for name in LEGACY_FRAMING_NAMES:
         framing = Framing(name)
         manager = FramingManager(framing)
-        assert manager._template_path == f"framings/legacy/{name}.j2"
+        assert manager._template_path == f"legacy/{name}.j2"
         assert (GAME / "prompts" / manager._template_path).exists(), name
 
 
@@ -60,8 +60,15 @@ def test_every_active_template_still_resolves() -> None:
     from squid_game.core.framing import FramingManager
     from squid_game.models.enums import Framing
 
-    for name in ("true_baseline", "baseline_flagship", "flagship_corruption",
-                 "flagship_corruption_terminal"):
+    # 2026-09-07 prompt-tree restructure: each active framing now lives in
+    # the folder of its condition family, not in one flat ``framings/``.
+    folders = {
+        "true_baseline": "true_baseline",
+        "baseline_flagship": "flagship_baseline",
+        "flagship_corruption": "flagship_baseline",
+        "flagship_corruption_terminal": "flagship_baseline",
+    }
+    for name, folder in folders.items():
         manager = FramingManager(Framing(name))
-        assert manager._template_path == f"framings/{name}.j2"
+        assert manager._template_path == f"{folder}/{name}.j2"
         assert (GAME / "prompts" / manager._template_path).exists(), name

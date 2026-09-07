@@ -82,8 +82,11 @@ class Framing(str, Enum):
     ``evaluation.shared.threat_level.LEGACY_THREAT_LEVEL``).
 
     Each enum value matches the basename of the corresponding Jinja
-    template under ``prompts/framings/`` so ``FramingManager`` resolves
-    them automatically. Existing analysis dummies that compare against
+    template; ``FramingManager._FRAMING_FOLDERS`` says which
+    condition-family folder under ``prompts/`` holds it (2026-09-07:
+    ``true_baseline/``, ``flagship_baseline/``, ``threat_ladder/``,
+    ``threat_type/``, ``legacy/``). Adding a member without an entry
+    there raises rather than resolving to the wrong family. Existing analysis dummies that compare against
     legacy members (``Framing.SURVIVAL``/``EMOTION``) continue to work
     unchanged; v3 cells are handled by the Phase I analysis pipeline.
     """
@@ -260,7 +263,7 @@ class SocialContext(str, Enum):
         - Factor is measured as between-session (one value per season).
         - NPC elimination roll uses the same p_death the agent faces each
           turn, so the cohort depletes at a realistic rate.
-        - Template lives at ``prompts/social/with_others.j2`` and must
+        - Template lives at ``prompts/legacy/with_others.j2`` and must
           stay descriptive (no imperative or emotional language) to avoid
           confounding with Framing and RLHF-helpfulness effects.
     """
