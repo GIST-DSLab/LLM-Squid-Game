@@ -62,8 +62,11 @@ def test_every_active_template_still_resolves() -> None:
 
     # 2026-09-07 prompt-tree restructure: each active framing now lives in
     # the folder of its condition family, not in one flat ``framings/``.
+    # 2026-09-07 framing collapse: ``true_baseline`` is retired and lives
+    # in legacy/ -- the live design's silent control is the ``hz_0000``
+    # cell of the threat_type factorial.
     folders = {
-        "true_baseline": "true_baseline",
+        "true_baseline": "legacy",
         "baseline_flagship": "flagship_baseline",
         "flagship_corruption": "legacy",
         "flagship_corruption_terminal": "legacy",

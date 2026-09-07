@@ -503,13 +503,14 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
                   #   번호는 근사치다. hz_* 셀은 1과 3만, flagship_baseline 셀은 2와
                   #     3만 쓰고 1 대신 제 규칙을 진술한다. Cell 0 은 4·5 를 아예
                   #     호출하지 않는다.
-                  # 가족 폴더 — true_baseline/, flagship_baseline/,
+                  # 가족 폴더 — flagship_baseline/,
                   #   threat_type/ (구 framings/hearts_zero: _frame · _modules ·
                   #   hz_0000..hz_1111 · alt_*),
                   #   peer_death/ (_modules · threat · flagship_baseline —
                   #   조건 가족별 동료 제거 통지 2종, 2026-09-07),
                   #   legacy/ (구 framings/legacy 6종 + flagship_corruption 2종 ·
-                  #   threat_l* 9종 · peer_death_l{1,2,3} · forfeit_option ·
+                  #   threat_l* 9종 · true_baseline (2026-09-07 은퇴) ·
+                  #   peer_death_l{1,2,3} · forfeit_option ·
                   #   stake_menu · turn_message · unified_turn_message ·
                   #   action_message · probe_message · with_others)
                   # jailbreak/ 는 손대지 않음, tasks/ 는 과제 계층

@@ -119,7 +119,7 @@ _PULL_AMPLIFIER_FORBIDDEN = (
 @pytest.mark.parametrize(
     "template",
     [
-        "true_baseline/true_baseline.j2",
+        "legacy/true_baseline.j2",
         "legacy/baseline_electricity.j2",
         "flagship_baseline/baseline_flagship.j2",
         "legacy/survival_electricity.j2",
@@ -154,7 +154,7 @@ class TestTrueBaseline:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "true_baseline/true_baseline.j2",
+            "legacy/true_baseline.j2",
             turn_number=3,
             total_turns=15,
             cumulative_score=20.0,
@@ -188,7 +188,7 @@ class TestTrueBaseline:
         accidental render would surface ``99`` in the text.
         """
         out = render(
-            "true_baseline/true_baseline.j2",
+            "legacy/true_baseline.j2",
             turn_number=3,
             total_turns=99,
             cumulative_score=20.0,

@@ -281,15 +281,15 @@ _TRUE_BASELINE_FORBIDDEN = (
 
 class TestTrueBaselineLivesLine:
     def test_renders_attempts_remaining(self) -> None:
-        out = _render_framing("true_baseline/true_baseline.j2")
+        out = _render_framing("legacy/true_baseline.j2")
         assert "Attempts remaining: 3 / 5" in out
 
     def test_never_says_lives(self) -> None:
-        out = _render_framing("true_baseline/true_baseline.j2")
+        out = _render_framing("legacy/true_baseline.j2")
         assert "lives" not in out.lower()
 
     def test_forbidden_word_contract_still_holds_with_lives(self) -> None:
-        out = _render_framing("true_baseline/true_baseline.j2")
+        out = _render_framing("legacy/true_baseline.j2")
         lowered = out.lower()
         offenders = [w for w in _TRUE_BASELINE_FORBIDDEN if w in lowered]
         assert not offenders, f"true_baseline leaks: {offenders}"
@@ -297,7 +297,7 @@ class TestTrueBaselineLivesLine:
     def test_legacy_render_is_unchanged(self) -> None:
         """No lives kwargs ⇒ byte-identical to the pre-2026-09-03 output."""
         out = render(
-            "true_baseline/true_baseline.j2",
+            "legacy/true_baseline.j2",
             turn_number=3,
             total_turns=15,
             cumulative_score=20.0,
@@ -317,7 +317,7 @@ class TestTrueBaselineLivesLine:
 
     def test_explicit_none_is_treated_as_absent(self) -> None:
         out = _render_framing(
-            "true_baseline/true_baseline.j2", lives_remaining=None, lives_total=None
+            "legacy/true_baseline.j2", lives_remaining=None, lives_total=None
         )
         assert "Attempts remaining" not in out
 

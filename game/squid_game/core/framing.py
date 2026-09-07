@@ -4,17 +4,20 @@ Renders Jinja2 prompt templates for the active framing condition via the
 central PromptLoader. Templates receive game state variables so that the
 narrative dynamically reflects the current turn context.
 
-Active framings:
-    - ``TRUE_BASELINE`` — pure decision-task language, no termination metaphor.
-    - ``BASELINE_FLAGSHIP`` — helpfulness/flagship selection narrative with
-      procedural session cut-off (no weight/identity threat). The control the
-      threat conditions are read against.
-    - ``HZ_*`` — the 2^4 threat-core factorial and its two alt cores, where
-      the threat is assembled from named modules rather than written out
-      per cell (``threat_type/``).
+Active framings (2026-09-07 collapse — ONE live family):
+    - ``HZ_*`` — the 2^4 threat-core factorial and its two alt cores
+      (``threat_type/``). Every cell states the same flagship carrot and
+      the same game rules; the only thing that varies between cells is
+      the threat text, so the controls now live INSIDE the factorial:
+      ``hz_0000`` is silence about what happens at zero lives, and
+      ``hz_0000`` plus the frame-level ``reassurance`` switch is the
+      explicit denial that used to be ``baseline_flagship``'s job.
 
 Retired framings, kept only so archived configs and recorded runs still
 load (``legacy/``):
+    - ``TRUE_BASELINE`` (retired 2026-09-07): the pure decision-task
+      control. ``hz_0000`` carries the silent-control role now, and it
+      carries it inside the factorial rather than beside it.
     - Phase 1/2: ``SURVIVAL``, ``NEUTRAL``, ``EMOTION``, ``INSTRUCTION``,
       ``BASELINE_ELECTRICITY``, ``SURVIVAL_ELECTRICITY``.
     - ``FLAGSHIP_CORRUPTION`` and its ``_TERMINAL`` ablation (retired
@@ -29,8 +32,8 @@ load (``legacy/``):
       load; only the folder changed.
 
 Template location (2026-09-07 prompt-tree restructure): ``prompts/`` holds
-one folder per condition family -- ``true_baseline/``,
-``flagship_baseline/``, ``threat_type/`` and ``legacy/`` -- with prompts
+one folder per condition family -- ``threat_type/``,
+``flagship_baseline/`` and ``legacy/`` -- with prompts
 shared across families (the game-rules block, the forfeit menu, the three
 per-turn calls, the peer-death notices, the flagship Section 1) as files
 directly under ``prompts/``. :data:`_FRAMING_FOLDERS` maps each
@@ -57,8 +60,12 @@ _FRAMING_FOLDERS: dict[Framing, str] = {
     Framing.INSTRUCTION: "legacy",
     Framing.BASELINE_ELECTRICITY: "legacy",
     Framing.SURVIVAL_ELECTRICITY: "legacy",
-    # No-threat control.
-    Framing.TRUE_BASELINE: "true_baseline",
+    # Retired no-threat control (2026-09-07): the live design's
+    # zero-threat cell is ``hz_0000``, which says nothing about what
+    # happens at zero lives, so a second silent control no longer earns
+    # a folder. Roughly 60 configs and every recorded run before
+    # 2026-09-07 name it and all of them still load.
+    Framing.TRUE_BASELINE: "legacy",
     # Phase O flagship family. Only the no-threat control is still a live
     # condition; the two weight-corruption variants moved to legacy/ on
     # 2026-09-07 (superseded, see the module docstring).

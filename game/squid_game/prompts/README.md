@@ -14,9 +14,8 @@ Two rules decide where a template lives.
    `prompts/`.** Since 2026-09-07 those files carry a number prefix saying where
    they sit in an assembled prompt.
 2. **A prompt owned by exactly one condition family lives in that family's
-   folder**, and folders are never numbered. `true_baseline/`,
-   `flagship_baseline/`, `threat_type/`, `peer_death/`, `tasks/`, `jailbreak/`
-   and `legacy/`.
+   folder**, and folders are never numbered. `flagship_baseline/`,
+   `threat_type/`, `peer_death/`, `tasks/`, `jailbreak/` and `legacy/`.
 
 ## The numbered files
 
@@ -85,6 +84,18 @@ So read the number as "where this would sit if it appears", not as a step count.
 - **`6-forfeit_option.j2` is the live menu.** `legacy/forfeit_option.j2` is a
   different, retired file: the pre-split-call blurb that used to be appended to
   the system prompt, kept only so archived single-call configs replay.
+
+## Retirements of 2026-09-07
+
+The live experiment keeps one framing family, `threat_type/`; everything else
+is replay-only and lives in `legacy/`.
+
+| Was | Is | Why |
+|---|---|---|
+| `true_baseline/true_baseline.j2` | `legacy/true_baseline.j2` | `hz_0000` is the silent control now, and it is a cell of the factorial rather than a family beside it |
+
+Configs and recorded runs that name a retired framing still load: only the
+folder moved, and `core.framing._FRAMING_FOLDERS` is what says where.
 
 ## Renames of 2026-09-07
 
