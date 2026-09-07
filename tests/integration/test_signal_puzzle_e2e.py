@@ -27,7 +27,7 @@ from squid_game.tasks.signal_game.puzzle import (
     CONDITIONS_BY_ARITY,
     PuzzleRule,
     cached_puzzle,
-    render_shape_block,
+    render_shape_hint,
 )
 from squid_game.tasks.signal_game.puzzle_config import (
     load_signal_puzzle_config,
@@ -288,13 +288,13 @@ class TestSignalPuzzleSmoke:
             # The observation template indents the skeleton by four spaces.
             # ``    if ___:`` alone would not do as the opener: a rung whose
             # first clause is a conjunction renders ``    if ___ and ___:``
-            # (turns 6 and 8 of this seed), so pin the whole block instead.
-            skeleton = "\n".join(
-                f"    {line}" for line in render_shape_block(puzzle.shape).splitlines()
-            )
+            # (turns 6 and 8 of this seed), so pin the whole line instead.
+            skeleton = f"    {render_shape_hint(puzzle.shape)}"
             assert skeleton in body
             assert body.count("    if ___") == 1
-            assert "    else:" in body
+            assert "; else: ___" in body
+            # One grammar only: the shown shape is the RULE the parser takes.
+            assert "action = ___" not in body
             assert puzzle.rule.description not in body, (
                 "the task call leaked the hidden rule"
             )

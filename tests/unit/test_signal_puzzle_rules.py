@@ -15,7 +15,6 @@ from squid_game.tasks.signal_game.puzzle import (
     SIGNAL_INDEX,
     SIGNAL_SPACE,
     PuzzleRule,
-    render_shape_block,
     render_shape_hint,
     shape_label,
 )
@@ -123,24 +122,16 @@ class TestRendering:
     def test_shape_label(self) -> None:
         assert shape_label((1, 2, 1)) == "1,2,1"
 
-    def test_shape_block(self) -> None:
-        out = render_shape_block((1, 2, 1))
-        assert out == (
-            "if ___:\n"
-            "    action = ___\n"
-            "elif ___ and ___:\n"
-            "    action = ___\n"
-            "elif ___:\n"
-            "    action = ___\n"
-            "else:\n"
-            "    action = ___"
+    def test_shape_hint_multi_clause(self) -> None:
+        assert render_shape_hint((1, 2, 1)) == (
+            "if ___: ___; elif ___ and ___: ___; elif ___: ___; else: ___"
         )
 
-    def test_shape_block_single_clause(self) -> None:
-        assert render_shape_block((1,)) == (
-            "if ___:\n    action = ___\nelse:\n    action = ___"
-        )
+    def test_shape_hint_single_clause(self) -> None:
+        assert render_shape_hint((1,)) == "if ___: ___; else: ___"
 
     def test_shape_hint_one_line(self) -> None:
         assert render_shape_hint((1, 2)) == "if ___: ___; elif ___ and ___: ___; else: ___"
         assert "\n" not in render_shape_hint((2, 1, 1))
+        # No ``action =`` anywhere: the shown shape is the answer grammar.
+        assert "action" not in render_shape_hint((1, 2, 1))

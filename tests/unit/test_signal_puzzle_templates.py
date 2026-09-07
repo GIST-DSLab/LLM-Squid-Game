@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from squid_game.prompts import render
-from squid_game.tasks.signal_game.puzzle import render_shape_block
+from squid_game.tasks.signal_game.puzzle import render_shape_hint
 
 _SYS_KW = dict(
     colors_str="red, blue, green, yellow",
@@ -52,20 +52,22 @@ class TestSystemRules:
 
 class TestObservation:
     def test_shape_then_clues_then_query(self) -> None:
-        block = render_shape_block((1, 2))
+        line = render_shape_hint((1, 2))
         out = render(
             "tasks/signal_game/observation_puzzle.j2",
             turn_number=7,
-            shape_block=block,
+            shape_line=line,
             clues=["red star with number 2 → stay", "blue circle with number 4 → jump"],
             query="green circle with number 3",
             actions_str="go_left, go_right, stay, jump",
         )
         assert out.startswith("Turn 7. This round's rule has exactly this shape (fill in the blanks):")
-        # the block is indented by four spaces, every line
-        for line in block.splitlines():
-            assert f"    {line}" in out
-        assert out.index("elif ___ and ___:") < out.index("Examples that follow this round's rule:")
+        # The shape is shown on one line, indented by four spaces, in the very
+        # grammar the RULE field and ``parse_rule_text`` require -- no
+        # ``action = `` block form to answer back in.
+        assert f"\n    {line}\n" in out
+        assert "action = ___" not in out
+        assert out.index("elif ___ and ___: ___") < out.index("Examples that follow this round's rule:")
         assert "  - red star with number 2 → stay\n  - blue circle with number 4 → jump\n" in out
         assert out.rstrip().endswith(
             "Now: green circle with number 3. Available actions: [go_left, go_right, stay, jump]"

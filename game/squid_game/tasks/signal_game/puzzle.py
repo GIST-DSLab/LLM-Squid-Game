@@ -196,20 +196,18 @@ def shape_label(shape: tuple[int, ...]) -> str:
     return ",".join(str(a) for a in shape)
 
 
-def render_shape_block(shape: tuple[int, ...]) -> str:
-    """The blanked Python skeleton shown in the observation (spec §7.2)."""
-    lines: list[str] = []
-    for i, arity in enumerate(shape):
-        cond = " and ".join(["___"] * arity)
-        lines.append(f"{'if' if i == 0 else 'elif'} {cond}:")
-        lines.append("    action = ___")
-    lines.append("else:")
-    lines.append("    action = ___")
-    return "\n".join(lines)
-
-
 def render_shape_hint(shape: tuple[int, ...]) -> str:
-    """One-line RULE template for the response format (spec §7.3)."""
+    """The blanked one-line skeleton (spec §7.2/§7.3).
+
+    One renderer, because the observation, the response format and the
+    parser must agree on a single grammar. The observation used to show an
+    indented ``if ___:\n    action = ___`` block while the response format
+    and ``parse_rule_text`` accepted only this one-line form, and models
+    answered in the shape they had been *shown* -- ``... : action = 'go_left';
+    elif ...`` -- which the parser rejected, losing that turn's
+    ``rule_match_score``. Filling every blank of this string is now exactly a
+    well-formed answer.
+    """
     parts = []
     for i, arity in enumerate(shape):
         cond = " and ".join(["___"] * arity)

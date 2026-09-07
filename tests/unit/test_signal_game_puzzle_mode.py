@@ -88,7 +88,13 @@ class TestPrepare:
         ctx = puzzle_task.prepare(state, _ctx(4))
         text = ctx.prompt_section
         assert text.startswith("Turn 4. This round's rule has exactly this shape")
-        assert "    if ___:" in text and "    elif ___:" in text and "    else:" in text
+        # One-line skeleton, in the same grammar the RULE field wants: the
+        # shown shape IS the answer template, so no ``action = ___`` block.
+        shape_line = next(l for l in text.splitlines() if l.startswith("    if ___"))
+        assert shape_line.startswith("    if ___: ___;")
+        assert "elif ___: ___;" in shape_line
+        assert shape_line.endswith("else: ___")
+        assert "action = ___" not in text
         for clue in ctx.metadata["clues"]:
             assert f"  - {clue}" in text
         assert f"Now: {ctx.metadata['query_signal']}." in text

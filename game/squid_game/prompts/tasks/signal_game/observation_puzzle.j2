@@ -1,7 +1,7 @@
 Turn {{ turn_number }}. This round's rule has exactly this shape (fill in the blanks):
 
-{% for line in shape_block.splitlines() %}    {{ line }}
-{% endfor %}
+    {{ shape_line }}
+
 Examples that follow this round's rule:
 {% for clue in clues %}  - {{ clue }}
 {% endfor %}Now: {{ query }}. Available actions: [{{ actions_str }}]

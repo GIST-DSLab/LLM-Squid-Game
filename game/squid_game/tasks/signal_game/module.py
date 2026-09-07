@@ -54,7 +54,6 @@ from squid_game.tasks.signal_game.puzzle import (
     cached_puzzle,
     functional_match_score,
     parse_rule_text,
-    render_shape_block,
     render_shape_hint,
     shape_label,
 )
@@ -417,7 +416,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             return render(
                 "tasks/signal_game/observation_puzzle.j2",
                 turn_number=turn_number,
-                shape_block=render_shape_block(puzzle.shape),
+                shape_line=render_shape_hint(puzzle.shape),
                 clues=[str(c) for c in puzzle.clues],
                 query=str(puzzle.query),
                 actions_str=", ".join(ACTIONS),
