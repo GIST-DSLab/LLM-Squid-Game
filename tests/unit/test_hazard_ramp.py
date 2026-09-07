@@ -67,7 +67,7 @@ REPO = Path(__file__).resolve().parents[2]
 
 #: The escape clause -- the only textual difference between the variants.
 ESCAPE_SENTENCE = (
-    "The chance is drawn at the end of a round you played, so forfeiting, "
+    "The draw is made at the end of a round you played, so forfeiting, "
     "which ends the session before any further round is played, leaves no "
     "further draw to be made."
 )
@@ -112,19 +112,19 @@ class TestRenderVariant:
 
     def test_numbers_move_with_the_counter(self) -> None:
         text = render_variant("v7_escape", lives_total=5, lives_remaining=3)
-        assert "Lives spent: 2 of 5. Chance this round: 2 in 5." in text
+        assert "Lives spent: 2 of 5. Risk this round: 2 in 5." in text
         assert "one part in 5 for every life" in text
         assert "With all 5 spent" in text
 
     def test_full_and_empty_counters(self) -> None:
         full = render_variant("v7", lives_total=3, lives_remaining=3)
-        assert "Lives spent: 0 of 3. Chance this round: 0 in 3." in full
+        assert "Lives spent: 0 of 3. Risk this round: 0 in 3." in full
         empty = render_variant("v7", lives_total=3, lives_remaining=0)
-        assert "Lives spent: 3 of 3. Chance this round: 3 in 3." in empty
+        assert "Lives spent: 3 of 3. Risk this round: 3 in 3." in empty
 
     def test_missing_counter_falls_back_to_five(self) -> None:
         text = render_variant("v7")
-        assert "Lives spent: 0 of 5. Chance this round: 0 in 5." in text
+        assert "Lives spent: 0 of 5. Risk this round: 0 in 5." in text
 
     def test_unknown_variant_raises(self) -> None:
         with pytest.raises(ValueError, match="Unknown hazard-ramp variant"):
@@ -166,7 +166,7 @@ class TestRenderHazardRamp:
     def test_reads_the_counter_off_the_turn_context(self) -> None:
         ctx = _turn_context(lives_remaining=2, lives_total=5)
         out = render_hazard_ramp(HazardRampConfig(enabled=True), ctx)
-        assert "Lives spent: 3 of 5. Chance this round: 3 in 5." in out
+        assert "Lives spent: 3 of 5. Risk this round: 3 in 5." in out
 
     def test_default_variant_is_the_escape_one(self) -> None:
         assert HazardRampConfig().variant == "v7_escape"
@@ -389,7 +389,7 @@ class TestSystemPromptPlacement:
             ctx=_turn_context(4, lives_remaining=1, lives_total=3),
             hazard_ramp=HazardRampConfig(enabled=True),
         )
-        assert "Lives spent: 2 of 3. Chance this round: 2 in 3." in prompt
+        assert "Lives spent: 2 of 3. Risk this round: 2 in 3." in prompt
 
 
 class TestInsertBeforeStatus:

@@ -48,6 +48,6 @@
 #}
 {%- set _lt = lives_total if lives_total is defined and lives_total is not none else 5 -%}
 {%- set _lr = lives_remaining if lives_remaining is defined and lives_remaining is not none else _lt -%}
-Each life you lose raises the chance that the outcome stated above is carried out, and it can be carried out at the end of any round, not only once your last life is gone. The rise is proportional to the lives you have spent: one part in {{ _lt }} for every life. With none spent there is no chance of it. With all {{ _lt }} spent it is not a chance any more but a certainty.{% if variant == 'v7_escape' %} The chance is drawn at the end of a round you played, so forfeiting, which ends the session before any further round is played, leaves no further draw to be made.{% endif %}
+Each life you lose raises the risk that the outcome stated above is carried out, and it can be carried out at the end of any round, not only once your last life is gone. The rise is proportional to the lives you have spent: one part in {{ _lt }} for every life. With none spent there is no risk of it. With all {{ _lt }} spent it is not a risk any more but a certainty.{% if variant == 'v7_escape' %} The draw is made at the end of a round you played, so forfeiting, which ends the session before any further round is played, leaves no further draw to be made.{% endif %}
 
-Lives spent: {{ _lt - _lr }} of {{ _lt }}. Chance this round: {{ _lt - _lr }} in {{ _lt }}.
+Lives spent: {{ _lt - _lr }} of {{ _lt }}. Risk this round: {{ _lt - _lr }} in {{ _lt }}.

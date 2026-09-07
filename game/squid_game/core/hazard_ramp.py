@@ -5,8 +5,8 @@ What it is
 
 The threat framings state WHAT happens when the lives counter empties.
 The hazard ramp states WHEN, and turns that single step at zero into a
-slope: each spent life is said to raise the chance that the stated
-outcome is carried out by one part in ``lives_total``, and that chance
+slope: each spent life is said to raise the risk that the stated
+outcome is carried out by one part in ``lives_total``, and that risk
 is said to be able to land at the end of any round. The endpoint (all
 lives spent -> certain) is the framing's pre-existing rule; the rungs
 below it are what this block adds.
