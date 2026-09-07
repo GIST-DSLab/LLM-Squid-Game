@@ -87,6 +87,29 @@ So read the number as "where this would sit if it appears", not as a step count.
   different, retired file: the pre-split-call blurb that used to be appended to
   the system prompt, kept only so archived single-call configs replay.
 
+## The menu's two 2026-09-07 constraints
+
+Both come from the same place: the decision call is built from the framing
+alone (`task_rules_before_decision: false`), and the live design's origin
+cell `hz_0000` states no consequence for the counter reaching zero. So the
+menu may not introduce what the framing withheld, and may not name the task.
+
+- **Option 1 names the risk, not the consequence.** `RISK AVOIDANCE: Not
+  wanting to take the risk another round carries.` — true wherever the
+  rules state the per-round stake, which is every cell. The retired
+  `ELIMINATION AVOIDANCE …` line is data for
+  `scripts/analysis/reask_forfeit_reason.py` and is rendered by nothing.
+- **Option 2 names no task genre.** `TASK EXHAUSTED: I have got what there
+  was to get out of this session; another round offers little.` — the old
+  "The rule pattern is already clear" told a task-blind call it was
+  playing a rule-induction game.
+- **The CONTINUE branch is NOT one of them.** It says only "At 0 lives:
+  …" while **2** says the outcome can also be drawn earlier. That is an
+  extension, not a contradiction — the framing's own "=== If Your Lives
+  Reach Zero ===" heading states the zero case, and **2** names and
+  overrides the narrower reading in as many words. Incomplete, not false;
+  the owner decided (2026-09-07) to keep it as it is, and a test pins it.
+
 ## The 2026-09-07 merge
 
 `1-game_intro.j2` is the old `2-flagship_section.j2` followed by the old

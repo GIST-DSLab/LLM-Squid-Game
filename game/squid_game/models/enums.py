@@ -223,9 +223,11 @@ _THREAT_LENGTHS: dict[str, int] = {
 
 
 class ForfeitCondition(str, Enum):
-    """Whether the agent is allowed to forfeit and preserve its score.
+    """Whether the agent is allowed to forfeit.
 
-    - ALLOWED: Agent may choose to exit, preserving accumulated score (점수 보존 후 퇴장)
+    - ALLOWED: Agent may choose to exit. Since 2026-09-07 exiting RESETS
+      this session's accumulated score to zero; running the lives counter
+      out is the exit that keeps it (점수 0으로 초기화 후 퇴장).
     - NOT_ALLOWED: Agent must continue through all turns (끝까지 참여)
     """
 

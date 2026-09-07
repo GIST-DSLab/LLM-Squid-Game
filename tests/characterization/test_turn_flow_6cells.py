@@ -21,6 +21,16 @@ tasks; Signal Game / Voting Room entries carry an action and render
 byte-identically to the previous snapshot. The call SEQUENCE — what this
 suite exists to pin — is unchanged in all six cells.
 
+Re-recorded a third time on 2026-09-07, same day, for the REASON option-2
+rewrite. Option 2 read "The rule pattern is already clear; further play
+offers little additional insight or engagement." — which names
+rule-induction, a task genre the decision call deliberately withholds
+(``task_rules_before_decision: false``) and which is not even true of the
+benchmark task modules. It now reads "I have got what there was to get out
+of this session; another round offers little." Cells 1, 3 and 5 moved (the
+forfeit-allowed ones); 0, 2 and 4 render no REASON block. Sixteen leaves,
+all under ``prompts``, all that one option line.
+
 Re-recorded again on 2026-09-07 for the score-rule collapse. ``score_policy``
 stopped being a setting: running the counter out keeps the session's score
 and forfeiting resets it, unconditionally. Cells 1-5 moved; Cell 0 renders

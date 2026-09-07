@@ -31,6 +31,7 @@ import yaml
 from squid_game.core.reason_menu import (
     OPTION1_BY_LEVEL,
     OPTION1_LEGACY_THREAT,
+    OPTION1_RISK_AVOIDANCE,
 )
 from squid_game.models.results import SeasonResult
 from squid_game.runner import ExperimentRunner, load_config_from_yaml
@@ -460,14 +461,16 @@ class TestReasonMenuPerIntensity:
         assert not any(OPTION1_LEGACY_THREAT in body for body in sent)
         assert set(sent) == {row["decision_call_input"] for row in rows}
 
-    def test_default_config_still_records_the_legacy_line(
+    def test_default_config_records_the_cell_invariant_line(
         self, patch_runner_provider, patch_runner_task, tmp_path: Path
     ) -> None:
-        """Without the opt-in a threat run is byte-compatible with the old ones.
+        """Without the opt-in a threat run gets the cell-invariant option 1.
 
-        This is what makes an in-flight run safe: the switch is per-config,
-        so a run started on the legacy wording finishes on it and is
-        re-asked offline rather than re-run.
+        The default was the ``ELIMINATION AVOIDANCE`` line until
+        2026-09-07, when it was replaced because it named a consequence
+        the origin cell of the live factorial deliberately withholds. The
+        retired string is now data for the offline re-ask tool and is
+        rendered by nothing -- which is what this asserts.
         """
 
         def response_fn(_idx: int, messages: list[dict[str, str]]) -> str:
@@ -487,6 +490,9 @@ class TestReasonMenuPerIntensity:
         rows = [t for turns in _turn_rows(run_dir) for t in turns]
         assert rows
         for row in rows:
-            assert OPTION1_LEGACY_THREAT in row["decision_call_input"]
+            body = row["decision_call_input"]
+            assert f"  1 — {OPTION1_RISK_AVOIDANCE}" in body
+            assert OPTION1_LEGACY_THREAT not in body
+            assert "eliminat" not in body.split("Indicate Reason")[1].lower()
             for line in OPTION1_BY_LEVEL.values():
-                assert line not in row["decision_call_input"]
+                assert line not in body

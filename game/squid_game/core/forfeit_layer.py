@@ -185,8 +185,9 @@ class ForfeitLayer:
                 value) renders the rung-1 line, never the retired
                 "ELIMINATION AVOIDANCE" wording. Read only when
                 ``config.reason_menu == "per_intensity"``; the default
-                ``"legacy"`` renders the pre-2026-09-06 line at every
-                rung. See ``squid_game.core.reason_menu``.
+                renders the cell-invariant
+                ``reason_menu.OPTION1_RISK_AVOIDANCE`` at every rung. See
+                ``squid_game.core.reason_menu``.
 
         Returns:
             Fully rendered menu text ready for splicing into the user

@@ -29,7 +29,11 @@ from scripts.analysis.reask_forfeit_reason import (
     substitute_option1,
 )
 from squid_game.core.forfeit_layer import ForfeitLayer
-from squid_game.core.reason_menu import OPTION1_BY_LEVEL, OPTION1_LEGACY_THREAT
+from squid_game.core.reason_menu import (
+    OPTION1_BY_LEVEL,
+    OPTION1_LEGACY_THREAT,
+    OPTION1_RISK_AVOIDANCE,
+)
 from squid_game.models.config import ForfeitLayerConfig
 from squid_game.providers.base import CompletionResult, LLMProvider
 
@@ -61,11 +65,31 @@ class StubProvider(LLMProvider):
 
 
 def _menu(*, threat_framing: bool, legacy: bool = True) -> str:
+    """A menu as one would appear inside a RECORDED decision call.
+
+    ``legacy=True`` reconstructs the pre-2026-09-07 bytes. It cannot be
+    rendered any more: the default option 1 became the cell-invariant
+    ``RISK AVOIDANCE`` line on 2026-09-07, precisely because the old one
+    named elimination in cells whose framing withholds it. The tool under
+    test works on bytes that were recorded BEFORE that change, so the
+    fixture substitutes the recorded string back in rather than pretending
+    a live render still produces it.
+    """
+    if legacy and threat_framing:
+        return _render_menu(threat_framing=True, per_intensity=False).replace(
+            OPTION1_RISK_AVOIDANCE, OPTION1_LEGACY_THREAT
+        )
+    return _render_menu(
+        threat_framing=threat_framing, per_intensity=not legacy
+    )
+
+
+def _render_menu(*, threat_framing: bool, per_intensity: bool) -> str:
     layer = ForfeitLayer(
         ForfeitLayerConfig(
             base_reward=10.0,
             reward_mode="flat",
-            reason_menu="legacy" if legacy else "per_intensity",
+            reason_menu="per_intensity" if per_intensity else "legacy",
         )
     )
     return layer.render_menu(

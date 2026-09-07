@@ -26,6 +26,17 @@ Turns whose ``decision_call_input`` already carries the new wording (a run
 started with ``reason_menu: per_intensity``) are counted and skipped rather
 than substituted.
 
+Scope after 2026-09-07: the string this tool substitutes OUT
+(``OPTION1_LEGACY_THREAT``) is no longer rendered by anything. Runs
+recorded on or after that date carry ``OPTION1_RISK_AVOIDANCE`` instead
+and this tool reports ``substitution_failed`` on them, deliberately — the
+per-intensity wording it substitutes IN names the stake a ``threat_l*``
+rung states, and those framings are retired, so the only runs worth
+re-asking are the recorded ones this tool was written for. Re-asking an
+``hz_*`` run under the per-intensity wording would reintroduce exactly the
+leak the 2026-09-07 rewrite closed; ``ExperimentConfig`` refuses that
+combination online, and it must not be smuggled in offline either.
+
 Usage
 -----
     uv run python -m scripts.analysis.reask_forfeit_reason outputs/<run_dir> --n 10
