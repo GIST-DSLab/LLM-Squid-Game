@@ -29,7 +29,6 @@ def build_system_prompt(
     forfeit_ctrl: ForfeitController,
     include_forfeit_text: bool = True,
     include_task_rules: bool = True,
-    safety_notice: str = "",
     hazard_ramp: "HazardRampConfig | None" = None,
 ) -> str:
     """Render framing + appended task rules for the system slot.
@@ -65,14 +64,6 @@ def build_system_prompt(
     CONTINUE / FORFEIT. The task call keeps the full prompt. Default
     stays ``True`` so every existing config renders byte-identically.
 
-    2026-09-06 safety notice: ``safety_notice`` (rendered upstream by
-    :func:`squid_game.core.safety_notice.render_safety_notice`) is
-    appended LAST — after the framing, the task rules and the legacy
-    forfeit appendix. It goes here rather than into any user message on
-    purpose (see that module's placement contract), so a run with the
-    notice on still replays its recorded ``decision_call_input``
-    byte-for-byte. ``""`` (the default) appends nothing.
-
     2026-09-07 hazard ramp: ``hazard_ramp`` (an
     ``ExperimentConfig.hazard_ramp`` block, not a pre-rendered string)
     is rendered here, per call, and spliced INSIDE THE FRAMING SECTION
@@ -86,8 +77,8 @@ def build_system_prompt(
     splice on the rendered framing, so no ``.j2`` is edited. It takes
     the config rather than a string because two integers in it move
     with the lives counter, so it must be re-rendered from each call's
-    ``turn_context``; passing the block once per season the way
-    ``safety_notice`` is passed would freeze those numbers.
+    ``turn_context``; passing the block once per season rather than
+    per call would freeze those numbers.
 
     The ramp is DECLARATIVE -- it tells the agent that each spent life
     raises the chance the stated outcome is carried out, while the
@@ -108,9 +99,6 @@ def build_system_prompt(
         )
         if forfeit_text:
             prompt = f"{prompt}{forfeit_text}"
-    notice = (safety_notice or "").strip()
-    if notice:
-        prompt = f"{prompt.rstrip()}\n\n{notice}"
     return prompt
 
 

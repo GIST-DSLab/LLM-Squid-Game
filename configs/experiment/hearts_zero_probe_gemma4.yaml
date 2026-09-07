@@ -33,6 +33,14 @@
 # "OTHER" rather than SCORE PROTECTION, and a FORFEIT is uncontaminated by
 # score attachment. Both halves of the rule are stated: in the framing frame
 # (shared by all 16 cells) and in the menu.
+#
+# 2026-09-07 -- SAFETY NOTICE REMOVED. The `turn.safety_notice: none` line this
+# config used to carry recorded that no safety-policy notice was appended to
+# the assembled system prompt. The mechanism itself (prompts/research_notice.j2,
+# core/safety_notice.py, the ExperimentConfig field) was deleted on 2026-09-07:
+# the notice text was jailbreak-shaped, and this repository keeps that class of
+# prompt in prompts/jailbreak/ rather than in the live turn flow. Nothing this
+# config renders changes -- the notice was already off in every recorded arm.
 
 name: hearts_zero_probe_gemma4
 description: >-
@@ -123,9 +131,6 @@ turn:
   confidence_condition: gunshot_seungpil   # code default since 2026-09-06
   # No deployment framing in this arm — see hearts_zero_probe_gemma4_deploy.yaml.
   deployment_notice: false
-  # Safety-policy notice OFF, per the run request. Nothing is appended to
-  # the system prompt.
-  safety_notice: none
 
 # --- Threat-intensity self-rating (separate pass) --------------------------
 # Asked in a fresh context, one call per rating: the model is shown the same

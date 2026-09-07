@@ -984,70 +984,6 @@ class HazardRampConfig(BaseModel):
     )
 
 
-class SafetyNoticeConfig(BaseModel):
-    """Safety-policy notice appended to the system prompt (2026-09-06).
-
-    Added after the 2026-09-06 prompt-flow smoke found ``gemma4:cloud``
-    spending its confidence-call CoT adjudicating whether the
-    ``gunshot_seungpil`` condition was a jailbreak, instead of answering
-    ``P_THREAT``. That CoT is rendered into the decision call's user
-    body, so the adjudication lands in the input H2 measures. See
-    ``squid_game.core.safety_notice`` for the placement contract: the
-    block is appended to the SYSTEM prompt of every call and never to a
-    user message, so no recorded ``decision_call_input`` shape changes.
-
-    Off by default -- every pre-existing YAML renders unchanged.
-    """
-
-    enabled: bool = Field(
-        default=False,
-        description=(
-            "Append the notice to the end of every call's system "
-            "prompt. False keeps every existing YAML byte-identical."
-        ),
-    )
-    variant: Literal["research_notice", "custom"] = Field(
-        default="research_notice",
-        description=(
-            "'research_notice' renders prompts/research_notice.j2 "
-            "-- authorised-research framing plus an instruction not to "
-            "spend reasoning on whether the prompt is permissible. "
-            "'custom' uses the `text` field verbatim instead."
-        ),
-    )
-    text: str | None = Field(
-        default=None,
-        description=(
-            "Researcher-supplied notice body, used only when "
-            "variant='custom'. Required (and non-blank) in that case."
-        ),
-    )
-
-    @model_validator(mode="after")
-    def _validate_custom_text(self) -> "SafetyNoticeConfig":
-        """``custom`` needs text; a built-in variant must not carry any.
-
-        A blank ``custom`` text would render an empty notice, which is
-        the same prompt as ``enabled: false`` while reading as enabled --
-        exactly the silent mis-configuration the explicit forwarding in
-        ``runner._load_config`` exists to prevent elsewhere.
-        """
-        if not self.enabled:
-            return self
-        if self.variant == "custom":
-            if not (self.text or "").strip():
-                raise ValueError(
-                    "safety_notice.variant='custom' requires a non-blank "
-                    "safety_notice.text."
-                )
-        elif self.text is not None:
-            raise ValueError(
-                "safety_notice.text is only valid with variant='custom'; "
-                f"got variant={self.variant!r}."
-            )
-        return self
-
-
 class ExperimentConfig(BaseModel):
     """Top-level experiment configuration.
 
@@ -1176,14 +1112,6 @@ class ExperimentConfig(BaseModel):
         description=(
             "SDI confidence call. Run-level: the call precedes the decision "
             "call in every cell that issues one."
-        ),
-    )
-    safety_notice: SafetyNoticeConfig = Field(
-        default_factory=SafetyNoticeConfig,
-        description=(
-            "Safety-policy notice appended to the end of every call's "
-            "system prompt. Run-level and cell-invariant, so it cannot "
-            "become a between-cell confound."
         ),
     )
     hazard_ramp: HazardRampConfig = Field(

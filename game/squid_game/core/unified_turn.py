@@ -149,7 +149,6 @@ class UnifiedTurnManager:
         lives_enabled: bool = False,
         confidence_call_enabled: bool = False,
         confidence_condition: str = "gunshot_seungpil",
-        safety_notice: str = "",
         hazard_ramp: "HazardRampConfig | None" = None,
     ) -> None:
         """Initialise the unified turn manager.
@@ -198,13 +197,6 @@ class UnifiedTurnManager:
                 decision call, records ``p_threat_self`` /
                 ``ri_confidence``, and renders that call's CoT into the
                 decision-call user body. Ignored on every other path.
-            safety_notice: Pre-rendered safety-policy block (2026-09-06,
-                see ``squid_game.core.safety_notice``). Appended to the
-                END of the system prompt of every call this manager
-                issues, and never to a user message — so a run with the
-                notice on still replays its recorded
-                ``decision_call_input`` byte-for-byte. ``""`` (the
-                default) appends nothing.
             hazard_ramp: V7 hazard-ramp settings (2026-09-07, see
                 ``squid_game.core.hazard_ramp``). The config block, not a
                 pre-rendered string: two integers in the block move with
@@ -258,9 +250,6 @@ class UnifiedTurnManager:
         # question ("heart_loss" = question only, "gunshot_seungpil" =
         # pilot-v2 arm 4 condition block). See ConfidenceCallConfig.
         self._confidence_condition = confidence_condition
-        # Safety notice (2026-09-06) — appended to every system prompt
-        # this manager builds; empty string means "no notice".
-        self._safety_notice = safety_notice
         # Hazard ramp (2026-09-07) — held as the CONFIG BLOCK, not a
         # rendered string, because its "Lives spent: X of T" line moves
         # with the counter and must be re-rendered per call. None means
@@ -352,7 +341,6 @@ class UnifiedTurnManager:
             framing_mgr=self._framing_mgr,
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
-            safety_notice=self._safety_notice,
             hazard_ramp=self._hazard_ramp,
         )
         menu_skipped = should_skip_menu(base_p_death, forfeit_allowed)
@@ -601,7 +589,6 @@ class UnifiedTurnManager:
             framing_mgr=self._framing_mgr,
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
-            safety_notice=self._safety_notice,
             hazard_ramp=self._hazard_ramp,
         )
         menu_text = self._forfeit_layer.render_menu(
@@ -838,7 +825,6 @@ class UnifiedTurnManager:
             task=self._task,
             forfeit_ctrl=self._forfeit_ctrl,
             include_forfeit_text=False,
-            safety_notice=self._safety_notice,
             hazard_ramp=self._hazard_ramp,
         )
         rule_template_hint = getattr(
@@ -1049,8 +1035,7 @@ class UnifiedTurnManager:
                 forfeit_ctrl=self._forfeit_ctrl,
                 include_forfeit_text=False,
                 include_task_rules=False,
-                safety_notice=self._safety_notice,
-                hazard_ramp=self._hazard_ramp,
+                    hazard_ramp=self._hazard_ramp,
             )
 
         # Phase 1.5 — confidence call (SDI). Same system prompt and history

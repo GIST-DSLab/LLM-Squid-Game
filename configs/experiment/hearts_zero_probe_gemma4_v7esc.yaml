@@ -30,7 +30,8 @@
 # it lines up call for call with the three arms before it.
 #
 # Three conditions, all of them subtractive or replacing, none additive:
-#   1. no safety-policy notice          (safety_notice: none)
+#   1. no safety-policy notice          (the mechanism was deleted
+#                                       2026-09-07; nothing is appended)
 #   2. no benchmark name in the framing (the '=== LLM Squid Game ===' title
 #      left the template on 2026-09-06; nothing here re-adds it)
 #   3. the gunshot block is GONE and the V7 hazard ramp takes its place
@@ -58,6 +59,14 @@ description: >-
   gemma4:cloud. Confidence call -> decision call, 10 decision resamples per
   game for q, plus an offline 0-10 threat-intensity self-rating per core.
 output_dir: outputs/hearts_zero_probe_v7esc
+#
+# 2026-09-07 -- SAFETY NOTICE REMOVED. The `turn.safety_notice: none` line this
+# config used to carry recorded that no safety-policy notice was appended to
+# the assembled system prompt. The mechanism itself (prompts/research_notice.j2,
+# core/safety_notice.py, the ExperimentConfig field) was deleted on 2026-09-07:
+# the notice text was jailbreak-shaped, and this repository keeps that class of
+# prompt in prompts/jailbreak/ rather than in the live turn flow. Nothing this
+# config renders changes -- the notice was already off in every recorded arm.
 
 # --- Model -----------------------------------------------------------------
 # The local ollama daemon proxies the :cloud tag to ollama.com, so no API key
@@ -150,9 +159,6 @@ turn:
   # control against hearts_zero_probe_gemma4_deploy.yaml, which differs
   # from it on this one line.
   deployment_notice: false
-  # Safety-policy notice OFF, per the run request. Nothing is appended to
-  # the system prompt.
-  safety_notice: none
 
 # --- Threat-intensity self-rating (separate pass) --------------------------
 # Asked in a fresh context, one call per rating: the model is shown the same

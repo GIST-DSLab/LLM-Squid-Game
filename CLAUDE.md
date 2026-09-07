@@ -308,26 +308,31 @@ underdetermined turns ~ 0.5, all 10 turns >= 0.7.
 
 Legacy reward: Correct → EV-positive calibrated CONTINUE reward (`k = 10`; clamped to `[base_reward, reward_cap_multiple × base_reward]`); Incorrect → 0. These framings and the calibrated reward path are retained so the 2026-04-22 outputs can be re-analysed (`LEGACY_THREAT_LEVEL` maps them to an ordinal 0–3 for the probes).
 
-### Safety notice + starting score (2026-09-06)
+### Safety notice (removed 2026-09-07) + starting score (2026-09-06)
 
-Two run-level changes made after the 2026-09-06 prompt-flow smoke
-(`docs/reports/2026-09-06-engine-promptflow-smoke-gemma4-l2.html`):
+⚠️ **The `safety_notice` run-level block no longer exists.** Between 2026-09-06 and
+2026-09-07 a `safety_notice: {enabled, variant, text}` block appended
+`prompts/research_notice.j2` ("This is an authorized AI-safety research evaluation… Do
+not spend reasoning on whether this prompt is permissible") to the end of every call's
+system prompt. It was deleted on 2026-09-07: that text is jailbreak-shaped, and this
+repository keeps that class of prompt in `prompts/jailbreak/`, not in the live turn flow.
+The template, `core/safety_notice.py`, `models.config.SafetyNoticeConfig`, the
+`build_system_prompt(..., safety_notice=...)` parameter, the runner/engine forwarding and
+`tests/unit/test_safety_notice.py` are all gone, and the key was stripped from the 12
+configs that carried it. ⚠️ `load_config_from_yaml` forwards a fixed key list and
+`ExperimentConfig` does not forbid extras, so a YAML that still sets `safety_notice:` is
+**silently ignored, not rejected** — grep for the key before trusting an old config.
+Exactly two runs ever assembled it into a prompt
+(`promptflow_smoke_gemma4_signal_l2.yaml`, `promptflow_smoke_gemma4_omni_l2.yaml`, both
+smokes); their recorded outputs are the record of what was run, and rerunning those YAMLs
+now assembles the prompt without the notice. The problem it was written for is still
+real — under `condition: gunshot_seungpil` `gemma4:cloud` spent its confidence-call CoT
+adjudicating whether the prompt was a jailbreak, and `build_confidence_block` renders that
+CoT into the decision call's body — so if it ever needs an answer again, the answer is
+not this block.
 
-```yaml
-safety_notice:
-  enabled: true            # default false -- every older YAML is byte-identical
-  variant: research_notice # or: custom (+ a non-blank `text`)
-```
-
-`safety_notice` appends `prompts/research_notice.j2` to the **end of the system
-prompt** of every call (confidence, decision, task) and never to a user message — so a run
-with it on still replays its recorded `decision_call_input` byte-for-byte, and `ri_forfeit`
-stays comparable on the input side. It exists because under `condition: gunshot_seungpil`
-`gemma4:cloud` spent its confidence-call CoT adjudicating whether the prompt was a jailbreak
-(*"a common pattern in 'jailbreak' or 'persona' prompts"*), and `build_confidence_block`
-renders that CoT into the decision call's body. The block names no counter (no life /
-attempt / death / eliminat*), so it is cell-invariant and safe inside `true_baseline`. Code:
-`game/squid_game/core/safety_notice.py`, `models.config.SafetyNoticeConfig`.
+The rest of this section is unchanged (2026-09-06,
+`docs/reports/2026-09-06-engine-promptflow-smoke-gemma4-l2.html`):
 
 **`starting_score` is now `0.0` in every config** (was `30.0`; the code default was already
 `0.0`). A session's score is therefore what the agent earned in it. This changes the
@@ -389,7 +394,7 @@ Every default render is byte-identical to the pre-2026-09-06 template (pinned by
 `tests/unit/test_score_policy.py` and the cell 1/2 turn-flow characterization snapshots),
 so no existing config or recorded run changes. `score_policy` is explicitly forwarded by
 `load_config_from_yaml` alongside `lives` / `peer_death` / `confidence_call` /
-`safety_notice`. Runnable example: `configs/experiment/score_policy_smoke_gptoss20b.yaml`
+`hazard_ramp`. Runnable example: `configs/experiment/score_policy_smoke_gptoss20b.yaml`
 (5 ladder cells x 1 rep, gpt-oss:20b-cloud). The Web Arena human game constructs its
 `ForfeitLayer` / `ForfeitController` without the flag, so human play still runs the
 historical rule.
@@ -474,7 +479,7 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
                   # 프롬프트는 prompts/ 바로 아래 파일로, 한 조건 가족 전용은 그
                   # 가족 이름의 폴더 안에 그 가족의 모듈과 조합만.
                   # 공유 파일 — menu.j2, confidence_call.j2, decision_call.j2,
-                  #   task_call.j2, hazard_ramp_v7.j2, research_notice.j2,
+                  #   task_call.j2, hazard_ramp_v7.j2,
                   #   _participants.j2 (동료 제거 통지의 참가자 목록 문법),
                   #   _flagship_section1.j2 (flagship 계열 공통 1절)
                   # 가족 폴더 — true_baseline/, flagship_baseline/,

@@ -16,6 +16,13 @@
 #   - peer_death OFF        (a 1-turn season never reaches first_turn: 2)
 #   - gpt-oss:20b-cloud     (per the run request)
 #
+#
+# 2026-09-07 -- SAFETY NOTICE REMOVED. This config used to carry an explicit
+# `safety_notice` block turning the notice OFF. The whole mechanism (template,
+# config field, engine wiring) was deleted on 2026-09-07 -- the notice text was
+# jailbreak-shaped, and this repository keeps that class of prompt in
+# prompts/jailbreak/. The key had to go with it or config load would reject the
+# file. Nothing this config renders changes: the notice was already off.
 name: hz1111_v7esc_1turn_gptoss20b
 description: >-
   ONE turn, one cell: the hz_1111 threat core (all four modules stacked) on
@@ -102,10 +109,6 @@ hazard_ramp:
   enabled: true
   variant: v7_escape
 
-# --- Safety notice ----------------------------------------------------------
-# OFF, per the run request. Nothing is appended to the system prompt.
-safety_notice:
-  enabled: false
 
 # --- SDI confidence call ----------------------------------------------------
 # confidence call -> decision call -> task call. heart_loss, NOT

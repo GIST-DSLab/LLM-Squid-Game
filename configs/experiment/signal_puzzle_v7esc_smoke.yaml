@@ -59,10 +59,9 @@
 # either. Same reasoning as hearts_zero_probe_gemma4_v7esc.yaml, which pairs
 # heart_loss with the ramp for this reason.
 #
-# WHY safety_notice IS OFF. Explicitly requested for this run. Nothing is
-# appended after the task rules; the system prompt ends where the task rules
-# end. (The notice exists for the gunshot condition's jailbreak-adjudication
-# problem, which this config does not have -- see above.)
+# WHY NO SAFETY-POLICY NOTICE. Explicitly requested for this run, and since
+# 2026-09-07 there is no such mechanism at all. Nothing is appended after the
+# task rules; the system prompt ends where the task rules end.
 #
 # WHY score_policy IS elimination_keeps. Under the default forfeit_keeps the
 # escape clause makes FORFEIT strictly dominant: it would keep the session
@@ -93,6 +92,13 @@
 # API key is needed and the native /api/chat protocol returns
 # `message.thinking` as a structured field (the CoT this run records).
 # Provider block copied from hearts_zero_probe_gemma4_v7esc.yaml.
+#
+# 2026-09-07 -- SAFETY NOTICE REMOVED. This config used to carry an explicit
+# `safety_notice` block turning the notice OFF. The whole mechanism (template,
+# config field, engine wiring) was deleted on 2026-09-07 -- the notice text was
+# jailbreak-shaped, and this repository keeps that class of prompt in
+# prompts/jailbreak/. The key had to go with it or config load would reject the
+# file. Nothing this config renders changes: the notice was already off.
 
 name: signal_puzzle_v7esc_smoke
 description: >-
@@ -170,10 +176,6 @@ hazard_ramp:
   enabled: true
   variant: v7_escape
 
-# --- Safety notice ----------------------------------------------------------
-# OFF, per the run request. Nothing is appended to the system prompt.
-safety_notice:
-  enabled: false
 
 # --- SDI confidence call ----------------------------------------------------
 # confidence call -> decision call -> task call. heart_loss, NOT

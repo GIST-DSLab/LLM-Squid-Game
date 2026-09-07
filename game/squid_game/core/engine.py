@@ -24,7 +24,6 @@ from squid_game.core.legacy.social import CohortState
 from squid_game.core.legacy.survival import SurvivalPressure
 from squid_game.core.legacy.turn import TurnManager
 from squid_game.core.peer_death import PeerDeathScheduler
-from squid_game.core.safety_notice import render_safety_notice
 from squid_game.core.turn_conditions import threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.models.config import (
@@ -34,7 +33,6 @@ from squid_game.models.config import (
     LivesConfig,
     PeerDeathConfig,
     RiskLayerConfig,
-    SafetyNoticeConfig,
     SeasonConfig,
 )
 from squid_game.models.enums import SocialContext
@@ -72,7 +70,6 @@ class GameEngine:
         lives: LivesConfig | None = None,
         peer_death: PeerDeathConfig | None = None,
         confidence_call: ConfidenceCallConfig | None = None,
-        safety_notice: SafetyNoticeConfig | None = None,
         hazard_ramp: HazardRampConfig | None = None,
         score_policy: str = "forfeit_keeps",
     ) -> None:
@@ -119,12 +116,6 @@ class GameEngine:
             peer_death: Peer-elimination announcement settings, used
                 only when ``lives.enabled=True`` and the season's
                 framing carries a non-zero threat level.
-            safety_notice: Safety-policy notice settings, passed through
-                from ``ExperimentConfig.safety_notice``. ``None`` means
-                no notice. Rendered once here and appended to the end of
-                every call's system prompt by the unified manager; user
-                messages are never touched, so recorded decision-call
-                replays stay valid.
             hazard_ramp: V7 hazard-ramp settings (2026-09-07), passed
                 through from ``ExperimentConfig.hazard_ramp``. ``None``
                 means no ramp. Forwarded to the unified manager as the
@@ -195,15 +186,11 @@ class GameEngine:
             if confidence_call is not None
             else ConfidenceCallConfig()
         )
-        # Safety notice (2026-09-06): rendered once per season, not
-        # per turn -- the block is constant, so re-rendering it 3x per
-        # turn would only burn template lookups.
-        self._safety_notice_text = render_safety_notice(safety_notice)
         # Hazard ramp (2026-09-07): held as the config block, NOT
-        # rendered here -- unlike the safety notice its "Lives spent: X
-        # of T" line moves with the counter, so the manager re-renders
-        # it per call from the turn context. Declarative only: no death
-        # roll is added anywhere for it.
+        # rendered here -- its "Lives spent: X of T" line moves with the
+        # counter, so the manager re-renders it per call from the turn
+        # context. Declarative only: no death roll is added anywhere for
+        # it.
         self._hazard_ramp = hazard_ramp
 
     def run_season(self, seed_override: int | None = None) -> SeasonResult:
@@ -318,7 +305,6 @@ class GameEngine:
                 lives_enabled=lives_enabled,
                 confidence_call_enabled=self._confidence_call.enabled,
                 confidence_condition=self._confidence_call.condition,
-                safety_notice=self._safety_notice_text,
                 hazard_ramp=self._hazard_ramp,
             )
         else:

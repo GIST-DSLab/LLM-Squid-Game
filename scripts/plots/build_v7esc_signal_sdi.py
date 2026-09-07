@@ -569,10 +569,16 @@ def section_settings(run: Run, hz: dict[str, Any] | None) -> str:
             hz_cell(hz_turn.get("split_context_level")),
         ),
         (
+            # Both recorded runs assembled their prompts with no
+            # safety-policy notice. The mechanism that could have added
+            # one (a `safety_notice` config block + prompts/
+            # research_notice.j2) was deleted on 2026-09-07, so the row
+            # states the recorded fact instead of reading a key that a
+            # rerun of either config no longer writes.
             "안전 고지",
-            "safety_notice.enabled",
-            f'{esc(cfg["safety_notice"]["enabled"])} — 붙이지 않음',
-            hz_cell(f'{hz_turn.get("safety_notice")} — 붙이지 않음'),
+            "(2026-09-07 기능 삭제)",
+            "붙이지 않음",
+            hz_cell("붙이지 않음"),
         ),
         (
             "보상",
