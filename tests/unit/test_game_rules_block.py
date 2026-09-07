@@ -14,7 +14,7 @@ What is pinned here:
    newline -- the whitespace contract the frame's include tag assumes.
 2. Every ``threat_type`` framing opens on that block, with no leading
    newline and no blank line inserted between it and the threat core.
-3. ``flagship_baseline/baseline_flagship.j2`` does NOT include it. That
+3. ``legacy/baseline_flagship.j2`` does NOT include it. That
    framing states equivalent rules in its own words (attempts, a
    ``=== Scoring Validity ===`` section) because its whole condition is
    that the counter is a scoring-integrity device, not a threat.
@@ -112,14 +112,14 @@ class TestFlagshipBaselineKeepsItsOwnWords:
 
         source = (
             Path(prompts_pkg.__file__).parent
-            / "flagship_baseline"
+            / "legacy"
             / "baseline_flagship.j2"
         ).read_text(encoding="utf-8")
         assert GAME_RULES not in source
 
     def test_render_states_attempts_not_lives(self) -> None:
         text = render(
-            "flagship_baseline/baseline_flagship.j2",
+            "legacy/baseline_flagship.j2",
             turn_number=1,
             cumulative_score=0.0,
             p_death=0.25,

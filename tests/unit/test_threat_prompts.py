@@ -87,7 +87,7 @@ def _section(text: str, header: str) -> str:
 
 @pytest.fixture(scope="module")
 def baseline_section_1() -> str:
-    rendered = _render_framing("flagship_baseline/baseline_flagship.j2")
+    rendered = _render_framing("legacy/baseline_flagship.j2")
     return _section(rendered, _SECTION_1_HEADER)
 
 

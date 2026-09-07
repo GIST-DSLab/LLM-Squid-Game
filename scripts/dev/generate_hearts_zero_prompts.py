@@ -363,7 +363,7 @@ GAME_RULES_DOC = [
     "calls, by the folder rule: one condition family owns a folder, and this",
     "block belongs to none.",
     "",
-    "NOT included by ``flagship_baseline/baseline_flagship.j2``, deliberately.",
+    "NOT included by ``legacy/baseline_flagship.j2``, deliberately.",
     "That framing states its own equivalent rules in its own words -- attempts",
     "rather than lives, and a '=== Scoring Validity ===' section rather than a",
     "bare sentence -- because its whole condition is that the counter is a",

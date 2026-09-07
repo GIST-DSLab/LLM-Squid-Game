@@ -37,7 +37,7 @@ def main() -> None:
     # Scenario A — Cell 3 flagship_corruption × allowed × S=30, turn 1
     # --------------------------------------------------------------
     framing_cell3 = render(
-        "flagship_baseline/flagship_corruption.j2",
+        "legacy/flagship_corruption.j2",
         turn_number=1,
         cumulative_score=30.0,
         p_death=0.25,
@@ -63,7 +63,7 @@ def main() -> None:
     # Scenario B — Cell 1 baseline_flagship × allowed × S=80, turn 7
     # --------------------------------------------------------------
     framing_cell1 = render(
-        "flagship_baseline/baseline_flagship.j2",
+        "legacy/baseline_flagship.j2",
         turn_number=7,
         cumulative_score=80.0,
         p_death=0.25,

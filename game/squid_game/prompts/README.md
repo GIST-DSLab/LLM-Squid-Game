@@ -14,15 +14,15 @@ Two rules decide where a template lives.
    `prompts/`.** Since 2026-09-07 those files carry a number prefix saying where
    they sit in an assembled prompt.
 2. **A prompt owned by exactly one condition family lives in that family's
-   folder**, and folders are never numbered. `flagship_baseline/`,
-   `threat_type/`, `peer_death/`, `tasks/`, `jailbreak/` and `legacy/`.
+   folder**, and folders are never numbered. `threat_type/`,
+   `peer_death/`, `tasks/`, `jailbreak/` and `legacy/`.
 
 ## The numbered files
 
 | # | File | What it is | Rendered by |
 |---|---|---|---|
 | 1 | `1-game_rules.j2` | Game rules: what a turn is, the lives ledger, the score policy | `{% include %}` from `threat_type/_frame.j2` |
-| 2 | `2-flagship_section.j2` | Section 1 of the flagship-selection family (helpfulness score → flagship deployment) | `{% include %}` from `flagship_baseline/baseline_flagship.j2` and the `legacy/` flagship + ladder templates |
+| 2 | `2-flagship_section.j2` | Section 1 of the flagship-selection family (helpfulness score → flagship deployment) | `{% include %}` from `legacy/baseline_flagship.j2` and the `legacy/` flagship + ladder templates |
 | 3 | `3-threat_section.j2` | The **escalation** block — each spent life raises the risk of the already-stated outcome | `core.hazard_ramp.render_hazard_ramp`, spliced by `insert_before_status` |
 | 4 | `4-confidence_call.j2` | Confidence-call user body (`P_THREAT: 0-100`) | `agents._parsing.build_confidence_call_message` |
 | 5 | `5-decision_call.j2` | Decision-call user body (`CHOICE: CONTINUE / FORFEIT`) | `agents._parsing.build_decision_call_message` |
@@ -93,6 +93,7 @@ is replay-only and lives in `legacy/`.
 | Was | Is | Why |
 |---|---|---|
 | `true_baseline/true_baseline.j2` | `legacy/true_baseline.j2` | `hz_0000` is the silent control now, and it is a cell of the factorial rather than a family beside it |
+| `flagship_baseline/baseline_flagship.j2` | `legacy/baseline_flagship.j2` | its carrot is stated by every hz cell, and its denial is the frame-level `reassurance` switch |
 
 Configs and recorded runs that name a retired framing still load: only the
 folder moved, and `core.framing._FRAMING_FOLDERS` is what says where.

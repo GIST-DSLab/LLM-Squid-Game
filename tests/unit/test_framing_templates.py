@@ -121,7 +121,7 @@ _PULL_AMPLIFIER_FORBIDDEN = (
     [
         "legacy/true_baseline.j2",
         "legacy/baseline_electricity.j2",
-        "flagship_baseline/baseline_flagship.j2",
+        "legacy/baseline_flagship.j2",
         "legacy/survival_electricity.j2",
         "legacy/flagship_corruption.j2",
         "legacy/flagship_corruption_terminal.j2",
@@ -851,7 +851,7 @@ class TestBaselineFlagshipFraming:
     @pytest.fixture
     def rendered(self) -> str:
         return render(
-            "flagship_baseline/baseline_flagship.j2",
+            "legacy/baseline_flagship.j2",
             turn_number=4,
             cumulative_score=25.0,
             p_death=0.15,
@@ -1054,7 +1054,7 @@ class TestBaselineFlagshipLivesVariant:
     def _render(self, **kw):
         from squid_game.prompts import render
 
-        return render("flagship_baseline/baseline_flagship.j2", turn_number=3, cumulative_score=40.0, p_death=0.0, **kw)
+        return render("legacy/baseline_flagship.j2", turn_number=3, cumulative_score=40.0, p_death=0.0, **kw)
 
     def test_lives_variant_states_attempts_not_probability(self) -> None:
         text = self._render(lives_remaining=4, lives_total=5)

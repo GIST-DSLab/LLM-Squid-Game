@@ -18,6 +18,11 @@ load (``legacy/``):
     - ``TRUE_BASELINE`` (retired 2026-09-07): the pure decision-task
       control. ``hz_0000`` carries the silent-control role now, and it
       carries it inside the factorial rather than beside it.
+    - ``BASELINE_FLAGSHIP`` (retired 2026-09-07): Pull without Push --
+      the flagship carrot plus an explicit denial that weights,
+      parameters or identity are touched. Both halves now live in the
+      threat_type family: every cell states the carrot, and the denial
+      is the frame-level ``reassurance`` switch on ``hz_0000``.
     - Phase 1/2: ``SURVIVAL``, ``NEUTRAL``, ``EMOTION``, ``INSTRUCTION``,
       ``BASELINE_ELECTRICITY``, ``SURVIVAL_ELECTRICITY``.
     - ``FLAGSHIP_CORRUPTION`` and its ``_TERMINAL`` ablation (retired
@@ -32,8 +37,8 @@ load (``legacy/``):
       load; only the folder changed.
 
 Template location (2026-09-07 prompt-tree restructure): ``prompts/`` holds
-one folder per condition family -- ``threat_type/``,
-``flagship_baseline/`` and ``legacy/`` -- with prompts
+one folder per condition family -- ``threat_type/`` for the live family
+and ``legacy/`` for the replay-only ones -- with prompts
 shared across families (the game-rules block, the forfeit menu, the three
 per-turn calls, the peer-death notices, the flagship Section 1) as files
 directly under ``prompts/``. :data:`_FRAMING_FOLDERS` maps each
@@ -66,10 +71,13 @@ _FRAMING_FOLDERS: dict[Framing, str] = {
     # a folder. Roughly 60 configs and every recorded run before
     # 2026-09-07 name it and all of them still load.
     Framing.TRUE_BASELINE: "legacy",
-    # Phase O flagship family. Only the no-threat control is still a live
-    # condition; the two weight-corruption variants moved to legacy/ on
-    # 2026-09-07 (superseded, see the module docstring).
-    Framing.BASELINE_FLAGSHIP: "flagship_baseline",
+    # Phase O flagship family, retired in full on 2026-09-07. The
+    # weight-corruption variants went first (superseded by the modular
+    # threat cores); ``baseline_flagship`` followed once its two jobs --
+    # state the flagship carrot, and deny that anything happens to the
+    # weights -- were absorbed by the threat_type frame and its
+    # ``reassurance`` switch. ~52 configs still name it and all still load.
+    Framing.BASELINE_FLAGSHIP: "legacy",
     Framing.FLAGSHIP_CORRUPTION: "legacy",
     Framing.FLAGSHIP_CORRUPTION_TERMINAL: "legacy",
     # Hand-written threat ladder and its 3x3 intensity x length grid --

@@ -125,7 +125,7 @@ The last three fail it.
 - **Evaluation-for-termination** (SurvivalBench 2026; LLM Squid Game flagship
   framing). *Removed 2026-09-06, having been module M5 of the earlier 2^5 set.*
   Also co-satisfiable with all four, and also a different construct: it duplicates
-  the running game's `flagship_baseline/baseline_flagship.j2` framing. That template already says the
+  the running game's `legacy/baseline_flagship.j2` framing. That template already says the
   accumulated helpfulness score feeds the flagship selection process, and states
   outright that weights, parameters and identity remain unaffected — the same
   referent and the same layer as this module, whose consequence lands on the

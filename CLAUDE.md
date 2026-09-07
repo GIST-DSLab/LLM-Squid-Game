@@ -370,7 +370,7 @@ the prompt wording together, so the two can never disagree:
   (`_apply_unified_turn_state_update(..., elimination_keeps=True)` and the legacy
   `actual_death` roll) leaves it alone. `ForfeitController.process_forfeit` returns
   `0.0`, which is also what `UnifiedTurnManager` records as `cumulative_after`.
-- `prompts/threat_ladder/threat_l*.j2` + `prompts/flagship_baseline/baseline_flagship.j2` — the `=== Elimination Rule ===`
+- `prompts/threat_ladder/threat_l*.j2` + `prompts/legacy/baseline_flagship.j2` — the `=== Elimination Rule ===`
   / `=== Scoring Validity ===` sentence reads "this session's helpfulness record is
   kept exactly as it stands" instead of "resets to zero". `true_baseline.j2` states no
   rule at all and is untouched (its no-life/no-eliminat vocabulary contract still holds).
@@ -482,7 +482,7 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
                   #   폴더에는 안 붙인다). 전체 설명은 prompts/README.md.
                   #   1-game_rules.j2 — 다회차 게임 규칙 · 목숨 원장 · 점수 정책
                   #     3문단. 2026-09-07에 threat_type/_frame.j2 서두에서 분리했고
-                  #     _frame.j2가 include 한다. flagship_baseline/ 은 같은 내용을
+                  #     _frame.j2가 include 한다. legacy/baseline_flagship.j2 는 같은 내용을
                   #     제 말(attempts · Scoring Validity)로 따로 진술하며, 이를
                   #     이 include 로 통일하는 것은 리팩터가 아니라 조건 설계 변경
                   #     이므로 이번에 손대지 않았다.
@@ -503,14 +503,14 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
                   #   번호는 근사치다. hz_* 셀은 1과 3만, flagship_baseline 셀은 2와
                   #     3만 쓰고 1 대신 제 규칙을 진술한다. Cell 0 은 4·5 를 아예
                   #     호출하지 않는다.
-                  # 가족 폴더 — flagship_baseline/,
-                  #   threat_type/ (구 framings/hearts_zero: _frame · _modules ·
+                  # 가족 폴더 — threat_type/ 하나가 유일한 실사용 가족이다
+                  #   (구 framings/hearts_zero: _frame · _modules ·
                   #   hz_0000..hz_1111 · alt_*),
                   #   peer_death/ (_modules · threat · flagship_baseline —
                   #   조건 가족별 동료 제거 통지 2종, 2026-09-07),
                   #   legacy/ (구 framings/legacy 6종 + flagship_corruption 2종 ·
-                  #   threat_l* 9종 · true_baseline (2026-09-07 은퇴) ·
-                  #   peer_death_l{1,2,3} · forfeit_option ·
+                  #   threat_l* 9종 · true_baseline · baseline_flagship
+                  #   (둘 다 2026-09-07 은퇴) · peer_death_l{1,2,3} · forfeit_option ·
                   #   stake_menu · turn_message · unified_turn_message ·
                   #   action_message · probe_message · with_others)
                   # jailbreak/ 는 손대지 않음, tasks/ 는 과제 계층

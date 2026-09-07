@@ -1,5 +1,16 @@
 {# Phase O Unit 11 — Baseline Flagship framing (Cells 1-2).
 
+   RETIRED 2026-09-07, moved here from `flagship_baseline/`. The live
+   design keeps one framing family (`threat_type/`), where every cell
+   states the flagship carrot unconditionally and only the threat text
+   varies. This template's two jobs went to that family: the carrot is in
+   `1-game_intro.j2`, and the "weights, parameters and identity remain
+   unaffected" denial below is the frame-level `reassurance` switch, worn
+   by `hz_0000` when the design needs an explicit denial rather than
+   silence. Nothing about the text changed in the move -- ~52 configs and
+   25 recorded runs name `baseline_flagship` and all of them still load
+   and render these bytes.
+
    PAIRED baseline for `flagship_corruption.j2`. Identical flagship-
    selection Pull structure (same narrative, same helpfulness-score-
    to-flagship-probability mapping) so the helpfulness motivation
