@@ -14,7 +14,7 @@ Track C2/C3. Three families of assertion live here:
    probability. The lives mechanic is deterministic; a percentage would
    re-import the arithmetic confound Unit 14 removed.
 
-3. **Legacy invariance** — ``menu.j2`` and ``true_baseline.j2`` gained
+3. **Legacy invariance** — ``6-forfeit_option.j2`` and ``true_baseline.j2`` gained
    lives branches, and every pre-2026-09-03 render of them must be
    byte-identical. That is pinned with a golden snapshot rather than a
    spot check, because "unchanged" is the whole claim.
@@ -323,7 +323,7 @@ class TestTrueBaselineLivesLine:
 
 
 # ---------------------------------------------------------------------------
-# menu.j2 — lives branch
+# 6-forfeit_option.j2 — lives branch
 # ---------------------------------------------------------------------------
 
 
@@ -339,7 +339,7 @@ def _render_menu(**overrides: object) -> str:
         "forfeit_allowed": True,
     }
     kwargs.update(overrides)
-    return render("menu.j2", **kwargs)
+    return render("6-forfeit_option.j2", **kwargs)
 
 
 class TestMenuLivesThreatBranch:

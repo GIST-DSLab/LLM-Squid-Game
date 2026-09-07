@@ -541,7 +541,7 @@ def build_svg() -> str:
         node_box(
             64, 200, 280, 88,
             cls="box-call", tag="CALL 1", name="확신 콜",
-            subs=[("confidence_call.j2", "mono"), ("P_THREAT: 0-100 한 줄", "mono")],
+            subs=[("4-confidence_call.j2", "mono"), ("P_THREAT: 0-100 한 줄", "mono")],
         ),
         node_box(
             64, 312, 280, 88,
@@ -555,7 +555,7 @@ def build_svg() -> str:
             64, 424, 280, 88,
             cls="box-focal", tag="CALL 2", name="결정 콜",
             subs=[
-                ("decision_call.j2 + menu.j2", "mono"),
+                ("5-decision_call.j2 + 6-forfeit_option.j2", "mono"),
                 ("CHOICE: CONTINUE / FORFEIT", "mono"),
             ],
         ),
@@ -569,7 +569,7 @@ def build_svg() -> str:
             680, 88, 304, 104,
             cls="box-focal", tag="CALL 3", name="과제 콜",
             subs=[
-                ("task_call.j2", "mono"),
+                ("7-task_call.j2", "mono"),
                 ("규칙 모양 + 단서 34줄 + 질문", "ko"),
                 ("RULE: ... / ACTION: ...", "mono"),
             ],

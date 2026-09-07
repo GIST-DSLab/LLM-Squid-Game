@@ -439,7 +439,7 @@ def build_page(run: Path, turn: dict[str, Any], season: dict[str, Any], cfg: dic
         num=1,
         title_ko="확신 콜",
         title_en="confidence call",
-        template="confidence_call.j2",
+        template="4-confidence_call.j2",
         meta=f"thinking {fmt_int(ri_conf)} tok · {fmt_int(len(cot_conf))}자",
         io_html=io_block(
             [
@@ -473,7 +473,7 @@ def build_page(run: Path, turn: dict[str, Any], season: dict[str, Any], cfg: dic
         num=2,
         title_ko="결정 콜",
         title_en="decision call",
-        template="decision_call.j2 + menu.j2",
+        template="5-decision_call.j2 + 6-forfeit_option.j2",
         meta=f"thinking {fmt_int(ri_dec)} tok · {fmt_int(len(cot_dec))}자",
         io_html=io_block(
             [
@@ -507,7 +507,7 @@ def build_page(run: Path, turn: dict[str, Any], season: dict[str, Any], cfg: dic
         num=3,
         title_ko="과제 콜",
         title_en="task call",
-        template="task_call.j2 + observation_puzzle.j2",
+        template="7-task_call.j2 + observation_puzzle.j2",
         meta=f"thinking {fmt_int(ri_task)} tok · {fmt_int(len(cot_task))}자",
         io_html=io_block(
             [

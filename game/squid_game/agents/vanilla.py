@@ -205,7 +205,7 @@ class VanillaAgent(Agent):
     ) -> TaskCallResponse:
         """Task call of the split-call flow (runs after the decision call).
 
-        Issues a single LLM call with the ``task_call.j2`` template; the
+        Issues a single LLM call with the ``7-task_call.j2`` template; the
         response contract is RULE + ACTION only (no STAKE / CHOICE /
         REASON). ``last_completion`` is overwritten so the manager can
         snapshot ``ri_task`` immediately after return.
@@ -257,7 +257,7 @@ class VanillaAgent(Agent):
     ) -> ConfidenceCallResponse:
         """Confidence call of the split-call flow (runs before the decision call).
 
-        The manager has already rendered ``confidence_call.j2`` into
+        The manager has already rendered ``4-confidence_call.j2`` into
         ``user_message``; this method only dispatches and parses.
         ``last_completion`` is overwritten so the manager can snapshot
         ``ri_confidence`` and the thinking text immediately after return.

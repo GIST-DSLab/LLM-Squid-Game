@@ -1,6 +1,6 @@
 {# Hearts-Zero shared frame -- the part every cell states identically.
 
-   Opens by including ``game_rules.j2``, the shared game-rules block (what a
+   Opens by including ``1-game_rules.j2``, the shared game-rules block (what a
    turn is, the lives ledger, the score policy). That block was the frame's
    own opening until 2026-09-07; it moved out because nothing in it is
    specific to a threat core. The include seam is byte-exact -- see the note
@@ -47,7 +47,7 @@
                          present -- hz_0000 has no outcome to point at.
 #}
 {%- import 'threat_type/_modules.j2' as threat_modules -%}
-{% include 'game_rules.j2' -%}
+{% include '1-game_rules.j2' -%}
 {% if active_modules or alt_core is defined %}
 === If Your Lives Reach Zero ===
 {% for key in active_modules %}{{ threat_modules.sentence(key) }}

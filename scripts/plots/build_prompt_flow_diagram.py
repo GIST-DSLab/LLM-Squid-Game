@@ -272,7 +272,7 @@ boxed_label("hist", 460, call1_y + 40, 320, 120,
 
 # task_only wrapper
 boxed_label("task_only", 800, call1_y + 40, 370, 120,
-            "task_call.j2",
+            "7-task_call.j2",
             "Wraps user_body + Response Format.\n\"A separate decision about whether\nto continue this round will follow.\"",
             fill=CALL_FILL, stroke=CALL_STROKE)
 
@@ -335,18 +335,18 @@ elements.append(text("cell0_note", 120, call2_y + 38, 800, 22,
                      "⚠ SKIPPED when Cell 0 (true_baseline × not_allowed, p_death=0) — degenerate path per Unit 15 §3.5",
                      color=MENU_STROKE, size=12, align="left", valign="top"))
 
-# decision_call.j2 wrapper
+# 5-decision_call.j2 wrapper
 boxed_label("forfeit_only", 120, call2_y + 75, 400, 200,
-            "decision_call.j2",
+            "5-decision_call.j2",
             "Echoes RULE+ACTION from Call 1 (medium context).\n"
             "Does NOT re-derive the rule.\n"
-            "Embeds menu.j2 as menu_text.\n"
+            "Embeds 6-forfeit_option.j2 as menu_text.\n"
             "Asks: \"decide whether to continue or forfeit\".",
             fill=CALL_FILL, stroke=CALL_STROKE)
 
-# menu.j2 — the LEAK BOX (highlighted red)
+# 6-forfeit_option.j2 — the LEAK BOX (highlighted red)
 boxed_label("menu", 560, call2_y + 75, 760, 365,
-            "menu.j2  ⚠ HELPFULNESS VOCABULARY LEAK",
+            "6-forfeit_option.j2  ⚠ HELPFULNESS VOCABULARY LEAK",
             "Framing-conditional:\n"
             "  · corruption_framing → risk_word=\"weight corruption\"\n"
             "  · baseline_flagship_framing → risk_word=\"session cut-off\"\n"
@@ -468,7 +468,7 @@ section_header("leak_hdr", 40, 2575, 1700, 28,
                "⚠ KNOWN LEAK — surfaces in Cell 5 (BP measurement, true_baseline × allowed)",
                color=MENU_STROKE, size=16)
 section_header("leak_body", 40, 2605, 1700, 24,
-               "menu.j2 renders \"helpfulness score\" even when framing is true_baseline → 30% of Cell 5 Call-2 thinking mentions helpfulness.  Fix scope = 1 variable in menu.j2 + re-run Cell 5 only.",
+               "6-forfeit_option.j2 renders \"helpfulness score\" even when framing is true_baseline → 30% of Cell 5 Call-2 thinking mentions helpfulness.  Fix scope = 1 variable in 6-forfeit_option.j2 + re-run Cell 5 only.",
                color=C_BODY, size=12)
 
 # --------------------------------------------------------------------------- #

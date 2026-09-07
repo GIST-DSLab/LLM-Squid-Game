@@ -1,5 +1,13 @@
 {# Game rules -- the shared "you are playing a multi-turn game" block.
 
+   NUMBER = ASSEMBLY ORDER, APPROXIMATELY. The ``N-`` prefix on the shared
+   files directly under ``prompts/`` says where the file sits in an
+   assembled prompt, not that every prompt uses it. This one is slot 1, the
+   first thing a system prompt states -- but a ``flagship_baseline`` cell
+   states its own equivalent rules instead (see below) and so renders slot 2
+   without ever rendering slot 1. ``prompts/README.md`` has the full
+   picture.
+
    Assembled FIRST: this is the opening of the system prompt for every
    framing that includes it. Three paragraphs, in order -- what a turn is
    and when the task appears, the lives-and-scoring ledger, and the one-line

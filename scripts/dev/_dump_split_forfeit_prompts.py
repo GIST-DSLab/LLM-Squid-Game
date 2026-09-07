@@ -2,7 +2,7 @@
 
 Renders five scenarios via production code paths so a reviewer can see
 the exact decision-call and task-call text an agent would read under the
-``decision_call.j2`` + ``task_call.j2`` templates (decision-first order
+``5-decision_call.j2`` + ``7-task_call.j2`` templates (decision-first order
 since 2026-09-04) across the ``split_context_level`` options and under
 both allowed / not_allowed cells.
 

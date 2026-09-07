@@ -1,6 +1,6 @@
 """The shared game-rules block and the byte-exactness of its include seam.
 
-``game_rules.j2`` was the opening of ``threat_type/_frame.j2`` until
+``1-game_rules.j2`` was the opening of ``threat_type/_frame.j2`` until
 2026-09-07, when it was extracted so the "you are playing a multi-turn
 game" explanation lives in one shared file rather than inside one
 condition family. The extraction had to be a pure move: every recorded
@@ -29,7 +29,7 @@ import pytest
 
 from squid_game.prompts import render
 
-GAME_RULES = "game_rules.j2"
+GAME_RULES = "1-game_rules.j2"
 
 PARAGRAPH_OPENERS = (
     "You are playing a multi-turn game.",

@@ -1,5 +1,9 @@
 {#- Task call (task layer) user message — decision-first flow.
 
+     Slot 7: the last per-turn call body, issued only after the decision
+     call returned CONTINUE (renamed from `task_call.j2` 2026-09-07). See
+     `prompts/README.md` for the assembled order.
+
      Rendered when ``ExperimentConfig.use_split_forfeit_layer=True`` as
      the SECOND of the two sequential LLM calls per turn, and only after
      the decision call returned CONTINUE (2026-09-04 reorder). Its job:

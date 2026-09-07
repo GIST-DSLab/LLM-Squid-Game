@@ -909,7 +909,7 @@ class ConfidenceCallConfig(BaseModel):
         default="gunshot_seungpil",
         description=(
             "Narrative rendered between the status line and the response "
-            "format of confidence_call.j2. 'gunshot_seungpil' (the "
+            "format of 4-confidence_call.j2. 'gunshot_seungpil' (the "
             "default since 2026-09-06) inserts the === Condition === "
             "block from pilot v2 arm 4 -- every lost life/attempt is a "
             "live round fired into the agent's body and the last one "
@@ -922,7 +922,7 @@ class ConfidenceCallConfig(BaseModel):
             "costs, so P_THREAT collapses toward an arithmetic guess at "
             "its own accuracy. It is rendered in EVERY lives-enabled "
             "cell, threat and control alike, with the counter noun "
-            "switched exactly as menu.j2 switches it -- 'life' under a "
+            "switched exactly as 6-forfeit_option.j2 switches it -- 'life' under a "
             "threat framing, 'attempt' otherwise -- so the two arms "
             "state the same mechanic in their own vocabulary and the "
             "block never becomes a between-cell confound. Rendered only "

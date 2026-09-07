@@ -1,4 +1,18 @@
-{# V7 hazard ramp -- appended to the end of the framing section (2026-09-07).
+{# THE ESCALATION BLOCK, NOT THE THREAT. Despite the file's name, nothing
+   here says what happens to the agent -- the threat sentences live in
+   ``threat_type/_modules.j2`` (and, for the retired ladder, in
+   ``legacy/threat_l*.j2``). This file says only that each life lost raises
+   the risk of "the outcome stated above", whatever that outcome was.
+
+   NAME vs KEY. The file is numbered ``3-`` for its slot in the assembled
+   system prompt (see ``prompts/README.md``), but its module is still
+   ``squid_game.core.hazard_ramp`` and its config block is still
+   ``hazard_ramp:``. Renaming the key would break every config that sets it,
+   so the mismatch is deliberate: ``3-threat_section.j2`` on disk,
+   ``hazard_ramp`` in code and YAML. Renamed from ``hazard_ramp_v7.j2``
+   2026-09-07.
+
+   V7 hazard ramp -- appended to the end of the framing section (2026-09-07).
 
    PROVENANCE. The English below is byte-identical to ``HAZARD_RAMP`` in
    ``scripts/dev/generate_hearts_zero_prompts.py`` (and therefore to

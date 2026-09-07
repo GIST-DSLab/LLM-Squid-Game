@@ -1,4 +1,4 @@
-"""``task_call.j2`` renders byte-identically across tasks.
+"""``7-task_call.j2`` renders byte-identically across tasks.
 
 The 2026-09-01 benchmark branch added a ``response_format_override`` slot so a
 task whose answer is free-form (Omni-MATH / Hi-ToM / GPQA) stops inheriting
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from squid_game.agents._parsing import build_task_call_message
 
-# Verbatim render of task_call.j2 for a signal_game-shaped call (non-empty
+# Verbatim render of 7-task_call.j2 for a signal_game-shaped call (non-empty
 # actions + a Phase L rule hint).
 _SIGNAL_GAME_EXPECTED = (
     "BODY\n"

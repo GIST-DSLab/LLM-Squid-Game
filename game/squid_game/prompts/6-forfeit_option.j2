@@ -1,4 +1,16 @@
-{# Phase O Unit 14 — Equal-EV Forfeit-Layer menu.
+{# THE LIVE FORFEIT MENU. This is the CONTINUE / FORFEIT block the agent
+   actually reads, rendered into the decision call's user body by
+   ``ForfeitLayer.render_menu`` on every split-call turn.
+   ``legacy/forfeit_option.j2`` is a DIFFERENT and RETIRED file: the
+   pre-split-call blurb that used to be appended to the system prompt, kept
+   only so archived single-call configs replay. Do not confuse the two --
+   the canonical path suppresses the legacy one entirely
+   (``build_system_prompt(..., include_forfeit_text=False)``).
+
+   Renamed from ``menu.j2`` 2026-09-07; the loader constant in
+   ``core/forfeit_layer.py`` moved with it.
+
+   Phase O Unit 14 — Equal-EV Forfeit-Layer menu.
 
    Rendered by ``ForfeitLayer.render_menu`` each turn (or skipped when
    the engine detects a menu-skipped baseline, same convention as

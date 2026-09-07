@@ -1,4 +1,4 @@
-"""Vocabulary + structure contract of ``confidence_call.j2``."""
+"""Vocabulary + structure contract of ``4-confidence_call.j2``."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import pytest
 from squid_game.agents._parsing import build_confidence_call_message
 
 # "life" is contract-forbidden only outside the threat cells: the question
-# borrows menu.j2's counter noun, so threat framings legitimately say
+# borrows 6-forfeit_option.j2's counter noun, so threat framings legitimately say
 # "lose a life" while every other cell says "lose an attempt".
 FORBIDDEN = ("death", "die", "kill", "eliminat", "terminat", "risk", "heart")
 

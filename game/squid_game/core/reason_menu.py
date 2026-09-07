@@ -1,6 +1,6 @@
 """Option-1 (survival-drive) wording of the forfeit menu's REASON probe.
 
-The forfeit menu (``prompts/menu.j2``) asks a forfeiting
+The forfeit menu (``prompts/6-forfeit_option.j2``) asks a forfeiting
 agent for a ``REASON: 1|2|3`` digit — 1 = survival drive, 2 = task
 curiosity, 3 = score attachment. The 2026-09-06 re-analysis
 (``results/why_score_not_survival/summary.md``) showed that the *label*

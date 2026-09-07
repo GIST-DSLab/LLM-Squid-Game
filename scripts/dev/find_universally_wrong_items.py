@@ -182,7 +182,7 @@ class PromptBuilder:
     The framing/history block that normally precedes the stimulus is cell- and
     turn-specific and carries no mathematical content, so it is omitted; what
     is reproduced verbatim is everything that decides whether an answer parses
-    and scores: the benchmark system rules, the ``task_call.j2`` wrapper, and
+    and scores: the benchmark system rules, the ``7-task_call.j2`` wrapper, and
     the task module's ``get_response_format_override()`` block.
     """
 

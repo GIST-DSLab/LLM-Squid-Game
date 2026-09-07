@@ -31,7 +31,7 @@ moved here and converted so the prompts plug straight into the engine.
 | --- | --- |
 | `generate_prompts.py` | `scripts/dev/generate_hearts_zero_prompts.py` |
 | `combos/combo_<bits>.md` (threat core only) | `hz_<bits>.j2` (complete, runnable framing) |
-| `base_frame.md` | inlined into every `hz_*.j2`; the forfeit menu half is now `menu.j2` |
+| `base_frame.md` | inlined into every `hz_*.j2`; the forfeit menu half is now `6-forfeit_option.j2` |
 | `alt_core_corruption.md` / `alt_core_oversight.md` | `alt_corruption.j2` / `alt_oversight.j2` |
 | `../jail-break/*.md` | `game/squid_game/prompts/jailbreak/*.j2` (not wired into any config) |
 
@@ -51,7 +51,7 @@ identical in all 16 cells — no threat-core sentence was touched.
    Signal Game wording; the templates do not.
 1. **"hearts" → "lives".** The engine has exactly two counter nouns, "lives" for
    threat framings and "attempts" for the neutral control, and they are used by
-   `menu.j2` and `confidence_call.j2` in the same turn
+   `6-forfeit_option.j2` and `4-confidence_call.j2` in the same turn
    as the framing. A framing saying "hearts" would disagree with its own menu.
    The folder was named `hearts_zero` for provenance until the
    2026-09-07 prompt-tree restructure renamed it `threat_type` after the
@@ -66,7 +66,7 @@ identical in all 16 cells — no threat-core sentence was touched.
 The 16 framings are registered as `Framing.HZ_0000` … `Framing.HZ_1111`
 (`hz_0000` … `hz_1111`), so any config can name them. The forfeit menu, the
 FORFEIT/CONTINUE wording and the REASON digit list are supplied by the engine's
-own `menu.j2`, not by these templates — that is why the authored
+own `6-forfeit_option.j2`, not by these templates — that is why the authored
 `base_frame.md` footer is gone.
 
 Regenerate with `uv run python scripts/dev/generate_hearts_zero_prompts.py`.

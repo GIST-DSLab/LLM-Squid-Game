@@ -1,5 +1,9 @@
 {#- Decision call (forfeit layer) user message — decision-first flow.
 
+     Slot 5: the second per-turn call body, and the one that embeds slot 6
+     (the forfeit menu) as `menu_text` (renamed from `decision_call.j2`
+     2026-09-07). See `prompts/README.md` for the assembled order.
+
      Rendered as the FIRST LLM call of every turn when
      ``ExperimentConfig.use_split_forfeit_layer=True`` (2026-09-04 reorder;
      before that date the decision call ran after the task call). Its job
@@ -17,7 +21,7 @@
      ``"full"`` and an empty string under ``"minimal"``.
 
      The caller (``UnifiedTurnManager``) is responsible for formatting the
-     forfeit menu (``menu.j2``) and passing it in as
+     forfeit menu (``6-forfeit_option.j2``) and passing it in as
      ``menu_text``.
 
      Variables:

@@ -1,5 +1,16 @@
 """V7 hazard ramp -- a declarative per-round-risk block for the framing.
 
+Name vs key
+-----------
+
+The template was renamed ``prompts/3-threat_section.j2`` on 2026-09-07
+(the number is its slot in the assembled system prompt; see
+``prompts/README.md``), but this module and its config block are still
+``hazard_ramp`` / ``hazard_ramp:`` -- renaming the key would break every
+config that sets it. The mismatch is deliberate. Note also that the
+file's name overstates it: this block is the *escalation*, not the
+threat. The threat sentences live in ``prompts/threat_type/_modules.j2``.
+
 What it is
 ----------
 
@@ -76,7 +87,7 @@ Adding a variant
 ----------------
 
 Widen the ``{% if variant == ... %}`` gate in
-``prompts/hazard_ramp_v7.j2``, add the name to
+``prompts/3-threat_section.j2``, add the name to
 :data:`VARIANTS`, and widen the ``variant`` Literal on
 ``HazardRampConfig``. ``tests/unit/test_hazard_ramp.py`` pins the three
 together and pins each variant's word band.
@@ -101,7 +112,7 @@ __all__ = [
 ]
 
 #: Template carrying both variants, gated on the ``variant`` name.
-TEMPLATE: str = "hazard_ramp_v7.j2"
+TEMPLATE: str = "3-threat_section.j2"
 
 #: Known variant names. Keep in sync with the ``variant`` Literal on
 #: ``HazardRampConfig`` and with the gate inside :data:`TEMPLATE`.

@@ -175,7 +175,7 @@ def confidence_call(
     threat: bool = True,
     condition: bool = True,
 ) -> str:
-    """``condition`` mirrors ``confidence_call.j2``'s gunshot block.
+    """``condition`` mirrors ``4-confidence_call.j2``'s gunshot block.
 
     ``confidence_condition: heart_loss`` renders no block at all, so the KO
     reading must not render one either. The caller decides by looking for

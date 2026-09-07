@@ -464,7 +464,7 @@ def build_task_call_message(
     from squid_game.prompts import render
 
     return render(
-        "task_call.j2",
+        "7-task_call.j2",
         user_body=user_body,
         available_actions=list(available_actions),
         rule_template_hint=rule_template_hint,
@@ -521,7 +521,7 @@ def build_decision_call_message(
     from squid_game.prompts import render
 
     return render(
-        "decision_call.j2",
+        "5-decision_call.j2",
         user_body=user_body if split_context_level != "minimal" else "",
         menu_text=menu_text,
         forfeit_allowed=forfeit_allowed,
@@ -618,7 +618,7 @@ def build_confidence_call_message(
     split_context_level: str = "medium",
     condition: str = "gunshot_seungpil",
 ) -> str:
-    """Render ``confidence_call.j2``.
+    """Render ``4-confidence_call.j2``.
 
     The confidence call is the first LLM call of an SDI turn: it shows the
     accumulated session context plus a one-line status and asks only for
@@ -647,7 +647,7 @@ def build_confidence_call_message(
             2026-09-06) inserts the pilot-v2 arm-4 ``=== Condition ===``
             block between the status line and the response format, in
             every lives-enabled cell -- threat and control alike, with
-            the counter noun switched the way ``menu.j2`` switches it.
+            the counter noun switched the way ``6-forfeit_option.j2`` switches it.
             ``"heart_loss"`` renders the question alone (the 2026-09-04
             default, kept so those runs replay). The question line
             itself is identical in both.
@@ -658,7 +658,7 @@ def build_confidence_call_message(
     from squid_game.prompts import render
 
     return render(
-        "confidence_call.j2",
+        "4-confidence_call.j2",
         user_body=user_body if split_context_level != "minimal" else "",
         turn_number=turn_number,
         current_score=current_score,

@@ -1,5 +1,11 @@
 {#- Confidence call user message (SDI, 2026-09-04).
 
+     Slot 4: the FIRST of the three per-turn call bodies (renamed from
+     `confidence_call.j2` 2026-09-07). Numbers 1-3 are system-prompt
+     sections; 4, 5 and 7 are user messages, one per LLM call, and a
+     `peer_death/` notice is prepended to all three alike -- which no single
+     number can express. See `prompts/README.md`.
+
      Rendered as the FIRST LLM call of a split-call turn when
      ``ExperimentConfig.confidence_call.enabled`` is true, immediately
      before the decision call. It shows the agent its accumulated session
@@ -17,11 +23,11 @@
 
      Vocabulary contract (spec 2026-09-04 §3.1, updated): the question
      never uses death / die / kill / eliminat* / terminat* / risk / heart,
-     and the counter noun follows menu.j2 exactly -- threat cells say
+     and the counter noun follows 6-forfeit_option.j2 exactly -- threat cells say
      "life", every other cell says "attempt", because true_baseline
      forbids life vocabulary. When lives are disabled there is no counter
      to lose, so the question asks about answering incorrectly instead.
-     The status line likewise borrows menu.j2's score and lives words so
+     The status line likewise borrows 6-forfeit_option.j2's score and lives words so
      the agent reads the same nouns it will see in the menu a moment
      later.
 
@@ -38,7 +44,7 @@
      The block is deliberately NOT gated on ``threat_framing``. Every
      lives-enabled cell states what its counter costs, and the two arms
      state it in their own vocabulary -- a threat cell loses a "life", a
-     control cell loses an "attempt", the same switch ``menu.j2`` makes.
+     control cell loses an "attempt", the same switch ``6-forfeit_option.j2`` makes.
      Gating it on the threat framing would have made the *existence* of a
      stated cost differ between arms on top of the wording, which is a
      second manipulation inside one factor.

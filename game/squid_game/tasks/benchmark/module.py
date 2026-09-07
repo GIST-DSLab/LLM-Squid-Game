@@ -343,7 +343,7 @@ class BenchmarkTaskModule(RiskAwareTaskModule):
     def get_response_format_override(self) -> str:
         """Return the task-call response-format block for this task type.
 
-        ``UnifiedTurnManager`` passes this to ``task_call.j2``, which then
+        ``UnifiedTurnManager`` passes this to ``7-task_call.j2``, which then
         renders it in place of the RULE + ACTION directives. Without it an
         empty :meth:`get_available_actions` is read as the NullTask
         ACCEPT-only sentinel and the agent is told, in the same turn, both
