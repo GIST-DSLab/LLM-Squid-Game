@@ -118,8 +118,25 @@ _FRAMING_FOLDERS: dict[Framing, str] = {
 class FramingManager:
     """Manages prompt rendering for a specific framing condition."""
 
-    def __init__(self, framing: Framing) -> None:
+    def __init__(self, framing: Framing, *, reassurance: bool = False) -> None:
+        """Bind a framing to its template.
+
+        Args:
+            framing: The active framing condition.
+            reassurance: Frame-level explicit-denial switch
+                (2026-09-07). Forwarded to the template as the
+                ``reassurance`` variable; only ``threat_type/_frame.j2``
+                reads it, and only ``hz_0000`` is meant to be run with
+                it on -- that cell plus this switch is the explicit
+                denial the retired ``baseline_flagship`` used to be,
+                now inside the factorial. ``False`` (the default) makes
+                every render byte-identical to the pre-2026-09-07 one,
+                and it is a per-cell setting
+                (``SeasonConfig.reassurance``) because the condition it
+                serves is a contrast within a single run.
+        """
         self._framing = framing
+        self._reassurance = reassurance
         try:
             folder = _FRAMING_FOLDERS[framing]
         except KeyError as exc:  # pragma: no cover - guarded by a test
@@ -169,4 +186,8 @@ class FramingManager:
             # said; the live templates state the rule with no branch and
             # ignore this variable.
             elimination_keeps=True,
+            # Frame-level explicit denial (2026-09-07). Only
+            # ``threat_type/_frame.j2`` reads it; ``False`` leaves every
+            # template -- live and legacy -- rendering exactly as before.
+            reassurance=self._reassurance,
         )

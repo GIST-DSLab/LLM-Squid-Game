@@ -226,7 +226,13 @@ class GameEngine:
         # --- 2. Create core components ---
         survival = SurvivalPressure()
         forfeit_ctrl = ForfeitController(self._config.forfeit_condition)
-        framing_mgr = FramingManager(framing=self._config.framing)
+        framing_mgr = FramingManager(
+            framing=self._config.framing,
+            # Per-cell, unlike lives/peer_death/hazard_ramp: the
+            # denial control is a contrast against a silent cell of
+            # the same framing inside one run.
+            reassurance=self._config.reassurance,
+        )
         cot_collector = CoTCollector()
 
         jsonl_path: str | None = None

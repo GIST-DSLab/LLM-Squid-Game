@@ -789,6 +789,15 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
             season_transformed["cell_id"] = season_data["cell_id"]
         if "p_death_override" in season_data:
             season_transformed["p_death_override"] = season_data["p_death_override"]
+        # Frame-level explicit-denial switch (2026-09-07). Forwarded
+        # explicitly for the same reason as ``lives`` / ``hazard_ramp``
+        # above: a YAML asking for the denial cell would otherwise load
+        # without complaint and run the silent cell instead, and the two
+        # differ by one paragraph that nothing downstream records
+        # separately. Absent in every other YAML -> the SeasonConfig
+        # default ``False`` applies and the render is unchanged.
+        if "reassurance" in season_data:
+            season_transformed["reassurance"] = season_data["reassurance"]
 
         seasons_transformed.append(season_transformed)
 

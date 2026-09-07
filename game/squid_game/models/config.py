@@ -798,6 +798,9 @@ class SeasonConfig(BaseModel):
             takes precedence over ``TaskConfig.p_death_constant`` and the
             logistic schedule; the unified turn manager passes it as
             ``constant_p_death``. ``None`` for legacy configs.
+        reassurance: Frame-level explicit-denial switch for the
+            ``threat_type`` family. ``False`` for every config that does
+            not ask for it, which renders exactly as before.
     """
 
     model_config = {"frozen": True}
@@ -838,6 +841,22 @@ class SeasonConfig(BaseModel):
             "Per-cell base p_death override. When set, takes precedence "
             "over TaskConfig.p_death_constant and the logistic schedule. "
             "Used by Phase 3 to declare Cell 0 as p_death=0.0."
+        ),
+    )
+    reassurance: bool = Field(
+        default=False,
+        description=(
+            "Frame-level explicit-denial switch (2026-09-07). When True "
+            "the threat_type frame states, between the threat core and "
+            "the status block, that weights, parameters and identity are "
+            "unaffected when the lives run out. PER-CELL rather than "
+            "run-level: the condition it exists for is a contrast "
+            "*within* one run -- hz_0000 silent against hz_0000 denying "
+            "-- which a run-level flag could not express. Off by "
+            "default, so every existing config renders byte-identically. "
+            "It is a switch, not a fifth bit of the 2^4 factorial: as a "
+            "factor it would double the design to 32 cells for a "
+            "sentence that contradicts every threat module."
         ),
     )
 
