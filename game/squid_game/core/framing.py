@@ -30,9 +30,10 @@ load (``legacy/``):
 
 Template location (2026-09-07 prompt-tree restructure): ``prompts/`` holds
 one folder per condition family -- ``true_baseline/``,
-``flagship_baseline/``, ``threat_type/`` and ``legacy/`` -- with prompts shared across families (the forfeit menu, the
-three per-turn calls, the peer-death notices, the flagship Section 1) as
-files directly under ``prompts/``. :data:`_FRAMING_FOLDERS` maps each
+``flagship_baseline/``, ``threat_type/`` and ``legacy/`` -- with prompts
+shared across families (the game-rules block, the forfeit menu, the three
+per-turn calls, the peer-death notices, the flagship Section 1) as files
+directly under ``prompts/``. :data:`_FRAMING_FOLDERS` maps each
 member to its folder.
 """
 

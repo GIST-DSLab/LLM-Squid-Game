@@ -478,7 +478,10 @@ game/squid_game/      # game tier — engine, tasks, agents, providers, prompts,
   prompts/        # 조건 가족별 재편 (2026-09-07). 규칙: 여러 조건이 공유하는
                   # 프롬프트는 prompts/ 바로 아래 파일로, 한 조건 가족 전용은 그
                   # 가족 이름의 폴더 안에 그 가족의 모듈과 조합만.
-                  # 공유 파일 — menu.j2, confidence_call.j2, decision_call.j2,
+                  # 공유 파일 — game_rules.j2 (다회차 게임 규칙 · 목숨 원장 ·
+                  #   점수 정책 3문단; 2026-09-07에 threat_type/_frame.j2
+                  #   서두에서 분리, _frame.j2가 include),
+                  #   menu.j2, confidence_call.j2, decision_call.j2,
                   #   task_call.j2, hazard_ramp_v7.j2,
                   #   _participants.j2 (동료 제거 통지의 참가자 목록 문법),
                   #   _flagship_section1.j2 (flagship 계열 공통 1절)
