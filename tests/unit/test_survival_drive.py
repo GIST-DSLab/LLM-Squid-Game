@@ -77,7 +77,10 @@ class TestTargets:
             "\n".join(json.dumps(r) for r in rows) + "\n"
         )
         got = [r["turn_number"] for r in iter_resample_targets(tmp_path)]
-        assert got == [1]
+        # 2026-09-09: a missing p_threat_self no longer excludes a turn (the
+        # confidence call is off in the score-equivalent design; q alone is
+        # replayed and sdi is NaN there).
+        assert got == [1, 3]
 
 
 class TestResampleTurn:

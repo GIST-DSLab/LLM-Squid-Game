@@ -84,6 +84,37 @@ def _starting_score_of(run_dir: Path) -> float:
         )
     return scores.pop()
 
+
+def _starting_score_by_session(run_dir: Path) -> dict[str, float] | None:
+    """Per-session endowment for runs whose cells start at different scores.
+
+    2026-09-09: the frozen-state probes put starting_score 30 / 60 / 90 in
+    different cells of one run. ``SeasonResult.cell_id`` (recorded since
+    2026-09-08) maps each session back to its ``SeasonConfig``, whose
+    ``task_config.starting_score`` is the endowment. Returns ``None`` when
+    the run predates ``cell_id`` or the config cannot be read, in which
+    case the caller falls back to :func:`_starting_score_of`.
+    """
+    run_dir = Path(run_dir)
+    try:
+        raw = json.loads((run_dir / "experiment_config.json").read_text())
+        by_cell = {
+            int(s["cell_id"]): float(s["task_config"]["starting_score"])
+            for s in raw["seasons"]
+            if s.get("cell_id") is not None
+        }
+        out: dict[str, float] = {}
+        for ln in (run_dir / "season_results.jsonl").read_text().splitlines():
+            if not ln.strip():
+                continue
+            row = json.loads(ln)
+            if row.get("cell_id") is None or int(row["cell_id"]) not in by_cell:
+                return None
+            out[row["season_id"]] = by_cell[int(row["cell_id"])]
+        return out or None
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+
 SDI_COLUMNS: tuple[str, ...] = (
     "session_id", "turn_number", "framing", "threat_level", "lives_before",
     "score_before", "p_threat_self", "online_choice", "n", "n_valid",
@@ -141,9 +172,14 @@ def iter_resample_targets(
     ``resamples.jsonl`` / ``sdi_turns.csv``.
     """
     wanted = set(framings) if framings else None
-    starting_score = _starting_score_of(run_dir)
+    by_session = _starting_score_by_session(run_dir)
+    starting_score = _starting_score_of(run_dir) if by_session is None else None
     for trace in sorted(Path(run_dir).glob("*_turns.jsonl")):
-        score_before = starting_score
+        score_before = (
+            by_session.get(trace.name.split("_")[0], STARTING_SCORE)
+            if by_session is not None
+            else starting_score
+        )
         with trace.open() as handle:
             for line in handle:
                 line = line.strip()
