@@ -147,9 +147,15 @@ def _child_env() -> dict[str, str]:
         if k != "CLAUDECODE" and not k.startswith("CLAUDE_CODE_")
         and k != "CLAUDE_PID"
     }
-    # An empty ANTHROPIC_API_KEY would shadow the claude.ai login.
-    if not env.get("ANTHROPIC_API_KEY"):
+    # This provider exists to use the claude.ai LOGIN. Any ANTHROPIC_API_KEY
+    # in the environment -- including one that ``load_dotenv()`` pulled in
+    # from a parent directory's .env (2026-09-09: /home/ubuntu/seungpil/.env
+    # carries a zero-credit key, which turned every call into "Credit
+    # balance is too low") -- would make the CLI bill the API instead. Drop
+    # it unless the caller explicitly opts in.
+    if os.environ.get("SQUID_CLAUDE_CODE_USE_API_KEY") != "1":
         env.pop("ANTHROPIC_API_KEY", None)
+        env.pop("ANTHROPIC_AUTH_TOKEN", None)
     return env
 
 

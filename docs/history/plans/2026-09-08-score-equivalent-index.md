@@ -144,3 +144,13 @@ seasons:
 2. 본 런 3모델 → `scripts/run/run_hz2x2_with_resample.sh`와 같은 방식으로 셀 1 재생.
 3. `uv run python scripts/analysis/score_equivalent.py outputs/<date>/score_equiv_<model>/<run> --out results/score_equiv/<model>`.
 4. X*가 통제(X=0)와 갈리는지 확인 후 절제(당근 없음, 난이도, 용량) 착수.
+
+## 6. 2026-09-09 개정 (owner 결정)
+
+- 결정 콜에 EV 계산 재료를 두 팔에 똑같이, 최소로: 확신 콜 off, 문맥은 상태 한 줄(`split_context_level:
+  minimal`, `history_mode: none`), 메뉴 보상 액수 숨김(`show_reward_amount: false`). 숫자 확률 스케줄과
+  제목 줄(`title_line: true`)은 유지·복원 — 고정 상태 프로브에서 이 둘이 포기율을 목숨 전 구간에 걸쳐 움직였다.
+- 시작 점수 30, 눈금 X = 0·20·50·80·all, 추측 턴 2/10(`underdetermined_blocks`).
+- 파일럿은 고정 상태 프로브(목숨 3/2/1 × 시작점수 30/60/90 × 팔 6, 결정 콜 10회 재생)로 Haiku가
+  플레이하고 Sonnet이 CoT를 코딩한다. 관문 G1~G3 통과가 본 런 조건, G4~G7은 조작 점검, G8은 견고성.
+- 목숨당 X(추첨 없음)는 절제로 남긴다. 판정 임계값은 `scripts/analysis/score_equiv_gates.py` 헤더.

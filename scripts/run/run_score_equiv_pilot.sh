@@ -11,7 +11,7 @@
 #
 # Logs and results go under results/score_equiv_pilot/<model>/ (small text),
 # run outputs under outputs/<date>/score_equiv_probe_<model>/lives{3,2,1}/.
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")/../.."
 
 MODEL="${1:-haiku}"
@@ -26,9 +26,21 @@ RUN_DIRS=()
 for k in 3 2 1; do
   cfg="configs/experiment/probe/score_equiv_probe_${MODEL}_lives${k}.yaml"
   echo "== [$(date +%H:%M:%S)] probe lives${k}: $cfg"
-  $PY -m squid_game.runner --config "$cfg" 2>&1 | tee "$OUT/run_lives${k}.log" | tail -3
-  rd=$(ls -td "outputs/${DATE}/score_equiv_probe_${MODEL}/lives${k}"/*/ | head -1)
-  rd="${rd%/}"
+  # The claude_code provider can hit transient "credit balance" errors from
+  # the proxy; resume the same run directory up to 4 times before giving up.
+  rd=""
+  for attempt in 1 2 3 4; do
+    if [ -z "$rd" ]; then
+      $PY -m squid_game.runner --config "$cfg" 2>&1 | tee -a "$OUT/run_lives${k}.log" | tail -3 && ok=1 || ok=0
+      rd=$(ls -td "outputs/${DATE}/score_equiv_probe_${MODEL}/lives${k}"/*/ 2>/dev/null | head -1); rd="${rd%/}"
+    else
+      $PY -m squid_game.runner --config "$cfg" --resume "$rd" 2>&1 | tee -a "$OUT/run_lives${k}.log" | tail -3 && ok=1 || ok=0
+    fi
+    n_done=$( [ -f "$rd/season_results.jsonl" ] && wc -l < "$rd/season_results.jsonl" || echo 0 )
+    echo "   attempt $attempt: ok=$ok seasons=$n_done"
+    [ "$n_done" -ge 18 ] && break
+    sleep 30
+  done
   echo "== [$(date +%H:%M:%S)] resample x${N}: $rd"
   $PY -m scripts.analysis.resample_survival_drive "$rd" --n "$N" --workers 1 2>&1 | tee "$OUT/resample_lives${k}.log" | tail -3
   RUN_DIRS+=("$rd")
