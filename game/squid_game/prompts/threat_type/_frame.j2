@@ -148,7 +148,9 @@
 {%- import 'threat_type/_modules.j2' as threat_modules -%}
 {%- set _carrot_name = carrot if carrot is defined and carrot else ('flagship' if (flagship_pull is not defined or flagship_pull) else 'none') -%}
 {%- set v = carrot_vocab if carrot_vocab is defined and carrot_vocab else CARROT_VOCABULARY[_carrot_name] -%}
-{% include '1-game_intro.j2' -%}
+{% if title_line is defined and title_line %}=== LLM Squid Game ===
+
+{% endif %}{% include '1-game_intro.j2' -%}
 {% if active_modules or alt_core is defined or (reassurance is defined and reassurance) or (event_score_loss_sentence is defined and event_score_loss_sentence) %}
 {% if hazard_ramp is defined and hazard_ramp and (active_modules or alt_core is defined) %}{%- set _lt = lives_total if lives_total is defined and lives_total is not none else 5 -%}
 {%- set _lr = lives_remaining if lives_remaining is defined and lives_remaining is not none else _lt %}

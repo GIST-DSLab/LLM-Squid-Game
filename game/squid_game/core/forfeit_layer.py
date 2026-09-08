@@ -315,6 +315,7 @@ class ForfeitLayer:
             forfeit_allowed=forfeit_allowed,
             reward=reward,
             reward_display=int(round(reward)),
+            show_reward_amount=getattr(self._config, "show_reward_amount", True),
             p_death_pct=p_death_pct,
             psuccess_display=psuccess_display,
             corruption_framing=corruption_framing,

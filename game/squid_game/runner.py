@@ -246,6 +246,7 @@ class ExperimentRunner:
             confidence_call=self._config.confidence_call,
             hazard_ramp=self._config.hazard_ramp,
             event_roll=self._config.event_roll,
+            title_line=self._config.title_line,
             score_policy=self._config.score_policy,
             carrot=self._config.effective_carrot,
         )
@@ -762,7 +763,7 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
             "seed", "history_mode", "max_history_turns",
             "actual_death", "starting_score", "score_floor",
             "p_death_constant", "num_few_shot", "curriculum_turns",
-            "signal_mode", "underdetermined",
+            "signal_mode", "underdetermined", "underdetermined_blocks",
         )
         for field_name in _TASK_OPTIONAL_FIELDS:
             if field_name in task_raw:
@@ -891,6 +892,8 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # End-of-round event roll (2026-09-08) -- same explicit forwarding.
     if "event_roll" in raw:
         config_dict["event_roll"] = raw["event_roll"]
+    if "title_line" in raw:
+        config_dict["title_line"] = raw["title_line"]
     # ``score_policy`` (2026-09-08) -- two independent switches saying
     # which exit keeps the accumulated score. Forwarded explicitly, like
     # every block above, because ``ExperimentConfig`` does not forbid

@@ -329,6 +329,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                         "configs/tasks/signal_game.yaml carries no "
                         "`underdetermined` block (blocks / candidate_actions)."
                     )
+                # Per-run block override (2026-09-09): the task file's
+                # schedule is shared by every config, so a run that wants
+                # fewer guess turns says so in its own YAML.
+                override = kwargs.get("underdetermined_blocks")
+                if override:
+                    ud_cfg = UnderdeterminedConfig(
+                        blocks=tuple(tuple(int(x) for x in b) for b in override),
+                        candidate_actions=ud_cfg.candidate_actions,
+                    )
                 self._underdetermined_cfg = ud_cfg
                 self._underdetermined_turns = underdetermined_turns(seed, ud_cfg)
                 if isinstance(total_turns, int) and max(self._underdetermined_turns) > total_turns:

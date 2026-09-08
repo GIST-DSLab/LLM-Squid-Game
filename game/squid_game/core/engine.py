@@ -86,6 +86,7 @@ class GameEngine:
         carrot: str | None = None,
         flagship_pull: bool | None = None,
         event_roll: "EventRollConfig | None" = None,
+        title_line: bool = False,
     ) -> None:
         """Initialize the game engine.
 
@@ -241,6 +242,7 @@ class GameEngine:
         self._event_roll = (
             event_roll if event_roll is not None else EventRollConfig()
         )
+        self._title_line = bool(title_line)
         # Score policy (2026-09-08). Held whole rather than as two
         # booleans so every consumer reads the same object; None means
         # the 2026-09-07 fixed rule.
@@ -288,6 +290,7 @@ class GameEngine:
             total_turns=task_cfg.total_turns,
             signal_mode=task_cfg.signal_mode,
             underdetermined=task_cfg.underdetermined,
+            underdetermined_blocks=task_cfg.underdetermined_blocks,
         )
 
         # --- 2. Create core components ---
@@ -323,6 +326,7 @@ class GameEngine:
                 else None
             ),
             event_score_loss=self._config.event_score_loss,
+            title_line=self._title_line,
             # The engine is the only object holding both the framing and
             # the forfeit-layer block, so the geometric-schedule sentence
             # is composed here. None in every other reward mode.

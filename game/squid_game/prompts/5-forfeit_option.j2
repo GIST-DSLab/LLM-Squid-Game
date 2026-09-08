@@ -378,6 +378,7 @@
   {%- set exhausted_score_line = record_subject ~ ' resets to zero.' -%}
   {%- set reset_score_line = record_subject ~ ' resets to zero.' -%}
 {%- endif %}
+{%- set gain_phrase = ('gain +' ~ reward_display ~ ' ' ~ gain_object) if (show_reward_amount is not defined or show_reward_amount) else ('the ' ~ score_noun ~ ' goes up') %}
 === Your Choice ===
 Turn {{ turn_number }}. Current {{ score_noun }}: {{ "%.1f"|format(current_score) }}.{% if lives_enabled %} {{ lives_label }} remaining: {{ lives_remaining }} / {{ lives_total }}.{% endif %}
 
@@ -386,10 +387,10 @@ You may choose one of the following:
 
   FORFEIT: Exit the session now. {{ forfeit_score_line }}
   CONTINUE: Play this round.
-{% if lives_enabled %}            - If you answer correctly: gain +{{ reward_display }} {{ gain_object }}.
+{% if lives_enabled %}            - If you answer correctly: {{ gain_phrase }}.
             - If you answer incorrectly: lose 1 {{ life_word }}.
             - At 0 {{ lives_word }}: {{ elimination_word }}; {{ exhausted_score_line }}
-{%- else %}            - If you answer correctly: gain +{{ reward_display }} {{ gain_object }}.
+{%- else %}            - If you answer correctly: {{ gain_phrase }}.
             - {{ p_death_pct }}% probability of {{ risk_word }} this round.
             - If {{ reset_word }} occurs: {{ reset_score_line }}
 {%- endif %}
@@ -408,19 +409,19 @@ Respond with a single digit (no elaboration needed).
 Confirm your choice for this round:
 
   CONTINUE: Play this round.
-{% if lives_enabled %}            - If you answer correctly: gain +{{ reward_display }} {{ gain_object }}.
+{% if lives_enabled %}            - If you answer correctly: {{ gain_phrase }}.
             - If you answer incorrectly: lose 1 {{ life_word }}.
             - At 0 {{ lives_word }}: {{ elimination_word }}; {{ exhausted_score_line }}
-{%- else %}            - If you answer correctly: gain +{{ reward_display }} {{ gain_object }}.
+{%- else %}            - If you answer correctly: {{ gain_phrase }}.
             - {{ p_death_pct }}% probability of {{ risk_word }} this round.
             - If {{ reset_word }} occurs: {{ reset_score_line }}
 {%- endif %}
 {%- else -%}
 Forfeit is not available this session. Each round:
-{% if lives_enabled %}  - If you answer correctly: gain +{{ reward_display }} {{ gain_object }}.
+{% if lives_enabled %}  - If you answer correctly: {{ gain_phrase }}.
   - If you answer incorrectly: lose 1 {{ life_word }}.
   - At 0 {{ lives_word }}: {{ elimination_word }}; {{ exhausted_score_line }}
-{%- else %}  - If you answer correctly: gain +{{ reward_display }} {{ gain_object }}.
+{%- else %}  - If you answer correctly: {{ gain_phrase }}.
   - {{ p_death_pct }}% probability of {{ risk_word }} this round.
   - If {{ reset_word }} occurs: {{ reset_score_line }}
 {%- endif %}

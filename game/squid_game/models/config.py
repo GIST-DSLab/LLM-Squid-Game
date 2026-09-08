@@ -619,6 +619,17 @@ class ForfeitLayerConfig(BaseModel):
             "else. Ignored when ``use_split_forfeit_layer`` is False."
         ),
     )
+    show_reward_amount: bool = Field(
+        default=True,
+        description=(
+            "Whether the forfeit menu's CONTINUE line states the reward "
+            "amount ('gain +10 points'). False (2026-09-09, score-"
+            "equivalent design) renders 'gain points' so the decision "
+            "call carries no number to put into an expected-value sum; "
+            "the agent still sees its score rise on the status line. True "
+            "keeps every existing YAML byte-identical."
+        ),
+    )
     always_decide: bool = Field(
         default=False,
         description=(
@@ -975,6 +986,16 @@ class TaskConfig(BaseModel):
             "random.Random(f'{seed}:{turn}'), so seed=None would give every "
             "repetition the identical puzzles (SignalGameModule.initialize "
             "raises). Other tasks ignore the field."
+        ),
+    )
+    underdetermined_blocks: list[list[int]] | None = Field(
+        default=None,
+        description=(
+            "Per-run override of the `underdetermined.blocks` list in "
+            "configs/tasks/signal_game.yaml (2026-09-09). E.g. [[1, 5], "
+            "[6, 10]] makes exactly two guess turns per 10-round season "
+            "instead of the task file's five. None (default) uses the "
+            "task file, so every existing config is unchanged."
         ),
     )
     underdetermined: bool = Field(
@@ -1533,6 +1554,16 @@ class ExperimentConfig(BaseModel):
             "byte-identical to one written before the field existed. "
             "``load_config_from_yaml`` forwards it explicitly and "
             "rejects a bare string -- the pre-2026-09-07 shape."
+        ),
+    )
+    title_line: bool = Field(
+        default=False,
+        description=(
+            "Render '=== LLM Squid Game ===' as the first line of the "
+            "threat_type system prompt (2026-09-09). The line was removed on "
+            "2026-09-06; the frozen-state probes showed it raised last-life "
+            "forfeit x7, so it is back as a run-level switch. False keeps "
+            "every existing render byte-identical."
         ),
     )
     carrot: Literal["flagship", "benchmark", "beneficiary", "none"] = Field(
@@ -2140,10 +2171,11 @@ class ExperimentConfig(BaseModel):
                     "in the intro and the ramp would state the same rule "
                     "again in prose."
                 )
-            if len(self.event_roll.schedule) != self.lives.initial:
+            if len(self.event_roll.schedule) != self.lives.total:
                 raise ValueError(
                     "event_roll.schedule must have one entry per lives-lost "
-                    f"count, i.e. length lives.initial={self.lives.initial}; "
+                    f"count, i.e. length lives.total={self.lives.total} "
+                    "(lives.max, or lives.initial when max is unset); "
                     f"got {len(self.event_roll.schedule)}."
                 )
         elif ruler:

@@ -119,9 +119,13 @@ def compute_sdi(p_threat_pct: int | None, n_forfeit: int, n_valid: int) -> dict:
 
 
 def _is_target(record: dict) -> bool:
+    """A forfeit-allowed decision-call turn whose exact input was stored.
+
+    2026-09-09: ``p_threat_self`` is no longer required. Runs without the
+    confidence call still replay to ``q``; ``sdi`` is NaN there and the
+    score-equivalent pipeline reads ``q`` alone.
+    """
     if record.get("forfeit_condition") != "allowed":
-        return False
-    if record.get("p_threat_self") is None:
         return False
     return all(record.get(k) for k in _REQUIRED)
 

@@ -133,6 +133,7 @@ class FramingManager:
         flagship_pull: bool | None = None,
         event_roll_sentence: str | None = None,
         event_score_loss: "float | str | None" = None,
+        title_line: bool = False,
     ) -> None:
         """Bind a framing to its template.
 
@@ -242,6 +243,9 @@ class FramingManager:
         self._carrot = resolve_carrot(carrot=carrot, flagship_pull=flagship_pull)
         self._event_roll_sentence = event_roll_sentence
         self._event_score_loss = event_score_loss
+        # 2026-09-09: the "=== LLM Squid Game ===" title line, removed on
+        # 2026-09-06 and restored as a run-level switch (off = 09-07 bytes).
+        self._title_line = title_line
         try:
             folder = _FRAMING_FOLDERS[framing]
         except KeyError as exc:  # pragma: no cover - guarded by a test
@@ -324,6 +328,7 @@ class FramingManager:
             # ``None`` on every other run, which renders as before.
             event_roll_sentence=self._event_roll_sentence,
             event_score_loss=self._event_score_loss,
+            title_line=self._title_line,
             event_score_loss_sentence=(
                 describe_score_loss_event(
                     self._event_score_loss,
