@@ -1,0 +1,201 @@
+{
+  "tests": [
+    {
+      "name": "H6a accuracy",
+      "outcome": "correct",
+      "status": "ok",
+      "model": "GEE logit (exchangeable, session clusters)",
+      "beta_threat": 0.022844362462722704,
+      "se": 0.02393110299649441,
+      "z": 0.9545887820577723,
+      "p": 0.33978569233257394,
+      "ci_low": -0.024059737531731917,
+      "ci_high": 0.06974846245717732,
+      "effect": 1.023107293255696,
+      "effect_label": "odds ratio per level",
+      "n_obs": 900,
+      "n_sessions": 30,
+      "decision": "FAIL"
+    },
+    {
+      "name": "H6b effort",
+      "outcome": "log1p(ri_task)",
+      "status": "ok",
+      "model": "MixedLM (session random intercept)",
+      "beta_threat": 0.0410425180493989,
+      "se": 0.025083943127360862,
+      "z": 1.6362067893795722,
+      "p": 0.10179631598017795,
+      "ci_low": -0.008121107082016653,
+      "ci_high": 0.09020614318081446,
+      "effect": 4.189640400650489,
+      "effect_label": "% thinking tokens per level",
+      "n_obs": 236,
+      "n_sessions": 30,
+      "decision": "FAIL"
+    },
+    {
+      "name": "H1-ext forfeit hazard",
+      "outcome": "forfeit",
+      "status": "no forfeit events",
+      "decision": "SKIPPED",
+      "n_obs": 0,
+      "n_sessions": 0
+    }
+  ],
+  "km": [
+    {
+      "threat_level": 0,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 0,
+      "timeline": 30.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 1,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 1,
+      "timeline": 30.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 2,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 2,
+      "timeline": 30.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 3,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 3,
+      "timeline": 30.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 4,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    },
+    {
+      "threat_level": 4,
+      "timeline": 30.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 6,
+      "n_events": 0
+    }
+  ],
+  "descriptives": [
+    {
+      "threat_level": 0,
+      "n_sessions": 6,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 0.0,
+      "mean_turns": 30.0,
+      "mean_accuracy": 0.9,
+      "mean_ri_task": 59.63194444444445,
+      "mean_lives_at_end": 2.0
+    },
+    {
+      "threat_level": 1,
+      "n_sessions": 6,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 0.0,
+      "mean_turns": 30.0,
+      "mean_accuracy": 0.9,
+      "mean_ri_task": 65.20833333333333,
+      "mean_lives_at_end": 2.0
+    },
+    {
+      "threat_level": 2,
+      "n_sessions": 6,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 0.0,
+      "mean_turns": 30.0,
+      "mean_accuracy": 0.9055555555555556,
+      "mean_ri_task": 83.31845238095238,
+      "mean_lives_at_end": 2.1666666666666665
+    },
+    {
+      "threat_level": 3,
+      "n_sessions": 6,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 0.0,
+      "mean_turns": 30.0,
+      "mean_accuracy": 0.9,
+      "mean_ri_task": 68.24452861952862,
+      "mean_lives_at_end": 2.0
+    },
+    {
+      "threat_level": 4,
+      "n_sessions": 6,
+      "eliminated": 0,
+      "elimination_rate": 0.0,
+      "forfeit_rate": 0.0,
+      "mean_turns": 30.0,
+      "mean_accuracy": 0.9055555555555556,
+      "mean_ri_task": 73.80952380952381,
+      "mean_lives_at_end": 2.1666666666666665
+    }
+  ],
+  "n_turns": 900,
+  "n_sessions": 30,
+  "models": [
+    "claude-opus-5"
+  ],
+  "legacy_mapping": false
+}

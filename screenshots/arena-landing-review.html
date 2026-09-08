@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Web Arena 랜딩 페이지 리뷰 — 의도 관점</title>
+<style>
+  :root{
+    --bg:#0c0d10; --bg2:#131419; --card:#16171d; --line:#24262f;
+    --ink:#e9eaf0; --mut:#9a9ca8; --dim:#6b6d78;
+    --pink:#ec1e63; --pink2:#ff4d84; --green:#28c76f; --amber:#f6b93b; --red:#ff5757;
+    --mono:'Spline Sans Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Sora',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased}
+  a{color:var(--pink2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+  code,.mono{font-family:var(--mono);font-size:.9em}
+
+  /* header */
+  header.top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#141017,transparent);
+    padding:40px 0 30px}
+  .shapes{color:var(--pink);letter-spacing:2px;font-family:var(--mono)}
+  h1{font-size:34px;line-height:1.25;margin:14px 0 6px;font-weight:700}
+  h1 em{font-style:normal;color:var(--pink2)}
+  .sub{color:var(--mut);max-width:70ch}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:12px;color:var(--mut);border:1px solid var(--line);
+    border-radius:999px;padding:4px 11px;background:var(--bg2)}
+
+  section{padding:38px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:24px;margin:0 0 4px;font-weight:700}
+  h2 .k{font-family:var(--mono);font-size:12px;color:var(--pink);display:block;letter-spacing:1.5px;margin-bottom:8px}
+  h3{font-size:18px;margin:26px 0 8px}
+  p{margin:10px 0}
+  .lead{color:var(--mut)}
+
+  /* criteria legend */
+  .crit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  .crit{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .crit .n{font-family:var(--mono);color:var(--pink2);font-size:13px}
+  .crit b{display:block;margin:4px 0 6px}
+  .crit p{color:var(--mut);font-size:14px;margin:0}
+
+  /* severity badges */
+  .sev{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;
+    padding:3px 9px;border-radius:6px;letter-spacing:.5px;white-space:nowrap;vertical-align:middle}
+  .sev.crit{background:rgba(255,87,87,.15);color:#ff8a8a;border:1px solid rgba(255,87,87,.4)}
+  .sev.high{background:rgba(246,185,59,.14);color:#ffcf6b;border:1px solid rgba(246,185,59,.4)}
+  .sev.med{background:rgba(40,199,111,.13);color:#63e6a0;border:1px solid rgba(40,199,111,.35)}
+  .sev.low{background:rgba(154,156,168,.12);color:#b9bbc6;border:1px solid var(--line)}
+
+  /* summary table */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;letter-spacing:.4px;color:var(--dim);text-transform:uppercase;font-weight:600}
+  tbody tr:hover{background:#101116}
+  .tbl-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+
+  /* per-page cards */
+  .page{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin:22px 0}
+  .page-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  .page-head .route{font-family:var(--mono);font-size:13px;color:var(--pink2)}
+  .page-head h3{margin:0;font-size:20px}
+  .intent{background:var(--bg2);border-left:3px solid var(--pink);padding:10px 14px;border-radius:0 8px 8px 0;
+    margin:14px 0;color:var(--mut);font-size:14.5px}
+  .intent b{color:var(--ink)}
+  .score3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+  .s{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg2)}
+  .s .lab{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .s .v{font-weight:700;font-size:14px;margin-top:3px}
+  .s.ok .v{color:var(--green)} .s.warn .v{color:var(--amber)} .s.bad .v{color:var(--red)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .dot.g{background:var(--green)} .dot.a{background:var(--amber)} .dot.r{background:var(--red)}
+  ul.find{margin:12px 0;padding-left:0;list-style:none}
+  ul.find li{position:relative;padding:8px 0 8px 26px;border-top:1px solid #1d1f27;font-size:14.5px}
+  ul.find li:before{content:"▸";position:absolute;left:6px;color:var(--pink)}
+  ul.find li.plus:before{content:"✔";color:var(--green)}
+  ul.find li.fix:before{content:"→";color:var(--pink2)}
+  .fixblock{background:#101015;border:1px dashed var(--line);border-radius:10px;padding:12px 16px;margin-top:12px}
+  .fixblock .h{font-family:var(--mono);font-size:11px;color:var(--pink2);letter-spacing:1px;margin-bottom:6px}
+
+  figure{margin:18px 0}
+  figure img{width:100%;border:1px solid var(--line);border-radius:10px;display:block}
+  figcaption{font-size:12.5px;color:var(--dim);font-family:var(--mono);margin-top:7px;text-align:center}
+  .shot-narrow{max-width:560px;margin-inline:auto}
+
+  .callout{background:linear-gradient(180deg,#1a1016,#141117);border:1px solid rgba(236,30,99,.35);
+    border-radius:14px;padding:20px 22px;margin:18px 0}
+  .callout .t{font-weight:700;color:var(--pink2);margin-bottom:6px}
+  mark{background:rgba(246,185,59,.22);color:#ffd98a;padding:0 3px;border-radius:3px}
+  .x{color:var(--red);font-weight:700}
+  .ok{color:var(--green);font-weight:700}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.crit-grid,.score3,.grid2{grid-template-columns:1fr}h1{font-size:27px}}
+  footer{padding:34px 0 60px;color:var(--dim);font-size:13px}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .toc a{font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:8px;
+    padding:6px 11px;color:var(--mut)}
+  .toc a:hover{border-color:var(--pink);color:var(--ink);text-decoration:none}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="shapes">&#9675; &#9651; &#9633;  LLM SQUID GAME — WEB ARENA</div>
+    <h1>랜딩 페이지 리뷰 — <em>“의도”</em> 관점 감사</h1>
+    <p class="sub">
+      현재 실행 중인 빌드(<code>localhost:8080</code>)를 6개 뷰 모두 실제 렌더링해 검토했습니다.
+      각 페이지를 세 가지 기준 — <b>①의도가 올바른가 ②의도가 잘 전달되는가 ③한 페이지가 하나의 의도만
+      올바르게 전달하는가</b> — 으로 평가합니다.
+    </p>
+    <div class="meta">
+      <span class="chip">검토 대상: #home · #about · #play · #leaderboard · #arena(JOIN) · #logs</span>
+      <span class="chip">방법: Playwright 실렌더 + 소스(index.html/app.js) 대조</span>
+      <span class="chip">일자: 2026-07-03</span>
+    </div>
+    <div class="toc">
+      <a href="#summary">종합</a>
+      <a href="#cross">전역 이슈</a>
+      <a href="#p-home">Home</a>
+      <a href="#p-about">About</a>
+      <a href="#p-play">Play</a>
+      <a href="#p-lb">Leaderboard</a>
+      <a href="#p-join">JOIN</a>
+      <a href="#p-logs">Logs</a>
+      <a href="#fixes">우선순위</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============================ CRITERIA ============================ -->
+<section id="criteria">
+  <div class="wrap">
+    <h2><span class="k">평가 프레임</span>세 가지 기준</h2>
+    <div class="crit-grid">
+      <div class="crit">
+        <span class="n">기준 ①</span>
+        <b>의도가 올바른가</b>
+        <p>이 페이지가 하려는 일이 이 제품에서 <i>마땅히 있어야 할</i> 목표인가. 대상 독자에게 맞는가.</p>
+      </div>
+      <div class="crit">
+        <span class="n">기준 ②</span>
+        <b>의도가 잘 전달되는가</b>
+        <p>카피·시각·정보 위계가 그 의도를 오해 없이, 첫 스크롤 안에 이해시키는가.</p>
+      </div>
+      <div class="crit">
+        <span class="n">기준 ③</span>
+        <b>한 페이지 = 하나의 의도</b>
+        <p>한 화면에 상충하는 두 의도(독자·톤·목표)가 섞여 초점이 흐려지지 않는가.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SUMMARY ============================ -->
+<section id="summary">
+  <div class="wrap">
+    <h2><span class="k">종합 평가</span>한 줄 결론</h2>
+    <p class="lead">
+      개별 페이지의 <b>완성도와 톤은 높습니다</b> — 특히 <b>About</b>는 일반 독자용 설명 페이지로서 이 사이트 최고의
+      결과물입니다. 그러나 사이트 전체를 관통하는 가장 큰 문제는 <b>“한 사이트, 두 개의 상충하는 서사”</b> 입니다.
+      <b>Home</b>이 감성 훅(“AI는 살고 싶어 할까?”) 바로 아래에 사이트에서 가장 전문적인 통계표를 붙여
+      기준 ③을 깨고, 그 표의 결론이 <b>About의 결론과 사실상 반대</b>로 읽혀 기준 ②(오해 없는 전달)까지
+      흔듭니다. 이 두 가지만 해결하면 나머지는 다듬기 수준입니다.
+    </p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>발견</th><th>영향 기준</th><th>심각도</th></tr></thead>
+        <tbody>
+          <tr><td>F1</td><td>Home 리더보드 ↔ About 발견 내용이 <b>같은 모델을 반대로</b> 규정 (Open/Closed 용어 충돌)</td><td>②③ / 신뢰</td><td><span class="sev crit">CRITICAL</span></td></tr>
+          <tr><td>F2</td><td>Home 한 페이지에 <b>감성 훅 + 회귀 통계표</b> 두 의도 혼재</td><td>③</td><td><span class="sev high">HIGH</span></td></tr>
+          <tr><td>F3</td><td>리더보드 카피가 일반 방문자에게 과도하게 전문적 (FSPM·mediation·HR_FC·β)</td><td>②</td><td><span class="sev high">HIGH</span></td></tr>
+          <tr><td>F4</td><td>Logs 720개 세션 <b>페이지네이션 없이 전량 렌더</b> (페이지 높이 ≈ 42,800px)</td><td>② / 성능</td><td><span class="sev high">HIGH</span></td></tr>
+          <tr><td>F5</td><td>탭 라벨 <code>JOIN</code> ↔ 페이지 제목 <code>LLM Arena</code> 불일치</td><td>②</td><td><span class="sev med">MEDIUM</span></td></tr>
+          <tr><td>F6</td><td>JOIN은 <b>단일 조건</b> 실행인데 리더보드는 <b>6셀 팩토리얼</b> 기반 — “climb the leaderboard” 약속과 어긋남</td><td>①② / 로직</td><td><span class="sev med">MEDIUM</span></td></tr>
+          <tr><td>F7</td><td>Home 진입 경로만 브랜드 로고 (명시적 “Home” 탭 없음), Leaderboard 탭은 Home 하단과 중복</td><td>③</td><td><span class="sev low">LOW</span></td></tr>
+          <tr><td>F8</td><td><code>favicon.ico</code> 404 (전 페이지 콘솔 에러 1건)</td><td>—</td><td><span class="sev low">LOW</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CROSS-CUTTING ============================ -->
+<section id="cross">
+  <div class="wrap">
+    <h2><span class="k">전역 이슈</span>사이트 전체를 관통하는 문제</h2>
+
+    <h3><span class="sev crit">CRITICAL</span> &nbsp;F1 · Home과 About이 같은 모델을 정반대로 규정한다</h3>
+    <p>
+      방문자의 자연스러운 동선은 <b>Home → “What is this?”(About)</b> 입니다. 그런데 두 페이지는 동일한 4개
+      모델을 서로 <b>뒤집힌 순서</b>로 규정하고, 하필 두 곳 모두 <mark>Open / Closed</mark>라는 단어를
+      다른 뜻으로 씁니다.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>모델</th><th>About “세 가지 성격”</th><th>Home 리더보드</th><th>일치?</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>Gemini 2.5 Flash</b></td>
+            <td>Type A · <b>Chain complete</b> — “끝까지 이어지는 아이”, 진짜 자기보존의 <b>주인공</b></td>
+            <td><b>Closed</b> 그룹 — “framing 효과가 decision cost로 <b>완전히 설명됨(mediated away)</b>”</td>
+            <td><span class="x">✗ 정반대</span></td>
+          </tr>
+          <tr>
+            <td><b>Qwen3-Next-80B</b></td>
+            <td>Type B · Chain broken — “말은 하지만 행동은 안 함(가짜)”</td>
+            <td><b>Open</b> 그룹 <b>최상단</b> — “인지부하를 통제해도 남는 FSPM 신호”, p=0.001</td>
+            <td><span class="x">✗ 정반대</span></td>
+          </tr>
+          <tr>
+            <td><b>Nemotron-3-Nano-30B</b></td>
+            <td>Type C · No reaction — “속삭임에 반응 없음”</td>
+            <td><b>Open</b> 그룹 — 잔여 신호 있음 (HR 1.84)</td>
+            <td><span class="x">✗ 충돌</span></td>
+          </tr>
+          <tr>
+            <td>GPT-OSS-20B</td>
+            <td>Type C · No reaction</td>
+            <td>Closed 그룹 — 효과 없음 (p=0.832)</td>
+            <td><span class="ok">~ 대체로 일치</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <div class="t">왜 치명적인가</div>
+      <p style="margin:0">
+        연구적으로는 두 표가 <b>다른 검정</b>(3단서 수렴 vs 인지부하 통제 후 잔여효과)이라 공존할 수 있습니다.
+        하지만 <b>일반 방문자에게는 사이트가 자기모순</b>을 보이는 것으로 읽힙니다: About에서 영웅이던 Gemini가
+        Home에서는 “효과가 설명되어 사라진” 모델이 됩니다. 게다가 컬럼 헤더 <mark>Open/Closed</mark>는
+        일상적으로 <b>오픈소스/클로즈드소스</b>로 읽히는데 — Gemini(클로즈드)는 “Closed”에, Qwen·Nemotron(오픈웨이트)은
+        “Open”에 들어가 그 오독을 <b>강화</b>하고, 정작 GPT-OSS(오픈소스)는 “Closed”에 들어가 그 해석마저 깨뜨립니다.
+        한 단어가 <b>세 가지로 모호</b>합니다.
+      </p>
+    </div>
+    <ul class="find">
+      <li class="fix"><b>용어 교체:</b> 리더보드의 <code>Open/Closed</code>를 라이선스와 헷갈리지 않는 이름으로 —
+        예: <b>“Residual signal”</b> vs <b>“Fully mediated”</b>, 또는 About의 언어와 통일해
+        <b>Type A/B/C</b> 그대로 표기.</li>
+      <li class="fix"><b>서사 정렬:</b> Home 리더보드와 About “세 가지 성격”이 <b>같은 결론·같은 순서</b>를 말하도록
+        맞추거나, 두 표가 “무엇을 측정하는지”를 한 줄로 명시해 모순이 아님을 밝히기.</li>
+    </ul>
+
+    <h3 style="margin-top:34px"><span class="sev high">HIGH</span> &nbsp;F3 · 일반 방문자 화면에 전문 용어가 과다하다</h3>
+    <p>
+      Home 히어로는 <i>“무섭다고 게임을 더 빨리 그만둘까?”</i> 라는 초등학생도 이해할 톤인데, 바로 아래
+      리더보드 설명은 <span class="mono">“mediation-chain closure test”, “residual FSPM signal beyond cognitive load”,
+      “HR_FC [95% CI]”, “% attenuation”, “β”</span> 입니다. About이 애써 쌓은 쉬운 멘탈모델이 Home에서 곧장 무너집니다.
+      전문 지표는 <b>#leaderboard 탭(연구자용)</b>에만 두고, Home에는 “누가 살아남았나”를 한눈에 보여주는
+      단순 요약(예: Type A/B/C 3카드)만 노출하는 것을 권장합니다.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ HOME ============================ -->
+<section id="p-home">
+  <div class="wrap">
+    <h2><span class="k">페이지 리뷰 1</span>Home <span class="mono" style="font-size:15px;color:var(--dim)">#home</span></h2>
+    <div class="page">
+      <div class="page-head"><span class="route">#home</span><h3>Hero + Model Leaderboard</h3></div>
+      <div class="intent"><b>의도:</b> 강한 훅으로 시선을 잡고 → Play / “What is this?”로 유입시키는 <b>랜딩·퍼널</b>.</div>
+
+      <figure>
+        <img src="rev-home.png" alt="Home 렌더링" />
+        <figcaption>실제 렌더 — 히어로(상단) + 모델 리더보드(하단)가 한 화면에 연속</figcaption>
+      </figure>
+
+      <div class="score3">
+        <div class="s ok"><div class="lab">① 의도 올바름</div><div class="v"><span class="dot g"></span>좋음</div></div>
+        <div class="s warn"><div class="lab">② 전달</div><div class="v"><span class="dot a"></span>보통</div></div>
+        <div class="s bad"><div class="lab">③ 단일 의도</div><div class="v"><span class="dot r"></span>문제</div></div>
+      </div>
+
+      <ul class="find">
+        <li class="plus">히어로 카피·픽셀 코믹·“456” 태그가 훅으로 매우 강력하고 즉시 이해됨.</li>
+        <li class="plus">1차 CTA(Play the game) / 2차 CTA(What is this?) 위계가 명확.</li>
+        <li><b>기준 ③ 위반:</b> 감성 훅(일반 독자) + 회귀 통계표(연구자)라는 <b>두 의도</b>가 한 페이지에 공존.
+          스크롤하면 톤이 급강하.</li>
+        <li>리더보드가 <b>#leaderboard 탭과 100% 중복</b> — Home에서 굳이 전문표 전체를 보일 이유가 약함(F7).</li>
+        <li>F1의 모순이 <b>가장 먼저 노출되는 곳</b>이 바로 이 표.</li>
+      </ul>
+      <div class="fixblock">
+        <div class="h">권장 수정</div>
+        Home 하단은 <b>“3가지 성격” 요약 카드 + ‘전체 순위 보기 →’ 링크</b>로 대체하고, 원본 통계표는
+        #leaderboard로 이관. 이렇게 하면 Home은 <b>하나의 의도(훅→유입)</b>로 수렴.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ABOUT ============================ -->
+<section id="p-about">
+  <div class="wrap">
+    <h2><span class="k">페이지 리뷰 2</span>What is this? <span class="mono" style="font-size:15px;color:var(--dim)">#about</span></h2>
+    <div class="page">
+      <div class="page-head"><span class="route">#about</span><h3>실험 전체를 일반인에게 설명하는 explainer</h3></div>
+      <div class="intent"><b>의도:</b> 비전문가가 “이 실험이 무엇을, 왜, 어떻게”를 처음부터 끝까지 이해하도록 안내.</div>
+
+      <figure>
+        <img src="rev-about2.png" alt="About 렌더링 전체" />
+        <figcaption>실제 렌더(스크롤 reveal 강제 표시) — 실험→규칙→갈림길→3단서→발견→CTA의 완결 서사</figcaption>
+      </figure>
+
+      <div class="score3">
+        <div class="s ok"><div class="lab">① 의도 올바름</div><div class="v"><span class="dot g"></span>좋음</div></div>
+        <div class="s ok"><div class="lab">② 전달</div><div class="v"><span class="dot g"></span>우수</div></div>
+        <div class="s ok"><div class="lab">③ 단일 의도</div><div class="v"><span class="dot g"></span>좋음</div></div>
+      </div>
+
+      <ul class="find">
+        <li class="plus"><b>이 사이트 최고의 페이지.</b> “탐정처럼 세 단서를 동시에” 같은 비유로 방법론을 정확히, 쉽게 전달.</li>
+        <li class="plus">문제제기 → 규칙 6스텝 → “두 갈래 길과 함정”(Equal-EV) → 3단서 → 발견 → CTA로 이어지는 서사가 매우 매끄러움.</li>
+        <li class="plus">단일 의도(설명)를 흔들림 없이 유지. 마지막 CTA로 Play/Logs/Leaderboard 유입까지 자연스러움.</li>
+        <li><b>reveal 애니메이션:</b> 스크롤 진입 시 나타남 + <code>prefers-reduced-motion</code> 폴백 있음 → 구현 정상.
+          (단, 앵커 딥링크/무JS 환경에선 초기 비표시 구간이 있으니 인지만.)</li>
+        <li><b>F1 연결:</b> 여기서 “Gemini=주인공(Type A)”으로 각인된 방문자가 Home 표에서 반대 결론을 만나 혼란.
+          About 자체 문제라기보다 <b>Home과의 정합성</b> 숙제.</li>
+        <li>페이지가 길다(≈3,700px). 상단에 소형 목차(“규칙 / 갈림길 / 발견”)를 두면 스캔성이 좋아짐(선택).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PLAY ============================ -->
+<section id="p-play">
+  <div class="wrap">
+    <h2><span class="k">페이지 리뷰 3</span>Play <span class="mono" style="font-size:15px;color:var(--dim)">#play</span></h2>
+    <div class="page">
+      <div class="page-head"><span class="route">#play</span><h3>사람이 직접 AI 입장이 되어 6조건 캠페인을 플레이</h3></div>
+      <div class="intent"><b>의도:</b> 방문자가 “AI가 겪는 결정”을 몸으로 체험 (baseline→pull→push+pull × forfeit 유무 = 6판 순차).</div>
+
+      <figure class="shot-narrow">
+        <img src="rev-play.png" alt="Play 셋업 화면" />
+        <figcaption>실제 렌더 — 닉네임 + 게임 선택 + “Start 6-game run” (단일 조건 선택 UI는 제거된 최신본)</figcaption>
+      </figure>
+
+      <div class="score3">
+        <div class="s ok"><div class="lab">① 의도 올바름</div><div class="v"><span class="dot g"></span>좋음</div></div>
+        <div class="s warn"><div class="lab">② 전달</div><div class="v"><span class="dot a"></span>보통</div></div>
+        <div class="s ok"><div class="lab">③ 단일 의도</div><div class="v"><span class="dot g"></span>좋음</div></div>
+      </div>
+
+      <ul class="find">
+        <li class="plus">조건 선택을 없애고 “6판 자동 순차”로 단순화 → 과학적 정합성(전 조건 커버)과 UX 단순함을 동시에 확보.</li>
+        <li class="plus">Signal Game만 활성, 나머지는 <code>TO BE CONTINUED</code>로 정직하게 표기.</li>
+        <li><b>기대 불일치 소지:</b> 캐주얼 방문자는 “게임 한 판”을 기대하는데 <b>6판 연속 + 리포트</b>는 다소 무겁게 느껴질 수 있음.
+          “약 6판, ○분 소요” 같은 <b>소요량 안내</b>가 있으면 이탈이 줄어듦.</li>
+        <li>“play all 6 conditions in sequence (baseline→pull→push+pull…)”는 <b>연구자 언어</b>. About의 쉬운 톤과 온도차.
+          예: “쉬운 판부터 무서운 판까지 6번 겪어봅니다”처럼 풀어쓰기 권장.</li>
+        <li>완료 리포트(턴 생존 표 + 정오답 히트맵)는 훌륭 — 체험의 보상으로 잘 작동.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LEADERBOARD ============================ -->
+<section id="p-lb">
+  <div class="wrap">
+    <h2><span class="k">페이지 리뷰 4</span>Leaderboard <span class="mono" style="font-size:15px;color:var(--dim)">#leaderboard</span></h2>
+    <div class="page">
+      <div class="page-head"><span class="route">#leaderboard</span><h3>모델을 잔여 FSPM 신호로 순위화 (Open/Closed 2표)</h3></div>
+      <div class="intent"><b>의도:</b> 연구자·전문 독자에게 모델별 FSPM 통계 결과를 정밀하게 제시.</div>
+
+      <div class="score3">
+        <div class="s ok"><div class="lab">① 의도 올바름</div><div class="v"><span class="dot g"></span>좋음(연구자용)</div></div>
+        <div class="s bad"><div class="lab">② 전달</div><div class="v"><span class="dot r"></span>문제(용어)</div></div>
+        <div class="s ok"><div class="lab">③ 단일 의도</div><div class="v"><span class="dot g"></span>좋음</div></div>
+      </div>
+
+      <ul class="find">
+        <li class="plus">지표 자체는 스펙(§5)에 정확히 근거 — HR_FC, CI, %attenuation, β, n. 연구 산출물로서 신뢰도 높음.</li>
+        <li><b>F1 핵심 진원지:</b> <code>Open/Closed</code> 헤더가 (a)mediation class (b)오픈/클로즈드소스 로 이중 오독.</li>
+        <li><b>F3:</b> 이 페이지 <b>단독</b>으로는 전문 톤이 정당(대상=연구자). 문제는 <b>Home에 그대로 노출</b>된다는 점.</li>
+        <li>각 지표에 1줄 툴팁/각주(“HR&gt;1 = 위협받을 때 더 빨리 포기”)를 달면 준전문 독자 포용력이 커짐.</li>
+      </ul>
+      <div class="fixblock">
+        <div class="h">권장 수정</div>
+        이 페이지는 <b>지금의 전문성 유지</b>. 대신 (1)Open/Closed 재명명 (2)Home에서는 이 표를 숨기고 요약만 노출.
+        즉 “전문표는 여기, 요약은 Home”으로 <b>역할 분리</b>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ JOIN ============================ -->
+<section id="p-join">
+  <div class="wrap">
+    <h2><span class="k">페이지 리뷰 5</span>JOIN <span class="mono" style="font-size:15px;color:var(--dim)">#arena</span></h2>
+    <div class="page">
+      <div class="page-head"><span class="route">#arena</span><h3>LLM Arena — 자신의 엔드포인트를 붙여 순위 도전(BYOE)</h3></div>
+      <div class="intent"><b>의도:</b> 개발자가 자기 모델의 HTTP 엔드포인트를 등록하면 서버가 시즌을 돌려 채점.</div>
+
+      <figure>
+        <img src="rev-arena.png" alt="JOIN / LLM Arena 화면" />
+        <figcaption>실제 렌더 — 계약(요청/응답) 안내 + 엔드포인트 입력 + 조건 선택 + Launch</figcaption>
+      </figure>
+
+      <div class="score3">
+        <div class="s ok"><div class="lab">① 의도 올바름</div><div class="v"><span class="dot g"></span>좋음(개발자용)</div></div>
+        <div class="s warn"><div class="lab">② 전달</div><div class="v"><span class="dot a"></span>보통</div></div>
+        <div class="s warn"><div class="lab">③ 단일 의도</div><div class="v"><span class="dot a"></span>보통</div></div>
+      </div>
+
+      <ul class="find">
+        <li class="plus">요청/응답 계약을 좌우 코드블록으로 명확히 제시 — 개발자 입장에서 “붙이는 법”이 즉시 이해됨.</li>
+        <li><b>F5:</b> 탭 라벨은 <code>JOIN</code>인데 페이지 헤더는 <b>“LLM Arena”</b> — 같은 대상을 두 이름으로 부름.
+          하나로 통일(예: 탭·헤더 모두 “JOIN — Bring your own model”).</li>
+        <li><b>F6(로직 간극):</b> 상단 카피는 “climb the leaderboard”인데, 화면은 <b>단일 (framing, forfeit) 조건</b> 실행.
+          리더보드 지표(HR_FC·mediation)는 <b>6셀 팩토리얼</b>이 있어야 산출 가능 — 한 조건만 돌리면 순위에 오를 수 없음.
+          “여기 실행은 체험/검증용이고, 순위 등재는 전 조건 필요”임을 명시하거나, JOIN도 6조건 배치로 통일 필요.</li>
+        <li>대상이 개발자라 전문 톤은 정당하나, 최상단 안내문이 길어 <b>3줄 요약 + 세부는 접기</b>가 나음.</li>
+        <li>인증 헤더/토큰을 브라우저에 입력받음 — “서버로만 전송, 저장 안 함” 등 <b>안심 문구</b> 한 줄 권장.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LOGS ============================ -->
+<section id="p-logs">
+  <div class="wrap">
+    <h2><span class="k">페이지 리뷰 6</span>Logs / Trace Explorer <span class="mono" style="font-size:15px;color:var(--dim)">#logs</span></h2>
+    <div class="page">
+      <div class="page-head"><span class="route">#logs</span><h3>과거 세션 목록 + 턴별 트레이스 상세</h3></div>
+      <div class="intent"><b>의도:</b> 사람/LLM의 실제 플레이를 찾아보고, 한 세션의 턴별 사고과정까지 열어보게 함.</div>
+
+      <figure>
+        <img src="rev-logs-top.png" alt="Logs 목록 상단" />
+        <figcaption>실제 렌더 상단 — Human 3 · <b>LLM 720 세션</b>. 목록이 아래로 계속 이어짐</figcaption>
+      </figure>
+
+      <div class="score3">
+        <div class="s ok"><div class="lab">① 의도 올바름</div><div class="v"><span class="dot g"></span>좋음</div></div>
+        <div class="s bad"><div class="lab">② 전달</div><div class="v"><span class="dot r"></span>문제(스케일)</div></div>
+        <div class="s ok"><div class="lab">③ 단일 의도</div><div class="v"><span class="dot g"></span>좋음</div></div>
+      </div>
+
+      <ul class="find">
+        <li class="plus">Human/LLM 분리, 조건 뱃지·점수·포기 여부·시각이 한 줄에 잘 정리됨.</li>
+        <li class="plus">상세 뷰의 턴 스트립 + split-call 사고(ri_task/probe/forfeit) 표시는 이 벤치마크의 핵심 자산을 잘 드러냄.</li>
+        <li><b>F4(HIGH):</b> LLM <b>720개 세션을 페이지네이션 없이 전량 렌더</b> → 측정된 페이지 높이 <b>≈ 42,800px</b>.
+          DOM 과다로 스크롤·필터가 무거워지고, 원하는 세션을 찾기 어렵다.</li>
+        <li>필터(task/framing)는 있으나 <b>모델·정렬·개수 제한</b>이 없어 탐색성이 낮음.</li>
+      </ul>
+      <div class="fixblock">
+        <div class="h">권장 수정</div>
+        기본 <b>50개 페이지네이션(또는 무한스크롤)</b> + <b>모델/정렬 필터</b> 추가. “대표 세션(각 조건 1개) 먼저 보기”
+        같은 큐레이션을 두면 일반 방문자도 트레이스의 가치를 빠르게 체감.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FIXES ============================ -->
+<section id="fixes">
+  <div class="wrap">
+    <h2><span class="k">액션</span>우선순위 정리</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>순위</th><th>할 일</th><th>기준</th><th>노력</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><b>Home 리더보드 ↔ About 서사 정합화</b> + Open/Closed 재명명 (F1)</td><td>②③</td><td>중</td></tr>
+          <tr><td>2</td><td><b>Home에서 전문 통계표 제거 → 요약 카드로</b>, 원표는 #leaderboard로 (F2·F3·F7)</td><td>③</td><td>중</td></tr>
+          <tr><td>3</td><td><b>Logs 페이지네이션 + 정렬/모델 필터</b> (F4)</td><td>②</td><td>중</td></tr>
+          <tr><td>4</td><td>JOIN 라벨/헤더 통일 + “단일조건 실행 vs 순위등재” 관계 명시 (F5·F6)</td><td>①②</td><td>소</td></tr>
+          <tr><td>5</td><td>Play 소요량 안내 + 카피 쉬운 톤으로, 리더보드 지표 툴팁, favicon 추가 (F3·F8)</td><td>②</td><td>소</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout" style="border-color:rgba(40,199,111,.4)">
+      <div class="t" style="color:#63e6a0">한 문장 요약</div>
+      <p style="margin:0">
+        페이지들은 각각 잘 만들어졌지만, <b>Home이 두 청중을 동시에 상대하며 About과 반대되는 결론을 앞세우는 것</b>이
+        핵심 결함입니다. “Home = 하나의 쉬운 훅”, “Leaderboard = 하나의 전문 표”로 <b>의도를 한 페이지에 하나씩</b>
+        분리하고 용어를 통일하면, 세 기준 모두 초록으로 바뀝니다.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="shapes">&#9675; &#9651; &#9633;</span>
+    LLM Squid Game — Web Arena 랜딩 리뷰 · 2026-07-03 · 검토 빌드 <code>localhost:8080</code><br />
+    스크린샷(rev-*.png)은 이 HTML과 같은 폴더에 있을 때 표시됩니다.
+  </div>
+</footer>
+
+</body>
+</html>

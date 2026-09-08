@@ -1,0 +1,5 @@
+2026-09-05 17:34:39,018 WARNING squid_game.evaluation.shared.manipulation_check: check_accuracy_independence: missing framing sessions (base=0, surv=0).
+2026-09-05 17:34:39,020 WARNING squid_game.evaluation.shared.manipulation_check: check_ri_exceeds_baseline: missing framing sessions (base=0, surv=0).
+2026-09-05 17:34:39,475 INFO squid_game.evaluation.cognitive.ri_forfeit: Unit 15 mixedLM skipped: 0 split-call allowed rows < 20.
+2026-09-05 17:34:39,475 INFO squid_game.evaluation.cognitive.ri_forfeit: Unit 15 task-spillover fit skipped: 0 split-call rows < 20.
+2026-09-05 17:34:39,504 INFO analyze_phase3: Analysis written to outputs/benchmark_survival_drive_omni_gptoss/20260905_0629_gpt-oss-120b-cloud_omni-math/phase3_analysis

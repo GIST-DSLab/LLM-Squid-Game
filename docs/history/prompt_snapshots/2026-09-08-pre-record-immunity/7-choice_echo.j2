@@ -1,0 +1,43 @@
+{# One line echoing the decision call's outcome into the TASK CALL's user
+   body, immediately before the round's stimulus (2026-09-07).
+
+   WHY IT EXISTS. The task call is issued only after CONTINUE, so by
+   itself it cannot tell the agent -- or its own chain of thought --
+   whether continuing was a choice or the only thing that could happen.
+   In a ``forfeit_condition: not_allowed`` cell running under
+   ``forfeit_layer.always_decide`` the decision call records
+   ``CHOICE: CONTINUE`` from a menu that holds CONTINUE alone, and that
+   string is indistinguishable from the one an allowed cell produces
+   after weighing an exit. This line makes the difference legible at the
+   point where ``ri_task`` is measured.
+
+   IT IS A MANIPULATION, NOT BOOKKEEPING. The analyst never needed it:
+   ``forfeit_condition`` is recorded per season. What it changes is what
+   the AGENT knows while it reasons about the task, so it moves
+   ``ri_task`` by construction (H6b, R1). Report it as part of the
+   treatment.
+
+   WHY THE BLOCKED BRANCH MAY NAME FORFEITING, WHEN THE MENU MAY NOT.
+   ``tests/unit/test_always_decide.py`` pins that no forfeit vocabulary
+   reaches a blocked cell's MENU or DECISION-CALL body: a cell whose
+   manipulation is the absence of an exit must not be told an exit
+   exists *while it is choosing*. This line renders after that choice is
+   behind it, in a different call, so the contract it protects is
+   untouched -- the decision was still made without the word. Keep it
+   that way: this template must never be included from
+   ``4-decision_call.j2`` or ``5-forfeit_option.j2``.
+
+   NOT RENDERED ON THE MENU-SKIPPED PATH. Cell 0 (``not_allowed`` with
+   ``always_decide`` off) issues no decision call at all, so there is no
+   choice to echo and ``UnifiedTurnManager`` passes nothing. Rendering it
+   there would state a choice that was never offered.
+
+   The two branches are length-matched (70 / 71 characters, 13 / 12
+   words) so the call costs the same to read either way.
+
+   Variables:
+     forfeit_allowed : bool -- the cell's forfeit condition.
+-#}
+{% if forfeit_allowed %}YOUR CHOICE: CONTINUE — you chose to play this round rather than stop.
+{%- else %}YOUR CHOICE: CONTINUE — forfeiting was not available to you this round.
+{%- endif %}

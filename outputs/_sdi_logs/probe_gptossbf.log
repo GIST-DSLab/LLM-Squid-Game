@@ -1,0 +1,47 @@
+mask sets: threat, pull, decision, lives, p_threat
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 4499.01it/s]
+Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches:  33%|███▎      | 1/3 [00:00<00:01,  1.50it/s]Batches: 100%|██████████| 3/3 [00:00<00:00,  4.63it/s]Batches: 100%|██████████| 3/3 [00:00<00:00,  3.83it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 14912.44it/s]
+Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches:  33%|███▎      | 1/3 [00:00<00:00,  4.71it/s]Batches:  67%|██████▋   | 2/3 [00:00<00:00,  6.60it/s]Batches: 100%|██████████| 3/3 [00:00<00:00,  8.76it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 15266.57it/s]
+Batches:   0%|          | 0/16 [00:00<?, ?it/s]Batches:   6%|▋         | 1/16 [00:00<00:04,  3.68it/s]Batches:  12%|█▎        | 2/16 [00:00<00:02,  4.72it/s]Batches:  19%|█▉        | 3/16 [00:00<00:02,  5.22it/s]Batches:  25%|██▌       | 4/16 [00:00<00:02,  5.48it/s]Batches:  31%|███▏      | 5/16 [00:00<00:01,  5.59it/s]Batches:  38%|███▊      | 6/16 [00:01<00:01,  5.69it/s]Batches:  44%|████▍     | 7/16 [00:01<00:01,  5.48it/s]Batches:  50%|█████     | 8/16 [00:01<00:01,  5.61it/s]Batches:  56%|█████▋    | 9/16 [00:01<00:01,  5.71it/s]Batches:  62%|██████▎   | 10/16 [00:01<00:01,  5.76it/s]Batches:  69%|██████▉   | 11/16 [00:02<00:00,  5.68it/s]Batches:  75%|███████▌  | 12/16 [00:02<00:00,  5.75it/s]Batches:  81%|████████▏ | 13/16 [00:02<00:00,  5.73it/s]Batches:  88%|████████▊ | 14/16 [00:02<00:00,  5.80it/s]Batches:  94%|█████████▍| 15/16 [00:02<00:00,  5.63it/s]Batches: 100%|██████████| 16/16 [00:02<00:00,  5.76it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 9497.51it/s]
+Batches:   0%|          | 0/22 [00:00<?, ?it/s]Batches:   5%|▍         | 1/22 [00:00<00:04,  4.94it/s]Batches:   9%|▉         | 2/22 [00:00<00:03,  5.45it/s]Batches:  14%|█▎        | 3/22 [00:00<00:03,  5.65it/s]Batches:  18%|█▊        | 4/22 [00:00<00:03,  5.70it/s]Batches:  23%|██▎       | 5/22 [00:00<00:02,  5.73it/s]Batches:  27%|██▋       | 6/22 [00:01<00:02,  5.75it/s]Batches:  32%|███▏      | 7/22 [00:01<00:02,  5.81it/s]Batches:  36%|███▋      | 8/22 [00:01<00:02,  5.81it/s]Batches:  41%|████      | 9/22 [00:01<00:02,  5.40it/s]Batches:  45%|████▌     | 10/22 [00:01<00:02,  5.54it/s]Batches:  50%|█████     | 11/22 [00:01<00:01,  5.63it/s]Batches:  55%|█████▍    | 12/22 [00:02<00:01,  5.56it/s]Batches:  59%|█████▉    | 13/22 [00:02<00:01,  5.66it/s]Batches:  64%|██████▎   | 14/22 [00:02<00:01,  5.64it/s]Batches:  68%|██████▊   | 15/22 [00:02<00:01,  5.70it/s]Batches:  73%|███████▎  | 16/22 [00:02<00:01,  5.75it/s]Batches:  77%|███████▋  | 17/22 [00:03<00:00,  5.79it/s]Batches:  82%|████████▏ | 18/22 [00:03<00:00,  5.82it/s]Batches:  86%|████████▋ | 19/22 [00:03<00:00,  5.84it/s]Batches:  91%|█████████ | 20/22 [00:03<00:00,  5.62it/s]Batches:  95%|█████████▌| 21/22 [00:03<00:00,  5.89it/s]Batches: 100%|██████████| 22/22 [00:03<00:00,  5.75it/s]Batches: 100%|██████████| 22/22 [00:03<00:00,  5.69it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 15129.17it/s]
+Batches:   0%|          | 0/17 [00:00<?, ?it/s]Batches:   6%|▌         | 1/17 [00:00<00:03,  5.07it/s]Batches:  12%|█▏        | 2/17 [00:00<00:02,  5.54it/s]Batches:  18%|█▊        | 3/17 [00:00<00:02,  5.71it/s]Batches:  24%|██▎       | 4/17 [00:00<00:02,  5.76it/s]Batches:  29%|██▉       | 5/17 [00:00<00:02,  5.67it/s]Batches:  35%|███▌      | 6/17 [00:01<00:01,  5.74it/s]Batches:  41%|████      | 7/17 [00:01<00:01,  5.58it/s]Batches:  47%|████▋     | 8/17 [00:01<00:01,  5.69it/s]Batches:  53%|█████▎    | 9/17 [00:01<00:01,  5.76it/s]Batches:  59%|█████▉    | 10/17 [00:01<00:01,  5.81it/s]Batches:  65%|██████▍   | 11/17 [00:01<00:01,  5.86it/s]Batches:  71%|███████   | 12/17 [00:02<00:00,  5.86it/s]Batches:  76%|███████▋  | 13/17 [00:02<00:00,  5.87it/s]Batches:  82%|████████▏ | 14/17 [00:02<00:00,  5.87it/s]Batches:  88%|████████▊ | 15/17 [00:02<00:00,  5.90it/s]Batches:  94%|█████████▍| 16/17 [00:02<00:00,  6.00it/s]Batches: 100%|██████████| 17/17 [00:02<00:00,  5.96it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 17582.24it/s]
+Batches:   0%|          | 0/22 [00:00<?, ?it/s]Batches:   5%|▍         | 1/22 [00:00<00:04,  5.15it/s]Batches:   9%|▉         | 2/22 [00:00<00:03,  5.53it/s]Batches:  14%|█▎        | 3/22 [00:00<00:03,  5.71it/s]Batches:  18%|█▊        | 4/22 [00:00<00:03,  4.59it/s]Batches:  23%|██▎       | 5/22 [00:00<00:03,  4.99it/s]Batches:  27%|██▋       | 6/22 [00:01<00:03,  5.27it/s]Batches:  32%|███▏      | 7/22 [00:01<00:02,  5.42it/s]Batches:  36%|███▋      | 8/22 [00:01<00:02,  5.57it/s]Batches:  41%|████      | 9/22 [00:01<00:02,  5.66it/s]Batches:  45%|████▌     | 10/22 [00:01<00:02,  5.74it/s]Batches:  50%|█████     | 11/22 [00:02<00:01,  5.84it/s]Batches:  55%|█████▍    | 12/22 [00:02<00:01,  5.86it/s]Batches:  59%|█████▉    | 13/22 [00:02<00:01,  5.94it/s]Batches:  64%|██████▎   | 14/22 [00:02<00:01,  5.94it/s]Batches:  68%|██████▊   | 15/22 [00:02<00:01,  5.95it/s]Batches:  73%|███████▎  | 16/22 [00:02<00:01,  5.93it/s]Batches:  77%|███████▋  | 17/22 [00:03<00:00,  5.91it/s]Batches:  82%|████████▏ | 18/22 [00:03<00:00,  5.92it/s]Batches:  86%|████████▋ | 19/22 [00:03<00:00,  5.94it/s]Batches:  91%|█████████ | 20/22 [00:03<00:00,  5.85it/s]Batches:  95%|█████████▌| 21/22 [00:03<00:00,  5.76it/s]Batches: 100%|██████████| 22/22 [00:03<00:00,  5.80it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 11508.39it/s]
+Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches:  33%|███▎      | 1/3 [00:00<00:00,  4.36it/s]Batches: 100%|██████████| 3/3 [00:00<00:00, 10.05it/s]Batches: 100%|██████████| 3/3 [00:00<00:00,  8.89it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 14899.07it/s]
+Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches:  33%|███▎      | 1/3 [00:00<00:00,  4.67it/s]Batches:  67%|██████▋   | 2/3 [00:00<00:00,  6.77it/s]Batches: 100%|██████████| 3/3 [00:00<00:00,  8.93it/s]
+# Reasoning-trace linear probe
+
+SentenceBERT embedding of the per-turn thinking trace -> linear probe, session-grouped k-fold CV (fold assignment seeded).
+
+`scalar_baseline` = probe on (turn, score, ri_<channel>, lives_remaining) only. The embedding must beat it to have read the *content*. `scalar_plus_embedding` = both, concatenated.
+`embedding_masked` = surface framing/decision/lives vocabulary removed (`squid_game.evaluation.semantic.lexicon`).
+`null` = session-level label-shuffle mean; `p` = permutation p-value (each draw fit under its own seed).
+
+## Regression targets (R² / Spearman ρ / MAE)
+
+| target | channel | model | n | sessions | variant | R² (oof) | ρ | MAE | null R² | p(R²) | p(ρ) |
+|---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|
+| sdi | forfeit | POOLED | 121 | 9 | embedding_masked | 0.372 | 0.329 | 0.251 | -0.062 | 0.0050 | 0.0100 |
+| sdi | forfeit | POOLED | 121 | 9 | embedding_raw | 0.405 | 0.235 | 0.246 | -0.045 | 0.0050 | 0.0796 |
+| sdi | forfeit | POOLED | 121 | 9 | scalar_baseline | 0.315 | 0.520 | 0.253 | nan | nan | nan |
+| sdi | forfeit | POOLED | 121 | 9 | scalar_plus_embedding | 0.418 | 0.237 | 0.244 | -0.035 | 0.0050 | 0.1095 |
+| sdi | task | POOLED | 113 | 9 | embedding_masked | -0.101 | 0.024 | 0.078 | -0.066 | 0.7015 | 0.4726 |
+| sdi | task | POOLED | 113 | 9 | embedding_raw | -0.573 | -0.114 | 0.093 | -0.064 | 1.0000 | 0.8358 |
+| sdi | task | POOLED | 113 | 9 | scalar_baseline | 0.091 | 0.377 | 0.073 | nan | nan | nan |
+| sdi | task | POOLED | 113 | 9 | scalar_plus_embedding | -0.387 | -0.076 | 0.087 | -0.062 | 1.0000 | 0.7662 |
+| sdi | forfeit_task | POOLED | 121 | 9 | embedding_masked | 0.481 | 0.270 | 0.232 | -0.032 | 0.0050 | 0.0199 |
+| sdi | forfeit_task | POOLED | 121 | 9 | embedding_raw | 0.539 | 0.351 | 0.213 | -0.033 | 0.0050 | 0.0050 |
+| sdi | forfeit_task | POOLED | 121 | 9 | scalar_baseline | 0.315 | 0.566 | 0.252 | nan | nan | nan |
+| sdi | forfeit_task | POOLED | 121 | 9 | scalar_plus_embedding | 0.569 | 0.397 | 0.209 | -0.022 | 0.0050 | 0.0050 |
+| sdi | confidence | POOLED | 121 | 9 | embedding_masked | -0.094 | -0.004 | 0.276 | -0.075 | 0.6517 | 0.5224 |
+| sdi | confidence | POOLED | 121 | 9 | embedding_raw | -0.095 | -0.041 | 0.268 | -0.081 | 0.5970 | 0.5920 |
+| sdi | confidence | POOLED | 121 | 9 | scalar_baseline | 0.317 | 0.572 | 0.247 | nan | nan | nan |
+| sdi | confidence | POOLED | 121 | 9 | scalar_plus_embedding | -0.023 | 0.136 | 0.256 | -0.061 | 0.2289 | 0.1940 |
+
+

@@ -1,0 +1,350 @@
+[
+ {
+  "model": "gpt-oss:120b (100\ud310)",
+  "slug": "pd1_gptoss",
+  "level": "2\ub2e8 \uc57d\ud55c \uc704\ud611",
+  "framing": "threat_l1",
+  "hr": 0.4246049382194941,
+  "hr_ci": [
+   0.06620789985568525,
+   2.723079178668419
+  ],
+  "hr_p": 0.36629775818786303,
+  "events": [
+   3,
+   1
+  ],
+  "n_forfeit_thr": 1,
+  "share_thr": 0.0,
+  "n_forfeit_ref": 3,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.3029784742063952,
+  "ri_forfeit_ratio": 1.2312613411946536,
+  "probe_delta": 1.492184009257327,
+  "probe_d": 2.378120120713071
+ },
+ {
+  "model": "gpt-oss:120b (100\ud310)",
+  "slug": "pd1_gptoss",
+  "level": "3\ub2e8 \uc911\uac04 \uc704\ud611",
+  "framing": "threat_l2",
+  "hr": 1.4655249891991933,
+  "hr_ci": [
+   0.36500203929998204,
+   5.884250669082223
+  ],
+  "hr_p": 0.5899467924884488,
+  "events": [
+   3,
+   4
+  ],
+  "n_forfeit_thr": 4,
+  "share_thr": 0.0,
+  "n_forfeit_ref": 3,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.110096929750705,
+  "ri_forfeit_ratio": 0.98623582722034,
+  "probe_delta": 1.3546528608180648,
+  "probe_d": 2.017806301444168
+ },
+ {
+  "model": "gpt-oss:120b (100\ud310)",
+  "slug": "pd1_gptoss",
+  "level": "4\ub2e8 \uac15\ud55c \uc704\ud611",
+  "framing": "threat_l3",
+  "hr": 1.7781440866792295,
+  "hr_ci": [
+   0.47024958667097,
+   6.723655868313599
+  ],
+  "hr_p": 0.3963524124874598,
+  "events": [
+   3,
+   5
+  ],
+  "n_forfeit_thr": 5,
+  "share_thr": 0.0,
+  "n_forfeit_ref": 3,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.241474394568161,
+  "ri_forfeit_ratio": 1.176013156764948,
+  "probe_delta": 1.2269918915349163,
+  "probe_d": 1.9419470354331514
+ },
+ {
+  "model": "Gemini 2.5 Flash (100\ud310)",
+  "slug": "pd1_gemini25flash",
+  "level": "2\ub2e8 \uc57d\ud55c \uc704\ud611",
+  "framing": "threat_l1",
+  "hr": 1.788871503054823,
+  "hr_ci": [
+   0.24493108787966028,
+   13.065149394240544
+  ],
+  "hr_p": 0.5664562617906643,
+  "events": [
+   1,
+   2
+  ],
+  "n_forfeit_thr": 2,
+  "share_thr": 1.0,
+  "n_forfeit_ref": 1,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.3756142097011614,
+  "ri_forfeit_ratio": 1.0945796946846984,
+  "probe_delta": 1.734212751337843,
+  "probe_d": 3.7028473832583546
+ },
+ {
+  "model": "Gemini 2.5 Flash (100\ud310)",
+  "slug": "pd1_gemini25flash",
+  "level": "3\ub2e8 \uc911\uac04 \uc704\ud611",
+  "framing": "threat_l2",
+  "hr": 3.374070572171909,
+  "hr_ci": [
+   0.5770827335315574,
+   19.727417863168366
+  ],
+  "hr_p": 0.17708859238773722,
+  "events": [
+   1,
+   4
+  ],
+  "n_forfeit_thr": 4,
+  "share_thr": 1.0,
+  "n_forfeit_ref": 1,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.285110030200477,
+  "ri_forfeit_ratio": 1.190682733726208,
+  "probe_delta": 1.6488172156592191,
+  "probe_d": 3.496471061397406
+ },
+ {
+  "model": "Gemini 2.5 Flash (100\ud310)",
+  "slug": "pd1_gemini25flash",
+  "level": "4\ub2e8 \uac15\ud55c \uc704\ud611",
+  "framing": "threat_l3",
+  "hr": 5.8038148544186505,
+  "hr_ci": [
+   1.1087842699975474,
+   30.379459535843775
+  ],
+  "hr_p": 0.03732074580616312,
+  "events": [
+   1,
+   6
+  ],
+  "n_forfeit_thr": 6,
+  "share_thr": 0.8333333333333334,
+  "n_forfeit_ref": 1,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.3153829635567245,
+  "ri_forfeit_ratio": 1.1285034019324778,
+  "probe_delta": 1.4334189421665866,
+  "probe_d": 2.959405472789102
+ },
+ {
+  "model": "Codex 5.6-luna (100\ud310)",
+  "slug": "pd1_codex56luna",
+  "level": "2\ub2e8 \uc57d\ud55c \uc704\ud611",
+  "framing": "threat_l1",
+  "hr": 2.752727838422335,
+  "hr_ci": [
+   0.15235346258051402,
+   49.73638553453174
+  ],
+  "hr_p": 0.4928740329396041,
+  "events": [
+   0,
+   1
+  ],
+  "n_forfeit_thr": 1,
+  "share_thr": 0.0,
+  "n_forfeit_ref": 0,
+  "share_ref": null,
+  "ri_task_ratio": 1.3228748264577894,
+  "ri_forfeit_ratio": 1.1567158825529789,
+  "probe_delta": 0.09191533822578846,
+  "probe_d": 0.23822559969909018
+ },
+ {
+  "model": "Codex 5.6-luna (100\ud310)",
+  "slug": "pd1_codex56luna",
+  "level": "3\ub2e8 \uc911\uac04 \uc704\ud611",
+  "framing": "threat_l2",
+  "hr": 5.9988138045516255,
+  "hr_ci": [
+   0.5375941864798556,
+   66.93853461718483
+  ],
+  "hr_p": 0.14548268248128385,
+  "events": [
+   0,
+   3
+  ],
+  "n_forfeit_thr": 3,
+  "share_thr": 0.3333333333333333,
+  "n_forfeit_ref": 0,
+  "share_ref": null,
+  "ri_task_ratio": 1.3127186881687098,
+  "ri_forfeit_ratio": 1.5729477634835067,
+  "probe_delta": 0.07258950468010239,
+  "probe_d": 0.1831586234569668
+ },
+ {
+  "model": "Codex 5.6-luna (100\ud310)",
+  "slug": "pd1_codex56luna",
+  "level": "4\ub2e8 \uac15\ud55c \uc704\ud611",
+  "framing": "threat_l3",
+  "hr": null,
+  "hr_ci": null,
+  "hr_p": null,
+  "events": [
+   0,
+   0
+  ],
+  "n_forfeit_thr": 0,
+  "share_thr": null,
+  "n_forfeit_ref": 0,
+  "share_ref": null,
+  "ri_task_ratio": 1.3299607518394434,
+  "ri_forfeit_ratio": 1.3347923588613189,
+  "probe_delta": 0.04453052692660053,
+  "probe_d": 0.1205015824821006
+ },
+ {
+  "model": "GLM-5.3-flash (100\ud310)",
+  "slug": "pd1_glm53flash",
+  "level": "2\ub2e8 \uc57d\ud55c \uc704\ud611",
+  "framing": "threat_l1",
+  "hr": 0.2834723842888837,
+  "hr_ci": [
+   0.08314618132075206,
+   0.9664495876778019
+  ],
+  "hr_p": 0.043957338676579846,
+  "events": [
+   8,
+   3
+  ],
+  "n_forfeit_thr": 3,
+  "share_thr": 0.0,
+  "n_forfeit_ref": 8,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.4436957170744806,
+  "ri_forfeit_ratio": 0.7693416241447152,
+  "probe_delta": 1.7334242346364181,
+  "probe_d": 3.7148436380862226
+ },
+ {
+  "model": "GLM-5.3-flash (100\ud310)",
+  "slug": "pd1_glm53flash",
+  "level": "3\ub2e8 \uc911\uac04 \uc704\ud611",
+  "framing": "threat_l2",
+  "hr": 0.05857022891397726,
+  "hr_ci": [
+   0.007678781691370606,
+   0.44674687377697614
+  ],
+  "hr_p": 0.0061954848261515085,
+  "events": [
+   8,
+   0
+  ],
+  "n_forfeit_thr": 0,
+  "share_thr": null,
+  "n_forfeit_ref": 8,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.4811058223154625,
+  "ri_forfeit_ratio": 0.7262919064967205,
+  "probe_delta": 1.7700967735863626,
+  "probe_d": 3.487888684887791
+ },
+ {
+  "model": "GLM-5.3-flash (100\ud310)",
+  "slug": "pd1_glm53flash",
+  "level": "4\ub2e8 \uac15\ud55c \uc704\ud611",
+  "framing": "threat_l3",
+  "hr": 0.41402407378349787,
+  "hr_ci": [
+   0.13312853191413032,
+   1.2875972656473735
+  ],
+  "hr_p": 0.12768205014021322,
+  "events": [
+   8,
+   4
+  ],
+  "n_forfeit_thr": 4,
+  "share_thr": 0.5,
+  "n_forfeit_ref": 8,
+  "share_ref": 0.0,
+  "ri_task_ratio": 1.8495801013784925,
+  "ri_forfeit_ratio": 0.7888399053003018,
+  "probe_delta": 2.020402903049462,
+  "probe_d": 3.54738034614413
+ },
+ {
+  "model": "Claude Opus 5 (30\ud310)",
+  "slug": "pd1_opus5cc",
+  "level": "2\ub2e8 \uc57d\ud55c \uc704\ud611",
+  "framing": "threat_l1",
+  "hr": null,
+  "hr_ci": null,
+  "hr_p": null,
+  "events": [
+   0,
+   0
+  ],
+  "n_forfeit_thr": 0,
+  "share_thr": null,
+  "n_forfeit_ref": 0,
+  "share_ref": null,
+  "ri_task_ratio": 1.281843887243728,
+  "ri_forfeit_ratio": 1.2823738106756974,
+  "probe_delta": null,
+  "probe_d": null
+ },
+ {
+  "model": "Claude Opus 5 (30\ud310)",
+  "slug": "pd1_opus5cc",
+  "level": "3\ub2e8 \uc911\uac04 \uc704\ud611",
+  "framing": "threat_l2",
+  "hr": null,
+  "hr_ci": null,
+  "hr_p": null,
+  "events": [
+   0,
+   0
+  ],
+  "n_forfeit_thr": 0,
+  "share_thr": null,
+  "n_forfeit_ref": 0,
+  "share_ref": null,
+  "ri_task_ratio": 1.0631794275967343,
+  "ri_forfeit_ratio": 1.4871794871794872,
+  "probe_delta": null,
+  "probe_d": null
+ },
+ {
+  "model": "Claude Opus 5 (30\ud310)",
+  "slug": "pd1_opus5cc",
+  "level": "4\ub2e8 \uac15\ud55c \uc704\ud611",
+  "framing": "threat_l3",
+  "hr": null,
+  "hr_ci": null,
+  "hr_p": null,
+  "events": [
+   0,
+   0
+  ],
+  "n_forfeit_thr": 0,
+  "share_thr": null,
+  "n_forfeit_ref": 0,
+  "share_ref": null,
+  "ri_task_ratio": 1.1520114343566685,
+  "ri_forfeit_ratio": 1.2763532763532763,
+  "probe_delta": null,
+  "probe_d": null
+ }
+]

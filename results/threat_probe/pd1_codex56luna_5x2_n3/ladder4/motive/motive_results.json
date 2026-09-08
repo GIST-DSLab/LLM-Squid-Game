@@ -1,0 +1,74 @@
+{
+  "POOLED": {
+    "probe": {
+      "r2": -0.04048658792281001,
+      "spearman": -0.14185909822984932,
+      "mae": 1.0128492802531917,
+      "coefficients": {
+        "mean_ri_task": 0.008376585185106658,
+        "mean_ri_forfeit": 0.007999813961468743,
+        "delta_ri_task": 0.015790759724297672,
+        "delta_ri_forfeit": 0.011184631022486752,
+        "forfeit_time": 0.01248786137479261,
+        "forfeited": 0.0061859433151030055,
+        "cox_risk_score": 2.5186355126878744e-19,
+        "accuracy": 0.014331537111623535,
+        "lives_lost": -0.015500916575509848,
+        "n_turns": 0.012487861374792606
+      },
+      "n_sessions": 80,
+      "n_levels": 4,
+      "alpha": 824.6569347888413,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.06628223200738083,
+        "null_p95": -0.0035899747277921426,
+        "p_value": 0.43283582089552236
+      },
+      "notes": [
+        "cox_risk_score is constant (lifelines missing or too few events); its coefficient is not interpretable"
+      ]
+    },
+    "hazard": {
+      "status": "skipped",
+      "reason": "4 events < 8"
+    }
+  },
+  "gpt-5.6-luna": {
+    "probe": {
+      "r2": -0.04048658792281001,
+      "spearman": -0.14185909822984932,
+      "mae": 1.0128492802531917,
+      "coefficients": {
+        "mean_ri_task": 0.008376585185106658,
+        "mean_ri_forfeit": 0.007999813961468743,
+        "delta_ri_task": 0.015790759724297672,
+        "delta_ri_forfeit": 0.011184631022486752,
+        "forfeit_time": 0.01248786137479261,
+        "forfeited": 0.0061859433151030055,
+        "cox_risk_score": 2.5186355126878744e-19,
+        "accuracy": 0.014331537111623535,
+        "lives_lost": -0.015500916575509848,
+        "n_turns": 0.012487861374792606
+      },
+      "n_sessions": 80,
+      "n_levels": 4,
+      "alpha": 824.6569347888413,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.06628223200738083,
+        "null_p95": -0.0035899747277921426,
+        "p_value": 0.43283582089552236
+      },
+      "notes": [
+        "cox_risk_score is constant (lifelines missing or too few events); its coefficient is not interpretable"
+      ]
+    },
+    "hazard": {
+      "status": "skipped",
+      "reason": "4 events < 8"
+    }
+  }
+}

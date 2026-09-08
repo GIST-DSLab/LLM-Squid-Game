@@ -1,0 +1,10 @@
+[driver] gemma4hard: SQUID_GAME_TASK_CONFIG_DIR=/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/configs/tasks_hard10
+rundir: no matches found: /Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/benchmark_survival_drive_omni_gemma4_hard10/*/
+rundir: no matches found: /Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/benchmark_survival_drive_omni_gemma4_hard10/*/
+[01:45] key probe -> 200 (pending: gemma4hard)
+rundir: no matches found: /Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/benchmark_survival_drive_omni_gemma4_hard10/*/
+[01:45] gemma4hard: started fresh
+[05:57] runs exited: gemma4hard=220 
+[05:58] gemma4hard: online complete (220/220) — tail started
+[05:58] all online runs complete
+[05:58] DRIVER DONE

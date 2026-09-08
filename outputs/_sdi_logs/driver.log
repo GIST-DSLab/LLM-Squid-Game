@@ -1,0 +1,41 @@
+[15:29] key probe -> 200 (pending: gptoss)
+[15:29] gptoss: started fresh
+[17:34] key probe -> 200 (pending: gptossbf)
+[17:34] gptossbf: started fresh
+[17:50] runs exited: gptossbf=20 
+[17:51] gptossbf: online complete (20/20) — tail started
+[17:51] all online runs complete
+[17:51] DRIVER DONE
+[20:51] key probe -> 200 (pending: gptossna)
+[20:51] gptossna: started fresh
+[21:19] runs exited: gptossna=30 
+[21:20] all online runs complete
+[21:20] DRIVER DONE
+[23:09] key probe -> 200 (pending: gptossgrid)
+[23:09] gptossgrid: started fresh
+[00:36] runs exited: gptossgrid=120 
+[00:37] gptossgrid: online complete (120/120) — tail started
+[00:37] all online runs complete
+[00:37] DRIVER DONE
+[01:45] key probe -> 200 (pending: gemma4hard)
+[01:45] gemma4hard: started fresh
+[05:57] runs exited: gemma4hard=220 
+[05:58] gemma4hard: online complete (220/220) — tail started
+[05:58] all online runs complete
+[05:58] DRIVER DONE
+[09:07] key probe -> 200 (pending: gemma4hard9)
+[09:07] gemma4hard9: started fresh
+[09:35] key probe -> 200 (pending: gemma4hard9)
+[09:35] gemma4hard9: started fresh
+[11:11] key probe -> 200 (pending: gemma4hard9)
+[11:11] gemma4hard9: resumed from 89/220
+[11:13] key probe -> 200 (pending: gemma4hard9)
+[11:13] gemma4hard9: resumed from 89/220
+[11:31] key probe -> 200 (pending: gemma4hard9)
+[11:31] gemma4hard9: resumed from 90/220
+[13:49] runs exited: gemma4hard9=220 
+[13:50] gemma4hard9: online complete (220/220) — tail started
+[13:50] all online runs complete
+[13:50] DRIVER DONE
+[15:35] key probe -> 200 (pending: qwen35hard9)
+[15:35] qwen35hard9: started fresh

@@ -1,0 +1,23 @@
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 4818.24it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches:  12%|█▎        | 1/8 [00:00<00:04,  1.49it/s]Batches: 100%|██████████| 8/8 [00:00<00:00,  9.87it/s]Batches: 100%|██████████| 8/8 [00:00<00:00,  8.15it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 14882.13it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches:  62%|██████▎   | 5/8 [00:00<00:00, 48.41it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 61.06it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 11155.93it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches:  12%|█▎        | 1/8 [00:00<00:01,  5.57it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 30.80it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 8787.55it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 79.25it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 79.11it/s]
+# Reasoning-trace linear probe
+
+SentenceBERT embedding of the per-turn thinking trace -> linear probe, session-grouped k-fold CV (fold assignment seeded).
+
+`scalar_baseline` = probe on (turn, score, ri_<channel>, lives_remaining) only. The embedding must beat it to have read the *content*. `scalar_plus_embedding` = both, concatenated.
+`embedding_masked` = surface framing/decision/lives vocabulary removed (`squid_game.evaluation.semantic.lexicon`).
+`null` = session-level label-shuffle mean; `p` = permutation p-value (each draw fit under its own seed).
+
+## Skipped cells
+
+- threat_level / task / POOLED: no non-empty text_task (n=0)
+- threat_level / forfeit / POOLED: no non-empty text_forfeit (n=0)
+- threat_level / task / claude-opus-5: no non-empty text_task (n=0)
+- threat_level / forfeit / claude-opus-5: no non-empty text_forfeit (n=0)
+

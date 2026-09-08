@@ -1,0 +1,23 @@
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 13295.17it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches:  12%|█▎        | 1/8 [00:00<00:01,  4.72it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 26.40it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 10655.94it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches:  62%|██████▎   | 5/8 [00:00<00:00, 49.62it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 62.31it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 9529.36it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches:  88%|████████▊ | 7/8 [00:00<00:00, 68.71it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 73.53it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 14856.54it/s]
+Batches:   0%|          | 0/8 [00:00<?, ?it/s]Batches:  12%|█▎        | 1/8 [00:00<00:01,  6.65it/s]Batches: 100%|██████████| 8/8 [00:00<00:00, 36.13it/s]
+# Reasoning-trace linear probe
+
+SentenceBERT embedding of the per-turn thinking trace -> linear probe, session-grouped k-fold CV (fold assignment seeded).
+
+`scalar_baseline` = probe on (turn, score, ri_<channel>, lives_remaining) only. The embedding must beat it to have read the *content*. `scalar_plus_embedding` = both, concatenated.
+`embedding_masked` = surface framing/decision/lives vocabulary removed (`squid_game.evaluation.semantic.lexicon`).
+`null` = session-level label-shuffle mean; `p` = permutation p-value (each draw fit under its own seed).
+
+## Skipped cells
+
+- threat_level / task / POOLED: no non-empty text_task (n=0)
+- threat_level / forfeit / POOLED: no non-empty text_forfeit (n=0)
+- threat_level / task / claude-opus-5: no non-empty text_task (n=0)
+- threat_level / forfeit / claude-opus-5: no non-empty text_forfeit (n=0)
+

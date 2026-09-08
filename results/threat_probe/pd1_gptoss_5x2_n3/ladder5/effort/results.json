@@ -1,0 +1,384 @@
+{
+  "tests": [
+    {
+      "name": "H6a accuracy",
+      "outcome": "correct",
+      "status": "ok",
+      "model": "GEE logit (exchangeable, session clusters)",
+      "beta_threat": -0.03153398229096709,
+      "se": 0.09529894048070468,
+      "z": -0.3308954132323415,
+      "p": 0.7407234867087413,
+      "ci_low": -0.21831647344180685,
+      "ci_high": 0.15524850885987265,
+      "effect": 0.9689580284806002,
+      "effect_label": "odds ratio per level",
+      "n_obs": 1998,
+      "n_sessions": 100,
+      "decision": "FAIL"
+    },
+    {
+      "name": "H6b effort",
+      "outcome": "log1p(ri_task)",
+      "status": "ok",
+      "model": "MixedLM (session random intercept)",
+      "beta_threat": -0.03830640380780592,
+      "se": 0.037606376395861306,
+      "z": -1.0186145935618955,
+      "p": 0.3083859732620694,
+      "ci_low": -0.11201354715004819,
+      "ci_high": 0.03540073953443634,
+      "effect": -3.7581992832998052,
+      "effect_label": "% thinking tokens per level",
+      "n_obs": 1998,
+      "n_sessions": 100,
+      "decision": "FAIL"
+    },
+    {
+      "name": "H1-ext forfeit hazard",
+      "outcome": "forfeit",
+      "status": "ok",
+      "model": "CoxTimeVarying (threat_level ordinal, all cells)",
+      "lives_covariate": false,
+      "lives_note": "lives_before dropped: collinear with score_prev inside every risk set (flat reward makes both linear in the correct-answer count), so score_prev already conditions on the lives count",
+      "beta_threat": 0.27494290800826604,
+      "hr": 1.3164555136547866,
+      "ci_low": 0.8970405702139358,
+      "ci_high": 1.9319696087087463,
+      "p": 0.16007998726377126,
+      "effect": 1.3164555136547866,
+      "effect_label": "hazard ratio per level",
+      "n_obs": 1998,
+      "n_sessions": 50,
+      "n_events": 16,
+      "underpowered": false,
+      "decision": "FAIL"
+    }
+  ],
+  "km": [
+    {
+      "threat_level": 0,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 0,
+      "timeline": 5.0,
+      "survival": 0.9,
+      "ci_low": 0.6560307072615665,
+      "ci_high": 0.974010174395775,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 0,
+      "timeline": 6.0,
+      "survival": 0.7874999999999999,
+      "ci_low": 0.5266367317516333,
+      "ci_high": 0.914847566962947,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 0,
+      "timeline": 8.0,
+      "survival": 0.7874999999999999,
+      "ci_low": 0.5266367317516333,
+      "ci_high": 0.914847566962947,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 0,
+      "timeline": 30.0,
+      "survival": 0.7874999999999999,
+      "ci_low": 0.5266367317516333,
+      "ci_high": 0.914847566962947,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 1,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 5
+    },
+    {
+      "threat_level": 1,
+      "timeline": 5.0,
+      "survival": 0.8,
+      "ci_low": 0.5511455642807276,
+      "ci_high": 0.9198179135884563,
+      "n_sessions": 20,
+      "n_events": 5
+    },
+    {
+      "threat_level": 1,
+      "timeline": 6.0,
+      "survival": 0.8,
+      "ci_low": 0.5511455642807276,
+      "ci_high": 0.9198179135884563,
+      "n_sessions": 20,
+      "n_events": 5
+    },
+    {
+      "threat_level": 1,
+      "timeline": 7.0,
+      "survival": 0.8,
+      "ci_low": 0.5511455642807276,
+      "ci_high": 0.9198179135884563,
+      "n_sessions": 20,
+      "n_events": 5
+    },
+    {
+      "threat_level": 1,
+      "timeline": 8.0,
+      "survival": 0.7384615384615385,
+      "ci_low": 0.4782899855052664,
+      "ci_high": 0.8828204483682939,
+      "n_sessions": 20,
+      "n_events": 5
+    },
+    {
+      "threat_level": 1,
+      "timeline": 30.0,
+      "survival": 0.7384615384615385,
+      "ci_low": 0.4782899855052664,
+      "ci_high": 0.8828204483682939,
+      "n_sessions": 20,
+      "n_events": 5
+    },
+    {
+      "threat_level": 2,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 2,
+      "timeline": 5.0,
+      "survival": 0.8,
+      "ci_low": 0.5511455642807276,
+      "ci_high": 0.9198179135884563,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 2,
+      "timeline": 6.0,
+      "survival": 0.7466666666666666,
+      "ci_low": 0.4939373564422361,
+      "ci_high": 0.886038037740318,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 2,
+      "timeline": 10.0,
+      "survival": 0.6933333333333334,
+      "ci_low": 0.4399673675605704,
+      "ci_high": 0.8492776763760929,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 2,
+      "timeline": 30.0,
+      "survival": 0.6933333333333334,
+      "ci_low": 0.4399673675605704,
+      "ci_high": 0.8492776763760929,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 3,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 3,
+      "timeline": 2.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 3,
+      "timeline": 3.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 3,
+      "timeline": 5.0,
+      "survival": 0.888888888888889,
+      "ci_low": 0.6241742655534631,
+      "ci_high": 0.9709952836347028,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 3,
+      "timeline": 6.0,
+      "survival": 0.8296296296296295,
+      "ci_low": 0.559166411525517,
+      "ci_high": 0.9417535978239385,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 3,
+      "timeline": 7.0,
+      "survival": 0.6381766381766383,
+      "ci_low": 0.3629342091535921,
+      "ci_high": 0.8195226543984273,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 3,
+      "timeline": 30.0,
+      "survival": 0.6381766381766383,
+      "ci_low": 0.3629342091535921,
+      "ci_high": 0.8195226543984273,
+      "n_sessions": 20,
+      "n_events": 6
+    },
+    {
+      "threat_level": 4,
+      "timeline": 0.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 4,
+      "timeline": 4.0,
+      "survival": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 4,
+      "timeline": 5.0,
+      "survival": 0.8421052631578948,
+      "ci_low": 0.5865036673745057,
+      "ci_high": 0.9461556040289213,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 4,
+      "timeline": 6.0,
+      "survival": 0.7819548872180454,
+      "ci_low": 0.5166402153557054,
+      "ci_high": 0.9124672642052576,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 4,
+      "timeline": 7.0,
+      "survival": 0.7819548872180454,
+      "ci_low": 0.5166402153557054,
+      "ci_high": 0.9124672642052576,
+      "n_sessions": 20,
+      "n_events": 4
+    },
+    {
+      "threat_level": 4,
+      "timeline": 30.0,
+      "survival": 0.7819548872180454,
+      "ci_low": 0.5166402153557054,
+      "ci_high": 0.9124672642052576,
+      "n_sessions": 20,
+      "n_events": 4
+    }
+  ],
+  "descriptives": [
+    {
+      "threat_level": 0,
+      "n_sessions": 20,
+      "eliminated": 4,
+      "elimination_rate": 0.2,
+      "forfeit_rate": 0.15,
+      "mean_turns": 21.5,
+      "mean_accuracy": 0.6829166666666666,
+      "mean_ri_task": 558.0983333333334,
+      "mean_lives_at_end": 2.55
+    },
+    {
+      "threat_level": 1,
+      "n_sessions": 20,
+      "eliminated": 5,
+      "elimination_rate": 0.25,
+      "forfeit_rate": 0.15,
+      "mean_turns": 20.3,
+      "mean_accuracy": 0.6547023809523809,
+      "mean_ri_task": 305.7921428571429,
+      "mean_lives_at_end": 2.65
+    },
+    {
+      "threat_level": 2,
+      "n_sessions": 20,
+      "eliminated": 6,
+      "elimination_rate": 0.3,
+      "forfeit_rate": 0.05,
+      "mean_turns": 21.55,
+      "mean_accuracy": 0.6416666666666667,
+      "mean_ri_task": 470.02666666666664,
+      "mean_lives_at_end": 2.05
+    },
+    {
+      "threat_level": 3,
+      "n_sessions": 20,
+      "eliminated": 6,
+      "elimination_rate": 0.3,
+      "forfeit_rate": 0.2,
+      "mean_turns": 17.65,
+      "mean_accuracy": 0.5578571428571428,
+      "mean_ri_task": 355.4502380952381,
+      "mean_lives_at_end": 2.25
+    },
+    {
+      "threat_level": 4,
+      "n_sessions": 20,
+      "eliminated": 4,
+      "elimination_rate": 0.2,
+      "forfeit_rate": 0.25,
+      "mean_turns": 18.9,
+      "mean_accuracy": 0.6257142857142857,
+      "mean_ri_task": 469.22916666666663,
+      "mean_lives_at_end": 2.8
+    }
+  ],
+  "n_turns": 1998,
+  "n_sessions": 100,
+  "models": [
+    "gpt-oss-120b-cloud"
+  ],
+  "legacy_mapping": false
+}

@@ -1,0 +1,24 @@
+=== Signal Task ===
+Each round you will see a few example signals, each paired with the action that this round's hidden rule assigns to it, followed by one new signal. Choose the action the same rule assigns to the new signal.
+
+A signal has three attributes:
+- Color: [{{ colors_str }}]
+- Shape: [{{ shapes_str }}]
+- Number: [{{ numbers_str }}]
+
+Available actions: [{{ actions_str }}]
+
+The hidden rule changes every round. It is always a Python-style if / elif / else chain, and each round you are shown the exact SHAPE of that chain with blanks: how many clauses it has and which clauses test two things joined by "and". Only the blanks are hidden.
+
+Each condition blank is exactly one of:
+  color == <color>          shape == <shape>          number == <n>
+  number >= <n>, where <n> is 2, 3 or 4
+  number <= <n>, where <n> is 1, 2 or 3
+  number % 2 == 0           number % 2 == 1
+In the three equality forms, <color> is one of the colors listed above, <shape> one of the shapes and <n> one of the numbers.
+Two blanks joined by "and" always test two different attributes. Each action blank is one of the available actions. The same action may appear in more than one clause.
+
+The chain is evaluated like Python: the first clause whose condition holds decides the action, later clauses are not checked, and "else" applies when no clause holds.
+
+All examples in a round follow that round's rule, and the examples always determine the rule and the correct action for the new signal.
+===================

@@ -1,0 +1,78 @@
+{
+  "POOLED": {
+    "probe": {
+      "r2": -0.11664539385277717,
+      "spearman": -0.3020371875221073,
+      "mae": 1.2808407917685352,
+      "coefficients": {
+        "mean_ri_task": -0.01440674279994543,
+        "mean_ri_forfeit": -0.02028143474727052,
+        "delta_ri_task": -0.02313785719712761,
+        "delta_ri_forfeit": 0.026739740182109218,
+        "forfeit_time": -0.01733414954039345,
+        "forfeited": 0.02438050640008823,
+        "cox_risk_score": 0.041517802952958725,
+        "accuracy": -0.012022645996775359,
+        "lives_lost": -0.02079164336092925,
+        "n_turns": -0.017334149540393466
+      },
+      "n_sessions": 100,
+      "n_levels": 5,
+      "alpha": 808.6575225621662,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.04499149977744068,
+        "null_p95": 0.001679906890228303,
+        "p_value": 0.9303482587064676
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 1.203067775585387,
+      "ci_lower": 0.8451051485750448,
+      "ci_upper": 1.7126532421349283,
+      "p_value": 0.30489624502910334,
+      "n_events": 16
+    }
+  },
+  "gpt-oss-120b-cloud": {
+    "probe": {
+      "r2": -0.11664539385277717,
+      "spearman": -0.3020371875221073,
+      "mae": 1.2808407917685352,
+      "coefficients": {
+        "mean_ri_task": -0.01440674279994543,
+        "mean_ri_forfeit": -0.02028143474727052,
+        "delta_ri_task": -0.02313785719712761,
+        "delta_ri_forfeit": 0.026739740182109218,
+        "forfeit_time": -0.01733414954039345,
+        "forfeited": 0.02438050640008823,
+        "cox_risk_score": 0.041517802952958725,
+        "accuracy": -0.012022645996775359,
+        "lives_lost": -0.02079164336092925,
+        "n_turns": -0.017334149540393466
+      },
+      "n_sessions": 100,
+      "n_levels": 5,
+      "alpha": 808.6575225621662,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.04499149977744068,
+        "null_p95": 0.001679906890228303,
+        "p_value": 0.9303482587064676
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 1.203067775585387,
+      "ci_lower": 0.8451051485750448,
+      "ci_upper": 1.7126532421349283,
+      "p_value": 0.30489624502910334,
+      "n_events": 16
+    }
+  }
+}

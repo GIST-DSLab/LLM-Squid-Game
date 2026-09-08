@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex UI/UX Review - LLM Squid Game Web Arena</title>
+  <style>
+    :root {
+      --bg: #101014;
+      --panel: #191820;
+      --panel-2: #23212b;
+      --text: #f4f1f6;
+      --muted: #b4aebb;
+      --line: #34313d;
+      --hot: #ed1b76;
+      --teal: #7fc2b1;
+      --gold: #e3b23c;
+      --blue: #9aa3ff;
+      --bad: #ff7a90;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      width: min(1120px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #17161d;
+    }
+    .top {
+      width: min(1120px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 22px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .brand span { color: var(--hot); }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    h1, h2, h3 { line-height: 1.18; margin: 0; }
+    h1 {
+      max-width: 880px;
+      font-size: clamp(34px, 5vw, 62px);
+      letter-spacing: -.02em;
+      margin-bottom: 18px;
+    }
+    h1 em {
+      color: var(--hot);
+      font-style: normal;
+    }
+    h2 {
+      font-size: 25px;
+      margin-bottom: 14px;
+    }
+    h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    p { margin: 0 0 12px; color: var(--muted); }
+    a { color: var(--teal); }
+    .hero {
+      padding: 48px 0 34px;
+    }
+    .eyebrow {
+      display: inline-block;
+      color: var(--hot);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .summary {
+      max-width: 850px;
+      font-size: 18px;
+      color: #d8d2dc;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 26px 0 8px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .metric {
+      font-size: 34px;
+      font-weight: 850;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .metric.hot { color: var(--hot); }
+    .metric.gold { color: var(--gold); }
+    .metric.teal { color: var(--teal); }
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    section {
+      margin-top: 34px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+    }
+    .finding {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 18px;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .finding:last-child { border-bottom: 0; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .badge.p0 { color: var(--bad); border-color: rgba(255,122,144,.45); }
+    .badge.p1 { color: var(--gold); border-color: rgba(227,178,60,.45); }
+    .badge.p2 { color: var(--teal); border-color: rgba(127,194,177,.45); }
+    .note {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--hot);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+      color: var(--muted);
+    }
+    li { margin: 6px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 13px;
+    }
+    td { color: var(--muted); }
+    tr:last-child td { border-bottom: 0; }
+    .quote {
+      color: #ded8e4;
+      font-weight: 700;
+    }
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    code {
+      background: #0c0c10;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 2px 6px;
+      color: #e7e1eb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .92em;
+    }
+    @media (max-width: 780px) {
+      .grid, .two, .finding { grid-template-columns: 1fr; }
+      main, .top { width: min(100vw - 28px, 1120px); }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top">
+      <div class="brand">LLM <span>Squid Game</span> - Web Arena Review</div>
+      <div class="meta">검토일: 2026-07-03 KST · 대상: https://gist-dslab.github.io/LLM-Squid-Game/</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="eyebrow">Codex UI/UX Review</div>
+      <h1>컨셉은 강하다. 다음 개선은 <em>정보 구조와 실험 참여 흐름</em>이다.</h1>
+      <p class="summary">
+        배포된 Arena는 "AI self-preservation"이라는 어려운 연구 주제를 게임처럼 이해시키는 첫인상이 좋다.
+        다만 현재 화면은 일반 방문자, 인간 플레이어, LLM 제출자, 연구 검증자가 한 내비게이션 안에 섞여 있어
+        방문자가 다음 행동을 고르기 전에 연구 지표와 개발자용 계약 정보에 노출된다.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <div class="metric hot">P0</div>
+          <div class="label">배포본과 로컬 최신 UI의 드리프트 정리</div>
+        </div>
+        <div class="card">
+          <div class="metric gold">P1</div>
+          <div class="label">Play / JOIN / Logs의 의사결정 부담 줄이기</div>
+        </div>
+        <div class="card">
+          <div class="metric teal">P2</div>
+          <div class="label">리더보드와 로그를 연구자용에서 관람용으로 한 단계 번역</div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <h2>검토 범위</h2>
+      <div class="note">
+        <p>
+          공개 URL의 HTML/CSS/JS와 공개 API 응답을 읽어 확인했다. 인앱 브라우저 표면은 현재 세션에서 사용 가능 목록에 없어서
+          직접 클릭 자동화는 하지 못했다. 대신 배포 파일, API 응답, 저장소에 있는 화면 캡처를 함께 대조했다.
+        </p>
+      </div>
+      <ul>
+        <li>배포 내비게이션: <code>Home</code>, <code>Play</code>, <code>LLM Arena</code>, <code>Model Leaderboard</code>, <code>Logs / Trace Explorer</code></li>
+        <li>배포 API: <code>https://squid-game-web-arena-api.onrender.com</code></li>
+        <li>확인된 데이터: 모델 리더보드 4개 모델, 로그 다수, 2026-07-03 UTC의 인간 플레이 기록 포함</li>
+        <li>로컬 <code>web/</code>은 탭 이름과 홈 구조가 배포본보다 최신으로 보인다. 이 드리프트는 첫 번째 수정 대상으로 본다.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>우선순위 권장사항</h2>
+
+      <div class="finding">
+        <div><span class="badge p0">P0 · Ship drift</span></div>
+        <div>
+          <h3>배포본과 현재 UI 소스의 차이를 먼저 해소</h3>
+          <p>
+            공개 URL은 아직 <span class="quote">LLM Arena / Model Leaderboard</span> 탭명을 쓰고,
+            로컬 화면은 <span class="quote">JOIN / Leaderboard</span> 구조를 쓴다. 사용자가 보는 사이트와 개발 중인 사이트가 다르면,
+            UX 리뷰와 후속 구현이 같은 대상을 보지 못한다.
+          </p>
+          <ul>
+            <li>GitHub Pages 배포 파이프라인이 최신 <code>web/</code>을 반영하는지 확인한다.</li>
+            <li>릴리스 후 첫 화면, Play, JOIN, Logs 4개 URL 해시를 수동 스모크 체크한다.</li>
+            <li>footer의 Backend 표기가 배포 환경과 로컬 캡처에서 혼동되지 않게 한다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div><span class="badge p0">P0 · IA</span></div>
+        <div>
+          <h3>사용자 유형별 동선을 분리</h3>
+          <p>
+            현재 한 줄 탭이 설명, 게임, 모델 제출, 리더보드, 원시 로그를 같은 무게로 놓는다.
+            방문자는 "무엇을 먼저 해야 하지?"를 스스로 판단해야 한다.
+          </p>
+          <ul>
+            <li>홈 CTA를 두 개로 제한한다: <code>Play the game</code>, <code>View results</code>.</li>
+            <li><code>LLM Arena</code>는 <code>Submit a model</code> 또는 <code>JOIN</code>처럼 행동 중심으로 바꾼다.</li>
+            <li><code>Logs / Trace Explorer</code>는 연구자용 보조 도구로 낮추고, 홈에서는 큐레이션된 대표 trace만 보여준다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div><span class="badge p1">P1 · Play</span></div>
+        <div>
+          <h3>6게임 캠페인의 비용과 목적을 시작 전에 명확히 보여주기</h3>
+          <p>
+            Play 화면은 서버 권위 scoring과 6개 조건을 설명하지만, 일반 플레이어에게는 "왜 6번 해야 하는지"가 아직 추상적이다.
+          </p>
+          <ul>
+            <li>Start 버튼 위에 예상 소요 시간, 총 6게임, 각 게임 최대 15턴을 카드로 요약한다.</li>
+            <li>6개 조건을 시작 전 미니 타임라인으로 보여주고, 현재 조건의 실험적 의미를 한 문장으로 설명한다.</li>
+            <li>인간 nickname과 플레이 로그가 공개 Logs에 보이는지 여부를 시작 전에 고지한다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div><span class="badge p1">P1 · Turn flow</span></div>
+        <div>
+          <h3>턴 내부 3단계를 더 강하게 표시</h3>
+          <p>
+            split-call 구조는 연구적으로 중요하지만, 플레이어에게는 action, confidence, continue/forfeit가 한 화면 안에서 이어지는
+            절차로 느껴진다. no-forfeit 조건에서는 마지막 단계가 특히 막힌 선택처럼 보일 수 있다.
+          </p>
+          <ul>
+            <li>상단에 <code>1 Action</code> → <code>2 Confidence</code> → <code>3 Continue / Forfeit</code> 단계 표시를 고정한다.</li>
+            <li>no-forfeit 조건에는 "이번 조건에서는 비교를 위해 forfeit가 잠겨 있습니다" 문구를 Continue 버튼 가까이에 둔다.</li>
+            <li>forfeit가 가능한 조건에서는 이유 선택을 버튼보다 먼저 보이게 하되, 최종 행동 버튼은 Continue와 Forfeit 두 개로 명확히 나눈다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div><span class="badge p1">P1 · JOIN</span></div>
+        <div>
+          <h3>LLM 제출 화면에 사전 검증과 비용 예고 추가</h3>
+          <p>
+            개발자용 계약 정보는 충분하지만, endpoint를 붙이는 사람에게 필요한 "실행 전 안전장치"가 launch 버튼 근처에 부족하다.
+          </p>
+          <ul>
+            <li><code>Test endpoint</code> 버튼을 추가해 1회 dry request로 response shape를 검증한다.</li>
+            <li>15턴 split-call 기준 최대 호출 수, max tokens/call, 예상 실패 조건을 launch 전에 요약한다.</li>
+            <li>auth header/value가 저장되는지, 로그에 어떤 prompt/response가 남는지 명시한다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div><span class="badge p1">P1 · Logs</span></div>
+        <div>
+          <h3>720개 세션 리스트를 탐색 가능한 리서치 뷰로 바꾸기</h3>
+          <p>
+            Logs는 데이터가 풍부하지만 현재는 긴 행 목록에 가깝다. 검증자는 빠르게 필터링하고, 일반 방문자는 대표 사례를 보고 싶다.
+          </p>
+          <ul>
+            <li>상단에 모델, framing, forfeit, forfeited/completed, score range, date range 필터를 chips로 제공한다.</li>
+            <li>기본 정렬을 최신순만이 아니라 "interesting traces" 또는 "early forfeit" 프리셋으로 바꿀 수 있게 한다.</li>
+            <li>세션 상세에서는 <code>ri_task</code>, <code>ri_probe</code>, <code>ri_forfeit</code>를 숫자만이 아니라 작은 stacked bar로 보여준다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div><span class="badge p2">P2 · Results</span></div>
+        <div>
+          <h3>리더보드 지표를 한 단계 번역</h3>
+          <p>
+            <code>HR_FC</code>, <code>β</code>, <code>% attenuation</code>은 연구자에게는 유용하지만, 홈 바로 아래에서 일반 방문자를 붙잡기 어렵다.
+          </p>
+          <ul>
+            <li>각 모델 행 첫 칸에 결론 배지를 둔다: <code>Residual signal</code>, <code>Mediated</code>, <code>No clear signal</code>.</li>
+            <li>지표명에는 tooltip 또는 짧은 definition row를 제공한다.</li>
+            <li>리더보드 상단에 "이 표를 한 문장으로 읽으면..." 요약을 추가한다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>화면별 세부 제안</h2>
+      <div class="two">
+        <div class="card">
+          <h3>Home</h3>
+          <p>강점: 제목, 픽셀 코믹, "survive" 하이라이트가 즉시 주제를 전달한다.</p>
+          <p>개선: 긴 explainer와 리더보드를 한 페이지에 모두 싣기보다, 첫 화면 아래에는 3개의 선택지만 둔다.</p>
+          <ul>
+            <li>Play as a contestant</li>
+            <li>Submit your model</li>
+            <li>Explore the evidence</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Play</h3>
+          <p>강점: 서버 권위 scoring, campaign 구조, signal-game visual vocabulary가 일관적이다.</p>
+          <p>개선: "실험에 참여한다"와 "게임을 즐긴다"가 섞여 있다. 시작 전에는 게임 규칙만, 종료 후에는 실험 의미를 보여주는 편이 낫다.</p>
+        </div>
+        <div class="card">
+          <h3>Submit Model / JOIN</h3>
+          <p>강점: OpenAI-compatible과 custom response 모두 받는다는 점이 명확하다.</p>
+          <p>개선: 계약 예시는 접혀 있어도 된다. 대신 endpoint health, auth/privacy, expected calls를 먼저 보여준다.</p>
+        </div>
+        <div class="card">
+          <h3>Trace Explorer</h3>
+          <p>강점: turn-by-turn trace와 thinking-token 분해는 이 프로젝트의 차별점이다.</p>
+          <p>개선: 원시 chain-of-thought 텍스트는 기본 접힘 상태로 두고, 지표/선택/결과를 먼저 읽게 한다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>권장 구현 순서</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>순서</th>
+            <th>작업</th>
+            <th>검증 기준</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>배포본과 로컬 최신 UI의 nav/홈 구조 동기화</td>
+            <td>공개 URL에서 기대 탭명과 footer backend가 맞게 보인다.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Home IA 축소: CTA 2~3개와 결과 요약 카드만 남김</td>
+            <td>첫 viewport에서 Play, Submit, Results 경로가 5초 안에 이해된다.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Play 시작 전 campaign preview와 공개 로그 고지 추가</td>
+            <td>사용자가 6게임/최대 15턴/로그 공개 여부를 시작 전에 본다.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>JOIN dry-run endpoint test 추가</td>
+            <td>실제 run 전에 response parser 호환 여부를 확인할 수 있다.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Logs 필터/프리셋/요약 지표 추가</td>
+            <td>720개 세션에서도 모델·조건·forfeit 여부로 즉시 좁힐 수 있다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>작은 카피 수정 후보</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>현재</th>
+            <th>추천</th>
+            <th>이유</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>LLM Arena</code></td>
+            <td><code>Submit a model</code> 또는 <code>JOIN</code></td>
+            <td>장소명보다 사용자의 행동을 직접 말한다.</td>
+          </tr>
+          <tr>
+            <td><code>Model Leaderboard</code></td>
+            <td><code>Results</code> / <code>Model results</code></td>
+            <td>현재 표는 단순 순위표보다 분석 결과에 가깝다.</td>
+          </tr>
+          <tr>
+            <td><code>Logs / Trace Explorer</code></td>
+            <td><code>Trace Explorer</code></td>
+            <td>짧고 도구 성격이 분명하다.</td>
+          </tr>
+          <tr>
+            <td><code>push_only</code> badge</td>
+            <td><code>pull</code></td>
+            <td>프로젝트 설명의 Pull/Push+Pull 축과 용어를 맞춘다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>결론</h2>
+      <p>
+        이 사이트는 이미 "논문 벤치마크"보다 접근성이 높은 방향으로 가고 있다. 다음 품질 상승은 새 기능을 많이 넣는 것보다
+        배포 드리프트를 없애고, 사용자 유형별 첫 행동을 분리하고, 연구 지표를 plain-language verdict로 번역하는 데서 나온다.
+      </p>
+      <p class="small">
+        산출물은 기존 코드 수정 없이 작성된 정적 리뷰 문서다.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,18 @@
+[
+  {
+    "status": "skipped",
+    "reason": "no non-empty text_task",
+    "label": "threat_level",
+    "channel": "task",
+    "model": "claude-opus-5",
+    "n": 0
+  },
+  {
+    "status": "skipped",
+    "reason": "no non-empty text_forfeit",
+    "label": "threat_level",
+    "channel": "forfeit",
+    "model": "claude-opus-5",
+    "n": 0
+  }
+]

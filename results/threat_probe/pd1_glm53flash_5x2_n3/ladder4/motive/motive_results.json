@@ -1,0 +1,78 @@
+{
+  "POOLED": {
+    "probe": {
+      "r2": -0.034833007943435135,
+      "spearman": 0.45462693937825427,
+      "mae": 0.9221475221349887,
+      "coefficients": {
+        "mean_ri_task": 2.0516862175573594,
+        "mean_ri_forfeit": -0.19365621023094653,
+        "delta_ri_task": -0.215471370022647,
+        "delta_ri_forfeit": 0.3955556088341628,
+        "forfeit_time": 0.4128248009081236,
+        "forfeited": -0.12854729991736666,
+        "cox_risk_score": -0.4961809346351929,
+        "accuracy": 0.1590265042502149,
+        "lives_lost": -0.30606452384070215,
+        "n_turns": 0.4128248009082597
+      },
+      "n_sessions": 80,
+      "n_levels": 4,
+      "alpha": 3.5787830232958604,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.07344897232468406,
+        "null_p95": 0.0011063351472152096,
+        "p_value": 0.38308457711442784
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 1.4072082166055333,
+      "ci_lower": 0.7334094116374728,
+      "ci_upper": 2.7000402959935887,
+      "p_value": 0.30421445978280653,
+      "n_events": 8
+    }
+  },
+  "glm-5.3-flash": {
+    "probe": {
+      "r2": -0.034833007943435135,
+      "spearman": 0.45462693937825427,
+      "mae": 0.9221475221349887,
+      "coefficients": {
+        "mean_ri_task": 2.0516862175573594,
+        "mean_ri_forfeit": -0.19365621023094653,
+        "delta_ri_task": -0.215471370022647,
+        "delta_ri_forfeit": 0.3955556088341628,
+        "forfeit_time": 0.4128248009081236,
+        "forfeited": -0.12854729991736666,
+        "cox_risk_score": -0.4961809346351929,
+        "accuracy": 0.1590265042502149,
+        "lives_lost": -0.30606452384070215,
+        "n_turns": 0.4128248009082597
+      },
+      "n_sessions": 80,
+      "n_levels": 4,
+      "alpha": 3.5787830232958604,
+      "permutation": {
+        "n_permutations_requested": 200,
+        "n_permutations": 200,
+        "null_mean": -0.07344897232468406,
+        "null_p95": 0.0011063351472152096,
+        "p_value": 0.38308457711442784
+      },
+      "notes": []
+    },
+    "hazard": {
+      "status": "ok",
+      "hazard_ratio": 1.4072082166055333,
+      "ci_lower": 0.7334094116374728,
+      "ci_upper": 2.7000402959935887,
+      "p_value": 0.30421445978280653,
+      "n_events": 8
+    }
+  }
+}

@@ -1,0 +1,24 @@
+2026-09-06 07:47:09,005 INFO    pool: {1: 219, 2: 253, 3: 121, 4: 511, 5: 643, 6: 79, 7: 59, 8: 37, 9: 30}
+2026-09-06 07:47:09,009 INFO    ledger: 0 prior attempts loaded from results/allwrong10_drytest/attempts.jsonl
+2026-09-06 07:47:09,076 INFO    OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=True, effort=medium)
+2026-09-06 07:47:09,090 INFO    OllamaCloudProvider targeting gemma4:31b at https://ollama.com (thinking=True, effort=medium)
+2026-09-06 07:47:09,103 INFO    OllamaCloudProvider targeting qwen3.5:397b at https://ollama.com (thinking=True, effort=medium)
+2026-09-06 07:47:09,103 INFO    === band 9: 3 item(s) enter the sieve
+2026-09-06 07:47:09,103 INFO    --- model gpt-oss:120b-cloud over 3 item(s), workers=4
+2026-09-06 07:47:22,171 INFO    CALL  gpt-oss:120b-cloud band=9 omni-0755b1ad5a97 attempt=1 13.1s think=1904 parsed=29 expected=29 correct=True
+2026-09-06 07:47:37,670 INFO    CALL  gpt-oss:120b-cloud band=9 omni-10e7530b586c attempt=1 28.6s think=5191 parsed=None expected=100 correct=False
+2026-09-06 07:47:52,349 INFO    CALL  gpt-oss:120b-cloud band=9 omni-09a606462ea7 attempt=1 43.2s think=7604 parsed=120 expected=960 correct=False
+2026-09-06 07:47:58,652 INFO    CALL  gpt-oss:120b-cloud band=9 omni-10e7530b586c attempt=2 21.0s think=3147 parsed=None expected=100 correct=False
+2026-09-06 07:48:14,102 INFO    CALL  gpt-oss:120b-cloud band=9 omni-09a606462ea7 attempt=2 21.8s think=3973 parsed=61 expected=960 correct=False
+2026-09-06 07:48:14,103 INFO    --- model gpt-oss:120b-cloud: 3 seen -> 1 right, 0 errored, 2 survived
+2026-09-06 07:48:14,103 INFO    --- model gemma4:31b over 2 item(s), workers=4
+2026-09-06 07:48:40,305 INFO    CALL  gemma4:31b         band=9 omni-10e7530b586c attempt=1 26.2s think=3998 parsed=100 expected=100 correct=True
+2026-09-06 07:48:42,858 INFO    CALL  gemma4:31b         band=9 omni-09a606462ea7 attempt=1 28.8s think=3354 parsed=1800 expected=960 correct=False
+2026-09-06 07:49:14,129 INFO    CALL  gemma4:31b         band=9 omni-09a606462ea7 attempt=2 31.3s think=4049 parsed=3600 expected=960 correct=False
+2026-09-06 07:49:14,129 INFO    --- model gemma4:31b: 2 seen -> 1 right, 0 errored, 1 survived
+2026-09-06 07:49:14,129 INFO    --- model qwen3.5:397b over 1 item(s), workers=3
+2026-09-06 07:53:15,535 INFO    CALL  qwen3.5:397b       band=9 omni-09a606462ea7 attempt=1 241.4s think=10884 parsed=1830 expected=960 correct=False
+2026-09-06 07:57:45,309 INFO    CALL  qwen3.5:397b       band=9 omni-09a606462ea7 attempt=2 269.8s think=13662 parsed=119 expected=960 correct=False
+2026-09-06 07:57:45,309 INFO    --- model qwen3.5:397b: 1 seen -> 0 right, 0 errored, 1 survived
+2026-09-06 07:57:45,309 INFO    === band 9 done: 1 survivor(s); 1/10 collected
+2026-09-06 07:57:45,311 INFO    DONE: 1 candidate(s), 1 chosen -> results/allwrong10_drytest

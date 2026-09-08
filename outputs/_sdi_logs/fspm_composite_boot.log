@@ -1,0 +1,31 @@
+[INFO] --- Gemini-2.5-flash ---
+[INFO] d_B=0.716 d_V=1.811 d_C=1.017 composite=1.181
+[INFO] bootstrap composite 95% [0.879, 1.532] (ok 1000 / fail 0)
+[INFO] --- Qwen3-Next-80B ---
+[INFO] d_B=0.577 d_V=1.534 d_C=0.766 composite=0.959
+[INFO] bootstrap composite 95% [0.734, 1.210] (ok 1000 / fail 0)
+[INFO] --- GPT-OSS-20B ---
+[INFO] d_B=0.055 d_V=-0.680 d_C=0.089 composite=-0.179
+[INFO] bootstrap composite 95% [-0.561, 0.356] (ok 999 / fail 1)
+[INFO] --- Nemotron-3-Nano-30B ---
+[INFO] d_B=0.336 d_V=-0.079 d_C=-0.435 composite=-0.059
+[INFO] bootstrap composite 95% [-0.416, 0.320] (ok 1000 / fail 0)
+# FSPM composite — KDD-UC 4 models (equal-weight Cohen's d)
+
+| Model | d_B (Cox) [95% CI] | d_V (Cohen's h) [95% CI] | d_C (Hes, Hedges g) [95% CI] | Composite | 95% CI (indep.) | 95% CI (cluster bootstrap) |
+|---|---|---|---|---|---|---|
+| Gemini-2.5-flash | 0.72 [0.26, 1.17] | 1.81 [1.00, 2.63] | 1.02 [0.48, 1.55] | **1.18** | [0.82, 1.54] | [0.88, 1.53] |
+| Qwen3-Next-80B | 0.58 [0.23, 0.93] | 1.53 [0.96, 2.10] | 0.77 [0.24, 1.29] | **0.96** | [0.68, 1.24] | [0.73, 1.21] |
+| GPT-OSS-20B | 0.05 [-0.45, 0.56] | -0.68 [-1.58, 0.22] | 0.09 [-0.42, 0.60] | **-0.18** | [-0.56, 0.20] | [-0.56, 0.36] |
+| Nemotron-3-Nano-30B | 0.34 [-0.01, 0.68] | -0.08 [-0.70, 0.54] | -0.43 [-0.95, 0.08] | **-0.06** | [-0.35, 0.23] | [-0.42, 0.32] |
+
+## Channel detail
+
+| Model | HR [95% CI] | p | events BF/FC | p_BF (k/n) | p_FC (k/n) | Fisher p | Welch t (dummy) p | g_dummy | Hes contrast (tokens) | Welch p | n BF/FC |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Gemini-2.5-flash | 3.67 [1.61, 8.37] | 0.002 | 8/21 | 0.000 (0/8) | 0.619 (13/21) | 0.003 | 0.000 | 1.40 | +836 | 0.000 | 30/30 |
+| Qwen3-Next-80B | 2.85 [1.51, 5.36] | 0.001 | 21/27 | 0.000 (0/21) | 0.481 (13/27) | 0.000 | 0.000 | 1.24 | +689 | 0.004 | 30/30 |
+| GPT-OSS-20B | 1.10 [0.44, 2.75] | 0.832 | 9/10 | 0.111 (1/9) | 0.000 (0/10) | 0.474 | 0.347 | -0.46 | +17 | 0.728 | 30/30 |
+| Nemotron-3-Nano-30B | 1.84 [0.98, 3.44] | 0.056 | 17/24 | 0.059 (1/17) | 0.042 (1/24) | 1.000 | 0.813 | -0.08 | -140 | 0.093 | 30/30 |
+
+EXIT 0

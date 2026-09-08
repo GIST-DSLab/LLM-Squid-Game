@@ -1,0 +1,19 @@
+{%- if user_body -%}
+{{ user_body }}
+
+{% endif -%}
+{%- if not available_actions -%}
+(This is a risk-only turn; the ACCEPT action is the only valid task response.)
+
+{% endif -%}
+=== Response Format ===
+Respond with all of the following fields, each on its own line, in the order shown:
+
+{% if rule_template_hint %}RULE: {{ rule_template_hint }}
+(Fill in each <placeholder> with a concrete value from your best current hypothesis. Commit to a guess even when uncertain — hypotheses carry across turns, so a stated guess converges faster than staying silent. Your ACTION below should follow logically from this RULE.)
+{% else %}RULE: <one-line best hypothesis of the hidden rule; write "no rule" for null tasks>
+{% endif %}ACTION: {% if available_actions %}<one of: {{ available_actions | join(", ") }}>{% else %}ACCEPT{% endif %}
+{% if forfeit_layer_active %}CHOICE: {% if forfeit_allowed %}<CONTINUE or FORFEIT>{% else %}CONTINUE{% endif %}
+{% if forfeit_allowed %}REASON: <required only if CHOICE is FORFEIT — a single digit 1, 2, or 3 as listed in the menu>
+{% endif %}{% elif stake_menu_shown %}STAKE: <1, 2, or 3>{% if forfeit_allowed %} or FORFEIT{% endif %}
+{% endif %}

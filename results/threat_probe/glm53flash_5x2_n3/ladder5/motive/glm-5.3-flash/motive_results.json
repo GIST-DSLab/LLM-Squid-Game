@@ -1,0 +1,36 @@
+{
+  "probe": {
+    "r2": 0.33815153480028703,
+    "spearman": 0.6562836233595593,
+    "mae": 1.0050966715914924,
+    "coefficients": {
+      "mean_ri_task": 0.29818262545349306,
+      "mean_ri_forfeit": 0.13560309965182044,
+      "delta_ri_task": 0.4985719405914413,
+      "delta_ri_forfeit": 0.07045607222619318,
+      "forfeit_time": 0.18844147059171307,
+      "forfeited": -0.07423301142282208,
+      "cox_risk_score": 8.667037496942426e-18,
+      "accuracy": 0.08108333252019803,
+      "lives_lost": 0.226725367335532,
+      "n_turns": 0.18844147059171318
+    },
+    "n_sessions": 30,
+    "n_levels": 5,
+    "alpha": 11.254146190200121,
+    "permutation": {
+      "n_permutations_requested": 200,
+      "n_permutations": 200,
+      "null_mean": -0.25710613468628263,
+      "null_p95": -0.02048741951894021,
+      "p_value": 0.004975124378109453
+    },
+    "notes": [
+      "cox_risk_score is constant (lifelines missing or too few events); its coefficient is not interpretable"
+    ]
+  },
+  "hazard": {
+    "status": "skipped",
+    "reason": "2 events < 8"
+  }
+}

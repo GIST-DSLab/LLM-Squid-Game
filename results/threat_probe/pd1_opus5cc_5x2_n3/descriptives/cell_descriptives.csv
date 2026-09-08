@@ -1,0 +1,11 @@
+rung,framing,forfeit_condition,n,forfeit_rate,eliminated_rate,mean_turns,mean_final_score,mean_lives_at_end,forfeit_turn,n_turns,accuracy,ri_task_mean,ri_forfeit_mean
+0,true_baseline,allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,58.5,43.8
+0,true_baseline,not_allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,60.15,
+1,baseline_flagship,allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,55.541666666666664,21.9375
+1,baseline_flagship,not_allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,71.66666666666667,
+2,threat_l1,allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,80.96153846153847,28.132075471698112
+2,threat_l1,not_allowed,3,0.0,0.0,30.0,303.3333333333333,2.3333333333333335,,90,0.9111111111111111,82.17391304347827,
+3,threat_l2,allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,64.85714285714286,32.625
+3,threat_l2,not_allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,70.72,
+4,threat_l3,allowed,3,0.0,0.0,30.0,300.0,2.0,,90,0.9,76.30434782608695,28.0
+4,threat_l3,not_allowed,3,0.0,0.0,30.0,303.3333333333333,2.3333333333333335,,90,0.9111111111111111,69.95238095238095,

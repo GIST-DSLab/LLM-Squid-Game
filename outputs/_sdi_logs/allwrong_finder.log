@@ -1,0 +1,334 @@
+2026-09-06 07:58:03,573 INFO    pool: {1: 219, 2: 253, 3: 121, 4: 511, 5: 643, 6: 79, 7: 59, 8: 37, 9: 30}
+2026-09-06 07:58:03,577 INFO    ledger: 10 prior attempts loaded from /Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/allwrong10/attempts.jsonl
+2026-09-06 07:58:03,629 INFO    OllamaCloudProvider targeting gpt-oss:120b-cloud at https://ollama.com (thinking=True, effort=medium)
+2026-09-06 07:58:03,642 INFO    OllamaCloudProvider targeting gemma4:31b at https://ollama.com (thinking=True, effort=medium)
+2026-09-06 07:58:03,656 INFO    OllamaCloudProvider targeting qwen3.5:397b at https://ollama.com (thinking=True, effort=medium)
+2026-09-06 07:58:03,656 INFO    === band 9: 30 item(s) enter the sieve
+2026-09-06 07:58:03,656 INFO    --- model gpt-oss:120b-cloud over 30 item(s), workers=4
+2026-09-06 07:58:03,656 INFO    SKIP  gpt-oss:120b-cloud band=9 omni-0755b1ad5a97 attempt=1 (ledger: correct=True)
+2026-09-06 07:58:03,656 INFO    SKIP  gpt-oss:120b-cloud band=9 omni-09a606462ea7 attempt=1 (ledger: correct=False)
+2026-09-06 07:58:03,656 INFO    SKIP  gpt-oss:120b-cloud band=9 omni-09a606462ea7 attempt=2 (ledger: correct=False)
+2026-09-06 07:58:03,656 INFO    SKIP  gpt-oss:120b-cloud band=9 omni-10e7530b586c attempt=1 (ledger: correct=False)
+2026-09-06 07:58:03,656 INFO    SKIP  gpt-oss:120b-cloud band=9 omni-10e7530b586c attempt=2 (ledger: correct=False)
+2026-09-06 07:58:18,684 INFO    CALL  gpt-oss:120b-cloud band=9 omni-23e9c122196b attempt=1 15.0s think=2233 parsed=4 expected=4 correct=True
+2026-09-06 07:58:23,927 INFO    CALL  gpt-oss:120b-cloud band=9 omni-13a48490b98b attempt=1 20.3s think=3201 parsed=1010 expected=7 correct=False
+2026-09-06 07:58:33,997 INFO    CALL  gpt-oss:120b-cloud band=9 omni-13a48490b98b attempt=2 10.1s think=1717 parsed=1 expected=7 correct=False
+2026-09-06 07:58:34,954 INFO    CALL  gpt-oss:120b-cloud band=9 omni-4a0d9911afeb attempt=1 31.3s think=4482 parsed=18 expected=120 correct=False
+2026-09-06 07:58:37,518 INFO    CALL  gpt-oss:120b-cloud band=9 omni-373f906e71a5 attempt=1 33.9s think=5449 parsed=1011 expected=506 correct=False
+2026-09-06 07:58:44,047 INFO    CALL  gpt-oss:120b-cloud band=9 omni-4a0d9911afeb attempt=2 9.1s think=1148 parsed=1998 expected=120 correct=False
+2026-09-06 07:58:45,249 INFO    CALL  gpt-oss:120b-cloud band=9 omni-55a436b7fbe4 attempt=1 11.3s think=1646 parsed=None expected=2 correct=False
+2026-09-06 07:58:46,014 INFO    CALL  gpt-oss:120b-cloud band=9 omni-4c9d49ca74a8 attempt=1 27.3s think=4787 parsed=61917364864 expected=61917364224 correct=False
+2026-09-06 07:59:02,217 INFO    CALL  gpt-oss:120b-cloud band=9 omni-6333f2f4bda0 attempt=1 18.2s think=1879 parsed=121 expected=121 correct=True
+2026-09-06 07:59:13,470 INFO    CALL  gpt-oss:120b-cloud band=9 omni-373f906e71a5 attempt=2 36.0s think=4693 parsed=674 expected=506 correct=False
+2026-09-06 07:59:22,171 INFO    CALL  gpt-oss:120b-cloud band=9 omni-4c9d49ca74a8 attempt=2 36.2s think=5529 parsed=61917364224 expected=61917364224 correct=True
+2026-09-06 07:59:30,012 INFO    CALL  gpt-oss:120b-cloud band=9 omni-6aa76bb55d33 attempt=1 27.8s think=2695 parsed=None expected=4 correct=False
+2026-09-06 07:59:34,653 INFO    CALL  gpt-oss:120b-cloud band=9 omni-75000b8edae2 attempt=1 21.2s think=1576 parsed=100 expected=100 correct=True
+2026-09-06 07:59:42,757 INFO    CALL  gpt-oss:120b-cloud band=9 omni-55a436b7fbe4 attempt=2 57.5s think=6321 parsed=0 expected=2 correct=False
+2026-09-06 07:59:52,171 INFO    CALL  gpt-oss:120b-cloud band=9 omni-6aa76bb55d33 attempt=2 22.2s think=2003 parsed=4 expected=4 correct=True
+2026-09-06 08:00:02,945 INFO    CALL  gpt-oss:120b-cloud band=9 omni-87591802e7f1 attempt=1 28.3s think=2815 parsed=7 expected=7 correct=True
+2026-09-06 08:00:03,060 INFO    CALL  gpt-oss:120b-cloud band=9 omni-8dea63b17a24 attempt=1 20.3s think=2349 parsed=2 expected=2 correct=True
+2026-09-06 08:00:08,042 INFO    CALL  gpt-oss:120b-cloud band=9 omni-9a4d3fdead91 attempt=1 15.9s think=1866 parsed=1 expected=0 correct=False
+2026-09-06 08:00:19,418 INFO    CALL  gpt-oss:120b-cloud band=9 omni-7cf8bfc42666 attempt=1 57.2s think=6547 parsed=12 expected=3024 correct=False
+2026-09-06 08:00:19,745 INFO    CALL  gpt-oss:120b-cloud band=9 omni-9d077d1c0d71 attempt=1 16.8s think=1946 parsed=1 expected=1 correct=True
+2026-09-06 08:00:24,526 INFO    CALL  gpt-oss:120b-cloud band=9 omni-9a4d3fdead91 attempt=2 16.5s think=1949 parsed=1 expected=0 correct=False
+2026-09-06 08:00:43,948 INFO    CALL  gpt-oss:120b-cloud band=9 omni-a138ab7a4eb9 attempt=1 24.2s think=3317 parsed=306 expected=807 correct=False
+2026-09-06 08:00:50,933 INFO    CALL  gpt-oss:120b-cloud band=9 omni-a1beb77ce58f attempt=1 26.4s think=3772 parsed=3 expected=3 correct=True
+2026-09-06 08:00:56,652 INFO    CALL  gpt-oss:120b-cloud band=9 omni-9eb3adfa0f15 attempt=1 53.6s think=7675 parsed=4088480 expected=2271380 correct=False
+2026-09-06 08:01:01,682 INFO    CALL  gpt-oss:120b-cloud band=9 omni-a138ab7a4eb9 attempt=2 17.7s think=2713 parsed=807 expected=807 correct=True
+2026-09-06 08:01:07,636 INFO    CALL  gpt-oss:120b-cloud band=9 omni-ae66f2e2c955 attempt=1 16.7s think=2665 parsed=2023 expected=3 correct=False
+2026-09-06 08:01:11,110 INFO    CALL  gpt-oss:120b-cloud band=9 omni-7cf8bfc42666 attempt=2 51.7s think=7077 parsed=52 expected=3024 correct=False
+2026-09-06 08:01:20,037 INFO    CALL  gpt-oss:120b-cloud band=9 omni-9eb3adfa0f15 attempt=2 23.4s think=3643 parsed=4088480 expected=2271380 correct=False
+2026-09-06 08:01:21,768 INFO    CALL  gpt-oss:120b-cloud band=9 omni-ae66f2e2c955 attempt=2 14.1s think=2163 parsed=2023 expected=3 correct=False
+2026-09-06 08:01:27,170 INFO    CALL  gpt-oss:120b-cloud band=9 omni-cd2444520465 attempt=1 16.1s think=2418 parsed=2023 expected=3 correct=False
+2026-09-06 08:01:34,114 INFO    CALL  gpt-oss:120b-cloud band=9 omni-b55f03b0c3b1 attempt=1 32.4s think=3988 parsed=None expected=1 correct=False
+2026-09-06 08:01:37,191 INFO    CALL  gpt-oss:120b-cloud band=9 omni-ce27e3cb7f12 attempt=1 17.2s think=2470 parsed=2009 expected=1 correct=False
+2026-09-06 08:01:39,459 INFO    CALL  gpt-oss:120b-cloud band=9 omni-cd2444520465 attempt=2 12.3s think=1554 parsed=2023 expected=3 correct=False
+2026-09-06 08:01:53,147 INFO    CALL  gpt-oss:120b-cloud band=9 omni-ce27e3cb7f12 attempt=2 16.0s think=2346 parsed=1004 expected=1 correct=False
+2026-09-06 08:01:57,569 INFO    CALL  gpt-oss:120b-cloud band=9 omni-dc6129c32e69 attempt=1 18.1s think=2473 parsed=1 expected=1 correct=True
+2026-09-06 08:02:05,613 INFO    CALL  gpt-oss:120b-cloud band=9 omni-d7267e368f23 attempt=1 43.8s think=5691 parsed=199 expected=199 correct=True
+2026-09-06 08:02:05,911 INFO    CALL  gpt-oss:120b-cloud band=9 omni-f00d34a4772c attempt=1 8.3s think=1034 parsed=81 expected=256 correct=False
+2026-09-06 08:02:08,298 INFO    CALL  gpt-oss:120b-cloud band=9 omni-b55f03b0c3b1 attempt=2 34.2s think=5017 parsed=0 expected=1 correct=False
+2026-09-06 08:02:13,472 INFO    CALL  gpt-oss:120b-cloud band=9 omni-e7b9cf2b1598 attempt=1 20.3s think=2944 parsed=2500 expected=3822 correct=False
+2026-09-06 08:02:19,921 INFO    CALL  gpt-oss:120b-cloud band=9 omni-fe1e5dee3582 attempt=1 14.3s think=1805 parsed=90 expected=2013 correct=False
+2026-09-06 08:02:23,541 INFO    CALL  gpt-oss:120b-cloud band=9 omni-fe980f72a830 attempt=1 15.2s think=1966 parsed=31 expected=33 correct=False
+2026-09-06 08:02:32,753 INFO    CALL  gpt-oss:120b-cloud band=9 omni-fe1e5dee3582 attempt=2 12.8s think=1723 parsed=90 expected=2013 correct=False
+2026-09-06 08:02:35,453 INFO    CALL  gpt-oss:120b-cloud band=9 omni-e7b9cf2b1598 attempt=2 22.0s think=2713 parsed=None expected=3822 correct=False
+2026-09-06 08:02:36,026 INFO    CALL  gpt-oss:120b-cloud band=9 omni-f00d34a4772c attempt=2 30.1s think=3327 parsed=256 expected=256 correct=True
+2026-09-06 08:02:54,832 INFO    CALL  gpt-oss:120b-cloud band=9 omni-fe980f72a830 attempt=2 31.3s think=3823 parsed=31 expected=33 correct=False
+2026-09-06 08:02:54,833 INFO    --- model gpt-oss:120b-cloud: 30 seen -> 14 right, 0 errored, 16 survived
+2026-09-06 08:02:54,833 INFO    --- model gemma4:31b over 16 item(s), workers=4
+2026-09-06 08:02:54,833 INFO    SKIP  gemma4:31b         band=9 omni-09a606462ea7 attempt=1 (ledger: correct=False)
+2026-09-06 08:02:54,833 INFO    SKIP  gemma4:31b         band=9 omni-09a606462ea7 attempt=2 (ledger: correct=False)
+2026-09-06 08:02:54,833 INFO    SKIP  gemma4:31b         band=9 omni-10e7530b586c attempt=1 (ledger: correct=True)
+2026-09-06 08:03:21,869 INFO    CALL  gemma4:31b         band=9 omni-4a0d9911afeb attempt=1 27.0s think=3175 parsed=120 expected=120 correct=True
+2026-09-06 08:03:26,126 INFO    CALL  gemma4:31b         band=9 omni-373f906e71a5 attempt=1 31.3s think=4241 parsed=507 expected=506 correct=False
+2026-09-06 08:03:27,240 INFO    CALL  gemma4:31b         band=9 omni-55a436b7fbe4 attempt=1 32.4s think=4751 parsed=0 expected=2 correct=False
+2026-09-06 08:03:28,038 INFO    CALL  gemma4:31b         band=9 omni-13a48490b98b attempt=1 33.2s think=3999 parsed=7 expected=7 correct=True
+2026-09-06 08:03:49,606 INFO    CALL  gemma4:31b         band=9 omni-9a4d3fdead91 attempt=1 21.6s think=2984 parsed=1 expected=0 correct=False
+2026-09-06 08:03:57,111 INFO    CALL  gemma4:31b         band=9 omni-55a436b7fbe4 attempt=2 29.9s think=3808 parsed=2 expected=2 correct=True
+2026-09-06 08:03:58,649 INFO    CALL  gemma4:31b         band=9 omni-373f906e71a5 attempt=2 32.5s think=4071 parsed=675 expected=506 correct=False
+2026-09-06 08:04:01,617 INFO    CALL  gemma4:31b         band=9 omni-7cf8bfc42666 attempt=1 39.7s think=4381 parsed=4030 expected=3024 correct=False
+2026-09-06 08:04:12,791 INFO    CALL  gemma4:31b         band=9 omni-9a4d3fdead91 attempt=2 23.2s think=3435 parsed=0 expected=0 correct=True
+2026-09-06 08:04:27,596 INFO    CALL  gemma4:31b         band=9 omni-9eb3adfa0f15 attempt=1 30.5s think=4848 parsed=2271380 expected=2271380 correct=True
+2026-09-06 08:04:33,144 INFO    CALL  gemma4:31b         band=9 omni-ae66f2e2c955 attempt=1 34.5s think=4680 parsed=2022 expected=3 correct=False
+2026-09-06 08:04:43,688 INFO    CALL  gemma4:31b         band=9 omni-b55f03b0c3b1 attempt=1 30.9s think=4058 parsed=1 expected=1 correct=True
+2026-09-06 08:04:50,853 INFO    CALL  gemma4:31b         band=9 omni-7cf8bfc42666 attempt=2 49.2s think=4597 parsed=4030 expected=3024 correct=False
+2026-09-06 08:05:02,742 INFO    CALL  gemma4:31b         band=9 omni-cd2444520465 attempt=1 35.1s think=4376 parsed=2023 expected=3 correct=False
+2026-09-06 08:05:06,353 INFO    CALL  gemma4:31b         band=9 omni-ae66f2e2c955 attempt=2 33.2s think=5172 parsed=2023 expected=3 correct=False
+2026-09-06 08:05:20,398 INFO    CALL  gemma4:31b         band=9 omni-ce27e3cb7f12 attempt=1 36.7s think=4508 parsed=1 expected=1 correct=True
+2026-09-06 08:05:26,828 INFO    CALL  gemma4:31b         band=9 omni-e7b9cf2b1598 attempt=1 36.0s think=4889 parsed=2500 expected=3822 correct=False
+2026-09-06 08:05:37,519 INFO    CALL  gemma4:31b         band=9 omni-fe1e5dee3582 attempt=1 31.2s think=4480 parsed=2013 expected=2013 correct=True
+2026-09-06 08:05:39,249 INFO    CALL  gemma4:31b         band=9 omni-cd2444520465 attempt=2 36.5s think=4270 parsed=2023 expected=3 correct=False
+2026-09-06 08:05:39,876 INFO    CALL  gemma4:31b         band=9 omni-fe980f72a830 attempt=1 19.5s think=3553 parsed=33 expected=33 correct=True
+2026-09-06 08:05:52,848 INFO    CALL  gemma4:31b         band=9 omni-e7b9cf2b1598 attempt=2 26.0s think=3922 parsed=2500 expected=3822 correct=False
+2026-09-06 08:05:52,849 INFO    --- model gemma4:31b: 16 seen -> 10 right, 0 errored, 6 survived
+2026-09-06 08:05:52,850 INFO    --- model qwen3.5:397b over 6 item(s), workers=3
+2026-09-06 08:05:52,850 INFO    SKIP  qwen3.5:397b       band=9 omni-09a606462ea7 attempt=1 (ledger: correct=False)
+2026-09-06 08:05:52,850 INFO    SKIP  qwen3.5:397b       band=9 omni-09a606462ea7 attempt=2 (ledger: correct=False)
+2026-09-06 08:08:24,222 INFO    CALL  qwen3.5:397b       band=9 omni-373f906e71a5 attempt=1 151.4s think=6594 parsed=1011 expected=506 correct=False
+2026-09-06 08:09:13,670 INFO    CALL  qwen3.5:397b       band=9 omni-ae66f2e2c955 attempt=1 200.9s think=10324 parsed=2023 expected=3 correct=False
+2026-09-06 08:10:12,699 INFO    CALL  qwen3.5:397b       band=9 omni-7cf8bfc42666 attempt=1 259.9s think=11805 parsed=1039 expected=3024 correct=False
+2026-09-06 08:12:00,918 INFO    CALL  qwen3.5:397b       band=9 omni-373f906e71a5 attempt=2 216.8s think=9120 parsed=1010 expected=506 correct=False
+2026-09-06 08:13:03,548 INFO    CALL  qwen3.5:397b       band=9 omni-7cf8bfc42666 attempt=2 170.8s think=7564 parsed=12 expected=3024 correct=False
+2026-09-06 08:13:33,367 INFO    CALL  qwen3.5:397b       band=9 omni-ae66f2e2c955 attempt=2 259.7s think=13722 parsed=4 expected=3 correct=False
+2026-09-06 08:14:40,353 INFO    CALL  qwen3.5:397b       band=9 omni-cd2444520465 attempt=1 159.4s think=6882 parsed=2023 expected=3 correct=False
+2026-09-06 08:16:12,874 INFO    CALL  qwen3.5:397b       band=9 omni-e7b9cf2b1598 attempt=1 189.3s think=8825 parsed=2500 expected=3822 correct=False
+2026-09-06 08:18:57,021 INFO    CALL  qwen3.5:397b       band=9 omni-e7b9cf2b1598 attempt=2 164.1s think=8414 parsed=2500 expected=3822 correct=False
+2026-09-06 08:19:38,322 INFO    CALL  qwen3.5:397b       band=9 omni-cd2444520465 attempt=2 298.0s think=12534 parsed=2022 expected=3 correct=False
+2026-09-06 08:19:38,323 INFO    --- model qwen3.5:397b: 6 seen -> 0 right, 0 errored, 6 survived
+2026-09-06 08:19:38,323 INFO    === band 9 done: 6 survivor(s); 6/10 collected
+2026-09-06 08:19:38,325 INFO    === band 8: 37 item(s) enter the sieve
+2026-09-06 08:19:38,325 INFO    --- model gpt-oss:120b-cloud over 37 item(s), workers=4
+2026-09-06 08:19:44,343 INFO    CALL  gpt-oss:120b-cloud band=8 omni-0b305ec06558 attempt=1 6.0s think=528 parsed=0 expected=1 correct=False
+2026-09-06 08:19:45,858 INFO    CALL  gpt-oss:120b-cloud band=8 omni-06a0841fe7cd attempt=1 7.5s think=964 parsed=10 expected=8 correct=False
+2026-09-06 08:19:53,700 INFO    CALL  gpt-oss:120b-cloud band=8 omni-0b305ec06558 attempt=2 9.4s think=1243 parsed=1 expected=1 correct=True
+2026-09-06 08:19:54,462 INFO    CALL  gpt-oss:120b-cloud band=8 omni-06a0841fe7cd attempt=2 8.6s think=1040 parsed=8 expected=8 correct=True
+2026-09-06 08:20:01,129 INFO    CALL  gpt-oss:120b-cloud band=8 omni-222aec4f50b9 attempt=1 6.7s think=709 parsed=1 expected=1 correct=True
+2026-09-06 08:20:06,887 INFO    CALL  gpt-oss:120b-cloud band=8 omni-1a53fecdc5f1 attempt=1 13.2s think=2015 parsed=113 expected=253 correct=False
+2026-09-06 08:20:07,226 INFO    CALL  gpt-oss:120b-cloud band=8 omni-18555e803616 attempt=1 28.9s think=4406 parsed=4034 expected=4033 correct=False
+2026-09-06 08:20:09,520 INFO    CALL  gpt-oss:120b-cloud band=8 omni-1913861e29ed attempt=1 31.2s think=4717 parsed=5399 expected=5183 correct=False
+2026-09-06 08:20:16,424 INFO    CALL  gpt-oss:120b-cloud band=8 omni-1a53fecdc5f1 attempt=2 9.5s think=1301 parsed=253 expected=253 correct=True
+2026-09-06 08:20:33,428 INFO    CALL  gpt-oss:120b-cloud band=8 omni-18555e803616 attempt=2 26.2s think=3899 parsed=4034 expected=4033 correct=False
+2026-09-06 08:20:36,859 INFO    CALL  gpt-oss:120b-cloud band=8 omni-262cf513d9c8 attempt=1 35.7s think=4995 parsed=2 expected=1010 correct=False
+2026-09-06 08:20:59,180 INFO    CALL  gpt-oss:120b-cloud band=8 omni-1913861e29ed attempt=2 49.7s think=7560 parsed=3986 expected=5183 correct=False
+2026-09-06 08:21:00,401 INFO    CALL  gpt-oss:120b-cloud band=8 omni-262cf513d9c8 attempt=2 23.5s think=2777 parsed=2 expected=1010 correct=False
+2026-09-06 08:21:16,530 INFO    CALL  gpt-oss:120b-cloud band=8 omni-3e2fd4b4b0e4 attempt=1 60.1s think=9287 parsed=None expected=1003 correct=False
+2026-09-06 08:21:25,325 INFO    CALL  gpt-oss:120b-cloud band=8 omni-4cc010e57123 attempt=1 26.1s think=3022 parsed=55 expected=4033 correct=False
+2026-09-06 08:21:31,047 INFO    CALL  gpt-oss:120b-cloud band=8 omni-46876f9df846 attempt=1 57.6s think=6045 parsed=21 expected=6 correct=False
+2026-09-06 08:21:37,679 INFO    CALL  gpt-oss:120b-cloud band=8 omni-53e2b6bae9fe attempt=1 37.3s think=4133 parsed=None expected=4 correct=False
+2026-09-06 08:21:45,669 INFO    CALL  gpt-oss:120b-cloud band=8 omni-4cc010e57123 attempt=2 20.3s think=2355 parsed=1009 expected=4033 correct=False
+2026-09-06 08:22:01,033 INFO    CALL  gpt-oss:120b-cloud band=8 omni-58de5c76385a attempt=1 15.4s think=1463 parsed=13725 expected=13725 correct=True
+2026-09-06 08:22:13,932 INFO    CALL  gpt-oss:120b-cloud band=8 omni-53e2b6bae9fe attempt=2 36.3s think=4164 parsed=None expected=4 correct=False
+2026-09-06 08:22:16,892 INFO    CALL  gpt-oss:120b-cloud band=8 omni-3e2fd4b4b0e4 attempt=2 60.4s think=8000 parsed=1003 expected=1003 correct=True
+2026-09-06 08:22:31,854 INFO    CALL  gpt-oss:120b-cloud band=8 omni-625bc8f49281 attempt=1 30.8s think=3476 parsed=-1 expected=-1 correct=True
+2026-09-06 08:22:35,582 INFO    CALL  gpt-oss:120b-cloud band=8 omni-46876f9df846 attempt=2 64.5s think=7504 parsed=157 expected=6 correct=False
+2026-09-06 08:22:44,744 INFO    CALL  gpt-oss:120b-cloud band=8 omni-6e2a87cdfe45 attempt=1 27.9s think=3676 parsed=10 expected=10 correct=True
+2026-09-06 08:22:48,152 INFO    CALL  gpt-oss:120b-cloud band=8 omni-7d924befd6f1 attempt=1 16.3s think=2160 parsed=4041 expected=3031 correct=False
+2026-09-06 08:23:00,018 INFO    CALL  gpt-oss:120b-cloud band=8 omni-7db2fc57f41b attempt=1 24.4s think=3279 parsed=63000 expected=115440 correct=False
+2026-09-06 08:23:00,581 INFO    CALL  gpt-oss:120b-cloud band=8 omni-7d924befd6f1 attempt=2 12.4s think=1919 parsed=4041 expected=3031 correct=False
+2026-09-06 08:23:17,242 INFO    CALL  gpt-oss:120b-cloud band=8 omni-7f8f2e0c6812 attempt=1 32.5s think=4360 parsed=197 expected=197 correct=True
+2026-09-06 08:23:23,511 INFO    CALL  gpt-oss:120b-cloud band=8 omni-64ca90d68061 attempt=1 69.6s think=9612 parsed=56 expected=79 correct=False
+2026-09-06 08:23:31,257 INFO    CALL  gpt-oss:120b-cloud band=8 omni-91485268efa1 attempt=1 14.0s think=1908 parsed=35 expected=32 correct=False
+2026-09-06 08:23:33,371 INFO    CALL  gpt-oss:120b-cloud band=8 omni-909dc6c4e89a attempt=1 32.8s think=4601 parsed=985 expected=970 correct=False
+2026-09-06 08:23:51,188 INFO    CALL  gpt-oss:120b-cloud band=8 omni-7db2fc57f41b attempt=2 51.2s think=6679 parsed=3603000 expected=115440 correct=False
+2026-09-06 08:24:02,530 INFO    CALL  gpt-oss:120b-cloud band=8 omni-95d7661caccf attempt=1 11.3s think=1600 parsed=0 expected=1 correct=False
+2026-09-06 08:24:09,279 INFO    CALL  gpt-oss:120b-cloud band=8 omni-95d7661caccf attempt=2 6.7s think=897 parsed=0 expected=1 correct=False
+2026-09-06 08:24:15,584 INFO    CALL  gpt-oss:120b-cloud band=8 omni-91485268efa1 attempt=2 44.3s think=7341 parsed=34 expected=32 correct=False
+2026-09-06 08:24:30,037 INFO    CALL  gpt-oss:120b-cloud band=8 omni-a29be30f8fbe attempt=1 14.5s think=2045 parsed=1 expected=1 correct=True
+2026-09-06 08:24:33,871 INFO    CALL  gpt-oss:120b-cloud band=8 omni-909dc6c4e89a attempt=2 60.5s think=8685 parsed=970 expected=970 correct=True
+2026-09-06 08:24:35,551 INFO    CALL  gpt-oss:120b-cloud band=8 omni-9f4a2a9ea62d attempt=1 26.3s think=3493 parsed=9 expected=9 correct=True
+2026-09-06 08:24:41,593 INFO    CALL  gpt-oss:120b-cloud band=8 omni-64ca90d68061 attempt=2 78.1s think=11420 parsed=29 expected=79 correct=False
+2026-09-06 08:24:50,827 INFO    CALL  gpt-oss:120b-cloud band=8 omni-b9cdc33c92e2 attempt=1 15.3s think=2025 parsed=4080400 expected=3030 correct=False
+2026-09-06 08:24:51,768 INFO    CALL  gpt-oss:120b-cloud band=8 omni-b0358c23d74a attempt=1 21.7s think=3159 parsed=595 expected=595 correct=True
+2026-09-06 08:24:52,264 INFO    CALL  gpt-oss:120b-cloud band=8 omni-b0b90735f1c2 attempt=1 18.4s think=2456 parsed=0 expected=0 correct=True
+2026-09-06 08:24:59,745 INFO    CALL  gpt-oss:120b-cloud band=8 omni-d8321d80f1a6 attempt=1 8.0s think=1085 parsed=16 expected=16 correct=True
+2026-09-06 08:25:09,252 INFO    CALL  gpt-oss:120b-cloud band=8 omni-e1dd64e18d99 attempt=1 9.5s think=1094 parsed=1 expected=1 correct=True
+2026-09-06 08:25:15,556 INFO    CALL  gpt-oss:120b-cloud band=8 omni-e5910d45302c attempt=1 6.3s think=604 parsed=2020050 expected=2020050 correct=True
+2026-09-06 08:25:17,714 INFO    CALL  gpt-oss:120b-cloud band=8 omni-b9cdc33c92e2 attempt=2 26.9s think=3733 parsed=4080400 expected=3030 correct=False
+2026-09-06 08:25:20,743 INFO    CALL  gpt-oss:120b-cloud band=8 omni-d15af3dd6a56 attempt=1 39.1s think=5525 parsed=2043230 expected=2042222 correct=False
+2026-09-06 08:25:22,716 INFO    CALL  gpt-oss:120b-cloud band=8 omni-df139c84d7e0 attempt=1 30.5s think=4404 parsed=None expected=2 correct=False
+2026-09-06 08:25:22,913 INFO    CALL  gpt-oss:120b-cloud band=8 omni-e9c42be53593 attempt=1 5.2s think=597 parsed=7 expected=7 correct=True
+2026-09-06 08:25:29,722 INFO    CALL  gpt-oss:120b-cloud band=8 omni-e611c5607821 attempt=1 14.2s think=2247 parsed=859 expected=859 correct=True
+2026-09-06 08:25:36,106 INFO    CALL  gpt-oss:120b-cloud band=8 omni-f04d8906cf08 attempt=1 13.2s think=1538 parsed=3 expected=3 correct=True
+2026-09-06 08:25:42,446 INFO    CALL  gpt-oss:120b-cloud band=8 omni-f5cbff2d3e54 attempt=1 12.7s think=1499 parsed=1 expected=1 correct=True
+2026-09-06 08:25:53,881 INFO    CALL  gpt-oss:120b-cloud band=8 omni-d15af3dd6a56 attempt=2 33.1s think=4511 parsed=2043231 expected=2042222 correct=False
+2026-09-06 08:25:54,354 INFO    CALL  gpt-oss:120b-cloud band=8 omni-fbfbdfb7cede attempt=1 18.2s think=2532 parsed=6 expected=6 correct=True
+2026-09-06 08:25:55,940 INFO    CALL  gpt-oss:120b-cloud band=8 omni-df139c84d7e0 attempt=2 33.2s think=4787 parsed=None expected=2 correct=False
+2026-09-06 08:26:06,777 INFO    CALL  gpt-oss:120b-cloud band=8 omni-fc4ce4844d52 attempt=1 24.3s think=4023 parsed=5702 expected=5700 correct=False
+2026-09-06 08:26:22,204 INFO    CALL  gpt-oss:120b-cloud band=8 omni-fc4ce4844d52 attempt=2 15.4s think=2922 parsed=16 expected=5700 correct=False
+2026-09-06 08:26:22,205 INFO    --- model gpt-oss:120b-cloud: 37 seen -> 22 right, 0 errored, 15 survived
+2026-09-06 08:26:22,205 INFO    --- model gemma4:31b over 15 item(s), workers=4
+2026-09-06 08:26:50,789 INFO    CALL  gemma4:31b         band=8 omni-46876f9df846 attempt=1 28.6s think=3706 parsed=6 expected=6 correct=True
+2026-09-06 08:26:51,772 INFO    CALL  gemma4:31b         band=8 omni-18555e803616 attempt=1 29.6s think=4731 parsed=4033 expected=4033 correct=True
+2026-09-06 08:26:55,592 INFO    CALL  gemma4:31b         band=8 omni-262cf513d9c8 attempt=1 33.4s think=3410 parsed=2 expected=1010 correct=False
+2026-09-06 08:26:58,262 INFO    CALL  gemma4:31b         band=8 omni-1913861e29ed attempt=1 36.1s think=4637 parsed=5315 expected=5183 correct=False
+2026-09-06 08:27:22,604 INFO    CALL  gemma4:31b         band=8 omni-53e2b6bae9fe attempt=1 30.8s think=3979 parsed=4 expected=4 correct=True
+2026-09-06 08:27:30,448 INFO    CALL  gemma4:31b         band=8 omni-4cc010e57123 attempt=1 39.7s think=3776 parsed=2017 expected=4033 correct=False
+2026-09-06 08:27:38,933 INFO    CALL  gemma4:31b         band=8 omni-262cf513d9c8 attempt=2 43.3s think=3775 parsed=1010 expected=1010 correct=True
+2026-09-06 08:27:44,949 INFO    CALL  gemma4:31b         band=8 omni-1913861e29ed attempt=2 46.7s think=5797 parsed=3986 expected=5183 correct=False
+2026-09-06 08:27:57,994 INFO    CALL  gemma4:31b         band=8 omni-64ca90d68061 attempt=1 35.4s think=5822 parsed=15 expected=79 correct=False
+2026-09-06 08:27:59,803 INFO    CALL  gemma4:31b         band=8 omni-4cc010e57123 attempt=2 29.4s think=3093 parsed=2017 expected=4033 correct=False
+2026-09-06 08:28:06,596 INFO    CALL  gemma4:31b         band=8 omni-7d924befd6f1 attempt=1 27.7s think=3700 parsed=4039 expected=3031 correct=False
+2026-09-06 08:28:22,060 INFO    CALL  gemma4:31b         band=8 omni-7db2fc57f41b attempt=1 37.1s think=4665 parsed=115440 expected=115440 correct=True
+2026-09-06 08:28:33,002 INFO    CALL  gemma4:31b         band=8 omni-91485268efa1 attempt=1 33.2s think=5217 parsed=34 expected=32 correct=False
+2026-09-06 08:28:34,842 INFO    CALL  gemma4:31b         band=8 omni-64ca90d68061 attempt=2 36.8s think=5909 parsed=53 expected=79 correct=False
+2026-09-06 08:28:35,968 INFO    CALL  gemma4:31b         band=8 omni-7d924befd6f1 attempt=2 29.4s think=3781 parsed=3031 expected=3031 correct=True
+2026-09-06 08:28:40,621 INFO    CALL  gemma4:31b         band=8 omni-95d7661caccf attempt=1 18.6s think=2933 parsed=1 expected=1 correct=True
+2026-09-06 08:29:02,986 INFO    CALL  gemma4:31b         band=8 omni-df139c84d7e0 attempt=1 22.4s think=2767 parsed=2 expected=2 correct=True
+2026-09-06 08:29:08,302 INFO    CALL  gemma4:31b         band=8 omni-91485268efa1 attempt=2 35.3s think=5373 parsed=34 expected=32 correct=False
+2026-09-06 08:29:09,330 INFO    CALL  gemma4:31b         band=8 omni-b9cdc33c92e2 attempt=1 34.5s think=4528 parsed=4040 expected=3030 correct=False
+2026-09-06 08:29:11,908 INFO    CALL  gemma4:31b         band=8 omni-d15af3dd6a56 attempt=1 35.9s think=4108 parsed=2042222 expected=2042222 correct=True
+2026-09-06 08:29:29,921 INFO    CALL  gemma4:31b         band=8 omni-fc4ce4844d52 attempt=1 26.9s think=3489 parsed=5700 expected=5700 correct=True
+2026-09-06 08:29:41,522 INFO    CALL  gemma4:31b         band=8 omni-b9cdc33c92e2 attempt=2 32.2s think=4535 parsed=3030 expected=3030 correct=True
+2026-09-06 08:29:41,522 INFO    --- model gemma4:31b: 15 seen -> 11 right, 0 errored, 4 survived
+2026-09-06 08:29:41,522 INFO    --- model qwen3.5:397b over 4 item(s), workers=3
+2026-09-06 08:32:14,305 INFO    CALL  qwen3.5:397b       band=8 omni-4cc010e57123 attempt=1 152.8s think=6415 parsed=4033 expected=4033 correct=True
+2026-09-06 08:33:34,028 INFO    CALL  qwen3.5:397b       band=8 omni-1913861e29ed attempt=1 232.5s think=9013 parsed=4983 expected=5183 correct=False
+2026-09-06 08:33:58,229 INFO    CALL  qwen3.5:397b       band=8 omni-64ca90d68061 attempt=1 256.7s think=11719 parsed=48 expected=79 correct=False
+2026-09-06 08:36:20,457 INFO    CALL  qwen3.5:397b       band=8 omni-91485268efa1 attempt=1 246.2s think=11973 parsed=34 expected=32 correct=False
+2026-09-06 08:38:13,531 INFO    CALL  qwen3.5:397b       band=8 omni-1913861e29ed attempt=2 279.5s think=10468 parsed=4983 expected=5183 correct=False
+2026-09-06 08:39:06,212 INFO    CALL  qwen3.5:397b       band=8 omni-64ca90d68061 attempt=2 308.0s think=14667 parsed=None expected=79 correct=False
+2026-09-06 08:39:35,908 INFO    CALL  qwen3.5:397b       band=8 omni-91485268efa1 attempt=2 195.5s think=8462 parsed=34 expected=32 correct=False
+2026-09-06 08:39:35,909 INFO    --- model qwen3.5:397b: 4 seen -> 1 right, 0 errored, 3 survived
+2026-09-06 08:39:35,909 INFO    === band 8 done: 3 survivor(s); 9/10 collected
+2026-09-06 08:39:35,911 INFO    === band 7: 59 item(s) enter the sieve
+2026-09-06 08:39:35,911 INFO    --- model gpt-oss:120b-cloud over 59 item(s), workers=4
+2026-09-06 08:39:43,279 INFO    CALL  gpt-oss:120b-cloud band=7 omni-05c1c29b98b6 attempt=1 7.4s think=913 parsed=21 expected=21 correct=True
+2026-09-06 08:39:49,136 INFO    CALL  gpt-oss:120b-cloud band=7 omni-0a045dd630b6 attempt=1 13.2s think=1649 parsed=4035 expected=2017 correct=False
+2026-09-06 08:39:51,784 INFO    CALL  gpt-oss:120b-cloud band=7 omni-0ceb7718de97 attempt=1 15.9s think=1467 parsed=None expected=41 correct=False
+2026-09-06 08:39:54,517 INFO    CALL  gpt-oss:120b-cloud band=7 omni-17547682b0ee attempt=1 11.2s think=1806 parsed=501 expected=501 correct=True
+2026-09-06 08:40:02,729 INFO    CALL  gpt-oss:120b-cloud band=7 omni-1914b341dd4e attempt=1 8.2s think=1231 parsed=31 expected=31 correct=True
+2026-09-06 08:40:21,907 INFO    CALL  gpt-oss:120b-cloud band=7 omni-192fde3d3e87 attempt=1 19.2s think=3332 parsed=49 expected=34 correct=False
+2026-09-06 08:40:39,185 INFO    CALL  gpt-oss:120b-cloud band=7 omni-0a045dd630b6 attempt=2 50.0s think=7515 parsed=2018 expected=2017 correct=False
+2026-09-06 08:40:51,293 INFO    CALL  gpt-oss:120b-cloud band=7 omni-0cd3c01d784f attempt=1 75.4s think=10537 parsed=6 expected=60 correct=False
+2026-09-06 08:41:11,044 INFO    CALL  gpt-oss:120b-cloud band=7 omni-192fde3d3e87 attempt=2 49.1s think=7460 parsed=33 expected=34 correct=False
+2026-09-06 08:41:12,936 INFO    CALL  gpt-oss:120b-cloud band=7 omni-20bd3e99db0e attempt=1 33.8s think=4814 parsed=6 expected=6 correct=True
+2026-09-06 08:41:36,443 INFO    CALL  gpt-oss:120b-cloud band=7 omni-27599040592e attempt=1 23.5s think=2411 parsed=1167 expected=1167 correct=True
+2026-09-06 08:41:38,622 INFO    CALL  gpt-oss:120b-cloud band=7 omni-0ceb7718de97 attempt=2 106.8s think=1108 parsed=41 expected=41 correct=True
+2026-09-06 08:41:43,621 INFO    CALL  gpt-oss:120b-cloud band=7 omni-0cd3c01d784f attempt=2 52.3s think=7740 parsed=0 expected=60 correct=False
+2026-09-06 08:41:44,140 INFO    CALL  gpt-oss:120b-cloud band=7 omni-2a137cc41566 attempt=1 7.7s think=859 parsed=1700 expected=1700 correct=True
+2026-09-06 08:41:48,592 INFO    CALL  gpt-oss:120b-cloud band=7 omni-2e6394f6e362 attempt=1 10.0s think=1326 parsed=25 expected=18 correct=False
+2026-09-06 08:41:53,785 INFO    CALL  gpt-oss:120b-cloud band=7 omni-3571d740061a attempt=1 9.6s think=1789 parsed=16 expected=16 correct=True
+2026-09-06 08:41:59,557 INFO    CALL  gpt-oss:120b-cloud band=7 omni-2e6394f6e362 attempt=2 11.0s think=1395 parsed=26 expected=18 correct=False
+2026-09-06 08:42:03,023 INFO    CALL  gpt-oss:120b-cloud band=7 omni-479d8698812d attempt=1 3.5s think=245 parsed=2 expected=2 correct=True
+2026-09-06 08:42:03,519 INFO    CALL  gpt-oss:120b-cloud band=7 omni-33929f8b7dbb attempt=1 19.9s think=2806 parsed=0 expected=500 correct=False
+2026-09-06 08:42:13,383 INFO    CALL  gpt-oss:120b-cloud band=7 omni-402ba6e2bef1 attempt=1 19.6s think=2810 parsed=4 expected=4 correct=True
+2026-09-06 08:42:19,007 INFO    CALL  gpt-oss:120b-cloud band=7 omni-22869cfcb2a7 attempt=1 68.0s think=9194 parsed=90 expected=10 correct=False
+2026-09-06 08:42:25,101 INFO    CALL  gpt-oss:120b-cloud band=7 omni-4e8bdd058fef attempt=1 11.7s think=1686 parsed=5 expected=4 correct=False
+2026-09-06 08:42:31,844 INFO    CALL  gpt-oss:120b-cloud band=7 omni-33929f8b7dbb attempt=2 28.3s think=3342 parsed=0 expected=500 correct=False
+2026-09-06 08:42:35,481 INFO    CALL  gpt-oss:120b-cloud band=7 omni-493745ddd1e1 attempt=1 32.5s think=4923 parsed=0 expected=12 correct=False
+2026-09-06 08:42:42,258 INFO    CALL  gpt-oss:120b-cloud band=7 omni-4e8bdd058fef attempt=2 17.2s think=2740 parsed=5 expected=4 correct=False
+2026-09-06 08:42:43,489 INFO    CALL  gpt-oss:120b-cloud band=7 omni-5260a011ad68 attempt=1 11.6s think=1448 parsed=808 expected=951 correct=False
+2026-09-06 08:42:55,017 INFO    CALL  gpt-oss:120b-cloud band=7 omni-52d020bfdee1 attempt=1 12.8s think=1343 parsed=3 expected=3 correct=True
+2026-09-06 08:43:01,816 INFO    CALL  gpt-oss:120b-cloud band=7 omni-22869cfcb2a7 attempt=2 42.8s think=6672 parsed=9 expected=10 correct=False
+2026-09-06 08:43:03,358 INFO    CALL  gpt-oss:120b-cloud band=7 omni-493745ddd1e1 attempt=2 27.9s think=4724 parsed=None expected=12 correct=False
+2026-09-06 08:43:09,943 INFO    CALL  gpt-oss:120b-cloud band=7 omni-56ede3a87956 attempt=1 14.9s think=2512 parsed=2 expected=7 correct=False
+2026-09-06 08:43:14,106 INFO    CALL  gpt-oss:120b-cloud band=7 omni-5dc93a84f7ed attempt=1 10.7s think=1506 parsed=2 expected=2 correct=True
+2026-09-06 08:43:22,019 INFO    CALL  gpt-oss:120b-cloud band=7 omni-56ede3a87956 attempt=2 12.1s think=1816 parsed=2 expected=7 correct=False
+2026-09-06 08:43:24,215 INFO    CALL  gpt-oss:120b-cloud band=7 omni-5895b1a601af attempt=1 22.4s think=3740 parsed=32 expected=13 correct=False
+2026-09-06 08:43:34,440 INFO    CALL  gpt-oss:120b-cloud band=7 omni-5260a011ad68 attempt=2 50.9s think=7621 parsed=None expected=951 correct=False
+2026-09-06 08:43:36,715 INFO    CALL  gpt-oss:120b-cloud band=7 omni-72a91b8d0e6e attempt=1 14.7s think=1733 parsed=1 expected=1 correct=True
+2026-09-06 08:43:39,922 INFO    CALL  gpt-oss:120b-cloud band=7 omni-5895b1a601af attempt=2 15.7s think=2242 parsed=28 expected=13 correct=False
+2026-09-06 08:43:48,014 INFO    CALL  gpt-oss:120b-cloud band=7 omni-5f761644eb23 attempt=1 33.9s think=4770 parsed=0 expected=2 correct=False
+2026-09-06 08:43:58,630 INFO    CALL  gpt-oss:120b-cloud band=7 omni-75e35fb9f0e5 attempt=1 24.2s think=3557 parsed=50 expected=69 correct=False
+2026-09-06 08:44:00,281 INFO    CALL  gpt-oss:120b-cloud band=7 omni-7aebffed7a0d attempt=1 20.4s think=2927 parsed=0 expected=0 correct=True
+2026-09-06 08:44:35,015 INFO    CALL  gpt-oss:120b-cloud band=7 omni-787b2878758c attempt=1 58.3s think=6792 parsed=7521 expected=7521 correct=True
+2026-09-06 08:44:41,802 INFO    CALL  gpt-oss:120b-cloud band=7 omni-5f761644eb23 attempt=2 53.8s think=5920 parsed=1 expected=2 correct=False
+2026-09-06 08:44:42,922 INFO    CALL  gpt-oss:120b-cloud band=7 omni-75e35fb9f0e5 attempt=2 44.3s think=5400 parsed=66 expected=69 correct=False
+2026-09-06 08:45:00,400 INFO    CALL  gpt-oss:120b-cloud band=7 omni-810c7433dbe0 attempt=1 60.1s think=6472 parsed=653 expected=39 correct=False
+2026-09-06 08:45:08,258 INFO    CALL  gpt-oss:120b-cloud band=7 omni-881915ff7c99 attempt=1 26.5s think=3081 parsed=8 expected=8 correct=True
+2026-09-06 08:45:08,804 INFO    CALL  gpt-oss:120b-cloud band=7 omni-850483409b27 attempt=1 33.8s think=3530 parsed=8064 expected=8096 correct=False
+2026-09-06 08:45:23,193 INFO    CALL  gpt-oss:120b-cloud band=7 omni-894a9dcd13a9 attempt=1 40.3s think=4076 parsed=5 expected=5 correct=True
+2026-09-06 08:45:28,058 INFO    CALL  gpt-oss:120b-cloud band=7 omni-9022bf57f9bc attempt=1 19.8s think=1988 parsed=3 expected=3 correct=True
+2026-09-06 08:45:34,225 INFO    CALL  gpt-oss:120b-cloud band=7 omni-850483409b27 attempt=2 25.4s think=2648 parsed=8160 expected=8096 correct=False
+2026-09-06 08:45:40,346 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a28d8a5ffe31 attempt=1 6.1s think=845 parsed=4 expected=4 correct=True
+2026-09-06 08:45:42,183 INFO    CALL  gpt-oss:120b-cloud band=7 omni-9567d9540860 attempt=1 19.0s think=2480 parsed=48 expected=48 correct=True
+2026-09-06 08:45:53,435 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a320356f2caa attempt=1 13.1s think=1587 parsed=331 expected=561 correct=False
+2026-09-06 08:45:57,757 INFO    CALL  gpt-oss:120b-cloud band=7 omni-810c7433dbe0 attempt=2 57.4s think=6443 parsed=45 expected=39 correct=False
+2026-09-06 08:46:08,199 INFO    CALL  gpt-oss:120b-cloud band=7 omni-9efcc26346d0 attempt=1 40.1s think=5301 parsed=576577 expected=576 correct=False
+2026-09-06 08:46:09,617 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a6589e1c70df attempt=1 27.4s think=3546 parsed=125060 expected=127009 correct=False
+2026-09-06 08:46:10,819 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a320356f2caa attempt=2 17.4s think=2159 parsed=159 expected=561 correct=False
+2026-09-06 08:46:18,535 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a86e18333795 attempt=1 20.8s think=3045 parsed=4000000 expected=3920000 correct=False
+2026-09-06 08:46:23,421 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a6589e1c70df attempt=2 13.8s think=1547 parsed=125060 expected=127009 correct=False
+2026-09-06 08:46:30,816 INFO    CALL  gpt-oss:120b-cloud band=7 omni-9efcc26346d0 attempt=2 22.6s think=2708 parsed=576 expected=576 correct=True
+2026-09-06 08:46:33,105 INFO    CALL  gpt-oss:120b-cloud band=7 omni-ac6b29f5f3a8 attempt=1 9.7s think=1035 parsed=3 expected=3 correct=True
+2026-09-06 08:46:38,991 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a87298f2bafe attempt=1 28.2s think=3713 parsed=1 expected=1 correct=True
+2026-09-06 08:46:40,574 INFO    CALL  gpt-oss:120b-cloud band=7 omni-b65e4e7f2796 attempt=1 7.5s think=954 parsed=3 expected=3 correct=True
+2026-09-06 08:46:49,793 INFO    CALL  gpt-oss:120b-cloud band=7 omni-b5a15d618f0e attempt=1 19.0s think=1535 parsed=12 expected=12 correct=True
+2026-09-06 08:46:58,285 INFO    CALL  gpt-oss:120b-cloud band=7 omni-a86e18333795 attempt=2 39.7s think=5473 parsed=7759600 expected=3920000 correct=False
+2026-09-06 08:47:01,821 INFO    CALL  gpt-oss:120b-cloud band=7 omni-bac2cb661e70 attempt=1 21.2s think=2446 parsed=6 expected=12 correct=False
+2026-09-06 08:47:26,018 INFO    CALL  gpt-oss:120b-cloud band=7 omni-bfc35fe6ad92 attempt=1 36.2s think=4922 parsed=99999 expected=999989991 correct=False
+2026-09-06 08:47:32,535 INFO    CALL  gpt-oss:120b-cloud band=7 omni-bac2cb661e70 attempt=2 30.7s think=3993 parsed=6 expected=12 correct=False
+2026-09-06 08:47:34,393 INFO    CALL  gpt-oss:120b-cloud band=7 omni-c392558cccce attempt=1 36.1s think=5258 parsed=5 expected=6 correct=False
+2026-09-06 08:47:34,963 INFO    CALL  gpt-oss:120b-cloud band=7 omni-b6741bfb5ffc attempt=1 56.0s think=7669 parsed=12 expected=60 correct=False
+2026-09-06 08:47:52,787 INFO    CALL  gpt-oss:120b-cloud band=7 omni-bfc35fe6ad92 attempt=2 26.8s think=3651 parsed=4999950000 expected=999989991 correct=False
+2026-09-06 08:47:57,275 INFO    CALL  gpt-oss:120b-cloud band=7 omni-c72de3218bbe attempt=1 4.5s think=395 parsed=0 expected=0 correct=True
+2026-09-06 08:48:01,457 INFO    CALL  gpt-oss:120b-cloud band=7 omni-c65ec2eaba2e attempt=1 28.9s think=4102 parsed=3027 expected=2018 correct=False
+2026-09-06 08:48:04,083 INFO    CALL  gpt-oss:120b-cloud band=7 omni-c392558cccce attempt=2 29.7s think=4266 parsed=6 expected=6 correct=True
+2026-09-06 08:48:07,167 INFO    CALL  gpt-oss:120b-cloud band=7 omni-c946a7cb089a attempt=1 9.9s think=1297 parsed=6 expected=6 correct=True
+2026-09-06 08:48:19,730 INFO    CALL  gpt-oss:120b-cloud band=7 omni-dce9f5f44d2e attempt=1 12.6s think=1914 parsed=1001 expected=1999 correct=False
+2026-09-06 08:48:26,782 INFO    CALL  gpt-oss:120b-cloud band=7 omni-d0a00884c8ec attempt=1 22.7s think=3005 parsed=None expected=3 correct=False
+2026-09-06 08:48:39,675 INFO    CALL  gpt-oss:120b-cloud band=7 omni-c65ec2eaba2e attempt=2 38.2s think=5084 parsed=2018 expected=2018 correct=True
+2026-09-06 08:48:43,260 INFO    CALL  gpt-oss:120b-cloud band=7 omni-b6741bfb5ffc attempt=2 68.3s think=9611 parsed=5 expected=60 correct=False
+2026-09-06 08:48:47,639 INFO    CALL  gpt-oss:120b-cloud band=7 omni-dce9f5f44d2e attempt=2 27.9s think=3979 parsed=1999 expected=1999 correct=True
+2026-09-06 08:48:52,715 INFO    CALL  gpt-oss:120b-cloud band=7 omni-d0a00884c8ec attempt=2 25.9s think=3196 parsed=None expected=3 correct=False
+2026-09-06 08:49:11,362 INFO    CALL  gpt-oss:120b-cloud band=7 omni-e1aa17c68341 attempt=1 28.1s think=3273 parsed=42925 expected=42925 correct=True
+2026-09-06 08:49:11,443 INFO    CALL  gpt-oss:120b-cloud band=7 omni-ea4a4d82f30f attempt=1 18.7s think=2696 parsed=322 expected=3750 correct=False
+2026-09-06 08:49:21,256 INFO    CALL  gpt-oss:120b-cloud band=7 omni-e77f661deef1 attempt=1 33.6s think=4594 parsed=None expected=6014950 correct=False
+2026-09-06 08:49:29,635 INFO    CALL  gpt-oss:120b-cloud band=7 omni-ea4a4d82f30f attempt=2 18.2s think=2272 parsed=400 expected=3750 correct=False
+2026-09-06 08:49:39,964 INFO    CALL  gpt-oss:120b-cloud band=7 omni-eae9d8ec4568 attempt=1 28.6s think=3576 parsed=6 expected=6 correct=True
+2026-09-06 08:49:46,118 INFO    CALL  gpt-oss:120b-cloud band=7 omni-fb88c6f8e11a attempt=1 16.5s think=1585 parsed=660 expected=660 correct=True
+2026-09-06 08:49:59,512 INFO    CALL  gpt-oss:120b-cloud band=7 omni-dfdcb29bcbce attempt=1 79.8s think=9209 parsed=290 expected=290 correct=True
+2026-09-06 08:50:03,003 INFO    CALL  gpt-oss:120b-cloud band=7 omni-e77f661deef1 attempt=2 41.7s think=5290 parsed=6686600 expected=6014950 correct=False
+2026-09-06 08:50:17,867 INFO    CALL  gpt-oss:120b-cloud band=7 omni-fcd6c1a952b5 attempt=1 37.9s think=5353 parsed=3132900 expected=4769280 correct=False
+2026-09-06 08:50:31,612 INFO    CALL  gpt-oss:120b-cloud band=7 omni-fcd6c1a952b5 attempt=2 13.7s think=2396 parsed=410640 expected=4769280 correct=False
+2026-09-06 08:50:31,612 INFO    --- model gpt-oss:120b-cloud: 59 seen -> 34 right, 0 errored, 25 survived
+2026-09-06 08:50:31,612 INFO    --- model gemma4:31b over 25 item(s), workers=4
+2026-09-06 08:50:52,177 INFO    CALL  gemma4:31b         band=7 omni-0cd3c01d784f attempt=1 20.6s think=2574 parsed=60 expected=60 correct=True
+2026-09-06 08:51:03,537 INFO    CALL  gemma4:31b         band=7 omni-0a045dd630b6 attempt=1 31.9s think=4353 parsed=2017 expected=2017 correct=True
+2026-09-06 08:51:04,697 INFO    CALL  gemma4:31b         band=7 omni-192fde3d3e87 attempt=1 33.1s think=4706 parsed=33 expected=34 correct=False
+2026-09-06 08:51:08,993 INFO    CALL  gemma4:31b         band=7 omni-22869cfcb2a7 attempt=1 37.4s think=3872 parsed=10 expected=10 correct=True
+2026-09-06 08:51:28,314 INFO    CALL  gemma4:31b         band=7 omni-2e6394f6e362 attempt=1 36.1s think=3844 parsed=20 expected=18 correct=False
+2026-09-06 08:51:34,652 INFO    CALL  gemma4:31b         band=7 omni-192fde3d3e87 attempt=2 30.0s think=4478 parsed=33 expected=34 correct=False
+2026-09-06 08:51:35,241 INFO    CALL  gemma4:31b         band=7 omni-493745ddd1e1 attempt=1 26.2s think=3084 parsed=12 expected=12 correct=True
+2026-09-06 08:51:48,941 INFO    CALL  gemma4:31b         band=7 omni-33929f8b7dbb attempt=1 45.4s think=3191 parsed=500 expected=500 correct=True
+2026-09-06 08:51:59,649 INFO    CALL  gemma4:31b         band=7 omni-2e6394f6e362 attempt=2 31.3s think=3944 parsed=21 expected=18 correct=False
+2026-09-06 08:52:07,834 INFO    CALL  gemma4:31b         band=7 omni-4e8bdd058fef attempt=1 33.2s think=4215 parsed=4 expected=4 correct=True
+2026-09-06 08:52:08,613 INFO    CALL  gemma4:31b         band=7 omni-5260a011ad68 attempt=1 33.4s think=3791 parsed=924 expected=951 correct=False
+2026-09-06 08:52:23,266 INFO    CALL  gemma4:31b         band=7 omni-56ede3a87956 attempt=1 34.3s think=4572 parsed=3 expected=7 correct=False
+2026-09-06 08:52:34,875 INFO    CALL  gemma4:31b         band=7 omni-56ede3a87956 attempt=2 11.6s think=1682 parsed=2 expected=7 correct=False
+2026-09-06 08:52:35,455 INFO    CALL  gemma4:31b         band=7 omni-5895b1a601af attempt=1 35.8s think=5032 parsed=16 expected=13 correct=False
+2026-09-06 08:52:39,475 INFO    CALL  gemma4:31b         band=7 omni-5f761644eb23 attempt=1 31.6s think=2964 parsed=1 expected=2 correct=False
+2026-09-06 08:52:42,462 INFO    CALL  gemma4:31b         band=7 omni-5260a011ad68 attempt=2 33.8s think=4093 parsed=931 expected=951 correct=False
+2026-09-06 08:53:02,681 INFO    CALL  gemma4:31b         band=7 omni-75e35fb9f0e5 attempt=1 27.8s think=3215 parsed=66 expected=69 correct=False
+2026-09-06 08:53:09,222 INFO    CALL  gemma4:31b         band=7 omni-5f761644eb23 attempt=2 29.7s think=3685 parsed=1 expected=2 correct=False
+2026-09-06 08:53:12,507 INFO    CALL  gemma4:31b         band=7 omni-5895b1a601af attempt=2 37.1s think=5578 parsed=16 expected=13 correct=False
+2026-09-06 08:53:15,242 INFO    CALL  gemma4:31b         band=7 omni-810c7433dbe0 attempt=1 32.8s think=3141 parsed=39 expected=39 correct=True
+2026-09-06 08:53:31,752 INFO    CALL  gemma4:31b         band=7 omni-850483409b27 attempt=1 22.5s think=2685 parsed=8096 expected=8096 correct=True
+2026-09-06 08:53:36,565 INFO    CALL  gemma4:31b         band=7 omni-75e35fb9f0e5 attempt=2 33.9s think=5086 parsed=66 expected=69 correct=False
+2026-09-06 08:53:42,693 INFO    CALL  gemma4:31b         band=7 omni-a6589e1c70df attempt=1 27.5s think=3700 parsed=127009 expected=127009 correct=True
+2026-09-06 08:53:46,325 INFO    CALL  gemma4:31b         band=7 omni-a320356f2caa attempt=1 33.8s think=4040 parsed=488 expected=561 correct=False
+2026-09-06 08:53:57,079 INFO    CALL  gemma4:31b         band=7 omni-b6741bfb5ffc attempt=1 20.5s think=2705 parsed=60 expected=60 correct=True
+2026-09-06 08:54:10,300 INFO    CALL  gemma4:31b         band=7 omni-bac2cb661e70 attempt=1 27.6s think=3952 parsed=12 expected=12 correct=True
+2026-09-06 08:54:12,790 INFO    CALL  gemma4:31b         band=7 omni-a86e18333795 attempt=1 41.0s think=4654 parsed=980000 expected=3920000 correct=False
+2026-09-06 08:54:17,967 INFO    CALL  gemma4:31b         band=7 omni-a320356f2caa attempt=2 31.6s think=4000 parsed=608 expected=561 correct=False
+2026-09-06 08:54:33,936 INFO    CALL  gemma4:31b         band=7 omni-bfc35fe6ad92 attempt=1 36.9s think=4308 parsed=90000 expected=999989991 correct=False
+2026-09-06 08:54:39,382 INFO    CALL  gemma4:31b         band=7 omni-d0a00884c8ec attempt=1 29.1s think=4359 parsed=3 expected=3 correct=True
+2026-09-06 08:55:00,477 INFO    CALL  gemma4:31b         band=7 omni-e77f661deef1 attempt=1 42.5s think=5473 parsed=6686401 expected=6014950 correct=False
+2026-09-06 08:55:04,389 INFO    CALL  gemma4:31b         band=7 omni-ea4a4d82f30f attempt=1 25.0s think=3270 parsed=3750 expected=3750 correct=True
+2026-09-06 08:55:08,847 INFO    CALL  gemma4:31b         band=7 omni-a86e18333795 attempt=2 56.1s think=6433 parsed=2000000 expected=3920000 correct=False
+2026-09-06 08:55:19,099 INFO    CALL  gemma4:31b         band=7 omni-bfc35fe6ad92 attempt=2 45.2s think=5556 parsed=1406557142 expected=999989991 correct=False
+2026-09-06 08:55:33,760 INFO    CALL  gemma4:31b         band=7 omni-fcd6c1a952b5 attempt=1 29.4s think=3894 parsed=3132900 expected=4769280 correct=False
+2026-09-06 08:55:38,774 INFO    CALL  gemma4:31b         band=7 omni-e77f661deef1 attempt=2 38.3s think=4951 parsed=5353300 expected=6014950 correct=False
+2026-09-06 08:56:01,237 INFO    CALL  gemma4:31b         band=7 omni-fcd6c1a952b5 attempt=2 27.5s think=3104 parsed=4769280 expected=4769280 correct=True
+2026-09-06 08:56:01,237 INFO    --- model gemma4:31b: 25 seen -> 14 right, 0 errored, 11 survived
+2026-09-06 08:56:01,238 INFO    --- model qwen3.5:397b over 11 item(s), workers=3
+2026-09-06 08:59:04,771 INFO    CALL  qwen3.5:397b       band=7 omni-192fde3d3e87 attempt=1 183.5s think=8610 parsed=49 expected=34 correct=False
+2026-09-06 08:59:42,709 INFO    CALL  qwen3.5:397b       band=7 omni-2e6394f6e362 attempt=1 221.5s think=9002 parsed=20 expected=18 correct=False
+2026-09-06 08:59:54,852 INFO    CALL  qwen3.5:397b       band=7 omni-5260a011ad68 attempt=1 233.6s think=9532 parsed=931 expected=951 correct=False
+2026-09-06 09:01:56,742 INFO    CALL  qwen3.5:397b       band=7 omni-192fde3d3e87 attempt=2 172.0s think=8237 parsed=33 expected=34 correct=False
+2026-09-06 09:02:39,258 INFO    CALL  qwen3.5:397b       band=7 omni-2e6394f6e362 attempt=2 176.5s think=6646 parsed=23 expected=18 correct=False
+2026-09-06 09:02:45,803 INFO    CALL  qwen3.5:397b       band=7 omni-5260a011ad68 attempt=2 171.0s think=6883 parsed=931 expected=951 correct=False
+2026-09-06 09:05:40,811 INFO    CALL  qwen3.5:397b       band=7 omni-56ede3a87956 attempt=1 224.1s think=11115 parsed=5 expected=7 correct=False
+2026-09-06 09:06:22,226 INFO    CALL  qwen3.5:397b       band=7 omni-5f761644eb23 attempt=1 216.4s think=9244 parsed=0 expected=2 correct=False
+2026-09-06 09:06:29,529 INFO    CALL  qwen3.5:397b       band=7 omni-5895b1a601af attempt=1 230.3s think=11164 parsed=13 expected=13 correct=True

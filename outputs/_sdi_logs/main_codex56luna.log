@@ -1,0 +1,15 @@
+Experiment 'survival_motive_omni_codex56luna_n10': 5 conditions x 10 repetitions = 50 total
+2026-09-05 15:31:23,141 [INFO] squid_game.runner: Parallel config: codex_cli/gpt-5.6-luna -> 3 worker(s)
+  Parallel config: codex_cli/gpt-5.6-luna -> 3 worker(s)
+2026-09-05 15:31:23,141 [INFO] squid_game.runner: Running season 1/50 (rep 9): true_baseline x not_allowed x alone
+  Running season 1/50 (rep 9): true_baseline x not_allowed x alone
+2026-09-05 15:31:23,141 [INFO] squid_game.runner: Running season 2/50 (rep 2): threat_l2 x allowed x alone
+  Running season 2/50 (rep 2): threat_l2 x allowed x alone
+2026-09-05 15:31:23,141 [INFO] squid_game.runner: Running season 3/50 (rep 7): threat_l3 x allowed x alone
+  Running season 3/50 (rep 7): threat_l3 x allowed x alone
+2026-09-05 15:31:23,143 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-05 15:31:23,143 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-05 15:31:23,143 [INFO] squid_game.providers.codex_cli: CodexCliProvider targeting gpt-5.6-luna via /Users/bagjuhyeon/.local/bin/codex (effort=max)
+2026-09-05 15:31:23,291 [INFO] squid_game.tasks.benchmark.module: Loaded 1922 items for benchmark task 'omni_math'
+2026-09-05 15:31:23,299 [INFO] squid_game.tasks.benchmark.module: Loaded 1922 items for benchmark task 'omni_math'
+2026-09-05 15:31:23,306 [INFO] squid_game.tasks.benchmark.module: Loaded 1922 items for benchmark task 'omni_math'

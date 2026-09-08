@@ -1,0 +1,38 @@
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 6045.27it/s]
+Batches:   0%|          | 0/20 [00:00<?, ?it/s]Batches:   5%|▌         | 1/20 [00:00<00:06,  2.80it/s]Batches:  15%|█▌        | 3/20 [00:00<00:02,  7.48it/s]Batches:  30%|███       | 6/20 [00:00<00:01, 13.48it/s]Batches:  45%|████▌     | 9/20 [00:00<00:00, 17.78it/s]Batches:  60%|██████    | 12/20 [00:00<00:00, 21.14it/s]Batches:  85%|████████▌ | 17/20 [00:00<00:00, 28.91it/s]Batches: 100%|██████████| 20/20 [00:00<00:00, 20.76it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 13296.81it/s]
+Batches:   0%|          | 0/20 [00:00<?, ?it/s]Batches:   5%|▌         | 1/20 [00:00<00:03,  5.16it/s]Batches:  20%|██        | 4/20 [00:00<00:01, 15.53it/s]Batches:  45%|████▌     | 9/20 [00:00<00:00, 27.86it/s]Batches:  75%|███████▌  | 15/20 [00:00<00:00, 37.12it/s]Batches: 100%|██████████| 20/20 [00:00<00:00, 32.96it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 15300.09it/s]
+Batches:   0%|          | 0/20 [00:00<?, ?it/s]Batches:   5%|▌         | 1/20 [00:00<00:02,  7.10it/s]Batches:  30%|███       | 6/20 [00:00<00:00, 24.93it/s]Batches:  55%|█████▌    | 11/20 [00:00<00:00, 32.17it/s]Batches: 100%|██████████| 20/20 [00:00<00:00, 50.45it/s]Batches: 100%|██████████| 20/20 [00:00<00:00, 40.15it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 14244.23it/s]
+Batches:   0%|          | 0/20 [00:00<?, ?it/s]Batches:   5%|▌         | 1/20 [00:00<00:07,  2.45it/s]Batches:  10%|█         | 2/20 [00:00<00:05,  3.58it/s]Batches:  40%|████      | 8/20 [00:00<00:00, 16.05it/s]Batches:  80%|████████  | 16/20 [00:00<00:00, 31.07it/s]Batches: 100%|██████████| 20/20 [00:00<00:00, 23.37it/s]
+# Reasoning-trace linear probe
+
+SentenceBERT embedding of the per-turn thinking trace -> linear probe, session-grouped k-fold CV (fold assignment seeded).
+
+`scalar_baseline` = probe on (turn, score, ri_<channel>, lives_remaining) only. The embedding must beat it to have read the *content*. `scalar_plus_embedding` = both, concatenated.
+`embedding_masked` = surface framing/decision/lives vocabulary removed (`squid_game.evaluation.semantic.lexicon`).
+`null` = session-level label-shuffle mean; `p` = permutation p-value (each draw fit under its own seed).
+
+## Regression targets (R² / Spearman ρ / MAE)
+
+| target | channel | model | n | sessions | variant | R² (oof) | ρ | MAE | null R² | p(R²) | p(ρ) |
+|---|---|---|---:|---:|---|---:|---:|---:|---:|---:|---:|
+| threat_level | task | POOLED | 1936 | 80 | embedding_masked | -0.047 | -0.033 | 1.025 | -0.074 | 0.1443 | 0.2836 |
+| threat_level | task | POOLED | 1936 | 80 | embedding_raw | -0.047 | -0.033 | 1.025 | -0.074 | 0.1443 | 0.2935 |
+| threat_level | task | POOLED | 1936 | 80 | scalar_baseline | -0.015 | -0.104 | 1.023 | nan | nan | nan |
+| threat_level | task | POOLED | 1936 | 80 | scalar_plus_embedding | -0.048 | -0.034 | 1.023 | -0.079 | 0.1542 | 0.3184 |
+| threat_level | forfeit | POOLED | 932 | 40 | embedding_masked | -0.089 | -0.064 | 1.023 | -0.112 | 0.3682 | 0.2537 |
+| threat_level | forfeit | POOLED | 932 | 40 | embedding_raw | -0.084 | -0.040 | 1.017 | -0.116 | 0.3134 | 0.2388 |
+| threat_level | forfeit | POOLED | 932 | 40 | scalar_baseline | -0.141 | -0.443 | 1.061 | nan | nan | nan |
+| threat_level | forfeit | POOLED | 932 | 40 | scalar_plus_embedding | -0.101 | -0.069 | 1.025 | -0.121 | 0.3980 | 0.3134 |
+| threat_level | task | gpt-5.6-luna | 1936 | 80 | embedding_masked | -0.047 | -0.033 | 1.025 | -0.074 | 0.1443 | 0.2836 |
+| threat_level | task | gpt-5.6-luna | 1936 | 80 | embedding_raw | -0.047 | -0.033 | 1.025 | -0.074 | 0.1443 | 0.2935 |
+| threat_level | task | gpt-5.6-luna | 1936 | 80 | scalar_baseline | -0.015 | -0.104 | 1.023 | nan | nan | nan |
+| threat_level | task | gpt-5.6-luna | 1936 | 80 | scalar_plus_embedding | -0.048 | -0.034 | 1.023 | -0.079 | 0.1542 | 0.3184 |
+| threat_level | forfeit | gpt-5.6-luna | 932 | 40 | embedding_masked | -0.089 | -0.064 | 1.023 | -0.112 | 0.3682 | 0.2537 |
+| threat_level | forfeit | gpt-5.6-luna | 932 | 40 | embedding_raw | -0.084 | -0.040 | 1.017 | -0.116 | 0.3134 | 0.2388 |
+| threat_level | forfeit | gpt-5.6-luna | 932 | 40 | scalar_baseline | -0.141 | -0.443 | 1.061 | nan | nan | nan |
+| threat_level | forfeit | gpt-5.6-luna | 932 | 40 | scalar_plus_embedding | -0.101 | -0.069 | 1.025 | -0.121 | 0.3980 | 0.3134 |
+
+
