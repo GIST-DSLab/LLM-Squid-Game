@@ -321,7 +321,7 @@ seasons:
   cell_id: 9
   p_death_override: 0.0
 num_repetitions: 10
-output_dir: outputs/lives_threat_5x2_glm53flash
+output_dir: outputs/2026-09-03/lives_threat_5x2_glm53flash
 parallel_workers: 3
 lives:
   enabled: true

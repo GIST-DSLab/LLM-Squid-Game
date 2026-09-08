@@ -262,7 +262,11 @@ def _benchmark_response(_idx: int, messages: list[dict[str, str]]) -> str:
     test honest about what the agent is actually shown.
     """
     body = messages[-1]["content"]
-    if "CHOICE:" in body:
+    # Route on the menu header, not on a bare "CHOICE:": since 2026-09-07
+    # the task-call body opens with "YOUR CHOICE: CONTINUE — ..." (the
+    # choice echo), so that substring is in both prompts. The menu header
+    # is rendered by 5-forfeit_option.j2 alone.
+    if "=== Your Choice ===" in body:
         return "CHOICE: CONTINUE"
     marker = "synthetic e2e band "
     band = body[body.index(marker) + len(marker)]
@@ -293,7 +297,10 @@ def test_full_season_through_the_engine_asks_for_answer_not_accept(
     task_call_bodies = [
         call.messages[-1]["content"]
         for call in stub.calls
-        if "CHOICE:" not in call.messages[-1]["content"]
+        # The decision call is the one rendering the menu. Routing on a
+        # bare "CHOICE:" broke on 2026-09-07, when the task-call body
+        # gained the one-line choice echo ("YOUR CHOICE: CONTINUE — ...").
+        if "=== Your Choice ===" not in call.messages[-1]["content"]
     ]
     assert len(task_call_bodies) == _E2E_TOTAL_TURNS
     for body in task_call_bodies:

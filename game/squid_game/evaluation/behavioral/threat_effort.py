@@ -119,7 +119,7 @@ def discover_run_dirs(paths: Iterable[Path | str]) -> list[Path]:
     """Expand CLI arguments into directories that hold turn traces.
 
     Accepts either a run directory (``…/20260903_1200_gpt-oss_signal-game``)
-    or a parent holding several (``outputs/lives_threat_smoke/``), because
+    or a parent holding several (``outputs/2026-09-02/lives_threat_smoke/``), because
     the runner nests a timestamped directory under ``output_dir`` and the
     caller should not have to care which level they are pointing at.
     """

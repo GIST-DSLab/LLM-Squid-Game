@@ -129,7 +129,7 @@ live cell and no archived one.
 cells and absent in others is a second factor, and the design has one. **This
 changed what every hz cell sends.** The frame used to open with the game rules
 alone; it now opens with the carrot first. The recorded
-`outputs/hearts_zero_probe*` runs (240 games, 2720 calls) were made against the
+`outputs/2026-09-06/hearts_zero_probe*` runs (240 games, 2720 calls) were made against the
 carrot-free frame and cannot be re-rendered from these templates — replay them
 from their stored `system_prompt` / `decision_call_input` bytes.
 

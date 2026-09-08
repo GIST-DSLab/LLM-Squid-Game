@@ -194,7 +194,7 @@ seasons:
   cell_id: 4
   p_death_override: 0.0
 num_repetitions: 1
-output_dir: outputs/benchmark_lives_gpqa_smoke
+output_dir: outputs/2026-09-02/benchmark_lives_gpqa_smoke
 parallel_workers: 2
 
 # --- Lives mechanic (replaces the Bernoulli p_death roll) -------------------

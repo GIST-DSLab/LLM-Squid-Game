@@ -11,7 +11,7 @@ House style follows ``docs/reports/2026-09-06-engine-promptflow-smoke-gemma4-l2.
 
 Usage:
     uv run python scripts/plots/build_hearts_zero_turnflow.py \
-        outputs/hearts_zero_probe_smoke/<run> \
+        outputs/2026-09-06/hearts_zero_probe_smoke/<run> \
         --out "docs/reports/notes/2026-09-06-hearts-zero-turnflow.html"
 """
 
@@ -2299,7 +2299,7 @@ def _cot_block(
         tail_card = (
             '<div class="card">\n'
             "<p><b>다음 런이 이 구멍을 닫는다.</b> 다섯 번째 판\n"
-            '(<span class="mono">outputs/hearts_zero_probe_v7esc/</span>, config\n'
+            '(<span class="mono">outputs/2026-09-07/hearts_zero_probe_v7esc/</span>, config\n'
             '<span class="mono">hearts_zero_probe_gemma4_v7esc.yaml</span>)이 지금 돌고 있다.\n'
             "이 판과 <b>경사 블록 안의 한 문장</b>만 다르다 — 추첨은 치른 라운드 끝에 이뤄지므로,\n"
             "더 이상의 라운드 전에 세션을 끝내는 포기는 남겨 둘 추첨이 없게 만든다는 문장이다.\n"

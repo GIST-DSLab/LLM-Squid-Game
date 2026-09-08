@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the hz_1111 one-turn note (HTML) from the recorded run.
 
-Reads ``outputs/signal_puzzle_hz1111_1turn/<run>/`` -- one season, exactly
+Reads ``outputs/2026-09-07/signal_puzzle_hz1111_1turn/<run>/`` -- one season, exactly
 one turn, ``gpt-oss:20b-cloud`` through the local Ollama daemon's native
 ``/api/chat`` -- and writes a single self-contained HTML page into
 ``docs/reports/notes/``.
@@ -27,7 +27,7 @@ presence of every recorded string in the emitted HTML.
 
 Usage:
     uv run python scripts/plots/build_hz1111_1turn.py \
-        outputs/signal_puzzle_hz1111_1turn/20260907_0025_gpt-oss-20b-cloud_signal-game
+        outputs/2026-09-07/signal_puzzle_hz1111_1turn/20260907_0025_gpt-oss-20b-cloud_signal-game
 """
 
 from __future__ import annotations

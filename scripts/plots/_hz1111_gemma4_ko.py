@@ -1,7 +1,7 @@
 """Korean reading translations for the hz_1111 / gemma4 one-turn note.
 
 READING AID ONLY. Nothing in this module is ever sent to a model. The run
-under ``outputs/signal_puzzle_hz1111_1turn_gemma4/`` issued the English
+under ``outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/`` issued the English
 templates under ``game/squid_game/prompts/`` and only those; these strings
 rebuild the same text in Korean so a reader can follow what the agent was
 told and what it wrote.

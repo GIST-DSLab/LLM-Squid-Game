@@ -17,6 +17,7 @@ well as the file contents.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -186,8 +187,10 @@ class TestRunSizes:
 
     @pytest.mark.parametrize("name", ALL_CONFIGS)
     def test_output_lands_under_the_gitignored_prefix(self, name: str) -> None:
-        """``.gitignore`` excludes ``outputs/lives_threat_*/``; stay inside it."""
-        assert _load(name).output_dir.startswith("outputs/lives_threat_")
+        """``.gitignore`` excludes ``outputs/lives_threat_*/`` and its
+        ``outputs/*/lives_threat_*/`` date-filed twin; stay inside one of them."""
+        assert re.fullmatch(r"outputs/(\d{4}-\d{2}-\d{2}/)?lives_threat_.+",
+                            _load(name).output_dir), _load(name).output_dir
 
     def test_the_two_configs_differ_only_in_scale(self) -> None:
         smoke, n30 = _load(SMOKE), _load(N30)

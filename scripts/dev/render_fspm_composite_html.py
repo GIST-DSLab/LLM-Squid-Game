@@ -318,7 +318,7 @@ def build(results: dict) -> str:
 <main>
 <p class="eyebrow">LLM Squid Game · KDD-UC 4-model re-analysis</p>
 <h1>세 채널을 하나의 숫자로: FSPM 합성 지표</h1>
-<div class="meta"><span>2026-09-06</span><span>데이터: outputs/final_results 2026-04-22 canonical runs (Signal Game, 6-cell)</span><span>모델당 세션 180 (Exit BF/FC 각 30)</span><span>bootstrap B={n_boot}</span></div>
+<div class="meta"><span>2026-09-06</span><span>데이터: outputs/KDD-UC 2026-04-22 canonical runs (Signal Game, 6-cell)</span><span>모델당 세션 180 (Exit BF/FC 각 30)</span><span>bootstrap B={n_boot}</span></div>
 
 <section id="summary">
 <h2 style="margin-top:0;border:0;padding-top:0">핵심 요약</h2>
@@ -444,7 +444,7 @@ PYTHONPATH=game python scripts/analysis/fspm_composite_kdd.py --out results/fspm
 
 # 2. 이 페이지 렌더
 python scripts/dev/render_fspm_composite_html.py</pre>
-<p>원자료: <code>outputs/final_results/2026042*_*_signal-game/phase3_analysis/regime_stratified_{{turn_observations,forfeit_events}}.csv</code>와 각 런의 <code>season_results.jsonl</code>. 참고: Chinn S. (2000) <i>A simple method for converting an odds ratio to effect size for use in meta-analysis</i>, Stat Med 19:3127–31; Cohen J. (1988) <i>Statistical Power Analysis for the Behavioral Sciences</i>, 2nd ed., ch. 6 (h).</p>
+<p>원자료: <code>outputs/KDD-UC/2026042*_*_signal-game/phase3_analysis/regime_stratified_{{turn_observations,forfeit_events}}.csv</code>와 각 런의 <code>season_results.jsonl</code>. 참고: Chinn S. (2000) <i>A simple method for converting an odds ratio to effect size for use in meta-analysis</i>, Stat Med 19:3127–31; Cohen J. (1988) <i>Statistical Power Analysis for the Behavioral Sciences</i>, 2nd ed., ch. 6 (h).</p>
 </section>
 </main>
 </div>

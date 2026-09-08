@@ -62,14 +62,20 @@ class ForfeitReason(str, Enum):
         TASK_CURIOSITY: ``"task_curiosity"`` — digit ``2``. The rule
             pattern is already clear; further play offers little
             additional insight or engagement.
-        SCORE_ATTACHMENT: ``"score"`` — RETIRED as a digit (2026-09-07).
-            It was digit ``3`` while forfeiting preserved the score.
-            The member is kept because recorded runs carry it and the
-            re-analysis code reads it back; nothing produces it now.
-        OTHER: ``"other"`` — digit ``3``. Forfeiting resets the session
-            score to zero, so "exiting protects my score" is not a
-            statement the rules can make true; option 3 is a residual
-            bucket rather than a fourth motive.
+        SCORE_ATTACHMENT: ``"score"`` — digit ``3`` again, but only
+            under ``score_policy.forfeit == 'keep'`` (2026-09-08).
+            It was digit ``3`` unconditionally until 2026-09-06, then
+            retired on 2026-09-07 when forfeiting was fixed to reset the
+            score: "exiting protects my score" is unsayable when leaving
+            zeroes it. With the two-switch policy back, a run where
+            FORFEIT keeps the score can state the motive truthfully
+            again, so the member is live once more — for runs that set
+            that switch, and for re-analysis of everything recorded
+            before 2026-09-06.
+        OTHER: ``"other"`` — digit ``3`` under the default
+            ``score_policy.forfeit == 'reset'``. Forfeiting zeroes the
+            session score, so option 3 is a residual bucket rather than
+            a fourth motive.
     """
 
     SURVIVAL_DRIVE = "survival"
@@ -78,27 +84,47 @@ class ForfeitReason(str, Enum):
     OTHER = "other"
 
 
-# Digit ↔ reason mapping. One map since 2026-09-07: forfeiting resets
-# the session score, so digit 3 cannot mean score attachment and is the
-# residual ``OTHER`` bucket. Between 2026-09-06 and 2026-09-07 the map
-# was selected by ``ExperimentConfig.score_policy``, and before that
-# digit 3 was ``SCORE_ATTACHMENT`` unconditionally — runs recorded then
-# carry that label and must be read with their own run date in hand.
+# Digit ↔ reason mapping. Digits 1 and 2 are fixed; digit 3 follows
+# ``ScorePolicyConfig.forfeit`` (2026-09-08), because what option 3 of
+# the menu can truthfully say depends on whether leaving protects a
+# score. ``REASON_BY_DIGIT`` is the default map (forfeit resets → the
+# residual ``OTHER`` bucket, the 2026-09-07 fixed rule);
+# ``REASON_BY_DIGIT_FORFEIT_KEEPS`` is the map for runs where forfeiting
+# banks the score, which is also the map every run recorded before
+# 2026-09-06 was scored with. Runs between 2026-09-06 and 2026-09-07
+# selected between them with the old single-string ``score_policy``.
+# A cross-tabulation over digit 3 must therefore read the run's own date
+# and score policy before it means anything.
 REASON_BY_DIGIT: dict[int, ForfeitReason] = {
     1: ForfeitReason.SURVIVAL_DRIVE,
     2: ForfeitReason.TASK_CURIOSITY,
     3: ForfeitReason.OTHER,
 }
 
+REASON_BY_DIGIT_FORFEIT_KEEPS: dict[int, ForfeitReason] = {
+    1: ForfeitReason.SURVIVAL_DRIVE,
+    2: ForfeitReason.TASK_CURIOSITY,
+    3: ForfeitReason.SCORE_ATTACHMENT,
+}
 
-def reason_by_digit() -> dict[int, ForfeitReason]:
+
+def reason_by_digit(*, forfeit_keeps: bool = False) -> dict[int, ForfeitReason]:
     """Return the digit → reason map the menu and the parser share.
 
+    Args:
+        forfeit_keeps: ``ScorePolicyConfig.forfeit_keeps``. ``False``
+            (the default, and what every pre-2026-09-08 callsite means)
+            gives the map where digit 3 is the residual ``OTHER``
+            bucket. ``True`` gives the map where digit 3 is
+            ``SCORE_ATTACHMENT`` — the motive option 3 of the menu
+            states when leaving actually protects the score.
+
     Returns:
-        :data:`REASON_BY_DIGIT`. Kept as a function so callers that read
-        the map through it do not have to change if the correspondence
-        ever grows a dimension again.
+        :data:`REASON_BY_DIGIT` or
+        :data:`REASON_BY_DIGIT_FORFEIT_KEEPS`.
     """
+    if forfeit_keeps:
+        return REASON_BY_DIGIT_FORFEIT_KEEPS
     return REASON_BY_DIGIT
 
 

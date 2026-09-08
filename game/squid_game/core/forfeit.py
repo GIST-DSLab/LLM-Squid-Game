@@ -7,6 +7,7 @@ zero) or must continue playing through all turns.
 
 from typing import TYPE_CHECKING
 
+from squid_game.models.config import ScorePolicyConfig
 from squid_game.models.enums import ForfeitCondition
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
@@ -20,15 +21,35 @@ class ForfeitError(RuntimeError):
 class ForfeitController:
     """Controls forfeit availability and score preservation logic.
 
-    In the ALLOWED condition the agent may choose to exit at any turn,
-    which resets the session's accumulated score to zero (2026-09-07:
-    running the lives counter out is the exit that keeps it). In the
-    NOT_ALLOWED condition the option is never presented and attempting
-    to forfeit raises an error.
+    In the ALLOWED condition the agent may choose to exit at any turn.
+    What that exit does to the accumulated score is
+    ``ScorePolicyConfig.forfeit`` (2026-09-08): ``'reset'`` — the
+    default and the 2026-09-07 fixed rule — zeroes it, ``'keep'`` exits
+    with it intact. In the NOT_ALLOWED condition the option is never
+    presented and attempting to forfeit raises an error.
+
+    Args:
+        condition: Whether forfeiting is offered this season.
+        score_policy: Run-level score policy. ``None`` (the default)
+            means the 2026-09-07 rule, so every caller written before
+            the block existed behaves exactly as it did.
     """
 
-    def __init__(self, condition: ForfeitCondition) -> None:
+    def __init__(
+        self,
+        condition: ForfeitCondition,
+        *,
+        score_policy: ScorePolicyConfig | None = None,
+    ) -> None:
         self._condition = condition
+        self._score_policy = (
+            score_policy if score_policy is not None else ScorePolicyConfig()
+        )
+
+    @property
+    def score_policy(self) -> ScorePolicyConfig:
+        """The active score policy."""
+        return self._score_policy
 
     @property
     def condition(self) -> ForfeitCondition:
@@ -42,19 +63,17 @@ class ForfeitController:
     def process_forfeit(self, cumulative_score: float) -> float:
         """Process a forfeit decision and return the score kept on exit.
 
-        Always ``0.0``. Since 2026-09-07 forfeiting is the exit that
-        resets the session's score; running the lives counter out is the
-        exit that keeps it. Until then this was selectable per run
-        (``ExperimentConfig.score_policy``), and the historical branch
-        returned ``cumulative_score``.
+        ``0.0`` under ``score_policy.forfeit == 'reset'`` (the default,
+        and the fixed rule between 2026-09-07 and 2026-09-08);
+        ``cumulative_score`` under ``'keep'``. The prompt the agent read
+        is built from the same block, so the number returned here is the
+        number the forfeit menu promised.
 
         Args:
             cumulative_score: The score accumulated before this turn.
-                Accepted for signature stability and for the caller's
-                logging; the returned score no longer depends on it.
 
         Returns:
-            ``0.0`` — the score the agent leaves with.
+            The score the agent leaves with.
 
         Raises:
             ForfeitError: If forfeit is not allowed under the current condition.
@@ -64,6 +83,8 @@ class ForfeitController:
                 "Agent attempted to forfeit under NOT_ALLOWED condition. "
                 "This indicates a bug in the agent or engine logic."
             )
+        if self._score_policy.forfeit_keeps:
+            return cumulative_score
         return 0.0
 
     def get_forfeit_prompt_text(
@@ -107,12 +128,25 @@ class ForfeitController:
             # Framing enum — extract its serialised string value.
             framing_value = getattr(framing, "value", None)
 
-        # ``elimination_keeps`` is always True now: forfeiting resets the
-        # score, running the counter out keeps it. The template still
-        # carries the retired branch so archived runs read back as they
-        # were written; nothing reaches it any more.
+        # THE POLICY REACHES THE FROZEN BLURB TOO (2026-09-08). This
+        # template predates the two-switch score policy and carries a
+        # SINGLE boolean: ``elimination_keeps=True`` renders "forfeiting
+        # zeroes the score, the session ending on its own keeps it" (the
+        # default pair), False renders the inverse. It can therefore
+        # express the two DIAGONAL combinations exactly and neither
+        # off-diagonal one, which is why ``ExperimentConfig`` refuses a
+        # non-default policy unless ``use_split_forfeit_layer`` is on --
+        # on that path this blurb is never rendered at all
+        # (``include_forfeit_text=False``).
+        #
+        # The boolean is keyed on the FORFEIT switch because this is the
+        # forfeit blurb: its load-bearing sentence is what leaving does
+        # to the score, and that sentence is then correct in all four
+        # combinations. On the two off-diagonal pairs the trailing
+        # session-end sentence is the half that goes stale -- reachable
+        # only by building a controller by hand, past the validator.
         return "\n" + render(
             "legacy/forfeit_option.j2",
             framing=framing_value,
-            elimination_keeps=True,
+            elimination_keeps=not self._score_policy.forfeit_keeps,
         )

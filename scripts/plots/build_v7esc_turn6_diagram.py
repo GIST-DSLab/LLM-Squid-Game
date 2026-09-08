@@ -42,7 +42,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-RUN_DIR = ROOT / "outputs/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game"
+RUN_DIR = ROOT / "outputs/2026-09-06/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game"
 TURNS = RUN_DIR / "714b2ba2e216_turns.jsonl"
 RULES_TEMPLATE = ROOT / "game/squid_game/prompts/tasks/signal_game/system_rules_puzzle.j2"
 OUT = ROOT / "docs/reports/notes/2026-09-07-v7esc-turn6-diagram.html"
@@ -860,7 +860,7 @@ def build_page(row: dict, ko_task: str) -> str:
     facts = f"""
       <div class="tw"><table>
         <tbody>
-          <tr><th>기록</th><td class="num">outputs/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game/714b2ba2e216_turns.jsonl</td></tr>
+          <tr><th>기록</th><td class="num">outputs/2026-09-06/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game/714b2ba2e216_turns.jsonl</td></tr>
           <tr><th>모델</th><td class="num">gemma4:cloud · ollama_cloud · temperature 1.0 · max_tokens 32768</td></tr>
           <tr><th>설정</th><td class="num">configs/experiment/signal_puzzle_v7esc_smoke.yaml</td></tr>
           <tr><th>칸</th><td class="num">framing={esc(row["framing"])} · forfeit={esc(row["forfeit_condition"])} · threat_level={row["threat_level"]}</td></tr>
@@ -1060,7 +1060,7 @@ def build_page(row: dict, ko_task: str) -> str:
     </ul>
 
     <div class="footer">
-      SOURCE · outputs/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game · turn 6<br>
+      SOURCE · outputs/2026-09-06/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game · turn 6<br>
       BUILD · scripts/plots/build_v7esc_turn6_diagram.py · 영어 원문은 기록에서 그대로 읽어 넣는다<br>
       DIAGRAM · diagram-design 기본 스킨 (브랜드 토큰 미적용) · flowchart · doc-wide · faithful · mixed
     </div>

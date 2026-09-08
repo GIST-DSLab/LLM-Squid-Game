@@ -100,7 +100,7 @@ seasons:
   cell_id: 2
   p_death_override: 0.0
 num_repetitions: 3
-output_dir: outputs/benchmark_threat3_omni_math_glm53flash
+output_dir: outputs/2026-09-03/benchmark_threat3_omni_math_glm53flash
 parallel_workers: 3
 lives:
   enabled: true

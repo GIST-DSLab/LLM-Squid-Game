@@ -37,9 +37,9 @@ name: signal_2x2_gptoss20b_n10
 description: >-
   2x2 (hz_1111 / baseline_flagship) x (forfeit allowed / not_allowed), 10 games
   per cell, full 10-turn per-turn-puzzle signal game on gpt-oss:20b-cloud.
-output_dir: outputs/signal_2x2_gptoss20b
+output_dir: outputs/2026-09-07/signal_2x2_gptoss20b
 num_repetitions: 10
-parallel_workers: 5
+parallel_workers: 10
 
 use_unified_turn: true
 use_forfeit_layer: true

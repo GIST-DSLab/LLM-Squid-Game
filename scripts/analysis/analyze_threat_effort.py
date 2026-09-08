@@ -7,7 +7,7 @@ resolves run directories, runs the battery, and writes the artefacts.
 Usage
 -----
     uv run python scripts/analysis/analyze_threat_effort.py \
-        outputs/lives_threat_smoke/ --out outputs/lives_threat_smoke/threat_effort
+        outputs/2026-09-02/lives_threat_smoke/ --out outputs/2026-09-02/lives_threat_smoke/threat_effort
 
 Several run directories may be given at once (they are pooled, with a
 ``model`` column preserved); each argument may be either a run directory
@@ -17,7 +17,7 @@ Writes ``results.md``, ``results.json``, ``long.csv``, ``km.csv`` and
 ``km.png`` into ``--out`` (default: ``<first run dir>/threat_effort``).
 
 ``--legacy-mapping`` maps the archived v6 framings onto the ladder so
-the same battery can be pointed at ``outputs/final_results/``.
+the same battery can be pointed at ``outputs/KDD-UC/``.
 """
 
 from __future__ import annotations
@@ -58,7 +58,7 @@ def main() -> None:
         help=(
             "Map the archived v6 framings onto the ladder "
             "(baseline_flagship 1 / flagship_corruption 2 / _terminal 3) "
-            "so H6 can be run over outputs/final_results as a check."
+            "so H6 can be run over outputs/KDD-UC as a check."
         ),
     )
     parser.add_argument(

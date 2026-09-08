@@ -167,6 +167,11 @@ LIVES_MARKERS: tuple[str, ...] = (
 # which the ``p_threat`` set is meant to be paired with.
 P_THREAT_MARKERS: tuple[str, ...] = (
     "P_THREAT",
+    # The same field under the name a no-stated-outcome cell asks for
+    # (2026-09-07, prompts/3-confidence_call.j2). Masking one label and
+    # not the other leaves the denominator legible in exactly the cells
+    # the control arm is made of.
+    "P_LIFE_LOSS",
     "threatened",
     "threat",
     "percent",

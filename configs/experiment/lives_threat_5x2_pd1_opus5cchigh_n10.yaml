@@ -284,7 +284,7 @@ seasons:
   cell_id: 9
   p_death_override: 0.0
 num_repetitions: 10
-output_dir: outputs/lives_threat_5x2_pd1_opus5cchigh
+output_dir: outputs/2026-09-03/lives_threat_5x2_pd1_opus5cchigh
 parallel_workers: 3
 lives:
   enabled: true

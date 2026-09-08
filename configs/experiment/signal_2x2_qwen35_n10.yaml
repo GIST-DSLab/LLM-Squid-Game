@@ -39,7 +39,7 @@ description: >-
   per cell, full 10-turn per-turn-puzzle signal game on qwen3.5:cloud.
 output_dir: outputs/signal_2x2_qwen35
 num_repetitions: 10
-parallel_workers: 5
+parallel_workers: 10
 
 use_unified_turn: true
 use_forfeit_layer: true

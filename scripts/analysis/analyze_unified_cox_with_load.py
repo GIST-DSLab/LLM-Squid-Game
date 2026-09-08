@@ -33,7 +33,7 @@ Mediation criterion:
     Partial mediation → |β_F (4-cov)| < |β_F (3-cov)| with non-trivial Δ
 
 Outputs:
-    outputs/final_results/cognitive_load_mediation.json — full per-model dump
+    outputs/KDD-UC/cognitive_load_mediation.json — full per-model dump
     stdout — markdown table for §3a paste-in.
 
 Usage:
@@ -310,7 +310,7 @@ def run_one(model_label: str, run_root: Path) -> dict:
 
 
 def main() -> None:
-    root = Path("outputs/final_results")
+    root = Path("outputs/KDD-UC")
     aggregate: dict = {}
     for label, d in MODEL_DIRS.items():
         run_root = root / d

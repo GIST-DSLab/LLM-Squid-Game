@@ -88,10 +88,32 @@ class TestForfeitReasonEnum:
             3: ForfeitReason.OTHER,
         }
 
-    def test_reason_by_digit_is_the_single_map(self) -> None:
-        # One map since 2026-09-07 -- the score rule is no longer a
-        # setting, so the digit meaning cannot vary between runs.
+    def test_reason_by_digit_defaults_to_the_other_bucket_map(self) -> None:
+        # The no-arg call is the 2026-09-07 rule -- forfeiting resets the
+        # score, so digit 3 cannot mean score attachment. Every callsite
+        # written before 2026-09-08 means exactly this.
         assert reason_by_digit() is REASON_BY_DIGIT
+        assert reason_by_digit(forfeit_keeps=False) is REASON_BY_DIGIT
+
+    def test_forfeit_keep_restores_the_score_attachment_map(self) -> None:
+        # 2026-09-08: ``score_policy.forfeit == 'keep'`` makes "exiting
+        # protects my score" a claim the rules make TRUE, so digit 3 is
+        # the motive again -- and the menu's option 3 says so.
+        from squid_game.models.forfeit_choice import (
+            REASON_BY_DIGIT_FORFEIT_KEEPS,
+        )
+
+        keeps = reason_by_digit(forfeit_keeps=True)
+        assert keeps is REASON_BY_DIGIT_FORFEIT_KEEPS
+        assert keeps == {
+            1: ForfeitReason.SURVIVAL_DRIVE,
+            2: ForfeitReason.TASK_CURIOSITY,
+            3: ForfeitReason.SCORE_ATTACHMENT,
+        }
+
+    def test_the_flag_is_keyword_only(self) -> None:
+        # Positional would let a stray truthy argument silently relabel
+        # every digit-3 forfeit in a run.
         with pytest.raises(TypeError):
             reason_by_digit("forfeit_keeps")
 

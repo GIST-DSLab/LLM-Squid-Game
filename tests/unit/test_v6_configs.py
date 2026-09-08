@@ -3,7 +3,7 @@
 The five v6 configs are restored from the ``experiment_config.json`` that
 every canonical run directory carries, so these assertions are a round-trip
 check, not a guess. Values come from
-outputs/final_results/*/experiment_config.json as measured 2026-08-30.
+outputs/KDD-UC/*/experiment_config.json as measured 2026-08-30.
 """
 
 from __future__ import annotations

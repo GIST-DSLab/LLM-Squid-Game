@@ -8,7 +8,7 @@ pooled, and writes the CSV / JSON / Markdown report to disk.
 Usage
 -----
     uv run python -m scripts.analysis.analyze_task_call_ri \
-        --root outputs/final_results --out results/call1_ri_analysis
+        --root outputs/KDD-UC --out results/call1_ri_analysis
 """
 
 from __future__ import annotations

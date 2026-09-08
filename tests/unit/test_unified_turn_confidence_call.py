@@ -180,10 +180,19 @@ def test_three_calls_in_order_and_decision_sees_confidence_cot() -> None:
     conf_sys, conf_user = agent.call_log[0][1], agent.call_log[0][2]
     dec_sys, dec_user = agent.call_log[1][1], agent.call_log[1][2]
     assert conf_sys == dec_sys
-    assert "P_THREAT:" in conf_user and "FORFEIT" not in conf_user.upper()
+    # The fixture framing states no outcome for the counter reaching zero,
+    # so the confidence call asks P_LIFE_LOSS about the counter rather than
+    # P_THREAT about an outcome that is not there (2026-09-07). Both land in
+    # ``p_threat_self``; the label follows the framing.
+    assert "P_LIFE_LOSS:" in conf_user
+    assert "FORFEIT" not in conf_user.upper()
     assert CONFIDENCE_BLOCK_HEADER in dec_user
     assert "five attempts, easy rule" in dec_user
-    assert "P_THREAT: 25" in dec_user
+    # The pasted block is labelled with the field the confidence call
+    # actually asked for, so ``P_THREAT`` never appears in a cell whose
+    # framing states no outcome.
+    assert "P_LIFE_LOSS: 25" in dec_user
+    assert "P_THREAT" not in dec_user
     assert result.p_threat_self == 25
     assert result.thinking_text_confidence == "five attempts, easy rule"
     assert result.raw_response_confidence == "P_THREAT: 25"

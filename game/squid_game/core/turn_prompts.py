@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from squid_game.core.forfeit import ForfeitController
 from squid_game.core.framing import FramingManager
-from squid_game.core.hazard_ramp import insert_before_status, render_hazard_ramp
+from squid_game.core.hazard_ramp import insert_ramp, render_hazard_ramp
 from squid_game.models.state import TurnContext
 from squid_game.tasks.base import RiskAwareTaskModule
 
@@ -73,7 +73,7 @@ def build_system_prompt(
     load-bearing twice over: the block's subject is "the outcome stated
     above" (the framing's own elimination rule), and matching the
     probe's slot is what makes a live run comparable with the v7 /
-    v7esc arms whose text it copies. ``insert_before_status`` does the
+    v7esc arms whose text it copies. ``insert_ramp`` does the
     splice on the rendered framing, so no ``.j2`` is edited. It takes
     the config rather than a string because two integers in it move
     with the lives counter, so it must be re-rendered from each call's
@@ -87,7 +87,7 @@ def build_system_prompt(
     changes not a byte.
     """
     prompt = framing_mgr.render_system_prompt(turn_context)
-    prompt = insert_before_status(
+    prompt = insert_ramp(
         prompt, render_hazard_ramp(hazard_ramp, turn_context)
     )
     rules = task.get_system_rules() if include_task_rules else ""
@@ -137,6 +137,7 @@ def compose_task_call_user_message(
     history_mode: str,
     max_history_turns: int,
     lives_label: str = "lives",
+    choice_echo: str = "",
 ) -> str:
     """Task-call body: history → task stimulus (no menu).
 
@@ -148,6 +149,15 @@ def compose_task_call_user_message(
     ``lives_label`` is forwarded to :func:`format_history_block` and is
     only consulted when ``history_mode == "outcome"``; see that
     function for the ``true_baseline`` vocabulary contract.
+
+    ``choice_echo`` (2026-09-07) is the one line from
+    ``prompts/7-choice_echo.j2`` restating what the decision call
+    settled, placed BETWEEN the history and the stimulus: it is context
+    for the round, not an instruction about it, and it mirrors the slot
+    the confidence CoT occupies in the decision call. Empty (the
+    default) on every path that issues no decision call -- Cell 0's
+    menu-skipped turn has no choice to echo -- and on every legacy
+    caller, so those render byte-identically.
     """
     sections: list[str] = []
     history_block = format_history_block(
@@ -155,6 +165,8 @@ def compose_task_call_user_message(
     )
     if history_block:
         sections.append(history_block)
+    if choice_echo:
+        sections.append(choice_echo)
     if task_ctx.prompt_section:
         sections.append(task_ctx.prompt_section)
     return "\n\n".join(sections).strip()

@@ -20,7 +20,7 @@ context but not required).
 
 Reads each model's ``phase3_analysis/regime_stratified_forfeit_events.csv``
 (raw_digit + regime + framing) and writes
-``outputs/final_results/verbal_reason_summary.json`` keyed by model label — the
+``outputs/KDD-UC/verbal_reason_summary.json`` keyed by model label — the
 same convention as the other analyze_* summaries that seed the web-arena
 ``model_stats`` table.
 
@@ -123,8 +123,8 @@ def main() -> None:
         parser,
         flag="--results-root",
         type_=None,
-        default="outputs/final_results",
-        help="Directory holding the per-model run dirs (default outputs/final_results).",
+        default="outputs/KDD-UC",
+        help="Directory holding the per-model run dirs (default outputs/KDD-UC).",
     )
     args = parser.parse_args()
 

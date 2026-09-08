@@ -10,7 +10,7 @@ Bundles fit per model:
   - v7b_subgroup_prone: primary spec on forfeit-prone session subset
   - v7b_subgroup_rare : primary spec on forfeit-rare session subset
 
-Output: outputs/final_results/framing_ri_forfeit_continue.json — feeds
+Output: outputs/KDD-UC/framing_ri_forfeit_continue.json — feeds
 the §3.3 (primary + robustness tables) and §3.4 V5 / V7 rows of the paper.
 
 Usage:
@@ -296,7 +296,7 @@ def main() -> None:
     args = parser.parse_args()
     bootstrap_n = 0 if args.skip_bootstrap else args.bootstrap_n
 
-    root = Path("outputs/final_results")
+    root = Path("outputs/KDD-UC")
     aggregate: dict = {}
     for label, d in MODEL_DIRS.items():
         csv = root / d / "phase3_analysis" / "unit14_turn_observations.csv"

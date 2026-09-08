@@ -57,12 +57,28 @@ assets/figures/run_*/
 /data/benchmarks/*
 !/data/benchmarks/hard_math_fixture.jsonl
 
-# Benchmark experiment outputs. Unlike outputs/final_results/** (which this
+# The `outputs/*/<name>/` twin of each rule above. Runs were regrouped under
+# `outputs/YYYY-MM-DD/` on 2026-09-08; the single-level patterns stop matching
+# at that depth, and without the twin a benchmark run's GPQA question text
+# would become committable. The twin ignores the *contents* rather than the
+# directory, so `README.md`, `config/` and `reports/` inside a date-filed run
+# can be re-included: what these rules exist to keep out is the raw per-turn
+# trace, not the write-up. Ten reports that were tracked at `docs/reports/`
+# and `weekly-report/` moved into such directories on 2026-09-08 and would
+# otherwise have dropped out of the repository.
+
+# Benchmark experiment outputs. Unlike outputs/KDD-UC/** (which this
 # repo commits, LFS-tracked), a benchmark run's per-turn records are derived
 # from datasets that must not be republished, so they stay local. See
 # _UNPERSISTED_META_KEYS in game/squid_game/tasks/benchmark/module.py for the
 # in-code half of the same rule.
 outputs/benchmark_*/
+outputs/*/benchmark_*/**
+!outputs/*/benchmark_*/README.md
+!outputs/*/benchmark_*/config/
+!outputs/*/benchmark_*/config/**
+!outputs/*/benchmark_*/reports/
+!outputs/*/benchmark_*/reports/**
 
 # SentenceBERT embedding cache for scripts/analysis/probe_reasoning_embeddings.py.
 # Regenerable from the turn traces; ~13 MB per (channel, mask variant).
@@ -72,15 +88,21 @@ outputs/benchmark_*/
 **/_embedding_cache/
 
 # analyze_call1_ri.py dumps its input frame beside the report. Nothing in the
-# repo reads it -- load_all() rebuilds it from outputs/final_results/ on every
+# repo reads it -- load_all() rebuilds it from outputs/KDD-UC/ on every
 # run -- so the 1.3 MB copy was tracked for no consumer. Untracked 2026-08-31.
 results/call1_ri_analysis/turn_observations.csv
 
 # Lives + threat-ladder experiment outputs (2026-09-03). Kept local for the
 # same reason as outputs/benchmark_*/: these are exploratory runs of a design
 # still under revision, and the traces are large. Promote a run into
-# outputs/final_results/ deliberately once it is the one being reported.
+# outputs/KDD-UC/ deliberately once it is the one being reported.
 outputs/lives_threat_*/
+outputs/*/lives_threat_*/**
+!outputs/*/lives_threat_*/README.md
+!outputs/*/lives_threat_*/config/
+!outputs/*/lives_threat_*/config/**
+!outputs/*/lives_threat_*/reports/
+!outputs/*/lives_threat_*/reports/**
 
 # Signal-puzzle v7esc smoke runs (2026-09-07). Exploratory prompt-assembly
 # runs, kept local for the same reason as outputs/lives_threat_*/ and
@@ -88,3 +110,25 @@ outputs/lives_threat_*/
 # docs/reports/notes/2026-09-07-v7esc-*.html, not a reported experiment.
 # The reports carry every number; the raw calls stay on disk.
 outputs/signal_puzzle_*/
+outputs/*/signal_puzzle_*/**
+!outputs/*/signal_puzzle_*/README.md
+!outputs/*/signal_puzzle_*/config/
+!outputs/*/signal_puzzle_*/config/**
+!outputs/*/signal_puzzle_*/reports/
+!outputs/*/signal_puzzle_*/reports/**
+
+# Web Arena database backups (2026-09-08). Two 135 MB SQLite dumps -- over
+# GitHub's 100 MB single-file limit, and regenerable from the live DB.
+outputs/web_arena/*.bak
+outputs/web_arena/web_arena.db.*
+
+# Aborted runs (2026-09-08). Kept on disk because two of the three hold 31
+# and 22 real seasons, but they are runs whose prompts changed mid-flight or
+# whose config was wrong -- not evidence for anything. See outputs/README.md.
+outputs/_aborted/
+
+# Pre-P6 leftover: figures/ was split into assets/brand/ and assets/figures/
+# (P6 Task 3) and tests/unit/test_artefact_layout.py asserts it is gone. The
+# directory came back as untracked build output; ignored so it cannot be
+# committed by accident, pending a decision to delete it.
+figures/

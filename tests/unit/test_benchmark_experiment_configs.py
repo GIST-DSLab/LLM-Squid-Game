@@ -122,7 +122,7 @@ def test_every_season_carries_the_canonical_seed(name):
     identical item sequence (item effects confounded with turn number) and
     ``--resume`` collapses them onto one ``(framing, forfeit, social, seed)``
     key. 42 is the seed the canonical v6 signal-game run used (see
-    ``outputs/final_results/20260422_0218_gemini-2.5-flash_signal-game/
+    ``outputs/KDD-UC/20260422_0218_gemini-2.5-flash_signal-game/
     experiment_config.json``)."""
     config = load_config_from_yaml(str(_CONFIG_DIR / name))
     seeds = [season.task_config.seed for season in config.seasons]

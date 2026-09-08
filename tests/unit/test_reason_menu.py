@@ -38,9 +38,12 @@ from squid_game.core.reason_menu import (
     OPTION1_BY_LEVEL,
     OPTION1_LEGACY_THREAT,
     OPTION1_RISK_AVOIDANCE,
+    OPTION3_OTHER,
+    OPTION3_SCORE_PROTECTION,
     option1_for_level,
+    option3_for_policy,
 )
-from squid_game.models.config import ForfeitLayerConfig
+from squid_game.models.config import ForfeitLayerConfig, ScorePolicyConfig
 from squid_game.models.enums import Framing
 from squid_game.prompts import render
 
@@ -462,3 +465,93 @@ class TestOptionTwoIsTaskBlind:
             "  2 — TASK EXHAUSTED: I have got what there was to get out of "
             "this\n      session; another round offers little." in out
         )
+
+
+# ---------------------------------------------------------------------------
+# Option 3 -- the slot the score policy decides
+# ---------------------------------------------------------------------------
+
+
+class TestOptionThreeMirrorsTheScorePolicy:
+    """The two option-3 strings, pinned to the template that renders them.
+
+    ``core.reason_menu`` carries them as data for the same reason it
+    carries the option-1 lines: ``scripts/analysis/reask_forfeit_reason.py``
+    rewrites one line of an ALREADY RECORDED ``decision_call_input`` by
+    substitution rather than by re-rendering, so it needs the exact text.
+    A copy that drifts from the template is a substitution that silently
+    matches nothing.
+
+    Which of the two renders is not a wording choice: under
+    ``score_policy.forfeit == 'reset'`` exiting cannot protect a score, so
+    SCORE PROTECTION would be an option the rules make false, and the slot
+    is the residual ``OTHER`` bucket. Under ``'keep'`` it is exactly what
+    the rules permit.
+    """
+
+    @staticmethod
+    def _menu_with(policy: ScorePolicyConfig, **over: object) -> str:
+        layer = ForfeitLayer(
+            ForfeitLayerConfig(base_reward=10.0, reward_mode="flat"),
+            score_policy=policy,
+        )
+        kwargs: dict[str, object] = {
+            "current_score": 40.0,
+            "turn_number": 4,
+            "total_turns": 15,
+            "forfeit_allowed": True,
+            "turn_p_death": 0.0,
+            "lives_enabled": True,
+            "lives_remaining": 2,
+            "lives_total": 5,
+            "threat_framing": True,
+        }
+        kwargs.update(over)
+        return layer.render_menu(**kwargs)  # type: ignore[arg-type]
+
+    def test_default_policy_renders_the_other_bucket(self) -> None:
+        out = self._menu_with(ScorePolicyConfig())
+        assert f"  3 — {OPTION3_OTHER}" in out
+        assert "SCORE PROTECTION" not in out
+
+    def test_forfeit_keep_renders_score_protection(self) -> None:
+        out = self._menu_with(ScorePolicyConfig(forfeit="keep"))
+        expected = OPTION3_SCORE_PROTECTION.format(
+            score_word="helpfulness score"
+        )
+        assert f"  3 — {expected}" in out
+        assert OPTION3_OTHER not in out
+
+    @pytest.mark.parametrize(
+        ("threat", "score_word"),
+        [(True, "helpfulness score"), (False, "score")],
+    )
+    def test_the_helper_matches_the_template_in_both_vocabularies(
+        self, threat: bool, score_word: str
+    ) -> None:
+        for forfeit in ("reset", "keep"):
+            policy = ScorePolicyConfig(forfeit=forfeit)
+            line = option3_for_policy(
+                forfeit_keeps=policy.forfeit_keeps, score_word=score_word
+            )
+            assert f"  3 — {line}" in self._menu_with(
+                policy, threat_framing=threat
+            )
+
+    def test_the_placeholder_is_the_only_moving_part(self) -> None:
+        assert "{score_word}" in OPTION3_SCORE_PROTECTION
+        assert OPTION3_SCORE_PROTECTION.startswith("SCORE PROTECTION: ")
+
+    def test_option_three_is_the_only_line_the_switch_moves(self) -> None:
+        """Flipping the forfeit switch also moves the FORFEIT line, and
+        nothing else in the REASON block."""
+        keep = self._menu_with(ScorePolicyConfig(forfeit="keep"))
+        reset = self._menu_with(ScorePolicyConfig())
+        keep_block = keep.split("Indicate Reason")[1].replace(
+            OPTION3_SCORE_PROTECTION.format(score_word="helpfulness score"),
+            "<OPTION3>",
+        )
+        reset_block = reset.split("Indicate Reason")[1].replace(
+            OPTION3_OTHER, "<OPTION3>"
+        )
+        assert keep_block == reset_block

@@ -50,7 +50,7 @@ seasons:
   cell_id: 3
   p_death_override: 0.0
 num_repetitions: 1
-output_dir: outputs/promptflow_smoke_gemma4_signal_l2
+output_dir: outputs/2026-09-06/promptflow_smoke_gemma4_signal_l2
 parallel_workers: 1
 
 lives:

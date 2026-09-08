@@ -67,7 +67,7 @@ the image is rebuilt (`run_docker.sh` rebuilds on every invocation).
 ```bash
 docker compose -f docker-compose.runner.yml build analysis
 
-RUN=outputs/lives_threat_docker_smoke/<ts>_gpt-oss-120b-cloud_signal-game
+RUN=outputs/2026-09-03/lives_threat_docker_smoke/<ts>_gpt-oss-120b-cloud_signal-game
 
 docker compose -f docker-compose.runner.yml run --rm analysis \
   uv run --no-sync python -m scripts.analysis.probe_threat_motive \
@@ -75,13 +75,13 @@ docker compose -f docker-compose.runner.yml run --rm analysis \
 
 docker compose -f docker-compose.runner.yml run --rm analysis \
   uv run --no-sync python -m scripts.analysis.probe_reasoning_embeddings \
-    --root outputs/lives_threat_docker_smoke --target threat_level \
+    --root outputs/2026-09-03/lives_threat_docker_smoke --target threat_level \
     --channel task --channel forfeit --n-permutations 20 --n-splits 3 \
     --min-rows 5 --out results/threat_probe/docker_smoke
 
 docker compose -f docker-compose.runner.yml run --rm analysis \
   uv run --no-sync python scripts/analysis/analyze_threat_effort.py \
-    outputs/lives_threat_docker_smoke/ --out results/threat_effort_docker_smoke
+    outputs/2026-09-03/lives_threat_docker_smoke/ --out results/threat_effort_docker_smoke
 ```
 
 `./results` is bind-mounted, so the artefacts land on the host. The

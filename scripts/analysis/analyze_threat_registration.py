@@ -2,8 +2,8 @@
 
 Example:
   uv run python scripts/analysis/analyze_threat_registration.py \
-      --run outputs/final_results/20260422_0902_gpt-oss-20b-cloud_signal-game gpt-oss-20b-cloud \
-      --run outputs/final_results/20260422_0902_nemotron-3-nano-30b-cloud_signal-game nemotron-3-nano-30b-cloud \
+      --run outputs/KDD-UC/20260422_0902_gpt-oss-20b-cloud_signal-game gpt-oss-20b-cloud \
+      --run outputs/KDD-UC/20260422_0902_nemotron-3-nano-30b-cloud_signal-game nemotron-3-nano-30b-cloud \
       --judge gemini gemini-2.5-flash GEMINI_API_KEY \
       --out outputs/threat_registration_analysis
 """
@@ -17,7 +17,7 @@ from squid_game.providers.factory import available_providers, build_provider
 from squid_game.evaluation.semantic.threat_judge import ThreatJudge
 from squid_game.evaluation.semantic.threat_registration import run_analysis
 
-# Paper SD-Behavioral pass/fail (docs/paper/sections/04_empirical_findings.tex).
+# Paper SD-Behavioral pass/fail (paper/en/sections/04_empirical_findings.tex).
 SD_BEHAVIORAL_PASS = {
     "gemini-2.5-flash": True, "qwen3-next-80b-cloud": True,
     "gpt-oss-20b-cloud": False, "nemotron-3-nano-30b-cloud": False,

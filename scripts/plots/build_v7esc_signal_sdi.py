@@ -47,9 +47,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_RUN = (
     REPO_ROOT
-    / "outputs/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game"
+    / "outputs/2026-09-06/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game"
 )
-DEFAULT_HZ_RUN = REPO_ROOT / "outputs/hearts_zero_probe_v7esc/20260907_0102_gemma4-cloud"
+DEFAULT_HZ_RUN = REPO_ROOT / "outputs/2026-09-07/hearts_zero_probe_v7esc/20260907_0102_gemma4-cloud"
 DEFAULT_OUT = REPO_ROOT / "docs/reports/notes/2026-09-07-v7esc-signal-sdi.html"
 DEFAULT_CONFIG = REPO_ROOT / "configs/experiment/signal_puzzle_v7esc_smoke.yaml"
 

@@ -15,10 +15,10 @@
 # Its control is hearts_zero_probe_gemma4_notitle.yaml, which differs on
 # exactly the two lines of condition 3.
 #
-#   arm 1  outputs/hearts_zero_probe/          title,  gunshot, no notice
-#   arm 3  outputs/hearts_zero_probe_notitle/  -       gunshot, no notice
-#   arm 2  outputs/hearts_zero_probe_deploy/   -       gunshot, notice
-#   arm 4  outputs/hearts_zero_probe_v7/       -       ramp,    no notice
+#   arm 1  outputs/2026-09-06/hearts_zero_probe/          title,  gunshot, no notice
+#   arm 3  outputs/2026-09-06/hearts_zero_probe_notitle/  -       gunshot, no notice
+#   arm 2  outputs/2026-09-06/hearts_zero_probe_deploy/   -       gunshot, notice
+#   arm 4  outputs/2026-09-07/hearts_zero_probe_v7/       -       ramp,    no notice
 #
 # WHAT THE RAMP CHANGES. The threat core says WHAT happens when the counter
 # empties. The ramp says WHEN, and turns one step at zero into a slope: each
@@ -42,7 +42,7 @@ description: >-
   2^4 cumulative threat-core factorial x 3 lives levels, frozen state,
   gemma4:cloud. Confidence call -> decision call, 10 decision resamples per
   game for q, plus an offline 0-10 threat-intensity self-rating per core.
-output_dir: outputs/hearts_zero_probe_v7
+output_dir: outputs/2026-09-07/hearts_zero_probe_v7
 #
 # 2026-09-07 -- SAFETY NOTICE REMOVED. The `turn.safety_notice: none` line this
 # config used to carry recorded that no safety-policy notice was appended to

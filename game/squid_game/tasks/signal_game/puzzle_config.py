@@ -110,25 +110,36 @@ def underdetermined_turns(seed: int, cfg: UnderdeterminedConfig) -> tuple[int, .
     from the seed both keeps this module stateless and makes the cells of
     one repetition play identical underdetermined turns (the paired design
     needs that). The ``+ b`` term offsets each block from the one before,
-    so block A and block B never sit at the same position within their
-    blocks. Over three consecutive seeds a three-turn block visits each of
-    its positions exactly once — the Latin square of spec §3.2.
+    so consecutive blocks never sit at the same position within their
+    blocks. Over *w* consecutive seeds a *w*-turn block visits each of its
+    positions exactly once — the Latin square of spec §3.2.
 
-    ⚠️ With the shipped ``blocks: [[1, 3], [4, 6]]`` this yields exactly
-    three schedules, keyed on ``seed % 3``::
+    ⚠️ With the shipped ``blocks: [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]``
+    (2026-09-07; it was ``[[1, 3], [4, 6]]`` before) every block is two
+    turns wide, so there are exactly **two** schedules, keyed on
+    ``seed % 2``::
 
-        seed % 3 == 0 -> (1, 5)   gap 4
-        seed % 3 == 1 -> (2, 6)   gap 4
-        seed % 3 == 2 -> (3, 4)   gap 1  <-- the two guess turns are ADJACENT
+        seed % 2 == 0 -> (1, 4, 5, 8, 9)
+        seed % 2 == 1 -> (2, 3, 6, 7, 10)
 
-    So one repetition in three puts the two coin flips back to back, and
-    the inter-flip gap is confounded with ``seed % 3``. Any secondary
-    analysis of what happens on the turn *after* an underdetermined turn
-    (the spec's post-guess FORFEIT rate, for one) has no clean
-    post-turn for those repetitions — turn 4 is itself a guess turn.
-    Condition on the gap, or drop the ``seed % 3 == 2`` repetitions from
-    that analysis. The formula is spec-fixed and pinned by tests; do not
-    change the ``+ b`` offset to spread the schedule out.
+    Consequences an analyst must carry:
+
+    * Half of every turn pair is a guess turn: **5 of the 10 turns** are
+      unsolvable, up from 2. Any accuracy or mastery metric that does not
+      condition on ``underdetermined`` is now half noise, not a fifth.
+    * Both schedules contain **adjacent** guess turns (4-5 and 8-9 on even
+      seeds; 2-3 and 6-7 on odd seeds), which is unavoidable when the block
+      width equals 2 and consecutive blocks alternate offsets. The spec's
+      post-guess analyses (FORFEIT rate on the turn *after* a guess turn)
+      therefore have no clean post-turn for those pairs — condition on
+      whether the next turn is itself underdetermined, or use only the
+      isolated ones (1, 8-as-follower excluded, etc.).
+    * With only two schedules the position is confounded with ``seed % 2``
+      rather than ``seed % 3``; a paired design over an even number of
+      repetitions balances it, an odd number does not.
+
+    The ``+ b`` offset is spec-fixed and pinned by tests; do not change it
+    to spread the schedule out.
     """
     return tuple(
         start + (seed + b) % (end - start + 1)

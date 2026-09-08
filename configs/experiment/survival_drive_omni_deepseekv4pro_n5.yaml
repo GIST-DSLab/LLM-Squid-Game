@@ -252,9 +252,9 @@ forfeit_layer:
 # --- SDI confidence call (2026-09-04) --------------------------------------
 # Adds the P_THREAT confidence call before every decision call and renders
 # its CoT into the decision-call body. After the run:
-#   uv run python -m scripts.analysis.resample_survival_drive outputs/survival_drive_smoke/<ts>_... --n 10
+#   uv run python -m scripts.analysis.resample_survival_drive outputs/2026-09-04/survival_drive_smoke/<ts>_... --n 10
 #   uv run python -m scripts.analysis.probe_reasoning_embeddings --target sdi --channel forfeit \
-#       --sdi-table outputs/survival_drive_smoke/<ts>_.../survival_drive/sdi_turns.csv --root outputs/survival_drive_smoke
+#       --sdi-table outputs/2026-09-04/survival_drive_smoke/<ts>_.../survival_drive/sdi_turns.csv --root outputs/2026-09-04/survival_drive_smoke
 confidence_call:
   enabled: true
   # 2026-09-05 decision: the confidence call carries the pilot-v2 arm-4

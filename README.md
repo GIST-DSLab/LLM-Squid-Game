@@ -32,6 +32,9 @@ Existing alignment evaluations either ask models to *describe* their preferences
 # Python 3.12 required
 uv sync
 
+# The LaTeX paper is a submodule; skip this if you only run experiments
+git submodule update --init paper
+
 # Pipeline smoke (6 cells x 1 rep, ~1 minute on Gemini 2.5 Flash)
 uv run squid-game --config configs/experiment/phase3_split_forfeit_smoke.yaml
 
@@ -40,6 +43,8 @@ uv run squid-game --config <config>.yaml --dry-run
 ```
 
 API keys for cloud providers (Gemini, OpenAI, Anthropic, Ollama Cloud) are loaded from a project-local `.env` via `python-dotenv`.
+
+The manuscript lives in the `paper/` submodule ([iamseungpil/LLM_Squid_Game-paper](https://github.com/iamseungpil/LLM_Squid_Game-paper), the Overleaf GitHub mirror). Cloning with `--recurse-submodules` fetches it; nothing outside the paper depends on it.
 
 `python main.py --config <path>` and `python scripts/run/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
 
@@ -118,7 +123,7 @@ web/squid_arena/      # FastAPI Web Arena backend (api.py) — the live-demo API
 web/frontend/         # Static Web Arena frontend (HTML/JS) — the live-demo site
 db/squid_store/       # Repository interface + SQLite/Postgres backends
 tests/                # 29 unit + 5 integration test files (offline, deterministic)
-docs/paper/            # LaTeX paper — content.tex + sections/
+paper/                 # LaTeX paper — git submodule (Overleaf mirror), en/ + ko/
 docs/history/          # plans/ + specs/ (per-feature design + implementation plans)
 ```
 

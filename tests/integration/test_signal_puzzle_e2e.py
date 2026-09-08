@@ -385,14 +385,18 @@ class TestSignalPuzzleSmoke:
         assert ladder.underdetermined is not None
         return set(underdetermined_turns(seed, ladder.underdetermined))
 
-    def test_two_underdetermined_turns_per_season(
+    def test_scheduled_turns_per_season_are_unsolvable(
         self, patch_runner_provider, tmp_path: Path
     ) -> None:
-        """Exactly two turns per season are unsolvable, at the scheduled positions."""
+        """One turn of every two-turn block is unsolvable, at the scheduled positions.
+
+        Five blocks since 2026-09-07 (it was two three-turn blocks before),
+        so half the ladder is a coin flip.
+        """
         cfg = _load_config(tmp_path)
         seed = _season_seed(cfg)
         expected = self._expected_underdetermined(seed)
-        assert len(expected) == 2
+        assert len(expected) == 5
 
         patch_runner_provider(response_fn=_make_response_fn(seed, answer_correctly=True))
         ExperimentRunner(cfg).run()
@@ -442,16 +446,21 @@ class TestSignalPuzzleSmoke:
         patch_runner_provider(response_fn=response_fn)
         ExperimentRunner(cfg).run()
 
+        # With five guess turns and three lives the solver is eliminated on the
+        # third one, so the season stops there instead of playing all ten turns.
+        played = sorted(expected)[:3]
+        last_turn = played[-1]
+
         run_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
         for rows in _turn_rows(run_dir).values():
-            assert len(rows) == 10, "two lives lost out of three: the season finishes"
+            assert len(rows) == last_turn, "three lives lost: the season ends early"
             wrong = {
                 r["task_metadata"]["puzzle_turn"]
                 for r in rows
                 if r["task_metadata"]["correct"] is False
             }
-            assert wrong == expected
-            assert rows[-1]["lives_after"] == 1
+            assert wrong == set(played)
+            assert rows[-1]["lives_after"] == 0
             # The hypothesis was consistent with everything it was shown, yet
             # it disagrees with the truth — the divergence this design exists
             # to observe. The pairing is the whole point: consistency alone
@@ -471,5 +480,6 @@ class TestSignalPuzzleSmoke:
                     assert md["rule_consistent_with_clues"] is True
                     assert md["rule_match_score"] == 100.0
         for season in _seasons(run_dir):
-            assert season.eliminated is False
-            assert season.lives_at_end == 1
+            # Three coin flips, three lives: losing all of them is the exit.
+            assert season.eliminated is True
+            assert season.lives_at_end == 0

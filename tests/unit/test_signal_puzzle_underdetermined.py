@@ -285,12 +285,21 @@ class TestSchedule:
         assert underdetermined_turns(43, cfg) == (2, 6)
         assert underdetermined_turns(44, cfg) == (3, 4)
 
+    def test_shipped_five_block_layout_has_two_schedules(self) -> None:
+        """Width-2 blocks: the schedule is keyed on ``seed % 2``, not ``% 3``."""
+        cfg = UnderdeterminedConfig(blocks=[(1, 2), (3, 4), (5, 6), (7, 8), (9, 10)])
+        assert underdetermined_turns(42, cfg) == (1, 4, 5, 8, 9)
+        assert underdetermined_turns(43, cfg) == (2, 3, 6, 7, 10)
+        assert underdetermined_turns(44, cfg) == underdetermined_turns(42, cfg)
+        # Every turn of the ladder is reachable across the two schedules.
+        assert set(underdetermined_turns(42, cfg)) | set(underdetermined_turns(43, cfg)) == set(range(1, 11))
+
 
 class TestUnderdeterminedConfigValidation:
     def test_packaged_yaml_has_the_block(self) -> None:
         cfg = load_signal_puzzle_config()
         assert cfg.underdetermined is not None
-        assert cfg.underdetermined.blocks == ((1, 3), (4, 6))
+        assert cfg.underdetermined.blocks == ((1, 2), (3, 4), (5, 6), (7, 8), (9, 10))
         assert cfg.underdetermined.candidate_actions == 2
 
     def test_absent_block_is_none(self, tmp_path: Path) -> None:
@@ -357,8 +366,8 @@ class TestModuleWiring:
         assert module._underdetermined_turns == ()
 
     def test_schedule_computed_from_seed(self) -> None:
-        assert _module(seed=42, underdetermined=True)._underdetermined_turns == (1, 5)
-        assert _module(seed=43, underdetermined=True)._underdetermined_turns == (2, 6)
+        assert _module(seed=42, underdetermined=True)._underdetermined_turns == (1, 4, 5, 8, 9)
+        assert _module(seed=43, underdetermined=True)._underdetermined_turns == (2, 3, 6, 7, 10)
 
     def test_rejected_outside_puzzle_mode(self) -> None:
         with pytest.raises(ValueError, match="per_turn_puzzle"):

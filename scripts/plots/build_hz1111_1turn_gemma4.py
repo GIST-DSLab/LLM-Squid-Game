@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the hz_1111 / gemma4 one-turn note (HTML) from the recorded run.
 
-Reads ``outputs/signal_puzzle_hz1111_1turn_gemma4/<run>/`` -- one season,
+Reads ``outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/<run>/`` -- one season,
 exactly one turn, ``gemma4:cloud`` through the local Ollama daemon's native
 ``/api/chat`` -- and writes a single HTML page into ``docs/reports/notes/``.
 
@@ -337,7 +337,7 @@ def build(rec: dict, parts: dict) -> str:
             "🧠 chain of thought — 410 thinking tokens (verbatim)",
         ),
         module_rows=module_rows,
-        run_dir="outputs/signal_puzzle_hz1111_1turn_gemma4/20260907_0532_gemma4-cloud_signal-game",
+        run_dir="outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/20260907_0532_gemma4-cloud_signal-game",
         sys_details=details(
             "이 콜의 시스템 프롬프트 전문 (system_prompt, 2,137자)",
             "system prompt, verbatim (system_prompt, 2,137 chars)",

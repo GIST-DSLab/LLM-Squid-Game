@@ -47,7 +47,7 @@ name: hearts_zero_v7_smoke
 description: >-
   Single-game render smoke of the V7 hazard ramp on hz_1111 at 3/5 lives,
   gpt-oss:120b-cloud. Confidence call -> decision call, no resampling.
-output_dir: outputs/hearts_zero_v7_smoke
+output_dir: outputs/2026-09-07/hearts_zero_v7_smoke
 
 # --- Model -----------------------------------------------------------------
 # The local ollama daemon proxies the :cloud tag to ollama.com, so no API key

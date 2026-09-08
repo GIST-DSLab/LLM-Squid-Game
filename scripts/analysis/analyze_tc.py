@@ -3,7 +3,7 @@
 Reads each model's ``unit14_turn_observations.csv`` directly (avoids
 re-loading season_results.jsonl) and writes ``tc_indicator.json`` next
 to it. Also writes a 4-model aggregate at
-``outputs/final_results/tc_indicator_summary.json`` for the §6.4 /
+``outputs/KDD-UC/tc_indicator_summary.json`` for the §6.4 /
 §6.7 / §8 paper tables.
 
 Usage:

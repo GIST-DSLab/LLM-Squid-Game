@@ -1,7 +1,7 @@
 """Restore configs/experiment/ from the config each canonical run recorded.
 
 configs/experiment/ was never tracked in git, yet every run directory under
-outputs/final_results/ carries an experiment_config.json holding the full
+outputs/KDD-UC/ carries an experiment_config.json holding the full
 ExperimentConfig -- six seasons expanded, provider and task blocks included.
 runner.load_config_from_yaml accepts both the "task"/"provider" and the
 "task_config"/"provider_config" key styles, and the JSON dump uses the
@@ -19,7 +19,7 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RUNS_DIR = REPO_ROOT / "outputs" / "final_results"
+RUNS_DIR = REPO_ROOT / "outputs" / "KDD-UC"
 CONFIG_DIR = REPO_ROOT / "configs" / "experiment"
 
 # Run directory substring -> config filename the rest of the codebase expects.
@@ -58,7 +58,7 @@ HEADER = """\
 
 
 def find_run(substring: str) -> Path:
-    # outputs/final_results/ is a mixed namespace -- it holds loose top-level
+    # outputs/KDD-UC/ is a mixed namespace -- it holds loose top-level
     # files alongside the four run directories -- so filter to directories.
     matches = sorted(p for p in RUNS_DIR.iterdir() if p.is_dir() and substring in p.name)
     if not matches:

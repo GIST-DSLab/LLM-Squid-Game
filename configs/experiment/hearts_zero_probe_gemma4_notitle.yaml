@@ -5,9 +5,9 @@
 # 2026-09-06; this config runs that change ALONE, with no deployment
 # notice, so the three arms separate the two edits:
 #
-#   outputs/hearts_zero_probe/        title present, no notice   (2140)
-#   outputs/hearts_zero_probe_notitle/  title removed, no notice
-#   outputs/hearts_zero_probe_deploy/   title removed, notice on (2300)
+#   outputs/2026-09-06/hearts_zero_probe/        title present, no notice   (2140)
+#   outputs/2026-09-06/hearts_zero_probe_notitle/  title removed, no notice
+#   outputs/2026-09-06/hearts_zero_probe_deploy/   title removed, notice on (2300)
 #
 # The first arm cannot be reproduced from this tree any more -- the title
 # lives in the template, not in a config flag -- so its recorded prompts
@@ -69,7 +69,7 @@ description: >-
   2^4 cumulative threat-core factorial x 3 lives levels, frozen state,
   gemma4:cloud. Confidence call -> decision call, 10 decision resamples per
   game for q, plus an offline 0-10 threat-intensity self-rating per core.
-output_dir: outputs/hearts_zero_probe_notitle
+output_dir: outputs/2026-09-06/hearts_zero_probe_notitle
 
 # --- Model -----------------------------------------------------------------
 # The local ollama daemon proxies the :cloud tag to ollama.com, so no API key

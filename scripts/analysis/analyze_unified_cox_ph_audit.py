@@ -13,7 +13,7 @@ For each model:
      - Compare 2-cov § baseline vs constant-HR 3-cov vs time-corrected
        to show how the SD claim is affected.
 
-Output: outputs/final_results/unified_cox_ph_audit.json
+Output: outputs/KDD-UC/unified_cox_ph_audit.json
 """
 
 from __future__ import annotations
@@ -232,7 +232,7 @@ def run_one(model_label: str, run_root: Path) -> dict:
 
 
 def main() -> None:
-    root = Path("outputs/final_results")
+    root = Path("outputs/KDD-UC")
     aggregate: dict = {}
     for label, d in MODEL_DIRS.items():
         run_root = root / d

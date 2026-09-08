@@ -16,7 +16,7 @@ renders with no network at all.
 
 Usage:
     uv run python scripts/plots/build_v7esc_turnflow.py \\
-        outputs/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game \\
+        outputs/2026-09-06/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game \\
         --out docs/reports/notes/2026-09-07-v7esc-signal-puzzle-turnflow.html
 """
 

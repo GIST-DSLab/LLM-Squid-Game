@@ -258,7 +258,7 @@ def write_markdown(results: dict, path: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root", default="outputs/final_results")
+    ap.add_argument("--root", default="outputs/KDD-UC")
     ap.add_argument("--out", default="results/fspm_composite/kdd4")
     ap.add_argument("--boot", type=int, default=1000)
     ap.add_argument("--seed", type=int, default=20260906)

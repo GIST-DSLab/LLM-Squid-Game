@@ -1,11 +1,15 @@
 """docs/ is split by what a document is for, not by who wrote it.
 
-Four kinds live here and they have different lifetimes: the paper source
-changes with the manuscript, design docs are the spec of record, reports
-are dated findings that are never revised, and history is an append-only
-log of how the work went. Mixing them is what produced a docs/ where two
-markdown files sat loose at the top level with no indication of which kind
-they were.
+Three kinds live here and they have different lifetimes: design docs are
+the spec of record, reports are dated findings that are never revised, and
+history is an append-only log of how the work went. Mixing them is what
+produced a docs/ where two markdown files sat loose at the top level with
+no indication of which kind they were.
+
+A fourth kind, the paper source, used to live at docs/paper/. It left on
+2026-09-08: the manuscript is now the top-level ``paper/`` submodule (the
+Overleaf mirror), which is on a different lifetime again -- it is versioned
+by another repository and pinned here by commit.
 """
 
 from __future__ import annotations
@@ -14,10 +18,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCS = REPO_ROOT / "docs"
-KINDS = ("paper", "design", "reports", "history")
+KINDS = ("design", "reports", "history")
 
 
-def test_the_four_kinds_exist() -> None:
+def test_the_three_kinds_exist() -> None:
     for kind in KINDS:
         assert (DOCS / kind).is_dir(), kind
 

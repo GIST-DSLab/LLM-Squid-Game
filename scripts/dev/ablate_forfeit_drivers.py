@@ -22,7 +22,7 @@ from squid_game.models.config import ProviderConfig
 from squid_game.providers.factory import build_provider
 
 RUN = Path(
-    "outputs/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game"
+    "outputs/2026-09-06/signal_puzzle_v7esc_smoke/20260906_2130_gemma4-cloud_signal-game"
 )
 TURN = 8
 N = 30

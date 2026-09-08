@@ -11,7 +11,7 @@ entirely and is not a caller of this helper).
 
 What genuinely repeats four times is a different argument: an *aggregate*
 root directory ("the directory holding the per-model run directories",
-default ``outputs/final_results``) -- spelled ``--root`` (``type=Path``)
+default ``outputs/KDD-UC``) -- spelled ``--root`` (``type=Path``)
 in three scripts and ``--results-root`` (plain ``str``) in a fourth. This
 test pins that extraction and its four callers.
 """
@@ -43,7 +43,7 @@ def test_the_helper_adds_the_default_root_flag() -> None:
     add_aggregate_root_argument(parser)
 
     args = parser.parse_args([])
-    assert args.root == Path("outputs/final_results")
+    assert args.root == Path("outputs/KDD-UC")
 
     args = parser.parse_args(["--root", "outputs/other_results"])
     assert args.root == Path("outputs/other_results")
@@ -60,11 +60,11 @@ def test_the_helper_lets_a_caller_override_flag_type_and_default() -> None:
         parser,
         flag="--results-root",
         type_=None,
-        default="outputs/final_results",
+        default="outputs/KDD-UC",
     )
 
     args = parser.parse_args([])
-    assert args.results_root == "outputs/final_results"
+    assert args.results_root == "outputs/KDD-UC"
     assert isinstance(args.results_root, str)
 
     args = parser.parse_args(["--results-root", "outputs/other"])

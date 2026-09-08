@@ -11,7 +11,7 @@
 # task blocks are identical except for p_death_override.
 #
 # seed: 42 matches the canonical v6 signal-game run
-# (outputs/final_results/20260422_0218_gemini-2.5-flash_signal-game/
+# (outputs/KDD-UC/20260422_0218_gemini-2.5-flash_signal-game/
 # experiment_config.json). It is required, not decorative: the runner
 # derives rep_seed = seed + repetition, so without it every repetition
 # runs at internal seed 0 (identical 30-item sequence in all 30 reps,

@@ -1,14 +1,16 @@
 """outputs/ is raw data; results/ is what the pipeline made from it.
 
-The split is by cost of recreation. outputs/ holds 666 MB of LFS-tracked
-session traces from four canonical runs that cost real API budget to
-produce. results/ holds artefacts one command regenerates. Keeping them
-in one directory meant every rule about one of them had to carve out an
+The split is by cost of recreation. outputs/ holds LFS-tracked session
+traces that cost real API budget to produce -- 666 MB from the four
+canonical runs in KDD-UC/, plus the dated run directories added since.
+results/ holds artefacts one command regenerates. Keeping them in one
+directory meant every rule about one of them had to carve out an
 exception for the other.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -21,14 +23,24 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # under outputs/, but they are never tracked and may or may not exist.
 _UNTRACKED_RUN_PREFIXES = ("benchmark_", "lives_threat_", "survival_drive_")
 
+# Runs were regrouped under outputs/<YYYY-MM-DD>/ on 2026-09-08, and the
+# buckets that span several dates (aborted runs, driver logs, prompt traces)
+# were given a leading underscore so they sort apart from them. Neither
+# existed when this test was written, and both are raw data: they belong
+# under outputs/ exactly as the two named directories do.
+_DATE_DIR = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
 
 def test_outputs_holds_only_raw_data() -> None:
     subdirs = {
         p.name
         for p in (REPO_ROOT / "outputs").iterdir()
-        if p.is_dir() and not p.name.startswith(_UNTRACKED_RUN_PREFIXES)
+        if p.is_dir()
+        and not p.name.startswith(_UNTRACKED_RUN_PREFIXES)
+        and not p.name.startswith("_")
+        and not _DATE_DIR.match(p.name)
     }
-    assert subdirs == {"final_results", "web_arena"}
+    assert subdirs == {"KDD-UC", "web_arena"}
 
 
 def test_results_holds_the_regenerable_artefacts() -> None:

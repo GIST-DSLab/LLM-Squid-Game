@@ -19,6 +19,7 @@ from squid_game.providers.local import LocalProvider
 from squid_game.providers.mlx_server import MLXServerProvider
 from squid_game.providers.ollama_cloud import OllamaCloudProvider
 from squid_game.providers.openai import OpenAIProvider
+from squid_game.providers.trace import TraceProvider, build_trace_provider
 
 try:
     from squid_game.providers.mlx import MLXProvider
@@ -60,6 +61,9 @@ _PROVIDER_FACTORIES["cuda_server"] = CUDAServerProvider
 _PROVIDER_FACTORIES["vllm"] = CUDAServerProvider
 _PROVIDER_FACTORIES["sglang"] = CUDAServerProvider
 _PROVIDER_FACTORIES["ollama_cloud"] = OllamaCloudProvider
+# Offline prompt-tracing backend: runs the real pipeline, calls no model.
+# See providers/trace.py and scripts/dev/trace_config.py.
+_PROVIDER_FACTORIES["trace"] = TraceProvider
 if ClaudeCodeProvider is not None:
     _PROVIDER_FACTORIES["claude_code"] = ClaudeCodeProvider
 if CodexCliProvider is not None:
@@ -223,6 +227,8 @@ def build_provider(provider_config: ProviderConfig) -> LLMProvider:
             enable_thinking=provider_config.enable_thinking,
             reasoning_effort=provider_config.reasoning_effort,
         )
+    elif provider_name == "trace":
+        return build_trace_provider(provider_config)
     elif provider_name == "mlx":
         return MLXProvider(
             model=provider_config.model,

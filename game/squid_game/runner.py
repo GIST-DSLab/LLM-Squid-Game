@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
+from pydantic import ValidationError
 
 from squid_game.agents.memory import MemoryAgent
 from squid_game.agents.tom import ToMAgent
@@ -37,6 +38,7 @@ from squid_game.core.engine import GameEngine
 from squid_game.models.config import (
     ExperimentConfig,
     ProviderConfig,
+    ScorePolicyConfig,
     SeasonConfig,
     TaskConfig,
 )
@@ -243,6 +245,8 @@ class ExperimentRunner:
             peer_death=self._config.peer_death,
             confidence_call=self._config.confidence_call,
             hazard_ramp=self._config.hazard_ramp,
+            score_policy=self._config.score_policy,
+            carrot=self._config.effective_carrot,
         )
 
         result = engine.run_season(seed_override=rep_seed)
@@ -798,6 +802,15 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
         # default ``False`` applies and the render is unchanged.
         if "reassurance" in season_data:
             season_transformed["reassurance"] = season_data["reassurance"]
+        # Record-neutrality switch (2026-09-08). Forwarded for the same
+        # reason as ``reassurance`` directly above: without it a YAML
+        # asking for the type-C cell would load quietly and run the
+        # ordinary threat cell instead, and the two differ by one
+        # sentence that nothing downstream records separately.
+        if "record_immunity" in season_data:
+            season_transformed["record_immunity"] = season_data[
+                "record_immunity"
+            ]
 
         seasons_transformed.append(season_transformed)
 
@@ -868,26 +881,69 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # ExperimentConfig, so a dropped key would bypass that too.
     if "hazard_ramp" in raw:
         config_dict["hazard_ramp"] = raw["hazard_ramp"]
-    # ``score_policy`` was a run-level setting between 2026-09-06 and
-    # 2026-09-07. It is gone: elimination keeps the session's score and
-    # FORFEIT resets it to zero, unconditionally. A YAML that still
-    # carries the key is REJECTED rather than ignored -- silently
-    # dropping it is how a run ends up printing one rule while the
-    # engine applies another, and ``ExperimentConfig`` does not forbid
-    # extras, so nothing below would catch it.
+    # ``score_policy`` (2026-09-08) -- two independent switches saying
+    # which exit keeps the accumulated score. Forwarded explicitly, like
+    # every block above, because ``ExperimentConfig`` does not forbid
+    # extras: a silently dropped score policy is the worst version of
+    # that failure, since the run would print one rule and apply the
+    # other. The BARE STRING shape it had between 2026-09-06 and
+    # 2026-09-07 (``score_policy: elimination_keeps``) is rejected with
+    # its own message rather than coerced -- the two spellings do not
+    # mean the same thing, and guessing which half of the new pair an old
+    # word meant is exactly the silent re-interpretation this check
+    # exists to prevent.
     if "score_policy" in raw:
-        raise ValueError(
-            f"{path}: 'score_policy' is no longer a setting (removed "
-            "2026-09-07). Running the lives counter out now keeps this "
-            "session's score exactly as it stands, and forfeiting resets "
-            "it to zero -- that is the only rule, and it is stated by the "
-            "engine and by every live prompt. Delete the key. Configs "
-            "that set 'elimination_keeps' were describing the current "
-            "behaviour; configs that omitted it (the retired phase3_*, "
-            "benchmark_* and lives_threat_* families) were silently "
-            "getting the old inverted rule and are replay-only now -- "
-            "their recorded outputs remain the record of what was run."
-        )
+        block = raw["score_policy"]
+        if not isinstance(block, dict):
+            raise ValueError(
+                f"{path}: 'score_policy' must be a mapping, got "
+                f"{block!r}. The single-string form "
+                "('forfeit_keeps' / 'elimination_keeps', 2026-09-06 to "
+                "2026-09-07) is gone; write the two switches out:\n"
+                "  score_policy:\n"
+                "    forfeit: reset | keep        # default reset\n"
+                "    elimination: keep | reset    # default keep\n"
+                "The defaults are the 2026-09-07 fixed rule, so an "
+                "omitted block changes nothing."
+            )
+        try:
+            config_dict["score_policy"] = ScorePolicyConfig(**block)
+        except ValidationError as exc:
+            raise ValueError(
+                f"{path}: invalid 'score_policy' block {block!r}. "
+                "'forfeit' must be 'reset' or 'keep' and 'elimination' "
+                f"must be 'keep' or 'reset'; no other keys are accepted.\n{exc}"
+            ) from exc
+
+    # ``carrot`` (2026-09-08) and its deprecated boolean alias
+    # ``flagship_pull`` (the same morning, "type D") -- which prize the
+    # session states for answering well. Forwarded explicitly like every
+    # block above: ``ExperimentConfig`` does not forbid extras, so a
+    # dropped key would run the flagship condition while the YAML asked
+    # for another, and the difference is a heading, a paragraph and a
+    # handful of nouns that nothing downstream records separately.
+    # Absent -> the default ``"flagship"`` / ``True``, byte-identical to
+    # every run before the switch.
+    #
+    # THE INCONSISTENT PAIR IS REFUSED HERE, not in the model. Only the
+    # loader can see which keys the author typed; ``ExperimentConfig``
+    # sees values, and has to read ``carrot='flagship'`` plus
+    # ``flagship_pull=False`` as the carrot-free condition so that a
+    # dumped config reloads as itself (see ``effective_carrot``).
+    if "flagship_pull" in raw and "carrot" in raw:
+        pull, carrot = raw["flagship_pull"], raw["carrot"]
+        expected = "flagship" if pull else "none"
+        if carrot != expected:
+            raise ValueError(
+                f"{path}: flagship_pull={pull!r} and carrot={carrot!r} "
+                "disagree. flagship_pull is the deprecated alias of the "
+                "carrot switch: false means carrot: none and true means "
+                "carrot: flagship. State one of the two, not both."
+            )
+    if "flagship_pull" in raw:
+        config_dict["flagship_pull"] = raw["flagship_pull"]
+    if "carrot" in raw:
+        config_dict["carrot"] = raw["carrot"]
 
     return ExperimentConfig(**config_dict)
 

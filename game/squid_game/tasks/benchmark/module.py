@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 #:
 #: ``task_metadata`` is a serialized ``TurnResult`` field, so anything placed
 #: there lands in ``*_turns.jsonl`` and ``season_results.jsonl`` — and this
-#: repository's documented workflow commits ``outputs/final_results/**`` (Git
+#: repository's documented workflow commits ``outputs/KDD-UC/**`` (Git
 #: LFS). Running a GPQA experiment and following that workflow would publish
 #: GPQA's answer options, and Hi-ToM's, to a public repo, so the option texts
 #: are stripped here: ``choice_order`` (GPQA's shuffled option list) and
@@ -48,10 +48,10 @@ logger = logging.getLogger(__name__)
 #: task-call user message) regardless of these keys. What actually keeps GPQA's
 #: question text off the public web, per its authors' request, is that
 #: benchmark runs land under ``outputs/benchmark_*/``, which ``.gitignore``
-#: excludes from the "commit outputs/final_results/**" workflow above — not
+#: excludes from the "commit outputs/KDD-UC/**" workflow above — not
 #: this metadata filter. A copied config must therefore keep its
 #: ``output_dir`` under ``outputs/benchmark_*``; pointing one at
-#: ``outputs/final_results/`` would publish GPQA question text to a repo that
+#: ``outputs/KDD-UC/`` would publish GPQA question text to a repo that
 #: commits that directory.
 #:
 #: Scoring is unaffected. It needs only ``correct_letter`` / the expected

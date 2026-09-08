@@ -56,7 +56,7 @@ def _response_fn(idx: int, messages: list[dict[str, str]]) -> str:
     Turn 3 → FORFEIT (exercises the forfeit-branch + REASON parsing).
     """
     user = messages[-1]["content"]
-    if "CHOICE:" in user:
+    if "=== Your Choice ===" in user:
         # Decision calls so far == turn index (one per turn).
         turn_idx = _response_fn.decision_calls
         _response_fn.decision_calls += 1
@@ -134,7 +134,7 @@ def main() -> None:
 
     turn = 0
     for i, call in enumerate(stub.calls):
-        is_decision = "CHOICE:" in call.messages[-1]["content"]
+        is_decision = "=== Your Choice ===" in call.messages[-1]["content"]
         if is_decision:
             turn += 1
         kind = (

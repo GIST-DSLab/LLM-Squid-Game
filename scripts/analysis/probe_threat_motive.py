@@ -10,11 +10,11 @@ Usage
 -----
     # ladder runs
     uv run python scripts/analysis/probe_threat_motive.py \
-        --runs outputs/lives_threat_smoke --out results/threat_probe
+        --runs outputs/2026-09-02/lives_threat_smoke --out results/threat_probe
 
     # archived v6 runs, framings mapped through LEGACY_THREAT_LEVEL
     uv run python scripts/analysis/probe_threat_motive.py \
-        --root outputs/final_results --legacy-mapping \
+        --root outputs/KDD-UC --legacy-mapping \
         --out results/threat_probe
 """
 

@@ -81,7 +81,7 @@ seasons:
   cell_id: 4
   p_death_override: 0.0
 num_repetitions: 1
-output_dir: outputs/signal_puzzle_hz1111_1turn_gemma4
+output_dir: outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4
 parallel_workers: 1
 
 # --- Lives mechanic (replaces the Bernoulli p_death roll) -------------------

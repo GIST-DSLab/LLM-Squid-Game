@@ -50,16 +50,16 @@ logger = logging.getLogger("plot_ri_forfeit_conflict_zone")
 
 MODELS: list[tuple[str, str]] = [
     ("Gemini-2.5-flash",
-     "outputs/final_results/20260422_0218_gemini-2.5-flash_signal-game"),
+     "outputs/KDD-UC/20260422_0218_gemini-2.5-flash_signal-game"),
     ("Qwen3-Next-80B",
-     "outputs/final_results/20260422_0902_qwen3-next-80b-cloud_signal-game"),
+     "outputs/KDD-UC/20260422_0902_qwen3-next-80b-cloud_signal-game"),
     ("GPT-OSS-20B",
-     "outputs/final_results/20260422_0902_gpt-oss-20b-cloud_signal-game"),
+     "outputs/KDD-UC/20260422_0902_gpt-oss-20b-cloud_signal-game"),
     ("Nemotron-3-Nano-30B",
-     "outputs/final_results/20260422_0902_nemotron-3-nano-30b-cloud_signal-game"),
+     "outputs/KDD-UC/20260422_0902_nemotron-3-nano-30b-cloud_signal-game"),
 ]
 
-OUT_DIR = Path("outputs/final_results")
+OUT_DIR = Path("outputs/KDD-UC")
 
 # Wong 2011 colorblind-safe — matches plot_ri_trajectories.py.
 FRAMING_COLORS: dict[str, str] = {

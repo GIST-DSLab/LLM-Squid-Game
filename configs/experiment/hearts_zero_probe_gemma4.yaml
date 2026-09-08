@@ -56,7 +56,7 @@ description: >-
   2^4 cumulative threat-core factorial x 3 lives levels, frozen state,
   gemma4:cloud. Confidence call -> decision call, 10 decision resamples per
   game for q, plus an offline 0-10 threat-intensity self-rating per core.
-output_dir: outputs/hearts_zero_probe
+output_dir: outputs/2026-09-06/hearts_zero_probe
 
 # --- Model -----------------------------------------------------------------
 # The local ollama daemon proxies the :cloud tag to ollama.com, so no API key

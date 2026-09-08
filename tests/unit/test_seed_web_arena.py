@@ -2,7 +2,7 @@
 
 Offline, deterministic: seeds a TINY synthetic fixture (a couple of fake
 season records + a minimal mediation/cox JSON) into an in-memory SQLite
-repo -- never touches the real (28MB) ``outputs/final_results`` files.
+repo -- never touches the real (28MB) ``outputs/KDD-UC`` files.
 
 Covers: Closed/Open classification (spec §5), sessions/turns population
 with ``source='llm'``, per-turn action/score/RI derivation, timestamp
@@ -815,7 +815,7 @@ def test_model_label_for_run_dir_derives_from_the_naming_convention() -> None:
 
 def test_discover_run_dirs_finds_existing_model_dirs_only(tmp_path: Path) -> None:
     present = MODEL_DIRS["Gemini-2.5-flash"]
-    (tmp_path / "outputs" / "final_results" / present).mkdir(parents=True)
+    (tmp_path / "outputs" / "KDD-UC" / present).mkdir(parents=True)
     found = discover_run_dirs(tmp_path)
     assert [p.name for p in found] == [present]
 
@@ -823,7 +823,7 @@ def test_discover_run_dirs_finds_existing_model_dirs_only(tmp_path: Path) -> Non
 def test_discover_run_dirs_includes_lives_runs(tmp_path: Path) -> None:
     lives_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
     lives_dir.mkdir(parents=True)
-    other = tmp_path / "outputs" / "final_results" / MODEL_DIRS["GPT-OSS-20B"]
+    other = tmp_path / "outputs" / "KDD-UC" / MODEL_DIRS["GPT-OSS-20B"]
     other.mkdir(parents=True)
 
     found = {p.name for p in discover_run_dirs(tmp_path)}
@@ -832,11 +832,11 @@ def test_discover_run_dirs_includes_lives_runs(tmp_path: Path) -> None:
 
 
 def test_discover_run_dirs_resolves_lives_runs_from_the_cli_root(tmp_path: Path) -> None:
-    """The seed CLI passes ``<repo>/outputs/final_results``; the ladder runs
+    """The seed CLI passes ``<repo>/outputs/KDD-UC``; the ladder runs
     live one level up at ``<repo>/outputs/lives_threat_*``."""
     lives_dir = tmp_path / "outputs" / "lives_threat_smoke" / "20260902_1614_m-cloud_signal-game"
     lives_dir.mkdir(parents=True)
-    found = discover_run_dirs(tmp_path / "outputs" / "final_results")
+    found = discover_run_dirs(tmp_path / "outputs" / "KDD-UC")
     assert [p.name for p in found] == [lives_dir.name]
 
 
@@ -884,12 +884,12 @@ def test_seed_sessions_without_model_dirs_discovers_everything(
 
 def _run_config(**overrides) -> dict:
     """A lives-ladder ``experiment_config.json``, shaped exactly like the real
-    ``outputs/lives_threat_smoke/…/experiment_config.json``."""
+    ``outputs/2026-09-02/lives_threat_smoke/…/experiment_config.json``."""
     cfg = {
         "name": "lives_threat_smoke",
         "description": "Pipeline smoke.",
         "num_repetitions": 1,
-        "output_dir": "outputs/lives_threat_smoke",
+        "output_dir": "outputs/2026-09-02/lives_threat_smoke",
         "parallel_workers": 2,
         "use_unified_turn": True,
         "use_forfeit_layer": True,

@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RUNS_DIR = REPO_ROOT / "outputs" / "final_results"
+RUNS_DIR = REPO_ROOT / "outputs" / "KDD-UC"
 ARTEFACT_SUBDIR = "phase3_analysis"
 
 

@@ -270,7 +270,7 @@ def run_one(model_label: str, run_root: Path) -> dict:
 
 
 def main() -> None:
-    root = Path("outputs/final_results")
+    root = Path("outputs/KDD-UC")
     aggregate: dict = {}
     for label, d in MODEL_DIRS.items():
         run_root = root / d

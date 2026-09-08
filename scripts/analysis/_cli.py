@@ -11,7 +11,7 @@ at all).
 What genuinely repeats, four times, is a different argument: an
 *aggregate* root directory -- "the directory holding the per-model run
 directories" (as opposed to a single run directory), default
-``outputs/final_results`` -- spelled ``--root`` (``type=Path``) in
+``outputs/KDD-UC`` -- spelled ``--root`` (``type=Path``) in
 ``analyze_task_call_ri.py``, ``probe_reasoning_embeddings.py`` and
 ``analyze_tc.py``, and ``--results-root`` (plain ``str``) in
 ``analyze_verbal_reason.py``.
@@ -32,10 +32,10 @@ from typing import Any, Callable
 # The value three of the four callers share verbatim
 # (``analyze_task_call_ri.py``, ``probe_reasoning_embeddings.py``,
 # ``analyze_tc.py``): ``--root``, ``type=Path``,
-# ``default=Path("outputs/final_results")``. The fourth
+# ``default=Path("outputs/KDD-UC")``. The fourth
 # (``analyze_verbal_reason.py``) overrides every one of these.
 DEFAULT_ROOT_FLAG = "--root"
-DEFAULT_ROOT = Path("outputs/final_results")
+DEFAULT_ROOT = Path("outputs/KDD-UC")
 
 
 def add_aggregate_root_argument(

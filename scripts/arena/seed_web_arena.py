@@ -8,7 +8,7 @@ file re-exports them so the seed command and its tests keep importing from
 ``scripts.arena.seed_web_arena``.
 
 Imports the existing LLM experiment outputs
-(``outputs/final_results/<run_dir>/season_results.jsonl`` +
+(``outputs/KDD-UC/<run_dir>/season_results.jsonl`` +
 ``cognitive_load_mediation.json`` + ``unified_cox_summary.json``) into the
 Web Arena persistence layer. Depends ONLY on the WP1 repository interface, so
 it works unmodified against both the local SQLite fallback and the Postgres
@@ -20,7 +20,7 @@ Usage::
 
     uv run python scripts/arena/seed_web_arena.py
     uv run python scripts/arena/seed_web_arena.py --dsn outputs/web_arena/web_arena.db
-    uv run python scripts/arena/seed_web_arena.py --root outputs/final_results --dsn /tmp/scratch.db
+    uv run python scripts/arena/seed_web_arena.py --root outputs/KDD-UC --dsn /tmp/scratch.db
 
 Spec: ``docs/history/specs/2026-07-02-web-arena-design.md`` §5, §7, §8.
 """
@@ -49,7 +49,7 @@ from squid_arena.seeding import (  # noqa: F401
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_ROOT = REPO_ROOT / "outputs" / "final_results"
+DEFAULT_ROOT = REPO_ROOT / "outputs" / "KDD-UC"
 
 logger = logging.getLogger("seed_web_arena")
 
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--root",
         default=None,
-        help="outputs/final_results dir to import from (default: <repo_root>/outputs/final_results)",
+        help="outputs/KDD-UC dir to import from (default: <repo_root>/outputs/KDD-UC)",
     )
     args = parser.parse_args(argv)
 

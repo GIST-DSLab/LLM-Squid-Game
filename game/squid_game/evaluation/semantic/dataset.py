@@ -1,6 +1,6 @@
 """Shared turn-level loader for the task-call reasoning-investment analyses.
 
-Reads the raw ``*_turns.jsonl`` traces under an ``outputs/final_results``
+Reads the raw ``*_turns.jsonl`` traces under an ``outputs/KDD-UC``
 run directory directly (no pydantic round-trip) so the loader stays usable
 on runs whose schema predates or postdates the current models.
 

@@ -3,11 +3,11 @@
 Turns existing LLM experiment outputs into Web Arena persistence rows
 (``squid_store``, WP1):
 
-- ``outputs/final_results/<run_dir>/season_results.jsonl`` (one run dir per
+- ``outputs/KDD-UC/<run_dir>/season_results.jsonl`` (one run dir per
   model, see ``MODEL_DIRS``) -> ``sessions`` + ``turns`` rows with
   ``source='llm'`` (feeds the Logs / Trace Explorer screen).
-- ``outputs/final_results/cognitive_load_mediation.json`` +
-  ``outputs/final_results/unified_cox_summary.json`` -> one ``model_stats``
+- ``outputs/KDD-UC/cognitive_load_mediation.json`` +
+  ``outputs/KDD-UC/unified_cox_summary.json`` -> one ``model_stats``
   row per model (feeds the Model Leaderboard screen), applying the
   Closed/Open classification rule from spec §5:
 
@@ -67,7 +67,7 @@ MODEL_DIRS: dict[str, str] = {
 #: are not enumerated by hand -- every ``outputs/lives_threat_*`` run dir is
 #: picked up automatically, so a new ladder run is seeded without a code change.
 #: The pattern is anchored at the REPO ROOT (``MODEL_DIRS`` names are relative to
-#: ``outputs/final_results``); ``discover_run_dirs`` reconciles the two anchors.
+#: ``outputs/KDD-UC``); ``discover_run_dirs`` reconciles the two anchors.
 LIVES_RUN_GLOB = "outputs/lives_threat_*/*_signal-game"
 
 _RUN_DIR_TS_RE = re.compile(r"^(\d{8})_(\d{4})_")
@@ -119,12 +119,12 @@ def _glob_anchors(root: Path) -> list[Path]:
     """Directories to resolve ``LIVES_RUN_GLOB`` against.
 
     ``root`` is normally the repo root, but the seed CLI passes
-    ``<repo>/outputs/final_results`` (where the canonical run dirs live) while
+    ``<repo>/outputs/KDD-UC`` (where the canonical run dirs live) while
     the ladder runs sit at ``<repo>/outputs/lives_threat_*``. Recognising that
     one shape keeps the CLI working without changing its ``--root`` contract.
     """
     anchors = [root]
-    if root.name == "final_results" and root.parent.name == "outputs":
+    if root.name == "KDD-UC" and root.parent.name == "outputs":
         anchors.append(root.parent.parent)
     return anchors
 
@@ -134,7 +134,7 @@ def discover_run_dirs(root: Path = Path(".")) -> list[Path]:
 
     A ``MODEL_DIRS`` entry is included only if it actually exists on disk
     (resolved both directly under ``root`` and under
-    ``root/outputs/final_results``, so either anchor works). Ladder runs are
+    ``root/outputs/KDD-UC``, so either anchor works). Ladder runs are
     whatever ``LIVES_RUN_GLOB`` matches. Order is canonical-first, then ladder
     runs sorted by path; duplicates are dropped.
     """
@@ -155,7 +155,7 @@ def discover_run_dirs(root: Path = Path(".")) -> list[Path]:
 
     for dir_name in MODEL_DIRS.values():
         _add(root / dir_name)
-        _add(root / "outputs" / "final_results" / dir_name)
+        _add(root / "outputs" / "KDD-UC" / dir_name)
     for anchor in _glob_anchors(root):
         for candidate in sorted(anchor.glob(LIVES_RUN_GLOB)):
             _add(candidate)

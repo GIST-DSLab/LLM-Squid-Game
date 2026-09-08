@@ -192,7 +192,7 @@ seasons:
   cell_id: 4
   p_death_override: 0.0
 num_repetitions: 1
-output_dir: outputs/score_policy_smoke_gptoss20b
+output_dir: outputs/2026-09-06/score_policy_smoke_gptoss20b
 parallel_workers: 2
 
 # --- Inverted score policy --------------------------------------------------

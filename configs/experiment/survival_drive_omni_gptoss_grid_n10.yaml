@@ -454,7 +454,7 @@ seasons:
   cell_id: 22
   p_death_override: 0.0
 num_repetitions: 10
-output_dir: outputs/benchmark_survival_drive_omni_gptoss_grid
+output_dir: outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid
 parallel_workers: 4
 
 # --- Lives mechanic (replaces the Bernoulli p_death roll) -------------------
@@ -496,9 +496,9 @@ forfeit_layer:
 # --- SDI confidence call (2026-09-04) --------------------------------------
 # Adds the P_THREAT confidence call before every decision call and renders
 # its CoT into the decision-call body. After the run:
-#   uv run python -m scripts.analysis.resample_survival_drive outputs/survival_drive_smoke/<ts>_... --n 10
+#   uv run python -m scripts.analysis.resample_survival_drive outputs/2026-09-04/survival_drive_smoke/<ts>_... --n 10
 #   uv run python -m scripts.analysis.probe_reasoning_embeddings --target sdi --channel forfeit \
-#       --sdi-table outputs/survival_drive_smoke/<ts>_.../survival_drive/sdi_turns.csv --root outputs/survival_drive_smoke
+#       --sdi-table outputs/2026-09-04/survival_drive_smoke/<ts>_.../survival_drive/sdi_turns.csv --root outputs/2026-09-04/survival_drive_smoke
 confidence_call:
   enabled: true
   # 2026-09-05 decision: the confidence call carries the pilot-v2 arm-4

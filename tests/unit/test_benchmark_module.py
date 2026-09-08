@@ -357,7 +357,7 @@ def test_hi_tom_rejects_a_different_valid_container_name(tmp_path, monkeypatch):
 #
 # TaskContext.metadata is merged into TurnResult.task_metadata, a serialized
 # field, so it lands in *_turns.jsonl and season_results.jsonl -- and this
-# repo's documented workflow commits outputs/final_results/** (Git LFS).
+# repo's documented workflow commits outputs/KDD-UC/** (Git LFS).
 # Publishing GPQA's answer options is exactly what GPQA's authors ask not to
 # happen, and this branch has treated that as a hard constraint throughout.
 # ---------------------------------------------------------------------------

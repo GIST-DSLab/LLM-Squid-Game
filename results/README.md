@@ -7,7 +7,7 @@ named in the subdirectory's own report will rebuild it.
 - `reasoning_probe/` — `uv run --extra probe python -m scripts.analysis.probe_reasoning_embeddings`
 
 The phase-3 artefacts the golden snapshot gates on are NOT here: they live
-beside their run under `outputs/final_results/<run>/phase3_analysis/`,
+beside their run under `outputs/KDD-UC/<run>/phase3_analysis/`,
 because they are keyed to that run.
 
 Two files here are deliberately untracked (see `.gitignore`):

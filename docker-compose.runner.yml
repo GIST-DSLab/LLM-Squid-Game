@@ -34,17 +34,17 @@
 #   docker compose -f docker-compose.runner.yml build analysis
 #   docker compose -f docker-compose.runner.yml run --rm analysis \
 #     uv run --no-sync python -m scripts.analysis.probe_threat_motive \
-#       --runs outputs/lives_threat_docker_smoke/<ts>_... \
+#       --runs outputs/2026-09-03/lives_threat_docker_smoke/<ts>_... \
 #       --out results/threat_probe/docker_smoke
 #
 #   docker compose -f docker-compose.runner.yml run --rm analysis \
 #     uv run --no-sync python -m scripts.analysis.probe_reasoning_embeddings \
-#       --root outputs/lives_threat_docker_smoke --target threat_level \
+#       --root outputs/2026-09-03/lives_threat_docker_smoke --target threat_level \
 #       --channel task --channel forfeit --out results/threat_probe/docker_smoke
 #
 #   docker compose -f docker-compose.runner.yml run --rm analysis \
 #     uv run --no-sync python scripts/analysis/analyze_threat_effort.py \
-#       outputs/lives_threat_docker_smoke/ --out results/threat_effort_docker
+#       outputs/2026-09-03/lives_threat_docker_smoke/ --out results/threat_effort_docker
 #
 #   The SentenceBERT probe downloads its model on first use; the named
 #   `hf-cache` volume keeps that download out of every later run.

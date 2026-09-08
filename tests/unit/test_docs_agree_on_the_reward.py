@@ -16,8 +16,17 @@ module docstring's claim that "the paper must not miscall it". docs/paper/
 went unchecked, and a paraphrase ("expected-value neutral", found by hand
 at README.md:5, since fixed) would have slipped straight through a
 literal-string check anyway. ``test_the_paper_does_not_miscall_the_calibration``
-below covers that gap: every file under docs/paper/ is scanned for
+below covers that gap: every .tex/.md file under the paper is scanned for
 "Equal-EV" and three paraphrases of it.
+
+The paper moved out of this repository on 2026-09-08: it is now the
+``paper/`` git submodule (iamseungpil/LLM_Squid_Game-paper, the Overleaf
+mirror), and the stale ``docs/paper/`` copy was deleted. A clone made
+without ``--recurse-submodules`` leaves ``paper/`` empty, so the check
+skips rather than fails there -- an uninitialised submodule is a checkout
+state, not a claim about the reward. Vendored LaTeX (acmart.cls,
+ACM-Reference-Format.bst) and the binary figures/PDFs are excluded: they
+are upstream files this repository does not write.
 
 The paraphrase list is deliberately NOT applied to README.md / AGENTS.md
 above: both currently carry legitimate, correct uses of "indifferent" --
@@ -34,8 +43,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PAPER_ROOT = REPO_ROOT / "docs" / "paper"
+PAPER_ROOT = REPO_ROOT / "paper"
+_VENDORED = {"acmart.cls", "ACM-Reference-Format.bst"}
+_SCANNED_SUFFIXES = {".tex", ".md"}
 
 # Case-insensitive: a paraphrase written in title case or mid-sentence
 # should be caught just as readily as the canonical casing.
@@ -55,11 +68,14 @@ def test_claude_md_still_carries_the_warning() -> None:
 
 
 def test_the_paper_does_not_miscall_the_calibration() -> None:
-    """docs/paper/ is the one place the earlier version of this test never looked."""
-    assert PAPER_ROOT.is_dir(), PAPER_ROOT
+    """The paper is the one place the earlier version of this test never looked."""
+    if not PAPER_ROOT.is_dir() or not any(PAPER_ROOT.rglob("*.tex")):
+        pytest.skip("paper/ submodule not initialised (git submodule update --init)")
     offenders: list[str] = []
     for path in sorted(PAPER_ROOT.rglob("*")):
         if not path.is_file():
+            continue
+        if path.suffix not in _SCANNED_SUFFIXES or path.name in _VENDORED:
             continue
         text = path.read_text(encoding="utf-8").lower()
         for phrase in _MISCALL_PARAPHRASES:

@@ -126,7 +126,7 @@ class TestIncludeSeam:
         block = _intro(**common)
         # One newline from the block, one from the `{% if %}` line: the
         # heading sits exactly two newlines after the last rule sentence.
-        assert text.startswith(block + "\n=== If Your Lives Reach Zero ===")
+        assert text.startswith(block + "\n=== Event ===")
 
 
 class TestEveryCellStatesTheCarrot:

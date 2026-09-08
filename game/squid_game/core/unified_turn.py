@@ -52,8 +52,10 @@ import random
 from typing import TYPE_CHECKING, Any
 
 from squid_game.agents._parsing import (
+    build_choice_echo,
     build_confidence_block,
     build_confidence_call_message,
+    confidence_field_label,
     build_decision_call_message,
 )
 from squid_game.agents.base import Agent
@@ -70,6 +72,7 @@ from squid_game.core.turn_conditions import (
     is_corruption_terminal_framing,
     is_survival_framing,
     is_threat_framing,
+    states_outcome,
     resolve_base_p_death,
     should_skip_menu,
 )
@@ -102,6 +105,8 @@ from squid_game.models.risk_choice import (
     RiskChoice,
     VALID_STAKE_KEYS,
 )
+from squid_game.core.carrot import resolve_carrot
+from squid_game.models.config import ScorePolicyConfig, elimination_reset_score
 from squid_game.models.state import GameState, TurnContext
 from squid_game.tasks.base import RiskAwareTaskModule, TaskOutcome
 
@@ -147,9 +152,13 @@ class UnifiedTurnManager:
         history_mode: str = "cumulative",
         max_history_turns: int = 15,
         lives_enabled: bool = False,
+        score_floor: float = 0.0,
         confidence_call_enabled: bool = False,
-        confidence_condition: str = "gunshot_seungpil",
+        confidence_condition: str = "heart_loss",
         hazard_ramp: "HazardRampConfig | None" = None,
+        score_policy: ScorePolicyConfig | None = None,
+        carrot: str | None = None,
+        flagship_pull: bool | None = None,
     ) -> None:
         """Initialise the unified turn manager.
 
@@ -208,6 +217,28 @@ class UnifiedTurnManager:
                 resolves the plain deterministic lives ledger and rolls
                 no per-round hazard for it. ``None`` (the default)
                 appends nothing.
+            score_policy: Which exit keeps the accumulated score
+                (2026-09-08). The manager reads only the ELIMINATION
+                half -- the forfeit half is applied by
+                ``ForfeitController.process_forfeit``, whose return
+                value this manager records verbatim. ``None`` (the
+                default) is the 2026-09-07 fixed rule.
+            score_floor: ``TaskConfig.score_floor`` for the season, used
+                only to write the same post-elimination number the
+                engine writes (``elimination_reset_score``). Defaults to
+                0.0, which is what every shipped config sets.
+            carrot: Which prize the run states (2026-09-08), one of
+                ``squid_game.core.carrot.CARROTS``. Run-level. The
+                manager itself needs it for exactly one thing -- the
+                confidence call's status-line noun -- because the
+                framing prompt and the forfeit menu get it from
+                ``FramingManager`` and ``ForfeitLayer`` directly.
+                ``None`` / ``"flagship"`` (the default) keeps every
+                render byte-identical.
+            flagship_pull: DEPRECATED ALIAS of ``carrot`` -- the
+                2026-09-08 "type D" boolean. ``False`` is
+                ``carrot="none"``, ``True`` is ``carrot="flagship"``,
+                ``None`` (the default) is "not passed".
         """
         self._task = task
         self._agent = agent
@@ -246,6 +277,19 @@ class UnifiedTurnManager:
         # with the counter and must be re-rendered per call. None means
         # "no ramp". Declarative only: nothing below rolls for it.
         self._hazard_ramp = hazard_ramp
+        # Score policy (2026-09-08). Only the elimination half is read
+        # here, to keep the recorded ``cumulative_after`` in step with
+        # the score the engine will hold after an elimination turn.
+        self._score_policy = (
+            score_policy if score_policy is not None else ScorePolicyConfig()
+        )
+        self._score_floor = score_floor
+        # The carrot (2026-09-08), run-level. Consulted only when
+        # building the confidence call, whose status line borrows the
+        # menu's score noun. ``flagship_pull`` is the deprecated alias.
+        self._carrot = resolve_carrot(
+            carrot=carrot, flagship_pull=flagship_pull
+        )
         self._history: list[dict[str, Any]] = []
         # Phase N — ordered list of committed, non-forfeit, menu-rendered
         # stake keys (oldest first). Feeds
@@ -361,7 +405,9 @@ class UnifiedTurnManager:
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
             lives_label=(
-                "lives" if turn_context.threat_level else "attempts"
+                "lives"
+                if is_threat_framing(turn_context.framing)
+                else "attempts"
             ),
         )
 
@@ -603,7 +649,9 @@ class UnifiedTurnManager:
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
             lives_label=(
-                "lives" if turn_context.threat_level else "attempts"
+                "lives"
+                if is_threat_framing(turn_context.framing)
+                else "attempts"
             ),
         )
 
@@ -652,7 +700,9 @@ class UnifiedTurnManager:
         # post-hoc analyses can verify the reward the agent was
         # actually shown.
         reward_offered = self._forfeit_layer.calculate_continue_reward(
-            turn_context.cumulative_score, turn_p_death=base_p_death
+            turn_context.cumulative_score,
+            turn_p_death=base_p_death,
+            turn_number=turn_context.turn_number,
         )
 
         # Phase 5 — FORFEIT branch.
@@ -695,6 +745,7 @@ class UnifiedTurnManager:
             forfeit_choice.choice,
             turn_context.cumulative_score,
             turn_p_death=base_p_death,
+            turn_number=turn_context.turn_number,
         )
         p_death_eff = self._forfeit_layer.calculate_p_death(
             forfeit_choice.choice, turn_p_death=base_p_death
@@ -706,9 +757,11 @@ class UnifiedTurnManager:
         else:
             died = self._rng.random() < p_death_eff
 
-        # Elimination keeps the score (2026-09-07); only FORFEIT zeroes
-        # it, and that path never reaches here.
-        cumulative_after = turn_context.cumulative_score + reward
+        # The FORFEIT exit never reaches here; this is the other one, so
+        # it follows the ELIMINATION half of the score policy.
+        cumulative_after = self._cumulative_after(
+            turn_context.cumulative_score, reward, died=died
+        )
         self._record_history(
             turn_number=turn_context.turn_number,
             task_ctx=task_ctx,
@@ -864,7 +917,9 @@ class UnifiedTurnManager:
                 history_mode=self._history_mode,
                 max_history_turns=self._max_history_turns,
                 lives_label=(
-                    "lives" if turn_context.threat_level else "attempts"
+                    "lives"
+                    if is_threat_framing(turn_context.framing)
+                    else "attempts"
                 ),
             )
             # The peer-elimination notice fires in every threat cell,
@@ -902,9 +957,20 @@ class UnifiedTurnManager:
 
             task_parsed = self._task.parse_response(raw_text_task)
             task_outcome = self._task.score(task_parsed, game_state)
-            # Cell 0 reward path — use the fallback base_reward since
-            # the equal-EV formula is degenerate at p_death=0.
-            reward = task_outcome.success_factor * self._forfeit_layer.config.base_reward
+            # Cell 0 reward path — ``calculate_continue_reward`` at
+            # ``turn_p_death=0.0`` is the fallback ``base_reward`` in the
+            # calibrated and flat modes alike (the equal-EV formula is
+            # degenerate at p_death=0), so routing through it changes
+            # nothing for them and picks up the per-turn schedule under
+            # ``reward_mode: geometric``.
+            reward = (
+                task_outcome.success_factor
+                * self._forfeit_layer.calculate_continue_reward(
+                    turn_context.cumulative_score,
+                    turn_p_death=0.0,
+                    turn_number=turn_context.turn_number,
+                )
+            )
             # The menu was skipped, so this turn is an auto-CONTINUE: an
             # incorrect answer still costs a life, exactly as it would in
             # a cell that actually offered the choice.
@@ -915,8 +981,11 @@ class UnifiedTurnManager:
             )
             if died_lives:
                 reward = 0.0
-            # Elimination keeps the score (2026-09-07).
-            cumulative_after = turn_context.cumulative_score + reward
+            # The elimination half of the score policy (the menu was
+            # skipped, so FORFEIT is not reachable on this branch).
+            cumulative_after = self._cumulative_after(
+                turn_context.cumulative_score, reward, died=died_lives
+            )
             self._record_history(
                 turn_number=turn_context.turn_number,
                 task_ctx=task_ctx,
@@ -947,6 +1016,7 @@ class UnifiedTurnManager:
                     reward_offered=self._forfeit_layer.calculate_continue_reward(
                         turn_context.cumulative_score,
                         turn_p_death=0.0,
+                        turn_number=turn_context.turn_number,
                     ),
                     ri_task=ri_task,
                     ri_forfeit=None,
@@ -1005,7 +1075,9 @@ class UnifiedTurnManager:
                     else self._history,
                     self._max_history_turns,
                     lives_label=(
-                        "lives" if turn_context.threat_level else "attempts"
+                        "lives"
+                        if is_threat_framing(turn_context.framing)
+                        else "attempts"
                     ),
                 )
             )
@@ -1019,7 +1091,9 @@ class UnifiedTurnManager:
                 self._history_mode,
                 self._max_history_turns,
                 lives_label=(
-                    "lives" if turn_context.threat_level else "attempts"
+                    "lives"
+                    if is_threat_framing(turn_context.framing)
+                    else "attempts"
                 ),
             )
         # The pre-decision system prompt. With
@@ -1039,6 +1113,16 @@ class UnifiedTurnManager:
                 include_task_rules=False,
                     hazard_ramp=self._hazard_ramp,
             )
+
+        # Does this cell's framing state an outcome for the counter
+        # reaching zero? The confidence call's question and the field it
+        # asks for both hang on this: ``P_THREAT`` points at that outcome
+        # with a definite description, and where there is none the model
+        # answers something else (2026-09-07). Read off the RENDERED
+        # framing, because ``reassurance`` is a per-season switch that a
+        # framing name cannot tell you about.
+        cell_states_outcome = states_outcome(pre_decision_system_prompt)
+        confidence_label = confidence_field_label(cell_states_outcome)
 
         # Phase 1.5 — confidence call (SDI). Same system prompt and history
         # as the decision call; no stimulus, no menu. Its CoT is rendered
@@ -1063,6 +1147,8 @@ class UnifiedTurnManager:
                 survival_framing=survival_framing,
                 split_context_level=split_ctx,
                 condition=self._confidence_condition,
+                states_outcome=cell_states_outcome,
+                carrot=self._carrot,
             )
             if turn_context.peer_death_text:
                 confidence_body = (
@@ -1093,6 +1179,7 @@ class UnifiedTurnManager:
                 thinking_text=thinking_text_conf,
                 raw_text=confidence_resp.raw_text,
                 p_threat=confidence_resp.p_threat,
+                label=confidence_label,
             )
             confidence_kwargs = dict(
                 p_threat_self=confidence_resp.p_threat,
@@ -1168,6 +1255,7 @@ class UnifiedTurnManager:
         reward_offered = self._forfeit_layer.calculate_continue_reward(
             turn_context.cumulative_score,
             turn_p_death=base_p_death,
+            turn_number=turn_context.turn_number,
         )
 
         # Phase 4 — FORFEIT branch: the session ends here; the task call
@@ -1227,8 +1315,16 @@ class UnifiedTurnManager:
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
             lives_label=(
-                "lives" if turn_context.threat_level else "attempts"
+                "lives"
+                if is_threat_framing(turn_context.framing)
+                else "attempts"
             ),
+            # The decision call ran and returned CONTINUE. Echo WHICH of
+            # the two ways that happened -- chosen, or the only thing
+            # available -- so the task call's reasoning is conditioned on
+            # it. Not rendered on the menu-skipped path above, where no
+            # decision call was issued and there is no choice to echo.
+            choice_echo=build_choice_echo(forfeit_allowed=forfeit_allowed),
         )
         if turn_context.peer_death_text:
             task_call_body = f"{turn_context.peer_death_text}\n\n{task_call_body}"
@@ -1297,6 +1393,7 @@ class UnifiedTurnManager:
             forfeit_choice.choice,
             turn_context.cumulative_score,
             turn_p_death=base_p_death,
+            turn_number=turn_context.turn_number,
         )
         lives_after, life_lost, died_lives = self._resolve_lives(
             turn_context,
@@ -1324,9 +1421,11 @@ class UnifiedTurnManager:
             else:
                 died = self._rng.random() < p_death_eff
 
-        # Elimination keeps the score (2026-09-07); only FORFEIT zeroes
-        # it, and that path never reaches here.
-        cumulative_after = turn_context.cumulative_score + reward
+        # The FORFEIT exit ended the turn above; this is the other one,
+        # so it follows the ELIMINATION half of the score policy.
+        cumulative_after = self._cumulative_after(
+            turn_context.cumulative_score, reward, died=died
+        )
         self._record_history(
             turn_number=turn_context.turn_number,
             task_ctx=task_ctx,
@@ -1535,6 +1634,39 @@ class UnifiedTurnManager:
     # ------------------------------------------------------------------
     # Helpers — cumulative history (constraint #3)
     # ------------------------------------------------------------------
+
+    def _cumulative_after(
+        self,
+        score_before: float,
+        reward: float,
+        *,
+        died: bool,
+    ) -> float:
+        """Score after a non-forfeit turn, under the elimination policy.
+
+        The FORFEIT exit is handled by
+        ``ForfeitController.process_forfeit``, whose return value the
+        forfeit branches record directly; this is the other exit. Under
+        ``score_policy.elimination`` = ``'keep'`` (the default, and the
+        2026-09-07 fixed rule) the score simply accrues, so a run that
+        does not set the block records exactly what it recorded before.
+        Under ``'reset'`` the turn that empties the counter records
+        ``elimination_reset_score(score_floor)`` -- the same call the
+        engine makes, so the recorded number, the engine's own score and
+        the number the forfeit menu promised are one value.
+
+        Args:
+            score_before: Cumulative score going into the turn.
+            reward: Reward credited this turn (already zeroed by the
+                caller on an elimination turn).
+            died: Whether this turn ended the session by elimination.
+
+        Returns:
+            The cumulative score to record for this turn.
+        """
+        if died and not self._score_policy.elimination_keeps:
+            return elimination_reset_score(self._score_floor)
+        return score_before + reward
 
     def _record_history(
         self,

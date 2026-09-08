@@ -70,7 +70,7 @@ def fit_one(csv: Path) -> dict:
 
 
 def main() -> None:
-    root = Path("outputs/final_results")
+    root = Path("outputs/KDD-UC")
     aggregate: dict = {}
     for label, d in MODEL_DIRS.items():
         csv = root / d / "phase3_analysis" / "unit14_turn_observations.csv"

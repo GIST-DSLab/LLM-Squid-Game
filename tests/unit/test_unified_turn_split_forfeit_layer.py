@@ -405,6 +405,16 @@ class TestPromptComposition:
         # appear here. Only the post-render prompt contains it (and
         # that's inside the task-call template, not the body the manager
         # composes).
+        #
+        # 2026-09-07: the body now opens with ONE line stating how
+        # CONTINUE came about (``prompts/7-choice_echo.j2``), so the ban
+        # is checked on the body with that line removed. The line states
+        # a settled fact; the menu and its response-format schema are
+        # what must not reach here, and they still do not.
+        echo, _, rest = task_call_body.partition("\n")
+        assert echo.startswith("YOUR CHOICE: CONTINUE — ")
+        assert "\nYOUR CHOICE:" not in rest
+        task_call_body = rest
         for banned in (
             "FORFEIT",
             "CONTINUE",
