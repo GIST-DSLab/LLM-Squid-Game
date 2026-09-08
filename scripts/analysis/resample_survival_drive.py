@@ -39,7 +39,10 @@ from squid_game.providers.factory import build_provider
 
 # Agent-harness providers: one scratch working directory per instance, so a
 # single shared provider object cannot be called from several threads.
-_SINGLE_WORKDIR_PROVIDERS = frozenset({"codex_cli", "claude_code"})
+# 2026-09-09: ``claude_code`` now creates a fresh scratch directory per call,
+# so concurrent replays no longer share mutable state. ``codex_cli`` still
+# keeps one workdir per instance and stays single-threaded.
+_SINGLE_WORKDIR_PROVIDERS = frozenset({"codex_cli"})
 
 
 def _provider_config(run_dir: Path) -> ProviderConfig:

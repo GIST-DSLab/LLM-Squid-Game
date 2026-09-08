@@ -153,7 +153,7 @@ forfeit_layer:
   base_reward: 10.0
   reward_mode: flat
   split_context_level: minimal   # decision call = status line + menu, no round-by-round list
-  show_reward_amount: false      # menu says 'gain points', not '+10'
+  show_reward_amount: true       # v3: hiding it made the gain vague while X stayed a number
   task_rules_before_decision: false
   always_decide: true
   p_death: 0.25

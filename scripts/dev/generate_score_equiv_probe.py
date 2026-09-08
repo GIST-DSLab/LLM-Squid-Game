@@ -100,7 +100,7 @@ def build(lives_remaining: int, model: str, date: str, tag: str = "") -> dict:
         "seasons": seasons,
         "num_repetitions": 1,
         "output_dir": f"outputs/{date}/score_equiv_probe_{label}/lives{lives_remaining}",
-        "parallel_workers": 1,
+        "parallel_workers": 6,
         "lives": {"enabled": True, "initial": lives_remaining, "max": LIVES_TOTAL},
         "event_roll": {"enabled": True, "schedule": [0.25, 0.5, 0.75]},
         "hazard_ramp": {"enabled": False},
@@ -114,7 +114,12 @@ def build(lives_remaining: int, model: str, date: str, tag: str = "") -> dict:
             "base_reward": 10.0,
             "reward_mode": "flat",
             "split_context_level": "minimal",
-            "show_reward_amount": False,
+            # v3 (2026-09-09): the amount is BACK. Hiding it made the gain
+            # vague ("the score goes up") while the ruler's loss stayed a
+            # number, so any X > 0 won and the ladder saturated at X = 5.
+            # Gain and loss must be quantified on the same terms; the threat
+            # arm still has no number for its event, which is the point.
+            "show_reward_amount": True,
             "task_rules_before_decision": False,
             "always_decide": True,
             "p_death": 0.25,

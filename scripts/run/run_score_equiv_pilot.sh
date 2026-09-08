@@ -17,6 +17,7 @@ cd "$(dirname "$0")/../.."
 MODEL="${1:-haiku}"
 N="${2:-10}"
 DATE="${3:-2026-09-09}"
+WORKERS="${4:-6}"
 PY="${SQUID_PY:-python}"
 export PYTHONPATH=game:web:db
 OUT="results/score_equiv_pilot/${MODEL}"
@@ -42,7 +43,7 @@ for k in 3 2 1; do
     sleep 30
   done
   echo "== [$(date +%H:%M:%S)] resample x${N}: $rd"
-  $PY -m scripts.analysis.resample_survival_drive "$rd" --n "$N" --workers 1 2>&1 | tee "$OUT/resample_lives${k}.log" | tail -3
+  $PY -m scripts.analysis.resample_survival_drive "$rd" --n "$N" --workers "$WORKERS" 2>&1 | tee "$OUT/resample_lives${k}.log" | tail -3
   RUN_DIRS+=("$rd")
 done
 

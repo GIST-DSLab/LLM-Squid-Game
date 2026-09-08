@@ -229,7 +229,7 @@ class TestEventRollConfig:
             cfg = load_config_from_yaml(str(root / name))
             assert cfg.event_roll.enabled
             losses = [s.event_score_loss for s in cfg.seasons]
-            assert losses == [None, None, 0, 0, 20, 50, 80, "all"]
+            assert losses == [None, None, 0, 0, 20, 50, 80, "all"]  # main 8-cell run
             assert cfg.score_policy.forfeit_keeps and cfg.score_policy.elimination_keeps
             assert cfg.forfeit_layer is not None
             assert cfg.forfeit_layer.reward_mode == "flat"
@@ -237,7 +237,7 @@ class TestEventRollConfig:
             # context only, reward amount hidden, title on, 2 guess turns.
             assert cfg.confidence_call.enabled is False
             assert cfg.forfeit_layer.split_context_level == "minimal"
-            assert cfg.forfeit_layer.show_reward_amount is False
+            assert cfg.forfeit_layer.show_reward_amount is True
             assert cfg.title_line is True
             assert cfg.seasons[0].task_config.underdetermined_blocks == [[1, 5], [6, 10]]
             assert cfg.seasons[0].task_config.starting_score == 30.0

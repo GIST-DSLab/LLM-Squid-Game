@@ -225,7 +225,9 @@ class TestResampleCliGuards:
         monkeypatch.setattr("sys.argv", ["resample_survival_drive", *argv])
         cli.main()
 
-    @pytest.mark.parametrize("provider", ["codex_cli", "claude_code"])
+    # 2026-09-09: claude_code makes a fresh scratch dir per call, so only
+    # codex_cli still needs the single-worker guard.
+    @pytest.mark.parametrize("provider", ["codex_cli"])
     def test_workers_gt_1_rejected_for_shared_workdir_providers(
         self, tmp_path: Path, monkeypatch, capsys, provider: str
     ) -> None:

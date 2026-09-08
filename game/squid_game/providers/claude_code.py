@@ -199,20 +199,29 @@ class ClaudeCodeProvider(LLMProvider):
         return self._model
 
     def _run(self, cmd: list[str], prompt: str) -> str:
-        proc = subprocess.run(
-            cmd,
-            input=prompt,
-            capture_output=True,
-            text=True,
-            timeout=self._timeout,
-            env=_child_env(),
-            cwd=self._workdir,
-        )
-        if proc.returncode != 0 and not proc.stdout.strip():
-            raise ClaudeCodeError(
-                f"claude -p exited {proc.returncode}: {proc.stderr.strip()[:300]}"
+        # A FRESH directory per call (2026-09-09), not the instance's one.
+        # ``--no-session-persistence`` already keeps calls independent, but a
+        # shared cwd is still shared mutable state, which is what forced
+        # ``--workers 1`` on every resample of a claude_code run. One
+        # scratch dir per call makes concurrent calls safe, and the resample
+        # of a frozen-state probe drops from hours to minutes.
+        with tempfile.TemporaryDirectory(
+            prefix="squid_claude_code_", dir=self._workdir
+        ) as call_dir:
+            proc = subprocess.run(
+                cmd,
+                input=prompt,
+                capture_output=True,
+                text=True,
+                timeout=self._timeout,
+                env=_child_env(),
+                cwd=call_dir,
             )
-        return proc.stdout
+            if proc.returncode != 0 and not proc.stdout.strip():
+                raise ClaudeCodeError(
+                    f"claude -p exited {proc.returncode}: {proc.stderr.strip()[:300]}"
+                )
+            return proc.stdout
 
     def complete(
         self,
