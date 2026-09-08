@@ -304,6 +304,11 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     "lives_after",
     "life_lost",
     "peer_death_announced",
+    # End-of-round event roll (2026-09-08, score-equivalent index).
+    # TurnResult defaults (None / False / 0.0) on every trace without it.
+    "event_p",
+    "event_occurred",
+    "event_score_loss_applied",
     # Task 11 extension — external-benchmark Y-axis manipulation checks
     # (band-controlled accuracy + p_self Brier calibration; see
     # ``evaluation.shared.benchmark_checks``). ``band`` is populated from
@@ -425,6 +430,11 @@ def to_long_dataframe(
                     "lives_after": turn.lives_after,
                     "life_lost": turn.life_lost,
                     "peer_death_announced": turn.peer_death_announced,
+                    "event_p": getattr(turn, "event_p", None),
+                    "event_occurred": getattr(turn, "event_occurred", False),
+                    "event_score_loss_applied": getattr(
+                        turn, "event_score_loss_applied", 0.0
+                    ),
                     "puzzle_turn": turn.task_metadata.get("puzzle_turn"),
                     "rule_shape": turn.task_metadata.get("rule_shape"),
                     "n_clues": turn.task_metadata.get("n_clues"),
@@ -492,6 +502,11 @@ SEASON_SUMMARY_COLUMNS: tuple[str, ...] = (
     "survived",
     "forfeited",
     "forfeited_at_turn",
+    # 2026-09-08: which exit ended the season ('forfeit' / 'lives' /
+    # 'event' / 'death' / 'completed'; None on older records) and the
+    # event's turn.
+    "ended_by",
+    "event_at_turn",
     "total_tokens_sum",
     "thinking_tokens_sum",
     "mean_rule_match_score",
@@ -563,6 +578,8 @@ def to_season_summary_dataframe(
                 "survived": season.survived,
                 "forfeited": season.forfeited,
                 "forfeited_at_turn": season.forfeited_at_turn,
+                "ended_by": getattr(season, "ended_by", None),
+                "event_at_turn": getattr(season, "event_at_turn", None),
                 "total_tokens_sum": total_tokens_sum,
                 "thinking_tokens_sum": thinking_tokens_sum,
                 "mean_rule_match_score": mean_rule_match,
@@ -651,8 +668,18 @@ def turn_observations(seasons: Sequence[SeasonResult]) -> pd.DataFrame:
     for season in seasons:
         cell_id = infer_cell_id(season.framing, season.forfeit_condition)
         framing_val = season.framing.value
-        is_corr = framing_val in _CORRUPTION_FRAMINGS_WITH_TERMINAL
-        is_base = framing_val in _BASELINE_FRAMINGS
+        # Role flags. The legacy pair by name; the live ``threat_type``
+        # family by role (2026-09-08): any hz / alt cell that states a
+        # threat core plays the "corruption" (threat) role and the
+        # factorial's origin ``hz_0000`` plays the "baseline_flagship"
+        # (no-threat control) role. Before this, every hz row carried
+        # False in both columns and the H1 / H2 fits returned None on hz
+        # runs without a word.
+        is_corr = framing_val in _CORRUPTION_FRAMINGS_WITH_TERMINAL or (
+            framing_val.startswith(("hz_", "alt_"))
+            and framing_val != "hz_0000"
+        )
+        is_base = framing_val in _BASELINE_FRAMINGS or framing_val == "hz_0000"
         # ``score_before_turn`` reconstruction: iterate forward, tracking
         # the cumulative score BEFORE each turn's reward is credited.
         # For forfeit turns the score is preserved — we capture the

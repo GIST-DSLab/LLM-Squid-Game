@@ -184,6 +184,11 @@ def resample_turn(
                 "choice": choice,
                 "raw": completion.text,
                 "thinking_tokens": int(getattr(completion, "thinking_tokens", 0) or 0),
+                # 2026-09-08: keep the sample's CoT. The 2026-09-07 ledgers
+                # stored choice + token count only, which left the only
+                # forfeit-shaped evidence in that corpus unreadable as to
+                # why. ``None`` when the provider exposes no thinking text.
+                "thinking": getattr(completion, "thinking_text", None),
             }
         )
     return result

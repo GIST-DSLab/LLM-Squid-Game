@@ -18,6 +18,12 @@ from squid_game.evaluation.semantic.lexicon import code_threat_mention
 ANALYSIS_FRAMINGS = {
     "baseline_flagship": "pull_only",
     "flagship_corruption": "pull_push",
+    # 2026-09-08: the live threat_type family by role. Note the frozen
+    # lexicon v1 (``semantic.lexicon``) is flagship_corruption-specific and
+    # shares almost no pattern with the hz threat sentences; on hz runs
+    # read A1 mention rates only with a v2 lexicon or the LLM judge.
+    "hz_0000": "pull_only",
+    "hz_1111": "pull_push",
 }
 
 

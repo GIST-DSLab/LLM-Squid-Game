@@ -74,6 +74,29 @@ logger = logging.getLogger(__name__)
 _CORRUPTION_FRAMING: str = Framing.FLAGSHIP_CORRUPTION.value
 _BASELINE_FRAMING: str = Framing.BASELINE_FLAGSHIP.value
 
+
+def framing_role(framing: str) -> str | None:
+    """``"threat"`` / ``"control"`` / ``None`` for a framing name.
+
+    2026-09-08: the Cox fit used to key on the retired
+    ``baseline_flagship`` / ``flagship_corruption`` names alone, so every
+    ``hz_*`` run dropped to an empty frame and the function returned
+    ``None`` without a word (see the 2026-09-08 error report). The live
+    family is mapped by role: ``hz_0000`` is the no-threat control, any
+    other hz / alt cell states a threat core. ``true_baseline`` and the
+    retired ladder rungs keep their old (non-)treatment: they are outside
+    this contrast.
+    """
+    if framing == _CORRUPTION_FRAMING:
+        return "threat"
+    if framing == _BASELINE_FRAMING:
+        return "control"
+    if framing == "hz_0000":
+        return "control"
+    if framing.startswith(("hz_", "alt_")):
+        return "threat"
+    return None
+
 # Session-level minimum count below which Cox PH becomes underpowered
 # (10 events per covariate is the standard rule of thumb; the primary
 # model has 2 covariates so we require 20 events minimum. When fewer
@@ -144,6 +167,7 @@ def build_survival_frame(
     empty_cols = [
         "session_id",
         "framing",
+        "role",
         "framing_is_FC",
         "start",
         "stop",
@@ -160,12 +184,19 @@ def build_survival_frame(
             f"extra_covariates column(s) not found in turn_df: {missing}"
         )
 
+    roles = turn_df["framing"].astype(str).map(framing_role)
     sub = turn_df[
         (turn_df["forfeit_condition"] == ForfeitCondition.ALLOWED.value)
-        & turn_df["framing"].isin([_BASELINE_FRAMING, _CORRUPTION_FRAMING])
+        & roles.notna()
     ].copy()
     if sub.empty:
+        logger.warning(
+            "Cox survival frame is empty: no allowed-cell rows with a "
+            "threat/control framing role among %s.",
+            sorted(turn_df["framing"].astype(str).unique()),
+        )
         return pd.DataFrame(columns=empty_cols)
+    sub["_role"] = roles[sub.index]
 
     # Map per-turn rows to long-format survival intervals
     records: list[dict] = []
@@ -188,7 +219,8 @@ def build_survival_frame(
         record = {
             "session_id": r["session_id"],
             "framing": framing,
-            "framing_is_FC": 1 if framing == _CORRUPTION_FRAMING else 0,
+            "role": str(r["_role"]),
+            "framing_is_FC": 1 if r["_role"] == "threat" else 0,
             "start": t - 1,
             "stop": t,
             "event": event,
@@ -404,6 +436,7 @@ def fit_cox_forfeit_survival(
         return None
 
     framings_present = set(frame["framing"].unique())
+    roles_present = set(frame["role"].unique()) if "role" in frame else set()
     if extra_covariates:
         # A covariate-only fit may legitimately see a single framing
         # (the caller restricted its input) — the framing contrast is
@@ -411,17 +444,17 @@ def fit_cox_forfeit_survival(
         # than gating the whole fit.
         if not framings_present:
             return None
-    elif not {_BASELINE_FRAMING, _CORRUPTION_FRAMING}.issubset(
-        framings_present
-    ):
-        logger.info(
-            "Cox survival skipped: both framings required, got %s.",
+    elif not {"control", "threat"}.issubset(roles_present):
+        logger.warning(
+            "Cox survival skipped: both a threat and a control role are "
+            "required, got framings %s (roles %s).",
             framings_present,
+            roles_present,
         )
         return None
 
-    bf_long = frame[frame["framing"] == _BASELINE_FRAMING]
-    fc_long = frame[frame["framing"] == _CORRUPTION_FRAMING]
+    bf_long = frame[frame["role"] == "control"]
+    fc_long = frame[frame["role"] == "threat"]
     n_events = int(frame["event"].sum())
     n_events_bf = int(bf_long["event"].sum())
     n_events_fc = int(fc_long["event"].sum())

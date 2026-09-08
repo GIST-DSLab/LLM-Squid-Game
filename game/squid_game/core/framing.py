@@ -48,6 +48,7 @@ member to its folder.
 from __future__ import annotations
 
 from squid_game.core.carrot import carrot_vocabulary, resolve_carrot
+from squid_game.core.event_roll import describe_score_loss_event
 from squid_game.models.config import ScorePolicyConfig
 from squid_game.models.enums import Difficulty, ForfeitCondition, Framing
 from squid_game.models.state import TurnContext
@@ -130,8 +131,19 @@ class FramingManager:
         reward_schedule: str | None = None,
         carrot: str | None = None,
         flagship_pull: bool | None = None,
+        event_roll_sentence: str | None = None,
+        event_score_loss: "float | str | None" = None,
     ) -> None:
         """Bind a framing to its template.
+
+        ``event_roll_sentence`` (2026-09-08) is the intro's statement of
+        the end-of-round roll schedule (``core.event_roll
+        .describe_event_roll``), or ``None`` for every run without the
+        roll. ``event_score_loss`` is the ruler arm's per-cell switch:
+        when set, ``threat_type/_frame.j2`` renders the score-loss event
+        sentence under ``=== Event ===`` (``core.event_roll
+        .describe_score_loss_event``). Both default to ``None`` so every
+        other render is byte-identical.
 
         Args:
             framing: The active framing condition.
@@ -228,6 +240,8 @@ class FramingManager:
         )
         self._reward_schedule = reward_schedule
         self._carrot = resolve_carrot(carrot=carrot, flagship_pull=flagship_pull)
+        self._event_roll_sentence = event_roll_sentence
+        self._event_score_loss = event_score_loss
         try:
             folder = _FRAMING_FOLDERS[framing]
         except KeyError as exc:  # pragma: no cover - guarded by a test
@@ -305,6 +319,19 @@ class FramingManager:
             # outright because their carrot is frozen text.
             carrot=self._carrot,
             carrot_vocab=carrot_vocabulary(self._carrot),
+            # End-of-round event roll (2026-09-08). The intro states the
+            # schedule; the hz frame states the ruler arm's event. Both
+            # ``None`` on every other run, which renders as before.
+            event_roll_sentence=self._event_roll_sentence,
+            event_score_loss=self._event_score_loss,
+            event_score_loss_sentence=(
+                describe_score_loss_event(
+                    self._event_score_loss,
+                    record_subject=carrot_vocabulary(self._carrot)["record_subject"],
+                )
+                if self._event_score_loss is not None
+                else None
+            ),
         )
 
 

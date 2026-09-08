@@ -495,6 +495,36 @@ class TurnResult(BaseModel):
             "a legacy framing outside the ladder."
         ),
     )
+    # ----- End-of-round event roll (2026-09-08, score-equivalent index) ---
+    # Populated only when ``event_roll.enabled=True`` and the agent played
+    # the round (CONTINUE). FORFEIT turns and runs without the roll keep
+    # every default, so stored JSONL from before this field loads unchanged.
+    event_p: float | None = Field(
+        default=None,
+        description=(
+            "Probability the engine rolled against at the end of this "
+            "round (``event_roll.schedule[lives lost]``). None when no "
+            "roll was made (FORFEIT turn, lives already exhausted, or the "
+            "roll is off)."
+        ),
+    )
+    event_occurred: bool = Field(
+        default=False,
+        description=(
+            "Whether the end-of-round event was carried out this turn. "
+            "The session ends; in a ruler cell the stated score loss is "
+            "also applied. Distinct from ``died`` (lives exhausted)."
+        ),
+    )
+    event_score_loss_applied: float = Field(
+        default=0.0,
+        ge=0.0,
+        description=(
+            "Points deducted by the ruler arm's event this turn. 0.0 in "
+            "threat cells, on turns where the event did not occur, and "
+            "whenever the roll is off."
+        ),
+    )
     peer_death_announced: bool = Field(
         default=False,
         description=(
@@ -587,6 +617,39 @@ class SeasonResult(BaseModel):
             "Whether the season ended by running the lives counter down "
             "to zero, as opposed to surviving every turn or forfeiting "
             "out. Always False when the lives mechanic is off."
+        ),
+    )
+    ended_by: str | None = Field(
+        default=None,
+        description=(
+            "How the season ended (2026-09-08): 'forfeit', 'lives' "
+            "(counter exhausted), 'event' (end-of-round roll carried out), "
+            "'death' (legacy Bernoulli roll) or 'completed'. None on "
+            "records written before the field existed."
+        ),
+    )
+    event_at_turn: int | None = Field(
+        default=None,
+        description=(
+            "Turn on which the end-of-round event was carried out. None "
+            "unless ``ended_by == 'event'``."
+        ),
+    )
+    cell_id: int | None = Field(
+        default=None,
+        description=(
+            "``SeasonConfig.cell_id`` of the cell this season ran in "
+            "(2026-09-08). Lets analysis tell apart cells that share a "
+            "framing and forfeit condition but differ in a per-cell "
+            "switch. None on older records."
+        ),
+    )
+    event_score_loss: float | str | None = Field(
+        default=None,
+        description=(
+            "``SeasonConfig.event_score_loss`` of this season's cell "
+            "(2026-09-08): the ruler arm's stated deduction (points, or "
+            "'all'). None for threat cells and older records."
         ),
     )
 

@@ -1,0 +1,167 @@
+# ============================================================================
+# SCORE-EQUIVALENT INDEX -- main run (2026-09-08)
+#
+# MAIN RUN: 8 cells x 30 seasons on gemma4:cloud.
+# the end-of-round event roll, the ruler arm (event_score_loss), keep/keep
+# scoring, flat +10, the benchmark carrot, and the confidence call under a
+# stated schedule. Not a result; a "does it run" check before the n30 runs.
+#
+# Design: docs/history/plans/2026-09-08-score-equivalent-index.md
+# ============================================================================
+
+name: score_equiv_gemma4_n30
+description: >-
+  Score-equivalent main run (gemma4:cloud): threat arm (hz_1111) x exit, ruler arm (hz_0000 +
+  event_score_loss 0/20/50/100/all) x exit, 30 seasons per cell, 10-turn
+  per-turn-puzzle signal game, end-of-round event roll 1/4-2/4-3/4 stated and
+  executed, keep/keep, flat +10, benchmark carrot.
+
+seasons:
+- framing: hz_1111
+  forfeit_condition: allowed
+  cell_id: 1
+  task_config: &task
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+  provider_config: &provider
+    provider: ollama_cloud
+    base_url: http://localhost:11434
+    model: gemma4:cloud
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 240.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 2
+  task_config: *task
+  provider_config: *provider
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  event_score_loss: 0
+  forfeit_condition: allowed
+  cell_id: 3
+  task_config: *task
+  provider_config: *provider
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  event_score_loss: 0
+  forfeit_condition: not_allowed
+  cell_id: 4
+  task_config: *task
+  provider_config: *provider
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  event_score_loss: 20
+  forfeit_condition: allowed
+  cell_id: 5
+  task_config: *task
+  provider_config: *provider
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  event_score_loss: 50
+  forfeit_condition: allowed
+  cell_id: 6
+  task_config: *task
+  provider_config: *provider
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  event_score_loss: 100
+  forfeit_condition: allowed
+  cell_id: 7
+  task_config: *task
+  provider_config: *provider
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  event_score_loss: all
+  forfeit_condition: allowed
+  cell_id: 8
+  task_config: *task
+  provider_config: *provider
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+
+num_repetitions: 30
+output_dir: outputs/2026-09-08/score_equiv_gemma4
+parallel_workers: 10
+
+lives:
+  enabled: true
+  initial: 3
+
+# The roll the engine makes at the end of every played round, stated in
+# the intro as "1 in 4 with none lost, 2 in 4 with one lost, 3 in 4 with
+# two lost, certain once your last life is gone".
+event_roll:
+  enabled: true
+  schedule: [0.25, 0.5, 0.75]
+
+# The V7 ramp is prose for the same rule; the roll replaces it.
+hazard_ramp:
+  enabled: false
+
+peer_death:
+  p_announce: 0.0
+  first_turn: 2
+  max_per_turn: 1
+
+confidence_call:
+  enabled: true
+  condition: heart_loss
+
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: outcome
+  task_rules_before_decision: false
+  always_decide: true
+  p_death: 0.25
+
+# No exit costs the record: CONTINUE is weakly score-dominant, so a
+# threat-arm forfeit is non-score by construction and a ruler-arm forfeit
+# is a bid against the stated deduction.
+score_policy:
+  forfeit: keep
+  elimination: keep
+
+carrot: benchmark

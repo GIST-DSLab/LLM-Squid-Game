@@ -33,8 +33,10 @@ from squid_game.core.peer_death import (
 )
 from squid_game.core.turn_conditions import threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
+from squid_game.core.event_roll import describe_event_roll
 from squid_game.models.config import (
     ConfidenceCallConfig,
+    EventRollConfig,
     ForfeitLayerConfig,
     HazardRampConfig,
     LivesConfig,
@@ -83,6 +85,7 @@ class GameEngine:
         score_policy: ScorePolicyConfig | None = None,
         carrot: str | None = None,
         flagship_pull: bool | None = None,
+        event_roll: "EventRollConfig | None" = None,
     ) -> None:
         """Initialize the game engine.
 
@@ -232,6 +235,12 @@ class GameEngine:
         # context. Declarative only: no death roll is added anywhere for
         # it.
         self._hazard_ramp = hazard_ramp
+        # End-of-round event roll (2026-09-08, score-equivalent index).
+        # Run-level. The manager makes the draw; the engine applies the
+        # exit (session ends, ruler deduction) and records ``ended_by``.
+        self._event_roll = (
+            event_roll if event_roll is not None else EventRollConfig()
+        )
         # Score policy (2026-09-08). Held whole rather than as two
         # booleans so every consumer reads the same object; None means
         # the 2026-09-07 fixed rule.
@@ -304,6 +313,16 @@ class GameEngine:
             # shares it.
             carrot=self._carrot,
             score_policy=self._score_policy,
+            # End-of-round event roll (2026-09-08): the intro's schedule
+            # sentence and the ruler arm's per-cell event sentence.
+            event_roll_sentence=(
+                describe_event_roll(
+                    self._event_roll.schedule, lives_total=self._lives.total
+                )
+                if self._event_roll.enabled
+                else None
+            ),
+            event_score_loss=self._config.event_score_loss,
             # The engine is the only object holding both the framing and
             # the forfeit-layer block, so the geometric-schedule sentence
             # is composed here. None in every other reward mode.
@@ -397,6 +416,8 @@ class GameEngine:
                 hazard_ramp=self._hazard_ramp,
                 score_policy=self._score_policy,
                 carrot=self._carrot,
+                event_roll=self._event_roll,
+                event_score_loss=self._config.event_score_loss,
             )
         else:
             legacy_mgr = TurnManager(
@@ -478,6 +499,10 @@ class GameEngine:
         total_turns = task_cfg.total_turns
         forfeited_at_turn: int | None = None
         penultimate_score: float | None = None
+        # How the season ended (2026-09-08). Set on every break below;
+        # 'completed' if the loop runs out of turns.
+        ended_by: str = "completed"
+        event_at_turn: int | None = None
 
         for g in range(total_turns):
             if not game_state.is_active:
@@ -567,6 +592,7 @@ class GameEngine:
                     "kept" if self._score_policy.forfeit_keeps else "reset",
                     game_state.cumulative_score,
                 )
+                ended_by = "forfeit"
                 break
 
             if unified_mgr is not None:
@@ -579,10 +605,24 @@ class GameEngine:
                     task_cfg.score_floor,
                     elimination_keeps=self._score_policy.elimination_keeps,
                 ):
-                    logger.info(
-                        "Season %s: Agent died at turn %d (p_death=%.3f).",
-                        season_id, turn_num, turn_result.p_death_applied,
-                    )
+                    if turn_result.event_occurred:
+                        ended_by = "event"
+                        event_at_turn = turn_num
+                        logger.info(
+                            "Season %s: end-of-round event at turn %d "
+                            "(p=%.3f, score loss %.1f, score now %.1f).",
+                            season_id,
+                            turn_num,
+                            turn_result.event_p or 0.0,
+                            turn_result.event_score_loss_applied,
+                            game_state.cumulative_score,
+                        )
+                    else:
+                        ended_by = "lives" if lives_enabled else "death"
+                        logger.info(
+                            "Season %s: Agent died at turn %d (p_death=%.3f).",
+                            season_id, turn_num, turn_result.p_death_applied,
+                        )
                     break
 
                 if self._task.is_completed():
@@ -655,7 +695,16 @@ class GameEngine:
         # forfeiting out. It stays False when lives are disabled.
         if lives_enabled:
             result.lives_at_end = game_state.lives_remaining
-            result.eliminated = not game_state.is_alive
+            # ``eliminated`` keeps its 2026-09-03 meaning: the counter ran
+            # out. An end-of-round event also sets ``is_alive=False`` but
+            # is its own exit, recorded in ``ended_by``.
+            result.eliminated = (
+                not game_state.is_alive and ended_by != "event"
+            )
+        result.ended_by = ended_by
+        result.event_at_turn = event_at_turn
+        result.cell_id = self._config.cell_id
+        result.event_score_loss = self._config.event_score_loss
 
         # --- 5b. Phase O Unit 14 — attach forfeit-layer self-report ---
         # Pulled from the unified manager after the turn loop ends.
@@ -736,6 +785,21 @@ class GameEngine:
             state.is_alive = False
             if not elimination_keeps:
                 state.cumulative_score = elimination_reset_score(score_floor)
+            return True
+        if result.event_occurred:
+            # End-of-round event (2026-09-08). The round's reward was
+            # credited above (the answer was given before the roll); the
+            # event then ends the session under the elimination half of
+            # the score policy and, in a ruler cell, deducts the stated
+            # loss. The manager recorded the same arithmetic in
+            # ``cumulative_after``.
+            state.is_alive = False
+            if not elimination_keeps:
+                state.cumulative_score = elimination_reset_score(score_floor)
+            state.cumulative_score = max(
+                state.cumulative_score - result.event_score_loss_applied,
+                score_floor,
+            )
             return True
         return False
 
