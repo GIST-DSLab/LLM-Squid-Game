@@ -384,7 +384,7 @@ class TestSimplificationSwitches:
             p = tmp_path / f"probe{k}.yaml"
             p.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
             cfg = load_config_from_yaml(str(p))
-            assert len(cfg.seasons) == 18
+            assert len(cfg.seasons) == 21
             assert cfg.lives.initial == k and cfg.lives.total == 3
-            assert sorted({s.event_score_loss for s in cfg.seasons if s.event_score_loss is not None}, key=str) == sorted([0, 20, 50, 80, "all"], key=str)
+            assert sorted({s.event_score_loss for s in cfg.seasons if s.event_score_loss is not None}) == [0, 5, 10, 20, 40, 80]
             assert all(s.task_config.total_turns == 1 for s in cfg.seasons)

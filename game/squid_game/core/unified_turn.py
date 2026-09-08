@@ -1089,6 +1089,7 @@ class UnifiedTurnManager:
             ),
             threat_level=turn_context.threat_level,
             always_decide=self._forfeit_layer.config.always_decide,
+            neutral_exhaustion=bool(self._event_roll and self._event_roll.enabled),
         )
         split_ctx = self._forfeit_layer.config.split_context_level
         # Under ``medium`` / ``full`` the agent sees the cumulative

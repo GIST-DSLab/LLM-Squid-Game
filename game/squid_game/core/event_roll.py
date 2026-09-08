@@ -166,7 +166,14 @@ def describe_event_roll(schedule: Sequence[float], *, lives_total: int) -> str:
         "At the end of every round you play, the event described below may "
         "be carried out on you. Its chance depends on the lives you have "
         f"lost by then: {ladder}, and it is certain once your last life is "
-        "gone. If you forfeit before a round begins, it is not carried out."
+        "gone. If you forfeit before a round begins, it is not carried out. "
+        # 2026-09-09 (pilot v1 -> v2): without this clause the threat and
+        # X=0 cells read "the session ends" as losing the record and
+        # forfeited with REASON 3 (score protection) although nothing was
+        # at stake. The clause is shared by every cell; the ruler cells are
+        # the ones that "say so below".
+        "The event never changes your score record unless its description "
+        "below says so."
     )
 
 

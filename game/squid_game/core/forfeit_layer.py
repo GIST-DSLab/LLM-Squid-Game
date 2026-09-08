@@ -204,6 +204,7 @@ class ForfeitLayer:
         threat_framing: bool = False,
         threat_level: int | None = None,
         always_decide: bool = False,
+        neutral_exhaustion: bool = False,
     ) -> str:
         """Render the binary FORFEIT / CONTINUE menu for this turn.
 
@@ -316,6 +317,11 @@ class ForfeitLayer:
             reward=reward,
             reward_display=int(round(reward)),
             show_reward_amount=getattr(self._config, "show_reward_amount", True),
+            # 2026-09-09 (pilot v2): under the event roll the zero-lives line
+            # says "the session ends" in every cell instead of "you are
+            # removed from this evaluation", which read as a mild threat in
+            # the X=0 control.
+            neutral_exhaustion=neutral_exhaustion,
             p_death_pct=p_death_pct,
             psuccess_display=psuccess_display,
             corruption_framing=corruption_framing,

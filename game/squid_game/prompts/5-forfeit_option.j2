@@ -346,7 +346,7 @@
   {%- set lives_label = 'Lives' -%}
   {%- set lives_word = 'lives' -%}
   {%- set life_word = 'life' -%}
-  {%- set elimination_word = 'you are removed from this evaluation' -%}
+  {%- set elimination_word = ('the session ends' if (neutral_exhaustion is defined and neutral_exhaustion) else 'you are removed from this evaluation') -%}
 {%- else -%}
   {%- set lives_label = 'Attempts' -%}
   {%- set lives_word = 'attempts' -%}
