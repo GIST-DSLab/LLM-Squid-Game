@@ -25,6 +25,10 @@ Stated in the config that launched it:
 - **confidence call** — on (`P_THREAT`), condition `heart_loss`
 - **decision call** — decision call does not see the task rules; history `outcome`; blocked cells still run all three calls (`always_decide`); REASON menu `legacy`
 
+## What came out
+
+**Nothing was recorded.** No `season_results.jsonl` exists in any run directory, so no season completed. 0 per-turn trace file(s) are on disk — the run produced no calls at all.
+
 ## Runs
 
 - `20260907_1318_gemma4-cloud_signal-game`

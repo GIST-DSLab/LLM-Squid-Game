@@ -8,4 +8,4 @@
 | `hz_2x2_carrot_beneficiary_gemma4` | 1 | 40 | 01:03-01:35 | gemma4-cloud | `hz_2x2_carrot_beneficiary_gemma4_n10.yaml` | 0 |
 | `hz_2x2_carrot_beneficiary_gptoss120b` | 1 | 40 | 00:22-00:37 | gpt-oss-120b-cloud | `hz_2x2_carrot_beneficiary_gptoss120b_n10.yaml` | 1 |
 
-Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md`. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.
+Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md` giving what the run tested (the config's own `description`), its cell design, the settings that shape the decision, and what came out per cell. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.

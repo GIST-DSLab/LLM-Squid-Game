@@ -12,13 +12,36 @@ outputs/2026-09-07/hz_2x2_main_gemma4/
     20260907_1353_gemma4-cloud_signal-game/   the run, byte-for-byte as written
     config/hz_2x2_main_gemma4_n10.yaml        copy of the YAML it was launched from
     reports/2026-09-07-hz-2x2-gemma4-report.html
-    README.md                                 runs, timings, config, reports
+    README.md                                 see below
 outputs/2026-09-07/INDEX.md                   one table over that day
 ```
 
 Every experiment directory carries exactly one date, so the grouping never
 splits a run set. `INDEX.md` per date lists runs, season counts, UTC spans,
 model and config.
+
+Each experiment's `README.md` answers what was run and why, from the recorded
+artefacts only:
+
+- **What this run tested** — the `description` the config was launched with,
+  quoted. Nothing is inferred; where a config recorded none, the README says so.
+- **Design** — one row per declared cell (framing x forfeit condition, plus the
+  `reassurance` / `record_immunity` switches), task and turn count.
+- **Settings that shape the decision** — only the knobs that change what the
+  agent is asked or paid: model, lives, score policy, CONTINUE reward mode,
+  carrot, hazard ramp, confidence call, peer-death notice, decision-call context.
+- **What came out** — per cell from `season_results.jsonl`: n, forfeit and
+  elimination counts, mean final score, mean lives left, mean turns, and the
+  FORFEIT self-report tally. A run that recorded no seasons says that outright.
+- **Runs / Config / Reports** — the files, and any joint report that cites this
+  run from elsewhere.
+
+Frozen-state prompt probes (`hearts_zero_probe*`, `hearts_zero_v7_smoke`) play
+no seasons, so their README reads `run_config.json` and `summary.json` instead
+and reports the spread of `p`, `q` and SDI over the probe's cells.
+
+The READMEs are generated, not written by hand: regenerate one after adding a
+run rather than editing it.
 
 A report that covers several runs is **not** filed under any one of them: it
 stays at `docs/reports/` or `weekly-report/`, and each cited run's `README.md`

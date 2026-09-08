@@ -29,6 +29,10 @@ Stated in the config that launched it:
 - **peer-death notice** — p_announce 1.0, from turn 2
 - **decision call** — decision call does not see the task rules; history `outcome`
 
+## What came out
+
+**Nothing was recorded.** No `season_results.jsonl` exists in any run directory, so no season completed. 3 per-turn trace file(s) are on disk — the run was interrupted partway.
+
 ## Runs
 
 - `20260905_0631_gpt-5.6-luna_omni-math`

@@ -11,4 +11,4 @@
 | `benchmark_survival_drive_omni_gptoss_grid` | 1 | 120 | 14:09-15:34 | gpt-oss-120b-cloud | `survival_drive_omni_gptoss_grid_n10.yaml` | 1 |
 | `benchmark_survival_drive_omni_gptoss_threat_na` | 1 | 30 | 11:51-12:17 | gpt-oss-120b-cloud | `survival_drive_omni_gptoss_threat_na_n10.yaml` | 0 |
 
-Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md`. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.
+Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md` giving what the run tested (the config's own `description`), its cell design, the settings that shape the decision, and what came out per cell. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.

@@ -23,4 +23,4 @@
 | `lives_threat_5x2_pd1_opus5cchigh` | 1 | - | - | claude-opus-5 | `lives_threat_5x2_pd1_opus5cchigh_n3.yaml` | 0 |
 | `lives_threat_docker_smoke` | 1 | 5 | 00:22-00:25 | gpt-oss-120b-cloud | `lives_threat_docker_smoke.yaml` | 0 |
 
-Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md`. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.
+Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md` giving what the run tested (the config's own `description`), its cell design, the settings that shape the decision, and what came out per cell. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.

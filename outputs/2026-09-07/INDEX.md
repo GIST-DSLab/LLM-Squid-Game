@@ -33,4 +33,4 @@
 | `signal_puzzle_hz1111_1turn_gemma4` | 1 | 1 | 05:32-05:32 | gemma4-cloud | `hz1111_v7esc_1turn_gemma4.yaml` | 1 |
 | `signal_puzzle_hz1111_1turn_qwen35` | 1 | 1 | 06:31-06:32 | qwen3.5-cloud | `hz1111_v7esc_1turn_qwen35.yaml` | 0 |
 
-Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md`. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.
+Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md` giving what the run tested (the config's own `description`), its cell design, the settings that shape the decision, and what came out per cell. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.

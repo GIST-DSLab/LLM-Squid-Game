@@ -16,4 +16,4 @@
 | `score_policy_smoke_gptoss20b` | 1 | 5 | 11:10-11:14 | gpt-oss-20b-cloud | `score_policy_smoke_gptoss20b.yaml` | 0 |
 | `signal_puzzle_v7esc_smoke` | 3 | 2 | 21:25-21:34 | gemma4-cloud | `signal_puzzle_v7esc_smoke.yaml` | 3 |
 
-Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md`. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.
+Each experiment folder holds its run directories untouched, a `config/` copy of the YAML it was launched from, a `reports/` copy of the write-ups specific to it, and a `README.md` giving what the run tested (the config's own `description`), its cell design, the settings that shape the decision, and what came out per cell. Reports covering several runs stay at their original path and are listed in the READMEs of every run they cite.

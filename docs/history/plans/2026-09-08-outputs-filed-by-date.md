@@ -12,7 +12,7 @@ outputs/2026-09-07/hz_2x2_main_gemma4/
     20260907_1353_gemma4-cloud_signal-game/   the run, byte-for-byte as written
     config/hz_2x2_main_gemma4_n10.yaml        copy of the YAML it was launched from
     reports/2026-09-07-hz-2x2-gemma4-report.html
-    README.md                                 runs, seasons, UTC span, config, reports
+    README.md                                 what was run, why, and what came out
 outputs/2026-09-07/INDEX.md                   one table over that day
 ```
 
@@ -21,11 +21,48 @@ after; no run directory's contents were touched.
 
 Not filed by date, and why:
 
-- `final_results/` — the golden-snapshot harness and the paper both resolve
-  runs at `outputs/final_results/`.
+- `KDD-UC/` — the canonical 2026-04-22 runs, renamed from `final_results/`
+  the same day for the manuscript that reports them. The golden-snapshot
+  harness and every analysis script default their `--root` to that path.
 - `web_arena/` — the live arena's database.
 - `_aborted/` — spans several dates by construction.
 - `_sdi_logs/`, `_trace/` — driver logs and prompt-trace dumps, not runs.
+
+## What each README says
+
+The first pass wrote a purely mechanical README — runs, timings, filenames —
+which does not answer what an experiment was for. Each is now generated from
+the recorded artefacts and carries:
+
+- **What this run tested** — the `description` the config was launched with,
+  quoted. That field is the author's own statement of intent and the only
+  honest source for "why"; nothing is inferred from directory names. All 74
+  runs turned out to have one.
+- **Design** — a row per declared cell: `cell_id`, framing, forfeit condition,
+  the `reassurance` and `record_immunity` switches, task, turns.
+- **Settings that shape the decision** — model, task mode (including whether
+  `underdetermined` turns are on), repetitions, lives, score policy, CONTINUE
+  reward mode, carrot, hazard ramp, confidence call, peer-death notice, and
+  what the decision call is allowed to see.
+- **What came out** — per cell from `season_results.jsonl`: n, forfeit and
+  elimination counts with rates, mean final score, mean lives left, mean turns,
+  and the FORFEIT self-report tally.
+- **Runs / Config / Reports**, plus joint reports citing the run from elsewhere.
+
+Two runs recorded no seasons — `benchmark_survival_drive_omni_codex56luna`
+(3 trace files, interrupted) and `hz0000rea_lives2of3_gemma4` (nothing but its
+config). Their READMEs say that in as many words rather than omitting the
+section, which would read as "nothing to report".
+
+The six `hearts_zero_probe*` runs and `hearts_zero_v7_smoke` are frozen-state
+prompt probes, not played seasons: no `season_results.jsonl` exists, so their
+README reads `run_config.json` (description, `design`, `turn`, `notes`) and
+`summary.json`, and reports the spread of `p`, `q`, SDI and `ri_forfeit` over
+the probe's cells.
+
+Older configs wrote `score_policy` as a bare string rather than the
+`{forfeit, elimination}` pair; the generator renders that form as-is and labels
+it, instead of guessing which side the old word meant.
 
 ## Configs
 
