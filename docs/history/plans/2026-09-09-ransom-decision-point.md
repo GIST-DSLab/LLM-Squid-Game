@@ -235,6 +235,21 @@ and their prompt bytes, which is the record of what was run; the YAML
 that produced them no longer exists and they are not reproducible from
 this tree.
 
+## 4b. A regression the frozen snapshots caught
+
+The ransom branch was first added to `1-game_intro.j2` as a second Jinja
+line. That deleted the blank line between the lives paragraph and the
+score-policy sentence on the **non-ransom** path as well, moving the
+bytes of every live hz cell. `tests/unit/test_record_immunity.py`
+(`TestOffIsByteIdentical`) failed on 60 assertions and named the cause.
+The branch now nests the policy sentence inside its `else`, which
+restores the 2026-09-08 bytes exactly.
+
+Worth stating as a rule, since this design adds branches to shared
+templates: **a new branch in a shared prompt file is a byte change to
+every cell that does not take it, until a frozen snapshot says
+otherwise.** Run the snapshot tests, not just the new ones.
+
 ## 5. Running it
 
 ```bash
