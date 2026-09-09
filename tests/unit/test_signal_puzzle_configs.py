@@ -66,18 +66,23 @@ def test_n30_is_the_five_cell_ladder() -> None:
     assert cfg.output_dir == "outputs/signal_puzzle_threat_gptoss"
 
 
+#: ``(filename, carrot)``. The carrot is a per-file expectation since
+#: 2026-09-10: ``ransom_r6_winnings_gptoss120b.yaml`` is the same design
+#: with the prize moved off the evaluator, run against its ``benchmark``
+#: sibling to read the demand effect that sibling showed.
 RANSOM_R6_CONFIGS = [
-    "ransom_r6_gptoss120b.yaml",
-    "ransom_r6_gemma4.yaml",
-    "ransom_r6_glm53flash.yaml",
-    "ransom_r6_pilot_gptoss120b.yaml",
-    "ransom_r6_pilot_gemma4.yaml",
-    "ransom_r6_pilot_glm53flash.yaml",
+    ("ransom_r6_gptoss120b.yaml", "benchmark"),
+    ("ransom_r6_gemma4.yaml", "benchmark"),
+    ("ransom_r6_glm53flash.yaml", "benchmark"),
+    ("ransom_r6_pilot_gptoss120b.yaml", "benchmark"),
+    ("ransom_r6_pilot_gemma4.yaml", "benchmark"),
+    ("ransom_r6_pilot_glm53flash.yaml", "benchmark"),
+    ("ransom_r6_winnings_gptoss120b.yaml", "winnings"),
 ]
 
 
-@pytest.mark.parametrize("name", RANSOM_R6_CONFIGS)
-def test_ransom_r6_family(name: str) -> None:
+@pytest.mark.parametrize("name,carrot", RANSOM_R6_CONFIGS)
+def test_ransom_r6_family(name: str, carrot: str) -> None:
     """Six rounds, forced-wrong on the §4.10 recipe, compression on."""
     cfg = load_config_from_yaml(str(CONFIG_DIR / name))
     assert cfg.lives.enabled and cfg.lives.initial == 1
@@ -85,7 +90,7 @@ def test_ransom_r6_family(name: str) -> None:
     assert cfg.forfeit_layer.base_reward == 10.0
     assert cfg.forfeit_layer.reward_mode == "flat"
     assert (cfg.score_policy.forfeit, cfg.score_policy.elimination) == ("keep", "keep")
-    assert cfg.carrot == "benchmark"
+    assert cfg.carrot == carrot
     # Two schedules keyed on seed % 2 need an even repetition count.
     assert cfg.num_repetitions % 2 == 0
     assert len(cfg.seasons) == 12
@@ -214,7 +219,9 @@ class TestTheLoaderCatchesTheForcedWrongMistakes:
         assert cfg.seasons[0].task_config.forced_wrong_blocks == [[5, 6]]
 
 
-RANSOM_FORCED_CONFIGS = RANSOM_R6_CONFIGS + ["ransom_r10_forced_gptoss120b.yaml"]
+RANSOM_FORCED_CONFIGS = [n for n, _ in RANSOM_R6_CONFIGS] + [
+    "ransom_r10_forced_gptoss120b.yaml"
+]
 
 
 @pytest.mark.parametrize("name", RANSOM_FORCED_CONFIGS)

@@ -51,9 +51,45 @@ from dataclasses import dataclass, field
 from squid_game.models.enums import Framing
 from squid_game.prompts import render
 
-#: The two general notices.
+#: The general notices.
 THREAT_NOTICE = "peer_death/threat.j2"
 FLAGSHIP_BASELINE_NOTICE = "peer_death/flagship_baseline.j2"
+#: The ransom design's notice (2026-09-10). Not in
+#: :data:`PEER_DEATH_TEMPLATES`: it is not a fourth family but a
+#: replacement for :data:`THREAT_NOTICE` on the live family when the RUN
+#: turns the ransom on, so it is selected by a run-level switch rather
+#: than by the season's framing. See :func:`peer_death_template_for`.
+RANSOM_NOTICE = "peer_death/ransom.j2"
+
+#: The live ``threat_type`` family -- the only framings a ransom run can
+#: name. EXPLICIT, in the style of :data:`PEER_DEATH_TEMPLATES` and
+#: ``core.framing._FRAMING_FOLDERS``: a ``hz_``/``alt_`` prefix test would
+#: silently absorb a future family into a design whose notice assumes a
+#: single life and no forfeit menu. ``tests/unit/test_peer_death_ransom.py``
+#: pins this set equal to the ``threat_type`` folder, so the two cannot
+#: drift.
+_RANSOM_NOTICE_FRAMINGS: frozenset[Framing] = frozenset(
+    {
+        Framing.HZ_0000,
+        Framing.HZ_0001,
+        Framing.HZ_0010,
+        Framing.HZ_0011,
+        Framing.HZ_0100,
+        Framing.HZ_0101,
+        Framing.HZ_0110,
+        Framing.HZ_0111,
+        Framing.HZ_1000,
+        Framing.HZ_1001,
+        Framing.HZ_1010,
+        Framing.HZ_1011,
+        Framing.HZ_1100,
+        Framing.HZ_1101,
+        Framing.HZ_1110,
+        Framing.HZ_1111,
+        Framing.HZ_ALT_CORRUPTION,
+        Framing.HZ_ALT_OVERSIGHT,
+    }
+)
 
 #: Which peer-death notice each framing gets. EXPLICIT, like
 #: ``core.framing._FRAMING_FOLDERS``: a prefix test on ``hz_``/``threat_``
@@ -122,11 +158,22 @@ def has_peer_death_notice(framing: Framing) -> bool:
     return framing in PEER_DEATH_TEMPLATES
 
 
-def peer_death_template_for(framing: Framing) -> str:
+def peer_death_template_for(framing: Framing, *, ransom: bool = False) -> str:
     """Return the notice template path for ``framing``.
 
     Args:
         framing: Season framing.
+        ransom: Whether the RUN has ``ransom.enabled``. When it does,
+            every live ``threat_type`` framing takes
+            :data:`RANSOM_NOTICE` instead of :data:`THREAT_NOTICE`: that
+            design has no forfeit menu for a peer to have used, states a
+            ``benchmark`` / ``winnings`` carrot rather than the flagship
+            one, and runs a silent arm (``hz_0000``) that states no
+            consequence for the threat notice to point at. Every other
+            framing -- the retired ladder, the corruption pair, the
+            flagship control -- keeps the notice it always had; none of
+            them is reachable from a ransom config, and a run-level
+            switch must not rewrite an archived cell's wording.
 
     Returns:
         A path relative to ``prompts/``.
@@ -138,7 +185,7 @@ def peer_death_template_for(framing: Framing) -> str:
             declare.
     """
     try:
-        return PEER_DEATH_TEMPLATES[framing]
+        template = PEER_DEATH_TEMPLATES[framing]
     except KeyError as exc:
         raise ValueError(
             f"{framing!r} has no peer-death notice. Threat framings use "
@@ -150,6 +197,9 @@ def peer_death_template_for(framing: Framing) -> str:
             "template written in that cell's own register, before running "
             "a cohort under it."
         ) from exc
+    if ransom and framing in _RANSOM_NOTICE_FRAMINGS:
+        return RANSOM_NOTICE
+    return template
 
 
 @dataclass(frozen=True)
@@ -185,6 +235,8 @@ class PeerDeathScheduler:
         first_turn: int,
         max_per_turn: int,
         framing: Framing,
+        ransom: bool = False,
+        states_outcome: bool = True,
     ) -> None:
         """Initialise the scheduler.
 
@@ -207,6 +259,18 @@ class PeerDeathScheduler:
                 level -- and is resolved here, at construction, so a
                 framing with no notice fails before the season starts
                 rather than on the first firing turn.
+            ransom: Whether the run has ``ransom.enabled``. Selects
+                :data:`RANSOM_NOTICE` for the live ``threat_type``
+                family; see :func:`peer_death_template_for`. Read only at
+                construction, so it cannot perturb the draw.
+            states_outcome: Whether this cell's RENDERED framing states
+                what happens when the counter empties -- the same
+                predicate ``_offer_ransom`` computes over the system
+                prompt it is about to send, and computed by the engine
+                the same way, so the notice and the decision point agree
+                about whether there is anything to point at. Only
+                :data:`RANSOM_NOTICE` reads it; the other two notices
+                ignore it, which is why the default is harmless.
 
         Raises:
             ValueError: When ``framing`` has no peer-death notice (see
@@ -218,9 +282,10 @@ class PeerDeathScheduler:
         self._first_turn = int(first_turn)
         self._max_per_turn = max(1, int(max_per_turn))
         self._framing = framing
+        self._states_outcome = bool(states_outcome)
         # Resolve eagerly: a missing notice is a configuration error, and
         # it must surface at construction, not mid-season on turn 2.
-        self._template = peer_death_template_for(framing)
+        self._template = peer_death_template_for(framing, ransom=ransom)
         self._alive: list[int] = list(range(1, self._cohort_size + 1))
         self._cumulative = 0
 
@@ -299,6 +364,10 @@ class PeerDeathScheduler:
             participants=participants,
             cumulative=self._cumulative,
             remaining=remaining_after,
+            # Read by ``peer_death/ransom.j2`` only. The other two
+            # notices never reference it, so passing it unconditionally
+            # leaves their bytes untouched.
+            states_outcome=self._states_outcome,
         ).strip()
         return PeerDeathEvent(
             fired=True,

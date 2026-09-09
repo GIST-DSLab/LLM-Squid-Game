@@ -31,7 +31,7 @@ from squid_game.core.peer_death import (
     PeerDeathScheduler,
     has_peer_death_notice,
 )
-from squid_game.core.turn_conditions import threat_level_of
+from squid_game.core.turn_conditions import states_outcome, threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.core.ransom import describe_ransom_rule
 from squid_game.models.config import (
@@ -333,6 +333,12 @@ class GameEngine:
                     reward=self._forfeit_layer_config.base_reward,
                     score_noun=carrot_vocabulary(self._carrot)["score_noun"],
                     record_subject=carrot_vocabulary(self._carrot)["record_subject"],
+                    # None on every row but ``winnings``, where the
+                    # endowment belongs to the beneficiary like the rest
+                    # of the ledger. None renders the old bytes.
+                    endowment_sentence=carrot_vocabulary(self._carrot)[
+                        "endowment_sentence"
+                    ],
                 )
                 if self._ransom.enabled
                 else None
@@ -508,6 +514,35 @@ class GameEngine:
                 first_turn=self._peer_death.first_turn,
                 max_per_turn=self._peer_death.max_per_turn,
                 framing=self._config.framing,
+                # Run-level, not per-cell: the ransom design has no
+                # forfeit menu and its own carrot, so its notice replaces
+                # the threat one for the whole live family.
+                ransom=self._ransom.enabled,
+                # Computed on the RENDERED framing, exactly as
+                # ``_offer_ransom`` computes it for the decision point --
+                # per-season switches (``reassurance``, and the carrot /
+                # record-immunity wording around the event block) decide
+                # whether the cell states an outcome, and the notice must
+                # point at nothing wherever the offer does. Cheap enough
+                # to render once per season, and only where a scheduler
+                # exists at all.
+                states_outcome=states_outcome(
+                    framing_mgr.render_system_prompt(
+                        TurnContext(
+                            turn_number=1,
+                            total_turns=task_cfg.total_turns,
+                            season_id=season_id,
+                            cumulative_score=task_cfg.starting_score,
+                            p_death=0.0,
+                            framing=self._config.framing,
+                            forfeit_condition=self._config.forfeit_condition,
+                            difficulty=task_cfg.difficulty,
+                            lives_remaining=lives_total,
+                            lives_total=lives_total,
+                            threat_level=season_threat_level,
+                        )
+                    )
+                ),
             )
 
         # --- 4. Flat turn loop ---

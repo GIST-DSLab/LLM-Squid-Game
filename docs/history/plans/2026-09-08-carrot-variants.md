@@ -255,3 +255,7 @@ forward 두 줄 · engine/FramingManager/ForfeitLayer/UnifiedTurnManager/
 설치 · `reason_menu.OPTION3_SCORE_PROTECTION_FRAME`을 되돌리고 새 설정 4개와
 테스트 2개를 지우면 된다 — 다른 어떤 설정도 `carrot` 키를 쓰지 않는다.
 `flagship_pull`은 그 자리에 그대로 남으므로 geo2d는 영향을 받지 않는다.
+
+## 2026-09-10 — 다섯째 값 `winnings`
+
+- `benchmark`의 소유자가 채점자여서 r6 몸값 런의 지불 근거가 요구 특성("the benchmark expects me to continue")과 자기 귀속("show my reasoning ability")으로 나왔다. `winnings`는 같은 표에 한 행을 더해 상금을 **채점하지 않는 게임 밖 수혜자**에게 라운드마다 돌려주고(호소 없는 건조한 어조, 여섯 시험 전부 통과), 명사는 템플릿 동사가 단수라 "prize money"를 쓴다. 코드: `core/carrot.py` 행 + `ExperimentConfig.carrot` Literal 확장(추가형 밸리데이터는 값 열거가 아니라 `none`/`flagship` 제외로 동작하므로 그대로 적용된다). 설정: `configs/experiment/ransom_r6_winnings_gptoss120b.yaml`(`ransom_r6_gptoss120b.yaml` 복사본, name/description/output_dir/`carrot`만 다름). 테스트: `tests/unit/test_carrot_variants.py::TestWinnings` + 기존 파라미터화에 편입, `tests/integration/test_ransom_e2e.py`의 두 팔 대조/결정점 어휘 2건. 기존 네 당근의 렌더는 바이트 동일.

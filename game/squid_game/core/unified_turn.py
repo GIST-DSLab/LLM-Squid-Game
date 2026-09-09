@@ -1625,7 +1625,12 @@ class UnifiedTurnManager:
             ),
             carrot=self._carrot,
         )
-        user_message = f"{peer_prefix}{body}" if peer_prefix else body
+        # Same blank-line separator the confidence / decision / task calls
+        # use, so the notice reads as its own paragraph rather than running
+        # into "=== Decision Point ===". No recorded run is affected: every
+        # ransom config to date sets ``peer_death.p_announce: 0.0``, so this
+        # branch was unreachable until 2026-09-10.
+        user_message = f"{peer_prefix}\n\n{body}" if peer_prefix else body
         response = self._agent.respond_ransom_call(
             user_message=user_message, system_prompt=system_prompt
         )
