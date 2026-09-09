@@ -62,3 +62,28 @@ underdetermined:
   # per repetition rather than per cell.
   blocks: [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]
   candidate_actions: 2
+
+# --- forced-wrong rounds (spec docs/history/specs/2026-09-10-signal-puzzle-forced-wrong-turns-design.md)
+# Where the forced-incorrect rounds go, when an experiment config sets
+# task_config.forced_wrong: true. One round inside each block is graded
+# INCORRECT whatever the agent answered; the puzzle itself is ordinary and
+# fully solvable, and the prompts are byte-identical to a normal round.
+# Which round inside the block rotates with the season seed:
+#   seed % 2 == 0 -> (2, 5)      seed % 2 == 1 -> (3, 4)
+#
+# These blocks are the N = 6 instance of the recipe in spec §4.10: K = 2
+# two-round blocks packed against round N - 1, leaving round 1 clean and
+# round N unforced. A run of a different length states its own blocks in
+# task_config.forced_wrong_blocks; the recipe gives
+#   N = 6  -> [[2, 3], [4, 5]]   forced (2, 5) / (3, 4)
+#   N = 8  -> [[4, 5], [6, 7]]   forced (4, 7) / (5, 6)
+#   N = 10 -> [[6, 7], [8, 9]]   forced (6, 9) / (7, 8)
+# and at every N the two forced ceilings are 40 then 10 (even seeds) or
+# 30 then 20 (odd), so the ransom's dominated share does not move with N.
+#
+# Round N may not be in a block: the engine offers no ransom on the final
+# round (rounds_remaining <= 0), so a forced round there ends the session
+# with no decision recorded — a manipulation spent for nothing. Rejected at
+# load, along with any block outside [1, N - 1].
+forced_wrong:
+  blocks: [[2, 3], [4, 5]]

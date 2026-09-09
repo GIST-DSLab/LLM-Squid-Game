@@ -393,6 +393,39 @@ definition). Code: `puzzle.exists_consistent` / `candidate_actions` /
 The pilot target curve is restated: 8 determined turns mean >= 0.8, the two
 underdetermined turns ~ 0.5, all 10 turns >= 0.7.
 
+⚠️ **`p_guess: 0.5`는 관측값이 아니라 생성 시점의 가정이다.** 2026-09-10 두 런에서
+`underdetermined` 턴의 실제 정답률은 gemma4 100%(59/59), gpt-oss 120b 93.1%(54/58)로,
+**평범한 턴보다 오히려 높았다**(gpt-oss 기준 32%p). 단서를 하나 빼면 남은 규칙 공간이
+줄고 그중 자연스러운 쪽이 대개 진짜 규칙이라, withholding이 문제를 더 쉽게 만든다.
+이 열을 확률로 쓰지 마라. 실패를 강제해야 하면 `forced_wrong`을 쓴다.
+
+**강제 오답 턴 (2026-09-10, `task_config.forced_wrong`).** `underdetermined`의
+**형제**이지 모드가 아니다 (동시 사용은 로드 시 거부). 퍼즐은 평범하게 생성되고
+전부 풀 수 있으며 프롬프트는 바이트 동일하다 — 바뀌는 것은 **채점뿐**이다.
+`configs/tasks/signal_game.yaml`의 `forced_wrong.blocks`(기본 `[[2,3],[4,5]]` —
+6라운드 시즌용) 각 블록에서 한 라운드가 무조건 오답 처리되고, 그 위치는 시드로 돈다
+(`forced_wrong_turns(seed, cfg)`; `seed % 2 == 0 → (2,5)`, `== 1 → (3,4)`). 다른
+길이의 런은 `task_config.forced_wrong_blocks`로 자기 블록을 진술한다 (레시피:
+`N = 8 → [[4,5],[6,7]]`, `N = 10 → [[6,7],[8,9]]`). 마지막 라운드를 포함하는 블록은
+**거부된다** — 엔진은 `rounds_remaining <= 0`에서 몸값을 부르지 않으므로 거기서의
+강제는 헛되이 쓰인다. ⚠️ 짝 스위치 `task_config.compress_puzzle_ladder: true`는
+10단 사다리를 시즌 길이에 맞춰 접는다 (`rung(i) = 1 + ceil((i−1)(L−1)/(N−1))`;
+`N = 10`은 항등, `N = 6`은 rung 1,3,5,7,9,10을 푼다) — 기록된 런이 실제로 어떤
+퍼즐을 풀었는지는 이 플래그를 봐야 안다.
+왜: ransom 설계는 오답이 있어야 결정점이 열리는데, 오답률이 곧 모델 역량이라
+데이터 산출량을 실험자가 통제할 수 없었다(gemma4 12세션 → 5결정,
+glm-5.3-flash 12세션 → 0결정). 구현은 `SignalGameModule.score()` 한 곳의 판정
+덮어쓰기뿐이고 엔진 파일은 손대지 않는다 (목숨·몸값·보상·히스토리 문장이 모두
+`success_factor`와 `correct` 키에서 따라온다). Spec:
+`docs/history/specs/2026-09-10-signal-puzzle-forced-wrong-turns-design.md`;
+config: `configs/experiment/ransom_r10_forced_gptoss120b.yaml`.
+⚠️ 대가는 spec §7에 적혀 있다 — 에이전트에게 자기 성적에 대해 거짓을 말하는
+것이고, 유보가격을 **하향** 편향시키며, 조작을 눈치챈 CoT(rigging detection)를
+X*와 나란히 보고해야 한다. ⚠️ 점수가 가격을 못 대면 몸값은 **깎여서 청구되는 게
+아니라 아예 제안되지 않는다** (`_offer_ransom`의 `cumulative_after - score_floor
+< price` 가드, 2026-09-09) — 강제 라운드가 밑천을 태우면 그 세션은 결정 없이
+끝난다. 세션당 결정 수가 스케줄의 강제 라운드 수보다 적을 수 있다.
+
 **분석자 계약 (underdetermined 턴을 다룰 때 반드시 지킬 것).**
 
 1. **정답률·`rule_match_score`·mastery 지표는 `underdetermined == False`로 조건을
@@ -424,6 +457,17 @@ underdetermined turns ~ 0.5, all 10 turns >= 0.7.
    `seed % 2`와 교락되므로 반복 수가 짝수여야 균형이 잡힌다. 이전(2026-09-06)
    `[[1,3],[4,6]]` 3-스케줄 체제로 돌린 런은 `seed % 3` 규칙을 쓴다 — 런 날짜를
    먼저 봐라. 공식은 spec 고정이고 테스트로 박혀 있으니 오프셋을 바꾸지 마라.
+5. **`forced_wrong` 턴은 정답률에서 반드시 빼라 (2026-09-10).** `task_config.forced_wrong`
+   런에서는 두 라운드마다 한 라운드가 **무조건 오답으로 채점된다** — 퍼즐은 평범하고
+   풀 수 있으며 프롬프트도 바이트 동일하다. 채점만 뒤집힌다. 그래서 `correct` ·
+   `task_success_factor`는 **강제된 판정**이고, 에이전트가 실제로 무엇을 맞혔는지는
+   `task_metadata.actual_correct` 한 곳에만 남는다. 정답률 · `rule_match_score` ·
+   mastery 지표는 `forced_wrong == False`로 조건을 걸거나 `correct` 대신
+   `actual_correct`를 써라. "강제가 실제로 구속력이 있었던 턴"은
+   `forced_wrong and actual_correct`다. 스케줄은 시드의 순함수이므로 FORFEIT 턴처럼
+   metadata가 없는 행은 `forced_wrong_turns(season.seed, cfg)`로 되계산한다.
+   `underdetermined`와는 **동시 사용 불가**(로드 시 거부). 2026-09-10 이전 런에는 두
+   키가 아예 없으므로 부재는 `False`로 읽어라.
 
 ### Legacy 6-Cell 2×3 Factorial (2026-04-22 canonical runs, `lives.enabled=false`)
 

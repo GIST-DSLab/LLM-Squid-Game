@@ -295,6 +295,9 @@ class GameEngine:
             signal_mode=task_cfg.signal_mode,
             underdetermined=task_cfg.underdetermined,
             underdetermined_blocks=task_cfg.underdetermined_blocks,
+            forced_wrong=task_cfg.forced_wrong,
+            forced_wrong_blocks=task_cfg.forced_wrong_blocks,
+            compress_puzzle_ladder=task_cfg.compress_puzzle_ladder,
         )
 
         # --- 2. Create core components ---

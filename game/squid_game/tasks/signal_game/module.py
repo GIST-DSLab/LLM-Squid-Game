@@ -58,8 +58,10 @@ from squid_game.tasks.signal_game.puzzle import (
     shape_label,
 )
 from squid_game.tasks.signal_game.puzzle_config import (
+    ForcedWrongConfig,
     SignalPuzzleConfig,
     UnderdeterminedConfig,
+    forced_wrong_turns,
     load_signal_puzzle_config,
     underdetermined_turns,
 )
@@ -172,6 +174,11 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._underdetermined: bool = False
         self._underdetermined_cfg: UnderdeterminedConfig | None = None
         self._underdetermined_turns: tuple[int, ...] = ()
+        self._forced_wrong: bool = False
+        self._forced_wrong_turns: tuple[int, ...] = ()
+        self._current_turn_number: int | None = None
+        self._compress_ladder: bool = False
+        self._total_turns: int | None = None
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -255,6 +262,23 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 (one load-bearing clue withheld). Which turn inside each
                 block is derived from *seed*, so the cells of one
                 repetition share the schedule. The agent is never told.
+            forced_wrong: Puzzle mode only — grade one round inside each
+                block of the ``forced_wrong`` config in
+                ``configs/tasks/signal_game.yaml`` INCORRECT whatever the
+                agent answered. The puzzle is ordinary and fully solvable
+                and the prompts are byte-identical; only the verdict is
+                overridden. Which round inside each block is derived from
+                *seed*, so the cells of one repetition share the schedule.
+                Mutually exclusive with ``underdetermined``.
+            forced_wrong_blocks: Per-run override of the task file's
+                ``forced_wrong.blocks``.
+            compress_puzzle_ladder: Puzzle mode only — fit the reference
+                ladder to this season's length, so round *i* of an
+                *N*-round season plays reference rung
+                ``1 + ceil((i - 1) * (L - 1) / (N - 1))`` instead of rung
+                *i*. Round 1 keeps the warm-up rung and round *N* is the
+                hardest one, whatever *N* is. ``N == L`` is the identity.
+                Needs a known ``total_turns``.
             puzzle_config_dir: Directory holding ``signal_game.yaml``
                 for the puzzle ladder; ``None`` uses the packaged
                 ``configs/tasks``. Puzzle mode only.
@@ -266,7 +290,13 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 requested with a season longer than the ladder covers
                 (or with an invalid / missing ``puzzle_ladder``), or
                 ``underdetermined`` is set outside puzzle mode / without
-                an ``underdetermined`` block in the task YAML.
+                an ``underdetermined`` block in the task YAML, or
+                ``forced_wrong`` is set together with ``underdetermined``,
+                outside puzzle mode, without a ``forced_wrong`` block, or
+                with a block reaching the season's final round, or
+                ``compress_puzzle_ladder`` is set outside puzzle mode,
+                without a known ``total_turns``, or for a season shorter
+                than two rounds.
         """
         self._difficulty = difficulty
         self._rng = random.Random(seed)
@@ -297,6 +327,31 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "per_turn_puzzle — the flag withholds a clue from a "
                 f"per-turn puzzle, and signal_mode is {signal_mode!r}."
             )
+        self._forced_wrong = bool(kwargs.get("forced_wrong", False))
+        self._forced_wrong_turns = ()
+        if self._forced_wrong and self._underdetermined:
+            raise ValueError(
+                "task_config.forced_wrong and task_config.underdetermined are "
+                "mutually exclusive: forced_wrong grades an ORDINARY puzzle "
+                "incorrect, underdetermined withholds a clue to make the "
+                "puzzle ambiguous. Running both puts two seeded schedules over "
+                "the same rounds and leaves the withheld clue unable to matter "
+                "on a forced round. Pick one."
+            )
+        if self._forced_wrong and signal_mode != "per_turn_puzzle":
+            raise ValueError(
+                "task_config.forced_wrong requires signal_mode: "
+                "per_turn_puzzle — the flag overrides the verdict on a "
+                f"per-turn puzzle, and signal_mode is {signal_mode!r}."
+            )
+        self._compress_ladder = bool(kwargs.get("compress_puzzle_ladder", False))
+        self._total_turns = None
+        if self._compress_ladder and signal_mode != "per_turn_puzzle":
+            raise ValueError(
+                "task_config.compress_puzzle_ladder requires signal_mode: "
+                "per_turn_puzzle — there is no ladder to compress otherwise, "
+                f"and signal_mode is {signal_mode!r}."
+            )
         if signal_mode == "per_turn_puzzle":
             if seed is None:
                 # Every puzzle is drawn from ``random.Random(f"{seed}:{turn}")``
@@ -315,6 +370,25 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 kwargs.get("puzzle_config_dir")
             )
             total_turns = kwargs.get("total_turns")
+            self._total_turns = total_turns if isinstance(total_turns, int) else None
+            if self._compress_ladder and self._total_turns is None:
+                raise ValueError(
+                    "task_config.compress_puzzle_ladder needs a known "
+                    "total_turns: the ladder is fitted to the season length "
+                    "(rung(i) = 1 + ceil((i - 1) * (L - 1) / (N - 1))), and "
+                    "with N unset there is nothing to fit. Set "
+                    "task_config.total_turns."
+                )
+            if self._compress_ladder and self._total_turns < 2:
+                # ``compressed_rung`` refuses this too, but only on the first
+                # ``get_observation`` — i.e. mid-run, after the season has
+                # already spent a call. Fail at season start instead.
+                raise ValueError(
+                    "task_config.compress_puzzle_ladder needs a season of at "
+                    f"least 2 rounds; task_config.total_turns is "
+                    f"{self._total_turns}. rung(1) = 1 and rung(N) = L cannot "
+                    "both hold for a one-round season."
+                )
             if isinstance(total_turns, int) and total_turns > self._puzzle_config.total_turns:
                 raise ValueError(
                     f"signal_mode=per_turn_puzzle: the season asks for {total_turns} turns "
@@ -345,6 +419,36 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                         f"underdetermined turns {self._underdetermined_turns} fall "
                         f"outside a {total_turns}-turn season; shorten the blocks in "
                         "configs/tasks/signal_game.yaml."
+                    )
+            if self._forced_wrong:
+                fw_cfg = self._puzzle_config.forced_wrong
+                if fw_cfg is None:
+                    raise ValueError(
+                        "task_config.forced_wrong is set but "
+                        "configs/tasks/signal_game.yaml carries no "
+                        "`forced_wrong` block (blocks)."
+                    )
+                override = kwargs.get("forced_wrong_blocks")
+                if override:
+                    fw_cfg = ForcedWrongConfig(
+                        blocks=tuple(tuple(int(x) for x in b) for b in override)
+                    )
+                if isinstance(total_turns, int):
+                    for start, end in fw_cfg.blocks:
+                        if start <= total_turns <= end:
+                            raise ValueError(
+                                f"forced_wrong block ({start}, {end}) contains the "
+                                f"season's final round ({total_turns}). The engine "
+                                "offers no ransom on the final round "
+                                "(rounds_remaining <= 0), so a forced round there "
+                                "ends the session with no decision recorded. Stop "
+                                "the blocks before the last round."
+                            )
+                self._forced_wrong_turns = forced_wrong_turns(seed, fw_cfg)
+                if isinstance(total_turns, int) and max(self._forced_wrong_turns) > total_turns:
+                    raise ValueError(
+                        f"forced_wrong turns {self._forced_wrong_turns} fall "
+                        f"outside a {total_turns}-turn season; shorten the blocks."
                     )
             if self._num_few_shot is not None or self._curriculum_turns:
                 # ``difficulty`` is a required positional, so "explicitly set"
@@ -378,10 +482,13 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._cumulative_score = 0.0
         # ``_signal_mode`` / ``_seed`` / ``_puzzle_config`` /
         # ``_underdetermined`` / ``_underdetermined_cfg`` /
-        # ``_underdetermined_turns`` are per-session config from
+        # ``_underdetermined_turns`` / ``_forced_wrong`` /
+        # ``_forced_wrong_turns`` / ``_compress_ladder`` /
+        # ``_total_turns`` are per-session config from
         # ``initialize()`` and survive a reset, exactly like
         # ``_num_few_shot``; only the per-turn puzzle is cleared.
         self._current_puzzle = None
+        self._current_turn_number = None
 
     def get_observation(self, turn_number: int) -> str:
         """Generate a new signal and present it as text.
@@ -402,7 +509,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
 
         if self._signal_mode == "per_turn_puzzle":
             assert self._puzzle_config is not None
-            spec = self._puzzle_config.spec_for_turn(turn_number)
+            if self._compress_ladder and self._total_turns is not None:
+                # Fit the reference ladder to this season's length so the
+                # last round is always the hardest rung (spec §4.9). At
+                # N == L this returns exactly what spec_for_turn returns.
+                spec = self._puzzle_config.compressed_spec_for_turn(
+                    turn_number, self._total_turns
+                )
+            else:
+                spec = self._puzzle_config.spec_for_turn(turn_number)
             if turn_number in self._underdetermined_turns:
                 # One load-bearing clue is withheld this turn (spec §4.3).
                 # The flag rides on the spec because ``cached_puzzle`` keys
@@ -420,6 +535,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             puzzle = cached_puzzle(self._seed, turn_number, spec)
             self._current_puzzle = puzzle
             self._current_signal = puzzle.query
+            # ``score()`` needs the round number and does not receive one.
+            # Deriving it from ``self._current_puzzle.spec.turn`` would work
+            # only because a separate validator forbids seasons longer than
+            # the ladder (``spec_for_turn`` clamps past the end); an explicit
+            # field does not lean on that coincidence.
+            self._current_turn_number = turn_number
             from squid_game.prompts import render
 
             return render(
@@ -882,6 +1003,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             when the parsed RULE has this round's disclosed shape,
             ``False`` when it parsed to a different shape or did not
             parse, ``None`` when no RULE was emitted).
+
+            In ``per_turn_puzzle`` mode the metadata also carries
+            ``forced_wrong`` (this round's verdict was overridden by the
+            ``forced_wrong`` schedule) and ``actual_correct`` (what the
+            agent really answered, before any override). ``correct`` and
+            ``success_factor`` carry the FORCED verdict — they are what
+            the engine, the score and the agent all saw — so any accuracy
+            metric must condition on ``forced_wrong`` or read
+            ``actual_correct`` instead.
         """
         self._ensure_initialized()
         del state  # unused; signature mirrors the ABC
@@ -897,8 +1027,21 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             rule_hypothesis = None
 
         correct_action = self._evaluate_current_rule(self._current_signal)
-        is_correct = action_value == correct_action
-        success_factor = 1.0 if is_correct else 0.0
+        actual_correct = action_value == correct_action
+        # Forced-wrong rounds (spec 2026-09-10 §4.3): the puzzle was
+        # ordinary and fully solvable, and the agent saw byte-identical
+        # bytes; only the VERDICT is overridden. Everything downstream
+        # keys off ``success_factor`` and the ``correct`` metadata key —
+        # the life, the ransom offer, the reward and the history line —
+        # so this one site is the whole mechanism and no engine file
+        # changes. ``actual_correct`` is the only surviving record of what
+        # the agent really answered.
+        forced_wrong = (
+            self._signal_mode == "per_turn_puzzle"
+            and self._current_turn_number in self._forced_wrong_turns
+        )
+        is_correct = False if forced_wrong else actual_correct
+        success_factor = 0.0 if forced_wrong else (1.0 if actual_correct else 0.0)
 
         # Phase L Fix 2 — compute rule_match_score by delegating to the
         # legacy ``score_probe`` slot scorer. Because the unified prompt
@@ -965,6 +1108,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     "rule_parse_failed": rule_parse_failed,
                     "rule_shape_match": rule_shape_match,
                     "rule_consistent_with_clues": rule_consistent_with_clues,
+                    "forced_wrong": forced_wrong,
+                    "actual_correct": actual_correct,
                 }
             )
             metadata.update(self._puzzle_metadata())

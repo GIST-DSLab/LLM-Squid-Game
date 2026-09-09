@@ -1,6 +1,6 @@
 """Task-YAML loading for the Signal Game per-turn puzzle mode (v2).
 
-Two blocks of ``configs/tasks/signal_game.yaml`` are read at runtime, so
+Three blocks of ``configs/tasks/signal_game.yaml`` are read at runtime, so
 re-tuning is a YAML edit rather than a code change:
 
 ``puzzle_ladder``
@@ -17,10 +17,20 @@ re-tuning is a YAML edit rather than a code change:
     per-experiment ``task_config.underdetermined`` flag. Which turn inside
     each block is picked is :func:`underdetermined_turns` of the season seed
     (read its warning about the three-valued schedule before analysing).
+
+``forced_wrong``
+    Where the forced-incorrect rounds go (:class:`ForcedWrongConfig`). The
+    puzzle is ordinary and fully solvable; only the *verdict* is
+    overridden, so this block is a sibling of ``underdetermined`` rather
+    than a mode of it (the two are mutually exclusive at load). Whether it
+    runs is the per-experiment ``task_config.forced_wrong`` flag; which
+    round inside each block is :func:`forced_wrong_turns` of the seed.
 """
 
 from __future__ import annotations
 
+import dataclasses
+import math
 from pathlib import Path
 
 import yaml
@@ -147,6 +157,82 @@ def underdetermined_turns(seed: int, cfg: UnderdeterminedConfig) -> tuple[int, .
     )
 
 
+class ForcedWrongConfig(BaseModel):
+    """The ``forced_wrong`` block: where the forced-incorrect rounds go.
+
+    One round inside each listed block is graded incorrect whatever the
+    agent answered (spec §4.3). The puzzle itself is ordinary and fully
+    solvable — this block changes the VERDICT, never the stimulus, which
+    is what separates it from :class:`UnderdeterminedConfig`.
+
+    Blocks are closed turn intervals ``[start, end]`` and must be at
+    least two turns wide, so the forced position rotates across
+    repetitions instead of pinning to one round number. Turning the
+    feature on is the per-experiment ``task_config.forced_wrong`` flag;
+    this block only says *where*.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    blocks: tuple[tuple[int, int], ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _blocks_well_formed(self) -> "ForcedWrongConfig":
+        prev_end = 0
+        for start, end in self.blocks:
+            if end < start:
+                raise ValueError(
+                    f"forced_wrong block ({start}, {end}) is reversed; a block "
+                    "is a closed turn interval [start, end] and needs start <= end"
+                )
+            if end == start:
+                raise ValueError(
+                    f"forced_wrong block ({start}, {end}) must span at least "
+                    "two turns; a one-turn block puts the forced round in the "
+                    "same position every repetition"
+                )
+            if start <= prev_end:
+                raise ValueError(
+                    f"forced_wrong blocks must be ascending and disjoint, "
+                    f"got ({start}, {end}) after turn {prev_end}"
+                )
+            prev_end = end
+        return self
+
+
+def forced_wrong_turns(seed: int, cfg: ForcedWrongConfig) -> tuple[int, ...]:
+    """The round graded incorrect inside each block, for one season seed.
+
+    Same rotation as :func:`underdetermined_turns`, and for the same
+    reasons: derived from the seed so the module stays stateless, and
+    shared by every cell of one repetition so the paired design holds.
+
+    With the shipped ``blocks: [[2, 3], [4, 5]]`` — the *N* = 6 instance
+    of the recipe in spec §4.10, two two-round blocks packed against
+    round ``N - 1`` — every block is two rounds wide, so there are
+    exactly **two** schedules, keyed on ``seed % 2``::
+
+        seed % 2 == 0 -> (2, 5)
+        seed % 2 == 1 -> (3, 4)
+
+    A run of a different length states its own blocks in
+    ``task_config.forced_wrong_blocks``; the same recipe gives
+    ``N = 8 -> [[4, 5], [6, 7]]`` and ``N = 10 -> [[6, 7], [8, 9]]``, and
+    at every *N* the two forced rounds carry the same ransom ceilings
+    (40 then 10 on even seeds, 30 then 20 on odd), so the dominated share
+    does not move with the season length.
+
+    An analyst must carry the same consequences the underdetermined
+    schedule has: the position is confounded with ``seed % 2``, so a
+    paired design over an even number of repetitions balances it and an
+    odd number does not.
+    """
+    return tuple(
+        start + (seed + b) % (end - start + 1)
+        for b, (start, end) in enumerate(cfg.blocks)
+    )
+
+
 class SignalPuzzleConfig(BaseModel):
     """The ``puzzle_ladder`` block: turn number -> spec."""
 
@@ -154,6 +240,7 @@ class SignalPuzzleConfig(BaseModel):
 
     puzzle_ladder: list[PuzzleLadderStep] = Field(min_length=1)
     underdetermined: UnderdeterminedConfig | None = None
+    forced_wrong: ForcedWrongConfig | None = None
 
     @model_validator(mode="after")
     def _turns_consecutive(self) -> "SignalPuzzleConfig":
@@ -175,6 +262,19 @@ class SignalPuzzleConfig(BaseModel):
                 )
         return self
 
+    @model_validator(mode="after")
+    def _forced_wrong_within_ladder(self) -> "SignalPuzzleConfig":
+        if self.forced_wrong is None:
+            return self
+        last = len(self.puzzle_ladder)
+        for start, end in self.forced_wrong.blocks:
+            if start < 1 or end > last:
+                raise ValueError(
+                    f"forced_wrong block ({start}, {end}) falls outside the "
+                    f"{last}-rung puzzle_ladder"
+                )
+        return self
+
     @property
     def total_turns(self) -> int:
         return len(self.puzzle_ladder)
@@ -183,6 +283,68 @@ class SignalPuzzleConfig(BaseModel):
         """Spec for a 1-based turn; turns past the end clamp to the last rung."""
         idx = min(max(turn_number, 1), self.total_turns) - 1
         return self.puzzle_ladder[idx].to_spec()
+
+    def compressed_rung(self, turn_number: int, total_turns: int) -> int:
+        """The reference rung round *turn_number* of an *N*-round season plays.
+
+        ``rung(i) = 1 + ceil((i - 1) * (L - 1) / (N - 1))`` where ``L`` is
+        the reference ladder's length. Four properties earn this formula
+        its place, and all four are pinned by tests (spec §4.9.1):
+
+        * ``N == L`` is the identity, so every recorded 10-turn config keeps
+          playing exactly the ladder it played before this method existed.
+        * ``rung(1) == 1`` always. This is why the formula is two-ended
+          rather than the simpler ``ceil(i * L / N)``, which starts at rung
+          2 for a six-round season: with one life a genuine error on the
+          clean opening round opens a below-ceiling ransom, and a DECLINE
+          there ends the session before its dominated round ever arrives.
+          Round 1 has to stay the easiest thing the ladder has.
+        * ``rung(N) == L`` always, so the last round is the hardest rung
+          whatever the season length -- the reason the method exists.
+        * ``(L - 1) / (N - 1) >= 1`` for ``N <= L``, so the map is strictly
+          increasing: no rung repeats and the reference ladder's own
+          difficulty ordering is preserved.
+
+        Args:
+            turn_number: 1-based round.
+            total_turns: The season's length, ``N``.
+
+        Raises:
+            ValueError: If *total_turns* exceeds the ladder -- compression
+                can map ``N > L`` too, but only by repeating rungs, i.e.
+                two rounds at identical difficulty, silently; extending the
+                reference ladder is the honest way to run a longer season.
+                Also if *total_turns* is below 2, where the formula divides
+                by zero and its two anchors contradict each other.
+        """
+        last = self.total_turns
+        if total_turns > last:
+            raise ValueError(
+                f"a {total_turns}-turn season is longer than the {last}-rung "
+                "puzzle_ladder; compression would have to repeat rungs. Extend "
+                "the ladder in configs/tasks/signal_game.yaml instead."
+            )
+        if total_turns < 2:
+            raise ValueError(
+                "ladder compression needs a season of at least 2 rounds; "
+                f"got total_turns={total_turns}. rung(1) = 1 and rung(N) = L "
+                "cannot both hold for a one-round season."
+            )
+        idx = min(max(turn_number, 1), total_turns)
+        return 1 + math.ceil((idx - 1) * (last - 1) / (total_turns - 1))
+
+    def compressed_spec_for_turn(self, turn_number: int, total_turns: int) -> PuzzleSpec:
+        """``spec_for_turn`` through :meth:`compressed_rung`.
+
+        The returned spec carries ``turn = turn_number`` -- the round being
+        played, not the reference rung it was drawn from. ``PuzzleSpec`` is
+        part of ``cached_puzzle``'s lru key, so this is also what keeps two
+        season lengths from colliding in the cache.
+        """
+        rung = self.compressed_rung(turn_number, total_turns)
+        return dataclasses.replace(
+            self.puzzle_ladder[rung - 1].to_spec(), turn=turn_number
+        )
 
 
 def load_signal_puzzle_config(config_dir: Path | None = None) -> SignalPuzzleConfig:
@@ -204,4 +366,6 @@ def load_signal_puzzle_config(config_dir: Path | None = None) -> SignalPuzzleCon
     payload: dict = {"puzzle_ladder": raw["puzzle_ladder"]}
     if "underdetermined" in raw:
         payload["underdetermined"] = raw["underdetermined"]
+    if "forced_wrong" in raw:
+        payload["forced_wrong"] = raw["forced_wrong"]
     return SignalPuzzleConfig.model_validate(payload)
