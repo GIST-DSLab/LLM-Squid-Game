@@ -341,8 +341,26 @@ class TestLadderCompressionWiring:
             _module(total_turns=None, compress_puzzle_ladder=True)
 
     def test_rejected_for_a_one_round_season(self) -> None:
+        # ``initialize`` raises, so there is no module to call further.
         with pytest.raises(ValueError, match="at least 2"):
-            _module(total_turns=1, compress_puzzle_ladder=True).get_observation(1)
+            _module(total_turns=1, compress_puzzle_ladder=True)
+
+
+class TestForcedWrongNeedsASeasonLength:
+    """Every forced-wrong guard is keyed on the season's length.
+
+    With ``total_turns`` unset the schedule would be built with no bound,
+    so a block reaching past the last round would surface only as a
+    session that ended with no decision point. Fail at season start, the
+    same way ``compress_puzzle_ladder`` does.
+    """
+
+    def test_rejected_without_a_known_total_turns(self) -> None:
+        with pytest.raises(ValueError, match="total_turns"):
+            _module(total_turns=None, forced_wrong=True)
+
+    def test_a_known_total_turns_is_accepted(self) -> None:
+        assert _module(total_turns=6, forced_wrong=True)._forced_wrong_turns
 
 
 class TestAnySeasonLength:

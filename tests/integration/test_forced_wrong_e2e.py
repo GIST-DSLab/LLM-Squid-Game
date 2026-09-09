@@ -32,7 +32,8 @@ _BASE_SEED = 42
 _SEASON_SEED = _BASE_SEED + 1
 
 
-def _cfg(tmp_path, *, blocks, total_turns=8, price=10.0, starting_score=100.0):
+def _cfg(tmp_path, *, blocks, total_turns=8, price=10.0, starting_score=100.0,
+         compress_puzzle_ladder=False):
     return ExperimentConfig(
         name="forced-wrong-e2e",
         seasons=[SeasonConfig(
@@ -44,6 +45,7 @@ def _cfg(tmp_path, *, blocks, total_turns=8, price=10.0, starting_score=100.0):
                 starting_score=starting_score,
                 history_mode="outcome", forced_wrong=True,
                 forced_wrong_blocks=blocks,
+                compress_puzzle_ladder=compress_puzzle_ladder,
             ),
             provider_config=ProviderConfig(provider="gemini", model="stub"),
             p_death_override=0.0,
@@ -62,17 +64,20 @@ def _cfg(tmp_path, *, blocks, total_turns=8, price=10.0, starting_score=100.0):
     )
 
 
-def _correct_actions(total_turns: int) -> list[str]:
+def _correct_actions(total_turns: int, compress: bool = False) -> list[str]:
     """The true answer for each round of the season the runner will play.
 
     Generated from a module seeded exactly as the season's will be, so the
     stub below is a perfect solver and every wrong verdict in the run is
-    the forced-wrong schedule's doing.
+    the forced-wrong schedule's doing. ``compress`` must match the
+    season's ``compress_puzzle_ladder``: the flag changes which reference
+    rung each round draws, hence the puzzle, hence the answer.
     """
     module = SignalGameModule()
     module.initialize(
         difficulty=Difficulty.MEDIUM, seed=_SEASON_SEED,
         signal_mode="per_turn_puzzle", total_turns=total_turns,
+        compress_puzzle_ladder=compress,
     )
     answers = []
     for turn in range(1, total_turns + 1):
@@ -81,14 +86,14 @@ def _correct_actions(total_turns: int) -> list[str]:
     return answers
 
 
-def _perfect_responses(total_turns: int = 8):
+def _perfect_responses(total_turns: int = 8, compress: bool = False):
     """A stub that pays every ransom and answers every puzzle correctly.
 
     The three call kinds are told apart by their bodies; the task calls
     arrive one per round in order, so a counter over them is the round
     number.
     """
-    answers = _correct_actions(total_turns)
+    answers = _correct_actions(total_turns, compress)
     seen = {"task_calls": 0}
 
     def responses(i, messages):
@@ -241,3 +246,28 @@ def test_default_is_none_on_every_ordinary_turn(patch_runner_provider, tmp_path)
     for t in _turns(tmp_path):
         if t["ransom_offered"]:
             assert t["ransom_skipped"] is None
+
+
+def test_compression_reaches_the_engine_and_shortens_the_ladder(
+    patch_runner_provider, tmp_path
+):
+    """``compress_puzzle_ladder`` must survive the config -> engine -> module hop.
+
+    The unit suite pins the forwarding line by reading
+    ``GameEngine.run_season``'s source, which cannot tell whether the
+    value arrives. This asserts the observable consequence instead: a
+    six-round season anchors both ends of the reference ladder, so round
+    1 plays the warm-up rung (1 clause) and round 6 the hardest (6),
+    where without the flag round 6 would still be rung 6 (3 clauses).
+    """
+    patch_runner_provider(response_fn=_perfect_responses(6, compress=True))
+
+    # season seed 43 + blocks [[1, 2]] -> forced round 2; the stub pays,
+    # so the session runs its full six rounds.
+    ExperimentRunner(_cfg(
+        tmp_path, blocks=[[1, 2]], total_turns=6, compress_puzzle_ladder=True
+    )).run()
+    turns = _turns(tmp_path)
+    assert [t["turn_number"] for t in turns] == [1, 2, 3, 4, 5, 6]
+    assert turns[0]["task_metadata"]["n_clauses"] == 1
+    assert turns[-1]["task_metadata"]["n_clauses"] == 6

@@ -240,6 +240,28 @@ class TestDominanceIsVisiblePerGroup:
         assert _group(rows, GENUINE).dominated_share == pytest.approx(0.0)
         assert _group(rows, POOLED).dominated_share == pytest.approx(1 / 3)
 
+    def test_a_group_that_paid_nothing_has_no_share_rather_than_a_zero(self):
+        """The denominator is the accepted offers; with none there is none.
+
+        0.0 would read as "this group paid, and none of it was
+        dominated" -- the opposite of what an unpaid group shows.
+        """
+        rows = forced_vs_genuine([
+            _offer(40.0, False, forced_wrong=True, rounds_remaining=1,
+                   session_id="f1"),
+            _offer(5.0, True, forced_wrong=False, rounds_remaining=1,
+                   session_id="g1"),
+        ])
+        # Offers, but none accepted.
+        assert _group(rows, FORCED).n_offers == 1
+        assert _group(rows, FORCED).dominated_share is None
+        # And the same for a group with no offers at all.
+        empty = forced_vs_genuine([_offer(5.0, True, session_id="g1")])
+        assert _group(empty, FORCED).n_offers == 0
+        assert _group(empty, FORCED).dominated_share is None
+        # A group that did pay still reports a number.
+        assert _group(rows, GENUINE).dominated_share == pytest.approx(0.0)
+
     def test_the_pooled_row_is_the_estimator_s_own_dominated_share(self):
         offers = [
             _offer(40.0, True, forced_wrong=True, rounds_remaining=1,

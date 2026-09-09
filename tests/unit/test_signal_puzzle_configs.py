@@ -105,20 +105,13 @@ def test_ransom_r6_family(name: str) -> None:
             assert 1 <= start <= end <= tc.total_turns - 1
 
 
-def test_forced_wrong_and_underdetermined_together_are_refused(tmp_path) -> None:
-    """The r10 configs this family was copied from set `underdetermined`.
-
-    Leaving that key behind is the one copy-paste mistake that produces a
-    config which loads and then dies at season start, so pin the message.
-    """
+def _write(tmp_path, body: str) -> str:
+    """A one-season YAML carrying *body* as its ``task_config`` extras."""
     import textwrap
 
-    from squid_game.models.enums import Difficulty
-    from squid_game.tasks.signal_game.module import SignalGameModule
-
-    path = tmp_path / "both.yaml"
-    path.write_text(textwrap.dedent("""
-        name: both
+    path = tmp_path / "cfg.yaml"
+    path.write_text(textwrap.dedent(f"""
+        name: cfg
         seasons:
         - framing: hz_1111
           forfeit_condition: not_allowed
@@ -127,17 +120,113 @@ def test_forced_wrong_and_underdetermined_together_are_refused(tmp_path) -> None
             signal_mode: per_turn_puzzle
             total_turns: 6
             seed: 42
-            forced_wrong: true
-            underdetermined: true
+{textwrap.indent(textwrap.dedent(body).strip(), " " * 12)}
           provider_config:
             provider: gemini
             model: stub
     """), encoding="utf-8")
-    tc = load_config_from_yaml(str(path)).seasons[0].task_config
-    assert tc.forced_wrong and tc.underdetermined      # the loader forwards both
-    with pytest.raises(ValueError, match="mutually exclusive"):
-        SignalGameModule().initialize(
-            difficulty=Difficulty.MEDIUM, seed=42,
-            signal_mode="per_turn_puzzle", total_turns=6,
-            forced_wrong=True, underdetermined=True,
-        )
+    return str(path)
+
+
+class TestTheLoaderCatchesTheForcedWrongMistakes:
+    """Both errors used to surface only at season start (module.initialize).
+
+    ``--dry-run`` builds an ``ExperimentConfig`` and stops, so it said
+    "Config validated successfully" for a YAML that would die on its
+    first season. The module keeps its own copies of these checks -- it
+    is reachable without this loader -- but the loader answers first.
+    """
+
+    def test_forced_wrong_with_underdetermined_is_refused(self, tmp_path) -> None:
+        """The r10 configs this family was copied from set `underdetermined`.
+
+        Leaving that key behind is the one copy-paste mistake that
+        produces a config which loads and then dies at season start.
+        """
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                underdetermined: true
+            """))
+
+    def test_the_module_still_refuses_the_pair_on_its_own(self) -> None:
+        """Belt and braces: the loader is not the only way in."""
+        from squid_game.models.enums import Difficulty
+        from squid_game.tasks.signal_game.module import SignalGameModule
+
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            SignalGameModule().initialize(
+                difficulty=Difficulty.MEDIUM, seed=42,
+                signal_mode="per_turn_puzzle", total_turns=6,
+                forced_wrong=True, underdetermined=True,
+            )
+
+    def test_a_block_reaching_the_final_round_is_refused(self, tmp_path) -> None:
+        with pytest.raises(ValueError, match=r"\[5, 6\].*\[1, 5\].*6-round"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                forced_wrong_blocks:
+                - [5, 6]
+            """))
+
+    def test_a_block_past_the_season_is_refused(self, tmp_path) -> None:
+        """Beyond the last round, not merely touching it."""
+        with pytest.raises(ValueError, match=r"\[7, 8\]"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                forced_wrong_blocks:
+                - [7, 8]
+            """))
+
+    def test_a_block_starting_below_round_one_is_refused(self, tmp_path) -> None:
+        with pytest.raises(ValueError, match=r"\[0, 2\]"):
+            load_config_from_yaml(_write(tmp_path, """
+                forced_wrong: true
+                forced_wrong_blocks:
+                - [0, 2]
+            """))
+
+    def test_the_default_schedule_loads(self, tmp_path) -> None:
+        """No override: the task file's blocks are not this validator's business."""
+        cfg = load_config_from_yaml(_write(tmp_path, """
+            forced_wrong: true
+        """))
+        task = cfg.seasons[0].task_config
+        assert task.forced_wrong and task.forced_wrong_blocks is None
+        assert task.total_turns == 6
+
+    def test_a_legal_override_loads(self, tmp_path) -> None:
+        cfg = load_config_from_yaml(_write(tmp_path, """
+            forced_wrong: true
+            forced_wrong_blocks:
+            - [2, 3]
+            - [4, 5]
+        """))
+        assert cfg.seasons[0].task_config.forced_wrong_blocks == [[2, 3], [4, 5]]
+
+    def test_the_flag_off_leaves_the_blocks_alone(self, tmp_path) -> None:
+        """The validator must not police a schedule that never runs."""
+        cfg = load_config_from_yaml(_write(tmp_path, """
+            forced_wrong: false
+            forced_wrong_blocks:
+            - [5, 6]
+        """))
+        assert cfg.seasons[0].task_config.forced_wrong_blocks == [[5, 6]]
+
+
+RANSOM_FORCED_CONFIGS = RANSOM_R6_CONFIGS + ["ransom_r10_forced_gptoss120b.yaml"]
+
+
+@pytest.mark.parametrize("name", RANSOM_FORCED_CONFIGS)
+def test_every_shipped_forced_wrong_config_still_loads(name: str) -> None:
+    """The new load-time validator must not reject anything on disk.
+
+    The r10 file states ``[[1, 2], [3, 4], [5, 6], [7, 8]]`` over ten
+    rounds -- inside ``[1, 9]``, so it passes.
+    """
+    cfg = load_config_from_yaml(str(CONFIG_DIR / name))
+    for season in cfg.seasons:
+        task = season.task_config
+        assert task.forced_wrong is True
+        for start, end in task.forced_wrong_blocks or []:
+            assert 1 <= start <= end <= task.total_turns - 1

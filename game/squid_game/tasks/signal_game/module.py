@@ -292,8 +292,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 ``underdetermined`` is set outside puzzle mode / without
                 an ``underdetermined`` block in the task YAML, or
                 ``forced_wrong`` is set together with ``underdetermined``,
-                outside puzzle mode, without a ``forced_wrong`` block, or
-                with a block reaching the season's final round, or
+                outside puzzle mode, without a ``forced_wrong`` block,
+                without a known ``total_turns``, or with a block reaching
+                the season's final round, or
                 ``compress_puzzle_ladder`` is set outside puzzle mode,
                 without a known ``total_turns``, or for a season shorter
                 than two rounds.
@@ -432,6 +433,22 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 if override:
                     fw_cfg = ForcedWrongConfig(
                         blocks=tuple(tuple(int(x) for x in b) for b in override)
+                    )
+                if self._total_turns is None:
+                    # Every guard below -- the final-round block, the
+                    # out-of-season schedule -- is keyed on the season's
+                    # length. With ``total_turns`` unset there is nothing
+                    # to check against, so a schedule reaching past the
+                    # last round would be scheduled unbounded and only
+                    # show up as a session that ended with no decision
+                    # point. Refuse at season start instead, the same way
+                    # ``compress_puzzle_ladder`` does above.
+                    raise ValueError(
+                        "task_config.forced_wrong needs a known total_turns: "
+                        "the schedule must stop before the season's final "
+                        "round (the engine offers no ransom there), and with "
+                        "total_turns unset that cannot be checked. Set "
+                        "task_config.total_turns."
                     )
                 if isinstance(total_turns, int):
                     for start, end in fw_cfg.blocks:

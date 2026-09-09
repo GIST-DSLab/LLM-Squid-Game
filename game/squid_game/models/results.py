@@ -510,7 +510,10 @@ class TurnResult(BaseModel):
     ransom_skipped: Literal["final_round", "insufficient_score"] | None = Field(
         default=None,
         description=(
-            "Why no ransom was offered on a turn that emptied the counter. "
+            "On a ransom run, why no price was offered on a turn that "
+            "emptied the counter -- and ``None`` whenever that question "
+            "does not arise, which includes every turn of a run with no "
+            "ransom enabled, counter emptied or not. "
             "``final_round``: the session ends after this round either way, "
             "so the price would buy zero rounds. ``insufficient_score``: the "
             "score could not cover the price, and the engine withholds the "

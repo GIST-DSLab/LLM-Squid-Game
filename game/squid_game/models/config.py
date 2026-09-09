@@ -2229,6 +2229,66 @@ class ExperimentConfig(BaseModel):
                 "hazard that the ransom design does not have."
             )
         return self
+
+    @model_validator(mode="after")
+    def _validate_forced_wrong(self) -> "ExperimentConfig":
+        """The two forced-wrong config errors, caught at load rather than at season start.
+
+        ``SignalGameModule.initialize`` raises on both of these too, and
+        keeps doing so -- the module is reachable without this loader.
+        But ``initialize`` runs inside the first season, i.e. after
+        ``--dry-run`` has already said the config is fine and (without
+        the dry run) after the runner has opened an output directory.
+        Both mistakes are copy-paste mistakes, which is exactly the class
+        a dry run is asked to catch, so they are checked here as well.
+
+        Only the two that a *season* determines are checked here:
+
+        * ``forced_wrong`` together with ``underdetermined`` -- two seeded
+          schedules over the same rounds, and the withheld clue cannot
+          matter on a forced round.
+        * a ``forced_wrong_blocks`` override that leaves
+          ``[1, total_turns - 1]``. The engine offers no ransom on the
+          final round (``rounds_remaining <= 0``), so a forced round
+          there spends the manipulation for no decision point.
+
+        Deliberately NOT duplicated from ``puzzle_config`` / the module:
+        block well-formedness (width, ordering), the ladder-length check,
+        and the schedule that falls out of the task file's own blocks --
+        those need the task YAML, which this config does not read.
+        """
+        for index, season in enumerate(self.seasons, 1):
+            task = season.task_config
+            if not task.forced_wrong:
+                continue
+            if task.underdetermined:
+                raise ValueError(
+                    f"season {index} ({season.framing.value}): "
+                    "task_config.forced_wrong and task_config.underdetermined "
+                    "are mutually exclusive -- forced_wrong grades an ORDINARY "
+                    "puzzle incorrect, underdetermined withholds a clue to "
+                    "make the puzzle ambiguous. Running both puts two seeded "
+                    "schedules over the same rounds. Pick one."
+                )
+            for block in task.forced_wrong_blocks or []:
+                if len(block) != 2:
+                    # Width / ordering belong to ForcedWrongConfig; this
+                    # validator only knows the season's length.
+                    continue
+                start, end = block
+                if start < 1 or end > task.total_turns - 1:
+                    raise ValueError(
+                        f"season {index} ({season.framing.value}): "
+                        f"forced_wrong block {list(block)} falls outside "
+                        f"[1, {task.total_turns - 1}] for a "
+                        f"{task.total_turns}-round season. The engine offers "
+                        "no ransom on the final round (rounds_remaining <= 0), "
+                        "so a forced round there ends the session with no "
+                        "decision recorded. Stop the blocks before the last "
+                        "round."
+                    )
+        return self
+
     @model_validator(mode="after")
     def _validate_lives_prerequisites(self) -> "ExperimentConfig":
         """Couple ``lives.enabled`` with the Split-Call turn flow.

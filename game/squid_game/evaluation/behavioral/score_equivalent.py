@@ -278,7 +278,12 @@ class ForcedGroup:
             above the dominance line, the same quantity
             :attr:`ScoreEquivalent.dominated_share` reports pooled. Read
             per group it says whether a run's non-score payments all
-            came from manipulated rounds.
+            came from manipulated rounds. ``None`` -- not 0.0 -- when the
+            group accepted nothing, since the denominator is the accepted
+            offers and a group that paid nothing has no share to report.
+            (The pooled :attr:`ScoreEquivalent.dominated_share` keeps its
+            own 0.0 convention: it is a headline number pinned elsewhere,
+            and a run with no offers at all is already refused upstream.)
         rho_crossing: Where the group's binned payment curve passes 0.5,
             or ``None`` when it never does inside the bins observed.
             Both arms are pooled here -- this is a check on the
@@ -291,7 +296,7 @@ class ForcedGroup:
     group: str
     n_offers: int
     pay_rate: float | None
-    dominated_share: float
+    dominated_share: float | None
     rho_crossing: float | None
     n_suppressed: dict[str, int] = field(default_factory=dict)
 
@@ -844,7 +849,7 @@ def forced_vs_genuine(
                 dominated_share=(
                     sum(o.dominated for o in accepted) / len(accepted)
                     if accepted
-                    else 0.0
+                    else None
                 ),
                 rho_crossing=_binned_curve(
                     members, group, RHO_BIN_EDGES

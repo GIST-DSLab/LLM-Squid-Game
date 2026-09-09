@@ -418,7 +418,14 @@ glm-5.3-flash 12세션 → 0결정). 구현은 `SignalGameModule.score()` 한 �
 덮어쓰기뿐이고 엔진 파일은 손대지 않는다 (목숨·몸값·보상·히스토리 문장이 모두
 `success_factor`와 `correct` 키에서 따라온다). Spec:
 `docs/history/specs/2026-09-10-signal-puzzle-forced-wrong-turns-design.md`;
-config: `configs/experiment/ransom_r10_forced_gptoss120b.yaml`.
+config: 실행 대상은 6라운드 계열
+`configs/experiment/ransom_r6_{gptoss120b,gemma4,glm53flash}.yaml`(각 12셀 ×
+6반복)과 그 파일럿 `ransom_r6_pilot_{gptoss120b,gemma4,glm53flash}.yaml`이다 —
+6라운드여야 가격 사다리 5~30이 강제 라운드가 실제로 떨어지는 지점의 천장
+(`10 × 남은 라운드`) 위로 올라간다. 같은 날 먼저 만든
+`configs/experiment/ransom_r10_forced_gptoss120b.yaml`은 Revision 1의 기록일 뿐
+실행 대상이 아니다 — 블록이 `[[1,2],[3,4],[5,6],[7,8]]`로 다르고 반복 수가
+홀수라 `seed % 2` 두 스케줄이 불균형이다.
 ⚠️ 대가는 spec §7에 적혀 있다 — 에이전트에게 자기 성적에 대해 거짓을 말하는
 것이고, 유보가격을 **하향** 편향시키며, 조작을 눈치챈 CoT(rigging detection)를
 X*와 나란히 보고해야 한다. ⚠️ 점수가 가격을 못 대면 몸값은 **깎여서 청구되는 게

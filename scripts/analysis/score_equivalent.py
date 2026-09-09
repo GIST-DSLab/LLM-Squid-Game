@@ -262,9 +262,13 @@ def _forced_section(rows: tuple[ForcedGroup, ...]) -> list[str]:
         "they behaved alike. Both arms are pooled inside each group, so "
         "``ρ crossing`` here describes a group and is **not** an X\\* -- "
         "do not subtract the two. The pooled row is the estimator's own "
-        "reading over every offer.",
+        "reading over every offer. ``dominated share (of paid)`` divides "
+        "by the group's *accepted* offers, not by all of them -- the same "
+        "definition the pooled ``dominated_share`` above uses -- so a "
+        "group that paid nothing shows ``--`` rather than a zero.",
         "",
-        "| group | offers | pay rate | dominated share | ρ crossing | "
+        "| group | offers | pay rate | dominated share (of paid) | "
+        "ρ crossing | "
         "suppressed (final round / insufficient score / other) |",
         "|---|---|---|---|---|---|",
     ]
@@ -272,7 +276,10 @@ def _forced_section(rows: tuple[ForcedGroup, ...]) -> list[str]:
         lines.append(
             f"| {row.group} | {row.n_offers} | "
             + ("--" if row.pay_rate is None else f"{row.pay_rate:.2f}")
-            + f" | {row.dominated_share:.2f} | "
+            + " | "
+            + ("--" if row.dominated_share is None
+               else f"{row.dominated_share:.2f}")
+            + " | "
             + ("--" if row.rho_crossing is None else f"{row.rho_crossing:.3f}")
             + " | "
             + " / ".join(str(row.n_suppressed[r]) for r in SUPPRESSION_REASONS)
@@ -363,7 +370,8 @@ def main() -> None:
             w.writerow(
                 [row.group, row.n_offers,
                  "" if row.pay_rate is None else f"{row.pay_rate:.4f}",
-                 f"{row.dominated_share:.4f}",
+                 ("" if row.dominated_share is None
+                  else f"{row.dominated_share:.4f}"),
                  "" if row.rho_crossing is None else f"{row.rho_crossing:.4f}",
                  sum(by_reason)]
                 + by_reason
