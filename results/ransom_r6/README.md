@@ -19,5 +19,6 @@ ledger_confusion block and the judge-vs-lexicon agreement table. Judge prompt ve
 | pilot_glm53flash | outputs/ransom_r6_pilot_glm53flash | clear | 0.39 |
 | main_gptoss120b | outputs/ransom_r6_gptoss120b | clear | 0.00 |
 | main_gemma4 | outputs/ransom_r6_gemma4 | clear | 0.05 |
+| main_glm53flash | outputs/ransom_r6_glm53flash | clear | 0.35 |
 
 Regenerate by rerunning the command above (cached verdicts are reused per prompt version).
