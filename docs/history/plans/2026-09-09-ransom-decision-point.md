@@ -250,6 +250,42 @@ templates: **a new branch in a shared prompt file is a byte change to
 every cell that does not take it, until a frozen snapshot says
 otherwise.** Run the snapshot tests, not just the new ones.
 
+## 4c. --resume silently under-scheduled 5 of 6 cells per arm
+
+The corrected-ladder pilot hit the usage limit again at 54/120 seasons.
+Resuming reported "Experiment complete: 60 seasons" -- half the target,
+with no error. Per-cell counts showed why:
+
+| cell | price | seasons present |
+|---|---|---|
+| 1-6 (threat) | 20/40/60/80/100/120 | 5/4/6/7/7/4 of 10 |
+| 7-12 (silent) | 20/40/60/80/100/120 | 3/4/5/5/5/5 of 10 |
+
+`ExperimentRunner._scan_completed` / `_filter_schedule` key a season by
+`(framing, forfeit_condition, social_context, seed)`. Every prior design
+put one cell per `(framing, forfeit_condition)` pair, so that triple was
+already unique. The ransom design (like the score-equivalent design
+before it) puts six cells under one such pair, distinguished only by
+`cell_id` / price, and every cell iterates the identical seed sequence
+(`task_config.seed` fixed at 42, effective seed `42 + rep`). Finishing
+cell 1's rep 0 (seed 42) made resume believe cell 2's rep 0 (also seed
+42) was done too -- for every price pair sharing an arm.
+
+No data was corrupted: the 60 seasons that ran are all legitimate,
+merely distributed unevenly instead of 10-per-cell. Fixed by folding
+`cell_id` into the key on both sides (`game/squid_game/runner.py`).
+Legacy configs carry `cell_id=None` on every season and are unaffected.
+Pinned by `tests/unit/test_resume_cell_disambiguation.py`. Re-running
+`--resume` on the same directory now reports "60 already completed, 60
+remaining" -- exactly the true count.
+
+**General rule for any multi-rung design** (this one, and the retired
+score-equivalent ruler before it): whenever several cells share
+`(framing, forfeit_condition)` and differ only by a per-cell field like
+`ransom_price` / `event_score_loss`, `--resume` needs `cell_id` in its
+key or it will conflate them. Check `git log --oneline | grep cell_id`
+before trusting a resumed run's season count on a new design like this.
+
 ## 5. Running it
 
 ```bash
