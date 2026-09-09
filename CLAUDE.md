@@ -696,6 +696,14 @@ seasons:
   1차 파일럿은 `outputs/2026-09-09/_ransom_haiku_n10_shortladder/`에 보관.
 - **제안하지 않는 두 경우**: 마지막 라운드(0라운드를 사게 된다), 점수가 가격에 못 미칠 때
   (엔진이 차감을 깎으므로 프롬프트가 말한 값과 달라진다).
+- **`--resume`는 `cell_id`를 키에 넣어야 한다** (2026-09-10, `game/squid_game/runner.py`).
+  한 (framing, forfeit_condition) 아래 가격 6개가 들어가는 이 설계에서, 옛 키
+  `(framing, forfeit_condition, social_context, seed)`는 같은 시드를 도는 6칸을
+  구별하지 못해 한 칸의 rep을 다른 칸도 끝난 것으로 착각했다. 파일럿이 "120 중 60 완료"를
+  "완료"로 보고했다 — 데이터는 멀쩡했지만(실행된 60은 전부 유효) 나머지 60이 스케줄에서
+  아예 빠졌다. `cell_id`를 키에 추가해 고쳤고(`tests/unit/test_resume_cell_disambiguation.py`),
+  `cell_id=None`인 옛 config는 영향 없다. **한 팔에 여러 칸을 두는 설계라면(이 설계,
+  퇴역한 눈금 팔 설계) `--resume`이 낸 세션 수를 항상 셀별로 세어 확인할 것.**
 - **추정기는 X\*를 두 번 낸다**: 전체 제안(뺄셈)과 지배선 위 제안만(`x_star_dominated`).
   지배 비율이 10% 밑이면 경고한다.
 - **설정**: `configs/experiment/ransom_smoke.yaml`(12셀 × 1, 4라운드),
