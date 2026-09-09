@@ -325,7 +325,7 @@ class ExperimentRunner:
         )
 
         # 3. If resuming, find completed seeds and clean orphans.
-        completed_keys: set[tuple[str, str, str, int | None]] = set()
+        completed_keys: set[tuple[str, str, str, int | None, int | None]] = set()
         prior_results: list[SeasonResult] = []
 
         if resume_dir:
@@ -398,15 +398,28 @@ class ExperimentRunner:
     @staticmethod
     def _scan_completed(
         output_dir: str,
-    ) -> tuple[set[tuple[str, str, str, int | None]], list[SeasonResult]]:
+    ) -> tuple[set[tuple[str, str, str, int | None, int | None]], list[SeasonResult]]:
         """Read completed seasons from an existing output directory.
 
         Returns:
             Tuple of (completed_keys set, list of SeasonResult).
-            Each key is (framing, forfeit_condition, social_context, seed).
+            Each key is
+            ``(framing, forfeit_condition, social_context, cell_id, seed)``.
+
+            ``cell_id`` (2026-09-08) disambiguates seasons that share every
+            other field -- the ransom and score-equivalent designs put
+            several cells (different prices) under one
+            ``(framing, forfeit_condition)`` pair, all iterating the same
+            seed sequence. Without it, resume conflated cell 2's seed 42
+            with cell 1's: the first pilot of the ransom run (2026-09-09)
+            "completed" at 60 of 120 seasons, 3-7 per cell instead of 10,
+            because the dedup key could not tell the cells apart. Legacy
+            configs have ``cell_id=None`` on every season, so this key is
+            no finer there than before -- resume behaviour for the
+            pre-2026-09-08 designs is unchanged.
         """
         results_path = Path(output_dir) / "season_results.jsonl"
-        completed: set[tuple[str, str, str, int | None]] = set()
+        completed: set[tuple[str, str, str, int | None, int | None]] = set()
         seasons: list[SeasonResult] = []
 
         if not results_path.exists():
@@ -422,6 +435,7 @@ class ExperimentRunner:
                     result.framing.value,
                     result.forfeit_condition.value,
                     result.social_context.value,
+                    result.cell_id,
                     result.seed,
                 )
                 completed.add(key)
@@ -461,12 +475,13 @@ class ExperimentRunner:
     @staticmethod
     def _filter_schedule(
         schedule: list[tuple[int, SeasonConfig, int]],
-        completed_keys: set[tuple[str, str, str, int | None]],
+        completed_keys: set[tuple[str, str, str, int | None, int | None]],
     ) -> list[tuple[int, SeasonConfig, int]]:
         """Remove already-completed runs from the schedule.
 
         A run is identified by
-        (framing, forfeit_condition, social_context, effective_seed).
+        (framing, forfeit_condition, social_context, cell_id, effective_seed).
+        See :meth:`_scan_completed` for why ``cell_id`` is in the key.
         """
         if not completed_keys:
             return schedule
@@ -479,6 +494,7 @@ class ExperimentRunner:
                 season_config.framing.value,
                 season_config.forfeit_condition.value,
                 season_config.social_context.value,
+                season_config.cell_id,
                 eff_seed,
             )
             if key not in completed_keys:
