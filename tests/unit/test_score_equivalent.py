@@ -7,9 +7,13 @@ the end-of-round event roll it read were deleted together.
 
 from __future__ import annotations
 
+import math
+
 import pytest
 
 from squid_game.evaluation.behavioral.score_equivalent import (
+    RHO_BIN_EDGES,
+    RIDGE,
     SILENT,
     THREAT,
     ArmCurve,
@@ -18,6 +22,8 @@ from squid_game.evaluation.behavioral.score_equivalent import (
     bootstrap_x_star,
     collect_offers,
     crossing_price,
+    _solve3,
+    fit_rho_logistic,
     pav_monotone,
     score_equivalent,
 )
@@ -281,3 +287,144 @@ class TestScoreBefore:
                         "ransom_decision": "PAY", "turn_number": 4,
                         "cumulative_after": 140.0}]}
         assert collect_offers(seasons, turns)[0].score_before == 140.0
+
+
+def _rho_offer(arm, rho, paid, *, session_id="s", reward=10.0, rounds_remaining=1):
+    """One offer placed at a chosen ``rho`` by solving for the price."""
+    return Offer(
+        session_id=session_id,
+        arm=arm,
+        price=float(rho) * reward * rounds_remaining,
+        paid=paid,
+        rounds_remaining=rounds_remaining,
+        reward=reward,
+    )
+
+
+def _step_population():
+    """Both arms answering a step rule: threat pays to rho 1.2, silent to 0.8.
+
+    Fifteen rungs (rho 0.2 .. 3.0) x 5 offers x 2 arms = 150 offers. The
+    two thresholds differ, so the shared-slope model is exactly the model
+    that generated the data and the fit should read each one back.
+    """
+    offers = []
+    for k in range(1, 16):
+        rho = round(0.2 * k, 1)
+        for j in range(5):
+            offers.append(_rho_offer(THREAT, rho, rho <= 1.2, session_id=f"t{k}_{j}"))
+            offers.append(_rho_offer(SILENT, rho, rho <= 0.8, session_id=f"c{k}_{j}"))
+    return offers
+
+
+class TestRho:
+    """``rho`` is the axis the agent actually decides on: price / ceiling."""
+
+    def test_ceiling_is_what_the_remaining_rounds_can_pay(self):
+        assert Offer("s", THREAT, 20.0, True, rounds_remaining=3, reward=10.0).ceiling == 30.0
+
+    def test_ceiling_is_zero_when_no_rounds_remain(self):
+        assert Offer("s", THREAT, 20.0, True, rounds_remaining=0, reward=10.0).ceiling == 0.0
+
+    def test_rho_is_the_price_as_a_share_of_the_ceiling(self):
+        offer = Offer("s", THREAT, 15.0, True, rounds_remaining=3, reward=10.0)
+        assert offer.rho == pytest.approx(0.5)
+
+    def test_rho_is_infinite_when_nothing_remains_to_be_won(self):
+        assert Offer("s", THREAT, 1.0, True, rounds_remaining=0, reward=10.0).rho == math.inf
+
+    def test_dominance_is_exactly_rho_above_one(self):
+        """The two must agree everywhere, or the axes tell different stories."""
+        for price in (0.5, 5.0, 10.0, 20.0, 29.9, 30.0, 30.1, 90.0):
+            for rounds in (0, 1, 3, 9):
+                offer = Offer("s", THREAT, price, True, rounds_remaining=rounds, reward=10.0)
+                assert offer.dominated == (offer.rho > 1.0)
+
+    def test_the_bin_edges_span_zero_to_infinity(self):
+        assert RHO_BIN_EDGES[0] == 0.0
+        assert RHO_BIN_EDGES[-1] == math.inf
+        assert list(RHO_BIN_EDGES) == sorted(RHO_BIN_EDGES)
+        assert RIDGE == pytest.approx(1e-3)
+
+
+class TestFitRhoLogistic:
+    """Two intercepts, one shared slope, on log rho."""
+
+    def test_a_step_population_recovers_each_arms_threshold(self):
+        fit = fit_rho_logistic(_step_population())
+        assert fit.converged is True
+        assert fit.b < 0
+        assert fit.n_used == 150
+        assert fit.n_skipped == 0
+        assert fit.notes == []
+        assert fit.rho_star_threat == pytest.approx(1.2, abs=0.15)
+        assert fit.rho_star_silent == pytest.approx(0.8, abs=0.15)
+        assert fit.rho_star_threat > fit.rho_star_silent
+
+    def test_complete_separation_converges_instead_of_diverging(self):
+        """Every offer paid: the ridge holds the fit finite, and the flat
+        slope disqualifies it as a demand curve rather than inventing one."""
+        offers = [
+            _rho_offer(arm, rho, True, session_id=f"{arm}_{rho}_{i}")
+            for arm in (THREAT, SILENT)
+            for rho in (0.5, 1.0, 2.0)
+            for i in range(5)
+        ]
+        fit = fit_rho_logistic(offers)
+        assert fit.converged is True
+        assert all(math.isfinite(v) for v in (fit.a_threat, fit.a_silent, fit.b))
+        assert fit.b >= 0
+        assert fit.rho_star_threat is None
+        assert fit.rho_star_silent is None
+        assert any("non-negative" in n for n in fit.notes)
+
+    def test_offers_with_no_rounds_left_are_skipped_and_counted(self):
+        offers = _step_population() + [
+            Offer(f"x{i}", THREAT, 10.0, True, rounds_remaining=0, reward=10.0)
+            for i in range(3)
+        ]
+        fit = fit_rho_logistic(offers)
+        assert fit.n_used == 150
+        assert fit.n_skipped == 3
+        assert any("no rounds remaining" in n for n in fit.notes)
+
+    def test_a_zero_price_is_skipped_rather_than_a_log_of_zero(self):
+        offers = _step_population() + [
+            Offer("z", THREAT, 0.0, True, rounds_remaining=3, reward=10.0)
+        ]
+        fit = fit_rho_logistic(offers)
+        assert fit.n_used == 150
+        assert fit.n_skipped == 1
+
+    def test_offers_from_neither_arm_are_skipped(self):
+        offers = _step_population() + [
+            Offer("n", "true_baseline", 10.0, True, rounds_remaining=3, reward=10.0)
+        ]
+        fit = fit_rho_logistic(offers)
+        assert fit.n_used == 150
+        assert fit.n_skipped == 1
+
+    def test_an_arm_with_no_offers_has_no_intercept(self):
+        fit = fit_rho_logistic([o for o in _step_population() if o.arm == THREAT])
+        assert fit.a_silent is None
+        assert fit.rho_star_silent is None
+        assert fit.a_threat is not None
+        assert fit.rho_star_threat is not None
+        assert any(SILENT in n for n in fit.notes)
+
+
+class TestSolve3:
+    """The hand-written 3x3 solve, since there is no numpy to check it."""
+
+    def test_solves_a_known_system(self):
+        matrix = [[2.0, 1.0, -1.0], [-3.0, -1.0, 2.0], [-2.0, 1.0, 2.0]]
+        assert _solve3(matrix, [8.0, -11.0, -3.0]) == pytest.approx([2.0, 3.0, -1.0])
+
+    def test_pivots_past_a_zero_leading_entry(self):
+        matrix = [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 2.0]]
+        assert _solve3(matrix, [3.0, 5.0, 4.0]) == pytest.approx([5.0, 3.0, 2.0])
+
+    def test_none_on_a_singular_matrix(self):
+        """A singular Hessian is reported, never pseudo-inverted."""
+        matrix = [[1.0, 2.0, 3.0], [2.0, 4.0, 6.0], [3.0, 6.0, 9.0]]
+        assert _solve3(matrix, [1.0, 2.0, 3.0]) is None

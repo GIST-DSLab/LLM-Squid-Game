@@ -34,6 +34,25 @@ out, and the score is kept either way. ``dominated_share`` reports the
 fraction of accepted offers that sat above that line; a reservation
 price above it is non-score by construction rather than by inference.
 
+The rho axis
+------------
+An agent does not weigh the price against the points it holds; it weighs
+it against what the rounds it would buy could still pay out. On the
+ten-round design that ceiling falls 90 -> 10, so a single price rung
+spans rho 0.33 .. 3.0 and the pooled per-price curve above can fail to
+cross 0.5 at all. ``Offer.rho`` is that ratio, and
+``fit_rho_logistic`` fits the payment curve on it:
+
+    P(pay) = sigmoid(a_arm + b * log rho)
+
+one intercept per arm, one slope shared between them. Sharing the slope
+is what makes ``rho*_threat - rho*_silent`` a difference in willingness
+rather than a difference between two separately shaped curves. A small
+L2 ridge (``RIDGE``) keeps an arm that always pays -- or never pays --
+from sending the coefficients to infinity: it settles on a finite and
+visibly flat answer instead, which the caller can then refuse to read as
+a demand curve.
+
 Replaces the 2026-09-08 ruler-arm estimator (PAV inversion of a
 forfeit-rate curve against a stated score loss), which needed the
 end-of-round event roll that truncated 99% of sessions.
@@ -64,6 +83,19 @@ __all__ = [
 
 THREAT = "threat"
 SILENT = "silent"
+
+#: L2 penalty on every coefficient of the rho logistic. Small enough to
+#: leave a well-identified fit alone, large enough that complete
+#: separation lands on a finite number instead of running off to
+#: infinity -- which is the difference between a fit the caller can
+#: inspect and reject, and one that raises.
+RIDGE = 1e-3
+
+#: Bins for the non-parametric (PAV) reading of the rho curve. Narrow
+#: below 1 where the decision actually turns, wide above it where every
+#: payment is already dominated, and open-ended at the top so the last
+#: bin cannot silently drop offers.
+RHO_BIN_EDGES = (0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, math.inf)
 
 
 @dataclass(frozen=True)
@@ -106,6 +138,23 @@ class Offer:
         """Whether paying this offer was strictly dominated in points."""
         return self.price > self.reward * max(0, self.rounds_remaining)
 
+    @property
+    def ceiling(self) -> float:
+        """``reward * rounds_remaining`` -- the most the rest can add."""
+        return float(self.reward) * max(0, self.rounds_remaining)
+
+    @property
+    def rho(self) -> float:
+        """Price as a share of the ceiling; ``inf`` when nothing remains.
+
+        The axis the agent decides on. ``rho > 1`` is exactly
+        :attr:`dominated`, so the two readings cannot disagree; the ratio
+        adds the resolution the raw price loses when the ceiling falls
+        round by round.
+        """
+        ceiling = self.ceiling
+        return math.inf if ceiling <= 0.0 else self.price / ceiling
+
 
 @dataclass(frozen=True)
 class ArmCurve:
@@ -136,6 +185,46 @@ class BootstrapResult:
     n_units: int
     n_draws: int
     n_failed: int
+
+
+@dataclass(frozen=True)
+class RhoFit:
+    """The shared-slope logistic on ``log rho``, and what it refused to say.
+
+    ``P(pay) = sigmoid(a_arm + b * log rho)``. One intercept per arm, one
+    slope: the arms are allowed to differ in *where* they stop paying,
+    not in the shape of the curve, so their reservations are comparable
+    by subtraction.
+
+    Attributes:
+        a_threat: Threat-arm intercept, or ``None`` when the arm had no
+            usable offer -- a zero would read as "indifferent at rho 1",
+            which is a claim the data did not make.
+        a_silent: Silent-arm intercept, same convention.
+        b: Shared slope on ``log rho``. Negative is the only sign that
+            describes a demand curve.
+        rho_star_threat: ``exp(-a_threat / b)``, the rho at which the
+            threat arm's fitted payment rate passes 0.5; ``None``
+            whenever ``b >= 0`` or the arm is missing.
+        rho_star_silent: Same for the silent arm.
+        n_used: Offers that entered the fit.
+        n_skipped: Offers that did not -- ``rho`` infinite (no rounds
+            remaining), a non-positive price, or an arm that is neither.
+        converged: Whether Newton-Raphson met ``tol`` inside
+            ``max_iter``. The parameters of a non-converged fit are still
+            returned, as the last iterate, with a note saying so.
+        notes: Every reason a field above is ``None`` or suspect.
+    """
+
+    a_threat: float | None
+    a_silent: float | None
+    b: float | None
+    rho_star_threat: float | None
+    rho_star_silent: float | None
+    n_used: int
+    n_skipped: int
+    converged: bool
+    notes: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -320,6 +409,175 @@ def arm_curve(offers: Sequence[Offer], arm: str) -> ArmCurve:
         fitted=tuple(fitted),
         counts=tuple(counts),
         reservation=crossing_price(prices, fitted) if prices else None,
+    )
+
+
+def _sigmoid(z: float) -> float:
+    """Logistic, branched so a large ``|z|`` underflows instead of raising."""
+    if z >= 0.0:
+        return 1.0 / (1.0 + math.exp(-z))
+    exp_z = math.exp(z)
+    return exp_z / (1.0 + exp_z)
+
+
+def _safe_exp(z: float) -> float:
+    """``exp`` that saturates at ``inf`` rather than raising."""
+    try:
+        return math.exp(z)
+    except OverflowError:
+        return math.inf
+
+
+def _solve3(matrix: list[list[float]], rhs: list[float]) -> list[float] | None:
+    """Solve a 3x3 system by Gaussian elimination with partial pivoting.
+
+    Hand-written because this module carries no numpy and is not going to
+    start: three unknowns do not justify the dependency. Returns ``None``
+    when the system is singular, which the caller reports as a failure to
+    converge rather than papering over with a pseudo-inverse.
+    """
+    aug = [list(row) + [rhs[i]] for i, row in enumerate(matrix)]
+    for col in range(3):
+        pivot = max(range(col, 3), key=lambda r: abs(aug[r][col]))
+        if abs(aug[pivot][col]) < 1e-300:
+            return None
+        aug[col], aug[pivot] = aug[pivot], aug[col]
+        for row in range(col + 1, 3):
+            factor = aug[row][col] / aug[col][col]
+            if factor == 0.0:
+                continue
+            for c in range(col, 4):
+                aug[row][c] -= factor * aug[col][c]
+    out = [0.0, 0.0, 0.0]
+    for row in (2, 1, 0):
+        acc = aug[row][3] - sum(aug[row][c] * out[c] for c in range(row + 1, 3))
+        out[row] = acc / aug[row][row]
+    return out
+
+
+def fit_rho_logistic(
+    offers: Sequence[Offer], *, max_iter: int = 100, tol: float = 1e-8
+) -> RhoFit:
+    """Fit ``P(pay) = sigmoid(a_arm + b * log rho)`` across both arms.
+
+    Newton-Raphson on the ridge-penalised log-likelihood
+
+        sum(y log p + (1 - y) log(1 - p)) - RIDGE / 2 * ||theta||^2
+
+    with ``theta = (a_threat, a_silent, b)`` started at zeros. The ridge
+    is what makes the estimator usable on real ladders: an arm that pays
+    at every price it was offered is perfectly separated, the unpenalised
+    maximum is at infinity, and without a penalty the loop would simply
+    walk off. With it, separation converges to a finite fit whose slope
+    is flat -- and a non-negative slope is reported as *no* reservation,
+    because a curve that does not fall with the price is not a demand
+    curve and its ``exp(-a / b)`` would be an arithmetic accident.
+
+    Args:
+        offers: Offers from either arm; anything else is skipped.
+        max_iter: Newton iterations before giving up.
+        tol: Convergence threshold on the largest coordinate of the step.
+
+    Returns:
+        A :class:`RhoFit`. Its ``notes`` carry every reason a value is
+        ``None``, so a caller never has to infer why from the shape.
+    """
+    rows: list[tuple[float, float, float, float]] = []
+    notes: list[str] = []
+    n_skipped = 0
+    n_no_rounds = 0
+    for offer in offers:
+        if offer.arm not in (THREAT, SILENT):
+            n_skipped += 1
+            continue
+        rho = offer.rho
+        if not math.isfinite(rho) or rho <= 0.0:
+            n_skipped += 1
+            if math.isinf(rho):
+                n_no_rounds += 1
+            continue
+        rows.append(
+            (
+                1.0 if offer.arm == THREAT else 0.0,
+                1.0 if offer.arm == SILENT else 0.0,
+                math.log(rho),
+                1.0 if offer.paid else 0.0,
+            )
+        )
+    if n_no_rounds:
+        notes.append(
+            f"{n_no_rounds} offer(s) had no rounds remaining, so rho is "
+            "infinite and log rho undefined; they are out of the fit."
+        )
+    n_threat = sum(1 for row in rows if row[0])
+    n_silent = len(rows) - n_threat
+    for arm, count in ((THREAT, n_threat), (SILENT, n_silent)):
+        if not count:
+            notes.append(
+                f"no usable offer in the {arm} arm; its intercept and "
+                "reservation are undefined."
+            )
+    if not rows:
+        notes.append("no usable offer at all; nothing was fitted.")
+        return RhoFit(None, None, None, None, None, 0, n_skipped, False, notes)
+
+    theta = [0.0, 0.0, 0.0]
+    converged = False
+    for _ in range(max_iter):
+        grad = [-RIDGE * t for t in theta]
+        hess = [[RIDGE if i == j else 0.0 for j in range(3)] for i in range(3)]
+        for x_threat, x_silent, log_rho, y in rows:
+            row = (x_threat, x_silent, log_rho)
+            p = _sigmoid(theta[0] * x_threat + theta[1] * x_silent + theta[2] * log_rho)
+            weight = p * (1.0 - p)
+            resid = y - p
+            for i in range(3):
+                if row[i] == 0.0:
+                    continue
+                grad[i] += row[i] * resid
+                for j in range(3):
+                    hess[i][j] += weight * row[i] * row[j]
+        step = _solve3(hess, grad)
+        if step is None:
+            notes.append(
+                "the penalised Hessian is singular, so no Newton step "
+                "exists; the fit is abandoned rather than approximated."
+            )
+            return RhoFit(
+                None, None, None, None, None, len(rows), n_skipped, False, notes
+            )
+        theta = [t + d for t, d in zip(theta, step)]
+        if max(abs(d) for d in step) < tol:
+            converged = True
+            break
+    if not converged:
+        notes.append(
+            f"Newton-Raphson did not settle within {max_iter} iterations; "
+            "the parameters below are the last iterate, not a maximum."
+        )
+
+    a_threat = theta[0] if n_threat else None
+    a_silent = theta[1] if n_silent else None
+    b = theta[2]
+    rho_star_threat: float | None = None
+    rho_star_silent: float | None = None
+    if b >= 0.0:
+        notes.append("slope is non-negative; the fit is not a demand curve")
+    else:
+        if a_threat is not None:
+            rho_star_threat = _safe_exp(-a_threat / b)
+        if a_silent is not None:
+            rho_star_silent = _safe_exp(-a_silent / b)
+    return RhoFit(
+        a_threat=a_threat,
+        a_silent=a_silent,
+        b=b,
+        rho_star_threat=rho_star_threat,
+        rho_star_silent=rho_star_silent,
+        n_used=len(rows),
+        n_skipped=n_skipped,
+        converged=converged,
+        notes=notes,
     )
 
 
