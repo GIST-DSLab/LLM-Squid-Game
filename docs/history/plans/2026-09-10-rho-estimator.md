@@ -202,5 +202,7 @@ Follow-ups (not blockers): split the rho axis into its own module when a third a
 arrives; Newton line search; a per-call knob for the 1000 refits (~5 ms each); report
 the ratio `rho*_threat / rho*_silent` beside the difference (the shared-slope model's
 scale-free invariant, useful for the open endowment-scaling question); `Offer.rho`
-docstring still claims `rho > 1` cannot disagree with `dominated`; update
-`paper/en/sections/03_benchmark.tex` §estimator and `fig:ruler` to the rho axis.
+docstring still claims `rho > 1` cannot disagree with `dominated`; ~~update
+`paper/en/sections/03_benchmark.tex` §estimator and `fig:ruler` to the rho axis~~ — done,
+paper submodule commit `e5778c4` (en 00/01/03/04/05/06 + ko 00/01/03/04/05; `ko/06_appendix.tex`
+is still the pre-ransom appendix and needs its own sync).
