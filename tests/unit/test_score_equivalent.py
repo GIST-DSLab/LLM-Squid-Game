@@ -15,14 +15,16 @@ from squid_game.evaluation.behavioral.score_equivalent import (
     RHO_BIN_EDGES,
     RIDGE,
     SILENT,
+    SLOPE_EPS,
     THREAT,
     ArmCurve,
     Offer,
+    _reservation,
+    _solve3,
     arm_curve,
     bootstrap_x_star,
     collect_offers,
     crossing_price,
-    _solve3,
     fit_rho_logistic,
     pav_monotone,
     score_equivalent,
@@ -373,7 +375,10 @@ class TestFitRhoLogistic:
         fit = fit_rho_logistic(offers)
         assert fit.converged is True
         assert all(math.isfinite(v) for v in (fit.a_threat, fit.a_silent, fit.b))
-        assert fit.b >= 0
+        # Not `fit.b >= 0`: the arms are symmetric about log rho = 0,
+        # so the slope's fixed point is zero and its sign is summation
+        # noise. What must hold is that no reservation is reported.
+        assert abs(fit.b) < SLOPE_EPS
         assert fit.rho_star_threat is None
         assert fit.rho_star_silent is None
         assert any("non-negative" in n for n in fit.notes)
@@ -428,3 +433,32 @@ class TestSolve3:
         """A singular Hessian is reported, never pseudo-inverted."""
         matrix = [[1.0, 2.0, 3.0], [2.0, 4.0, 6.0], [3.0, 6.0, 9.0]]
         assert _solve3(matrix, [1.0, 2.0, 3.0]) is None
+
+
+class TestReservation:
+    """``exp(-a / b)`` is a reservation only when it comes back usable."""
+
+    def test_a_well_conditioned_fit_reads_its_crossing(self):
+        # b = -1, a = log(1.2) -> exp(-a / b) = 1.2.
+        assert _reservation(math.log(1.2), -1.0) == pytest.approx(1.2)
+
+    def test_a_slope_one_ulp_below_zero_overflows_to_no_reservation(self):
+        """The case a bare `b < 0` test would have called a value."""
+        assert _reservation(7.59, -1e-17) is None
+
+    def test_the_mirror_case_underflows_to_no_reservation(self):
+        """`exp` flushes to 0.0 here, which is a rho of zero -- not a price."""
+        assert _reservation(-7.59, -1e-17) is None
+
+    def test_the_flat_slope_window_catches_it_first(self):
+        """Both layers, in order: the guard fires before `_reservation`."""
+        offers = [
+            _rho_offer(arm, rho, True, session_id=f"{arm}_{rho}_{i}")
+            for arm in (THREAT, SILENT)
+            for rho in (0.5, 1.0, 2.0)
+            for i in range(5)
+        ]
+        fit = fit_rho_logistic(offers)
+        assert abs(fit.b) < SLOPE_EPS
+        assert any("non-negative" in n for n in fit.notes)
+        assert not any("exp(-a / b)" in n for n in fit.notes)

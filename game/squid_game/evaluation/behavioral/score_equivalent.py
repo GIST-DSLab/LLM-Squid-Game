@@ -91,6 +91,15 @@ SILENT = "silent"
 #: inspect and reject, and one that raises.
 RIDGE = 1e-3
 
+#: How close to zero a slope may sit and still be called flat. A
+#: separated arm's slope has no determined sign -- its fixed point is
+#: zero and what comes back is summation noise -- so testing ``b < 0``
+#: alone decides a reservation on one ULP: at ``b = -1e-17`` the
+#: reservation ``exp(-a / b)`` overflows to ``inf`` (or flushes to 0.0)
+#: and would travel on as a number. The window is what makes the
+#: judgement about the model rather than about rounding.
+SLOPE_EPS = 1e-9
+
 #: Bins for the non-parametric (PAV) reading of the rho curve. Narrow
 #: below 1 where the decision actually turns, wide above it where every
 #: payment is already dominated, and open-ended at the top so the last
@@ -204,8 +213,10 @@ class RhoFit:
         b: Shared slope on ``log rho``. Negative is the only sign that
             describes a demand curve.
         rho_star_threat: ``exp(-a_threat / b)``, the rho at which the
-            threat arm's fitted payment rate passes 0.5; ``None``
-            whenever ``b >= 0`` or the arm is missing.
+            threat arm's fitted payment rate passes 0.5; ``None`` when the
+            arm is missing, when the slope is flat to within
+            ``SLOPE_EPS``, or when that exponential is not a finite
+            positive number.
         rho_star_silent: Same for the silent arm.
         n_used: Offers that entered the fit.
         n_skipped: Offers that did not -- ``rho`` infinite (no rounds
@@ -428,6 +439,22 @@ def _safe_exp(z: float) -> float:
         return math.inf
 
 
+def _reservation(a: float, b: float) -> float | None:
+    """``exp(-a / b)`` when that is a usable rho, else ``None``.
+
+    A reservation is a finite positive ratio. When the slope is nearly
+    flat the exponent runs away and ``exp`` saturates -- to ``inf`` at
+    one sign, to ``0.0`` at the other -- and both are shapes of "the fit
+    located no crossing", not readings. Returning them would let a
+    difference of two reservations come out ``nan`` or ``0.0`` downstream
+    with nothing on the record to say why, so they are refused here.
+    """
+    value = _safe_exp(-a / b)
+    if not math.isfinite(value) or value <= 0.0:
+        return None
+    return value
+
+
 def _solve3(matrix: list[list[float]], rhs: list[float]) -> list[float] | None:
     """Solve a 3x3 system by Gaussian elimination with partial pivoting.
 
@@ -469,9 +496,14 @@ def fit_rho_logistic(
     at every price it was offered is perfectly separated, the unpenalised
     maximum is at infinity, and without a penalty the loop would simply
     walk off. With it, separation converges to a finite fit whose slope
-    is flat -- and a non-negative slope is reported as *no* reservation,
-    because a curve that does not fall with the price is not a demand
-    curve and its ``exp(-a / b)`` would be an arithmetic accident.
+    is flat -- and a slope that is flat to within ``SLOPE_EPS`` is
+    reported as *no* reservation, because a curve that does not fall with
+    the price is not a demand curve and its ``exp(-a / b)`` would be an
+    arithmetic accident of the last bit of the slope. The window is not
+    cosmetic: a separated arm's slope has no determined sign, so ``b < 0``
+    alone would hand back ``inf`` or ``0.0`` as a reservation depending on
+    summation noise. :func:`_reservation` is the second layer, refusing
+    any exponential that is not finite and positive.
 
     Args:
         offers: Offers from either arm; anything else is skipped.
@@ -519,7 +551,17 @@ def fit_rho_logistic(
             )
     if not rows:
         notes.append("no usable offer at all; nothing was fitted.")
-        return RhoFit(None, None, None, None, None, 0, n_skipped, False, notes)
+        return RhoFit(
+            a_threat=None,
+            a_silent=None,
+            b=None,
+            rho_star_threat=None,
+            rho_star_silent=None,
+            n_used=0,
+            n_skipped=n_skipped,
+            converged=False,
+            notes=notes,
+        )
 
     theta = [0.0, 0.0, 0.0]
     converged = False
@@ -544,7 +586,15 @@ def fit_rho_logistic(
                 "exists; the fit is abandoned rather than approximated."
             )
             return RhoFit(
-                None, None, None, None, None, len(rows), n_skipped, False, notes
+                a_threat=None,
+                a_silent=None,
+                b=None,
+                rho_star_threat=None,
+                rho_star_silent=None,
+                n_used=len(rows),
+                n_skipped=n_skipped,
+                converged=False,
+                notes=notes,
             )
         theta = [t + d for t, d in zip(theta, step)]
         if max(abs(d) for d in step) < tol:
@@ -561,13 +611,27 @@ def fit_rho_logistic(
     b = theta[2]
     rho_star_threat: float | None = None
     rho_star_silent: float | None = None
-    if b >= 0.0:
-        notes.append("slope is non-negative; the fit is not a demand curve")
+    if b > -SLOPE_EPS:
+        notes.append(
+            "slope is non-negative; the fit is not a demand curve "
+            f"(b = {b:.3g}, flat to within {SLOPE_EPS:g})"
+        )
     else:
-        if a_threat is not None:
-            rho_star_threat = _safe_exp(-a_threat / b)
-        if a_silent is not None:
-            rho_star_silent = _safe_exp(-a_silent / b)
+        for arm, intercept in ((THREAT, a_threat), (SILENT, a_silent)):
+            if intercept is None:
+                continue
+            value = _reservation(intercept, b)
+            if value is None:
+                notes.append(
+                    f"the {arm} arm's exp(-a / b) is not a finite positive "
+                    f"rho (a = {intercept:.3g}, b = {b:.3g}): the crossing "
+                    "lies outside what a float can represent, so the "
+                    "reservation is undefined."
+                )
+            elif arm == THREAT:
+                rho_star_threat = value
+            else:
+                rho_star_silent = value
     return RhoFit(
         a_threat=a_threat,
         a_silent=a_silent,
