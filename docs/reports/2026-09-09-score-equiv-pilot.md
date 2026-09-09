@@ -7,12 +7,11 @@
 - 설계: `docs/history/plans/2026-09-08-score-equivalent-index.md` (§6 2026-09-09 개정)
 - 설정 생성: `scripts/dev/generate_score_equiv_probe.py`, 드라이버: `scripts/run/run_score_equiv_pilot.sh`
 - 관문: `scripts/analysis/score_equiv_gates.py`, 판사: `scripts/analysis/pilot_judge.py`
-- 산출: `results/score_equiv_pilot/<label>/` (커밋됨), 런: `outputs/2026-09-09/score_equiv_probe_<label>/`
+- 산출: `results/score_equiv_pilot/<label>/` (관문표·판사 CSV·재생 원장·로그),
+  런: `outputs/2026-09-09/score_equiv_probe_<label>/` (원시 세션, LFS)
 
-⚠️ **원시 런 데이터는 커밋하지 않았다.** 이 작업 머신에 `git-lfs`가 없어서
-`outputs/**/*_turns.jsonl`이 LFS 포인터가 아니라 평문 블롭으로 들어간다. 저장소 규약을 깨므로
-스테이징을 되돌렸다. 파일럿의 근거는 `results/score_equiv_pilot/`의 관문표·판사 CSV·재생 집계이고,
-원시 데이터가 필요하면 `git lfs` 있는 머신에서 다시 add 하면 된다 (경로는 위 그대로 남아 있다).
+둘 다 커밋돼 있다. `git-lfs`를 설치한 뒤 원시 런을 규약대로 포인터로 올렸으므로
+(`*_turns.jsonl` 162개, LFS 객체 196개) 관문 스크립트를 다른 머신에서 그대로 재현할 수 있다.
 
 ## 1. 방법
 
