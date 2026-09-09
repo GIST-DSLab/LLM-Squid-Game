@@ -53,6 +53,16 @@ from sending the coefficients to infinity: it settles on a finite and
 visibly flat answer instead, which the caller can then refuse to read as
 a demand curve.
 
+``rho_result`` is that fit read as an estimate. Two things happen there
+that the fit itself does not do. A reservation outside ``[min rho, max
+rho]`` of the arm's own offers is dropped with a note -- the fit is
+defined past the ladder, the ladder is not, and an extrapolated crossing
+is a bound on the reservation in the same way a price curve that never
+reaches 0.5 is. And ``x_star_rho`` is multiplied by ``c_ref``, the median
+ceiling of the offers used, to give the same gap in points;
+``rho_curve`` runs the PAV over rho bins beside it, so a reader can see
+whether the shape or the data produced the number.
+
 Replaces the 2026-09-08 ruler-arm estimator (PAV inversion of a
 forfeit-rate curve against a stated score loss), which needed the
 end-of-round event roll that truncated 99% of sessions.
@@ -62,22 +72,30 @@ from __future__ import annotations
 
 import math
 import random
-from collections.abc import Iterable, Sequence
+import statistics
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 
 __all__ = [
+    "RHO_BIN_EDGES",
     "SILENT",
     "THREAT",
     "ArmCurve",
     "BootstrapResult",
     "Offer",
+    "RhoFit",
+    "RhoResult",
     "ScoreEquivalent",
     "arm_curve",
     "bootstrap_units",
     "bootstrap_x_star",
+    "bootstrap_x_star_rho",
     "collect_offers",
     "crossing_price",
+    "fit_rho_logistic",
     "pav_monotone",
+    "rho_curve",
+    "rho_result",
     "score_equivalent",
 ]
 
@@ -239,6 +257,58 @@ class RhoFit:
 
 
 @dataclass(frozen=True)
+class RhoResult:
+    """The rho-axis reading: the fit, what it was allowed to say, the CI.
+
+    ``fit`` is kept whole and unedited so the reader can see what the
+    logistic actually produced. ``rho_star_threat`` / ``rho_star_silent``
+    are that fit *after* the observed-range rule: a reservation outside
+    the rungs an arm was actually offered is an extrapolation, and
+    reporting it would be the same fault the price estimator refuses
+    when a curve never crosses 0.5 -- a bound dressed as a value. Those
+    two, not the fit's, are what ``x_star_rho`` subtracts, and every
+    suppression says so in ``notes``.
+
+    Attributes:
+        fit: The raw :class:`RhoFit`, extrapolations included.
+        x_star_rho: ``rho*_threat - rho*_silent`` after the range rule,
+            or ``None`` when either arm was suppressed or undefined.
+        x_star_points: ``x_star_rho * c_ref`` -- the same gap read in
+            points at a stated reference ceiling.
+        c_ref: Median ceiling over the offers that entered the fit; 0.0
+            when none did.
+        ci_low_rho: Lower percentile of the rho bootstrap, or ``None``.
+        ci_high_rho: Upper percentile, same convention.
+        threat_curve: PAV over rho bins for the threat arm -- the
+            non-parametric check on the logistic.
+        silent_curve: Same for the silent arm.
+        boot_unit: ``"seed"`` or ``"session"``; see :func:`bootstrap_units`.
+        n_boot_draws: Resamples that produced a value.
+        n_boot_failed: Resamples that did not, and why the interval is
+            conditional on the ones that did.
+        rho_star_threat: The threat arm's reservation after the range
+            rule, ``None`` when suppressed.
+        rho_star_silent: Same for the silent arm.
+        notes: The fit's notes plus every suppression this rule made.
+    """
+
+    fit: RhoFit
+    x_star_rho: float | None
+    x_star_points: float | None
+    c_ref: float
+    ci_low_rho: float | None
+    ci_high_rho: float | None
+    threat_curve: ArmCurve
+    silent_curve: ArmCurve
+    boot_unit: str
+    n_boot_draws: int
+    n_boot_failed: int
+    rho_star_threat: float | None = None
+    rho_star_silent: float | None = None
+    notes: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class ScoreEquivalent:
     """The index and everything needed to read it.
 
@@ -251,6 +321,13 @@ class ScoreEquivalent:
     questions and are reported together: the first is the index, the
     second is the index restricted to the states where each arm's
     payments are individually non-score.
+
+    ``rho`` is the same index on the axis the agent decides on, price as
+    a share of what the remaining rounds could still pay. It is filled
+    whenever there is an offer at all, and it is the reading to prefer
+    when the ceiling moves within a run: the price-axis fields above
+    then pool rungs that were not the same decision, and are retained as
+    the legacy estimator.
     """
 
     x_star: float | None
@@ -267,6 +344,7 @@ class ScoreEquivalent:
     boot_unit: str = "seed"
     n_boot_draws: int = 0
     n_boot_failed: int = 0
+    rho: RhoResult | None = None
 
 
 def _framing_arm(framing: str | None) -> str | None:
@@ -420,6 +498,73 @@ def arm_curve(offers: Sequence[Offer], arm: str) -> ArmCurve:
         fitted=tuple(fitted),
         counts=tuple(counts),
         reservation=crossing_price(prices, fitted) if prices else None,
+    )
+
+
+def _bin_index(rho: float, edges: Sequence[float]) -> int:
+    """Which ``[edges[i], edges[i + 1])`` the value falls in.
+
+    The top bin is open, so an offer with no rounds remaining -- ``rho``
+    infinite -- lands there rather than falling out of the histogram
+    unannounced. Everything else is half-open on the lower edge.
+    """
+    index = 0
+    for i in range(len(edges) - 1):
+        if rho >= edges[i]:
+            index = i
+    return index
+
+
+def rho_curve(
+    offers: Sequence[Offer], arm: str, *, edges: Sequence[float] = RHO_BIN_EDGES
+) -> ArmCurve:
+    """Payment rate by rho bin for one arm, PAV-fitted -- the check on the fit.
+
+    The logistic in :func:`fit_rho_logistic` assumes a shape. This does
+    not: it bins rho, reads the raw rate in each bin, and pools only what
+    monotonicity forces. A crossing here that disagrees with the fitted
+    ``rho*`` is the signal that the shape, not the data, produced the
+    number.
+
+    The returned :class:`ArmCurve` is the same dataclass the price axis
+    uses, with its ``prices`` holding the bins' **lower edges** -- so
+    ``reservation`` is a rho, and interpolation runs between lower edges
+    rather than bin midpoints. That understates the crossing by up to one
+    bin width and is stated here rather than corrected: the bins are the
+    resolution this reading has.
+
+    Args:
+        offers: Offers from any arm; only ``arm``'s are binned.
+        arm: ``"threat"`` or ``"silent"``.
+        edges: Bin boundaries, ascending, last one open.
+
+    Returns:
+        An :class:`ArmCurve` over every bin -- empty ones included, with
+        a NaN rate -- or an empty curve when the arm has no offers.
+    """
+    subset = [o for o in offers if o.arm == arm]
+    if not subset:
+        return ArmCurve(
+            arm=arm, prices=(), rates=(), fitted=(), counts=(), reservation=None
+        )
+    lowers = list(edges[:-1])
+    paid = [0] * len(lowers)
+    total = [0] * len(lowers)
+    for offer in subset:
+        index = _bin_index(offer.rho, edges)
+        total[index] += 1
+        paid[index] += 1 if offer.paid else 0
+    rates = [
+        (paid[i] / total[i]) if total[i] else float("nan") for i in range(len(lowers))
+    ]
+    fitted = pav_monotone(rates, total)
+    return ArmCurve(
+        arm=arm,
+        prices=tuple(float(x) for x in lowers),
+        rates=tuple(rates),
+        fitted=tuple(fitted),
+        counts=tuple(total),
+        reservation=crossing_price(lowers, fitted),
     )
 
 
@@ -645,6 +790,71 @@ def fit_rho_logistic(
     )
 
 
+def _fitted_rhos(offers: Sequence[Offer], arm: str) -> list[float]:
+    """The rho values of ``arm``'s offers that :func:`fit_rho_logistic` uses."""
+    return [
+        o.rho
+        for o in offers
+        if o.arm == arm and math.isfinite(o.rho) and o.rho > 0.0
+    ]
+
+
+def _in_observed_range(
+    offers: Sequence[Offer], arm: str, value: float | None
+) -> tuple[float | None, str | None]:
+    """Keep a reservation only where the arm was actually asked.
+
+    ``exp(-a / b)`` is defined everywhere the fit is, including well past
+    the last rung an arm ever saw. An arm that paid at every price it was
+    offered pushes its intercept up until the crossing lands beyond the
+    ladder, and the number that comes back then says where the arm
+    *would* stop paying under a shape the data never tested. That is the
+    same fault :func:`crossing_price` refuses on the price axis, so it is
+    refused here too: outside ``[min rho, max rho]`` the value is dropped
+    and a note names the arm, the value and the range.
+
+    Returns:
+        ``(value, None)`` when the value is inside the observed range;
+        ``(None, note)`` when it is outside; ``(None, None)`` when there
+        was no value to check.
+    """
+    if value is None:
+        return None, None
+    rhos = _fitted_rhos(offers, arm)
+    if not rhos:
+        return None, (
+            f"the {arm} arm has no offer with a finite rho, so its "
+            "reservation cannot be placed against an observed range."
+        )
+    lo, hi = min(rhos), max(rhos)
+    if lo <= value <= hi:
+        return value, None
+    return None, (
+        f"the {arm} arm's fitted rho* = {value:.3g} lies outside the "
+        f"observed rho range [{lo:.3g}, {hi:.3g}]: the crossing is an "
+        "extrapolation past the rungs that arm was offered, so it is a "
+        "bound on the reservation, not the reservation. Widen the ladder."
+    )
+
+
+def _rho_x_star(offers: Sequence[Offer]) -> float | None:
+    """``rho*_threat - rho*_silent`` under the rules a draw must obey.
+
+    Three ways to come back with nothing, and all three are the same
+    refusal: a fit that did not converge (its parameters are the last
+    iterate, not a maximum), an arm the fit could not place, and a
+    reservation outside the rho values that arm was offered.
+    """
+    fit = fit_rho_logistic(offers)
+    if not fit.converged:
+        return None
+    threat, _ = _in_observed_range(offers, THREAT, fit.rho_star_threat)
+    silent, _ = _in_observed_range(offers, SILENT, fit.rho_star_silent)
+    if threat is None or silent is None:
+        return None
+    return threat - silent
+
+
 def bootstrap_units(offers: Sequence[Offer]) -> tuple[str, dict[object, list[Offer]]]:
     """Group offers into the units a resample draws, and name the unit.
 
@@ -691,6 +901,40 @@ def bootstrap_x_star(
     draws that did produce a value, and the caller is expected to report
     the share that did not.
     """
+    return _bootstrap(offers, _price_x_star, n_boot=n_boot, seed=seed, alpha=alpha)
+
+
+def _price_x_star(offers: Sequence[Offer]) -> float | None:
+    """``reservation(threat) - reservation(silent)`` off the PAV price curves."""
+    threat = arm_curve(offers, THREAT).reservation
+    silent = arm_curve(offers, SILENT).reservation
+    if threat is None or silent is None:
+        return None
+    return threat - silent
+
+
+def _bootstrap(
+    offers: Sequence[Offer],
+    statistic: Callable[[list[Offer]], float | None],
+    *,
+    n_boot: int,
+    seed: int,
+    alpha: float,
+) -> BootstrapResult:
+    """The draw loop both axes share; only ``statistic`` differs.
+
+    Whole units are drawn with replacement (see :func:`bootstrap_units`)
+    and handed to ``statistic``, which returns ``None`` for a draw it
+    cannot read. Those are counted, not dropped in silence: on the price
+    axis they are the resamples where an arm never crossed 0.5, on the
+    rho axis they are also the ones whose reservation left the rungs the
+    draw actually contained. Either way the interval that comes back is
+    conditional on the draws that did produce a value, and the count is
+    what lets the caller say so.
+
+    Fewer than 20 usable draws returns no interval at all: percentiles
+    off a handful of draws are decoration.
+    """
     unit, grouped = bootstrap_units(offers)
     units = list(grouped)
     if len(units) < 2:
@@ -701,18 +945,102 @@ def bootstrap_x_star(
     for _ in range(n_boot):
         picked = [rng.choice(units) for _ in units]
         sample = [o for u in picked for o in grouped[u]]
-        threat = arm_curve(sample, THREAT).reservation
-        silent = arm_curve(sample, SILENT).reservation
-        if threat is None or silent is None:
+        value = statistic(sample)
+        if value is None:
             n_failed += 1
             continue
-        draws.append(threat - silent)
+        draws.append(value)
     if len(draws) < 20:
         return BootstrapResult(None, None, unit, len(units), len(draws), n_failed)
     draws.sort()
     lo = draws[int((alpha / 2) * len(draws))]
     hi = draws[min(len(draws) - 1, int((1 - alpha / 2) * len(draws)))]
     return BootstrapResult(lo, hi, unit, len(units), len(draws), n_failed)
+
+
+def bootstrap_x_star_rho(
+    offers: Sequence[Offer],
+    *,
+    n_boot: int = 1000,
+    seed: int = 0,
+    alpha: float = 0.05,
+) -> BootstrapResult:
+    """Percentile CI for ``X*`` on the rho axis, resampling the same units.
+
+    Identical resampling to :func:`bootstrap_x_star` -- seeds when the
+    offers carry them, sessions otherwise -- with the statistic refit per
+    draw: ``rho*_threat - rho*_silent`` from :func:`fit_rho_logistic`,
+    subject to the same two refusals the point estimate makes. A draw
+    whose fit did not converge, or whose reservation falls outside the
+    rho values *that draw* holds for that arm, is a failure rather than a
+    number, and the count comes back in ``n_failed``.
+    """
+    return _bootstrap(offers, _rho_x_star, n_boot=n_boot, seed=seed, alpha=alpha)
+
+
+def rho_result(
+    offers: Sequence[Offer],
+    *,
+    n_boot: int = 1000,
+    seed: int = 0,
+) -> RhoResult:
+    """The rho-axis reading: fit, range rule, points conversion, interval.
+
+    ``c_ref`` is the median ceiling of the offers that entered the fit,
+    which is what turns a ratio back into points: ``X*`` in rho says the
+    threat arm pays a larger share of what the remaining rounds could
+    win, and multiplying by a stated ceiling says how many points that
+    share is at a typical point in a session. The median, not the mean,
+    so one long-remaining offer cannot set the scale; and stored on the
+    result, so a reader who wants another reference ceiling can divide
+    it back out.
+
+    Args:
+        offers: Every offer in the run, both arms.
+        n_boot: Resamples for the interval. The fit is refit per draw,
+            so this is the expensive argument.
+        seed: RNG seed for the resampling.
+
+    Returns:
+        A :class:`RhoResult`. The interval is only attempted when both
+        arms produced a reservation the range rule allowed.
+    """
+    fit = fit_rho_logistic(offers)
+    notes = list(fit.notes)
+    stars: dict[str, float | None] = {}
+    for arm, value in ((THREAT, fit.rho_star_threat), (SILENT, fit.rho_star_silent)):
+        kept, note = _in_observed_range(offers, arm, value)
+        stars[arm] = kept
+        if note:
+            notes.append(note)
+    x_star_rho: float | None = None
+    if stars[THREAT] is not None and stars[SILENT] is not None:
+        x_star_rho = stars[THREAT] - stars[SILENT]
+    ceilings = [
+        o.ceiling
+        for o in offers
+        if o.arm in (THREAT, SILENT) and math.isfinite(o.rho) and o.rho > 0.0
+    ]
+    c_ref = statistics.median(ceilings) if ceilings else 0.0
+    boot = BootstrapResult(None, None, "seed", 0, 0, 0)
+    if x_star_rho is not None:
+        boot = bootstrap_x_star_rho(offers, n_boot=n_boot, seed=seed)
+    return RhoResult(
+        fit=fit,
+        x_star_rho=x_star_rho,
+        x_star_points=None if x_star_rho is None else x_star_rho * c_ref,
+        c_ref=c_ref,
+        ci_low_rho=boot.low,
+        ci_high_rho=boot.high,
+        threat_curve=rho_curve(offers, THREAT),
+        silent_curve=rho_curve(offers, SILENT),
+        boot_unit=boot.unit,
+        n_boot_draws=boot.n_draws,
+        n_boot_failed=boot.n_failed,
+        rho_star_threat=stars[THREAT],
+        rho_star_silent=stars[SILENT],
+        notes=notes,
+    )
 
 
 def score_equivalent(
@@ -791,4 +1119,5 @@ def score_equivalent(
         boot_unit=boot.unit,
         n_boot_draws=boot.n_draws,
         n_boot_failed=boot.n_failed,
+        rho=rho_result(offers, n_boot=n_boot, seed=seed) if offers else None,
     )
