@@ -282,3 +282,15 @@ Read in this order:
 - **Resistance.** If the rate is high in the target models too, the
   paper reports a ceiling on behavioural measurement, and the honest
   reading of a small X* is "not measurable this way", not "no motive".
+
+
+## 2026-09-10 — the verdict line names its round
+
+`8-ransom_call.j2` now renders "You answered round N incorrectly." (`round_number`
+passed from `_offer_ransom`). Reason: the framing's status block says `Turn: N` for
+the round just played; with a bare verdict, gemma4 and glm-5.3-flash read `Turn: N`
+as "about to start round N", took the verdict to be about round N-1, and called the
+unchanged score contradictory (game f28948 in `outputs/ransom_r6_pilot_gemma4`). The
+line is identical in both arms; `round_number=None` keeps the old wording so replay
+renders of earlier runs are unchanged. The `ransom_r6_*` pilots and main runs recorded
+before this change carry the old line in `ransom_call_input`.

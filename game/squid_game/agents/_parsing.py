@@ -495,6 +495,7 @@ def build_ransom_call_message(
     states_outcome: bool = False,
     lives_label: str = "Lives",
     carrot: str | None = None,
+    round_number: int | None = None,
 ) -> str:
     """Render ``8-ransom_call.j2`` -- the decision-point user message.
 
@@ -522,6 +523,12 @@ def build_ransom_call_message(
             whose vocabulary contract forbids life/death words.
         carrot: Run-level carrot name; supplies the score noun so the
             status line matches the intro and the menu.
+        round_number: The round just answered. When given, the verdict
+            line reads "You answered round N incorrectly." (2026-09-10)
+            so it cannot be mistaken for a verdict on the previous round
+            -- the framing's status block says ``Turn: N`` and two models
+            read a bare verdict as belonging to round N-1. None keeps the
+            older wording.
 
     Returns:
         Fully rendered ransom-call user-message string.
@@ -542,6 +549,7 @@ def build_ransom_call_message(
         rounds_remaining=rounds_remaining,
         states_outcome=states_outcome,
         score_noun=vocab["score_noun"],
+        round_number=round_number,
     )
 
 

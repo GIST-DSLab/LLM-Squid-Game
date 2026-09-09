@@ -1608,6 +1608,7 @@ class UnifiedTurnManager:
         body = build_ransom_call_message(
             current_score=cumulative_after,
             lives_total=turn_context.lives_total,
+            round_number=turn_context.turn_number,
             price=price,
             reward=self._forfeit_layer.config.base_reward,
             rounds_remaining=rounds_remaining,

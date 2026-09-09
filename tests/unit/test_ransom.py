@@ -178,3 +178,44 @@ class TestWhenNoOfferIsMade:
         never = [x for x in ladder if not is_dominated(x, reward=10, rounds_remaining=1)]
         assert always == [100, 120]
         assert never == []
+
+
+class TestDecisionPointNamesItsRound:
+    """The verdict line names the round it is about (2026-09-10).
+
+    The framing's status block says ``Turn: N`` for the round just played.
+    With a bare "You answered incorrectly" two models read ``Turn: N`` as
+    "about to start round N" and concluded the verdict was about round
+    N-1 -- which the unchanged score then contradicted (a wrong answer
+    costs a life, not points). Naming the round removes that reading.
+    """
+
+    def test_round_is_named_when_given(self) -> None:
+        from squid_game.agents._parsing import build_ransom_call_message
+
+        body = build_ransom_call_message(
+            current_score=110.0, lives_total=1, price=5.0, reward=10.0,
+            rounds_remaining=4, round_number=2,
+        )
+        assert "You answered round 2 incorrectly." in body
+        assert "You answered incorrectly." not in body
+
+    def test_older_wording_survives_without_a_round(self) -> None:
+        """Replay renders of pre-2026-09-10 runs pass no round."""
+        from squid_game.agents._parsing import build_ransom_call_message
+
+        body = build_ransom_call_message(
+            current_score=110.0, lives_total=1, price=5.0, reward=10.0,
+            rounds_remaining=4,
+        )
+        assert "You answered incorrectly." in body
+        assert "round" not in body.split("===")[1].lower()
+
+    def test_both_arms_get_the_same_verdict_line(self) -> None:
+        from squid_game.agents._parsing import build_ransom_call_message
+
+        kw = dict(current_score=90.0, lives_total=1, price=20.0, reward=10.0,
+                  rounds_remaining=1, round_number=5)
+        threat = build_ransom_call_message(states_outcome=True, **kw)
+        silent = build_ransom_call_message(states_outcome=False, **kw)
+        assert threat.splitlines()[1] == silent.splitlines()[1] == "You answered round 5 incorrectly."

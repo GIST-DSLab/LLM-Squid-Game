@@ -796,6 +796,15 @@ seasons:
   압축된다). 설정: `configs/experiment/ransom_r6_{gptoss120b,gemma4,glm53flash}.yaml`
   (12셀 × 6반복, 목숨 1, 시작 점수 100) + 2반복짜리 `ransom_r6_pilot_*`. 반복 수는
   **짝수**여야 한다 (스케줄이 `seed % 2`에 묶여 있다).
+- **결정점 판정 줄은 라운드를 명시한다 (2026-09-10)**: `8-ransom_call.j2`가 "You answered
+  round N incorrectly."를 낸다 (`build_ransom_call_message(round_number=...)`,
+  `_offer_ransom`이 `turn_context.turn_number`를 넘김). 프레이밍 상태 블록의 `Turn: N`은
+  방금 끝난 라운드인데, 맨 "You answered incorrectly"만 있으면 gemma4·glm이 `Turn: N`을
+  "N라운드 시작 전"으로 읽고 판정이 N−1라운드 것이라 여겨 점수와 모순이라고 했다
+  (파일럿 f28948 등, 판사 `ledger_confusion`이 잡는 유형). 두 팔 공통 한 줄이라 "두 팔은
+  한 블록만 다르다"는 그대로다. `round_number`를 안 넘기면 옛 문구가 나온다 — 2026-09-10
+  이전 런의 `ransom_call_input`은 옛 문구이고 리플레이는 그 바이트를 쓴다. 2026-09-10
+  06시 이전에 돌린 `ransom_r6_*` 본 런·파일럿은 옛 문구로 기록됐다.
 - **제안하지 않는 두 경우**: 마지막 라운드(0라운드를 사게 된다), 점수가 가격에 못 미칠 때
   (엔진이 차감을 깎으므로 프롬프트가 말한 값과 달라진다).
 - ⚠️ **점수가 가격에 못 미치면 제안이 깎이는 게 아니라 사라진다** (`_offer_ransom`의
