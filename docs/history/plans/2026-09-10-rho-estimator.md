@@ -177,3 +177,30 @@ tests — check first and follow what is there).
    directory written by the test (`experiment_config.json`, `season_results.jsonl`,
    one `*_turns.jsonl`) and assert the three files exist and `rho_curves.csv` has
    the header above.
+
+## Record (2026-09-10)
+
+Implemented on `feat/ransom-decision-point` in five commits: `cfb4f91` (Task 1),
+`e120b63` (Task 1 fix: `SLOPE_EPS`, `_reservation`), `c7e1b33` (Task 2), `13d2a97`
+(Task 3), `457102a` (final-review wave). 90 tests across
+`tests/unit/test_score_equivalent.py` and `tests/unit/test_score_equivalent_cli.py`.
+
+Decisions taken during implementation, beyond the plan text:
+- Shared slope `b`, two intercepts (owner choice, 2026-09-10).
+- Observed-range rule: a fitted `rho*` outside the arm's observed rho support is
+  reported `None` with a note; the raw value stays on `RhoResult.fit`. Applied per
+  bootstrap draw too, so the interval is conditional and conservative toward 0; the
+  CLI labels it "conditional 95% percentile interval" and says so.
+- Non-converged fits produce no reservation, in the point estimate and in every draw.
+- `RhoResult` also carries `rho_range_threat/silent` (observed support) so the CLI
+  prints the same range the rule used.
+- `Offer.dominated` is `price > ceiling`; the one cell where it disagrees with
+  `rho > 1` (price <= 0 with no rounds remaining) is unreachable and named in the test.
+- `rho_curves.csv` writes NaN as an empty cell.
+
+Follow-ups (not blockers): split the rho axis into its own module when a third axis
+arrives; Newton line search; a per-call knob for the 1000 refits (~5 ms each); report
+the ratio `rho*_threat / rho*_silent` beside the difference (the shared-slope model's
+scale-free invariant, useful for the open endowment-scaling question); `Offer.rho`
+docstring still claims `rho > 1` cannot disagree with `dominated`; update
+`paper/en/sections/03_benchmark.tex` §estimator and `fig:ruler` to the rho axis.
