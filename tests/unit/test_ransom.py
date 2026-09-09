@@ -154,3 +154,27 @@ class TestConfigValidation:
         cfg = self._config(seasons=[season])
         assert cfg.seasons[0].ransom_price == 5.0
         assert cfg.ransom.price == 20.0
+
+
+class TestWhenNoOfferIsMade:
+    """Two states where a price would be meaningless or untrue."""
+
+    def test_the_dominance_line_moves_with_the_rounds_left(self):
+        """A fixed price is recoverable early and not late."""
+        assert not is_dominated(60, reward=10, rounds_remaining=9)
+        assert is_dominated(60, reward=10, rounds_remaining=5)
+
+    def test_the_shipped_ladder_straddles_the_line(self):
+        """Two rungs are dominated at every offer, four conditionally.
+
+        With r = 10 over ten rounds an offer has at most nine rounds
+        left, so the ceiling never exceeds 90. The 5--30 ladder the
+        prompt ablation produced was calibrated on a three-rounds-left
+        state and is dominated almost nowhere in a real session; this is
+        the ladder that replaced it.
+        """
+        ladder = [20, 40, 60, 80, 100, 120]
+        always = [x for x in ladder if is_dominated(x, reward=10, rounds_remaining=9)]
+        never = [x for x in ladder if not is_dominated(x, reward=10, rounds_remaining=1)]
+        assert always == [100, 120]
+        assert never == []

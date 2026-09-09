@@ -108,7 +108,18 @@ class ArmCurve:
 
 @dataclass(frozen=True)
 class ScoreEquivalent:
-    """The index and everything needed to read it."""
+    """The index and everything needed to read it.
+
+    ``x_star`` is estimated on every offer and rests on the subtraction:
+    both arms share the appetite for continued play and the model's own
+    accuracy belief, so their difference removes both. ``x_star_dominated``
+    repeats the estimate on the offers that also satisfy
+    ``price > reward * rounds_remaining``, where a payment cannot be a
+    bid for points in the first place. The two answer different
+    questions and are reported together: the first is the index, the
+    second is the index restricted to the states where each arm's
+    payments are individually non-score.
+    """
 
     x_star: float | None
     ci_low: float | None
@@ -118,6 +129,8 @@ class ScoreEquivalent:
     n_sessions: int
     n_offers: int
     dominated_share: float
+    x_star_dominated: float | None = None
+    n_dominated: int = 0
     notes: list[str] = field(default_factory=list)
 
 
@@ -332,10 +345,26 @@ def score_equivalent(
     dominated_share = (
         sum(o.dominated for o in accepted) / len(accepted) if accepted else 0.0
     )
-    if accepted and dominated_share == 0.0:
+    dominated = [o for o in offers if o.dominated]
+    x_star_dominated: float | None = None
+    if dominated:
+        d_threat = arm_curve(dominated, THREAT).reservation
+        d_silent = arm_curve(dominated, SILENT).reservation
+        if d_threat is not None and d_silent is not None:
+            x_star_dominated = d_threat - d_silent
+    if accepted and dominated_share < 0.1:
         notes.append(
-            "no accepted offer was score-dominated; every payment is "
-            "explicable as a bid for points. Raise the prices."
+            f"only {dominated_share:.0%} of accepted offers were "
+            "score-dominated: at these prices and this session length, "
+            "paying is usually recoverable, so the subtraction is "
+            "carrying the identification on its own. Dominance needs "
+            "price > reward x rounds remaining -- either raise the "
+            "ladder or shorten the session."
+        )
+    if not dominated:
+        notes.append(
+            "no offer at all sat above the dominance line; "
+            "x_star_dominated is undefined."
         )
     return ScoreEquivalent(
         x_star=x_star,
@@ -346,5 +375,7 @@ def score_equivalent(
         n_sessions=len({o.session_id for o in offers}),
         n_offers=len(offers),
         dominated_share=dominated_share,
+        x_star_dominated=x_star_dominated,
+        n_dominated=len(dominated),
         notes=notes,
     )

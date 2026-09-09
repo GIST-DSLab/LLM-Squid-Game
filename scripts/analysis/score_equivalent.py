@@ -119,6 +119,7 @@ def main() -> None:
         "",
         f"- sessions: {result.n_sessions}, offers: {result.n_offers}",
         f"- accepted offers that were score-dominated: {result.dominated_share:.2f}",
+        f"- offers above the dominance line: {result.n_dominated} of {result.n_offers}",
         "",
         "| arm | reservation price |",
         "|---|---|",
@@ -135,6 +136,12 @@ def main() -> None:
             else ""
         )
         lines.append(f"**X\\* = {result.x_star:.1f} points{ci}**")
+        if result.x_star_dominated is not None:
+            lines.append("")
+            lines.append(
+                f"Restricted to the {result.n_dominated} offers above the "
+                f"dominance line: **X\\* = {result.x_star_dominated:.1f} points**."
+            )
     if result.notes:
         lines += ["", "## Notes", ""] + [f"- {n}" for n in result.notes]
     # The two arms need not have met the same prices -- a cell whose

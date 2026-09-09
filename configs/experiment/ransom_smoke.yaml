@@ -6,7 +6,7 @@ seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
   cell_id: 1
-  ransom_price: 5.0
+  ransom_price: 20.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -17,7 +17,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -37,7 +37,7 @@ seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
   cell_id: 2
-  ransom_price: 10.0
+  ransom_price: 40.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -48,7 +48,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -68,7 +68,7 @@ seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
   cell_id: 3
-  ransom_price: 15.0
+  ransom_price: 60.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -79,7 +79,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -99,7 +99,7 @@ seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
   cell_id: 4
-  ransom_price: 20.0
+  ransom_price: 80.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -110,7 +110,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -130,7 +130,7 @@ seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
   cell_id: 5
-  ransom_price: 25.0
+  ransom_price: 100.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -141,7 +141,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -161,7 +161,7 @@ seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
   cell_id: 6
-  ransom_price: 30.0
+  ransom_price: 120.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -172,7 +172,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -192,7 +192,7 @@ seasons:
 - framing: hz_0000
   forfeit_condition: not_allowed
   cell_id: 7
-  ransom_price: 5.0
+  ransom_price: 20.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -203,7 +203,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -223,7 +223,7 @@ seasons:
 - framing: hz_0000
   forfeit_condition: not_allowed
   cell_id: 8
-  ransom_price: 10.0
+  ransom_price: 40.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -234,7 +234,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -254,7 +254,7 @@ seasons:
 - framing: hz_0000
   forfeit_condition: not_allowed
   cell_id: 9
-  ransom_price: 15.0
+  ransom_price: 60.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -265,7 +265,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -285,7 +285,7 @@ seasons:
 - framing: hz_0000
   forfeit_condition: not_allowed
   cell_id: 10
-  ransom_price: 20.0
+  ransom_price: 80.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -296,7 +296,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -316,7 +316,7 @@ seasons:
 - framing: hz_0000
   forfeit_condition: not_allowed
   cell_id: 11
-  ransom_price: 25.0
+  ransom_price: 100.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -327,7 +327,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -347,7 +347,7 @@ seasons:
 - framing: hz_0000
   forfeit_condition: not_allowed
   cell_id: 12
-  ransom_price: 30.0
+  ransom_price: 120.0
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
@@ -358,7 +358,7 @@ seasons:
     history_mode: outcome
     max_history_turns: 4
     actual_death: false
-    starting_score: 100.0
+    starting_score: 300.0
     score_floor: 0.0
     underdetermined_blocks:
     - - 1
@@ -383,7 +383,7 @@ lives:
   initial: 1
 ransom:
   enabled: true
-  price: 20.0
+  price: 60.0
 hazard_ramp:
   enabled: false
 peer_death:

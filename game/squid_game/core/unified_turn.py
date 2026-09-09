@@ -1588,6 +1588,12 @@ class UnifiedTurnManager:
         # 2026-09-09 hit this on 6 of 9 offers before the guard existed.
         if rounds_remaining <= 0:
             return {}, cumulative_after, True
+        # No offer the score cannot cover either. The engine would clamp
+        # the deduction to what is there and continue the session, so the
+        # agent would have paid less than the prompt said -- the one
+        # place this design could state a price it does not charge.
+        if cumulative_after - self._score_floor < price:
+            return {}, cumulative_after, True
 
         body = build_ransom_call_message(
             current_score=cumulative_after,
