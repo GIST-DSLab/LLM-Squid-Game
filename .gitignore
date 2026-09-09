@@ -132,3 +132,7 @@ outputs/_aborted/
 # directory came back as untracked build output; ignored so it cannot be
 # committed by accident, pending a decision to delete it.
 figures/
+
+# Pilot judge cache: thousands of tiny per-sample JSON files, regenerable by
+# re-running scripts/analysis/pilot_judge.py (the CSV it writes is the record).
+results/score_equiv_pilot/**/judge_cache/

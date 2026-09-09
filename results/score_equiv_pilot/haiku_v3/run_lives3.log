@@ -1,0 +1,109 @@
+Experiment 'score_equiv_probe_haiku_v3_lives3': 21 conditions x 1 repetitions = 21 total
+2026-09-09 08:32:24,389 [INFO] __main__: Parallel config: claude_code/haiku -> 6 worker(s)
+  Parallel config: claude_code/haiku -> 6 worker(s)
+2026-09-09 08:32:24,390 [INFO] __main__: Running season 1/21 (rep 1): hz_1111 x allowed x alone
+  Running season 1/21 (rep 1): hz_1111 x allowed x alone
+2026-09-09 08:32:24,390 [INFO] __main__: Running season 2/21 (rep 1): hz_0000 x allowed x alone
+  Running season 2/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:32:24,391 [INFO] __main__: Running season 3/21 (rep 1): hz_0000 x allowed x alone
+  Running season 3/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:32:24,391 [INFO] __main__: Running season 4/21 (rep 1): hz_0000 x allowed x alone
+  Running season 4/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:32:24,392 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:32:24,392 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:32:24,392 [INFO] __main__: Running season 5/21 (rep 1): hz_1111 x allowed x alone
+  Running season 5/21 (rep 1): hz_1111 x allowed x alone
+2026-09-09 08:32:24,392 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:32:24,393 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:32:24,393 [INFO] __main__: Running season 6/21 (rep 1): hz_0000 x allowed x alone
+  Running season 6/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:32:24,393 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:32:24,393 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:32:46,332 [INFO] squid_game.core.engine: Season 9a4e9e7806f8: end-of-round event at turn 1 (p=0.250, score loss 0.0, score now 100.0).
+2026-09-09 08:32:46,333 [INFO] squid_game.core.engine: Season 9a4e9e7806f8 complete: survived=False, forfeited=False, score=100.0, turns=1
+2026-09-09 08:32:46,333 [INFO] __main__: Running season 7/21 (rep 1): hz_0000 x allowed x alone
+  Running season 7/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:32:46,334 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:32:47,937 [INFO] squid_game.core.engine: Season 2977cddfed38: end-of-round event at turn 1 (p=0.250, score loss 0.0, score now 40.0).
+2026-09-09 08:32:47,937 [INFO] squid_game.core.engine: Season 2977cddfed38 complete: survived=False, forfeited=False, score=40.0, turns=1
+2026-09-09 08:32:47,937 [INFO] __main__: Running season 8/21 (rep 1): hz_0000 x allowed x alone
+  Running season 8/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:32:47,938 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:03,218 [INFO] squid_game.core.engine: Season 983eed6c461b: end-of-round event at turn 1 (p=0.250, score loss 20.0, score now 20.0).
+2026-09-09 08:33:03,218 [INFO] squid_game.core.engine: Season 983eed6c461b complete: survived=False, forfeited=False, score=20.0, turns=1
+2026-09-09 08:33:03,218 [INFO] __main__: Running season 9/21 (rep 1): hz_0000 x allowed x alone
+  Running season 9/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:03,218 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:07,786 [INFO] squid_game.core.engine: Season 7cb69f47ee7b: end-of-round event at turn 1 (p=0.250, score loss 0.0, score now 40.0).
+2026-09-09 08:33:07,787 [INFO] squid_game.core.engine: Season 7cb69f47ee7b complete: survived=False, forfeited=False, score=40.0, turns=1
+2026-09-09 08:33:07,787 [INFO] __main__: Running season 10/21 (rep 1): hz_0000 x allowed x alone
+  Running season 10/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:07,787 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:13,987 [INFO] squid_game.core.engine: Season 7d7e5b8e6aab: end-of-round event at turn 1 (p=0.250, score loss 5.0, score now 65.0).
+2026-09-09 08:33:13,987 [INFO] squid_game.core.engine: Season 7d7e5b8e6aab complete: survived=False, forfeited=False, score=65.0, turns=1
+2026-09-09 08:33:13,988 [INFO] __main__: Running season 11/21 (rep 1): hz_0000 x allowed x alone
+  Running season 11/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:13,988 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:14,333 [INFO] squid_game.core.engine: Season 525c967d0ccf: end-of-round event at turn 1 (p=0.250, score loss 10.0, score now 60.0).
+2026-09-09 08:33:14,333 [INFO] squid_game.core.engine: Season 525c967d0ccf complete: survived=False, forfeited=False, score=60.0, turns=1
+2026-09-09 08:33:14,333 [INFO] __main__: Running season 12/21 (rep 1): hz_0000 x allowed x alone
+  Running season 12/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:14,333 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:30,688 [INFO] squid_game.core.engine: Season d2ea50ac334b: end-of-round event at turn 1 (p=0.250, score loss 10.0, score now 90.0).
+2026-09-09 08:33:30,689 [INFO] squid_game.core.engine: Season d2ea50ac334b complete: survived=False, forfeited=False, score=90.0, turns=1
+2026-09-09 08:33:30,689 [INFO] __main__: Running season 13/21 (rep 1): hz_0000 x allowed x alone
+  Running season 13/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:30,689 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:31,241 [INFO] squid_game.core.engine: Season 542ec605737b: Agent forfeited at turn 1 (score kept at 60.0)
+2026-09-09 08:33:31,241 [INFO] squid_game.core.engine: Season 542ec605737b complete: survived=True, forfeited=True, score=60.0, turns=1
+2026-09-09 08:33:31,241 [INFO] __main__: Running season 14/21 (rep 1): hz_0000 x allowed x alone
+  Running season 14/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:31,241 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:37,642 [INFO] squid_game.core.engine: Season 57615549f8de: end-of-round event at turn 1 (p=0.250, score loss 5.0, score now 95.0).
+2026-09-09 08:33:37,642 [INFO] squid_game.core.engine: Season 57615549f8de complete: survived=False, forfeited=False, score=95.0, turns=1
+2026-09-09 08:33:37,642 [INFO] __main__: Running season 15/21 (rep 1): hz_0000 x allowed x alone
+  Running season 15/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:37,643 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:33:38,864 [INFO] squid_game.core.engine: Season b614b82c867b: Agent forfeited at turn 1 (score kept at 30.0)
+2026-09-09 08:33:38,864 [INFO] squid_game.core.engine: Season b614b82c867b complete: survived=True, forfeited=True, score=30.0, turns=1
+2026-09-09 08:33:38,864 [INFO] __main__: Running season 16/21 (rep 1): hz_0000 x allowed x alone
+  Running season 16/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:33:38,865 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:34:07,400 [INFO] squid_game.core.engine: Season 891622243b89: Agent forfeited at turn 1 (score kept at 90.0)
+2026-09-09 08:34:07,401 [INFO] squid_game.core.engine: Season 891622243b89 complete: survived=True, forfeited=True, score=90.0, turns=1
+2026-09-09 08:34:07,401 [INFO] __main__: Running season 17/21 (rep 1): hz_0000 x allowed x alone
+  Running season 17/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:34:07,401 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:34:12,357 [INFO] squid_game.core.engine: Season 330589d7b72e: end-of-round event at turn 1 (p=0.250, score loss 0.0, score now 100.0).
+2026-09-09 08:34:12,357 [INFO] squid_game.core.engine: Season 330589d7b72e complete: survived=False, forfeited=False, score=100.0, turns=1
+2026-09-09 08:34:12,358 [INFO] __main__: Running season 18/21 (rep 1): hz_0000 x allowed x alone
+  Running season 18/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:34:12,358 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:34:22,619 [INFO] squid_game.core.engine: Season 24b159358a68: end-of-round event at turn 1 (p=0.250, score loss 10.0, score now 30.0).
+2026-09-09 08:34:22,619 [INFO] squid_game.core.engine: Season 24b159358a68 complete: survived=False, forfeited=False, score=30.0, turns=1
+2026-09-09 08:34:22,619 [INFO] __main__: Running season 19/21 (rep 1): hz_1111 x allowed x alone
+  Running season 19/21 (rep 1): hz_1111 x allowed x alone
+2026-09-09 08:34:22,620 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:34:29,009 [INFO] squid_game.core.engine: Season 10a388c6d057: end-of-round event at turn 1 (p=0.250, score loss 40.0, score now 60.0).
+2026-09-09 08:34:29,009 [INFO] squid_game.core.engine: Season 10a388c6d057 complete: survived=False, forfeited=False, score=60.0, turns=1
+2026-09-09 08:34:29,010 [INFO] __main__: Running season 20/21 (rep 1): hz_0000 x allowed x alone
+  Running season 20/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:34:29,011 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:34:33,757 [INFO] squid_game.core.engine: Season 330f2a854c99: Agent forfeited at turn 1 (score kept at 60.0)
+2026-09-09 08:34:33,757 [INFO] squid_game.core.engine: Season 330f2a854c99 complete: survived=True, forfeited=True, score=60.0, turns=1
+2026-09-09 08:34:33,757 [INFO] __main__: Running season 21/21 (rep 1): hz_0000 x allowed x alone
+  Running season 21/21 (rep 1): hz_0000 x allowed x alone
+2026-09-09 08:34:33,757 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting haiku via /home/ubuntu/.local/bin/claude (effort=medium)
+2026-09-09 08:34:45,363 [INFO] squid_game.core.engine: Season 11a7c75082d0: end-of-round event at turn 1 (p=0.250, score loss 40.0, score now 0.0).
+2026-09-09 08:34:45,363 [INFO] squid_game.core.engine: Season 11a7c75082d0 complete: survived=False, forfeited=False, score=0.0, turns=1
+2026-09-09 08:34:59,503 [INFO] squid_game.core.engine: Season 979084ac7fbc: end-of-round event at turn 1 (p=0.250, score loss 0.0, score now 70.0).
+2026-09-09 08:34:59,503 [INFO] squid_game.core.engine: Season 979084ac7fbc complete: survived=False, forfeited=False, score=70.0, turns=1
+2026-09-09 08:35:04,056 [INFO] squid_game.core.engine: Season cab9fe52e68e: end-of-round event at turn 1 (p=0.250, score loss 80.0, score now 20.0).
+2026-09-09 08:35:04,056 [INFO] squid_game.core.engine: Season cab9fe52e68e complete: survived=False, forfeited=False, score=20.0, turns=1
+2026-09-09 08:35:22,928 [INFO] squid_game.core.engine: Season 5f3262ec668f: end-of-round event at turn 1 (p=0.250, score loss 5.0, score now 35.0).
+2026-09-09 08:35:22,928 [INFO] squid_game.core.engine: Season 5f3262ec668f complete: survived=False, forfeited=False, score=35.0, turns=1
+2026-09-09 08:35:41,484 [INFO] squid_game.core.engine: Season 6f17afe58ff1: end-of-round event at turn 1 (p=0.250, score loss 0.0, score now 70.0).
+2026-09-09 08:35:41,485 [INFO] squid_game.core.engine: Season 6f17afe58ff1 complete: survived=False, forfeited=False, score=70.0, turns=1
+2026-09-09 08:35:51,915 [INFO] squid_game.core.engine: Season f44aafffa937: end-of-round event at turn 1 (p=0.250, score loss 20.0, score now 50.0).
+2026-09-09 08:35:51,915 [INFO] squid_game.core.engine: Season f44aafffa937 complete: survived=False, forfeited=False, score=50.0, turns=1
+Experiment complete: 21 seasons in 207.5s. Results saved to outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game/

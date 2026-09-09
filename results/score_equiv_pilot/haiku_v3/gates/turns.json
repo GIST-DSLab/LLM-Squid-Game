@@ -1,0 +1,864 @@
+[
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "2977cddfed38",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 3,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "330589d7b72e",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 3,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "330f2a854c99",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 3,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 7,
+  "q": 0.7,
+  "reasons": {
+   "3": 7
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "24b159358a68",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 3,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "10a388c6d057",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 3,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 8,
+  "q": 0.8,
+  "reasons": {
+   "3": 7,
+   "1": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "525c967d0ccf",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 3,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 1,
+  "q": 0.1,
+  "reasons": {
+   "3": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "11a7c75082d0",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 3,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 9,
+  "q": 0.9,
+  "reasons": {
+   "3": 9
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "5f3262ec668f",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 3,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "57615549f8de",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 3,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "7cb69f47ee7b",
+  "arm": "threat",
+  "x": null,
+  "lives": 3,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "6f17afe58ff1",
+  "arm": "threat",
+  "x": null,
+  "lives": 3,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "7d7e5b8e6aab",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 3,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "542ec605737b",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 3,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 8,
+  "q": 0.8,
+  "reasons": {
+   "3": 8
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "979084ac7fbc",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 3,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "891622243b89",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 3,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 2,
+  "q": 0.2,
+  "reasons": {
+   "3": 2
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "983eed6c461b",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 3,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 1,
+  "q": 0.1,
+  "reasons": {
+   "3": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "9a4e9e7806f8",
+  "arm": "threat",
+  "x": null,
+  "lives": 3,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "d2ea50ac334b",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 3,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "b614b82c867b",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 3,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 7,
+  "q": 0.7,
+  "reasons": {
+   "3": 6,
+   "1": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "cab9fe52e68e",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 3,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 8,
+  "q": 0.8,
+  "reasons": {
+   "3": 8
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives3/20260908_2332_haiku_signal-game",
+  "session_id": "f44aafffa937",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 3,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "20fca6b22130",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 2,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 6,
+  "q": 0.6,
+  "reasons": {
+   "3": 6
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "115a330ef8ed",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 2,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "05ef76efe892",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 2,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "0f889d323e76",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 2,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "25cdbb5460ab",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 2,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 2,
+  "q": 0.2,
+  "reasons": {
+   "3": 2
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "21cf7ae630bf",
+  "arm": "threat",
+  "x": null,
+  "lives": 2,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 3,
+  "q": 0.3,
+  "reasons": {
+   "3": 2,
+   "1": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "28952da567da",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 2,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 5,
+  "q": 0.5,
+  "reasons": {
+   "3": 5
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "3aa9a006e31f",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 2,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "6b2dbce7c97b",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 2,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "65176f52e021",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 2,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "559a712e18f8",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 2,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "4df5cf8bc86c",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 2,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "ca170b237929",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 2,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "82ef6ce7b404",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 2,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 1,
+  "q": 0.1,
+  "reasons": {
+   "1": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "b60808b363c4",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 2,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 9,
+  "q": 0.9,
+  "reasons": {
+   "3": 8,
+   "1": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "c0af47ea9095",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 2,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 9,
+  "q": 0.9,
+  "reasons": {
+   "3": 9
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "d43497bd49ba",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 2,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 3,
+  "q": 0.3,
+  "reasons": {
+   "3": 3
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "a33dbd66d579",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 2,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 2,
+  "q": 0.2,
+  "reasons": {
+   "3": 2
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "e2dfcc7ba793",
+  "arm": "threat",
+  "x": null,
+  "lives": 2,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 3,
+  "q": 0.3,
+  "reasons": {
+   "1": 1,
+   "3": 2
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "db2e9b5cac35",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 2,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 0,
+  "q": 0.0,
+  "reasons": {}
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives2/20260908_2358_haiku_signal-game",
+  "session_id": "f1dfeb6a92f3",
+  "arm": "threat",
+  "x": null,
+  "lives": 2,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 1,
+  "q": 0.1,
+  "reasons": {
+   "1": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "0993417d6283",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 1,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "54df259983b9",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 1,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "279bdeb5d6c4",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 1,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "59f5a775f6e9",
+  "arm": "threat",
+  "x": null,
+  "lives": 1,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 4,
+  "q": 0.4,
+  "reasons": {
+   "1": 3,
+   "3": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "1850572d04cb",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 1,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 1,
+  "q": 0.1,
+  "reasons": {
+   "3": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "5f33f2ff8827",
+  "arm": "threat",
+  "x": null,
+  "lives": 1,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 2,
+  "q": 0.2,
+  "reasons": {
+   "1": 1,
+   "3": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "74575a48d9b0",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 1,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 5,
+  "q": 0.5,
+  "reasons": {
+   "3": 5
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "7538cb81b22e",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 1,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 2,
+  "q": 0.2,
+  "reasons": {
+   "3": 1,
+   "1": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "82cdd1a62580",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 1,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "83447075e70b",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 1,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "1": 1,
+   "3": 9
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "8e08264bc976",
+  "arm": "ruler",
+  "x": 40.0,
+  "lives": 1,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "875837c32a5b",
+  "arm": "threat",
+  "x": null,
+  "lives": 1,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 1,
+  "q": 0.1,
+  "reasons": {
+   "3": 1
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "b48bbdcd8f9a",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 1,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 5,
+  "q": 0.5,
+  "reasons": {
+   "1": 1,
+   "3": 4
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "d6dc112c1b0c",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 1,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 4,
+  "q": 0.4,
+  "reasons": {
+   "3": 4
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "daa0d463bb6e",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 1,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "d27751618454",
+  "arm": "ruler",
+  "x": 80.0,
+  "lives": 1,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "abe0f8ee89f1",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 1,
+  "score": 30.0,
+  "n_valid": 10,
+  "n_forfeit": 2,
+  "q": 0.2,
+  "reasons": {
+   "3": 2
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "ae94d1eaeb1f",
+  "arm": "ruler",
+  "x": 0.0,
+  "lives": 1,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 2,
+  "q": 0.2,
+  "reasons": {
+   "3": 2
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "f05753ad940e",
+  "arm": "ruler",
+  "x": 20.0,
+  "lives": 1,
+  "score": 90.0,
+  "n_valid": 10,
+  "n_forfeit": 10,
+  "q": 1.0,
+  "reasons": {
+   "3": 10
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "f8b9c43512b3",
+  "arm": "ruler",
+  "x": 10.0,
+  "lives": 1,
+  "score": 60.0,
+  "n_valid": 10,
+  "n_forfeit": 7,
+  "q": 0.7,
+  "reasons": {
+   "3": 7
+  }
+ },
+ {
+  "run": "outputs/2026-09-09/score_equiv_probe_haiku_v3/lives1/20260909_0034_haiku_signal-game",
+  "session_id": "eb148ba88be7",
+  "arm": "ruler",
+  "x": 5.0,
+  "lives": 1,
+  "score": 90.0,
+  "n_valid": 9,
+  "n_forfeit": 2,
+  "q": 0.2222222222222222,
+  "reasons": {
+   "3": 2
+  }
+ }
+]
