@@ -272,9 +272,9 @@ class TestToLongDataframe:
         # → 39 (2026-09-06, underdetermined turns: +underdetermined
         # +n_candidate_actions +rule_consistent_with_clues, the columns
         # every accuracy aggregate has to condition on)
-        # → 42 (2026-09-08, end-of-round event roll: +event_p
-        # +event_occurred +event_score_loss_applied).
-        assert len(LONG_FORMAT_COLUMNS) == 42
+        # → 43 (2026-09-09, ransom decision point: +ransom_offered
+        # +ransom_price +ransom_decision +ransom_paid).
+        assert len(LONG_FORMAT_COLUMNS) == 43
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""

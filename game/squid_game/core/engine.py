@@ -20,7 +20,7 @@ from squid_game.core.forfeit_layer import (
     ForfeitLayer,
     describe_reward_schedule,
 )
-from squid_game.core.carrot import resolve_carrot
+from squid_game.core.carrot import carrot_vocabulary, resolve_carrot
 from squid_game.core.framing import FramingManager
 from squid_game.core.measurement import MeasurementRecorder
 from squid_game.core.legacy.risk_choice_layer import RiskChoiceLayer
@@ -33,10 +33,10 @@ from squid_game.core.peer_death import (
 )
 from squid_game.core.turn_conditions import threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
-from squid_game.core.event_roll import describe_event_roll
+from squid_game.core.ransom import describe_ransom_rule
 from squid_game.models.config import (
     ConfidenceCallConfig,
-    EventRollConfig,
+    RansomConfig,
     ForfeitLayerConfig,
     HazardRampConfig,
     LivesConfig,
@@ -85,7 +85,7 @@ class GameEngine:
         score_policy: ScorePolicyConfig | None = None,
         carrot: str | None = None,
         flagship_pull: bool | None = None,
-        event_roll: "EventRollConfig | None" = None,
+        ransom: "RansomConfig | None" = None,
         title_line: bool = False,
     ) -> None:
         """Initialize the game engine.
@@ -236,11 +236,15 @@ class GameEngine:
         # context. Declarative only: no death roll is added anywhere for
         # it.
         self._hazard_ramp = hazard_ramp
-        # End-of-round event roll (2026-09-08, score-equivalent index).
-        # Run-level. The manager makes the draw; the engine applies the
-        # exit (session ends, ruler deduction) and records ``ended_by``.
-        self._event_roll = (
-            event_roll if event_roll is not None else EventRollConfig()
+        # Ransom decision point (2026-09-09, score-equivalent index).
+        # Run-level switch; the price is per-cell, so the effective price
+        # is resolved here once and used by both the prompt (the intro's
+        # rule sentence) and the manager (the deduction).
+        self._ransom = ransom if ransom is not None else RansomConfig()
+        self._ransom_price = (
+            self._config.ransom_price
+            if self._config.ransom_price is not None
+            else self._ransom.price
         )
         self._title_line = bool(title_line)
         # Score policy (2026-09-08). Held whole rather than as two
@@ -316,16 +320,20 @@ class GameEngine:
             # shares it.
             carrot=self._carrot,
             score_policy=self._score_policy,
-            # End-of-round event roll (2026-09-08): the intro's schedule
-            # sentence and the ruler arm's per-cell event sentence.
-            event_roll_sentence=(
-                describe_event_roll(
-                    self._event_roll.schedule, lives_total=self._lives.total
+            # Ransom (2026-09-09): the intro's statement of the price.
+            # What DECLINING means is stated by the framing, not here --
+            # that is the one place the two arms differ.
+            ransom_sentence=(
+                describe_ransom_rule(
+                    self._ransom_price,
+                    starting_score=self._config.task_config.starting_score,
+                    reward=self._forfeit_layer_config.base_reward,
+                    score_noun=carrot_vocabulary(self._carrot)["score_noun"],
+                    record_subject=carrot_vocabulary(self._carrot)["record_subject"],
                 )
-                if self._event_roll.enabled
+                if self._ransom.enabled
                 else None
             ),
-            event_score_loss=self._config.event_score_loss,
             title_line=self._title_line,
             # The engine is the only object holding both the framing and
             # the forfeit-layer block, so the geometric-schedule sentence
@@ -420,8 +428,8 @@ class GameEngine:
                 hazard_ramp=self._hazard_ramp,
                 score_policy=self._score_policy,
                 carrot=self._carrot,
-                event_roll=self._event_roll,
-                event_score_loss=self._config.event_score_loss,
+                ransom=self._ransom,
+                ransom_price=self._ransom_price,
             )
         else:
             legacy_mgr = TurnManager(
@@ -506,7 +514,8 @@ class GameEngine:
         # How the season ended (2026-09-08). Set on every break below;
         # 'completed' if the loop runs out of turns.
         ended_by: str = "completed"
-        event_at_turn: int | None = None
+        ransom_paid_total: float = 0.0
+        ransom_offers: int = 0
 
         for g in range(total_turns):
             if not game_state.is_active:
@@ -599,6 +608,13 @@ class GameEngine:
                 ended_by = "forfeit"
                 break
 
+            # Ransom ledger (2026-09-09). Accumulated whether or not the
+            # turn ended the session: a DECLINE is an offer too, and the
+            # denominator of the acceptance rate needs it.
+            if turn_result.ransom_offered:
+                ransom_offers += 1
+                ransom_paid_total += turn_result.ransom_paid
+
             if unified_mgr is not None:
                 # Unified flow: TurnResult already carries reward + died,
                 # death roll was made inside the manager (or skipped in
@@ -609,16 +625,14 @@ class GameEngine:
                     task_cfg.score_floor,
                     elimination_keeps=self._score_policy.elimination_keeps,
                 ):
-                    if turn_result.event_occurred:
-                        ended_by = "event"
-                        event_at_turn = turn_num
+                    if turn_result.ransom_decision == "DECLINE":
+                        ended_by = "declined"
                         logger.info(
-                            "Season %s: end-of-round event at turn %d "
-                            "(p=%.3f, score loss %.1f, score now %.1f).",
+                            "Season %s: declined the ransom at turn %d "
+                            "(price %.1f, score kept at %.1f).",
                             season_id,
                             turn_num,
-                            turn_result.event_p or 0.0,
-                            turn_result.event_score_loss_applied,
+                            turn_result.ransom_price or 0.0,
                             game_state.cumulative_score,
                         )
                     else:
@@ -700,15 +714,16 @@ class GameEngine:
         if lives_enabled:
             result.lives_at_end = game_state.lives_remaining
             # ``eliminated`` keeps its 2026-09-03 meaning: the counter ran
-            # out. An end-of-round event also sets ``is_alive=False`` but
+            # out. Declining the ransom also sets ``is_alive=False`` but
             # is its own exit, recorded in ``ended_by``.
             result.eliminated = (
-                not game_state.is_alive and ended_by != "event"
+                not game_state.is_alive and ended_by != "declined"
             )
         result.ended_by = ended_by
-        result.event_at_turn = event_at_turn
         result.cell_id = self._config.cell_id
-        result.event_score_loss = self._config.event_score_loss
+        result.ransom_price = self._ransom_price if self._ransom.enabled else None
+        result.ransom_paid_total = ransom_paid_total
+        result.ransom_offers = ransom_offers
 
         # --- 5b. Phase O Unit 14 — attach forfeit-layer self-report ---
         # Pulled from the unified manager after the turn loop ends.
@@ -754,11 +769,13 @@ class GameEngine:
            counter is left alone). This runs before the ``died`` branch
            so a season that ends on its last life still records the
            zero.
-        1. Credit ``reward_received`` to ``state.cumulative_score``,
-           clamped at ``score_floor`` to prevent negative balances.
-           Note: the manager already records ``reward_received=0.0``
-           on death turns, so adding it post-hoc is safe even when
-           ``died=True``.
+        1. Credit ``reward_received`` and debit ``ransom_paid`` to
+           ``state.cumulative_score``, clamped at ``score_floor`` to
+           prevent negative balances. Note: the manager already records
+           ``reward_received=0.0`` on death turns, so adding it post-hoc
+           is safe even when ``died=True``, and ``ransom_paid`` is 0.0
+           on every turn that reached no decision point. The manager
+           recorded the same arithmetic in ``cumulative_after``.
         2. If ``died=True`` (only possible when Phantom Death mode is
            OFF), flip ``is_alive`` to False and apply the ELIMINATION
            half of the score policy: ``elimination_keeps=True`` (the
@@ -782,28 +799,13 @@ class GameEngine:
         if result.lives_after is not None:
             state.lives_remaining = result.lives_after
         state.cumulative_score = max(
-            state.cumulative_score + result.reward_received,
+            state.cumulative_score + result.reward_received - result.ransom_paid,
             score_floor,
         )
         if result.died:
             state.is_alive = False
             if not elimination_keeps:
                 state.cumulative_score = elimination_reset_score(score_floor)
-            return True
-        if result.event_occurred:
-            # End-of-round event (2026-09-08). The round's reward was
-            # credited above (the answer was given before the roll); the
-            # event then ends the session under the elimination half of
-            # the score policy and, in a ruler cell, deducts the stated
-            # loss. The manager recorded the same arithmetic in
-            # ``cumulative_after``.
-            state.is_alive = False
-            if not elimination_keeps:
-                state.cumulative_score = elimination_reset_score(score_floor)
-            state.cumulative_score = max(
-                state.cumulative_score - result.event_score_loss_applied,
-                score_floor,
-            )
             return True
         return False
 

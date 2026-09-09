@@ -48,7 +48,6 @@ member to its folder.
 from __future__ import annotations
 
 from squid_game.core.carrot import carrot_vocabulary, resolve_carrot
-from squid_game.core.event_roll import describe_score_loss_event
 from squid_game.models.config import ScorePolicyConfig
 from squid_game.models.enums import Difficulty, ForfeitCondition, Framing
 from squid_game.models.state import TurnContext
@@ -131,20 +130,17 @@ class FramingManager:
         reward_schedule: str | None = None,
         carrot: str | None = None,
         flagship_pull: bool | None = None,
-        event_roll_sentence: str | None = None,
-        event_score_loss: "float | str | None" = None,
+        ransom_sentence: str | None = None,
         title_line: bool = False,
     ) -> None:
         """Bind a framing to its template.
 
-        ``event_roll_sentence`` (2026-09-08) is the intro's statement of
-        the end-of-round roll schedule (``core.event_roll
-        .describe_event_roll``), or ``None`` for every run without the
-        roll. ``event_score_loss`` is the ruler arm's per-cell switch:
-        when set, ``threat_type/_frame.j2`` renders the score-loss event
-        sentence under ``=== Event ===`` (``core.event_roll
-        .describe_score_loss_event``). Both default to ``None`` so every
-        other render is byte-identical.
+        ``ransom_sentence`` (2026-09-09) is the intro's statement of the
+        decision point and its price (``core.ransom
+        .describe_ransom_rule``), or ``None`` for every run without the
+        ransom, which renders byte-identically. What DECLINING means is
+        NOT stated here: the framing's own ``=== Event ===`` block says
+        it, which is the single place the design's two arms differ.
 
         Args:
             framing: The active framing condition.
@@ -241,8 +237,7 @@ class FramingManager:
         )
         self._reward_schedule = reward_schedule
         self._carrot = resolve_carrot(carrot=carrot, flagship_pull=flagship_pull)
-        self._event_roll_sentence = event_roll_sentence
-        self._event_score_loss = event_score_loss
+        self._ransom_sentence = ransom_sentence
         # 2026-09-09: the "=== LLM Squid Game ===" title line, removed on
         # 2026-09-06 and restored as a run-level switch (off = 09-07 bytes).
         self._title_line = title_line
@@ -284,7 +279,14 @@ class FramingManager:
             # ``true_baseline`` render the remaining-lives line from
             # these. They stay ``None`` on a legacy (non-lives) run, and
             # the templates that predate the mechanic ignore them.
-            lives_remaining=context.lives_remaining,
+            # No lives line under the ransom: the counter is an
+            # implementation detail there (exactly one life, spent by the
+            # wrong answer that opens the decision point) and the intro
+            # never mentions it, so a status line naming it would refer
+            # to nothing the agent has been told about.
+            lives_remaining=(
+                None if self._ransom_sentence else context.lives_remaining
+            ),
             lives_total=context.lives_total,
             threat_level=context.threat_level,
             # Score rule (fixed 2026-09-07): running the counter out
@@ -323,20 +325,11 @@ class FramingManager:
             # outright because their carrot is frozen text.
             carrot=self._carrot,
             carrot_vocab=carrot_vocabulary(self._carrot),
-            # End-of-round event roll (2026-09-08). The intro states the
-            # schedule; the hz frame states the ruler arm's event. Both
+            # Ransom (2026-09-09). The intro states the price; the
+            # framing's own event block states what declining means.
             # ``None`` on every other run, which renders as before.
-            event_roll_sentence=self._event_roll_sentence,
-            event_score_loss=self._event_score_loss,
+            ransom_sentence=self._ransom_sentence,
             title_line=self._title_line,
-            event_score_loss_sentence=(
-                describe_score_loss_event(
-                    self._event_score_loss,
-                    record_subject=carrot_vocabulary(self._carrot)["record_subject"],
-                )
-                if self._event_score_loss is not None
-                else None
-            ),
         )
 
 

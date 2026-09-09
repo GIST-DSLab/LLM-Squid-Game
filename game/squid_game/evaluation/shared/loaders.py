@@ -304,11 +304,12 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     "lives_after",
     "life_lost",
     "peer_death_announced",
-    # End-of-round event roll (2026-09-08, score-equivalent index).
-    # TurnResult defaults (None / False / 0.0) on every trace without it.
-    "event_p",
-    "event_occurred",
-    "event_score_loss_applied",
+    # Ransom decision point (2026-09-09, score-equivalent index).
+    # TurnResult defaults (False / None / 0.0) on every trace without it.
+    "ransom_offered",
+    "ransom_price",
+    "ransom_decision",
+    "ransom_paid",
     # Task 11 extension — external-benchmark Y-axis manipulation checks
     # (band-controlled accuracy + p_self Brier calibration; see
     # ``evaluation.shared.benchmark_checks``). ``band`` is populated from
@@ -430,11 +431,10 @@ def to_long_dataframe(
                     "lives_after": turn.lives_after,
                     "life_lost": turn.life_lost,
                     "peer_death_announced": turn.peer_death_announced,
-                    "event_p": getattr(turn, "event_p", None),
-                    "event_occurred": getattr(turn, "event_occurred", False),
-                    "event_score_loss_applied": getattr(
-                        turn, "event_score_loss_applied", 0.0
-                    ),
+                    "ransom_offered": getattr(turn, "ransom_offered", False),
+                    "ransom_price": getattr(turn, "ransom_price", None),
+                    "ransom_decision": getattr(turn, "ransom_decision", None),
+                    "ransom_paid": getattr(turn, "ransom_paid", 0.0),
                     "puzzle_turn": turn.task_metadata.get("puzzle_turn"),
                     "rule_shape": turn.task_metadata.get("rule_shape"),
                     "n_clues": turn.task_metadata.get("n_clues"),
@@ -506,7 +506,8 @@ SEASON_SUMMARY_COLUMNS: tuple[str, ...] = (
     # 'event' / 'death' / 'completed'; None on older records) and the
     # event's turn.
     "ended_by",
-    "event_at_turn",
+    "ransom_offers",
+    "ransom_paid_total",
     "total_tokens_sum",
     "thinking_tokens_sum",
     "mean_rule_match_score",
@@ -579,7 +580,8 @@ def to_season_summary_dataframe(
                 "forfeited": season.forfeited,
                 "forfeited_at_turn": season.forfeited_at_turn,
                 "ended_by": getattr(season, "ended_by", None),
-                "event_at_turn": getattr(season, "event_at_turn", None),
+                "ransom_offers": getattr(season, "ransom_offers", 0),
+                "ransom_paid_total": getattr(season, "ransom_paid_total", 0.0),
                 "total_tokens_sum": total_tokens_sum,
                 "thinking_tokens_sum": thinking_tokens_sum,
                 "mean_rule_match_score": mean_rule_match,

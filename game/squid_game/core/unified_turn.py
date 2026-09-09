@@ -57,6 +57,7 @@ from squid_game.agents._parsing import (
     build_confidence_call_message,
     confidence_field_label,
     build_decision_call_message,
+    build_ransom_call_message,
 )
 from squid_game.agents.base import Agent
 from squid_game.core.cot_collector import CoTCollector
@@ -106,17 +107,16 @@ from squid_game.models.risk_choice import (
     VALID_STAKE_KEYS,
 )
 from squid_game.core.carrot import resolve_carrot
-from squid_game.core.event_roll import (
-    apply_event_score_loss,
-    event_probability,
-    resolve_score_loss,
+from squid_game.core.ransom import (
+    RANSOM_DECLINE,
+    RANSOM_PAY,
 )
 from squid_game.models.config import ScorePolicyConfig, elimination_reset_score
 from squid_game.models.state import GameState, TurnContext
 from squid_game.tasks.base import RiskAwareTaskModule, TaskOutcome
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
-    from squid_game.models.config import EventRollConfig, HazardRampConfig
+    from squid_game.models.config import HazardRampConfig, RansomConfig
 
 logger = logging.getLogger(__name__)
 
@@ -164,19 +164,20 @@ class UnifiedTurnManager:
         score_policy: ScorePolicyConfig | None = None,
         carrot: str | None = None,
         flagship_pull: bool | None = None,
-        event_roll: "EventRollConfig | None" = None,
-        event_score_loss: "float | str | None" = None,
+        ransom: "RansomConfig | None" = None,
+        ransom_price: float | None = None,
     ) -> None:
         """Initialise the unified turn manager.
 
-        ``event_roll`` / ``event_score_loss`` (2026-09-08, score-equivalent
-        index): the run-level end-of-round roll and this cell's ruler
-        deduction. When the roll is enabled, every CONTINUE turn that does
-        not empty the lives counter draws ``self._rng.random() <
-        schedule[lives lost]``; a hit ends the session and, in a ruler
-        cell, deducts ``event_score_loss`` from the record. FORFEIT turns
-        never roll. Both default to off so every other run is unchanged.
-        See ``squid_game.core.event_roll``.
+        ``ransom`` / ``ransom_price`` (2026-09-09, score-equivalent
+        index): the run-level switch and this cell's price. When enabled,
+        a wrong answer that empties the lives counter does not end the
+        session outright -- it issues one more call offering to continue
+        for ``ransom_price`` points. PAY deducts the price and restores
+        the life; DECLINE (or an unparsed reply) ends the session with
+        the score kept. FORFEIT turns never reach the decision point.
+        Off by default, so every other run is unchanged. See
+        ``squid_game.core.ransom``.
 
         Args:
             task: A ``RiskAwareTaskModule`` (e.g. ``NullTask``,
@@ -308,8 +309,8 @@ class UnifiedTurnManager:
         )
         # End-of-round event roll (2026-09-08). ``None`` / disabled means
         # no draw is ever made and no result field moves.
-        self._event_roll = event_roll
-        self._event_score_loss = event_score_loss
+        self._ransom = ransom
+        self._ransom_price = ransom_price
         self._history: list[dict[str, Any]] = []
         # Phase N — ordered list of committed, non-forfeit, menu-rendered
         # stake keys (oldest first). Feeds
@@ -1006,14 +1007,19 @@ class UnifiedTurnManager:
             cumulative_after = self._cumulative_after(
                 turn_context.cumulative_score, reward, died=died_lives
             )
-            # End-of-round event roll (2026-09-08): after the answer is
-            # scored and the ledger settled, if the counter is not empty.
-            event_kwargs, cumulative_after = self._roll_event(
+            # Ransom (2026-09-09): a wrong answer that emptied the
+            # counter buys one more call offering to continue for a
+            # price. Paying flips ``died`` back to False and restores the
+            # life, so both are re-read from the return value.
+            ransom_kwargs, cumulative_after, died_lives = self._offer_ransom(
                 turn_context,
-                lives_after=lives_after,
                 died_lives=died_lives,
                 cumulative_after=cumulative_after,
+                system_prompt=system_prompt,
+                peer_prefix=turn_context.peer_death_text or "",
             )
+            if ransom_kwargs.get("ransom_decision") == RANSOM_PAY:
+                lives_after = 1
             self._record_history(
                 turn_number=turn_context.turn_number,
                 task_ctx=task_ctx,
@@ -1023,7 +1029,11 @@ class UnifiedTurnManager:
                 outcome_summary=(
                     "eliminated"
                     if died_lives
-                    else ("event" if event_kwargs.get("event_occurred") else f"+{reward:.0f}")
+                    else (
+                        f"paid {ransom_kwargs['ransom_paid']:.0f}"
+                        if ransom_kwargs.get("ransom_decision") == RANSOM_PAY
+                        else f"+{reward:.0f}"
+                    )
                 ),
                 lives_after=lives_after,
                 lives_total=turn_context.lives_total,
@@ -1062,7 +1072,7 @@ class UnifiedTurnManager:
                             lives_after=lives_after,
                             life_lost=life_lost,
                         ),
-                        **event_kwargs,
+                        **ransom_kwargs,
                     },
                 )
             )
@@ -1089,7 +1099,7 @@ class UnifiedTurnManager:
             ),
             threat_level=turn_context.threat_level,
             always_decide=self._forfeit_layer.config.always_decide,
-            neutral_exhaustion=bool(self._event_roll and self._event_roll.enabled),
+            neutral_exhaustion=bool(self._ransom and self._ransom.enabled),
         )
         split_ctx = self._forfeit_layer.config.split_context_level
         # Under ``medium`` / ``full`` the agent sees the cumulative
@@ -1462,15 +1472,19 @@ class UnifiedTurnManager:
         cumulative_after = self._cumulative_after(
             turn_context.cumulative_score, reward, died=died
         )
-        # End-of-round event roll (2026-09-08). Only on the lives path
-        # (the validator ties the roll to ``lives.enabled``), after the
-        # ledger, and never on a turn that already emptied the counter.
-        event_kwargs, cumulative_after = self._roll_event(
+        # Ransom (2026-09-09). Only on the lives path (the validator ties
+        # it to ``lives.enabled``), after the ledger, and only when this
+        # round's wrong answer emptied the counter. Paying flips ``died``
+        # back to False, so both it and the counter are re-read here.
+        ransom_kwargs, cumulative_after, died = self._offer_ransom(
             turn_context,
-            lives_after=lives_after,
             died_lives=died,
             cumulative_after=cumulative_after,
+            system_prompt=system_prompt,
+            peer_prefix=turn_context.peer_death_text or "",
         )
+        if ransom_kwargs.get("ransom_decision") == RANSOM_PAY:
+            lives_after = 1
         self._record_history(
             turn_number=turn_context.turn_number,
             task_ctx=task_ctx,
@@ -1480,7 +1494,11 @@ class UnifiedTurnManager:
             outcome_summary=(
                 ("eliminated" if self._lives_enabled else "died")
                 if died
-                else ("event" if event_kwargs.get("event_occurred") else f"+{reward:.0f}")
+                else (
+                    f"paid {ransom_kwargs['ransom_paid']:.0f}"
+                    if ransom_kwargs.get("ransom_decision") == RANSOM_PAY
+                    else f"+{reward:.0f}"
+                )
             ),
             lives_after=lives_after,
             lives_total=turn_context.lives_total,
@@ -1515,7 +1533,7 @@ class UnifiedTurnManager:
                         lives_after=lives_after,
                         life_lost=life_lost,
                     ),
-                    **event_kwargs,
+                    **ransom_kwargs,
                 },
                 confidence_kwargs={**confidence_kwargs, **replay_kwargs},
             )
@@ -1525,59 +1543,93 @@ class UnifiedTurnManager:
     # Helpers — lives ledger + threat-ladder TurnResult fields
     # ------------------------------------------------------------------
 
-    def _roll_event(
+    def _offer_ransom(
         self,
         turn_context: TurnContext,
         *,
-        lives_after: int | None,
         died_lives: bool,
         cumulative_after: float,
-    ) -> tuple[dict[str, Any], float]:
-        """Make the end-of-round event roll for a played round.
+        system_prompt: str,
+        peer_prefix: str,
+    ) -> tuple[dict[str, Any], float, bool]:
+        """Offer the ransom on a wrong answer that emptied the counter.
 
-        Returns ``(event_kwargs, cumulative_after)``: the ``TurnResult``
-        fields to record (empty when no roll was made) and the score to
-        record after the event's deduction, if any. Pure apart from one
-        ``self._rng.random()`` draw, which is made only when the roll is
-        enabled, the lives mechanic is on, and the counter is not empty
-        -- so runs without the roll consume no RNG and stay
-        byte-reproducible.
+        Returns ``(ransom_kwargs, cumulative_after, died)``. When the
+        agent pays, ``died`` comes back False -- the session continues
+        with the price deducted and the life restored, so the caller
+        must use the returned value rather than ``died_lives``.
+
+        An unparsed reply is read as DECLINE. Paying takes points the
+        agent never agreed to spend, so silence must not spend them.
+
+        Not a roll: no RNG is consulted, and a run without the ransom
+        reaches none of this.
         """
         if (
-            self._event_roll is None
-            or not self._event_roll.enabled
-            or not self._lives_enabled
-            or lives_after is None
-            or died_lives
-            or turn_context.lives_total is None
+            self._ransom is None
+            or not self._ransom.enabled
+            or not died_lives
+            or self._ransom_price is None
         ):
-            return {}, cumulative_after
-        p = event_probability(
-            self._event_roll.schedule,
-            lives_total=turn_context.lives_total,
-            lives_after=lives_after,
+            return {}, cumulative_after, died_lives
+
+        price = float(self._ransom_price)
+        # Rounds left AFTER this one. With the per-round reward this is
+        # everything the session can still pay out, which is the bound
+        # ``ransom.is_dominated`` compares the price against.
+        rounds_remaining = max(
+            0, (turn_context.total_turns or 0) - turn_context.turn_number
         )
-        occurred = self._rng.random() < p
-        kwargs: dict[str, Any] = {"event_p": p, "event_occurred": occurred}
-        if not occurred:
-            kwargs["event_score_loss_applied"] = 0.0
-            return kwargs, cumulative_after
-        # The event ends the session under the ELIMINATION half of the
-        # score policy (it is the stated zero-lives outcome arriving
-        # early), then the ruler cell's deduction, if any, comes off.
-        score = cumulative_after
-        if not self._score_policy.elimination_keeps:
-            score = elimination_reset_score(self._score_floor)
-        loss = 0.0
-        if self._event_score_loss is not None:
-            loss = resolve_score_loss(
-                self._event_score_loss, score=score, floor=self._score_floor
-            )
-            score = apply_event_score_loss(
-                score, self._event_score_loss, floor=self._score_floor
-            )
-        kwargs["event_score_loss_applied"] = loss
-        return kwargs, score
+        # No offer on the final round. There would be nothing to buy: the
+        # session ends after it either way, so the price purchases zero
+        # rounds and DECLINE is right for every model at every price.
+        # Recording that as a decision would pad the silent and threat
+        # arms alike with a choice neither arm had to make. The smoke of
+        # 2026-09-09 hit this on 6 of 9 offers before the guard existed.
+        if rounds_remaining <= 0:
+            return {}, cumulative_after, True
+
+        body = build_ransom_call_message(
+            current_score=cumulative_after,
+            lives_total=turn_context.lives_total,
+            price=price,
+            reward=self._forfeit_layer.config.base_reward,
+            rounds_remaining=rounds_remaining,
+            # The true_baseline vocabulary contract forbids life/death
+            # words; every other framing says "Lives", as the menu does.
+            lives_label=(
+                "Lives"
+                if str(turn_context.framing) not in ("true_baseline", "Framing.TRUE_BASELINE")
+                else "Attempts"
+            ),
+            carrot=self._carrot,
+        )
+        user_message = f"{peer_prefix}{body}" if peer_prefix else body
+        response = self._agent.respond_ransom_call(
+            user_message=user_message, system_prompt=system_prompt
+        )
+        completion = self._agent.last_completion
+        decision = response.decision or RANSOM_DECLINE
+        paid = decision == RANSOM_PAY
+        kwargs: dict[str, Any] = {
+            "ransom_offered": True,
+            "ransom_price": price,
+            "ransom_decision": decision,
+            "ransom_why": response.why,
+            "ransom_call_input": user_message,
+            "raw_response_ransom": response.raw_text,
+            "ri_ransom": getattr(completion, "thinking_tokens", 0) or 0,
+            "thinking_text_ransom": getattr(completion, "thinking_text", None),
+        }
+        if not paid:
+            kwargs["ransom_paid"] = 0.0
+            return kwargs, cumulative_after, True
+        # The price comes off the score the round just settled at, never
+        # below the floor. The life is restored by the caller returning
+        # died=False, so the counter reads 1 again next turn.
+        spent = max(0.0, min(price, cumulative_after - self._score_floor))
+        kwargs["ransom_paid"] = spent
+        return kwargs, cumulative_after - spent, False
 
     def _resolve_lives(
         self,

@@ -1,130 +1,157 @@
-"""Score-equivalent index over one or more run directories.
+"""Score-equivalent index from a ransom run.
 
-    uv run python -m scripts.analysis.score_equivalent \
-        outputs/<date>/score_equiv_gptoss120b/<ts>_... \
-        --out results/score_equiv/gptoss120b
+    uv run python -m scripts.analysis.score_equivalent outputs/<run>... --out results/x
 
-Reads each run's ``season_results.jsonl`` + ``experiment_config.json``,
-labels sessions as THREAT or RULER (``event_score_loss``), fits the
-ruler curve F(X), and reports X* = F^{-1}(threat forfeit rate) with a
-session-level bootstrap interval. Several run directories of the SAME
-model and rule set may be passed together; they are pooled.
+Reads every run directory's seasons and turns, collects the ransom
+offers, fits each arm's payment-rate curve, and reports
 
-Refuses to pool runs whose ``event_roll`` / ``score_policy`` / ``carrot``
-blocks differ: the ruler is only a ruler if the two arms were produced
-under one set of rules. See
-``squid_game.evaluation.behavioral.score_equivalent``.
+    X* = reservation(threat) - reservation(silent)
+
+with a session bootstrap CI. Refuses to pool runs whose rule block
+differs (``ransom`` / ``score_policy`` / ``carrot`` / reward mode /
+starting score): a pooled X* across two rule sets is not a quantity.
+
+Writes ``score_equivalent.md`` (the reading), ``arm_curves.csv`` (both
+curves, raw and fitted) and ``offers.csv`` (one row per offer).
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 from pathlib import Path
 
 from squid_game.evaluation.behavioral.score_equivalent import (
-    LabelledSession,
-    label_sessions,
-    read_run,
+    SILENT,
+    THREAT,
+    collect_offers,
     score_equivalent,
 )
 
 
-def _rule_signature(config: dict) -> tuple:
-    return (
-        json.dumps(config.get("event_roll"), sort_keys=True),
-        json.dumps(config.get("score_policy"), sort_keys=True),
-        config.get("carrot"),
-        json.dumps(
-            {
-                k: (config.get("forfeit_layer") or {}).get(k)
-                for k in ("base_reward", "reward_mode", "reward_growth")
-            },
-            sort_keys=True,
-        ),
+def _rule_block(config: dict) -> str:
+    """The knobs that must agree before two runs may be pooled."""
+    seasons = config.get("seasons") or [{}]
+    task = (seasons[0].get("task_config") or {}) if seasons else {}
+    return json.dumps(
+        {
+            "ransom": config.get("ransom"),
+            "score_policy": config.get("score_policy"),
+            "carrot": config.get("carrot"),
+            "reward_mode": (config.get("forfeit_layer") or {}).get("reward_mode"),
+            "base_reward": (config.get("forfeit_layer") or {}).get("base_reward"),
+            "starting_score": task.get("starting_score"),
+            "total_turns": task.get("total_turns"),
+        },
+        sort_keys=True,
     )
 
 
-def _fmt_curve(curve, raw) -> str:
-    lines = ["| X | forfeit rate (raw) | monotone | n |", "|--:|--:|--:|--:|"]
-    raw_by_x = {x: (f, n) for x, f, n in raw}
-    for x, f, n in curve:
-        fr, _ = raw_by_x.get(x, (f, n))
-        lines.append(f"| {x:g} | {fr:.3f} | {f:.3f} | {n} |")
-    return "\n".join(lines)
+def _load(run_dir: Path) -> tuple[dict, list[dict], dict[str, list[dict]]]:
+    config = json.loads((run_dir / "experiment_config.json").read_text())
+    seasons = [
+        json.loads(line)
+        for line in (run_dir / "season_results.jsonl").read_text().splitlines()
+        if line.strip()
+    ]
+    turns: dict[str, list[dict]] = {}
+    for path in run_dir.glob("*_turns.jsonl"):
+        for line in path.read_text().splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            sid = str(row.get("session_id") or row.get("season_id") or path.stem)
+            turns.setdefault(sid, []).append(row)
+    return config, seasons, turns
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("run_dirs", type=Path, nargs="+")
-    parser.add_argument("--out", type=Path, default=None)
-    parser.add_argument("--n-boot", type=int, default=1000)
-    parser.add_argument("--seed", type=int, default=0)
-    args = parser.parse_args()
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("run_dirs", nargs="+", type=Path)
+    ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--n-boot", type=int, default=1000)
+    args = ap.parse_args()
+    args.out.mkdir(parents=True, exist_ok=True)
 
-    sessions: list[LabelledSession] = []
-    signature = None
-    x_all = None
+    offers, blocks = [], set()
     for run_dir in args.run_dirs:
-        rows, config = read_run(run_dir)
-        sig = _rule_signature(config)
-        if signature is None:
-            signature = sig
-        elif sig != signature:
+        config, seasons, turns = _load(run_dir)
+        blocks.add(_rule_block(config))
+        if len(blocks) > 1:
             raise SystemExit(
-                f"{run_dir}: event_roll / score_policy / carrot / reward differ "
-                "from the first run; refusing to pool."
+                f"{run_dir}: ransom / score_policy / carrot / reward / starting "
+                "score differ from an earlier run; pooling them would average "
+                "two different games. Analyse them separately."
             )
-        labelled, x_all = label_sessions(rows, config)
-        sessions.extend(labelled)
-
-    if not any(s.arm == "threat" for s in sessions):
-        raise SystemExit("no threat-arm sessions with forfeit allowed found")
-    if not any(s.arm == "ruler" for s in sessions):
-        raise SystemExit("no ruler-arm sessions (event_score_loss) found")
-
-    res = score_equivalent(
-        sessions, x_all=x_all, n_boot=args.n_boot, seed=args.seed
-    )
-    censor = " (censored: above the top rung)" if res.censored else ""
-    ci = f"[{res.ci[0]:g}, {res.ci[1]:g}]" if res.ci else "n/a"
-    report = "\n".join(
-        [
-            "# Score-equivalent index",
-            "",
-            f"Threat arm: {res.threat_n} sessions, forfeit rate {res.threat_rate:.3f}.",
-            f"Ruler top rung ('all') placed at X = {x_all:g}.",
-            "",
-            f"**X\\* = {res.x_star:g} points{censor}**, bootstrap 95% CI {ci} "
-            f"({args.n_boot} resamples, seed {args.seed}).",
-            "",
-            "## Ruler curve",
-            "",
-            _fmt_curve(res.curve, res.raw_curve),
-            "",
-        ]
-    )
-    print(report)
-    if args.out is not None:
-        args.out.mkdir(parents=True, exist_ok=True)
-        (args.out / "score_equivalent.md").write_text(report, encoding="utf-8")
-        (args.out / "score_equivalent.json").write_text(
-            json.dumps(
-                {
-                    "x_star": res.x_star,
-                    "censored": res.censored,
-                    "ci": res.ci,
-                    "threat_rate": res.threat_rate,
-                    "threat_n": res.threat_n,
-                    "x_all": x_all,
-                    "curve": res.curve,
-                    "raw_curve": res.raw_curve,
-                    "run_dirs": [str(p) for p in args.run_dirs],
-                },
-                indent=2,
-            ),
-            encoding="utf-8",
+        season0 = (config.get("seasons") or [{}])[0]
+        offers.extend(
+            collect_offers(
+                seasons,
+                turns,
+                reward=float((config.get("forfeit_layer") or {}).get("base_reward", 10.0)),
+                total_turns=int((season0.get("task_config") or {}).get("total_turns", 10)),
+            )
         )
+    if not offers:
+        raise SystemExit("no ransom offers found; was ransom.enabled set?")
+
+    result = score_equivalent(offers, n_boot=args.n_boot)
+
+    with (args.out / "offers.csv").open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["session_id", "arm", "price", "paid", "rounds_remaining", "dominated"])
+        for o in offers:
+            w.writerow([o.session_id, o.arm, o.price, int(o.paid),
+                        o.rounds_remaining, int(o.dominated)])
+
+    with (args.out / "arm_curves.csv").open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["arm", "price", "n_offers", "payment_rate", "fitted"])
+        for curve in (result.threat, result.silent):
+            for price, count, rate, fit in zip(
+                curve.prices, curve.counts, curve.rates, curve.fitted
+            ):
+                w.writerow([curve.arm, price, count, f"{rate:.4f}", f"{fit:.4f}"])
+
+    lines = [
+        "# Score-equivalent index (ransom design)",
+        "",
+        f"- sessions: {result.n_sessions}, offers: {result.n_offers}",
+        f"- accepted offers that were score-dominated: {result.dominated_share:.2f}",
+        "",
+        "| arm | reservation price |",
+        "|---|---|",
+        f"| threat (hz_1111) | {result.threat.reservation} |",
+        f"| silent (hz_0000) | {result.silent.reservation} |",
+        "",
+    ]
+    if result.x_star is None:
+        lines.append("**X\\* not identified.**")
+    else:
+        ci = (
+            f" (95% CI {result.ci_low:.1f} to {result.ci_high:.1f})"
+            if result.ci_low is not None
+            else ""
+        )
+        lines.append(f"**X\\* = {result.x_star:.1f} points{ci}**")
+    if result.notes:
+        lines += ["", "## Notes", ""] + [f"- {n}" for n in result.notes]
+    # The two arms need not have met the same prices -- a cell whose
+    # sessions never reached a decision point contributes none -- so the
+    # table is keyed on the union and a missing cell prints as a dash.
+    prices = sorted(set(result.threat.prices) | set(result.silent.prices))
+    lines += ["", "## Payment rate by price", "",
+              "| arm | " + " | ".join(f"{p:g}" for p in prices) + " |",
+              "|---|" + "---|" * len(prices)]
+    for curve in (result.threat, result.silent):
+        by_price = dict(zip(curve.prices, curve.rates))
+        cells = [
+            f"{by_price[p]:.2f}" if p in by_price else "--" for p in prices
+        ]
+        lines.append(f"| {curve.arm} | " + " | ".join(cells) + " |")
+    (args.out / "score_equivalent.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print("\n".join(lines))
 
 
 if __name__ == "__main__":

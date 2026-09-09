@@ -11,6 +11,7 @@ from squid_game.agents.base import Agent, AgentResponse
 from squid_game.agents._parsing import (
     ConfidenceCallResponse,
     DecisionCallResponse,
+    RansomCallResponse,
     TaskCallResponse,
     build_action_message,
     build_decision_call_message,
@@ -19,6 +20,7 @@ from squid_game.agents._parsing import (
     build_unified_turn_message,
     parse_confidence_call_response,
     parse_decision_call_response,
+    parse_ransom_call_response,
     parse_response,
     parse_task_call_response,
     parse_unified_response,
@@ -268,6 +270,25 @@ class VanillaAgent(Agent):
         ]
         text = self._dispatch("confidence", messages)
         return parse_confidence_call_response(text)
+
+    def respond_ransom_call(
+        self,
+        user_message: str,
+        system_prompt: str,
+    ) -> RansomCallResponse:
+        """Ransom call of the split-call flow (runs after a wrong answer).
+
+        The manager has already rendered ``8-ransom_call.j2`` into
+        ``user_message``; this method only dispatches and parses.
+        ``last_completion`` is overwritten so the manager can snapshot
+        ``ri_ransom`` and the thinking text immediately after return.
+        """
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ]
+        text = self._dispatch("ransom", messages)
+        return parse_ransom_call_response(text)
 
     def reset(self) -> None:
         """No-op: vanilla agent carries no state between sessions."""

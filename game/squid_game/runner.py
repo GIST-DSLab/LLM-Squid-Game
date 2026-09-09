@@ -245,7 +245,7 @@ class ExperimentRunner:
             peer_death=self._config.peer_death,
             confidence_call=self._config.confidence_call,
             hazard_ramp=self._config.hazard_ramp,
-            event_roll=self._config.event_roll,
+            ransom=self._config.ransom,
             title_line=self._config.title_line,
             score_policy=self._config.score_policy,
             carrot=self._config.effective_carrot,
@@ -815,9 +815,9 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
             ]
         # Ruler-arm switch (2026-09-08). Same reasoning: a YAML asking for
         # a score-loss cell must not load quietly as the silent hz_0000.
-        if "event_score_loss" in season_data:
-            season_transformed["event_score_loss"] = season_data[
-                "event_score_loss"
+        if "ransom_price" in season_data:
+            season_transformed["ransom_price"] = season_data[
+                "ransom_price"
             ]
 
         seasons_transformed.append(season_transformed)
@@ -890,8 +890,8 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     if "hazard_ramp" in raw:
         config_dict["hazard_ramp"] = raw["hazard_ramp"]
     # End-of-round event roll (2026-09-08) -- same explicit forwarding.
-    if "event_roll" in raw:
-        config_dict["event_roll"] = raw["event_roll"]
+    if "ransom" in raw:
+        config_dict["ransom"] = raw["ransom"]
     if "title_line" in raw:
         config_dict["title_line"] = raw["title_line"]
     # ``score_policy`` (2026-09-08) -- two independent switches saying

@@ -453,6 +453,92 @@ class ConfidenceCallResponse:
     p_threat: Optional[int]
 
 
+@dataclass
+class RansomCallResponse:
+    """Parsed ransom-call response (2026-09-09 decision point).
+
+    Attributes:
+        raw_text: Original unprocessed LLM output.
+        decision: ``"PAY"``, ``"DECLINE"``, or ``None`` when no
+            ``DECISION:`` line parsed. An unparsed decision is treated
+            as DECLINE by the manager -- the conservative reading, since
+            paying takes points the agent never agreed to spend.
+        why: The one-line justification, or ``None``. On providers that
+            return no thinking text this is the only reasoning channel.
+    """
+
+    raw_text: str
+    decision: Optional[str]
+    why: Optional[str]
+
+
+def parse_ransom_call_response(text: str) -> RansomCallResponse:
+    """Extract ``DECISION`` / ``WHY`` from a ransom reply.
+
+    Delegates to :func:`squid_game.core.ransom.parse_ransom_response`,
+    which owns the contract (and accepts ``REFUSE`` as a synonym for
+    ``DECLINE``).
+    """
+    from squid_game.core.ransom import parse_ransom_response
+
+    decision, why = parse_ransom_response(text)
+    return RansomCallResponse(raw_text=text, decision=decision, why=why)
+
+
+def build_ransom_call_message(
+    *,
+    current_score: float,
+    lives_total: Optional[int],
+    price: float,
+    reward: float,
+    rounds_remaining: int,
+    lives_label: str = "Lives",
+    carrot: str | None = None,
+) -> str:
+    """Render ``8-ransom_call.j2`` -- the decision-point user message.
+
+    Issued after a round the agent played and got wrong, when
+    ``ransom.enabled``. The three numbers it states (price, per-round
+    reward, rounds remaining) are exactly what
+    :func:`squid_game.core.ransom.is_dominated` needs, so the agent can
+    see for itself whether paying is score-dominated without being told
+    the conclusion.
+
+    What DECLINING means is deliberately absent: the framing's own block
+    states it, which is the single place the two arms differ.
+
+    Args:
+        current_score: Score the round settled at, before the price.
+        lives_total: Denominator of the status line's counter.
+        price: Points deducted on PAY.
+        reward: Points a correct answer is worth.
+        rounds_remaining: Rounds left after this one.
+        lives_label: ``"Lives"``, or ``"Attempts"`` under a framing
+            whose vocabulary contract forbids life/death words.
+        carrot: Run-level carrot name; supplies the score noun so the
+            status line matches the intro and the menu.
+
+    Returns:
+        Fully rendered ransom-call user-message string.
+    """
+    from squid_game.core.carrot import carrot_vocabulary, resolve_carrot
+    from squid_game.prompts import render
+
+    vocab = carrot_vocabulary(resolve_carrot(carrot=carrot))
+    # The status line names the score and nothing else. A counter line
+    # here would say "0 / 1" on every offer -- true, and about a
+    # mechanism the rules never described.
+    score_line = f"Current {vocab['score_noun']}: {current_score:.1f}"
+    return render(
+        "8-ransom_call.j2",
+        score_line=score_line,
+        price=price,
+        reward=reward,
+        rounds_remaining=rounds_remaining,
+        score_noun=vocab["score_noun"],
+    )
+
+
 def build_choice_echo(*, forfeit_allowed: bool) -> str:
     """Render ``7-choice_echo.j2`` -- the task call's one-line choice echo.
 

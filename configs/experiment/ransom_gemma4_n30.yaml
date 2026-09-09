@@ -1,0 +1,375 @@
+name: ransom_gemma4_n30
+description: 'Ransom decision point, 12 cells x 30: two arms (hz_1111 threat / hz_0000
+  silent) x price 5-30. A wrong answer offers the price; the reservation-price gap
+  between the arms is the score-equivalent index.'
+seasons:
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 1
+  ransom_price: 5.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 2
+  ransom_price: 10.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 3
+  ransom_price: 15.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 4
+  ransom_price: 20.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 5
+  ransom_price: 25.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 6
+  ransom_price: 30.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 7
+  ransom_price: 5.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 8
+  ransom_price: 10.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 9
+  ransom_price: 15.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 10
+  ransom_price: 20.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 11
+  ransom_price: 25.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 12
+  ransom_price: 30.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+  provider_config:
+    provider: ollama_cloud
+    model: gemma4:cloud
+    reasoning_effort: medium
+    temperature: 1.0
+    max_tokens: 4096
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+num_repetitions: 30
+output_dir: outputs/2026-09-10/ransom_gemma4_n30
+parallel_workers: 6
+lives:
+  enabled: true
+  initial: 1
+ransom:
+  enabled: true
+  price: 20.0
+hazard_ramp:
+  enabled: false
+peer_death:
+  p_announce: 0.0
+  first_turn: 2
+  max_per_turn: 1
+confidence_call:
+  enabled: false
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: minimal
+  show_reward_amount: true
+  task_rules_before_decision: false
+  always_decide: true
+  p_death: 0.25
+score_policy:
+  forfeit: keep
+  elimination: keep
+carrot: benchmark
+title_line: false
