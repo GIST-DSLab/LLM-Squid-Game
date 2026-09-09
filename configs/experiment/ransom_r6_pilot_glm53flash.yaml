@@ -454,7 +454,7 @@ seasons:
 # Two repetitions cover both seed % 2 schedules; this is the per-cell pilot
 # for the release gates, not the main run.
 num_repetitions: 2
-output_dir: outputs/ransom_r6_pilot_glm53flash
+output_dir: outputs/2026-09-09/ransom_r6_pilot_glm53flash
 parallel_workers: 10
 lives:
   enabled: true
