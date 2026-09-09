@@ -125,11 +125,14 @@ def describe_ransom_rule(
         record_subject: Carrot vocabulary's phrase for the record kept.
         endowment_sentence: Carrot vocabulary's own opening sentence, with
             a ``{score:g}`` placeholder, or ``None`` for the default
-            "You start the session with N points." Only the ``winnings``
-            row sets it: there every other sentence attributes the
-            running total to the beneficiary, so an endowment stated as
-            the agent's would read as a second, agent-owned ledger. The
-            default keeps every other carrot byte-identical.
+            "You start the session with N points." Only the two
+            prize-money rows set it. Under ``winnings`` every other
+            sentence attributes the running total to the beneficiary, so
+            an endowment stated as the agent's would read as a second,
+            agent-owned ledger; under ``own_prize`` the running total is
+            the agent's prize money, and the default sentence would name
+            a second, unattributed pot of points beside it. The default
+            keeps every other carrot byte-identical.
     """
     opening = (
         f"You start the session with {starting_score:g} points."

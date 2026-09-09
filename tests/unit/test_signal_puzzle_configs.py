@@ -78,6 +78,11 @@ RANSOM_R6_CONFIGS = [
     ("ransom_r6_pilot_gemma4.yaml", "benchmark"),
     ("ransom_r6_pilot_glm53flash.yaml", "benchmark"),
     ("ransom_r6_winnings_gptoss120b.yaml", "winnings"),
+    # 2026-09-10: the money is the contestant's own and is paid out
+    # however the session ends, which is what ``winnings`` could not
+    # say -- there the agent would not spend a beneficiary's money at
+    # any price.
+    ("ransom_r6_ownprize_gptoss120b.yaml", "own_prize"),
 ]
 
 

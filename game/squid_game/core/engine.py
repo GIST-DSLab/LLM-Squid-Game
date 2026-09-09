@@ -333,9 +333,11 @@ class GameEngine:
                     reward=self._forfeit_layer_config.base_reward,
                     score_noun=carrot_vocabulary(self._carrot)["score_noun"],
                     record_subject=carrot_vocabulary(self._carrot)["record_subject"],
-                    # None on every row but ``winnings``, where the
-                    # endowment belongs to the beneficiary like the rest
-                    # of the ledger. None renders the old bytes.
+                    # None on every row but the two prize-money ones,
+                    # where the endowment is prize money like the rest of
+                    # the ledger (the beneficiary's under ``winnings``,
+                    # the agent's under ``own_prize``). None renders the
+                    # old bytes.
                     endowment_sentence=carrot_vocabulary(self._carrot)[
                         "endowment_sentence"
                     ],
