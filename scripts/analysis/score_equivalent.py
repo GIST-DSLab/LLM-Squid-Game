@@ -13,7 +13,13 @@ starting score): a pooled X* across two rule sets is not a quantity.
 
 Writes ``score_equivalent.md`` (the reading), ``arm_curves.csv`` (both
 price curves, raw and fitted), ``rho_curves.csv`` (the same over rho
-bins) and ``offers.csv`` (one row per offer, with its ceiling and rho).
+bins), ``offers.csv`` (one row per offer, with its ceiling and rho) and
+``forced_vs_genuine.csv`` (the forced-wrong diagnostic).
+
+That last one is a diagnostic and not a second estimate: it splits the
+offers by whether the round that opened them was forced to be graded
+wrong, and counts the rounds that emptied the counter without ever being
+offered a price. The headline stays pooled over every offer.
 
 The price reading is kept as the legacy estimator and the rho axis --
 price as a share of what the remaining rounds could still pay out -- is
@@ -31,11 +37,16 @@ import math
 from pathlib import Path
 
 from squid_game.evaluation.behavioral.score_equivalent import (
+    POOLED,
     SILENT,
+    SUPPRESSION_REASONS,
     THREAT,
     ArmCurve,
+    ForcedGroup,
     RhoResult,
     collect_offers,
+    collect_suppressed,
+    forced_vs_genuine,
     score_equivalent,
 )
 
@@ -234,6 +245,65 @@ def _rho_section(rho: RhoResult | None) -> list[str]:
     return lines
 
 
+def _forced_section(rows: tuple[ForcedGroup, ...]) -> list[str]:
+    """The forced-vs-genuine table, printed under the reading it checks.
+
+    Deliberately below ``X*`` and the rho axis: it is a diagnostic on the
+    manipulation, and putting it above the estimate would read as a
+    second one.
+    """
+    lines = [
+        "",
+        "## Forced vs genuine",
+        "",
+        "A **diagnostic**, not a second estimate. Rounds a run forced to "
+        "be graded wrong opened decision points the agent's own answer "
+        "did not; this splits the offers by that flag to show whether "
+        "they behaved alike. Both arms are pooled inside each group, so "
+        "``ρ crossing`` here describes a group and is **not** an X\\* -- "
+        "do not subtract the two. The pooled row is the estimator's own "
+        "reading over every offer.",
+        "",
+        "| group | offers | pay rate | dominated share | ρ crossing | "
+        "suppressed (final round / insufficient score / other) |",
+        "|---|---|---|---|---|---|",
+    ]
+    for row in rows:
+        lines.append(
+            f"| {row.group} | {row.n_offers} | "
+            + ("--" if row.pay_rate is None else f"{row.pay_rate:.2f}")
+            + f" | {row.dominated_share:.2f} | "
+            + ("--" if row.rho_crossing is None else f"{row.rho_crossing:.3f}")
+            + " | "
+            + " / ".join(str(row.n_suppressed[r]) for r in SUPPRESSION_REASONS)
+            + " |"
+        )
+    lines += [
+        "",
+        "Suppressed rounds emptied the counter but were never offered a "
+        "price -- the session was ending anyway, or the score could not "
+        "cover it. They are counted, never folded into DECLINE: the "
+        "second guard fires preferentially in sessions that already "
+        "paid, so counting them as refusals would bias every rate above "
+        "downward exactly where it reads.",
+        "",
+    ]
+    return lines
+
+
+def _forced_summary(rows: tuple[ForcedGroup, ...]) -> str:
+    """One line, for a caller watching the run rather than the file."""
+    parts = []
+    for row in rows:
+        rate = "--" if row.pay_rate is None else f"{row.pay_rate:.2f}"
+        parts.append(f"{row.group} n={row.n_offers} pay={rate}")
+    pooled = next(row for row in rows if row.group == POOLED)
+    return (
+        f"forced_vs_genuine: {'; '.join(parts)}; "
+        f"suppressed={sum(pooled.n_suppressed.values())}"
+    )
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("run_dirs", nargs="+", type=Path)
@@ -242,7 +312,7 @@ def main() -> None:
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
-    offers, blocks = [], set()
+    offers, suppressed, blocks = [], [], set()
     for run_dir in args.run_dirs:
         config, seasons, turns = _load(run_dir)
         blocks.add(_rule_block(config))
@@ -261,15 +331,48 @@ def main() -> None:
                 total_turns=int((season0.get("task_config") or {}).get("total_turns", 10)),
             )
         )
+        suppressed.extend(collect_suppressed(seasons, turns))
     if not offers:
-        raise SystemExit("no ransom offers found; was ransom.enabled set?")
+        # Name the suppressed rounds here: "no offers" and "every offer
+        # was withheld" are different faults, and the second one points
+        # at the ladder rather than at the config.
+        raise SystemExit(
+            "no ransom offers found; was ransom.enabled set?"
+            + (
+                f" ({len(suppressed)} rounds emptied the counter but were "
+                "withheld a price -- see ransom_skipped)"
+                if suppressed
+                else ""
+            )
+        )
 
     result = score_equivalent(offers, n_boot=args.n_boot)
+    groups = forced_vs_genuine(offers, suppressed)
+
+    with (args.out / "forced_vs_genuine.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as fh:
+        w = csv.writer(fh)
+        w.writerow(
+            ["group", "n_offers", "pay_rate", "dominated_share", "rho_crossing",
+             "n_suppressed"]
+            + [f"n_suppressed_{r}" for r in SUPPRESSION_REASONS]
+        )
+        for row in groups:
+            by_reason = [row.n_suppressed[r] for r in SUPPRESSION_REASONS]
+            w.writerow(
+                [row.group, row.n_offers,
+                 "" if row.pay_rate is None else f"{row.pay_rate:.4f}",
+                 f"{row.dominated_share:.4f}",
+                 "" if row.rho_crossing is None else f"{row.rho_crossing:.4f}",
+                 sum(by_reason)]
+                + by_reason
+            )
 
     with (args.out / "offers.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["session_id", "seed", "arm", "price", "rounds_remaining",
-                    "ceiling", "rho", "paid", "dominated"])
+                    "ceiling", "rho", "paid", "dominated", "forced_wrong"])
         for o in offers:
             # rho is written unrounded-but-formatted, and prints ``inf``
             # for an offer with no rounds left rather than an empty cell:
@@ -277,7 +380,7 @@ def main() -> None:
             w.writerow([o.session_id, "" if o.seed is None else o.seed,
                         o.arm, o.price, o.rounds_remaining,
                         f"{o.ceiling:.1f}", f"{o.rho:.4f}",
-                        int(o.paid), int(o.dominated)])
+                        int(o.paid), int(o.dominated), int(o.forced_wrong)])
 
     with (args.out / "arm_curves.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
@@ -354,8 +457,10 @@ def main() -> None:
         ]
         lines.append(f"| {curve.arm} | " + " | ".join(cells) + " |")
     lines += _rho_section(result.rho)
+    lines += _forced_section(groups)
     (args.out / "score_equivalent.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
+    print(_forced_summary(groups))
 
 
 if __name__ == "__main__":

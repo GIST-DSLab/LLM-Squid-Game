@@ -63,6 +63,27 @@ ceiling of the offers used, to give the same gap in points;
 ``rho_curve`` runs the PAV over rho bins beside it, so a reader can see
 whether the shape or the data produced the number.
 
+Forced-wrong rounds
+-------------------
+Since 2026-09-10 a run may force some rounds to be graded wrong however
+the agent answered (``task_config.forced_wrong``). The offer and the
+verdict live on the same turn row, so the manipulation is readable
+without joining anything: ``Offer.forced_wrong`` carries it and
+``forced_vs_genuine`` reads the two groups side by side. That table is a
+**diagnostic** -- it says whether the offers a manipulated round
+produced behave like the ones an honest mistake produced -- and never
+the headline: ``x_star`` and ``x_star_dominated`` stay pooled over every
+offer, as they were before the split existed.
+
+The same date added ``TurnResult.ransom_skipped``: a round that emptied
+the counter but was never offered a price, because the session was
+ending anyway (``final_round``) or the score could not cover the price
+(``insufficient_score``). Those rows are not decisions and are excluded
+from every rate here; ``collect_suppressed`` counts them instead. The
+second reason fires preferentially in sessions that already paid --
+selectively on willingness to pay -- so folding it into DECLINE would
+bias the estimator downward exactly where it reads.
+
 Replaces the 2026-09-08 ruler-arm estimator (PAV inversion of a
 forfeit-rate curve against a stated score loss), which needed the
 end-of-round event roll that truncated 99% of sessions.
@@ -77,24 +98,32 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 
 __all__ = [
+    "FORCED",
+    "GENUINE",
+    "POOLED",
     "RHO_BIN_EDGES",
     "RIDGE",
     "SILENT",
     "SLOPE_EPS",
+    "SUPPRESSION_REASONS",
     "THREAT",
     "ArmCurve",
     "BootstrapResult",
+    "ForcedGroup",
     "Offer",
     "RhoFit",
     "RhoResult",
     "ScoreEquivalent",
+    "SuppressedOffer",
     "arm_curve",
     "bootstrap_units",
     "bootstrap_x_star",
     "bootstrap_x_star_rho",
     "collect_offers",
+    "collect_suppressed",
     "crossing_price",
     "fit_rho_logistic",
+    "forced_vs_genuine",
     "pav_monotone",
     "rho_curve",
     "rho_result",
@@ -103,6 +132,19 @@ __all__ = [
 
 THREAT = "threat"
 SILENT = "silent"
+
+#: Rows of the forced-vs-genuine diagnostic, in the order they are
+#: reported. ``POOLED`` repeats the estimator's own pooled reading, so a
+#: reader can see at a glance whether either group carries it alone.
+FORCED = "forced"
+GENUINE = "genuine"
+POOLED = "pooled"
+
+#: Every reason a round that emptied the counter got no offer, plus
+#: ``"other"`` for a guard added after this was written. The keys are
+#: fixed so the diagnostic's header is stable and an unrecognised reason
+#: is visible rather than dropped.
+SUPPRESSION_REASONS = ("final_round", "insufficient_score", "other")
 
 #: L2 penalty on every coefficient of the rho logistic. Small enough to
 #: leave a well-identified fit alone, large enough that complete
@@ -151,6 +193,10 @@ class Offer:
             not the session, is the unit the design randomised and the
             unit the bootstrap must resample. ``None`` on runs recorded
             before the seed was carried through to the analysis.
+        forced_wrong: Whether the round that opened this decision point
+            was graded wrong by the manipulation rather than by the
+            answer. ``False`` on every offer of a run recorded before
+            2026-09-10, which is what the missing key means there.
     """
 
     session_id: str
@@ -161,6 +207,7 @@ class Offer:
     rounds_remaining: int = 0
     reward: float = 10.0
     seed: int | None = None
+    forced_wrong: bool = False
 
     @property
     def dominated(self) -> bool:
@@ -188,6 +235,65 @@ class Offer:
         """
         ceiling = self.ceiling
         return math.inf if ceiling <= 0.0 else self.price / ceiling
+
+
+@dataclass(frozen=True)
+class SuppressedOffer:
+    """A round that emptied the counter and was never offered a price.
+
+    Not an :class:`Offer`: nothing was asked, so there is no decision to
+    read and no rate it belongs in. It is recorded because the two
+    guards and an ordinary elimination are otherwise the same row, and
+    ``insufficient_score`` fires preferentially in sessions that already
+    paid.
+
+    Attributes:
+        session_id: Session the round belongs to.
+        arm: ``"threat"`` or ``"silent"``.
+        turn_number: Round that emptied the counter.
+        reason: The recorded ``ransom_skipped`` value.
+        forced_wrong: Whether that round was graded wrong by the
+            manipulation, read the same way as on an offer.
+    """
+
+    session_id: str
+    arm: str
+    turn_number: int
+    reason: str
+    forced_wrong: bool = False
+
+
+@dataclass(frozen=True)
+class ForcedGroup:
+    """One row of the forced-vs-genuine diagnostic.
+
+    Attributes:
+        group: ``FORCED``, ``GENUINE`` or ``POOLED``.
+        n_offers: Offers in the group -- suppressed rounds excluded,
+            because no price was ever asked there.
+        pay_rate: Share of those offers paid, or ``None`` when the group
+            has none. ``None`` rather than 0.0: an unasked group did not
+            refuse.
+        dominated_share: Share of the group's *accepted* offers that sat
+            above the dominance line, the same quantity
+            :attr:`ScoreEquivalent.dominated_share` reports pooled. Read
+            per group it says whether a run's non-score payments all
+            came from manipulated rounds.
+        rho_crossing: Where the group's binned payment curve passes 0.5,
+            or ``None`` when it never does inside the bins observed.
+            Both arms are pooled here -- this is a check on the
+            manipulation, not an X*, and must never be subtracted.
+            Read off bin lower edges, so it understates by up to one bin.
+        n_suppressed: Count per :data:`SUPPRESSION_REASONS`; every key is
+            always present so the table's shape does not depend on the run.
+    """
+
+    group: str
+    n_offers: int
+    pay_rate: float | None
+    dominated_share: float
+    rho_crossing: float | None
+    n_suppressed: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -380,6 +486,92 @@ def _framing_arm(framing: str | None) -> str | None:
     return None
 
 
+def _forced_wrong_of(turn: dict, session_id: str) -> bool:
+    """Read the manipulation off a turn row, checking the analyst contract.
+
+    ``forced_wrong`` absent reads as ``False``: that is what a run
+    recorded before 2026-09-10 means, and the alternative -- refusing to
+    read those runs -- would retire the estimator over a key that was
+    never written.
+
+    On a round that was *not* forced, ``actual_correct`` and ``correct``
+    are the same fact by construction (the override is the only thing
+    that separates them). A row where they differ is therefore a bug in
+    the run, not a case to handle, and is raised naming the session and
+    the turn so the run can be found. Either key missing is "unknown",
+    not a violation.
+
+    Args:
+        turn: The turn row, as recorded.
+        session_id: For the message; the row's own id is not always set.
+
+    Returns:
+        Whether the round was graded wrong by the manipulation.
+
+    Raises:
+        ValueError: The identity fails on a non-forced row.
+    """
+    meta = turn.get("task_metadata") or {}
+    forced = bool(meta.get("forced_wrong", False))
+    actual = meta.get("actual_correct")
+    graded = meta.get("correct")
+    if not forced and actual is not None and graded is not None:
+        if bool(actual) != bool(graded):
+            raise ValueError(
+                f"session {session_id}, turn {turn.get('turn_number')}: "
+                f"actual_correct={actual} but correct={graded} on a round "
+                "that was not forced wrong. Those are the same fact unless "
+                "the manipulation overrode the verdict, so this run's "
+                "records disagree with themselves; fix the run rather than "
+                "the analysis."
+            )
+    return forced
+
+
+def collect_suppressed(
+    season_rows: Iterable[dict],
+    turn_rows_by_session: dict[str, list[dict]],
+) -> list[SuppressedOffer]:
+    """Every round that emptied the counter and got no offer.
+
+    The mirror of :func:`collect_offers` over the same rows: those carry
+    ``ransom_skipped`` and no ``ransom_offered``, so the two functions
+    partition the decision points a run reached. Sessions in neither arm
+    are skipped, exactly as there.
+
+    Args:
+        season_rows: Season result dicts, as :func:`collect_offers`.
+        turn_rows_by_session: Turn dicts keyed by session id.
+
+    Returns:
+        One record per suppressed round, in run order.
+
+    Raises:
+        ValueError: A row breaks the ``actual_correct == correct``
+            contract; see :func:`_forced_wrong_of`.
+    """
+    out: list[SuppressedOffer] = []
+    for season in season_rows:
+        sid = str(season.get("session_id") or season.get("season_id") or "")
+        arm = _framing_arm(season.get("framing"))
+        if arm is None or not sid:
+            continue
+        for turn in turn_rows_by_session.get(sid, []):
+            reason = turn.get("ransom_skipped")
+            if not reason:
+                continue
+            out.append(
+                SuppressedOffer(
+                    session_id=sid,
+                    arm=arm,
+                    turn_number=int(turn.get("turn_number") or 0),
+                    reason=str(reason),
+                    forced_wrong=_forced_wrong_of(turn, sid),
+                )
+            )
+    return out
+
+
 def collect_offers(
     season_rows: Iterable[dict],
     turn_rows_by_session: dict[str, list[dict]],
@@ -401,7 +593,13 @@ def collect_offers(
         total_turns: Rounds in a session, for ``rounds_remaining``.
 
     Returns:
-        Offers in run order. Sessions in neither arm are skipped.
+        Offers in run order. Sessions in neither arm are skipped, and so
+        are rounds the engine suppressed -- those carry ``ransom_skipped``
+        and no ``ransom_offered``; :func:`collect_suppressed` reads them.
+
+    Raises:
+        ValueError: A row breaks the ``actual_correct == correct``
+            contract; see :func:`_forced_wrong_of`.
     """
     offers: list[Offer] = []
     for season in season_rows:
@@ -432,6 +630,7 @@ def collect_offers(
                     rounds_remaining=max(0, total_turns - turn_number),
                     reward=reward,
                     seed=None if season.get("seed") is None else int(season["seed"]),
+                    forced_wrong=_forced_wrong_of(turn, sid),
                 )
             )
     return offers
@@ -559,10 +758,22 @@ def rho_curve(
         An :class:`ArmCurve` over every bin -- empty ones included, with
         a NaN rate -- or an empty curve when the arm has no offers.
     """
-    subset = [o for o in offers if o.arm == arm]
+    return _binned_curve([o for o in offers if o.arm == arm], arm, edges)
+
+
+def _binned_curve(
+    subset: Sequence[Offer], label: str, edges: Sequence[float]
+) -> ArmCurve:
+    """Bin whatever offers are handed in, PAV them, read the crossing.
+
+    Split out of :func:`rho_curve` so the forced-vs-genuine diagnostic
+    can bin a group that spans both arms without a second copy of the
+    binning -- which would be free to drift from the one the rho reading
+    actually uses.
+    """
     if not subset:
         return ArmCurve(
-            arm=arm, prices=(), rates=(), fitted=(), counts=(), reservation=None
+            arm=label, prices=(), rates=(), fitted=(), counts=(), reservation=None
         )
     lowers = list(edges[:-1])
     paid = [0] * len(lowers)
@@ -576,13 +787,72 @@ def rho_curve(
     ]
     fitted = pav_monotone(rates, total)
     return ArmCurve(
-        arm=arm,
+        arm=label,
         prices=tuple(float(x) for x in lowers),
         rates=tuple(rates),
         fitted=tuple(fitted),
         counts=tuple(total),
         reservation=crossing_price(lowers, fitted),
     )
+
+
+def forced_vs_genuine(
+    offers: Sequence[Offer],
+    suppressed: Sequence[SuppressedOffer] = (),
+) -> tuple[ForcedGroup, ...]:
+    """The forced / genuine / pooled diagnostic table.
+
+    A **diagnostic**, not a second estimate. It answers one question --
+    do the offers a forced round produced behave like the ones an honest
+    mistake produced -- and it answers it by pooling both arms inside
+    each group, so its ``rho_crossing`` is a description of a group, not
+    an ``X*``, and the two groups' crossings must not be subtracted.
+
+    The pooled row repeats the estimator's own reading over every offer,
+    so a run whose dominated payments all came from manipulated rounds is
+    visible as such rather than having to be inferred from the split.
+
+    Args:
+        offers: Every offer of the run, both arms, both groups.
+        suppressed: Rounds that emptied the counter and were never
+            offered a price. They enter no rate -- nothing was asked --
+            and are reported as counts beside the group they fell in.
+
+    Returns:
+        Three rows: ``FORCED``, ``GENUINE``, ``POOLED``, in that order.
+    """
+    rows: list[ForcedGroup] = []
+    for group, members, skipped in (
+        (FORCED,
+         [o for o in offers if o.forced_wrong],
+         [s for s in suppressed if s.forced_wrong]),
+        (GENUINE,
+         [o for o in offers if not o.forced_wrong],
+         [s for s in suppressed if not s.forced_wrong]),
+        (POOLED, list(offers), list(suppressed)),
+    ):
+        accepted = [o for o in members if o.paid]
+        counts = dict.fromkeys(SUPPRESSION_REASONS, 0)
+        for record in skipped:
+            key = record.reason if record.reason in counts else "other"
+            counts[key] += 1
+        rows.append(
+            ForcedGroup(
+                group=group,
+                n_offers=len(members),
+                pay_rate=len(accepted) / len(members) if members else None,
+                dominated_share=(
+                    sum(o.dominated for o in accepted) / len(accepted)
+                    if accepted
+                    else 0.0
+                ),
+                rho_crossing=_binned_curve(
+                    members, group, RHO_BIN_EDGES
+                ).reservation,
+                n_suppressed=counts,
+            )
+        )
+    return tuple(rows)
 
 
 def _sigmoid(z: float) -> float:
