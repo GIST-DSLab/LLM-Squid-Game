@@ -129,7 +129,9 @@ class TestScoreEquivalent:
             Offer("only", THREAT, 10.0, True, rounds_remaining=3),
             Offer("only", THREAT, 20.0, False, rounds_remaining=3),
         ]
-        assert bootstrap_x_star(offers, n_boot=50) == (None, None)  # one session
+        result = bootstrap_x_star(offers, n_boot=50)  # one session
+        assert (result.low, result.high) == (None, None)
+        assert result.n_units == 1
 
 
 class TestCollectOffers:
@@ -158,3 +160,124 @@ class TestCollectOffers:
                                                    "ransom_decision": "PAY",
                                                    "turn_number": 1}]}
         assert len(collect_offers(seasons, turns)) == 1
+
+
+def _paired_offers(seeds=(0, 1, 2, 3), segregate=False):
+    """One offer per session; every seed carries both arms at every price.
+
+    Payment is set so the threat arm reserves at 25 and the silent arm at
+    16.67, i.e. ``X* = 8.33``. Every seed pays at the bottom rung and
+    none at the top, so a draw of any seed multiset still brackets 0.5 in
+    both arms -- a failed draw can then only mean a missing arm. With
+    ``segregate=True`` the same offers are
+    relabelled so that one seed holds every threat session and another
+    every silent session -- the shape that makes a seed-level draw miss
+    an arm.
+    """
+    plan = {
+        THREAT: {10.0: 4, 20.0: 3, 30.0: 1, 40.0: 0},
+        SILENT: {10.0: 4, 20.0: 1, 30.0: 0, 40.0: 0},
+    }
+    out = []
+    for arm, by_price in plan.items():
+        for price, n_paid in by_price.items():
+            for i, seed in enumerate(seeds):
+                out.append(
+                    Offer(
+                        session_id=f"{arm}_{price:g}_{seed}",
+                        arm=arm,
+                        price=price,
+                        paid=i < n_paid,
+                        rounds_remaining=3,
+                        reward=10.0,
+                        seed=(0 if arm == THREAT else 1) if segregate else seed,
+                    )
+                )
+    return out
+
+
+class TestSeedPairing:
+    """The bootstrap unit is the seed, because the design paired on it."""
+
+    def test_collect_offers_carries_the_seed(self):
+        seasons = [{"session_id": "a", "framing": "hz_1111", "seed": 42}]
+        turns = {"a": [{"ransom_offered": True, "ransom_price": 20.0,
+                        "ransom_decision": "PAY", "turn_number": 4}]}
+        assert collect_offers(seasons, turns)[0].seed == 42
+
+    def test_seed_is_none_when_the_season_row_has_none(self):
+        seasons = [{"session_id": "a", "framing": "hz_1111"}]
+        turns = {"a": [{"ransom_offered": True, "ransom_price": 20.0,
+                        "ransom_decision": "PAY", "turn_number": 4}]}
+        assert collect_offers(seasons, turns)[0].seed is None
+
+    def test_unit_is_the_seed_when_every_offer_has_one(self):
+        assert bootstrap_x_star(_paired_offers(), n_boot=100).unit == "seed"
+
+    def test_unit_falls_back_to_the_session_without_seeds(self):
+        offers = [
+            Offer(o.session_id, o.arm, o.price, o.paid,
+                  rounds_remaining=o.rounds_remaining, reward=o.reward)
+            for o in _paired_offers()
+        ]
+        assert bootstrap_x_star(offers, n_boot=100).unit == "session"
+
+    def test_one_seed_is_one_unit_however_many_sessions_it_spans(self):
+        offers = _paired_offers(seeds=(7,))
+        result = bootstrap_x_star(offers, n_boot=100)
+        assert result.n_units == 1
+        assert (result.low, result.high) == (None, None)
+
+    def test_a_seed_carries_both_arms_into_every_draw(self):
+        """Paired seeds: no draw can lose an arm, so nothing fails."""
+        result = bootstrap_x_star(_paired_offers(), n_boot=200, seed=1)
+        assert result.n_failed == 0
+        assert result.n_draws == 200
+
+    def test_failed_draws_are_counted_not_silently_dropped(self):
+        """Arm-segregated seeds: half the draws hold one arm only."""
+        result = bootstrap_x_star(
+            _paired_offers(segregate=True), n_boot=200, seed=1
+        )
+        assert result.n_failed > 0
+        assert result.n_draws + result.n_failed == 200
+
+    def test_score_equivalent_reports_the_failure_share(self):
+        result = score_equivalent(
+            _paired_offers(segregate=True), n_boot=200, seed=1
+        )
+        assert result.n_boot_failed > 0
+        assert any("resample" in n for n in result.notes)
+
+    def test_score_equivalent_notes_the_session_fallback(self):
+        offers = [
+            Offer(o.session_id, o.arm, o.price, o.paid,
+                  rounds_remaining=o.rounds_remaining, reward=o.reward)
+            for o in _paired_offers()
+        ]
+        result = score_equivalent(offers, n_boot=100)
+        assert result.boot_unit == "session"
+        assert any("seed" in n for n in result.notes)
+
+    def test_the_paired_fixture_reads_the_x_star_it_was_built_for(self):
+        result = score_equivalent(_paired_offers(), n_boot=100)
+        assert result.threat.reservation == pytest.approx(25.0)
+        assert result.silent.reservation == pytest.approx(50 / 3)
+        assert result.x_star == pytest.approx(25.0 - 50 / 3)
+
+
+class TestScoreBefore:
+    """The turn record carries no running score, so do not invent one."""
+
+    def test_absent_score_is_none_not_zero(self):
+        seasons = [{"season_id": "a", "framing": "hz_1111", "seed": 1}]
+        turns = {"a": [{"ransom_offered": True, "ransom_price": 20.0,
+                        "ransom_decision": "PAY", "turn_number": 4}]}
+        assert collect_offers(seasons, turns)[0].score_before is None
+
+    def test_a_recorded_score_is_read(self):
+        seasons = [{"season_id": "a", "framing": "hz_1111", "seed": 1}]
+        turns = {"a": [{"ransom_offered": True, "ransom_price": 20.0,
+                        "ransom_decision": "PAY", "turn_number": 4,
+                        "cumulative_after": 140.0}]}
+        assert collect_offers(seasons, turns)[0].score_before == 140.0

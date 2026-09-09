@@ -50,9 +50,11 @@ __all__ = [
     "SILENT",
     "THREAT",
     "ArmCurve",
+    "BootstrapResult",
     "Offer",
     "ScoreEquivalent",
     "arm_curve",
+    "bootstrap_units",
     "bootstrap_x_star",
     "collect_offers",
     "crossing_price",
@@ -75,18 +77,29 @@ class Offer:
         arm: ``"threat"`` or ``"silent"``.
         price: Points asked.
         paid: Whether the agent paid.
-        score_before: Score the round settled at, before the price.
+        score_before: Score the round settled at, before the price, or
+            ``None`` when the record does not carry one. The turn record
+            does not persist a running score today -- ``cumulative_after``
+            is a local in the turn manager and never reaches
+            ``TurnResult`` -- so this is ``None`` on every current run.
+            It is left readable rather than filled with a plausible 0.0,
+            which a later regression would silently believe.
         rounds_remaining: Rounds left after the one just answered.
         reward: Points a correct answer is worth.
+        seed: Season seed. Every cell of a repetition shares it, so it,
+            not the session, is the unit the design randomised and the
+            unit the bootstrap must resample. ``None`` on runs recorded
+            before the seed was carried through to the analysis.
     """
 
     session_id: str
     arm: str
     price: float
     paid: bool
-    score_before: float = 0.0
+    score_before: float | None = None
     rounds_remaining: int = 0
     reward: float = 10.0
+    seed: int | None = None
 
     @property
     def dominated(self) -> bool:
@@ -104,6 +117,25 @@ class ArmCurve:
     fitted: tuple[float, ...]
     counts: tuple[int, ...]
     reservation: float | None
+
+
+@dataclass(frozen=True)
+class BootstrapResult:
+    """A percentile interval and what it was actually computed over.
+
+    ``n_failed`` counts resamples in which an arm's curve never crossed
+    0.5 and no ``X*`` could be read. Those draws cannot enter the
+    percentiles, but they are not nothing: they are the lopsided ones,
+    so discarding them without saying so narrows the interval and makes
+    it conditional on "the ladder worked in this resample".
+    """
+
+    low: float | None
+    high: float | None
+    unit: str
+    n_units: int
+    n_draws: int
+    n_failed: int
 
 
 @dataclass(frozen=True)
@@ -132,6 +164,9 @@ class ScoreEquivalent:
     x_star_dominated: float | None = None
     n_dominated: int = 0
     notes: list[str] = field(default_factory=list)
+    boot_unit: str = "seed"
+    n_boot_draws: int = 0
+    n_boot_failed: int = 0
 
 
 def _framing_arm(framing: str | None) -> str | None:
@@ -162,7 +197,8 @@ def collect_offers(
     Args:
         season_rows: Season result dicts; each needs ``session_id`` (or
             ``season_id``), ``framing`` and, when the cell carries one,
-            ``ransom_price``.
+            ``ransom_price``. ``seed`` is carried through when present,
+            because it is the unit the bootstrap resamples.
         turn_rows_by_session: Turn dicts keyed by the same id. Only turns
             with ``ransom_offered`` are read.
         reward: Points a correct answer is worth, from the run's
@@ -193,9 +229,14 @@ def collect_offers(
                     arm=arm,
                     price=float(price),
                     paid=turn.get("ransom_decision") == "PAY",
-                    score_before=float(turn.get("cumulative_after") or 0.0),
+                    score_before=(
+                        None
+                        if turn.get("cumulative_after") is None
+                        else float(turn["cumulative_after"])
+                    ),
                     rounds_remaining=max(0, total_turns - turn_number),
                     reward=reward,
+                    seed=None if season.get("seed") is None else int(season["seed"]),
                 )
             )
     return offers
@@ -282,40 +323,74 @@ def arm_curve(offers: Sequence[Offer], arm: str) -> ArmCurve:
     )
 
 
+def bootstrap_units(offers: Sequence[Offer]) -> tuple[str, dict[object, list[Offer]]]:
+    """Group offers into the units a resample draws, and name the unit.
+
+    The seed is the unit whenever every offer carries one. All twelve
+    cells of a repetition share a seed, so drawing a seed draws its whole
+    row at once: the puzzle sequence and the underdetermined rounds are
+    held fixed across the arms inside every resample, which is the
+    pairing the design bought and the only way the interval can spend it.
+    Drawing sessions instead breaks the row apart, lets an arm be drawn
+    against a different seed's puzzles, and pushes that extra variance
+    into the interval as if it were variance in ``X*``.
+
+    Falls back to the session when any offer lacks a seed, so runs
+    recorded before the seed was carried through still produce an
+    interval -- a wider one, and the caller says so.
+    """
+    if offers and all(o.seed is not None for o in offers):
+        key, unit = (lambda o: o.seed), "seed"
+    else:
+        key, unit = (lambda o: o.session_id), "session"
+    grouped: dict[object, list[Offer]] = {}
+    for offer in offers:
+        grouped.setdefault(key(offer), []).append(offer)
+    return unit, grouped
+
+
 def bootstrap_x_star(
     offers: Sequence[Offer],
     *,
     n_boot: int = 1000,
     seed: int = 0,
     alpha: float = 0.05,
-) -> tuple[float | None, float | None]:
-    """Percentile CI for ``X*``, resampling SESSIONS with replacement.
+) -> BootstrapResult:
+    """Percentile CI for ``X*``, resampling whole SEEDS with replacement.
 
-    Sessions, not offers: a session that pays three times contributes
-    three correlated offers, and resampling offers would treat them as
-    independent and shrink the interval.
+    Not offers: a session that pays three times contributes three
+    correlated offers, and resampling offers would treat them as
+    independent. Not sessions either: the twelve cells of a repetition
+    share a seed and therefore share the puzzles, so a session is not the
+    unit that was randomised. See :func:`bootstrap_units`.
+
+    Draws in which an arm never crosses 0.5 are counted in ``n_failed``
+    rather than discarded in silence; the percentiles are read over the
+    draws that did produce a value, and the caller is expected to report
+    the share that did not.
     """
-    by_session: dict[str, list[Offer]] = {}
-    for offer in offers:
-        by_session.setdefault(offer.session_id, []).append(offer)
-    sessions = list(by_session)
-    if len(sessions) < 2:
-        return None, None
+    unit, grouped = bootstrap_units(offers)
+    units = list(grouped)
+    if len(units) < 2:
+        return BootstrapResult(None, None, unit, len(units), 0, 0)
     rng = random.Random(seed)
     draws: list[float] = []
+    n_failed = 0
     for _ in range(n_boot):
-        picked = [rng.choice(sessions) for _ in sessions]
-        sample = [o for s in picked for o in by_session[s]]
+        picked = [rng.choice(units) for _ in units]
+        sample = [o for u in picked for o in grouped[u]]
         threat = arm_curve(sample, THREAT).reservation
         silent = arm_curve(sample, SILENT).reservation
-        if threat is not None and silent is not None:
-            draws.append(threat - silent)
+        if threat is None or silent is None:
+            n_failed += 1
+            continue
+        draws.append(threat - silent)
     if len(draws) < 20:
-        return None, None
+        return BootstrapResult(None, None, unit, len(units), len(draws), n_failed)
     draws.sort()
     lo = draws[int((alpha / 2) * len(draws))]
     hi = draws[min(len(draws) - 1, int((1 - alpha / 2) * len(draws)))]
-    return lo, hi
+    return BootstrapResult(lo, hi, unit, len(units), len(draws), n_failed)
 
 
 def score_equivalent(
@@ -338,9 +413,22 @@ def score_equivalent(
         notes.append("silent arm never crosses 0.5 within the offered prices.")
     if threat.reservation is not None and silent.reservation is not None:
         x_star = threat.reservation - silent.reservation
-    lo, hi = (None, None)
+    boot = BootstrapResult(None, None, "seed", 0, 0, 0)
     if x_star is not None:
-        lo, hi = bootstrap_x_star(offers, n_boot=n_boot, seed=seed)
+        boot = bootstrap_x_star(offers, n_boot=n_boot, seed=seed)
+    if boot.unit == "session" and offers:
+        notes.append(
+            "no seed on the offers, so the interval resamples sessions "
+            "rather than seeds; the arms are no longer paired inside a "
+            "draw and the interval is wider than the design allows."
+        )
+    if boot.n_failed:
+        total = boot.n_draws + boot.n_failed
+        notes.append(
+            f"{boot.n_failed}/{total} resamples produced no crossing and "
+            "are excluded from the interval, which is therefore "
+            "conditional on the ladder bracketing 0.5."
+        )
     accepted = [o for o in offers if o.paid]
     dominated_share = (
         sum(o.dominated for o in accepted) / len(accepted) if accepted else 0.0
@@ -368,8 +456,8 @@ def score_equivalent(
         )
     return ScoreEquivalent(
         x_star=x_star,
-        ci_low=lo,
-        ci_high=hi,
+        ci_low=boot.low,
+        ci_high=boot.high,
         threat=threat,
         silent=silent,
         n_sessions=len({o.session_id for o in offers}),
@@ -378,4 +466,7 @@ def score_equivalent(
         x_star_dominated=x_star_dominated,
         n_dominated=len(dominated),
         notes=notes,
+        boot_unit=boot.unit,
+        n_boot_draws=boot.n_draws,
+        n_boot_failed=boot.n_failed,
     )

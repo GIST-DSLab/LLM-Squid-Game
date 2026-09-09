@@ -31,11 +31,20 @@ from squid_game.evaluation.behavioral.score_equivalent import (
 
 
 def _rule_block(config: dict) -> str:
-    """The knobs that must agree before two runs may be pooled."""
+    """The knobs that must agree before two runs may be pooled.
+
+    The model is in here because the bootstrap resamples seeds: seed 7
+    names one row of puzzles, but *two different sessions* if two models
+    are pooled, and drawing them as one unit would tie unrelated
+    decisions together. X* is a per-model quantity in any case.
+    """
     seasons = config.get("seasons") or [{}]
     task = (seasons[0].get("task_config") or {}) if seasons else {}
+    provider = (seasons[0].get("provider_config") or {}) if seasons else {}
     return json.dumps(
         {
+            "model": provider.get("model"),
+            "provider": provider.get("provider"),
             "ransom": config.get("ransom"),
             "score_policy": config.get("score_policy"),
             "carrot": config.get("carrot"),
@@ -80,9 +89,9 @@ def main() -> None:
         blocks.add(_rule_block(config))
         if len(blocks) > 1:
             raise SystemExit(
-                f"{run_dir}: ransom / score_policy / carrot / reward / starting "
-                "score differ from an earlier run; pooling them would average "
-                "two different games. Analyse them separately."
+                f"{run_dir}: model / ransom / score_policy / carrot / reward / "
+                "starting score differ from an earlier run; pooling them would "
+                "average two different games. Analyse them separately."
             )
         season0 = (config.get("seasons") or [{}])[0]
         offers.extend(
@@ -100,9 +109,11 @@ def main() -> None:
 
     with (args.out / "offers.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["session_id", "arm", "price", "paid", "rounds_remaining", "dominated"])
+        w.writerow(["session_id", "seed", "arm", "price", "paid",
+                    "rounds_remaining", "dominated"])
         for o in offers:
-            w.writerow([o.session_id, o.arm, o.price, int(o.paid),
+            w.writerow([o.session_id, "" if o.seed is None else o.seed,
+                        o.arm, o.price, int(o.paid),
                         o.rounds_remaining, int(o.dominated)])
 
     with (args.out / "arm_curves.csv").open("w", newline="", encoding="utf-8") as fh:
@@ -120,6 +131,14 @@ def main() -> None:
         f"- sessions: {result.n_sessions}, offers: {result.n_offers}",
         f"- accepted offers that were score-dominated: {result.dominated_share:.2f}",
         f"- offers above the dominance line: {result.n_dominated} of {result.n_offers}",
+        f"- bootstrap unit: {result.boot_unit}"
+        + (
+            f", {result.n_boot_draws} draws"
+            + (f", {result.n_boot_failed} without a crossing"
+               if result.n_boot_failed else "")
+            if result.n_boot_draws or result.n_boot_failed
+            else ""
+        ),
         "",
         "| arm | reservation price |",
         "|---|---|",
