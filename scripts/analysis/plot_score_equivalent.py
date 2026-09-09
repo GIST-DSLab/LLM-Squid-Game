@@ -130,7 +130,16 @@ def _style(ax, xlabel: str) -> None:
             fontsize=8, color=INK_SOFT)
 
 
+NUDGE = {"threat": -1.0, "silent": 1.0}
+
+
 def _plot(ax, curves: dict[str, list[dict]], xkey: str, width_ref: float) -> None:
+    """Observed bin rates + PAV steps per arm.
+
+    ``width_ref`` is one x-step of the axis (a rho bin, a ladder rung);
+    markers are nudged by 6 % of it in opposite directions per arm so two
+    arms that paid at the same rate in the same bin both stay visible.
+    """
     for arm in ARMS:
         rows = sorted(
             (r for r in curves.get(arm, []) if r.get("payment_rate") and r.get("fitted")),
@@ -144,9 +153,33 @@ def _plot(ax, curves: dict[str, list[dict]], xkey: str, width_ref: float) -> Non
         n = [int(r["n_offers"]) for r in rows]
         ax.plot(x, fit, color=COLOR[arm], linewidth=1.2, linestyle=(0, (1, 2)),
                 drawstyle="steps-post", alpha=0.9, label=f"{LABEL[arm]} — monotone (PAV) fit")
-        ax.scatter(x, obs, s=[max(36, 9 * k) for k in n], color=COLOR[arm],
+        xs = [v + NUDGE[arm] * 0.06 * width_ref for v in x]
+        ax.scatter(xs, obs, s=[max(36, 9 * k) for k in n], color=COLOR[arm],
                    marker=MARKER[arm], edgecolors="white", linewidths=1.2, zorder=3,
                    label=f"{LABEL[arm]} — observed (size = offers)")
+
+
+def _end_labels(ax, points: dict[str, tuple[float, float]]) -> None:
+    """Direct labels at each arm's last point; pushed apart when they collide."""
+    items = sorted(points.items(), key=lambda kv: kv[1][1])
+    ys = [y for _, (_, y) in items]
+    for i in range(1, len(ys)):
+        if ys[i] - ys[i - 1] < 0.07:
+            ys[i] = ys[i - 1] + 0.07
+    for (arm, (x, _)), y in zip(items, ys):
+        ax.annotate(LABEL[arm], (x, y), xytext=(8, 0), textcoords="offset points",
+                    fontsize=8.5, color=INK, va="center")
+
+
+def _mark_pair(ax, values: dict[str, float | None], fmt: str) -> None:
+    """One dashed line per arm; a single shared label when both coincide."""
+    a, b = values.get("threat"), values.get("silent")
+    if a is not None and b is not None and abs(a - b) < 1e-9:
+        _mark_vertical(ax, a, INK_SOFT, fmt.format(a) + " (both arms)", 0.90)
+        return
+    for i, arm in enumerate(ARMS):
+        v = values.get(arm)
+        _mark_vertical(ax, v, COLOR[arm], fmt.format(v) if v is not None else "", 0.90 - 0.22 * i)
 
 
 def _mark_vertical(ax, x: float | None, color: str, text: str, y: float) -> None:
@@ -173,6 +206,7 @@ def draw(out_dir: Path, title: str | None) -> list[Path]:
     ax.axvspan(1.0, ax.get_xlim()[1], color=RULE, alpha=0.35, lw=0)
     ax.text(1.02, 1.03, "above the ceiling →", fontsize=8, color=INK_SOFT, va="bottom")
     logit = _logistic_from_offers(out_dir / "offers.csv")
+    ends: dict[str, tuple[float, float]] = {}
     if logit:
         lo, hi = ax.get_xlim()
         grid = [max(0.02, lo) + i * (hi - max(0.02, lo)) / 200 for i in range(201)]
@@ -182,11 +216,9 @@ def draw(out_dir: Path, title: str | None) -> list[Path]:
                 continue
             ax.plot(grid, [_sigmoid(a + logit["b"] * math.log(g)) for g in grid],
                     color=COLOR[arm], linewidth=2, label=f"{LABEL[arm]} — logistic fit (ρ* read here)")
-            ax.annotate(LABEL[arm], (grid[-1], _sigmoid(a + logit["b"] * math.log(grid[-1]))),
-                        xytext=(6, 0), textcoords="offset points", fontsize=8.5, color=INK, va="center")
-    for arm in ARMS:
-        rs = md["rho_star"].get(arm)
-        _mark_vertical(ax, rs, COLOR[arm], f"ρ*={rs:.2f}" if rs is not None else "", 0.90)
+            ends[arm] = (grid[-1], _sigmoid(a + logit["b"] * math.log(grid[-1])))
+        _end_labels(ax, ends)
+    _mark_pair(ax, md["rho_star"], "ρ*={:.2f}")
     if md["x_rho"]:
         x, lo, hi = md["x_rho"]
         sub = f"X*_ρ = {x:.3f}   (95% CI {lo:.2f} to {hi:.2f})"
@@ -209,9 +241,7 @@ def draw(out_dir: Path, title: str | None) -> list[Path]:
         ax.set_xlim(ps[0] - 2, ps[-1] + 6)
         ax.set_xticks(ps)
     _style(ax, "ransom price (points)")
-    for arm in ARMS:
-        pc = md["price_cross"].get(arm)
-        _mark_vertical(ax, pc, COLOR[arm], f"crossing={pc:.1f}" if pc is not None else "", 0.90)
+    _mark_pair(ax, md["price_cross"], "crossing={:.1f}")
     if md["x_pts"]:
         x, lo, hi = md["x_pts"]
         sub = f"X* = {x:.1f} points   (95% CI {lo:.1f} to {hi:.1f})"
@@ -219,11 +249,12 @@ def draw(out_dir: Path, title: str | None) -> list[Path]:
         sub = "price-axis X* not identified (no arm crosses 50% inside the ladder)"
     else:
         sub = ""
+    ends = {}
     for arm in ARMS:
         rows = sorted((r for r in price.get(arm, []) if r.get("fitted")), key=lambda r: float(r["price"]))
         if rows:
-            ax.annotate(LABEL[arm], (float(rows[-1]["price"]), float(rows[-1]["fitted"])),
-                        xytext=(6, 0), textcoords="offset points", fontsize=8.5, color=INK, va="center")
+            ends[arm] = (float(rows[-1]["price"]), float(rows[-1]["fitted"]))
+    _end_labels(ax, ends)
     ax.set_title(f"{head}payment rate by price\n{sub}", loc="left", fontsize=11, color=INK)
     ax.legend(frameon=False, fontsize=7.5, loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
     fig.tight_layout()
