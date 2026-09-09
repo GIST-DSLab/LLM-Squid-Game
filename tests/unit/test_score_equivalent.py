@@ -342,7 +342,15 @@ class TestRho:
         assert Offer("s", THREAT, 1.0, True, rounds_remaining=0, reward=10.0).rho == math.inf
 
     def test_dominance_is_exactly_rho_above_one(self):
-        """The two must agree everywhere, or the axes tell different stories."""
+        """The two must agree everywhere, or the axes tell different stories.
+
+        One cell is left out and stays out: a price of 0 with no rounds
+        remaining. ``dominated`` reads ``0 > 0`` as False while ``rho``
+        is ``inf`` and reads as dominated. Nothing is at stake -- a free
+        offer at the end of a session is not a decision -- and forcing
+        agreement would mean bending ``rho``, which the whole fit runs
+        on, to tidy up an empty case.
+        """
         for price in (0.5, 5.0, 10.0, 20.0, 29.9, 30.0, 30.1, 90.0):
             for rounds in (0, 1, 3, 9):
                 offer = Offer("s", THREAT, price, True, rounds_remaining=rounds, reward=10.0)
@@ -589,6 +597,40 @@ class TestRhoResult:
         assert result.boot_unit == "seed"
         assert result.n_boot_draws + result.n_boot_failed == 50
 
+    def test_a_non_converged_fit_is_not_read_as_a_reservation(self, monkeypatch):
+        """The point estimate must refuse what the bootstrap already refuses.
+
+        ``_rho_x_star`` drops a draw whose fit never settled, because the
+        parameters are the last iterate rather than a maximum. Reading
+        that same iterate as the point estimate would report a number the
+        interval around it was built to exclude.
+        """
+        real = module.fit_rho_logistic
+        monkeypatch.setattr(
+            module,
+            "fit_rho_logistic",
+            lambda offers, **kw: replace(real(offers, **kw), converged=False),
+        )
+        result = module.rho_result(_step_population(), n_boot=0)
+        assert result.fit.converged is False
+        assert result.rho_star_threat is None
+        assert result.rho_star_silent is None
+        assert result.x_star_rho is None
+        assert result.x_star_points is None
+        assert any("did not converge" in n for n in result.notes)
+
+    def test_it_carries_each_arms_observed_rho_range(self):
+        """The range the rule used, so the CLI need not recompute it."""
+        result = rho_result(_step_population(), n_boot=0)
+        assert result.rho_range_threat == pytest.approx((0.2, 3.0))
+        assert result.rho_range_silent == pytest.approx((0.2, 3.0))
+
+    def test_an_arm_that_was_never_asked_has_no_range(self):
+        offers = [o for o in _step_population() if o.arm == THREAT]
+        result = rho_result(offers, n_boot=0)
+        assert result.rho_range_threat == pytest.approx((0.2, 3.0))
+        assert result.rho_range_silent is None
+
 
 class TestRhoObservedRange:
     """A rho* outside the rungs actually offered is a bound, not a value."""
@@ -610,7 +652,10 @@ class TestRhoObservedRange:
         result = rho_result(_separated_threat_population(), n_boot=0)
         note = next(n for n in result.notes if "observed" in n)
         assert THREAT in note
-        assert "3" in note  # the top of the observed range
+        # The range as `_in_observed_range` formats it: `.3g`, so the top
+        # rung 3.0 prints as "3". Asserting the whole bracket keeps the
+        # test honest about which number is being shown.
+        assert "[0.2, 3]" in note
 
     def test_the_fits_own_notes_are_carried_through(self):
         offers = [o for o in _step_population() if o.arm == THREAT]
@@ -691,4 +736,11 @@ def test_the_rho_estimator_is_exported():
         "rho_curve",
         "rho_result",
     ):
+        assert name in module.__all__
+
+
+def test_the_rho_tuning_constants_are_exported():
+    """``RIDGE`` and ``SLOPE_EPS`` decide what the fit will say; a reader
+    who has to reach past ``__all__`` for them is reading a private knob."""
+    for name in ("RIDGE", "SLOPE_EPS"):
         assert name in module.__all__

@@ -34,7 +34,6 @@ from squid_game.evaluation.behavioral.score_equivalent import (
     SILENT,
     THREAT,
     ArmCurve,
-    Offer,
     RhoResult,
     collect_offers,
     score_equivalent,
@@ -91,22 +90,6 @@ def _rho_curves(rho: RhoResult | None) -> tuple[ArmCurve, ...]:
     return () if rho is None else (rho.threat_curve, rho.silent_curve)
 
 
-def _observed_rho_range(
-    offers: list[Offer], arm: str
-) -> tuple[float, float] | None:
-    """Min and max rho of the offers that arm actually contributed to the fit.
-
-    The same filter :func:`fit_rho_logistic` applies -- finite and
-    positive -- so the printed range is the ladder the arm was asked on,
-    which is what makes an extrapolated ``rho*`` visible as one.
-    """
-    rhos = [
-        o.rho for o in offers
-        if o.arm == arm and math.isfinite(o.rho) and o.rho > 0.0
-    ]
-    return (min(rhos), max(rhos)) if rhos else None
-
-
 def _rho_star_cell(kept: float | None, fitted: float | None) -> str:
     """The arm's reservation, or the value the range rule refused to read."""
     if kept is not None:
@@ -116,8 +99,14 @@ def _rho_star_cell(kept: float | None, fitted: float | None) -> str:
     return "--"
 
 
-def _rho_section(offers: list[Offer], rho: RhoResult | None) -> list[str]:
-    """The rho-axis reading, printed under the legacy price reading."""
+def _rho_section(rho: RhoResult | None) -> list[str]:
+    """The rho-axis reading, printed under the legacy price reading.
+
+    Every number here comes off the :class:`RhoResult`, the observed rho
+    ranges included: recomputing them from the offers would be a second
+    implementation of the fit's own filter, free to drift from the one
+    the range rule actually applied.
+    """
     if rho is None:
         return []
     fit = rho.fit
@@ -139,9 +128,12 @@ def _rho_section(offers: list[Offer], rho: RhoResult | None) -> list[str]:
         f"- offers used: {fit.n_used}; skipped: {fit.n_skipped} "
         "(this pools offers with an infinite ρ -- no rounds remaining -- "
         "offers at a zero or negative price, and offers in neither arm)",
+        # `.3g`, not `.3f`: three significant figures whatever the scale,
+        # and a coefficient that rounds to nothing prints as `0` rather
+        # than the `-0.000` that reads as a measured negative.
         "- "
         + ", ".join(
-            f"{name} = {'--' if value is None else format(value, '.3f')}"
+            f"{name} = {'--' if value is None else format(value, '.3g')}"
             for name, value in (
                 ("a_threat", fit.a_threat),
                 ("a_silent", fit.a_silent),
@@ -153,11 +145,12 @@ def _rho_section(offers: list[Offer], rho: RhoResult | None) -> list[str]:
         "| arm | ρ* | observed ρ range | PAV crossing (direction check) |",
         "|---|---|---|---|",
     ]
-    for arm, kept, fitted, curve in (
-        (THREAT, rho.rho_star_threat, fit.rho_star_threat, rho.threat_curve),
-        (SILENT, rho.rho_star_silent, fit.rho_star_silent, rho.silent_curve),
+    for arm, kept, fitted, curve, span in (
+        (THREAT, rho.rho_star_threat, fit.rho_star_threat, rho.threat_curve,
+         rho.rho_range_threat),
+        (SILENT, rho.rho_star_silent, fit.rho_star_silent, rho.silent_curve,
+         rho.rho_range_silent),
     ):
-        span = _observed_rho_range(offers, arm)
         lines.append(
             f"| {arm} | {_rho_star_cell(kept, fitted)} | "
             + (f"{span[0]:.3f} to {span[1]:.3f}" if span else "--")
@@ -168,36 +161,74 @@ def _rho_section(offers: list[Offer], rho: RhoResult | None) -> list[str]:
     lines += [
         "",
         "The last column is a direction check, not a second estimate: the PAV "
-        "runs over ρ bins, reads their **lower edges**, and counts the "
-        "infinite-ρ offers the fit skips, so it sits a little below the "
-        "logistic ρ*.",
+        "runs over ρ bins, reads their **lower edges**, and counts offers the "
+        "fit does not -- both the infinite-ρ ones (no rounds remaining) and "
+        "any at ρ = 0 (a zero or negative price), whose log the fit cannot "
+        "take -- so it sits a little below the logistic ρ*.",
         "",
     ]
     if rho.x_star_rho is None:
         lines.append(
-            "**X\\*_ρ not identified** -- see the notes below for which "
-            "arm the fit could not place."
+            "**X\\*_ρ not identified** -- see the fit line above and the "
+            "notes below for whether the fit settled at all, and which arm "
+            "it could not place."
         )
     else:
+        # Never "95% CI": the percentiles are read over the draws that
+        # produced a value, so the interval is conditional on that and
+        # the label has to carry the condition.
+        has_ci = rho.ci_low_rho is not None and rho.ci_high_rho is not None
         ci = (
-            f" (95% CI {rho.ci_low_rho:.3f} to {rho.ci_high_rho:.3f})"
-            if rho.ci_low_rho is not None and rho.ci_high_rho is not None
+            f" (conditional 95% percentile interval {rho.ci_low_rho:.3f} to "
+            f"{rho.ci_high_rho:.3f})"
+            if has_ci
             else ""
         )
         lines.append(f"**X\\*_ρ = {rho.x_star_rho:.3f}**{ci}")
         if rho.x_star_points is not None:
+            ci_points = (
+                " (conditional 95% percentile interval "
+                f"{rho.ci_low_rho * rho.c_ref:.1f} to "
+                f"{rho.ci_high_rho * rho.c_ref:.1f} points)"
+                if has_ci
+                else ""
+            )
             lines.append("")
             lines.append(
                 f"At c_ref = {rho.c_ref:.1f} points that is "
-                f"**X\\*_points = {rho.x_star_points:.1f} points**."
+                f"**X\\*_points = {rho.x_star_points:.1f} points**{ci_points}."
             )
+        # Three different absences, and they are not the same fact: no
+        # draw was taken at all, too few draws survived to read
+        # percentiles from, or the interval stands and is conditional.
         total = rho.n_boot_draws + rho.n_boot_failed
         lines.append("")
-        lines.append(
-            f"Bootstrap over {rho.boot_unit}s: the interval is conditional on "
-            "the draws whose own ladder bracketed the crossing; "
-            f"{rho.n_boot_failed} of {total} did not."
-        )
+        if total == 0:
+            lines.append(
+                "No interval: fewer than two bootstrap units "
+                f"({rho.boot_unit}s) to resample, so no draw was taken."
+            )
+        elif not has_ci:
+            lines.append(
+                f"No interval: only {rho.n_boot_draws} draws produced a "
+                "value, fewer than the 20 needed to read percentiles "
+                f"({rho.n_boot_failed} of {total} {rho.boot_unit} draws "
+                "produced none)."
+            )
+        else:
+            lines.append(
+                f"Bootstrap over {rho.boot_unit}s: the interval is "
+                "conditional on the draws whose own ladder bracketed the "
+                f"crossing; {rho.n_boot_failed} of {total} did not."
+            )
+            lines.append("")
+            lines.append(
+                "A draw fails when its crossing left its own ladder, which "
+                "happens preferentially to the draws with the largest "
+                "ρ\\*_threat -- the ones that would have widened the "
+                "interval upward. What is dropped is the top of the "
+                "distribution, so the interval is conservative toward 0."
+            )
     if rho.notes:
         lines += ["", "### ρ-axis notes", ""] + [f"- {n}" for n in rho.notes]
     return lines
@@ -322,7 +353,7 @@ def main() -> None:
             f"{by_price[p]:.2f}" if p in by_price else "--" for p in prices
         ]
         lines.append(f"| {curve.arm} | " + " | ".join(cells) + " |")
-    lines += _rho_section(offers, result.rho)
+    lines += _rho_section(result.rho)
     (args.out / "score_equivalent.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 

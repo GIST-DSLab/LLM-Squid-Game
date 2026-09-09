@@ -78,7 +78,9 @@ from dataclasses import dataclass, field
 
 __all__ = [
     "RHO_BIN_EDGES",
+    "RIDGE",
     "SILENT",
+    "SLOPE_EPS",
     "THREAT",
     "ArmCurve",
     "BootstrapResult",
@@ -162,8 +164,13 @@ class Offer:
 
     @property
     def dominated(self) -> bool:
-        """Whether paying this offer was strictly dominated in points."""
-        return self.price > self.reward * max(0, self.rounds_remaining)
+        """Whether paying this offer was strictly dominated in points.
+
+        Written against :attr:`ceiling` rather than repeating its
+        arithmetic, so the dominance line and the denominator of
+        :attr:`rho` cannot drift apart in a later edit.
+        """
+        return self.price > self.ceiling
 
     @property
     def ceiling(self) -> float:
@@ -290,6 +297,14 @@ class RhoResult:
             rule, ``None`` when suppressed.
         rho_star_silent: Same for the silent arm.
         notes: The fit's notes plus every suppression this rule made.
+        rho_range_threat: ``(min rho, max rho)`` over the threat offers
+            that entered the fit -- the ladder the range rule tested the
+            reservation against, carried on the result so a reader (or a
+            report) states the same range the rule used instead of
+            recomputing it and risking a different filter.
+        rho_range_silent: Same for the silent arm. ``None`` on either
+            side when that arm contributed no offer with a finite,
+            positive rho.
     """
 
     fit: RhoFit
@@ -306,6 +321,8 @@ class RhoResult:
     rho_star_threat: float | None = None
     rho_star_silent: float | None = None
     notes: list[str] = field(default_factory=list)
+    rho_range_threat: tuple[float, float] | None = None
+    rho_range_silent: tuple[float, float] | None = None
 
 
 @dataclass(frozen=True)
@@ -1001,18 +1018,34 @@ def rho_result(
             so this is the expensive argument.
         seed: RNG seed for the resampling.
 
+    A fit that did not converge is read for nothing at all. Its
+    parameters are the last Newton iterate rather than a maximum, which
+    is exactly the draw :func:`_rho_x_star` throws away inside the
+    bootstrap; reporting the same iterate as the point estimate would
+    put a number at the centre of an interval built to exclude it.
+
     Returns:
         A :class:`RhoResult`. The interval is only attempted when both
         arms produced a reservation the range rule allowed.
     """
     fit = fit_rho_logistic(offers)
     notes = list(fit.notes)
-    stars: dict[str, float | None] = {}
-    for arm, value in ((THREAT, fit.rho_star_threat), (SILENT, fit.rho_star_silent)):
-        kept, note = _in_observed_range(offers, arm, value)
-        stars[arm] = kept
-        if note:
-            notes.append(note)
+    stars: dict[str, float | None] = {THREAT: None, SILENT: None}
+    if not fit.converged:
+        notes.append(
+            "the fit did not converge, so neither arm's reservation was "
+            "read off it: the bootstrap discards such a draw and the "
+            "point estimate is held to the same rule."
+        )
+    else:
+        for arm, value in (
+            (THREAT, fit.rho_star_threat),
+            (SILENT, fit.rho_star_silent),
+        ):
+            kept, note = _in_observed_range(offers, arm, value)
+            stars[arm] = kept
+            if note:
+                notes.append(note)
     x_star_rho: float | None = None
     if stars[THREAT] is not None and stars[SILENT] is not None:
         x_star_rho = stars[THREAT] - stars[SILENT]
@@ -1022,6 +1055,10 @@ def rho_result(
         if o.arm in (THREAT, SILENT) and math.isfinite(o.rho) and o.rho > 0.0
     ]
     c_ref = statistics.median(ceilings) if ceilings else 0.0
+    ranges: dict[str, tuple[float, float] | None] = {}
+    for arm in (THREAT, SILENT):
+        rhos = _fitted_rhos(offers, arm)
+        ranges[arm] = (min(rhos), max(rhos)) if rhos else None
     boot = BootstrapResult(None, None, "seed", 0, 0, 0)
     if x_star_rho is not None:
         boot = bootstrap_x_star_rho(offers, n_boot=n_boot, seed=seed)
@@ -1040,6 +1077,8 @@ def rho_result(
         rho_star_threat=stars[THREAT],
         rho_star_silent=stars[SILENT],
         notes=notes,
+        rho_range_threat=ranges[THREAT],
+        rho_range_silent=ranges[SILENT],
     )
 
 

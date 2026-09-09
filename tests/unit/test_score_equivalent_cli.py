@@ -95,10 +95,46 @@ def _both_arms(tmp_path: Path) -> Path:
     return run
 
 
-def _run_cli(monkeypatch: pytest.MonkeyPatch, run: Path, out: Path) -> None:
+def _one_seed(tmp_path: Path) -> Path:
+    """Both arms on a single seed: one bootstrap unit, so no draw is taken.
+
+    ``_bootstrap`` returns before the loop when there are fewer than two
+    units, so ``n_boot_draws`` and ``n_boot_failed`` are both 0 -- the
+    case the md must not report as "0 of 20 draws did not".
+    """
+    run = tmp_path / "one_seed"
+    _write_run(run, [
+        ("t1", "hz_1111", 5, _THREAT_TURNS),
+        ("s1", "hz_0000", 5, _SILENT_TURNS),
+    ])
+    return run
+
+
+def _many_seeds(tmp_path: Path) -> Path:
+    """Six seeds, each carrying both arms, so the draws produce an interval.
+
+    Half the seeds pay the silent arm's third rung and half do not, which
+    is what keeps the percentile interval from collapsing onto the point
+    estimate.
+    """
+    run = tmp_path / "many_seeds"
+    sessions = []
+    for seed in range(6):
+        silent = list(_SILENT_TURNS)
+        if seed % 2 == 0:
+            silent[2] = (3, 20.0, True)
+        sessions.append((f"t{seed}", "hz_1111", seed, _THREAT_TURNS))
+        sessions.append((f"s{seed}", "hz_0000", seed, silent))
+    _write_run(run, sessions)
+    return run
+
+
+def _run_cli(
+    monkeypatch: pytest.MonkeyPatch, run: Path, out: Path, n_boot: int = 20
+) -> None:
     monkeypatch.setattr(
         "sys.argv",
-        ["score_equivalent", str(run), "--out", str(out), "--n-boot", "20"],
+        ["score_equivalent", str(run), "--out", str(out), "--n-boot", str(n_boot)],
     )
     main()
 
@@ -162,6 +198,104 @@ def test_md_reports_the_rho_axis(tmp_path, monkeypatch, capsys):
     # the PAV reading is a direction check, not a second estimate
     assert "direction check" in md
     assert "c_ref" in md
+
+
+class TestWhyThereIsNoInterval:
+    """Three different absences of a CI, and the md must not confuse them."""
+
+    def test_a_single_unit_says_so_instead_of_printing_zero_of_zero(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        out = tmp_path / "out"
+        _run_cli(monkeypatch, _one_seed(tmp_path), out)
+        capsys.readouterr()
+
+        md = (out / "score_equivalent.md").read_text(encoding="utf-8")
+        assert "**X\\*_ρ" in md  # the point estimate is there; only the CI is not
+        assert "0 of 0" not in md
+        assert "fewer than two bootstrap units" in md
+
+    def test_too_few_usable_draws_names_the_twenty_draw_floor(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        """Two arm-segregated seeds: some draws hold one arm only, and 20
+        resamples cannot leave 20 survivors once any of them fail."""
+        out = tmp_path / "out"
+        _run_cli(monkeypatch, _both_arms(tmp_path), out)
+        capsys.readouterr()
+
+        md = (out / "score_equivalent.md").read_text(encoding="utf-8")
+        assert "fewer than the 20 needed to read percentiles" in md
+        assert "of 20" in md
+
+    def test_a_real_interval_is_labelled_conditional_and_says_which_way(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        out = tmp_path / "out"
+        _run_cli(monkeypatch, _many_seeds(tmp_path), out, n_boot=200)
+        capsys.readouterr()
+
+        md = (out / "score_equivalent.md").read_text(encoding="utf-8")
+        # Only the ρ section: the price axis above it is the legacy
+        # estimator and its wording is deliberately left alone.
+        rho_md = md.split("## ρ axis (price / ceiling)", 1)[1]
+        assert "conditional 95% percentile interval" in rho_md
+        assert "95% CI" not in rho_md
+        assert "conservative toward 0" in rho_md
+        # the same interval, converted at c_ref, on the points line
+        assert "X\\*_points" in rho_md
+        points_line = next(
+            line for line in rho_md.splitlines() if "X\\*_points" in line
+        )
+        assert "conditional 95% percentile interval" in points_line
+        assert "points" in points_line
+
+
+def test_the_coefficients_are_printed_without_trailing_zero_noise(
+    tmp_path, monkeypatch, capsys
+):
+    """``.3g``, not ``.3f``: three significant figures, and no ``-0.000``."""
+    out = tmp_path / "out"
+    _run_cli(monkeypatch, _both_arms(tmp_path), out)
+    capsys.readouterr()
+
+    md = (out / "score_equivalent.md").read_text(encoding="utf-8")
+    assert "a_silent = -18," in md  # `.3f` would print -18.024
+
+
+def test_the_observed_range_comes_from_the_result_not_a_second_computation(
+    tmp_path, monkeypatch, capsys
+):
+    """The CLI prints ``RhoResult.rho_range_*``, the range the rule used."""
+    out = tmp_path / "out"
+    _run_cli(monkeypatch, _both_arms(tmp_path), out)
+    capsys.readouterr()
+
+    md = (out / "score_equivalent.md").read_text(encoding="utf-8")
+    # rho spans 5 / 90 = 0.056 up to 50 / 20 = 2.5 in both arms.
+    assert md.count("0.056 to 2.500") == 2
+
+    from scripts.analysis import score_equivalent as cli
+
+    assert not hasattr(cli, "_observed_rho_range")
+
+
+def test_the_pav_caveat_names_both_kinds_of_offer_the_fit_skips(
+    tmp_path, monkeypatch, capsys
+):
+    """Infinite ρ and zero-price offers are both binned but not fitted."""
+    out = tmp_path / "out"
+    _run_cli(monkeypatch, _both_arms(tmp_path), out)
+    capsys.readouterr()
+
+    md = (out / "score_equivalent.md").read_text(encoding="utf-8")
+    caveat = next(
+        line
+        for line in md.splitlines()
+        if "direction check, not a second estimate" in line
+    )
+    assert "infinite" in caveat
+    assert "ρ = 0" in caveat
 
 
 def test_an_arm_with_no_offers_writes_no_rho_rows(tmp_path, monkeypatch, capsys):
