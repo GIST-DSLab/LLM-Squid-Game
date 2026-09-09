@@ -1601,6 +1601,10 @@ class UnifiedTurnManager:
             price=price,
             reward=self._forfeit_layer.config.base_reward,
             rounds_remaining=rounds_remaining,
+            # Computed on the RENDERED framing, not on its name: whether
+            # a cell states a consequence is a property of the bytes it
+            # sends, and per-season switches can change it.
+            states_outcome=states_outcome(system_prompt),
             # The true_baseline vocabulary contract forbids life/death
             # words; every other framing says "Lives", as the menu does.
             lives_label=(

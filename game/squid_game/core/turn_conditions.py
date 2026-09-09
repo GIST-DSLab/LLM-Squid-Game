@@ -198,6 +198,11 @@ def threat_level_of(framing: Framing | str) -> int | None:
 EVENT_HEADINGS: tuple[str, ...] = (
     "=== Event ===",
     "=== Elimination Rule ===",
+    # The ransom design (2026-09-09) heads the same block by what
+    # triggers it. The predicate is about whether a consequence is
+    # stated, not about the wording of the heading, so a renamed
+    # heading belongs here rather than in a second predicate.
+    "=== If You Decline ===",
 )
 
 #: Opening words of the reassurance denial that ``threat_type/_frame.j2``

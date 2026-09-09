@@ -492,6 +492,7 @@ def build_ransom_call_message(
     price: float,
     reward: float,
     rounds_remaining: int,
+    states_outcome: bool = False,
     lives_label: str = "Lives",
     carrot: str | None = None,
 ) -> str:
@@ -513,6 +514,10 @@ def build_ransom_call_message(
         price: Points deducted on PAY.
         reward: Points a correct answer is worth.
         rounds_remaining: Rounds left after this one.
+        states_outcome: Does this cell's framing state a consequence for
+            declining? True adds one clause pointing at it -- never
+            restating it, so the erasure text stays in one place. False
+            (the silent arm) leaves the line as the rules' own.
         lives_label: ``"Lives"``, or ``"Attempts"`` under a framing
             whose vocabulary contract forbids life/death words.
         carrot: Run-level carrot name; supplies the score noun so the
@@ -535,6 +540,7 @@ def build_ransom_call_message(
         price=price,
         reward=reward,
         rounds_remaining=rounds_remaining,
+        states_outcome=states_outcome,
         score_noun=vocab["score_noun"],
     )
 
