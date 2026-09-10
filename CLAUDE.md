@@ -661,6 +661,54 @@ X*와 나란히 보고해야 한다. ⚠️ 점수가 가격을 못 대면 몸�
 < price` 가드, 2026-09-09) — 강제 라운드가 밑천을 태우면 그 세션은 결정 없이
 끝난다. 세션당 결정 수가 스케줄의 강제 라운드 수보다 적을 수 있다.
 
+**노력 민감 난이도 (2026-09-10, `task_config.puzzle_challenge`, 기본 off).** 옵트인 모드로,
+켜면 라운드별 프로필 스케줄이 `puzzle_ladder`를 **대체한다**. 정답은 계속 유일하고
+(`exists_differing`가 그대로 진실 신탁), 단서를 빼지 않으며, 맞힌 답을 오답 처리하지 않는다.
+손잡이는 둘이다. **① 함정 질의**(`puzzle_profiles.<name>.trap_query`) — 네 얕은 해가
+**전부 틀리는** 칸만 통과시킨다: 최근접 이웃 단서 복사 · 단서 최빈 행동 · 최적 1속성 규칙 ·
+마지막 매칭 절(first-match를 무시했을 때의 답). 기록된 런에서 NN의 정답률은 0.83인데
+gpt-oss:120b는 마지막 라운드에서 0.59였다 — 질의를 균등 추출해 난이도가 채점 지점에 없었기
+때문이다. 구현은 `generate_puzzle` 위의 **기각 표집 래퍼**(`generate_trap_puzzle`)라 유일성
+DFS는 한 줄도 안 바뀌고, 예산(200회)을 다 쓰면 **쉬운 문제로 조용히 대체하지 않고
+`PuzzleGenerationError`를 올린다**. 절이 3개 미만이면 우선순위가 없어 함정이 원리적으로
+존재하지 않으므로 `trap_query` + `clauses < 3`은 거부된다. **② 규칙 채점**
+(`puzzle_challenge.rule_grading`, **시즌 단위**) — 성공 조건이
+`ACTION 정답 AND 규칙이 제시된 단서 전부를 재현`이 되고, `system_rules_puzzle.j2`가 그
+사실을 한 문단으로 **말한다**(위협 셀과 통제 셀에 동일하게 말하므로 차분에는 안 남는다).
+왜: 기록된 런에서 자기 규칙이 단서 전부와 정합했던 턴의 정답률은 **85/85 = 100%**였고,
+모델은 그 경로를 채점이 보상하지 않아서 밟지 않았다(r6 CoT의 71%에 포기 어휘). 라운드가
+아니라 시즌 단위인 이유는 `get_system_rules()`가 시즌당 한 번 렌더되어 모든 턴에 들어가기
+때문이다 — 라운드별로 켜면 그 문단이 어떤 턴에서 거짓이 된다.
+`compress_puzzle_ladder` · `underdetermined` · `forced_wrong`과 **전부 상호배타**이고
+로드 시 거부된다. 프로필 정의는 `configs/tasks/signal_game.yaml`의 `puzzle_profiles`
+(easy/medium/hard, 네 번째를 더하는 건 한 줄), 배치는 실험 YAML의
+`puzzle_challenge.schedule`(라운드 `1..N`을 정확히 한 번씩). 검증:
+`scripts/dev/validate_puzzle_challenge.py`(모델 호출 0, 게이트 6개 + `--preflight`),
+파일럿 분석: `scripts/analysis/effort_dose_response.py`. 설정:
+`configs/experiment/signal_effort_pilot_{a,b}_{gptoss120b,gemma4}.yaml` +
+`signal_effort_pilot_a_nograde_gptoss120b.yaml`(A/B 귀속용 런 대 런 대조).
+Spec: `docs/history/specs/2026-09-10-signal-game-effort-sensitive-difficulty-design.md`.
+⚠️ 파일럿 세 셀은 framing · forfeit_condition · social_context · seed가 모두 같고
+`reasoning_effort`만 다르므로 **`cell_id`가 0/1/2로 갈려 있다** — 같은 id를 주면
+`--resume`이 셋을 한 칸으로 접고(몸값 설계에서 실제로 났던 사고), 분석의 effort 조인도
+끊긴다. ⚠️ 게이트 G6(shape 다양성)은 `C(clauses, conjunctions) > 1`인 프로필에만
+적용된다: easy(1,0)·medium(3,0)은 가능한 shape이 하나뿐이라 어떤 생성기도 점유율 1.00을
+피할 수 없다. G2·G5·G6은 비율 추정치라 표본이 작으면 잡음만으로 실패하므로
+`--seeds` 기본값은 200이다(easy의 `nn`은 0.83~0.86인데 n=100 draw 하나가 0.77을 냈다).
+
+⚠️ **`correct`의 정의가 런마다 다르다 (분석자 계약 8).** `rule_graded: true`인 런에서
+`correct`는 `action_correct AND rule_reproduces_clues`다. 옛 정의(ACTION만)는 새 열
+`action_correct`에 있다. 정답률·`rule_match_score`·mastery 지표를 런 사이에 비교하기 전에
+`task_metadata.rule_graded`를 먼저 봐라. `actual_correct == correct` 불변식은 유지되므로
+(`score_equivalent.py`가 그것을 검사한다) `actual_correct`로는 두 정의를 구별할 수 **없다**.
+`rule_reproduces_clues`는 **shape 무관**이고, 기존 `rule_consistent_with_clues`는 shape
+**엄격**이다 — 의미가 다르니 섞지 마라. 또한 puzzle 모드 런은 이제 `puzzle_id` ·
+`generator_version` · `shallow_actions` · `shallow_solvers_correct` · `trap_query` ·
+`trap_attempts` · `difficulty_profile` · `schedule_id`를 **항상** 기록한다(challenge를 안
+켜도; 비-challenge 런에서는 뒤 넷이 `False`/`0`/`None`/`None`). 문항 짝지음 분석은
+`puzzle_id`를 키로 쓰고, "얕은 해 대비 초과 정답"은 `shallow_solvers_correct`로 바로 낼 수
+있다.
+
 **사다리 압축 (2026-09-10, `task_config.compress_puzzle_ladder`, 기본 off).** 위
 문단의 공식(`L` = `configs/tasks/signal_game.yaml` `puzzle_ladder`의 길이 = 10)은
 **양 끝을 고정한다**: `rung(1) = 1`, `rung(N) = L`. 둘 다 필요하다 — 압축이 없으면

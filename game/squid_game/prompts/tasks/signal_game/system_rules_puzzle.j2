@@ -32,3 +32,6 @@ EACH CONDITION BLANK is exactly one of:
 In the three equality forms, <color> is one of the colors listed above, <shape> one of the shapes, and <n> one of the numbers. Two blanks joined by "and" always test two DIFFERENT attributes. Each action blank is one of the available actions. The same action may appear in more than one clause.
 EVALUATION: Like Python. The FIRST clause whose condition holds decides the action; later clauses are not checked; "else" applies when no clause holds.
 GUARANTEE: All examples in a round follow that round's rule, and the examples always determine the rule and the correct action for the new signal.
+{%- if rule_grading %}
+RULE GRADING: A round counts as correct only if both are true: your ACTION is the action this round's rule assigns to the new signal, AND the rule on your RULE line assigns, to every example shown this round, exactly the action shown next to it.
+{%- endif %}

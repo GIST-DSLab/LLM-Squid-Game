@@ -783,6 +783,7 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
             "p_death_constant", "num_few_shot", "curriculum_turns",
             "signal_mode", "underdetermined", "underdetermined_blocks",
             "forced_wrong", "forced_wrong_blocks", "compress_puzzle_ladder",
+            "puzzle_challenge",
         )
         for field_name in _TASK_OPTIONAL_FIELDS:
             if field_name in task_raw:

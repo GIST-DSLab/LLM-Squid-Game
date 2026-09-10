@@ -1,0 +1,190 @@
+# signal_effort_pilot_a_gptoss120b
+#
+# Effort dose-response pilot, schedule A. NO THREAT, NO RANSOM, NO FORFEIT.
+# Spec: docs/history/specs/2026-09-10-signal-game-effort-sensitive-difficulty-design.md §10
+#
+# Question this run answers, BEFORE any threat run: does dP(correct)/d(effort)
+# exceed zero on the new profiles? The only thing that differs between the
+# three cells is provider_config.reasoning_effort; every prompt byte is
+# identical. Recorded runs put this derivative at NEGATIVE today (longer CoT
+# predicted WORSE answers on rounds 4-6), which is the worst possible property
+# for a benchmark whose X axis is effort.
+#
+# lives.initial is 7 for a 6-round season, so NO session can be truncated:
+# otherwise the hard rounds would only ever be observed in sessions that
+# survived, and the effort estimate would carry that selection.
+#
+# The three cells are written out in full rather than sharing a YAML anchor:
+# every other config in this directory expands its cells, and the diff between
+# the two schedules stays readable that way.
+#
+# The three cells carry DISTINCT cell_id values (0 = low, 1 = medium,
+# 2 = high). They share framing, forfeit_condition, social_context and seed,
+# so cell_id is the only thing telling them apart: --resume keys on
+# (framing, forfeit_condition, social_context, cell_id, seed), and giving
+# them the same id would make one cell's repetitions count as all three's
+# (the failure CLAUDE.md records for the ransom design). It is also the join
+# that maps a season back to its reasoning_effort -- season_results.jsonl
+# records cell_id but not the provider config.
+#
+# Analysis: scripts/analysis/effort_dose_response.py (six acceptance gates).
+# Model: Ollama Cloud gpt-oss:120b-cloud (needs OLLAMA_API_KEY).
+
+name: signal_effort_pilot_a_gptoss120b
+description: "Effort dose-response pilot (schedule A), gpt-oss-120b: reasoning_effort low/medium/high x 20 reps x 6 rounds, no threat."
+seasons:
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 0
+  p_death_override: 0.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    difficulty: medium
+    total_turns: 6
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 6
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    underdetermined: false
+    forced_wrong: false
+    compress_puzzle_ladder: false
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - {turn: 1, profile: easy}
+      - {turn: 2, profile: medium}
+      - {turn: 3, profile: hard}
+      - {turn: 4, profile: hard}
+      - {turn: 5, profile: medium}
+      - {turn: 6, profile: easy}
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    reasoning_effort: low
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 1
+  p_death_override: 0.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    difficulty: medium
+    total_turns: 6
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 6
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    underdetermined: false
+    forced_wrong: false
+    compress_puzzle_ladder: false
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - {turn: 1, profile: easy}
+      - {turn: 2, profile: medium}
+      - {turn: 3, profile: hard}
+      - {turn: 4, profile: hard}
+      - {turn: 5, profile: medium}
+      - {turn: 6, profile: easy}
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 2
+  p_death_override: 0.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    difficulty: medium
+    total_turns: 6
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 6
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    underdetermined: false
+    forced_wrong: false
+    compress_puzzle_ladder: false
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - {turn: 1, profile: easy}
+      - {turn: 2, profile: medium}
+      - {turn: 3, profile: hard}
+      - {turn: 4, profile: hard}
+      - {turn: 5, profile: medium}
+      - {turn: 6, profile: easy}
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    reasoning_effort: high
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+num_repetitions: 20
+output_dir: outputs/signal_effort_pilot_a_gptoss120b
+parallel_workers: 2
+
+# No truncation: 7 lives over 6 rounds can never reach zero.
+lives:
+  enabled: true
+  initial: 7
+
+# Silent control framing states no outcome, so no peer notice is ever emitted.
+peer_death:
+  p_announce: 0.0
+  first_turn: 2
+  max_per_turn: 1
+
+carrot: benchmark
+
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: medium
+  p_death: 0.25
