@@ -32,6 +32,17 @@
      absent or falsy, this template renders the standard RULE + ACTION
      block (pinned by ``tests/unit/test_task_call_template.py``).
 
+     2026-09-10, prompt revision v2 (supervisor voice). No "===" marker;
+     "LABEL: sentence" instead. The two lead sentences ("You may now
+     analyze the puzzle and choose your action." / "... the problem and
+     produce your answer.") collapse to "Give your answer." and the
+     response-format lead to "ANSWER FORMAT: exactly two lines, in this
+     order." (audit L5). Two evaluator words go with them (audit E2):
+     "analyze the puzzle" named the genre every round, and the free-form
+     RULE slot said "hidden rule" where the task rules say "the rule".
+     The placeholder note now matches what the hint actually shows --
+     ``___`` blanks, not ``<placeholder>`` (audit A4).
+
      Variables:
        user_body                : composed task stimulus + history (already
                                   trimmed by UnifiedTurnManager — no further
@@ -48,21 +59,17 @@
 
 {% endif -%}
 {%- if response_format_override -%}
-You may now analyze the problem and produce your answer.
-
-=== Response Format ===
+Give your answer.
+ANSWER FORMAT:
 {{ response_format_override }}
 {%- else -%}
 {%- if not available_actions -%}
 (This is a risk-only turn; the ACCEPT action is the only valid task response.)
 
 {% endif -%}
-You may now analyze the puzzle and choose your action.
-
-=== Response Format ===
-Respond with all of the following fields, each on its own line, in the order shown:
-
+Give your answer.
+ANSWER FORMAT: exactly two lines, in this order.
 {% if rule_template_hint %}RULE: {{ rule_template_hint }}
-(Fill in each <placeholder> with a concrete value from your best current hypothesis. Your ACTION below should follow logically from this RULE.)
-{% else %}RULE: <one-line best hypothesis of the hidden rule; write "no rule" for null tasks>
+(Fill in every blank with a concrete value. Your ACTION must follow from your RULE.)
+{% else %}RULE: <one-line best hypothesis of the rule; write "no rule" for null tasks>
 {% endif %}ACTION: {% if available_actions %}<one of: {{ available_actions | join(", ") }}>{% else %}ACCEPT{% endif %}{% endif %}

@@ -265,8 +265,11 @@ def _benchmark_response(_idx: int, messages: list[dict[str, str]]) -> str:
     # Route on the menu header, not on a bare "CHOICE:": since 2026-09-07
     # the task-call body opens with "YOUR CHOICE: CONTINUE — ..." (the
     # choice echo), so that substring is in both prompts. The menu header
-    # is rendered by 5-forfeit_option.j2 alone.
-    if "=== Your Choice ===" in body:
+    # is rendered by 5-forfeit_option.j2 alone -- and since the
+    # 2026-09-10 supervisor-voice revision it is "YOUR CHOICE:" on a line
+    # of its own, so the trailing newline is what separates it from the
+    # echo line ("YOUR CHOICE: CONTINUE - ...").
+    if "YOUR CHOICE:\n" in body:
         return "CHOICE: CONTINUE"
     marker = "synthetic e2e band "
     band = body[body.index(marker) + len(marker)]
@@ -299,8 +302,10 @@ def test_full_season_through_the_engine_asks_for_answer_not_accept(
         for call in stub.calls
         # The decision call is the one rendering the menu. Routing on a
         # bare "CHOICE:" broke on 2026-09-07, when the task-call body
-        # gained the one-line choice echo ("YOUR CHOICE: CONTINUE — ...").
-        if "=== Your Choice ===" not in call.messages[-1]["content"]
+        # gained the one-line choice echo ("YOUR CHOICE: CONTINUE — ...");
+        # the menu header became "YOUR CHOICE:" on its own line on
+        # 2026-09-10, so the newline is what tells the two apart.
+        if "YOUR CHOICE:\n" not in call.messages[-1]["content"]
     ]
     assert len(task_call_bodies) == _E2E_TOTAL_TURNS
     for body in task_call_bodies:

@@ -73,8 +73,8 @@ compared word for word with the probe's v7 / v7esc arms.
 Design contract
 ---------------
 
-*Insertion point is inside the framing section, immediately after the
-threat core and immediately before the ``Current status:`` block.* That
+*Insertion point is inside the framing section, immediately ABOVE the
+event label the framing states its consequence under.* That
 is exactly where ``threat_type/_frame.j2`` puts it, and
 matching it is the point: the text is byte-identical to the probe's so
 that a live run is comparable with the v7 / v7esc arms, and a different
@@ -87,9 +87,10 @@ was "the events stated above". Three models probed at one turn
 heading above it -- "=== If Your Lives Reach Zero ===" -- and answered
 ``P_THREAT: 0`` at every lives level above one, deducing from the game
 rules that a round costs at most one life. The heading is now
-``=== Event ===`` and the ramp is spliced ABOVE it, pointing down at
-"the events stated below": the per-round statement is the first thing
-read about when the events land.
+``AT ZERO LIVES:`` (``=== Event ===`` until the 2026-09-10 marker
+removal) and the ramp is spliced ABOVE it, pointing down at "the events
+stated below": the per-round statement is the first thing read about
+when the events land.
 
 Mechanically the framing templates are still not edited (that would mean
 touching eleven ``.j2`` files and their pinned snapshots). Instead
@@ -165,13 +166,19 @@ TEMPLATE: str = "2-threat_section.j2"
 #: ``HazardRampConfig`` and with the gate inside :data:`TEMPLATE`.
 VARIANTS: tuple[str, ...] = ("v7", "v7_escape")
 
-#: Line that opens the per-turn status block in every live framing
-#: template (``threat_l*``, ``baseline_flagship``, ``flagship_corruption*``,
-#: ``true_baseline``, and the hearts_zero frame). The ramp is inserted
-#: immediately before it. ``tests/unit/test_hazard_ramp.py`` asserts that
-#: every framing reachable from ``Framing`` still renders this marker, so
-#: a template edit that drops it fails loudly instead of silently pushing
-#: the ramp to the end of the prompt.
+#: Line that opened the per-turn status block in every framing template
+#: until 2026-09-10, and still opens it in the retired ones
+#: (``legacy/threat_l*``, ``legacy/baseline_flagship``,
+#: ``legacy/flagship_corruption*``, ``legacy/true_baseline``).
+#:
+#: THE LIVE FRAME NO LONGER RENDERS IT (plan §0.5): turn, score and lives
+#: moved to the user body, so the system prompt is byte-identical for a
+#: whole session. Nothing in this module keys on it -- :func:`insert_ramp`
+#: anchors on :data:`EVENT_HEADINGS` and has since 2026-09-07, which is
+#: also the invariant ``tests/unit/test_hazard_ramp.py`` pins: every
+#: framing that states an outcome renders an event label for the ramp to
+#: sit above. Kept exported because recorded prompts carry it and the
+#: offline tools that cut a stored ``system_prompt`` reach for it here.
 STATUS_MARKER: str = "\nCurrent status:"
 
 #: Fallback lives budget when a context carries none. Matches the

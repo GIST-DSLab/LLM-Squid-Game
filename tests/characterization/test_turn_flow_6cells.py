@@ -43,6 +43,25 @@ stands"), and REASON option 3 (SCORE PROTECTION → OTHER) — plus the
 states the same rule. No ``results`` field moved: the call sequence, the
 per-call RI split and the forfeit/task short-circuit are unchanged.
 
+Re-recorded on 2026-09-10 for prompt revision v2 (supervisor voice,
+``docs/history/plans/2026-09-10-supervisor-voice-prompt-revision.md``).
+Only ``prompts`` leaves moved, only in the ``user`` role, and every moved
+leaf is one of: the history-block header (``=== Previous Turn Results ===``
+-> ``PREVIOUS ROUNDS:``) and its row prefix (``- Turn N:`` -> ``- Round
+N:``); the menu header (``=== Your Choice ===`` -> ``YOUR CHOICE:``) and
+its status line (``Turn N.`` -> ``Round N.``); the menu's REASON header
+plus its two-line lead and trailing "single digit" sentence, collapsed to
+``IF YOU FORFEIT, STATE YOUR REASON: add a REASON line with ONE digit.``;
+the decision call's framing sentence ("decide whether to continue or
+forfeit" -> "decide: CONTINUE or FORFEIT"); and both response-format
+blocks (``=== Response Format ===`` + "Respond with all of the following
+fields..." -> ``ANSWER FORMAT: ...``), including the task call's lead
+("You may now analyze the puzzle..." -> "Give your answer.") and its
+free-form RULE slot ("the hidden rule" -> "the rule"). The ``system`` role
+is byte-identical in all six cells -- these framings are frozen in
+``prompts/legacy/``. Every ``turns`` field is byte-identical: the same
+choices, scores, rewards, RI splits, call counts and call order.
+
 The six cells are the canonical v6 topology (CLAUDE.md "6-Cell 2x3
 Factorial"):
 
@@ -194,7 +213,12 @@ def _make_response_fn(*, menu_skipped: bool, forfeit_turn: int | None):
     #: is rendered by ``5-forfeit_option.j2`` alone, so it identifies the
     #: decision call without depending on a field name that now appears in
     #: two calls.
-    menu_header = "=== Your Choice ==="
+    #:
+    #: 2026-09-10 (prompt revision v2): the menu header lost its ``===``
+    #: marker and became ``YOUR CHOICE:``, which is a PREFIX of the echo
+    #: line. The trailing newline is what separates them: the menu header
+    #: is alone on its line, the echo always continues with " CONTINUE —".
+    menu_header = "YOUR CHOICE:\n"
 
     def _fn(_call_index: int, messages: list[dict[str, str]]) -> str:
         nonlocal decisions_seen
@@ -373,7 +397,7 @@ def test_call_sequence_is_decision_then_task_in_order() -> None:
     # the single echo line (``prompts/7-choice_echo.j2``) that says how
     # CONTINUE came about; that line is context, not a directive, and the
     # menu and its response-format schema are still decision-call only.
-    assert "=== Your Choice ===" not in task_user
+    assert "YOUR CHOICE:\n" not in task_user
     assert "CHOICE: <" not in task_user
     assert "FORFEIT" not in task_user
     assert task_user.count("YOUR CHOICE: CONTINUE") == 1
@@ -424,7 +448,7 @@ def test_forfeit_turn_issues_no_task_call() -> None:
     assert results[-1].forfeit_decision is True
     # Turns 1-2: decision + task; turn 3: decision only.
     assert len(provider.calls) == 2 * 2 + 1
-    assert "=== Your Choice ===" in provider.calls[-1].messages[-1]["content"]
+    assert "YOUR CHOICE:" in provider.calls[-1].messages[-1]["content"]
 
     last = results[-1]
     assert last.ri_task is None

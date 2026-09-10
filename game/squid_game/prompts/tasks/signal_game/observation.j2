@@ -1,1 +1,15 @@
-Turn {{ turn_number }}: You see a {{ signal }}. Available actions: [{{ actions_str }}]
+{# This round's stimulus in the default sequential mode.
+
+   Supervisor voice (2026-09-10, prompt revision v2): ``Turn N:`` became
+   ``ROUND N.`` (plan §1 A1, one word for one thing) and the signal and
+   the action list are spoken as ``LABEL: sentence``, matching
+   ``observation_puzzle.j2``. Facts unchanged.
+
+   "You see a" is kept verbatim inside the NOW line: the Web Arena
+   frontend renders the signal as a picture by matching
+   /you see an?\s+(\w+)\s+(\w+)\s+with number\s+(\d+)/ against this text
+   (``web/frontend/app.js::parseStimulus``) and falls back to raw text
+   when it does not match.
+#}ROUND {{ turn_number }}.
+NOW: You see a {{ signal }}.
+ACTIONS: [{{ actions_str }}]

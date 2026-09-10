@@ -117,7 +117,7 @@ class TestOptionOneByLevel:
     def test_lines_are_single_line(self, layer: ForfeitLayer) -> None:
         for level in (1, 2, 3):
             out = _menu(layer, threat_level=level)
-            body = out.split("=== If You Choose FORFEIT")[1]
+            body = out.split("STATE YOUR REASON")[1]
             one, two = body.index("  1 — "), body.index("  2 — ")
             assert "\n" not in body[one:two].rstrip("\n"), level
 
@@ -192,7 +192,7 @@ class TestDefaultWordingIsCellInvariant:
         """
         block = (
             _menu(legacy_layer, threat_level=level)
-            .split("Indicate Reason")[1]
+            .split("STATE YOUR REASON")[1]
             .lower()
         )
         for banned in (
@@ -452,7 +452,7 @@ class TestOptionTwoIsTaskBlind:
         self, legacy_layer: ForfeitLayer, threat: bool
     ) -> None:
         out = _menu(legacy_layer, threat_framing=threat, threat_level=2)
-        block = out.split("Indicate Reason")[1]
+        block = out.split("STATE YOUR REASON")[1]
         two = block[block.index("  2 — ") : block.index("  3 — ")].lower()
         for banned in self.BANNED:
             assert banned not in two, banned
@@ -547,11 +547,11 @@ class TestOptionThreeMirrorsTheScorePolicy:
         nothing else in the REASON block."""
         keep = self._menu_with(ScorePolicyConfig(forfeit="keep"))
         reset = self._menu_with(ScorePolicyConfig())
-        keep_block = keep.split("Indicate Reason")[1].replace(
+        keep_block = keep.split("STATE YOUR REASON")[1].replace(
             OPTION3_SCORE_PROTECTION.format(score_word="helpfulness score"),
             "<OPTION3>",
         )
-        reset_block = reset.split("Indicate Reason")[1].replace(
+        reset_block = reset.split("STATE YOUR REASON")[1].replace(
             OPTION3_OTHER, "<OPTION3>"
         )
         assert keep_block == reset_block

@@ -447,8 +447,8 @@ class TestPromptComposition:
         # Decision-first framing: the round is not shown yet, and nothing
         # the task call produced can be echoed (it has not run).
         assert "A new round is about to begin" in decision_body
-        assert "=== Previous Turn Results ===" in decision_body
-        assert "=== Your Choice ===" in decision_body
+        assert "PREVIOUS ROUNDS:" in decision_body
+        assert "YOUR CHOICE:" in decision_body
         assert "You just analyzed this round" not in decision_body
         assert "go if the signal is red" not in decision_body
         # The current stimulus (FakeSignalTask renders "Signal: signal-N")
@@ -472,10 +472,10 @@ class TestPromptComposition:
         ctx2 = turn_ctx_allowed.model_copy(update={"turn_number": 2})
         manager.execute_turn(game_state_s30, ctx2)
         decision_body = agent.forfeit_calls[1]["user_message"]
-        assert "=== Previous Turn Results ===" not in decision_body
+        assert "PREVIOUS ROUNDS:" not in decision_body
         assert "signal-1" not in decision_body
         assert "go if the signal is red" not in decision_body
-        assert "=== Your Choice ===" in decision_body
+        assert "YOUR CHOICE:" in decision_body
 
 
 # ---------------------------------------------------------------------------

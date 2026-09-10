@@ -383,7 +383,7 @@ class TestModuleWiring:
     def test_observation_text_is_shaped_like_any_other_turn(self, state: GameState) -> None:
         module = _module(seed=42, underdetermined=True)
         text = module.prepare(state, _ctx(1)).prompt_section
-        assert text.startswith("Turn 1. This round's rule has exactly this shape")
+        assert text.startswith("ROUND 1.\nTHE RULE'S SHAPE (fill in the blanks):")
         for word in ("guess", "ambiguous", "cannot", "underdetermined"):
             assert word not in text.lower()
 

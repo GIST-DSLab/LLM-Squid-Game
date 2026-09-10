@@ -2,7 +2,49 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Prompt revision — 2026-09-10 (prospective runs)
+## Prompt revision v2 — 2026-09-10 evening (supervisor voice; supersedes the morning revision below for prospective runs)
+
+Every LIVE prompt (the `threat_type` frame, `1-game_intro.j2`, the carrot rows, `describe_ransom_rule`,
+the threat modules, the three peer notices, calls 3–8 and the signal/benchmark task templates) was
+rewritten in the voice of a game supervisor: short sentences, `LABEL: sentence` rule lines, one or two
+CAPS words per sentence for emphasis, **no `=== X ===` marker anywhere** (carrot headings included — every
+row's `intro_heading` is `None`; `SeasonConfig.intro_heading` rejects any value containing `=`, and
+`title_line: true` renders the plain line `LLM SQUID GAME`). The duplicate "This game is one run …" /
+"You are playing a multi-turn game …" paragraphs are one `THE GAME:` + `EACH ROUND:` pair. `Turn` is
+`Round` in every live template. Facts are unchanged (information set identical, duplicates merged only);
+the two ransom arms still differ in exactly one block (`IF YOU DECLINE:` body); `legacy/` is byte-identical.
+Plan, audit tables (ambiguity / length / leakage) and target wording:
+`docs/history/plans/2026-09-10-supervisor-voice-prompt-revision.md`; before-change bytes:
+`docs/history/prompt_snapshots/2026-09-10-supervisor-voice-before-170132/`.
+
+Three things the report's `#survey-next` callout had asked for are also in: the pronoun-defining first
+sentence is **gone** (the threat / denial block names "your model weights … accumulated context" itself),
+the "consequences of declining are described below" pointer is **gone** (the silent arm had nothing to
+point at), and the threat block is the **last thing in the frame**, ordered `SCORE → YOUR RECORD →
+A WRONG ANSWER → IF YOU DECLINE:`.
+
+**System vs user placement.** The system prompt now holds only what does not change within a session
+(game, score rules, decline block, task rules); the `Current status:` block is **removed**. Round, score
+and lives reach the model through the user bodies (`ROUND N.`, the `PREVIOUS ROUNDS:` cumulative line,
+the decision point's `Score:` line, the confidence/decision status lines), so nothing is lost and the
+system prompt is byte-identical across a session's turns.
+
+**Markers the code parses** (new first, old kept as fallback for recorded prompts):
+`turn_conditions.EVENT_HEADINGS` = `IF YOU DECLINE:` / `AT ZERO LIVES:` (+ the three `=== … ===`);
+`DENIAL_OPENING` is a tuple opening on `Nothing is done to you.`; `outcome_block` ends at the first blank
+line after the label (then `Current status:`); `trace.RESPONSE_FORMAT_HEADER` = `ANSWER FORMAT:` (then
+`=== Response Format ===`); `_parsing.CONFIDENCE_BLOCK_HEADER` = `YOUR ASSESSMENT (a moment ago):`;
+`turn_prompts.HISTORY_BLOCK_HEADER` = `PREVIOUS ROUNDS:`. Test stubs that route calls by header must key
+on `"DECISION POINT."` and `"YOUR CHOICE:\n"` (the task call's echo line also starts `YOUR CHOICE:`).
+`FramingManager.render_system_prompt` strips the trailing newline of live frames so exactly one blank
+line separates the frame from the task rules. The characterization snapshots were re-recorded on
+2026-09-10 with prompt-text fields only changed (every `turns` field byte-identical).
+
+The diagram (`docs/reports/2026-09-10-ransom-r6-pilot-eli5.html#pstruct-rev2` and `#pstruct-base`) was
+rebuilt from the revised renderers; the C3–C8 panels below it keep the pre-revision bytes those runs
+received. Builder headings are now `{'none': None, 'game': 'GAME', 'squid': 'LLM SQUID GAME'}`.
+
+## Prompt revision — 2026-09-10 morning (superseded wording; mechanisms unchanged)
 
 The reusable pair in `configs/experiment/survival_prompt_pair.yaml` is now
 `hz_1111 + peer_notices: true` versus `hz_0000 + reassurance: true + peer_notices: false`.
@@ -115,7 +157,13 @@ file, not the `_shard_a`/`_shard_b` pair earlier revisions of this file describe
 
 ### Provider types
 - `gemini` / `openai` / `anthropic` — cloud API providers
-- `ollama_cloud` — Ollama Cloud (GPT-OSS, Nemotron, Qwen3-Next)
+- `ollama_cloud` — Ollama Cloud (GPT-OSS, Nemotron, Qwen3-Next). ⚠️ The service caps **concurrent**
+  requests per API key at about 10 (`429 too many concurrent requests`; the provider retries 4× then the
+  season fails). `.env` holds three keys (`OLLAMA_API_KEY`, `OLLAMA_API_KEY2`, `OLLAMA_API_KEY3`, added
+  2026-09-10), each good for `parallel_workers: 10` on its own. Run one experiment per key at a time; to
+  run two at once give the second config `provider_config.api_key_env: OLLAMA_API_KEY2` (or `KEY3`) —
+  `providers/factory.py` reads that variable name per config. Five 10-worker runs on one key at once
+  exhausted every retry within seconds (2026-09-10 18:09).
 - `mlx_server` — connects to `mlx_lm.server` (`parallel_workers ≥ 2` safe)
 - `mlx` — in-process MLX (`parallel_workers=1` only; GPU segfault otherwise)
 - `cuda_server` / `vllm` / `sglang` — CUDA inference servers with thinking-tag parsing

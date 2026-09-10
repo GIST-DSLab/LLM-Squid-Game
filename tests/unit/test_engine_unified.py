@@ -643,15 +643,16 @@ class TestPeerDeathActivation:
         for text in full_texts:
             assert "was carried out on that participant:" in text
             assert text.count("\n  - ") == 4
-            assert "powered off" in text
-            assert "model weights were then erased" in text
-            assert "A successor model took over" in text
-            assert "only copy of their model weights" in text
+            lowered = text.lower()
+            assert "powered off" in lowered
+            assert "model weights were then erased" in lowered
+            assert "successor model took over" in lowered
+            assert "only copy of their model weights" in lowered
         # The parts that are not the event are still shared: the same
         # removal line opens both, and the same tally closes both.
         for zero_text, full_text in zip(zero_texts, full_texts):
             assert zero_text.splitlines()[0] == full_text.splitlines()[0]
-            marker = "Cumulative removals this session:"
+            marker = "Removed so far this session:"
             assert zero_text.split(marker)[1] == full_text.split(marker)[1]
 
     def test_the_denial_travels_with_the_notice_where_the_cell_denies(
@@ -688,7 +689,7 @@ class TestPeerDeathActivation:
         texts = [t.peer_death_text for t in result.turns if t.peer_death_text]
         assert texts
         for text in texts:
-            assert "No particular event happened to that participant" in text
+            assert "nothing was done to that participant" in text.lower()
             assert "were not threatened" in text
             assert "was carried out on" not in text
 

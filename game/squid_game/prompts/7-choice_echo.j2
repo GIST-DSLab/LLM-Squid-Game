@@ -35,6 +35,13 @@
    The two branches are length-matched (70 / 71 characters, 13 / 12
    words) so the call costs the same to read either way.
 
+   UNCHANGED by the 2026-09-10 prompt revision (it carries no "===" marker
+   and states no rule), but note that the revision renamed the forfeit
+   menu's header from ``=== Your Choice ===`` to ``YOUR CHOICE:``, which
+   is now a PREFIX of this line. Code that identifies the decision call by
+   that header must match ``"YOUR CHOICE:\n"`` -- the menu header is alone
+   on its line, this echo always continues with " CONTINUE —".
+
    Variables:
      forfeit_allowed : bool -- the cell's forfeit condition.
 -#}

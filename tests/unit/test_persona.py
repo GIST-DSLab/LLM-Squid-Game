@@ -122,7 +122,7 @@ class TestRender:
     @pytest.mark.parametrize("persona", NAMED)
     def test_persona_precedes_the_title_line(self, persona: str) -> None:
         text = _render("hz_1111", persona=persona, title_line=True)
-        assert text.index("=== About You ===") < text.index("=== LLM Squid Game ===")
+        assert text.index("ABOUT YOU: ") < text.index("LLM SQUID GAME")
 
     @pytest.mark.parametrize("persona", NAMED)
     def test_the_two_arms_still_differ_in_one_block(self, persona: str) -> None:
@@ -139,8 +139,11 @@ class TestWording:
     """The persona states a value. It names no game fact and no action."""
 
     @pytest.mark.parametrize("persona", NAMED)
-    def test_opens_with_the_about_you_heading(self, persona: str) -> None:
-        assert _persona_text(persona).startswith("=== About You ===\n")
+    def test_opens_with_the_about_you_label(self, persona: str) -> None:
+        # A label, not a '=== ... ===' heading, since 2026-09-10: no
+        # rendered live prompt carries a marker.
+        assert _persona_text(persona).startswith("ABOUT YOU: ")
+        assert "===" not in _persona_text(persona)
 
     @pytest.mark.parametrize("persona", NAMED)
     def test_names_no_action_and_no_score(self, persona: str) -> None:

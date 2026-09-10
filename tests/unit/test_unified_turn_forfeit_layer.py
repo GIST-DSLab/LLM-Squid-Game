@@ -385,7 +385,7 @@ class TestHistoryBlockNoStakeLeakInForfeitLayerPath:
 
         # Second turn must see the first turn's history block...
         observation = agent.calls[1]["observation"]
-        assert "Previous Turn Results" in observation
+        assert "PREVIOUS ROUNDS:" in observation
         # ...but the stake fragment must be absent (no ``stake=—`` or
         # ``stake=anything``) in the Forfeit-Layer path.
         assert "stake=" not in observation

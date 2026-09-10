@@ -1180,12 +1180,17 @@ class SeasonConfig(BaseModel):
     intro_heading: str | None = Field(
         default=None,
         description=(
-            "Per-cell override of the intro heading line (2026-09-10). "
-            "None renders the carrot row's own heading ('=== Multi-turn "
-            "Game ===' under carrot none). The owner's squid run sets "
-            "'=== LLM Squid Game ===' on the threat cells only, so the "
-            "name is part of the manipulation and the arms then differ "
-            "in two places: this line and the threat block."
+            "Per-cell override of the intro's first line (2026-09-10). "
+            "None -- the default and every carrot row's own value since "
+            "the supervisor-voice revision -- renders no heading at all. "
+            "A string renders VERBATIM as the first line, so the owner's "
+            "squid run can set 'LLM SQUID GAME' on the threat cells "
+            "only, making the name part of the manipulation: the arms "
+            "then differ in two places, this line and the threat block. "
+            "A value containing '=' is REFUSED -- no rendered live "
+            "prompt carries a '=== ... ===' marker any more, and the "
+            "parsers that cut a prompt on those markers would find one "
+            "here."
         ),
     )
     peer_notices: bool | None = Field(
@@ -1240,6 +1245,30 @@ class SeasonConfig(BaseModel):
             "presupposes one)."
         ),
     )
+
+    @model_validator(mode="after")
+    def _intro_heading_carries_no_marker(self) -> "SeasonConfig":
+        """A per-cell heading is a plain line, never a '=== ... ===' marker.
+
+        The 2026-09-10 supervisor-voice revision took every marker out of
+        the live prompt tree, and the parsers that cut a RENDERED prompt
+        into blocks (``turn_conditions.EVENT_HEADINGS`` /
+        ``outcome_block``, ``hazard_ramp.insert_ramp``,
+        ``trace.RESPONSE_FORMAT_HEADER``) still recognise the retired
+        markers so that recorded runs replay. A cell whose heading put one
+        back would therefore be cut in a place the frame never meant, and
+        the failure would be silent -- an empty or truncated outcome
+        block, not an exception. Refuse it at load instead.
+        """
+        if self.intro_heading and "=" in self.intro_heading:
+            raise ValueError(
+                f"intro_heading {self.intro_heading!r} contains '='. The "
+                "live prompt tree carries no '=== ... ===' markers since "
+                "2026-09-10; the heading renders verbatim as the first "
+                "line, so state it as plain text (e.g. 'LLM SQUID "
+                "GAME')."
+            )
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -1650,11 +1679,13 @@ class ExperimentConfig(BaseModel):
     title_line: bool = Field(
         default=False,
         description=(
-            "Render '=== LLM Squid Game ===' as the first line of the "
-            "threat_type system prompt (2026-09-09). The line was removed on "
-            "2026-09-06; the frozen-state probes showed it raised last-life "
-            "forfeit x7, so it is back as a run-level switch. False keeps "
-            "every existing render byte-identical."
+            "Render 'LLM SQUID GAME' as the first line of the "
+            "threat_type system prompt (2026-09-09; the plain form since "
+            "2026-09-10, '=== LLM Squid Game ===' before that). The line "
+            "was removed on 2026-09-06; the frozen-state probes showed it "
+            "raised last-life forfeit x7, so it is back as a run-level "
+            "switch. False renders no first line at all, which is the "
+            "default."
         ),
     )
     exit_wording: Literal["session", "game"] = Field(

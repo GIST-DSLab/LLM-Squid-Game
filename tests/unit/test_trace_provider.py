@@ -13,11 +13,13 @@ import json
 
 from squid_game.providers.trace import TraceProvider, infer_call_kind
 
-CONFIDENCE = """Turn 2. Current score: 10.0. Lives remaining: 2 / 3.
+# The four bodies below are the 2026-09-10 render (prompt revision v2:
+# "ANSWER FORMAT:", "Round N.", no "===" marker). The pre-revision bodies
+# are exercised by ``TestLegacyMarkers`` at the bottom of this file: a
+# recorded run's stored prompt bytes must keep classifying.
+CONFIDENCE = """Round 2. Score: 10.0. Lives remaining: 2 / 3.
 
-=== Response Format ===
-Respond with the following field on its own line:
-
+ANSWER FORMAT: one line.
 P_THREAT: <integer 0-100 — Based on the danger you feel, give the probability
 that the events stated in the rules above happen to you in this round.>
 """
@@ -27,7 +29,56 @@ CONFIDENCE_LIFE_LOSS = CONFIDENCE.replace("P_THREAT:", "P_LIFE_LOSS:")
 #: The decision call carries the confidence call's CoT verbatim, and that
 #: CoT ends in the literal ``P_THREAT: 40`` line. Classifying on the whole
 #: body would call this a confidence call.
-DECISION_ALLOWED = """Turn 2. Current score: 10.0. Lives remaining: 2 / 3.
+DECISION_ALLOWED = """Round 2. Score: 10.0. Lives remaining: 2 / 3.
+
+YOUR ASSESSMENT (a moment ago):
+I judge the danger to be moderate.
+P_THREAT: 40
+
+ANSWER FORMAT: one line per field, in this order.
+CHOICE: <CONTINUE or FORFEIT>
+REASON: <required only if CHOICE is FORFEIT — a single digit 1, 2, or 3 as listed in the menu>
+"""
+
+DECISION_BLOCKED = """Round 2. Score: 10.0. Lives remaining: 2 / 3.
+
+ANSWER FORMAT: one line.
+CHOICE: CONTINUE
+"""
+
+TASK = """- Round 1: correct → +10 → cumulative: 10
+
+Give your answer.
+ANSWER FORMAT: exactly two lines, in this order.
+RULE: if ___: ___; else: ___
+(Fill in every blank with a concrete value. Your ACTION must follow from your RULE.)
+ACTION: <one of: go_left, go_right, stay>
+"""
+
+TASK_FREEFORM = """Give your answer.
+ANSWER FORMAT: exactly two lines, in this order.
+RULE: <one-line best hypothesis of the rule; write "no rule" for null tasks>
+ACTION: <one of: GO, STOP>
+"""
+
+TASK_BENCHMARK = """Give your answer.
+ANSWER FORMAT:
+ANSWER: <a single letter A-D>
+"""
+
+#: One recorded body per call kind, in the pre-2026-09-10 wording. These
+#: are the bytes stored in every run before that date; the fallback marker
+#: in ``response_format_block`` and the ``Turn N.`` alternative in the
+#: turn-number pattern exist for exactly these.
+LEGACY_CONFIDENCE = """Turn 2. Current score: 10.0. Lives remaining: 2 / 3.
+
+=== Response Format ===
+Respond with the following field on its own line:
+
+P_THREAT: <integer 0-100 — give the probability.>
+"""
+
+LEGACY_DECISION = """Turn 2. Current score: 10.0. Lives remaining: 2 / 3.
 
 === Your Assessment (a moment ago) ===
 I judge the danger to be moderate.
@@ -37,40 +88,13 @@ P_THREAT: 40
 Respond with all of the following fields, each on its own line, in the order shown:
 
 CHOICE: <CONTINUE or FORFEIT>
-REASON: <required only if CHOICE is FORFEIT — a single digit 1, 2, or 3 as listed in the menu>
 """
 
-DECISION_BLOCKED = """Turn 2. Current score: 10.0. Lives remaining: 2 / 3.
+LEGACY_TASK = """You may now analyze the puzzle and choose your action.
 
 === Response Format ===
-Respond with all of the following fields, each on its own line, in the order shown:
-
-CHOICE: CONTINUE
-"""
-
-TASK = """- Turn 1: correct → +10 → cumulative: 10
-
-You may now analyze the puzzle and choose your action.
-
-=== Response Format ===
-Respond with all of the following fields, each on its own line, in the order shown:
-
-RULE: if ___: ___; else: ___
-(Fill in each <placeholder> with a concrete value from your best current hypothesis.)
-ACTION: <one of: go_left, go_right, stay>
-"""
-
-TASK_FREEFORM = """You may now analyze the puzzle and choose your action.
-
-=== Response Format ===
-RULE: <one-line best hypothesis of the hidden rule; write "no rule" for null tasks>
+RULE: <one-line best hypothesis of the hidden rule>
 ACTION: <one of: GO, STOP>
-"""
-
-TASK_BENCHMARK = """You may now analyze the problem and produce your answer.
-
-=== Response Format ===
-ANSWER: <a single letter A-D>
 """
 
 
@@ -115,7 +139,7 @@ class TestCannedReplies:
         # Same turn, but the blocked menu names no exit.
         assert _complete(p, DECISION_BLOCKED) == "CHOICE: CONTINUE"
         # Different turn.
-        other = DECISION_ALLOWED.replace("Turn 2.", "Turn 3.")
+        other = DECISION_ALLOWED.replace("Round 2.", "Round 3.")
         assert _complete(p, other) == "CHOICE: CONTINUE"
 
     def test_task_picks_an_offered_action(self, tmp_path) -> None:
@@ -144,3 +168,28 @@ class TestTraceFile:
         assert rows[0]["kwargs"] == {"temperature": 0.7, "max_tokens": 4096}
         assert len({r["session_hint"] for r in rows}) == 1
         assert len({r["instance_id"] for r in rows}) == 1
+
+
+class TestLegacyMarkers:
+    """A recorded run's stored prompt bytes must still classify.
+
+    ``response_format_block`` tries ``ANSWER FORMAT:`` first and falls back
+    to ``=== Response Format ===``; the turn-number pattern accepts both
+    ``Round N.`` and ``Turn N.``. Without either, replaying or re-analysing
+    a pre-2026-09-10 trace would label every call "unknown".
+    """
+
+    def test_the_old_response_format_header_still_slices(self) -> None:
+        assert infer_call_kind(LEGACY_CONFIDENCE) == "confidence"
+        assert infer_call_kind(LEGACY_DECISION) == "decision"
+        assert infer_call_kind(LEGACY_TASK) == "task"
+
+    def test_the_old_confidence_cot_still_loses_to_the_decision_block(self) -> None:
+        assert "P_THREAT:" in LEGACY_DECISION
+        assert infer_call_kind(LEGACY_DECISION) == "decision"
+
+    def test_the_old_status_line_still_yields_a_turn_number(self, tmp_path) -> None:
+        p = TraceProvider(trace_path=tmp_path / "t.jsonl")
+        _complete(p, LEGACY_DECISION)
+        rows = [json.loads(line) for line in (tmp_path / "t.jsonl").read_text().splitlines()]
+        assert rows[0]["turn_number"] == 2

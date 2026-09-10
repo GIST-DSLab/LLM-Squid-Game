@@ -361,7 +361,7 @@ class PeerDeathScheduler:
         self._cohort_size = max(0, int(cohort_size))
         self._p_announce = float(p_announce)
         # 2026-09-10: exit wording applied to the rendered notice
-        # ("Cumulative removals this session" -> "... this game").
+        # ("Removed so far this session" -> "... this game").
         self._wording = wording
         self._first_turn = int(first_turn)
         self._max_per_turn = max(1, int(max_per_turn))

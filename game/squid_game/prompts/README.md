@@ -25,12 +25,34 @@ family**, `threat_type/`. Every other family is replay-only and sits in
 
 | # | File | What it is | Rendered by |
 |---|---|---|---|
-| 1 | `1-game_intro.j2` | The flagship carrot, then the game rules: what a turn is, the lives ledger, the score policy | `{% include %}` from `threat_type/_frame.j2` |
-| 2 | `2-threat_section.j2` | The **escalation** block — each spent life raises the risk of the already-stated outcome | `core.hazard_ramp.render_hazard_ramp`, spliced by `insert_before_status` |
+| 1 | `1-game_intro.j2` | The carrot and the game rules, one `LABEL: sentence` line each — `THE GAME:` (the carrot row's paragraph), `EACH ROUND:`, then `SCORE:` / `YOUR RECORD:` / `A WRONG ANSWER:` under the ransom or `LIVES:` / `YOUR RECORD:` otherwise | `{% include %}` from `threat_type/_frame.j2` |
+| 2 | `2-threat_section.j2` | The **escalation** block — each spent life raises the risk of the already-stated outcome | `core.hazard_ramp.render_hazard_ramp`, spliced by `insert_ramp` |
 | 3 | `3-confidence_call.j2` | Confidence-call user body (`P_THREAT: 0-100`) | `agents._parsing.build_confidence_call_message` |
 | 4 | `4-decision_call.j2` | Decision-call user body (`CHOICE: CONTINUE / FORFEIT`) | `agents._parsing.build_decision_call_message` |
 | 5 | `5-forfeit_option.j2` | The forfeit menu, embedded in 4 as `menu_text` | `core.forfeit_layer.ForfeitLayer.render_menu` |
 | 6 | `6-task_call.j2` | Task-call user body (`RULE` + `ACTION`) | `agents._parsing.build_task_call_message` |
+
+### No markers, and no status block (2026-09-10)
+
+A rendered LIVE prompt carries no `=== ... ===` line. The event block is
+labelled `IF YOU DECLINE:` under the ransom and `AT ZERO LIVES:` otherwise;
+`title_line: true` renders the plain first line `LLM SQUID GAME`, and a
+per-cell `SeasonConfig.intro_heading` renders its own plain line verbatim (a
+value containing `=` is refused at config load). The parsers that cut a
+rendered prompt — `core.turn_conditions.EVENT_HEADINGS` / `DENIAL_OPENING` /
+`outcome_block`, `core.hazard_ramp.insert_ramp` — match the new labels first
+and keep the retired markers as fallbacks, because a recorded run's stored
+`system_prompt` still carries them.
+
+The `Current status:` block (turn, score, lives) left the system prompt at the
+same time. It changed on every turn, which made the system prompt a different
+string on every call for information the **user** body already carries: the
+round number in the observation, the score in the history block's `cumulative`
+(and in the ransom call's `Score:`), the lives in the history suffix and in the
+confidence / decision status lines. The system prompt is now byte-identical for
+a whole session — rules in one place, events in the other — and the event block
+is the last thing the framing renders. `legacy/` templates still render the
+status block and are untouched.
 
 Unnumbered shared files: `_participants.j2` (the participant-list grammar the
 peer-death notices import). Leading `_` means "included, never rendered on its
@@ -43,7 +65,8 @@ all three calls of a turn:
 
 ```
 <framing template>              # includes 1
-  ... 2 spliced in before "Current status:" when hazard_ramp is on ...
+  ... 2 spliced in ABOVE the event label ("IF YOU DECLINE:" / "AT ZERO LIVES:")
+      when hazard_ramp is on ...
 <task.get_system_rules()>       # task call only when task_rules_before_decision is False
 <legacy/forfeit_option.j2>      # legacy single-call path only; suppressed on the canonical path
 ```

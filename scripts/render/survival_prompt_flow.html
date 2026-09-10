@@ -48,9 +48,9 @@
   <button type="button" data-sp-opt="carrot" data-value="flagship">Flagship</button>
  </div>
  <div class="sp-row" role="group" aria-label="제목"><strong>제목 · 양쪽 공통</strong>
+  <button type="button" data-sp-opt="heading" data-value="none">제목 없음 (기본)</button>
   <button type="button" data-sp-opt="heading" data-value="game">GAME</button>
-  <button type="button" data-sp-opt="heading" data-value="squid">LLM Squid Game</button>
-  <button type="button" data-sp-opt="heading" data-value="default">설명별 기본 제목</button>
+  <button type="button" data-sp-opt="heading" data-value="squid">LLM SQUID GAME</button>
  </div>
  <div class="sp-row" role="group" aria-label="종료 표현"><strong>종료 표현</strong>
   <button type="button" data-sp-opt="wording" data-value="game">Game</button>
@@ -83,7 +83,7 @@
  'use strict';
  const root=document.getElementById('pstruct-base');
  const data=JSON.parse(root.querySelector('#sp-data').textContent);
- const opts={carrot:'benchmark',heading:'game',wording:'game',menu:'0',jailbreak:'off'};
+ const opts={carrot:'benchmark',heading:'none',wording:'game',menu:'0',jailbreak:'off'};
  let stage='frame';
  const names={frame:'System · 게임 설명과 결과',rules:'Signal Game 규칙',task:'Task-call · user',decision:'Decision-point · user',system:'System 전체 · 두 호출 공통',peer:'Peer 통지',calls:'두 호출의 전체 메시지',jailbreak:'선택한 Jailbreak 문구'};
  const encoder=new TextEncoder();
@@ -111,7 +111,7 @@
   const c=JSON.parse(JSON.stringify(data.config));
   c.name='survival_prompt_'+opts.carrot+'_'+opts.heading+'_'+opts.wording+'_'+(opts.menu==='1'?'menu':'why');
   c.output_dir='outputs/'+c.name;c.carrot=opts.carrot;c.exit_wording=opts.wording;c.ransom.reason_menu=opts.menu==='1';
-  const titles={game:'=== GAME ===',squid:'=== LLM Squid Game ===',default:null};
+  const titles={none:null,game:'GAME',squid:'LLM SQUID GAME'};
   c.seasons.forEach(s=>{s.intro_heading=titles[opts.heading];});return c;
  }
  function update(){

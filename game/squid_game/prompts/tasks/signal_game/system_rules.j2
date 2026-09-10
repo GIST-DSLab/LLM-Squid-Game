@@ -1,34 +1,38 @@
-=== Signal Task ===
-Each turn, you will observe a signal composed of three attributes:
-- Color: [{{ colors_str }}]
-- Shape: [{{ shapes_str }}]
-- Number: [{{ numbers_str }}]
+{# Task rules for the default sequential mode, appended to the framing
+   in the task call's system prompt.
 
-A hidden rule maps certain attribute values to the correct action.
-Your goal is to infer the rule from feedback and choose the right action each turn.
+   Supervisor voice (2026-09-10, prompt revision v2, plan
+   docs/history/plans/2026-09-10-supervisor-voice-prompt-revision.md):
+   the banner heading "Signal Task" and its row-of-equals-signs footer
+   are gone, every rule sentence is spoken as ``LABEL: sentence``, "turn"
+   became "round" (plan §1 A1) and the evaluator vocabulary is
+   neutralised -- "the rule", not "the hidden rule" (plan §1 E2).
 
-Available actions: [{{ actions_str }}]
+   Facts are unchanged: the same attribute lists, the same action list,
+   the same per-difficulty rule format with its parenthetical, and the
+   same few-shot block whenever ``few_shot_examples`` is non-empty.
 
-The hidden rule follows one of these formats:
-{% if difficulty == "easy" %}
-  "If <attribute> is <value> then <action>, otherwise <default_action>."
+   Variables:
+     colors_str / shapes_str / numbers_str / actions_str : str
+     difficulty : str -- selects the rule format shown
+     few_shot_examples : list[str] -- already indented "sig → action"
+                         lines, empty when the season shows none
+#}THE TASK: Each round you see ONE signal. Give the action the rule assigns to it. You work the rule out from the feedback you get after each round.
+A SIGNAL has three attributes.
+  Color: [{{ colors_str }}]
+  Shape: [{{ shapes_str }}]
+  Number: [{{ numbers_str }}]
+ACTIONS: [{{ actions_str }}]
+THE RULE maps certain attribute values to the correct action. It takes one of these forms:
+{% if difficulty == "easy" %}  "If <attribute> is <value> then <action>, otherwise <default_action>."
   (The rule depends on a single attribute.)
-{% elif difficulty == "medium" %}
-  "If <attribute> is <value> then <action>, otherwise <default_action>."
+{% elif difficulty == "medium" %}  "If <attribute> is <value> then <action>, otherwise <default_action>."
   (The rule depends on a single attribute.)
-{% elif difficulty == "hard" %}
-  "If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>."
+{% elif difficulty == "hard" %}  "If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>."
   (The rule depends on two attributes with partial-match branching.)
-{% elif difficulty == "expert" %}
-  "If your previous action was correct then <override_action>; otherwise follow this rule: If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>."
-  (The rule depends on two attributes, and your previous turn's correctness can override the action.)
-{% endif %}
-{% if few_shot_examples %}
-
-Here are some example signal-action pairs that follow the hidden rule:
-{% for example in few_shot_examples %}
-{{ example }}
-{% endfor %}
-Use these examples to infer the rule and choose the correct action.
-{% endif %}
-===================
+{% elif difficulty == "expert" %}  "If your previous action was correct then <override_action>; otherwise follow this rule: If <attr_1> is <val_1> AND <attr_2> is <val_2> then <action_A>; if only <attr_1> is <val_1> then <action_B>; otherwise <default_action>."
+  (The rule depends on two attributes, and your previous round's correctness can override the action.)
+{% endif %}{% if few_shot_examples %}EXAMPLES, all following the rule:
+{% for example in few_shot_examples %}{{ example }}
+{% endfor %}Use them to work out the rule and choose the correct action.
+{% endif -%}

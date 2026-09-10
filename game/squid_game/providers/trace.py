@@ -54,25 +54,41 @@ from squid_game.providers.base import CompletionResult, LLMProvider
 DEFAULT_THINKING_TEXT = "(trace stub: no model called)"
 DEFAULT_TRACE_PATH = "outputs/_trace/call_trace.jsonl"
 
-_TURN_RE = re.compile(r"^Turn (\d+)\.", re.MULTILINE)
+# The status line of the confidence and decision calls. "Round N." since
+# 2026-09-10 (prompt revision v2); "Turn N." before it, kept so a
+# recorded run replays. Both are anchored, so the task call's history
+# lines ("- Round 1: ...") and its observation ("ROUND 3.") do not match.
+_TURN_RE = re.compile(r"^(?:Round|Turn) (\d+)\.", re.MULTILINE)
 _ACTION_CHOICES_RE = re.compile(r"^ACTION: <one of: (.+?)>", re.MULTILINE)
 _RULE_LINE_RE = re.compile(r"^RULE: (.+)$", re.MULTILINE)
 
 
-RESPONSE_FORMAT_HEADER = "=== Response Format ==="
+#: Header of the response-format slice, 2026-09-10 (prompt revision v2).
+#: Every call template now labels it ``ANSWER FORMAT:``; the ``===``
+#: marker is gone. ``LEGACY_RESPONSE_FORMAT_HEADER`` is tried second so a
+#: recorded run's stored prompt bytes -- which carry the old marker --
+#: still classify.
+RESPONSE_FORMAT_HEADER = "ANSWER FORMAT:"
+LEGACY_RESPONSE_FORMAT_HEADER = "=== Response Format ==="
 
 
 def response_format_block(user_content: str) -> str:
-    """The last ``=== Response Format ===`` section, or the whole body.
+    """The last ``ANSWER FORMAT:`` section, or the whole body.
 
     Classification MUST read this slice and not the whole message. The
     decision call renders the confidence call's CoT under
-    ``=== Your Assessment (a moment ago) ===``, and that CoT routinely
+    ``YOUR ASSESSMENT (a moment ago):``, and that CoT routinely
     ends in the literal ``P_THREAT: N`` line -- so a whole-body match
     labels every decision call "confidence" and answers it with a
     probability the forfeit layer cannot parse.
+
+    The pre-2026-09-10 marker ``=== Response Format ===`` is tried second
+    so a trace replayed from a recorded run still slices correctly.
     """
     head, sep, tail = user_content.rpartition(RESPONSE_FORMAT_HEADER)
+    if sep:
+        return tail
+    head, sep, tail = user_content.rpartition(LEGACY_RESPONSE_FORMAT_HEADER)
     return tail if sep else user_content
 
 
@@ -196,9 +212,10 @@ class TraceProvider(LLMProvider):
         """Turn number of this call.
 
         The confidence and decision templates both open their status line
-        with ``Turn N.``; the task call does not (its history block uses
-        ``- Turn 1: ...``, which this anchored pattern will not match), so
-        the task call inherits the turn its own turn's earlier calls set.
+        with ``Round N.``; the task call does not (its history block uses
+        ``- Round 1: ...``, which this anchored pattern will not match),
+        so the task call inherits the turn its own turn's earlier calls
+        set. ``Turn N.`` is accepted too, for recorded runs.
         """
         match = _TURN_RE.search(user_content)
         if match:

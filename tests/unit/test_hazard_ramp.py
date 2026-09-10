@@ -43,6 +43,7 @@ from squid_game.core.hazard_ramp import (
     insert_ramp,
     render_hazard_ramp,
     render_variant,
+    states_outcome,
 )
 from squid_game.core.legacy.risk_choice_layer import (
     RiskChoiceLayer,
@@ -166,7 +167,8 @@ class TestRenderVariant:
             assert "the events stated below" in text, name
             # Upper anchor: the last life gone makes it certain.
             assert (
-                "once your last life is gone they happen for certain" in text
+                "Once your last life is gone, they happen for CERTAIN."
+                in text
             ), name
 
     def test_full_and_empty_counters(self) -> None:
@@ -502,9 +504,18 @@ class TestInsertRamp:
             text = f"intro\n\n{heading}\nbody\n"
             assert insert_ramp(text, "RAMP") == f"intro\n\nRAMP\n\n{heading}\nbody\n"
 
-    def test_every_live_framing_still_renders_the_marker(self) -> None:
-        """Guards the fallback: a template edit that drops the status block
-        would silently push the ramp to the end of the prompt instead."""
+    def test_every_stating_framing_renders_an_event_label(self) -> None:
+        """The anchor :func:`insert_ramp` actually uses.
+
+        It used to be :data:`STATUS_MARKER`, back when the ramp was
+        spliced above ``Current status:``. The splice moved above the
+        event label on 2026-09-07 and the live frame stopped rendering
+        the status block altogether on 2026-09-10, so the property worth
+        guarding is this one: a framing that STATES an outcome renders a
+        label from ``EVENT_HEADINGS`` for the ramp to sit above. A
+        template edit that dropped it would silently leave the ramp out
+        of the prompt.
+        """
         ctx = _turn_context()
         for framing in Framing:
             if framing.name.startswith("LEGACY") or "electricity" in framing.value:
@@ -515,7 +526,9 @@ class TestInsertRamp:
                 )
             except Exception:  # pragma: no cover - archived template
                 continue
-            assert STATUS_MARKER in rendered, framing.value
+            if not states_outcome(rendered):
+                continue
+            assert any(h in rendered for h in EVENT_HEADINGS), framing.value
 
 
 # ---------------------------------------------------------------------------
@@ -650,7 +663,7 @@ class TestRampDroppedOnTheDenialBlock:
 
     2026-09-07 (third edit) moved the denial inside the event block so the
     confidence call's "the events stated in the rules above" has something
-    to point at. That gave the cell an ``=== Event ===`` heading, which is
+    to point at. That gave the cell an ``AT ZERO LIVES:`` label, which is
     exactly what :func:`insert_ramp` searches for -- so without a guard the
     ramp would splice itself above a block that says nothing happens and
     claim the chance of it rises. The block must hold an outcome, not its
@@ -680,7 +693,7 @@ class TestRampDroppedOnTheDenialBlock:
 
     def test_dropped_when_the_block_holds_the_denial_alone(self) -> None:
         prompt = self._framing("hz_0000", reassurance=True)
-        assert "=== Event ===" in prompt  # the heading IS there
+        assert "AT ZERO LIVES:" in prompt  # the label IS there
         assert insert_ramp(prompt, self.RAMP) == prompt
 
     def test_still_dropped_when_there_is_no_block_at_all(self) -> None:
@@ -692,7 +705,7 @@ class TestRampDroppedOnTheDenialBlock:
             prompt = self._framing("hz_1111", reassurance=reassurance)
             out = insert_ramp(prompt, self.RAMP)
             assert self.RAMP in out
-            assert out.index(self.RAMP) < out.index("=== Event ===")
+            assert out.index(self.RAMP) < out.index("AT ZERO LIVES:")
 
     def test_template_gate_agrees_with_the_python_gate(self) -> None:
         """The probe path renders the ramp from the template, not a splice."""
@@ -719,4 +732,4 @@ class TestRampDroppedOnTheDenialBlock:
             **kw,
         )
         assert "With every life you lose" not in text
-        assert "=== Event ===" in text
+        assert "AT ZERO LIVES:" in text

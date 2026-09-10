@@ -905,7 +905,7 @@ def test_state_exposes_system_rules_and_human_framing_intro(client) -> None:
     state = client.get("/api/state", params={"session_id": session_id}).json()
 
     # The signal-task ruleset is still surfaced as its own field (backend unchanged).
-    assert "=== Signal Task ===" in state["system_rules"]
+    assert "THE TASK:" in state["system_rules"]
 
     # Human intro: plain-language, no assistant disclaimer, no per-cell threat
     # prose, no status block.

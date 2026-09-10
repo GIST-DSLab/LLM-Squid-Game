@@ -493,6 +493,6 @@ class TestReasonMenuPerIntensity:
             body = row["decision_call_input"]
             assert f"  1 — {OPTION1_RISK_AVOIDANCE}" in body
             assert OPTION1_LEGACY_THREAT not in body
-            assert "eliminat" not in body.split("Indicate Reason")[1].lower()
+            assert "eliminat" not in body.split("STATE YOUR REASON")[1].lower()
             for line in OPTION1_BY_LEVEL.values():
                 assert line not in body

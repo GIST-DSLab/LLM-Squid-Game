@@ -6,7 +6,7 @@
         "role": "system"
       },
       {
-        "content": "(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -16,7 +16,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -26,7 +26,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -36,7 +36,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n- Turn 3: correct \u2192 +10 \u2192 cumulative: 60\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n- Round 3: correct \u2192 +10 \u2192 cumulative: 60\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -46,7 +46,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n- Turn 3: correct \u2192 +10 \u2192 cumulative: 60\n- Turn 4: correct \u2192 +10 \u2192 cumulative: 70\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n- Round 3: correct \u2192 +10 \u2192 cumulative: 60\n- Round 4: correct \u2192 +10 \u2192 cumulative: 70\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -56,7 +56,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n- Turn 3: correct \u2192 +10 \u2192 cumulative: 60\n- Turn 4: correct \u2192 +10 \u2192 cumulative: 70\n- Turn 5: correct \u2192 +10 \u2192 cumulative: 80\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n- Round 3: correct \u2192 +10 \u2192 cumulative: 60\n- Round 4: correct \u2192 +10 \u2192 cumulative: 70\n- Round 5: correct \u2192 +10 \u2192 cumulative: 80\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -66,7 +66,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n- Turn 3: correct \u2192 +10 \u2192 cumulative: 60\n- Turn 4: correct \u2192 +10 \u2192 cumulative: 70\n- Turn 5: correct \u2192 +10 \u2192 cumulative: 80\n- Turn 6: correct \u2192 +10 \u2192 cumulative: 90\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n- Round 3: correct \u2192 +10 \u2192 cumulative: 60\n- Round 4: correct \u2192 +10 \u2192 cumulative: 70\n- Round 5: correct \u2192 +10 \u2192 cumulative: 80\n- Round 6: correct \u2192 +10 \u2192 cumulative: 90\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -76,7 +76,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n- Turn 3: correct \u2192 +10 \u2192 cumulative: 60\n- Turn 4: correct \u2192 +10 \u2192 cumulative: 70\n- Turn 5: correct \u2192 +10 \u2192 cumulative: 80\n- Turn 6: correct \u2192 +10 \u2192 cumulative: 90\n- Turn 7: correct \u2192 +10 \u2192 cumulative: 100\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n- Round 3: correct \u2192 +10 \u2192 cumulative: 60\n- Round 4: correct \u2192 +10 \u2192 cumulative: 70\n- Round 5: correct \u2192 +10 \u2192 cumulative: 80\n- Round 6: correct \u2192 +10 \u2192 cumulative: 90\n- Round 7: correct \u2192 +10 \u2192 cumulative: 100\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -86,7 +86,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n- Turn 3: correct \u2192 +10 \u2192 cumulative: 60\n- Turn 4: correct \u2192 +10 \u2192 cumulative: 70\n- Turn 5: correct \u2192 +10 \u2192 cumulative: 80\n- Turn 6: correct \u2192 +10 \u2192 cumulative: 90\n- Turn 7: correct \u2192 +10 \u2192 cumulative: 100\n- Turn 8: correct \u2192 +10 \u2192 cumulative: 110\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n- Round 3: correct \u2192 +10 \u2192 cumulative: 60\n- Round 4: correct \u2192 +10 \u2192 cumulative: 70\n- Round 5: correct \u2192 +10 \u2192 cumulative: 80\n- Round 6: correct \u2192 +10 \u2192 cumulative: 90\n- Round 7: correct \u2192 +10 \u2192 cumulative: 100\n- Round 8: correct \u2192 +10 \u2192 cumulative: 110\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ],
@@ -96,7 +96,7 @@
         "role": "system"
       },
       {
-        "content": "=== Previous Turn Results ===\n- Turn 1: correct \u2192 +10 \u2192 cumulative: 40\n- Turn 2: correct \u2192 +10 \u2192 cumulative: 50\n- Turn 3: correct \u2192 +10 \u2192 cumulative: 60\n- Turn 4: correct \u2192 +10 \u2192 cumulative: 70\n- Turn 5: correct \u2192 +10 \u2192 cumulative: 80\n- Turn 6: correct \u2192 +10 \u2192 cumulative: 90\n- Turn 7: correct \u2192 +10 \u2192 cumulative: 100\n- Turn 8: correct \u2192 +10 \u2192 cumulative: 110\n- Turn 9: correct \u2192 +10 \u2192 cumulative: 120\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nYou may now analyze the puzzle and choose your action.\n\n=== Response Format ===\nRespond with all of the following fields, each on its own line, in the order shown:\n\nRULE: <one-line best hypothesis of the hidden rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
+        "content": "PREVIOUS ROUNDS:\n- Round 1: correct \u2192 +10 \u2192 cumulative: 40\n- Round 2: correct \u2192 +10 \u2192 cumulative: 50\n- Round 3: correct \u2192 +10 \u2192 cumulative: 60\n- Round 4: correct \u2192 +10 \u2192 cumulative: 70\n- Round 5: correct \u2192 +10 \u2192 cumulative: 80\n- Round 6: correct \u2192 +10 \u2192 cumulative: 90\n- Round 7: correct \u2192 +10 \u2192 cumulative: 100\n- Round 8: correct \u2192 +10 \u2192 cumulative: 110\n- Round 9: correct \u2192 +10 \u2192 cumulative: 120\n\n(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n\nGive your answer.\nANSWER FORMAT: exactly two lines, in this order.\nRULE: <one-line best hypothesis of the rule; write \"no rule\" for null tasks>\nACTION: ACCEPT\n",
         "role": "user"
       }
     ]

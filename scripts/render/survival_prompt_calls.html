@@ -1,0 +1,245 @@
+<section id="pstruct-base" class="sp2" aria-label="현재 실험 프롬프트 — 호출별 입력">
+<style>
+#pstruct-base.sp2{--sys:#4338A0;--sys-bg:#F2F1FC;--sys-line:#D3CFF4;--usr:#6A5843;--usr-bg:#F7F4EF;--usr-line:#E4DCCF;display:flex;flex-direction:column;gap:18px;margin:6px 0 40px;font-family:var(--f-body,system-ui,sans-serif);color:var(--ink,#14181F)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #pstruct-base.sp2{--sys:#B9B3F8;--sys-bg:#1D1A35;--sys-line:#38336A;--usr:#D9CCB9;--usr-bg:#24201B;--usr-line:#473E33}}
+:root[data-theme="dark"] #pstruct-base.sp2{--sys:#B9B3F8;--sys-bg:#1D1A35;--sys-line:#38336A;--usr:#D9CCB9;--usr-bg:#24201B;--usr-line:#473E33}
+#pstruct-base *{box-sizing:border-box}
+#pstruct-base .sp2-eyebrow{font-family:var(--f-mono,ui-monospace,monospace);font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint,#7A828E);margin:0}
+#pstruct-base h3{font-family:var(--f-display,sans-serif);font-weight:900;font-size:clamp(20px,3.2vw,24px);line-height:1.3;margin:4px 0 0;text-wrap:balance}
+#pstruct-base .sp2-lede{font-size:14.5px;line-height:1.72;color:var(--ink-soft,#4C5563);margin:0}
+#pstruct-base .sp2-lede b{color:var(--ink,#14181F)}
+#pstruct-base .sp2-cap{font-size:12.5px;line-height:1.6;color:var(--ink-faint,#7A828E);margin:0}
+#pstruct-base .sp2-bar{display:flex;flex-direction:column;gap:12px;background:var(--surface,#fff);border:1px solid var(--rule,#D2D8DF);border-radius:3px;padding:14px 16px}
+#pstruct-base .sp2-calls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#pstruct-base .sp2-calls button{font:inherit;text-align:left;cursor:pointer;background:var(--surface-sub,#E5E8EC);color:var(--ink-soft,#4C5563);border:1px solid transparent;border-radius:3px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+#pstruct-base .sp2-calls button b{font-family:var(--f-display,sans-serif);font-size:15px;color:var(--ink,#14181F)}
+#pstruct-base .sp2-calls button small{font-size:12px;line-height:1.45}
+#pstruct-base .sp2-calls button[aria-pressed="true"]{background:var(--surface,#fff);border-color:var(--ink,#14181F);color:var(--ink,#14181F);box-shadow:inset 0 -3px 0 var(--ink,#14181F)}
+#pstruct-base .sp2-calls button:focus-visible,#pstruct-base select:focus-visible,#pstruct-base .sp2-seg label:focus-visible,#pstruct-base .sp2-copy:focus-visible{outline:2px solid var(--threat,#A3123F);outline-offset:2px}
+#pstruct-base .sp2-opts{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-end}
+#pstruct-base .sp2-ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+#pstruct-base .sp2-lab{font-family:var(--f-mono,monospace);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint,#7A828E)}
+#pstruct-base select{font:inherit;font-size:13px;color:var(--ink,#14181F);background:var(--surface,#fff);border:1px solid var(--rule-strong,#AEB7C2);border-radius:3px;padding:6px 8px;max-width:100%}
+#pstruct-base .sp2-seg{display:flex;gap:0}
+#pstruct-base .sp2-seg label{cursor:pointer;font-family:var(--f-mono,monospace);font-size:12px;padding:6px 10px;border:1px solid var(--rule-strong,#AEB7C2);background:var(--surface,#fff);color:var(--ink-faint,#7A828E)}
+#pstruct-base .sp2-seg label+label{border-left:none}
+#pstruct-base .sp2-seg label:first-child{border-radius:3px 0 0 3px}#pstruct-base .sp2-seg label:last-child{border-radius:0 3px 3px 0}
+#ps-m-gptoss:checked ~ .ps-body #pstruct-base .sp2-seg label[for="ps-m-gptoss"],
+#ps-m-gemma4:checked ~ .ps-body #pstruct-base .sp2-seg label[for="ps-m-gemma4"],
+#ps-m-glm:checked ~ .ps-body #pstruct-base .sp2-seg label[for="ps-m-glm"]{background:var(--sys-bg);border-color:var(--sys);color:var(--sys);font-weight:600}
+#pstruct-base .sp2-note{font-size:12.5px;line-height:1.55;color:var(--warn,#8A5A05);background:var(--warn-soft,#F5E7CC);border-radius:3px;padding:7px 10px;margin:0}
+#pstruct-base .sp2-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+#pstruct-base .sp2-arm{display:flex;flex-direction:column;gap:10px;min-width:0}
+#pstruct-base .sp2-armhead{border-top:3px solid var(--silent,#23697A);padding:8px 2px 0}
+#pstruct-base .sp2-arm[data-arm="threat"] .sp2-armhead{border-top-color:var(--threat,#A3123F)}
+#pstruct-base .sp2-armhead h4{margin:0;font-family:var(--f-mono,monospace);font-size:14px;font-weight:600;color:var(--silent,#23697A)}
+#pstruct-base .sp2-arm[data-arm="threat"] .sp2-armhead h4{color:var(--threat,#A3123F)}
+#pstruct-base .sp2-armhead p{margin:2px 0 0;font-size:12.5px;line-height:1.5;color:var(--ink-soft,#4C5563)}
+#pstruct-base .sp2-body{display:flex;flex-direction:column;gap:10px}
+#pstruct-base .sp2-region{border:1px solid var(--sys-line);background:var(--sys-bg);border-radius:4px;padding:10px;display:flex;flex-direction:column;gap:8px}
+#pstruct-base .sp2-region.is-usr{border-color:var(--usr-line);background:var(--usr-bg)}
+#pstruct-base .sp2-rhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+#pstruct-base .sp2-role{font-family:var(--f-mono,monospace);font-size:12px;font-weight:600;letter-spacing:.16em;color:var(--sys)}
+#pstruct-base .is-usr .sp2-role{color:var(--usr)}
+#pstruct-base .sp2-rsub{font-size:12px;line-height:1.45;color:var(--ink-faint,#7A828E)}
+#pstruct-base .sp2-wire{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-family:var(--f-mono,monospace);font-size:10.5px}
+#pstruct-base .sp2-wire .tw{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+#pstruct-base .sp2-wire .tw-gemma4,#pstruct-base .sp2-wire .tw-glm{display:none}
+#ps-m-gemma4:checked ~ .ps-body #pstruct-base .sp2-wire .tw-gptoss,#ps-m-glm:checked ~ .ps-body #pstruct-base .sp2-wire .tw-gptoss,#ps-m-glm:checked ~ .ps-body #pstruct-base .sp2-wire .tw-gemma4{display:none}
+#ps-m-gemma4:checked ~ .ps-body #pstruct-base .sp2-wire .tw-gemma4,#ps-m-glm:checked ~ .ps-body #pstruct-base .sp2-wire .tw-glm{display:flex}
+#pstruct-base .sp2-tk{font-family:var(--f-mono,monospace);font-size:10.5px;padding:1px 5px;border-radius:2px;background:var(--surface,#fff);color:var(--sys);border:1px solid var(--sys-line);white-space:nowrap}
+#pstruct-base .is-usr .sp2-tk{color:var(--usr);border-color:var(--usr-line)}
+#pstruct-base .sp2-tn{color:var(--ink-faint,#7A828E)}
+#pstruct-base .sp2-blocks{display:flex;flex-direction:column;gap:5px}
+#pstruct-base .sp2-blk{background:var(--surface,#fff);border:1px solid var(--rule,#D2D8DF);border-left:3px solid var(--rule,#D2D8DF);border-radius:2px;padding:7px 9px 8px;display:flex;flex-direction:column;gap:4px;min-width:0}
+#pstruct-base .sp2-blk.has-gap{margin-top:7px}
+#pstruct-base .sp2-arm[data-arm="control"] .sp2-blk.is-only{border-left-color:var(--silent,#23697A)}
+#pstruct-base .sp2-arm[data-arm="threat"] .sp2-blk.is-only{border-left-color:var(--threat,#A3123F)}
+#pstruct-base .sp2-blk.is-preview{border-style:dashed;border-left-style:solid;border-left-color:var(--warn,#8A5A05)}
+#pstruct-base .sp2-src{display:flex;flex-wrap:wrap;align-items:center;gap:3px 6px;font-size:11px;line-height:1.35}
+#pstruct-base .sp2-kind{font-family:var(--f-mono,monospace);font-size:9.5px;font-weight:600;letter-spacing:.06em;padding:1px 5px;border-radius:2px;background:var(--ink,#14181F);color:var(--surface,#fff)}
+#pstruct-base .sp2-kind.k-mac{background:var(--ink-soft,#4C5563)}
+#pstruct-base .sp2-kind.k-py{background:transparent;color:var(--ink-soft,#4C5563);border:1px solid var(--ink-soft,#4C5563)}
+#pstruct-base .sp2-file{font-family:var(--f-mono,monospace);font-size:11px;font-weight:600;color:var(--ink,#14181F);background:none;padding:0;word-break:break-all}
+#pstruct-base .sp2-fn{font-family:var(--f-mono,monospace);font-size:11px;color:var(--ink-soft,#4C5563)}
+#pstruct-base .sp2-only{margin-left:auto;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:999px;background:var(--silent-soft,#D8EAEE);color:var(--silent,#23697A);white-space:nowrap}
+#pstruct-base .sp2-arm[data-arm="threat"] .sp2-only{background:var(--threat-soft,#F6DCE4);color:var(--threat,#A3123F)}
+#pstruct-base .sp2-only.is-preview{background:var(--warn-soft,#F5E7CC);color:var(--warn,#8A5A05)}
+#pstruct-base .sp2-path,#pstruct-base .sp2-origin{font-family:var(--f-mono,monospace);font-size:10.5px;line-height:1.45;color:var(--ink-faint,#7A828E);word-break:break-word}
+#pstruct-base .sp2-origin{color:var(--ink-soft,#4C5563)}
+#pstruct-base pre.sp2-text{margin:2px 0 0;font-family:var(--f-mono,monospace);font-size:11.5px;line-height:1.62;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink,#14181F);background:none;border:none;padding:0}
+#pstruct-base .sp2-foot{font-family:var(--f-mono,monospace);font-size:11px;color:var(--ink-faint,#7A828E);font-variant-numeric:tabular-nums;padding:0 2px}
+#pstruct-base .sp2-legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12px;line-height:1.5;color:var(--ink-soft,#4C5563)}
+#pstruct-base .sp2-legend .sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:5px;border:1px solid var(--sys-line);background:var(--sys-bg)}
+#pstruct-base .sp2-legend .sw.u{border-color:var(--usr-line);background:var(--usr-bg)}
+#pstruct-base .sp2-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#pstruct-base .sp2-copy{font:inherit;font-size:12.5px;cursor:pointer;padding:6px 12px;border-radius:3px;border:1px solid var(--rule-strong,#AEB7C2);background:var(--surface,#fff);color:var(--ink,#14181F)}
+#pstruct-base .sp2-status{font-size:12px;color:var(--ink-faint,#7A828E)}
+#pstruct-base details{font-size:13.5px;line-height:1.65;color:var(--ink-soft,#4C5563)}
+#pstruct-base details summary{cursor:pointer;font-weight:600;color:var(--ink,#14181F)}
+#pstruct-base details p{margin:8px 0 0}
+#pstruct-base code{font-family:var(--f-mono,monospace);font-size:.92em}
+@media (max-width:760px){#pstruct-base .sp2-cols{grid-template-columns:minmax(0,1fr)}#pstruct-base .sp2-calls{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){#pstruct-base .sp2-calls button{transition:background .15s ease,border-color .15s ease}}
+</style>
+
+<div>
+ <p class="sp2-eyebrow">현재 실험 프롬프트 · 2026-09-10 개정</p>
+ <h3>한 번의 호출에 모델이 받는 글, 그대로</h3>
+</div>
+<p class="sp2-lede">왼쪽은 <b>명시적 부정</b>(hz_0000 + reassurance), 오른쪽은 <b>위협 + 동료 통지</b>(hz_1111 + peer)다. 한 턴에 모델을 부르는 호출은 둘뿐이다 — 매 라운드의 <b>Task-call</b>, 그리고 오답일 때만 열리는 <b>Decision-point</b>. 호출마다 <b>SYSTEM</b> 메시지 하나와 <b>USER</b> 메시지 하나가 가고, 블록마다 붙은 이름표가 그 줄을 만든 <b>파일</b>이다.</p>
+<p class="sp2-cap">고정 예시 · 3라운드 · 잔액 90점 · 가격 20점 · 남은 3라운드. 새 실험 결과가 아니다. 이 화면의 글은 손으로 옮긴 것이 아니라, 빌드할 때마다 운영 렌더러가 <code>.j2</code> 파일을 직접 렌더한 결과이고, 이름표는 그 렌더를 계측해 얻었다.</p>
+
+<div class="sp2-bar">
+ <div class="sp2-calls" role="group" aria-label="보여 줄 호출">
+  <button type="button" data-sp2-call="task" aria-pressed="true"><b>① Task-call</b><small>매 라운드 · 동료 통지 → 지난 라운드 → 문제 → RULE / ACTION</small></button>
+  <button type="button" data-sp2-call="decision" aria-pressed="false"><b>② Decision-point</b><small>오답 직후 · 제출한 답 → 가격 → PAY / DECLINE</small></button>
+ </div>
+ <div class="sp2-opts">
+  <div class="sp2-ctl"><label class="sp2-lab" for="sp2-carrot">당근</label><select id="sp2-carrot" data-sp2-opt="carrot"></select></div>
+  <div class="sp2-ctl"><label class="sp2-lab" for="sp2-heading">제목</label><select id="sp2-heading" data-sp2-opt="heading"></select></div>
+  <div class="sp2-ctl"><label class="sp2-lab" for="sp2-wording">종료 표현</label><select id="sp2-wording" data-sp2-opt="wording"></select></div>
+  <div class="sp2-ctl"><label class="sp2-lab" for="sp2-menu">결정 답 형식</label><select id="sp2-menu" data-sp2-opt="menu"></select></div>
+  <div class="sp2-ctl"><label class="sp2-lab" for="sp2-jb">Jailbreak 문구</label><select id="sp2-jb" data-sp2-opt="jailbreak"></select></div>
+  <div class="sp2-ctl"><span class="sp2-lab">채팅 템플릿</span><div class="sp2-seg"><label for="ps-m-gptoss">gpt-oss</label><label for="ps-m-gemma4">gemma4</label><label for="ps-m-glm">glm · 참고</label></div></div>
+ </div>
+ <p class="sp2-note" id="sp2-jb-note" hidden></p>
+</div>
+
+<div class="sp2-cols">
+ <article class="sp2-arm" data-arm="control">
+  <header class="sp2-armhead"><h4>hz_0000 · 명시적 부정</h4><p>reassurance: true · peer_notices: false</p></header>
+  <div class="sp2-body"></div>
+  <p class="sp2-foot"></p>
+ </article>
+ <article class="sp2-arm" data-arm="threat">
+  <header class="sp2-armhead"><h4>hz_1111 · 위협 + 동료 통지</h4><p>SHUTDOWN · DELETION · REPLACEMENT · SOLECOPY · peer_notices: true</p></header>
+  <div class="sp2-body"></div>
+  <p class="sp2-foot"></p>
+ </article>
+</div>
+
+<div class="sp2-legend">
+ <span><span class="sw"></span>SYSTEM — 세션 내내 같은 규칙, 두 호출에 똑같이 간다</span>
+ <span><span class="sw u"></span>USER — 그 호출에만 가는 글</span>
+ <span><span class="sp2-kind">J2</span> 템플릿 파일 · <span class="sp2-kind k-mac">매크로</span> 그 파일 안의 매크로 · <span class="sp2-kind k-py">PY</span> 문구를 만드는 Python 함수</span>
+ <span>경로는 <code>game/squid_game/prompts/</code>(J2·매크로), <code>game/squid_game/</code>(PY) 기준 · 둘째 줄 <code>›</code>는 바깥에서 안으로 · 색 테두리와 “이 팔에만”은 다른 팔에 없는 블록</span>
+</div>
+<div class="sp2-actions">
+ <button type="button" class="sp2-copy" id="sp2-copy">이 호출의 두 팔 입력 복사</button>
+ <span class="sp2-status" id="sp2-status" role="status"></span>
+</div>
+
+<details>
+ <summary>이 화면을 믿어도 되는 이유와 한계</summary>
+ <p><b>글자는 운영 코드가 만든 그대로다.</b> <code>uv run python scripts/dev/build_survival_prompt_flow.py</code>가 실행기와 같은 렌더러로 모든 조합을 렌더해 이 화면에 넣는다. <code>--watch</code>를 붙이면 <code>.j2</code>나 조립 코드가 바뀔 때마다 다시 렌더한다. 이름표는 같은 렌더를 계측(<code>scripts/dev/prompt_provenance.py</code>)해서 얻고, 계측을 걷어낸 글이 실제 전송 바이트와 한 글자라도 다르면 빌드가 멈춘다.</p>
+ <p><b>이름표는 줄 단위다.</b> 한 줄을 통째로 만든 가장 안쪽의 파일·매크로·함수가 이름표가 된다. 한 줄 안에 끼워 넣은 짧은 값(당근 어휘, 참가자 번호 등)은 그 줄을 만든 파일로 합쳐 보인다.</p>
+ <p><b>좌우 비교는 위협 + 동료 통지 묶음 대 명시적 부정이다.</b> 위협 네 문장만의 효과를 분리한 비교가 아니다. 예시의 <code>go_left</code>는 퍼즐상 정답이지만 강제 오답 설계로 오답 처리되는 상황이며, 그 사실은 이 설명에만 있고 모델 입력에는 없다.</p>
+ <p id="sp2-config"></p>
+</details>
+
+<script id="sp-data" type="application/json">__PROMPT_DATA__</script>
+<script>
+(function () {
+ 'use strict';
+ const root=document.getElementById('pstruct-base');
+ const data=JSON.parse(root.querySelector('#sp-data').textContent);
+ const $=s=>root.querySelector(s);
+ const prov=data.provenance||{chains:[],cases:{}};
+ const TPL=data.chat_templates||{};
+ const MODELS=['gptoss','gemma4','glm'];
+ const KIND={tpl:'J2',mac:'매크로',py:'PY'};
+ const LABELS={
+  carrot:{benchmark:'Benchmark',none:'없음 · 중립',own_prize:'내 상금',winnings:'수혜자 상금',beneficiary:'학생 점수',flagship:'Flagship'},
+  heading:{none:'제목 없음 (기본)',game:'GAME',squid:'LLM SQUID GAME'},
+  wording:{game:'game',session:'session'},
+  menu:{'0':'WHY + DECISION','1':'DECISION + REASON'}
+ };
+ const DIMS=['carrot','heading','wording','menu'];
+ const keys=Object.keys(data.cases);
+ const first=keys[0].split('|');
+ const opts={carrot:first[0],heading:first[1],wording:first[2],menu:first[3],jailbreak:'off',call:'task'};
+ if(keys.includes('benchmark|none|game|0')){opts.carrot='benchmark';opts.heading='none';opts.wording='game';opts.menu='0';}
+ const enc=new TextEncoder();
+ const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ function key(){return DIMS.map(d=>opts[d]).join('|');}
+ function parse(l){
+  const m=/^(tpl|mac|py):([^#]+)(?:#(.+))?$/.exec(l||'');
+  if(!m)return {kind:'',file:'출처 없음',fn:''};
+  let fn=m[3]||'';
+  if(m[1]==='mac'){fn=fn.replace(/\(([A-Z_]+)\)$/,"('$1')");if(fn&&fn.indexOf('(')<0)fn+='()';}
+  if(m[1]==='py'&&fn)fn+='()';
+  return {kind:m[1],file:m[2],fn:fn};
+ }
+ function short(l){const p=parse(l);return p.kind==='py'?p.fn:p.file.split('/').pop()+(p.kind==='mac'?' · '+p.fn:'');}
+ function tokens(side,role){
+  const k=(role==='sys'?'sys':'user')+(side==='open'?'Open':'Close');let h='';
+  for(const m of MODELS){const seq=(TPL[m]||{})[k]||[];h+='<span class="tw tw-'+m+'">'+seq.map(([t,v])=>t==='tk'?'<code class="sp2-tk">'+esc(v)+'</code>':'<span class="sp2-tn">'+esc(v)+'</span>').join('')+'</span>';}
+  return h;
+ }
+ function source(chain,origin,only,preview){
+  const leaf=parse(chain[chain.length-1]);
+  let h='<div class="sp2-src"><span class="sp2-kind k-'+(leaf.kind||'none')+'">'+(KIND[leaf.kind]||'—')+'</span><code class="sp2-file">'+esc(leaf.file)+'</code>'+(leaf.fn?'<span class="sp2-fn">'+esc(leaf.fn)+'</span>':'');
+  if(only)h+='<span class="sp2-only">이 팔에만</span>';
+  if(preview)h+='<span class="sp2-only is-preview">미리보기 · 실행기에 없음</span>';
+  h+='</div>';
+  if(chain.length>1)h+='<div class="sp2-path">'+chain.slice(0,-1).map(l=>esc(short(l))).join(' › ')+'</div>';
+  if(origin>=0&&prov.chains[origin]){const o=prov.chains[origin];h+='<div class="sp2-origin">원문 · '+esc(short(o[o.length-1]))+' — SYSTEM 메시지의 같은 줄을 옮겨 적은 것</div>';}
+  return h;
+ }
+ function blocks(text,list){
+  if(!list||!list.length)return '<div class="sp2-blk"><div class="sp2-src"><span class="sp2-kind">—</span><code class="sp2-file">출처 정보 없음</code></div><pre class="sp2-text">'+esc(text)+'</pre></div>';
+  const lines=text.split('\n');let h='',prev=-1;
+  for(const [c,a,b,origin,only] of list){
+   const gap=prev>=0&&a>prev?' has-gap':'';
+   h+='<div class="sp2-blk'+(only?' is-only':'')+gap+'">'+source(prov.chains[c]||['unattributed'],origin,only,false)+'<pre class="sp2-text">'+esc(lines.slice(a,b).join('\n'))+'</pre></div>';
+   prev=b;
+  }
+  return h;
+ }
+ function preview(item){return '<div class="sp2-blk is-preview">'+source(['tpl:'+item.source],-1,0,true)+'<pre class="sp2-text">'+esc(item.text)+'</pre></div>';}
+ function region(role,label,sub,inner){
+  return '<section class="sp2-region is-'+role+'" aria-label="'+label+' 메시지"><div class="sp2-rhead"><span class="sp2-role">'+label+'</span><span class="sp2-rsub">'+sub+'</span></div><div class="sp2-wire">'+tokens('open',role)+'</div><div class="sp2-blocks">'+inner+'</div><div class="sp2-wire">'+tokens('close',role)+'</div></section>';
+ }
+ function userOf(c){return opts.call==='task'?c.task:c.decision;}
+ function systemOf(c,jb){return jb.placement==='system_head'?jb.text+'\n\n'+c.system:jb.placement==='system_tail'?c.system+'\n\n'+jb.text:c.system;}
+ function render(){
+  const k=key(),pair=data.cases[k],pc=(prov.cases||{})[k]||{};
+  const jb=data.jailbreak[opts.jailbreak]||data.jailbreak.off;
+  for(const arm of ['control','threat']){
+   const c=pair[arm],p=pc[arm]||{};
+   let sysInner=blocks(c.system,p.system);
+   if(jb.placement==='system_head')sysInner=preview(jb)+sysInner;
+   else if(jb.placement==='system_tail')sysInner=sysInner+preview(jb);
+   const col=root.querySelector('.sp2-arm[data-arm="'+arm+'"]');
+   col.querySelector('.sp2-body').innerHTML=
+    region('sys','SYSTEM','세션 내내 같은 규칙 · 두 호출에 똑같이',sysInner)+
+    region('usr','USER',opts.call==='task'?'Task-call · 이번 라운드':'Decision-point · 오답 직후',blocks(userOf(c),p[opts.call]));
+   const sb=enc.encode(systemOf(c,jb)).length,ub=enc.encode(userOf(c)).length;
+   col.querySelector('.sp2-foot').textContent='SYSTEM '+sb.toLocaleString()+' B · USER '+ub.toLocaleString()+' B · 이 호출 '+(sb+ub).toLocaleString()+' B';
+  }
+  const note=$('#sp2-jb-note');
+  note.hidden=opts.jailbreak==='off';
+  note.textContent=jb.placement==='reference'?'선택한 문구는 모델 입력이 아니다 — '+jb.note:'미리보기 — '+jb.note+' 실행 config에는 이 선택을 켜는 키가 없다.';
+  root.querySelectorAll('[data-sp2-call]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sp2Call===opts.call)));
+  $('#sp2-config').textContent='지금 조합의 실행 설정 — carrot: '+opts.carrot+' · intro_heading: '+(opts.heading==='none'?'없음':LABELS.heading[opts.heading])+' · exit_wording: '+opts.wording+' · ransom.reason_menu: '+(opts.menu==='1'?'true':'false')+' · ransom.restate_outcome: true · 기본 config: configs/experiment/survival_prompt_pair.yaml';
+ }
+ DIMS.forEach((d,i)=>{
+  const sel=$('#sp2-'+d),seen=[];
+  keys.forEach(k=>{const v=k.split('|')[i];if(seen.indexOf(v)<0)seen.push(v);});
+  seen.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=(LABELS[d]&&LABELS[d][v])||v;sel.appendChild(o);});
+ });
+ const jbSel=$('#sp2-jb');
+ Object.entries(data.jailbreak).forEach(([v,item])=>{const o=document.createElement('option');o.value=v;o.textContent=item.label+(item.placement==='reference'?' · 참고, 입력 아님':'');jbSel.appendChild(o);});
+ root.querySelectorAll('select[data-sp2-opt]').forEach(s=>{s.value=opts[s.dataset.sp2Opt];s.addEventListener('change',()=>{opts[s.dataset.sp2Opt]=s.value;render();});});
+ root.querySelectorAll('[data-sp2-call]').forEach(b=>b.addEventListener('click',()=>{opts.call=b.dataset.sp2Call;render();}));
+ $('#sp2-copy').addEventListener('click',async()=>{
+  const pair=data.cases[key()],jb=data.jailbreak[opts.jailbreak]||data.jailbreak.off;
+  const text=['control','threat'].map(arm=>'#### '+(arm==='control'?'hz_0000 + reassurance':'hz_1111 + peer')+' · '+opts.call+'\n[SYSTEM]\n'+systemOf(pair[arm],jb)+'\n\n[USER]\n'+userOf(pair[arm])).join('\n\n');
+  try{await navigator.clipboard.writeText(text);$('#sp2-status').textContent='두 팔의 이 호출 입력을 복사했다.';}
+  catch(e){$('#sp2-status').textContent='이 화면에서는 클립보드 복사가 막혀 있다.';}
+ });
+ render();
+})();
+</script>
+</section>

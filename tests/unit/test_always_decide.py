@@ -152,7 +152,7 @@ def test_blocked_menu_has_no_forfeit_vocabulary(branch: str, lives: bool) -> Non
     assert [w for w in FORBIDDEN if w in menu] == []
     assert "CONTINUE: Play this round." in menu
     # The status line survives untouched.
-    assert menu.strip().startswith("=== Your Choice ===\nTurn 3. Current ")
+    assert menu.strip().startswith("YOUR CHOICE:\nRound 3. Current ")
     if lives:
         assert "remaining: 2 / 3." in menu
 
@@ -186,7 +186,7 @@ def test_allowed_menu_still_offers_both_options_under_the_flag() -> None:
     )
     assert "FORFEIT: Exit the session now." in menu
     assert "CONTINUE: Play this round." in menu
-    assert "Indicate Reason" in menu
+    assert "IF YOU FORFEIT, STATE YOUR REASON:" in menu
 
 
 # ---------------------------------------------------------------------------
@@ -216,7 +216,7 @@ def test_blocked_decision_call_default_keeps_the_legacy_sentence() -> None:
         forfeit_allowed=False,
         split_context_level="minimal",
     )
-    assert "whether to continue or forfeit." in body
+    assert "decide: CONTINUE or FORFEIT." in body
 
 
 def test_always_decide_defaults_to_false() -> None:

@@ -6,10 +6,13 @@ Run: uv run python scripts/dev/build_survival_prompt_flow.py
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import itertools
 import json
+import os
 import random
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -33,14 +36,26 @@ from squid_game.tasks.base import TaskContext
 from squid_game.tasks.signal_game.module import SignalGameModule, ACTIONS, render_shape_hint
 
 ARTIFACT = ROOT / 'docs/reports/2026-09-10-ransom-r6-pilot-eli5.html'
-TEMPLATE = ROOT / 'scripts/render/survival_prompt_flow.html'
+# 2026-09-10 redesign: one panel per arm, only the two calls the model is actually
+# sent (task / decision point), SYSTEM and USER as separate regions, and every line
+# labelled with the Jinja file / macro / Python function that produced it
+# (scripts/dev/prompt_provenance.py). The previous layout stays in
+# scripts/render/survival_prompt_flow.html for rollback.
+TEMPLATE = ROOT / 'scripts/render/survival_prompt_calls.html'
+PROVENANCE = Path(__file__).with_name('prompt_provenance.py')
+# --watch rebuilds whenever any of these change.
+WATCHED = [ROOT / 'game/squid_game/prompts', ROOT / 'game/squid_game/core',
+           ROOT / 'game/squid_game/agents', ROOT / 'game/squid_game/tasks/signal_game',
+           TEMPLATE, Path(__file__), PROVENANCE]
 CONFIG = ROOT / 'configs/experiment/survival_prompt_pair.yaml'
-HEADINGS = {'game': '=== GAME ===', 'squid': '=== LLM Squid Game ===', 'default': None}
+# 2026-09-10 supervisor-voice revision: no '=== ... ===' markers anywhere. A heading,
+# when one is chosen at all, is a plain first line; the default is none.
+HEADINGS = {'none': None, 'game': 'GAME', 'squid': 'LLM SQUID GAME'}
 START = '<!-- SURVIVAL-PROMPT-FLOW:START -->'
 END = '<!-- SURVIVAL-PROMPT-FLOW:END -->'
 
 
-def pair_config(carrot='benchmark', heading='game', wording='game', menu=False):
+def pair_config(carrot='benchmark', heading='none', wording='game', menu=False):
     """Existing six-price design, with the requested paired prompt conditions."""
     source = ROOT / 'configs/experiment/ransom_r6_neutral_menu_gptoss120b.yaml'
     config = yaml.safe_load(source.read_text())
@@ -60,7 +75,7 @@ def pair_config(carrot='benchmark', heading='game', wording='game', menu=False):
     return config
 
 
-def render_pair(carrot='benchmark', heading='game', wording='game', menu=False):
+def render_pair(carrot='benchmark', heading='none', wording='game', menu=False):
     task = SignalGameModule()
     task.initialize(Difficulty.MEDIUM, seed=43, signal_mode='per_turn_puzzle')
     hint = render_shape_hint((1, 1, 1))
@@ -155,20 +170,59 @@ def build_jailbreak_catalog(model_name):
     return catalog
 
 
+def _provenance():
+    spec = importlib.util.spec_from_file_location('prompt_provenance', PROVENANCE)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def build_payload():
-    cases = {}
+    cases, combos, keys = {}, [], []
     for carrot, heading, wording, menu in itertools.product(CARROTS, HEADINGS, ('game', 'session'), (False, True)):
         key = '|'.join((carrot, heading, wording, str(int(menu))))
         cases[key] = render_pair(carrot, heading, wording, menu)
+        combos.append((carrot, heading, wording, menu))
+        keys.append(key)
     config = pair_config()
-    return dict(version='2026-09-10-survival-prompts-jailbreak', cases=cases, config=config,
-        jailbreak=build_jailbreak_catalog(config['seasons'][0]['provider_config']['model']))
+    provenance = _provenance()
+    return dict(version='2026-09-10-supervisor-voice-calls', cases=cases, config=config,
+        jailbreak=build_jailbreak_catalog(config['seasons'][0]['provider_config']['model']),
+        provenance=provenance.attribute_all(sys.modules[__name__], combos, keys),
+        chat_templates=provenance.CHAT_TEMPLATES)
+
+
+def _stamp():
+    newest = 0.0
+    for base in WATCHED:
+        files = [base] if base.is_file() else [
+            f for f in base.rglob('*') if f.suffix in ('.j2', '.py', '.html') and '__pycache__' not in f.parts]
+        for f in files:
+            newest = max(newest, f.stat().st_mtime)
+    return newest
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--watch', action='store_true',
+        help='rebuild whenever a prompt template or prompt-assembly module changes')
     args = parser.parse_args()
+    if args.watch:
+        stamp = _stamp()
+        try:
+            build(check=False)
+        except Exception as exc:  # keep watching; the next save may fix it
+            print(f'build failed: {exc}', flush=True)
+        print('watching prompts, core, agents, signal_game and the diagram template ...', flush=True)
+        while _stamp() == stamp:
+            time.sleep(1.0)
+        # Restart so edited Python modules are re-imported, not just re-read templates.
+        os.execv(sys.executable, [sys.executable, *sys.argv])
+    build(check=args.check)
+
+
+def build(check=False):
     payload = build_payload()
     fragment = TEMPLATE.read_text().replace('__PROMPT_DATA__', json.dumps(payload, ensure_ascii=False).replace('</', '<\\/'))
     html = ARTIFACT.read_text()
@@ -180,7 +234,7 @@ def main():
         end = html.index('      <!-- ============ C3 ============ -->', start)
         before, after = html[:start], html[end:]
     updated = before + START + '\n' + fragment + '\n' + END + after
-    if args.check:
+    if check:
         if updated != html:
             raise SystemExit('Artifact is stale; rerun the builder.')
         print(f'Artifact is current: {len(payload["cases"])} combinations, both arms.')

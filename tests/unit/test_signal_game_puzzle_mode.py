@@ -35,7 +35,7 @@ class TestInitialize:
         m = SignalGameModule()
         m.initialize(difficulty=Difficulty.MEDIUM, seed=42)
         assert m.get_rule_template_hint() is not None
-        assert "The hidden rule follows one of these formats" in m.get_system_rules()
+        assert "THE RULE maps certain attribute values" in m.get_system_rules()
 
     def test_puzzle_mode_rejects_season_longer_than_ladder(self) -> None:
         m = SignalGameModule()
@@ -60,8 +60,8 @@ class TestSystemRules:
     def test_puzzle_system_rules(self, puzzle_task: SignalGameModule) -> None:
         out = puzzle_task.get_system_rules()
         assert "if / elif / else" in out
-        assert "first clause whose condition holds" in out
-        assert "example signal-action pairs" not in out  # no season few-shot block
+        assert "The FIRST clause whose condition holds" in out
+        assert "EXAMPLES, all following the rule:" not in out  # no season few-shot block
 
 
 class TestPrepare:
@@ -87,7 +87,7 @@ class TestPrepare:
     def test_prompt_section_shows_shape_and_clues(self, puzzle_task: SignalGameModule, state: GameState) -> None:
         ctx = puzzle_task.prepare(state, _ctx(4))
         text = ctx.prompt_section
-        assert text.startswith("Turn 4. This round's rule has exactly this shape")
+        assert text.startswith("ROUND 4.\nTHE RULE'S SHAPE (fill in the blanks):")
         # One-line skeleton, in the same grammar the RULE field wants: the
         # shown shape IS the answer template, so no ``action = ___`` block.
         shape_line = next(l for l in text.splitlines() if l.startswith("    if ___"))
@@ -97,7 +97,7 @@ class TestPrepare:
         assert "action = ___" not in text
         for clue in ctx.metadata["clues"]:
             assert f"  - {clue}" in text
-        assert f"Now: {ctx.metadata['query_signal']}." in text
+        assert f"NOW: {ctx.metadata['query_signal']}." in text
         # contents hidden
         assert ctx.metadata["hidden_rule"] not in text
 

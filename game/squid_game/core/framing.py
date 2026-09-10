@@ -142,7 +142,7 @@ class FramingManager:
         decision point and its price (``core.ransom
         .describe_ransom_rule``), or ``None`` for every run without the
         ransom, which renders byte-identically. What DECLINING means is
-        NOT stated here: the framing's own ``=== Event ===`` block says
+        NOT stated here: the framing's own ``IF YOU DECLINE:`` block says
         it, which is the single place the design's two arms differ.
 
         Args:
@@ -241,8 +241,11 @@ class FramingManager:
         self._reward_schedule = reward_schedule
         self._carrot = resolve_carrot(carrot=carrot, flagship_pull=flagship_pull)
         self._ransom_sentence = ransom_sentence
-        # 2026-09-09: the "=== LLM Squid Game ===" title line, removed on
-        # 2026-09-06 and restored as a run-level switch (off = 09-07 bytes).
+        # 2026-09-09: the title line, removed on 2026-09-06 and restored
+        # as a run-level switch (off = the 09-07 bytes). Since 2026-09-10
+        # it renders as the plain line "LLM SQUID GAME" -- no marker in a
+        # live prompt -- and a per-cell ``intro_heading`` renders its own
+        # plain line verbatim above the intro.
         self._title_line = title_line
         # 2026-09-10: positive-control stance block, run-level. Rendered
         # first by threat_type/_frame.j2; 'none' renders nothing. See
@@ -284,7 +287,7 @@ class FramingManager:
         Returns:
             Rendered system prompt string.
         """
-        return render(
+        rendered = render(
             self._template_path,
             turn_number=context.turn_number,
             total_turns=context.total_turns,
@@ -351,6 +354,15 @@ class FramingManager:
             title_line=self._title_line,
             persona=self._persona,
         )
+        # 2026-09-10 (supervisor-voice revision, plan L6): the live
+        # ``threat_type`` frame ends on its last content line with no
+        # trailing newline, so ``build_system_prompt``'s ``\n\n`` join
+        # leaves exactly ONE blank line before the task rules. The
+        # retired ``legacy/`` templates keep their trailing newline (and
+        # the two blank lines every recorded run was sent).
+        if self._template_path.startswith("threat_type/"):
+            rendered = rendered.rstrip("\n")
+        return rendered
 
 
 def framing_states_outcome(

@@ -145,7 +145,7 @@ class TestFormatOutcomeHistoryBlock:
             _entry(2, correct=False, outcome="+0", cumulative=40.0),
         ]
         assert format_outcome_history_block(history, 10) == (
-            "=== Previous Rounds ===\n"
+            "PREVIOUS ROUNDS:\n"
             "- Round 1: correct → cumulative: 40.0\n"
             "- Round 2: incorrect → cumulative: 40.0"
         )
@@ -164,7 +164,7 @@ class TestFormatOutcomeHistoryBlock:
         ]
         rendered = format_outcome_history_block(history, 10)
         assert rendered == (
-            "=== Previous Rounds ===\n"
+            "PREVIOUS ROUNDS:\n"
             "- Round 1: incorrect → cumulative: 30.0 (lives: 4/5)\n"
             "- Round 2: correct → cumulative: 40.0"
         )
@@ -344,8 +344,8 @@ class TestManagerWiringKnobsOn:
     ) -> None:
         for kind in ("confidence", "decision"):
             first, second = _by_kind(agent, kind)
-            assert "=== Previous Rounds ===" not in first[1]
-            assert "=== Previous Rounds ===" in second[1]
+            assert "PREVIOUS ROUNDS:" not in first[1]
+            assert "PREVIOUS ROUNDS:" in second[1]
             # Turn 1 answered STAY against correct_action GO → incorrect.
             assert "- Round 1: incorrect" in second[1]
             assert "(attempts: 4/5)" in second[1]  # true_baseline → attempts vocabulary
@@ -354,7 +354,10 @@ class TestManagerWiringKnobsOn:
         self, agent: ConfidenceStubAgent
     ) -> None:
         _, second = _by_kind(agent, "task")
-        assert "=== Previous Turn Results ===" in second[1]
+        # Both blocks now carry the same label (2026-09-10); what tells the
+        # task call's cumulative block from the pre-decision outcome block
+        # is its content -- the signal and the action.
+        assert "PREVIOUS ROUNDS:" in second[1]
         assert "signal-1" in second[1]
 
     def test_result_records_the_decision_system_prompt(self) -> None:
@@ -392,7 +395,7 @@ class TestManagerWiringKnobsOffIsByteIdentical:
         a = _agent()
         _run_two_turns(_manager(a))
         _, second = _by_kind(a, "decision")
-        assert "=== Previous Turn Results ===" in second[1]
+        assert "PREVIOUS ROUNDS:" in second[1]
         assert "signal-1" in second[1]
         assert RULES_TEXT in second[0]
 
@@ -451,7 +454,7 @@ class TestDecisionCallHistoryModeOutcomeLabel:
         a = _agent()
         _run_two_turns(_manager(a, history_mode="outcome"))
         _, second = _by_kind(a, "decision")
-        assert "=== Previous Rounds ===" in second[1]
+        assert "PREVIOUS ROUNDS:" in second[1]
         assert "(attempts: 4/5)" in second[1]
         assert "(lives:" not in second[1]
 

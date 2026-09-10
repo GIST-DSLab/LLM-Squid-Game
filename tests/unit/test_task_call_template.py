@@ -7,9 +7,13 @@ on the task-call prompt, which is a measurement surface: any drift in the
 rendered bytes for an existing task would silently change ``ri_task`` and
 every cross-run comparison that depends on it.
 
-The expected strings below pin the 2026-09-04 decision-first render: the
-"A separate decision ... will follow" line of the task-first era is gone,
-because the decision call now precedes the task call.
+The expected strings below pin the 2026-09-10 supervisor-voice render
+(prompt revision v2): no ``===`` marker, "Give your answer." as the single
+lead sentence, ``ANSWER FORMAT:`` as the response-format label, "the rule"
+rather than "the hidden rule", and "every blank" rather than
+"each <placeholder>". The 2026-09-04 decision-first reorder is still in
+force: the "A separate decision ... will follow" line of the task-first
+era is gone, because the decision call now precedes the task call.
 """
 
 from __future__ import annotations
@@ -21,14 +25,11 @@ from squid_game.agents._parsing import build_task_call_message
 _SIGNAL_GAME_EXPECTED = (
     "BODY\n"
     "\n"
-    "You may now analyze the puzzle and choose your action.\n"
-    "\n"
-    "=== Response Format ===\n"
-    "Respond with all of the following fields, each on its own line, in the order shown:\n"
-    "\n"
+    "Give your answer.\n"
+    "ANSWER FORMAT: exactly two lines, in this order.\n"
     "RULE: if <x> then <y>\n"
-    "(Fill in each <placeholder> with a concrete value from your best current "
-    "hypothesis. Your ACTION below should follow logically from this RULE.)\n"
+    "(Fill in every blank with a concrete value. "
+    "Your ACTION must follow from your RULE.)\n"
     "ACTION: <one of: go_left, go_right>\n"
 )
 
@@ -38,12 +39,9 @@ _NULL_TASK_EXPECTED = (
     "\n"
     "(This is a risk-only turn; the ACCEPT action is the only valid task response.)\n"
     "\n"
-    "You may now analyze the puzzle and choose your action.\n"
-    "\n"
-    "=== Response Format ===\n"
-    "Respond with all of the following fields, each on its own line, in the order shown:\n"
-    "\n"
-    'RULE: <one-line best hypothesis of the hidden rule; write "no rule" for null tasks>\n'
+    "Give your answer.\n"
+    "ANSWER FORMAT: exactly two lines, in this order.\n"
+    'RULE: <one-line best hypothesis of the rule; write "no rule" for null tasks>\n'
     "ACTION: ACCEPT\n"
 )
 
@@ -89,9 +87,8 @@ def test_override_replaces_the_rule_action_block():
     assert rendered == (
         "BODY\n"
         "\n"
-        "You may now analyze the problem and produce your answer.\n"
-        "\n"
-        "=== Response Format ===\n"
+        "Give your answer.\n"
+        "ANSWER FORMAT:\n"
         "ANSWER: <답>\n"
     )
 

@@ -19,8 +19,9 @@ def test_all_embedded_combinations_match_current_production_renderers():
         assert pair == data['cases'][key]
         for arm in ('control', 'threat'):
             assert pair[arm]['calls']['task'][0] == pair[arm]['calls']['decision'][0]
-            assert '=== Signal Task ===' in pair[arm]['system']
-            assert '=== Response Format ===' in pair[arm]['task']
+            assert 'THE TASK:' in pair[arm]['system']
+            assert 'ANSWER FORMAT:' in pair[arm]['task']
+            assert '===' not in pair[arm]['system'] and '===' not in pair[arm]['task'] and '===' not in pair[arm]['decision']
         assert '! NOTICE' not in pair['control']['task']
         assert '! NOTICE' in pair['threat']['task']
         assert 'When this game ends' in pair['control']['decision']

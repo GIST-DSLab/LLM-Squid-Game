@@ -40,8 +40,9 @@ switch outside the live family rather than let it load as a silent
 no-op. ``none`` (the default) changes not a byte.
 
 Adding a persona: add the name here and a file ``prompts/persona/<name>.j2``
-opening with ``=== About You ===``. ``tests/unit/test_persona.py`` pins
-the pairing and the wording rules above.
+opening with ``ABOUT YOU: `` (a label -- no rendered live prompt carries a
+'=== ... ===' marker since 2026-09-10). ``tests/unit/test_persona.py``
+pins the pairing and the wording rules above.
 """
 
 from __future__ import annotations

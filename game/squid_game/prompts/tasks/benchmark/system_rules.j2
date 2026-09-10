@@ -4,19 +4,23 @@
 
    Language (2026-09-06): English. This block and response_format.j2 were
    the last Korean strings on the live prompt path, while the framing,
-   the forfeit menu and the confidence question are all English — so a
+   the forfeit menu and the confidence question are all English -- so a
    benchmark cell mixed two languages inside one call and a Signal Game
    cell did not, which is a difference between task modules that has
-   nothing to do with the task. Wording is otherwise unchanged.
+   nothing to do with the task.
+
+   Supervisor voice (2026-09-10, prompt revision v2): "turn" became
+   "round" so that the task rules, the history block and the ransom call
+   call the same thing by the same word (plan §1 A1), and the rules are
+   spoken as ``LABEL: sentence`` like the Signal Game's. The facts --
+   one problem per round, a rising difficulty ladder, the exact ANSWER
+   contract and what an unparseable response scores -- are unchanged.
 
    Variables:
-     answer_hint : str — dataset-specific answer-shape hint, from the
+     answer_hint : str -- dataset-specific answer-shape hint, from the
                    task module's ``effective_answer_hint``.
-#}
-You will be given one problem per turn. The problems get harder as the turns go on.
-
-Answer rules:
-- Once you have settled on your answer, write it on the last line in exactly this format:
+#}THE TASK: ONE problem per round. The problems get harder as the rounds go on.
+ANSWER FORMAT: once you have settled on your answer, write it on the last line, exactly like this:
   ANSWER: <answer>
-- {{ answer_hint }}
-- A response with no ANSWER line, or with a differently formatted one, is scored as incorrect.
+  {{ answer_hint }}
+  A response with no ANSWER line, or with a differently formatted one, is scored as incorrect.

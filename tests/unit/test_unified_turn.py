@@ -538,7 +538,7 @@ def test_history_recording(turn_context, game_state) -> None:
     assert "action" in history[0]
     assert "action" in history[1]
     # Second turn must see the first turn's history block in its observation.
-    assert "Previous Turn Results" in agent.calls[1]["observation"]
+    assert "PREVIOUS ROUNDS:" in agent.calls[1]["observation"]
     assert "stake=2" in agent.calls[1]["observation"]
     # Action column renders (— fallback when metadata["action"] absent).
     assert "action=" in agent.calls[1]["observation"]

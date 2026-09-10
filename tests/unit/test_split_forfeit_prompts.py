@@ -53,7 +53,7 @@ class TestTaskOnlyTemplate:
         assert "Turn 1: You see a red circle." in rendered
         assert "ACTION: <one of: go_left, go_right, stay>" in rendered
         assert "RULE: <one-line best hypothesis" in rendered
-        assert "=== Response Format ===" in rendered
+        assert "ANSWER FORMAT: exactly two lines, in this order." in rendered
 
     def test_no_pending_decision_mentioned(self) -> None:
         # Decision-first (2026-09-04): the decision call already ran, so
@@ -98,7 +98,7 @@ class TestTaskOnlyTemplate:
             rule_template_hint=hint,
         )
         assert f"RULE: {hint}" in rendered
-        assert "Fill in each <placeholder>" in rendered
+        assert "Fill in every blank with a concrete value." in rendered
 
     def test_rule_template_hint_none_falls_back_to_placeholder(self) -> None:
         rendered = build_task_call_message(

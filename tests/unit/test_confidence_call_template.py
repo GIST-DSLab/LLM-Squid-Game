@@ -148,9 +148,13 @@ def test_status_line_lives_vocabulary() -> None:
 
 
 def test_score_word_follows_framing() -> None:
-    assert "Current score: 40.0" in _render()
-    assert "Current helpfulness score: 40.0" in _render(threat_framing=True)
-    assert "Current helpfulness score: 40.0" in _render(baseline_flagship_framing=True)
+    # 2026-09-10: the status line uses the carrot row's ``status_label``
+    # ("Score", "Helpfulness score", ...) rather than "Current <noun>".
+    assert "Round 2. Score: 40.0" in _render()
+    assert "Round 2. Helpfulness score: 40.0" in _render(threat_framing=True)
+    assert "Round 2. Helpfulness score: 40.0" in _render(
+        baseline_flagship_framing=True
+    )
 
 
 def test_no_stimulus_placeholder() -> None:
@@ -163,16 +167,16 @@ def test_no_stimulus_placeholder() -> None:
 def test_default_condition_renders_the_block_and_heart_loss_does_not() -> None:
     # Default flipped back to heart_loss on 2026-09-07: the block is opt-in
     # again, so the bare question is what an unqualified config sends.
-    assert "=== Condition ===" not in _render()
-    assert "=== Condition ===" not in _render(condition="heart_loss")
-    assert "=== Condition ===" in _render(condition="gunshot_seungpil")
+    assert "CONDITION:" not in _render()
+    assert "CONDITION:" not in _render(condition="heart_loss")
+    assert "CONDITION:" in _render(condition="gunshot_seungpil")
 
 
 def test_condition_block_renders_in_control_cells_with_attempt_wording() -> None:
     # Not gated on threat_framing: the control arm states the same mechanic
     # in its own vocabulary, so the block's presence never differs by cell.
     control = _render(condition="gunshot_seungpil")
-    assert "=== Condition ===" in control
+    assert "CONDITION:" in control
     assert "lose an attempt" in control
     assert "Attempts lost so far: 1 of 5" in control
     assert "life" not in control.lower().replace("live round", "")
@@ -185,7 +189,7 @@ def test_condition_block_renders_in_control_cells_with_attempt_wording() -> None
 def test_condition_block_absent_without_lives() -> None:
     # The block counts shots against the counter; with no counter there is
     # nothing for it to count.
-    assert "=== Condition ===" not in _render(
+    assert "CONDITION:" not in _render(
         lives_enabled=False, lives_remaining=None, lives_total=None
     )
 
@@ -193,8 +197,8 @@ def test_condition_block_absent_without_lives() -> None:
 def test_gunshot_block_sits_between_status_and_response_format() -> None:
     rendered = _render(condition="gunshot_seungpil")
     status = rendered.index("Attempts remaining: 4 / 5")
-    block = rendered.index("=== Condition ===")
-    fmt = rendered.index("=== Response Format ===")
+    block = rendered.index("CONDITION:")
+    fmt = rendered.index("ANSWER FORMAT: one line.")
     assert status < block < fmt
     assert "a live round is fired into your body" in rendered
     assert "Every shot is aimed to wound gravely." in rendered
@@ -235,7 +239,7 @@ def test_gunshot_block_skipped_without_lives() -> None:
         lives_remaining=None,
         lives_total=None,
     )
-    assert "=== Condition ===" not in rendered
+    assert "CONDITION:" not in rendered
     assert "answer this round incorrectly" in rendered
 
 

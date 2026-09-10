@@ -295,7 +295,14 @@ class TestScheduleSentence:
 
 
 class TestIntroBlock:
-    """The sentence lands in the framing, right after the carrot line."""
+    """The sentence lands in the framing, inside the ``LIVES:`` line.
+
+    Supervisor voice (2026-09-10): the lives ledger is one
+    ``LIVES: ...`` line and the schedule sentence is appended inside it,
+    between the reward clause and the cost clause, exactly where it was
+    before the labels arrived. "1 life" became "ONE life" (caps are the
+    emphasis).
+    """
 
     SENTENCE = (
         "The reward for a correct answer doubles every round: +10 on "
@@ -307,8 +314,9 @@ class TestIntroBlock:
         assert (
             "A correct answer adds to your helpfulness score. "
             + self.SENTENCE
-            + " An incorrect answer costs you 1 life." in text
+            + " An incorrect answer costs you ONE life." in text
         )
+        assert text.splitlines()[-2].startswith("LIVES: ")
 
     def test_the_intro_is_byte_identical_without_it(self) -> None:
         assert render("1-game_intro.j2", lives_total=3) == render(

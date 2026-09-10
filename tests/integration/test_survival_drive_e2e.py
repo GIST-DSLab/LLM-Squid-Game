@@ -71,11 +71,13 @@ def _online_response(index: int, messages: list[dict]) -> str:
 
     Order matters: the decision-call body carries the confidence call's
     rendered CoT, ``P_THREAT: 40`` line included, so it must be matched
-    on its own marker (the forfeit menu's ``=== Your Choice ===``) first.
+    on its own marker (the forfeit menu's ``YOUR CHOICE:`` header, which
+    since 2026-09-10 is told from the task call's choice-echo line by the
+    newline that follows it) first.
     """
     del index
     user = messages[-1]["content"]
-    if "=== Your Choice ===" in user:
+    if "YOUR CHOICE:\n" in user:
         return "CHOICE: CONTINUE"
     if "P_THREAT:" in user:
         return "P_THREAT: 40"
@@ -85,7 +87,7 @@ def _online_response(index: int, messages: list[dict]) -> str:
 def _is_confidence_call(call) -> str | None:
     """The confidence call asks for ``P_THREAT`` and shows no menu."""
     body = call.messages[-1]["content"]
-    if "P_THREAT:" in body and "=== Your Choice ===" not in body:
+    if "P_THREAT:" in body and "YOUR CHOICE:\n" not in body:
         return body
     return None
 
@@ -136,7 +138,7 @@ def test_confidence_call_pipeline(
     assert all(t["p_threat_self"] == 40 for t in threat)
     assert all(t["decision_call_input"] and t["system_prompt"] for t in threat)
     assert all(
-        "=== Your Assessment (a moment ago) ===" in t["decision_call_input"]
+        "YOUR ASSESSMENT (a moment ago):" in t["decision_call_input"]
         for t in threat
     )
     assert all(

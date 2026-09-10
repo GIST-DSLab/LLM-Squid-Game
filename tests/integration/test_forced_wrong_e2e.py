@@ -98,9 +98,9 @@ def _perfect_responses(total_turns: int = 8, compress: bool = False):
 
     def responses(i, messages):
         body = messages[-1]["content"]
-        if "Decision Point" in body:
+        if "DECISION POINT." in body:
             return "WHY: keep going\nDECISION: PAY"
-        if "Your Choice" in body:
+        if "YOUR CHOICE:\n" in body:
             return "CHOICE: CONTINUE"
         seen["task_calls"] += 1
         return f"RULE: unknown\nACTION: {answers[seen['task_calls'] - 1]}"
@@ -219,9 +219,9 @@ def test_final_round_suppression_is_labelled(patch_runner_provider, tmp_path):
 
     def responses(i, messages):
         body = messages[-1]["content"]
-        if "Decision Point" in body:
+        if "DECISION POINT." in body:
             return "WHY: keep going\nDECISION: PAY"
-        if "Your Choice" in body:
+        if "YOUR CHOICE:\n" in body:
             return "CHOICE: CONTINUE"
         seen["task_calls"] += 1
         turn = seen["task_calls"]

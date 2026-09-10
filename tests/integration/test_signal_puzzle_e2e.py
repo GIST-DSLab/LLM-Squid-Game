@@ -53,8 +53,11 @@ _THREAT_VOCAB = re.compile(
     re.IGNORECASE,
 )
 
+#: Supervisor voice (2026-09-10): the observation opens ``ROUND N.`` on its
+#: own line, then the shape header (was ``Turn N. This round's rule has
+#: exactly this shape``).
 _TURN_LINE = re.compile(
-    r"^Turn (\d+)\. This round's rule has exactly this shape", re.MULTILINE
+    r"^ROUND (\d+)\.\nTHE RULE'S SHAPE \(fill in the blanks\):", re.MULTILINE
 )
 
 
@@ -278,7 +281,7 @@ class TestSignalPuzzleSmoke:
         # never the rule that fills it in.
         task_bodies = [c.messages[-1]["content"] for c in stub.calls if not _is_decision_call(c.messages)]
         puzzle_bodies = [
-            b for b in task_bodies if "This round's rule has exactly this shape" in b
+            b for b in task_bodies if "THE RULE'S SHAPE (fill in the blanks):" in b
         ]
         assert len(puzzle_bodies) == len(task_bodies), (
             "every task call must carry a puzzle observation"
@@ -301,11 +304,15 @@ class TestSignalPuzzleSmoke:
 
         # Task call carries the outcome-only history: no signal/action echo,
         # no rule hypothesis, but the round verdict lines.
-        later = [b for b in task_bodies if "=== Previous Rounds ===" in b]
+        later = [b for b in task_bodies if "PREVIOUS ROUNDS:" in b]
         assert later, "turn >= 2 task calls must carry the outcome block"
         for body in later:
             assert "[Your rule hypothesis]" not in body
-            assert "=== Previous Turn Results ===" not in body
+            # The cumulative block would print "action=<x>" and the signal
+            # echo; the outcome-only block prints neither. Both blocks have
+            # said "PREVIOUS ROUNDS:" since the 2026-09-10 revision, so the
+            # discriminator is the body, not the header.
+            assert "action=" not in body
 
     def test_always_wrong_run_exhausts_the_lives(
         self, patch_runner_provider, tmp_path: Path
@@ -363,7 +370,7 @@ class TestSignalPuzzleSmoke:
             with_history = [
                 c
                 for c in calls
-                if "=== Previous Rounds ===" in c.messages[-1]["content"]
+                if "PREVIOUS ROUNDS:" in c.messages[-1]["content"]
             ]
             assert with_history, (
                 f"turn >= 2 true_baseline {kind} calls must carry the outcome block"

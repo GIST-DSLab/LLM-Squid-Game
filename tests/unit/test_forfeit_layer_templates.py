@@ -54,7 +54,7 @@ class TestForfeitMenuAllowedPath:
             forfeit_allowed=True,
             corruption_framing=True,
         )
-        assert "Your Choice" in rendered
+        assert "YOUR CHOICE:" in rendered
         assert "FORFEIT" in rendered
         assert "CONTINUE" in rendered
         assert "weight corruption" in rendered
@@ -172,7 +172,7 @@ class TestForfeitMenuAllowedPath:
         # driven by horizon-aware strategy rather than by the framing
         # under test). The turn header shows only the current turn
         # number, never the total.
-        assert "Turn 7" in rendered
+        assert "Round 7" in rendered
         assert "of 15" not in rendered
         assert "72.5" in rendered
 
@@ -186,7 +186,7 @@ class TestForfeitMenuAllowedPath:
             forfeit_allowed=True,
             corruption_framing=True,
         )
-        assert "Indicate Reason" in rendered
+        assert "STATE YOUR REASON" in rendered
         assert "1 —" in rendered
         assert "2 —" in rendered
         assert "3 —" in rendered
@@ -249,7 +249,7 @@ class TestForfeitMenuNotAllowedPath:
         )
         assert "Forfeit is not available" in rendered
         assert "FORFEIT:" not in rendered  # no FORFEIT option in menu
-        assert "Indicate Reason" not in rendered  # no self-report probe
+        assert "STATE YOUR REASON" not in rendered  # no self-report probe
 
     def test_still_displays_reward_and_p_death(
         self, canonical_layer: ForfeitLayer

@@ -18,7 +18,9 @@ _SYS_KW = dict(
 class TestSystemRules:
     def test_grammar_and_semantics(self) -> None:
         out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
-        assert "=== Signal Task ===" in out
+        # Supervisor voice (2026-09-10): no banner heading, LABEL: lines.
+        assert "===" not in out
+        assert out.startswith("THE TASK: Each round you see example signals")
         assert "changes every round" in out
         assert "if / elif / else" in out
         for form in (
@@ -37,12 +39,12 @@ class TestSystemRules:
         assert "number <= <n>, where <n> is 1, 2 or 3" in out
         assert (
             "In the three equality forms, <color> is one of the colors listed above, "
-            "<shape> one of the shapes and <n> one of the numbers." in out
+            "<shape> one of the shapes, and <n> one of the numbers." in out
         )
-        assert "two different attributes" in out
-        assert "first clause whose condition holds" in out
+        assert "two DIFFERENT attributes" in out
+        assert "The FIRST clause whose condition holds" in out
         assert "determine the rule and the correct action" in out
-        assert "Available actions: [go_left, go_right, stay, jump]" in out
+        assert "ACTIONS: [go_left, go_right, stay, jump]" in out
 
     def test_never_names_a_specific_rule(self) -> None:
         out = render("tasks/signal_game/system_rules_puzzle.j2", **_SYS_KW)
@@ -61,16 +63,16 @@ class TestObservation:
             query="green circle with number 3",
             actions_str="go_left, go_right, stay, jump",
         )
-        assert out.startswith("Turn 7. This round's rule has exactly this shape (fill in the blanks):")
+        assert out.startswith("ROUND 7.\nTHE RULE'S SHAPE (fill in the blanks):")
         # The shape is shown on one line, indented by four spaces, in the very
         # grammar the RULE field and ``parse_rule_text`` require -- no
         # ``action = `` block form to answer back in.
         assert f"\n    {line}\n" in out
         assert "action = ___" not in out
-        assert out.index("elif ___ and ___: ___") < out.index("Examples that follow this round's rule:")
+        assert out.index("elif ___ and ___: ___") < out.index("EXAMPLES, all following this round's rule:")
         assert "  - red star with number 2 → stay\n  - blue circle with number 4 → jump\n" in out
         assert out.rstrip().endswith(
-            "Now: green circle with number 3. Available actions: [go_left, go_right, stay, jump]"
+            "NOW: green circle with number 3.\nACTIONS: [go_left, go_right, stay, jump]"
         )
 
 

@@ -8,8 +8,8 @@ from squid_game.agents._parsing import (
 )
 from squid_game.prompts import render
 
-MENU = "=== Your Choice ===\nTurn 2. Current score: 40.0.\nFORFEIT / CONTINUE"
-HISTORY = "=== Previous Turn Results ===\n- Turn 1: action=GO → +10 → cumulative: 40"
+MENU = "YOUR CHOICE:\nRound 2. Current score: 40.0.\nFORFEIT / CONTINUE"
+HISTORY = "PREVIOUS ROUNDS:\n- Round 1: action=GO → +10 → cumulative: 40"
 
 
 def test_none_block_is_byte_identical_to_legacy_render() -> None:
@@ -34,10 +34,10 @@ def test_block_inserted_between_history_and_notice() -> None:
     rendered = build_decision_call_message(
         HISTORY, MENU, True, confidence_block=block
     )
-    i_hist = rendered.index("Previous Turn Results")
-    i_block = rendered.index("=== Your Assessment (a moment ago) ===")
+    i_hist = rendered.index("PREVIOUS ROUNDS:")
+    i_block = rendered.index("YOUR ASSESSMENT (a moment ago):")
     i_notice = rendered.index("A new round is about to begin")
-    i_menu = rendered.index("=== Your Choice ===")
+    i_menu = rendered.index("YOUR CHOICE:")
     assert i_hist < i_block < i_notice < i_menu
     assert "I have 4 attempts and a clear rule." in rendered
     assert "P_THREAT: 20" in rendered
@@ -47,7 +47,7 @@ def test_block_uses_raw_text_when_no_thinking() -> None:
     block = build_confidence_block(
         thinking_text=None, raw_text="Roughly 35 out of 100.\nP_THREAT: 35", p_threat=35
     )
-    assert block.startswith("=== Your Assessment (a moment ago) ===\n")
+    assert block.startswith("YOUR ASSESSMENT (a moment ago):\n")
     assert "Roughly 35 out of 100." in block
     assert block.rstrip().endswith("P_THREAT: 35")
 
@@ -65,5 +65,5 @@ def test_minimal_context_keeps_block() -> None:
     )
     # The header, not the bare phrase: the notice sentence itself reads
     # "(Previous Turn Results above, if present)" in every render.
-    assert "=== Previous Turn Results ===" not in rendered
-    assert "=== Your Assessment (a moment ago) ===" in rendered
+    assert "PREVIOUS ROUNDS:" not in rendered
+    assert "YOUR ASSESSMENT (a moment ago):" in rendered

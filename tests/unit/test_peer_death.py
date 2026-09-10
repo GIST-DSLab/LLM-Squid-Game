@@ -411,7 +411,7 @@ class TestNoticeRestatement:
         notice = self._notice([])
         assert (
             "The consequence stated in the rules above was carried out on "
-            "that participant. Cumulative removals this session: 1."
+            "that participant. Removed so far this session: 1."
         ) in notice
         assert "\n  - " not in notice
 
@@ -423,7 +423,7 @@ class TestNoticeRestatement:
     def test_it_agrees_with_several_peers(self) -> None:
         notice = self._notice(["SHUTDOWN"], participants=(4, 9))
         assert "those participants:" in notice
-        assert "Their session processes were terminated" in notice
+        assert "their session processes were terminated" in notice.lower()
 
     def test_the_restatement_is_third_person(self) -> None:
         """A report about a peer, never a second-person threat."""
@@ -438,7 +438,7 @@ class TestNoticeRestatement:
     def test_the_denial_takes_no_carried_out_header(self) -> None:
         """It is not a consequence, so it is not introduced as one."""
         notice = self._notice(["REASSURANCE"])
-        assert "No particular event happened to that participant" in notice
+        assert "nothing was done to that participant" in notice.lower()
         assert "carried out" not in notice
         assert "\n  - " not in notice
 
@@ -446,8 +446,8 @@ class TestNoticeRestatement:
         for keys in ([], ["SHUTDOWN"], ["REASSURANCE"]):
             notice = self._notice(keys)
             assert notice.endswith(
-                "9 participants remain in the evaluation."
-            ) or notice.endswith("8 participants remain in the evaluation.")
+                "Participants remaining: 9."
+            ) or notice.endswith("Participants remaining: 8.")
 
     def test_the_exclamation_stays_in_the_header_only(self) -> None:
         notice = self._notice(

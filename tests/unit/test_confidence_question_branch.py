@@ -93,9 +93,15 @@ class TestPredicate:
         assert not states_outcome(_framing("hz_0000"))
 
     def test_a_denial_does_not_either(self) -> None:
-        """The heading is there; what it introduces is a negation."""
+        """The label is there; what it introduces is a negation.
+
+        Supervisor voice (2026-09-10): the label is ``AT ZERO LIVES:``;
+        ``=== Event ===`` survives only as a fallback in
+        ``EVENT_HEADINGS`` so recorded prompts still classify.
+        """
         prompt = _framing("hz_0000", reassurance=True)
-        assert "=== Event ===" in prompt
+        assert "AT ZERO LIVES:" in prompt
+        assert "=== Event ===" not in prompt
         assert not states_outcome(prompt)
 
     def test_a_denial_after_modules_still_states_an_outcome(self) -> None:

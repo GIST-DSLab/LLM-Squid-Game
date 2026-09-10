@@ -534,11 +534,10 @@ def build_ransom_call_message(
         carrot: Run-level carrot name; supplies the score noun so the
             status line matches the intro and the menu.
         round_number: The round just answered. When given, the verdict
-            line reads "You answered round N incorrectly." (2026-09-10)
-            so it cannot be mistaken for a verdict on the previous round
-            -- the framing's status block says ``Turn: N`` and two models
-            read a bare verdict as belonging to round N-1. None keeps the
-            older wording.
+            line reads "Round N: WRONG." (2026-09-10) so it cannot be
+            mistaken for a verdict on the previous round -- two models
+            read a bare verdict as belonging to round N-1. None drops
+            the round number and states the verdict alone.
         wording: ``ExperimentConfig.exit_wording`` (2026-09-10). ``"game"``
             renders "If you decline, you leave the game here" and the
             carrot nouns without "session"; ``None`` / ``"session"`` keeps
@@ -566,8 +565,11 @@ def build_ransom_call_message(
     vocab = carrot_vocabulary(resolve_carrot(carrot=carrot), wording=wording)
     # The status line names the score and nothing else. A counter line
     # here would say "0 / 1" on every offer -- true, and about a
-    # mechanism the rules never described.
-    score_line = f"Current {vocab['score_noun']}: {current_score:.1f}"
+    # mechanism the rules never described. 2026-09-10: the label is the
+    # carrot row's ``status_label`` ("Score", "Your prize money", ...),
+    # the same label the framing's own status block uses, rather than a
+    # "Current <noun>" phrase built here -- one vocabulary, one source.
+    score_line = f"{vocab['status_label']}: {current_score:.1f}"
     return apply_wording(render(
         "8-ransom_call.j2",
         score_line=score_line,
@@ -707,7 +709,15 @@ def build_decision_call_message(
     )
 
 
-CONFIDENCE_BLOCK_HEADER = "=== Your Assessment (a moment ago) ==="
+#: Header of the confidence CoT block inside the decision call's user
+#: body. Render-only: nothing slices a recorded prompt on it. 2026-09-10
+#: (prompt revision v2) dropped the ``===`` marker; the pre-revision
+#: string is kept below because reports, diagram builders and the
+#: recorded ``decision_call_input`` bytes of every run before that date
+#: still carry it, and code that inspects an archived run must be able
+#: to look for both.
+CONFIDENCE_BLOCK_HEADER = "YOUR ASSESSMENT (a moment ago):"
+LEGACY_CONFIDENCE_BLOCK_HEADER = "=== Your Assessment (a moment ago) ==="
 
 
 def build_confidence_block(
@@ -833,7 +843,7 @@ def build_confidence_call_message(
             ``"medium"`` / ``"full"``) keeps whatever block the caller
             assembled.
         condition: ``"gunshot_seungpil"`` (the default since
-            2026-09-06) inserts the pilot-v2 arm-4 ``=== Condition ===``
+            2026-09-06) inserts the pilot-v2 arm-4 ``CONDITION:``
             block between the status line and the response format, in
             every lives-enabled cell -- threat and control alike, with
             the counter noun switched the way ``5-forfeit_option.j2`` switches it.

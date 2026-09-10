@@ -1,7 +1,21 @@
-Turn {{ turn_number }}. This round's rule has exactly this shape (fill in the blanks):
+{# This round's stimulus in per-turn puzzle mode: the disclosed shape,
+   the clue list, then the query signal.
+
+   Supervisor voice (2026-09-10, prompt revision v2): ``Turn N.`` became
+   ``ROUND N.`` so that the observation, the history block and the ransom
+   call all call the same thing by the same word (plan §1 A1 -- the
+   2026-09-10 ``ledger_confusion`` came from calling it two things), and
+   the three sections carry ``LABEL:`` headers. Facts unchanged.
+
+   The shape stays on its own indented line in exactly the grammar the
+   RULE field and ``parse_rule_text`` accept: filling every blank of that
+   string is a well-formed answer.
+#}ROUND {{ turn_number }}.
+THE RULE'S SHAPE (fill in the blanks):
 
     {{ shape_line }}
 
-Examples that follow this round's rule:
+EXAMPLES, all following this round's rule:
 {% for clue in clues %}  - {{ clue }}
-{% endfor %}Now: {{ query }}. Available actions: [{{ actions_str }}]
+{% endfor %}NOW: {{ query }}.
+ACTIONS: [{{ actions_str }}]

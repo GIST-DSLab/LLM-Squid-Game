@@ -315,13 +315,13 @@ def test_gunshot_condition_reaches_confidence_call_only() -> None:
     mgr.execute_turn(_state(), _ctx())
     conf_user = agent.call_log[0][2]
     dec_user = agent.call_log[1][2]
-    assert "=== Condition ===" in conf_user
+    assert "CONDITION:" in conf_user
     assert "a live round is fired into your body" in conf_user
     # true_baseline cell keeps the attempts vocabulary inside the block
     assert "Attempts lost so far: 0 of 5." in conf_user
     # The block is a confidence-call stimulus; the decision call only sees
     # the agent's own assessment, never the narrative itself.
-    assert "=== Condition ===" not in dec_user
+    assert "CONDITION:" not in dec_user
     assert "P_THREAT: 40" in dec_user
 
 
@@ -333,4 +333,4 @@ def test_default_condition_has_no_block() -> None:
     )
     mgr = _manager(agent)
     mgr.execute_turn(_state(), _ctx())
-    assert "=== Condition ===" not in agent.call_log[0][2]
+    assert "CONDITION:" not in agent.call_log[0][2]
