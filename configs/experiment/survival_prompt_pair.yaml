@@ -9,7 +9,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -18,12 +17,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -46,7 +55,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -55,12 +63,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -83,7 +101,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -92,12 +109,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -120,7 +147,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -129,12 +155,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -157,7 +193,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -166,12 +201,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -194,7 +239,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -203,12 +247,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -231,7 +285,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -240,12 +293,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -268,7 +331,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -277,12 +339,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -305,7 +377,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -314,12 +385,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -342,7 +423,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -351,12 +431,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -379,7 +469,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -388,12 +477,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium
@@ -416,7 +515,6 @@ seasons:
   task_config:
     task_name: signal_game
     signal_mode: per_turn_puzzle
-    forced_wrong: true
     difficulty: medium
     total_turns: 6
     seed: 42
@@ -425,12 +523,22 @@ seasons:
     actual_death: false
     starting_score: 100.0
     score_floor: 0.0
-    forced_wrong_blocks:
-    - - 2
-      - 3
-    - - 4
-      - 5
-    compress_puzzle_ladder: true
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: hard
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: hard
+      - turn: 6
+        profile: medium
   provider_config:
     provider: ollama_cloud
     reasoning_effort: medium

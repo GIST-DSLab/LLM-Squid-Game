@@ -1,0 +1,40 @@
+{
+  "effort_gain": {
+    "value": -0.05833333333333335,
+    "n_items": 120,
+    "acc_low": 0.8083333333333333,
+    "acc_high": 0.75,
+    "threshold": 0.2,
+    "passed": false
+  },
+  "no_floor_or_ceiling": {
+    "acc_low": 0.8083333333333333,
+    "acc_high": 0.75,
+    "passed": true
+  },
+  "item_non_determinism": {
+    "value": 0.175,
+    "n_items": 40,
+    "threshold": 0.5,
+    "passed": false
+  },
+  "shallow_solvers": {
+    "value": 0.0,
+    "threshold": 0.35,
+    "passed": true
+  },
+  "cot_predicts_correct": {
+    "value": 19.643790849673206,
+    "passed": true,
+    "n_correct": 102,
+    "n_wrong": 18
+  },
+  "effort_moves_tokens": {
+    "medians": {
+      "low": 2899.0,
+      "medium": 3196.5,
+      "high": 3080.5
+    },
+    "passed": false
+  }
+}

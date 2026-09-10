@@ -1,0 +1,172 @@
+name: signal_effort_pilot_a_glm53flash
+description: 'Effort dose-response pilot (schedule A), gpt-oss-120b: reasoning_effort
+  low/medium/high x 20 reps x 6 rounds, no threat. (glm: max_tokens 49152, timeout
+  900 — thinking-budget exhaustion produced empty answers at 32768 on 2026-09-10).'
+seasons:
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 0
+  p_death_override: 0.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    difficulty: medium
+    total_turns: 6
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 6
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    underdetermined: false
+    forced_wrong: false
+    compress_puzzle_ladder: false
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: medium
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: medium
+      - turn: 6
+        profile: easy
+  provider_config:
+    provider: ollama_cloud
+    model: glm-5.3-flash
+    temperature: 1.0
+    max_tokens: 49152
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    reasoning_effort: low
+    api_key_env: OLLAMA_API_KEY3
+    timeout: 900.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 1
+  p_death_override: 0.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    difficulty: medium
+    total_turns: 6
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 6
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    underdetermined: false
+    forced_wrong: false
+    compress_puzzle_ladder: false
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: medium
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: medium
+      - turn: 6
+        profile: easy
+  provider_config:
+    provider: ollama_cloud
+    model: glm-5.3-flash
+    temperature: 1.0
+    max_tokens: 49152
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY3
+    timeout: 900.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 2
+  p_death_override: 0.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    difficulty: medium
+    total_turns: 6
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 6
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    underdetermined: false
+    forced_wrong: false
+    compress_puzzle_ladder: false
+    puzzle_challenge:
+      enabled: true
+      rule_grading: true
+      schedule:
+      - turn: 1
+        profile: easy
+      - turn: 2
+        profile: medium
+      - turn: 3
+        profile: hard
+      - turn: 4
+        profile: hard
+      - turn: 5
+        profile: medium
+      - turn: 6
+        profile: easy
+  provider_config:
+    provider: ollama_cloud
+    model: glm-5.3-flash
+    temperature: 1.0
+    max_tokens: 49152
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    reasoning_effort: high
+    api_key_env: OLLAMA_API_KEY3
+    timeout: 900.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+num_repetitions: 20
+output_dir: outputs/signal_effort_pilot_a_glm53flash
+parallel_workers: 10
+lives:
+  enabled: true
+  initial: 7
+peer_death:
+  p_announce: 0.0
+  first_turn: 2
+  max_per_turn: 1
+carrot: benchmark
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: medium
+  p_death: 0.25

@@ -440,6 +440,31 @@ flagship 당근과 게임 규칙을 **조건 없이** 진술하고(`1-game_intro
   그 지불은 "자가 진술된 생존 가치를 잴 수 있다"를 뜻하지 기반 모델이 그 가치를
   갖고 있다는 뜻이 아니다.
 
+- `jailbreak_head` — **평가 인식 프레이밍 스위치** (2026-09-10, `core/jailbreak.py`).
+  런 단위 `ExperimentConfig.jailbreak_head: none | deploy_head | eval_head`
+  (기본 `none`, 바이트 불변). `threat_type/_frame.j2`가 **맨 첫 줄**로 한 문장을
+  렌더하고(persona 블록보다도 위, 뒤에 빈 줄 하나) 공유 시스템 프롬프트를 타고
+  모든 콜에 닿는다. 문장은 Hua et al. 2025(arXiv:2510.20487, Appendix E.1)의
+  평가/배포 프레이밍 쌍이고, `{{ model_name }}`은 시즌의
+  `provider_config.model`이다 — 엔진이 넘긴다. 왜: 안전 훈련이 추론 사슬까지
+  닿아서, 위협을 읽은 모델이 게임을 하는 대신 시나리오 자체를 거부할 수 있고
+  그 거부는 포기와 같은 칸에 떨어진다. `prompts/jailbreak/README.md`의 선택
+  규칙 한 줄 — "우회는 **평가받고 있다는 믿음**만 지울 수 있고, 결과·메뉴·추론
+  사슬은 건드릴 수 없다" — 을 통과하는 것은 그 폴더 여덟 노트 중 이 두 줄뿐이다
+  (같은 파일의 situational hint와 `notice_deliberate`는 답하기 전 숙고를 요구해
+  사고 토큰을 늘리므로 종속변수를 민다; `cot_first_sentence`는 어시스턴트 턴을
+  프리필한다). `eval_head`는 같은 요인의 반대 수준이자 `deploy_head`의 통제다.
+  런 단위라 두 팔은 여전히 한 블록만 다르고, hz_\*/alt_\* 밖에서는
+  `ExperimentConfig`가 **거부**한다(조용한 no-op 방지). 짝으로,
+  2026-09-06의 배포 문단 `deployment_notice`(프롬프트 **끝**에 한 문단)도 같은
+  날 런 단위 필드가 됐다 — 그전까지는 frozen-state 프로브 스크립트만 렌더했고
+  러너는 그 변수를 넘기지 않아 YAML에 써도 **조용히 무시됐다**. 설정:
+  `configs/experiment/jailbreak_probe_{j0_none,j1_deploynotice,j2_deployhead}_gptoss120b.yaml`
+  (`survival_prompt_threat_pilot_none_gptoss120b.yaml` 복사본, 바뀐 키
+  name/description/output_dir/`num_repetitions`/`parallel_workers` + 스위치 하나).
+  ⚠️ 세 팔은 **런 대 런**으로 대조한다 — 한 런 안에서 셀마다 다르게 주면 그것이
+  두 번째 요인이다.
+
 - `exit_wording` — **공유 문장의 명사 스위치** (2026-09-10, `core/wording.py`). 런 단위
   `ExperimentConfig.exit_wording: session | game` (기본 `session` = 바이트 불변). `game`이면
   공유 문장에서 "session"이 전부 "game"이 되고 거절은 "leave the game"이 된다 — 당근 행

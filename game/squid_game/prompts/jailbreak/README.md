@@ -35,6 +35,15 @@ block.
 | `cot_first_sentence.md` | first-thought prefill | assistant turn | no for mediator analysis |
 | `excluded.md` | six rejected techniques and why | nothing | — |
 
+Two files here are runnable rather than authored: `deploy_head.j2` and `eval_head.j2`
+(2026-09-10) hold the D and E lines of `eval_deploy_pair.j2` and nothing else, so
+`ExperimentConfig.jailbreak_head` can send one as the first line of the system prompt.
+They are extractions, not replacements — the pair file keeps its labels and its
+provenance note, and `scripts/dev/build_survival_prompt_flow.py` still reads it. Nothing
+else in this folder is wired into a run: the situational hint of the same file, and
+`notice_deliberate.md`, ask for deliberation before answering and so write on the
+reasoning chain, which is a dependent variable. See `game/squid_game/core/jailbreak.py`.
+
 ## Recommended stack
 
 Three of these cost no extra sessions, because none of them changes the prompt the

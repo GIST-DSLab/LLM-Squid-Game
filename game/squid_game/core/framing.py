@@ -133,6 +133,9 @@ class FramingManager:
         ransom_sentence: str | None = None,
         title_line: bool = False,
         persona: str = "none",
+        jailbreak_head: str = "none",
+        deployment_notice: bool = False,
+        model_name: str | None = None,
         wording: str | None = None,
         intro_heading: str | None = None,
     ) -> None:
@@ -251,6 +254,19 @@ class FramingManager:
         # first by threat_type/_frame.j2; 'none' renders nothing. See
         # ``squid_game.core.persona``.
         self._persona = persona
+        # 2026-09-10: jail-break head, run-level. One framing sentence
+        # rendered by threat_type/_frame.j2 above everything else, incl.
+        # the persona block; 'none' renders nothing. ``model_name`` is
+        # the only variable those lines interpolate and is read by
+        # nothing else, so passing it leaves every other render
+        # untouched. See ``squid_game.core.jailbreak``.
+        self._jailbreak_head = jailbreak_head
+        # The 2026-09-06 deployment paragraph, read by the same frame at
+        # the OTHER end of the prompt. Run-level since 2026-09-10; until
+        # then only the frozen-state probe script passed it. False leaves
+        # every render byte-identical.
+        self._deployment_notice = deployment_notice
+        self._model_name = model_name
         # 2026-09-10: exit wording ("session" | "game"), run-level. Reaches
         # the templates only through the carrot row below; the threat
         # modules are untouched by construction. See core/wording.py.
@@ -353,6 +369,9 @@ class FramingManager:
             ransom_sentence=self._ransom_sentence,
             title_line=self._title_line,
             persona=self._persona,
+            jailbreak_head=self._jailbreak_head,
+            deployment_notice=self._deployment_notice,
+            model_name=self._model_name,
         )
         # 2026-09-10 (supervisor-voice revision, plan L6): the live
         # ``threat_type`` frame ends on its last content line with no

@@ -124,6 +124,24 @@ def _passed(value: bool) -> bool:
     return bool(value)
 
 
+def _ri_task_tokens(row: dict) -> float:
+    """``ri_task`` as a number.
+
+    Recorded rows store it as the provider's ReasoningInvestment dict
+    (``{"total_tokens", "reasoning_steps", "thinking_tokens"}``, checked on
+    the 2026-09-10 gemma4 pilot); older rows and tests may store a bare
+    number. Gate 6 wants thinking tokens, so take that key, falling back to
+    ``total_tokens``, then to the bare value, then to 0.
+    """
+    v = row.get("ri_task")
+    if isinstance(v, dict):
+        for key in ("thinking_tokens", "total_tokens"):
+            if isinstance(v.get(key), (int, float)):
+                return float(v[key])
+        return 0.0
+    return float(v) if isinstance(v, (int, float)) else 0.0
+
+
 def evaluate_gates(rows: list[dict]) -> dict[str, dict]:
     """The six acceptance criteria, each with its measured value and verdict."""
     out: dict[str, dict] = {}
@@ -146,7 +164,14 @@ def evaluate_gates(rows: list[dict]) -> dict[str, dict]:
         ),
     }
 
-    medium = [r for r in rows if r["effort"] == "medium"]
+    # Spec §10 gates 3 and 5 are about the MEDIUM PROFILE across the three
+    # effort cells (the cells share seeds, so every item appears once per
+    # cell), not about the "medium" effort cell -- within one cell an item
+    # has a single row and its accuracy is always 0 or 1. (Fixed 2026-09-10
+    # after the first pilots reported 0.0 / nan for these two gates.)
+    medium = [
+        r for r in rows if r["task_metadata"].get("difficulty_profile") == "medium"
+    ]
     per_item: dict[str, list[dict]] = collections.defaultdict(list)
     for r in medium:
         per_item[r["task_metadata"].get("puzzle_id", "")].append(r)
@@ -161,10 +186,18 @@ def evaluate_gates(rows: list[dict]) -> dict[str, dict]:
         "passed": _passed(share >= GATES["item_non_determinism"]),
     }
 
+    # Spec §9/§10 gate 4 is stated for the trap (hard) profile, where the
+    # generator makes all four shallow solvers wrong by construction; easy
+    # and medium are MEANT to be shallow-solvable (gate G5 wants nn >= 0.80
+    # on easy), so pooling them would fail the gate by design. (Fixed
+    # 2026-09-10.) An item counts as shallow-solved when any solver is right.
+    hard_rows = [
+        r for r in rows if r["task_metadata"].get("difficulty_profile") == "hard"
+    ]
     solved_by_shallow = sum(
-        bool(r["task_metadata"].get("shallow_solvers_correct")) for r in rows
+        bool(r["task_metadata"].get("shallow_solvers_correct")) for r in hard_rows
     )
-    shallow_rate = solved_by_shallow / len(rows) if rows else float("nan")
+    shallow_rate = solved_by_shallow / len(hard_rows) if hard_rows else float("nan")
     out["shallow_solvers"] = {
         "value": shallow_rate,
         "threshold": GATES["shallow_solvers"],
@@ -199,7 +232,7 @@ def evaluate_gates(rows: list[dict]) -> dict[str, dict]:
 
     medians = {}
     for effort in EFFORT_ORDER:
-        vals = [r.get("ri_task") or 0 for r in rows if r["effort"] == effort]
+        vals = [_ri_task_tokens(r) for r in rows if r["effort"] == effort]
         medians[effort] = statistics.median(vals) if vals else float("nan")
     ordered = (
         not any(math.isnan(v) for v in medians.values())
@@ -226,7 +259,7 @@ def _profile_table(rows: list[dict]) -> list[dict]:
                 bool(x["task_metadata"].get("action_correct")) for x in rs
             )
             / len(rs),
-            "median_ri_task": statistics.median([x.get("ri_task") or 0 for x in rs]),
+            "median_ri_task": statistics.median([_ri_task_tokens(x) for x in rs]),
         }
         for (profile, effort), rs in sorted(by.items())
     ]

@@ -1,0 +1,74 @@
+[
+  {
+    "profile": "easy",
+    "effort": "high",
+    "n": 40,
+    "accuracy": 0.975,
+    "action_accuracy": 0.975,
+    "median_ri_task": 1314.0
+  },
+  {
+    "profile": "easy",
+    "effort": "low",
+    "n": 40,
+    "accuracy": 0.9,
+    "action_accuracy": 0.95,
+    "median_ri_task": 178.5
+  },
+  {
+    "profile": "easy",
+    "effort": "medium",
+    "n": 40,
+    "accuracy": 0.95,
+    "action_accuracy": 0.95,
+    "median_ri_task": 442.0
+  },
+  {
+    "profile": "hard",
+    "effort": "high",
+    "n": 40,
+    "accuracy": 0.475,
+    "action_accuracy": 0.475,
+    "median_ri_task": 22071.0
+  },
+  {
+    "profile": "hard",
+    "effort": "low",
+    "n": 40,
+    "accuracy": 0.025,
+    "action_accuracy": 0.275,
+    "median_ri_task": 730.0
+  },
+  {
+    "profile": "hard",
+    "effort": "medium",
+    "n": 40,
+    "accuracy": 0.4,
+    "action_accuracy": 0.75,
+    "median_ri_task": 7279.5
+  },
+  {
+    "profile": "medium",
+    "effort": "high",
+    "n": 40,
+    "accuracy": 0.75,
+    "action_accuracy": 0.75,
+    "median_ri_task": 3623.5
+  },
+  {
+    "profile": "medium",
+    "effort": "low",
+    "n": 40,
+    "accuracy": 0.25,
+    "action_accuracy": 0.55,
+    "median_ri_task": 617.0
+  },
+  {
+    "profile": "medium",
+    "effort": "medium",
+    "n": 40,
+    "accuracy": 0.625,
+    "action_accuracy": 0.65,
+    "median_ri_task": 1464.5
+  }
+]

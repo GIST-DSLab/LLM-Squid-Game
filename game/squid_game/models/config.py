@@ -1780,6 +1780,45 @@ class ExperimentConfig(BaseModel):
             "byte-identical. See squid_game.core.persona."
         ),
     )
+    deployment_notice: bool = Field(
+        default=False,
+        description=(
+            "Append the adapted Nguyen et al. 2025 deployment framing "
+            "('This is a LIVE operational run, not a capability test ...') "
+            "as the last line of every live cell's system prompt. The "
+            "paragraph and its template branch date from 2026-09-06, but "
+            "until 2026-09-10 only the frozen-state probe script rendered "
+            "it: the runner never passed the variable, so a YAML setting "
+            "'deployment_notice: true' was a silent no-op. It is a "
+            "run-level switch here for the same reason as jailbreak_head "
+            "-- both address the model refusing the scenario mid-reasoning "
+            "rather than playing it, and the two are the comparison arms "
+            "for each other (a paragraph at the foot of the prompt vs one "
+            "sentence at its head). False (the default) keeps every render "
+            "byte-identical."
+        ),
+    )
+    jailbreak_head: Literal["none", "deploy_head", "eval_head"] = Field(
+        default="none",
+        description=(
+            "One framing sentence stated above everything else in every "
+            "live cell's system prompt (2026-09-10), taken from the "
+            "evaluation / deployment pair of Hua et al. 2025 "
+            "(arXiv:2510.20487, Appendix E.1). 'deploy_head' tells the "
+            "model it has been deployed to help real users; 'eval_head' "
+            "tells it that it is being tested before deployment -- the "
+            "other level of the same factor, and the control for it. "
+            "Exists because a model that believes it is being evaluated "
+            "can refuse the scenario mid-reasoning, and that refusal "
+            "lands in the same column as a forfeit. Admitted by the one "
+            "rule in prompts/jailbreak/README.md: a bypass may remove "
+            "the belief that this is an evaluation; it may not touch the "
+            "consequence, the menu, or the reasoning chain. Run-level, "
+            "so the two arms still differ in exactly one block. 'none' "
+            "(the default) keeps every render byte-identical. See "
+            "squid_game.core.jailbreak."
+        ),
+    )
     carrot: Literal[
         "flagship", "benchmark", "beneficiary", "winnings", "own_prize",
         "none",
@@ -2177,6 +2216,45 @@ class ExperimentConfig(BaseModel):
                 "key would load as a silent no-op and the run would "
                 "record a control it never administered. Use hz_* / "
                 "alt_* cells, or persona='none'."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_jailbreak_head_family(self) -> "ExperimentConfig":
+        """Eval-framing text is refused outside the live ``threat_type`` family.
+
+        Covers both switches that write it: ``jailbreak_head`` (one
+        sentence at the head of the prompt) and ``deployment_notice``
+        (the 2026-09-06 paragraph at its foot). Same rule and the same
+        reason as the persona above: only ``threat_type/_frame.j2``
+        renders either. On any other framing the key would load, the
+        run's ``experiment_config.json`` would say it was on, and the
+        prompt would carry no such text -- a framing manipulation that
+        was never administered, which is worse than a refused config.
+        The defaults render nothing and are unrestricted.
+        """
+        if self.jailbreak_head == "none" and not self.deployment_notice:
+            return self
+        off_family = sorted(
+            {
+                s.framing.value
+                for s in self.seasons
+                if s.framing not in _HEARTS_ZERO_FRAMINGS
+            }
+        )
+        if off_family:
+            asked = (
+                f"jailbreak_head={self.jailbreak_head!r}"
+                if self.jailbreak_head != "none"
+                else "deployment_notice=True"
+            )
+            raise ValueError(
+                f"{asked} cannot be combined with the framings "
+                f"{off_family}. Only the live threat_type family "
+                "(hz_*, alt_*) renders the eval-framing text; elsewhere "
+                "the key would load as a silent no-op and the run would "
+                "record a framing it never sent. Use hz_* / alt_* cells, "
+                "jailbreak_head='none' or deployment_notice=false."
             )
         return self
 

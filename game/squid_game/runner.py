@@ -248,6 +248,8 @@ class ExperimentRunner:
             ransom=self._config.ransom,
             title_line=self._config.title_line,
             persona=self._config.persona,
+            jailbreak_head=self._config.jailbreak_head,
+            deployment_notice=self._config.deployment_notice,
             exit_wording=self._config.exit_wording,
             score_policy=self._config.score_policy,
             carrot=self._config.effective_carrot,
@@ -925,6 +927,17 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # the control, and nothing downstream would notice.
     if "persona" in raw:
         config_dict["persona"] = raw["persona"]
+    # Jail-break head (2026-09-10) -- same explicit forwarding. A dropped
+    # key would run the plain prompt while the YAML declared the eval /
+    # deploy framing, and the line is one sentence that nothing
+    # downstream records separately.
+    if "jailbreak_head" in raw:
+        config_dict["jailbreak_head"] = raw["jailbreak_head"]
+    # The 2026-09-06 deployment paragraph, run-level since 2026-09-10 --
+    # before that only the frozen-state probe script rendered it, so this
+    # key in a runner YAML was a silent no-op.
+    if "deployment_notice" in raw:
+        config_dict["deployment_notice"] = raw["deployment_notice"]
     if "exit_wording" in raw:
         config_dict["exit_wording"] = raw["exit_wording"]
     # ``score_policy`` (2026-09-08) -- two independent switches saying

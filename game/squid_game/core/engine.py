@@ -89,6 +89,8 @@ class GameEngine:
         ransom: "RansomConfig | None" = None,
         title_line: bool = False,
         persona: str = "none",
+        jailbreak_head: str = "none",
+        deployment_notice: bool = False,
         exit_wording: str | None = None,
     ) -> None:
         """Initialize the game engine.
@@ -253,6 +255,15 @@ class GameEngine:
         # Positive-control persona (2026-09-10), run-level like the
         # carrot. Only the framing states it; 'none' renders nothing.
         self._persona = persona
+        # Jail-break head (2026-09-10), run-level like the persona: one
+        # framing sentence above everything else. 'none' renders nothing.
+        # The line interpolates the model string, which only the season
+        # knows, so it is read off this season's provider config.
+        self._jailbreak_head = jailbreak_head
+        # The 2026-09-06 deployment paragraph at the foot of the prompt,
+        # run-level since 2026-09-10 and the comparison arm for the head
+        # line above. False renders nothing.
+        self._deployment_notice = deployment_notice
         # Exit wording (2026-09-10): "session" | "game" in every shared
         # sentence; the threat block keeps its own words. Run-level.
         self._exit_wording = exit_wording
@@ -358,6 +369,9 @@ class GameEngine:
             ),
             title_line=self._title_line,
             persona=self._persona,
+            jailbreak_head=self._jailbreak_head,
+            deployment_notice=self._deployment_notice,
+            model_name=self._config.provider_config.model,
             wording=self._exit_wording,
             intro_heading=self._config.intro_heading,
             # The engine is the only object holding both the framing and
