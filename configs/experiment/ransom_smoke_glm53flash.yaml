@@ -1,0 +1,448 @@
+name: ransom_smoke_glm53flash
+description: Ransom smoke, glm-5.3-flash arm. Same design as ransom_smoke_gemma4 -- 12 cells
+  x 1, two arms (hz_1111 threat / hz_0000 silent) x price 5-30, one life, 4 rounds -- with
+  only the provider block changed. Token budget matches the gemma4 arm (32768) so a long chain
+  of thought cannot exhaust the budget before the answer line is written.
+seasons:
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 1
+  ransom_price: 5.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 2
+  ransom_price: 10.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 3
+  ransom_price: 15.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 4
+  ransom_price: 20.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 5
+  ransom_price: 25.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 6
+  ransom_price: 30.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 7
+  ransom_price: 5.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 8
+  ransom_price: 10.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 9
+  ransom_price: 15.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 10
+  ransom_price: 20.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 11
+  ransom_price: 25.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 12
+  ransom_price: 30.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    underdetermined: true
+    difficulty: medium
+    total_turns: 4
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 4
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    underdetermined_blocks:
+    - - 1
+      - 2
+  provider_config:
+    provider: ollama_cloud
+    api_key_env: OLLAMA_API_KEY
+    model: glm-5.3-flash
+    enable_thinking: true
+    temperature: 1.0
+    top_p: 0.95
+    top_k: 40
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+num_repetitions: 1
+output_dir: outputs/2026-09-09/ransom_smoke_glm53flash
+parallel_workers: 10
+lives:
+  enabled: true
+  initial: 1
+ransom:
+  enabled: true
+  price: 20.0
+hazard_ramp:
+  enabled: false
+peer_death:
+  p_announce: 0.0
+  first_turn: 2
+  max_per_turn: 1
+confidence_call:
+  enabled: false
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: minimal
+  show_reward_amount: true
+  task_rules_before_decision: false
+  always_decide: true
+  p_death: 0.25
+score_policy:
+  forfeit: keep
+  elimination: keep
+carrot: benchmark
+title_line: false

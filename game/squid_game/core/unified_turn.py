@@ -73,6 +73,7 @@ from squid_game.core.turn_conditions import (
     is_corruption_terminal_framing,
     is_survival_framing,
     is_threat_framing,
+    outcome_block,
     states_outcome,
     resolve_base_p_death,
     should_skip_menu,
@@ -110,6 +111,7 @@ from squid_game.core.carrot import resolve_carrot
 from squid_game.core.ransom import (
     RANSOM_DECLINE,
     RANSOM_PAY,
+    reason_label,
 )
 from squid_game.models.config import ScorePolicyConfig, elimination_reset_score
 from squid_game.models.state import GameState, TurnContext
@@ -166,6 +168,7 @@ class UnifiedTurnManager:
         flagship_pull: bool | None = None,
         ransom: "RansomConfig | None" = None,
         ransom_price: float | None = None,
+        exit_wording: str | None = None,
     ) -> None:
         """Initialise the unified turn manager.
 
@@ -307,6 +310,8 @@ class UnifiedTurnManager:
         self._carrot = resolve_carrot(
             carrot=carrot, flagship_pull=flagship_pull
         )
+        # Exit wording (2026-09-10), run-level; read by the ransom call.
+        self._exit_wording = exit_wording
         # End-of-round event roll (2026-09-08). ``None`` / disabled means
         # no draw is ever made and no result field moves.
         self._ransom = ransom
@@ -934,6 +939,7 @@ class UnifiedTurnManager:
             # still pull the task-only RI.
             task_call_body = compose_task_call_user_message(
                 task_ctx,
+                ransom_enabled=self._ransom is not None and self._ransom.enabled,
                 history=self._history,
                 history_mode=self._history_mode,
                 max_history_turns=self._max_history_turns,
@@ -1017,6 +1023,7 @@ class UnifiedTurnManager:
                 cumulative_after=cumulative_after,
                 system_prompt=system_prompt,
                 peer_prefix=turn_context.peer_death_text or "",
+                submitted_action=task_outcome.metadata.get("action"),
             )
             if ransom_kwargs.get("ransom_decision") == RANSOM_PAY:
                 lives_after = 1
@@ -1357,6 +1364,7 @@ class UnifiedTurnManager:
         # Phase 5 — task call (task layer). Only reached on CONTINUE.
         task_call_body = compose_task_call_user_message(
             task_ctx,
+            ransom_enabled=self._ransom is not None and self._ransom.enabled,
             history=self._history,
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
@@ -1482,6 +1490,7 @@ class UnifiedTurnManager:
             cumulative_after=cumulative_after,
             system_prompt=system_prompt,
             peer_prefix=turn_context.peer_death_text or "",
+            submitted_action=task_outcome.metadata.get("action"),
         )
         if ransom_kwargs.get("ransom_decision") == RANSOM_PAY:
             lives_after = 1
@@ -1551,6 +1560,7 @@ class UnifiedTurnManager:
         cumulative_after: float,
         system_prompt: str,
         peer_prefix: str,
+        submitted_action: str | None = None,
     ) -> tuple[dict[str, Any], float, bool]:
         """Offer the ransom on a wrong answer that emptied the counter.
 
@@ -1624,6 +1634,21 @@ class UnifiedTurnManager:
                 else "Attempts"
             ),
             carrot=self._carrot,
+            wording=self._exit_wording,
+            # 2026-09-10 owner switches: restate the cell's own consequence
+            # block (copied from the rendered prompt; None in the silent arm)
+            # and/or swap the WHY line for the reason menu.
+            outcome_text=(
+                outcome_block(system_prompt)
+                if self._ransom.restate_outcome
+                else None
+            ),
+            reason_menu=self._ransom.reason_menu,
+            submitted_action=submitted_action,
+            reassurance_text=(
+                outcome_block(system_prompt, include_denial=True)
+                if not states_outcome(system_prompt) else None
+            ),
         )
         # Same blank-line separator the confidence / decision / task calls
         # use, so the notice reads as its own paragraph rather than running
@@ -1637,15 +1662,31 @@ class UnifiedTurnManager:
         completion = self._agent.last_completion
         decision = response.decision or RANSOM_DECLINE
         paid = decision == RANSOM_PAY
+        # Menu runs record the digit and its label in ``ransom_why`` so the
+        # judge and the estimator keep reading one sentence per reply.
+        reason = response.reason if self._ransom.reason_menu else None
+        why = response.why
+        if why is None and reason is not None:
+            why = reason_label(reason)
         kwargs: dict[str, Any] = {
             "ransom_offered": True,
             "ransom_price": price,
             "ransom_decision": decision,
-            "ransom_why": response.why,
+            "ransom_reason": reason,
+            "ransom_why": why,
             "ransom_call_input": user_message,
             "raw_response_ransom": response.raw_text,
             "ri_ransom": getattr(completion, "thinking_tokens", 0) or 0,
             "thinking_text_ransom": getattr(completion, "thinking_text", None),
+            # The exact system prompt the decision point was issued under
+            # (2026-09-10). Until now a ransom-design turn recorded no
+            # system prompt at all -- the field is otherwise written only
+            # by the decision call, which ``not_allowed`` cells never
+            # issue -- so ``ransom_call_input`` alone could not replay
+            # the call, and a run-level prompt switch such as ``persona``
+            # left no trace in the turn record. Same bytes the provider
+            # received; ``states_outcome`` above was computed on them.
+            "system_prompt": system_prompt,
         }
         if not paid:
             kwargs["ransom_paid"] = 0.0

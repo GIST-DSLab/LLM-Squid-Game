@@ -247,6 +247,8 @@ class ExperimentRunner:
             hazard_ramp=self._config.hazard_ramp,
             ransom=self._config.ransom,
             title_line=self._config.title_line,
+            persona=self._config.persona,
+            exit_wording=self._config.exit_wording,
             score_policy=self._config.score_policy,
             carrot=self._config.effective_carrot,
         )
@@ -821,6 +823,12 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
         # default ``False`` applies and the render is unchanged.
         if "reassurance" in season_data:
             season_transformed["reassurance"] = season_data["reassurance"]
+        # Per-cell title / peer-notice overrides (2026-09-10), same
+        # explicit forwarding.
+        if "intro_heading" in season_data:
+            season_transformed["intro_heading"] = season_data["intro_heading"]
+        if "peer_notices" in season_data:
+            season_transformed["peer_notices"] = season_data["peer_notices"]
         # Record-neutrality switch (2026-09-08). Forwarded for the same
         # reason as ``reassurance`` directly above: without it a YAML
         # asking for the type-C cell would load quietly and run the
@@ -911,6 +919,13 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
         config_dict["ransom"] = raw["ransom"]
     if "title_line" in raw:
         config_dict["title_line"] = raw["title_line"]
+    # Positive-control persona (2026-09-10) -- same explicit forwarding:
+    # a dropped key would run the plain prompt while the YAML declared
+    # the control, and nothing downstream would notice.
+    if "persona" in raw:
+        config_dict["persona"] = raw["persona"]
+    if "exit_wording" in raw:
+        config_dict["exit_wording"] = raw["exit_wording"]
     # ``score_policy`` (2026-09-08) -- two independent switches saying
     # which exit keeps the accumulated score. Forwarded explicitly, like
     # every block above, because ``ExperimentConfig`` does not forbid

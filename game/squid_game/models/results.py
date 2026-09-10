@@ -553,6 +553,15 @@ class TurnResult(BaseModel):
             "on DECLINE and on turns with no offer."
         ),
     )
+    ransom_reason: int | None = Field(
+        default=None,
+        description=(
+            "Menu digit 1-4 of the decision point's REASON line "
+            "(ransom.reason_menu, 2026-09-10): 1 staying in the game itself, "
+            "2 more points, 3 not worth it, 4 other. None on WHY-format runs "
+            "and when no digit parsed."
+        ),
+    )
     ransom_why: str | None = Field(
         default=None,
         description=(

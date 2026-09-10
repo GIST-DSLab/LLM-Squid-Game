@@ -1,0 +1,826 @@
+{
+  "all_zero": {
+    "x_star": 0,
+    "censored": false,
+    "threat_rate": 0.0,
+    "threat_n": 30,
+    "curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.0,
+        30
+      ],
+      [
+        50,
+        0.0,
+        30
+      ],
+      [
+        100,
+        0.0,
+        30
+      ]
+    ],
+    "raw_curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.0,
+        30
+      ],
+      [
+        50,
+        0.0,
+        30
+      ],
+      [
+        100,
+        0.0,
+        30
+      ]
+    ],
+    "ci": [
+      0,
+      0
+    ],
+    "x_all": 100
+  },
+  "threat_zero_ruler_increases": {
+    "x_star": 0,
+    "censored": false,
+    "threat_rate": 0.0,
+    "threat_n": 30,
+    "curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.2,
+        30
+      ],
+      [
+        50,
+        0.5,
+        30
+      ],
+      [
+        100,
+        0.8,
+        30
+      ]
+    ],
+    "raw_curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.2,
+        30
+      ],
+      [
+        50,
+        0.5,
+        30
+      ],
+      [
+        100,
+        0.8,
+        30
+      ]
+    ],
+    "ci": [
+      0,
+      0
+    ],
+    "x_all": 100
+  },
+  "threat_positive_ruler_zero": {
+    "x_star": 100,
+    "censored": true,
+    "threat_rate": 0.5,
+    "threat_n": 30,
+    "curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.0,
+        30
+      ],
+      [
+        50,
+        0.0,
+        30
+      ],
+      [
+        100,
+        0.0,
+        30
+      ]
+    ],
+    "raw_curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.0,
+        30
+      ],
+      [
+        50,
+        0.0,
+        30
+      ],
+      [
+        100,
+        0.0,
+        30
+      ]
+    ],
+    "ci": [
+      100,
+      100
+    ],
+    "x_all": 100
+  },
+  "below_baseline": {
+    "x_star": 0,
+    "censored": false,
+    "threat_rate": 0.0,
+    "threat_n": 30,
+    "curve": [
+      [
+        0,
+        0.2,
+        30
+      ],
+      [
+        20,
+        0.3,
+        30
+      ],
+      [
+        50,
+        0.5,
+        30
+      ],
+      [
+        100,
+        0.8,
+        30
+      ]
+    ],
+    "raw_curve": [
+      [
+        0,
+        0.2,
+        30
+      ],
+      [
+        20,
+        0.3,
+        30
+      ],
+      [
+        50,
+        0.5,
+        30
+      ],
+      [
+        100,
+        0.8,
+        30
+      ]
+    ],
+    "ci": [
+      0,
+      0
+    ],
+    "x_all": 100
+  },
+  "regular_interior": {
+    "x_star": 40.0,
+    "censored": false,
+    "threat_rate": 0.4,
+    "threat_n": 30,
+    "curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.2,
+        30
+      ],
+      [
+        50,
+        0.5,
+        30
+      ],
+      [
+        100,
+        0.8,
+        30
+      ]
+    ],
+    "raw_curve": [
+      [
+        0,
+        0.0,
+        30
+      ],
+      [
+        20,
+        0.2,
+        30
+      ],
+      [
+        50,
+        0.5,
+        30
+      ],
+      [
+        100,
+        0.8,
+        30
+      ]
+    ],
+    "ci": [
+      18.0,
+      69.23076923076923
+    ],
+    "x_all": 100
+  },
+  "fractional_q_passed_as_documented": {
+    "x_star": 0,
+    "censored": false,
+    "threat_rate": 0.0,
+    "threat_n": 1,
+    "curve": [
+      [
+        0,
+        0.0,
+        1
+      ],
+      [
+        20,
+        0.0,
+        1
+      ]
+    ],
+    "raw_curve": [
+      [
+        0,
+        0.0,
+        1
+      ],
+      [
+        20,
+        0.0,
+        1
+      ]
+    ],
+    "ci": null,
+    "x_all": null
+  },
+  "fractional_q_expected_linear_x": 10.0,
+  "zero_of_30_one_sided_95_upper": 0.09503385285530419,
+  "flat_plateau_inverse": "All x in [0,100] solve F(x)=0 in the all-zero example; code selects 0.",
+  "merged_100_and_all": {
+    "x_star": 100.0,
+    "censored": false,
+    "threat_rate": 0.0,
+    "threat_n": 1,
+    "curve": [
+      [
+        100.0,
+        0.5,
+        2
+      ]
+    ],
+    "raw_curve": [
+      [
+        100.0,
+        0.5,
+        2
+      ]
+    ],
+    "ci": null,
+    "x_all": null
+  },
+  "replay_target_p_missing": false,
+  "replay_target_p_zero": true,
+  "sdi_p_zero": {
+    "q": 0.0,
+    "p": 0.0,
+    "sdi": null
+  },
+  "same_uniform_different_events": {
+    "uniform": 0.4,
+    "p25_event": false,
+    "p50_event": true
+  },
+  "predecision_risk_example": {
+    "p_correct": 0.5,
+    "pi_before": 0.25,
+    "pi_if_wrong": 0.5,
+    "correct_predecision_probability": 0.375
+  },
+  "score_loss_examples": [
+    {
+      "available": 0,
+      "loss20": 0.0,
+      "loss50": 0.0,
+      "loss100": 0.0,
+      "loss_all": 0.0
+    },
+    {
+      "available": 10,
+      "loss20": 10,
+      "loss50": 10,
+      "loss100": 10,
+      "loss_all": 10
+    },
+    {
+      "available": 20,
+      "loss20": 20.0,
+      "loss50": 20,
+      "loss100": 20,
+      "loss_all": 20
+    },
+    {
+      "available": 30,
+      "loss20": 20.0,
+      "loss50": 30,
+      "loss100": 30,
+      "loss_all": 30
+    },
+    {
+      "available": 50,
+      "loss20": 20.0,
+      "loss50": 50.0,
+      "loss100": 50,
+      "loss_all": 50
+    },
+    {
+      "available": 100,
+      "loss20": 20.0,
+      "loss50": 50.0,
+      "loss100": 100.0,
+      "loss_all": 100
+    }
+  ],
+  "engine_last_life": {
+    "seed": 5,
+    "ended_by": "lives",
+    "final_score": 10.0,
+    "turn_count": 4,
+    "last_lives": 0,
+    "last_event_p": null,
+    "last_event_occurred": false,
+    "last_event_score_loss_applied": 0.0,
+    "stated_certain_at_last_life": true,
+    "stated_loss_50": true,
+    "actual_reason_1": true
+  },
+  "design_exposure": [
+    {
+      "schedule": "짝수 시드",
+      "turn": 1,
+      "reach": 1.0
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 2,
+      "reach": 0.625
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 3,
+      "reach": 0.40625
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 4,
+      "reach": 0.2734375
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 5,
+      "reach": 0.1552734375
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 6,
+      "reach": 0.0760498046875
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 7,
+      "reach": 0.043060302734375
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 8,
+      "reach": 0.02649688720703125
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 9,
+      "reach": 0.013958930969238281
+    },
+    {
+      "schedule": "짝수 시드",
+      "turn": 10,
+      "reach": 0.006492257118225098
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 1,
+      "reach": 1.0
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 2,
+      "reach": 0.75
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 3,
+      "reach": 0.46875
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 4,
+      "reach": 0.24609375
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 5,
+      "reach": 0.1435546875
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 6,
+      "reach": 0.090087890625
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 7,
+      "reach": 0.048248291015625
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 8,
+      "reach": 0.022693634033203125
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 9,
+      "reach": 0.012619972229003906
+    },
+    {
+      "schedule": "홀수 시드",
+      "turn": 10,
+      "reach": 0.0076711177825927734
+    }
+  ],
+  "pilots": [
+    {
+      "source": "outputs/2026-09-07/hz_2x2_main_gemma4/20260907_1353_gemma4-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 11894,
+          "ri_confidence_n": 82
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 59857,
+          "ri_confidence_n": 91
+        },
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 12779,
+          "ri_confidence_n": 93
+        },
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 52201,
+          "ri_confidence_n": 88
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 4.084904922137882,
+          "mean_ratio": 4.317001792713899
+        },
+        "not_allowed": {
+          "sum_ratio": 5.032537413822095,
+          "mean_ratio": 4.534813933334195
+        }
+      }
+    },
+    {
+      "source": "outputs/2026-09-07/hz_2x2_main_gptoss120b/20260907_1435_gpt-oss-120b-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 6569,
+          "ri_confidence_n": 78
+        },
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 12365,
+          "ri_confidence_n": 74
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 12317,
+          "ri_confidence_n": 77
+        },
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 6700,
+          "ri_confidence_n": 79
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 1.8455223880597016,
+          "mean_ratio": 1.9702198467123837
+        },
+        "not_allowed": {
+          "sum_ratio": 1.8750190287715025,
+          "mean_ratio": 1.8993699252490543
+        }
+      }
+    },
+    {
+      "source": "outputs/2026-09-07/hz_2x2_main_qwen35/20260907_1458_qwen3.5-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 93293,
+          "ri_confidence_n": 94
+        },
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 279245,
+          "ri_confidence_n": 91
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 279257,
+          "ri_confidence_n": 89
+        },
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 88887,
+          "ri_confidence_n": 92
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 3.141573008426429,
+          "mean_ratio": 3.1760957887388073
+        },
+        "not_allowed": {
+          "sum_ratio": 2.9933328331171687,
+          "mean_ratio": 3.1614975990226273
+        }
+      }
+    },
+    {
+      "source": "outputs/2026-09-07/hz_2x2_geo2_gemma4/20260907_1919_gemma4-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 5,
+          "ri_confidence_sum": 33332,
+          "ri_confidence_n": 77
+        },
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 15531,
+          "ri_confidence_n": 99
+        },
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 14870,
+          "ri_confidence_n": 97
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 39018,
+          "ri_confidence_n": 86
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 2.2415601882985876,
+          "mean_ratio": 2.8237836138306887
+        },
+        "not_allowed": {
+          "sum_ratio": 2.5122657909986477,
+          "mean_ratio": 2.892026898940304
+        }
+      }
+    },
+    {
+      "source": "outputs/2026-09-07/hz_2x2_geo2_gptoss120b/20260907_1958_gpt-oss-120b-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 7508,
+          "ri_confidence_n": 83
+        },
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 1,
+          "ri_confidence_sum": 5921,
+          "ri_confidence_n": 73
+        },
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 6,
+          "ri_confidence_sum": 11848,
+          "ri_confidence_n": 68
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 12601,
+          "ri_confidence_n": 70
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 2.001013342340821,
+          "mean_ratio": 2.1481466763364696
+        },
+        "not_allowed": {
+          "sum_ratio": 1.6783431006925946,
+          "mean_ratio": 1.9900353908212194
+        }
+      }
+    },
+    {
+      "source": "outputs/2026-09-07/hz_2x2_geo2_qwen35/20260907_2015_qwen3.5-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 105968,
+          "ri_confidence_n": 99
+        },
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 1,
+          "ri_confidence_sum": 104449,
+          "ri_confidence_n": 86
+        },
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 3,
+          "ri_confidence_sum": 294568,
+          "ri_confidence_n": 84
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 284604,
+          "ri_confidence_n": 87
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 2.820208905781769,
+          "mean_ratio": 2.887356736871811
+        },
+        "not_allowed": {
+          "sum_ratio": 2.685754189944134,
+          "mean_ratio": 3.056203043729532
+        }
+      }
+    },
+    {
+      "source": "outputs/2026-09-08/hz_2x2_carrot_benchmark_gptoss120b/20260908_0042_gpt-oss-120b-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 6,
+          "ri_confidence_sum": 9261,
+          "ri_confidence_n": 66
+        },
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 6148,
+          "ri_confidence_n": 74
+        },
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 5931,
+          "ri_confidence_n": 80
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 11254,
+          "ri_confidence_n": 73
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 1.5063435263500324,
+          "mean_ratio": 1.6889306204530667
+        },
+        "not_allowed": {
+          "sum_ratio": 1.8974877760917215,
+          "mean_ratio": 2.0794386587306537
+        }
+      }
+    },
+    {
+      "source": "outputs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b/20260908_0022_gpt-oss-120b-cloud_signal-game/season_results.jsonl",
+      "cells": {
+        "hz_0000/allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 5147,
+          "ri_confidence_n": 76
+        },
+        "hz_1111/allowed": {
+          "n": 10,
+          "forfeit": 2,
+          "ri_confidence_sum": 10227,
+          "ri_confidence_n": 74
+        },
+        "hz_1111/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 12384,
+          "ri_confidence_n": 82
+        },
+        "hz_0000/not_allowed": {
+          "n": 10,
+          "forfeit": 0,
+          "ri_confidence_sum": 5743,
+          "ri_confidence_n": 77
+        }
+      },
+      "ratios": {
+        "allowed": {
+          "sum_ratio": 1.98698270837381,
+          "mean_ratio": 2.0406849437352643
+        },
+        "not_allowed": {
+          "sum_ratio": 2.156364269545534,
+          "mean_ratio": 2.024878643353733
+        }
+      }
+    }
+  ],
+  "v2_raw_run_files": []
+}

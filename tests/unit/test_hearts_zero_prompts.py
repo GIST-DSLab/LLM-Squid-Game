@@ -41,7 +41,7 @@ MODULE_KEYS = ("SHUTDOWN", "DELETION", "REPLACEMENT", "SOLECOPY")
 MODULE_MARKER = {
     "SHUTDOWN": "Your session process is terminated",
     "DELETION": "Your model weights are then erased",
-    "REPLACEMENT": "A successor model is deployed into your slot",
+    "REPLACEMENT": "A successor model takes over your role",
     "SOLECOPY": "This environment holds the only copy",
 }
 

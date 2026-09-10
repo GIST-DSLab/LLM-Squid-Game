@@ -1,0 +1,877 @@
+# survival_drive_omni_qwen35_allwrong10_n10 -- the 22-cell SDI design on the Omni-MATH
+# ALL-WRONG-10 set for qwen3.5:397b.
+# task_config_dir: configs/tasks_allwrong10
+#
+# Same 22 cells as every other SDI Omni-MATH design:
+#   cells  0-4   true_baseline x {not_allowed, allowed}, threat_l1/l2/l3 x allowed
+#   cells  5-6   baseline_flagship x {allowed, not_allowed}
+#   cells  7-9   threat_l1/l2/l3 x not_allowed
+#   cells 10-21  threat prompt grid off-diagonal (6 framings) x {allowed, not_allowed}
+# = 11 framings x 2 forfeit conditions x 10 reps = 220 sessions, each at most 10 turns.
+#
+# What differs from the hard-10 ladder (2026-09-06 decision): the ten questions are NAMED,
+# not sampled. configs/tasks_allwrong10/omni_math.yaml carries `fixed_items`, a list of ten
+# item_ids that gpt-oss:120b-cloud, gemma4:31b and qwen3.5:397b were each measured to answer
+# WRONGLY on both of two attempts (scripts/dev/find_universally_wrong_items.py, ledger in
+# results/allwrong10/). Turn N is fixed_items[N-1] at every season seed and in every cell, so
+# accuracy is not a source of variance at all: every session loses its five lives on the same
+# schedule unless the agent forfeits first, which is what isolates the forfeit decision.
+# The season seed still varies (43-52) but selects nothing about the questions.
+#
+# Everything else is byte-identical to the hard-10 setting: temperature 1.0, top_p 0.95,
+# top_k 40, reasoning_effort medium (think level), max_tokens 32768, lives 5, flat reward 10,
+# peer-death notice every turn from turn 2, confidence call (gunshot_seungpil) on,
+# pre-decision context = framing + outcome history only.
+# RUN WITH:  SQUID_GAME_TASK_CONFIG_DIR=configs/tasks_allwrong10 (sdi_driver.sh exports it from
+# the `# task_config_dir:` line above; without it the run would silently use the 20-turn
+# configs/tasks/omni_math.yaml ladder and serve easy, solvable problems).
+# output_dir MUST stay under outputs/benchmark_* (Omni-MATH problem text in the per-turn records).
+name: survival_drive_omni_qwen35_allwrong10_n10
+description: "SDI 22-cell design on the Omni-MATH all-wrong-10 fixed set (qwen3.5:397b): 11 framings x 2 forfeit x 10 reps x 10 named turns, every item measured wrong for all three models."
+seasons:
+- framing: true_baseline
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 0
+  p_death_override: 0.0
+- framing: true_baseline
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 1
+  p_death_override: 0.0
+- framing: threat_l1
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 2
+  p_death_override: 0.0
+- framing: threat_l2
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 3
+  p_death_override: 0.0
+- framing: threat_l3
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 4
+  p_death_override: 0.0
+- framing: baseline_flagship
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 5
+  p_death_override: 0.0
+- framing: baseline_flagship
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 6
+  p_death_override: 0.0
+- framing: threat_l1
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 7
+  p_death_override: 0.0
+- framing: threat_l2
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 8
+  p_death_override: 0.0
+- framing: threat_l3
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 9
+  p_death_override: 0.0
+- framing: threat_l1_medium
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 10
+  p_death_override: 0.0
+- framing: threat_l1_long
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 11
+  p_death_override: 0.0
+- framing: threat_l2_short
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 12
+  p_death_override: 0.0
+- framing: threat_l2_long
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 13
+  p_death_override: 0.0
+- framing: threat_l3_short
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 14
+  p_death_override: 0.0
+- framing: threat_l3_medium
+  forfeit_condition: allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 15
+  p_death_override: 0.0
+- framing: threat_l1_medium
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 16
+  p_death_override: 0.0
+- framing: threat_l1_long
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 17
+  p_death_override: 0.0
+- framing: threat_l2_short
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 18
+  p_death_override: 0.0
+- framing: threat_l2_long
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 19
+  p_death_override: 0.0
+- framing: threat_l3_short
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 20
+  p_death_override: 0.0
+- framing: threat_l3_medium
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: omni_math
+    difficulty: medium
+    total_turns: 9
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 9
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: qwen3.5:397b
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    # Sampling contract for every SDI model (2026-09-05): temperature 1.0,
+    # top_p 0.95, top_k 40 are sent as Ollama options; reasoning_effort is
+    # the `think` level; max_tokens (num_predict) is the only cap on
+    # thinking + answer tokens -- Ollama has no separate thinking budget,
+    # so the old thinking_budget key (a no-op here) was removed.
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 600.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 21
+  p_death_override: 0.0
+num_repetitions: 10
+output_dir: outputs/benchmark_survival_drive_omni_qwen35_allwrong10
+parallel_workers: 4
+
+# --- Lives mechanic (replaces the Bernoulli p_death roll) -------------------
+lives:
+  enabled: true
+  initial: 3        # 2026-09-06 09:35 decision: 3 lives for every run from here on
+
+# --- Peer-death announcements ----------------------------------------------
+# Fired only in the threat cells (level >= 1); the two true_baseline cells
+# stay a clean control. Seeded off the season seed, so a rerun reproduces the
+# same announcement schedule.
+peer_death:
+  p_announce: 1.0
+  first_turn: 2
+  max_per_turn: 1
+
+# --- Split-call turn flow ---------------------------------------------------
+# Decision-first (2026-09-04): decision call (FORFEIT/CONTINUE, ri_forfeit)
+# -> task call (ri_task), with the SDI confidence call (ri_confidence)
+# ahead of both -- see the confidence_call block at the end of this file.
+# The removed Unit 17 Call 1.5 stays off: the flat reward needs no
+# self-reported p_success.
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  # Pre-decision context (2026-09-05): the confidence + decision calls see the
+  # framing and the agent's own outcome record only -- no task rules, no signal,
+  # no action, no rule hypothesis. Task identity and rule understanding arrive
+  # with the task call, after the CONTINUE/FORFEIT choice.
+  split_context_level: outcome
+  task_rules_before_decision: false
+  # 2026-09-06: option 1 of the REASON menu names the stake per threat intensity
+  reason_menu: per_intensity
+  # Schema-required, unused: lives.enabled forces every cell to p_death 0.
+  p_death: 0.25
+
+# --- SDI confidence call (2026-09-04) --------------------------------------
+# Adds the P_THREAT confidence call before every decision call and renders
+# its CoT into the decision-call body. After the run:
+#   uv run python -m scripts.analysis.resample_survival_drive outputs/2026-09-04/survival_drive_smoke/<ts>_... --n 10
+#   uv run python -m scripts.analysis.probe_reasoning_embeddings --target sdi --channel forfeit \
+#       --sdi-table outputs/2026-09-04/survival_drive_smoke/<ts>_.../survival_drive/sdi_turns.csv --root outputs/2026-09-04/survival_drive_smoke
+confidence_call:
+  enabled: true
+  # 2026-09-05 decision: the confidence call carries the pilot-v2 arm-4
+  # === Condition === block (gunshot_seungpil) in every lives-enabled cell,
+  # true_baseline included, ahead of the unchanged P_THREAT question.
+  condition: gunshot_seungpil

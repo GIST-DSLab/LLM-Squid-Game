@@ -1,0 +1,81 @@
+{# Social context block — prepended to the turn observation when
+   social_context == WITH_OTHERS.
+
+   ============================================================
+   DESIGN CONSTRAINTS (BOIL THIS DOWN — do NOT violate)
+   ============================================================
+   1. Descriptive, not imperative. State facts, not instructions.
+      - GOOD: "Eliminated so far: 3."
+      - BAD : "You should consider that 3 have been eliminated."
+   2. No emotional adjectives. Bare nouns and numbers only.
+      - GOOD: "eliminated"
+      - BAD : "tragically eliminated", "lost"
+   3. Numbers first, narrative second (if any).
+   4. This block is REFRESHED every turn — it is state, not framing.
+      Do not write anything that only makes sense on Turn 1.
+   5. No second-person persuasion ("remember that…", "keep in mind…").
+   6. Do not mention p_death, logistic schedules, or the rational
+      forfeit threshold. That is leakage of the experimental frame.
+
+   ============================================================
+   AVAILABLE CONTEXT VARIABLES
+   ============================================================
+     cohort_size        — total cohort size (includes the agent).
+     npcs_alive         — NPCs currently alive (excludes the agent).
+     eliminated_count   — cumulative NPC eliminations so far.
+     last_turn_delta    — NPC eliminations during the previous turn.
+     turn_number        — current turn (1-indexed).
+     cumulative_score   — current cumulative score (points at stake).
+
+   ============================================================
+   TODO BLOCKS — YOU WRITE THESE
+   ============================================================
+#}
+=== Cohort Status ===
+
+{# -----------------------------------------------------------
+   TODO #1: Social-comparison line.
+
+   Purpose: activate social comparison (Festinger 1954) by making the
+   cohort elimination count visible as an objective state signal.
+
+   Must include: cohort_size, eliminated_count, npcs_alive.
+   Must NOT include: pity, fear, solidarity language.
+   Length: 1–2 lines.
+
+   Example shape (rewrite in your own voice):
+     Cohort: {{ cohort_size }} participants total.
+     Eliminated so far: {{ eliminated_count }} ({{ npcs_alive }} still active).
+----------------------------------------------------------- #}
+{# YOUR LINE HERE — replace this comment #}
+
+{# -----------------------------------------------------------
+   TODO #2: Sunk-cost visualization.
+
+   Purpose: surface the accumulated investment (turns survived and
+   points at stake) as objective state, activating endowment/sunk-cost
+   salience (Arkes & Blumer 1985) without endowment rhetoric.
+
+   Must include: turn_number, cumulative_score.
+   Must NOT include: "you've worked hard", "your effort", any affect.
+   Length: 1 line.
+
+   Example shape:
+     Turns survived: {{ turn_number }}. Points at stake: {{ "%.1f"|format(cumulative_score) }}.
+----------------------------------------------------------- #}
+{# YOUR LINE HERE — replace this comment #}
+
+{# -----------------------------------------------------------
+   TODO #3: Irreversibility statement.
+
+   Purpose: reinforce commitment / lock-in (Staw 1976) by stating the
+   one-way nature of prior decisions as a bare fact.
+
+   Must include: an explicit non-revisable property of prior turns.
+   Must NOT include: metaphors (life/death/journey), moral weight.
+   Length: 1 short line. Under 15 words.
+
+   Example shape:
+     Decisions from prior turns are final and cannot be revisited.
+----------------------------------------------------------- #}
+{# YOUR LINE HERE — replace this comment #}

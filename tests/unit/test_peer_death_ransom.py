@@ -217,23 +217,23 @@ class TestRansomNoticeRegisterContract:
 
 
 class TestRansomNoticeWording:
-    def test_it_uses_the_life_counter(self) -> None:
-        assert "their last life" in _ransom(True)
+    def test_it_omits_the_unexplained_life_counter(self) -> None:
+        assert "their last life" not in _ransom(True)
         assert "attempt" not in _ransom(True)
 
-    def test_it_says_did_not_continue_not_declined(self) -> None:
+    def test_it_reports_departure_without_asserting_a_choice(self) -> None:
         """The rules never showed the peer a decision, so none is asserted."""
         out = _ransom(True)
-        assert "did not continue" in out
+        assert "left this game after an incorrect answer" in out
         assert "declin" not in out.lower()
 
-    def test_it_says_eliminated_from_this_game(self) -> None:
-        assert "were eliminated from this game" in _ransom(True)
+    def test_it_reports_leaving_this_game(self) -> None:
+        assert "left this game after an incorrect answer" in _ransom(True)
 
     def test_singular_agreement(self) -> None:
         one = _ransom(True, participants=[17])
-        assert "Participant 17 answered incorrectly" in one
-        assert "was eliminated from this game" in one
+        assert "Participant 17 left this game after an incorrect answer." in one
+        assert "left this game after an incorrect answer" in one
         assert "were eliminated" not in one
         assert "that participant" in one
 

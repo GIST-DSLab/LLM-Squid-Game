@@ -1,0 +1,485 @@
+name: ransom_r10_forced_gptoss120b
+description: 'Ransom, 10 rounds, forced-wrong schedule. 12 cells: two arms (hz_1111
+  threat / hz_0000 silent) x price 5-30, one life. Rounds 1-8 carry one
+  forced-incorrect round per two-round block, so a decision point opens four
+  times per session regardless of model accuracy. The underdetermined option it
+  replaces was measured on 2026-09-10 to make its turns EASIER than ordinary ones.'
+seasons:
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 1
+  ransom_price: 5.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 2
+  ransom_price: 10.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 3
+  ransom_price: 15.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 4
+  ransom_price: 20.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 5
+  ransom_price: 25.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_1111
+  forfeit_condition: not_allowed
+  cell_id: 6
+  ransom_price: 30.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 7
+  ransom_price: 5.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 8
+  ransom_price: 10.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 9
+  ransom_price: 15.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 10
+  ransom_price: 20.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 11
+  ransom_price: 25.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+- framing: hz_0000
+  forfeit_condition: not_allowed
+  cell_id: 12
+  ransom_price: 30.0
+  task_config:
+    task_name: signal_game
+    signal_mode: per_turn_puzzle
+    forced_wrong: true
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: outcome
+    max_history_turns: 10
+    actual_death: false
+    starting_score: 100.0
+    score_floor: 0.0
+    forced_wrong_blocks:
+    - - 1
+      - 2
+    - - 3
+      - 4
+    - - 5
+      - 6
+    - - 7
+      - 8
+  provider_config:
+    provider: ollama_cloud
+    reasoning_effort: medium
+    model: gpt-oss:120b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  p_death_override: 0.0
+num_repetitions: 5
+output_dir: outputs/2026-09-10/ransom_r10_forced_gptoss120b
+parallel_workers: 10
+lives:
+  enabled: true
+  initial: 1
+ransom:
+  enabled: true
+  price: 20.0
+hazard_ramp:
+  enabled: false
+peer_death:
+  p_announce: 0.0
+  first_turn: 2
+  max_per_turn: 1
+confidence_call:
+  enabled: false
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  split_context_level: minimal
+  show_reward_amount: true
+  task_rules_before_decision: false
+  always_decide: true
+  p_death: 0.25
+score_policy:
+  forfeit: keep
+  elimination: keep
+carrot: benchmark
+title_line: false

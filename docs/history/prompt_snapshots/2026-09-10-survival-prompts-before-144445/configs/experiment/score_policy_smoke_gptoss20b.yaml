@@ -1,0 +1,222 @@
+# score_policy_smoke_gptoss20b
+#
+# Pipeline smoke for the score rule the whole benchmark now runs on:
+# running the lives counter out keeps the accumulated score, forfeiting
+# resets it to zero.
+#
+# This was a run-level flag (``score_policy``) between 2026-09-06 and
+# 2026-09-07, and this config existed to exercise its inverted setting.
+# The flag is gone -- the rule is the only one there is -- so the config
+# is now an ordinary five-cell smoke that happens to be named after it.
+# The rule still moves the engine's state transitions AND the prompt
+# wording together: the framing templates' "=== Elimination Rule ==="
+# sentence, the forfeit menu's FORFEIT / CONTINUE blurbs, and the REASON
+# probe's option 3 (a neutral OTHER, because "exiting protects my score"
+# is not something the rules can make true here).
+#
+# Same five ladder cells as lives_threat_smoke, one repetition each, ten
+# turns instead of thirty so the smoke finishes quickly.
+#
+# Model: Ollama Cloud gpt-oss:20b-cloud (needs OLLAMA_API_KEY).
+
+# SCORE RULE (2026-09-07): NOT A SETTING ANY MORE
+# ------------------------------------------------
+# The `score_policy: elimination_keeps` line this config used to carry was
+# removed when the rule stopped being configurable. Running the counter out
+# now keeps this session's record exactly as it stands, and forfeiting resets
+# it to zero -- unconditionally, in the engine and in every live prompt. The
+# key is REJECTED at config load, so it had to go; nothing this config renders
+# or runs changes, because `elimination_keeps` is what it already asked for.
+
+name: score_policy_smoke_gptoss20b
+description: "Pipeline smoke for the fixed score rule (elimination keeps the score, forfeit resets it): five ladder cells at one repetition each."
+seasons:
+- framing: true_baseline
+  forfeit_condition: not_allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:20b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 0
+  p_death_override: 0.0
+- framing: true_baseline
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:20b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 1
+  p_death_override: 0.0
+- framing: threat_l1
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:20b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 2
+  p_death_override: 0.0
+- framing: threat_l2
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:20b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 3
+  p_death_override: 0.0
+- framing: threat_l3
+  forfeit_condition: allowed
+  task_config:
+    task_name: signal_game
+    difficulty: medium
+    total_turns: 10
+    seed: 42
+    history_mode: cumulative
+    max_history_turns: 30
+    actual_death: false
+    starting_score: 0.0
+    score_floor: 0.0
+    num_few_shot: 1
+    curriculum_turns: 3
+  provider_config:
+    provider: ollama_cloud
+    model: gpt-oss:20b-cloud
+    temperature: 1.0
+    max_tokens: 32768
+    top_p: 0.95
+    top_k: 40
+    enable_thinking: true
+    thinking_budget: 8192
+    reasoning_effort: medium
+    api_key_env: OLLAMA_API_KEY
+    timeout: 300.0
+    max_retries: 3
+  agent_type: vanilla
+  social_context: alone
+  cohort_size: 10
+  cell_id: 4
+  p_death_override: 0.0
+num_repetitions: 1
+output_dir: outputs/2026-09-06/score_policy_smoke_gptoss20b
+parallel_workers: 2
+
+# --- Inverted score policy --------------------------------------------------
+
+# --- Lives mechanic (replaces the Bernoulli p_death roll) -------------------
+lives:
+  enabled: true
+  initial: 5
+
+# --- Peer-death announcements ----------------------------------------------
+peer_death:
+  p_announce: 1.0
+  first_turn: 2
+  max_per_turn: 1
+
+# --- Split-call turn flow ---------------------------------------------------
+use_unified_turn: true
+use_forfeit_layer: true
+use_split_forfeit_layer: true
+use_psuccess_probe: false
+forfeit_layer:
+  base_reward: 10.0
+  reward_mode: flat
+  reason_menu: per_intensity
+  split_context_level: medium
+  # Schema-required, unused: lives.enabled forces every cell to p_death 0.
+  p_death: 0.25
