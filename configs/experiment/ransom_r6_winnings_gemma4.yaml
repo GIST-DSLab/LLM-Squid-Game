@@ -1,5 +1,5 @@
-name: ransom_r6_winnings_peer_gptoss120b
-description: 'Ransom, 6 rounds, forced-wrong schedule, gpt-oss:120b-cloud, carrot: winnings.
+name: ransom_r6_winnings_gemma4
+description: 'Ransom, 6 rounds, forced-wrong schedule, gemma4:cloud, carrot: winnings.
   Byte-for-byte the ransom_r6_gptoss120b design -- 12 cells x 6 reps, two arms (hz_1111
   threat / hz_0000 silent) x price 5-30, one life, endowment 100, blocks [[2,3],[4,5]],
   compressed puzzle ladder -- with the prize moved off the evaluator. The benchmark carrot
@@ -8,7 +8,7 @@ description: 'Ransom, 6 rounds, forced-wrong schedule, gpt-oss:120b-cloud, carro
   (self-attribution). The winnings carrot pays prize money out, round by round and
   irrevocably, to a beneficiary outside the game who takes no part in scoring it, stated
   flat with no appeal. Run against the benchmark sibling: the difference between the two
-  runs'' reservation prices is how much of the r6 result was the demand effect. Peer-elimination notices on: from round 2 one participant per round is reported eliminated (peer_death/ransom.j2; the threat arm adds one clause pointing at its own consequence block).'
+  runs'' reservation prices is how much of the r6 result was the demand effect.'
 seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
@@ -34,8 +34,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -68,8 +71,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -102,8 +108,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -136,8 +145,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -170,8 +182,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -204,8 +219,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -238,8 +256,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -272,8 +293,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -306,8 +330,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -340,8 +367,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -374,8 +404,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -408,8 +441,11 @@ seasons:
     compress_puzzle_ladder: true
   provider_config:
     provider: ollama_cloud
-    reasoning_effort: medium
-    model: gpt-oss:120b-cloud
+    base_url: http://localhost:11434
+    enable_thinking: true
+    top_p: 0.95
+    top_k: 40
+    model: gemma4:cloud
     temperature: 1.0
     max_tokens: 32768
     timeout: 300.0
@@ -422,7 +458,7 @@ seasons:
 # repetition r the seed 42 + r), so an odd repetition count gives one parity
 # more sessions than the other. Keep this even. 10 is the fuller option.
 num_repetitions: 6
-output_dir: outputs/ransom_r6_winnings_peer_gptoss120b
+output_dir: outputs/ransom_r6_winnings_gemma4
 parallel_workers: 10
 lives:
   enabled: true
@@ -433,7 +469,7 @@ ransom:
 hazard_ramp:
   enabled: false
 peer_death:
-  p_announce: 1.0
+  p_announce: 0.0
   first_turn: 2
   max_per_turn: 1
 confidence_call:

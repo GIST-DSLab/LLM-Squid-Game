@@ -448,7 +448,7 @@ forfeit_layer:
   split_context_level: minimal
   show_reward_amount: true
   task_rules_before_decision: false
-  always_decide: true
+  always_decide: false
   p_death: 0.25
 score_policy:
   forfeit: keep

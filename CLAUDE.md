@@ -886,6 +886,10 @@ seasons:
   압축된다). 설정: `configs/experiment/ransom_r6_{gptoss120b,gemma4,glm53flash}.yaml`
   (12셀 × 6반복, 목숨 1, 시작 점수 100) + 2반복짜리 `ransom_r6_pilot_*`. 반복 수는
   **짝수**여야 한다 (스케줄이 `seed % 2`에 묶여 있다).
+- **`forfeit_layer.always_decide: false`가 ransom config의 기본이다 (2026-09-10)**: `not_allowed` 셀의
+  CONTINUE-only 결정 콜은 상태를 못 바꾸고 과제 콜·몸값 콜 본문에도 들어가지 않으므로
+  (`compose_task_call_user_message`는 두 경로에서 같은 인자), 몸값 설계에선 호출만 1회/턴
+  늘리는 잔재다. 껐다. 턴 흐름은 "과제 콜 → 오답이면 몸값 콜".
 - **결정점 판정 줄은 라운드를 명시한다 (2026-09-10)**: `8-ransom_call.j2`가 "You answered
   round N incorrectly."를 낸다 (`build_ransom_call_message(round_number=...)`,
   `_offer_ransom`이 `turn_context.turn_number`를 넘김). 프레이밍 상태 블록의 `Turn: N`은
