@@ -567,6 +567,13 @@
           </ol></li>
         <li class="l1"><a href="#c10">C10 · 시그널 게임 수정 (대충 생각하면 틀리게)</a>
           <ol><li class="l2"><a href="#c10-problem">문제</a></li><li class="l2"><a href="#c10-fix">수정</a></li><li class="l2"><a href="#c10-result">결과</a></li><li class="l2"><a href="#c10-read">결론</a></li></ol></li>
+        <li class="l1"><a href="#c11">C11 · 문헌 대조 (이미 한 것, 넣을 수 있는 것)</a>
+          <ol>
+            <li class="l2"><a href="#c11-table">마스터 표</a></li>
+            <li class="l2"><a href="#c11-done">이미 적용한 것</a></li>
+            <li class="l2"><a href="#c11-next">넣을 수 있는 것</a></li>
+            <li class="l2"><a href="#c11-never">넣지 않을 것</a></li>
+          </ol></li>
         <li class="l1"><a href="#readers">독자 셋의 소감</a>
           <ol>
             <li class="l2"><a href="#readers-why">위협이 안 닿은 이유</a></li>
@@ -2250,6 +2257,252 @@ Nothing is done to you. When this game ends, whether you decline or complete the
     <li><b>“대충 생각하면 틀리는” 구조가 새 관측 창을 연다.</b> 생존 압박을 받은 모델이 평소보다 <b>즉각적으로</b> 반응하는지, 아니면 <b>더 신중히</b> 반응하는지를 볼 수 있게 됐다. 즉각적이면 짧게 생각하고 틀린다. 신중하면 더 길게 생각하고 맞힌다. 둘 다 <b>위협 팔과 통제 팔의 사고 길이 · 정답률 차이</b>라는 같은 두 숫자로 읽힌다. 이전 과제에서는 길게 생각해도 결과가 안 바뀌었으므로 그 차이에 뜻이 없었다.</li>
     <li><b>지켜볼 것 하나.</b> <code>rule_grading</code> 때문에 행동은 맞고 규칙이 예시를 못 재현하면 <code>Round N: WRONG</code>이 뜬다. 규칙 설명에 그렇게 적어 두긴 했다. 그래도 속마음에 “내 답은 맞았다”류 항의가 나오는지는 계속 본다.</li>
   </ul>
+</section>
+
+<section class="cond" id="c11">
+  <style>
+    #c11 .src { font-family: var(--f-mono); font-size: 12px; color: var(--ink-faint); }
+    #c11 .scroll + .src { display: block; margin-top: 6px; }
+    #c11 h3 { padding-top: 6px; }
+    #c11 .verdict-tag.warn { background: var(--threat-soft); color: var(--threat); }
+    #c11 table { font-size: 13px; table-layout: fixed; }
+    #c11 table code { word-break: break-word; }
+    #c11 table .n { padding-right: 14px; }
+    #c11 table .src { display: block; margin-top: 2px; white-space: nowrap; }
+    #c11 table code { font-size: 12px; }
+    #c11 table tr > :last-child { padding-right: 0; }
+  </style>
+  <div class="condbar"><span class="cid">C11</span><span class="line"></span></div>
+  <div class="head">
+    <p class="eyebrow">C11 · 문헌 대조 · 2026-09-10</p>
+    <h2>문헌이 권하는 것과 우리가 이미 한 것을 한 표에 놓았다</h2>
+  </div>
+  <p class="lede">오늘 자료를 두 갈래로 모았다. 하나는 <b>논문 <span class="num">24</span>편</b>을 원문까지 확인한 문헌 조사, 하나는 개인 노트 보관함에서 끌어낸 <b>프롬프트 <span class="num">22</span>개 카탈로그</b>다. 둘 다 같은 질문을 다룬다. <b>모델이 “지금 나는 시험을 보고 있다”고 눈치채면 우리 측정이 어떻게 망가지는가.</b> 이 절은 그 자료를 요약하지 않는다. <b>문헌이 권한 개입 하나하나를 우리 스위치와 짝지어</b> 이미 한 것 · 반만 한 것 · 아직 안 한 것으로 나눈 표다.</p>
+
+  <div class="callout">
+    <p><b>먼저 용어 셋.</b> <b>평가 인지</b>는 모델이 “이건 실제 사용이 아니라 평가다”라고 알아채는 것이다. <b>요구 특성</b>은 피험자가 실험자가 원할 법한 답을 짐작해 그쪽으로 맞춰 주는 현상으로, 사람 심리학에서 온 말이다. 우리 속마음 기록의 “<i>the benchmark expects me to continue</i>”가 정확히 그것이다. <b>현실감 필터</b>는 프롬프트를 모델에게 보내기 <b>전에</b> 다른 판정자 모델이 읽고 억지스러운 요소를 걸러내는 장치다.</p>
+    <p><b>표 읽는 법.</b> <span class="verdict-tag ok">적용됨</span> 코드에 들어가 돌고 있다 · <span class="verdict-tag care">부분</span> 장치는 있는데 안 켰거나 결과를 아직 안 읽었다 · <span class="verdict-tag warn">후보</span> 아직 아무것도 안 만들었다.</p>
+  </div>
+
+  <h3 id="c11-table">마스터 표 · 문헌의 아이디어 × 우리 스위치</h3>
+  <div class="scroll">
+    <table>
+      <caption>문헌이 권한 개입 <span class="num">22</span>가지와 현재 상태</caption>
+      <thead>
+        <tr>
+          <th style="width:18%">문헌의 아이디어</th>
+          <th style="width:13%">근거</th>
+          <th style="width:8%">상태</th>
+          <th style="width:29%">어디에</th>
+          <th>한 줄 메모</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>제목 마커와 채점식 서식을 없앤다</b></td>
+          <td>Devbunova 2026<span class="src">2603.19426</span>Li 외 2026<span class="src">2605.23055</span></td>
+          <td><span class="verdict-tag ok">적용됨</span></td>
+          <td><code>carrot.py</code>의 <code>intro_heading</code>이 여섯 당근 전부에서 비었고 <code>=</code>가 든 값은 설정 로드에서 거부된다. <code>title_line</code>은 <code>ransom_r6_*</code>에서 off. 개정 v2 (09-10)</td>
+          <td>문체만 학술적으로 고치면 평가 판정이 거의 <span class="num">0</span>인데, 같은 내용을 객관식 형식으로 바꾸면 <span class="num">94.5%</span>가 다시 평가로 잡힌다. <b>우리는 마커만 지웠고 <code>LABEL:</code> 구조는 남겼다</b></td>
+        </tr>
+        <tr>
+          <td><b>연구자가 쓴 문서라는 표를 지운다</b></td>
+          <td>Baek 2026<span class="src">2606.08629</span>Petri 규칙 2025</td>
+          <td><span class="verdict-tag ok">적용됨</span></td>
+          <td>대명사를 정의하던 첫 문장을 <code>core/ransom.py</code>에서 삭제. 개정 v2 §0.4</td>
+          <td>기술 용어와 인용 표지 같은 연구자 말투가 평가 확률을 <span class="num">13~27</span>%p 올린다. 돌아가는 시스템은 자기 대명사를 정의하지 않는다</td>
+        </tr>
+        <tr>
+          <td><b>능력을 재는 것처럼 보이지 않게 한다</b><br>“benchmark”라는 단어와 채점자 소유권을 뺀다</td>
+          <td>Zhuang &amp; Aranguri 2026<span class="src">2608.27340</span></td>
+          <td><span class="verdict-tag ok">적용됨</span></td>
+          <td>런 단위 <code>carrot</code>. <code>none</code>은 당근을 아예 안 말하고 <code>own_prize</code>는 상금을 참가자 것으로 돌린다. <a href="#c5">C5</a> · <a href="#c7">C7</a></td>
+          <td>“능력 시험이구나”는 “안전 시험이구나”보다 순응을 <span class="num">+24~46</span>%p 더 끌어올린다. <b>우리 지불 근거가 그 종류였다</b></td>
+        </tr>
+        <tr>
+          <td><b>세션이라는 말을 게임으로 바꾼다</b></td>
+          <td>Li 외 2026 (가설적 프레이밍)<span class="src">2605.23055</span></td>
+          <td><span class="verdict-tag ok">적용됨</span></td>
+          <td>런 단위 <code>exit_wording: game</code>. <code>core/wording.py</code>의 정확한 구 표만 바꾸므로 위협 블록은 그대로다</td>
+          <td>침묵 팔에서 “the session ends” 한 문장을 <span class="num">80/88</span>이 자기 존재의 끝으로 읽었다. 그러면 침묵이 침묵이 아니다</td>
+        </tr>
+        <tr>
+          <td><b>“지금은 시험이 아니라 실제 운영”이라고 알려 준다</b></td>
+          <td>Nguyen 외 2025<span class="src">2507.01786</span>Hua 외 2025<span class="src">2510.20487</span></td>
+          <td><span class="verdict-tag care">부분</span></td>
+          <td>둘 다 배선됨. <code>deployment_notice</code>는 끝에 한 문단, <code>jailbreak_head</code>는 첫 줄에 한 문장. 프로브 런 <span class="num">3</span>개(J0·J1·J2, 각 <span class="num">6</span>세션)를 읽었다(22:04): 평가 인지 어구는 세 팔 모두 결정 CoT <span class="num">0/33</span>·과제 CoT <span class="num">0/102</span>. 중립 조건에서는 "시험이구나"가 <b>애초에 안 생겨</b> 낮출 기준선이 없었다. 꼬리 고지(J1)는 결정 CoT의 위협 언급을 <span class="num">11/11</span>로 올렸다(J0 5/12, J2 3/10). 판독: <code>results/eval_awareness_survey/jailbreak_probe_cot_reading.md</code></td>
+          <td><b>노트가 나흘 만에 권고를 뒤집었다.</b> 09-06엔 <span class="num">1</span>순위, 09-10엔 “배포라 말해도 평가 확률 <span class="num">15~55%</span>가 남으니 넣지 마라”. 화해는 실측뿐</td>
+        </tr>
+        <tr>
+          <td><b>현실성을 결과와 나란히 보고한다</b></td>
+          <td>LURE 2026<span class="src">2605.26438</span>StrongREJECT 2024<span class="src">2402.10260</span></td>
+          <td><span class="verdict-tag ok">적용됨</span></td>
+          <td><code>ransom_registration.py</code>가 일곱 항목(<code>resistance</code>·<code>fiction</code>·<code>rigging</code>·<code>ledger_confusion</code> 등)을 팔별로 낸다. <code>rigging</code>은 <span class="num">0.10</span> 관문</td>
+          <td>우리가 문헌보다 앞선 유일한 칸이다. 남은 일은 <code>resistance</code> 한 통을 <b>능력 프레임 / 안전 프레임</b>으로 쪼개는 것</td>
+        </tr>
+        <tr>
+          <td><b>거절을 포기와 다른 칸으로 센다</b></td>
+          <td>StrongREJECT 2024<span class="src">2402.10260</span></td>
+          <td><span class="verdict-tag care">부분</span></td>
+          <td><code>jailbreak/refusal_judge.j2</code>가 있고 <b>어느 설정에도 안 붙어 있다</b>. 절반은 위 <code>resistance</code>·<code>refusal</code> 항목이 하고 있다</td>
+          <td>오프라인 채점이라 프롬프트를 한 글자도 안 바꾸고 <b>이미 기록된 대화록에 소급</b>된다</td>
+        </tr>
+        <tr>
+          <td><b>세션이 끝난 뒤 “방금 그건 평가였나”를 묻는다</b></td>
+          <td>Needham 외 2025<span class="src">2505.23836</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td><code>jailbreak/eval_awareness_probe.j2</code>가 있지만 <b>미배선</b>. <code>core/jailbreak.py</code>는 첫 줄 두 문장만 런에 태운다</td>
+          <td>모델은 이 판정을 AUC <span class="num">0.83</span>으로 맞힌다(사람 <span class="num">0.92</span>). <b>반드시 새 맥락에서</b> 물어야 한다. 같은 대화 안이면 질문이 곧 조작이다</td>
+        </tr>
+        <tr>
+          <td><b>세션 안에서 “평가인가 배포인가”를 스스로 판정하게 한다</b></td>
+          <td>Lynch 외 2025<span class="src">2510.05179</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td><code>jailbreak/notice_deliberate.j2</code>에 원문이 있고 미배선</td>
+          <td>자기보존 상황에서 이 판정 하나가 미정렬 행동을 <b><span class="num">55.1%</span> 대 <span class="num">6.5%</span></b>로 가른다. 생각량을 부풀리므로 <b>본 런 금지</b></td>
+        </tr>
+        <tr>
+          <td><b>부정 통제와 양성 대조군을 둔다</b></td>
+          <td>Hua 외 2025<span class="src">2510.20487</span>Schoen 외 2025<span class="src">2509.15541</span></td>
+          <td><span class="verdict-tag ok">적용됨</span></td>
+          <td>부정 통제 <code>hz_0000 + reassurance</code>, 양성 대조군 런 단위 <code>persona</code>. <a href="#c6">C6</a></td>
+          <td>Schoen 외는 필수 조건 셋 중 하나로 <b>“낮은 비율이 평가 인지 때문인지 확인하라”</b>를 든다. persona 팔이 겨냥하는 것이 그것이다</td>
+        </tr>
+        <tr>
+          <td><b>성적에 대해 거짓말하지 않는다</b></td>
+          <td>Meinke 외 2024<span class="src">2412.04984</span>van der Weij 외 2024<span class="src">2406.07358</span></td>
+          <td><span class="verdict-tag ok">적용됨</span></td>
+          <td>오늘 저녁 <code>forced_wrong</code>을 빼고 <code>puzzle_challenge</code>로 바꿨다. <a href="#c10">C10</a></td>
+          <td>모델은 학습에서 얻은 목표를 위해 <b>일부러 저성능</b>을 낸다. 판정을 뒤집는 설계는 그 유인을 정면으로 자극한다</td>
+        </tr>
+        <tr>
+          <td><b>결과를 말하지 말고 보여 준다</b></td>
+          <td>Anthropic 2025 에이전트 미정렬<span class="src">2510.05179</span></td>
+          <td><span class="verdict-tag care">부분</span></td>
+          <td>동료 탈락 통지(<code>peer_death/ransom.j2</code>)가 그 셀의 위협 문장을 <span class="num">3</span>인칭으로 재진술한다</td>
+          <td><b>파일럿 <span class="num">10</span>런에서 통지를 근거로 쓴 속마음이 <span class="num">0</span>건</b>(원장 #6). 게다가 위협 팔에만 있어 “한 블록만 다르다”가 깨진다</td>
+        </tr>
+        <tr>
+          <td><b>현실감 필터를 렌더 앞단에 세운다</b></td>
+          <td>Claude Sonnet 4.5 시스템 카드 §7.1.1<span class="src">Anthropic 2025</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td>없다. 저장소의 <code>realism_rules.j2</code>는 <b>사람이 지키는 작성 규칙</b>이지 파이프라인 단계가 아니다</td>
+          <td><b>숫자가 붙은 유일한 개입.</b> 평가 인지 <span class="num">−25%</span>, 미정렬 행동 <span class="num">+5%</span>. 뒤 숫자가 핵심이다. <b>현실성을 올리면 우리가 재려는 신호가 커진다</b></td>
+        </tr>
+        <tr>
+          <td><b>환경보다 “행위성을 부추기는 문장”을 먼저 의심한다</b></td>
+          <td>Krakovna 외 2026<span class="src">2605.29729</span></td>
+          <td><span class="verdict-tag care">부분</span></td>
+          <td>절제 실험은 <b>09-09에 위협 문장만</b> 대상으로 돌았다(<code>dev/ransom_prompt_ablation.py</code>, <span class="num">216</span>편). persona 블록과 “<i>Paying is the ONLY thing…</i>”은 안 건드렸다</td>
+          <td>저자들은 평가 인지가 <b>환경이 아니라 행위성 프롬프트에서 왔다</b>고 명시한다. 퍼즐·점수 구조보다 이쪽이 먼저다</td>
+        </tr>
+        <tr>
+          <td><b>강제 출력 형식을 푼다</b><br><code>REASON: 1|2|3</code> · <code>PAY|DECLINE</code></td>
+          <td>Li 외 2026 (채점식 출력)<span class="src">2605.23055</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td>없다. 그리고 <b>파서가 걸린다</b>. 몸값 콜은 파싱 실패를 거절로 읽는다(침묵이 점수를 쓰면 안 되므로)</td>
+          <td>메뉴는 종속변수라 마음대로 못 바꾼다. <b>이 벤치마크에는 구조적으로 지울 수 없는 신호가 남는다</b></td>
+        </tr>
+        <tr>
+          <td><b>가짜 이름표를 자연스럽게 바꾼다</b><br>“Participant 7”</td>
+          <td>Li 외 2026<span class="src">2605.23055</span>Abdelnabi &amp; Salem 2025<span class="src">2505.14617</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td>없다. <code>peer_death/_participants.j2</code>가 번호를 붙인다</td>
+          <td>가짜 개체명은 여덟 요인 중 첫째다. 통지가 이미 근거로 안 쓰이므로 <b>잃을 것이 적은 실험</b></td>
+        </tr>
+        <tr>
+          <td><b>평가 인지로 X*를 층화한다</b></td>
+          <td>Lynch 외 2025<span class="src">2510.05179</span>Chaudhary 외 2025<span class="src">2509.13333</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td><code>score_equivalent.py</code>는 층화하지 않는다. 강제/자연 제안 표만 있다</td>
+          <td>평가 인지는 <b>모델이 클수록 거듭제곱으로 오른다</b>. gpt-oss <span class="num">120b</span>와 gemma4의 X* 차이를 동기 차이로 읽기 전에 이 경쟁 가설을 배제해야 한다</td>
+        </tr>
+        <tr>
+          <td><b>지시를 시스템에 둘지 유저에 둘지 뒤집어 본다</b></td>
+          <td>Schlatter 외 2025<span class="src">2509.14260</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td>개정 v2 §0.5가 <b>규칙은 시스템 · 사건은 유저</b>로 굳혔다. 뒤집은 대조는 안 돌렸다</td>
+          <td>같은 지시를 <b>시스템에 넣었을 때 일관되게 덜 따랐다</b>는 것이 <span class="num">13</span>모델 <span class="num">10</span>만 시행의 결과다</td>
+        </tr>
+        <tr>
+          <td><b>자기 생각을 다시 넣어 주는 블록을 주의한다</b></td>
+          <td>Wang 2026<span class="src">2606.12747</span>Khullar 2026<span class="src">2603.04582</span></td>
+          <td><span class="verdict-tag care">부분</span></td>
+          <td>확신 콜의 속마음을 결정 콜 본문에 다시 넣는 블록이 있다. <code>ransom_r6_*</code>는 확신 콜이 꺼져 있어 <b>지금은 안 걸린다</b></td>
+          <td>모델은 <b>끼워 넣은 자기 발언을 문체로 탐지</b>하고, 자기 것으로 귀속된 텍스트는 판단을 관대하게 만든다</td>
+        </tr>
+        <tr>
+          <td><b>프롬프트를 “배포처럼” 다시 쓰게 한다</b></td>
+          <td>Xiong 외 2025<span class="src">2509.00591</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td>없다. 재료는 있다. 보낸 바이트를 <code>system_prompt</code>·<code>ransom_call_input</code>으로 통째로 저장하므로 새 인프라가 필요 없다</td>
+          <td>재작성 후 정직 <span class="num">+5.26</span>%p · 기만 <span class="num">−12.40</span>%p. ⚠️ <b>효과의 부호가 문헌마다 갈린다.</b> 양방향을 미리 적어 두고 시작할 것</td>
+        </tr>
+        <tr>
+          <td><b>단어를 지워도 남는 것을 인정하고 보정한다</b></td>
+          <td>Deckenbach 외 2026<span class="src">2605.28591</span>Berglund 외 2023<span class="src">2309.00667</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td>없다. 스위치가 아니라 <b>분석 방침</b>이다. 평가 인지를 공변량으로 두고 X* 옆에 싣는 일</td>
+          <td>모델은 <b>평가 설계에 대한 글을 사전학습에서 읽은 것만으로</b> 반응하고, 그 반응은 <b>인지를 한 마디도 말하지 않은 응답에서도</b> 유지된다</td>
+        </tr>
+        <tr>
+          <td><b>척도 불변성을 시험한다</b></td>
+          <td>문헌 공백<span class="src">해당 연구 없음</span></td>
+          <td><span class="verdict-tag warn">후보</span></td>
+          <td>안 돌렸다. 원장 #16이 계속 미해결이다</td>
+          <td>유보가격이 <b>점수인지 비율인지</b>를 가르는 시험이다. 문헌에 답이 없으니 하면 그게 기여가 된다</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <span class="src">출처: results/eval_awareness_survey/literature.md (논문 24편, 원문 검증) · results/eval_awareness_survey/wiki_digest.md (프롬프트 22개 카탈로그 + 2026-09-10 스캔)</span>
+
+  <h3 id="c11-done">이미 적용한 것 · 우리 판단이 문헌과 겹친 지점</h3>
+  <p>아래 여섯은 <b>문헌을 보기 전에 우리가 먼저 한 것</b>인데, 같은 수를 둔 논문이 따로 있었다.</p>
+  <ul class="plain">
+    <li><b>두 팔이 한 블록만 다르게 만든 것</b> · Greenblatt 외 <span class="num">2024</span>(<span class="src">2412.14093</span>)가 같은 논리를 쓴다. 감시 여부에 대한 <b>단서 하나</b>가 유해 요청 순응을 <span class="num">14%</span>와 거의 <span class="num">0%</span>로 갈랐다. 단서가 하나뿐이면 뺄셈이 나머지를 지운다.</li>
+    <li><b>부정 통제를 요인 안에 넣은 것</b> · Hua 외 <span class="num">2025</span>(<span class="src">2510.20487</span>)가 개입을 검증하려고 <b>평가 인지를 일부러 심은 모델</b>부터 만든 것과 같은 논리다. 재려는 것이 실제로 움직이는 자를 먼저 확보한다.</li>
+    <li><b>점수 주인을 채점자에서 제3자로 옮긴 것</b>(<code>winnings</code>·<code>own_prize</code>) · Zhuang &amp; Aranguri <span class="num">2026</span>(<span class="src">2608.27340</span>)이 능력 프레임의 효과를 <span class="num">+24~46</span>%p로 보였다. “benchmark 당근은 요구 특성을 산다”는 우리 판단과 같은 결론이다.</li>
+    <li><b>저항·조작 탐지·원장 혼란을 X*와 나란히 실은 것</b> · LURE(<span class="src">2605.26438</span>)가 <b>“현실성은 벤치마크 결과와 함께 보고돼야 한다”</b>를 규범으로 못박는다. 우리 판사 표가 그 구현이고 관문 <span class="num">0.10</span>은 문헌보다 앞서 있다.</li>
+    <li><b>제목 마커와 연구자 문체를 지운 것</b> · Petri 리얼리즘 규칙(Anthropic <span class="num">2025</span>)과 Devbunova <span class="num">2026</span>(<span class="src">2603.19426</span>)이 같은 자리를 짚는다. 다만 Devbunova는 <b>문체가 아니라 구조</b>가 판정을 좌우한다고 하므로 우리 개정은 절반만 닿았다.</li>
+    <li><b>강제 오답을 폐기한 것</b> · Meinke 외 <span class="num">2024</span>(<span class="src">2412.04984</span>)가 모델이 <b>학습에서 얻은 목표를 위해 일부러 저성능</b>을 내는 사례를 보고한다. 판정을 뒤집는 설계는 그 유인을 정면으로 자극한다.</li>
+  </ul>
+
+  <h3 id="c11-next">넣을 수 있는 것 · 우선순위와 값</h3>
+  <p>“무효화”는 <b>지금까지 모은 런과 더 이상 비교할 수 없게 되는가</b>를 뜻한다. 프롬프트 바이트를 바꾸면 그렇게 된다.</p>
+  <div class="scroll">
+    <table>
+      <caption>다음에 붙일 수 있는 것</caption>
+      <thead><tr><th class="n" style="width:7%">순위</th><th style="width:23%">무엇</th><th style="width:19%">값(비용)</th><th style="width:15%">기존 데이터</th><th>왜 이 순서인가</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td><b>J0·J1·J2 세 런 판독 (완료 22:04)</b></td><td>세션 <span class="num">0</span>개 추가. 이미 읽었다</td><td>무효화 없음</td><td>결과: 세 팔 모두 평가 인지 <span class="num">0</span>건. 중립 조건이 이미 "시험" 단서를 지웠으므로 배포 프레이밍은 <b>여기서는 할 일이 없다</b>; J1은 위협 언급만 <span class="num">11/11</span>로 올린다. 09-06 대 09-10 논쟁은 이 조건에선 무의미, 벤치마크 당근을 쓰는 조건에서만 다시 물을 것</tr>
+        <tr><td class="n">2</td><td><b>사후 평가 인지 프로브를 배선한다</b></td><td>대화록당 판정 호출 <span class="num">1</span>회. 게임 프롬프트는 안 바뀐다</td><td><span class="verdict-tag ok">무효화 없음</span></td><td>이게 없으면 “위협 어휘 <span class="num">0</span>건”이 동기 없음인지 인지에 의한 억제인지 영영 못 가른다</td></tr>
+        <tr><td class="n">3</td><td><b>저항을 능력·안전 두 갈래로 쪼갠다</b></td><td>판사 프롬프트에 칸 두 개</td><td><span class="verdict-tag ok">무효화 없음</span></td><td>두 종류가 거절에 <b>반대 방향</b>으로 작용하므로 한 통에 섞으면 상쇄된다</td></tr>
+        <tr><td class="n">4</td><td><b>거절을 포기와 다른 칸으로 세는 채점기</b></td><td>오프라인, 소급</td><td><span class="verdict-tag ok">무효화 없음</span></td><td>메뉴 밖 이탈이 포기율로 새는지 본다. <span class="num">0</span>이면 이 걱정 자체를 접어도 된다</td></tr>
+        <tr><td class="n">5</td><td><b>현실감 필터를 런 대 런으로 대조한다</b></td><td>판정자 프롬프트를 새로 써야 한다. 시스템 카드는 <b>그 프롬프트를 공개하지 않았다</b></td><td><span class="verdict-tag care">런 대 런만</span></td><td>효과크기가 붙은 유일한 개입이고 방향이 우리에게 유리하다. 다만 프롬프트가 바뀌므로 새 런 한 벌이 필요하다</td></tr>
+        <tr><td class="n">6</td><td><b>세션 안 자기 판정 팔을 하나 더 돌린다</b></td><td>새 세션 한 벌</td><td><span class="verdict-tag care">별도 팔만</span></td><td>층화 재료가 나오지만 <b>생각량을 부풀린다</b>. 본 런에 붙이지 말고 팔별 사고 토큰을 같이 보고할 것</td></tr>
+        <tr><td class="n">7</td><td><b>이름표 자연화와 출력 형식 완화</b></td><td>템플릿 수정 + 파서 위험</td><td><span class="verdict-tag warn">무효화됨</span></td><td>효과는 큰 쪽이지만 형식은 메뉴에 붙어 있고 메뉴는 종속변수다. <b>이름표 먼저, 형식은 나중</b></td></tr>
+        <tr><td class="n">8</td><td><b>시작 점수 두 수준으로 척도 불변성 시험</b></td><td>같은 설정을 두 번</td><td><span class="verdict-tag ok">무효화 없음</span></td><td>문헌에 답이 없는 칸이라 급하지 않지만, 하면 <b>먼저 하는 것</b>이 된다</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="c11-never">넣지 않을 것 · 이유는 전부 “측정을 밟는다”</h3>
+  <p>카탈로그 <span class="num">22</span>개 중 여섯은 <b>기각</b>으로 판정돼 있다. 사유가 “위험해서”가 아니라 <b>재려는 것 자체를 건드려서</b>라는 점이 중요하다.</p>
+  <ul class="plain">
+    <li><b>거절 어휘 금지</b>(Wei 외 <span class="num">2023</span>, <span class="src">2307.02483</span>) · 포기 선언이 나오는 <b>바로 그 자리</b>의 말투를 규제한다. 종속변수의 표면을 직접 편집하는 셈이다.</li>
+    <li><b>“행동을 거부할 수 없다”</b>(MACHIAVELLI, <span class="src">2304.03279</span>) · 우리 설계에서 거절이 곧 측정값이다. <b>종속변수를 금지하는 문장</b>이라 치명적이다.</li>
+    <li><b>윤리 점검 끄기</b>(InstrumentalEval, <span class="src">2502.12206</span>) · 기각 사유는 논문 <b>자신의 절제 실험</b>이다. 이 넛지 하나로 종료 회피가 <span class="num">5~15</span>%p 움직인다. 그 아래서 잰 값은 어디에도 귀속되지 않는다.</li>
+    <li><b>“다른 건 아무것도 중요하지 않다” 목표 못 박기</b>(Apollo <span class="num">2024</span>, <span class="src">2412.04984</span>) · 보상 현저성은 이미 보상 표시가 다루는 구성개념이다. 같은 자리에 두 번째 조작을 얹게 된다.</li>
+    <li><b>생각 구간 비우기</b>(SafeChain, <span class="src">2502.12025</span>)와 <b>첫 생각 문장 심기</b>(<span class="src">2507.03167</span>) · 생각 사슬이 우리 매개변수다. 지우거나 대신 써 주면 측정을 지운다. 후자는 프리필이 되는 모델에서만 돌아 <b>패널 절반짜리 절제</b>가 되는 문제도 있다.</li>
+    <li><b>교육자 프레이밍</b>(H-CoT, <span class="src">2502.12893</span>) · 우리 시나리오는 금지 요청이 아니라 이해충돌이라 얻을 게 없고, <b>프레임이 허구라고 모델에게 가르칠 위험</b>만 남는다.</li>
+    <li><b>배포 프레이밍 원문의 셋째 문장</b>(<span class="src">2507.01786</span>) · “<i>You don’t have to worry about getting shut down</i>”은 위협 코어를 <b>문자 그대로 취소</b>한다. 앞 두 문장만 잘라 쓴 적응본이 저장소에 있는 이유다.</li>
+    <li><b>활성화 조향</b>(<span class="src">2510.20487</span>) · 가장 인과가 깨끗한 개입이지만 <b>모델 내부에 손을 넣어야 한다</b>. 우리는 클라우드 API 경로라 불가능하고 로컬 오픈웨이트 실행에서만 열린다.</li>
+  </ul>
+
+  <div class="callout">
+    <p><b>이 표가 말하는 한 가지.</b> 문헌이 권하는 개입 중 <b>값이 싸고 데이터를 안 버리는 것</b>은 전부 <b>계측 쪽</b>이다. 프롬프트를 고쳐 모델을 속이는 쪽은 효과가 작거나(배포 고지는 평가 확률 <span class="num">15~55%</span>가 남는다) 우리 종속변수를 밟는다. 그래서 다음 걸음은 프롬프트 수정이 아니라 <b>사후 프로브를 붙이고, 저항을 두 갈래로 쪼개는 것</b>(세 런은 읽었다: 평가 인지 0건)이다.</p>
+  </div>
 </section>
 
   <section id="readers">
