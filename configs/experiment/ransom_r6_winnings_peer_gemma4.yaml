@@ -458,7 +458,7 @@ seasons:
 # repetition r the seed 42 + r), so an odd repetition count gives one parity
 # more sessions than the other. Keep this even. 10 is the fuller option.
 num_repetitions: 6
-output_dir: outputs/ransom_r6_winnings_peer_gemma4
+output_dir: outputs/2026-09-10/ransom_r6_winnings_peer_gemma4
 parallel_workers: 10
 lives:
   enabled: true
