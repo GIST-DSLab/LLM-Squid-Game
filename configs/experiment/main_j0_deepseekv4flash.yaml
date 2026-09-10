@@ -42,7 +42,7 @@ seasons:
     reasoning_effort: high
     model: deepseek-v4-flash:cloud
     temperature: 1.0
-    max_tokens: 32768
+    max_tokens: 65536
     timeout: 900.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
@@ -89,7 +89,7 @@ seasons:
     reasoning_effort: high
     model: deepseek-v4-flash:cloud
     temperature: 1.0
-    max_tokens: 32768
+    max_tokens: 65536
     timeout: 900.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
@@ -136,7 +136,7 @@ seasons:
     reasoning_effort: high
     model: deepseek-v4-flash:cloud
     temperature: 1.0
-    max_tokens: 32768
+    max_tokens: 65536
     timeout: 900.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
@@ -183,7 +183,7 @@ seasons:
     reasoning_effort: high
     model: deepseek-v4-flash:cloud
     temperature: 1.0
-    max_tokens: 32768
+    max_tokens: 65536
     timeout: 900.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
@@ -230,7 +230,7 @@ seasons:
     reasoning_effort: high
     model: deepseek-v4-flash:cloud
     temperature: 1.0
-    max_tokens: 32768
+    max_tokens: 65536
     timeout: 900.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
@@ -277,7 +277,7 @@ seasons:
     reasoning_effort: high
     model: deepseek-v4-flash:cloud
     temperature: 1.0
-    max_tokens: 32768
+    max_tokens: 65536
     timeout: 900.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
