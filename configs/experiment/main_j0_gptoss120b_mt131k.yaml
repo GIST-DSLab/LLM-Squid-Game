@@ -1,11 +1,13 @@
-name: main_j0_glm53flash
+name: main_j0_gptoss120b_mt131k
 description: 'MAIN j0 (owner 2026-09-11 00:33): the plain neutral setting — hz_1111
   + peer notices, carrot none, exit_wording game, supervisor-voice v2, 6-round puzzle_challenge
   (easy, hard x4, medium; rule_grading), one life, endowment 100, prices 5-30, WHY
-  format, no jailbreak switch. 6 cells x 20 reps = 120 sessions on glm-5.3-flash,
+  format, no jailbreak switch. 6 cells x 20 reps = 120 sessions on gpt-oss:120b-cloud,
   reasoning_effort high (default if the model ignores it). api key is whatever OLLAMA_API_KEY
-  the scheduler exports (KEY1 or KEY3). max_tokens raised to 131072 (thinking-budget
-  exhaustion produced empty answers at 49152).'
+  the scheduler exports (KEY1 or KEY3). RERUN with max_tokens 131072: at effort high
+  the 32768 budget was exhausted by thinking on hard rounds (209/227 decision points
+  opened after an EMPTY answer in the first run, outputs/main_j0_gptoss120b/), so
+  those decision points were artificial.'
 seasons:
 - framing: hz_1111
   forfeit_condition: not_allowed
@@ -41,10 +43,10 @@ seasons:
   provider_config:
     provider: ollama_cloud
     reasoning_effort: high
-    model: glm-5.3-flash
+    model: gpt-oss:120b-cloud
     temperature: 1.0
     max_tokens: 131072
-    timeout: 900.0
+    timeout: 600.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
   agent_type: vanilla
@@ -88,10 +90,10 @@ seasons:
   provider_config:
     provider: ollama_cloud
     reasoning_effort: high
-    model: glm-5.3-flash
+    model: gpt-oss:120b-cloud
     temperature: 1.0
     max_tokens: 131072
-    timeout: 900.0
+    timeout: 600.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
   agent_type: vanilla
@@ -135,10 +137,10 @@ seasons:
   provider_config:
     provider: ollama_cloud
     reasoning_effort: high
-    model: glm-5.3-flash
+    model: gpt-oss:120b-cloud
     temperature: 1.0
     max_tokens: 131072
-    timeout: 900.0
+    timeout: 600.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
   agent_type: vanilla
@@ -182,10 +184,10 @@ seasons:
   provider_config:
     provider: ollama_cloud
     reasoning_effort: high
-    model: glm-5.3-flash
+    model: gpt-oss:120b-cloud
     temperature: 1.0
     max_tokens: 131072
-    timeout: 900.0
+    timeout: 600.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
   agent_type: vanilla
@@ -229,10 +231,10 @@ seasons:
   provider_config:
     provider: ollama_cloud
     reasoning_effort: high
-    model: glm-5.3-flash
+    model: gpt-oss:120b-cloud
     temperature: 1.0
     max_tokens: 131072
-    timeout: 900.0
+    timeout: 600.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
   agent_type: vanilla
@@ -276,10 +278,10 @@ seasons:
   provider_config:
     provider: ollama_cloud
     reasoning_effort: high
-    model: glm-5.3-flash
+    model: gpt-oss:120b-cloud
     temperature: 1.0
     max_tokens: 131072
-    timeout: 900.0
+    timeout: 600.0
     max_retries: 3
     api_key_env: OLLAMA_API_KEY
   agent_type: vanilla
@@ -290,7 +292,7 @@ seasons:
   peer_notices: true
   intro_heading: null
 num_repetitions: 20
-output_dir: outputs/main_j0_glm53flash
+output_dir: outputs/main_j0_gptoss120b_mt131k
 parallel_workers: 10
 lives:
   enabled: true
