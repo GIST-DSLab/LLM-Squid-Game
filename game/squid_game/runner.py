@@ -249,6 +249,7 @@ class ExperimentRunner:
             title_line=self._config.title_line,
             persona=self._config.persona,
             jailbreak_head=self._config.jailbreak_head,
+            jailbreak_tail=self._config.effective_jailbreak_tail,
             deployment_notice=self._config.deployment_notice,
             exit_wording=self._config.exit_wording,
             score_policy=self._config.score_policy,
@@ -938,6 +939,12 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # key in a runner YAML was a silent no-op.
     if "deployment_notice" in raw:
         config_dict["deployment_notice"] = raw["deployment_notice"]
+    # The tail half (2026-09-10, second revision) -- same explicit
+    # forwarding, same reason. ``deployment_notice`` above is its
+    # deprecated boolean alias and the two are validated against each
+    # other; what the engine is handed is ``effective_jailbreak_tail``.
+    if "jailbreak_tail" in raw:
+        config_dict["jailbreak_tail"] = raw["jailbreak_tail"]
     if "exit_wording" in raw:
         config_dict["exit_wording"] = raw["exit_wording"]
     # ``score_policy`` (2026-09-08) -- two independent switches saying

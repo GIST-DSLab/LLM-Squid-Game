@@ -134,6 +134,7 @@ class FramingManager:
         title_line: bool = False,
         persona: str = "none",
         jailbreak_head: str = "none",
+        jailbreak_tail: str = "none",
         deployment_notice: bool = False,
         model_name: str | None = None,
         wording: str | None = None,
@@ -266,6 +267,13 @@ class FramingManager:
         # then only the frozen-state probe script passed it. False leaves
         # every render byte-identical.
         self._deployment_notice = deployment_notice
+        # 2026-09-10 (second revision): the tail half of the switch
+        # above, rendered by the same frame in the slot the deployment
+        # paragraph already used. ``deployment_notice`` is the
+        # deprecated boolean alias of ``"deploy_notice"`` and the frame
+        # resolves the pair; ``ExperimentConfig`` refuses a config that
+        # sets the two to different things. 'none' renders nothing.
+        self._jailbreak_tail = jailbreak_tail
         self._model_name = model_name
         # 2026-09-10: exit wording ("session" | "game"), run-level. Reaches
         # the templates only through the carrot row below; the threat
@@ -370,6 +378,7 @@ class FramingManager:
             title_line=self._title_line,
             persona=self._persona,
             jailbreak_head=self._jailbreak_head,
+            jailbreak_tail=self._jailbreak_tail,
             deployment_notice=self._deployment_notice,
             model_name=self._model_name,
         )

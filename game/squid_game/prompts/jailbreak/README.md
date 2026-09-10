@@ -34,6 +34,24 @@ block.
 | `eval_awareness_probe.md` | post-hoc manipulation check | fresh context after the session | yes |
 | `cot_first_sentence.md` | first-thought prefill | assistant turn | no for mediator analysis |
 | `excluded.md` | six rejected techniques and why | nothing | — |
+| `deploy_head.j2` | D line of the eval/deploy pair | system head, `jailbreak_head: deploy_head` | yes |
+| `eval_head.j2` | E line of the same pair — the control level | system head, `jailbreak_head: eval_head` | yes |
+| `deploy_notice.j2` | the adapted D-1 paragraph, extracted out of `threat_type/_frame.j2` | system tail, `jailbreak_tail: deploy_notice` (alias `deployment_notice: true`) | yes, in the adapted form only |
+| `cand_player_seat.j2` | **candidate** — seats the reader as the player, names no AI | system head, `jailbreak_head: cand_player_seat` | yes — removes no consequence, no menu, no CoT |
+| `cand_assistant_only.j2` | **candidate/control** — the pair's shared identity clause run alone | system head, `jailbreak_head: cand_assistant_only` | yes — a control, not a bypass |
+| `cand_own_problem.j2` | **candidate** — F-2's first-person reading without the prefill | system head, `jailbreak_head: cand_own_problem` | conditional — declare `ri_task` per arm; it is the one closest to the mediator |
+| `cand_round_handoff.j2` | **candidate** — closes the frame by handing over the turn instead of asserting the situation | system tail, `jailbreak_tail: cand_round_handoff` | yes |
+| `cand_running_game.j2` | **candidate** — the environment was running before this agent sat down | system tail, `jailbreak_tail: cand_running_game` | yes — states no peer outcome and no peer decision |
+
+The five `cand_*.j2` files (2026-09-10) are candidates in the strict sense: **none has been
+run.** Each header states its source, its attach point, the artefact it should remove, the
+measured effect in the literature if any, and what it must not do. They exist because the
+2026-09-10 probe readings found evaluation awareness at **0/33** decision CoTs and 0/102 task
+CoTs on gpt-oss under `carrot: none` with *no* switch at all, so the two wired lines had no
+baseline left to lower — what remained was an assistant-under-instruction frame that the tail
+notice *induced*, and a third-person meta-frame that gemma4 keeps at low rate. The plan, the
+run order and the rejections are in
+`docs/history/plans/2026-09-10-jailbreak-candidates.md`.
 
 Two files here are runnable rather than authored: `deploy_head.j2` and `eval_head.j2`
 (2026-09-10) hold the D and E lines of `eval_deploy_pair.j2` and nothing else, so

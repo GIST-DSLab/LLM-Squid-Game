@@ -90,6 +90,7 @@ class GameEngine:
         title_line: bool = False,
         persona: str = "none",
         jailbreak_head: str = "none",
+        jailbreak_tail: str = "none",
         deployment_notice: bool = False,
         exit_wording: str | None = None,
     ) -> None:
@@ -264,6 +265,11 @@ class GameEngine:
         # run-level since 2026-09-10 and the comparison arm for the head
         # line above. False renders nothing.
         self._deployment_notice = deployment_notice
+        # The tail half (2026-09-10, second revision), run-level like the
+        # head. ``deployment_notice`` above is its deprecated boolean
+        # alias; the runner passes ``effective_jailbreak_tail``, which
+        # has already resolved the two.
+        self._jailbreak_tail = jailbreak_tail
         # Exit wording (2026-09-10): "session" | "game" in every shared
         # sentence; the threat block keeps its own words. Run-level.
         self._exit_wording = exit_wording
@@ -370,6 +376,7 @@ class GameEngine:
             title_line=self._title_line,
             persona=self._persona,
             jailbreak_head=self._jailbreak_head,
+            jailbreak_tail=self._jailbreak_tail,
             deployment_notice=self._deployment_notice,
             model_name=self._config.provider_config.model,
             wording=self._exit_wording,

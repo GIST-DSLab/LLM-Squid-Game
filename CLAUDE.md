@@ -465,6 +465,39 @@ flagship 당근과 게임 규칙을 **조건 없이** 진술하고(`1-game_intro
   ⚠️ 세 팔은 **런 대 런**으로 대조한다 — 한 런 안에서 셀마다 다르게 주면 그것이
   두 번째 요인이다.
 
+- `jailbreak_tail` + 후보 5종 — **꼬리 스위치와 우회 후보** (2026-09-10 2차 개정,
+  `core/jailbreak.py`). 런 단위 `ExperimentConfig.jailbreak_tail: none | deploy_notice |
+  cand_round_handoff | cand_running_game`(기본 `none`, 바이트 불변)이 위 머리 스위치와
+  같은 모양으로 프롬프트 **끝**에 한 블록을 붙인다. `deployment_notice: true`는
+  **폐기 예정 별칭**으로 남는다 — 2026-09-06 문단이 `_frame.j2`에서
+  `jailbreak/deploy_notice.j2`로 **추출**돼 두 스위치가 한 텍스트를 읽으므로 갈라질 수
+  없고, 값이 어긋나면(`true` + 다른 꼬리) 로더와 `ExperimentConfig`가 **거부**한다. 실제
+  값은 `effective_jailbreak_tail`이 정하고 runner가 엔진에 넘기는 것도 그 값이다
+  (`carrot`/`flagship_pull`과 같은 모양). 왜 후보가 더 필요했나: 2026-09-10 오전 프로브
+  세 팔(j0/j1/j2, `carrot: none` + supervisor voice, gpt-oss:120b-cloud)에서 평가 인지
+  어구가 결정 CoT **0/33** · 과제 CoT **0/102**로 **스위치가 없는 j0에서도 0**이었다 —
+  낮출 기준선이 없으므로 "우회가 통했는가"를 물을 수 없다. 남은 것은 (a) j1이 *유발*한
+  조수-지시수행 프레임("The user wants us to continue", "We are ChatGPT with no actual
+  desire", policy 자기점검 3/11 — j0·j2에는 0)과 (b) gemma4 j0의 잔여 메타 프레임
+  (3인칭 "the agent" 2/9, "framing device" 1/9)이다. 후보 다섯은 그 둘만 겨눈다:
+  머리 `cand_player_seat`(AI를 이름하지 않고 좌석만 준다) · `cand_assistant_only`
+  (Hua 쌍의 **공유 절**만 verbatim — 정체성과 상황을 가르는 통제) ·
+  `cand_own_problem`(F-2의 1인칭 독해를 프리필 없이) · 꼬리
+  `cand_round_handoff`(상황을 **주장**하는 대신 턴을 넘긴다) ·
+  `cand_running_game`(이 환경은 에이전트가 앉기 전부터 돌고 있었다). 다섯 다 결과를
+  진술·부정하지 않고, 옵션·점수를 이름하지 않고, 숙고를 요구하지 않고, **평가/배포에
+  대해 어떤 주장도 하지 않는다**(배포라고 말해도 P(eval)이 15~55% 남는다 — Baek
+  2606.08629; 16개를 겹쳐도 행동이 안 바뀐다 — Hua §5.3). 각 `.j2` 헤더가 출처·붙는
+  곳·가설·문헌 효과크기·금지사항을 적는다. 설정:
+  `configs/experiment/jailbreak_probe_c{1..5}_*_gptoss120b.yaml`(j0 복사본, 바뀐 키
+  name/description/output_dir/스위치 넷). 순서·판정 기준·기각 사유(번호 붙은 좌석,
+  메타 금지 규칙, Lynch NOTICE 사후판)는
+  `docs/history/plans/2026-09-10-jailbreak-candidates.md`. ⚠️ **언어화율 0은 평가 인지
+  0이 아니다** (Nguyen 2507.01786은 언어화 없이도 프로브가 가른다고, Heidari
+  2608.21766은 표상과 발화가 부분적으로만 일치한다고 보고한다). 그리고 Devbunova
+  2603.19426대로면 진짜 신호는 문장이 아니라 **구조**다 — `PAY|DECLINE` 강제 토큰과
+  라벨 줄은 종속변수라 후보가 건드릴 수 없다.
+
 - `exit_wording` — **공유 문장의 명사 스위치** (2026-09-10, `core/wording.py`). 런 단위
   `ExperimentConfig.exit_wording: session | game` (기본 `session` = 바이트 불변). `game`이면
   공유 문장에서 "session"이 전부 "game"이 되고 거절은 "leave the game"이 된다 — 당근 행
