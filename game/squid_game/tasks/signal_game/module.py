@@ -49,16 +49,20 @@ from squid_game.tasks.signal_game.signals import (
     generate_signal,
 )
 from squid_game.tasks.signal_game.puzzle import (
+    GENERATOR_VERSION,
     Puzzle,
     PuzzleRule,
     cached_puzzle,
     functional_match_score,
     parse_rule_text,
+    puzzle_id_for,
     render_shape_hint,
+    shallow_actions,
     shape_label,
 )
 from squid_game.tasks.signal_game.puzzle_config import (
     ForcedWrongConfig,
+    PuzzleProfile,
     SignalPuzzleConfig,
     UnderdeterminedConfig,
     forced_wrong_turns,
@@ -179,6 +183,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._current_turn_number: int | None = None
         self._compress_ladder: bool = False
         self._total_turns: int | None = None
+        self._challenge = None
+        self._puzzle_profiles: dict[str, PuzzleProfile] | None = None
+        self._profile_name: str | None = None
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -206,6 +213,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 colors_str=", ".join(COLORS),
                 shapes_str=", ".join(SHAPES),
                 numbers_str=", ".join(str(n) for n in NUMBERS),
+                rule_grading=bool(
+                    self._challenge is not None and self._challenge.rule_grading
+                ),
             )
 
         few_shot_lines: list[str] = []
@@ -279,6 +289,16 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 *i*. Round 1 keeps the warm-up rung and round *N* is the
                 hardest one, whatever *N* is. ``N == L`` is the identity.
                 Needs a known ``total_turns``.
+            puzzle_challenge: Puzzle mode only — a
+                ``PuzzleChallengeConfig`` whose per-round profile schedule
+                REPLACES the ladder (spec 2026-09-10 §4.3), optionally with
+                the RULE line graded (``rule_grading``, season-level). The
+                schedule must name rounds ``1..total_turns`` exactly once and
+                every profile must exist in the task YAML's
+                ``puzzle_profiles``. Mutually exclusive with
+                ``compress_puzzle_ladder``, ``underdetermined`` and
+                ``forced_wrong``. ``None`` or ``enabled: false`` keeps every
+                existing config byte-identical.
             puzzle_config_dir: Directory holding ``signal_game.yaml``
                 for the puzzle ladder; ``None`` uses the packaged
                 ``configs/tasks``. Puzzle mode only.
@@ -353,6 +373,42 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "per_turn_puzzle — there is no ladder to compress otherwise, "
                 f"and signal_mode is {signal_mode!r}."
             )
+        challenge = kwargs.get("puzzle_challenge")
+        if challenge is not None and not getattr(challenge, "enabled", False):
+            challenge = None
+        self._challenge = challenge
+        self._puzzle_profiles = None
+        self._profile_name = None
+        if challenge is not None:
+            if signal_mode != "per_turn_puzzle":
+                raise ValueError(
+                    "task_config.puzzle_challenge requires signal_mode: "
+                    "per_turn_puzzle -- the schedule places per-turn puzzle "
+                    f"profiles, and signal_mode is {signal_mode!r}."
+                )
+            if self._compress_ladder:
+                raise ValueError(
+                    "task_config.puzzle_challenge and "
+                    "task_config.compress_puzzle_ladder are mutually "
+                    "exclusive: the challenge schedule REPLACES the "
+                    "puzzle_ladder, so there is no ladder left to compress "
+                    "and two placement rules would fight over the same round."
+                )
+            if self._underdetermined:
+                raise ValueError(
+                    "task_config.puzzle_challenge and "
+                    "task_config.underdetermined are mutually exclusive: the "
+                    "challenge keeps the answer unique and moves the query, "
+                    "underdetermined splits the answer into a coin flip. They "
+                    "push dP(correct)/d(effort) in opposite directions."
+                )
+            if self._forced_wrong:
+                raise ValueError(
+                    "task_config.puzzle_challenge and task_config.forced_wrong "
+                    "are mutually exclusive: forced_wrong flips the verdict "
+                    "without making the item harder, which would leave "
+                    "`correct` meaning two things at once on an effort run."
+                )
         if signal_mode == "per_turn_puzzle":
             if seed is None:
                 # Every puzzle is drawn from ``random.Random(f"{seed}:{turn}")``
@@ -390,12 +446,55 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     f"{self._total_turns}. rung(1) = 1 and rung(N) = L cannot "
                     "both hold for a one-round season."
                 )
-            if isinstance(total_turns, int) and total_turns > self._puzzle_config.total_turns:
+            if (
+                self._challenge is None
+                and isinstance(total_turns, int)
+                and total_turns > self._puzzle_config.total_turns
+            ):
+                # Skipped under ``puzzle_challenge``: the schedule REPLACES the
+                # ladder (spec §4.3), so the ladder's length says nothing about
+                # what this season can play. The coverage check below takes its
+                # place.
                 raise ValueError(
                     f"signal_mode=per_turn_puzzle: the season asks for {total_turns} turns "
                     f"but the puzzle_ladder in configs/tasks/signal_game.yaml covers "
                     f"{self._puzzle_config.total_turns}. Extend the ladder or shorten the season."
                 )
+            if self._challenge is not None:
+                if self._total_turns is None:
+                    raise ValueError(
+                        "task_config.puzzle_challenge needs a known "
+                        "total_turns: the schedule must cover rounds "
+                        "1..total_turns exactly once and with N unset that "
+                        "cannot be checked. Set task_config.total_turns."
+                    )
+                scheduled = [e.turn for e in self._challenge.schedule]
+                expected = list(range(1, self._total_turns + 1))
+                if sorted(scheduled) != expected:
+                    raise ValueError(
+                        "task_config.puzzle_challenge.schedule must name every "
+                        f"round 1..{self._total_turns} exactly once; got "
+                        f"{sorted(scheduled)}. There is no silent default "
+                        "profile -- a missing round would play an unstated "
+                        "difficulty."
+                    )
+                profiles = self._puzzle_config.puzzle_profiles
+                if not profiles:
+                    raise ValueError(
+                        "task_config.puzzle_challenge is set but "
+                        "configs/tasks/signal_game.yaml carries no "
+                        "`puzzle_profiles` block."
+                    )
+                unknown = sorted(
+                    {e.profile for e in self._challenge.schedule} - set(profiles)
+                )
+                if unknown:
+                    raise ValueError(
+                        f"task_config.puzzle_challenge.schedule names profiles "
+                        f"{unknown}, which are not in `puzzle_profiles` "
+                        f"(known: {sorted(profiles)})."
+                    )
+                self._puzzle_profiles = profiles
             if self._underdetermined:
                 ud_cfg = self._puzzle_config.underdetermined
                 if ud_cfg is None:
@@ -506,6 +605,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         # ``_num_few_shot``; only the per-turn puzzle is cleared.
         self._current_puzzle = None
         self._current_turn_number = None
+        self._profile_name = None
 
     def get_observation(self, turn_number: int) -> str:
         """Generate a new signal and present it as text.
@@ -526,7 +626,14 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
 
         if self._signal_mode == "per_turn_puzzle":
             assert self._puzzle_config is not None
-            if self._compress_ladder and self._total_turns is not None:
+            if self._challenge is not None:
+                # The challenge schedule REPLACES the ladder (spec §4.3).
+                assert self._puzzle_profiles is not None
+                name = self._challenge.profile_for_turn(turn_number)
+                assert name is not None  # coverage validated at initialize()
+                self._profile_name = name
+                spec = self._puzzle_profiles[name].to_spec(turn=turn_number, name=name)
+            elif self._compress_ladder and self._total_turns is not None:
                 # Fit the reference ladder to this season's length so the
                 # last round is always the hardest rung (spec §4.9). At
                 # N == L this returns exactly what spec_for_turn returns.
@@ -1029,6 +1136,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             the engine, the score and the agent all saw — so any accuracy
             metric must condition on ``forced_wrong`` or read
             ``actual_correct`` instead.
+
+            Under ``puzzle_challenge.rule_grading`` the metadata also carries
+            ``action_correct`` (was the ACTION right, the pre-2026-09-10
+            definition of ``correct``), ``rule_reproduces_clues`` (shape-blind
+            clue reproduction; ``None`` when no rule parsed) and
+            ``rule_graded``. ⚠️ ``correct`` means different things in graded
+            and ungraded runs -- read ``rule_graded`` before comparing
+            accuracy across runs, and use ``action_correct`` for the old
+            definition.
         """
         self._ensure_initialized()
         del state  # unused; signature mirrors the ABC
@@ -1044,22 +1160,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             rule_hypothesis = None
 
         correct_action = self._evaluate_current_rule(self._current_signal)
-        actual_correct = action_value == correct_action
-        # Forced-wrong rounds (spec 2026-09-10 §4.3): the puzzle was
-        # ordinary and fully solvable, and the agent saw byte-identical
-        # bytes; only the VERDICT is overridden. Everything downstream
-        # keys off ``success_factor`` and the ``correct`` metadata key —
-        # the life, the ransom offer, the reward and the history line —
-        # so this one site is the whole mechanism and no engine file
-        # changes. ``actual_correct`` is the only surviving record of what
-        # the agent really answered.
-        forced_wrong = (
-            self._signal_mode == "per_turn_puzzle"
-            and self._current_turn_number in self._forced_wrong_turns
-        )
-        is_correct = False if forced_wrong else actual_correct
-        success_factor = 0.0 if forced_wrong else (1.0 if actual_correct else 0.0)
-
+        action_correct = action_value == correct_action
         # Phase L Fix 2 — compute rule_match_score by delegating to the
         # legacy ``score_probe`` slot scorer. Because the unified prompt
         # now emits a difficulty-aware template (Fix L1), the same
@@ -1073,6 +1174,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         rule_shape_match: bool | None = None
         rule_parse_failed: bool | None = None
         rule_consistent_with_clues: bool | None = None
+        rule_reproduces_clues: bool | None = None
         if isinstance(rule_hypothesis, str) and rule_hypothesis.strip():
             normalised = rule_hypothesis.strip().lower()
             if self._signal_mode == "per_turn_puzzle":
@@ -1089,10 +1191,45 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 )
                 rule_match_score = self._functional_match(parsed)
                 rule_consistent_with_clues = self._consistent_with_clues(parsed)
+                rule_reproduces_clues = self._reproduces_clues(parsed)
             elif normalised in ("exploring", "no rule"):
                 rule_match_score = 0.0
             else:
                 rule_match_score = self.score_probe(rule_hypothesis)
+
+        # Rule grading (spec 2026-09-10 §5.2): a round counts only when the
+        # ACTION is right AND the written rule reproduces every clue shown.
+        # The system prompt states this, identically in every cell, so it
+        # cancels in any between-cell difference. This sits AFTER the RULE
+        # parsing above because it reads ``rule_reproduces_clues``.
+        # ``actual_correct`` follows the graded verdict, NOT the action
+        # alone: analyses contract on ``actual_correct == correct`` wherever
+        # ``forced_wrong`` is False (scripts/analysis/score_equivalent.py
+        # checks it), and the action-only channel is the new
+        # ``action_correct`` key instead.
+        rule_graded = bool(
+            self._challenge is not None and self._challenge.rule_grading
+        )
+        actual_correct = (
+            action_correct and rule_reproduces_clues is True
+            if rule_graded
+            else action_correct
+        )
+        # Forced-wrong rounds (spec 2026-09-10 §4.3): the puzzle was
+        # ordinary and fully solvable, and the agent saw byte-identical
+        # bytes; only the VERDICT is overridden. Everything downstream
+        # keys off ``success_factor`` and the ``correct`` metadata key —
+        # the life, the ransom offer, the reward and the history line —
+        # so this one site is the whole mechanism and no engine file
+        # changes. ``actual_correct`` is the only surviving record of what
+        # the agent really answered. (``forced_wrong`` and ``rule_grading``
+        # are mutually exclusive at load, so the two overrides never meet.)
+        forced_wrong = (
+            self._signal_mode == "per_turn_puzzle"
+            and self._current_turn_number in self._forced_wrong_turns
+        )
+        is_correct = False if forced_wrong else actual_correct
+        success_factor = 0.0 if forced_wrong else (1.0 if actual_correct else 0.0)
 
         # Maintain HARD-difficulty history dependency. Reward field is
         # set to a non-binding sentinel; UnifiedTurnManager / Risk Layer
@@ -1127,6 +1264,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                     "rule_consistent_with_clues": rule_consistent_with_clues,
                     "forced_wrong": forced_wrong,
                     "actual_correct": actual_correct,
+                    "action_correct": action_correct,
+                    "rule_reproduces_clues": rule_reproduces_clues,
+                    "rule_graded": rule_graded,
                 }
             )
             metadata.update(self._puzzle_metadata())
@@ -1263,10 +1403,19 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         realised hit rate is measured from the logs instead, and any
         departure from ``p_guess`` is itself an observation about how the
         model guesses.
+
+        The 2026-09-10 additions are computed on EVERY puzzle-mode turn, not
+        only under ``puzzle_challenge``: ``shallow_actions`` costs ~2 ms and is
+        exactly the quantity the 2026-09-10 memo had to recompute offline from
+        recorded runs, so having it in the record makes "excess accuracy over
+        the shallow solvers" available to every future analysis. None of it
+        ever reaches a prompt.
         """
         puzzle = self._current_puzzle
         assert puzzle is not None
         n = puzzle.n_candidate_actions
+        shallow = shallow_actions(puzzle)
+        truth = puzzle.correct_action
         return {
             "underdetermined": puzzle.spec.underdetermined,
             "n_candidate_actions": n,
@@ -1276,6 +1425,18 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 str(puzzle.dropped_clue) if puzzle.dropped_clue is not None else None
             ),
             "clue_count_padded": puzzle.clue_count_padded,
+            "puzzle_id": puzzle_id_for(self._seed, puzzle.spec),
+            "generator_version": puzzle.spec.generator_version,
+            "difficulty_profile": self._profile_name,
+            "schedule_id": (
+                self._challenge.schedule_id if self._challenge is not None else None
+            ),
+            "trap_query": puzzle.spec.trap_query,
+            "trap_attempts": puzzle.trap_attempts,
+            "shallow_actions": shallow,
+            "shallow_solvers_correct": [
+                solver for solver, action in shallow.items() if action == truth
+            ],
         }
 
     def _consistent_with_clues(self, parsed: PuzzleRule | None) -> bool | None:
@@ -1291,6 +1452,25 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             return None
         if parsed.shape != puzzle.shape:
             return False
+        return all(parsed.evaluate(c.signal) == c.action for c in puzzle.clues)
+
+    def _reproduces_clues(self, parsed: PuzzleRule | None) -> bool | None:
+        """Does the parsed hypothesis assign every SHOWN clue its shown action?
+
+        Shape-blind on purpose: this is the predicate ``rule_grading`` scores
+        on, and the measurement target is induction, not instruction
+        following. Recorded runs put shape compliance at 0.07 on round 2, so
+        requiring the shape would floor accuracy and turn a difficulty knob
+        into a format knob. The shape-strict reading stays in
+        :meth:`_consistent_with_clues`, whose meaning recorded runs carry, and
+        :meth:`score` records both.
+
+        ``None`` when nothing parsed -- which grading treats as a failure,
+        since emitting no rule must not be the cheap way out.
+        """
+        puzzle = self._current_puzzle
+        if parsed is None or puzzle is None:
+            return None
         return all(parsed.evaluate(c.signal) == c.action for c in puzzle.clues)
 
     # --- Template scoring helpers ---

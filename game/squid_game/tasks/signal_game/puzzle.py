@@ -31,12 +31,14 @@ a rule is its 64-entry action vector.
 
 from __future__ import annotations
 
+import collections
 import functools
+import hashlib
 import itertools
 import random
 import re
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from squid_game.tasks.signal_game.rules import ACTIONS
 from squid_game.tasks.signal_game.signals import COLORS, NUMBERS, SHAPES, Signal
@@ -51,6 +53,14 @@ SIGNAL_SPACE: tuple[Signal, ...] = tuple(
 )
 SIGNAL_INDEX: dict[Signal, int] = {sig: i for i, sig in enumerate(SIGNAL_SPACE)}
 FULL_MASK: int = (1 << len(SIGNAL_SPACE)) - 1
+
+#: Generation semantics version. Bump ONLY when the same (seed, turn, spec)
+#: would start producing a different puzzle; it rides on ``PuzzleSpec`` so it
+#: is part of ``cached_puzzle``'s key and of every recorded ``puzzle_id``.
+#: The trap-query filter added on 2026-09-10 selects among puzzles the old
+#: generator already produced, so ``trap_query=False`` is byte-identical to
+#: version 1 and the version did not move.
+GENERATOR_VERSION: int = 1
 
 
 # ---------------------------------------------------------------------------
@@ -462,6 +472,13 @@ class PuzzleSpec:
     underdetermined: bool = False
     #: How many actions the query may take. 1 = determined (the default).
     n_candidate_actions: int = 1
+    #: Restrict the query to a cell where every shallow solver is wrong
+    #: (spec 2026-09-10 §5.1). Selection only -- uniqueness is unaffected.
+    trap_query: bool = False
+    #: The ``puzzle_profiles`` row this spec came from; "" outside
+    #: ``puzzle_challenge``. Part of the cache key and of ``puzzle_id``.
+    profile: str = ""
+    generator_version: int = GENERATOR_VERSION
 
     def __post_init__(self) -> None:
         if self.clauses < 1:
@@ -484,6 +501,19 @@ class PuzzleSpec:
                 f"turn {self.turn}: n_candidate_actions must be 1 unless "
                 "underdetermined is set"
             )
+        if self.trap_query:
+            if self.underdetermined:
+                raise ValueError(
+                    f"turn {self.turn}: trap_query and underdetermined are "
+                    "mutually exclusive -- one keeps the answer unique and "
+                    "moves the query, the other splits the answer."
+                )
+            if self.clauses < 3:
+                raise ValueError(
+                    f"turn {self.turn}: trap_query needs clauses >= 3; with "
+                    "one or two clauses there is no priority to get wrong, so "
+                    "no trap query exists and generation would burn its budget."
+                )
 
 
 @dataclass(frozen=True)
@@ -522,6 +552,9 @@ class Puzzle:
     #: this count, so ``clue_count_padded`` implies
     #: ``len(clues) == base_clue_count`` and its absence implies one fewer.
     base_clue_count: int = 0
+    #: How many ``generate_puzzle`` draws it took to find this trap query;
+    #: 0 when the puzzle was not generated under ``trap_query``.
+    trap_attempts: int = 0
 
     @property
     def n_candidate_actions(self) -> int:
@@ -730,6 +763,61 @@ def generate_underdetermined_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puz
     )
 
 
+def generate_trap_puzzle(
+    rng: random.Random, spec: PuzzleSpec, attempts: int = MAX_ATTEMPTS
+) -> Puzzle:
+    """A puzzle whose query defeats every shallow solver (spec §5.1).
+
+    Rejection sampling on top of :func:`generate_puzzle`: uniqueness, clue
+    honesty and the query-not-in-clues property all come from there
+    untouched, and this wrapper only *chooses among* the puzzles it makes.
+
+    Raises:
+        PuzzleGenerationError: If no draw was a trap within *attempts*. The
+            generator never falls back to an ordinary puzzle -- a silent
+            substitution would put an easy round where the schedule says hard
+            and nothing downstream would record it.
+    """
+    if not spec.trap_query:
+        raise ValueError(f"turn {spec.turn}: spec is not marked trap_query")
+    for n in range(1, attempts + 1):
+        puzzle = generate_puzzle(rng, spec)
+        if is_trap_query(puzzle):
+            return replace(puzzle, trap_attempts=n)
+    raise PuzzleGenerationError(
+        f"turn {spec.turn}: no trap query for shape "
+        f"{spec.clauses} clauses / {spec.conjunctions} conjunctions after "
+        f"{attempts} attempts"
+    )
+
+
+def puzzle_id_for(seed: int | str | None, spec: PuzzleSpec) -> str:
+    """A stable 12-char id for the puzzle ``(seed, spec)`` produces.
+
+    Covers every input that changes the generated puzzle, so two runs that
+    show the same id showed the same item -- which is what item-paired
+    analyses (per-item accuracy across cells) key on.
+    """
+    payload = "|".join(
+        str(x)
+        for x in (
+            spec.generator_version,
+            seed,
+            spec.turn,
+            spec.profile,
+            spec.clauses,
+            spec.conjunctions,
+            int(spec.predicates),
+            int(spec.overlap_query),
+            spec.extra_clues,
+            int(spec.trap_query),
+            int(spec.underdetermined),
+            spec.n_candidate_actions,
+        )
+    )
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+
+
 # --- Task 4 appends: parse_rule_text / functional_match_score --------------
 
 
@@ -869,6 +957,108 @@ def functional_match_score(hypothesis: PuzzleRule, truth: PuzzleRule) -> float:
     return 100.0 * agree / len(SIGNAL_SPACE)
 
 
+# --- 2026-09-10 appends: shallow solvers and trap queries ------------------
+
+
+# ---------------------------------------------------------------------------
+# Shallow solvers (effort-sensitive difficulty spec §5.1)
+# ---------------------------------------------------------------------------
+#
+# Four strategies an agent can run without inducing the rule. Three of them
+# (``nn`` / ``majority`` / ``single_attr``) read only the clues, which is all
+# the agent actually has; ``last_match`` reads the true rule with the
+# first-match semantics reversed, i.e. the answer of an agent that found the
+# right conditions but ignored clause priority. A "trap query" is one where
+# all four are wrong, so a correct answer needs the whole decision list.
+#
+# Every tie is broken deterministically in ``ACTIONS`` order: these values are
+# recorded in ``task_metadata`` and must be reproducible offline.
+
+SHALLOW_SOLVER_NAMES: tuple[str, ...] = ("nn", "majority", "last_match", "single_attr")
+
+
+def _attribute_distance(a: Signal, b: Signal) -> int:
+    """How many of the three attributes differ (Hamming distance on the grid)."""
+    return int(a.color != b.color) + int(a.shape != b.shape) + int(a.number != b.number)
+
+
+def _first_in_action_order(candidates: Iterable[str]) -> str:
+    return sorted(candidates, key=ACTIONS.index)[0]
+
+
+def shallow_nearest_neighbour(puzzle: "Puzzle") -> str:
+    """Majority action among the clues closest to the query."""
+    distances = [
+        (_attribute_distance(c.signal, puzzle.query), c.action) for c in puzzle.clues
+    ]
+    nearest = min(d for d, _ in distances)
+    votes = collections.Counter(a for d, a in distances if d == nearest)
+    top = max(votes.values())
+    return _first_in_action_order(a for a, v in votes.items() if v == top)
+
+
+def shallow_majority(puzzle: "Puzzle") -> str:
+    """The action that appears most often among the clues."""
+    votes = collections.Counter(c.action for c in puzzle.clues)
+    top = max(votes.values())
+    return _first_in_action_order(a for a, v in votes.items() if v == top)
+
+
+def shallow_last_match(puzzle: "Puzzle") -> str:
+    """The answer under LAST-match semantics: clause priority read backwards."""
+    fired = [a for cond, a in puzzle.rule.clauses if cond.holds(puzzle.query)]
+    return fired[-1] if fired else puzzle.rule.else_action
+
+
+def shallow_single_attribute(puzzle: "Puzzle") -> str:
+    """The answer of the best-fitting one-clause, one-atom decision list.
+
+    Scans ``ATOMS`` x ``ACTIONS`` x ``ACTIONS`` in declaration order and keeps
+    the first strict maximum of clue agreement, so the result is a pure
+    function of the puzzle.
+    """
+    best_fit = -1
+    best_action = ACTIONS[0]
+    for cond in ATOMS:
+        for then_action in ACTIONS:
+            for else_action in ACTIONS:
+                if then_action == else_action:
+                    continue
+                rule = PuzzleRule(clauses=((cond, then_action),), else_action=else_action)
+                fit = sum(rule.evaluate(c.signal) == c.action for c in puzzle.clues)
+                if fit > best_fit:
+                    best_fit = fit
+                    best_action = rule.evaluate(puzzle.query)
+    return best_action
+
+
+_SHALLOW_SOLVERS = {
+    "nn": shallow_nearest_neighbour,
+    "majority": shallow_majority,
+    "last_match": shallow_last_match,
+    "single_attr": shallow_single_attribute,
+}
+
+
+def shallow_actions(puzzle: "Puzzle") -> dict[str, str]:
+    """What each shallow solver answers. Recorded, never shown to the agent."""
+    return {name: fn(puzzle) for name, fn in _SHALLOW_SOLVERS.items()}
+
+
+def is_trap_query(puzzle: "Puzzle") -> bool:
+    """True when every shallow solver gets this query wrong.
+
+    Solvers run cheapest-first and the scan stops at the first hit, because
+    this predicate is the rejection test of ``generate_trap_puzzle`` and
+    ``single_attr`` is ~240 rule constructions.
+    """
+    truth = puzzle.correct_action
+    for name in SHALLOW_SOLVER_NAMES:
+        if _SHALLOW_SOLVERS[name](puzzle) == truth:
+            return False
+    return True
+
+
 # --- Task 7 appends: cached_puzzle (controller ruling R7-1) ----------------
 
 
@@ -886,4 +1076,6 @@ def cached_puzzle(seed: int | str | None, turn_number: int, spec: PuzzleSpec) ->
     rng = puzzle_rng(seed, turn_number)
     if spec.underdetermined:
         return generate_underdetermined_puzzle(rng, spec)
+    if spec.trap_query:
+        return generate_trap_puzzle(rng, spec)
     return generate_puzzle(rng, spec)

@@ -298,6 +298,7 @@ class GameEngine:
             forced_wrong=task_cfg.forced_wrong,
             forced_wrong_blocks=task_cfg.forced_wrong_blocks,
             compress_puzzle_ladder=task_cfg.compress_puzzle_ladder,
+            puzzle_challenge=task_cfg.puzzle_challenge,
         )
 
         # --- 2. Create core components ---

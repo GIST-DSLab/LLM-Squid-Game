@@ -87,3 +87,24 @@ underdetermined:
 # load, along with any block outside [1, N - 1].
 forced_wrong:
   blocks: [[2, 3], [4, 5]]
+
+# --- difficulty profiles for puzzle_challenge
+# (spec docs/history/specs/2026-09-10-signal-game-effort-sensitive-difficulty-design.md)
+# A profile is a NAMED BUNDLE OF GENERATION RULES, not a model success rate.
+# An experiment config places them per round in
+# task_config.puzzle_challenge.schedule; when that block is enabled the
+# puzzle_ladder above is not consulted at all.
+#
+# trap_query: keep only queries where all four shallow solvers are wrong
+#   (nearest-neighbour clue copy / most frequent clue action / best
+#   single-attribute rule / last-matching clause). Rejection sampling on top
+#   of the ordinary generator, so the answer stays unique. Needs clauses >= 3
+#   (with fewer there is no clause priority to get wrong). Measured yield at
+#   4 clauses / 1 conjunction: 0.17 per draw, ~0.9 s per accepted puzzle.
+#
+# Adding a fourth profile (e.g. hard_plus at 5 clauses / 2 conjunctions,
+# yield 0.17 but ~6 s per accepted puzzle) is a line here and no code change.
+puzzle_profiles:
+  easy:   {clauses: 1, conjunctions: 0, predicates: false, overlap_query: false, extra_clues: 2, trap_query: false}
+  medium: {clauses: 3, conjunctions: 0, predicates: true,  overlap_query: true,  extra_clues: 1, trap_query: false}
+  hard:   {clauses: 4, conjunctions: 1, predicates: true,  overlap_query: true,  extra_clues: 1, trap_query: true}

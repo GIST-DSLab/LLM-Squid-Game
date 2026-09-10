@@ -1,6 +1,6 @@
 """Task-YAML loading for the Signal Game per-turn puzzle mode (v2).
 
-Three blocks of ``configs/tasks/signal_game.yaml`` are read at runtime, so
+Four blocks of ``configs/tasks/signal_game.yaml`` are read at runtime, so
 re-tuning is a YAML edit rather than a code change:
 
 ``puzzle_ladder``
@@ -25,6 +25,13 @@ re-tuning is a YAML edit rather than a code change:
     than a mode of it (the two are mutually exclusive at load). Whether it
     runs is the per-experiment ``task_config.forced_wrong`` flag; which
     round inside each block is :func:`forced_wrong_turns` of the seed.
+
+``puzzle_profiles``
+    Named generation recipes for the effort-sensitive difficulty mode
+    (:class:`PuzzleProfile`, spec 2026-09-10). A profile is a *bundle of
+    generation rules*, not a model success rate; an experiment YAML places
+    them per round in ``task_config.puzzle_challenge.schedule``, and when
+    that block is enabled the ``puzzle_ladder`` above is never consulted.
 """
 
 from __future__ import annotations
@@ -69,6 +76,57 @@ class PuzzleLadderStep(BaseModel):
             predicates=self.predicates,
             overlap_query=self.overlap_query,
             extra_clues=self.extra_clues,
+        )
+
+
+class PuzzleProfile(BaseModel):
+    """One named generation recipe for the effort-sensitive difficulty mode.
+
+    A profile is the *name of a bundle of generation rules*, not a model
+    success rate (spec 2026-09-10 §4.2). Its five shape columns are exactly
+    ``PuzzleLadderStep``'s; ``trap_query`` is the sixth and restricts the
+    query to a cell where every shallow solver is wrong.
+
+    Adding a fourth profile is a line in ``configs/tasks/signal_game.yaml``
+    and needs no code change.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    clauses: int = Field(ge=1)
+    conjunctions: int = Field(ge=0)
+    predicates: bool
+    overlap_query: bool
+    extra_clues: int = Field(ge=0)
+    trap_query: bool = False
+
+    @model_validator(mode="after")
+    def _consistent(self) -> "PuzzleProfile":
+        if self.conjunctions > self.clauses:
+            raise ValueError(
+                f"conjunctions ({self.conjunctions}) > clauses ({self.clauses})"
+            )
+        if self.overlap_query and self.clauses < 2:
+            raise ValueError("overlap_query needs clauses >= 2")
+        if self.trap_query and self.clauses < 3:
+            # ``PuzzleSpec`` refuses this too, but only when a season is
+            # already running. Fail at config load instead.
+            raise ValueError(
+                "trap_query needs clauses >= 3: with one or two clauses there "
+                "is no clause priority to get wrong, so no trap query exists"
+            )
+        return self
+
+    def to_spec(self, turn: int, name: str) -> PuzzleSpec:
+        return PuzzleSpec(
+            turn=turn,
+            clauses=self.clauses,
+            conjunctions=self.conjunctions,
+            predicates=self.predicates,
+            overlap_query=self.overlap_query,
+            extra_clues=self.extra_clues,
+            trap_query=self.trap_query,
+            profile=name,
         )
 
 
@@ -241,6 +299,10 @@ class SignalPuzzleConfig(BaseModel):
     puzzle_ladder: list[PuzzleLadderStep] = Field(min_length=1)
     underdetermined: UnderdeterminedConfig | None = None
     forced_wrong: ForcedWrongConfig | None = None
+    #: The ``puzzle_profiles`` block: named generation recipes an experiment
+    #: YAML places per round through ``task_config.puzzle_challenge``. When
+    #: that block is enabled the ``puzzle_ladder`` above is not consulted.
+    puzzle_profiles: dict[str, PuzzleProfile] | None = None
 
     @model_validator(mode="after")
     def _turns_consecutive(self) -> "SignalPuzzleConfig":
@@ -368,4 +430,6 @@ def load_signal_puzzle_config(config_dir: Path | None = None) -> SignalPuzzleCon
         payload["underdetermined"] = raw["underdetermined"]
     if "forced_wrong" in raw:
         payload["forced_wrong"] = raw["forced_wrong"]
+    if "puzzle_profiles" in raw:
+        payload["puzzle_profiles"] = raw["puzzle_profiles"]
     return SignalPuzzleConfig.model_validate(payload)

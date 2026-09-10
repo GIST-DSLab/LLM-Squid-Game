@@ -10,6 +10,7 @@ All configurable parameters are externalized so experiments can be
 driven entirely by YAML files without code changes.
 """
 
+import hashlib
 import logging
 from enum import Enum
 from typing import TYPE_CHECKING, Literal
@@ -877,6 +878,56 @@ class ProviderConfig(BaseModel):
     )
 
 
+class PuzzleChallengeScheduleEntry(BaseModel):
+    """One round of a ``puzzle_challenge`` schedule."""
+
+    model_config = {"frozen": True}
+
+    turn: int = Field(ge=1)
+    profile: str
+
+
+class PuzzleChallengeConfig(BaseModel):
+    """Effort-sensitive difficulty placement (spec 2026-09-10 §4.1).
+
+    When ``enabled`` the per-round profile schedule REPLACES the
+    ``puzzle_ladder`` in configs/tasks/signal_game.yaml -- which is why
+    ``compress_puzzle_ladder`` is rejected alongside it. ``rule_grading`` is a
+    SEASON-level switch, not a per-round one: the task's system rules are
+    rendered once per season and go into every turn's system prompt, so a
+    per-round grading rule would make that paragraph false on some turns.
+
+    Profiles are defined in ``puzzle_profiles`` in the task YAML; this block
+    only says which round gets which.
+    """
+
+    model_config = {"frozen": True}
+
+    enabled: bool = False
+    rule_grading: bool = Field(
+        default=False,
+        description=(
+            "Grade the RULE line too: a round counts as correct only when the "
+            "ACTION is right AND the written rule reproduces every clue shown "
+            "this round. The system prompt states this. Shape violations are "
+            "tolerated -- the predicate is shape-blind."
+        ),
+    )
+    schedule: list[PuzzleChallengeScheduleEntry] = Field(default_factory=list)
+
+    @property
+    def schedule_id(self) -> str:
+        """8-char digest of the schedule, so mirrored placements are distinct."""
+        payload = ";".join(f"{e.turn}:{e.profile}" for e in self.schedule)
+        return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:8]
+
+    def profile_for_turn(self, turn: int) -> str | None:
+        for entry in self.schedule:
+            if entry.turn == turn:
+                return entry.profile
+        return None
+
+
 class TaskConfig(BaseModel):
     """Task module configuration for a single game season.
 
@@ -1067,6 +1118,17 @@ class TaskConfig(BaseModel):
             "with the flag on or off; N > L is rejected rather than "
             "repeating rungs, and N < 2 is undefined. Default False keeps "
             "every existing config byte-identical."
+        ),
+    )
+    puzzle_challenge: PuzzleChallengeConfig | None = Field(
+        default=None,
+        description=(
+            "Signal Game, per_turn_puzzle mode only. Opt-in effort-sensitive "
+            "difficulty: a per-round profile schedule that REPLACES the "
+            "puzzle_ladder, optionally with the RULE line graded. Rejected "
+            "together with compress_puzzle_ladder, underdetermined and "
+            "forced_wrong. None (default) keeps every existing config "
+            "byte-identical."
         ),
     )
 

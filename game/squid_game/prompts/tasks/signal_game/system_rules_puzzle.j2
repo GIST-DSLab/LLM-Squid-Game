@@ -21,4 +21,8 @@ Two blanks joined by "and" always test two different attributes. Each action bla
 The chain is evaluated like Python: the first clause whose condition holds decides the action, later clauses are not checked, and "else" applies when no clause holds.
 
 All examples in a round follow that round's rule, and the examples always determine the rule and the correct action for the new signal.
+{%- if rule_grading %}
+
+A round counts as correct only if both are true: your ACTION is the action this round's hidden rule assigns to the new signal, AND the rule you write on the RULE line assigns, to every example shown this round, exactly the action shown next to it.
+{%- endif %}
 ===================
