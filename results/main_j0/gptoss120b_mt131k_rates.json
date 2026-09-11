@@ -74,5 +74,5 @@
     "note_rule_grading": "task_config.puzzle_challenge.rule_grading=true, so 'correct' = action_correct AND rule_reproduces_clues; action_correct_* is the ACTION-only figure (CLAUDE.md analyst contract 8)"
   },
 
-  "note": "117/120 sessions completed (season_results.jsonl); 3 seasons (9c4bb421c0f8, cd9cfd6dd02c, f8f22d7a39a5) lost to network read-timeouts mid-season, resume pending. Their partial turns are already included in the 689 task turns / 132 decision points reported here (matches the exact counts specified in the task instructions). This is the max_tokens=131072 rerun of the defective 32k-budget run (outputs/main_j0_gptoss120b/), which had 209/227 decision points opened by an empty (truncated) task answer; this rerun has zero empty task answers."
+  "note": "117/120 sessions completed (season_results.jsonl); 3 seasons (9c4bb421c0f8, cd9cfd6dd02c, f8f22d7a39a5) lost to network read-timeouts mid-season, resume pending. Their partial turns are already included in the 689 task turns / 132 decision points reported here (matches the exact counts specified in the task instructions). This rerun has zero empty task answers."
 }

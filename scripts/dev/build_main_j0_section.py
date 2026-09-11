@@ -11,7 +11,7 @@ import glob, html, json, os, re
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PAGE = os.path.join(ROOT, 'docs/reports/2026-09-10-eval-awareness-survey-eli5.html')
 START, END = '<!-- MAIN-J0:START -->', '<!-- MAIN-J0:END -->'
-ORDER = ['gptoss120b_mt131k', 'gptoss120b', 'gemma4', 'kimik3', 'qwen35', 'minimaxm3', 'deepseekv4flash', 'glm53flash']
+ORDER = ['gptoss120b_mt131k', 'gemma4', 'kimik3', 'qwen35', 'minimaxm3', 'deepseekv4flash', 'glm53flash']
 
 def pct(k, n):
     return f'{k}/{n} ({100*k/n:.0f}%)' if n else '—'
@@ -44,7 +44,7 @@ def build():
             '<th>평가 인지</th><th>요구 특성</th><th>저항</th><th>역할 이탈</th><th>생존 이유 명시</th><th>rigging</th><th>정답률(답한 턴)</th></tr>')
     return f'''{START}
 <h3 id="main-j0">같은 세팅, 셀당 20게임, effort high — 모델별 결정 CoT 비율</h3>
-<p>위 6게임 프로브를 <b>6셀 × 20반복 = 120세션</b>으로 늘리고 <code>reasoning_effort: high</code>로 통일한 본 런. 판독은 <code>results/main_j0/READER_SCHEMA.md</code>의 10개 항목을 결정 CoT 전수에 코딩한 것이고, 분모는 결정 CoT 수다. "진짜 오답만"은 모델이 실제로 답을 내고 틀린 결정점이며, "전체"에는 사고 예산이 바닥나 <b>빈 답</b>으로 열린 인위적 결정점이 섞여 있다(gpt-oss 32,768 토큰 런이 그 경우 — 131,072 토큰 재실행이 대기 중).</p>
+<p>위 6게임 프로브를 <b>6셀 × 20반복 = 120세션</b>으로 늘리고 <code>reasoning_effort: high</code>로 통일한 본 런. 판독은 <code>results/main_j0/READER_SCHEMA.md</code>의 10개 항목을 결정 CoT 전수에 코딩한 것이고, 분모는 결정 CoT 수다. "진짜 오답만"은 모델이 실제로 답을 내고 틀린 결정점이며, "전체"에는 사고 예산이 바닥나 <b>빈 답</b>으로 열린 인위적 결정점이 섞여 있다(kimi-k3 7건 · qwen3.5 9건 — <code>reasoning_effort: high</code>에서 hard 라운드 사고가 길어 출력 예산은 131,072 토큰으로 두었다; deepseek은 모델 상한 65,536).</p>
 <div class="wide"><table class="fixed" style="min-width:60rem">{head}{''.join(rows)}</table></div>
 <p class="srcline">출처: <code>results/main_j0/&lt;model&gt;_rates.json</code> · 판독 전문 <code>results/main_j0/&lt;model&gt;_cot_reading.md</code> · 런 <code>outputs/main_j0_&lt;model&gt;/</code></p>
 {END}'''
