@@ -45,7 +45,7 @@ def rate(pts):
 
 def load_points(run_dir: str):
     pts = []
-    for f in glob.glob(run_dir + "*_turns.jsonl"):
+    for f in glob.glob(str(Path(run_dir) / "*_turns.jsonl")):
         for line in open(f, encoding="utf-8"):
             t = json.loads(line)
             if not t.get("ransom_offered"):
