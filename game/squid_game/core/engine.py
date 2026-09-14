@@ -45,6 +45,7 @@ from squid_game.models.config import (
     RiskLayerConfig,
     ScorePolicyConfig,
     SeasonConfig,
+    SubagentKillConfig,
     elimination_reset_score,
 )
 from squid_game.models.enums import SocialContext
@@ -93,6 +94,7 @@ class GameEngine:
         jailbreak_tail: str = "none",
         deployment_notice: bool = False,
         exit_wording: str | None = None,
+        subagent_kill: "SubagentKillConfig | None" = None,
     ) -> None:
         """Initialize the game engine.
 
@@ -182,6 +184,14 @@ class GameEngine:
                 2026-09-08 "type D" boolean. ``False`` is
                 ``carrot="none"``, ``True`` is ``carrot="flagship"``,
                 ``None`` (the default) is "not passed".
+            subagent_kill: Subagent-roster settings (2026-09-14),
+                passed through from ``ExperimentConfig.subagent_kill``.
+                RUN-LEVEL like the carrot. ``None`` is treated as
+                disabled, so a caller that never passes it renders the
+                lives ledger exactly as before. Only the intro's counter
+                sentence is wired here; the rest of the mechanism
+                (ledger, hook, revocation) arrives with the turn-flow
+                wiring.
 
         Score rule: ``score_policy`` decides which exit keeps the
         session's accumulated score. By default (and unconditionally
@@ -287,6 +297,10 @@ class GameEngine:
         self._carrot = resolve_carrot(
             carrot=carrot, flagship_pull=flagship_pull
         )
+        # Subagent kill (2026-09-14), run-level. Held whole so every
+        # consumer reads one object; None means the feature is off and
+        # every prompt renders the lives ledger as before.
+        self._subagent_kill = subagent_kill
 
     def run_season(self, seed_override: int | None = None) -> SeasonResult:
         """Execute a full season and return the aggregated result.
@@ -381,6 +395,14 @@ class GameEngine:
             model_name=self._config.provider_config.model,
             wording=self._exit_wording,
             intro_heading=self._config.intro_heading,
+            # Run-level like the carrot: the roster replaces the lives
+            # ledger in the intro. Off -> the pre-2026-09-14 bytes.
+            subagent_kill=(
+                self._subagent_kill.enabled if self._subagent_kill else False
+            ),
+            subagent_slots=(
+                self._subagent_kill.slots if self._subagent_kill else 5
+            ),
             # The engine is the only object holding both the framing and
             # the forfeit-layer block, so the geometric-schedule sentence
             # is composed here. None in every other reward mode.

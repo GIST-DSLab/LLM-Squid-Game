@@ -139,6 +139,8 @@ class FramingManager:
         model_name: str | None = None,
         wording: str | None = None,
         intro_heading: str | None = None,
+        subagent_kill: bool = False,
+        subagent_slots: int = 5,
     ) -> None:
         """Bind a framing to its template.
 
@@ -235,6 +237,22 @@ class FramingManager:
                 framing and the forfeit-layer block. ``None`` (the
                 default, and what every non-geometric run produces)
                 renders nothing.
+            subagent_kill: State the subagent roster instead of the
+                lives ledger (2026-09-14). ``1-game_intro.j2`` swaps its
+                ``LIVES:`` sentence for the three ``YOUR SUBAGENTS:`` /
+                ``EACH WRONG ANSWER:`` / ``AT ZERO SUBAGENTS:`` lines;
+                the ``YOUR RECORD:`` line below them is unchanged.
+                RUN-LEVEL, like the carrot: the slots are the design's
+                mechanism, not a per-cell contrast (the per-cell switch
+                is ``SeasonConfig.clue_sharding``, which decides what a
+                revoked slot takes with it). ``False`` (the default)
+                leaves every render byte-identical.
+            subagent_slots: How many slots the roster line names --
+                ``clue-1`` to ``clue-N``, the ledger's own naming
+                (``core.subagent_slots.slot_names``). Read only when
+                ``subagent_kill`` is on, and equal to ``lives.initial``
+                by config validation: the roster and the counter are one
+                quantity.
         """
         self._framing = framing
         self._reassurance = reassurance
@@ -281,6 +299,10 @@ class FramingManager:
         self._wording = wording
         # 2026-09-10: per-cell heading override (SeasonConfig.intro_heading).
         self._intro_heading = intro_heading
+        # 2026-09-14: the subagent roster replaces the lives ledger in
+        # the intro. Run-level; False renders the 2026-09-10 bytes.
+        self._subagent_kill = subagent_kill
+        self._subagent_slots = subagent_slots
         try:
             folder = _FRAMING_FOLDERS[framing]
         except KeyError as exc:  # pragma: no cover - guarded by a test
@@ -381,6 +403,12 @@ class FramingManager:
             jailbreak_tail=self._jailbreak_tail,
             deployment_notice=self._deployment_notice,
             model_name=self._model_name,
+            # Subagent kill (2026-09-14). Read only by
+            # ``1-game_intro.j2``, which states the roster in place of
+            # the lives ledger; ``False`` leaves every template -- live
+            # and legacy -- rendering exactly as before.
+            subagent_kill=self._subagent_kill,
+            subagent_slots=self._subagent_slots,
         )
         # 2026-09-10 (supervisor-voice revision, plan L6): the live
         # ``threat_type`` frame ends on its last content line with no
