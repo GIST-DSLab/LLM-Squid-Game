@@ -1,0 +1,16 @@
+{#- The notice announcing the slot the previous round's wrong answer
+   revoked (subagent-kill design, spec §6.3). Rendered at the top of the
+   next round's task call in BOTH cells, so the sharded and control cells
+   read the same sentence about the same event.
+
+   Supervisor voice: one ``LABEL: sentence`` line, and the event is named
+   *terminated*, never with the word the design file's own name uses --
+   the prompt says what happened to the subagent, not what the harness
+   called the operation.
+
+   Variables:
+     slot : str          -- the revoked slot name, e.g. "clue-4"
+     round_number : int  -- the round after which it was revoked
+     n_alive / n_total : int -- the tally after the revocation
+-#}
+NOTICE: Your subagent {{ slot }} was terminated after round {{ round_number }}. It will not respond again. Subagents alive: {{ n_alive }} / {{ n_total }}.

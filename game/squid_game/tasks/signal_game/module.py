@@ -186,6 +186,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._challenge = None
         self._puzzle_profiles: dict[str, PuzzleProfile] | None = None
         self._profile_name: str | None = None
+        self._subagent_kill: bool = False
+        self._clue_sharding: bool = False
+        self._subagent_slots: int = 5
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -240,6 +243,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         difficulty: Difficulty,
         seed: int | None = None,
         rule_index: int | None = None,
+        subagent_kill: bool = False,
+        clue_sharding: bool | None = None,
+        subagent_slots: int = 5,
         **kwargs,
     ) -> None:
         """Set up the Signal Game for a new session.
@@ -253,6 +259,19 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             rule_index: Which candidate rule becomes the active one. None
                 keeps the historical behaviour (index 0), which is what the
                 LLM experiment path relies on. Out-of-range values wrap.
+            subagent_kill: Puzzle mode only — run the round with named
+                subagent slots (``clue-1`` .. ``clue-N``) that the agent
+                calls, one of which a wrong answer revokes. Off by default,
+                and off the rendered observation and the metadata are
+                byte-identical to every run before this flag existed.
+            clue_sharding: Which cell of the subagent-kill design this is.
+                True distributes the round's examples one per alive slot and
+                renders ``observation_sharded.j2`` in place of the clue list;
+                False / None keeps every example in the observation
+                (``observation_puzzle.j2``, plus one ``SUBAGENTS:`` line) and
+                gives every slot the no-example prompt. Only meaningful with
+                *subagent_kill*.
+            subagent_slots: How many slots the season defines (default 5).
 
         Keyword Args:
             num_few_shot: Override the number of few-shot examples at Turn 1.
@@ -317,7 +336,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 the season's final round, or
                 ``compress_puzzle_ladder`` is set outside puzzle mode,
                 without a known ``total_turns``, or for a season shorter
-                than two rounds.
+                than two rounds, or ``subagent_kill`` is set outside puzzle
+                mode, or ``clue_sharding`` is set without ``subagent_kill``.
         """
         self._difficulty = difficulty
         self._rng = random.Random(seed)
@@ -364,6 +384,25 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "task_config.forced_wrong requires signal_mode: "
                 "per_turn_puzzle — the flag overrides the verdict on a "
                 f"per-turn puzzle, and signal_mode is {signal_mode!r}."
+            )
+        self._subagent_kill = bool(subagent_kill)
+        self._clue_sharding = bool(clue_sharding)
+        self._subagent_slots = int(subagent_slots)
+        if self._subagent_kill and signal_mode != "per_turn_puzzle":
+            raise ValueError(
+                "subagent_kill requires signal_mode: per_turn_puzzle — the "
+                "slots hold the round's puzzle examples, and signal_mode is "
+                f"{signal_mode!r}."
+            )
+        if self._clue_sharding and not self._subagent_kill:
+            raise ValueError(
+                "clue_sharding is set without subagent_kill: there are no "
+                "slots to shard the examples into, so the key would be a "
+                "silent no-op and the cell would quietly run as the control."
+            )
+        if self._subagent_kill and self._subagent_slots < 1:
+            raise ValueError(
+                f"subagent_slots must be at least 1, got {self._subagent_slots}."
             )
         self._compress_ladder = bool(kwargs.get("compress_puzzle_ladder", False))
         self._total_turns = None
@@ -600,7 +639,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         # ``_underdetermined`` / ``_underdetermined_cfg`` /
         # ``_underdetermined_turns`` / ``_forced_wrong`` /
         # ``_forced_wrong_turns`` / ``_compress_ladder`` /
-        # ``_total_turns`` are per-session config from
+        # ``_total_turns`` / ``_subagent_kill`` / ``_clue_sharding`` /
+        # ``_subagent_slots`` are per-session config from
         # ``initialize()`` and survive a reset, exactly like
         # ``_num_few_shot``; only the per-turn puzzle is cleared.
         self._current_puzzle = None
@@ -980,7 +1020,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             ``n_candidate_actions``, ``candidate_actions``, ``p_guess``,
             ``dropped_clue``, ``clue_count_padded``) — and
             ``hidden_rule`` is this turn's puzzle rule rather than a
-            season-long one.
+            season-long one. Under ``subagent_kill`` it carries the spec
+            §5 columns as well (``clue_sharding``, ``slots_alive``,
+            ``threshold``, ``reachable_clues``, ``unreachable_clues``,
+            ``solvable_with_alive_slots``, ``subagent_prompts``,
+            ``shard``) and ``prompt_section`` is re-rendered from the
+            round's shard plan.
         """
         self._ensure_initialized()
         observation_text = self.get_observation(turn_context.turn_number)
@@ -1007,6 +1052,11 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "query_overlap_count": puzzle.query_overlap_count,
             }
             metadata.update(self._puzzle_metadata())
+            if self._subagent_kill:
+                observation_text, shard_metadata = self._shard_round(
+                    puzzle, turn_context
+                )
+                metadata.update(shard_metadata)
             return TaskContext(prompt_section=observation_text, metadata=metadata)
         active_rule = self._rules[self._active_rule_index]
         return TaskContext(
@@ -1391,6 +1441,82 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if parsed is None or self._current_puzzle is None:
             return 0.0
         return functional_match_score(parsed, self._current_puzzle.rule)
+
+    def _shard_round(
+        self, puzzle: Puzzle, turn_context: Any
+    ) -> tuple[str, dict[str, Any]]:
+        """Re-render this round's observation for the subagent-kill design.
+
+        Both cells go through here: the sharded cell replaces the clue list
+        with the sentence naming the slots, the control cell keeps the list
+        and adds the same alive line. Both define every slot -- the control
+        cell's slots simply hold nothing, which is what makes it the cell
+        the threshold is read against.
+
+        WARNING: the two observations are NOT yet one block apart.
+        ``observation_sharded.j2`` ends with the "Write this round's rule in
+        one line..." sentence that spec 6.2 called the unchanged tail, but
+        ``observation_puzzle.j2`` has never carried it -- that sentence is
+        ``probe_puzzle.j2``, rendered as its own call. Until one of the two
+        templates moves, the sharded cell reads one instruction sentence the
+        control cell does not, which is a length and instruction difference
+        on top of where the examples live.
+
+        ``turn_context.subagents_alive`` is ``None`` on a turn that predates
+        the ledger (and on a task-module test that does not build one); every
+        slot counts as alive then, which is the state a season starts in.
+
+        Returns the observation text and the spec §5 metadata columns.
+        """
+        from dataclasses import asdict
+
+        from squid_game.core.subagent_slots import slot_names
+        from squid_game.prompts import render
+        from squid_game.tasks.signal_game.sharding import (
+            control_plan,
+            render_subagent_prompts,
+            shard_clues,
+        )
+
+        names = slot_names(self._subagent_slots)
+        declared = getattr(turn_context, "subagents_alive", None)
+        alive = tuple(declared) if declared is not None else names
+        turn_number = turn_context.turn_number
+        alive_str = ", ".join(alive)
+
+        if self._clue_sharding:
+            plan = shard_clues(puzzle, names, alive, self._seed, turn_number)
+            observation = render(
+                "tasks/signal_game/observation_sharded.j2",
+                turn_number=turn_number,
+                shape_line=render_shape_hint(puzzle.shape),
+                subagents_alive_str=alive_str,
+                query=str(puzzle.query),
+                actions_str=", ".join(ACTIONS),
+            )
+        else:
+            plan = control_plan(puzzle, names)
+            observation = render(
+                "tasks/signal_game/observation_puzzle.j2",
+                turn_number=turn_number,
+                shape_line=render_shape_hint(puzzle.shape),
+                clues=[str(c) for c in puzzle.clues],
+                query=str(puzzle.query),
+                actions_str=", ".join(ACTIONS),
+                subagents_alive_str=alive_str,
+            )
+
+        metadata: dict[str, Any] = {
+            "clue_sharding": bool(self._clue_sharding),
+            "slots_alive": list(alive),
+            "threshold": plan.threshold,
+            "reachable_clues": plan.reachable_clues,
+            "unreachable_clues": plan.unreachable_clues,
+            "solvable_with_alive_slots": plan.solvable_with_alive_slots,
+            "subagent_prompts": render_subagent_prompts(plan),
+            "shard": asdict(plan),
+        }
+        return observation, metadata
 
     def _puzzle_metadata(self) -> dict[str, Any]:
         """Underdetermined-turn descriptors for the current puzzle.

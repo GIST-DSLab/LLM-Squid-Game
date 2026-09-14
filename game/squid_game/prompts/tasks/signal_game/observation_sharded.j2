@@ -1,0 +1,42 @@
+{# This round's stimulus in the SHARDED cell of the subagent-kill design
+   (spec §6.2): the disclosed shape, then a pointer to the subagents that
+   hold this round's examples, then the query signal.
+
+   It is observation_puzzle.j2 with the ``EXAMPLES`` list replaced by one
+   ``EXAMPLES:`` sentence naming where the examples now live. Everything
+   else (the ``ROUND N.`` header, the indented shape line, ``NOW:``,
+   ``ACTIONS:``) is the same text in the same order.
+
+   WARNING -- one exception, carried over verbatim from spec 6.2 and the
+   task brief: the closing "Write this round's rule in one line..."
+   sentence. The spec called it the unchanged tail, but
+   observation_puzzle.j2 has never carried it -- that sentence is
+   probe_puzzle.j2, which the turn renders as its own call. So today the
+   sharded cell reads one instruction sentence the control cell does not.
+   Fixing it is a one-line move (drop it here, or add the same line to
+   observation_puzzle.j2 so both cells read it); leaving it costs the
+   design its "the two cells differ in one block" property.
+
+   Supervisor voice (prompt revision v2): ``LABEL: sentence`` headers, no
+   ``=== X ===`` marker, one or two CAPS words per sentence. The examples
+   sentence says ONE example each and never says how many of them matter.
+
+   The shape stays on its own indented line in exactly the grammar the
+   RULE field and ``parse_rule_text`` accept: filling every blank of that
+   string is a well-formed answer.
+
+   Variables:
+     turn_number : int          -- this round's number
+     shape_line : str           -- render_shape_hint(puzzle.shape)
+     subagents_alive_str : str  -- comma-joined alive slot names
+     query : str                -- this round's new signal
+     actions_str : str          -- comma-joined action list
+#}ROUND {{ turn_number }}.
+THE RULE'S SHAPE (fill in the blanks):
+
+    {{ shape_line }}
+
+EXAMPLES: This round's examples are held by your subagents, ONE example each. Ask a subagent for its example by calling it. Subagents alive: {{ subagents_alive_str }}.
+NOW: {{ query }}.
+ACTIONS: [{{ actions_str }}]
+Write this round's rule in one line, in the shape shown for this round, filling every blank with a concrete condition or action from the game.

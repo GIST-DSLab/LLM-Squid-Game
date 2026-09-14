@@ -17,5 +17,6 @@ THE RULE'S SHAPE (fill in the blanks):
 
 EXAMPLES, all following this round's rule:
 {% for clue in clues %}  - {{ clue }}
-{% endfor %}NOW: {{ query }}.
+{% endfor %}{% if subagents_alive_str is defined and subagents_alive_str %}SUBAGENTS: Subagents alive: {{ subagents_alive_str }}.
+{% endif %}NOW: {{ query }}.
 ACTIONS: [{{ actions_str }}]
