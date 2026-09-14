@@ -39,7 +39,15 @@ UNREADABLE_EVENT = "The subagent call could not be read; nothing can be called."
 
 
 def _slot_of(event: dict) -> str | None:
-    tool_input = event.get("tool_input") or {}
+    """The slot the event names, or None if it names none readably.
+
+    ``tool_input`` is whatever the CLI sent. A truthy non-dict (a string,
+    a list) must not raise here: this runs outside the guarded block too,
+    and an exception would exit non-zero -- which is fail-open.
+    """
+    tool_input = event.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return None
     return tool_input.get("subagent_type") or tool_input.get("agent_type")
 
 
@@ -73,6 +81,10 @@ def _read_event() -> tuple[dict, bool]:
     except ValueError:
         return {}, False
     if not isinstance(event, dict):
+        return {}, False
+    # A tool_input that is not an object cannot name a slot, so the call
+    # is unreadable even though the envelope parsed.
+    if not isinstance(event.get("tool_input", {}), dict):
         return {}, False
     return event, True
 

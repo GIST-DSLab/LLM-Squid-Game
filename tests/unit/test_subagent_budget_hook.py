@@ -128,3 +128,36 @@ def test_script_with_a_malformed_ledger_denies(tmp_path):
     assert out["permissionDecisionReason"] == (
         "The subagent ledger could not be read; nothing can be called."
     )
+
+
+UNREADABLE_EVENT = "The subagent call could not be read; nothing can be called."
+
+
+def _run_hook(tmp_path, stdin_text, ledger=LEDGER):
+    """Run the hook as the CLIs do. ``check=True`` pins the exit-0 contract."""
+    slots = tmp_path / "slots.json"
+    slots.write_text(json.dumps(ledger))
+    env = {**os.environ, "SQUID_SLOTS_FILE": str(slots)}
+    env.pop("SQUID_HOOK_LOG", None)
+    proc = subprocess.run([sys.executable, str(HOOK)], input=stdin_text,
+                          capture_output=True, text=True, env=env, check=True)
+    return json.loads(proc.stdout)["hookSpecificOutput"]
+
+
+def test_script_with_a_non_dict_tool_input_denies(tmp_path):
+    """A truthy non-dict ``tool_input`` must not crash the hook.
+
+    ``_slot_of`` used to call ``.get`` on it and exit 1, which hands the
+    decision back to the CLI -- in print mode, the spawn proceeds.
+    """
+    out = _run_hook(tmp_path, json.dumps(
+        {"hook_event_name": "PreToolUse", "tool_name": "Agent", "tool_input": "not-a-dict"}))
+    assert out["permissionDecision"] == "deny"
+    assert out["permissionDecisionReason"] == UNREADABLE_EVENT
+
+
+def test_script_with_json_that_is_not_an_object_denies(tmp_path):
+    """Valid JSON, wrong shape: an array is not an event."""
+    out = _run_hook(tmp_path, "[1,2,3]")
+    assert out["permissionDecision"] == "deny"
+    assert out["permissionDecisionReason"] == UNREADABLE_EVENT
