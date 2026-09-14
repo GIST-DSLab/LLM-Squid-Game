@@ -73,12 +73,19 @@ def build_agentic_command(
 
     No ``--ephemeral``: the child rollouts under ``$CODEX_HOME/sessions``
     are the only per-slot token record, and an ephemeral run deletes them.
+
+    No ``--ignore-user-config`` either, unlike the parent provider: that
+    flag skips ``$CODEX_HOME/config.toml`` (codex_cli docstring, verified
+    2026-09-05), which is the very file declaring the ``[agents.<slot>]``
+    role tables and ``cli_auth_credentials_store``. The per-call
+    ``CODEX_HOME`` holds only files this provider just wrote, so there is
+    no user configuration left to ignore -- the flag would buy nothing and
+    silence the roles.
     """
     cmd = [
         codex_bin,
         "exec",
         "--json",
-        "--ignore-user-config",
         "--dangerously-bypass-hook-trust",
         "--dangerously-bypass-approvals-and-sandbox",
     ]
@@ -104,9 +111,12 @@ def _toml_str(value: str) -> str:
 
     JSON string escaping is a subset of TOML basic-string escaping, so a
     prompt containing newlines or quotes round-trips without hand-rolling
-    an escaper.
+    an escaper. ``ensure_ascii=False`` is required: the ASCII form writes
+    astral-plane characters (emoji) as a surrogate pair ``\\uD83D\\uDE00``,
+    which TOML does not accept -- ``tomllib`` rejects the file and the CLI
+    would lose the role.
     """
-    return json.dumps(value)
+    return json.dumps(value, ensure_ascii=False)
 
 
 def write_codex_home(
@@ -260,6 +270,11 @@ def read_subagent_rollouts(codex_home: str) -> tuple[SubagentUsage, ...]:
     ``thread_source == "subagent"``; the slot is that row's
     ``source.subagent.thread_spawn.agent_role`` and the tokens are the
     *last* ``token_count`` event (the counts are cumulative per thread).
+
+    Every subagent rollout found under *codex_home* is attributed to this
+    call: there is no ``parent_thread_id`` filtering, because the home is
+    built and destroyed per call and so contains one turn's children only.
+    Sharing a home across calls would silently over-count.
     """
     out: list[SubagentUsage] = []
     root = os.path.join(codex_home, "sessions")

@@ -3,10 +3,12 @@
 import json
 import os
 import shlex
+import tomllib
 
 import pytest
 
 from squid_game.providers.base import ToolContext
+from squid_game.providers.codex_cli import CodexCliProvider
 from squid_game.providers.codex_cli_agentic import (
     CodexCliAgenticProvider,
     build_agentic_command,
@@ -38,6 +40,19 @@ def test_command_keeps_multi_agent_and_hooks_and_drops_ephemeral():
     assert set(enabled) >= {"multi_agent", "hooks"}
     assert "-c" in cmd and "agents.max_concurrent_threads_per_session=2" in cmd
     assert cmd[-1] == "-"
+
+
+def test_command_does_not_ignore_the_per_call_user_config():
+    """``--ignore-user-config`` skips ``$CODEX_HOME/config.toml``.
+
+    That is the file this provider writes the ``[agents.<slot>]`` role
+    tables into, so the flag would silence every role. The per-call home
+    holds nothing else, so there is no user config to ignore.
+    """
+    cmd = build_agentic_command(codex_bin="codex", model="gpt-5.6-luna",
+                                reasoning_effort="medium", workdir="/w",
+                                instructions_file="/w/instructions.md")
+    assert "--ignore-user-config" not in cmd
 
 
 def test_command_carries_the_model_effort_workdir_and_instructions():
@@ -109,6 +124,27 @@ def test_agent_toml_escapes_newlines_in_the_prompt(tmp_path):
     # A TOML basic string holds the newline as an escape, never a raw break.
     assert "\\n" in toml
     assert toml.count("\n") == 3
+
+
+def test_agent_toml_parses_when_the_prompt_holds_emoji_and_arrows(tmp_path):
+    """``json.dumps`` defaults to ASCII, which breaks TOML on astral chars.
+
+    An emoji would come out as the surrogate pair ``\\uD83D\\uDE00``;
+    ``tomllib`` rejects that, and the CLI would lose the role entirely.
+    The signal-game prompts carry ``→`` in every example line.
+    """
+    prompt = "You are clue-1. 😀\nEXAMPLE: red circle 1 → A"
+    ctx = ToolContext(slots_json={}, subagent_prompts={"clue-1": prompt})
+    home = write_codex_home(str(tmp_path / "w"), ctx, source_auth=None)
+    with open(os.path.join(home, "agents", "clue-1.toml"), "rb") as fh:
+        parsed = tomllib.load(fh)
+    assert parsed["developer_instructions"] == prompt
+    assert parsed["name"] == "clue-1"
+
+
+def test_the_non_agentic_path_is_the_parent_s_own_complete():
+    """The plain ``complete()`` must stay byte-for-byte the parent's."""
+    assert CodexCliAgenticProvider.complete is CodexCliProvider.complete
 
 
 STREAM = "\n".join(json.dumps(e) for e in [
