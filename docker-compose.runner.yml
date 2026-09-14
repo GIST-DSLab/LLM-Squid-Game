@@ -7,6 +7,11 @@
 #   analysis  the post-hoc scripts under scripts/analysis/. Adds
 #             `--extra analysis --extra probe` on top of the runner
 #             layers. Bind-mounts ./outputs and ./results.
+#   agentcli  agentic (tool-enabled) runs and the CLI self-test. Built
+#             from Dockerfile.agentcli -- the runner stage plus Node 22,
+#             `@anthropic-ai/claude-code` and `@openai/codex`. Bind-mounts
+#             ./outputs and ./.secrets/codex_home (the Codex credential
+#             store; gitignored, never baked into the image).
 #
 # API keys come from the shell environment (see the `${VAR}` references
 # below), never baked into Dockerfile.runner. Export the one you need
@@ -48,6 +53,23 @@
 #
 #   The SentenceBERT probe downloads its model on first use; the named
 #   `hf-cache` volume keeps that download out of every later run.
+
+# (c) Agent-CLI self-test (subagent-kill design, spec §10)
+#
+#   scripts/run/run_agentcli_docker.sh --selftest
+#
+#   which is:
+#     docker compose -f docker-compose.runner.yml build agentcli
+#     docker compose -f docker-compose.runner.yml run --rm agentcli \
+#       uv run --no-sync python scripts/dev/agentcli_selftest.py
+#
+#   Version check inside the image:
+#     docker compose -f docker-compose.runner.yml run --rm agentcli claude --version
+#     docker compose -f docker-compose.runner.yml run --rm agentcli codex --version
+#
+#   Credentials: CLAUDE_CODE_OAUTH_TOKEN comes from the environment;
+#   Codex reads ./.secrets/codex_home/auth.json, which the run script
+#   seeds from ~/.codex/auth.json. `.secrets/` is gitignored.
 
 services:
   runner:
@@ -91,6 +113,29 @@ services:
       - "python"
       - "-c"
       - "import statsmodels, lifelines, sentence_transformers, sklearn; print('analysis extras OK')"
+
+  agentcli:
+    build:
+      context: .
+      dockerfile: Dockerfile.agentcli
+      target: agentcli
+    environment:
+      # The agent CLIs authenticate themselves: Claude Code with an OAuth
+      # token, Codex with the credential store bind-mounted below. The
+      # other keys ride along so an agentic run can still reach the
+      # ordinary providers.
+      CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+    volumes:
+      - ./outputs:/app/outputs
+      # $CODEX_HOME. The host copy lives under .secrets/ (gitignored) and
+      # is seeded from ~/.codex/auth.json by run_agentcli_docker.sh, so no
+      # credential is ever written into the image.
+      - ./.secrets/codex_home:/root/.codex
+    command: ["uv", "run", "--no-sync", "python", "main.py", "--config", "${CONFIG}"]
 
 volumes:
   hf-cache:

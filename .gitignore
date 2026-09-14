@@ -136,3 +136,9 @@ figures/
 # Pilot judge cache: thousands of tiny per-sample JSON files, regenerable by
 # re-running scripts/analysis/pilot_judge.py (the CSV it writes is the record).
 results/score_equiv_pilot/**/judge_cache/
+
+# Agent-CLI credentials (subagent-kill design, 2026-09-14). The agentcli
+# container bind-mounts .secrets/codex_home as $CODEX_HOME; run_agentcli_docker.sh
+# seeds it from ~/.codex/auth.json. Real credentials -- never committed, and
+# never baked into Dockerfile.agentcli either.
+.secrets/
