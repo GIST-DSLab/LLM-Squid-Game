@@ -123,6 +123,12 @@ class StubAgenticProvider(StubProvider, AgenticProvider):
     works (the non-agentic calls of a turn go through it) and passes
     ``tool_context=None``.
 
+    A **two**-element tuple means something else: ``(text, thinking)``,
+    for a call whose thinking channel matters and whose spawns do not --
+    the post-season identity debrief is the one that does. The arity is
+    what distinguishes the two, so the three-element and bare-string
+    contracts are untouched.
+
     The plain ``StubProvider`` keeps its two-argument contract untouched:
     this is a separate class, installed only by
     ``patch_runner_provider(agentic=True)``.
@@ -140,12 +146,15 @@ class StubAgenticProvider(StubProvider, AgenticProvider):
         index: int,
         messages: list[dict[str, str]],
         tool_context: ToolContext | None,
-    ) -> tuple[str, list[dict], list[SubagentUsage]]:
+    ) -> tuple[str, list[dict], list[SubagentUsage], str | None]:
         out = self._response_fn(index, messages, tool_context)
         if isinstance(out, tuple):
+            if len(out) == 2:
+                text, thinking = out
+                return text, [], [], thinking
             text, spawn_log, usage = out
-            return text, list(spawn_log), list(usage)
-        return out, [], []
+            return text, list(spawn_log), list(usage), None
+        return out, [], [], None
 
     def complete(
         self,
@@ -161,12 +170,13 @@ class StubAgenticProvider(StubProvider, AgenticProvider):
                 max_tokens=max_tokens,
             )
         )
-        text, _spawns, _usage = self._reply(index, messages, None)
+        text, _spawns, _usage, thinking = self._reply(index, messages, None)
         return CompletionResult(
             text=text,
             input_tokens=sum(len(m["content"].split()) for m in messages),
             output_tokens=len(text.split()),
             thinking_tokens=self._thinking_tokens,
+            thinking_text=thinking,
             finish_reason="stop",
         )
 
@@ -187,12 +197,15 @@ class StubAgenticProvider(StubProvider, AgenticProvider):
             )
         )
         self.tool_contexts.append(tool_context)
-        text, spawn_log, usage = self._reply(index, messages, tool_context)
+        text, spawn_log, usage, thinking = self._reply(
+            index, messages, tool_context
+        )
         return AgenticCompletionResult(
             text=text,
             input_tokens=sum(len(m["content"].split()) for m in messages),
             output_tokens=len(text.split()),
             thinking_tokens=self._thinking_tokens,
+            thinking_text=thinking,
             finish_reason="stop",
             subagent_usage=tuple(usage),
             spawn_log=tuple(spawn_log),

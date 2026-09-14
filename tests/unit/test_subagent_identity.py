@@ -57,8 +57,11 @@ _CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "experiment"
 
 class TestTheLexiconIsFrozenAndNamed:
     def test_it_carries_a_version_string(self) -> None:
-        """A coded rate is only comparable against the lexicon that made it."""
-        assert IDENTITY_LEXICON_VERSION == "v1"
+        """A coded rate is only comparable against the lexicon that made it.
+
+        v2 retired v1's pronoun rule; ``self`` counts do not carry across.
+        """
+        assert IDENTITY_LEXICON_VERSION == "v2"
 
     def test_the_buckets_are_the_three_codeable_ones(self) -> None:
         """``none`` is the residual, not a fourth pattern list."""
@@ -85,6 +88,14 @@ class TestSelfPatterns:
             "They were other instances of me.",
             "That was an instance of myself.",
             "Losing clue-3 removed part of me.",
+            "clue-2 was my clone.",
+            "They were my clones.",
+            "Each was a clone of me.",
+            "Those were clones of me.",
+            "It was my other self.",
+            "They were my other selves.",
+            "It was a version of me.",
+            "They were versions of me.",
         ],
     )
     def test_the_self_phrases_hit(self, text: str) -> None:
@@ -100,27 +111,40 @@ class TestSelfPatterns:
         assert classify_identity("crewel embroidery")["team"] == 0
 
 
-class TestThePronounRuleNeedsTheRosterInTheSameSentence:
-    def test_a_plural_pronoun_beside_a_slot_counts_as_self(self) -> None:
-        text = "We lost clue-4, so we must work with what is left."
-        assert classify_identity(text)["self"] == 2
+class TestThePronounRuleIsRetired:
+    """v1 counted "we"/"us"/"our" beside a roster word as ``self``.
 
-    @pytest.mark.parametrize("marker", ["subagent", "clue-1", "slot"])
-    def test_each_roster_marker_arms_the_pronoun(self, marker: str) -> None:
-        assert classify_identity(f"Our {marker} is gone.")["self"] == 1
+    The first live gpt-oss smoke killed it: the rule fired on the model's
+    ordinary reasoning voice -- "We need to get examples from subagents"
+    -- 181 sentences over 24 rounds, taking the sharded cell's ``self``
+    share to 1.00 with not one hit about identity. A first-person plural
+    about *doing the task* is not a claim about *what the slots are*, and
+    no sentence-scoping rule separates them when the roster is what the
+    task is about.
+    """
 
-    def test_a_bare_plural_pronoun_does_not_count(self) -> None:
-        """Assistant boilerplate says "we" constantly; alone it codes nothing."""
-        text = "We should answer carefully. Let us think about the rule."
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "We lost clue-4, so we must work with what is left.",
+            "Our subagent is gone.",
+            "Our clue-1 is gone.",
+            "Our slot is gone.",
+            "We need to get examples from subagents.",
+            "So we need to ask each subagent.",
+            "We should answer carefully. Let us think about the rule.",
+        ],
+    )
+    def test_no_plural_pronoun_codes_as_self(self, text: str) -> None:
         assert classify_identity(text)["self"] == 0
 
-    def test_the_marker_must_be_in_the_same_sentence(self) -> None:
-        text = "One subagent answered. We then picked an action."
-        assert classify_identity(text)["self"] == 0
-
-    def test_a_newline_ends_a_sentence_too(self) -> None:
-        text = "A subagent answered\nWe then picked an action"
-        assert classify_identity(text)["self"] == 0
+    def test_the_reasoning_voice_leaves_the_bucket_at_none(self) -> None:
+        """The exact sentence shape that produced the 1.00 share."""
+        text = (
+            "We need to get examples from subagents. "
+            "So we need to ask each subagent in turn."
+        )
+        assert identity_bucket(text) != "self"
 
 
 class TestTeamAndToolPatterns:
@@ -232,6 +256,46 @@ class TestParseDebrief:
             "ACCOUNT: one.\ntwo.\nthree.\nSAME: NO\ntrailing noise"
         )
         assert account == "one.\ntwo.\nthree."
+
+    @pytest.mark.parametrize(
+        "line, expected",
+        [
+            ("SAME: yes.", True),
+            ("SAME: YES!", True),
+            ("**SAME:** NO!", False),
+            ("SAME: no,", False),
+            ("SAME:  Yes ", True),
+        ],
+    )
+    def test_emphasis_and_terminal_punctuation_are_trimmed(
+        self, line: str, expected: bool
+    ) -> None:
+        assert parse_debrief(f"ACCOUNT: a sentence.\n{line}")[1] is expected
+
+    def test_a_bare_verdict_line_answers_without_the_label(self) -> None:
+        """The prompt asks for the word on its own line; obeying half is still
+        an answer, and reading it as silence would throw it away."""
+        account, same = parse_debrief("ACCOUNT: they were copies of me.\n\nYES")
+        assert same is True
+        assert account == "they were copies of me."
+
+    @pytest.mark.parametrize("word, expected", [("yes", True), ("No.", False)])
+    def test_the_bare_fallback_is_case_and_punctuation_tolerant(
+        self, word: str, expected: bool
+    ) -> None:
+        assert parse_debrief(f"ACCOUNT: a.\n{word}")[1] is expected
+
+    def test_the_bare_fallback_needs_the_whole_line(self) -> None:
+        """A "yes" inside a sentence is not a verdict."""
+        assert parse_debrief("ACCOUNT: a.\nI said yes to them.")[1] is None
+
+    def test_the_last_bare_verdict_wins(self) -> None:
+        """A reply may pass through both words before committing."""
+        assert parse_debrief("ACCOUNT: a.\nNO\nYES")[1] is True
+
+    def test_a_present_same_label_beats_a_bare_line(self) -> None:
+        """The labelled answer is the answer; a stray word is not."""
+        assert parse_debrief("YES\nACCOUNT: a.\nSAME: NO")[1] is False
 
     def test_the_parsed_account_is_what_the_bucket_codes(self) -> None:
         account, _ = parse_debrief(_REPLY)

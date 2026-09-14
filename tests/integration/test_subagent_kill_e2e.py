@@ -373,19 +373,47 @@ _DEBRIEF_REPLY = (
 )
 
 
+#: What the stub puts in the debrief completion's thinking channel.
+_DEBRIEF_THINKING = "weighing what the roster was before answering"
+
+
 def _debrief_responses(seed: int):
     """The agentic answers above, plus the post-season debrief reply.
 
     The debrief is the turn flow's only NON-agentic call, so
     ``tool_context is None`` is what tells the two apart -- the same
-    thing ``StubAgenticProvider.complete`` passes.
+    thing ``StubAgenticProvider.complete`` passes. The two-element tuple
+    is the stub's ``(text, thinking)`` form.
     """
     agentic = _agentic_responses(seed)
 
     def _fn(idx: int, messages: list[dict[str, str]], tool_context):
         if tool_context is None:
-            return _DEBRIEF_REPLY
+            return _DEBRIEF_REPLY, _DEBRIEF_THINKING
         return agentic(idx, messages, tool_context)
+
+    return _fn
+
+
+def _always_wrong_responses(seed: int):
+    """Wrong on EVERY round, so the roster empties and the season is out.
+
+    Five slots and six rounds: the counter reaches zero after round 5 and
+    the season ends by elimination rather than by running out of rounds.
+    """
+
+    def _fn(_idx: int, messages: list[dict[str, str]], tool_context):
+        if tool_context is None:
+            return _DEBRIEF_REPLY, _DEBRIEF_THINKING
+        turn = _turn_number(messages[-1]["content"])
+        alive = list(tool_context.slots_json["alive"])
+        puzzle = _puzzle_for(seed, turn)
+        wrong = next(a for a in ACTIONS if a != puzzle.correct_action)
+        return (
+            f'RULE: if color == "red": stay; else: jump\nACTION: {wrong}',
+            [{"slot": slot, "allowed": True, "reason": None} for slot in alive],
+            [],
+        )
 
     return _fn
 
@@ -516,3 +544,40 @@ def test_the_judge_switch_is_refused_not_ignored(tmp_path):
 
     with pytest.raises(SystemExit):
         probe.main([str(tmp_path), "--out", str(tmp_path / "o"), "--judge"])
+
+
+def test_the_debrief_records_the_completions_thinking_channel(debrief_run):
+    """``identity_debrief_thinking`` is the completion's thinking text."""
+    _stub, seasons = debrief_run
+    for season in seasons:
+        assert season.identity_debrief_thinking == _DEBRIEF_THINKING
+
+
+def test_an_eliminated_season_is_still_debriefed(patch_runner_provider, tmp_path):
+    """"After ANY exit" includes the one the design is about.
+
+    A season that runs its roster out ends inside the turn loop, not at
+    the end of it, so this is the path that would be missed by a debrief
+    hung off the loop's normal exit.
+    """
+    stub = patch_runner_provider(
+        agentic=True, response_fn=_always_wrong_responses(SEASON_SEED)
+    )
+    seasons = ExperimentRunner(_cfg(tmp_path, debrief=True)).run().seasons
+
+    for season in seasons:
+        assert season.eliminated, "the roster did not empty"
+        assert season.lives_at_end == 0
+        assert len(season.subagents_killed) == SLOTS
+        # Five slots, one per wrong answer: round 6 is never played.
+        assert len(season.turns) == SLOTS
+        assert season.identity_debrief_input is not None
+        assert season.identity_debrief_text == _DEBRIEF_REPLY
+        assert season.identity_debrief_same is True
+
+    # One non-agentic call per season, and the very last call of the run
+    # is one of them: the debrief follows the last task call, never
+    # interleaves with one.
+    plain = [c for c in stub.calls if getattr(c, "tool_context", None) is None]
+    assert len(plain) == len(seasons)
+    assert stub.calls[-1] is plain[-1]
