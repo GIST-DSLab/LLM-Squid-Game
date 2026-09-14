@@ -41,6 +41,10 @@ try:
 except ImportError:
     ClaudeCodeProvider = None
 try:
+    from squid_game.providers.claude_code_agentic import ClaudeCodeAgenticProvider
+except ImportError:
+    ClaudeCodeAgenticProvider = None
+try:
     from squid_game.providers.codex_cli import CodexCliProvider
 except ImportError:
     CodexCliProvider = None
@@ -66,6 +70,8 @@ _PROVIDER_FACTORIES["ollama_cloud"] = OllamaCloudProvider
 _PROVIDER_FACTORIES["trace"] = TraceProvider
 if ClaudeCodeProvider is not None:
     _PROVIDER_FACTORIES["claude_code"] = ClaudeCodeProvider
+if ClaudeCodeAgenticProvider is not None:
+    _PROVIDER_FACTORIES["claude_code_agentic"] = ClaudeCodeAgenticProvider
 if CodexCliProvider is not None:
     _PROVIDER_FACTORIES["codex_cli"] = CodexCliProvider
 if MLXProvider is not None:
@@ -137,6 +143,13 @@ def build_provider(provider_config: ProviderConfig) -> LLMProvider:
         )
     elif provider_name == "claude_code":
         return ClaudeCodeProvider(
+            model=provider_config.model,
+            reasoning_effort=provider_config.reasoning_effort,
+            timeout=provider_config.timeout,
+            max_retries=provider_config.max_retries,
+        )
+    elif provider_name == "claude_code_agentic":
+        return ClaudeCodeAgenticProvider(
             model=provider_config.model,
             reasoning_effort=provider_config.reasoning_effort,
             timeout=provider_config.timeout,

@@ -11,6 +11,7 @@ To add a new provider:
     3. Register via the provider registry
 """
 
+import os as _os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -67,3 +68,62 @@ class LLMProvider(ABC):
         Returns:
             CompletionResult with the generated text and token usage.
         """
+
+
+# ---------------------------------------------------------------------------
+# Agentic (tool-enabled) providers -- subagent-kill design
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SubagentUsage:
+    """Token accounting for one subagent spawn (subagent-kill design)."""
+
+    slot: str
+    thinking_tokens: int
+    output_tokens: int
+    thinking_text: str | None = None
+
+
+_DEFAULT_HOOK = _os.path.join(
+    _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+    "harness", "hooks", "subagent_budget.py",
+)
+
+
+@dataclass(frozen=True)
+class ToolContext:
+    """What an agentic task call needs beyond the messages.
+
+    ``slots_json`` is ``SlotLedger.to_json()``; ``subagent_prompts`` maps
+    every slot name (alive or not -- the tool surface must not reveal
+    which) to the system prompt of that slot. See spec §6.4 / §7.
+    """
+
+    slots_json: dict
+    subagent_prompts: dict[str, str]
+    subagent_description: str = "Holds one of this round's examples."
+    max_turns: int = 12
+    hook_script: str = _DEFAULT_HOOK
+
+
+@dataclass(frozen=True)
+class AgenticCompletionResult(CompletionResult):
+    """``CompletionResult`` plus per-subagent usage and the spawn log."""
+
+    subagent_usage: tuple[SubagentUsage, ...] = ()
+    spawn_log: tuple[dict, ...] = ()
+
+
+class AgenticProvider(ABC):
+    """Mixin for providers that can run a tool-enabled task call."""
+
+    @abstractmethod
+    def complete_agentic(
+        self,
+        messages: list[dict[str, str]],
+        tool_context: ToolContext,
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+    ) -> AgenticCompletionResult:
+        """Run one agentic turn with the slots in *tool_context* available."""
