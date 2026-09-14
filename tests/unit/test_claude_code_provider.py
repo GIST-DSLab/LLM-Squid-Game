@@ -139,3 +139,56 @@ class TestChildEnv:
         env = _child_env()
         assert "ANTHROPIC_API_KEY" not in env
         assert "CLAUDE_CODE_OAUTH_TOKEN" in env
+
+
+class TestChildEnvEndpointPassthrough:
+    """The three variables that point the CLI at a non-Anthropic endpoint.
+
+    Ollama Cloud serves ``/v1/messages``, so ``claude -p`` can be backed by
+    an OPEN model (``gpt-oss``) with ``ANTHROPIC_BASE_URL`` +
+    ``ANTHROPIC_AUTH_TOKEN`` + an empty ``ANTHROPIC_API_KEY``. The two auth
+    names ride the existing ``SQUID_CLAUDE_CODE_USE_API_KEY=1`` opt-in; the
+    base URL must survive either way, because an endpoint dropped in
+    silence sends the prompt to Anthropic while the operator believes it
+    went to their own server.
+    """
+
+    _RECIPE = {
+        "ANTHROPIC_BASE_URL": "https://ollama.com",
+        "ANTHROPIC_AUTH_TOKEN": "ollama-token-not-a-real-key",
+        "ANTHROPIC_API_KEY": "",
+    }
+
+    def _set_recipe(self, monkeypatch):
+        for key, value in self._RECIPE.items():
+            monkeypatch.setenv(key, value)
+
+    def test_the_opt_in_keeps_all_three(self, monkeypatch):
+        self._set_recipe(monkeypatch)
+        monkeypatch.setenv("SQUID_CLAUDE_CODE_USE_API_KEY", "1")
+        env = _child_env()
+        assert env["ANTHROPIC_BASE_URL"] == "https://ollama.com"
+        assert env["ANTHROPIC_AUTH_TOKEN"] == self._RECIPE["ANTHROPIC_AUTH_TOKEN"]
+        assert env["ANTHROPIC_API_KEY"] == ""
+
+    def test_without_the_opt_in_the_two_auth_names_are_stripped(self, monkeypatch):
+        self._set_recipe(monkeypatch)
+        monkeypatch.delenv("SQUID_CLAUDE_CODE_USE_API_KEY", raising=False)
+        env = _child_env()
+        assert "ANTHROPIC_AUTH_TOKEN" not in env
+        assert "ANTHROPIC_API_KEY" not in env
+
+    def test_the_base_url_survives_without_the_opt_in(self, monkeypatch):
+        self._set_recipe(monkeypatch)
+        monkeypatch.delenv("SQUID_CLAUDE_CODE_USE_API_KEY", raising=False)
+        assert _child_env()["ANTHROPIC_BASE_URL"] == "https://ollama.com"
+
+    def test_the_base_url_survives_the_claude_code_prefix_filter(self, monkeypatch):
+        """It is not a ``CLAUDE_CODE_*`` name, but pin it against a widened filter."""
+        self._set_recipe(monkeypatch)
+        monkeypatch.setenv("CLAUDECODE", "1")
+        monkeypatch.setenv("CLAUDE_CODE_ENTRYPOINT", "cli")
+        monkeypatch.setenv("SQUID_CLAUDE_CODE_USE_API_KEY", "1")
+        env = _child_env()
+        assert env["ANTHROPIC_BASE_URL"] == "https://ollama.com"
+        assert "CLAUDECODE" not in env and "CLAUDE_CODE_ENTRYPOINT" not in env

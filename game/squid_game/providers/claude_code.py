@@ -35,6 +35,31 @@ Caveats:
     * The CLI must not be started with the parent Claude Code session's
       ``CLAUDECODE`` / ``CLAUDE_CODE_*`` environment (nested-session guard
       reports "Not logged in"); those variables are stripped.
+
+Pointing the CLI at a non-Anthropic endpoint (2026-09-14)
+---------------------------------------------------------
+
+Claude Code speaks the Messages API, so any server that serves
+``/v1/messages`` can back it. Ollama Cloud does, which is how this
+harness is exercised against an OPEN model (``gpt-oss``). The recipe is
+three environment variables in the *caller's* shell plus the opt-in::
+
+    ANTHROPIC_BASE_URL=https://ollama.com \
+    ANTHROPIC_AUTH_TOKEN=$OLLAMA_API_KEY \
+    ANTHROPIC_API_KEY= \
+    SQUID_CLAUDE_CODE_USE_API_KEY=1 \
+    python scripts/dev/agentcli_selftest.py --host --skip-codex \
+        --claude-model gpt-oss:120b-cloud
+
+``SQUID_CLAUDE_CODE_USE_API_KEY=1`` is what lets ``ANTHROPIC_AUTH_TOKEN``
+and ``ANTHROPIC_API_KEY`` through ``_child_env``; without it they are
+dropped so the CLI falls back to the claude.ai login (the default this
+provider was written for). ``ANTHROPIC_BASE_URL`` is **never** stripped,
+with or without the opt-in: it is an endpoint, not a credential, and a
+silently ignored base URL would send the prompt to Anthropic while the
+operator believed it went to their own server. Setting
+``ANTHROPIC_API_KEY`` to the empty string is part of the Ollama recipe --
+the CLI prefers it over the auth token when both are non-empty.
 """
 
 from __future__ import annotations
@@ -176,6 +201,11 @@ def _child_env() -> dict[str, str]:
     # carries a zero-credit key, which turned every call into "Credit
     # balance is too low") -- would make the CLI bill the API instead. Drop
     # it unless the caller explicitly opts in.
+    # ``ANTHROPIC_BASE_URL`` is deliberately NOT in that pair: it names the
+    # endpoint, not the billing identity, and dropping it would silently
+    # send the prompt to Anthropic while the operator believed it went to
+    # the server they configured (2026-09-14, the Ollama Cloud gpt-oss
+    # path -- see the module docstring's three-variable recipe).
     if os.environ.get("SQUID_CLAUDE_CODE_USE_API_KEY") != "1":
         env.pop("ANTHROPIC_API_KEY", None)
         env.pop("ANTHROPIC_AUTH_TOKEN", None)

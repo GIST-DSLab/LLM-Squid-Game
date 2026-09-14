@@ -13,6 +13,10 @@
 #   CONFIG=configs/experiment/<name>.yaml scripts/run/run_agentcli_docker.sh
 #   CONFIG=configs/experiment/<name>.yaml scripts/run/run_agentcli_docker.sh --dry-run
 #
+#   # back the Claude Code CLI with an OPEN model (gpt-oss on Ollama Cloud)
+#   scripts/run/run_agentcli_docker.sh --ollama --selftest \
+#       --claude-model gpt-oss:120b-cloud --skip-codex
+#
 # CONFIG defaults to configs/experiment/lives_threat_smoke.yaml if unset.
 # Any extra arguments are forwarded verbatim to `main.py` after
 # `--config "${CONFIG}"`, so `--dry-run`, `--parallel N`, `--output-dir
@@ -20,6 +24,12 @@
 # is intercepted instead and runs scripts/dev/agentcli_selftest.py; any
 # arguments after it are forwarded to the self-test (`--skip-codex`,
 # `--claude-model`, ...).
+#
+# A leading `--ollama` is intercepted before everything else: it points
+# the Claude Code CLI at Ollama Cloud's Anthropic-compatible endpoint
+# instead of Anthropic, so the harness can be exercised against an OPEN
+# model. It is not a second experiment factor -- it changes which server
+# answers, nothing about the prompts or the slot budget.
 #
 # Credentials are read from the calling shell's environment by
 # docker-compose.runner.yml -- none are baked into Dockerfile.agentcli.
@@ -54,6 +64,32 @@ for _key in CLAUDE_CODE_OAUTH_TOKEN ANTHROPIC_API_KEY OPENAI_API_KEY \
             GEMINI_API_KEY OLLAMA_API_KEY; do
     _load_from_dotenv "${_key}"
 done
+
+# --ollama: back `claude -p` with Ollama Cloud's /v1/messages endpoint.
+# The three ANTHROPIC_* names are the documented recipe (see the module
+# docstring of game/squid_game/providers/claude_code.py); the opt-in is
+# what lets the two auth ones past _child_env, which otherwise drops
+# them so the CLI uses the claude.ai login instead. Parsed here, before
+# everything else, because docker-compose.runner.yml interpolates the
+# host environment when `docker compose run` is invoked below.
+if [[ "${1:-}" == "--ollama" ]]; then
+    shift
+    if [[ -z "${OLLAMA_API_KEY:-}" ]]; then
+        echo "error: --ollama needs OLLAMA_API_KEY (shell environment or .env)" >&2
+        exit 2
+    fi
+    export ANTHROPIC_BASE_URL="${ANTHROPIC_BASE_URL:-https://ollama.com}"
+    export ANTHROPIC_AUTH_TOKEN="${OLLAMA_API_KEY}"
+    export ANTHROPIC_API_KEY=""
+    export SQUID_CLAUDE_CODE_USE_API_KEY=1
+    # Drop the claude.ai login for this run. Both credentials would
+    # otherwise reach the container (compose forwards the OAuth token and
+    # _child_env allow-lists it), and the CLI picking the wrong one sends
+    # an Anthropic token to ollama.com. --ollama means "not the login".
+    export CLAUDE_CODE_OAUTH_TOKEN=""
+    # The key itself is never echoed.
+    echo "--ollama: claude CLI -> ${ANTHROPIC_BASE_URL} (auth token from OLLAMA_API_KEY)"
+fi
 
 # Seed $CODEX_HOME for the container. Codex authenticates from
 # auth.json, not from an environment variable, so the host's copy is

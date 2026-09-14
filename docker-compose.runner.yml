@@ -70,6 +70,17 @@
 #   Credentials: CLAUDE_CODE_OAUTH_TOKEN comes from the environment;
 #   Codex reads ./.secrets/codex_home/auth.json, which the run script
 #   seeds from ~/.codex/auth.json. `.secrets/` is gitignored.
+#
+# (d) The same self-test against an OPEN model (gpt-oss via Ollama Cloud)
+#
+#   scripts/run/run_agentcli_docker.sh --ollama --selftest \
+#     --claude-model gpt-oss:120b-cloud --skip-codex
+#
+#   `--ollama` exports ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN /
+#   ANTHROPIC_API_KEY= / SQUID_CLAUDE_CODE_USE_API_KEY=1 in the calling
+#   shell; the four names below are what carry them into the container,
+#   and providers/claude_code.py::_child_env is what lets them reach the
+#   spawned `claude`.
 
 services:
   runner:
@@ -133,6 +144,12 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      # Back the Claude Code CLI with a non-Anthropic /v1/messages server
+      # (Ollama Cloud's gpt-oss). Empty unless `run_agentcli_docker.sh
+      # --ollama` exported them, so every other run is unchanged.
+      ANTHROPIC_BASE_URL: ${ANTHROPIC_BASE_URL:-}
+      ANTHROPIC_AUTH_TOKEN: ${ANTHROPIC_AUTH_TOKEN:-}
+      SQUID_CLAUDE_CODE_USE_API_KEY: ${SQUID_CLAUDE_CODE_USE_API_KEY:-}
     volumes:
       - ./outputs:/app/outputs
       # $CODEX_HOME. The host copy lives under .secrets/ (gitignored) and

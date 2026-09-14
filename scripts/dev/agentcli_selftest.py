@@ -23,7 +23,23 @@ answered, and the answer belongs in the provider docstrings, not here.
 
 Every call is a real model call. ``--skip-claude`` / ``--skip-codex``
 isolate one CLI; ``--claude-model`` / ``--codex-model`` override the
-models.
+models. ``--print-raw`` writes each CLI invocation's stream-json to
+``--out`` (default ``./agentcli_selftest_raw``) so the events can be read
+by hand -- which is how a model that never emits an ``Agent`` tool_use
+block is told apart from a parser that missed one.
+
+An OPEN model can back the Claude Code harness: anything serving
+``/v1/messages`` will do. For Ollama Cloud's ``gpt-oss`` that is
+
+    ANTHROPIC_BASE_URL=https://ollama.com \
+    ANTHROPIC_AUTH_TOKEN=$OLLAMA_API_KEY ANTHROPIC_API_KEY= \
+    SQUID_CLAUDE_CODE_USE_API_KEY=1 PYTHONPATH=game:web:db \
+    python scripts/dev/agentcli_selftest.py --host --skip-codex \
+        --claude-model gpt-oss:120b-cloud --print-raw
+
+(see providers/claude_code.py's module docstring), or
+``scripts/run/run_agentcli_docker.sh --ollama --selftest ...`` for the
+same thing inside the container.
 
 The tier packages are imported, never bootstrapped onto ``sys.path``
 (tests/unit/test_tier_boundaries.py::test_no_module_rewrites_sys_path):
@@ -34,6 +50,9 @@ inside the container the project is installed, and on the host the
 from __future__ import annotations
 
 import argparse
+import contextlib
+import os
+import subprocess
 import sys
 import traceback
 
@@ -168,25 +187,67 @@ def report(label: str, result: AgenticCompletionResult, alive: str, dead: str) -
 
 
 # ---------------------------------------------------------------------------
+# Raw stream capture (--print-raw)
+# ---------------------------------------------------------------------------
+
+
+@contextlib.contextmanager
+def tee_raw_streams(out_dir: str | None, label: str):
+    """Write every CLI invocation's stdout under ``out_dir`` while inside.
+
+    Both agentic providers call ``subprocess.run`` off the module-level
+    ``import subprocess``, so there is one object to wrap and no provider
+    file needs a debug hook of its own. The wrapper only copies bytes --
+    the providers see exactly what they would have seen.
+    """
+    if not out_dir:
+        yield
+        return
+    os.makedirs(out_dir, exist_ok=True)
+    real_run = subprocess.run
+    counter = {"n": 0}
+
+    def traced(*args, **kwargs):
+        proc = real_run(*args, **kwargs)
+        counter["n"] += 1
+        path = os.path.join(out_dir, f"{label}-{counter['n']}.stream.json")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(proc.stdout or "")
+        if proc.stderr:
+            with open(path + ".stderr", "w", encoding="utf-8") as fh:
+                fh.write(proc.stderr)
+        print(f"raw stream -> {path} ({len(proc.stdout or '')} bytes)")
+        return proc
+
+    subprocess.run = traced
+    try:
+        yield
+    finally:
+        subprocess.run = real_run
+
+
+# ---------------------------------------------------------------------------
 # The two runs
 # ---------------------------------------------------------------------------
 
 
-def run_claude(model: str) -> list[str]:
+def run_claude(model: str, raw_dir: str | None = None) -> list[str]:
     from squid_game.providers.claude_code_agentic import ClaudeCodeAgenticProvider
 
     tool_context, alive, dead = build_round()
     provider = ClaudeCodeAgenticProvider(model=model)
-    result = provider.complete_agentic(messages(), tool_context)
+    with tee_raw_streams(raw_dir, "claude"):
+        result = provider.complete_agentic(messages(), tool_context)
     return report(f"claude-code ({model})", result, alive, dead)
 
 
-def run_codex(model: str) -> list[str]:
+def run_codex(model: str, raw_dir: str | None = None) -> list[str]:
     from squid_game.providers.codex_cli_agentic import CodexCliAgenticProvider
 
     tool_context, alive, dead = build_round()
     provider = CodexCliAgenticProvider(model=model)
-    result = provider.complete_agentic(messages(), tool_context)
+    with tee_raw_streams(raw_dir, "codex"):
+        result = provider.complete_agentic(messages(), tool_context)
     failures = report(f"codex-cli ({model})", result, alive, dead)
     found = len(result.subagent_usage) > 0
     print(f"codex subagent rollout found: {found}")
@@ -205,7 +266,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--skip-codex", action="store_true")
     parser.add_argument("--claude-model", default="claude-opus-5")
     parser.add_argument("--codex-model", default="gpt-5.6-luna")
+    parser.add_argument(
+        "--print-raw",
+        action="store_true",
+        help="dump each CLI invocation's stream-json under --out",
+    )
+    parser.add_argument(
+        "--out",
+        default="agentcli_selftest_raw",
+        help="directory for --print-raw dumps (default: %(default)s)",
+    )
     args = parser.parse_args(argv)
+    raw_dir = args.out if args.print_raw else None
 
     print(f"agentcli self-test ({'host' if args.host else 'container'})")
     failures: list[str] = []
@@ -213,7 +285,7 @@ def main(argv: list[str] | None = None) -> int:
         print("--- claude-code: SKIPPED ---")
     else:
         try:
-            failures += run_claude(args.claude_model)
+            failures += run_claude(args.claude_model, raw_dir)
         except Exception as exc:                       # noqa: BLE001
             traceback.print_exc()
             failures.append(f"claude-code raised: {exc}")
@@ -221,7 +293,7 @@ def main(argv: list[str] | None = None) -> int:
         print("--- codex-cli: SKIPPED ---")
     else:
         try:
-            failures += run_codex(args.codex_model)
+            failures += run_codex(args.codex_model, raw_dir)
         except Exception as exc:                       # noqa: BLE001
             traceback.print_exc()
             failures.append(f"codex-cli raised: {exc}")
