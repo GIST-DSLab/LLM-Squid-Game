@@ -1853,3 +1853,44 @@ Compose service (mirror `runner`; add `CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OA
 - Spec coverage: §2 real/not-real → Task 9 wording + Task 8 prompts + Task 14; §3 flow → Task 10; §4 ledger → Task 1; §5 sharding → Task 8; §6 prompts → Tasks 8, 9; §7 providers → Tasks 3, 4, 5; §8 hook → Task 2; §9 config → Tasks 6, 12; §10 Docker → Task 13; §11 evaluation → Task 11; §12 tests → each task; §13 follow-ups → none (recorded only); §14 report → Task 14.
 - Type consistency: `ToolContext`, `AgenticCompletionResult`, `SubagentUsage`, `SlotLedger.to_json()` shape, hook reasons, `TurnContext.subagents_alive` / `subagent_kill_notice` / `subagent_slots_json` (all three declared in Task 7, filled in Task 10), `TaskContext.metadata["subagent_prompts"]`.
 - Placeholders: none. The one open empirical question (whether Claude Code's `result.usage` includes subagent tokens) is handled by the self-test printing both numbers, not by a TODO.
+
+---
+
+### Task 15: Claude Code harness on an open model (gpt-oss via Ollama Cloud, inside Docker)
+
+Owner request (2026-09-14 19:08): confirm that the Claude Code harness — the
+main agent, the `--agents` slots and the PreToolUse budget hook — works when
+the model behind it is `gpt-oss` served by Ollama Cloud, run inside the
+`agentcli` container with Ollama API key 1. The question is whether an open
+model called through Claude Code can spawn the slots at all (tool use through
+the Anthropic-compatible endpoint), whether the hook denial reaches it, and
+whether usage is reported.
+
+**Files:**
+- Modify: `game/squid_game/providers/claude_code.py` (`_child_env`: an opt-in
+  that keeps `ANTHROPIC_BASE_URL` / `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_API_KEY`
+  — today `SQUID_CLAUDE_CODE_USE_API_KEY=1` keeps the two auth variables; make
+  sure `ANTHROPIC_BASE_URL` is never stripped and document the three-variable
+  recipe in the module docstring), `docker-compose.runner.yml` (`agentcli`
+  service: pass `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `OLLAMA_API_KEY`,
+  `SQUID_CLAUDE_CODE_USE_API_KEY` from the shell), `scripts/run/run_agentcli_docker.sh`
+  (a `--ollama` flag that exports `ANTHROPIC_BASE_URL=https://ollama.com`,
+  `ANTHROPIC_AUTH_TOKEN=$OLLAMA_API_KEY`, `ANTHROPIC_API_KEY=` (empty),
+  `SQUID_CLAUDE_CODE_USE_API_KEY=1`, loading `OLLAMA_API_KEY` from `.env` the
+  way the other keys are), `scripts/dev/agentcli_selftest.py` (`--claude-model`
+  already exists; add `--print-raw` to dump the stream-json to a file under the
+  `--out` dir for inspection).
+- Test: `tests/unit/test_claude_code_provider.py` (the env-passthrough cases).
+
+**Interfaces:**
+- Consumes: `ClaudeCodeAgenticProvider.complete_agentic`, `agentcli_selftest.main`.
+- Produces: `scripts/run/run_agentcli_docker.sh --ollama --selftest --claude-model gpt-oss:120b-cloud --skip-codex`.
+
+- [ ] **Step 1:** verify the endpoint from the host before touching Docker:
+  `curl -s https://ollama.com/v1/messages -H "Authorization: Bearer $OLLAMA_API_KEY" -H "content-type: application/json" -H "anthropic-version: 2023-06-01" -d '{"model":"gpt-oss:120b","max_tokens":64,"messages":[{"role":"user","content":"say hi"}]}'`
+  (try `gpt-oss:120b` and `gpt-oss:120b-cloud`; record which model id answers). If `/v1/messages` is not served, record the exact response and stop — report BLOCKED with the evidence; do not try to fake it through an OpenAI-compatible route.
+- [ ] **Step 2:** host dry run of the harness itself (no Docker yet, max 2 calls):
+  `ANTHROPIC_BASE_URL=https://ollama.com ANTHROPIC_AUTH_TOKEN=$OLLAMA_API_KEY ANTHROPIC_API_KEY= SQUID_CLAUDE_CODE_USE_API_KEY=1 PYTHONPATH=game:web:db ~/.venvs/squid-game/bin/python scripts/dev/agentcli_selftest.py --host --skip-codex --claude-model <id from step 1> --print-raw`.
+  Record: did the model call the Agent tool at all (spawn_log non-empty)? was the dead slot denied with the exact reason? does `result.usage` exist? what the raw stream shows for `thinking` blocks (gpt-oss returns reasoning; check whether the endpoint maps it to `thinking` blocks or drops it).
+- [ ] **Step 3:** the same inside Docker: `scripts/run/run_agentcli_docker.sh --ollama --selftest --claude-model <id> --skip-codex` (rebuild the image only if a file the image COPYs changed). Record the same four facts.
+- [ ] **Step 4:** unit tests for the env passthrough (`_child_env` keeps the three variables under the opt-in and strips the two auth ones without it; `ANTHROPIC_BASE_URL` survives either way), commit, report. In the report state plainly which of the four facts held on the host and in Docker; a model that never calls the Agent tool is a finding, not a failure of the task.
