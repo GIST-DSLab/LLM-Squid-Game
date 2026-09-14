@@ -36,8 +36,14 @@ def test_command_keeps_multi_agent_and_hooks_and_drops_ephemeral():
     disabled = [cmd[i + 1] for i, a in enumerate(cmd) if a == "--disable"]
     assert "shell_tool" in disabled and "unified_exec" in disabled
     assert "multi_agent" not in disabled and "hooks" not in disabled
+    # The code-mode host serves the spawn tools on code_mode_only models
+    # (gpt-5.6-*); disabling it takes the whole tool router down and the
+    # model is offered no subagents at all (live gpt-5.6-luna, 2026-09-14).
+    # Left at the CLI's default -- neither disabled nor forced on.
+    assert "code_mode_host" not in disabled and "code_mode" not in disabled
     enabled = [cmd[i + 1] for i, a in enumerate(cmd) if a == "--enable"]
     assert set(enabled) >= {"multi_agent", "hooks"}
+    assert "code_mode_host" not in enabled
     assert "-c" in cmd and "agents.max_concurrent_threads_per_session=2" in cmd
     assert cmd[-1] == "-"
 

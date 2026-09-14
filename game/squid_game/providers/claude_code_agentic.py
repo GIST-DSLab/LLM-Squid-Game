@@ -114,6 +114,24 @@ def parse_agentic_stream(raw: str) -> AgenticCompletionResult:
     ``input.subagent_type``, so their text and thinking stay out of the
     main thread's. ``spawn_log`` records every attempt -- allowed and
     denied -- from the ``tool_result`` that came back.
+
+    A subagent event carries its usage at ``message.usage`` (verified
+    against claude-code 2.1.270 on 2026-09-14 by
+    ``scripts/dev/agentcli_selftest.py``), not at the top level where the
+    ``result`` event keeps its own -- reading only the latter recorded
+    every subagent as zero tokens. The top level is still read as a
+    fallback so a stream that puts it there is not lost. The event also
+    names its slot directly in a top-level ``subagent_type`` field, which
+    is used when the ``tool_use`` block that spawned it was not seen (a
+    truncated or resumed stream); the ``tool_use`` mapping stays primary
+    because it is what ties the usage to a specific spawn.
+
+    Token attribution (spec §7.1): the ``result`` event's usage is the
+    main thread's and is NOT reduced by the subagent totals -- the CLI
+    reports the parent session's own usage, and a subagent's tokens are
+    not folded into it. The two numbers are therefore additive, and
+    ``scripts/dev/agentcli_selftest.py`` prints them side by side on
+    every run so a CLI upgrade that changes this is caught.
     """
     text_parts: list[str] = []
     thinking_parts: list[str] = []
@@ -135,13 +153,13 @@ def parse_agentic_stream(raw: str) -> AgenticCompletionResult:
         parent = event.get("parent_tool_use_id")
         content = (event.get("message") or {}).get("content") or []
         if kind == "assistant" and parent:
-            slot = spawn_by_tool_use.get(parent)
+            slot = spawn_by_tool_use.get(parent) or event.get("subagent_type")
             if slot is None:
                 continue
             for block in content:
                 if block.get("type") == "thinking" and block.get("thinking"):
                     sub_thinking.setdefault(slot, []).append(block["thinking"])
-            u = event.get("usage") or {}
+            u = (event.get("message") or {}).get("usage") or event.get("usage") or {}
             if u:
                 # Accumulate, never overwrite: a slot may stream its usage
                 # over several events (and one slot may be spawned twice in

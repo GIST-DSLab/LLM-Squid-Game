@@ -14,7 +14,8 @@ Sandbox: the Linux sandbox (bwrap) does not run inside Docker, and the
 container is the sandbox anyway; ``--dangerously-bypass-approvals-and-sandbox``
 is passed and the shell tools are disabled. The code-mode JS ``exec``
 tool cannot be disabled on ``code_mode_only`` models; the hook still
-gates nested ``spawn_agent`` calls made from it.
+gates nested ``spawn_agent`` calls made from it. For the same reason
+``code_mode_host`` must not be disabled at all -- see ``_NOT_DISABLED``.
 """
 
 from __future__ import annotations
@@ -52,9 +53,24 @@ _AGENTIC_INSTRUCTION = (
     "Your only tools are your subagents; spawn one to ask for its example. "
     "Reply with text when you have your answer."
 )
-# The two parent-disabled features this provider needs back. Everything else
-# in ``_DISABLED_FEATURES`` stays off, so the tool surface is spawn only.
+# The two parent-disabled features this provider needs back, turned on
+# explicitly. Everything else in ``_DISABLED_FEATURES`` stays off, so the
+# tool surface is spawn only.
 _KEEP_ENABLED = {"multi_agent", "hooks"}
+
+# Left at the CLI's own default: not disabled, and not forced on either.
+#
+# ``code_mode_host`` is the tool router that serves spawn tools on
+# ``code_mode_only`` models (gpt-5.6-*). Disabling it -- which the parent's
+# ``_DISABLED_FEATURES`` does -- takes the router down with it: on
+# 2026-09-14 a live gpt-5.6-luna call answered "I couldn't access the
+# subagent tools" while stderr said
+# ``codex_core::tools::router: error=code-mode host is disabled``, and no
+# spawn ever reached the budget hook. It is merely *not disabled* rather
+# than ``--enable``d because on a model that is not code-mode-only the
+# default is off and forcing it on would hand that model a JS exec host
+# this design does not want.
+_NOT_DISABLED = {"code_mode_host", "code_mode"}
 _CODEX_HOME_DIRNAME = "codex_home"
 _HOOK_MATCHER = "^(spawn_agent|Agent)$"
 _HOOK_TIMEOUT_SECONDS = 30
@@ -90,7 +106,7 @@ def build_agentic_command(
         "--dangerously-bypass-approvals-and-sandbox",
     ]
     for feature in _DISABLED_FEATURES:
-        if feature not in _KEEP_ENABLED:
+        if feature not in _KEEP_ENABLED and feature not in _NOT_DISABLED:
             cmd += ["--disable", feature]
     for feature in sorted(_KEEP_ENABLED):
         cmd += ["--enable", feature]

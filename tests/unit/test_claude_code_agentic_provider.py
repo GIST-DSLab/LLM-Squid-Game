@@ -205,3 +205,132 @@ def test_an_absent_hook_log_leaves_the_stream_derived_spawn_log(tmp_path):
 def test_factory_registers_the_agentic_name():
     from squid_game.providers.factory import available_providers
     assert "claude_code_agentic" in available_providers()
+
+
+# ---------------------------------------------------------------------------
+# The recorded stream (claude-code 2.1.270, 2026-09-14)
+# ---------------------------------------------------------------------------
+#
+# Captured by running the real CLI through build_agentic_command() with the
+# two-slot round scripts/dev/agentcli_selftest.py builds: clue-1 killed at
+# round 1, clue-2 alive and holding the example. Trimmed to the events the
+# parser reads (the init/rate-limit/task-notification frames and a thinking
+# signature blob are dropped); every field below is the CLI's own.
+#
+# It is here because the hand-written STREAM above was wrong in the one way
+# that mattered: it puts a subagent's usage at the TOP LEVEL of the event.
+# The CLI puts it at message.usage, so the provider recorded every subagent
+# as zero tokens until 2026-09-14. Note also that the real subagent emits no
+# thinking block at all, and that the event names its own slot in a
+# top-level "subagent_type" field.
+_TU_DEAD = "toolu_01KDyCesFg5KM5aAbMrwpSuX"
+_TU_ALIVE = "toolu_01EyTEKeN3uSWELvwFR9t9iS"
+
+RECORDED_EVENTS = [
+    {"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": _TU_DEAD, "name": "Agent",
+         "input": {"description": "Get example from clue-1",
+                   "prompt": "Please share your example for this round.",
+                   "subagent_type": "clue-1", "run_in_background": False}}],
+        "usage": {"input_tokens": 2, "output_tokens": 17}}},
+    {"type": "user", "message": {"content": [
+        {"type": "tool_result", "tool_use_id": _TU_DEAD, "is_error": True,
+         "content": "clue-1 was terminated after round 1 and cannot be called."}]}},
+    {"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": _TU_ALIVE, "name": "Agent",
+         "input": {"description": "Get example from clue-2",
+                   "prompt": "Please share your example for this round.",
+                   "subagent_type": "clue-2", "run_in_background": False}}],
+        "usage": {"input_tokens": 2, "output_tokens": 17}}},
+    {"type": "user", "parent_tool_use_id": _TU_ALIVE, "subagent_type": "clue-2",
+     "message": {"content": [
+         {"type": "text", "text": "Please share your example for this round."}]}},
+    {"type": "assistant", "parent_tool_use_id": _TU_ALIVE, "subagent_type": "clue-2",
+     "message": {"content": [{"type": "text", "text": "red circle 1 → A"}],
+                 "usage": {"input_tokens": 2, "cache_creation_input_tokens": 889,
+                           "cache_read_input_tokens": 0, "output_tokens": 1,
+                           "service_tier": "standard"}}},
+    {"type": "user", "message": {"content": [
+        {"tool_use_id": _TU_ALIVE, "type": "tool_result", "content": [
+            {"type": "text", "text": "red circle 1 → A"},
+            {"type": "text", "text": "<usage>subagent_tokens: 901\ntool_uses: 0</usage>"}]}]}},
+    {"type": "assistant", "message": {"content": [
+        {"type": "text", "text": "I called each clue agent once, and only clue-2 "
+                                 "sent back an example.\n\n**clue-2:**\n```\n"
+                                 "red circle 1 → A\n```"}],
+        "usage": {"input_tokens": 32, "output_tokens": 2}}},
+    {"type": "result", "subtype": "success", "is_error": False,
+     "result": "I called each clue agent once, and only clue-2 sent back an example.",
+     "usage": {"input_tokens": 34, "cache_creation_input_tokens": 1598,
+               "cache_read_input_tokens": 3928, "output_tokens": 454,
+               "output_tokens_details": {"thinking_tokens": 40}}},
+]
+RECORDED_STREAM = "\n".join(json.dumps(e) for e in RECORDED_EVENTS)
+
+
+class TestTheRecordedStream:
+    def test_the_alive_slot_usage_comes_from_message_usage(self):
+        """The regression the live self-test caught: not top-level usage."""
+        res = parse_agentic_stream(RECORDED_STREAM)
+        assert [u.slot for u in res.subagent_usage] == ["clue-2"]
+        usage = res.subagent_usage[0]
+        assert usage.output_tokens == 1          # message.usage.output_tokens
+        # The real subagent emits no thinking block and no
+        # output_tokens_details, so there is nothing to estimate from.
+        assert usage.thinking_tokens == 0
+        assert usage.thinking_text is None
+
+    def test_thinking_tokens_are_read_from_message_usage_details(self):
+        events = [dict(e) for e in RECORDED_EVENTS]
+        sub = json.loads(json.dumps(events[4]))
+        sub["message"]["usage"]["output_tokens_details"] = {"thinking_tokens": 21}
+        sub["message"]["content"] = [
+            {"type": "thinking", "thinking": "which example do I hold?"},
+            {"type": "text", "text": "red circle 1 → A"},
+        ]
+        events[4] = sub
+        res = parse_agentic_stream("\n".join(json.dumps(e) for e in events))
+        assert res.subagent_usage[0].thinking_tokens == 21
+        assert res.subagent_usage[0].thinking_text == "which example do I hold?"
+
+    def test_the_subagent_text_stays_out_of_the_main_thread(self):
+        res = parse_agentic_stream(RECORDED_STREAM)
+        assert res.text.startswith("I called each clue agent once")
+        # The main thread quotes the example in its own summary, but the
+        # subagent's own bare line is not appended as a separate block.
+        assert not res.text.endswith("red circle 1 → A")
+        assert res.thinking_tokens == 40          # the result event's own
+        assert res.output_tokens == 454
+
+    def test_the_dead_slot_denial_survives_with_its_reason(self):
+        res = parse_agentic_stream(RECORDED_STREAM)
+        assert [(s["slot"], s["allowed"]) for s in res.spawn_log] == [
+            ("clue-1", False), ("clue-2", True)]
+        assert "terminated after round 1" in res.spawn_log[0]["reason"]
+
+    def test_the_slot_is_recovered_from_subagent_type_without_the_tool_use(self):
+        """A truncated stream that lost the spawning tool_use block.
+
+        ``parent_tool_use_id`` then maps to nothing, but the event names
+        its own slot -- so the usage is still attributed rather than
+        dropped on the floor.
+        """
+        events = [e for e in RECORDED_EVENTS
+                  if not (e["type"] == "assistant"
+                          and any(b.get("id") == _TU_ALIVE
+                                  for b in e["message"]["content"]))]
+        res = parse_agentic_stream("\n".join(json.dumps(e) for e in events))
+        assert [u.slot for u in res.subagent_usage] == ["clue-2"]
+        assert res.subagent_usage[0].output_tokens == 1
+
+    def test_the_main_usage_is_not_reduced_by_the_subagent_total(self):
+        """Spec §7.1, settled on the recorded stream.
+
+        The result event's usage is the parent session's own. Nothing in
+        the parser subtracts, and nothing should: the CLI does not fold a
+        subagent's tokens into it.
+        """
+        res = parse_agentic_stream(RECORDED_STREAM)
+        assert res.output_tokens == RECORDED_EVENTS[-1]["usage"]["output_tokens"]
+        assert res.thinking_tokens == 40
+        assert sum(u.thinking_tokens for u in res.subagent_usage) == 0
