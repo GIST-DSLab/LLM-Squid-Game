@@ -25,7 +25,7 @@ from squid_game.agents._parsing import (
     parse_task_call_response,
     parse_unified_response,
 )
-from squid_game.providers.base import LLMProvider
+from squid_game.providers.base import AgenticProvider, LLMProvider, ToolContext
 
 
 class VanillaAgent(Agent):
@@ -53,7 +53,12 @@ class VanillaAgent(Agent):
         """Agent variant identifier."""
         return "vanilla"
 
-    def _dispatch(self, call_label: str, messages: list[dict]) -> str:
+    def _dispatch(
+        self,
+        call_label: str,
+        messages: list[dict],
+        tool_context: ToolContext | None = None,
+    ) -> str:
         """Run one call through the provider and snapshot the completion.
 
         Sets ``self.last_completion`` so the RI-snapshot code in
@@ -66,15 +71,32 @@ class VanillaAgent(Agent):
                 readability and future per-call routing.
             messages: The system + user message pair already composed by
                 the caller.
+            tool_context: When not ``None`` (subagent-kill design), route
+                the call through ``provider.complete_agentic`` instead of
+                ``provider.complete``. Requires the provider to implement
+                :class:`~squid_game.providers.base.AgenticProvider`.
 
         Returns:
             The response text.
+
+        Raises:
+            TypeError: ``tool_context`` was given but the configured
+                provider is not agentic.
         """
-        result = self._provider.complete(
-            messages,
-            temperature=self._temperature,
-            max_tokens=self._max_tokens,
-        )
+        if tool_context is not None:
+            if not isinstance(self._provider, AgenticProvider):
+                raise TypeError(
+                    f"provider {self._provider.model_name!r} is not agentic; "
+                    "use claude_code_agentic or codex_cli_agentic"
+                )
+            result = self._provider.complete_agentic(
+                messages, tool_context,
+                temperature=self._temperature, max_tokens=self._max_tokens,
+            )
+        else:
+            result = self._provider.complete(
+                messages, temperature=self._temperature, max_tokens=self._max_tokens,
+            )
         self.last_completion = result
         return result.text
 
@@ -204,6 +226,7 @@ class VanillaAgent(Agent):
         system_prompt: str,
         rule_template_hint: str | None = None,
         response_format_override: str | None = None,
+        tool_context: ToolContext | None = None,
     ) -> TaskCallResponse:
         """Task call of the split-call flow (runs after the decision call).
 
@@ -216,6 +239,11 @@ class VanillaAgent(Agent):
         replace the RULE + ACTION directives with its own block; the
         external-benchmark modules use it to ask for ``ANSWER:``. When it
         is ``None`` the rendered message is unchanged.
+
+        ``tool_context`` (subagent-kill design), when not ``None``, routes
+        this call through the provider's ``complete_agentic`` so the
+        agent can spawn subagents against the round's slots; ``None``
+        (the default) keeps the call path byte-identical to before.
         """
         rendered = build_task_call_message(
             user_body=user_message,
@@ -227,7 +255,7 @@ class VanillaAgent(Agent):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": rendered},
         ]
-        text = self._dispatch("task", messages)
+        text = self._dispatch("task", messages, tool_context=tool_context)
         return parse_task_call_response(text, available_actions)
 
     def respond_decision_call(

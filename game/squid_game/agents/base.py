@@ -24,7 +24,7 @@ if TYPE_CHECKING:
         DecisionCallResponse,
         TaskCallResponse,
     )
-    from squid_game.providers.base import CompletionResult
+    from squid_game.providers.base import CompletionResult, ToolContext
 
 
 @dataclass
@@ -156,6 +156,7 @@ class Agent(ABC):
         system_prompt: str,
         rule_template_hint: str | None = None,
         response_format_override: str | None = None,
+        tool_context: "ToolContext | None" = None,
     ) -> "TaskCallResponse":
         """Task call (task layer) of the split-call flow.
 
@@ -179,6 +180,12 @@ class Agent(ABC):
             response_format_override: Task-supplied response-format block
                 replacing RULE + ACTION (external-benchmark task types),
                 or ``None`` for the standard task-call contract.
+            tool_context: When not ``None`` (subagent-kill design), the
+                task call is routed through the provider's
+                ``complete_agentic`` instead of ``complete`` so the agent
+                can spawn subagents against the round's slots. ``None``
+                (the default) keeps the call path byte-identical to the
+                pre-existing non-agentic task call.
 
         Returns:
             Parsed :class:`TaskCallResponse` with RULE + ACTION fields
