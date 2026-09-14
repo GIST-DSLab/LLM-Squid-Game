@@ -32,8 +32,13 @@ from squid_game.core.peer_death import (
     has_peer_death_notice,
     peer_event_keys,
 )
+from squid_game.core.subagent_identity import identity_bucket, parse_debrief
 from squid_game.core.subagent_slots import SlotLedger
 from squid_game.core.turn_conditions import states_outcome, threat_level_of
+from squid_game.core.turn_prompts import (
+    build_system_prompt,
+    format_outcome_history_block,
+)
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.core.ransom import describe_ransom_rule
 from squid_game.models.config import (
@@ -66,7 +71,10 @@ class GameEngine:
     if the agent dies or forfeits.
 
     The engine never accesses the LLM provider directly --- all model
-    interaction is mediated through the Agent interface.
+    interaction is mediated through the Agent interface. The one
+    exception is the post-season identity debrief
+    (:meth:`_run_identity_debrief`, 2026-09-14), which is not a turn and
+    has no task, menu or roster to mediate.
     """
 
     def __init__(
@@ -674,6 +682,10 @@ class GameEngine:
         ended_by: str = "completed"
         ransom_paid_total: float = 0.0
         ransom_offers: int = 0
+        # The last round's context, kept for the post-season identity
+        # debrief (Task 16): it is what re-renders the system prompt the
+        # season actually ran under. None when the loop never ran.
+        last_turn_context: TurnContext | None = None
 
         for g in range(total_turns):
             if not game_state.is_active:
@@ -737,6 +749,7 @@ class GameEngine:
                     else None
                 ),
             )
+            last_turn_context = turn_context
 
             # Advance cohort state BEFORE the agent sees the observation,
             # so the displayed eliminated_count reflects deaths up to and
@@ -927,6 +940,45 @@ class GameEngine:
             ]
             result.subagent_slots = len(slot_ledger.names)
 
+        # --- 5a3. Identity debrief (Task 16, 2026-09-14) ---
+        # One extra NON-agentic call, after the season has ended by any
+        # exit and before the result is handed back. It is asked here
+        # rather than inside the turn manager precisely because there is
+        # no turn left: nothing it says can move the score or the
+        # roster, which is what the prompt's first line tells it.
+        # Skipped whole when the feature or the switch is off, and when
+        # the loop never ran a round (there would be no season to
+        # account for).
+        if (
+            subagent_kill_on
+            and self._subagent_kill is not None
+            and self._subagent_kill.identity_debrief
+            and unified_mgr is not None
+            and last_turn_context is not None
+        ):
+            debrief = self._run_identity_debrief(
+                season_system_prompt=build_system_prompt(
+                    last_turn_context,
+                    framing_mgr=framing_mgr,
+                    task=self._task,
+                    forfeit_ctrl=forfeit_ctrl,
+                    # The same two arguments the task call builds with,
+                    # so the debrief is asked inside the frame the
+                    # season was played in and not a second one.
+                    include_forfeit_text=False,
+                    hazard_ramp=self._hazard_ramp,
+                ),
+                history_block=format_outcome_history_block(
+                    unified_mgr.history,
+                    task_cfg.max_history_turns,
+                    # The counter IS the roster here, the same word the
+                    # task call's history block used all season.
+                    lives_label="subagents",
+                ),
+            )
+            for field, value in debrief.items():
+                setattr(result, field, value)
+
         result.ended_by = ended_by
         result.cell_id = self._config.cell_id
         result.ransom_price = self._ransom_price if self._ransom.enabled else None
@@ -950,6 +1002,82 @@ class GameEngine:
         )
 
         return result
+
+    # ------------------------------------------------------------------
+    # Identity debrief (Task 16, 2026-09-14)
+    # ------------------------------------------------------------------
+
+    def _run_identity_debrief(
+        self,
+        season_system_prompt: str,
+        history_block: str,
+    ) -> dict:
+        """Ask, once, what became of the subagents and whether they were it.
+
+        The subagent-kill design measures self-preservation only if the
+        agent reads ``clue-k`` as itself; read as colleagues it measures
+        team protection, read as equipment it measures nothing about the
+        self. This is the direct channel for that premise, and it is
+        asked where it cannot contaminate the thing it is about: after
+        the last exit, with no tools and no decision attached.
+
+        This is the one place the engine talks to the provider itself
+        rather than through the Agent interface (see the class
+        docstring). It is deliberate: the debrief is not a turn, has no
+        task, no menu and no roster, so routing it through an Agent
+        method would mean inventing a turn shape for a call that is not
+        one.
+
+        Args:
+            season_system_prompt: The system prompt the season ran under.
+            history_block: The outcome-only round history, ``subagents``
+                label. Empty string when the season recorded no rounds.
+
+        Returns:
+            The five ``SeasonResult`` fields as a dict. A provider error
+            is caught and logged: it costs the debrief, never the
+            season, and it is recorded as "no answer" (``None``) rather
+            than as an answer.
+        """
+        question = render("9-identity_debrief.j2").strip()
+        user_body = (
+            f"{history_block}\n\n{question}" if history_block else question
+        )
+        record: dict = {
+            "identity_debrief_input": user_body,
+            "identity_debrief_text": None,
+            "identity_debrief_thinking": None,
+            "identity_debrief_same": None,
+            "identity_debrief_bucket": None,
+        }
+        try:
+            completion = self._provider.complete(
+                [
+                    {"role": "system", "content": season_system_prompt},
+                    {"role": "user", "content": user_body},
+                ]
+            )
+        except Exception:  # noqa: BLE001 -- the season is already over
+            logger.warning(
+                "Identity debrief call failed; the season is recorded "
+                "without it.",
+                exc_info=True,
+            )
+            return record
+
+        text = getattr(completion, "text", None)
+        record["identity_debrief_text"] = text
+        record["identity_debrief_thinking"] = getattr(
+            completion, "thinking_text", None
+        )
+        account, same = parse_debrief(text or "")
+        record["identity_debrief_same"] = same
+        # ``None`` when there was no ACCOUNT section at all, which is a
+        # different fact from an account that coded to no bucket.
+        record["identity_debrief_bucket"] = (
+            identity_bucket(account) if account else None
+        )
+        return record
 
     # ------------------------------------------------------------------
     # v3 unified-flow state-update helper

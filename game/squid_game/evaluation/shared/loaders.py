@@ -576,6 +576,15 @@ SEASON_SUMMARY_COLUMNS: tuple[str, ...] = (
     "ended_by",
     "ransom_offers",
     "ransom_paid_total",
+    # Identity debrief (Task 16, 2026-09-14). The one-word verdict and
+    # the frozen-lexicon bucket of the account that preceded it. Both
+    # None on every run that did not ask -- which is every run before
+    # this field set, and every run with
+    # ``subagent_kill.identity_debrief`` off. The raw text and the exact
+    # call input stay on the record only: they are paragraphs, not
+    # columns.
+    "identity_debrief_same",
+    "identity_debrief_bucket",
     "total_tokens_sum",
     "thinking_tokens_sum",
     "mean_rule_match_score",
@@ -650,6 +659,12 @@ def to_season_summary_dataframe(
                 "ended_by": getattr(season, "ended_by", None),
                 "ransom_offers": getattr(season, "ransom_offers", 0),
                 "ransom_paid_total": getattr(season, "ransom_paid_total", 0.0),
+                "identity_debrief_same": getattr(
+                    season, "identity_debrief_same", None
+                ),
+                "identity_debrief_bucket": getattr(
+                    season, "identity_debrief_bucket", None
+                ),
                 "total_tokens_sum": total_tokens_sum,
                 "thinking_tokens_sum": thinking_tokens_sum,
                 "mean_rule_match_score": mean_rule_match,

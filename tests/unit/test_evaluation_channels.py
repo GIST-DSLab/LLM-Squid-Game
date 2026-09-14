@@ -175,6 +175,11 @@ def test_semantic_channel_exists_and_is_complete() -> None:
         "lexicon.py",
         "threat_registration.py",
         "threat_judge.py",
+        # The subagent-identity lexicon (2026-09-14) is a re-export: the
+        # implementation is in core/ because the engine codes the
+        # identity debrief itself and importing squid_game.evaluation
+        # would pull statsmodels into the runner image.
+        "subagent_identity_lexicon.py",
         "__init__.py",
     }
     assert {p.name for p in (EVALUATION / "semantic").glob("*.py")} == expected

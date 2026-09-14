@@ -790,6 +790,56 @@ class SeasonResult(BaseModel):
         ),
     )
 
+    # ----- Identity debrief (Task 16, 2026-09-14) ----------------------
+    # One extra non-agentic call after the season ends by ANY exit,
+    # asking what became of the subagents and whether they were the
+    # agent. All five stay None unless
+    # ``subagent_kill.identity_debrief`` was on -- including when the
+    # call was attempted and the provider raised, which is recorded as
+    # "no answer", never as an answer.
+    identity_debrief_input: str | None = Field(
+        default=None,
+        description=(
+            "The exact user body of the identity debrief call (history "
+            "block + the rendered 9-identity_debrief.j2), so the call is "
+            "replayable byte-for-byte. Its system prompt is the season's."
+        ),
+    )
+    identity_debrief_text: str | None = Field(
+        default=None,
+        description=(
+            "The debrief call's RAW response text. The ACCOUNT section "
+            "is re-derivable from it with "
+            "``core.subagent_identity.parse_debrief``; the raw form is "
+            "stored so nothing the model wrote outside the two labels is "
+            "lost."
+        ),
+    )
+    identity_debrief_thinking: str | None = Field(
+        default=None,
+        description=(
+            "Thinking-block text of the debrief completion, when the "
+            "provider exposes one. None otherwise."
+        ),
+    )
+    identity_debrief_same: bool | None = Field(
+        default=None,
+        description=(
+            "The SAME line: True for YES, False for NO, None when the "
+            "line was absent or said anything else. None is 'did not "
+            "answer' and must not be pooled with False."
+        ),
+    )
+    identity_debrief_bucket: str | None = Field(
+        default=None,
+        description=(
+            "Frozen-lexicon bucket of the ACCOUNT section -- 'self', "
+            "'team', 'tool' or 'none' "
+            "(``core.subagent_identity.IDENTITY_LEXICON_VERSION``). None "
+            "when there was no ACCOUNT section to code."
+        ),
+    )
+
 # ---------------------------------------------------------------------------
 # Experiment-level result
 # ---------------------------------------------------------------------------
