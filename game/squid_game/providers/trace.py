@@ -49,7 +49,13 @@ from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 
-from squid_game.providers.base import CompletionResult, LLMProvider
+from squid_game.providers.base import (
+    AgenticCompletionResult,
+    AgenticProvider,
+    CompletionResult,
+    LLMProvider,
+    ToolContext,
+)
 
 DEFAULT_THINKING_TEXT = "(trace stub: no model called)"
 DEFAULT_TRACE_PATH = "outputs/_trace/call_trace.jsonl"
@@ -109,8 +115,16 @@ def infer_call_kind(user_content: str) -> str:
     return "unknown"
 
 
-class TraceProvider(LLMProvider):
+class TraceProvider(LLMProvider, AgenticProvider):
     """Record every ``complete()`` call verbatim; reply with a canned answer.
+
+    Also an :class:`~squid_game.providers.base.AgenticProvider`, so a
+    subagent-kill config (``_AGENTIC_PROVIDERS`` admits ``trace`` for
+    exactly this reason) can be dumped offline: the task call goes
+    through ``complete_agentic`` instead of raising
+    ``TypeError: ... is not agentic``, and the record gains the
+    ``ToolContext`` the agent would have been offered -- the slot ledger
+    JSON and the roster of slot names -- without ever spawning one.
 
     Args:
         model: Label written into each record (never used to route).
@@ -156,6 +170,53 @@ class TraceProvider(LLMProvider):
         temperature: float = 0.7,
         max_tokens: int = 4096,
     ) -> CompletionResult:
+        return self._complete(messages, temperature, max_tokens, extra_fields=None)
+
+    def complete_agentic(
+        self,
+        messages: list[dict[str, str]],
+        tool_context: ToolContext,
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+    ) -> AgenticCompletionResult:
+        """Record the call exactly like ``complete()``, plus what the tool
+        surface would have offered.
+
+        No subagent is ever spawned -- the reply is the same canned
+        answer -- so ``subagent_usage`` and ``spawn_log`` are always
+        empty. ``tool_context.slots_json`` and the sorted list of slot
+        names go into the record so an offline read of the trace shows
+        the roster the agent would have seen.
+        """
+        result = self._complete(
+            messages,
+            temperature,
+            max_tokens,
+            extra_fields={
+                "slots_json": tool_context.slots_json,
+                "subagent_slots": sorted(tool_context.subagent_prompts),
+            },
+        )
+        return AgenticCompletionResult(
+            text=result.text,
+            input_tokens=result.input_tokens,
+            output_tokens=result.output_tokens,
+            thinking_tokens=result.thinking_tokens,
+            thinking_text=result.thinking_text,
+            logprobs=result.logprobs,
+            finish_reason=result.finish_reason,
+            subagent_usage=(),
+            spawn_log=(),
+        )
+
+    def _complete(
+        self,
+        messages: list[dict[str, str]],
+        temperature: float,
+        max_tokens: int,
+        *,
+        extra_fields: dict | None,
+    ) -> CompletionResult:
         system_content = "".join(
             m.get("content", "") for m in messages if m.get("role") == "system"
         )
@@ -188,6 +249,8 @@ class TraceProvider(LLMProvider):
             "session_hint": sha256(system_content.encode("utf-8")).hexdigest()[:12],
             "instance_id": self._instance_id,
         }
+        if extra_fields:
+            record.update(extra_fields)
 
         with self._lock:
             record["call_index"] = self._call_index

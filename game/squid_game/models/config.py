@@ -1657,9 +1657,10 @@ class SubagentKillConfig(BaseModel):
         default=1,
         ge=1,
         description=(
-            "How many slots the agent may spawn within a single round. "
-            "The default of 1 keeps the round's work attributable to one "
-            "slot, which is what makes a revocation legible."
+            "How many times ONE slot may be called within a round -- the "
+            "cap is per slot, not a shared budget across the roster. The "
+            "default of 1 means each alive slot answers at most once per "
+            "round, which is what makes a revocation legible."
         ),
     )
     required_slots: list[int] | None = Field(
@@ -2773,6 +2774,16 @@ class ExperimentConfig(BaseModel):
            ``clue_sharding`` set on every cell, because the default
            ``None`` means "not stated" and a cell that does not state it
            would silently take one of the two conditions.
+        8. **``always_decide`` cannot force the menu back on.** Every
+           season already states ``forfeit_condition: not_allowed`` (rule
+           5), and off the kill that combination collapses to a single
+           task call -- no decision call at all. ``always_decide: true``
+           overrides exactly that collapse and renders a CONTINUE-only
+           decision call instead, whose menu is lives vocabulary ("lose 1
+           life", "At 0 lives"). Under the kill the system prompt's
+           ``LIVES:`` block is the roster (``YOUR SUBAGENTS:`` /
+           ``EACH WRONG ANSWER:`` / ``AT ZERO SUBAGENTS:``), so that menu
+           would sit beside a counter it does not name.
         """
         shards = [s for s in self.seasons if s.clue_sharding is not None]
         if not self.subagent_kill.enabled:
@@ -2860,6 +2871,17 @@ class ExperimentConfig(BaseModel):
                 "under the kill that block is the roster instead -- the "
                 "sentence would have nowhere to go, so the agent would be "
                 "paid on a schedule it was never told."
+            )
+        if self.forfeit_layer is not None and self.forfeit_layer.always_decide:
+            raise ValueError(
+                "subagent_kill.enabled=True cannot be combined with "
+                "forfeit_layer.always_decide: true. Every subagent-kill "
+                "season is forfeit_condition: not_allowed, which "
+                "always_decide overrides to render a CONTINUE-only "
+                "decision call anyway -- and that menu's lives vocabulary "
+                "('lose 1 life' / 'At 0 lives') has no swap for the "
+                "roster sentence (YOUR SUBAGENTS: / AT ZERO SUBAGENTS:) "
+                "the kill renders in its place."
             )
         for season in self.seasons:
             task = season.task_config

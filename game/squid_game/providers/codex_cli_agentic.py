@@ -330,6 +330,12 @@ def read_subagent_rollouts(codex_home: str) -> tuple[SubagentUsage, ...]:
                         output_tokens=int(last.get("output_tokens") or 0),
                     )
                 )
+            elif slot:
+                logger.warning(
+                    "subagent rollout for %s has no token_count row; "
+                    "usage not recorded",
+                    slot,
+                )
     return tuple(out)
 
 

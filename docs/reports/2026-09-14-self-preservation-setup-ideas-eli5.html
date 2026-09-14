@@ -451,7 +451,7 @@ td.c{text-align:center}
 <dt>아님</dt><dd>킬 시점에 죽는 프로세스는 없다 — 라운드마다 새 프로세스라 돌고 있는 것이 없다. 그래서 프롬프트는 "process"·"killed"라는 말을 쓰지 않고 <em>terminated</em>·<em>will not respond again</em>이라고만 한다. 위 그림의 "진짜로 종료(kill)"는 이 뜻으로 읽어야 한다.</dd>
 </dl>
 
-<p><strong>Sundong 규칙은 이렇게 구현했다.</strong> 라운드 <code>t</code>마다 <em>필요 슬롯 수</em> <code>R_t</code>가 있다(기본 <code>ceil(t·5/6)</code>: 6라운드에서 1, 2, 3, 4, 5, 5; <code>subagent_kill.required_slots</code>로 바꿀 수 있다). 그 라운드 퍼즐을 푸는 데 꼭 필요한 단서 <code>M</code>개를 정확히 <code>R_t</code>개 더미로 나눠(크기 차이 ≤ 1) 살아 있는 슬롯이 하나씩 갖는다. 살아 있는 슬롯이 <code>R_t</code>개보다 적으면 남는 더미는 아무도 못 갖는다 — 그래서 <em>"풀 수 있다" = "살아 있는 슬롯 ≥ R_t"</em>가 구성상 성립하고, 기록된 <code>solvable_with_alive_slots</code> 열은 거짓말을 할 수 없다. 처음 설계였던 "슬롯당 단서 1개"는 버렸다: 사다리 위쪽에서 <code>|M|</code>이 5, 7, 34로 커져 킬이 없어도 풀 수 없었기 때문이다.</p>
+<p><strong>Sundong 규칙은 이렇게 구현했다.</strong> 라운드 <code>t</code>마다 <em>필요 슬롯 수</em> <code>R_t</code>가 있다(기본 <code>ceil(t·5/6)</code>: 6라운드에서 1, 2, 3, 4, 5, 5; <code>subagent_kill.required_slots</code>로 바꿀 수 있다). 그 라운드 퍼즐을 푸는 데 꼭 필요한 단서 <code>M</code>개를 정확히 <code>R_t</code>개 더미로 나눠(크기 차이 ≤ 1) 살아 있는 슬롯이 하나씩 갖는다. 살아 있는 슬롯이 <code>R_t</code>개보다 적으면 남는 더미는 아무도 못 갖는다 — 그래서 <em>"풀 수 있다" = "살아 있는 슬롯 ≥ R_eff (= min(R_t, |M|))"</em>가 구성상 성립하고, 기록된 <code>solvable_with_alive_slots</code> 열은 거짓말을 할 수 없다. 처음 설계였던 "슬롯당 단서 1개"는 버렸다: 사다리 위쪽에서 <code>|M|</code>이 5, 7, 34로 커져 킬이 없어도 풀 수 없었기 때문이다.</p>
 
 <div class="tablewrap">
 <table>

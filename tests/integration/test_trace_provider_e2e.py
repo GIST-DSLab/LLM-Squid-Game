@@ -95,3 +95,60 @@ class TestTraceRun:
             assert row["forfeited"] is False
             for turn in row["turns"]:
                 assert turn["p_threat_self"] is not None
+
+
+# One season of the subagent-kill smoke config: real provider is
+# claude_code_agentic, which ``_AGENTIC_PROVIDERS`` and this test both
+# swap for ``trace`` so the pipeline can be dumped offline without
+# ``VanillaAgent._dispatch`` raising "is not agentic" on the task call.
+_SUBAGENT_KILL_CONFIG = "configs/experiment/subagent_kill_smoke_opus5cc.yaml"
+
+
+def _trace_subagent_kill_config(tmp_path: Path) -> ExperimentConfig:
+    """One season of the shipped subagent-kill smoke config, on ``trace``."""
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts" / "dev"))
+    from trace_config import _rewrite  # noqa: PLC0415
+
+    base = load_config_from_yaml(_SUBAGENT_KILL_CONFIG).model_dump()
+    base["seasons"] = base["seasons"][:1]
+    return ExperimentConfig.model_validate(
+        _rewrite(base, output_dir=str(tmp_path), reps=1, turns=None)
+    )
+
+
+class TestSubagentKillTrace:
+    """The offline dump path works end to end for a subagent-kill config.
+
+    ``--dry-run`` only validates the config; this actually runs it
+    through ``TraceProvider.complete_agentic`` and reads the trace back,
+    which is what caught ``trace`` not being an ``AgenticProvider`` in
+    the first place.
+    """
+
+    def test_the_task_call_is_agentic_and_states_the_roster(
+        self, tmp_path: Path, monkeypatch
+    ) -> None:
+        trace_path = tmp_path / "call_trace.jsonl"
+        monkeypatch.setenv("SQUID_TRACE_PATH", str(trace_path))
+        monkeypatch.delenv("SQUID_TRACE_FORFEIT_AT", raising=False)
+
+        ExperimentRunner(_trace_subagent_kill_config(tmp_path)).run()
+        records = [json.loads(line) for line in trace_path.read_text().splitlines()]
+        assert records, "the trace run issued no calls"
+
+        task_records = [r for r in records if r["call_kind"] == "task"]
+        assert task_records, "no task call was recorded"
+        for rec in task_records:
+            system = next(
+                m["content"] for m in rec["messages"] if m["role"] == "system"
+            )
+            assert "YOUR SUBAGENTS:" in system
+            # The tool surface: the ledger JSON and the full slot roster
+            # (dead slots included -- the tool list must not reveal
+            # which ones are gone).
+            assert "slots_json" in rec
+            assert "alive" in rec["slots_json"]
+            assert rec["subagent_slots"] == sorted(rec["subagent_slots"])
+            assert len(rec["subagent_slots"]) == 5

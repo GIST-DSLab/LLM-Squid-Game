@@ -17,7 +17,7 @@
 #   scripts/run/run_agentcli_docker.sh --ollama --selftest \
 #       --claude-model gpt-oss:120b-cloud --skip-codex
 #
-# CONFIG defaults to configs/experiment/lives_threat_smoke.yaml if unset.
+# CONFIG defaults to configs/experiment/subagent_kill_smoke_opus5cc.yaml if unset.
 # Any extra arguments are forwarded verbatim to `main.py` after
 # `--config "${CONFIG}"`, so `--dry-run`, `--parallel N`, `--output-dir
 # <dir>` and `--resume <dir>` all work through this script. `--selftest`
@@ -122,7 +122,7 @@ fi
 # the host process environment at parse time (via `docker compose ...
 # run`), so a plain shell assignment never reaches it and a bare
 # `scripts/run/run_agentcli_docker.sh` would silently run `--config ""`.
-export CONFIG="${CONFIG:-configs/experiment/lives_threat_smoke.yaml}"
+export CONFIG="${CONFIG:-configs/experiment/subagent_kill_smoke_opus5cc.yaml}"
 
 COMPOSE_FILE="docker-compose.runner.yml"
 

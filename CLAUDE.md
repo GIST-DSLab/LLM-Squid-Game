@@ -525,7 +525,7 @@ flagship 당근과 게임 규칙을 **조건 없이** 진술하고(`1-game_intro
   (2) 과제 콜이 **agentic**이 된다 — `claude -p --tools Agent --agents <슬롯 JSON>
   --settings <hook>` / `codex exec --enable multi_agent --enable hooks`, 본체의 유일한
   툴은 슬롯 호출이고 stdlib hook(`SQUID_SLOTS_FILE`)이 죽은 슬롯·미지의 이름·중첩
-  호출·라운드당 상한 초과를 **거부**한다(읽을 수 없는 입력도 거부 — fail-closed);
+  호출·슬롯당 라운드 상한 초과를 **거부**한다(읽을 수 없는 입력도 거부 — fail-closed);
   (3) **Sundong 규칙**: 라운드 `t`의 필요 슬롯 수 `R_t`(기본 `ceil(t·slots/total_turns)`,
   6라운드 → 1,2,3,4,5,5)만큼 **더미**로 꼭 필요한 단서 `M`을 나눠 살아 있는 슬롯이
   하나씩 갖는다(`R_eff = min(R_t, |M|)`); `solvable_with_alive_slots == (n_alive >= R_eff)`가
@@ -915,6 +915,11 @@ true`가 켜져 있는지 반드시 확인한다** (`N ≠ 10`에서 꺼져 있�
    닿지 않는다 — 설계상 추측만 남는 턴이다. `threshold`(= `R_eff`)와 `required_slots`
    (= `R_t`)는 다른 열이다(`|M| < R_t`면 갈린다). 거부된 호출(`subagent_spawns[].allowed
    == False`)은 죽은 슬롯을 부른 것과 없는 이름을 부른 것이 섞여 있으니 `slot`으로 가르라.
+   살아 있는 슬롯도 꼭 필요한 단서(`M`)가 다 나눠지고 나면 예시가 0개일 수 있다 — 그
+   라운드의 `R_eff`가 살아 있는 슬롯 수보다 작다는 뜻일 뿐이다. 그러니 모든 슬롯을
+   순회해 "예시 없음"을 반환한 슬롯을 세는 것은 그 슬롯이 살았는지를 알려줄 뿐,
+   그 슬롯이 꼭 필요했는지(`load-bearing`)나 `R_eff`를 알려주지 않는다. CoT 코딩에서
+   "빈 슬롯에 물어봤다"를 조작 탐지(rigging detection)의 증거로 읽지 마라.
 
 ### Legacy 6-Cell 2×3 Factorial (2026-04-22 canonical runs, `lives.enabled=false`)
 

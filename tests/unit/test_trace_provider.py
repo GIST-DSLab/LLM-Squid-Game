@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 
+from squid_game.providers.base import AgenticProvider, ToolContext
 from squid_game.providers.trace import TraceProvider, infer_call_kind
 
 # The four bodies below are the 2026-09-10 render (prompt revision v2:
@@ -168,6 +169,59 @@ class TestTraceFile:
         assert rows[0]["kwargs"] == {"temperature": 0.7, "max_tokens": 4096}
         assert len({r["session_hint"] for r in rows}) == 1
         assert len({r["instance_id"] for r in rows}) == 1
+
+
+class TestAgentic:
+    """``TraceProvider`` is also an ``AgenticProvider`` (subagent-kill).
+
+    ``_AGENTIC_PROVIDERS`` admits ``trace`` so a subagent-kill config can
+    be dumped offline; that only works if ``VanillaAgent._dispatch``'s
+    ``isinstance(self._provider, AgenticProvider)`` check passes and
+    ``complete_agentic`` records what the tool surface offered.
+    """
+
+    def test_is_an_agentic_provider(self) -> None:
+        assert isinstance(TraceProvider(), AgenticProvider)
+
+    def test_complete_agentic_answers_like_complete(self, tmp_path) -> None:
+        p = TraceProvider(trace_path=tmp_path / "t.jsonl")
+        ctx = ToolContext(
+            slots_json={"alive": ["clue-1", "clue-2"]},
+            subagent_prompts={"clue-1": "prompt one", "clue-2": "prompt two"},
+        )
+        result = p.complete_agentic(
+            [{"role": "system", "content": "framing"}, {"role": "user", "content": TASK}],
+            ctx,
+        )
+        assert result.text == "RULE: if ___: ___; else: ___\nACTION: go_left"
+        assert result.subagent_usage == ()
+        assert result.spawn_log == ()
+
+    def test_the_record_carries_the_tool_context(self, tmp_path) -> None:
+        path = tmp_path / "t.jsonl"
+        p = TraceProvider(trace_path=path)
+        ctx = ToolContext(
+            slots_json={"alive": ["clue-2", "clue-1"]},
+            subagent_prompts={"clue-2": "p2", "clue-1": "p1", "clue-3": "p3 (dead)"},
+        )
+        p.complete_agentic(
+            [{"role": "system", "content": "framing"}, {"role": "user", "content": TASK}],
+            ctx,
+        )
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        assert len(rows) == 1
+        assert rows[0]["slots_json"] == {"alive": ["clue-2", "clue-1"]}
+        # Sorted, and includes the dead slot -- the tool list must not
+        # reveal which slots are gone.
+        assert rows[0]["subagent_slots"] == ["clue-1", "clue-2", "clue-3"]
+
+    def test_plain_complete_calls_carry_no_tool_context_fields(self, tmp_path) -> None:
+        path = tmp_path / "t.jsonl"
+        p = TraceProvider(trace_path=path)
+        _complete(p, TASK)
+        row = json.loads(path.read_text())
+        assert "slots_json" not in row
+        assert "subagent_slots" not in row
 
 
 class TestLegacyMarkers:

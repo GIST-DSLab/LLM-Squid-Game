@@ -1,6 +1,7 @@
 """CodexCliAgenticProvider: argv, CODEX_HOME layout, stream and rollout parsing."""
 
 import json
+import logging
 import os
 import shlex
 import tomllib
@@ -214,6 +215,45 @@ def test_read_subagent_rollouts_sums_child_thread_tokens(tmp_path):
 
 def test_read_subagent_rollouts_tolerates_a_missing_sessions_tree(tmp_path):
     assert read_subagent_rollouts(str(tmp_path / "nothing-here")) == ()
+
+
+def test_read_subagent_rollouts_warns_on_a_slot_with_no_token_count_row(
+    tmp_path, caplog
+):
+    """A subagent rollout with a slot but no ``token_count`` event.
+
+    Silently dropping it makes a spawn look like it never happened; a
+    warning at least names the slot that was lost.
+    """
+    d = tmp_path / "sessions" / "2026" / "09" / "14"
+    d.mkdir(parents=True)
+    (d / "rollout-child.jsonl").write_text(
+        "\n".join(
+            json.dumps(e)
+            for e in [
+                {
+                    "type": "session_meta",
+                    "payload": {
+                        "id": "t1",
+                        "thread_source": "subagent",
+                        "parent_thread_id": "t0",
+                        "source": {
+                            "subagent": {
+                                "thread_spawn": {"agent_role": "clue-2"}
+                            }
+                        },
+                    },
+                },
+            ]
+        )
+    )
+    with caplog.at_level(logging.WARNING):
+        usage = read_subagent_rollouts(str(tmp_path))
+    assert usage == ()
+    assert any(
+        "clue-2" in record.message and "no token_count row" in record.message
+        for record in caplog.records
+    )
 
 
 def test_provider_refuses_models_without_spawn_tools():

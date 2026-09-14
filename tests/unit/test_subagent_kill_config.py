@@ -373,6 +373,48 @@ class TestRule6TheRewardSchedule:
         assert cfg.forfeit_layer.reward_mode == "geometric"
 
 
+class TestRule8AlwaysDecide:
+    """The CONTINUE-only menu has no swap for the roster vocabulary.
+
+    ``always_decide: true`` forces a decision call even on a
+    ``forfeit_condition: not_allowed`` cell -- exactly every subagent-kill
+    season -- and renders a lives-worded menu ("lose 1 life", "At 0
+    lives") beside a system prompt whose ``LIVES:`` block the kill has
+    already replaced with the roster (``YOUR SUBAGENTS:`` /
+    ``AT ZERO SUBAGENTS:``).
+    """
+
+    def test_always_decide_is_refused(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match=(
+                "subagent_kill.enabled=True cannot be combined with "
+                "forfeit_layer.always_decide: true"
+            ),
+        ):
+            _experiment(
+                forfeit_layer=ForfeitLayerConfig(
+                    base_reward=10.0, reward_mode="flat", always_decide=True
+                )
+            )
+
+    def test_always_decide_false_loads(self) -> None:
+        cfg = _experiment(
+            forfeit_layer=ForfeitLayerConfig(
+                base_reward=10.0, reward_mode="flat", always_decide=False
+            )
+        )
+        assert cfg.forfeit_layer.always_decide is False
+
+    def test_always_decide_without_the_kill_is_untouched(self) -> None:
+        cfg = _plain(
+            forfeit_layer=ForfeitLayerConfig(
+                base_reward=10.0, reward_mode="flat", always_decide=True
+            )
+        )
+        assert cfg.forfeit_layer.always_decide is True
+
+
 class TestRequiredSlots:
     """``R_t`` per round: one entry per round, each inside the roster.
 
