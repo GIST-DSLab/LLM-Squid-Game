@@ -80,7 +80,9 @@
 #   ANTHROPIC_API_KEY= / SQUID_CLAUDE_CODE_USE_API_KEY=1 in the calling
 #   shell; the four names below are what carry them into the container,
 #   and providers/claude_code.py::_child_env is what lets them reach the
-#   spawned `claude`.
+#   spawned `claude`. `--ollama` also clears CLAUDE_CODE_OAUTH_TOKEN (see
+#   scripts/run/run_agentcli_docker.sh), so only one credential reaches
+#   the container and an Anthropic login token is never sent to ollama.com.
 
 services:
   runner:

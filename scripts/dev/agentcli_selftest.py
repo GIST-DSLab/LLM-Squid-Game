@@ -24,9 +24,13 @@ answered, and the answer belongs in the provider docstrings, not here.
 Every call is a real model call. ``--skip-claude`` / ``--skip-codex``
 isolate one CLI; ``--claude-model`` / ``--codex-model`` override the
 models. ``--print-raw`` writes each CLI invocation's stream-json to
-``--out`` (default ``./agentcli_selftest_raw``) so the events can be read
-by hand -- which is how a model that never emits an ``Agent`` tool_use
-block is told apart from a parser that missed one.
+``--out`` so the events can be read by hand -- which is how a model that
+never emits an ``Agent`` tool_use block is told apart from a parser that
+missed one. ``--out`` is REQUIRED with ``--print-raw`` and is refused if
+it resolves inside this repository without being gitignored: a dump is a
+verbatim model transcript, and a directory with no default and no
+untracked landing spot cannot be swept into a commit by a broad
+``git add``.
 
 An OPEN model can back the Claude Code harness: anything serving
 ``/v1/messages`` will do. For Ollama Cloud's ``gpt-oss`` that is
@@ -191,6 +195,41 @@ def report(label: str, result: AgenticCompletionResult, alive: str, dead: str) -
 # ---------------------------------------------------------------------------
 
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def check_raw_out_dir(out_dir: str, repo_root: str = REPO_ROOT) -> str | None:
+    """The reason ``out_dir`` is an unsafe place for transcripts, else ``None``.
+
+    A stream-json dump is the model's verbatim output. Outside the
+    repository it cannot be committed at all; inside it, only a gitignored
+    path is safe, since a broad ``git add`` sweeps up everything else.
+    ``git check-ignore`` is the authority -- not a hand-rolled reading of
+    .gitignore -- and if git is not available the check is skipped rather
+    than guessed at (the caller is then trusted).
+    """
+    resolved = os.path.realpath(out_dir)
+    root = os.path.realpath(repo_root)
+    if os.path.commonpath([resolved, root]) != root:
+        return None                                   # outside the repository
+    try:
+        proc = subprocess.run(
+            ["git", "check-ignore", "-q", resolved],
+            cwd=root, capture_output=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None                                   # no git: accept
+    if proc.returncode == 0:
+        return None                                   # gitignored: safe
+    if proc.returncode != 1:
+        return None                                   # git could not decide
+    return (
+        f"--out {out_dir} resolves inside the repository ({resolved}) and is "
+        "not gitignored, so the stream-json dumps could be committed. Point "
+        "--out outside the repo (e.g. a temp directory) or at a gitignored path."
+    )
+
+
 @contextlib.contextmanager
 def tee_raw_streams(out_dir: str | None, label: str):
     """Write every CLI invocation's stdout under ``out_dir`` while inside.
@@ -273,10 +312,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--out",
-        default="agentcli_selftest_raw",
-        help="directory for --print-raw dumps (default: %(default)s)",
+        default=None,
+        help="directory for --print-raw dumps; required with --print-raw, and "
+             "refused if it resolves inside the repository without being "
+             "gitignored (there is no default on purpose)",
     )
     args = parser.parse_args(argv)
+    if args.print_raw and not args.out:
+        parser.error("--print-raw requires --out DIR (there is no default)")
+    if args.print_raw:
+        unsafe = check_raw_out_dir(args.out)
+        if unsafe:
+            parser.error(unsafe)
     raw_dir = args.out if args.print_raw else None
 
     print(f"agentcli self-test ({'host' if args.host else 'container'})")

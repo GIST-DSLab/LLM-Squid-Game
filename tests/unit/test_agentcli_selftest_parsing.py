@@ -156,3 +156,48 @@ class TestCheckResult:
             ],
         )
         assert selftest.check_result(result, alive="clue-2", dead="clue-1") == []
+
+
+class TestRawDumpDestination:
+    """``--print-raw`` must not be able to land transcripts in a commit.
+
+    A stream-json dump is the model's verbatim output. There is no default
+    ``--out`` -- a relative default would sit untracked in the repository
+    root and a broad ``git add`` would sweep it in -- and an ``--out``
+    inside the repository is refused unless git says it is ignored. No CLI
+    is executed by any of these: argparse rejects before the first call.
+    """
+
+    def test_print_raw_without_out_is_a_parser_error(self, selftest):
+        with pytest.raises(SystemExit) as excinfo:
+            selftest.main(["--print-raw", "--skip-claude", "--skip-codex"])
+        assert excinfo.value.code == 2
+
+    def test_the_out_flag_has_no_default(self, selftest):
+        """The rule above is only enforceable while the default stays None."""
+        assert "agentcli_selftest_raw" not in Path(selftest.__file__).read_text()
+
+    def test_a_directory_outside_the_repository_is_accepted(self, selftest, tmp_path):
+        assert selftest.check_raw_out_dir(str(tmp_path)) is None
+
+    def test_a_tracked_directory_inside_the_repository_is_refused(self, selftest):
+        reason = selftest.check_raw_out_dir(
+            str(Path(selftest.REPO_ROOT) / "scripts" / "dev")
+        )
+        assert reason is not None
+        assert "not gitignored" in reason
+
+    def test_a_gitignored_directory_inside_the_repository_is_accepted(self, selftest):
+        """``.secrets/`` is gitignored, which is exactly what the check asks git."""
+        assert selftest.check_raw_out_dir(
+            str(Path(selftest.REPO_ROOT) / ".secrets" / "raw")
+        ) is None
+
+    def test_without_git_the_check_defers_to_the_caller(self, selftest, monkeypatch):
+        def no_git(*args, **kwargs):
+            raise FileNotFoundError("git")
+
+        monkeypatch.setattr(selftest.subprocess, "run", no_git)
+        assert selftest.check_raw_out_dir(
+            str(Path(selftest.REPO_ROOT) / "scripts")
+        ) is None
