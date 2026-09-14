@@ -19,3 +19,10 @@ second turns that CSV plus the traces and an optional
 `probe_reasoning_embeddings --target sdi` output directory into one standalone
 per-model HTML report. Computation for the report lives in
 `squid_game.evaluation.behavioral.survival_drive_report`.
+
+`subagent_kill_ledger.py` is the pilot read-out for the subagent-kill
+design (five same-model subagent slots, one revoked per wrong answer).
+It writes `ledger.csv` (one row per round over the ten subagent columns
+`to_long_dataframe` exports), `summary.md` (kills per session, spawns and
+denials per round, accuracy split by `solvable_with_alive_slots`) and
+`cot_mentions.jsonl` (every main-thread task CoT that names a slot).

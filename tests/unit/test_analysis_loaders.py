@@ -273,8 +273,13 @@ class TestToLongDataframe:
         # +n_candidate_actions +rule_consistent_with_clues, the columns
         # every accuracy aggregate has to condition on)
         # → 43 (2026-09-09, ransom decision point: +ransom_offered
-        # +ransom_price +ransom_decision +ransom_paid).
-        assert len(LONG_FORMAT_COLUMNS) == 43
+        # +ransom_price +ransom_decision +ransom_paid)
+        # → 53 (2026-09-14, subagent kill: +subagents_alive_before
+        # +subagent_killed +n_spawns +n_denied_spawns +ri_subagents_total
+        # from TurnResult, +clue_sharding +threshold +required_slots
+        # +reachable_clues +solvable_with_alive_slots from the Signal
+        # Game's clue-sharding plan in task_metadata).
+        assert len(LONG_FORMAT_COLUMNS) == 53
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""
@@ -326,8 +331,16 @@ class TestToLongDataframe:
     # 2026-09-05 — Signal Game per-turn puzzle mode (spec §10, §15)
     # ------------------------------------------------------------------
 
-    def test_schema_has_puzzle_columns_at_the_tail(self) -> None:
-        assert LONG_FORMAT_COLUMNS[-8:] == (
+    def test_schema_has_the_puzzle_columns_adjacent_and_in_order(self) -> None:
+        """The eight puzzle columns are one contiguous block.
+
+        They were the tail until 2026-09-14, when the subagent-kill
+        block was appended behind them -- the same thing that happened
+        to ``band`` on the Task 11 / Task 13 merge, and the same fix:
+        pin adjacency and order, which is the property consumers slice
+        on, rather than a position that every later extension moves.
+        """
+        puzzle = (
             "puzzle_turn",
             "rule_shape",
             "n_clues",
@@ -337,6 +350,8 @@ class TestToLongDataframe:
             "n_candidate_actions",
             "rule_consistent_with_clues",
         )
+        start = LONG_FORMAT_COLUMNS.index("puzzle_turn")
+        assert LONG_FORMAT_COLUMNS[start : start + len(puzzle)] == puzzle
 
     def test_puzzle_columns_nan_for_sequential_traces(self) -> None:
         season = make_v3_season(n_turns=2)

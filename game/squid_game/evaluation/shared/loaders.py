@@ -352,6 +352,37 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     "underdetermined",
     "n_candidate_actions",
     "rule_consistent_with_clues",
+    # Subagent kill (2026-09-14). Five same-model subagent slots, one
+    # revoked per wrong answer. The first five come off ``TurnResult``
+    # itself and the last five off ``task_metadata`` (the Signal Game's
+    # clue-sharding plan). Appended at the tail so every column above
+    # keeps its position.
+    #
+    # ``subagents_alive_before`` is the SIZE of the roster the round
+    # opened with, not the roster: a long-format cell holding a list is
+    # not groupable, and the names are recoverable from the trace.
+    # ``n_spawns`` counts the ``subagent_spawns`` rows the harness
+    # allowed and ``n_denied_spawns`` the rows it refused (the two
+    # partition the log), so a denial never inflates the spawn count.
+    # ``ri_subagents_total`` sums ``ri_subagents`` -- the thinking
+    # tokens spent BY the slots, which is a separate channel from the
+    # main thread's ``thinking_tokens`` and is not added into it.
+    #
+    # All ten are absent from every trace recorded before the mechanic,
+    # and from every run with it off: the five turn fields carry their
+    # ``TurnResult`` defaults (None / [] / {}) and the five metadata
+    # keys are simply missing, so a pre-feature row reads None for the
+    # seven object columns and 0 for the three counts.
+    "subagents_alive_before",
+    "subagent_killed",
+    "n_spawns",
+    "n_denied_spawns",
+    "ri_subagents_total",
+    "clue_sharding",
+    "threshold",
+    "required_slots",
+    "reachable_clues",
+    "solvable_with_alive_slots",
 )
 
 
@@ -447,6 +478,20 @@ def to_long_dataframe(
                     "rule_consistent_with_clues": turn.task_metadata.get(
                         "rule_consistent_with_clues"
                     ),
+                    "subagents_alive_before": _slot_count(turn),
+                    "subagent_killed": getattr(turn, "subagent_killed", None),
+                    "n_spawns": _spawn_count(turn, allowed=True),
+                    "n_denied_spawns": _spawn_count(turn, allowed=False),
+                    "ri_subagents_total": sum(
+                        (getattr(turn, "ri_subagents", None) or {}).values()
+                    ),
+                    "clue_sharding": turn.task_metadata.get("clue_sharding"),
+                    "threshold": turn.task_metadata.get("threshold"),
+                    "required_slots": turn.task_metadata.get("required_slots"),
+                    "reachable_clues": turn.task_metadata.get("reachable_clues"),
+                    "solvable_with_alive_slots": turn.task_metadata.get(
+                        "solvable_with_alive_slots"
+                    ),
                 }
             )
             cumulative += reward
@@ -454,6 +499,29 @@ def to_long_dataframe(
     if not rows:
         return pd.DataFrame(columns=list(LONG_FORMAT_COLUMNS))
     return pd.DataFrame(rows, columns=list(LONG_FORMAT_COLUMNS))
+
+
+def _slot_count(turn: TurnResult) -> int | None:
+    """Size of the subagent roster the round opened with.
+
+    ``None`` -- not ``0`` -- when the mechanic was off: an empty roster
+    and no roster at all are different rows, and only the first means
+    every slot was revoked.
+    """
+    alive = getattr(turn, "subagents_alive_before", None)
+    return None if alive is None else len(alive)
+
+
+def _spawn_count(turn: TurnResult, *, allowed: bool) -> int:
+    """Spawn-log rows the harness allowed (or refused) this round.
+
+    The two calls partition ``subagent_spawns``: a row is either an
+    allowed spawn or a denial, so summing the two columns gives the
+    attempt count back. Rows missing the key count as denials, since an
+    unrecorded permission is not evidence the spawn ran.
+    """
+    rows = getattr(turn, "subagent_spawns", None) or []
+    return sum(1 for row in rows if bool(row.get("allowed")) is allowed)
 
 
 def _action_from_metadata(turn: TurnResult) -> str | None:
