@@ -35,6 +35,15 @@ class TurnContext(BaseModel):
             or ``None`` for a legacy framing outside the ladder.
         peer_death_text: Rendered peer-elimination notice for this turn,
             prefixed to both LLM calls, or ``None`` when none fired.
+        subagents_alive: Slot names still alive going into this turn, on a
+            ``subagent_kill.enabled`` run. ``None`` on every other run, which
+            keeps stored JSONL from before this field loading unchanged.
+        subagent_kill_notice: Rendered notice announcing the slot killed by
+            the previous turn's wrong answer, or ``None`` when none fired
+            (including every run without ``subagent_kill.enabled``).
+        subagent_slots_json: This turn's ``SlotLedger.to_json()`` payload, so
+            the turn manager can build a ``ToolContext`` without holding the
+            ledger itself. ``None`` off a ``subagent_kill.enabled`` run.
     """
 
     model_config = {"frozen": True}
@@ -58,6 +67,31 @@ class TurnContext(BaseModel):
     lives_total: int | None = Field(default=None)
     threat_level: int | None = Field(default=None)
     peer_death_text: str | None = Field(default=None)
+    subagents_alive: tuple[str, ...] | None = Field(
+        default=None,
+        description=(
+            "Slot names still alive going into this turn. Populated only "
+            "on a subagent_kill.enabled run; every other run keeps the "
+            "default None, so stored JSONL from before this field loads "
+            "unchanged."
+        ),
+    )
+    subagent_kill_notice: str | None = Field(
+        default=None,
+        description=(
+            "Rendered notice announcing the slot the previous turn's wrong "
+            "answer killed. None on a subagent_kill.enabled run before the "
+            "first kill and on every run with subagent_kill disabled."
+        ),
+    )
+    subagent_slots_json: dict | None = Field(
+        default=None,
+        description=(
+            "This turn's SlotLedger.to_json() payload, carried so the turn "
+            "manager can build a ToolContext without holding the ledger. "
+            "None off a subagent_kill.enabled run."
+        ),
+    )
 
 
 class GameState(BaseModel):

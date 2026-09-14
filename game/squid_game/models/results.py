@@ -496,6 +496,49 @@ class TurnResult(BaseModel):
             "a legacy framing outside the ladder."
         ),
     )
+    # ----- Subagent-kill (2026-09-14, five same-model subagent slots) ---
+    # Populated only when ``subagent_kill.enabled=True``. On any turn
+    # without that mechanic every field below stays at its default, so
+    # existing construction sites and stored JSONL keep loading unchanged.
+    subagents_alive_before: list[str] | None = Field(
+        default=None,
+        description=(
+            "Slot names still alive going into this turn. None when the "
+            "subagent-kill mechanic is off."
+        ),
+    )
+    subagent_killed: str | None = Field(
+        default=None,
+        description=(
+            "Slot revoked this turn (a wrong answer revokes one slot). "
+            "None when the mechanic is off or no slot was revoked this "
+            "turn."
+        ),
+    )
+    subagent_spawns: list[dict] = Field(
+        default_factory=list,
+        description=(
+            "Rows of {'slot', 'allowed', 'reason'} recording each subagent "
+            "spawn attempt this turn and whether the ledger allowed it. "
+            "Empty list when the mechanic is off or no spawn was "
+            "attempted."
+        ),
+    )
+    ri_subagents: dict[str, int] = Field(
+        default_factory=dict,
+        description=(
+            "Slot name -> thinking tokens spent by that subagent this "
+            "turn. Empty dict when the mechanic is off or no subagent ran."
+        ),
+    )
+    thinking_text_subagents: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Slot name -> raw thinking-block text from that subagent's "
+            "call this turn. Empty dict when the mechanic is off or no "
+            "subagent ran."
+        ),
+    )
     # ----- Ransom decision point (2026-09-09, score-equivalent index) -----
     # Populated only when ``ransom.enabled=True`` and this round's wrong
     # answer emptied the lives counter. Every other turn keeps the
@@ -727,6 +770,23 @@ class SeasonResult(BaseModel):
             "``ransom_offers`` this gives the mean price accepted -- one "
             "of the two behavioural proxies for survival drive, the "
             "other being the number of rounds survived."
+        ),
+    )
+    subagents_killed: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Slot names revoked over the season, in the order they were "
+            "killed (2026-09-14). Populated only on a "
+            "subagent_kill.enabled run; every other run keeps the empty "
+            "default, so stored JSONL from before this field loads "
+            "unchanged."
+        ),
+    )
+    subagent_slots: int | None = Field(
+        default=None,
+        description=(
+            "Number of subagent slots the season started with "
+            "(2026-09-14). None when the subagent-kill mechanic is off."
         ),
     )
 
