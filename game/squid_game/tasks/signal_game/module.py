@@ -1453,14 +1453,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         cell's slots simply hold nothing, which is what makes it the cell
         the threshold is read against.
 
-        WARNING: the two observations are NOT yet one block apart.
-        ``observation_sharded.j2`` ends with the "Write this round's rule in
-        one line..." sentence that spec 6.2 called the unchanged tail, but
-        ``observation_puzzle.j2`` has never carried it -- that sentence is
-        ``probe_puzzle.j2``, rendered as its own call. Until one of the two
-        templates moves, the sharded cell reads one instruction sentence the
-        control cell does not, which is a length and instruction difference
-        on top of where the examples live.
+        The two observations differ in the EXAMPLES block and nowhere else,
+        so the cells differ in where the examples live and in nothing else.
 
         ``turn_context.subagents_alive`` is ``None`` on a turn that predates
         the ledger (and on a task-module test that does not build one); every

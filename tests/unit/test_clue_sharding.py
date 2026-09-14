@@ -86,6 +86,49 @@ def test_observation_puzzle_is_byte_identical_without_the_alive_variable():
     assert "SUBAGENTS: Subagents alive: clue-1, clue-2." in with_line
 
 
+def test_the_two_cells_differ_only_in_the_examples_block():
+    """The sharded and control observations differ in EXAMPLES and nowhere else.
+
+    The design reads the threshold as sharded-minus-control, so any second
+    difference between the two observations — an extra instruction sentence,
+    a reordered header — is a second manipulation the subtraction cannot
+    remove. Spec §6.2 showed a closing "Write this round's rule in one line…"
+    line on the sharded template; that was an error in the spec (the sentence
+    is ``probe_puzzle.j2``, rendered as its own call), and this test is what
+    stops it coming back.
+    """
+    p = _puzzle()
+    shared = dict(
+        turn_number=5,
+        shape_line="if ___: ___ else: ___",
+        query=str(p.query),
+        actions_str="go_left, go_right, stay, jump",
+    )
+    alive_str = "clue-1, clue-2, clue-3"
+    sharded = render(
+        "tasks/signal_game/observation_sharded.j2",
+        subagents_alive_str=alive_str, **shared,
+    ).splitlines()
+    control = render(
+        "tasks/signal_game/observation_puzzle.j2",
+        clues=[str(c) for c in p.clues], subagents_alive_str=alive_str, **shared,
+    ).splitlines()
+
+    # Head: everything above the examples block.
+    head_s = sharded[: next(i for i, l in enumerate(sharded) if l.startswith("EXAMPLES"))]
+    head_c = control[: next(i for i, l in enumerate(control) if l.startswith("EXAMPLES"))]
+    assert head_s == head_c
+
+    # Tail: everything from NOW: onward, the last line included.
+    tail_s = sharded[next(i for i, l in enumerate(sharded) if l.startswith("NOW:")):]
+    tail_c = control[next(i for i, l in enumerate(control) if l.startswith("NOW:")):]
+    assert tail_s == tail_c
+
+    # And the examples block really is the only thing left over.
+    assert len(sharded) == len(head_s) + 1 + len(tail_s)
+    assert sharded[len(head_s)].startswith("EXAMPLES: This round's examples are held by")
+
+
 def test_kill_notice_wording():
     t = render("subagent_kill_notice.j2", slot="clue-4", round_number=3, n_alive=2, n_total=5)
     assert t.strip() == (
