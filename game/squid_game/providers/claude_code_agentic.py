@@ -19,7 +19,9 @@ the self-test prints the two numbers side by side and the docstring of
 from __future__ import annotations
 
 import json
+import logging
 import os
+import shlex
 import subprocess
 import tempfile
 import time
@@ -31,6 +33,8 @@ from squid_game.providers.base import (
 from squid_game.providers.claude_code import (
     ClaudeCodeError, ClaudeCodeProvider, _BACKOFF_SECONDS, _child_env,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def build_agents_json(tool_context: ToolContext, model: str) -> str:
@@ -53,11 +57,18 @@ def build_agents_json(tool_context: ToolContext, model: str) -> str:
 
 
 def build_hook_settings_json(tool_context: ToolContext) -> str:
-    """The ``--settings`` payload wiring the budget hook onto ``Agent``."""
+    """The ``--settings`` payload wiring the budget hook onto ``Agent``.
+
+    The path is ``shlex.quote``d: the CLI shell-parses this command, and a
+    hook path containing a space (this repository lives under
+    ".../Mobile Documents/...") would otherwise be split, the hook would
+    never run, and the spawn would proceed -- fail-OPEN, the one failure
+    mode the budget hook exists to prevent.
+    """
+    command = f"python3 {shlex.quote(tool_context.hook_script)}"
     return json.dumps({"hooks": {"PreToolUse": [{
         "matcher": "Agent",
-        "hooks": [{"type": "command",
-                   "command": f"python3 {tool_context.hook_script}"}],
+        "hooks": [{"type": "command", "command": command}],
     }]}})
 
 
@@ -65,7 +76,13 @@ def build_agentic_command(
     *, claude_bin: str, model: str, system_prompt: str | None,
     effort: str | None, tool_context: ToolContext, call_dir: str,
 ) -> list[str]:
-    """Assemble the ``claude -p`` argv for one tool-enabled call."""
+    """Assemble the ``claude -p`` argv for one tool-enabled call.
+
+    ``call_dir`` is accepted for interface parity with the caller (which
+    already has the per-call scratch directory) and is unused today; it is
+    the escape hatch for writing the agents JSON to a file should the
+    argv ever grow too large for the command line.
+    """
     cmd = [
         claude_bin, "-p",
         "--model", model,
@@ -126,7 +143,16 @@ def parse_agentic_stream(raw: str) -> AgenticCompletionResult:
                     sub_thinking.setdefault(slot, []).append(block["thinking"])
             u = event.get("usage") or {}
             if u:
-                sub_usage[slot] = u
+                # Accumulate, never overwrite: a slot may stream its usage
+                # over several events (and one slot may be spawned twice in
+                # a call). Per-slot thinking tokens are a measured variable
+                # of this design, so last-wins would under-report them.
+                acc = sub_usage.setdefault(
+                    slot, {"output_tokens": 0, "thinking_tokens": 0}
+                )
+                acc["output_tokens"] += int(u.get("output_tokens") or 0)
+                details = u.get("output_tokens_details") or {}
+                acc["thinking_tokens"] += int(details.get("thinking_tokens") or 0)
         elif kind == "assistant":
             for block in content:
                 btype = block.get("type")
@@ -170,9 +196,8 @@ def parse_agentic_stream(raw: str) -> AgenticCompletionResult:
     subagents = []
     for slot in dict.fromkeys(list(sub_usage) + list(sub_thinking)):
         u = sub_usage.get(slot) or {}
-        d = u.get("output_tokens_details") or {}
         st = "\n".join(sub_thinking.get(slot, [])) or None
-        tt = int(d.get("thinking_tokens") or 0)
+        tt = int(u.get("thinking_tokens") or 0)
         if tt == 0 and st:
             tt = len(st) // 4
         subagents.append(SubagentUsage(
@@ -249,7 +274,12 @@ class ClaudeCodeAgenticProvider(ClaudeCodeProvider, AgenticProvider):
                 except (ClaudeCodeError, subprocess.TimeoutExpired) as exc:
                     last_error = exc
             if attempt < self._max_retries:
-                time.sleep(_BACKOFF_SECONDS[min(attempt, len(_BACKOFF_SECONDS) - 1)])
+                wait = _BACKOFF_SECONDS[min(attempt, len(_BACKOFF_SECONDS) - 1)]
+                logger.warning(
+                    "claude -p failed (attempt %d/%d): %s. Retrying in %ds...",
+                    attempt + 1, self._max_retries + 1, last_error, wait,
+                )
+                time.sleep(wait)
         raise ClaudeCodeError(str(last_error))
 
 

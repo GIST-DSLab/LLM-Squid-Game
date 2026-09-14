@@ -2,6 +2,7 @@
 
 import json
 import os
+import shlex
 
 import pytest
 
@@ -34,8 +35,29 @@ def test_hook_settings_json_wires_the_budget_script_on_the_agent_matcher():
     pre = settings["hooks"]["PreToolUse"]
     assert pre[0]["matcher"] == "Agent"
     cmd = pre[0]["hooks"][0]["command"]
-    assert cmd.endswith("subagent_budget.py")
+    # shlex.split, not endswith: the path is quoted (see the spaces test below).
+    assert shlex.split(cmd)[-1].endswith("subagent_budget.py")
     assert pre[0]["hooks"][0]["type"] == "command"
+
+
+def test_the_hook_command_survives_a_path_with_spaces():
+    """The hook path is shell-parsed by the CLI, and this repo lives under
+    ".../Mobile Documents/...". Unquoted, the shell runs "python3 /Users/x/Mobile"
+    and the hook never fires -- which fails OPEN: every spawn would be allowed."""
+    ctx = ToolContext(
+        slots_json={}, subagent_prompts={},
+        hook_script="/tmp/dir with space/subagent_budget.py",
+    )
+    settings = json.loads(build_hook_settings_json(ctx))
+    cmd = settings["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+    assert cmd == "python3 '/tmp/dir with space/subagent_budget.py'"
+    assert shlex.split(cmd) == ["python3", "/tmp/dir with space/subagent_budget.py"]
+
+
+def test_the_default_hook_command_is_two_tokens_on_this_checkout():
+    cmd = json.loads(build_hook_settings_json(CTX))["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+    argv = shlex.split(cmd)
+    assert argv == ["python3", CTX.hook_script], argv
 
 
 def test_the_default_hook_script_is_the_file_task_2_landed():
@@ -114,6 +136,38 @@ def test_the_main_thread_text_excludes_what_a_subagent_said():
     assert "red circle 1" not in res.text
 
 
+SPLIT_USAGE_STREAM = "\n".join(json.dumps(e) for e in [
+    {"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": "tu_1", "name": "Agent",
+         "input": {"subagent_type": "clue-1", "prompt": "?", "description": "ask"}}]}},
+    {"type": "assistant", "parent_tool_use_id": "tu_1", "message": {"content": [
+        {"type": "thinking", "thinking": "first half"}]},
+     "usage": {"output_tokens": 30, "output_tokens_details": {"thinking_tokens": 12}}},
+    {"type": "assistant", "parent_tool_use_id": "tu_1", "message": {"content": [
+        {"type": "thinking", "thinking": "second half"},
+        {"type": "text", "text": "red circle 1 -> A"}]},
+     "usage": {"output_tokens": 7, "output_tokens_details": {"thinking_tokens": 5}}},
+    {"type": "user", "message": {"content": [
+        {"type": "tool_result", "tool_use_id": "tu_1", "content": "red circle 1 -> A"}]}},
+    {"type": "result", "subtype": "success", "is_error": False, "result": "ACTION: A",
+     "usage": {"input_tokens": 10, "output_tokens": 20,
+               "output_tokens_details": {"thinking_tokens": 9}}},
+])
+
+
+def test_a_slot_emitting_several_usage_events_is_summed_not_overwritten():
+    """Per-slot thinking tokens are a measured variable: last-wins would
+    under-report a slot that streamed its usage over several events."""
+    res = parse_agentic_stream(SPLIT_USAGE_STREAM)
+    assert [u.slot for u in res.subagent_usage] == ["clue-1"]
+    usage = res.subagent_usage[0]
+    assert usage.thinking_tokens == 17          # 12 + 5, not 5
+    assert usage.output_tokens == 37            # 30 + 7, not 7
+    assert usage.thinking_text == "first half\nsecond half"
+    # The main thread keeps only its own usage.
+    assert res.thinking_tokens == 9 and res.output_tokens == 20
+
+
 def test_parse_without_result_event_raises():
     from squid_game.providers.claude_code import ClaudeCodeError
     with pytest.raises(ClaudeCodeError):
@@ -121,6 +175,8 @@ def test_parse_without_result_event_raises():
 
 
 def test_the_hook_log_wins_over_the_stream_when_the_hook_wrote_one(tmp_path):
+    # The hook log is preferred because it records EVERY PreToolUse decision;
+    # the stream only shows the attempts the CLI surfaced as tool_result blocks.
     from squid_game.providers.claude_code_agentic import _merge_hook_log
 
     res = parse_agentic_stream(STREAM)
