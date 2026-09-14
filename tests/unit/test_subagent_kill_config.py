@@ -136,6 +136,33 @@ class TestRule1ShardingNeedsTheFeature:
             _plain(seasons=[_season(clue_sharding=value)])
 
 
+class TestRule1RequiredSlotsNeedsTheFeature:
+    """The schedule is as inert as ``clue_sharding`` on a run with no slots.
+
+    It says how many slots each round's clues are dealt into; with the
+    block off nothing is ever dealt, so a config that states it has
+    asked for a condition it is not getting.
+    """
+
+    def test_the_schedule_without_the_switch_is_refused(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match=(
+                "subagent_kill.required_slots is set but "
+                "subagent_kill.enabled is False"
+            ),
+        ):
+            _plain(
+                subagent_kill=SubagentKillConfig(
+                    enabled=False, required_slots=[1, 2, 3, 4, 5, 5]
+                )
+            )
+
+    def test_an_absent_schedule_is_fine(self) -> None:
+        cfg = _plain(subagent_kill=SubagentKillConfig(enabled=False))
+        assert cfg.subagent_kill.required_slots is None
+
+
 class TestRule2Prerequisites:
     def test_requires_the_unified_turn(self) -> None:
         with pytest.raises(

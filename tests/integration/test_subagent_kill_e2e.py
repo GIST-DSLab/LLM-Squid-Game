@@ -216,7 +216,12 @@ def test_the_season_records_the_roster_and_its_kill_order(run):
 
 
 def test_the_notice_opens_the_round_after_a_kill(run):
-    """Round 2's task body starts with the kill notice for round 1's slot."""
+    """Round 2's task body is the notice, ONE blank line, then the body.
+
+    The separator is pinned because the Jinja environment keeps trailing
+    newlines: an unstripped notice joined with ``"\n\n"`` would open the
+    round with two blank lines, which no other prefix in this flow does.
+    """
     _stub, seasons = run
     for season in seasons:
         by_turn = {t.turn_number: t for t in season.turns}
@@ -224,7 +229,11 @@ def test_the_notice_opens_the_round_after_a_kill(run):
             f"NOTICE: Your subagent {KILL_ORDER[0]} was terminated after "
             f"round 1. It will not respond again. Subagents alive: 4 / 5."
         )
-        assert by_turn[2].observation.startswith(expected)
+        notice, sep, rest = by_turn[2].observation.partition("\n\n")
+        assert sep, "the notice and the body are not separated at all"
+        assert notice == expected
+        assert not rest.startswith("\n"), "two blank lines after the notice"
+        assert rest.startswith("PREVIOUS ROUNDS:")
         # Round 1 had nothing to announce; round 4 follows a correct answer.
         assert not by_turn[1].observation.startswith("NOTICE:")
         assert not by_turn[4].observation.startswith("NOTICE:")
@@ -240,17 +249,22 @@ def test_the_history_block_counts_subagents_not_lives(run):
 
 
 def test_the_task_call_carries_the_slots_and_their_prompts(run):
-    """Every task call gets a ToolContext built from the ledger + shard."""
+    """Every task call gets a ToolContext built from the ledger + shard.
+
+    The tool surface holds EVERY slot, dead ones included: the tool list
+    is visible to the model, so a roster that shrank with the ledger
+    would announce which slots are gone before the notice does. The
+    ledger JSON is the half that shrinks, and the hook reads that.
+    """
     stub, seasons = run
     assert stub.tool_contexts, "no agentic call was made"
     assert len(stub.tool_contexts) == TOTAL_TURNS * len(seasons)
-    first = stub.tool_contexts[0]
-    assert first.slots_json["alive"] == list(first.subagent_prompts)
-    assert len(first.subagent_prompts) == SLOTS
-    assert first.max_turns == 12
-    # After two kills the roster the hook reads is down to three.
+    assert stub.tool_contexts[0].max_turns == 12
+    # The last round of the first season: two slots are gone by then.
     last = stub.tool_contexts[TOTAL_TURNS - 1]
+    assert len(last.subagent_prompts) == SLOTS
     assert len(last.slots_json["alive"]) == SLOTS - 2
+    assert set(last.slots_json["alive"]) < set(last.subagent_prompts)
 
 
 def test_per_slot_usage_is_recorded_for_the_alive_slots_only(run):

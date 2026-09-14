@@ -766,13 +766,18 @@ class GameEngine:
             # announces a kill twice.
             if slot_ledger is not None:
                 if turn_result.subagent_killed:
+                    # ``.strip()`` for the same reason the peer notice
+                    # strips (peer_death.py): the Jinja environment keeps
+                    # trailing newlines, and the manager joins the notice
+                    # to the body with "\n\n" -- unstripped, the round
+                    # would open with two blank lines.
                     kill_notice = render(
                         "subagent_kill_notice.j2",
                         slot=turn_result.subagent_killed,
                         round_number=turn_num,
                         n_alive=slot_ledger.n_alive,
                         n_total=len(slot_ledger.names),
-                    )
+                    ).strip()
                 else:
                     kill_notice = None
 

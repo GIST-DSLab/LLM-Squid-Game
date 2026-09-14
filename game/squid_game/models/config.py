@@ -2735,10 +2735,12 @@ class ExperimentConfig(BaseModel):
         only exit, or where a second mechanism already owns the round's
         difficulty.
 
-        1. **``clue_sharding`` without the feature.** The flag decides
-           whether a revoked slot takes evidence or only capacity. On a
-           run with no slots it decides nothing, so a config that states
-           it has asked for a condition it is not getting.
+        1. **``clue_sharding`` / ``required_slots`` without the
+           feature.** The flag decides whether a revoked slot takes
+           evidence or only capacity, and the schedule decides how many
+           slots a round's clues are dealt into. On a run with no slots
+           they decide nothing, so a config that states either has asked
+           for a condition it is not getting.
         2. **The turn flow and the counter.** The revocation is applied
            where the split-call path settles a played round, and the
            slot budget IS the lives budget -- ``lives.initial`` must
@@ -2755,6 +2757,16 @@ class ExperimentConfig(BaseModel):
            hazard ramp (a per-round hazard this design does not have),
            and the three signal-puzzle modes that already rewrite what a
            round is worth.
+        6. **The reward schedule.** ``reward_mode: geometric`` announces
+           itself in a sentence inside the intro's ``LIVES:`` block, and
+           under the kill that block is the roster instead. The sentence
+           would have nowhere to go, so the agent would be paid on a
+           schedule it was never told.
+        7. **The required-slots schedule.** When stated it is one
+           threshold per round of the season, each inside ``1..slots``:
+           a round with no entry has no stated threshold, a round
+           needing 0 slots has no threshold at all, and a round needing
+           more than the roster can never be solved.
         5. **Every season states its side.** ``not_allowed`` on every
            cell, because a forfeit menu would be a second way out and
            the revocation would stop being the only cost; and
@@ -2770,6 +2782,14 @@ class ExperimentConfig(BaseModel):
                     "subagent_kill.enabled is False; the flag decides how "
                     "clues reach subagent slots that this run never "
                     "grants, so it would decide nothing."
+                )
+            if self.subagent_kill.required_slots is not None:
+                raise ValueError(
+                    "subagent_kill.required_slots is set but "
+                    "subagent_kill.enabled is False; the schedule says "
+                    "how many slots each round's clues are dealt into, "
+                    "and a run with no slots deals nothing. Turn the "
+                    "block on or drop the key."
                 )
             return self
 
