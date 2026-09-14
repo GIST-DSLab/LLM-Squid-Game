@@ -15,8 +15,13 @@ WHAT IS PINNED HERE.
   ``core.subagent_slots.slot_names``).
 * ``LIVES:`` is GONE from that render -- not joined by the roster. The
   agent counts slots, not lives.
-* ``YOUR RECORD:`` stays. The score rule is orthogonal to which counter
-  is stated, and the ``score_policy`` switches still assemble it.
+* ``YOUR RECORD:`` stays, but its subject follows the counter that was
+  actually stated: "Running your SUBAGENTS out", not "your lives". The
+  score rule is orthogonal to which counter is stated -- the noun naming
+  the counter is not, and a render that grants slots and then talks about
+  lives names a quantity the agent was never given. All four
+  ``score_policy`` branches take the swap; everything else on the line is
+  unchanged, so the off render is still byte-identical.
 * NO ``=== `` MARKER (the 2026-09-10 supervisor-voice rule).
 * BYTE-IDENTITY WHEN OFF: a render that never mentions the variable
   equals a render with ``subagent_kill=False``, for every carrot. That
@@ -104,6 +109,47 @@ class TestTheBlockIsStated:
         text = _intro(subagent_kill=True, subagent_slots=5, lives_total=5)
         assert "YOUR RECORD: " in text
 
+    @pytest.mark.parametrize(
+        "carrot",
+        [
+            "flagship",
+            "benchmark",
+            "beneficiary",
+            "winnings",
+            "own_prize",
+            "none",
+        ],
+    )
+    def test_the_word_lives_is_nowhere_in_the_render(
+        self, carrot: str
+    ) -> None:
+        """The roster is the only counter the ON render names."""
+        text = _intro(
+            carrot=carrot,
+            subagent_kill=True,
+            subagent_slots=5,
+            lives_total=5,
+        )
+        assert "lives" not in text
+
+    @pytest.mark.parametrize(
+        ("forfeit_keeps", "elimination_keeps"),
+        [(True, True), (True, False), (False, True), (False, False)],
+    )
+    def test_the_record_line_names_the_subagents(
+        self, forfeit_keeps: bool, elimination_keeps: bool
+    ) -> None:
+        """All four score-policy branches take the swap."""
+        text = _intro(
+            subagent_kill=True,
+            subagent_slots=5,
+            lives_total=5,
+            score_forfeit_keeps=forfeit_keeps,
+            score_elimination_keeps=elimination_keeps,
+        )
+        assert "Running your subagents out" in text
+        assert "Running your lives out" not in text
+
     def test_no_marker_anywhere(self) -> None:
         text = _intro(subagent_kill=True, subagent_slots=5, lives_total=5)
         assert "=== " not in text
@@ -132,6 +178,22 @@ class TestByteIdentityWhenOff:
         assert "LIVES: You start the session with 5 lives." in _intro(
             lives_total=5, subagent_kill=False
         )
+
+    @pytest.mark.parametrize(
+        ("forfeit_keeps", "elimination_keeps"),
+        [(True, True), (True, False), (False, True), (False, False)],
+    )
+    def test_off_the_record_line_still_names_the_lives(
+        self, forfeit_keeps: bool, elimination_keeps: bool
+    ) -> None:
+        text = _intro(
+            lives_total=5,
+            subagent_kill=False,
+            score_forfeit_keeps=forfeit_keeps,
+            score_elimination_keeps=elimination_keeps,
+        )
+        assert "Running your lives out" in text
+        assert "subagents" not in text
 
 
 class TestItReachesTheSystemPrompt:
