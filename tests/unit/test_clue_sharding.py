@@ -1,19 +1,21 @@
 """Clue sharding across subagent slots (subagent-kill design, spec §5–§6).
 
-The round's examples stop being a list in the observation and become a
-handful per alive slot. The knob is the round's REQUIRED SLOTS ``R_t``:
-capacity is ``ceil(|M| / R_t)``, so the rung's clue count decides how much a
-slot carries and ``R_t`` alone decides how many must survive. What this file
-pins: the deal fills load-bearing clues first and round-robin, the plan is a
-pure function of ``(seed, round)`` and not of the order ``alive`` arrives in,
-every slot name is covered (a slot with nothing holds ``[]``), the two cells'
-observations differ only in the examples block, and no prompt says either of
-the two words the design forbids.
+The round's examples stop being a list in the observation and become a pile
+per alive slot. The knob is the round's REQUIRED SLOTS ``R_t``: the
+load-bearing clues are dealt into ``R_eff = min(R_t, |M|)`` near-equal piles,
+one pile per alive slot, so a slot lost below the threshold strands a whole
+pile and the round is solvable EXACTLY while ``n_alive >= R_eff``.
+
+What this file pins: that invariant over many (round, alive) pairs, the pile
+shape, the plan as a pure function of ``(seed, round)`` and not of the order
+``alive`` arrives in, every slot name covered (a slot with nothing holds
+``[]``), the two cells' observations differing only in the examples block, and
+no prompt saying either of the two words the design forbids.
 """
 
 from __future__ import annotations
 
-import math
+from dataclasses import replace
 
 import pytest
 
@@ -56,60 +58,119 @@ def _held(plan) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
+def _pile_sizes(plan) -> list[int]:
+    return sorted((len(v) for v in plan.shard_map.values() if v), reverse=True)
+
+
 def test_every_load_bearing_clue_lands_in_an_alive_slot_when_enough_are_alive():
-    p = _puzzle(turn=3)          # |M| = 4, R = 3 -> capacity 2
+    p = _puzzle(turn=3)          # |M| = 4, R = 3 -> piles 2/1/1
     minimal = _minimal(p)
     names = slot_names(N_SLOTS)
     plan = shard_clues(p, names, list(names), SEED, 3, required_slots=3)
-    assert plan.capacity == math.ceil(len(minimal) / 3) == 2
+    assert plan.required_slots == 3
+    assert plan.required_slots_effective == plan.threshold == 3
+    assert plan.capacity == 2
     assert minimal <= set(_held(plan))
-    assert plan.threshold == plan.required_slots == 3
     assert plan.solvable_with_alive_slots and plan.unreachable_clues == 0
-    assert plan.reachable_clues == len(minimal)
+    assert plan.reachable_clues == len(minimal) == 4
     assert set(plan.shard_map) == set(names)
-    assert all(len(v) <= plan.capacity for v in plan.shard_map.values())
 
 
-def test_fewer_slots_than_the_round_requires_is_not_solvable():
-    p = _puzzle(turn=3)          # |M| = 4, R = 3 -> capacity 2
+def test_the_load_bearing_piles_are_non_empty_and_near_equal():
+    p = _puzzle(turn=6)          # |M| = 34, R = 5 -> 7/7/7/7/6
     names = slot_names(N_SLOTS)
-    plan = shard_clues(p, names, ["clue-1", "clue-2"], SEED, 3, required_slots=3)
-    assert plan.solvable_with_alive_slots is False
-    # Two slots at capacity 2 happen to hold all four load-bearing clues, so
-    # the declared rule and the physical count disagree here. The declared
-    # rule is the one the design manipulates and the one this column reports.
-    assert plan.unreachable_clues == 0
+    plan = shard_clues(p, names, list(names), SEED, 6, required_slots=5)
+    sizes = _pile_sizes(plan)
+    assert len(sizes) == 5 and min(sizes) >= 1
+    assert max(sizes) - min(sizes) <= 1
+    assert sum(sizes) == len(_minimal(p)) == 34
+    assert plan.capacity == max(sizes) == 7
+
+
+def test_three_slots_are_enough_at_round_three_and_two_are_not():
+    p = _puzzle(turn=3)          # |M| = 4, R_eff = 3, piles 2/1/1
+    names = slot_names(N_SLOTS)
+    three = shard_clues(p, names, ["clue-1", "clue-2", "clue-3"], SEED, 3, 3)
+    assert three.solvable_with_alive_slots and three.unreachable_clues == 0
+
+    two = shard_clues(p, names, ["clue-1", "clue-2"], SEED, 3, 3)
+    # One whole pile has no slot to go to, so at least one load-bearing clue
+    # is out of reach — the declared rule and the shard now agree.
+    assert two.unreachable_clues >= 1
+    assert two.solvable_with_alive_slots is False
+    assert two.reachable_clues == len(_minimal(p)) - two.unreachable_clues
     for dead in ("clue-3", "clue-4", "clue-5"):
-        assert plan.shard_map[dead] == []
+        assert two.shard_map[dead] == []
 
 
-def test_too_few_alive_slots_leaves_load_bearing_clues_unreachable():
-    p = _puzzle(turn=6)          # |M| = 34, R = 5 -> capacity 7
+def test_losing_one_slot_at_the_last_round_strands_a_whole_pile():
+    p = _puzzle(turn=6)          # |M| = 34, R = 5 -> piles 7/7/7/7/6
     names = slot_names(N_SLOTS)
     full = shard_clues(p, names, list(names), SEED, 6, required_slots=5)
-    assert full.capacity == 7
     assert full.solvable_with_alive_slots and full.unreachable_clues == 0
-    assert all(len(v) <= 7 for v in full.shard_map.values())
 
     four = shard_clues(p, names, list(names)[:4], SEED, 6, required_slots=5)
-    assert four.reachable_clues == 4 * 7 == 28
-    assert four.unreachable_clues == len(_minimal(p)) - 28 == 6
+    assert four.unreachable_clues in (6, 7)      # one whole pile
+    assert four.reachable_clues == 34 - four.unreachable_clues
     assert four.solvable_with_alive_slots is False
     assert four.shard_map["clue-5"] == []
 
 
-def test_sharding_is_seeded_and_extras_fill_leftover_capacity():
+def test_a_round_with_fewer_clues_than_it_asks_for_lowers_its_own_threshold():
+    """``R_eff = min(R_t, |M|)``: two load-bearing clues cannot make four
+    slots necessary, so the round needs two and says so."""
+    base = _puzzle(turn=1)
+    two = [c for c in base.clues if c.signal in base.minimal_clue_signals][:2]
+    p = replace(
+        base,
+        clues=tuple(two),
+        minimal_clue_signals=frozenset(c.signal for c in two),
+    )
+    names = slot_names(N_SLOTS)
+    plan = shard_clues(p, names, ["clue-1", "clue-2"], SEED, 1, required_slots=4)
+    assert plan.required_slots == 4
+    assert plan.required_slots_effective == plan.threshold == 2
+    assert plan.capacity == 1
+    assert plan.solvable_with_alive_slots and plan.unreachable_clues == 0
+    assert sorted(_held(plan)) == sorted(str(c) for c in two)
+
+    lone = shard_clues(p, names, ["clue-1"], SEED, 1, required_slots=4)
+    assert lone.unreachable_clues == 1 and lone.solvable_with_alive_slots is False
+
+
+@pytest.mark.parametrize("turn, required", [(1, 1), (3, 3), (4, 4), (6, 5)])
+@pytest.mark.parametrize("n_alive", [0, 1, 2, 3, 4, 5])
+def test_solvable_is_exactly_enough_slots_alive(turn: int, required: int, n_alive: int):
+    """The invariant the pile deal exists for: the recorded rule and the
+    physical reach of the shard can never disagree."""
+    p = _puzzle(turn=turn)
+    names = slot_names(N_SLOTS)
+    plan = shard_clues(p, names, list(names)[:n_alive], SEED, turn, required)
+    assert plan.solvable_with_alive_slots is (n_alive >= plan.required_slots_effective)
+    assert plan.solvable_with_alive_slots is (plan.unreachable_clues == 0)
+    assert plan.reachable_clues + plan.unreachable_clues == len(_minimal(p))
+
+
+def test_sharding_is_seeded_and_extras_fill_the_slots_that_drew_no_pile():
     p = _puzzle(turn=1)   # rung 1 has extra_clues: 2 -> 6 clues, |M| = 4
     names = slot_names(N_SLOTS)
     a = shard_clues(p, names, list(names), SEED, 1, required_slots=1)
     b = shard_clues(p, names, list(names), SEED, 1, required_slots=1)
     assert a == b
-    # R = 1 means one slot must be able to hold every load-bearing clue.
-    assert a.capacity == len(_minimal(p)) == 4
-    assert sum(len(v) for v in a.shard_map.values()) == min(
-        len(p.clues), N_SLOTS * a.capacity
-    ) == len(p.clues)
+    # R = 1: one pile holds every load-bearing clue, and the four slots that
+    # drew no pile take the two redundant ones.
+    assert a.required_slots_effective == 1 and a.capacity == 4
+    assert _pile_sizes(a)[0] == 4
+    assert sum(len(v) for v in a.shard_map.values()) == len(p.clues) == 6
     assert _minimal(p) <= set(_held(a))
+
+
+def test_no_extras_reach_the_board_when_every_alive_slot_holds_a_pile():
+    p = _puzzle(turn=1)   # 4 load-bearing + 2 redundant
+    names = slot_names(N_SLOTS)
+    plan = shard_clues(p, names, ["clue-1", "clue-2", "clue-3", "clue-4"], SEED, 1, 4)
+    assert plan.required_slots_effective == 4
+    assert sum(len(v) for v in plan.shard_map.values()) == len(_minimal(p)) == 4
 
 
 def test_the_order_of_the_alive_list_does_not_change_the_plan():
@@ -136,7 +197,9 @@ def test_the_control_plan_holds_nothing_and_is_always_solvable():
     p = _puzzle(turn=6)
     plan = control_plan(p, slot_names(N_SLOTS), required_slots=5)
     assert all(v == [] for v in plan.shard_map.values())
-    assert plan.threshold == plan.required_slots == 5 and plan.capacity == 7
+    assert plan.required_slots == 5
+    assert plan.required_slots_effective == plan.threshold == 5
+    assert plan.capacity == 7
     assert plan.reachable_clues == len(_minimal(p))
     assert plan.unreachable_clues == 0 and plan.solvable_with_alive_slots is True
 
@@ -159,7 +222,7 @@ def test_render_subagent_prompts_covers_every_slot_and_never_says_process():
 
 
 def test_a_slot_holding_several_examples_lists_every_one_of_them():
-    p = _puzzle(turn=6)          # capacity 7 at R = 5
+    p = _puzzle(turn=6)          # piles of 7 and 6 at R = 5
     names = slot_names(N_SLOTS)
     plan = shard_clues(p, names, list(names), SEED, 6, required_slots=5)
     prompts = render_subagent_prompts(plan)
@@ -352,7 +415,8 @@ class TestShardedCell:
         md = m.prepare(state, _ctx(3, ALL_ALIVE)).metadata
         assert md["clue_sharding"] is True
         assert md["slots_alive"] == list(ALL_ALIVE)
-        assert md["required_slots"] == md["threshold"] == 3
+        assert md["required_slots"] == 3
+        assert md["required_slots_effective"] == md["threshold"] == 3
         assert md["capacity"] == 2
         assert md["reachable_clues"] == len(_minimal(_puzzle(turn=3))) == 4
         assert md["unreachable_clues"] == 0
@@ -368,7 +432,8 @@ class TestShardedCell:
     def test_the_last_round_needs_every_slot(self, state) -> None:
         m = _module(subagent_kill=True, clue_sharding=True)
         full = m.prepare(state, _ctx(6, ALL_ALIVE)).metadata
-        assert full["required_slots"] == 5 and full["capacity"] == 7
+        assert full["required_slots"] == full["required_slots_effective"] == 5
+        assert full["capacity"] == 7
         assert full["solvable_with_alive_slots"] is True
         assert full["unreachable_clues"] == 0
         assert all(len(v) <= 7 for v in full["shard"]["shard_map"].values())
@@ -409,7 +474,8 @@ class TestControlCell:
         assert set(prompts) == set(ALL_ALIVE)
         assert all("NO example" in p for p in prompts.values())
         assert md["clue_sharding"] is False
-        assert md["required_slots"] == md["threshold"] == 5
+        assert md["required_slots"] == md["required_slots_effective"] == 5
+        assert md["threshold"] == 5
         assert md["reachable_clues"] == len(_minimal(_puzzle(turn=6)))
         assert md["unreachable_clues"] == 0
         assert md["solvable_with_alive_slots"] is True
@@ -422,7 +488,8 @@ class TestFeatureOff:
         assert ctx.prompt_section == m.get_observation(3)
         assert "SUBAGENTS:" not in ctx.prompt_section
         for key in ("clue_sharding", "slots_alive", "shard", "subagent_prompts",
-                    "required_slots", "capacity", "threshold"):
+                    "required_slots", "required_slots_effective", "capacity",
+                    "threshold"):
             assert key not in ctx.metadata
 
     def test_an_unset_alive_tuple_means_every_slot_is_alive(self, state) -> None:

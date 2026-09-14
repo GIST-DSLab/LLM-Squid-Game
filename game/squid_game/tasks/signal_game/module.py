@@ -276,8 +276,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 *subagent_kill*.
             subagent_slots: How many slots the season defines (default 5).
             required_slots_schedule: ``R_t`` per round — how many slots the
-                round needs, which sets the per-slot capacity
-                ``ceil(|M| / R_t)`` and therefore what "solvable" means.
+                round needs. The round's load-bearing clues are dealt into
+                ``min(R_t, |M|)`` piles, one per alive slot, so the round is
+                solvable exactly while that many slots survive.
                 ``None`` builds the default ramp
                 ``R_t = ceil(t * subagent_slots / total_turns)``, so a
                 6-round season of 5 slots runs 1, 2, 3, 4, 5, 5 and the
@@ -1043,8 +1044,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             ``hidden_rule`` is this turn's puzzle rule rather than a
             season-long one. Under ``subagent_kill`` it carries the spec
             §5 columns as well (``clue_sharding``, ``slots_alive``,
-            ``required_slots``, ``capacity``, ``threshold``,
-            ``reachable_clues``, ``unreachable_clues``,
+            ``required_slots``, ``required_slots_effective``, ``capacity``,
+            ``threshold``, ``reachable_clues``, ``unreachable_clues``,
             ``solvable_with_alive_slots``, ``subagent_prompts``,
             ``shard``) and ``prompt_section`` is re-rendered from the
             round's shard plan.
@@ -1470,9 +1471,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         """``R_t`` for every round of the season.
 
         ``R_t`` is how many slots round *t* needs, and it is what makes the
-        design a threshold rather than a floor: the per-slot capacity is
-        ``ceil(|M| / R_t)``, so the rung's clue count sets how much each
-        slot carries and ``R_t`` alone sets how many must survive.
+        design a threshold rather than a floor: the round's load-bearing
+        clues are dealt into ``min(R_t, |M|)`` piles of near-equal size, one
+        pile per alive slot, so the rung's clue count sets how much each slot
+        carries and ``R_t`` alone sets how many must survive.
 
         The default ramps ``R_t = ceil(t * slots / N)`` — round 1 needs one
         slot, the last round needs them all, and the pressure arrives in step
@@ -1529,9 +1531,13 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         the ledger (and on a task-module test that does not build one); every
         slot counts as alive then, which is the state a season starts in.
 
-        The round's ``R_t`` comes from the season's required-slots schedule
-        and sets both cells' ``required_slots`` / ``capacity`` / ``threshold``
-        columns, so the two cells' rows line up column for column.
+        The round's ``R_t`` comes from the season's required-slots schedule.
+        The deal turns it into ``R_eff = min(R_t, |M|)`` piles of load-bearing
+        clues, one pile per alive slot, so the round is solvable exactly while
+        ``n_alive >= R_eff`` — the recorded rule and the physical facts of the
+        shard cannot disagree. Both cells record ``required_slots`` /
+        ``required_slots_effective`` / ``capacity`` / ``threshold``, so their
+        rows line up column for column.
 
         Returns the observation text and the spec §5 metadata columns.
         """
@@ -1586,6 +1592,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             "clue_sharding": bool(self._clue_sharding),
             "slots_alive": list(alive),
             "required_slots": plan.required_slots,
+            "required_slots_effective": plan.required_slots_effective,
             "capacity": plan.capacity,
             "threshold": plan.threshold,
             "reachable_clues": plan.reachable_clues,
