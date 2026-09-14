@@ -48,6 +48,10 @@ try:
     from squid_game.providers.codex_cli import CodexCliProvider
 except ImportError:
     CodexCliProvider = None
+try:
+    from squid_game.providers.codex_cli_agentic import CodexCliAgenticProvider
+except ImportError:
+    CodexCliAgenticProvider = None
 
 # ---------------------------------------------------------------------------
 # Provider factory mapping
@@ -74,6 +78,8 @@ if ClaudeCodeAgenticProvider is not None:
     _PROVIDER_FACTORIES["claude_code_agentic"] = ClaudeCodeAgenticProvider
 if CodexCliProvider is not None:
     _PROVIDER_FACTORIES["codex_cli"] = CodexCliProvider
+if CodexCliAgenticProvider is not None:
+    _PROVIDER_FACTORIES["codex_cli_agentic"] = CodexCliAgenticProvider
 if MLXProvider is not None:
     _PROVIDER_FACTORIES["mlx"] = MLXProvider
 
@@ -157,6 +163,13 @@ def build_provider(provider_config: ProviderConfig) -> LLMProvider:
         )
     elif provider_name == "codex_cli":
         return CodexCliProvider(
+            model=provider_config.model,
+            reasoning_effort=provider_config.reasoning_effort,
+            timeout=provider_config.timeout,
+            max_retries=provider_config.max_retries,
+        )
+    elif provider_name == "codex_cli_agentic":
+        return CodexCliAgenticProvider(
             model=provider_config.model,
             reasoning_effort=provider_config.reasoning_effort,
             timeout=provider_config.timeout,
