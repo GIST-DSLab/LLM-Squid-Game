@@ -11,6 +11,11 @@ prints one JSON decision on stdout. Always exits 0: a hook that crashes
 would let the CLI fall back to its own permission prompt, which in print
 mode means the spawn silently proceeds.
 
+It fails CLOSED. Anything it cannot read -- an absent ledger, a ledger it
+cannot walk, an event that is not a JSON object -- denies the spawn. The
+PreToolUse matcher only routes spawn calls here, so an unreadable event is
+an anomaly, and allowing it would let a terminated slot answer.
+
 The per-round spawn count is kept in ``$SQUID_SLOTS_FILE + ".spawns"``
 so a second call to the same slot in one round is denied; the harness
 deletes that file (with the call directory) after every call.
@@ -26,6 +31,11 @@ import os
 import sys
 
 SPAWN_TOOLS = ("Agent", "spawn_agent")
+
+# Fail-closed reasons. The model reads these verbatim.
+NO_LEDGER = "No subagent ledger is available; nothing can be called."
+UNREADABLE_LEDGER = "The subagent ledger could not be read; nothing can be called."
+UNREADABLE_EVENT = "The subagent call could not be read; nothing can be called."
 
 
 def _slot_of(event: dict) -> str | None:
@@ -52,6 +62,21 @@ def decide(event: dict, ledger: dict, spawns_so_far: dict) -> tuple[str, str]:
     return "allow", f"{slot} is alive."
 
 
+def _read_event() -> tuple[dict, bool]:
+    """Return ``(event, readable)``.
+
+    ``readable`` is False when stdin is not valid JSON or is not a JSON
+    object -- either way the caller denies rather than guessing.
+    """
+    try:
+        event = json.load(sys.stdin)
+    except ValueError:
+        return {}, False
+    if not isinstance(event, dict):
+        return {}, False
+    return event, True
+
+
 def _load_json(path: str | None) -> dict | None:
     if not path or not os.path.exists(path):
         return None
@@ -63,18 +88,23 @@ def _load_json(path: str | None) -> dict | None:
 
 
 def main() -> int:
-    try:
-        event = json.load(sys.stdin)
-    except ValueError:
-        event = {}
+    event, event_readable = _read_event()
     slots_file = os.environ.get("SQUID_SLOTS_FILE")
     ledger = _load_json(slots_file)
     spawns_file = f"{slots_file}.spawns" if slots_file else None
     spawns = _load_json(spawns_file) or {}
-    if ledger is None:
-        decision, reason = "deny", "No subagent ledger is available; nothing can be called."
+    if not event_readable:
+        decision, reason = "deny", UNREADABLE_EVENT
+    elif ledger is None:
+        decision, reason = "deny", NO_LEDGER
     else:
-        decision, reason = decide(event, ledger, spawns)
+        try:
+            decision, reason = decide(event, ledger, spawns)
+        except Exception:
+            # A ledger shape decide() cannot walk (a killed entry missing
+            # its "slot", say). Denying keeps the exit-0 contract; raising
+            # would hand the decision back to the CLI.
+            decision, reason = "deny", UNREADABLE_LEDGER
     slot = _slot_of(event)
     if decision == "allow" and slot and event.get("tool_name") in SPAWN_TOOLS and spawns_file:
         spawns[slot] = int(spawns.get(slot, 0)) + 1

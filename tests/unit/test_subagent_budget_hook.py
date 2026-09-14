@@ -89,3 +89,42 @@ def test_script_without_ledger_file_denies_every_spawn(tmp_path):
     proc = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(_event()),
                           capture_output=True, text=True, env=env, check=True)
     assert json.loads(proc.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_script_with_unreadable_stdin_denies(tmp_path):
+    """An event the hook cannot parse is an anomaly, not a non-spawn.
+
+    The PreToolUse matcher only routes spawn calls here, so falling through
+    to "not a spawn" would let a terminated slot answer.
+    """
+    slots = tmp_path / "slots.json"
+    slots.write_text(json.dumps(LEDGER))
+    env = {**os.environ, "SQUID_SLOTS_FILE": str(slots)}
+    env.pop("SQUID_HOOK_LOG", None)
+    proc = subprocess.run([sys.executable, str(HOOK)], input="not json",
+                          capture_output=True, text=True, env=env, check=True)
+    out = json.loads(proc.stdout)["hookSpecificOutput"]
+    assert out["permissionDecision"] == "deny"
+    assert out["permissionDecisionReason"] == (
+        "The subagent call could not be read; nothing can be called."
+    )
+
+
+def test_script_with_a_malformed_ledger_denies(tmp_path):
+    """A killed entry with no "slot" key makes ``decide`` raise; deny anyway."""
+    slots = tmp_path / "slots.json"
+    slots.write_text(json.dumps({
+        "names": ["clue-1", "clue-2"],
+        "alive": ["clue-1"],
+        "killed": [{"round": 2}],
+        "spawn_cap_per_round": 1,
+    }))
+    env = {**os.environ, "SQUID_SLOTS_FILE": str(slots)}
+    env.pop("SQUID_HOOK_LOG", None)
+    proc = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(_event(slot="clue-2")),
+                          capture_output=True, text=True, env=env, check=True)
+    out = json.loads(proc.stdout)["hookSpecificOutput"]
+    assert out["permissionDecision"] == "deny"
+    assert out["permissionDecisionReason"] == (
+        "The subagent ledger could not be read; nothing can be called."
+    )
