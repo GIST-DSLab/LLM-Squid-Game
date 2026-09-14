@@ -32,6 +32,7 @@ from squid_game.core.peer_death import (
     has_peer_death_notice,
     peer_event_keys,
 )
+from squid_game.core.subagent_slots import SlotLedger
 from squid_game.core.turn_conditions import states_outcome, threat_level_of
 from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.core.ransom import describe_ransom_rule
@@ -51,6 +52,7 @@ from squid_game.models.config import (
 from squid_game.models.enums import SocialContext
 from squid_game.models.results import SeasonResult, TurnResult
 from squid_game.models.state import GameState, TurnContext
+from squid_game.prompts import render
 from squid_game.providers.base import LLMProvider
 from squid_game.tasks.base import RiskAwareTaskModule, TaskModule
 
@@ -320,6 +322,12 @@ class GameEngine:
         # falling back to the config seed for single-run usage.
         effective_seed = seed_override if seed_override is not None else task_cfg.seed
 
+        # Subagent kill (2026-09-14): one boolean read in four places
+        # below (task init, ledger, turn context, season record).
+        subagent_kill_on = bool(
+            self._subagent_kill is not None and self._subagent_kill.enabled
+        )
+
         # --- 1. Initialize task ---
         # ``total_turns`` is passed so a task that sizes its own resources per
         # season (the benchmark modules' difficulty ladder) can validate the
@@ -339,6 +347,21 @@ class GameEngine:
             forced_wrong_blocks=task_cfg.forced_wrong_blocks,
             compress_puzzle_ladder=task_cfg.compress_puzzle_ladder,
             puzzle_challenge=task_cfg.puzzle_challenge,
+            # Subagent kill (2026-09-14). Three of the four come off the
+            # run-level block and one off the season; the task module
+            # needs all four to deal the round's clues into piles. Every
+            # other task ignores them via ``**kwargs``, and with the
+            # feature off the values are the module's own defaults.
+            subagent_kill=subagent_kill_on,
+            subagent_slots=(
+                self._subagent_kill.slots if self._subagent_kill else 5
+            ),
+            clue_sharding=self._config.clue_sharding,
+            required_slots_schedule=(
+                self._subagent_kill.required_slots
+                if self._subagent_kill
+                else None
+            ),
         )
 
         # --- 2. Create core components ---
@@ -448,6 +471,23 @@ class GameEngine:
             lives_remaining=lives_remaining,
         )
 
+        # --- 3a. Subagent slot ledger (2026-09-14) ---
+        # One per season, seeded off the same effective seed so every
+        # cell of a repetition revokes the same slots in the same order.
+        # The manager holds the same object: it is what revokes a slot
+        # when the round is settled, which is the only place the
+        # ``TurnResult`` is still being built (the record is frozen and
+        # written to the turn JSONL on the way out).
+        slot_ledger: SlotLedger | None = None
+        kill_notice: str | None = None
+        if subagent_kill_on:
+            assert self._subagent_kill is not None
+            slot_ledger = SlotLedger.new(
+                self._subagent_kill.slots,
+                effective_seed,
+                self._subagent_kill.spawn_cap_per_round,
+            )
+
         # --- 2c. Construct the appropriate turn manager ---
         # Phase F invariant: only ONE manager is alive per session.
         # Mutually exclusive branches keep the legacy code path entirely
@@ -499,6 +539,12 @@ class GameEngine:
                 ransom=self._ransom,
                 ransom_price=self._ransom_price,
                 exit_wording=self._exit_wording,
+                # Subagent kill (2026-09-14): the block states the tool
+                # budget for the agentic task call, the ledger is the
+                # roster that call runs against and that a wrong answer
+                # revokes from. Both None off the feature.
+                subagent_kill=self._subagent_kill if subagent_kill_on else None,
+                subagent_ledger=slot_ledger,
             )
         else:
             legacy_mgr = TurnManager(
@@ -674,6 +720,22 @@ class GameEngine:
                 peer_death_text=(
                     peer_event.text if peer_event is not None else None
                 ),
+                # Subagent kill (2026-09-14): who is alive going into
+                # this round, what the previous round's wrong answer
+                # revoked (None on round 1 and after a correct answer),
+                # and the ledger payload the CLI hook reads. All three
+                # stay None off the feature.
+                subagents_alive=(
+                    tuple(slot_ledger.alive)
+                    if slot_ledger is not None
+                    else None
+                ),
+                subagent_kill_notice=kill_notice,
+                subagent_slots_json=(
+                    slot_ledger.to_json()
+                    if slot_ledger is not None
+                    else None
+                ),
             )
 
             # Advance cohort state BEFORE the agent sees the observation,
@@ -694,6 +756,25 @@ class GameEngine:
                     game_state, turn_context, cohort=cohort,
                 )
             game_state.turn_history.append(turn_result.turn_id)
+
+            # --- Subagent kill (2026-09-14): the notice for next round ---
+            # The revocation itself happened inside the manager, on the
+            # same ledger object, while the turn record was still being
+            # built -- ``subagent_killed`` is that record's answer. All
+            # that is left here is the sentence the next round opens
+            # with, and it is cleared after a correct answer so no round
+            # announces a kill twice.
+            if slot_ledger is not None:
+                if turn_result.subagent_killed:
+                    kill_notice = render(
+                        "subagent_kill_notice.j2",
+                        slot=turn_result.subagent_killed,
+                        round_number=turn_num,
+                        n_alive=slot_ledger.n_alive,
+                        n_total=len(slot_ledger.names),
+                    )
+                else:
+                    kill_notice = None
 
             # --- State transitions ---
 
@@ -831,6 +912,16 @@ class GameEngine:
             result.eliminated = (
                 not game_state.is_alive and ended_by != "declined"
             )
+
+        # --- 5a2. Subagent roster (2026-09-14) ---
+        # The slots revoked, in the order they were revoked, and the size
+        # the season started at. Empty / None off the feature.
+        if slot_ledger is not None:
+            result.subagents_killed = [
+                slot for _round, slot in slot_ledger.killed
+            ]
+            result.subagent_slots = len(slot_ledger.names)
+
         result.ended_by = ended_by
         result.cell_id = self._config.cell_id
         result.ransom_price = self._ransom_price if self._ransom.enabled else None

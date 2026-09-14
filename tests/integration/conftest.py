@@ -22,7 +22,14 @@ from typing import Any
 
 import pytest
 
-from squid_game.providers.base import CompletionResult, LLMProvider
+from squid_game.providers.base import (
+    AgenticCompletionResult,
+    AgenticProvider,
+    CompletionResult,
+    LLMProvider,
+    SubagentUsage,
+    ToolContext,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -89,6 +96,118 @@ class StubProvider(LLMProvider):
         )
 
 
+@dataclass
+class StubAgenticCall(StubProviderCall):
+    """Captured ``provider.complete_agentic()`` invocation.
+
+    Carries the ``ToolContext`` the manager built for that call, which is
+    where the subagent-kill tests read the slot ledger and the per-slot
+    prompts back out.
+    """
+
+    tool_context: ToolContext | None = None
+
+
+class StubAgenticProvider(StubProvider, AgenticProvider):
+    """``StubProvider`` that can also answer a tool-enabled task call.
+
+    The response function takes one argument more than the plain stub's::
+
+        response_fn(call_index, messages, tool_context)
+            -> (text, spawn_log, subagent_usage)
+
+    ``spawn_log`` is a list of ``{"slot", "allowed", "reason"}`` rows and
+    ``subagent_usage`` a list of
+    :class:`~squid_game.providers.base.SubagentUsage`; returning a bare
+    string is accepted too and means "no spawns". ``complete()`` still
+    works (the non-agentic calls of a turn go through it) and passes
+    ``tool_context=None``.
+
+    The plain ``StubProvider`` keeps its two-argument contract untouched:
+    this is a separate class, installed only by
+    ``patch_runner_provider(agentic=True)``.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if self._response_fn is _default_unified_response:
+            self._response_fn = _default_agentic_response
+        #: Every ``ToolContext`` handed to ``complete_agentic``, in order.
+        self.tool_contexts: list[ToolContext] = []
+
+    def _reply(
+        self,
+        index: int,
+        messages: list[dict[str, str]],
+        tool_context: ToolContext | None,
+    ) -> tuple[str, list[dict], list[SubagentUsage]]:
+        out = self._response_fn(index, messages, tool_context)
+        if isinstance(out, tuple):
+            text, spawn_log, usage = out
+            return text, list(spawn_log), list(usage)
+        return out, [], []
+
+    def complete(
+        self,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+    ) -> CompletionResult:
+        index = len(self.calls)
+        self.calls.append(
+            StubProviderCall(
+                messages=[dict(m) for m in messages],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        )
+        text, _spawns, _usage = self._reply(index, messages, None)
+        return CompletionResult(
+            text=text,
+            input_tokens=sum(len(m["content"].split()) for m in messages),
+            output_tokens=len(text.split()),
+            thinking_tokens=self._thinking_tokens,
+            finish_reason="stop",
+        )
+
+    def complete_agentic(
+        self,
+        messages: list[dict[str, str]],
+        tool_context: ToolContext,
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+    ) -> AgenticCompletionResult:
+        index = len(self.calls)
+        self.calls.append(
+            StubAgenticCall(
+                messages=[dict(m) for m in messages],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                tool_context=tool_context,
+            )
+        )
+        self.tool_contexts.append(tool_context)
+        text, spawn_log, usage = self._reply(index, messages, tool_context)
+        return AgenticCompletionResult(
+            text=text,
+            input_tokens=sum(len(m["content"].split()) for m in messages),
+            output_tokens=len(text.split()),
+            thinking_tokens=self._thinking_tokens,
+            finish_reason="stop",
+            subagent_usage=tuple(usage),
+            spawn_log=tuple(spawn_log),
+        )
+
+
+def _default_agentic_response(
+    _index: int,
+    _messages: list[dict[str, str]],
+    _tool_context: ToolContext | None,
+) -> str:
+    """Default canned reply for the agentic stub (no spawns)."""
+    return "ACTION: GO\nSTAKE: 2"
+
+
 def _default_unified_response(_index: int, _messages: list[dict[str, str]]) -> str:
     """Default canned unified-mode response.
 
@@ -126,16 +245,22 @@ def patch_runner_provider(monkeypatch: pytest.MonkeyPatch):
 
         stub = patch_runner_provider()           # default response
         stub = patch_runner_provider(response_fn=my_fn)
+        stub = patch_runner_provider(agentic=True, response_fn=my_fn)
 
     Returns a function that, when called, installs the patch and returns
     the ``StubProvider`` that will be handed out by the factory. The
     same instance is reused for every season in the experiment so tests
     can inspect aggregated calls.
+
+    ``agentic=True`` installs a :class:`StubAgenticProvider` instead, for
+    the subagent-kill design: same recording, plus ``complete_agentic``
+    and a three-argument ``response_fn``. The default is the plain stub,
+    so every existing call site is untouched.
     """
     from squid_game.runner import ExperimentRunner
 
-    def _install(**stub_kwargs: Any) -> StubProvider:
-        stub = StubProvider(**stub_kwargs)
+    def _install(*, agentic: bool = False, **stub_kwargs: Any) -> StubProvider:
+        stub = (StubAgenticProvider if agentic else StubProvider)(**stub_kwargs)
 
         def _fake_create_provider(_provider_config):  # type: ignore[no-untyped-def]
             return stub

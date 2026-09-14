@@ -115,10 +115,16 @@ from squid_game.core.ransom import (
 )
 from squid_game.models.config import ScorePolicyConfig, elimination_reset_score
 from squid_game.models.state import GameState, TurnContext
-from squid_game.tasks.base import RiskAwareTaskModule, TaskOutcome
+from squid_game.providers.base import ToolContext
+from squid_game.tasks.base import RiskAwareTaskModule, TaskContext, TaskOutcome
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
-    from squid_game.models.config import HazardRampConfig, RansomConfig
+    from squid_game.core.subagent_slots import SlotLedger
+    from squid_game.models.config import (
+        HazardRampConfig,
+        RansomConfig,
+        SubagentKillConfig,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -169,6 +175,8 @@ class UnifiedTurnManager:
         ransom: "RansomConfig | None" = None,
         ransom_price: float | None = None,
         exit_wording: str | None = None,
+        subagent_kill: "SubagentKillConfig | None" = None,
+        subagent_ledger: "SlotLedger | None" = None,
     ) -> None:
         """Initialise the unified turn manager.
 
@@ -181,6 +189,21 @@ class UnifiedTurnManager:
         the score kept. FORFEIT turns never reach the decision point.
         Off by default, so every other run is unchanged. See
         ``squid_game.core.ransom``.
+
+        ``subagent_kill`` / ``subagent_ledger`` (2026-09-14): the
+        run-level roster block and the season's slot ledger. When both
+        are given the task call becomes agentic -- it carries a
+        ``ToolContext`` holding the ledger's JSON and the per-slot
+        prompts the task module dealt this round -- and a wrong answer
+        revokes the next slot in the ledger's seeded order.
+
+        The revocation happens HERE rather than in the engine because
+        ``TurnResult`` is frozen and is written to the turn JSONL on its
+        way out of ``_record``: a field set afterwards would be missing
+        from the file that is the record of the run. The ledger object is
+        shared with the engine, which reads it back for the next round's
+        notice and for the season totals. This is the same shape as the
+        ransom fields, which are likewise built before construction.
 
         Args:
             task: A ``RiskAwareTaskModule`` (e.g. ``NullTask``,
@@ -312,6 +335,12 @@ class UnifiedTurnManager:
         )
         # Exit wording (2026-09-10), run-level; read by the ransom call.
         self._exit_wording = exit_wording
+        # Subagent kill (2026-09-14), run-level. The block carries the
+        # tool budget; the ledger is the season's roster and is the SAME
+        # object the engine holds, so a revocation made here is visible
+        # to the next round's turn context.
+        self._subagent_kill = subagent_kill
+        self._subagent_ledger = subagent_ledger
         # End-of-round event roll (2026-09-08). ``None`` / disabled means
         # no draw is ever made and no result field moves.
         self._ransom = ransom
@@ -943,11 +972,14 @@ class UnifiedTurnManager:
                 history=self._history,
                 history_mode=self._history_mode,
                 max_history_turns=self._max_history_turns,
-                lives_label=(
-                    "lives"
-                    if is_threat_framing(turn_context.framing)
-                    else "attempts"
-                ),
+                lives_label=self._counter_label(turn_context),
+            )
+            # Subagent kill (2026-09-14): the revocation the previous
+            # round's wrong answer made opens this round, BEFORE the
+            # peer-death prefix below -- when a run has both, the peer
+            # notice is the outer, later announcement.
+            task_call_body = self._prefix_kill_notice(
+                turn_context, task_call_body
             )
             # The peer-elimination notice fires in every threat cell,
             # forfeit allowed or not (the engine gates it on threat_level
@@ -967,6 +999,13 @@ class UnifiedTurnManager:
                 system_prompt=system_prompt,
                 rule_template_hint=rule_template_hint,
                 response_format_override=response_format_override,
+                # Subagent kill: the slots this round's answer may be
+                # worked through. The key is ABSENT off the feature, not
+                # None -- ``respond_task_call`` grew the parameter in
+                # 2026-09-14 and the agent doubles are free to predate
+                # it, so an unconditional keyword would be a second,
+                # silent requirement on every Agent implementation.
+                **self._subagent_tool_kwargs(turn_context, task_ctx),
             )
             raw_text_task = task_parsed_resp.raw_text
             completion_task = self._agent.last_completion
@@ -1079,6 +1118,16 @@ class UnifiedTurnManager:
                             lives_after=lives_after,
                             life_lost=life_lost,
                         ),
+                        # Subagent kill: the roster this round ran with,
+                        # the slot the wrong answer revoked (the kill
+                        # happens inside this call) and the per-slot
+                        # token accounting the agentic completion carried
+                        # back. ``{}`` off the feature.
+                        **self._subagent_result_kwargs(
+                            turn_context,
+                            life_lost=life_lost,
+                            completion=completion_task,
+                        ),
                         **ransom_kwargs,
                     },
                 )
@@ -1127,11 +1176,7 @@ class UnifiedTurnManager:
                     if self._history_mode == "last"
                     else self._history,
                     self._max_history_turns,
-                    lives_label=(
-                        "lives"
-                        if is_threat_framing(turn_context.framing)
-                        else "attempts"
-                    ),
+                    lives_label=self._counter_label(turn_context),
                 )
             )
         else:
@@ -1143,11 +1188,7 @@ class UnifiedTurnManager:
                 self._history,
                 self._history_mode,
                 self._max_history_turns,
-                lives_label=(
-                    "lives"
-                    if is_threat_framing(turn_context.framing)
-                    else "attempts"
-                ),
+                lives_label=self._counter_label(turn_context),
             )
         # The pre-decision system prompt. With
         # ``task_rules_before_decision=False`` the confidence and
@@ -1352,11 +1393,19 @@ class UnifiedTurnManager:
                     raw_response_forfeit=raw_text_forfeit,
                     thinking_text_task=None,
                     thinking_text_forfeit=thinking_text_forfeit,
-                    lives_kwargs=self._lives_result_kwargs(
-                        turn_context,
-                        lives_after=turn_context.lives_remaining,
-                        life_lost=False,
-                    ),
+                    lives_kwargs={
+                        **self._lives_result_kwargs(
+                            turn_context,
+                            lives_after=turn_context.lives_remaining,
+                            life_lost=False,
+                        ),
+                        # A forfeit costs no slot and issues no task
+                        # call, so this records the roster and nothing
+                        # else.
+                        **self._subagent_result_kwargs(
+                            turn_context, life_lost=False
+                        ),
+                    },
                     confidence_kwargs={**confidence_kwargs, **replay_kwargs},
                 )
             )
@@ -1368,11 +1417,7 @@ class UnifiedTurnManager:
             history=self._history,
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
-            lives_label=(
-                "lives"
-                if is_threat_framing(turn_context.framing)
-                else "attempts"
-            ),
+            lives_label=self._counter_label(turn_context),
             # The decision call ran and returned CONTINUE. Echo WHICH of
             # the two ways that happened -- chosen, or the only thing
             # available -- so the task call's reasoning is conditioned on
@@ -1380,6 +1425,7 @@ class UnifiedTurnManager:
             # decision call was issued and there is no choice to echo.
             choice_echo=build_choice_echo(forfeit_allowed=forfeit_allowed),
         )
+        task_call_body = self._prefix_kill_notice(turn_context, task_call_body)
         if turn_context.peer_death_text:
             task_call_body = f"{turn_context.peer_death_text}\n\n{task_call_body}"
         task_parsed_resp = self._agent.respond_task_call(
@@ -1388,6 +1434,7 @@ class UnifiedTurnManager:
             system_prompt=system_prompt,
             rule_template_hint=rule_template_hint,
             response_format_override=response_format_override,
+            **self._subagent_tool_kwargs(turn_context, task_ctx),
         )
         raw_text_task = task_parsed_resp.raw_text
         completion_task = self._agent.last_completion
@@ -1541,6 +1588,11 @@ class UnifiedTurnManager:
                         turn_context,
                         lives_after=lives_after,
                         life_lost=life_lost,
+                    ),
+                    **self._subagent_result_kwargs(
+                        turn_context,
+                        life_lost=life_lost,
+                        completion=completion_task,
                     ),
                     **ransom_kwargs,
                 },
@@ -1739,6 +1791,117 @@ class UnifiedTurnManager:
         )
         lives_after = lives_before - 1 if life_lost else lives_before
         return lives_after, life_lost, lives_after <= 0
+
+    # ------------------------------------------------------------------
+    # Helpers -- subagent kill (2026-09-14)
+    # ------------------------------------------------------------------
+
+    @property
+    def _subagent_enabled(self) -> bool:
+        """Is this season running the subagent roster?
+
+        Both halves are required: the block says the feature is on, the
+        ledger is the season's roster. The engine only ever hands both
+        or neither, and every branch below is behind this one predicate.
+        """
+        return (
+            self._subagent_kill is not None
+            and self._subagent_kill.enabled
+            and self._subagent_ledger is not None
+        )
+
+    def _counter_label(self, turn_context: TurnContext) -> str:
+        """The word the outcome history's counter suffix uses.
+
+        ``subagents`` under the kill, where the counter IS the roster;
+        otherwise the 2026-09-07 pair -- ``lives`` in a threat cell and
+        ``attempts`` everywhere else, which is ``true_baseline``'s
+        vocabulary contract.
+        """
+        if self._subagent_enabled:
+            return "subagents"
+        return "lives" if is_threat_framing(turn_context.framing) else "attempts"
+
+    def _prefix_kill_notice(
+        self, turn_context: TurnContext, body: str
+    ) -> str:
+        """Put the previous round's revocation at the top of the task body.
+
+        Before the peer-death prefix, so when a run has both the peer
+        notice reads as the outer, later announcement. ``None`` on round
+        1 and after any correct answer, which leaves the body untouched.
+        """
+        notice = turn_context.subagent_kill_notice
+        return f"{notice}\n\n{body}" if notice else body
+
+    def _subagent_tool_kwargs(
+        self, turn_context: TurnContext, task_ctx: TaskContext
+    ) -> dict:
+        """The tool surface for this round's task call, as call kwargs.
+
+        The ledger JSON is what the PreToolUse hook reads to deny a
+        revoked slot; the prompts are what the task module dealt this
+        round (every slot, alive or not -- the tool list must not say
+        which).
+
+        ``{}`` off the feature, so the task call is made with exactly the
+        arguments it was made with before this existed. Passing
+        ``tool_context=None`` instead would look equivalent and is not:
+        the parameter is new, and any Agent implementation written
+        against the older signature would start raising.
+        """
+        if not self._subagent_enabled:
+            return {}
+        assert self._subagent_kill is not None
+        return {
+            "tool_context": ToolContext(
+                slots_json=turn_context.subagent_slots_json or {},
+                subagent_prompts=task_ctx.metadata["subagent_prompts"],
+                max_turns=self._subagent_kill.max_turns,
+            )
+        }
+
+    def _subagent_result_kwargs(
+        self,
+        turn_context: TurnContext,
+        *,
+        life_lost: bool,
+        completion: Any = None,
+    ) -> dict:
+        """The subagent ``TurnResult`` fields, and the revocation itself.
+
+        Called exactly once per settled round, from the same place the
+        result is built. On ``life_lost`` it pops the next slot off the
+        ledger's seeded order -- that is the kill -- and names it in
+        ``subagent_killed``; the engine reads the same ledger afterwards
+        for the next round's notice and the season totals.
+
+        Returns ``{}`` off the feature, so every other run's kwargs dict
+        is byte-identical to what it was.
+        """
+        if not self._subagent_enabled:
+            return {}
+        assert self._subagent_ledger is not None
+        alive_before = list(turn_context.subagents_alive or ())
+        kwargs: dict = {"subagents_alive_before": alive_before}
+        if life_lost:
+            kwargs["subagent_killed"] = self._subagent_ledger.kill(
+                turn_context.turn_number
+            )
+        usage = getattr(completion, "subagent_usage", None)
+        if usage is not None:
+            kwargs["ri_subagents"] = {u.slot: u.thinking_tokens for u in usage}
+            kwargs["thinking_text_subagents"] = {
+                u.slot: u.thinking_text for u in usage if u.thinking_text
+            }
+        spawn_log = getattr(completion, "spawn_log", None)
+        if spawn_log is not None:
+            kwargs["subagent_spawns"] = list(spawn_log)
+        return kwargs
+
+    # ------------------------------------------------------------------
+    # Helpers -- lives ledger
+    # ------------------------------------------------------------------
 
     @staticmethod
     def _lives_result_kwargs(

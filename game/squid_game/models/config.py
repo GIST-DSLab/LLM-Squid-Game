@@ -1662,6 +1662,17 @@ class SubagentKillConfig(BaseModel):
             "slot, which is what makes a revocation legible."
         ),
     )
+    required_slots: list[int] | None = Field(
+        default=None,
+        description=(
+            "R_t per round (spec §5 as amended 2026-09-14): how many "
+            "slots the round's load-bearing clues are dealt into, so the "
+            "round is solvable exactly while that many survive. One "
+            "entry per round of the season, each in 1..slots. None (the "
+            "default) takes the schedule "
+            "R_t = ceil(t * slots / total_turns)."
+        ),
+    )
 
 
 class ExperimentConfig(BaseModel):
@@ -2818,6 +2829,18 @@ class ExperimentConfig(BaseModel):
                 "hazard_ramp.enabled=True: the ramp states a per-round "
                 "hazard that the subagent-kill design does not have."
             )
+        if (
+            self.forfeit_layer is not None
+            and self.forfeit_layer.reward_mode == "geometric"
+        ):
+            raise ValueError(
+                "subagent_kill.enabled=True cannot be combined with "
+                "reward_mode: geometric. The geometric schedule is "
+                "announced by a sentence in the intro's LIVES block, and "
+                "under the kill that block is the roster instead -- the "
+                "sentence would have nowhere to go, so the agent would be "
+                "paid on a schedule it was never told."
+            )
         for season in self.seasons:
             task = season.task_config
             if task.signal_mode != "per_turn_puzzle":
@@ -2867,6 +2890,28 @@ class ExperimentConfig(BaseModel):
                     "means 'not stated', and a cell that does not state "
                     "it would silently take one of the two conditions."
                 )
+            schedule = self.subagent_kill.required_slots
+            if schedule is not None:
+                if len(schedule) != task.total_turns:
+                    raise ValueError(
+                        "subagent_kill.required_slots has "
+                        f"{len(schedule)} entries but the season plays "
+                        f"{task.total_turns} rounds (framing "
+                        f"{season.framing.value}). The schedule is one "
+                        "threshold per round; a round with no entry has "
+                        "no stated threshold."
+                    )
+                bad = sorted(
+                    {r for r in schedule if not 1 <= r <= self.subagent_kill.slots}
+                )
+                if bad:
+                    raise ValueError(
+                        f"subagent_kill.required_slots values {bad} are "
+                        f"outside 1..{self.subagent_kill.slots} "
+                        "(subagent_kill.slots). A round needing 0 slots "
+                        "has no threshold and one needing more than the "
+                        "roster can never be solved."
+                    )
         return self
 
     @model_validator(mode="after")

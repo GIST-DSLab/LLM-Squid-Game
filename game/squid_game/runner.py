@@ -254,6 +254,10 @@ class ExperimentRunner:
             exit_wording=self._config.exit_wording,
             score_policy=self._config.score_policy,
             carrot=self._config.effective_carrot,
+            # Run-level like the carrot: the roster, its size and the
+            # required-slots schedule are one block the engine hands on
+            # whole. Off by default, so every other config is unchanged.
+            subagent_kill=self._config.subagent_kill,
         )
 
         result = engine.run_season(seed_override=rep_seed)

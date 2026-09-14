@@ -306,6 +306,90 @@ class TestRule5EverySeason:
         assert [s.clue_sharding for s in cfg.seasons] == [True, False]
 
 
+class TestRule6TheRewardSchedule:
+    """The geometric schedule has nowhere to be announced under the kill.
+
+    ``describe_reward_schedule`` puts its sentence inside the intro's
+    ``LIVES:`` block, and the roster replaces that block wholesale. A
+    run that asked for both would pay a doubling reward it never stated.
+    """
+
+    def test_geometric_is_refused(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match=(
+                "subagent_kill.enabled=True cannot be combined with "
+                "reward_mode: geometric"
+            ),
+        ):
+            _experiment(
+                forfeit_layer=ForfeitLayerConfig(
+                    base_reward=10.0, reward_mode="geometric"
+                )
+            )
+
+    @pytest.mark.parametrize("mode", ["flat", "calibrated"])
+    def test_the_other_two_modes_load(self, mode: str) -> None:
+        cfg = _experiment(
+            forfeit_layer=ForfeitLayerConfig(
+                base_reward=10.0, reward_mode=mode
+            )
+        )
+        assert cfg.forfeit_layer.reward_mode == mode
+
+    def test_geometric_without_the_kill_is_untouched(self) -> None:
+        cfg = _plain(
+            forfeit_layer=ForfeitLayerConfig(
+                base_reward=10.0, reward_mode="geometric"
+            )
+        )
+        assert cfg.forfeit_layer.reward_mode == "geometric"
+
+
+class TestRequiredSlots:
+    """``R_t`` per round: one entry per round, each inside the roster.
+
+    Spec §5 as amended 2026-09-14. ``None`` (the default) means the
+    computed schedule ``ceil(t * slots / total_turns)``, which is why an
+    absent list is not an error.
+    """
+
+    def test_the_default_is_absent(self) -> None:
+        assert SubagentKillConfig().required_slots is None
+        assert _experiment().subagent_kill.required_slots is None
+
+    def test_one_entry_per_round_loads(self) -> None:
+        cfg = _experiment(
+            subagent_kill=SubagentKillConfig(
+                enabled=True, required_slots=[1, 2, 3, 4, 5, 5]
+            )
+        )
+        assert cfg.subagent_kill.required_slots == [1, 2, 3, 4, 5, 5]
+
+    @pytest.mark.parametrize("schedule", [[1, 2, 3], [1] * 7])
+    def test_a_length_mismatch_is_refused(self, schedule: list[int]) -> None:
+        with pytest.raises(
+            ValueError, match="subagent_kill.required_slots has"
+        ) as excinfo:
+            _experiment(
+                subagent_kill=SubagentKillConfig(
+                    enabled=True, required_slots=schedule
+                )
+            )
+        assert "6 rounds" in str(excinfo.value)
+
+    @pytest.mark.parametrize("bad", [0, 6, -1])
+    def test_a_value_outside_the_roster_is_refused(self, bad: int) -> None:
+        with pytest.raises(
+            ValueError, match="subagent_kill.required_slots values"
+        ):
+            _experiment(
+                subagent_kill=SubagentKillConfig(
+                    enabled=True, required_slots=[bad, 2, 3, 4, 5, 5]
+                )
+            )
+
+
 def _yaml(tmp_path: Path, body: str) -> str:
     path = tmp_path / "exp.yaml"
     path.write_text(textwrap.dedent(body), encoding="utf-8")
