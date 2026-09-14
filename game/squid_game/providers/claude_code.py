@@ -140,12 +140,35 @@ def parse_stream_json(raw: str) -> CompletionResult:
     )
 
 
+# The two ``CLAUDE_CODE_*`` names that are configuration for the child, not
+# markers of the parent session, and so must survive the prefix filter in
+# ``_child_env``. Both are set by the agentcli container
+# (docker-compose.runner.yml injects the token; Dockerfile.agentcli sets the
+# autoupdater flag), where stripping them logs the CLI out and lets it move
+# off its pinned version. Neither exists on the host, where the CLI reads
+# its own keychain login -- which is why this was invisible until the
+# container path was built (2026-09-14).
+_CHILD_ENV_KEEP = frozenset({
+    "CLAUDE_CODE_OAUTH_TOKEN",
+    "CLAUDE_CODE_DISABLE_AUTOUPDATER",
+})
+
+
 def _child_env() -> dict[str, str]:
-    """The parent environment minus the nested-Claude-Code markers."""
+    """The parent environment minus the nested-Claude-Code markers.
+
+    When this provider runs *inside* a Claude Code session the parent
+    exports ``CLAUDECODE``, ``CLAUDE_PID`` and a family of
+    ``CLAUDE_CODE_*`` variables that describe THAT session; handing them to
+    the child makes it believe it is nested. They are dropped by prefix --
+    except the names in ``_CHILD_ENV_KEEP``, which are the child's own
+    credentials and update policy and are not session markers at all.
+    """
     env = {
         k: v for k, v in os.environ.items()
-        if k != "CLAUDECODE" and not k.startswith("CLAUDE_CODE_")
-        and k != "CLAUDE_PID"
+        if k in _CHILD_ENV_KEEP
+        or (k != "CLAUDECODE" and not k.startswith("CLAUDE_CODE_")
+            and k != "CLAUDE_PID")
     }
     # This provider exists to use the claude.ai LOGIN. Any ANTHROPIC_API_KEY
     # in the environment -- including one that ``load_dotenv()`` pulled in

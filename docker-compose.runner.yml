@@ -124,6 +124,10 @@ services:
       # token, Codex with the credential store bind-mounted below. The
       # other keys ride along so an agentic run can still reach the
       # ordinary providers.
+      # Allow-listed through providers/claude_code.py::_child_env -- that
+      # filter drops CLAUDE_CODE_* by prefix, so this name and
+      # CLAUDE_CODE_DISABLE_AUTOUPDATER are named there explicitly or they
+      # never reach the spawned `claude`.
       CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

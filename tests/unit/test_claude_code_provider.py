@@ -8,6 +8,7 @@ import pytest
 from squid_game.providers.claude_code import (
     ClaudeCodeError,
     ClaudeCodeProvider,
+    _child_env,
     build_command,
     parse_stream_json,
 )
@@ -84,3 +85,57 @@ def test_complete_splits_system_and_user_and_retries():
 def test_invalid_effort_rejected():
     with pytest.raises(ValueError):
         ClaudeCodeProvider(reasoning_effort="ultra")
+
+
+# ---------------------------------------------------------------------------
+# _child_env: which parent variables reach the spawned CLI
+# ---------------------------------------------------------------------------
+
+
+class TestChildEnv:
+    """The prefix filter must not eat the child's own configuration.
+
+    ``CLAUDE_CODE_OAUTH_TOKEN`` and ``CLAUDE_CODE_DISABLE_AUTOUPDATER`` are
+    what the agentcli container supplies (compose injects the token,
+    Dockerfile.agentcli sets the flag). Stripping them by prefix logged the
+    container's CLI out and let it move off its pinned version -- invisible
+    on the host, where the CLI reads its own keychain login.
+    """
+
+    _MARKERS = {
+        "CLAUDECODE": "1",
+        "CLAUDE_PID": "4242",
+        "CLAUDE_CODE_SOMETHING_ELSE": "nested-session-marker",
+        "CLAUDE_CODE_ENTRYPOINT": "cli",
+    }
+    _KEPT = {
+        "CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat-not-a-real-token",
+        "CLAUDE_CODE_DISABLE_AUTOUPDATER": "1",
+    }
+
+    def test_the_oauth_token_and_the_autoupdater_flag_survive(self, monkeypatch):
+        for key, value in {**self._MARKERS, **self._KEPT}.items():
+            monkeypatch.setenv(key, value)
+        env = _child_env()
+        assert env["CLAUDE_CODE_OAUTH_TOKEN"] == self._KEPT["CLAUDE_CODE_OAUTH_TOKEN"]
+        assert env["CLAUDE_CODE_DISABLE_AUTOUPDATER"] == "1"
+
+    def test_the_session_markers_are_still_stripped(self, monkeypatch):
+        for key, value in {**self._MARKERS, **self._KEPT}.items():
+            monkeypatch.setenv(key, value)
+        env = _child_env()
+        for key in self._MARKERS:
+            assert key not in env, f"{key} should not reach the child"
+
+    def test_an_unrelated_variable_is_untouched(self, monkeypatch):
+        monkeypatch.setenv("SOME_OTHER_VAR", "kept")
+        assert _child_env()["SOME_OTHER_VAR"] == "kept"
+
+    def test_the_api_key_is_still_dropped_alongside_a_kept_token(self, monkeypatch):
+        """The allow-list must not reopen the billing escape hatch."""
+        monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "sk-ant-oat-not-a-real-token")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-api-zero-credit")
+        monkeypatch.delenv("SQUID_CLAUDE_CODE_USE_API_KEY", raising=False)
+        env = _child_env()
+        assert "ANTHROPIC_API_KEY" not in env
+        assert "CLAUDE_CODE_OAUTH_TOKEN" in env

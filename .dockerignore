@@ -49,6 +49,9 @@ wheels/
 *.sqlite3
 .env
 .env.*
+# Agent-CLI credential store (subagent-kill, 2026-09-14). The agentcli
+# container bind-mounts it at run time; it must never enter a build context.
+.secrets/
 
 # macOS
 .DS_Store

@@ -323,12 +323,14 @@ class TestTheRecordedStream:
         assert [u.slot for u in res.subagent_usage] == ["clue-2"]
         assert res.subagent_usage[0].output_tokens == 1
 
-    def test_the_main_usage_is_not_reduced_by_the_subagent_total(self):
-        """Spec §7.1, settled on the recorded stream.
+    def test_the_parser_does_not_subtract_the_subagent_total(self):
+        """Spec §7.1 is OPEN; what is pinned here is the parser's silence.
 
-        The result event's usage is the parent session's own. Nothing in
-        the parser subtracts, and nothing should: the CLI does not fold a
-        subagent's tokens into it.
+        The result event's usage is passed through exactly as the CLI
+        sent it, and the subagent's beside it, raw. Whether the CLI folds
+        the child's tokens into the parent total is undecided (see
+        ``parse_agentic_stream``), so this test fixes only that the
+        parser invents no adjustment in either direction.
         """
         res = parse_agentic_stream(RECORDED_STREAM)
         assert res.output_tokens == RECORDED_EVENTS[-1]["usage"]["output_tokens"]

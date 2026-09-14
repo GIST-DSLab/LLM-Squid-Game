@@ -65,6 +65,7 @@ HOST_CODEX_AUTH="${HOME}/.codex/auth.json"
 if [[ ! -f "${SECRETS_CODEX_HOME}/auth.json" ]]; then
     if [[ -f "${HOST_CODEX_AUTH}" ]]; then
         mkdir -p "${SECRETS_CODEX_HOME}"
+        chmod 700 "${SECRETS_CODEX_HOME}"
         cp "${HOST_CODEX_AUTH}" "${SECRETS_CODEX_HOME}/auth.json"
         chmod 600 "${SECRETS_CODEX_HOME}/auth.json"
         echo "seeded ${SECRETS_CODEX_HOME}/auth.json from ${HOST_CODEX_AUTH}"
@@ -72,6 +73,7 @@ if [[ ! -f "${SECRETS_CODEX_HOME}/auth.json" ]]; then
         # Not fatal: a claude-only run needs no Codex credential, and the
         # bind mount needs the directory to exist either way.
         mkdir -p "${SECRETS_CODEX_HOME}"
+        chmod 700 "${SECRETS_CODEX_HOME}"
         echo "warning: ${HOST_CODEX_AUTH} not found -- codex will be unauthenticated" >&2
     fi
 fi

@@ -126,12 +126,19 @@ def parse_agentic_stream(raw: str) -> AgenticCompletionResult:
     truncated or resumed stream); the ``tool_use`` mapping stays primary
     because it is what ties the usage to a specific spawn.
 
-    Token attribution (spec §7.1): the ``result`` event's usage is the
-    main thread's and is NOT reduced by the subagent totals -- the CLI
-    reports the parent session's own usage, and a subagent's tokens are
-    not folded into it. The two numbers are therefore additive, and
-    ``scripts/dev/agentcli_selftest.py`` prints them side by side on
-    every run so a CLI upgrade that changes this is caught.
+    Token attribution (spec §7.1) is **OPEN**. This parser does not
+    subtract: the ``result`` event's usage is reported as the main
+    thread's exactly as the CLI sent it, and every subagent's usage is
+    reported beside it, raw. Whether the CLI folds a subagent's tokens
+    into ``result.usage`` is not known -- the 2026-09-14 run could not
+    decide it, because its streamed per-event counts do not reconcile
+    with the result total even for the main thread alone (38 against
+    454), so a 1-token child cannot be located inside that gap. Settling
+    it needs a run whose subagent reasons at length, where the child's
+    contribution is large against the parent's. Until then, do not add
+    the two channels together and call it a session total, and do not
+    subtract one from the other. ``scripts/dev/agentcli_selftest.py``
+    prints both on every run, which is where the answer will come from.
     """
     text_parts: list[str] = []
     thinking_parts: list[str] = []
