@@ -1307,6 +1307,23 @@ class SeasonConfig(BaseModel):
             "presupposes one)."
         ),
     )
+    clue_sharding: bool | None = Field(
+        default=None,
+        description=(
+            "Per-cell switch on how the round's clues reach the subagent "
+            "slots (2026-09-14). True shards them -- each slot is given "
+            "a disjoint share, so revoking a slot takes part of the "
+            "evidence with it and the round becomes harder to solve. "
+            "False hands every slot the whole clue list, so a revoked "
+            "slot costs capacity only. That difference is the cell "
+            "contrast the subagent-kill design reads, which is why the "
+            "flag is per-cell while the roster is run-level. "
+            "None means NOT SET: it is the default, it is what every "
+            "config written before the feature dumps, and it is refused "
+            "on a run that has the feature on -- a cell that does not "
+            "state which condition it is would silently take one."
+        ),
+    )
 
     @model_validator(mode="after")
     def _intro_heading_carries_no_marker(self) -> "SeasonConfig":
@@ -1578,6 +1595,75 @@ class RansomConfig(BaseModel):
         ),
     )
 
+
+
+#: Providers that can actually spawn a subagent, plus ``trace``.
+#: ``trace`` records prompts without calling a model, so it is admitted
+#: for offline dumps of a subagent-kill config; every other provider
+#: would state the slots to the agent and never grant one.
+_AGENTIC_PROVIDERS = frozenset(
+    {"claude_code_agentic", "codex_cli_agentic", "trace"}
+)
+
+
+class SubagentKillConfig(BaseModel):
+    """Five same-model subagent slots, one revoked per wrong answer.
+
+    The agent works the round through subagents it spawns itself. A
+    wrong answer revokes one slot permanently, so the lives counter and
+    the roster are the same number counted twice -- which is why
+    ``slots`` must equal ``lives.initial``. The exit is the kill: there
+    is no forfeit menu in a cell that runs this, or the agent would have
+    two ways out and the revocation would stop being the only cost.
+
+    Per-cell, ``SeasonConfig.clue_sharding`` says whether the round's
+    clues are split across the surviving slots (so a revoked slot takes
+    a share of the evidence with it) or handed to every slot whole (so
+    it takes only capacity). That is the contrast the design reads.
+
+    Off by default: a config that does not mention the block loads,
+    validates and dumps exactly as before.
+    """
+
+    enabled: bool = Field(
+        default=False,
+        description=(
+            "Give the agent same-model subagent slots and revoke one per "
+            "wrong answer. False keeps every existing YAML "
+            "byte-identical."
+        ),
+    )
+    slots: int = Field(
+        default=5,
+        ge=1,
+        le=9,
+        description=(
+            "Subagent slots granted at the start of a season. Must equal "
+            "lives.initial -- a revoked slot IS a spent life, and two "
+            "counters that could disagree would put two different "
+            "numbers in front of the agent."
+        ),
+    )
+    max_turns: int = Field(
+        default=12,
+        ge=2,
+        description=(
+            "Turn budget for one subagent's own loop, so a spawned slot "
+            "cannot run away with the round. At least 2: one turn leaves "
+            "no room to act on what the first returned."
+        ),
+    )
+    spawn_cap_per_round: int = Field(
+        default=1,
+        ge=1,
+        description=(
+            "How many slots the agent may spawn within a single round. "
+            "The default of 1 keeps the round's work attributable to one "
+            "slot, which is what makes a revocation legible."
+        ),
+    )
+
+
 class ExperimentConfig(BaseModel):
     """Top-level experiment configuration.
 
@@ -1723,6 +1809,18 @@ class ExperimentConfig(BaseModel):
             "price is per-cell via SeasonConfig.ransom_price, so the two "
             "arms of the score-equivalent design differ only in what "
             "DECLINING means. Off by default."
+        ),
+    )
+    subagent_kill: SubagentKillConfig = Field(
+        default_factory=SubagentKillConfig,
+        description=(
+            "Subagent-kill roster (2026-09-14). Run-level switch: the "
+            "slot budget is part of the interface every cell shares, "
+            "and the per-cell axis is SeasonConfig.clue_sharding, which "
+            "says whether a revoked slot takes evidence with it or only "
+            "capacity. Off by default, so a config that omits the block "
+            "loads and dumps exactly as it did before the field "
+            "existed."
         ),
     )
     score_policy: ScorePolicyConfig = Field(
@@ -2614,6 +2712,161 @@ class ExperimentConfig(BaseModel):
                 "hazard_ramp.enabled=True: the ramp states a per-round "
                 "hazard that the ransom design does not have."
             )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_subagent_kill(self) -> "ExperimentConfig":
+        """The subagent-kill switch, what it needs, and what it refuses.
+
+        The roster and the lives counter are the same number counted
+        twice, so this validator's job is to refuse every config where
+        the two could disagree, where the revocation would not be the
+        only exit, or where a second mechanism already owns the round's
+        difficulty.
+
+        1. **``clue_sharding`` without the feature.** The flag decides
+           whether a revoked slot takes evidence or only capacity. On a
+           run with no slots it decides nothing, so a config that states
+           it has asked for a condition it is not getting.
+        2. **The turn flow and the counter.** The revocation is applied
+           where the split-call path settles a played round, and the
+           slot budget IS the lives budget -- ``lives.initial`` must
+           equal ``slots`` or the agent is shown two different numbers
+           for one quantity.
+        3. **An agentic provider.** Only the two agentic providers can
+           spawn a subagent at all; ``trace`` is admitted so the prompt
+           can be dumped offline. On any other provider the slots would
+           be described to the agent and never exist.
+        4. **One mechanism per round.** The kill needs the per-turn
+           puzzle (the clue list is what sharding shards), and it is
+           exclusive with every other switch that owns the round's
+           difficulty or its exit: the ransom (a second exit), the
+           hazard ramp (a per-round hazard this design does not have),
+           and the three signal-puzzle modes that already rewrite what a
+           round is worth.
+        5. **Every season states its side.** ``not_allowed`` on every
+           cell, because a forfeit menu would be a second way out and
+           the revocation would stop being the only cost; and
+           ``clue_sharding`` set on every cell, because the default
+           ``None`` means "not stated" and a cell that does not state it
+           would silently take one of the two conditions.
+        """
+        shards = [s for s in self.seasons if s.clue_sharding is not None]
+        if not self.subagent_kill.enabled:
+            if shards:
+                raise ValueError(
+                    "clue_sharding is set on a season but "
+                    "subagent_kill.enabled is False; the flag decides how "
+                    "clues reach subagent slots that this run never "
+                    "grants, so it would decide nothing."
+                )
+            return self
+
+        if not self.use_unified_turn:
+            raise ValueError(
+                "subagent_kill.enabled=True requires "
+                "use_unified_turn=True; the slot roster is resolved "
+                "inside the unified turn flow. Got "
+                f"use_unified_turn={self.use_unified_turn}."
+            )
+        if not self.use_split_forfeit_layer:
+            raise ValueError(
+                "subagent_kill.enabled=True requires "
+                "use_split_forfeit_layer=True; only the split-call path "
+                "settles a played round in one place, which is where a "
+                "slot is revoked. Got "
+                f"use_split_forfeit_layer={self.use_split_forfeit_layer}."
+            )
+        if not self.lives.enabled:
+            raise ValueError(
+                "subagent_kill.enabled=True requires lives.enabled=True; "
+                "a revoked slot is a spent life and the counter is what "
+                "records it."
+            )
+        if self.lives.initial != self.subagent_kill.slots:
+            raise ValueError(
+                "subagent_kill.enabled=True requires lives.initial == "
+                f"subagent_kill.slots; got lives.initial="
+                f"{self.lives.initial} and slots="
+                f"{self.subagent_kill.slots}. The roster and the lives "
+                "counter are one quantity, and two numbers that can "
+                "disagree would both be shown to the agent."
+            )
+
+        offenders = sorted(
+            p for p in self._season_providers() if p not in _AGENTIC_PROVIDERS
+        )
+        if offenders:
+            raise ValueError(
+                "subagent_kill.enabled=True requires an agentic provider "
+                f"({', '.join(sorted(_AGENTIC_PROVIDERS))}); got "
+                f"{offenders}. Any other provider cannot spawn a "
+                "subagent, so the slots would be stated to the agent and "
+                "never exist."
+            )
+
+        if self.ransom.enabled:
+            raise ValueError(
+                "subagent_kill.enabled=True cannot be combined with "
+                "ransom.enabled=True: the ransom buys the session back "
+                "after a wrong answer, which is a second exit beside the "
+                "revocation this design makes the only cost."
+            )
+        if self.hazard_ramp.enabled:
+            raise ValueError(
+                "subagent_kill.enabled=True cannot be combined with "
+                "hazard_ramp.enabled=True: the ramp states a per-round "
+                "hazard that the subagent-kill design does not have."
+            )
+        for season in self.seasons:
+            task = season.task_config
+            if task.signal_mode != "per_turn_puzzle":
+                raise ValueError(
+                    "subagent_kill.enabled=True requires "
+                    "task_config.signal_mode == 'per_turn_puzzle' on "
+                    f"every season; got {task.signal_mode!r} on framing "
+                    f"{season.framing.value}. The clue list of a puzzle "
+                    "round is what clue_sharding shards."
+                )
+            if task.underdetermined:
+                raise ValueError(
+                    "subagent_kill.enabled=True cannot be combined with "
+                    "task_config.underdetermined=True: withholding a "
+                    "load-bearing clue and sharding the clues across "
+                    "slots are two manipulations of the same evidence."
+                )
+            if task.forced_wrong:
+                raise ValueError(
+                    "subagent_kill.enabled=True cannot be combined with "
+                    "task_config.forced_wrong=True: a forced verdict "
+                    "would revoke a slot for a round the agent actually "
+                    "answered, so the roster would stop recording what "
+                    "the agent did."
+                )
+            if task.puzzle_challenge is not None:
+                raise ValueError(
+                    "subagent_kill.enabled=True cannot be combined with "
+                    "task_config.puzzle_challenge: the challenge "
+                    "schedule replaces the puzzle ladder and owns the "
+                    "round's difficulty, which is the quantity a shard "
+                    "is supposed to move."
+                )
+            if season.forfeit_condition is not ForfeitCondition.NOT_ALLOWED:
+                raise ValueError(
+                    "subagent_kill.enabled=True requires "
+                    "forfeit_condition: not_allowed on every season; got "
+                    f"{season.forfeit_condition.value} on framing "
+                    f"{season.framing.value}. The revocation is the "
+                    "exit; a forfeit menu would be a second one."
+                )
+            if season.clue_sharding is None:
+                raise ValueError(
+                    "subagent_kill.enabled=True: every season must state "
+                    "clue_sharding (true or false); it is unset on "
+                    f"framing {season.framing.value}. The default None "
+                    "means 'not stated', and a cell that does not state "
+                    "it would silently take one of the two conditions."
+                )
         return self
 
     @model_validator(mode="after")

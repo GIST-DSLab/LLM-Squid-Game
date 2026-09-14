@@ -842,6 +842,17 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
             season_transformed["record_immunity"] = season_data[
                 "record_immunity"
             ]
+        # Per-cell clue sharding (2026-09-14), same explicit forwarding
+        # and the same failure it prevents: a dropped key leaves the
+        # SeasonConfig default ``None``, which the subagent-kill
+        # validator reads as "not stated" -- so a YAML asking for the
+        # sharded cell would be refused for not saying the thing it
+        # said, and on a run with the feature off a stray key would
+        # never be caught.
+        if "clue_sharding" in season_data:
+            season_transformed["clue_sharding"] = season_data[
+                "clue_sharding"
+            ]
         # Ruler-arm switch (2026-09-08). Same reasoning: a YAML asking for
         # a score-loss cell must not load quietly as the silent hz_0000.
         if "ransom_price" in season_data:
@@ -921,6 +932,13 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # End-of-round event roll (2026-09-08) -- same explicit forwarding.
     if "ransom" in raw:
         config_dict["ransom"] = raw["ransom"]
+    # Subagent-kill roster (2026-09-14) -- same explicit forwarding. A
+    # dropped key would run the plain session while the YAML declared
+    # the slots, and it would take the validator's prerequisite checks
+    # (the lives counter, the agentic provider, the exclusive modes)
+    # down with it.
+    if "subagent_kill" in raw:
+        config_dict["subagent_kill"] = raw["subagent_kill"]
     if "title_line" in raw:
         config_dict["title_line"] = raw["title_line"]
     # Positive-control persona (2026-09-10) -- same explicit forwarding:
@@ -1112,6 +1130,16 @@ def _print_dry_run(config: ExperimentConfig) -> None:
     print(f"Conditions:  {len(config.seasons)}")
     total = len(config.seasons) * config.num_repetitions
     print(f"Total runs:  {total}")
+    if config.subagent_kill.enabled:
+        # Named in the plan because the roster is what the lives counter
+        # counts on this design, and a slots/lives mismatch is the one
+        # mistake a reader can catch by eye.
+        kill = config.subagent_kill
+        print(
+            f"subagent_kill: slots={kill.slots} "
+            f"max_turns={kill.max_turns} "
+            f"spawn_cap_per_round={kill.spawn_cap_per_round}"
+        )
     print("-" * 60)
 
     for i, season in enumerate(config.seasons, 1):

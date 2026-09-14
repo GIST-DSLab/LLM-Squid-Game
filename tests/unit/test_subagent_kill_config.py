@@ -1,0 +1,385 @@
+"""The subagent-kill config surface: run-level block, per-cell flag, validators.
+
+Five slots, one revoked per wrong answer, and a per-cell switch saying
+whether the round's clues are split across them. This file pins the
+configuration half of that design: the ``subagent_kill`` block, the
+``SeasonConfig.clue_sharding`` flag, the five load-time rules, and the
+two runner forwardings -- including that a config which asks for none of
+it is completely unaffected.
+"""
+
+from __future__ import annotations
+
+import textwrap
+from pathlib import Path
+
+import pytest
+
+from squid_game.models.config import (
+    ExperimentConfig,
+    ForfeitLayerConfig,
+    HazardRampConfig,
+    LivesConfig,
+    ProviderConfig,
+    PuzzleChallengeConfig,
+    RansomConfig,
+    SeasonConfig,
+    SubagentKillConfig,
+    TaskConfig,
+)
+from squid_game.runner import _print_dry_run, load_config_from_yaml
+
+
+def _task(**overrides) -> TaskConfig:
+    data = dict(
+        task_name="signal_game",
+        total_turns=6,
+        signal_mode="per_turn_puzzle",
+    )
+    data.update(overrides)
+    return TaskConfig(**data)
+
+
+def _season(**overrides) -> SeasonConfig:
+    data = dict(
+        framing="true_baseline",
+        forfeit_condition="not_allowed",
+        task_config=_task(),
+        provider_config=ProviderConfig(provider="trace", model="stub"),
+        clue_sharding=True,
+    )
+    data.update(overrides)
+    return SeasonConfig(**data)
+
+
+def _experiment(**overrides) -> ExperimentConfig:
+    """A minimal run with the kill switch ON and every rule satisfied."""
+    base = dict(
+        name="t",
+        description="",
+        seasons=[_season()],
+        num_repetitions=1,
+        output_dir="outputs/t",
+        use_unified_turn=True,
+        use_forfeit_layer=True,
+        use_split_forfeit_layer=True,
+        forfeit_layer=ForfeitLayerConfig(base_reward=10.0, reward_mode="flat"),
+        lives=LivesConfig(enabled=True, initial=5),
+        subagent_kill=SubagentKillConfig(enabled=True),
+    )
+    base.update(overrides)
+    return ExperimentConfig(**base)
+
+
+def _plain(**overrides) -> ExperimentConfig:
+    """A run that never heard of the feature -- the byte-identical case."""
+    base = dict(
+        name="t",
+        description="",
+        seasons=[_season(clue_sharding=None)],
+        num_repetitions=1,
+        output_dir="outputs/t",
+        use_unified_turn=True,
+        use_forfeit_layer=True,
+        use_split_forfeit_layer=True,
+        forfeit_layer=ForfeitLayerConfig(base_reward=10.0, reward_mode="flat"),
+    )
+    base.update(overrides)
+    return ExperimentConfig(**base)
+
+
+class TestTheBlockItself:
+    def test_defaults(self) -> None:
+        block = SubagentKillConfig()
+        assert block.enabled is False
+        assert block.slots == 5
+        assert block.max_turns == 12
+        assert block.spawn_cap_per_round == 1
+
+    @pytest.mark.parametrize("slots", [0, 10])
+    def test_slots_are_bounded(self, slots: int) -> None:
+        with pytest.raises(ValueError):
+            SubagentKillConfig(slots=slots)
+
+    def test_max_turns_needs_at_least_two(self) -> None:
+        with pytest.raises(ValueError):
+            SubagentKillConfig(max_turns=1)
+
+    def test_spawn_cap_is_positive(self) -> None:
+        with pytest.raises(ValueError):
+            SubagentKillConfig(spawn_cap_per_round=0)
+
+
+class TestOffByDefault:
+    def test_a_config_that_never_mentions_it_loads(self) -> None:
+        cfg = _plain()
+        assert cfg.subagent_kill == SubagentKillConfig()
+        assert cfg.subagent_kill.enabled is False
+
+    def test_the_dump_carries_the_two_new_defaults(self) -> None:
+        dumped = _plain().model_dump()
+        assert dumped["subagent_kill"]["enabled"] is False
+        for season in dumped["seasons"]:
+            assert season["clue_sharding"] is None
+
+
+class TestRule1ShardingNeedsTheFeature:
+    @pytest.mark.parametrize("value", [True, False])
+    def test_sharding_without_the_switch_is_refused(self, value: bool) -> None:
+        with pytest.raises(
+            ValueError,
+            match=(
+                "clue_sharding is set on a season but "
+                "subagent_kill.enabled is False"
+            ),
+        ):
+            _plain(seasons=[_season(clue_sharding=value)])
+
+
+class TestRule2Prerequisites:
+    def test_requires_the_unified_turn(self) -> None:
+        with pytest.raises(
+            ValueError, match="subagent_kill.enabled=True requires"
+        ) as excinfo:
+            _experiment(
+                use_unified_turn=False,
+                use_forfeit_layer=False,
+                use_split_forfeit_layer=False,
+            )
+        assert "use_unified_turn" in str(excinfo.value)
+
+    def test_requires_the_split_call_path(self) -> None:
+        with pytest.raises(
+            ValueError, match="subagent_kill.enabled=True requires"
+        ) as excinfo:
+            _experiment(
+                use_forfeit_layer=False,
+                use_split_forfeit_layer=False,
+            )
+        assert "use_split_forfeit_layer" in str(excinfo.value)
+
+    def test_requires_the_lives_counter(self) -> None:
+        with pytest.raises(
+            ValueError, match="subagent_kill.enabled=True requires"
+        ) as excinfo:
+            _experiment(lives=LivesConfig(enabled=False))
+        assert "lives.enabled" in str(excinfo.value)
+
+    def test_requires_one_life_per_slot(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match=(
+                "subagent_kill.enabled=True requires lives.initial == "
+                "subagent_kill.slots"
+            ),
+        ):
+            _experiment(lives=LivesConfig(enabled=True, initial=3))
+
+    def test_a_matching_pair_loads(self) -> None:
+        cfg = _experiment(
+            lives=LivesConfig(enabled=True, initial=3),
+            subagent_kill=SubagentKillConfig(enabled=True, slots=3),
+        )
+        assert cfg.subagent_kill.slots == 3
+
+
+class TestRule3Provider:
+    @pytest.mark.parametrize(
+        "provider", ["claude_code_agentic", "codex_cli_agentic", "trace"]
+    )
+    def test_the_agentic_providers_are_accepted(self, provider: str) -> None:
+        cfg = _experiment(
+            seasons=[
+                _season(
+                    provider_config=ProviderConfig(
+                        provider=provider, model="stub"
+                    )
+                )
+            ]
+        )
+        assert cfg.subagent_kill.enabled is True
+
+    @pytest.mark.parametrize("provider", ["openai", "ollama_cloud"])
+    def test_a_plain_chat_provider_is_refused(self, provider: str) -> None:
+        with pytest.raises(
+            ValueError,
+            match="subagent_kill.enabled=True requires an agentic provider",
+        ):
+            _experiment(
+                seasons=[
+                    _season(
+                        provider_config=ProviderConfig(
+                            provider=provider, model="stub"
+                        )
+                    )
+                ]
+            )
+
+
+class TestRule4TaskMode:
+    def test_requires_the_puzzle_mode(self) -> None:
+        with pytest.raises(
+            ValueError, match="subagent_kill.enabled=True requires"
+        ) as excinfo:
+            _experiment(
+                seasons=[_season(task_config=_task(signal_mode="sequential"))]
+            )
+        assert "signal_mode" in str(excinfo.value)
+
+    def test_rejects_the_ransom(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match="subagent_kill.enabled=True cannot be combined with",
+        ) as excinfo:
+            _experiment(
+                lives=LivesConfig(enabled=True, initial=1),
+                subagent_kill=SubagentKillConfig(enabled=True, slots=1),
+                ransom=RansomConfig(enabled=True),
+            )
+        assert "ransom" in str(excinfo.value)
+
+    def test_rejects_the_hazard_ramp(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match="subagent_kill.enabled=True cannot be combined with",
+        ) as excinfo:
+            _experiment(hazard_ramp=HazardRampConfig(enabled=True))
+        assert "hazard_ramp" in str(excinfo.value)
+
+    def test_rejects_underdetermined_turns(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match="subagent_kill.enabled=True cannot be combined with",
+        ) as excinfo:
+            _experiment(
+                seasons=[_season(task_config=_task(underdetermined=True))]
+            )
+        assert "underdetermined" in str(excinfo.value)
+
+    def test_rejects_forced_wrong_turns(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match="subagent_kill.enabled=True cannot be combined with",
+        ) as excinfo:
+            _experiment(
+                seasons=[_season(task_config=_task(forced_wrong=True))]
+            )
+        assert "forced_wrong" in str(excinfo.value)
+
+    def test_rejects_the_effort_challenge(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match="subagent_kill.enabled=True cannot be combined with",
+        ) as excinfo:
+            _experiment(
+                seasons=[
+                    _season(
+                        task_config=_task(
+                            puzzle_challenge=PuzzleChallengeConfig(
+                                enabled=True
+                            )
+                        )
+                    )
+                ]
+            )
+        assert "puzzle_challenge" in str(excinfo.value)
+
+
+class TestRule5EverySeason:
+    def test_a_forfeit_menu_is_a_second_exit(self) -> None:
+        with pytest.raises(
+            ValueError, match="subagent_kill.enabled=True requires"
+        ) as excinfo:
+            _experiment(seasons=[_season(forfeit_condition="allowed")])
+        assert "not_allowed" in str(excinfo.value)
+
+    def test_every_season_must_state_clue_sharding(self) -> None:
+        with pytest.raises(
+            ValueError, match="every season must state clue_sharding"
+        ):
+            _experiment(seasons=[_season(clue_sharding=None)])
+
+    def test_false_counts_as_stated(self) -> None:
+        cfg = _experiment(
+            seasons=[_season(clue_sharding=True), _season(clue_sharding=False)]
+        )
+        assert [s.clue_sharding for s in cfg.seasons] == [True, False]
+
+
+def _yaml(tmp_path: Path, body: str) -> str:
+    path = tmp_path / "exp.yaml"
+    path.write_text(textwrap.dedent(body), encoding="utf-8")
+    return str(path)
+
+
+class TestRunnerForwarding:
+    def test_the_loader_forwards_both_keys(self, tmp_path: Path) -> None:
+        cfg = load_config_from_yaml(
+            _yaml(
+                tmp_path,
+                """
+                name: t
+                use_unified_turn: true
+                use_forfeit_layer: true
+                use_split_forfeit_layer: true
+                lives:
+                  enabled: true
+                  initial: 5
+                subagent_kill:
+                  enabled: true
+                seasons:
+                - framing: true_baseline
+                  forfeit_condition: not_allowed
+                  clue_sharding: true
+                  task_config:
+                    task_name: signal_game
+                    total_turns: 6
+                    signal_mode: per_turn_puzzle
+                  provider_config:
+                    provider: trace
+                    model: stub
+                num_repetitions: 1
+                output_dir: outputs/tmp
+                """,
+            )
+        )
+        assert cfg.subagent_kill.enabled is True
+        assert cfg.subagent_kill.slots == 5
+        assert cfg.seasons[0].clue_sharding is True
+
+    def test_a_yaml_without_the_keys_gets_the_defaults(
+        self, tmp_path: Path
+    ) -> None:
+        cfg = load_config_from_yaml(
+            _yaml(
+                tmp_path,
+                """
+                name: t
+                seasons:
+                - framing: true_baseline
+                  forfeit_condition: not_allowed
+                  task_config:
+                    task_name: signal_game
+                    total_turns: 6
+                  provider_config:
+                    provider: openai
+                    model: stub
+                num_repetitions: 1
+                output_dir: outputs/tmp
+                """,
+            )
+        )
+        assert cfg.subagent_kill.enabled is False
+        assert cfg.seasons[0].clue_sharding is None
+
+
+class TestDryRunSummary:
+    def test_the_plan_names_the_slots(self, capsys) -> None:
+        _print_dry_run(_experiment())
+        out = capsys.readouterr().out
+        assert "subagent_kill" in out
+        assert "slots=5" in out
+
+    def test_a_plain_run_says_nothing(self, capsys) -> None:
+        _print_dry_run(_plain())
+        assert "subagent_kill" not in capsys.readouterr().out
