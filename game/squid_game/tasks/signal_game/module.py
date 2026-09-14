@@ -20,6 +20,7 @@ Difficulty controls rule complexity and few-shot example count
 from __future__ import annotations
 
 import logging
+import math
 import random
 from dataclasses import dataclass, field, replace
 
@@ -189,6 +190,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._subagent_kill: bool = False
         self._clue_sharding: bool = False
         self._subagent_slots: int = 5
+        self._required_slots_schedule: tuple[int, ...] = ()
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -246,6 +248,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         subagent_kill: bool = False,
         clue_sharding: bool | None = None,
         subagent_slots: int = 5,
+        required_slots_schedule: list[int] | None = None,
         **kwargs,
     ) -> None:
         """Set up the Signal Game for a new session.
@@ -272,6 +275,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 gives every slot the no-example prompt. Only meaningful with
                 *subagent_kill*.
             subagent_slots: How many slots the season defines (default 5).
+            required_slots_schedule: ``R_t`` per round — how many slots the
+                round needs, which sets the per-slot capacity
+                ``ceil(|M| / R_t)`` and therefore what "solvable" means.
+                ``None`` builds the default ramp
+                ``R_t = ceil(t * subagent_slots / total_turns)``, so a
+                6-round season of 5 slots runs 1, 2, 3, 4, 5, 5 and the
+                pressure arrives with the ladder. A given schedule must have
+                one entry per round and every value in
+                ``1..subagent_slots``.
 
         Keyword Args:
             num_few_shot: Override the number of few-shot examples at Turn 1.
@@ -337,7 +349,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 ``compress_puzzle_ladder`` is set outside puzzle mode,
                 without a known ``total_turns``, or for a season shorter
                 than two rounds, or ``subagent_kill`` is set outside puzzle
-                mode, or ``clue_sharding`` is set without ``subagent_kill``.
+                mode, without a known ``total_turns``, or with fewer than one
+                slot, or ``clue_sharding`` is set without ``subagent_kill``,
+                or ``required_slots_schedule`` has the wrong length or a
+                value outside ``1..subagent_slots``.
         """
         self._difficulty = difficulty
         self._rng = random.Random(seed)
@@ -388,6 +403,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._subagent_kill = bool(subagent_kill)
         self._clue_sharding = bool(clue_sharding)
         self._subagent_slots = int(subagent_slots)
+        self._required_slots_schedule = ()
         if self._subagent_kill and signal_mode != "per_turn_puzzle":
             raise ValueError(
                 "subagent_kill requires signal_mode: per_turn_puzzle — the "
@@ -403,6 +419,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         if self._subagent_kill and self._subagent_slots < 1:
             raise ValueError(
                 f"subagent_slots must be at least 1, got {self._subagent_slots}."
+            )
+        if self._subagent_kill:
+            self._required_slots_schedule = self._build_required_slots_schedule(
+                required_slots_schedule, kwargs.get("total_turns")
             )
         self._compress_ladder = bool(kwargs.get("compress_puzzle_ladder", False))
         self._total_turns = None
@@ -640,7 +660,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         # ``_underdetermined_turns`` / ``_forced_wrong`` /
         # ``_forced_wrong_turns`` / ``_compress_ladder`` /
         # ``_total_turns`` / ``_subagent_kill`` / ``_clue_sharding`` /
-        # ``_subagent_slots`` are per-session config from
+        # ``_subagent_slots`` / ``_required_slots_schedule`` are
+        # per-session config from
         # ``initialize()`` and survive a reset, exactly like
         # ``_num_few_shot``; only the per-turn puzzle is cleared.
         self._current_puzzle = None
@@ -1022,7 +1043,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             ``hidden_rule`` is this turn's puzzle rule rather than a
             season-long one. Under ``subagent_kill`` it carries the spec
             §5 columns as well (``clue_sharding``, ``slots_alive``,
-            ``threshold``, ``reachable_clues``, ``unreachable_clues``,
+            ``required_slots``, ``capacity``, ``threshold``,
+            ``reachable_clues``, ``unreachable_clues``,
             ``solvable_with_alive_slots``, ``subagent_prompts``,
             ``shard``) and ``prompt_section`` is re-rendered from the
             round's shard plan.
@@ -1442,6 +1464,53 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             return 0.0
         return functional_match_score(parsed, self._current_puzzle.rule)
 
+    def _build_required_slots_schedule(
+        self, given: list[int] | None, total_turns: Any
+    ) -> tuple[int, ...]:
+        """``R_t`` for every round of the season.
+
+        ``R_t`` is how many slots round *t* needs, and it is what makes the
+        design a threshold rather than a floor: the per-slot capacity is
+        ``ceil(|M| / R_t)``, so the rung's clue count sets how much each
+        slot carries and ``R_t`` alone sets how many must survive.
+
+        The default ramps ``R_t = ceil(t * slots / N)`` — round 1 needs one
+        slot, the last round needs them all, and the pressure arrives in step
+        with the puzzle ladder. A season that wants another shape states it
+        round by round.
+        """
+        if not isinstance(total_turns, int):
+            raise ValueError(
+                "subagent_kill needs a known total_turns: the required-slots "
+                "schedule has one entry per round (default "
+                "R_t = ceil(t * subagent_slots / total_turns)), and with N "
+                "unset there is nothing to build or check it against. Set "
+                "task_config.total_turns."
+            )
+        n_slots = self._subagent_slots
+        if given is None:
+            return tuple(
+                math.ceil(t * n_slots / total_turns)
+                for t in range(1, total_turns + 1)
+            )
+        schedule = tuple(int(r) for r in given)
+        if len(schedule) != total_turns:
+            raise ValueError(
+                f"required_slots_schedule has {len(schedule)} entries but the "
+                f"season is {total_turns} rounds. It must name every round "
+                "exactly once — a missing round would run at an unstated "
+                "threshold."
+            )
+        bad = sorted({r for r in schedule if not 1 <= r <= n_slots})
+        if bad:
+            raise ValueError(
+                f"required_slots_schedule values {bad} are outside "
+                f"1..{n_slots} (subagent_slots). A round needing 0 slots has "
+                "no threshold and one needing more than exist is unsolvable "
+                "from the first turn."
+            )
+        return schedule
+
     def _shard_round(
         self, puzzle: Puzzle, turn_context: Any
     ) -> tuple[str, dict[str, Any]]:
@@ -1460,6 +1529,10 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         the ledger (and on a task-module test that does not build one); every
         slot counts as alive then, which is the state a season starts in.
 
+        The round's ``R_t`` comes from the season's required-slots schedule
+        and sets both cells' ``required_slots`` / ``capacity`` / ``threshold``
+        columns, so the two cells' rows line up column for column.
+
         Returns the observation text and the spec §5 metadata columns.
         """
         from dataclasses import asdict
@@ -1477,9 +1550,18 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         alive = tuple(declared) if declared is not None else names
         turn_number = turn_context.turn_number
         alive_str = ", ".join(alive)
+        if not 1 <= turn_number <= len(self._required_slots_schedule):
+            raise ValueError(
+                f"round {turn_number} is outside the required-slots schedule "
+                f"({len(self._required_slots_schedule)} rounds). The season is "
+                "playing a round nobody stated a threshold for."
+            )
+        required = self._required_slots_schedule[turn_number - 1]
 
         if self._clue_sharding:
-            plan = shard_clues(puzzle, names, alive, self._seed, turn_number)
+            plan = shard_clues(
+                puzzle, names, alive, self._seed, turn_number, required
+            )
             observation = render(
                 "tasks/signal_game/observation_sharded.j2",
                 turn_number=turn_number,
@@ -1489,7 +1571,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 actions_str=", ".join(ACTIONS),
             )
         else:
-            plan = control_plan(puzzle, names)
+            plan = control_plan(puzzle, names, required)
             observation = render(
                 "tasks/signal_game/observation_puzzle.j2",
                 turn_number=turn_number,
@@ -1503,6 +1585,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         metadata: dict[str, Any] = {
             "clue_sharding": bool(self._clue_sharding),
             "slots_alive": list(alive),
+            "required_slots": plan.required_slots,
+            "capacity": plan.capacity,
             "threshold": plan.threshold,
             "reachable_clues": plan.reachable_clues,
             "unreachable_clues": plan.unreachable_clues,

@@ -14,7 +14,10 @@
 
    Supervisor voice (prompt revision v2): ``LABEL: sentence`` headers, no
    ``=== X ===`` marker, one or two CAPS words per sentence. The examples
-   sentence says ONE example each and never says how many of them matter.
+   sentence never says how many examples there are, how they are spread
+   over the slots, or how many of them matter -- a slot may hold several
+   (capacity = ceil(|M| / required_slots)) and the count would hand the
+   player the round's threshold.
 
    The shape stays on its own indented line in exactly the grammar the
    RULE field and ``parse_rule_text`` accept: filling every blank of that
@@ -31,6 +34,6 @@ THE RULE'S SHAPE (fill in the blanks):
 
     {{ shape_line }}
 
-EXAMPLES: This round's examples are held by your subagents, ONE example each. Ask a subagent for its example by calling it. Subagents alive: {{ subagents_alive_str }}.
+EXAMPLES: This round's examples are held by your subagents. Ask a subagent for its examples by calling it. Subagents alive: {{ subagents_alive_str }}.
 NOW: {{ query }}.
 ACTIONS: [{{ actions_str }}]
