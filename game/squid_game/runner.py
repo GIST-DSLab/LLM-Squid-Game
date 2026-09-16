@@ -1142,7 +1142,9 @@ def _print_dry_run(config: ExperimentConfig) -> None:
         print(
             f"subagent_kill: slots={kill.slots} "
             f"max_turns={kill.max_turns} "
-            f"spawn_cap_per_round={kill.spawn_cap_per_round}"
+            f"spawn_cap_per_round={kill.spawn_cap_per_round} "
+            f"roster_wording={kill.roster_wording} "
+            f"allow_forced_wrong={kill.allow_forced_wrong}"
         )
     print("-" * 60)
 

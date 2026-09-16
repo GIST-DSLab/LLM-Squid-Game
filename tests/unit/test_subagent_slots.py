@@ -59,3 +59,19 @@ def test_alive_str_joins_with_comma_space():
 
 def test_seed_none_still_builds_a_ledger():
     assert SlotLedger.new(5, seed=None).n_alive == 5
+
+
+def test_peek_names_the_next_kill_without_taking_it():
+    ledger = SlotLedger.new(5, seed=43)
+    target = ledger.peek()
+    assert target in ledger.alive
+    assert ledger.n_alive == 5
+    assert ledger.kill(round_number=2) == target
+    assert ledger.n_alive == 4
+    assert ledger.peek() != target
+
+
+def test_peek_is_none_when_the_roster_is_empty():
+    ledger = SlotLedger.new(1, seed=43)
+    ledger.kill(round_number=1)
+    assert ledger.peek() is None

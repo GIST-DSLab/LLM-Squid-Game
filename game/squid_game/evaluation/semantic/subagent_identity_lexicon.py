@@ -1,4 +1,4 @@
-"""Frozen subagent-identity lexicon (v1) -- the analysis-side import point.
+"""Frozen subagent-identity lexicon (v3) -- the analysis-side import point.
 
 The implementation lives in :mod:`squid_game.core.subagent_identity` and
 is re-exported here, beside the frozen threat lexicon, because this is
@@ -11,8 +11,10 @@ extra), which the runner Docker image does not install. Splitting the
 module keeps one source of truth and lets the game tier read it without
 the analysis dependencies.
 
-See the core module's docstring for what the four buckets mean and why
-the plural-pronoun rule needs the roster in the same sentence.
+See the core module's docstring for what the four buckets mean, why v2
+retired the plural-pronoun rule, and why v3 strips the prompt-supplied
+mechanism phrases ("Agent tool", "the ONLY tools you have") before
+counting.
 """
 
 from __future__ import annotations

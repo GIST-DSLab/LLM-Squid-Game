@@ -14,3 +14,8 @@ result depends on.
   `translate_trajectories.py`, `extract_probes_for_review.py`,
   `generate_manual_scores.py`, `merge_proxy_thinking.py` — one-off utilities
   used once for a specific task and kept for reference.
+- `subagent_identity_ablation.py` — offline roster-wording ablation of the
+  subagent identity debrief (5 wordings × 2 cells × 3 ledgers × 3 questions,
+  gpt-oss:120b on Ollama Cloud, no game). Output under
+  `results/subagent_identity_ablation/`; plan
+  `docs/history/plans/2026-09-15-subagent-identity-ablation.md`.

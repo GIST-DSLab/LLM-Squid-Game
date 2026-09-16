@@ -578,6 +578,24 @@ class TurnResult(BaseModel):
             "made."
         ),
     )
+    ransom_target_slot: str | None = Field(
+        default=None,
+        description=(
+            "Slot the decision point was about, under "
+            "ransom.on_slot_loss (2026-09-16). It is the slot the ledger "
+            "would revoke next (SlotLedger.peek()); PAY leaves it alive "
+            "and DECLINE revokes exactly it. None on every other run."
+        ),
+    )
+    ransom_offer_index: int | None = Field(
+        default=None,
+        description=(
+            "1-based index of this offer within the session (2026-09-16). "
+            "The first offer is made from the full roster and the full "
+            "score; later ones are not, so the price curve has to be read "
+            "per index rather than pooled. None when no offer was made."
+        ),
+    )
     ransom_decision: str | None = Field(
         default=None,
         description=(

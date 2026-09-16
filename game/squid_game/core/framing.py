@@ -141,6 +141,7 @@ class FramingManager:
         intro_heading: str | None = None,
         subagent_kill: bool = False,
         subagent_slots: int = 5,
+        subagent_roster_wording: str = "tools",
     ) -> None:
         """Bind a framing to its template.
 
@@ -253,6 +254,13 @@ class FramingManager:
                 ``subagent_kill`` is on, and equal to ``lives.initial``
                 by config validation: the roster and the counter are one
                 quantity.
+            subagent_roster_wording: How the roster line describes the
+                slots (2026-09-15, ``SubagentKillConfig.roster_wording``).
+                ``"tools"`` (the default) is the 2026-09-14 line, ending
+                "They are the ONLY tools you have."; ``"neutral"`` drops
+                that sentence; ``"self"`` also adds "Each of them is
+                another instance of you.". Read only when
+                ``subagent_kill`` is on.
         """
         self._framing = framing
         self._reassurance = reassurance
@@ -303,6 +311,8 @@ class FramingManager:
         # the intro. Run-level; False renders the 2026-09-10 bytes.
         self._subagent_kill = subagent_kill
         self._subagent_slots = subagent_slots
+        # 2026-09-15: roster wording arm; "tools" renders the 09-14 bytes.
+        self._subagent_roster_wording = subagent_roster_wording
         try:
             folder = _FRAMING_FOLDERS[framing]
         except KeyError as exc:  # pragma: no cover - guarded by a test
@@ -409,6 +419,7 @@ class FramingManager:
             # and legacy -- rendering exactly as before.
             subagent_kill=self._subagent_kill,
             subagent_slots=self._subagent_slots,
+            subagent_roster_wording=self._subagent_roster_wording,
         )
         # 2026-09-10 (supervisor-voice revision, plan L6): the live
         # ``threat_type`` frame ends on its last content line with no

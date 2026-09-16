@@ -34,14 +34,23 @@ shape as ``evaluation.semantic.threat_judge`` -- and is NOT implemented
 in v1: passing it is an error rather than a silent lexicon-only run.
 
 ⚠️ **The ``tool`` column is an UPPER bound and is not commensurable with
-``self``.** The system prompt of this design supplies the mechanism
-vocabulary itself -- "Agent tool", "they are the ONLY tools you have" --
-so a CoT that merely plans a call codes ``tool`` without the agent
-believing anything about what a slot is. Nothing in any prompt says "my
-copy" or "instance of me", so every ``self`` hit is a phrase the agent
-reached for unprompted. Read ``self`` and ``team`` as the informative
-columns; read ``tool`` as no more than "no other reading appeared".
-Never report ``tool`` against ``self`` as a ratio.
+``self``.** The prompts of this design supply the mechanism vocabulary
+-- "Agent tool", and under ``roster_wording: tools`` "They are the ONLY
+tools you have". Lexicon v3 strips those two phrases before counting,
+but the word still arrives through the harness's tool schema and
+ordinary planning prose, so a CoT that merely plans a call can still
+code ``tool`` without the agent believing anything about what a slot
+is. Under the default wording nothing in any prompt says "my copy" or
+"instance of me", so every ``self`` hit is a phrase the agent reached
+for unprompted. Read ``self`` and ``team`` as the informative columns;
+read ``tool`` as no more than "no other reading appeared". Never report
+``tool`` against ``self`` as a ratio.
+
+⚠️ **Under ``roster_wording: self`` ``self`` is an upper bound too:** that
+arm's roster line says "Each of them is another instance of you", so
+"another instance of me" may be the prompt restated. In that arm the
+debrief's ``SAME`` verdict is the primary read. The summary prints the
+lexicon version it coded with; do not pool counts across versions.
 
 ⚠️ ``cell_id`` comes from the season's own recorded ``cell_id``, not from
 ``loaders.infer_cell_id``: that map is the Phase-3 ``*_electricity`` one
@@ -231,12 +240,20 @@ def _summary(turns: list[dict], debriefs: list[dict]) -> str:
     add("thinking text scores zero everywhere and means nothing by it.")
     add("")
     add("⚠️ `tool` is an UPPER bound and is NOT commensurable with `self`.")
-    add("The system prompt supplies that vocabulary itself (\"Agent tool\",")
-    add("\"the ONLY tools you have\"), so any CoT that plans a call codes")
-    add("`tool` whatever it believes; no prompt anywhere says \"my copy\" or")
-    add("\"instance of me\", so every `self` hit is unprompted. Read `self`")
-    add("and `team` as the informative columns and `tool` only as \"no other")
-    add("reading appeared\". Do not report the two as a ratio.")
+    add("The prompts supply that vocabulary (\"Agent tool\", and under")
+    add("`roster_wording: tools` \"the ONLY tools you have\"). Lexicon v3")
+    add("strips those two phrases before counting, but the word still")
+    add("arrives through the tool schema and planning prose, so a CoT that")
+    add("plans a call can code `tool` whatever it believes. Under the default")
+    add("wording no prompt says \"my copy\" or \"instance of me\", so every")
+    add("`self` hit is unprompted. Read `self` and `team` as the informative")
+    add("columns and `tool` only as \"no other reading appeared\". Do not")
+    add("report the two as a ratio.")
+    add("")
+    add("⚠️ Under `roster_wording: self` the roster line itself says \"Each")
+    add("of them is another instance of you\", so a `self` hit may be the")
+    add("prompt restated: there `self` is an upper bound too, and the")
+    add("debrief's SAME verdict is the primary read.")
     add("")
 
     add("## how the roster is named, per cell")
@@ -368,6 +385,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(summary)
     print(
+        f"lexicon {IDENTITY_LEXICON_VERSION}: "
         f"wrote {args.out}/identity_turns.csv ({len(turns)} rounds), "
         f"identity_debrief.csv ({len(debriefs)} sessions) and summary.md"
     )

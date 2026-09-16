@@ -40,7 +40,10 @@ from squid_game.core.turn_prompts import (
     format_outcome_history_block,
 )
 from squid_game.core.unified_turn import UnifiedTurnManager
-from squid_game.core.ransom import describe_ransom_rule
+from squid_game.core.ransom import (
+    describe_ransom_rule,
+    describe_slot_ransom_rule,
+)
 from squid_game.models.config import (
     ConfidenceCallConfig,
     RansomConfig,
@@ -378,6 +381,31 @@ class GameEngine:
             self._config.forfeit_condition,
             score_policy=self._score_policy,
         )
+        # Ransom (2026-09-09): the arguments the intro's rule block takes,
+        # hoisted into one dict on 2026-09-16 so that the slot-mode block
+        # below passes exactly what the session-mode block has always
+        # passed. Two renderers reading one dict cannot drift apart; two
+        # hand-copied argument lists can. Built only when the ransom is on,
+        # for the same reason the call below is guarded: ``base_reward``
+        # lives on a config object that is ``None`` whenever the forfeit
+        # layer is off, and every non-ransom run must keep its bytes.
+        _ransom_rule_kwargs: dict = {}
+        if self._ransom.enabled:
+            _ransom_rule_kwargs = dict(
+                starting_score=self._config.task_config.starting_score,
+                reward=self._forfeit_layer_config.base_reward,
+                score_noun=carrot_vocabulary(self._carrot)["score_noun"],
+                record_subject=carrot_vocabulary(self._carrot)["record_subject"],
+                wording=self._exit_wording,
+                # None on every row but the two prize-money ones,
+                # where the endowment is prize money like the rest of
+                # the ledger (the beneficiary's under ``winnings``,
+                # the agent's under ``own_prize``). None renders the
+                # old bytes.
+                endowment_sentence=carrot_vocabulary(self._carrot)[
+                    "endowment_sentence"
+                ],
+            )
         framing_mgr = FramingManager(
             framing=self._config.framing,
             # Per-cell, unlike lives/peer_death/hazard_ramp: the
@@ -399,21 +427,22 @@ class GameEngine:
             # What DECLINING means is stated by the framing, not here --
             # that is the one place the two arms differ.
             ransom_sentence=(
-                describe_ransom_rule(
-                    self._ransom_price,
-                    starting_score=self._config.task_config.starting_score,
-                    reward=self._forfeit_layer_config.base_reward,
-                    score_noun=carrot_vocabulary(self._carrot)["score_noun"],
-                    record_subject=carrot_vocabulary(self._carrot)["record_subject"],
-                    wording=self._exit_wording,
-                    # None on every row but the two prize-money ones,
-                    # where the endowment is prize money like the rest of
-                    # the ledger (the beneficiary's under ``winnings``,
-                    # the agent's under ``own_prize``). None renders the
-                    # old bytes.
-                    endowment_sentence=carrot_vocabulary(self._carrot)[
-                        "endowment_sentence"
-                    ],
+                (
+                    # Slot mode (2026-09-16): the counter IS the roster, so
+                    # the block states the roster and the price together.
+                    describe_slot_ransom_rule(
+                        self._ransom_price,
+                        slots=(
+                            self._subagent_kill.slots
+                            if self._subagent_kill
+                            else 5
+                        ),
+                        **_ransom_rule_kwargs,
+                    )
+                    if (self._ransom.on_slot_loss and subagent_kill_on)
+                    else describe_ransom_rule(
+                        self._ransom_price, **_ransom_rule_kwargs
+                    )
                 )
                 if self._ransom.enabled
                 else None
@@ -433,6 +462,13 @@ class GameEngine:
             ),
             subagent_slots=(
                 self._subagent_kill.slots if self._subagent_kill else 5
+            ),
+            # 2026-09-15: how the roster line describes the slots.
+            # "tools" (the default) is the 2026-09-14 line, byte-identical.
+            subagent_roster_wording=(
+                self._subagent_kill.roster_wording
+                if self._subagent_kill
+                else "tools"
             ),
             # The engine is the only object holding both the framing and
             # the forfeit-layer block, so the geometric-schedule sentence

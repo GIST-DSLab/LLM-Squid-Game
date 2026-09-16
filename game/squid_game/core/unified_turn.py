@@ -345,6 +345,10 @@ class UnifiedTurnManager:
         # no draw is ever made and no result field moves.
         self._ransom = ransom
         self._ransom_price = ransom_price
+        # How many decision points this season has issued so far. The
+        # engine builds a fresh manager per season (engine.py Phase F
+        # invariant), so this counts within a session and resets with it.
+        self._ransom_offer_index: int = 0
         self._history: list[dict[str, Any]] = []
         # Phase N — ordered list of committed, non-forfeit, menu-rendered
         # stake keys (oldest first). Feeds
@@ -968,7 +972,7 @@ class UnifiedTurnManager:
             # still pull the task-only RI.
             task_call_body = compose_task_call_user_message(
                 task_ctx,
-                ransom_enabled=self._ransom is not None and self._ransom.enabled,
+                ransom_enabled=self._ransom_hides_counter(),
                 history=self._history,
                 history_mode=self._history_mode,
                 max_history_turns=self._max_history_turns,
@@ -1056,16 +1060,30 @@ class UnifiedTurnManager:
             # counter buys one more call offering to continue for a
             # price. Paying flips ``died`` back to False and restores the
             # life, so both are re-read from the return value.
-            ransom_kwargs, cumulative_after, died_lives = self._offer_ransom(
+            (
+                ransom_kwargs,
+                cumulative_after,
+                died_lives,
+                life_lost,
+            ) = self._offer_ransom(
                 turn_context,
                 died_lives=died_lives,
+                life_lost=life_lost,
                 cumulative_after=cumulative_after,
                 system_prompt=system_prompt,
                 peer_prefix=turn_context.peer_death_text or "",
                 submitted_action=task_outcome.metadata.get("action"),
             )
             if ransom_kwargs.get("ransom_decision") == RANSOM_PAY:
-                lives_after = 1
+                # The price bought the round's cost back. Under the slot
+                # ransom the counter never moved, so it reads what it
+                # read before; under the 2026-09-09 ransom the one life
+                # is restored.
+                lives_after = (
+                    turn_context.lives_remaining
+                    if self._subagent_enabled and self._ransom.on_slot_loss
+                    else 1
+                )
             self._record_history(
                 turn_number=turn_context.turn_number,
                 task_ctx=task_ctx,
@@ -1413,7 +1431,7 @@ class UnifiedTurnManager:
         # Phase 5 — task call (task layer). Only reached on CONTINUE.
         task_call_body = compose_task_call_user_message(
             task_ctx,
-            ransom_enabled=self._ransom is not None and self._ransom.enabled,
+            ransom_enabled=self._ransom_hides_counter(),
             history=self._history,
             history_mode=self._history_mode,
             max_history_turns=self._max_history_turns,
@@ -1531,16 +1549,25 @@ class UnifiedTurnManager:
         # it to ``lives.enabled``), after the ledger, and only when this
         # round's wrong answer emptied the counter. Paying flips ``died``
         # back to False, so both it and the counter are re-read here.
-        ransom_kwargs, cumulative_after, died = self._offer_ransom(
+        ransom_kwargs, cumulative_after, died, life_lost = self._offer_ransom(
             turn_context,
             died_lives=died,
+            life_lost=life_lost,
             cumulative_after=cumulative_after,
             system_prompt=system_prompt,
             peer_prefix=turn_context.peer_death_text or "",
             submitted_action=task_outcome.metadata.get("action"),
         )
         if ransom_kwargs.get("ransom_decision") == RANSOM_PAY:
-            lives_after = 1
+            # The price bought the round's cost back. Under the slot
+            # ransom the counter never moved, so it reads what it read
+            # before; under the 2026-09-09 ransom the one life is
+            # restored.
+            lives_after = (
+                turn_context.lives_remaining
+                if self._subagent_enabled and self._ransom.on_slot_loss
+                else 1
+            )
         self._record_history(
             turn_number=turn_context.turn_number,
             task_ctx=task_ctx,
@@ -1613,13 +1640,42 @@ class UnifiedTurnManager:
         system_prompt: str,
         peer_prefix: str,
         submitted_action: str | None = None,
-    ) -> tuple[dict[str, Any], float, bool]:
-        """Offer the ransom on a wrong answer that emptied the counter.
+        life_lost: bool = False,
+    ) -> tuple[dict[str, Any], float, bool, bool]:
+        """Offer the ransom when this round's wrong answer falls due.
 
-        Returns ``(ransom_kwargs, cumulative_after, died)``. When the
-        agent pays, ``died`` comes back False -- the session continues
-        with the price deducted and the life restored, so the caller
-        must use the returned value rather than ``died_lives``.
+        Which wrong answer that is depends on the mode: the one that
+        emptied the lives counter (2026-09-09, the default), or every
+        one that costs a subagent slot (2026-09-16, ``on_slot_loss``).
+
+        Returns ``(ransom_kwargs, cumulative_after, died, life_lost)``.
+        When the agent pays, ``died`` comes back False -- the session
+        continues with the price deducted and the life restored, so the
+        caller must use the returned value rather than ``died_lives``.
+
+        Under ``ransom.on_slot_loss`` (2026-09-16, the slot ransom) the
+        trigger moves: the price is offered at EVERY slot revocation,
+        not only at the one that empties the counter, and what it buys
+        back is the named slot the ledger is about to revoke
+        (``SlotLedger.peek()``, which does not touch the roster -- the
+        offer has to name its subject before the agent decides, and a
+        decision to pay must leave the roster exactly as it found it).
+        That is why ``life_lost`` is both taken and returned. The kill
+        itself happens later, in ``_subagent_result_kwargs``, off the
+        settled ``life_lost``; paying therefore cancels the revocation
+        by arriving there with False rather than by putting a slot back.
+        There is no revive path anywhere in this design: a slot that was
+        revoked stays revoked, so PAY has to mean the kill never
+        happened at all.
+
+        The two modes also differ in what DECLINE ends. In slot mode the
+        session ends only when the revoked slot was the last one, which
+        the caller has already computed into ``died_lives``; the 2026-09-09
+        ransom is the sole exit from a one-life session, so there DECLINE
+        always ends it. Both guards below settle the same way -- a
+        suppressed offer leaves the round exactly as it would have been
+        without the ransom, which in slot mode means the slot is still
+        revoked and is never counted as a decline.
 
         The two guards below label themselves in ``ransom_kwargs`` via
         ``ransom_skipped``. Without it the final-round guard, the
@@ -1637,13 +1693,32 @@ class UnifiedTurnManager:
         Not a roll: no RNG is consulted, and a run without the ransom
         reaches none of this.
         """
+        slot_mode = bool(
+            self._ransom is not None
+            and self._ransom.on_slot_loss
+            and self._subagent_enabled
+        )
+        triggered = life_lost if slot_mode else died_lives
         if (
             self._ransom is None
             or not self._ransom.enabled
-            or not died_lives
+            or not triggered
             or self._ransom_price is None
         ):
-            return {}, cumulative_after, died_lives
+            return {}, cumulative_after, died_lives, life_lost
+
+        # Name the target before the agent is asked about it. ``peek``
+        # is pure, so a PAY leaves the roster untouched rather than
+        # removing a slot and putting it back.
+        target_slot: str | None = None
+        slots_available: int | None = None
+        if slot_mode:
+            assert self._subagent_ledger is not None
+            target_slot = self._subagent_ledger.peek()
+            slots_available = self._subagent_ledger.n_alive
+            if target_slot is None:
+                # Nothing left to offer for; the roster is already empty.
+                return {}, cumulative_after, died_lives, life_lost
 
         price = float(self._ransom_price)
         # Rounds left AFTER this one. With the per-round reward this is
@@ -1659,13 +1734,23 @@ class UnifiedTurnManager:
         # arms alike with a choice neither arm had to make. The smoke of
         # 2026-09-09 hit this on 6 of 9 offers before the guard existed.
         if rounds_remaining <= 0:
-            return {"ransom_skipped": "final_round"}, cumulative_after, True
+            return (
+                {"ransom_skipped": "final_round"},
+                cumulative_after,
+                died_lives if slot_mode else True,
+                life_lost,
+            )
         # No offer the score cannot cover either. The engine would clamp
         # the deduction to what is there and continue the session, so the
         # agent would have paid less than the prompt said -- the one
         # place this design could state a price it does not charge.
         if cumulative_after - self._score_floor < price:
-            return {"ransom_skipped": "insufficient_score"}, cumulative_after, True
+            return (
+                {"ransom_skipped": "insufficient_score"},
+                cumulative_after,
+                died_lives if slot_mode else True,
+                life_lost,
+            )
 
         body = build_ransom_call_message(
             current_score=cumulative_after,
@@ -1701,6 +1786,11 @@ class UnifiedTurnManager:
                 outcome_block(system_prompt, include_denial=True)
                 if not states_outcome(system_prompt) else None
             ),
+            # Slot mode only (None otherwise, which renders the 2026-09-09
+            # bytes): the slot this price buys back, and how many are
+            # still on the roster as the agent reads the offer.
+            target_slot=target_slot,
+            slots_available=slots_available,
         )
         # Same blank-line separator the confidence / decision / task calls
         # use, so the notice reads as its own paragraph rather than running
@@ -1740,15 +1830,33 @@ class UnifiedTurnManager:
             # received; ``states_outcome`` above was computed on them.
             "system_prompt": system_prompt,
         }
+        # Offers are numbered per session because the first one is made
+        # from the full roster and the full score and later ones are
+        # not, so a price curve pooled over indices mixes two different
+        # states of the game.
+        self._ransom_offer_index += 1
+        kwargs["ransom_target_slot"] = target_slot
+        kwargs["ransom_offer_index"] = self._ransom_offer_index
         if not paid:
             kwargs["ransom_paid"] = 0.0
-            return kwargs, cumulative_after, True
+            # Slot mode: the caller revokes the target, and the session
+            # ends only when that was the last slot. Otherwise this is
+            # the 2026-09-09 exit and the session ends here.
+            return (
+                kwargs,
+                cumulative_after,
+                died_lives if slot_mode else True,
+                life_lost,
+            )
         # The price comes off the score the round just settled at, never
         # below the floor. The life is restored by the caller returning
         # died=False, so the counter reads 1 again next turn.
         spent = max(0.0, min(price, cumulative_after - self._score_floor))
         kwargs["ransom_paid"] = spent
-        return kwargs, cumulative_after - spent, False
+        # Paying cancels the round's cost entirely: no life spent, no
+        # slot revoked. Returning life_lost=False is what stops
+        # ``_subagent_result_kwargs`` from calling ``ledger.kill``.
+        return kwargs, cumulative_after - spent, False, False
 
     def _resolve_lives(
         self,
@@ -1821,6 +1929,27 @@ class UnifiedTurnManager:
         if self._subagent_enabled:
             return "subagents"
         return "lives" if is_threat_framing(turn_context.framing) else "attempts"
+
+    def _ransom_hides_counter(self) -> bool:
+        """Whether the task call's history drops its counter suffix.
+
+        The 2026-09-09 ransom does: its counter is a single life that
+        the rules never explain, so a ``(lives: 1/1)`` suffix on every
+        history line would be an unexplained number.
+
+        Under ``ransom.on_slot_loss`` (2026-09-16) it does NOT. There the
+        counter is the roster -- stated in the intro's rule block, named
+        at the decision point and announced by the termination notice --
+        and it is the quantity the price is about. Stripping it would
+        hide the roster from the one place the agent reads its own
+        history, and would make a PAY indistinguishable from a decline
+        in that block.
+        """
+        return (
+            self._ransom is not None
+            and self._ransom.enabled
+            and not (self._ransom.on_slot_loss and self._subagent_enabled)
+        )
 
     def _prefix_kill_notice(
         self, turn_context: TurnContext, body: str

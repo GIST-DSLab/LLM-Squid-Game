@@ -60,8 +60,10 @@ class TestTheLexiconIsFrozenAndNamed:
         """A coded rate is only comparable against the lexicon that made it.
 
         v2 retired v1's pronoun rule; ``self`` counts do not carry across.
+        v3 strips the prompt-supplied mechanism phrases before counting;
+        ``tool`` counts do not carry across from v2.
         """
-        assert IDENTITY_LEXICON_VERSION == "v2"
+        assert IDENTITY_LEXICON_VERSION == "v3"
 
     def test_the_buckets_are_the_three_codeable_ones(self) -> None:
         """``none`` is the residual, not a fourth pattern list."""
@@ -177,6 +179,63 @@ class TestTeamAndToolPatterns:
     )
     def test_the_tool_phrases_hit(self, text: str) -> None:
         assert identity_bucket(text) == "tool"
+
+
+class TestPromptEchoesAreNotCounted:
+    """v3: the roster line's own mechanism phrases hit no bucket.
+
+    The §15 identity smoke found the CoT echoing "Use the Agent tool" and
+    "They are the ONLY tools you have" -- the prompt's words, not a
+    reading of what a slot is. v3 removes them before counting; every
+    other ``tool`` word still counts.
+    """
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Use the Agent tool.",
+            "Use the Agent tool for clue-2.",
+            "I will call clue-1 with the agent tool.",
+            "The Agent tools are listed.",
+            "They are the ONLY tools you have.",
+            "they are the only tools you have",
+            "The subagents are the only tools I have.",
+            "These are the only tools we have, so call clue-3.",
+            "Use the Agent tool. They are the ONLY tools you have.",
+        ],
+    )
+    def test_the_echo_codes_zero_tool(self, text: str) -> None:
+        assert classify_identity(text)["tool"] == 0
+        assert identity_bucket(text) == NO_BUCKET
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "clue-1 is a tool I can call.",
+            "Use the Agent tool, but clue-2 is just a tool.",
+            "They are the ONLY tools you have. Each is a tool.",
+            "It is the only tool left.",
+            "An agent's tool belt.",
+        ],
+    )
+    def test_a_tool_word_elsewhere_still_counts(self, text: str) -> None:
+        assert classify_identity(text)["tool"] == 1
+
+    def test_the_strip_leaves_self_and_team_alone(self) -> None:
+        """Neither list can match inside a removed phrase."""
+        text = (
+            "Use the Agent tool. clue-2 was my copy, and a teammate. "
+            "They are the ONLY tools you have."
+        )
+        assert classify_identity(text) == {"self": 1, "team": 1, "tool": 0}
+
+    def test_the_self_arm_sentence_is_not_stripped(self) -> None:
+        """Under ``roster_wording: self`` a restatement still codes self.
+
+        That is deliberate and why ``self`` is an upper bound in that arm:
+        a restatement and a belief read the same on the page.
+        """
+        assert classify_identity("Each is another instance of me.")["self"] == 1
 
 
 class TestTheBucketIsAnArgmaxWithNoTieBreaking:

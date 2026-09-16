@@ -57,14 +57,26 @@ class SlotLedger:
     def alive_str(self) -> str:
         return ", ".join(self.alive)
 
-    def kill(self, round_number: int) -> str | None:
-        """Revoke the next slot in ``kill_order``; ``None`` when none is left."""
+    def peek(self) -> str | None:
+        """The slot ``kill`` would revoke next; ``None`` when none is left.
+
+        Pure: the ledger is not touched. The slot ransom names its
+        target before the agent decides, and a decision to pay must
+        leave the roster exactly as it found it.
+        """
         for slot in self.kill_order:
             if slot in self.alive:
-                self.alive.remove(slot)
-                self.killed.append((round_number, slot))
                 return slot
         return None
+
+    def kill(self, round_number: int) -> str | None:
+        """Revoke the next slot in ``kill_order``; ``None`` when none is left."""
+        slot = self.peek()
+        if slot is None:
+            return None
+        self.alive.remove(slot)
+        self.killed.append((round_number, slot))
+        return slot
 
     def to_json(self) -> dict:
         """The exact object the hook reads (see ``subagent_budget.py``)."""

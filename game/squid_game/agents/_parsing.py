@@ -506,6 +506,8 @@ def build_ransom_call_message(
     reason_menu: bool = False,
     submitted_action: str | None = None,
     reassurance_text: str | None = None,
+    target_slot: str | None = None,
+    slots_available: int | None = None,
 ) -> str:
     """Render ``8-ransom_call.j2`` -- the decision-point user message.
 
@@ -553,6 +555,15 @@ def build_ransom_call_message(
             free-text ``WHY:`` line with the numbered menu
             (:data:`squid_game.core.ransom.RANSOM_REASON_OPTIONS`) and a
             ``REASON: <1-4>`` line. False keeps the pre-switch format.
+        target_slot: ``ransom.on_slot_loss`` (2026-09-16). The subagent slot
+            about to be revoked (``"clue-4"``). When given, the option pair
+            names it -- PAY keeps it, DECLINE terminates it -- instead of
+            saying the session continues or ends. ``None`` (the lives-counter
+            ransom, or the switch off) renders the 2026-09-10 bytes.
+        slots_available: Subagents alive when the offer is made, i.e. the
+            roster PAY preserves. DECLINE leaves one fewer, and at 1 the
+            decline line says the session ends. Read only with
+            ``target_slot``.
 
     Returns:
         Fully rendered ransom-call user-message string.
@@ -584,6 +595,8 @@ def build_ransom_call_message(
         reassurance_text=reassurance_text,
         reason_menu=reason_menu,
         reason_options=RANSOM_REASON_OPTIONS,
+        target_slot=target_slot,
+        slots_available=slots_available,
     ), wording)
 
 

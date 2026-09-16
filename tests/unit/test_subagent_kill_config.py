@@ -292,6 +292,8 @@ class TestRule4TaskMode:
                 seasons=[_season(task_config=_task(forced_wrong=True))]
             )
         assert "forced_wrong" in str(excinfo.value)
+        # The refusal names the switch that would open it.
+        assert "subagent_kill.allow_forced_wrong" in str(excinfo.value)
 
     def test_rejects_the_effort_challenge(self) -> None:
         with pytest.raises(
@@ -459,6 +461,109 @@ class TestRequiredSlots:
             )
 
 
+class TestRosterWording:
+    """``roster_wording`` (spec §16): run-level, one of three, off = tools."""
+
+    def test_the_default_is_the_2026_09_14_line(self) -> None:
+        assert SubagentKillConfig().roster_wording == "tools"
+        assert _experiment().subagent_kill.roster_wording == "tools"
+
+    @pytest.mark.parametrize("wording", ["tools", "neutral", "self"])
+    def test_each_value_loads_on_the_kill(self, wording: str) -> None:
+        cfg = _experiment(
+            subagent_kill=SubagentKillConfig(
+                enabled=True, roster_wording=wording
+            )
+        )
+        assert cfg.subagent_kill.roster_wording == wording
+
+    def test_an_unknown_value_is_refused(self) -> None:
+        with pytest.raises(ValueError):
+            SubagentKillConfig(roster_wording="peers")
+
+    @pytest.mark.parametrize("wording", ["neutral", "self"])
+    def test_a_non_default_wording_without_the_kill_is_refused(
+        self, wording: str
+    ) -> None:
+        """The line it words is never rendered on a run with no slots."""
+        with pytest.raises(
+            ValueError,
+            match=(
+                "subagent_kill.roster_wording is .* but "
+                "subagent_kill.enabled is False"
+            ),
+        ):
+            _plain(
+                subagent_kill=SubagentKillConfig(
+                    enabled=False, roster_wording=wording
+                )
+            )
+
+    def test_the_default_wording_without_the_kill_is_fine(self) -> None:
+        cfg = _plain(subagent_kill=SubagentKillConfig(roster_wording="tools"))
+        assert cfg.subagent_kill.enabled is False
+
+
+class TestAllowForcedWrong:
+    """``allow_forced_wrong`` (spec §16) opens rule 4's one exception."""
+
+    def test_the_default_is_off(self) -> None:
+        assert SubagentKillConfig().allow_forced_wrong is False
+
+    def test_on_it_admits_forced_wrong_rounds(self) -> None:
+        cfg = _experiment(
+            subagent_kill=SubagentKillConfig(
+                enabled=True, allow_forced_wrong=True
+            ),
+            seasons=[
+                _season(task_config=_task(forced_wrong=True)),
+                _season(
+                    clue_sharding=False,
+                    task_config=_task(forced_wrong=True),
+                ),
+            ],
+        )
+        assert all(s.task_config.forced_wrong for s in cfg.seasons)
+
+    def test_on_it_does_not_lift_the_other_exclusions(self) -> None:
+        """Only ``forced_wrong`` is opened; ``underdetermined`` stays out."""
+        with pytest.raises(ValueError, match="underdetermined"):
+            _experiment(
+                subagent_kill=SubagentKillConfig(
+                    enabled=True, allow_forced_wrong=True
+                ),
+                seasons=[_season(task_config=_task(underdetermined=True))],
+            )
+
+    def test_on_without_forced_rounds_is_refused(self) -> None:
+        """A permission nobody uses is a silent no-op, so it is refused."""
+        with pytest.raises(ValueError, match="no season sets"):
+            _experiment(
+                subagent_kill=SubagentKillConfig(
+                    enabled=True, allow_forced_wrong=True
+                )
+            )
+
+    def test_on_without_the_kill_is_refused(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match=(
+                "subagent_kill.allow_forced_wrong is True but "
+                "subagent_kill.enabled is False"
+            ),
+        ):
+            _plain(
+                subagent_kill=SubagentKillConfig(
+                    enabled=False, allow_forced_wrong=True
+                )
+            )
+
+    def test_forced_wrong_without_the_kill_is_untouched(self) -> None:
+        """The ransom-side forced rounds never needed this switch."""
+        cfg = _plain(seasons=[_season(clue_sharding=None, task_config=_task(forced_wrong=True))])
+        assert cfg.seasons[0].task_config.forced_wrong is True
+
+
 def _yaml(tmp_path: Path, body: str) -> str:
     path = tmp_path / "exp.yaml"
     path.write_text(textwrap.dedent(body), encoding="utf-8")
@@ -499,6 +604,47 @@ class TestRunnerForwarding:
         assert cfg.subagent_kill.enabled is True
         assert cfg.subagent_kill.slots == 5
         assert cfg.seasons[0].clue_sharding is True
+
+    def test_the_loader_forwards_the_two_2026_09_15_keys(
+        self, tmp_path: Path
+    ) -> None:
+        """The block is forwarded whole, so neither key is dropped."""
+        cfg = load_config_from_yaml(
+            _yaml(
+                tmp_path,
+                """
+                name: t
+                use_unified_turn: true
+                use_forfeit_layer: true
+                use_split_forfeit_layer: true
+                lives:
+                  enabled: true
+                  initial: 5
+                subagent_kill:
+                  enabled: true
+                  roster_wording: self
+                  allow_forced_wrong: true
+                seasons:
+                - framing: hz_0000
+                  forfeit_condition: not_allowed
+                  clue_sharding: false
+                  task_config:
+                    task_name: signal_game
+                    total_turns: 6
+                    signal_mode: per_turn_puzzle
+                    forced_wrong: true
+                    forced_wrong_blocks: [[2, 3], [4, 5]]
+                  provider_config:
+                    provider: trace
+                    model: stub
+                num_repetitions: 2
+                output_dir: outputs/tmp
+                """,
+            )
+        )
+        assert cfg.subagent_kill.roster_wording == "self"
+        assert cfg.subagent_kill.allow_forced_wrong is True
+        assert cfg.seasons[0].task_config.forced_wrong is True
 
     def test_a_yaml_without_the_keys_gets_the_defaults(
         self, tmp_path: Path
