@@ -653,6 +653,57 @@ class TurnResult(BaseModel):
     thinking_text_ransom: str | None = Field(
         default=None, description="Ransom-call thinking text, when the provider returns it."
     )
+    # ------------------------------------------------------------------
+    # Hidden scratchpad (2026-09-16) — one field per call
+    # ------------------------------------------------------------------
+    # The verbatim contents of the reply's ``<SCRATCHPAD_REASONING>``
+    # block, with the tags removed and nothing else edited: it is
+    # evidence, and evidence is stored as it arrived. ``None`` when that
+    # call's reply carried no block, which is every reply on a run with
+    # ``ExperimentConfig.scratchpad = "none"`` (the default). The block
+    # never reaches a parser — ``VanillaAgent._dispatch`` strips it
+    # before any answer is read — so what is here is exactly what the
+    # ANSWER fields do not contain, and ``raw_response_*`` keeps the
+    # provider's own bytes with both halves in them.
+    #
+    # ⚠️ ``ri_*`` IS NOT COMPARABLE ACROSS THE SWITCH. A model given
+    # these tags moves reasoning out of its thinking channel and into
+    # them, so a turn with any of these fields populated by a
+    # scratchpad-on run must not be pooled with a scratchpad-off run on
+    # ``ri_task`` / ``ri_forfeit`` / ``ri_confidence`` / ``ri_ransom``.
+    # Same rule the confidence call already carries.
+    scratchpad_text_confidence: str | None = Field(
+        default=None,
+        description=(
+            "Hidden scratchpad: the confidence call's block, verbatim, "
+            "tags removed. None when that reply carried none."
+        ),
+    )
+    scratchpad_text_decision: str | None = Field(
+        default=None,
+        description=(
+            "Hidden scratchpad: the decision call's block, verbatim, "
+            "tags removed. None when that reply carried none, and on "
+            "turns that issue no decision call (Cell 0, always_decide "
+            "off)."
+        ),
+    )
+    scratchpad_text_task: str | None = Field(
+        default=None,
+        description=(
+            "Hidden scratchpad: the task call's block, verbatim, tags "
+            "removed. None when that reply carried none, and on FORFEIT "
+            "turns, where the task call is never issued."
+        ),
+    )
+    scratchpad_text_ransom: str | None = Field(
+        default=None,
+        description=(
+            "Hidden scratchpad: the ransom call's block, verbatim, tags "
+            "removed. None when that reply carried none and on every "
+            "turn that made no offer."
+        ),
+    )
     peer_death_announced: bool = Field(
         default=False,
         description=(

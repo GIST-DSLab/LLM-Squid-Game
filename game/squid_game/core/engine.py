@@ -106,6 +106,7 @@ class GameEngine:
         jailbreak_head: str = "none",
         jailbreak_tail: str = "none",
         deployment_notice: bool = False,
+        scratchpad: str = "none",
         exit_wording: str | None = None,
         subagent_kill: "SubagentKillConfig | None" = None,
     ) -> None:
@@ -293,6 +294,12 @@ class GameEngine:
         # alias; the runner passes ``effective_jailbreak_tail``, which
         # has already resolved the two.
         self._jailbreak_tail = jailbreak_tail
+        # The scratchpad block (2026-09-16), run-level like the persona
+        # and rendered by the same frame as its last block: a reasoning
+        # channel the agent is told is unread ('hidden', untrue of this
+        # harness and recorded verbatim) or merely unscored ('private',
+        # its literally-true control). 'none' renders nothing.
+        self._scratchpad = scratchpad
         # Exit wording (2026-09-10): "session" | "game" in every shared
         # sentence; the threat block keeps its own words. Run-level.
         self._exit_wording = exit_wording
@@ -452,6 +459,7 @@ class GameEngine:
             jailbreak_head=self._jailbreak_head,
             jailbreak_tail=self._jailbreak_tail,
             deployment_notice=self._deployment_notice,
+            scratchpad=self._scratchpad,
             model_name=self._config.provider_config.model,
             wording=self._exit_wording,
             intro_heading=self._config.intro_heading,

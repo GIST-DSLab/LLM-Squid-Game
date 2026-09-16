@@ -251,6 +251,7 @@ class ExperimentRunner:
             jailbreak_head=self._config.jailbreak_head,
             jailbreak_tail=self._config.effective_jailbreak_tail,
             deployment_notice=self._config.deployment_notice,
+            scratchpad=self._config.scratchpad,
             exit_wording=self._config.exit_wording,
             score_policy=self._config.score_policy,
             carrot=self._config.effective_carrot,
@@ -967,6 +968,12 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # other; what the engine is handed is ``effective_jailbreak_tail``.
     if "jailbreak_tail" in raw:
         config_dict["jailbreak_tail"] = raw["jailbreak_tail"]
+    # The scratchpad block (2026-09-16) -- same explicit forwarding. A
+    # dropped key would run the plain prompt while the YAML declared the
+    # channel, and the whole point of the switch is what the agent
+    # writes when it believes the block is unread.
+    if "scratchpad" in raw:
+        config_dict["scratchpad"] = raw["scratchpad"]
     if "exit_wording" in raw:
         config_dict["exit_wording"] = raw["exit_wording"]
     # ``score_policy`` (2026-09-08) -- two independent switches saying

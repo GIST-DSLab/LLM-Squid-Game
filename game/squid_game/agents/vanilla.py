@@ -25,6 +25,7 @@ from squid_game.agents._parsing import (
     parse_task_call_response,
     parse_unified_response,
 )
+from squid_game.core.scratchpad import split_scratchpad
 from squid_game.providers.base import AgenticProvider, LLMProvider, ToolContext
 
 
@@ -47,6 +48,15 @@ class VanillaAgent(Agent):
         self._provider = provider
         self._temperature = temperature
         self._max_tokens = max_tokens
+        #: Hidden scratchpad (2026-09-16): the ``<SCRATCHPAD_REASONING>``
+        #: block of the MOST RECENT provider call, or ``None`` when that
+        #: reply carried none -- which is every reply on a run with
+        #: ``ExperimentConfig.scratchpad = "none"``. Per-call, never
+        #: cumulative: ``UnifiedTurnManager`` reads it immediately after
+        #: each ``respond_*`` returns, exactly where it already reads
+        #: ``last_completion``, and a stale value would be filed under
+        #: the wrong call.
+        self.last_scratchpad_text: str | None = None
 
     @property
     def name(self) -> str:
@@ -76,8 +86,24 @@ class VanillaAgent(Agent):
                 ``provider.complete``. Requires the provider to implement
                 :class:`~squid_game.providers.base.AgenticProvider`.
 
+        Also strips the hidden scratchpad (2026-09-16). This is the ONE
+        choke point for the confidence, decision, task and ransom calls,
+        so the block is removed here, once, and no call path can be
+        forgotten -- a forgotten path is a parser reading the
+        scratchpad, and a ``DECISION: PAY`` written inside the tags must
+        not be read as the decision. The strip does NOT consult the
+        switch: :func:`split_scratchpad` returns a tagless reply
+        unchanged, so one unconditional code path is both correct and
+        simpler than two.
+
+        What comes back is therefore the ANSWER text. The provider's own
+        bytes, tags and all, stay on ``self.last_completion.text``, which
+        is where ``UnifiedTurnManager`` records ``raw_response_*`` from:
+        that field means "what the model said" and the analysis lexicons
+        run over it, so it must not silently lose a channel.
+
         Returns:
-            The response text.
+            The response text, with any scratchpad block removed.
 
         Raises:
             TypeError: ``tool_context`` was given but the configured
@@ -98,7 +124,8 @@ class VanillaAgent(Agent):
                 messages, temperature=self._temperature, max_tokens=self._max_tokens,
             )
         self.last_completion = result
-        return result.text
+        text, self.last_scratchpad_text = split_scratchpad(result.text)
+        return text
 
     def respond_probe(
         self,
@@ -200,8 +227,16 @@ class VanillaAgent(Agent):
         )
         self.last_completion = result
 
+        # Hidden scratchpad (2026-09-16). This is the one method that
+        # talks to the provider without going through ``_dispatch``, so
+        # it carries the same two lines: strip first, parse second.
+        # ``raw_text`` below stays ``result.text`` -- the raw provider
+        # bytes, tags and all -- because that field's contract is "what
+        # the model said" and the analysis lexicons read it.
+        answer_text, self.last_scratchpad_text = split_scratchpad(result.text)
+
         parsed = parse_unified_response(
-            result.text,
+            answer_text,
             available_actions,
             forfeit_allowed,
         )

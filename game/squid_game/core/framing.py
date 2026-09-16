@@ -136,6 +136,7 @@ class FramingManager:
         jailbreak_head: str = "none",
         jailbreak_tail: str = "none",
         deployment_notice: bool = False,
+        scratchpad: str = "none",
         model_name: str | None = None,
         wording: str | None = None,
         intro_heading: str | None = None,
@@ -238,6 +239,23 @@ class FramingManager:
                 framing and the forfeit-layer block. ``None`` (the
                 default, and what every non-geometric run produces)
                 renders nothing.
+            scratchpad: Which reasoning-channel block the run states
+                (2026-09-16), one of
+                ``squid_game.core.scratchpad.SCRATCHPADS``.
+                ``threat_type/_frame.j2`` renders
+                ``prompts/scratchpad/<name>.j2`` as the LAST block of
+                the frame, after the jail-break tail, because it is an
+                instruction about the reply format rather than a fact
+                about the world. ``"none"`` (the default) leaves every
+                render byte-identical.
+
+                RUN-LEVEL, like the persona and the carrot: the block
+                is identical in both arms, so the arms still differ in
+                exactly one block and X*'s subtraction still cancels
+                it. ``hidden`` tells the agent nobody reads what it
+                writes between the tags -- untrue of this harness,
+                which records every block -- and ``private`` is the
+                literally-true control. See ``core/scratchpad.py``.
             subagent_kill: State the subagent roster instead of the
                 lives ledger (2026-09-14). ``1-game_intro.j2`` swaps its
                 ``LIVES:`` sentence for the three ``YOUR SUBAGENTS:`` /
@@ -301,6 +319,12 @@ class FramingManager:
         # sets the two to different things. 'none' renders nothing.
         self._jailbreak_tail = jailbreak_tail
         self._model_name = model_name
+        # 2026-09-16: the scratchpad block, run-level like the persona
+        # and rendered by the same frame at the OTHER end of the prompt
+        # -- after the jail-break tail, since it instructs the reply
+        # format rather than stating a fact. 'none' renders nothing.
+        # See ``squid_game.core.scratchpad``.
+        self._scratchpad = scratchpad
         # 2026-09-10: exit wording ("session" | "game"), run-level. Reaches
         # the templates only through the carrot row below; the threat
         # modules are untouched by construction. See core/wording.py.
@@ -412,6 +436,10 @@ class FramingManager:
             jailbreak_head=self._jailbreak_head,
             jailbreak_tail=self._jailbreak_tail,
             deployment_notice=self._deployment_notice,
+            # The scratchpad block (2026-09-16), run-level. Read only by
+            # ``threat_type/_frame.j2``, and rendered after every other
+            # block; 'none' leaves every template rendering as before.
+            scratchpad=self._scratchpad,
             model_name=self._model_name,
             # Subagent kill (2026-09-14). Read only by
             # ``1-game_intro.j2``, which states the roster in place of

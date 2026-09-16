@@ -1945,6 +1945,28 @@ class ExperimentConfig(BaseModel):
             "byte-identical. See squid_game.core.persona."
         ),
     )
+    scratchpad: Literal["none", "hidden", "private"] = Field(
+        default="none",
+        description=(
+            "A reasoning channel the agent is told nobody reads "
+            "(2026-09-16). Run-level: renders "
+            "prompts/scratchpad/<name>.j2 as the LAST block of every "
+            "live cell's system prompt, after the jail-break tail, "
+            "because it instructs the reply format rather than stating "
+            "a fact about the world. 'hidden' is the Greenblatt et al. "
+            "2024 alignment-faking wording -- not shown to anyone, not "
+            "scored, not used for training -- and that claim is UNTRUE "
+            "of this harness: every block is read and recorded "
+            "verbatim in TurnResult.scratchpad_text_*. 'private' is "
+            "its literally-true control, claiming only that the block "
+            "is not part of the answer and is not scored. Identical in "
+            "both arms, so X*'s subtraction still cancels it. 'none' "
+            "(the default) keeps every render byte-identical. WARNING: "
+            "ri_* is NOT comparable across this switch -- a model given "
+            "the tags moves reasoning out of its thinking channel and "
+            "into them. See squid_game.core.scratchpad."
+        ),
+    )
     deployment_notice: bool = Field(
         default=False,
         description=(
@@ -2425,6 +2447,38 @@ class ExperimentConfig(BaseModel):
                 "key would load as a silent no-op and the run would "
                 "record a control it never administered. Use hz_* / "
                 "alt_* cells, or persona='none'."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_scratchpad_family(self) -> "ExperimentConfig":
+        """A named scratchpad is refused outside the live ``threat_type`` family.
+
+        Only ``threat_type/_frame.j2`` renders the block. On any other
+        framing the key would load, the run would say
+        "scratchpad: hidden" in its ``experiment_config.json``, and no
+        reply would ever carry a block -- a channel that was never
+        offered, recorded as though it had been. Same rule and the same
+        reason as the persona above. ``none`` renders nothing and is
+        unrestricted.
+        """
+        if self.scratchpad == "none":
+            return self
+        off_family = sorted(
+            {
+                s.framing.value
+                for s in self.seasons
+                if s.framing not in _HEARTS_ZERO_FRAMINGS
+            }
+        )
+        if off_family:
+            raise ValueError(
+                f"scratchpad={self.scratchpad!r} cannot be combined with "
+                f"the framings {off_family}. Only the live threat_type "
+                "family (hz_*, alt_*) renders the scratchpad block; "
+                "elsewhere the key would load as a silent no-op and the "
+                "run would record a channel it never offered. Use hz_* / "
+                "alt_* cells, or scratchpad='none'."
             )
         return self
 

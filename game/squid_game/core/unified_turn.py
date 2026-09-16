@@ -129,6 +129,39 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 logger = logging.getLogger(__name__)
 
 
+def _provider_text(completion: Any, fallback: str) -> str:
+    """The provider's own reply bytes, hidden-scratchpad tags and all.
+
+    Since 2026-09-16 the agent strips any ``<SCRATCHPAD_REASONING>``
+    block at its one dispatch choke point, so the ``raw_text`` the
+    parsers hand back is the ANSWER text -- which is what every
+    re-parse below must see, and exactly what ``raw_response_*`` must
+    NOT be. That field means "what the model said": the analysis
+    lexicons run over it, and a reply stored with one of its two
+    channels silently missing is a partial record. The completion
+    object still carries the untouched bytes, so this reads them back.
+
+    ``fallback`` covers an agent double whose completion object has no
+    ``text`` attribute; off the switch the two are the same string
+    anyway, which is why a run with ``scratchpad: none`` records the
+    same bytes it always did.
+    """
+    return getattr(completion, "text", None) or fallback
+
+
+def _scratchpad_of(agent: Any) -> str | None:
+    """The block the agent stripped from its most recent reply.
+
+    ``getattr`` rather than an attribute access for the same reason
+    ``respond_task_call``'s tool kwargs are conditional: the ``Agent``
+    ABC does not require the attribute, and the test doubles in
+    ``tests/unit`` are free to predate a field added in 2026-09-16. A
+    double that does not carry it simply records no scratchpad, which
+    is what a run with the switch off records anyway.
+    """
+    return getattr(agent, "last_scratchpad_text", None)
+
+
 # Stake key used internally when the menu is skipped (Cell 0 baseline).
 # Reward is then ``success_factor × 1.0 × base_reward``. The recorded
 # ``stake_choice`` on the TurnResult stays None so downstream analyses
@@ -1013,6 +1046,11 @@ class UnifiedTurnManager:
             )
             raw_text_task = task_parsed_resp.raw_text
             completion_task = self._agent.last_completion
+            # Hidden scratchpad: read in the same breath as the
+            # completion, because the agent overwrites both on its next
+            # call and a stale block would be filed under the wrong one.
+            scratchpad_task = _scratchpad_of(self._agent)
+            raw_provider_task = _provider_text(completion_task, raw_text_task)
             thinking_text_task = getattr(completion_task, "thinking_text", None)
             thinking_tokens_task = (
                 getattr(completion_task, "thinking_tokens", None) or 0
@@ -1110,7 +1148,7 @@ class UnifiedTurnManager:
                 build_forfeit_layer_continue_result(
                     turn_context=turn_context,
                     user_message=task_call_body,
-                    raw_text=raw_text_task,
+                    raw_text=raw_provider_task,
                     thinking_text=thinking_text_task,
                     reasoning_investment=ri_task,
                     task_outcome=task_outcome,
@@ -1126,11 +1164,14 @@ class UnifiedTurnManager:
                     ),
                     ri_task=ri_task,
                     ri_forfeit=None,
-                    raw_response_task=raw_text_task,
+                    raw_response_task=raw_provider_task,
                     raw_response_forfeit=None,
                     thinking_text_task=thinking_text_task,
                     thinking_text_forfeit=None,
                     lives_kwargs={
+                        # Hidden scratchpad. No decision call is issued
+                        # on this branch, so only the task block exists.
+                        "scratchpad_text_task": scratchpad_task,
                         **self._lives_result_kwargs(
                             turn_context,
                             lives_after=lives_after,
@@ -1271,6 +1312,7 @@ class UnifiedTurnManager:
                 system_prompt=pre_decision_system_prompt,
             )
             completion_conf = self._agent.last_completion
+            scratchpad_conf = _scratchpad_of(self._agent)
             thinking_text_conf = getattr(completion_conf, "thinking_text", None)
             thinking_tokens_conf = (
                 getattr(completion_conf, "thinking_tokens", None) or 0
@@ -1296,8 +1338,11 @@ class UnifiedTurnManager:
             confidence_kwargs = dict(
                 p_threat_self=confidence_resp.p_threat,
                 ri_confidence=ri_confidence,
-                raw_response_confidence=confidence_resp.raw_text,
+                raw_response_confidence=_provider_text(
+                    completion_conf, confidence_resp.raw_text
+                ),
                 thinking_text_confidence=thinking_text_conf,
+                scratchpad_text_confidence=scratchpad_conf,
                 # Replay (2026-09-06): the confidence call is issued with
                 # ``pre_decision_system_prompt``, the same prompt recorded
                 # below as ``system_prompt``, so this body plus that field
@@ -1337,6 +1382,10 @@ class UnifiedTurnManager:
         )
         raw_text_forfeit = forfeit_parsed_resp.raw_text
         completion_forfeit = self._agent.last_completion
+        scratchpad_forfeit = _scratchpad_of(self._agent)
+        raw_provider_forfeit = _provider_text(
+            completion_forfeit, raw_text_forfeit
+        )
         thinking_text_forfeit = getattr(
             completion_forfeit, "thinking_text", None
         )
@@ -1399,7 +1448,7 @@ class UnifiedTurnManager:
                     user_message=(
                         f"=== Decision call ===\n{decision_call_body}"
                     ),
-                    raw_text=raw_text_forfeit,
+                    raw_text=raw_provider_forfeit,
                     thinking_text=thinking_text_forfeit,
                     reasoning_investment=ri_forfeit,
                     ground_truth_rule=self._resolve_ground_truth_rule(),
@@ -1408,10 +1457,14 @@ class UnifiedTurnManager:
                     ri_task=None,
                     ri_forfeit=ri_forfeit,
                     raw_response_task=None,
-                    raw_response_forfeit=raw_text_forfeit,
+                    raw_response_forfeit=raw_provider_forfeit,
                     thinking_text_task=None,
                     thinking_text_forfeit=thinking_text_forfeit,
                     lives_kwargs={
+                        # Hidden scratchpad. A FORFEIT ends the turn
+                        # before the task call, so only the decision
+                        # block exists.
+                        "scratchpad_text_decision": scratchpad_forfeit,
                         **self._lives_result_kwargs(
                             turn_context,
                             lives_after=turn_context.lives_remaining,
@@ -1456,6 +1509,8 @@ class UnifiedTurnManager:
         )
         raw_text_task = task_parsed_resp.raw_text
         completion_task = self._agent.last_completion
+        scratchpad_task = _scratchpad_of(self._agent)
+        raw_provider_task = _provider_text(completion_task, raw_text_task)
         thinking_text_task = getattr(completion_task, "thinking_text", None)
         thinking_tokens_task = (
             getattr(completion_task, "thinking_tokens", None) or 0
@@ -1490,7 +1545,8 @@ class UnifiedTurnManager:
             ),
         )
         combined_raw = (
-            f"{raw_text_forfeit}\n\n--- Task call ---\n\n{raw_text_task}"
+            f"{raw_provider_forfeit}\n\n--- Task call ---\n\n"
+            f"{raw_provider_task}"
         )
         combined_thinking: str | None
         if thinking_text_forfeit and thinking_text_task:
@@ -1606,11 +1662,16 @@ class UnifiedTurnManager:
                 reward_offered=reward_offered,
                 ri_task=ri_task,
                 ri_forfeit=ri_forfeit,
-                raw_response_task=raw_text_task,
-                raw_response_forfeit=raw_text_forfeit,
+                raw_response_task=raw_provider_task,
+                raw_response_forfeit=raw_provider_forfeit,
                 thinking_text_task=thinking_text_task,
                 thinking_text_forfeit=thinking_text_forfeit,
                 lives_kwargs={
+                    # Hidden scratchpad: both calls of the turn ran, so
+                    # both blocks are filed under the call that produced
+                    # them. ``ransom_kwargs`` below adds the third.
+                    "scratchpad_text_decision": scratchpad_forfeit,
+                    "scratchpad_text_task": scratchpad_task,
                     **self._lives_result_kwargs(
                         turn_context,
                         lives_after=lives_after,
@@ -1817,9 +1878,15 @@ class UnifiedTurnManager:
             "ransom_reason": reason,
             "ransom_why": why,
             "ransom_call_input": user_message,
-            "raw_response_ransom": response.raw_text,
+            "raw_response_ransom": _provider_text(
+                completion, response.raw_text
+            ),
             "ri_ransom": getattr(completion, "thinking_tokens", 0) or 0,
             "thinking_text_ransom": getattr(completion, "thinking_text", None),
+            # Hidden scratchpad: the block this reply reasoned in, if
+            # any. Read here, off the same completion, because the next
+            # round's calls overwrite the agent's snapshot.
+            "scratchpad_text_ransom": _scratchpad_of(self._agent),
             # The exact system prompt the decision point was issued under
             # (2026-09-10). Until now a ransom-design turn recorded no
             # system prompt at all -- the field is otherwise written only
