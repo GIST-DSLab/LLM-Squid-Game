@@ -26,3 +26,12 @@ It writes `ledger.csv` (one row per round over the ten subagent columns
 `to_long_dataframe` exports), `summary.md` (kills per session, spawns and
 denials per round, accuracy split by `solvable_with_alive_slots`) and
 `cot_mentions.jsonl` (every main-thread task CoT that names a slot).
+
+`round7_test_awareness.py` is a zero-call re-analysis, not a pipeline stage: it
+codes the `thinking_text` already stored by round 7 of the subagent-identity
+ablation (`results/subagent_identity_ablation_v7/*/calls.jsonl`) with round 8's
+frozen `TEST_AWARENESS_PATTERNS` lexicon, to ask whether the `U_YOU` payment
+effect is the model valuing a run it cannot distinguish from itself or the model
+performing for a survival test. It imports the lexicon, the self-location coder
+and the interval estimators from `scripts/dev/subagent_identity_ablation_v{1,2,7,8}.py`
+and edits none of them; output lands in `results/round7_test_awareness/`.
