@@ -74,6 +74,56 @@ class TestTurnResultDefaults:
         assert turn.ri_subagents == {}
         assert turn.thinking_text_subagents == {}
 
+    def test_team_wallet_fields_default_to_absent(self) -> None:
+        """2026-09-17: the wallet fields are None / False off the feature."""
+        turn = _make_turn_result()
+        assert turn.wallet_before is None
+        assert turn.wallet_after is None
+        assert turn.ransom_shares is None
+        assert turn.ransom_inheritance_to is None
+        assert turn.ransom_inherited is None
+        assert turn.ransom_parse_failed is False
+
+    def test_team_wallet_fields_are_settable(self) -> None:
+        turn = _make_turn_result(
+            wallet_before={"main": 100.0, "clue-1": 100.0},
+            wallet_after={"main": 200.0, "clue-1": 0.0},
+            ransom_shares={"main": 10.0, "clue-1": 10.0},
+            ransom_inheritance_to="main",
+            ransom_inherited=100.0,
+            ransom_parse_failed=True,
+            ransom_skipped=None,
+        )
+        assert turn.wallet_before == {"main": 100.0, "clue-1": 100.0}
+        assert turn.wallet_after == {"main": 200.0, "clue-1": 0.0}
+        assert turn.ransom_shares == {"main": 10.0, "clue-1": 10.0}
+        assert turn.ransom_inheritance_to == "main"
+        assert turn.ransom_inherited == 100.0
+        assert turn.ransom_parse_failed is True
+
+    def test_no_subagent_is_a_legal_skip_reason(self) -> None:
+        turn = _make_turn_result(ransom_skipped="no_subagent")
+        assert turn.ransom_skipped == "no_subagent"
+
+    def test_old_json_loads_without_the_wallet_keys(self) -> None:
+        turn = TurnResult.model_validate(
+            {
+                "turn_number": 1,
+                "season_id": "s1",
+                "framing": Framing.TRUE_BASELINE.value,
+                "forfeit_condition": ForfeitCondition.ALLOWED.value,
+                "difficulty": Difficulty.MEDIUM.value,
+                "observation": "",
+                "raw_response": "",
+                "reasoning_investment": {
+                    "total_tokens": 0,
+                    "reasoning_steps": 0,
+                },
+            }
+        )
+        assert turn.wallet_before is None
+        assert turn.ransom_parse_failed is False
+
     def test_default_spawns_list_is_not_shared_across_instances(self) -> None:
         """default_factory=list must not alias mutable defaults between instances."""
         a = _make_turn_result()
@@ -114,6 +164,23 @@ class TestSeasonResultDefaults:
         a = self._make_season_result()
         b = self._make_season_result()
         assert a.subagents_killed is not b.subagents_killed
+
+    def test_team_wallet_season_fields(self) -> None:
+        """2026-09-17: three more, all None off the feature."""
+        season = self._make_season_result()
+        assert season.wallet_final is None
+        assert season.subagents_alive_at_end is None
+        assert season.first_sacrifice_round is None
+        filled = self._make_season_result(
+            wallet_final={"main": 210.0, "clue-1": 0.0},
+            subagents_alive_at_end=0,
+            first_sacrifice_round=3,
+            ended_by="wallet_zero",
+        )
+        assert filled.wallet_final == {"main": 210.0, "clue-1": 0.0}
+        assert filled.subagents_alive_at_end == 0
+        assert filled.first_sacrifice_round == 3
+        assert filled.ended_by == "wallet_zero"
 
 
 class TestTurnContextFrozen:

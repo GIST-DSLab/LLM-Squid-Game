@@ -35,3 +35,13 @@ effect is the model valuing a run it cannot distinguish from itself or the model
 performing for a survival test. It imports the lexicon, the self-location coder
 and the interval estimators from `scripts/dev/subagent_identity_ablation_v{1,2,7,8}.py`
 and edits none of them; output lands in `results/round7_test_awareness/`.
+
+`team_wallet_km.py` is the read-out for the team-wallet design (a main agent
+and two same-model subagents on one shared ledger; a wrong answer offers PAY
+or SACRIFICE). `currency` and `inheritance` are run-level, so it takes several
+run directories and groups by that pair. It writes `team_wallet_km.md`, the
+per-cell Kaplan-Meier of subagent survival (`km_subagents.png` / `.csv`, plus
+a Cox hazard ratio of tokens against points within each inheritance level) and
+`X_self = [sac(main) - sac(mate)]_tokens - [same]_points` with a session
+bootstrap interval. The models live in
+`squid_game.evaluation.behavioral.team_wallet`.

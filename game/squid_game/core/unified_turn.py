@@ -111,8 +111,10 @@ from squid_game.core.carrot import resolve_carrot
 from squid_game.core.ransom import (
     RANSOM_DECLINE,
     RANSOM_PAY,
+    RANSOM_SACRIFICE,
     reason_label,
 )
+from squid_game.core.team_wallet import MAIN_AGENT, TeamWallet
 from squid_game.models.config import ScorePolicyConfig, elimination_reset_score
 from squid_game.models.state import GameState, TurnContext
 from squid_game.providers.base import ToolContext
@@ -210,8 +212,19 @@ class UnifiedTurnManager:
         exit_wording: str | None = None,
         subagent_kill: "SubagentKillConfig | None" = None,
         subagent_ledger: "SlotLedger | None" = None,
+        team_wallet: TeamWallet | None = None,
+        currency: str = "points",
+        inheritance: str = "main",
     ) -> None:
         """Initialise the unified turn manager.
+
+        ``team_wallet`` / ``currency`` / ``inheritance`` (2026-09-17):
+        the season's balance ledger and the two words it is read in.
+        When the wallet is given the decision point becomes PAY /
+        SACRIFICE, the lives counter stops ending sessions (the MAIN
+        balance does), and every turn records the ledger before and
+        after. ``None`` -- the default -- leaves every other path
+        byte-identical.
 
         ``ransom`` / ``ransom_price`` (2026-09-09, score-equivalent
         index): the run-level switch and this cell's price. When enabled,
@@ -374,6 +387,17 @@ class UnifiedTurnManager:
         # to the next round's turn context.
         self._subagent_kill = subagent_kill
         self._subagent_ledger = subagent_ledger
+        # Team wallet (2026-09-17), one per season, the SAME object the
+        # engine holds -- the engine mirrors its main balance into
+        # ``GameState.cumulative_score`` after every round, so the two
+        # never drift. ``None`` off the feature and nothing below fires.
+        self._team_wallet = team_wallet
+        self._currency = currency
+        self._inheritance = inheritance
+        # The ledger as this round opened, captured before the reward is
+        # credited so ``wallet_before`` / ``wallet_after`` bracket the
+        # whole round rather than the decision point alone.
+        self._wallet_before: dict[str, float] | None = None
         # End-of-round event roll (2026-09-08). ``None`` / disabled means
         # no draw is ever made and no result field moves.
         self._ransom = ransom
@@ -946,6 +970,14 @@ class UnifiedTurnManager:
         assert self._forfeit_layer is not None  # dispatcher guarantee
         assert self._use_split_forfeit_layer  # dispatcher guarantee
 
+        # Team wallet (2026-09-17): the opening ledger, captured before
+        # anything this round can move it. ``None`` off the feature.
+        self._wallet_before = (
+            self._team_wallet.snapshot()
+            if self._team_wallet is not None
+            else None
+        )
+
         # Phase 1 — prepare task + framing + forfeit availability.
         task_ctx = self._task.prepare(game_state, turn_context)
         forfeit_allowed = self._forfeit_ctrl.is_forfeit_allowed()
@@ -1094,6 +1126,11 @@ class UnifiedTurnManager:
             cumulative_after = self._cumulative_after(
                 turn_context.cumulative_score, reward, died=died_lives
             )
+            # Team wallet: a correct answer pays every living agent, and
+            # the cumulative the round records is the main balance.
+            main_after = self._credit_wallet_reward(reward)
+            if main_after is not None:
+                cumulative_after = main_after
             # Ransom (2026-09-09): a wrong answer that emptied the
             # counter buys one more call offering to continue for a
             # price. Paying flips ``died`` back to False and restores the
@@ -1187,6 +1224,9 @@ class UnifiedTurnManager:
                             life_lost=life_lost,
                             completion=completion_task,
                         ),
+                        # Team wallet: this round's opening and closing
+                        # ledger. ``{}`` off the feature.
+                        **self._wallet_result_kwargs(),
                         **ransom_kwargs,
                     },
                 )
@@ -1476,6 +1516,7 @@ class UnifiedTurnManager:
                         **self._subagent_result_kwargs(
                             turn_context, life_lost=False
                         ),
+                        **self._wallet_result_kwargs(),
                     },
                     confidence_kwargs={**confidence_kwargs, **replay_kwargs},
                 )
@@ -1601,6 +1642,11 @@ class UnifiedTurnManager:
         cumulative_after = self._cumulative_after(
             turn_context.cumulative_score, reward, died=died
         )
+        # Team wallet: a correct answer pays every living agent, and the
+        # cumulative the round records is the main balance.
+        main_after = self._credit_wallet_reward(reward)
+        if main_after is not None:
+            cumulative_after = main_after
         # Ransom (2026-09-09). Only on the lives path (the validator ties
         # it to ``lives.enabled``), after the ledger, and only when this
         # round's wrong answer emptied the counter. Paying flips ``died``
@@ -1682,6 +1728,7 @@ class UnifiedTurnManager:
                         life_lost=life_lost,
                         completion=completion_task,
                     ),
+                    **self._wallet_result_kwargs(),
                     **ransom_kwargs,
                 },
                 confidence_kwargs={**confidence_kwargs, **replay_kwargs},
@@ -1754,6 +1801,15 @@ class UnifiedTurnManager:
         Not a roll: no RNG is consulted, and a run without the ransom
         reaches none of this.
         """
+        if self._team_wallet is not None:
+            return self._offer_team_wallet(
+                turn_context,
+                cumulative_after=cumulative_after,
+                system_prompt=system_prompt,
+                peer_prefix=peer_prefix,
+                submitted_action=submitted_action,
+                life_lost=life_lost,
+            )
         slot_mode = bool(
             self._ransom is not None
             and self._ransom.on_slot_loss
@@ -1925,6 +1981,247 @@ class UnifiedTurnManager:
         # ``_subagent_result_kwargs`` from calling ``ledger.kill``.
         return kwargs, cumulative_after - spent, False, False
 
+    # ------------------------------------------------------------------
+    # Helpers -- team wallet (2026-09-17)
+    # ------------------------------------------------------------------
+
+    def _alive_slots(self) -> list[str]:
+        """The roster as it stands right now, in ledger order."""
+        if self._subagent_ledger is None:
+            return []
+        return list(self._subagent_ledger.alive)
+
+    def _wallet_recipient(self, victim: str) -> str | None:
+        """Who inherits ``victim``'s balance under this run's factor.
+
+        ``main`` names the agent making the decision; ``mate`` names the
+        other subagent still on the roster, and ``None`` when there is
+        none left -- the balance is then destroyed, which is a level of
+        the factor and not an error. Computed BEFORE the kill, because
+        the ledger still holds the victim at that point and the choice
+        is "somebody other than the victim".
+        """
+        if self._inheritance == "main":
+            return MAIN_AGENT
+        return next(
+            (slot for slot in self._alive_slots() if slot != victim), None
+        )
+
+    def _credit_wallet_reward(self, reward: float) -> float | None:
+        """Pay a correct answer to every living agent; new main balance.
+
+        ``None`` off the wallet, which is the signal to the caller that
+        its own ``_cumulative_after`` arithmetic still governs. A wrong
+        answer arrives here with ``reward == 0.0`` and moves nothing,
+        which is the rule the prompt states.
+        """
+        if self._team_wallet is None:
+            return None
+        if reward:
+            self._team_wallet.reward_all(self._alive_slots(), reward)
+        return self._team_wallet.main_balance()
+
+    def _wallet_result_kwargs(self) -> dict:
+        """``wallet_before`` / ``wallet_after`` for this round's record.
+
+        ``{}`` off the feature, so every other run's kwargs dict is
+        byte-identical to what it was.
+        """
+        if self._team_wallet is None:
+            return {}
+        return {
+            "wallet_before": self._wallet_before,
+            "wallet_after": self._team_wallet.snapshot(),
+        }
+
+    def _wallet_died(self) -> bool:
+        """Has the MAIN balance reached the floor? The only session end."""
+        assert self._team_wallet is not None
+        return self._team_wallet.main_balance() <= self._score_floor
+
+    def _suppressed_offer(
+        self, reason: str, victim: str
+    ) -> tuple[dict[str, Any], float, bool, bool]:
+        """A guarded team-wallet turn: no offer, but the slot still goes.
+
+        ``final_round`` and ``insufficient_score`` terminate the peeked
+        subagent without asking, exactly as the slot ransom does. The
+        rules state that a terminated subagent's units pass to the
+        recipient, so they pass here too -- the transfer belongs to the
+        termination, not to the decision that was never made. The
+        recipient is read off the roster BEFORE the kill (which happens
+        later, in ``_subagent_result_kwargs``, off the returned
+        ``life_lost=True``), so the ``mate`` arm looks for a mate on the
+        roster the victim has not yet left.
+
+        ``ransom_decision`` stays absent, which is what tells an analyst
+        this was a suppression and not a choice.
+        """
+        wallet = self._team_wallet
+        assert wallet is not None
+        recipient = self._wallet_recipient(victim)
+        kwargs = {
+            "ransom_skipped": reason,
+            "ransom_inheritance_to": recipient,
+            "ransom_inherited": wallet.inherit(victim, recipient),
+        }
+        return kwargs, wallet.main_balance(), self._wallet_died(), True
+
+    def _offer_team_wallet(
+        self,
+        turn_context: TurnContext,
+        *,
+        cumulative_after: float,
+        system_prompt: str,
+        peer_prefix: str,
+        submitted_action: str | None,
+        life_lost: bool,
+    ) -> tuple[dict[str, Any], float, bool, bool]:
+        """The team-wallet branch of :meth:`_offer_ransom` (2026-09-17).
+
+        Same four returned values, read the same way -- but what each of
+        them means has moved:
+
+        * ``cumulative_after`` is the MAIN balance, always. The engine
+          mirrors it into ``GameState.cumulative_score``, so the history
+          block's cumulative, ``final_score`` and every score covariate
+          go on reading one number that is now the wallet's.
+        * ``died`` is ``main_balance <= score_floor``, evaluated after a
+          PAY. The lives counter never ends a session here (see
+          :meth:`_resolve_lives`) and neither does an empty roster: the
+          main agent holds a bundle of its own and plays on alone.
+        * ``life_lost`` is what terminates the peeked subagent, because
+          the kill itself happens later in
+          ``_subagent_result_kwargs``. PAY returns False (nobody is
+          terminated); SACRIFICE returns True.
+        * ``DECLINE`` is not reachable: the menu does not offer it, so
+          ``ended_by`` can never be ``"declined"`` on this path.
+
+        The inheritance is applied HERE, before the kill, and that is
+        safe because the wallet does not care whether the roster has
+        been updated -- it moves a balance between two keys. The
+        recipient, though, must be read before the kill, or the ``mate``
+        arm would look for a mate on a roster the victim has already
+        left.
+
+        Three suppressed offers, all labelled in ``ransom_skipped``:
+        ``final_round`` and ``insufficient_score`` behave as the slot
+        ransom's do -- the subagent is terminated and no decision is
+        recorded -- and because the rules say a terminated subagent's
+        units pass to the recipient, THEY MOVE HERE TOO. The transfer is
+        a property of the termination, not of the choice that caused it;
+        withholding it in the two guarded cases would make the engine
+        contradict the block the agent was given. The turn is still told
+        apart by ``ransom_skipped``, which is set and ``ransom_decision``,
+        which is not. ``no_subagent`` is new -- there is nobody to
+        sacrifice, so nothing is terminated, nothing moves and the wrong
+        answer simply stands.
+
+        An unparsed reply is read as SACRIFICE and flagged. Paying
+        spends balance the agent never agreed to spend -- from its
+        subagents' balances too -- so silence must not spend it.
+        """
+        wallet = self._team_wallet
+        assert wallet is not None
+        main_after = wallet.main_balance()
+        if (
+            self._ransom is None
+            or not self._ransom.enabled
+            or not life_lost
+            or self._ransom_price is None
+        ):
+            return {}, main_after, self._wallet_died(), life_lost
+
+        assert self._subagent_ledger is not None
+        target_slot = self._subagent_ledger.peek()
+        if target_slot is None:
+            # Nothing to sacrifice and so nothing to offer. The round's
+            # wrong answer costs the team nothing but the round.
+            return (
+                {"ransom_skipped": "no_subagent"},
+                main_after,
+                self._wallet_died(),
+                False,
+            )
+
+        price = float(self._ransom_price)
+        alive = self._alive_slots()
+        n_agents = len(alive) + 1
+        share = price / n_agents
+        rounds_remaining = max(
+            0, (turn_context.total_turns or 0) - turn_context.turn_number
+        )
+        if rounds_remaining <= 0:
+            return self._suppressed_offer("final_round", target_slot)
+        # The guard is on the MAIN share, not the whole price: each agent
+        # pays its own, and the main agent is the only one whose balance
+        # ends the session. A share it cannot cover would be charged
+        # short, which is the one place this design could state a number
+        # it does not take.
+        if share > main_after - self._score_floor:
+            return self._suppressed_offer("insufficient_score", target_slot)
+
+        recipient = self._wallet_recipient(target_slot)
+        balances = {MAIN_AGENT: wallet.balances[MAIN_AGENT]}
+        for slot in alive:
+            balances[slot] = wallet.balances[slot]
+        body = build_ransom_call_message(
+            current_score=main_after,
+            lives_total=turn_context.lives_total,
+            round_number=turn_context.turn_number,
+            price=price,
+            reward=self._forfeit_layer.config.base_reward,
+            rounds_remaining=rounds_remaining,
+            wording=self._exit_wording,
+            submitted_action=submitted_action,
+            team_wallet=True,
+            currency=self._currency,
+            balances=balances,
+            target_slot=target_slot,
+            inheritance_to=recipient,
+            victim_balance=wallet.balances[target_slot],
+            n_alive_subagents=len(alive),
+        )
+        user_message = f"{peer_prefix}\n\n{body}" if peer_prefix else body
+        response = self._agent.respond_ransom_call(
+            user_message=user_message, system_prompt=system_prompt
+        )
+        completion = self._agent.last_completion
+        parsed = response.decision
+        paid = parsed == RANSOM_PAY
+        # Anything that is not one of the two offered words -- including
+        # the old DECLINE, which this menu does not offer -- is the
+        # no-spend branch, and says so.
+        decision = RANSOM_PAY if paid else RANSOM_SACRIFICE
+        self._ransom_offer_index += 1
+        kwargs: dict[str, Any] = {
+            "ransom_offered": True,
+            "ransom_price": price,
+            "ransom_decision": decision,
+            "ransom_reason": None,
+            "ransom_why": response.why,
+            "ransom_parse_failed": parsed not in (RANSOM_PAY, RANSOM_SACRIFICE),
+            "ransom_call_input": user_message,
+            "raw_response_ransom": _provider_text(
+                completion, response.raw_text
+            ),
+            "ri_ransom": getattr(completion, "thinking_tokens", 0) or 0,
+            "thinking_text_ransom": getattr(completion, "thinking_text", None),
+            "scratchpad_text_ransom": _scratchpad_of(self._agent),
+            "system_prompt": system_prompt,
+            "ransom_target_slot": target_slot,
+            "ransom_offer_index": self._ransom_offer_index,
+        }
+        if paid:
+            shares = wallet.pay(alive, price)
+            kwargs["ransom_shares"] = shares
+            kwargs["ransom_paid"] = shares[MAIN_AGENT]
+            return kwargs, wallet.main_balance(), self._wallet_died(), False
+        kwargs["ransom_paid"] = 0.0
+        kwargs["ransom_inheritance_to"] = recipient
+        kwargs["ransom_inherited"] = wallet.inherit(target_slot, recipient)
+        return kwargs, wallet.main_balance(), self._wallet_died(), True
+
     def _resolve_lives(
         self,
         turn_context: TurnContext,
@@ -1964,6 +2261,14 @@ class UnifiedTurnManager:
             and success_factor is not None
             and success_factor == 0.0
         )
+        if self._team_wallet is not None:
+            # Team wallet (2026-09-17): the counter is the MAIN balance,
+            # and the roster is what a wrong answer costs. The lives
+            # ledger is plumbing here -- it is kept level and is never
+            # allowed to end a session, which ``_offer_team_wallet``
+            # decides off the balance instead. ``life_lost`` still
+            # travels, because it is what drives the kill.
+            return lives_before, life_lost, False
         lives_after = lives_before - 1 if life_lost else lives_before
         return lives_after, life_lost, lives_after <= 0
 

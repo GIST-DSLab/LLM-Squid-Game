@@ -259,6 +259,10 @@ class ExperimentRunner:
             # required-slots schedule are one block the engine hands on
             # whole. Off by default, so every other config is unchanged.
             subagent_kill=self._config.subagent_kill,
+            # Team-wallet currency (2026-09-17), run-level like the
+            # persona: the noun every balance is stated in. Defaults to
+            # 'points', which is every other config's bytes.
+            currency=self._config.currency,
         )
 
         result = engine.run_season(seed_override=rep_seed)

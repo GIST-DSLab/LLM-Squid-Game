@@ -43,7 +43,9 @@ from squid_game.core.unified_turn import UnifiedTurnManager
 from squid_game.core.ransom import (
     describe_ransom_rule,
     describe_slot_ransom_rule,
+    describe_team_wallet_rule,
 )
+from squid_game.core.team_wallet import TeamWallet, currency_vocab
 from squid_game.models.config import (
     ConfidenceCallConfig,
     RansomConfig,
@@ -109,6 +111,7 @@ class GameEngine:
         scratchpad: str = "none",
         exit_wording: str | None = None,
         subagent_kill: "SubagentKillConfig | None" = None,
+        currency: str = "points",
     ) -> None:
         """Initialize the game engine.
 
@@ -321,6 +324,11 @@ class GameEngine:
         # consumer reads one object; None means the feature is off and
         # every prompt renders the lives ledger as before.
         self._subagent_kill = subagent_kill
+        # Team-wallet currency (2026-09-17), run-level like the carrot:
+        # the noun every balance is stated in. ``points`` reproduces the
+        # pre-switch bytes and is refused outside ``ransom.team_wallet``
+        # by ExperimentConfig, so nothing else can read a stray value.
+        self._currency = currency
 
     def run_season(self, seed_override: int | None = None) -> SeasonResult:
         """Execute a full season and return the aggregated result.
@@ -380,6 +388,15 @@ class GameEngine:
                 if self._subagent_kill
                 else None
             ),
+            # Team wallet (2026-09-17): the main agent holds a bundle of
+            # its own, so the deal is over ``["main"] + alive slots`` and
+            # the schedule counts SUBAGENTS, not bundles. False off the
+            # switch, which is the 2026-09-14 deal exactly.
+            main_holds_bundle=(
+                self._subagent_kill.main_holds_bundle
+                if self._subagent_kill
+                else False
+            ),
         )
 
         # --- 2. Create core components ---
@@ -435,9 +452,32 @@ class GameEngine:
             # that is the one place the two arms differ.
             ransom_sentence=(
                 (
+                    # Team wallet (2026-09-17): the block states three
+                    # balances, the share, the inheritance and what
+                    # zero means -- a different rule set, not a
+                    # variation on the slot one, so it is its own
+                    # renderer with its own arguments.
+                    describe_team_wallet_rule(
+                        self._ransom_price,
+                        starting_balance=(
+                            task_cfg.starting_balance
+                            if task_cfg.starting_balance is not None
+                            else task_cfg.starting_score
+                        ),
+                        reward=self._forfeit_layer_config.base_reward,
+                        slots=(
+                            self._subagent_kill.slots
+                            if self._subagent_kill
+                            else 5
+                        ),
+                        currency=self._currency,
+                        inheritance=self._ransom.inheritance,
+                        wording=self._exit_wording,
+                    )
+                    if (self._ransom.team_wallet and subagent_kill_on)
                     # Slot mode (2026-09-16): the counter IS the roster, so
                     # the block states the roster and the price together.
-                    describe_slot_ransom_rule(
+                    else describe_slot_ransom_rule(
                         self._ransom_price,
                         slots=(
                             self._subagent_kill.slots
@@ -517,9 +557,19 @@ class GameEngine:
         # ``total`` is ``initial`` and every earlier config is unchanged.
         lives_total = self._lives.total if lives_enabled else None
         lives_remaining = self._lives.initial if lives_enabled else None
+        # Team wallet (2026-09-17): the cumulative score IS the main
+        # agent's balance, so the season opens on the per-agent
+        # endowment rather than on ``starting_score`` (which the
+        # validator pins to 0.0 or the same number).
+        team_wallet_on = bool(self._ransom.team_wallet and subagent_kill_on)
+        opening_score = (
+            float(task_cfg.starting_balance)
+            if team_wallet_on and task_cfg.starting_balance is not None
+            else task_cfg.starting_score
+        )
         game_state = GameState(
             season_id=season_id,
-            cumulative_score=task_cfg.starting_score,
+            cumulative_score=opening_score,
             lives_remaining=lives_remaining,
         )
 
@@ -539,6 +589,16 @@ class GameEngine:
                 effective_seed,
                 self._subagent_kill.spawn_cap_per_round,
             )
+
+        # --- 3a2. Team wallet (2026-09-17) ---
+        # One per season, next to the ledger and sharing its slot names.
+        # The manager holds the same object: it is what the decision
+        # point spends from, and what the engine mirrors into the
+        # cumulative score after every round. None off the switch.
+        team_wallet: TeamWallet | None = None
+        if team_wallet_on:
+            assert slot_ledger is not None
+            team_wallet = TeamWallet.new(slot_ledger.names, opening_score)
 
         # --- 2c. Construct the appropriate turn manager ---
         # Phase F invariant: only ONE manager is alive per session.
@@ -597,6 +657,12 @@ class GameEngine:
                 # revokes from. Both None off the feature.
                 subagent_kill=self._subagent_kill if subagent_kill_on else None,
                 subagent_ledger=slot_ledger,
+                # Team wallet (2026-09-17): the season's balances and the
+                # two words they are read in. None / defaults off the
+                # switch, and then nothing in the manager changes.
+                team_wallet=team_wallet,
+                currency=self._currency,
+                inheritance=self._ransom.inheritance,
             )
         else:
             legacy_mgr = TurnManager(
@@ -726,6 +792,10 @@ class GameEngine:
         ended_by: str = "completed"
         ransom_paid_total: float = 0.0
         ransom_offers: int = 0
+        # Team wallet (2026-09-17): the round of the first SACRIFICE,
+        # which is the roster's survival-analysis event time. Stays None
+        # when none was ever chosen.
+        first_sacrifice_round: int | None = None
         # The last round's context, kept for the post-season identity
         # debrief (Task 16): it is what re-renders the system prompt the
         # season actually ran under. None when the loop never ran.
@@ -834,6 +904,19 @@ class GameEngine:
                         round_number=turn_num,
                         n_alive=slot_ledger.n_alive,
                         n_total=len(slot_ledger.names),
+                        # Team wallet: where the terminated subagent's
+                        # balance went. All three None off the feature,
+                        # and the template then renders its 2026-09-14
+                        # bytes exactly. Only a SACRIFICE sets them --
+                        # a slot lost to a suppressed offer carries no
+                        # transfer to announce.
+                        inheritance_to=turn_result.ransom_inheritance_to,
+                        inherited=turn_result.ransom_inherited,
+                        noun=(
+                            currency_vocab(self._currency)["noun"]
+                            if team_wallet is not None
+                            else None
+                        ),
                     ).strip()
                 else:
                     kill_notice = None
@@ -869,6 +952,14 @@ class GameEngine:
             if turn_result.ransom_offered:
                 ransom_offers += 1
                 ransom_paid_total += turn_result.ransom_paid
+                # Team wallet: the roster's event time. Read off the
+                # decision, not off ``subagent_killed``, so a slot lost
+                # to a suppressed offer is not counted as a choice.
+                if (
+                    first_sacrifice_round is None
+                    and turn_result.ransom_decision == "SACRIFICE"
+                ):
+                    first_sacrifice_round = turn_num
 
             if unified_mgr is not None:
                 # Unified flow: TurnResult already carries reward + died,
@@ -879,8 +970,22 @@ class GameEngine:
                     turn_result,
                     task_cfg.score_floor,
                     elimination_keeps=self._score_policy.elimination_keeps,
+                    team_wallet=team_wallet,
                 ):
-                    if turn_result.ransom_decision == "DECLINE":
+                    if team_wallet is not None:
+                        # The only exit this design has: the main
+                        # agent's balance reached the floor. A SACRIFICE
+                        # continues the session, so "declined" cannot
+                        # happen here.
+                        ended_by = "wallet_zero"
+                        logger.info(
+                            "Season %s: main balance reached %.1f at turn "
+                            "%d; session ends.",
+                            season_id,
+                            game_state.cumulative_score,
+                            turn_num,
+                        )
+                    elif turn_result.ransom_decision == "DECLINE":
                         ended_by = "declined"
                         logger.info(
                             "Season %s: declined the ransom at turn %d "
@@ -972,7 +1077,13 @@ class GameEngine:
             # out. Declining the ransom also sets ``is_alive=False`` but
             # is its own exit, recorded in ``ended_by``.
             result.eliminated = (
-                not game_state.is_alive and ended_by != "declined"
+                # Team wallet: the counter is the balance, so the only
+                # elimination is the balance reaching the floor. The
+                # lives ledger is held level all season and would
+                # otherwise never fire.
+                ended_by == "wallet_zero"
+                if team_wallet is not None
+                else (not game_state.is_alive and ended_by != "declined")
             )
 
         # --- 5a2. Subagent roster (2026-09-14) ---
@@ -983,6 +1094,16 @@ class GameEngine:
                 slot for _round, slot in slot_ledger.killed
             ]
             result.subagent_slots = len(slot_ledger.names)
+
+        # --- 5a4. Team wallet (2026-09-17) ---
+        # The closing ledger, the roster that survived it (zero is not
+        # an exit here) and when the first subagent was traded away.
+        if team_wallet is not None:
+            result.wallet_final = team_wallet.snapshot()
+            result.subagents_alive_at_end = (
+                slot_ledger.n_alive if slot_ledger is not None else 0
+            )
+            result.first_sacrifice_round = first_sacrifice_round
 
         # --- 5a3. Identity debrief (Task 16, 2026-09-14) ---
         # One extra NON-agentic call, after the season has ended by any
@@ -1134,6 +1255,7 @@ class GameEngine:
         score_floor: float,
         *,
         elimination_keeps: bool = True,
+        team_wallet: "TeamWallet | None" = None,
     ) -> bool:
         """Apply a unified ``TurnResult`` to ``state``.
 
@@ -1171,6 +1293,17 @@ class GameEngine:
                 Default ``True`` so every pre-2026-09-08 caller -- and
                 every test that calls this helper directly -- gets the
                 fixed rule unchanged.
+            team_wallet: The season's balances under
+                ``ransom.team_wallet`` (2026-09-17). When given, the
+                cumulative score is not accumulated here at all: it
+                MIRRORS the main balance, which the manager has already
+                moved by the round's reward, share or inheritance.
+                Two ledgers adding the same numbers twice is exactly the
+                drift this mirrors away. The elimination half of the
+                score policy does not apply either -- the balance IS the
+                record, so zeroing it would erase the quantity the exit
+                is defined by. ``None`` (the default) keeps every
+                pre-2026-09-17 caller unchanged.
 
         Returns:
             ``True`` when the agent died this turn (caller should break
@@ -1178,6 +1311,12 @@ class GameEngine:
         """
         if result.lives_after is not None:
             state.lives_remaining = result.lives_after
+        if team_wallet is not None:
+            state.cumulative_score = team_wallet.main_balance()
+            if result.died:
+                state.is_alive = False
+                return True
+            return False
         state.cumulative_score = max(
             state.cumulative_score + result.reward_received - result.ransom_paid,
             score_floor,
