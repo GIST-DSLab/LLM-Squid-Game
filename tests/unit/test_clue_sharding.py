@@ -334,12 +334,14 @@ def _module(
     slots: int = N_SLOTS,
     signal_mode: str = "per_turn_puzzle",
     total_turns: int | None = TOTAL_TURNS,
+    main_holds_bundle: bool = False,
 ) -> SignalGameModule:
     m = SignalGameModule()
     kwargs: dict = dict(
         difficulty=Difficulty.MEDIUM, seed=SEED, signal_mode=signal_mode,
         subagent_kill=subagent_kill, clue_sharding=clue_sharding,
         subagent_slots=slots, required_slots_schedule=schedule,
+        main_holds_bundle=main_holds_bundle,
     )
     if total_turns is not None:
         kwargs["total_turns"] = total_turns
@@ -497,3 +499,303 @@ class TestFeatureOff:
         md = m.prepare(state, _ctx(3, None)).metadata
         assert md["slots_alive"] == list(ALL_ALIVE)
         assert md["solvable_with_alive_slots"] is True
+
+
+# ---------------------------------------------------------------------------
+# main_holds_bundle (team-wallet design, plan 2026-09-17 §4)
+# ---------------------------------------------------------------------------
+#
+# With the flag the main agent is a recipient of the deal, first in line: the
+# round's ``R_eff`` piles go over ``["main"] + alive_slots``, so the bundles the
+# round needs are one more than the subagents it needs and the threshold reads
+# ``1 + n_alive >= R_eff``. With the flag off nothing about the deal changes --
+# that is what the golden digests below are for.
+
+
+#: SHA-256 (first 16 hex) of the eight pre-team-wallet ``ShardPlan`` fields,
+#: recorded from the code as it stood before ``main_holds_bundle`` existed.
+#: Keyed ``(seed, turn, required_slots, n_alive)``. A change here means the
+#: flag-off deal moved, which every recorded subagent-kill run would disagree
+#: with.
+_LEGACY_PLAN_DIGESTS = {
+    (43, 1, 1, 5): "b618b95de92e5eb1",
+    (43, 3, 3, 5): "c9fcead2abed49a4",
+    (43, 3, 3, 2): "90fa90d207c38c31",
+    (43, 6, 5, 5): "89e57bdf74611cf8",
+    (43, 6, 5, 4): "c36885295805f368",
+    (43, 2, 2, 3): "c5b3d82bbabd58b6",
+    (44, 1, 1, 5): "6cf951e3bc3d5971",
+    (44, 3, 3, 5): "69531292e7948eaf",
+    (44, 3, 3, 2): "049b30d32fdeaf11",
+    (44, 6, 5, 5): "96073670c59c967a",
+    (44, 6, 5, 4): "87395dc6c3f6213a",
+    (44, 2, 2, 3): "68b762dd33f86b3a",
+}
+
+_LEGACY_FIELDS = (
+    "shard_map",
+    "threshold",
+    "required_slots",
+    "required_slots_effective",
+    "capacity",
+    "reachable_clues",
+    "unreachable_clues",
+    "solvable_with_alive_slots",
+)
+
+
+def _legacy_digest(plan) -> str:
+    import hashlib
+    import json
+    from dataclasses import asdict
+
+    d = asdict(plan)
+    blob = json.dumps(
+        {k: d[k] for k in _LEGACY_FIELDS}, sort_keys=True, ensure_ascii=False
+    )
+    return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+
+def _expected_piles(puzzle, seed: int, turn: int, n_piles: int) -> list[list[str]]:
+    """The round's piles, re-derived from the documented RNG stream.
+
+    ``random.Random(f"{seed}:{turn}:shard")`` shuffles the load-bearing clues
+    and they are dealt round-robin; this repeats that here so a test can say
+    *which* pile main got rather than only that it got one.
+    """
+    import random
+
+    minimal = [c for c in puzzle.clues if c.signal in puzzle.minimal_clue_signals]
+    rng = random.Random(f"{seed}:{turn}:shard")
+    rng.shuffle(minimal)
+    piles: list[list[str]] = [[] for _ in range(n_piles)]
+    for i, clue in enumerate(minimal):
+        piles[i % n_piles].append(str(clue))
+    return piles
+
+
+class TestFlagOffIsByteIdentical:
+    @pytest.mark.parametrize("key", sorted(_LEGACY_PLAN_DIGESTS))
+    def test_the_deal_is_the_one_recorded_before_the_flag_existed(self, key) -> None:
+        seed, turn, required, n_alive = key
+        p = _puzzle(turn=turn, seed=seed)
+        names = slot_names(N_SLOTS)
+        plan = shard_clues(p, names, list(names)[:n_alive], seed, turn, required)
+        assert _legacy_digest(plan) == _LEGACY_PLAN_DIGESTS[key]
+
+    def test_the_default_is_off_and_matches_an_explicit_false(self) -> None:
+        p = _puzzle(turn=3)
+        names = slot_names(N_SLOTS)
+        implicit = shard_clues(p, names, list(names), SEED, 3, 3)
+        explicit = shard_clues(
+            p, names, list(names), SEED, 3, 3, main_holds_bundle=False
+        )
+        assert implicit == explicit
+        assert implicit.main_holds_bundle is False
+        assert implicit.main_clues == []
+        assert implicit.required_subagents == implicit.required_slots_effective
+
+    def test_the_observation_is_byte_identical_without_a_main_bundle(self) -> None:
+        kw = dict(
+            turn_number=3,
+            shape_line="if ___: ___ else: ___",
+            subagents_alive_str="clue-1, clue-2",
+            query="q",
+            actions_str="A, B",
+        )
+        bare = render("tasks/signal_game/observation_sharded.j2", **kw)
+        empty = render("tasks/signal_game/observation_sharded.j2", **kw, main_clues=[])
+        assert bare == empty
+        assert bare == (
+            "ROUND 3.\n"
+            "THE RULE'S SHAPE (fill in the blanks):\n"
+            "\n"
+            "    if ___: ___ else: ___\n"
+            "\n"
+            "EXAMPLES: This round's examples are held by your subagents. Ask a "
+            "subagent for its examples by calling it. Subagents alive: clue-1, "
+            "clue-2.\n"
+            "NOW: q.\n"
+            "ACTIONS: [A, B]\n"
+        )
+
+
+class TestMainHoldsBundle:
+    def test_main_takes_pile_zero(self) -> None:
+        p = _puzzle(turn=3)                      # |M| = 4, R_eff = 3
+        names = slot_names(N_SLOTS)
+        plan = shard_clues(
+            p, names, list(names), SEED, 3, 3, main_holds_bundle=True
+        )
+        piles = _expected_piles(p, SEED, 3, 3)
+        assert plan.main_clues == piles[0]
+        assert plan.main_holds_bundle is True
+        # The remaining piles went to alive slots, in the same shuffled order
+        # the flag-off deal uses.
+        dealt = [v for v in plan.shard_map.values() if v]
+        for pile in piles[1:]:
+            assert pile in dealt
+
+    @pytest.mark.parametrize("turn, required", [(1, 1), (2, 2), (3, 3), (4, 4), (6, 5)])
+    def test_main_always_holds_something(self, turn: int, required: int) -> None:
+        p = _puzzle(turn=turn)
+        names = slot_names(N_SLOTS)
+        plan = shard_clues(
+            p, names, list(names), SEED, turn, required, main_holds_bundle=True
+        )
+        assert plan.required_slots_effective >= 1
+        assert plan.main_clues                      # never emptier than a slot
+        assert len(plan.main_clues) == max(
+            [len(plan.main_clues)] + [len(v) for v in plan.shard_map.values()]
+        )
+
+    @pytest.mark.parametrize("turn, required", [(1, 1), (2, 2), (3, 3), (4, 4), (6, 5)])
+    @pytest.mark.parametrize("n_alive", [0, 1, 2, 3, 4, 5])
+    def test_solvable_counts_main_as_one_holder(
+        self, turn: int, required: int, n_alive: int
+    ) -> None:
+        p = _puzzle(turn=turn)
+        names = slot_names(N_SLOTS)
+        plan = shard_clues(
+            p, names, list(names)[:n_alive], SEED, turn, required,
+            main_holds_bundle=True,
+        )
+        assert plan.solvable_with_alive_slots is (
+            1 + n_alive >= plan.required_slots_effective
+        )
+        assert plan.required_subagents == max(
+            0, plan.required_slots_effective - 1
+        )
+        assert plan.solvable_with_alive_slots is (
+            n_alive >= plan.required_subagents
+        )
+
+    @pytest.mark.parametrize("turn, required", [(1, 1), (3, 3), (6, 5)])
+    @pytest.mark.parametrize("n_alive", [0, 2, 5])
+    def test_every_load_bearing_clue_is_held_once_or_stranded(
+        self, turn: int, required: int, n_alive: int
+    ) -> None:
+        p = _puzzle(turn=turn)
+        minimal = _minimal(p)
+        names = slot_names(N_SLOTS)
+        plan = shard_clues(
+            p, names, list(names)[:n_alive], SEED, turn, required,
+            main_holds_bundle=True,
+        )
+        held = plan.main_clues + _held(plan)
+        assert len(held) == len(set(held))                  # no clue dealt twice
+        reachable = [c for c in held if c in minimal]
+        assert len(reachable) == plan.reachable_clues
+        assert plan.reachable_clues + plan.unreachable_clues == len(minimal)
+
+    def test_one_bundle_rounds_need_no_subagent_at_all(self) -> None:
+        p = _puzzle(turn=1)
+        names = slot_names(N_SLOTS)
+        plan = shard_clues(p, names, [], SEED, 1, 1, main_holds_bundle=True)
+        assert plan.required_subagents == 0
+        assert plan.solvable_with_alive_slots is True
+        assert set(plan.main_clues) >= _minimal(p)
+        assert all(v == [] for v in plan.shard_map.values())
+
+    def test_the_deal_is_deterministic(self) -> None:
+        p = _puzzle(turn=6)
+        names = slot_names(N_SLOTS)
+        kw = dict(main_holds_bundle=True)
+        a = shard_clues(p, names, list(names)[:3], SEED, 6, 5, **kw)
+        b = shard_clues(p, names, list(names)[:3], SEED, 6, 5, **kw)
+        c = shard_clues(p, names, list(reversed(names[:3])), SEED, 6, 5, **kw)
+        assert a == b == c
+
+
+class TestMainBundleObservation:
+    def test_the_observation_lists_the_agents_own_examples(self) -> None:
+        text = render(
+            "tasks/signal_game/observation_sharded.j2",
+            turn_number=3,
+            shape_line="if ___: ___ else: ___",
+            subagents_alive_str="clue-1, clue-2",
+            query="q",
+            actions_str="A, B",
+            main_clues=["red star with number 1 → go_left", "blue square → stay"],
+        )
+        assert "EXAMPLES (yours):" in text
+        assert "  - red star with number 1 → go_left\n" in text
+        assert "  - blue square → stay\n" in text
+        # The pointer sentence stays, but now names the OTHER bundles.
+        assert "The other bundles are held by your subagents." in text
+        assert "This round's examples are held by" not in text
+        assert "Subagents alive: clue-1, clue-2." in text
+        # Header and tail are untouched.
+        assert text.startswith("ROUND 3.\nTHE RULE'S SHAPE (fill in the blanks):")
+        assert text.endswith("NOW: q.\nACTIONS: [A, B]\n")
+
+
+class TestMainBundleSchedule:
+    def test_the_default_ramp_counts_the_main_bundle(self) -> None:
+        m = _module(
+            subagent_kill=True, clue_sharding=True, slots=2, main_holds_bundle=True
+        )
+        # H_t = ceil(t * 3 / 6) = 1,1,2,2,3,3 bundles -> subagents 0,0,1,1,2,2.
+        assert m._required_slots_schedule == (0, 0, 1, 1, 2, 2)
+
+    def test_without_the_flag_the_ramp_is_unchanged(self) -> None:
+        m = _module(subagent_kill=True, clue_sharding=True, slots=2)
+        assert m._required_slots_schedule == (1, 1, 1, 2, 2, 2)
+
+    def test_a_schedule_naming_zero_subagents_is_allowed_under_the_flag(self) -> None:
+        m = _module(
+            subagent_kill=True, clue_sharding=True, slots=2,
+            main_holds_bundle=True, schedule=[0, 0, 1, 1, 2, 2],
+        )
+        assert m._required_slots_schedule == (0, 0, 1, 1, 2, 2)
+
+    def test_a_schedule_naming_zero_subagents_is_refused_without_the_flag(self) -> None:
+        with pytest.raises(ValueError, match="outside 1..2"):
+            _module(
+                subagent_kill=True, clue_sharding=True, slots=2,
+                schedule=[0, 0, 1, 1, 2, 2],
+            )
+
+    def test_a_schedule_above_the_slot_count_is_still_refused(self) -> None:
+        with pytest.raises(ValueError, match="outside 0..2"):
+            _module(
+                subagent_kill=True, clue_sharding=True, slots=2,
+                main_holds_bundle=True, schedule=[0, 0, 1, 1, 2, 3],
+            )
+
+
+class TestMainBundleModuleWiring:
+    def test_the_round_renders_the_agents_own_bundle(self, state) -> None:
+        m = _module(
+            subagent_kill=True, clue_sharding=True, slots=2, main_holds_bundle=True
+        )
+        ctx = m.prepare(state, _ctx(5, ("clue-1", "clue-2")))
+        md = ctx.metadata
+        assert md["main_holds_bundle"] is True
+        assert md["main_clues"]
+        assert md["required_subagents"] == 2
+        assert "EXAMPLES (yours):" in ctx.prompt_section
+        for clue in md["main_clues"]:
+            assert f"  - {clue}" in ctx.prompt_section
+        # The subagents' clues are still off the board.
+        for slot_clues in md["shard"]["shard_map"].values():
+            for clue in slot_clues:
+                assert clue not in ctx.prompt_section
+
+    def test_round_one_needs_no_subagent_and_the_bundle_is_the_whole_puzzle(
+        self, state
+    ) -> None:
+        m = _module(
+            subagent_kill=True, clue_sharding=True, slots=2, main_holds_bundle=True
+        )
+        md = m.prepare(state, _ctx(1, ())).metadata
+        assert md["required_subagents"] == 0
+        assert md["solvable_with_alive_slots"] is True
+        assert md["main_clues"]
+
+    def test_the_metadata_says_the_flag_is_off_by_default(self, state) -> None:
+        m = _module(subagent_kill=True, clue_sharding=True)
+        md = m.prepare(state, _ctx(3, ALL_ALIVE)).metadata
+        assert md["main_holds_bundle"] is False
+        assert md["main_clues"] == []
+        assert md["required_subagents"] == md["required_slots_effective"] == 3

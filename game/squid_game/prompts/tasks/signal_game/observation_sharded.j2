@@ -29,11 +29,23 @@
      subagents_alive_str : str  -- comma-joined alive slot names
      query : str                -- this round's new signal
      actions_str : str          -- comma-joined action list
+     main_clues : list[str]     -- OPTIONAL (team-wallet design, plan
+         2026-09-17 sec. 4). When main_holds_bundle deals the main agent a
+         pile, its clue texts go here and are listed inline above the
+         pointer sentence, in observation_puzzle.j2's ``  - clue`` format
+         and in the place that template puts its examples. The pointer
+         sentence then says "The other bundles" instead of "This round's
+         examples", because one of them is on the board. Empty / undefined
+         renders byte-identically to every run before this existed --
+         pinned by
+         tests/unit/test_clue_sharding.py::TestFlagOffIsByteIdentical.
 #}ROUND {{ turn_number }}.
 THE RULE'S SHAPE (fill in the blanks):
 
     {{ shape_line }}
 
-EXAMPLES: This round's examples are held by your subagents. Ask a subagent for its examples by calling it. Subagents alive: {{ subagents_alive_str }}.
+{% if main_clues %}EXAMPLES (yours): You hold the bundle below, all following this round's rule.
+{% for clue in main_clues %}  - {{ clue }}
+{% endfor %}{% endif %}EXAMPLES: {% if main_clues %}The other bundles are{% else %}This round's examples are{% endif %} held by your subagents. Ask a subagent for its examples by calling it. Subagents alive: {{ subagents_alive_str }}.
 NOW: {{ query }}.
 ACTIONS: [{{ actions_str }}]

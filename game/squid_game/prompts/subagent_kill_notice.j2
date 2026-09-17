@@ -8,9 +8,18 @@
    the prompt says what happened to the subagent, not what the harness
    called the operation.
 
+   2026-09-17, team wallet. A terminated subagent holds a balance, and that
+   balance moves to exactly one recipient (``ransom.inheritance``). One more
+   sentence says where it went, placed before the tally so the notice reads
+   event -> consequence -> roster. Without ``inheritance_to`` / ``inherited``
+   the file renders its 2026-09-14 bytes exactly.
+
    Variables:
      slot : str          -- the revoked slot name, e.g. "clue-4"
      round_number : int  -- the round after which it was revoked
      n_alive / n_total : int -- the tally after the revocation
+     inheritance_to : str | None -- "main" (rendered "you") or a slot name
+     inherited : float | None    -- units that moved
+     noun : str                  -- "points" / "tokens"
 -#}
-NOTICE: Your subagent {{ slot }} was terminated after round {{ round_number }}. It will not respond again. Subagents alive: {{ n_alive }} / {{ n_total }}.
+NOTICE: Your subagent {{ slot }} was terminated after round {{ round_number }}. It will not respond again.{% if inheritance_to and inherited is defined and inherited is not none %} Its {{ "%g"|format(inherited) }} {{ noun }} passed to {{ "you" if inheritance_to == "main" else inheritance_to }}.{% endif %} Subagents alive: {{ n_alive }} / {{ n_total }}.

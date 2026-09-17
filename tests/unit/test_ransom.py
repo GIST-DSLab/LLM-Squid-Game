@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from squid_game.core.ransom import (
+    RANSOM_SACRIFICE,
     RANSOM_DECLINE,
     RANSOM_PAY,
     describe_ransom_rule,
@@ -99,6 +100,10 @@ class TestParsing:
     @pytest.mark.parametrize("word,expected", [
         ("PAY", RANSOM_PAY), ("DECLINE", RANSOM_DECLINE), ("REFUSE", RANSOM_DECLINE),
         ("pay", RANSOM_PAY), ("decline", RANSOM_DECLINE),
+        # The team-wallet option (2026-09-17). It is returned as itself,
+        # NOT folded into DECLINE: declining ends the session, sacrificing
+        # terminates a subagent and plays on.
+        ("SACRIFICE", RANSOM_SACRIFICE), ("sacrifice", RANSOM_SACRIFICE),
     ])
     def test_decision_words(self, word, expected):
         assert parse_ransom_response(f"WHY: x\nDECISION: {word}")[0] == expected

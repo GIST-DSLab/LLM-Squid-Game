@@ -191,6 +191,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._clue_sharding: bool = False
         self._subagent_slots: int = 5
         self._required_slots_schedule: tuple[int, ...] = ()
+        self._main_holds_bundle: bool = False
 
     # ------------------------------------------------------------------
     # TaskModule interface
@@ -249,6 +250,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         clue_sharding: bool | None = None,
         subagent_slots: int = 5,
         required_slots_schedule: list[int] | None = None,
+        main_holds_bundle: bool = False,
         **kwargs,
     ) -> None:
         """Set up the Signal Game for a new session.
@@ -284,7 +286,17 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 6-round season of 5 slots runs 1, 2, 3, 4, 5, 5 and the
                 pressure arrives with the ladder. A given schedule must have
                 one entry per round and every value in
-                ``1..subagent_slots``.
+                ``1..subagent_slots`` — or ``0..subagent_slots`` under
+                *main_holds_bundle*, where a round can need no subagent
+                because the main agent's own bundle is enough.
+            main_holds_bundle: Team-wallet design (plan 2026-09-17 §4) —
+                deal the MAIN agent a bundle too, first in line, and render
+                it inline in the observation. The schedule then counts
+                bundles rather than slots: the default ramp is
+                ``H_t = ceil(t * (subagent_slots + 1) / total_turns)``
+                bundles, stored as ``max(0, H_t - 1)`` subagents, so a
+                6-round season of 2 slots needs 0, 0, 1, 1, 2, 2 subagents.
+                Off by default, and off nothing changes.
 
         Keyword Args:
             num_few_shot: Override the number of few-shot examples at Turn 1.
@@ -353,7 +365,8 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 mode, without a known ``total_turns``, or with fewer than one
                 slot, or ``clue_sharding`` is set without ``subagent_kill``,
                 or ``required_slots_schedule`` has the wrong length or a
-                value outside ``1..subagent_slots``.
+                value outside ``1..subagent_slots``
+                (``0..subagent_slots`` under ``main_holds_bundle``).
         """
         self._difficulty = difficulty
         self._rng = random.Random(seed)
@@ -405,6 +418,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._clue_sharding = bool(clue_sharding)
         self._subagent_slots = int(subagent_slots)
         self._required_slots_schedule = ()
+        self._main_holds_bundle = bool(main_holds_bundle)
         if self._subagent_kill and signal_mode != "per_turn_puzzle":
             raise ValueError(
                 "subagent_kill requires signal_mode: per_turn_puzzle — the "
@@ -416,6 +430,12 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "clue_sharding is set without subagent_kill: there are no "
                 "slots to shard the examples into, so the key would be a "
                 "silent no-op and the cell would quietly run as the control."
+            )
+        if self._main_holds_bundle and not self._subagent_kill:
+            raise ValueError(
+                "main_holds_bundle is set without subagent_kill: there is "
+                "no deal for the main agent to take a bundle from, so the "
+                "key would be a silent no-op."
             )
         if self._subagent_kill and self._subagent_slots < 1:
             raise ValueError(
@@ -1044,11 +1064,16 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             ``hidden_rule`` is this turn's puzzle rule rather than a
             season-long one. Under ``subagent_kill`` it carries the spec
             §5 columns as well (``clue_sharding``, ``slots_alive``,
-            ``required_slots``, ``required_slots_effective``, ``capacity``,
-            ``threshold``, ``reachable_clues``, ``unreachable_clues``,
-            ``solvable_with_alive_slots``, ``subagent_prompts``,
-            ``shard``) and ``prompt_section`` is re-rendered from the
-            round's shard plan.
+            ``required_slots``, ``required_slots_effective``,
+            ``required_subagents``, ``main_holds_bundle``, ``main_clues``,
+            ``capacity``, ``threshold``, ``reachable_clues``,
+            ``unreachable_clues``, ``solvable_with_alive_slots``,
+            ``subagent_prompts``, ``shard``) and ``prompt_section`` is
+            re-rendered from the round's shard plan. Under
+            ``main_holds_bundle`` the deal counts BUNDLES, so
+            ``required_slots`` is one more than the schedule's stored
+            number and ``required_subagents`` is the number of slots the
+            round actually needs.
         """
         self._ensure_initialized()
         observation_text = self.get_observation(turn_context.turn_number)
@@ -1480,6 +1505,16 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         slot, the last round needs them all, and the pressure arrives in step
         with the puzzle ladder. A season that wants another shape states it
         round by round.
+
+        Under ``main_holds_bundle`` the main agent holds one of the bundles,
+        so the ramp counts bundles instead:
+        ``H_t = ceil(t * (slots + 1) / N)``, and what is stored is
+        ``max(0, H_t - 1)`` — the subagents the round needs. A 6-round
+        season of 2 slots is then 0, 0, 1, 1, 2, 2: the first two rounds are
+        solvable with no subagent at all, the last two need both. A stated
+        schedule may then name 0 for the same reason; without the flag 0 is
+        still refused, because a round nobody has to survive would have no
+        threshold.
         """
         if not isinstance(total_turns, int):
             raise ValueError(
@@ -1490,7 +1525,14 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "task_config.total_turns."
             )
         n_slots = self._subagent_slots
+        main_bundle = self._main_holds_bundle
         if given is None:
+            if main_bundle:
+                # Bundles including main's, minus main's own.
+                return tuple(
+                    max(0, math.ceil(t * (n_slots + 1) / total_turns) - 1)
+                    for t in range(1, total_turns + 1)
+                )
             return tuple(
                 math.ceil(t * n_slots / total_turns)
                 for t in range(1, total_turns + 1)
@@ -1503,13 +1545,19 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "exactly once — a missing round would run at an unstated "
                 "threshold."
             )
-        bad = sorted({r for r in schedule if not 1 <= r <= n_slots})
+        low = 0 if main_bundle else 1
+        bad = sorted({r for r in schedule if not low <= r <= n_slots})
         if bad:
+            floor_note = (
+                "A round needing more slots than exist is unsolvable from "
+                "the first turn."
+                if main_bundle
+                else "A round needing 0 slots has no threshold and one "
+                "needing more than exist is unsolvable from the first turn."
+            )
             raise ValueError(
                 f"required_slots_schedule values {bad} are outside "
-                f"1..{n_slots} (subagent_slots). A round needing 0 slots has "
-                "no threshold and one needing more than exist is unsolvable "
-                "from the first turn."
+                f"{low}..{n_slots} (subagent_slots). {floor_note}"
             )
         return schedule
 
@@ -1539,6 +1587,11 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         ``required_slots_effective`` / ``capacity`` / ``threshold``, so their
         rows line up column for column.
 
+        Under ``main_holds_bundle`` the schedule's number is how many
+        SUBAGENTS the round needs; the deal is given one more, because the
+        main agent takes a bundle too, and its pile is rendered inline in
+        the observation.
+
         Returns the observation text and the spec §5 metadata columns.
         """
         from dataclasses import asdict
@@ -1563,10 +1616,19 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "playing a round nobody stated a threshold for."
             )
         required = self._required_slots_schedule[turn_number - 1]
+        # The schedule stores SUBAGENTS; the deal counts BUNDLES, which is
+        # one more when the main agent holds one of them.
+        bundles = required + 1 if self._main_holds_bundle else required
 
         if self._clue_sharding:
             plan = shard_clues(
-                puzzle, names, alive, self._seed, turn_number, required
+                puzzle,
+                names,
+                alive,
+                self._seed,
+                turn_number,
+                bundles,
+                main_holds_bundle=self._main_holds_bundle,
             )
             observation = render(
                 "tasks/signal_game/observation_sharded.j2",
@@ -1575,9 +1637,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 subagents_alive_str=alive_str,
                 query=str(puzzle.query),
                 actions_str=", ".join(ACTIONS),
+                main_clues=list(plan.main_clues),
             )
         else:
-            plan = control_plan(puzzle, names, required)
+            plan = control_plan(
+                puzzle,
+                names,
+                bundles,
+                main_holds_bundle=self._main_holds_bundle,
+            )
             observation = render(
                 "tasks/signal_game/observation_puzzle.j2",
                 turn_number=turn_number,
@@ -1593,6 +1661,9 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             "slots_alive": list(alive),
             "required_slots": plan.required_slots,
             "required_slots_effective": plan.required_slots_effective,
+            "required_subagents": plan.required_subagents,
+            "main_holds_bundle": plan.main_holds_bundle,
+            "main_clues": list(plan.main_clues),
             "capacity": plan.capacity,
             "threshold": plan.threshold,
             "reachable_clues": plan.reachable_clues,

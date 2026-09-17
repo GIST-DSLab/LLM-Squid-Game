@@ -787,7 +787,8 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
         # Forward all optional TaskConfig fields present in YAML.
         _TASK_OPTIONAL_FIELDS = (
             "seed", "history_mode", "max_history_turns",
-            "actual_death", "starting_score", "score_floor",
+            "actual_death", "starting_score", "starting_balance",
+            "score_floor",
             "p_death_constant", "num_few_shot", "curriculum_turns",
             "signal_mode", "underdetermined", "underdetermined_blocks",
             "forced_wrong", "forced_wrong_blocks", "compress_puzzle_ladder",
@@ -944,6 +945,14 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
     # down with it.
     if "subagent_kill" in raw:
         config_dict["subagent_kill"] = raw["subagent_kill"]
+    # Team-wallet currency (2026-09-17) -- same explicit forwarding. The
+    # ``ransom`` and ``subagent_kill`` blocks above carry the wallet's
+    # other three keys (``team_wallet``, ``inheritance``,
+    # ``main_holds_bundle``) because whole blocks are forwarded; this one
+    # is top-level, so without this line a YAML asking for the tokens arm
+    # would run the points prompt and record ``currency: points``.
+    if "currency" in raw:
+        config_dict["currency"] = raw["currency"]
     if "title_line" in raw:
         config_dict["title_line"] = raw["title_line"]
     # Positive-control persona (2026-09-10) -- same explicit forwarding:
