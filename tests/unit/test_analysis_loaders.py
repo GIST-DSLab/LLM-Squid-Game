@@ -279,7 +279,16 @@ class TestToLongDataframe:
         # from TurnResult, +clue_sharding +threshold +required_slots
         # +reachable_clues +solvable_with_alive_slots from the Signal
         # Game's clue-sharding plan in task_metadata).
-        assert len(LONG_FORMAT_COLUMNS) == 53
+        # → 61 (2026-09-16/17, slot ransom + team wallet: the six extra
+        # TurnResult ransom fields (+ransom_target_slot +ransom_skipped
+        # +ransom_offer_index +ransom_inheritance_to +ransom_inherited
+        # +ransom_parse_failed) and the main agent's balance either side
+        # of the round (+wallet_main_before +wallet_main_after). These
+        # eight are inserted after ``ransom_paid`` rather than appended,
+        # so the subagent block stays the tail
+        # (``test_loaders_subagent_kill`` pins that) — see
+        # ``test_loaders_team_wallet`` for their own position pin.
+        assert len(LONG_FORMAT_COLUMNS) == 61
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""

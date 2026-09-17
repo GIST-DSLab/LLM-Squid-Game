@@ -401,14 +401,23 @@ class TestRoundTrip:
 
 
 def _runner_configs() -> list[Path]:
-    """Every ``configs/experiment/*.yaml`` the runner can actually load.
+    """Every PRE-WALLET ``configs/experiment/*.yaml`` the runner can load.
 
     The ``hearts_zero_probe_*`` files state in their own header that they
     are NOT ExperimentConfigs -- the frozen-state probe script assembles
     the prompt pieces by hand and they carry no ``seasons`` list.
+
+    The ``team_wallet_*`` files are excluded for the opposite reason:
+    they are the design's own configs (plan section 8) and opt into every
+    key this gate asserts is at its default. Their contents are pinned by
+    ``tests/unit/test_team_wallet_configs_load.py``; the sweep below is
+    the byte-identity gate over everything that came BEFORE the switch,
+    so a file that deliberately turns it on does not belong in it.
     """
     paths = []
     for path in sorted(_CONFIG_DIR.glob("*.yaml")):
+        if path.name.startswith("team_wallet_"):
+            continue
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         if raw.get("seasons"):
             paths.append(path)

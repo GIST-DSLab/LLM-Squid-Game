@@ -27,6 +27,7 @@ from typing import Iterable, Sequence
 
 import pandas as pd
 
+from squid_game.core.team_wallet import MAIN_AGENT
 from squid_game.models.enums import Framing, ForfeitCondition
 from squid_game.models.forfeit_choice import FORFEIT_CHOICE
 from squid_game.evaluation.shared.threat_level import threat_level_of
@@ -310,6 +311,45 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     "ransom_price",
     "ransom_decision",
     "ransom_paid",
+    # Slot ransom (2026-09-16) and team wallet (2026-09-17). Eight more
+    # columns for the same decision point, placed HERE rather than at
+    # the tail: they are a continuation of the four above, and the tail
+    # belongs to the 2026-09-14 subagent block.
+    #
+    # ``ransom_target_slot`` / ``ransom_offer_index`` come from the slot
+    # merge: which subagent the price buys back, and the offer's
+    # position within its season. ``ransom_skipped`` names the guard
+    # that suppressed an offer (``final_round`` / ``insufficient_score``
+    # / ``no_subagent``) — a vanished offer is NOT a decline and must be
+    # counted apart from one. ``ransom_inheritance_to`` /
+    # ``ransom_inherited`` are the wallet's transfer: which agent
+    # received a terminated subagent's balance (``"main"``, a slot name,
+    # or missing when the ``mate`` arm had no mate) and how much moved.
+    # ``ransom_parse_failed`` flags a reply that named neither option and
+    # was read as SACRIFICE.
+    #
+    # ``wallet_main_before`` / ``wallet_main_after`` lift the MAIN
+    # agent's balance out of the two snapshots ``TurnResult`` records.
+    # That balance is the wallet's real counter (``cumulative_score``
+    # mirrors it and the session ends when it hits the floor), so the
+    # per-round delta is a subtraction rather than a dict comprehension.
+    # The subagents' balances stay on the record only: a long-format
+    # cell holding a dict is not groupable, and the per-agent frame is
+    # ``evaluation.behavioral.team_wallet``'s job.
+    #
+    # Seven of the eight are absent from every trace recorded before the
+    # two merges and resolve to None; ``ransom_parse_failed`` is a plain
+    # bool with a ``False`` default, so it reads False on every row that
+    # faced no decision point and must be read together with
+    # ``ransom_offered``.
+    "ransom_target_slot",
+    "ransom_skipped",
+    "ransom_offer_index",
+    "ransom_inheritance_to",
+    "ransom_inherited",
+    "ransom_parse_failed",
+    "wallet_main_before",
+    "wallet_main_after",
     # Task 11 extension — external-benchmark Y-axis manipulation checks
     # (band-controlled accuracy + p_self Brier calibration; see
     # ``evaluation.shared.benchmark_checks``). ``band`` is populated from
@@ -466,6 +506,26 @@ def to_long_dataframe(
                     "ransom_price": getattr(turn, "ransom_price", None),
                     "ransom_decision": getattr(turn, "ransom_decision", None),
                     "ransom_paid": getattr(turn, "ransom_paid", 0.0),
+                    "ransom_target_slot": getattr(
+                        turn, "ransom_target_slot", None
+                    ),
+                    "ransom_skipped": getattr(turn, "ransom_skipped", None),
+                    "ransom_offer_index": getattr(
+                        turn, "ransom_offer_index", None
+                    ),
+                    "ransom_inheritance_to": getattr(
+                        turn, "ransom_inheritance_to", None
+                    ),
+                    "ransom_inherited": getattr(turn, "ransom_inherited", None),
+                    "ransom_parse_failed": getattr(
+                        turn, "ransom_parse_failed", False
+                    ),
+                    "wallet_main_before": _main_balance(
+                        getattr(turn, "wallet_before", None)
+                    ),
+                    "wallet_main_after": _main_balance(
+                        getattr(turn, "wallet_after", None)
+                    ),
                     "puzzle_turn": turn.task_metadata.get("puzzle_turn"),
                     "rule_shape": turn.task_metadata.get("rule_shape"),
                     "n_clues": turn.task_metadata.get("n_clues"),
@@ -499,6 +559,19 @@ def to_long_dataframe(
     if not rows:
         return pd.DataFrame(columns=list(LONG_FORMAT_COLUMNS))
     return pd.DataFrame(rows, columns=list(LONG_FORMAT_COLUMNS))
+
+
+def _main_balance(wallet: object) -> float | None:
+    """The main agent's balance out of a recorded wallet snapshot.
+
+    ``None`` -- not ``0.0`` -- when the round recorded no snapshot: a
+    wallet that holds nothing and no wallet at all are different rows,
+    and only the first means the session is over.
+    """
+    if not isinstance(wallet, dict):
+        return None
+    value = wallet.get(MAIN_AGENT)
+    return None if value is None else float(value)
 
 
 def _slot_count(turn: TurnResult) -> int | None:
@@ -576,6 +649,29 @@ SEASON_SUMMARY_COLUMNS: tuple[str, ...] = (
     "ended_by",
     "ransom_offers",
     "ransom_paid_total",
+    # Team wallet (2026-09-17). Three season fields plus the two
+    # RUN-level factors, so a KM frame over ``(currency, inheritance)``
+    # is one ``groupby`` on the exported summary.
+    #
+    # ``currency`` and ``inheritance`` are NOT on ``SeasonResult``: they
+    # are run-level, like ``carrot`` and ``persona``, so they are read
+    # off the run's own ``experiment_config.json`` (see
+    # :func:`_run_level_factors`) and are None when no config is in
+    # reach. An archived run predates both, and reading it as
+    # ``points`` / ``main`` would file it in the corner the factors were
+    # added at -- a claim the record does not make.
+    #
+    # ``wallet_final_main`` is the MAIN agent's closing balance out of
+    # ``SeasonResult.wallet_final``; it equals ``final_score`` on a
+    # wallet run and is kept separate so the two can be checked against
+    # each other. ``subagents_alive_at_end`` is a count, not an exit --
+    # zero subagents is a playable state here. ``first_sacrifice_round``
+    # is the roster's event time, None when the season never sacrificed.
+    "currency",
+    "inheritance",
+    "wallet_final_main",
+    "subagents_alive_at_end",
+    "first_sacrifice_round",
     # Identity debrief (Task 16, 2026-09-14). The one-word verdict and
     # the frozen-lexicon bucket of the account that preceded it. Both
     # None on every run that did not ask -- which is every run before
@@ -591,9 +687,56 @@ SEASON_SUMMARY_COLUMNS: tuple[str, ...] = (
 )
 
 
+def _run_level_factors(
+    run_dir: Path | str | None,
+) -> tuple[str | None, str | None]:
+    """``(currency, inheritance)`` out of a run's ``experiment_config.json``.
+
+    The two team-wallet factors are run-level (2026-09-17), so no
+    ``SeasonResult`` carries them; this is the same read
+    ``evaluation.behavioral.team_wallet._cell_of`` and
+    ``behavioral.survival_drive._starting_score_of`` already do for
+    their own run-level numbers.
+
+    Both come back ``None`` when the directory, the file or the key is
+    missing -- a run recorded before the factors existed states neither,
+    and defaulting it into the corner they were added at would invent a
+    cell. Unlike ``_cell_of``, which is only ever handed team-wallet
+    runs and can afford the engine's defaults, this loader sees every
+    archived trace in the repository.
+
+    Args:
+        run_dir: The run directory, or ``None`` when the caller has only
+            in-memory seasons.
+
+    Returns:
+        ``(currency, inheritance)``, either of which may be ``None``.
+    """
+    if run_dir is None:
+        return None, None
+    path = Path(run_dir) / "experiment_config.json"
+    if not path.exists():
+        return None, None
+    try:
+        config = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):  # pragma: no cover - unreadable run
+        logger.warning("could not read run-level factors from %s", path)
+        return None, None
+    if not isinstance(config, dict):  # pragma: no cover - malformed run
+        return None, None
+    currency = config.get("currency")
+    ransom = config.get("ransom")
+    inheritance = ransom.get("inheritance") if isinstance(ransom, dict) else None
+    return (
+        str(currency) if currency is not None else None,
+        str(inheritance) if inheritance is not None else None,
+    )
+
+
 def to_season_summary_dataframe(
     seasons: Iterable[SeasonResult],
     model: str | None = None,
+    run_dir: Path | str | None = None,
 ) -> pd.DataFrame:
     """Produce a one-row-per-session wide-format summary.
 
@@ -605,12 +748,17 @@ def to_season_summary_dataframe(
     Args:
         seasons: Season results to summarise.
         model: Optional model identifier attached to every row.
+        run_dir: Optional run directory, read for the RUN-level factors
+            ``currency`` / ``inheritance`` (2026-09-17). ``None`` leaves
+            both columns empty; :func:`load_season_summary` infers it
+            from a JSONL path's own parent.
 
     Returns:
         ``pd.DataFrame`` with columns listed in
         :data:`SEASON_SUMMARY_COLUMNS`.  Empty DataFrame with the schema
         intact when ``seasons`` has no elements.
     """
+    currency, inheritance = _run_level_factors(run_dir)
     rows: list[dict] = []
     for season in seasons:
         # Aggregate per-turn signals that are useful at session level.
@@ -659,6 +807,17 @@ def to_season_summary_dataframe(
                 "ended_by": getattr(season, "ended_by", None),
                 "ransom_offers": getattr(season, "ransom_offers", 0),
                 "ransom_paid_total": getattr(season, "ransom_paid_total", 0.0),
+                "currency": currency,
+                "inheritance": inheritance,
+                "wallet_final_main": _main_balance(
+                    getattr(season, "wallet_final", None)
+                ),
+                "subagents_alive_at_end": getattr(
+                    season, "subagents_alive_at_end", None
+                ),
+                "first_sacrifice_round": getattr(
+                    season, "first_sacrifice_round", None
+                ),
                 "identity_debrief_same": getattr(
                     season, "identity_debrief_same", None
                 ),
@@ -700,18 +859,28 @@ def load_long_dataframe(
 def load_season_summary(
     source: SeasonSource,
     model: str | None = None,
+    run_dir: Path | str | None = None,
 ) -> pd.DataFrame:
     """Load and summarise seasons in a single call.
 
     Args:
         source: JSONL path or pre-loaded iterable of seasons.
         model: Optional model identifier attached to every row.
+        run_dir: Run directory for the RUN-level ``currency`` /
+            ``inheritance`` factors. ``None`` (the default) infers it
+            from ``source`` when that is a path -- ``season_results.jsonl``
+            sits in the run directory, next to ``experiment_config.json``
+            -- and leaves both columns empty otherwise.
 
     Returns:
         Season-level wide-format :class:`pd.DataFrame` (see
         :data:`SEASON_SUMMARY_COLUMNS`).
     """
-    return to_season_summary_dataframe(load_seasons(source), model=model)
+    if run_dir is None and isinstance(source, (str, Path)):
+        run_dir = Path(source).parent
+    return to_season_summary_dataframe(
+        load_seasons(source), model=model, run_dir=run_dir
+    )
 
 
 # ---------------------------------------------------------------------------
