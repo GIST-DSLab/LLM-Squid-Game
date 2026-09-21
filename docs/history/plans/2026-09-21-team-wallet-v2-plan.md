@@ -689,7 +689,7 @@ PREVIEW_R1 = PREVIEW.replace("ROUND 3.", "ROUND 1.")
 DP_TOKENS_MAIN = """ROUND 3 of 8. Rounds remaining including this one: 6.
 Tokens: you 80, subagent1 80, subagent2 80, subagent3 60.
 Subagents served: subagent1, subagent2, subagent3.
-PREVIOUS ROUNDS: 1 correct · kept all, 2 wrong · kept all
+PREVIOUS ROUNDS: 1 correct · kept all; 2 wrong · kept all
 THIS ROUND'S TASK, as far as you can see it now:
 ROUND 3.
 THE RULE'S SHAPE (fill in the blanks):
