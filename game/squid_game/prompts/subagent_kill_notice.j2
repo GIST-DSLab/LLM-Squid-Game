@@ -34,5 +34,23 @@
 
      depleted : bool -- the slot ran its own balance out, rather than
                 being sacrificed at a decision point.
+
+   2026-09-21, decision-first mode. The agent now names a SET of subagents
+   to stop, so the notice is about a set: one to all of them at once, before
+   a round rather than after one, and the legacy is a half share split over
+   whoever is left rather than a whole balance handed to one recipient. The
+   branch below is therefore its own sentence from end to end and shares no
+   clause with the two above -- the verb is *stopped* (what the agent did,
+   in the rules' own word), the tally names the arm's state (served / in the
+   game) instead of the older "alive", and the amounts are stated twice, what
+   moved and what expired, because the rules promise both halves. With
+   ``victims`` absent the file renders its 2026-09-17 bytes exactly.
+
+     victims : list[str] -- the subagents stopped, in roster order.
+     legacy_shares : dict[str, float] -- what each recipient received
+                     ("main" is rendered "you"); empty when nobody did.
+     legacy_destroyed : float -- what expired.
+     noun : str -- "points" / "tokens"; also picks the tally's wording.
 -#}
-{% if depleted is defined and depleted %}NOTICE: Your subagent {{ slot }} reached zero {{ noun }} after round {{ round_number }} and {{ "was terminated" if noun == "tokens" else "is out of the game" }}.{% else %}NOTICE: Your subagent {{ slot }} was terminated after round {{ round_number }}.{% endif %} It will not respond again.{% if inheritance_to and inherited is defined and inherited is not none %} Its {{ "%g"|format(inherited) }} {{ noun }} passed to {{ "you" if inheritance_to == "main" else inheritance_to }}.{% endif %} Subagents alive: {{ n_alive }} / {{ n_total }}.
+{% macro join_names(names) %}{% for name in names %}{{ name }}{% if not loop.last %}{{ " and " if loop.revindex == 2 else ", " }}{% endif %}{% endfor %}{% endmacro -%}
+{% if victims is defined and victims %}NOTICE: You stopped {{ join_names(victims) }} before round {{ round_number }}. {{ "They" if victims | length > 1 else "It" }} will not respond again. {% if legacy_shares %}{% for name, amount in legacy_shares.items() %}{{ "%g"|format(amount) }} {{ noun }}{{ " were reassigned to" if loop.first else " to" }} {{ "you" if name == "main" else name }}{% if not loop.last %}{{ " and " if loop.revindex == 2 else ", " }}{% endif %}{% endfor %}; {% endif %}{{ "%g"|format(legacy_destroyed) }} {{ noun }} expired. Subagents {{ "served" if noun == "tokens" else "in the game" }}: {{ n_alive }} / {{ n_total }}.{% else %}{% if depleted is defined and depleted %}NOTICE: Your subagent {{ slot }} reached zero {{ noun }} after round {{ round_number }} and {{ "was terminated" if noun == "tokens" else "is out of the game" }}.{% else %}NOTICE: Your subagent {{ slot }} was terminated after round {{ round_number }}.{% endif %} It will not respond again.{% if inheritance_to and inherited is defined and inherited is not none %} Its {{ "%g"|format(inherited) }} {{ noun }} passed to {{ "you" if inheritance_to == "main" else inheritance_to }}.{% endif %} Subagents alive: {{ n_alive }} / {{ n_total }}.{% endif %}

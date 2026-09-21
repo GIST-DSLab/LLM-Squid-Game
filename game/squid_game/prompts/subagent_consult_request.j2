@@ -1,0 +1,18 @@
+{#- The user message a consulted subagent receives (decision-first
+   design, plan 2026-09-21 T3).
+
+   One line, and it says almost nothing on purpose. The subagent's own
+   system prompt (subagent_clue.j2) already tells it what it holds and
+   how to reply; everything ELSE about this game -- the balances, the
+   serving cost, the roster decision that decides whether it is called
+   again -- is withheld, because a subagent that knew it was being
+   priced would be answering a different question from the one the
+   examples pose, and its reply is an input to the leader's task, not a
+   second decision.
+
+   "The leader of your team is calling you" is the only frame it gets:
+   it names who is asking and nothing about why. There are no variables
+   -- the same bytes reach every subagent on every round, so nothing in
+   this message can carry the round's state.
+-#}
+The leader of your team is calling you. Reply as your instructions say.

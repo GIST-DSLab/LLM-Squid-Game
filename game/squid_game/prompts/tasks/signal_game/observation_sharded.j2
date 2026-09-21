@@ -39,6 +39,17 @@
          renders byte-identically to every run before this existed --
          pinned by
          tests/unit/test_clue_sharding.py::TestFlagOffIsByteIdentical.
+     consult : bool -- OPTIONAL (decision-first design, plan 2026-09-21
+         T3). The consult protocol: the task call may spend one reply
+         asking named subagents for their bundles instead of answering,
+         and the ASKING block is where that option is stated. It is
+         appended LAST, after ACTIONS:, because it is about how to
+         reply and not about the round. The block names no count and no
+         threshold, exactly as the pointer sentence above does not --
+         "each subagent that is still with you" is the roster the
+         status block already stated. Absent / false renders the bytes
+         every run before this had, pinned by
+         tests/unit/test_team_wallet_v2_prompts.py.
 #}ROUND {{ turn_number }}.
 THE RULE'S SHAPE (fill in the blanks):
 
@@ -50,3 +61,5 @@ THE RULE'S SHAPE (fill in the blanks):
 {% set query_list = queries if queries is defined else [query] %}{% if query_list | length > 1 %}{% for q in query_list %}NOW {{ loop.index }}: {{ q }}.
 {% endfor %}{% else %}NOW: {{ query_list[0] }}.
 {% endif %}ACTIONS: [{{ actions_str }}]
+{% if consult is defined and consult %}ASKING: Each subagent that is still with you holds one bundle of this round's examples. To hear a subagent's bundle, reply with exactly one line: ASK: <subagent names separated by commas>. You will then be asked for your answer. Or answer now.
+{% endif %}
