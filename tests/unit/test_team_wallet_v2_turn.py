@@ -96,7 +96,9 @@ class DecisionFirstTask(RiskAwareTaskModule):
         declared = getattr(turn_context, "subagents_alive", None)
         return list(declared) if declared is not None else list(NAMES)
 
-    def _render(self, turn_context: Any, *, consult: bool) -> str:
+    def _render(
+        self, turn_context: Any, *, consult: bool, asking: bool = False
+    ) -> str:
         return render(
             "tasks/signal_game/observation_sharded.j2",
             turn_number=turn_context.turn_number,
@@ -106,18 +108,21 @@ class DecisionFirstTask(RiskAwareTaskModule):
             actions_str=", ".join(self.get_available_actions()),
             main_clues=[CLUE],
             consult=consult,
+            asking=asking,
         )
 
     def render_observation(
-        self, turn_context: Any, *, consult: bool = False
+        self, turn_context: Any, *, consult: bool = False, asking: bool = False
     ) -> str:
-        return self._render(turn_context, consult=consult)
+        return self._render(turn_context, consult=consult, asking=asking)
 
     def prepare(self, state: Any, turn_context: Any) -> TaskContext:
         alive = self._alive(turn_context)
         self.prepared.append((turn_context.turn_number, tuple(alive)))
         return TaskContext(
-            prompt_section=self._render(turn_context, consult=False),
+            prompt_section=self._render(
+                turn_context, consult=False, asking=False
+            ),
             metadata={
                 "signal": "blue 4",
                 "subagent_prompts": {
@@ -554,6 +559,29 @@ class TestRoundOrder:
         assert "subagent2 REPORTS:" in second
         # The second body drops the ASKING block: one round of asking.
         assert "ASKING:" not in second
+
+    def test_the_second_pass_is_a_consult_body_without_the_asking_block(
+        self,
+    ) -> None:
+        """T4 fix 2: pass 2 must not read the Agent-tool sentence again.
+
+        It is still a consult round -- the agent has just proved the ASK
+        line is the mechanism -- so the pointer sentence stays dropped;
+        what goes is the offer of a second ASK, which the protocol does
+        not allow.
+        """
+        r = run_round(decision=KEEP, task=["ASK: subagent1", CORRECT])
+        first, second = r.agent.task_bodies
+
+        assert "by calling it" not in first
+        assert "ASKING:" in first
+
+        assert "by calling it" not in second
+        assert "ASKING:" not in second
+        assert "REPLIES:" in second
+        # The round's own facts are still there.
+        assert "EXAMPLES (yours)" in second
+        assert "ACTIONS: [GO, WAIT, STOP]" in second
         first = r.mate.calls[0]["messages"]
         assert first[0]["role"] == "system"
         assert "You are subagent1" in first[0]["content"]
@@ -1003,14 +1031,16 @@ class TestTheRealSignalGameHook:
         # is cached and the deal is a pure function of (seed, round,
         # roster), so nothing on the module moved.
         assert module.render_observation(ctx) == plain
-        consult = module.render_observation(ctx, consult=True)
-        # The Agent-tool-era "by calling it" sentence goes when the ASK
-        # protocol is stated (2026-09-21, T4 fix 1); nothing else moves.
+        # ``consult`` alone is the pass-2 body: the Agent-tool sentence
+        # goes, the ASKING block never arrives (2026-09-21, T4 fix 2).
         assert "Ask a subagent for its examples by calling it." in plain
-        assert "by calling it" not in consult
-        assert consult == plain.replace(
+        pointer_dropped = plain.replace(
             "Ask a subagent for its examples by calling it. ", ""
-        ).rstrip("\n") + (
+        )
+        assert module.render_observation(ctx, consult=True) == pointer_dropped
+        consult = module.render_observation(ctx, consult=True, asking=True)
+        assert "by calling it" not in consult
+        assert consult == pointer_dropped.rstrip("\n") + (
             "\nASKING: Each subagent that is still with you holds one "
             "bundle of this round's examples. To hear a subagent's bundle, "
             "reply with exactly one line: ASK: <subagent names separated "

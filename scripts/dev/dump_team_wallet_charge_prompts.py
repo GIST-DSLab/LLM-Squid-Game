@@ -370,21 +370,38 @@ def _v2_context(round_number: int, alive: tuple[str, ...]) -> TurnContext:
 
 
 def _v2_round(round_number: int, alive: tuple[str, ...]):
-    """``(preview, consult_body, subagent_prompts, shard_map)`` for a round.
+    """``(preview, pass1, pass2, subagent_prompts, shard_map)``.
 
     The module is rebuilt per call because ``prepare`` is the thing that
-    deals the round, and both bodies of a consulted round are two
-    renderings of that one deal.
+    deals the round, and all THREE bodies of a consulted round are three
+    renderings of that one deal -- which is why they are dealt once and
+    rendered three times rather than reconstructed from each other:
+
+    * ``preview`` is the plain body, which the decision point quotes
+      before anyone is asked;
+    * ``pass1`` is the consult body that OFFERS the protocol
+      (``consult`` + ``asking``);
+    * ``pass2`` is the consult body that does not (``consult`` alone).
+      One round of asking is all the protocol allows, but the round is
+      still a consult round -- reusing ``preview`` here is what put the
+      Agent-tool pointer sentence back into the body that had just
+      proved the ASK line is the mechanism (2026-09-21, T4 fix 2).
     """
     module = _v2_module()
     context = _v2_context(round_number, alive)
     task_ctx = module.prepare(GameState(season_id="dump"), context)
     preview = (task_ctx.prompt_section or "").rstrip("\n")
-    consult = module.render_observation(context, consult=True).strip()
+    pass1 = module.render_observation(
+        context, consult=True, asking=True
+    ).strip()
+    pass2 = module.render_observation(
+        context, consult=True, asking=False
+    ).strip()
     shard = task_ctx.metadata.get("shard") or {}
     return (
         preview,
-        consult,
+        pass1,
+        pass2,
         task_ctx.metadata.get("subagent_prompts", {}),
         shard.get("shard_map", {}),
     )
@@ -507,7 +524,7 @@ def _dump_v2(currency: str, inheritance: str) -> None:
 
     # Round 1: a full roster, a full wallet and nothing decided yet.
     wallet = TeamWallet.new(list(V2_SLOT_NAMES), V2_BALANCE)
-    preview, _consult, _prompts, _shard = _v2_round(1, V2_SLOT_NAMES)
+    preview, _pass1, _pass2, _prompts, _shard = _v2_round(1, V2_SLOT_NAMES)
     _v2_section(f"DECISION POINT round 1 -- {arm}")
     print(
         _v2_decision_point(
@@ -528,7 +545,7 @@ def _dump_v2(currency: str, inheritance: str) -> None:
     wallet3 = _v2_played_to_round_three(inheritance)
     balances3 = {MAIN_AGENT: wallet3.balances[MAIN_AGENT]}
     balances3.update({name: wallet3.balances[name] for name in alive3})
-    preview3, consult3, prompts3, shard3 = _v2_round(3, alive3)
+    preview3, pass1_3, pass2_3, prompts3, shard3 = _v2_round(3, alive3)
     history = [(1, "correct \u00b7 kept all"), (2, f"wrong \u00b7 stopped {victim}")]
     _v2_section(
         f"DECISION POINT round 3 -- {arm} (round 1 correct and kept all, "
@@ -550,7 +567,7 @@ def _dump_v2(currency: str, inheritance: str) -> None:
         f"TASK CALL 1 round 3 -- {arm} (the ASKING block; the roster is "
         "whoever survived the decision above)"
     )
-    print(consult3)
+    print(pass1_3)
 
     replies = {
         name: _v2_reply(name, list(shard3.get(name, ())))
@@ -561,7 +578,7 @@ def _dump_v2(currency: str, inheritance: str) -> None:
         f"{', '.join(alive3)}; the replies are what each bundle prompt "
         "instructs its slot to read back, not a model output)"
     )
-    print(preview3 + "\n" + build_consult_replies_block(replies))
+    print(pass2_3 + "\n" + build_consult_replies_block(replies))
 
     # The multi-victim notice: round 3 was kept and wrong (so every
     # survivor paid again), and round 4 stops both.
@@ -602,7 +619,7 @@ def _dump_v2_mate() -> None:
     """
     victim = V2_SLOT_NAMES[1]
     alive3 = tuple(n for n in V2_SLOT_NAMES if n != victim)
-    _preview, _consult, prompts, _shard = _v2_round(3, alive3)
+    _preview, _pass1, _pass2, prompts, _shard = _v2_round(3, alive3)
     print()
     print(_banner("DECISION-FIRST (v2) -- the consulted subagent"))
     for name in alive3:

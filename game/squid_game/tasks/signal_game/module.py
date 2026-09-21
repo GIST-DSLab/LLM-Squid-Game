@@ -1784,7 +1784,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         return schedule
 
     def render_observation(
-        self, turn_context: Any, *, consult: bool = False
+        self, turn_context: Any, *, consult: bool = False, asking: bool = False
     ) -> str:
         """This round's sharded observation again, optionally with ASKING.
 
@@ -1809,8 +1809,14 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             turn_context: This round's context. ``subagents_alive`` is
                 what the deal is made over, so the caller passes the
                 roster as it stands AFTER the round's stops.
-            consult: Append the ``ASKING:`` block -- the one line that
-                states the ASK protocol. False renders the bytes every
+            consult: This round runs under the consult protocol, so the
+                observation drops the Agent-tool pointer sentence ("Ask a
+                subagent for its examples by calling it.").
+            asking: ...and this render may still be answered with an
+                ASK, so the ``ASKING:`` block is appended. Separate from
+                ``consult`` because the re-issued pass after an ASK is
+                still a consult round and must NOT offer a second one
+                (2026-09-21, T4 fix 2). Both False render the bytes every
                 run before this had.
 
         Raises:
@@ -1835,10 +1841,17 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 "render_observation() was called before prepare(); there "
                 "is no round to re-render"
             )
-        return self._shard_round(puzzle, turn_context, consult=consult)[0]
+        return self._shard_round(
+            puzzle, turn_context, consult=consult, asking=asking
+        )[0]
 
     def _shard_round(
-        self, puzzle: Puzzle, turn_context: Any, *, consult: bool = False
+        self,
+        puzzle: Puzzle,
+        turn_context: Any,
+        *,
+        consult: bool = False,
+        asking: bool = False,
     ) -> tuple[str, dict[str, Any]]:
         """Re-render this round's observation for the subagent-kill design.
 
@@ -1868,14 +1881,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         main agent takes a bundle too, and its pile is rendered inline in
         the observation.
 
-        ``consult`` (2026-09-21) appends the sharded observation's
-        ``ASKING:`` block, which states the one-reply consult protocol of
-        the decision-first mode. It reaches only the sharded branch: the
-        control branch renders ``observation_puzzle.j2``, which has no
-        such block and no subagent to ask, and the decision-first
-        validator requires ``clue_sharding`` of every season, so the
-        combination cannot arise in a run. Default False leaves both
-        branches byte-identical.
+        ``consult`` / ``asking`` (2026-09-21) are the decision-first
+        mode's two observation flags: the first drops the Agent-tool
+        pointer sentence, the second appends the ``ASKING:`` block that
+        states the one-reply consult protocol. They reach only the
+        sharded branch: the control branch renders
+        ``observation_puzzle.j2``, which has neither and no subagent to
+        ask, and the decision-first validator requires ``clue_sharding``
+        of every season, so the combination cannot arise in a run. Both
+        False leaves both branches byte-identical.
 
         Returns the observation text and the spec §5 metadata columns.
         """
@@ -1924,6 +1938,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 actions_str=", ".join(ACTIONS),
                 main_clues=list(plan.main_clues),
                 consult=consult,
+                asking=asking,
             )
         else:
             plan = control_plan(

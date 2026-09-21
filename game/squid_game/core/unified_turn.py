@@ -2001,14 +2001,25 @@ class UnifiedTurnManager:
         ]
 
     def _task_observation(
-        self, turn_context: TurnContext, task_ctx: TaskContext, *, consult: bool
+        self,
+        turn_context: TurnContext,
+        task_ctx: TaskContext,
+        *,
+        consult: bool,
+        asking: bool = False,
     ) -> str:
-        """This round's stimulus, with or without the ASKING block.
+        """This round's stimulus, in the wording that pass wants.
 
-        ``consult=False`` reuses what ``prepare`` already rendered;
-        ``consult=True`` asks the task module to render it again with the
-        consult protocol stated, which only a module that knows the block
-        can do.
+        Three renders per round and all three differ (2026-09-21, T4 fix
+        2). The decision point's PREVIEW is the plain body, which
+        ``prepare`` already made. The task call's FIRST pass is a consult
+        body that offers the protocol (``consult`` + ``asking``). The
+        pass RE-ISSUED after an ASK is a consult body that does not
+        (``consult`` alone): one round of asking is all the protocol
+        allows, so there is no second ASK to offer -- but the round is
+        still a consult round, so the Agent-tool pointer sentence must
+        not come back on the way out. Before the flags were split, pass 2
+        fell back to the plain render and did exactly that.
 
         Raises:
             AttributeError: when a consult body is wanted from a task
@@ -2027,7 +2038,9 @@ class UnifiedTurnManager:
                 "decision-first mode needs it to state the consult "
                 "protocol in the round's own observation"
             )
-        return render_observation(turn_context, consult=True)
+        return render_observation(
+            turn_context, consult=True, asking=asking
+        )
 
     def _consult_subagents(
         self, names: list[str], subagent_prompts: dict[str, str]
@@ -2404,7 +2417,7 @@ class UnifiedTurnManager:
             )
             task_ctx = self._task.prepare(game_state, play_ctx)
         task_body = self._task_observation(
-            play_ctx, task_ctx, consult=bool(alive_now)
+            play_ctx, task_ctx, consult=bool(alive_now), asking=bool(alive_now)
         ).strip()
         if not record.get("ransom_offered") and prefix:
             # No decision call was issued this round, so the whole prefix
@@ -2476,9 +2489,15 @@ class UnifiedTurnManager:
             )
             # The same round, the same observation, the bundles appended
             # and the ASKING block gone: the protocol allows one round of
-            # asking, so there is no second ASK to offer.
+            # asking, so there is no second ASK to offer. It is still a
+            # CONSULT render, though -- ``task_ctx.prompt_section`` is the
+            # plain one and would put the Agent-tool pointer sentence back
+            # in the one body that has just proved the ASK line is the
+            # mechanism (2026-09-21, T4 fix 2).
             task_body = (
-                (task_ctx.prompt_section or "").strip()
+                self._task_observation(
+                    play_ctx, task_ctx, consult=True, asking=False
+                ).strip()
                 + "\n"
                 + build_consult_replies_block(help_replies)
             )

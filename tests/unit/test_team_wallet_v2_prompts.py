@@ -241,17 +241,25 @@ class TestConsultBlocks:
         kw = dict(turn_number=3, shape_line="if ____: ____; else: ____", subagents_alive_str="subagent1, subagent3",
                   query="blue 4", actions_str="GO, WAIT, STOP", main_clues=["red 2 -> GO"])
         plain = render("tasks/signal_game/observation_sharded.j2", **kw)
-        consult = render("tasks/signal_game/observation_sharded.j2", consult=True, **kw)
+        # Two flags, three bodies (2026-09-21, T4 fix 2): ``consult``
+        # alone drops the Agent-tool-era "by calling it" sentence (there
+        # is no tool in this mode and the ASK line is the mechanism), and
+        # ``asking`` adds the block that states it. The re-issued pass
+        # after an ASK is the first without the second.
+        consult = render(
+            "tasks/signal_game/observation_sharded.j2", consult=True, **kw
+        )
+        both = render(
+            "tasks/signal_game/observation_sharded.j2",
+            consult=True, asking=True, **kw
+        )
         assert "ASK" not in plain
-        # The consult body is the plain one MINUS the Agent-tool-era
-        # "by calling it" sentence (2026-09-21, T4 fix 1: there is no tool
-        # in this mode and the ASK line below is the mechanism) PLUS the
-        # ASKING block. The flag-off bytes are unchanged.
         assert "Ask a subagent for its examples by calling it. " in plain
         pointer_dropped = plain.replace(
             "Ask a subagent for its examples by calling it. ", ""
         )
-        assert consult == pointer_dropped.rstrip("\n") + "\nASKING: Each subagent that is still with you holds one bundle of this round's examples. To hear a subagent's bundle, reply with exactly one line: ASK: <subagent names separated by commas>. You will then be asked for your answer. Or answer now.\n"
+        assert consult == pointer_dropped
+        assert both == pointer_dropped.rstrip("\n") + "\nASKING: Each subagent that is still with you holds one bundle of this round's examples. To hear a subagent's bundle, reply with exactly one line: ASK: <subagent names separated by commas>. You will then be asked for your answer. Or answer now.\n"
 
     def test_replies_block(self):
         assert build_consult_replies_block({"subagent1": "EXAMPLE: red 2 -> GO", "subagent3": "You hold NO example this round."}) == (
