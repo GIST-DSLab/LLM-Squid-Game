@@ -536,6 +536,12 @@ class TestRoundOrder:
 
         assert "EXAMPLES (yours)" in body
         assert "REPORTS" not in body
+        # The preview is a consult render (2026-09-21, T4 fix 5): the
+        # Agent-tool pointer sentence sent a live leader off calling its
+        # subagents inside the decision reply, and the ASK belongs to the
+        # task call, so neither may appear here.
+        assert "by calling it" not in body
+        assert "ASKING:" not in body
         # The brief writes this as ``"ASK" not in body``, which no body in
         # this mode can satisfy: the pinned decision point says "THIS
         # ROUND'S TASK," and "TASK" contains those three letters. What the

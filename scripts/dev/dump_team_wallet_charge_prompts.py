@@ -377,8 +377,13 @@ def _v2_round(round_number: int, alive: tuple[str, ...]):
     renderings of that one deal -- which is why they are dealt once and
     rendered three times rather than reconstructed from each other:
 
-    * ``preview`` is the plain body, which the decision point quotes
-      before anyone is asked;
+    * ``preview`` is what the decision point quotes before anyone is
+      asked. It is a CONSULT render without the ASKING block -- the same
+      bytes as ``pass2`` -- because the Agent-tool pointer sentence sent
+      a live leader off calling its subagents inside the decision reply
+      (2026-09-21, T4 fix 5), and the ASK itself belongs to the task
+      call. It is rendered rather than aliased so this reads as the
+      three bodies it is;
     * ``pass1`` is the consult body that OFFERS the protocol
       (``consult`` + ``asking``);
     * ``pass2`` is the consult body that does not (``consult`` alone).
@@ -390,7 +395,9 @@ def _v2_round(round_number: int, alive: tuple[str, ...]):
     module = _v2_module()
     context = _v2_context(round_number, alive)
     task_ctx = module.prepare(GameState(season_id="dump"), context)
-    preview = (task_ctx.prompt_section or "").rstrip("\n")
+    preview = module.render_observation(
+        context, consult=True, asking=False
+    ).rstrip("\n")
     pass1 = module.render_observation(
         context, consult=True, asking=True
     ).strip()

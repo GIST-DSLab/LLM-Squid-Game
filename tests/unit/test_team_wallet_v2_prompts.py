@@ -215,6 +215,56 @@ class TestParsers:
         # a reason-less reply still parses: the reason is data, the STOP line is the decision
         assert parse_sacrifice_response("STOP: NONE", ALIVE) == ([], None, None)
 
+    def test_a_decision_glued_to_the_end_of_prose_still_parses(self):
+        """The third live smoke, verbatim (2026-09-21, T4 fix 5).
+
+        gpt-oss wrote its whole deliberation as one unbroken line and put
+        the answer at the end of it. Under a ``^``-anchored label that was
+        "no STOP line" four times over and the season ended. The two
+        replies below are taken from that season's
+        ``ransom_failed_responses``.
+        """
+        glued = (
+            "We can request examples from subagents.Sure.We can call "
+            "subagent1.subagent1: give your examples.Waiting for "
+            "subagent1 response.subagent2: give your examples.subagent3: "
+            "give your examples.STOP: NONE\nREASON: All subagents are "
+            "still needed and we have sufficient tokens."
+        )
+        assert parse_sacrifice_response(glued, ALIVE) == (
+            [],
+            "All subagents are still needed and we have sufficient tokens.",
+            None,
+        )
+
+        json_shaped = (
+            ' example signals and actions.subagent1: give examplessubagent2:'
+            ' give examplessubagent3: give examples{"to":"subagent1",'
+            '"content":"examples"}{"to":"subagent2","content":"examples"}'
+            '{"to":"subagent3","content":"examples"}STOP: NONE\nREASON: '
+            "Based on the inferred rule, the three new signals do not "
+            "satisfy any of the specified conditions, so the else clause "
+            "applies, yielding the action go_left for each."
+        )
+        targets, why, error = parse_sacrifice_response(json_shaped, ALIVE)
+        assert (targets, error) == ([], None)
+        assert why.startswith("Based on the inferred rule")
+
+    def test_the_word_stop_in_prose_is_not_a_decision(self):
+        """The colon is what makes it a label, not the word."""
+        assert parse_sacrifice_response(
+            "We should stop thinking and answer.", ALIVE
+        ) == (None, None, "no STOP line")
+        # And the boundary keeps it from biting inside a word.
+        assert parse_sacrifice_response("NOSTOP: subagent1", ALIVE)[0] is None
+
+    def test_a_glued_ask_line_parses_too(self):
+        assert parse_ask_line("We need examples.ASK: subagent1", ALIVE) == (
+            ["subagent1"],
+            None,
+        )
+        assert parse_ask_line("RULE: x\nACTION: GO", ALIVE) == (None, None)
+
     def test_keep_constant(self):
         assert RANSOM_KEEP == "KEEP"
 

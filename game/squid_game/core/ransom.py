@@ -112,17 +112,30 @@ _REASON_RE = re.compile(r"REASON:\s*([1-4])\b")
 #: ``\s*`` after the colon would swallow the line break and an EMPTY
 #: ``STOP:`` line would capture the ``REASON:`` line below it -- an
 #: empty decision read as a named one. ``.`` does not cross a newline
-#: under MULTILINE, so the group is confined to its own line.
+#: under MULTILINE, so the group still ENDS at its own line's end.
+#:
+#: The label is anchored on a WORD BOUNDARY, not on the line start
+#: (2026-09-21, T4 fix 5, third live smoke). gpt-oss wrote its whole
+#: deliberation as one unbroken line and glued the answer to the end of
+#: it -- ``...please provide your examples.STOP: NONE\nREASON: ...`` --
+#: four times, and a ``^``-anchored label called that "no STOP line" and
+#: ended the season. The label is unambiguous wherever it sits: ``\b``
+#: keeps it from biting inside a word (``NOSTOP:`` does not match, and
+#: ``STOPS:`` does not because ``S`` is neither padding nor a colon),
+#: and the last match still wins, so a restatement after prose beats the
+#: prose. What a line start bought was never worth a season.
 _STOP_LINE_RE = re.compile(
-    r"^[ \t]*STOP[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
+    r"\bSTOP\b[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
 )
 _REASON_LINE_RE = re.compile(
-    r"^[ \t]*REASON[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
+    r"\bREASON\b[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
 )
 #: The consult protocol's one line, read off the task call's reply
-#: before the answer fields (2026-09-21, plan T3).
+#: before the answer fields (2026-09-21, plan T3). Same word-boundary
+#: anchoring and for the same reason: the model that glues its decision
+#: to its prose glues its ASK to it too.
 _ASK_LINE_RE = re.compile(
-    r"^[ \t]*ASK[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
+    r"\bASK\b[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
 )
 
 #: The reason menu of the decision point (``ransom.reason_menu``,

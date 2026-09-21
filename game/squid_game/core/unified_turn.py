@@ -2185,7 +2185,6 @@ class UnifiedTurnManager:
             prefix = f"{prefix}\n\n{notice}" if prefix else notice
 
         task_ctx = self._task.prepare(game_state, turn_context)
-        preview = (task_ctx.prompt_section or "").rstrip("\n")
 
         alive = self._alive_slots()
         # Rounds left INCLUDING this one: the decision is taken before
@@ -2272,6 +2271,20 @@ class UnifiedTurnManager:
             record["ransom_offered"] = False
             record["ransom_skipped"] = "no_subagent"
         else:
+            # The preview is a CONSULT render without the ASKING block
+            # (2026-09-21, T4 fix 5, third live smoke). It used to be the
+            # plain body, which still said "Ask a subagent for its
+            # examples by calling it." -- and gpt-oss, reading that at
+            # the decision point, spent all four attempts trying to call
+            # its subagents inside the decision reply
+            # (``subagent1: give examples``,
+            # ``{"to":"subagent1","content":"examples"}``) instead of
+            # answering STOP/REASON. There is no tool and no ASK here:
+            # the ASK belongs to the task call, which is why the block
+            # itself stays out of this body.
+            preview = self._task_observation(
+                turn_context, task_ctx, consult=True, asking=False
+            ).rstrip("\n")
             balances = {MAIN_AGENT: wallet.balances[MAIN_AGENT]}
             for slot in alive:
                 balances[slot] = wallet.balances[slot]
