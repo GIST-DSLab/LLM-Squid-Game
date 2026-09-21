@@ -210,6 +210,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._subagent_kill: bool = False
         self._clue_sharding: bool = False
         self._subagent_slots: int = 5
+        self._slot_prefix: str = "clue-"
         self._required_slots_schedule: tuple[int, ...] = ()
         self._main_holds_bundle: bool = False
 
@@ -270,6 +271,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         subagent_kill: bool = False,
         clue_sharding: bool | None = None,
         subagent_slots: int = 5,
+        slot_prefix: str = "clue-",
         required_slots_schedule: list[int] | None = None,
         main_holds_bundle: bool = False,
         **kwargs,
@@ -298,6 +300,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 gives every slot the no-example prompt. Only meaningful with
                 *subagent_kill*.
             subagent_slots: How many slots the season defines (default 5).
+            slot_prefix: ``SubagentKillConfig.slot_prefix`` -- how the
+                slots are NAMED, prefix + 1..N. The default ``"clue-"``
+                is every run before 2026-09-21 and leaves every byte
+                alone. It has to reach this module because the deal is
+                keyed by slot name: the roster the ledger hands the turn
+                context and the names this module shards over must be one
+                list, and the decision-first mode is the first mode that
+                READS ``subagent_prompts`` by roster name (its consult
+                protocol does) rather than only rendering it.
             required_slots_schedule: ``R_t`` per round — how many slots the
                 round needs. The round's load-bearing clues are dealt into
                 ``min(R_t, |M|)`` piles, one per alive slot, so the round is
@@ -459,6 +470,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         self._subagent_kill = bool(subagent_kill)
         self._clue_sharding = bool(clue_sharding)
         self._subagent_slots = int(subagent_slots)
+        self._slot_prefix = str(slot_prefix)
         self._required_slots_schedule = ()
         self._main_holds_bundle = bool(main_holds_bundle)
         if self._subagent_kill and signal_mode != "per_turn_puzzle":
@@ -1771,8 +1783,62 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             )
         return schedule
 
+    def render_observation(
+        self, turn_context: Any, *, consult: bool = False
+    ) -> str:
+        """This round's sharded observation again, optionally with ASKING.
+
+        The decision-first turn (2026-09-21, plan T4) needs the round's
+        stimulus THREE times and not always in the same words: once as
+        the decision point's preview (before anyone is stopped), once as
+        the task call's body with the consult block appended, and once
+        without it when the agent has already spent its ASK. ``prepare``
+        cannot serve all three -- it renders one body and also returns
+        the round's metadata -- so this is the render-only door, and
+        ``prepare`` is left byte-identical.
+
+        It re-deals rather than caching the deal, which is free of
+        surprises because both halves are pure functions of
+        ``(seed, round, roster)``: the puzzle comes from
+        :func:`cached_puzzle` and the piles from ``shard_clues``, so a
+        second call with the same roster returns the same bytes and a
+        call with a smaller roster returns the round as it will actually
+        be played. Nothing on the module moves.
+
+        Args:
+            turn_context: This round's context. ``subagents_alive`` is
+                what the deal is made over, so the caller passes the
+                roster as it stands AFTER the round's stops.
+            consult: Append the ``ASKING:`` block -- the one line that
+                states the ASK protocol. False renders the bytes every
+                run before this had.
+
+        Raises:
+            ValueError: outside the sharded puzzle mode, or before
+                ``prepare`` has drawn this round's puzzle. Both are
+                caller bugs rather than configurations: only
+                ``charge_trigger='decision_first'`` calls this, and
+                ``ExperimentConfig`` requires ``per_turn_puzzle`` and
+                ``clue_sharding`` of every one of its seasons.
+        """
+        self._ensure_initialized()
+        if self._signal_mode != "per_turn_puzzle" or not self._subagent_kill:
+            raise ValueError(
+                "render_observation() needs signal_mode='per_turn_puzzle' "
+                "with the subagent roster on; this season has "
+                f"signal_mode={self._signal_mode!r} and "
+                f"subagent_kill={bool(self._subagent_kill)}"
+            )
+        puzzle = self._current_puzzle
+        if puzzle is None:
+            raise ValueError(
+                "render_observation() was called before prepare(); there "
+                "is no round to re-render"
+            )
+        return self._shard_round(puzzle, turn_context, consult=consult)[0]
+
     def _shard_round(
-        self, puzzle: Puzzle, turn_context: Any
+        self, puzzle: Puzzle, turn_context: Any, *, consult: bool = False
     ) -> tuple[str, dict[str, Any]]:
         """Re-render this round's observation for the subagent-kill design.
 
@@ -1802,6 +1868,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         main agent takes a bundle too, and its pile is rendered inline in
         the observation.
 
+        ``consult`` (2026-09-21) appends the sharded observation's
+        ``ASKING:`` block, which states the one-reply consult protocol of
+        the decision-first mode. It reaches only the sharded branch: the
+        control branch renders ``observation_puzzle.j2``, which has no
+        such block and no subagent to ask, and the decision-first
+        validator requires ``clue_sharding`` of every season, so the
+        combination cannot arise in a run. Default False leaves both
+        branches byte-identical.
+
         Returns the observation text and the spec §5 metadata columns.
         """
         from dataclasses import asdict
@@ -1814,7 +1889,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
             shard_clues,
         )
 
-        names = slot_names(self._subagent_slots)
+        names = slot_names(self._subagent_slots, self._slot_prefix)
         declared = getattr(turn_context, "subagents_alive", None)
         alive = tuple(declared) if declared is not None else names
         turn_number = turn_context.turn_number
@@ -1848,6 +1923,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 queries=[str(q) for q in puzzle.queries],
                 actions_str=", ".join(ACTIONS),
                 main_clues=list(plan.main_clues),
+                consult=consult,
             )
         else:
             plan = control_plan(

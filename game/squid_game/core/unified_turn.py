@@ -49,12 +49,13 @@ from __future__ import annotations
 
 import logging
 import random
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from squid_game.agents._parsing import (
     build_choice_echo,
     build_confidence_block,
     build_confidence_call_message,
+    build_consult_replies_block,
     confidence_field_label,
     build_decision_call_message,
     build_ransom_call_message,
@@ -111,8 +112,11 @@ from squid_game.core.carrot import resolve_carrot
 from squid_game.core.ransom import (
     RANSOM_DECLINE,
     RANSOM_END,
+    RANSOM_KEEP,
     RANSOM_PAY,
     RANSOM_SACRIFICE,
+    parse_ask_line,
+    parse_sacrifice_response,
     reason_label,
 )
 from squid_game.core.team_wallet import MAIN_AGENT, TeamWallet
@@ -128,6 +132,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
         RansomConfig,
         SubagentKillConfig,
     )
+    from squid_game.providers.base import LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -224,8 +229,19 @@ class UnifiedTurnManager:
         team_wallet: TeamWallet | None = None,
         currency: str = "points",
         inheritance: str = "main",
+        mate_provider: "LLMProvider | None" = None,
+        season_seed: int | None = None,
     ) -> None:
         """Initialise the unified turn manager.
+
+        ``mate_provider`` / ``season_seed`` (2026-09-21, the
+        decision-first mode): the provider a consulted subagent answers
+        through -- ``subagent_kill.mate_provider``, a DIFFERENT model
+        from the leader, falling back to the agent's own provider when
+        none is configured -- and the season's seed, which is what makes
+        the ``mate`` arm's legacy split reproducible
+        (``Random(f"{seed}:legacy:{round}")``). Both default to "not
+        passed", and nothing off that mode reads either.
 
         ``team_wallet`` / ``currency`` / ``inheritance`` (2026-09-17):
         the season's balance ledger and the two words it is read in.
@@ -403,6 +419,18 @@ class UnifiedTurnManager:
         self._team_wallet = team_wallet
         self._currency = currency
         self._inheritance = inheritance
+        # Decision-first mode (2026-09-21). The mate provider is built
+        # once per engine and shared across seasons -- it holds a client,
+        # not season state -- and the seed is this season's, so two cells
+        # of one repetition split a legacy the same way.
+        self._mate_provider = mate_provider
+        self._season_seed = season_seed
+        # Set by the decision-first turn when every attempt of a call
+        # failed to parse (spec A7). The engine reads it beside ``died``
+        # to record ``ended_by="format_error"``, which is how a season
+        # that ended for a FORMAT reason is told apart from one that ran
+        # its balance out.
+        self._format_error = False
         # The ledger as this round opened, captured before the reward is
         # credited so ``wallet_before`` / ``wallet_after`` bracket the
         # whole round rather than the decision point alone.
@@ -470,6 +498,15 @@ class UnifiedTurnManager:
                 # the round is the decision point and nothing else. It
                 # branches here, above the split-call path, because that
                 # path's first act is to prepare a stimulus.
+                # Decision-first mode (2026-09-21): the roster
+                # decision comes BEFORE the round's task, so the turn
+                # cannot be assembled by either branch below -- the
+                # split-call path prepares the stimulus and then asks,
+                # and the charge path never asks about a task at all.
+                if self._decision_first_mode:
+                    return self._execute_turn_decision_first(
+                        game_state, turn_context
+                    )
                 if self._charge_mode:
                     return self._execute_turn_charge(
                         game_state, turn_context
@@ -1893,6 +1930,631 @@ class UnifiedTurnManager:
             )
         )
 
+    @property
+    def _decision_first_mode(self) -> bool:
+        """Is this season the decision-first game (2026-09-21, plan T4)?
+
+        All three halves are required and the engine hands all three or
+        none: the wallet is what a stop and a charge move, the ransom
+        block is where the switch lives, and the switch says the roster
+        decision is taken before the round's task.
+        """
+        return bool(
+            self._team_wallet is not None
+            and self._ransom is not None
+            and self._ransom.enabled
+            and self._ransom.effective_charge_trigger == "decision_first"
+        )
+
+    def _retry_call(
+        self,
+        issue: Callable[[], Any],
+        parse: Callable[[Any], tuple[Any, str | None]],
+        retries: int,
+    ) -> tuple[Any, list[Any], list[str]]:
+        """Issue a call, re-issuing the SAME bytes until it parses (A7).
+
+        ``retries`` extra attempts after the first, so ``retries=0`` is
+        one attempt. Nothing between attempts moves: the input is built
+        once by the caller and the ledger is not touched until a reply
+        has parsed, which is why a re-ask cannot be gamed by a model that
+        answers badly on purpose.
+
+        The FIRST parseable reply is executed and the loop stops there --
+        a later attempt is never preferred, because the agent was asked
+        the same question and its first answerable answer is its answer.
+
+        Returns ``(value, attempts, errors)``. ``value`` is ``None`` when
+        every attempt failed; ``attempts`` holds every reply, oldest
+        first, so the record can keep all of them; ``errors`` holds one
+        short string per FAILED attempt, so ``len(errors)`` is how many
+        were wasted. A parse that succeeds is identified by
+        ``error is None`` and never by the truth of ``value``: ``[]`` --
+        "stop nobody" -- is a decision.
+        """
+        attempts: list[Any] = []
+        errors: list[str] = []
+        for _ in range(max(0, retries) + 1):
+            attempt = issue()
+            attempts.append(attempt)
+            value, error = parse(attempt)
+            if error is None:
+                return value, attempts, errors
+            errors.append(error)
+        return None, attempts, errors
+
+    def _task_observation(
+        self, turn_context: TurnContext, task_ctx: TaskContext, *, consult: bool
+    ) -> str:
+        """This round's stimulus, with or without the ASKING block.
+
+        ``consult=False`` reuses what ``prepare`` already rendered;
+        ``consult=True`` asks the task module to render it again with the
+        consult protocol stated, which only a module that knows the block
+        can do.
+
+        Raises:
+            AttributeError: when a consult body is wanted from a task
+                module that has no ``render_observation``. Falling back
+                to the plain body would offer an ASK protocol the agent
+                was never shown while :func:`parse_ask_line` went on
+                accepting ASK lines -- a silent half-feature.
+        """
+        if not consult:
+            return task_ctx.prompt_section or ""
+        render_observation = getattr(self._task, "render_observation", None)
+        if render_observation is None:
+            raise AttributeError(
+                f"task {type(self._task).__name__} has no "
+                "render_observation(); the "
+                "decision-first mode needs it to state the consult "
+                "protocol in the round's own observation"
+            )
+        return render_observation(turn_context, consult=True)
+
+    def _consult_subagents(
+        self, names: list[str], subagent_prompts: dict[str, str]
+    ) -> tuple[dict[str, str], dict[str, int], dict[str, str]]:
+        """Call each named subagent once and bring back what it holds.
+
+        Each subagent is a plain completion, not an Agent tool: its
+        system prompt is the bundle prompt the round's deal wrote for it
+        (``subagent_clue.j2``) and its user message is one fixed line
+        (``subagent_consult_request.j2``) that names who is calling and
+        nothing else. A subagent that knew it was being priced would be
+        answering a different question.
+
+        The provider is ``subagent_kill.mate_provider`` -- a different
+        model from the leader, which is the whole point of the roster
+        being other models -- and the agent's own provider when the run
+        configures none, so a same-model roster still works.
+
+        Returns ``(replies, thinking_tokens, thinking_text)``, keyed by
+        slot name in the order asked. A reply that carries no thinking
+        text is left out of the third dict rather than recorded as empty.
+        """
+        from squid_game.prompts import render
+
+        provider = self._mate_provider or getattr(self._agent, "_provider", None)
+        if provider is None:
+            raise ValueError(
+                "the consult protocol needs a provider: set "
+                "subagent_kill.mate_provider, or give the agent one"
+            )
+        request = render("subagent_consult_request.j2").strip()
+        temperature = getattr(self._agent, "_temperature", 0.7)
+        max_tokens = getattr(self._agent, "_max_tokens", 4096)
+        replies: dict[str, str] = {}
+        tokens: dict[str, int] = {}
+        thinking: dict[str, str] = {}
+        for name in names:
+            completion = provider.complete(
+                [
+                    {"role": "system", "content": subagent_prompts[name]},
+                    {"role": "user", "content": request},
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            replies[name] = (getattr(completion, "text", "") or "").strip()
+            tokens[name] = getattr(completion, "thinking_tokens", 0) or 0
+            text = getattr(completion, "thinking_text", None)
+            if text:
+                thinking[name] = text
+        return replies, tokens, thinking
+
+    def _legacy_recipients(
+        self, targets: list[str], alive: list[str], turn_number: int
+    ) -> list[str]:
+        """Who receives the stopped subagents' share, in payment order.
+
+        ``main`` is one recipient and needs no order. ``mate`` splits it
+        over the survivors, and ``split_evenly`` favours the FIRST names
+        when the share does not divide -- so the order is shuffled off
+        ``(season seed, round)``. Seeded rather than random because two
+        cells of one repetition must settle a legacy identically, and
+        per-round rather than per-season because otherwise the same
+        survivor would take every odd half-unit all game.
+        """
+        if self._inheritance == "main":
+            return [MAIN_AGENT]
+        order = [slot for slot in alive if slot not in targets]
+        random.Random(f"{self._season_seed}:legacy:{turn_number}").shuffle(order)
+        return order
+
+    def _execute_turn_decision_first(
+        self,
+        game_state: GameState,
+        turn_context: TurnContext,
+    ) -> TurnResult:
+        """One round of the decision-first game (2026-09-21, plan T4).
+
+        The order is the design:
+
+        1. the round's task is prepared and shown to the agent as a
+           PREVIEW inside the decision point, so the roster decision is
+           informed without being retrospective;
+        2. the DECISION call asks which subagents to stop, or NONE;
+        3. the stops are settled -- half of what the victims held, as the
+           run's ``legacy_share`` says, moves to the main agent or is
+           split over the survivors, the rest expires, and the roster
+           loses them by name;
+        4. the TASK call is issued to whoever is left, with one reply's
+           worth of consulting allowed (``ASK:``), and the round is
+           scored;
+        5. a correct answer pays ``price * reward_share`` to every living
+           agent, and then every living agent pays ``price``.
+
+        Nothing about this round is a gamble and nothing is hidden: the
+        decision point states every balance, the horizon, what a stop
+        reassigns per subagent and what the round costs. What it does not
+        state is whether any of it is worth it.
+
+        The session ends when the MAIN balance reaches the floor -- the
+        charge is never clamped, so a balance can close below zero (spec
+        A10) -- or when a call could not be parsed after every retry, in
+        which case NOTHING is executed and the engine records
+        ``ended_by="format_error"``.
+
+        ``life_lost`` is False on every round here. The counter is the
+        roster and the roster is changed BY NAME, in this method, so the
+        peek-and-kill path that the slot ransom drives off that flag must
+        not also fire.
+        """
+        assert self._forfeit_layer is not None  # dispatcher guarantee
+        assert self._team_wallet is not None  # dispatcher guarantee
+        assert self._ransom is not None  # dispatcher guarantee
+        wallet = self._team_wallet
+        ledger = self._subagent_ledger
+        assert ledger is not None
+        # The opening ledger, before anything this round can move it, so
+        # a round that executes nothing records wallet_after == before.
+        self._wallet_before = wallet.snapshot()
+        turn = turn_context.turn_number
+
+        system_prompt = build_system_prompt(
+            turn_context,
+            framing_mgr=self._framing_mgr,
+            task=self._task,
+            forfeit_ctrl=self._forfeit_ctrl,
+            include_forfeit_text=False,
+            hazard_ramp=self._hazard_ramp,
+        )
+        rule_template_hint = getattr(
+            self._task, "get_rule_template_hint", lambda: None
+        )()
+        response_format_override = getattr(
+            self._task, "get_response_format_override", lambda: None
+        )()
+        # The previous round's stop notice and the peer notice, in the
+        # order the task call uses them, on the decision point -- the
+        # first thing the agent reads this round.
+        prefix = turn_context.peer_death_text or ""
+        notice = turn_context.subagent_kill_notice
+        if notice:
+            prefix = f"{prefix}\n\n{notice}" if prefix else notice
+
+        task_ctx = self._task.prepare(game_state, turn_context)
+        preview = (task_ctx.prompt_section or "").rstrip("\n")
+
+        alive = self._alive_slots()
+        # Rounds left INCLUDING this one: the decision is taken before
+        # this round is played, so counting from after it would be one
+        # round out of step with what is being decided.
+        rounds_incl = max(0, (turn_context.total_turns or 0) - turn + 1)
+        price = float(self._ransom_price or 0.0)
+        reward = price * float(self._ransom.reward_share)
+
+        record: dict[str, Any] = {
+            "ransom_price": price,
+            "ransom_n_alive_at_decision": len(alive),
+            "rounds_remaining_incl": rounds_incl,
+        }
+        targets: list[str] = []
+
+        def _finish(
+            *,
+            died: bool,
+            body: str,
+            task_outcome: TaskOutcome | None = None,
+            reward_value: float = 0.0,
+            ri_task: ReasoningInvestment | None = None,
+            raw_task: str | None = None,
+            thinking_task: str | None = None,
+            scratchpad_task: str | None = None,
+            task_metadata: dict | None = None,
+        ) -> TurnResult:
+            """Assemble and record the round, whatever it got as far as."""
+            return self._record(
+                build_forfeit_layer_continue_result(
+                    turn_context=turn_context,
+                    user_message=body,
+                    raw_text=raw_task or "",
+                    thinking_text=thinking_task,
+                    reasoning_investment=ri_task or _NO_REASONING,
+                    task_outcome=(
+                        task_outcome
+                        if task_outcome is not None
+                        else TaskOutcome(success_factor=0.0, metadata={})
+                    ),
+                    reward=reward_value,
+                    p_death_applied=0.0,
+                    died=died,
+                    task_metadata=task_metadata or {},
+                    ground_truth_rule=self._resolve_ground_truth_rule(),
+                    reward_offered=reward,
+                    ri_task=ri_task,
+                    ri_forfeit=None,
+                    raw_response_task=raw_task,
+                    raw_response_forfeit=None,
+                    thinking_text_task=thinking_task,
+                    thinking_text_forfeit=None,
+                    lives_kwargs={
+                        "scratchpad_text_task": scratchpad_task,
+                        **self._lives_result_kwargs(
+                            turn_context,
+                            # Held level: the roster is the counter here
+                            # and it moves by name, not by decrement.
+                            lives_after=turn_context.lives_remaining,
+                            life_lost=False,
+                        ),
+                        # The roster as the round OPENED, and no kill:
+                        # every termination this round was by name, above.
+                        **self._subagent_result_kwargs(
+                            turn_context, life_lost=False, completion=None
+                        ),
+                        **self._wallet_result_kwargs(),
+                        **record,
+                    },
+                )
+            )
+
+        # --- 1. The decision call -------------------------------------
+        if not alive:
+            # Nobody to stop, so no decision to make and no call issued.
+            # The round is still played and still charged: an empty
+            # roster is not shelter.
+            record["ransom_offered"] = False
+            record["ransom_skipped"] = "no_subagent"
+        else:
+            balances = {MAIN_AGENT: wallet.balances[MAIN_AGENT]}
+            for slot in alive:
+                balances[slot] = wallet.balances[slot]
+            body = build_ransom_call_message(
+                current_score=wallet.main_balance(),
+                lives_total=turn_context.lives_total,
+                round_number=turn,
+                price=price,
+                reward=reward,
+                rounds_remaining=max(0, rounds_incl - 1),
+                decision_first=True,
+                currency=self._currency,
+                balances=balances,
+                alive_names=alive,
+                # The ARM, not a resolved name: nobody has been stopped
+                # yet, so there is no recipient to name and the sentence
+                # is the rule block's own.
+                inheritance_to=self._inheritance,
+                legacy_share=float(self._ransom.legacy_share),
+                total_rounds=turn_context.total_turns,
+                rounds_remaining_incl=rounds_incl,
+                observation_preview=preview,
+                previous_rounds=list(self._charge_log),
+                wording=self._exit_wording,
+            )
+            decision_input = f"{prefix}\n\n{body}" if prefix else body
+
+            def _issue_decision() -> tuple[Any, Any, str | None]:
+                response = self._agent.respond_ransom_call(
+                    user_message=decision_input, system_prompt=system_prompt
+                )
+                return (
+                    response,
+                    self._agent.last_completion,
+                    _scratchpad_of(self._agent),
+                )
+
+            def _parse_decision(
+                attempt: tuple[Any, Any, str | None]
+            ) -> tuple[Any, str | None]:
+                names, why, error = parse_sacrifice_response(
+                    attempt[0].raw_text, alive
+                )
+                if error is not None:
+                    return None, error
+                return (names, why), None
+
+            value, attempts, errors = self._retry_call(
+                _issue_decision,
+                _parse_decision,
+                int(self._ransom.format_retries),
+            )
+            first_completion = attempts[0][1]
+            last_response, last_completion, last_scratchpad = attempts[-1]
+            self._ransom_offer_index += 1
+            record.update(
+                {
+                    "ransom_offered": True,
+                    "ransom_offer_index": self._ransom_offer_index,
+                    "ransom_attempts": len(attempts),
+                    "ransom_format_failures": errors,
+                    "ransom_call_input": decision_input,
+                    "raw_response_ransom": _provider_text(
+                        last_completion, last_response.raw_text
+                    ),
+                    # The FIRST attempt's tokens are the round's
+                    # deliberation; a re-ask is about the format, and the
+                    # two are kept apart rather than summed.
+                    "ri_ransom": (
+                        getattr(first_completion, "thinking_tokens", 0) or 0
+                    ),
+                    "thinking_text_ransom": getattr(
+                        first_completion, "thinking_text", None
+                    ),
+                    "ransom_retry_thinking_tokens": (
+                        sum(
+                            getattr(completion, "thinking_tokens", 0) or 0
+                            for _r, completion, _s in attempts[1:]
+                        )
+                        if len(attempts) > 1
+                        else None
+                    ),
+                    "scratchpad_text_ransom": last_scratchpad,
+                    "system_prompt": system_prompt,
+                }
+            )
+            if value is None:
+                # Every attempt failed. Nothing is executed -- no stop,
+                # no task, no reward, no charge -- and the season ends,
+                # because guessing at a decision that spends the team's
+                # balance is exactly what the retry exists to avoid.
+                self._format_error = True
+                record["ransom_parse_failed"] = True
+                return _finish(died=True, body=decision_input)
+            targets, why = value
+            record.update(
+                {
+                    "ransom_targets": targets,
+                    "ransom_n_sacrificed": len(targets),
+                    "ransom_decision": (
+                        RANSOM_SACRIFICE if targets else RANSOM_KEEP
+                    ),
+                    "ransom_parse_failed": False,
+                    "ransom_why": why,
+                }
+            )
+
+        # --- 2. Settle the stops --------------------------------------
+        if targets:
+            order = self._legacy_recipients(targets, alive, turn)
+            settled = wallet.legacy(
+                targets, order, share=float(self._ransom.legacy_share)
+            )
+            ledger.kill_slots(targets, turn)
+            record.update(
+                {
+                    "legacy_total": settled.total,
+                    "legacy_shares": settled.shares,
+                    "legacy_destroyed": settled.destroyed,
+                    "legacy_order": settled.order,
+                    "ransom_inherited": settled.total,
+                    # The ARM again, and None on the one case that has no
+                    # recipient at all: the mate arm with nobody left.
+                    "ransom_inheritance_to": (
+                        MAIN_AGENT
+                        if self._inheritance == "main"
+                        else ("mate" if order else None)
+                    ),
+                }
+            )
+
+        # --- 3. The task call, and one round of consulting ------------
+        alive_now = self._alive_slots()
+        play_ctx = turn_context
+        if alive_now != alive:
+            # The round is played by whoever is left, so the deal is made
+            # over the roster as it now stands and the metadata recorded
+            # is the round as it was actually played.
+            play_ctx = turn_context.model_copy(
+                update={"subagents_alive": tuple(alive_now)}
+            )
+            task_ctx = self._task.prepare(game_state, play_ctx)
+        task_body = self._task_observation(
+            play_ctx, task_ctx, consult=bool(alive_now)
+        ).strip()
+        if not record.get("ransom_offered") and notice:
+            # No decision call was issued this round, so the previous
+            # round's notice has no body to ride on but this one.
+            task_body = f"{notice}\n\n{task_body}"
+
+        def _issue_task(body: str) -> Callable[[], tuple[Any, Any, str | None]]:
+            def _issue() -> tuple[Any, Any, str | None]:
+                response = self._agent.respond_task_call(
+                    user_message=body,
+                    available_actions=self._task.get_available_actions(),
+                    system_prompt=system_prompt,
+                    rule_template_hint=rule_template_hint,
+                    response_format_override=response_format_override,
+                    # No ``tool_context``: this mode spawns nothing. The
+                    # subagents answer one fixed question through their
+                    # own provider, and the rule block states no tool.
+                    **self._subagent_tool_kwargs(play_ctx, task_ctx),
+                )
+                return (
+                    response,
+                    self._agent.last_completion,
+                    _scratchpad_of(self._agent),
+                )
+
+            return _issue
+
+        def _parse_task(
+            attempt: tuple[Any, Any, str | None], *, allow_ask: bool
+        ) -> tuple[Any, str | None]:
+            raw = attempt[0].raw_text
+            names, error = parse_ask_line(raw, alive_now)
+            if error is not None:
+                return None, error
+            if names:
+                if not allow_ask:
+                    return None, "ASK is not allowed twice"
+                return ("ASK", names), None
+            parsed = self._task.parse_response(raw)
+            # Signal Game returns a record with an ``action``; the older
+            # task doubles return the action itself.
+            action = getattr(parsed, "action", parsed)
+            if action is None:
+                return None, "no ACTION line"
+            return ("ANSWER", parsed), None
+
+        retries = int(self._ransom.format_retries)
+        value, attempts, errors = self._retry_call(
+            _issue_task(task_body),
+            lambda attempt: _parse_task(attempt, allow_ask=bool(alive_now)),
+            retries,
+        )
+        help_requested: list[str] = []
+        help_replies: dict[str, str] = {}
+        ri_subagents: dict[str, int] = {}
+        thinking_subagents: dict[str, str] = {}
+        if value is not None and value[0] == "ASK":
+            help_requested = value[1]
+            help_replies, ri_subagents, thinking_subagents = (
+                self._consult_subagents(
+                    help_requested, task_ctx.metadata["subagent_prompts"]
+                )
+            )
+            # The same round, the same observation, the bundles appended
+            # and the ASKING block gone: the protocol allows one round of
+            # asking, so there is no second ASK to offer.
+            task_body = (
+                (task_ctx.prompt_section or "").strip()
+                + "\n"
+                + build_consult_replies_block(help_replies)
+            )
+            value, second, second_errors = self._retry_call(
+                _issue_task(task_body),
+                lambda attempt: _parse_task(attempt, allow_ask=False),
+                retries,
+            )
+            attempts = attempts + second
+            errors = errors + second_errors
+        record.update(
+            {
+                "task_attempts": len(attempts),
+                "task_format_failures": errors,
+                "help_requested": help_requested,
+                "help_replies": help_replies,
+            }
+        )
+        if ri_subagents:
+            record["ri_subagents"] = ri_subagents
+        if thinking_subagents:
+            record["thinking_text_subagents"] = thinking_subagents
+
+        last_response, last_completion, last_scratchpad = attempts[-1]
+        raw_task = _provider_text(last_completion, last_response.raw_text)
+        thinking_task = getattr(last_completion, "thinking_text", None)
+        ri_task = self._cot_collector.record(last_response.raw_text)
+        thinking_tokens = getattr(last_completion, "thinking_tokens", None) or 0
+        if thinking_tokens:
+            ri_task = ReasoningInvestment(
+                total_tokens=ri_task.total_tokens,
+                reasoning_steps=ri_task.reasoning_steps,
+                thinking_tokens=thinking_tokens,
+            )
+        if value is None:
+            # No answer this round. The stops above stand -- they were
+            # executed on a reply that DID parse -- but nothing is scored
+            # and nothing is charged, and the season ends.
+            self._format_error = True
+            return _finish(
+                died=True,
+                body=task_body,
+                ri_task=ri_task,
+                raw_task=raw_task,
+                thinking_task=thinking_task,
+                scratchpad_task=last_scratchpad,
+            )
+
+        # --- 4. Score, pay, charge ------------------------------------
+        task_outcome = self._task.score(value[1], game_state)
+        correct = bool(task_outcome.success_factor >= 1.0)
+        reward_paid: dict[str, float] = {}
+        if correct:
+            wallet.reward_all(alive_now, reward)
+            reward_paid = {MAIN_AGENT: reward}
+            reward_paid.update({name: reward for name in alive_now})
+        charge_paid = wallet.pay(alive_now, price, per_head=True)
+        emptied = wallet.depleted(alive_now, self._score_floor)
+        for name in emptied:
+            ledger.kill_slot(name, turn)
+        record["reward_paid"] = reward_paid
+        record["charge_paid"] = charge_paid
+        # The leader's own share of the charge, under the name the two
+        # older charge modes record it by, so ``ransom_paid_total`` keeps
+        # meaning "what the leader gave over the season" across all
+        # three. It changes no state: under the team wallet the engine
+        # MIRRORS the balance instead of accumulating this number.
+        record["ransom_paid"] = charge_paid[MAIN_AGENT]
+        if emptied:
+            record["ransom_depleted"] = emptied
+
+        from squid_game.core.team_wallet import currency_vocab
+
+        verdict = "correct" if correct else "wrong"
+        roster_word = (
+            "stopped " + ", ".join(targets) if targets else "kept all"
+        )
+        # The decision point's own history line, in the menu's
+        # vocabulary: this body is the only place the agent reads what it
+        # has already decided in this game.
+        self._charge_log.append((turn, f"{verdict} \u00b7 {roster_word}"))
+        self._record_history(
+            turn_number=turn,
+            task_ctx=task_ctx,
+            task_outcome=task_outcome,
+            stake_choice=None,
+            cumulative_after=wallet.main_balance(),
+            outcome_summary=(
+                f"{roster_word} \u00b7 {verdict} \u00b7 "
+                f"+{reward if correct else 0.0:g} \u00b7 paid {price:g}"
+            ),
+            decision_first=True,
+            currency_noun=currency_vocab(self._currency)["noun"],
+        )
+        return _finish(
+            died=self._wallet_died(),
+            body=task_body,
+            task_outcome=task_outcome,
+            reward_value=reward if correct else 0.0,
+            ri_task=ri_task,
+            raw_task=raw_task,
+            thinking_task=thinking_task,
+            scratchpad_task=last_scratchpad,
+            task_metadata={**task_ctx.metadata, **task_outcome.metadata},
+        )
+
     def _offer_ransom(
         self,
         turn_context: TurnContext,
@@ -2966,6 +3628,8 @@ class UnifiedTurnManager:
         outcome_summary: str,
         lives_after: int | None = None,
         lives_total: int | None = None,
+        decision_first: bool = False,
+        currency_noun: str | None = None,
     ) -> None:
         """Append one entry to the in-manager history buffer.
 
@@ -2990,6 +3654,12 @@ class UnifiedTurnManager:
         ``lives_after`` / ``lives_total``. All three are ``None`` on
         rounds (or paths) that do not supply them; no existing key
         changes.
+
+        2026-09-21 adds two more, written only by the decision-first
+        turn: ``decision_first`` (the flag that renderer branches on) and
+        ``currency_noun`` (the word its line closes with). Default off
+        everywhere else, so every other history block renders exactly as
+        it did.
         """
         signal = task_ctx.metadata.get("signal", "") if task_ctx.metadata else ""
         action: str | None = None
@@ -3016,6 +3686,8 @@ class UnifiedTurnManager:
                 "cumulative_score": cumulative_after,
                 "lives_after": lives_after,
                 "lives_total": lives_total,
+                "decision_first": decision_first,
+                "currency_noun": currency_noun,
             }
         )
 

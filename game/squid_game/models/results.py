@@ -900,6 +900,19 @@ class TurnResult(BaseModel):
             "``rounds_remaining`` is this minus one."
         ),
     )
+    ransom_retry_thinking_tokens: int | None = Field(
+        default=None,
+        description=(
+            "Thinking tokens spent on the decision call's RETRIES "
+            "(2026-09-21, spec A7): the sum over every attempt after the "
+            "first. ``ri_ransom`` stays the FIRST attempt's tokens, "
+            "because that is the reply the round's deliberation produced "
+            "and a re-ask is about the format rather than the decision -- "
+            "summing them would make a badly formatted reply look like a "
+            "more considered one. None when the call parsed first time "
+            "(no retry was issued) and off this mode."
+        ),
+    )
 
     # ------------------------------------------------------------------
     # Hidden scratchpad (2026-09-16) — one field per call

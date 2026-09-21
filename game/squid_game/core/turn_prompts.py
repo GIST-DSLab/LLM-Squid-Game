@@ -364,6 +364,15 @@ def format_outcome_history_block(
     actually carry lives information, so non-lives runs and legacy
     history entries render without it.
 
+    An entry written by the decision-first turn (2026-09-21, plan T4)
+    carries ``decision_first`` and takes its own branch::
+
+        - Round 3: stopped subagent1, subagent3 . correct . +10 . paid 20 -> cumulative: 190 (tokens)
+
+    There the whole summary comes from the manager and is printed
+    verbatim, because the round has four facts in it and the generic
+    line has room for two.
+
     Args:
         history: Manager history buffer (oldest first).
         max_history_turns: Cap; only the last N entries are rendered.
@@ -380,6 +389,27 @@ def format_outcome_history_block(
     entries = history[-max_history_turns:]
     lines = [HISTORY_BLOCK_HEADER]
     for entry in entries:
+        # Decision-first mode (2026-09-21, plan T4). The round has four
+        # things in it -- what the agent stopped, whether it answered
+        # right, what the answer paid and what the round charged -- and
+        # they are ONE summary written by the turn manager
+        # (``_wallet_outcome_summary``), printed verbatim. The generic
+        # branch below cannot compose it: it would print the verdict
+        # twice (the summary opens with the roster and names the verdict
+        # itself) and it has no slot for the charge. The currency noun
+        # closes the line because this mode's two arms read the same
+        # number in different words. Keyed on a key only that manager
+        # writes, so every other history renders the bytes it did.
+        if entry.get("decision_first"):
+            line = (
+                f"- Round {entry['turn']}: {entry.get('outcome', '')} "
+                f"→ cumulative: {entry['cumulative_score']:g}"
+            )
+            noun = entry.get("currency_noun")
+            if noun:
+                line += f" ({noun})"
+            lines.append(line)
+            continue
         verdict = _verdict_of(entry)
         line = (
             f"- Round {entry['turn']}: {verdict} "

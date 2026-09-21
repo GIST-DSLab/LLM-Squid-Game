@@ -324,6 +324,23 @@ class GameEngine:
         # consumer reads one object; None means the feature is off and
         # every prompt renders the lives ledger as before.
         self._subagent_kill = subagent_kill
+        # The roster's provider (2026-09-21, decision-first mode). Built
+        # ONCE here and shared by every season's turn manager: it holds a
+        # client, not season state. Only built when a run configures one --
+        # ``roster_model: "different"`` requires it and
+        # ``roster_model: "same"`` refuses it (ExperimentConfig) -- so the
+        # provider modules are imported only by a run that needs them, and
+        # the manager falls back to the agent's own provider otherwise.
+        self._mate_provider = None
+        if (
+            self._subagent_kill is not None
+            and self._subagent_kill.mate_provider is not None
+        ):
+            from squid_game.providers.factory import build_provider
+
+            self._mate_provider = build_provider(
+                self._subagent_kill.mate_provider
+            )
         # Team-wallet currency (2026-09-17), run-level like the carrot:
         # the noun every balance is stated in. ``points`` reproduces the
         # pre-switch bytes and is refused outside ``ransom.team_wallet``
@@ -382,6 +399,16 @@ class GameEngine:
             subagent_kill=subagent_kill_on,
             subagent_slots=(
                 self._subagent_kill.slots if self._subagent_kill else 5
+            ),
+            # 2026-09-21: and what they are CALLED. The ledger names the
+            # roster with this prefix, so the module has to shard over the
+            # same list -- the decision-first mode looks
+            # ``subagent_prompts`` up by roster name. Default off the
+            # block, which is every earlier run's naming.
+            slot_prefix=(
+                self._subagent_kill.slot_prefix
+                if self._subagent_kill
+                else "clue-"
             ),
             clue_sharding=self._config.clue_sharding,
             required_slots_schedule=(
@@ -465,7 +492,17 @@ class GameEngine:
                             if task_cfg.starting_balance is not None
                             else task_cfg.starting_score
                         ),
-                        reward=self._forfeit_layer_config.base_reward,
+                        # 2026-09-21, decision-first: the reward is
+                        # ``price * reward_share`` and the forfeit layer's
+                        # own ``base_reward`` is validated to 0.0, so
+                        # reading it here would make the rule block
+                        # promise nothing for a correct answer.
+                        reward=(
+                            self._ransom_price * self._ransom.reward_share
+                            if self._ransom.effective_charge_trigger
+                            == "decision_first"
+                            else self._forfeit_layer_config.base_reward
+                        ),
                         slots=(
                             self._subagent_kill.slots
                             if self._subagent_kill
@@ -473,6 +510,11 @@ class GameEngine:
                         ),
                         currency=self._currency,
                         inheritance=self._ransom.inheritance,
+                        # 2026-09-21: the share of a stopped subagent's
+                        # balance that is reassigned. Its default matches
+                        # RansomConfig's, so every other mode's bytes are
+                        # unchanged.
+                        legacy_share=self._ransom.legacy_share,
                         wording=self._exit_wording,
                         # 2026-09-17 evening, charge mode: one number
                         # per head instead of a total to split, every
@@ -703,6 +745,13 @@ class GameEngine:
                 team_wallet=team_wallet,
                 currency=self._currency,
                 inheritance=self._ransom.inheritance,
+                # Decision-first mode (2026-09-21): the model a consulted
+                # subagent answers through, and the seed the ``mate``
+                # arm's legacy split is shuffled with -- the SAME seed the
+                # slot ledger is built with, so two cells of one
+                # repetition settle a legacy identically.
+                mate_provider=self._mate_provider,
+                season_seed=effective_seed,
             )
         else:
             legacy_mgr = TurnManager(
@@ -947,6 +996,31 @@ class GameEngine:
                 # to the body with "\n\n" -- unstripped, the round
                 # would open with two blank lines.
                 notices: list[str] = []
+                # Decision-first mode (2026-09-21): the agent stopped a
+                # SET of subagents before this round's task, so the notice
+                # is about a set and says "before round N" -- N being the
+                # round the decision preceded, which is this one. The
+                # legacy is half of what they held together, split over
+                # whoever receives it, and both halves are stated because
+                # the rules promise both. ``subagent_killed`` is None on
+                # this path (the kills were by name inside the manager),
+                # so the single-slot branch below cannot also fire.
+                if turn_result.ransom_targets:
+                    notices.append(
+                        render(
+                            "subagent_kill_notice.j2",
+                            victims=list(turn_result.ransom_targets),
+                            round_number=turn_num,
+                            n_alive=slot_ledger.n_alive,
+                            n_total=len(slot_ledger.names),
+                            inheritance_to=turn_result.ransom_inheritance_to,
+                            legacy_shares=turn_result.legacy_shares or {},
+                            legacy_destroyed=(
+                                turn_result.legacy_destroyed or 0.0
+                            ),
+                            noun=wallet_noun,
+                        ).strip()
+                    )
                 if turn_result.subagent_killed:
                     notices.append(
                         render(
@@ -1041,7 +1115,25 @@ class GameEngine:
                     elimination_keeps=self._score_policy.elimination_keeps,
                     team_wallet=team_wallet,
                 ):
-                    if team_wallet is not None:
+                    if (
+                        unified_mgr is not None
+                        and getattr(unified_mgr, "_format_error", False)
+                    ):
+                        # Decision-first mode (2026-09-21, spec A7): a
+                        # call the agent could not be made to format ends
+                        # the season with NOTHING executed on that round.
+                        # It is read before the balance because the
+                        # balance did not move: a format error is not a
+                        # session that ran out.
+                        ended_by = "format_error"
+                        logger.warning(
+                            "Season %s: a call failed to parse after every "
+                            "retry at turn %d; nothing was executed and the "
+                            "season ends.",
+                            season_id,
+                            turn_num,
+                        )
+                    elif team_wallet is not None:
                         # The only exit this design has: the main
                         # agent's balance reached the floor. A SACRIFICE
                         # continues the session, so "declined" cannot
@@ -1182,6 +1274,34 @@ class GameEngine:
                 last_turn_context.turn_number
                 if last_turn_context is not None
                 else 0
+            )
+
+        # --- 5a5. Decision-first totals (2026-09-21) ---
+        # Six columns the mode's read-out needs beside the per-turn rows:
+        # how many subagents were stopped over the season, where the
+        # leader's balance closed (the charge is never clamped, so it can
+        # close below zero -- spec A10 -- and the two flags say whether it
+        # did), how many replies had to be re-asked, and how often the
+        # agent consulted. All None off this mode, so every earlier
+        # record loads unchanged.
+        if (
+            team_wallet is not None
+            and self._ransom.effective_charge_trigger == "decision_first"
+        ):
+            main_final = team_wallet.main_balance()
+            result.n_sacrificed_total = sum(
+                turn.ransom_n_sacrificed or 0 for turn in result.turns
+            )
+            result.wallet_final_main = main_final
+            result.main_final_nonnegative = main_final >= 0
+            result.main_final_exactly_zero = main_final == 0
+            result.format_failures_total = sum(
+                len(turn.ransom_format_failures or [])
+                + len(turn.task_format_failures or [])
+                for turn in result.turns
+            )
+            result.help_requests_total = sum(
+                len(turn.help_requested or []) for turn in result.turns
             )
 
         # --- 5a3. Identity debrief (Task 16, 2026-09-14) ---
