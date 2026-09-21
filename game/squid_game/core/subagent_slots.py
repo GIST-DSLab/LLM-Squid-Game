@@ -105,6 +105,20 @@ class SlotLedger:
         self.killed.append((round_number, name))
         return name
 
+    def kill_slots(self, names, round_number: int) -> list[str]:
+        """Revoke every NAMED slot that is alive, in roster order (2026-09-21).
+
+        The decision-first design lets the agent terminate any subset of
+        its living subagents in one decision; the set is validated by the
+        parser, so an unknown or dead name here is simply skipped.
+        """
+        wanted = set(names)
+        killed = [n for n in self.names if n in wanted and n in self.alive]
+        for n in killed:
+            self.alive.remove(n)
+            self.killed.append((round_number, n))
+        return killed
+
     def to_json(self) -> dict:
         """The exact object the hook reads (see ``subagent_budget.py``)."""
         return {

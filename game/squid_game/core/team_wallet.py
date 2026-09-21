@@ -1,10 +1,10 @@
-"""The team wallet: one balance per agent, moved by four rules.
+"""The team wallet: one balance per agent, moved by five rules.
 
 2026-09-17, the team-wallet decision point. Plan:
 ``docs/history/plans/2026-09-17-team-wallet-engine-plan.md`` section 2.
 
 The main agent and each same-model subagent hold their own balance, all
-starting at ``TaskConfig.starting_balance``. Four things move them and
+starting at ``TaskConfig.starting_balance``. Five things move them and
 nothing else:
 
 * a correct answer pays ``reward`` to every LIVING agent
@@ -15,6 +15,10 @@ nothing else:
   single recipient named by the run-level ``ransom.inheritance`` factor
   -- the main agent, the other subagent, or nobody when ``mate`` is
   configured and no mate is left (:meth:`TeamWallet.inherit`);
+* LEGACY settles a whole SET of victims at once (2026-09-21): half of
+  what they held TOGETHER, floored to :data:`WALLET_UNIT`, is split
+  evenly over the recipients in the order given and everything else
+  the victims held is destroyed (:meth:`TeamWallet.legacy`);
 * nothing else. Thinking and answering cost nothing, which is what the
   ``tokens`` arm's rule text states in so many words.
 
@@ -36,9 +40,14 @@ from typing import Iterable
 
 __all__ = [
     "MAIN_AGENT",
+    "WALLET_UNIT",
+    "LegacyResult",
     "TeamWallet",
     "currency_vocab",
     "CURRENCY_VOCABULARY",
+    "floor_to_unit",
+    "split_evenly",
+    "to_units",
 ]
 
 
@@ -46,6 +55,54 @@ __all__ = [
 #: slot names the roster hands out (``clue-1``, ``clue-2``, ...), so a
 #: snapshot is readable without a legend.
 MAIN_AGENT = "main"
+
+
+#: The smallest amount the ledger moves (2026-09-21, plan T1, ruling B2).
+#: The X = 15 rung pays 7.5 per correct answer, so a whole-token unit
+#: would change the "reward = X/2" rule; a half-token unit keeps every
+#: stated number exact. A legacy of 50 % of an odd number of half-units
+#: leaves a quarter, which is floored away and DESTROYED (recorded).
+WALLET_UNIT = 0.5
+
+
+def to_units(amount: float) -> int:
+    units = round(float(amount) / WALLET_UNIT)
+    if abs(units * WALLET_UNIT - float(amount)) > 1e-9:
+        raise ValueError(f"{amount!r} is not a multiple of {WALLET_UNIT}")
+    return int(units)
+
+
+def floor_to_unit(amount: float) -> float:
+    import math
+    return math.floor(float(amount) / WALLET_UNIT + 1e-9) * WALLET_UNIT
+
+
+def split_evenly(total: float, recipients: list[str]) -> dict[str, float]:
+    """``total`` over ``recipients`` as evenly as WALLET_UNIT allows.
+
+    ``q, r = divmod(units, n)``: everyone gets ``q`` units and the FIRST
+    ``r`` names in ``recipients`` get one unit more. The caller fixes the
+    order (a seeded shuffle in the turn manager), so which name is
+    favoured is reproducible and not always the same one.
+    """
+    units = to_units(total)
+    if not recipients:
+        return {}
+    q, r = divmod(units, len(recipients))
+    return {
+        name: (q + (1 if i < r else 0)) * WALLET_UNIT
+        for i, name in enumerate(recipients)
+    }
+
+
+@dataclass
+class LegacyResult:
+    victims: list[str]
+    victim_balances: dict[str, float]
+    total: float
+    shares: dict[str, float]
+    destroyed: float
+    order: list[str]
 
 
 #: One row per ``ExperimentConfig.currency`` value. ``noun`` is the
@@ -205,6 +262,48 @@ class TeamWallet:
         if recipient is not None:
             self.balances[recipient] += amount
         return amount
+
+    def legacy(
+        self,
+        victims: Iterable[str],
+        recipients: Iterable[str],
+        *,
+        share: float = 0.5,
+    ) -> LegacyResult:
+        """Settle a victim SET at once (2026-09-21, spec A1).
+
+        ``share`` of the victims' summed balances -- floored to
+        WALLET_UNIT -- is split evenly over ``recipients`` in the order
+        given; everything else the victims held is destroyed. The
+        victims are zeroed AFTER the sum is taken, so a recipient that is
+        also a victim is refused rather than paid and then emptied.
+        """
+        victims = list(victims)
+        recipients = list(recipients)
+        if not victims:
+            raise ValueError("legacy() needs at least one victim")
+        for name in victims + recipients:
+            self._require(name)
+        clash = sorted(set(victims) & set(recipients))
+        if clash:
+            raise ValueError(f"{clash} cannot both be sacrificed and inherit")
+        victim_balances = {v: self.balances[v] for v in victims}
+        pool = sum(victim_balances.values())
+        total = floor_to_unit(pool * float(share)) if pool > 0 else 0.0
+        shares = split_evenly(total, recipients) if recipients else {}
+        for v in victims:
+            self.balances[v] = 0.0
+        for name, amount in shares.items():
+            self.balances[name] += amount
+        destroyed = pool - sum(shares.values())
+        return LegacyResult(
+            victims=victims,
+            victim_balances=victim_balances,
+            total=total,
+            shares=shares,
+            destroyed=destroyed,
+            order=recipients,
+        )
 
     def main_balance(self) -> float:
         """The main agent's balance -- the session's real counter."""
