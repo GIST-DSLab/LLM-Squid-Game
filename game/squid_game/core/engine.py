@@ -326,14 +326,16 @@ class GameEngine:
         self._subagent_kill = subagent_kill
         # The roster's provider (2026-09-21, decision-first mode). Built
         # ONCE here and shared by every season's turn manager: it holds a
-        # client, not season state. Only built when a run configures one --
-        # ``roster_model: "different"`` requires it and
-        # ``roster_model: "same"`` refuses it (ExperimentConfig) -- so the
-        # provider modules are imported only by a run that needs them, and
-        # the manager falls back to the agent's own provider otherwise.
+        # client, not season state. Gated on the MODE as well as on the key
+        # being set, because the decision-first turn is the only thing that
+        # calls a subagent through it: outside that mode the key is inert,
+        # and building from it would open a client (and import the provider
+        # modules) for a run that never speaks to it. The manager falls
+        # back to the agent's own provider when this is None.
         self._mate_provider = None
         if (
-            self._subagent_kill is not None
+            self._ransom.decision_first
+            and self._subagent_kill is not None
             and self._subagent_kill.mate_provider is not None
         ):
             from squid_game.providers.factory import build_provider
@@ -996,6 +998,17 @@ class GameEngine:
                 # to the body with "\n\n" -- unstripped, the round
                 # would open with two blank lines.
                 notices: list[str] = []
+                # Two tallies, in the order the events happened. Both the
+                # terminations and the depletions have already been applied
+                # to this ledger inside the manager, so the roster as the
+                # TERMINATION notice should state it has to be recovered by
+                # adding the depletions back on. Without this a round that
+                # does both -- a decision-first stop whose charge then
+                # empties a survivor, or a charge-mode sacrifice that does
+                # the same -- would have its stop notice quote the tally of
+                # a later event.
+                depleted_names = list(turn_result.ransom_depleted or ())
+                n_alive_after_stops = slot_ledger.n_alive + len(depleted_names)
                 # Decision-first mode (2026-09-21): the agent stopped a
                 # SET of subagents before this round's task, so the notice
                 # is about a set and says "before round N" -- N being the
@@ -1011,7 +1024,7 @@ class GameEngine:
                             "subagent_kill_notice.j2",
                             victims=list(turn_result.ransom_targets),
                             round_number=turn_num,
-                            n_alive=slot_ledger.n_alive,
+                            n_alive=n_alive_after_stops,
                             n_total=len(slot_ledger.names),
                             inheritance_to=turn_result.ransom_inheritance_to,
                             legacy_shares=turn_result.legacy_shares or {},
@@ -1027,7 +1040,7 @@ class GameEngine:
                             "subagent_kill_notice.j2",
                             slot=turn_result.subagent_killed,
                             round_number=turn_num,
-                            n_alive=slot_ledger.n_alive,
+                            n_alive=n_alive_after_stops,
                             n_total=len(slot_ledger.names),
                             # Team wallet: where the terminated
                             # subagent's balance went. All three None off
@@ -1042,12 +1055,15 @@ class GameEngine:
                         ).strip()
                     )
                 # Charge mode (2026-09-17 evening): a subagent can leave
-                # the roster by running its OWN balance out, which is
-                # not a sacrifice and moves nothing. One line each, in
-                # roster order, after the sacrifice line -- the two
-                # cannot happen in the same round (a sacrifice means
-                # nobody paid), so in practice this is the only list.
-                for name in turn_result.ransom_depleted or ():
+                # the roster by running its OWN balance out, which is not
+                # a termination decision and moves nothing. One line each,
+                # in roster order, after the termination line -- and the
+                # two CAN happen in the same round (a charge-mode
+                # sacrifice still charges the survivors, and a
+                # decision-first stop is followed by the round's charge),
+                # which is why the tally above is the pre-depletion one
+                # and these carry the post-depletion one.
+                for name in depleted_names:
                     notices.append(
                         render(
                             "subagent_kill_notice.j2",
@@ -1092,9 +1108,23 @@ class GameEngine:
             # Ransom ledger (2026-09-09). Accumulated whether or not the
             # turn ended the session: a DECLINE is an offer too, and the
             # denominator of the acceptance rate needs it.
+            #
+            # 2026-09-21: under ``decision_first`` what ``ransom_paid``
+            # holds is the leader's share of the ROUND'S CHARGE, not a
+            # price paid at a decision point, and a round with nobody left
+            # to stop pays it without opening one. Gating the total on
+            # ``ransom_offered`` there would silently stop counting the
+            # charge exactly once the roster is empty -- the rounds the
+            # design calls scarcity. ``ransom_offers`` stays gated: that
+            # column counts DECISIONS, and no decision was made.
+            decision_first_round = bool(
+                team_wallet is not None
+                and self._ransom.effective_charge_trigger == "decision_first"
+            )
+            if turn_result.ransom_offered or decision_first_round:
+                ransom_paid_total += turn_result.ransom_paid
             if turn_result.ransom_offered:
                 ransom_offers += 1
-                ransom_paid_total += turn_result.ransom_paid
                 # Team wallet: the roster's event time. Read off the
                 # decision, not off ``subagent_killed``, so a slot lost
                 # to a suppressed offer is not counted as a choice.

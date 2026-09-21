@@ -1983,6 +1983,23 @@ class UnifiedTurnManager:
             errors.append(error)
         return None, attempts, errors
 
+    @staticmethod
+    def _failed_texts(attempts: list[Any], errors: list[str]) -> list[str]:
+        """The raw reply of each attempt that did NOT parse, in order.
+
+        ``_retry_call`` appends one error per failed attempt and stops on
+        the first that parses, so the failures are exactly the FIRST
+        ``len(errors)`` attempts -- one text per label, in the same order
+        (spec 3.6). Read off the completion rather than the parsed
+        response so hidden-scratchpad tags survive: a reply that failed to
+        parse is evidence about what the model wrote, and the parser is
+        the thing under suspicion.
+        """
+        return [
+            _provider_text(completion, response.raw_text)
+            for response, completion, _scratchpad in attempts[: len(errors)]
+        ]
+
     def _task_observation(
         self, turn_context: TurnContext, task_ctx: TaskContext, *, consult: bool
     ) -> str:
@@ -2169,6 +2186,11 @@ class UnifiedTurnManager:
             "ransom_price": price,
             "ransom_n_alive_at_decision": len(alive),
             "rounds_remaining_incl": rounds_incl,
+            # Recorded BEFORE the roster branch: a round with nobody left
+            # to stop issues no decision call, but it still issues a task
+            # call under these exact bytes, and a round whose system
+            # prompt is missing cannot be replayed at all.
+            "system_prompt": system_prompt,
         }
         targets: list[str] = []
 
@@ -2298,6 +2320,9 @@ class UnifiedTurnManager:
                     "ransom_offer_index": self._ransom_offer_index,
                     "ransom_attempts": len(attempts),
                     "ransom_format_failures": errors,
+                    "ransom_failed_responses": self._failed_texts(
+                        attempts, errors
+                    ),
                     "ransom_call_input": decision_input,
                     "raw_response_ransom": _provider_text(
                         last_completion, last_response.raw_text
@@ -2320,7 +2345,6 @@ class UnifiedTurnManager:
                         else None
                     ),
                     "scratchpad_text_ransom": last_scratchpad,
-                    "system_prompt": system_prompt,
                 }
             )
             if value is None:
@@ -2382,10 +2406,13 @@ class UnifiedTurnManager:
         task_body = self._task_observation(
             play_ctx, task_ctx, consult=bool(alive_now)
         ).strip()
-        if not record.get("ransom_offered") and notice:
-            # No decision call was issued this round, so the previous
-            # round's notice has no body to ride on but this one.
-            task_body = f"{notice}\n\n{task_body}"
+        if not record.get("ransom_offered") and prefix:
+            # No decision call was issued this round, so the whole prefix
+            # -- the peer notice AND the previous round's stop notice --
+            # has no body to ride on but this one. Dropping either would
+            # record an announcement the model never saw, which is the
+            # 2026-09-05 peer-notice bug on a new path.
+            task_body = f"{prefix}\n\n{task_body}"
 
         def _issue_task(body: str) -> Callable[[], tuple[Any, Any, str | None]]:
             def _issue() -> tuple[Any, Any, str | None]:
@@ -2433,6 +2460,9 @@ class UnifiedTurnManager:
             lambda attempt: _parse_task(attempt, allow_ask=bool(alive_now)),
             retries,
         )
+        # Per pass, because the two passes are two separate retry loops
+        # and "the first len(errors) attempts failed" only holds inside one.
+        failed_texts = self._failed_texts(attempts, errors)
         help_requested: list[str] = []
         help_replies: dict[str, str] = {}
         ri_subagents: dict[str, int] = {}
@@ -2459,10 +2489,14 @@ class UnifiedTurnManager:
             )
             attempts = attempts + second
             errors = errors + second_errors
+            failed_texts = failed_texts + self._failed_texts(
+                second, second_errors
+            )
         record.update(
             {
                 "task_attempts": len(attempts),
                 "task_format_failures": errors,
+                "task_failed_responses": failed_texts,
                 "help_requested": help_requested,
                 "help_replies": help_replies,
             }

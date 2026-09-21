@@ -233,7 +233,13 @@ class TurnResult(BaseModel):
             "Zero on forfeit, death, or legacy turns. May be negative "
             "in Phase O when a paid Safe stake fails the task; the "
             "engine clamps cumulative score at ``TaskConfig.score_floor`` "
-            "downstream so cumulative score itself is still bounded."
+            "downstream so cumulative score itself is still bounded. "
+            "Under ``ransom.charge_trigger='decision_first'`` (2026-09-21) "
+            "a TERMINAL round can carry a populated ``reward_paid`` while "
+            "this column reads 0.0: the shared result builder zeroes it on "
+            "``died``, and the wallet had already been credited. "
+            "``wallet_after`` and ``reward_paid`` are authoritative there; "
+            "this column is not."
         ),
     )
     p_death_applied: float = Field(
@@ -838,6 +844,19 @@ class TurnResult(BaseModel):
             "empty list is 'the first reply parsed'."
         ),
     )
+    ransom_failed_responses: list[str] | None = Field(
+        default=None,
+        description=(
+            "The raw provider text of every decision-call reply that did "
+            "NOT parse this round (2026-09-21, spec 3.6), in the same "
+            "order as ``ransom_format_failures`` -- that column says what "
+            "was wrong, this one says what was written. Kept because the "
+            "label is a guess about the model and the bytes are the "
+            "evidence: a mode that can end a season on a format error "
+            "has to be auditable for whether the format or the prompt was "
+            "at fault. The empty list is 'the first reply parsed'."
+        ),
+    )
     task_attempts: int | None = Field(
         default=None,
         description=(
@@ -853,6 +872,16 @@ class TurnResult(BaseModel):
             "One entry per unparseable task-call reply this round "
             "(2026-09-21), in order. The empty list is 'the first reply "
             "parsed'."
+        ),
+    )
+    task_failed_responses: list[str] | None = Field(
+        default=None,
+        description=(
+            "The raw provider text of every task-call reply that did NOT "
+            "parse this round (2026-09-21, spec 3.6), in the same order "
+            "as ``task_format_failures`` and spanning both the "
+            "pre-consult and post-consult calls. The empty list is 'the "
+            "first reply parsed'."
         ),
     )
     help_requested: list[str] | None = Field(

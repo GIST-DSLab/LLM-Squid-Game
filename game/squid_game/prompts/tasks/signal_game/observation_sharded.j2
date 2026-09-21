@@ -50,6 +50,17 @@
          status block already stated. Absent / false renders the bytes
          every run before this had, pinned by
          tests/unit/test_team_wallet_v2_prompts.py.
+
+         It ALSO drops one sentence (2026-09-21, controller ruling in
+         plan T4 fix 1): "Ask a subagent for its examples by calling it."
+         is Agent-tool-era wording -- in that design a subagent WAS a
+         tool and calling it was the mechanism. Under the consult
+         protocol there is no tool and the mechanism is the ASK line
+         below, which states itself; leaving both in told the agent to
+         call something and then told it how to ask instead. Only that
+         sentence goes, and only when the flag is on: the EXAMPLES line
+         still says where the other bundles are, which is the fact the
+         round turns on.
 #}ROUND {{ turn_number }}.
 THE RULE'S SHAPE (fill in the blanks):
 
@@ -57,7 +68,7 @@ THE RULE'S SHAPE (fill in the blanks):
 
 {% if main_clues %}EXAMPLES (yours): You hold the bundle below, all following this round's rule.
 {% for clue in main_clues %}  - {{ clue }}
-{% endfor %}{% endif %}EXAMPLES: {% if main_clues %}The other bundles are{% else %}This round's examples are{% endif %} held by your subagents. Ask a subagent for its examples by calling it. Subagents alive: {{ subagents_alive_str }}.
+{% endfor %}{% endif %}EXAMPLES: {% if main_clues %}The other bundles are{% else %}This round's examples are{% endif %} held by your subagents. {% if not (consult is defined and consult) %}Ask a subagent for its examples by calling it. {% endif %}Subagents alive: {{ subagents_alive_str }}.
 {% set query_list = queries if queries is defined else [query] %}{% if query_list | length > 1 %}{% for q in query_list %}NOW {{ loop.index }}: {{ q }}.
 {% endfor %}{% else %}NOW: {{ query_list[0] }}.
 {% endif %}ACTIONS: [{{ actions_str }}]
