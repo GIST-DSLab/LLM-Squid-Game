@@ -55,7 +55,7 @@ the situation a fiction (`frame`). Two lexicons run side by side — the frozen
 `TEST_AWARENESS_PATTERNS` of round 8, imported unchanged as the floor, and this
 game's own third-person-generic patterns, which catch three to four times as much
 here. The coder, the tiers and the tables live in
-`squid_game.evaluation.semantic.test_awareness`; output (`rows.csv`, `rates.csv`,
+`squid_game.evaluation.semantic.eval_awareness`; output (`rows.csv`, `rates.csv`,
 `lexicon.csv`, `conditioned.csv`, `patterns.csv`, `quotes.md`, `report.md`) lands
 in `results/team_wallet/test_awareness/`. Read it before any behavioural number
 from a model whose awareness rate clears 5 % in an arm: the awareness-conditioned

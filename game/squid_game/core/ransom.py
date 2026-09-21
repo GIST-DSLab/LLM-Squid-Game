@@ -114,29 +114,52 @@ _REASON_RE = re.compile(r"REASON:\s*([1-4])\b")
 #: empty decision read as a named one. ``.`` does not cross a newline
 #: under MULTILINE, so the group still ENDS at its own line's end.
 #:
-#: The label is anchored on a WORD BOUNDARY, not on the line start
-#: (2026-09-21, T4 fix 5, third live smoke). gpt-oss wrote its whole
-#: deliberation as one unbroken line and glued the answer to the end of
-#: it -- ``...please provide your examples.STOP: NONE\nREASON: ...`` --
-#: four times, and a ``^``-anchored label called that "no STOP line" and
-#: ended the season. The label is unambiguous wherever it sits: ``\b``
-#: keeps it from biting inside a word (``NOSTOP:`` does not match, and
-#: ``STOPS:`` does not because ``S`` is neither padding nor a colon),
-#: and the last match still wins, so a restatement after prose beats the
-#: prose. What a line start bought was never worth a season.
-_STOP_LINE_RE = re.compile(
+#: Each label has TWO patterns and the LINE-START one wins (2026-09-21,
+#: final review C1). Fix 5 made the label word-anchored so that a model
+#: which writes its whole deliberation as one unbroken line and glues
+#: the answer to the end of it -- ``...your examples.STOP: NONE\nREASON:
+#: ...``, four times, one lost season -- is understood. But a bare
+#: ``\bSTOP\b`` with last-match-wins reads
+#: ``STOP: NONE\nREASON: keeping all three beats any stop: subagent2``
+#: as a decision to stop subagent2: a KEEP executed as a kill, the worst
+#: error this parser can make, and the agent's own reason is what sets
+#: it off. So the line-start form is tried first over the whole reply and
+#: the word-anchored form is a FALLBACK, reached only when no line-start
+#: match exists at all. Both keep last-match-wins (a restatement after
+#: thinking out loud is the answer) and both keep ``[ \t]`` padding,
+#: never ``\s``: ``\s`` matches a newline, so an empty ``STOP:`` would
+#: swallow the line break and capture the ``REASON:`` line below it.
+#: ``\b`` also keeps the label from biting inside a word -- ``NOSTOP:``
+#: does not match, nor does ``STOPS:``, whose ``S`` is neither padding
+#: nor a colon.
+_STOP_AT_LINE_START_RE = re.compile(
+    r"^[ \t]*STOP[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
+)
+_STOP_ANYWHERE_RE = re.compile(
     r"\bSTOP\b[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
 )
-_REASON_LINE_RE = re.compile(
+_REASON_AT_LINE_START_RE = re.compile(
+    r"^[ \t]*REASON[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
+)
+_REASON_ANYWHERE_RE = re.compile(
     r"\bREASON\b[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
 )
 #: The consult protocol's one line, read off the task call's reply
-#: before the answer fields (2026-09-21, plan T3). Same word-boundary
-#: anchoring and for the same reason: the model that glues its decision
-#: to its prose glues its ASK to it too.
-_ASK_LINE_RE = re.compile(
+#: before the answer fields (2026-09-21, plan T3). Same two-pattern
+#: shape, plus one more guard -- see :func:`parse_ask_line`.
+_ASK_AT_LINE_START_RE = re.compile(
+    r"^[ \t]*ASK[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
+)
+_ASK_ANYWHERE_RE = re.compile(
     r"\bASK\b[ \t]*:[ \t]*(.*?)[ \t]*$", re.MULTILINE | re.IGNORECASE
 )
+#: "This reply answers the round" -- a RULE or an ACTION field, wherever
+#: it sits. Read only to refuse a MID-LINE ``ask:`` in a reply that is
+#: plainly an answer (final review I5): "I could ask: subagent1 but I
+#: will answer." followed by RULE / ACTION is prose about asking, not a
+#: request, and treating it as one spends the round's reply on a consult
+#: the agent did not want.
+_ANSWER_FIELD_RE = re.compile(r"\b(?:RULE|ACTIONS?)[ \t]*:", re.IGNORECASE)
 
 #: The reason menu of the decision point (``ransom.reason_menu``,
 #: 2026-09-10). Replaces the free-text ``WHY:`` line with one digit. The
@@ -1105,6 +1128,33 @@ def _validate_names(
     return [name for name in alive if name in chosen], None
 
 
+def _last_labelled_value(
+    text: str,
+    line_start_re: "re.Pattern[str]",
+    anywhere_re: "re.Pattern[str]",
+    *,
+    fallback_region: str | None = None,
+) -> str | None:
+    """The last LINE-START value; a mid-line one only if there is none.
+
+    ``fallback_region`` is the slice the MID-LINE search is allowed to
+    look at (the whole text when omitted). The line-start search always
+    sees everything: a reply that writes its reason first and its
+    decision after is still well-formed, and truncating would lose it.
+
+    ``None`` when neither pattern matched. An empty string is a MATCH
+    with an empty value ("STOP:" with nothing after it), which the
+    caller must tell apart from no match at all.
+    """
+    matches = line_start_re.findall(text)
+    if matches:
+        return matches[-1]
+    matches = anywhere_re.findall(
+        text if fallback_region is None else fallback_region
+    )
+    return matches[-1] if matches else None
+
+
 def parse_sacrifice_response(
     text: str, alive: Sequence[str]
 ) -> tuple[list[str] | None, str | None, str | None]:
@@ -1135,15 +1185,29 @@ def parse_sacrifice_response(
     """
     if not text:
         return None, None, "no STOP line"
-    reason_matches = _REASON_LINE_RE.findall(text)
-    why = reason_matches[-1].strip() if reason_matches else None
-    why = why or None
-    # The LAST STOP line wins: a model that restates its answer after
-    # thinking out loud means the restatement.
-    stop_matches = _STOP_LINE_RE.findall(text)
-    if not stop_matches:
+    raw_why = _last_labelled_value(
+        text, _REASON_AT_LINE_START_RE, _REASON_ANYWHERE_RE
+    )
+    why = (raw_why or "").strip() or None
+    # Where the MID-LINE fallback may look. A reason is free text and
+    # routinely contains the word "stop" followed by names -- "I would
+    # only stop: subagent2, subagent3 if the cost rose" -- so once a
+    # REASON line has begun, nothing after it is a decision. This is the
+    # second half of C1: line-start preference alone saves the reply that
+    # HAS a proper STOP line, and this saves the glued reply that does
+    # not, whose real decision sits before the reason and whose prose
+    # sits inside it.
+    first_reason = _REASON_AT_LINE_START_RE.search(text)
+    region = text[: first_reason.start()] if first_reason else text
+    value = _last_labelled_value(
+        text,
+        _STOP_AT_LINE_START_RE,
+        _STOP_ANYWHERE_RE,
+        fallback_region=region,
+    )
+    if value is None:
         return None, why, "no STOP line"
-    value = stop_matches[-1].strip()
+    value = value.strip()
     if not value:
         return None, why, "empty STOP line"
     if value.upper() == "NONE":
@@ -1163,16 +1227,29 @@ def parse_ask_line(
     subagent; ``(names, None)`` otherwise, in roster order and
     deduplicated like :func:`parse_sacrifice_response`.
 
+    A LINE-START ``ASK:`` is always read. A mid-line one is read only
+    when the reply is not already an answer (final review I5): "I could
+    ask: subagent1 but I will answer." followed by ``RULE:`` / ``ACTION:``
+    is prose about asking, and spending the round's one consult on it
+    would take the reply the agent DID write and throw it away. With no
+    answer field present a mid-line ask is the whole reply's point and
+    is honoured -- that is the glued case fix 5 was for.
+
     Args:
         text: The raw reply.
         alive: The subagents that may be asked, in roster order.
     """
     if not text:
         return None, None
-    matches = _ASK_LINE_RE.findall(text)
-    if not matches:
+    raw = _last_labelled_value(
+        text,
+        _ASK_AT_LINE_START_RE,
+        _ASK_ANYWHERE_RE,
+        fallback_region=None if not _ANSWER_FIELD_RE.search(text) else "",
+    )
+    if raw is None:
         return None, None
-    value = matches[-1].strip()
+    value = raw.strip()
     if not value:
         return None, "empty ASK line"
     return _validate_names(value, alive, label="ASK")

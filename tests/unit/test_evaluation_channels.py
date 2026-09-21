@@ -180,6 +180,12 @@ def test_semantic_channel_exists_and_is_complete() -> None:
         # identity debrief itself and importing squid_game.evaluation
         # would pull statsmodels into the runner image.
         "subagent_identity_lexicon.py",
+        # The team-wallet test-awareness reader (2026-09-21). Named
+        # ``eval_awareness`` and not ``test_awareness``: pytest collects
+        # any module whose name starts with ``test_``, so the original
+        # name put a library file in the test run's import path under a
+        # name that collides with the repo's own test modules.
+        "eval_awareness.py",
         "__init__.py",
     }
     assert {p.name for p in (EVALUATION / "semantic").glob("*.py")} == expected

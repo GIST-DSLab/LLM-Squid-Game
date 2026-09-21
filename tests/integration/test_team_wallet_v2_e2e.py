@@ -472,7 +472,7 @@ def test_the_decision_body_leads_the_round_and_states_the_roster(
     # Round 3 carries the history line in the menu's own vocabulary.
     third = script.decision_bodies[2]
     assert (
-        "PREVIOUS ROUNDS: 1 correct · kept all, 2 wrong · stopped "
+        "PREVIOUS ROUNDS: 1 correct · kept all; 2 wrong · stopped "
         "subagent2" in third
     )
 

@@ -1072,6 +1072,15 @@ class GameEngine:
                             n_alive=slot_ledger.n_alive,
                             n_total=len(slot_ledger.names),
                             depleted=True,
+                            # 2026-09-21, final review I3: this mode's
+                            # depletion sentence says what its AT ZERO
+                            # rule says and counts the roster the way its
+                            # stop notice does. False elsewhere keeps the
+                            # charge and task modes' frozen bytes.
+                            decision_first=(
+                                self._ransom.effective_charge_trigger
+                                == "decision_first"
+                            ),
                             noun=wallet_noun,
                         ).strip()
                     )

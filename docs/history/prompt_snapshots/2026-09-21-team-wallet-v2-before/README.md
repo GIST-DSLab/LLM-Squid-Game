@@ -23,4 +23,11 @@ uv run --no-sync python scripts/dev/dump_team_wallet_charge_prompts.py --mode v2
   꾸며낸 것은 상의에 대한 서브에이전트의 답으로, 그 슬롯의 `subagent_clue.j2`가 그대로 읽으라고
   지시한 번들 줄이다.
 
+**갱신 (2026-09-21, 최종 리뷰 fix wave — 커밋 `fix(team-wallet): final review wave — STOP/ASK prefer line-start, …`; 해시는 그 커밋 자신이 담을 수 없어 제목으로 적는다).** `v2.txt`를 그 커밋에서 다시 떴다. `task_mode.txt`는
+**바이트 동일**이라 손대지 않았다 — before 기준점은 그대로다. `v2.txt`의 diff는 딱 두 가지다:
+(1) 결정점 미리보기에서 Agent-tool 문장("Ask a subagent for its examples by calling it.")이 빠졌다
+(fix 5 — 그 문장을 읽은 라이브 리더가 결정 답변 안에서 서브에이전트를 호출하려다 시즌을 잃었다),
+(2) `PREVIOUS ROUNDS:`의 항목 구분자가 `, `에서 `; `로 바뀌었다(최종 리뷰 I4 — 한 항목이 여러 이름을
+쉼표로 나열하므로 한 라운드가 두 라운드로 읽혔다). 12줄 추가 · 12줄 삭제, 그 둘뿐이다.
+
 읽는 법은 `CLAUDE.md`의 "팀 지갑 v2 — decision-first" 절.

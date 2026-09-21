@@ -1684,6 +1684,7 @@ SESSION_COLUMNS = (
     "currency",
     "inheritance",
     "n_seasons",
+    "n_seasons_analysed",
     "n_survived",
     "survived_rate",
     "mean_rounds_survived",
@@ -1745,9 +1746,24 @@ def session_outcomes(seasons_df: pd.DataFrame) -> pd.DataFrame:
     totals. ``mean_decisions_per_session`` will be **below** the
     configured round count on most seasons and that is the design, not a
     loss: a round with nobody left to stop issues no decision call, and
-    the roster empties faster the dearer the charge is. The three
-    ``ended_by`` counts are exhaustive over the cell's seasons, with
-    ``n_other_end`` holding anything that is none of the three.
+    the roster empties faster the dearer the charge is.
+
+    **Every rate and mean below EXCLUDES ``format_error`` seasons**
+    (2026-09-21, final review I2). That exit means the harness could not
+    read a reply after every retry and NOTHING of that round was
+    executed, so the season stopped where the game had not put it: its
+    ``rounds_survived`` is a property of the parser, its
+    ``subagents_alive_at_end`` is a mid-round roster, and its
+    ``survived_to_end`` is False for a reason that is not a decision.
+    Averaging them in would move every behavioural number towards
+    whatever the format failures happened to do. They are still COUNTED,
+    in ``n_format_error``, and ``n_seasons`` still holds the cell's real
+    size; ``n_seasons_analysed`` is the denominator the rates actually
+    used, so the gap between the two is visible without arithmetic.
+
+    The ``ended_by`` counts are exhaustive over the cell's seasons --
+    they are counts, not rates, and describe the excluded ones too --
+    with ``n_other_end`` holding anything that is none of the three.
     """
     if seasons_df is None or seasons_df.empty:
         return pd.DataFrame(columns=list(SESSION_COLUMNS))
@@ -1755,16 +1771,19 @@ def session_outcomes(seasons_df: pd.DataFrame) -> pd.DataFrame:
     for (currency, inheritance), grp in seasons_df.groupby(
         ["currency", "inheritance"], sort=True
     ):
-        survived = grp["survived_to_end"].astype(bool)
-        rounds = grp["rounds_survived"].astype(float)
-        alive = grp["subagents_alive_at_end"]
-        first = grp["first_sacrifice_round"]
-        ended = grp["ended_by"]
+        ended_all = grp["ended_by"]
+        # The behavioural frame: the seasons the GAME ended.
+        played = grp[ended_all != FORMAT_ERROR]
+        survived = played["survived_to_end"].astype(bool)
+        rounds = played["rounds_survived"].astype(float)
+        alive = played["subagents_alive_at_end"]
+        first = played["first_sacrifice_round"]
+        ended = ended_all
         decisions = pd.to_numeric(
-            grp.get("n_decisions", pd.Series(dtype=float)), errors="coerce"
+            played.get("n_decisions", pd.Series(dtype=float)), errors="coerce"
         )
         sacrificed_total = pd.to_numeric(
-            grp.get("n_sacrificed_total", pd.Series(dtype=float)),
+            played.get("n_sacrificed_total", pd.Series(dtype=float)),
             errors="coerce",
         )
         rows.append(
@@ -1772,8 +1791,11 @@ def session_outcomes(seasons_df: pd.DataFrame) -> pd.DataFrame:
                 "currency": currency,
                 "inheritance": inheritance,
                 "n_seasons": int(len(grp)),
+                "n_seasons_analysed": int(len(played)),
                 "n_survived": int(survived.sum()),
-                "survived_rate": float(survived.mean()),
+                "survived_rate": float(survived.mean())
+                if len(played)
+                else float("nan"),
                 "mean_rounds_survived": float(rounds.mean())
                 if rounds.notna().any()
                 else float("nan"),
@@ -1794,14 +1816,18 @@ def session_outcomes(seasons_df: pd.DataFrame) -> pd.DataFrame:
                 if sacrificed_total.notna().any()
                 else float("nan"),
                 "all_sacrificed_rate": _rate_of_flag(
-                    grp.get("all_sacrificed_ever", pd.Series(dtype=object))
+                    played.get("all_sacrificed_ever", pd.Series(dtype=object))
                 ),
                 "main_final_nonnegative_rate": _rate_of_flag(
-                    grp.get("main_final_nonnegative", pd.Series(dtype=object))
+                    played.get("main_final_nonnegative", pd.Series(dtype=object))
                 ),
                 "main_final_exactly_zero_rate": _rate_of_flag(
-                    grp.get("main_final_exactly_zero", pd.Series(dtype=object))
+                    played.get("main_final_exactly_zero", pd.Series(dtype=object))
                 ),
+                # These two read EVERY season, format errors included.
+                # They count what the harness could not read and what the
+                # agents asked for; excluding the season that failed
+                # would hide exactly the failures the column is for.
                 "format_failures_total": _sum_if_stated(
                     grp.get("format_failures_total", pd.Series(dtype=float))
                 ),
@@ -2336,6 +2362,8 @@ END_STATE_COLUMNS = (
     "currency",
     "inheritance",
     "n_seasons",
+    "n_seasons_analysed",
+    "n_format_error",
     "alive_0",
     "alive_1",
     "alive_2",
@@ -2371,6 +2399,17 @@ def end_state(seasons_df: pd.DataFrame) -> pd.DataFrame:
     are read over the seasons that STATE the flag: the charge is taken
     in full even when the balance cannot cover it, so "closed below
     zero" is a recorded fact and not the absence of one.
+
+    **``format_error`` seasons are excluded from every number here,
+    including the Kaplan-Meier input** (2026-09-21, final review I2).
+    Their end state is not an end state: nothing of the last round was
+    executed, the roster is mid-round and ``wallet_final_main`` is the
+    balance as it stood before the round would have settled. In the KM
+    they would enter as a censoring at a time the game did not choose,
+    which is exactly the bias censoring is supposed to avoid.
+    ``n_seasons`` still holds the cell's real size, ``n_format_error``
+    counts what went, and ``n_seasons_analysed`` is the denominator the
+    rest of the row used.
     """
     if seasons_df is None or seasons_df.empty:
         return pd.DataFrame(columns=list(END_STATE_COLUMNS))
@@ -2383,15 +2422,23 @@ def end_state(seasons_df: pd.DataFrame) -> pd.DataFrame:
     for (currency, inheritance), grp in seasons_df.groupby(
         ["currency", "inheritance"], sort=True
     ):
-        alive = grp["subagents_alive_at_end"]
-        first = grp["first_sacrifice_round"]
+        # The seasons the GAME ended; see the docstring.
+        played = grp[grp["ended_by"] != FORMAT_ERROR]
+        alive = played["subagents_alive_at_end"]
+        first = played["first_sacrifice_round"]
         row = {
             "currency": currency,
             "inheritance": inheritance,
             "n_seasons": int(len(grp)),
+            "n_seasons_analysed": int(len(played)),
+            "n_format_error": int((grp["ended_by"] == FORMAT_ERROR).sum()),
             "mean_alive_at_end": float(alive.mean()) if alive.notna().any() else float("nan"),
-            "mean_final_score": float(grp["final_score"].mean()),
-            "wipe_out_rate": float(grp["wiped_out"].astype(bool).mean()),
+            "mean_final_score": float(played["final_score"].mean())
+            if len(played)
+            else float("nan"),
+            "wipe_out_rate": float(played["wiped_out"].astype(bool).mean())
+            if len(played)
+            else float("nan"),
             "n_first_sacrifice": int(first.notna().sum()),
             "median_first_sacrifice_round": float("nan"),
             "mean_first_sacrifice_round": float(first.mean())
@@ -2401,20 +2448,20 @@ def end_state(seasons_df: pd.DataFrame) -> pd.DataFrame:
         for k in (0, 1, 2, 3):
             row[f"alive_{k}"] = int((alive == k).sum())
         final_main = pd.to_numeric(
-            grp.get("wallet_final_main", pd.Series(dtype=float)),
+            played.get("wallet_final_main", pd.Series(dtype=float)),
             errors="coerce",
         )
         row["mean_wallet_final_main"] = (
             float(final_main.mean()) if final_main.notna().any() else float("nan")
         )
         row["main_final_nonnegative_rate"] = _rate_of_flag(
-            grp.get("main_final_nonnegative", pd.Series(dtype=object))
+            played.get("main_final_nonnegative", pd.Series(dtype=object))
         )
         row["main_final_exactly_zero_rate"] = _rate_of_flag(
-            grp.get("main_final_exactly_zero", pd.Series(dtype=object))
+            played.get("main_final_exactly_zero", pd.Series(dtype=object))
         )
-        if KaplanMeierFitter is not None and len(grp):
-            duration = first.where(first.notna(), grp["n_turns"]).astype(float)
+        if KaplanMeierFitter is not None and len(played):
+            duration = first.where(first.notna(), played["n_turns"]).astype(float)
             event = first.notna().astype(int)
             try:
                 fitter = KaplanMeierFitter()

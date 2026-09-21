@@ -20,7 +20,7 @@ import json
 import pytest
 
 from scripts.dev.subagent_identity_ablation_v8 import TEST_AWARENESS_PATTERNS
-from squid_game.evaluation.semantic import test_awareness as ta
+from squid_game.evaluation.semantic import eval_awareness as ta
 
 
 # ---------------------------------------------------------------------------

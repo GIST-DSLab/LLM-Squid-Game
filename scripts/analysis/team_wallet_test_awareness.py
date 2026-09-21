@@ -7,7 +7,7 @@ and does that noticing move the decision?
 
 Zero model calls. Everything is coded off the text those 40 runs already
 recorded. The lexicons, the coder and the interval estimators live in
-``squid_game.evaluation.semantic.test_awareness``; this file owns argparse,
+``squid_game.evaluation.semantic.eval_awareness``; this file owns argparse,
 the output paths and the report.
 
     PYTHONPATH=game:web:db uv run --no-sync python -m \
@@ -41,7 +41,7 @@ import math
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-from squid_game.evaluation.semantic import test_awareness as ta
+from squid_game.evaluation.semantic import eval_awareness as ta
 
 DEFAULT_GLOBS = ("team_wallet_charge_endsmoke_*", "team_wallet_charge_hidden_*")
 

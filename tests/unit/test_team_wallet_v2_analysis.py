@@ -482,20 +482,57 @@ class TestSessionOutcomes:
         _, seasons = v2_frames
         table = session_outcomes(seasons).set_index(["currency", "inheritance"])
         row = table.loc[(TOKENS, MAIN)]
+        # Season C ended in a format error, so it is COUNTED but not
+        # averaged (final review I2): the cell is three seasons and the
+        # rates read the two the game actually ended.
         assert row["n_seasons"] == 3
-        assert row["mean_n_sacrificed_total"] == pytest.approx(2.0)
-        assert row["all_sacrificed_rate"] == pytest.approx(2 / 3)
-        assert row["main_final_nonnegative_rate"] == pytest.approx(2 / 3)
-        assert row["main_final_exactly_zero_rate"] == pytest.approx(1 / 3)
+        assert row["n_seasons_analysed"] == 2
+        assert row["n_format_error"] == 1
+        assert row["mean_n_sacrificed_total"] == pytest.approx(3.0)
+        assert row["all_sacrificed_rate"] == pytest.approx(1.0)
+        assert row["main_final_nonnegative_rate"] == pytest.approx(0.5)
+        assert row["main_final_exactly_zero_rate"] == pytest.approx(0.0)
+        # ...but the two FAILURE counts read every season, C included:
+        # they count what the harness could not read, and C is the
+        # season that failed.
         assert row["format_failures_total"] == 5
         assert row["help_requests_total"] == 1
-        assert row["n_format_error"] == 1
         assert row["n_wallet_zero"] == 2
         assert row["n_completed"] == 0
-        # Three decisions in A, four in B, one in C: below the eight
-        # rounds the season was configured for, because the roster runs
-        # out before the horizon does.
-        assert row["mean_decisions_per_session"] == pytest.approx(8 / 3)
+        # Three decisions in A, four in B: below the eight rounds the
+        # season was configured for, because the roster runs out before
+        # the horizon does.
+        assert row["mean_decisions_per_session"] == pytest.approx(3.5)
+
+    def test_a_format_error_season_moves_no_rate_or_mean(
+        self, v2_frames
+    ) -> None:
+        """Final review I2, stated as the four numbers it would have moved.
+
+        Season C stopped at round 2 with all three subagents still on the
+        roster, because the harness could not read a reply -- not because
+        the game ended there. Averaging it in would drag every
+        behavioural number towards whatever the format failures happened
+        to do.
+        """
+        _, seasons = v2_frames
+        row = session_outcomes(seasons).set_index(
+            ["currency", "inheritance"]
+        ).loc[(TOKENS, MAIN)]
+
+        # A and B both ran out of balance at round 4 with nobody left.
+        assert row["survived_rate"] == pytest.approx(0.0)
+        assert row["mean_rounds_survived"] == pytest.approx(4.0)
+        assert row["mean_subagents_alive_at_end"] == pytest.approx(0.0)
+        # Pooled over all three these would have been 1/3, 10/3 and 1.0.
+        end = end_state(seasons).set_index(["currency", "inheritance"]).loc[
+            (TOKENS, MAIN)
+        ]
+        assert end["n_seasons"] == 3
+        assert end["n_seasons_analysed"] == 2
+        assert end["n_format_error"] == 1
+        assert end["wipe_out_rate"] == pytest.approx(1.0)
+        assert end["mean_alive_at_end"] == pytest.approx(0.0)
 
     def test_the_season_frame_carries_the_flags(self, v2_frames) -> None:
         _, seasons = v2_frames
@@ -514,9 +551,11 @@ class TestEndState:
         row = table.loc[(TOKENS, MAIN)]
         assert "alive_3" in table.columns
         assert row["alive_0"] == 2
-        assert row["alive_3"] == 1
-        assert row["mean_wallet_final_main"] == pytest.approx(25.0)
-        assert row["main_final_nonnegative_rate"] == pytest.approx(2 / 3)
+        # C's three survivors are a MID-ROUND roster, not an end state,
+        # so the histogram does not count them (final review I2).
+        assert row["alive_3"] == 0
+        assert row["mean_wallet_final_main"] == pytest.approx(37.5)
+        assert row["main_final_nonnegative_rate"] == pytest.approx(0.5)
 
 
 class TestRetryAndHelp:

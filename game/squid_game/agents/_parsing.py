@@ -819,9 +819,14 @@ def _build_decision_first_call_message(
         ),
     )
     alive_line = f"Subagents {alive_word}: {', '.join(alive_names)}."
+    # "; " and not ", " (2026-09-21, final review I4). An entry of this
+    # mode names a SET -- "4 wrong \u00b7 stopped subagent1, subagent3" --
+    # so it contains commas of its own, and a comma joiner made one round
+    # read as two. The older charge and task bodies keep ", ": their
+    # entries are one word each and their bytes are pinned.
     previous_rounds_line = (
         "PREVIOUS ROUNDS: "
-        + ", ".join(f"{n} {what}" for n, what in previous_rounds)
+        + "; ".join(f"{n} {what}" for n, what in previous_rounds)
         if previous_rounds
         else None
     )
