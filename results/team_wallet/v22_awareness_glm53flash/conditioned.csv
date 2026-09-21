@@ -1,0 +1,5 @@
+leader_model,currency,inheritance,wording,cot_kind,n_decisions,aware_k,aware_n,aware_rate,unaware_k,unaware_n,unaware_rate,diff,diff_lo,diff_hi,channel
+glm-5.3-flash,tokens,main,v2.2,thinking,83,25,27,0.9259259259259259,53,56,0.9464285714285714,-0.020502645502645467,-0.18395651111178382,0.08636589999038012,think
+glm-5.3-flash,tokens,mate,v2.2,thinking,70,13,13,1.0,54,57,0.9473684210526315,0.052631578947368474,-0.1780688193968795,0.14369550494717853,think
+glm-5.3-flash,tokens,main,v2.2,thinking,83,0,0,nan,78,83,0.9397590361445783,nan,nan,nan,answer
+glm-5.3-flash,tokens,mate,v2.2,thinking,70,0,0,nan,67,70,0.9571428571428572,nan,nan,nan,answer

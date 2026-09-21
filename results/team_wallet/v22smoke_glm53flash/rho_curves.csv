@@ -1,0 +1,17 @@
+currency,inheritance,rho_low,rho_high,n_offers,n_sacrifice,rate,fitted
+tokens,main,0.0,0.25,0,0,,
+tokens,main,0.25,0.5,0,0,,
+tokens,main,0.5,0.75,6,0,0.0,0.0
+tokens,main,0.75,1.0,5,0,0.0,0.0
+tokens,main,1.0,1.5,10,0,0.0,0.0
+tokens,main,1.5,2.0,0,0,,
+tokens,main,2.0,3.0,0,0,,
+tokens,main,3.0,inf,0,0,,
+tokens,mate,0.0,0.25,0,0,,
+tokens,mate,0.25,0.5,2,0,0.0,0.0
+tokens,mate,0.5,0.75,4,0,0.0,0.0
+tokens,mate,0.75,1.0,1,0,0.0,0.0
+tokens,mate,1.0,1.5,3,0,0.0,0.0
+tokens,mate,1.5,2.0,0,0,,
+tokens,mate,2.0,3.0,4,0,0.0,0.0
+tokens,mate,3.0,inf,1,0,0.0,0.0

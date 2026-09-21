@@ -1438,6 +1438,8 @@ costs 20 tokens a round, paid from that agent's own balance …" + "Keeping a su
 a subagent does not change your own balance.` (규칙 블록은 v2.1 그대로; 결과이지 지시가 아니라 `test_no_goal_instruction` 녹색). ⚠️ **스모크 1~4는 v2.0
 바이트**다. ⚠️ gpt-oss가 A8 승계를 **동기로** 정지한 사례는 규칙의 효과라 손대지 않았다 — `REASON:`에서 따로 센다. 바이트: `…/2026-09-21-team-wallet-v2{-before,.1,.2}/`.
 
+**세 번째 리더 glm-5.3-flash (2026-09-22 05:13, v2.2 스모크).** 40세션 중 **7세션만 기록**(나 4 · 남 3)됐고 그 7개는 전부 `format_error`다. 33세션은 `timeout: 300` × 4회 읽기 타임아웃으로 러너가 버렸고(`attempt 4/4` 16+17), 빈 답의 원인은 사고 길이다 — 과제 콜 사고 토큰 중앙값 8,813(gpt-oss 1,244), 함정 라운드(R3·R5)에서 2만 토큰까지 늘어 보이는 답이 `''`가 된다(답이 나온 라운드는 0.86 정답). glm을 쓰려면 `timeout 900` · `max_tokens 65536`으로 올리고 하루를 잡을 것 (`configs/experiment/team_wallet_v2_tokens_{main,mate}_glm53flash.yaml`, 리더 키 `OLLAMA_API_KEY3` — KEY2는 `402 Payment Required`). 트레이스 기준 정지 나 5/83 · 남 3/70(남 팔 3건 전부 X30·R1·일부 끔 = A8 승계 논리, 오독 ①② 0/3). 평가 인지 construct **0/153** · eval 30/153 · frame 14/153(glm만 "판돈이 진짜가 아닐 수도"가 잡힌다). 결과: `results/team_wallet/v22smoke_glm53flash/`(x_rho 빈 칸 — 기록된 36결정에 정지 0) · `v22_awareness_glm53flash/`; 페이지 §1.18.
+
 **재실행 시 달라지는 기록** (기록된 JSONL은 불변). ⚠️ `slot_prefix`가 샤딩 딜까지 닿아 `slot_prefix: subagent` 런을 재실행하면 `task_metadata.shard` ·
 `subagent_prompts` 키가 `subagent1..`이 된다(프롬프트 불변). ⚠️ `_parse_actions_line`이 관대해져 multi-query 런 재실행은 같은 답변에 `action_correct` ·
 `parse_failed` · `per_query_correct`를 다르게 찍는다.
