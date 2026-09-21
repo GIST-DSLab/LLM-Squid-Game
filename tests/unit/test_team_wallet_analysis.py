@@ -226,6 +226,9 @@ class TestRates:
     def test_the_rate_is_sacrifices_over_decision_points(self, frames) -> None:
         turns, _ = frames
         rates = sacrifice_rates(turns)
+        # The last three were added with the decision-first mode
+        # (2026-09-21): they are NaN / 0 on a charge run, which records
+        # no sacrifice SET, and the first six are unchanged.
         assert list(rates.columns) == [
             "currency",
             "inheritance",
@@ -233,6 +236,9 @@ class TestRates:
             "n_offers",
             "n_sacrifice",
             "rate",
+            "n_sacrificed_mean",
+            "share_mean",
+            "n_all",
         ]
         assert len(rates) == 8  # four cells x two prices
         by_cell = rates.groupby(["currency", "inheritance"])[
