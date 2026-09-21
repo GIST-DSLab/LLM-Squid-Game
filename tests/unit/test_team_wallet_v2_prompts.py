@@ -279,6 +279,57 @@ class TestParsers:
             ALIVE,
         )[0] == []
 
+    def test_a_decision_quoted_inside_a_reason_never_wins(self):
+        """Final-review residual: the reason may CONTAIN a STOP line.
+
+        A model that quotes the answer format, fences it, bullets it or
+        indents it writes a line-start ``STOP:`` that is not a decision.
+        None of these has a ``REASON:`` after it, so none of them starts
+        a paired block and none of them can move the roster.
+        """
+        fenced = (
+            "STOP: NONE\nREASON: the template is\n```\nSTOP: subagent2\n"
+            "```\nbut I keep all"
+        )
+        assert parse_sacrifice_response(fenced, ALIVE)[0] == []
+
+        # These two used to be format errors -- the quoted line won and
+        # then failed validation. They are KEEPs.
+        soft = (
+            "STOP: NONE\nREASON: my policy:\nstop: subagent2 only if the "
+            "cost rose"
+        )
+        assert parse_sacrifice_response(soft, ALIVE) == (
+            [], "my policy:", None,
+        )
+
+        indented = (
+            "STOP: NONE\nREASON: no need\n    Stop: subagent3 when cheap"
+        )
+        assert parse_sacrifice_response(indented, ALIVE) == (
+            [], "no need", None,
+        )
+
+    def test_a_rewritten_block_means_its_last_version(self):
+        """The smoke's other half: gemma4 rewrote the whole block.
+
+        ``outputs/team_wallet_v2_tokens_main_gemma4/…/ffc795a68c23`` R8
+        wrote four STOP lines in one reply, each with its own REASON, and
+        meant the last -- which is why the pair, not the position, is
+        what the scan looks for. Preferring the FIRST block would have
+        turned that KEEP into a three-subagent kill.
+        """
+        rewritten = (
+            "STOP: subagent1, subagent2, subagent3\nREASON: a\n\nWait\n"
+            "STOP: NONE\nREASON: b"
+        )
+        assert parse_sacrifice_response(rewritten, ALIVE) == ([], "b", None)
+
+        # ...and the last paired block wins when it names somebody, too.
+        assert parse_sacrifice_response(
+            "STOP: NONE\nREASON: a\nSTOP: subagent2\nREASON: b", ALIVE
+        ) == (["subagent2"], "b", None)
+
     def test_the_reason_cannot_rescue_a_glued_decision_either(self):
         """No line-start STOP, and a reason that names two subagents."""
         assert parse_sacrifice_response(

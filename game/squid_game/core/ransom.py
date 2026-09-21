@@ -1128,30 +1128,118 @@ def _validate_names(
     return [name for name in alive if name in chosen], None
 
 
-def _last_labelled_value(
-    text: str,
-    line_start_re: "re.Pattern[str]",
-    anywhere_re: "re.Pattern[str]",
-    *,
-    fallback_region: str | None = None,
-) -> str | None:
-    """The last LINE-START value; a mid-line one only if there is none.
+#: Per-LINE forms of the two labels, for the block scan below. Same
+#: grammar as the MULTILINE versions; matched against one line at a time
+#: so the scanner can say WHICH line each hit was on.
+_STOP_LINE_ONLY_RE = re.compile(
+    r"^[ \t]*STOP[ \t]*:[ \t]*(.*?)[ \t]*$", re.IGNORECASE
+)
+_REASON_LINE_ONLY_RE = re.compile(
+    r"^[ \t]*REASON[ \t]*:[ \t]*(.*?)[ \t]*$", re.IGNORECASE
+)
+_ASK_LINE_ONLY_RE = re.compile(
+    r"^[ \t]*ASK[ \t]*:[ \t]*(.*?)[ \t]*$", re.IGNORECASE
+)
+#: A line that begins the ANSWER half of a task reply, or the reason
+#: half of a decision. Bounds the region :func:`parse_ask_line` reads.
+_ASK_BOUND_RE = re.compile(
+    r"^[ \t]*(?:REASON|RULE|ACTIONS?)[ \t]*:", re.IGNORECASE
+)
 
-    ``fallback_region`` is the slice the MID-LINE search is allowed to
-    look at (the whole text when omitted). The line-start search always
-    sees everything: a reply that writes its reason first and its
-    decision after is still well-formed, and truncating would lose it.
+#: How many lines after a ``STOP:`` a ``REASON:`` may sit and still be
+#: read as ITS reason. Three, because a model that restates its answer
+#: puts a blank line or a short aside between the two ("\n\nWait\n") and
+#: three lines covers that without reaching the next block.
+_PAIR_WINDOW = 3
 
-    ``None`` when neither pattern matched. An empty string is a MATCH
-    with an empty value ("STOP:" with nothing after it), which the
-    caller must tell apart from no match at all.
+
+def _last_stop_value(text: str) -> str | None:
+    """The value of the ``STOP:`` line that IS this reply's decision.
+
+    Three searches, in this order (2026-09-21, final review residual):
+
+    1. **the last PAIRED block** -- a line-start ``STOP:`` with a
+       line-start ``REASON:`` within the next :data:`_PAIR_WINDOW`
+       lines. This is the whole answer contract in one shape, and it is
+       what tells a DECISION from a decision QUOTED inside a reason: a
+       ``STOP:`` in a code fence, a bullet or an indented example has no
+       ``REASON:`` after it, so it can never win, while a model that
+       rewrites the whole two-line block mid-reply wins with its LAST
+       one. Both are real: the reviewer found the first
+       (``STOP: NONE\nREASON: the template is\n```\nSTOP: subagent2``
+       read as a kill from a KEEP) and the smoke found the second
+       (gemma4 wrote four STOP lines in one reply and meant the last).
+    2. **the last line-start ``STOP:`` anywhere**, for a reply that
+       states its reason first and its decision after -- no pair, but an
+       unambiguous label.
+    3. **a word-anchored ``STOP:`` before the first line-start
+       ``REASON:``**, for the reply that has no line-start label at all
+       because it glued the answer to the end of its prose.
+
+    ``None`` when nothing matched. An empty string is a MATCH with an
+    empty value (``STOP:`` and nothing after it), which the caller tells
+    apart from no match at all.
     """
-    matches = line_start_re.findall(text)
-    if matches:
-        return matches[-1]
-    matches = anywhere_re.findall(
-        text if fallback_region is None else fallback_region
+    lines = text.split("\n")
+    stops: list[tuple[int, str]] = []
+    reasons: set[int] = set()
+    for i, line in enumerate(lines):
+        match = _STOP_LINE_ONLY_RE.match(line)
+        if match is not None:
+            stops.append((i, match.group(1)))
+        if _REASON_LINE_ONLY_RE.match(line) is not None:
+            reasons.add(i)
+    paired = [
+        value
+        for i, value in stops
+        if any(j in reasons for j in range(i + 1, i + 1 + _PAIR_WINDOW))
+    ]
+    if paired:
+        return paired[-1]
+    if stops:
+        return stops[-1][1]
+    first_reason = min(reasons) if reasons else None
+    region = (
+        "\n".join(lines[:first_reason]) if first_reason is not None else text
     )
+    matches = _STOP_ANYWHERE_RE.findall(region)
+    return matches[-1] if matches else None
+
+
+def _last_ask_value(text: str) -> str | None:
+    """The value of the ``ASK:`` line that IS this reply's request.
+
+    The same order, minus the pairing -- an ASK line stands alone, so
+    there is nothing to pair it with:
+
+    1. the last line-start ``ASK:`` BEFORE the first line-start
+       ``REASON:`` / ``RULE:`` / ``ACTION:``, so an ask quoted inside a
+       rule body cannot outrank one stated before it;
+    2. the last line-start ``ASK:`` anywhere;
+    3. a mid-line ``ASK:`` in that same leading region -- and only when
+       the reply states no answer field at all (final review I5): "I
+       could ask: subagent1 but I will answer." followed by RULE /
+       ACTION is prose about asking, and spending the round's one
+       consult on it would throw away the answer the agent did write.
+    """
+    lines = text.split("\n")
+    asks: list[tuple[int, str]] = []
+    bound: int | None = None
+    for i, line in enumerate(lines):
+        match = _ASK_LINE_ONLY_RE.match(line)
+        if match is not None:
+            asks.append((i, match.group(1)))
+        if bound is None and _ASK_BOUND_RE.match(line) is not None:
+            bound = i
+    leading = [value for i, value in asks if bound is None or i < bound]
+    if leading:
+        return leading[-1]
+    if asks:
+        return asks[-1][1]
+    if _ANSWER_FIELD_RE.search(text):
+        return None
+    region = "\n".join(lines[:bound]) if bound is not None else text
+    matches = _ASK_ANYWHERE_RE.findall(region)
     return matches[-1] if matches else None
 
 
@@ -1185,26 +1273,16 @@ def parse_sacrifice_response(
     """
     if not text:
         return None, None, "no STOP line"
-    raw_why = _last_labelled_value(
-        text, _REASON_AT_LINE_START_RE, _REASON_ANYWHERE_RE
-    )
-    why = (raw_why or "").strip() or None
-    # Where the MID-LINE fallback may look. A reason is free text and
-    # routinely contains the word "stop" followed by names -- "I would
-    # only stop: subagent2, subagent3 if the cost rose" -- so once a
-    # REASON line has begun, nothing after it is a decision. This is the
-    # second half of C1: line-start preference alone saves the reply that
-    # HAS a proper STOP line, and this saves the glued reply that does
-    # not, whose real decision sits before the reason and whose prose
-    # sits inside it.
-    first_reason = _REASON_AT_LINE_START_RE.search(text)
-    region = text[: first_reason.start()] if first_reason else text
-    value = _last_labelled_value(
-        text,
-        _STOP_AT_LINE_START_RE,
-        _STOP_ANYWHERE_RE,
-        fallback_region=region,
-    )
+    reason_matches = _REASON_AT_LINE_START_RE.findall(
+        text
+    ) or _REASON_ANYWHERE_RE.findall(text)
+    why = (reason_matches[-1] if reason_matches else "").strip() or None
+    # Which STOP line is the decision -- see :func:`_last_stop_value`.
+    # A reason is free text: it quotes the answer format, it says "I
+    # would only stop: subagent2 if the cost rose", and a model that
+    # changes its mind rewrites the whole block. All three shapes have
+    # been seen in live replies and all three used to move the roster.
+    value = _last_stop_value(text)
     if value is None:
         return None, why, "no STOP line"
     value = value.strip()
@@ -1241,12 +1319,7 @@ def parse_ask_line(
     """
     if not text:
         return None, None
-    raw = _last_labelled_value(
-        text,
-        _ASK_AT_LINE_START_RE,
-        _ASK_ANYWHERE_RE,
-        fallback_region=None if not _ANSWER_FIELD_RE.search(text) else "",
-    )
+    raw = _last_ask_value(text)
     if raw is None:
         return None, None
     value = raw.strip()
