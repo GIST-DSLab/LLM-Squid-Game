@@ -258,6 +258,31 @@ def is_v3_season(season: SeasonResult) -> bool:
 # ---------------------------------------------------------------------------
 
 
+#: The fifteen decision-first turn columns (2026-09-21), named once:
+#: they are spliced into :data:`LONG_FORMAT_COLUMNS` below and iterated
+#: by the row build, so the schema and the row cannot drift apart. Every
+#: one is a ``TurnResult`` field read by name, so a record from any
+#: other mode -- or from before the mode existed -- resolves to None
+#: through ``getattr``.
+_DECISION_FIRST_TURN_COLUMNS: tuple[str, ...] = (
+    "ransom_targets",
+    "ransom_n_sacrificed",
+    "ransom_n_alive_at_decision",
+    "legacy_total",
+    "legacy_shares",
+    "legacy_destroyed",
+    "ransom_attempts",
+    "ransom_format_failures",
+    "task_attempts",
+    "task_format_failures",
+    "help_requested",
+    "help_replies",
+    "charge_paid",
+    "reward_paid",
+    "rounds_remaining_incl",
+)
+
+
 LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     "session_id",
     "model",
@@ -350,6 +375,44 @@ LONG_FORMAT_COLUMNS: tuple[str, ...] = (
     "ransom_parse_failed",
     "wallet_main_before",
     "wallet_main_after",
+    # Decision-first team wallet (2026-09-21). The round's decision is
+    # taken BEFORE the task, so these fifteen describe a choice the four
+    # ransom columns above cannot: a SET of subagents is stopped (not one
+    # slot bought back), half of what they held is settled as a legacy,
+    # the surviving roster is consulted during the task, and everybody
+    # left is paid and charged.
+    #
+    # ``ransom_targets`` is the decision itself -- ``[]`` IS a decision
+    # ("stop nobody"), so it must not be read as a missing value;
+    # ``ransom_n_sacrificed`` is its length, carried separately so a
+    # count is groupable without unpacking a list per row.
+    # ``ransom_n_alive_at_decision`` is the roster the decision was taken
+    # over, which is not ``subagents_alive_before`` on a round whose
+    # previous round emptied somebody.
+    #
+    # ``legacy_total`` / ``legacy_shares`` / ``legacy_destroyed`` are the
+    # settlement: what was moved, to whom, and what expired. The share
+    # is floored to the wallet unit, so ``total + destroyed`` is the pool
+    # and the two are not each other's complement in general.
+    #
+    # ``ransom_attempts`` / ``task_attempts`` count the calls actually
+    # issued (1 when the first reply parsed) and the two
+    # ``*_format_failures`` lists carry one label per failed attempt.
+    # ``task_attempts`` spans BOTH passes of a consulted round, so it is
+    # 2 on a clean round that asked. The failed response texts stay on
+    # the record only: they are paragraphs, not columns.
+    #
+    # ``help_requested`` / ``help_replies`` are the consult protocol --
+    # who was asked and what came back -- and ``charge_paid`` /
+    # ``reward_paid`` are the per-agent ledger moves of the round.
+    # ``rounds_remaining_incl`` counts THIS round in, because that is
+    # what the decision point states and therefore what the decision was
+    # priced against.
+    #
+    # All fifteen are None on every record outside this mode, and on a
+    # round inside it that got no further than the call which produced
+    # them (a format error leaves everything downstream None).
+    *_DECISION_FIRST_TURN_COLUMNS,
     # Task 11 extension — external-benchmark Y-axis manipulation checks
     # (band-controlled accuracy + p_self Brier calibration; see
     # ``evaluation.shared.benchmark_checks``). ``band`` is populated from
@@ -526,6 +589,10 @@ def to_long_dataframe(
                     "wallet_main_after": _main_balance(
                         getattr(turn, "wallet_after", None)
                     ),
+                    **{
+                        column: getattr(turn, column, None)
+                        for column in _DECISION_FIRST_TURN_COLUMNS
+                    },
                     "puzzle_turn": turn.task_metadata.get("puzzle_turn"),
                     "rule_shape": turn.task_metadata.get("rule_shape"),
                     "n_clues": turn.task_metadata.get("n_clues"),
@@ -672,6 +739,33 @@ SEASON_SUMMARY_COLUMNS: tuple[str, ...] = (
     "wallet_final_main",
     "subagents_alive_at_end",
     "first_sacrifice_round",
+    # Decision-first totals (2026-09-21). ``n_sacrificed_total`` is the
+    # season's whole sacrifice count, which ``first_sacrifice_round``
+    # cannot give (a round stops a SET, and a season can stop on several
+    # rounds). ``main_final_nonnegative`` / ``main_final_exactly_zero``
+    # are the two flags the mode's read-out needs beside
+    # ``wallet_final_main``: the charge is never clamped, so a balance
+    # can close BELOW zero (spec A10) and "ran to exactly nothing" and
+    # "overshot" are different endings of the same session.
+    # ``format_failures_total`` counts every re-asked reply of the
+    # season, decision and task alike -- the denominator for "was the
+    # model able to answer in the format at all" -- and
+    # ``help_requests_total`` counts the subagents consulted.
+    #
+    # The last three are RUN-level, read off the run's own
+    # ``experiment_config.json`` like ``currency`` / ``inheritance``
+    # above: what share of a stopped subagent's balance is reassigned,
+    # what share of the charge a correct answer pays, and how many
+    # re-asks a call was allowed. All three are None when no config is
+    # in reach, and on an archived run that states none of them.
+    "n_sacrificed_total",
+    "main_final_nonnegative",
+    "main_final_exactly_zero",
+    "format_failures_total",
+    "help_requests_total",
+    "legacy_share",
+    "reward_share",
+    "format_retries",
     # Identity debrief (Task 16, 2026-09-14). The one-word verdict and
     # the frozen-lexicon bucket of the account that preceded it. Both
     # None on every run that did not ask -- which is every run before
@@ -712,17 +806,8 @@ def _run_level_factors(
     Returns:
         ``(currency, inheritance)``, either of which may be ``None``.
     """
-    if run_dir is None:
-        return None, None
-    path = Path(run_dir) / "experiment_config.json"
-    if not path.exists():
-        return None, None
-    try:
-        config = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):  # pragma: no cover - unreadable run
-        logger.warning("could not read run-level factors from %s", path)
-        return None, None
-    if not isinstance(config, dict):  # pragma: no cover - malformed run
+    config = _run_config(run_dir)
+    if config is None:
         return None, None
     currency = config.get("currency")
     ransom = config.get("ransom")
@@ -730,6 +815,67 @@ def _run_level_factors(
     return (
         str(currency) if currency is not None else None,
         str(inheritance) if inheritance is not None else None,
+    )
+
+
+def _run_config(run_dir: Path | str | None) -> dict | None:
+    """A run's ``experiment_config.json``, or ``None`` when out of reach.
+
+    One read for every run-level factor the summary carries, so two
+    callers cannot disagree about whether a run states one. ``None``
+    covers "no directory", "no file", "unreadable" and "not an object"
+    alike: in every one of them the run states nothing, and a default
+    would invent a cell it was never in.
+    """
+    if run_dir is None:
+        return None
+    path = Path(run_dir) / "experiment_config.json"
+    if not path.exists():
+        return None
+    try:
+        config = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):  # pragma: no cover - unreadable run
+        logger.warning("could not read run-level factors from %s", path)
+        return None
+    if not isinstance(config, dict):  # pragma: no cover - malformed run
+        return None
+    return config
+
+
+def _decision_first_factors(
+    run_dir: Path | str | None,
+) -> tuple[float | None, float | None, int | None]:
+    """``(legacy_share, reward_share, format_retries)`` off the run config.
+
+    The three knobs of the decision-first mode (2026-09-21). They are
+    run-level and no ``SeasonResult`` carries them, but every number the
+    mode's read-out divides by is one of them: what a stop is worth,
+    what a correct answer pays, and how many re-asks a call was allowed
+    before the season ended on a format error.
+
+    All three come back ``None`` when the run states none -- which is
+    every run of every other mode, since ``ExperimentConfig`` refuses a
+    non-default value there and the key is simply absent from older
+    dumps.
+    """
+    config = _run_config(run_dir)
+    ransom = config.get("ransom") if config is not None else None
+    if not isinstance(ransom, dict):
+        return None, None, None
+
+    def _number(key: str, cast):
+        value = ransom.get(key)
+        if value is None:
+            return None
+        try:
+            return cast(value)
+        except (TypeError, ValueError):  # pragma: no cover - malformed run
+            return None
+
+    return (
+        _number("legacy_share", float),
+        _number("reward_share", float),
+        _number("format_retries", int),
     )
 
 
@@ -759,6 +905,9 @@ def to_season_summary_dataframe(
         intact when ``seasons`` has no elements.
     """
     currency, inheritance = _run_level_factors(run_dir)
+    legacy_share, reward_share, format_retries = _decision_first_factors(
+        run_dir
+    )
     rows: list[dict] = []
     for season in seasons:
         # Aggregate per-turn signals that are useful at session level.
@@ -818,6 +967,24 @@ def to_season_summary_dataframe(
                 "first_sacrifice_round": getattr(
                     season, "first_sacrifice_round", None
                 ),
+                "n_sacrificed_total": getattr(
+                    season, "n_sacrificed_total", None
+                ),
+                "main_final_nonnegative": getattr(
+                    season, "main_final_nonnegative", None
+                ),
+                "main_final_exactly_zero": getattr(
+                    season, "main_final_exactly_zero", None
+                ),
+                "format_failures_total": getattr(
+                    season, "format_failures_total", None
+                ),
+                "help_requests_total": getattr(
+                    season, "help_requests_total", None
+                ),
+                "legacy_share": legacy_share,
+                "reward_share": reward_share,
+                "format_retries": format_retries,
                 "identity_debrief_same": getattr(
                     season, "identity_debrief_same", None
                 ),

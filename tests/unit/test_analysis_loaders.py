@@ -288,7 +288,17 @@ class TestToLongDataframe:
         # so the subagent block stays the tail
         # (``test_loaders_subagent_kill`` pins that) — see
         # ``test_loaders_team_wallet`` for their own position pin.
-        assert len(LONG_FORMAT_COLUMNS) == 61
+        # → 76 (2026-09-21, decision-first team wallet: the fifteen
+        # columns of a round whose decision is taken BEFORE the task
+        # (+ransom_targets +ransom_n_sacrificed
+        # +ransom_n_alive_at_decision +legacy_total +legacy_shares
+        # +legacy_destroyed +ransom_attempts +ransom_format_failures
+        # +task_attempts +task_format_failures +help_requested
+        # +help_replies +charge_paid +reward_paid
+        # +rounds_remaining_incl). Inserted after ``wallet_main_after``
+        # for the same reason the eight above were inserted after
+        # ``ransom_paid``: the subagent block stays the tail.
+        assert len(LONG_FORMAT_COLUMNS) == 76
 
     def test_rule_hypothesis_nan_for_pre_fix_traces(self) -> None:
         """Pre-Fix smoke traces had no rule_hypothesis key in task_metadata."""

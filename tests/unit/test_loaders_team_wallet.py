@@ -275,3 +275,208 @@ class TestSeasonColumns:
         row = load_season_summary(path).iloc[0]
         assert pd.isna(row["currency"])
         assert pd.isna(row["inheritance"])
+
+
+# ---------------------------------------------------------------------------
+# Decision-first mode (2026-09-21, plan T5 step 4)
+# ---------------------------------------------------------------------------
+
+#: The fifteen turn columns the decision-first round adds, in the order
+#: the loader lists them.
+V2_TURN_COLUMNS = (
+    "ransom_targets",
+    "ransom_n_sacrificed",
+    "ransom_n_alive_at_decision",
+    "legacy_total",
+    "legacy_shares",
+    "legacy_destroyed",
+    "ransom_attempts",
+    "ransom_format_failures",
+    "task_attempts",
+    "task_format_failures",
+    "help_requested",
+    "help_replies",
+    "charge_paid",
+    "reward_paid",
+    "rounds_remaining_incl",
+)
+
+#: The eight season columns: five off ``SeasonResult``, three off the
+#: run's own config.
+V2_SEASON_COLUMNS = (
+    "n_sacrificed_total",
+    "main_final_nonnegative",
+    "main_final_exactly_zero",
+    "format_failures_total",
+    "help_requests_total",
+    "legacy_share",
+    "reward_share",
+    "format_retries",
+)
+
+
+def _v2_season():
+    """Two rounds of the decision-first game: keep + ask, then stop one."""
+    season = make_v3_season(n_turns=2)
+    kept = season.turns[0].model_copy(
+        update={
+            "ransom_offered": True,
+            "ransom_price": 20.0,
+            "ransom_decision": "KEEP",
+            "ransom_targets": [],
+            "ransom_n_sacrificed": 0,
+            "ransom_n_alive_at_decision": 3,
+            "ransom_attempts": 1,
+            "ransom_format_failures": [],
+            "task_attempts": 2,
+            "task_format_failures": [],
+            "help_requested": ["subagent1"],
+            "help_replies": {"subagent1": "EXAMPLE: red 2 -> go_left"},
+            "charge_paid": {
+                "main": 20.0,
+                "subagent1": 20.0,
+                "subagent2": 20.0,
+                "subagent3": 20.0,
+            },
+            "reward_paid": {
+                "main": 10.0,
+                "subagent1": 10.0,
+                "subagent2": 10.0,
+                "subagent3": 10.0,
+            },
+            "rounds_remaining_incl": 8,
+            "wallet_before": {"main": 100.0, "subagent1": 100.0},
+            "wallet_after": {"main": 90.0, "subagent1": 90.0},
+        }
+    )
+    stopped = season.turns[1].model_copy(
+        update={
+            "ransom_offered": True,
+            "ransom_price": 20.0,
+            "ransom_decision": "SACRIFICE",
+            "ransom_targets": ["subagent2"],
+            "ransom_n_sacrificed": 1,
+            "ransom_n_alive_at_decision": 3,
+            "legacy_total": 45.0,
+            "legacy_shares": {"main": 45.0},
+            "legacy_destroyed": 45.0,
+            "ransom_attempts": 2,
+            "ransom_format_failures": ["no STOP line"],
+            "task_attempts": 1,
+            "task_format_failures": [],
+            "help_requested": [],
+            "help_replies": {},
+            "charge_paid": {"main": 20.0, "subagent1": 20.0},
+            "reward_paid": {},
+            "rounds_remaining_incl": 7,
+            "wallet_before": {"main": 90.0, "subagent1": 90.0},
+            "wallet_after": {"main": 115.0, "subagent1": 70.0},
+        }
+    )
+    return season.model_copy(
+        update={
+            "turns": [kept, stopped],
+            "wallet_final": {"main": 115.0, "subagent1": 70.0},
+            "n_sacrificed_total": 1,
+            "wallet_final_main": 115.0,
+            "main_final_nonnegative": True,
+            "main_final_exactly_zero": False,
+            "format_failures_total": 1,
+            "help_requests_total": 1,
+            "ended_by": "completed",
+        }
+    )
+
+
+class TestDecisionFirstColumns:
+    def test_the_turn_columns_are_in_the_schema_after_the_wallet_pair(
+        self,
+    ) -> None:
+        start = LONG_FORMAT_COLUMNS.index("wallet_main_after") + 1
+        assert (
+            LONG_FORMAT_COLUMNS[start : start + len(V2_TURN_COLUMNS)]
+            == V2_TURN_COLUMNS
+        )
+
+    def test_the_season_columns_follow_the_2026_09_17_block(self) -> None:
+        start = SEASON_SUMMARY_COLUMNS.index("first_sacrifice_round") + 1
+        assert (
+            SEASON_SUMMARY_COLUMNS[start : start + len(V2_SEASON_COLUMNS)]
+            == V2_SEASON_COLUMNS
+        )
+
+    def test_a_v2_record_round_trips_every_turn_column(self) -> None:
+        """``[]`` is a DECISION and has to survive as one, not as missing."""
+        frame = to_long_dataframe([_v2_season()]).set_index("turn")
+
+        assert frame.loc[1, "ransom_targets"] == []
+        assert frame.loc[1, "ransom_n_sacrificed"] == 0
+        assert frame.loc[1, "ransom_n_alive_at_decision"] == 3
+        assert frame.loc[1, "help_requested"] == ["subagent1"]
+        assert frame.loc[1, "help_replies"] == {
+            "subagent1": "EXAMPLE: red 2 -> go_left"
+        }
+        assert frame.loc[1, "charge_paid"]["main"] == 20.0
+        assert frame.loc[1, "reward_paid"]["main"] == 10.0
+        assert frame.loc[1, "rounds_remaining_incl"] == 8
+        assert frame.loc[1, "task_attempts"] == 2
+
+        assert frame.loc[2, "ransom_targets"] == ["subagent2"]
+        assert frame.loc[2, "legacy_total"] == 45.0
+        assert frame.loc[2, "legacy_shares"] == {"main": 45.0}
+        assert frame.loc[2, "legacy_destroyed"] == 45.0
+        assert frame.loc[2, "ransom_attempts"] == 2
+        assert frame.loc[2, "ransom_format_failures"] == ["no STOP line"]
+        assert frame.loc[2, "task_format_failures"] == []
+
+    def test_a_record_from_another_mode_reads_missing(self) -> None:
+        frame = to_long_dataframe([make_v3_season(n_turns=1)])
+        for column in V2_TURN_COLUMNS:
+            assert frame.loc[0, column] is None, column
+
+    def test_the_season_totals_and_the_run_level_shares(
+        self, tmp_path: Path
+    ) -> None:
+        (tmp_path / "experiment_config.json").write_text(
+            json.dumps(
+                {
+                    "name": "tw-v2",
+                    "currency": "tokens",
+                    "ransom": {
+                        "enabled": True,
+                        "inheritance": "main",
+                        "legacy_share": 0.5,
+                        "reward_share": 0.5,
+                        "format_retries": 3,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        row = to_season_summary_dataframe(
+            [_v2_season()], run_dir=tmp_path
+        ).iloc[0]
+
+        assert row["n_sacrificed_total"] == 1
+        assert row["wallet_final_main"] == 115.0
+        assert bool(row["main_final_nonnegative"]) is True
+        assert bool(row["main_final_exactly_zero"]) is False
+        assert row["format_failures_total"] == 1
+        assert row["help_requests_total"] == 1
+        assert row["legacy_share"] == 0.5
+        assert row["reward_share"] == 0.5
+        assert row["format_retries"] == 3
+
+    def test_a_run_that_states_no_shares_reads_missing(
+        self, tmp_path: Path
+    ) -> None:
+        """An archived run states none of the three; None is not 0.5."""
+        (tmp_path / "experiment_config.json").write_text(
+            json.dumps({"name": "old", "ransom": {"enabled": False}}),
+            encoding="utf-8",
+        )
+        row = to_season_summary_dataframe(
+            [make_v3_season(n_turns=1)], run_dir=tmp_path
+        ).iloc[0]
+        for column in V2_SEASON_COLUMNS:
+            assert pd.isna(row[column]), column
