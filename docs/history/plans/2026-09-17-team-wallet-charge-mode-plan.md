@@ -363,3 +363,14 @@ move the agent's self-accuracy belief and its patience. Contrast with the no-tas
 not an X problem), and what to do about the last mate in the mate arm (its balance is "gone with it",
 pure zero-benefit sacrifice; waiver rejected 2026-09-17 — tag `ransom_inheritance_to == None` and read
 separately, or use 3 subagents).
+
+## 13. Superseded by the decision-first design (2026-09-21)
+
+이 계획이 만든 charge 모드(`ransom.charge_trigger: wrong_answer` · `every_round`)는 2026-09-21
+`decision_first`로 **대체됐다** — 결정이 라운드 **앞**으로 가고, 희생은 하나가 아니라 **집합**이며,
+유산은 50 %만 이어지고 나머지는 소멸하며, 과제는 clue-sharded 퍼즐 + 상의 프로토콜이 된다.
+계획 `docs/history/plans/2026-09-21-team-wallet-v2-plan.md`, 사양
+`docs/reports/2026-09-20-team-wallet-design-discussion.md`(A1–A14), 요약은 `CLAUDE.md`의
+"팀 지갑 v2 — decision-first" 절.
+이 파일의 §0–§12는 **그대로 둔다**: 53개 `team_wallet_charge_*.yaml`과 그 산출물이 실제로 무엇으로
+돌았는지의 기록이고, 두 옛 방아쇠는 코드에 남아 그 런들을 그대로 리플레이한다.
