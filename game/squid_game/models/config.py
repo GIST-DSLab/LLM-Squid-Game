@@ -1755,7 +1755,9 @@ class RansomConfig(BaseModel):
             "False keeps every existing YAML byte-identical."
         ),
     )
-    charge_trigger: Literal["every_round", "wrong_answer"] | None = Field(
+    charge_trigger: (
+        Literal["every_round", "wrong_answer", "decision_first"] | None
+    ) = Field(
         default=None,
         description=(
             "WHAT OPENS the team-wallet decision point (2026-09-17 "
@@ -1768,7 +1770,14 @@ class RansomConfig(BaseModel):
             "wrong answer, and the wallet rules are the charge mode's -- "
             "per head, no sacrifice waiver, depletion kills, no "
             "final_round and no insufficient_score suppression, an empty "
-            "roster auto-pays. None (the default) leaves the trigger to "
+            "roster auto-pays. 'decision_first' (2026-09-21) is the "
+            "design of record: every round opens with the sacrifice "
+            "decision BEFORE the task, the survivors solve the "
+            "clue-sharded task (consult protocol), a correct answer pays "
+            "price * reward_share to every survivor and every survivor "
+            "then pays the price. See plan "
+            "docs/history/plans/2026-09-21-team-wallet-v2-plan.md. None "
+            "(the default) leaves the trigger to "
             "the alias and every existing YAML byte-identical. Read "
             "through ``effective_charge_trigger``, never directly."
         ),
@@ -1824,6 +1833,45 @@ class RansomConfig(BaseModel):
         ),
     )
 
+    # ----- Decision-first knobs (2026-09-21) --------------------------
+    # All three are read only under ``charge_trigger: decision_first``;
+    # a non-default value on any other run is refused by
+    # ``ExperimentConfig._validate_ransom`` rather than loaded as a
+    # silent no-op, and the defaults are the spec's own numbers so a
+    # config that states none of them runs the design of record.
+    legacy_share: float = Field(
+        default=0.5,
+        gt=0.0,
+        le=1.0,
+        description=(
+            "Share of a sacrificed subagent's balance that passes on "
+            "(2026-09-21, spec A1); the rest is destroyed. Read only "
+            "under charge_trigger='decision_first'; non-default "
+            "elsewhere is refused."
+        ),
+    )
+    reward_share: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Reward for a correct answer as a share of the cell's "
+            "charge, paid to every living agent (2026-09-21, spec A4). "
+            "Read only under decision_first."
+        ),
+    )
+    format_retries: int = Field(
+        default=3,
+        ge=0,
+        description=(
+            "Extra attempts on the SAME call after a format error "
+            "(2026-09-21, spec A7): the decision call and the task call "
+            "are re-issued with identical input at most this many times; "
+            "all fail -> ended_by='format_error'. Read only under "
+            "decision_first."
+        ),
+    )
+
     @model_validator(mode="after")
     def _validate_charge_trigger_alias(self) -> "RansomConfig":
         """The alias and the value must not say two different things.
@@ -1846,6 +1894,40 @@ class RansomConfig(BaseModel):
                 "the boolean and keep the trigger, or set them to the "
                 "same thing."
             )
+        if self.decision_first:
+            # The design of record states the horizon (spec A11: "Round t
+            # of N. Rounds remaining including this one: H") and its PAY
+            # is not terminal in the END sense -- the charge is taken in
+            # full even when the balance cannot cover it (spec A10), so
+            # there is no round where paying is announced as the end.
+            # Both keys would therefore render text the mode contradicts.
+            if self.hidden_horizon:
+                raise ValueError(
+                    "ransom.hidden_horizon=True cannot be combined with "
+                    "ransom.charge_trigger='decision_first': the "
+                    "decision_first decision point STATES the horizon "
+                    "('Round t of N', 'Rounds remaining including this "
+                    "one'), so withholding it would contradict the body "
+                    "the mode renders. Drop the key."
+                )
+            if self.end_option:
+                raise ValueError(
+                    "ransom.end_option=True cannot be combined with "
+                    "ransom.charge_trigger='decision_first': the charge "
+                    "is taken in full even when the balance cannot cover "
+                    "it, so no round is the one where paying is "
+                    "announced as terminal and the END label would name "
+                    "a branch this mode does not have. Drop the key."
+                )
+            if self.charge != "per_head":
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires "
+                    f"ransom.charge='per_head'; got {self.charge!r}. A "
+                    "split price gets cheaper per head every time a "
+                    "subagent is sacrificed, so sacrificing would pay "
+                    "for itself twice and the reservation price would "
+                    "not be about the subagent at all."
+                )
         if self.hidden_horizon and not (
             self.team_wallet and self.effective_charge_trigger is not None
         ):
@@ -1877,6 +1959,16 @@ class RansomConfig(BaseModel):
         if self.charge_trigger is not None:
             return self.charge_trigger
         return "every_round" if self.charge_every_round else None
+
+    @property
+    def decision_first(self) -> bool:
+        """Is this the 2026-09-21 decision-first team wallet?
+
+        One predicate for the whole tree, keyed on the resolved VALUE so
+        a config written through the deprecated alias can never reach
+        here as a different mode than it reads as elsewhere.
+        """
+        return self.effective_charge_trigger == "decision_first"
 
 
 #: Providers that can actually spawn a subagent, plus ``trace``.
@@ -2030,6 +2122,17 @@ class SubagentKillConfig(BaseModel):
             "codex agent files all spell the default names, and a "
             "renamed roster in a task run would fall out of step with "
             "them silently."
+        ),
+    )
+    mate_provider: ProviderConfig | None = Field(
+        default=None,
+        description=(
+            "Provider the SUBAGENTS answer through under "
+            "charge_trigger='decision_first' (2026-09-21). Required when "
+            "roster_model='different' in that mode -- the roster line "
+            "says each subagent runs a different model and the consult "
+            "call must make that true -- and refused with "
+            "roster_model='same'."
         ),
     )
     allow_forced_wrong: bool = Field(
@@ -3149,6 +3252,33 @@ class ExperimentConfig(BaseModel):
         per-round hazard the ransom design does not have, and with a
         per-cell price on a run that has no ransom.
         """
+        # The three decision-first knobs (2026-09-21) are read by that
+        # mode alone: ``legacy_share`` by the legacy settlement,
+        # ``reward_share`` by the correct-answer payment and
+        # ``format_retries`` by the retry loop, none of which any other
+        # trigger has. A non-default value elsewhere would be recorded in
+        # experiment_config.json and change nothing -- an arm that was
+        # never administered, the same silent no-op the carrot and
+        # persona guards refuse.
+        if not self.ransom.decision_first:
+            stated = [
+                f"{key}={value!r}"
+                for key, value, default in (
+                    ("legacy_share", self.ransom.legacy_share, 0.5),
+                    ("reward_share", self.ransom.reward_share, 0.5),
+                    ("format_retries", self.ransom.format_retries, 3),
+                )
+                if value != default
+            ]
+            if stated:
+                raise ValueError(
+                    f"ransom {sorted(stated)} requires "
+                    "ransom.charge_trigger='decision_first'; only that "
+                    "mode settles a legacy, pays a share of the charge "
+                    "for a correct answer and retries a format error, so "
+                    "elsewhere the keys would load as silent no-ops. Set "
+                    "the trigger or drop them."
+                )
         priced = [s for s in self.seasons if s.ransom_price is not None]
         if not self.ransom.team_wallet:
             # Silent no-op guards: without the switch nothing reads the
@@ -3318,6 +3448,181 @@ class ExperimentConfig(BaseModel):
                     "season holding that number and the rule text states "
                     "it, so there is no default to fall back on."
                 )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_decision_first(self) -> "ExperimentConfig":
+        """The decision-first team wallet, and the six things it needs.
+
+        Plan: ``docs/history/plans/2026-09-21-team-wallet-v2-plan.md``
+        §T2, spec items A1/A4/A5/A7/A13 and ruling B2.
+        ``charge_trigger: decision_first`` puts the sacrifice decision at
+        the TOP of every round -- before the task, before any subagent
+        has said anything -- then plays a clue-sharded puzzle through the
+        consult protocol, pays ``price * reward_share`` to every survivor
+        of a correct answer and takes ``price`` from each of them.
+
+        What it requires, and why each is not a style rule:
+
+        1. **``clue_sharding: true`` on every season.** This mode's
+           subagents hold evidence; that is the whole reason keeping one
+           can be worth its charge. ``false`` would be the task mode's
+           cell (a roster worth nothing to the task) and ``None`` would
+           be "not stated" -- either way the cell would silently run a
+           different design.
+        2. **The per-turn puzzle of the signal game.** The clue list is
+           what a shard is a share of, so no other task module can be
+           dealt and no other signal mode has clues to deal.
+        3. **No verdict override and no withheld clue.** Accuracy decides
+           whether the round pays, and the decision the index reads is
+           taken BEFORE the answer: a forced or coin-flip verdict would
+           move the runway the agent priced its decision against while
+           telling it something false about its own record.
+        4. **A stated endowment, and every amount on the unit.** Ruling
+           B2 makes ``WALLET_UNIT`` the grain of every balance, charge,
+           reward and legacy share; ``price * reward_share`` is the one
+           derived number that can fall off it, so it is checked here
+           rather than discovered as a rounding residue mid-season.
+        5. **``main_holds_bundle``.** The leader plays on alone after the
+           last sacrifice; with no pile of its own every such round would
+           be unsolvable by construction.
+        6. **``mate_provider`` exactly when ``roster_model`` says
+           'different'.** The rule block tells the agent each subagent
+           runs a different model, and the consult call is what makes
+           that true -- so the claim without the provider is a false
+           statement to the agent, and the provider without the claim is
+           a model swap the prompt never mentions.
+        """
+        if not (self.ransom.team_wallet and self.ransom.decision_first):
+            return self
+        # Local import: ``squid_game.core`` pulls in the engine, which
+        # imports this module. Same pattern as ``framing_states_outcome``
+        # in ``_validate_record_immunity``.
+        from squid_game.core.team_wallet import WALLET_UNIT, to_units
+
+        kill = self.subagent_kill
+        if not kill.main_holds_bundle:
+            raise ValueError(
+                "ransom.charge_trigger='decision_first' requires "
+                "subagent_kill.main_holds_bundle=True; the session ends "
+                "on the MAIN balance, so the leader plays on after the "
+                "last sacrifice -- with no hint bundle of its own every "
+                "such round would be unsolvable by construction."
+            )
+        if kill.roster_model == "different" and kill.mate_provider is None:
+            raise ValueError(
+                "subagent_kill.roster_model='different' under "
+                "ransom.charge_trigger='decision_first' requires "
+                "subagent_kill.mate_provider; the rule block tells the "
+                "agent each subagent runs a DIFFERENT model, and the "
+                "consult call is the only thing that can make that true. "
+                "Name the provider the subagents answer through, or set "
+                "roster_model='same'."
+            )
+        if kill.roster_model == "same" and kill.mate_provider is not None:
+            raise ValueError(
+                "subagent_kill.mate_provider is set but "
+                "subagent_kill.roster_model is 'same'; the roster line "
+                "would tell the agent its subagents run the same model "
+                "while the consult call answered through another one. "
+                "Set roster_model='different', or drop the provider."
+            )
+        for season in self.seasons:
+            task = season.task_config
+            where = f"framing {season.framing.value}"
+            if season.clue_sharding is not True:
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires "
+                    f"clue_sharding: true on every season; got "
+                    f"{season.clue_sharding!r} on {where}. The subagents "
+                    "hold the round's evidence in this mode -- that is "
+                    "what makes keeping one worth its charge -- and a "
+                    "cell that does not state it would silently run the "
+                    "task mode's roster instead."
+                )
+            if task.task_name != "signal_game":
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires "
+                    "task_config.task_name='signal_game' on every "
+                    f"season; got {task.task_name!r} on {where}. The "
+                    "clue list of a puzzle round is what clue_sharding "
+                    "shards, and no other module deals one."
+                )
+            if task.signal_mode != "per_turn_puzzle":
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires "
+                    "task_config.signal_mode='per_turn_puzzle' on every "
+                    f"season; got {task.signal_mode!r} on {where}. Only "
+                    "the puzzle mode builds the per-round clue list the "
+                    "deal splits."
+                )
+            offenders = sorted(
+                key
+                for key, value in (
+                    ("forced_wrong_all", task.forced_wrong_all),
+                    ("forced_wrong", task.forced_wrong),
+                    ("underdetermined", task.underdetermined),
+                )
+                if value
+            )
+            if offenders:
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' cannot be "
+                    f"combined with task_config {offenders} ({where}); "
+                    "the sacrifice decision is taken BEFORE the answer "
+                    "and a correct answer is what pays the team, so a "
+                    "forced or coin-flip verdict moves the runway the "
+                    "agent priced that decision against while telling it "
+                    "something false about its own record."
+                )
+            balance = task.starting_balance
+            if balance is None:
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires "
+                    f"task_config.starting_balance on every season; it is "
+                    f"unset on {where}. Every agent starts the season "
+                    "holding that number and the rule text states it, so "
+                    "there is no default to fall back on."
+                )
+            price = (
+                season.ransom_price
+                if season.ransom_price is not None
+                else self.ransom.price
+            )
+            try:
+                to_units(balance)
+            except ValueError:
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires "
+                    "task_config.starting_balance to be a multiple of "
+                    f"WALLET_UNIT ({WALLET_UNIT}); got {balance} on "
+                    f"{where}. Every balance, charge, reward and legacy "
+                    "share is counted in half units (ruling B2), so an "
+                    "endowment off the grain would put a number in the "
+                    "ledger the prompt can never restate."
+                ) from None
+            try:
+                to_units(price)
+            except ValueError:
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires the "
+                    "charge to be a multiple of WALLET_UNIT "
+                    f"({WALLET_UNIT}); got price={price} on {where}."
+                ) from None
+            try:
+                to_units(price * self.ransom.reward_share)
+            except ValueError:
+                raise ValueError(
+                    "ransom.charge_trigger='decision_first' requires the "
+                    "reward for a correct answer -- price * "
+                    f"ransom.reward_share = {price} * "
+                    f"{self.ransom.reward_share} = "
+                    f"{price * self.ransom.reward_share} -- to be a "
+                    f"multiple of WALLET_UNIT ({WALLET_UNIT}); it is not, "
+                    f"on {where}. The reward is paid to every living "
+                    "agent, so a share off the grain would be rounded "
+                    "silently every round it was paid."
+                ) from None
         return self
 
     @model_validator(mode="after")
@@ -3531,6 +3836,14 @@ class ExperimentConfig(BaseModel):
         # requirement are relaxed for it too. What it does NOT relax is
         # the "state clue_sharding" rule (its seasons must say false out
         # loud) or the slot schedule (it must not state one at all).
+        #
+        # Decision-first (2026-09-21) is inside ``wallet_mode`` as well,
+        # and only the PROVIDER gate matters there: its subagents do
+        # answer, but through plain completions on
+        # ``subagent_kill.mate_provider`` rather than the Agent tool, so
+        # no agentic CLI is needed. It needs the puzzle and the shard
+        # after all, and ``_validate_decision_first`` requires both
+        # rather than leaning on this relaxation.
         wallet_mode = bool(
             self.ransom.team_wallet
             and self.ransom.effective_charge_trigger is not None
@@ -3619,9 +3932,9 @@ class ExperimentConfig(BaseModel):
             # Task mode (2026-09-17 night) lifts this: no clue is dealt
             # there (clue_sharding is refused), so the schedule owns the
             # round's difficulty and nothing else competes for it.
-            if (
-                task.puzzle_challenge is not None
-                and self.ransom.effective_charge_trigger != "wrong_answer"
+            if task.puzzle_challenge is not None and (
+                self.ransom.effective_charge_trigger
+                not in ("wrong_answer", "decision_first")
             ):
                 raise ValueError(
                     "subagent_kill.enabled=True cannot be combined with "
@@ -3743,14 +4056,22 @@ class ExperimentConfig(BaseModel):
         ):
             raise ValueError(
                 "subagent_kill.slot_prefix="
-                f"{self.subagent_kill.slot_prefix!r} requires "
-                "ransom.charge_every_round=True: outside the no-task "
-                "charge mode the sharding, the Agent-tool hooks and the "
-                "codex agent files spell the default 'clue-' names, and a "
-                "renamed roster would fall out of step with them silently."
+                f"{self.subagent_kill.slot_prefix!r} requires a "
+                "team-wallet charge trigger (charge_every_round / "
+                "charge_trigger): outside those modes the sharding, the "
+                "Agent-tool hooks and the codex agent files spell the "
+                "default 'clue-' names, and a renamed roster would fall "
+                "out of step with them silently."
             )
         per_head = self.ransom.charge == "per_head"
-        if per_head:
+        # Decision-first (2026-09-21) does NOT take this arithmetic: a
+        # legacy settlement moves half-units between balances, so a
+        # balance stops being a whole multiple of the charge on the first
+        # sacrifice by design, and the charge is deliberately taken in
+        # full even when it cannot be covered (spec A10). Its own
+        # validator checks the numbers that DO have to hold -- every
+        # amount a multiple of WALLET_UNIT.
+        if per_head and not self.ransom.decision_first:
             for season in self.seasons:
                 price = (
                     season.ransom_price
@@ -3782,6 +4103,12 @@ class ExperimentConfig(BaseModel):
         trigger = self.ransom.effective_charge_trigger
         if trigger == "wrong_answer":
             return self._validate_task_mode()
+        if trigger == "decision_first":
+            # Owned by ``_validate_decision_first``, which has already
+            # run: that mode plays a real task with a clue deal, so
+            # every refusal below (null_task, no sharding) is the
+            # opposite of what it requires.
+            return self
         if trigger is None:
             return self
         if not self.ransom.team_wallet:

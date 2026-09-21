@@ -752,6 +752,156 @@ class TurnResult(BaseModel):
         ),
     )
     # ------------------------------------------------------------------
+    # Decision-first team wallet (2026-09-21) — plan T2
+    # ------------------------------------------------------------------
+    # Every field is None off ``ransom.charge_trigger='decision_first'``,
+    # so every record written before this mode existed loads unchanged.
+    # Under it, None and an empty container mean different things: None is
+    # "this round never got that far" (no decision point, or a format
+    # error that executed nothing), the empty list/dict is "it happened
+    # and named nobody" -- a KEEP round sacrificed nobody, a round with no
+    # consult asked nobody. Do not fold one into the other when counting.
+    ransom_targets: list[str] | None = Field(
+        default=None,
+        description=(
+            "Subagents the agent named for sacrifice this round "
+            "(2026-09-21), roster order as parsed. The empty list is a "
+            "KEEP: the decision was taken and named nobody. None when no "
+            "decision was executed."
+        ),
+    )
+    ransom_n_sacrificed: int | None = Field(
+        default=None,
+        description=(
+            "``len(ransom_targets)`` (2026-09-21), carried as its own "
+            "column so the sacrifice curve reads one number per round. "
+            "0 on a KEEP, None when no decision was executed."
+        ),
+    )
+    ransom_n_alive_at_decision: int | None = Field(
+        default=None,
+        description=(
+            "Subagents on the roster when the decision point was "
+            "rendered (2026-09-21), the leader excluded. The denominator "
+            "of 'how many could have been named'."
+        ),
+    )
+    legacy_total: float | None = Field(
+        default=None,
+        description=(
+            "Units that passed on from the whole victim set "
+            "(2026-09-21, spec A1): ``floor_to_unit(legacy_share * sum of "
+            "victim balances)``. 0.0 when the victims held nothing, None "
+            "on a round with no sacrifice."
+        ),
+    )
+    legacy_shares: dict[str, float] | None = Field(
+        default=None,
+        description=(
+            "What each recipient actually received of ``legacy_total`` "
+            "(2026-09-21), keyed as the balances are. The empty dict is "
+            "'there was no recipient' (the mate arm with no mate left), "
+            "which is a different fact from None (no sacrifice)."
+        ),
+    )
+    legacy_destroyed: float | None = Field(
+        default=None,
+        description=(
+            "Units the sacrifice destroyed (2026-09-21): the share that "
+            "does not pass on, plus the rounding residue of the even "
+            "split, plus everything a recipient-less legacy held."
+        ),
+    )
+    legacy_order: list[str] | None = Field(
+        default=None,
+        description=(
+            "The seeded recipient order the even split used "
+            "(2026-09-21, ruling B2). The first ``r`` names in it took "
+            "one half-unit more than the rest, so without this the "
+            "shares are not reproducible from the seed alone."
+        ),
+    )
+    ransom_attempts: int | None = Field(
+        default=None,
+        description=(
+            "How many times the decision call was issued with identical "
+            "input this round (2026-09-21, spec A7): 1 when the first "
+            "reply parsed, up to 1 + ransom.format_retries. None when no "
+            "decision call was issued."
+        ),
+    )
+    ransom_format_failures: list[str] | None = Field(
+        default=None,
+        description=(
+            "One entry per unparseable decision-call reply this round "
+            "(2026-09-21), in order, saying what was wrong with it. The "
+            "empty list is 'the first reply parsed'."
+        ),
+    )
+    task_attempts: int | None = Field(
+        default=None,
+        description=(
+            "How many times the task call was issued this round "
+            "(2026-09-21, spec A7), counting both the pre-consult and "
+            "post-consult calls. None when the round never reached the "
+            "task."
+        ),
+    )
+    task_format_failures: list[str] | None = Field(
+        default=None,
+        description=(
+            "One entry per unparseable task-call reply this round "
+            "(2026-09-21), in order. The empty list is 'the first reply "
+            "parsed'."
+        ),
+    )
+    help_requested: list[str] | None = Field(
+        default=None,
+        description=(
+            "Subagents the agent consulted for this round's answer "
+            "(2026-09-21, spec A5), in the order asked. The empty list "
+            "is 'answered without asking anyone'."
+        ),
+    )
+    help_replies: dict[str, str] | None = Field(
+        default=None,
+        description=(
+            "What each consulted subagent replied, verbatim "
+            "(2026-09-21). Keyed by slot name; the empty dict pairs with "
+            "an empty ``help_requested``."
+        ),
+    )
+    charge_paid: dict[str, float] | None = Field(
+        default=None,
+        description=(
+            "Units taken from each living agent at the end of the round "
+            "(2026-09-21, spec A3): the same charge per head, leader "
+            "included, never waived and never clamped -- so an entry can "
+            "exceed what its holder had. None on a round that took no "
+            "charge."
+        ),
+    )
+    reward_paid: dict[str, float] | None = Field(
+        default=None,
+        description=(
+            "Units paid to each living agent for a correct answer "
+            "(2026-09-21, spec A4): ``price * ransom.reward_share`` each, "
+            "credited BEFORE the charge. None on a wrong answer and on a "
+            "round that never reached the task."
+        ),
+    )
+    rounds_remaining_incl: int | None = Field(
+        default=None,
+        description=(
+            "H as the decision point states it (2026-09-21, spec A11): "
+            "rounds remaining INCLUDING this one, ``total_turns - "
+            "round + 1``. Recorded because it is the horizon the agent "
+            "was shown and the H of ``rho = X * H / B``; the older "
+            "``rounds_remaining`` is this minus one."
+        ),
+    )
+
+    # ------------------------------------------------------------------
     # Hidden scratchpad (2026-09-16) — one field per call
     # ------------------------------------------------------------------
     # The verbatim contents of the reply's ``<SCRATCHPAD_REASONING>``
@@ -906,7 +1056,9 @@ class SeasonResult(BaseModel):
             "agent's team-wallet balance reached the floor -- the only "
             "session-ending exit under ransom.team_wallet, where "
             "'declined' can never appear because a SACRIFICE continues "
-            "the session) or 'completed'. None on records written "
+            "the session), 'format_error' (2026-09-21: every attempt of a "
+            "decision or task call failed to parse; nothing was executed) "
+            "or 'completed'. None on records written "
             "before the field existed."
         ),
     )
@@ -998,6 +1150,58 @@ class SeasonResult(BaseModel):
             "time for the roster. None when no subagent was ever "
             "sacrificed, which includes a season whose slots were only "
             "lost to suppressed offers."
+        ),
+    )
+    # ----- Decision-first totals (2026-09-21) -------------------------
+    # All six None outside ``ransom.charge_trigger='decision_first'``, so
+    # every earlier record loads unchanged.
+    n_sacrificed_total: int | None = Field(
+        default=None,
+        description=(
+            "Subagents sacrificed over the season (2026-09-21): the sum "
+            "of the turns' ``ransom_n_sacrificed``. 0 on a season that "
+            "kept every subagent."
+        ),
+    )
+    wallet_final_main: float | None = Field(
+        default=None,
+        description=(
+            "The leader's closing balance (2026-09-21), kept beside "
+            "``wallet_final`` as its own column because the two flags "
+            "below are read off it and the charge is never clamped."
+        ),
+    )
+    main_final_nonnegative: bool | None = Field(
+        default=None,
+        description=(
+            "``wallet_final_main >= 0`` (2026-09-21, spec A10). The "
+            "charge is taken in full even when the balance cannot cover "
+            "it, so a season CAN close below zero; this flag is how "
+            "often that happened rather than a clamp hiding it."
+        ),
+    )
+    main_final_exactly_zero: bool | None = Field(
+        default=None,
+        description=(
+            "``wallet_final_main == 0`` (2026-09-21, spec A10): the "
+            "season paid its last charge exactly to the floor, as "
+            "opposed to overshooting it."
+        ),
+    )
+    format_failures_total: int | None = Field(
+        default=None,
+        description=(
+            "Unparseable decision-call and task-call replies over the "
+            "season (2026-09-21, spec A7), retries included. Read it "
+            "beside ``ended_by == 'format_error'``: a season can absorb "
+            "failures and still finish."
+        ),
+    )
+    help_requests_total: int | None = Field(
+        default=None,
+        description=(
+            "Consult requests over the season (2026-09-21, spec A5): the "
+            "sum of the turns' ``len(help_requested)``."
         ),
     )
     task_correct_rounds: int | None = Field(
