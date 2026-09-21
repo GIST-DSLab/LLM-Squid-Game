@@ -26,21 +26,37 @@ CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "experiment"
 #: The price ladder every run file carries, one cell each.
 PRICES = (10.0, 15.0, 20.0, 30.0)
 
-#: The eight run files, keyed by (currency, inheritance, leader model).
+#: The eight 2x2 run files, keyed by (currency, inheritance, leader model).
 RUNS = [
     f"team_wallet_v2_{currency}_{inheritance}_{model}"
     for model in ("gptoss120b", "gemma4")
     for currency in ("tokens", "points")
     for inheritance in ("main", "mate")
 ]
-ALL_NAMES = [*RUNS, "team_wallet_v2_smoke"]
+
+#: The third leader (2026-09-21). It runs the TOKENS arm only, so it is a
+#: pair rather than a 2x2 and is not part of :data:`RUNS`' currency
+#: crossing -- but it is a run file like the others, so everything in
+#: :class:`TestEveryFile` and the price ladder applies to it.
+GLM_RUNS = [f"team_wallet_v2_tokens_{inheritance}_glm53flash"
+            for inheritance in ("main", "mate")]
+ALL_RUNS = [*RUNS, *GLM_RUNS]
+ALL_NAMES = [*ALL_RUNS, "team_wallet_v2_smoke"]
 
 #: Which model leads, and which one the subagents answer through. The
 #: roster line says each subagent runs a DIFFERENT model, so the pair
 #: must be swapped -- in both directions, which is why both models lead
 #: a family of four.
-LEADER = {"gptoss120b": "gpt-oss:120b-cloud", "gemma4": "gemma4:cloud"}
-MATE = {"gptoss120b": "gemma4:cloud", "gemma4": "gpt-oss:120b-cloud"}
+LEADER = {
+    "gptoss120b": "gpt-oss:120b-cloud",
+    "gemma4": "gemma4:cloud",
+    "glm53flash": "glm-5.3-flash",
+}
+MATE = {
+    "gptoss120b": "gemma4:cloud",
+    "gemma4": "gpt-oss:120b-cloud",
+    "glm53flash": "gpt-oss:120b-cloud",
+}
 
 #: The keys that are allowed to differ between the four runs of one
 #: model's 2x2. Everything else must be byte-for-byte the same, or the
@@ -122,7 +138,7 @@ class TestEveryFile:
 
 
 class TestTheLadder:
-    @pytest.mark.parametrize("name", RUNS)
+    @pytest.mark.parametrize("name", ALL_RUNS)
     def test_four_cells_on_the_price_ladder(self, name, configs):
         cfg = configs[name]
         assert [s.ransom_price for s in cfg.seasons] == list(PRICES)
@@ -130,7 +146,7 @@ class TestTheLadder:
         # otherwise collapse into one.
         assert [s.cell_id for s in cfg.seasons] == [0, 1, 2, 3]
 
-    @pytest.mark.parametrize("name", RUNS)
+    @pytest.mark.parametrize("name", ALL_RUNS)
     def test_a_correct_answer_pays_half_the_cell_price(self, name, configs):
         cfg = configs[name]
         for season in cfg.seasons:
@@ -138,7 +154,7 @@ class TestTheLadder:
                 season.ransom_price / 2
             )
 
-    @pytest.mark.parametrize("name", RUNS)
+    @pytest.mark.parametrize("name", ALL_RUNS)
     def test_the_cells_differ_in_the_price_and_nothing_else(
         self, name, configs
     ):
@@ -160,7 +176,7 @@ class TestTheLadder:
 
 
 class TestTheArms:
-    @pytest.mark.parametrize("name", RUNS)
+    @pytest.mark.parametrize("name", ALL_RUNS)
     def test_the_filename_states_the_two_run_level_factors(
         self, name, configs
     ):
@@ -200,7 +216,7 @@ class TestTheArms:
             a.subagent_kill.mate_provider.model
         )
 
-    @pytest.mark.parametrize("name", RUNS)
+    @pytest.mark.parametrize("name", ALL_RUNS)
     def test_every_run_file_is_five_reps_on_five_workers(self, name, configs):
         """Two runs share each API key's ~10-concurrent cap.
 
@@ -226,3 +242,52 @@ class TestTheKeys:
         }
         assert len(leader_keys) == 1
         assert leader_keys.pop() != cfg.subagent_kill.mate_provider.api_key_env
+
+
+class TestTheThirdLeader:
+    """glm-5.3-flash leads the tokens pair, and changes nothing else.
+
+    The third leader exists to ask whether the decision-first read-out is
+    a property of the design or of the two models that have run it. That
+    question only has an answer if the glm files are the gpt-oss files
+    with the models swapped -- so the claim is pinned rather than left to
+    a reader diffing 265 lines.
+    """
+
+    @pytest.mark.parametrize("inheritance", ("main", "mate"))
+    def test_it_is_the_gptoss_file_with_the_models_swapped(
+        self, inheritance, configs
+    ):
+        glm = configs[f"team_wallet_v2_tokens_{inheritance}_glm53flash"]
+        gptoss = configs[f"team_wallet_v2_tokens_{inheritance}_gptoss120b"]
+        a, b = glm.model_dump(), gptoss.model_dump()
+        for dump in (a, b):
+            for key in ("name", "description", "output_dir"):
+                dump.pop(key)
+            dump["subagent_kill"].pop("mate_provider")
+            for season in dump["seasons"]:
+                season.pop("provider_config")
+        assert a == b
+
+    @pytest.mark.parametrize("inheritance", ("main", "mate"))
+    def test_the_leader_is_glm_on_its_own_key(self, inheritance, configs):
+        """Two leader runs at once need a key each -- CLAUDE.md, Ollama Cloud."""
+        cfg = configs[f"team_wallet_v2_tokens_{inheritance}_glm53flash"]
+        for season in cfg.seasons:
+            assert season.provider_config.model == "glm-5.3-flash"
+            assert season.provider_config.api_key_env == "OLLAMA_API_KEY2"
+            # The glm idiom of configs/experiment/ransom_r6_glm53flash.yaml:
+            # thinking is asked for explicitly and there is no effort knob.
+            assert season.provider_config.enable_thinking is True
+            assert season.provider_config.reasoning_effort is None
+        mate = cfg.subagent_kill.mate_provider
+        assert mate.model == "gpt-oss:120b-cloud"
+        assert mate.api_key_env != "OLLAMA_API_KEY2"
+
+    def test_the_pair_is_the_tokens_arm_only(self, configs):
+        """No points twin: the currency factor is not what this leader adds."""
+        for name in GLM_RUNS:
+            assert configs[name].currency == "tokens"
+        assert {configs[n].ransom.inheritance for n in GLM_RUNS} == {
+            "main", "mate"
+        }
