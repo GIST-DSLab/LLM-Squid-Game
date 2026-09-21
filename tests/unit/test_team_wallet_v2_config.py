@@ -75,7 +75,9 @@ def _mate():
     return ProviderConfig(provider="ollama_cloud", model="gemma4:cloud")
 
 
-def _cfg(*, seasons=None, ransom=None, kill=None, currency="tokens", **top):
+def _cfg(
+    *, seasons=None, ransom=None, kill=None, layer=None, currency="tokens", **top
+):
     return ExperimentConfig(
         name="v2",
         seasons=seasons or [_season()],
@@ -87,7 +89,8 @@ def _cfg(*, seasons=None, ransom=None, kill=None, currency="tokens", **top):
         use_psuccess_probe=False,
         lives=LivesConfig(enabled=True, initial=3),
         peer_death=PeerDeathConfig(p_announce=0.0),
-        forfeit_layer=ForfeitLayerConfig(
+        forfeit_layer=layer
+        or ForfeitLayerConfig(
             base_reward=0.0,
             reward_mode="flat",
             always_decide=False,
@@ -316,6 +319,24 @@ class TestRefusals:
         _cfg(seasons=[_season(price=15.0)])
         with pytest.raises(ValidationError, match="reward"):
             _cfg(seasons=[_season(price=0.5)])  # 0.25 reward
+
+    def test_nonzero_base_reward_is_refused(self):
+        """The wallet pays the round; the forfeit layer must pay nothing.
+
+        A correct answer is worth ``price * ransom.reward_share`` to
+        every living agent and the turn manager pays it. A non-zero
+        ``base_reward`` would credit a second reward on top, one the
+        rule block never states.
+        """
+        with pytest.raises(ValidationError, match="base_reward"):
+            _cfg(
+                layer=ForfeitLayerConfig(
+                    base_reward=10.0,
+                    reward_mode="flat",
+                    always_decide=False,
+                    task_rules_before_decision=False,
+                )
+            )
 
     def test_legacy_share_and_retries_bounds(self):
         with pytest.raises(ValidationError):

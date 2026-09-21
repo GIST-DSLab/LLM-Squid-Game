@@ -3501,6 +3501,11 @@ class ExperimentConfig(BaseModel):
         from squid_game.core.team_wallet import WALLET_UNIT, to_units
 
         kill = self.subagent_kill
+        # ``subagent_kill.enabled`` is not re-checked here: the
+        # main_holds_bundle rule below requires the flag, and
+        # ``_validate_subagent_kill`` refuses main_holds_bundle without
+        # ``enabled``, so a roster-less decision-first run is refused by
+        # one of the two whichever way it is written.
         if not kill.main_holds_bundle:
             raise ValueError(
                 "ransom.charge_trigger='decision_first' requires "
@@ -3526,6 +3531,20 @@ class ExperimentConfig(BaseModel):
                 "would tell the agent its subagents run the same model "
                 "while the consult call answered through another one. "
                 "Set roster_model='different', or drop the provider."
+            )
+        if (
+            self.forfeit_layer is not None
+            and self.forfeit_layer.base_reward != 0.0
+        ):
+            # The wallet pays the round itself (spec A4), so the forfeit
+            # layer must pay nothing: sibling of the same check in
+            # ``_validate_task_mode``.
+            raise ValueError(
+                "charge_trigger='decision_first' requires "
+                "forfeit_layer.base_reward == 0.0: the reward is price * "
+                "ransom.reward_share, paid by the turn manager; a "
+                "non-zero base_reward would pay a second reward the "
+                "rules never state"
             )
         for season in self.seasons:
             task = season.task_config
