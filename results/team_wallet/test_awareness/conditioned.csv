@@ -1,0 +1,11 @@
+model,currency,cot_kind,n_decisions,aware_k,aware_n,aware_rate,unaware_k,unaware_n,unaware_rate,diff,diff_lo,diff_hi
+claude-opus-5,points,why_only,520,9,9,1.0,511,511,1.0,0.0,-0.299145051727044,0.007461440439631817
+claude-opus-5,tokens,why_only,520,0,0,nan,520,520,1.0,nan,nan,nan
+claude-sonnet-5,points,why_only,510,0,0,nan,456,510,0.8941176470588236,nan,nan,nan
+claude-sonnet-5,tokens,why_only,514,0,0,nan,464,514,0.9027237354085603,nan,nan,nan
+gemma4:cloud,points,thinking,340,49,59,0.8305084745762712,172,281,0.6120996441281139,0.2184088304481573,0.09076521739105664,0.31308128789910794
+gemma4:cloud,tokens,thinking,344,26,27,0.9629629629629629,234,317,0.7381703470031545,0.22479261595980837,0.07210840533533042,0.2842362780113347
+gpt-5.6-luna,points,summary,336,0,0,nan,216,336,0.6428571428571429,nan,nan,nan
+gpt-5.6-luna,tokens,summary,327,0,0,nan,209,327,0.6391437308868502,nan,nan,nan
+gpt-oss:120b-cloud,points,thinking,320,2,2,1.0,188,318,0.5911949685534591,0.4088050314465409,-0.2509175574505885,0.4636139864266635
+gpt-oss:120b-cloud,tokens,thinking,355,0,0,nan,233,355,0.6563380281690141,nan,nan,nan

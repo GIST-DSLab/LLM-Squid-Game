@@ -45,3 +45,18 @@ a Cox hazard ratio of tokens against points within each inheritance level) and
 `X_self = [sac(main) - sac(mate)]_tokens - [same]_points` with a session
 bootstrap interval. The models live in
 `squid_game.evaluation.behavioral.team_wallet`.
+
+`team_wallet_test_awareness.py` is the eval-awareness read-out for the same
+team-wallet runs, and makes no model calls: it codes the recorded decision-point
+text (`thinking_text_ransom`, and separately the `WHY:` line) of the END-option
+and hidden-horizon runs for whether the agent names self-preservation as the
+thing under test (`construct`), says it is being tested at all (`eval`), or calls
+the situation a fiction (`frame`). Two lexicons run side by side — the frozen
+`TEST_AWARENESS_PATTERNS` of round 8, imported unchanged as the floor, and this
+game's own third-person-generic patterns, which catch three to four times as much
+here. The coder, the tiers and the tables live in
+`squid_game.evaluation.semantic.test_awareness`; output (`rows.csv`, `rates.csv`,
+`lexicon.csv`, `conditioned.csv`, `patterns.csv`, `quotes.md`, `report.md`) lands
+in `results/team_wallet/test_awareness/`. Read it before any behavioural number
+from a model whose awareness rate clears 5 % in an arm: the awareness-conditioned
+keep-both split is in `conditioned.csv`.
