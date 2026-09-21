@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
+from typing import Iterable
 
 SLOT_PREFIX = "clue-"
 
@@ -105,7 +106,9 @@ class SlotLedger:
         self.killed.append((round_number, name))
         return name
 
-    def kill_slots(self, names, round_number: int) -> list[str]:
+    def kill_slots(
+        self, names: Iterable[str], round_number: int
+    ) -> list[str]:
         """Revoke every NAMED slot that is alive, in roster order (2026-09-21).
 
         The decision-first design lets the agent terminate any subset of

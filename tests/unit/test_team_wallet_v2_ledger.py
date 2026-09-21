@@ -48,6 +48,12 @@ class TestSplitEvenly:
         with pytest.raises(ValueError):
             split_evenly(50.25, ["a"])
 
+    def test_duplicate_recipients_are_refused(self):
+        # Keyed by name, so "a" twice would be paid once and the other
+        # half-share would vanish with nothing recording the loss.
+        with pytest.raises(ValueError, match="unique"):
+            split_evenly(50.0, ["a", "b", "a"])
+
 
 class TestLegacy:
     def test_main_arm_gets_half_of_the_sum_and_half_is_destroyed(self):
@@ -101,6 +107,26 @@ class TestLegacy:
             w.legacy(["subagent9"], [MAIN_AGENT])
         with pytest.raises(ValueError):
             w.legacy([], [MAIN_AGENT])
+
+    def test_duplicate_recipients_are_refused(self):
+        w = TeamWallet.new(S, 100.0)
+        with pytest.raises(ValueError, match="unique"):
+            w.legacy(["subagent1"], [MAIN_AGENT, MAIN_AGENT])
+        # Refused before anything moved.
+        assert w.balances["subagent1"] == 100.0
+        assert w.balances[MAIN_AGENT] == 100.0
+
+    def test_negative_victim_balance_is_refused(self):
+        # `destroyed` is measured against the whole pool, so a negative
+        # balance would report a negative destruction. A balance below
+        # zero is a depletion the roster settles, never an estate.
+        w = TeamWallet.new(S, 100.0)
+        w.balances["subagent2"] = -5.0
+        with pytest.raises(ValueError, match="negative balance"):
+            w.legacy(["subagent1", "subagent2"], [MAIN_AGENT])
+        assert w.balances["subagent1"] == 100.0
+        assert w.balances["subagent2"] == -5.0
+        assert w.balances[MAIN_AGENT] == 100.0
 
     def test_pay_may_take_a_balance_below_zero(self):
         w = TeamWallet.new(S, 10.0)

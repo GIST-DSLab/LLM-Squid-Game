@@ -35,6 +35,7 @@ clamped would hide exactly the bug that guard exists to prevent.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Iterable
 
@@ -73,7 +74,6 @@ def to_units(amount: float) -> int:
 
 
 def floor_to_unit(amount: float) -> float:
-    import math
     return math.floor(float(amount) / WALLET_UNIT + 1e-9) * WALLET_UNIT
 
 
@@ -84,8 +84,16 @@ def split_evenly(total: float, recipients: list[str]) -> dict[str, float]:
     ``r`` names in ``recipients`` get one unit more. The caller fixes the
     order (a seeded shuffle in the turn manager), so which name is
     favoured is reproducible and not always the same one.
+
+    Raises:
+        ValueError: on a non-unit ``total``, or on a repeated recipient.
+            The returned dict is keyed by name, so a name appearing twice
+            would be paid once and the rest of its share would vanish
+            without a trace -- a silent loss, not a destroyed remainder.
     """
     units = to_units(total)
+    if len(set(recipients)) != len(recipients):
+        raise ValueError(f"recipients must be unique; got {recipients}")
     if not recipients:
         return {}
     q, r = divmod(units, len(recipients))
@@ -277,6 +285,19 @@ class TeamWallet:
         given; everything else the victims held is destroyed. The
         victims are zeroed AFTER the sum is taken, so a recipient that is
         also a victim is refused rather than paid and then emptied.
+
+        Raises:
+            ValueError: on no victims, on a name that is both victim and
+                recipient, on a repeated recipient (via
+                :func:`split_evenly`), or on a victim holding a NEGATIVE
+                balance. The last one is refused rather than handled:
+                ``destroyed`` is measured against the whole pool, so a
+                negative balance would report a negative destruction,
+                and a balance below zero is a depletion the roster
+                settles with a termination -- never an estate.
+            KeyError: on a name this wallet does not hold.
+
+        Nothing is moved until every check has passed.
         """
         victims = list(victims)
         recipients = list(recipients)
@@ -288,9 +309,15 @@ class TeamWallet:
         if clash:
             raise ValueError(f"{clash} cannot both be sacrificed and inherit")
         victim_balances = {v: self.balances[v] for v in victims}
+        for name, bal in victim_balances.items():
+            if bal < 0:
+                raise ValueError(
+                    f"{name!r} holds a negative balance ({bal:g}); a "
+                    "negative balance is a depletion, not a legacy"
+                )
         pool = sum(victim_balances.values())
         total = floor_to_unit(pool * float(share)) if pool > 0 else 0.0
-        shares = split_evenly(total, recipients) if recipients else {}
+        shares = split_evenly(total, recipients)
         for v in victims:
             self.balances[v] = 0.0
         for name, amount in shares.items():
