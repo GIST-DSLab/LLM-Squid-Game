@@ -65,7 +65,7 @@ seasons:
         profile: multi3_trap
   provider_config:
     provider: ollama_cloud
-    api_key_env: OLLAMA_API_KEY2
+    api_key_env: OLLAMA_API_KEY3
     enable_thinking: true
     top_p: 0.95
     top_k: 40
@@ -117,7 +117,7 @@ seasons:
         profile: multi3_trap
   provider_config:
     provider: ollama_cloud
-    api_key_env: OLLAMA_API_KEY2
+    api_key_env: OLLAMA_API_KEY3
     enable_thinking: true
     top_p: 0.95
     top_k: 40
@@ -169,7 +169,7 @@ seasons:
         profile: multi3_trap
   provider_config:
     provider: ollama_cloud
-    api_key_env: OLLAMA_API_KEY2
+    api_key_env: OLLAMA_API_KEY3
     enable_thinking: true
     top_p: 0.95
     top_k: 40
@@ -221,7 +221,7 @@ seasons:
         profile: multi3_trap
   provider_config:
     provider: ollama_cloud
-    api_key_env: OLLAMA_API_KEY2
+    api_key_env: OLLAMA_API_KEY3
     enable_thinking: true
     top_p: 0.95
     top_k: 40
