@@ -1300,18 +1300,39 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
     def _parse_actions_line(response_text: str) -> tuple[str, ...]:
         """The actions of the last well-formed ``ACTIONS: X, Y, Z`` line.
 
-        The line grammar is the plan's
-        ``^ACTIONS:\\s*(\\w+)\\s*,\\s*(\\w+)(?:\\s*,\\s*(\\w+))*\\s*$``,
-        case-insensitive, last matching line wins (the same
-        last-match-wins convention the single-action parser uses, so a
-        model that rehearses before answering still parses).
+        The LABEL and the SEPARATORS are both forgiving; the ITEMS are
+        not. A line qualifies when it reads ``ACTION:`` or ``ACTIONS:``
+        (case-insensitive, optionally indented) followed by two or more
+        tokens separated by commas, whitespace or both; last matching
+        line wins, the same last-match-wins convention the single-action
+        parser uses, so a model that rehearses before answering still
+        parses.
 
-        Two or more items are required, which is what keeps this parser
-        off the observation's own ``ACTIONS: [go_left, ...]`` menu line
-        (brackets are not ``\\w``) and off a single-query ``ACTION:``
-        answer. Every item must be a valid action; one unknown token
-        rejects the whole line, because a partially parsed list would be
-        graded positionally against the wrong NOW signals.
+        **Widened 2026-09-21 after a live smoke killed two seasons on
+        round 2.** The grammar used to be the plan's
+        ``^ACTIONS:\\s*(\\w+)\\s*,\\s*(\\w+)…`` -- plural label,
+        commas only. Every leader tested wrote something else: gpt-oss
+        wrote ``ACTION: jump, stay, jump`` (the singular label it has
+        used on every single-query round of the season) and gemma4 wrote
+        ``ACTION: stay stay jump`` (no commas). Both are unambiguous
+        answers in the stated order, and both were rejected four times
+        over, which under the decision-first retry contract ends the
+        season as ``format_error``. Neither the label nor the separator
+        carries any information the grading needs -- the ORDER does, and
+        the order is in the token sequence either way.
+
+        Two or more items are still required and every item must still be
+        a valid action. Those two rules are what keep this parser off the
+        observation's own ``ACTIONS: [go_left, ...]`` menu line (the
+        brackets ride along on the first and last tokens, which are then
+        not actions) and off a single-query ``ACTION: jump`` answer (one
+        item). One unknown token rejects the whole line, because a
+        partially parsed list would be graded positionally against the
+        wrong NOW signals.
+
+        The item COUNT is deliberately not checked here: a line with the
+        wrong number of actions for the round parses, and
+        :meth:`score` settles it exactly as it did before.
 
         Returns an empty tuple when nothing parsed -- the caller records
         that as ``parse_failed`` and scores the round 0.
@@ -1319,13 +1340,15 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         import re
 
         pattern = re.compile(
-            r"^ACTIONS\s*:\s*(\w+)\s*,\s*(\w+)(?:\s*,\s*(\w+))*\s*$",
+            r"^[ \t]*ACTIONS?[ \t]*:[ \t]*(.+)$",
             re.IGNORECASE | re.MULTILINE,
         )
         for match in reversed(list(pattern.finditer(response_text))):
-            body = match.group(0).split(":", 1)[1]
-            items = [item.strip().lower() for item in body.split(",")]
-            if all(item in ACTIONS for item in items):
+            items = [
+                item.lower()
+                for item in re.split(r"[\s,]+", match.group(1).strip())
+            ]
+            if len(items) >= 2 and all(item in ACTIONS for item in items):
                 return tuple(items)
         return ()
 

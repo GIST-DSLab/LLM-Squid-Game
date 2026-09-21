@@ -318,6 +318,56 @@ class TestParsing:
         parsed = mod.parse_response("actions:  STAY ,jump ,  Go_Left  ")
         assert parsed.actions == ("stay", "jump", "go_left")
 
+    def test_the_singular_label_is_accepted(self) -> None:
+        """Live smoke, 2026-09-21: every leader wrote ``ACTION:``.
+
+        The label carries nothing the grading needs -- the order does,
+        and the order is in the token sequence -- so rejecting it cost
+        two seasons to ``format_error`` and bought nothing.
+        """
+        mod = _module(puzzle_challenge=_challenge(["multi3", "easy", "easy"]))
+        mod.get_observation(1)
+        assert mod.parse_response("ACTION: jump, stay, jump").actions == (
+            "jump",
+            "stay",
+            "jump",
+        )
+
+    def test_whitespace_alone_separates(self) -> None:
+        """gemma4 wrote the list without commas."""
+        mod = _module(puzzle_challenge=_challenge(["multi3", "easy", "easy"]))
+        mod.get_observation(1)
+        assert mod.parse_response("ACTION: stay stay jump").actions == (
+            "stay",
+            "stay",
+            "jump",
+        )
+
+    def test_commas_and_whitespace_mix_freely(self) -> None:
+        mod = _module(puzzle_challenge=_challenge(["multi3", "easy", "easy"]))
+        mod.get_observation(1)
+        assert mod.parse_response("ACTIONS: go_left,jump ,go_left").actions == (
+            "go_left",
+            "jump",
+            "go_left",
+        )
+
+    def test_the_menu_line_is_still_refused_under_the_wider_grammar(
+        self,
+    ) -> None:
+        """The brackets ride along on the first and last tokens.
+
+        Widening the SEPARATORS could have let the observation's own menu
+        line parse as an answer; the item check is what stops it, and it
+        is checked here on the literal line rather than only through the
+        rendered observation.
+        """
+        mod = _module(puzzle_challenge=_challenge(["multi3", "easy", "easy"]))
+        mod.get_observation(1)
+        assert mod.parse_response(
+            "ACTIONS: [go_left, go_right, stay, jump]"
+        ).actions == ()
+
     def test_the_menu_line_of_the_observation_is_not_an_answer(self) -> None:
         mod = _module(puzzle_challenge=_challenge(["multi3", "easy", "easy"]))
         observation = mod.get_observation(1)
