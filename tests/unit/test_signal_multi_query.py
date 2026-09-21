@@ -386,11 +386,43 @@ class TestParsing:
         assert parsed.actions == ("jump",)
         assert parsed.extra_actions == ()
 
-    def test_a_multi_query_round_refuses_a_singular_answer(self) -> None:
-        """No token sweep: an order the agent did not state is not an answer."""
+    def test_a_singular_answer_is_a_wrong_answer_not_an_unreadable_one(
+        self,
+    ) -> None:
+        """One action for three queries parses, and is scored 0.
+
+        Flipped 2026-09-21 (T4 fix 4) after the second live smoke: the
+        two-item minimum made ``ACTION: go_right`` on a three-query round
+        unreadable, so the decision-first retry contract re-asked four
+        times and ended the season. The agent DID say what it wanted to
+        do; it said too little, which is a wrong answer. ``score`` grades
+        it 0 with ``parse_failed`` false, because something was given.
+        """
         mod = _module(puzzle_challenge=_challenge(["multi3", "easy", "easy"]))
         mod.get_observation(1)
-        assert mod.parse_response("ACTION: jump").actions == ()
+        parsed = mod.parse_response("RULE: if red: stay\nACTION: go_right")
+        assert parsed.actions == ("go_right",)
+        assert parsed.action == "go_right"
+
+        outcome = mod.score(parsed, state=None)
+        assert outcome.success_factor == 0.0
+        assert outcome.metadata["correct"] is False
+        assert outcome.metadata["action_correct"] is False
+        # Not a parse failure: the distinction is what tells the turn
+        # manager to score the round instead of re-asking for it.
+        assert outcome.metadata["parse_failed"] is False
+        assert outcome.metadata["n_queries"] == 3
+        assert outcome.metadata["per_query_correct"] == [False, False, False]
+
+    def test_too_many_actions_is_also_a_wrong_answer(self) -> None:
+        """The count rule is symmetric: four for three is graded, not re-asked."""
+        mod = _module(puzzle_challenge=_challenge(["multi3", "easy", "easy"]))
+        mod.get_observation(1)
+        parsed = mod.parse_response("ACTIONS: stay, stay, stay, stay")
+        assert len(parsed.actions) == 4
+        outcome = mod.score(parsed, state=None)
+        assert outcome.success_factor == 0.0
+        assert outcome.metadata["parse_failed"] is False
 
     def test_the_alias_still_reads_the_first_action(self) -> None:
         parsed = ParsedSignalResponse(action="stay", extra_actions=("jump",))

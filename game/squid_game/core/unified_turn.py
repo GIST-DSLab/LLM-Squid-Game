@@ -2465,6 +2465,13 @@ class UnifiedTurnManager:
             action = getattr(parsed, "action", parsed)
             if action is None:
                 return None, "no ACTION line"
+            # NOTHING ELSE is a format error. An answer that names the
+            # wrong NUMBER of actions for a multi-query round parses here
+            # and is graded 0 by the module (2026-09-21, T4 fix 4): the
+            # agent said what it wanted to do and said too little, which
+            # is a wrong answer, and re-asking for it burned a season on
+            # the second live smoke. Only "no readable action at all"
+            # leaves nothing to grade.
             return ("ANSWER", parsed), None
 
         retries = int(self._ransom.format_retries)

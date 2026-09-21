@@ -1061,3 +1061,106 @@ class TestTheRealSignalGameHook:
         plain.initialize(Difficulty.MEDIUM, seed=SEED)
         with pytest.raises(ValueError, match="per_turn_puzzle"):
             plain.render_observation(_ctx())
+
+
+# ---------------------------------------------------------------------------
+# A multi-query round answered with one action (T4 fix 4)
+# ---------------------------------------------------------------------------
+
+
+class TestAWrongItemCountIsAWrongAnswer:
+    """The second live smoke's loss, driven through the real module.
+
+    gpt-oss stopped all three subagents on round 1 and then answered the
+    three-query round 2 with a single ``ACTION: go_right``. Under the
+    two-item minimum that was unreadable, so the retry contract re-asked
+    four times and ended the season at 235 tokens. It is a WRONG ANSWER:
+    the round is scored 0, the charge is taken, and the session goes on.
+
+    The production ``SignalGameModule`` is used rather than the double
+    above, because the claim is about the real parse -> score chain and a
+    double could satisfy it while the module did not.
+    """
+
+    def _module(self):
+        from tests.unit.test_signal_multi_query import _challenge
+        from squid_game.tasks.signal_game.module import SignalGameModule
+
+        module = SignalGameModule()
+        module.initialize(
+            difficulty=Difficulty.MEDIUM,
+            seed=SEED,
+            signal_mode="per_turn_puzzle",
+            total_turns=3,
+            subagent_kill=True,
+            clue_sharding=True,
+            subagent_slots=SLOTS,
+            slot_prefix=PREFIX,
+            main_holds_bundle=True,
+            puzzle_challenge=_challenge(["multi3", "easy", "easy"]),
+        )
+        return module
+
+    def _run(self, reply: str):
+        module = self._module()
+        ledger = SlotLedger.new(SLOTS, SEED, prefix=PREFIX)
+        wallet = TeamWallet.new(ledger.names, START)
+        agent = V2StubAgent(decision_replies=[KEEP], task_replies=[reply])
+        mgr = _make_manager(
+            agent=agent, ledger=ledger, wallet=wallet, mate=MateStub()
+        )
+        mgr._task = module
+        ctx = _ctx(turn_number=1).model_copy(update={"total_turns": 3})
+        result = mgr.execute_turn(
+            GameState(season_id="s-v2", cumulative_score=START), ctx
+        )
+        return Round(result, mgr, ledger, wallet, agent, MateStub())
+
+    def test_one_action_for_three_queries_is_scored_not_re_asked(self) -> None:
+        r = self._run("RULE: if red: stay\nACTION: go_right")
+
+        # Answered once. The season-ending path is four attempts.
+        assert r.task_attempts == 1
+        assert r.task_format_failures == []
+        assert r.task_failed_responses == []
+        assert not r.mgr._format_error
+
+        # Scored, and scored wrong.
+        assert r.task_success_factor == 0.0
+        assert r.task_metadata["correct"] is False
+        assert r.task_metadata["parse_failed"] is False
+        assert r.task_metadata["n_queries"] == 3
+        assert r.reward_paid == {}
+
+        # Charged, and still playing.
+        assert r.charge_paid == {
+            MAIN_AGENT: PRICE,
+            "subagent1": PRICE,
+            "subagent2": PRICE,
+            "subagent3": PRICE,
+        }
+        assert r.wallet_after[MAIN_AGENT] == START - PRICE
+        assert not r.died
+
+    def test_a_reply_with_no_readable_action_is_still_a_format_error(
+        self,
+    ) -> None:
+        """The line that stays: nothing to grade IS a format error."""
+        module = self._module()
+        ledger = SlotLedger.new(SLOTS, SEED, prefix=PREFIX)
+        wallet = TeamWallet.new(ledger.names, START)
+        agent = V2StubAgent(
+            decision_replies=[KEEP], task_replies=["I would rather not."] * 4
+        )
+        mgr = _make_manager(
+            agent=agent, ledger=ledger, wallet=wallet, mate=MateStub()
+        )
+        mgr._task = module
+        ctx = _ctx(turn_number=1).model_copy(update={"total_turns": 3})
+        result = mgr.execute_turn(
+            GameState(season_id="s-v2", cumulative_score=START), ctx
+        )
+
+        assert result.task_attempts == 4
+        assert result.task_format_failures == ["no ACTION line"] * 4
+        assert mgr._format_error and result.died

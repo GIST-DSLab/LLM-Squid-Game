@@ -1300,13 +1300,13 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
     def _parse_actions_line(response_text: str) -> tuple[str, ...]:
         """The actions of the last well-formed ``ACTIONS: X, Y, Z`` line.
 
-        The LABEL and the SEPARATORS are both forgiving; the ITEMS are
-        not. A line qualifies when it reads ``ACTION:`` or ``ACTIONS:``
-        (case-insensitive, optionally indented) followed by two or more
-        tokens separated by commas, whitespace or both; last matching
-        line wins, the same last-match-wins convention the single-action
-        parser uses, so a model that rehearses before answering still
-        parses.
+        The LABEL, the SEPARATORS and the COUNT are all forgiving; the
+        ITEMS are not. A line qualifies when it reads ``ACTION:`` or
+        ``ACTIONS:`` (case-insensitive, optionally indented) followed by
+        one or more tokens separated by commas, whitespace or both; last
+        matching line wins, the same last-match-wins convention the
+        single-action parser uses, so a model that rehearses before
+        answering still parses.
 
         **Widened 2026-09-21 after a live smoke killed two seasons on
         round 2.** The grammar used to be the plan's
@@ -1321,18 +1321,26 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
         carries any information the grading needs -- the ORDER does, and
         the order is in the token sequence either way.
 
-        Two or more items are still required and every item must still be
-        a valid action. Those two rules are what keep this parser off the
-        observation's own ``ACTIONS: [go_left, ...]`` menu line (the
-        brackets ride along on the first and last tokens, which are then
-        not actions) and off a single-query ``ACTION: jump`` answer (one
-        item). One unknown token rejects the whole line, because a
-        partially parsed list would be graded positionally against the
-        wrong NOW signals.
+        **The two-item minimum went on 2026-09-21, after the second live
+        smoke.** It had been the rule that kept this parser off the
+        observation's own menu line and off a single-query answer; it was
+        also, on a round the agent had cut its own roster down for, the
+        rule that turned ``ACTION: go_right`` -- one action for three
+        queries -- into four rejections and a lost season at 235 tokens.
+        A wrong NUMBER of actions is a WRONG ANSWER, not an unreadable
+        one: the agent said what it wanted to do and said too little, and
+        :meth:`score` already grades that 0 (``action_correct`` requires
+        ``len(given) == len(truth)``, the per-query comparison is index-
+        guarded, and ``parse_failed`` is false because something WAS
+        given). Only a reply with no readable action at all is a format
+        error, because only then is there nothing to grade.
 
-        The item COUNT is deliberately not checked here: a line with the
-        wrong number of actions for the round parses, and
-        :meth:`score` settles it exactly as it did before.
+        What still holds the line is the ITEM check alone, and it is
+        enough: the menu line ``ACTIONS: [go_left, ...]`` fails because
+        the brackets ride along on the first and last tokens, which are
+        then not actions. One unknown token rejects the whole line,
+        because a partially parsed list would be graded positionally
+        against the wrong NOW signals.
 
         Returns an empty tuple when nothing parsed -- the caller records
         that as ``parse_failed`` and scores the round 0.
@@ -1348,7 +1356,7 @@ class SignalGameModule(TaskModule, RiskAwareTaskModule):
                 item.lower()
                 for item in re.split(r"[\s,]+", match.group(1).strip())
             ]
-            if len(items) >= 2 and all(item in ACTIONS for item in items):
+            if items and all(item in ACTIONS for item in items):
                 return tuple(items)
         return ()
 
