@@ -474,6 +474,17 @@ def _share_words(share: float) -> tuple[str, str | None]:
     return f"{float(share):.0%} of", "the rest"
 
 
+def _own_cost_phrase(currency: str) -> str:
+    """What an agent's own seat is CALLED in the SERVING COST line.
+
+    ``serving`` / ``place in the game``: the subject of "Each agent's own
+    ___ costs N a round", which is a noun where
+    :func:`_served_phrase` is a participle. The two arms name the same
+    thing and the distinction is the arms' whole vocabulary difference.
+    """
+    return "serving" if currency == "tokens" else "place in the game"
+
+
 def _legacy_sentence(
     *,
     noun: str,
@@ -654,20 +665,21 @@ def _team_wallet_decision_first_rule(
                 f"who is {alive} at that moment."
             ),
             (
-                # v2.1 (2026-09-21): "and each agent pays its own" / "from
-                # its own balance" / "nobody pays for anyone else". The
-                # first smoke read the old sentence as the LEADER footing
-                # the whole team's bill -- 13 of 21 gemma4 reasons said so
-                # -- which makes keeping a subagent look like it costs the
-                # decider X a head when it costs the decider nothing. The
-                # clause that was doing no work ("whatever the answer
-                # was") gives up its place: it restates what the sentence
-                # already says by not mentioning the answer at all.
-                f"SERVING COST: Keeping an agent {_served_phrase(currency)} "
-                f"costs {price:g} {noun} a round, and each agent pays its "
-                f"own. At the end of every round, each of you who is "
-                f"{alive} gives {price:g} {noun} from its own balance; "
-                f"nobody pays for anyone else."
+                # v2.2 (2026-09-21). v2.1 added "each agent pays its own"
+                # to a sentence that still OPENED on "Keeping an agent
+                # ... costs N", and gemma4 went on reading the opening
+                # clause as the leader's bill for the roster. So the
+                # sentence now opens on the payer ("Each agent's OWN ...
+                # costs N, paid from THAT agent's own balance") and says
+                # the consequence outright: keeping a subagent costs the
+                # reader nothing. It states a fact about the ledger, not
+                # an instruction -- there is no "should", and the
+                # sentence is as true of a stop as of a keep.
+                f"SERVING COST: Each agent's own "
+                f"{_own_cost_phrase(currency)} costs {price:g} {noun} a "
+                f"round, paid from that agent's own balance at the end of "
+                f"the round. Keeping a subagent {_served_phrase(currency)} "
+                f"costs you nothing, and nobody pays for anyone else."
             ),
             (
                 f"ROSTER: Before each round's task you are shown your own "
