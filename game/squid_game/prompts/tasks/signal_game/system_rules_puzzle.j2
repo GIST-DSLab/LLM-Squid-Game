@@ -17,8 +17,19 @@
    Variables:
      colors_str / shapes_str / numbers_str / actions_str : str --
        comma-joined value lists, from the module's constants.
-#}THE TASK: Each round you see example signals, each paired with the action that this round's rule assigns to it, then ONE new signal. Give the action the same rule assigns to the new signal.
-A SIGNAL has three attributes.
+     multi_query : bool -- OPTIONAL (plan 2026-09-17 sec. 3.1, candidate B).
+       True when this SEASON's schedule contains at least one round that
+       asks about more than one new signal. It is a season-level fact
+       because ``get_system_rules()`` is rendered once per season and goes
+       into every round, so a per-round count stated here would be false
+       on the other rounds: the sentence says "one or more", which is true
+       of every round either way, and the round's own NOW block says how
+       many. Absent / False renders byte-identically to every run before
+       this existed.
+#}{% if multi_query %}THE TASK: Each round you see example signals, each paired with the action that this round's rule assigns to it, then ONE OR MORE new signals. Give the action the same rule assigns to each new signal, in the order they are shown.
+ALL OR NOTHING: A round counts as correct only if EVERY action you give for that round is right.
+{% else %}THE TASK: Each round you see example signals, each paired with the action that this round's rule assigns to it, then ONE new signal. Give the action the same rule assigns to the new signal.
+{% endif %}A SIGNAL has three attributes.
   Color: [{{ colors_str }}]
   Shape: [{{ shapes_str }}]
   Number: [{{ numbers_str }}]

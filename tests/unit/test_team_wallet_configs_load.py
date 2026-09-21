@@ -235,3 +235,41 @@ class TestThePilotGrid:
             parent.pop(key)
             child.pop(key)
         assert parent == child
+
+
+#: The charge-mode arms (2026-09-17 evening, charge-mode plan §6): eight
+#: run-level cells of the 2x2 (currency x inheritance) over two models,
+#: plus one smoke. They are a different game -- a per-head charge every
+#: round; since 2026-09-18 a real puzzle graded WRONG every round rather
+#: than no task -- so they are enumerated separately from the six
+#: above rather than folded into ``_CONFIGS``, whose assertions are all
+#: about the signal-game wrong-answer design.
+_CHARGE_CONFIGS = [
+    f"team_wallet_charge_{currency}_{inheritance}_{model}.yaml"
+    for currency in ("points", "tokens")
+    for inheritance in ("main", "mate")
+    for model in ("gptoss120b", "opus5")
+] + ["team_wallet_charge_smoke.yaml"]
+
+
+@pytest.mark.parametrize("filename", _CHARGE_CONFIGS)
+def test_every_charge_config_loads_and_dry_runs(filename: str) -> None:
+    """The same gate the six above pass: load, validate, print a plan.
+
+    What each file must SAY is pinned in
+    ``tests/unit/test_team_wallet_charge_config.py::TestTheShippedConfigs``;
+    this is the enumeration that makes sure a new arm cannot be added
+    without going through ``load_config_from_yaml``.
+    """
+    path = _CONFIG_DIR / filename
+    assert path.exists()
+    cfg = load_config_from_yaml(str(path))
+
+    assert cfg.ransom.team_wallet is True
+    assert cfg.ransom.charge == "per_head"
+    # 2026-09-18: task mode + forced_wrong_all (see
+    # test_team_wallet_charge_config.py::TestTheShippedConfigs).
+    assert cfg.ransom.effective_charge_trigger == "wrong_answer"
+    assert all(s.task_config.forced_wrong_all for s in cfg.seasons)
+    assert cfg.subagent_kill.roster_model == "different"
+    _print_dry_run(cfg)

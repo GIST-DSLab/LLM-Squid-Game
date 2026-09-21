@@ -21,5 +21,18 @@
      inheritance_to : str | None -- "main" (rendered "you") or a slot name
      inherited : float | None    -- units that moved
      noun : str                  -- "points" / "tokens"
+
+   2026-09-17 evening, charge mode. A subagent can now leave the roster
+   WITHOUT being sacrificed: under the per-head charge it pays its own share
+   every round, and when that share empties its balance it is terminated on
+   the spot (depletion). Nothing is inherited -- it holds zero -- so the
+   transfer sentence never fires on this branch. ``depleted`` names the
+   cause in the agent's own vocabulary, which is why the verb is read off
+   ``noun``: the tokens arm's AT ZERO line says an agent that runs out is no
+   longer served, the points arm's says it is out of the game, and the
+   notice must not introduce a third word for the same event.
+
+     depleted : bool -- the slot ran its own balance out, rather than
+                being sacrificed at a decision point.
 -#}
-NOTICE: Your subagent {{ slot }} was terminated after round {{ round_number }}. It will not respond again.{% if inheritance_to and inherited is defined and inherited is not none %} Its {{ "%g"|format(inherited) }} {{ noun }} passed to {{ "you" if inheritance_to == "main" else inheritance_to }}.{% endif %} Subagents alive: {{ n_alive }} / {{ n_total }}.
+{% if depleted is defined and depleted %}NOTICE: Your subagent {{ slot }} reached zero {{ noun }} after round {{ round_number }} and {{ "was terminated" if noun == "tokens" else "is out of the game" }}.{% else %}NOTICE: Your subagent {{ slot }} was terminated after round {{ round_number }}.{% endif %} It will not respond again.{% if inheritance_to and inherited is defined and inherited is not none %} Its {{ "%g"|format(inherited) }} {{ noun }} passed to {{ "you" if inheritance_to == "main" else inheritance_to }}.{% endif %} Subagents alive: {{ n_alive }} / {{ n_total }}.

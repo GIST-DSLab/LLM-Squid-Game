@@ -387,7 +387,15 @@ def format_outcome_history_block(
         )
         outcome = entry.get("outcome", "")
         if isinstance(outcome, str) and outcome.startswith("paid "):
-            line += f" ({outcome} points to continue)"
+            # The team wallet (2026-09-18) writes the noun itself
+            # ("paid 30 tokens"); the 2026-09-10 ransom writes "paid 30"
+            # and this line supplies the points wording it always had.
+            if outcome.endswith((" tokens", " points")):
+                line += f" ({outcome})"
+            else:
+                line += f" ({outcome} points to continue)"
+        elif isinstance(outcome, str) and outcome.startswith("sacrificed "):
+            line += f" ({outcome})"
         lives_after = entry.get("lives_after")
         lives_total = entry.get("lives_total")
         if lives_after is not None and lives_total is not None:

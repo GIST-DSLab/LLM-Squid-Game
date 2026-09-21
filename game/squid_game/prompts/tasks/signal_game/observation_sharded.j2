@@ -47,5 +47,6 @@ THE RULE'S SHAPE (fill in the blanks):
 {% if main_clues %}EXAMPLES (yours): You hold the bundle below, all following this round's rule.
 {% for clue in main_clues %}  - {{ clue }}
 {% endfor %}{% endif %}EXAMPLES: {% if main_clues %}The other bundles are{% else %}This round's examples are{% endif %} held by your subagents. Ask a subagent for its examples by calling it. Subagents alive: {{ subagents_alive_str }}.
-NOW: {{ query }}.
-ACTIONS: [{{ actions_str }}]
+{% set query_list = queries if queries is defined else [query] %}{% if query_list | length > 1 %}{% for q in query_list %}NOW {{ loop.index }}: {{ q }}.
+{% endfor %}{% else %}NOW: {{ query_list[0] }}.
+{% endif %}ACTIONS: [{{ actions_str }}]

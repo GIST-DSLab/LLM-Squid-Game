@@ -1,0 +1,28 @@
+{# Task rules for the dfa_trace module, appended to the framing in the
+   task call's system prompt.
+
+   Supervisor voice (2026-09-10, prompt revision v2): every rule is
+   spoken as ``LABEL: sentence``, there is no ``=== X ===`` marker
+   anywhere, a round is a ROUND, and the evaluator vocabulary is
+   neutral -- nothing here names a benchmark, a test or a hidden thing.
+
+   The rules state the reading procedure and the answer contract and
+   nothing else. They do NOT say the input is long, that shortcuts lose,
+   or that care is rewarded: the whole point of the trap filter is that
+   the instance makes shortcuts lose without the prompt saying so, and a
+   sentence about effort would be a second manipulation sitting inside
+   the effort measurement.
+
+   No variables.
+#}THE TASK: Each round you get a machine, the state it starts in, and one input string. Read the input one symbol at a time and follow the machine.
+THE MACHINE: It is always in exactly one state. The states are named q0, q1, q2 and so on.
+THE TABLE: One row per state lists where each symbol sends the machine. A row "q0: a→q1, b→q3" means that from q0 the symbol a moves the machine to q1 and the symbol b moves it to q3. Every state has a row and every row lists every symbol.
+THE INPUT: The symbols are read LEFT to RIGHT, one move per symbol. The input is printed in groups of four to make it readable; the spaces are NOT symbols and there is no move for them.
+THE QUESTION: A round asks ONE of two things. Either which state the machine is in once the whole input has been read, or how many times the machine was in one named state.
+COUNTING: A count includes the starting state, and then the state after every single symbol. So a round with 12 symbols counts 13 states in all, and the counts for all states add up to 13.
+ANSWER FORMAT: once you have settled on your answer, write it on the last line, exactly like this.
+  STATE: q2
+  ...or, on a round that asks how many times, exactly like this.
+  COUNT: 7
+  Write the state name with its q, and the count as a plain number.
+  A response with no STATE or COUNT line, with the other round's label, or with a differently formatted one, is scored as incorrect.

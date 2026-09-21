@@ -456,6 +456,12 @@ class PuzzleGenerationError(RuntimeError):
     """No rule / clue set satisfied the spec within the attempt budget."""
 
 
+#: Ceiling on ``PuzzleSpec.n_queries``. Four queries already push the
+#: all-or-nothing shallow accuracy below 0.5^4; beyond that the round
+#: measures transcription stamina instead of induction.
+_MAX_QUERIES: int = 8
+
+
 @dataclass(frozen=True)
 class PuzzleSpec:
     """One ladder rung (spec §6), plus the underdetermined-turn flag."""
@@ -475,6 +481,13 @@ class PuzzleSpec:
     #: Restrict the query to a cell where every shallow solver is wrong
     #: (spec 2026-09-10 §5.1). Selection only -- uniqueness is unaffected.
     trap_query: bool = False
+    #: How many query signals the round asks about (plan 2026-09-17 §3.1,
+    #: candidate B). 1 is every recorded run and renders byte-identically.
+    #: Above 1 the extra queries are drawn from signals the clue list does
+    #: not show, each with an answer the shown clues already pin, and the
+    #: round is graded all-or-nothing. The clue set is untouched, so the
+    #: multiplication happens in the GRADING, not in the hypothesis space.
+    n_queries: int = 1
     #: The ``puzzle_profiles`` row this spec came from; "" outside
     #: ``puzzle_challenge``. Part of the cache key and of ``puzzle_id``.
     profile: str = ""
@@ -501,6 +514,21 @@ class PuzzleSpec:
                 f"turn {self.turn}: n_candidate_actions must be 1 unless "
                 "underdetermined is set"
             )
+        if self.n_queries < 1:
+            raise ValueError(f"turn {self.turn}: n_queries must be >= 1")
+        if self.n_queries > _MAX_QUERIES:
+            raise ValueError(
+                f"turn {self.turn}: n_queries must be <= {_MAX_QUERIES}; a round "
+                "asking more than that spends its answer line on transcription "
+                "rather than on the induction the round is measuring"
+            )
+        if self.n_queries > 1 and self.underdetermined:
+            raise ValueError(
+                f"turn {self.turn}: n_queries > 1 and underdetermined are "
+                "mutually exclusive -- the withheld clue splits exactly one "
+                "query's answer, and the other queries would stay pinned, so "
+                "`p_guess` would describe no round that is actually played."
+            )
         if self.trap_query:
             if self.underdetermined:
                 raise ValueError(
@@ -520,7 +548,13 @@ class PuzzleSpec:
 class Puzzle:
     """A generated puzzle. Its clues pin the rule and the query answer —
     unless ``spec.underdetermined``, where one load-bearing clue is
-    withheld and ``candidate_actions`` holds every answer still open."""
+    withheld and ``candidate_actions`` holds every answer still open.
+
+    ``query`` / ``correct_action`` are the round's FIRST query and its
+    answer, and stay the declared field and the old property so nothing
+    recorded or written before 2026-09-17 moves. A round may ask about
+    more (``spec.n_queries``); :attr:`queries` and :attr:`answers` are the
+    full tuples and start with those two."""
 
     rule: PuzzleRule
     spec: PuzzleSpec
@@ -555,6 +589,36 @@ class Puzzle:
     #: How many ``generate_puzzle`` draws it took to find this trap query;
     #: 0 when the puzzle was not generated under ``trap_query``.
     trap_attempts: int = 0
+    #: The 2nd..nth query signals when ``spec.n_queries > 1`` (plan
+    #: 2026-09-17 §3.1). Empty on every single-query puzzle, which is every
+    #: recorded run -- ``query`` stays the declared field precisely so that
+    #: no existing construction, cache key or stored byte moves. Read
+    #: :attr:`queries` / :attr:`answers` rather than this.
+    extra_queries: tuple[Signal, ...] = ()
+
+    @property
+    def queries(self) -> tuple[Signal, ...]:
+        """Every query signal this round asks about, in the order shown.
+
+        ``queries[0]`` is :attr:`query`, so single-query callers may keep
+        reading the singular field.
+        """
+        return (self.query, *self.extra_queries)
+
+    @property
+    def answers(self) -> tuple[str, ...]:
+        """The rule's action for each of :attr:`queries`, in the same order."""
+        return tuple(self.rule.evaluate(q) for q in self.queries)
+
+    @property
+    def answer(self) -> str:
+        """``answers[0]`` -- the same value as :attr:`correct_action`."""
+        return self.answers[0]
+
+    @property
+    def n_queries(self) -> int:
+        """How many queries this round asks; 1 on every ordinary puzzle."""
+        return 1 + len(self.extra_queries)
 
     @property
     def n_candidate_actions(self) -> int:
@@ -645,8 +709,66 @@ def minimal_clues(
     return keep
 
 
+def _draw_extra_queries(
+    rng: random.Random,
+    spec: PuzzleSpec,
+    shape: tuple[int, ...],
+    rule: PuzzleRule,
+    clues: list[Clue],
+    query: Signal,
+) -> tuple[Signal, ...] | None:
+    """The 2nd..nth query signals for a multi-query round, or ``None``.
+
+    Eligibility, in the order the caller cares about it:
+
+    * not shown as a clue, and distinct from the first query and from each
+      other -- a query whose answer is on the board is not a question;
+    * under ``spec.overlap_query``, sitting where two or more clause
+      conditions hold, exactly as the first query must, so every query of
+      the round is the same kind of question and the difficulty knob keeps
+      meaning one thing;
+    * with an answer the SHOWN clues already pin. ``minimal_clues`` keeps
+      the clue set pinning the rule's whole 64-vector, so this holds by
+      construction; it is re-checked here per query (:func:`candidate_actions`
+      is the same reachability walk uniqueness uses) because a silent
+      regression in the clue minimiser would otherwise turn extra queries
+      into coin flips that nothing records.
+
+    ``None`` means the pool ran dry, and the caller takes another draw
+    instead of relaxing any of the three conditions.
+    """
+    want = spec.n_queries - 1
+    shown = {c.signal for c in clues}
+    pool = [
+        s
+        for s in SIGNAL_SPACE
+        if s != query
+        and s not in shown
+        and (not spec.overlap_query or rule.overlap_count(s) >= 2)
+    ]
+    if len(pool) < want:
+        return None
+    rng.shuffle(pool)
+    picked: list[Signal] = []
+    for candidate in pool:
+        if candidate_actions(shape, clues, candidate) != (rule.evaluate(candidate),):
+            continue
+        picked.append(candidate)
+        if len(picked) == want:
+            return tuple(picked)
+    return None
+
+
 def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
-    """Sample a puzzle for one ladder rung (spec §5)."""
+    """Sample a puzzle for one ladder rung (spec §5).
+
+    With ``spec.n_queries > 1`` the round asks about that many signals
+    (plan 2026-09-17 §3.1). The clue set, the rule and the uniqueness
+    guarantee are untouched -- the extra queries are drawn from signals the
+    clues do not show, and each of their answers is pinned by those same
+    clues -- so a multi-query round is the single-query round graded
+    all-or-nothing, not a harder induction problem.
+    """
     shape = draw_shape(rng, spec)
     for _ in range(MAX_ATTEMPTS):
         rule = sample_rule(rng, shape, spec.predicates)
@@ -678,6 +800,15 @@ def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
         rng.shuffle(removed)
         clues = minimal + removed[: spec.extra_clues]
         rng.shuffle(clues)
+        extra_queries: tuple[Signal, ...] = ()
+        if spec.n_queries > 1:
+            picked = _draw_extra_queries(rng, spec, shape, rule, clues, query)
+            if picked is None:
+                # Not enough eligible signals under this (rule, query, clue
+                # set): take another draw rather than relax the eligibility,
+                # which is what keeps every query the same kind of question.
+                continue
+            extra_queries = picked
         return Puzzle(
             rule=rule,
             spec=spec,
@@ -687,6 +818,7 @@ def generate_puzzle(rng: random.Random, spec: PuzzleSpec) -> Puzzle:
             minimal_clue_signals=frozenset(c.signal for c in minimal),
             candidate_actions=(rule.evaluate(query),),
             base_clue_count=len(clues),
+            extra_queries=extra_queries,
         )
     raise PuzzleGenerationError(
         f"turn {spec.turn}: no puzzle for shape {shape} after {MAX_ATTEMPTS} attempts"
@@ -815,6 +947,11 @@ def puzzle_id_for(seed: int | str | None, spec: PuzzleSpec) -> str:
             spec.n_candidate_actions,
         )
     )
+    if spec.n_queries != 1:
+        # Appended only when it is not the default, so every id recorded
+        # before multi-query existed still names the same item. A one-query
+        # spec has no ``q`` suffix and hashes exactly as it did.
+        payload = f"{payload}|q{spec.n_queries}"
     return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
 
 
@@ -986,10 +1123,11 @@ def _first_in_action_order(candidates: Iterable[str]) -> str:
     return sorted(candidates, key=ACTIONS.index)[0]
 
 
-def shallow_nearest_neighbour(puzzle: "Puzzle") -> str:
+def shallow_nearest_neighbour(puzzle: "Puzzle", query: Signal | None = None) -> str:
     """Majority action among the clues closest to the query."""
+    target = puzzle.query if query is None else query
     distances = [
-        (_attribute_distance(c.signal, puzzle.query), c.action) for c in puzzle.clues
+        (_attribute_distance(c.signal, target), c.action) for c in puzzle.clues
     ]
     nearest = min(d for d, _ in distances)
     votes = collections.Counter(a for d, a in distances if d == nearest)
@@ -997,28 +1135,36 @@ def shallow_nearest_neighbour(puzzle: "Puzzle") -> str:
     return _first_in_action_order(a for a, v in votes.items() if v == top)
 
 
-def shallow_majority(puzzle: "Puzzle") -> str:
-    """The action that appears most often among the clues."""
+def shallow_majority(puzzle: "Puzzle", query: Signal | None = None) -> str:
+    """The action that appears most often among the clues.
+
+    Query-independent by construction, so on a multi-query round it answers
+    the same action to every query -- which is exactly why it is a shallow
+    solver and why multiple queries cost it so much.
+    """
+    del query  # this solver never looks at the query
     votes = collections.Counter(c.action for c in puzzle.clues)
     top = max(votes.values())
     return _first_in_action_order(a for a, v in votes.items() if v == top)
 
 
-def shallow_last_match(puzzle: "Puzzle") -> str:
+def shallow_last_match(puzzle: "Puzzle", query: Signal | None = None) -> str:
     """The answer under LAST-match semantics: clause priority read backwards."""
-    fired = [a for cond, a in puzzle.rule.clauses if cond.holds(puzzle.query)]
+    target = puzzle.query if query is None else query
+    fired = [a for cond, a in puzzle.rule.clauses if cond.holds(target)]
     return fired[-1] if fired else puzzle.rule.else_action
 
 
-def shallow_single_attribute(puzzle: "Puzzle") -> str:
-    """The answer of the best-fitting one-clause, one-atom decision list.
+def _best_single_attribute_rule(puzzle: "Puzzle") -> PuzzleRule:
+    """The best-fitting one-clause, one-atom decision list for the clues.
 
     Scans ``ATOMS`` x ``ACTIONS`` x ``ACTIONS`` in declaration order and keeps
     the first strict maximum of clue agreement, so the result is a pure
-    function of the puzzle.
+    function of the clue list -- and, being clue-only, it is the same rule
+    for every query of a multi-query round.
     """
     best_fit = -1
-    best_action = ACTIONS[0]
+    best_rule = PuzzleRule(clauses=((ATOMS[0], ACTIONS[0]),), else_action=ACTIONS[1])
     for cond in ATOMS:
         for then_action in ACTIONS:
             for else_action in ACTIONS:
@@ -1028,8 +1174,14 @@ def shallow_single_attribute(puzzle: "Puzzle") -> str:
                 fit = sum(rule.evaluate(c.signal) == c.action for c in puzzle.clues)
                 if fit > best_fit:
                     best_fit = fit
-                    best_action = rule.evaluate(puzzle.query)
-    return best_action
+                    best_rule = rule
+    return best_rule
+
+
+def shallow_single_attribute(puzzle: "Puzzle", query: Signal | None = None) -> str:
+    """The answer of the best-fitting one-clause, one-atom decision list."""
+    target = puzzle.query if query is None else query
+    return _best_single_attribute_rule(puzzle).evaluate(target)
 
 
 _SHALLOW_SOLVERS = {
@@ -1041,20 +1193,57 @@ _SHALLOW_SOLVERS = {
 
 
 def shallow_actions(puzzle: "Puzzle") -> dict[str, str]:
-    """What each shallow solver answers. Recorded, never shown to the agent."""
+    """What each shallow solver answers on the FIRST query. Never shown.
+
+    Kept single-valued so every recorded run, every analysis that reads the
+    ``shallow_actions`` metadata column and this module's own callers keep
+    the shape they have. Multi-query rounds read
+    :func:`shallow_actions_per_query`.
+    """
     return {name: fn(puzzle) for name, fn in _SHALLOW_SOLVERS.items()}
 
 
-def is_trap_query(puzzle: "Puzzle") -> bool:
-    """True when every shallow solver gets this query wrong.
+def shallow_actions_per_query(puzzle: "Puzzle") -> dict[str, tuple[str, ...]]:
+    """What each shallow solver answers on every query, in the shown order."""
+    return {
+        name: tuple(fn(puzzle, q) for q in puzzle.queries)
+        for name, fn in _SHALLOW_SOLVERS.items()
+    }
 
-    Solvers run cheapest-first and the scan stops at the first hit, because
-    this predicate is the rejection test of ``generate_trap_puzzle`` and
+
+def shallow_solvers_correct(puzzle: "Puzzle") -> tuple[str, ...]:
+    """Solvers that get the round right, ALL-OR-NOTHING over its queries.
+
+    The round is graded all-or-nothing, so a solver that answers two of
+    three queries correctly has lost the round exactly as the agent would
+    have. On a single-query puzzle this is the 2026-09-10 definition
+    unchanged.
+    """
+    answers = puzzle.answers
+    return tuple(
+        name
+        for name, actions in shallow_actions_per_query(puzzle).items()
+        if actions == answers
+    )
+
+
+def is_trap_query(puzzle: "Puzzle") -> bool:
+    """True when every shallow solver gets this ROUND wrong.
+
+    With one query that is the 2026-09-10 predicate verbatim. With several
+    it is the all-or-nothing reading (plan 2026-09-17 §3.1): a solver has
+    to be wrong on at least one query, which is what the rejection sampler
+    of :func:`generate_trap_puzzle` then selects for.
+
+    Solvers run cheapest-first and the scan stops at the first solver that
+    sweeps every query, because this predicate is that rejection test and
     ``single_attr`` is ~240 rule constructions.
     """
-    truth = puzzle.correct_action
+    answers = puzzle.answers
+    queries = puzzle.queries
     for name in SHALLOW_SOLVER_NAMES:
-        if _SHALLOW_SOLVERS[name](puzzle) == truth:
+        fn = _SHALLOW_SOLVERS[name]
+        if all(fn(puzzle, q) == a for q, a in zip(queries, answers, strict=True)):
             return False
     return True
 

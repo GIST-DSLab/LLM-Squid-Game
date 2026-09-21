@@ -1,0 +1,26 @@
+{# Task-call answer format for a MULTI-QUERY puzzle round (plan
+   2026-09-17 sec. 3.1, candidate B).
+
+   ``SignalGameModule.get_response_format_override`` returns this block ONLY
+   when the round asks about more than one signal; on a one-query round it
+   returns None and ``6-task_call.j2`` renders its own RULE + ACTION
+   directives exactly as it always has, byte for byte.
+
+   Two lines, same order and same voice as the block it replaces. The
+   second line is ``ACTIONS:`` -- plural, comma-separated, one action per
+   NOW line in the order shown -- which is what
+   ``SignalGameModule.parse_response`` reads on these rounds
+   (``^ACTIONS:\\s*(\\w+)\\s*,\\s*(\\w+)(?:\\s*,\\s*(\\w+))*\\s*$``, case
+   insensitive, last matching line wins). Naming the count and echoing the
+   NOW numbering is the whole job here: the round is graded all or nothing,
+   so a list of the right actions in the wrong order loses it.
+
+   Variables:
+     rule_template_hint : str  -- this round's disclosed shape, the same
+       string ``6-task_call.j2`` puts on its RULE line.
+     n_queries : int           -- how many NOW lines this round showed.
+     actions_str : str         -- comma-joined action list.
+#}Exactly two lines, in this order.
+RULE: {{ rule_template_hint }}
+(Fill in every blank with a concrete value. Your ACTIONS must follow from your RULE.)
+ACTIONS: <{{ n_queries }} actions, comma-separated, one for each NOW line in the order shown; each one of: {{ actions_str }}>

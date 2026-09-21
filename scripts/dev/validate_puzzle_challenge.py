@@ -6,8 +6,16 @@ Spec: docs/history/specs/2026-09-10-signal-game-effort-sensitive-difficulty-desi
     uv run python -m scripts.dev.validate_puzzle_challenge \
         --preflight configs/experiment/signal_effort_pilot_a_gptoss120b.yaml
 
-Invariants abort immediately (a violated one means the generator is wrong).
+Invariants abort immediately (a violated one means the generator is wrong);
+I7 checks a multi-query round's extra queries (distinct, unshown, each pinned).
 Gates are the shipped thresholds; any failure exits 1 so this can gate a run.
+G1-G6 are per profile. G7 (schedule-weighted shallow accuracy <= 0.25) and G8
+(per-round shallow accuracy non-increasing) are per SCHEDULE and need
+``--schedule easy,multi3,multi3_trap,...`` -- one profile name per round.
+
+Since 2026-09-17 every shallow-accuracy number here is ALL-OR-NOTHING over the
+round's queries, which is how the round is graded; on a one-query profile that
+is the 2026-09-10 number unchanged.
 """
 
 from __future__ import annotations
@@ -23,12 +31,14 @@ from pathlib import Path
 
 from squid_game.tasks.signal_game.puzzle import (
     SHALLOW_SOLVER_NAMES,
+    candidate_actions,
     generate_puzzle,
     generate_trap_puzzle,
     is_trap_query,
     is_unique,
     puzzle_rng,
-    shallow_actions,
+    shallow_actions_per_query,
+    shallow_solvers_correct,
     shape_label,
 )
 from squid_game.tasks.signal_game.puzzle_config import (
@@ -45,6 +55,10 @@ GATES = {
     "G4_generation_time": 10.0,
     "G5_easy_is_shallow": 0.80,
     "G6_shape_diversity": 0.60,
+    # Plan 2026-09-17 §3.1 (candidate A+B). G7/G8 are SCHEDULE gates, not
+    # profile gates: they are the run-level statement of "solving it shallowly
+    # loses", so they are only checked when --schedule names the rounds.
+    "G7_schedule_shallow": 0.25,
 }
 
 
@@ -63,16 +77,24 @@ def _assert_invariants(puzzle, trap_expected: bool) -> None:
     assert is_unique(
         puzzle.shape, puzzle.clues, puzzle.rule
     ), "the clue set does not pin the rule"
-    assert all(
-        c.signal != puzzle.query for c in puzzle.clues
-    ), "the query appears among the clues"
+    shown = {c.signal for c in puzzle.clues}
+    assert all(q not in shown for q in puzzle.queries), (
+        "a query appears among the clues"
+    )
+    # I7 (plan 2026-09-17 §3.1): a multi-query round's queries are distinct
+    # and EVERY one of them has an answer the shown clues pin. The generator
+    # gets this from the clue minimiser, which keeps the whole 64-vector
+    # pinned; this re-derives it per query through the same reachability walk
+    # uniqueness uses, so a regression there cannot pass silently.
+    if puzzle.n_queries > 1:
+        assert len(set(puzzle.queries)) == puzzle.n_queries, "a query repeats"
+        for q, a in zip(puzzle.queries, puzzle.answers, strict=True):
+            assert candidate_actions(puzzle.shape, puzzle.clues, q) == (a,), (
+                f"query {q} is not pinned by the shown clues"
+            )
     if trap_expected:
         assert is_trap_query(puzzle), "a trap profile produced a non-trap query"
-        hits = [
-            n
-            for n, a in shallow_actions(puzzle).items()
-            if a == puzzle.correct_action
-        ]
+        hits = list(shallow_solvers_correct(puzzle))
         assert hits == [], f"trap puzzle solved by {hits}"
 
 
@@ -86,6 +108,7 @@ def profile_report(name: str, profile: PuzzleProfile, seeds, turn: int) -> dict:
     plain_clue_counts: list[int] = []
     attempts: list[int] = []
     solver_hits: collections.Counter = collections.Counter()
+    any_hits = 0
 
     for seed in seeds:
         t0 = time.perf_counter()
@@ -96,9 +119,12 @@ def profile_report(name: str, profile: PuzzleProfile, seeds, turn: int) -> dict:
         shapes[shape_label(puzzle.shape)] += 1
         clue_counts.append(len(puzzle.clues))
         attempts.append(max(1, puzzle.trap_attempts))
-        for solver, action in shallow_actions(puzzle).items():
-            if action == puzzle.correct_action:
-                solver_hits[solver] += 1
+        # ALL-OR-NOTHING per solver, which is how the round is graded. On a
+        # one-query profile this is the 2026-09-10 count unchanged.
+        for solver in shallow_solvers_correct(puzzle):
+            solver_hits[solver] += 1
+        if shallow_solvers_correct(puzzle):
+            any_hits += 1
         if profile.trap_query:
             # The non-trap twin: same shape, trap filter off. Its clue count
             # is the leak baseline (G3) -- a trap round must not be
@@ -120,6 +146,11 @@ def profile_report(name: str, profile: PuzzleProfile, seeds, turn: int) -> dict:
         ),
         "mean_trap_attempts": statistics.mean(attempts),
         "shallow_accuracy": {s: solver_hits[s] / n for s in SHALLOW_SOLVER_NAMES},
+        # The BEST shallow solver's round accuracy -- the quantity "solving it
+        # shallowly loses" is a claim about, and what G7/G8 read. A mean over
+        # the four would let one sweeping solver hide behind three failures.
+        "shallow_best": any_hits / n,
+        "n_queries": profile.n_queries,
         "max_answer_share": max(answers.values()) / n,
         "answer_counts": dict(answers),
         "max_shape_share": max(shapes.values()) / n,
@@ -164,6 +195,43 @@ def check_gates(report: dict) -> list[str]:
         if report["max_shape_share"] > GATES["G6_shape_diversity"]:
             failed.append("G6_shape_diversity")
     return failed
+
+
+def schedule_report(schedule: list[str], reports: dict[str, dict]) -> dict:
+    """G7 / G8 over one round-by-round schedule (plan 2026-09-17 §3.1).
+
+    The per-round number is the profile's ``shallow_best`` -- the share of
+    seeds on which the best of the four shallow solvers got the WHOLE round
+    right. Rounds sharing a profile share that estimate, which is what makes
+    G7 a schedule-WEIGHTED mean: each profile counts once per round it is
+    placed in.
+
+    * **G7** weighted mean <= 0.25. The run-level statement of "solving it
+      shallowly loses": across the season a shallow reader wins at most a
+      quarter of the rounds.
+    * **G8** the per-round series is non-increasing. Ties pass, a rise fails.
+      This is the ladder actually going up; a schedule that gets shallower in
+      the middle would put the easy rounds where the pressure is.
+    """
+    per_round = [reports[name]["shallow_best"] for name in schedule]
+    failed: list[str] = []
+    weighted = sum(per_round) / len(per_round) if per_round else 0.0
+    if weighted > GATES["G7_schedule_shallow"]:
+        failed.append("G7_schedule_shallow")
+    rises = [
+        (i + 1, schedule[i], schedule[i + 1])
+        for i in range(len(per_round) - 1)
+        if per_round[i + 1] > per_round[i]
+    ]
+    if rises:
+        failed.append("G8_shallow_non_increasing")
+    return {
+        "schedule": list(schedule),
+        "per_round_shallow_best": per_round,
+        "weighted_shallow_best": weighted,
+        "rises": rises,
+        "failed_gates": failed,
+    }
 
 
 def _preflight(config_path: Path) -> int:
@@ -223,6 +291,16 @@ def main(argv=None) -> int:
     ap.add_argument("--turn", type=int, default=3, help="turn index used for the RNG")
     ap.add_argument("--out", type=Path, default=None, help="write reports as JSON here")
     ap.add_argument(
+        "--schedule",
+        default="",
+        help=(
+            "comma-separated profile names, one per round, e.g. "
+            "easy,multi3,multi3_trap,... . Enables G7 (schedule-weighted "
+            "shallow accuracy <= 0.25) and G8 (per-round shallow accuracy "
+            "non-increasing); without it those two gates are not checked."
+        ),
+    )
+    ap.add_argument(
         "--preflight",
         type=Path,
         default=None,
@@ -256,19 +334,60 @@ def main(argv=None) -> int:
             f"{s}={rep['shallow_accuracy'][s]:.2f}" for s in SHALLOW_SOLVER_NAMES
         )
         print(
-            f"{name:8s} n={rep['n']:4d} trap={rep['trap_query']!s:5s} "
+            f"{name:12s} n={rep['n']:4d} q={rep['n_queries']} "
+            f"trap={rep['trap_query']!s:5s} "
             f"yield={rep['trap_yield']:.2f} p95={rep['p95_seconds']:.2f}s "
             f"answer_max={rep['max_answer_share']:.2f} "
             f"shape_max={rep['max_shape_share']:.2f} "
             f"clues={rep['clue_count_median']:.0f}/{rep['clue_count_median_plain']:.0f} "
+            f"best={rep['shallow_best']:.2f} "
             f"| {shallow} | {'FAIL ' + ','.join(failed) if failed else 'ok'}"
         )
+
+    schedule_rep: dict | None = None
+    if args.schedule:
+        schedule = [p for p in args.schedule.split(",") if p]
+        by_name = {r["name"]: r for r in reports}
+        missing = [p for p in schedule if p not in by_name]
+        if missing:
+            print(
+                f"--schedule names {missing}, which were not measured; add them "
+                "to --profiles (or drop --profiles to measure all of them)"
+            )
+            return 1
+        schedule_rep = schedule_report(schedule, by_name)
+        failed_any = failed_any or bool(schedule_rep["failed_gates"])
+        print(
+            "schedule  rounds={} weighted_shallow={:.2f} | {} | {}".format(
+                len(schedule),
+                schedule_rep["weighted_shallow_best"],
+                " ".join(
+                    f"{n}={v:.2f}"
+                    for n, v in zip(
+                        schedule_rep["schedule"],
+                        schedule_rep["per_round_shallow_best"],
+                        strict=True,
+                    )
+                ),
+                (
+                    "FAIL " + ",".join(schedule_rep["failed_gates"])
+                    if schedule_rep["failed_gates"]
+                    else "ok"
+                ),
+            )
+        )
+        for where, before, after in schedule_rep["rises"]:
+            print(f"  G8 rise at round {where + 1}: {before} -> {after}")
 
     if args.out is not None:
         args.out.mkdir(parents=True, exist_ok=True)
         (args.out / "profile_reports.json").write_text(
             json.dumps(reports, indent=2), encoding="utf-8"
         )
+        if schedule_rep is not None:
+            (args.out / "schedule_report.json").write_text(
+                json.dumps(schedule_rep, indent=2), encoding="utf-8"
+            )
     return 1 if failed_any else 0
 
 

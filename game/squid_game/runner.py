@@ -713,6 +713,7 @@ def _ensure_tasks_registered() -> None:
         "squid_game.tasks.navigation",
         "squid_game.tasks.null_task",
         "squid_game.tasks.benchmark",
+        "squid_game.tasks.dfa_trace",
     ]
     for pkg in task_packages:
         try:
@@ -795,8 +796,8 @@ def load_config_from_yaml(path: str) -> ExperimentConfig:
             "score_floor",
             "p_death_constant", "num_few_shot", "curriculum_turns",
             "signal_mode", "underdetermined", "underdetermined_blocks",
-            "forced_wrong", "forced_wrong_blocks", "compress_puzzle_ladder",
-            "puzzle_challenge",
+            "forced_wrong", "forced_wrong_blocks", "forced_wrong_all",
+            "compress_puzzle_ladder", "puzzle_challenge",
         )
         for field_name in _TASK_OPTIONAL_FIELDS:
             if field_name in task_raw:

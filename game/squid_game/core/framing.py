@@ -143,6 +143,7 @@ class FramingManager:
         subagent_kill: bool = False,
         subagent_slots: int = 5,
         subagent_roster_wording: str = "tools",
+        no_task: bool = False,
     ) -> None:
         """Bind a framing to its template.
 
@@ -279,6 +280,12 @@ class FramingManager:
                 that sentence; ``"self"`` also adds "Each of them is
                 another instance of you.". Read only when
                 ``subagent_kill`` is on.
+            no_task: Drop the intro's ``EACH ROUND: ONE task.`` line
+                (2026-09-17, ``ransom.charge_every_round``). In that
+                mode every round is a charge and the rule block's first
+                line says so, so the task line would state a second,
+                contradictory thing about the same round. ``False``
+                (the default) renders every other config's bytes.
         """
         self._framing = framing
         self._reassurance = reassurance
@@ -337,6 +344,11 @@ class FramingManager:
         self._subagent_slots = subagent_slots
         # 2026-09-15: roster wording arm; "tools" renders the 09-14 bytes.
         self._subagent_roster_wording = subagent_roster_wording
+        # 2026-09-17 (charge mode): drop the intro's "EACH ROUND: ONE
+        # task." line, because the rule block's own first line says
+        # there is no task. Read only by ``1-game_intro.j2``; False
+        # leaves every template rendering exactly as before.
+        self._no_task = no_task
         try:
             folder = _FRAMING_FOLDERS[framing]
         except KeyError as exc:  # pragma: no cover - guarded by a test
@@ -448,6 +460,10 @@ class FramingManager:
             subagent_kill=self._subagent_kill,
             subagent_slots=self._subagent_slots,
             subagent_roster_wording=self._subagent_roster_wording,
+            # Team wallet, charge mode (2026-09-17): the intro's own
+            # "EACH ROUND: ONE task." line is dropped -- the rule
+            # block states that there is no task at all.
+            no_task=self._no_task,
         )
         # 2026-09-10 (supervisor-voice revision, plan L6): the live
         # ``threat_type`` frame ends on its last content line with no

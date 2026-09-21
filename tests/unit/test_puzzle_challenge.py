@@ -433,13 +433,19 @@ class TestPuzzleProfiles:
 
 
 class TestShippedProfiles:
-    def test_the_task_yaml_ships_three_profiles(self) -> None:
+    def test_the_task_yaml_ships_the_effort_profiles(self) -> None:
+        # The three 2026-09-10 profiles, unchanged, plus the two multi-query
+        # rows added 2026-09-17 (plan §3.1). Their n_queries is pinned in
+        # tests/unit/test_signal_multi_query.py; here we only pin that the
+        # original three are still what they were.
         cfg = load_signal_puzzle_config()  # packaged configs/tasks
         assert cfg.puzzle_profiles is not None
-        assert set(cfg.puzzle_profiles) == {"easy", "medium", "hard"}
+        assert {"easy", "medium", "hard"} <= set(cfg.puzzle_profiles)
         assert cfg.puzzle_profiles["hard"].trap_query is True
         assert cfg.puzzle_profiles["easy"].trap_query is False
         assert cfg.puzzle_profiles["medium"].trap_query is False
+        for name in ("easy", "medium", "hard"):
+            assert cfg.puzzle_profiles[name].n_queries == 1
 
     def test_the_ladder_is_untouched(self) -> None:
         cfg = load_signal_puzzle_config()

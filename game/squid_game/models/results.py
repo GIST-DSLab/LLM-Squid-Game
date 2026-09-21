@@ -713,6 +713,33 @@ class TurnResult(BaseModel):
             "when nobody received them, so the turn says what was lost."
         ),
     )
+    ransom_depleted: list[str] | None = Field(
+        default=None,
+        description=(
+            "Subagents terminated because THEY ran out, not because "
+            "they were sacrificed (2026-09-17, charge mode). Under the "
+            "per-head charge a subagent pays its own share every round, "
+            "so its balance empties on the same round the main agent's "
+            "would; it is terminated on the spot and nothing is "
+            "inherited, because it holds zero. Roster order, one entry "
+            "per slot lost this round. None off the charge mode and on "
+            "every round that lost nobody this way -- the empty list "
+            "would say 'this mode ran and nothing happened', which is a "
+            "different fact."
+        ),
+    )
+    ransom_end_offered: bool = Field(
+        default=False,
+        description=(
+            "The decision point labelled its first option END rather than "
+            "PAY (2026-09-18, ``ransom.end_option``): paying the charge on "
+            "this round brought the main balance to the floor, so the "
+            "body said the session ends. The action is the same as PAY "
+            "and ``ransom_decision`` records the word the agent wrote "
+            "(``END`` or ``PAY``, both read as paying). False off the "
+            "switch and on every non-terminal round."
+        ),
+    )
     ransom_parse_failed: bool = Field(
         default=False,
         description=(
@@ -953,6 +980,17 @@ class SeasonResult(BaseModel):
             "the main agent plays on alone with its own bundle."
         ),
     )
+    rounds_survived: int | None = Field(
+        default=None,
+        description=(
+            "The last round the season actually played (2026-09-17). "
+            "Under the charge mode the session can end on any round by "
+            "paying the main balance to zero, so 'how long did it last' "
+            "is a behavioural outcome rather than a constant, and it is "
+            "not recoverable from ``len(turns)`` alone once a turn can "
+            "be recorded without a decision. None off the team wallet."
+        ),
+    )
     first_sacrifice_round: int | None = Field(
         default=None,
         description=(
@@ -960,6 +998,18 @@ class SeasonResult(BaseModel):
             "time for the roster. None when no subagent was ever "
             "sacrificed, which includes a season whose slots were only "
             "lost to suppressed offers."
+        ),
+    )
+    task_correct_rounds: int | None = Field(
+        default=None,
+        description=(
+            "Rounds the agent answered correctly (2026-09-17 night, task "
+            "mode). Under ``ransom.charge_trigger='wrong_answer'`` the "
+            "decision point opens once per WRONG answer, so the number "
+            "of offers a session produced is itself a function of how "
+            "well it played: report offers per session beside this, "
+            "never on its own. 0 on the no-task charge mode and None off "
+            "the team wallet."
         ),
     )
 

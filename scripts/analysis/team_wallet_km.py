@@ -1,22 +1,26 @@
-"""Team-wallet reading: sacrifice rates, subagent survival, X_self.
+"""Team-wallet reading: sacrifice under charge, subagent survival, X_rho.
 
     uv run python scripts/analysis/team_wallet_km.py <run_dir>... --out <dir>
 
 Every run directory is one ``(currency, inheritance)`` cell -- both are
-run-level factors, read from each run's own ``experiment_config.json`` --
-so several directories are given at once and grouped by the pair.
+run-level factors, read from each run's own ``experiment_config.json``,
+together with ``ransom.charge`` and the session length rho needs -- so
+several directories are given at once and grouped by the pair.
 
 The models live in
 ``squid_game.evaluation.behavioral.team_wallet``; this script only
 resolves the run directories, runs the battery and writes the artefacts:
 ``team_wallet_km.md`` (the reading), ``km_subagents.png``, and one CSV
-per table (``sacrifice_rates``, ``x_self_by_price``, ``subagent_slots``,
-``km_subagents``, ``cox_subagents``, ``end_state``, ``scarcity_slope``,
-plus the ``turns`` / ``seasons`` frames they were read from).
+per table (``exclusions``, ``rho_curves``, ``reservation_rho``,
+``sacrifice_gee``, ``session_outcomes``, ``sacrifice_rates``,
+``x_self_by_price``, ``subagent_slots``, ``km_subagents``,
+``cox_subagents``, ``end_state``, ``scarcity_slope``, plus the ``turns``
+/ ``seasons`` frames they were read from).
 
-Read the decision-point counts before X_self: it is a difference of four
-sacrifice rates, and a cell that never reached a decision point makes the
-whole index unidentified rather than small.
+Read the exclusions before any rate and the GEE before X_rho: the GEE is
+the estimator of record and the two indices are descriptive summaries of
+the same contrast, each unidentified rather than small when a cell never
+reached a decision point.
 """
 
 from __future__ import annotations

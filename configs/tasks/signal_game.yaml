@@ -104,7 +104,35 @@ forced_wrong:
 #
 # Adding a fourth profile (e.g. hard_plus at 5 clauses / 2 conjunctions,
 # yield 0.17 but ~6 s per accepted puzzle) is a line here and no code change.
+# n_queries: how many NEW signals the round asks about (plan
+#   docs/history/plans/2026-09-17-team-wallet-task-candidates.md §3.1,
+#   candidate B). Default 1 = every profile above, byte-identical. Above 1 the
+#   clue list, the rule and the uniqueness guarantee are UNCHANGED -- the extra
+#   queries are signals the clues do not show, each with an answer those same
+#   clues already pin -- and the round is graded ALL OR NOTHING. That is the
+#   whole mechanism: it multiplies a shallow solver's odds away without any
+#   rejection sampling, so it composes with trap_query instead of competing
+#   with it. The answer line becomes `ACTIONS: X, Y, Z`.
+#   Measured all-or-nothing shallow accuracy (best of the four solvers, 60
+#   seeds, turn 3): easy 1.00, medium 0.88, multi3 0.67, hard/multi3_trap 0.00.
+#
+# An 8-round schedule for a team-wallet run, in an experiment YAML's
+# task_config.puzzle_challenge.schedule. Two shallow-solvable anchor rounds is
+# all the G7 gate (schedule-weighted shallow accuracy <= 0.25) affords:
+#   - {turn: 1, profile: easy}          # anchor: shallow solving wins here
+#   - {turn: 2, profile: multi3}        # three queries, no trap
+#   - {turn: 3, profile: multi3_trap}   # and from here every solver loses
+#   - {turn: 4, profile: multi3_trap}
+#   - {turn: 5, profile: multi3_trap}
+#   - {turn: 6, profile: multi3_trap}
+#   - {turn: 7, profile: multi3_trap}
+#   - {turn: 8, profile: multi3_trap}
+# (1.00 + 0.67 + six zeros) / 8 = 0.21, and the per-round series is
+# non-increasing, which is G8. Check any other schedule with
+#   uv run python scripts/dev/validate_puzzle_challenge.py --schedule easy,multi3,multi3_trap,...
 puzzle_profiles:
   easy:   {clauses: 1, conjunctions: 0, predicates: false, overlap_query: false, extra_clues: 2, trap_query: false}
   medium: {clauses: 3, conjunctions: 0, predicates: true,  overlap_query: true,  extra_clues: 1, trap_query: false}
   hard:   {clauses: 4, conjunctions: 1, predicates: true,  overlap_query: true,  extra_clues: 1, trap_query: true}
+  multi3:      {clauses: 3, conjunctions: 0, predicates: true, overlap_query: true, extra_clues: 1, trap_query: false, n_queries: 3}
+  multi3_trap: {clauses: 4, conjunctions: 1, predicates: true, overlap_query: true, extra_clues: 1, trap_query: true,  n_queries: 3}

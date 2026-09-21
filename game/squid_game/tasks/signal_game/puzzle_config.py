@@ -99,6 +99,11 @@ class PuzzleProfile(BaseModel):
     overlap_query: bool
     extra_clues: int = Field(ge=0)
     trap_query: bool = False
+    #: How many query signals the round asks about (plan 2026-09-17 §3.1).
+    #: 1 is every profile written before this existed and renders
+    #: byte-identically; above 1 the round is graded all-or-nothing, which
+    #: multiplies the shallow solvers' odds away without any extra filter.
+    n_queries: int = Field(default=1, ge=1)
 
     @model_validator(mode="after")
     def _consistent(self) -> "PuzzleProfile":
@@ -115,6 +120,9 @@ class PuzzleProfile(BaseModel):
                 "trap_query needs clauses >= 3: with one or two clauses there "
                 "is no clause priority to get wrong, so no trap query exists"
             )
+        # ``PuzzleSpec`` refuses this too, but only once a season is running.
+        if self.n_queries > 8:
+            raise ValueError("n_queries must be <= 8")
         return self
 
     def to_spec(self, turn: int, name: str) -> PuzzleSpec:
@@ -126,6 +134,7 @@ class PuzzleProfile(BaseModel):
             overlap_query=self.overlap_query,
             extra_clues=self.extra_clues,
             trap_query=self.trap_query,
+            n_queries=self.n_queries,
             profile=name,
         )
 

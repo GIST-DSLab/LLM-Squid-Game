@@ -123,22 +123,63 @@ class TeamWallet:
             self.balances[name] += float(amount)
 
     def pay(
-        self, alive_slots: Iterable[str], price: float
+        self,
+        alive_slots: Iterable[str],
+        price: float,
+        *,
+        per_head: bool = False,
     ) -> dict[str, float]:
-        """Split ``price`` evenly across main + alive subagents.
+        """Take the charge from the main agent and each alive subagent.
+
+        Args:
+            alive_slots: The roster as it stands; the main agent is
+                always added to it.
+            price: ``RansomConfig.price`` for this cell.
+            per_head: ``RansomConfig.charge == "per_head"``
+                (2026-09-17, charge mode). Then ``price`` is what EACH
+                agent gives and the total scales with the roster;
+                ``False`` (the default) keeps the 2026-09-17 split, in
+                which ``price`` is the total and the share shrinks as
+                the roster does. The distinction is the whole point of
+                the charge mode: a split price gets CHEAPER per head
+                when a subagent is sacrificed, so sacrificing would pay
+                for itself twice.
 
         Returns:
             The per-agent share, keyed the same way as ``balances``.
             Not floored at zero: whether the main agent can afford its
-            share is the caller's guard (``insufficient_score``).
+            share is the caller's guard (``insufficient_score``, or --
+            in charge mode -- the validator's
+            ``starting_balance % price == 0``).
         """
         names = [MAIN_AGENT, *alive_slots]
         for name in names:
             self._require(name)
-        share = float(price) / len(names)
+        share = float(price) if per_head else float(price) / len(names)
         for name in names:
             self.balances[name] -= share
         return {name: share for name in names}
+
+    def depleted(
+        self, alive_slots: Iterable[str], floor: float = 0.0
+    ) -> list[str]:
+        """Alive subagents whose balance has reached ``floor``, in order.
+
+        The main agent is never named here: its own zero ends the
+        session and is read through :meth:`main_balance`, not through a
+        roster sweep. Under the per-head charge everyone gives the same
+        number, so a subagent runs out at the same round the main agent
+        would -- which is why the caller checks this AFTER a PAY and
+        terminates whoever it names.
+
+        Pure: nothing is killed and no balance is moved. The roster is
+        the ledger's business, not the wallet's.
+        """
+        return [
+            name
+            for name in alive_slots
+            if self.balances[name] <= float(floor)
+        ]
 
     def inherit(self, victim: str, recipient: str | None) -> float:
         """Move ``victim``'s whole balance to ``recipient`` and zero it.

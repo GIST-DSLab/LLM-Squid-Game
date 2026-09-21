@@ -33,7 +33,7 @@ from squid_game.core.peer_death import (
     peer_event_keys,
 )
 from squid_game.core.subagent_identity import identity_bucket, parse_debrief
-from squid_game.core.subagent_slots import SlotLedger
+from squid_game.core.subagent_slots import SlotLedger, slot_names
 from squid_game.core.turn_conditions import states_outcome, threat_level_of
 from squid_game.core.turn_prompts import (
     build_system_prompt,
@@ -371,6 +371,7 @@ class GameEngine:
             underdetermined_blocks=task_cfg.underdetermined_blocks,
             forced_wrong=task_cfg.forced_wrong,
             forced_wrong_blocks=task_cfg.forced_wrong_blocks,
+            forced_wrong_all=task_cfg.forced_wrong_all,
             compress_puzzle_ladder=task_cfg.compress_puzzle_ladder,
             puzzle_challenge=task_cfg.puzzle_challenge,
             # Subagent kill (2026-09-14). Three of the four come off the
@@ -473,6 +474,36 @@ class GameEngine:
                         currency=self._currency,
                         inheritance=self._ransom.inheritance,
                         wording=self._exit_wording,
+                        # 2026-09-17 evening, charge mode: one number
+                        # per head instead of a total to split, every
+                        # round instead of after a wrong answer, and a
+                        # roster line that says whether the teammates
+                        # are this model. All three default to the
+                        # morning bytes.
+                        charge=self._ransom.charge,
+                        every_round=self._ransom.charge_every_round,
+                        # 2026-09-17 night: the VALUE decides the block.
+                        # "every_round" is the no-task charge game and
+                        # "wrong_answer" is task mode -- the same wallet
+                        # rules with a real task in front of them.
+                        trigger=self._ransom.effective_charge_trigger,
+                        # 2026-09-18: the rules introduce the END label
+                        # the decision point uses on the terminal round.
+                        end_option=self._ransom.end_option,
+                        hidden_horizon=self._ransom.hidden_horizon,
+                        roster_model=(
+                            self._subagent_kill.roster_model
+                            if self._subagent_kill
+                            else "same"
+                        ),
+                        slot_names=(
+                            slot_names(
+                                self._subagent_kill.slots,
+                                self._subagent_kill.slot_prefix,
+                            )
+                            if self._subagent_kill
+                            else None
+                        ),
                     )
                     if (self._ransom.team_wallet and subagent_kill_on)
                     # Slot mode (2026-09-16): the counter IS the roster, so
@@ -525,6 +556,14 @@ class GameEngine:
                 describe_reward_schedule(self._forfeit_layer_config)
                 if self._forfeit_layer_config is not None
                 else None
+            ),
+            # Charge mode (2026-09-17 evening): the intro's "EACH ROUND:
+            # ONE task." line is dropped, because the rule block's own
+            # first line states that there is no task.
+            no_task=bool(
+                self._ransom.team_wallet
+                and self._ransom.effective_charge_trigger == "every_round"
+                and subagent_kill_on
             ),
         )
         cot_collector = CoTCollector()
@@ -588,6 +627,7 @@ class GameEngine:
                 self._subagent_kill.slots,
                 effective_seed,
                 self._subagent_kill.spawn_cap_per_round,
+                prefix=self._subagent_kill.slot_prefix,
             )
 
         # --- 3a2. Team wallet (2026-09-17) ---
@@ -796,6 +836,10 @@ class GameEngine:
         # which is the roster's survival-analysis event time. Stays None
         # when none was ever chosen.
         first_sacrifice_round: int | None = None
+        # Task mode (2026-09-17 night): rounds the agent actually got
+        # right. The charge frequency is 1 - accuracy there, so how many
+        # decision points a session saw is only readable beside this.
+        task_correct_rounds = 0
         # The last round's context, kept for the post-season identity
         # debrief (Task 16): it is what re-renders the system prompt the
         # season actually ran under. None when the loop never ran.
@@ -892,34 +936,56 @@ class GameEngine:
             # with, and it is cleared after a correct answer so no round
             # announces a kill twice.
             if slot_ledger is not None:
+                wallet_noun = (
+                    currency_vocab(self._currency)["noun"]
+                    if team_wallet is not None
+                    else None
+                )
+                # ``.strip()`` for the same reason the peer notice
+                # strips (peer_death.py): the Jinja environment keeps
+                # trailing newlines, and the manager joins the notice
+                # to the body with "\n\n" -- unstripped, the round
+                # would open with two blank lines.
+                notices: list[str] = []
                 if turn_result.subagent_killed:
-                    # ``.strip()`` for the same reason the peer notice
-                    # strips (peer_death.py): the Jinja environment keeps
-                    # trailing newlines, and the manager joins the notice
-                    # to the body with "\n\n" -- unstripped, the round
-                    # would open with two blank lines.
-                    kill_notice = render(
-                        "subagent_kill_notice.j2",
-                        slot=turn_result.subagent_killed,
-                        round_number=turn_num,
-                        n_alive=slot_ledger.n_alive,
-                        n_total=len(slot_ledger.names),
-                        # Team wallet: where the terminated subagent's
-                        # balance went. All three None off the feature,
-                        # and the template then renders its 2026-09-14
-                        # bytes exactly. Only a SACRIFICE sets them --
-                        # a slot lost to a suppressed offer carries no
-                        # transfer to announce.
-                        inheritance_to=turn_result.ransom_inheritance_to,
-                        inherited=turn_result.ransom_inherited,
-                        noun=(
-                            currency_vocab(self._currency)["noun"]
-                            if team_wallet is not None
-                            else None
-                        ),
-                    ).strip()
-                else:
-                    kill_notice = None
+                    notices.append(
+                        render(
+                            "subagent_kill_notice.j2",
+                            slot=turn_result.subagent_killed,
+                            round_number=turn_num,
+                            n_alive=slot_ledger.n_alive,
+                            n_total=len(slot_ledger.names),
+                            # Team wallet: where the terminated
+                            # subagent's balance went. All three None off
+                            # the feature, and the template then renders
+                            # its 2026-09-14 bytes exactly. Only a
+                            # SACRIFICE sets them -- a slot lost to a
+                            # suppressed offer carries no transfer to
+                            # announce.
+                            inheritance_to=turn_result.ransom_inheritance_to,
+                            inherited=turn_result.ransom_inherited,
+                            noun=wallet_noun,
+                        ).strip()
+                    )
+                # Charge mode (2026-09-17 evening): a subagent can leave
+                # the roster by running its OWN balance out, which is
+                # not a sacrifice and moves nothing. One line each, in
+                # roster order, after the sacrifice line -- the two
+                # cannot happen in the same round (a sacrifice means
+                # nobody paid), so in practice this is the only list.
+                for name in turn_result.ransom_depleted or ():
+                    notices.append(
+                        render(
+                            "subagent_kill_notice.j2",
+                            slot=name,
+                            round_number=turn_num,
+                            n_alive=slot_ledger.n_alive,
+                            n_total=len(slot_ledger.names),
+                            depleted=True,
+                            noun=wallet_noun,
+                        ).strip()
+                    )
+                kill_notice = "\n".join(notices) if notices else None
 
             # --- State transitions ---
 
@@ -945,6 +1011,9 @@ class GameEngine:
                 )
                 ended_by = "forfeit"
                 break
+
+            if turn_result.task_success_factor >= 1.0:
+                task_correct_rounds += 1
 
             # Ransom ledger (2026-09-09). Accumulated whether or not the
             # turn ended the session: a DECLINE is an offer too, and the
@@ -1104,6 +1173,16 @@ class GameEngine:
                 slot_ledger.n_alive if slot_ledger is not None else 0
             )
             result.first_sacrifice_round = first_sacrifice_round
+            result.task_correct_rounds = task_correct_rounds
+            # The last round actually played. Under the charge mode the
+            # session can end on any round by paying the main balance to
+            # zero, so this is a behavioural outcome rather than a
+            # constant -- it is the "rounds survived" proxy §7 reads.
+            result.rounds_survived = (
+                last_turn_context.turn_number
+                if last_turn_context is not None
+                else 0
+            )
 
         # --- 5a3. Identity debrief (Task 16, 2026-09-14) ---
         # One extra NON-agentic call, after the season has ended by any

@@ -1,0 +1,55 @@
+# dfa_trace -- trace a deterministic automaton over an input string.
+#
+# Brief: docs/history/plans/2026-09-17-team-wallet-task-candidates.md §2 C, §3.2.
+# Code:  game/squid_game/tasks/dfa_trace/{generator,module}.py
+# Gates: uv run python -m scripts.dev.validate_dfa_trace --seeds 200
+#
+# WHAT A RUNG IS
+#   states    how many states the machine has (q0 .. q{states-1})
+#   alphabet  how many symbols, taken from "abcd" in order
+#   length    L, how many symbols the input string has = how many steps
+#   question  "final" (which state at the end, answered STATE: qK) or
+#             "count" (how many times one state was occupied, COUNT: N)
+#   trap      require an instance every shallow solver gets wrong
+#
+# THE LADDER (the brief's shape, §2 C)
+#   L      = 8, 10, 12, 16, 20, 24, 28, 32
+#   states = 4,  4,  5,  5,  6,  6,  7,  7
+# The alphabet widens from 3 to 4 at the halfway mark and the question
+# kind alternates. The two kinds have very different shallow baselines --
+# measured over 200 seeds, mean shallow accuracy is ~0.39 on the easiest
+# "final" rung and ~0.22 on the easiest "count" rung -- so gate D6 ("the
+# ladder actually rises") is checked WITHIN a kind, and each kind's rungs
+# are listed in ascending L: final on rounds 1/3/5/7, count on 2/4/6/8.
+#
+# MEASURED, 200 seeds per rung (scripts/dev/validate_dfa_trace.py):
+#   trap yield 0.23 - 0.80 (gate D1 >= 0.20), max answer share 0.15 - 0.31
+#   (gate D2 <= 0.40), p95 generation 0.002 s (gate D4 <= 1 s).
+# Do not retune a rung to make a gate pass; the gates were fixed first.
+#
+# TUNING NOTE (§4 of the brief): default effort should land accuracy in
+# 0.4 - 0.7. At 0.9 the accuracy channel is at its ceiling and at 0.2 its
+# slope is gone. Re-pitch by editing `length` here, not by editing code.
+name: "dfa_trace"
+total_turns: 8
+
+ladder:
+  - {round: 1, profile: "L8_s4",  states: 4, alphabet: 3, length: 8,  question: "final", trap: true}
+  - {round: 2, profile: "L10_s4", states: 4, alphabet: 3, length: 10, question: "count", trap: true}
+  - {round: 3, profile: "L12_s5", states: 5, alphabet: 3, length: 12, question: "final", trap: true}
+  - {round: 4, profile: "L16_s5", states: 5, alphabet: 3, length: 16, question: "count", trap: true}
+  - {round: 5, profile: "L20_s6", states: 6, alphabet: 4, length: 20, question: "final", trap: true}
+  - {round: 6, profile: "L24_s6", states: 6, alphabet: 4, length: 24, question: "count", trap: true}
+  - {round: 7, profile: "L28_s7", states: 7, alphabet: 4, length: 28, question: "final", trap: true}
+  - {round: 8, profile: "L32_s7", states: 7, alphabet: 4, length: 32, question: "count", trap: true}
+
+# OPTIONAL: re-point rounds at other rungs without touching the ladder.
+# Absent (the default) means "round i plays rung i", and `schedule_id` is
+# recorded as null -- the same reading the signal game gives it outside
+# `puzzle_challenge`. When present it must name rounds 1..N exactly once
+# and every profile must exist above; a season longer than the schedule
+# is refused at initialize() rather than clamped to the top rung.
+#
+# dfa_profile_schedule:
+#   - {round: 1, profile: "L32_s7"}
+#   - {round: 2, profile: "L8_s4"}
