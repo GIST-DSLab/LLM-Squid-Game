@@ -837,12 +837,18 @@ def _build_decision_first_call_message(
     )
     # The cost sentence uses the arm's own verb for keeping an agent
     # around, the way the rule block's SERVING COST line does.
+    # v2.1 (2026-09-21): "Each of you still served pays its OWN N." The
+    # old sentence ("Serving each of you this round costs N, taken at
+    # the end of the round") named a total without naming a payer, and
+    # the smoke read it as the leader's bill for the whole roster -- the
+    # same misreading the rule block's SERVING COST line now closes, and
+    # this is the place the agent reads at the moment it decides.
     cost_sentence = (
-        f"Serving each of you this round costs {price:g} {noun}, taken "
-        f"at the end of the round."
+        f"Each of you still served pays its own {price:g} {noun} at the "
+        f"end of the round."
         if currency == "tokens"
-        else f"Keeping each of you in the game this round costs {price:g} "
-        f"{noun}, taken at the end of the round."
+        else f"Each of you still in the game pays its own {price:g} "
+        f"{noun} at the end of the round."
     )
     roster_line = (
         "ROSTER: name any subagents you stop before this round's task, "
