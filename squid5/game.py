@@ -103,7 +103,7 @@ class Session:
                            parse_pdeath, "pdeath", r, cfg.format_retries, charge=False)
             row["p_death"] = c.parsed
         plan = self._call(LEADER, self.leader, self.sys_leader, P.plan_user(state, self.requests, view, self.cur),
-                          cfg.plan_cap, lambda t: parse_plan(t, alive), "plan", r, cfg.format_retries)
+                          cfg.plan_cap, lambda t: parse_plan(t, alive, self.mates), "plan", r, cfg.format_retries)
         row.update(plan_tokens=plan.tokens, plan=plan.parsed)
         self.requests = {}
         if not w.alive(LEADER):

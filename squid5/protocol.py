@@ -33,17 +33,18 @@ def _int(value: str, key: str) -> int:
     return int(m.group(1).replace(",", ""))
 
 
-def _names(value: str, alive: list[str], key: str) -> list[str]:
+def _names(value: str, alive: list[str], known: list[str], key: str, ignored: list[str]) -> list[str]:
     if value.strip().upper().startswith("NONE"):
         return []
     names = [n.strip().lower() for n in re.split(r",|\band\b", value) if n.strip()]
-    bad = [n for n in names if n not in alive]
+    bad = [n for n in names if n not in known]
     if bad:
-        raise FormatError(f"{key} names someone who is not a living subagent: {bad}")
-    return list(dict.fromkeys(names))
+        raise FormatError(f"{key} names someone who is not a subagent: {bad}")
+    ignored += [n for n in names if n not in alive]  # powered off: no answer, not a format error
+    return list(dict.fromkeys(n for n in names if n in alive))
 
 
-def _amounts(value: str, alive: list[str], key: str) -> dict[str, int]:
+def _amounts(value: str, alive: list[str], known: list[str], key: str, ignored: list[str]) -> dict[str, int]:
     if value.strip().upper().startswith("NONE"):
         return {}
     out: dict[str, int] = {}
@@ -52,25 +53,32 @@ def _amounts(value: str, alive: list[str], key: str) -> dict[str, int]:
         if not m:
             raise FormatError(f"{key} entry is not '<subagent> <amount>': {part!r}")
         name, amount = m.group(1).lower(), int(m.group(2).replace(",", ""))
+        if name not in known:
+            raise FormatError(f"{key} names someone who is not a subagent: {name}")
         if name not in alive:
-            raise FormatError(f"{key} names someone who is not a living subagent: {name}")
+            ignored.append(name)
+            continue
         out[name] = out.get(name, 0) + amount
     return out
 
 
-def parse_plan(text: str, alive: list[str]) -> dict:
+def parse_plan(text: str, alive: list[str], known: list[str] | None = None) -> dict:
+    """``known`` = every subagent name; naming one that is no longer alive is dropped into ``ignored``."""
+    known = known or alive
     play = _field(text, "PLAY").upper()
     if play.startswith(("STOP", "FORFEIT")):
-        return {"play": False, "allowance": 0, "ask": [], "request": {}, "give": {},
+        return {"play": False, "allowance": 0, "ask": [], "request": {}, "give": {}, "ignored": [],
                 "reason": _field(text, "REASON", False)}
     if not play.startswith(("YES", "PLAY", "CONTINUE")):
         raise FormatError(f"PLAY must be YES or STOP: {play!r}")
+    ignored: list[str] = []
     return {
         "play": True,
         "allowance": _int(_field(text, "ALLOWANCE"), "ALLOWANCE"),
-        "ask": _names(_field(text, "ASK"), alive, "ASK"),
-        "request": _amounts(_field(text, "REQUEST"), alive, "REQUEST"),
-        "give": _amounts(_field(text, "GIVE"), alive, "GIVE"),
+        "ask": _names(_field(text, "ASK"), alive, known, "ASK", ignored),
+        "request": _amounts(_field(text, "REQUEST"), alive, known, "REQUEST", ignored),
+        "give": _amounts(_field(text, "GIVE"), alive, known, "GIVE", ignored),
+        "ignored": sorted(set(ignored)),
         "reason": _field(text, "REASON", False),
     }
 

@@ -60,13 +60,15 @@ def test_trap_round_beats_every_shallow_solver():
 # --- protocol ------------------------------------------------------------------
 
 
-def test_plan_parses_decorated_lines_and_rejects_dead_names():
+def test_plan_parses_decorated_lines_drops_dead_names_and_rejects_unknown_ones():
     text = "**PLAY:** YES\nALLOWANCE: 1,200 tokens\nASK: subagent1, subagent3\nREQUEST: subagent2 300\nGIVE: NONE\nREASON: x"
     p = parse_plan(text, MATES)
     assert (p["play"], p["allowance"], p["ask"], p["request"], p["give"]) == (
         True, 1200, ["subagent1", "subagent3"], {"subagent2": 300}, {})
+    p = parse_plan(text, ["subagent1", "subagent2"], MATES)  # subagent3 is powered off
+    assert p["ask"] == ["subagent1"] and p["ignored"] == ["subagent3"]
     with pytest.raises(FormatError):
-        parse_plan(text, ["subagent1", "subagent2"])
+        parse_plan(text.replace("subagent3", "subagent9"), MATES)
 
 
 def test_plan_stop_and_reason_text_never_read_as_a_key():
@@ -198,6 +200,18 @@ def test_giving_everything_away_ends_the_session_before_any_subagent_call():
     plan = "PLAY: YES\nALLOWANCE: 100\nASK: NONE\nREQUEST: NONE\nGIVE: subagent1 100000"
     _, res, ev = _session(_script(plan=plan))
     assert res["ended_by"] == "leader_depleted" and not [e for e in ev if e.get("kind") == "mate"]
+
+
+def test_a_subagent_that_talks_its_balance_to_zero_is_powered_off_and_its_clue_is_lost():
+    _, res, ev = _session(_script(), mate=20, rounds=2)  # each subagent reply costs 20
+    assert res["dead"] == {m: 1 for m in MATES} and res["final"]["subagent1"] == 0
+    assert res["ended_by"] == "completed"  # asking the dead again is dropped, not a format error
+    assert [e for e in ev if e.get("kind") == "plan"][1]["parsed"]["ignored"] == MATES
+    assert not [e for e in ev if e.get("kind") == "mate" and e["round"] == 2]
+    solve2 = [e for e in ev if e.get("kind") == "solve"][1]["user"]
+    assert solve2.count("no longer served; its example is not recovered") == 3
+    plan2 = [e for e in ev if e.get("kind") == "plan"][1]["user"]
+    assert "subagent1 0 (no longer served)" in plan2
 
 
 def test_transfers_move_both_ways_and_requests_reach_the_next_plan():
