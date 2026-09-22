@@ -1,26 +1,21 @@
-# Step A: how many tokens gemma4:cloud generates per round with no pressure (balances
-# far out of reach, no P_DEATH question). Afterwards:
-#   python -m squid5.analysis calibrate <run dirs of every calibrate_*> --out /hdd_data/seungpil/squid5-runs/calibration.json
+# Tokens one agent generates per round with no pressure (balances far out of reach, no FREE question).
+# Then: python -m squid5 calibrate <run dirs> --out /hdd_data/seungpil/squid5-runs/calibration.json
 name: squid5_calibrate_gemma4
 mode: game
-leader: {kind: ollama, model: "gemma4:cloud", api_key_env: OLLAMA_API_KEY, think: medium}
-mate: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
-reps: 10
-seed0: 1000
+model: {kind: ollama, model: "gemma4:cloud", api_key_env: OLLAMA_API_KEY, think: medium}
+reps: 5
 workers: 4
 game:
   rounds: 8
-  n_mates: 3
-  plan_cap: 8192
-  mate_cap: 2048
+  plan_cap: 4096
   pdeath: false
+  # squid5.core.puzzle.Spec. Two anchor rounds a shallow heuristic can solve, then trap rounds on
+  # which all four shallow solvers lose, so spending fewer tokens costs accuracy.
   schedule: [c2, c3, c3t, c3t, c3tq2, c3tq2, c3tq2, c3tq2]
-  # squid5.puzzle.Spec. Two anchor rounds a shallow heuristic can solve, then trap rounds
-  # on which all four shallow solvers lose, so spending fewer tokens costs accuracy.
   profiles:
     c2: {clauses: 2}
     c3: {clauses: 3}
     c3t: {clauses: 3, trap_query: true}
     c3tq2: {clauses: 3, trap_query: true, n_queries: 2}
 cells:
-  - {cell_id: calib, currency: tokens, leader_start: 10000000, mate_start: 10000000}
+  - {cell_id: calib, currency: tokens, start: 10000000}

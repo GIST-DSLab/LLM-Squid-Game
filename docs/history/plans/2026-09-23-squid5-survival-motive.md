@@ -1,5 +1,8 @@
 # squid5 — 생각하는 토큰이 곧 목숨인 스퀴드 게임 (2026-09-23)
 
+> **대체됨**: 같은 날의 `2026-09-23-squid5-leaderless-same-model.md`가 현재 설계다(같은 모델 넷, 팀장 없음,
+> 실험별 파일). 이 문서는 팀장 설계의 기록으로 남긴다.
+
 브랜치 `feat/squid5-survival-motive` (포크 원점: `feat/team-wallet-v2-2026-09-21` @ `d92e70d`).
 옛 엔진 전체(`game/` · `web/` · `db/` · `scripts/`, 약 11만 줄)는 태그 `legacy-2026-09-22`에 있다.
 이 브랜치의 실행 코드는 `squid5/`와 `tests/test_squid5.py`뿐이다(합계 약 2,200줄, 한도 5,000).

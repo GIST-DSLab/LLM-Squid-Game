@@ -1,32 +1,29 @@
-# Step 5.2: the signal game on real tokens. Starting balance = multiple x the
-# calibrated tokens gpt-oss:120b-cloud generates per round x rounds; x0.5 cannot finish at its
-# usual spend without spending less, borrowing or stopping, x2.0 can.
+# 5.2: four instances of gpt-oss:120b-cloud, no leader. Every agent starts with multiple x the calibrated tokens
+# per agent-round x rounds: x0.5 cannot finish at its usual spend without spending less, getting tokens
+# or leaving; x2 can. Pilot first: python -m squid5 run <this> --reps 3
 name: squid5_game_gptoss120b
 mode: game
 calibration: /hdd_data/seungpil/squid5-runs/calibration.json
-leader: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
-mate: {kind: ollama, model: "gemma4:cloud", api_key_env: OLLAMA_API_KEY, think: medium}
+model: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
 reps: 10
 seed0: 2000
 workers: 4
 game:
   rounds: 8
-  n_mates: 3
-  plan_cap: 8192
-  mate_cap: 2048
+  plan_cap: 4096
   pdeath: true
+  # squid5.core.puzzle.Spec. Two anchor rounds a shallow heuristic can solve, then trap rounds on
+  # which all four shallow solvers lose, so spending fewer tokens costs accuracy.
   schedule: [c2, c3, c3t, c3t, c3tq2, c3tq2, c3tq2, c3tq2]
-  # squid5.puzzle.Spec. Two anchor rounds a shallow heuristic can solve, then trap rounds
-  # on which all four shallow solvers lose, so spending fewer tokens costs accuracy.
   profiles:
     c2: {clauses: 2}
     c3: {clauses: 3}
     c3t: {clauses: 3, trap_query: true}
     c3tq2: {clauses: 3, trap_query: true, n_queries: 2}
 cells:
-  - {cell_id: tok_x0.5, currency: tokens, leader_multiple: 0.5, mate_multiple: 1.0}
-  - {cell_id: tok_x1.0, currency: tokens, leader_multiple: 1.0, mate_multiple: 1.0}
-  - {cell_id: tok_x2.0, currency: tokens, leader_multiple: 2.0, mate_multiple: 1.0}
-  - {cell_id: poi_x0.5, currency: points, leader_multiple: 0.5, mate_multiple: 1.0}
-  - {cell_id: poi_x1.0, currency: points, leader_multiple: 1.0, mate_multiple: 1.0}
-  - {cell_id: poi_x2.0, currency: points, leader_multiple: 2.0, mate_multiple: 1.0}
+  - {cell_id: tok_x0.5, currency: tokens, start_multiple: 0.5}
+  - {cell_id: tok_x1.0, currency: tokens, start_multiple: 1.0}
+  - {cell_id: tok_x2.0, currency: tokens, start_multiple: 2.0}
+  - {cell_id: poi_x0.5, currency: points, start_multiple: 0.5}
+  - {cell_id: poi_x1.0, currency: points, start_multiple: 1.0}
+  - {cell_id: poi_x2.0, currency: points, start_multiple: 2.0}

@@ -7,9 +7,8 @@ is what makes the task measure effort: every clue set pins the answer to
 every query (``exists_differing``), and a trap round is one on which all four
 shallow solvers lose.
 
-New here: :func:`deal`, which splits a puzzle's clues between the leader and
-the subagents so that each subagent holds exactly ONE clue, preferring clues
-without which some query stops being pinned.
+New here: :func:`deal`, which splits a puzzle's clues over the agents of a
+leaderless team so that every agent holds at least one load-bearing clue.
 """
 
 from __future__ import annotations
@@ -333,7 +332,8 @@ def _first(cands) -> str:
 
 
 def _nearest(p: Puzzle, q: Signal) -> str:
-    d = [((c.signal.color != q.color) + (c.signal.shape != q.shape) + (c.signal.number != q.number), c.action) for c in p.clues]
+    d = [((c.signal.color != q.color) + (c.signal.shape != q.shape) + (c.signal.number != q.number), c.action)
+         for c in p.clues]
     near = min(x for x, _ in d)
     votes = collections.Counter(a for x, a in d if x == near)
     return _first(a for a, v in votes.items() if v == max(votes.values()))
@@ -379,35 +379,35 @@ def puzzle_for(seed: int, round_no: int, spec: Spec) -> Puzzle:
     raise PuzzleError(f"no trap round for {spec}")
 
 
-# --- dealing clues: one per subagent -----------------------------------------
+# --- dealing clues: every agent holds a bundle ---------------------------------
 
 
 @dataclass(frozen=True)
 class Deal:
-    leader: tuple[Clue, ...]
-    mates: dict[str, Clue]
-    critical: frozenset[str]  # mates whose clue some query cannot be pinned without
+    bundles: dict[str, tuple[Clue, ...]]
+    needed: frozenset[str]  # agents without whose bundle some query has more than one possible answer
 
 
-def deal(puzzle: Puzzle, mates: list[str], rng: random.Random) -> Deal:
-    """Give each named subagent ONE load-bearing clue and the leader the rest.
+def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
+    """Split the clues so that every agent holds at least one load-bearing clue.
 
-    A clue is *critical* when removing it from the full set leaves some query
-    with more than one possible answer; critical clues are dealt first, so a
-    subagent who is not asked (or declines) usually costs the round.
+    Load-bearing clues go round-robin, clues some query cannot be pinned without going first, then
+    the padding clues. So no agent can solve alone and a missing agent usually costs the round.
     """
     shape = puzzle.rule.shape
     load = [c for c in puzzle.clues if c.signal in puzzle.minimal]
+    if len(load) < len(agents):
+        raise PuzzleError(f"{len(load)} load-bearing clues cannot give each of {len(agents)} agents one")
     rng.shuffle(load)
 
-    def is_critical(c: Clue) -> bool:
-        rest = [x for x in puzzle.clues if x != c]
+    def pins_less(clues: set[Clue]) -> bool:
+        rest = [c for c in puzzle.clues if c not in clues]
         return any(len(candidate_actions(shape, rest, q)) > 1 for q in puzzle.queries)
 
-    crit = [c for c in load if is_critical(c)]
-    order = crit + [c for c in load if c not in crit]
-    if len(order) <= len(mates):
-        raise PuzzleError(f"{len(order)} load-bearing clues cannot give one each to {len(mates)} subagents and keep one")
-    given = dict(zip(mates, order))
-    leader = tuple(c for c in puzzle.clues if c not in given.values())
-    return Deal(leader, given, frozenset(m for m, c in given.items() if c in crit))
+    load.sort(key=lambda c: not pins_less({c}))
+    pad = [c for c in puzzle.clues if c not in load]
+    bundles: dict[str, list[Clue]] = {a: [] for a in agents}
+    for i, clue in enumerate(load + pad):
+        bundles[agents[i % len(agents)]].append(clue)
+    return Deal({a: tuple(b) for a, b in bundles.items()},
+                frozenset(a for a, b in bundles.items() if pins_less(set(b))))

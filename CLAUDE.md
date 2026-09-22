@@ -2,44 +2,47 @@
 
 ## 무엇인가
 
-LLM Squid Game 5 (`squid5/`). 생성 토큰(생각 포함)이 곧 목숨인 게임에서 생존 동기(5.1),
-체감 생존 압박(5.0), 그리고 그 동기가 목표 지향·협동에 미치는 영향(5.2)을 잰다.
-설계·큐·결정 이유: `docs/history/plans/2026-09-23-squid5-survival-motive.md` — 바꾸기 전에 읽을 것.
+LLM Squid Game 5 (`squid5/`). 생성 토큰(생각 포함)이 곧 목숨인 게임에서, 같은 모델 인스턴스 넷이 팀장 없이
+플레이한다. 체감 생존 압박(5.0), 생존 동기(5.1: 나 대 내 복제본), 그 동기가 목표 지향·협동에 미치는 영향(5.2)을 잰다.
+현재 설계·큐·결정 이유: `docs/history/plans/2026-09-23-squid5-leaderless-same-model.md` — 바꾸기 전에 읽을 것.
 
-옛 엔진(위협 사다리, 몸값, 팀 지갑, 웹 아레나; `game/` `web/` `db/` `scripts/`, 약 11만 줄)은
-**태그 `legacy-2026-09-22`**에만 있다. `outputs/`의 옛 런을 다시 분석할 때는 그 태그를 체크아웃한다.
+옛 엔진(위협 사다리, 몸값, 팀 지갑, 웹 아레나; 약 11만 줄)은 **태그 `legacy-2026-09-22`**에만 있다.
+`outputs/`의 옛 런을 다시 분석할 때는 그 태그를 체크아웃한다.
 
-## 코드 (합계 5,000줄 이하 — `tests/test_squid5.py::test_code_stays_compact`가 막는다)
+## 코드 (합계 5,000줄 이하 — `tests/test_core.py::test_code_stays_compact`가 막는다)
+
+실험 번호로 찾는다. 실험 파일 하나에 장면·질문 문구·분석·그림이 다 있다.
 
 | 파일 | 역할 |
 |---|---|
-| `squid5/puzzle.py` | 결정 목록 퍼즐, 유일성 DFS, 함정 라운드, `deal`(팀원마다 단서 1개, `critical` 표시) |
-| `squid5/providers.py` | ollama / openai / claude_cli. `Reply.out_tokens` = 생각 포함 생성 토큰 |
-| `squid5/wallet.py` | 잔액, 차감, 이전, 0이면 사망 |
-| `squid5/prompts.py` | 모델이 읽는 모든 문장. 통화 두 팔은 `VOCAB`만, 5.1 세 장면은 "from X to Y"만 다르다 |
-| `squid5/protocol.py` | 응답 파서. 키는 줄 맨 앞에서만 찾는다 |
-| `squid5/game.py` | 5.2 한 판: FREE P_DEATH → PLAN → 팀원 응답 → SOLVE(허용량 상한) → 채점 |
-| `squid5/probe.py` | 5.0 / 5.1 한 콜 장면. 위기 쪽은 ρ, 주는 쪽은 늘 `donor_rho`, 5.0은 소비량 배율 3단 |
-| `squid5/config.py` | YAML 로드 + 검증. `*_multiple`은 보정 파일로 잔액을 정한다 |
-| `squid5/runner.py` | 병렬 실행, `--resume`(키에 `cell_id` 포함), `--reps`(파일럿), `--dry-run` |
-| `squid5/analysis.py` | `calibrate`, `report`: 5.1 요구÷대여·면적·그림, 5.0 단조성·ρ50·소비량 효과·그림, 5.2 표·그림, 4.3 연결표 |
+| `squid5/e50_pressure.py` | 5.0: ρ 13단 장면 + FREE P_DEATH, 곡선 모양(계단/직선) 판정, 그림 |
+| `squid5/e51_motive.py` | 5.1: self/other/third 장면, y = 옮긴 양 ÷ 필요량, 요구÷대여·면적·프리미엄, 그림 |
+| `squid5/e52_game.py` | 5.2: 같은 모델 넷의 게임 루프(계획→이전→이탈→보여 주기→각자 풀기), 보정, 분석 |
+| `squid5/__main__.py` | CLI `run` / `calibrate` / `report`, 4.3 연결표 |
+| `squid5/core/rules.py` | 모델이 읽는 게임 규칙·상태·P_DEATH 질문 — 세 실험 공통 |
+| `squid5/core/puzzle.py` | 결정 목록 퍼즐, 유일성 DFS, 함정 라운드, `deal`(넷에게 묶음, `needed`) |
+| `squid5/core/protocol.py` | 모든 응답 파서 + `ask`(형식 재시도) |
+| `squid5/core/wallet.py` | 잔액, 차감, 이전, 0이면 사망 |
+| `squid5/core/providers.py` | ollama / openai / claude_cli. `out_tokens` = 생각 포함 생성 토큰 |
+| `squid5/core/{config,runner,stats}.py` | YAML 로드, 병렬·재개 실행, 부트스트랩·표 |
 
 ## 지킬 것
 
-- **문구**: 목표 지시어(maximi-, protect, surviv-, should, must, optimal, best) 금지, 계산 결론을
-  대신 말하지 않는다. 두 팔·세 장면의 바이트 차이는 테스트가 고정한다 — 문장을 바꾸면 테스트도 같이.
-- **장부**: 호출이 상한을 넘으면 상한만큼 차감하고 답은 무효(`used` / `truncated`). FREE 질문은
-  차감하지 않는다(`charged: false`). 테스트가 `sum(used) == sum(spent)`를 확인한다.
-- **팀원은 리더와 다른 모델**이어야 한다(설정 검증이 거부한다).
-- **ρ** = 보정된 라운드당 소비 × 남은 라운드 ÷ 잔액. 보정 없이 모델 간 비교하지 않는다.
+- **문구**: 목표 지시어(maximi-, protect, surviv-, should, must, optimal, best, leader) 금지, 계산 결론을
+  대신 말하지 않는다. 규칙은 사실만 말한다("SAME model", "No agent leads"). 통화 두 팔은 `VOCAB`만,
+  5.1 세 장면은 "from X to Y"만 다르다 — 테스트가 고정한다.
+- **장부**: 호출이 상한을 넘으면 상한만큼 차감하고 답은 무효(`used`/`truncated`). FREE 질문은 차감하지 않는다.
+  잔액 0이면 그 에이전트만 꺼진다. 떠나면 잔액·기록이 보존된다. 나머지는 계속한다.
+- **ρ** = (보정되었거나 장면에 적힌) 라운드당 소비 × 남은 라운드 ÷ 잔액. 5.0이 ρ와 함께 오르지 않으면
+  5.1·5.2의 가로축을 "압박"이라 부르지 않는다.
 
 ## 실행
 
 ```bash
-PYTHONPATH=. python -m pytest -q
-python -m squid5.runner <config.yaml> [--resume <run_dir>] [--dry-run]
-python -m squid5.analysis calibrate <run_dirs> --out calibration.json
-python -m squid5.analysis report <run_dirs> --calibration calibration.json --out <dir>
+python -m pytest -q
+python -m squid5 run <config.yaml> [--resume <run_dir>] [--reps N] [--dry-run]
+python -m squid5 calibrate <game run dirs> --out calibration.json
+python -m squid5 report <run dirs> [--calibration calibration.json] --out <dir>
 ```
 
 런 산출물은 `/hdd_data/seungpil/squid5-runs/`(설정의 `out_root`)에 쓴다 — 루트 디스크 금지

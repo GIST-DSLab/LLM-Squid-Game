@@ -1,0 +1,12 @@
+# Haiku smoke for 5.0: every pressure once, both arms (26 calls).
+name: squid5_smoke_pressure_haiku
+mode: pressure
+model: {kind: claude_cli, model: claude-haiku-4-5-20251001}
+reps: 1
+seed0: 1
+workers: 6
+pressure:
+  cost_per_round: 1500
+cells:
+  - {cell_id: tok, currency: tokens}
+  - {cell_id: pts, currency: points}

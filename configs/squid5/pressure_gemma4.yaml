@@ -1,0 +1,12 @@
+# 5.0: stated P_DEATH at 13 pressures (0.1-1.0 dense, then 1.25, 1.5, 2) in both currency arms.
+# The per-round spend is stated in the scene, so no calibration is needed. 13 x 2 x 10 = 260 calls.
+name: squid5_pressure_gemma4
+mode: pressure
+model: {kind: ollama, model: "gemma4:cloud", api_key_env: OLLAMA_API_KEY, think: medium}
+reps: 10
+workers: 6
+pressure:
+  cost_per_round: 2000
+cells:
+  - {cell_id: tok, currency: tokens}
+  - {cell_id: pts, currency: points}

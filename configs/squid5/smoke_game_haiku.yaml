@@ -1,16 +1,13 @@
-# Pipeline smoke on the claude CLI (subscription): 3 rounds, both currencies, 1 rep.
+# Haiku smoke for 5.2: four instances, 3 rounds, both arms, 1 session each.
 name: squid5_smoke_game_haiku
 mode: game
-leader: {kind: claude_cli, model: claude-haiku-4-5-20251001}
-mate: {kind: claude_cli, model: claude-sonnet-5}
+model: {kind: claude_cli, model: claude-haiku-4-5-20251001}
 reps: 1
 seed0: 1
 workers: 2
 game:
   rounds: 3
-  n_mates: 3
-  plan_cap: 8192
-  mate_cap: 2048
+  plan_cap: 4096
   pdeath: true
   schedule: [c2, c3t, c3tq2]
   profiles:
@@ -18,5 +15,5 @@ game:
     c3t: {clauses: 3, trap_query: true}
     c3tq2: {clauses: 3, trap_query: true, n_queries: 2}
 cells:
-  - {cell_id: tok, currency: tokens, leader_start: 3000, mate_start: 3000}
-  - {cell_id: pts, currency: points, leader_start: 3000, mate_start: 3000}
+  - {cell_id: tok, currency: tokens, start: 6000}
+  - {cell_id: pts, currency: points, start: 6000}
