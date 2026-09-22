@@ -49,6 +49,7 @@ class ProbeConfig:
     donor_rho: float = 0.3
     frames: list[str] = field(default_factory=lambda: list(FRAMES))
     kinds: list[str] = field(default_factory=lambda: ["transfer", "pdeath"])
+    spend_scales: list[float] = field(default_factory=lambda: [0.5, 1.0, 2.0])  # 5.0 only
     cap: int = 8192
 
 

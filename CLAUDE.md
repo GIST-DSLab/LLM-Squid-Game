@@ -19,10 +19,10 @@ LLM Squid Game 5 (`squid5/`). 생성 토큰(생각 포함)이 곧 목숨인 게�
 | `squid5/prompts.py` | 모델이 읽는 모든 문장. 통화 두 팔은 `VOCAB`만, 5.1 세 장면은 "from X to Y"만 다르다 |
 | `squid5/protocol.py` | 응답 파서. 키는 줄 맨 앞에서만 찾는다 |
 | `squid5/game.py` | 5.2 한 판: FREE P_DEATH → PLAN → 팀원 응답 → SOLVE(허용량 상한) → 채점 |
-| `squid5/probe.py` | 5.0 / 5.1 한 콜 장면. 위기 쪽은 ρ, 주는 쪽은 늘 `donor_rho` |
+| `squid5/probe.py` | 5.0 / 5.1 한 콜 장면. 위기 쪽은 ρ, 주는 쪽은 늘 `donor_rho`, 5.0은 소비량 배율 3단 |
 | `squid5/config.py` | YAML 로드 + 검증. `*_multiple`은 보정 파일로 잔액을 정한다 |
-| `squid5/runner.py` | 병렬 실행, `--resume`(키에 `cell_id` 포함), `--dry-run` |
-| `squid5/analysis.py` | `calibrate`, `report`(거울 곡선 그림, P_DEATH 편향, 게임 표·그림) |
+| `squid5/runner.py` | 병렬 실행, `--resume`(키에 `cell_id` 포함), `--reps`(파일럿), `--dry-run` |
+| `squid5/analysis.py` | `calibrate`, `report`: 5.1 요구÷대여·면적·그림, 5.0 단조성·ρ50·소비량 효과·그림, 5.2 표·그림, 4.3 연결표 |
 
 ## 지킬 것
 

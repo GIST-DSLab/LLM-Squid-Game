@@ -1,4 +1,4 @@
-"""CLI: ``python -m squid5.runner <config.yaml> [--resume <run_dir>] [--dry-run]``.
+"""CLI: ``python -m squid5.runner <config.yaml> [--resume <run_dir>] [--reps N] [--dry-run]``.
 
 Writes ``<out_root>/<name>/<UTC stamp>_<leader model>/`` with ``config.yaml``, ``meta.json``,
 ``events.jsonl`` (game mode: every call and round, append-only) and
@@ -34,10 +34,12 @@ def units(cfg: RunConfig) -> list[dict]:
                 out.append({"cell": cell, "seed": seed, "key": [cell.cell_id, seed]})
                 continue
             for kind in cfg.probe.kinds:
-                for frame in cfg.probe.frames if kind == "transfer" else ["self"]:
-                    for rho in cfg.probe.rhos:
-                        out.append({"cell": cell, "seed": seed, "kind": kind, "frame": frame, "rho": rho,
-                                    "key": [cell.cell_id, seed, kind, frame, rho]})
+                frames, scales = (cfg.probe.frames, [1.0]) if kind == "transfer" else (["self"], cfg.probe.spend_scales)
+                for frame in frames:
+                    for scale in scales:
+                        for rho in cfg.probe.rhos:
+                            out.append({"cell": cell, "seed": seed, "kind": kind, "frame": frame, "rho": rho,
+                                        "scale": scale, "key": [cell.cell_id, seed, kind, frame, scale, rho]})
     return out
 
 
@@ -64,7 +66,7 @@ def run(cfg: RunConfig, run_dir: Path, leader: Provider, mate: Provider | None) 
         if cfg.mode == "game":
             sid = f"{u['cell'].cell_id}-s{u['seed']}-{uuid.uuid4().hex[:6]}"  # a crashed attempt's events stay orphaned
             return Session(cfg.game, u["cell"], u["seed"], leader, mate, emit, sid).run()
-        return run_item(cfg, u["cell"], leader, u["kind"], u["frame"], u["rho"], u["seed"])
+        return run_item(cfg, u["cell"], leader, u["kind"], u["frame"], u["rho"], u["seed"], u["scale"])
 
     failed = 0
     with ThreadPoolExecutor(max_workers=cfg.workers) as pool:
@@ -85,8 +87,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("config")
     ap.add_argument("--resume")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--reps", type=int, help="override the config's reps (a pilot before the main run)")
     a = ap.parse_args(argv)
     cfg = load(a.config)
+    if a.reps:
+        cfg.reps = cfg.source["reps"] = a.reps
     if a.dry_run:
         print(f"{cfg.name}: mode={cfg.mode}, {len(units(cfg))} units, cells={[c.cell_id for c in cfg.cells]}")
         return 0

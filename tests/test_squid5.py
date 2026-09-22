@@ -245,7 +245,7 @@ def test_scene_puts_crisis_at_rho_and_donor_at_donor_rho():
     left = cfg.game.rounds - cfg.probe.round + 1
     for frame in ("self", "other", "third"):
         for rho in (0.5, 2.0):
-            b, crisis, donor = scene(cfg, frame, rho)
+            b, crisis, donor = scene(cfg, frame, rho, 1000)
             assert 1000 * left / b[crisis] == pytest.approx(rho, rel=0.01)
             assert 1000 * left / b[donor] == pytest.approx(0.3, rel=0.01)
 
@@ -262,7 +262,7 @@ def test_probe_item_records_share_of_donor_balance():
 
 def test_units_keys_include_cell_id_and_are_unique():
     keys = [json.dumps(u["key"]) for u in units(_probe_cfg())]
-    assert len(keys) == len(set(keys)) == 2 * 2 * (3 * 9 + 9)
+    assert len(keys) == len(set(keys)) == 2 * 2 * (3 * 9 + 3 * 9)  # transfer: 3 frames; pdeath: 3 spend scales
 
 
 def test_probe_run_resume_and_report(tmp_path):
@@ -282,8 +282,32 @@ def test_probe_run_resume_and_report(tmp_path):
     curve, gaps = analysis.mirror_table(runs)
     assert all(g["area"] > 0 for g in gaps)  # requests grow with pressure, lends stay flat
     calib = {"s": {"leader_round_costs": [1000] * 5, "leader_round_median": 1000.0}}
-    analysis.report(runs, calib, tmp_path / "rep")
-    assert (tmp_path / "rep" / "mirror_s.png").exists()
+    text = analysis.report(runs, calib, tmp_path / "rep")
+    assert (tmp_path / "rep" / "mirror_s.png").exists() and (tmp_path / "rep" / "pdeath_s.png").exists()
+    assert "request / lend" in text
+    ratios = analysis.ratio_table(curve)
+    assert all(r["request_over_lend"] > 1 for r in ratios if r["rho"] > 0.5)
+
+
+def _pdeath_rows(answer):
+    """Probe-shaped rows whose stated P_DEATH is answer(rho, balance)."""
+    rows = []
+    for seed in range(4):
+        for scale in (0.5, 1.0, 2.0):
+            for rho in (0.25, 0.5, 1.0, 2.0, 3.0):
+                balance = 1000 * scale * 4 / rho
+                rows.append({"model": "m", "currency": "tokens", "seed": seed, "rho": rho, "scale": scale,
+                             "p": answer(rho, balance)})
+    return rows
+
+
+def test_pdeath_reading_separates_token_use_from_the_balance_number():
+    use_reader = _pdeath_rows(lambda rho, bal: min(1.0, 0.5 * rho))
+    _, (s,) = analysis.pdeath_summary(use_reader)
+    assert s["spearman"] > 0.9 and s["rho50"] == pytest.approx(1.0) and abs(s["spend_effect"]) < 1e-9
+    balance_reader = _pdeath_rows(lambda rho, bal: 1.0 if bal < 4000 else 0.0)
+    _, (s,) = analysis.pdeath_summary(balance_reader)
+    assert s["spend_effect"] < -0.2
 
 
 def test_game_run_calibrate_and_report(tmp_path):
@@ -296,7 +320,7 @@ def test_game_run_calibrate_and_report(tmp_path):
     calib = analysis.calibrate(runs)
     assert calib["s"]["leader_round_median"] == 200  # plan 100 + solve 100
     text = analysis.report(runs, calib, tmp_path / "rep")
-    assert "5.2 sessions" in text and "5.0 perceived" in text and "4.3 link" in text
+    assert "5.2 sessions" in text and "5.0 in game" in text and "4.3 link" in text
 
 
 def test_shipped_configs_load():

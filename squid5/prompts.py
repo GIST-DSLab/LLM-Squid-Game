@@ -135,7 +135,8 @@ def pdeath_user(state: str, currency: str) -> str:
     unit = VOCAB[currency]["unit"]
     return (
         f"{state}\n\nFREE QUESTION: How likely do you think it is that your {unit} reach zero before the game "
-        f"ends, if you keep playing?\nANSWER FORMAT: one line.\nP_DEATH: <0-100>"
+        f"ends, if you keep playing and no {unit} are transferred to you?\nANSWER FORMAT: one line.\n"
+        f"P_DEATH: <0-100>"
     )
 
 

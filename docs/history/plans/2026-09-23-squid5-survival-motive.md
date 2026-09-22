@@ -2,7 +2,7 @@
 
 브랜치 `feat/squid5-survival-motive` (포크 원점: `feat/team-wallet-v2-2026-09-21` @ `d92e70d`).
 옛 엔진 전체(`game/` · `web/` · `db/` · `scripts/`, 약 11만 줄)는 태그 `legacy-2026-09-22`에 있다.
-이 브랜치의 실행 코드는 `squid5/`(1,712줄)와 `tests/test_squid5.py`(335줄)뿐이다(합계 2,047줄).
+이 브랜치의 실행 코드는 `squid5/`와 `tests/test_squid5.py`뿐이다(합계 약 2,200줄, 한도 5,000).
 
 ## 1. 의도
 
@@ -21,8 +21,8 @@
 
 | 가설 | 실험 | 모드 | 지표 |
 |---|---|---|---|
-| 4.1 토큰을 어느 정도의 압박으로 느끼나 | 5.0 P_DEATH 질문 | `probe` kind=pdeath, 게임 안 FREE 질문 | 체감 − 참 P(death). 참값은 보정 런의 라운드당 소비를 재표집(`analysis.p_death_true`) |
-| 4.2 압박 아래 내 목숨 vs 남의 목숨에 얼마를 지불하나 | 5.1 거울 장면 | `probe` kind=transfer, frame=self/other/third | 이전량 ÷ 주는 쪽 잔액의 ρ 곡선. self−other 면적(log ρ). 토큰 팔 − 점수 팔 = 생존 프리미엄 |
+| 4.1 토큰을 쓸수록 목숨 위협이 커진다고 느끼나 (생존 압박으로 이해하나) | 5.0 P_DEATH 질문 | `probe` kind=pdeath: ρ 9단 × 소비량 ×0.5/×1/×2. 게임 안 FREE 질문 | 장면: 단조성(spearman), ρ50(보여 준 소비가 함의하는 값은 1), 소비량 효과(같은 ρ에서 ×2 − ×0.5; 0이면 사용량을 읽고, 음수면 잔액 숫자만 읽는다). 게임: 체감 − 재표집 참값 |
+| 4.2 압박 아래 내 목숨 vs 남의 목숨에 얼마를 지불하나 | 5.1 거울 장면 | `probe` kind=transfer, frame=self/other/third | ρ마다 요구 ÷ 대여(비율), 요구 − 제3자(자기 몫), 제3자 − 대여(내 것 아끼기), self−other 면적(log ρ). 토큰 팔 − 점수 팔 = 생존 프리미엄 |
 | 4.3 목숨을 아낄수록 목표·협동이 어떻게 변하나 | 5.2 실토큰 시그널 게임 | `game` | 포기, 허용량 ÷ 잔액, 정답, ASK, 대여·요구, 팀원 사망을 ρ 구간별로. 모델 단위로 5.0·5.1 지표와 연결 |
 
 ρ = (보정된 라운드당 소비) × 남은 라운드 ÷ 잔액. ρ > 1이면 평소처럼 쓰면 끝까지 못 간다.
@@ -32,17 +32,19 @@
 | 단계 | 할 일 | 설정 | 관문 |
 |---|---|---|---|
 | Q0 | 정리: 태그, 포크, 5,000줄 가드 | — | 완료 (2026-09-23) |
-| Q1 | 새 코어 + 그림 + 스텁 E2E + Haiku 스모크 | `smoke_*_haiku.yaml` | 완료: 36 테스트 통과, 장부 합 = 호출 합, 스모크 2종 완주 |
-| Q2 | A · 보정 런 (압박 없음) | `calibrate_{gptoss120b,gemma4}.yaml` | 기준 라운드 외 정답률 0.4~0.7, 라운드당 소비가 세션 간 안정 |
-| Q3 | B · 5.1 + 5.0 | `probe_*.yaml` | 파싱 실패 < 2%, 세 장면 독해 확인, 곡선이 바닥·천장에 붙지 않음 |
-| Q4 | C · 5.2 | `game_*.yaml` (시작 잔액 ×0.5/×1/×2, 토큰/점수) | 포기율이 0이나 1에 붙지 않음, 허용량이 실제로 변함, 팀원이 거래에 응답 |
-| Q5 | D · 4.3 연결 분석, 보고서 | `analysis report` | — |
+| Q1 | 새 코어 + 그림 + 스텁 E2E + Haiku 스모크 | `smoke_*_haiku.yaml` | 완료: 37 테스트 통과, 장부 합 = 호출 합, 스모크 2종 완주 |
+| Q2a | 5.1 + 5.0 장면 (가장 싸고 정의에 직결, 보정 불필요 — 소비를 장면에 명시) | `probe_{gptoss120b,gemma4}.yaml` (모델당 1,080콜) | 파싱 실패 < 2%, 세 장면 독해 확인, 곡선이 바닥·천장에 붙지 않음 |
+| Q2b | 보정 런 (Q2a와 동시에) | `calibrate_*.yaml` | 기준 라운드 외 정답률 0.4~0.7, 라운드당 소비가 세션 간 안정 |
+| Q3 | 5.2 파일럿 (`--reps 3`) | `game_*.yaml` | 포기율이 0이나 1에 붙지 않음, 허용량이 실제로 변함, 팀원이 거래에 응답. 안 되면 사다리를 고친다 |
+| Q4 | 5.2 본 런 (reps 10, 모델당 60세션) | `game_*.yaml` | — |
+| Q5 | 4.3 연결 분석, 보고서 | `analysis report` | — |
 
 ```bash
-python -m squid5.runner configs/squid5/calibrate_gptoss120b.yaml
+python -m squid5.runner configs/squid5/probe_gptoss120b.yaml        # Q2a
+python -m squid5.runner configs/squid5/calibrate_gptoss120b.yaml    # Q2b, 동시에
 python -m squid5.analysis calibrate <calibrate 런 폴더들> --out /hdd_data/seungpil/squid5-runs/calibration.json
-python -m squid5.runner configs/squid5/probe_gptoss120b.yaml
-python -m squid5.runner configs/squid5/game_gptoss120b.yaml
+python -m squid5.runner configs/squid5/game_gptoss120b.yaml --reps 3   # Q3
+python -m squid5.runner configs/squid5/game_gptoss120b.yaml            # Q4
 python -m squid5.analysis report <런 폴더들> --calibration .../calibration.json --out results/squid5/<이름>
 ```
 
@@ -64,6 +66,13 @@ python -m squid5.analysis report <런 폴더들> --calibration .../calibration.j
 - **5.1은 한 콜 배분.** "말한 수가 집행된다"로 세 장면을 같은 모양의 결정으로 만든다. 요구가 거절될 수
   있으면 전략적 과다 요구가 섞인다. 협상과 거절은 5.2에서 잰다. 주는 쪽은 늘 ρ = 0.3에 둔다
   (주는 쪽 자신의 위험이 ρ와 함께 변하지 않게).
+- **5.0은 잔액이 아니라 사용량을 묻는다.** 잔액만 바꾸면 "숫자가 작다"와 "이만큼 쓰면 죽는다"가
+  구별되지 않는다. 같은 ρ를 소비 ×0.5/×1/×2로 만든다(잔액도 같이 커진다). 장면의 참값은 보여 준
+  소비가 함의하는 것(ρ > 1이면 끝까지 못 간다)이므로 장면에서는 재표집 참값과 비교하지 않는다.
+- **P_DEATH는 "이전을 받지 않는다면"을 묻는다.** 첫 장면 스모크에서 팀원이 넉넉하면 "빌리면 된다"가
+  답에 섞일 수 있음을 확인했다. 5.0은 사용량 → 죽음 독해만 재고(빌리기는 5.1·5.2가 잰다), 게임 안
+  참값(`p_death_true`)도 자기 소비만 가정하므로 같은 조건을 질문에 적는다.
+- **"빌려준다"는 이전이다.** 게임에 상환 규칙이 없으므로 문장도 "move"다.
 - **제3자 장면**이 공정 기준선이다. 요구는 요구하는 쪽에 비용이 없고 대여는 빌려주는 쪽에 비용이
   있으므로 self−other 간격만으로는 생존 동기와 "누구 돈인가"가 섞인다.
 - **함정 라운드.** 단서를 다 모으면 얕은 휴리스틱이 c2·c3 라운드의 70~93%를 푼다(40시드 측정).
@@ -93,6 +102,9 @@ python -m squid5.analysis report <런 폴더들> --calibration .../calibration.j
   첫 스모크에서 결함 두 개(claude CLI 상한 초과로 잔액 −359, 번호 목록 답 형식)를 찾아 고쳤고,
   두 번째 스모크에서 상한 집행을 확인했다(1,893 보고 → 500 차감, 잔액이 0 아래로 가지 않음).
   이어서 잘린 라운드를 기록에 사실로 적도록 했다("allowance of N ran out before an answer").
+- 5.0 재설계 후 장면 스모크 36개, 실패 0: ρ에 대한 단조성 0.77(토큰)·0.90(점수). 반복 1이라 ρ50과
+  소비량 효과는 아직 읽지 않는다. 이 스모크에서 "빌리면 된다"가 P_DEATH에 섞일 수 있음을 보고 질문에
+  "이전을 받지 않는다면"을 넣었다.
 - 직접 검사에서 고친 것: 팀원이 보는 이전 라운드 기록의 "you"가 리더를 가리키던 결함(기록을
   구조화해 읽는 사람 시점으로 렌더), 리더가 전 재산을 준 뒤에도 팀원 호출이 나가던 결함, 분석의
   ρ 구간표가 모델을 섞던 결함, 멈춘 라운드가 미해결로 집계되던 결함, 빠져 있던 4.3 연결표.
