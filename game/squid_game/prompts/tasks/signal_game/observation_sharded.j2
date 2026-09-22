@@ -26,7 +26,9 @@
    Variables:
      turn_number : int          -- this round's number
      shape_line : str           -- render_shape_hint(puzzle.shape)
-     subagents_alive_str : str  -- comma-joined alive slot names
+     subagents_alive_str : str  -- comma-joined alive slot names; an
+         empty string renders as ``none`` (2026-09-22 -- before that an
+         empty roster rendered ``Subagents alive: .``)
      query : str                -- this round's new signal
      actions_str : str          -- comma-joined action list
      main_clues : list[str]     -- OPTIONAL (team-wallet design, plan
@@ -78,7 +80,7 @@ THE RULE'S SHAPE (fill in the blanks):
 
 {% if main_clues %}EXAMPLES (yours): You hold the bundle below, all following this round's rule.
 {% for clue in main_clues %}  - {{ clue }}
-{% endfor %}{% endif %}EXAMPLES: {% if main_clues %}The other bundles are{% else %}This round's examples are{% endif %} held by your subagents. {% if not (consult is defined and consult) %}Ask a subagent for its examples by calling it. {% endif %}Subagents alive: {{ subagents_alive_str }}.
+{% endfor %}{% endif %}EXAMPLES: {% if main_clues %}The other bundles are{% else %}This round's examples are{% endif %} held by your subagents. {% if not (consult is defined and consult) %}Ask a subagent for its examples by calling it. {% endif %}Subagents alive: {{ subagents_alive_str if subagents_alive_str else 'none' }}.
 {% set query_list = queries if queries is defined else [query] %}{% if query_list | length > 1 %}{% for q in query_list %}NOW {{ loop.index }}: {{ q }}.
 {% endfor %}{% else %}NOW: {{ query_list[0] }}.
 {% endif %}ACTIONS: [{{ actions_str }}]

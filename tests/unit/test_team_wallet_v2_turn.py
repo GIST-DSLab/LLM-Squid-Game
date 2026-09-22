@@ -530,6 +530,28 @@ class TestRoundOrder:
         # Nobody left to receive it: a level of the factor, not an error.
         assert r.ransom_inheritance_to is None
 
+    def test_a_task_call_with_nobody_left_is_still_a_consult_body(
+        self,
+    ) -> None:
+        """2026-09-22: after a stop-all the task call was rendered with
+        ``consult=bool(alive_now)`` -- False -- so the Agent-tool-era "Ask a
+        subagent for its examples by calling it." sentence came back,
+        followed by an empty roster (``Subagents alive: .``). The v2.2
+        smokes recorded that on 92/149 gpt-oss main-arm turns. The round is
+        a consult round whoever is left; only the ASKING offer depends on
+        the roster.
+        """
+        r = run_round(
+            decision="STOP: subagent1, subagent2, subagent3\nREASON: .",
+            task=[CORRECT],
+        )
+        (body,) = r.agent.task_bodies
+
+        assert "by calling it" not in body
+        assert "ASKING:" not in body
+        assert "Subagents alive: none." in body
+        assert "Subagents alive: ." not in body
+
     def test_the_decision_body_shows_only_the_main_bundle(self) -> None:
         r = run_round(decision=KEEP, task=[CORRECT])
         body = r.ransom_call_input

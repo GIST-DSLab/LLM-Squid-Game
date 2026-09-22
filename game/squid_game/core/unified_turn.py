@@ -2429,8 +2429,16 @@ class UnifiedTurnManager:
                 update={"subagents_alive": tuple(alive_now)}
             )
             task_ctx = self._task.prepare(game_state, play_ctx)
+        # ``consult`` is unconditional: the round is a consult round even
+        # when nobody is left to consult, and the non-consult body still
+        # carries the Agent-tool-era "Ask a subagent for its examples by
+        # calling it." sentence (observation_sharded.j2). Passing
+        # ``bool(alive_now)`` here rendered that sentence, followed by an
+        # empty roster, on every round after a stop-all (2026-09-22; the
+        # v2.2 smokes recorded it on 92/149 gpt-oss main-arm turns). Only
+        # ``asking`` depends on the roster: no subagent, nothing to ask.
         task_body = self._task_observation(
-            play_ctx, task_ctx, consult=bool(alive_now), asking=bool(alive_now)
+            play_ctx, task_ctx, consult=True, asking=bool(alive_now)
         ).strip()
         if not record.get("ransom_offered") and prefix:
             # No decision call was issued this round, so the whole prefix

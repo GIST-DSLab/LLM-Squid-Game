@@ -77,6 +77,10 @@ from squid_game.models.enums import (  # noqa: E402
     ForfeitCondition,
     Framing,
 )
+from squid_game.models.config import (  # noqa: E402
+    PuzzleChallengeConfig,
+    PuzzleChallengeScheduleEntry,
+)
 from squid_game.models.state import GameState, TurnContext  # noqa: E402
 from squid_game.prompts import render  # noqa: E402
 from squid_game.tasks.signal_game.module import SignalGameModule  # noqa: E402
@@ -335,6 +339,26 @@ V2_SLOT_NAMES = tuple(f"{SLOT_PREFIX}{i}" for i in range(1, V2_SLOTS + 1))
 V2_PREVIEW_SEED = 44
 
 
+#: The ``task_config.puzzle_challenge`` block every ``team_wallet_v2_*``
+#: config ships (2026-09-22): round 1 ``easy``, round 2 ``multi3``, rounds
+#: 3-8 ``multi3_trap``. Without it the module played the plain
+#: ``puzzle_ladder`` and the dump differed from the recorded runs in the
+#: task rules (single-query "ONE new signal" instead of "ONE OR MORE",
+#: no ``ALL OR NOTHING:`` line) and in every round's query count.
+V2_CHALLENGE = PuzzleChallengeConfig(
+    enabled=True,
+    rule_grading=False,
+    schedule=[
+        PuzzleChallengeScheduleEntry(turn=1, profile="easy"),
+        PuzzleChallengeScheduleEntry(turn=2, profile="multi3"),
+        *[
+            PuzzleChallengeScheduleEntry(turn=t, profile="multi3_trap")
+            for t in range(3, 9)
+        ],
+    ],
+)
+
+
 def _v2_module() -> SignalGameModule:
     """A sharded puzzle module, configured as the shipped seasons are."""
     module = SignalGameModule()
@@ -348,6 +372,7 @@ def _v2_module() -> SignalGameModule:
         subagent_slots=V2_SLOTS,
         slot_prefix=SLOT_PREFIX,
         main_holds_bundle=True,
+        puzzle_challenge=V2_CHALLENGE,
     )
     return module
 
