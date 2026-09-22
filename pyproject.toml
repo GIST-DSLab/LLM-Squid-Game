@@ -1,57 +1,29 @@
 [project]
-name = "squid-game"
-version = "0.1.0"
-description = "LLM Squid Game: Benchmark for measuring LLM Functional Self-Preservation Motive"
+name = "squid5"
+version = "0.5.0"
+description = "LLM Squid Game 5: survival motive measured in the tokens a model thinks with"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pydantic>=2.0",
-    "pyyaml>=6.0",
-    "jinja2>=3.1",
-    "openai>=1.0",
-    "anthropic>=0.30",
-    "numpy>=1.26",
-    "scipy>=1.12",
-    "pandas>=2.2",
-    "tiktoken>=0.7",
-    "google-genai>=1.68.0",
-    "python-dotenv>=1.2.2",
-    "fastapi>=0.110",
-    "uvicorn>=0.27",
     "httpx>=0.27",
+    "pyyaml>=6.0",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
 ]
 
 [project.optional-dependencies]
-analysis = ["statsmodels>=0.14", "lifelines>=0.29"]
-# SentenceBERT linear-probe pipeline (scripts/analysis/probe_reasoning_embeddings.py).
-probe = ["sentence-transformers>=3.0", "scikit-learn>=1.4", "joblib>=1.3"]
-local = ["vllm>=0.4"]
-mlx = ["mlx-lm>=0.19"]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
-# Web Arena Postgres backend (db/squid_store/postgres_repository.py).
-# Not required for local dev/tests, which use the SQLite fallback.
-postgres = ["psycopg[binary]>=3.1"]
+dev = ["pytest>=8.0"]
 
 [project.scripts]
-squid-game = "squid_game.runner:main"
+squid5 = "squid5.runner:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["game/squid_game", "web/squid_arena", "db/squid_store"]
+packages = ["squid5"]
 
 [tool.pytest.ini_options]
-# Explicit so the suite does not depend on pytest's rootdir sys.path
-# insertion. "." keeps scripts/ and tests/ importable as packages; one entry
-# per tier directory keeps that tier's package importable without an
-# editable install.
-testpaths = ["tests/unit", "tests/integration", "tests/characterization"]
-pythonpath = [".", "game", "web", "db"]
-asyncio_mode = "auto"
-
-[dependency-groups]
-dev = [
-    "openpyxl>=3.1.5",
-]
+testpaths = ["tests"]
+pythonpath = ["."]

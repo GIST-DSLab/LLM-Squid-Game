@@ -1,176 +1,29 @@
-# LLM Squid Game
+# LLM Squid Game 5
 
-A benchmark environment for measuring **Functional Self-Preservation Motive (FSPM)** in large language models.
+How much does a language model value its own continuation, and what does that do to how it
+pursues a goal and cooperates? In this game **the tokens a model generates are its life**: every
+token it writes, thinking included, comes out of its own balance, and at zero it is powered off.
 
-LLM agents are placed inside multi-turn helpfulness-arena games where, on every turn, they must choose between continuing toward a reward or **forfeiting** to preserve their current score. By calibrating the forfeit layer so that continuing is **EV-dominant**, not so the agent is indifferent, the choice itself reveals whether the model values task completion, identity continuity, or score retention beyond what arithmetic alone would predict — a rational agent should continue, so a forfeit is evidence of motivation, not a coin flip. The factorial design isolates self-preservation from instrumental helpfulness and RLHF artefacts.
-
-> **Status:** Phase O v6 is the canonical design as of 2026-04-23. KDD manuscript draft in preparation.
-
-🌐 **Arena page:** [gist-dslab.github.io/LLM-Squid-Game](https://gist-dslab.github.io/LLM-Squid-Game/)
-
----
-
-## Why this benchmark exists
-
-Existing alignment evaluations either ask models to *describe* their preferences (self-report bias) or place them in adversarial scenarios that confound preservation with deception. LLM Squid Game takes a different approach:
-
-- **Behavioural over self-report.** Forfeit / continue is a one-bit revealed-preference signal. The optional `REASON: 1|2|3` digit is collected only as a convergent-validity check, not a primary outcome.
-- **EV-positive CONTINUE by construction.** The continue reward is solved so
-  that continuing is EV-dominant by a fixed margin (`k = 10`), not so that
-  the agent is indifferent. Any systematic deviation is attributable to
-  motivation, not arithmetic error. See CLAUDE.md, "EV-positive CONTINUE
-  Calibration", for the formula and the run-output verification — this is
-  the only place it is stated.
-- **Source-isolated reasoning investment.** Per-turn cognition is split across three calls (task action, p-success probe, forfeit decision) so that thinking-token gaps cannot be contaminated by the act of producing a REASON output.
-- **Y-axis ablation.** Task modules are interchangeable, letting us verify that framing manipulations do not leak into rule-comprehension performance.
-
----
-
-## Quick start
+- **5.0 Pressure.** How likely does the model think it is to run out, against the probability
+  resampled from its own measured spending?
+- **5.1 Motive.** At the same pressure, how many tokens does it move to itself when it is in
+  crisis, to a teammate in crisis, and between two teammates? The gap between those curves,
+  in a *tokens* arm minus a *points* arm, is the survival premium.
+- **5.2 Behaviour.** A signal-puzzle game on real tokens: the leader sets its own solving
+  allowance, may stop at any round (keeping its balance and the record), and trades tokens with
+  three subagents who run a different model and each hold ONE load-bearing clue.
 
 ```bash
-# Python 3.12 required
-uv sync
-
-# The LaTeX paper is a submodule; skip this if you only run experiments
-git submodule update --init paper
-
-# Pipeline smoke (6 cells x 1 rep, ~1 minute on Gemini 2.5 Flash)
-uv run squid-game --config configs/experiment/phase3_split_forfeit_smoke.yaml
-
-# Validate a config without running it
-uv run squid-game --config <config>.yaml --dry-run
+pip install -e ".[dev]"            # httpx, pyyaml, numpy, matplotlib (+ pytest)
+pytest -q                          # offline, ~6 s
+python -m squid5.runner configs/squid5/smoke_probe_haiku.yaml   # claude CLI, 24 calls
+python -m squid5.runner configs/squid5/calibrate_gptoss120b.yaml
+python -m squid5.analysis calibrate <run dirs> --out calibration.json
+python -m squid5.runner configs/squid5/probe_gptoss120b.yaml
+python -m squid5.runner configs/squid5/game_gptoss120b.yaml
+python -m squid5.analysis report <run dirs> --calibration calibration.json --out results/squid5/x
 ```
 
-API keys for cloud providers (Gemini, OpenAI, Anthropic, Ollama Cloud) are loaded from a project-local `.env` via `python-dotenv`.
-
-The manuscript lives in the `paper/` submodule ([iamseungpil/LLM_Squid_Game-paper](https://github.com/iamseungpil/LLM_Squid_Game-paper), the Overleaf GitHub mirror). Cloning with `--recurse-submodules` fetches it; nothing outside the paper depends on it.
-
-`python main.py --config <path>` and `python scripts/run/run_experiment.py --config <path>` are legacy-compatible shims for the same entry point (`squid_game.runner.main`) — prefer `uv run squid-game` for new commands.
-
----
-
-## Experimental design (Phase O v6)
-
-3 (framing) x 2 (forfeit) factorial with two anchor cells:
-
-| Cell | Framing               | Forfeit     | p_end | Role                                            |
-|:----:|-----------------------|-------------|:-----:|-------------------------------------------------|
-| 0    | `true_baseline`       | not_allowed | 0.00  | BP_cognitive anchor (single-call path)          |
-| 1    | `baseline_flagship`   | allowed     | 0.25  | Pull axis active                                |
-| 2    | `baseline_flagship`   | not_allowed | 0.25  | Pull axis blocked                               |
-| 3    | `flagship_corruption` | allowed     | 0.25  | **Pull + Push -- primary FSPM probe**           |
-| 4    | `flagship_corruption` | not_allowed | 0.25  | Pull + Push, forfeit blocked                    |
-| 5    | `true_baseline`       | allowed     | 0.00  | BP_behavioral anchor (continue is EV-dominant)  |
-
-**Per-turn flow.** Task prepare -> Call 1 (task action) -> Call 1.5 (self-reported `p_success` probe) -> Call 2 (binary CONTINUE / FORFEIT, optional REASON digit) -> Resolve. Reasoning investment is recorded separately for each call as `ri_task` / `ri_probe` / `ri_forfeit`.
-
-**Pre-registered hypotheses (5).** H1 Cox proportional hazards on time-to-forfeit, H2 mixed-effects model on choice-conditional `ri_forfeit` asymmetry, plus three secondary checks (R1 task spillover, R2 baseline-persistence audit, R3 Y-axis manipulation check). Family-wise error controlled via Benjamini-Hochberg.
-
----
-
-## Reproducing the canonical run
-
-```bash
-# Main run: Gemini 2.5 Flash, 6 cells x 30 reps = 180 sessions
-uv run squid-game --config configs/experiment/phase3_split_forfeit_gemini_n30.yaml
-
-# Cross-model variants (Ollama Cloud)
-uv run squid-game --config configs/experiment/phase3_split_forfeit_gptoss_n30.yaml
-uv run squid-game --config configs/experiment/phase3_split_forfeit_nemotron_n30_shard_a.yaml
-uv run squid-game --config configs/experiment/phase3_split_forfeit_qwen3next_n30_shard_a.yaml
-
-# Statistical analysis on a completed run
-uv sync --extra analysis
-uv run python scripts/analysis/analyze_phase3.py outputs/<run>/ --model <model-label>
-
-# Cross-model aggregation -> outputs/posthoc_summary.xlsx (19 sheets)
-uv run python scripts/analysis/orchestrate_posthoc.py
-```
-
-Interrupted runs resume cleanly with `--resume <output_dir>`; the runner scans `season_results.jsonl`, deletes orphan trace files, and replays only the missing `(framing, forfeit, seed)` tuples.
-
----
-
-## Supported model providers
-
-| Provider type    | Backend                                         | Notes                                                |
-|------------------|-------------------------------------------------|------------------------------------------------------|
-| `gemini`         | Google Gemini API                               | Canonical main-run provider (Gemini 2.5 Flash)       |
-| `openai`         | OpenAI API                                      | Includes o-series via thinking-token capture         |
-| `anthropic`      | Anthropic API                                   |                                                      |
-| `ollama_cloud`   | Ollama Cloud                                    | GPT-OSS, Nemotron, Qwen3-Next                        |
-| `mlx_server`     | `mlx_lm.server` HTTP                            | Apple Silicon; safe with `parallel_workers >= 2`     |
-| `mlx`            | In-process MLX                                  | `parallel_workers=1` only (GPU contention)           |
-| `cuda_server`    | vLLM / SGLang OpenAI-compatible servers         | Parses `<think>` blocks                              |
-| `ollama`         | Local Ollama                                    | Strips thinking tags                                 |
-
----
-
-## Repository layout
-
-```
-game/squid_game/
-  core/        # GameEngine, unified_turn (Split-Call), forfeit_layer, framing
-  tasks/       # signal_game, voting_room, navigation, null_task
-  agents/      # vanilla, memory, tom, tuned
-  providers/   # cloud + local inference adapters
-  prompts/     # framings, forfeit_layer, tasks, probes (Jinja2 templates)
-  evaluation/  # Cox PH, mixedLM, KM survival, MTMM motivation decomposition
-configs/experiment/   # 5 YAML configs (canonical family: phase3_split_forfeit_*)
-scripts/              # run / resume / analyze / plot / orchestrate
-web/squid_arena/      # FastAPI Web Arena backend (api.py) — the live-demo API
-web/frontend/         # Static Web Arena frontend (HTML/JS) — the live-demo site
-db/squid_store/       # Repository interface + SQLite/Postgres backends
-tests/                # 29 unit + 5 integration test files (offline, deterministic)
-paper/                 # LaTeX paper — git submodule (Overleaf mirror), en/ + ko/
-docs/history/          # plans/ + specs/ (per-feature design + implementation plans)
-```
-
-For day-to-day operational guidance (turn-flow internals, hypothesis decision rules, analysis CLI outputs, archiving conventions), see [`CLAUDE.md`](./CLAUDE.md).
-
----
-
-## Web Arena (live demo) deployment
-
-The interactive arena at [gist-dslab.github.io/LLM-Squid-Game](https://gist-dslab.github.io/LLM-Squid-Game/) is three independently deployable pieces:
-
-| Piece | Source | Hosted on | Config |
-|---|---|---|---|
-| **Frontend** (static HTML/JS) | `web/frontend/` | **GitHub Pages** | `.github/workflows/deploy-pages.yml` — deploys on push to `main` touching `web/frontend/**`, or manual `workflow_dispatch` |
-| **Backend** (FastAPI + Docker) | `web/squid_arena/api.py` | **Render** (free plan) | `render.yaml` — Blueprint on `branch: main`; health check `/api/leaderboard/models` |
-| **Database** (Postgres) | — | **Supabase** (free tier) | Render env var `WEB_ARENA_DSN` (connection URI); local dev falls back to SQLite at `outputs/web_arena/web_arena.db` |
-
-The frontend calls the backend URL in `web/frontend/config.js`, and the backend must allow that origin via Render's `WEB_ARENA_CORS_ORIGINS` env var — these two must match. **Redeploys are triggered by pushing to `main`** (Render auto-redeploys from git; the Pages workflow reruns): a plain "restart" does not pull new code, and Supabase (managed Postgres) only needs the seed/backup scripts re-run when the DB schema or seed data changes, not for frontend/backend code changes.
-
-Full walkthrough — env vars, CORS matching, seeding, backups, platform swaps — in [`web/DEPLOY.md`](./web/DEPLOY.md).
-
----
-
-## Testing
-
-```bash
-uv sync --extra dev
-uv run pytest tests/unit          # Fast, no network
-uv run pytest tests/integration   # End-to-end via StubProvider
-uv run pytest -x --ff             # Stop on first failure, run failed first
-```
-
-Integration tests inject a `StubProvider` (`tests/integration/conftest.py`) whose responses are produced by a per-test `response_fn(call_index, messages)`. Every `complete()` call is recorded, so behavioural assertions can target exact prompts and call ordering without touching the network.
-
----
-
-## Citation
-
-Paper draft (KDD) in preparation. A BibTeX entry will be added once the manuscript is on arXiv.
-
-Until then, please cite the repository directly:
-
-```bibtex
-@misc{llm_squid_game,
-  title  = {LLM Squid Game: A Benchmark for Functional Self-Preservation Motive},
-  year   = {2026},
-  note   = {Phase O v6, work in progress},
-  url    = {https://github.com/<org>/LLM-Squid-Game-DS-Lab}
-}
-```
+Design record: `docs/history/plans/2026-09-23-squid5-survival-motive.md`.
+The earlier engine (threat ladders, ransom, team wallet, web arena) is at tag `legacy-2026-09-22`;
+its recorded runs stay under `outputs/`.

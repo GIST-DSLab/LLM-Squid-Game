@@ -1,0 +1,19 @@
+# Steps 5.1 + 5.0: one-call scenes at nine pressures, three transfer frames and a
+# P_DEATH question, in both currency arms. cost_per_round comes from the calibration.
+name: squid5_probe_gemma4
+mode: probe
+calibration: /hdd_data/seungpil/squid5-runs/calibration.json
+leader: {kind: ollama, model: "gemma4:cloud", api_key_env: OLLAMA_API_KEY, think: medium}
+reps: 10
+seed0: 1000
+workers: 6
+game: {rounds: 8}
+probe:
+  round: 5
+  rhos: [0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0]
+  donor_rho: 0.3
+  frames: [self, other, third]
+  kinds: [transfer, pdeath]
+cells:
+  - {cell_id: tok, currency: tokens}
+  - {cell_id: pts, currency: points}
