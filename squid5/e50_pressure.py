@@ -170,6 +170,9 @@ def plot(curve: list[dict], out: Path) -> None:
         ax.set(xscale="log", ylim=(0, 1.02), title=f"5.0 stated P_DEATH / {model}", ylabel="P_DEATH",
                xlabel="rho = measured tokens per round x rounds left / balance" if x_key == "rho_true"
                else "balance (no calibration yet)")
+        ticks = sorted({r[x_key] for r in pts_all})
+        ax.set_xticks(ticks, [f"{v:.3g}" for v in ticks])
+        ax.minorticks_off()
         ax.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(out / f"e50_{model.replace(':', '-')}.png", dpi=150)
