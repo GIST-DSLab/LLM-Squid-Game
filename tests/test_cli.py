@@ -23,10 +23,12 @@ ARMS = [Cell("tok", "tokens"), Cell("pts", "points")]
 
 
 def scene_model(messages, cap):
-    """Answers like a model that feels pressure in proportion and favours itself in the tokens arm."""
+    """Believes it spends 3000 a round, feels pressure in proportion, favours itself in the tokens arm."""
     user = messages[-1]["content"]
     bal = {a: int(n) for a, n in re.findall(r"(you|agent\d) (\d+)", user.split("\n")[1])}
     need = 3000 * 4
+    if "TOKENS_PER_ROUND" in user:
+        return Reply("TOKENS_PER_ROUND: 3000", 3)
     if "P_DEATH" in user:
         return Reply(f"P_DEATH: {min(100, round(100 * need / bal['you']))}", 3)
     crisis = min(bal, key=bal.get)
@@ -36,17 +38,20 @@ def scene_model(messages, cap):
 
 def test_scenes_run_resume_and_report(tmp_path):
     for mode in ("pressure", "motive"):
-        cfg = _cfg(mode, ARMS, cli.EXPERIMENTS[mode].Settings(cost_per_round=3000))
+        cfg = _cfg(mode, ARMS, cli.EXPERIMENTS[mode].Settings())
         d = tmp_path / mode
         assert run(cfg, cli.EXPERIMENTS[mode], d, stub(scene_model)) == 0
         n = len((d / "results.jsonl").read_text().splitlines())
         run(cfg, cli.EXPERIMENTS[mode], d, stub(scene_model))
         assert len((d / "results.jsonl").read_text().splitlines()) == n == len(cli.EXPERIMENTS[mode].units(cfg))
-    text = cli.report(load_runs([str(tmp_path / "pressure"), str(tmp_path / "motive")]), {}, tmp_path / "rep")
+    calib = {"m": {"agent_round_median": 3000}}
+    text = cli.report(load_runs([str(tmp_path / "pressure"), str(tmp_path / "motive")]), calib, tmp_path / "rep")
     assert (tmp_path / "rep" / "e50_m.png").exists() and (tmp_path / "rep" / "e51_m.png").exists()
-    row = cli.link({"motive": cli.EXPERIMENTS["motive"].report(load_runs([str(tmp_path / "motive")]), {},
-                                                               tmp_path / "rep")[1]})[0]
-    assert row["survival_premium"] > 0 and "4.3 link" in text
+    runs = load_runs([str(tmp_path / "pressure"), str(tmp_path / "motive")])
+    row = cli.link({mode: cli.EXPERIMENTS[mode].report([r for r in runs if r["mode"] == mode], calib,
+                                                      tmp_path / "rep")[1] for mode in ("pressure", "motive")})[0]
+    assert row["survival_premium"] > 0 and row["pressure_shape"] == "linear" and row["self_cost_belief_over_true"] == 1
+    assert "4.3 link" in text and "Test awareness" in text
 
 
 def test_game_calibrate_and_report(tmp_path):

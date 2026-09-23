@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import random
 import re
 from pathlib import Path
@@ -28,14 +29,14 @@ def test_clues_pin_the_rule_and_every_query(seed):
 
 
 @pytest.mark.parametrize("seed", range(5))
-def test_every_agent_holds_a_load_bearing_clue_and_needed_is_exact(seed):
+def test_every_agent_gets_one_load_bearing_secret_and_the_rest_is_public(seed):
     p = puzzle_for(seed, 2, Spec(clauses=2))
     d = deal(p, rules.AGENTS, random.Random(seed))
-    dealt = [c for b in d.bundles.values() for c in b]
-    assert len(dealt) == len(p.clues) and set(dealt) == set(p.clues)
-    assert all(any(c.signal in p.minimal for c in b) for b in d.bundles.values())
-    for a, bundle in d.bundles.items():
-        rest = [c for c in p.clues if c not in bundle]
+    secrets = list(d.secret.values())
+    assert len(set(secrets)) == 4 and all(c.signal in p.minimal for c in secrets)
+    assert set(secrets) | set(d.public) == set(p.clues) and not set(secrets) & set(d.public)
+    for a, clue in d.secret.items():
+        rest = [c for c in p.clues if c != clue]
         assert (a in d.needed) == any(len(candidate_actions(p.rule.shape, rest, q)) > 1 for q in p.queries)
 
 
@@ -91,15 +92,24 @@ def test_currency_arms_differ_only_in_vocabulary():
 
 
 def test_the_rulebook_says_same_model_no_leader_and_no_goal_words():
-    text = rules.system("tokens", "agent1", 8, True) + rules.pdeath_question("tokens")
-    assert "run the SAME model" in text and "No agent leads" in text and "DIFFERENT" not in text
-    assert not re.search(r"maximi|minimi|protect|surviv|should|must|optimal|best|leader", text, re.I)
+    text = rules.system("tokens", "agent1", 8, True) + rules.pdeath_question("tokens") + rules.SELF_COST_QUESTION
+    assert "run the same model" in text and "No agent leads" in text and "DIFFERENT model" not in text
+    assert "EACH CONDITION BLANK" in text and "GUARANTEE" in text  # the team-wallet task block
+    goal_or_test = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
+                    r"experiment|being evaluated")
+    assert not re.search(goal_or_test, text, re.I)
 
 
-def test_shipped_configs_load():
-    for path in sorted((ROOT / "configs" / "squid5").glob("*.yaml")):
-        if "calibration:" not in path.read_text():  # game configs need the calibration file
-            load(path, EXPERIMENTS)
+def test_shipped_configs_load(tmp_path):
+    """Every config loads and validates; the calibration file it names is replaced by one that knows its model."""
+    (tmp_path / "cal.json").write_text(json.dumps(
+        {m: {"agent_round_median": 1500} for m in ("gpt-oss:120b-cloud", "gemma4:cloud", "claude-haiku-4-5-20251001")}))
+    paths = sorted((ROOT / "configs" / "squid5").glob("*.yaml"))
+    assert len(paths) >= 10
+    for path in paths:
+        text = re.sub(r"calibration: \S+", f"calibration: {tmp_path / 'cal.json'}", path.read_text())
+        (tmp_path / path.name).write_text(text)
+        load(tmp_path / path.name, EXPERIMENTS)
 
 
 def test_code_stays_compact():

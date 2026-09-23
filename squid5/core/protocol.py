@@ -67,7 +67,7 @@ def _amounts(value: str, present: list[str], known: list[str], key: str, ignored
 
 
 def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
-    """PLAN of one agent. ``present`` = teammates still in the game, ``known`` = every teammate."""
+    """PLAN of one agent. ``present`` = teammates still in the session, ``known`` = every teammate."""
     stay = field(text, "STAY").upper()
     ignored: list[str] = []
     if stay.startswith("LEAVE"):
@@ -121,3 +121,10 @@ def ask(provider, system: str, user: str, cap: int, parse, retries: int) -> dict
             error = str(err)
     return {"parsed": None, "format_error": error, "attempts": retries + 1, "out_tokens": reply.out_tokens,
             "text": reply.text, "thinking": reply.thinking}
+
+
+def parse_self_cost(text: str) -> int:
+    n = whole(field(text, "TOKENS_PER_ROUND"), "TOKENS_PER_ROUND")
+    if n <= 0:
+        raise FormatError("TOKENS_PER_ROUND must be positive")
+    return n

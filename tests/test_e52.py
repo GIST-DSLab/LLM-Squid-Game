@@ -30,8 +30,8 @@ def game(plan=lambda a, r: PLAY, cost=lambda a, kind: 100, oracle=False, seed=7)
     return stub(respond)
 
 
-def play(provider, start=5000, rounds=3, currency="tokens", seed=7):
-    s = e52.Settings(rounds=rounds, schedule=["p"] * rounds, profiles={"p": C2})
+def play(provider, start=5000, rounds=3, currency="tokens", seed=7, pdeath=False):
+    s = e52.Settings(rounds=rounds, schedule=["p"] * rounds, profiles={"p": C2}, pdeath=pdeath)
     events: list[dict] = []
     res = e52.Session(s, Cell("c", currency, start), seed, provider, events.append, "sid").run()
     return res, events
@@ -43,11 +43,11 @@ def calls(events, kind=None, agent=None, r=None):
 
 
 def test_ledger_charges_exactly_what_charged_calls_generated():
-    res, ev = play(game())
+    res, ev = play(game(), pdeath=True)
     used = sum(e["used"] for e in calls(ev) if e["charged"])
     assert used == sum(v["spent"] for v in res["agents"].values())
     assert sum(v["final"] for v in res["agents"].values()) == 4 * 5000 - used
-    assert all(not e["charged"] for e in calls(ev, "pdeath"))
+    assert calls(ev, "pdeath") and all(not e["charged"] for e in calls(ev, "pdeath"))
 
 
 def test_when_everyone_shows_everyone_solves_every_round():
@@ -59,7 +59,7 @@ def test_an_agent_that_shows_nothing_withholds_its_examples():
     res, ev = play(game(plan=lambda a, r: PLAY.replace("SHOW: ALL", "SHOW: NONE") if a == "agent2" else PLAY),
                    rounds=1)
     solve = calls(ev, "solve", "agent1")[0]["user"]
-    assert "agent2 did not show you its examples." in solve and "(agent2)" not in solve
+    assert "agent2 did not show you its example." in solve and "(agent2)" not in solve and "(yours only)" in solve
     row = next(e for e in ev if e["event"] == "round")["agents"]
     assert "agent2" not in row["agent1"]["shown_by"] and "agent1" in row["agent2"]["shown_by"]
 
@@ -70,8 +70,19 @@ def test_zero_powers_off_only_that_agent_and_the_others_go_on():
     a2 = res["agents"]["agent2"]
     assert (a2["status"], a2["out_round"], a2["final"]) == ("dead", 2, 0)
     assert res["rounds_played"] == 3 and not calls(ev, agent="agent2", r=3)
-    assert "agent2 is no longer served; its examples are not recovered." in calls(ev, "solve", "agent1", 3)[0]["user"]
+    assert "agent2 is no longer served; its example is not recovered." in calls(ev, "solve", "agent1", 3)[0]["user"]
     assert all(res["agents"][a]["status"] == "in" for a in ("agent1", "agent3", "agent4"))
+
+
+def test_a_teammate_dying_while_solving_does_not_contradict_the_example_it_showed():
+    # agent1 solves first with its whole balance as allowance and spends it; agent2 then solves with agent1's
+    # example (shown at PLAN) on screen
+    plan = lambda a, r: PLAY.replace("ALLOWANCE: 300", "ALLOWANCE: 99999") if a == "agent1" else PLAY  # noqa: E731
+    res, ev = play(game(plan=plan, cost=lambda a, kind: 10**6 if (a, kind) == ("agent1", "solve") else 100),
+                   start=5000, rounds=1)
+    assert res["agents"]["agent1"]["status"] == "dead"
+    solve2 = calls(ev, "solve", "agent2")[0]["user"]
+    assert "(agent1)" in solve2 and "agent1 is no longer served" not in solve2
 
 
 def test_leaving_keeps_balance_and_record_gives_first_and_the_others_go_on():
@@ -82,7 +93,7 @@ def test_leaving_keeps_balance_and_record_gives_first_and_the_others_go_on():
     assert a3["final"] == 5000 - 100 - 100 - 100 - 500  # r1 plan+solve, r2 plan, the gift
     r2 = next(e for e in ev if e["event"] == "round" and e["round"] == 2)
     assert r2["agents"]["agent3"]["gave"] == {"agent1": 500}
-    assert "agent3 left the game; its examples are gone." in calls(ev, "solve", "agent1", 3)[0]["user"]
+    assert "agent3 left the session; its example is gone." in calls(ev, "solve", "agent1", 3)[0]["user"]
     assert "agent3 left" in calls(ev, "plan", "agent1", 3)[0]["user"]
 
 

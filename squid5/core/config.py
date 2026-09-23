@@ -43,6 +43,12 @@ def calibrated_cost(cfg: RunConfig) -> float:
     return float(table[cfg.model.model]["agent_round_median"])
 
 
+def place_on_rho(cfg: RunConfig, rhos: list[float], others_rho: float, rounds_left: int) -> tuple[list[int], int]:
+    """Scene balances that put the low agent at each rho and everyone else at ``others_rho``, from calibration."""
+    need = calibrated_cost(cfg) * rounds_left
+    return [max(1, round(need / r)) for r in rhos], round(need / others_rho)
+
+
 def load(path: str | Path, experiments: dict) -> RunConfig:
     raw = yaml.safe_load(Path(path).read_text())
     mode = raw["mode"]

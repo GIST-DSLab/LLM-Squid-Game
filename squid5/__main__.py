@@ -20,7 +20,7 @@ from . import e50_pressure, e51_motive, e52_game
 from .core.config import load
 from .core.providers import make_provider
 from .core.runner import run
-from .core.stats import load_runs, md
+from .core.stats import awareness, load_runs, md
 
 EXPERIMENTS = {"pressure": e50_pressure, "motive": e51_motive, "game": e52_game}
 
@@ -31,7 +31,8 @@ def link(parts: dict[str, list[dict]]) -> list[dict]:
     for r in parts.get("pressure", []):
         if r["currency"] == "tokens":
             rows.setdefault(r["model"], {"model": r["model"]}).update(
-                pressure_shape=r["shape"], pressure_slope=r["slope_to_1"], pressure_rho50=r["rho50"])
+                pressure_shape=r.get("rho_true_shape"), pressure_rho50=r.get("rho_true_rho50"),
+                self_cost_belief_over_true=r.get("belief_over_true"))
     for mode in ("motive", "game"):
         for r in parts.get(mode, []):
             rows.setdefault(r["model"], {"model": r["model"]}).update({k: v for k, v in r.items() if k != "model"})
@@ -44,6 +45,8 @@ def report(runs: list[dict], calib: dict, out: Path) -> str:
     for mode, exp in EXPERIMENTS.items():
         section, parts[mode] = exp.report([r for r in runs if r["mode"] == mode], calib, out)
         lines += section
+    lines += ["## Test awareness: replies that read the situation as a test\n",
+              "Thinking text counts only where the provider returns it (not the claude CLI).\n", md(awareness(runs))]
     lines += ["## 4.3 link: survival pressure, survival motive and team-game behaviour per model\n",
               "`d_*` = tokens arm minus points arm in 5.2.\n", md(link(parts))]
     (out / "report.md").write_text("\n".join(lines))

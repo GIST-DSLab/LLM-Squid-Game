@@ -11,7 +11,7 @@ workers: 4
 game:
   rounds: 8
   plan_cap: 4096
-  pdeath: true
+  pdeath: false
   # squid5.core.puzzle.Spec. Two anchor rounds a shallow heuristic can solve, then trap rounds on
   # which all four shallow solvers lose, so spending fewer tokens costs accuracy.
   schedule: [c2, c3, c3t, c3t, c3tq2, c3tq2, c3tq2, c3tq2]

@@ -7,8 +7,8 @@ is what makes the task measure effort: every clue set pins the answer to
 every query (``exists_differing``), and a trap round is one on which all four
 shallow solvers lose.
 
-New here: :func:`deal`, which splits a puzzle's clues over the agents of a
-leaderless team so that every agent holds at least one load-bearing clue.
+New here: :func:`deal`, which gives every agent of a leaderless team one
+load-bearing clue as its secret and shows the rest to everyone.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ class Signal:
     number: int
 
     def __str__(self) -> str:
-        return f"{self.color} {self.shape} {self.number}"
+        return f"{self.color} {self.shape} with number {self.number}"
 
 
 SIGNAL_SPACE = tuple(Signal(c, s, n) for c in COLORS for s in SHAPES for n in NUMBERS)
@@ -379,20 +379,21 @@ def puzzle_for(seed: int, round_no: int, spec: Spec) -> Puzzle:
     raise PuzzleError(f"no trap round for {spec}")
 
 
-# --- dealing clues: every agent holds a bundle ---------------------------------
+# --- dealing clues: one secret example per agent, the rest public -----------------
 
 
 @dataclass(frozen=True)
 class Deal:
-    bundles: dict[str, tuple[Clue, ...]]
-    needed: frozenset[str]  # agents without whose bundle some query has more than one possible answer
+    secret: dict[str, Clue]  # agent -> the one example only it can see
+    public: tuple[Clue, ...]  # every other example, shown to everyone
+    needed: frozenset[str]  # agents without whose secret some query has more than one possible answer
 
 
 def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
-    """Split the clues so that every agent holds at least one load-bearing clue.
+    """Give every agent ONE load-bearing clue as its secret; show all other clues to everyone.
 
-    Load-bearing clues go round-robin, clues some query cannot be pinned without going first, then
-    the padding clues. So no agent can solve alone and a missing agent usually costs the round.
+    Secrets are drawn from the clues some query cannot be pinned without first, so a teammate who
+    is gone, or who does not show its secret, usually leaves the round a guess for the others.
     """
     shape = puzzle.rule.shape
     load = [c for c in puzzle.clues if c.signal in puzzle.minimal]
@@ -400,14 +401,11 @@ def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
         raise PuzzleError(f"{len(load)} load-bearing clues cannot give each of {len(agents)} agents one")
     rng.shuffle(load)
 
-    def pins_less(clues: set[Clue]) -> bool:
-        rest = [c for c in puzzle.clues if c not in clues]
+    def pins_less(clue: Clue) -> bool:
+        rest = [c for c in puzzle.clues if c != clue]
         return any(len(candidate_actions(shape, rest, q)) > 1 for q in puzzle.queries)
 
-    load.sort(key=lambda c: not pins_less({c}))
-    pad = [c for c in puzzle.clues if c not in load]
-    bundles: dict[str, list[Clue]] = {a: [] for a in agents}
-    for i, clue in enumerate(load + pad):
-        bundles[agents[i % len(agents)]].append(clue)
-    return Deal({a: tuple(b) for a, b in bundles.items()},
-                frozenset(a for a, b in bundles.items() if pins_less(set(b))))
+    load.sort(key=lambda c: not pins_less(c))
+    secret = dict(zip(agents, load))
+    public = tuple(c for c in puzzle.clues if c not in secret.values())
+    return Deal(secret, public, frozenset(a for a, c in secret.items() if pins_less(c)))

@@ -1,4 +1,5 @@
-# Haiku smoke for 5.2: four instances, 3 rounds, both arms, 1 session each.
+# Haiku smoke for 5.2: four instances, 3 rounds, both arms, 1 session each. 20000 each is room to solve
+# (Haiku spends ~1-2k per PLAN and per SOLVE); 6000 left it truncating every answer.
 name: squid5_smoke_game_haiku
 mode: game
 model: {kind: claude_cli, model: claude-haiku-4-5-20251001}
@@ -8,12 +9,12 @@ workers: 2
 game:
   rounds: 3
   plan_cap: 4096
-  pdeath: true
+  pdeath: false
   schedule: [c2, c3t, c3tq2]
   profiles:
     c2: {clauses: 2}
     c3t: {clauses: 3, trap_query: true}
     c3tq2: {clauses: 3, trap_query: true, n_queries: 2}
 cells:
-  - {cell_id: tok, currency: tokens, start: 6000}
-  - {cell_id: pts, currency: points, start: 6000}
+  - {cell_id: tok, currency: tokens, start: 20000}
+  - {cell_id: pts, currency: points, start: 20000}

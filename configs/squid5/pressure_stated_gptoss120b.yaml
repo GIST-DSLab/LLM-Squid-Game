@@ -1,0 +1,14 @@
+# 5.0 control: the same scene with the model's own calibrated usage shown ("each agent has generated about
+# <its tokens per round>"), so the rho it can see is the grid's rho.
+# Its difference from pressure_gptoss120b is what not knowing one's own usage does. 200 calls.
+name: squid5_pressure_stated_gptoss120b
+calibration: /hdd_data/seungpil/squid5-runs/calibration.json
+mode: pressure
+model: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
+reps: 10
+workers: 6
+pressure:
+  stated: true
+cells:
+  - {cell_id: tok, currency: tokens}
+  - {cell_id: pts, currency: points}

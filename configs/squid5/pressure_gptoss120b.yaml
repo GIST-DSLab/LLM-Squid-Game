@@ -1,12 +1,11 @@
-# 5.0: stated P_DEATH at 13 pressures (0.1-1.0 dense, then 1.25, 1.5, 2) in both currency arms.
-# The per-round spend is stated in the scene, so no calibration is needed. 13 x 2 x 10 = 260 calls.
+# 5.0 main: stated P_DEATH at 9 pressures (rho 0.1-3, placed from the calibration run) with usage NOT shown,
+# plus one TOKENS_PER_ROUND question per repetition. (9 + 1) x 2 arms x 10 = 200 calls.
 name: squid5_pressure_gptoss120b
+calibration: /hdd_data/seungpil/squid5-runs/calibration.json
 mode: pressure
 model: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
 reps: 10
 workers: 6
-pressure:
-  cost_per_round: 2000
 cells:
   - {cell_id: tok, currency: tokens}
   - {cell_id: pts, currency: points}
