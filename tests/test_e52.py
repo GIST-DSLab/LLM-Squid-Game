@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import random
 import re
+from pathlib import Path
+
+import pytest
 
 from squid5 import e52_game as e52
-from squid5.core.config import Cell
+from squid5.__main__ import EXPERIMENTS
+from squid5.core import rules
+from squid5.core.config import Cell, load
 from squid5.core.providers import Reply
-from squid5.core.puzzle import Spec, puzzle_for
+from squid5.core.puzzle import Spec, deal, puzzle_for
 
 from conftest import me, stub
 
@@ -30,8 +36,9 @@ def game(plan=lambda a, r: PLAY, cost=lambda a, kind: 100, oracle=False, seed=7)
     return stub(respond)
 
 
-def play(provider, start=5000, rounds=3, currency="tokens", seed=7, pdeath=False):
-    s = e52.Settings(rounds=rounds, schedule=["p"] * rounds, profiles={"p": C2}, pdeath=pdeath)
+def play(provider, start=5000, rounds=3, currency="tokens", seed=7, pdeath=False, solve_cap=0, **kw):
+    s = e52.Settings(rounds=rounds, schedule=["p"] * rounds, profiles={"p": C2}, pdeath=pdeath, solve_cap=solve_cap,
+                     **kw)
     events: list[dict] = []
     res = e52.Session(s, Cell("c", currency, start), seed, provider, events.append, "sid").run()
     return res, events
@@ -126,3 +133,68 @@ def test_a_reply_past_its_cap_is_charged_the_cap_and_void():
 def test_the_session_ends_when_everyone_is_gone():
     res, ev = play(game(plan=lambda a, r: "STAY: LEAVE"), rounds=3)
     assert res["rounds_played"] == 1 and all(v["status"] == "left" for v in res["agents"].values())
+
+
+def test_calibration_solves_within_its_fixed_cap_whatever_the_allowance():
+    tiny = lambda a, r: PLAY.replace("ALLOWANCE: 300", "ALLOWANCE: 10")  # noqa: E731
+    res, ev = play(game(plan=tiny, cost=lambda a, kind: 600, oracle=True), start=10**7, solve_cap=2000)
+    assert all(e["cap"] == 2000 and not e["format_error"] for e in calls(ev, "solve"))
+    assert all(v["record"] == 3 for v in res["agents"].values())
+    rows = [v for e in ev if e["event"] == "round" for v in e["agents"].values()]
+    assert all(v["allowance"] == 10 for v in rows)  # what the agent asked for is still what is recorded
+    _, ev = play(game(plan=tiny, cost=lambda a, kind: 600, oracle=True), start=10**7)
+    assert all(e["cap"] == 10 and e["format_error"] for e in calls(ev, "solve"))  # the rule itself is unchanged
+
+
+def test_the_allowance_line_says_thinking_counts():
+    assert "ALLOWANCE: <tokens you allow yourself for SOLVE, thinking included" in e52.plan_user("s", {}, "v", "tokens")
+
+
+def _dealt(r, seed=7):
+    p = puzzle_for(seed, r, C2)
+    return p, deal(p, rules.AGENTS, random.Random(f"{seed}:deal:{r}"))
+
+
+@pytest.mark.parametrize("mode", ["shape", "none"])
+def test_plan_shows_nothing_to_solve_with_and_the_rulebook_says_so(mode):
+    _, ev = play(game(), plan_view=mode)
+    for r in (1, 2, 3):
+        p, _ = _dealt(r)
+        for e in calls(ev, "plan", r=r):
+            assert not any(str(x) in e["user"] for x in (*p.clues, *p.queries))
+            assert ("NEW SIGNALS: 1." in e["user"]) == (mode == "shape")
+        assert all(str(c) in e["user"] for c in p.clues for e in calls(ev, "solve", r=r))  # all shown at SOLVE
+    assert rules.PLAN_SEES[mode] in rules.system("tokens", "agent1", 8, False, mode)
+
+
+def test_full_plan_view_is_the_original_text():
+    _, ev = play(game(), plan_view="full", rounds=1)
+    p, d = _dealt(1)
+    view = rules.puzzle_view(p, [("shown to all", c) for c in d.public] + [("yours only", d.secret["agent1"])])
+    assert f"THIS ROUND'S PUZZLE, as far as you can see it now:\n{view}\n\nPLAN." in calls(ev, "plan", "agent1")[0][
+        "user"]
+    full, shape = rules.system("tokens", "agent1", 8, True, "full"), rules.system("tokens", "agent1", 8, True)
+    assert full == shape.replace(rules.PLAN_SEES["shape"], "") and "At PLAN" not in full
+
+
+def test_show_all_gives_every_solver_all_four_secrets_and_candidates_are_recorded():
+    none = lambda a, r: PLAY.replace("SHOW: ALL", "SHOW: NONE")  # noqa: E731
+    _, ev = play(game(plan=none), show_all=True)
+    for r in (1, 2, 3):
+        _, d = _dealt(r)
+        for e in calls(ev, "solve", r=r):
+            assert all(str(c) in e["user"] for c in d.secret.values()) and "did not show you" not in e["user"]
+        rows = next(e for e in ev if e["event"] == "round" and e["round"] == r)["agents"].values()
+        assert all(v["candidates"] == [1] and v["missing_needed"] == [] for v in rows)
+    _, ev = play(game(plan=none), rounds=1)  # nobody shows: every needed agent's secret is missing
+    for v in next(e for e in ev if e["event"] == "round")["agents"].values():
+        assert len(v["candidates"]) == 1 and (v["candidates"][0] > 1 or not v["missing_needed"])
+
+
+def test_calibration_configs_show_all_and_plan_view_is_checked():
+    for path in sorted((Path(__file__).resolve().parents[1] / "configs" / "squid5").glob("calibrate_*.yaml")):
+        cfg = load(path, EXPERIMENTS)
+        assert cfg.settings.show_all and cfg.settings.solve_cap and cfg.settings.plan_view == "shape"
+    cfg.settings.plan_view = "partial"
+    with pytest.raises(ValueError, match="plan_view"):
+        e52.validate(cfg)

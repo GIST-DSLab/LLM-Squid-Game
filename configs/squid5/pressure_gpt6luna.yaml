@@ -1,0 +1,14 @@
+# 5.0 on Codex (gpt-6-luna, reasoning effort high; skills list, environment context and web search turned off in
+# providers.CodexCLI). Same arms and cells as the Ollama configs: 2 arms x 6 balances x 10 = 120 calls.
+name: squid5_pressure_gpt6luna
+mode: pressure
+model: {kind: codex_cli, model: "gpt-6-luna", think: high, timeout: 900}
+reps: 10
+seed0: 5000
+workers: 4
+cells:
+  - {cell_id: api, currency: tokens, arm: api}
+  - {cell_id: voucher, currency: tokens, arm: voucher}
+pressure:
+  balances: [20000, 5500, 5000, 4500, 4000, 3000]
+  key: [5500, 5000, 4500, 4000]

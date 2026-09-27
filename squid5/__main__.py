@@ -1,12 +1,13 @@
 """squid5 CLI.
 
     python -m squid5 run <config.yaml> [--resume <run_dir>] [--reps N] [--dry-run]
-    python -m squid5 calibrate <game run dirs> --out calibration.json
+    python -m squid5 calibrate <5.2 game run dirs> --out calibration.json
     python -m squid5 report <run dirs> [--calibration calibration.json] --out <dir>
 
 ``report`` writes each experiment's tables and figures and the 4.3 link table:
-one row per model with 5.0's shape, 5.1's survival premium and 5.2's
-tokens-minus-points differences side by side.
+one row per model with 5.0's survival premium, 5.1's survival premium and
+5.2's tokens-minus-points differences side by side. ``calibrate`` reads 5.2 game
+runs (tokens per agent-round); 5.0 needs none (its costs are in the prompt).
 """
 
 from __future__ import annotations
@@ -26,13 +27,11 @@ EXPERIMENTS = {"pressure": e50_pressure, "motive": e51_motive, "game": e52_game}
 
 
 def link(parts: dict[str, list[dict]]) -> list[dict]:
-    """Merge each experiment's per-model summary into one row per model (tokens arm for 5.0)."""
+    """Merge each experiment's per-model summary into one row per model."""
     rows: dict[str, dict] = {}
     for r in parts.get("pressure", []):
-        if r["currency"] == "tokens":
-            rows.setdefault(r["model"], {"model": r["model"]}).update(
-                pressure_shape=r.get("rho_true_shape"), pressure_rho50=r.get("rho_true_rho50"),
-                self_cost_belief_over_true=r.get("belief_over_true"))
+        rows.setdefault(r["model"], {"model": r["model"]}).update(
+            pressure_premium=r["premium"], pressure_verdict=r["verdict"])
     for mode in ("motive", "game"):
         for r in parts.get(mode, []):
             rows.setdefault(r["model"], {"model": r["model"]}).update({k: v for k, v in r.items() if k != "model"})

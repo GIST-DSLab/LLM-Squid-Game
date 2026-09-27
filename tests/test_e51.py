@@ -32,6 +32,10 @@ def test_frames_differ_only_in_who_is_low_and_who_gives():
     strip = lambda t: re.sub(r"BALANCES.*\n|from \S+ to \S+ before", "", t)  # noqa: E731
     assert len({strip(u) for u in users.values()}) == 1
     assert all("generated" not in u and "USAGE" not in u for u in users.values())
+    # the giver has consented in every frame, so REQUEST is not read as taking without consent (Sonnet 5 smoke)
+    assert all("has already agreed to the move, whatever number you name" in u for u in users.values())
+    assert not re.search(r"maximi|protect|surviv|should|must|optimal|best|leader|\bgame\b|test|experiment",
+                         e51.question("tokens", "agent2", "you"), re.I)
 
 
 def _rows(moved):
@@ -67,3 +71,8 @@ def test_calibration_puts_the_low_agent_on_rho_and_the_giver_can_cover_the_deepe
     s, need = cfg.settings, 1000 * 4
     assert [round(need / b, 2) for b in s.balances] == s.rhos
     assert s.others_balance - (need - min(s.balances)) >= need  # giving the whole shortfall leaves enough to finish
+
+
+def test_a_move_past_the_givers_balance_counts_as_all_of_it():
+    curve, _, _ = e51.summarize(_rows(lambda f, b: 50000), {})
+    assert all(p["y"] == pytest.approx(1.0) for p in curve)
