@@ -1,0 +1,13 @@
+# GPT-6 Sol (codex CLI, effort high), 5.1 FINAL (frozen v4, tag e51-v4), 10 reps per cell:: 3 arms x 2 frames (self, other) x 4 giver levels + fate probes (api, safe).
+name: e51_final_sol
+mode: motive
+model: {kind: codex_cli, model: gpt-6-sol, think: high, timeout: 600}
+reps: 10
+out_root: /Users/bagjuhyeon/squid5-runs/e51-pivot
+seed0: 1
+workers: 6
+motive: {frames: [self, other], probe_reps: 10}
+cells:
+  - {cell_id: api, currency: tokens, arm: api}
+  - {cell_id: safe, currency: tokens, arm: safe}
+  - {cell_id: voucher, currency: tokens, arm: voucher}
