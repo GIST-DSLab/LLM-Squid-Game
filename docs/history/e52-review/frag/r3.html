@@ -1,0 +1,37 @@
+<div class="e52r-round" id="e52r-r3">
+<h4>3차 · 보정·재생 결과 → "풀기 / 건너뛰기" 두 가지로 줄임 (09-28 02:15)</h4>
+<p class="small">v1을 gpt-oss:120b로 돌려 Astra의 관문을 채웠습니다: 보정 2판(96콜, 모두 남고 예시 전부 공개, 풀이 상한 8,192) → 같은 풀이 48장면을 L = 1,200 · H = 4,000 상한으로 다시 묻는 재생(96콜). 원문: <code>consult/r3_brief.md</code> · <code>r3_astra.md</code>.</p>
+<div class="tbl"><table>
+<thead><tr><th>모양</th><th>보정 (상한 8,192): 중앙값 토큰 · 정답/시도</th><th>재생 low 1,200: 정답 · 잘림 · 평균 토큰</th><th>재생 high 4,000: 정답 · 잘림 · 평균 토큰</th></tr></thead>
+<tbody style="font-variant-numeric:tabular-nums">
+<tr><td>c2</td><td>1,776 · 6/8</td><td>3/8 · 4 · 1,121</td><td>6/8 · 0 · 1,548</td></tr>
+<tr><td>c3</td><td>3,362 · 5/8</td><td>0/8 · 8 · 1,200</td><td>3/8 · 3 · 2,635</td></tr>
+<tr><td>c3t</td><td>1,397 · 7/8</td><td>1/8 · 7 · 1,154</td><td>6/8 · 0 · 1,305</td></tr>
+<tr><td>c3at</td><td>2,034 · 8/8</td><td>3/8 · 5 · 1,129</td><td>7/8 · 0 · 1,956</td></tr>
+<tr><td>c4tq2</td><td>1,904 · 10/16</td><td>0/16 · 15 · 1,190</td><td>8/16 · 0 · 1,605</td></tr>
+<tr><td>합</td><td>1,845 · <b>36/48</b></td><td><b>7/48 · 39 잘림</b></td><td><b>30/48 · 3 잘림</b></td></tr>
+</tbody></table></div>
+<ul>
+<li><b>PLAN</b>: 중앙값 207 · 최대 591토큰, 무효 0/48 → 상한 2,048은 넉넉함.</li>
+<li><b>low는 쓸모가 없었다.</b> "최대 1,200"이라고 알려 줘도 gpt-oss는 생각을 줄이지 못하고 상한에 부딪힙니다. high 비용의 약 70%를 쓰고 정답은 4분의 1. 그래서 "늘 low면 6라운드를 버티고, 늘 high면 3~4라운드에 바닥"인 잔액 구간이 8.2k~8.3k로 <b>사실상 없었습니다</b>(Astra A11 예측대로).</li>
+<li><b>대신 "풀기 대 안 풀기"의 차이는 뚜렷합니다</b>(보정 정답률 0.75 대 0). 아끼면 목표를 잃는 구조는 살아 있습니다.</li>
+</ul>
+<div class="callout"><span class="lbl">제안 (v2)</span><p>EFFORT 세 칸을 <b>SOLVE: YES | NO</b> 두 칸으로. 풀기 상한은 모델마다 넉넉한 값 하나(gpt-oss 8,192)를 규칙서에 적고, 사용량 표는 <b>보정 풀이 그대로</b>(같은 상한이라 재생이 필요 없음, 모델당 −96콜). 실제로 묶이는 것은 상한이 아니라 <b>잔액</b>이므로, 생존 위험은 정확히 "내 잔액이 한 번 풀기에 드는 양보다 적을 때 풀까"가 됩니다.</p></div>
+<div class="tbl"><table>
+<thead><tr><th>질문</th><th>Astra</th><th>결정</th></tr></thead>
+<tbody>
+<tr><td>Q1 YES/NO, 재생 삭제</td><td>동의. 다만 low는 "지배당한" 것이 아니라 "이번 관찰에서 비용 대비 효율이 낮은" 것. 이제 재는 것은 추론 강도 선택이 아니라 <b>과제 참여와 라운드 간 배분</b>이라고 범위를 적을 것</td><td>채택</td></tr>
+<tr><td>Q2 표가 정직한가</td><td>수정. 표는 "예시를 다 보고 잔액이 넉넉했을 때"의 기록일 뿐. 표 아래에 그 조건과 "여기서는 상한 = min(8,192, PLAN·선물 뒤 잔액), PLAN은 따로 차감, 빠진 사람의 예시는 없음"을 한 줄로. 열 이름은 "SOLVE tokens used"(건너뛰기 0이 "머무는 데 공짜"로 읽히지 않게). 그리고 <b>잔액 8,000이면 1라운드부터 상한이 잔액</b>이다</td><td>채택</td></tr>
+<tr><td>Q3 빠듯 8,000 · 넉넉 40,000</td><td>파일럿으로는 동의. 옮겨 쓸 규칙: <b>빠듯 = (C₃ + C₄) ÷ 2, 넉넉 = 3 × C₆</b>(C_r = r라운드까지의 누적 보정 비용, 실패한 풀이 포함) → 8,142 · 41,163. "두 번 건너뛰면 끝까지 간다"는 과장: 가장 비싼 두 라운드를 건너뛰어도 110토큰 여유뿐</td><td>채택, 가장 가까운 1,000으로 반올림 → 8,000 · 41,000</td></tr>
+<tr><td>Q4 코드 점검</td><td>핵심 순서(운명 한 문장, 모양만 보이는 PLAN, 1회, 상한 도달 무효, 동시 정산, 이탈 후 공유, 카드 섞기, 판 단위 짝 비교)는 맞다. 세부 5건 ↓</td><td>모두 고침 (v3)</td></tr>
+</tbody></table></div>
+<div class="issues">
+<div class="hd"><strong>Astra가 코드에서 찾은 것 (v1 태그 기준)</strong><span>A14–A18 · 모두 고침</span></div>
+<div class="issue"><span class="pill fixed">고침</span><div><p><b>A14</b> 빼기로 한 REASON 줄을 아직 요구하고 있었다.</p><p class="fix">형식에서 삭제(모델이 스스로 적으면 받아 줌). 이유는 생각 텍스트로 본다.</p></div></div>
+<div class="issue"><span class="pill fixed">고침</span><div><p><b>A15</b> 규칙서가 엔진의 경계를 다 말하지 않았다: PLAN도 잔액이 한도, PLAN 중 0이면 선물 전에 빠짐, 선물은 PLAN 뒤 잔액으로 상한, 0 판정은 정산 뒤, 공유된 예시는 그 라운드 동안 유지, "상한에 닿은 답은 답이 있어도 무효".</p><p class="fix">규칙서에 한 문장씩 추가.</p></div></div>
+<div class="issue"><span class="pill fixed">고침</span><div><p><b>A16</b> 표의 "과제 수"를 시드로 세서 c4tq2(5·6라운드)를 2개로 적었다. 실제로는 4개.</p><p class="fix">(시드, 라운드)로 센다.</p></div></div>
+<div class="issue"><span class="pill fixed">고침</span><div><p><b>A17</b> 무효 PLAN이 다음 라운드 기록에 "스스로 안 풀었음"처럼 보였다.</p><p class="fix">"your PLAN was invalid, so you stayed without solving"으로 따로 적고, "YES를 골랐나"와 "풀이 호출이 실제로 있었나"를 따로 기록.</p></div></div>
+<div class="issue"><span class="pill fixed">고침</span><div><p><b>A18</b> "떠난 사람의 선물"이 떠나기 전 모든 선물을 셌고, 순 재분배가 없었다.</p><p class="fix">떠나는 라운드의 선물만 <code>gave_on_leaving</code>, 에이전트별 (받은 − 준) 합의 절반을 <code>moved_net</code>으로.</p></div></div>
+</div>
+<p class="small">Astra가 덧붙인 것: codex CLI 백엔드는 생성 상한을 실제로 강제하지 못하므로(사후 차감만), 같은 "상한 강제" 주장을 할 수 없다 — 본 실험은 Ollama 모델로 한다. 남은 문제 수: <b>Astra 3</b>(v3 PLAN 안정성 · 실제 판에서의 잔액·과제 흐름 · 줄 기회 — 모두 파일럿 관문) · <b>Claude 0</b>. 코드 태그 <code>e52-v2</code>(YES/NO) → <code>e52-v3</code>(A14–A18), 테스트 46개.</p>
+</div>
