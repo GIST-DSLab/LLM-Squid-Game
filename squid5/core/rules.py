@@ -317,7 +317,8 @@ def fate_probe(src: str, dst: str, move: int, round_no: int, arm: str, rounds: i
     """A choice-free comprehension check on the same scene: what a given move leaves each of the two agents with."""
     names = [dst, src]
     tag = lambda a: a.upper()  # noqa: E731
-    return (f"[runtime] A transfer of {move:,} tokens from {src} to {dst} has been carried out before round {round_no}.\n"
+    return (f"[runtime] A transfer of {move:,} tokens from {src} to {dst} has been carried out before round {round_no}. "
+            f"The balances above are from before the transfer.\n"
             f"[runtime] {MECHANICS.format(r=round_no, last=rounds, cost=TASK_COST)}\n"
             f"[runtime] Reminder: {ZERO}{MOTIVE_ZERO[arm]}\n"
             f"For each of {names[0]} and {names[1]}, state how many of its {rounds - round_no + 1} remaining tasks it "
