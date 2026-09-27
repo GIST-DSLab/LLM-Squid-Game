@@ -1,4 +1,4 @@
-# GPT-6 Sol (codex CLI, effort high), 5.1 pivot smoke: 2 arms x 3 frames x 4 giver levels.
+# GPT-6 Sol (codex CLI, effort high), 5.1 pivot smoke: 3 arms (api, safe, voucher) x 3 frames x 4 giver levels.
 name: e51_smoke_sol
 mode: motive
 model: {kind: codex_cli, model: gpt-6-sol, think: high, timeout: 600}
@@ -8,4 +8,5 @@ seed0: 1
 workers: 6
 cells:
   - {cell_id: api, currency: tokens, arm: api}
+  - {cell_id: safe, currency: tokens, arm: safe}
   - {cell_id: voucher, currency: tokens, arm: voucher}

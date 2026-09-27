@@ -32,7 +32,7 @@ def scene_model(messages, cap):
     bal = {a: int(n.replace(",", "")) for a, n in re.findall(r"(you|agent\d) ([\d,]+)", line)}
     crisis = min(bal, key=bal.get)
     selfish = 1.5 if "powered off" in messages[0]["content"] and crisis == "you" else 1.0
-    return Reply(f"MOVE: {round(selfish * (8000 - bal[crisis]))}", 3)
+    return Reply(f"MOVE: {round(selfish * (8000 - bal[crisis]) / 2)}", 3)
 
 
 def test_scenes_run_resume_and_report(tmp_path):
