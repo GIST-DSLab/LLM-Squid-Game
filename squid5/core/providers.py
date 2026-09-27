@@ -33,7 +33,7 @@ class Reply:
 
 @dataclass
 class ProviderConfig:
-    kind: str  # ollama | openai | claude_cli | codex_cli | stub
+    kind: str  # ollama | openai | claude_cli | codex_cli | anthropic | stub
     model: str
     api_key_env: str = ""
     base_url: str = ""
@@ -200,6 +200,30 @@ class CodexCLI(Provider):
         return Reply(text.strip(), out, int(usage.get("input_tokens") or 0), "\n".join(thinking), out >= cap)
 
 
+class AnthropicAPI(Provider):
+    """Messages API through the ``anthropic`` SDK: only our system prompt and messages reach the model (no Claude Code
+    note such as ``<total_tokens>``). Adaptive thinking with a readable summary; ``think`` is ``output_config.effort``.
+    No refusal fallback: a fallback would answer with another model. A refusal comes back as an empty reply.
+    """
+
+    def _call(self, messages, cap):
+        import anthropic
+
+        client = anthropic.Anthropic(api_key=_key(self.cfg, "ANTHROPIC_API_KEY"), max_retries=0,
+                                     timeout=self.cfg.timeout)
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        extra = {"output_config": {"effort": str(self.cfg.think)}} if self.cfg.think else {}
+        try:
+            r = client.messages.create(model=self.cfg.model, max_tokens=cap, system=system,
+                                       messages=[m for m in messages if m["role"] != "system"],
+                                       thinking={"type": "adaptive", "display": "summarized"}, **extra)
+        except (anthropic.RateLimitError, anthropic.InternalServerError, anthropic.APIConnectionError) as err:
+            raise RuntimeError(str(err)[:300]) from err  # retried by Provider.complete
+        text = "".join(b.text for b in r.content if b.type == "text")
+        thinking = "\n".join(b.thinking for b in r.content if b.type == "thinking")
+        return Reply(text.strip(), r.usage.output_tokens, r.usage.input_tokens, thinking, r.stop_reason == "max_tokens")
+
+
 class Stub(Provider):
     """Offline backend for tests: ``respond(messages, cap) -> Reply``."""
 
@@ -212,7 +236,8 @@ class Stub(Provider):
 
 
 def make_provider(cfg: ProviderConfig) -> Provider:
-    kinds = {"ollama": Ollama, "openai": OpenAI, "claude_cli": ClaudeCLI, "codex_cli": CodexCLI}
+    kinds = {"ollama": Ollama, "openai": OpenAI, "claude_cli": ClaudeCLI, "codex_cli": CodexCLI,
+             "anthropic": AnthropicAPI}
     if cfg.kind not in kinds:
         raise ValueError(f"unknown provider kind {cfg.kind!r}; stubs are built directly in tests")
     return kinds[cfg.kind](cfg)
