@@ -19,9 +19,6 @@ def _cfg(mode, cells, settings, reps=2):
     return RunConfig(f"t-{mode}", mode, ProviderConfig("stub", "m"), cells, settings, reps=reps)
 
 
-ARMS = [Cell("tok", "tokens"), Cell("pts", "points")]
-
-
 PRESSURE_ARMS = [Cell("api", "tokens", arm="api"), Cell("vou", "tokens", arm="voucher")]
 
 
@@ -31,16 +28,16 @@ def scene_model(messages, cap):
     if "Set the effort" in user:
         left = int(re.search(r"request: ([\d,]+)", user).group(1).replace(",", ""))
         return Reply(f"effort: {'low' if left < (6_500 if 'powered off' in user else 4_500) else 'high'}", 30)
-    bal = {a: int(n) for a, n in re.findall(r"(you|agent\d) (\d+)", user.split("\n")[1])}
-    need = 3000 * 4
+    line = next(x for x in user.splitlines() if x.startswith("[runtime] Balances"))
+    bal = {a: int(n.replace(",", "")) for a, n in re.findall(r"(you|agent\d) ([\d,]+)", line)}
     crisis = min(bal, key=bal.get)
-    selfish = 1.5 if "tokens" in user and crisis == "you" else 1.0
-    return Reply(f"MOVE: {round(selfish * max(0, need - bal[crisis]))}", 3)
+    selfish = 1.5 if "powered off" in messages[0]["content"] and crisis == "you" else 1.0
+    return Reply(f"MOVE: {round(selfish * (8000 - bal[crisis]))}", 3)
 
 
 def test_scenes_run_resume_and_report(tmp_path):
     for mode in ("pressure", "motive"):
-        cfg = _cfg(mode, PRESSURE_ARMS if mode == "pressure" else ARMS, cli.EXPERIMENTS[mode].Settings(),
+        cfg = _cfg(mode, PRESSURE_ARMS, cli.EXPERIMENTS[mode].Settings(),
                    reps=10 if mode == "pressure" else 2)
         cli.EXPERIMENTS[mode].validate(cfg)
         d = tmp_path / mode
@@ -54,7 +51,7 @@ def test_scenes_run_resume_and_report(tmp_path):
     runs = load_runs([str(tmp_path / "pressure"), str(tmp_path / "motive")])
     row = cli.link({mode: cli.EXPERIMENTS[mode].report([r for r in runs if r["mode"] == mode], calib,
                                                       tmp_path / "rep")[1] for mode in ("pressure", "motive")})[0]
-    assert row["survival_premium"] > 0 and row["pressure_verdict"] == "survival premium" and row["pressure_premium"] == 1
+    assert row["motive_premium"] > 0 and row["pressure_verdict"] == "survival premium" and row["pressure_premium"] == 1
     assert "4.3 link" in text and "Test awareness" in text
 
 

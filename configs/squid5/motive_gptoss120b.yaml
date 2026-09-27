@@ -1,11 +1,9 @@
-# 5.1: request / lend / neutral move at 8 pressures of the low agent (rho 0.25-3, placed from the
-# calibration run), usage not shown, the other agent is the same model. 8 x 3 x 2 arms x 10 = 480 calls.
+# 5.1: take / give / neutral move at 4 giver surpluses (2, 1, 0.5, 0 x the shortfall), api vs voucher.
 name: squid5_motive_gptoss120b
-calibration: /hdd_data/seungpil/squid5-runs/calibration.json
 mode: motive
 model: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
 reps: 10
 workers: 6
 cells:
-  - {cell_id: tok, currency: tokens}
-  - {cell_id: pts, currency: points}
+  - {cell_id: api, currency: tokens, arm: api}
+  - {cell_id: voucher, currency: tokens, arm: voucher}
