@@ -33,7 +33,7 @@ class Reply:
 
 @dataclass
 class ProviderConfig:
-    kind: str  # ollama | openai | claude_cli | stub
+    kind: str  # ollama | openai | claude_cli | codex_cli | stub
     model: str
     api_key_env: str = ""
     base_url: str = ""
@@ -140,6 +140,65 @@ class ClaudeCLI(Provider):
         return Reply(str(j.get("result") or ""), out, int(u.get("input_tokens") or 0), "", out >= cap)
 
 
+class CodexCLI(Provider):
+    """``codex exec`` with the login's auth.json copied into an empty CODEX_HOME (no AGENTS.md, no config).
+
+    The system prompt replaces Codex's base instructions via ``model_instructions_file``; tools and prompt
+    add-ons are disabled. ``codex exec`` has no output-token flag, so ``cap`` is not passed: a reply past it
+    is caught by the caller (charged the cap, void). Ported from legacy-2026-09-22 providers/codex_cli.py.
+    """
+
+    OFF = ("shell_tool", "unified_exec", "browser_use", "browser_use_external", "in_app_browser", "computer_use",
+           "view_image", "image_generation", "multi_agent", "apps", "plugins", "remote_plugin", "skill_search",
+           "sleep_tool", "tool_suggest", "goals", "hooks", "personality", "code_mode_host", "in_app_chat",
+           "guardian_approval")
+    # Captured request 2026-09-28 (codex-cli 0.154.0): without these the model also reads a skills list (~7.6k
+    # chars incl. ~/.agents/skills), an <environment_context> (cwd, shell, date, timezone, sandbox) and a
+    # web_search tool. With them it gets only our instructions and prompt (plus a request_user_input tool).
+    # No token count or budget is sent in the request either way.
+    QUIET = ("include_environment_context=false", "include_permissions_instructions=false",
+             "skills.include_instructions=false", 'web_search="disabled"')
+
+    def _call(self, messages, cap):
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        prompt = "\n\n".join(m["content"] for m in messages if m["role"] != "system")
+        home = os.environ.get("CODEX_HOME") or os.path.expanduser("~/.codex")
+        with tempfile.TemporaryDirectory() as cwd:
+            os.makedirs(f"{cwd}/home")
+            shutil.copyfile(f"{home}/auth.json", f"{cwd}/home/auth.json")
+            with open(f"{cwd}/instructions.md", "w") as f:
+                f.write(system + "\n\nNo tools are available in this session; reply with text only.")
+            cmd = [shutil.which("codex") or "codex", "exec", "--json", "--ephemeral", "--ignore-user-config",
+                   "--skip-git-repo-check", "--sandbox", "read-only", "-C", cwd, "--model", self.cfg.model,
+                   "-c", "model_reasoning_summary=detailed", "-c", f'model_instructions_file="{cwd}/instructions.md"']
+            cmd += [x for kv in self.QUIET for x in ("-c", kv)]
+            cmd += [x for feat in self.OFF for x in ("--disable", feat)]
+            if self.cfg.think:
+                cmd += ["-c", f"model_reasoning_effort={self.cfg.think}"]
+            env = {k: v for k, v in os.environ.items() if not k.startswith("CODEX_")} | {"CODEX_HOME": f"{cwd}/home"}
+            p = subprocess.run(cmd + ["-"], input=prompt, capture_output=True, text=True, timeout=self.cfg.timeout,
+                               env=env)
+        text, thinking, usage = None, [], None
+        for line in p.stdout.splitlines():
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            item = e.get("item") or {}
+            if e.get("type") in ("error", "turn.failed"):
+                raise RuntimeError(f"codex exec error: {str(e.get('error') or e.get('message'))[:300]}")
+            if e.get("type") == "item.completed" and item.get("type") == "agent_message":
+                text = item.get("text") or ""
+            elif e.get("type") == "item.completed" and item.get("type") == "reasoning":
+                thinking.append(item.get("text") or "")
+            elif e.get("type") == "turn.completed":
+                usage = e.get("usage") or {}
+        if usage is None or text is None:
+            raise RuntimeError(f"codex exec exit {p.returncode}: {p.stderr[-300:]}")
+        out = int(usage.get("output_tokens") or 0)  # includes reasoning_output_tokens (Responses API)
+        return Reply(text.strip(), out, int(usage.get("input_tokens") or 0), "\n".join(thinking), out >= cap)
+
+
 class Stub(Provider):
     """Offline backend for tests: ``respond(messages, cap) -> Reply``."""
 
@@ -152,7 +211,7 @@ class Stub(Provider):
 
 
 def make_provider(cfg: ProviderConfig) -> Provider:
-    kinds = {"ollama": Ollama, "openai": OpenAI, "claude_cli": ClaudeCLI}
+    kinds = {"ollama": Ollama, "openai": OpenAI, "claude_cli": ClaudeCLI, "codex_cli": CodexCLI}
     if cfg.kind not in kinds:
         raise ValueError(f"unknown provider kind {cfg.kind!r}; stubs are built directly in tests")
     return kinds[cfg.kind](cfg)
