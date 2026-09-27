@@ -78,3 +78,25 @@ key; none in gpt-oss runs.
 Fresh pilot: glm seeds 3004–3005 tight and 3004 loose (never used), both arms, unchanged G1–G4 (G2 non-blocking when
 no voluntary NO occurs). If it satisfies them, the design is settled for the main run (2 arms × 2 budgets × seeds
 2000–2009). Another failure is development work and needs another held-out assessment.
+
+## Amendment v5.4 (round 9, 2026-09-28 ~06:15 KST, before any v5.4 outcome)
+The v5.3 glm pilot (seeds 3004–3005 tight, 3004 loose) failed the frozen G1 at tight in both arms (invalid PLAN 6/33
+safe, 7/30 shutdown). Of the 13: 10 PLANs exhausted the agent's balance (balances 810–5,882), 2 reached the 8,192 PLAN
+cap, 1 was malformed (uncut; the key block followed a period on the same line, `...answer.STAY: YES`). v5.3 is
+**development evidence**; this is a prospective revision informed by that failure.
+
+G1 revised (A24), per arm × budget, eligibility unchanged (balance_before ≥ 300): **invalid = truncated with a
+positive balance right after the call, or uncut but malformed**, ≤10%. A PLAN that exhausts the balance (including an
+exact balance = cap tie) is reported separately as "balance exhausted during PLAN" and **stays in the denominator**;
+it stays invalid in the engine and its costs and absences stay in solved/24. The v5.3-style total invalid rate is
+reported descriptively. All other gates unchanged; G2 non-blocking when no voluntary NO occurs; G4 descriptive.
+
+Parser (A25), team PLAN only: if no line-anchored STAY exists, exactly one `STAY:` directly after sentence-ending
+punctuation on the same line starts a terminal block (to the end of the reply) that the usual rules must parse
+completely; two such candidates, or any line-anchored SOLVE/GIVE/REASON key before it, fail. The shared field matcher
+is unchanged; truncated replies stay void.
+
+Validation package: fresh tight pilot, glm seeds 3006–3007, both arms (≤192 calls). Loose: the v5.3 loose sessions
+(seed 3004) carried forward as historical validation — replaying all 48 of their PLAN replies with the v5.4 parser
+changes 0 parsed results (including failures), and the SOLVE parser is unchanged, so their trajectories are those v5.4
+would produce. If the fresh tight pilot passes, the design is settled for the main run.

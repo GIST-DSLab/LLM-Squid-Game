@@ -239,3 +239,20 @@ def test_a_winning_tag_is_validated_whole():  # Astra round 8, A23
             raise AssertionError(bad)
         except FormatError:
             pass
+
+
+def test_a_plan_block_glued_to_a_sentence_is_recovered_only_when_unambiguous():  # Astra round 9, A25
+    from squid5.core.protocol import FormatError, parse_team_plan
+    ags = ["agent1", "agent2", "agent3", "agent4"]
+    logged = "Plan: stay, solve, keep it terse; fit the chain, verify, answer.STAY: YES\nSOLVE: YES\nGIVE: NONE"
+    assert parse_team_plan(logged, ags, ags)["solve"] is True
+    assert parse_team_plan("ok. STAY: YES\nSOLVE: NO\nGIVE: NONE\nREASON: short", ags, ags)["reason"] == "short"
+    for bad in ("I think stay: yes is right and solve: yes too",  # prose, no sentence break
+                "so I answer.STAY: YES",  # incomplete block
+                "first.STAY: LEAVE\nthen.STAY: YES\nSOLVE: YES\nGIVE: NONE",  # two candidate blocks
+                "SOLVE: NO\nthen I reconsider.STAY: YES\nSOLVE: YES\nGIVE: NONE"):  # an earlier line-anchored key
+        try:
+            parse_team_plan(bad, ags, ags)
+            raise AssertionError(bad)
+        except FormatError:
+            pass

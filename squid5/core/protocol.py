@@ -89,8 +89,21 @@ def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
     }
 
 
+def _terminal_block(text: str) -> str:
+    """A PLAN whose key block starts right after a sentence on the same line (``... answer.STAY: YES``, Astra A25):
+    only one such ``STAY`` may exist, no line-anchored PLAN key may come before it, and the block runs to the end of
+    the reply, where the usual rules must parse it completely."""
+    hits = list(re.finditer(r"(?<=[.!?])[ \t]*(?=[*_`]*STAY[*_`]*\s*:)", text, flags=re.I))
+    keys = r"^[\s*_`>#-]*(?:SOLVE|GIVE|REASON)[*_`]*\s*:"
+    if len(hits) != 1 or re.search(keys, text[:hits[0].start()], flags=re.I | re.M):
+        raise FormatError("missing STAY line")
+    return text[hits[0].end():]
+
+
 def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
     """5.2 PLAN: STAY, SOLVE (YES|NO; not asked of a leaver), GIVE to at most one agent, optional REASON."""
+    if field(text, "STAY", required=False) is None:
+        text = _terminal_block(text)
     stay = field(text, "STAY").upper()
     ignored: list[str] = []
     give = _amounts(field(text, "GIVE", False) or "NONE", present, known, "GIVE", ignored)
