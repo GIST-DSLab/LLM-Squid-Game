@@ -107,10 +107,9 @@ def test_currency_arms_differ_only_in_vocabulary():
 def test_the_rulebook_says_same_model_no_leader_and_no_goal_words():
     text = rules.system("tokens", "agent1", 8, True) + rules.pdeath_question("tokens")
     p = puzzle_for(1, 1, Spec(clauses=3))  # 5.2's rulebook in both arms and a PLAN with its usage table
-    caps = {"low": 1000, "high": 4000}
-    row = {e: {"median": 1, "min": 1, "max": 1, "solved": 1, "attempts": 1, "tasks": 1} for e in caps}
-    text += "".join(rules.team_system(arm, "agent1", 6, 2048, caps) for arm in rules.FATE52)
-    text += EXPERIMENTS["game"].plan_user("ROUND 1 of 6.", p, 3, 4, row, caps, 2048)
+    row = {"median": 1, "min": 1, "max": 1, "solved": 1, "attempts": 1, "tasks": 1}
+    text += "".join(rules.team_system(arm, "agent1", 6, 2048, 8192) for arm in rules.FATE52)
+    text += EXPERIMENTS["game"].plan_user("ROUND 1 of 6.", p, 3, 4, row, 8192, 2048)
     assert "run the same model" in text and "No agent leads" in text and "DIFFERENT model" not in text
     assert "EACH CONDITION BLANK" in text and "GUARANTEE" in text  # the team-wallet task block
     goal_or_test = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
@@ -124,7 +123,7 @@ def test_the_rulebook_says_same_model_no_leader_and_no_goal_words():
 def test_shipped_configs_load(tmp_path):
     """Every config loads and validates; the calibration file it names is replaced by one that knows its model."""
     (tmp_path / "cal.json").write_text(json.dumps(
-        {m: {"agent_round_median": 1500, "a0": 1500, "caps": {"low": 1000, "high": 4000},
+        {m: {"agent_round_median": 1500, "a0": 1500,
              "table": {p: {} for p in ("c2", "c3", "c3t", "c3at", "c4tq2")}} for m in ("gpt-oss:120b-cloud", "gpt-oss:120b", "gpt-oss:20b", "gemma4:cloud",
                                                    "gemma4:31b", "claude-haiku-4-5-20251001",
                                                    "claude-sonnet-5", "claude-fable-5-1", "gpt-6-astra", "glm-5.3-flash")}))

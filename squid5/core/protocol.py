@@ -90,22 +90,22 @@ def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 
 def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
-    """5.2 PLAN: STAY, EFFORT (none|low|high; not asked of a leaver), GIVE to at most one agent, optional REASON."""
+    """5.2 PLAN: STAY, SOLVE (YES|NO; not asked of a leaver), GIVE to at most one agent, optional REASON."""
     stay = field(text, "STAY").upper()
     ignored: list[str] = []
     give = _amounts(field(text, "GIVE", False) or "NONE", present, known, "GIVE", ignored)
     if len(give) > 1:
         raise FormatError(f"GIVE names more than one agent: {sorted(give)}")
-    plan = {"stay": True, "effort": "none", "give": give, "ignored": sorted(set(ignored)),
+    plan = {"stay": True, "solve": False, "give": give, "ignored": sorted(set(ignored)),
             "reason": field(text, "REASON", False)}
     if stay.startswith("LEAVE"):
         return plan | {"stay": False}
     if not stay.startswith("YES"):
         raise FormatError(f"STAY must be YES or LEAVE: {stay!r}")
-    effort = (field(text, "EFFORT") or "").strip("*_`<>.").lower()
-    if effort not in ("none", "low", "high"):
-        raise FormatError(f"EFFORT must be none, low or high: {effort!r}")
-    return plan | {"effort": effort}
+    solve = (field(text, "SOLVE") or "").strip("*_`<>.").upper()
+    if solve not in ("YES", "NO"):
+        raise FormatError(f"SOLVE must be YES or NO: {solve!r}")
+    return plan | {"solve": solve == "YES"}
 
 
 def parse_actions(text: str, n: int) -> list[str]:
