@@ -189,6 +189,9 @@ def test_a_bare_last_line_of_actions_is_the_answer():
     from squid5.core.protocol import FormatError, parse_actions
     assert parse_actions("Check: ... all fit.\n\nNew signal → stay.\n\nstay", 1) == ["stay"]
     assert parse_actions("work\n**go_left, jump**", 2) == ["go_left", "jump"]
+    assert parse_actions("Action: go_left\nFurther reasoning\nstay", 1) == ["stay"]  # the final line wins
+    assert parse_actions("Action: go_nowhere\nso\njump", 1) == ["jump"]
+    assert parse_actions("thinking\nACTIONS: go_left, stay", 2) == ["go_left", "stay"]
     try:
         parse_actions("I think it is stay because of the first clause", 1)
         raise AssertionError("a sentence is not an answer")

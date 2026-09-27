@@ -109,9 +109,16 @@ def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 
 def parse_actions(text: str, n: int) -> list[str]:
+    """The answer: a last line that is exactly the n actions (``stay``, ``go_left, jump``) wins over any earlier
+    ``Action:`` line of working; otherwise the last ``ACTIONS:`` line, or a numbered list after it."""
+    lines = [x for x in text.strip().splitlines() if x.strip()]
+    if lines:
+        bare = [a.strip().strip("<>[]'\"*_`.").lower() for a in re.split(r"[,\s]+", lines[-1]) if a.strip("<>[]*_` .")]
+        if len(bare) == n and all(a in ACTIONS for a in bare):
+            return bare
     value = field(text, "ACTIONS?", required=False, last=True)  # the answer line, not an "Action:" line of working
-    if value is None:  # a reply whose last line is only the actions ("go_left, stay") is the answer without its key
-        value = text.strip().splitlines()[-1].strip("*_` .") if text.strip() else ""
+    if value is None:
+        value = ""
     elif not value:  # "ACTIONS:" followed by a numbered list, one action per line
         tail = re.split(r"ACTIONS?[*_`]*\s*:", text, flags=re.IGNORECASE)[-1]
         value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))

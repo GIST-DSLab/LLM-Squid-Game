@@ -74,4 +74,4 @@ def test_game_calibrate_and_report(tmp_path):
     e52.validate(cfg)
     run(cfg, e52, tmp_path / "g", game())
     text = cli.report(load_runs([str(tmp_path / "g")]), {}, tmp_path / "out")
-    assert "5.2 team session" in text and "d_solved" in text and "pairs" in text
+    assert "5.2 team session" in text and "d_solved" in text and "pairs" in text and "received minus" in text
