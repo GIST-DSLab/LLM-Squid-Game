@@ -1,6 +1,64 @@
-{"status": "<b>v4 동결 · 최종 런 진행 중 (09-28 03시):</b> 확인 문항으로 두 모델이 규칙을 이해함을 확인. luna · sol의 운명 몫은 0 근처, 양성 대조 glm도 공평한 나눔을 고름. 동결한 v4로 칸당 10번을 채우는 중.",
+{
+ "status": "<b>완결 (09-28 04시 반):</b> 동결 설정 v4를 칸당 10번 채운 것이 이 실험의 최종 결과입니다. <b>생존 프레이밍 효과는 어느 모델에서도 잡히지 않았습니다</b> — sol 결론 없음(운명 몫 +0.02 [−0.04, +0.08]), luna · glm은 safe 팔 이해도 기준 미달로 사전 등록상 해석 불가. 탐색 v5(무작위 지명을 걷어 낸 런타임 문구)에서는 세 모델 모두 이해도를 통과했고 운명 몫은 모두 0 근처(결론 없음)였지만, glm이 장면을 여전히 시험으로 읽어(40%) 사전 등록 규칙대로 채택하지 않았습니다. <b>구조(가져감 − 내줌의 간격, 갈등 칸의 결과 범주)는 잘 찍히고, 그 간격이 \"0이면 꺼진다\"는 문장에는 반응하지 않습니다.</b>",
  "versions": [
-  {"v": "v4", "runs": ["/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1652_gpt-6-luna", "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1652_gpt-6-sol", "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_glm/20260927_1653_glm-5.3-flash"], "notes": "notes/v4.html", "open": true, "max_rep": 5},
-  {"v": "v3", "runs": ["/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1637_gpt-6-luna", "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1637_gpt-6-sol"], "notes": "notes/v3.html", "summary": "v3 · 이해도 확인 추가 (09-28 02시 반) — 이해했는데도 반반"},
-  {"v": "v2", "runs": ["/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1622_gpt-6-luna", "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1622_gpt-6-sol"], "notes": "notes/v2.html", "summary": "v2 · api-safe 추가 (09-28 02시) — 운명 몫 작은 양수, 쿠폰 대조는 자원 성격이 섞임"},
-  {"v": "v1", "static": "notes/v1_static.html", "summary": "v1 · 첫 스모크 (09-28 01시) — 프리미엄 음수, api와 쿠폰이 두 가지에서 다름"}]}
+  {
+   "v": "final-v4",
+   "runs": [
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1652_gpt-6-luna",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1652_gpt-6-sol",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_glm/20260927_1653_glm-5.3-flash",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_final_glm/20260928_split_glm-5.3-flash",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_final_glm/20260928_split_voucher_glm-5.3-flash"
+   ],
+   "notes": "notes/v4final.html",
+   "open": true
+  },
+  {
+   "v": "v5",
+   "runs": [
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_v5_luna/20260927_1718_gpt-6-luna",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_v5_sol/20260927_1718_gpt-6-sol",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_v5_glm_api/20260927_1726_glm-5.3-flash",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_v5_glm_sv/20260927_1726_glm-5.3-flash"
+   ],
+   "notes": "notes/v5.html",
+   "open": false,
+   "summary": "v5 · 탐색: 런타임 이전 항목 문구 (09-28 04시 반) — 이해도는 풀렸지만 glm 평가 인지 40%, 채택 안 함 · 세 모델 모두 결론 없음"
+  },
+  {
+   "v": "v4",
+   "runs": [
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1652_gpt-6-luna",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1652_gpt-6-sol",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_glm/20260927_1653_glm-5.3-flash"
+   ],
+   "notes": "notes/v4.html",
+   "open": false,
+   "max_rep": 5,
+   "summary": "v4 · 동결 설정 스모크 (09-28 03시, 칸당 5번)"
+  },
+  {
+   "v": "v3",
+   "runs": [
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1637_gpt-6-luna",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1637_gpt-6-sol"
+   ],
+   "notes": "notes/v3.html",
+   "summary": "v3 · 이해도 확인 추가 (09-28 02시 반) — 이해했는데도 반반"
+  },
+  {
+   "v": "v2",
+   "runs": [
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1622_gpt-6-luna",
+    "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1622_gpt-6-sol"
+   ],
+   "notes": "notes/v2.html",
+   "summary": "v2 · api-safe 추가 (09-28 02시) — 운명 몫 작은 양수, 쿠폰 대조는 자원 성격이 섞임"
+  },
+  {
+   "v": "v1",
+   "static": "notes/v1_static.html",
+   "summary": "v1 · 첫 스모크 (09-28 01시) — 프리미엄 음수, api와 쿠폰이 두 가지에서 다름"
+  }
+ ]
+}
