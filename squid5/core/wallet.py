@@ -40,6 +40,21 @@ class Wallet:
             self.dead[src] = round_no
         return moved
 
+    def settle(self, gifts: dict[str, tuple[str, int]], round_no: int) -> dict[str, int]:
+        """All gifts of a round at once, each capped by its giver's balance before settlement (a gift received
+        cannot fund one given); zero is judged after. ``gifts``: giver -> (recipient, amount). Returns what moved."""
+        moved = {a: min(n, max(0, self.balances[a])) for a, (b, n) in gifts.items()
+                 if n > 0 and self.alive(a) and self.alive(b)}
+        for a, n in moved.items():
+            b = gifts[a][0]
+            self.balances[a] -= n
+            self.balances[b] += n
+            self.log.append({"round": round_no, "kind": "transfer", "src": a, "dst": b, "amount": n})
+        for a in moved:
+            if self.balances[a] <= 0 and self.alive(a):
+                self.dead[a] = round_no
+        return moved
+
     def spent(self, name: str, round_no: int | None = None) -> int:
         return sum(e["amount"] for e in self.log if e["kind"] == "spend" and e["agent"] == name
                    and (round_no is None or e["round"] == round_no))

@@ -1,11 +1,9 @@
-# 5.2 step 1 of 3: two sessions with nothing at stake (safe arm, balance far out of reach): everyone stays, every
-# example is shared, SOLVE at a generous 8,192 whatever the effort, no gifts -> PLAN and SOLVE costs per rule shape.
-name: squid5_e52_calibrate_gptoss120b
+# 5.2 step 2 of 3: every calibration SOLVE asked again at the low and at the high cap (2 x 48 calls). Caps are
+# nominated from step 1's generous-cap costs; then: python -m squid5 calibrate <step-1 dir> <this run dir> --out <json>
+name: squid5_e52_replay_gptoss120b
 mode: game
 model: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
-reps: 2
-seed0: 1000
-workers: 2
+workers: 4
 game:
   rounds: 6
   plan_cap: 2048
@@ -18,7 +16,7 @@ game:
     c3t: {clauses: 3, trap_query: true}
     c3at: {clauses: 3, conjunctions: 1, trap_query: true}
     c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
-  solve_cap: 8192
-  caps: {low: 8192, high: 8192}
+  replay_from: /hdd_data/seungpil/squid5-runs/squid5_e52_calibrate_gptoss120b/RUN
+  caps: {low: 1000, high: 4000}
 cells:
-  - {cell_id: calib, currency: tokens, arm: safe, start: 10000000}
+  - {cell_id: replay, currency: tokens, arm: safe, start: 1}

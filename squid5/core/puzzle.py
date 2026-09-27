@@ -406,6 +406,8 @@ def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
         return any(len(candidate_actions(shape, rest, q)) > 1 for q in puzzle.queries)
 
     load.sort(key=lambda c: not pins_less(c))
-    secret = dict(zip(agents, load))
+    held = load[:len(agents)]
+    rng.shuffle(held)  # which agent holds a query-essential clue must not follow the agent's name
+    secret = dict(zip(agents, held))
     public = tuple(c for c in puzzle.clues if c not in secret.values())
     return Deal(secret, public, frozenset(a for a, c in secret.items() if pins_less(c)))

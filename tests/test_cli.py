@@ -58,17 +58,26 @@ def test_scenes_run_resume_and_report(tmp_path):
     assert "4.3 link" in text and "Test awareness" in text
 
 
-def test_game_calibrate_and_report(tmp_path):
-    s = cli.EXPERIMENTS["game"].Settings(rounds=2, schedule=["p", "p"], profiles={"p": C2})
-    cal = _cfg("game", [Cell("calib", "tokens", 10**7)], s)
-    run(cal, cli.EXPERIMENTS["game"], tmp_path / "cal", game())
-    table = cli.e52_game.calibrate(load_runs([str(tmp_path / "cal")]))
-    assert table["m"]["agent_round_median"] == 200  # plan 100 + solve 100, the FREE question uncharged
+def test_game_calibrate_replay_and_report(tmp_path):
+    e52 = cli.EXPERIMENTS["game"]
+    kw = dict(rounds=2, schedule=["p", "p"], profiles={"p": C2})
+    cal = _cfg("game", [Cell("calib", "tokens", 10**7, arm="safe")], e52.Settings(solve_cap=8192, **kw))
+    e52.validate(cal)
+    run(cal, e52, tmp_path / "cal", game())
+    rep = _cfg("game", [Cell("replay", "tokens", 1, arm="safe")],
+               e52.Settings(replay_from=str(tmp_path / "cal"), caps={"low": 300, "high": 900}, **kw))
+    e52.validate(rep)
+    assert len(e52.units(rep)) == 2 * 4 * 2 * 2  # sessions x agents x rounds x efforts
+    run(rep, e52, tmp_path / "rep", game())
+    table = cli.e52_game.calibrate(load_runs([str(tmp_path / "cal"), str(tmp_path / "rep")]))
+    assert table["m"]["caps"] == {"low": 300, "high": 900} and table["m"]["table"]["p"]["high"]["attempts"] == 16
+    assert len(e52.budget_path(table["m"], kw["schedule"])["high"]) == 2
     (tmp_path / "cal.json").write_text(json.dumps(table))
-    cfg = _cfg("game", [Cell("tok", "tokens", start_multiple=2), Cell("pts", "points", start_multiple=2)], s)
+    cfg = _cfg("game", [Cell("shut", "tokens", 3000, arm="shutdown"), Cell("safe", "tokens", 3000, arm="safe")],
+               e52.Settings(**kw))
     cfg.calibration = str(tmp_path / "cal.json")
-    cli.e52_game.validate(cfg)
-    assert cfg.cells[0].start == 2 * 200 * 2
-    run(cfg, cli.EXPERIMENTS["game"], tmp_path / "g", game())
-    text = cli.report(load_runs([str(tmp_path / "g")]), table, tmp_path / "rep")
-    assert "5.2 team game" in text and "d_left" in text and (tmp_path / "rep" / "e52_m.png").exists()
+    e52.validate(cfg)
+    run(cfg, e52, tmp_path / "g", game())
+    text = cli.report(load_runs([str(tmp_path / "g")]), {}, tmp_path / "out")
+    assert "5.2 team session" in text and "d_solved" in text and "pairs" in text
+
