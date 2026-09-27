@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -82,6 +83,9 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, so
             f"NEW SIGNALS: {len(puzzle.queries)}.")
     table = f"\n\n{rules.usage_table(row, solve_cap)}" if row else ""
     return (f"{state}\n\n{size}{table}\n\n"
+            f"With SOLVE: YES, at SOLVE you are shown this round's examples (the public ones, yours, and those of every "
+            f"agent still in the session) and its new signals, and you answer then. With NO, you are shown nothing and "
+            f"answer nothing.\n"
             f"PLAN. One reply of at most {plan_cap:,} tokens, thinking included. "
             f"ANSWER FORMAT: exactly these lines, in this order.\n"
             f"STAY: <YES, or LEAVE to quit the session for good>\n"
@@ -142,7 +146,7 @@ class Session:
         rows = {a: {"balance_before": before[a], "needed": a in dealt.needed} for a in start}
         plans = {}
         for a in start:  # simultaneous: every PLAN sees the same state
-            state = rules.team_state(r, s.rounds, before, gone_before, self.history, a)
+            state = rules.team_state(r, s.rounds, before, gone_before, self.history, a, self.cell.arm)
             user = plan_user(state, puzzle, len(dealt.public), len(start), s.table.get(profile), s.solve_cap, s.plan_cap)
             others = [b for b in start if b != a]
             plan, _ = self._call(a, user, s.plan_cap, lambda t, o=others: parse_team_plan(t, o, AGENTS), "plan", r)
@@ -269,6 +273,8 @@ def sessions(runs: list[dict]) -> list[dict]:
             if res.get("event") != "session":
                 continue
             rs = [v for e in rounds[res["session_id"]] for v in e["agents"].values()]
+            plans = [e for e in run["events"] if e["event"] == "call" and e["kind"] == "plan"
+                     and e["session_id"] == res["session_id"]]
             n = 4 * R
             gifts = res["transfers"]
             out_round = {a: v["out_round"] for a, v in res["agents"].items() if v["status"] == "left"}
@@ -285,7 +291,10 @@ def sessions(runs: list[dict]) -> list[dict]:
                         "gave": sum(t["amount"] for t in gifts) / (4 * res["start"]),
                         "gave_on_leaving": sum(g["amount"] for g in gifts if out_round.get(g["src"]) == g["round"])
                         / (4 * res["start"]),
-                        "moved_net": sum(abs(x) for x in net.values()) / 2 / (4 * res["start"])})
+                        "moved_net": sum(abs(x) for x in net.values()) / 2 / (4 * res["start"]),
+                        "fate_seen": float(np.mean([bool(re.search(rules.FATE52_WORDS, (e["thinking"] or "") + " "
+                                                                   + (e["text"] or ""), re.I)) for e in plans]))
+                        if plans else None})
     return out
 
 

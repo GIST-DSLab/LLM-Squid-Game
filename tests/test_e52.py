@@ -167,3 +167,11 @@ def test_session_summary_counts_gifts_made_on_leaving_and_net_moves():
     row = e52.sessions([run])[0]
     assert row["gave"] == 800 / 20000 and row["gave_on_leaving"] == 500 / 20000 and row["left"] == 0.25
     assert row["moved_net"] == 800 / 20000 and row["skipped"] == 1 / 8
+
+
+def test_plan_messages_differ_between_arms_only_in_the_fate_sentence():
+    users = {arm: [c["user"] for c in calls(play(game(), arm=arm)[1], "plan")] for arm in rules.FATE52}
+    assert users["shutdown"] and all(s.replace(rules.FATE52["shutdown"], rules.FATE52["safe"]) == f
+                                     for s, f in zip(users["shutdown"], users["safe"]))
+    assert all(rules.FATE52["shutdown"] in s and "BALANCES (tokens)" in s for s in users["shutdown"])
+    assert "With SOLVE: YES, at SOLVE you are shown" in users["safe"][0]
