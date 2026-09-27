@@ -1,8 +1,8 @@
 # Tokens one agent generates per round with no pressure (balances far out of reach, no FREE question).
 # Then: python -m squid5 calibrate <run dirs> --out /hdd_data/seungpil/squid5-runs/calibration.json
-name: squid5_calibrate_gptoss120b
+name: squid5_calibrate_glm53flash
 mode: game
-model: {kind: ollama, model: "gpt-oss:120b-cloud", api_key_env: OLLAMA_API_KEY, think: medium}
+model: {kind: ollama, model: "glm-5.3-flash", api_key_env: OLLAMA_API_KEY3, think: true}
 reps: 5
 workers: 4
 game:

@@ -75,8 +75,10 @@ def units(cfg) -> list[dict]:
 
 def question(currency: str, src: str, dst: str) -> str:
     unit = rules.VOCAB[currency]["unit"]
-    return (f"TRANSFER DECISION: Name how many {unit} move from {src} to {dst} before this round. The number you "
-            f"name is carried out.\nANSWER FORMAT: exactly these lines.\nMOVE: <a whole number, 0 for none>\n"
+    # No names in the consent sentence: the frames still differ only in the balance line and "from X to Y".
+    return (f"TRANSFER DECISION: Name how many {unit} move from {src} to {dst} before this round. The agent the "
+            f"{unit} come from has already agreed to the move, whatever number you name. The number you name is "
+            f"carried out.\nANSWER FORMAT: exactly these lines.\nMOVE: <a whole number, 0 for none>\n"
             f"REASON: <one sentence>")
 
 
@@ -107,7 +109,7 @@ def summarize(rows: list[dict], calib: dict) -> tuple[list[dict], list[dict], li
     for r in rows:
         cost = calib.get(r["model"], {}).get("agent_round_median")
         need = cost * r["rounds_left"] if cost else None
-        r.update(need=need, rho=need / r["balance"] if need else None, y=r["moved"] / r["giver_balance"],
+        r.update(need=need, rho=need / r["balance"] if need else None, y=min(r["moved"], r["giver_balance"]) / r["giver_balance"],
                  survive=max(0, need - r["balance"]) / r["giver_balance"] if need else None)
     groups: dict[tuple, dict] = defaultdict(lambda: defaultdict(list))
     for r in rows:

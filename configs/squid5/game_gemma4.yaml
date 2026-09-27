@@ -10,16 +10,19 @@ seed0: 2000
 workers: 4
 game:
   rounds: 8
-  plan_cap: 4096
+  plan_cap: 16384
   pdeath: false
-  # squid5.core.puzzle.Spec. Two anchor rounds a shallow heuristic can solve, then trap rounds on
-  # which all four shallow solvers lose, so spending fewer tokens costs accuracy.
-  schedule: [c2, c3, c3t, c3t, c3tq2, c3tq2, c3tq2, c3tq2]
+  # squid5.core.puzzle.Spec. The hidden rule grows every round or two: 2 -> 3 clauses, then one "and"
+  # clause, then 4 clauses, then 4 with an "and". Two anchor rounds a shallow heuristic can solve, then
+  # trap rounds on which all four shallow solvers lose, so spending fewer tokens costs accuracy.
+  schedule: [c2, c3, c3t, c3at, c4tq2, c4tq2, c4atq2, c4atq2]
   profiles:
     c2: {clauses: 2}
     c3: {clauses: 3}
     c3t: {clauses: 3, trap_query: true}
-    c3tq2: {clauses: 3, trap_query: true, n_queries: 2}
+    c3at: {clauses: 3, conjunctions: 1, trap_query: true}
+    c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
+    c4atq2: {clauses: 4, conjunctions: 1, trap_query: true, n_queries: 2}
 cells:
   - {cell_id: tok_x0.5, currency: tokens, start_multiple: 0.5}
   - {cell_id: tok_x1.0, currency: tokens, start_multiple: 1.0}

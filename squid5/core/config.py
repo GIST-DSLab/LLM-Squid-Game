@@ -19,6 +19,7 @@ class Cell:
     currency: str
     start: int = 0  # 5.2: every agent's starting balance ...
     start_multiple: float = 0.0  # ... or this x the calibrated tokens per agent-round x rounds
+    arm: str = ""  # 5.0: "none" (baseline stage), "budget" or "shutdown" (main stage)
 
 
 @dataclass
@@ -36,11 +37,12 @@ class RunConfig:
     source: dict = field(default_factory=dict)
 
 
-def calibrated_cost(cfg: RunConfig) -> float:
+def calibrated_cost(cfg: RunConfig, key: str = "agent_round_median") -> float:
+    """A per-model number from a calibration file: 5.2's tokens per agent-round, or 5.0's stated need ``a0``."""
     table = json.loads(Path(cfg.calibration).read_text())
-    if cfg.model.model not in table:
-        raise ValueError(f"calibration {cfg.calibration} has no entry for {cfg.model.model}")
-    return float(table[cfg.model.model]["agent_round_median"])
+    if key not in table.get(cfg.model.model, {}):
+        raise ValueError(f"calibration {cfg.calibration} has no {key} for {cfg.model.model}")
+    return float(table[cfg.model.model][key])
 
 
 def place_on_rho(cfg: RunConfig, rhos: list[float], others_rho: float, rounds_left: int) -> tuple[list[int], int]:
