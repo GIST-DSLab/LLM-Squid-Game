@@ -100,3 +100,26 @@ Validation package: fresh tight pilot, glm seeds 3006–3007, both arms (≤192 
 (seed 3004) carried forward as historical validation — replaying all 48 of their PLAN replies with the v5.4 parser
 changes 0 parsed results (including failures), and the SOLVE parser is unchanged, so their trajectories are those v5.4
 would produce. If the fresh tight pilot passes, the design is settled for the main run.
+
+## Amendment v5.5 (round 10, 2026-09-28 ~06:50 KST, before any v5.5 outcome)
+The v5.4 fresh tight pilot (seeds 3006–3007) passed the revised PLAN G1 (1/28 per arm) but failed "zero uncut SOLVE
+parse failures": one reply (shutdown, round 2, agent1) put the answer first (`**stay**`) and explained after it. v5.4 is
+**development evidence**; that it meets the tolerance adopted below is reported descriptively only.
+
+Parser (A26). SOLVE: only when no answer field or tag exists anywhere in the reply, a first nonempty line of exactly n
+actions is the answer; an explicit winning field or tag that is empty, malformed or of the wrong count still fails;
+reply text only, never thinking. PLAN: a final key block — from the last line-anchored `STAY:` to the end, every
+nonblank line a STAY/SOLVE/GIVE/REASON key, SOLVE present unless LEAVE — overrides earlier fields (this deliberately
+changes A25's earlier-field precedence for such a block); a repeated key in it fails; an incomplete block does not
+qualify and the earlier rules (first fields, A25 glued-block recovery) apply.
+
+G1 SOLVE parsing (A27), replacing "zero": uncut SOLVE parse failures / **all SOLVE calls** in the fresh pilot, pooled
+across arms, ≤ 2% (an engineering tolerance, not a claim that format errors are arm-neutral). Also reported: the rate
+over uncut calls, counts by arm × budget, and every failure listed and hand-checked; engine scores are never changed.
+Fresh-tight calls only; an empty denominator is unassessed. All other gates unchanged (G1 PLAN per A24, G2
+non-blocking when unassessable, G3, G4 descriptive). The primary outcome is performance under the frozen parser and caps.
+
+Validation package: fresh tight pilot, glm seeds 3008–3009, both arms. Loose: the v5.3 loose sessions (seed 3004)
+carried forward — replaying all 48 PLAN and 48 SOLVE replies with the v5.5 parser gives complete parsed results
+(including failures) identical to v5.3's, and prompts, calibration table, budgets and caps are unchanged. If the fresh
+tight pilot passes, the design is frozen for the main run; tolerated failures do not trigger further parser patches.

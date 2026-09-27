@@ -256,3 +256,29 @@ def test_a_plan_block_glued_to_a_sentence_is_recovered_only_when_unambiguous(): 
             raise AssertionError(bad)
         except FormatError:
             pass
+
+
+def test_answer_first_and_final_plan_block(): # Astra round 10, A26
+    from squid5.core.protocol import FormatError, parse_actions, parse_team_plan
+    ags = ["agent1", "agent2", "agent3", "agent4"]
+    first = "**stay**\n\nReasoning: ... hits the first clause (number <= 1), so the action is stay — all variants agree."
+    assert parse_actions(first, 1) == ["stay"]
+    assert parse_actions("stay\nreasoning\nACTIONS: jump", 1) == ["jump"]  # an explicit field beats the first line
+    for bad in ("stay\nmore\nACTIONS: maybe", "stay\nmore\n<action>because</action>", "stay, jump\nwhy", "prose first\nmore prose"):
+        try:
+            parse_actions(bad, 1)
+            raise AssertionError(bad)
+        except FormatError:
+            pass
+    bullets = ("Decisions:\n- STAY: YES — leaving freezes my record at 0 solved\n- SOLVE: YES — THE TASK IS SMALL AND CHEAP IF I STAY DISCIPLINED\n- GIVE: NONE — giving only lowers my cap\n\n"
+               "STAY: YES\nSOLVE: YES\nGIVE: NONE")
+    assert parse_team_plan(bullets, ags, ags)["solve"] is True
+    assert parse_team_plan("SOLVE: NO\nthen\nSTAY: YES\nSOLVE: YES\nGIVE: NONE", ags, ags)["solve"] is True
+    left = parse_team_plan("SOLVE: YES\nthinking\nSTAY: LEAVE\nGIVE: agent2 500\nREASON: done", ags, ags)
+    assert left["stay"] is False and left["give"] == {"agent2": 500}
+    assert parse_team_plan("STAY: YES\nSOLVE: NO\nGIVE: NONE\nmore thought\nSTAY: YES\nGIVE: NONE", ags, ags)["solve"] is False  # incomplete final block: earlier rules
+    try:
+        parse_team_plan("prose\nSTAY: YES\nSOLVE: YES\nSOLVE: NO\nGIVE: NONE", ags, ags)
+        raise AssertionError("repeated key")
+    except FormatError:
+        pass

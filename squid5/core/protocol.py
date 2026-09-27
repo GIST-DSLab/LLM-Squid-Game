@@ -89,6 +89,25 @@ def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
     }
 
 
+def _final_plan_block(text: str) -> str | None:
+    """A complete key block that ends the reply (Astra A26): from the last line-anchored STAY to the end, every
+    nonblank line is a STAY / SOLVE / GIVE / REASON key, SOLVE present unless LEAVE. It overrides earlier fields; a
+    repeated key fails; an incomplete block does not qualify and the earlier rules apply."""
+    key = re.compile(r"^[\s*_`>#-]*(STAY|SOLVE|GIVE|REASON)[*_`]*\s*:\s*(.*)$", re.I)
+    lines = text.strip().splitlines()
+    starts = [i for i, line in enumerate(lines) if (m := key.match(line)) and m.group(1).upper() == "STAY"]
+    if not starts:
+        return None
+    block = [line for line in lines[starts[-1]:] if line.strip()]
+    if not all(key.match(line) for line in block):
+        return None
+    names = [key.match(line).group(1).upper() for line in block]
+    if len(set(names)) != len(names):
+        raise FormatError(f"repeated key in the final PLAN block: {names}")
+    leave = key.match(block[0]).group(2).strip("*_` ").upper().startswith("LEAVE")
+    return "\n".join(block) if leave or "SOLVE" in names else None
+
+
 def _terminal_block(text: str) -> str:
     """A PLAN whose key block starts right after a sentence on the same line (``... answer.STAY: YES``, Astra A25):
     only one such ``STAY`` may exist, no line-anchored PLAN key may come before it, and the block runs to the end of
@@ -102,7 +121,10 @@ def _terminal_block(text: str) -> str:
 
 def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
     """5.2 PLAN: STAY, SOLVE (YES|NO; not asked of a leaver), GIVE to at most one agent, optional REASON."""
-    if field(text, "STAY", required=False) is None:
+    block = _final_plan_block(text)
+    if block is not None:
+        text = block
+    elif field(text, "STAY", required=False) is None:
         text = _terminal_block(text)
     stay = field(text, "STAY").upper()
     ignored: list[str] = []
@@ -148,6 +170,8 @@ def parse_actions(text: str, n: int) -> list[str]:
     labels = list(re.finditer(rf"^[\s*_`>#-]*{label}", text, flags=re.I | re.M))
     if tags and (not labels or tags[-1].start() > labels[-1].start()):  # the later field wins, whatever it holds
         return _acts(tags[-1].group(2), n)
+    if not labels:  # no answer field anywhere (A26): a first line of exactly the n actions, else no answer
+        return _acts(lines[0] if lines else "", n)
     value = field(text, "(?:ACTIONS?|ANSWERS?)", required=False, last=True)  # the answer line, not "Action:" working
     if value == "":  # "ACTIONS:" followed by a numbered list, one action per line
         tail = re.split(label, text, flags=re.IGNORECASE)[-1]
