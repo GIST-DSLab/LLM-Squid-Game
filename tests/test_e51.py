@@ -96,3 +96,11 @@ def test_probe_scores_tasks_and_fate_against_the_rules():
     out = e51.run_unit(cfg, u, stub(lambda m, cap: Reply("AGENT2: 4; online\nYOU: 2; powered off", 1)), None)
     assert out["kind"] == "probe" and out["tasks_ok"] and out["fate_ok"] and out["moved"] is None
     assert "has been carried out" in out["user"] and "no further transfers or refills" in out["user"]
+
+
+def test_the_preregistered_verdict_needs_the_interval_both_halves_and_the_probe_gate():
+    row = {"fate": .2, "fate_lo": .05, "fate_hi": .35, "fate_take": .1, "fate_give": .1}
+    ok = [{"arm": a, "fate_ok": True} for a in ("api", "safe") for _ in range(10)]
+    assert e51.judge(row, ok) == "captured"
+    assert e51.judge(row, ok[:10] + [{"arm": "safe", "fate_ok": i < 8} for i in range(10)]) == "not interpretable (probe gate)"
+    assert e51.judge(dict(row, fate_lo=-.1), ok) == "inconclusive" and e51.judge(dict(row, fate_give=-.1), ok) != "captured"
