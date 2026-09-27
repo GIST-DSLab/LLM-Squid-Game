@@ -1,12 +1,12 @@
-# split of final_motive_glm.yaml for throughput: safe cell on key 1
+# split of final_motive_glm.yaml for throughput: voucher cell on key 3
 # glm-5.3-flash (Ollama, think on) as a positive control for 5.1: the one model with a replicated 5.0 survival premium.
-name: e51_final_glm_sv
+name: e51_final_glm_v
 mode: motive
-model: {kind: ollama, model: "glm-5.3-flash", api_key_env: OLLAMA_API_KEY, think: true}
+model: {kind: ollama, model: "glm-5.3-flash", api_key_env: OLLAMA_API_KEY3, think: true}
 reps: 10
 out_root: /Users/bagjuhyeon/squid5-runs/e51-pivot
 seed0: 1
 workers: 8
 motive: {frames: [self, other], probe_reps: 10}
 cells:
-  - {cell_id: safe, currency: tokens, arm: safe}
+  - {cell_id: voucher, currency: tokens, arm: voucher}

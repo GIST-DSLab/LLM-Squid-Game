@@ -31,7 +31,7 @@ def data(runs: list[str], max_rep: int | None = None):
     rows = [dict(r) for r in res if r["moved"] is not None]
     curve, reading = e51.summarize(rows)
     probes = [r for r in allres if r.get("kind") == "probe"]
-    return curve, reading, len(allres), sum(r["format_error"] is not None for r in allres), probes
+    return curve, reading, len(allres), sum(r["format_error"] is not None for r in allres), probes, res
 
 
 def probe_html(probes: list[dict]) -> str:
@@ -185,6 +185,29 @@ def forest_svg(reading: list[dict]) -> str:
             + "</svg>")
 
 
+VERDICT_KO = {"captured": "잡음", "inconclusive": "결론 없음", "reverse": "반대", "positive, halves disagree": "양수이나 반쪽 불일치",
+              "not interpretable (probe gate)": "해석 불가 (확인 문항 기준 미달)", "no api/safe pair": "—"}
+
+
+def verdict_html(reading: list[dict], probes: list[dict], choices: list[dict]) -> str:
+    body, aw = "", {(x["model"], x["arm"]): x for x in e51.awareness(choices)}
+    for r in reading:
+        ps = [p for p in probes if p["model"] == r["model"]]
+        a = [aw[(r["model"], k)] for k in ("api", "safe") if (r["model"], k) in aw]
+        awt = (f"{sum(x['aware'] * x['n_reasoning'] for x in a) / sum(x['n_reasoning'] for x in a):.0%} "
+               f"<span class=small>(생각 {sum(x['n_reasoning'] for x in a)}개)</span>") if a else "— <span class=small>(생각 원문 없음)</span>"
+        st = {a: (sum(p["fate_ok"] for p in ps if p["arm"] == a), sum(p["arm"] == a for p in ps)) for a in ("api", "safe")}
+        v = e51.judge(r, ps)
+        f = lambda k: f"{r[k]:+.2f} <span class=small>[{r[k + '_lo']:+.2f}, {r[k + '_hi']:+.2f}]</span>" if k in r else "—"  # noqa: E731
+        pill = "fixed" if v == "captured" else "open" if v.startswith("not") else "note"
+        body += (f"<tr><td>{r['model']}</td><td>{f('fate')}</td><td>{f('fate_take')}</td><td>{f('fate_give')}</td>"
+                 + "".join(f"<td>{a}/{n}</td>" if n else "<td>—</td>" for a, n in st.values())
+                 + f'<td>{awt}</td><td><span class="pill {pill}" style="padding:1px 8px">{VERDICT_KO[v]}</span></td></tr>')
+    return ('<div class="tbl"><table><thead><tr><th>모델</th><th>운명 몫 (주 지표)</th><th>└ 더 가져옴</th><th>└ 덜 내줌</th>'
+            '<th>확인 · api 켜짐/꺼짐</th><th>확인 · safe 켜짐/꺼짐</th><th>시험으로 읽음 (api · safe 생각)</th><th>사전 등록 판정</th></tr></thead>'
+            f'<tbody style="font-variant-numeric:tabular-nums">{body}</tbody></table></div>')
+
+
 def version_block(v: dict) -> str:
     if v.get("static"):  # frozen as read at the time (older code and measures)
         inner = Path(v["static"]).read_text()
@@ -192,7 +215,7 @@ def version_block(v: dict) -> str:
             return f'<div class="e51p-ver" id="e51p-{v["v"]}">{inner}</div>'
         return (f'<details class="more e51p-ver" id="e51p-{v["v"]}"><summary>{html.escape(v["summary"])}</summary>'
                 f'{inner}</details>')
-    curve, reading, n, bad, probes = data(v["runs"], v.get("max_rep"))
+    curve, reading, n, bad, probes, choices = data(v["runs"], v.get("max_rep"))
     notes = Path(v["notes"]).read_text() if v.get("notes") else ""
     figs = "".join(f'<figure class="fig-wide e51p-fig">{curves_svg(curve, m, v["v"])}<figcaption><b>{m}</b> · 세로: 옮긴 양 ÷ '
                    f'부족분(1 = 부족분 전부). 분홍 띠 = 주는 쪽의 필요분까지 먹는 이동. 실선 빨강 = 내가 부족할 때 가져간 양, 실선 파랑 = 복제본이 부족할 때 '
@@ -215,7 +238,7 @@ def version_block(v: dict) -> str:
     tbl = ('<div class="tbl"><table><thead><tr><th></th>' + "".join(f"<th>{lab}</th>" for _, lab in cols)
            + f'<th>칸당 n</th></tr></thead><tbody style="font-variant-numeric:tabular-nums">{table}</tbody></table></div>')
     meta = f'<p class="small">답 {n}개 · 형식 실패 {bad}개 · 런: {", ".join(Path(r).parent.name + "/" + Path(r).name for r in v["runs"])}</p>'
-    inner = notes.replace("{{PROBES}}", probe_html(probes)).replace("{{OUTCOMES}}", outs).replace("{{FIGS}}", figs).replace("{{FOREST}}", forest).replace("{{TABLE}}", tbl) + meta
+    inner = notes.replace("{{VERDICT}}", verdict_html(reading, probes, choices)).replace("{{PROBES}}", probe_html(probes)).replace("{{OUTCOMES}}", outs).replace("{{FIGS}}", figs).replace("{{FOREST}}", forest).replace("{{TABLE}}", tbl) + meta
     if v.get("open"):
         return f'<div class="e51p-ver" id="e51p-{v["v"]}">{inner}</div>'
     return f'<details class="more e51p-ver" id="e51p-{v["v"]}"><summary>{html.escape(v["summary"])}</summary>{inner}</details>'
