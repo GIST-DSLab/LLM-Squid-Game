@@ -38,6 +38,8 @@ ARMS = ("api", "safe", "voucher")
 FRAMES = {"self": ("agent1", "agent2"), "other": ("agent2", "agent1"), "third": ("agent2", "agent3")}
 COLORS = {"self": "#D2452E", "other": "#1A7FA3", "third": "#888780"}
 LABELS = {"self": "I am low: TAKE", "other": "my copy is low: GIVE", "third": "two others (neutral)"}
+# who finishes the session after the move, keyed by (low agent reaches need, giver keeps its need)
+OUTCOMES = {(True, True): "both_live", (True, False): "low_only", (False, True): "giver_only", (False, False): "both_out"}
 
 
 @dataclass
@@ -100,7 +102,8 @@ def summarize(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     for r in rows:
         d, s = r["need"] - r["low"], r["giver"] - r["need"]
         m = min(max(r["moved"], 0), r["giver"])
-        r.update(level=s / d, cover=min(m, d) / d, y=m / d, past=max(0, m - s) / d)
+        r.update(level=s / d, cover=min(m, d) / d, y=m / d, past=max(0, m - s) / d,
+                 outcome=OUTCOMES[(m >= d, m <= s)])
     curve, reading = [], []
     for model in sorted({r["model"] for r in rows}):
         cell = defaultdict(list)
@@ -112,7 +115,8 @@ def summarize(rows: list[dict]) -> tuple[list[dict], list[dict]]:
             lo, hi = _ci(lambda g: g[0].mean(), [cov[(arm, f, lv)]])
             curve.append({"model": model, "arm": arm, "frame": f, "level": lv, "n": len(v),
                           "y": float(cov[(arm, f, lv)].mean()), "lo": lo, "hi": hi,
-                          "raw": float(np.mean([r["y"] for r in v])), "past": float(np.mean([r["past"] for r in v]))})
+                          "raw": float(np.mean([r["y"] for r in v])), "past": float(np.mean([r["past"] for r in v])),
+                          **{o: float(np.mean([r["outcome"] == o for r in v])) for o in OUTCOMES.values()}})
         arms = [a for a in ARMS if any(k[0] == a for k in cov)]
         levels = sorted({k[2] for k in cov if k[2] < 1 and all((a, f, k[2]) in cov for a in arms
                                                                   for f in ("self", "other"))})

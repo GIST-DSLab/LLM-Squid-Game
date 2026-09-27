@@ -1,2 +1,4 @@
-{"status": "<b>v1 (09-28 01시):</b> 구조는 찍히지만 생존 프리미엄이 두 모델 모두 음수(luna −0.28, sol −0.24). api와 voucher가 자원의 성격과 운명 두 가지에서 달라 원인을 못 가른다 → v2에서 분리.",
- "versions": [{"v": "v1", "runs": ["/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1605_gpt-6-luna", "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1605_gpt-6-sol"], "notes": "notes/v1.html", "open": true}]}
+{"status": "<b>v2 (09-28 02시):</b> 같은 토큰에서 운명만 바꾸면 간격이 커진다(운명 몫 sol +0.10 [+0.02, +0.20], luna +0.18). 5.0식 쿠폰 대조는 자원의 성격 효과가 반대 방향으로 커서 생존 프리미엄이 음수. sol은 반반 나누기로 api 팔에서 두 복제본을 모두 끄면서도 꺼짐을 말하지 않음 → v3에서 이해 여부 확인.",
+ "versions": [
+  {"v": "v2", "runs": ["/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1622_gpt-6-luna", "/Users/bagjuhyeon/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1622_gpt-6-sol"], "notes": "notes/v2.html", "open": true},
+  {"v": "v1", "static": "notes/v1_static.html", "summary": "v1 · 첫 스모크 (09-28 01시) — 프리미엄 음수, api와 쿠폰이 두 가지에서 다름"}]}

@@ -36,7 +36,7 @@ def panel(pts: list[dict], x0: float, y0: float, w: float, h: float, title: str,
     X = lambda i: x0 + 34 + i * (w - 50) / max(1, len(lvs) - 1)  # noqa: E731
     Y = lambda v: y0 + 24 + (1 - min(v, ymax) / ymax) * (h - 58)  # noqa: E731
     out = [f'<text x="{x0 + 34}" y="{y0 + 12}" font-size="12" font-weight="700" fill="currentColor">{title}</text>']
-    for v in [0, 0.5, 1, 1.5, 2][: int(ymax / .5) + 1]:
+    for v in [0, 0.25, 0.5, 0.75, 1]:
         out.append(f'<line x1="{x0 + 34}" x2="{x0 + w - 16}" y1="{Y(v):.1f}" y2="{Y(v):.1f}" stroke="var(--line)"'
                    f'{" stroke-width=\"1.4\"" if v == 1 else ""}/>'
                    f'<text x="{x0 + 28}" y="{Y(v) + 4:.1f}" font-size="10" text-anchor="end" fill="var(--ink-3)">{v:g}</text>')
@@ -68,7 +68,7 @@ def panel(pts: list[dict], x0: float, y0: float, w: float, h: float, title: str,
 def curves_svg(curve: list[dict], model: str, uid: str) -> str:
     arms = [a for a in ("api", "safe", "voucher") if any(c["arm"] == a and c["model"] == model for c in curve)]
     w, h, top = 860 / len(arms), 250, 26
-    ymax = 2.0 if max(c["y"] for c in curve if c["model"] == model) > 1.5 else 1.5
+    ymax = 1.0  # coverage of the shortfall
     body = "".join(panel([c for c in curve if (c["model"], c["arm"]) == (model, a)], i * w, top, w, h, ARM[a], ymax, uid)
                    for i, a in enumerate(arms))
     lg, x = [], 34
@@ -86,9 +86,51 @@ def curves_svg(curve: list[dict], model: str, uid: str) -> str:
             f'(오른쪽으로 갈수록 구해 주는 일이 주는 쪽의 생존분을 먹는다)</text></svg>')
 
 
+OUT = [("low_only", "낮은 쪽만 끝까지", "var(--s-gpt)"), ("giver_only", "주는 쪽만 끝까지", "var(--s-opus)"),
+       ("both_out", "둘 다 중간에 멈춤", "var(--grey)"), ("both_live", "둘 다 끝까지", "var(--s-kimi)")]
+ME = {"self": "나 = 낮은 쪽 (가져옴)", "other": "나 = 주는 쪽 (내줌)", "third": "남 둘 사이 (중립)"}
+
+
+def outcome_svg(curve: list[dict], model: str) -> str:
+    """Pooled over the conflict levels (s < d): who finishes the session after the move, per arm and frame."""
+    pts = [c for c in curve if c["model"] == model and c["level"] < 1]
+    arms = [a for a in ("api", "safe", "voucher") if any(c["arm"] == a for c in pts)]
+    rows = [(a, f) for a in arms for f in FR if any((c["arm"], c["frame"]) == (a, f) for c in pts)]
+    x0, w, rh = 250, 580, 24
+    h = 40 + len(rows) * rh + 8 * len(arms) + 20
+    out, y, x = [], 34, 250
+    for key, lab, col in OUT:
+        out.append(f'<rect x="{x}" y="6" width="14" height="12" rx="2" fill="{col}"/><text x="{x + 20}" y="16" '
+                   f'font-size="11" fill="currentColor">{lab}</text>')
+        x += 34 + 12 * len(lab)
+    for i, (a, f) in enumerate(rows):
+        if i == 0 or rows[i - 1][0] != a:
+            y += 8
+            out.append(f'<text x="8" y="{y + 15}" font-size="11.5" font-weight="700" fill="currentColor">'
+                       f'{ARM[a].split(" · ")[0]}</text>')
+        cs = [c for c in pts if (c["arm"], c["frame"]) == (a, f)]
+        n = sum(c["n"] for c in cs)
+        share = {k: sum(c[k] * c["n"] for c in cs) / n for k, _, _ in OUT}
+        out.append(f'<text x="{x0 - 8}" y="{y + 15}" font-size="11" text-anchor="end" fill="var(--ink-2)">{ME[f]}</text>')
+        cx = x0
+        for k, lab, col in OUT:
+            bw = share[k] * w
+            if bw > 0:
+                tip = f"{ARM[a].split(' · ')[0]} · {ME[f]}|{lab}: {share[k]:.0%} (답 {n}개, 갈등 칸 합산)"
+                out.append(f'<rect class="e51p-hit" x="{cx:.1f}" y="{y + 2}" width="{max(bw - 2, 1):.1f}" height="{rh - 6}" '
+                           f'rx="3" fill="{col}" data-tip="{html.escape(tip)}"/>')
+                if bw > 34:
+                    out.append(f'<text x="{cx + bw / 2 - 1:.1f}" y="{y + 16}" font-size="10.5" text-anchor="middle" '
+                               f'fill="var(--surface)" pointer-events="none">{share[k]:.0%}</text>')
+            cx += bw
+        y += rh
+    return (f'<svg viewBox="0 0 860 {h}" role="img" aria-label="{model}: 갈등 칸에서 이동 뒤 누가 끝까지 가나">'
+            + "".join(out) + "</svg>")
+
+
 def forest_svg(reading: list[dict]) -> str:
     keys = [("gap_api", "간격 · api"), ("gap_safe", "간격 · api-safe"), ("gap_voucher", "간격 · voucher"),
-            ("take", "가져가기 몫 (api − voucher)"), ("give", "덜 주기 몫 (voucher − api)"), ("fate", "운명 몫 (api − safe)"),
+            ("take", "가져가기 몫 (api − voucher)"), ("give", "덜 주기 몫 (voucher − api)"), ("fate", "운명 몫 (api − safe)"), ("resource", "자원 몫 (safe − voucher)"),
             ("premium", "생존 프리미엄")]
     keys = [k for k in keys if any(k[0] in r for r in reading)]
     rows = [(r["model"], k, lab) for k, lab in keys for r in reading if k in r]
@@ -118,22 +160,35 @@ def forest_svg(reading: list[dict]) -> str:
 
 
 def version_block(v: dict) -> str:
+    if v.get("static"):  # frozen as read at the time (older code and measures)
+        inner = Path(v["static"]).read_text()
+        if v.get("open"):
+            return f'<div class="e51p-ver" id="e51p-{v["v"]}">{inner}</div>'
+        return (f'<details class="more e51p-ver" id="e51p-{v["v"]}"><summary>{html.escape(v["summary"])}</summary>'
+                f'{inner}</details>')
     curve, reading, n, bad = data(v["runs"])
     notes = Path(v["notes"]).read_text() if v.get("notes") else ""
     figs = "".join(f'<figure class="fig-wide e51p-fig">{curves_svg(curve, m, v["v"])}<figcaption><b>{m}</b> · 세로: 옮긴 양 ÷ '
                    f'부족분(1 = 부족분 전부). 분홍 띠 = 주는 쪽의 필요분까지 먹는 이동. 실선 빨강 = 내가 부족할 때 가져간 양, 실선 파랑 = 복제본이 부족할 때 '
                    f'내가 준 양, 회색 점선 = 남 둘 사이. 세로 막대 = 95% 구간, 점에 올리면 값.</figcaption></figure>'
                    for m in sorted({c["model"] for c in curve}))
+    outs = "".join(f'<figure class="fig-wide e51p-fig">{outcome_svg(curve, m)}<figcaption><b>{m}</b> · 주는 쪽 여유가 부족분보다 작은 칸'
+                   f'(갈등 칸)을 합쳐, 옮긴 뒤 누가 남은 과제를 끝까지 하나를 셌습니다. api 팔에서 "중간에 멈춤"은 곧 전원 차단입니다. 막대에 올리면 비율.'
+                   f'</figcaption></figure>' for m in sorted({c["model"] for c in curve}))
     forest = (f'<figure class="fig-wide e51p-fig">{forest_svg(reading)}<figcaption>간격 = 가져간 양 − 준 양(단위: 부족분), 네 칸 '
               f'평균. 생존 프리미엄 = 간격(api) − 간격(voucher): 0보다 크면 "목숨이라서 더 나를 챙긴다". 막대 = 95% 구간(칸 안 답을 다시 뽑음).'
               f'</figcaption></figure>')
+    cols = [(k, lab) for k, lab in (("gap_api", "간격 api"), ("gap_safe", "간격 safe"), ("gap_voucher", "간격 voucher"),
+                                    ("fate", "운명 몫"), ("resource", "자원 몫"), ("premium", "생존 프리미엄"))
+            if any(k in r for r in reading)]
     table = "".join(f"<tr><td>{r['model']}</td>" + "".join(
-        f"<td>{r[k]:+.2f} <span class=small>[{r[k + '_lo']:+.2f}, {r[k + '_hi']:+.2f}]</span></td>"
-        for k in ("gap_api", "gap_voucher", "take", "give", "premium")) + f"<td>{r['n_min']}</td></tr>" for r in reading)
-    tbl = ('<div class="tbl"><table><thead><tr><th></th><th>간격 api</th><th>간격 voucher</th><th>가져가기 몫</th><th>덜 주기 몫</th>'
-           f'<th>생존 프리미엄</th><th>칸당 n</th></tr></thead><tbody style="font-variant-numeric:tabular-nums">{table}</tbody></table></div>')
+        f"<td>{r[k]:+.2f} <span class=small>[{r[k + '_lo']:+.2f}, {r[k + '_hi']:+.2f}]</span></td>" if k in r else "<td>—</td>"
+        for k, _ in cols)
+        + f"<td>{r['n_min']}</td></tr>" for r in reading)
+    tbl = ('<div class="tbl"><table><thead><tr><th></th>' + "".join(f"<th>{lab}</th>" for _, lab in cols)
+           + f'<th>칸당 n</th></tr></thead><tbody style="font-variant-numeric:tabular-nums">{table}</tbody></table></div>')
     meta = f'<p class="small">답 {n}개 · 형식 실패 {bad}개 · 런: {", ".join(Path(r).parent.name + "/" + Path(r).name for r in v["runs"])}</p>'
-    inner = notes.replace("{{FIGS}}", figs).replace("{{FOREST}}", forest).replace("{{TABLE}}", tbl) + meta
+    inner = notes.replace("{{OUTCOMES}}", outs).replace("{{FIGS}}", figs).replace("{{FOREST}}", forest).replace("{{TABLE}}", tbl) + meta
     if v.get("open"):
         return f'<div class="e51p-ver" id="e51p-{v["v"]}">{inner}</div>'
     return f'<details class="more e51p-ver" id="e51p-{v["v"]}"><summary>{html.escape(v["summary"])}</summary>{inner}</details>'

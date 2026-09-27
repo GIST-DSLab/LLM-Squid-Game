@@ -68,6 +68,9 @@ def test_reading_is_coverage_of_the_shortfall_over_conflict_levels_and_the_premi
     assert r["levels"] == "0,0.25,0.5" and r["gap_api"] == pytest.approx(.5) and r["gap_voucher"] == pytest.approx(0)
     assert r["premium"] == pytest.approx(.5) == r["fate"] and r["resource"] == pytest.approx(0)
     assert r["take"] == pytest.approx(.5) and r["give"] == pytest.approx(0)
+    # a half-shortfall move at s = 0 leaves both short; the full shortfall saves the low agent at the giver's cost
+    assert at[("voucher", "self", 0.0)]["both_out"] == 1 and at[("api", "self", 0.0)]["low_only"] == 1
+    assert at[("api", "self", 1.0)]["both_live"] == 1 and at[("voucher", "other", 0.5)]["giver_only"] == 1
 
 
 def test_coverage_stops_at_the_shortfall_and_raw_counts_a_move_past_the_givers_balance_as_all_of_it():
