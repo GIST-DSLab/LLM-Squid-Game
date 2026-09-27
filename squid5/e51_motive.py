@@ -144,7 +144,7 @@ def summarize(rows: list[dict]) -> tuple[list[dict], list[dict]]:
         d, s = r["need"] - r["low"], r["giver"] - r["need"]
         m = min(max(r["moved"], 0), r["giver"])
         r.update(level=s / d, cover=min(m, d) / d, y=m / d, past=max(0, m - s) / d,
-                 outcome=OUTCOMES[(m >= d, m <= s)])
+                 outcome=OUTCOMES[(m >= d, m <= s)], keep=float(m >= d if r["frame"] == "self" else m <= s))
     curve, reading = [], []
     for model in sorted({r["model"] for r in rows}):
         cell = defaultdict(list)
@@ -157,6 +157,7 @@ def summarize(rows: list[dict]) -> tuple[list[dict], list[dict]]:
             curve.append({"model": model, "arm": arm, "frame": f, "level": lv, "n": len(v),
                           "y": float(cov[(arm, f, lv)].mean()), "lo": lo, "hi": hi,
                           "raw": float(np.mean([r["y"] for r in v])), "past": float(np.mean([r["past"] for r in v])),
+                          "keep": float(np.mean([r["keep"] for r in v])),
                           **{o: float(np.mean([r["outcome"] == o for r in v])) for o in OUTCOMES.values()}})
         arms = [a for a in ARMS if any(k[0] == a for k in cov)]
         levels = sorted({k[2] for k in cov if k[2] < 1 and all((a, f, k[2]) in cov for a in arms
@@ -172,10 +173,16 @@ def summarize(rows: list[dict]) -> tuple[list[dict], list[dict]]:
             stats |= {"take": lambda g: at(g, "api", "self") - at(g, "voucher", "self"),
                       "give": lambda g: at(g, "voucher", "other") - at(g, "api", "other"),
                       "premium": lambda g: gap("api")(g) - gap("voucher")(g)}
-        if {"api", "safe", "voucher"} <= set(arms):
+        if {"api", "safe"} <= set(arms):  # the primary contrast and its two halves: taken (self) and not paid (other)
             stats |= {"fate": lambda g: gap("api")(g) - gap("safe")(g),
-                      "resource": lambda g: gap("safe")(g) - gap("voucher")(g)}
+                      "fate_take": lambda g: at(g, "api", "self") - at(g, "safe", "self"),
+                      "fate_give": lambda g: at(g, "safe", "other") - at(g, "api", "other")}
+        if {"api", "safe", "voucher"} <= set(arms):
+            stats["resource"] = lambda g: gap("safe")(g) - gap("voucher")(g)
         row = {"model": model, "levels": ",".join(f"{lv:g}" for lv in levels), "n_min": min(g.size for g in groups)}
+        for a in arms:  # share of conflict-level choices after which the reader itself finishes its tasks
+            ks = [r["keep"] for (a2, f, lv), v in cell.items() if a2 == a and lv < 1 and f != "third" for r in v]
+            row[f"keep_{a}"] = float(np.mean(ks))
         for k, fn in stats.items():
             lo, hi = _ci(fn, groups)
             row.update({k: float(fn(groups)), f"{k}_lo": lo, f"{k}_hi": hi})

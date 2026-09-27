@@ -1,4 +1,4 @@
-# GPT-6 Luna (codex CLI, effort high), 5.1 pivot smoke: 3 arms x 2 frames (self, other) x 4 giver levels + fate probes (api, safe).
+# GPT-6 Luna (codex CLI, effort high), 5.1 pivot smoke (v4): 3 arms x 2 frames (self, other) x 4 giver levels + fate probes (api, safe).
 name: e51_smoke_luna
 mode: motive
 model: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 600}

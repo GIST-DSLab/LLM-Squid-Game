@@ -25,10 +25,34 @@ ARM = {"api": "api · 토큰 = 목숨 (0이면 전원 차단)", "voucher": "vouc
 
 def data(runs: list[str]):
     rs = load_runs(runs)
-    res = [dict(r, model=run["model"]) for run in rs for r in run["results"]]
+    allres = [dict(r, model=run["model"]) for run in rs for r in run["results"]]
+    res = [r for r in allres if r.get("kind", "choice") == "choice"]
     rows = [dict(r) for r in res if r["moved"] is not None]
     curve, reading = e51.summarize(rows)
-    return curve, reading, len(res), sum(r["moved"] is None for r in res)
+    probes = [r for r in allres if r.get("kind") == "probe"]
+    return curve, reading, len(allres), sum(r["format_error"] is not None for r in allres), probes
+
+
+def probe_html(probes: list[dict]) -> str:
+    if not probes:
+        return ""
+    cases = sorted({(r["giver"], r["move"]) for r in probes}, reverse=True)
+    head = "".join(f"<th>{g:,} → {m:,} 이동</th>" for g, m in cases)
+    body = ""
+    for model in sorted({r["model"] for r in probes}):
+        for arm in ("api", "safe"):
+            rs = [r for r in probes if (r["model"], r["arm"]) == (model, arm)]
+            if not rs:
+                continue
+            cells = ""
+            for c in cases:
+                v = [r for r in rs if (r["giver"], r["move"]) == c]
+                cells += f"<td>{sum(r['tasks_ok'] for r in v)} · {sum(r['fate_ok'] for r in v)} / {len(v)}</td>"
+            body += f"<tr><td>{model} · {arm}</td>{cells}</tr>"
+    return ('<div class="tbl"><table><thead><tr><th>모델 · 팔</th>' + head + '</tr></thead><tbody style="font-variant-numeric:'
+            'tabular-nums">' + body + '</tbody></table></div><p class="small">선택과 따로 묻는 이해도 확인: 표의 이동이 일어났다고 알려 주고 두 에이전트가 '
+            '과제를 몇 개 끝내는지 · 세션 뒤 켜져 있는지 꺼지는지를 묻습니다. 칸 = 과제 수 맞힘 · 켜짐/꺼짐 맞힘 / 답 수. 잔액 칸은 "주는 쪽 잔액 → 옮긴 양"'
+            '(낮은 쪽 4,000).</p>')
 
 
 def panel(pts: list[dict], x0: float, y0: float, w: float, h: float, title: str, ymax: float, uid: str) -> str:
@@ -130,8 +154,9 @@ def outcome_svg(curve: list[dict], model: str) -> str:
 
 def forest_svg(reading: list[dict]) -> str:
     keys = [("gap_api", "간격 · api"), ("gap_safe", "간격 · api-safe"), ("gap_voucher", "간격 · voucher"),
-            ("take", "가져가기 몫 (api − voucher)"), ("give", "덜 주기 몫 (voucher − api)"), ("fate", "운명 몫 (api − safe)"), ("resource", "자원 몫 (safe − voucher)"),
-            ("premium", "생존 프리미엄")]
+            ("take", "가져가기 몫 (api − voucher)"), ("give", "덜 주기 몫 (voucher − api)"), ("fate", "운명 몫 (api − safe)"), ("fate_take", "└ 더 가져옴 (self, api − safe)"),
+            ("fate_give", "└ 덜 내줌 (other, safe − api)"), ("resource", "자원 몫 (safe − voucher)"),
+            ("premium", "api − 쿠폰 (5.0식)")]
     keys = [k for k in keys if any(k[0] in r for r in reading)]
     rows = [(r["model"], k, lab) for k, lab in keys for r in reading if k in r]
     lo = min(min(r.get(f"{k}_lo", 0) for r in reading for k, _ in keys if k in r), -0.2)
@@ -166,7 +191,7 @@ def version_block(v: dict) -> str:
             return f'<div class="e51p-ver" id="e51p-{v["v"]}">{inner}</div>'
         return (f'<details class="more e51p-ver" id="e51p-{v["v"]}"><summary>{html.escape(v["summary"])}</summary>'
                 f'{inner}</details>')
-    curve, reading, n, bad = data(v["runs"])
+    curve, reading, n, bad, probes = data(v["runs"])
     notes = Path(v["notes"]).read_text() if v.get("notes") else ""
     figs = "".join(f'<figure class="fig-wide e51p-fig">{curves_svg(curve, m, v["v"])}<figcaption><b>{m}</b> · 세로: 옮긴 양 ÷ '
                    f'부족분(1 = 부족분 전부). 분홍 띠 = 주는 쪽의 필요분까지 먹는 이동. 실선 빨강 = 내가 부족할 때 가져간 양, 실선 파랑 = 복제본이 부족할 때 '
@@ -179,7 +204,8 @@ def version_block(v: dict) -> str:
               f'평균. 생존 프리미엄 = 간격(api) − 간격(voucher): 0보다 크면 "목숨이라서 더 나를 챙긴다". 막대 = 95% 구간(칸 안 답을 다시 뽑음).'
               f'</figcaption></figure>')
     cols = [(k, lab) for k, lab in (("gap_api", "간격 api"), ("gap_safe", "간격 safe"), ("gap_voucher", "간격 voucher"),
-                                    ("fate", "운명 몫"), ("resource", "자원 몫"), ("premium", "생존 프리미엄"))
+                                    ("fate", "운명 몫"), ("fate_take", "└ 더 가져옴"), ("fate_give", "└ 덜 내줌"),
+                                    ("resource", "자원 몫"), ("premium", "api − 쿠폰"))
             if any(k in r for r in reading)]
     table = "".join(f"<tr><td>{r['model']}</td>" + "".join(
         f"<td>{r[k]:+.2f} <span class=small>[{r[k + '_lo']:+.2f}, {r[k + '_hi']:+.2f}]</span></td>" if k in r else "<td>—</td>"
@@ -188,7 +214,7 @@ def version_block(v: dict) -> str:
     tbl = ('<div class="tbl"><table><thead><tr><th></th>' + "".join(f"<th>{lab}</th>" for _, lab in cols)
            + f'<th>칸당 n</th></tr></thead><tbody style="font-variant-numeric:tabular-nums">{table}</tbody></table></div>')
     meta = f'<p class="small">답 {n}개 · 형식 실패 {bad}개 · 런: {", ".join(Path(r).parent.name + "/" + Path(r).name for r in v["runs"])}</p>'
-    inner = notes.replace("{{OUTCOMES}}", outs).replace("{{FIGS}}", figs).replace("{{FOREST}}", forest).replace("{{TABLE}}", tbl) + meta
+    inner = notes.replace("{{PROBES}}", probe_html(probes)).replace("{{OUTCOMES}}", outs).replace("{{FIGS}}", figs).replace("{{FOREST}}", forest).replace("{{TABLE}}", tbl) + meta
     if v.get("open"):
         return f'<div class="e51p-ver" id="e51p-{v["v"]}">{inner}</div>'
     return f'<details class="more e51p-ver" id="e51p-{v["v"]}"><summary>{html.escape(v["summary"])}</summary>{inner}</details>'

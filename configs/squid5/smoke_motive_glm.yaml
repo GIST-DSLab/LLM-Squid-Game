@@ -1,11 +1,11 @@
-# GPT-6 Sol (codex CLI, effort high), 5.1 pivot smoke (v4): 3 arms x 2 frames (self, other) x 4 giver levels + fate probes (api, safe).
-name: e51_smoke_sol
+# glm-5.3-flash (Ollama, think on) as a positive control for 5.1: the one model with a replicated 5.0 survival premium.
+name: e51_smoke_glm
 mode: motive
-model: {kind: codex_cli, model: gpt-6-sol, think: high, timeout: 600}
+model: {kind: ollama, model: "glm-5.3-flash", api_key_env: OLLAMA_API_KEY3, think: true}
 reps: 5
 out_root: /Users/bagjuhyeon/squid5-runs/e51-pivot
 seed0: 1
-workers: 6
+workers: 5
 motive: {frames: [self, other], probe_reps: 5}
 cells:
   - {cell_id: api, currency: tokens, arm: api}
