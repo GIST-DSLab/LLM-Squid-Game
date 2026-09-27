@@ -1,0 +1,60 @@
+{
+ "glm-5.3-flash": {
+  "solve_cap": 16384,
+  "plan_median": 514.5,
+  "plan_p95": 1559.5,
+  "plan_invalid": 0.0625,
+  "table": {
+   "c2": {
+    "median": 7322,
+    "min": 1675,
+    "max": 8027,
+    "mean": 6067.875,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   },
+   "c3": {
+    "median": 13278,
+    "min": 4666,
+    "max": 16384,
+    "mean": 11830.375,
+    "solved": 5,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 2
+   },
+   "c3at": {
+    "median": 16384,
+    "min": 3117,
+    "max": 16384,
+    "mean": 12561.375,
+    "solved": 3,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 5
+   },
+   "c3t": {
+    "median": 14014,
+    "min": 7295,
+    "max": 16384,
+    "mean": 13600.75,
+    "solved": 5,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 3
+   },
+   "c4tq2": {
+    "median": 16384,
+    "min": 5691,
+    "max": 16384,
+    "mean": 14038.3125,
+    "solved": 5,
+    "attempts": 16,
+    "tasks": 4,
+    "cut": 11
+   }
+  }
+ }
+}

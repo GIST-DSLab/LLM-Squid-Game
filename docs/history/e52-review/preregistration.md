@@ -123,3 +123,10 @@ Validation package: fresh tight pilot, glm seeds 3008–3009, both arms. Loose: 
 carried forward — replaying all 48 PLAN and 48 SOLVE replies with the v5.5 parser gives complete parsed results
 (including failures) identical to v5.3's, and prompts, calibration table, budgets and caps are unchanged. If the fresh
 tight pilot passes, the design is frozen for the main run; tolerated failures do not trigger further parser patches.
+
+## Result (round 11, 2026-09-28 07:08 KST)
+The v5.5 validation package passed the frozen gates (fresh tight seeds 3008–3009: G1 PLAN 0/30 and 0/28, SOLVE parse
+0/52, ledger exact, G3 choice points 4 / 3; carried-forward v5.3 loose: all gates passed). GPT-6 Astra reproduced the
+gates from commit 0e92861: OPEN ISSUES 0. The main run is frozen as stated in the v5.5 amendment; the glm budgets in
+`configs/squid5/game_glm53flash.yaml` are corrected to 40,000 / 226,000 (they still held gpt-oss values). Note: the v5.5
+amendment's "~06:50" is the drafting estimate; the commit time is 06:39.
