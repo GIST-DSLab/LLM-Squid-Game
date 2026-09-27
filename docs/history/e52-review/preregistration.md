@@ -57,3 +57,24 @@ PLAN costs or success under v5.2; its PLAN median/p95 include the capped calibra
 Fresh pilot: glm seeds 3002–3003 tight and 3002 loose, both arms, unchanged G1–G4; P4 adds PLAN length (median, p95,
 cap-only vs balance-caused truncation) per arm × budget as a descriptive measure. Another failure is development work
 and needs another held-out assessment.
+
+## Amendment v5.3 (round 8, 2026-09-28 ~05:10 KST, before any v5.3 outcome)
+The v5.2 glm pilot (seeds 3002–3003 tight, 3002 loose) passed every gate except one: G1 requires zero uncut SOLVE
+parse failures and one call (loose, safe, round 2, agent2) ended with `<action>jump</action>`, which v5.2 did not
+read. The same form already occurred once in the calibration. The whole v5.2 pilot is **development evidence**;
+because the scored result feeds later history lines, the sessions cannot be repaired offline.
+
+Change (P1 + A23): an XML-style tag pair `<action(s)>…</action(s)>` / `<answer(s)>…</answer(s)>` (case-insensitive,
+matched names) counts as an answer field. A final line that is exactly one such tag wins; its content must itself be
+exactly n actions (no arrow extraction inside it, no fallback). Otherwise A21 applies unchanged, and in rule 3 the later
+of the last label field and the last tag wins; an empty or invalid winning tag fails. No answer-key recovery.
+
+Calibration provenance: re-parsed offline again with the v5.3 parser; the only change is c3t solved 4 → 5 (25 → 26 of
+48). Token costs, PLAN statistics, budgets (tight 40,000, loose 226,000) unchanged. File `calib_glm_v53.json`, run copy
+`squid5_e52_calibrate_glm53flash_rescored_v53`; the original run and the v5.2 copy are kept. A22's qualification stands.
+Re-parsing every uncut SOLVE logged in this review (205 calls) with v5.3 changes 10 answers, all from no answer to the
+key; none in gpt-oss runs.
+
+Fresh pilot: glm seeds 3004–3005 tight and 3004 loose (never used), both arms, unchanged G1–G4 (G2 non-blocking when
+no voluntary NO occurs). If it satisfies them, the design is settled for the main run (2 arms × 2 budgets × seeds
+2000–2009). Another failure is development work and needs another held-out assessment.

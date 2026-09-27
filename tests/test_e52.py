@@ -214,3 +214,28 @@ def test_answer_precedence_is_fixed_before_validation():  # Astra round 7, A21
             raise AssertionError(bad)
         except FormatError:
             pass
+
+
+def test_an_xml_style_answer_tag_is_read_like_a_field():  # round 8: glm ended with <action>jump</action>
+    from squid5.core.protocol import FormatError, parse_actions
+    assert parse_actions("so the query hits clause 1 → **jump**\n\n<action>jump</action>", 1) == ["jump"]
+    assert parse_actions("work\n<Actions>go_left, jump</Actions>", 2) == ["go_left", "jump"]
+    assert parse_actions("<answer>stay</answer>\nmore thought\nACTIONS: go_right", 1) == ["go_right"]  # later wins
+    assert parse_actions("ACTIONS: go_right\nmore thought\n<answer>stay</answer> and done", 1) == ["stay"]
+    for bad, n in (("<action>stay because it matches</action>", 1), ("<action>jump</answer>", 1),
+                   ("<action>stay</action>", 2)):
+        try:
+            parse_actions(bad, n)
+            raise AssertionError(bad)
+        except FormatError:
+            pass
+
+
+def test_a_winning_tag_is_validated_whole():  # Astra round 8, A23
+    from squid5.core.protocol import FormatError, parse_actions
+    for bad in ("ACTIONS: stay\n<action>because the rule applies -> jump</action>", "ACTIONS:\n1. stay\n<action></action>"):
+        try:
+            parse_actions(bad, 1)
+            raise AssertionError(bad)
+        except FormatError:
+            pass

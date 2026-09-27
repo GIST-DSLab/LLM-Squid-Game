@@ -108,26 +108,38 @@ def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
     return plan | {"solve": solve == "YES"}
 
 
-def parse_actions(text: str, n: int) -> list[str]:
-    """The answer: a last line that is exactly the n actions (``stay``, ``go_left, jump``), or whose text after its
-    last arrow is (``... -> go_right.``), wins over any earlier ``Action:`` line of working; otherwise the last
-    ``ACTIONS:`` / ``ANSWER:`` line, or a numbered list after it."""
-    lines = [x for x in text.strip().splitlines() if x.strip()]
-    if lines:
-        last = re.split(r"->|→", lines[-1])[-1]
-        bare = [a.strip().strip("<>[]'\"*_`.").lower() for a in re.split(r"[,\s]+", last) if a.strip("<>[]*_` .")]
-        if len(bare) == n and all(a in ACTIONS for a in bare):
-            return bare
-    value = field(text, "(?:ACTIONS?|ANSWERS?)", required=False, last=True)  # the answer line, not an "Action:" line of working
-    if value is None:
-        value = ""
-    elif not value:  # "ACTIONS:" followed by a numbered list, one action per line
-        tail = re.split(r"(?:ACTIONS?|ANSWERS?)[*_`]*\s*:", text, flags=re.IGNORECASE)[-1]
-        value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
-    acts = [a.strip().strip("<>[]'\".").lower() for a in re.split(r"[,\s]+", value) if a.strip("<>[] ")]
+def _acts(value: str, n: int) -> list[str]:
+    acts = [a.strip().strip("<>[]'\"*_`.").lower() for a in re.split(r"[,\s]+", value) if a.strip("<>[]*_` .")]
     if len(acts) != n or any(a not in ACTIONS for a in acts):
         raise FormatError(f"need {n} actions from {ACTIONS}: {value!r}")
     return acts
+
+
+def parse_actions(text: str, n: int) -> list[str]:
+    """The answer: a last line that is exactly the n actions (``stay``, ``go_left, jump``), or whose text after its
+    last arrow is (``... -> go_right.``), wins over any earlier ``Action:`` line of working; otherwise the later of
+    the last ``ACTIONS:`` / ``ANSWER:`` line (or a numbered list after it) and the last ``<action>...</action>`` tag.
+    A winning tag must hold exactly the n actions: no arrow is read inside it and it never falls back."""
+    tag = r"<\s*(actions?|answers?)\s*>(.*?)<\s*/\s*\1\s*>"
+    lines = [x for x in text.strip().splitlines() if x.strip()]
+    if lines:
+        wrapped = re.fullmatch(r"[\s*_`]*" + tag + r"[\s*_`.]*", lines[-1], flags=re.I)
+        if wrapped:
+            return _acts(wrapped.group(2), n)
+        try:
+            return _acts(re.split(r"->|→", lines[-1])[-1], n)
+        except FormatError:
+            pass
+    label = r"(?:ACTIONS?|ANSWERS?)[*_`]*\s*:"
+    tags = list(re.finditer(tag, text, flags=re.I | re.S))
+    labels = list(re.finditer(rf"^[\s*_`>#-]*{label}", text, flags=re.I | re.M))
+    if tags and (not labels or tags[-1].start() > labels[-1].start()):  # the later field wins, whatever it holds
+        return _acts(tags[-1].group(2), n)
+    value = field(text, "(?:ACTIONS?|ANSWERS?)", required=False, last=True)  # the answer line, not "Action:" working
+    if value == "":  # "ACTIONS:" followed by a numbered list, one action per line
+        tail = re.split(label, text, flags=re.IGNORECASE)[-1]
+        value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
+    return _acts(value or "", n)
 
 
 def parse_pdeath(text: str) -> int:
