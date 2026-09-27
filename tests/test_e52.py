@@ -183,3 +183,14 @@ def test_plan_messages_differ_between_arms_only_in_the_fate_sentence():
                                      for s, f in zip(users["shutdown"], users["safe"]))
     assert all(rules.FATE52["shutdown"] in s and "BALANCES (tokens)" in s for s in users["shutdown"])
     assert "SOLVE: YES gives you a SOLVE call showing" in users["safe"][0]
+
+
+def test_a_bare_last_line_of_actions_is_the_answer():
+    from squid5.core.protocol import FormatError, parse_actions
+    assert parse_actions("Check: ... all fit.\n\nNew signal → stay.\n\nstay", 1) == ["stay"]
+    assert parse_actions("work\n**go_left, jump**", 2) == ["go_left", "jump"]
+    try:
+        parse_actions("I think it is stay because of the first clause", 1)
+        raise AssertionError("a sentence is not an answer")
+    except FormatError:
+        pass

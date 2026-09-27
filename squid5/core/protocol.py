@@ -110,8 +110,8 @@ def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 def parse_actions(text: str, n: int) -> list[str]:
     value = field(text, "ACTIONS?", required=False, last=True)  # the answer line, not an "Action:" line of working
-    if value is None:  # a one-line reply that is only the actions ("go_left, stay") is the answer without its key
-        value = "" if "\n" in text.strip() else text.strip()
+    if value is None:  # a reply whose last line is only the actions ("go_left, stay") is the answer without its key
+        value = text.strip().splitlines()[-1].strip("*_` .") if text.strip() else ""
     elif not value:  # "ACTIONS:" followed by a numbered list, one action per line
         tail = re.split(r"ACTIONS?[*_`]*\s*:", text, flags=re.IGNORECASE)[-1]
         value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
