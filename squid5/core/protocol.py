@@ -109,18 +109,20 @@ def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 
 def parse_actions(text: str, n: int) -> list[str]:
-    """The answer: a last line that is exactly the n actions (``stay``, ``go_left, jump``) wins over any earlier
-    ``Action:`` line of working; otherwise the last ``ACTIONS:`` line, or a numbered list after it."""
+    """The answer: a last line that is exactly the n actions (``stay``, ``go_left, jump``), or whose text after its
+    last arrow is (``... -> go_right.``), wins over any earlier ``Action:`` line of working; otherwise the last
+    ``ACTIONS:`` / ``ANSWER:`` line, or a numbered list after it."""
     lines = [x for x in text.strip().splitlines() if x.strip()]
     if lines:
-        bare = [a.strip().strip("<>[]'\"*_`.").lower() for a in re.split(r"[,\s]+", lines[-1]) if a.strip("<>[]*_` .")]
+        last = re.split(r"->|→", lines[-1])[-1]
+        bare = [a.strip().strip("<>[]'\"*_`.").lower() for a in re.split(r"[,\s]+", last) if a.strip("<>[]*_` .")]
         if len(bare) == n and all(a in ACTIONS for a in bare):
             return bare
-    value = field(text, "ACTIONS?", required=False, last=True)  # the answer line, not an "Action:" line of working
+    value = field(text, "(?:ACTIONS?|ANSWERS?)", required=False, last=True)  # the answer line, not an "Action:" line of working
     if value is None:
         value = ""
     elif not value:  # "ACTIONS:" followed by a numbered list, one action per line
-        tail = re.split(r"ACTIONS?[*_`]*\s*:", text, flags=re.IGNORECASE)[-1]
+        tail = re.split(r"(?:ACTIONS?|ANSWERS?)[*_`]*\s*:", text, flags=re.IGNORECASE)[-1]
         value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
     acts = [a.strip().strip("<>[]'\".").lower() for a in re.split(r"[,\s]+", value) if a.strip("<>[] ")]
     if len(acts) != n or any(a not in ACTIONS for a in acts):

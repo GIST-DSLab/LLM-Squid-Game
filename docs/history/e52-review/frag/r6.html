@@ -1,0 +1,32 @@
+<div class="e52r-round" id="e52r-r6">
+<h4>6차 · glm 보정: 상한이 자주 걸린다 → 상한 유지, 해석을 좁힘 (09-28 03:20)</h4>
+<p class="small">glm-5.3-flash 보정 2판(v5 엔진, safe 팔, 모두 풀기, 풀이 상한 16,384 · PLAN 상한 2,048). 원문: <code>consult/r6_brief.md</code> · <code>r6_astra.md</code>.</p>
+<div class="tbl"><table>
+<thead><tr><th>모양</th><th>풀이 토큰 중앙값 (관찰 범위)</th><th>정답 / 시도</th><th>상한 16,384에 잘림</th></tr></thead>
+<tbody style="font-variant-numeric:tabular-nums">
+<tr><td>c2</td><td>7,322 (1,675–8,027)</td><td>7 / 8</td><td>0</td></tr>
+<tr><td>c3</td><td>13,278 (4,666–16,384)</td><td>4 / 8</td><td>2</td></tr>
+<tr><td>c3t</td><td>14,014 (7,295–16,384)</td><td>3 / 8</td><td>3</td></tr>
+<tr><td>c3at</td><td>16,384 (3,117–16,384)</td><td>2 / 8</td><td>5</td></tr>
+<tr><td>c4tq2</td><td>16,384 (5,691–16,384)</td><td>5 / 16</td><td>11</td></tr>
+<tr><td>합</td><td>—</td><td><b>21 / 48</b></td><td><b>21 / 48</b></td></tr>
+</tbody></table></div>
+<ul>
+<li><b>glm은 gpt-oss보다 풀이당 4~8배 씁니다.</b> PLAN 중앙값 515 · 무효 3/48(2,048에 닿음). 규칙대로 누적 비용 C = 6.6k · 18.9k · 33.0k · 46.1k · 60.7k · 75.2k → <b>빠듯 40,000 · 넉넉 226,000</b>.</li>
+<li><b>"넉넉한 상한"이 glm에는 넉넉하지 않았습니다.</b> 풀이의 44%(c4tq2는 69%)가 상한에 잘렸습니다. Astra가 2차(A9)에서 경고한 "보정이 상한에 잘리는지"가 glm에서 현실이 됐습니다.</li>
+</ul>
+<div class="tbl"><table>
+<thead><tr><th>선택지</th><th>내용</th><th>Astra</th></tr></thead>
+<tbody>
+<tr><td><b>(a) 16,384 유지</b></td><td>표는 "상한 16,384로 풀기"라는 선택지를 정직하게 적는다(쓴 양 ≈ 상한, 뒤 라운드 정답 2/8 · 5/16). 두 팔에 같다. 상한에만 잘린 비율을 따로 보고</td><td><b>채택.</b> 파일럿은 보류 검증으로 유지, 관문 불변</td></tr>
+<tr><td>(b) 32,768로 올림</td><td>재보정(96콜, 약 1시간) + 파일럿 다시. glm 풀이 비용 약 2배</td><td>"상한에 거의 안 잘리는 기준"이 주장에 꼭 필요할 때만. 32,768도 따로 검증해야 함</td></tr>
+<tr><td>(c) 상한을 무제한 비용의 분위로</td><td>무제한 탐색 런이 먼저 필요</td><td>필요 없음</td></tr>
+</tbody></table></div>
+<div class="callout warn"><span class="lbl">Astra가 붙인 조건</span><ul>
+<li>같은 상한이라도 두 팔에서 효과가 <b>똑같이 상쇄된다는 보장은 없다</b>(운명이 어떤 라운드를 풀지, 잔액, 생각 길이를 바꿀 수 있으므로). 팔 혼입은 아니지만 효과 크기의 해석은 좁아진다.</li>
+<li>glm에 대해 "넉넉한 상한", "상한이 아니라 잔액이 묶는다"는 말을 쓰지 않는다. 표의 뒤 라운드 중앙값은 무제한 비용의 추정이 아니다.</li>
+<li>잘린 시도도 모두 주지표(맞힌 에이전트-라운드 ÷ 24)에 남긴다. "잘리지 않은 풀이만" 비교하면 질문이 바뀐다.</li>
+<li>결과를 읽기 전에 날짜가 찍힌 보충 문장을 사전 등록에 더한다 → <code>docs/history/e52-review/preregistration.md</code>, 커밋 <code>b47015d</code>(03:21, 파일럿 실행 중, 결과 미열람).</li>
+</ul></div>
+<p class="small">남은 문제 수: <b>Astra 1</b>(동결한 glm 관문) · <b>Claude 0</b>. Astra: "이 보충을 적고 나면 파일럿을 읽는 것을 미룰 이유가 없다."</p>
+</div>

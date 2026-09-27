@@ -192,8 +192,25 @@ def test_a_bare_last_line_of_actions_is_the_answer():
     assert parse_actions("Action: go_left\nFurther reasoning\nstay", 1) == ["stay"]  # the final line wins
     assert parse_actions("Action: go_nowhere\nso\njump", 1) == ["jump"]
     assert parse_actions("thinking\nACTIONS: go_left, stay", 2) == ["go_left", "stay"]
+    assert parse_actions("work\n\nANSWER: jump", 1) == ["jump"]
+    assert parse_actions("work\n\n**Answer:** stay", 1) == ["stay"]
+    assert parse_actions("New signal blue triangle 1: first clause (triangle) -> go_right.", 1) == ["go_right"]
     try:
         parse_actions("I think it is stay because of the first clause", 1)
         raise AssertionError("a sentence is not an answer")
     except FormatError:
         pass
+
+
+def test_answer_precedence_is_fixed_before_validation():  # Astra round 7, A21
+    from squid5.core.protocol import FormatError, parse_actions
+    assert parse_actions("ACTIONS: go_left\nmore thought\nANSWER: jump", 1) == ["jump"]
+    assert parse_actions("ACTIONS: go_left\nso the new signal -> stay", 1) == ["stay"]
+    assert parse_actions("**Answers:** go_left, jump", 2) == ["go_left", "jump"]
+    assert parse_actions("a -> b\n-> go_left, jump.", 2) == ["go_left", "jump"]
+    for bad, n in (("final -> stay because it matches", 1), ("ANSWER: stay, jump", 1), ("-> go_left", 2)):
+        try:
+            parse_actions(bad, n)
+            raise AssertionError(bad)
+        except FormatError:
+            pass

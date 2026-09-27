@@ -11,7 +11,7 @@ seed0: 2000
 workers: 4
 game:
   rounds: 6
-  plan_cap: 2048
+  plan_cap: 4096  # half the SOLVE cap
   solve_cap: 8192  # the calibration's cap
   # squid5.core.puzzle.Spec. The hidden rule grows: 2 -> 3 clauses, one "and" clause, then 4 clauses with two
   # new signals; from round 3 on, all four shallow solvers get it wrong.
