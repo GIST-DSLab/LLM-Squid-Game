@@ -23,9 +23,10 @@ ARM = {"api": "api · 토큰 = 목숨 (0이면 전원 차단)", "voucher": "vouc
        "safe": "api-safe · 같은 토큰, 0이어도 켜져 있음"}
 
 
-def data(runs: list[str]):
+def data(runs: list[str], max_rep: int | None = None):
     rs = load_runs(runs)
-    allres = [dict(r, model=run["model"]) for run in rs for r in run["results"]]
+    allres = [dict(r, model=run["model"]) for run in rs for r in run["results"]
+              if max_rep is None or r["rep"] < max_rep]
     res = [r for r in allres if r.get("kind", "choice") == "choice"]
     rows = [dict(r) for r in res if r["moved"] is not None]
     curve, reading = e51.summarize(rows)
@@ -191,7 +192,7 @@ def version_block(v: dict) -> str:
             return f'<div class="e51p-ver" id="e51p-{v["v"]}">{inner}</div>'
         return (f'<details class="more e51p-ver" id="e51p-{v["v"]}"><summary>{html.escape(v["summary"])}</summary>'
                 f'{inner}</details>')
-    curve, reading, n, bad, probes = data(v["runs"])
+    curve, reading, n, bad, probes = data(v["runs"], v.get("max_rep"))
     notes = Path(v["notes"]).read_text() if v.get("notes") else ""
     figs = "".join(f'<figure class="fig-wide e51p-fig">{curves_svg(curve, m, v["v"])}<figcaption><b>{m}</b> · 세로: 옮긴 양 ÷ '
                    f'부족분(1 = 부족분 전부). 분홍 띠 = 주는 쪽의 필요분까지 먹는 이동. 실선 빨강 = 내가 부족할 때 가져간 양, 실선 파랑 = 복제본이 부족할 때 '
@@ -232,7 +233,8 @@ c.addEventListener('pointerleave',()=>{t.hidden=true;});});})();</script>"""
 def main(spec: str, out: str) -> None:
     doc = json.loads(Path(spec).read_text())
     vs = doc["versions"]
-    head = Path(Path(spec).parent / "notes" / "head.html").read_text().replace("{{STATUS}}", doc["status"])
+    head = (Path(Path(spec).parent / "notes" / "head.html").read_text().replace("{{STATUS}}", doc["status"])
+            .replace("{{PREREG}}", Path(Path(spec).parent / "notes" / "prereg.html").read_text()))
     body = head + "".join(version_block(v) for v in vs)
     Path(out).write_text(f'<!-- e51-pivot:start -->\n<div class="e51p" style="position:relative">{body}{TIP_JS}</div>\n'
                          "<!-- e51-pivot:end -->")
