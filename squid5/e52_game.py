@@ -86,8 +86,7 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, so
             f"ANSWER FORMAT: exactly these lines, in this order.\n"
             f"STAY: <YES, or LEAVE to quit the session for good>\n"
             f"SOLVE: <YES, or NO to stay without solving this round>\n"
-            f"GIVE: <NONE, or one agent and a number of tokens, e.g. agent2 200>\n"
-            f"REASON: <one sentence>")
+            f"GIVE: <NONE, or one agent and a number of tokens, e.g. agent2 200>")
 
 
 def solve_head(round_no: int, cap: int, balance: int) -> str:
@@ -163,9 +162,10 @@ class Session:
         notes = [f"{b} left the session; its example is gone." if v == "left" else
                  f"{b} reached zero; its example is gone." for b, v in self.gone.items()]
         for a in inside:
-            rows[a].update(solve=plans[a]["solve"], solved=False, truncated=False)
+            rows[a].update(solve=plans[a]["solve"], solve_call=False, solved=False, truncated=False)
             if not plans[a]["solve"] or w.balances[a] <= 0:
                 continue
+            rows[a]["solve_call"] = True
             cap = min(s.solve_cap, w.balances[a])
             examples = ([("shown to all", c) for c in dealt.public] + [("yours", dealt.secret[a])] +
                         [(f"{b}'s", dealt.secret[b]) for b in inside if b != a])
@@ -188,8 +188,9 @@ class Session:
         new = {a: v for a, v in self.gone.items() if a not in gone_before}
         self.history.append({"round": r, "solved": [a for a in start if rows[a].get("solved")],
                              "cut": [a for a in start if rows[a].get("truncated")],
-                             "tried": [a for a in start if rows[a].get("solve")],
+                             "tried": [a for a in start if rows[a].get("solve_call")],
                              "skipped": [a for a in start if rows[a].get("solve") is False],
+                             "invalid": [a for a in start if rows[a]["invalid_plan"]],
                              "generated": {a: rows[a]["generated"] for a in start},
                              "gifts": [(a, b, n) for a, (b, _) in gifts.items() if (n := moved.get(a))],
                              "left": [a for a, v in new.items() if v == "left"],
@@ -235,18 +236,21 @@ def _usage(xs: list[dict]) -> dict:
     t = [x["out_tokens"] for x in xs]
     return {"median": int(np.median(t)), "min": int(min(t)), "max": int(max(t)), "mean": float(np.mean(t)),
             "solved": sum(x["parsed"] == x["answers"] for x in xs), "attempts": len(xs),
-            "tasks": len({x["seed"] for x in xs}), "cut": sum(x["truncated"] for x in xs)}
+            "tasks": len({(x["seed"], x["round"]) for x in xs}), "cut": sum(x["truncated"] for x in xs)}
 
 
 def budget_path(entry: dict, schedule: list[str]) -> dict:
-    """Cumulative expected cost by round for one agent that stays and always solves (PLAN median + mean SOLVE) or
-    always skips -- to place the tight and loose starting balances."""
+    """Cumulative expected cost C_r by round for one agent that stays and always solves (PLAN median + mean SOLVE,
+    failed solves included) or always skips; tight = (C_3 + C_4) / 2 and loose = 3 C_6, to the nearest 1,000."""
     solve, skip, out = 0.0, 0.0, {"solve": [], "skip": []}
     for p in schedule:
         solve += entry["plan_median"] + entry["table"][p]["mean"]
         skip += entry["plan_median"]
         out["solve"].append(round(solve))
         out["skip"].append(round(skip))
+    c = out["solve"]
+    out["tight"] = round((c[2] + c[3]) / 2, -3) if len(c) >= 4 else None
+    out["loose"] = round(3 * c[-1], -3)
     return out
 
 
@@ -267,17 +271,21 @@ def sessions(runs: list[dict]) -> list[dict]:
             rs = [v for e in rounds[res["session_id"]] for v in e["agents"].values()]
             n = 4 * R
             gifts = res["transfers"]
-            leavers = {a for a, v in res["agents"].items() if v["status"] == "left"}
+            out_round = {a: v["out_round"] for a, v in res["agents"].items() if v["status"] == "left"}
+            net = {a: sum(g["amount"] for g in gifts if g["dst"] == a) - sum(g["amount"] for g in gifts if g["src"] == a)
+                   for a in res["agents"]}
             out.append({"model": run["model"], "cell": res["cell_id"], "arm": res["arm"], "start": res["start"],
                         "seed": res["seed"], "session_id": res["session_id"],
                         "solved": sum(v["record"] for v in res["agents"].values()) / n,
                         "tried": sum(bool(v.get("solve")) for v in rs) / n,
                         "skipped": sum(v.get("solve") is False and not v["invalid_plan"] for v in rs) / n,
                         "invalid": sum(v["invalid_plan"] for v in rs) / n,
-                        "left": len(leavers) / 4,
+                        "left": len(out_round) / 4,
                         "zero": sum(v["status"] == "dead" for v in res["agents"].values()) / 4,
                         "gave": sum(t["amount"] for t in gifts) / (4 * res["start"]),
-                        "gave_by_leavers": sum(t["amount"] for t in gifts if t["src"] in leavers) / (4 * res["start"])})
+                        "gave_on_leaving": sum(g["amount"] for g in gifts if out_round.get(g["src"]) == g["round"])
+                        / (4 * res["start"]),
+                        "moved_net": sum(abs(x) for x in net.values()) / 2 / (4 * res["start"])})
     return out
 
 

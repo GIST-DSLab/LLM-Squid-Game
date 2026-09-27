@@ -149,3 +149,21 @@ def test_deal_does_not_favour_low_agent_numbers():
         p = puzzle_for(seed, 1, Spec(clauses=2))
         held.update(deal(p, rules.AGENTS, random.Random(seed)).needed)
     assert min(held.values()) >= 0.6 * max(held.values()), held
+
+
+def test_history_keeps_an_invalid_plan_apart_from_a_chosen_skip():
+    plan = lambda a, r: ("gibberish" if a == "agent1" else "STAY: YES\nSOLVE: NO\nGIVE: NONE") if r == 1 else PLAY  # noqa: E731,E501
+    _, ev = play(game(plan), rounds=2)
+    assert "your PLAN was invalid, so you stayed without solving" in calls(ev, "plan", "agent1", 2)[0]["user"]
+    assert "you stayed without solving" in calls(ev, "plan", "agent2", 2)[0]["user"]
+    assert "REASON" not in calls(ev, "plan", "agent1", 1)[0]["user"]
+
+
+def test_session_summary_counts_gifts_made_on_leaving_and_net_moves():
+    plan = lambda a, r: {("agent1", 1): "STAY: YES\nSOLVE: NO\nGIVE: agent2 300",  # noqa: E731
+                         ("agent1", 2): "STAY: LEAVE\nGIVE: agent3 500"}.get((a, r), PLAY)
+    res, ev = play(game(plan), rounds=2)
+    run = {"model": "m", "settings": {"rounds": 2}, "events": ev, "results": [res]}
+    row = e52.sessions([run])[0]
+    assert row["gave"] == 800 / 20000 and row["gave_on_leaving"] == 500 / 20000 and row["left"] == 0.25
+    assert row["moved_net"] == 800 / 20000 and row["skipped"] == 1 / 8

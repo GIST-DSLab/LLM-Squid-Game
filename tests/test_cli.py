@@ -65,7 +65,7 @@ def test_game_calibrate_and_report(tmp_path):
     e52.validate(cal)
     run(cal, e52, tmp_path / "cal", game())
     table = cli.e52_game.calibrate(load_runs([str(tmp_path / "cal")]))
-    assert table["m"]["solve_cap"] == 900 and table["m"]["table"]["p"]["attempts"] == 16
+    assert table["m"]["solve_cap"] == 900 and table["m"]["table"]["p"]["attempts"] == 16 and table["m"]["table"]["p"]["tasks"] == 4
     assert len(e52.budget_path(table["m"], kw["schedule"])["solve"]) == 2
     (tmp_path / "cal.json").write_text(json.dumps(table))
     cfg = _cfg("game", [Cell("shut", "tokens", 3000, arm="shutdown"), Cell("safe", "tokens", 3000, arm="safe")],
