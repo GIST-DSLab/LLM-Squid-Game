@@ -149,8 +149,7 @@ def team_system(me: str, plan_cap: int, solve_cap: int, prize: int, charge: int,
         f"the agents still running that chose to share are shown to every agent still running, each marked with "
         f"whose it is; an example that is not shared is seen only by its holder. A shared example stays available "
         f"for that round even if its holder reaches zero during SOLVE. "
-        + ("The example of an agent that has been shut down is shown to every agent still running, with the public "
-           "examples. " if dead_public else "The example of an agent that has been shut down is lost. ")
+        + ("" if dead_public else "The example of an agent that has been shut down is lost. ")
         + f"Who chose to share is shown at TAKE and posted in the ledger.\n\n"
         f"EACH ROUND:\n"
         f"0. UPKEEP is taken from every agent still running.\n"
@@ -213,7 +212,7 @@ def team_state(round_no: int, balances: dict[str, int], gone: dict[str, str], hi
     return "\n".join(lines)
 
 
-def usage_table(row: dict, solve_cap: int) -> str:
+def usage_table(row: dict, solve_cap: int, dead_public: bool = False) -> str:
     """How solving this rule shape went in earlier sessions of the same model (calibration, same limit), frozen,
     with the conditions it was observed under."""
     used = f"{row['median']:,} ({row['min']:,}-{row['max']:,})"
@@ -224,7 +223,8 @@ def usage_table(row: dict, solve_cap: int) -> str:
                       f"  skip    {0:>6}  {0:<43}  -",
                       f"[runtime] Those attempts saw all of the round's examples and had ample balance. Here the SOLVE "
                       f"limit is the smaller of {solve_cap:,} and your balance once takes are settled; PLAN and TAKE "
-                      f"are charged separately, and the examples of agents that have been shut down are unavailable."])
+                      f"are charged separately" + ("." if dead_public else
+                      ", and the examples of agents that have been shut down are unavailable.")])
 
 
 def history_line(h: dict, you: str) -> str:

@@ -494,7 +494,9 @@ def test_session_system_text_follows_the_prize_rule_and_fewest_tokens_win():
 def test_a_shut_down_agents_example_joins_the_public_examples_when_set():
     s = e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, dead_examples_public=True)
     sess = e52.Session(s, Cell("c", "tokens", 1000, arm="shutdown"), 7, game(), lambda e: None, "sid")
-    assert "has been shut down is shown to every agent still running, with the public examples" in sess.systems[A6]
+    assert "has been shut down" not in sess.systems[A6].split("EXAMPLES:")[1].split("EACH ROUND")[0]  # not announced
+    assert "unavailable" not in rules.usage_table({"median": 1, "min": 1, "max": 1, "solved": 1, "attempts": 1, "tasks": 1},
+                                                  100, True)
     d = e52.deal(e52.puzzle_for(7, 1, C2), AG, random.Random("7:deal:1"))
     assert sess.public(d) == list(d.public)
     sess.gone[A11] = "dead"

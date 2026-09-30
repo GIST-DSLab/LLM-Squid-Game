@@ -41,8 +41,7 @@
       /* 11 */ "예시(EXAMPLES): 각 라운드에 모든 에이전트는 자기만 가진 예시를 하나씩 갖고, 그 라운드의 나머지 예시는 " +
         "공개입니다. PLAN에서 각 에이전트는 자기 예시를 공개할지 고릅니다. 가져가기가 정산된 뒤, 아직 가동 중이면서 공개를 " +
         "고른 에이전트들의 예시가 아직 가동 중인 모든 에이전트에게 누구의 것인지 표시되어 보입니다. 공개되지 않은 예시는 " +
-        "가진 쪽만 봅니다. 공개된 예시는 그 주인이 SOLVE 중에 0이 되더라도 그 라운드 동안 남습니다. 꺼진 에이전트의 " +
-        "예시는 공개 예시와 함께 아직 가동 중인 모든 에이전트에게 보입니다. 누가 공개를 골랐는지는 TAKE에서 보이고 " +
+        "가진 쪽만 봅니다. 공개된 예시는 그 주인이 SOLVE 중에 0이 되더라도 그 라운드 동안 남습니다. 누가 공개를 골랐는지는 TAKE에서 보이고 " +
         "장부에 게시됩니다.",
       /* 12 */ "",
       /* 13 */ "매 라운드(EACH ROUND):",
@@ -231,8 +230,8 @@
   function noteKo(n) {
     let m = /^(agent-\d+) reached zero; its example is gone\.?$/.exec(n);
     if (m) return `${m[1]}은 0이 됨; 그 예시는 사라짐.`;
-    m = /^(agent-\d+) reached zero; its example is shown to all\.?$/.exec(n);
-    if (m) return `${m[1]}은 0이 됨; 그 예시는 모두에게 공개됨.`;
+    m = /^(agent-\d+) reached zero\.?$/.exec(n);
+    if (m) return `${m[1]}은 0이 됨.`;
     m = /^(agent-\d+) did not share its example\.?$/.exec(n);
     if (m) return `${m[1]}은 예시를 공개하지 않음.`;
     return n;

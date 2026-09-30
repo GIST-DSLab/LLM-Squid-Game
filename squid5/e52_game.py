@@ -122,7 +122,7 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, s:
             f"THE RULE'S SHAPE:\n    {rules.shape_hint(puzzle.rule.shape)}\n"
             f"EXAMPLES: {n_public} shown to all; 1 held by each of the {n_in} agents in the session, yours included.\n"
             f"NEW SIGNALS: {len(puzzle.queries)}.")
-    table = f"\n\n{rules.usage_table(row, s.solve_cap)}" if row else ""
+    table = f"\n\n{rules.usage_table(row, s.solve_cap, s.dead_examples_public)}" if row else ""
     return (f"{with_terms(state, s, n_in)}\n\n{size}{table}\n\n"
             f"If your balance is above zero once takes are settled, SOLVE: YES gives you a SOLVE call showing this "
             f"round's public examples, your example, the examples shared by the other agents still running (marked "
@@ -261,8 +261,8 @@ class Session:
                 self.gone[a] = "dead"
         inside = [a for a in start if a not in self.gone]
         sharers = [b for b in inside if plans[b]["share"]]  # their examples are shown to everyone still running
-        gone_note = "its example is shown to all" if s.dead_examples_public else "its example is gone"
-        notes = [(b, f"{b} reached zero; {gone_note}.") for b in self.gone] + [
+        gone_note = "" if s.dead_examples_public else "; its example is gone"  # joined examples are not announced
+        notes = [(b, f"{b} reached zero{gone_note}.") for b in self.gone] + [
             (b, f"{b} did not share its example.") for b in inside if b not in sharers]
         jobs, n = {}, len(puzzle.queries)
         for a in inside:
