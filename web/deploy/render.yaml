@@ -1,0 +1,16 @@
+# Render Blueprint for the squid5 web5 API. Copy to the repo root (Render reads render.yaml there) or create the
+# service by hand with dockerfilePath web/deploy/Dockerfile and the same env vars.
+services:
+  - type: web
+    name: squid5-web5-api
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: web/deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: WEB5_DSN
+        sync: false        # Postgres URI (Supabase); unset -> SQLite on the ephemeral disk
+      - key: WEB5_CORS_ORIGINS
+        sync: false        # e.g. https://irregular6612.github.io

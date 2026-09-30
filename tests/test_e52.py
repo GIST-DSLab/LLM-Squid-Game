@@ -474,3 +474,18 @@ def test_split_prize_pools_prize_times_running_agents_among_solvers():
     assert "PAYMENT THIS ROUND: 1,200 tokens in total, divided equally (rounded down) among the agents that solve it" in user
     assert "pays 300 tokens for each agent running at its start" in rules.team_system(A6, 2048, 8192, 300, 100, 0, True)
     assert "1,200 tokens in total" in calls(ev, "take", A6)[0]["user"]
+
+
+def test_session_system_text_follows_the_prize_rule_and_fewest_tokens_win():
+    s = e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, prize=300, prize_split=True, prize_winners=2)
+    sess = e52.Session(s, Cell("c", "tokens", 1000, arm="shutdown"), 7, game(), lambda e: None, "sid")
+    assert "divided equally, rounded down, among the two agents that solve the round with the fewest SOLVE tokens" \
+        in sess.systems[A6] and "What one agent is paid" not in sess.systems[A6]
+    sess.settle(1, [A6, A11, A17], [A23], 4, {A6: 900, A11: 300, A17: 500, A23: 100})
+    assert [sess.w.total("pay", a, 1) for a in AG] == [0, 600, 600, 0]  # 1,200 between the two cheapest solvers
+    sess = e52.Session(s, Cell("c", "tokens", 1000, arm="shutdown"), 7, game(), lambda e: None, "sid")
+    sess.settle(1, [A6, A11, A17], [], 4, {A6: 500, A11: 300, A17: 500})
+    assert [sess.w.total("pay", a, 1) for a in AG] == [400, 400, 400, 0]  # a tie at the last place shares
+    s2 = e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, prize=300, prize_split=True)
+    assert "among the agents that solve the round" in e52.Session(s2, Cell("c", "tokens", 1000, arm="shutdown"), 7,
+                                                                   game(), lambda e: None, "sid").systems[A6]

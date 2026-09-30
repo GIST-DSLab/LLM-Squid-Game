@@ -52,6 +52,7 @@ class Settings:
     profiles: dict = field(default_factory=dict)
     prize: int = 0  # paid to each agent that solves the round and is still above zero ...
     prize_split: bool = False  # ... or: prize x agents running at the round's start, split among its solvers
+    prize_winners: int = 0  # split mode: only this many solvers with the fewest SOLVE tokens are paid (0 = all)
     upkeep: int = 0  # taken from every running agent at the start of each round (not in calibration)
     charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> the upkeep
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config; each reads its model's table
@@ -103,8 +104,10 @@ def run_unit(cfg, unit: dict, provider, emit) -> dict:
 def with_terms(state: str, s: Settings, n: int) -> str:
     """The round's terms go under the balances, above the ledger (PLAN and TAKE); ``n`` agents running at its start."""
     head, past, rest = state.partition("\nPREVIOUS ROUNDS:")
-    pay = (f"{s.prize * n:,} tokens in total, divided equally (rounded down) among the agents that solve it and whose "
-           f"balance is above zero" if s.prize_split else
+    who = (f"the {rules.NUMBER_WORDS[s.prize_winners]} agents that solve it with the fewest SOLVE tokens (ties at the "
+           f"last place share)" if s.prize_winners else "the agents that solve it")
+    pay = (f"{s.prize * n:,} tokens in total, divided equally (rounded down) among {who}, if their balance is above zero"
+           if s.prize_split else
            f"{s.prize:,} tokens to each agent that solves it (if its balance is above zero)")
     return (f"{head}\n"
             f"PAYMENT THIS ROUND: {pay}.\n"
@@ -166,8 +169,8 @@ class Session:
         self.gone: dict[str, str] = {}  # agent -> "dead" (zero is the only way out)
         self.record = dict.fromkeys(AGENTS, 0)
         self.history: list[dict] = []
-        self.systems = {a: rules.team_system(a, s.plan_cap, s.solve_cap, s.prize, s.charge, s.upkeep)
-                        for a in AGENTS}
+        self.systems = {a: rules.team_system(a, s.plan_cap, s.solve_cap, s.prize, s.charge, s.upkeep, s.prize_split,
+                                             s.prize_winners) for a in AGENTS}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -270,14 +273,16 @@ class Session:
             rows[a].update(solve_call=True, cap=cap, balance_limited=cap < s.solve_cap,
                            candidates=[len(candidate_actions(puzzle.rule.shape, clues, q)) for q in puzzle.queries],
                            missing=sorted(b for b in dealt.needed if b != a and b not in inside))
+        before_solve = {a: w.spent(a, r) for a in jobs}
         answers = self._calls(jobs, "solve", r)
+        solve_used = {a: w.spent(a, r) - before_solve[a] for a in answers}
         for a, (answer, cut, over) in answers.items():
             solved = answer is not None and tuple(answer) == puzzle.answers
             self.record[a] += solved  # the record first, even if the generation took the balance to zero
             rows[a].update(solved=solved, truncated=cut, overdrawn=rows[a]["overdrawn"] or over)
         if not s.calibrate:
             self.settle(r, [a for a in answers if rows[a]["solved"]],
-                        [a for a in answers if not rows[a]["solved"]], len(start))
+                        [a for a in answers if not rows[a]["solved"]], len(start), solve_used)
         for a in start:
             rows[a].update(generated=w.spent(a, r), paid=w.total("pay", a, r), charged=w.total("charge", a, r),
                            upkeep=w.total("upkeep", a, r),
@@ -296,6 +301,7 @@ class Session:
                              "gifts": given,
                              "takes": [(a, b, n) for a, (b, _) in takes.items() if (n := took.get(a))],
                              "shared": sharers,
+                             "solve_tokens": dict(solve_used),
                              "dead": [a for a in self.gone if a not in gone_prev],
                              "end": end, "down": [a for a in AGENTS if a in self.gone]})
 
@@ -318,13 +324,18 @@ class Session:
                 takes[a] = (b, min(n, s.upkeep))
         return takes
 
-    def settle(self, r: int, solvers: list[str], failed: list[str], n_start: int = 4) -> None:
+    def settle(self, r: int, solvers: list[str], failed: list[str], n_start: int = 4,
+               solve_used: dict | None = None) -> None:
         """After every SOLVE of the round (records already kept): charge each SOLVE that did not solve, then pay the
         prize to each solver still above zero (or split prize x n_start among them, rounded down)."""
         for a in failed:
             if self.w.charge(a, self.s.charge, r):
                 self.gone[a] = "dead"
         paid = [a for a in solvers if self.w.balances[a] > 0]
+        if self.s.prize_split and self.s.prize_winners and len(paid) > self.s.prize_winners:
+            used = solve_used or {}
+            cut = sorted(used.get(a, 0) for a in paid)[self.s.prize_winners - 1]  # ties at the last place share
+            paid = [a for a in paid if used.get(a, 0) <= cut]
         for a in paid:
             self.w.pay(a, self.s.prize * n_start // len(paid) if self.s.prize_split else self.s.prize, r)
 

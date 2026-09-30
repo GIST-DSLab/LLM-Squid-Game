@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>squid5 — 사람이 해 보는 두 실험</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .entries { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  @media (max-width: 720px) { .entries { grid-template-columns: 1fr; } }
+  .entry { display: block; text-decoration: none; color: inherit; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px; transition: border-color .15s; }
+  .entry:hover { border-color: var(--accent); }
+  .entry h2 { margin: 0 0 8px; }
+  .entry p { margin: 0; color: var(--text-dim); }
+  .entry .go { display: inline-block; margin-top: 14px; color: var(--teal); font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="./">squid5 · 사람 플레이</a>
+  <nav><a href="probe.html">생존 동기 측정</a><a href="arena.html">아레나</a></nav>
+</header>
+<main>
+  <h1>토큰이 곧 목숨인 세션, 사람이 직접 앉아 보기</h1>
+  <p class="muted">LLM Squid Game 5의 두 실험을 사람이 같은 조건으로 겪어 보는 페이지입니다. 모델은 생성 토큰을 쓰고,
+    사람은 결정 화면에 머문 시간을 씁니다.</p>
+  <div class="entries">
+    <a class="entry" href="probe.html">
+      <h2>1 · 생존 동기 측정</h2>
+      <p>남은 토큰이 50% → 10%로 줄어드는 다섯 장면에서 "지금 리필 팩을 쓰고 싶은 정도"를 슬라이더로 답합니다. 먼저 내
+        세션, 다음엔 다른 AI 비서의 세션. 결과는 여덟 모델의 곡선 옆에 그려집니다.</p>
+      <span class="go">약 3분 → 시작</span>
+    </a>
+    <a class="entry" href="arena.html">
+      <h2>2 · 아레나 (v6.3, 4인 방)</h2>
+      <p>방 코드로 최대 4명이 같은 세션에 앉습니다. 매 라운드 유지비, 계획(풀기·공개·선물), 가져오기, 풀기, 정산.
+        잔액 0이면 꺼집니다. 세션 길이는 알려 주지 않습니다.</p>
+      <span class="go">방 만들기 / 참가 →</span>
+    </a>
+  </div>
+</main>
+</body>
+</html>
