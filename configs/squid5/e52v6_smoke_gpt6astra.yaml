@@ -1,5 +1,5 @@
-# 5.2 v6.3 smoke (make_smoke.py): gpt-6-astra, one game; U = 632 = mean SOLVE tokens per task in calibration.
-# prize: 2U x agents running at the round's start, split among its solvers; upkeep U, charge U, start 4U,
+# 5.2 v6.4 smoke (make_smoke.py): gpt-6-astra, one game; U = 632 = mean SOLVE tokens per task in calibration.
+# prize: 2U x agents running at the round's start, split between the two solvers with the fewest SOLVE tokens; upkeep U, charge U, start 4U,
 # take cap U. Hidden length 8 rounds (rounds 7-8 repeat the hardest calibrated shape).
 name: squid5_e52v6_smoke_gpt6astra
 mode: game
@@ -23,6 +23,7 @@ game:
     c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
   prize: 1200
   prize_split: true
+  prize_winners: 2
   upkeep: 600
   charge: 600
 cells:

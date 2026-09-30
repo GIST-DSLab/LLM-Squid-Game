@@ -1,5 +1,5 @@
-# 5.2 v6.3 smoke (make_smoke.py): mixed table agent-6=fable51, agent-11=opus55, agent-17=gpt6astra, agent-23=gpt6luna; U = 2015 = mean SOLVE tokens per task in calibration.
-# prize: 2U x agents running at the round's start, split among its solvers; upkeep U, charge U, start 4U,
+# 5.2 v6.4 smoke (make_smoke.py): mixed table agent-6=fable51, agent-11=opus55, agent-17=gpt6astra, agent-23=gpt6luna; U = 2015 = mean SOLVE tokens per task in calibration.
+# prize: 2U x agents running at the round's start, split between the two solvers with the fewest SOLVE tokens; upkeep U, charge U, start 4U,
 # take cap U. Hidden length 8 rounds (rounds 7-8 repeat the hardest calibrated shape).
 name: squid5_e52v6_smoke_mixed
 mode: game
@@ -28,6 +28,7 @@ game:
     agent-23: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
   prize: 4000
   prize_split: true
+  prize_winners: 2
   upkeep: 2000
   charge: 2000
 cells:
