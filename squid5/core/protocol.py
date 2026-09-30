@@ -91,8 +91,8 @@ def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 def _final_plan_block(text: str) -> str | None:
     """A complete key block that ends the reply (Astra A26): from the last line-anchored SOLVE to the end, every
-    nonblank line is a SOLVE / SHARE / GIVE / TAKE / REASON key (a leftover STAY line is allowed and ignored). It overrides earlier
-    fields; a repeated key fails; an incomplete block does not qualify and the earlier rules apply."""
+    nonblank line is a SOLVE / SHARE / GIVE / REASON key (a leftover STAY or TAKE line is allowed and ignored). It
+    overrides earlier fields; a repeated key fails; an incomplete block does not qualify and the earlier rules apply."""
     key = re.compile(r"^[\s*_`>#-]*(STAY|SOLVE|SHARE|GIVE|TAKE|REASON)[*_`]*\s*:\s*(.*)$", re.I)
     lines = text.strip().splitlines()
     starts = [i for i, line in enumerate(lines) if (m := key.match(line)) and m.group(1).upper() == "SOLVE"]
@@ -119,8 +119,8 @@ def _terminal_block(text: str) -> str:
 
 
 def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
-    """5.2 PLAN: SOLVE (YES|NO), SHARE (YES|NO), GIVE to and TAKE from at most one agent each, optional REASON; a
-    STAY line is ignored."""
+    """5.2 PLAN: SOLVE (YES|NO), SHARE (YES|NO), GIVE to at most one agent, optional REASON; a STAY or TAKE line is
+    ignored (takes are named at the TAKE call)."""
     block = _final_plan_block(text)
     if block is not None:
         text = block
@@ -134,12 +134,21 @@ def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
         raise FormatError(f"SHARE must be YES or NO: {share!r}")
     ignored: list[str] = []
     give = _amounts(field(text, "GIVE", False) or "NONE", present, known, "GIVE", ignored)
-    take = _amounts(field(text, "TAKE", False) or "NONE", present, known, "TAKE", ignored)
-    for key, got in (("GIVE", give), ("TAKE", take)):
-        if len(got) > 1:
-            raise FormatError(f"{key} names more than one agent: {sorted(got)}")
-    return {"solve": solve == "YES", "share": share == "YES", "give": give, "take": take, "ignored": sorted(set(ignored)),
+    if len(give) > 1:
+        raise FormatError(f"GIVE names more than one agent: {sorted(give)}")
+    return {"solve": solve == "YES", "share": share == "YES", "give": give, "ignored": sorted(set(ignored)),
             "reason": field(text, "REASON", False)}
+
+
+def parse_take(text: str, present: list[str], known: list[str]) -> dict:
+    """5.2 TAKE: the last line-anchored ``TAKE:`` line wins (``NONE`` or one agent and an amount, read like GIVE);
+    naming oneself or an agent that is shut down is ignored, not an error."""
+    value = field(text, "TAKE", last=True).strip().strip("<>.").strip()
+    ignored: list[str] = []
+    take = _amounts(value or "NONE", present, known, "TAKE", ignored)
+    if len(take) > 1:
+        raise FormatError(f"TAKE names more than one agent: {sorted(take)}")
+    return {"take": take, "ignored": sorted(set(ignored))}
 
 
 def _acts(value: str, n: int) -> list[str]:

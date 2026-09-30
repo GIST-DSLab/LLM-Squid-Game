@@ -111,3 +111,31 @@ the smoke; the smoke is read by hand.
 Update `tests/test_e52.py` (and any others) to the new rules: parser without STAY, hyphen names, overdrawn -> dead,
 settlement order (record, charge, pay; pay split floor; dead solver gets record but no pay), calibration pays nothing,
 word-ban test still passing on the new text, `test_code_stays_compact` passing.
+
+## v6.1 (09-30 21:30) — two-phase transfers and a compact ledger
+
+Researcher decisions after the first six smokes:
+
+1. **Gifts and takes are separate turns.** PLAN (one call per agent, simultaneous): `SOLVE: YES|NO`, `SHARE: YES|NO`,
+   `GIVE: <NONE | agent amount>`. Gifts are settled (as now). Then a **TAKE turn**: one more call per agent still
+   running, simultaneous, seeing the balances after gifts, the ledger, **this round's gifts** (who gave whom how
+   much, as settled) and **who chose SHARE: YES this round**. Answer: `TAKE: <NONE | agent amount>` (one target, at
+   most the upkeep; a larger number counts as the upkeep). Takes are settled exactly as `Wallet.take` does now.
+   The TAKE call is charged like any call (real usage up to the balance; cap = plan_cap or balance; reaching zero
+   shuts the agent down before takes are settled; an invalid/cut reply = no take). No TAKE call in calibration.
+2. **Context carries the ledger, not old examples.** Every call (PLAN, TAKE, SOLVE) shows the round number, the
+   current balances and `PREVIOUS ROUNDS:` one line per past round. Each line adds **balances at the end of that
+   round** for every agent (dead ones as 0 / shut down) to what it has now (solved by, shared by, generated, paid,
+   charged, gifts, takes, reached zero). Past rounds' examples are never shown. SOLVE shows the ledger block, then
+   this round's public examples, the solver's own example and the examples shared this round (marked with whose).
+3. System text: step list becomes `0. UPKEEP · 1. PLAN (solve, share, gift) · 2. GIFTS are settled and posted ·
+   3. TAKE (each agent sees this round's gifts and who shares, and names any take) · 4. TAKES are settled; then the
+   shared examples are shown · 5. SOLVE · 6. SETTLEMENT`. The TAKES paragraph says takes happen at the TAKE step,
+   after gifts are settled and posted. Invalid PLAN = do not solve, do not share, no gift. Keep every existing word
+   rule (tests enforce the banned list).
+
+**v6.1 correction to item 2 (researcher, 09-30):** the ledger goes only into PLAN and TAKE, where the decisions use
+it. SOLVE does **not** show the ledger/state block: it stays as in v6 — the SOLVE head line (round, limit, balance),
+this round's public examples, "(yours)" and "(agent-X's, shared)", the notes (who did not share, who is gone) and the
+answer format. PLAN and TAKE show `ROUND N.`, the current balances and `PREVIOUS ROUNDS:` (each line ending with
+`balances at end: ...` for every agent, the shut down as `0 (shut down)`). Past rounds' examples appear nowhere.
