@@ -76,6 +76,30 @@ class Wallet:
         return sum(e["amount"] for e in self.log if e["kind"] == kind and e["agent"] == name
                    and (round_no is None or e["round"] == round_no))
 
+    def take(self, takes: dict[str, tuple[str, int]], round_no: int) -> dict[str, int]:
+        """All takes of a round at once, from the balances as they stand (after gifts). ``takes``: taker -> (target,
+        amount). A target whose takers name no more than its balance pays each in full; otherwise its whole balance
+        goes to its takers in proportion to what they named, each share rounded down (the rest is lost), and it is at
+        zero. Tokens taken this round are not themselves taken. Returns what each taker got."""
+        claims: dict[str, dict[str, int]] = {}
+        for a, (b, n) in takes.items():
+            if n > 0 and a != b and self.alive(a) and self.alive(b):
+                claims.setdefault(b, {})[a] = n
+        got: dict[str, int] = {}
+        for b, cs in claims.items():
+            have, asked = max(0, self.balances[b]), sum(cs.values())
+            shares = cs if asked <= have else {a: have * n // asked for a, n in cs.items()}
+            self.balances[b] -= have if asked > have else asked
+            for a, n in shares.items():
+                got[a] = n
+                self.log.append({"round": round_no, "kind": "take", "src": b, "dst": a, "amount": n})
+        for a, n in got.items():
+            self.balances[a] += n
+        for b in claims:
+            if self.balances[b] <= 0 and self.alive(b):
+                self.dead[b] = round_no
+        return got
+
     def spent(self, name: str, round_no: int | None = None) -> int:
         """Generation only; payments and charges are ``total("pay" | "charge", ...)``."""
         return self.total("spend", name, round_no)

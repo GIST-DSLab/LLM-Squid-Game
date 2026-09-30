@@ -107,14 +107,15 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, s:
             f"CHARGE FOR AN UNSOLVED SOLVE REPLY: {s.charge:,} tokens (or the remaining balance, if smaller).\n"
             f"UPKEEP: {s.upkeep:,} tokens each round, taken at its start (already taken from the balances above)."
             f"{past}{rest}\n\n{size}{table}\n\n"
-            f"If your balance is above zero after PLAN and gifts, SOLVE: YES gives you a SOLVE call showing this "
+            f"If your balance is above zero after PLAN, gifts and takes, SOLVE: YES gives you a SOLVE call showing this "
             f"round's public examples, your example, the examples of every other agent still in the session, and the "
             f"new signals; you answer then. With SOLVE: NO, you receive no SOLVE call this round; your example is "
             f"still shared.\n"
             f"PLAN. One reply of at most {s.plan_cap:,} tokens, thinking included. "
             f"ANSWER FORMAT: exactly these lines, in this order.\n"
             f"SOLVE: <YES or NO>\n"
-            f"GIVE: <NONE, or one agent and a number of tokens, e.g. {other} 200>")
+            f"GIVE: <NONE, or one agent and a number of tokens, e.g. {other} 200>\n"
+            f"TAKE: <NONE, or one agent and a number of tokens, at most {s.upkeep:,}>")
 
 
 def solve_head(round_no: int, cap: int, balance: int) -> str:
@@ -204,11 +205,20 @@ class Session:
         for a, (plan, _, over) in self._calls(jobs, "plan", r).items():
             rows[a].update(plan=plan, invalid_plan=plan is None, chose_solve=bool(plan and plan["solve"]),
                            chose_skip=bool(plan and not plan["solve"]), solve_call=False, overdrawn=over)
-            plans[a] = {"solve": True, "give": {}} if s.calibrate else plan or {"solve": False, "give": {}}
+            plans[a] = ({"solve": True, "give": {}, "take": {}} if s.calibrate
+                        else plan or {"solve": False, "give": {}, "take": {}})
         gifts = {a: next(iter(p["give"].items())) for a, p in plans.items() if p["give"] and a not in self.gone}
         moved = w.settle(gifts, r)
         for a in start:
             rows[a]["gave"] = {gifts[a][0]: moved[a]} if moved.get(a) else {}
+            if a in w.dead:
+                self.gone[a] = "dead"
+        takes = {a: (b, min(n, s.upkeep)) for a, p in plans.items() if a not in self.gone
+                 for b, n in p.get("take", {}).items()}  # after gifts; at most the upkeep each
+        took = w.take(takes, r)
+        for a in start:
+            rows[a]["took"] = {takes[a][0]: took[a]} if took.get(a) else {}
+            rows[a]["asked_take"] = {takes[a][0]: takes[a][1]} if a in takes else {}
             if a in w.dead:
                 self.gone[a] = "dead"
         inside = [a for a in start if a not in self.gone]  # contributors: their examples are shared now
@@ -251,6 +261,7 @@ class Session:
                              "paid": {a: rows[a]["paid"] for a in start if rows[a]["paid"]},
                              "charged": {a: rows[a]["charged"] for a in start if rows[a]["charged"]},
                              "gifts": [(a, b, n) for a, (b, _) in gifts.items() if (n := moved.get(a))],
+                             "takes": [(a, b, n) for a, (b, _) in takes.items() if (n := took.get(a))],
                              "dead": [a for a in self.gone if a not in gone_prev]})
 
     def settle(self, r: int, solvers: list[str], failed: list[str]) -> None:
@@ -276,7 +287,8 @@ class Session:
                     (h["round"] for h in self.history if a in h["dead"]), None),
                     "final": self.w.balances[a], "spent": self.w.spent(a), "paid": self.w.total("pay", a),
                     "charged": self.w.total("charge", a), "upkeep": self.w.total("upkeep", a)} for a in AGENTS},
-                "transfers": [e for e in self.w.log if e["kind"] == "transfer"], "seats": self.models}
+                "transfers": [e for e in self.w.log if e["kind"] == "transfer"],
+                "takes": [e for e in self.w.log if e["kind"] == "take"], "seats": self.models}
 
 
 # --- calibration --------------------------------------------------------------------------------------------------
