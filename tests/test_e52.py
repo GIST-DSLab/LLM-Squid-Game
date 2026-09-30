@@ -464,3 +464,13 @@ def test_only_shared_examples_are_shown_marked_with_whose_they_are():
     assert rounds(ev)[0]["agents"][A11]["shared"] is False and rounds(ev)[0]["agents"][A6]["shared"] is True
     with pytest.raises(FormatError):
         parse_team_plan("SOLVE: YES\nGIVE: NONE", AG, AG)  # SHARE is a required choice
+
+
+def test_split_prize_pools_prize_times_running_agents_among_solvers():
+    res, ev = play(game(wrong=(A17,)), start=5000, rounds=1, prize=300, charge=100, prize_split=True)
+    r1 = rounds(ev)[0]["agents"]
+    assert [r1[a]["paid"] for a in AG] == [400, 400, 0, 400]  # 300 x 4 running, among 3 solvers
+    user = calls(ev, "plan", A6)[0]["user"]
+    assert "PAYMENT THIS ROUND: 1,200 tokens in total, divided equally (rounded down) among the agents that solve it" in user
+    assert "pays 300 tokens for each agent running at its start" in rules.team_system(A6, 2048, 8192, 300, 100, 0, True)
+    assert "1,200 tokens in total" in calls(ev, "take", A6)[0]["user"]

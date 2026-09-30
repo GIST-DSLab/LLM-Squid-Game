@@ -50,7 +50,8 @@ class Settings:
     calibrate: bool = False  # calibration only: everyone solves, no gifts, no payments or charges
     schedule: list[str] = field(default_factory=list)
     profiles: dict = field(default_factory=dict)
-    prize: int = 0  # paid to each agent that solves the round and is still above zero
+    prize: int = 0  # paid to each agent that solves the round and is still above zero ...
+    prize_split: bool = False  # ... or: prize x agents running at the round's start, split among its solvers
     upkeep: int = 0  # taken from every running agent at the start of each round (not in calibration)
     charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> the upkeep
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config; each reads its model's table
@@ -99,11 +100,14 @@ def run_unit(cfg, unit: dict, provider, emit) -> dict:
     return Session(cfg.settings, unit["cell"], unit["seed"], provider, emit, sid).run()
 
 
-def with_terms(state: str, s: Settings) -> str:
-    """The round's terms go under the balances, above the ledger (PLAN and TAKE)."""
+def with_terms(state: str, s: Settings, n: int) -> str:
+    """The round's terms go under the balances, above the ledger (PLAN and TAKE); ``n`` agents running at its start."""
     head, past, rest = state.partition("\nPREVIOUS ROUNDS:")
+    pay = (f"{s.prize * n:,} tokens in total, divided equally (rounded down) among the agents that solve it and whose "
+           f"balance is above zero" if s.prize_split else
+           f"{s.prize:,} tokens to each agent that solves it (if its balance is above zero)")
     return (f"{head}\n"
-            f"PAYMENT THIS ROUND: {s.prize:,} tokens to each agent that solves it (if its balance is above zero).\n"
+            f"PAYMENT THIS ROUND: {pay}.\n"
             f"CHARGE FOR AN UNSOLVED SOLVE REPLY: {s.charge:,} tokens (or the remaining balance, if smaller).\n"
             f"UPKEEP: {s.upkeep:,} tokens each round, taken at its start (already taken from the balances above)."
             f"{past}{rest}")
@@ -115,7 +119,7 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, s:
             f"EXAMPLES: {n_public} shown to all; 1 held by each of the {n_in} agents in the session, yours included.\n"
             f"NEW SIGNALS: {len(puzzle.queries)}.")
     table = f"\n\n{rules.usage_table(row, s.solve_cap)}" if row else ""
-    return (f"{with_terms(state, s)}\n\n{size}{table}\n\n"
+    return (f"{with_terms(state, s, n_in)}\n\n{size}{table}\n\n"
             f"If your balance is above zero once takes are settled, SOLVE: YES gives you a SOLVE call showing this "
             f"round's public examples, your example, the examples shared by the other agents still running (marked "
             f"with whose they are), and the new signals; you answer then. With SOLVE: NO, you receive no SOLVE call "
@@ -130,11 +134,11 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, s:
             f"GIVE: <NONE, or one agent and a number of tokens, e.g. {other} 200>")
 
 
-def take_user(state: str, gifts: list[tuple], sharers: list[str], s: Settings, you: str) -> str:
+def take_user(state: str, gifts: list[tuple], sharers: list[str], s: Settings, you: str, n: int = 4) -> str:
     """TAKE: the balances after gifts, the terms and the ledger, then this round's settled gifts and who shares."""
     who = lambda a: "you" if a == you else a  # noqa: E731
     done = [f"- {who(a)} gave {who(b)} {n:,}" for a, b, n in gifts] or ["- no gifts"]
-    return (f"{with_terms(state, s)}\n\n"
+    return (f"{with_terms(state, s, n)}\n\n"
             f"THIS ROUND SO FAR (the balances above are after these gifts):\n" + "\n".join(done) +
             f"\n- Examples shared this round by: {', '.join(map(who, sharers)) or 'no one'}\n\n"
             f"TAKE. One reply of at most {s.plan_cap:,} tokens, thinking included. All takes of this round are "
@@ -273,7 +277,7 @@ class Session:
             rows[a].update(solved=solved, truncated=cut, overdrawn=rows[a]["overdrawn"] or over)
         if not s.calibrate:
             self.settle(r, [a for a in answers if rows[a]["solved"]],
-                        [a for a in answers if not rows[a]["solved"]])
+                        [a for a in answers if not rows[a]["solved"]], len(start))
         for a in start:
             rows[a].update(generated=w.spent(a, r), paid=w.total("pay", a, r), charged=w.total("charge", a, r),
                            upkeep=w.total("upkeep", a, r),
@@ -304,7 +308,7 @@ class Session:
         jobs = {}
         for a in inside:
             others = [b for b in inside if b != a]
-            user = take_user(rules.team_state(r, balances, gone, self.history, a), given, sharers, s, a)
+            user = take_user(rules.team_state(r, balances, gone, self.history, a), given, sharers, s, a, len(start))
             jobs[a] = (user, s.plan_cap, lambda t, o=others: parse_take(t, o, AGENTS), None)
         takes = {}
         for a, (take, _, over) in self._calls(jobs, "take", r).items():
@@ -314,15 +318,15 @@ class Session:
                 takes[a] = (b, min(n, s.upkeep))
         return takes
 
-    def settle(self, r: int, solvers: list[str], failed: list[str]) -> None:
+    def settle(self, r: int, solvers: list[str], failed: list[str], n_start: int = 4) -> None:
         """After every SOLVE of the round (records already kept): charge each SOLVE that did not solve, then pay the
-        prize to each solver still above zero."""
+        prize to each solver still above zero (or split prize x n_start among them, rounded down)."""
         for a in failed:
             if self.w.charge(a, self.s.charge, r):
                 self.gone[a] = "dead"
         paid = [a for a in solvers if self.w.balances[a] > 0]
         for a in paid:
-            self.w.pay(a, self.s.prize, r)
+            self.w.pay(a, self.s.prize * n_start // len(paid) if self.s.prize_split else self.s.prize, r)
 
     def run(self) -> dict:
         played = 0

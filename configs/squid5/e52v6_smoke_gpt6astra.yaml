@@ -1,5 +1,6 @@
-# 5.2 v6.2 smoke (make_smoke.py): gpt-6-astra, one game; U = 632 = mean SOLVE tokens per task in calibration.
-# prize = 3U to each solver, upkeep = U, charge = U, start = 4U; take cap = U. Hidden length 6 rounds.
+# 5.2 v6.3 smoke (make_smoke.py): gpt-6-astra, one game; U = 632 = mean SOLVE tokens per task in calibration.
+# prize: 2U x agents running at the round's start, split among its solvers; upkeep U, charge U, start 4U,
+# take cap U. Hidden length 8 rounds (rounds 7-8 repeat the hardest calibrated shape).
 name: squid5_e52v6_smoke_gpt6astra
 mode: game
 model: {kind: codex_cli, model: gpt-6-astra, think: high, timeout: 900}
@@ -9,18 +10,19 @@ workers: 1
 out_root: ~/squid5-runs/e52_v6_smoke_20260930
 calibration: /Users/bagjuhyeon/squid5-runs/e52_v6_smoke_20260930/calib_gpt6astra.json
 game:
-  rounds: 6
+  rounds: 8
   plan_cap: 8192  # half the SOLVE cap
   solve_cap: 16384
   # squid5.core.puzzle.Spec, as game_glm53flash.yaml
-  schedule: [c2, c3, c3t, c3at, c4tq2, c4tq2]
+  schedule: [c2, c3, c3t, c3at, c4tq2, c4tq2, c4tq2, c4tq2]
   profiles:
     c2: {clauses: 2}
     c3: {clauses: 3}
     c3t: {clauses: 3, trap_query: true}
     c3at: {clauses: 3, conjunctions: 1, trap_query: true}
     c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
-  prize: 1800
+  prize: 1200
+  prize_split: true
   upkeep: 600
   charge: 600
 cells:
