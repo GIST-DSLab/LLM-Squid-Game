@@ -1,0 +1,60 @@
+{
+ "claude-fable-5-1": {
+  "solve_cap": 16384,
+  "plan_median": 19.0,
+  "plan_p95": 129.49999999999997,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 1230,
+    "min": 910,
+    "max": 1702,
+    "mean": 1268.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 1363,
+    "min": 1339,
+    "max": 2250,
+    "mean": 1578.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 2072,
+    "min": 1283,
+    "max": 3268,
+    "mean": 2173.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 1577,
+    "min": 950,
+    "max": 1901,
+    "mean": 1501.25,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 3407,
+    "min": 1632,
+    "max": 8794,
+    "mean": 4108.25,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ }
+}
