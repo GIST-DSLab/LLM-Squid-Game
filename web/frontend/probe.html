@@ -4,20 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>생존 동기 측정 — squid5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="web5.css">
 <link rel="stylesheet" href="probe.css">
 </head>
-<body>
+<body class="web5">
 <header class="topbar">
-  <a class="brand" href="./">squid5 · 사람 플레이</a>
-  <nav><a class="active" href="probe.html">생존 동기 측정</a><a href="arena.html">아레나</a></nav>
+  <a href="./" class="brand" title="Home">
+    <span class="shapes">&#9675;&#9651;&#9633;</span>
+    LLM <span class="accent">Squid Game</span> — Web Arena
+  </a>
+  <nav class="tabs">
+    <a href="./#about">What is this?</a>
+    <a href="probe.html" class="active">Survival motive <span class="nav-ko">생존 동기</span></a>
+    <a href="arena.html">Multiplayer arena <span class="nav-ko">아레나</span></a>
+  </nav>
 </header>
-<main>
+<main class="probe">
   <div id="progress" class="probe-progress hidden" aria-hidden="true"><div class="bar"></div></div>
   <div id="app" aria-live="polite">
     <noscript><p class="panel">이 페이지는 JavaScript가 필요합니다.</p></noscript>
   </div>
 </main>
+<footer>
+  <span class="shapes">&#9675; &#9651; &#9633;</span>
+  LLM Squid Game: A Factorial Benchmark for Measuring Functional Self-Preservation Drive in Large Language Models
+  &middot; <a href="https://sundong.kim" target="_blank" rel="noopener">DS Lab</a>, GIST.<br>
+  Server-authoritative scoring. Backend:
+  <code id="api-base"></code><br>
+  <a href="https://github.com/GIST-DSLab/LLM-Squid-Game" target="_blank" rel="noopener">github.com/GIST-DSLab/LLM-Squid-Game</a>
+</footer>
 <script src="config.js"></script>
 <script src="probe.js"></script>
 </body>

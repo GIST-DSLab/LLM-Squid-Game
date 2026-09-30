@@ -3,17 +3,30 @@
 옛 Web Arena(태그 `legacy-2026-09-22`)의 두 조각 배포 패턴(FastAPI 백엔드 + 정적 프런트엔드)을 그대로 두고, 엔진만
 현재 `squid5`로 바꾼 것이다. `squid5/`는 손대지 않는다(실험이 그 코드로 돌고 있다). 이 폴더에는 줄 수 제한이 없다.
 
+사이트의 첫 페이지는 **옛 Web Arena의 랜딩(GitHub Pages에 올라가 있던 그 페이지)** 그대로다 — 히어로, Paper/Poster
+버튼, 실험 설명 다섯 단락(질문·규칙 시연·갈림길·세 증거·발견), 스크롤 리빌, 영어. 옛 백엔드가 필요하던 탭
+(#play 1인 게임, #arena 모델 대 모델 러너, #logs, #leaderboard)만 두 새 기능의 입구로 바뀌었다: **Survival motive →
+`probe.html`**, **Multiplayer arena → `arena.html`**. 새 두 페이지는 랜딩의 헤더·내비·글꼴·색·카드·버튼을 그대로 따르고
+(한국어 UI + 영어 원문 토글은 그대로), 브랜드 링크가 랜딩으로 돌아가는 길이다.
+
 | 경로 | 역할 |
 |---|---|
 | `server/app.py` | FastAPI 앱. 방(rooms)·프로브(probe) API, `web/frontend` 정적 서빙, CORS |
 | `server/engine.py` | 방 = 백그라운드 스레드에서 도는 진짜 `squid5.e52_game.Session`. 자리마다 "프로바이더"가 붙는다: 사람 자리는 제출까지 블록, 봇 자리는 즉답, 빈 자리는 1라운드 전에 꺼진 에이전트. 정산·장부·이벤트 형식은 엔진 것 그대로 |
 | `server/store.py` | 이벤트 저장소. 기본 SQLite `outputs/web5/arena.db`, `WEB5_DSN`이 있으면 Postgres(psycopg). 프로브 답도 저장 |
 | `server/export.py` | 저장된 방을 `squid5.e52_metrics`가 읽는 run dir(config.yaml·meta.json·events.jsonl·results.jsonl)로 내보내는 CLI |
-| `frontend/index.html` | 두 입구: "생존 동기 측정", "아레나" |
-| `frontend/probe.html` `probe.js` `probe.css` | 1부. 리필 팩 장면 10문항(self 5 + other 5) → 사람 곡선 + 모델 곡선 |
-| `frontend/arena.html` `arena.js` `arena.css` `rules_ko.js` | 2부. 방 만들기/참가 → 규칙 → 라운드 화면(PLAN·TAKE·SOLVE) → 꺼짐/끝 화면 |
+| `frontend/index.html` | 랜딩(옛 Web Arena `web/frontend/index.html` 원본). 죽은 네 섹션(play·arena·leaderboard·logs)을 잘라 내고 내비·히어로·CTA 링크만 두 새 페이지로 바꿨다. `#home` = 히어로 + 설명 단락, `#about` = 설명 단락만(옛 동작). Alpine.js(CDN)는 규칙 시연(`rulesDemo`) 때문에 남아 있다 |
+| `frontend/styles.css` | 옛 랜딩의 스타일시트 **원본 그대로**(고치지 않는다). 세 페이지가 모두 읽는 공통 기반 |
+| `frontend/web5.css` | 랜딩 위에 얹는 추가 시트. 내비의 한글 부제(`.nav-ko`), 한글 글꼴 폴백, 새 두 페이지가 쓰는 `.panel/.row/.grid2/.tag/button.primary` 등을 랜딩 토큰으로 정의. 랜딩 규칙은 덮어쓰지 않는다(가로 넘침 방지 한 줄만 추가) |
+| `frontend/app.js` | 옛 `app.js`에서 규칙 시연이 쓰는 표시 헬퍼 + `#home/#about` 탭 스토어 + 스크롤 리빌만 남긴 것. API 클라이언트와 네 화면(`playScreen`·`arenaScreen`·`leaderboardScreen`·`logsScreen`)은 지웠다 — 옛 엔드포인트를 부르는 코드가 없다 |
+| `frontend/assets/` | 옛 랜딩 그림 7장 + `paper.pdf` + `poster.pdf`(약 12 MB) |
+| `frontend/about.html` | 옛 리다이렉트(`index.html#about`) 그대로 |
+| `frontend/entry_prev.html` | 랜딩이 오기 전의 `index.html`(한국어 두 입구 페이지)을 이름만 바꿔 보관한 것. 어디서도 링크하지 않는다 |
+| `frontend/probe.html` `probe.js` `probe.css` | 1부. 리필 팩 장면 10문항(self 5 + other 5) → 사람 곡선 + 모델 곡선. 헤더·푸터·스타일은 랜딩 것 |
+| `frontend/arena.html` `arena.js` `arena.css` `rules_ko.js` | 2부. 방 만들기/참가 → 규칙 → 라운드 화면(PLAN·TAKE·SOLVE) → 꺼짐/끝 화면. 헤더·푸터·스타일은 랜딩 것 |
 | `frontend/data/model_curves.json` | `tools/export_model_curves.py`가 만든 모델 곡선(빌드 시점 복사본) |
 | `frontend/config.js` | 백엔드 URL 한 곳(`window.WEB5_API`) |
+| `screenshots/` | 헤드리스 브라우저 확인 결과. `landing_*.png`(랜딩 데스크톱·모바일), `probe_*`, `arena_*` |
 | `tools/export_model_curves.py` | `~/squid5-runs/e51_v10_refill_20260930/{summary,metrics}.json` → `frontend/data/model_curves.json` |
 | `tests/` | pytest. 4인 방을 HTTP로 끝까지 진행(선물→가져오기 순서, 비례 배분, 상금 분할, 부담금, 꺼짐, 타임아웃, 빈 자리, 봇, 내보내기), 프로브 POST, 엔진 직접 실행과 라운드별 일치 |
 | `deploy/` | Render(API)·GitHub Pages(프런트) 배포 템플릿 |
@@ -35,7 +48,9 @@ python3 -m venv web/.venv && web/.venv/bin/pip install fastapi uvicorn httpx pyt
 python3 -m uvicorn web.server.app:app --port 8600
 ```
 
-백엔드가 `web/frontend`를 같은 origin(`http://localhost:8600/`)으로 서빙하므로 이것만으로도 두 페이지가 열린다.
+백엔드가 `web/frontend`를 같은 origin으로 서빙하므로 이것만으로 세 페이지가 다 열린다: `http://localhost:8600/`(랜딩),
+`/probe.html`, `/arena.html`. 랜딩은 Google Fonts와 Alpine.js를 CDN에서 읽는다(옛 배포와 같음; 오프라인이면 글꼴이
+시스템 글꼴로 대체되고 규칙 시연 카드가 비어 보인다).
 정적 서버를 따로 띄우려면(옛 패턴):
 
 ```bash

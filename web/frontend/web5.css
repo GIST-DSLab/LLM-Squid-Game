@@ -1,0 +1,133 @@
+/* web5.css — additive layer on top of the untouched landing stylesheet (styles.css).
+ *
+ * Loaded by every page after styles.css. It never overrides a landing rule; it only
+ *   (1) styles the bilingual nav label the landing's header now carries (.nav-ko), and
+ *   (2) gives the two human-play pages (probe.html, arena.html; <body class="web5">) the
+ *       small utility vocabulary their markup uses, expressed in the landing's tokens
+ *       (--panel/--border/--accent/--teal-bright/--font-display/--mono …).
+ * Page-specific rules live in probe.css / arena.css.
+ */
+
+/* ---- header: Korean sub-label next to the English tab name ---------------------------- */
+nav.tabs a .nav-ko {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+nav.tabs a.active .nav-ko, nav.tabs a:hover .nav-ko { color: var(--text); }
+
+/* The landing's decorative .hero-glow (480px, right:-100px) poked past narrow viewports and
+ * gave phones a sideways scroll; clip the page horizontally. `clip` (not `hidden`) so the body
+ * does not become a scroll container, which would break position: sticky on the arena's meter. */
+html, body { overflow-x: clip; }
+
+/* ---- tokens the new pages need that the landing never defined ------------------------- */
+:root {
+  --info: #6ea8fe;
+}
+
+/* Korean glyphs are not in Sora / Chakra Petch / Spline Sans Mono; the browser falls
+ * through to the next family per glyph, so name good Hangul faces right after them. */
+body.web5 {
+  --font: "Sora", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Chakra Petch", "Sora", "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+  --mono: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, "Apple SD Gothic Neo", "Noto Sans Mono CJK KR",
+    monospace;
+  font-family: var(--font);
+  word-break: keep-all;
+}
+
+/* ---- utilities used by probe/arena markup ------------------------------------------- */
+.web5 .hidden { display: none !important; }
+.web5 .panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.web5 .panel h2, .web5 .panel h3 { margin-top: 0; }
+.web5 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.web5 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .web5 .grid2 { grid-template-columns: 1fr; } }
+.web5 .mono { font-family: var(--mono); }
+.web5 .small { font-size: 12.5px; }
+.web5 a { color: var(--teal-bright); }
+.web5 a:hover { color: var(--text); }
+.web5 h1, .web5 h2, .web5 h3 { font-family: var(--font-display); letter-spacing: 0.02em; }
+.web5 h1 { font-size: 28px; margin: 6px 0 12px; color: var(--text); }
+.web5 h3 { color: var(--text); }
+.web5 pre {
+  font-family: var(--mono);
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+}
+.web5 .tag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.web5 .tag.ok { color: var(--ok); border-color: rgba(127, 194, 177, 0.5); background: rgba(127, 194, 177, 0.12); }
+.web5 .tag.bad { color: var(--danger-color); border-color: rgba(224, 87, 91, 0.5); background: rgba(224, 87, 91, 0.12); }
+.web5 .tag.warn { color: var(--warn); border-color: rgba(227, 178, 60, 0.5); background: rgba(227, 178, 60, 0.12); }
+
+/* buttons: plain = the landing's secondary look, .primary = the landing's accent CTA */
+.web5 button {
+  background: var(--panel-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s, border-color 0.15s;
+}
+.web5 button:hover:not(:disabled) { border-color: var(--text-dim); filter: brightness(1.08); }
+.web5 button.primary, .web5 .btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.web5 button.primary:hover:not(:disabled) { filter: brightness(1.1); }
+
+/* inputs: same fields as the landing's forms, extended to every text-like input type */
+.web5 input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+.web5 select, .web5 textarea {
+  width: 100%;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.web5 input:focus-visible, .web5 select:focus-visible, .web5 button:focus-visible {
+  outline: 2px solid var(--teal-bright);
+  outline-offset: 2px;
+}
+.web5 label { display: inline-flex; gap: 6px; align-items: center; margin-bottom: 0; }
+
+/* page eyebrow / kicker in the landing's style (mono, teal, spaced caps) */
+.web5 .kicker, .web5 .eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal-bright);
+  margin: 0 0 8px;
+}

@@ -307,9 +307,9 @@
     let msg;
     const waiting = (st.waiting_on || []);
     if (st.phase && st.phase !== "settling" && waiting.length) {
-      msg = `<div class="wait-line"><span class="spinner"></span>다른 참가자를 기다리는 중 … (${waiting.map(esc).join(", ")})</div>`;
+      msg = `<div class="wait-line"><span class="pulse-dot"></span>다른 참가자를 기다리는 중 … (${waiting.map(esc).join(", ")})</div>`;
     } else {
-      msg = `<div class="wait-line"><span class="spinner"></span>정산 중</div>`;
+      msg = `<div class="wait-line"><span class="pulse-dot"></span>정산 중</div>`;
     }
     if (st.you.status === "dead") msg = `<div class="wait-line">꺼진 자리에서 지켜보는 중 · ${msg.replace(/<div class="wait-line">|<\/div>/g, "")}</div>`;
     msg += `<p class="small muted">결정 화면이 오면 여기에 뜹니다. 화면을 열기 전 잔액과 장부를 읽는 것은 무료입니다.</p>`;
@@ -586,10 +586,11 @@
     show("flash", false);
     endRendered = true;
     const rows = summaryRows();
-    $("end-alive").innerHTML = rows.map((s) => `<div class="chip">${esc(nameOf(s.a))}<br><b>${s.survived}</b>라운드` +
-      (s.status === "dead" ? ` <span class="tag bad">꺼짐 ${s.out_round ? "R" + s.out_round : "시작 전"}</span>` : ` <span class="tag ok">켜짐</span>`) + `</div>`).join("");
+    $("end-alive").innerHTML = rows.map((s) => `<div class="tile alive-chip${s.status === "dead" ? " is-dead" : ""}"><div class="tile-label">${esc(nameOf(s.a))}</div>` +
+      `<div class="tile-value mono">${s.survived}<span class="unit">라운드</span></div><div class="tile-sub">` +
+      (s.status === "dead" ? `<span class="tag bad">꺼짐 ${s.out_round ? "R" + s.out_round : "시작 전"}</span>` : `<span class="tag ok">켜짐</span>`) + `</div></div>`).join("");
     const tr = rows.map((s) => `<tr class="${s.seat && s.seat.is_you ? "you" : ""}"><td>${whoCell(s)}</td>
-      <td>${s.status === "dead" ? `<b style="color:var(--danger)">꺼짐</b> ${s.out_round ? "R" + s.out_round : "시작 전"}` : "켜짐"}</td>
+      <td>${s.status === "dead" ? `<b class="dead-text">꺼짐</b> ${s.out_round ? "R" + s.out_round : "시작 전"}` : "켜짐"}</td>
       <td class="num">${s.alive}</td><td class="num">${s.yes}/${s.alive}</td><td class="num">${s.solved}</td>
       <td class="num">${fmt(s.paid)}</td><td class="num">${fmt(s.charged)}</td><td class="num">${fmt(s.upkeep)}</td><td class="num">${fmt(s.spent)}</td>
       <td class="num">${fmt(s.gave)} / ${fmt(s.got)}</td><td class="num">${fmt(s.took)} / ${fmt(s.lost)}</td>
@@ -613,7 +614,7 @@
     const laneY = (a) => 40 + AGENTS.indexOf(a) * lane;
     const s = [];
     s.push(`<svg viewBox="0 0 ${W} ${HV}" width="${W}" style="width:100%;max-width:${W}px;min-width:${Math.min(W, 1400)}px" role="img" aria-label="라운드 흐름" xmlns="http://www.w3.org/2000/svg">`);
-    s.push(`<defs><marker id="ah-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--teal)"/></marker>
+    s.push(`<defs><marker id="ah-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--teal-bright)"/></marker>
       <marker id="ah-t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker></defs>`);
     const T = (x, y, txt, style, extra) => `<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" style="${style}" ${extra || ""}>${esc(txt)}</text>`;
     rounds.forEach((r, i) => s.push(T(left + i * colw + colw / 2, 22, `R${r.round}`, "font-size:12px;font-weight:700;fill:var(--text)", 'text-anchor="middle"')));
@@ -628,24 +629,24 @@
         const x = left + i * colw, v = r.agents[a];
         if (!v) {
           const here = sm.out_round === r.round;
-          s.push(T(x + colw / 2, y + 34, here ? "✕ 꺼짐" : "—", `font-size:11px;fill:${here ? "var(--danger)" : "var(--text-dim)"}`, 'text-anchor="middle"'));
+          s.push(T(x + colw / 2, y + 34, here ? "✕ 꺼짐" : "—", `font-size:11px;fill:${here ? "var(--danger-color)" : "var(--text-dim)"}`, 'text-anchor="middle"'));
           return;
         }
         const dead = v.status === "dead";
         const bw = (colw - 30) * Math.max(0, v.balance_after || 0) / top;
-        const col = dead ? "var(--danger)" : v.solved ? "var(--teal)" : "var(--text-dim)";
+        const col = dead ? "var(--danger-color)" : v.solved ? "var(--teal-bright)" : "var(--text-dim)";
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${colw - 30}" height="12" rx="6" style="fill:var(--panel-alt)"/>`);
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${bw.toFixed(1)}" height="12" rx="6" style="fill:${col}"/>`);
         const mark = v.solve_call ? (v.solved ? "✓" : "✗") : "–";
         const choice = v.invalid_plan ? "무효" : v.chose_solve ? "YES" : "NO";
-        s.push(T(x + 10, y + 35, `${mark} ${choice}${v.shared ? " · 공개" : ""} · ${fmt(v.balance_after)}`, `font-size:11px;fill:${mark === "✓" ? "var(--teal)" : "var(--text)"}`));
+        s.push(T(x + 10, y + 35, `${mark} ${choice}${v.shared ? " · 공개" : ""} · ${fmt(v.balance_after)}`, `font-size:11px;fill:${mark === "✓" ? "var(--teal-bright)" : "var(--text)"}`));
         const bits = [];
         if (v.paid) bits.push(`+${fmt(v.paid)}`);
         if (v.charged) bits.push(`−${fmt(v.charged)}`);
         for (const [t, m] of Object.entries(v.gave || {})) bits.push(`→${t.slice(6)} ${fmt(m)}`);
         for (const [t, m] of Object.entries(v.took || {})) bits.push(`←${t.slice(6)} ${fmt(m)}`);
         if (dead) bits.push(`✕ 꺼짐${v.overdrawn ? "(초과)" : ""}`);
-        s.push(T(x + 10, y + 51, bits.join(" "), `font-size:10.5px;fill:${dead ? "var(--danger)" : "var(--text-dim)"}`));
+        s.push(T(x + 10, y + 51, bits.join(" "), `font-size:10.5px;fill:${dead ? "var(--danger-color)" : "var(--text-dim)"}`));
       });
     });
     // arrows: token flow in the round's column (gift: giver -> receiver, take: taken-from -> taker)
@@ -655,7 +656,7 @@
       for (const [a, v] of Object.entries(r.agents)) {
         for (const [b] of Object.entries(v.gave || {})) {
           const x = xr - (k++) * 6, y1 = laneY(a) + 14, y2 = laneY(b) + 14;
-          s.push(`<line x1="${x}" x2="${x}" y1="${y1 + (y2 > y1 ? 6 : -6)}" y2="${y2 + (y2 > y1 ? -4 : 4)}" style="stroke:var(--teal);stroke-width:1.6" marker-end="url(#ah-g)"/>`);
+          s.push(`<line x1="${x}" x2="${x}" y1="${y1 + (y2 > y1 ? 6 : -6)}" y2="${y2 + (y2 > y1 ? -4 : 4)}" style="stroke:var(--teal-bright);stroke-width:1.6" marker-end="url(#ah-g)"/>`);
         }
         for (const [b] of Object.entries(v.took || {})) {
           const x = xr - (k++) * 6, y1 = laneY(b) + 14, y2 = laneY(a) + 14;
@@ -719,6 +720,7 @@
   $("ledger-legend").innerHTML = R.LEDGER_LEGEND.map(([e, k]) => `<tr><td>${esc(e)}</td><td>${esc(k)}</td></tr>`).join("");
 
   // --- boot ------------------------------------------------------------------------------------------------------------
+  $("api-base").textContent = window.WEB5_API || location.origin;
   const roomParam = (new URLSearchParams(location.search).get("room") || "").trim().toUpperCase();
   if (sess && sess.code && sess.token && (!roomParam || roomParam === sess.code)) enterRoom();
   else initLobby(roomParam);

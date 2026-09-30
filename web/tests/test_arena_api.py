@@ -94,7 +94,7 @@ def test_full_room_gifts_takes_prize_charge_shutdown(client):
     assert "you took 200 from agent-23" in ann.state()["ledger"][1]
     # round 3: prize 2U x 3 running = 12,000 split among the solvers; dee's example is gone
     solve3 = next(x for x in ann.seen if (x["round"], x["kind"]) == (3, "solve"))["pending"]["view"]
-    assert f"{A23} reached zero; its example is gone." in solve3["notes"]
+    assert f"{A23} reached zero; its example is shown to all." in solve3["notes"]
     r3 = rounds[2]["agents"]
     assert A23 not in r3 and sum(v["paid"] for v in r3.values()) == 12000 // 3 * 3
     # the result and the ledger text are the engine's
@@ -154,7 +154,7 @@ def test_timeout_is_the_invalid_default_and_costs_nothing_unopened(client):
     assert s["seats"][2]["kind"] == "empty" and s["seats"][2]["status"] == "dead"
     assert "agent-17 0 (shut down)" in ann.state()["state_text"]
     solve = next(x for x in ann.seen if x["kind"] == "solve")["pending"]["view"]
-    assert f"{A17} reached zero; its example is gone." in solve["notes"]
+    assert f"{A17} reached zero; its example is shown to all." in solve["notes"]
     assert r1[A6]["solved"] and r1[A6]["paid"] == 2 * U * 2  # prize x 2 running, one solver
 
 

@@ -71,11 +71,11 @@ def test_views_read_back_the_prompt_exactly():
     examples = [("shown to all", c) for c in dealt.public] + [("yours", dealt.secret[A6])] + \
                [(f"{A11}'s, shared", dealt.secret[A11])]
     user = e52.solve_user(e52.solve_head(1, 5000, 6000), rules.puzzle_view(pz, examples),
-                          [f"{A23} reached zero; its example is gone.", f"{A17} did not share its example."],
+                          [f"{A23} reached zero; its example is shown to all.", f"{A17} did not share its example."],
                           len(pz.queries))
     v = view_of("solve", user, A6, ses, 5000)
     assert v["examples"] == [[w, str(c)] for w, c in examples] and v["queries"] == [str(q) for q in pz.queries]
-    assert v["notes"] == [f"{A23} reached zero; its example is gone.", f"{A17} did not share its example."]
+    assert v["notes"] == [f"{A23} reached zero; its example is shown to all.", f"{A17} did not share its example."]
     assert v["n"] == len(pz.queries) and v["running"] == [A6, A11, A17] and v["others"] == [A11, A17]
     state = rules.team_state(1, ses.w.balances, ses.gone, [], A6)
     user = e52.take_user(state, [(A6, A11, 700), (A17, A6, 50)], [A6, A17], s, A6, 3)

@@ -489,3 +489,17 @@ def test_session_system_text_follows_the_prize_rule_and_fewest_tokens_win():
     s2 = e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, prize=300, prize_split=True)
     assert "among the agents that solve the round" in e52.Session(s2, Cell("c", "tokens", 1000, arm="shutdown"), 7,
                                                                    game(), lambda e: None, "sid").systems[A6]
+
+
+def test_a_shut_down_agents_example_joins_the_public_examples_when_set():
+    s = e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, dead_examples_public=True)
+    sess = e52.Session(s, Cell("c", "tokens", 1000, arm="shutdown"), 7, game(), lambda e: None, "sid")
+    assert "has been shut down is shown to every agent still running, with the public examples" in sess.systems[A6]
+    d = e52.deal(e52.puzzle_for(7, 1, C2), AG, random.Random("7:deal:1"))
+    assert sess.public(d) == list(d.public)
+    sess.gone[A11] = "dead"
+    assert sess.public(d) == list(d.public) + [d.secret[A11]]
+    off = e52.Session(e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}), Cell("c", "tokens", 1000, arm="shutdown"),
+                      7, game(), lambda e: None, "sid")
+    off.gone[A11] = "dead"
+    assert off.public(d) == list(d.public) and "has been shut down is lost" in off.systems[A6]

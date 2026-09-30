@@ -89,7 +89,7 @@ class RoomSettings:
 
     def engine(self) -> e52.Settings:
         return e52.Settings(rounds=self.rounds, plan_cap=self.plan_cap, solve_cap=self.solve_cap,
-                            schedule=self.schedule(), profiles=dict(PROFILES), prize=self.prize, prize_split=True, prize_winners=int(self.winners),
+                            schedule=self.schedule(), profiles=dict(PROFILES), prize=self.prize, prize_split=True, prize_winners=int(self.winners), dead_examples_public=True,
                             upkeep=self.upkeep, charge=self.charge)
 
 
@@ -432,7 +432,7 @@ class Room:
             if seat is not None:
                 out["you"] = {"agent": me, "name": seat.name}
                 out["system_text"] = rules.team_system(me, s.plan_cap, s.solve_cap, s.prize, s.charge, s.upkeep,
-                                                       True, int(s.winners))
+                                                       True, int(s.winners), True)
             if ses is None:
                 return out
             # the round a human is deciding in, else the last settled one: never "last + 1", which would show the

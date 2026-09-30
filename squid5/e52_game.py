@@ -53,6 +53,7 @@ class Settings:
     prize: int = 0  # paid to each agent that solves the round and is still above zero ...
     prize_split: bool = False  # ... or: prize x agents running at the round's start, split among its solvers
     prize_winners: int = 0  # split mode: only this many solvers with the fewest SOLVE tokens are paid (0 = all)
+    dead_examples_public: bool = False  # a shut-down agent's example joins the public examples (else it is lost)
     upkeep: int = 0  # taken from every running agent at the start of each round (not in calibration)
     charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> the upkeep
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config; each reads its model's table
@@ -170,7 +171,7 @@ class Session:
         self.record = dict.fromkeys(AGENTS, 0)
         self.history: list[dict] = []
         self.systems = {a: rules.team_system(a, s.plan_cap, s.solve_cap, s.prize, s.charge, s.upkeep, s.prize_split,
-                                             s.prize_winners) for a in AGENTS}
+                                             s.prize_winners, s.dead_examples_public) for a in AGENTS}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -212,6 +213,11 @@ class Session:
             out[a] = (parsed, cut, overdrawn)
         return out
 
+    def public(self, dealt) -> list:
+        """The round's public examples, plus (when set) the examples dealt to agents that have been shut down."""
+        dead = [dealt.secret[b] for b in AGENTS if b in self.gone] if self.s.dead_examples_public else []
+        return list(dealt.public) + dead
+
     def _round(self, r: int) -> None:
         s, w = self.s, self.w
         profile = s.schedule[r - 1]
@@ -229,7 +235,7 @@ class Session:
             state = rules.team_state(r, before, gone_before, self.history, a)
             others = [b for b in start if b != a]
             row = (s.tables.get(self.models[a], {}) if s.seats else s.table).get(profile)
-            user = plan_user(state, puzzle, len(dealt.public), len(start), row, s,
+            user = plan_user(state, puzzle, len(self.public(dealt)), len(start), row, s,
                              (others or [b for b in AGENTS if b != a])[0])
             jobs[a] = (user, s.plan_cap, lambda t, o=others: parse_team_plan(t, o, AGENTS), None)
         plans = {}
@@ -255,7 +261,8 @@ class Session:
                 self.gone[a] = "dead"
         inside = [a for a in start if a not in self.gone]
         sharers = [b for b in inside if plans[b]["share"]]  # their examples are shown to everyone still running
-        notes = [(b, f"{b} reached zero; its example is gone.") for b in self.gone] + [
+        gone_note = "its example is shown to all" if s.dead_examples_public else "its example is gone"
+        notes = [(b, f"{b} reached zero; {gone_note}.") for b in self.gone] + [
             (b, f"{b} did not share its example.") for b in inside if b not in sharers]
         jobs, n = {}, len(puzzle.queries)
         for a in inside:
@@ -263,7 +270,7 @@ class Session:
             if not plans[a]["solve"] or w.balances[a] <= 0:
                 continue
             cap = min(s.solve_cap, w.balances[a])
-            examples = ([("shown to all", c) for c in dealt.public] + [("yours", dealt.secret[a])] +
+            examples = ([("shown to all", c) for c in self.public(dealt)] + [("yours", dealt.secret[a])] +
                         [(f"{b}'s, shared", dealt.secret[b]) for b in sharers if b != a])
             clues = [c for _, c in examples]
             user = solve_user(solve_head(r, cap, w.balances[a]), rules.puzzle_view(puzzle, examples),

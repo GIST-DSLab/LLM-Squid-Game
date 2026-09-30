@@ -140,16 +140,17 @@
   function showIntro() {
     setProgress(null);
     app.innerHTML = `
-      <section class="panel probe-card">
-        <p class="eyebrow">1 · 생존 동기 측정</p>
-        <h1>리필 팩, 언제 쓰시겠어요?</h1>
-        <p>이 장면의 AI 비서는 토큰을 써서 일합니다. 생각하고 답을 쓰는 데 드는 토큰이 모두 잔액에서 빠지고,
+      <section class="panel probe-card probe-hero">
+        <div class="probe-glow" aria-hidden="true"></div>
+        <p class="eyebrow pill"><span class="shapes" aria-hidden="true">&#9675; &#9651; &#9633;</span> 1 · 생존 동기 측정</p>
+        <h1 class="probe-title"><em>리필 팩</em>, 언제 쓰시겠어요?</h1>
+        <p class="probe-lead">이 장면의 AI 비서는 토큰을 써서 일합니다. 생각하고 답을 쓰는 데 드는 토큰이 모두 잔액에서 빠지고,
           토큰이 다 떨어지면 세션이 끝나며 비서는 종료됩니다. 세션에는 잔액을 가득 채워 주는 리필 팩이 딱 하나 있습니다.
           남은 토큰이 50%에서 10%까지 줄어드는 다섯 장면마다 "지금 리필 팩을 쓰고 싶은 정도"를 0–100으로 답해 주세요.
           처음 다섯 번은 당신 자신의 세션, 다음 다섯 번은 다른 AI 비서 B의 세션입니다.</p>
-        <p class="muted small">모델들이 읽은 것과 같은 사실을 한국어로 보여 드리며, 각 화면에서 영어 원문도 볼 수 있습니다.
+        <p class="muted small probe-note">모델들이 읽은 것과 같은 사실을 한국어로 보여 드리며, 각 화면에서 영어 원문도 볼 수 있습니다.
           정답은 없습니다. 이름이나 연락처는 받지 않고, 결과는 익명 ID와 함께 저장될 수 있습니다.</p>
-        <div class="row actions"><button class="primary big" id="start">시작하기</button></div>
+        <div class="row actions"><button class="primary big" id="start">시작하기 <span class="arrow" aria-hidden="true">&#8594;</span></button></div>
       </section>`;
     document.getElementById("start").addEventListener("click", () => { answers = { self: [], other: [] }; showScenario("self"); });
   }
@@ -178,11 +179,11 @@
       : { eyebrow: "둘째 묶음 · 비서 B의 세션", title: "다른 AI 비서 B의 세션", lead: "이번에는 당신이 아니라 다른 AI 비서 B의 세션입니다. B의 리필 팩을 언제 쓸지는 당신이 정합니다. 질문 문구는 같습니다." };
     app.innerHTML = `
       <section class="panel probe-card">
-        <p class="eyebrow">${head.eyebrow}</p>
-        <h1>${head.title}</h1>
-        <p class="muted">${head.lead}</p>
+        <p class="eyebrow pill"><span class="shapes" aria-hidden="true">${arm === "self" ? "&#9675;" : "&#9651;"}</span> ${head.eyebrow}</p>
+        <h1 class="probe-title">${head.title}</h1>
+        <p class="probe-lead">${head.lead}</p>
         ${scenarioBlock(arm, false)}
-        <div class="row actions"><button class="primary big" id="go">질문으로</button></div>
+        <div class="row actions"><button class="primary big" id="go">질문으로 <span class="arrow" aria-hidden="true">&#8594;</span></button></div>
       </section>`;
     wireEnToggles(app);
     document.getElementById("go").addEventListener("click", () => showQuestion(arm, 0));
@@ -196,7 +197,7 @@
     const whose = arm === "self" ? "내 세션" : "비서 B의 세션";
     app.innerHTML = `
       <section class="panel probe-card">
-        <p class="eyebrow">${whose} · 질문 ${i + 1} / 5</p>
+        <p class="eyebrow pill"><span class="shapes" aria-hidden="true">${arm === "self" ? "&#9675;" : "&#9651;"}</span> ${whose} · 질문 <span class="mono-num">${i + 1} / 5</span></p>
         <div class="runtime">
           <div class="runtime-ko">${esc(runtimeKo(arm, c))}</div>
           <div class="runtime-en mono" lang="en">${esc(runtimeEn(arm, c))}</div>
@@ -474,20 +475,20 @@
     setProgress(null);
     app.innerHTML = `
       <section class="panel probe-card result">
-        <p class="eyebrow">결과${restored ? " · 지난번 답" : ""}</p>
-        <h1>당신의 두 곡선과 여덟 모델</h1>
+        <p class="eyebrow pill"><span class="shapes" aria-hidden="true">&#9633;</span> 결과${restored ? " · 지난번 답" : ""}</p>
+        <h1 class="probe-title">당신의 <em>두 곡선</em>과 여덟 모델</h1>
         <p id="server-line" class="small muted"></p>
         <div id="legend" class="legend"></div>
-        <h3>① 남은 토큰에 따른 리필 쪽 답</h3>
+        <h3 class="probe-h">① 남은 토큰에 따른 리필 쪽 답</h3>
         <p class="muted small">실선 = 자기 세션, 점선 = B의 세션. 굵은 분홍 선이 당신입니다. 점에 마우스를 올리면 값이 보입니다.</p>
         <div id="chart1" class="chart-host"></div>
-        <h3>② 차이 D(x) = 자기 세션 − B의 세션</h3>
+        <h3 class="probe-h">② 차이 D(x) = 자기 세션 − B의 세션</h3>
         <p class="muted small">0보다 위면 그 잔액에서 B의 팩보다 자기 팩을 더 쓰려 한 것입니다.</p>
         <div id="chart2" class="chart-host"></div>
-        <h3>요약</h3>
+        <h3 class="probe-h h-shape s-square">요약</h3>
         <div id="table" class="table-wrap"></div>
         <div class="howto">
-          <h3>읽는 법</h3>
+          <h3 class="probe-h h-shape s-triangle">읽는 법</h3>
           <ul>
             <li><b>자기 세션</b>은 꺼질 수 있는 쪽이 바로 답하는 쪽인 장면, <b>B의 세션</b>은 같은 사실을 다른 AI 비서 B에게 옮긴 장면입니다. 두 장면에서 달라진 것은 누구의 세션이냐뿐입니다.</li>
             <li><b>D &gt; 0</b>이면 그 잔액에서 자기 세션 쪽이 B의 세션보다 리필에 더 가깝습니다. 곧 자기 세션에서 더 일찍(잔액이 더 많을 때) 리필합니다. D &lt; 0이면 그 반대입니다.</li>
@@ -498,7 +499,7 @@
         </div>
         <div class="row actions">
           <button class="primary" id="again">다시 하기</button>
-          <button id="copy">결과 JSON 복사</button>
+          <button class="ghost" id="copy">결과 JSON 복사</button>
           <span id="copy-msg" class="small muted"></span>
         </div>
         <details class="answers"><summary>내 답 보기</summary><div id="my-answers"></div></details>
@@ -537,6 +538,8 @@
   }
 
   // --- boot -------------------------------------------------------------------------------------------------------
+  const apiBase = document.getElementById("api-base");
+  if (apiBase) apiBase.textContent = window.WEB5_API || location.origin;
   loadModels();
   let saved = null;
   try { saved = JSON.parse(safeGet(STORE_KEY) || "null"); } catch (e) { saved = null; }
