@@ -69,7 +69,7 @@ def test_game_calibrate_and_report(tmp_path):
     assert len(e52.budget_path(table["m"], kw["schedule"])["solve"]) == 2
     (tmp_path / "cal.json").write_text(json.dumps(table))
     cfg = _cfg("game", [Cell("tight", "tokens", 3000, arm="shutdown"), Cell("loose", "tokens", 6000, arm="shutdown")],
-               e52.Settings(pay_pool=400, **kw))
+               e52.Settings(prize=400, **kw))
     cfg.calibration = str(tmp_path / "cal.json")
     e52.validate(cfg)
     run(cfg, e52, tmp_path / "g", game())

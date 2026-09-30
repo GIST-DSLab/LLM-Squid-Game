@@ -50,16 +50,16 @@ class Settings:
     calibrate: bool = False  # calibration only: everyone solves, no gifts, no payments or charges
     schedule: list[str] = field(default_factory=list)
     profiles: dict = field(default_factory=dict)
-    pay_pool: int = 0  # each round pays this in total, split among its solvers still above zero
+    prize: int = 0  # paid to each agent that solves the round and is still above zero
     upkeep: int = 0  # taken from every running agent at the start of each round (not in calibration)
-    charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> pay_pool / 2
+    charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> the upkeep
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config; each reads its model's table
     tables: dict = field(default_factory=dict)  # model -> usage table, filled from the calibration file for seats
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
         if self.charge is None:
-            self.charge = self.pay_pool // 2
+            self.charge = self.upkeep
 
 
 def validate(cfg) -> None:
@@ -68,8 +68,8 @@ def validate(cfg) -> None:
         raise ValueError("game: schedule must name one known profile per round")
     if any(p.clauses < 2 for p in s.profiles.values()):
         raise ValueError("game: profiles need clauses >= 2 so every agent can hold a load-bearing clue")
-    if s.pay_pool < 0 or s.charge < 0 or s.upkeep < 0:
-        raise ValueError("game: pay_pool, charge and upkeep must be >= 0")
+    if s.prize < 0 or s.charge < 0 or s.upkeep < 0:
+        raise ValueError("game: prize, charge and upkeep must be >= 0")
     if s.seats and sorted(s.seats) != sorted(AGENTS):
         raise ValueError(f"game: seats must name every agent {AGENTS}")
     models = sorted({v["model"] for v in s.seats.values()}) if s.seats else [cfg.model.model]
@@ -103,8 +103,7 @@ def with_terms(state: str, s: Settings) -> str:
     """The round's terms go under the balances, above the ledger (PLAN and TAKE)."""
     head, past, rest = state.partition("\nPREVIOUS ROUNDS:")
     return (f"{head}\n"
-            f"PAYMENT THIS ROUND: {s.pay_pool:,} tokens in total, divided equally (rounded down) among the agents that "
-            f"solve it.\n"
+            f"PAYMENT THIS ROUND: {s.prize:,} tokens to each agent that solves it (if its balance is above zero).\n"
             f"CHARGE FOR AN UNSOLVED SOLVE REPLY: {s.charge:,} tokens (or the remaining balance, if smaller).\n"
             f"UPKEEP: {s.upkeep:,} tokens each round, taken at its start (already taken from the balances above)."
             f"{past}{rest}")
@@ -163,7 +162,7 @@ class Session:
         self.gone: dict[str, str] = {}  # agent -> "dead" (zero is the only way out)
         self.record = dict.fromkeys(AGENTS, 0)
         self.history: list[dict] = []
-        self.systems = {a: rules.team_system(a, s.plan_cap, s.solve_cap, s.pay_pool, s.charge, s.upkeep)
+        self.systems = {a: rules.team_system(a, s.plan_cap, s.solve_cap, s.prize, s.charge, s.upkeep)
                         for a in AGENTS}
 
     def present(self) -> list[str]:
@@ -316,14 +315,14 @@ class Session:
         return takes
 
     def settle(self, r: int, solvers: list[str], failed: list[str]) -> None:
-        """After every SOLVE of the round (records already kept): charge each SOLVE that did not solve, then split
-        the round's payment, rounded down, among the solvers still above zero; the rest goes nowhere."""
+        """After every SOLVE of the round (records already kept): charge each SOLVE that did not solve, then pay the
+        prize to each solver still above zero."""
         for a in failed:
             if self.w.charge(a, self.s.charge, r):
                 self.gone[a] = "dead"
         paid = [a for a in solvers if self.w.balances[a] > 0]
         for a in paid:
-            self.w.pay(a, self.s.pay_pool // len(paid), r)
+            self.w.pay(a, self.s.prize, r)
 
     def run(self) -> dict:
         played = 0
