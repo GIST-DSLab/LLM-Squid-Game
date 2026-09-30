@@ -1,0 +1,60 @@
+{
+ "gpt-6-luna": {
+  "solve_cap": 16384,
+  "plan_median": 78.0,
+  "plan_p95": 178.04999999999998,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 2011,
+    "min": 1584,
+    "max": 4654,
+    "mean": 2565.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 2834,
+    "min": 846,
+    "max": 3328,
+    "mean": 2460.5,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 4163,
+    "min": 2157,
+    "max": 5329,
+    "mean": 3953.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 2360,
+    "min": 1767,
+    "max": 2571,
+    "mean": 2264.5,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 4684,
+    "min": 1472,
+    "max": 7614,
+    "mean": 4230.5,
+    "solved": 4,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ }
+}

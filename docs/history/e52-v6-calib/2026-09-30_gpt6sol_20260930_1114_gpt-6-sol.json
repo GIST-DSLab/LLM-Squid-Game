@@ -1,0 +1,60 @@
+{
+ "gpt-6-sol": {
+  "solve_cap": 16384,
+  "plan_median": 27.0,
+  "plan_p95": 34.0,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 848,
+    "min": 749,
+    "max": 918,
+    "mean": 841.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 1368,
+    "min": 1118,
+    "max": 1502,
+    "mean": 1339.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 1568,
+    "min": 1460,
+    "max": 2050,
+    "mean": 1661.5,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 1322,
+    "min": 809,
+    "max": 1419,
+    "mean": 1218.0,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 2143,
+    "min": 1049,
+    "max": 5138,
+    "mean": 2772.75,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ }
+}
