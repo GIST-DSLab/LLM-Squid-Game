@@ -60,13 +60,13 @@ class Wallet:
             self.balances[name] += amount
             self.log.append({"round": round_no, "kind": "pay", "agent": name, "amount": amount})
 
-    def charge(self, name: str, amount: int, round_no: int) -> bool:
-        """Take up to *amount*, never below zero; returns True when this charge killed *name*."""
+    def charge(self, name: str, amount: int, round_no: int, kind: str = "charge") -> bool:
+        """Take up to *amount*, never below zero (``kind`` "charge" or "upkeep"); True when this killed *name*."""
         amount = min(amount, max(0, self.balances[name]))
         if amount <= 0:
             return False
         self.balances[name] -= amount
-        self.log.append({"round": round_no, "kind": "charge", "agent": name, "amount": amount})
+        self.log.append({"round": round_no, "kind": kind, "agent": name, "amount": amount})
         if self.balances[name] <= 0 and self.alive(name):
             self.dead[name] = round_no
             return True

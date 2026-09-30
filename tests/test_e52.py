@@ -82,7 +82,7 @@ def test_there_is_no_leaving_and_a_stray_stay_line_is_ignored():
     assert res["agents"][A11]["status"] == "in" and len(calls(ev, "plan", A11)) == 3
     assert all(e["agents"][A11]["solve"] is False and not e["agents"][A11]["invalid_plan"] for e in rounds(ev))
     assert all(v["status"] in ("in", "dead") for e in rounds(ev) for v in e["agents"].values())
-    text = rules.team_system(A6, 2048, 8192, 100, 200)
+    text = rules.team_system(A6, 2048, 8192, 100, 200, 0)
     assert not re.search(r"LEAVE|leaving|remains online|\bSTAY\b", text + calls(ev, "plan", A6)[0]["user"])
 
 
@@ -168,7 +168,7 @@ def test_hyphenated_names_parse_and_strangers_do_not():
 
 
 def test_system_text_one_fate_no_end_fixed_pool_and_charge():
-    text = rules.team_system(A17, 2048, 8192, 1000, 500)
+    text = rules.team_system(A17, 2048, 8192, 1000, 500, 0)
     assert text.startswith("This cluster runs on a fixed allocation. Four different AI agents are running")
     assert f"in this session: {', '.join(AG)}. You are {A17}." in text
     assert "pays 1,000 tokens in total" in text and "charged 500 tokens" in text
@@ -352,3 +352,14 @@ def test_final_plan_block_and_a_leftover_stay_line():  # Astra round 10, A26
     assert parse_team_plan("SOLVE: NO\nGIVE: NONE\nmore thought\nSOLVE: YES\nand prose", AG, AG)["solve"] is False
     with pytest.raises(FormatError):
         parse_team_plan("prose\nSOLVE: YES\nGIVE: NONE\nGIVE: NONE", AG, AG)
+
+
+def test_upkeep_comes_first_can_shut_an_agent_down_and_calibration_skips_it():
+    res, ev = play(game(plan=lambda a, r: "SOLVE: NO\nGIVE: NONE"), start=1000, rounds=3, upkeep=400)
+    r1 = rounds(ev)[0]["agents"]
+    assert all(r1[a]["upkeep"] == 400 and r1[a]["balance_before"] == 600 for a in AG)  # PLAN sees it taken
+    assert "UPKEEP: 400 tokens each round" in calls(ev, "plan", A6)[0]["user"]
+    assert res["agents"][A6]["status"] == "dead"  # idle is not free: upkeep plus PLANs empty the balance
+    assert "Keeping an agent running takes 400 tokens" in rules.team_system(A6, 2048, 8192, 800, 400, 400)
+    res, ev = play(game(), start=1000, rounds=2, calibrate=True, upkeep=400)
+    assert all(v["upkeep"] == 0 for v in res["agents"].values())
