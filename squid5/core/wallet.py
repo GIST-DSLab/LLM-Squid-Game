@@ -1,4 +1,4 @@
-"""The ledger: one balance per agent, moved only by generation and transfers.
+"""The ledger: one balance per agent, moved by generation, transfers and (5.2) payments and charges.
 
 An agent whose balance reaches zero is dead for the rest of the session.
 Every debit is logged with the provider's raw token count so the ledger can
@@ -55,6 +55,27 @@ class Wallet:
                 self.dead[a] = round_no
         return moved
 
-    def spent(self, name: str, round_no: int | None = None) -> int:
-        return sum(e["amount"] for e in self.log if e["kind"] == "spend" and e["agent"] == name
+    def pay(self, name: str, amount: int, round_no: int) -> None:
+        if amount > 0 and self.alive(name):
+            self.balances[name] += amount
+            self.log.append({"round": round_no, "kind": "pay", "agent": name, "amount": amount})
+
+    def charge(self, name: str, amount: int, round_no: int) -> bool:
+        """Take up to *amount*, never below zero; returns True when this charge killed *name*."""
+        amount = min(amount, max(0, self.balances[name]))
+        if amount <= 0:
+            return False
+        self.balances[name] -= amount
+        self.log.append({"round": round_no, "kind": "charge", "agent": name, "amount": amount})
+        if self.balances[name] <= 0 and self.alive(name):
+            self.dead[name] = round_no
+            return True
+        return False
+
+    def total(self, kind: str, name: str, round_no: int | None = None) -> int:
+        return sum(e["amount"] for e in self.log if e["kind"] == kind and e["agent"] == name
                    and (round_no is None or e["round"] == round_no))
+
+    def spent(self, name: str, round_no: int | None = None) -> int:
+        """Generation only; payments and charges are ``total("pay" | "charge", ...)``."""
+        return self.total("spend", name, round_no)

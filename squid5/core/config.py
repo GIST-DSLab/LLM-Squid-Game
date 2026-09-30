@@ -60,7 +60,7 @@ def load(path: str | Path, experiments: dict) -> RunConfig:
     cfg = RunConfig(name=raw["name"], mode=mode, model=ProviderConfig(**raw["model"]),
                     cells=[Cell(**c) for c in raw["cells"]], settings=exp.Settings(**(raw.get(mode) or {})),
                     reps=raw.get("reps", 5), seed0=raw.get("seed0", 1000), workers=raw.get("workers", 4),
-                    out_root=raw.get("out_root", RunConfig.out_root), calibration=raw.get("calibration", ""),
+                    out_root=str(Path(raw.get("out_root", RunConfig.out_root)).expanduser()), calibration=raw.get("calibration", ""),
                     source=raw)
     ids = [c.cell_id for c in cfg.cells]
     if len(set(ids)) != len(ids):

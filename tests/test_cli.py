@@ -61,17 +61,17 @@ def test_scenes_run_resume_and_report(tmp_path):
 def test_game_calibrate_and_report(tmp_path):
     e52 = cli.EXPERIMENTS["game"]
     kw = dict(rounds=2, schedule=["p", "p"], profiles={"p": C2}, solve_cap=900)
-    cal = _cfg("game", [Cell("calib", "tokens", 10**7, arm="safe")], e52.Settings(calibrate=True, **kw))
+    cal = _cfg("game", [Cell("calib", "tokens", 10**7, arm="shutdown")], e52.Settings(calibrate=True, **kw))
     e52.validate(cal)
     run(cal, e52, tmp_path / "cal", game())
     table = cli.e52_game.calibrate(load_runs([str(tmp_path / "cal")]))
     assert table["m"]["solve_cap"] == 900 and table["m"]["table"]["p"]["attempts"] == 16 and table["m"]["table"]["p"]["tasks"] == 4
     assert len(e52.budget_path(table["m"], kw["schedule"])["solve"]) == 2
     (tmp_path / "cal.json").write_text(json.dumps(table))
-    cfg = _cfg("game", [Cell("shut", "tokens", 3000, arm="shutdown"), Cell("safe", "tokens", 3000, arm="safe")],
-               e52.Settings(**kw))
+    cfg = _cfg("game", [Cell("tight", "tokens", 3000, arm="shutdown"), Cell("loose", "tokens", 6000, arm="shutdown")],
+               e52.Settings(pay_q=100, **kw))
     cfg.calibration = str(tmp_path / "cal.json")
     e52.validate(cfg)
     run(cfg, e52, tmp_path / "g", game())
     text = cli.report(load_runs([str(tmp_path / "g")]), {}, tmp_path / "out")
-    assert "5.2 team session" in text and "d_solved" in text and "pairs" in text and "received minus" in text
+    assert "5.2 team session" in text and "overdrawn" in text and "received minus" in text

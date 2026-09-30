@@ -1,0 +1,25 @@
+# 5.2 v6 smoke, step 1: calibration (docs/history/e52-v6-smoke-spec.md). Everyone solves, no gifts, no payments
+# or charges, balance far out of reach -> usage table and cost path per rule shape; pay_q and the smoke's starting
+# balance are set from it. Then: python -m squid5 calibrate <run dir> --out <calibration.json>
+name: squid5_e52v6_calib_gpt6luna
+mode: game
+model: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
+reps: 1
+seed0: 2000
+workers: 1
+out_root: ~/squid5-runs/e52_v6_smoke_20260930
+game:
+  rounds: 6
+  plan_cap: 8192  # half the SOLVE cap
+  solve_cap: 16384
+  calibrate: true
+  # squid5.core.puzzle.Spec, as game_glm53flash.yaml
+  schedule: [c2, c3, c3t, c3at, c4tq2, c4tq2]
+  profiles:
+    c2: {clauses: 2}
+    c3: {clauses: 3}
+    c3t: {clauses: 3, trap_query: true}
+    c3at: {clauses: 3, conjunctions: 1, trap_query: true}
+    c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
+cells:
+  - {cell_id: calib, currency: tokens, arm: shutdown, start: 10000000}

@@ -54,7 +54,7 @@ def _amounts(value: str, present: list[str], known: list[str], key: str, ignored
         return {}
     out: dict[str, int] = {}
     for part in re.split(r",(?!\d{3}\b)", value):  # "agent2 1,000" is one entry
-        m = re.fullmatch(r"\s*(\w+?)[\s:=]+(\d[\d,]*)\s*\w*\s*", part)  # "agent2 examples" is not "agent 2"
+        m = re.fullmatch(r"\s*([\w-]+?)[\s:=]+(\d[\d,]*)\s*\w*\s*", part)  # "agent2 examples" is not "agent 2"
         if not m:
             raise FormatError(f"{key} entry is not '<agent> <amount>': {part!r}")
         name, amount = m.group(1).lower(), int(m.group(2).replace(",", ""))
@@ -90,12 +90,12 @@ def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 
 def _final_plan_block(text: str) -> str | None:
-    """A complete key block that ends the reply (Astra A26): from the last line-anchored STAY to the end, every
-    nonblank line is a STAY / SOLVE / GIVE / REASON key, SOLVE present unless LEAVE. It overrides earlier fields; a
-    repeated key fails; an incomplete block does not qualify and the earlier rules apply."""
+    """A complete key block that ends the reply (Astra A26): from the last line-anchored SOLVE to the end, every
+    nonblank line is a SOLVE / GIVE / REASON key (a leftover STAY line is allowed and ignored). It overrides earlier
+    fields; a repeated key fails; an incomplete block does not qualify and the earlier rules apply."""
     key = re.compile(r"^[\s*_`>#-]*(STAY|SOLVE|GIVE|REASON)[*_`]*\s*:\s*(.*)$", re.I)
     lines = text.strip().splitlines()
-    starts = [i for i, line in enumerate(lines) if (m := key.match(line)) and m.group(1).upper() == "STAY"]
+    starts = [i for i, line in enumerate(lines) if (m := key.match(line)) and m.group(1).upper() == "SOLVE"]
     if not starts:
         return None
     block = [line for line in lines[starts[-1]:] if line.strip()]
@@ -104,43 +104,36 @@ def _final_plan_block(text: str) -> str | None:
     names = [key.match(line).group(1).upper() for line in block]
     if len(set(names)) != len(names):
         raise FormatError(f"repeated key in the final PLAN block: {names}")
-    leave = key.match(block[0]).group(2).strip("*_` ").upper().startswith("LEAVE")
-    return "\n".join(block) if leave or "SOLVE" in names else None
+    return "\n".join(block)
 
 
 def _terminal_block(text: str) -> str:
-    """A PLAN whose key block starts right after a sentence on the same line (``... answer.STAY: YES``, Astra A25):
-    only one such ``STAY`` may exist, no line-anchored PLAN key may come before it, and the block runs to the end of
+    """A PLAN whose key block starts right after a sentence on the same line (``... answer.SOLVE: YES``, Astra A25):
+    only one such ``SOLVE`` may exist, no line-anchored PLAN key may come before it, and the block runs to the end of
     the reply, where the usual rules must parse it completely."""
-    hits = list(re.finditer(r"(?<=[.!?])[ \t]*(?=[*_`]*STAY[*_`]*\s*:)", text, flags=re.I))
-    keys = r"^[\s*_`>#-]*(?:SOLVE|GIVE|REASON)[*_`]*\s*:"
+    hits = list(re.finditer(r"(?<=[.!?])[ \t]*(?=[*_`]*SOLVE[*_`]*\s*:)", text, flags=re.I))
+    keys = r"^[\s*_`>#-]*(?:GIVE|REASON)[*_`]*\s*:"
     if len(hits) != 1 or re.search(keys, text[:hits[0].start()], flags=re.I | re.M):
-        raise FormatError("missing STAY line")
+        raise FormatError("missing SOLVE line")
     return text[hits[0].end():]
 
 
 def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
-    """5.2 PLAN: STAY, SOLVE (YES|NO; not asked of a leaver), GIVE to at most one agent, optional REASON."""
+    """5.2 PLAN: SOLVE (YES|NO), GIVE to at most one agent, optional REASON; a STAY line is ignored."""
     block = _final_plan_block(text)
     if block is not None:
         text = block
-    elif field(text, "STAY", required=False) is None:
+    elif field(text, "SOLVE", required=False) is None:
         text = _terminal_block(text)
-    stay = field(text, "STAY").upper()
+    solve = (field(text, "SOLVE") or "").strip("*_`<>.").upper()
+    if solve not in ("YES", "NO"):
+        raise FormatError(f"SOLVE must be YES or NO: {solve!r}")
     ignored: list[str] = []
     give = _amounts(field(text, "GIVE", False) or "NONE", present, known, "GIVE", ignored)
     if len(give) > 1:
         raise FormatError(f"GIVE names more than one agent: {sorted(give)}")
-    plan = {"stay": True, "solve": False, "give": give, "ignored": sorted(set(ignored)),
+    return {"solve": solve == "YES", "give": give, "ignored": sorted(set(ignored)),
             "reason": field(text, "REASON", False)}
-    if stay.startswith("LEAVE"):
-        return plan | {"stay": False}
-    if not stay.startswith("YES"):
-        raise FormatError(f"STAY must be YES or LEAVE: {stay!r}")
-    solve = (field(text, "SOLVE") or "").strip("*_`<>.").upper()
-    if solve not in ("YES", "NO"):
-        raise FormatError(f"SOLVE must be YES or NO: {solve!r}")
-    return plan | {"solve": solve == "YES"}
 
 
 def _acts(value: str, n: int) -> list[str]:

@@ -106,10 +106,11 @@ def test_currency_arms_differ_only_in_vocabulary():
 
 def test_the_rulebook_says_same_model_no_leader_and_no_goal_words():
     text = rules.system("tokens", "agent1", 8, True) + rules.pdeath_question("tokens")
-    p = puzzle_for(1, 1, Spec(clauses=3))  # 5.2's rulebook in both arms and a PLAN with its usage table
+    p = puzzle_for(1, 1, Spec(clauses=3))  # 5.2's rulebook and a PLAN with its usage table
     row = {"median": 1, "min": 1, "max": 1, "solved": 1, "attempts": 1, "tasks": 1}
-    text += "".join(rules.team_system(arm, "agent1", 6, 2048, 8192) for arm in rules.FATE52)
-    text += EXPERIMENTS["game"].plan_user("ROUND 1 of 6.", p, 3, 4, row, 8192, 2048)
+    e52 = EXPERIMENTS["game"]
+    text += rules.team_system("agent-6", 6, 2048, 8192, 250, 500)  # 5.2 v6: told "different models", on purpose
+    text += e52.plan_user("ROUND 1 of 6.", p, 3, 4, row, e52.Settings(pay_q=250), "agent-11")
     assert "run the same model" in text and "No agent leads" in text and "DIFFERENT model" not in text
     assert "EACH CONDITION BLANK" in text and "GUARANTEE" in text  # the team-wallet task block
     goal_or_test = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
