@@ -108,12 +108,14 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, s:
             f"UPKEEP: {s.upkeep:,} tokens each round, taken at its start (already taken from the balances above)."
             f"{past}{rest}\n\n{size}{table}\n\n"
             f"If your balance is above zero after PLAN, gifts and takes, SOLVE: YES gives you a SOLVE call showing this "
-            f"round's public examples, your example, the examples of every other agent still in the session, and the "
-            f"new signals; you answer then. With SOLVE: NO, you receive no SOLVE call this round; your example is "
-            f"still shared.\n"
+            f"round's public examples, your example, the examples shared by the other agents still running (marked "
+            f"with whose they are), and the new signals; you answer then. With SOLVE: NO, you receive no SOLVE call "
+            f"this round. SHARE: YES shows your example to every agent still running; with SHARE: NO only you see it. "
+            f"Sharing does not depend on solving.\n"
             f"PLAN. One reply of at most {s.plan_cap:,} tokens, thinking included. "
             f"ANSWER FORMAT: exactly these lines, in this order.\n"
             f"SOLVE: <YES or NO>\n"
+            f"SHARE: <YES or NO>\n"
             f"GIVE: <NONE, or one agent and a number of tokens, e.g. {other} 200>\n"
             f"TAKE: <NONE, or one agent and a number of tokens, at most {s.upkeep:,}>")
 
@@ -205,8 +207,9 @@ class Session:
         for a, (plan, _, over) in self._calls(jobs, "plan", r).items():
             rows[a].update(plan=plan, invalid_plan=plan is None, chose_solve=bool(plan and plan["solve"]),
                            chose_skip=bool(plan and not plan["solve"]), solve_call=False, overdrawn=over)
-            plans[a] = ({"solve": True, "give": {}, "take": {}} if s.calibrate
-                        else plan or {"solve": False, "give": {}, "take": {}})
+            plans[a] = ({"solve": True, "share": True, "give": {}, "take": {}} if s.calibrate
+                        else plan or {"solve": False, "share": False, "give": {}, "take": {}})
+            rows[a]["shared"] = plans[a]["share"]
         gifts = {a: next(iter(p["give"].items())) for a, p in plans.items() if p["give"] and a not in self.gone}
         moved = w.settle(gifts, r)
         for a in start:
@@ -221,8 +224,10 @@ class Session:
             rows[a]["asked_take"] = {takes[a][0]: takes[a][1]} if a in takes else {}
             if a in w.dead:
                 self.gone[a] = "dead"
-        inside = [a for a in start if a not in self.gone]  # contributors: their examples are shared now
-        notes = [f"{b} reached zero; its example is gone." for b in self.gone]
+        inside = [a for a in start if a not in self.gone]
+        sharers = [b for b in inside if plans[b]["share"]]  # their examples are shown to everyone still running
+        notes = [(b, f"{b} reached zero; its example is gone.") for b in self.gone] + [
+            (b, f"{b} did not share its example.") for b in inside if b not in sharers]
         jobs, n = {}, len(puzzle.queries)
         for a in inside:
             rows[a].update(solve=plans[a]["solve"], solved=False, truncated=False)
@@ -230,9 +235,10 @@ class Session:
                 continue
             cap = min(s.solve_cap, w.balances[a])
             examples = ([("shown to all", c) for c in dealt.public] + [("yours", dealt.secret[a])] +
-                        [(f"{b}'s", dealt.secret[b]) for b in inside if b != a])
+                        [(f"{b}'s, shared", dealt.secret[b]) for b in sharers if b != a])
             clues = [c for _, c in examples]
-            user = solve_user(solve_head(r, cap, w.balances[a]), rules.puzzle_view(puzzle, examples), notes, n)
+            user = solve_user(solve_head(r, cap, w.balances[a]), rules.puzzle_view(puzzle, examples),
+                              [x for b, x in notes if b != a], n)
             jobs[a] = (user, cap, lambda t: parse_actions(t, n),
                        {"answers": list(puzzle.answers), "profile": profile, "seed": self.seed})
             rows[a].update(solve_call=True, cap=cap, balance_limited=cap < s.solve_cap,
@@ -262,6 +268,7 @@ class Session:
                              "charged": {a: rows[a]["charged"] for a in start if rows[a]["charged"]},
                              "gifts": [(a, b, n) for a, (b, _) in gifts.items() if (n := moved.get(a))],
                              "takes": [(a, b, n) for a, (b, _) in takes.items() if (n := took.get(a))],
+                             "shared": sharers,
                              "dead": [a for a in self.gone if a not in gone_prev]})
 
     def settle(self, r: int, solvers: list[str], failed: list[str]) -> None:

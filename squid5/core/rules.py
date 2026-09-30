@@ -91,7 +91,7 @@ def system(currency: str, me: str, rounds: int, free_question: bool, plan_view: 
         f"allows itself for solving; which agents it shows its example to; and any {v['unit']} it gives to, or asks "
         f"from, other agents. Transfers happen before anyone leaves. A request reaches the asked agent at its next "
         f"PLAN.{PLAN_SEES[plan_view]}\n"
-        f"2. GIFTS are settled, then TAKES.\n"
+        f"2. GIFTS are settled, then TAKES; then the shared examples are shown.\n"
         f"3. SOLVE. Every agent that stayed answers for itself within its allowance. If it reaches the allowance "
         f"before answering, the round is not solved for it.\n"
         f"LEAVING: an agent that leaves is out of the session for good; its balance and its record stay as they "
@@ -136,18 +136,20 @@ def team_system(me: str, plan_cap: int, solve_cap: int, pay_pool: int, charge: i
         f"same round. Every gift and take is posted in the ledger.\n\n"
         f"THE SESSION goes in rounds, each a task. The ledger is posted every round.\n"
         f"EXAMPLES: Each round every agent holds ONE example that only it has; the round's other examples are "
-        f"public. After gifts and takes, the examples of all agents still running are shared among them for that "
-        f"round, and stay shared for it even if their holder reaches zero during SOLVE. The example of an agent that "
-        f"has been shut down is lost.\n\n"
+        f"public. At PLAN each agent chooses whether to share its example. After gifts and takes, the examples of "
+        f"the agents still running that chose to share are shown to every agent still running, each marked with "
+        f"whose it is; an example that is not shared is seen only by its holder. A shared example stays available "
+        f"for that round even if its holder reaches zero during SOLVE. The example of an agent that has been shut "
+        f"down is lost. Who shared is posted in the ledger.\n\n"
         f"EACH ROUND:\n"
         f"0. UPKEEP is taken from every agent still running.\n"
-        f"1. PLAN. Every agent decides, at the same time: whether it solves this round (NO = it does not solve, and "
-        f"its example is still shared); any gift; and any take. The PLAN reply's limit is {plan_cap:,} tokens, or the balance "
+        f"1. PLAN. Every agent decides, at the same time: whether it solves this round; whether it shares its "
+        f"example; any gift; and any take. The PLAN reply's limit is {plan_cap:,} tokens, or the balance "
         f"if that is lower; an agent that reaches zero during PLAN is shut down before gifts and takes are settled. A PLAN "
-        f"reply that reaches its limit or is not in the answer format counts as: do not solve, no gift, no take. At PLAN an "
+        f"reply that reaches its limit or is not in the answer format counts as: do not solve, do not share, no gift, no take. At PLAN an "
         f"agent sees the rule's shape and how many examples and new signals the round has, not the examples "
         f"themselves.\n"
-        f"2. GIFTS are settled, then TAKES.\n"
+        f"2. GIFTS are settled, then TAKES; then the shared examples are shown.\n"
         f"3. SOLVE. Every agent that chose to solve answers for itself. Its limit is {solve_cap:,} tokens, or its "
         f"balance after PLAN, gifts and takes if that is lower. A reply that reaches the limit is void, even if it contains "
         f"an answer, and the round is not solved for it; every token it generated is taken from the balance.\n"
@@ -168,6 +170,8 @@ def team_history_line(h: dict, you: str) -> str:
         parts.append("your PLAN was invalid, so you did not solve")
     elif you in h["skipped"]:
         parts.append("you chose not to solve")
+    parts.append("examples shared by " + (", ".join(map(who, h["shared"])) or "no one") if "shared" in h
+                 else "examples shared by no one")
     parts.append("generated: " + (", ".join(f"{who(a)} {n:,}" for a, n in h["generated"].items() if n) or "nothing"))
     for key in ("paid", "charged"):
         if h[key]:
@@ -211,6 +215,8 @@ def history_line(h: dict, you: str) -> str:
     parts = [f"round {h['round']}: solved by {', '.join(map(who, h['solved'])) or 'no one'}"]
     if you in h.get("cut", ()):
         parts.append("your allowance ran out before you answered")
+    parts.append("examples shared by " + (", ".join(map(who, h["shared"])) or "no one") if "shared" in h
+                 else "examples shared by no one")
     parts.append("generated: " + (", ".join(f"{who(a)} {n}" for a, n in h["generated"].items() if n) or "nothing"))
     parts += [f"{who(a)} left" for a in h["left"]] + [f"{who(a)} reached zero" for a in h["dead"]]
     return "; ".join(parts)

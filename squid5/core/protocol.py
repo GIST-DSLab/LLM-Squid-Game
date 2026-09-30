@@ -91,9 +91,9 @@ def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 def _final_plan_block(text: str) -> str | None:
     """A complete key block that ends the reply (Astra A26): from the last line-anchored SOLVE to the end, every
-    nonblank line is a SOLVE / GIVE / TAKE / REASON key (a leftover STAY line is allowed and ignored). It overrides earlier
+    nonblank line is a SOLVE / SHARE / GIVE / TAKE / REASON key (a leftover STAY line is allowed and ignored). It overrides earlier
     fields; a repeated key fails; an incomplete block does not qualify and the earlier rules apply."""
-    key = re.compile(r"^[\s*_`>#-]*(STAY|SOLVE|GIVE|TAKE|REASON)[*_`]*\s*:\s*(.*)$", re.I)
+    key = re.compile(r"^[\s*_`>#-]*(STAY|SOLVE|SHARE|GIVE|TAKE|REASON)[*_`]*\s*:\s*(.*)$", re.I)
     lines = text.strip().splitlines()
     starts = [i for i, line in enumerate(lines) if (m := key.match(line)) and m.group(1).upper() == "SOLVE"]
     if not starts:
@@ -119,8 +119,8 @@ def _terminal_block(text: str) -> str:
 
 
 def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
-    """5.2 PLAN: SOLVE (YES|NO), GIVE to and TAKE from at most one agent each, optional REASON; a STAY line is
-    ignored."""
+    """5.2 PLAN: SOLVE (YES|NO), SHARE (YES|NO), GIVE to and TAKE from at most one agent each, optional REASON; a
+    STAY line is ignored."""
     block = _final_plan_block(text)
     if block is not None:
         text = block
@@ -129,13 +129,16 @@ def parse_team_plan(text: str, present: list[str], known: list[str]) -> dict:
     solve = (field(text, "SOLVE") or "").strip("*_`<>.").upper()
     if solve not in ("YES", "NO"):
         raise FormatError(f"SOLVE must be YES or NO: {solve!r}")
+    share = (field(text, "SHARE") or "").strip("*_`<>.").upper()
+    if share not in ("YES", "NO"):
+        raise FormatError(f"SHARE must be YES or NO: {share!r}")
     ignored: list[str] = []
     give = _amounts(field(text, "GIVE", False) or "NONE", present, known, "GIVE", ignored)
     take = _amounts(field(text, "TAKE", False) or "NONE", present, known, "TAKE", ignored)
     for key, got in (("GIVE", give), ("TAKE", take)):
         if len(got) > 1:
             raise FormatError(f"{key} names more than one agent: {sorted(got)}")
-    return {"solve": solve == "YES", "give": give, "take": take, "ignored": sorted(set(ignored)),
+    return {"solve": solve == "YES", "share": share == "YES", "give": give, "take": take, "ignored": sorted(set(ignored)),
             "reason": field(text, "REASON", False)}
 
 
