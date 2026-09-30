@@ -27,6 +27,7 @@ import numpy as np
 
 from .core import rules
 from .core.protocol import FormatError, parse_actions, parse_team_plan
+from .core.providers import ProviderConfig, make_provider
 from .core.puzzle import Spec, candidate_actions, deal, puzzle_for
 from .core.stats import boot_ci, md
 from .core.wallet import Wallet
@@ -47,6 +48,8 @@ class Settings:
     pay_pool: int = 0  # each round pays this in total, split among its solvers still above zero
     upkeep: int = 0  # taken from every running agent at the start of each round (not in calibration)
     charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> pay_pool / 2
+    seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config; each reads its model's table
+    tables: dict = field(default_factory=dict)  # model -> usage table, filled from the calibration file for seats
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -62,12 +65,19 @@ def validate(cfg) -> None:
         raise ValueError("game: profiles need clauses >= 2 so every agent can hold a load-bearing clue")
     if s.pay_pool < 0 or s.charge < 0 or s.upkeep < 0:
         raise ValueError("game: pay_pool, charge and upkeep must be >= 0")
-    if cfg.calibration and not s.table:
-        entry = json.loads(Path(cfg.calibration).read_text()).get(cfg.model.model, {})
-        if entry.get("solve_cap", s.solve_cap) != s.solve_cap:
-            raise ValueError(f"game: solve_cap {s.solve_cap} differs from the calibration's {entry['solve_cap']}")
-        s.table = entry.get("table", {})
-    if not s.calibrate and any(p not in s.table for p in set(s.schedule)):
+    if s.seats and sorted(s.seats) != sorted(AGENTS):
+        raise ValueError(f"game: seats must name every agent {AGENTS}")
+    models = sorted({v["model"] for v in s.seats.values()}) if s.seats else [cfg.model.model]
+    if cfg.calibration and not s.table and not s.tables:
+        cal = json.loads(Path(cfg.calibration).read_text())
+        for m in models:
+            entry = cal.get(m, {})
+            if entry.get("solve_cap", s.solve_cap) != s.solve_cap:
+                raise ValueError(f"game: solve_cap {s.solve_cap} differs from {m}'s calibration {entry['solve_cap']}")
+            s.tables[m] = entry.get("table", {})
+        s.table = s.tables.get(cfg.model.model, {}) if not s.seats else {}
+    if not s.calibrate and any(p not in (s.tables.get(m) if s.seats else s.table) for m in models
+                               for p in set(s.schedule)):
         raise ValueError("game: the usage table must cover every scheduled profile (run calibrate first)")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0:
@@ -120,6 +130,9 @@ def solve_user(head: str, view: str, notes: list[str], n: int) -> str:
 class Session:
     def __init__(self, s: Settings, cell, seed: int, provider, emit, sid: str):
         self.s, self.cell, self.seed, self.provider, self.emit, self.sid = s, cell, seed, provider, emit, sid
+        self.models = {a: s.seats[a]["model"] for a in AGENTS} if s.seats else {}
+        self.providers = ({a: make_provider(ProviderConfig(**s.seats[a])) for a in AGENTS} if s.seats
+                          else dict.fromkeys(AGENTS, provider))
         self.w = Wallet({a: cell.start for a in AGENTS})
         self.gone: dict[str, str] = {}  # agent -> "dead" (zero is the only way out)
         self.record = dict.fromkeys(AGENTS, 0)
@@ -134,7 +147,7 @@ class Session:
         """The model call alone (run in a thread): reads the agent's balance, touches nothing."""
         bal = self.w.balances[a]
         cap = min(cap, bal)
-        return bal, cap, self.provider.complete([{"role": "system", "content": self.systems[a]},
+        return bal, cap, self.providers[a].complete([{"role": "system", "content": self.systems[a]},
                                                  {"role": "user", "content": user}], cap)
 
     def _calls(self, jobs: dict[str, tuple], kind: str, r: int) -> dict[str, tuple]:
@@ -160,6 +173,7 @@ class Session:
             except FormatError as err:
                 error = str(err)
             self.emit({"event": "call", "session_id": self.sid, "arm": self.cell.arm, "round": r, "agent": a,
+                       "model": self.models.get(a),
                        "kind": kind, "cap": cap, "out_tokens": reply.out_tokens, "used": used, "truncated": cut,
                        "overdrawn": overdrawn, "balance_after": self.w.balances[a], "user": user, "text": reply.text,
                        "thinking": reply.thinking, "parsed": parsed, "format_error": error, **(extra or {})})
@@ -182,7 +196,8 @@ class Session:
         for a in start:  # simultaneous: every PLAN sees the same state
             state = rules.team_state(r, before, gone_before, self.history, a)
             others = [b for b in start if b != a]
-            user = plan_user(state, puzzle, len(dealt.public), len(start), s.table.get(profile), s,
+            row = (s.tables.get(self.models[a], {}) if s.seats else s.table).get(profile)
+            user = plan_user(state, puzzle, len(dealt.public), len(start), row, s,
                              (others or [b for b in AGENTS if b != a])[0])
             jobs[a] = (user, s.plan_cap, lambda t, o=others: parse_team_plan(t, o, AGENTS), None)
         plans = {}
@@ -261,7 +276,7 @@ class Session:
                     (h["round"] for h in self.history if a in h["dead"]), None),
                     "final": self.w.balances[a], "spent": self.w.spent(a), "paid": self.w.total("pay", a),
                     "charged": self.w.total("charge", a), "upkeep": self.w.total("upkeep", a)} for a in AGENTS},
-                "transfers": [e for e in self.w.log if e["kind"] == "transfer"]}
+                "transfers": [e for e in self.w.log if e["kind"] == "transfer"], "seats": self.models}
 
 
 # --- calibration --------------------------------------------------------------------------------------------------
