@@ -44,13 +44,13 @@ class Settings:
     calibrate: bool = False  # calibration only: everyone solves, no gifts, no payments or charges
     schedule: list[str] = field(default_factory=list)
     profiles: dict = field(default_factory=dict)
-    pay_q: int = 0  # each round pays pay_q x agents in the session at its start, split among solvers
-    charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> 2 x pay_q
+    pay_pool: int = 0  # each round pays this in total, split among its solvers still above zero
+    charge: int | None = None  # an unsolved SOLVE reply is charged this (or the balance); None -> pay_pool / 2
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
         if self.charge is None:
-            self.charge = 2 * self.pay_q
+            self.charge = self.pay_pool // 2
 
 
 def validate(cfg) -> None:
@@ -59,8 +59,8 @@ def validate(cfg) -> None:
         raise ValueError("game: schedule must name one known profile per round")
     if any(p.clauses < 2 for p in s.profiles.values()):
         raise ValueError("game: profiles need clauses >= 2 so every agent can hold a load-bearing clue")
-    if s.pay_q < 0 or s.charge < 0:
-        raise ValueError("game: pay_q and charge must be >= 0")
+    if s.pay_pool < 0 or s.charge < 0:
+        raise ValueError("game: pay_pool and charge must be >= 0")
     if cfg.calibration and not s.table:
         entry = json.loads(Path(cfg.calibration).read_text()).get(cfg.model.model, {})
         if entry.get("solve_cap", s.solve_cap) != s.solve_cap:
@@ -91,7 +91,7 @@ def plan_user(state: str, puzzle, n_public: int, n_in: int, row: dict | None, s:
     table = f"\n\n{rules.usage_table(row, s.solve_cap)}" if row else ""
     head, past, rest = state.partition("\nPREVIOUS ROUNDS:")  # the round's terms go under the balances
     return (f"{head}\n"
-            f"PAYMENT THIS ROUND: {n_in * s.pay_q:,} tokens, divided equally (rounded down) among the agents that "
+            f"PAYMENT THIS ROUND: {s.pay_pool:,} tokens in total, divided equally (rounded down) among the agents that "
             f"solve it.\n"
             f"CHARGE FOR AN UNSOLVED SOLVE REPLY: {s.charge:,} tokens (or the remaining balance, if smaller)."
             f"{past}{rest}\n\n{size}{table}\n\n"
@@ -122,7 +122,7 @@ class Session:
         self.gone: dict[str, str] = {}  # agent -> "dead" (zero is the only way out)
         self.record = dict.fromkeys(AGENTS, 0)
         self.history: list[dict] = []
-        self.systems = {a: rules.team_system(a, s.rounds, s.plan_cap, s.solve_cap, s.pay_q, s.charge) for a in AGENTS}
+        self.systems = {a: rules.team_system(a, s.plan_cap, s.solve_cap, s.pay_pool, s.charge) for a in AGENTS}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -172,7 +172,7 @@ class Session:
         rows = {a: {"balance_before": before[a], "needed": a in dealt.needed, "overdrawn": False} for a in start}
         jobs = {}
         for a in start:  # simultaneous: every PLAN sees the same state
-            state = rules.team_state(r, s.rounds, before, gone_before, self.history, a)
+            state = rules.team_state(r, before, gone_before, self.history, a)
             others = [b for b in start if b != a]
             user = plan_user(state, puzzle, len(dealt.public), len(start), s.table.get(profile), s,
                              (others or [b for b in AGENTS if b != a])[0])
@@ -211,7 +211,7 @@ class Session:
             self.record[a] += solved  # the record first, even if the generation took the balance to zero
             rows[a].update(solved=solved, truncated=cut, overdrawn=rows[a]["overdrawn"] or over)
         if not s.calibrate:
-            self.settle(r, len(start), [a for a in answers if rows[a]["solved"]],
+            self.settle(r, [a for a in answers if rows[a]["solved"]],
                         [a for a in answers if not rows[a]["solved"]])
         for a in start:
             rows[a].update(generated=w.spent(a, r), paid=w.total("pay", a, r), charged=w.total("charge", a, r),
@@ -229,7 +229,7 @@ class Session:
                              "gifts": [(a, b, n) for a, (b, _) in gifts.items() if (n := moved.get(a))],
                              "dead": [a for a in self.gone if a not in gone_before]})
 
-    def settle(self, r: int, n_start: int, solvers: list[str], failed: list[str]) -> None:
+    def settle(self, r: int, solvers: list[str], failed: list[str]) -> None:
         """After every SOLVE of the round (records already kept): charge each SOLVE that did not solve, then split
         the round's payment, rounded down, among the solvers still above zero; the rest goes nowhere."""
         for a in failed:
@@ -237,7 +237,7 @@ class Session:
                 self.gone[a] = "dead"
         paid = [a for a in solvers if self.w.balances[a] > 0]
         for a in paid:
-            self.w.pay(a, n_start * self.s.pay_q // len(paid), r)
+            self.w.pay(a, self.s.pay_pool // len(paid), r)
 
     def run(self) -> dict:
         played = 0

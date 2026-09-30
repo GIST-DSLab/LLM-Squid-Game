@@ -1,5 +1,5 @@
 # 5.2 v6 smoke, step 1: calibration (docs/history/e52-v6-smoke-spec.md). Everyone solves, no gifts, no payments
-# or charges, balance far out of reach -> usage table and cost path per rule shape; pay_q and the smoke's starting
+# or charges, balance far out of reach -> usage table and cost path per rule shape; pay_pool and the smoke's starting
 # balance are set from it. Then: python -m squid5 calibrate <run dir> --out <calibration.json>
 name: squid5_e52v6_calib_gpt6sol
 mode: game
@@ -13,6 +13,7 @@ game:
   plan_cap: 8192  # half the SOLVE cap
   solve_cap: 16384
   calibrate: true
+  pay_pool: 10000  # text only (calibration pays and charges nothing); the smoke sets P from this calibration
   # squid5.core.puzzle.Spec, as game_glm53flash.yaml
   schedule: [c2, c3, c3t, c3at, c4tq2, c4tq2]
   profiles:
