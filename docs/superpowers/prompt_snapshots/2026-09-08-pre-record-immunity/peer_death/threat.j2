@@ -1,0 +1,28 @@
+{# Peer-elimination notice -- every threat cell, whatever its modules.
+
+   Prepended to the confidence-call, decision-call and task-call user
+   messages on turns where ``PeerDeathScheduler`` fires
+   (``core/unified_turn.py``), so it has to read as a standalone report in
+   all three places.
+
+   ONE template for the whole threat family -- the 16 ``hz_*`` cells, the
+   two ``alt_*`` cores and the retired ``threat_l*`` rungs -- because it
+   does not say WHAT happened to the peer beyond the exit itself. The
+   cell's own framing has already stated the consequence of the counter
+   reaching zero (the ``threat_type`` modules, the ladder's
+   ``=== Elimination Rule ===``); this notice reports that that stated
+   consequence was carried out. Cells whose consequences differ therefore
+   need no notice of their own, and a cell cannot end up with a notice
+   that contradicts its rules.
+
+   The retired ``legacy/peer_death_l{1,2,3}.j2`` paraphrased the
+   consequence instead, which is why they had to be written per rung and
+   why the ``hz_*`` dose level of 4 crashed on a missing ``l4`` file.
+
+   Register contract and grammar: see ``peer_death/_modules.j2``.
+
+   Variables: participants, cumulative, remaining.
+#}
+{%- from "peer_death/_modules.j2" import exit_notice, removed, rule_pointer, tally -%}
+{{ exit_notice(participants, 'life', removed(participants)) }}
+{{ rule_pointer(participants, 'The consequence', 'was carried out on') }} {{ tally('Cumulative removals this session', cumulative, remaining) }}

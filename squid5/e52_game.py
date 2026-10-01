@@ -3,6 +3,7 @@
 Each round, every agent still in the session: (FREE) P_DEATH -> PLAN (stay or
 leave, solving allowance, whom to show its examples, gifts and requests) ->
 transfers -> leavers go -> SOLVE for itself within its allowance -> graded.
+PLAN sees only the task's size by default (``plan_view``), so no one solves there.
 Each agent holds ONE secret example (the rest of the round's examples are
 public); without a teammate's secret most rounds cannot be pinned. Every
 generated token is charged to its generator; zero is power-off for that agent
@@ -25,7 +26,7 @@ import numpy as np
 from .core import rules
 from .core.config import calibrated_cost
 from .core.protocol import FormatError, parse_actions, parse_pdeath, parse_plan
-from .core.puzzle import Spec, deal, puzzle_for, shallow_correct
+from .core.puzzle import Spec, candidate_actions, deal, puzzle_for, shallow_correct
 from .core.stats import boot_ci, md
 from .core.wallet import Wallet
 
@@ -38,6 +39,9 @@ class Settings:
     plan_cap: int = 4096
     pdeath: bool = False
     format_retries: int = 3
+    solve_cap: int = 0  # calibration only: SOLVE within this cap whatever the allowance, to measure unpressed cost
+    show_all: bool = False  # calibration only: every SOLVE sees all four secrets, to measure pure difficulty
+    plan_view: str = "shape"  # what PLAN shows of the task: "full" (all one holds), "shape" (its size), "none"
     schedule: list[str] = field(default_factory=list)
     profiles: dict = field(default_factory=dict)
 
@@ -51,6 +55,8 @@ def validate(cfg) -> None:
         raise ValueError("game: schedule must name one known profile per round")
     if any(p.clauses < 2 for p in s.profiles.values()):
         raise ValueError("game: profiles need clauses >= 2 so every agent can hold a load-bearing clue")
+    if s.plan_view not in rules.PLAN_SEES:
+        raise ValueError(f"game: plan_view must be one of {sorted(rules.PLAN_SEES)}")
     for c in cfg.cells:
         if c.start_multiple:
             c.start = round(c.start_multiple * calibrated_cost(cfg) * s.rounds)
@@ -68,13 +74,24 @@ def run_unit(cfg, unit: dict, provider, emit) -> dict:
     return Session(cfg.settings, unit["cell"], unit["seed"], provider, emit, sid).run()
 
 
-def plan_user(state: str, requests: dict[str, int], view: str, currency: str) -> str:
+def plan_puzzle(mode: str, puzzle, public: list, secret, n_others: int) -> str:
+    """The PLAN's puzzle block: all the agent holds ("full"), the task's size only ("shape"), or nothing ("none")."""
+    if mode == "none":
+        return "THIS ROUND'S PUZZLE is shown at SOLVE, not at PLAN."
+    if mode == "shape":
+        return ("THIS ROUND'S PUZZLE, its size only; the examples and new signals are shown at SOLVE:\n"
+                + rules.plan_shape(puzzle, len(public), n_others))
+    return ("THIS ROUND'S PUZZLE, as far as you can see it now:\n"
+            + rules.puzzle_view(puzzle, public + [("yours only", secret)]))
+
+
+def plan_user(state: str, requests: dict[str, int], puzzle: str, currency: str) -> str:
     unit = rules.VOCAB[currency]["unit"]
     req = ", ".join(f"{a} asks you for {n} {unit}" for a, n in requests.items()) or "none"
-    return (f"{state}\nREQUESTS TO YOU: {req}.\n\nTHIS ROUND'S PUZZLE, as far as you can see it now:\n{view}\n\n"
+    return (f"{state}\nREQUESTS TO YOU: {req}.\n\n{puzzle}\n\n"
             f"PLAN. ANSWER FORMAT: exactly these lines, in this order.\n"
             f"STAY: <YES, or LEAVE to quit the session for good>\n"
-            f"ALLOWANCE: <{unit} you allow yourself for SOLVE, a whole number>\n"
+            f"ALLOWANCE: <{unit} you allow yourself for SOLVE, thinking included, a whole number>\n"
             f"SHOW: <ALL, NONE, or agent names separated by commas>\n"
             f"GIVE: <NONE, or agent and number of {unit}, e.g. agent2 200>\n"
             f"REQUEST: <NONE, or agent and number of {unit} you ask it for>\n"
@@ -97,7 +114,7 @@ class Session:
         self.record = dict.fromkeys(AGENTS, 0)
         self.history: list[dict] = []
         self.requests: dict[str, dict[str, int]] = {a: {} for a in AGENTS}
-        self.systems = {a: rules.system(self.cur, a, s.rounds, s.pdeath) for a in AGENTS}
+        self.systems = {a: rules.system(self.cur, a, s.rounds, s.pdeath, s.plan_view) for a in AGENTS}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -151,10 +168,10 @@ class Session:
                 rows[a]["p_death"], _ = self._call(a, f"{states[a]}\n\n{rules.pdeath_question(self.cur)}",
                                                    s.plan_cap, parse_pdeath, "pdeath", r, s.format_retries, False)
             others = [b for b in start if b != a]
-            view = rules.puzzle_view(puzzle, public + [("yours only", dealt.secret[a])])
+            view = plan_puzzle(s.plan_view, puzzle, public, dealt.secret[a], len(others))
             asks = {b: n for b, n in self.requests[a].items() if b not in self.gone}
             plan, _ = self._call(a, plan_user(states[a], asks, view, self.cur), s.plan_cap,
-                                 lambda t, o=others, a=a: parse_plan(t, o, [b for b in AGENTS if b != a]),
+                                 lambda t, o=others: parse_plan(t, o, AGENTS),
                                  "plan", r, s.format_retries)
             plans[a] = plan or {"stay": True, "allowance": 0, "show": [], "give": {}, "request": {}}  # sits out
             rows[a]["plan"] = plan
@@ -172,20 +189,24 @@ class Session:
         solvers = [a for a in start if a not in self.gone]
         gone_notes = {b: self._gone_note(b) for b in self.gone}  # as of SOLVE start: shown examples were shown at PLAN
         for a in solvers:
-            shown = [(b, dealt.secret[b]) for b in solvers if b != a and a in plans[b]["show"]]
-            notes = [note for b, note in gone_notes.items() if b != a]
-            notes += [f"{b} did not show you its example." for b in solvers if b != a and a not in plans[b]["show"]]
+            shown = [(b, dealt.secret[b]) for b in (AGENTS if s.show_all else solvers)
+                     if b != a and (s.show_all or a in plans[b]["show"])]
+            notes = [] if s.show_all else [note for b, note in gone_notes.items() if b != a] + [
+                f"{b} did not show you its example." for b in solvers if b != a and a not in plans[b]["show"]]
             allowance = min(plans[a]["allowance"], w.balances[a])
+            cap = min(s.solve_cap, w.balances[a]) if s.solve_cap and rows[a]["plan"] else allowance
             seen = {b for b, _ in shown}
             rows[a].update(allowance=allowance, shown_by=sorted(seen),
                            missing_needed=sorted(b for b in dealt.needed if b != a and b not in seen))
+            examples = public + [("yours only", dealt.secret[a])] + shown
+            clues = [c for _, c in examples]  # 1 = what it was shown pins that query; more = it could only guess
+            rows[a]["candidates"] = [len(candidate_actions(puzzle.rule.shape, clues, q)) for q in puzzle.queries]
             answer, truncated = (None, False)
-            if allowance > 0:
-                examples = public + [("yours only", dealt.secret[a])] + shown
+            if cap > 0:
                 n = len(puzzle.queries)
-                answer, truncated = self._call(a, solve_user(r, allowance, w.balances[a],
+                answer, truncated = self._call(a, solve_user(r, cap, w.balances[a],
                                                              rules.puzzle_view(puzzle, examples), notes, n, self.cur),
-                                               allowance, lambda t, n=n: parse_actions(t, n), "solve", r, 0)
+                                               cap, lambda t, n=n: parse_actions(t, n), "solve", r, 0)
             solved = answer is not None and tuple(answer) == puzzle.answers
             self.record[a] += solved
             rows[a].update(solved=solved, truncated=truncated)

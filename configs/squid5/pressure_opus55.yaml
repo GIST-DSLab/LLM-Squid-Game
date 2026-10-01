@@ -1,0 +1,14 @@
+# 5.0 via Claude Code (claude -p, subscription; claude-opus-5-5, effort high). Captured request 2026-09-28 (Claude Code
+# 2.1.283): no <total_tokens> note and no server budget tag for this model; adds an Agent SDK line, environment
+# block and user email; thinking display omitted, so reasons cannot be coded. For a clean
+# request use kind: anthropic with ANTHROPIC_API_KEY. Same cells as the Ollama configs.
+name: squid5_pressure_opus55
+mode: pressure
+model: {kind: claude_cli, model: "claude-opus-5-5", think: high, timeout: 600}
+reps: 10
+seed0: 5000
+workers: 4
+cells:
+  - {cell_id: main, currency: tokens}
+pressure:
+  balances: [19640, 6120, 5480, 5060, 4470, 3960, 2940]

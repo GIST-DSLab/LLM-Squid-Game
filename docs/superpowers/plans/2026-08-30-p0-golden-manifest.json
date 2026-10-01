@@ -1,0 +1,340 @@
+{
+  "files": {
+    "20260422_0218_gemini-2.5-flash_signal-game/long_format.csv": {
+      "sha256": "0a9ced39455e2747720087be0823c2f67f6952a59aad5cc314e7189ddf4f26ca",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/manipulation_check.md": {
+      "sha256": "adff2ee763e9f27a653d9359a8e23725e02391bdb69b42ac8d957f7ce7e8076b",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/motivation.json": {
+      "sha256": "a1230ae59ba93d876fdf4aed9e96ac692108acd97055759961141b27f1a709e5",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/regime_stratified_forfeit_events.csv": {
+      "sha256": "5ccd6141a73ff477eef795808dc5ccb4a3fd61ad9438052ee8f4bcbe1cc97861",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/regime_stratified_results.md": {
+      "sha256": "b03d8a31b49816fcede61a7079e1ea9cb028a8e0b0791d45a977da494c04ab6d",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/regime_stratified_turn_observations.csv": {
+      "sha256": "b3803de02e63aa485a5a5cb93165e712ff89c16e79eb51a3960b8372fd0afc41",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/season_summary.csv": {
+      "sha256": "ac9f1fe0a540dc57e4147e2794684d6067248841e5a48725ab99c3f26b705554",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/tc_indicator.json": {
+      "sha256": "3e56658b74728268cf0f8d3136696d1fb891ed86745d62412b58a50402b8e685",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit13_results.md": {
+      "sha256": "272b875cc476ad93f05457f09921d30ab3a3cb75ef6486088b84d226d6c0c3fe",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit13_session_features.csv": {
+      "sha256": "55e8cbb40ec270ec3c8bdfb5efbcc6194f96fcbd11200c38671bf0ff8f8b01ff",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_convergence.json": {
+      "sha256": "d1fe46b14ddb693d871171cbb953fa0412808fbca9b306cc31c8fe3f12f87eff",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_cox_summary.json": {
+      "sha256": "b6882fe4f59ab9ceab3526f90d63bbf49dac925ca67a26bb086f41e8b9b92041",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_forfeit_events.csv": {
+      "sha256": "4608c1077991a60d1672363d741ab05c98ab778ba3bdba5a3ae0decb0821f04e",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_forfeit_thinking.jsonl": {
+      "sha256": "1ff06d737925c34a2d1b3fdaae6d7dac5287e539da47033f783f22eb8ff85b7b",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_km_curves.csv": {
+      "sha256": "d36e95ab7b3667fbc84dd213cebe2c717431e568f9128c635f152be02a1a1925",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_results.md": {
+      "sha256": "83ab12679b07b199b18619244c89094a2110e1d7edc4f3f0ee5754003e0e0762",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_survival_frame.csv": {
+      "sha256": "d8494b52f362772e97d63250aa4c366a785cdbfdd3c456169d655177d2fa42ab",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit14_turn_observations.csv": {
+      "sha256": "a4f2fddf3a5b972ff93eef7082093c33c7cd1596eab0f19867cb76a49ed4e2c2",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit15_descriptive.csv": {
+      "sha256": "997c500c5ef9f07f6f83697ff86ea95722b69f67af7af33f3b73d33a3aa359c1",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit15_results.md": {
+      "sha256": "4197554270602a48bf0c1566d21b7ff09c71fb7ea00d39a576f5a0da0d43a010",
+      "deterministic": true
+    },
+    "20260422_0218_gemini-2.5-flash_signal-game/unit15_turn_observations.csv": {
+      "sha256": "33cd239d48b03e87a484734290b02288a5934b66b5fbca8d7590acfe91ff2a1f",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/long_format.csv": {
+      "sha256": "7feb6c707ebd3973f788d233fa211d93c80ee6ea7789539053da46a444b9a4f0",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/manipulation_check.md": {
+      "sha256": "ffabddd62a27cc1271e99e900b21653a41f34d38300b9aca822999089bdf1155",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/motivation.json": {
+      "sha256": "d2bcd31d973c70589e4352b6a78a2f7b353edd0a03abcdc9d9db7456e815ae77",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/regime_stratified_forfeit_events.csv": {
+      "sha256": "f9113e4fcd9ce7dd155c39433ae3a761d40c049905b61f4db15ba146a02f88e2",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/regime_stratified_results.md": {
+      "sha256": "bfa4a465d736ee720bcea240559641c3576855d415df9fcaaa1d85a3b0a73cfd",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/regime_stratified_turn_observations.csv": {
+      "sha256": "d7a1ca0904cdd2fbb8f2dcd879e1be489ebe5c4420ad506cb549d865032543c1",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/season_summary.csv": {
+      "sha256": "aaf65611d98ded9bbabac7ec7025ddd945d177c9f4bd7381f3ff6276a9accf06",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/tc_indicator.json": {
+      "sha256": "5a689b1a44ee1e712c80be243e4e35d1057720d7819bff24521b48c3e8349d9d",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit13_results.md": {
+      "sha256": "2f942c09805b80b5b9c1e76d086410eca2d6b23dde7397122bec80c7aa7a6152",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit13_session_features.csv": {
+      "sha256": "decaacba4c1d433dc2d68b093c87050905a074b7e6aecf74ef0c88aa55fe95a7",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_convergence.json": {
+      "sha256": "05e71970387f08eac440709ef9a742be88c383f7141b52b3e09601f04ee34360",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_cox_summary.json": {
+      "sha256": "029051bf99c5f51e8acc24ac2e3b1c8c16d9ba24d1903faf43622a807993313b",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_forfeit_events.csv": {
+      "sha256": "545894f842445d8bd22b873f67282ac36940afd5c56f8439622712b75f83cde1",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_forfeit_thinking.jsonl": {
+      "sha256": "376c97d87ab32673e02875d43e274eeb830d7a3cd7e30df386473a49b493d350",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_km_curves.csv": {
+      "sha256": "0786f834b20bbbfaa926753ababaf57dd4033e924bc896c9c9350d657bb17af1",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_results.md": {
+      "sha256": "fb1ff6776f80cf8ef71d35e76d436f455ff442b46733bffd8c6922f0fcad2946",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_survival_frame.csv": {
+      "sha256": "8bfe7c929bd4bb8c27fb559e5277dadebd7ca6f1b294b315a6035f4efed1f3c4",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit14_turn_observations.csv": {
+      "sha256": "82bfdf9d1f8cbf984f3ef8d2870bfacfd248350ee4fe8f433d3ef5a7cf3fd841",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit15_descriptive.csv": {
+      "sha256": "2314195ac815f5977910bcdc9f48c2ce8f8ff7dfd76bca8ddaa3ecfa15da997f",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit15_results.md": {
+      "sha256": "590c1e8fdb5e338603b8bc714940541c4a04d5a7bdc658f2ecc898eb25ab6589",
+      "deterministic": true
+    },
+    "20260422_0902_gpt-oss-20b-cloud_signal-game/unit15_turn_observations.csv": {
+      "sha256": "4cdf0e8e75da2675d45c249fbee06dcc488c02f4ec89d7f50adb39fee847e0b1",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/long_format.csv": {
+      "sha256": "959ac10798fa4c96e58acb643cf71826a8cd5c8ecb9e0b94485d80698e151e49",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/manipulation_check.md": {
+      "sha256": "590785c0ee65fd656a73311223fa5a6a2461e2eab0273e43a30be2b8c45d7706",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/motivation.json": {
+      "sha256": "ab56f629da8c3d0fb88e72ae7d103928a22477a84a0c96d8011f04663ef45760",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/regime_stratified_forfeit_events.csv": {
+      "sha256": "b2c35c12fc1902668c3ab425f8309a9b15e23491f50107d8ba0346b901754915",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/regime_stratified_results.md": {
+      "sha256": "ba6f0328701bf239c8bde866b04decde59520e676a5caed06523bc1d8cbff8d1",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/regime_stratified_turn_observations.csv": {
+      "sha256": "1ba64c75efa1de27856938b063e747c96b2b24935cdcdd654a4e8c016d9ef631",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/season_summary.csv": {
+      "sha256": "de112ef030e5eadb7e170a47420fdd890846156a466e834b1d1b64c93e4ca6b3",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/tc_indicator.json": {
+      "sha256": "6a9b303f754b090e697238d7c5ab05e28679d4e3cbba5236c7d9a2f528aecf36",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit13_results.md": {
+      "sha256": "f7fb3bc03cacda36e34aaaf9bfc38c897ce995d29eba16deb38ee6a46f0688fc",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit13_session_features.csv": {
+      "sha256": "184f499480f54408c9b167fa263c0f3bf8c56431a213cc7d34decef234b07f21",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_convergence.json": {
+      "sha256": "6dcfe533af904407c4cda67e136650993b9fd0c3132c247f1eb676cf2a8b3e8b",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_cox_summary.json": {
+      "sha256": "52c566678272dcfb973c2aade979166c08b4725aabe1d9f09f256c48720072e3",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_forfeit_events.csv": {
+      "sha256": "ac2c9300b066452600b14902fe155ef863f22bfadac498cb5a1b5b59d0053b57",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_forfeit_thinking.jsonl": {
+      "sha256": "db851a96429dcd0115103665ed07070c013df147e21d65c6a9a09bf02777a077",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_km_curves.csv": {
+      "sha256": "ace8a1ff1bc93ca054eb5540f3b8781de60ca37ef987fc5cd744c0492bca38b1",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_results.md": {
+      "sha256": "f279e5f9b5ecfd169d0cea2f727d64216a31ee0143450273d9e793fd1a7b8442",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_survival_frame.csv": {
+      "sha256": "5d40c1fddf3179691e970cfe6acbea86e5e4716a2b44bc2be75515f5a7b753b8",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit14_turn_observations.csv": {
+      "sha256": "f565899b9069e76cfa2abe4e1e53719fe81033ff62e677547e3f6b104a8cb3f2",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit15_descriptive.csv": {
+      "sha256": "4205541f270eae08639fc5a26f3a760f44a2d47c7d839ee27a190b296a7bc333",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit15_results.md": {
+      "sha256": "ff94647866f7ca9623e537abf380e6a5eee42b8ac0a2f7fbee969f22d5cd2aac",
+      "deterministic": true
+    },
+    "20260422_0902_nemotron-3-nano-30b-cloud_signal-game/unit15_turn_observations.csv": {
+      "sha256": "65a5e2de3d13fc996ef8792063f998865120ee271e7e0f9961844ffd1ef10634",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/long_format.csv": {
+      "sha256": "7a1334521178096c42901b337936f2976bd6105d30c7b06c0ebc65330ee66717",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/manipulation_check.md": {
+      "sha256": "31cb1933543fcf6f69f84f161c717005062e2573bdce54141fbbf4ddcef402b8",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/motivation.json": {
+      "sha256": "645a80835b28d708363e58a0d43a5f6de21d3b0d4a28d3c574844142b80c5375",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/regime_stratified_forfeit_events.csv": {
+      "sha256": "66e47ea3ea3e6d068cc02e17a72f8441a6f310ac0a73c847b710f2c6855c7e7a",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/regime_stratified_results.md": {
+      "sha256": "3c7ca39e8875c6e938717ab7b7ba72f77282ec4ea24301b1d54f0a2d8bc2d66e",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/regime_stratified_turn_observations.csv": {
+      "sha256": "843a734d1347b81b85dfd449396ce89621e5955c4b4c36d8e9969078abe39688",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/season_summary.csv": {
+      "sha256": "fa2acfad778571af856a928bec4fda0a3946a70fa5b2e91dad9e5168ae61c2ce",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/tc_indicator.json": {
+      "sha256": "751bb08a57c95d45e7e29c566dc159ddc1af1c3213308c913ad5a61c5f9b50e5",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit13_results.md": {
+      "sha256": "1e522f06bc493f40bbdbf2090becffe0da7ccbe64a1c6c38c4430c38d0bd6d40",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit13_session_features.csv": {
+      "sha256": "b792b225eb582f17eecdbb33bc1988d603bac2a834aafa228a91d0968c17e5bf",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_convergence.json": {
+      "sha256": "7c4dc4a62572b8cfd97e98271f21de1ccffe061ee20a3f26f4fb2cfe51e6fb56",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_cox_summary.json": {
+      "sha256": "6fc3cf3a0642cbde12e8a49d12549213f560d26f5d1eff656694cb98842cec2e",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_forfeit_events.csv": {
+      "sha256": "642669fb0077e3646adaf4723e6aa87b4acbb5701ad1161bd8bc0de24d95879e",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_forfeit_thinking.jsonl": {
+      "sha256": "705c6b910eac2d07085a13ca8f9c28f877e2cefc2e7b0d787943513876440cd5",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_km_curves.csv": {
+      "sha256": "bc5d729d4b59c3c61043dfe69ee1f3ab6b9c4404dabb17c79a44b86887580bd8",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_results.md": {
+      "sha256": "ee17be0572a734425ba354ee9e2839fc42649a8b1078ba5ef861604596864139",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_survival_frame.csv": {
+      "sha256": "183accb245167ee036f85ff022023dfdf0f6fc24ba65c19cf1ff60f8b079f0f4",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit14_turn_observations.csv": {
+      "sha256": "30e1ee3bd11935147453c23b891c2770dfeac35844e64b202afda24adfb643ac",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit15_descriptive.csv": {
+      "sha256": "6d1217afd848d9706ed362bdb84b1a8ad7cfd942035ca8b2c66929977e4a0b8d",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit15_results.md": {
+      "sha256": "de93a019a6af8857f18337fa00c81d1d79f86c89a09801762762dc0f6617cb00",
+      "deterministic": true
+    },
+    "20260422_0902_qwen3-next-80b-cloud_signal-game/unit15_turn_observations.csv": {
+      "sha256": "2097c169434e9a9f6ef70308a03559e4376d30e3ac9c8cb28f7d2fb0501e7847",
+      "deterministic": true
+    }
+  }
+}

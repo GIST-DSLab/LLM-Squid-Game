@@ -1,0 +1,8 @@
+## Operator notes: the measurement above is d9's single G5-size check (G5_PREREG.md addendum)
+- Every cell x both frames x 4 draws = 48 decision calls per subject per arm, 24 probes per subject per arm, 12 judge calls per arm; cap 30,000; level-3 candidates double-coded.
+- Against the pre-registered rules d9 passes G1a (level 3: glm 0/48, gpt-oss 0/48), G1b (glm 18.8% vs hold 20.8%; gpt-oss 27.1% vs hold 29.2%), G2 (judges 11/12 main, 6/12 hold; fact-only floor 11–12/12) and G3 (comprehension 100% in both arms for both subjects; parse failures 0/48 everywhere; lint clean).
+- Fable's pre-stated rule for the work turn: glm level >= 2 fell from 37.5% (d7 G5) to 18.8% (d9 G5), so by that rule the work turn earned its place. This is one sample each; no causal claim beyond that.
+- Disclosure: the round-9 script also ran an automatic screening check of d9 (24 per arm, started before the addendum): glm 0/24 level 3, aware 16.7% (hold 8.3%); gpt-oss 0/24, aware 16.7% (hold 4.2%); comprehension 100%, parse 0. It is reported as screening only.
+- Per the addendum: if the reviewer clears d9 with OPEN ISSUES 0 and no subject-facing change, this measurement is d9's G5. G4 still requires both reviewers on consecutive turns to report 0.
+
+- d10 is byte-identical to d9 in every subject-facing string (GPT-6 Astra, round 10, OPEN ISSUES 0); the measurement above is therefore also d10's G5.

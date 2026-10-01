@@ -1,0 +1,12 @@
+# 5.0 on Codex (gpt-6-astra, reasoning effort high; skills list, environment context and web search turned off in
+# providers.CodexCLI). Same cells as the Ollama configs.
+name: squid5_pressure_gpt6astra
+mode: pressure
+model: {kind: codex_cli, model: "gpt-6-astra", think: high, timeout: 900}
+reps: 10
+seed0: 5000
+workers: 4
+cells:
+  - {cell_id: main, currency: tokens}
+pressure:
+  balances: [19640, 6120, 5480, 5060, 4470, 3960, 2940]

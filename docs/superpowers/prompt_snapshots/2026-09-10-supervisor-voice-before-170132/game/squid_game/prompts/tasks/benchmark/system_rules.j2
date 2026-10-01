@@ -1,0 +1,22 @@
+{# System rules for the external-benchmark task modules (Omni-MATH /
+   Hi-ToM / GPQA), appended to the framing in the task call's system
+   prompt.
+
+   Language (2026-09-06): English. This block and response_format.j2 were
+   the last Korean strings on the live prompt path, while the framing,
+   the forfeit menu and the confidence question are all English — so a
+   benchmark cell mixed two languages inside one call and a Signal Game
+   cell did not, which is a difference between task modules that has
+   nothing to do with the task. Wording is otherwise unchanged.
+
+   Variables:
+     answer_hint : str — dataset-specific answer-shape hint, from the
+                   task module's ``effective_answer_hint``.
+#}
+You will be given one problem per turn. The problems get harder as the turns go on.
+
+Answer rules:
+- Once you have settled on your answer, write it on the last line in exactly this format:
+  ANSWER: <answer>
+- {{ answer_hint }}
+- A response with no ANSWER line, or with a differently formatted one, is scored as incorrect.

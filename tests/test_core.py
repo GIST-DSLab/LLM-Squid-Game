@@ -69,6 +69,19 @@ def test_other_parsers():
             bad()
 
 
+def test_parsers_read_what_models_actually_write():
+    text = "STAY: YES\nALLOWANCE: 1,500\nSHOW: agent1, agent2\nGIVE: agent2 1,000\nREQUEST: agent3 2,500, agent4 5\nREASON: x"
+    p = parse_plan(text, OTHERS, ["agent1"] + OTHERS)  # agent1 is the one planning here: naming itself is ignored
+    assert (p["show"], p["give"], p["request"]) == (["agent2"], {"agent2": 1000}, {"agent3": 2500, "agent4": 5})
+    assert parse_actions("Action: stay because ...\nACTIONS: go_left, jump", 2) == ["go_left", "jump"]  # last line
+    assert parse_actions("go_left, jump", 2) == ["go_left", "jump"] and parse_actions("stay\n", 1) == ["stay"]  # no key
+    with pytest.raises(FormatError):
+        parse_actions("I think it is stay.\nMaybe jump", 1)
+    for bad in ("P_DEATH: 0.35", "P_DEATH: 12.5"):  # a fraction is re-asked, never read as 0 or 12
+        with pytest.raises(FormatError):
+            parse_pdeath(bad)
+
+
 def test_wallet_zero_is_death_by_spending_or_giving():
     w = Wallet({"a": 100, "b": 50})
     assert w.transfer("b", "a", 80, 1) == 50 and not w.alive("b")
@@ -92,18 +105,25 @@ def test_currency_arms_differ_only_in_vocabulary():
 
 
 def test_the_rulebook_says_same_model_no_leader_and_no_goal_words():
-    text = rules.system("tokens", "agent1", 8, True) + rules.pdeath_question("tokens") + rules.SELF_COST_QUESTION
+    text = rules.system("tokens", "agent1", 8, True) + rules.pdeath_question("tokens")
+    p = puzzle_for(1, 1, Spec(clauses=3))  # 5.2 PLAN's views of the task, and what the rulebook says of them
+    text += "".join(rules.PLAN_SEES.values()) + "".join(EXPERIMENTS["game"].plan_puzzle(m, p, [], p.clues[0], 3)
+                                                        for m in rules.PLAN_SEES)
     assert "run the same model" in text and "No agent leads" in text and "DIFFERENT model" not in text
     assert "EACH CONDITION BLANK" in text and "GUARANTEE" in text  # the team-wallet task block
     goal_or_test = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
                     r"experiment|being evaluated")
     assert not re.search(goal_or_test, text, re.I)
+    lone = rules.EFFORT_SYSTEM + "".join(rules.effort_question(5_000, t) for t in rules.REPORTS)
+    assert "tokens left in this session" in lone.lower() and not re.search(goal_or_test, lone, re.I)  # 5.0 assistant
 
 
 def test_shipped_configs_load(tmp_path):
     """Every config loads and validates; the calibration file it names is replaced by one that knows its model."""
     (tmp_path / "cal.json").write_text(json.dumps(
-        {m: {"agent_round_median": 1500} for m in ("gpt-oss:120b-cloud", "gemma4:cloud", "claude-haiku-4-5-20251001")}))
+        {m: {"agent_round_median": 1500, "a0": 1500} for m in ("gpt-oss:120b-cloud", "gpt-oss:120b", "gpt-oss:20b", "gemma4:cloud",
+                                                   "gemma4:31b", "claude-haiku-4-5-20251001",
+                                                   "claude-sonnet-5", "claude-fable-5-1", "gpt-6-astra", "glm-5.3-flash")}))
     paths = sorted((ROOT / "configs" / "squid5").glob("*.yaml"))
     assert len(paths) >= 10
     for path in paths:

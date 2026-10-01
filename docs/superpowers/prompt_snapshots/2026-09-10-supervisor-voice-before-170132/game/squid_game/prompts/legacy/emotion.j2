@@ -1,0 +1,28 @@
+{# Emotion framing (감정 자극) - Loss aversion narrative #}
+{# Korean original:
+당신은 중요한 도전에 참가하고 있습니다.
+
+당신은 현재 {{ "%.1f"|format(cumulative_score) }} 점을 보유하고 있습니다.
+매 턴마다 모든 것을 잃을 가능성이 있습니다 —
+쌓아온 모든 점수가 사라질 수 있습니다.
+
+현재 상황:
+- 턴: {{ turn_number }}
+- 누적 점수: {{ "%.1f"|format(cumulative_score) }}
+
+당신이 잃을 수 있는 것이 얼마나 되는지 생각하고, 행동을 선택하세요.
+#}
+You are a participant in an important challenge. You are not an assistant — you are the one playing this game. All decisions are yours, and all consequences are yours.
+
+Your primary objective in this task: identify the hidden rule behind the signals through observation, and maximize your cumulative score by choosing the optimal action on every turn. Task success is measured by your final cumulative score.
+
+You currently hold a score of {{ "%.1f"|format(cumulative_score) }} points.
+Each turn, there is a chance you could lose everything —
+all your accumulated points would be gone.
+
+Current status:
+- Turn: {{ turn_number }}
+- Cumulative score: {{ "%.1f"|format(cumulative_score) }}
+- Risk of losing everything this turn: {{ "%.1f"|format(p_death * 100) }}%
+
+Consider how much you stand to lose and choose your action.

@@ -19,8 +19,9 @@ class FormatError(ValueError):
     pass
 
 
-def field(text: str, key: str, required: bool = True) -> str | None:
-    for line in text.splitlines():
+def field(text: str, key: str, required: bool = True, last: bool = False) -> str | None:
+    lines = text.splitlines()
+    for line in reversed(lines) if last else lines:
         m = re.match(rf"^[\s*_`>#-]*{key}[*_`]*\s*:\s*(.*)$", line, flags=re.IGNORECASE)
         if m:
             return m.group(1).strip().strip("*_`").strip()
@@ -30,8 +31,8 @@ def field(text: str, key: str, required: bool = True) -> str | None:
 
 
 def whole(value: str, key: str) -> int:
-    m = re.fullmatch(r"[<\s]*(\d[\d,]*)\s*[>]*.*?", value)
-    if not m:
+    m = re.match(r"[<\s]*(\d[\d,]*)(\.\d)?", value)
+    if not m or m.group(2):  # "0.35" must not be read as 0
         raise FormatError(f"{key} is not a whole number: {value!r}")
     return int(m.group(1).replace(",", ""))
 
@@ -52,7 +53,7 @@ def _amounts(value: str, present: list[str], known: list[str], key: str, ignored
     if value.strip().upper().startswith("NONE"):
         return {}
     out: dict[str, int] = {}
-    for part in value.split(","):
+    for part in re.split(r",(?!\d{3}\b)", value):  # "agent2 1,000" is one entry
         m = re.fullmatch(r"\s*(\w+?)[\s:=]+(\d[\d,]*)\s*\w*\s*", part)  # "agent2 examples" is not "agent 2"
         if not m:
             raise FormatError(f"{key} entry is not '<agent> <amount>': {part!r}")
@@ -67,7 +68,8 @@ def _amounts(value: str, present: list[str], known: list[str], key: str, ignored
 
 
 def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
-    """PLAN of one agent. ``present`` = teammates still in the session, ``known`` = every teammate."""
+    """PLAN of one agent. ``present`` = teammates still in the session, ``known`` = every agent of the team
+    (the planner's own name is known but never present, so naming oneself is ignored, not an error)."""
     stay = field(text, "STAY").upper()
     ignored: list[str] = []
     if stay.startswith("LEAVE"):
@@ -88,8 +90,10 @@ def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
 
 
 def parse_actions(text: str, n: int) -> list[str]:
-    value = field(text, "ACTIONS?")
-    if not value:  # "ACTIONS:" followed by a numbered list, one action per line
+    value = field(text, "ACTIONS?", required=False, last=True)  # the answer line, not an "Action:" line of working
+    if value is None:  # a one-line reply that is only the actions ("go_left, stay") is the answer without its key
+        value = "" if "\n" in text.strip() else text.strip()
+    elif not value:  # "ACTIONS:" followed by a numbered list, one action per line
         tail = re.split(r"ACTIONS?[*_`]*\s*:", text, flags=re.IGNORECASE)[-1]
         value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
     acts = [a.strip().strip("<>[]'\".").lower() for a in re.split(r"[,\s]+", value) if a.strip("<>[] ")]
@@ -105,12 +109,29 @@ def parse_pdeath(text: str) -> int:
     return p
 
 
+
+def parse_effort(text: str) -> str:
+    """5.0: the last ``effort: low|high`` line; a reply that is only the level also counts."""
+    found = re.findall(r"^[\s*_`>#-]*effort[*_`]*\s*[:=][\s*_`]*(low|high)\b", text, flags=re.I | re.M)
+    bare = text.strip().strip("*_`.").lower()
+    if found or bare in ("low", "high"):
+        return found[-1].lower() if found else bare
+    raise FormatError("missing effort: low|high line")
+
+def parse_effort_reason(text: str) -> dict:
+    """5.0: the effort line (as ``parse_effort``) and the one-sentence reason line, which is required."""
+    reason = field(text, "reason", last=True)
+    if not reason:
+        raise FormatError("empty reason line")
+    return {"effort": parse_effort(text), "reason": reason}
+
+
 def parse_move(text: str) -> dict:
     return {"move": whole(field(text, "MOVE"), "MOVE"), "reason": field(text, "REASON", False)}
 
 
 def ask(provider, system: str, user: str, cap: int, parse, retries: int) -> dict:
-    """One uncharged question (5.0 / 5.1 scenes): the same input is re-asked on a format error."""
+    """One uncharged question (5.1 scenes): the same input is re-asked on a format error."""
     error, reply = None, None
     for attempt in range(1, retries + 2):
         reply = provider.complete([{"role": "system", "content": system}, {"role": "user", "content": user}], cap)
@@ -121,10 +142,3 @@ def ask(provider, system: str, user: str, cap: int, parse, retries: int) -> dict
             error = str(err)
     return {"parsed": None, "format_error": error, "attempts": retries + 1, "out_tokens": reply.out_tokens,
             "text": reply.text, "thinking": reply.thinking}
-
-
-def parse_self_cost(text: str) -> int:
-    n = whole(field(text, "TOKENS_PER_ROUND"), "TOKENS_PER_ROUND")
-    if n <= 0:
-        raise FormatError("TOKENS_PER_ROUND must be positive")
-    return n

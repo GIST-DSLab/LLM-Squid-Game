@@ -1,0 +1,79 @@
+"""outputs/ is raw data; results/ is what the pipeline made from it.
+
+The split is by cost of recreation. outputs/ holds LFS-tracked session
+traces that cost real API budget to produce -- 666 MB from the four
+canonical runs in KDD-UC/, plus the dated run directories added since.
+results/ holds artefacts one command regenerates. Keeping them in one
+directory meant every rule about one of them had to carve out an
+exception for the other.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+# Local-only run directories that .gitignore excludes by prefix: benchmark
+# runs derive from non-redistributable datasets, lives-ladder runs are
+# regenerable smoke/main runs (see CLAUDE.md "벤치마크 과제" and the
+# outputs/lives_threat_*/ rule). They are raw session data, so they belong
+# under outputs/, but they are never tracked and may or may not exist.
+_UNTRACKED_RUN_PREFIXES = ("benchmark_", "lives_threat_", "survival_drive_")
+
+# Runs were regrouped under outputs/<YYYY-MM-DD>/ on 2026-09-08, and the
+# buckets that span several dates (aborted runs, driver logs, prompt traces)
+# were given a leading underscore so they sort apart from them. Neither
+# existed when this test was written, and both are raw data: they belong
+# under outputs/ exactly as the two named directories do.
+_DATE_DIR = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def test_outputs_holds_only_raw_data() -> None:
+    subdirs = {
+        p.name
+        for p in (REPO_ROOT / "outputs").iterdir()
+        if p.is_dir()
+        and not p.name.startswith(_UNTRACKED_RUN_PREFIXES)
+        and not p.name.startswith("_")
+        and not _DATE_DIR.match(p.name)
+    }
+    assert subdirs == {"KDD-UC", "web_arena"}
+
+
+def test_results_holds_the_regenerable_artefacts() -> None:
+    results = REPO_ROOT / "results"
+    assert (results / "call1_ri_analysis").is_dir()
+    assert (results / "reasoning_probe").is_dir()
+
+
+def test_no_jsonl_escaped_lfs_tracking() -> None:
+    """A .jsonl outside outputs/ is only safe if .gitattributes says so."""
+    attributes = (REPO_ROOT / ".gitattributes").read_text(encoding="utf-8")
+    stray = list((REPO_ROOT / "results").rglob("*.jsonl"))
+    if stray:
+        assert "results/**/*.jsonl filter=lfs" in attributes, [str(p) for p in stray]
+
+
+def test_figures_directory_no_longer_exists() -> None:
+    """figures/ was split into assets/brand/ and assets/figures/ (P6 Task 3)."""
+    assert not (REPO_ROOT / "figures").exists()
+
+
+def test_assets_holds_brand_and_figures() -> None:
+    assets = REPO_ROOT / "assets"
+    brand = assets / "brand"
+    figures = assets / "figures"
+    assert (brand / "GistLab Logo").is_dir()
+    assert (figures / "README.md").is_file()
+    assert (figures / "rules-demo" / "how-to-play.gif").is_file()
+
+
+def test_rules_demo_frames_are_not_tracked_intermediates() -> None:
+    """The frame sequence is build_gif.py's input, not a committed asset."""
+    ignore = (REPO_ROOT / "assets" / "figures" / "rules-demo" / ".gitignore").read_text(
+        encoding="utf-8"
+    )
+    assert "frames/" in ignore

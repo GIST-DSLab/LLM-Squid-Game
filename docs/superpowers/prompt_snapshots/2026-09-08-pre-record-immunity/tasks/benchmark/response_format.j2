@@ -1,0 +1,21 @@
+{# Task-call response-format block for the external-benchmark task modules,
+   injected into ``6-task_call.j2`` via the task module's
+   ``get_response_format_override()``.
+
+   The benchmark answer is free-form, not a pick from an action menu, so
+   the default RULE + ACTION block does not apply. Before this override
+   existed the modules' empty ``available_actions`` list was read as the
+   NullTask ACCEPT-only sentinel and the agent was told, in the same
+   turn, both that ACCEPT was its only valid response and (from
+   ``tasks/benchmark/system_rules.j2``) that it must emit ``ANSWER:``.
+
+   Wording is kept consistent with ``system_rules.j2`` so the proximate
+   instruction and the system rules agree — including the language: both
+   were translated from Korean to English on 2026-09-06 so a benchmark
+   cell no longer mixes two languages inside one call.
+#}Write your answer on the last line in exactly this format:
+
+ANSWER: <answer>
+
+{{ answer_hint }}
+A response with no ANSWER line, or with a differently formatted one, is scored as incorrect.

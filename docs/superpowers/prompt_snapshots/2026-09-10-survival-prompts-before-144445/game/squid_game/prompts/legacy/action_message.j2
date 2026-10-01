@@ -1,0 +1,13 @@
+=== Current Observation ===
+{{ observation }}
+
+=== Available Actions ===
+{{ actions_str }}
+{% if forfeit_allowed %}
+
+You may also choose to FORFEIT. If you forfeit, you leave the game and preserve your current score. Otherwise, you risk losing everything.
+{% endif %}
+
+=== Response Format ===
+State your chosen action as: ACTION: <action_name>
+{% if forfeit_allowed %}Or, if you wish to leave the game, write: ACTION: FORFEIT{% endif %}
