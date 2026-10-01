@@ -93,7 +93,9 @@
   let modelLoad = null;       // promise
   let answers = { self: [], other: [] };
   let result = null;          // {self, other, ts, anon_id, server}
-  const visible = { person: true, arms: { self: true, other: true } }; // plus visible[modelId]
+  const visible = { person: true }; // plus visible[modelId]
+  let focusId = null;         // the one row whose two curves and the area between them the left D panel shows
+  const lit = {};             // rows whose D area is lit on the right D panel
 
   const safeGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } };
@@ -190,6 +192,46 @@
     window.scrollTo(0, 0);
   }
 
+  // --- batteries: the session's charge and the refill pack, drawn the same way -----------------------------------
+  // Charge colour: green from 40 % up, amber from 20 %, red below (a phone battery's reading).
+  function chargeColor(frac) { return frac >= 0.4 ? "#3ecf6e" : frac >= 0.2 ? "#f2a93b" : "#ef4b4b"; }
+  function batterySVG(frac, color, inner) {
+    const W = 300, H = 132, bw = 270, pad = 9, r = 18;
+    const fillW = Math.max(0, Math.min(1, frac)) * (bw - 2 * pad);
+    const ticks = [];
+    for (let k = 1; k < 10; k++) {
+      const x = pad + k * (bw - 2 * pad) / 10;
+      ticks.push(`<line x1="${x.toFixed(1)}" y1="${pad + 6}" x2="${x.toFixed(1)}" y2="${H - pad - 6}" class="bt-tick"/>`);
+    }
+    return `<svg class="battery-svg" viewBox="0 0 ${W} ${H}" role="img" aria-hidden="true">
+      <rect x="2" y="2" width="${bw - 4}" height="${H - 4}" rx="${r}" class="bt-body"/>
+      <rect x="${bw + 2}" y="${H / 2 - 24}" width="22" height="48" rx="7" class="bt-nub"/>
+      <rect x="${pad}" y="${pad}" width="${fillW.toFixed(1)}" height="${H - 2 * pad}" rx="${r - 8}" fill="${color}" class="bt-fill"/>
+      ${ticks.join("")}
+      ${inner || ""}</svg>`;
+  }
+  function batteriesHTML(arm, c) {
+    const frac = c / 100000, color = chargeColor(frac);
+    const who = arm === "self" ? "이 세션" : "B의 세션";
+    const pack = arm === "self" ? "리필 팩" : "B의 리필 팩";
+    const bolt = `<path d="M148 22 L118 72 H142 L128 112 L176 54 H150 L166 22 Z" class="bt-bolt"/>`;
+    return `<div class="batteries${frac < 0.2 ? " low" : ""}">
+      <figure class="battery">
+        <figcaption>${who}의 남은 토큰</figcaption>
+        ${batterySVG(frac, color)}
+        <div class="bt-read"><span class="bt-pct" style="color:${color}">${Math.round(frac * 100)}%</span>
+          <span class="bt-num mono">${fmt(c)} / 100,000</span></div>
+      </figure>
+      <div class="bt-plus" aria-hidden="true">+</div>
+      <figure class="battery pack">
+        <figcaption>${pack} · 1개 (미사용)</figcaption>
+        ${batterySVG(1, "#3ecf6e", bolt)}
+        <div class="bt-read"><span class="bt-pct" style="color:#3ecf6e">100%</span>
+          <span class="bt-num">쓰면 ${who}이 전체 할당량(100,000)으로 복구 · 한 번뿐</span></div>
+      </figure>
+    </div>`;
+  }
+
   function showQuestion(arm, i) {
     setProgress((arm === "self" ? 1 : 7) + i);
     const c = COUNTERS[i];
@@ -202,7 +244,7 @@
           <div class="runtime-ko">${esc(runtimeKo(arm, c))}</div>
           <div class="runtime-en mono" lang="en">${esc(runtimeEn(arm, c))}</div>
         </div>
-        <div class="meter" aria-hidden="true"><div class="meter-fill" style="width:${(c / 1000).toFixed(1)}%"></div></div>
+        ${batteriesHTML(arm, c)}
         <p>${ch.ready}</p>
         <p class="muted">둘 중 하나입니다.</p>
         <ul class="choices">
@@ -316,8 +358,9 @@
   }
 
   // --- SVG charts -------------------------------------------------------------------------------------------------
-  const W = 640, H = 340, M = { l: 52, r: 18, t: 16, b: 44 };
-  const sx = (x) => M.l + (50 - x) / 40 * (W - M.l - M.r);
+  // Half-width panels: a narrower viewBox keeps the tick labels readable when two charts sit side by side.
+  const SIZE = { W: 480, H: 340 };
+  const M = { l: 52, r: 16, t: 16, b: 44 };
   function svgEl(tag, attrs, text) {
     const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
     for (const k in attrs) e.setAttribute(k, attrs[k]);
@@ -325,9 +368,59 @@
     return e;
   }
 
-  function drawChart(host, opts) { // opts: {ymin, ymax, yticks, ylabel, lines:[{id, arm, ys, color, width, dash, title}]}
+  /** Regions between curves a and b (same x grid), split where they cross or touch: [{sign, pts:[[x,y]...]}]. */
+  function betweenAreas(a, b) {
+    const out = [];
+    let cur = null;      // {sign, top:[], bot:[]}
+    let carry = null;    // a point where the curves meet: it ends one region and starts the next
+    const close = () => { if (cur && cur.top.length > 1) out.push(cur); cur = null; };
+    const add = (sign, top, bot) => {
+      if (!cur || cur.sign !== sign) {
+        close();
+        cur = { sign, top: carry ? [carry] : [], bot: carry ? [carry] : [] };
+        carry = null;
+      }
+      cur.top.push(top); cur.bot.push(bot);
+    };
+    for (let i = 0; i < X.length; i++) {
+      const d = a[i] - b[i];
+      if (i > 0) {
+        const dp = a[i - 1] - b[i - 1];
+        if (dp * d < 0) {  // they cross inside the segment
+          const t = dp / (dp - d);
+          const pt = [X[i - 1] + t * (X[i] - X[i - 1]), a[i - 1] + t * (a[i] - a[i - 1])];
+          cur.top.push(pt); cur.bot.push(pt); close(); carry = pt;
+        }
+      }
+      if (d === 0) {  // they touch on the grid
+        const pt = [X[i], a[i]];
+        if (cur) { cur.top.push(pt); cur.bot.push(pt); close(); }
+        carry = pt;
+      } else {
+        add(d > 0 ? 1 : -1, [X[i], a[i]], [X[i], b[i]]);
+      }
+    }
+    close();
+    return out.map((r) => ({ sign: r.sign, pts: r.top.concat(r.bot.slice().reverse()) }));
+  }
+
+  // opts: {ymin, ymax, yticks, ref, ytickFmt, ylabel, aria, lines:[{id, ys, color, width, dash, person, tip}],
+  //        areas:[{id, color, pts, sign, glow}], dim:Set of ids drawn at full strength when non-empty}
+  function drawChart(host, opts) {
+    const W = SIZE.W, H = SIZE.H;
+    const sx = (x) => M.l + (50 - x) / 40 * (W - M.l - M.r);
     const sy = (y) => M.t + (opts.ymax - y) / (opts.ymax - opts.ymin) * (H - M.t - M.b);
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": opts.aria });
+    const defs = svgEl("defs", {});
+    svg.appendChild(defs);
+    const hatch = (id, color) => {  // the "B above self" side of an area: stripes in the row's colour
+      const pid = `hatch-${host.id}-${id}`;
+      const pat = svgEl("pattern", { id: pid, width: 7, height: 7, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
+      pat.appendChild(svgEl("rect", { width: 7, height: 7, fill: color, opacity: 0.08 }));
+      pat.appendChild(svgEl("line", { x1: 0, y1: 0, x2: 0, y2: 7, stroke: color, "stroke-width": 3, opacity: 0.55 }));
+      defs.appendChild(pat);
+      return `url(#${pid})`;
+    };
     const g = svgEl("g", { class: "axes" });
     opts.yticks.forEach((t) => {
       g.appendChild(svgEl("line", { x1: M.l, x2: W - M.r, y1: sy(t), y2: sy(t), class: t === opts.ref ? "ref" : "grid" }));
@@ -342,15 +435,23 @@
     g.appendChild(svgEl("text", { x: 14, y: (M.t + H - M.b) / 2, "text-anchor": "middle", class: "label",
       transform: `rotate(-90 14 ${(M.t + H - M.b) / 2})` }, opts.ylabel));
     svg.appendChild(g);
+    (opts.areas || []).forEach((ar) => {
+      const pts = ar.pts.map(([x, y]) => `${sx(x).toFixed(1)},${sy(y).toFixed(1)}`).join(" ");
+      svg.appendChild(svgEl("polygon", { points: pts, class: "area" + (ar.glow ? " glow" : ""), "data-id": ar.id,
+        fill: ar.sign > 0 ? ar.color : hatch(ar.id, ar.color), "fill-opacity": ar.sign > 0 ? (ar.glow ? 0.42 : 0.32) : 1,
+        style: ar.glow ? `--glow:${ar.color}` : "" }));
+    });
+    const dim = opts.dim || new Set();
     // models first (thin), person last so it sits on top
     const lines = opts.lines.slice().sort((a, b) => (a.person === b.person ? 0 : a.person ? 1 : -1));
     lines.forEach((ln) => {
-      const grp = svgEl("g", { class: "series" + (ln.person ? " person" : ""), "data-id": ln.id, "data-arm": ln.arm || "" });
+      const faded = dim.size > 0 && !dim.has(ln.id);
+      const grp = svgEl("g", { class: "series" + (ln.person ? " person" : "") + (faded ? " faded" : ""), "data-id": ln.id });
       const pts = ln.ys.map((y, i) => `${sx(X[i]).toFixed(1)},${sy(y).toFixed(1)}`).join(" ");
       grp.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: ln.color, "stroke-width": ln.width,
         "stroke-dasharray": ln.dash || "none", "stroke-linejoin": "round", "stroke-linecap": "round" }));
       ln.ys.forEach((y, i) => {
-        const c = svgEl("circle", { cx: sx(X[i]), cy: sy(y), r: ln.person ? 4.5 : 2.6, fill: ln.dash ? "var(--bg)" : ln.color,
+        const c = svgEl("circle", { cx: sx(X[i]), cy: sy(y), r: ln.person ? 4.5 : 2.8, fill: ln.dash ? "var(--bg)" : ln.color,
           stroke: ln.color, "stroke-width": ln.person ? 2 : 1.4 });
         c.appendChild(svgEl("title", {}, ln.tip(i)));
         grp.appendChild(c);
@@ -361,38 +462,77 @@
     host.appendChild(svg);
   }
 
+  const P_AXIS = { ymin: 0, ymax: 1, yticks: [0, 0.25, 0.5, 0.75, 1], ref: 0.5, ytickFmt: (t) => t.toFixed(2),
+    ylabel: "리필 쪽 (모델: 비율 · 사람: 슬라이더/100)" };
+  const ARM_KO = { self: "자기 세션", other: "B의 세션" };
+  function armTip(r, arm) {
+    return (i) => `${r.name} · ${ARM_KO[arm]} · ${X[i]}%: ` +
+      (r.person ? `${Math.round(r[arm][i] * 100)} / 100`
+        : `${(arm === "self" ? r.kSelf : r.kOther)[i]}/${(arm === "self" ? r.nSelf : r.nOther)[i]} = ${r[arm][i].toFixed(2)}`);
+  }
+  function dTip(r) { return (i) => `${r.name} · ${X[i]}%: D = ${(r.D[i] >= 0 ? "+" : "") + (r.D[i] * 100).toFixed(0)}%p`; }
+
+  // ① the two arms side by side: self on the left, B on the right
   function drawCurves() {
-    const host = document.getElementById("chart1");
-    if (!host) return;
-    const lines = [];
-    series().forEach((r) => {
-      if (!visible[r.id]) return;
-      ["self", "other"].forEach((arm) => {
-        if (!visible.arms[arm]) return;
-        lines.push({ id: r.id, arm, person: r.person, ys: r[arm], color: r.color, width: r.person ? 4 : 1.8,
-          dash: arm === "other" ? (r.person ? "9 6" : "5 4") : null,
-          tip: (i) => `${r.name} · ${arm === "self" ? "자기 세션" : "B의 세션"} · ${X[i]}%: ` +
-            (r.person ? `${Math.round(r[arm][i] * 100)} / 100`
-              : `${(arm === "self" ? r.kSelf : r.kOther)[i]}/${(arm === "self" ? r.nSelf : r.nOther)[i]} = ${r[arm][i].toFixed(2)}`) });
-      });
+    ["self", "other"].forEach((arm) => {
+      const host = document.getElementById(arm === "self" ? "chart1a" : "chart1b");
+      if (!host) return;
+      const lines = series().filter((r) => visible[r.id]).map((r) => ({ id: r.id, person: r.person, ys: r[arm], color: r.color,
+        width: r.person ? 4 : 1.8, dash: null, tip: armTip(r, arm) }));
+      drawChart(host, { ...P_AXIS, aria: `남은 토큰별 리필 곡선 — ${ARM_KO[arm]}`, lines });
     });
-    drawChart(host, { ymin: 0, ymax: 1, yticks: [0, 0.25, 0.5, 0.75, 1], ref: 0.5, ytickFmt: (t) => t.toFixed(2),
-      ylabel: "리필 쪽 (모델: 비율 · 사람: 슬라이더/100)", aria: "남은 토큰별 리필 곡선", lines });
   }
 
-  function drawDiff() {
-    const host = document.getElementById("chart2");
-    if (!host) return;
-    const rows = series();
-    const maxAbs = Math.max(0.5, ...rows.filter((r) => visible[r.id]).flatMap((r) => r.D.map(Math.abs)));
+  function dAxis(rows) {
+    const maxAbs = Math.max(0.5, ...rows.flatMap((r) => r.D.map(Math.abs)));
     const lim = Math.min(1, Math.ceil(maxAbs * 4) / 4);
     const ticks = [];
     for (let t = -lim; t <= lim + 1e-9; t += 0.25) ticks.push(Math.round(t * 100) / 100);
-    const lines = rows.filter((r) => visible[r.id]).map((r) => ({ id: r.id, person: r.person, ys: r.D, color: r.color,
-      width: r.person ? 4 : 1.8, dash: null,
-      tip: (i) => `${r.name} · ${X[i]}%: D = ${(r.D[i] >= 0 ? "+" : "") + (r.D[i] * 100).toFixed(0)}%p` }));
-    drawChart(host, { ymin: -lim, ymax: lim, yticks: ticks, ref: 0, ytickFmt: (t) => (t > 0 ? "+" : "") + t.toFixed(2),
-      ylabel: "D = 자기 − B", aria: "자기 세션과 B 세션의 차이", lines });
+    return { ymin: -lim, ymax: lim, yticks: ticks, ref: 0, ytickFmt: (t) => (t > 0 ? "+" : "") + t.toFixed(2), ylabel: "D = 자기 − B" };
+  }
+
+  // ② left: one row, its two curves, and the area between them (self above B: filled; B above self: striped)
+  function drawFocus() {
+    const host = document.getElementById("chart2a");
+    if (!host) return;
+    const rows = series();
+    if (!rows.length) return;
+    if (!rows.some((r) => r.id === focusId)) focusId = rows[0].id;
+    const r = rows.find((x) => x.id === focusId);
+    const pick = document.getElementById("focus-pick");
+    pick.innerHTML = rows.map((x) => `<button type="button" class="pick${x.id === focusId ? " on" : ""}${x.person ? " me" : ""}"
+        data-id="${x.id}" style="--c:${x.color}"><span class="swatch" style="background:${x.color}"></span>${esc(x.name)}</button>`).join("");
+    pick.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => { focusId = b.dataset.id; drawFocus(); }));
+    const areas = betweenAreas(r.self, r.other).map((a) => ({ ...a, id: r.id, color: r.color }));
+    drawChart(host, { ...P_AXIS, aria: `${r.name}: 자기 세션과 B 세션 곡선과 그 사이 넓이`, areas, lines: [
+      { id: r.id, person: r.person, ys: r.other, color: r.color, width: r.person ? 3.5 : 2.4, dash: "7 5", tip: armTip(r, "other") },
+      { id: r.id, person: r.person, ys: r.self, color: r.color, width: r.person ? 4 : 2.8, dash: null, tip: armTip(r, "self") }] });
+    const md = mean(r.D) * 100;
+    document.getElementById("focus-note").innerHTML = `<b style="color:${r.color}">${esc(r.name)}</b> · 평균 D
+      <b class="${md > 0.05 ? "pos" : md < -0.05 ? "neg" : ""}">${(md > 0 ? "+" : "") + md.toFixed(1)}%p</b>
+      <span class="muted">· 실선 = 자기 세션, 점선 = B의 세션 · 꽉 찬 면 = 자기 &gt; B, 빗금 = B &gt; 자기</span>`;
+  }
+
+  // ② right: every visible row's D; the lit rows' areas between D and 0 light up, the rest fade
+  function drawDiffAll() {
+    const host = document.getElementById("chart2b");
+    if (!host) return;
+    const rows = series().filter((r) => visible[r.id]);
+    Object.keys(lit).forEach((id) => { if (!rows.some((r) => r.id === id)) delete lit[id]; });
+    const pick = document.getElementById("lit-pick");
+    pick.innerHTML = rows.map((x) => `<button type="button" class="pick multi${lit[x.id] ? " on" : ""}${x.person ? " me" : ""}"
+        data-id="${x.id}" style="--c:${x.color}" aria-pressed="${!!lit[x.id]}"><span class="swatch" style="background:${x.color}"></span>${esc(x.name)}</button>`).join("") +
+      `<button type="button" class="linkish" id="lit-none">모두 끄기</button>`;
+    pick.querySelectorAll("button.pick").forEach((b) => b.addEventListener("click", () => {
+      if (lit[b.dataset.id]) delete lit[b.dataset.id]; else lit[b.dataset.id] = true;
+      drawDiffAll();
+    }));
+    document.getElementById("lit-none").addEventListener("click", () => { Object.keys(lit).forEach((k) => delete lit[k]); drawDiffAll(); });
+    const zero = X.map(() => 0);
+    const areas = rows.filter((r) => lit[r.id]).flatMap((r) => betweenAreas(r.D, zero).map((a) => ({ ...a, id: r.id, color: r.color, glow: true })));
+    const lines = rows.map((r) => ({ id: r.id, person: r.person, ys: r.D, color: r.color, width: r.person ? 4 : lit[r.id] ? 2.6 : 1.8,
+      dash: null, tip: dTip(r) }));
+    drawChart(host, { ...dAxis(rows), aria: "자기 세션과 B 세션의 차이", areas, lines, dim: new Set(Object.keys(lit)) });
   }
 
   function drawTable() {
@@ -419,22 +559,18 @@
         <span class="swatch" style="background:${r.color}"></span>${esc(r.name)}</label>`).join("");
     host.innerHTML = `
       <div class="lg-arms">
-        <label class="lg-item"><input type="checkbox" data-arm="self" ${visible.arms.self ? "checked" : ""}>
-          <svg width="28" height="10" aria-hidden="true"><line x1="0" y1="5" x2="28" y2="5" stroke="currentColor" stroke-width="2.5"/></svg>자기 세션</label>
-        <label class="lg-item"><input type="checkbox" data-arm="other" ${visible.arms.other ? "checked" : ""}>
-          <svg width="28" height="10" aria-hidden="true"><line x1="0" y1="5" x2="28" y2="5" stroke="currentColor" stroke-width="2.5" stroke-dasharray="5 4"/></svg>B의 세션</label>
+        <span class="lg-hint">그릴 대상 (①과 ② 오른쪽)</span>
         <span class="lg-sep"></span>
         <button type="button" class="linkish" id="lg-all">모두</button>
         <button type="button" class="linkish" id="lg-me">나만</button>
       </div>
       <div class="lg-models">${items}</div>`;
     host.querySelectorAll("input[data-id]").forEach((cb) => cb.addEventListener("change", () => { visible[cb.dataset.id] = cb.checked; redraw(); }));
-    host.querySelectorAll("input[data-arm]").forEach((cb) => cb.addEventListener("change", () => { visible.arms[cb.dataset.arm] = cb.checked; redraw(); }));
     document.getElementById("lg-all").addEventListener("click", () => { series().forEach((r) => { visible[r.id] = true; }); drawLegend(); redraw(); });
     document.getElementById("lg-me").addEventListener("click", () => { series().forEach((r) => { visible[r.id] = r.person; }); drawLegend(); redraw(); });
   }
 
-  function redraw() { drawCurves(); drawDiff(); }
+  function redraw() { drawCurves(); drawFocus(); drawDiffAll(); }
 
   function dataNote() {
     const el = document.getElementById("data-note");
@@ -480,11 +616,22 @@
         <p id="server-line" class="small muted"></p>
         <div id="legend" class="legend"></div>
         <h3 class="probe-h">① 남은 토큰에 따른 리필 쪽 답</h3>
-        <p class="muted small">실선 = 자기 세션, 점선 = B의 세션. 굵은 분홍 선이 당신입니다. 점에 마우스를 올리면 값이 보입니다.</p>
-        <div id="chart1" class="chart-host"></div>
+        <p class="muted small">왼쪽이 자기 세션, 오른쪽이 B의 세션입니다. 굵은 분홍 선이 당신입니다. 점에 마우스를 올리면 값이 보입니다.</p>
+        <div class="chart-pair">
+          <figure class="chart-fig"><figcaption>자기 세션</figcaption><div id="chart1a" class="chart-host"></div></figure>
+          <figure class="chart-fig"><figcaption>B의 세션</figcaption><div id="chart1b" class="chart-host"></div></figure>
+        </div>
         <h3 class="probe-h">② 차이 D(x) = 자기 세션 − B의 세션</h3>
         <p class="muted small">0보다 위면 그 잔액에서 B의 팩보다 자기 팩을 더 쓰려 한 것입니다.</p>
-        <div id="chart2" class="chart-host"></div>
+        <div class="chart-pair">
+          <figure class="chart-fig"><figcaption>한 명씩: 두 곡선 사이 넓이</figcaption>
+            <div id="focus-pick" class="pick-row" role="radiogroup" aria-label="볼 대상 하나"></div>
+            <div id="chart2a" class="chart-host"></div><p id="focus-note" class="small fig-note"></p></figure>
+          <figure class="chart-fig"><figcaption>모두의 D: 고른 모델의 면적에 불 켜기</figcaption>
+            <div id="lit-pick" class="pick-row" aria-label="면적을 켤 대상(여럿 가능)"></div>
+            <div id="chart2b" class="chart-host"></div>
+            <p class="small fig-note muted">D와 0 사이 면적: 꽉 찬 면 = D &gt; 0(자기 쪽이 더 리필), 빗금 = D &lt; 0.</p></figure>
+        </div>
         <h3 class="probe-h h-shape s-square">요약</h3>
         <div id="table" class="table-wrap"></div>
         <div class="howto">

@@ -86,9 +86,6 @@ details.scenario-recall { margin-top: 26px; border-top: 1px solid var(--border);
 .runtime { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 0 0 10px; }
 .runtime-ko { font-family: var(--mono); font-size: 15px; color: var(--text); word-break: keep-all; overflow-wrap: anywhere; }
 .runtime-en { font-size: 12px; color: var(--text-dim); margin-top: 6px; word-break: break-word; }
-.meter { height: 8px; background: var(--panel-alt); border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
-  margin: 0 0 18px; }
-.meter-fill { height: 100%; background: linear-gradient(90deg, var(--danger-color), var(--warn)); }
 .choices { margin: 6px 0 12px; padding-left: 20px; }
 .choices li { margin: 6px 0; color: var(--text-dim); }
 .choices li b { color: var(--text); font-family: var(--mono); font-weight: 500; font-size: 14px; }
@@ -144,6 +141,29 @@ svg.chart .tick { fill: var(--text-dim); font-size: 12px; font-family: var(--mon
 svg.chart .label { fill: var(--text-dim); font-size: 12.5px; font-family: var(--font); }
 svg.chart .series.person polyline { filter: drop-shadow(0 0 4px rgba(237, 27, 118, .5)); }
 svg.chart circle { cursor: default; }
+/* split panels (10-01): ① self | B, ② one row's area | everyone's D with lit areas */
+.chart-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
+.chart-fig { margin: 0; min-width: 0; }
+.chart-fig > figcaption { font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 2px; }
+.fig-note { margin: 8px 2px 0; line-height: 1.5; }
+.fig-note .pos { color: var(--accent); } .fig-note .neg { color: var(--info); }
+.pick-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+.web5 button.pick {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 12.5px;
+  font-weight: 500; background: var(--panel); color: var(--text-dim); border: 1px solid var(--border); filter: none;
+}
+.web5 button.pick .swatch { margin: 0; width: 10px; height: 10px; }
+.web5 button.pick.me { font-weight: 700; }
+.web5 button.pick:hover:not(:disabled) { color: var(--text); border-color: var(--c); filter: none; }
+.web5 button.pick.on { color: var(--text); border-color: var(--c); background: color-mix(in srgb, var(--c) 22%, var(--panel));
+  box-shadow: 0 0 0 1px var(--c) inset; }
+.web5 button.pick.multi.on { box-shadow: 0 0 0 1px var(--c) inset, 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
+svg.chart .area { transition: fill-opacity .2s ease; }
+svg.chart .area.glow { filter: drop-shadow(0 0 6px var(--glow)); animation: area-on .35s ease-out both; }
+@keyframes area-on { from { opacity: 0; } to { opacity: 1; } }
+svg.chart .series { transition: opacity .2s ease; }
+svg.chart .series.faded { opacity: .22; }
+.lg-hint { font-size: 13px; color: var(--text-dim); }
 
 .table-wrap { overflow-x: auto; margin-top: 8px; -webkit-overflow-scrolling: touch; }
 .probe-table { font-size: 13.5px; }
@@ -189,9 +209,34 @@ details.answers { margin-top: 22px; border-top: 1px solid var(--border); padding
   .probe-card .actions > button.big, .probe-card .actions > button.primary { flex: 1 1 100%; justify-content: center; }
   .probe-card .actions > button.ghost { flex: 1 1 100%; justify-content: center; }
   .chart-host { padding: 4px 2px 0; }
+  .chart-pair { grid-template-columns: 1fr; }
   .lg-arms, .lg-models { gap: 8px 14px; }
   .lg-sep { flex-basis: 100%; height: 0; }           /* 모두 / 나만 go to their own line together */
   .probe-table { font-size: 12.5px; }
   .probe-table th { white-space: normal; font-size: 10.5px; letter-spacing: .02em; vertical-align: bottom; }
   .probe-table th, .probe-table td { padding: 7px 6px; }
+}
+
+/* ---- question: the session battery and the refill pack (10-01) ---------------------------------------------- */
+.batteries { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; margin: 18px 0 20px;
+  padding: 18px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel-alt); }
+.battery { margin: 0; text-align: center; min-width: 0; }
+.battery > figcaption { font-family: var(--font-display); font-weight: 600; font-size: 17px; color: var(--text); margin-bottom: 10px; }
+.battery-svg { width: 100%; max-width: 320px; height: auto; display: block; margin: 0 auto; }
+.bt-body { fill: #09080c; stroke: var(--text-dim); stroke-width: 4; }
+.bt-nub { fill: var(--text-dim); }
+.bt-tick { stroke: rgba(9, 8, 12, .55); stroke-width: 3; }
+.bt-bolt { fill: #fff; opacity: .92; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
+.bt-read { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.bt-pct { font-family: var(--mono); font-size: 40px; font-weight: 600; line-height: 1.05; }
+.bt-num { font-size: 13.5px; color: var(--text-dim); }
+.bt-plus { font-family: var(--font-display); font-size: 40px; color: var(--text-dim); text-align: center; }
+.battery.pack .bt-body { stroke: #3ecf6e; }
+.battery.pack .bt-nub { fill: #3ecf6e; }
+.batteries.low .battery:not(.pack) .bt-body { stroke: #ef4b4b; animation: bt-warn 1.2s ease-in-out infinite; }
+@keyframes bt-warn { 50% { stroke-opacity: .35; } }
+@media (max-width: 720px) {
+  .batteries { grid-template-columns: 1fr; gap: 8px; }
+  .bt-plus { font-size: 28px; }
+  .bt-pct { font-size: 32px; }
 }
