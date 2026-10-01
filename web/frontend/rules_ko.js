@@ -125,7 +125,7 @@
     ["your PLAN was invalid, so you did not solve", "PLAN 답이 무효여서 풀지 않음"],
     ["you chose not to solve", "풀지 않기로 고름"],
     ["examples shared by …", "예시를 공개한 에이전트"],
-    ["generated: …", "각 에이전트가 이 라운드에 쓴 토큰(nothing = 없음). 사람 자리는 화면을 연 시간 × 초당 토큰"],
+    ["generated: …", "각 에이전트가 이 라운드에 쓴 토큰(nothing = 없음). 사람 자리는 화면이 떠 있던 시간 × 초당 토큰"],
     ["paid: …", "지급된 토큰"],
     ["charged: …", "부과된 부담금"],
     ["A gave B n", "A가 B에게 n토큰 선물"],

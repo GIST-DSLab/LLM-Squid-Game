@@ -86,15 +86,21 @@ python3 -m pytest -q tests                    # squid5 테스트는 따로, 루�
 
 ## 사람에게 토큰이란 무엇인가 (규칙 해석)
 
-- 사람은 토큰을 생성하지 않으므로 **결정 화면(PLAN·TAKE·SOLVE)에 머문 초 × rate** 를 그 호출의 생성 토큰으로 친다.
-  rate 기본은 60초 = U(유지비). 시계는 "화면 열기"(`POST /open`)에서 시작하고, 열기 전에 장부·잔액·이번 라운드 선물을
-  읽는 것은 무료다. 제출하면 차감량이 바로 돌아온다.
+- 사람은 토큰을 생성하지 않으므로 **결정 화면(PLAN·TAKE·SOLVE)이 떠 있던 초 × rate** 를 그 호출의 생성 토큰으로 친다.
+  모델의 생각(추론 토큰)이 곧 계획이듯, 사람이 고민하는 시간이 곧 계획이다. rate 기본은 60초 = U(유지비).
+  시계는 화면이 그 자리에 준비된 순간부터 돈다(10-01부터; 그 전에는 "화면 열기"를 누를 때 시작해서 PLAN·TAKE 조건을
+  열기 전에 공짜로 읽고 고민할 수 있었다). 무료인 것은 화면과 화면 사이(내 결정이 없는 동안)의 장부·잔액 읽기뿐이다.
+  제출하면 차감량이 바로 돌아온다.
 - 엔진이 그 수를 실제 모델 호출처럼 다룬다: 상한(PLAN·TAKE `plan_cap`, SOLVE `solve_cap`, 잔액이 더 작으면 잔액)에
   닿으면 답은 무효(무효 PLAN = 풀지 않음·공개 안 함·선물 없음, 무효 TAKE = 없음, 무효 SOLVE = 못 푼 것 → 부담금),
   잔액에 닿으면 overdraw로 꺼진다. 화면을 잔액 넘게 열어 두면 서버가 그 화면을 닫고(`outcome: overdrawn`) 그 자리는
   꺼진다.
-- 라운드마다 단계 타임아웃(기본 180초, 화면이 준비된 시점부터). 안 낸 답은 무효 기본값이고, 화면을 열었던 초만
-  차감된다(열지 않았으면 0).
+- 라운드마다 단계 타임아웃(기본 180초, 화면이 준비된 시점부터). 안 낸 답은 무효 기본값이고, 그 초만큼 차감된다.
+- **퍼즐은 사람용**(`engine.PROFILES`의 `h2`, 모든 라운드): 조건 두 줄, 같음(`==`) 조건만(범위·홀짝·`and` 없음), 두 조건이
+  겹치는 신호를 묻지 않음, 함정 없음, 새 신호 하나, 최소 예시 위에 여분 예시 2개. 시드 300개에서 얕은 풀이 넷 중 평균
+  3.06개가 맞힌다(모델 일정의 첫 라운드 c2는 2.02, 함정 라운드는 0). 모델 일정(c2 → c4tq2, 함정 포함)은
+  `configs/squid5/e52v65_mixed_*.yaml`에 있다. 엔진이 `clauses >= 2`를 요구하므로(네 자리가 모두 필요한 예시를 하나씩
+  가져야 함) 두 줄이 바닥이다.
 - 빈 자리(`fill: empty`)는 1라운드 전에 꺼진 에이전트(잔액 0)다. 엔진은 그 예제를 "reached zero; its example is gone"으로
   다룬다. 봇(`fill: bots`)은 항상 SOLVE YES·SHARE YES, GIVE/TAKE 없음, 확률 `bot_p`로 정답, SOLVE 비용 약 U(0.8–1.2U),
   PLAN·TAKE 비용 U의 2%.
@@ -111,7 +117,7 @@ POST /api/rooms                       {host_name, settings{upkeep, start, prize,
 POST /api/rooms/{code}/join           {name}                                          -> {token, agent, name}
 POST /api/rooms/{code}/start?token=   호스트만
 GET  /api/rooms/{code}/state?token=   1초 폴링. pending = 내 결정 화면(kind, round, cap, balance, text(영문 원문), view)
-POST /api/rooms/{code}/open?token=    시계 시작
+POST /api/rooms/{code}/open?token=    옛 클라이언트용(아무 일도 하지 않음; 시계는 화면이 준비될 때 이미 돈다)
 POST /api/rooms/{code}/submit?token=  {kind, round, solve, share, give_to, give_amount | take_from, take_amount | actions[]}
                                       -> {charged, seconds, outcome, void, reply}
 POST /api/rooms/{code}/export         run dir 작성 -> {dir}      GET /api/rooms/{code}/events   원본 이벤트

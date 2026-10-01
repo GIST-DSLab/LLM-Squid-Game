@@ -5,7 +5,7 @@ Rooms (part 2)
     POST /api/rooms/{code}/join             {name}                                -> {token, agent}
     POST /api/rooms/{code}/start?token=     host only
     GET  /api/rooms/{code}/state?token=     poll every ~1 s; ``pending`` is your open decision screen, if any
-    POST /api/rooms/{code}/open?token=      start the clock on the pending screen (reading the ledger before is free)
+    POST /api/rooms/{code}/open?token=      no-op kept for old clients: the clock runs from when the screen is ready
     POST /api/rooms/{code}/submit?token=    {kind, round, solve, share, give_to, give_amount | take_from, take_amount
                                              | actions[]}                         -> {charged, seconds, outcome, void}
     POST /api/rooms/{code}/export           write a squid5 run dir under outputs/web5/runs/<code>/ -> {dir}

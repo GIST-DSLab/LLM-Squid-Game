@@ -13,7 +13,7 @@ main.arena { max-width: 1080px; overflow-x: clip; }
 .web5 .muted { color: var(--text-dim); }
 
 /* display headings, like the landing's .section-title (uppercase, letter-spaced) */
-.web5 .panel-title, .web5 .section-title, .web5 .pre-title, .decision-form > h2, .modal-head h2, .err-title {
+.web5 .panel-title, .web5 .section-title, .decision-form > h2, .modal-head h2, .err-title {
   font-family: var(--font-display);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -127,10 +127,6 @@ tr.you td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 #ledger-legend td:first-child { font-family: var(--mono); font-size: 12px; white-space: nowrap; color: var(--teal-bright); }
 
 /* ---- decision: before opening ------------------------------------------------------------------------------------ */
-.web5 .pre-open { border-color: var(--accent-dim); border-left: 3px solid var(--accent);
-  background: linear-gradient(160deg, rgba(237, 27, 118, 0.07), var(--panel) 45%); }
-.web5 .pre-title { font-size: 18px; margin: 0 0 8px; }
-.pre-open > .row { margin-top: 18px; }
 .deadline { font-size: 13px; color: var(--text-dim); margin: 6px 0; }
 .deadline b { font-family: var(--mono); color: var(--text); font-weight: 500; }
 .deadline.urgent, .deadline.urgent b { color: var(--warn); font-weight: 600; }

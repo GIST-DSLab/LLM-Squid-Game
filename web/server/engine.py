@@ -6,11 +6,14 @@ A room runs one ``squid5.e52_game.Session`` in a background thread. The engine i
 takes (pro-rata), shared examples, SOLVE checking, charges, the split prize, the ledger lines and the event log exactly
 as it does for models; the reply text a human submits goes through the engine's own parsers.
 
-A person does not generate tokens. Each decision screen (PLAN, TAKE, SOLVE) is charged ``seconds open x rate``
-(default rate: 60 s = one upkeep U). The clock starts when the client opens the screen (``open``), not when the phase
-starts, so reading the ledger between screens is free. A screen open past the balance ends at zero like an overdraw; a
-phase that is not answered within ``timeout_s`` counts as the invalid default (no solve / no share / no gift / no take)
-and is charged the seconds it was open.
+A person does not generate tokens; the time a person spends deciding stands in for them (a model's thinking is its
+planning, a person's is the time on the screen). Each decision screen (PLAN, TAKE, SOLVE) is charged ``seconds x rate``
+(default rate: 60 s = one upkeep U), counted from the moment the screen is ready for the seat, so no part of the
+decision can be thought through off the clock. Only the time between screens (no decision waiting) is free. A screen
+left past the balance ends at zero like an overdraw; a phase that is not answered within ``timeout_s`` counts as the
+invalid default (no solve / no share / no gift / no take) and is charged its seconds.
+
+The puzzles are the human set: a person's puzzle is far easier than a model's (see ``PROFILES``).
 
 An empty seat is an agent shut down before round 1 (balance 0); the engine then treats its example as lost.
 """
@@ -34,11 +37,13 @@ from squid5.core.wallet import Wallet
 
 AGENTS = list(rules.TEAM_AGENTS)
 
-# the v6.3 smoke schedule (configs/squid5/e52v6_smoke_mixed.yaml)
-PROFILES = {"c2": {"clauses": 2}, "c3": {"clauses": 3}, "c3t": {"clauses": 3, "trap_query": True},
-            "c3at": {"clauses": 3, "conjunctions": 1, "trap_query": True},
-            "c4tq2": {"clauses": 4, "trap_query": True, "n_queries": 2}}
-SCHEDULE = ["c2", "c3", "c3t", "c3at", "c4tq2", "c4tq2", "c4tq2", "c4tq2"]
+# Human puzzles, every round: the floor the engine allows (2 clauses, so each of the four seats can hold a
+# load-bearing example) with every hard part removed. Equality conditions only (no ranges, parity or "and"), the new
+# signal is not one where both clauses fire, no trap round, one new signal, and two spare examples on top of the
+# minimal set. Over 300 seeds the four shallow solvers get 3.06 of 4 right (the model schedule's first round: 2.02,
+# its trap rounds: 0). The model schedule (configs/squid5/e52v65_mixed_*.yaml) ramps c2 -> c4tq2 with traps.
+PROFILES = {"h2": {"clauses": 2, "predicates": False, "overlap_query": False, "extra_clues": 2}}
+SCHEDULE = ["h2"] * 8
 
 
 @dataclass
@@ -190,8 +195,6 @@ class HumanSeat:
         return f"human:{self.name}"
 
     def cost(self, p: Pending, now: float | None = None) -> tuple[int, float]:
-        if p.opened_at is None:
-            return 0, 0.0
         secs = max(0.0, (now or time.time()) - p.opened_at)
         return int(round(secs * self.room.settings.rate)), secs
 
@@ -200,8 +203,9 @@ class HumanSeat:
         kind = kind_of(user)
         with self.room.lock:
             bal = self.room.session.w.balances[self.agent]
+            now = time.time()  # the clock starts when the screen is ready, not when the person looks at it
             p = Pending(kind, int(re.search(r"^ROUND (\d+)", user, re.M).group(1)), cap, bal, user,
-                        view_of(kind, user, self.agent, self.room.session, cap), time.time())
+                        view_of(kind, user, self.agent, self.room.session, cap), now, opened_at=now)
             self.pending = p
         timeout = self.room.settings.timeout_s
         while not p.done.wait(0.2):
@@ -227,12 +231,11 @@ class HumanSeat:
         p.done.set()
 
     def open(self) -> Pending:
+        """Kept for old clients: the clock already runs from the moment the screen was ready."""
         with self.room.lock:
             p = self.pending
             if p is None:
                 raise LookupError("no decision screen is waiting for you")
-            if p.opened_at is None:
-                p.opened_at = time.time()
             return p
 
     def submit(self, body: dict) -> Pending:
@@ -244,8 +247,6 @@ class HumanSeat:
                 raise ValueError(f"the open screen is {p.kind}, not {body['kind']}")
             if body.get("round") is not None and int(body["round"]) != p.round:
                 raise ValueError(f"the open screen is round {p.round}")
-            if p.opened_at is None:  # submitting without opening: the clock starts now (0 s)
-                p.opened_at = time.time()
             charged, secs = self.cost(p)
             n = p.view.get("n", 1)
             p.submitted, p.submitted_at = body, time.time()

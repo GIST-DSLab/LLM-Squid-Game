@@ -128,14 +128,15 @@ def test_seconds_are_charged_and_a_void_reply_is_the_default(client):
     assert s["rounds"][0]["agents"][A6]["generated"] == 600  # never more than the balance
 
 
-def test_timeout_is_the_invalid_default_and_costs_nothing_unopened(client):
-    ps = make_room(client, 2, rounds=1, timeout_s=1.0, fill="empty", seed=3)
+def test_timeout_is_the_invalid_default_and_is_charged_its_seconds(client):
+    """The clock runs from the moment a screen is ready: a person who never touches it still pays the time."""
+    ps = make_room(client, 2, rounds=1, timeout_s=1.0, fill="empty", seed=3, rate=100.0)
     start(client, ps)
     ann, bob = ps
 
     def policy(p, pend):
         if p.agent == A11:
-            return None  # bob never opens his screens
+            return None  # bob never answers his screens
         if pend["kind"] == "plan":
             return {"solve": True, "share": True, "give_to": A11, "give_amount": 100}
         if pend["kind"] == "take":
@@ -147,8 +148,10 @@ def test_timeout_is_the_invalid_default_and_costs_nothing_unopened(client):
     assert s["status"] == "finished" and time.time() - t0 < 12
     r1 = s["rounds"][0]["agents"]
     assert r1[A11]["invalid_plan"] and r1[A11]["chose_solve"] is False and r1[A11]["shared"] is False
-    assert r1[A11]["generated"] == 0 and r1[A11]["balance_after"] == 6000 + 100  # the gift still arrived
-    assert bob.state()["last"]["outcome"] == "timeout" and bob.state()["last"]["charged"] == 0
+    gen = r1[A11]["generated"]
+    assert gen >= 100 and r1[A11]["balance_after"] == 6000 + 100 - gen  # >= 1 s x 100/s; the gift still arrived
+    last = bob.state()["last"]
+    assert last["outcome"] == "timeout" and last["seconds"] >= 1.0 and last["charged"] >= 100
     # empty seats are shut down before round 1 and their examples are gone
     assert r1.keys() == {A6, A11} and s["rounds"][0]["end"][A17] == 0
     assert s["seats"][2]["kind"] == "empty" and s["seats"][2]["status"] == "dead"
@@ -200,3 +203,35 @@ def test_only_the_two_cheapest_solvers_are_paid_by_default(client):
              {} if pend["kind"] == "take" else {"actions": answers_for(5, pend["round"])})
     paid = [a for a, v in s["rounds"][0]["agents"].items() if v["paid"]]
     assert 1 <= len(paid) <= 3 and "fewest SOLVE tokens" in s["system_text"]  # two, or more on a tie
+
+
+def test_the_clock_runs_before_any_open_call(client):
+    ps = make_room(client, 1, rounds=1, rate=1000.0, fill="bots", timeout_s=30)
+    start(client, ps)
+    t0 = time.time()
+    while (pend := ps[0].state()["pending"]) is None:
+        assert time.time() - t0 < 10
+        time.sleep(0.05)
+    assert pend["opened_at"] == pend["created_at"]
+    time.sleep(0.3)
+    assert ps[0].state()["pending"]["charged_so_far"] >= 250  # 0.3 s x 1,000/s, no /open call made
+
+
+def test_people_get_the_easy_puzzle_set():
+    """Every web round: 2 clauses of equality conditions, no trap, one new signal, spare examples."""
+    from squid5.core.puzzle import Spec, puzzle_for, shallow_correct
+
+    from web.server.engine import PROFILES, RoomSettings
+
+    sched = RoomSettings(rounds=12, seed=1).schedule()
+    assert len(sched) == 12
+    for name in set(sched):
+        sp = Spec(**PROFILES[name])
+        assert (sp.clauses, sp.conjunctions, sp.predicates, sp.trap_query, sp.n_queries) == (2, 0, False, False, 1)
+        assert sp.extra_clues >= 2
+    right = []
+    for seed in range(40):
+        pz = puzzle_for(seed, 1 + seed % 8, Spec(**PROFILES[sched[seed % 8]]))
+        assert all(c.kind == "eq" for c, _ in pz.rule.clauses)
+        right.append(len(shallow_correct(pz)))
+    assert sum(right) / len(right) >= 2.5  # the model schedule's easiest round: about 2 of 4

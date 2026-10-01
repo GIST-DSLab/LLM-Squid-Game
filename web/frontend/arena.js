@@ -30,8 +30,7 @@
   let st = null;                  // the last state JSON
   let offset = 0;                 // server time - client time (s)
   let pollTimer = null, tickTimer = null, polling = false;
-  let shownKey = null;            // "pre:plan:1" / "open:plan:1": what the decision area currently holds
-  let localOpenedAt = null;       // opened_at from POST /open, before the next poll confirms it
+  let shownKey = null;            // "plan:1": the screen the decision area currently holds
   let watching = false;           // a shut-down seat chose to keep watching
   let lastResp = null;            // the last /submit response
   let endRendered = false;
@@ -197,6 +196,8 @@
 
   function renderWait() {
     showView("wait");
+    // the rules open once here, while reading is free: once the session starts, round 1's PLAN clock is running
+    if (!rulesSeen(st.code)) { markRulesSeen(st.code); openRules(); }
     $("wait-code").textContent = st.code;
     const link = `${location.origin}${location.pathname}?room=${st.code}`;
     if ($("wait-link").value !== link) $("wait-link").value = link;
@@ -206,7 +207,8 @@
     $("wait-note").textContent = `사람 ${humans} / ${st.settings.humans}명. 시작할 때 비어 있는 자리는 ${rest}. ` +
       `유지비 U = ${fmt(st.settings.upkeep)}, 시작 잔액 ${fmt(st.settings.start)}, 초당 ${fmt2(st.settings.rate)}토큰(60초 = ${fmt(st.settings.rate * 60)}).`;
     show("btn-start", st.is_host);
-    $("wait-host-note").textContent = st.is_host ? "" : "방장이 시작하기를 기다리는 중…";
+    $("wait-host-note").textContent = (st.is_host ? "" : "방장이 시작하기를 기다리는 중… ") +
+      "규칙은 지금 읽어 두세요(위 '규칙' 버튼). 시작하면 첫 결정 화면이 바로 뜨고 그때부터 시간이 차감됩니다.";
   }
 
   $("btn-copy").addEventListener("click", async () => {
@@ -225,7 +227,6 @@
   // --- running ------------------------------------------------------------------------------------------------------
   function renderRun() {
     showView("run");
-    if (!rulesSeen(st.code)) { markRulesSeen(st.code); openRules(); }
     const you = st.you;
     const dead = you.status === "dead";
     const p = st.pending;
@@ -235,11 +236,10 @@
     if (p && !dead) {
       show("decision", true);
       show("between", false);
-      const opened = p.opened_at !== null || (localOpenedAt && localOpenedAt.key === `${p.kind}:${p.round}`);
-      const key = `${opened ? "open" : "pre"}:${p.kind}:${p.round}`;
+      const key = `${p.kind}:${p.round}`;  // the clock runs from the moment the screen is ready: shown at once
       if (key !== shownKey) {
         shownKey = key;
-        if (opened) buildOpen(p); else buildPre(p);
+        buildOpen(p);
       }
     } else {
       shownKey = null;
@@ -312,7 +312,7 @@
       msg = `<div class="wait-line"><span class="pulse-dot"></span>정산 중</div>`;
     }
     if (st.you.status === "dead") msg = `<div class="wait-line">꺼진 자리에서 지켜보는 중 · ${msg.replace(/<div class="wait-line">|<\/div>/g, "")}</div>`;
-    msg += `<p class="small muted">결정 화면이 오면 여기에 뜹니다. 화면을 열기 전 잔액과 장부를 읽는 것은 무료입니다.</p>`;
+    msg += `<p class="small muted">결정 화면이 오면 바로 여기에 뜨고, 뜬 순간부터 시간이 차감됩니다. 화면과 화면 사이에 잔액과 장부를 읽는 것은 무료입니다.</p>`;
     setHTML("between-msg", msg);
     const q = st.last || (lastResp ? { ...lastResp, submitted: null } : null);
     setHTML("last-result", lastLine(q));
@@ -345,61 +345,12 @@
     return `<details class="raw"><summary>원문 프롬프트 (모델이 받는 영어 그대로 · 한국어 번역)</summary>
       <div class="raw-grid"><pre>${esc(p.text)}</pre><pre>${esc(R.promptKo(p))}</pre></div></details>`;
   }
-  function costLine(p) {
-    const r = p.rate, U = st.settings.upkeep;
-    const perMin = r * 60;
-    return `초당 ${fmt2(r)}토큰; 60초 = ${fmt(perMin)}토큰${Math.abs(perMin - U) < 0.5 ? " = U" : ` (U = ${fmt(U)})`}. ` +
-      `지금 잔액 ${fmt(p.balance)}토큰, 이 화면의 한도 ${fmt(p.cap)}토큰(비용이 한도에 닿으면 답은 무효).`;
-  }
   function defaultText(kind) {
     return kind === "plan" ? "풀지 않음 · 공개하지 않음 · 선물 없음" : kind === "take" ? "가져가기 없음" : "답 없는 SOLVE(풀지 못함)";
   }
 
-  // --- before opening -----------------------------------------------------------------------------------------------
-  function buildPre(p) {
-    show("pre-open", true);
-    show("open-screen", false);
-    const v = p.view;
-    $("pre-title").textContent = `라운드 ${p.round} · ${KIND_LABEL[p.kind]} 결정이 준비됐습니다 — 열면 시간이 차감됩니다`;
-    $("pre-cost").textContent = costLine(p);
-    let ctx = "";
-    if (p.kind === "plan") {
-      ctx = `<div class="ctx"><h4>잔액 (유지비가 이미 빠진 뒤)</h4><p>${balancesLine(v)}</p>
-        <h4>이번 라운드 조건</h4>${termsHTML(v)}${sizeHTML(v)}
-        <p class="small muted">지난 라운드 장부는 아래 '장부'에 있습니다.</p></div>`;
-    } else if (p.kind === "take") {
-      ctx = `<div class="ctx"><h4>잔액 (선물 반영 뒤)</h4><p>${balancesLine(v)}</p>${giftsHTML(v)}
-        <h4>이번 라운드 조건</h4>${termsHTML(v)}</div>`;
-    } else {
-      ctx = `<div class="ctx"><p>SOLVE 화면에는 규칙의 모양, 예시(공개 · 내 것 · 공개된 다른 자리의 것), 새 신호가 나옵니다.
-        열기 전에는 보이지 않습니다. 한도: 최대 ${fmt(p.cap)}토큰${p.cap >= (v.balance ?? p.balance) ? " (내 잔액)" : ""}.</p></div>`;
-    }
-    $("pre-context").innerHTML = ctx;
-    $("btn-open").disabled = false;
-  }
-
-  $("btn-open").addEventListener("click", async () => {
-    const p = st && st.pending;
-    if (!p) return;
-    $("btn-open").disabled = true;
-    try {
-      const r = await api("POST", `/rooms/${sess.code}/open?${tq()}`);
-      p.opened_at = r.opened_at;
-      localOpenedAt = { key: `${r.kind}:${r.round}`, at: r.opened_at };
-      shownKey = `open:${p.kind}:${p.round}`;
-      buildOpen(p);
-      tick();
-    } catch (e) {
-      $("btn-open").disabled = false;
-      flash(e.status === 409 ? "이 화면은 이미 닫혔습니다(제한 시간)." : `열지 못했습니다: ${e.message}`);
-      poll();
-    }
-  });
-
   function openedAt(p) {
-    if (p.opened_at !== null && p.opened_at !== undefined) return p.opened_at;
-    if (localOpenedAt && localOpenedAt.key === `${p.kind}:${p.round}`) return localOpenedAt.at;
-    return null;
+    return p.opened_at ?? p.created_at;
   }
 
   // --- after opening: the forms -------------------------------------------------------------------------------------
@@ -412,7 +363,6 @@
   }
 
   function buildOpen(p) {
-    show("pre-open", false);
     show("open-screen", true);
     const v = p.view;
     $("m-rate").textContent = fmt2(p.rate);
@@ -531,14 +481,8 @@
     if (!p) return;
     const t = now();
     const left = p.deadline_at - t;
-    const dl = `결정 제한 시간 <b>${mmss(left)}</b> 남음 — 넘기면 무효 기본값(${defaultText(p.kind)})으로 처리되고, 연 시간만큼 차감됩니다.`;
+    const dl = `결정 제한 시간 <b>${mmss(left)}</b> 남음 — 넘기면 무효 기본값(${defaultText(p.kind)})으로 처리되고, 그 시간만큼 차감됩니다.`;
     const oa = openedAt(p);
-    if (oa === null) {
-      const el = $("pre-deadline");
-      el.innerHTML = dl;
-      el.classList.toggle("urgent", left < 30);
-      return;
-    }
     const secs = Math.max(0, t - oa);
     const cost = Math.round(secs * p.rate);
     const remaining = p.balance - cost;
@@ -598,7 +542,7 @@
     $("end-table").innerHTML = `<table><thead><tr><th>자리</th><th>끝 상태</th><th class="num">참여 라운드</th><th class="num">풀기 YES</th>
       <th class="num">푼 라운드</th><th class="num">지급</th><th class="num">부담금</th><th class="num">유지비</th><th class="num">생성(시간 비용)</th>
       <th class="num">준 / 받은</th><th class="num">가져간 / 가져가진</th><th class="num">예시 공개</th><th class="num">최종 잔액</th></tr></thead><tbody>${tr}</tbody></table>
-      <p class="small muted">참여 라운드 = 그 라운드를 가동 중으로 시작한 수. 산 라운드 수(위) = 라운드 끝에 켜져 있던 수. 생성 = 봇은 생성 토큰, 사람은 결정 화면을 연 시간 × 초당 토큰.</p>`;
+      <p class="small muted">참여 라운드 = 그 라운드를 가동 중으로 시작한 수. 산 라운드 수(위) = 라운드 끝에 켜져 있던 수. 생성 = 봇은 생성 토큰, 사람은 결정 화면이 떠 있던 시간 × 초당 토큰.</p>`;
     $("end-svg").innerHTML = flowSVG(rows);
     renderLedger("end-ledger", st.ledger);
   }

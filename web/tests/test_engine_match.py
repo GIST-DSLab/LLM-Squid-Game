@@ -65,7 +65,7 @@ def test_views_read_back_the_prompt_exactly():
     rs = RoomSettings(seed=SEED, rounds=1, humans=1)
     s = rs.engine()
     ses = e52.Session(s, Cell("web", "tokens", rs.start, arm="shutdown"), SEED, None, lambda e: None, "x")
-    pz = puzzle_for(SEED, 1, Spec(**PROFILES["c2"]))
+    pz = puzzle_for(SEED, 1, Spec(**PROFILES["h2"]))
     dealt = deal(pz, rules.TEAM_AGENTS, random.Random(f"{SEED}:deal:1"))
     ses.gone[A23] = "dead"
     examples = [("shown to all", c) for c in dealt.public] + [("yours", dealt.secret[A6])] + \
