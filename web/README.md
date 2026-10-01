@@ -64,7 +64,7 @@ python3 web/tools/export_model_curves.py            # → web/frontend/data/mode
 ```
 
 환경변수: `WEB5_DB_PATH`(SQLite 경로, 기본 `outputs/web5/arena.db`), `WEB5_DSN`(Postgres, 있으면 SQLite 대신),
-`WEB5_CORS_ORIGINS`(쉼표 구분; 기본은 localhost 5600/8600 + `https://irregular6612.github.io`),
+`WEB5_CORS_ORIGINS`(쉼표 구분; 기본은 localhost 5600/8600 + `https://gist-dslab.github.io`),
 `WEB5_EXPORT_ROOT`(내보내기 폴더, 기본 `outputs/web5/runs`).
 
 ### 같은 LAN의 여러 기기로 플레이
@@ -128,7 +128,7 @@ POST /api/probe                       {anon_id, ts, self[5], other[5], meta}    
 | 값 | 어디에 | 무엇 |
 |---|---|---|
 | 프런트 → 백엔드 URL | `web/frontend/config.js` → `window.WEB5_API` | Render 서비스 URL, 예 `https://squid5-web5-api.onrender.com` |
-| 백엔드 → 허용 origin | Render 환경변수 `WEB5_CORS_ORIGINS` | Pages origin, 예 `https://irregular6612.github.io` (경로 없이, 끝 슬래시 없이) |
+| 백엔드 → 허용 origin | Render 환경변수 `WEB5_CORS_ORIGINS` | Pages origin, 예 `https://gist-dslab.github.io` (경로 없이, 끝 슬래시 없이) |
 
 1. **Render**: `web/deploy/Dockerfile`(빌드 컨텍스트 = 저장소 루트)과 `web/deploy/render.yaml`을 쓴다. 대시보드 → New →
    Blueprint → 이 저장소. `render.yaml`은 저장소 루트에 있어야 Blueprint가 읽으므로 배포할 때 복사한다(또는 대시보드에서

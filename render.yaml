@@ -1,5 +1,4 @@
-# Render Blueprint for the squid5 web5 API. Copy to the repo root (Render reads render.yaml there) or create the
-# service by hand with dockerfilePath web/deploy/Dockerfile and the same env vars.
+# Render Blueprint for the squid5 web5 API (copy of web/deploy/render.yaml).
 services:
   - type: web
     name: squid5-web5-api

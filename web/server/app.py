@@ -34,7 +34,7 @@ from .engine import AGENTS, HumanSeat, Room, RoomSettings, export_files, new_cod
 from .store import REPO, Store, write_run_dir
 
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
-                "https://irregular6612.github.io"]
+                "https://gist-dslab.github.io"]
 FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
 
 
