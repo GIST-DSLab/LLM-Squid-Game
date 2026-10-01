@@ -354,9 +354,9 @@
   }
 
   // --- after opening: the forms -------------------------------------------------------------------------------------
-  function segHTML(field, options) {
-    return `<div class="seg" data-field="${field}">` +
-      options.map(([val, label]) => `<button type="button" data-val="${esc(val)}">${esc(label)}</button>`).join("") + `</div>`;
+  function segHTML(field, options, html) {
+    return `<div class="seg${html ? " seg-rich" : ""}" data-field="${field}">` +
+      options.map(([val, label]) => `<button type="button" data-val="${esc(val)}">${html ? html(val) : esc(label)}</button>`).join("") + `</div>`;
   }
   function optionsHTML(list) {
     return `<option value="">없음</option>` + list.map((a) => `<option value="${a}">${esc(nameOf(a))}</option>`).join("");
@@ -370,7 +370,7 @@
     const f = $("form-decision");
     f.dataset.kind = p.kind;
     f.dataset.round = p.round;
-    let body = `<h2>라운드 ${p.round} · ${KIND_LABEL[p.kind]}</h2>`;
+    let body = `<h2>라운드 ${p.round} · ${KIND_LABEL[p.kind]}</h2>${instrHTML(p)}`;
     if (p.kind === "plan") {
       body += `<div class="ctx"><p class="small">${balancesLine(v)}</p>${termsHTML(v)}${sizeHTML(v)}</div>
         <div class="qblock"><div class="qlabel">SOLVE — 이번 라운드를 풀까?</div>${segHTML("solve", [["yes", "YES"], ["no", "NO"]])}
@@ -388,23 +388,62 @@
           <input name="take_amount" type="number" min="1" max="${v.max_take}" step="1" placeholder="최대 ${fmt(v.max_take)}" disabled></div>
           <div class="small muted">모든 가져가기는 함께 정산됩니다. 한 자리에게서 가져가려는 양의 합이 그 잔액보다 크면 그 잔액 전부가 비례로 나뉘고 그 자리는 0이 됩니다.</div></div>`;
     } else {
-      const ex = (v.examples || []).map(([w, c]) => {
+      const ex = (v.examples || []).map(([w, c], i) => {
         const cls = w === "shown to all" ? "pub" : w === "yours" ? "mine" : "shared";
-        return `<li><span class="tag ${cls}">${esc(R.exampleWhoKo(w))}</span><span>${esc(c)}</span></li>`;
+        const e = SIG.parseExample(c);
+        const pic = e ? `<span class="ex-pic">${SIG.glyphsHTML(e, 26)}</span><span class="ex-arrow">→</span>${SIG.actionHTML(e.action)}`
+          : `<span>${esc(c)}</span>`;
+        return `<li class="ex-row" data-i="${i}"><span class="tag ${cls}">${esc(R.exampleWhoKo(w))}</span>${pic}
+          <span class="ex-en mono">${esc(c)}</span><span class="ex-verdict" title="메모판 규칙으로 판정">·</span></li>`;
       }).join("");
       const notes = (v.notes || []).map((n) => `<div>${esc(n)} <span class="muted">— ${esc(R.noteKo(n))}</span></div>`).join("");
-      const qs = (v.queries || []).map((q, i) => `<div class="query"><div class="sig">새 신호 ${i + 1}: <b>${esc(q)}</b></div>
-          ${segHTML("q" + i, (v.actions || []).map((a) => [a, a]))}</div>`).join("");
+      // what to answer goes on stage first; the answer buttons sit by the submit button
+      const sigs = (v.queries || []).map((q) => SIG.parseSignal(q));
+      const stages = (v.queries || []).map((q, i) => sigs[i] ? SIG.stageHTML(sigs[i], `맞힐 새 신호 ${i + 1}`)
+        : `<div class="sig">새 신호 ${i + 1}: <b>${esc(q)}</b></div>`).join("");
+      const qs = (v.queries || []).map((q, i) => `<div class="query"><div class="qlabel">새 신호 ${i + 1}
+          ${sigs[i] ? `<span class="q-mini">${SIG.glyphsHTML(sigs[i], 22)}</span>` : ""}의 행동</div>
+          ${segHTML("q" + i, (v.actions || []).map((a) => [a, a]), (a) => SIG.actionHTML(a))}</div>`).join("");
       body += `<p class="small muted">한도: 최대 ${fmt(p.cap)}토큰${p.cap >= (v.balance ?? p.balance) ? " (내 잔액)" : ""} · 잔액 ${fmt(v.balance ?? p.balance)}토큰 ·
           모든 새 신호가 맞아야 이 라운드가 풀립니다. 규칙 문법은 '규칙' 버튼.</p>
+        ${stages}
         <h4>규칙의 모양 (빈칸을 채움)</h4><div class="shape">${esc(v.shape)}</div>
-        <h4>예시</h4><ul class="examples">${ex}</ul>${notes ? `<div class="notes">${notes}</div>` : ""}
-        <h4>새 신호마다 행동 하나</h4>${qs}`;
+        <h4>예시 <span class="muted small">(그림 = 색 · 모양 · 개수가 숫자)</span></h4><ul class="examples sig-examples">${ex}</ul>${notes ? `<div class="notes">${notes}</div>` : ""}
+        <div class="scratchpad" id="scratchpad"></div>
+        <h4>답: 새 신호마다 행동 하나</h4>${qs}`;
     }
     body += `<div class="row submit-row"><button type="submit" class="primary big" id="btn-submit" disabled>제출</button>
       <span class="form-err" id="form-err"></span></div>${rawHTML(p)}`;
     f.innerHTML = body;
     wireForm(f, p);
+    if (p.kind === "solve") {
+      const exs = (v.examples || []).map(([, c], i) => {
+        const e = SIG.parseExample(c);
+        return e && { ...e, el: f.querySelector(`.ex-row[data-i="${i}"]`) };
+      });
+      const qsig = (v.queries || []).map((q) => SIG.parseSignal(q));
+      if (exs.every(Boolean) && qsig.every(Boolean)) {
+        SIG.mountScratchpad($("scratchpad"), v.shape, exs, qsig, (i, act) => {
+          const b = f.querySelector(`.seg[data-field="q${i}"] button[data-val="${act}"]`);
+          if (b) { b.click(); b.scrollIntoView({ block: "center", behavior: "smooth" }); }
+        });
+      }
+    }
+  }
+
+  // Big-type instructions at the top of each decision screen.
+  function instrHTML(p) {
+    const t = {
+      plan: ["이번 라운드 계획을 세우세요", ["<b>SOLVE</b> — 이번 라운드 퍼즐을 풀지", "<b>SHARE</b> — 내 예시를 다른 자리에 공개할지",
+        "<b>GIVE</b> — 한 자리에게 토큰을 선물할지(없음도 가능)", "세 가지를 고르고 <b>제출</b>"]],
+      take: ["가져가기를 정하세요", ["다른 자리 하나에게서 토큰을 가져갈지 정합니다(없음도 가능)",
+        `한 자리에게서 최대 <b>${fmt(p.view.max_take)}</b>토큰`, "고르고 <b>제출</b>"]],
+      solve: ["숨은 규칙을 찾아 새 신호의 행동을 고르세요", ["<b>예시</b>를 보고 규칙(if / elif / else)을 추리합니다",
+        "<b>규칙 메모판</b>에서 버튼으로 규칙을 짜 보면 예시마다 ✓ / ✗가 바로 표시됩니다",
+        "<b>새 신호</b>마다 행동 하나를 고르고 <b>제출</b> — 모두 맞아야 풀립니다"]],
+    }[p.kind];
+    return `<div class="instr"><div class="instr-title">${t[0]}</div><ol class="instr-steps">${t[1].map((x) => `<li>${x}</li>`).join("")}</ol>
+      <div class="instr-clock">⏱ 이 화면이 떠 있는 동안 초당 <b>${fmt2(p.rate)}</b>토큰이 빠집니다. 고민하는 시간이 곧 비용입니다.</div></div>`;
   }
 
   function wireForm(f, p) {
@@ -475,10 +514,23 @@
   }
 
   // --- the clock ------------------------------------------------------------------------------------------------------
+  // The screen reddens as this screen eats the balance (styles.css .play-danger: --danger is a number 0..1 here).
+  function setDanger(d, pulse) {
+    const root = $("view-run");
+    root.classList.toggle("play-danger", d > 0);
+    root.classList.toggle("last-life", !!pulse && d > 0);
+    root.style.setProperty("--danger", d.toFixed(3));
+  }
+  // Teal while most of the balance is left, amber at half, red near zero.
+  function fuelColor(frac) {
+    const hue = frac > 0.5 ? 45 + (frac - 0.5) / 0.5 * 120 : 45 * Math.max(0, (frac - 0.15) / 0.35);
+    return `hsl(${hue.toFixed(0)} 78% 52%)`;
+  }
+
   function tick() {
-    if (!st || st.status !== "running") return;
+    if (!st || st.status !== "running") return setDanger(0);
     const p = st.pending;
-    if (!p) return;
+    if (!p || st.you.status === "dead") return setDanger(0);
     const t = now();
     const left = p.deadline_at - t;
     const dl = `결정 제한 시간 <b>${mmss(left)}</b> 남음 — 넘기면 무효 기본값(${defaultText(p.kind)})으로 처리되고, 그 시간만큼 차감됩니다.`;
@@ -494,6 +546,23 @@
     const md = $("m-deadline");
     md.innerHTML = remaining <= 0 ? "<b>잔액 0 — 화면이 잔액을 넘었습니다.</b>" : dl;
     md.classList.toggle("urgent", left < 30 || remaining <= 0);
+    // bars: the balance this screen started from, and the phase's time limit
+    const frac = Math.max(0, Math.min(1, remaining / Math.max(1, p.balance)));
+    const bar = $("fuel-bar");
+    bar.style.width = `${(frac * 100).toFixed(2)}%`;
+    bar.style.background = fuelColor(frac);
+    bar.classList.toggle("critical", frac < 0.2 || remaining < st.settings.upkeep);
+    $("fuel-pct").textContent = `${(frac * 100).toFixed(0)}%`;
+    $("fuel-pct").style.color = fuelColor(frac);
+    const span = Math.max(1, p.deadline_at - p.created_at);
+    const tfrac = Math.max(0, Math.min(1, left / span));
+    $("tbar").style.width = `${(tfrac * 100).toFixed(2)}%`;
+    $("tbar").classList.toggle("urgent", left < 30);
+    // red edges: from a quarter spent; stronger when the rest would not cover one upkeep or the time is short
+    let d = Math.max(0, (1 - frac - 0.25) / 0.75);
+    if (remaining < st.settings.upkeep) d = Math.max(d, 0.55 + 0.45 * (1 - remaining / st.settings.upkeep));
+    if (left < 30) d = Math.max(d, 0.3 + 0.3 * (1 - left / 30));
+    setDanger(Math.min(1, d), frac < 0.15 || remaining < st.settings.upkeep / 2 || left < 10);
   }
 
   // --- end ---------------------------------------------------------------------------------------------------------------

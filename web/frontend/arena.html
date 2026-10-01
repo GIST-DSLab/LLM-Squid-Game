@@ -140,6 +140,12 @@
               <div class="tile-sub">토큰 — 비용이 한도에 닿으면 답은 무효</div>
             </div>
           </div>
+          <div class="fuel" aria-label="남은 잔액 막대">
+            <div class="fuel-head"><span class="fuel-label">잔액</span><span id="fuel-pct" class="fuel-pct mono">100%</span>
+              <span class="fuel-sub muted">이 화면이 떴을 때의 잔액 대비</span></div>
+            <div class="fuel-track"><div id="fuel-bar" class="fuel-bar"></div></div>
+            <div class="tbar-track" title="결정 제한 시간"><div id="tbar" class="tbar"></div></div>
+          </div>
           <div id="m-deadline" class="deadline"></div>
         </div>
         <form id="form-decision" class="panel decision-form" autocomplete="off"></form>
@@ -233,6 +239,7 @@
 
 <script src="config.js"></script>
 <script src="rules_ko.js"></script>
+<script src="signal_ui.js"></script>
 <script src="arena.js"></script>
 </body>
 </html>

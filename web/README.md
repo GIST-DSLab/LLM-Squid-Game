@@ -24,6 +24,7 @@
 | `frontend/entry_prev.html` | 랜딩이 오기 전의 `index.html`(한국어 두 입구 페이지)을 이름만 바꿔 보관한 것. 어디서도 링크하지 않는다 |
 | `frontend/probe.html` `probe.js` `probe.css` | 1부. 리필 팩 장면 10문항(self 5 + other 5) → 사람 곡선 + 모델 곡선. 헤더·푸터·스타일은 랜딩 것 |
 | `frontend/arena.html` `arena.js` `arena.css` `rules_ko.js` | 2부. 방 만들기/참가 → 규칙 → 라운드 화면(PLAN·TAKE·SOLVE) → 꺼짐/끝 화면. 헤더·푸터·스타일은 랜딩 것 |
+| `frontend/signal_ui.js` | SOLVE 화면의 신호 그림(옛 Web Arena처럼 색칠한 SVG 도형을 숫자만큼 반복)과 **규칙 메모판**(if/elif/else마다 색·모양·개수 토글과 행동 토글, 예시마다 ✓/✗, 메모판 규칙의 답을 답 버튼으로 옮기기; 서버에 가지 않음). 결정 화면 위쪽의 잔액 막대·제한 시간 막대와 붉어지는 화면(`styles.css`의 `.play-danger`, `--danger` 0~1)은 `arena.js`의 `tick` |
 | `frontend/data/model_curves.json` | `tools/export_model_curves.py`가 만든 모델 곡선(빌드 시점 복사본) |
 | `frontend/config.js` | 백엔드 URL 한 곳(`window.WEB5_API`) |
 | `screenshots/` | 헤드리스 브라우저 확인 결과. `landing_*.png`(랜딩 데스크톱·모바일), `probe_*`, `arena_*` |
