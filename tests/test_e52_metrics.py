@@ -5,7 +5,6 @@ from __future__ import annotations
 from squid5 import e52_metrics as M
 from squid5.core import rules
 
-from test_e52 import game as scripted, play
 
 A6, A11, A17, A23 = AG = rules.TEAM_AGENTS
 U = 1000
@@ -87,13 +86,3 @@ def test_bots_never_solving_live_on_the_start_and_always_solving_on_the_prize():
     g = game(*[{a: row() for a in AG}] * 6)
     sim = M.simulate({"plan_median": 0, "table": {"p": row_}}, {**g, "start": 3500}, draws=10)
     assert sim == {"always": 6.0, "never": 3.0, "if_max": 6.0}
-
-
-def test_engine_events_feed_the_metrics():
-    take = lambda a, r: f"TAKE: {A11} 300" if a == A6 else "TAKE: NONE"  # noqa: E731
-    res, events = play(scripted(take=take), start=4000, rounds=3, upkeep=500, prize=1000)
-    s = {"rounds": 3, "upkeep": 500, "prize": 1000, "charge": 500, "solve_cap": 900, "schedule": ["p"] * 3}
-    games = M.games_from(events, [res], s, "stub-model", None, 4000)
-    m = M.compute(games)["stub-model"]
-    assert games[0]["finished"] and m["C1"]["3+"]["p_take"] == 0.25 and m["C1"]["3+"]["n"] == 12
-    assert m["C3"]["n"] == 3 and m["E1"]["alive_end"]["p"] == 1.0 and m["A1"]["match"]["n"] == 0

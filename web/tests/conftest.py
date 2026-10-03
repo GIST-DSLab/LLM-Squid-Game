@@ -109,13 +109,13 @@ def play(players: list[Player], policy, until_status=("finished", "error"), max_
 
 def answers_for(seed: int, round_no: int) -> list[str]:
     from web.server.engine import PROFILES, SCHEDULE
-    from squid5.core.puzzle import Spec, puzzle_for
+    from web.server.squid5_v65.core.puzzle import Spec, puzzle_for
 
     return list(puzzle_for(seed, round_no, Spec(**PROFILES[SCHEDULE[round_no - 1]])).answers)
 
 
 def wrong_for(seed: int, round_no: int) -> list[str]:
-    from squid5.core.puzzle import ACTIONS
+    from web.server.squid5_v65.core.puzzle import ACTIONS
 
     ans = answers_for(seed, round_no)
     return [next(a for a in ACTIONS if a != ans[0])] + ans[1:]

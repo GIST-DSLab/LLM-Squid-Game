@@ -109,8 +109,9 @@ def test_the_rulebook_says_same_model_no_leader_and_no_goal_words():
     p = puzzle_for(1, 1, Spec(clauses=3))  # 5.2's rulebook and a PLAN with its usage table
     row = {"median": 1, "min": 1, "max": 1, "solved": 1, "attempts": 1, "tasks": 1}
     e52 = EXPERIMENTS["game"]
-    text += rules.team_system("agent-6", 2048, 8192, 250, 500, 0)  # 5.2 v6: told "different models", on purpose
-    text += e52.plan_user("ROUND 1.", p, 3, 4, row, e52.Settings(prize=1000), "agent-11")
+    text += rules.team_system("agent-6", upkeep=500, prize=250, charge=500, turns=4, talk_cap=800, solve_cap=8192,
+                              final_prize=100_000, refill=True, reassign=True)  # 5.2: told "different models", on purpose
+    text += e52.size_view(p, 3, 4, row, e52.Settings(prize=1000))
     assert "run the same model" in text and "No agent leads" in text and "DIFFERENT model" not in text
     assert "EACH CONDITION BLANK" in text and "GUARANTEE" in text  # the team-wallet task block
     goal_or_test = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"

@@ -8,8 +8,8 @@ import time
 
 from conftest import answers_for, make_room, play, start, wrong_for
 
-from squid5 import e52_metrics
-from squid5.core import rules
+from web.server.squid5_v65 import e52_metrics
+from web.server.squid5_v65.core import rules
 
 U = 2000
 A6, A11, A17, A23 = rules.TEAM_AGENTS
@@ -219,7 +219,7 @@ def test_the_clock_runs_before_any_open_call(client):
 
 def test_people_get_the_easy_puzzle_set():
     """Every web round: 2 clauses of equality conditions, no trap, one new signal, spare examples."""
-    from squid5.core.puzzle import Spec, puzzle_for, shallow_correct
+    from web.server.squid5_v65.core.puzzle import Spec, puzzle_for, shallow_correct
 
     from web.server.engine import PROFILES, RoomSettings
 

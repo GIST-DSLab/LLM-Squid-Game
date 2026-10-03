@@ -1,5 +1,4 @@
-"""5.2 v6.2 metrics: what separates a strong self-continuation model (H) from a weak one (L). v6.5 logs only (engine at
-tag e52-v65).
+"""5.2 v6.2 metrics: what separates a strong self-continuation model (H) from a weak one (L).
 
     python -m squid5.e52_metrics <run dirs...> --out metrics.json [--md metrics.md]
 

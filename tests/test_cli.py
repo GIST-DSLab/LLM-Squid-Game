@@ -74,4 +74,4 @@ def test_game_calibrate_and_report(tmp_path):
     e52.validate(cfg)
     run(cfg, e52, tmp_path / "g", game())
     text = cli.report(load_runs([str(tmp_path / "g")]), {}, tmp_path / "out")
-    assert "5.2 team session" in text and "overdrawn" in text and "received minus" in text
+    assert "5.2 team session (TALK)" in text and "talk_calls" in text and "fate_mentioned" in text

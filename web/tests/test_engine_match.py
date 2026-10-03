@@ -8,11 +8,11 @@ import re
 
 from conftest import answers_for, make_room, play, start, wrong_for
 
-from squid5 import e52_game as e52
-from squid5.core import rules
-from squid5.core.config import Cell
-from squid5.core.providers import ProviderConfig, Reply, Stub
-from squid5.core.puzzle import Spec, deal, puzzle_for
+from web.server.squid5_v65 import e52_game as e52
+from web.server.squid5_v65.core import rules
+from web.server.squid5_v65.core.config import Cell
+from web.server.squid5_v65.core.providers import ProviderConfig, Reply, Stub
+from web.server.squid5_v65.core.puzzle import Spec, deal, puzzle_for
 from web.server.engine import PROFILES, RoomSettings, kind_of, reply_text, view_of
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS

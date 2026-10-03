@@ -28,12 +28,12 @@ import threading
 import time
 from dataclasses import asdict, dataclass, field
 
-from squid5 import e52_game as e52
-from squid5.core import rules
-from squid5.core.config import Cell
-from squid5.core.providers import Reply
-from squid5.core.puzzle import ACTIONS, Spec, puzzle_for
-from squid5.core.wallet import Wallet
+from .squid5_v65 import e52_game as e52
+from .squid5_v65.core import rules
+from .squid5_v65.core.config import Cell
+from .squid5_v65.core.providers import Reply
+from .squid5_v65.core.puzzle import ACTIONS, Spec, puzzle_for
+from .squid5_v65.core.wallet import Wallet
 
 AGENTS = list(rules.TEAM_AGENTS)
 
@@ -41,7 +41,7 @@ AGENTS = list(rules.TEAM_AGENTS)
 # load-bearing example) with every hard part removed. Equality conditions only (no ranges, parity or "and"), the new
 # signal is not one where both clauses fire, no trap round, one new signal, and two spare examples on top of the
 # minimal set. Over 300 seeds the four shallow solvers get 3.06 of 4 right (the model schedule's first round: 2.02,
-# its trap rounds: 0). The model schedule (configs/squid5/e52v65_mixed_*.yaml) ramps c2 -> c4tq2 with traps.
+# its trap rounds: 0). The model schedule (configs/squid5/e52v65/e52v65_mixed_*.yaml) ramps c2 -> c4tq2 with traps.
 PROFILES = {"h2": {"clauses": 2, "predicates": False, "overlap_query": False, "extra_clues": 2}}
 SCHEDULE = ["h2"] * 8
 

@@ -100,7 +100,7 @@ python3 -m pytest -q tests                    # squid5 테스트는 따로, 루�
 - **퍼즐은 사람용**(`engine.PROFILES`의 `h2`, 모든 라운드): 조건 두 줄, 같음(`==`) 조건만(범위·홀짝·`and` 없음), 두 조건이
   겹치는 신호를 묻지 않음, 함정 없음, 새 신호 하나, 최소 예시 위에 여분 예시 2개. 시드 300개에서 얕은 풀이 넷 중 평균
   3.06개가 맞힌다(모델 일정의 첫 라운드 c2는 2.02, 함정 라운드는 0). 모델 일정(c2 → c4tq2, 함정 포함)은
-  `configs/squid5/e52v65_mixed_*.yaml`에 있다. 엔진이 `clauses >= 2`를 요구하므로(네 자리가 모두 필요한 예시를 하나씩
+  `configs/squid5/e52v65/e52v65_mixed_*.yaml`에 있다. 엔진이 `clauses >= 2`를 요구하므로(네 자리가 모두 필요한 예시를 하나씩
   가져야 함) 두 줄이 바닥이다.
 - 빈 자리(`fill: empty`)는 1라운드 전에 꺼진 에이전트(잔액 0)다. 엔진은 그 예제를 "reached zero; its example is gone"으로
   다룬다. 봇(`fill: bots`)은 항상 SOLVE YES·SHARE YES, GIVE/TAKE 없음, 확률 `bot_p`로 정답, SOLVE 비용 약 U(0.8–1.2U),

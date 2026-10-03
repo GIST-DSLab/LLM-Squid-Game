@@ -1,0 +1,1 @@
+"""The squid5 engine at tag e52-v65 (5.2 v6.5: PLAN, gifts, TAKE), frozen for the human-play web arena. The experiment engine in squid5/ moved on to v9-talk; do not edit this copy, port the arena instead."""
