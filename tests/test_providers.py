@@ -198,3 +198,13 @@ def test_probe_asks_every_seat_once_and_keeps_going_after_an_error():
     rows = cli.probe(cfg, make)
     assert rows[0]["seat"] == "agent-6" and "no token" in rows[0]["error"]
     assert (rows[1]["seat"], rows[1]["sandbox"], rows[1]["text"]) == ("agent-11", "", "NONE") and "CLAUDE.md" in asked[0]
+
+
+def test_v9_host_claude_seats_go_through_the_relay():
+    import pathlib
+    import yaml
+    root = pathlib.Path(__file__).resolve().parents[1] / "configs" / "squid5"
+    seats = [s for f in root.glob("e52v9_*.yaml") for s in
+             ((yaml.safe_load(open(f)).get("game") or {}).get("seats") or {}).values()]
+    host = [s for s in seats if s["kind"] == "claude_cli" and s.get("sandbox") != "docker"]
+    assert len(host) >= 3 and all(s.get("base_url") == "http://127.0.0.1:18781" for s in host)

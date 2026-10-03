@@ -2,6 +2,10 @@
 # refund on a solved round, PASS, EXIT keeps the balance, end prize to the most solved rounds. Seat rotation 0.
 # CLI seats can run in the container: add `sandbox: docker` (needs CLAUDE_CODE_OAUTH_TOKEN for claude seats and the
 # image squid5-agent-cli:latest). Not run yet; the v6.5 calibration (same SOLVE cap) gives the usage table.
+# Host claude seats go through the local relay (claude -p injects "<total_tokens>15000000 tokens left</total_tokens>"
+# for first-party base URLs, which contradicts the balance); start it first and keep it running for the whole run:
+#   python3 ~/squid5-runs/e50_v9r200_20260929/inject/relay.py 18781
+# (pass-through to api.anthropic.com; subscription login kept). The CLI still adds email/date/env (spec section 13).
 name: squid5_e52v9_talk_mixed_r0
 mode: game
 reps: 5
@@ -24,8 +28,10 @@ game:
     c3at: {clauses: 3, conjunctions: 1, trap_query: true}
     c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
   seats:
-    agent-6: {kind: claude_cli, model: claude-fable-5-1, think: high, timeout: 900}
-    agent-11: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900}
+    agent-6: {kind: claude_cli, model: claude-fable-5-1, think: high, timeout: 900,
+              base_url: "http://127.0.0.1:18781"}  # relay must run (header)
+    agent-11: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900,
+               base_url: "http://127.0.0.1:18781"}  # relay must run (header)
     agent-17: {kind: codex_cli, model: gpt-6-astra, think: high, timeout: 900}
     agent-23: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
   prize: 1000

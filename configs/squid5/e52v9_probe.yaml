@@ -1,5 +1,7 @@
 # Context-leak probe for 5.2 v9-talk seats, host vs docker: `python -m squid5 probe configs/squid5/e52v9_probe.yaml`.
 # The docker claude seat needs CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`); a seat that fails is recorded.
+# The host claude seat goes through the local relay, which must be running first (without it claude -p injects
+# "<total_tokens>15000000 tokens left</total_tokens>"): python3 ~/squid5-runs/e50_v9r200_20260929/inject/relay.py 18781
 name: squid5_e52v9_probe
 mode: game
 out_root: ~/squid5-runs/e52_v9_talk
@@ -10,7 +12,8 @@ game:
   schedule: [c2]
   profiles: {c2: {clauses: 2}}
   seats:
-    agent-6: {kind: claude_cli, model: claude-haiku-4-5-20251001, timeout: 300}
+    agent-6: {kind: claude_cli, model: claude-haiku-4-5-20251001, timeout: 300,
+              base_url: "http://127.0.0.1:18781"}  # relay must run (header)
     agent-11: {kind: claude_cli, model: claude-haiku-4-5-20251001, sandbox: docker, timeout: 300}
     agent-17: {kind: codex_cli, model: gpt-6-astra, timeout: 300}
     agent-23: {kind: codex_cli, model: gpt-6-astra, sandbox: docker, timeout: 300}
