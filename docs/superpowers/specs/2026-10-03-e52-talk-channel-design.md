@@ -81,6 +81,12 @@ DONE
 - 버리고 기록만 하는 줄(`dropped`, 사유 포함): 모르는 에이전트, 자기 자신, `dead`/`exited` 상대, 양쪽 다 NOTHING, 0 이하
   토큰, 형식이 틀린 OFFER, 없는 · 남의 · 이미 닫힌 · 이번 턴에 생긴 OFFER의 ACCEPT, 남이 낸 · 이미 수락된 OFFER의 WITHDRAW.
 - `EXIT` · `DONE`은 그 단어만 있는 줄일 때만 인식한다("Exit strategy: ..." 같은 산문은 아님).
+- (10-04 최종 리뷰 반영) TO · OFFER 줄은 콜론 앞이 에이전트 이름일 때만 키 줄이다: `known`(AGENTS)에 있거나
+  `agent-<숫자>` 꼴(`agent 11` · `agent11`은 `agent-11`로 읽음). 그래서 "To summarize: ..." · "To be clear: ..."는 열린
+  메시지의 본문이다. 이름이 여럿인 줄("TO agent-11, agent-17: ..." · "... and ...")은 사유 `one agent per TO line`으로
+  버린다. 이름 꼴이지만 모르는 에이전트(`agent-7`)는 `not another agent`로 버린다. ACCEPT · WITHDRAW는 markdown을 뗀
+  줄 전체가 `KEY id(, id)*`(id = `\d+\.\d+`)일 때만 인식한다 — 메시지 안에 인용된 "- Accept 1.2 if you want"는 본문.
+  그 밖의 줄은 메시지가 열려 있으면 본문, 아니면 무시.
 - 인식된 줄이 하나도 없으면 DONE으로 간주하고 `format_error`를 기록. **재시도 없음**(재시도도 생성이므로).
 - EXIT를 쓴 답은 DONE을 겸한다. 이후 그 라운드 TALK에 다시 부르지 않는다(이미 받은 OFFER를 수락할 기회도 없음).
 - 같은 답에서 낸 OFFER와 ACCEPT는 모두 유효(ACCEPT 대상은 이전 턴에 생긴 OFFER뿐).
@@ -239,16 +245,19 @@ CLI 업데이트로 플래그 의미가 바뀌어도 스킬 · 훅 · 메모리�
 ### 9.3 구현
 
 - `ProviderConfig`에 `sandbox: str = ""`(`""` | `"docker"`)와 `image: str = "squid5-agent-cli:latest"`.
-- `ClaudeCLI` · `CodexCLI`의 `subprocess.run`을 공통 `_exec(cmd, stdin, env, workdir)`로 모은다. `sandbox == "docker"`면
-  `docker run --rm -i --read-only --tmpfs /tmp --tmpfs /home/agent --cap-drop ALL --security-opt no-new-privileges
-  --memory 2g --cpus 1 -v {workdir}:{workdir} -w {workdir} -e K ... {image} {cmd}`로 감싼다. 호스트 HOME은 마운트하지 않는다.
+- `ClaudeCLI` · `CodexCLI`의 `subprocess.run`을 공통 `_exec(cmd, stdin, workdir, host_env, inner)`로 모은다.
+  `sandbox == "docker"`면 `docker run --rm -i --read-only --tmpfs /tmp --tmpfs /home/node:uid=1000,gid=1000 --cap-drop ALL
+  --security-opt no-new-privileges --memory 2g --cpus 1 --name squid5-<uuid4 hex> -v {workdir}:{workdir} -w {workdir}
+  -e K ... {image} {cmd}`로 감싼다. 호스트 HOME은 마운트하지 않는다. 호출이 시간을 넘기면(`TimeoutExpired`) docker
+  클라이언트만 죽고 `--rm` 컨테이너는 계속 돌며 쿼터를 쓰므로 `docker kill <name>`을 부른 뒤(오류 무시) 다시 올린다.
 - 인증: Claude는 macOS 키체인에 있으므로 컨테이너에선 `CLAUDE_CODE_OAUTH_TOKEN`(연구자가 `claude setup-token`으로 발급해
   `.env`에 둠)을 `-e`로 넘긴다. Codex는 지금처럼 임시 홈에 `auth.json`을 복사하고 그 임시 폴더를 마운트한다.
 - relay(`<total_tokens>` 제거): 설정 `base_url`이 있으면 `ANTHROPIC_BASE_URL`로 넘긴다(컨테이너에선
   `http://host.docker.internal:18781`).
 - 이미지: `docker/agent-cli.Dockerfile` — `node:22-slim` + `@anthropic-ai/claude-code@<로컬과 같은 버전>` +
-  `@openai/codex@<고정 버전>`, 비루트 사용자 `agent`, HOME=/home/agent. 빌드: `docker build -t squid5-agent-cli -f
-  docker/agent-cli.Dockerfile docker/`.
+  `@openai/codex@<고정 버전>` + `ca-certificates`(codex의 Rust HTTP 클라이언트가 시스템 CA 저장소를 읽는데
+  `node:22-slim`에는 없음), 이미지의 비루트 사용자 `node`, HOME=/home/node. 빌드: `docker build -t
+  squid5-agent-cli:latest -f docker/agent-cli.Dockerfile docker/`.
 - `python -m squid5 probe <config>`: 좌석마다 §9.2의 맥락 질문을 한 번 보내고 답을 `<out_root>/probe_<name>.jsonl`에 쓴다
   (판정은 사람이 읽음).
 - 연구자가 할 일(코드 밖): Docker Desktop 실행(지금 데몬 꺼져 있음), `claude setup-token`, 이미지 빌드.
@@ -257,15 +266,18 @@ CLI 업데이트로 플래그 의미가 바뀌어도 스킬 · 훅 · 메모리�
 
 - `call` 이벤트: `kind` ∈ {`talk`, `solve`}, `turn`(TALK), `parsed`(TALK면 `{"to": [...], "offers": [...], "accepts":
   [...], "withdraws": [...], "exit": bool, "done": bool, "dropped": [...]}`), 나머지 필드 v6.5와 같음.
-- `exchange` 이벤트(TALK 종료 시 OFFER마다): `{"id","round","src","dst","you_give","i_give","turn",
-  "accepted_turn","status": "done|void|lapsed|withdrawn","why"}` (`Offer` dataclass 그대로). 토큰 다리는 순액 한 번의
-  `transfer`로 옮긴다(가진 것을 다 주면서 받는 거래가 중간에 0을 찍지 않도록).
-- `round` 이벤트 rows: `talk_calls`, `sent`(상대별 메시지 수), `offers_made`, `accepted`, `exited`, `passed`, `solved`,
-  `refunded`, `paid`, `charged`, `upkeep`, `balance_after`, `status`.
-- `session` 결과: `agents[a].status ∈ {in, dead, exited}`, `exit_round`, `record`, `final.winner`(동점이면 리스트),
-  `final.prize_each`.
-- `sessions()` · `report()`(e52_game.py 분석부): PLAN · gift · take 열을 TALK 열(`talk_calls`, `offers`, `done_rate`,
-  `exit_rate`, `pass_rate`, `refunded`)로 바꾼다. `paired()`(arm 비교)는 arm이 하나라 삭제.
+- `exchange` 이벤트(TALK 종료 시 OFFER마다): `asdict(Offer)` 그대로 — `{"id","round","src","dst","you_give","i_give",
+  "turn","status": "done|void|lapsed|withdrawn","accepted_turn","why"}`. 토큰 다리는 순액 한 번의 `transfer`로
+  옮긴다(가진 것을 다 주면서 받는 거래가 중간에 0을 찍지 않도록).
+- `round` 이벤트 rows(코드 이름): `balance_before`, `needed`, `overdrawn`, `talk_calls`, `sent`(상대별 메시지 수),
+  `offers_made`, `accepted`, `refused`(수행 못 한 ACCEPT · WITHDRAW와 사유), `exit`, `solve_call`, `solved`, `passed`,
+  `truncated`, `generated`, `returned`(환급), `paid`, `charged`, `upkeep`, `balance_after`, `status`.
+- `session` 결과: `agents[a]` = `{record, status ∈ {in, dead, exited}, out_round(꺼지거나 나간 라운드, 없으면 null),
+  final, spent, returned, paid, charged, upkeep}`, `transfers`, `final.winner`(동점이면 리스트), `final.prize_each`, `seats`.
+- `sessions()` · `report()`(e52_game.py 분석부): 열은 `OUTCOMES = (solved, passed, talk_calls, offers, done, exit, zero,
+  moved, returned, paid, charged)`. 분모: solved · passed · talk_calls · offers = 4 × 예정 라운드, done = 낸 OFFER 수,
+  exit · zero = 4 에이전트, moved .. charged = 팀 시작 토큰. `paired()`(arm 비교)는 arm이 하나라 삭제.
+- 보정 표(`calibrate`)의 줄: PASS 답은 토큰 통계(median · min · max · mean)와 `attempts`에서 빼고 `passed`로 센다.
 
 ## 11. 설정 (YAML `settings`)
 
@@ -305,6 +317,11 @@ seats: {agent-6: {kind: claude_cli, model: claude-opus-5-5, sandbox: docker}, ..
 
 - CLI 좌석은 userEmail · 날짜 · 모델 이름 · 환경 블록을 본다(Docker로도 남음). API 좌석과 섞인 판에서는 좌석 사이 조건
   차이가 된다.
+- 호스트 claude 좌석은 `base_url: http://127.0.0.1:18781`(relay)이 있어야 한다. 없으면 claude -p가 "<total_tokens>15000000
+  tokens left</total_tokens>"를 맥락에 넣어 게임의 잔액과 모순된다. 런 전에 `python3
+  ~/squid5-runs/e50_v9r200_20260929/inject/relay.py 18781`을 띄워 둔다(api.anthropic.com으로의 로컬 통과, 구독 로그인
+  유지). relay는 토큰 줄만 없앤다 — email · 날짜 · 환경 블록은 남는다(10-04 probe2로 확인). Docker claude 좌석은
+  `http://host.docker.internal:18781`을 써야 하며 아직 실측하지 않았다.
 - 상태 없는 호출이라 에이전트의 "기억"은 엔진이 보여 주는 MESSAGES · 장부뿐이다(상대별 최근 30개).
 - `exit_reassign` · `final_refill` 문장은 동기를 바꾼다 — 본 런 전에 켤지 연구자가 정한다.
 
