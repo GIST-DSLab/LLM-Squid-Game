@@ -6,7 +6,9 @@
 FROM node:22-slim
 ARG CLAUDE_CODE_VERSION=2.1.288
 ARG CODEX_VERSION=0.160.0
-RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} @openai/codex@${CODEX_VERSION} \
+# ca-certificates: codex's Rust HTTP client reads the system CA store (node:22-slim ships none; node has its own).
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/* \
+ && npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} @openai/codex@${CODEX_VERSION} \
  && npm cache clean --force
 USER node
 ENV HOME=/home/node
