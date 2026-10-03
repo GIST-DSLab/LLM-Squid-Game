@@ -61,6 +61,76 @@ def test_anthropic_budget_model_and_a_cut_reply(monkeypatch):
     assert "output_config" not in seen["call"] and "system" not in seen["call"]
 
 
+def test_anthropic_budget_stays_below_the_cap_and_is_dropped_under_1024(monkeypatch):
+    seen = fake_anthropic(monkeypatch)
+    prov = P.make_provider(P.ProviderConfig("anthropic", "claude-haiku-4-5", think=2048))
+    prov.complete([{"role": "user", "content": "U"}], 1500)
+    assert seen["call"]["thinking"] == {"type": "enabled", "budget_tokens": 1499}
+    prov.complete([{"role": "user", "content": "U"}], 1000)
+    assert "thinking" not in seen["call"] and seen["call"]["max_tokens"] == 1000
+
+
+class FakeStatus(anthropic.APIStatusError):
+    def __init__(self, code):
+        Exception.__init__(self, f"status {code}")
+        self.status_code = code
+
+
+def test_anthropic_overloaded_and_mid_stream_5xx_are_retried_other_statuses_propagate(monkeypatch):
+    seen = fake_anthropic(monkeypatch)
+    calls = []
+
+    def stream(**kw):
+        calls.append(kw)
+        raise FakeStatus(seen["code"])
+    monkeypatch.setattr(P.time, "sleep", lambda s: None)
+    prov = P.make_provider(P.ProviderConfig("anthropic", "claude-opus-5-5", retries=1))
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: NS(messages=NS(stream=stream)))
+    for code in (529, 500, 408, 409, 429):
+        seen["code"], calls[:] = code, []
+        with pytest.raises(RuntimeError, match=f"anthropic {code}"):
+            prov.complete([{"role": "user", "content": "U"}], 100)
+        assert len(calls) == 2  # retried once
+    seen["code"], calls[:] = 400, []
+    with pytest.raises(anthropic.APIStatusError):
+        prov.complete([{"role": "user", "content": "U"}], 100)
+    assert len(calls) == 1
+
+
+def test_a_timed_out_docker_call_kills_its_named_container(monkeypatch, tmp_path):
+    (tmp_path / "auth.json").write_text("{}")
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
+    monkeypatch.setenv("SQUID5_SANDBOX_DIR", str(tmp_path / "sbx"))
+    calls = []
+
+    def run(cmd, **kw):
+        calls.append(cmd)
+        if cmd[:2] == ["docker", "run"]:
+            raise subprocess.TimeoutExpired(cmd, 1)
+        return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="no such container")
+    monkeypatch.setattr(P.subprocess, "run", run)
+    cfg = P.ProviderConfig("codex_cli", "gpt-6-astra", sandbox="docker", image="img:1", retries=0)
+    with pytest.raises(subprocess.TimeoutExpired):
+        P.make_provider(cfg)._call([{"role": "user", "content": "U"}], 100)
+    name = calls[0][calls[0].index("--name") + 1]
+    assert name.startswith("squid5-") and len(name) == 7 + 32 and calls[1] == ["docker", "kill", name]
+
+
+def test_codex_recovers_from_a_reconnect_error_event(monkeypatch, tmp_path):
+    (tmp_path / "auth.json").write_text("{}")
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
+    ok = ({"type": "error", "message": "Reconnecting... 1/5"},
+          {"type": "item.completed", "item": {"type": "agent_message", "text": "hi"}},
+          {"type": "turn.completed", "usage": {"output_tokens": 9}})
+    capture(monkeypatch, tmp_path, "\n".join(json.dumps(e) for e in ok))
+    prov = P.make_provider(P.ProviderConfig("codex_cli", "gpt-6-astra", retries=0))
+    assert prov.complete([{"role": "user", "content": "U"}], 100).text == "hi"
+    failed = (ok[0], {"type": "turn.failed", "error": {"message": "stream closed"}})
+    capture(monkeypatch, tmp_path, "\n".join(json.dumps(e) for e in failed))
+    with pytest.raises(RuntimeError, match="Reconnecting.*stream closed"):
+        prov._call([{"role": "user", "content": "U"}], 100)
+
+
 def capture(monkeypatch, tmp_path, stdout):
     seen = {}
 

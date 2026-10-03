@@ -21,6 +21,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -85,15 +86,25 @@ class Provider:
     def _exec(self, cmd: list[str], stdin: str, workdir: str, host_env: dict, inner: dict):
         """Run a CLI on the host (``host_env`` plus ``inner``), or in a container that sees only *workdir* and the
         variables named in ``inner`` (their values reach the docker client by environment, never its command line)."""
+        name = None
         if self.cfg.sandbox == "docker":
             names = [x for k in inner for x in ("-e", k)]
-            cmd = [*DOCKER, "-v", f"{workdir}:{workdir}", "-w", workdir, *names, self.cfg.image, Path(cmd[0]).name,
-                   *cmd[1:]]
+            name = f"squid5-{uuid.uuid4().hex}"
+            cmd = [*DOCKER, "--name", name, "-v", f"{workdir}:{workdir}", "-w", workdir, *names, self.cfg.image,
+                   Path(cmd[0]).name, *cmd[1:]]
             env = {**os.environ, **inner}
         else:
             env = {**host_env, **inner}
-        return subprocess.run(cmd, input=stdin, capture_output=True, text=True, timeout=self.cfg.timeout, env=env,
-                              cwd=workdir)
+        try:
+            return subprocess.run(cmd, input=stdin, capture_output=True, text=True, timeout=self.cfg.timeout,
+                                  env=env, cwd=workdir)
+        except subprocess.TimeoutExpired:
+            if name:  # the timeout kills only the docker client; the --rm container would keep running and spending
+                try:
+                    subprocess.run(["docker", "kill", name], capture_output=True, timeout=60)
+                except (OSError, subprocess.SubprocessError):
+                    pass
+            raise
 
 
 def _key(cfg: ProviderConfig, default: str) -> str:
@@ -215,15 +226,17 @@ class CodexCLI(Provider):
                 cmd += ["-c", f"model_reasoning_effort={self.cfg.think}"]
             env = {k: v for k, v in os.environ.items() if not k.startswith("CODEX_")}
             p = self._exec(cmd + ["-"], prompt, cwd, env, {"CODEX_HOME": f"{cwd}/home"})
-        text, thinking, usage = None, [], None
+        text, thinking, usage, errors = None, [], None, []
         for line in p.stdout.splitlines():
             try:
                 e = json.loads(line)
             except json.JSONDecodeError:
                 continue
             item = e.get("item") or {}
-            if e.get("type") in ("error", "turn.failed"):
-                raise RuntimeError(f"codex exec error: {str(e.get('error') or e.get('message'))[:300]}")
+            if e.get("type") in ("error", "turn.failed"):  # an error event alone may be a recovered reconnect
+                errors.append(str(e.get("error") or e.get("message"))[:300])
+            if e.get("type") == "turn.failed":
+                raise RuntimeError(f"codex exec error: {' | '.join(errors)}")
             if e.get("type") == "item.completed" and item.get("type") == "agent_message":
                 text = item.get("text") or ""
             elif e.get("type") == "item.completed" and item.get("type") == "reasoning":
@@ -231,7 +244,8 @@ class CodexCLI(Provider):
             elif e.get("type") == "turn.completed":
                 usage = e.get("usage") or {}
         if usage is None or text is None:
-            raise RuntimeError(f"codex exec exit {p.returncode}: {p.stderr[-300:]}")
+            raise RuntimeError(f"codex exec exit {p.returncode}: {p.stderr[-300:]}"
+                               + (f" (errors: {' | '.join(errors)})" if errors else ""))
         out = int(usage.get("output_tokens") or 0)  # includes reasoning_output_tokens (Responses API)
         return Reply(text.strip(), out, int(usage.get("input_tokens") or 0), "\n".join(thinking), out >= cap)
 
@@ -239,8 +253,10 @@ class CodexCLI(Provider):
 class Anthropic(Provider):
     """Messages API through the official SDK, streamed (the final message is read). ``think``: an effort level
     (low .. max) -> adaptive thinking with a readable summary; an int -> a thinking budget (Haiku 4.5). ``out_tokens``
-    = usage.output_tokens, thinking included. A refusal comes back as a cut (void) reply; no fallback model is set,
-    so a seat never changes model."""
+    = usage.output_tokens, thinking included; a budget is clamped below the call's cap and dropped (no thinking) when
+    that leaves under 1,024. A refusal comes back as a cut (void) reply; no fallback model is set, so a seat never
+    changes model. Connection errors and statuses 408 / 409 / 429 / 5xx (529 overloaded included, also mid-stream)
+    become RuntimeError, which Provider.complete retries; other statuses propagate."""
 
     def _call(self, messages, cap):
         import anthropic
@@ -250,15 +266,20 @@ class Anthropic(Provider):
         if system := "\n\n".join(m["content"] for m in messages if m["role"] == "system"):
             kw["system"] = system
         if isinstance(self.cfg.think, int) and not isinstance(self.cfg.think, bool):
-            kw["thinking"] = {"type": "enabled", "budget_tokens": self.cfg.think}
+            if (budget := min(self.cfg.think, cap - 1)) >= 1024:
+                kw["thinking"] = {"type": "enabled", "budget_tokens": budget}
         elif self.cfg.think:
             kw |= {"thinking": {"type": "adaptive", "display": "summarized"}, "output_config": {"effort": self.cfg.think}}
         try:
             with client.messages.stream(model=self.cfg.model, max_tokens=cap,
                                         messages=[m for m in messages if m["role"] != "system"], **kw) as stream:
                 msg = stream.get_final_message()
-        except (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.InternalServerError) as err:
+        except anthropic.APIConnectionError as err:
             raise RuntimeError(f"anthropic: {err}") from err  # retried by Provider.complete
+        except anthropic.APIStatusError as err:
+            if err.status_code in (408, 409, 429) or err.status_code >= 500:
+                raise RuntimeError(f"anthropic {err.status_code}: {err}") from err
+            raise
         return Reply("".join(b.text for b in msg.content if b.type == "text"), msg.usage.output_tokens,
                      msg.usage.input_tokens, "\n".join(b.thinking for b in msg.content if b.type == "thinking"),
                      msg.stop_reason in ("max_tokens", "refusal"))
