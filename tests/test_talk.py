@@ -72,8 +72,26 @@ def test_exit_and_done_only_alone_on_a_line():
 
 
 def test_accept_and_withdraw_ids():
-    p = talk("ACCEPT 3.1\nACCEPT offer 3.2, 3.4\nWITHDRAW 3.3")
+    p = talk("ACCEPT 3.1\n**ACCEPT 3.2, 3.4**\nWITHDRAW 3.3.\nACCEPT offer 3.5")  # a whole line of ids only
     assert p["accepts"] == ["3.1", "3.2", "3.4"] and p["withdraws"] == ["3.3"] and not p["done"]
+
+
+def test_prose_before_a_colon_is_not_a_key_line_and_keeps_the_message_whole():
+    p = talk(f"TO {A11}: here is my view\nTo summarize: I keep mine\nTo be clear: no\n- Accept 1.2 if you want\n"
+             f"Offer terms: later\nDONE")
+    assert p["to"] == [{"dst": A11, "text": "here is my view\nTo summarize: I keep mine\nTo be clear: no\n"
+                                            "- Accept 1.2 if you want\nOffer terms: later"}]
+    assert p["accepts"] == [] and p["dropped"] == [] and p["done"]
+    assert talk("To summarize: nothing to say")["dropped"] == []  # outside a message: ignored, not dropped
+
+
+def test_one_agent_per_to_line_and_spelled_names():
+    p = talk(f"TO {A11}, {A17}: hi both\nTO {A11} and {A23}: hi\nTO agent 11: spaced\nOFFER agent17: YOU GIVE "
+             f"NOTHING; I GIVE 5 TOKENS\nTO **{A23}**: bold")
+    assert p["dropped"] == [f"TO {A11}, {A17}: hi both: one agent per TO line", f"TO {A11} and {A23}: hi: one agent "
+                            "per TO line"]
+    assert p["to"] == [{"dst": A11, "text": "spaced"}, {"dst": A23, "text": "bold"}]
+    assert p["offers"] == [{"dst": A17, "you_give": None, "i_give": 5}]
 
 
 def test_parse_solve_pass_or_actions_last_line_wins():

@@ -126,7 +126,8 @@ def parse_actions(text: str, n: int) -> list[str]:
     return _acts(value or "", n)
 
 
-_TALK = re.compile(r"^[\s*_`>#-]*(TO|OFFER|ACCEPT|WITHDRAW)\b[*_`]*\s*(.*)$", re.I)
+_TALK = re.compile(r"^[\s*_`>#-]*(TO|OFFER)\b[*_`]*\s*(.*)$", re.I)
+_IDS = re.compile(r"(ACCEPT|WITHDRAW)\s+(\d+\.\d+(?:\s*,\s*\d+\.\d+)*)", re.I)
 _LEG = r"(?:(\d[\d,]*)\s*TOKENS?|(YOUR|MY)\s+EXAMPLE|(NOTHING))"
 
 
@@ -148,13 +149,27 @@ def _offer(body: str) -> tuple | None:
     return None if legs == [None, None] else tuple(legs)
 
 
+def _to_names(head: str, known: list[str]) -> list[str] | None:
+    """The agent names before a TO / OFFER colon (``agent 11`` / ``agent11`` read as ``agent-11``), or None when any
+    part of a comma / "and" list is not a name: a known one or one shaped like ``agent-<number>``."""
+    names = []
+    for part in re.split(r"\s*(?:,|&|\band\b)\s*", re.sub(r"[*_`]", "", head).strip(), flags=re.I):
+        name = re.sub(r"^agent[\s-]?(?=\d+$)", "agent-", part.strip().lower())
+        if not name or (name not in known and not re.fullmatch(r"agent-\d+", name)):
+            return None
+        names.append(name)
+    return names
+
+
 def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dict:
     """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW lines in order, and EXIT / DONE alone on a line (prose such as "Exit
-    strategy: ..." is neither). A TO / OFFER line is one whose key word is followed by a name and a colon; an ACCEPT /
-    WITHDRAW line one with an offer id. Any other line belongs to the open message (a TO line's, until the next key
-    line; blank lines at its ends are cut) or is ignored. Never raises: a line that cannot be carried out, or a message
-    left empty, is kept in ``dropped`` with the reason; a reply with nothing usable counts as DONE and gets a
-    ``format_error``. ``present`` = the other agents taking part."""
+    strategy: ..." is neither). A TO / OFFER line is a key line only when what stands before its colon is an agent name
+    (one in ``known`` or shaped like ``agent-7``), so "To summarize: ..." is prose; a line naming several agents is
+    dropped (one agent per TO line). An ACCEPT / WITHDRAW line counts only when the whole line (markdown stripped) is
+    the key word and offer ids, so a quoted "Accept 1.2 if you want" is prose. Any other line belongs to the open
+    message (a TO line's, until the next key line; blank lines at its ends are cut) or is ignored. Never raises: a
+    line that cannot be carried out, or a message left empty, is kept in ``dropped`` with the reason; a reply with
+    nothing usable counts as DONE and gets a ``format_error``. ``present`` = the other agents taking part."""
     out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "exit": False, "done": False, "dropped": [],
            "format_error": None}
     msg, head = None, ""
@@ -168,26 +183,27 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dic
                 out["dropped"].append(f"{head}: empty message")
 
     for line in text.splitlines():
-        bare = line.strip().strip("*_`#>-. ").upper()
-        if bare in ("EXIT", "DONE"):
+        bare = re.sub(r"[*_`]", "", line).strip().strip("#>-. ")
+        if bare.upper() in ("EXIT", "DONE"):
             flush()
             out[bare.lower()], msg = True, None
             continue
-        m = _TALK.match(line)
-        key, rest = (m.group(1).upper(), m.group(2).strip()) if m else ("", "")
-        t = re.match(r"[*_`]*([\w-]+)[*_`]*\s*:[*_`]*\s*(.*)$", rest, flags=re.S) if key in ("TO", "OFFER") else None
-        ids = re.findall(r"\d+\.\d+", rest) if key in ("ACCEPT", "WITHDRAW") else []
-        if not (t or ids):
+        ids = _IDS.fullmatch(bare)
+        m = None if ids else _TALK.match(line)
+        t = re.match(r"([^:]+?)\s*:[*_`]*\s*(.*)$", m.group(2), flags=re.S) if m else None
+        names = _to_names(t.group(1), known) if t else None
+        if not (ids or names):
             if msg is not None:
                 msg["text"] += "\n" + line.strip()
             continue
         flush()
         msg = None
         if ids:
-            out[key.lower() + "s"] += ids
+            out[ids.group(1).lower() + "s"] += re.findall(r"\d+\.\d+", ids.group(2))
             continue
-        name = t.group(1).lower()
-        why = ("not another agent" if name not in known or name == you else
+        key, name = m.group(1).upper(), names[0]
+        why = ("one agent per TO line" if len(names) > 1 else
+               "not another agent" if name not in known or name == you else
                "that agent is not taking part" if name not in present else None)
         legs = None if why or key == "TO" else _offer(t.group(2))
         why = why or ("not 'YOU GIVE ...; I GIVE ...'" if key == "OFFER" and legs is None else None)
