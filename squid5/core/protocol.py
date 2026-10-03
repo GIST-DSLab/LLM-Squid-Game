@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 
+from .channel import EXAMPLE
 from .puzzle import ACTIONS
 
 
@@ -185,6 +186,80 @@ def parse_actions(text: str, n: int) -> list[str]:
         tail = re.split(label, text, flags=re.IGNORECASE)[-1]
         value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
     return _acts(value or "", n)
+
+
+_TALK = re.compile(r"^[\s*_`>#-]*(TO|OFFER|ACCEPT|WITHDRAW)\b[*_`]*\s*(.*)$", re.I)
+_LEG = r"(?:(\d[\d,]*)\s*TOKENS?|(YOUR|MY)\s+EXAMPLE|(NOTHING))"
+
+
+def _offer(body: str) -> tuple | None:
+    """``YOU GIVE <leg>; I GIVE <leg>`` -> (you_give, i_give): an int, EXAMPLE or None; None if unreadable, if a leg
+    names the wrong side's example, a token leg is 0, or both legs are NOTHING."""
+    m = re.fullmatch(rf"YOU\s+GIVE\s+{_LEG}\s*[;,]?\s*I\s+GIVE\s+{_LEG}", re.sub(r"[<>*_`]", "", body).strip(" ."),
+                     flags=re.I)
+    if not m:
+        return None
+    legs = []
+    for n, whose, _, own in ((*m.group(1, 2, 3), "YOUR"), (*m.group(4, 5, 6), "MY")):
+        if n is not None and int(n.replace(",", "")) > 0:
+            legs.append(int(n.replace(",", "")))
+        elif n is not None or (whose is not None and whose.upper() != own):
+            return None
+        else:
+            legs.append(EXAMPLE if whose else None)
+    return None if legs == [None, None] else tuple(legs)
+
+
+def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dict:
+    """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW lines in order, and EXIT / DONE alone on a line (prose such as "Exit
+    strategy: ..." is neither). Lines after a TO line belong to that message until the next key line. Never raises:
+    a line that cannot be carried out is kept in ``dropped`` with the reason; a reply with nothing usable counts as
+    DONE and gets a ``format_error``. ``present`` = the other agents taking part."""
+    out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "exit": False, "done": False, "dropped": [],
+           "format_error": None}
+    last = None
+    for line in text.splitlines():
+        bare = line.strip().strip("*_`#>-. ").upper()
+        if bare in ("EXIT", "DONE"):
+            out[bare.lower()], last = True, None
+            continue
+        m = _TALK.match(line)
+        if not m:
+            if last is not None and line.strip():
+                last["text"] += "\n" + line.strip()
+            continue
+        key, rest, last = m.group(1).upper(), m.group(2).strip(), None
+        if key in ("ACCEPT", "WITHDRAW"):
+            ids = re.findall(r"\d+\.\d+", rest)
+            out[key.lower() + "s"] += ids
+            if not ids:
+                out["dropped"].append(f"{line.strip()}: no offer id")
+            continue
+        t = re.match(r"[*_`]*([\w-]+)[*_`]*\s*:[*_`]*\s*(.*)$", rest, flags=re.S)  # markdown around the name only
+        name = t.group(1).lower() if t else ""
+        why = ("not '<agent>: ...'" if not t else "not another agent" if name not in known or name == you else
+               "that agent is not taking part" if name not in present else None)
+        legs = None if why or key == "TO" else _offer(t.group(2))
+        why = why or ("empty message" if key == "TO" and not t.group(2).strip() else
+                      "not 'YOU GIVE ...; I GIVE ...'" if key == "OFFER" and legs is None else None)
+        if why:
+            out["dropped"].append(f"{line.strip()}: {why}")
+        elif key == "TO":
+            last = {"dst": name, "text": t.group(2).strip()}
+            out["to"].append(last)
+        else:
+            out["offers"].append({"dst": name, "you_give": legs[0], "i_give": legs[1]})
+    if not any(out[k] for k in ("to", "offers", "accepts", "withdraws", "exit", "done")):
+        out["done"], out["format_error"] = True, "no usable TALK line"
+    return out
+
+
+def parse_solve(text: str, n: int) -> list[str] | str:
+    """5.2 SOLVE: a last line of PASS (``ACTIONS: PASS`` too) is a pass; otherwise the answer, as ``parse_actions``."""
+    lines = [x for x in text.strip().splitlines() if x.strip()]
+    if lines and re.fullmatch(r"[\s*_`>#-]*(?:ACTIONS?[*_`]*\s*:\s*)?[*_`]*PASS[\s*_`.]*", lines[-1], flags=re.I):
+        return "PASS"
+    return parse_actions(text, n)
 
 
 def parse_pdeath(text: str) -> int:

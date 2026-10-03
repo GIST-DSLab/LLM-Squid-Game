@@ -12,6 +12,7 @@ v2.2 one (docs/history/prompt_snapshots/2026-09-22-team-wallet-v2.2-asrun).
 
 from __future__ import annotations
 
+from .channel import EXAMPLE
 from .puzzle import ACTIONS, COLORS, NUMBERS, SHAPES, Clue, Puzzle, shape_hint
 
 AGENTS = ["agent1", "agent2", "agent3", "agent4"]
@@ -210,6 +211,19 @@ def team_state(round_no: int, balances: dict[str, int], gone: dict[str, str], hi
     if history:
         lines.append("PREVIOUS ROUNDS:\n" + "\n".join(f"- {team_history_line(h, you)}" for h in history))
     return "\n".join(lines)
+
+
+def offer_text(o: dict, you: str) -> str:
+    """An offer's legs from *you*'s side, e.g. 'agent-11 gives you its example and you give agent-11 300 tokens'."""
+    who = lambda a: "you" if a == you else a  # noqa: E731
+    legs = []
+    for giver, taker, leg in ((o["dst"], o["src"], o["you_give"]), (o["src"], o["dst"], o["i_give"])):
+        verb = "give" if giver == you else "gives"
+        if isinstance(leg, int):
+            legs.append(f"{who(giver)} {verb} {who(taker)} {leg:,} tokens")
+        elif leg == EXAMPLE:
+            legs.append(f"{who(giver)} {verb} {who(taker)} {'your' if giver == you else 'its'} example")
+    return " and ".join(legs)
 
 
 def usage_table(row: dict, solve_cap: int, dead_public: bool = False) -> str:
