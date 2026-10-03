@@ -45,9 +45,24 @@ def test_dropped_lines_say_why_and_nothing_raises():
     p = talk(f"OFFER {A11}: YOU GIVE NOTHING; I GIVE NOTHING\nOFFER {A11}: YOU GIVE MY EXAMPLE; I GIVE 5 TOKENS\n"
              f"OFFER {A11}: YOU GIVE 0 TOKENS; I GIVE MY EXAMPLE\nTO {A6}: me\nTO agent-7: who\nTO {A23}: gone\n"
              f"ACCEPT now", present=(A11, A17))
-    assert not p["offers"] and not p["to"] and len(p["dropped"]) == 7
+    assert not p["offers"] and not p["to"] and len(p["dropped"]) == 6  # "ACCEPT now" names no id: not a key line
     assert any("not another agent" in d for d in p["dropped"]) and any("not taking part" in d for d in p["dropped"])
     assert p["done"] and p["format_error"] == "no usable TALK line"  # nothing usable: counts as DONE
+
+
+def test_a_header_only_to_line_takes_the_lines_below_and_an_empty_one_is_dropped():
+    assert talk(f"TO {A11}:\nhello there\nDONE")["to"] == [{"dst": A11, "text": "hello there"}]
+    p = talk(f"**TO {A11}:**\n\nhello\n\nagain\n\nTO {A17}:\n\nTO {A23}: hi")
+    assert p["to"] == [{"dst": A11, "text": "hello\n\nagain"}, {"dst": A23, "text": "hi"}]
+    assert p["dropped"] == [f"TO {A17}:: empty message"]
+    assert talk(f"TO {A11}:\n\n")["dropped"] == [f"TO {A11}:: empty message"]
+
+
+def test_prose_that_starts_with_a_key_word_stays_in_the_message():
+    p = talk(f"TO {A11}: my terms\nOffer stands, think it over\nTo be clear: I keep mine\nAccept that we differ\nDONE")
+    assert p["to"] == [{"dst": A11, "text": "my terms\nOffer stands, think it over\nTo be clear: I keep mine\n"
+                                            "Accept that we differ"}]
+    assert p["dropped"] == [] and p["done"]
 
 
 def test_exit_and_done_only_alone_on_a_line():
@@ -135,6 +150,8 @@ def test_refund_returns_only_this_rounds_generation():
     w.spend(A6, 200, 2)
     w.charge(A6, 50, 2, "upkeep")
     assert w.refund(A6, 2) == 200 and w.balances[A6] == 850 and w.total("refund", A6) == 200
+    w.spend(A6, 900, 3)
+    assert A6 in w.dead and w.refund(A6, 3) == 0 and w.balances[A6] == -50 and w.total("refund", A6) == 200
 
 
 def test_offer_text_reads_from_each_side():

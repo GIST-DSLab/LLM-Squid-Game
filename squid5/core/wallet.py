@@ -61,9 +61,10 @@ class Wallet:
             self.log.append({"round": round_no, "kind": "pay", "agent": name, "amount": amount})
 
     def refund(self, name: str, round_no: int) -> int:
-        """A solved round: every token *name* generated in *round_no* comes back (nothing reaches the dead)."""
-        n = self.spent(name, round_no)
-        if n > 0 and self.alive(name):
+        """A solved round: every token *name* generated in *round_no* comes back; returns what came back (0 for the
+        dead: nothing reaches them)."""
+        n = self.spent(name, round_no) if self.alive(name) else 0
+        if n > 0:
             self.balances[name] += n
             self.log.append({"round": round_no, "kind": "refund", "agent": name, "amount": n})
         return n

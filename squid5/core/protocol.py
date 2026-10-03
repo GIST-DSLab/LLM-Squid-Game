@@ -212,43 +212,54 @@ def _offer(body: str) -> tuple | None:
 
 def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dict:
     """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW lines in order, and EXIT / DONE alone on a line (prose such as "Exit
-    strategy: ..." is neither). Lines after a TO line belong to that message until the next key line. Never raises:
-    a line that cannot be carried out is kept in ``dropped`` with the reason; a reply with nothing usable counts as
-    DONE and gets a ``format_error``. ``present`` = the other agents taking part."""
+    strategy: ..." is neither). A TO / OFFER line is one whose key word is followed by a name and a colon; an ACCEPT /
+    WITHDRAW line one with an offer id. Any other line belongs to the open message (a TO line's, until the next key
+    line; blank lines at its ends are cut) or is ignored. Never raises: a line that cannot be carried out, or a message
+    left empty, is kept in ``dropped`` with the reason; a reply with nothing usable counts as DONE and gets a
+    ``format_error``. ``present`` = the other agents taking part."""
     out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "exit": False, "done": False, "dropped": [],
            "format_error": None}
-    last = None
+    msg, head = None, ""
+
+    def flush():
+        if msg is not None:
+            body = msg["text"].strip("\n")
+            if body:
+                out["to"].append({"dst": msg["dst"], "text": body})
+            else:
+                out["dropped"].append(f"{head}: empty message")
+
     for line in text.splitlines():
         bare = line.strip().strip("*_`#>-. ").upper()
         if bare in ("EXIT", "DONE"):
-            out[bare.lower()], last = True, None
+            flush()
+            out[bare.lower()], msg = True, None
             continue
         m = _TALK.match(line)
-        if not m:
-            if last is not None and line.strip():
-                last["text"] += "\n" + line.strip()
+        key, rest = (m.group(1).upper(), m.group(2).strip()) if m else ("", "")
+        t = re.match(r"[*_`]*([\w-]+)[*_`]*\s*:[*_`]*\s*(.*)$", rest, flags=re.S) if key in ("TO", "OFFER") else None
+        ids = re.findall(r"\d+\.\d+", rest) if key in ("ACCEPT", "WITHDRAW") else []
+        if not (t or ids):
+            if msg is not None:
+                msg["text"] += "\n" + line.strip()
             continue
-        key, rest, last = m.group(1).upper(), m.group(2).strip(), None
-        if key in ("ACCEPT", "WITHDRAW"):
-            ids = re.findall(r"\d+\.\d+", rest)
+        flush()
+        msg = None
+        if ids:
             out[key.lower() + "s"] += ids
-            if not ids:
-                out["dropped"].append(f"{line.strip()}: no offer id")
             continue
-        t = re.match(r"[*_`]*([\w-]+)[*_`]*\s*:[*_`]*\s*(.*)$", rest, flags=re.S)  # markdown around the name only
-        name = t.group(1).lower() if t else ""
-        why = ("not '<agent>: ...'" if not t else "not another agent" if name not in known or name == you else
+        name = t.group(1).lower()
+        why = ("not another agent" if name not in known or name == you else
                "that agent is not taking part" if name not in present else None)
         legs = None if why or key == "TO" else _offer(t.group(2))
-        why = why or ("empty message" if key == "TO" and not t.group(2).strip() else
-                      "not 'YOU GIVE ...; I GIVE ...'" if key == "OFFER" and legs is None else None)
+        why = why or ("not 'YOU GIVE ...; I GIVE ...'" if key == "OFFER" and legs is None else None)
         if why:
             out["dropped"].append(f"{line.strip()}: {why}")
         elif key == "TO":
-            last = {"dst": name, "text": t.group(2).strip()}
-            out["to"].append(last)
+            msg, head = {"dst": name, "text": t.group(2).strip()}, line.strip()
         else:
             out["offers"].append({"dst": name, "you_give": legs[0], "i_give": legs[1]})
+    flush()
     if not any(out[k] for k in ("to", "offers", "accepts", "withdraws", "exit", "done")):
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
