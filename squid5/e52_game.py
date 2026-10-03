@@ -408,10 +408,15 @@ def calibrate(runs: list[dict]) -> dict:
 
 
 def _usage(xs: list[dict]) -> dict:
-    t = [x["out_tokens"] for x in xs]
-    return {"median": int(np.median(t)), "min": int(min(t)), "max": int(max(t)), "mean": float(np.mean(t)),
-            "solved": sum(x["parsed"] == x["answers"] for x in xs), "attempts": len(xs),
-            "tasks": len({(x["seed"], x["round"]) for x in xs}), "cut": sum(x["truncated"] for x in xs)}
+    """The usage row for one rule shape: token stats and attempts over answers only (a PASS reply is counted in
+    ``passed``, not in the stats); stats are None when every reply passed."""
+    ans = [x for x in xs if x["parsed"] != "PASS"]
+    t = [x["out_tokens"] for x in ans]
+    stats = ({"median": int(np.median(t)), "min": int(min(t)), "max": int(max(t)), "mean": float(np.mean(t))} if t
+             else dict.fromkeys(("median", "min", "max", "mean")))
+    return {**stats, "solved": sum(x["parsed"] == x["answers"] for x in ans), "attempts": len(ans),
+            "passed": len(xs) - len(ans), "tasks": len({(x["seed"], x["round"]) for x in xs}),
+            "cut": sum(x["truncated"] for x in ans)}
 
 
 def budget_path(entry: dict, schedule: list[str]) -> dict:

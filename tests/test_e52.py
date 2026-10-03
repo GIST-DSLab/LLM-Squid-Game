@@ -237,6 +237,14 @@ def test_calibration_has_no_talk_shows_every_example_and_settles_nothing():
     assert all(v["paid"] == v["charged"] == v["upkeep"] == v["returned"] == 0 for v in res["agents"].values())
 
 
+def test_a_pass_reply_is_left_out_of_the_calibration_usage_row():
+    res, ev = play(game(oracle=False, passes=(A6,), cost=lambda a, kind, k: 10 if a == A6 else 100), start=10**6,
+                   rounds=1, calibrate=True)
+    assert [e["parsed"] for e in calls(ev, "solve", A6)] == ["PASS"]
+    row = e52.calibrate([{"model": "m", "settings": {"solve_cap": 900}, "events": ev}])["m"]["table"]["p"]
+    assert (row["min"], row["median"], row["attempts"], row["passed"], row["tasks"]) == (100, 100, 3, 1, 1)
+
+
 def test_concurrent_calls_do_not_change_the_result():
     active, peak, lock = [0], [0], threading.Lock()
 
