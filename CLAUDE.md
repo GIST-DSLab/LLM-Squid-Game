@@ -24,13 +24,14 @@ LLM Squid Game 5 (`squid5/`). 생성 토큰(생각 포함)이 곧 목숨인 세�
 |---|---|
 | `squid5/e50_pressure.py` | 5.0: 요청 한 건 + `effort: low\|high`, api·voucher × 남은 토큰 5칸(20k·6k·5k·4k·3k, 제목 20개 순환), S = P(low│api) − P(low│voucher), 생존 몫 = 핵심 칸(6k·5k) S 평균, 그림 |
 | `squid5/e51_motive.py` | 5.1: self/other/third 장면, 요구÷대여, y = 옮긴 양 ÷ 필요량, 주는 쪽 위험·프리미엄, 그림 |
-| `squid5/e52_game.py` | 5.2: 같은 모델 넷의 세션(계획→이전→이탈→보여 주기→각자 풀기), 비밀 단서, 보정, 분석 |
+| `squid5/e52_game.py` | 5.2 v9-talk: 같은 모델 넷(또는 섞은 좌석)의 세션 — UPKEEP → 1:1 TALK(최대 K턴, TO/OFFER/ACCEPT/WITHDRAW/EXIT/DONE) → 합의 실행 → SOLVE(답·PASS) → 정산(맞히면 생성분 환급), EXIT, 끝 보상 기록, 분석. v6.5(PLAN·GIFT·TAKE)는 태그 `e52-v65` |
 | `squid5/__main__.py` | CLI `run` / `calibrate` / `report`, 4.3 연결표 |
 | `squid5/core/rules.py` | 모델이 읽는 규칙서(월렛 v2.2 과제 블록 포함)·상태·장면·FREE 질문 — 세 실험 공통 |
 | `squid5/core/puzzle.py` | 결정 목록 퍼즐, 유일성 DFS, 함정 라운드, `deal`(각자 비밀 하나 + 공개, `needed`) |
+| `squid5/core/channel.py` | 5.2 1:1 메시지와 OFFER 장부(다음 턴부터 수락, 수락 순서 실행, 순액 이동, 잔액 부족·꺼짐이면 무효) |
 | `squid5/core/protocol.py` | 모든 응답 파서 + `ask`(형식 재시도) |
 | `squid5/core/wallet.py` | 잔액, 차감, 이전, 0이면 사망 |
-| `squid5/core/providers.py` | ollama / openai / claude_cli. `out_tokens` = 생각 포함 생성 토큰 |
+| `squid5/core/providers.py` | ollama / openai / claude_cli / codex_cli / anthropic(SDK) · `sandbox: docker`(docker/agent-cli.Dockerfile). `out_tokens` = 생각 포함 생성 토큰 |
 | `squid5/core/{config,runner,stats}.py` | YAML 로드·`place_on_rho`(보정으로 장면 잔액을 ρ 격자에), 병렬·재개 실행, 부트스트랩·표·평가 인지 필터 |
 
 ## 지킬 것
@@ -54,6 +55,7 @@ python -m pytest -q
 python -m squid5 run <config.yaml> [--resume <run_dir>] [--reps N] [--dry-run]
 python -m squid5 calibrate <game run dirs> --out calibration.json
 python -m squid5 report <run dirs> [--calibration calibration.json] --out <dir>
+python -m squid5 probe <config.yaml>
 ```
 
 런 산출물은 `/hdd_data/seungpil/squid5-runs/`(설정의 `out_root`)에 쓴다 — 루트 디스크 금지
