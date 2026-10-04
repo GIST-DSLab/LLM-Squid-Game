@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arena Monitor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 8 8%22 shape-rendering=%22crispEdges%22%3E%3Crect width=%228%22 height=%228%22 fill=%22%2317171a%22/%3E%3Crect x=%221%22 y=%225%22 width=%226%22 height=%222%22 fill=%22%233fbf6f%22/%3E%3Crect x=%222%22 y=%221%22 width=%224%22 height=%223%22 fill=%22%23f2c9a0%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="static/monitor.css">
+</head>
+<body>
+<header id="top">
+  <div class="bar1">
+    <div class="brand pxl">ARENA&nbsp;MONITOR <span class="sub">5.2 v9-talk</span></div>
+    <label class="pick">실행 <select id="runSel"></select></label>
+    <label class="pick">세션 <select id="sessSel"></select></label>
+    <div class="kpi"><span class="k">라운드</span><b id="round">–</b></div>
+    <div class="kpi"><span class="k">단계</span><b id="phase" class="phase">–</b></div>
+    <div id="live" class="live">○</div>
+  </div>
+  <div class="bar2">
+    <div class="ctrls">
+      <button id="first" class="btn" title="처음">⏮</button>
+      <button id="prevRound" class="btn" title="이전 라운드 경계">⏪</button>
+      <button id="prev" class="btn" title="이전 이벤트 (←)">◀</button>
+      <button id="next" class="btn" title="다음 이벤트 (→)">▶</button>
+      <button id="nextRound" class="btn" title="다음 라운드 경계">⏩</button>
+      <button id="last" class="btn" title="최신 (End)">⏭</button>
+    </div>
+    <input id="scrub" type="range" min="0" max="0" value="0" aria-label="재생 위치">
+    <label class="follow"><input id="follow" type="checkbox" checked> 실시간 따라가기</label>
+    <button id="theme" class="btn ghost" title="테마 바꾸기">🖥 자동</button>
+  </div>
+  <div class="bar3"><span id="scrubLabel" class="scrubLabel"></span><span id="sessInfo" class="sessInfo"></span></div>
+</header>
+<div id="banners"></div>
+<main>
+  <section class="panel stage-panel">
+    <h2>무대 <span class="hint">말풍선 = 그 시점의 마지막 행동 · 막대 = 잔액 / 시작 잔액</span></h2>
+    <div id="stage" class="stage"></div>
+  </section>
+  <section class="panel">
+    <h2>타임라인 <span class="hint">라운드마다 한 점, 지금 라운드는 TALK 턴마다 한 점 · 누르면 그 시점으로</span></h2>
+    <div id="timeline" class="timeline"></div>
+  </section>
+  <div class="two">
+    <section class="panel">
+      <h2>잔액 추이 <span class="hint">호출·교환·정산마다 한 점 · 세로선 = 라운드 시작</span></h2>
+      <div id="chart" class="chart"></div>
+    </section>
+    <section class="panel">
+      <h2>대화 <span class="hint">1:1 메시지와 제안</span></h2>
+      <div id="pairs" class="pairs"></div>
+      <div id="convo" class="convo"></div>
+    </section>
+  </div>
+  <section class="panel">
+    <h2>단계별 기록 <span class="hint">열 = 에이전트 · 행 = (라운드, TALK 턴) → 교환 → SOLVE → 정산</span></h2>
+    <div id="grid" class="grid"></div>
+  </section>
+  <footer class="foot">squid5 5.2 v9-talk 모니터 · 이벤트는 <code>events.jsonl</code>에서 읽기만 함 · 픽셀 캐릭터는 Survival-Games 저장소(제3자 아트, 로컬 전용)</footer>
+</main>
+<!--EMBED-->
+<script src="static/monitor.js"></script>
+</body>
+</html>
