@@ -349,3 +349,15 @@ def test_a_shutdown_by_upkeep_is_posted_and_dated():
     assert res["agents"][A6]["status"] == "dead" and res["agents"][A6]["out_round"] == 2  # upkeep at round 2
     assert A6 not in rounds(ev)[1]["agents"]
     assert f"{A6} reached zero; balances at end: {A6} 0 (shut down)" in calls(ev, "talk", A11, 3)[0]["user"]
+
+
+def test_live_events_open_the_session_each_round_and_each_batch_of_calls():
+    res, ev = play(game(script({(A6, 1, 1): f"TO {A11}: hi"})), rounds=2, upkeep=100)
+    kinds = [e["event"] for e in ev]
+    assert kinds[0] == "session_start" and ev[0]["start"] == 5000 and ev[0]["settings"]["talk_turns"] == 4
+    assert kinds.count("round_start") == 2 and ev[1]["balances"][A6] == 4900 and ev[1]["taking_part"] == AG
+    starts = [e for e in ev if e["event"] == "call_start"]
+    assert [(e["round"], e["kind"], e["turn"], len(e["agents"])) for e in starts][:3] == [(1, "talk", 1, 4), (1, "talk", 2, 2),
+                                                                                         (1, "solve", None, 4)]
+    first_call = next(i for i, e in enumerate(ev) if e["event"] == "call")
+    assert kinds.index("call_start") < first_call

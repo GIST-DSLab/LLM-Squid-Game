@@ -205,6 +205,9 @@ class Session:
         nothing depends on which call returns first. ``jobs``: agent -> (user, cap, parse, extra). Real usage is
         charged up to the balance; a reply at or past its cap is void; generation that reaches the balance is
         ``overdrawn`` and shuts the agent down."""
+        turn = next(iter(jobs.values()))[3].get("turn") if jobs and kind == "talk" else None
+        self.emit({"event": "call_start", "session_id": self.sid, "round": r, "kind": kind, "turn": turn,
+                   "agents": list(jobs), "balances": dict(self.w.balances)})  # live monitors: these calls are out
         with ThreadPoolExecutor(max_workers=4) as pool:
             futures = {a: pool.submit(self._ask, a, user, cap) for a, (user, cap, _, _) in jobs.items()}
             answers = {a: f.result() for a, f in futures.items()}
@@ -291,6 +294,8 @@ class Session:
                 if w.charge(a, s.upkeep, r, "upkeep"):
                     self.gone[a] = "dead"
         start = self.present()
+        self.emit({"event": "round_start", "session_id": self.sid, "round": r, "profile": profile, "taking_part": start,
+                   "balances": dict(w.balances), "gone": dict(self.gone)})
         rows = {a: {"balance_before": w.balances[a], "needed": a in dealt.needed, "overdrawn": False, "talk_calls": 0,
                     "sent": {}, "offers_made": 0, "accepted": 0, "refused": [], "exit": False, "solve_call": False}
                 for a in start}
@@ -372,6 +377,11 @@ class Session:
         return {"winner": won, "prize_each": self.s.final_prize // len(won)}
 
     def run(self) -> dict:
+        s = self.s
+        self.emit({"event": "session_start", "session_id": self.sid, "cell_id": self.cell.cell_id, "seed": self.seed,
+                   "start": self.cell.start, "agents": AGENTS, "seats": self.models,
+                   "settings": {k: getattr(s, k) for k in ("rounds", "talk_turns", "talk_cap", "solve_cap", "prize",
+                                                           "upkeep", "charge", "final_prize", "calibrate")}})
         played = 0
         for r in range(1, self.s.rounds + 1):
             if not self.present():
