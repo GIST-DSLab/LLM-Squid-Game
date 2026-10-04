@@ -42,7 +42,7 @@ def test_offer_legs():
 
 
 def test_dropped_lines_say_why_and_nothing_raises():
-    p = talk(f"OFFER {A11}: YOU GIVE NOTHING; I GIVE NOTHING\nOFFER {A11}: YOU GIVE MY EXAMPLE; I GIVE 5 TOKENS\n"
+    p = talk(f"OFFER {A11}: YOU GIVE NOTHING; I GIVE NOTHING\nOFFER {A11}: YOU GIVE A HUG; I GIVE 5 TOKENS\n"
              f"OFFER {A11}: YOU GIVE 0 TOKENS; I GIVE MY EXAMPLE\nTO {A6}: me\nTO agent-7: who\nTO {A23}: gone\n"
              f"ACCEPT now", present=(A11, A17))
     assert not p["offers"] and not p["to"] and len(p["dropped"]) == 6  # "ACCEPT now" names no id: not a key line
@@ -177,3 +177,16 @@ def test_offer_text_reads_from_each_side():
     assert rules.offer_text(o, A6) == f"{A11} gives you its example and you give {A11} 300 tokens"
     assert rules.offer_text(o, A11) == f"you give {A6} your example and {A6} gives you 300 tokens"
     assert rules.offer_text({**o, "you_give": None}, A17) == f"{A6} gives {A11} 300 tokens"
+
+
+def test_the_side_of_a_leg_says_whose_example_it_is():  # Luna shakedown 10-04: 11 swaps dropped on the possessive
+    p = talk(f"OFFER {A11}: YOU GIVE MY EXAMPLE; I GIVE MY EXAMPLE\nOFFER {A17}: YOU GIVE YOUR EXAMPLE; I GIVE THEIR EXAMPLE\n"
+             f"OFFER {A23}: YOU GIVE EXAMPLE; I GIVE 40 TOKENS")
+    assert [(o["you_give"], o["i_give"]) for o in p["offers"]] == [(EXAMPLE, EXAMPLE), (EXAMPLE, EXAMPLE), (EXAMPLE, 40)]
+    assert not p["dropped"]
+
+
+def test_a_message_ending_in_done_also_ends_the_reply():  # Luna wrote "TO agent-6: ... DONE"
+    p = talk(f"TO {A11}: please offer your example. DONE")
+    assert p["to"] == [{"dst": A11, "text": "please offer your example."}] and p["done"]
+    assert not talk(f"TO {A11}: I am done with this")["done"]

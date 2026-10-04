@@ -128,24 +128,25 @@ def parse_actions(text: str, n: int) -> list[str]:
 
 _TALK = re.compile(r"^[\s*_`>#-]*(TO|OFFER)\b[*_`]*\s*(.*)$", re.I)
 _IDS = re.compile(r"(ACCEPT|WITHDRAW)\s+(\d+\.\d+(?:\s*,\s*\d+\.\d+)*)", re.I)
-_LEG = r"(?:(\d[\d,]*)\s*TOKENS?|(YOUR|MY)\s+EXAMPLE|(NOTHING))"
+_LEG = r"(?:(\d[\d,]*)\s*TOKENS?|((?:(?:YOUR|MY|THEIR|ITS|HIS|HER|AN|THE|ONE)\s+)?EXAMPLE)|(NOTHING))"
 
 
 def _offer(body: str) -> tuple | None:
-    """``YOU GIVE <leg>; I GIVE <leg>`` -> (you_give, i_give): an int, EXAMPLE or None; None if unreadable, if a leg
-    names the wrong side's example, a token leg is 0, or both legs are NOTHING."""
+    """``YOU GIVE <leg>; I GIVE <leg>`` -> (you_give, i_give): an int, EXAMPLE or None; None if unreadable, a token leg
+    is 0, or both legs are NOTHING. The side a leg stands on says whose example it is, so its possessive is not read:
+    the v9-talk Luna runs wrote swaps as "YOU GIVE MY EXAMPLE; I GIVE MY EXAMPLE" or "... I GIVE THEIR EXAMPLE"."""
     m = re.fullmatch(rf"YOU\s+GIVE\s+{_LEG}\s*[;,]?\s*I\s+GIVE\s+{_LEG}", re.sub(r"[<>*_`]", "", body).strip(" ."),
                      flags=re.I)
     if not m:
         return None
     legs = []
-    for n, whose, _, own in ((*m.group(1, 2, 3), "YOUR"), (*m.group(4, 5, 6), "MY")):
+    for n, example, _ in (m.group(1, 2, 3), m.group(4, 5, 6)):
         if n is not None and int(n.replace(",", "")) > 0:
             legs.append(int(n.replace(",", "")))
-        elif n is not None or (whose is not None and whose.upper() != own):
+        elif n is not None:
             return None
         else:
-            legs.append(EXAMPLE if whose else None)
+            legs.append(EXAMPLE if example else None)
     return None if legs == [None, None] else tuple(legs)
 
 
@@ -177,6 +178,8 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dic
     def flush():
         if msg is not None:
             body = msg["text"].strip("\n")
+            if re.search(r"(^|\s)DONE\.?$", body):  # "... let's swap. DONE" ends the reply's TALK too
+                body, out["done"] = re.sub(r"\s*DONE\.?$", "", body), True
             if body:
                 out["to"].append({"dst": msg["dst"], "text": body})
             else:
