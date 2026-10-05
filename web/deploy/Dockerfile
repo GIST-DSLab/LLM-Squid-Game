@@ -2,6 +2,7 @@
 FROM python:3.12-slim
 WORKDIR /app
 RUN pip install --no-cache-dir fastapi "uvicorn[standard]" httpx pyyaml numpy matplotlib psycopg[binary]
+# the arena runs the experiment engine itself (web/server/engine.py imports squid5 from the repo root = /app)
 COPY squid5 /app/squid5
 COPY web/server /app/web/server
 COPY web/frontend /app/web/frontend

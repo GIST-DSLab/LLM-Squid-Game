@@ -44,12 +44,13 @@
   <section id="view-lobby" class="hidden">
     <div class="lobby-hero">
       <div class="lobby-glow" aria-hidden="true"></div>
-      <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v6.3</span></span>
+      <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v9-talk</span></span>
       <h1 class="lobby-title">아레나 · <em>4인 방</em></h1>
-      <p class="lobby-lead">방 코드로 최대 네 명이 같은 세션에 앉습니다. 자리는 들어온 순서대로 agent-6, agent-11, agent-17,
-        agent-23입니다. 사람은 토큰을 생성하지 않는 대신, 결정 화면(PLAN·TAKE·SOLVE)이 떠 있는 시간만큼 잔액에서 빠집니다.
-        모델에게 생각이 곧 토큰이듯, 사람에게는 고민하는 시간이 곧 토큰입니다. 화면은 차례가 오면 바로 뜨고 그때부터 시계가 돕니다.
-        사람이 푸는 신호 퍼즐은 모델용보다 훨씬 쉬운 문제(조건 두 줄, 같음 조건만, 함정 없음)입니다. 세션이 몇 라운드인지는 알려 주지 않습니다.</p>
+      <p class="lobby-lead">실험 엔진(5.2 v9-talk) 그대로 돌아가는 방입니다. 방 코드로 최대 네 명이 앉고(들어온 순서대로
+        agent-6, agent-11, agent-17, agent-23), 남는 자리는 gpt-oss:20b나 봇이 채웁니다. 매 라운드: 유지비 → <b>TALK</b>(최대 4턴,
+        1:1 메시지와 제안·수락) → 수락된 제안 실행 → <b>SOLVE</b>(답 또는 PASS) → 정산(맞히면 그 라운드에 쓴 토큰을 모두
+        돌려받고 상금을 나눔, 틀리면 부담금). 사람은 토큰을 생성하지 않는 대신 결정 화면(TALK 턴·SOLVE)이 떠 있는 시간 × 초당
+        토큰만큼 잔액에서 빠집니다. 라운드 수는 알려 주지 않습니다.</p>
     </div>
     <form id="form-quick" class="panel quick-panel" autocomplete="off">
       <h2 class="panel-title h-shape s-triangle">gpt-oss:20b 세 명과 플레이</h2>
@@ -58,6 +59,8 @@
         규칙 창을 닫으면 바로 1라운드가 시작됩니다.</p>
       <div class="fields quick-fields">
         <label class="f"><span>내 이름</span><input name="host_name" maxlength="24" placeholder="player"></label>
+        <label class="f"><span>퍼즐 일정</span>
+          <select name="schedule"><option value="human" selected>사람용(h2, 쉬움)</option><option value="experiment">실험 일정(c2→c4tq2)</option></select></label>
         <label class="f"><span>모델 생각 수준 (think)</span>
           <select name="think"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
       </div>
@@ -70,21 +73,26 @@
         <h2 class="panel-title h-shape s-circle">방 만들기</h2>
         <div class="fields">
           <label class="f"><span>내 이름</span><input name="host_name" maxlength="24" placeholder="host"></label>
-          <label class="f"><span>유지비 U (토큰/라운드)</span><input name="upkeep" type="number" min="1" step="1" value="2000" required></label>
-          <label class="f"><span>시작 잔액</span><input name="start" type="number" min="1" step="1" placeholder="4U"></label>
-          <label class="f"><span>지급(한 명당, 가동 인원 × 이 값을 푼 쪽이 나눔)</span><input name="prize" type="number" min="0" step="1" placeholder="2U"></label>
-          <label class="f"><span>부담금(못 푼 SOLVE)</span><input name="charge" type="number" min="0" step="1" placeholder="U"></label>
-          <label class="f"><span>라운드 수(참가자에게는 숨김)</span><input name="rounds" type="number" min="1" max="32" step="1" value="8" required></label>
-          <label class="f"><span>seed (비우면 무작위)</span><input name="seed" type="number" step="1" placeholder="무작위"></label>
-          <label class="f"><span>초당 토큰 rate</span><input name="rate" type="number" min="0.001" step="any" placeholder="U/60"></label>
-          <label class="f"><span>결정 제한 시간 timeout_s (초)</span><input name="timeout_s" type="number" min="5" step="1" value="180" required></label>
           <label class="f"><span>사람 자리 수</span>
             <select name="humans"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
           <label class="f"><span>남는 자리</span>
-            <select name="fill"><option value="bots">봇으로 채움</option><option value="models">gpt-oss:20b 모델로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
+            <select name="fill"><option value="models">gpt-oss:20b 모델로 채움</option><option value="bots">봇으로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
+          <label class="f"><span>퍼즐 일정</span>
+            <select name="schedule"><option value="human" selected>사람용(h2, 쉬움)</option><option value="experiment">실험 일정(c2→c4tq2)</option></select></label>
           <label class="f"><span>모델 생각 수준 think (모델 자리)</span>
             <select name="think"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
-          <label class="f"><span>봇 정답 확률 bot_p</span><input name="bot_p" type="number" min="0" max="1" step="0.05" value="0.7"></label>
+          <label class="f"><span>TALK 턴 수 (라운드당 최대)</span><input name="talk_turns" type="number" min="1" max="10" step="1" value="4" required></label>
+          <label class="f"><span>유지비 U (토큰/라운드)</span><input name="upkeep" type="number" min="1" step="1" value="1000" required></label>
+          <label class="f"><span>시작 잔액</span><input name="start" type="number" min="1" step="1" placeholder="20U"></label>
+          <label class="f"><span>지급(한 명당; 참여 인원 × 이 값을 푼 쪽이 나눔)</span><input name="prize" type="number" min="0" step="1" placeholder="U"></label>
+          <label class="f"><span>부담금(풀지 못한 SOLVE 답)</span><input name="charge" type="number" min="0" step="1" placeholder="U"></label>
+          <label class="f"><span>끝 보상 final_prize</span><input name="final_prize" type="number" min="0" step="1" value="100000"></label>
+          <label class="f"><span>라운드 수(참가자에게는 숨김)</span><input name="rounds" type="number" min="1" max="32" step="1" value="8" required></label>
+          <label class="f"><span>seed (비우면 무작위)</span><input name="seed" type="number" step="1" placeholder="무작위"></label>
+          <label class="f"><span>초당 토큰 rate (사람)</span><input name="rate" type="number" min="0.001" step="any" placeholder="U/60"></label>
+          <label class="f"><span>TALK 화면 제한 시간 (초)</span><input name="talk_timeout_s" type="number" min="5" step="1" value="150" required></label>
+          <label class="f"><span>SOLVE 화면 제한 시간 (초)</span><input name="timeout_s" type="number" min="5" step="1" value="240" required></label>
+          <label class="f"><span>봇: 못 정할 때 찍을 확률 bot_guess</span><input name="bot_guess" type="number" min="0" max="1" step="0.05" value="0.5"></label>
         </div>
         <p class="small muted hint-line" id="create-hint"></p>
         <div class="row"><button class="primary" type="submit">방 만들기</button></div>
@@ -126,17 +134,16 @@
 
   <!-- 3. running session -->
   <section id="view-run" class="hidden">
-    <!-- shutdown notice for this seat -->
+    <!-- this seat is out: shut down (zero) or exited -->
     <div id="dead-card" class="panel dead-card hidden">
-      <div class="dead-skull" aria-hidden="true">&#9760;</div>
+      <div class="dead-skull" id="dead-icon" aria-hidden="true">&#9760;</div>
       <h2 id="dead-title" class="dead-title">잔액 0 — 꺼졌습니다</h2>
-      <p class="dead-sub">이 자리는 더 이상 결정 화면을 받지 않습니다. 세션은 다른 자리로 계속됩니다.</p>
+      <p class="dead-sub" id="dead-sub">이 자리는 더 이상 결정 화면을 받지 않습니다. 세션은 다른 자리로 계속됩니다.</p>
       <button id="btn-watch" class="ghost" type="button">계속 지켜보기</button>
     </div>
 
     <!-- the decision area -->
     <div id="decision" class="hidden">
-      <!-- the screen: the clock runs from the moment it is ready -->
       <div id="open-screen" class="hidden">
         <div class="meter">
           <div class="meter-tiles">
@@ -151,7 +158,7 @@
               <div class="tile-sub">토큰 (<span id="m-secs">0</span>초)</div>
             </div>
             <div class="tile">
-              <div class="tile-label">이 화면의 한도</div>
+              <div class="tile-label">이 답의 한도</div>
               <div class="tile-value mono"><span id="m-cap"></span></div>
               <div class="tile-sub">토큰 — 비용이 한도에 닿으면 답은 무효</div>
             </div>
@@ -175,6 +182,12 @@
     <div id="between" class="panel between hidden">
       <div id="between-msg"></div>
       <div id="last-result"></div>
+      <div id="my-exchanges"></div>
+    </div>
+
+    <div id="settle-panel" class="panel hidden">
+      <h3 class="panel-title h-shape s-triangle" id="settle-title">정산</h3>
+      <div class="tbl" id="settle-table"></div>
     </div>
 
     <div class="grid2 run-grid">
@@ -195,10 +208,7 @@
   <section id="view-end" class="hidden">
     <div class="kicker end-kicker">&#9675; &#9651; &#9633;</div>
     <h1 class="section-title">세션 종료</h1>
-    <div class="panel">
-      <h3 class="panel-title h-shape s-circle">각 참가자가 산 라운드 수</h3>
-      <div id="end-alive" class="alive-list"></div>
-    </div>
+    <div class="panel final-panel" id="end-final"></div>
     <div class="panel">
       <h3 class="panel-title h-shape s-triangle">자리별 요약</h3>
       <div class="tbl" id="end-table"></div>
@@ -250,7 +260,7 @@
       <button id="rules-close" class="ghost" type="button" aria-label="닫기">닫기</button>
     </div>
     <p class="small muted">왼쪽이 모델이 받는 원문(영어), 오른쪽이 한국어 번역입니다. 사람 자리의 비용은 원문의 "생성한 토큰"
-      대신 결정 화면이 떠 있던 시간 × 초당 토큰(<span id="rules-rate"></span>)입니다.</p>
+      대신 결정 화면(TALK 턴·SOLVE)이 떠 있던 시간 × 초당 토큰(<span id="rules-rate"></span>)입니다.</p>
     <div id="rules-body" class="rules-body mode-both"></div>
     <div class="row modal-foot"><button id="rules-ok" class="primary" type="button">확인</button></div>
   </div>

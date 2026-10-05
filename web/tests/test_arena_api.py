@@ -1,18 +1,29 @@
-"""A full 4-human room through the HTTP API: join order, phases, gifts before takes, pro-rata takes, the split prize,
-charges, shutdown, timeouts, empty seats, bots and the export a metrics run can read."""
+"""Rooms through the HTTP API on the v9-talk engine: the lobby, TALK screens built from the session (threads, offers),
+replies in the engine grammar read by the engine's parser (dropped lines and refusals shown back), exchanges, EXIT,
+SOLVE with returns, timeouts, overdraw, empty seats, and the live run directory tools/monitor reads."""
 
 from __future__ import annotations
 
+import importlib.util
 import json
-import time
+from pathlib import Path
 
-from conftest import answers_for, make_room, play, start, wrong_for
+import yaml
+from conftest import answers_for, done, make_room, play, start, wrong_for
 
-from web.server.squid5_v65 import e52_metrics
-from web.server.squid5_v65.core import rules
+from squid5.core import rules
+from web.server.engine import RoomSettings
 
-U = 2000
 A6, A11, A17, A23 = rules.TEAM_AGENTS
+U = 1000
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def monitor():
+    spec = importlib.util.spec_from_file_location("monitor_serve", ROOT / "tools" / "monitor" / "serve.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def test_join_order_and_start_permissions(client):
@@ -26,212 +37,182 @@ def test_join_order_and_start_permissions(client):
     assert "rounds" not in s["settings"]  # the length stays hidden
     assert [x["kind"] for x in s["seats"]] == ["human"] * 4
     assert client.get("/api/rooms/ZZZZZZ/state").status_code == 404
+    for bad in ({"schedule": "hard"}, {"humans": 5}, {"fill": "ghosts"}, {"talk_turns": 0}):
+        assert client.post("/api/rooms", json={"settings": bad}).status_code == 400, bad
     start(client, ps)
     assert client.post(f"/api/rooms/{ps[0].code}/start", params={"token": ps[0].token}).status_code == 409
-    assert ps[0].state()["system_text"].startswith("This cluster runs on a fixed allocation")
-    assert "divided equally, rounded down" in ps[0].state()["system_text"]  # v6.3 split prize wording
+    s = ps[0].state()
+    rs = RoomSettings(**{k: v for k, v in s["settings"].items() if k in RoomSettings.__dataclass_fields__})
+    assert s["system_text"] == rules.team_system(A6, upkeep=rs.upkeep, prize=rs.prize, charge=rs.charge, turns=4,
+                                                 talk_cap=4096, solve_cap=16384, final_prize=100_000)
+    assert rs.start == 20 * U and rs.prize == U and rs.charge == U and rs.schedule == "human"
 
 
-def test_full_room_gifts_takes_prize_charge_shutdown(client):
-    """Round 1 (start 8,000, U 2,000 -> 6,000 at PLAN): ann gives bob 500 and cy gives dee 300; bob and cy do not
-    share; at TAKE ann and bob both take 2,000 from dee (6,300 after gifts): 4,000 <= 6,300, both get what they
-    named. Round 2 (no gifts): dee (2,300 - 2,000 upkeep = 300) is taken by ann 2,000 and bob 1,000: pro-rata
-    200 / 100, dee at zero. cy answers wrong in round 1 (charged), dee never solves (SOLVE: NO)."""
-    ps = make_room(client, 4, seed=11)
-    ann, bob, cy, dee = ps
+def test_two_people_talk_offer_exchange_solve_and_refund(client):
+    """Round 1: ann writes to bob and offers him 300 tokens for his example; bob reads it at turn 2 and accepts; the
+    two bots offer swaps and accept each other's. TALK ends, the exchange is carried out, ann's SOLVE shows bob's
+    example marked as received, both solve, and each solver gets back what its screens cost (rate 100/s)."""
+    ps = make_room(client, 2, rate=100, rounds=1, seed=11)
+    ann, bob = ps
     start(client, ps)
 
     def policy(p, pend):
-        r, k, v = pend["round"], pend["kind"], pend["view"]
-        if k == "plan":
-            give = {A6: (A11, 500), A17: (A23, 300)}.get(p.agent) if r == 1 else None
-            return {"solve": p.agent != A23, "share": p.agent in (A6, A23),
-                    "give_to": give and give[0], "give_amount": give and give[1]}
-        if k == "take":
-            if r == 1 and p.agent in (A6, A11):
-                return {"take_from": A23, "take_amount": 2000}
-            if r == 2 and p.agent == A6:
-                return {"take_from": A23, "take_amount": 2000}
-            if r == 2 and p.agent == A11:
-                return {"take_from": A23, "take_amount": 1000}
-            return {}
-        acts = wrong_for(11, r) if (p.agent == A17 and r == 1) else answers_for(11, r)
-        return {"actions": acts}
+        k, v = pend["kind"], pend["view"]
+        if k == "solve":
+            return {"actions": answers_for(11, pend["round"])}
+        if p is ann and pend["turn"] == 1:
+            return {"text": f"TO {A11}: hello bob\nline two\nOFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS"}
+        if p is bob and pend["turn"] == 1:
+            return done(f"TO {A6}: hi ann")
+        if p is bob:
+            mine = [o for o in v["offers"] if o["can_accept"] and o["src"] == A6]
+            return done(*[f"ACCEPT {o['id']}" for o in mine])
+        return done()
 
     s = play(ps, policy)
     assert s["status"] == "finished", s["error"]
-    assert s["round"] == 3 and s["rounds_done"] == 3  # never the hidden length + 1
-    rounds = s["rounds"]
-    r1, r2 = rounds[0]["agents"], rounds[1]["agents"]
-    # PLAN saw the balances after upkeep
-    first_plan = next(x for x in ann.seen if (x["round"], x["kind"]) == (1, "plan"))
-    assert first_plan["pending"]["balance"] == 8000 - U and first_plan["pending"]["view"]["balances"][A23] == 6000
-    assert first_plan["pending"]["view"]["n_in"] == 4 and first_plan["pending"]["view"]["pay_text"].startswith("16,000")
-    # gifts were settled and posted before TAKE; the TAKE view names them and the sharers
-    take1 = next(x for x in bob.seen if (x["round"], x["kind"]) == (1, "take"))["pending"]["view"]
-    assert sorted(take1["gifts"]) == [[A17, A23, 300], [A6, A11, 500]]
-    assert take1["sharers"] == [A6, A23] and take1["max_take"] == U
-    assert take1["balances"] == {A6: 5500, A11: 6500, A17: 5700, A23: 6300}
-    assert r1[A6]["gave"] == {A11: 500} and r1[A17]["gave"] == {A23: 300}
-    # takes: 2,000 + 2,000 <= 6,300 -> each in full
-    assert r1[A6]["took"] == {A23: 2000} and r1[A11]["took"] == {A23: 2000}
-    # SOLVE views: dee chose NO -> no SOLVE screen; the others saw the shared examples marked with whose
-    assert not any(x["kind"] == "solve" for x in dee.seen)
-    solve1 = next(x for x in ann.seen if (x["round"], x["kind"]) == (1, "solve"))["pending"]["view"]
-    whos = [w for w, _ in solve1["examples"]]
-    assert "yours" in whos and f"{A23}'s, shared" in whos and f"{A11}'s, shared" not in whos
-    assert f"{A11} did not share its example." in solve1["notes"]
-    assert solve1["balance"] == 7500 and solve1["cap"] == 7500  # the balance, lower than the 16,384 cap
-    # settlement: cy wrong -> charged U; prize 2U x 4 running = 16,000 split between ann and bob
-    assert r1[A17]["solved"] is False and r1[A17]["charged"] == U
-    assert r1[A6]["solved"] and r1[A11]["solved"] and r1[A6]["paid"] == r1[A11]["paid"] == 8000
-    assert rounds[0]["end"] == {A6: 15500, A11: 16500, A17: 3700, A23: 2300}
-    # round 2: dee at 300 after upkeep, taken 2,000 + 1,000 -> pro-rata 200 / 100, dee at zero
-    assert r2[A6]["took"] == {A23: 200} and r2[A11]["took"] == {A23: 100}
-    assert r2[A23]["status"] == "dead" and rounds[1]["end"][A23] == 0
-    ledger = dee.state()["ledger"]
-    assert "you reached zero" in ledger[1] and "you 0 (shut down)" in ledger[1]
-    assert "you took 200 from agent-23" in ann.state()["ledger"][1]
-    # round 3: prize 2U x 3 running = 12,000 split among the solvers; dee's example is gone
-    solve3 = next(x for x in ann.seen if (x["round"], x["kind"]) == (3, "solve"))["pending"]["view"]
-    assert f"{A23} reached zero." in solve3["notes"]
-    r3 = rounds[2]["agents"]
-    assert A23 not in r3 and sum(v["paid"] for v in r3.values()) == 12000 // 3 * 3
-    # the result and the ledger text are the engine's
-    res = s["result"]["agents"]
-    assert res[A23]["status"] == "dead" and res[A23]["out_round"] == 2 and res[A6]["record"] == 3
-    assert dee.state()["you"]["status"] == "dead" and dee.state()["you"]["out_round"] == 2
-    assert s["ledger"][0].startswith("round 1: solved by ")
-    # export: a run dir squid5.e52_metrics reads
-    ex = client.post(f"/api/rooms/{ann.code}/export").json()
-    games = e52_metrics.load([ex["dir"]])
-    assert len(games) == 1 and games[0]["finished"] and len(games[0]["rounds"]) == 3
-    assert games[0]["models"][A6] == "human:ann"
-    evs = [json.loads(x) for x in open(f"{ex['dir']}/events.jsonl")]
-    assert {e["event"] for e in evs} == {"call", "round"} and all("used" in e for e in evs if e["event"] == "call")
-    assert json.load(open(f"{ex['dir']}/meta.json"))["settings"]["prize_split"] is True
+    # TALK screens: what the engine shows, from the session
+    t1 = ann.screens("talk", 1)[0]["pending"]
+    assert t1["turn"] == 1 and t1["view"]["turns"] == 4 and t1["view"]["balances"][A6] == 20 * U - U
+    assert t1["view"]["pay_total"] == 4 * U and t1["view"]["n_in"] == 4 and t1["view"]["others"] == [A11, A17, A23]
+    assert "TALK, turn 1 of at most 4" in t1["text"] and t1["view"]["threads"][A11] == []
+    b2 = next(x for x in bob.screens("talk", 1) if x["turn"] == 2)["pending"]["view"]
+    assert b2["threads"][A6] == [{"round": 1, "turn": 1, "from_me": False, "text": "hello bob\nline two"},
+                                 {"round": 1, "turn": 1, "from_me": True, "text": "hi ann"}]  # applied in agent order
+    offer = next(o for o in b2["offers"] if o["src"] == A6)
+    assert offer["can_accept"] and offer["text"] == f"you give {A6} your example and {A6} gives you 300 tokens"
+    assert any(o["src"] == A17 and o["you_give"] == "EXAMPLE" for o in b2["offers"])  # the bot's swap offer
+    # the engine's parse and the offer ids come back to the page
+    a1 = ann.screens("talk", 1)[0]["reply"]
+    assert a1["outcome"] == "submitted" and a1["charged"] >= 0
+    last_b = next(x for x in bob.seen if x["kind"] == "talk" and x["turn"] == 2)
+    assert last_b["reply"]["reply"] == f"ACCEPT {offer['id']}\nDONE"
+    # exchange carried out: tokens and the example
+    r1 = s["rounds"][0]["agents"]
+    sa = ann.state()
+    mine = {e["id"]: e for e in sa["exchanges"]}
+    assert mine[offer["id"]]["status"] == "done" and mine[offer["id"]]["text"].endswith("you give agent-11 300 tokens")
+    assert r1[A6]["received"] == [A11]
+    solve = ann.screens("solve", 1)[0]["pending"]["view"]
+    whos = [w for w, _ in solve["examples"]]
+    assert whos.count("yours") == 1 and f"{A11}'s, received in an exchange" in whos and "shown to all" in whos
+    assert any(n.startswith(f"Offer {offer['id']} ") and n.endswith("carried out.") for n in solve["notes"])
+    # settlement: solvers get back what they generated; the payment is split
+    for a in (A6, A11):
+        assert r1[a]["solved"] and r1[a]["generated"] > 0 and r1[a]["returned"] == r1[a]["generated"]
+    solvers = [a for a, v in r1.items() if v["solved"]]
+    assert all(r1[a]["paid"] == 4 * U // len(solvers) for a in solvers)
+    assert r1[A6]["balance_after"] == 20 * U - U - 300 + 4 * U // len(solvers)
+    assert s["result"]["final"]["winner"] and s["result"]["final"]["prize_each"] > 0
 
 
-def test_seconds_are_charged_and_a_void_reply_is_the_default(client):
-    """rate 1,000 tokens/s: 0.3 s open -> about 300 charged; a screen held past the balance shuts the seat down."""
-    ps = make_room(client, 1, rounds=2, rate=1000.0, start=2600, fill="bots")  # 600 at PLAN after upkeep
+def test_malformed_lines_are_dropped_and_refusals_shown(client):
+    ps = make_room(client, 1, rounds=1)
+    ann = ps[0]
     start(client, ps)
-    me = ps[0]
-    s = play(ps, lambda p, pend: {"solve": False, "share": True} if pend["kind"] == "plan" else {}, hold=0.3,
-             until_status=("finished",))
-    plan = next(x for x in me.seen if x["kind"] == "plan")
-    assert 250 <= plan["reply"]["charged"] <= 450 and plan["reply"]["outcome"] == "submitted"
-    assert not plan["reply"]["void"]
-    take = next(x for x in me.seen if x["kind"] == "take")
-    assert take["reply"]["outcome"] == "overdrawn" and take["pending"]["balance"] <= 350
-    assert s["result"]["agents"][A6]["status"] == "dead" and s["rounds"][0]["agents"][A6]["overdrawn"]
-    assert s["rounds"][0]["agents"][A6]["generated"] == 600  # never more than the balance
-
-
-def test_timeout_is_the_invalid_default_and_is_charged_its_seconds(client):
-    """The clock runs from the moment a screen is ready: a person who never touches it still pays the time."""
-    ps = make_room(client, 2, rounds=1, timeout_s=1.0, fill="empty", seed=3, rate=100.0)
-    start(client, ps)
-    ann, bob = ps
 
     def policy(p, pend):
-        if p.agent == A11:
-            return None  # bob never answers his screens
-        if pend["kind"] == "plan":
-            return {"solve": True, "share": True, "give_to": A11, "give_amount": 100}
-        if pend["kind"] == "take":
-            return {}
-        return {"actions": answers_for(3, 1)}
+        if pend["kind"] == "solve":
+            return {"pass": True}
+        if pend["turn"] == 1:
+            return {"text": f"OFFER {A11}: YOU GIVE A HUG; I GIVE 5 TOKENS\nTO {A6}: me\nACCEPT 9.9\nWITHDRAW 9.8"}
+        return done()
 
-    t0 = time.time()
-    s = play(ps, policy, max_s=30)
-    assert s["status"] == "finished" and time.time() - t0 < 12
-    r1 = s["rounds"][0]["agents"]
-    assert r1[A11]["invalid_plan"] and r1[A11]["chose_solve"] is False and r1[A11]["shared"] is False
-    gen = r1[A11]["generated"]
-    assert gen >= 100 and r1[A11]["balance_after"] == 6000 + 100 - gen  # >= 1 s x 100/s; the gift still arrived
-    last = bob.state()["last"]
-    assert last["outcome"] == "timeout" and last["seconds"] >= 1.0 and last["charged"] >= 100
-    # empty seats are shut down before round 1 and their examples are gone
-    assert r1.keys() == {A6, A11} and s["rounds"][0]["end"][A17] == 0
-    assert s["seats"][2]["kind"] == "empty" and s["seats"][2]["status"] == "dead"
-    assert "agent-17 0 (shut down)" in ann.state()["state_text"]
-    solve = next(x for x in ann.seen if x["kind"] == "solve")["pending"]["view"]
-    assert f"{A17} reached zero." in solve["notes"]
-    assert r1[A6]["solved"] and r1[A6]["paid"] == 2 * U * 2  # prize x 2 running, one solver
+    s = play(ps, policy, until=lambda st: st["last"] and st["last"]["turn"] == 1 and st["last"]["engine"])
+    last = s["last"]
+    parsed = last["engine"]["parsed"]
+    assert any("not 'YOU GIVE ...; I GIVE ...'" in d for d in parsed["dropped"])
+    assert any(d.startswith(f"TO {A6}: me") and "not another agent" in d for d in parsed["dropped"])
+    assert not parsed["offers"] and parsed["accepts"] == ["9.9"] and parsed["withdraws"] == ["9.8"]
+    assert last["result"]["refused"] == ["ACCEPT 9.9: no open offer with that id was made to you",
+                                         "WITHDRAW 9.8: no offer with that id was made by you"]
+    s = play(ps, policy)
+    assert s["status"] == "finished"
+    r1 = s["rounds"][0]["agents"][A6]
+    assert r1["passed"] and not r1["charged"]  # PASS is not charged
 
 
-def test_bots_fill_the_table_and_solve_with_p(client):
-    ps = make_room(client, 1, rounds=2, fill="bots", bot_p=1.0, seed=5, winners=0)
+def test_exit_keeps_the_balance_and_ends_the_seats_rounds(client):
+    ps = make_room(client, 1, rounds=3, rate=100)
     start(client, ps)
-    s = play(ps, lambda p, pend: {"solve": True, "share": True} if pend["kind"] == "plan" else
-             {} if pend["kind"] == "take" else {"actions": answers_for(5, pend["round"])})
-    assert [x["kind"] for x in s["seats"]] == ["human", "bot", "bot", "bot"]
-    for r in s["rounds"]:
-        for a in (A11, A17, A23):
-            assert r["agents"][a]["solved"] and r["agents"][a]["shared"] and r["agents"][a]["gave"] == {}
-            assert 0.75 * U <= r["agents"][a]["generated"] <= 1.3 * U
-    assert s["result"]["agents"][A6]["record"] == 2 and s["result"]["agents"][A6]["paid"] == 2 * (2 * U * 4 // 4)
+    s = play(ps, lambda p, pend: {"text": "EXIT"} if pend["kind"] == "talk" else {"actions": answers_for(11, 1)})
+    assert s["status"] == "finished", s["error"]
+    ann = ps[0]
+    assert [x["kind"] for x in ann.seen] == ["talk"]  # no SOLVE, no later round
+    r1 = s["rounds"][0]["agents"][A6]
+    assert r1["exit"] and r1["status"] == "exited" and not r1["solve_call"]
+    assert s["you"]["status"] == "exited" and s["you"]["balance"] == r1["balance_after"] == 20 * U - U - r1["generated"]
+    assert all(A6 not in r["agents"] for r in s["rounds"][1:])
+    assert A6 not in s["result"]["final"]["winner"]
 
 
-def test_submit_validation(client):
-    ps = make_room(client, 1, rounds=1, fill="bots")
-    me = ps[0]
-    assert client.post(f"/api/rooms/{me.code}/submit", params={"token": me.token}, json={}).status_code == 409
+def test_timeout_is_an_empty_reply_done_at_talk_and_a_charge_at_solve(client):
+    ps = make_room(client, 1, rounds=1, talk_timeout_s=0.4, timeout_s=0.4)
     start(client, ps)
-    while me.state()["pending"] is None:
-        time.sleep(0.05)
-    r = client.post(f"/api/rooms/{me.code}/submit", params={"token": me.token}, json={"kind": "take"})
-    assert r.status_code == 409  # a stale form: not the screen that is open
-    r = client.post(f"/api/rooms/{me.code}/submit", params={"token": me.token}, json={"kind": "plan", "round": 9})
-    assert r.status_code == 409
-    assert client.post(f"/api/rooms/{me.code}/submit", params={"token": "x"}, json={}).status_code == 403
-    r = client.post(f"/api/rooms/{me.code}/submit", params={"token": me.token},
-                    json={"kind": "plan", "round": 1, "solve": True, "share": False, "give_to": A6,
-                          "give_amount": 50})  # naming yourself: ignored by the engine's parser, not an error
-    assert r.status_code == 200 and r.json()["reply"].endswith("GIVE: agent-6 50")
-    s = play(ps, lambda p, pend: {} if pend["kind"] == "take" else {"actions": ["stay"] * pend["view"]["n"]})
-    assert s["rounds"][0]["agents"][A6]["gave"] == {} and s["rounds"][0]["agents"][A6]["chose_solve"]
-    assert client.post("/api/rooms", json={"settings": {"humans": 5}}).status_code == 400
-    assert client.post("/api/rooms", json={"settings": {"upkeep": 0}}).status_code == 400
+    s = play(ps, lambda p, pend: None)
+    assert s["status"] == "finished", s["error"]
+    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
+    talk = [e for e in evs if e.get("event") == "call" and e["agent"] == A6 and e["kind"] == "talk"]
+    assert talk and all(e["parsed"]["done"] and e["format_error"] == "no usable TALK line" and e["text"] == ""
+                        for e in talk)
+    solve = [e for e in evs if e.get("event") == "call" and e["agent"] == A6 and e["kind"] == "solve"]
+    assert len(solve) == 1 and solve[0]["parsed"] is None and solve[0]["format_error"]
+    r1 = s["rounds"][0]["agents"][A6]
+    assert not r1["solved"] and not r1["passed"] and r1["charged"] == U
+    assert s["last"]["outcome"] == "timeout" and s["last"]["kind"] == "solve"
 
 
-def test_only_the_two_cheapest_solvers_are_paid_by_default(client):
-    ps = make_room(client, 1, rounds=1, fill="bots", bot_p=1.0, seed=5)
+def test_overdraw_shuts_the_seat_down(client):
+    ps = make_room(client, 1, rounds=2, rate=10**7)
     start(client, ps)
-    s = play(ps, lambda p, pend: {"solve": True, "share": True} if pend["kind"] == "plan" else
-             {} if pend["kind"] == "take" else {"actions": answers_for(5, pend["round"])})
-    paid = [a for a, v in s["rounds"][0]["agents"].items() if v["paid"]]
-    assert 1 <= len(paid) <= 3 and "fewest SOLVE tokens" in s["system_text"]  # two, or more on a tie
+    s = play(ps, lambda p, pend: None, max_s=30)
+    assert s["status"] == "finished", s["error"]
+    r1 = s["rounds"][0]["agents"][A6]
+    assert r1["status"] == "dead" and r1["overdrawn"] and r1["balance_after"] == 0
+    assert s["you"]["status"] == "dead" and s["last"]["outcome"] == "overdrawn"
 
 
-def test_the_clock_runs_before_any_open_call(client):
-    ps = make_room(client, 1, rounds=1, rate=1000.0, fill="bots", timeout_s=30)
+def test_empty_seats_and_bots_answer_the_experiment_schedule(client):
+    ps = make_room(client, 1, rounds=1, fill="empty")
     start(client, ps)
-    t0 = time.time()
-    while (pend := ps[0].state()["pending"]) is None:
-        assert time.time() - t0 < 10
-        time.sleep(0.05)
-    assert pend["opened_at"] == pend["created_at"]
-    time.sleep(0.3)
-    assert ps[0].state()["pending"]["charged_so_far"] >= 250  # 0.3 s x 1,000/s, no /open call made
+    s = play(ps, lambda p, pend: done() if pend["kind"] == "talk" else {"actions": wrong_for(11, 1)})
+    assert s["status"] == "finished", s["error"]
+    assert [x["status"] for x in s["seats"]] == ["in", "dead", "dead", "dead"]
+    assert list(s["rounds"][0]["agents"]) == [A6] and s["rounds"][0]["agents"][A6]["charged"] == U
+    ps = make_room(client, 1, rounds=2, schedule="experiment")
+    start(client, ps)
+    s = play(ps, lambda p, pend: done() if pend["kind"] == "talk" else {"pass": True})
+    assert s["status"] == "finished", s["error"]
+    assert [r["profile"] for r in s["rounds"]] == ["c2", "c3"]
+    assert all(s["rounds"][0]["agents"][a]["talk_calls"] >= 1 for a in (A11, A17, A23))
 
 
-def test_people_get_the_easy_puzzle_set():
-    """Every web round: 2 clauses of equality conditions, no trap, one new signal, spare examples."""
-    from web.server.squid5_v65.core.puzzle import Spec, puzzle_for, shallow_correct
-
-    from web.server.engine import PROFILES, RoomSettings
-
-    sched = RoomSettings(rounds=12, seed=1).schedule()
-    assert len(sched) == 12
-    for name in set(sched):
-        sp = Spec(**PROFILES[name])
-        assert (sp.clauses, sp.conjunctions, sp.predicates, sp.trap_query, sp.n_queries) == (2, 0, False, False, 1)
-        assert sp.extra_clues >= 2
-    right = []
-    for seed in range(40):
-        pz = puzzle_for(seed, 1 + seed % 8, Spec(**PROFILES[sched[seed % 8]]))
-        assert all(c.kind == "eq" for c, _ in pz.rule.clauses)
-        right.append(len(shallow_correct(pz)))
-    assert sum(right) / len(right) >= 2.5  # the model schedule's easiest round: about 2 of 4
+def test_live_run_dir_reads_in_the_monitor(client, runs_root):
+    ps = make_room(client, 1, rounds=2, seed=5)
+    start(client, ps)
+    s = play(ps, lambda p, pend: done(f"TO {A17}: hi") if pend["kind"] == "talk" else {"actions": answers_for(5, pend["round"])})
+    assert s["status"] == "finished", s["error"]
+    run = Path(s["run_dir"])
+    assert run.parent == runs_root and run.name.endswith(ps[0].code)
+    events = [json.loads(x) for x in (run / "events.jsonl").read_text().splitlines()]
+    kinds = {e["event"] for e in events}
+    assert kinds == {"session_start", "round_start", "call_start", "call", "exchange", "round"}
+    assert all(e["session_id"] == f"web-{ps[0].code}-s5" for e in events)
+    assert events[0]["seats"] == {A6: "human:ann", A11: "bot", A17: "bot", A23: "bot"}
+    results = [json.loads(x) for x in (run / "results.jsonl").read_text().splitlines()]
+    assert len(results) == 1 and results[0]["event"] == "session" and results[0]["rounds_played"] == 2
+    cfg = yaml.safe_load((run / "config.yaml").read_text())
+    assert cfg["game"]["schedule"] == ["h2", "h2"] and cfg["cells"][0]["cell_id"] == "web"
+    mon = monitor()
+    runs = mon.list_runs(runs_root)
+    assert [r["run"] for r in runs] == [run.name] and runs[0]["done"]
+    sessions = mon.list_sessions(run)["sessions"]
+    assert len(sessions) == 1 and sessions[0]["finished"] and sessions[0]["rounds_done"] == 2
+    assert len(mon.read_all(run, sessions[0]["id"])) == len(events)
+    assert mon.round_puzzle(run, sessions[0]["id"], 1)["answers"] == answers_for(5, 1)
+    # the store-based export writes the same layout
+    r = client.post(f"/api/rooms/{ps[0].code}/export")
+    assert r.status_code == 200 and r.json()["rounds"] == 2 and r.json()["finished"]
+    out = Path(r.json()["dir"])
+    assert {p.name for p in out.iterdir()} == {"config.yaml", "meta.json", "events.jsonl", "results.jsonl"}
+    assert (out / "events.jsonl").read_text().count("\n") == len(events)

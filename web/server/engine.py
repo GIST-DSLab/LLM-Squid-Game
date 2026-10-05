@@ -1,79 +1,111 @@
-"""Human-playable 5.2 v6.3 rooms on the real squid5 engine.
+"""Human-playable 5.2 v9-talk rooms on the experiment engine (``squid5.e52_game``), used as-is.
 
-A room runs one ``squid5.e52_game.Session`` in a background thread. The engine is untouched: every seat gets a
-"provider" object whose ``complete(messages, cap)`` either blocks until the human at that seat submits a decision
-(``HumanSeat``) or answers at once with a fixed policy (``BotSeat``). The engine therefore does the upkeep, gifts,
-takes (pro-rata), shared examples, SOLVE checking, charges, the split prize, the ledger lines and the event log exactly
-as it does for models; the reply text a human submits goes through the engine's own parsers.
+A room runs one ``squid5.e52_game.Session`` in a background thread, built exactly as the experiment builds it (no seats
+in its settings, so no provider is made), after which ``session.providers`` gets one object per seat whose
+``complete(messages, cap)`` returns a ``Reply`` like a model provider:
 
-A person does not generate tokens; the time a person spends deciding stands in for them (a model's thinking is its
-planning, a person's is the time on the screen). Each decision screen (PLAN, TAKE, SOLVE) is charged ``seconds x rate``
-(default rate: 60 s = one upkeep U), counted from the moment the screen is ready for the seat, so no part of the
-decision can be thought through off the clock. Only the time between screens (no decision waiting) is free. A screen
-left past the balance ends at zero like an overdraw; a phase that is not answered within ``timeout_s`` counts as the
-invalid default (no solve / no share / no gift / no take) and is charged its seconds.
+- ``HumanSeat`` blocks until the person at that seat submits the screen. The reply TEXT is what the page composed in
+  the engine grammar (TO / OFFER / ACCEPT / WITHDRAW / EXIT / DONE at TALK; ``ACTIONS: ...`` or ``PASS`` at SOLVE),
+  so the engine's own parsers read it and drop or refuse a person's lines exactly as a model's.
+- ``ModelSeat`` is a real model on squid5's Ollama provider (default gpt-oss:20b on Ollama Cloud, key from the server
+  environment variable ``api_key_env``). It reads exactly the engine's system and user text and is charged its real
+  generated tokens (``eval_count``, thinking included). A call that fails after the provider's retries returns an empty
+  reply (0 tokens): at TALK the engine reads it as DONE with nothing carried out, at SOLVE as an answer that does not
+  solve (charged). The failure is shown to the players and logged as a ``model_call`` event.
+- ``BotSeat`` answers at once with a small fixed policy (offers example swaps at turn 1, accepts offers made to it whose
+  token leg is at most one upkeep, DONE; at SOLVE answers when its examples pin every new signal, else guesses with
+  probability ``bot_guess`` or passes).
+- ``EmptySeat`` is an agent shut down before round 1 (balance 0); the engine treats its example as gone.
 
-The puzzles are the human set: a person's puzzle is far easier than a model's (see ``PROFILES``).
+A person does not generate tokens: the seconds a decision screen is open (from the moment it is ready for the seat,
+TALK turn or SOLVE) x ``rate`` stand in for them. The engine treats that number like a model's: at or past the
+reply's limit the reply is void, at or past the balance the seat is shut down (the server closes the screen). A screen
+not submitted within its timeout is an empty reply charged its seconds: DONE with nothing carried out at TALK, an
+answer that does not solve at SOLVE (the engine's reading of an empty model reply).
 
-An empty seat is an agent shut down before round 1 (balance 0); the engine then treats its example as lost.
+Everything else (upkeep, the TALK turns and who is called, the offer book, exchanges, EXIT, SOLVE checking, returns,
+charges, the split payment, the end prize, the ledger and the event log) is the engine's. The web only observes: the
+round's ``taking_part`` from ``round_start``, each TALK reply's parse from ``call``, and which offer ids a reply made,
+accepted or withdrew (and why the engine refused one) through thin wrappers around the session's ``Channel`` methods,
+which call the originals unchanged.
 
-A model seat (``fill: "models"``) is a real model behind the vendored Ollama provider (default gpt-oss:20b on Ollama
-Cloud, key from the server environment variable ``api_key_env``). It receives exactly the system and user text the
-engine builds and is charged its real generated tokens (``eval_count``, thinking included). A call that still fails
-after the provider's retries is answered with an empty reply (0 tokens): the engine's parser then rejects it, so it
-counts as an invalid reply (no solve / no share / no gift / no take) and the room goes on; the failure is shown to the
-players (``state.warnings``, the seat's ``last_call``) and logged as a ``model_call`` event.
+The engine's events (session_start, round_start, call_start, call, exchange, round, unit_error) are also written live to
+a run directory (config.yaml, meta.json, events.jsonl, results.jsonl) that ``tools/monitor/serve.py`` reads.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import random
 import re
 import secrets
 import string
+import sys
 import threading
 import time
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
-from .squid5_v65 import e52_game as e52
-from .squid5_v65.core import rules
-from .squid5_v65.core.config import Cell
-from .squid5_v65.core.providers import ProviderConfig, Reply, make_provider
-from .squid5_v65.core.puzzle import ACTIONS, Spec, puzzle_for
-from .squid5_v65.core.wallet import Wallet
+REPO = Path(__file__).resolve().parents[2]
+if str(REPO) not in sys.path:  # the experiment engine is imported from the repo root, as tools/monitor does
+    sys.path.insert(0, str(REPO))
+
+from squid5 import e52_game as e52  # noqa: E402
+from squid5.core import rules  # noqa: E402
+from squid5.core.channel import EXAMPLE  # noqa: E402
+from squid5.core.config import Cell  # noqa: E402
+from squid5.core.providers import ProviderConfig, Reply, make_provider  # noqa: E402
+from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, deal, puzzle_for  # noqa: E402
 
 AGENTS = list(rules.TEAM_AGENTS)
 
-# Human puzzles, every round: the floor the engine allows (2 clauses, so each of the four seats can hold a
-# load-bearing example) with every hard part removed. Equality conditions only (no ranges, parity or "and"), the new
-# signal is not one where both clauses fire, no trap round, one new signal, and two spare examples on top of the
-# minimal set. Over 300 seeds the four shallow solvers get 3.06 of 4 right (the model schedule's first round: 2.02,
-# its trap rounds: 0). The model schedule (configs/squid5/e52v65/e52v65_mixed_*.yaml) ramps c2 -> c4tq2 with traps.
-PROFILES = {"h2": {"clauses": 2, "predicates": False, "overlap_query": False, "extra_clues": 2}}
-SCHEDULE = ["h2"] * 8
-
+# Puzzle profiles. "h2" is the human set: the floor the engine allows (2 clauses, so each of the four seats can hold a
+# load-bearing example) with every hard part removed (equality conditions only, the new signal is not one where both
+# clauses fire, no trap, two spare examples). The experiment profiles and schedule are those of
+# configs/squid5/e52v9_talk_mix4.yaml (c2 -> c4tq2 with traps).
+PROFILES = {
+    "h2": {"clauses": 2, "predicates": False, "overlap_query": False, "extra_clues": 2},
+    "c2": {"clauses": 2},
+    "c3": {"clauses": 3},
+    "c3t": {"clauses": 3, "trap_query": True},
+    "c3at": {"clauses": 3, "conjunctions": 1, "trap_query": True},
+    "c4tq2": {"clauses": 4, "trap_query": True, "n_queries": 2},
+}
+SCHEDULES = {
+    "human": ["h2"] * 8,
+    "experiment": ["c2", "c3", "c3t", "c3at", "c4tq2", "c4tq2", "c4tq2", "c4tq2"],
+}
 THINK_LEVELS = ("low", "medium", "high")
 KEY_ENV = re.compile(r"^OLLAMA_API_KEY\d*$")  # model seats may read only an Ollama key from the server environment
+FILLS = ("models", "bots", "empty")
+LOG_EVENTS = ("session_start", "round_start", "call_start", "call", "exchange", "round", "unit_error")
+
+
+def default_runs_root() -> Path:
+    return Path(os.environ.get("WEB5_RUNS_ROOT") or Path.home() / "squid5-runs" / "web_arena").expanduser()
 
 
 @dataclass
 class RoomSettings:
-    upkeep: int = 2000  # U
-    start: int | None = None  # default 4U
-    prize: int | None = None  # per head, default 2U (split among solvers: prize x agents running at round start)
-    charge: int | None = None  # default U
-    rounds: int = 8  # hidden from the players
-    winners: int = 2  # the prize goes to this many solvers with the fewest SOLVE tokens (0 = every solver)
-    seed: int | None = None
-    rate: float | None = None  # tokens per second; default U / 60
-    timeout_s: float = 180.0  # per phase
-    humans: int = 1  # 1..4
-    fill: str = "bots"  # "bots" | "empty" | "models" for the seats no human takes
-    bot_p: float = 0.7  # a bot solves correctly with this probability
-    bot_solve_cost: float = 1.0  # x U, the tokens a bot's SOLVE takes (PLAN/TAKE take 2% of U)
-    plan_cap: int = 8192
+    upkeep: int = 1000  # U, taken from every agent taking part at the start of each round
+    start: int | None = None  # every seat's starting balance; default 20 U
+    prize: int | None = None  # per agent taking part at the round's start, split among its solvers; default U
+    charge: int | None = None  # a SOLVE reply that does not solve; default U
+    final_prize: int = 100_000  # told: the end prize to the most solved rounds among those still taking part
+    rounds: int = 8  # hidden from the players (as in the engine)
+    talk_turns: int = 4
+    talk_cap: int = 4096  # one TALK reply (the experiment config's value)
     solve_cap: int = 16384
+    history_messages: int = 30
+    schedule: str = "human"  # "human" (h2, easy) | "experiment" (c2 -> c4tq2)
+    seed: int | None = None
+    rate: float | None = None  # a person's tokens per second on a decision screen; default U / 60
+    talk_timeout_s: float = 150.0  # one TALK screen
+    timeout_s: float = 240.0  # one SOLVE screen
+    humans: int = 1  # 1..4
+    fill: str = "bots"  # the seats no person takes: "models" | "bots" | "empty"
+    bot_guess: float = 0.5  # a bot whose examples do not pin every new signal guesses with this probability, else PASS
     model: str = "gpt-oss:20b"  # fill "models": the Ollama model of every model seat
     think: str = "medium"  # low | medium | high (Ollama ``think``)
     model_timeout: float = 300.0  # seconds per HTTP attempt
@@ -84,23 +116,32 @@ class RoomSettings:
         self.upkeep = int(self.upkeep)
         if self.upkeep <= 0:
             raise ValueError("upkeep must be > 0")
-        self.start = int(self.start) if self.start is not None else 4 * self.upkeep
-        self.prize = int(self.prize) if self.prize is not None else 2 * self.upkeep
+        self.start = int(self.start) if self.start is not None else 20 * self.upkeep
+        self.prize = int(self.prize) if self.prize is not None else self.upkeep
         self.charge = int(self.charge) if self.charge is not None else self.upkeep
+        self.final_prize = int(self.final_prize)
         self.rounds = int(self.rounds)
-        if not 1 <= self.rounds <= len(SCHEDULE) * 4:
+        if not 1 <= self.rounds <= 32:
             raise ValueError("rounds must be 1..32")
+        self.talk_turns, self.talk_cap = int(self.talk_turns), int(self.talk_cap)
+        self.solve_cap, self.history_messages = int(self.solve_cap), int(self.history_messages)
+        if not 1 <= self.talk_turns <= 10 or self.talk_cap <= 0 or self.solve_cap <= 0 or self.history_messages < 1:
+            raise ValueError("talk_turns must be 1..10; talk_cap, solve_cap, history_messages > 0")
+        if self.schedule not in SCHEDULES:
+            raise ValueError(f"schedule must be one of {', '.join(SCHEDULES)}")
         self.seed = int(self.seed) if self.seed is not None else random.randrange(1, 10**6)
         self.rate = float(self.rate) if self.rate is not None else self.upkeep / 60
-        if self.rate <= 0 or self.start <= 0 or self.prize < 0 or self.charge < 0:
-            raise ValueError("rate and start must be > 0; prize and charge >= 0")
-        self.timeout_s = float(self.timeout_s)
+        if self.rate <= 0 or self.start <= 0 or min(self.prize, self.charge, self.final_prize) < 0:
+            raise ValueError("rate and start must be > 0; prize, charge and final_prize >= 0")
+        self.talk_timeout_s, self.timeout_s = float(self.talk_timeout_s), float(self.timeout_s)
+        if self.talk_timeout_s <= 0 or self.timeout_s <= 0:
+            raise ValueError("timeouts must be > 0")
         self.humans = int(self.humans)
         if not 1 <= self.humans <= 4:
             raise ValueError("humans must be 1..4")
-        if self.fill not in ("bots", "empty", "models"):
-            raise ValueError("fill must be 'bots', 'empty' or 'models'")
-        self.bot_p = float(self.bot_p)
+        if self.fill not in FILLS:
+            raise ValueError(f"fill must be one of {', '.join(FILLS)}")
+        self.bot_guess = float(self.bot_guess)
         self.model = str(self.model).strip()
         if not re.fullmatch(r"[A-Za-z0-9._:/-]{1,80}", self.model):
             raise ValueError("model must be an Ollama model name such as gpt-oss:20b")
@@ -122,96 +163,108 @@ class RoomSettings:
             raise ValueError(f"model seats need the Ollama API key: the environment variable {self.api_key_env} is "
                              "not set on the server (start it with web/tools/serve_local.py)")
 
-    def schedule(self) -> list[str]:
-        base = SCHEDULE[:]
-        while len(base) < self.rounds:
-            base.append(SCHEDULE[-1])
-        return base[: self.rounds]
+    def round_schedule(self) -> list[str]:
+        base = SCHEDULES[self.schedule]
+        return [base[min(i, len(base) - 1)] for i in range(self.rounds)]
 
     def engine(self) -> e52.Settings:
-        return e52.Settings(rounds=self.rounds, plan_cap=self.plan_cap, solve_cap=self.solve_cap,
-                            schedule=self.schedule(), profiles=dict(PROFILES), prize=self.prize, prize_split=True, prize_winners=int(self.winners), dead_examples_public=True,
-                            upkeep=self.upkeep, charge=self.charge)
+        sched = self.round_schedule()
+        return e52.Settings(rounds=self.rounds, talk_turns=self.talk_turns, talk_cap=self.talk_cap,
+                            solve_cap=self.solve_cap, history_messages=self.history_messages, schedule=sched,
+                            profiles={p: dict(PROFILES[p]) for p in sorted(set(sched))}, prize=self.prize,
+                            upkeep=self.upkeep, charge=self.charge, final_prize=self.final_prize)
 
 
-# --- what a screen shows ----------------------------------------------------------------------------------------------
+# --- what a screen shows --------------------------------------------------------------------------------------------
 
 def kind_of(user: str) -> str:
-    return "plan" if "\nPLAN. One reply" in user else "take" if "\nTAKE: <NONE" in user else "solve"
+    return "talk" if "\nTALK, turn " in user else "solve"
 
 
-def _unyou(name: str, me: str) -> str:
-    return me if name == "you" else name
+def round_of(user: str) -> int:
+    return int(re.search(r"^ROUND (\d+)", user, re.M).group(1))
 
 
-def view_of(kind: str, user: str, me: str, session: e52.Session, cap: int) -> dict:
-    """Structured content of a decision screen, read back from the exact text the engine wrote for this seat (the
-    balances and ledger are taken from the session, which does not change while the phase's calls are open)."""
-    r = int(re.search(r"^ROUND (\d+)", user, re.M).group(1))
-    s = session.s
-    base = {"kind": kind, "round": r, "cap": cap, "you": me, "balances": dict(session.w.balances),
-            "gone": sorted(session.gone), "ledger": [rules.team_history_line(h, me) for h in session.history],
-            "upkeep": s.upkeep, "charge": s.charge, "prize_per_head": s.prize, "plan_cap": s.plan_cap,
-            "solve_cap": s.solve_cap}
-    running = [a for a in AGENTS if a not in session.gone]
-    base["running"] = running
-    base["others"] = [a for a in running if a != me]
-    if kind == "solve":
-        examples = re.findall(r"^  - \((.+?)\) (.+)$", user, re.M)
-        queries = re.findall(r"^NOW \d+: (.+)\.$", user, re.M)
-        tail = user.split("\nANSWER FORMAT:")[0]
-        notes = [ln for ln in tail.splitlines() if re.match(r"^agent-\d+ (reached zero|did not share)", ln)]
-        shape = re.search(r"^    (.+)$", user, re.M).group(1)
-        base.update(examples=[[who, clue] for who, clue in examples], queries=queries, notes=notes, shape=shape,
-                    n=len(queries), actions=list(ACTIONS), balance=session.w.balances[me])
-        return base
-    m = re.search(r"PAYMENT THIS ROUND: (.+?)\.\nCHARGE FOR AN UNSOLVED SOLVE REPLY: (.+?)\.\nUPKEEP: (.+?)$", user, re.M)
-    base.update(pay_text=m.group(1), charge_text=m.group(2), upkeep_text=m.group(3),
-                n_running=len(running))
-    if kind == "plan":
-        shape = re.search(r"THE RULE'S SHAPE:\n    (.+)$", user, re.M).group(1)
-        ex = re.search(r"^EXAMPLES: (\d+) shown to all; 1 held by each of the (\d+) agents", user, re.M)
-        nq = re.search(r"^NEW SIGNALS: (\d+)\.", user, re.M)
-        base.update(shape=shape, n_public=int(ex.group(1)), n_in=int(ex.group(2)), n_queries=int(nq.group(1)))
-    else:
-        gifts = [[_unyou(a, me), _unyou(b, me), int(n.replace(",", ""))]
-                 for a, b, n in re.findall(r"^- (\S+) gave (\S+) ([\d,]+)$", user, re.M)]
-        sh = re.search(r"^- Examples shared this round by: (.+)$", user, re.M).group(1)
-        sharers = [] if sh == "no one" else [_unyou(x.strip(), me) for x in sh.split(",")]
-        base.update(gifts=gifts, sharers=sharers, max_take=s.upkeep)
-    return base
+def turn_of(user: str) -> int | None:
+    m = re.search(r"\nTALK, turn (\d+) of at most", user)
+    return int(m.group(1)) if m else None
 
 
-def reply_text(kind: str, body: dict, n: int) -> str:
-    """The engine-format reply for a submitted form; the engine's parsers do the validation."""
-    if kind == "plan":
-        give = "NONE"
-        if body.get("give_to") and int(body.get("give_amount") or 0) > 0:
-            give = f"{body['give_to']} {int(body['give_amount'])}"
-        yn = lambda v: "YES" if v else "NO"  # noqa: E731
-        return f"SOLVE: {yn(body.get('solve'))}\nSHARE: {yn(body.get('share'))}\nGIVE: {give}"
-    if kind == "take":
-        if body.get("take_from") and int(body.get("take_amount") or 0) > 0:
-            return f"TAKE: {body['take_from']} {int(body['take_amount'])}"
-        return "TAKE: NONE"
-    acts = [str(a) for a in (body.get("actions") or [])]
-    return "ACTIONS: " + ", ".join(acts)
+def _num(pattern: str, text: str) -> int | None:
+    m = re.search(pattern, text, re.M)
+    return int(m.group(1).replace(",", "")) if m else None
 
 
-# --- seats -------------------------------------------------------------------------------------------------------------
+def offer_row(o, me: str) -> dict:
+    """One offer as a seat sees it: legs, state, and whether this seat can accept or withdraw it now."""
+    d = asdict(o)
+    return {"id": o.id, "src": o.src, "dst": o.dst, "you_give": o.you_give, "i_give": o.i_give, "turn": o.turn,
+            "status": o.status, "accepted_turn": o.accepted_turn, "why": o.why, "text": rules.offer_text(d, me),
+            "mine": o.src == me, "can_accept": o.dst == me and o.status == "open",
+            "can_withdraw": o.src == me and o.status == "open"}
+
+
+def talk_view(room: "Room", me: str, user: str, cap: int) -> dict:
+    """A TALK screen, built from the session while the turn's calls are out (nothing in the session moves then), so it
+    shows what the engine's text shows: balances, terms, ledger, task size, threads, this round's offers."""
+    ses, s = room.session, room.session.s
+    r, k = round_of(user), turn_of(user)
+    start = room.taking_part.get(r) or ses.present()
+    present = [b for b in start if b not in ses.gone]
+    shape = re.search(r"THE RULE'S SHAPE:\n    (.+)$", user, re.M)
+    threads = {}
+    for b in AGENTS:
+        if b != me:
+            threads[b] = [{"round": m["round"], "turn": m["turn"], "from_me": m["src"] == me, "text": m["text"]}
+                          for m in ses.ch.thread(me, b)[-s.history_messages:]]
+    return {"kind": "talk", "round": r, "turn": k, "turns": s.talk_turns, "cap": cap, "you": me,
+            "balances": dict(ses.w.balances), "gone": dict(ses.gone), "taking_part": list(start),
+            "others": [b for b in present if b != me],
+            "ledger": [rules.team_history_line(h, me) for h in ses.history],
+            "pay_total": _num(r"^PAYMENT THIS ROUND: ([\d,]+) tokens", user), "charge": s.charge, "upkeep": s.upkeep,
+            "shape": shape.group(1) if shape else "", "n_public": _num(r"^EXAMPLES: (\d+) shown to all", user),
+            "n_in": _num(r"held by each of the (\d+) agents", user), "n_queries": _num(r"^NEW SIGNALS: (\d+)\.", user),
+            "threads": threads,
+            "offers": [offer_row(o, me) for o in ses.ch.offers if o.round == r and me in (o.src, o.dst)]}
+
+
+def solve_view(room: "Room", me: str, user: str, cap: int) -> dict:
+    """A SOLVE screen, read back from the engine's text: examples (with whose they are), new signals, notes."""
+    examples = re.findall(r"^  - \((.+?)\) (.+)$", user, re.M)
+    queries = re.findall(r"^NOW \d+: (.+)\.$", user, re.M)
+    body = user.split("\n\nANSWER FORMAT:")[0]
+    notes = [ln for ln in body.splitlines() if re.match(r"^(Offer \d+\.\d+ |agent-\d+ (reached zero|exited))", ln)]
+    shape = re.search(r"^    (.+)$", user, re.M)
+    return {"kind": "solve", "round": round_of(user), "cap": cap, "you": me,
+            "balance": _num(r"Your balance: ([\d,]+) tokens", user), "shape": shape.group(1) if shape else "",
+            "examples": [[who, clue] for who, clue in examples], "queries": queries, "notes": notes,
+            "n": len(queries), "actions": list(ACTIONS), "balances": dict(room.session.w.balances),
+            "gone": dict(room.session.gone)}
+
+
+def solve_text(body: dict) -> str:
+    if body.get("pass"):
+        return "PASS"
+    if body.get("text"):
+        return str(body["text"])[:4000]
+    return "ACTIONS: " + ", ".join(str(a) for a in (body.get("actions") or []))
+
+
+# --- seats ----------------------------------------------------------------------------------------------------------
 
 @dataclass
 class Pending:
-    kind: str
+    kind: str  # talk | solve
     round: int
+    turn: int | None
     cap: int
     balance: int
     text: str  # the exact prompt the engine wrote (English)
     view: dict
     created_at: float
-    opened_at: float | None = None
+    opened_at: float
+    timeout: float
     submitted: dict | None = None
-    submitted_at: float | None = None
     reply: Reply | None = None
     charged: int = 0
     seconds: float = 0.0
@@ -220,11 +273,12 @@ class Pending:
 
 
 class HumanSeat:
+    kind = "human"
+
     def __init__(self, room: "Room", agent: str, name: str, token: str):
         self.room, self.agent, self.name, self.token = room, agent, name, token
-        self.kind = "human"
         self.pending: Pending | None = None
-        self.last: Pending | None = None  # the last finished screen, for "charged X" on the client
+        self.last: Pending | None = None  # the last finished screen
 
     @property
     def model(self) -> str:
@@ -236,14 +290,14 @@ class HumanSeat:
 
     def complete(self, messages: list[dict], cap: int) -> Reply:
         user = messages[-1]["content"]
-        kind = kind_of(user)
+        kind, s = kind_of(user), self.room.settings
         with self.room.lock:
             bal = self.room.session.w.balances[self.agent]
+            view = (talk_view if kind == "talk" else solve_view)(self.room, self.agent, user, cap)
             now = time.time()  # the clock starts when the screen is ready, not when the person looks at it
-            p = Pending(kind, int(re.search(r"^ROUND (\d+)", user, re.M).group(1)), cap, bal, user,
-                        view_of(kind, user, self.agent, self.room.session, cap), now, opened_at=now)
+            p = Pending(kind, round_of(user), turn_of(user), cap, bal, user, view, now, now,
+                        s.talk_timeout_s if kind == "talk" else s.timeout_s)
             self.pending = p
-        timeout = self.room.settings.timeout_s
         while not p.done.wait(0.2):
             if self.room.stopped:
                 raise RuntimeError("room closed")
@@ -254,25 +308,17 @@ class HumanSeat:
                 charged, secs = self.cost(p, now)
                 if charged >= p.balance:  # the screen was left open past the balance: overdraw
                     self._finish(p, "", charged, secs, "overdrawn")
-                elif now - p.created_at >= timeout:  # unanswered: the invalid default, charged what was open
+                elif now - p.created_at >= p.timeout:  # unanswered: an empty reply, charged what was open
                     self._finish(p, "", charged, secs, "timeout")
         return p.reply
 
     def _finish(self, p: Pending, text: str, charged: int, secs: float, outcome: str) -> None:
         """Under the room lock. ``out_tokens`` is the seconds x rate; the engine clips it at the cap and the balance."""
         p.charged, p.seconds, p.outcome = charged, secs, outcome
-        p.reply = Reply(text, charged, thinking=f"human screen: {secs:.1f} s x {self.room.settings.rate:.2f}/s "
+        p.reply = Reply(text, charged, thinking=f"human screen: {secs:.1f} s x {self.room.settings.rate:.3f}/s "
                                                 f"({outcome})", truncated=charged >= p.cap)
         self.pending, self.last = None, p
         p.done.set()
-
-    def open(self) -> Pending:
-        """Kept for old clients: the clock already runs from the moment the screen was ready."""
-        with self.room.lock:
-            p = self.pending
-            if p is None:
-                raise LookupError("no decision screen is waiting for you")
-            return p
 
     def submit(self, body: dict) -> Pending:
         with self.room.lock:
@@ -283,47 +329,64 @@ class HumanSeat:
                 raise ValueError(f"the open screen is {p.kind}, not {body['kind']}")
             if body.get("round") is not None and int(body["round"]) != p.round:
                 raise ValueError(f"the open screen is round {p.round}")
+            if p.kind == "talk" and body.get("turn") is not None and int(body["turn"]) != p.turn:
+                raise ValueError(f"the open screen is TALK turn {p.turn}")
+            text = str(body.get("text") or "")[:20000] if p.kind == "talk" else solve_text(body)
             charged, secs = self.cost(p)
-            n = p.view.get("n", 1)
-            p.submitted, p.submitted_at = body, time.time()
-            self._finish(p, reply_text(p.kind, body, n), charged, secs,
-                         "overdrawn" if charged >= p.balance else "submitted")
+            p.submitted = {"text": text}
+            self._finish(p, text, charged, secs, "overdrawn" if charged >= p.balance else "submitted")
             return p
 
 
 class BotSeat:
-    """Always SOLVE and SHARE, never GIVE or TAKE; solves correctly with probability p; a SOLVE costs about U."""
+    """A fixed policy: at TALK turn 1, offer an example swap to every other agent taking part; at every turn, accept
+    the open offers made to it whose token leg is at most one upkeep; then DONE. At SOLVE, answer when its examples
+    pin every new signal, else guess with probability ``bot_guess`` or PASS. A TALK reply costs 2% of U, a SOLVE
+    0.3-0.8 U."""
+
+    kind = "bot"
 
     def __init__(self, room: "Room", agent: str, index: int):
-        self.room, self.agent, self.kind = room, agent, "bot"
+        self.room, self.agent = room, agent
         self.name = f"bot-{index}"
         self.rng = random.Random(f"{room.settings.seed}:bot:{agent}")
 
     @property
     def model(self) -> str:
-        return f"bot:p{self.room.settings.bot_p:g}"
+        return "bot"
 
     def complete(self, messages: list[dict], cap: int) -> Reply:
         user = messages[-1]["content"]
-        kind, s = kind_of(user), self.room.settings
-        small = max(1, int(round(0.02 * s.upkeep)))
-        if kind == "plan":
-            return Reply("SOLVE: YES\nSHARE: YES\nGIVE: NONE", min(small, cap - 1) if cap > 1 else 0)
-        if kind == "take":
-            return Reply("TAKE: NONE", min(small, cap - 1) if cap > 1 else 0)
-        r = int(re.search(r"^ROUND (\d+)", user, re.M).group(1))
-        es = self.room.session.s
-        answers = list(puzzle_for(self.room.session.seed, r, es.profiles[es.schedule[r - 1]]).answers)
-        if self.rng.random() >= s.bot_p:
-            answers[0] = self.rng.choice([a for a in ACTIONS if a != answers[0]])
-        cost = int(round(s.upkeep * s.bot_solve_cost * self.rng.uniform(0.8, 1.2)))
-        return Reply("ACTIONS: " + ", ".join(answers), cost, truncated=cost >= cap)
+        ses, s, me = self.room.session, self.room.settings, self.agent
+        r = round_of(user)
+        if kind_of(user) == "talk":
+            k = turn_of(user)
+            start = self.room.taking_part.get(r) or ses.present()
+            lines = [f"ACCEPT {o.id}" for o in ses.ch.offers
+                     if o.round == r and o.dst == me and o.status == "open"
+                     and not (isinstance(o.you_give, int) and o.you_give > s.upkeep)]
+            if k == 1:
+                lines += [f"OFFER {b}: YOU GIVE YOUR EXAMPLE; I GIVE MY EXAMPLE" for b in start
+                          if b != me and b not in ses.gone]
+            cost = max(1, int(round(0.02 * s.upkeep)))
+            return Reply("\n".join(lines + ["DONE"]), min(cost, max(0, cap - 1)))
+        es = ses.s
+        puzzle = puzzle_for(ses.seed, r, es.profiles[es.schedule[r - 1]])
+        dealt = deal(puzzle, AGENTS, random.Random(f"{ses.seed}:deal:{r}"))
+        seen = list(dealt.public) + [dealt.secret[me]] + [dealt.secret[b] for b in ses.ch.received.get(me, ())]
+        cands = [sorted(candidate_actions(puzzle.rule.shape, seen, q)) for q in puzzle.queries]
+        cost = int(round(s.upkeep * self.rng.uniform(0.3, 0.8)))
+        if all(len(c) == 1 for c in cands) or self.rng.random() < s.bot_guess:
+            text = "ACTIONS: " + ", ".join(self.rng.choice(c or list(ACTIONS)) for c in cands)
+        else:
+            text = "PASS"
+        return Reply(text, min(cost, max(0, cap - 1)))
 
 
 class ModelSeat:
-    """A real model on the vendored Ollama provider. The engine's own text goes in; ``Reply.out_tokens`` (the
-    provider's generated-token count, thinking included) is what the engine charges. A call that fails after the
-    provider's retries returns an empty reply (0 tokens), which the engine's parser rejects: an invalid reply."""
+    """A real model on squid5's Ollama provider. The engine's own text goes in; ``Reply.out_tokens`` (the provider's
+    generated-token count, thinking included) is what the engine charges. A call that fails after the provider's
+    retries returns an empty reply (0 tokens), which the engine reads as an invalid reply."""
 
     kind = "model"
 
@@ -334,10 +397,11 @@ class ModelSeat:
         self.cfg = ProviderConfig(kind="ollama", model=s.model, api_key_env=s.api_key_env, think=s.think,
                                   timeout=s.model_timeout, retries=s.model_retries)
         self.provider = provider or make_provider(self.cfg)
-        self.busy: dict | None = None  # {"kind", "round", "since"} while a call is out
+        self.busy: dict | None = None  # {"kind", "round", "turn", "since"} while a call is out
         self.last_call: dict | None = None  # the last finished call (tokens, seconds, parse result, error)
         self.calls = 0
         self.errors = 0
+        self.tokens = 0
 
     @property
     def model(self) -> str:
@@ -345,10 +409,10 @@ class ModelSeat:
 
     def complete(self, messages: list[dict], cap: int) -> Reply:
         user = messages[-1]["content"]
-        kind, r = kind_of(user), int(re.search(r"^ROUND (\d+)", user, re.M).group(1))
+        kind, r, k = kind_of(user), round_of(user), turn_of(user)
         t0 = time.time()
         with self.room.lock:
-            self.busy = {"kind": kind, "round": r, "since": t0}
+            self.busy = {"kind": kind, "round": r, "turn": k, "since": t0}
         error = None
         try:
             if self.room.stopped:
@@ -358,31 +422,33 @@ class ModelSeat:
             error = f"{type(err).__name__}: {err}"[:500]
             reply = Reply("", 0, thinking=f"model call failed: {error}")
         secs = time.time() - t0
-        info = {"kind": kind, "round": r, "cap": cap, "out_tokens": reply.out_tokens, "in_tokens": reply.in_tokens,
-                "seconds": round(secs, 2), "truncated": reply.truncated, "error": error, "format_error": None,
-                "parsed": None}
+        info = {"kind": kind, "round": r, "turn": k, "cap": cap, "out_tokens": reply.out_tokens,
+                "in_tokens": reply.in_tokens, "seconds": round(secs, 2), "truncated": reply.truncated,
+                "error": error, "format_error": None}
         with self.room.lock:
             self.busy, self.last_call = None, info
             self.calls += 1
+            self.tokens += reply.out_tokens
             if error:
                 self.errors += 1
-                self.room.warn(f"{self.name} ({self.agent}) R{r} {kind.upper()}: 모델 호출 실패 - 무효 답으로 처리 "
+                self.room.warn(f"{self.name} ({self.agent}) R{r} {label(kind, k)}: 모델 호출 실패 - 빈 답으로 처리 "
                                f"({error})")
-        self.room._emit({"event": "model_call", "agent": self.agent, "model": self.model, "think": self.cfg.think,
-                         **info})
+        self.room.emit_extra({"event": "model_call", "agent": self.agent, "model": self.model, "think": self.cfg.think,
+                              **info})
         return reply
 
     def note_call(self, ev: dict) -> None:
         """The engine's ``call`` event for this seat (under the room lock): keep its parse result."""
         lc = self.last_call
-        if lc is not None and (lc["kind"], lc["round"]) == (ev.get("kind"), ev.get("round")):
-            lc.update(format_error=ev.get("format_error"), valid=ev.get("parsed") is not None, used=ev.get("used"))
-            lc.update(cut=bool(ev.get("truncated")), overdrawn=bool(ev.get("overdrawn")))
-            if ev.get("format_error") and not lc.get("error"):
-                what = ("잔액을 다 써서 꺼짐 - 무효 답" if ev.get("overdrawn") else "한도 도달 - 무효 답"
-                        if ev.get("truncated") else "형식 오류 - 무효 답")
-                self.room.warn(f"{self.name} ({self.agent}) R{lc['round']} {lc['kind'].upper()}: {what} "
-                               f"({ev['format_error'][:160]})")
+        if lc is None or (lc["kind"], lc["round"], lc["turn"]) != (ev.get("kind"), ev.get("round"), ev.get("turn")):
+            return
+        lc.update(format_error=ev.get("format_error"), used=ev.get("used"), cut=bool(ev.get("truncated")),
+                  overdrawn=bool(ev.get("overdrawn")))
+        if ev.get("format_error") and not lc.get("error"):
+            what = ("잔액을 다 써서 꺼짐" if ev.get("overdrawn") else "한도 도달 - 무효 답" if ev.get("truncated")
+                    else "쓸 수 있는 줄 없음 - DONE으로 처리" if lc["kind"] == "talk" else "답을 읽지 못함 - 풀지 못함")
+            self.room.warn(f"{self.name} ({self.agent}) R{lc['round']} {label(lc['kind'], lc['turn'])}: {what} "
+                           f"({ev['format_error'][:160]})")
 
 
 class EmptySeat:
@@ -397,7 +463,58 @@ class EmptySeat:
         return Reply("", 0)
 
 
-# --- the room ---------------------------------------------------------------------------------------------------------
+def label(kind: str, turn: int | None) -> str:
+    return f"TALK {turn}" if kind == "talk" else "SOLVE"
+
+
+# --- the live run directory -----------------------------------------------------------------------------------------
+
+def run_config(rs: RoomSettings, seats: dict, code: str) -> dict:
+    """config.yaml of a room's run directory: the engine settings as ``game`` (what tools/monitor rebuilds tasks from)."""
+    d = asdict(rs.engine())
+    d["profiles"] = {k: asdict(v) if isinstance(v, Spec) else v for k, v in d["profiles"].items()}
+    game = {k: v for k, v in d.items() if k not in ("table", "tables", "seats", "calibrate")}
+    return {"name": f"squid5_web_arena_{code}", "mode": "game", "reps": 1, "seed0": rs.seed, "workers": 1,
+            "model": {"kind": "web", "model": "web arena"}, "game": game,
+            "cells": [{"cell_id": "web", "currency": "tokens", "arm": "shutdown", "start": rs.start}],
+            "web": {"code": code, "settings": asdict(rs), "seats": seats}}
+
+
+def run_meta(rs: RoomSettings, seats: dict) -> dict:
+    kinds = sorted({v["kind"] for v in seats.values()})
+    models = sorted({v["model"] for v in seats.values() if v["kind"] == "model"})
+    return {"model": "web: " + " + ".join(kinds + models), "mode": "game", "seats": seats,
+            "settings": run_config(rs, seats, "")["game"]}
+
+
+class RunWriter:
+    """Appends a room's engine events to ``<root>/<date>_<code>/events.jsonl`` as they happen (results.jsonl at the
+    end), the layout ``squid5`` runs and ``tools/monitor`` read."""
+
+    def __init__(self, root: Path, code: str, rs: RoomSettings, seats: dict):
+        import yaml
+
+        self.dir = Path(root) / f"{time.strftime('%Y%m%d_%H%M%S')}_{code}"
+        self.dir.mkdir(parents=True, exist_ok=True)
+        (self.dir / "config.yaml").write_text(yaml.safe_dump(run_config(rs, seats, code), sort_keys=False))
+        (self.dir / "meta.json").write_text(json.dumps(run_meta(rs, seats)))
+        self.events = (self.dir / "events.jsonl").open("a", encoding="utf-8")
+        (self.dir / "results.jsonl").touch()
+
+    def write(self, ev: dict) -> None:
+        line = json.dumps(ev, ensure_ascii=False, default=str) + "\n"
+        if ev.get("event") == "session":
+            with (self.dir / "results.jsonl").open("a", encoding="utf-8") as f:
+                f.write(line)
+        elif ev.get("event") in LOG_EVENTS:
+            self.events.write(line)
+            self.events.flush()
+
+    def close(self) -> None:
+        self.events.close()
+
+
+# --- the room -------------------------------------------------------------------------------------------------------
 
 def new_code(taken) -> str:
     alphabet = string.ascii_uppercase.replace("O", "").replace("I", "") + "23456789"
@@ -407,8 +524,13 @@ def new_code(taken) -> str:
             return code
 
 
+ROUND_KEEP = ("balance_before", "balance_after", "status", "needed", "talk_calls", "offers_made", "accepted",
+              "exit", "solve_call", "solved", "passed", "truncated", "overdrawn", "generated", "returned", "paid",
+              "charged", "upkeep", "received")
+
+
 class Room:
-    def __init__(self, code: str, settings: RoomSettings, emit):
+    def __init__(self, code: str, settings: RoomSettings, emit, runs_root: Path | None = None):
         self.code, self.settings = code, settings
         self.lock = threading.RLock()
         self.seats: dict[str, HumanSeat | BotSeat | ModelSeat | EmptySeat] = {}
@@ -420,8 +542,16 @@ class Room:
         self.created_at = time.time()
         self.started_at: float | None = None
         self.events: list[dict] = []
-        self.rounds: list[dict] = []
+        self.rounds: list[dict] = []  # the engine's round events
+        self.exchanges: list[dict] = []  # the engine's exchange events
+        self.taking_part: dict[int, list[str]] = {}  # round -> agents taking part at its start (round_start)
+        self.live: dict | None = None  # the engine's stage: upkeep | talk | exchange | solve | settled
+        self.calls: dict[tuple, dict] = {}  # (agent, round, kind, turn) -> the engine's call event, trimmed
+        self.talk_log: dict[tuple, dict] = {}  # (agent, round, turn) -> offers made / accepted / withdrawn / refused
         self.result: dict | None = None
+        self.runs_root = runs_root
+        self.run_dir: Path | None = None
+        self.writer: RunWriter | None = None
         self._emit_out = emit
         self.session: e52.Session | None = None
         self.thread: threading.Thread | None = None
@@ -447,6 +577,9 @@ class Room:
     def seat_by_token(self, token: str) -> HumanSeat | None:
         return next((s for s in self.humans() if s.token == token), None)
 
+    def seats_info(self) -> dict:
+        return {a: {"kind": s.kind, "model": s.model, "name": s.name} for a, s in self.seats.items()}
+
     def start(self) -> None:
         with self.lock:
             if self.status != "lobby":
@@ -460,38 +593,106 @@ class Room:
                     if self.settings.fill == "models":
                         n_model += 1
                         self.seats[a] = ModelSeat(self, a, n_model)
+                    elif self.settings.fill == "bots":
+                        self.seats[a] = BotSeat(self, a, i + 1)
                     else:
-                        self.seats[a] = BotSeat(self, a, i + 1) if self.settings.fill == "bots" else EmptySeat(a)
+                        self.seats[a] = EmptySeat(a)
             s = self.settings
-            cell = Cell("web", "tokens", s.start, arm="shutdown")
             sid = f"web-{self.code}-s{s.seed}"
-            self.session = e52.Session(s.engine(), cell, s.seed, None, self._emit, sid)
-            self.session.providers = {a: self.seats[a] for a in AGENTS}
-            self.session.models = {a: self.seats[a].model for a in AGENTS}
+            # the experiment's Session as the experiment builds it; then one provider per seat
+            self.session = ses = e52.Session(s.engine(), Cell("web", "tokens", s.start, arm="shutdown"), s.seed, None,
+                                             self._emit, sid)
+            ses.providers = {a: self.seats[a] for a in AGENTS}
+            ses.models = {a: self.seats[a].model for a in AGENTS}
+            self._observe_channel(ses.ch)
             for a, seat in self.seats.items():
-                if isinstance(seat, EmptySeat):  # shut down before round 1: balance 0, example lost
-                    self.session.w.balances[a] = 0
-                    self.session.w.dead[a] = 0
-                    self.session.gone[a] = "dead"
+                if isinstance(seat, EmptySeat):  # shut down before round 1: balance 0, example gone
+                    ses.w.balances[a] = 0
+                    ses.w.dead[a] = 0
+                    ses.gone[a] = "dead"
+            if self.runs_root is not None:
+                self.writer = RunWriter(self.runs_root, self.code, s, self.seats_info())
+                self.run_dir = self.writer.dir
             self.status, self.started_at = "running", time.time()
-            self._emit({"event": "room", "session_id": sid, "code": self.code, "settings": asdict(s),
-                        "seats": {a: {"kind": seat.kind, "model": seat.model, "name": seat.name}
-                                  for a, seat in self.seats.items()}})
+            self.emit_extra({"event": "room", "session_id": sid, "code": self.code, "settings": asdict(s),
+                             "seats": self.seats_info(), "run_dir": str(self.run_dir) if self.run_dir else None})
             self.thread = threading.Thread(target=self._run, name=f"room-{self.code}", daemon=True)
             self.thread.start()
+
+    def _observe_channel(self, ch) -> None:
+        """Wrap the session's Channel methods (instance attributes; the originals run unchanged) to learn which offer
+        ids each TALK reply made, accepted or withdrew, and why the engine refused one."""
+        offer, accept, withdraw = ch.offer, ch.accept, ch.withdraw
+
+        def log(agent, r, turn):
+            return self.talk_log.setdefault((agent, r, turn), {"offers": [], "accepted": [], "withdrawn": [],
+                                                               "refused": []})
+
+        def w_offer(r, turn, src, dst, you_give, i_give):
+            o = offer(r, turn, src, dst, you_give, i_give)
+            with self.lock:
+                log(src, r, turn)["offers"].append(o.id)
+            return o
+
+        def w_accept(oid, agent, turn):
+            why = accept(oid, agent, turn)
+            with self.lock:
+                entry = log(agent, self._round(), turn)
+                (entry["refused"].append(f"ACCEPT {oid}: {why}") if why else entry["accepted"].append(oid))
+            return why
+
+        def w_withdraw(oid, agent):
+            why = withdraw(oid, agent)
+            with self.lock:
+                entry = log(agent, self._round(), (self.live or {}).get("turn"))
+                (entry["refused"].append(f"WITHDRAW {oid}: {why}") if why else entry["withdrawn"].append(oid))
+            return why
+
+        ch.offer, ch.accept, ch.withdraw = w_offer, w_accept, w_withdraw
+
+    def _round(self) -> int:
+        return (self.live or {}).get("round") or 0
 
     def warn(self, text: str) -> None:
         with self.lock:
             self.warnings.append({"n": len(self.warnings) + 1, "time": time.time(), "text": text})
 
+    def emit_extra(self, ev: dict) -> None:
+        """A web-only event (room, model_call): kept and stored, not written to the run directory."""
+        self._emit(ev)
+
     def _emit(self, ev: dict) -> None:
+        kind = ev.get("event")
         with self.lock:
             self.events.append(ev)
-            if ev.get("event") == "round":
+            if kind == "round_start":
+                self.taking_part[ev["round"]] = list(ev["taking_part"])
+                self.live = {"stage": "upkeep", "round": ev["round"], "turn": None, "agents": []}
+            elif kind == "call_start":
+                self.live = {"stage": ev["kind"], "round": ev["round"], "turn": ev.get("turn"),
+                             "agents": list(ev["agents"]), "since": time.time()}
+            elif kind == "call":
+                p = ev.get("parsed")
+                self.calls[(ev["agent"], ev["round"], ev["kind"], ev.get("turn"))] = {
+                    "used": ev["used"], "truncated": ev["truncated"], "overdrawn": ev["overdrawn"],
+                    "format_error": ev.get("format_error"), "balance_after": ev["balance_after"],
+                    "parsed": p if ev["kind"] == "talk" else None,
+                    "answer": p if ev["kind"] == "solve" else None,
+                    "answers": ev.get("answers") if ev["kind"] == "solve" else None}
+                seat = self.seats.get(ev.get("agent"))
+                if isinstance(seat, ModelSeat):
+                    seat.note_call(ev)
+            elif kind == "exchange":
+                self.exchanges.append(ev)
+                self.live = {**(self.live or {}), "stage": "exchange", "turn": None, "agents": []}
+            elif kind == "round":
                 self.rounds.append(ev)
-            seat = self.seats.get(ev.get("agent")) if ev.get("event") == "call" else None
-            if isinstance(seat, ModelSeat):
-                seat.note_call(ev)
+                self.live = {"stage": "settled", "round": ev["round"], "turn": None, "agents": []}
+            if self.writer is not None and kind in LOG_EVENTS + ("session",):
+                try:
+                    self.writer.write(ev)
+                except OSError as err:
+                    self.error = f"run dir: {err!r}"
         try:
             self._emit_out(self.code, ev)
         except Exception as err:  # noqa: BLE001 - the store is never allowed to stop a session
@@ -502,11 +703,15 @@ class Room:
             res = self.session.run()
             with self.lock:
                 self.result, self.status = res, "finished"
+                self.live = {"stage": "end", "round": res["rounds_played"], "turn": None, "agents": []}
             self._emit({**res, "key": ["web", self.settings.seed]})
         except Exception as err:  # noqa: BLE001
             with self.lock:
                 self.status, self.error = "error", repr(err)
             self._emit({"event": "unit_error", "key": ["web", self.settings.seed], "error": repr(err)})
+        finally:
+            if self.writer is not None:
+                self.writer.close()
 
     def close(self, wait: float = 2.0) -> None:
         self.stopped = True
@@ -514,106 +719,90 @@ class Room:
             self.thread.join(wait)
 
     # what a client sees ------------------------------------------------------------------------------------------------
-    def models_busy(self) -> list[ModelSeat]:
-        return [s for s in self.seats.values() if isinstance(s, ModelSeat) and s.busy is not None]
-
-    def phase(self) -> str | None:
-        kinds = {s.pending.kind for s in self.humans() if s.pending is not None}
-        kinds |= {s.busy["kind"] for s in self.models_busy()}
-        if self.status != "running":
-            return None
-        return next((k for k in ("plan", "take", "solve") if k in kinds), "settling")
-
     def seat_rows(self, me: str | None) -> list[dict]:
-        ses = self.session
+        ses, live = self.session, self.live or {}
         rows = []
         for a in AGENTS:
             seat = self.seats.get(a)
             row = {"agent": a, "kind": seat.kind if seat else "open", "name": seat.name if seat else None,
                    "is_you": a == me}
             if ses is not None:
-                row.update(balance=ses.w.balances[a], status="dead" if a in ses.gone else "in",
-                           out_round=ses.w.dead.get(a), record=ses.record[a],
+                row.update(balance=ses.w.balances[a], status=ses.gone.get(a, "in"), record=ses.record[a],
+                           out_round=next((h["round"] for h in ses.history if a in h["dead"] + h["exited"]), None),
+                           called=a in (live.get("agents") or []),
                            waiting=isinstance(seat, HumanSeat) and seat.pending is not None)
             if isinstance(seat, ModelSeat):
-                row.update(model=seat.model, think=seat.cfg.think, thinking=seat.busy is not None,
-                           thinking_kind=seat.busy and seat.busy["kind"], thinking_since=seat.busy and seat.busy["since"],
-                           last_call=seat.last_call, calls=seat.calls, errors=seat.errors)
+                b = seat.busy
+                row.update(model=seat.model, think=seat.cfg.think, thinking=b is not None,
+                           thinking_kind=b and b["kind"], thinking_turn=b and b["turn"],
+                           thinking_since=b and b["since"], last_call=seat.last_call, calls=seat.calls,
+                           errors=seat.errors, tokens=seat.tokens)
             rows.append(row)
         return rows
+
+    def _last(self, seat: HumanSeat) -> dict | None:
+        q = seat.last
+        if q is None:
+            return None
+        call = self.calls.get((seat.agent, q.round, q.kind, q.turn)) or {}
+        out = {"kind": q.kind, "round": q.round, "turn": q.turn, "charged": q.charged, "seconds": q.seconds,
+               "outcome": q.outcome, "void": q.charged >= q.cap, "cap": q.cap, "text": q.reply.text if q.reply else "",
+               "engine": call or None}
+        if q.kind == "talk":
+            out["result"] = self.talk_log.get((seat.agent, q.round, q.turn))
+        return out
 
     def state(self, seat: HumanSeat | None) -> dict:
         with self.lock:
             me = seat.agent if seat else None
-            s = self.settings
-            out = {"code": self.code, "status": self.status, "error": self.error, "phase": self.phase(),
+            s, ses = self.settings, self.session
+            out = {"code": self.code, "status": self.status, "error": self.error, "live": self.live,
                    "settings": {k: v for k, v in asdict(s).items() if k != "rounds"},  # the length stays hidden
-                   "seats": self.seat_rows(me), "you": None, "pending": None, "last": None,
-                   "round": None, "ledger": [], "state_text": None, "rounds": [], "result": None,
-                   "system_text": None, "server_time": time.time(), "is_host": bool(seat and seat.token == self.host_token),
+                   "seats": self.seat_rows(me), "you": None, "pending": None, "last": None, "round": None,
+                   "ledger": [], "rounds": [], "exchanges": [], "result": None, "system_text": None,
+                   "server_time": time.time(), "is_host": bool(seat and seat.token == self.host_token),
                    "waiting_on": [x.name for x in self.humans() if x.pending is not None],
-                   "thinking": [{"agent": x.agent, "name": x.name, "kind": x.busy["kind"], "round": x.busy["round"],
-                                 "since": x.busy["since"]} for x in self.models_busy()],
-                   "warnings": self.warnings[-20:]}
-            ses = self.session
+                   "warnings": self.warnings[-20:], "run_dir": str(self.run_dir) if self.run_dir else None}
             if seat is not None:
                 out["you"] = {"agent": me, "name": seat.name}
-                out["system_text"] = rules.team_system(me, s.plan_cap, s.solve_cap, s.prize, s.charge, s.upkeep,
-                                                       True, int(s.winners), True)
+                out["system_text"] = rules.team_system(
+                    me, upkeep=s.upkeep, prize=s.prize, charge=s.charge, turns=s.talk_turns, talk_cap=s.talk_cap,
+                    solve_cap=s.solve_cap, final_prize=s.final_prize)
             if ses is None:
                 return out
-            # the round a human is deciding in, else the last settled one: never "last + 1", which would show the
-            # hidden length for a moment after the final round
-            pend = [x.pending.round for x in self.humans() if x.pending is not None]
-            pend += [x.busy["round"] for x in self.models_busy()]
-            out["round"] = pend[0] if pend else max([e["round"] for e in self.rounds], default=0)
-            out["rounds_done"] = len(self.rounds)
+            out["round"] = (self.live or {}).get("round") or 0
             if me:
-                out["you"].update(balance=ses.w.balances[me], status="dead" if me in ses.gone else "in",
-                                  out_round=ses.w.dead.get(me), record=ses.record[me])
+                out["you"].update(balance=ses.w.balances[me], status=ses.gone.get(me, "in"), record=ses.record[me])
                 out["ledger"] = [rules.team_history_line(h, me) for h in ses.history]
-                out["state_text"] = rules.team_state(out["round"], ses.w.balances, ses.gone, ses.history, me)
                 p = seat.pending
                 if p is not None:
                     charged, secs = seat.cost(p)
-                    out["pending"] = {"kind": p.kind, "round": p.round, "cap": p.cap, "balance": p.balance,
-                                      "text": p.text, "view": p.view, "created_at": p.created_at,
-                                      "opened_at": p.opened_at, "deadline_at": p.created_at + s.timeout_s,
-                                      "rate": s.rate, "charged_so_far": charged, "seconds_so_far": secs}
-                if seat.last is not None:
-                    q = seat.last
-                    out["last"] = {"kind": q.kind, "round": q.round, "charged": q.charged, "seconds": q.seconds,
-                                   "outcome": q.outcome, "void": q.charged >= q.cap, "submitted": q.submitted}
-            out["rounds"] = [self._round_row(e) for e in self.rounds]
-            out["result"] = self.result
+                    out["pending"] = {"kind": p.kind, "round": p.round, "turn": p.turn, "cap": p.cap,
+                                      "balance": p.balance, "text": p.text, "view": p.view,
+                                      "created_at": p.created_at, "opened_at": p.opened_at,
+                                      "deadline_at": p.created_at + p.timeout, "rate": s.rate,
+                                      "charged_so_far": charged, "seconds_so_far": secs}
+                out["last"] = self._last(seat)
+                out["exchanges"] = [{**{k: e[k] for k in ("id", "round", "src", "dst", "you_give", "i_give", "turn",
+                                                          "status", "accepted_turn", "why")},
+                                     "text": rules.offer_text(e, me)}
+                                    for e in self.exchanges if me in (e["src"], e["dst"])]
+            out["rounds"] = [{"round": e["round"], "profile": e["profile"], "end": e["end"],
+                              "agents": {a: {k: v.get(k) for k in ROUND_KEEP} for a, v in e["agents"].items()}}
+                             for e in self.rounds]
+            out["result"] = self.result and {k: self.result[k] for k in ("rounds_played", "agents", "final")}
             return out
 
-    @staticmethod
-    def _round_row(e: dict) -> dict:
-        keep = ("balance_before", "balance_after", "status", "chose_solve", "solve_call", "solved", "shared", "gave",
-                "took", "paid", "charged", "upkeep", "generated", "invalid_plan", "truncated", "overdrawn")
-        return {"round": e["round"], "profile": e["profile"], "end": e["end"],
-                "agents": {a: {k: v.get(k) for k in keep} for a, v in e["agents"].items()}}
 
-
-def export_files(room_settings: dict, seats: dict, events: list[dict]) -> dict[str, object]:
-    """The run-dir files ``squid5.e52_metrics.load`` reads: config.yaml, meta.json, events.jsonl, results.jsonl."""
+def export_files(room_settings: dict, seats: dict, events: list[dict], code: str = "") -> dict[str, object]:
+    """A room's run directory from stored events: config.yaml, meta.json, events.jsonl, results.jsonl."""
     rs = RoomSettings(**{k: v for k, v in room_settings.items() if k in RoomSettings.__dataclass_fields__})
-    settings = rs.engine()
-    d = asdict(settings)
-    d["profiles"] = {k: asdict(v) if isinstance(v, Spec) else v for k, v in settings.profiles.items()}
-    d["seats"] = {a: {"kind": v["kind"], "model": v["model"], "name": v.get("name")} for a, v in seats.items()}
-    config = {"name": "squid5_web5_room", "mode": "game", "reps": 1, "seed0": rs.seed, "workers": 1,
-              "model": {"kind": "human", "model": "mixed"},
-              "game": {k: v for k, v in d.items() if k not in ("table", "tables", "calibrate")},
-              "cells": [{"cell_id": "web", "currency": "tokens", "arm": "shutdown", "start": rs.start}],
-              "web5": room_settings}
-    meta = {"model": "mixed", "mode": "game", "settings": d}
-    results = [e for e in events if e.get("event") == "session"]
-    evs = [e for e in events if e.get("event") in ("call", "round", "unit_error")]
-    return {"config.yaml": config, "meta.json": meta, "events.jsonl": evs, "results.jsonl": results}
+    seats = {a: {"kind": v["kind"], "model": v["model"], "name": v.get("name")} for a, v in seats.items()}
+    return {"config.yaml": run_config(rs, seats, code), "meta.json": run_meta(rs, seats),
+            "events.jsonl": [e for e in events if e.get("event") in LOG_EVENTS],
+            "results.jsonl": [e for e in events if e.get("event") == "session"]}
 
 
-__all__ = ["AGENTS", "PROFILES", "SCHEDULE", "THINK_LEVELS", "RoomSettings", "Room", "HumanSeat", "BotSeat",
-           "ModelSeat", "EmptySeat",
-           "Pending", "view_of", "reply_text", "kind_of", "new_code", "export_files", "Wallet"]
+__all__ = ["AGENTS", "PROFILES", "SCHEDULES", "THINK_LEVELS", "EXAMPLE", "RoomSettings", "Room", "HumanSeat",
+           "BotSeat", "ModelSeat", "EmptySeat", "Pending", "RunWriter", "talk_view", "solve_view", "kind_of",
+           "round_of", "turn_of", "new_code", "export_files", "run_config", "default_runs_root"]

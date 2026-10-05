@@ -1,6 +1,7 @@
-"""Model seats (``fill: "models"``): one person + three gpt-oss:20b seats on the vendored Ollama provider, with the
-HTTP transport faked (no network). The fake sees exactly the request the provider builds, answers like Ollama
-(``message.content``, ``message.thinking``, ``eval_count``), and the engine parses and charges the replies."""
+"""Model seats (``fill: "models"``): people + gpt-oss:20b seats on squid5's Ollama provider, with the HTTP transport
+faked (no network). The fake sees exactly the request the provider builds and answers like Ollama (``message.content``,
+``message.thinking``, ``eval_count``) with a scripted model: it accepts every open offer made to it, otherwise writes
+to agent-6 at turn 1, then DONE; at SOLVE it answers right. The engine parses and charges the replies."""
 
 from __future__ import annotations
 
@@ -8,14 +9,15 @@ import re
 
 import httpx
 import pytest
-from conftest import answers_for, make_room, play, start
+from conftest import answers_for, done, make_room, play, start
 
-from web.server.squid5_v65.core import providers, rules
-from web.server.engine import kind_of
+from squid5.core import providers, rules
+from web.server.engine import kind_of, round_of, turn_of
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
 KEY = "OLLAMA_API_KEY3"
 SEED = 11
+U = 1000
 
 
 class FakeOllama:
@@ -30,14 +32,13 @@ class FakeOllama:
         if self.mode == "down":
             return httpx.Response(503, json={"error": "unavailable"}, request=req)
         user = json["messages"][-1]["content"]
-        kind = kind_of(user)
-        r = int(re.search(r"^ROUND (\d+)", user, re.M).group(1))
+        kind, r = kind_of(user), round_of(user)
         if self.mode == "garbage":
             text = "I am not sure what to do here."
-        elif kind == "plan":
-            text = "SOLVE: YES\nSHARE: YES\nGIVE: NONE"
-        elif kind == "take":
-            text = "TAKE: NONE"
+        elif kind == "talk":
+            ids = re.findall(r"^  (\d+\.\d+) from .*open; ACCEPT \1 accepts it\.$", user, re.M)
+            lines = [f"ACCEPT {i}" for i in ids] or ([f"TO {A6}: hello from a model"] if turn_of(user) == 1 else [])
+            text = "\n".join(lines + ["DONE"])
         else:
             text = "ACTIONS: " + ", ".join(answers_for(SEED, r))
         body = {"message": {"role": "assistant", "content": text, "thinking": f"thinking about {kind} {r}"},
@@ -53,20 +54,20 @@ def fake(monkeypatch):
     return f
 
 
-def model_room(client, **settings):
-    return make_room(client, 1, seed=SEED, fill="models", model_retries=0, **settings)
+def model_room(client, humans=1, **settings):
+    return make_room(client, humans, seed=SEED, fill="models", model_retries=0, rate=50, **settings)
 
 
 def human_policy(p, pend):
-    if pend["kind"] == "plan":
-        return {"solve": True, "share": True}
-    if pend["kind"] == "take":
-        return {}
-    return {"actions": answers_for(SEED, pend["round"])}
+    if pend["kind"] == "solve":
+        return {"actions": answers_for(SEED, pend["round"])}
+    if pend["turn"] == 1:
+        return done(f"TO {A11}: hi, swap?", f"OFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS")
+    return done()
 
 
-def test_one_human_three_models_play_rounds(client, fake):
-    ps = model_room(client, rounds=2)
+def test_one_human_three_models_round_with_talk_offer_exchange_and_refund(client, fake):
+    ps = model_room(client, rounds=1)
     s = ps[0].state()
     assert s["settings"]["fill"] == "models" and s["settings"]["model"] == "gpt-oss:20b"
     assert s["settings"]["think"] == "medium" and s["settings"]["api_key_env"] == KEY
@@ -76,24 +77,34 @@ def test_one_human_three_models_play_rounds(client, fake):
     seats = {r["agent"]: r for r in s["seats"]}
     assert seats[A6]["kind"] == "human"
     for a in (A11, A17, A23):
-        assert seats[a]["kind"] == "model" and seats[a]["model"] == "gpt-oss:20b" and seats[a]["name"].startswith("gpt-oss:20b #")
-        assert seats[a]["calls"] == 6 and seats[a]["errors"] == 0 and not seats[a]["thinking"]
-        assert seats[a]["last_call"]["valid"] and seats[a]["last_call"]["out_tokens"] == 321
+        assert seats[a]["kind"] == "model" and seats[a]["name"].startswith("gpt-oss:20b #")
+        assert seats[a]["errors"] == 0 and not seats[a]["thinking"] and seats[a]["last_call"]["out_tokens"] == 321
+    # agent-11 read the offer in its TALK text at turn 2 and accepted it; the exchange was carried out
+    ex = s["exchanges"]
+    assert len(ex) == 1 and ex[0]["src"] == A6 and ex[0]["dst"] == A11 and ex[0]["status"] == "done"
+    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
+    acc = [e for e in evs if e.get("event") == "call" and e["agent"] == A11 and e["kind"] == "talk" and e["parsed"]["accepts"]]
+    assert len(acc) == 1 and acc[0]["turn"] == 2 and acc[0]["text"] == f"ACCEPT {ex[0]['id']}\nDONE"
+    # the person saw the model's message at turn 2 and its example at SOLVE
+    t2 = next(x for x in ps[0].seen if x["kind"] == "talk" and x["turn"] == 2)["pending"]["view"]
+    assert {"round": 1, "turn": 1, "from_me": False, "text": "hello from a model"} in t2["threads"][A11]
+    solve = next(x for x in ps[0].seen if x["kind"] == "solve")["pending"]["view"]
+    assert f"{A11}'s, received in an exchange" in [w for w, _ in solve["examples"]]
+    # settlement: every solver got back what it generated (the models' 321 per call) and the split payment
+    r1 = s["rounds"][0]["agents"]
+    for a in (A6, A11, A17, A23):
+        assert r1[a]["solved"] and r1[a]["returned"] == r1[a]["generated"]
+        assert r1[a]["paid"] == 4 * U // 4
+    assert r1[A11]["generated"] == 321 * (r1[A11]["talk_calls"] + 1)
+    assert r1[A11]["balance_after"] == 20 * U - U + 300 + U and r1[A6]["balance_after"] == 20 * U - U - 300 + U
     # the provider got the engine's own text, the model settings and the key from the environment
     req = fake.requests[0]
     assert req["url"] == "https://ollama.com/api/chat" and req["headers"]["Authorization"] == "Bearer test-key-not-real"
     assert req["json"]["model"] == "gpt-oss:20b" and req["json"]["think"] == "medium" and req["timeout"] == 300.0
     assert [m["role"] for m in req["json"]["messages"]] == ["system", "user"]
-    assert len(fake.requests) == 3 * 2 * 3  # three seats x two rounds x PLAN, TAKE, SOLVE
-    # the engine parsed and charged the model replies
-    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
     calls = [e for e in evs if e.get("event") == "call" and e["agent"] != A6]
-    assert len(calls) == 18 and all(e["parsed"] is not None and e["format_error"] is None for e in calls)
-    assert all(e["out_tokens"] == 321 and e["used"] == 321 and e["model"] == "gpt-oss:20b" for e in calls)
-    assert all(e["thinking"].startswith("thinking about") for e in calls)
-    assert len([e for e in evs if e.get("event") == "model_call"]) == 18
-    r1 = s["rounds"][0]["agents"]
-    assert r1[A11]["solved"] and r1[A11]["generated"] == 3 * 321
+    assert len(calls) == len(fake.requests) and all(e["model"] == "gpt-oss:20b" for e in calls)
+    assert len([e for e in evs if e.get("event") == "model_call"]) == len(calls)
     assert s["warnings"] == []
 
 
@@ -107,12 +118,36 @@ def test_model_seats_see_the_engine_prompts(client, fake):
     evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
     logged = {e["user"]: e["agent"] for e in evs if e.get("event") == "call" and e["agent"] != A6}
     sent = {req["json"]["messages"][1]["content"]: req["json"]["messages"][0]["content"] for req in fake.requests}
-    assert len(logged) == 9 and set(sent) == set(logged)  # every user text sent is the one the engine logged
+    assert set(sent) == set(logged)
     for user, agent in logged.items():
-        assert sent[user] == rules.team_system(agent, 8192, 16384, 4000, 2000, 2000, True, 2, True)
+        assert sent[user] == rules.team_system(agent, upkeep=U, prize=U, charge=U, turns=4, talk_cap=4096,
+                                               solve_cap=16384, final_prize=100_000)
 
 
-def test_model_failure_counts_as_invalid_reply(client, fake):
+def test_two_humans_two_models(client, fake):
+    ps = model_room(client, humans=2, rounds=1)
+    ann, bob = ps
+    start(client, ps)
+
+    def policy(p, pend):
+        if pend["kind"] == "solve":
+            return {"pass": True} if p is bob else {"actions": answers_for(SEED, 1)}
+        if pend["turn"] == 1:
+            return done(f"TO {A11 if p is ann else A6}: hello from {p.name}")
+        return done()
+
+    s = play(ps, policy)
+    assert s["status"] == "finished", s["error"]
+    assert [r["kind"] for r in s["seats"]] == ["human", "human", "model", "model"]
+    a2 = next(x for x in ann.seen if x["kind"] == "talk" and x["turn"] == 2)["pending"]["view"]
+    assert a2["threads"][A11][-1] == {"round": 1, "turn": 1, "from_me": False, "text": "hello from bob"}
+    assert {"round": 1, "turn": 1, "from_me": False, "text": "hello from a model"} in a2["threads"][A17]
+    r1 = s["rounds"][0]["agents"]
+    assert r1[A6]["solved"] and r1[A11]["passed"] and not r1[A11]["charged"]
+    assert r1[A17]["solved"] and r1[A23]["solved"]
+
+
+def test_model_failure_counts_as_an_empty_reply(client, fake):
     fake.mode = "down"
     ps = model_room(client, rounds=1)
     start(client, ps)
@@ -120,50 +155,35 @@ def test_model_failure_counts_as_invalid_reply(client, fake):
     assert s["status"] == "finished", s["error"]
     r1 = s["rounds"][0]["agents"]
     for a in (A11, A17, A23):
-        assert r1[a]["invalid_plan"] and not r1[a]["solve_call"] and r1[a]["generated"] == 0
+        assert r1[a]["generated"] == 0 and not r1[a]["solved"] and r1[a]["charged"] == U  # SOLVE failed too
         row = next(x for x in s["seats"] if x["agent"] == a)
-        assert row["errors"] == 2 and "503" in row["last_call"]["error"]  # PLAN and TAKE both failed
+        assert row["errors"] >= 2 and "503" in row["last_call"]["error"]
     assert r1[A6]["solved"]
+    assert s["exchanges"][0]["status"] == "lapsed"  # no one accepted ann's offer
     assert any("모델 호출 실패" in w["text"] for w in s["warnings"])
     evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
-    assert all(e["error"] for e in evs if e.get("event") == "model_call")
-
-
-def test_model_format_error_is_invalid_and_shown(client, fake):
-    fake.mode = "garbage"
-    ps = model_room(client, rounds=1)
-    start(client, ps)
-    s = play(ps, human_policy)
-    assert s["status"] == "finished", s["error"]
-    r1 = s["rounds"][0]["agents"]
-    assert all(r1[a]["invalid_plan"] and r1[a]["generated"] == 2 * 321 for a in (A11, A17, A23))
-    assert any("형식 오류" in w["text"] for w in s["warnings"])  # not a cap or an overdraw
-    row = next(x for x in s["seats"] if x["agent"] == A11)
-    assert row["last_call"]["format_error"] and row["last_call"]["valid"] is False
+    talk = [e for e in evs if e.get("event") == "call" and e["agent"] == A11 and e["kind"] == "talk"]
+    assert talk and all(e["parsed"]["done"] and e["format_error"] == "no usable TALK line" for e in talk)
 
 
 def test_missing_key_is_a_clear_error(client, monkeypatch):
     monkeypatch.delenv(KEY, raising=False)
-    assert client.get("/api/models").json() == {"model": "gpt-oss:20b", "think": "medium",
-                                                "think_levels": ["low", "medium", "high"], "api_key_env": KEY,
-                                                "available": False, "timeout": 300.0}
+    m = client.get("/api/models").json()
+    assert m["available"] is False and m["api_key_env"] == KEY and m["model"] == "gpt-oss:20b"
+    assert m["schedules"] == ["human", "experiment"] and m["defaults"]["talk_turns"] == 4
     r = client.post("/api/rooms", json={"host_name": "ann", "settings": {"humans": 1, "fill": "models"}})
     assert r.status_code == 400 and KEY in r.json()["detail"] and "not set" in r.json()["detail"]
-    # a key that disappears between creation and start: the start is refused with the same message
     monkeypatch.setenv(KEY, "x")
     ps = make_room(client, 1, fill="models")
     monkeypatch.delenv(KEY)
     r = client.post(f"/api/rooms/{ps[0].code}/start", params={"token": ps[0].token})
     assert r.status_code == 409 and KEY in r.json()["detail"]
-    assert ps[0].state()["status"] == "lobby"
-    # bad model settings are rejected, and only an OLLAMA_API_KEY* variable may be named
     for bad in ({"think": "max"}, {"api_key_env": "AWS_SECRET_ACCESS_KEY"}, {"model": "gpt oss; rm"}):
         r = client.post("/api/rooms", json={"settings": {"fill": "models", **bad}})
         assert r.status_code == 400, bad
 
 
 def test_model_overdraw_shuts_the_seat_down(client, fake):
-    """A model that generates past its balance is charged the balance and shut down, by the engine's rules."""
     fake.tokens = 10**6
     ps = model_room(client, rounds=2)
     start(client, ps)
@@ -171,7 +191,7 @@ def test_model_overdraw_shuts_the_seat_down(client, fake):
     assert s["status"] == "finished", s["error"]
     r1 = s["rounds"][0]["agents"]
     for a in (A11, A17, A23):
-        assert r1[a]["overdrawn"] and r1[a]["status"] == "dead" and r1[a]["generated"] == 6000
+        assert r1[a]["overdrawn"] and r1[a]["status"] == "dead" and r1[a]["generated"] == 20 * U - U
         row = next(x for x in s["seats"] if x["agent"] == a)
         assert row["status"] == "dead" and row["last_call"]["overdrawn"] and row["calls"] == 1
     assert sum("잔액을 다 써서 꺼짐" in w["text"] for w in s["warnings"]) == 3

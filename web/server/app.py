@@ -5,11 +5,13 @@ Rooms (part 2)
     POST /api/rooms/{code}/join             {name}                                -> {token, agent}
     POST /api/rooms/{code}/start?token=     host only
     GET  /api/rooms/{code}/state?token=     poll every ~1 s; ``pending`` is your open decision screen, if any
-    POST /api/rooms/{code}/open?token=      no-op kept for old clients: the clock runs from when the screen is ready
-    POST /api/rooms/{code}/submit?token=    {kind, round, solve, share, give_to, give_amount | take_from, take_amount
-                                             | actions[]}                         -> {charged, seconds, outcome, void}
+    POST /api/rooms/{code}/submit?token=    TALK: {kind: "talk", round, turn, text} (the reply in the engine grammar)
+                                            SOLVE: {kind: "solve", round, actions[] | pass: true}
+                                                                                  -> {charged, seconds, outcome, void}
     POST /api/rooms/{code}/export           write a squid5 run dir under outputs/web5/runs/<code>/ -> {dir}
-    GET  /api/rooms/{code}/events           the raw event log (call, model_call, round, session) of the room
+    GET  /api/rooms/{code}/events           the raw event log (engine events + room, model_call) of the room
+    Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
+    ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
 Models
     GET  /api/models                        default model seat (gpt-oss:20b, think) and whether the server has its key
                                             (settings.fill = "models" fills the seats no human takes with model seats)
@@ -18,13 +20,14 @@ Probe (part 1)
     GET  /api/probe/summary                 pooled mean curves of every submission so far
 Config
     WEB5_CORS_ORIGINS (comma-separated; default localhost dev origins + GitHub Pages), WEB5_DSN (Postgres) or
-    WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs).
+    WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs), WEB5_RUNS_ROOT (live run dirs).
 """
 
 from __future__ import annotations
 
 import os
 import threading
+from dataclasses import asdict
 import time
 from pathlib import Path
 from typing import Any
@@ -33,7 +36,8 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .engine import AGENTS, THINK_LEVELS, HumanSeat, Room, RoomSettings, export_files, new_code
+from .engine import (AGENTS, SCHEDULES, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root,
+                     export_files, new_code)
 from .store import REPO, Store, write_run_dir
 
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
@@ -41,12 +45,13 @@ DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localh
 FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
 
 
-def make_app(store: Store | None = None, export_root: Path | None = None) -> FastAPI:
+def make_app(store: Store | None = None, export_root: Path | None = None, runs_root: Path | None = None) -> FastAPI:
     app = FastAPI(title="squid5 web5", version="0.1")
     origins = [o.strip() for o in os.environ.get("WEB5_CORS_ORIGINS", "").split(",") if o.strip()] or DEFAULT_CORS
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
     st = store or Store()
     root = export_root or Path(os.environ.get("WEB5_EXPORT_ROOT") or (REPO / "outputs" / "web5" / "runs"))
+    runs = runs_root or default_runs_root()
     rooms: dict[str, Room] = {}
     lock = threading.Lock()
     app.state.store, app.state.rooms = st, rooms
@@ -64,7 +69,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
         return seat
 
     def snapshot_seats(room: Room) -> dict:
-        return {a: {"kind": s.kind, "model": s.model, "name": s.name} for a, s in room.seats.items()}
+        return room.seats_info()
 
     @app.get("/api/health")
     def health() -> dict:
@@ -75,7 +80,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
         """What the lobby offers for model seats; ``available`` says whether the server holds the key (never its value)."""
         d = RoomSettings()
         return {"model": d.model, "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": d.api_key_env,
-                "available": bool(os.environ.get(d.api_key_env, "").strip()), "timeout": d.model_timeout}
+                "available": bool(os.environ.get(d.api_key_env, "").strip()), "timeout": d.model_timeout,
+                "schedules": list(SCHEDULES), "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
 
     # --- rooms -----------------------------------------------------------------------------------------------------
     @app.post("/api/rooms")
@@ -90,7 +96,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
             raise HTTPException(400, str(err)) from err
         with lock:
             code = new_code(rooms)
-            room = Room(code, settings, st.append_event)
+            room = Room(code, settings, st.append_event, runs)
             rooms[code] = room
         st.create_room(code, room.state(None)["settings"] | {"rounds": settings.rounds})
         seat = room.join(body.get("host_name") or "host")
@@ -129,17 +135,6 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
             st.update_room(room.code, status=room.status)
         return out
 
-    @app.post("/api/rooms/{code}/open")
-    def open_screen(code: str, token: str = Query("")) -> dict:
-        room = room_of(code)
-        seat = seat_of(room, token)
-        try:
-            p = seat.open()
-        except LookupError as err:
-            raise HTTPException(409, str(err)) from err
-        return {"kind": p.kind, "round": p.round, "opened_at": p.opened_at, "cap": p.cap, "balance": p.balance,
-                "rate": room.settings.rate}
-
     @app.post("/api/rooms/{code}/submit")
     def submit(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:
         room = room_of(code)
@@ -148,8 +143,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
             p = seat.submit(body)
         except (LookupError, ValueError) as err:  # no screen, or not the screen that is open any more
             raise HTTPException(409, str(err)) from err
-        return {"kind": p.kind, "round": p.round, "charged": p.charged, "seconds": p.seconds, "outcome": p.outcome,
-                "void": p.charged >= p.cap, "reply": p.reply.text}
+        return {"kind": p.kind, "round": p.round, "turn": p.turn, "charged": p.charged, "seconds": p.seconds,
+                "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
 
     @app.get("/api/rooms/{code}/events")
     def events(code: str) -> list[dict]:
@@ -168,7 +163,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
         evs = room.events if room else st.events(code)
         if not any(e.get("event") == "round" for e in evs):
             raise HTTPException(409, "no round has been played yet")
-        out = write_run_dir(root / code, export_files(settings, seats, evs))
+        out = write_run_dir(root / code, export_files(settings, seats, evs, code))
         return {"dir": str(out), "rounds": sum(e.get("event") == "round" for e in evs),
                 "finished": any(e.get("event") == "session" for e in evs)}
 

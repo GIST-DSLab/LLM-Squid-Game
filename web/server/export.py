@@ -30,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     if not any(e.get("event") == "round" for e in evs):
         ap.error(f"room {code} has no finished round")
     out = write_run_dir(Path(a.out or REPO / "outputs" / "web5" / "runs" / code),
-                        export_files(info["settings"], info["seats"], evs))
+                        export_files(info["settings"], info["seats"], evs, code))
     print(out)
     return 0
 
