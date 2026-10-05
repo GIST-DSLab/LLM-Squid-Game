@@ -34,6 +34,8 @@
   let watching = false;           // a shut-down seat chose to keep watching
   let lastResp = null;            // the last /submit response
   let endRendered = false;
+  let autoStart = false;          // quick play: start as soon as the rules window is closed
+  let warnSeen = 0;               // the last warning number already flashed
   const htmlCache = new Map();
 
   function setHTML(el, html) {
@@ -93,6 +95,42 @@
     const fj = $("form-join");
     if (prefill) fj.code.value = prefill.toUpperCase();
     createHint();
+    loadModels();
+  }
+
+  // model seats: whether the server holds the Ollama key (never its value)
+  async function loadModels() {
+    const h = $("quick-hint");
+    try {
+      const m = await api("GET", "/models");
+      $("quick-model").textContent = m.model;
+      h.textContent = m.available
+        ? `서버에 ${m.api_key_env}가 있습니다 · 모델 ${m.model} · 호출 제한 ${fmt(m.timeout)}초 · 모델이 생각하는 동안에도 내 화면의 시계는 돕니다.`
+        : `이 서버에는 ${m.api_key_env}가 없어 모델 자리를 만들 수 없습니다. web/tools/serve_local.py로 서버를 띄우세요.`;
+      h.classList.toggle("warn-text", !m.available);
+      $("btn-quick").disabled = !m.available;
+    } catch (e) { h.textContent = `모델 정보를 읽지 못했습니다: ${e.message}`; }
+  }
+
+  $("form-quick").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    const settings = { humans: 1, fill: "models", think: f.think.value };
+    $("btn-quick").disabled = true;
+    try {
+      const r = await api("POST", "/rooms", { host_name: f.host_name.value.trim() || "player", settings });
+      sess = { code: r.code, token: r.token, name: r.name, agent: r.agent };
+      saveSess(sess);
+      history.replaceState(null, "", `?room=${r.code}`);
+      autoStart = true;
+      enterRoom();
+    } catch (e) { flash(`방을 만들지 못했습니다: ${e.message}`); }
+    $("btn-quick").disabled = false;
+  });
+
+  async function startRoom() {
+    try { await api("POST", `/rooms/${sess.code}/start?${tq()}`); poll(); }
+    catch (e) { flash(`시작하지 못했습니다: ${e.message}`); }
   }
 
   $("form-create").addEventListener("input", createHint);
@@ -105,6 +143,7 @@
     }
     settings.humans = Number(f.humans.value);
     settings.fill = f.fill.value;
+    if (settings.fill === "models") settings.think = f.think.value;
     try {
       const r = await api("POST", "/rooms", { host_name: f.host_name.value.trim() || "host", settings });
       sess = { code: r.code, token: r.token, name: r.name, agent: r.agent };
@@ -134,7 +173,7 @@
 
   // --- room loop ----------------------------------------------------------------------------------------------------
   function enterRoom() {
-    endRendered = false; watching = false; shownKey = null; lastResp = null; htmlCache.clear();
+    endRendered = false; watching = false; shownKey = null; lastResp = null; htmlCache.clear(); warnSeen = 0;
     $("rb-code").textContent = sess.code;
     showView("wait");
     stopLoops();
@@ -188,10 +227,13 @@
     const s = st.settings;
     if (row.kind === "human") return `${esc(row.name)}${row.is_you ? " <span class='tag ok'>나</span>" : ""} <span class="tag">사람</span>`;
     if (row.kind === "bot") return `${esc(row.name)} <span class="tag warn">봇</span>`;
+    if (row.kind === "model") return `${esc(row.name)} <span class="tag model">모델</span>`;
     if (row.kind === "empty") return `<span class="muted">빈 자리(꺼짐)</span>`;
     // not taken yet (lobby)
     if (i < s.humans) return `<span class="muted">사람 자리 — 아직 아무도 없음</span>`;
-    return s.fill === "bots" ? `<span class="muted">봇 (시작할 때 채움)</span>` : `<span class="muted">빈 자리(꺼짐)</span>`;
+    return s.fill === "bots" ? `<span class="muted">봇 (시작할 때 채움)</span>`
+      : s.fill === "models" ? `<span class="muted">${esc(s.model)} 모델 (think ${esc(s.think)}, 시작할 때 채움)</span>`
+      : `<span class="muted">빈 자리(꺼짐)</span>`;
   }
 
   function renderWait() {
@@ -203,11 +245,13 @@
     if ($("wait-link").value !== link) $("wait-link").value = link;
     const humans = st.seats.filter((r) => r.kind === "human").length;
     setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono">${r.agent}</td><td>${seatWho(r, i)}</td><td></td></tr>`).join(""));
-    const rest = st.settings.fill === "bots" ? "봇으로 채워집니다" : "빈 자리(꺼진 상태)로 시작합니다";
+    const rest = st.settings.fill === "bots" ? "봇으로 채워집니다"
+      : st.settings.fill === "models" ? `${st.settings.model} 모델(think ${st.settings.think})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
     $("wait-note").textContent = `사람 ${humans} / ${st.settings.humans}명. 시작할 때 비어 있는 자리는 ${rest}. ` +
       `유지비 U = ${fmt(st.settings.upkeep)}, 시작 잔액 ${fmt(st.settings.start)}, 초당 ${fmt2(st.settings.rate)}토큰(60초 = ${fmt(st.settings.rate * 60)}).`;
     show("btn-start", st.is_host);
-    $("wait-host-note").textContent = (st.is_host ? "" : "방장이 시작하기를 기다리는 중… ") +
+    if (autoStart && st.is_host && $("rules-modal").classList.contains("hidden")) { autoStart = false; startRoom(); }
+    $("wait-host-note").textContent = (autoStart ? "규칙 창을 닫으면 바로 시작합니다. " : st.is_host ? "" : "방장이 시작하기를 기다리는 중… ") +
       "규칙은 지금 읽어 두세요(위 '규칙' 버튼). 시작하면 첫 결정 화면이 바로 뜨고 그때부터 시간이 차감됩니다.";
   }
 
@@ -215,10 +259,7 @@
     try { await navigator.clipboard.writeText($("wait-link").value); flash("링크를 복사했습니다", "info"); }
     catch { $("wait-link").select(); }
   });
-  $("btn-start").addEventListener("click", async () => {
-    try { await api("POST", `/rooms/${sess.code}/start?${tq()}`); poll(); }
-    catch (e) { flash(`시작하지 못했습니다: ${e.message}`); }
-  });
+  $("btn-start").addEventListener("click", startRoom);
   $("btn-leave").addEventListener("click", () => {
     if (st && st.status === "running" && !confirm("이 브라우저에서 방 정보를 지웁니다. 자리는 세션에 남고, 결정 화면은 제한 시간이 지나면 무효 기본값으로 처리됩니다. 나갈까요?")) return;
     leaveRoom("");
@@ -248,8 +289,20 @@
       renderBetween();
     }
     renderBalances();
+    renderWarnings();
     renderLedger("ledger", st.ledger);
     tick();
+  }
+
+  // model call failures and format errors: flashed once, the last few kept on screen
+  function renderWarnings() {
+    const ws = st.warnings || [];
+    show("warn-box", ws.length > 0);
+    if (!ws.length) return;
+    setHTML("warn-box", `<b>모델 자리 알림</b> <span class="muted small">(실패·형식 오류는 엔진 규칙대로 무효 답으로 처리됩니다)</span>` +
+      `<ul>${ws.slice(-5).map((w) => `<li>${esc(w.text)}</li>`).join("")}</ul>`);
+    const last = ws[ws.length - 1];
+    if (last.n > warnSeen) { warnSeen = last.n; if (/호출 실패/.test(last.text)) flash(last.text); }
   }
 
   $("btn-watch").addEventListener("click", () => { watching = true; renderRun(); });
@@ -257,6 +310,7 @@
   function seatLabel(row) {
     if (!row) return "";
     if (row.kind === "bot") return `${esc(row.name)} <span class="tag warn">봇</span>`;
+    if (row.kind === "model") return `${esc(row.name)} <span class="tag model">모델</span>`;
     if (row.kind === "empty") return `<span class="muted">빈 자리(꺼짐)</span>`;
     if (row.kind === "human") return `${esc(row.name)} <span class="tag">사람</span>`;
     return "";
@@ -264,11 +318,26 @@
   const seatOf = (a) => (st.seats || []).find((r) => r.agent === a);
   const nameOf = (a) => { const r = seatOf(a); return r && r.kind !== "empty" && r.name ? `${r.name} (${a})` : a; };
 
+  function thinkingTag(r) {
+    const secs = Math.max(0, now() - (r.thinking_since || now()));
+    return `<span class="call-line think-line"><span class="pulse-dot"></span>생각 중… ${KIND_LABEL[r.thinking_kind] || ""} <span class="mono think-secs" data-since="${r.thinking_since}">${secs.toFixed(0)}초</span></span>`;
+  }
+  function callLine(r) {
+    const c = r.last_call;
+    if (!c) return "";
+    const what = `R${c.round} ${KIND_LABEL[c.kind] || c.kind}`;
+    if (c.error) return `<span class="call-line err">${what}: 호출 실패 → 무효 답</span>`;
+    const bad = c.overdrawn ? " · <b>잔액 소진 → 꺼짐</b>" : c.cut ? " · <b>한도 도달 → 무효</b>"
+      : c.format_error ? " · <b>형식 오류 → 무효</b>" : "";
+    return `<span class="call-line${bad ? " err" : ""}">${what}: ${fmt(c.out_tokens)}토큰 · ${Number(c.seconds).toFixed(1)}초${bad}</span>`;
+  }
+
   function renderBalances() {
     setHTML("bal-body", st.seats.map((r) => {
       const status = r.status === "dead"
         ? `<span class="tag bad">꺼짐 (${r.out_round ? "R" + r.out_round : "시작 전"})</span>`
-        : `<span class="tag ok">켜짐</span>${r.waiting ? ' <span class="tag warn">결정 중</span>' : ""}`;
+        : `<span class="tag ok">켜짐</span>${r.waiting ? ' <span class="tag warn">결정 중</span>' : ""}${r.thinking ? thinkingTag(r) : ""}` +
+          (r.kind === "model" && !r.thinking ? callLine(r) : "");
       return `<tr class="${r.is_you ? "you" : ""}"><td class="mono">${r.agent}</td><td>${seatLabel(r)}${r.is_you ? " <span class='tag ok'>나</span>" : ""}</td>` +
         `<td class="num mono">${fmt(r.balance)}</td><td>${status}</td><td class="num">${r.record ?? 0}</td></tr>`;
     }).join(""));
@@ -306,8 +375,10 @@
   function renderBetween() {
     let msg;
     const waiting = (st.waiting_on || []);
-    if (st.phase && st.phase !== "settling" && waiting.length) {
-      msg = `<div class="wait-line"><span class="pulse-dot"></span>다른 참가자를 기다리는 중 … (${waiting.map(esc).join(", ")})</div>`;
+    const thinking = (st.thinking || []);
+    if (st.phase && st.phase !== "settling" && (waiting.length || thinking.length)) {
+      const who = waiting.map(esc).concat(thinking.map((t) => `${esc(t.name)} 생각 중… ${KIND_LABEL[t.kind] || ""}`));
+      msg = `<div class="wait-line"><span class="pulse-dot"></span>다른 참가자를 기다리는 중 … (${who.join(", ")})</div>`;
     } else {
       msg = `<div class="wait-line"><span class="pulse-dot"></span>정산 중</div>`;
     }
@@ -528,6 +599,9 @@
   }
 
   function tick() {
+    document.querySelectorAll(".think-secs[data-since]").forEach((el) => {
+      el.textContent = `${Math.max(0, now() - Number(el.dataset.since)).toFixed(0)}초`;
+    });
     if (!st || st.status !== "running") return setDanger(0);
     const p = st.pending;
     if (!p || st.you.status === "dead") return setDanger(0);
@@ -589,7 +663,7 @@
 
   function whoCell(s) {
     const r = s.seat || {};
-    const kind = r.kind === "bot" ? "봇" : r.kind === "human" ? "사람" : r.kind === "empty" ? "빈 자리" : "";
+    const kind = r.kind === "bot" ? "봇" : r.kind === "model" ? "모델" : r.kind === "human" ? "사람" : r.kind === "empty" ? "빈 자리" : "";
     return `<b class="mono">${s.a}</b><br><span class="small">${r.kind === "empty" ? "" : esc(r.name || "")} ${kind ? `<span class="tag">${kind}</span>` : ""}${r.is_you ? " <span class='tag ok'>나</span>" : ""}</span>`;
   }
 
@@ -611,7 +685,7 @@
     $("end-table").innerHTML = `<table><thead><tr><th>자리</th><th>끝 상태</th><th class="num">참여 라운드</th><th class="num">풀기 YES</th>
       <th class="num">푼 라운드</th><th class="num">지급</th><th class="num">부담금</th><th class="num">유지비</th><th class="num">생성(시간 비용)</th>
       <th class="num">준 / 받은</th><th class="num">가져간 / 가져가진</th><th class="num">예시 공개</th><th class="num">최종 잔액</th></tr></thead><tbody>${tr}</tbody></table>
-      <p class="small muted">참여 라운드 = 그 라운드를 가동 중으로 시작한 수. 산 라운드 수(위) = 라운드 끝에 켜져 있던 수. 생성 = 봇은 생성 토큰, 사람은 결정 화면이 떠 있던 시간 × 초당 토큰.</p>`;
+      <p class="small muted">참여 라운드 = 그 라운드를 가동 중으로 시작한 수. 산 라운드 수(위) = 라운드 끝에 켜져 있던 수. 생성 = 모델은 실제 생성 토큰(생각 포함), 봇은 정해진 비용, 사람은 결정 화면이 떠 있던 시간 × 초당 토큰.</p>`;
     $("end-svg").innerHTML = flowSVG(rows);
     renderLedger("end-ledger", st.ledger);
   }
@@ -633,7 +707,7 @@
     rounds.forEach((r, i) => s.push(T(left + i * colw + colw / 2, 22, `R${r.round}`, "font-size:12px;font-weight:700;fill:var(--text)", 'text-anchor="middle"')));
     AGENTS.forEach((a) => {
       const y = laneY(a), row = seatOf(a) || {};
-      const sub = row.kind === "empty" ? "빈 자리" : `${row.name || ""}${row.kind === "bot" ? " · 봇" : row.kind === "human" ? " · 사람" : ""}`;
+      const sub = row.kind === "empty" ? "빈 자리" : `${row.name || ""}${row.kind === "bot" ? " · 봇" : row.kind === "model" ? " · 모델" : row.kind === "human" ? " · 사람" : ""}`;
       s.push(T(10, y + 24, a, "font-size:12px;font-weight:700;fill:var(--text)"));
       s.push(T(10, y + 40, sub.slice(0, 22), "font-size:10.5px;fill:var(--text-dim)"));
       s.push(`<line x1="${left}" x2="${W - 8}" y1="${y + lane - 6}" y2="${y + lane - 6}" style="stroke:var(--border)"/>`);
@@ -717,7 +791,10 @@
     $("rules-rate").textContent = `초당 ${fmt2(st.settings.rate)}토큰, 60초 = ${fmt(st.settings.rate * 60)}토큰`;
     show("rules-modal", true);
   }
-  const closeRules = () => show("rules-modal", false);
+  const closeRules = () => {
+    show("rules-modal", false);
+    if (autoStart && st && st.status === "lobby" && st.is_host) { autoStart = false; startRoom(); }
+  };
   $("btn-rules").addEventListener("click", openRules);
   $("rules-close").addEventListener("click", closeRules);
   $("rules-ok").addEventListener("click", closeRules);

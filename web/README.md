@@ -12,7 +12,7 @@
 | 경로 | 역할 |
 |---|---|
 | `server/app.py` | FastAPI 앱. 방(rooms)·프로브(probe) API, `web/frontend` 정적 서빙, CORS |
-| `server/engine.py` | 방 = 백그라운드 스레드에서 도는 진짜 `squid5.e52_game.Session`. 자리마다 "프로바이더"가 붙는다: 사람 자리는 제출까지 블록, 봇 자리는 즉답, 빈 자리는 1라운드 전에 꺼진 에이전트. 정산·장부·이벤트 형식은 엔진 것 그대로 |
+| `server/engine.py` | 방 = 백그라운드 스레드에서 도는 진짜 `squid5.e52_game.Session`. 자리마다 "프로바이더"가 붙는다: 사람 자리는 제출까지 블록, 봇 자리는 즉답, 모델 자리(`ModelSeat`)는 Ollama의 실제 모델(기본 gpt-oss:20b), 빈 자리는 1라운드 전에 꺼진 에이전트. 정산·장부·이벤트 형식은 엔진 것 그대로 |
 | `server/store.py` | 이벤트 저장소. 기본 SQLite `outputs/web5/arena.db`, `WEB5_DSN`이 있으면 Postgres(psycopg). 프로브 답도 저장 |
 | `server/export.py` | 저장된 방을 `squid5.e52_metrics`가 읽는 run dir(config.yaml·meta.json·events.jsonl·results.jsonl)로 내보내는 CLI |
 | `frontend/index.html` | 랜딩(옛 Web Arena `web/frontend/index.html` 원본). 죽은 네 섹션(play·arena·leaderboard·logs)을 잘라 내고 내비·히어로·CTA 링크만 두 새 페이지로 바꿨다. `#home` = 히어로 + 설명 단락, `#about` = 설명 단락만(옛 동작). Alpine.js(CDN)는 규칙 시연(`rulesDemo`) 때문에 남아 있다 |
@@ -28,6 +28,7 @@
 | `frontend/data/model_curves.json` | `tools/export_model_curves.py`가 만든 모델 곡선(빌드 시점 복사본) |
 | `frontend/config.js` | 백엔드 URL 한 곳(`window.WEB5_API`) |
 | `screenshots/` | 헤드리스 브라우저 확인 결과. `landing_*.png`(랜딩 데스크톱·모바일), `probe_*`, `arena_*` |
+| `tools/serve_local.py` | 루트 `.env`에서 `OLLAMA_API_KEY3` 한 줄만 읽어 환경에 넣고 uvicorn을 빈 포트(8600~)에 띄우는 런처 |
 | `tools/export_model_curves.py` | `~/squid5-runs/e51_v10_refill_20260930/{summary,metrics}.json` → `frontend/data/model_curves.json` |
 | `tests/` | pytest. 4인 방을 HTTP로 끝까지 진행(선물→가져오기 순서, 비례 배분, 상금 분할, 부담금, 꺼짐, 타임아웃, 빈 자리, 봇, 내보내기), 프로브 POST, 엔진 직접 실행과 라운드별 일치 |
 | `deploy/` | Render(API)·GitHub Pages(프런트) 배포 템플릿 |
@@ -78,6 +79,37 @@ python3 -m uvicorn web.server.app:app --host 0.0.0.0 --port 8600
 origin으로 서빙하므로 CORS 설정이 필요 없다(`config.js`는 8600 포트에서 열리면 `WEB5_API = ""`로 둔다). 방을 만든 사람이
 6자리 코드를 알려 주고, 나머지는 "참가하기"에 코드와 표시 이름을 넣는다. 자리는 참가 순서(agent-6 → 11 → 17 → 23).
 
+### gpt-oss:20b 세 명과 플레이 (사람 1 + 실제 모델 3)
+
+Ollama Cloud의 `gpt-oss:20b` 세 자리와 한 사람이 같은 방에서 한다. 키는 서버 환경변수 `OLLAMA_API_KEY3`에서만 읽는다.
+런처가 루트 저장소의 `.env`에서 **그 한 줄만** 읽어(줄 끝 `# 주석`·공백 제거, `source` 하지 않음) 자식 프로세스 환경에
+넣고 uvicorn을 띄운다. 키 값은 화면·로그·파일 어디에도 쓰지 않는다.
+
+```bash
+python3 web/tools/serve_local.py                 # 8600부터 빈 포트를 찾아 URL을 찍는다
+# 옵션: --port 8610 --host 0.0.0.0 --env-file /path/.env --key-var OLLAMA_API_KEY3
+# 백그라운드로: nohup python3 web/tools/serve_local.py > ~/squid5-runs/web_gptoss_server.log 2>&1 &
+```
+
+찍힌 `http://localhost:<port>/arena.html`을 열고 로비 맨 위 **"gpt-oss:20b 세 명과 플레이"**를 누른다(생각 수준 think
+low/medium/high, 기본 medium). 규칙 창이 뜨고, 닫으면 바로 1라운드가 시작된다. 일반 "방 만들기"에서도 남는 자리를
+"gpt-oss:20b 모델로 채움"으로 고를 수 있다(사람 2~3명 + 모델도 가능).
+
+- 모델 자리(`engine.ModelSeat`)는 엔진이 만든 시스템·사용자 문장을 그대로 받는다(실험과 같은 `team_system`·PLAN·TAKE·
+  SOLVE 텍스트). 퍼즐은 이 방의 일정(사람용 `h2`)이라 모델에게도 같은 쉬운 퍼즐이 간다. PLAN의 사용량 표는 없다.
+- 차감은 Ollama가 돌려준 `eval_count`(생각 포함 생성 토큰) 그대로다. 상한·잔액 규칙은 엔진 것.
+- 모델이 생각하는 동안 잔액 표에 "생각 중… PLAN 12초"가 뜨고, 끝나면 "R1 PLAN: 812토큰 · 9.3초"(형식 오류면 표시)가 남는다.
+  사람의 결정 화면 시계는 모델과 상관없이 돈다.
+- 호출이 재시도(`model_retries`, 기본 2) 뒤에도 실패하면 빈 답(0토큰)으로 처리돼 엔진 규칙대로 무효 답이 된다(무효 PLAN =
+  풀지 않음·공개 안 함·선물 없음). 방은 멈추지 않고, 화면 위 "모델 자리 알림"과 `state.warnings`에 실패가 뜬다.
+  키가 서버에 없으면 방을 만들 때 400(`OLLAMA_API_KEY3 ... not set on the server`)으로 거절하고 로비 버튼이 꺼진다
+  (`GET /api/models`의 `available`).
+- 이벤트 로그에는 엔진의 `call`(답 원문·thinking·토큰·파싱 결과) 외에 `model_call`(자리·종류·토큰·입력 토큰·초·오류)이
+  추가된다. 내보내기(run dir)는 엔진 이벤트만 쓴다.
+- 설정 키: `fill: "models"`, `model`(기본 `gpt-oss:20b`), `think`(low|medium|high), `model_timeout`(호출당 초, 기본 300),
+  `model_retries`(기본 2), `api_key_env`(기본 `OLLAMA_API_KEY3`; `OLLAMA_API_KEY*` 이름만 허용).
+- Ollama Cloud는 키당 동시 요청 약 10개다. 방 하나가 동시에 최대 3개를 쓴다.
+
 ### 테스트
 
 ```bash
@@ -114,7 +146,10 @@ python3 -m pytest -q tests                    # squid5 테스트는 따로, 루�
 
 ```
 POST /api/rooms                       {host_name, settings{upkeep, start, prize, charge, rounds, seed, rate, timeout_s,
-                                        humans, fill, bot_p, plan_cap, solve_cap}}   -> {code, token, agent, name}
+                                        humans, fill(bots|empty|models), bot_p, plan_cap, solve_cap,
+                                        model, think, model_timeout, model_retries, api_key_env}}
+                                                                                      -> {code, token, agent, name}
+GET  /api/models                      모델 자리 기본값과 서버에 키가 있는지(available; 값은 주지 않음)
 POST /api/rooms/{code}/join           {name}                                          -> {token, agent, name}
 POST /api/rooms/{code}/start?token=   호스트만
 GET  /api/rooms/{code}/state?token=   1초 폴링. pending = 내 결정 화면(kind, round, cap, balance, text(영문 원문), view)

@@ -9,7 +9,10 @@ Rooms (part 2)
     POST /api/rooms/{code}/submit?token=    {kind, round, solve, share, give_to, give_amount | take_from, take_amount
                                              | actions[]}                         -> {charged, seconds, outcome, void}
     POST /api/rooms/{code}/export           write a squid5 run dir under outputs/web5/runs/<code>/ -> {dir}
-    GET  /api/rooms/{code}/events           the raw event log (call, round, session) of the room
+    GET  /api/rooms/{code}/events           the raw event log (call, model_call, round, session) of the room
+Models
+    GET  /api/models                        default model seat (gpt-oss:20b, think) and whether the server has its key
+                                            (settings.fill = "models" fills the seats no human takes with model seats)
 Probe (part 1)
     POST /api/probe                         {anon_id, ts, self[5], other[5], meta?} -> {ok, id}
     GET  /api/probe/summary                 pooled mean curves of every submission so far
@@ -30,7 +33,7 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .engine import AGENTS, HumanSeat, Room, RoomSettings, export_files, new_code
+from .engine import AGENTS, THINK_LEVELS, HumanSeat, Room, RoomSettings, export_files, new_code
 from .store import REPO, Store, write_run_dir
 
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
@@ -67,6 +70,13 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
     def health() -> dict:
         return {"ok": True, "rooms": len(rooms), "time": time.time()}
 
+    @app.get("/api/models")
+    def models() -> dict:
+        """What the lobby offers for model seats; ``available`` says whether the server holds the key (never its value)."""
+        d = RoomSettings()
+        return {"model": d.model, "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": d.api_key_env,
+                "available": bool(os.environ.get(d.api_key_env, "").strip()), "timeout": d.model_timeout}
+
     # --- rooms -----------------------------------------------------------------------------------------------------
     @app.post("/api/rooms")
     def create_room(body: dict = Body(default={})) -> dict:
@@ -74,6 +84,10 @@ def make_app(store: Store | None = None, export_root: Path | None = None) -> Fas
             settings = RoomSettings(**(body.get("settings") or {}))
         except (TypeError, ValueError) as err:
             raise HTTPException(400, f"bad settings: {err}") from err
+        try:
+            settings.check_models()
+        except ValueError as err:
+            raise HTTPException(400, str(err)) from err
         with lock:
             code = new_code(rooms)
             room = Room(code, settings, st.append_event)

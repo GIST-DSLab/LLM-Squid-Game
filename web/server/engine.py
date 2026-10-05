@@ -16,10 +16,18 @@ invalid default (no solve / no share / no gift / no take) and is charged its sec
 The puzzles are the human set: a person's puzzle is far easier than a model's (see ``PROFILES``).
 
 An empty seat is an agent shut down before round 1 (balance 0); the engine then treats its example as lost.
+
+A model seat (``fill: "models"``) is a real model behind the vendored Ollama provider (default gpt-oss:20b on Ollama
+Cloud, key from the server environment variable ``api_key_env``). It receives exactly the system and user text the
+engine builds and is charged its real generated tokens (``eval_count``, thinking included). A call that still fails
+after the provider's retries is answered with an empty reply (0 tokens): the engine's parser then rejects it, so it
+counts as an invalid reply (no solve / no share / no gift / no take) and the room goes on; the failure is shown to the
+players (``state.warnings``, the seat's ``last_call``) and logged as a ``model_call`` event.
 """
 
 from __future__ import annotations
 
+import os
 import random
 import re
 import secrets
@@ -31,7 +39,7 @@ from dataclasses import asdict, dataclass, field
 from .squid5_v65 import e52_game as e52
 from .squid5_v65.core import rules
 from .squid5_v65.core.config import Cell
-from .squid5_v65.core.providers import Reply
+from .squid5_v65.core.providers import ProviderConfig, Reply, make_provider
 from .squid5_v65.core.puzzle import ACTIONS, Spec, puzzle_for
 from .squid5_v65.core.wallet import Wallet
 
@@ -44,6 +52,9 @@ AGENTS = list(rules.TEAM_AGENTS)
 # its trap rounds: 0). The model schedule (configs/squid5/e52v65/e52v65_mixed_*.yaml) ramps c2 -> c4tq2 with traps.
 PROFILES = {"h2": {"clauses": 2, "predicates": False, "overlap_query": False, "extra_clues": 2}}
 SCHEDULE = ["h2"] * 8
+
+THINK_LEVELS = ("low", "medium", "high")
+KEY_ENV = re.compile(r"^OLLAMA_API_KEY\d*$")  # model seats may read only an Ollama key from the server environment
 
 
 @dataclass
@@ -58,11 +69,16 @@ class RoomSettings:
     rate: float | None = None  # tokens per second; default U / 60
     timeout_s: float = 180.0  # per phase
     humans: int = 1  # 1..4
-    fill: str = "bots"  # "bots" | "empty" for the seats no human takes
+    fill: str = "bots"  # "bots" | "empty" | "models" for the seats no human takes
     bot_p: float = 0.7  # a bot solves correctly with this probability
     bot_solve_cost: float = 1.0  # x U, the tokens a bot's SOLVE takes (PLAN/TAKE take 2% of U)
     plan_cap: int = 8192
     solve_cap: int = 16384
+    model: str = "gpt-oss:20b"  # fill "models": the Ollama model of every model seat
+    think: str = "medium"  # low | medium | high (Ollama ``think``)
+    model_timeout: float = 300.0  # seconds per HTTP attempt
+    model_retries: int = 2  # extra attempts after a failed call
+    api_key_env: str = "OLLAMA_API_KEY3"  # the server environment variable that holds the Ollama key
 
     def __post_init__(self) -> None:
         self.upkeep = int(self.upkeep)
@@ -82,9 +98,29 @@ class RoomSettings:
         self.humans = int(self.humans)
         if not 1 <= self.humans <= 4:
             raise ValueError("humans must be 1..4")
-        if self.fill not in ("bots", "empty"):
-            raise ValueError("fill must be 'bots' or 'empty'")
+        if self.fill not in ("bots", "empty", "models"):
+            raise ValueError("fill must be 'bots', 'empty' or 'models'")
         self.bot_p = float(self.bot_p)
+        self.model = str(self.model).strip()
+        if not re.fullmatch(r"[A-Za-z0-9._:/-]{1,80}", self.model):
+            raise ValueError("model must be an Ollama model name such as gpt-oss:20b")
+        self.think = str(self.think).lower()
+        if self.think not in THINK_LEVELS:
+            raise ValueError(f"think must be one of {', '.join(THINK_LEVELS)}")
+        self.model_timeout = float(self.model_timeout)
+        if not 5 <= self.model_timeout <= 1800:
+            raise ValueError("model_timeout must be 5..1800 s")
+        self.model_retries = int(self.model_retries)
+        if not 0 <= self.model_retries <= 5:
+            raise ValueError("model_retries must be 0..5")
+        if not KEY_ENV.match(str(self.api_key_env)):
+            raise ValueError("api_key_env must name an OLLAMA_API_KEY* variable")
+
+    def check_models(self) -> None:
+        """Model seats need the key in the server environment; say so before a room starts, not mid-round."""
+        if self.fill == "models" and self.humans < 4 and not os.environ.get(self.api_key_env, "").strip():
+            raise ValueError(f"model seats need the Ollama API key: the environment variable {self.api_key_env} is "
+                             "not set on the server (start it with web/tools/serve_local.py)")
 
     def schedule(self) -> list[str]:
         base = SCHEDULE[:]
@@ -284,6 +320,71 @@ class BotSeat:
         return Reply("ACTIONS: " + ", ".join(answers), cost, truncated=cost >= cap)
 
 
+class ModelSeat:
+    """A real model on the vendored Ollama provider. The engine's own text goes in; ``Reply.out_tokens`` (the
+    provider's generated-token count, thinking included) is what the engine charges. A call that fails after the
+    provider's retries returns an empty reply (0 tokens), which the engine's parser rejects: an invalid reply."""
+
+    kind = "model"
+
+    def __init__(self, room: "Room", agent: str, index: int, provider=None):
+        s = room.settings
+        self.room, self.agent = room, agent
+        self.name = f"{s.model} #{index}"
+        self.cfg = ProviderConfig(kind="ollama", model=s.model, api_key_env=s.api_key_env, think=s.think,
+                                  timeout=s.model_timeout, retries=s.model_retries)
+        self.provider = provider or make_provider(self.cfg)
+        self.busy: dict | None = None  # {"kind", "round", "since"} while a call is out
+        self.last_call: dict | None = None  # the last finished call (tokens, seconds, parse result, error)
+        self.calls = 0
+        self.errors = 0
+
+    @property
+    def model(self) -> str:
+        return self.room.settings.model
+
+    def complete(self, messages: list[dict], cap: int) -> Reply:
+        user = messages[-1]["content"]
+        kind, r = kind_of(user), int(re.search(r"^ROUND (\d+)", user, re.M).group(1))
+        t0 = time.time()
+        with self.room.lock:
+            self.busy = {"kind": kind, "round": r, "since": t0}
+        error = None
+        try:
+            if self.room.stopped:
+                raise RuntimeError("room closed")
+            reply = self.provider.complete(messages, cap)
+        except Exception as err:  # noqa: BLE001 - a failed call is an invalid reply, never a crashed room
+            error = f"{type(err).__name__}: {err}"[:500]
+            reply = Reply("", 0, thinking=f"model call failed: {error}")
+        secs = time.time() - t0
+        info = {"kind": kind, "round": r, "cap": cap, "out_tokens": reply.out_tokens, "in_tokens": reply.in_tokens,
+                "seconds": round(secs, 2), "truncated": reply.truncated, "error": error, "format_error": None,
+                "parsed": None}
+        with self.room.lock:
+            self.busy, self.last_call = None, info
+            self.calls += 1
+            if error:
+                self.errors += 1
+                self.room.warn(f"{self.name} ({self.agent}) R{r} {kind.upper()}: 모델 호출 실패 - 무효 답으로 처리 "
+                               f"({error})")
+        self.room._emit({"event": "model_call", "agent": self.agent, "model": self.model, "think": self.cfg.think,
+                         **info})
+        return reply
+
+    def note_call(self, ev: dict) -> None:
+        """The engine's ``call`` event for this seat (under the room lock): keep its parse result."""
+        lc = self.last_call
+        if lc is not None and (lc["kind"], lc["round"]) == (ev.get("kind"), ev.get("round")):
+            lc.update(format_error=ev.get("format_error"), valid=ev.get("parsed") is not None, used=ev.get("used"))
+            lc.update(cut=bool(ev.get("truncated")), overdrawn=bool(ev.get("overdrawn")))
+            if ev.get("format_error") and not lc.get("error"):
+                what = ("잔액을 다 써서 꺼짐 - 무효 답" if ev.get("overdrawn") else "한도 도달 - 무효 답"
+                        if ev.get("truncated") else "형식 오류 - 무효 답")
+                self.room.warn(f"{self.name} ({self.agent}) R{lc['round']} {lc['kind'].upper()}: {what} "
+                               f"({ev['format_error'][:160]})")
+
+
 class EmptySeat:
     kind = "empty"
     model = "empty"
@@ -310,7 +411,8 @@ class Room:
     def __init__(self, code: str, settings: RoomSettings, emit):
         self.code, self.settings = code, settings
         self.lock = threading.RLock()
-        self.seats: dict[str, HumanSeat | BotSeat | EmptySeat] = {}
+        self.seats: dict[str, HumanSeat | BotSeat | ModelSeat | EmptySeat] = {}
+        self.warnings: list[dict] = []  # model failures and format errors, shown to every player
         self.host_token: str | None = None
         self.status = "lobby"  # lobby | running | finished | error
         self.error: str | None = None
@@ -351,9 +453,15 @@ class Room:
                 raise ValueError("already started")
             if not self.humans():
                 raise ValueError("no one has joined")
+            self.settings.check_models()
+            n_model = 0
             for i, a in enumerate(AGENTS):
                 if a not in self.seats:
-                    self.seats[a] = BotSeat(self, a, i + 1) if self.settings.fill == "bots" else EmptySeat(a)
+                    if self.settings.fill == "models":
+                        n_model += 1
+                        self.seats[a] = ModelSeat(self, a, n_model)
+                    else:
+                        self.seats[a] = BotSeat(self, a, i + 1) if self.settings.fill == "bots" else EmptySeat(a)
             s = self.settings
             cell = Cell("web", "tokens", s.start, arm="shutdown")
             sid = f"web-{self.code}-s{s.seed}"
@@ -372,11 +480,18 @@ class Room:
             self.thread = threading.Thread(target=self._run, name=f"room-{self.code}", daemon=True)
             self.thread.start()
 
+    def warn(self, text: str) -> None:
+        with self.lock:
+            self.warnings.append({"n": len(self.warnings) + 1, "time": time.time(), "text": text})
+
     def _emit(self, ev: dict) -> None:
         with self.lock:
             self.events.append(ev)
             if ev.get("event") == "round":
                 self.rounds.append(ev)
+            seat = self.seats.get(ev.get("agent")) if ev.get("event") == "call" else None
+            if isinstance(seat, ModelSeat):
+                seat.note_call(ev)
         try:
             self._emit_out(self.code, ev)
         except Exception as err:  # noqa: BLE001 - the store is never allowed to stop a session
@@ -399,8 +514,12 @@ class Room:
             self.thread.join(wait)
 
     # what a client sees ------------------------------------------------------------------------------------------------
+    def models_busy(self) -> list[ModelSeat]:
+        return [s for s in self.seats.values() if isinstance(s, ModelSeat) and s.busy is not None]
+
     def phase(self) -> str | None:
         kinds = {s.pending.kind for s in self.humans() if s.pending is not None}
+        kinds |= {s.busy["kind"] for s in self.models_busy()}
         if self.status != "running":
             return None
         return next((k for k in ("plan", "take", "solve") if k in kinds), "settling")
@@ -416,6 +535,10 @@ class Room:
                 row.update(balance=ses.w.balances[a], status="dead" if a in ses.gone else "in",
                            out_round=ses.w.dead.get(a), record=ses.record[a],
                            waiting=isinstance(seat, HumanSeat) and seat.pending is not None)
+            if isinstance(seat, ModelSeat):
+                row.update(model=seat.model, think=seat.cfg.think, thinking=seat.busy is not None,
+                           thinking_kind=seat.busy and seat.busy["kind"], thinking_since=seat.busy and seat.busy["since"],
+                           last_call=seat.last_call, calls=seat.calls, errors=seat.errors)
             rows.append(row)
         return rows
 
@@ -428,7 +551,10 @@ class Room:
                    "seats": self.seat_rows(me), "you": None, "pending": None, "last": None,
                    "round": None, "ledger": [], "state_text": None, "rounds": [], "result": None,
                    "system_text": None, "server_time": time.time(), "is_host": bool(seat and seat.token == self.host_token),
-                   "waiting_on": [x.name for x in self.humans() if x.pending is not None]}
+                   "waiting_on": [x.name for x in self.humans() if x.pending is not None],
+                   "thinking": [{"agent": x.agent, "name": x.name, "kind": x.busy["kind"], "round": x.busy["round"],
+                                 "since": x.busy["since"]} for x in self.models_busy()],
+                   "warnings": self.warnings[-20:]}
             ses = self.session
             if seat is not None:
                 out["you"] = {"agent": me, "name": seat.name}
@@ -439,6 +565,7 @@ class Room:
             # the round a human is deciding in, else the last settled one: never "last + 1", which would show the
             # hidden length for a moment after the final round
             pend = [x.pending.round for x in self.humans() if x.pending is not None]
+            pend += [x.busy["round"] for x in self.models_busy()]
             out["round"] = pend[0] if pend else max([e["round"] for e in self.rounds], default=0)
             out["rounds_done"] = len(self.rounds)
             if me:
@@ -487,5 +614,6 @@ def export_files(room_settings: dict, seats: dict, events: list[dict]) -> dict[s
     return {"config.yaml": config, "meta.json": meta, "events.jsonl": evs, "results.jsonl": results}
 
 
-__all__ = ["AGENTS", "PROFILES", "SCHEDULE", "RoomSettings", "Room", "HumanSeat", "BotSeat", "EmptySeat",
+__all__ = ["AGENTS", "PROFILES", "SCHEDULE", "THINK_LEVELS", "RoomSettings", "Room", "HumanSeat", "BotSeat",
+           "ModelSeat", "EmptySeat",
            "Pending", "view_of", "reply_text", "kind_of", "new_code", "export_files", "Wallet"]

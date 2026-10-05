@@ -429,3 +429,18 @@ details.legend { margin-top: 12px; }
   .sp-line { grid-template-columns: 1fr; gap: 4px; }
   .sp-and { margin-left: 0; }
 }
+
+/* model seats (fill: models) */
+.web5 .quick-panel { margin-bottom: 18px; border-color: var(--teal); }
+.quick-lead { margin: 0 0 10px; color: var(--text-dim); line-height: 1.6; }
+.web5 .quick-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.web5 .tag.model { color: var(--teal-bright); border-color: var(--teal); background: rgba(127, 194, 177, 0.1); }
+.call-line.think-line { display: flex; align-items: center; gap: 6px; color: var(--warn); font-weight: 600; white-space: nowrap; }
+.think-line .pulse-dot { width: 7px; height: 7px; margin: 0; flex: 0 0 auto; }
+.call-line { display: block; font-size: 11.5px; color: var(--text-dim); margin-top: 3px; }
+.call-line.err { color: var(--danger-color); }
+.web5 .warn-box { border-left: 3px solid var(--warn); font-size: 13px; }
+.warn-box ul { margin: 6px 0 0; padding-left: 18px; }
+.warn-box li { margin: 2px 0; word-break: break-word; }
+@media (max-width: 640px) { .web5 .quick-fields { grid-template-columns: 1fr; } }
+.web5 .hint-line.warn-text { color: var(--warn); }

@@ -51,6 +51,20 @@
         모델에게 생각이 곧 토큰이듯, 사람에게는 고민하는 시간이 곧 토큰입니다. 화면은 차례가 오면 바로 뜨고 그때부터 시계가 돕니다.
         사람이 푸는 신호 퍼즐은 모델용보다 훨씬 쉬운 문제(조건 두 줄, 같음 조건만, 함정 없음)입니다. 세션이 몇 라운드인지는 알려 주지 않습니다.</p>
     </div>
+    <form id="form-quick" class="panel quick-panel" autocomplete="off">
+      <h2 class="panel-title h-shape s-triangle">gpt-oss:20b 세 명과 플레이</h2>
+      <p class="small quick-lead">나 한 명 + 실제 모델 세 자리(<span class="mono" id="quick-model">gpt-oss:20b</span>, Ollama Cloud).
+        모델 자리는 엔진이 만든 프롬프트를 그대로 받고, 실제로 생성한 토큰(생각 포함)만큼 잔액에서 빠집니다.
+        규칙 창을 닫으면 바로 1라운드가 시작됩니다.</p>
+      <div class="fields quick-fields">
+        <label class="f"><span>내 이름</span><input name="host_name" maxlength="24" placeholder="player"></label>
+        <label class="f"><span>모델 생각 수준 (think)</span>
+          <select name="think"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
+      </div>
+      <p class="small muted hint-line" id="quick-hint">서버 확인 중…</p>
+      <div class="row"><button class="primary big" type="submit" id="btn-quick">gpt-oss:20b 세 명과 플레이</button></div>
+    </form>
+
     <div class="grid2 lobby-grid">
       <form id="form-create" class="panel" autocomplete="off">
         <h2 class="panel-title h-shape s-circle">방 만들기</h2>
@@ -67,7 +81,9 @@
           <label class="f"><span>사람 자리 수</span>
             <select name="humans"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
           <label class="f"><span>남는 자리</span>
-            <select name="fill"><option value="bots">봇으로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
+            <select name="fill"><option value="bots">봇으로 채움</option><option value="models">gpt-oss:20b 모델로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
+          <label class="f"><span>모델 생각 수준 think (모델 자리)</span>
+            <select name="think"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
           <label class="f"><span>봇 정답 확률 bot_p</span><input name="bot_p" type="number" min="0" max="1" step="0.05" value="0.7"></label>
         </div>
         <p class="small muted hint-line" id="create-hint"></p>
@@ -151,6 +167,9 @@
         <form id="form-decision" class="panel decision-form" autocomplete="off"></form>
       </div>
     </div>
+
+    <!-- model failures / format errors, for every player -->
+    <div id="warn-box" class="panel warn-box hidden"></div>
 
     <!-- between screens -->
     <div id="between" class="panel between hidden">
