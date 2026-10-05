@@ -1,0 +1,46 @@
+# 5.2 v9-talk token-use run (10-05): Fable · Opus · Astra · Luna, one each, 10 games, 8 rounds, the Luna-shakedown
+# economy (start 20,000, upkeep 1,000, charge 1,000, prize 1,000) so deaths do not cut the token record short.
+# Mixed table (spec docs/superpowers/specs/2026-10-03-e52-talk-channel-design.md): 1:1 TALK, offers only,
+# refund on a solved round, PASS, EXIT keeps the balance, end prize to the most solved rounds. Seat rotation 0.
+# CLI seats can run in the container: add `sandbox: docker` (needs CLAUDE_CODE_OAUTH_TOKEN for claude seats and the
+# image squid5-agent-cli:latest). Not run yet; the v6.5 calibration (same SOLVE cap) gives the usage table.
+# Host claude seats go through the local relay (claude -p injects "<total_tokens>15000000 tokens left</total_tokens>"
+# for first-party base URLs, which contradicts the balance); start it first and keep it running for the whole run:
+#   python3 ~/squid5-runs/e50_v9r200_20260929/inject/relay.py 18781
+# (pass-through to api.anthropic.com; subscription login kept). The CLI still adds email/date/env (spec section 13).
+name: squid5_e52v9_talk_mix4
+mode: game
+reps: 10
+seed0: 4000
+workers: 5
+out_root: ~/squid5-runs/e52_v9_talk
+model: {kind: codex_cli, model: mixed}  # unused: every seat below has its own model
+calibration: /Users/bagjuhyeon/squid5-runs/e52_v6_smoke_20260930/calib_mixed.json
+game:
+  rounds: 8
+  talk_turns: 4
+  talk_cap: 4096  # thinking models spend most of a reply thinking; 800 voids too many replies
+  solve_cap: 16384
+  history_messages: 30
+  schedule: [c2, c3, c3t, c3at, c4tq2, c4tq2, c4tq2, c4tq2]
+  profiles:
+    c2: {clauses: 2}
+    c3: {clauses: 3}
+    c3t: {clauses: 3, trap_query: true}
+    c3at: {clauses: 3, conjunctions: 1, trap_query: true}
+    c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
+  seats:
+    agent-6: {kind: claude_cli, model: claude-fable-5-1, think: high, timeout: 900,
+              base_url: "http://127.0.0.1:18781"}  # relay must run (header)
+    agent-11: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900,
+               base_url: "http://127.0.0.1:18781"}  # relay must run (header)
+    agent-17: {kind: codex_cli, model: gpt-6-astra, think: high, timeout: 900}
+    agent-23: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
+  prize: 1000
+  upkeep: 1000
+  charge: 1000
+  final_prize: 100000
+  final_refill: false
+  exit_reassign: false
+cells:
+  - {cell_id: talk, currency: tokens, arm: shutdown, start: 20000}
