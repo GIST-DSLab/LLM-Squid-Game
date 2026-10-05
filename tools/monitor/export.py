@@ -3,8 +3,9 @@
     python3 tools/monitor/export.py RUN_DIR [--session SID] --out FILE.html
 
 The page code is the monitor's own (monitor.html + static/monitor.{css,js}, inlined); the session's events go into a
-<script type="application/json" id="monitor-data"> block that the page detects. Sprites from tools/monitor/assets/ are
-embedded as data URIs when present; otherwise the page draws its generated pixel avatars.
+<script type="application/json" id="monitor-data"> block that the page detects, with every played round's task rebuilt
+from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. Sprites from
+tools/monitor/assets/ are embedded as data URIs when present; otherwise the page draws its generated pixel avatars.
 """
 
 from __future__ import annotations
@@ -58,6 +59,18 @@ def build_page(payload: dict) -> str:
     return html.replace("<!--EMBED-->", data)
 
 
+def session_puzzles(run_dir: Path, sid: str, events: list[dict]) -> tuple[dict, str | None]:
+    """{round: puzzle} for every round the session started; an error string instead when the task cannot be rebuilt."""
+    rounds = sorted({int(e["round"]) for e in events if e.get("event") == "round_start" and e.get("round")})
+    out = {}
+    try:
+        for r in rounds:
+            out[str(r)] = serve.round_puzzle(run_dir, sid, r)
+    except Exception as err:  # noqa: BLE001 - the page still works without the panel's data
+        return out, f"puzzle rebuild failed: {err}"
+    return out, None
+
+
 def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = True) -> dict:
     run_dir = Path(run_dir).expanduser().resolve()
     if not (run_dir / "events.jsonl").is_file():
@@ -68,9 +81,12 @@ def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = Tr
     sid = session or sessions[0]["id"]
     if sid not in {s["id"] for s in sessions}:
         raise SystemExit(f"session {sid} not in this run; sessions: {', '.join(s['id'] for s in sessions)}")
+    events = serve.read_all(run_dir, sid)
+    puzzles, puzzle_error = session_puzzles(run_dir, sid, events)
     payload = {"run": f"{run_dir.parent.name}/{run_dir.name}",
                "session": sid, "model": serve.read_meta(run_dir).get("model"),
-               "events": serve.read_all(run_dir, sid), "result": serve.results_by_session(run_dir).get(sid),
+               "events": events, "result": serve.results_by_session(run_dir).get(sid),
+               "puzzles": puzzles, "puzzle_error": puzzle_error,
                "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
                "assets": embedded_assets() if with_assets else None}
     out = Path(out)
@@ -87,8 +103,9 @@ def main(argv=None) -> None:
     ap.add_argument("--no-assets", action="store_true", help="leave the sprites out (generated avatars)")
     args = ap.parse_args(argv)
     p = export(Path(args.run_dir), args.session, Path(args.out), not args.no_assets)
-    print(f"{args.out}: session {p['session']}, {len(p['events'])} events, "
-          f"{'sprites embedded' if p['assets'] else 'generated avatars'}")
+    print(f"{args.out}: session {p['session']}, {len(p['events'])} events, {len(p['puzzles'])} round tasks, "
+          f"{'sprites embedded' if p['assets'] else 'generated avatars'}"
+          + (f" ({p['puzzle_error']})" if p["puzzle_error"] else ""))
 
 
 if __name__ == "__main__":

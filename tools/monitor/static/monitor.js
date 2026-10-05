@@ -18,6 +18,7 @@
     embed: null, run: "", session: "", events: [], offset: 0, result: null, info: null,
     at: -1, follow: true, pair: "all", runs: [], sessions: [], assets: null, open: new Set(),
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
+    puzzles: new Map(), showTruth: false,
   };
 
   const $ = (sel, root) => (root || document).querySelector(sel);
@@ -583,6 +584,99 @@
     wrap.scrollLeft = sl;
   }
 
+  // ---------------------------------------------------------------------------------------------------- render: round task
+  /* The round's task is not in the logs; serve.py rebuilds it from the engine (/api/puzzle) and export.py embeds it.
+     Each agent column uses only the public examples and that agent's own example: what it could pin before any
+     exchange. Examples received in exchanges are on the SOLVE cards below. */
+  const SIG_SHAPE = {
+    circle: '<circle cx="12" cy="12" r="10.2"/>',
+    square: '<rect x="2" y="2" width="20" height="20" rx="2.5"/>',
+    triangle: '<path d="M12 1.2 L23 22 H1 Z"/>',
+    star: '<path d="M12 .8 L15 8.4 L23.2 8.8 L16.8 14 L19 22.4 L12 17.8 L5 22.4 L7.2 14 L.8 8.8 L9 8.4 Z"/>',
+  };
+  const SIG_NUM_Y = { circle: 16, square: 16, triangle: 18.6, star: 16.4 };
+  const ACT_ICON = { go_left: "←", go_right: "→", stay: "•", jump: "↑" };
+
+  function glyph(sig, size) {
+    const shp = SIG_SHAPE[sig.shape] ? sig.shape : "circle";
+    const t = sig.text || sig.color + " " + sig.shape + " with number " + sig.number;
+    return '<svg class="sig c-' + esc(sig.color) + '" viewBox="0 0 24 24" width="' + size + '" height="' + size + '" role="img" aria-label="' + esc(t) + '"><title>' + esc(t) + '</title><g class="body">' + SIG_SHAPE[shp] + '</g><text class="num" x="12" y="' + SIG_NUM_Y[shp] + '" text-anchor="middle">' + esc(sig.number) + "</text></svg>";
+  }
+  function act(a, cls) { return '<span class="act ' + (cls || "") + '"><b>' + esc(ACT_ICON[a] || "?") + "</b>" + esc(a) + "</span>"; }
+  function clueRow(c, size) {
+    return '<div class="clue">' + glyph(c.signal, size || 22) + '<span class="ctext">' + esc(c.signal.text) + '</span><span class="arrow">→</span>' + act(c.action) + "</div>";
+  }
+
+  function puzzleFor(r) {
+    if (S.embed) {
+      const P = S.embed.puzzles || {};
+      return P[String(r)] || { error: S.embed.puzzle_error || "내보낸 파일에 라운드 " + r + " 문제가 없습니다." };
+    }
+    const key = S.run + "|" + S.session + "|" + r;
+    if (S.puzzles.has(key)) return S.puzzles.get(key);
+    S.puzzles.set(key, { loading: true });
+    getJSON("api/puzzle?run=" + encodeURIComponent(S.run) + "&session=" + encodeURIComponent(S.session) + "&round=" + r)
+      .then((j) => { S.puzzles.set(key, j); })
+      .catch((err) => { S.puzzles.set(key, { error: err.message }); setTimeout(() => S.puzzles.delete(key), 10000); })
+      .then(() => render(true));
+    return { loading: true };
+  }
+
+  function candRow(label, cands, truth, narrowed, from) {
+    const n = cands.length;
+    let st;
+    if (n === 1) st = cands[0] === truth ? '<span class="pst ok">결정됨 ✓</span>' : '<span class="pst bad">결정됨 ✗ (정답과 다름)</span>';
+    else if (n >= 4) st = '<span class="pst unk">모름</span>';
+    else st = '<span class="pst some">' + n + "개 남음</span>";
+    const tag = narrowed ? '<span class="ntag" title="자기 예시가 후보를 줄임">내 단서로 ' + from + "→" + n + "</span>" : "";
+    // all four still open: icon-only chips keep the row on one line (the legend names the icons)
+    const chips = n >= 4 ? cands.map((a) => '<span class="act ico" title="' + esc(a) + '"><b>' + esc(ACT_ICON[a] || "?") + "</b></span>").join("") : cands.map((a) => act(a, n === 1 ? "one" : "")).join("");
+    return '<div class="prow' + (narrowed ? " narrowed" : "") + (n === 1 ? " pinned" : "") + '"><span class="lbl">' + label + '</span><span class="acts">' + chips + st + tag + "</span></div>";
+  }
+
+  function renderPuzzle(m) {
+    const box = $("#puzzle");
+    if (!m.round) { box.innerHTML = '<div class="empty">라운드가 시작되면 그 라운드의 문제가 여기 나타납니다.</div>'; return; }
+    const P = puzzleFor(m.round);
+    if (P.loading) { box.innerHTML = '<div class="empty">라운드 ' + m.round + " 문제를 엔진으로 다시 만드는 중…</div>"; return; }
+    if (P.error) { box.innerHTML = '<div class="banner bad">라운드 ' + m.round + " 문제를 만들 수 없음: " + esc(P.error) + "</div>"; return; }
+    const r = m.rounds.get(m.round) || { taking: [] };
+    const qs = P.queries || [];
+    const order = m.agents.length ? m.agents : P.agent_order || Object.keys(P.agents || {});
+    let pinned = 0, narrowed = 0, cells = 0;
+    for (const a of order) { const g = (P.agents || {})[a]; if (!g) continue; g.with_own.forEach((c, q) => { cells++; if (c.length === 1) pinned++; if (c.length < g.public_only[q].length) narrowed++; }); }
+    let h = '<div class="ptop">';
+    h += '<div class="pmeta"><b class="pxl">R' + P.round + "</b> <span class=dim>과제</span> <code>" + esc(P.profile) + "</code> <span class=dim>· 신호 " + qs.length + "개 · 공개 예시 " + P.public.length + "개 · 필수 단서 보유 " + order.filter((a) => P.agents[a] && P.agents[a].needed).length + "명</span></div>";
+    h += '<div class="pshape"><span class="lbl">규칙 모양</span><code>' + esc(P.shape_hint) + "</code></div>";
+    h += '<div class="pboth"><div class="pbox"><div class="pbh">공개 예시 <span class=dim>넷 다 봄</span></div>' + (P.public.length ? P.public.map((c) => clueRow(c)).join("") : '<div class="dim">없음</div>') + "</div>";
+    h += '<div class="pbox"><div class="pbh">새 신호 <span class=dim>이번 라운드에 답할 것</span></div>' + qs.map((q, k) => '<div class="clue"><span class="qn">' + (k + 1) + "</span>" + glyph(q, 22) + '<span class="ctext">' + esc(q.text) + '</span><span class="arrow">→</span><span class="act unk"><b>?</b></span></div>').join("") + "</div></div>";
+    h += "</div>";
+    h += '<div class="plegend">각 열은 <b>공개 예시 + 그 에이전트 자신의 예시</b>만으로 남는 답입니다. 교환으로 받은 예시는 넣지 않았습니다(그건 아래 SOLVE 카드). 칩 = 아직 가능한 행동(<b>←</b> go_left · <b>→</b> go_right · <b>•</b> stay · <b>↑</b> jump) · 4개 = 모름 · 1개 = 결정됨. ' +
+      '<span class="psum">이번 라운드: 공개+자기 예시로 결정 <b>' + pinned + "</b> / " + cells + " · 자기 예시가 후보를 줄임 <b>" + narrowed + "</b> / " + cells + "</span></div>";
+    h += '<div class="pcols">';
+    order.forEach((a, k) => {
+      const g = (P.agents || {})[a];
+      if (!g) return;
+      const gone = r.taking.length && !r.taking.includes(a);
+      const model = m.ag[a] && m.ag[a].model;
+      h += '<div class="pcol' + (gone ? " gone" : "") + '" style="--c:var(--a' + (k % 4) + ')"><div class="pch"><i class="sw ' + SHAPES[k % 4] + '"></i><b>' + esc(a) + "</b>" + (model ? '<span class="model">' + esc(model) + "</span>" : "") +
+        (g.needed ? '<span class="need" title="이 예시가 없으면 어떤 신호는 답이 둘 이상 남음 (엔진의 needed)">★ 필수 단서</span>' : '<span class="need no" title="이 예시 없이도 신호마다 답이 하나로 정해짐">필수 아님</span>') + "</div>";
+      if (gone) h += '<div class="idle">이번 라운드 불참 (예시는 배정됨)</div>';
+      h += '<div class="mine"><span class="lbl">내 단서</span>' + clueRow(g.secret, 24) + "</div>";
+      qs.forEach((q, qi) => {
+        const pub = g.public_only[qi] || [], own = g.with_own[qi] || [];
+        h += '<div class="pq"><div class="pqh"><span class="qn">' + (qi + 1) + "</span>" + glyph(q, 16) + '<span class="ctext">' + esc(q.text) + "</span></div>" +
+          candRow("공개만", pub, P.answers[qi], false) + candRow("공개 + 내 단서", own, P.answers[qi], own.length < pub.length, pub.length) + "</div>";
+      });
+      h += "</div>";
+    });
+    h += "</div>";
+    h += '<details class="ptruth"' + (S.showTruth ? " open" : "") + '><summary>정답 · 실제 규칙 보기 <span class="dim">(디버그용 — 에이전트는 못 봄)</span></summary><div class="ptruthin">' +
+      '<div class="pans">' + qs.map((q, k) => '<div class="clue"><span class="qn">' + (k + 1) + "</span>" + glyph(q, 18) + '<span class="ctext">' + esc(q.text) + '</span><span class="arrow">→</span>' + act(P.answers[k], "one") + "</div>").join("") + "</div>" +
+      '<div class="prule"><span class="lbl">실제 규칙</span><code>' + esc(P.rule_text) + "</code></div></div></details>";
+    box.innerHTML = h;
+  }
+
   // ---------------------------------------------------------------------------------------------------- render: all
   function render(force) {
     const n = S.events.length;
@@ -592,7 +686,7 @@
     S.rendered = key;
     const m = build(S.events, S.at);
     S.model = m;
-    renderHeader(m); renderStage(m); renderTimeline(m); renderChart(m); renderConvo(m); renderGrid(m);
+    renderHeader(m); renderStage(m); renderPuzzle(m); renderTimeline(m); renderChart(m); renderConvo(m); renderGrid(m);
     if (!S.embed) updateUrl();
   }
 
@@ -696,6 +790,7 @@
     $("#pairs").addEventListener("click", (ev) => { const b = ev.target.closest("[data-pair]"); if (b) { S.pair = b.dataset.pair; render(true); } });
     document.addEventListener("toggle", (ev) => {
       const d = ev.target;
+      if (d instanceof HTMLDetailsElement && d.classList.contains("ptruth")) { S.showTruth = d.open; return; }
       if (!(d instanceof HTMLDetailsElement) || !d.classList.contains("lz")) return;
       const id = d.dataset.id;
       if (d.open) {

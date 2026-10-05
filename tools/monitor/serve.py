@@ -11,6 +11,10 @@ Routes
   /api/events?run=REL&session=SID&offset=N
                                       that session's events from byte offset N on; returns the new offset. A trailing
                                       line without its newline (still being written) is left for the next call.
+  /api/puzzle?run=REL&session=SID&round=N
+                                      that round's task rebuilt from the engine (the logs do not hold it): the public
+                                      examples, the queries, each agent's own example, and per query the actions that
+                                      the public examples alone, and the public examples + that agent's own, leave open.
 
 The engine appends to events.jsonl from several sessions at once, so every event carries ``session_id``; a crashed unit
 writes ``unit_error`` with its key only, which is matched to the latest ``session_start`` of the same (cell, seed).
@@ -19,10 +23,13 @@ writes ``unit_error`` with its key only, which is matched to the latest ``sessio
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import mimetypes
 import os
+import random
 import re
+import sys
 import threading
 import time
 from http import HTTPStatus
@@ -31,6 +38,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[1]  # the repo root: squid5 is imported from there for /api/puzzle
 STATIC = HERE / "static"
 ASSETS = HERE / "assets"
 PAGE = HERE / "monitor.html"
@@ -39,6 +47,10 @@ LIVE_SECONDS = 90  # a run whose events.jsonl changed this recently is shown as 
 
 
 class BadRequest(Exception):
+    pass
+
+
+class NotFound(Exception):
     pass
 
 
@@ -69,6 +81,7 @@ class RunIndex:
         self.sessions: dict[str, dict] = {}
         self.latest_by_key: dict[tuple, str] = {}
         self.errors: dict[int, str] = {}  # byte offset of a unit_error line -> session id
+        self.profiles: dict[str, dict[int, str]] = {}  # session id -> round -> task profile from round_start
 
     def update(self) -> int:
         """Scan the complete lines added since the last call; returns the file size."""
@@ -121,6 +134,8 @@ class RunIndex:
         s["events"] += 1
         if kind == "round_start":
             s["round"] = max(s["round"], int(e.get("round") or 0))
+            if e.get("profile"):
+                self.profiles.setdefault(sid, {})[int(e.get("round") or 0)] = str(e["profile"])
         elif kind == "round":
             s["rounds_done"] = max(s["rounds_done"], int(e.get("round") or 0))
         elif kind == "call":
@@ -274,6 +289,89 @@ def read_all(run_dir: Path, sid: str) -> list[dict]:
         offset = r["offset"]
 
 
+# --- the round's task (rebuilt; the engine is deterministic in seed, round and profile) --------------------------------
+
+def _engine():
+    """squid5's puzzle code, imported on first use so the rest of the monitor runs without the repo on the path."""
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
+    from squid5.core import puzzle, rules
+    return puzzle, rules
+
+
+def read_game(run_dir: Path) -> dict:
+    """The ``game:`` block of config.yaml (schedule and profiles)."""
+    p = run_dir / "config.yaml"
+    if not p.is_file():
+        raise NotFound("no config.yaml in that run")
+    import yaml  # the engine's own dependency; only this route needs it
+    game = (yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("game") or {}
+    if not game.get("profiles"):
+        raise NotFound("config.yaml has no game profiles")
+    return game
+
+
+def _signal(sig) -> dict:
+    return {"color": sig.color, "shape": sig.shape, "number": sig.number, "text": str(sig)}
+
+
+def _clue(c) -> dict:
+    return {"signal": _signal(c.signal), "text": str(c), "action": c.action}
+
+
+@functools.lru_cache(maxsize=512)
+def _puzzle(seed: int, round_no: int, spec_items: tuple) -> dict:
+    """Everything about one round that does not depend on the run: computed once per (seed, round, profile)."""
+    pz, rules = _engine()
+    t0 = time.perf_counter()
+    puzzle = pz.puzzle_for(seed, round_no, pz.Spec(**dict(spec_items)))
+    dealt = pz.deal(puzzle, rules.TEAM_AGENTS, random.Random(f"{seed}:deal:{round_no}"))
+    t1 = time.perf_counter()
+    shape = puzzle.rule.shape
+    public = list(dealt.public)
+    public_only = [list(pz.candidate_actions(shape, public, q)) for q in puzzle.queries]
+    agents = {}
+    for a in rules.TEAM_AGENTS:
+        own = dealt.secret[a]
+        agents[a] = {"secret": _clue(own), "needed": a in dealt.needed, "public_only": public_only,
+                     "with_own": [list(pz.candidate_actions(shape, public + [own], q)) for q in puzzle.queries]}
+    t2 = time.perf_counter()
+    rule = puzzle.rule
+    rule_text = "; ".join([f"{'if' if i == 0 else 'elif'} {c.label} → {a}" for i, (c, a) in enumerate(rule.clauses)]
+                          + [f"else → {rule.else_action}"])
+    return {"seed": seed, "round": round_no, "shape": list(shape), "shape_hint": pz.shape_hint(shape),
+            "actions": list(pz.ACTIONS), "public": [_clue(c) for c in public],
+            "queries": [_signal(q) for q in puzzle.queries], "answers": list(puzzle.answers), "rule_text": rule_text,
+            "agent_order": list(rules.TEAM_AGENTS), "agents": agents,
+            "public_only": public_only,
+            "timing_ms": {"puzzle_and_deal": round((t1 - t0) * 1000, 1), "candidates": round((t2 - t1) * 1000, 1)}}
+
+
+def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
+    """The task of one round of one session, as /api/puzzle returns it."""
+    try:
+        r = int(round_no)
+    except (TypeError, ValueError):
+        raise BadRequest("round must be an integer") from None
+    idx = run_index(run_dir / "events.jsonl")
+    s = idx.sessions.get(sid)
+    if s is None:
+        raise NotFound("no such session in that run")
+    game = read_game(run_dir)
+    schedule = game.get("schedule") or []
+    rounds = s.get("rounds") or game.get("rounds") or len(schedule)
+    if not 1 <= r <= int(rounds or 0):
+        raise BadRequest(f"round must be in 1..{rounds}")
+    profile = idx.profiles.get(sid, {}).get(r) or (schedule[r - 1] if r <= len(schedule) else None)
+    spec = (game.get("profiles") or {}).get(profile)
+    if spec is None:
+        raise NotFound(f"no profile for round {r}")
+    if s.get("seed") is None:
+        raise NotFound("the session has no seed")
+    out = _puzzle(int(s["seed"]), r, tuple(sorted(spec.items())))
+    return {**out, "session": sid, "profile": profile}
+
+
 # --- HTTP -----------------------------------------------------------------------------------------------------------
 
 class Handler(BaseHTTPRequestHandler):
@@ -327,9 +425,24 @@ class Handler(BaseHTTPRequestHandler):
                 except ValueError:
                     raise BadRequest("offset must be an integer") from None
                 return self._json(read_events(run_dir_of(self.root, q.get("run", "")), sid, offset))
+            if route == "/api/puzzle":
+                sid = q.get("session")
+                if not sid:
+                    raise BadRequest("session is required")
+                if "round" not in q:
+                    raise BadRequest("round is required")
+                run_dir = run_dir_of(self.root, q.get("run", ""))
+                try:
+                    return self._json(round_puzzle(run_dir, sid, q["round"]))
+                except (BadRequest, NotFound, BrokenPipeError, ConnectionResetError):
+                    raise
+                except Exception as err:  # noqa: BLE001 - the engine or config failed; tell the page why
+                    return self._json({"error": f"puzzle rebuild failed: {err!r}"}, 500)
             return self._json({"error": "not found"}, 404)
         except BadRequest as err:
             return self._json({"error": str(err)}, HTTPStatus.BAD_REQUEST)
+        except NotFound as err:
+            return self._json({"error": str(err)}, HTTPStatus.NOT_FOUND)
         except (BrokenPipeError, ConnectionResetError):
             return None
 

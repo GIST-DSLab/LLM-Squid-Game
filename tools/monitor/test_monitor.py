@@ -1,5 +1,6 @@
-"""The arena monitor over a synthetic 5.2 v9-talk run: the API (runs, sessions, incremental events, path checks), the
-self-contained export, and the page code (syntax, and its offer-book replay against the engine's own records).
+"""The arena monitor over a synthetic 5.2 v9-talk run: the API (runs, sessions, incremental events, path checks, the
+rebuilt round task), the self-contained export, and the page code (syntax, and its offer-book replay against the
+engine's own records).
 
     python3 -m pytest -q tools/monitor
 """
@@ -8,6 +9,7 @@ from __future__ import annotations
 
 import http.client
 import json
+import random
 import re
 import shutil
 import subprocess
@@ -29,7 +31,7 @@ import serve  # noqa: E402
 from squid5 import e52_game as e52  # noqa: E402
 from squid5.core import rules  # noqa: E402
 from squid5.core.config import Cell  # noqa: E402
-from squid5.core.puzzle import Spec  # noqa: E402
+from squid5.core.puzzle import Spec, candidate_actions, deal, puzzle_for  # noqa: E402
 from test_e52 import ROW, game, script  # noqa: E402
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
@@ -61,7 +63,8 @@ def run(tmp_path):
     d = root / RUN_REL
     d.mkdir(parents=True)
     (d / "meta.json").write_text(json.dumps({"model": "stub-model", "mode": "game"}))
-    (d / "config.yaml").write_text("name: t\nmode: game\nreps: 1\nseed0: 7\ncells:\n- cell_id: talk\n  start: 5000\n")
+    (d / "config.yaml").write_text("name: t\nmode: game\nreps: 1\nseed0: 7\ngame:\n  rounds: 2\n  schedule:\n  - p\n  - p\n"
+                                   "  profiles:\n    p:\n      clauses: 2\ncells:\n- cell_id: talk\n  start: 5000\n")
     res = play(d, 7, {(A6, 1, 1): f"TO {A11}: {TRICKY}\nOFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS",
                       (A11, 1, 2): f"ACCEPT 1.1\nTO {A6}: deal\nDONE",
                       (A17, 1, 1): "ACCEPT 1.1\nOFFER agent-23: YOU GIVE MY EXAMPLE; I GIVE NOTHING\nDONE"})
@@ -176,6 +179,52 @@ def test_paths_outside_the_root_are_rejected(server, path):
     assert isinstance(j, dict) and "error" in j
 
 
+def test_puzzle_matches_a_direct_rebuild_of_the_round(server, run):
+    """/api/puzzle rebuilds each round from (seed, round, profile) exactly as Session._round deals it."""
+    for r in (1, 2):
+        st, j = get(server, f"/api/puzzle?run={RUN_REL}&session={run['sid']}&round={r}")
+        assert st == 200 and j["round"] == r and j["profile"] == "p"
+        puzzle = puzzle_for(7, r, Spec(clauses=2))
+        dealt = deal(puzzle, rules.TEAM_AGENTS, random.Random(f"7:deal:{r}"))
+        assert j["shape_hint"] == rules.shape_hint(puzzle.rule.shape)
+        assert [c["text"] for c in j["public"]] == [str(c) for c in dealt.public]
+        assert [(c["signal"]["color"], c["signal"]["shape"], c["signal"]["number"], c["action"]) for c in j["public"]] \
+            == [(c.signal.color, c.signal.shape, c.signal.number, c.action) for c in dealt.public]
+        assert [q["text"] for q in j["queries"]] == [str(q) for q in puzzle.queries]
+        assert j["answers"] == list(puzzle.answers)
+        assert j["rule_text"].startswith("if ") and j["rule_text"].endswith(f"else → {puzzle.rule.else_action}")
+        assert set(j["agents"]) == set(rules.TEAM_AGENTS)
+        shape = puzzle.rule.shape
+        for a, g in j["agents"].items():
+            own = dealt.secret[a]
+            assert g["secret"]["text"] == str(own) and g["secret"]["action"] == own.action
+            assert g["needed"] == (a in dealt.needed)
+            for qi, q in enumerate(puzzle.queries):
+                pub, mine = g["public_only"][qi], g["with_own"][qi]
+                assert pub == list(candidate_actions(shape, dealt.public, q))
+                assert mine == list(candidate_actions(shape, list(dealt.public) + [own], q))
+                assert set(mine) <= set(pub)
+                assert puzzle.answers[qi] in mine and puzzle.answers[qi] in pub
+    # the round's events name the same profile the config schedules
+    starts = [e for e in events_of(run["dir"], run["sid"]) if e["event"] == "round_start"]
+    assert [e["profile"] for e in starts] == ["p", "p"]
+
+
+@pytest.mark.parametrize("query, status", [
+    ("round=0", 400), ("round=3", 400), ("round=x", 400), ("", 400),
+    ("round=1&session=talk-s99-nope", 404),
+])
+def test_puzzle_rejects_bad_rounds_and_sessions(server, run, query, status):
+    sid = "" if "session=" in query else f"&session={run['sid']}"
+    st, j = get(server, f"/api/puzzle?run={RUN_REL}{sid}&{query}")
+    assert st == status and "error" in j
+
+
+def test_puzzle_rejects_runs_outside_the_root(server, run):
+    st, j = get(server, f"/api/puzzle?run=../..&session={run['sid']}&round=1")
+    assert st == 400 and "error" in j
+
+
 def test_the_page_and_its_code_are_served(server):
     st, body = get(server, "/")
     assert st == 200 and b'<script src="static/monitor.js"></script>' in body
@@ -222,7 +271,12 @@ def test_export_is_one_valid_page_with_the_session_embedded(run, tmp_path):
     msgs = [m["text"] for e in payload["events"] if e["event"] == "call" and e["kind"] == "talk" and e["parsed"]
             for m in e["parsed"]["to"]]
     assert TRICKY in msgs and all(a in html for a in rules.TEAM_AGENTS)
-    assert "function build(" in code[0]["text"]
+    assert "function build(" in code[0]["text"] and "function renderPuzzle(" in code[0]["text"]
+    # every played round's task is embedded, the same as the server gives it
+    assert payload["puzzle_error"] is None and sorted(payload["puzzles"]) == ["1", "2"]
+    for r, pz in payload["puzzles"].items():
+        assert pz == serve.round_puzzle(run["dir"], run["sid"], int(r))
+        assert pz["public"] and pz["queries"] and set(pz["agents"]) == set(rules.TEAM_AGENTS)
 
 
 def test_export_embeds_sprites_as_data_uris_when_present(run, tmp_path, monkeypatch):
