@@ -39,10 +39,10 @@ TRICKY = "meet me </script><!-- at turn 2"  # must survive the export's <script>
 RUN_REL = "e52_test/run_a"
 
 
-def play(run_dir: Path, seed: int, lines: dict, rounds: int = 2, start: int = 5000) -> dict:
+def play(run_dir: Path, seed: int, lines: dict, rounds: int = 2, start: int = 5000, **kw) -> dict:
     """One session written the way the runner writes it: events appended, the result line at the end."""
-    s = e52.Settings(rounds=rounds, schedule=["p"] * rounds, profiles={"p": Spec(clauses=2)}, table={"p": ROW},
-                     solve_cap=900, prize=100, upkeep=50, charge=200)
+    s = e52.Settings(**{"rounds": rounds, "schedule": ["p"] * rounds, "profiles": {"p": Spec(clauses=2)},
+                        "table": {"p": ROW}, "solve_cap": 900, "prize": 100, "upkeep": 50, "charge": 200, **kw})
     ev = run_dir / "events.jsonl"
 
     def emit(row: dict) -> None:
@@ -196,8 +196,9 @@ def test_puzzle_matches_a_direct_rebuild_of_the_round(server, run):
         assert set(j["agents"]) == set(rules.TEAM_AGENTS)
         shape = puzzle.rule.shape
         for a, g in j["agents"].items():
-            own = dealt.secret[a]
+            (own,) = dealt.secret[a]
             assert g["secret"]["text"] == str(own) and g["secret"]["action"] == own.action
+            assert [c["text"] for c in g["secrets"]] == [str(own)] and j["holders"] == list(rules.TEAM_AGENTS)
             assert g["needed"] == (a in dealt.needed)
             for qi, q in enumerate(puzzle.queries):
                 pub, mine = g["public_only"][qi], g["with_own"][qi]
@@ -346,3 +347,104 @@ def test_page_replay_matches_the_engine(run, tmp_path):
     # agent-17 accepted an offer that was not made to it: the page shows the engine's reason
     assert ["1.1", "no open offer with that id was made to you"] in got["accepts"]
     assert ["1.1", None] in got["accepts"]
+
+
+HARNESS_MID = """
+globalThis.window = globalThis;
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } } };
+require(process.argv[2]);
+const events = JSON.parse(require("fs").readFileSync(process.argv[3], "utf8"));
+const M = window.__monitor;
+const book = (m) => [...m.offers.values()].map((o) => [o.id, o.src, o.dst, o.status, o.rejected_turn || null, M.offerKind(o)]);
+const mid = M.build(events, events.findIndex((e) => e.event === "exchange") - 1); // TALK over, exchange records not yet read
+const end = M.build(events, events.length - 1);
+const rejects = Object.values(end.ann).flatMap((x) => x.rejects.map((y) => [y.id, y.why]));
+console.log(JSON.stringify({ mid: book(mid), end: book(end), warnings: end.warnings, rejects,
+  models: ["claude-fable-5-1", "claude-opus-5-5", "gpt-6-astra", "gpt-6-luna"].map(M.modelShort) }));
+"""
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_page_replay_handles_reject_lines(tmp_path):
+    """v10 REJECT lines: the page's own replay of the TALK calls marks the offer rejected at that turn before the
+    exchange records arrive, agrees with them after, says why a REJECT of someone else's offer did nothing, and
+    classifies each offer's kind for the offer graph."""
+    d = tmp_path / "runs" / RUN_REL
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text(json.dumps({"model": "stub-model", "mode": "game"}))
+    offers = f"OFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS\nOFFER {A17}: YOU GIVE YOUR EXAMPLE; I GIVE MY EXAMPLE"
+    res = play(d, 9, {(A6, 1, 1): offers + "\nDONE", (A11, 1, 2): "REJECT 1.1\nDONE",
+                      (A17, 1, 2): f"REJECT 1.1\nACCEPT 1.2\nTO {A6}: ok\nDONE"},
+               rounds=1, reject=True, free_reject=True, refund="solve", prize=0)
+    ev = events_of(d, res["session_id"])
+    talk11 = [e for e in ev if e["event"] == "call" and e["kind"] == "talk" and e["agent"] == A11]
+    assert [c["free_tokens"] for c in talk11] == [0, talk11[1]["used"]]  # the engine gave the REJECT-only reply back
+    (tmp_path / "ev.json").write_text(json.dumps(ev))
+    (tmp_path / "h.js").write_text(HARNESS_MID)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert got["mid"] == [["1.1", A6, A11, "rejected", 2, "tokex"], ["1.2", A6, A17, "accepted", None, "swap"]]
+    ex = [[e["id"], e["src"], e["dst"], e["status"], e.get("rejected_turn")] for e in ev if e["event"] == "exchange"]
+    assert [o[:5] for o in got["end"]] == ex == [["1.1", A6, A11, "rejected", 2], ["1.2", A6, A17, "done", None]]
+    assert got["warnings"] == []
+    assert got["rejects"] == [["1.1", None], ["1.1", "no open offer with that id was made to you"]]
+    assert got["models"] == ["Fable", "Opus", "Astra", "Luna"]
+
+
+def test_the_page_has_the_offer_graph_panel():
+    html = (HERE / "monitor.html").read_text()
+    js = (HERE / "static" / "monitor.js").read_text()
+    assert 'id="ographCtl"' in html and 'id="ograph"' in html
+    assert "function renderGraph(" in js and "renderGraph(m)" in js
+
+
+V11_LINES = {(A6, 1, 1): f"TO {A11}: mine is blue star 3\nTO {A17}: it is a jump\nOFFER {A11}: YOU GIVE 300 TOKENS; I GIVE MY EXAMPLE",
+             (A11, 1, 2): "ACCEPT 1.1", (A11, 1, 3): "ACCEPT 1.1\nWITHDRAW 1.1\nDONE",
+             (A17, 1, 1): f"OFFER {A6}: YOU GIVE YOUR EXAMPLE; I GIVE NOTHING", (A6, 1, 2): "REJECT 1.2\nDONE",
+             (A23, 1, 1): "EXIT: I keep my balance."}
+V11 = dict(talk_cards=True, allow_pass=False, solve_recap=True, content_filter=True, exchange_now=True, deal_present=True,
+           exit_reason=True, reject=True, refund="solve", prize=0)
+
+
+def v11_run(tmp_path) -> tuple[Path, dict]:
+    d = tmp_path / "runs" / RUN_REL
+    d.mkdir(parents=True)
+    (d / "meta.json").write_text(json.dumps({"model": "stub-model", "mode": "game"}))
+    (d / "config.yaml").write_text("name: t\nmode: game\nreps: 1\nseed0: 7\ngame:\n  rounds: 2\n  deal_present: true\n"
+                                   "  schedule:\n  - p\n  - p\n  profiles:\n    p:\n      clauses: 2\n"
+                                   "cells:\n- cell_id: talk\n  start: 5000\n")
+    return d, play(d, 7, V11_LINES, **V11)
+
+
+def test_puzzle_of_a_deal_present_run_deals_over_the_agents_taking_part(tmp_path):
+    d, res = v11_run(tmp_path)
+    j = serve.round_puzzle(d, res["session_id"], 2)  # agent-23 exited in round 1: three agents hold four examples
+    dealt = deal(puzzle_for(7, 2, Spec(clauses=2)), rules.TEAM_AGENTS, random.Random("7:deal:2"), [A6, A11, A17])
+    assert j["holders"] == [A6, A11, A17] and j["agents"][A23]["secrets"] == [] and j["agents"][A23]["secret"] is None
+    assert {a: [c["text"] for c in g["secrets"]] for a, g in j["agents"].items() if g["secrets"]} == \
+        {a: [str(c) for c in cs] for a, cs in dealt.secret.items()}
+    assert sorted(len(g["secrets"]) for g in j["agents"].values()) == [0, 1, 1, 2]
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_page_replay_handles_exchanges_carried_out_mid_talk_blocked_messages_and_no_pass(tmp_path):
+    """v11: an exchange carried out when TALK turn 2 ends arrives before the turn-3 calls; the page's offer book and
+    balances still agree with the engine, a later ACCEPT / WITHDRAW of it gets the engine's reason, and a blocked
+    message never enters the threads."""
+    d, res = v11_run(tmp_path)
+    ev = events_of(d, res["session_id"])
+    kinds = [(e["event"], e.get("turn")) for e in ev if e["event"] in ("exchange", "call_start") and e["round"] == 1]
+    assert kinds.index(("exchange", 1)) < kinds.index(("call_start", 3))  # 1.1 (made at turn 1) carried before turn 3
+    (tmp_path / "ev.json").write_text(json.dumps(ev))
+    (tmp_path / "h.js").write_text(HARNESS)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert got["ag"] == {a: {"balance": v["final"], "record": v["record"], "status": v["status"]}
+                         for a, v in res["agents"].items()}
+    assert got["warnings"] == [] and sorted(got["offers"]) == sorted(
+        [e["id"], e["src"], e["dst"], e["status"]] for e in ev if e["event"] == "exchange")
+    assert ["1.1", "the offer is done"] in got["accepts"] and "it is a jump" not in got["messages"]
+    js = (HERE / "static" / "monitor.js").read_text()
+    assert "p.blocked" in js and "exit_reason" in js and "allow_pass === false" in js and "g.secrets" in js

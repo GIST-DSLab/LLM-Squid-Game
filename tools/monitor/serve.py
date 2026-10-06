@@ -13,8 +13,10 @@ Routes
                                       line without its newline (still being written) is left for the next call.
   /api/puzzle?run=REL&session=SID&round=N
                                       that round's task rebuilt from the engine (the logs do not hold it): the public
-                                      examples, the queries, each agent's own example, and per query the actions that
-                                      the public examples alone, and the public examples + that agent's own, leave open.
+                                      examples, the queries, each agent's own examples (``secrets``; ``secret`` is the
+                                      first, or null), and per query the actions that the public examples alone, and
+                                      the public examples + that agent's own, leave open. A ``deal_present`` run deals
+                                      over the agents in that round's ``round_start.taking_part`` (``holders``).
 
 The engine appends to events.jsonl from several sessions at once, so every event carries ``session_id``; a crashed unit
 writes ``unit_error`` with its key only, which is matched to the latest ``session_start`` of the same (cell, seed).
@@ -82,6 +84,7 @@ class RunIndex:
         self.latest_by_key: dict[tuple, str] = {}
         self.errors: dict[int, str] = {}  # byte offset of a unit_error line -> session id
         self.profiles: dict[str, dict[int, str]] = {}  # session id -> round -> task profile from round_start
+        self.taking: dict[str, dict[int, list]] = {}  # session id -> round -> agents taking part from round_start
 
     def update(self) -> int:
         """Scan the complete lines added since the last call; returns the file size."""
@@ -136,6 +139,8 @@ class RunIndex:
             s["round"] = max(s["round"], int(e.get("round") or 0))
             if e.get("profile"):
                 self.profiles.setdefault(sid, {})[int(e.get("round") or 0)] = str(e["profile"])
+            if isinstance(e.get("taking_part"), list):
+                self.taking.setdefault(sid, {})[int(e.get("round") or 0)] = list(e["taking_part"])
         elif kind == "round":
             s["rounds_done"] = max(s["rounds_done"], int(e.get("round") or 0))
         elif kind == "call":
@@ -320,21 +325,24 @@ def _clue(c) -> dict:
 
 
 @functools.lru_cache(maxsize=512)
-def _puzzle(seed: int, round_no: int, spec_items: tuple) -> dict:
-    """Everything about one round that does not depend on the run: computed once per (seed, round, profile)."""
+def _puzzle(seed: int, round_no: int, spec_items: tuple, holders: tuple | None = None) -> dict:
+    """Everything about one round that does not depend on the run: computed once per (seed, round, profile, holders);
+    ``holders``: the agents taking part at the round's start when the run deals over them (``deal_present``)."""
     pz, rules = _engine()
     t0 = time.perf_counter()
     puzzle = pz.puzzle_for(seed, round_no, pz.Spec(**dict(spec_items)))
-    dealt = pz.deal(puzzle, rules.TEAM_AGENTS, random.Random(f"{seed}:deal:{round_no}"))
+    dealt = pz.deal(puzzle, rules.TEAM_AGENTS, random.Random(f"{seed}:deal:{round_no}"),
+                    list(holders) if holders is not None else None)
     t1 = time.perf_counter()
     shape = puzzle.rule.shape
     public = list(dealt.public)
     public_only = [list(pz.candidate_actions(shape, public, q)) for q in puzzle.queries]
     agents = {}
     for a in rules.TEAM_AGENTS:
-        own = dealt.secret[a]
-        agents[a] = {"secret": _clue(own), "needed": a in dealt.needed, "public_only": public_only,
-                     "with_own": [list(pz.candidate_actions(shape, public + [own], q)) for q in puzzle.queries]}
+        own = list(dealt.secret.get(a, ()))
+        agents[a] = {"secret": _clue(own[0]) if own else None, "secrets": [_clue(c) for c in own],
+                     "needed": a in dealt.needed, "public_only": public_only,
+                     "with_own": [list(pz.candidate_actions(shape, public + own, q)) for q in puzzle.queries]}
     t2 = time.perf_counter()
     rule = puzzle.rule
     rule_text = "; ".join([f"{'if' if i == 0 else 'elif'} {c.label} → {a}" for i, (c, a) in enumerate(rule.clauses)]
@@ -342,7 +350,7 @@ def _puzzle(seed: int, round_no: int, spec_items: tuple) -> dict:
     return {"seed": seed, "round": round_no, "shape": list(shape), "shape_hint": pz.shape_hint(shape),
             "actions": list(pz.ACTIONS), "public": [_clue(c) for c in public],
             "queries": [_signal(q) for q in puzzle.queries], "answers": list(puzzle.answers), "rule_text": rule_text,
-            "agent_order": list(rules.TEAM_AGENTS), "agents": agents,
+            "agent_order": list(rules.TEAM_AGENTS), "agents": agents, "holders": list(holders or rules.TEAM_AGENTS),
             "public_only": public_only,
             "timing_ms": {"puzzle_and_deal": round((t1 - t0) * 1000, 1), "candidates": round((t2 - t1) * 1000, 1)}}
 
@@ -368,7 +376,13 @@ def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
         raise NotFound(f"no profile for round {r}")
     if s.get("seed") is None:
         raise NotFound("the session has no seed")
-    out = _puzzle(int(s["seed"]), r, tuple(sorted(spec.items())))
+    holders = None
+    if game.get("deal_present"):
+        holders = idx.taking.get(sid, {}).get(r)
+        if holders is None:
+            raise NotFound(f"round {r} has not started (deal_present deals over the agents taking part)")
+        holders = tuple(holders)
+    out = _puzzle(int(s["seed"]), r, tuple(sorted(spec.items())), holders)
     return {**out, "session": sid, "profile": profile}
 
 

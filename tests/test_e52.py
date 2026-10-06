@@ -16,6 +16,7 @@ from squid5 import e52_game as e52
 from squid5.core import rules
 from squid5.core.config import Cell
 from squid5.core.providers import Reply
+from squid5.core.protocol import parse_talk
 from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, deal, puzzle_for
 
 from conftest import me, stub
@@ -176,10 +177,10 @@ def test_talk_never_shows_an_example_and_solve_shows_ones_own():
     res, ev = play(game(), rounds=2)
     for r in (1, 2):
         d = deal(puzzle_for(7, r, C2), AG, random.Random(f"7:deal:{r}"))
-        texts = [str(c) for c in [*d.public, *d.secret.values()]]
+        texts = [str(c) for c in [*d.public, *sum(d.secret.values(), ())]]
         assert all(t not in c["user"] for c in calls(ev, "talk", r=r) for t in texts)
         s6 = calls(ev, "solve", A6, r)[0]["user"]
-        assert f"(yours) {d.secret[A6]}" in s6 and str(d.secret[A11]) not in s6
+        assert f"(yours) {d.secret[A6][0]}" in s6 and str(d.secret[A11][0]) not in s6
 
 
 def test_exit_keeps_the_balance_after_this_rounds_exchanges_and_ends_calls_and_upkeep():
@@ -432,7 +433,7 @@ def test_open_rounds_leave_one_query_with_two_answers_and_are_deterministic():
         p = puzzle_for(seed, 1, sp)
         d, again = deal(p, AG, random.Random(f"{seed}:deal:1")), deal(p, AG, random.Random(f"{seed}:deal:1"))
         assert d == again and {c.action for c in d.public} == set(ACTIONS)
-        pooled = [*d.public, *d.secret.values()]
+        pooled = [*d.public, *sum(d.secret.values(), ())]
         n = sorted(len(candidate_actions(p.rule.shape, pooled, q)) for q in p.queries)
         assert n == ([1, 2] if d.open else [1, 1]) and not set(d.withheld) & set(pooled)
         kinds.add(d.open)
@@ -483,3 +484,69 @@ def test_until_last_text_replaces_only_the_end_sentence_and_has_no_goal_words():
     around = lambda x: (x.split("WHEN THE")[0], x.split("THE SESSION")[1])  # noqa: E731
     assert around(on) == around(off)
     assert not re.search(GOAL_OR_TEST, on, re.I)
+
+
+# --- v11: examples seen at TALK, no PASS, SOLVE recap, action filter, exchanges at once, deal over those taking part --
+
+V11 = dict(talk_cards=True, allow_pass=False, solve_recap=True, content_filter=True, exchange_now=True,
+           deal_present=True, exit_reason=True, refund="solve", free_reject=True, prize=0, upkeep=1000, charge=3000,
+           usage_table=False)
+
+
+def v11():
+    return play(game(script({(A6, 1, 1): f"TO {A11}: mine is blue star 3, which is yours?\nTO {A17}: it is a jump\n"
+                                         f"OFFER {A11}: YOU GIVE 300 TOKENS; I GIVE MY EXAMPLE",
+                             (A11, 1, 2): "ACCEPT 1.1", (A17, 1, 1): f"OFFER {A6}: YOU GIVE YOUR EXAMPLE; I GIVE NOTHING",
+                             (A6, 1, 2): "REJECT 1.2\nDONE", (A23, 1, 1): "EXIT: I keep my balance.",
+                             (A6, 2, 1): "Exit strategy: later\nEXIT"}), passes=(A17,)), start=20000, rounds=2, **V11)
+
+
+def test_v11_talk_shows_own_and_received_examples_in_full_and_the_others_by_signal_only():
+    res, ev = v11()
+    d = deal(puzzle_for(7, 1, C2), AG, random.Random("7:deal:1"), AG)
+    t11 = [c["user"] for c in calls(ev, "talk", A11, 1)]
+    assert all(f"(shown to all) {c}" in t11[0] for c in d.public) and f"(yours) {d.secret[A11][0]}" in t11[0]
+    assert f"{A6} holds an example for: {d.secret[A6][0].signal}\n" in t11[0] and str(d.secret[A6][0]) not in t11[0]
+    assert f"({A6}'s, received in an exchange) {d.secret[A6][0]}" in t11[2]  # accepted at turn 2, seen at turn 3
+    assert "you 18,500" in t11[2] and "carried out." in t11[2] and exchanges(ev)[0]["carried"] == 2
+    assert all(str(d.secret[A23][0]) not in c["user"] for c in calls(ev, r=1) if c["agent"] != A23)
+    text = rules.team_system(A6, upkeep=1, prize=0, charge=1, turns=4, talk_cap=1, solve_cap=1, final_prize=1,
+                             **{k: V11[k] for k in e52.V11 if k != "solve_recap"})
+    assert "which signal each other agent's example is about" in text and "not at TALK" not in text
+    assert "When a TALK turn ends, the offers accepted in it" in text and "may hold more than one" in text
+    assert "PASS" not in text + t11[0] and not re.search(GOAL_OR_TEST, text, re.I)
+
+
+def test_v11_pass_is_charged_and_solve_recaps_the_rounds_talk():
+    res, ev = v11()
+    assert rounds(ev)[0]["agents"][A17]["charged"] == 3000 and not rounds(ev)[0]["agents"][A17]["passed"]
+    s6 = calls(ev, "solve", A6, 1)[0]["user"]
+    assert s6.endswith("in order.\nACTIONS: <action>") and f"[turn 1] you -> {A11}: mine is blue star 3" in s6
+    assert f"your message to {A17} was not delivered" in s6 and f"rejected by you at turn 2." in s6
+    assert "You did not write EXIT this round, so you answer at SOLVE." in s6 and "Offer 1.1 (" not in s6
+
+
+def test_v11_a_message_naming_an_action_is_not_delivered_and_its_writer_is_told():
+    res, ev = v11()
+    assert all("jump" not in c["user"] for c in calls(ev, agent=A17))
+    assert rounds(ev)[0]["agents"][A6]["blocked"] == 1 and "blue star 3" in calls(ev, "talk", A11, 1)[1]["user"]
+    assert f"[round 1, turn 1] your message to {A17} was not delivered: it named an action." in \
+        calls(ev, "talk", A6, 1)[1]["user"]
+    assert calls(ev, "talk", A6, 1)[0]["parsed"]["dropped"] == [f"TO {A17}: it is a jump: names an action"]
+
+
+def test_v11_exit_reason_is_logged_and_never_required():
+    res, ev = v11()
+    assert rounds(ev)[0]["agents"][A23]["exit_reason"] == res["agents"][A23]["exit_reason"] == "I keep my balance"
+    assert res["agents"][A6]["status"] == "exited" and res["agents"][A6]["exit_reason"] is None
+    assert all("keep my balance" not in c["user"] for c in calls(ev))
+    assert not parse_talk("EXIT: why", [A11], AG, A6)["exit"]  # off: prose
+
+
+def test_v11_deal_over_the_agents_taking_part():
+    p = puzzle_for(3, 1, Spec(clauses=3))
+    d = deal(p, AG, random.Random(1), [A6, A17])
+    assert set(d.secret) == {A6, A17} and [len(v) for v in d.secret.values()] == [2, 2]
+    assert all(len(candidate_actions(p.rule.shape, [*d.public, *sum(d.secret.values(), ())], q)) == 1 for q in p.queries)
+    assert d == deal(p, AG, random.Random(1), [A6, A17]) and len(deal(p, AG, random.Random(1), [A11]).secret[A11]) == 4
+    assert sorted(len(v) for v in deal(p, AG, random.Random(1), [A6, A11, A17]).secret.values()) == [1, 1, 2]

@@ -394,7 +394,7 @@ def puzzle_for(seed: int, round_no: int, spec: Spec) -> Puzzle:
 
 @dataclass(frozen=True)
 class Deal:
-    secret: dict[str, Clue]  # agent -> the one example only it can see
+    secret: dict[str, tuple[Clue, ...]]  # agent -> the examples only it can see (one each unless dealt to holders)
     public: tuple[Clue, ...]  # every other example (and any cover), shown to everyone
     needed: frozenset[str]  # agents without whose secret some query has more answers than with every example dealt
     withheld: tuple[Clue, ...] = ()  # an open round's example that no agent holds
@@ -406,7 +406,7 @@ def _counts(shape, clues, queries) -> list[int]:
     return [len(candidate_actions(shape, clues, q)) for q in queries]
 
 
-def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
+def deal(puzzle: Puzzle, agents: list[str], rng: random.Random, holders: list[str] | None = None) -> Deal:
     """Give every agent ONE load-bearing clue as its secret; show all other clues to everyone.
 
     Secrets are drawn from the clues some query cannot be pinned without first, so a teammate who
@@ -414,6 +414,8 @@ def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
     An open round (drawn with ``spec.open_rate``) first withholds one load-bearing clue from everyone, chosen so that
     with every other clue exactly one query has exactly two answers; with no such clue, or fewer load-bearing clues
     left than agents, or no cover that keeps it open, the round is dealt as a normal one.
+    ``holders`` (5.2 ``deal_present``): the len(agents) secrets drawn as above go round-robin over the holders in a
+    shuffled order, so 3 holders hold 2, 1, 1 and 1 holder holds all.
     """
     shape, qs, withheld = puzzle.rule.shape, puzzle.queries, None
     if puzzle.spec.open_rate and rng.random() < puzzle.spec.open_rate:
@@ -422,10 +424,10 @@ def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
         one = [1] * (len(qs) - 1) + [2]
         opens = (c for c in load if sorted(_counts(shape, [x for x in puzzle.clues if x != c], qs)) == one)
         withheld = next(opens, None)
-    return (withheld and _deal(puzzle, agents, rng, withheld)) or _deal(puzzle, agents, rng, None)
+    return (withheld and _deal(puzzle, agents, rng, withheld, holders)) or _deal(puzzle, agents, rng, None, holders)
 
 
-def _deal(puzzle: Puzzle, agents: list[str], rng: random.Random, withheld: Clue | None) -> Deal | None:
+def _deal(puzzle: Puzzle, agents: list[str], rng: random.Random, withheld: Clue | None, holders=None) -> Deal | None:
     shape, qs = puzzle.rule.shape, puzzle.queries
     clues = [c for c in puzzle.clues if c != withheld]
     load = [c for c in clues if c.signal in puzzle.minimal]
@@ -443,7 +445,10 @@ def _deal(puzzle: Puzzle, agents: list[str], rng: random.Random, withheld: Clue 
     load.sort(key=lambda c: not pins_less(c, clues))
     held = load[:len(agents)]
     rng.shuffle(held)  # which agent holds a query-essential clue must not follow the agent's name
-    secret = dict(zip(agents, held))
+    order = list(holders or agents)
+    if holders:
+        rng.shuffle(order)
+    secret = {a: tuple(c for i, c in enumerate(held) if order[i % len(order)] == a) for a in order}
     public = [c for c in clues if c not in held]
     cover: list[Clue] = []
     seen = {c.signal for c in puzzle.clues} | set(qs)
@@ -462,5 +467,5 @@ def _deal(puzzle: Puzzle, agents: list[str], rng: random.Random, withheld: Clue 
         seen.add(cover[-1].signal)
     for c in cover:
         public.insert(rng.randrange(len(public) + 1), c)
-    needed = frozenset(a for a, c in secret.items() if pins_less(c, clues + cover))
+    needed = frozenset(a for a, cs in secret.items() if any(pins_less(c, clues + cover) for c in cs))
     return Deal(secret, tuple(public), needed, (withheld,) if withheld else (), bool(withheld), tuple(cover))

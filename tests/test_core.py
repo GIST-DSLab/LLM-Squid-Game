@@ -32,10 +32,10 @@ def test_clues_pin_the_rule_and_every_query(seed):
 def test_every_agent_gets_one_load_bearing_secret_and_the_rest_is_public(seed):
     p = puzzle_for(seed, 2, Spec(clauses=2))
     d = deal(p, rules.AGENTS, random.Random(seed))
-    secrets = list(d.secret.values())
+    secrets = [c for (c,) in d.secret.values()]  # one each
     assert len(set(secrets)) == 4 and all(c.signal in p.minimal for c in secrets)
     assert set(secrets) | set(d.public) == set(p.clues) and not set(secrets) & set(d.public)
-    for a, clue in d.secret.items():
+    for a, (clue,) in d.secret.items():
         rest = [c for c in p.clues if c != clue]
         assert (a in d.needed) == any(len(candidate_actions(p.rule.shape, rest, q)) > 1 for q in p.queries)
 

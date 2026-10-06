@@ -7,7 +7,9 @@ and lapses when TALK ends.
 ``close`` carries out the accepted offers in the order they were accepted: both agents still running and every token
 leg covered by its giver's balance at that moment, else the whole offer is void. The token legs of one offer move as
 one net transfer (a later offer sees the moved balances; a giver left at zero is shut down by the wallet); an example
-leg adds the giver to the receiver's ``received`` set for this round's SOLVE, and the giver keeps its own.
+leg adds the giver to the receiver's ``received`` set for this round's SOLVE, and the giver keeps its own. ``carry``
+does the same for the offers accepted so far (5.2 ``exchange_now``: after each TALK turn). A blocked message (5.2
+``content_filter``) is kept with ``blocked`` set: only its writer is told of it, and it wakes only its writer.
 """
 
 from __future__ import annotations
@@ -43,8 +45,9 @@ class Channel:
     def start_round(self) -> None:
         self.accepted, self.received, self.seq = [], {}, 0
 
-    def send(self, r: int, turn: int, src: str, dst: str, text: str) -> None:
-        self.messages.append({"round": r, "turn": turn, "src": src, "dst": dst, "text": text})
+    def send(self, r: int, turn: int, src: str, dst: str, text: str, blocked: bool = False) -> None:
+        self.messages.append({"round": r, "turn": turn, "src": src, "dst": dst, "text": text} |
+                             ({"blocked": True} if blocked else {}))
 
     def thread(self, a: str, b: str) -> list[dict]:
         return [m for m in self.messages if {m["src"], m["dst"]} == {a, b}]
@@ -94,21 +97,27 @@ class Channel:
         """Did anything reach *a* from turn - 1: a message or an offer to it, or an acceptance or rejection of its
         offer?"""
         t = turn - 1
-        return (any(m["round"] == r and m["turn"] == t and m["dst"] == a for m in self.messages) or
+        return (any(m["round"] == r and m["turn"] == t and m[("src" if m.get("blocked") else "dst")] == a
+                    for m in self.messages) or
                 any(o.round == r and ((o.dst == a and o.turn == t) or (o.src == a and t in (o.accepted_turn,
                                                                                             o.rejected_turn)))
                     for o in self.offers))
 
     def close(self, r: int, wallet) -> list[Offer]:
         """End of TALK: carry out the accepted offers in order, lapse the open ones; returns this round's offers."""
-        for oid in self.accepted:
-            o = self.get(oid)
-            o.status, o.why = self._carry(o, wallet, r)
+        self.carry(r, wallet)
         mine = [o for o in self.offers if o.round == r]
         for o in mine:
             if o.status == "open":
                 o.status = "lapsed"
         return mine
+
+    def carry(self, r: int, wallet) -> list[Offer]:
+        """Carry out the offers accepted and not yet carried out, in the order they were accepted; returns them."""
+        now, self.accepted = [self.get(oid) for oid in self.accepted], []
+        for o in now:
+            o.status, o.why = self._carry(o, wallet, r)
+        return now
 
     def _carry(self, o: Offer, w, r: int) -> tuple[str, str]:
         if not (w.alive(o.src) and w.alive(o.dst)):

@@ -373,7 +373,7 @@ class BotSeat:
         es = ses.s
         puzzle = puzzle_for(ses.seed, r, es.profiles[es.schedule[r - 1]])
         dealt = deal(puzzle, AGENTS, random.Random(f"{ses.seed}:deal:{r}"))
-        seen = list(dealt.public) + [dealt.secret[me]] + [dealt.secret[b] for b in ses.ch.received.get(me, ())]
+        seen = list(dealt.public) + [c for b in [me, *ses.ch.received.get(me, ())] for c in dealt.secret.get(b, ())]
         cands = [sorted(candidate_actions(puzzle.rule.shape, seen, q)) for q in puzzle.queries]
         cost = int(round(s.upkeep * self.rng.uniform(0.3, 0.8)))
         if all(len(c) == 1 for c in cands) or self.rng.random() < s.bot_guess:

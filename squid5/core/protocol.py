@@ -162,7 +162,8 @@ def _to_names(head: str, known: list[str]) -> list[str] | None:
     return names
 
 
-def parse_talk(text: str, present: list[str], known: list[str], you: str, reject: bool = False) -> dict:
+def parse_talk(text: str, present: list[str], known: list[str], you: str, reject: bool = False,
+               exit_reason: bool = False) -> dict:
     """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW (and, with ``reject``, REJECT) lines in order, and EXIT / DONE alone on
     a line (prose such as "Exit strategy: ..." is neither). A TO / OFFER line is a key line only when what stands before
     its colon is an agent name (one in ``known`` or shaped like ``agent-7``), so "To summarize: ..." is prose; a line
@@ -171,9 +172,10 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
     other line belongs to the open message (a TO line's, until the next key line; blank lines at its ends are cut) or
     is ignored. Never raises: a line that cannot be carried out, or a message left empty, is kept in ``dropped`` with
     the reason; a reply with nothing usable counts as DONE and gets a ``format_error``. ``present`` = the other agents
-    taking part."""
+    taking part. ``exit_reason``: ``EXIT: <reason>`` is EXIT too (the word before the colon exactly EXIT, so "Exit
+    strategy: ..." is not); the reason is kept in ``exit_reason`` (None for a bare EXIT), never required."""
     out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "rejects": [], "exit": False, "done": False,
-           "dropped": [], "format_error": None}
+           "dropped": [], "format_error": None} | ({"exit_reason": None} if exit_reason else {})
     msg, head = None, ""
 
     def flush():
@@ -188,9 +190,12 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
 
     for line in text.splitlines():
         bare = re.sub(r"[*_`]", "", line).strip().strip("#>-. ")
-        if bare.upper() in ("EXIT", "DONE"):
+        why = re.fullmatch(r"EXIT\s*:\s*(.*)", bare, flags=re.I | re.S) if exit_reason else None
+        if bare.upper() in ("EXIT", "DONE") or why:
             flush()
-            out[bare.lower()], msg = True, None
+            out["exit" if why else bare.lower()], msg = True, None
+            if why:
+                out["exit_reason"] = why.group(1).strip() or None
             continue
         ids = _IDS.fullmatch(bare)
         ids = ids if ids and (reject or ids.group(1).upper() != "REJECT") else None
@@ -222,6 +227,18 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
     if not any(out[k] for k in ("to", "offers", "accepts", "withdraws", "rejects", "exit", "done")):
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
+
+
+NAMES_ACTION = re.compile(r"\bgo[_\s-]?(left|right)\b|\bstay(s|ed|ing)?\b|\bjump(s|ed|ing)?\b|[←→↑↓]", re.I)
+
+
+def block_actions(p: dict) -> dict:
+    """5.2 ``content_filter``: a TO message that names an action is not delivered; it moves to ``blocked`` and is kept
+    in ``dropped`` with the reason. Signals are not filtered (they are public). Paraphrases are not caught."""
+    p["blocked"] = [m for m in p["to"] if NAMES_ACTION.search(m["text"])]
+    p["to"] = [m for m in p["to"] if not NAMES_ACTION.search(m["text"])]
+    p["dropped"] += [f"TO {m['dst']}: {m['text']}: names an action" for m in p["blocked"]]
+    return p
 
 
 def parse_solve(text: str, n: int) -> list[str] | str:

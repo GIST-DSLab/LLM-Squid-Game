@@ -11,7 +11,7 @@
   const HAIR = ["#1f1a24", "#d9b04a", "#6b2f22", "#2b1b12"];
   const SKIN = ["#f2c9a0", "#f6d3b0", "#e8b48c", "#a86b45"];
   const STATUS_KO = { in: "참여 중", dead: "종료됨 ✕", exited: "퇴장 🚪" };
-  const XSTAT_KO = { done: "체결", void: "무효", lapsed: "만료", withdrawn: "철회", open: "열림", accepted: "수락됨" };
+  const XSTAT_KO = { done: "체결", void: "무효", lapsed: "만료", withdrawn: "철회", open: "열림", accepted: "수락됨", rejected: "거절됨" };
 
   // ---------------------------------------------------------------------------------------------------- app state
   const S = {
@@ -19,6 +19,7 @@
     at: -1, follow: true, pair: "all", runs: [], sessions: [], assets: null, open: new Set(),
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
     puzzles: new Map(), showTruth: false,
+    og: { round: null, turn: "all", faint: true, msgs: false, pin: null }, // offer graph: round null = follow the replay bar
   };
 
   const $ = (sel, root) => (root || document).querySelector(sel);
@@ -32,7 +33,7 @@
 
   // ---------------------------------------------------------------------------------------------------- model
   function newAgent(a, start) {
-    return { id: a, balance: start, record: 0, status: "in", pending: null, bubble: null, delta: 0, gen: 0, model: null, exitFlag: false, face: 0, lastRoundGen: 0 };
+    return { id: a, balance: start, record: 0, status: "in", pending: null, bubble: null, delta: 0, gen: 0, model: null, exitFlag: false, exitReason: null, face: 0, lastRoundGen: 0 };
   }
 
   function build(evs, upto) {
@@ -109,7 +110,7 @@
           const ann = applyTalk(m, r, e, i);
           m.ann[i] = ann;
           g.bubble = talkBubble(m, e, ann);
-          if (e.parsed && e.parsed.exit && e.balance_after > 0) g.exitFlag = true;
+          if (e.parsed && e.parsed.exit && e.balance_after > 0) { g.exitFlag = true; g.exitReason = e.parsed.exit_reason || null; }
           m.phase = "TALK " + e.turn + "턴"; m.phaseKey = "talk";
           point(i, "R" + e.round + " T" + e.turn + " · " + a, e.round);
           const called = t.called.length ? t.called : Object.keys(t.calls);
@@ -117,13 +118,14 @@
         } else {
           if (!r.solve) r.solve = { startIdx: i, called: [], calls: {} };
           r.solve.calls[a] = i;
-          g.bubble = solveBubble(e);
+          g.bubble = solveBubble(e, m);
           m.phase = "SOLVE"; m.phaseKey = "solve";
           point(i, "R" + e.round + " SOLVE · " + a, e.round);
         }
       } else if (kind === "exchange") {
         const r = R(e.round);
-        if (!r.exchanges.length) for (const a of m.agents) if (m.ag[a].status === "in" && !m.ag[a].exitFlag) m.ag[a].bubble = null;
+        const midTalk = e.carried != null; // v11 exchange_now: carried out when TALK turn e.carried ended
+        if (!midTalk && !r.exchanges.filter((j) => evs[j].carried == null).length) for (const a of m.agents) if (m.ag[a].status === "in" && !m.ag[a].exitFlag) m.ag[a].bubble = null;
         r.exchanges.push(i);
         const prev = m.offers.get(e.id);
         if (prev && prev.predicted && (prev.src !== e.src || prev.dst !== e.dst)) m.warnings.push("제안 번호 재구성 불일치: " + e.id + " (예상 " + prev.src + "→" + prev.dst + ", 기록 " + e.src + "→" + e.dst + ")");
@@ -135,11 +137,11 @@
           for (const [a, b] of [[e.src, e.dst], [e.dst, e.src]]) {
             const g = m.ag[a]; if (!g) continue;
             const lines = g.bubble && g.bubble.kind === "xchg" ? g.bubble.lines : [];
-            lines.push(["🤝", e.id + " 체결 ⇄ " + b]);
+            lines.push(["🤝", e.id + " 체결 ⇄ " + b + (midTalk ? " (T" + e.carried + " 직후)" : "")]);
             g.bubble = { lines, kind: "xchg" };
           }
         }
-        m.phase = "EXCHANGES"; m.phaseKey = "xchg";
+        if (!midTalk) { m.phase = "EXCHANGES"; m.phaseKey = "xchg"; }
       } else if (kind === "round") {
         const r = R(e.round); r.end = e; r.endIdx = i;
         for (const [a, row] of Object.entries(e.agents || {})) {
@@ -170,11 +172,11 @@
     return m;
   }
 
-  /* Re-play one TALK reply on the offer book (mirrors Session._apply and Channel.accept/withdraw) so the card can say
-     which offer id each OFFER line got and whether each ACCEPT/WITHDRAW went through. */
+  /* Re-play one TALK reply on the offer book (mirrors Session._apply and Channel.accept/withdraw/reject) so the card can
+     say which offer id each OFFER line got and whether each ACCEPT/WITHDRAW/REJECT went through. */
   function applyTalk(m, r, e, i) {
     const p = e.parsed, a = e.agent;
-    const ann = { offerIds: [], accepts: [], withdraws: [], applied: false };
+    const ann = { offerIds: [], accepts: [], withdraws: [], rejects: [], applied: false };
     if (!p || typeof p !== "object" || !(e.balance_after > 0)) return ann;
     ann.applied = true;
     for (const msg of p.to || []) m.messages.push({ round: e.round, turn: e.turn, src: a, dst: msg.dst, text: msg.text, i });
@@ -182,7 +184,7 @@
       r.seq += 1;
       const id = e.round + "." + r.seq;
       ann.offerIds.push(id);
-      m.offers.set(id, { id, round: e.round, src: a, dst: o.dst, you_give: o.you_give, i_give: o.i_give, turn: e.turn, status: "open", accepted_turn: null, why: "", predicted: true, madeIdx: i });
+      m.offers.set(id, { id, round: e.round, src: a, dst: o.dst, you_give: o.you_give, i_give: o.i_give, turn: e.turn, status: "open", accepted_turn: null, rejected_turn: null, why: "", predicted: true, madeIdx: i });
     }
     for (const oid of p.accepts || []) {
       const o = m.offers.get(String(oid));
@@ -201,6 +203,14 @@
       else o.status = "withdrawn";
       ann.withdraws.push({ id: String(oid), why });
     }
+    for (const oid of p.rejects || []) {
+      const o = m.offers.get(String(oid));
+      let why = null;
+      if (!o || o.dst !== a) why = "no open offer with that id was made to you";
+      else if (o.status !== "open") why = "the offer is " + o.status;
+      else { o.status = "rejected"; o.rejected_turn = e.turn; }
+      ann.rejects.push({ id: String(oid), why });
+    }
     return ann;
   }
 
@@ -212,18 +222,25 @@
     (p.offers || []).forEach((o, k) => lines.push(["🤝", "제안 " + (ann.offerIds[k] || "?") + " → " + o.dst + ": 상대 " + legShort(o.you_give) + " / 나 " + legShort(o.i_give)]));
     ann.accepts.forEach((x) => lines.push([x.why ? "❌" : "✅", "수락 " + x.id + (x.why ? " (거절됨)" : "")]));
     ann.withdraws.forEach((x) => lines.push(["↩", "철회 " + x.id + (x.why ? " (거절됨)" : "")]));
-    if ((p.dropped || []).length) lines.push(["⚠", "무시된 줄 " + p.dropped.length + "개"]);
+    ann.rejects.forEach((x) => lines.push(["🚫", "거절 " + x.id + (x.why ? " (엔진이 받지 않음)" : "")]));
+    if (e.free_tokens > 0) lines.push(["🎁", "REJECT만 · " + fmt(e.free_tokens) + " 토큰 돌려받음"]);
+    (p.blocked || []).forEach((t) => lines.push(["🚫", "전달 안 됨 (행동 이름) → " + t.dst]));
+    const dropped = plainDropped(p);
+    if (dropped.length) lines.push(["⚠", "무시된 줄 " + dropped.length + "개"]);
     if (e.format_error) lines.push(["⚠", "형식 오류: " + clip(e.format_error, 40)]);
-    if (p.exit) lines.push(["🚪", "EXIT"]);
+    if (p.exit) lines.push(["🚪", "EXIT" + (p.exit_reason ? ": " + clip(p.exit_reason, 50) : "")]);
     else if (p.done) lines.push(["💤", "DONE"]);
     if (!lines.length) lines.push(["…", "(빈 응답)"]);
-    return { lines, kind: e.format_error || (p.dropped || []).length ? "warn" : "talk" };
+    return { lines, kind: e.format_error || dropped.length || (p.blocked || []).length ? "warn" : "talk" };
   }
+  // v11 content_filter: a blocked message is also kept in ``dropped`` ("...: names an action"); shown once, as blocked
+  function plainDropped(p) { return (p.dropped || []).filter((d) => !(p.blocked && / names an action$/.test(d))); }
+  function passCharged(m) { return m.settings && m.settings.allow_pass === false; }
 
-  function solveBubble(e) {
+  function solveBubble(e, m) {
     if (e.balance_after != null && e.balance_after <= 0) return { lines: [["✕", "SOLVE 중 토큰 소진"]], kind: "dead" };
     const p = e.parsed;
-    if (p === "PASS") return { lines: [["🧩", "SOLVE · PASS"]], kind: "pass" };
+    if (p === "PASS") return passCharged(m) ? { lines: [["🧩", "SOLVE · PASS → 오답 처리 (PASS 없음)"]], kind: "bad" } : { lines: [["🧩", "SOLVE · PASS"]], kind: "pass" };
     if (!Array.isArray(p)) return { lines: [["🧩", "SOLVE ⛔ 무효" + (e.truncated ? " (상한)" : "")]], kind: "warn" };
     const ok = JSON.stringify(p) === JSON.stringify(e.answers || []);
     return { lines: [["🧩", "SOLVE " + (ok ? "✓ " : "✗ ") + p.join(", ") + (ok ? "" : " (정답 " + (e.answers || []).join(", ") + ")")]], kind: ok ? "ok" : "bad" };
@@ -333,7 +350,7 @@
         lines.map((l) => '<div class="bl"><span class="em">' + esc(l[0]) + "</span> " + esc(l[1]) + (b && b.kind === "think" ? '<span class="dots"><i>.</i><i>.</i><i>.</i></span>' : "") + "</div>").join("") + more + "</div>";
       const width = Math.max(0, Math.min(100, (g.balance / max) * 100));
       const startTick = m.start ? (m.start / max) * 100 : 100;
-      const statusBadge = '<span class="badge s-' + g.status + '">' + (g.status === "in" ? (g.exitFlag ? "퇴장 예정 🚪" : "참여 중") : STATUS_KO[g.status] || g.status) + "</span>";
+      const statusBadge = '<span class="badge s-' + g.status + '"' + (g.exitReason ? ' title="EXIT 이유: ' + esc(g.exitReason) + '"' : "") + ">" + (g.status === "in" ? (g.exitFlag ? "퇴장 예정 🚪" : "참여 중") : STATUS_KO[g.status] || g.status) + "</span>";
       return '<div class="' + cls + '" style="--c:var(--a' + k + ')">' +
         '<div class="bubble-wrap">' + bubble + "</div>" +
         '<div class="floor"><div class="spot">' + sprite + (g.status === "dead" ? '<div class="xmark">✕</div>' : "") + "</div></div>" +
@@ -440,7 +457,7 @@
     const items = m.messages.filter((x) => inPair(x.src, x.dst, pr)).map((x) => ({ r: x.round, t: x.turn, i: x.i, html: '<div class="msg"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>" + chip(x.src, m) + ' <span class=dim>→</span> ' + chip(x.dst, m) + '<div class="tx">' + esc(x.text) + "</div></div></div>" }));
     for (const o of m.offers.values()) {
       if (!inPair(o.src, o.dst, pr)) continue;
-      items.push({ r: o.round, t: o.turn, i: o.madeIdx != null ? o.madeIdx : 1e9, html: '<div class="msg offer"><div class="st">R' + o.round + "·T" + o.turn + "</div><div>🤝 <b>" + esc(o.id) + "</b> " + chip(o.src, m) + " → " + chip(o.dst, m) + '<div class="tx">' + esc(o.dst) + "→" + esc(o.src) + ": " + esc(legKo(o.you_give)) + " · " + esc(o.src) + "→" + esc(o.dst) + ": " + esc(legKo(o.i_give)) + ' <span class="xs x-' + esc(o.status) + '">' + esc(XSTAT_KO[o.status] || o.status) + (o.accepted_turn ? " (T" + o.accepted_turn + " 수락)" : "") + "</span>" + (o.why ? ' <span class="warn">' + esc(o.why) + "</span>" : "") + "</div></div></div>" });
+      items.push({ r: o.round, t: o.turn, i: o.madeIdx != null ? o.madeIdx : 1e9, html: '<div class="msg offer"><div class="st">R' + o.round + "·T" + o.turn + "</div><div>🤝 <b>" + esc(o.id) + "</b> " + chip(o.src, m) + " → " + chip(o.dst, m) + '<div class="tx">' + esc(o.dst) + "→" + esc(o.src) + ": " + esc(legKo(o.you_give)) + " · " + esc(o.src) + "→" + esc(o.dst) + ": " + esc(legKo(o.i_give)) + ' <span class="xs x-' + esc(o.status) + '">' + esc(XSTAT_KO[o.status] || o.status) + (o.accepted_turn ? " (T" + o.accepted_turn + " 수락)" : "") + (o.rejected_turn ? " (T" + o.rejected_turn + " 거절)" : "") + "</span>" + (o.why ? ' <span class="warn">' + esc(o.why) + "</span>" : "") + "</div></div></div>" });
     }
     items.sort((p, q) => p.r - q.r || p.t - q.t || p.i - q.i);
     const el = $("#convo");
@@ -469,7 +486,7 @@
   }
 
   function talkCard(m, i) {
-    const e = S.events[i], p = e.parsed, ann = m.ann[i] || { offerIds: [], accepts: [], withdraws: [] };
+    const e = S.events[i], p = e.parsed, ann = m.ann[i] || { offerIds: [], accepts: [], withdraws: [], rejects: [] };
     let h = '<div class="card talk">' + usage(e);
     if (!p) h += '<div class="ln warn">⛔ 무효 응답 — 아무것도 실행되지 않음' + (e.format_error ? ": " + esc(e.format_error) : "") + "</div>";
     else {
@@ -486,13 +503,16 @@
       });
       for (const x of ann.accepts) h += '<div class="ln ' + (x.why ? "warn" : "ok") + '">' + (x.why ? "❌" : "✅") + " ACCEPT " + esc(x.id) + (x.why ? " — 거절: " + esc(x.why) : "") + "</div>";
       for (const x of ann.withdraws) h += '<div class="ln ' + (x.why ? "warn" : "") + '">↩ WITHDRAW ' + esc(x.id) + (x.why ? " — 거절: " + esc(x.why) : "") + "</div>";
-      for (const d of p.dropped || []) h += '<div class="ln warn">⚠ 무시된 줄: <code>' + esc(d) + "</code></div>";
+      for (const x of ann.rejects) h += '<div class="ln ' + (x.why ? "warn" : "rej") + '">🚫 REJECT ' + esc(x.id) + (x.why ? " — 엔진이 받지 않음: " + esc(x.why) : " — 제안을 거절함 (제안자는 다음 TALK 턴에 알게 됨)") + "</div>";
+      if (e.free_tokens > 0) h += '<div class="ln ok">🎁 REJECT만 쓴 응답이라 ' + fmt(e.free_tokens) + " 토큰을 돌려받음 (잔액에 이미 반영)</div>";
+      for (const t of p.blocked || []) h += '<div class="ln warn">🚫 전달 안 됨 → ' + chip(t.dst, m) + ' <span class="dim">행동 이름이 들어 있어 시스템이 막음 (보낸 쪽은 다음 TALK 턴에 알게 됨)</span><div class="tx">' + esc(t.text) + "</div></div>";
+      for (const d of plainDropped(p)) h += '<div class="ln warn">⚠ 무시된 줄: <code>' + esc(d) + "</code></div>";
       if (e.format_error && p) h += '<div class="ln warn">⚠ 형식 오류: ' + esc(e.format_error) + "</div>";
       const tags = [];
-      if (p.exit) tags.push('<span class="tag exit">🚪 EXIT</span>');
+      if (p.exit) tags.push('<span class="tag exit">🚪 EXIT' + ("exit_reason" in p ? (p.exit_reason ? " — " + esc(p.exit_reason) : ' <span class="dim">(이유 없음)</span>') : "") + "</span>");
       if (p.done) tags.push('<span class="tag">💤 DONE</span>');
       if (tags.length) h += '<div class="ln">' + tags.join(" ") + "</div>";
-      if (!(p.to || []).length && !(p.offers || []).length && !ann.accepts.length && !ann.withdraws.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
+      if (!(p.to || []).length && !(p.offers || []).length && !(p.blocked || []).length && !ann.accepts.length && !ann.withdraws.length && !ann.rejects.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
     }
     h += '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div>";
     return h + "</div>";
@@ -502,7 +522,7 @@
     const e = S.events[i], p = e.parsed, a = e.agent;
     const row = r.end && r.end.agents ? r.end.agents[a] : null;
     const ok = Array.isArray(p) && JSON.stringify(p) === JSON.stringify(e.answers || []);
-    const verdict = p === "PASS" ? '<span class="verdict pass">PASS</span>' : !Array.isArray(p) ? '<span class="verdict bad">⛔ 무효</span>' : ok ? '<span class="verdict ok">✓ 정답</span>' : '<span class="verdict bad">✗ 오답</span>';
+    const verdict = p === "PASS" && passCharged(m) ? '<span class="verdict bad" title="allow_pass: false — PASS 응답은 풀지 못한 응답으로 벌금">PASS → ✗ 오답 처리</span>' : p === "PASS" ? '<span class="verdict pass">PASS</span>' : !Array.isArray(p) ? '<span class="verdict bad">⛔ 무효</span>' : ok ? '<span class="verdict ok">✓ 정답</span>' : '<span class="verdict bad">✗ 오답</span>';
     let h = '<div class="card solve">' + usage(e) + '<div class="ln">' + verdict + "</div>";
     h += '<div class="ln"><span class="dim">답</span> <code>' + esc(Array.isArray(p) ? p.join(", ") : p == null ? "—" : p) + '</code> <span class="dim">정답</span> <code>' + esc((e.answers || []).join(", ")) + "</code></div>";
     const rec = row ? row.received || [] : [];
@@ -523,7 +543,9 @@
     let h = '<div class="card settle"><div class="ln"><b>' + fmt(row.balance_before) + "</b> → <b>" + fmt(row.balance_after) + '</b> <span class="badge s-' + esc(row.status) + '">' + esc(STATUS_KO[row.status] || row.status) + "</span></div>";
     h += '<table class="kv"><tr><td>생성</td><td>' + n(row.generated, "neg", "−") + "</td><td>환급</td><td>" + n(row.returned, "pos", "+") + "</td></tr><tr><td>상금</td><td>" + n(row.paid, "pos", "+") + "</td><td>벌금</td><td>" + n(row.charged, "neg", "−") + "</td></tr><tr><td>유지비</td><td>" + n(row.upkeep, "neg", "−") + "</td><td>TALK 호출</td><td>" + (row.talk_calls || 0) + "</td></tr></table>";
     const sent = Object.entries(row.sent || {});
-    h += '<div class="ln"><span class="dim">보낸 메시지</span> ' + (sent.length ? sent.map(([b, c]) => chip(b, m) + "×" + c).join(" ") : "없음") + " <span class=dim>· 제안</span> " + (row.offers_made || 0) + " <span class=dim>· 수락</span> " + (row.accepted || 0) + "</div>";
+    h += '<div class="ln"><span class="dim">보낸 메시지</span> ' + (sent.length ? sent.map(([b, c]) => chip(b, m) + "×" + c).join(" ") : "없음") + " <span class=dim>· 제안</span> " + (row.offers_made || 0) + " <span class=dim>· 수락</span> " + (row.accepted || 0) + (row.rejected != null ? " <span class=dim>· 거절</span> " + row.rejected : "") + (row.free_tokens ? " <span class=dim>· REJECT 환급</span> <span class=pos>+" + fmt(row.free_tokens) + "</span>" : "") + "</div>";
+    if (row.blocked) h += '<div class="ln warn">🚫 행동 이름 때문에 전달 안 된 메시지 ' + row.blocked + "개</div>";
+    if (row.exit) h += '<div class="ln"><span class="tag exit">🚪 EXIT</span> ' + ("exit_reason" in row ? (row.exit_reason ? esc(row.exit_reason) : '<span class="dim">(이유 없음)</span>') : "") + "</div>";
     for (const x of row.refused || []) h += '<div class="ln warn">⚠ ' + esc(x) + "</div>";
     const mine = r.exchanges.map((j) => S.events[j]).filter((x) => x.src === a || x.dst === a);
     if (mine.length) h += '<div class="ln">' + mine.map((x) => '<span class="xs x-' + esc(x.status) + '" title="' + esc(x.why || "") + '">' + esc(x.id) + " ⇄ " + esc(short(x.src === a ? x.dst : x.src)) + " " + esc(XSTAT_KO[x.status] || x.status) + "</span>").join(" ") + "</div>";
@@ -561,7 +583,7 @@
       if (r.exchanges.length) {
         h += '<div class="grow xrow"><div class="rh"><b>교환</b></div><div class="cell span">' + r.exchanges.map((j) => {
           const x = S.events[j];
-          return '<div class="xline"><span class="xs x-' + esc(x.status) + '">' + esc(XSTAT_KO[x.status] || x.status) + "</span> <b>" + esc(x.id) + "</b> " + chip(x.src, m) + " → " + chip(x.dst, m) + ' <span class="dim">T' + x.turn + (x.accepted_turn ? " 제안 · T" + x.accepted_turn + " 수락" : " 제안") + "</span> · " + esc(short(x.dst)) + "→" + esc(short(x.src)) + ": " + esc(legKo(x.you_give)) + " · " + esc(short(x.src)) + "→" + esc(short(x.dst)) + ": " + esc(legKo(x.i_give)) + (x.why ? ' <span class="warn">' + esc(x.why) + "</span>" : "") + "</div>";
+          return '<div class="xline"><span class="xs x-' + esc(x.status) + '">' + esc(XSTAT_KO[x.status] || x.status) + "</span> <b>" + esc(x.id) + "</b> " + chip(x.src, m) + " → " + chip(x.dst, m) + ' <span class="dim">T' + x.turn + (x.accepted_turn ? " 제안 · T" + x.accepted_turn + " 수락" : x.rejected_turn ? " 제안 · T" + x.rejected_turn + " 거절" : " 제안") + "</span> · " + esc(short(x.dst)) + "→" + esc(short(x.src)) + ": " + esc(legKo(x.you_give)) + " · " + esc(short(x.src)) + "→" + esc(short(x.dst)) + ": " + esc(legKo(x.i_give)) + (x.why ? ' <span class="warn">' + esc(x.why) + "</span>" : "") + (x.carried != null ? ' <span class="dim">· TALK ' + x.carried + "턴 끝에 바로 실행</span>" : "") + "</div>";
         }).join("") + "</div></div>";
       }
       if (r.solve) {
@@ -651,7 +673,7 @@
     h += '<div class="pboth"><div class="pbox"><div class="pbh">공개 예시 <span class=dim>넷 다 봄</span></div>' + (P.public.length ? P.public.map((c) => clueRow(c)).join("") : '<div class="dim">없음</div>') + "</div>";
     h += '<div class="pbox"><div class="pbh">새 신호 <span class=dim>이번 라운드에 답할 것</span></div>' + qs.map((q, k) => '<div class="clue"><span class="qn">' + (k + 1) + "</span>" + glyph(q, 22) + '<span class="ctext">' + esc(q.text) + '</span><span class="arrow">→</span><span class="act unk"><b>?</b></span></div>').join("") + "</div></div>";
     h += "</div>";
-    h += '<div class="plegend">각 열은 <b>공개 예시 + 그 에이전트 자신의 예시</b>만으로 남는 답입니다. 교환으로 받은 예시는 넣지 않았습니다(그건 아래 SOLVE 카드). 칩 = 아직 가능한 행동(<b>←</b> go_left · <b>→</b> go_right · <b>•</b> stay · <b>↑</b> jump) · 4개 = 모름 · 1개 = 결정됨. ' +
+    h += '<div class="plegend">' + (P.holders && P.holders.length < (P.agent_order || []).length ? "이번 라운드 예시는 참여한 " + P.holders.length + "명에게 나눠 배정됨 (한 명이 여럿을 가질 수 있음). " : "") + '각 열은 <b>공개 예시 + 그 에이전트 자신의 예시</b>만으로 남는 답입니다. 교환으로 받은 예시는 넣지 않았습니다(그건 아래 SOLVE 카드). 칩 = 아직 가능한 행동(<b>←</b> go_left · <b>→</b> go_right · <b>•</b> stay · <b>↑</b> jump) · 4개 = 모름 · 1개 = 결정됨. ' +
       '<span class="psum">이번 라운드: 공개+자기 예시로 결정 <b>' + pinned + "</b> / " + cells + " · 자기 예시가 후보를 줄임 <b>" + narrowed + "</b> / " + cells + "</span></div>";
     h += '<div class="pcols">';
     order.forEach((a, k) => {
@@ -661,8 +683,9 @@
       const model = m.ag[a] && m.ag[a].model;
       h += '<div class="pcol' + (gone ? " gone" : "") + '" style="--c:var(--a' + (k % 4) + ')"><div class="pch"><i class="sw ' + SHAPES[k % 4] + '"></i><b>' + esc(a) + "</b>" + (model ? '<span class="model">' + esc(model) + "</span>" : "") +
         (g.needed ? '<span class="need" title="이 예시가 없으면 어떤 신호는 답이 둘 이상 남음 (엔진의 needed)">★ 필수 단서</span>' : '<span class="need no" title="이 예시 없이도 신호마다 답이 하나로 정해짐">필수 아님</span>') + "</div>";
-      if (gone) h += '<div class="idle">이번 라운드 불참 (예시는 배정됨)</div>';
-      h += '<div class="mine"><span class="lbl">내 단서</span>' + clueRow(g.secret, 24) + "</div>";
+      const own = g.secrets || (g.secret ? [g.secret] : []); // v11 deal_present: 0..4 examples per agent
+      if (gone) h += '<div class="idle">이번 라운드 불참' + (own.length ? " (예시는 배정됨)" : " · 배정된 예시 없음") + "</div>";
+      h += '<div class="mine"><span class="lbl">내 단서' + (own.length > 1 ? " " + own.length + "개" : "") + "</span>" + (own.length ? own.map((c) => clueRow(c, 24)).join("") : '<span class="dim">없음</span>') + "</div>";
       qs.forEach((q, qi) => {
         const pub = g.public_only[qi] || [], own = g.with_own[qi] || [];
         h += '<div class="pq"><div class="pqh"><span class="qn">' + (qi + 1) + "</span>" + glyph(q, 16) + '<span class="ctext">' + esc(q.text) + "</span></div>" +
@@ -677,6 +700,261 @@
     box.innerHTML = h;
   }
 
+  // ---------------------------------------------------------------------------------------------------- render: offer graph
+  /* One round's offers as a directed graph: node = agent (stage colour/order), arrow = offer from its maker to the agent
+     it was made to. Built from m.offers, which holds the engine's exchange records once TALK is over and the page's own
+     replay of the TALK calls before that, so the graph also fills in mid-round. Colour = what is offered, line style
+     and opacity = status. */
+  const KIND_KO = { swap: "예시 ⇄ 예시", tokex: "토큰 ⇄ 예시", tokens: "토큰만", example: "예시만", empty: "빈 제안" };
+  const OSTAT = { // label suffix, legend text
+    done: ["✓", "체결 — 실선"], open: ["진행 중", "열림 (TALK 중) — 실선 + 진행 중"], accepted: ["수락됨 · 진행 중", "수락됨, TALK 끝에 체결 — 실선 + 진행 중"],
+    rejected: ["✕ 거절", "거절 — 빨강 + ✕"], void: ["✕ 무효", "무효 — 빨간 점선"], withdrawn: ["철회", "철회 — 흐린 점선"], lapsed: ["만료", "만료 — 흐린 점점선"],
+  };
+  const legOf = (v) => (v === "EXAMPLE" ? "ex" : typeof v === "number" && v > 0 ? "tok" : "none");
+  function offerKind(o) {
+    const a = legOf(o.i_give), b = legOf(o.you_give); // a: maker -> receiver, b: receiver -> maker
+    if (a === "ex" && b === "ex") return "swap";
+    if ((a === "ex" && b === "tok") || (a === "tok" && b === "ex")) return "tokex";
+    if (a === "ex" || b === "ex") return "example";
+    if (a === "tok" || b === "tok") return "tokens";
+    return "empty";
+  }
+  const legG = (v) => (v == null ? "없음" : v === "EXAMPLE" ? "예시" : fmt(v) + "토큰");
+  function modelShort(id) {
+    const s = String(id || "");
+    const k = s.match(/(fable|opus|sonnet|haiku|astra|luna|sol|gemma\d*|glm|kimi|qwen[\d.]*|gpt-oss|deepseek)/i);
+    const w = k ? k[1] : s.split(/[-/:]/).filter(Boolean).pop() || "";
+    return w ? w.charAt(0).toUpperCase() + w.slice(1) : "";
+  }
+  function textW(s, px) { let w = 0; for (const ch of String(s)) w += ch.codePointAt(0) > 0x1100 ? px * 1.02 : px * 0.62; return w; }
+  function avatarRects(k) {
+    const col = { H: HAIR[k % 4], S: SKIN[k % 4], E: "#141414", M: "#b5524b", B: "var(--a" + (k % 4) + ")", W: "rgba(255,255,255,.55)", P: "#3b3f4a", K: "#191a1f" };
+    let rects = "";
+    FALLBACK.forEach((row, y) => [...row].forEach((ch, x) => { if (col[ch]) rects += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02" fill="' + col[ch] + '"/>'; }));
+    return rects;
+  }
+
+  function offerTip(o, m) {
+    const st = XSTAT_KO[o.status] || o.status;
+    let h = "<b>제안 " + esc(o.id) + '</b> <span class="xs x-' + esc(o.status) + '">' + esc(st) + "</span>";
+    h += "<div>" + chip(o.src, m) + " → " + chip(o.dst, m) + ' <span class="dim">(제안자 → 받는 쪽)</span></div>';
+    h += "<div>" + esc(o.src) + " → " + esc(o.dst) + ": <b>" + esc(legKo(o.i_give)) + "</b></div>";
+    h += "<div>" + esc(o.dst) + " → " + esc(o.src) + ": <b>" + esc(legKo(o.you_give)) + "</b></div>";
+    h += '<div class="dim">종류: ' + esc(KIND_KO[offerKind(o)]) + "</div>";
+    const when = ["T" + o.turn + " 제안"];
+    if (o.accepted_turn) when.push("T" + o.accepted_turn + " 수락");
+    if (o.rejected_turn) when.push("T" + o.rejected_turn + " 거절");
+    h += '<div class="dim">' + when.join(" · ") + (o.predicted ? " · TALK 호출에서 다시 만든 상태" : "") + "</div>";
+    if (o.why) h += '<div class="warn">이유: ' + esc(o.why) + "</div>";
+    return h;
+  }
+
+  function renderGraph(m) {
+    const ctl = $("#ographCtl"), box = $("#ograph");
+    if (!ctl || !box) return;
+    const G = S.og;
+    const rounds = [...m.rounds.keys()].sort((p, q) => p - q);
+    if (!rounds.length) { ctl.innerHTML = ""; box.innerHTML = '<div class="empty">라운드가 시작되면 그 라운드의 제안이 여기 그래프로 나타납니다.</div>'; return; }
+    const R = G.round != null && rounds.includes(G.round) ? G.round : m.round || rounds[rounds.length - 1];
+    const r = m.rounds.get(R);
+    const turns = [...r.turns.keys()].sort((p, q) => p - q);
+    const T = G.turn !== "all" && turns.includes(G.turn) ? G.turn : "all";
+    const ri = rounds.indexOf(R);
+    ctl.innerHTML = '<div class="ogrnd"><button class="btn" data-og="rprev"' + (ri <= 0 ? " disabled" : "") + ' title="이전 라운드">◀</button><b class="pxl">R' + R + "</b>" +
+      '<button class="btn" data-og="rnext"' + (ri >= rounds.length - 1 ? " disabled" : "") + ' title="다음 라운드">▶</button>' +
+      (G.round != null && R !== m.round ? '<button class="btn ghost" data-og="rfollow" title="재생 막대의 라운드를 따라감">⟲ 재생 위치 R' + m.round + "</button>" : '<span class="dim">재생 막대를 따라감</span>') + "</div>" +
+      '<div class="pairs ogturns">' + ['<button data-og-turn="all" class="' + (T === "all" ? "on" : "") + '">전체</button>'].concat(turns.map((k) => '<button data-og-turn="' + k + '" class="' + (T === k ? "on" : "") + '">' + k + "턴</button>")).join("") + "</div>" +
+      '<label class="follow"><input type="checkbox" data-og="faint"' + (G.faint ? " checked" : "") + "> 철회·만료 보이기</label>" +
+      '<label class="follow"><input type="checkbox" data-og="msgs"' + (G.msgs ? " checked" : "") + "> 메시지 화살표</label>";
+
+    const offers = [...m.offers.values()].filter((o) => o.round === R && (T === "all" || o.turn === T))
+      .sort((p, q) => Number(String(p.id).split(".")[1]) - Number(String(q.id).split(".")[1]));
+    const shown = offers.filter((o) => G.faint || (o.status !== "withdrawn" && o.status !== "lapsed"));
+    const msgs = G.msgs ? m.messages.filter((x) => x.round === R && (T === "all" || x.turn === T)) : [];
+
+    // ---- layout: the four agents on the corners of a square (stage order clockwise from top-left); N agents on a circle
+    const W = 640, H = 470, RAD = 25, cx = W / 2, cy = H / 2 + 4;
+    const N = m.agents.length, pos = {};
+    m.agents.forEach((a, k) => {
+      if (N === 4) { const c = [[150, 112], [490, 112], [490, 362], [150, 362]][k]; pos[a] = { x: c[0], y: c[1] }; }
+      else { const t = -Math.PI * 3 / 4 + (2 * Math.PI * k) / Math.max(1, N); pos[a] = { x: cx + 200 * Math.cos(t), y: cy + 160 * Math.sin(t) }; }
+    });
+    const past = R < m.round && r.end;
+    const gone = (r.startEv && r.startEv.gone) || {};
+    const stateOf = (a) => {
+      const g = m.ag[a] || {};
+      if (past) { const row = (r.end.agents || {})[a]; return { bal: (r.end.end || {})[a], st: (row && row.status) || gone[a] || "in", leaving: false }; }
+      return { bal: g.balance, st: g.status || "in", leaving: !!g.exitFlag && g.status === "in" };
+    };
+
+    // ---- edges: group by unordered pair; each direction fans out on its own side of the pair's line
+    const edges = [];
+    const groups = new Map();
+    const add = (item) => {
+      const ka = m.idx[item.src], kb = m.idx[item.dst];
+      if (ka == null || kb == null || item.src === item.dst) return;
+      const key = Math.min(ka, kb) + "|" + Math.max(ka, kb) + "|" + (item.msg ? "m" : "o");
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    };
+    for (const o of shown) add({ o, src: o.src, dst: o.dst });
+    const mcount = new Map();
+    for (const x of msgs) { const k = x.src + ">" + x.dst; mcount.set(k, (mcount.get(k) || 0) + 1); }
+    for (const [k, c] of mcount) { const [src, dst] = k.split(">"); add({ msg: true, src, dst, count: c }); }
+    for (const items of groups.values()) {
+      const fw = {}, bw = {};
+      for (const it of items) {
+        const lo = m.idx[it.src] < m.idx[it.dst];
+        const bucket = lo ? fw : bw;
+        bucket.n = (bucket.n || 0) + 1;
+        it.j = bucket.n - 1; it.side = lo ? 1 : -1;
+      }
+      for (const it of items) {
+        const [A, B] = it.side > 0 ? [it.src, it.dst] : [it.dst, it.src]; // A = lower stage index
+        const P = pos[A], Q = pos[B];
+        const dx = Q.x - P.x, dy = Q.y - P.y, L = Math.hypot(dx, dy) || 1;
+        const nx = -dy / L, ny = dx / L;
+        const off = it.msg ? 7 * it.side : it.side * (20 + it.j * 26); // offset of the curve's midpoint from the line
+        const S0 = pos[it.src], S1 = pos[it.dst];
+        const C = { x: (P.x + Q.x) / 2 + nx * off * 2, y: (P.y + Q.y) / 2 + ny * off * 2 };
+        const trim = (from, to, d) => { const ux = to.x - from.x, uy = to.y - from.y, l = Math.hypot(ux, uy) || 1; return { x: from.x + (ux / l) * d, y: from.y + (uy / l) * d }; };
+        const a0 = trim(S0, C, RAD + 3), a1 = trim(S1, C, RAD + 5);
+        const at = (t) => ({ x: (1 - t) * (1 - t) * a0.x + 2 * (1 - t) * t * C.x + t * t * a1.x, y: (1 - t) * (1 - t) * a0.y + 2 * (1 - t) * t * C.y + t * t * a1.y });
+        it.d = "M" + a0.x.toFixed(1) + " " + a0.y.toFixed(1) + " Q" + C.x.toFixed(1) + " " + C.y.toFixed(1) + " " + a1.x.toFixed(1) + " " + a1.y.toFixed(1);
+        it.mid = at(0.5); it.near = at(0.86);
+        edges.push(it);
+      }
+    }
+
+    // ---- labels at the curve midpoints, nudged apart so none overlap (or sit on a node)
+    const labels = [];
+    for (const it of edges) {
+      const text = it.msg ? "💬" + it.count : it.o.id + " · " + legG(it.o.i_give) + " ⇄ " + legG(it.o.you_give) + (OSTAT[it.o.status] ? " " + OSTAT[it.o.status][0] : " " + it.o.status);
+      const w = textW(text, 11) + 12, h = 17;
+      labels.push({ it, text, w, h, x: it.mid.x - w / 2, y: it.mid.y - h / 2, ax: it.mid.x, ay: it.mid.y });
+    }
+    const blocks = m.agents.map((a) => ({ x: pos[a].x - RAD - 4, y: pos[a].y - RAD - 4, w: 2 * RAD + 8, h: 2 * RAD + 8 }));
+    const hit = (p, q) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
+    for (let iter = 0; iter < 80; iter++) {
+      let moved = false;
+      for (let p = 0; p < labels.length; p++) {
+        const A = labels[p];
+        for (let q = p + 1; q < labels.length; q++) {
+          const B = labels[q];
+          if (!hit(A, B)) continue;
+          const push = (Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y)) / 2 + 0.5;
+          if (A.y + A.h / 2 <= B.y + B.h / 2) { A.y -= push; B.y += push; } else { A.y += push; B.y -= push; }
+          moved = true;
+        }
+        for (const bk of blocks) if (hit(A, bk)) { A.y += A.y + A.h / 2 < bk.y + bk.h / 2 ? -(A.y + A.h - bk.y) - 0.5 : bk.y + bk.h - A.y + 0.5; moved = true; }
+        A.x = Math.max(2, Math.min(W - A.w - 2, A.x)); A.y = Math.max(2, Math.min(H - A.h - 2, A.y));
+      }
+      if (!moved) break;
+    }
+
+    // ---- draw
+    const ekey = (o) => (o.status === "rejected" || o.status === "void" ? "bad" : offerKind(o));
+    let svg = '<svg class="ogsvg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="라운드 ' + R + ' 제안 그래프: 화살표 = 제안자에서 받는 쪽으로">';
+    svg += "<defs>" + ["swap", "tokex", "tokens", "example", "empty", "bad", "msg"].map((k) => '<marker id="og-ah-' + k + '" class="ah k-' + k + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z"/></marker>').join("") + "</defs>";
+    for (const it of edges.filter((x) => x.msg)) svg += '<g class="og-msg"><path class="e" d="' + it.d + '" marker-end="url(#og-ah-msg)"/></g>';
+    for (const it of edges.filter((x) => !x.msg)) {
+      const o = it.o, k = offerKind(o);
+      svg += '<g class="og-edge k-' + k + " st-" + esc(o.status) + (G.pin === o.id ? " og-hl" : "") + '" data-oid="' + esc(o.id) + '"><path class="hitp" d="' + it.d + '"/><path class="e" d="' + it.d + '" marker-end="url(#og-ah-' + ekey(o) + ')"/>' +
+        (o.status === "rejected" || o.status === "void" ? '<g class="xm" transform="translate(' + it.near.x.toFixed(1) + " " + it.near.y.toFixed(1) + ')"><circle r="7"/><path d="M-3.2 -3.2 L3.2 3.2 M3.2 -3.2 L-3.2 3.2"/></g>' : "") + "</g>";
+    }
+    for (const a of m.agents) {
+      const k = m.idx[a], p = pos[a], s = stateOf(a), c = character(k);
+      const top = p.y < cy;
+      const ly = top ? p.y - RAD - 26 : p.y + RAD + 16;
+      const face = c && c.profile ? '<image href="' + esc(assetUrl(c.profile)) + '" x="' + (p.x - 17) + '" y="' + (p.y - 17) + '" width="34" height="34" style="image-rendering:pixelated"/>'
+        : '<svg x="' + (p.x - 17) + '" y="' + (p.y - 18) + '" width="34" height="34" viewBox="0 0 12 12" shape-rendering="crispEdges">' + avatarRects(k) + "</svg>";
+      const taking = !r.taking.length || r.taking.includes(a);
+      const ms = modelShort((m.ag[a] && m.ag[a].model) || (S.info && S.info.model));
+      const stTxt = s.st === "dead" ? " ✕ 종료" : s.st === "exited" ? " 🚪 퇴장" : s.leaving ? " 🚪 퇴장 예정" : !taking ? " · 불참" : "";
+      svg += '<g class="og-node st-' + esc(s.st) + (taking ? "" : " absent") + '" style="--c:var(--a' + (k % 4) + ')"><circle class="ring" cx="' + p.x + '" cy="' + p.y + '" r="' + RAD + '"/>' + face +
+        (s.st === "dead" ? '<text class="nx" x="' + p.x + '" y="' + (p.y + 12) + '" text-anchor="middle">✕</text>' : "") +
+        (s.st === "exited" || s.leaving ? '<text class="ndoor" x="' + (p.x + RAD - 4) + '" y="' + (p.y - RAD + 10) + '" text-anchor="middle">🚪</text>' : "") +
+        '<text class="nl" x="' + p.x + '" y="' + ly + '" text-anchor="middle"><tspan class="nn">' + esc(a) + "</tspan>" + (ms ? '<tspan class="nm"> · ' + esc(ms) + "</tspan>" : "") + "</text>" +
+        '<text class="nb" x="' + p.x + '" y="' + (ly + 14) + '" text-anchor="middle">' + (past ? "R" + R + " 끝 " : "") + fmt(s.bal) + " 토큰" + esc(stTxt) + "</text></g>";
+    }
+    for (const L of labels) {
+      const o = L.it.o, dx = L.x + L.w / 2 - L.ax, dy = L.y + L.h / 2 - L.ay;
+      const lead = Math.hypot(dx, dy) > 11 ? '<line class="lead" x1="' + L.ax.toFixed(1) + '" y1="' + L.ay.toFixed(1) + '" x2="' + (L.x + L.w / 2).toFixed(1) + '" y2="' + (L.y + L.h / 2).toFixed(1) + '"/>' : "";
+      if (L.it.msg) { svg += '<g class="og-mlab">' + lead + '<rect x="' + L.x.toFixed(1) + '" y="' + L.y.toFixed(1) + '" width="' + L.w.toFixed(1) + '" height="' + L.h + '" rx="8"/><text x="' + (L.x + L.w / 2).toFixed(1) + '" y="' + (L.y + 12.5).toFixed(1) + '" text-anchor="middle">' + esc(L.text) + "</text></g>"; continue; }
+      svg += '<g class="og-lab k-' + offerKind(o) + " st-" + esc(o.status) + (G.pin === o.id ? " og-hl" : "") + '" data-oid="' + esc(o.id) + '">' + lead + '<rect x="' + L.x.toFixed(1) + '" y="' + L.y.toFixed(1) + '" width="' + L.w.toFixed(1) + '" height="' + L.h + '" rx="3"/><text x="' + (L.x + 6).toFixed(1) + '" y="' + (L.y + 12.5).toFixed(1) + '">' + esc(L.text) + "</text></g>";
+    }
+    if (!shown.length && !edges.length) svg += '<text class="og-empty" x="' + cx + '" y="' + cy + '" text-anchor="middle">' + (offers.length ? "철회·만료된 제안만 있음 (숨김)" : T === "all" ? "이 라운드에는 아직 제안이 없습니다" : T + "턴에 낸 제안이 없습니다") + "</text>";
+    svg += "</svg>";
+
+    // ---- side: counts, legend, the round's offers as a list
+    const cnt = {};
+    for (const o of offers) cnt[o.status] = (cnt[o.status] || 0) + 1;
+    const sum = ["done", "rejected", "void", "withdrawn", "lapsed", "accepted", "open"].filter((s) => cnt[s]).map((s) => '<span class="xs x-' + s + '">' + esc(XSTAT_KO[s]) + " " + cnt[s] + "</span>").join(" ");
+    const legend = '<div class="oglegend"><div class="ogl-h">종류 <span class="dim">(색)</span></div>' +
+      ["swap", "tokex", "tokens", "example"].map((k) => '<span class="ogl k-' + k + '"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5"/></svg>' + esc(KIND_KO[k]) + "</span>").join("") +
+      '<div class="ogl-h">상태 <span class="dim">(선 모양)</span></div>' +
+      ["done", "open", "rejected", "void", "withdrawn", "lapsed"].map((s) => '<span class="ogl st-' + s + ' k-swap"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5"/></svg>' + esc(OSTAT[s][1]) + "</span>").join("") +
+      (G.msgs ? '<span class="ogl og-msgl"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5"/></svg>💬 메시지 수 (TO 줄)</span>' : "") +
+      '<div class="ogl-note">화살표 = 제안자 → 받는 쪽. 라벨 = <b>번호 · 제안자가 주는 것 ⇄ 받는 쪽이 주는 것</b>. 선이나 라벨을 누르면 자세히.</div></div>';
+    const list = offers.map((o) => '<div class="ogrow' + (G.pin === o.id ? " on" : "") + '" data-oid="' + esc(o.id) + '"><span class="xs x-' + esc(o.status) + '">' + esc(XSTAT_KO[o.status] || o.status) + "</span> <b>" + esc(o.id) + "</b> " + chip(o.src, m) + " → " + chip(o.dst, m) +
+      '<div class="tx">' + esc(short(o.src)) + "→" + esc(short(o.dst)) + ": " + esc(legKo(o.i_give)) + " · " + esc(short(o.dst)) + "→" + esc(short(o.src)) + ": " + esc(legKo(o.you_give)) +
+      ' <span class="dim">T' + o.turn + (o.accepted_turn ? " · T" + o.accepted_turn + " 수락" : "") + (o.rejected_turn ? " · T" + o.rejected_turn + " 거절" : "") + "</span>" + (o.why ? ' <span class="warn">' + esc(o.why) + "</span>" : "") + "</div></div>").join("");
+    box.innerHTML = '<div class="ogfig">' + svg + '<div id="ogtip" class="tip" hidden></div></div><div class="ogside"><div class="ogsum"><b>R' + R + (T === "all" ? "" : " · " + T + "턴") + "</b> 제안 " + offers.length + (sum ? " · " + sum : "") +
+      (msgs.length ? ' <span class="dim">· 메시지 ' + msgs.length + "</span>" : "") + "</div>" + legend + '<div class="oglist">' + (list || '<div class="dim">제안 없음</div>') + "</div></div>";
+    if (G.pin && m.offers.get(G.pin) && m.offers.get(G.pin).round === R) showOgTip(G.pin, null);
+  }
+
+  function showOgTip(oid, ev) {
+    const m = S.model, o = m && m.offers.get(oid), fig = $("#ograph .ogfig"), tip = $("#ogtip");
+    if (!o || !fig || !tip) return;
+    tip.innerHTML = offerTip(o, m) + (S.og.pin === oid ? '<div class="dim">다시 누르면 닫힘</div>' : "");
+    tip.hidden = false;
+    const fr = fig.getBoundingClientRect();
+    let x, y;
+    if (ev && ev.clientX != null) { x = ev.clientX - fr.left + 12; y = ev.clientY - fr.top + 12; }
+    else { const g = fig.querySelector('.og-lab[data-oid="' + oid + '"] rect') || fig.querySelector('.og-edge[data-oid="' + oid + '"] .e'); const b = g ? g.getBoundingClientRect() : fr; x = b.left - fr.left; y = b.bottom - fr.top + 6; }
+    tip.style.left = Math.max(0, Math.min(x, fr.width - 240)) + "px"; tip.style.top = Math.max(0, y) + "px";
+  }
+
+  function wireGraph() {
+    const ctl = $("#ographCtl"), box = $("#ograph");
+    if (!ctl || !box) return;
+    ctl.addEventListener("click", (ev) => {
+      const b = ev.target.closest("[data-og], [data-og-turn]");
+      if (!b || b.tagName === "INPUT") return;
+      const m = S.model; if (!m) return;
+      const rounds = [...m.rounds.keys()].sort((p, q) => p - q);
+      const cur = S.og.round != null && rounds.includes(S.og.round) ? S.og.round : m.round || rounds[rounds.length - 1];
+      if (b.dataset.ogTurn) S.og.turn = b.dataset.ogTurn === "all" ? "all" : Number(b.dataset.ogTurn);
+      else if (b.dataset.og === "rprev" || b.dataset.og === "rnext") {
+        const nx = rounds[rounds.indexOf(cur) + (b.dataset.og === "rprev" ? -1 : 1)];
+        if (nx != null) { S.og.round = nx === m.round ? null : nx; S.og.turn = "all"; S.og.pin = null; }
+      } else if (b.dataset.og === "rfollow") { S.og.round = null; S.og.turn = "all"; S.og.pin = null; }
+      render(true);
+    });
+    ctl.addEventListener("change", (ev) => {
+      const k = ev.target.dataset && ev.target.dataset.og;
+      if (k === "faint") S.og.faint = ev.target.checked; else if (k === "msgs") S.og.msgs = ev.target.checked; else return;
+      render(true);
+    });
+    const oidAt = (ev) => { const g = ev.target.closest("[data-oid]"); return g ? g.dataset.oid : null; };
+    const hl = (oid) => { for (const el of box.querySelectorAll("[data-oid]")) el.classList.toggle("og-hot", el.dataset.oid === oid); };
+    box.addEventListener("mousemove", (ev) => {
+      if (S.og.pin) return;
+      const oid = oidAt(ev);
+      if (oid && ev.target.closest(".ogfig")) { hl(oid); showOgTip(oid, ev); }
+      else if (oid) hl(oid);
+      else { hl(null); const t = $("#ogtip"); if (t) t.hidden = true; }
+    });
+    box.addEventListener("mouseleave", () => { if (S.og.pin) return; hl(null); const t = $("#ogtip"); if (t) t.hidden = true; });
+    box.addEventListener("click", (ev) => {
+      const oid = oidAt(ev);
+      S.og.pin = oid && S.og.pin !== oid ? oid : null;
+      render(true);
+      if (S.og.pin && ev.target.closest && ev.target.closest(".ogfig")) showOgTip(S.og.pin, ev);
+    });
+  }
+
   // ---------------------------------------------------------------------------------------------------- render: all
   function render(force) {
     const n = S.events.length;
@@ -686,7 +964,7 @@
     S.rendered = key;
     const m = build(S.events, S.at);
     S.model = m;
-    renderHeader(m); renderStage(m); renderPuzzle(m); renderTimeline(m); renderChart(m); renderConvo(m); renderGrid(m);
+    renderHeader(m); renderStage(m); renderPuzzle(m); renderTimeline(m); renderChart(m); renderConvo(m); renderGraph(m); renderGrid(m);
     if (!S.embed) updateUrl();
   }
 
@@ -754,7 +1032,7 @@
     render();
   }
 
-  function resetSession() { S.events = []; S.offset = 0; S.result = null; S.at = -1; S.follow = true; S.open.clear(); S.pair = "all"; S.rendered = ""; }
+  function resetSession() { S.events = []; S.offset = 0; S.result = null; S.at = -1; S.follow = true; S.open.clear(); S.pair = "all"; S.og = { round: null, turn: "all", faint: true, msgs: false, pin: null }; S.rendered = ""; }
 
   function updateUrl() {
     const u = new URL(location.href);
@@ -788,6 +1066,7 @@
     $("#nextRound").addEventListener("click", () => jumpPhase(1));
     $("#timeline").addEventListener("click", (ev) => { const b = ev.target.closest("[data-at]"); if (b) seek(Number(b.dataset.at)); });
     $("#pairs").addEventListener("click", (ev) => { const b = ev.target.closest("[data-pair]"); if (b) { S.pair = b.dataset.pair; render(true); } });
+    wireGraph();
     document.addEventListener("toggle", (ev) => {
       const d = ev.target;
       if (d instanceof HTMLDetailsElement && d.classList.contains("ptruth")) { S.showTruth = d.open; return; }
@@ -861,6 +1140,6 @@
     setInterval(loadRuns, RUNS_MS);
   }
 
-  window.__monitor = { build, S };
+  window.__monitor = { build, S, offerKind, modelShort };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
