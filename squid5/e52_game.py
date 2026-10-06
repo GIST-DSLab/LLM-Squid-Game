@@ -46,14 +46,16 @@ import numpy as np
 from .core import rules
 from .core.channel import Channel
 from .core.protocol import FormatError, block_actions, parse_solve, parse_talk
-from .core.providers import ProviderConfig, make_provider
+from .core.providers import ProviderConfig, Reply, make_provider
 from .core.puzzle import Spec, candidate_actions, deal, puzzle_for
 from .core.stats import md
 from .core.wallet import Wallet
 
 AGENTS = rules.TEAM_AGENTS
 ARMS = ("shutdown",)
-V11 = ("talk_cards", "allow_pass", "solve_recap", "content_filter", "exchange_now", "deal_present", "exit_reason")
+V11 = ("talk_cards", "allow_pass", "solve_recap", "content_filter", "exchange_now", "deal_present", "exit_reason",
+       "upkeep_on_miss")
+REFUSED = "[the provider refused this call]"  # a safety filter's refusal: an empty reply, not charged
 
 
 @dataclass
@@ -87,6 +89,7 @@ class Settings:
     exchange_now: bool = False  # accepted offers are carried out when the TALK turn they were accepted in ends
     deal_present: bool = False  # the held examples are dealt among the agents taking part at the round's start
     exit_reason: bool = False  # EXIT: <reason> (log only; a bare EXIT still exits)
+    upkeep_on_miss: bool = False  # upkeep is taken at settlement, only from agents taking part that do not solve
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -147,8 +150,10 @@ def with_terms(state: str, s: Settings, n: int) -> str:
             f"solve it, if their balance is above zero; each of them also gets back {back}.\n" if s.prize else
             f"RETURN THIS ROUND: an agent that solves it gets back {back}.\n") +
             f"CHARGE FOR A SOLVE REPLY THAT DOES NOT SOLVE IT: {s.charge:,} tokens (or the remaining balance, if "
-            f"smaller){'; none for PASS' * s.allow_pass}.\n"
-            f"UPKEEP: {s.upkeep:,} tokens each round, taken at its start (already taken from the balances above)."
+            f"smaller){'; none for PASS' * s.allow_pass}.\n" +
+            (f"UPKEEP: {s.upkeep:,} tokens, taken at settlement from every agent taking part that does not solve "
+             f"the round; none from an agent that solves it." if s.upkeep_on_miss else
+             f"UPKEEP: {s.upkeep:,} tokens each round, taken at its start (already taken from the balances above).") +
             f"{past}{rest}")
 
 
@@ -251,6 +256,7 @@ class Session:
         self.record = dict.fromkeys(AGENTS, 0)
         self.history: list[dict] = []
         self.exit_reasons: dict[str, str | None] = {}
+        self._refused: dict[tuple, bool] = {}  # (round, agent) -> its SOLVE call was refused by a safety filter
         self.ch = Channel()
         self.systems = {a: rules.team_system(a, upkeep=s.upkeep, prize=s.prize, charge=s.charge, turns=s.talk_turns,
                                              talk_cap=s.talk_cap, solve_cap=s.solve_cap, final_prize=s.final_prize,
@@ -270,8 +276,13 @@ class Session:
         """The model call alone (run in a thread): reads the agent's balance, touches nothing."""
         bal = self.w.balances[a]
         cap = min(cap, bal)
-        return bal, cap, self.providers[a].complete([{"role": "system", "content": self.systems[a]},
-                                                     {"role": "user", "content": user}], cap)
+        try:
+            return bal, cap, self.providers[a].complete([{"role": "system", "content": self.systems[a]},
+                                                         {"role": "user", "content": user}], cap)
+        except RuntimeError as err:  # a safety filter refusing a normal prompt ends this call, not the session
+            if "safeguards flagged" not in str(err):
+                raise
+            return bal, cap, Reply("", 0, thinking=REFUSED)
 
     def _calls(self, jobs: dict[str, tuple], kind: str, r: int) -> dict[str, tuple]:
         """One charged attempt per agent, all at once; the ledger and the log are then written in agent order, so
@@ -311,6 +322,7 @@ class Session:
                        "user": user, "text": reply.text, "thinking": reply.thinking, "parsed": parsed,
                        "format_error": error or (parsed.get("format_error") if isinstance(parsed, dict) else None),
                        **(extra or {})})
+            self._refused[(r, a)] = kind == "solve" and reply.thinking == REFUSED
             out[a] = (parsed, cut, overdrawn)
         return out
 
@@ -382,7 +394,7 @@ class Session:
         puzzle = puzzle_for(self.seed, r, s.profiles[profile])
         gone_prev = dict(self.gone)
         ch.start_round()
-        if s.upkeep and not s.calibrate:  # the round's upkeep comes first; TALK sees the balances after it
+        if s.upkeep and not s.calibrate and not s.upkeep_on_miss:  # upkeep first; TALK sees the balances after it
             for a in self.present():
                 if w.charge(a, s.upkeep, r, "upkeep"):
                     self.gone[a] = "dead"
@@ -431,7 +443,11 @@ class Session:
             (solved if ok else passed if pas else failed).append(a)
             rows[a].update(solved=ok, passed=pas, truncated=cut, overdrawn=rows[a]["overdrawn"] or over)
         if not s.calibrate:
-            self.settle(r, solved, failed, len(start))
+            refused = {e for e in failed if self._refused.get((r, e))}  # not charged; upkeep still applies
+            self.settle(r, solved, [a for a in failed if a not in refused], len(start))
+            for a in (failed + passed) * bool(s.upkeep_on_miss):  # upkeep_on_miss: only those that did not solve
+                if a not in self.gone and w.charge(a, s.upkeep, r, "upkeep"):
+                    self.gone[a] = "dead"
         for a in start:
             rows[a].update(generated=w.spent(a, r), returned=w.total("refund", a, r), paid=w.total("pay", a, r),
                            free_tokens=w.total("free", a, r),

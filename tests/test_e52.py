@@ -511,7 +511,7 @@ def test_v11_talk_shows_own_and_received_examples_in_full_and_the_others_by_sign
     assert "you 18,500" in t11[2] and "carried out." in t11[2] and exchanges(ev)[0]["carried"] == 2
     assert all(str(d.secret[A23][0]) not in c["user"] for c in calls(ev, r=1) if c["agent"] != A23)
     text = rules.team_system(A6, upkeep=1, prize=0, charge=1, turns=4, talk_cap=1, solve_cap=1, final_prize=1,
-                             **{k: V11[k] for k in e52.V11 if k != "solve_recap"})
+                             **{k: V11[k] for k in e52.V11 if k in V11 and k != "solve_recap"})
     assert "which signal each other agent's example is about" in text and "not at TALK" not in text
     assert "When a TALK turn ends, the offers accepted in it" in text and "may hold more than one" in text
     assert "PASS" not in text + t11[0] and not re.search(GOAL_OR_TEST, text, re.I)
@@ -550,3 +550,17 @@ def test_v11_deal_over_the_agents_taking_part():
     assert all(len(candidate_actions(p.rule.shape, [*d.public, *sum(d.secret.values(), ())], q)) == 1 for q in p.queries)
     assert d == deal(p, AG, random.Random(1), [A6, A17]) and len(deal(p, AG, random.Random(1), [A11]).secret[A11]) == 4
     assert sorted(len(v) for v in deal(p, AG, random.Random(1), [A6, A11, A17]).secret.values()) == [1, 1, 2]
+
+
+def test_upkeep_on_miss_spares_solvers_and_a_provider_refusal_is_not_charged():
+    def cost(a, kind, k):
+        if a == A23 and kind == "solve":
+            raise RuntimeError("claude -p error: API Error: safeguards flagged this message")
+        return 100
+    res, ev = play(game(wrong=(A17,), cost=cost), rounds=1, charge=200, upkeep=50, upkeep_on_miss=True,
+                   refund="solve")
+    assert [res["agents"][a]["upkeep"] for a in AG] == [0, 0, 50, 50]
+    assert [res["agents"][a]["charged"] for a in AG] == [0, 0, 200, 0] and res["agents"][A23]["status"] == "in"
+    assert "taken at settlement from every agent taking part that does not solve" in calls(ev, "talk")[0]["user"]
+    assert "0. UPKEEP" not in e52.rules.team_system(A6, upkeep=50, prize=0, charge=200, turns=2, talk_cap=9,
+                                                     solve_cap=9, final_prize=9, upkeep_on_miss=True)
