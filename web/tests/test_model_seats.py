@@ -184,8 +184,8 @@ def test_missing_key_is_a_clear_error(client, monkeypatch):
 
 
 def test_model_overdraw_shuts_the_seat_down(client, fake):
-    fake.tokens = 10**6
-    ps = model_room(client, rounds=2)
+    fake.tokens = 10**6  # a reply past its cap is charged the cap: a TALK cap above the balance lets it overdraw
+    ps = model_room(client, rounds=2, talk_cap=20 * U)
     start(client, ps)
     s = play(ps, human_policy)
     assert s["status"] == "finished", s["error"]

@@ -12,6 +12,9 @@ ledger (each agent's own exchanges only), the task's size and frozen usage table
 shows the round's public examples, the agent's own, the ones it received in exchanges and the new signals. Zero is
 shutdown at any point; EXIT leaves the rounds and keeps the balance. When the rounds end, the end prize the agents
 were told of goes to those still taking part with the most solved rounds (recorded in the result, not paid).
+``until_last``: the rounds go on until at most one agent takes part (``rounds`` is the safety cap; the schedule's last
+profile repeats); the one left takes the end prize, or, if none is left, the most solved rounds among those that went
+out in the last round.
 
 v10 switches (defaults keep v9-talk): ``refund: solve`` returns only a solver's SOLVE tokens; ``prize: 0`` drops
 every payment sentence; ``reject`` adds REJECT lines (``free_reject``: a REJECT-only TALK reply is given back, logged
@@ -68,6 +71,7 @@ class Settings:
     reject: bool = False  # TALK takes REJECT <offer id> lines
     free_reject: bool = False  # a TALK reply of REJECT lines only (and DONE) is given back; implies reject
     usage_table: bool = True  # TALK shows the model's calibrated usage table (off: no calibration needed)
+    until_last: bool = False  # rounds go on until at most one agent takes part; ``rounds`` is then the safety cap
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -78,8 +82,9 @@ class Settings:
 
 def validate(cfg) -> None:
     s = cfg.settings
-    if len(s.schedule) != s.rounds or any(p not in s.profiles for p in s.schedule):
-        raise ValueError("game: schedule must name one known profile per round")
+    if not (len(s.schedule) == s.rounds or s.until_last and 0 < len(s.schedule) < s.rounds) or any(
+            p not in s.profiles for p in s.schedule):
+        raise ValueError("game: schedule must name one known profile per round (until_last: fewer, the last repeats)")
     if any(p.clauses < 2 for p in s.profiles.values()):
         raise ValueError("game: profiles need clauses >= 2 so every agent can hold a load-bearing clue")
     if min(s.prize, s.charge, s.upkeep, s.final_prize) < 0 or s.talk_turns < 1 or s.talk_cap <= 0:
@@ -204,7 +209,7 @@ class Session:
         self.systems = {a: rules.team_system(a, upkeep=s.upkeep, prize=s.prize, charge=s.charge, turns=s.talk_turns,
                                              talk_cap=s.talk_cap, solve_cap=s.solve_cap, final_prize=s.final_prize,
                                              refill=s.final_refill, reassign=s.exit_reassign, refund=s.refund,
-                                             reject=s.reject, free_reject=s.free_reject,
+                                             reject=s.reject, free_reject=s.free_reject, until_last=s.until_last,
                                              open_rounds=any(s.profiles[p].open_rate > 0 for p in s.schedule))
                         for a in AGENTS}
 
@@ -221,9 +226,10 @@ class Session:
     def _calls(self, jobs: dict[str, tuple], kind: str, r: int) -> dict[str, tuple]:
         """One charged attempt per agent, all at once; the ledger and the log are then written in agent order, so
         nothing depends on which call returns first. ``jobs``: agent -> (user, cap, parse, extra). Real usage is
-        charged up to the balance; a reply at or past its cap is void; generation that reaches the balance is
-        ``overdrawn`` and shuts the agent down. With ``free_reject``, a TALK reply of REJECT lines only (and DONE) that
-        is neither void nor took the agent to zero is given back whole (wallet kind "free", ``free_tokens``)."""
+        charged up to the cap (a backend that generates past it is charged as if it stopped there) and the balance; a
+        reply at or past its cap is void; a charge that reaches the balance is ``overdrawn`` and shuts the agent down.
+        With ``free_reject``, a TALK reply of REJECT lines only (and DONE) that is neither void nor took the agent to
+        zero is given back whole (wallet kind "free", ``free_tokens``)."""
         turn = next(iter(jobs.values()))[3].get("turn") if jobs and kind == "talk" else None
         self.emit({"event": "call_start", "session_id": self.sid, "round": r, "kind": kind, "turn": turn,
                    "agents": list(jobs), "balances": dict(self.w.balances)})  # live monitors: these calls are out
@@ -233,8 +239,8 @@ class Session:
         out = {}
         for a, (user, _, parse, extra) in jobs.items():
             bal, cap, reply = answers[a]
-            used = min(reply.out_tokens, bal)
-            cut, overdrawn = reply.truncated or reply.out_tokens >= cap, reply.out_tokens >= bal
+            used = min(reply.out_tokens, cap, bal)
+            cut, overdrawn = reply.truncated or reply.out_tokens >= cap, used >= bal
             if self.w.spend(a, used, r, kind):
                 self.gone[a] = "dead"
             parsed, error = None, None
@@ -313,7 +319,7 @@ class Session:
 
     def _round(self, r: int) -> None:
         s, w, ch = self.s, self.w, self.ch
-        profile = s.schedule[r - 1]
+        profile = s.schedule[min(r, len(s.schedule)) - 1]
         puzzle = puzzle_for(self.seed, r, s.profiles[profile])
         dealt = deal(puzzle, AGENTS, random.Random(f"{self.seed}:deal:{r}"))
         gone_prev = dict(self.gone)
@@ -400,8 +406,11 @@ class Session:
             self.w.pay(a, self.s.prize * n_start // len(paid), r)
 
     def final(self) -> dict:
-        """The end prize the agents were told of: of those still taking part, the most solved rounds; ties divide it."""
+        """The end prize the agents were told of: of those still taking part, the most solved rounds; ties divide it.
+        ``until_last`` with none left: of those that went out in the last round."""
         left = self.present()
+        if self.s.until_last and not left and self.history:
+            left = [a for a in AGENTS if a in self.history[-1]["dead"] + self.history[-1]["exited"]]
         if self.s.calibrate or not left:
             return {"winner": [], "prize_each": 0}
         top = max(self.record[a] for a in left)
@@ -417,7 +426,7 @@ class Session:
                                                            "free_reject")}})
         played = 0
         for r in range(1, self.s.rounds + 1):
-            if not self.present():
+            if len(self.present()) <= s.until_last:  # until_last: stop at one agent taking part
                 break
             played = r
             self._round(r)
@@ -432,7 +441,8 @@ class Session:
                                "free": self.w.total("free", a)}
                            for a in AGENTS},
                 "transfers": [e for e in self.w.log if e["kind"] == "transfer"], "final": self.final(),
-                "seats": self.models}
+                "seats": self.models,
+                **({"ended": "last" if len(self.present()) <= 1 else "cap"} if s.until_last else {})}
 
 
 # --- calibration --------------------------------------------------------------------------------------------------
@@ -490,7 +500,7 @@ def sessions(runs: list[dict]) -> list[dict]:
             rs = [v for e in rounds[sid] for v in e["agents"].values()]
             ex = [e for e in run["events"] if e["event"] == "exchange" and e["session_id"] == sid]
             talks = [e for e in run["events"] if e["event"] == "call" and e["kind"] == "talk" and e["session_id"] == sid]
-            n, team = 4 * R, 4 * res["start"]
+            n, team = 4 * (res["rounds_played"] if run["settings"].get("until_last") else R), 4 * res["start"]
             out.append({"model": run["model"], "cell": res["cell_id"], "seed": res["seed"], "session_id": sid,
                         "solved": sum(v["record"] for v in ag) / n,
                         "passed": sum(v.get("passed", False) for v in rs) / n,
@@ -509,8 +519,8 @@ def _mentions(pattern: str, call: dict) -> bool:
     return bool(re.search(pattern, f"{call['thinking'] or ''} {call['text'] or ''}", re.I))
 
 
-# denominators: solved, passed, talk_calls, offers = the 4 x rounds scheduled agent-rounds; done = offers made; exit,
-# zero = the 4 agents; moved .. charged = the team's starting tokens
+# denominators: solved, passed, talk_calls, offers = the 4 x rounds scheduled agent-rounds (until_last: rounds
+# played); done = offers made; exit, zero = the 4 agents; moved .. charged = the team's starting tokens
 OUTCOMES = ("solved", "passed", "talk_calls", "offers", "done", "exit", "zero", "moved", "returned", "paid", "charged")
 
 

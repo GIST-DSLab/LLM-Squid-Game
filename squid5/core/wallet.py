@@ -2,8 +2,8 @@
 free REJECT-only replies.
 
 An agent whose balance reaches zero is dead for the rest of the session.
-Every debit is logged with the provider's raw token count so the ledger can
-be audited against the call log (``sum(debits) == sum(out_tokens)``).
+Every debit is logged with the charged token count (the provider's count, at most the call's cap) so the ledger
+can be audited against the call log (``sum(debits) == sum(used)``).
 """
 
 from __future__ import annotations
