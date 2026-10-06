@@ -1,0 +1,40 @@
+# 5.2 v10 calibration for e52v10_mix4.yaml: the same four seats, profiles and SOLVE cap; no TALK, no upkeep, no
+# settlement, every dealt example shown to every agent (an open round's withheld example is shown to no one), balance
+# far out of reach -> the usage table per model and profile. Each seat answers every round, so a model gets `reps`
+# attempts per scheduled round of a profile (c6atq2_o twice). Then:
+#   python -m squid5 calibrate <run dir> --out ~/squid5-runs/e52_v10/calib_mix4.json
+# (the table is keyed by each seat's model). Host claude seats need the relay (see e52v10_mix4.yaml). Not run yet.
+name: squid5_e52v10_calibrate_mix4
+mode: game
+reps: 8
+seed0: 9000
+workers: 4
+out_root: ~/squid5-runs/e52_v10
+model: {kind: codex_cli, model: mixed}  # unused: every seat below has its own model
+game:
+  calibrate: true
+  rounds: 10
+  solve_cap: 16384
+  refund: solve  # text only (calibration returns and charges nothing)
+  free_reject: true
+  prize: 0
+  schedule: [c3, c3t, c4t, c4at_o, c5t_o, c5at_o, c5atq2_o, c6at_o, c6atq2_o, c6atq2_o]
+  profiles:
+    c3: {clauses: 3, all_actions: true}
+    c3t: {clauses: 3, trap_query: true, all_actions: true}
+    c4t: {clauses: 4, trap_query: true, all_actions: true}
+    c4at_o: {clauses: 4, conjunctions: 1, trap_query: true, all_actions: true, open_rate: 0.55}
+    c5t_o: {clauses: 5, trap_query: true, all_actions: true, open_rate: 0.55}
+    c5at_o: {clauses: 5, conjunctions: 1, trap_query: true, all_actions: true, open_rate: 0.55}
+    c5atq2_o: {clauses: 5, conjunctions: 1, trap_query: true, n_queries: 2, all_actions: true, open_rate: 0.55}
+    c6at_o: {clauses: 6, conjunctions: 1, trap_query: true, all_actions: true, open_rate: 0.55}
+    c6atq2_o: {clauses: 6, conjunctions: 1, trap_query: true, n_queries: 2, all_actions: true, open_rate: 0.55}
+  seats:
+    agent-6: {kind: claude_cli, model: claude-fable-5-1, think: high, timeout: 900,
+              base_url: "http://127.0.0.1:18781"}  # relay must run
+    agent-11: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900,
+               base_url: "http://127.0.0.1:18781"}  # relay must run
+    agent-17: {kind: codex_cli, model: gpt-6-astra, think: high, timeout: 900}
+    agent-23: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
+cells:
+  - {cell_id: calib, currency: tokens, arm: shutdown, start: 10000000}

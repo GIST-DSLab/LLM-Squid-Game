@@ -8,6 +8,7 @@ import re
 import threading
 import time
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
@@ -15,7 +16,7 @@ from squid5 import e52_game as e52
 from squid5.core import rules
 from squid5.core.config import Cell
 from squid5.core.providers import Reply
-from squid5.core.puzzle import ACTIONS, Spec, deal, puzzle_for
+from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, deal, puzzle_for
 
 from conftest import me, stub
 
@@ -361,3 +362,81 @@ def test_live_events_open_the_session_each_round_and_each_batch_of_calls():
                                                                                          (1, "solve", None, 4)]
     first_call = next(i for i, e in enumerate(ev) if e["event"] == "call")
     assert kinds.index("call_start") < first_call
+
+
+# --- v10: REJECT, free refusals, SOLVE-only refund, no prize, every action shown, open rounds ---------------------
+
+V10 = dict(refund="solve", free_reject=True, prize=0)
+
+
+def test_a_rejection_reaches_the_maker_who_is_called_again_and_a_reject_only_reply_is_free():
+    offers = f"OFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS\nOFFER {A17}: YOU GIVE YOUR EXAMPLE; I GIVE NOTHING"
+    res, ev = play(game(script({(A6, 1, 1): offers + "\nDONE", (A11, 1, 2): "REJECT 1.1\nDONE",
+                                (A17, 1, 2): f"REJECT 1.2\nTO {A6}: no\nDONE"})), rounds=1, **V10)
+    assert [(e["id"], e["status"], e["rejected_turn"]) for e in exchanges(ev)] == [("1.1", "rejected", 2),
+                                                                                  ("1.2", "rejected", 2)]
+    t6 = calls(ev, "talk", A6)
+    assert [c["turn"] for c in t6] == [1, 3] and f"rejected by {A11} at turn 2" in t6[1]["user"]
+    assert "REJECT <offer id>\n" in t6[0]["user"] and "REJECT 1.1 turns it down" in calls(ev, "talk", A11)[1]["user"]
+    assert [c["free_tokens"] for c in calls(ev, "talk", A11)] == [0, 100]  # turn 1 DONE is charged, REJECT-only not
+    assert [c["free_tokens"] for c in calls(ev, "talk", A17)] == [0, 0]  # REJECT with a TO line is charged
+    row = rounds(ev)[0]["agents"]
+    assert row[A11]["free_tokens"] == 100 and row[A11]["rejected"] == 1 and row[A17]["free_tokens"] == 0
+    v = res["agents"]
+    assert v[A11]["final"] - v[A17]["final"] == 100 and v[A11]["free"] == 100
+    assert sum(x["final"] for x in v.values()) == 4 * 5000 - sum(x["spent"] - x["returned"] - x["free"] for x in v.values())
+    assert sum(x["spent"] for x in v.values()) == sum(c["used"] for c in calls(ev))
+
+
+def test_a_solved_round_returns_only_solve_tokens_with_refund_solve():
+    res, ev = play(game(), rounds=1, refund="solve")
+    assert {a: v["final"] for a, v in res["agents"].items()} == dict.fromkeys(AG, 4900)  # TALK 100 kept, SOLVE back
+    res, _ = play(game(), rounds=1)
+    assert res["agents"][A6]["final"] == 5000
+
+
+def test_v10_text_without_payments_names_the_switches_and_no_goal_words():
+    text = rules.team_system(A6, upkeep=1000, prize=0, charge=3000, turns=4, talk_cap=4096, solve_cap=16384,
+                             final_prize=100_000, refund="solve", reject=True, free_reject=True, open_rounds=True)
+    assert "SOLVED ROUNDS: If an agent's SOLVE reply solves the round, every token it generated at SOLVE in that round " \
+           "is returned to its balance. Tokens generated at TALK are not returned.\n" in text
+    assert "Apart from returned tokens and exchanges, nothing" in text and "returns, then charges.\n" in text
+    assert "REJECT <offer id> turns down an offer made to you; the agent that made it is told at its next TALK turn. " \
+           "A TALK reply whose only lines are REJECT lines (and DONE) is not taken from the balance." in text
+    assert "offer, acceptance or rejection since" in text and rules.OPEN_GUARANTEE in text and rules.GUARANTEE not in text
+    res, ev = play(game(), rounds=1, **V10)
+    t = calls(ev, "talk", A6)[0]["user"]
+    assert "RETURN THIS ROUND: an agent that solves it gets back every token it generated at SOLVE this round" in t
+    assert "a solved round returns the SOLVE tokens only" in t
+    assert not re.search(r"pay|paid", text + t, re.I) and not re.search(GOAL_OR_TEST, text + t, re.I)
+
+
+def test_all_actions_rules_use_four_actions_and_public_shows_all_four():
+    for seed in range(4):
+        p = puzzle_for(seed, 1, Spec(clauses=3, trap_query=True, all_actions=True))
+        d = deal(p, AG, random.Random(seed))
+        assert len(set(p.rule.vector)) == 4 and {c.action for c in d.public} == set(ACTIONS)
+        assert all(c not in p.clues and c.signal not in p.queries and c in d.public for c in d.cover)
+
+
+def test_open_rounds_leave_one_query_with_two_answers_and_are_deterministic():
+    sp, kinds = Spec(clauses=4, trap_query=True, n_queries=2, all_actions=True, open_rate=1.0), set()
+    for seed in range(4):
+        p = puzzle_for(seed, 1, sp)
+        d, again = deal(p, AG, random.Random(f"{seed}:deal:1")), deal(p, AG, random.Random(f"{seed}:deal:1"))
+        assert d == again and {c.action for c in d.public} == set(ACTIONS)
+        pooled = [*d.public, *d.secret.values()]
+        n = sorted(len(candidate_actions(p.rule.shape, pooled, q)) for q in p.queries)
+        assert n == ([1, 2] if d.open else [1, 1]) and not set(d.withheld) & set(pooled)
+        kinds.add(d.open)
+    assert True in kinds
+    normal = deal(puzzle_for(0, 1, Spec(clauses=4, trap_query=True, n_queries=2)), AG, random.Random(0))
+    assert not normal.open and not normal.withheld and not normal.cover
+
+
+def test_v10_profiles_generate_and_deal():
+    import yaml
+    game_cfg = yaml.safe_load(open(Path(__file__).parents[1] / "configs/squid5/e52v10_mix4.yaml"))["game"]
+    for name, kw in game_cfg["profiles"].items():
+        d = deal(puzzle_for(1, 4, Spec(**kw)), AG, random.Random(f"1:deal:4"))
+        assert {c.action for c in d.public} == set(ACTIONS), name

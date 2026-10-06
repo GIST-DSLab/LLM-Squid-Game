@@ -190,3 +190,24 @@ def test_a_message_ending_in_done_also_ends_the_reply():  # Luna wrote "TO agent
     p = talk(f"TO {A11}: please offer your example. DONE")
     assert p["to"] == [{"dst": A11, "text": "please offer your example."}] and p["done"]
     assert not talk(f"TO {A11}: I am done with this")["done"]
+
+
+def test_reject_lines_only_when_enabled_and_the_maker_hears_of_it():
+    assert talk("REJECT 2.1, 2.3")["format_error"] and not talk("REJECT 2.1")["rejects"]  # off: prose
+    p = parse_talk("**REJECT 2.1, 2.3**\nREJECT offer 2.4\nDONE", [A11], AG, A6, reject=True)
+    assert p["rejects"] == ["2.1", "2.3"] and p["done"] and not p["format_error"]
+    ch, w = book()
+    o = ch.offer(1, 1, A6, A11, EXAMPLE, 300)
+    assert ch.reject("1.1", A17, 2) == "no open offer with that id was made to you"
+    assert ch.reject("1.1", A11, 2) is None and (o.status, o.rejected_turn) == ("rejected", 2)
+    assert ch.reject("1.1", A11, 3) == "the offer is rejected" and ch.accept("1.1", A11, 3) == "the offer is rejected"
+    assert ch.news(A6, 1, 3) and not ch.news(A6, 1, 4)
+    assert ch.close(1, w) == [o] and o.status == "rejected" and w.balances[A6] == 1000
+
+
+def test_spend_is_logged_by_phase_and_a_refund_can_take_one_phase():
+    w = Wallet({A6: 1000})
+    w.spend(A6, 100, 1, "talk")
+    w.spend(A6, 200, 1, "solve")
+    assert w.spent(A6, 1) == 300 and w.spent(A6, 1, "talk") == 100
+    assert w.refund(A6, 1, "solve") == 200 and w.balances[A6] == 900

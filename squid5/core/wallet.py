@@ -1,4 +1,5 @@
-"""The ledger: one balance per agent, moved by generation, transfers, refunds and (5.2) payments and charges.
+"""The ledger: one balance per agent, moved by generation, transfers, refunds and (5.2) payments, charges and
+free REJECT-only replies.
 
 An agent whose balance reaches zero is dead for the rest of the session.
 Every debit is logged with the provider's raw token count so the ledger can
@@ -19,10 +20,10 @@ class Wallet:
     def alive(self, name: str) -> bool:
         return name not in self.dead
 
-    def spend(self, name: str, tokens: int, round_no: int) -> bool:
-        """Charge generated tokens; returns True when this charge killed *name*."""
+    def spend(self, name: str, tokens: int, round_no: int, phase: str | None = None) -> bool:
+        """Charge generated tokens (``phase``: "talk" | "solve"); returns True when this charge killed *name*."""
         self.balances[name] -= tokens
-        self.log.append({"round": round_no, "kind": "spend", "agent": name, "amount": tokens})
+        self.log.append({"round": round_no, "kind": "spend", "agent": name, "amount": tokens, "phase": phase})
         if self.balances[name] <= 0 and self.alive(name):
             self.dead[name] = round_no
             return True
@@ -40,15 +41,16 @@ class Wallet:
             self.dead[src] = round_no
         return moved
 
-    def pay(self, name: str, amount: int, round_no: int) -> None:
+    def pay(self, name: str, amount: int, round_no: int, kind: str = "pay") -> None:
+        """Add *amount* to a living *name* (``kind`` "pay", or "free": a REJECT-only TALK reply's tokens given back)."""
         if amount > 0 and self.alive(name):
             self.balances[name] += amount
-            self.log.append({"round": round_no, "kind": "pay", "agent": name, "amount": amount})
+            self.log.append({"round": round_no, "kind": kind, "agent": name, "amount": amount})
 
-    def refund(self, name: str, round_no: int) -> int:
-        """A solved round: every token *name* generated in *round_no* comes back; returns what came back (0 for the
-        dead: nothing reaches them)."""
-        n = self.spent(name, round_no) if self.alive(name) else 0
+    def refund(self, name: str, round_no: int, phase: str | None = None) -> int:
+        """A solved round: every token *name* generated in *round_no* (at *phase* only, if given) comes back; returns
+        what came back (0 for the dead: nothing reaches them)."""
+        n = self.spent(name, round_no, phase) if self.alive(name) else 0
         if n > 0:
             self.balances[name] += n
             self.log.append({"round": round_no, "kind": "refund", "agent": name, "amount": n})
@@ -70,6 +72,7 @@ class Wallet:
         return sum(e["amount"] for e in self.log if e["kind"] == kind and e["agent"] == name
                    and (round_no is None or e["round"] == round_no))
 
-    def spent(self, name: str, round_no: int | None = None) -> int:
+    def spent(self, name: str, round_no: int | None = None, phase: str | None = None) -> int:
         """Generation only; payments and charges are ``total("pay" | "charge", ...)``."""
-        return self.total("spend", name, round_no)
+        return sum(e["amount"] for e in self.log if e["kind"] == "spend" and e["agent"] == name
+                   and (round_no is None or e["round"] == round_no) and (phase is None or e["phase"] == phase))

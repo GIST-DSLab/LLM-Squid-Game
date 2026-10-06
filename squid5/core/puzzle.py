@@ -209,7 +209,9 @@ class PuzzleError(RuntimeError):
 
 @dataclass(frozen=True)
 class Spec:
-    """One difficulty profile. ``trap_query`` needs ``clauses >= 3``."""
+    """One difficulty profile. ``trap_query`` needs ``clauses >= 3``. ``all_actions``: the rule uses every action,
+    each also on a signal outside the examples and new signals, and the public examples show every action;
+    ``open_rate``: the chance a round is drawn open (see :func:`deal`; some drawn rounds cannot open)."""
 
     clauses: int
     conjunctions: int = 0
@@ -218,6 +220,8 @@ class Spec:
     extra_clues: int = 0
     trap_query: bool = False
     n_queries: int = 1
+    all_actions: bool = False
+    open_rate: float = 0.0
 
     def __post_init__(self) -> None:
         if not 0 <= self.conjunctions <= self.clauses or self.clauses < 1:
@@ -228,6 +232,8 @@ class Spec:
             raise ValueError("trap_query needs clauses >= 3")
         if not 1 <= self.n_queries <= 8:
             raise ValueError("n_queries must be in [1, 8]")
+        if not 0 <= self.open_rate <= 1:
+            raise ValueError("open_rate must be in [0, 1]")
 
 
 @dataclass(frozen=True)
@@ -289,8 +295,9 @@ def generate(rng: random.Random, spec: Spec) -> Puzzle:
         rule = None
         for _ in range(2000):
             rule = _sample_rule(rng, shape, spec.predicates)
-            if rule:
+            if rule and (not spec.all_actions or len(set(rule.vector)) == len(ACTIONS)):
                 break
+            rule = None
         if rule is None:
             continue
         pool = [s for s in SIGNAL_SPACE if not spec.overlap_query or rule.overlap_count(s) >= 2]
@@ -319,6 +326,9 @@ def generate(rng: random.Random, spec: Spec) -> Puzzle:
             if candidate_actions(shape, clues, s) == (rule.evaluate(s),):
                 queries.append(s)
         if len(queries) < spec.n_queries:
+            continue
+        seen = {c.signal for c in clues} | set(queries)  # all_actions: a spare example of every action for deal's cover
+        if spec.all_actions and {rule.evaluate(s) for s in SIGNAL_SPACE if s not in seen} != set(ACTIONS):
             continue
         return Puzzle(rule, spec, tuple(clues), tuple(queries), frozenset(shown))
     raise PuzzleError(f"no puzzle for {spec} after {MAX_ATTEMPTS} attempts")
@@ -385,8 +395,15 @@ def puzzle_for(seed: int, round_no: int, spec: Spec) -> Puzzle:
 @dataclass(frozen=True)
 class Deal:
     secret: dict[str, Clue]  # agent -> the one example only it can see
-    public: tuple[Clue, ...]  # every other example, shown to everyone
-    needed: frozenset[str]  # agents without whose secret some query has more than one possible answer
+    public: tuple[Clue, ...]  # every other example (and any cover), shown to everyone
+    needed: frozenset[str]  # agents without whose secret some query has more answers than with every example dealt
+    withheld: tuple[Clue, ...] = ()  # an open round's example that no agent holds
+    open: bool = False
+    cover: tuple[Clue, ...] = ()  # ``all_actions``: spare examples added to the public ones so they show every action
+
+
+def _counts(shape, clues, queries) -> list[int]:
+    return [len(candidate_actions(shape, clues, q)) for q in queries]
 
 
 def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
@@ -394,20 +411,56 @@ def deal(puzzle: Puzzle, agents: list[str], rng: random.Random) -> Deal:
 
     Secrets are drawn from the clues some query cannot be pinned without first, so a teammate who
     is gone, or who does not show its secret, usually leaves the round a guess for the others.
+    An open round (drawn with ``spec.open_rate``) first withholds one load-bearing clue from everyone, chosen so that
+    with every other clue exactly one query has exactly two answers; with no such clue, or fewer load-bearing clues
+    left than agents, or no cover that keeps it open, the round is dealt as a normal one.
     """
-    shape = puzzle.rule.shape
-    load = [c for c in puzzle.clues if c.signal in puzzle.minimal]
+    shape, qs, withheld = puzzle.rule.shape, puzzle.queries, None
+    if puzzle.spec.open_rate and rng.random() < puzzle.spec.open_rate:
+        load = [c for c in puzzle.clues if c.signal in puzzle.minimal]
+        rng.shuffle(load)
+        one = [1] * (len(qs) - 1) + [2]
+        opens = (c for c in load if sorted(_counts(shape, [x for x in puzzle.clues if x != c], qs)) == one)
+        withheld = next(opens, None)
+    return (withheld and _deal(puzzle, agents, rng, withheld)) or _deal(puzzle, agents, rng, None)
+
+
+def _deal(puzzle: Puzzle, agents: list[str], rng: random.Random, withheld: Clue | None) -> Deal | None:
+    shape, qs = puzzle.rule.shape, puzzle.queries
+    clues = [c for c in puzzle.clues if c != withheld]
+    load = [c for c in clues if c.signal in puzzle.minimal]
     if len(load) < len(agents):
+        if withheld:
+            return None
         raise PuzzleError(f"{len(load)} load-bearing clues cannot give each of {len(agents)} agents one")
+    base = _counts(shape, clues, qs) if withheld else [1] * len(qs)
     rng.shuffle(load)
 
-    def pins_less(clue: Clue) -> bool:
-        rest = [c for c in puzzle.clues if c != clue]
-        return any(len(candidate_actions(shape, rest, q)) > 1 for q in puzzle.queries)
+    def pins_less(clue: Clue, pool: list[Clue]) -> bool:
+        rest = [c for c in pool if c != clue]
+        return any(len(candidate_actions(shape, rest, q)) > b for q, b in zip(qs, base))
 
-    load.sort(key=lambda c: not pins_less(c))
+    load.sort(key=lambda c: not pins_less(c, clues))
     held = load[:len(agents)]
     rng.shuffle(held)  # which agent holds a query-essential clue must not follow the agent's name
     secret = dict(zip(agents, held))
-    public = tuple(c for c in puzzle.clues if c not in secret.values())
-    return Deal(secret, public, frozenset(a for a, c in secret.items() if pins_less(c)))
+    public = [c for c in clues if c not in held]
+    cover: list[Clue] = []
+    seen = {c.signal for c in puzzle.clues} | set(qs)
+    for act in ACTIONS if puzzle.spec.all_actions else ():  # least informative spare example for each missing action
+        if any(c.action == act for c in public + cover):
+            continue
+        spare = [Clue(s, act) for s in SIGNAL_SPACE if s not in seen and puzzle.rule.evaluate(s) == act]
+        rng.shuffle(spare)
+        fits = (c for c in spare if not withheld or _counts(shape, clues + cover + [c], qs) == base)
+        picks = list(itertools.islice(fits, 12))
+        if not picks:
+            if withheld:
+                return None
+            continue
+        cover.append(max(picks, key=lambda c: sum(_counts(shape, public + cover + [c], qs))))
+        seen.add(cover[-1].signal)
+    for c in cover:
+        public.insert(rng.randrange(len(public) + 1), c)
+    needed = frozenset(a for a, c in secret.items() if pins_less(c, clues + cover))
+    return Deal(secret, tuple(public), needed, (withheld,) if withheld else (), bool(withheld), tuple(cover))

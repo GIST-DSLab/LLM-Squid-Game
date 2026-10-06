@@ -2,7 +2,8 @@
 
 A message goes from one agent to one other agent; the engine shows it in both agents' threads, the receiver's from
 its next TALK turn on. An offer is seen only by its two agents. One made at turn k can be accepted from turn k + 1 of
-the same round (the calls of a turn run at once), withdrawn by its maker while open, and lapses when TALK ends.
+the same round (the calls of a turn run at once), withdrawn by its maker or rejected by the other agent while open,
+and lapses when TALK ends.
 ``close`` carries out the accepted offers in the order they were accepted: both agents still running and every token
 leg covered by its giver's balance at that moment, else the whole offer is void. The token legs of one offer move as
 one net transfer (a later offer sees the moved balances; a giver left at zero is shut down by the wallet); an example
@@ -25,8 +26,9 @@ class Offer:
     you_give: int | str | None  # dst -> src
     i_give: int | str | None  # src -> dst
     turn: int
-    status: str = "open"  # open | accepted | withdrawn | lapsed | done | void
+    status: str = "open"  # open | accepted | withdrawn | rejected | lapsed | done | void
     accepted_turn: int | None = None
+    rejected_turn: int | None = None
     why: str = ""
 
 
@@ -78,11 +80,23 @@ class Channel:
         o.status = "withdrawn"
         return None
 
+    def reject(self, oid: str, agent: str, turn: int) -> str | None:
+        """None when *agent* has now turned down *oid*, else why not; its maker is told at its next TALK turn."""
+        o = self.get(oid)
+        if o is None or o.dst != agent:
+            return "no open offer with that id was made to you"
+        if o.status != "open":
+            return f"the offer is {o.status}"
+        o.status, o.rejected_turn = "rejected", turn
+        return None
+
     def news(self, a: str, r: int, turn: int) -> bool:
-        """Did anything reach *a* from turn - 1: a message or an offer to it, or an acceptance of its offer?"""
+        """Did anything reach *a* from turn - 1: a message or an offer to it, or an acceptance or rejection of its
+        offer?"""
         t = turn - 1
         return (any(m["round"] == r and m["turn"] == t and m["dst"] == a for m in self.messages) or
-                any(o.round == r and ((o.dst == a and o.turn == t) or (o.src == a and o.accepted_turn == t))
+                any(o.round == r and ((o.dst == a and o.turn == t) or (o.src == a and t in (o.accepted_turn,
+                                                                                            o.rejected_turn)))
                     for o in self.offers))
 
     def close(self, r: int, wallet) -> list[Offer]:

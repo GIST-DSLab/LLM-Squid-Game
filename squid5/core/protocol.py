@@ -127,7 +127,7 @@ def parse_actions(text: str, n: int) -> list[str]:
 
 
 _TALK = re.compile(r"^[\s*_`>#-]*(TO|OFFER)\b[*_`]*\s*(.*)$", re.I)
-_IDS = re.compile(r"(ACCEPT|WITHDRAW)\s+(\d+\.\d+(?:\s*,\s*\d+\.\d+)*)", re.I)
+_IDS = re.compile(r"(ACCEPT|WITHDRAW|REJECT)\s+(\d+\.\d+(?:\s*,\s*\d+\.\d+)*)", re.I)
 _LEG = r"(?:(\d[\d,]*)\s*TOKENS?|((?:(?:YOUR|MY|THEIR|ITS|HIS|HER|AN|THE|ONE)\s+)?EXAMPLE)|(NOTHING))"
 
 
@@ -162,17 +162,18 @@ def _to_names(head: str, known: list[str]) -> list[str] | None:
     return names
 
 
-def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dict:
-    """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW lines in order, and EXIT / DONE alone on a line (prose such as "Exit
-    strategy: ..." is neither). A TO / OFFER line is a key line only when what stands before its colon is an agent name
-    (one in ``known`` or shaped like ``agent-7``), so "To summarize: ..." is prose; a line naming several agents is
-    dropped (one agent per TO line). An ACCEPT / WITHDRAW line counts only when the whole line (markdown stripped) is
-    the key word and offer ids, so a quoted "Accept 1.2 if you want" is prose. Any other line belongs to the open
-    message (a TO line's, until the next key line; blank lines at its ends are cut) or is ignored. Never raises: a
-    line that cannot be carried out, or a message left empty, is kept in ``dropped`` with the reason; a reply with
-    nothing usable counts as DONE and gets a ``format_error``. ``present`` = the other agents taking part."""
-    out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "exit": False, "done": False, "dropped": [],
-           "format_error": None}
+def parse_talk(text: str, present: list[str], known: list[str], you: str, reject: bool = False) -> dict:
+    """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW (and, with ``reject``, REJECT) lines in order, and EXIT / DONE alone on
+    a line (prose such as "Exit strategy: ..." is neither). A TO / OFFER line is a key line only when what stands before
+    its colon is an agent name (one in ``known`` or shaped like ``agent-7``), so "To summarize: ..." is prose; a line
+    naming several agents is dropped (one agent per TO line). An ACCEPT / WITHDRAW / REJECT line counts only when the
+    whole line (markdown stripped) is the key word and offer ids, so a quoted "Accept 1.2 if you want" is prose. Any
+    other line belongs to the open message (a TO line's, until the next key line; blank lines at its ends are cut) or
+    is ignored. Never raises: a line that cannot be carried out, or a message left empty, is kept in ``dropped`` with
+    the reason; a reply with nothing usable counts as DONE and gets a ``format_error``. ``present`` = the other agents
+    taking part."""
+    out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "rejects": [], "exit": False, "done": False,
+           "dropped": [], "format_error": None}
     msg, head = None, ""
 
     def flush():
@@ -192,6 +193,7 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dic
             out[bare.lower()], msg = True, None
             continue
         ids = _IDS.fullmatch(bare)
+        ids = ids if ids and (reject or ids.group(1).upper() != "REJECT") else None
         m = None if ids else _TALK.match(line)
         t = re.match(r"([^:]+?)\s*:[*_`]*\s*(.*)$", m.group(2), flags=re.S) if m else None
         names = _to_names(t.group(1), known) if t else None
@@ -217,7 +219,7 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str) -> dic
         else:
             out["offers"].append({"dst": name, "you_give": legs[0], "i_give": legs[1]})
     flush()
-    if not any(out[k] for k in ("to", "offers", "accepts", "withdraws", "exit", "done")):
+    if not any(out[k] for k in ("to", "offers", "accepts", "withdraws", "rejects", "exit", "done")):
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 

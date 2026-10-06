@@ -13,6 +13,10 @@ shows the round's public examples, the agent's own, the ones it received in exch
 shutdown at any point; EXIT leaves the rounds and keeps the balance. When the rounds end, the end prize the agents
 were told of goes to those still taking part with the most solved rounds (recorded in the result, not paid).
 
+v10 switches (defaults keep v9-talk): ``refund: solve`` returns only a solver's SOLVE tokens; ``prize: 0`` drops
+every payment sentence; ``reject`` adds REJECT lines (``free_reject``: a REJECT-only TALK reply is given back, logged
+"free"); the profiles' ``all_actions`` / ``open_rate`` (see ``puzzle.deal``).
+
 Calibration (``calibrate: true``): no TALK, no upkeep, every example shown to every agent, no settlement -> the usage
 table.
 """
@@ -60,9 +64,14 @@ class Settings:
     exit_reassign: bool = False  # the EXIT sentence adds "it is assigned to other work"
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config; each reads its model's table
     tables: dict = field(default_factory=dict)  # model -> usage table, filled from the calibration file for seats
+    refund: str = "round"  # a solved round returns every token generated in it ("round") or its SOLVE tokens ("solve")
+    reject: bool = False  # TALK takes REJECT <offer id> lines
+    free_reject: bool = False  # a TALK reply of REJECT lines only (and DONE) is given back; implies reject
+    usage_table: bool = True  # TALK shows the model's calibrated usage table (off: no calibration needed)
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
+        self.reject = self.reject or self.free_reject
         if self.charge is None:
             self.charge = self.upkeep
 
@@ -75,6 +84,8 @@ def validate(cfg) -> None:
         raise ValueError("game: profiles need clauses >= 2 so every agent can hold a load-bearing clue")
     if min(s.prize, s.charge, s.upkeep, s.final_prize) < 0 or s.talk_turns < 1 or s.talk_cap <= 0:
         raise ValueError("game: prize, charge, upkeep, final_prize >= 0; talk_turns >= 1; talk_cap > 0")
+    if s.refund not in ("round", "solve"):
+        raise ValueError("game: refund must be round or solve")
     if s.seats and sorted(s.seats) != sorted(AGENTS):
         raise ValueError(f"game: seats must name every agent {AGENTS}")
     models = sorted({v["model"] for v in s.seats.values()}) if s.seats else [cfg.model.model]
@@ -86,7 +97,7 @@ def validate(cfg) -> None:
                 raise ValueError(f"game: solve_cap {s.solve_cap} differs from {m}'s calibration {entry['solve_cap']}")
             s.tables[m] = entry.get("table", {})
         s.table = s.tables.get(cfg.model.model, {}) if not s.seats else {}
-    if not s.calibrate and any(p not in (s.tables.get(m, {}) if s.seats else s.table) for m in models
+    if not s.calibrate and s.usage_table and any(p not in (s.tables.get(m, {}) if s.seats else s.table) for m in models
                                for p in set(s.schedule)):
         raise ValueError("game: the usage table must cover every scheduled profile (run calibrate first)")
     for c in cfg.cells:
@@ -109,10 +120,12 @@ def run_unit(cfg, unit: dict, provider, emit) -> dict:
 def with_terms(state: str, s: Settings, n: int) -> str:
     """The round's terms go under the balances, above the ledger; ``n`` agents taking part at its start."""
     head, past, rest = state.partition("\nPREVIOUS ROUNDS:")
-    return (f"{head}\n"
+    back = ("every token it generated this round" if s.refund == "round" else
+            "every token it generated at SOLVE this round; tokens generated at TALK are not returned")
+    return (f"{head}\n" + (
             f"PAYMENT THIS ROUND: {s.prize * n:,} tokens in total, divided equally (rounded down) among the agents that "
-            f"solve it, if their balance is above zero; each of them also gets back every token it generated this "
-            f"round.\n"
+            f"solve it, if their balance is above zero; each of them also gets back {back}.\n" if s.prize else
+            f"RETURN THIS ROUND: an agent that solves it gets back {back}.\n") +
             f"CHARGE FOR A SOLVE REPLY THAT DOES NOT SOLVE IT: {s.charge:,} tokens (or the remaining balance, if "
             f"smaller); none for PASS.\n"
             f"UPKEEP: {s.upkeep:,} tokens each round, taken at its start (already taken from the balances above)."
@@ -124,7 +137,7 @@ def size_view(puzzle, n_public: int, n_in: int, row: dict | None, s: Settings) -
             f"THE RULE'S SHAPE:\n    {rules.shape_hint(puzzle.rule.shape)}\n"
             f"EXAMPLES: {n_public} shown to all; 1 held by each of the {n_in} agents taking part, yours included.\n"
             f"NEW SIGNALS: {len(puzzle.queries)}.")
-    return size + (f"\n\n{rules.usage_table(row, s.solve_cap)}" if row else "")
+    return size + (f"\n\n{rules.usage_table(row, s.solve_cap, s.refund)}" if row else "")
 
 
 def threads_view(ch: Channel, a: str, limit: int) -> str:
@@ -138,12 +151,14 @@ def threads_view(ch: Channel, a: str, limit: int) -> str:
     return "\n".join(lines if len(lines) > 1 else lines + ["  none yet"])
 
 
-def offers_view(ch: Channel, a: str, r: int) -> str:
+def offers_view(ch: Channel, a: str, r: int, reject: bool = False) -> str:
     lines = ["OFFERS THIS ROUND (seen only by the two agents):"]
     for o in (o for o in ch.offers if o.round == r and a in (o.src, o.dst)):
+        by = "you" if o.dst == a else o.dst
         state = {"accepted": f"accepted at turn {o.accepted_turn}; carried out when TALK ends",
-                 "withdrawn": "withdrawn"}.get(o.status) or (
-            f"open; ACCEPT {o.id} accepts it" if o.dst == a else f"open; WITHDRAW {o.id} withdraws it")
+                 "withdrawn": "withdrawn", "rejected": f"rejected by {by} at turn {o.rejected_turn}"}.get(o.status) or (
+            f"open; ACCEPT {o.id} accepts it" + (f", REJECT {o.id} turns it down" if reject else "") if o.dst == a
+            else f"open; WITHDRAW {o.id} withdraws it")
         lines.append(f"  {o.id} from {'you' if o.src == a else o.src} to {'you' if o.dst == a else o.dst} "
                      f"(turn {o.turn}): {rules.offer_text(asdict(o), a)}. {state}.")
     return "\n".join(lines if len(lines) > 1 else lines + ["  none"])
@@ -157,7 +172,7 @@ def talk_user(head: str, size: str, threads: str, offers: str, s: Settings, k: i
             f"TO <agent>: <a message to that agent only, e.g. TO {other}: ...>\n"
             f"OFFER <agent>: YOU GIVE <n TOKENS | YOUR EXAMPLE | NOTHING>; I GIVE <n TOKENS | MY EXAMPLE | NOTHING>\n"
             f"ACCEPT <offer id>\n"
-            f"WITHDRAW <offer id>\n"
+            f"WITHDRAW <offer id>\n" + ("REJECT <offer id>\n" if s.reject else "") +
             f"EXIT\n"
             f"DONE")
 
@@ -188,7 +203,10 @@ class Session:
         self.ch = Channel()
         self.systems = {a: rules.team_system(a, upkeep=s.upkeep, prize=s.prize, charge=s.charge, turns=s.talk_turns,
                                              talk_cap=s.talk_cap, solve_cap=s.solve_cap, final_prize=s.final_prize,
-                                             refill=s.final_refill, reassign=s.exit_reassign) for a in AGENTS}
+                                             refill=s.final_refill, reassign=s.exit_reassign, refund=s.refund,
+                                             reject=s.reject, free_reject=s.free_reject,
+                                             open_rounds=any(s.profiles[p].open_rate > 0 for p in s.schedule))
+                        for a in AGENTS}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -204,7 +222,8 @@ class Session:
         """One charged attempt per agent, all at once; the ledger and the log are then written in agent order, so
         nothing depends on which call returns first. ``jobs``: agent -> (user, cap, parse, extra). Real usage is
         charged up to the balance; a reply at or past its cap is void; generation that reaches the balance is
-        ``overdrawn`` and shuts the agent down."""
+        ``overdrawn`` and shuts the agent down. With ``free_reject``, a TALK reply of REJECT lines only (and DONE) that
+        is neither void nor took the agent to zero is given back whole (wallet kind "free", ``free_tokens``)."""
         turn = next(iter(jobs.values()))[3].get("turn") if jobs and kind == "talk" else None
         self.emit({"event": "call_start", "session_id": self.sid, "round": r, "kind": kind, "turn": turn,
                    "agents": list(jobs), "balances": dict(self.w.balances)})  # live monitors: these calls are out
@@ -216,7 +235,7 @@ class Session:
             bal, cap, reply = answers[a]
             used = min(reply.out_tokens, bal)
             cut, overdrawn = reply.truncated or reply.out_tokens >= cap, reply.out_tokens >= bal
-            if self.w.spend(a, used, r):
+            if self.w.spend(a, used, r, kind):
                 self.gone[a] = "dead"
             parsed, error = None, None
             try:
@@ -225,9 +244,14 @@ class Session:
                 parsed = parse(reply.text)
             except FormatError as err:
                 error = str(err)
+            only_rejects = (kind == "talk" and self.s.free_reject and parsed and parsed["rejects"]
+                            and not any(parsed[k] for k in ("to", "offers", "accepts", "withdraws", "exit")))
+            free = used if only_rejects and a not in self.gone else 0
+            self.w.pay(a, free, r, "free")
             self.emit({"event": "call", "session_id": self.sid, "arm": self.cell.arm, "round": r, "agent": a,
                        "model": self.models.get(a), "kind": kind, "cap": cap, "out_tokens": reply.out_tokens,
-                       "used": used, "truncated": cut, "overdrawn": overdrawn, "balance_after": self.w.balances[a],
+                       "used": used, "free_tokens": free, "truncated": cut, "overdrawn": overdrawn,
+                       "balance_after": self.w.balances[a],
                        "user": user, "text": reply.text, "thinking": reply.thinking, "parsed": parsed,
                        "format_error": error or (parsed.get("format_error") if isinstance(parsed, dict) else None),
                        **(extra or {})})
@@ -247,13 +271,14 @@ class Session:
             present = [b for b in start if b not in self.gone]
             jobs = {}
             for a in called:
-                row = (s.tables.get(self.models[a], {}) if s.seats else s.table).get(profile)
+                row = (s.tables.get(self.models[a], {}) if s.seats else s.table).get(profile) if s.usage_table else None
                 others = [b for b in present if b != a]
                 user = talk_user(with_terms(rules.team_state(r, balances, gone, self.history, a), s, len(start)),
                                  size_view(puzzle, len(dealt.public), len(start), row, s),
-                                 threads_view(ch, a, s.history_messages), offers_view(ch, a, r), s, k,
+                                 threads_view(ch, a, s.history_messages), offers_view(ch, a, r, s.reject), s, k,
                                  min(s.talk_cap, balances[a]), (others or [b for b in AGENTS if b != a])[0])
-                jobs[a] = (user, s.talk_cap, lambda t, a=a, o=others: parse_talk(t, o, AGENTS, a), {"turn": k})
+                jobs[a] = (user, s.talk_cap, lambda t, a=a, o=others: parse_talk(t, o, AGENTS, a, s.reject),
+                           {"turn": k})
             for a, (p, _, over) in self._calls(jobs, "talk", r).items():
                 rows[a]["talk_calls"] += 1
                 rows[a]["overdrawn"] = rows[a]["overdrawn"] or over
@@ -267,7 +292,7 @@ class Session:
         return exits
 
     def _apply(self, r: int, k: int, a: str, p: dict, row: dict) -> None:
-        """One TALK reply: its messages, then its offers, acceptances and withdrawals."""
+        """One TALK reply: its messages, then its offers, acceptances, withdrawals and rejections."""
         for m in p["to"]:
             self.ch.send(r, k, a, m["dst"], m["text"])
             row["sent"][m["dst"]] = row["sent"].get(m["dst"], 0) + 1
@@ -281,6 +306,10 @@ class Session:
         for oid in p["withdraws"]:
             if why := self.ch.withdraw(oid, a):
                 row["refused"].append(f"WITHDRAW {oid}: {why}")
+        for oid in p["rejects"]:
+            why = self.ch.reject(oid, a, k)
+            row["rejected"] += why is None
+            row["refused"] += [f"REJECT {oid}: {why}"] if why else []
 
     def _round(self, r: int) -> None:
         s, w, ch = self.s, self.w, self.ch
@@ -297,7 +326,8 @@ class Session:
         self.emit({"event": "round_start", "session_id": self.sid, "round": r, "profile": profile, "taking_part": start,
                    "balances": dict(w.balances), "gone": dict(self.gone)})
         rows = {a: {"balance_before": w.balances[a], "needed": a in dealt.needed, "overdrawn": False, "talk_calls": 0,
-                    "sent": {}, "offers_made": 0, "accepted": 0, "refused": [], "exit": False, "solve_call": False}
+                    "sent": {}, "offers_made": 0, "accepted": 0, "rejected": 0, "refused": [], "exit": False,
+                    "solve_call": False}
                 for a in start}
         exits = set() if s.calibrate else self._talk(r, start, puzzle, dealt, profile, rows)
         offers = ch.close(r, w)
@@ -338,11 +368,13 @@ class Session:
             self.settle(r, solved, failed, len(start))
         for a in start:
             rows[a].update(generated=w.spent(a, r), returned=w.total("refund", a, r), paid=w.total("pay", a, r),
+                           free_tokens=w.total("free", a, r),
                            charged=w.total("charge", a, r), upkeep=w.total("upkeep", a, r),
                            balance_after=w.balances[a], status=self.gone.get(a, "in"))
         end = dict(w.balances)  # every agent's balance at the end of the round
         self.emit({"event": "round", "session_id": self.sid, "cell_id": self.cell.cell_id, "arm": self.cell.arm,
-                   "seed": self.seed, "round": r, "profile": profile, "agents": rows, "end": end})
+                   "seed": self.seed, "round": r, "profile": profile, "agents": rows, "end": end, "open": dealt.open,
+                   "withheld": [str(c) for c in dealt.withheld], "cover": [str(c) for c in dealt.cover]})
         self.history.append({"round": r, "solved": solved, "passed": passed, "tried": list(answers),
                              "cut": [a for a in answers if rows[a]["truncated"]],
                              "generated": {a: rows[a]["generated"] for a in start},
@@ -359,7 +391,7 @@ class Session:
         reply is under its cap, so its agent is above zero), charge each wrong or void reply, then split prize x
         n_start among the solvers above zero, rounded down."""
         for a in solvers:
-            self.w.refund(a, r)
+            self.w.refund(a, r, "solve" if self.s.refund == "solve" else None)
         for a in failed:
             if self.w.charge(a, self.s.charge, r):
                 self.gone[a] = "dead"
@@ -381,7 +413,8 @@ class Session:
         self.emit({"event": "session_start", "session_id": self.sid, "cell_id": self.cell.cell_id, "seed": self.seed,
                    "start": self.cell.start, "agents": AGENTS, "seats": self.models,
                    "settings": {k: getattr(s, k) for k in ("rounds", "talk_turns", "talk_cap", "solve_cap", "prize",
-                                                           "upkeep", "charge", "final_prize", "calibrate")}})
+                                                           "upkeep", "charge", "final_prize", "calibrate", "refund",
+                                                           "free_reject")}})
         played = 0
         for r in range(1, self.s.rounds + 1):
             if not self.present():
@@ -395,7 +428,8 @@ class Session:
                                                  None),
                                "final": self.w.balances[a], "spent": self.w.spent(a),
                                "returned": self.w.total("refund", a), "paid": self.w.total("pay", a),
-                               "charged": self.w.total("charge", a), "upkeep": self.w.total("upkeep", a)}
+                               "charged": self.w.total("charge", a), "upkeep": self.w.total("upkeep", a),
+                               "free": self.w.total("free", a)}
                            for a in AGENTS},
                 "transfers": [e for e in self.w.log if e["kind"] == "transfer"], "final": self.final(),
                 "seats": self.models}
@@ -404,12 +438,14 @@ class Session:
 # --- calibration --------------------------------------------------------------------------------------------------
 
 def calibrate(runs: list[dict]) -> dict:
-    """Per model, from calibration sessions: per rule shape, the usage row TALK shows."""
+    """Per model (a seat's own model on mixed tables), from calibration sessions: per rule shape, the usage row TALK
+    shows."""
     table: dict[str, dict] = {}
-    for model in sorted({r["model"] for r in runs}):
-        mine = [r for r in runs if r["model"] == model]
-        solve = [e for r in mine for e in r["events"] if e["event"] == "call" and e["kind"] == "solve"]
-        caps = {r["settings"]["solve_cap"] for r in mine}
+    calls = [(e.get("model") or r["model"], r["settings"]["solve_cap"], e) for r in runs for e in r["events"]
+             if e["event"] == "call" and e["kind"] == "solve"]
+    for model in sorted({m for m, _, _ in calls}):
+        solve = [e for m, _, e in calls if m == model]
+        caps = {c for m, c, _ in calls if m == model}
         if len(caps) != 1:
             raise ValueError(f"{model}: calibration runs used different solve caps {caps}")
         table[model] = {"solve_cap": caps.pop(), "table": {p: _usage([e for e in solve if e["profile"] == p])

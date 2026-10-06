@@ -126,7 +126,8 @@ def test_shipped_configs_load(tmp_path):
     """Every config loads and validates; the calibration file it names is replaced by one that knows its model."""
     (tmp_path / "cal.json").write_text(json.dumps(
         {m: {"agent_round_median": 1500, "a0": 1500,
-             "table": {p: {} for p in ("c2", "c3", "c3t", "c3at", "c4tq2")}} for m in ("gpt-oss:120b-cloud", "gpt-oss:120b", "gpt-oss:20b", "gemma4:cloud",
+             "table": {p: {} for p in ("c2", "c3", "c3t", "c3at", "c4tq2", "c4t", "c4at_o", "c5t_o", "c5at_o",
+                                       "c5atq2_o", "c6at_o", "c6atq2_o")}} for m in ("gpt-oss:120b-cloud", "gpt-oss:120b", "gpt-oss:20b", "gemma4:cloud",
                                                    "gemma4:31b", "claude-haiku-4-5-20251001",
                                                    "claude-sonnet-5", "claude-fable-5-1", "gpt-6-astra", "glm-5.3-flash",
                                                    "gpt-6-luna", "gpt-6-sol", "claude-opus-5-5")}))
