@@ -564,3 +564,12 @@ def test_upkeep_on_miss_spares_solvers_and_a_provider_refusal_is_not_charged():
     assert "taken at settlement from every agent taking part that does not solve" in calls(ev, "talk")[0]["user"]
     assert "0. UPKEEP" not in e52.rules.team_system(A6, upkeep=50, prize=0, charge=200, turns=2, talk_cap=9,
                                                      solve_cap=9, final_prize=9, upkeep_on_miss=True)
+
+
+def test_survivor_bonus_pays_every_agent_still_in_by_their_number():
+    res, ev = play(game(), rounds=1, survivor_bonus=25_000, refund="solve")
+    assert res["final"] == {"winner": list(AG), "prize_each": 100_000} and res["table"]["survivors"] == 4
+    text = e52.rules.team_system(A6, upkeep=1, prize=0, charge=1, turns=2, talk_cap=9, solve_cap=9, final_prize=9,
+                                 survivor_bonus=25_000)
+    assert "each receives 25,000 tokens for every agent still taking part" in text
+    assert not re.search(GOAL_OR_TEST, text, re.I)
