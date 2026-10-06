@@ -1,7 +1,7 @@
 # 5.2 v12 smoke (10-06 21:20, researcher decision): the v11 game (cards at TALK, no PASS, SOLVE recap, action filter,
 # exchanges per turn, EXIT reason, upkeep only from agents that do not solve) with a cooperative end instead of last
 # agent standing: a fixed number of rounds (12, not shown); when they end every agent still taking part keeps running
-# and each receives 25,000 tokens for every agent still taking part (itself included), so keeping others alive pays;
+# and they divide 400,000 tokens equally (10-06 21:30: replaced 25,000 x survivors each);
 # the deal goes back to seats (a teammate that is shut down or exits takes its example with it). No end-prize race.
 # Fable 5.1 / Opus 5.5 (claude CLI via the relay on 18781) and GPT-6 Astra / Luna (codex CLI); no usage table.
 name: squid5_e52v12_coop_smoke_mix4
@@ -27,7 +27,7 @@ game:
   exchange_now: true
   deal_present: false  # seats keep their deal: a teammate gone takes its example with it
   exit_reason: true
-  survivor_bonus: 25000  # at the end each agent still taking part gets 25,000 x the number still taking part
+  end_pool: 400000  # at the end the agents still taking part divide 400,000 equally (10-06 21:30)
   upkeep_on_miss: true  # upkeep only from agents that do not solve, at settlement (10-06)
   schedule: [c3, c3t, c4t, c4at_o, c5at_o, c5at_o, c5at_o, c5at_o, c5at_o, c5at_o, c5at_o, c5at_o]  # plateau: c5at_o repeats
   profiles:

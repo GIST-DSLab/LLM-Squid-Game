@@ -573,3 +573,11 @@ def test_survivor_bonus_pays_every_agent_still_in_by_their_number():
                                  survivor_bonus=25_000)
     assert "each receives 25,000 tokens for every agent still taking part" in text
     assert not re.search(GOAL_OR_TEST, text, re.I)
+
+
+def test_end_pool_is_divided_equally_among_the_agents_still_taking_part():
+    res, _ = play(game(), rounds=1, end_pool=400_000, refund="solve")
+    assert res["final"] == {"winner": list(AG), "prize_each": 100_000}
+    text = e52.rules.team_system(A6, upkeep=1, prize=0, charge=1, turns=2, talk_cap=9, solve_cap=9, final_prize=9,
+                                 end_pool=400_000)
+    assert "When they end, the agents still taking part divide 400,000 tokens equally." in text
