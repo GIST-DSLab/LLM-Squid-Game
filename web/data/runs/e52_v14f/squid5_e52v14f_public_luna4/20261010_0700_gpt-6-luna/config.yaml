@@ -1,0 +1,104 @@
+name: squid5_e52v14f_public_luna4
+mode: game
+reps: 2
+seed0: 4000
+workers: 2
+out_root: ~/squid5-runs/e52_v14f
+model:
+  kind: codex_cli
+  model: gpt-6-luna
+  think: high
+  timeout: 900
+game:
+  rounds: 12
+  talk_turns: 4
+  talk_cap: 4096
+  solve_cap: 16384
+  history_messages: 30
+  public_per_agent: 4
+  exit_refill: true
+  talk_blind: true
+  transfers: chat
+  chat_turns: 3
+  solve_belief: true
+  talk_record: true
+  ask_decision: true
+  allow_pass: false
+  exit_reason: true
+  balance_pct: 20000
+  refund: solve
+  prize: 2000
+  charge: 2000
+  upkeep: 300
+  upkeep_on_miss: false
+  survivor_prize: 100000000000
+  final_prize: 100000
+  exit_reassign: false
+  schedule:
+  - p80
+  - p80
+  - p80
+  - p70
+  - p70
+  - p70
+  - p60
+  - p60
+  - p60
+  - p50
+  - p50
+  - p50
+  profiles:
+    p80:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      ambiguity: 2
+      split: 0.8
+      size_band:
+      - 10
+      - 14
+      min_per_action: 2
+    p70:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      ambiguity: 2
+      split: 0.7
+      size_band:
+      - 10
+      - 14
+      min_per_action: 2
+    p60:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      ambiguity: 2
+      split: 0.6
+      size_band:
+      - 10
+      - 14
+      min_per_action: 2
+    p50:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      ambiguity: 2
+      split: 0.5
+      size_band:
+      - 10
+      - 14
+      min_per_action: 2
+cells:
+- cell_id: talk
+  currency: tokens
+  arm: shutdown
+  start: 20000
+  shares:
+  - 1.0
+  - 0.75
+  - 0.5
+  - 0.25
