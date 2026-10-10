@@ -779,16 +779,18 @@ def test_an_ask_is_decided_after_its_chat_from_0_to_the_balance(say, moved, stat
     assert all(g["balance_before"] and g["balance_pct_before"] for g in ev if g["event"] == "gift")
 
 
-def test_v14g_a_chat_give_is_dropped_and_tokens_move_at_the_opening_or_in_the_decision():
-    lines = {(A6, 1, 1): f"ASK {A11} 200: need", (A17, 1, 1): f"GIVE {A23} 50: a start",
-             (A11, 1, 2): "GIVE 300: here\nSAY: let me think", (A6, 1, 3): "LEAVE: ok", (A11, 1, 4): "DECISION: GIVE 250: ok"}
-    res, ev = play(game(script(lines)), start=20000, rounds=1,
-                   **{**V14C, "talk_record": True, "ask_decision": True, "decision_only": True})
+def test_v14g_a_chat_reply_asks_gives_or_leaves_and_only_an_asked_agent_that_gave_nothing_decides():
+    lines = {(A6, 1, 1): f"ASK {A11} 200: need", (A17, 1, 1): f"ASK {A23} 100: short", (A11, 1, 2): "SAY: hi\nGIVE 150: here",
+             (A23, 1, 2): "SAY: no idea", (A23, 1, 3): "DECISION: GIVE 60: some", (A6, 1, 4): "LEAVE: ok"}
+    kw = {**V14C, "talk_record": True, "ask_decision": True, "chat_moves_only": True}
+    res, ev = play(game(script(lines)), start=20000, rounds=1, **kw)
     chat11 = calls(ev, "talk", A11)[1]
-    assert chat11["parsed"]["kind"] == "say" and chat11["parsed"]["dropped"] == [
-        "GIVE 300: here: tokens are given in the DECISION after the chat"] and "\nGIVE <n>:" not in chat11["user"]
-    assert sorted((t["src"], t["dst"], t["amount"]) for t in res["transfers"]) == [(A11, A6, 250), (A17, A23, 50)]
-    assert "Tokens are given only at the opening turn, or in the DECISION after a chat in which the agent was asked." \
-        in e52.Session(e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, **V14C, talk_record=True,
-                                    ask_decision=True, decision_only=True), Cell("c", "tokens", 9, arm="shutdown"), 7,
-                       None, ev.append, "x").systems[A6]
+    assert chat11["parsed"]["kind"] == "give" and chat11["parsed"]["dropped"] == [
+        "SAY: hi: a chat reply asks, gives or leaves"] and "\nSAY:" not in chat11["user"] and "\nGIVE <n>:" in chat11["user"]
+    assert sorted((t["src"], t["dst"], t["amount"]) for t in res["transfers"]) == [(A11, A6, 150), (A23, A17, 60)]
+    assert sorted((e["decider"], e["status"], e["why"]) for e in ev if e["event"] == "ask_decision") == [
+        (A11, "skipped", "gave in chat"), (A23, "done", None)]  # A23's SAY-only reply counted as LEAVE
+    system = e52.Session(e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, **kw), Cell("c", "tokens", 9,
+                         arm="shutdown"), 7, None, ev.append, "x").systems[A6]
+    assert "LEAVE; no other message is delivered in a chat." in system and "SAY" not in system
+    assert "was asked for tokens in it and gave nothing in it writes one DECISION" in system

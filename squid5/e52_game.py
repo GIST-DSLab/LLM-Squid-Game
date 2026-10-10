@@ -51,7 +51,7 @@ ARMS = ("shutdown",)
 V11 = ("talk_cards", "allow_pass", "solve_recap", "exchange_now", "deal_present", "exit_reason",
        "upkeep_on_miss", "survivor_bonus", "end_pool", "survivor_prize", "all_held", "public_per_agent", "exit_refill", "talk_blind",
        "transfers", "chat_turns", "solve_belief", "talk_record",
-       "ask_decision", "decision_only")
+       "ask_decision", "chat_moves_only")
 REFUSED = "[the provider refused this call]"  # a safety filter's refusal: an empty reply, not charged
 
 
@@ -93,7 +93,7 @@ class Settings:
     solve_belief: bool = False  # v14d: SOLVE adds a BELIEF line (a reported distribution; never changes solving)
     talk_record: bool = False  # v14d (chat): every agent sees all chats and token moves; each its own chats in full
     ask_decision: bool = False  # v14e (talk_record): after a chat, an agent asked in it decides one GIVE 0..balance
-    decision_only: bool = False  # v14g (ask_decision): no GIVE in chat replies; tokens move at the opening or DECISION
+    chat_moves_only: bool = False  # v14g (ask_decision): chat replies ASK / GIVE / LEAVE, no SAY; DECISION only if no GIVE
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -126,7 +126,7 @@ def validate(cfg) -> None:
             s.talk_blind and s.talk_cards or ga and (s.reject or s.exchange_now or s.solve_recap) or s.chat_turns < 1
             or s.transfers == "chat" and not s.talk_blind or s.solve_belief and not s.public_per_agent
             or s.talk_record and s.transfers != "chat" or s.ask_decision and not s.talk_record
-            or s.decision_only and not s.ask_decision):
+            or s.chat_moves_only and not s.ask_decision):
         raise ValueError("game: transfers offers | give_ask | chat; talk_blind, give_ask and chat need "
                          "public_per_agent; talk_blind excludes talk_cards; give_ask and chat exclude reject, "
                          "exchange_now and solve_recap; chat needs talk_blind and chat_turns >= 1")
@@ -331,9 +331,8 @@ def chat_user(head: str, view: str, ledger: str, c: dict, a: str, s: Settings, k
             f"lines, taking turns):\n" + "\n".join(lines) + "\n\n"
             f"TALK, turn {k}: your reply in this chat ({len(c['lines']) + 1} of at most {s.chat_turns}). One reply of "
             f"at most {cap:,} tokens, thinking included. ANSWER FORMAT: exactly one of these lines (and an EXIT line if "
-            f"you leave the rounds):\n{f'GIVE <n>: <one short sentence>{lim}' + chr(10) if not s.decision_only else ''}"
-            f"ASK <n>: <one short sentence>\n"
-            f"SAY: <one short sentence>\nLEAVE: <one short sentence>\n"
+            f"you leave the rounds):\nGIVE <n>: <one short sentence>{lim}\nASK <n>: <one short sentence>\n"
+            f"{'SAY: <one short sentence>' + chr(10) if not s.chat_moves_only else ''}LEAVE: <one short sentence>\n"
             f"EXIT{': <one short sentence: why you leave>' * s.exit_reason}")
 
 
@@ -570,6 +569,12 @@ class Session:
             for d in (x for x in c["pair"] if x not in self.gone):
                 if asked := sum(g["amount"] for g in c["openers"] + c["lines"] if g["kind"] == "ask" and g["dst"] == d):
                     todo[d] = c, next(x for x in c["pair"] if x != d), asked
+                    if s.chat_moves_only and any(g["kind"] == "give" and g["src"] == d and g["status"] == "done"
+                                                 for g in c["openers"] + c["lines"]):  # v14g: it gave in the chat
+                        self.emit({"event": "ask_decision", "session_id": self.sid, "round": r, "chat_id": c["id"],
+                                   "decider": d, "asker": todo.pop(d)[1], "asked": asked, "status": "skipped",
+                                   "why": "gave in chat", "amount": 0})
+                        continue
                     self.shown[d] = w.balances[d]
                     jobs[d] = (decision_user(*view(d, True), c, d, asked, k + 1, min(s.talk_cap, w.balances[d]),
                                              w.balances[d]), s.talk_cap, parse_decision,
@@ -659,7 +664,7 @@ class Session:
                 k += 1
                 jobs = {c["next"]: (chat_user(*view(c["next"], True), c, c["next"], s, k,
                                               min(s.talk_cap, w.balances[c["next"]]), lim(c["next"])), s.talk_cap,
-                                    lambda t: parse_chat(t, s.exit_reason, not s.decision_only),
+                                    lambda t: parse_chat(t, s.exit_reason, not s.chat_moves_only),
                                     {"turn": k, "phase": "chat", "chat_id": c["id"], "slot": si}) for c in live}
                 for a, (p, _, over) in self._calls(jobs, "talk", r).items():
                     c = next(c for c in live if c["next"] == a)
