@@ -1,0 +1,67 @@
+/* site-theme.css: the web site's look (web/frontend styles.css + web5.css + leaderboard.css) for the game-log viewer
+   and the model comparison page. A copy of the site's tokens, so the monitor works standalone (serve.py) and exported
+   (export.py inlines this file) without web/frontend. Only neutral and brand tokens live here, under the site's names;
+   monitor.css maps its own tokens (--surface, --ink, --line ...) onto them and keeps its semantic colours.
+   Light = the leaderboard's light variant; dark = the site's default. OS setting, or data-theme="light|dark" on <html>. */
+:root {
+  --bg: #f7f6f2;
+  --panel: #ffffff;
+  --panel-alt: #ecebe6;
+  --border: #d9d6cf;
+  --text: #1d1b20;
+  --text-2: #45414b;
+  --text-dim: #5f5b66;
+  --accent: #ed1b76;
+  --link: #1f8f73;
+  --font: "Sora", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Chakra Petch", "Sora", "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+  --mono: "Spline Sans Mono", ui-monospace, SFMono-Regular, Menlo, "Apple SD Gothic Neo", "Noto Sans Mono CJK KR",
+    monospace;
+  --pixel: "Silkscreen", "Spline Sans Mono", monospace; /* the pixel stage's own lettering */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e0d11; --panel: #1a1920; --panel-alt: #242229; --border: #2e2c36;
+    --text: #f2eff4; --text-2: #cdc8d2; --text-dim: #a39daa; --link: #7fc2b1;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e0d11; --panel: #1a1920; --panel-alt: #242229; --border: #2e2c36;
+  --text: #f2eff4; --text-2: #cdc8d2; --text-dim: #a39daa; --link: #7fc2b1;
+}
+
+body { background: var(--bg); color: var(--text); font-family: var(--font); }
+
+/* the site's top bar (same markup and classes as leaderboard.html) */
+header.topbar {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--panel);
+}
+header.topbar .brand {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text); text-decoration: none; white-space: normal; transition: opacity 0.15s;
+}
+header.topbar .brand:hover { opacity: 0.82; }
+header.topbar .brand .accent { color: var(--accent); }
+header.topbar .brand .shapes { font-size: 12px; letter-spacing: 2px; }
+header.topbar nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+header.topbar nav.tabs a {
+  padding: 8px 14px; border-radius: 6px; color: var(--text-dim); text-decoration: none; font-size: 14px;
+  border: 1px solid transparent;
+}
+header.topbar nav.tabs a:hover { color: var(--text); }
+header.topbar nav.tabs a.active {
+  color: var(--text); background: var(--panel-alt); border-color: var(--border); box-shadow: inset 0 -2px 0 var(--accent);
+}
+header.topbar nav.tabs a .nav-ko { font-size: 11.5px; color: var(--text-dim); margin-left: 4px; letter-spacing: 0; }
+header.topbar nav.tabs a.active .nav-ko, header.topbar nav.tabs a:hover .nav-ko { color: var(--text); }
+@media (max-width: 640px) {
+  header.topbar { padding: 12px 16px; }
+  header.topbar .brand { font-size: 15px; }
+  header.topbar nav.tabs a { padding: 6px 10px; font-size: 13px; }
+}
+
+/* an exported page (body.embedded, no server): the site links do not resolve from a saved file */
+body.embedded header.topbar nav.tabs { display: none; }

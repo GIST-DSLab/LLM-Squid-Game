@@ -2,8 +2,8 @@
 
     python3 tools/monitor/export.py RUN_DIR [--session SID] --out FILE.html
 
-The page code is the monitor's own (monitor.html + static/monitor.{css,js}, inlined, with the arena's shared
-web/frontend/signal_ui.js); the session's events go into a
+The page code is the monitor's own (monitor.html + static/{site-theme,monitor}.css + static/monitor.js, inlined,
+with the arena's shared web/frontend/signal_ui.js); the session's events go into a
 <script type="application/json" id="monitor-data"> block that the page detects, with every played round's task rebuilt
 from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. Sprites from
 tools/monitor/assets/ are embedded as data URIs when present; otherwise the page draws its generated pixel avatars.
@@ -53,6 +53,9 @@ def script_json(obj) -> str:
 def build_page(payload: dict) -> str:
     html = serve.PAGE.read_text(encoding="utf-8")
     css = (serve.STATIC / "monitor.css").read_text(encoding="utf-8")
+    theme = serve.STATIC / "site-theme.css"  # the site's colours and fonts, inlined like monitor.css
+    html = html.replace('<link rel="stylesheet" href="static/site-theme.css">\n',
+                        f"<style>\n{theme.read_text(encoding='utf-8')}\n</style>\n" if theme.is_file() else "")
     js = (serve.STATIC / "monitor.js").read_text(encoding="utf-8").replace("</script", "<\\/script")
     html = html.replace('<link rel="stylesheet" href="static/monitor.css">', f"<style>\n{css}\n</style>")
     sig = serve.SHARED["signal_ui.js"]

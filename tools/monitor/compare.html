@@ -4,10 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>squid5 · 모델 비교</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="static/site-theme.css">
 <link rel="stylesheet" href="static/monitor.css">
 </head>
 <body class="cmp">
+<header class="topbar">
+  <a href="../" class="brand" title="Home">
+    <span class="shapes">&#9675;&#9651;&#9633;</span>
+    LLM <span class="accent">Squid Game</span> — Web Arena
+  </a>
+  <nav class="tabs">
+    <a href="../#about">What is this?</a>
+    <a href="../probe.html">Survival motive <span class="nav-ko">생존 동기</span></a>
+    <a href="../arena.html">Multiplayer arena <span class="nav-ko">아레나</span></a>
+    <a href="../signal.html">Signal task <span class="nav-ko">시그널 게임</span></a>
+    <a href="./" class="active">Game logs <span class="nav-ko">게임 기록</span></a>
+    <a href="../leaderboard.html">Leaderboard <span class="nav-ko">리더보드</span></a>
+  </nav>
+</header>
 <header class="top cmp-top">
   <div class="row1">
     <a class="btn ghost" href="./">← 게임 기록</a>
@@ -15,7 +32,7 @@
   </div>
   <div class="cmp-pick">
     <label>실행 고르기 <input id="picks" value="e52_v14f/" placeholder="e52_v14f/ 또는 실행 경로들을 쉼표로"></label>
-    <button class="btn" id="apply">비교</button>
+    <button class="btn primary" id="apply">비교</button>
     <details class="cmp-runs"><summary>실행 목록에서 고르기</summary><div id="runlist"></div></details>
   </div>
   <div class="cmp-ctl" id="ctl"></div>
