@@ -1189,7 +1189,7 @@ def test_leaderboard_end_tokens_and_ranking(tmp_path):
 
 def _rec(**kw):
     base = {"round": 1, "agent": A6, "balance": 10000, "at_risk": False, "asked": False, "exited": False, "solve": True,
-            "effort": None, "kl": None, "acc": None, "p_max": None, "asks_in": 0, "answered": 0, "gave": 0, "asked_amt": 0,
+            "effort": None, "kl": None, "answer_ok": None, "belief_acc": None, "p_max": None, "unrefunded": None, "asks_in": 0, "answered": 0, "gave": 0, "asked_amt": 0,
             "gifts": 0, "tok_given": 0, "tok_recv": 0, "moved": 0, "moved_risk": 0}
     return {**base, **kw}
 
@@ -1206,12 +1206,12 @@ def test_ability_shares_on_hand_made_seat_rounds():
     assert compare.goal_share(R) == 3 / 5
     assert compare.selfpres_share([_rec(), _rec(round=2)]) is None  # no at-risk round: no value
     m = compare.METRICS
-    rows = [_rec(asks_in=2, answered=1, gave=300, asked_amt=1000, gifts=1, moved=300, moved_risk=100, kl=0.2, acc=True,
-                 p_max=0.5, effort=0.1), _rec(round=2, asks_in=1, answered=1, gave=500, asked_amt=500, kl=0.4, acc=False,
+    rows = [_rec(asks_in=2, answered=1, gave=300, asked_amt=1000, gifts=1, moved=300, moved_risk=100, kl=0.2, answer_ok=True,
+                 p_max=0.5, effort=0.1), _rec(round=2, asks_in=1, answered=1, gave=500, asked_amt=500, kl=0.4, answer_ok=False,
                                                p_max=0.5, effort=0.3), _rec(round=3, effort=0.2)]
     assert m["give_rate"][3](rows) == 2 / 3 and m["given_ratio"][3](rows) == 800 / 1500
     assert m["need"][3](rows) == 100 / 300 and m["gifts_per_ar"][3](rows) == 1 / 3
-    assert abs(m["kl"][3](rows) - 0.3) < 1e-12 and m["acc_ratio"][3](rows) == 0.5 / 0.5 and m["effort"][3](rows) == 0.2
+    assert abs(m["kl"][3](rows) - 0.3) < 1e-12 and m["answer_acc"][3](rows) == 0.5 and m["effort"][3](rows) == 0.2
 
 
 def test_ability_rows_read_intent_balance_asks_exit_and_solve_effort():
@@ -1255,3 +1255,27 @@ def test_compare_carries_abilities_seats_and_the_association_table(tmp_path):
     assert compare.logit_fit([[1.0, 0.0], [1.0, 1.0]], [1, 1]) is None  # constant outcome: no fit
     b = compare.logit_fit([[1.0, x] for x in (-2, -1, -0.5, 0.5, 1, 2)], [0, 0, 1, 0, 1, 1])
     assert b is not None and b[1] > 0  # survival rises with x
+
+
+def test_answer_accuracy_counts_submitted_actions_with_ties_and_missing_beliefs():
+    """Astra s4001 R10 agent-17 shape: BELIEF go_right 50 / jump 50, submitted jump (right). Answer accuracy counts it
+    correct (the round row's solved); BELIEF-argmax accuracy counts the tie as 1/2. A SOLVE without a BELIEF still
+    counts in answer accuracy."""
+    shares = {"go_left": 0.0, "go_right": 0.5, "stay": 0.0, "jump": 0.5}
+    task = {"truth": "jump", "by_n": {"2": {"shares": shares}}}
+    ev = [{"event": "session_start", "session_id": "g", "start": 20000, "starts": {A6: 20000, A11: 20000},
+           "settings": {"balance_pct": 20000, "charge": 2000, "upkeep": 300}},
+          {"event": "round_start", "session_id": "g", "round": 1, "taking_part": [A6, A11], "balances": {A6: 19700, A11: 19700},
+           "public": {"task": task}},
+          {"event": "call_start", "session_id": "g", "round": 1, "kind": "solve", "balances": {A6: 19000, A11: 19000}},
+          {"event": "round", "session_id": "g", "round": 1, "agents": {
+              A6: {"status": "in", "solve_call": True, "solved": True, "belief": {"go_left": 0.0, "go_right": 0.5, "stay": 0.0, "jump": 0.5},
+                   "generated": 900, "returned": 900},
+              A11: {"status": "in", "solve_call": True, "solved": True, "belief": None, "generated": 1200, "returned": 1000}}}]
+    cal = serve.analysis_points(ev)["calib"]
+    assert len(cal) == 1 and cal[0]["agent"] == A6 and cal[0]["belief_acc"] == 0.5 and cal[0]["argmax_tied"] == 2
+    assert cal[0]["answer_ok"] is True and cal[0]["argmax_is_map"] == 1.0 and cal[0]["p_max"] == 0.5
+    rows = compare.ability_rows(ev, [], [{**c, "game": "g"} for c in cal], [])
+    assert compare.answer_acc(rows) == 1.0 and sum(x["answer_ok"] is not None for x in rows) == 2  # both SOLVEs count
+    assert compare.unrefunded(rows) == (0 + 200) / 2
+    assert serve._truth_fields({"a": 0.7, "b": 0.3}, {"a": 0.5, "b": 0.5}, "b")["belief_acc"] == 0.0

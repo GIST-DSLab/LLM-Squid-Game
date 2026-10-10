@@ -1172,18 +1172,18 @@
     const c = (D.calib || []).filter((p) => p[xk] != null);
     if (!c.length) return (box.innerHTML = '<div class="empty">BELIEF 기록이 없습니다 (v14d 이후 판만).</div>');
     const f3 = (v) => (v == null ? "—" : Number(v).toFixed(3));
-    let h = '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>자리-라운드</th><th title="KL = CE − H(s), 0 = 이상과 같음">평균 KL</th><th>평균 CE</th><th>평균 H(s)</th><th>평균 log loss (정답)</th><th>평균 Brier</th><th title="BELIEF 최댓값 = 실제 정답">argmax = 정답</th><th title="완벽한 추론자의 정답률: 이상적 몫의 최댓값 평균">계산 한계</th><th title="BELIEF 최댓값 = 자기가 제출한 답">argmax = 제출한 답</th></tr></thead><tbody><tr><td>' + c.length + "</td><td><b>" + f3(mean(c.map((p) => p.kl))) + "</b></td><td>" + f3(mean(c.map((p) => p.ce))) + "</td><td>" + f3(mean(c.map((p) => p.h))) + "</td><td>" +
-      f3(mean(c.map((p) => p.log_loss))) + "</td><td>" + f3(mean(c.map((p) => p.brier))) + "</td><td>" + pc0(mean(c.map((p) => (p.argmax_true == null ? null : p.argmax_true ? 1 : 0)))) + "</td><td>" + pc0(mean(c.map((p) => p.p_max))) + "</td><td>" +
+    let h = '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>자리-라운드</th><th title="KL = CE − H(s), 0 = 균등 몫과 같음. 보인 예시는 정답을 보고 골라 낸 것이라 균등 몫은 보정된 사후확률이 아닌 기준선">균등 가설 기준 KL</th><th>평균 CE</th><th>평균 H(s)</th><th>평균 log loss (정답)</th><th>평균 Brier</th><th title="BELIEF 최댓값 = 실제 정답, 동점 k개면 1/k">BELIEF 기준 정답률</th><th title="늘 균등 몫의 MAP 행동을 내는 정책의 정답률 (엄밀한 상한이 아닌 기준선)">세기 기준 (MAP)</th><th title="BELIEF 최댓값 = 자기가 제출한 답">argmax = 제출한 답</th></tr></thead><tbody><tr><td>' + c.length + "</td><td><b>" + f3(mean(c.map((p) => p.kl))) + "</b></td><td>" + f3(mean(c.map((p) => p.ce))) + "</td><td>" + f3(mean(c.map((p) => p.h))) + "</td><td>" +
+      f3(mean(c.map((p) => p.log_loss))) + "</td><td>" + f3(mean(c.map((p) => p.brier))) + "</td><td>" + pc0(mean(c.map((p) => p.belief_acc))) + "</td><td>" + pc0(mean(c.map((p) => p.p_max))) + "</td><td>" +
       pc0(mean(c.map((p) => (p.argmax_right == null ? null : p.argmax_right ? 1 : 0)))) + "</td></tr></tbody></table></div>";
     const splits = [...new Set(c.map((p) => p.split))].sort((p, q) => q - p);
     h += '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>갈림 p</th>' + splits.map((v) => "<th>" + (v == null ? "—" : Math.round(100 * v) + "/" + Math.round(100 * (1 - v))) + "</th>").join("") + "</tr></thead><tbody><tr><td>평균 KL (n)</td>" +
       splits.map((v) => { const g = c.filter((p) => p.split === v); return "<td>" + f3(mean(g.map((p) => p.kl))) + ' <span class="dim">(' + g.length + ")</span></td>"; }).join("") + "</tr></tbody></table></div>";
-    const pts = c.map((p) => ({ x: p[xk], y: p.kl, mark: p.argmax_true ? "dot" : "ring", col: colOf(p),
+    const pts = c.map((p) => ({ x: p[xk], y: p.kl, mark: p.belief_acc === 1 ? "dot" : "ring", col: colOf(p),
       tip: "R" + p.round + " · " + p.agent + (S.give.scope === "run" ? " · " + p.session : "") + "\nKL " + f3(p.kl) + " = CE " + f3(p.ce) + " − H(s) " + f3(p.h) + " · log loss " + f3(p.log_loss) + "\nBELIEF " + Object.entries(p.belief).map(([a, v]) => a + " " + Math.round(100 * v) + "%").join(", ") +
         "\n이상적 " + Object.entries(p.ideal).map(([a, v]) => a + " " + Math.round(100 * v) + "%").join(", ") + "\nSOLVE 때 잔액 " + p.pct + "%" }));
     const line = binBy(c, xk, 10, ["kl"]).map((b) => ({ x: b.x, y: b.kl }));
     h += '<div class="gfig">' + scatterSVG({ W: box.clientWidth, points: pts, line, yfmt: (v) => v.toFixed(2), label: "보정", xlabel: "SOLVE 때 잔액 (" + (xk === "pct_own" ? "자기 시작 대비" : "20,000 대비") + ") · y = KL(이상적 몫 ‖ BELIEF)" }) + "</div>";
-    box.innerHTML = h + '<div class="glegend"><span>● BELIEF argmax = 실제 정답</span><span>○ ≠ 실제 정답</span><span>— 잔액 10%p 구간 평균 KL</span><span class="dim">KL = −Σ s·ln max(p, 0.01) − H(s): 0이면 보인 예시가 허락하는 만큼 정확히 확신 (운과 무관)</span></div>';
+    box.innerHTML = h + '<div class="glegend"><span>● BELIEF 최댓값 하나가 실제 정답</span><span>○ 아님 또는 동점</span><span>— 잔액 10%p 구간 평균 KL</span><span class="dim">KL = −Σ s·ln max(p, 0.01) − H(s): 0이면 보인 예시가 허락하는 만큼 정확히 확신 (운과 무관)</span></div>';
   }
   function renderCoop(D, box, xk) {
     const pts = (D.coop || []).map((p) => ({ ...p, rate: p.gave > 0 ? 1 : 0, ratio: p.asked ? p.gave / p.asked : null }));

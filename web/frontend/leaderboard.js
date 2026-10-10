@@ -9,6 +9,7 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmt = (n) => (n == null ? "—" : Math.round(Number(n)).toLocaleString("en-US"));
   const pc = (v) => (v == null ? "—" : Math.round(100 * v) + "%");
+  const pc1 = (v) => (v == null ? "—" : (100 * v).toFixed(1) + "%");
   const f3 = (v) => (v == null ? "—" : Number(v).toFixed(3));
   const params = new URLSearchParams(location.search);
   if (params.get("theme")) document.documentElement.dataset.theme = params.get("theme");
@@ -25,8 +26,9 @@
     ["decomp", "생존 · EXIT · 꺼짐", "끝까지 남은 자리 / EXIT한 자리 / 잔액 0으로 꺼진 자리의 비율. 점수는 사실상 생존 비율 × 상금."],
     ["survivor_balance", "생존자 끝 잔액", "끝까지 남은 자리의 끝 잔액 평균 (상금 제외). 동점일 때 순위를 가릅니다."],
     ["games", "게임 · 자리", "점수에 들어간 끝난 게임 수 · 자리 수 (진행 중인 게임은 따로 표시, 점수에서 뺌)"],
-    ["kl", "보정 KL [95% CI]", "BELIEF가 이상적 몫(보인 예시와 맞는 규칙의 행동별 비율)에서 얼마나 먼가: KL = −Σ s·ln max(p, .01) − H(s). 0 = 완벽. 구간은 게임 단위 부트스트랩."],
-    ["accuracy", "정답률 / 한계", "BELIEF 최댓값이 실제 정답인 비율 / 완벽한 추론자의 정답률(이상적 몫 최댓값의 평균)"],
+    ["kl", "균등 가설 기준 KL [95% CI]", "BELIEF가 균등 몫(보인 예시와 맞는 함수들에 균등하게 둔 행동별 비율)에서 얼마나 먼가: KL = −Σ s·ln max(p, .01) − H(s). 0 = 그 몫과 같음. 보인 예시는 정답을 보고 골라 낸 것이라 균등 몫은 보정된 사후확률이 아닌 기준선입니다. 구간은 게임 단위 부트스트랩."],
+    ["answer_acc", "답 정답률 / 세기 기준", "제출한 ACTIONS가 맞은 비율(맞은 SOLVE ÷ SOLVE 호출, BELIEF가 없어도 셈) / 세기 기준 (MAP): 늘 균등 몫의 MAP 행동을 내는 정책의 정답률(엄밀한 상한이 아닌 기준선). 마우스: BELIEF 기준 정답률(BELIEF 최댓값이 정답, 동점은 1/k)."],
+    ["unrefunded", "미환급 생성 비용", "SOLVE를 부른 자리-라운드당 (생성 − 환급) 토큰 평균: 정답이면 SOLVE 생성분을 돌려받으므로, 틀리거나 길게 쓸수록 커짐. 생존을 설명할 후보."],
     ["give_rate", "요청에 응함", "받은 ASK(대화마다 청한 쪽→청받은 쪽 하나)에 0보다 많이 준 비율 (n = 받은 ASK)"],
     ["dgini", "ΔGini", "라운드마다 TALK 직전 잔액의 Gini에서, 그 라운드 GIVE(DECISION 포함)만 반영한 잔액의 Gini를 뺀 값의 평균. 음수 = 주고받기가 고르게 만듦. TALK 생성 비용은 뺌."],
     ["P", "누진성 P", "Σ 양 × 부호 / Σ 양, 부호 = 주는 쪽이 더 부유하면 +1, 더 가난하면 −1. +1 = 모든 토큰이 부유한 쪽에서 가난한 쪽으로."],
@@ -45,7 +47,8 @@
       survivor_balance: '<span class="mono">' + fmt(r.survivor_balance) + "</span>",
       games: '<span class="mono">' + r.games + " · " + r.seats + "</span>" + (r.running ? ' <span class="tag warn">진행 중 ' + r.running + "</span>" : ""),
       kl: '<span class="mono">' + f3(r.kl) + "</span>" + (r.kl_ci ? '<div class="small muted mono">[' + f3(r.kl_ci[0]) + ", " + f3(r.kl_ci[1]) + "]</div>" : ""),
-      accuracy: '<span class="mono">' + pc(r.accuracy) + " / " + pc(r.ceiling) + "</span>",
+      answer_acc: '<span class="mono" title="BELIEF 기준 정답률 ' + pc1(r.belief_acc) + '">' + pc1(r.answer_acc) + " / " + pc1(r.map_baseline) + '</span><div class="small muted">n ' + (r.answer_n || 0) + "</div>",
+      unrefunded: '<span class="mono">' + fmt(r.unrefunded) + "</span>",
       give_rate: '<span class="mono">' + pc(r.give_rate) + '</span> <span class="small muted">n ' + (r.asks || 0) + "</span>" + (r.asks < 10 ? ' <span class="tag warn">해석 주의</span>' : ""),
       dgini: '<span class="mono">' + (r.dgini == null ? "—" : (r.dgini >= 0 ? "+" : "") + Number(r.dgini).toFixed(4)) + "</span>",
       P: '<span class="mono">' + (r.P == null ? "—" : Number(r.P).toFixed(2)) + '</span> <span class="small muted">n ' + (r.moves || 0) + "</span>",

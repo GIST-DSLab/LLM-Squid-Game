@@ -534,14 +534,20 @@ def _pcts(bal, full, own) -> dict:
 
 
 def _truth_fields(belief: dict, ideal: dict, truth) -> dict:
-    """The probability the belief put on the true action and the ideal share of it; the counting ceiling (the ideal's
-    largest share: a perfect reasoner's chance of being right) and whether the belief's argmax is an ideal MAP action."""
+    """The probability the belief put on the true action and the ideal share of it; the counting baseline ``p_max``
+    (the ideal's largest share: the hit rate of always playing a MAP action of the uniform-over-consistent-rules shares,
+    a baseline policy, not a strict upper bound); BELIEF-argmax accuracy ``belief_acc`` (1/#tied if the truth is among
+    the belief's tied largest actions, else 0; ``argmax_tied`` = #tied) and ``argmax_is_map`` (the share of the tied
+    largest actions that are ideal MAP actions). Answer accuracy is the round row's ``solved`` (the submitted
+    ACTIONS), not this."""
     top = max(ideal.values()) if ideal else None
     maps = [a for a, v in ideal.items() if v == top]
-    arg = max(belief, key=lambda a: belief[a]) if belief else None
+    best = max(belief.values()) if belief else None
+    tied = [a for a, v in belief.items() if v == best] if belief else []
     return {"truth": truth, "p_true": belief.get(truth) if truth else None, "ideal_true": ideal.get(truth, 0) if truth else None,
-            "p_max": top, "argmax_is_map": arg in maps if arg else None,
-            "argmax_true": (arg == truth) if arg and truth else None}  # the round row's argmax flag is vs the SUBMITTED answer
+            "p_max": top, "argmax_tied": len(tied) or None,
+            "argmax_is_map": sum(a in maps for a in tied) / len(tied) if tied else None,
+            "belief_acc": (1 / len(tied) if truth in tied else 0.0) if tied and truth else None}
 
 
 def analysis_points(events: list[dict]) -> dict:
@@ -594,6 +600,7 @@ def analysis_points(events: list[dict]) -> dict:
                                   "log_loss": row.get("log_loss"), "brier": row.get("brier"), "split": pub.get("split"),
                                   "argmax_right": row.get("belief_argmax_matches_answer"), "n": len(taking),
                                   **_truth_fields(b, ideal, (pub.get("task") or {}).get("truth") or (pub.get("answers") or [None])[0]),
+                                  "answer_ok": bool(row.get("solved")) if row.get("solve_call") else None,
                                   "share": round(own / start, 2) if own and start else None})
     return {"exits": exits, "deaths": deaths, "calib": calib}
 

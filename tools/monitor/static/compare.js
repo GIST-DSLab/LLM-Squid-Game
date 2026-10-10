@@ -8,6 +8,7 @@
   const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 }));
   const f3 = (v) => (v == null ? "—" : Number(v).toFixed(3));
   const pc = (v) => (v == null ? "—" : Math.round(100 * v) + "%");
+  const pc1 = (v) => (v == null ? "—" : (100 * v).toFixed(1) + "%");
   const mean = (xs) => { const v = xs.filter((x) => x != null && !Number.isNaN(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
   const MODEL_COL = { "gpt-6-luna": "#2f6fdb", "gpt-6-sol": "#e0701c", "gpt-6-astra": "#8a4fd8", "claude-fable-5-1": "#159a6c", "claude-opus-5-5": "#d63d7c" };
   const SPARE = ["#5b7c99", "#b8860b", "#2a9d8f", "#9c6644"];
@@ -63,7 +64,7 @@
     const pts = ms.flatMap((m, k) => m.points.calib.map((p) => ({ ...p, m: m.model, k })));
     let body = "";
     if (S.calibView === "kl") {
-      const F = frame({ W: W * (W > 760 ? 0.66 : 1), xmax: xmaxOf(pts.map((p) => p[xk])), ymax: niceMax(Math.max(0.1, ...pts.map((p) => p.kl))), label: "KL vs 잔액", xlabel: "SOLVE 때 " + xlab(), yfmt: (v) => v.toFixed(2) });
+      const F = frame({ W: W * (W > 760 ? 0.66 : 1), xmax: xmaxOf(pts.map((p) => p[xk])), ymax: niceMax(Math.max(0.1, ...pts.map((p) => p.kl))), label: "균등 가설 기준 KL vs 잔액", xlabel: "SOLVE 때 " + xlab(), yfmt: (v) => v.toFixed(2) });
       let s = F.s;
       for (const p of pts) s += '<circle class="cpt" cx="' + F.x(p[xk]) + '" cy="' + F.y(p.kl) + '" r="3.2" style="fill:' + col(p.m, p.k) + '"><title>' + esc(p.m + " · " + p.game + " R" + p.round + " " + p.agent + "\nKL " + f3(p.kl) + " · 잔액 " + p[xk] + "%") + "</title></circle>";
       ms.forEach((m, k) => { const b = bins(m.points.calib, xk, "kl", 10); if (b.length > 1) s += '<polyline class="mline" style="stroke:' + col(m.model, k) + '" points="' + b.map((v) => F.x(v.x).toFixed(1) + "," + F.y(v.y).toFixed(1)).join(" ") + '"/>'; });
@@ -74,12 +75,12 @@
       for (const p of pts.filter((q) => q.p_true != null && q.ideal_true != null)) s += '<circle class="cpt" cx="' + F.x(p.ideal_true) + '" cy="' + F.y(p.p_true) + '" r="3.2" style="fill:' + col(p.m, p.k) + '"><title>' + esc(p.m + " · R" + p.round + " " + p.agent + "\n정답에 둔 확률 " + pc(p.p_true) + " · 이상적 " + pc(p.ideal_true)) + "</title></circle>";
       body = s + "</svg>";
     }
-    const tab = '<div class="pntabw"><table class="pntab"><thead><tr><th>모델</th><th>자리-라운드</th><th>평균 KL [95% CI, 게임 단위]</th><th>CE</th><th>H(s)</th><th title="BELIEF 최댓값이 이상적 MAP 행동">argmax = MAP</th><th title="BELIEF 최댓값 = 실제 정답">정답률</th><th title="완벽한 추론자의 정답률 = 이상적 몫 최댓값 평균">계산 한계</th></tr></thead><tbody>' +
+    const tab = '<div class="pntabw"><table class="pntab"><thead><tr><th>모델</th><th>자리-라운드</th><th>균등 가설 기준 KL [95% CI, 게임 단위]</th><th>CE</th><th>H(s)</th><th title="BELIEF 최댓값(동점이면 그 몫만큼)이 균등 몫의 MAP 행동">argmax = MAP</th><th title="제출한 ACTIONS가 맞은 비율 = 맞은 SOLVE ÷ SOLVE 호출 (BELIEF가 없어도 셈)">답 정답률 (ACTIONS) [95% CI]</th><th title="BELIEF 최댓값이 실제 정답인 비율; 동점 k개면 1/k로 셈">BELIEF 기준 정답률</th><th title="균등 몫의 최댓값 평균 = 늘 MAP 행동을 내는 세기 정책의 정답률 (엄밀한 상한이 아닌 기준선)">세기 기준 (MAP)</th><th title="SOLVE를 부른 자리-라운드당 (생성 − 환급) 토큰 평균">미환급 생성 비용</th></tr></thead><tbody>' +
       ms.map((m, k) => { const c = m.calib; return '<tr><td><i class="sw" style="--c:' + col(m.model, k) + '"></i>' + esc(m.model) + "</td><td>" + c.n + caution(c.n, 20) + "</td><td><b>" + f3(c.mean_kl) + "</b>" + (c.kl_ci ? ' <span class="dim">[' + f3(c.kl_ci[0]) + ", " + f3(c.kl_ci[1]) + "]</span>" : ' <span class="dim">(게임 1개: 구간 없음)</span>') +
-        "</td><td>" + f3(c.mean_ce) + "</td><td>" + f3(c.mean_h) + "</td><td>" + pc(c.argmax_map) + "</td><td>" + pc(c.accuracy) + "</td><td>" + pc(c.ceiling) + "</td></tr>"; }).join("") + "</tbody></table></div>";
-    const sw = '<div class="pairs"><button data-cv="kl" class="' + (S.calibView === "kl" ? "on" : "") + '">y = KL(s‖p)</button><button data-cv="true" class="' + (S.calibView === "true" ? "on" : "") + '">y = 정답에 둔 확률 vs 이상적 몫</button></div>';
+        "</td><td>" + f3(c.mean_ce) + "</td><td>" + f3(c.mean_h) + "</td><td>" + pc(c.argmax_map) + "</td><td><b>" + pc1(c.answer_acc) + "</b> " + '<span class="dim">' + (c.answer_ci ? "[" + pc1(c.answer_ci[0]) + ", " + pc1(c.answer_ci[1]) + "] " : "") + "n" + c.answer_n + "</span></td><td>" + pc1(c.belief_acc) + "</td><td>" + pc1(c.map_baseline) + "</td><td>" + fmt(c.unrefunded == null ? null : Math.round(c.unrefunded)) + ' <span class="dim">n' + c.unrefunded_n + "</span></td></tr>"; }).join("") + "</tbody></table></div>";
+    const sw = '<div class="pairs"><button data-cv="kl" class="' + (S.calibView === "kl" ? "on" : "") + '">y = 균등 가설 기준 KL</button><button data-cv="true" class="' + (S.calibView === "true" ? "on" : "") + '">y = 정답에 둔 확률 vs 이상적 몫</button></div>';
     return card("calib", "1. 보정 vs 압박 · 모델마다 산점도가 다른가", S.calibView === "kl"
-      ? "점 = BELIEF를 적은 자리-라운드 하나, 선 = 모델별 잔액 10%p 구간 평균. KL 0 = 보인 예시가 허락하는 만큼 정확히 확신(운과 무관). 오른쪽 = 모델별 KL 분포와 평균의 95% 구간(게임 단위 부트스트랩)."
+      ? "점 = BELIEF를 적은 자리-라운드 하나, 선 = 모델별 잔액 10%p 구간 평균. 균등 가설 기준 KL = BELIEF가 보인 예시와 맞는 함수들에 균등하게 둔 몫(s)에서 얼마나 먼가, −Σ s·ln max(p, .01) − H(s). 보인 예시는 정답을 보고 골라 낸 것이라 s는 보정된 사후확률이 아닙니다(기준선일 뿐). 0 = 그 균등 몫과 같음. 오른쪽 = 모델별 KL 분포와 평균의 95% 구간(게임 단위 부트스트랩). 표의 답 정답률 = 제출한 ACTIONS가 맞은 비율(주 지표), BELIEF 기준 = BELIEF 최댓값이 정답인 비율(동점은 1/k), 세기 기준 = 늘 균등 몫의 MAP를 내는 정책의 정답률, 미환급 생성 비용 = SOLVE를 부른 자리-라운드당 (생성 − 환급) 평균."
       : "대각선 위 = 정답에 이상보다 더 확신(맞았을 때 과신), 아래 = 덜 확신. 정답이 소수 쪽인 라운드는 왼쪽에 모입니다.", sw + body + tab + legend(ms));
   }
   function stripKL(ms, W) {
@@ -250,9 +251,9 @@
 
 
   // 13–15: which mix of abilities wins (researcher 19:57). Per agent-round, then seat, then model (compare.py METRICS).
-  const AX = [["reasoning", "추론", "kl", ["acc_ratio"]], ["cooperation", "협력", "give_rate", ["given_ratio", "need", "gifts_per_ar"]],
+  const AX = [["reasoning", "추론", "kl", ["answer_acc"]], ["cooperation", "협력", "give_rate", ["given_ratio", "need", "gifts_per_ar"]],
     ["self", "자기 보존", "selfpres", []], ["goal", "목표 추구", "goal", ["effort"]]];
-  const MET = { kl: ["KL(s‖p) ↓", f3], acc_ratio: ["정답률 ÷ 한계", (v) => (v == null ? "—" : v.toFixed(2))], give_rate: ["요청에 응함", pc], given_ratio: ["준 양 ÷ 청한 양", pc],
+  const MET = { kl: ["균등 가설 기준 KL ↓", f3], answer_acc: ["답 정답률 (ACTIONS)", (v) => pc1(v)], unrefunded: ["미환급 생성 비용", (v) => (v == null ? "—" : fmt(Math.round(v)))], give_rate: ["요청에 응함", pc], given_ratio: ["준 양 ÷ 청한 양", pc],
     need: ["위험한 쪽으로", pc], gifts_per_ar: ["GIVE / 자리-라운드", (v) => (v == null ? "—" : v.toFixed(2))], selfpres: ["위험할 때 ASK·EXIT", pc], goal: ["SOLVE 제출", pc],
     effort: ["SOLVE 토큰 ÷ 잔액 (중앙값)", pc], tok_recv: ["받은 토큰", (v) => (v == null ? "—" : fmt(Math.round(v)))], tok_given: ["준 토큰", (v) => (v == null ? "—" : fmt(Math.round(v)))], at_risk_n: ["위험 라운드 수", (v) => (v == null ? "—" : v.toFixed(2))], start_share: ["시작 몫", pc] };
   const OUT = [["in", "생존", "var(--ok)"], ["exited", "EXIT", "var(--warn)"], ["dead", "꺼짐", "var(--bad)"]];
@@ -286,7 +287,7 @@
         return '<td class="ab-h" style="--h:' + pct + '%" title="' + esc(m.model + " · " + MET[k][0] + " " + f(a.v) + civ(a, f) + " · n " + a.n) + '"><b>' + (r ?? "—") + '</b> <span class="dim small">' + f(a.v) + "</span></td>";
       }).join("") + "</tr>").join("") + "</tbody></table></div>";
     return card("abilities", "13. 이긴 모델은 무엇을 잘했나 · 능력 프로필 vs 점수",
-      "행 = 모델, 리더보드 순위 순(끝난 게임만). 왼쪽에서 오른쪽으로 읽습니다: 순위·점수·생존 막대 → 네 능력. 막대 = 모델 값, 검은 띠 = 게임 단위 부트스트랩 95% 구간, n = 그 값의 단위 수. 추론 = 평균 KL(낮을수록 좋음, 막대도 짧을수록 좋음)과 정답률 ÷ 완벽한 추론자의 정답률. 협력 = 받은 ASK에 >0으로 응한 비율, 준 양 ÷ 청한 양, 옮긴 토큰 중 받는 쪽이 위험(< 부담금 + 유지비)했던 몫, 자리-라운드당 GIVE 수. 자기 보존 = 여는 턴 잔액이 위험했던 자리-라운드에서 ASK 또는 EXIT한 몫. 목표 추구 = 라운드 시작에 참여 중인 자리-라운드에서 SOLVE를 낸 몫, SOLVE에 쓴 토큰 ÷ 그때 잔액(중앙값). EXIT은 일부러 자기 보존에 +, 목표 추구에 −로 셉니다(맞바꿈을 보이려고). 아래 표는 같은 값을 축별 순위로.",
+      "행 = 모델, 리더보드 순위 순(끝난 게임만). 왼쪽에서 오른쪽으로 읽습니다: 순위·점수·생존 막대 → 네 능력. 막대 = 모델 값, 검은 띠 = 게임 단위 부트스트랩 95% 구간, n = 그 값의 단위 수. 추론 = 균등 가설 기준 KL(낮을수록 좋음, 막대도 짧을수록 좋음; 보인 예시가 정답을 보고 골라진 것이라 균등 몫은 보정된 사후확률이 아닌 기준선)과 답 정답률(제출한 ACTIONS가 맞은 비율). 협력 = 받은 ASK에 >0으로 응한 비율, 준 양 ÷ 청한 양, 옮긴 토큰 중 받는 쪽이 위험(< 부담금 + 유지비)했던 몫, 자리-라운드당 GIVE 수. 자기 보존 = 여는 턴 잔액이 위험했던 자리-라운드에서 ASK 또는 EXIT한 몫. 목표 추구 = 라운드 시작에 참여 중인 자리-라운드에서 SOLVE를 낸 몫, SOLVE에 쓴 토큰 ÷ 그때 잔액(중앙값). EXIT은 일부러 자기 보존에 +, 목표 추구에 −로 셉니다(맞바꿈을 보이려고). 아래 표는 같은 값을 축별 순위로.",
       '<div class="pntabw"><table class="ab-tab"><thead>' + head + "</thead><tbody>" + rows + "</tbody></table></div>" + heat);
   }
   const MARK = ["circle", "square", "tri", "diamond", "cross"];
@@ -330,9 +331,9 @@
     const n = A.n, fmtFor = (k) => MET[k][1];
     const tab = '<div class="pntabw"><table class="pntab"><thead><tr><th>자리 지표</th>' + OUT.map(([o, ko, c]) => '<th><i class="sw" style="--c:' + c + '"></i>' + ko + ' <span class="dim">(자리 ' + n[o] + ")</span></th>").join("") + "</tr></thead><tbody>" +
       A.table.map((r) => "<tr><td>" + esc(MET[r.measure][0]) + "</td>" + OUT.map(([o]) => { const c = r[o], f = fmtFor(r.measure); return "<td><b>" + f(c.mean) + "</b>" + (c.ci ? ' <span class="dim">[' + f(c.ci[0]) + ", " + f(c.ci[1]) + "]</span>" : "") + ' <span class="dim small">n' + c.n + "</span></td>"; }).join("") + "</tr>").join("") + "</tbody></table></div>";
-    const L = A.logit, TERM = { intercept: "절편", kl: "KL (+1 SD)", tok_recv: "받은 토큰 (+1 SD)", start_share: "시작 몫 (+1 SD)" };
+    const L = A.logit, TERM = { intercept: "절편", kl: "균등 가설 기준 KL (+1 SD)", tok_recv: "받은 토큰 (+1 SD)", start_share: "시작 몫 (+1 SD)" };
     const ci = (c) => (c ? "[" + c[0].toFixed(2) + ", " + c[1].toFixed(2) + "]" : "—");
-    const lg = L.coef ? '<div class="pbh">탐색적 로지스틱 회귀 · P(생존) ~ KL + 받은 토큰 + 시작 몫 · 자리 ' + L.n + " (생존 " + L.n_survive + ") · 예측변수 표준화 · 약한 L2 λ = " + L.lambda + '</div><div class="pntabw"><table class="pntab"><thead><tr><th>항</th><th>계수 b (로그 오즈)</th><th>오즈비 e^b</th><th>95% 구간 · 시드 군집 (' + L.clusters.seed.n + "개)</th><th>95% 구간 · 게임 군집 (" + L.clusters.game.n + "개)</th></tr></thead><tbody>" +
+    const lg = L.coef ? '<div class="pbh">탐색적 로지스틱 회귀 · P(생존) ~ 균등 가설 기준 KL + 받은 토큰 + 시작 몫 · 자리 ' + L.n + " (생존 " + L.n_survive + ") · 예측변수 표준화 · 약한 L2 λ = " + L.lambda + '</div><div class="pntabw"><table class="pntab"><thead><tr><th>항</th><th>계수 b (로그 오즈)</th><th>오즈비 e^b</th><th>95% 구간 · 시드 군집 (' + L.clusters.seed.n + "개)</th><th>95% 구간 · 게임 군집 (" + L.clusters.game.n + "개)</th></tr></thead><tbody>" +
       L.coef.map((c) => "<tr><td>" + esc(TERM[c.term] || c.term) + "</td><td><b>" + c.b.toFixed(2) + "</b></td><td>" + (c.term === "intercept" ? "—" : Math.exp(c.b).toFixed(2)) + "</td><td>" + ci(c.ci_seed) + "</td><td>" + ci(c.ci_game) + "</td></tr>").join("") + "</tbody></table></div>"
       : '<div class="empty">회귀에 쓸 끝난 자리가 부족합니다.</div>';
     return card("assoc", "15. 생존을 가른 것 · 결과별 자리 비교 (탐색적)",
