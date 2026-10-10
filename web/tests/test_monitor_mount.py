@@ -32,7 +32,7 @@ def test_page_and_code(client):
     assert client.get("/monitor/api/compare.csv", params={"runs": "nope/", "chart": "x"}).status_code == 400
     heads = {}
     for chart in ("calib", "asks", "unsolicited", "gives", "recip", "survival", "map", "e51", "gini", "moves", "summary",
-                  "leaderboard"):  # every chart id the 모델 비교 page links, plus summary and leaderboard
+                  "abilities", "seats", "assoc", "leaderboard"):  # every chart id the 모델 비교 page links, plus summary and leaderboard
         r = client.get("/monitor/api/compare.csv", params={"runs": "nope/", "chart": chart})
         assert r.status_code == 200, chart
         heads[chart] = r.text.lstrip("\ufeff").splitlines()[0]

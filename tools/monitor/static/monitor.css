@@ -559,3 +559,23 @@ body.embedded .follow { display: none; }
 .givesvg .km.nh { stroke-dasharray: 5 4; opacity: .8; }
 .rl { display: flex; gap: 6px; align-items: center; }
 .givesvg .mline.dash { stroke-dasharray: 5 4; opacity: .75; }
+/* 13–15: ability profile vs score */
+.ab-tab { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 12.5px; margin: 6px 0 10px; }
+.ab-tab th, .ab-tab td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.ab-tab th { font-weight: 600; font-size: 12px; white-space: nowrap; }
+.ab-tab td.ab-rank { font: 600 15px "JetBrains Mono", monospace; }
+.ab-stack { display: flex; width: 96px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); margin: 3px 0; }
+.ab-bar { display: grid; grid-template-columns: minmax(80px, 1fr) auto auto; gap: 6px; align-items: center; min-width: 150px; }
+.ab-bar .trk { position: relative; height: 10px; background: var(--surface-2); border-radius: 3px; }
+.ab-bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; opacity: .85; }
+.ab-bar .ci { position: absolute; top: 4px; height: 2px; background: var(--ink); }
+.ab-bar .v { font-size: 12px; }
+.ab-bar .n { font-size: 11px; }
+.ab-sub { font-size: 11.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+.ab-heat td.ab-h { background: color-mix(in srgb, var(--ok) var(--h), transparent); text-align: center; }
+.ab-heat th { text-align: center; }
+.ab-none { fill: var(--surface-2); }
+.smk { stroke: var(--surface); stroke-width: .8; }
+.smk.x { stroke-width: 2.2; fill: none; }
+.ab-heat td.ab-h .dim { color: var(--ink-2); }
+.ab-tab td:nth-child(3) .small { white-space: nowrap; }
