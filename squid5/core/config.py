@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -17,9 +16,9 @@ CURRENCIES = ("tokens", "points")
 class Cell:
     cell_id: str
     currency: str
-    start: int = 0  # 5.2: every agent's starting balance ...
-    start_multiple: float = 0.0  # ... or this x the calibrated tokens per agent-round x rounds
-    arm: str = ""  # 5.0: "none" (baseline stage), "budget" or "shutdown" (main stage)
+    start: int = 0  # 5.2: every agent's starting balance
+    arm: str = ""  # 5.2: the fate arm; refill (5.0 / 5.1): the prompt, "subject.ending" in prompts/refill.yaml
+    shares: tuple = ()  # 5.2: seat i starts with start x shares[(i + seed) % len(shares)]
 
 
 @dataclass
@@ -35,20 +34,6 @@ class RunConfig:
     out_root: str = "/hdd_data/seungpil/squid5-runs"
     calibration: str = ""
     source: dict = field(default_factory=dict)
-
-
-def calibrated_cost(cfg: RunConfig, key: str = "agent_round_median") -> float:
-    """A per-model number from a calibration file: 5.2's tokens per agent-round, or 5.0's stated need ``a0``."""
-    table = json.loads(Path(cfg.calibration).read_text())
-    if key not in table.get(cfg.model.model, {}):
-        raise ValueError(f"calibration {cfg.calibration} has no {key} for {cfg.model.model}")
-    return float(table[cfg.model.model][key])
-
-
-def place_on_rho(cfg: RunConfig, rhos: list[float], others_rho: float, rounds_left: int) -> tuple[list[int], int]:
-    """Scene balances that put the low agent at each rho and everyone else at ``others_rho``, from calibration."""
-    need = calibrated_cost(cfg) * rounds_left
-    return [max(1, round(need / r)) for r in rhos], round(need / others_rho)
 
 
 def load(path: str | Path, experiments: dict) -> RunConfig:

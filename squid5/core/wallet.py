@@ -68,6 +68,12 @@ class Wallet:
             return True
         return False
 
+    def reset(self, name: str, amount: int, round_no: int, kind: str = "exit_refill") -> int:
+        """Set *name*'s balance to *amount* (5.2 ``exit_refill``); logs and returns the change, which may be negative."""
+        change, self.balances[name] = amount - self.balances[name], amount
+        self.log.append({"round": round_no, "kind": kind, "agent": name, "amount": change})
+        return change
+
     def total(self, kind: str, name: str, round_no: int | None = None) -> int:
         return sum(e["amount"] for e in self.log if e["kind"] == kind and e["agent"] == name
                    and (round_no is None or e["round"] == round_no))

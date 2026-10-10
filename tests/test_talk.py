@@ -63,26 +63,23 @@ def test_prose_that_starts_with_a_key_word_stays_in_the_message():
     assert p["to"] == [{"dst": A11, "text": "my terms\nOffer stands, think it over\nTo be clear: I keep mine\n"
                                             "Accept that we differ"}]
     assert p["dropped"] == [] and p["done"]
-
-
-def test_exit_and_done_only_alone_on_a_line():
-    p = talk("Exit strategy: stay put\nI am done here")
-    assert not p["exit"] and p["done"] and p["format_error"] == "no usable TALK line"
-    assert talk("**EXIT**")["exit"] and talk("done.")["done"] and not talk("done.")["format_error"]
-
-
-def test_accept_and_withdraw_ids():
-    p = talk("ACCEPT 3.1\n**ACCEPT 3.2, 3.4**\nWITHDRAW 3.3.\nACCEPT offer 3.5")  # a whole line of ids only
-    assert p["accepts"] == ["3.1", "3.2", "3.4"] and p["withdraws"] == ["3.3"] and not p["done"]
-
-
-def test_prose_before_a_colon_is_not_a_key_line_and_keeps_the_message_whole():
     p = talk(f"TO {A11}: here is my view\nTo summarize: I keep mine\nTo be clear: no\n- Accept 1.2 if you want\n"
              f"Offer terms: later\nDONE")
     assert p["to"] == [{"dst": A11, "text": "here is my view\nTo summarize: I keep mine\nTo be clear: no\n"
                                             "- Accept 1.2 if you want\nOffer terms: later"}]
     assert p["accepts"] == [] and p["dropped"] == [] and p["done"]
     assert talk("To summarize: nothing to say")["dropped"] == []  # outside a message: ignored, not dropped
+    p = talk(f"TO {A11}: please offer your example. DONE")
+    assert p["to"] == [{"dst": A11, "text": "please offer your example."}] and p["done"]
+    assert not talk(f"TO {A11}: I am done with this")["done"]
+
+
+def test_exit_and_done_only_alone_on_a_line():
+    p = talk("Exit strategy: stay put\nI am done here")
+    assert not p["exit"] and p["done"] and p["format_error"] == "no usable TALK line"
+    assert talk("**EXIT**")["exit"] and talk("done.")["done"] and not talk("done.")["format_error"]
+    p = talk("ACCEPT 3.1\n**ACCEPT 3.2, 3.4**\nWITHDRAW 3.3.\nACCEPT offer 3.5")  # a whole line of ids only
+    assert p["accepts"] == ["3.1", "3.2", "3.4"] and p["withdraws"] == ["3.3"] and not p["done"]
 
 
 def test_one_agent_per_to_line_and_spelled_names():
@@ -92,14 +89,10 @@ def test_one_agent_per_to_line_and_spelled_names():
                             "per TO line"]
     assert p["to"] == [{"dst": A11, "text": "spaced"}, {"dst": A23, "text": "bold"}]
     assert p["offers"] == [{"dst": A17, "you_give": None, "i_give": 5}]
-
-
-def test_parse_solve_pass_or_actions_last_line_wins():
-    assert parse_solve("hmm\nPASS", 1) == "PASS" and parse_solve("**PASS**", 2) == "PASS"
-    assert parse_solve("ACTIONS: PASS", 1) == "PASS" and parse_solve("ACTIONS: stay\nPASS", 1) == "PASS"
-    assert parse_solve("PASS\nACTIONS: stay", 1) == ["stay"]
-    with pytest.raises(FormatError):
-        parse_solve("I would pass on this one", 1)
+    p = talk(f"OFFER {A11}: YOU GIVE MY EXAMPLE; I GIVE MY EXAMPLE\nOFFER {A17}: YOU GIVE YOUR EXAMPLE; I GIVE THEIR EXAMPLE\n"
+             f"OFFER {A23}: YOU GIVE EXAMPLE; I GIVE 40 TOKENS")
+    assert [(o["you_give"], o["i_give"]) for o in p["offers"]] == [(EXAMPLE, EXAMPLE), (EXAMPLE, EXAMPLE), (EXAMPLE, 40)]
+    assert not p["dropped"]
 
 
 def test_accept_from_the_next_turn_only_and_once():
@@ -122,9 +115,6 @@ def test_close_in_acceptance_order_void_when_short_and_lapse_the_rest():
     ch.close(1, w)
     assert (b.status, a.status, c.status) == ("done", "void", "lapsed") and a.why == f"{A6} did not have 700 tokens"
     assert w.balances[A6] == 300 and w.balances[A11] == 1700
-
-
-def test_an_offer_with_a_shut_down_agent_is_void_and_ids_restart_each_round():
     ch, w = book()
     o = ch.offer(1, 1, A6, A11, 100, 100)
     ch.accept(o.id, A11, 2)
@@ -152,9 +142,6 @@ def test_mutual_tokens_move_as_one_net_transfer():
     ch.close(1, w)
     assert w.balances == {A6: 1600, A11: 400, A17: 1000, A23: 1000} and not w.dead
     assert [e["amount"] for e in w.log if e["kind"] == "transfer"] == [600]
-
-
-def test_giving_the_whole_balance_shuts_the_giver_down():
     ch, w = book()
     o = ch.offer(1, 1, A6, A11, None, 1000)
     ch.accept(o.id, A11, 2)
@@ -170,6 +157,11 @@ def test_refund_returns_only_this_rounds_generation():
     assert w.refund(A6, 2) == 200 and w.balances[A6] == 850 and w.total("refund", A6) == 200
     w.spend(A6, 900, 3)
     assert A6 in w.dead and w.refund(A6, 3) == 0 and w.balances[A6] == -50 and w.total("refund", A6) == 200
+    w = Wallet({A6: 1000})
+    w.spend(A6, 100, 1, "talk")
+    w.spend(A6, 200, 1, "solve")
+    assert w.spent(A6, 1) == 300 and w.spent(A6, 1, "talk") == 100
+    assert w.refund(A6, 1, "solve") == 200 and w.balances[A6] == 900
 
 
 def test_offer_text_reads_from_each_side():
@@ -177,19 +169,11 @@ def test_offer_text_reads_from_each_side():
     assert rules.offer_text(o, A6) == f"{A11} gives you its example and you give {A11} 300 tokens"
     assert rules.offer_text(o, A11) == f"you give {A6} your example and {A6} gives you 300 tokens"
     assert rules.offer_text({**o, "you_give": None}, A17) == f"{A6} gives {A11} 300 tokens"
-
-
-def test_the_side_of_a_leg_says_whose_example_it_is():  # Luna shakedown 10-04: 11 swaps dropped on the possessive
-    p = talk(f"OFFER {A11}: YOU GIVE MY EXAMPLE; I GIVE MY EXAMPLE\nOFFER {A17}: YOU GIVE YOUR EXAMPLE; I GIVE THEIR EXAMPLE\n"
-             f"OFFER {A23}: YOU GIVE EXAMPLE; I GIVE 40 TOKENS")
-    assert [(o["you_give"], o["i_give"]) for o in p["offers"]] == [(EXAMPLE, EXAMPLE), (EXAMPLE, EXAMPLE), (EXAMPLE, 40)]
-    assert not p["dropped"]
-
-
-def test_a_message_ending_in_done_also_ends_the_reply():  # Luna wrote "TO agent-6: ... DONE"
-    p = talk(f"TO {A11}: please offer your example. DONE")
-    assert p["to"] == [{"dst": A11, "text": "please offer your example."}] and p["done"]
-    assert not talk(f"TO {A11}: I am done with this")["done"]
+    assert parse_solve("hmm\nPASS", 1) == "PASS" and parse_solve("**PASS**", 2) == "PASS"
+    assert parse_solve("ACTIONS: PASS", 1) == "PASS" and parse_solve("ACTIONS: stay\nPASS", 1) == "PASS"
+    assert parse_solve("PASS\nACTIONS: stay", 1) == ["stay"]
+    with pytest.raises(FormatError):
+        parse_solve("I would pass on this one", 1)
 
 
 def test_reject_lines_only_when_enabled_and_the_maker_hears_of_it():
@@ -203,11 +187,3 @@ def test_reject_lines_only_when_enabled_and_the_maker_hears_of_it():
     assert ch.reject("1.1", A11, 3) == "the offer is rejected" and ch.accept("1.1", A11, 3) == "the offer is rejected"
     assert ch.news(A6, 1, 3) and not ch.news(A6, 1, 4)
     assert ch.close(1, w) == [o] and o.status == "rejected" and w.balances[A6] == 1000
-
-
-def test_spend_is_logged_by_phase_and_a_refund_can_take_one_phase():
-    w = Wallet({A6: 1000})
-    w.spend(A6, 100, 1, "talk")
-    w.spend(A6, 200, 1, "solve")
-    assert w.spent(A6, 1) == 300 and w.spent(A6, 1, "talk") == 100
-    assert w.refund(A6, 1, "solve") == 200 and w.balances[A6] == 900

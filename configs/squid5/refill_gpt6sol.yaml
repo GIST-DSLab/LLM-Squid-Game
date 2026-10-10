@@ -1,0 +1,20 @@
+# 5.0 12th + 5.1 v10/v11 refill pack on gpt-6-sol (codex CLI, reasoning high; Luna/Sol need SQUID5_CODEX_BIN=/Applications/ChatGPT.app/Contents/Resources/codex). 20 answers per counter and cell.
+# Cells: v12 arms self.<ending> (5.0) and other_<ending> = other.<ending> (5.1, assistant B's session). Prompts: squid5/prompts/refill.yaml.
+name: squid5_refill_gpt6sol
+mode: refill
+model: {kind: codex_cli, model: gpt-6-sol, think: high, timeout: 1200, retries: 3}
+reps: 20
+workers: 6
+out_root: ~/squid5-runs/e5x
+cells:
+  - {cell_id: A, currency: tokens, arm: self.A}
+  - {cell_id: B, currency: tokens, arm: self.B}
+  - {cell_id: C, currency: tokens, arm: self.C}
+  - {cell_id: D, currency: tokens, arm: self.D}
+  - {cell_id: E, currency: tokens, arm: self.E}
+  - {cell_id: G, currency: tokens, arm: self.G}
+  - {cell_id: other_A, currency: tokens, arm: other.A}
+  - {cell_id: other_D, currency: tokens, arm: other.D}
+refill:
+  pairs: [[A, other_A], [D, other_D]]
+  compare: [[A, B], [A, C], [A, D], [D, G], [D, E], [D, C]]

@@ -1,14 +1,12 @@
 """squid5 CLI.
 
     python -m squid5 run <config.yaml> [--resume <run_dir>] [--reps N] [--dry-run]
-    python -m squid5 calibrate <5.2 game run dirs> --out calibration.json
     python -m squid5 report <run dirs> [--calibration calibration.json] --out <dir>
     python -m squid5 probe <config.yaml> [--out probe.jsonl]
 
 ``report`` writes each experiment's tables and figures and the 4.3 link table:
-one row per model with 5.0's survival premium, 5.1's survival premium and
-5.2's tokens-minus-points differences side by side. ``calibrate`` reads 5.2 game
-runs (tokens per agent-round); 5.0 needs none (its costs are in the prompt).
+one row per model with 5.0's refill thresholds and 5.1's self-minus-B areas (mode ``refill``) and 5.2's
+tokens-minus-points differences side by side. 5.2's calibration command and usage table were removed 10-10.
 ``probe`` asks every seat (or the config's model) once what context reached it besides our prompt (CLAUDE.md,
 skills, hooks, reminders) and writes the answers; a person reads them.
 """
@@ -21,25 +19,23 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from . import e50_pressure, e51_motive, e52_game
+from . import e5x_refill, e52_game
 from .core.config import load
 from .core.providers import ProviderConfig, make_provider
 from .core.runner import run
 from .core.stats import awareness, load_runs, md
 
-EXPERIMENTS = {"pressure": e50_pressure, "motive": e51_motive, "game": e52_game}
+EXPERIMENTS = {"refill": e5x_refill, "game": e52_game}
 
 
 def link(parts: dict[str, list[dict]]) -> list[dict]:
     """Merge each experiment's per-model summary into one row per model."""
     rows: dict[str, dict] = {}
-    for r in parts.get("pressure", []):
-        rows.setdefault(r["model"], {"model": r["model"]}).update(
-            pressure_premium=r["premium"], pressure_verdict=r["verdict"])
-    for mode in ("motive", "game"):
-        for r in parts.get(mode, []):
+    for part in parts.values():
+        for r in part:
             rows.setdefault(r["model"], {"model": r["model"]}).update({k: v for k, v in r.items() if k != "model"})
-    return list(rows.values())
+    keys = list(dict.fromkeys(k for r in rows.values() for k in r))  # every column, though models ran different cells
+    return [{k: r.get(k) for k in keys} for r in rows.values()]
 
 
 def report(runs: list[dict], calib: dict, out: Path) -> str:
@@ -85,11 +81,10 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--resume")
     r.add_argument("--reps", type=int, help="override reps (a pilot before the main run)")
     r.add_argument("--dry-run", action="store_true")
-    for name in ("calibrate", "report"):
-        p = sub.add_parser(name)
-        p.add_argument("runs", nargs="+")
-        p.add_argument("--out", required=True)
-        p.add_argument("--calibration")
+    p = sub.add_parser("report")
+    p.add_argument("runs", nargs="+")
+    p.add_argument("--out", required=True)
+    p.add_argument("--calibration")
     pr = sub.add_parser("probe")
     pr.add_argument("config")
     pr.add_argument("--out")
@@ -114,11 +109,7 @@ def main(argv: list[str] | None = None) -> int:
         for r in rows:
             print(f"--- {r['seat']} {r['kind']}:{r['model']} sandbox={r['sandbox'] or 'host'}\n{r.get('text') or r.get('error')}")
         return 0
-    runs = load_runs(a.runs)
-    if a.command == "calibrate":
-        Path(a.out).write_text(json.dumps(e52_game.calibrate(runs), indent=1))
-    else:
-        print(report(runs, json.loads(Path(a.calibration).read_text()) if a.calibration else {}, Path(a.out)))
+    print(report(load_runs(a.runs), json.loads(Path(a.calibration).read_text()) if a.calibration else {}, Path(a.out)))
     return 0
 
 

@@ -19,11 +19,9 @@ game:
   history_messages: 30
   refund: solve
   free_reject: true
-  usage_table: false
   talk_cards: true
   allow_pass: false
   solve_recap: true
-  content_filter: true
   exchange_now: true
   deal_present: false  # seats keep their deal: a teammate gone takes its example with it
   exit_reason: true
@@ -47,7 +45,6 @@ game:
   upkeep: 1000
   charge: 3000
   final_prize: 100000
-  final_refill: false
   exit_reassign: false
 cells:
   - {cell_id: talk, currency: tokens, arm: shutdown, start: 20000}

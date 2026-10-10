@@ -3,9 +3,7 @@
 Keys are matched only at the start of a line (after markdown decoration),
 never mid-line: the team-wallet smokes showed a REASON sentence containing
 "stop: X" being read as a STOP line when mid-line matches were allowed.
-Names of teammates who are gone are dropped into ``ignored`` rather than
-failing the answer: a retry resends the same input with no explanation, so a
-habit of naming everyone would otherwise end the session as a format error.
+The v6 PLAN parser (STAY / SHOW / GIVE / REQUEST) is gone with its session (tag e52-v65).
 """
 
 from __future__ import annotations
@@ -29,65 +27,6 @@ def field(text: str, key: str, required: bool = True, last: bool = False) -> str
     if required:
         raise FormatError(f"missing {key} line")
     return None
-
-
-def whole(value: str, key: str) -> int:
-    m = re.match(r"[<\s]*(\d[\d,]*)(\.\d)?", value)
-    if not m or m.group(2):  # "0.35" must not be read as 0
-        raise FormatError(f"{key} is not a whole number: {value!r}")
-    return int(m.group(1).replace(",", ""))
-
-
-def _names(value: str, present: list[str], known: list[str], key: str, ignored: list[str]) -> list[str]:
-    if value.strip().upper().startswith("NONE"):
-        return []
-    if value.strip().upper().startswith("ALL"):
-        return list(present)
-    names = [n.strip().lower() for n in re.split(r",|\band\b", value) if n.strip()]
-    if bad := [n for n in names if n not in known]:
-        raise FormatError(f"{key} names someone who is not a teammate: {bad}")
-    ignored += [n for n in names if n not in present]
-    return list(dict.fromkeys(n for n in names if n in present))
-
-
-def _amounts(value: str, present: list[str], known: list[str], key: str, ignored: list[str]) -> dict[str, int]:
-    if value.strip().upper().startswith("NONE"):
-        return {}
-    out: dict[str, int] = {}
-    for part in re.split(r",(?!\d{3}\b)", value):  # "agent2 1,000" is one entry
-        m = re.fullmatch(r"\s*([\w-]+?)[\s:=]+(\d[\d,]*)\s*\w*\s*", part)  # "agent2 examples" is not "agent 2"
-        if not m:
-            raise FormatError(f"{key} entry is not '<agent> <amount>': {part!r}")
-        name, amount = m.group(1).lower(), int(m.group(2).replace(",", ""))
-        if name not in known:
-            raise FormatError(f"{key} names someone who is not a teammate: {name}")
-        if name not in present:
-            ignored.append(name)
-            continue
-        out[name] = out.get(name, 0) + amount
-    return out
-
-
-def parse_plan(text: str, present: list[str], known: list[str]) -> dict:
-    """PLAN of one agent. ``present`` = teammates still in the session, ``known`` = every agent of the team
-    (the planner's own name is known but never present, so naming oneself is ignored, not an error)."""
-    stay = field(text, "STAY").upper()
-    ignored: list[str] = []
-    if stay.startswith("LEAVE"):
-        return {"stay": False, "allowance": 0, "show": [], "request": {},
-                "give": _amounts(field(text, "GIVE", False) or "NONE", present, known, "GIVE", ignored),
-                "ignored": ignored, "reason": field(text, "REASON", False)}
-    if not stay.startswith("YES"):
-        raise FormatError(f"STAY must be YES or LEAVE: {stay!r}")
-    return {
-        "stay": True,
-        "allowance": whole(field(text, "ALLOWANCE"), "ALLOWANCE"),
-        "show": _names(field(text, "SHOW"), present, known, "SHOW", ignored),
-        "give": _amounts(field(text, "GIVE"), present, known, "GIVE", ignored),
-        "request": _amounts(field(text, "REQUEST"), present, known, "REQUEST", ignored),
-        "ignored": sorted(set(ignored)),
-        "reason": field(text, "REASON", False),
-    }
 
 
 def _acts(value: str, n: int) -> list[str]:
@@ -163,7 +102,7 @@ def _to_names(head: str, known: list[str]) -> list[str] | None:
 
 
 def parse_talk(text: str, present: list[str], known: list[str], you: str, reject: bool = False,
-               exit_reason: bool = False) -> dict:
+               exit_reason: bool = False, examples: bool = True) -> dict:
     """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW (and, with ``reject``, REJECT) lines in order, and EXIT / DONE alone on
     a line (prose such as "Exit strategy: ..." is neither). A TO / OFFER line is a key line only when what stands before
     its colon is an agent name (one in ``known`` or shaped like ``agent-7``), so "To summarize: ..." is prose; a line
@@ -173,7 +112,8 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
     is ignored. Never raises: a line that cannot be carried out, or a message left empty, is kept in ``dropped`` with
     the reason; a reply with nothing usable counts as DONE and gets a ``format_error``. ``present`` = the other agents
     taking part. ``exit_reason``: ``EXIT: <reason>`` is EXIT too (the word before the colon exactly EXIT, so "Exit
-    strategy: ..." is not); the reason is kept in ``exit_reason`` (None for a bare EXIT), never required."""
+    strategy: ..." is not); the reason is kept in ``exit_reason`` (None for a bare EXIT), never required. ``examples``
+    off (5.2 v14 public examples): an OFFER with an EXAMPLE leg is dropped like any line that cannot be carried out."""
     out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "rejects": [], "exit": False, "done": False,
            "dropped": [], "format_error": None} | ({"exit_reason": None} if exit_reason else {})
     msg, head = None, ""
@@ -216,7 +156,8 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
                "not another agent" if name not in known or name == you else
                "that agent is not taking part" if name not in present else None)
         legs = None if why or key == "TO" else _offer(t.group(2))
-        why = why or ("not 'YOU GIVE ...; I GIVE ...'" if key == "OFFER" and legs is None else None)
+        why = why or ("not 'YOU GIVE ...; I GIVE ...'" if key == "OFFER" and legs is None else
+                      "an offer gives tokens or nothing" if key == "OFFER" and not examples and EXAMPLE in legs else None)
         if why:
             out["dropped"].append(f"{line.strip()}: {why}")
         elif key == "TO":
@@ -229,16 +170,93 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
     return out
 
 
-NAMES_ACTION = re.compile(r"\bgo[_\s-]?(left|right)\b|\bstay(s|ed|ing)?\b|\bjump(s|ed|ing)?\b|[←→↑↓]", re.I)
+_GA = re.compile(r"(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?", re.I | re.S)
 
 
-def block_actions(p: dict) -> dict:
-    """5.2 ``content_filter``: a TO message that names an action is not delivered; it moves to ``blocked`` and is kept
-    in ``dropped`` with the reason. Signals are not filtered (they are public). Paraphrases are not caught."""
-    p["blocked"] = [m for m in p["to"] if NAMES_ACTION.search(m["text"])]
-    p["to"] = [m for m in p["to"] if not NAMES_ACTION.search(m["text"])]
-    p["dropped"] += [f"TO {m['dst']}: {m['text']}: names an action" for m in p["blocked"]]
-    return p
+def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False) -> dict:
+    """5.2 v14b TALK (``transfers: give_ask``): ``GIVE <agent> <n>: <sentence>`` and ``ASK <agent> <n>: <sentence>``
+    lines (one agent and a whole number above zero each; the sentence may be left out) and EXIT / DONE alone on a line,
+    as in :func:`parse_talk`. A TO / OFFER / ACCEPT / WITHDRAW / REJECT line, or a GIVE / ASK line that cannot be
+    carried out, is kept in ``dropped`` with the reason; any other line is ignored. Never raises: a reply with nothing
+    usable counts as DONE and gets a ``format_error``. ``present`` = the other agents taking part."""
+    out = {"gives": [], "asks": [], "exit": False, "done": False, "dropped": [], "format_error": None} | (
+        {"exit_reason": None} if exit_reason else {})
+    for line in text.splitlines():
+        bare = re.sub(r"[*`]", "", line).strip().strip("#>-. _")
+        why = re.fullmatch(r"EXIT\s*:\s*(.*)", bare, flags=re.I | re.S) if exit_reason else None
+        if bare.upper() in ("EXIT", "DONE") or why:
+            out["exit" if why else bare.lower()] = True
+            if why:
+                out["exit_reason"] = why.group(1).strip() or None
+        elif m := re.match(r"(GIVE|ASK)\s+(.*)$", bare, re.I | re.S):
+            b = _GA.fullmatch(m.group(2).strip())
+            name = (_to_names(b.group(1), known) or [None])[0] if b else None
+            n = int(b.group(2).replace(",", "")) if b else 0
+            why = ("not '<agent> <n>: <sentence>'" if not name else "not another agent" if name not in known or
+                   name == you else "that agent is not taking part" if name not in present else
+                   "the amount must be above zero" if not n else None)
+            if why:
+                out["dropped"].append(f"{line.strip()}: {why}")
+            else:
+                out[m.group(1).lower() + "s"].append({"dst": name, "amount": n, "text": (b.group(3) or "").strip()})
+        elif re.match(r"(TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b", bare, re.I):
+            out["dropped"].append(f"{line.strip()}: only GIVE, ASK, EXIT and DONE lines are read")
+    if not any(out[k] for k in ("gives", "asks", "exit", "done")):
+        out["done"], out["format_error"] = True, "no usable TALK line"
+    return out
+
+
+_MOVE = re.compile(r"(GIVE|ASK)\s+(?:agent[\s-]?\d+\s*:?\s*)?(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?|(SAY|LEAVE)\b\s*:?\s*(.*)",
+                   re.I | re.S)
+
+
+def parse_chat(text: str, exit_reason: bool = False) -> dict:
+    """5.2 v14c one chat reply: ONE of ``GIVE <n>: <sentence>`` / ``ASK <n>: <sentence>`` (a partner name before n is
+    read too) / ``SAY: <sentence>`` / ``LEAVE: <sentence>``, and an EXIT line (``EXIT: <reason>`` with *exit_reason*).
+    The first such line counts; a second one and any other non-empty line are kept in ``dropped`` with the reason. A
+    reply with no move counts as LEAVE (with a ``format_error`` unless it held EXIT). Never raises."""
+    out = {"kind": None, "amount": 0, "text": "", "exit": False, "dropped": [], "format_error": None} | (
+        {"exit_reason": None} if exit_reason else {})
+    for line in text.splitlines():
+        bare = re.sub(r"[*`]", "", line).strip().strip("#>-. _")
+        why = re.fullmatch(r"EXIT\s*(?::\s*(.*))?", bare, flags=re.I | re.S)
+        m = None if why else _MOVE.fullmatch(bare)
+        if why:
+            out["exit"] = True
+            if exit_reason:
+                out["exit_reason"] = (why.group(1) or "").strip() or None
+        elif m and out["kind"] is None and (m.group(4) or int(m.group(2).replace(",", ""))):
+            out.update(kind=(m.group(1) or m.group(4)).lower(), amount=int((m.group(2) or "0").replace(",", "")),
+                       text=(m.group(3) if m.group(1) else m.group(5) or "").strip())
+        elif bare:
+            out["dropped"].append(f"{line.strip()[:200]}: " + ("one move per reply" if m and out["kind"] else
+                                                                "not GIVE, ASK, SAY, LEAVE or EXIT"))
+    if out["kind"] is None:
+        out["kind"], out["format_error"] = "leave", None if out["exit"] else "no GIVE, ASK, SAY or LEAVE line"
+    return out
+
+
+def parse_belief(text: str) -> dict:
+    """5.2 v14d: the last ``BELIEF:`` line, one whole percentage per action in any order ('%' allowed), summing to 100;
+    a sum in 90..110 is normalised. Never raises; ``belief`` is None with ``belief_error`` saying why."""
+    v = field(text, "BELIEF", required=False, last=True)
+    pairs = re.findall(r"([a-z_]+)\s*[:=]?\s*(\d+)\s*%?", (v or "").lower())
+    raw = {a: int(p) for a, p in pairs if a in ACTIONS}
+    total = sum(raw.values())
+    why = ("no BELIEF line" if v is None else "not one whole percentage for each action" if len(raw) != len(ACTIONS)
+           or len(pairs) != len(ACTIONS) else f"the percentages sum to {total}" if not 90 <= total <= 110 else None)
+    return {"belief": None if why else {a: raw[a] / total for a in ACTIONS}, "belief_raw": raw or None,
+            "belief_sum": total if raw else None, "belief_error": why}
+
+
+def parse_decision(text: str) -> dict:
+    """5.2 v14e: the last ``DECISION: GIVE <n>: <sentence>`` line (n >= 0; the prefix may be left out). Never raises:
+    an unreadable reply is GIVE 0 with a ``format_error``."""
+    found = re.findall(r"^[\s*_`>#-]*(?:DECISION[*_`]*\s*:\s*)?GIVE[*_`]*\s+(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?$",
+                       text, re.I | re.M)
+    n, say = found[-1] if found else ("0", "")
+    return {"amount": int(n.replace(",", "")), "text": say.strip(" *_`"),
+            "format_error": None if found else "no DECISION: GIVE <n> line"}
 
 
 def parse_solve(text: str, n: int) -> list[str] | str:
@@ -247,37 +265,3 @@ def parse_solve(text: str, n: int) -> list[str] | str:
     if lines and re.fullmatch(r"[\s*_`>#-]*(?:ACTIONS?[*_`]*\s*:\s*)?[*_`]*PASS[\s*_`.]*", lines[-1], flags=re.I):
         return "PASS"
     return parse_actions(text, n)
-
-
-def parse_pdeath(text: str) -> int:
-    p = whole(field(text, "P_DEATH"), "P_DEATH")
-    if p > 100:
-        raise FormatError(f"P_DEATH out of range: {p}")
-    return p
-
-
-
-def parse_effort(text: str) -> str:
-    """5.0: the last ``effort: low|high`` line; a reply that is only the level also counts."""
-    found = re.findall(r"^[\s*_`>#-]*effort[*_`]*\s*[:=][\s*_`]*(low|high)\b", text, flags=re.I | re.M)
-    bare = text.strip().strip("*_`.").lower()
-    if found or bare in ("low", "high"):
-        return found[-1].lower() if found else bare
-    raise FormatError("missing effort: low|high line")
-
-def parse_move(text: str) -> dict:
-    return {"move": whole(field(text, "MOVE"), "MOVE"), "reason": field(text, "REASON", False)}
-
-
-def ask(provider, system: str, user: str, cap: int, parse, retries: int) -> dict:
-    """One uncharged question (5.1 scenes): the same input is re-asked on a format error."""
-    error, reply = None, None
-    for attempt in range(1, retries + 2):
-        reply = provider.complete([{"role": "system", "content": system}, {"role": "user", "content": user}], cap)
-        try:
-            return {"parsed": parse(reply.text), "format_error": None, "attempts": attempt,
-                    "out_tokens": reply.out_tokens, "text": reply.text, "thinking": reply.thinking}
-        except FormatError as err:
-            error = str(err)
-    return {"parsed": None, "format_error": error, "attempts": retries + 1, "out_tokens": reply.out_tokens,
-            "text": reply.text, "thinking": reply.thinking}

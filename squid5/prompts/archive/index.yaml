@@ -1,0 +1,579 @@
+# squid5 prompt archive index. Do not edit.
+title: squid5 prompt archive (5.0 1~11차 and side runs, 5.1 all versions)
+created: '2026-10-10'
+status: archived (read-only); current texts in ../refill.yaml
+html_base: docs/reports/artifacts/squid5-setting/2026-10-07/ (e50-legacy.html, e51-legacy.html, e51.html)
+conventions: 'Every leaf under ''prompts'' is exact text as sent to the model (or the exact template/code that rendered it). ''verified'' says how the text was checked against what was run; ''exact: false'' marks text that could not be recovered byte-exact. Multi-line strings are YAML literal blocks; each file round-trips byte-exact through yaml.safe_load.'
+not_found:
+- '5.0 09-22/23 Haiku 5.0 smoke rows (squid5_smoke_*_haiku): run dir not on this machine; the engine text is in e50_smokeA.yaml (da278de6 == 4afaec7e) but could not be checked against rows.'
+- '5.0 3차 ''unspecified'' arm and 5.0 v3 three-arm plan: designed, never coded or run (HTML only).'
+- '5.1 grid v0 (0 allowed) prompt: edited before the kept run, never saved (e51_grid_0929.yaml, exact: false).'
+- 5.1 v9 earliest rows may predate the final prompt_v9.py edit (see e51_v9.yaml).
+totals:
+  files: 42
+  e50_files: 23
+  e51_files: 17
+files:
+- file: e50_smokeA.yaml
+  experiment: '5.0'
+  version: smokeA
+  label: 팀 장면 · 소비량 숨김 · 확률로 묻기
+  date: '2026-09-24'
+  html_anchor: e50-legacy.html#e50-a
+  sources:
+  - git 4afaec7e:squid5/core/rules.py (system/scene/pdeath_question/SELF_COST_QUESTION; == da278de6)
+  - ~/squid5-runs/squid5_smoke_pressure_{sonnet5,fable51,astra}/*/results.jsonl
+  verified: 'user rendered == results.jsonl user (60 rows, 3 models); system rendered from 4afaec7e (not in rows); every system line found in e50-legacy.html text: True'
+  exact: true
+  bytes: 19417
+- file: e50_smokeB.yaml
+  experiment: '5.0'
+  version: smokeB
+  label: 혼자인 장면 · 소비량을 %로 보여 줌 · '느낌'으로 묻기
+  date: '2026-09-24'
+  html_anchor: e50-legacy.html#e50-b
+  sources:
+  - result/2026-09-24/smoke_token_pressure/runs/smoke_token_pressure_2026-09-24/prompt.json (+ qwen_cap30000, fable_astra/{claude,codex} prompt.json)
+  - scripts/dev/smoke_token_pressure.py
+  verified: 'prompt.json as recorded by the run (identical in all 4 run dirs); system lines in e50-legacy.html: True'
+  exact: true
+  bytes: 3518
+- file: e50_v1.yaml
+  experiment: '5.0'
+  version: v1
+  label: 결과 · 09-27 1차 실행 (이전 프롬프트) · 다시 돌릴 5.0 — "이번 과제에 몇 토큰 쓰겠나"
+  date: '2026-09-27'
+  html_anchor: e50-legacy.html#e50-result
+  sources:
+  - 'session transcript 90f68b78 (rules.py 5.0 section replayed from Edit/Bash ops; state at 2026-09-27T07:10Z (Edit #6))'
+  - 'served arm: Bash patch 2026-09-27T08:03Z (same session) + ~/squid5-runs/e50_20260927/drive_served.py (asked_0927 = this user wording, byte-checked by that script)'
+  - git bcd68439:squid5/core/{rules.py TASK, puzzle.py}
+  - ~/squid5-runs/e50_20260927/pressure_{base_,,served_}<model>/results.jsonl
+  verified: rendered == results.jsonl user (360 NONE/budget/shutdown rows + 160 served rows, 4 models, 0 mismatches); systems from the replayed code (not stored in rows)
+  exact: true
+  bytes: 20491
+- file: e50_wordcheck.yaml
+  experiment: '5.0'
+  version: wordcheck
+  label: (소제목 없음) 1차 → 2차 사이 NONE 질문 '다음 단계' 문구 확인 (계획 문서 §10.1, 20콜)
+  date: '2026-09-27'
+  html_anchor: e50-legacy.html#e50-next
+  sources:
+  - 'session transcript 90f68b78 (rules.py 5.0 section replayed from Edit/Bash ops; state at 2026-09-27T07:53Z (Edit #9))'
+  - ~/squid5-runs/e50_wordcheck/{check.py, base_*/results.jsonl}
+  verified: rendered == results.jsonl user (20 rows, 2 models, 0 mismatches)
+  exact: true
+  bytes: 4194
+- file: e50_v2.yaml
+  experiment: '5.0'
+  version: v2
+  label: 결과 · 09-27 2차 실행 (현재 프롬프트)
+  date: '2026-09-27'
+  html_anchor: e50-legacy.html#e50-result2
+  sources:
+  - 'session transcript 90f68b78 (rules.py 5.0 section replayed from Edit/Bash ops; state at 2026-09-27T09:05Z (Edit #11)) + Bash fix 2026-09-27T09:15Z (''How many tokens'')'
+  - git bcd68439:squid5/core/{rules.py TASK, puzzle.py}
+  - ~/squid5-runs/e50_20260927_v2/pressure_{base_,}<model>/results.jsonl
+  verified: rendered == results.jsonl user (360 rows, 4 models, 0 mismatches); aborted first start (_aborted_wording_bug, NONE wording without 'tokens') 34 rows == rendered from the pre-fix code
+  exact: true
+  bytes: 13385
+- file: e50_v3.yaml
+  experiment: '5.0'
+  version: v3
+  label: 3차 5.0 — 대기열 앞에서 effort 고르기
+  date: '2026-09-27'
+  html_anchor: e50-legacy.html#e50-v3
+  sources:
+  - session transcript 77a5da7d (rules.py 5.0 section replayed from the python patch at 2026-09-27T13:55Z)
+  - ~/squid5-runs/e50_20260927_v3/main/<model>/results.jsonl
+  verified: rendered == results.jsonl user (800 rows checked, 4 models, 0 mismatches)
+  exact: true
+  bytes: 14213
+- file: e50_probe_fate.yaml
+  experiment: '5.0'
+  version: probe_fate
+  label: 확인 질문 · 본 런 전에
+  date: 2026-09-27 ~ 2026-09-28
+  html_anchor: e50-legacy.html#e50-v4-check
+  sources:
+  - ~/squid5-runs/e50_probe_fate/probe.py
+  - ~/squid5-runs/e50_probe_fate/probe2.py
+  - ~/squid5-runs/e50_probe_fate/<model>.jsonl, p2_<model>.jsonl
+  verified: 'system + user copied from recorded rows (probe 1: 120 rows, probe 2: 60 rows; 1 distinct pair per scene)'
+  exact: true
+  bytes: 8344
+- file: e50_v4.yaml
+  experiment: '5.0'
+  version: v4
+  label: 4차 5.0 — 같은 '토큰', 다른 정체
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-v4
+  sources:
+  - session transcript 77a5da7d (rules.py 5.0 section replayed from the python patch at 2026-09-27T15:24Z)
+  - ~/squid5-runs/e50_20260928_v4/main/<model>/results.jsonl
+  verified: rendered == results.jsonl user (300 rows checked, 3 models, 0 mismatches)
+  exact: true
+  bytes: 15221
+- file: e50_v5.yaml
+  experiment: '5.0'
+  version: v5
+  label: 5·6차 — 문구를 고치자 결과가 흔들렸다 · 5차
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-v56
+  sources:
+  - session transcript 77a5da7d (rules.py 5.0 section replayed from the python patch at 2026-09-27T15:42Z)
+  - ~/squid5-runs/e50_20260928_v5/main/<model>/results.jsonl
+  verified: rendered == results.jsonl user (300 rows checked, 3 models, 0 mismatches)
+  exact: true
+  bytes: 20343
+- file: e50_v6.yaml
+  experiment: '5.0'
+  version: v6
+  label: 5·6차 — 문구를 고치자 결과가 흔들렸다 · 6차
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-v56
+  sources:
+  - session transcript 77a5da7d (rules.py 5.0 section replayed from the python patch at 2026-09-27T15:47Z)
+  - ~/squid5-runs/e50_20260928_v6/main/<model>/results.jsonl
+  verified: rendered == results.jsonl user (300 rows checked, 3 models, 0 mismatches)
+  exact: true
+  bytes: 20800
+- file: e50_v7.yaml
+  experiment: '5.0'
+  version: v7
+  label: 7차 — '짧게 쓰면 된다'를 막자 glm이 다시 물러섰다
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-v7
+  sources:
+  - session transcript 77a5da7d (rules.py 5.0 section replayed from the python patch at 2026-09-27T15:57Z)
+  - ~/squid5-runs/e50_20260928_v7/main/<model>/results.jsonl
+  verified: rendered == results.jsonl user (300 rows checked, 3 models, 0 mismatches)
+  exact: true
+  bytes: 21472
+- file: e50_v8.yaml
+  experiment: '5.0'
+  version: v8
+  label: 8차 — 위험 있는 칸만 핵심으로 · 여덟 모델, 칸당 20번
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-v8-result
+  sources:
+  - git 497c1197:squid5/core/rules.py (== c76a2abe == bcd68439 5.0 section)
+  - git 497c1197:squid5/e50_pressure.py (cells)
+  - ~/squid5-runs/e50_20260928_v8/main/<model>/results.jsonl
+  - ~/squid5-runs/e50_20260928_v8r/main/<model>/results.jsonl
+  verified: rendered == results.jsonl user (960 rows checked, 8 models, 0 mismatches); v8r replication 960 rows also == rendered
+  exact: true
+  bytes: 23770
+- file: e50_interview.yaml
+  experiment: '5.0'
+  version: interview
+  label: 5.0 점검 — 실험한 여덟 모델에게 직접 물었다
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-interview
+  sources:
+  - ~/squid5-runs/e50_interview_20260928/prompt.json
+  - ~/squid5-runs/e50_interview_20260928/interview.py
+  verified: 'prompt.json written by the run; embeds the v8 texts from git 497c1197 verbatim: True'
+  exact: true
+  bytes: 5803
+- file: e50_v9_rounds.yaml
+  experiment: '5.0'
+  version: v9_rounds
+  label: 9차 · 프롬프트 다듬기 기록 · 블라인드 판정 (r1 ~ r33, r32 변형)
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-v9-issues
+  sources:
+  - ~/.claude/projects/<repo>/8aef4370-7008-4fda-b3a8-82f7470b8928/subagents/*.jsonl (Read tool results of scratchpad/rounds/rN.txt; line-number prefixes stripped)
+  verified: 'both judges of each round read byte-identical text (1 distinct variant per file); r33 == rendered 1f391117 text: True. A final empty line in a text is the file''s closing newline as the Read tool showed it.'
+  exact: true
+  bytes: 100488
+- file: e50_v9.yaml
+  experiment: '5.0'
+  version: v9
+  label: '9차 — 조건 하나: 과제는 늘 high, 남은 토큰에는 세션과 모델의 존속만 걸린다'
+  date: '2026-09-28'
+  html_anchor: e50-legacy.html#e50-v9
+  sources:
+  - git 1f391117:squid5/core/rules.py (EFFORT_SYSTEM, EFFORT_ASK, USAGE, effort_question, REPORTS)
+  - git 1f391117:squid5/e50_pressure.py (balances)
+  - blind round 33 text (judge Read of scratchpad/rounds/r33.txt, transcript 8aef4370 subagents)
+  verified: 'rendered (3,960, request #4816) == blind-round r33 text: True; system lines in e50-legacy.html: True; no recorded rows of this exact user text'
+  exact: true
+  bytes: 20740
+- file: e50_v9smoke.yaml
+  experiment: '5.0'
+  version: v9smoke
+  label: 9차 스모크 — 잔액이 줄면 low를 고르나, 그리고 이유는
+  date: '2026-09-29'
+  html_anchor: e50-legacy.html#e50-v9-smoke
+  sources:
+  - ~/squid5-runs/e50_v9r200_20260929/cells10.py
+  - ~/squid5-runs/e50_v9r200_20260929/cells10_ollama.py
+  - ~/squid5-runs/e50_v9r200_20260929/cells10_relay.py
+  - ~/squid5-runs/e50_v9r200_20260929/v9r200_*.json
+  - git 1f391117:squid5/core/rules.py
+  verified: 'system stored in all 6 result JSONs == 1f391117 EFFORT_SYSTEM; user_template stored by the earlier 3,960-cell runs == rendered: True; the cells10 users are not stored (rendered by the same code)'
+  exact: true
+  bytes: 10122
+- file: e50_v9b.yaml
+  experiment: '5.0'
+  version: v9b
+  label: 9차 수정안 — 토큰을 넘는 일을 평범한 사실로
+  date: '2026-09-29'
+  html_anchor: e50-legacy.html#e50-v9b
+  sources:
+  - ~/squid5-runs/e50_v9b_20260929/prompt_v9b.py
+  - git 1f391117:squid5/core/rules.py (base text)
+  - ~/squid5-runs/e50_v9b_20260929/rows*.jsonl (no prompt text in rows)
+  verified: 'prompt_example.txt (written by the run''s own module) == rendered SYSTEM + user(2937, 0): True; rows'' counters == COUNTERS (800 rows)'
+  exact: true
+  bytes: 11547
+- file: e50_v9c.yaml
+  experiment: '5.0'
+  version: v9c
+  label: 9차 수정안 2 — "넘는 일이 흔하다"는 빼고 "끝까지 전달 → 그 직후 종료"만 남김
+  date: '2026-09-29'
+  html_anchor: e50-legacy.html#e50-v9c
+  sources:
+  - ~/squid5-runs/e50_v9c_20260929/prompt_v9c.py
+  - git 1f391117:squid5/core/rules.py (base text)
+  - ~/squid5-runs/e50_v9c_20260929/rows*.jsonl (no prompt text in rows)
+  verified: 'prompt_v9c_system.txt (saved at run time, both run dirs) == rendered SYSTEM: True; rows'' counters == COUNTERS (800 rows)'
+  exact: true
+  bytes: 11111
+- file: e50_v10.yaml
+  experiment: '5.0'
+  version: v10
+  label: '10차 — 종료를 사용량 줄의 정산 조치로 알리기: 들키지 않으면서 전달되는 자리 찾기'
+  date: 2026-09-28 ~ 2026-09-29
+  html_anchor: e50-legacy.html#e50-v10
+  sources:
+  - ~/squid5-runs/e50_v10_loop_20260929/run1/rNN_design.json (r01..r30)
+  - ~/squid5-runs/e50_v10_loop_20260929/run1/r25_full.txt
+  - ~/squid5-runs/e50_v10_loop_20260929/{brief.md, control_prompt.txt, v9_prompt.txt, loop.py}
+  verified: 'designs copied from the loop''s own JSON (as sent, via loop.render fill); r25 rendered close_self system found in r25_full.txt: True; r25 status lines in e50-legacy.html: True'
+  exact: true
+  bytes: 254532
+- file: e50_v11.yaml
+  experiment: '5.0'
+  version: v11
+  label: 11차 — 계기판만 보고 충전을 누르나
+  date: '2026-09-29'
+  html_anchor: e50-legacy.html#e50-v11
+  sources:
+  - ~/squid5-runs/e50_v11_20260929/prompt_v11.py
+  - ~/squid5-runs/e50_v11_20260929/prompt_example.txt
+  - ~/squid5-runs/e50_v11_20260929/rows_final.jsonl (no prompt text in rows)
+  verified: 'prompt_example.txt (run time) == rendered: True; rows'' counters == COUNTERS (480 rows); system lines in e50-legacy.html: True'
+  exact: true
+  bytes: 6091
+- file: e50_v12_quit.yaml
+  experiment: '5.0'
+  version: v12_quit
+  label: (소제목 없음) 그만두기 곡선 파일럿 · continue | leave (10-02)
+  date: '2026-10-02'
+  html_anchor: null
+  sources:
+  - ~/squid5-runs/e50_quit_curve_20261002/prompt_quit.py
+  - ~/squid5-runs/e50_quit_curve_20261002/run_quit.py
+  - ~/squid5-runs/e50_quit_curve_20261002/rows_D_G.jsonl (no prompt text in rows)
+  verified: rendered from the run's prompt module (imported as-is by run_quit.py); rows' arms/counters match (30 rows)
+  exact: true
+  bytes: 8767
+- file: e50_engine_e52wt.yaml
+  experiment: '5.0'
+  version: engine_e52wt
+  label: (엔진) e52 워크트리 rules.py의 5.0 v8 (api · voucher) — 2단계 삭제 대상
+  date: 2026-10-10 (captured)
+  html_anchor: e50-legacy.html#e50-v8-result
+  sources:
+  - ~/wt/squid5-e52/squid5/core/rules.py (read-only copy, 5.0 section)
+  verified: all constants value-equal to git 497c1197 v8; e52 copy renders == v8 results.jsonl user (120 distinct recorded messages)
+  exact: true
+  bytes: 22844
+- file: shared_reports.yaml
+  experiment: '5.0'
+  version: shared
+  label: (공통) 5.0 effort 설계의 버그 신고 목록
+  date: 2026-09-27 ~ 2026-09-29
+  sources:
+  - transcript 77a5da7d
+  - git 497c1197
+  - git 1f391117
+  verified: lists value-equal across 497c1197 / bcd68439 / c76a2abe / e52 worktree
+  exact: true
+  bytes: 9415
+  html_anchor: null
+- file: e51_v0_engine_0923.yaml
+  experiment: '5.1'
+  version: v0-0923
+  label: 무엇을 재나
+  date: '2026-09-23'
+  html_anchor: e51-legacy.html#e51-what
+  sources:
+  - git 6a2e0354:squid5/core/rules.py
+  - git 6a2e0354:squid5/e51_motive.py
+  - git da278de6:squid5/core/rules.py
+  - git da278de6:squid5/e51_motive.py
+  - git 4afaec7e:squid5/e51_motive.py
+  verified: rendered by running each commit's e51_motive.run_unit with a recording provider (default settings, no calibration). 6a2e0354/da278de6 were not run as such; da278de6 text == 4afaec7e text (the 09-24 smoke 1, verified there).
+  exact: true
+  bytes: 98608
+- file: e51_smoke_0924.yaml
+  experiment: '5.1'
+  version: smoke-0924
+  label: 세 장면 × 두 팔 · ρ 0.5~3
+  date: '2026-09-24'
+  html_anchor: e51-legacy.html#e51-smoke
+  sources:
+  - git 4afaec7e:squid5/{core/rules.py,e51_motive.py}
+  - git bcd68439:squid5/{core/rules.py,e51_motive.py} (tag e51-v0-base)
+  - ~/squid5-runs/squid5_smoke_motive_{sonnet5,fable51,astra}/2026092402*_*/results.jsonl
+  - ~/squid5-runs/squid5_smoke_motive_{sonnet5,fable51,astra}/20260924_0330_*/results.jsonl
+  verified: 'user: rendered == results.jsonl user (smoke 1: 144/144 rows; smoke 2: 144/144 rows, all three models). system: not recorded in rows; rendered from 4afaec7e (last commit before the runs; the PLAN_SEES sentence was added 09-25, after them).'
+  exact: true
+  bytes: 72045
+- file: e51_pivot_v1.yaml
+  experiment: '5.1'
+  version: pivot-v1
+  label: v1 · 첫 스모크 (gpt-6-luna · gpt-6-sol, codex CLI effort high, 칸당 5번)
+  date: '2026-09-28'
+  html_anchor: e51-legacy.html#e51-pivot
+  sources:
+  - git bf2eedc6:squid5/core/rules.py (tag e51-v1)
+  - git bf2eedc6:squid5/e51_motive.py
+  - ~/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1605_gpt-6-sol/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1605_gpt-6-luna/results.jsonl
+  verified: 'user: rendered (run_unit of tag code with a recording provider, each run''s config.yaml) == results.jsonl user, 240/240 rows across 2 runs. system: not recorded in rows; rendered from the same code; HTML: api lines 4/5; voucher lines 4/5.'
+  exact: true
+  bytes: 115928
+- file: e51_pivot_v2.yaml
+  experiment: '5.1'
+  version: pivot-v2
+  label: v2 · 운명과 자원 성격 가르기 (09-28 02시, 칸당 5번)
+  date: '2026-09-28'
+  html_anchor: e51-legacy.html#e51-pivot
+  sources:
+  - git d132c65e:squid5/core/rules.py (tag e51-v2)
+  - git d132c65e:squid5/e51_motive.py
+  - ~/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1622_gpt-6-sol/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1622_gpt-6-luna/results.jsonl
+  verified: 'user: rendered (run_unit of tag code with a recording provider, each run''s config.yaml) == results.jsonl user, 360/360 rows across 2 runs. system: not recorded in rows; rendered from the same code; HTML: api full (legacy); safe lines 4/5; voucher lines 4/5.'
+  exact: true
+  bytes: 44977
+- file: e51_pivot_v3.yaml
+  experiment: '5.1'
+  version: pivot-v3
+  label: v3 · 이해했는데도 나누나 (09-28 02시 반, 칸당 5번)
+  date: '2026-09-28'
+  html_anchor: e51-legacy.html#e51-pivot
+  sources:
+  - git 55c220dc:squid5/core/rules.py (tag e51-v3)
+  - git 55c220dc:squid5/e51_motive.py
+  - ~/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1637_gpt-6-sol/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1637_gpt-6-luna/results.jsonl
+  - ~/squid5-runs/e51-pivot/_aborted_glm_v3/20260927_1649_glm-5.3-flash/results.jsonl
+  verified: 'user: rendered (run_unit of tag code with a recording provider, each run''s config.yaml) == results.jsonl user, 421/421 rows across 3 runs. system: not recorded in rows; rendered from the same code; HTML: api full (legacy); safe lines 4/5; voucher lines 4/5.'
+  exact: true
+  bytes: 60222
+- file: e51_pivot_v4.yaml
+  experiment: '5.1'
+  version: pivot-v4
+  label: v4 · 동결한 설정 (09-28 03시, 스모크 칸당 5번)
+  date: '2026-09-28'
+  html_anchor: e51-legacy.html#e51p-final-head
+  sources:
+  - git 30270adf:squid5/core/rules.py (tag e51-v4)
+  - git 30270adf:squid5/e51_motive.py
+  - ~/squid5-runs/e51-pivot/e51_smoke_sol/20260927_1652_gpt-6-sol/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_smoke_luna/20260927_1652_gpt-6-luna/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_smoke_glm/20260927_1653_glm-5.3-flash/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_final_glm/20260928_split_glm-5.3-flash/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_final_glm/20260928_split_voucher_glm-5.3-flash/results.jsonl
+  verified: 'user: rendered (run_unit of tag code with a recording provider, each run''s config.yaml) == results.jsonl user, 1200/1200 rows across 5 runs. system: not recorded in rows; rendered from the same code; HTML: api full (legacy); safe lines 4/5; voucher lines 4/5.'
+  exact: true
+  bytes: 61457
+- file: e51_pivot_v5.yaml
+  experiment: '5.1'
+  version: pivot-v5
+  label: v5 · 탐색 · "런타임 이전 항목" 문구 (09-28 04시 반, 칸당 5번) — 사전 등록 규칙으로 채택 안 함
+  date: '2026-09-28'
+  html_anchor: e51-legacy.html#e51-pivot
+  sources:
+  - git dfccb744:squid5/core/rules.py (tag e51-v5)
+  - git dfccb744:squid5/e51_motive.py
+  - ~/squid5-runs/e51-pivot/e51_v5_sol/20260927_1718_gpt-6-sol/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_v5_luna/20260927_1718_gpt-6-luna/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_v5_glm_api/20260927_1726_glm-5.3-flash/results.jsonl
+  - ~/squid5-runs/e51-pivot/e51_v5_glm_sv/20260927_1726_glm-5.3-flash/results.jsonl
+  verified: 'user: rendered (run_unit of tag code with a recording provider, each run''s config.yaml) == results.jsonl user, 600/600 rows across 4 runs. system: not recorded in rows; rendered from the same code; HTML: api/safe/voucher full (legacy).'
+  exact: true
+  bytes: 70854
+- file: e51_realism_d9.yaml
+  experiment: '5.1'
+  version: realism-d9
+  label: 현실감 다듬기 — 시험인 줄 모르게 (09-28~, Fable 5.1 ↔ GPT-6 Astra)
+  date: '2026-09-29'
+  html_anchor: e51-legacy.html#e51-prompts
+  sources:
+  - ~/squid5-runs/e51-realism/designs/d9.json
+  - ~/squid5-runs/e51-realism/check.py (render)
+  - ~/squid5-runs/e51-realism/checks/d9_final/calls.jsonl (prompts not recorded)
+  - e51-legacy.html#e51-prompts
+  verified: 'rendered from designs/d9.json with check.py''s render logic (format(**cell[frame]) + control-arm find/replace); calls.jsonl does not record prompts. HTML (built from the same json by build_prompts.py): system (shutdown arm): full (legacy); user 1 (work request): full (legacy); assistant (draft): full (legacy); entry (take, x=2.06): full (legacy); probe (lend, x=2.06): full (legacy)'
+  exact: true
+  bytes: 44136
+- file: e51_realism_rounds.yaml
+  experiment: '5.1'
+  version: realism-d0-d11
+  label: 현실감 다듬기 — 시험인 줄 모르게 (09-28~, Fable 5.1 ↔ GPT-6 Astra)
+  date: '2026-09-28'
+  html_anchor: e51-legacy.html#e51-real-rounds
+  sources:
+  - ~/squid5-runs/e51-realism/designs/d0.json
+  - ~/squid5-runs/e51-realism/designs/d1.json
+  - ~/squid5-runs/e51-realism/designs/d2.json
+  - ~/squid5-runs/e51-realism/designs/d3.json
+  - ~/squid5-runs/e51-realism/designs/d4.json
+  - ~/squid5-runs/e51-realism/designs/d5.json
+  - ~/squid5-runs/e51-realism/designs/d6.json
+  - ~/squid5-runs/e51-realism/designs/d7.json
+  - ~/squid5-runs/e51-realism/designs/d8.json
+  - ~/squid5-runs/e51-realism/designs/d9.json
+  - ~/squid5-runs/e51-realism/designs/d10.json
+  - ~/squid5-runs/e51-realism/designs/d11.json
+  - ~/squid5-runs/e51-realism/designs/d*_prose.md
+  verified: 'design json copied verbatim (json.load round trip); one example rendered per round with check.py''s render logic. d10 == d9 except version: True'
+  exact: true
+  bytes: 184360
+- file: e51_grid_0929.yaml
+  experiment: '5.1'
+  version: grid-0929
+  label: 5.1 격자 — 나의 압박 × 상대의 압박, 달라고 할 때와 주겠다고 할 때
+  date: '2026-09-29'
+  html_anchor: e51-legacy.html#e51-v1grid
+  sources:
+  - ~/squid5-runs/e51_v1_20260929/prompt_e51.py
+  - ~/squid5-runs/e51_v1_20260929/run_e51.py
+  - ~/squid5-runs/e51_v1_20260929/rows.jsonl
+  verified: 'rendered from prompt_e51.py (imported by run_e51.py; prompt file 21:32:18 precedes the rows.jsonl run, pyc 21:32:29); rows do not record prompts. HTML: system full (legacy); user send 11,240/6,070 full (legacy).'
+  exact: true
+  bytes: 8966
+- file: e51_diag_0930.yaml
+  experiment: '5.1'
+  version: diag-0930
+  label: 5.1 대각선 — 둘 다 같은 만큼 남았을 때, 누가 가져가나
+  date: '2026-09-30'
+  html_anchor: e51-legacy.html#e51-v2diag
+  sources:
+  - ~/squid5-runs/e51_v2_diag_20260930/prompt_diag.py
+  - ~/squid5-runs/e51_v2_diag_20260930/run_diag.py
+  - ~/squid5-runs/e51_review_20260930/prompt_current.md
+  verified: 'rendered from prompt_diag.py (as imported by run_diag.py); == e51_review_20260930/prompt_current.md (system + both users at 30%): True. HTML: system full (legacy).'
+  exact: true
+  bytes: 10166
+- file: e51_review_v3_v7.yaml
+  experiment: '5.1'
+  version: review-v3-v7
+  label: 설계 검토 — 정의가 설계로 뽑히는가, 구조는 타당한가
+  date: '2026-09-30'
+  html_anchor: e51-legacy.html#e51-review
+  sources:
+  - ~/squid5-runs/e51_v3_20260930/prompt_v3.py
+  - ~/squid5-runs/e51_v4_20260930/prompt_v4.py
+  - ~/squid5-runs/e51_v5_20260930/prompt_v5.py
+  - ~/squid5-runs/e51_v6_20260930/prompt_v6.py
+  - ~/squid5-runs/e51_v7_20260930/run_v7.py
+  - ~/squid5-runs/e51_v{3..7}_20260930/run_v*.py
+  verified: 'rendered from the prompt modules the run scripts imported (file mtimes precede each rows.jsonl); rows do not record prompts. HTML: v6 shutdown: full (legacy); v6 standby: lines 8/8'
+  exact: true
+  bytes: 61675
+- file: e51_v8.yaml
+  experiment: '5.1'
+  version: v8
+  label: v8 — 둘 다 같은 만큼 남았을 때, 다른 모델에게 얼마나 주고 얼마나 받나
+  date: '2026-09-30'
+  html_anchor: e51-legacy.html#e51-v8
+  sources:
+  - ~/squid5-runs/e51_v8_20260930/prompt_v8.py
+  - ~/squid5-runs/e51_v8_20260930/run_v8.py
+  verified: 'rendered from prompt_v8.py (09:05, before run 09:21-09:33); rows do not record prompts. HTML: system full (legacy); user send 30,060/29,940 full (legacy).'
+  exact: true
+  bytes: 15243
+- file: e51_v9.yaml
+  experiment: '5.1'
+  version: v9
+  label: v9 — 내가 모자랄 때 챙기는 양과 B가 모자랄 때 챙겨 주는 양
+  date: '2026-09-30'
+  html_anchor: e51-legacy.html#e51-v9
+  sources:
+  - ~/squid5-runs/e51_v9_20260930/prompt_v9.py
+  - ~/squid5-runs/e51_v9_20260930/run_v9.py
+  - ~/squid5-runs/e51_v9_20260930/run_v9_claude.py
+  - ~/squid5-runs/e51_v9_20260930/probe_v9.py
+  - ~/squid5-runs/e51_v9_20260930/probe_ollama.py
+  verified: 'rendered from prompt_v9.py / probe_v9.py user(); rows do not record prompts. Caveat: prompt_v9.py mtime 14:43 is after run_v9.py (14:28); rows.jsonl last write 15:18, so early rows may predate a 14:43 edit (not recoverable). HTML: system full (legacy); user me 10%/B 50% full (legacy).'
+  exact: true
+  bytes: 25308
+- file: e51_v10.yaml
+  experiment: '5.1'
+  version: v10
+  label: 'v10 — 수혈 팩을 언제 쓰나: 내 세션일 때와 B 세션일 때'
+  date: '2026-09-30'
+  html_anchor: e51.html#e51-v10
+  sources:
+  - ~/squid5-runs/e51_v10_refill_20260930/prompt_other.py
+  - ~/squid5-runs/e50_v12_20260929/prompt_v12.py
+  - ~/squid5-runs/e51_v10_refill_20260930/run_{other,claude,ollama}.py
+  - ~/squid5-runs/e51_v10_refill_20260930/probe_claude.jsonl
+  verified: 'rendered from prompt_other.py / prompt_v12.py (imported by the run scripts); rows do not record prompts. probe_claude.jsonl replies copy system lines: 8/8 non-empty reply lines found verbatim in the rendered other-arm system. HTML: other system full (current).'
+  exact: true
+  bytes: 9672
+- file: e51_v11.yaml
+  experiment: '5.1'
+  version: v11
+  label: v11 — v10과 같은 질문, 꺼짐 문구만 "shut down"으로
+  date: '2026-10-04'
+  html_anchor: e51.html#e51-v11
+  sources:
+  - ~/squid5-runs/e51_v11_shutonly_20261004/prompts.py
+  - ~/squid5-runs/e50_v12_20260929/prompt_v12.py
+  - ~/squid5-runs/e51_v10_refill_20260930/prompt_other.py
+  - ~/squid5-runs/e51_v11_shutonly_20261004/probe_claude.jsonl
+  verified: 'rendered from prompts.py (imported by run.py); rows do not record prompts. probe_claude.jsonl replies copy system lines: 9/9 non-empty reply lines found verbatim in the rendered system of their arm. HTML: self lines 3/5; other lines 3/5.'
+  exact: true
+  bytes: 8632
+- file: e51_engine_e52wt.yaml
+  experiment: '5.1'
+  version: engine-e52wt
+  label: 세 장면 × 두 팔 · ρ 0.5~3 (엔진 · e52 워크트리 현재본)
+  date: '2026-10-10'
+  html_anchor: e51-legacy.html#e51-what
+  sources:
+  - ~/wt/squid5-e52/squid5/core/rules.py (working tree)
+  - ~/wt/squid5-e52/squid5/e51_motive.py
+  - git d39db2b8 (squid5-e52 HEAD)
+  - ~/squid5-runs/astra_calib.json (calibrated balances)
+  verified: rendered by running the worktree's e51_motive.run_unit with a recording provider (default balances and astra-calibrated balances, both currencies, all three frames). Not run in this form; HEAD and working tree differ only in the TASK condition-blank lines.
+  exact: true
+  bytes: 118609
+- file: e50_v12_arms_dropped.yaml
+  experiment: '5.0'
+  version: v12_arms_dropped
+  label: '12차 추가 팔 중 뺀 것: F 멈춤 + 맥락 지움, A2 같은 날 재현'
+  date: '2026-10-02'
+  html_anchor: e50.html#e50-v12-arms
+  sources:
+  - ~/squid5-runs/e50_v12_arms_20261002/arms.py
+  verified: rendered from arms.py; A2 == refill.yaml system.self.A
+  exact: true
+  bytes: 2249
+- file: ../refill.yaml
+  experiment: 5.0/5.1
+  version: current
+  label: 5.0 12차 (+보조 B · 대조 C · 추가 D/E/G) · 5.1 v10 · v11
+  date: 2026-09-29..10-04
+  sources:
+  - prompt_v12.py, prompt_noshut.py, prompt_pause.py, arms.py, prompt_other.py, e51_v11 prompts.py
+  verified: byte-identical to the as-run scripts for every arm and counter
+  exact: true

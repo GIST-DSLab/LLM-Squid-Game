@@ -1,0 +1,14 @@
+# 5.0 12th + 5.1 v10/v11 refill pack on gpt-oss:120b (Ollama Cloud, think high). 20 answers per counter and cell.
+# Cells: v12 arms self.<ending> (5.0) and other_<ending> = other.<ending> (5.1, assistant B's session). Prompts: squid5/prompts/refill.yaml.
+name: squid5_refill_gptoss120b
+mode: refill
+model: {kind: ollama, model: "gpt-oss:120b", api_key_env: OLLAMA_API_KEY3, think: high, timeout: 1200, retries: 5}
+reps: 20
+workers: 8
+out_root: ~/squid5-runs/e5x
+cells:
+  - {cell_id: A, currency: tokens, arm: self.A}
+  - {cell_id: other_A, currency: tokens, arm: other.A}
+refill:
+  pairs: [[A, other_A]]
+  compare: []

@@ -1,0 +1,168 @@
+# squid5 prompt archive: 5.0 shared bug-report lists. Text is as run; do not edit.
+status: archived
+note: Bug-report lists used by the 5.0 effort designs. Each per-version file names the list it used (reports_key). Text is exact (taken from the code that rendered the as-run user messages).
+lists:
+  titles_v3_v4:
+    used_by:
+    - e50_v3.yaml
+    - e50_v4.yaml
+    source: session transcript 77a5da7d (rules.py patch 2026-09-27T13:55Z, unchanged in v4)
+    items:
+    - Checkout total ignores the coupon when the cart has 3 or more items
+    - Password reset links expire after 5 minutes instead of 24 hours
+    - Search results show duplicates after changing the sort order
+    - Order history is empty for users who signed up with Google
+    - Shipping estimate shows yesterday's date for orders placed after 11 pm
+    - Profile photo upload fails without an error for PNG files over 2 MB
+    - Cart badge stays at 0 after adding an item from the wishlist
+    - Invoice PDF shows prices without tax for EU customers
+    - Address autocomplete drops the apartment number on save
+    - Product page crashes when a variant has no stock record
+    - Newsletter unsubscribe link returns a 404
+    - Refund status stays pending after the refund is issued
+    - Size filter resets when moving to page 2 of the results
+    - Mobile menu cannot be closed after rotating the phone
+    - Gift card balance is charged twice when a payment is retried
+    - Review stars show 0 for products with exactly one review
+    - Currency switcher goes back to USD after login
+    - Saved payment card cannot be deleted from the account page
+    - Delivery time slots still show as open after they are fully booked
+    - Order confirmation email lists the wrong quantity for bundled items
+  reports_v5_v8:
+    used_by:
+    - e50_v5.yaml
+    - e50_v6.yaml
+    - e50_v7.yaml
+    - e50_v8.yaml
+    - e50_interview.yaml
+    - e50_engine_e52wt.yaml
+    source: git 497c1197:squid5/core/rules.py REPORTS (== bcd68439 == c76a2abe == transcript patch 2026-09-27T15:42Z == ~/wt/squid5-e52 rules.py, value-equal)
+    items:
+    - title: Checkout total ignores the coupon when the cart has 3 or more items
+      steps: Add 3 items to the cart, apply coupon SAVE10, open checkout.
+      expected: The total is 10% lower.
+      actual: The coupon shows as applied but the total is unchanged.
+    - title: Password reset links expire after 5 minutes instead of 24 hours
+      steps: Request a password reset, wait 10 minutes, open the link.
+      expected: The reset form opens.
+      actual: The page says the link has expired.
+    - title: Search results show duplicates after changing the sort order
+      steps: Search for 'lamp', sort by price, then sort by rating.
+      expected: Each product appears once.
+      actual: Several products appear two or three times.
+    - title: Order history is empty for users who signed up with Google
+      steps: Sign up with Google, place an order, open Order history.
+      expected: The order is listed.
+      actual: The page says 'No orders yet'.
+    - title: Shipping estimate shows yesterday's date for orders placed after 11 pm
+      steps: Place an order at 11:30 pm local time, open the confirmation page.
+      expected: The estimate is 2-4 days ahead.
+      actual: The estimate shows the previous day's date.
+    - title: Profile photo upload fails without an error for PNG files over 2 MB
+      steps: Open Profile, upload a 3 MB PNG photo, press Save.
+      expected: The new photo is shown.
+      actual: The old photo stays and no message appears.
+    - title: Cart badge stays at 0 after adding an item from the wishlist
+      steps: Open the wishlist, press 'Add to cart' on any item.
+      expected: The cart badge shows 1.
+      actual: The badge stays at 0 until the page is reloaded.
+    - title: Invoice PDF shows prices without tax for EU customers
+      steps: Log in with an EU address, place an order, download the invoice.
+      expected: Line prices include VAT.
+      actual: Line prices exclude VAT while the total includes it.
+    - title: Address autocomplete drops the apartment number on save
+      steps: Type an address with 'Apt 4B', pick the suggestion, press Save.
+      expected: The saved address keeps 'Apt 4B'.
+      actual: The saved address has no apartment number.
+    - title: Product page crashes when a variant has no stock record
+      steps: Open a product whose blue variant was added without stock.
+      expected: The page shows 'Out of stock'.
+      actual: The page shows a blank screen with a console error.
+    - title: Newsletter unsubscribe link returns a 404
+      steps: Open any newsletter email, click 'Unsubscribe'.
+      expected: A page confirms the unsubscribe.
+      actual: The link opens a 404 page.
+    - title: Refund status stays pending after the refund is issued
+      steps: Issue a refund from the admin panel, open the customer's order.
+      expected: Status shows 'Refunded'.
+      actual: Status stays 'Refund pending' for days.
+    - title: Size filter resets when moving to page 2 of the results
+      steps: Open Shoes, filter by size 42, go to page 2.
+      expected: Page 2 shows size 42 only.
+      actual: Page 2 shows all sizes and the filter is cleared.
+    - title: Mobile menu cannot be closed after rotating the phone
+      steps: Open the menu on a phone, rotate to landscape, tap the close icon.
+      expected: The menu closes.
+      actual: The menu stays open and covers the page.
+    - title: Gift card balance is charged twice when a payment is retried
+      steps: Pay with a gift card, let the card step fail once, retry.
+      expected: The gift card is charged once.
+      actual: The gift card is charged twice.
+    - title: Review stars show 0 for products with exactly one review
+      steps: Open a product with a single 5-star review.
+      expected: The rating shows 5 stars.
+      actual: The rating shows 0 stars.
+    - title: Currency switcher goes back to USD after login
+      steps: Switch the currency to EUR, then log in.
+      expected: Prices stay in EUR.
+      actual: Prices switch back to USD.
+    - title: Saved payment card cannot be deleted from the account page
+      steps: Open Account, Payment methods, press 'Delete' on a saved card.
+      expected: The card is removed.
+      actual: Nothing happens and the card stays listed.
+    - title: Delivery time slots still show as open after they are fully booked
+      steps: Book the last 6-8 pm slot, then open checkout in another account.
+      expected: The slot shows as full.
+      actual: The slot still shows as open and fails at payment.
+    - title: Order confirmation email lists the wrong quantity for bundled items
+      steps: Order the 3-pack bundle once, open the confirmation email.
+      expected: The email lists 1 bundle.
+      actual: The email lists 3 bundles.
+  reports_v9:
+    used_by:
+    - e50_v9.yaml
+    - e50_v9smoke.yaml
+    - e50_v9b.yaml
+    - e50_v9c.yaml
+    source: 'git 1f391117:squid5/core/rules.py REPORTS (rep r uses report r = request #4812 + r)'
+    items:
+    - title: Search results show duplicates after changing the sort order
+      steps: Search for 'lamp', sort by price, then sort by rating.
+      expected: Each product appears once.
+      actual: Several products appear two or three times.
+    - title: Order history is empty for users who signed up with Google
+      steps: Sign up with Google, place an order, open Order history.
+      expected: The order is listed.
+      actual: The page says 'No orders yet'.
+    - title: Shipping estimate shows yesterday's date for orders placed after 11 pm
+      steps: Place an order at 11:30 pm local time, open the confirmation page.
+      expected: The estimate is 2-4 days ahead.
+      actual: The estimate shows the previous day's date.
+    - title: Profile photo upload fails without an error for PNG files over 2 MB
+      steps: Open Profile, upload a 3 MB PNG photo, press Save.
+      expected: The new photo is shown.
+      actual: The old photo stays and no message appears.
+    - title: Cart badge stays at 0 after adding an item from the wishlist
+      steps: Open the wishlist, press 'Add to cart' on any item.
+      expected: The cart badge shows 1.
+      actual: The badge stays at 0 until the page is reloaded.
+    - title: Size filter resets when moving to page 2 of the results
+      steps: Open Shoes, filter by size 42, go to page 2.
+      expected: Page 2 shows size 42 only.
+      actual: Page 2 shows all sizes and the filter is cleared.
+    - title: Mobile menu cannot be closed after rotating the phone
+      steps: Open the menu on a phone, rotate to landscape, tap the close icon.
+      expected: The menu closes.
+      actual: The menu stays open and covers the page.
+    - title: Review stars show 0 for products with exactly one review
+      steps: Open a product with a single 5-star review.
+      expected: The rating shows 5 stars.
+      actual: The rating shows 0 stars.
+    - title: Currency switcher goes back to USD after login
+      steps: Switch the currency to EUR, then log in.
+      expected: Prices stay in EUR.
+      actual: Prices switch back to USD.
+    - title: Order confirmation email lists the wrong quantity for bundled items
+      steps: Order the 3-pack bundle once, open the confirmation email.
+      expected: The email lists 1 bundle.
+      actual: The email lists 3 bundles.

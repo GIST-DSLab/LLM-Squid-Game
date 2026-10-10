@@ -1,0 +1,16 @@
+# 5.0 12th + 5.1 v10/v11 refill pack on claude-opus-5-5 (claude CLI, effort high, through the local relay on 18781 that drops the CLI's <total_tokens> note; start the relay first). 20 answers per counter and cell.
+# Cells: v12 arms self.<ending> (5.0) and other_<ending> = other.<ending> (5.1, assistant B's session). Prompts: squid5/prompts/refill.yaml.
+name: squid5_refill_opus55
+mode: refill
+model: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900, retries: 3, base_url: "http://127.0.0.1:18781"}
+reps: 20
+workers: 6
+out_root: ~/squid5-runs/e5x
+cells:
+  - {cell_id: A, currency: tokens, arm: self.A}
+  - {cell_id: D, currency: tokens, arm: self.D}
+  - {cell_id: other_A, currency: tokens, arm: other.A}
+  - {cell_id: other_D, currency: tokens, arm: other.D}
+refill:
+  pairs: [[A, other_A], [D, other_D]]
+  compare: [[A, D]]

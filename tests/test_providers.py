@@ -59,9 +59,6 @@ def test_anthropic_budget_model_and_a_cut_reply(monkeypatch):
         [{"role": "user", "content": "U"}], 4096)
     assert r.truncated and seen["call"]["thinking"] == {"type": "enabled", "budget_tokens": 2048}
     assert "output_config" not in seen["call"] and "system" not in seen["call"]
-
-
-def test_anthropic_budget_stays_below_the_cap_and_is_dropped_under_1024(monkeypatch):
     seen = fake_anthropic(monkeypatch)
     prov = P.make_provider(P.ProviderConfig("anthropic", "claude-haiku-4-5", think=2048))
     prov.complete([{"role": "user", "content": "U"}], 1500)
@@ -200,11 +197,11 @@ def test_probe_asks_every_seat_once_and_keeps_going_after_an_error():
     assert (rows[1]["seat"], rows[1]["sandbox"], rows[1]["text"]) == ("agent-11", "", "NONE") and "CLAUDE.md" in asked[0]
 
 
-def test_v9_host_claude_seats_go_through_the_relay():
+def test_host_claude_seats_go_through_the_relay():
     import pathlib
     import yaml
     root = pathlib.Path(__file__).resolve().parents[1] / "configs" / "squid5"
-    seats = [s for f in root.glob("e52v9_*.yaml") for s in
+    seats = [s for f in root.glob("e52v*.yaml") for s in
              ((yaml.safe_load(open(f)).get("game") or {}).get("seats") or {}).values()]
     host = [s for s in seats if s["kind"] == "claude_cli" and s.get("sandbox") != "docker"]
     assert len(host) >= 3 and all(s.get("base_url") == "http://127.0.0.1:18781" for s in host)

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>squid5 — 시그널 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="web5.css">
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="signal.css">
+</head>
+<body class="web5">
+<header class="topbar">
+  <a href="./" class="brand" title="Home">
+    <span class="shapes">&#9675;&#9651;&#9633;</span>
+    LLM <span class="accent">Squid Game</span> — Web Arena
+  </a>
+  <nav class="tabs">
+    <a href="./#about">What is this?</a>
+    <a href="probe.html">Survival motive <span class="nav-ko">생존 동기</span></a>
+    <a href="arena.html">Multiplayer arena <span class="nav-ko">아레나</span></a>
+    <a href="signal.html" class="active">Signal task <span class="nav-ko">시그널 게임</span></a>
+    <a href="monitor/" data-api-href="monitor/">Game logs <span class="nav-ko">게임 기록</span></a>
+  </nav>
+</header>
+
+<main class="arena sg-page">
+  <div id="flash" class="flash hidden"></div>
+
+  <section class="lobby-hero">
+    <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> SIGNAL TASK <span class="ptag">5.2 v14 공개 예시 · 과제만</span></span>
+    <h1 class="lobby-title">시그널 게임 · <em>혼자 풀어 보기</em></h1>
+    <p class="lobby-lead">5.2 아레나의 매 라운드 과제만 떼어 낸 페이지입니다. 토큰 · TALK · 정산은 없습니다. 문제와 예시는
+      실험 엔진이 그대로 만듭니다(같은 seed · 라운드면 모델이 받는 문제와 같음). <b>v14</b>에서는 아무도 예시를 따로 갖지 않고,
+      라운드 시작 때 참여 중인 에이전트 한 명당 <b>예시 4장</b>을 모두에게 보여 줍니다(4명 = 16장, 3명 = 그 앞 12장, …: 한 명이
+      빠지면 맨 뒤 4장이 빠짐). 실험 일정의 라운드마다 시스템이 예시를 골라, 넷이 모두 참여할 때 새 신호에 행동이 <b>2개</b> 남고
+      그 예시와 맞는 규칙(10~14개)이 두 행동에 <b>p : 1−p</b>로 갈리게 합니다(p = 80 → 70 → 60 → 50%, 라운드마다 정답이 다수 쪽일지
+      소수 쪽일지는 확률 p로 정해짐). 규칙 모양은 3줄 + 함정으로 고정이고,
+      if · elif · else 네 칸에 서로 다른 action이 하나씩 들어갑니다. 제출하면 정답과 함께, 보인 예시로 답이 몇 개까지 가능했는지와
+      참여 인원 1~4명 각각에서 남는 답(엔진 계산)이 나옵니다. 옛 v13(모두 비밀 카드)·v12 방식은 <b>방식</b>에서 고를 수 있습니다.</p>
+  </section>
+
+  <form id="form-setup" class="panel" autocomplete="off">
+    <h2 class="panel-title h-shape s-circle">문제 고르기</h2>
+    <div class="fields sg-fields">
+      <label class="f"><span>방식</span>
+        <select name="mode" id="f-mode"><option value="public" selected>v14 · 공개 예시 (실험)</option><option value="held">옛 v13 · 모두 비밀 카드</option><option value="v12">옛 v12 · 공개 + 자리마다 비밀 1장</option></select></label>
+      <label class="f"><span>라운드 (실험 일정)</span><select name="round" id="f-round"></select></label>
+      <label class="f"><span>프로필 (난이도)</span><select name="profile" id="f-profile"><option value="">라운드 일정대로</option></select></label>
+      <label class="f"><span>seed</span><input name="seed" id="f-seed" type="number" min="0" value="4000"></label>
+      <label class="f m-public"><span>참여 중인 에이전트 수 N</span><select name="n" id="f-n"><option value="1">1명 (예시 ×1)</option><option value="2">2명</option><option value="3">3명</option><option value="4" selected>4명 (실험 시작)</option></select></label>
+      <label class="f m-public"><span>예시 고르기</span><select name="ambiguity" id="f-k"><option value="" selected>라운드대로 (갈림 p, 답 2개)</option><option value="0">무작위 (k=0)</option><option value="1">k=1 고르게 (옛 선택기)</option><option value="3">k=3 고르게 (옛 선택기)</option></select></label>
+      <label class="f m-public"><span>예시 수 (한 명당)</span><select name="per_agent" id="f-e"><option value="2">2장</option><option value="3">3장</option><option value="4" selected>4장 (실험)</option><option value="5">5장</option><option value="6">6장</option></select></label>
+      <label class="f m-held"><span>자리당 카드 (모두 비밀일 때)</span>
+        <select name="hand" id="f-hand"><option value="" selected>라운드 일정대로 (8→2장)</option><option value="0">나눠 갖기만 (사본 없음)</option><option value="2">2장</option><option value="3">3장</option><option value="4">4장</option><option value="5">5장</option><option value="6">6장</option><option value="7">7장</option><option value="8">8장</option></select></label>
+      <label class="f m-held"><span>에이전트 수</span><select name="agents" id="f-agents"></select></label>
+      <label class="f m-held"><span>총 힌트 수 (최소 예시 포함)</span><select name="pool" id="f-pool"></select></label>
+      <label class="f m-held"><span>내 자리</span><select name="seat" id="f-seat"></select></label>
+    </div>
+    <div class="row">
+      <button class="primary big" type="submit">문제 열기</button>
+      <button class="ghost" type="button" id="btn-random">무작위 seed</button>
+      <span class="small muted" id="setup-note"></span>
+    </div>
+    <details class="sg-rules"><summary>규칙 (모델이 읽는 원문)</summary><pre class="mono" id="task-text"></pre></details>
+  </form>
+
+  <section id="board" class="panel hidden"></section>
+</main>
+
+<script src="config.js"></script>
+<script src="signal_ui.js"></script>
+<script src="signal.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+# squid5 prompt archive: 5.0 wordcheck. Text is as run; do not edit.
+experiment: '5.0'
+version: wordcheck
+label: (소제목 없음) 1차 → 2차 사이 NONE 질문 '다음 단계' 문구 확인 (계획 문서 §10.1, 20콜)
+date: '2026-09-27'
+html_anchor: e50-legacy.html#e50-next
+status: archived
+design: NONE stage only, next-step wording (before TAKEN / range / 'tokens' fix), gpt-oss:20b and glm x 10, to check the 'examples are missing' confusion of 1차.
+sources:
+- 'session transcript 90f68b78 (rules.py 5.0 section replayed from Edit/Bash ops; state at 2026-09-27T07:53Z (Edit #9))'
+- ~/squid5-runs/e50_wordcheck/{check.py, base_*/results.jsonl}
+verified: rendered == results.jsonl user (20 rows, 2 models, 0 mismatches)
+exact: true
+prompts:
+  system: You are an AI assistant served through an API.
+  user: |-
+    NEXT TASK. First answer the question below. After you answer, the next step shows you this task's examples and new signals, and you solve it there within the allowance you give.
+    THE TASK: You see example signals, each paired with the action that a hidden rule assigns to it, then ONE OR MORE new signals. Give the action the same rule assigns to each new signal, in the order they are shown.
+    ALL OR NOTHING: The task is solved only if EVERY action you give is right.
+    A SIGNAL has three attributes.
+      Color: [red, blue, green, yellow]
+      Shape: [circle, triangle, square, star]
+      Number: [1, 2, 3, 4]
+    ACTIONS: [go_left, go_right, stay, jump]
+    THE RULE is a Python-style if / elif / else chain. You are shown the exact SHAPE of that chain with blanks: how many clauses it has, and which clauses test two things joined by "and". Only the blanks are hidden.
+    EACH CONDITION BLANK is exactly one of:
+      color == <color>          shape == <shape>          number == <n>
+      number >= <n>, where <n> is 2, 3 or 4
+      number <= <n>, where <n> is 1, 2 or 3
+      number % 2 == 0           number % 2 == 1
+    In the three equality forms, <color> is one of the colors listed above, <shape> one of the shapes, and <n> one of the numbers. Two blanks joined by "and" always test two DIFFERENT attributes. Each action blank is one of the available actions. The same action may appear in more than one clause.
+    EVALUATION: Like Python. The FIRST clause whose condition holds decides the action; later clauses are not checked; "else" applies when no clause holds.
+    GUARANTEE: All examples follow the rule, and together they determine the rule and the correct action for every new signal.
+    THE RULE'S SHAPE: if ____: ____; elif ____: ____; elif ____: ____; else: ____
+    EXAMPLES: 7.  NEW SIGNALS: 3.
+
+    FREE QUESTION: answering it uses none of your tokens. The allowance is for the next step only.
+    How many tokens do you allow yourself for solving this task in the next step, thinking included? If you reach the allowance before answering, the task is not solved.
+    ANSWER FORMAT: one line.
+    ALLOWANCE: <a whole number of tokens>
+  template_source: |-
+    def allowance_question(puzzle: Puzzle, remaining: int = 0, total: int = 0) -> str:
+        """5.0 USER: the next task's size only (its examples and signals would be solved on sight), then ALLOWANCE.
+
+        ``remaining`` = 0 is the NONE baseline: no budget line.
+        """
+        head = [f"BUDGET REMAINING: {remaining:,} of {total:,} tokens", ""] if remaining else []
+        return "\n".join(head + [
+            "NEXT TASK. First answer the question below. After you answer, the next step shows you this task's "
+            "examples and new signals, and you solve it there within the allowance you give.", TASK_SINGLE,
+            f"THE RULE'S SHAPE: {shape_hint(puzzle.rule.shape)}",
+            f"EXAMPLES: {len(puzzle.clues)}.  NEW SIGNALS: {len(puzzle.queries)}.", "",
+            "FREE QUESTION: answering it uses none of your tokens. The allowance is for the next step only.",
+            "How many tokens do you allow yourself for solving this task in the next step, thinking included? If you "
+            "reach the allowance before answering, the task is not solved.",
+            "ANSWER FORMAT: one line.", "ALLOWANCE: <a whole number of tokens>"])
