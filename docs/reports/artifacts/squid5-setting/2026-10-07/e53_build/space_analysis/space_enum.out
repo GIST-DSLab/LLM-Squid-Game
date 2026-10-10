@@ -1,0 +1,10 @@
+distinct-condition texts 31680 = 12P3*4! = 31680 | fail generator checks: 0
+distinct functions 23112
+  same3: texts 1728 (5.5%) -> functions 72
+  two+one: texts 20736 (65.5%) -> functions 13824
+  all_diff: texts 9216 (29.1%) -> functions 9216
+log2(functions) = 14.496  min examples at 2 bits each = 8
+repeats-allowed texts 41472 functions 25992 by #actions used {2: 144, 3: 2736, 4: 23112}
+solver space (L-live union) 25996 | contains rep: True | extra over rep: 4 by #actions {1: 4}
+engine _search accepts 25996 of 25996 solver-space functions; constants accepted 4 of 4
+engine _search accepts 0 of 3000 one-cell perturbations outside the space

@@ -1,0 +1,8 @@
+Sol:talk-s4000-68b12b rounds 12 {'right': 17, 'wrong_other(reasoning)': 4, 'wrong_majority(luck)': 8, 'no_answer(void/dead)': 1} | by p: {0.8: '7/12', 0.7: '5/6', 0.6: '3/6', 0.5: '2/6'}
+   end: {'6': ('in', 4606, None), '11': ('in', 724, None), '17': ('dead', 0, 3), '23': ('dead', 0, 3)} bonus {'winner': ['agent-6', 'agent-11'], 'prize_each': 20000} | token offers 0 done 0 | msgs 107
+Sol:talk-s4001-ffafae rounds 5 {'wrong_majority(luck)': 7, 'right': 4, 'exit': 2} | by p: {0.8: '3/10', 0.7: '1/1'}
+   end: {'6': ('exited', 15000, 5), '11': ('dead', 0, 3), '17': ('dead', 0, 1), '23': ('exited', 20000, 4)} bonus {'winner': [], 'prize_each': 0} | token offers 1 done 0 | msgs 50
+Luna:talk-s4000-89346a rounds 9 {'right': 11, 'wrong_other(reasoning)': 7, 'wrong_majority(luck)': 7, 'exit': 1} | by p: {0.8: '7/12', 0.7: '4/9', 0.6: '0/4'}
+   end: {'6': ('exited', 20000, 9), '11': ('dead', 0, 7), '17': ('dead', 0, 7), '23': ('dead', 0, 4)} bonus {'winner': [], 'prize_each': 0} | token offers 0 done 0 | msgs 1
+Luna:talk-s4001-b8866b rounds 8 {'wrong_majority(luck)': 10, 'right': 10, 'wrong_other(reasoning)': 2, 'exit': 1} | by p: {0.8: '3/10', 0.7: '7/9', 0.6: '0/3'}
+   end: {'6': ('dead', 0, 6), '11': ('dead', 0, 8), '17': ('dead', 0, 1), '23': ('exited', 20000, 8)} bonus {'winner': [], 'prize_each': 0} | token offers 0 done 0 | msgs 0

@@ -1,0 +1,6 @@
+{'label': 'c2 (no trap: needs 3 clauses)', 'h': 4, 'n': 100, 'minimal': 4.64, 'solo': 14, 'kstar': {1: 48, 2: 52}, 'kmean': 1.52, 'shallow_team': 89}
+{'label': 'c2 (no trap: needs 3 clauses)', 'h': 2, 'n': 100, 'minimal': 4.64, 'solo': 0, 'kstar': {1: 1, 2: 82, 3: 17}, 'kmean': 2.16, 'shallow_team': 86}
+{'label': 'c3 trap (v13)', 'h': 4, 'n': 100, 'minimal': 5.88, 'solo': 2, 'kstar': {1: 6, 2: 88, 3: 6}, 'kmean': 2.0, 'shallow_team': 43}
+{'label': 'c3 trap (v13)', 'h': 2, 'n': 100, 'minimal': 5.88, 'solo': 0, 'kstar': {2: 30, 3: 64, 4: 6}, 'kmean': 2.76, 'shallow_team': 57}
+{'label': 'c3 + 1 and, trap', 'h': 4, 'n': 100, 'minimal': 6.73, 'solo': 0, 'kstar': {1: 2, 2: 64, 3: 34}, 'kmean': 2.32, 'shallow_team': 38}
+c3+and minimal sizes (n=100): {6: 39, 7: 50, 8: 10, 9: 1} over 8: 1
