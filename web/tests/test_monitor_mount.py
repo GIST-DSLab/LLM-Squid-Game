@@ -30,6 +30,13 @@ def test_page_and_code(client):
     csv = client.get("/monitor/api/compare.csv", params={"runs": "nope/", "chart": "summary"})
     assert csv.status_code == 200 and csv.text.lstrip("\ufeff").startswith("model,games")
     assert client.get("/monitor/api/compare.csv", params={"runs": "nope/", "chart": "x"}).status_code == 400
+    heads = {}
+    for chart in ("calib", "asks", "unsolicited", "gives", "recip", "survival", "map", "e51", "gini", "moves", "summary",
+                  "leaderboard"):  # every chart id the 모델 비교 page links, plus summary and leaderboard
+        r = client.get("/monitor/api/compare.csv", params={"runs": "nope/", "chart": chart})
+        assert r.status_code == 200, chart
+        heads[chart] = r.text.lstrip("\ufeff").splitlines()[0]
+    assert len(set(heads.values())) == len(heads), heads  # each its own columns
     sig = client.get("/monitor/static/signal_ui.js")  # the arena's task drawing, shared with the viewer (one file)
     assert sig.status_code == 200 and sig.text == client.get("/signal_ui.js").text and "byActionHTML" in sig.text
     assert client.get("/monitor/assets/nope.png").status_code == 404  # no sprites: the page falls back silently

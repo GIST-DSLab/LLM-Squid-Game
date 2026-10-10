@@ -1113,6 +1113,20 @@ def test_compare_routes_serve_the_page_data_and_csv(tmp_path):
         text = r.read().decode("utf-8-sig")
         assert r.status == 200 and "attachment" in r.getheader("Content-Disposition") and text.startswith("model,games")
         assert len(text.strip().splitlines()) == 3
+        page_ids = set(re.findall(r'[A-Za-z]+\("([a-z0-9_]+)", "\d', (HERE / "static" / "compare.js").read_text()))
+        ids = page_ids | set(compare.CHARTS) | {"recip", "survival", "map", "e51", "summary", "leaderboard"}
+        assert {"calib", "gives", "gini", "moves", "map", "e51"} <= page_ids
+        headers = {}
+        for chart in sorted(ids):
+            c.request("GET", f"/api/compare.csv?runs=fam/&chart={chart}")
+            r = c.getresponse()
+            text = r.read().decode("utf-8-sig")
+            assert r.status == 200, (chart, text)
+            headers[chart] = text.splitlines()[0]
+        assert len(set(headers.values())) == len(headers), headers  # every chart its own columns
+        assert headers["map"].startswith("model,games,running,coop_slope_per10,coop_slope_n,calib_slope_per10")
+        assert headers["e51"].startswith("model,e51_area,e51_lo,e51_hi,give_rate,give_ci_lo,give_ci_hi,asks")
+        assert headers["leaderboard"].startswith("rank,model")
     finally:
         srv.shutdown()
         srv.server_close()

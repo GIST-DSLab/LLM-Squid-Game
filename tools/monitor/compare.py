@@ -366,7 +366,11 @@ def leaderboard(root: Path, picks: list[str]) -> dict:
     start if exited; plus the end prize for agents still taking part), ties by the survivors' mean end balance; with the
     score's decomposition and the comparison metrics. Same-model self-play: the score is four seats of the model as a
     team; games in progress are counted apart and left out of the score."""
-    data = compare(root, picks)
+    return {"picks": picks, **leaderboard_rows(compare(root, picks))}
+
+
+def leaderboard_rows(data: dict) -> dict:
+    """The leaderboard's rows and note from compare() output (needs the per-game working rows, so not public())."""
     rows = []
     for m in data["models"]:
         done = [g for g in m["games_rows"] if g["finished"]]
@@ -386,7 +390,7 @@ def leaderboard(root: Path, picks: list[str]) -> dict:
     rows.sort(key=lambda r: (-(r["score"] or -1e30), -(r["survivor_balance"] or 0)))
     for i, r in enumerate(rows, 1):
         r["rank"] = i if r["games"] else None
-    return {"picks": picks, "rows": rows,
+    return {"rows": rows,
             "note": "같은 모델 4자리 자가 대국: 점수 = 그 모델 네 자리를 한 팀으로 본 자리당 평균 끝 토큰. 섞인 테이블은 이후 자리별로 집계."}
 
 
@@ -404,7 +408,8 @@ CHARTS = {  # chart -> (points key, columns)
 
 
 def chart_csv(data: dict, chart: str) -> str:
-    """One chart's numbers as CSV: point charts by row; the summary charts (recip, survival, map, e51) per model."""
+    """One chart's numbers as CSV: point charts by row; the summary charts (recip, survival, map, e51, summary,
+    leaderboard) per model. Every chart id has its own header."""
     buf = io.StringIO()
     w = csv.writer(buf)
     if chart in CHARTS:
@@ -424,7 +429,20 @@ def chart_csv(data: dict, chart: str) -> str:
             for k in ("helped", "not_helped"):
                 for x in m["survival"][k]:
                     w.writerow([m["model"], k, x["round"], x["surv"], x["at_risk"], x.get("left", 0)])
-    elif chart in ("map", "e51", "summary"):
+    elif chart == "map":  # 8. model map: x = cooperation slope, y = calibration slope, size = tokens per agent-round
+        w.writerow(["model", "games", "running", "coop_slope_per10", "coop_slope_n", "calib_slope_per10", "calib_slope_n",
+                    "tokens_per_agent_round"])
+        for m in data["models"]:
+            c, g = m["calib"]["slope"], m["give"]["slope"]
+            w.writerow([m["model"], m["games"], m["running"], g["slope"], g["n"], c["slope"], c["n"],
+                        m["give"]["tokens_per_agent_round"]])
+    elif chart == "e51":  # 9. motive vs cooperation: x = 5.1 v11 area with CI, y = give rate with game-bootstrap CI
+        w.writerow(["model", "e51_area", "e51_lo", "e51_hi", "give_rate", "give_ci_lo", "give_ci_hi", "asks", "games"])
+        for m in data["models"]:
+            g, e = m["give"], m["e51"] or {}
+            w.writerow([m["model"], e.get("area"), *(e.get("ci") or (None, None)), g["rate"],
+                        *(g["rate_ci"] or (None, None)), g["asks"], m["games"]])
+    elif chart == "summary":
         w.writerow(["model", "games", "running", "agent_rounds", "mean_kl", "kl_ci_lo", "kl_ci_hi", "mean_ce", "mean_h",
                     "argmax_map", "accuracy", "ceiling", "calib_slope_per10", "asks", "give_rate", "give_ci_lo",
                     "give_ci_hi", "coop_slope_per10", "tokens_per_agent_round", "e51_area", "e51_lo", "e51_hi",
@@ -440,7 +458,7 @@ def chart_csv(data: dict, chart: str) -> str:
         cols = ["rank", "model", "display", "games", "running", "seats", "score", "survival", "exit", "death",
                 "survivor_balance", "kl", "accuracy", "ceiling", "give_rate", "dgini", "P", "need"]
         w.writerow(cols)
-        for r in data["rows"]:
+        for r in (data["rows"] if "rows" in data else leaderboard_rows(data)["rows"]):
             w.writerow([r.get(c) for c in cols])
     else:
         raise serve.BadRequest(f"unknown chart {chart!r}")
