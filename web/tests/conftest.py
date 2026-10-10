@@ -116,25 +116,31 @@ def play(players: list[Player], policy, until_status=("finished", "error"), max_
     raise AssertionError(f"room did not reach {until_status} in {max_s}s: {s and s['status']} live {s and s['live']}")
 
 
-def puzzle(seed: int, round_no: int, schedule: str = "human"):
-    from squid5.core.puzzle import Spec, deal, puzzle_for
-
-    from web.server.engine import AGENTS, PROFILES, SCHEDULES
-
-    pz = puzzle_for(seed, round_no, Spec(**PROFILES[SCHEDULES[schedule][round_no - 1]]))
+def puzzle(seed: int, round_no: int, schedule: str = "v14"):
+    """The round's puzzle as a room of ``schedule`` builds it, and its deal (v13 / v9) or its public examples with all
+    four taking part (v14: the puzzle may be a redraw, so it comes from ``public_round``)."""
     import random
 
+    from squid5.core.puzzle import Spec, deal, public_round, puzzle_for
+
+    from web.server.engine import AGENTS, PROFILES, SCHEDULES, V14, RoomSettings
+
+    spec = Spec(**PROFILES[SCHEDULES[schedule][round_no - 1]])
+    if schedule in V14:
+        pz, shown, _ = public_round(seed, round_no, spec, len(AGENTS), RoomSettings.public_per_agent)
+        return pz, shown
+    pz = puzzle_for(seed, round_no, spec)
     return pz, deal(pz, AGENTS, random.Random(f"{seed}:deal:{round_no}"))
 
 
-def answers_for(seed: int, round_no: int, schedule: str = "human") -> list[str]:
+def answers_for(seed: int, round_no: int, schedule: str = "v14") -> list[str]:
     return list(puzzle(seed, round_no, schedule)[0].answers)
 
 
-def wrong_for(seed: int, round_no: int) -> list[str]:
+def wrong_for(seed: int, round_no: int, schedule: str = "v14") -> list[str]:
     from squid5.core.puzzle import ACTIONS
 
-    ans = answers_for(seed, round_no)
+    ans = answers_for(seed, round_no, schedule)
     return [next(a for a in ACTIONS if a != ans[0])] + ans[1:]
 
 

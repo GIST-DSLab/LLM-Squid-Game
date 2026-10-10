@@ -2,7 +2,8 @@
 
     python3 tools/monitor/export.py RUN_DIR [--session SID] --out FILE.html
 
-The page code is the monitor's own (monitor.html + static/monitor.{css,js}, inlined); the session's events go into a
+The page code is the monitor's own (monitor.html + static/monitor.{css,js}, inlined, with the arena's shared
+web/frontend/signal_ui.js); the session's events go into a
 <script type="application/json" id="monitor-data"> block that the page detects, with every played round's task rebuilt
 from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. Sprites from
 tools/monitor/assets/ are embedded as data URIs when present; otherwise the page draws its generated pixel avatars.
@@ -54,7 +55,10 @@ def build_page(payload: dict) -> str:
     css = (serve.STATIC / "monitor.css").read_text(encoding="utf-8")
     js = (serve.STATIC / "monitor.js").read_text(encoding="utf-8").replace("</script", "<\\/script")
     html = html.replace('<link rel="stylesheet" href="static/monitor.css">', f"<style>\n{css}\n</style>")
-    html = html.replace('<script src="static/monitor.js"></script>', f"<script>\n{js}\n</script>")
+    sig = serve.SHARED["signal_ui.js"]
+    sig_js = sig.read_text(encoding="utf-8").replace("</script", "<\\/script") if sig.is_file() else ""
+    html = html.replace('<script src="static/signal_ui.js"></script>\n', "")  # inlined with the page code, one script
+    html = html.replace('<script src="static/monitor.js"></script>', f"<script>\n{sig_js}\n{js}\n</script>")
     data = f'<script type="application/json" id="monitor-data">{script_json(payload)}</script>'
     return html.replace("<!--EMBED-->", data)
 
@@ -87,6 +91,8 @@ def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = Tr
                "session": sid, "model": serve.read_meta(run_dir).get("model"),
                "events": events, "result": serve.results_by_session(run_dir).get(sid),
                "puzzles": puzzles, "puzzle_error": puzzle_error,
+               "giving": {"run": serve.run_giving(run_dir), "session": serve.run_giving(run_dir, sid)},  # 나눔 그래프
+               "analysis": {"run": serve.run_analysis(run_dir), "session": serve.run_analysis(run_dir, sid)},
                "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
                "assets": embedded_assets() if with_assets else None}
     out = Path(out)

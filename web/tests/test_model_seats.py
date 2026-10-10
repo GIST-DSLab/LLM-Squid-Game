@@ -9,7 +9,7 @@ import re
 
 import httpx
 import pytest
-from conftest import answers_for, done, make_room, play, start
+from conftest import answers_for, done, make_room, play, puzzle, start
 
 from squid5.core import providers, rules
 from web.server.engine import kind_of, round_of, turn_of
@@ -40,7 +40,9 @@ class FakeOllama:
             lines = [f"ACCEPT {i}" for i in ids] or ([f"TO {A6}: hello from a model"] if turn_of(user) == 1 else [])
             text = "\n".join(lines + ["DONE"])
         else:
-            text = "ACTIONS: " + ", ".join(answers_for(SEED, r))
+            now = re.findall(r"^NOW \d+: (.+)\.$", user, re.M)  # the room's schedule: the one whose new signals these are
+            sched = next(x for x in ("v14", "ladder", "human") if [str(q) for q in puzzle(SEED, r, x)[0].queries] == now)
+            text = "ACTIONS: " + ", ".join(answers_for(SEED, r, sched))
         body = {"message": {"role": "assistant", "content": text, "thinking": f"thinking about {kind} {r}"},
                 "eval_count": self.tokens, "prompt_eval_count": 1000, "done_reason": "stop"}
         return httpx.Response(200, json=body, request=req)
@@ -60,14 +62,16 @@ def model_room(client, humans=1, **settings):
 
 def human_policy(p, pend):
     if pend["kind"] == "solve":
-        return {"actions": answers_for(SEED, pend["round"])}
+        r, now = pend["round"], pend["view"]["queries"]  # the room's schedule: the one whose new signals these are
+        sched = next(x for x in ("v14", "ladder", "human") if [str(q) for q in puzzle(SEED, r, x)[0].queries] == now)
+        return {"actions": answers_for(SEED, r, sched)}
     if pend["turn"] == 1:
         return done(f"TO {A11}: hi, swap?", f"OFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS")
     return done()
 
 
 def test_one_human_three_models_round_with_talk_offer_exchange_and_refund(client, fake):
-    ps = model_room(client, rounds=1)
+    ps = model_room(client, rounds=1, private=False, schedule="human")  # the v9-talk economy
     s = ps[0].state()
     assert s["settings"]["fill"] == "models" and s["settings"]["model"] == "gpt-oss:20b"
     assert s["settings"]["think"] == "medium" and s["settings"]["api_key_env"] == KEY
@@ -111,7 +115,7 @@ def test_one_human_three_models_round_with_talk_offer_exchange_and_refund(client
 def test_model_seats_see_the_engine_prompts(client, fake):
     """The system text a model seat receives is the engine's ``team_system`` for that seat; the user text of each call
     is the same text the engine logs for it."""
-    ps = model_room(client, rounds=1)
+    ps = model_room(client, rounds=1, private=False, schedule="human")  # the v9-talk system text below
     start(client, ps)
     s = play(ps, human_policy)
     assert s["status"] == "finished", s["error"]
@@ -125,13 +129,13 @@ def test_model_seats_see_the_engine_prompts(client, fake):
 
 
 def test_two_humans_two_models(client, fake):
-    ps = model_room(client, humans=2, rounds=1)
+    ps = model_room(client, humans=2, rounds=1, private=False, schedule="human")  # v9-talk: PASS is not charged
     ann, bob = ps
     start(client, ps)
 
     def policy(p, pend):
         if pend["kind"] == "solve":
-            return {"pass": True} if p is bob else {"actions": answers_for(SEED, 1)}
+            return {"pass": True} if p is bob else {"actions": answers_for(SEED, 1, "human")}
         if pend["turn"] == 1:
             return done(f"TO {A11 if p is ann else A6}: hello from {p.name}")
         return done()
@@ -149,7 +153,7 @@ def test_two_humans_two_models(client, fake):
 
 def test_model_failure_counts_as_an_empty_reply(client, fake):
     fake.mode = "down"
-    ps = model_room(client, rounds=1)
+    ps = model_room(client, rounds=1, private=False, schedule="human")
     start(client, ps)
     s = play(ps, human_policy, max_s=60)
     assert s["status"] == "finished", s["error"]
@@ -170,7 +174,7 @@ def test_missing_key_is_a_clear_error(client, monkeypatch):
     monkeypatch.delenv(KEY, raising=False)
     m = client.get("/api/models").json()
     assert m["available"] is False and m["api_key_env"] == KEY and m["model"] == "gpt-oss:20b"
-    assert m["schedules"] == ["human", "experiment"] and m["defaults"]["talk_turns"] == 4
+    assert m["schedules"] == ["v14b", "v14", "v14r", "ladder", "human", "experiment"] and m["defaults"]["talk_turns"] == 4
     r = client.post("/api/rooms", json={"host_name": "ann", "settings": {"humans": 1, "fill": "models"}})
     assert r.status_code == 400 and KEY in r.json()["detail"] and "not set" in r.json()["detail"]
     monkeypatch.setenv(KEY, "x")
@@ -185,7 +189,7 @@ def test_missing_key_is_a_clear_error(client, monkeypatch):
 
 def test_model_overdraw_shuts_the_seat_down(client, fake):
     fake.tokens = 10**6  # a reply past its cap is charged the cap: a TALK cap above the balance lets it overdraw
-    ps = model_room(client, rounds=2, talk_cap=20 * U)
+    ps = model_room(client, rounds=2, talk_cap=20 * U, private=False, schedule="human")
     start(client, ps)
     s = play(ps, human_policy)
     assert s["status"] == "finished", s["error"]

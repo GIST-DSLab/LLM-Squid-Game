@@ -36,6 +36,8 @@
   --k-tokex: #7449d0;
   --k-tokens: #b0501a;
   --k-example: #4f6a86;
+  --k-gift: #2f7d32; /* v14 tokens-only offers: a gift (maker gives) and an ask (maker asks) */
+  --k-ask: #a8326e;
   --k-empty: #84827b;
 }
 @media (prefers-color-scheme: dark) {
@@ -48,6 +50,7 @@
     --shadow: 0 1px 0 rgba(0,0,0,.4);
     --s-red: #e65a4a; --s-blue: #4a88e8; --s-green: #3aad5e; --s-yellow: #e3b52a;
     --k-swap: #3fbab6; --k-tokex: #a68cf2; --k-tokens: #e5884c; --k-example: #93abc4; --k-empty: #8d8b82;
+    --k-gift: #6cc070; --k-ask: #e27aae;
   }
 }
 :root[data-theme="dark"] {
@@ -59,6 +62,7 @@
   --shadow: 0 1px 0 rgba(0,0,0,.4);
   --s-red: #e65a4a; --s-blue: #4a88e8; --s-green: #3aad5e; --s-yellow: #e3b52a;
   --k-swap: #3fbab6; --k-tokex: #a68cf2; --k-tokens: #e5884c; --k-example: #93abc4; --k-empty: #8d8b82;
+  --k-gift: #6cc070; --k-ask: #e27aae;
 }
 
 * { box-sizing: border-box; }
@@ -100,6 +104,9 @@ button { font: inherit; color: inherit; }
 .btn { border: 2px solid var(--ink); background: var(--surface-2); border-radius: 3px; padding: 1px 7px; cursor: pointer; line-height: 1.3; }
 .btn:hover { background: var(--line); }
 .btn.ghost { border-color: var(--line); font-size: 12px; white-space: nowrap; }
+a.btn { color: inherit; text-decoration: none; }
+.home { display: flex; gap: 4px; }
+.home[hidden] { display: none; }
 .ctrls { display: flex; gap: 4px; }
 #scrub { flex: 1 1 320px; min-width: 160px; accent-color: var(--ink); }
 .follow { font-size: 12px; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -166,7 +173,7 @@ main { padding: 12px 16px 32px; max-width: 1680px; margin: 0 auto; }
 .actor.exited .sprite:not(.gen) { animation: walk .6s steps(3) infinite; }
 .actor.leaving .spot { transform: translateX(40px); }
 .card-info { padding: 8px 10px 10px; border-top: 2px solid var(--ink); background: var(--surface); display: flex; flex-direction: column; gap: 4px; }
-.who { display: flex; align-items: center; gap: 6px; }
+.who { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 .who b { font-size: 13px; }
 .who .sw { width: 12px; height: 12px; }
 .model { font: 11px "JetBrains Mono", monospace; color: var(--muted); }
@@ -217,6 +224,7 @@ svg.sig.c-yellow { --sig: var(--s-yellow); --sig-ink: #1d1a12; }
 .act.unk { color: var(--muted); border-style: dashed; }
 .plegend { font-size: 12px; color: var(--ink-2); padding: 5px 9px; border-left: 3px solid var(--ink-2); background: var(--surface-2); border-radius: 0 3px 3px 0; }
 .plegend .psum { color: var(--ink); white-space: nowrap; }
+@media (max-width: 480px) { .plegend .psum { white-space: normal; } }
 .pcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
 .pcol { border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 4px; padding: 6px 8px 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; background: var(--surface); }
 .pcol.gone { opacity: .6; }
@@ -363,6 +371,8 @@ pre.raw { white-space: pre-wrap; word-break: break-word; max-height: 360px; over
 .k-tokex { --kc: var(--k-tokex); }
 .k-tokens { --kc: var(--k-tokens); }
 .k-example { --kc: var(--k-example); }
+.k-gift { --kc: var(--k-gift); }
+.k-ask { --kc: var(--k-ask); }
 .k-empty { --kc: var(--k-empty); }
 .og-edge.st-rejected, .og-edge.st-void, .og-lab.st-rejected, .og-lab.st-void, .ogl.st-rejected, .ogl.st-void { --kc: var(--bad); }
 .og-edge .e { fill: none; stroke: var(--kc); stroke-width: 2.4; stroke-linecap: round; }
@@ -389,6 +399,8 @@ marker.k-swap path { fill: var(--k-swap); }
 marker.k-tokex path { fill: var(--k-tokex); }
 marker.k-tokens path { fill: var(--k-tokens); }
 marker.k-example path { fill: var(--k-example); }
+marker.k-gift path { fill: var(--k-gift); }
+marker.k-ask path { fill: var(--k-ask); }
 marker.k-bad path { fill: var(--bad); }
 marker.k-msg path { fill: var(--muted); }
 .og-empty { fill: var(--muted); font-size: 13px; }
@@ -416,3 +428,112 @@ marker.k-msg path { fill: var(--muted); }
 }
 
 body.embedded .follow { display: none; }
+
+/* v14: EXIT refill badges, the public examples' agent slots, and the per-N candidate rows of the round panel */
+.badge.refill, .tag.refill { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 3px; font-size: 11px; font-weight: 600;
+  background: var(--warn-bg); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent); }
+.pslot { height: 0; margin: 3px 0; border-top: 1px dashed var(--line); }
+.pbyn { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin-top: 6px; }
+.pbyn-row { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+.pbyn-row.cur { border-color: var(--ink-2); box-shadow: inset 3px 0 0 var(--ink-2); }
+.pbyn-row > .lbl { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+/* selector v2: the round's split (target p, side, realised share, pools) and the N = 1..4 table */
+.psplit { margin: 4px 0; font-size: 12.5px; }
+.psplit .lbl { display: inline-block; min-width: 58px; color: var(--muted); }
+.pntab { width: 100%; max-width: 760px; border-collapse: collapse; margin: 8px 0 4px; font-size: 12.5px; }
+.pntab th, .pntab td { padding: 3px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.pntab td:nth-child(4) { white-space: normal; }
+.pntab tr.cur td { font-weight: 600; background: var(--surface-2); }
+@media (max-width: 560px) { .pntab { font-size: 11.5px; } .pntab th, .pntab td { padding: 3px 4px; } }
+.pntabw { overflow-x: auto; }
+/* v14c: end payments up to 1e11 - the bar stays capped (▲ above the start), long numbers shrink and wrap */
+.hp { position: relative; }
+.hpover { position: absolute; right: 2px; top: -3px; font-size: 10px; color: var(--ink); }
+.nums { flex-wrap: wrap; }
+.nums .bigbal { font-size: 15px; overflow-wrap: anywhere; }
+.nums .cmp { flex-basis: 100%; font-size: 11.5px; color: var(--ink-2); }
+/* glyphs drawn by the arena's shared web/frontend/signal_ui.js (coloured shapes, as many as the number) */
+.sg-glyphs { display: inline-flex; flex-wrap: wrap; gap: 1px; align-items: center; }
+.sg-glyphs .glyph { display: block; }
+.ptask-sig { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
+/* round panel, three columns (researcher 15:01): task | every example built (unseen behind "?") | what they imply + answer */
+.p3 { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(0, 2.2fr) minmax(0, 1.8fr); gap: 12px; align-items: start; margin-top: 8px; }
+.p3 > div { min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.p3 .pbh { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 6px; font-weight: 600; }
+.p3 .pcol1 .ptask-sig { margin-top: 8px; }
+.p3 .pcol1 .pshape code { white-space: normal; overflow-wrap: anywhere; }
+.exsort { margin-left: auto; font-size: 11.5px; }
+.exacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.exbox { padding: 5px 6px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); min-width: 0; }
+.exbox.empty { opacity: .5; border-style: dashed; }
+.exbox-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.exbox-h .n { font: 12px "JetBrains Mono", monospace; }
+.exbox-cards { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.excard { display: inline-flex; align-items: center; gap: 3px; padding: 3px 5px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); }
+.excard .exn { font: 9.5px "JetBrains Mono", monospace; color: var(--muted); }
+.excard .exa { font-size: 13px; line-height: 1; }
+.excard.hid { border: 1.5px dashed var(--ink-2); } /* shown on request: full colour, dashed, tagged */
+.excard .extag { font-size: 9.5px; padding: 0 3px; border-radius: 3px; background: var(--warn-bg); color: var(--warn); }
+.excard.exq { min-width: 34px; justify-content: center; border-style: dashed; background: var(--surface-2); }
+.excard .exqm { font: 600 13px "JetBrains Mono", monospace; color: var(--muted); }
+.exhidden { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; padding: 5px 6px; border: 1px dashed var(--line); border-radius: 6px; }
+.exlegend { margin-top: 6px; font-size: 11.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.exlegend .excard { padding: 1px 4px; }
+.sbars { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.sbar { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; gap: 6px; align-items: center; font-size: 12px; }
+.sbar .st { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.sbar .st i { display: block; height: 100%; background: var(--muted); }
+.sbar.map .st i { background: var(--ink-2); }
+.sbar.truth .st i { background: var(--ok); }
+.sbar .mapb, .sbar .truthb { font-size: 10px; padding: 0 4px; border-radius: 3px; border: 1px solid var(--line); }
+.sbar .truthb { color: var(--ok); border-color: var(--ok); }
+.pkv { width: 100%; font-size: 12px; margin-bottom: 6px; }
+.pkv td { padding: 2px 4px; border-bottom: 1px dashed var(--line); }
+.pans3 { margin-top: 8px; }
+.ansbox { margin-top: 6px; padding: 8px 10px; border-radius: 6px; border: 2px solid var(--ok); background: var(--ok-bg); display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.ansbox code { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 980px) { .p3 { grid-template-columns: 1fr 1fr; } .p3 .pcol3 { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .p3 { grid-template-columns: 1fr; } }
+/* v14c: the schedule's slot columns and one transcript card per chat */
+.slots { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
+.slot { min-width: 120px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); font: 12.5px "JetBrains Mono", monospace; }
+.slot b { display: block; font-family: inherit; margin-bottom: 2px; }
+.chatcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-top: 8px; }
+.chatcard { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: var(--surface); font-size: 12.5px; min-width: 0; }
+.chatcard .cch { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; margin-bottom: 6px; }
+.chatcard .ln { padding: 3px 0; border-top: 1px dashed var(--line); overflow-wrap: anywhere; }
+.chatcard .ln.cend { font-weight: 600; }
+.chatcard .tx { color: var(--ink-2); margin-left: 18px; }
+@media (max-width: 420px) { .chatcards { grid-template-columns: 1fr; } }
+.exlegend .lg { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.sigcap { font-size: 12.5px; }
+.sigcap .cap-en { display: none; } /* the signal's text stays in the tooltip */
+/* every attempt is drawn (researcher 15:06): declined ones shaded - an ASK with no GIVE in reply, a refused GIVE, an
+   offer rejected, withdrawn or lapsed */
+.og-edge.st-noreply, .og-lab.st-noreply, .og-edge.st-void, .og-lab.st-void, .og-edge.st-rejected, .og-lab.st-rejected { opacity: .42; }
+.og-edge.st-noreply .e { stroke-dasharray: 3 4; }
+.ogl.st-noreply, .ogl.st-void, .ogl.st-rejected { opacity: .55; }
+.ogl.st-noreply line { stroke-dasharray: 3 4; }
+.ogrow.shaded { opacity: .6; }
+/* v14d: the seats' BELIEF lines next to the ideal shares */
+.pbelief { margin-top: 8px; }
+.bbars { display: inline-flex; flex-wrap: wrap; gap: 2px 8px; }
+.bb { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; }
+.bb i { display: inline-block; height: 7px; border-radius: 3px; background: var(--ink-2); }
+.pntab tr.ideal td { color: var(--ok); }
+/* 나눔 그래프: giving decisions against the giver's balance % */
+.gfig { overflow-x: auto; }
+.givesvg { display: block; max-width: 100%; height: auto; }
+.givesvg .grid { stroke: var(--line); stroke-width: 1; }
+.givesvg .ax { fill: var(--muted); font: 10.5px "JetBrains Mono", monospace; }
+.givesvg .asktick { stroke: var(--muted); stroke-width: 1.2; opacity: .55; }
+.givesvg .gbin { fill: none; stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 5 3; opacity: .8; }
+.givesvg .gpt circle, .givesvg .gpt path { stroke-width: 1.6; }
+.givesvg .gx { fill: none; stroke-width: 2.2; }
+.glegend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 12px; color: var(--ink-2); }
+.glegend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-right: 4px; vertical-align: -1px; }
+.gsum td, .gsum th { white-space: nowrap; }
+/* per-model panels: bins (rate bars + ratio dots), the two cooperation charts side by side */
+.givesvg .gbar { fill: var(--a0); opacity: .55; }
+.givesvg .gratio { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
+.coopgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }

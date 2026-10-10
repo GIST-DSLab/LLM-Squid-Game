@@ -3,7 +3,7 @@
     python -m web.server.export <ROOMCODE> [--out DIR] [--db PATH]
 
 The directory holds config.yaml, meta.json, events.jsonl and results.jsonl, readable by
-``python -m squid5.e52_metrics <DIR> --out metrics.json``.
+``python -m squid5 report <DIR> --out <report dir>`` and tools/monitor.
 """
 
 from __future__ import annotations

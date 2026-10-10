@@ -1,13 +1,14 @@
-// Signal pictures and the rule scratchpad for the arena's SOLVE screen.
+// Signal pictures, card boxes, answer buttons and the compact rule memo, shared by the arena's SOLVE screen and
+// signal.html (the task alone).
 //
 // A signal "blue triangle with number 3" is drawn as three blue triangles (inline SVG: an emoji cannot be recoloured,
 // there is no red star glyph). The shapes, colours and the drop-shadow are the old Web Arena's (styles.css .glyph,
 // .stimulus), so the arena looks like the signal game people played before.
 //
-// The scratchpad lets a person try decision lists by toggling buttons instead of typing: one condition and one action
-// per "if"/"elif" line of the shape the screen shows, an action for "else". Every example is checked against the
-// current guess (match / miss / not decided yet) and the guess's answer for each new signal can be copied into the
-// answer buttons. It never submits anything and the server never sees it.
+// The rule memo lets a person try decision lists with dropdowns instead of typing: one row per "if"/"elif" line of the
+// shape the screen shows ("type == value", two pairs on an "and" line, then "action"), and "else". Every
+// example seen in full is marked right/wrong under the current guess, and the guess's answer for each new signal can be
+// chosen with one button. It never submits anything and the server never sees it.
 (function () {
   "use strict";
 
@@ -29,7 +30,6 @@
     shape: ["circle", "triangle", "square", "star"],
     number: [1, 2, 3, 4],
   };
-  const ATTR_KO = { color: "색", shape: "모양", number: "개수" };
   const COLOR_KO = { red: "빨강", blue: "파랑", green: "초록", yellow: "노랑" };
   const SHAPE_KO = { circle: "원", triangle: "삼각형", square: "사각형", star: "별" };
 
@@ -76,16 +76,45 @@
     return `<span class="act"><span class="act-emoji">${m.emoji}</span>${withCode ? `<span class="act-code">${esc(a)}</span>` : ""}` +
       `<span class="act-ko">${m.ko}</span></span>`;
   }
-  function valueHTML(attr, val) {
-    if (attr === "color") return `<span class="swatch" style="background:${COLORS[val]}"></span><span>${COLOR_KO[val]}</span>`;
-    if (attr === "shape") return `${shapeSVG(val, "#cbd2e0", 20)}<span>${SHAPE_KO[val]}</span>`;
-    return `<span class="digit">${val}</span><span class="digit-dots">${"•".repeat(val)}</span>`;
+  // --- cards, answer buttons ----------------------------------------------------------------------------------------
+
+  /** An action in English only: emoji + code. */
+  function actEn(a) {
+    const m = ACTIONS[a];
+    return `<span class="act-emoji">${m ? m.emoji : ""}</span><span class="mono">${esc(a)}</span>`;
   }
-  function condText(c) {
-    return c.attr === "number" ? `number == ${c.val}` : `${c.attr} == "${c.val}"`;
+  /** A card seen in full; `key` lets the memo mark it right/wrong. */
+  function cardHTML(ex, key) {  // the signal and "→ emoji" only; the action's name is the tooltip
+    const m = ACTIONS[ex.action];
+    return `<span class="sg-card" data-key="${esc(key)}" title="${esc(ex.action)}"><span class="sg-glyphs">${glyphsHTML(ex, 20)}</span>` +
+      `<span class="sg-act">→ <span class="act-emoji" aria-label="${esc(ex.action)}">${m ? m.emoji : esc(ex.action)}</span></span></span>`;
+  }
+  /** Cards seen in full, sorted into one small box per action (the box's emoji is the action; cards show the signal
+   * only). `items`: [{e: parsed example, key}]. Every action gets its box, empty ones too, in the order of ACTIONS. */
+  function byActionHTML(items) {
+    return `<div class="sg-acts">${Object.keys(ACTIONS).map((a) => {
+      const mine = items.filter((x) => x.e && x.e.action === a);
+      return `<div class="sg-actbox${mine.length ? "" : " empty"}" title="${a}"><div class="sg-actbox-h"><span class="act-emoji">${ACTIONS[a].emoji}</span>` +
+        `<span class="n">${mine.length}</span></div><div class="sg-actbox-cards">${mine.map((x) =>
+        `<span class="sg-card mini" data-key="${esc(x.key)}" title="${esc(x.e.color)} ${esc(x.e.shape)} ${x.e.number} → ${a}">` +
+        `<span class="sg-glyphs">${glyphsHTML(x.e, 14)}</span></span>`).join("")}</div></div>`;
+    }).join("")}</div>`;
+  }
+  /** A card seen by its front only (the signal). */
+  function backHTML(sig) {
+    return `<span class="sg-card back"><span class="sg-glyphs">${glyphsHTML(sig, 20)}</span><span class="sg-act">→ ❔</span></span>`;
+  }
+  /** One holder's box: `title` (html), `cards` (html), `cls` (mine | pub | open), `foot` (html under the cards). */
+  function seatHTML(title, cards, cls, foot) {
+    return `<div class="sg-seat ${cls || ""}"><div class="sg-seat-h">${title}</div><div class="sg-hand">${cards}</div>${foot || ""}</div>`;
+  }
+  /** The action buttons for new signal `i`, centred, English only. */
+  function answerRowHTML(i, actions, chosen, disabled) {
+    return `<div class="sg-answer" data-q="${i}">${actions.map((a) =>
+      `<button type="button" data-val="${a}" class="ans-btn${chosen === a ? " on" : ""}"${disabled ? " disabled" : ""}>${actEn(a)}</button>`).join("")}</div>`;
   }
 
-  // --- the scratchpad ---------------------------------------------------------------------------------------------
+  // --- the rule memo -------------------------------------------------------------------------------------------------
 
   /** Arity of each if/elif line of "if ____: ____; elif ____ and ____: ____; else: ____". */
   function shapeArities(shape) {
@@ -98,102 +127,167 @@
   /** The guess's action for a signal, or null while a line it depends on is not filled in. */
   function predict(guess, sig) {
     for (const line of guess.lines) {
-      if (line.conds.some((c) => !c)) return null;  // cannot tell whether this line fires
+      if (line.conds.some((c) => !c || c.val == null)) return null;  // cannot tell whether this line fires
       if (line.conds.every((c) => holds(c, sig))) return line.action;  // may be null: fires, action not chosen
     }
     return guess.elseAction;
   }
-  function firingLine(guess, sig) {
-    for (let i = 0; i < guess.lines.length; i++) {
-      const line = guess.lines[i];
-      if (line.conds.some((c) => !c)) return null;
-      if (line.conds.every((c) => holds(c, sig))) return i;
-    }
-    return guess.lines.length;  // else
-  }
 
   /**
-   * Mount the scratchpad in `root`. `examples` are parsed examples (with `.el`, the row whose verdict badge to update),
-   * `queries` parsed new signals, `useAnswer(i, action)` presses answer button i.
+   * Mount the rule memo in `root`: one row per clause, "type == value" (and a second pair on an "and" clause) then
+   * "action", each a dropdown; "else" has the action only. It never submits anything and the server never sees it.
+   *   shape     the round's shape hint
+   *   examples  () => [{color, shape, number, action, key}] — the examples seen in full now (re-read on every render);
+   *             a card element with the same data-key under `scope` is marked .ok / .bad by the memo rule
+   *   queries   parsed new signals;  actions  the action codes;  onUse(i, action) chooses the memo's answer
+   *   keep      a guess returned by an earlier mount of the same shape (a remount keeps what was filled in)
+   *   scope     where the cards are (default document);  disabled  () => bool (no "use" after submitting)
+   *   distinct  the rule uses every action at most once: an action chosen twice in the memo gets a warning
+   *   truth     () => {lines: [{conds: [{attr, val}], action}], elseAction} | null — after an answer: every line is
+   *             marked against the hidden rule's line in the same place, and the memo's 64-signal table is compared
+   * Returns {guess, render}.
    */
-  function mountScratchpad(root, shape, examples, queries, useAnswer) {
-    const arities = shapeArities(shape);
-    const guess = { lines: arities.map((n) => ({ conds: Array(n).fill(null), action: null })), elseAction: null };
-
-    function condPicker(li, ci) {
-      const cur = guess.lines[li].conds[ci];
-      return `<div class="sp-cond">${Object.keys(VALUES).map((attr) => `<div class="sp-group">
-          <span class="sp-attr">${ATTR_KO[attr]}</span>
-          ${VALUES[attr].map((val) => {
-            const on = cur && cur.attr === attr && String(cur.val) === String(val);
-            return `<button type="button" class="chip sp-tog${on ? " set" : ""}" data-l="${li}" data-c="${ci}" data-attr="${attr}" data-val="${val}">${valueHTML(attr, val)}</button>`;
-          }).join("")}</div>`).join("")}</div>`;
+  function mountMemo(root, o) {
+    const arities = shapeArities(o.shape);
+    const k = o.keep;
+    const guess = k && k.lines.length === arities.length && k.lines.every((l, i) => l.conds.length === arities[i]) ? k
+      : { lines: arities.map((n) => ({ conds: Array(n).fill(null), action: null })), elseAction: null };
+    guess.crossed = guess.crossed || {};  // "attr:value" -> true: the person's mark that this condition cannot be used
+    const MARK = { red: "🔴", blue: "🔵", green: "🟢", yellow: "🟡", circle: "●", triangle: "▲", square: "■", star: "★" };
+    const opt = (val, label, on) => `<option value="${esc(val)}"${on ? " selected" : ""}>${esc(label)}</option>`;
+    const sel = (cls, key, html, filled, disabled) =>
+      `<select class="msel ${cls}${filled ? " set" : ""}" data-k="${key}"${disabled ? " disabled" : ""}>${html}</select>`;
+    function pairHTML(li, ci) {
+      const c = guess.lines[li].conds[ci];
+      const t = sel("mtype", `t:${li}:${ci}`, opt("", "type") + Object.keys(VALUES).map((a) => opt(a, a, c && c.attr === a)).join(""), !!c);
+      const v = sel("mval", `v:${li}:${ci}`, opt("", "value") + (c ? VALUES[c.attr].map((x) =>
+        opt(x, `${guess.crossed[`${c.attr}:${x}`] ? "✕ " : ""}${MARK[x] ? MARK[x] + " " : ""}${x}`, c.val != null && String(c.val) === String(x))).join("") : ""), c && c.val != null, !c);
+      return `<span class="mpair">${t}<span class="mop">==</span>${v}</span>`;
     }
-    function actionPicker(li) {
-      const cur = li === "else" ? guess.elseAction : guess.lines[li].action;
-      return `<div class="sp-acts">${Object.keys(ACTIONS).map((a) =>
-        `<button type="button" class="chip sp-act${cur === a ? " set" : ""}" data-l="${li}" data-act="${a}">${actionHTML(a, false)}<span class="act-code">${a}</span></button>`).join("")}</div>`;
-    }
-    function lineSummary(line) {
-      const cs = line.conds.map((c) => (c ? condText(c) : "____")).join(" and ");
-      return `${cs}: ${line.action || "____"}`;
+    let dup = [];
+    const actSel = (li, cur) => sel(`mact${cur && dup.includes(cur) ? " dup" : ""}`, `a:${li}`, opt("", "action") + o.actions.map((a) =>
+      opt(a, `${ACTIONS[a] ? ACTIONS[a].emoji + " " : ""}${a}`, cur === a)).join(""), !!cur);
+    const ALL = VALUES.color.flatMap((color) => VALUES.shape.flatMap((shape) => VALUES.number.map((number) => ({ color, shape, number }))));
+    function tableLine(truth) {  // the memo rule's whole table against the hidden rule's: equal rules may differ in text
+      const same = ALL.filter((s) => predict(guess, s) === predict(truth, s)).length;
+      return `<div class="mtable ${same === ALL.length ? "ok" : ""}">메모 규칙의 행동표: 신호 ${ALL.length}개 중 <b>${same}개</b>가 숨은 규칙과 같음` +
+        (same === ALL.length ? " — 줄 순서나 글자가 달라도 같은 규칙입니다" : "") + `</div>`;
     }
     function render() {
-      const rows = guess.lines.map((line, li) => `<div class="sp-line">
-          <div class="sp-kw">${li === 0 ? "if" : "elif"}</div>
-          <div class="sp-body">${line.conds.map((_, ci) => (ci ? `<div class="sp-and">and</div>` : "") + condPicker(li, ci)).join("")}
-            <div class="sp-then">→ 이 줄이 맞으면</div>${actionPicker(li)}</div></div>`).join("");
-      const text = guess.lines.map((l, i) => `${i ? "elif" : "if"} ${lineSummary(l)}`).join("; ") + `; else: ${guess.elseAction || "____"}`;
-      const verdicts = examples.map((ex) => predict(guess, ex));
-      const decided = verdicts.filter((v) => v !== null).length;
-      const right = verdicts.filter((v, i) => v !== null && v === examples[i].action).length;
-      const answers = queries.map((q) => predict(guess, q));
-      root.innerHTML = `<div class="sp-head"><span class="sp-title">규칙 메모판</span>
-          <span class="sp-note">버튼을 눌러 규칙을 짜 보세요. 제출과는 무관하고 서버에 가지 않습니다(시계는 계속 돕니다).</span>
-          <button type="button" class="ghost sp-reset">초기화</button></div>
-        ${rows}
-        <div class="sp-line sp-else"><div class="sp-kw">else</div><div class="sp-body"><div class="sp-then">위 줄이 모두 아니면</div>${actionPicker("else")}</div></div>
-        <div class="sp-text mono">${esc(text)}</div>
-        <div class="sp-score ${decided === examples.length && right === decided ? "all" : right < decided ? "miss" : ""}">
-          예시 ${examples.length}개 중 <b>${right}</b>개 맞음${decided < examples.length ? ` · ${examples.length - decided}개는 아직 판정 불가(빈칸)` : ""}
-          ${decided === examples.length && right === decided ? " — 모든 예시와 맞습니다" : ""}</div>
-        <div class="sp-answers">${queries.map((q, i) => `<div class="sp-ans">새 신호 ${i + 1} ${glyphsHTML(q, 22)} →
-          ${answers[i] ? `${actionHTML(answers[i])} <button type="button" class="primary sp-use" data-q="${i}" data-act="${answers[i]}">이 답으로 고르기</button>`
-            : `<span class="muted">빈칸을 채우면 이 규칙의 답이 나옵니다</span>`}</div>`).join("")}</div>`;
-      examples.forEach((ex, i) => {
-        const b = ex.el && ex.el.querySelector(".ex-verdict");
-        if (!b) return;
-        const v = verdicts[i];
-        b.className = "ex-verdict " + (v === null ? "" : v === ex.action ? "ok" : "bad");
-        b.textContent = v === null ? "·" : v === ex.action ? "✓" : "✗";
-        b.title = v === null ? "메모판 규칙으로는 아직 판정할 수 없음" : v === ex.action ? "메모판 규칙과 맞음" : `메모판 규칙이면 ${v}`;
-        const fl = firingLine(guess, ex);
-        ex.el.dataset.line = fl === null ? "" : fl === guess.lines.length ? "else" : String(fl);
+      const ex = o.examples(), verdict = ex.map((e) => predict(guess, e));
+      const decided = verdict.filter((v) => v != null).length;
+      const right = verdict.filter((v, i) => v != null && v === ex[i].action).length;
+      const answers = o.queries.map((q) => predict(guess, q));
+      const off = o.disabled && o.disabled();
+      const chosen = [...guess.lines.map((l) => l.action), guess.elseAction].filter(Boolean);
+      const twice = o.distinct ? [...new Set(chosen.filter((a, i) => chosen.indexOf(a) !== i))] : [];
+      dup = twice;
+      // the keyword stays in its row; the block (conditions + then + action) is what moves
+      const truth = o.truth && o.truth();
+      const sameCond = (a, b) => !!a && a.val != null && String(a.attr) === String(b.attr) && String(a.val) === String(b.val);
+      const lineMark = (line, t) => {  // the memo line against the hidden one in its place: conditions (any order), action
+        const condOk = line.conds.length === t.conds.length && t.conds.every((tc) => line.conds.some((c) => sameCond(c, tc)));
+        const actOk = line.action === t.action;
+        const want = `${t.conds.map((c) => `${c.attr} == ${c.val}`).join(" and ")} then ${t.action}`;
+        return `<span class="mmark ${condOk && actOk ? "ok" : "bad"}" title="${condOk && actOk ? "정답과 같음" : "정답: " + want}">${condOk && actOk ? "✓" : "✗"}</span>` +
+          (condOk && actOk ? "" : `<span class="mwant">정답: <b>${esc(want)}</b>${condOk ? " (조건은 맞음)" : actOk ? " (action은 맞음)" : ""}</span>`);
+      };
+      const rows = guess.lines.map((line, li) => `<div class="mline"><span class="mkw">${li ? "elif" : "if"}</span>
+        <div class="mblock" data-li="${li}"><span class="mgrip" draggable="true" data-li="${li}" title="끌어서 순서 바꾸기"
+          aria-label="${li + 1}번째 줄 옮기기">⠿</span>
+        <span class="mconds">${line.conds.map((_, ci) => (ci ? `<span class="mand">and</span>` : "") + pairHTML(li, ci)).join("")}</span>
+        <span class="mthen">then</span>${actSel(li, line.action)}
+        <span class="mmove"><button type="button" class="mmv" data-mv="${li}" data-to="${li - 1}"${movable(li, li - 1) ? "" : " disabled"}
+          aria-label="위로">▲</button><button type="button" class="mmv" data-mv="${li}" data-to="${li + 1}"${movable(li, li + 1) ? "" : " disabled"}
+          aria-label="아래로">▼</button></span>${truth ? lineMark(line, truth.lines[li]) : ""}</div></div>`).join("");
+      const score = ex.length ? `<span class="memo-score ${decided === ex.length && right === decided ? "all" : right < decided ? "miss" : ""}">` +
+        `예시 ${ex.length}장 중 ${right}장 맞음${decided < ex.length ? ` · ${ex.length - decided}장 판정 전` : ""}</span>` : "";
+      const use = answers.map((a, i) => a ? `<span class="memo-ans">${o.queries.length > 1 ? `<span class="q-mini">${glyphsHTML(o.queries[i], 14)}</span>` : "새 신호"} →
+        ${actEn(a)}<button type="button" class="memo-btn" data-use="${i}" data-act="${a}"${off ? " disabled" : ""}>이 답 고르기</button></span>` : "").join("");
+      root.innerHTML = `<div class="memo-h"><span class="memo-title">규칙 메모</span>${score}<span class="memo-sp"></span>${use}
+          <button type="button" class="memo-btn ghosty" data-reset="1">초기화</button></div>
+        <div class="mx" aria-label="조건 표시: 쓸 수 없는 조건에 ✕">${Object.keys(VALUES).map((attr) => `<span class="mx-group"><span class="mx-attr mono">${attr}</span>${
+          VALUES[attr].map((val) => { const k = `${attr}:${val}`, on = !!guess.crossed[k];
+            const face = attr === "color" ? `<span class="swatch" style="background:${COLORS[val]}"></span>`
+              : attr === "shape" ? shapeSVG(val, "#cbd2e0", 16) : `<span class="mono">${val}</span>`;
+            return `<button type="button" class="mx-chip${on ? " on" : ""}" data-cross="${k}" aria-pressed="${on}" title="${attr} == ${val}">${face}${on ? `<span class="mx-x">✕</span>` : ""}</button>`; }).join("")}</span>`).join("")}</div>
+        ${twice.length ? `<div class="memo-warn" role="alert">⚠ action은 규칙 안에서 한 번씩만 쓰입니다 — ${twice.map((a) => `<b>${esc(a)}</b>`).join(", ")}을(를) 두 번 이상 골랐습니다.</div>` : ""}
+        <div class="mrows">${rows}<div class="mline melse"><span class="mkw">else</span><div class="mblock fixed"><span class="mthen">then</span>${actSel("else", guess.elseAction)}${
+          truth ? (guess.elseAction === truth.elseAction ? `<span class="mmark ok">✓</span>` : `<span class="mmark bad">✗</span><span class="mwant">정답: <b>then ${esc(truth.elseAction)}</b></span>`) : ""}</div></div></div>
+        ${truth ? tableLine(truth) : ""}`;
+      (o.scope || document).querySelectorAll(".sg-card[data-key]").forEach((el) => {
+        const i = ex.findIndex((e) => e.key === el.dataset.key);
+        el.classList.toggle("ok", i >= 0 && verdict[i] != null && verdict[i] === ex[i].action);
+        el.classList.toggle("bad", i >= 0 && verdict[i] != null && verdict[i] !== ex[i].action);
       });
     }
+    root.addEventListener("change", (ev) => {
+      const t = ev.target.closest("select[data-k]");
+      if (!t) return;
+      const [kind, li, ci] = t.dataset.k.split(":"), v = t.value || null;
+      if (kind === "t") guess.lines[Number(li)].conds[Number(ci)] = v ? { attr: v, val: null } : null;
+      else if (kind === "v") {
+        const c = guess.lines[Number(li)].conds[Number(ci)];
+        if (c) c.val = v == null ? null : c.attr === "number" ? Number(v) : v;
+      } else if (li === "else") guess.elseAction = v;
+      else guess.lines[Number(li)].action = v;
+      render();
+    });
+    // reordering: a line moves to another line's place (the rest shift) when every line has the same number of
+    // conditions; with "and" lines in the shape, only lines with as many conditions swap, so the shape stays put
+    const same = () => arities.every((a) => a === arities[0]);
+    function movable(i, j) { return j >= 0 && j < arities.length && j !== i && (same() || arities[i] === arities[j]); }
+    function move(i, j) {
+      if (!movable(i, j)) return false;
+      const L = guess.lines;
+      if (same()) L.splice(j, 0, L.splice(i, 1)[0]); else [L[i], L[j]] = [L[j], L[i]];
+      return true;
+    }
+    let from = null;
+    const blockOf = (ev) => ev.target.closest && ev.target.closest(".mblock[data-li]");
+    root.addEventListener("dragstart", (ev) => {
+      const g = ev.target.closest && ev.target.closest(".mgrip");
+      if (!g) return;
+      from = Number(g.dataset.li);
+      ev.dataTransfer.effectAllowed = "move";
+      ev.dataTransfer.setData("text/plain", String(from));
+      const b = g.closest(".mblock");
+      b.classList.add("dragging");
+      if (ev.dataTransfer.setDragImage) ev.dataTransfer.setDragImage(b, 16, 16);
+    });
+    root.addEventListener("dragover", (ev) => {
+      const b = blockOf(ev);
+      if (from === null || !b) return;
+      const to = Number(b.dataset.li);
+      root.querySelectorAll(".mblock.over, .mblock.no").forEach((x) => x.classList.remove("over", "no"));
+      if (to === from) return;
+      b.classList.add(movable(from, to) ? "over" : "no");
+      if (movable(from, to)) { ev.preventDefault(); ev.dataTransfer.dropEffect = "move"; }
+    });
+    root.addEventListener("drop", (ev) => {
+      const b = blockOf(ev);
+      if (from === null || !b) return;
+      ev.preventDefault();
+      const ok = move(from, Number(b.dataset.li));
+      from = null;
+      if (ok) render();
+    });
+    root.addEventListener("dragend", () => {
+      from = null;
+      root.querySelectorAll(".mblock.over, .mblock.no, .mblock.dragging").forEach((x) => x.classList.remove("over", "no", "dragging"));
+    });
     root.addEventListener("click", (ev) => {
       const t = ev.target.closest("button");
       if (!t) return;
-      if (t.classList.contains("sp-reset")) {
-        guess.lines.forEach((l) => { l.conds.fill(null); l.action = null; });
-        guess.elseAction = null;
-      } else if (t.classList.contains("sp-tog")) {
-        const line = guess.lines[Number(t.dataset.l)], ci = Number(t.dataset.c);
-        const val = t.dataset.attr === "number" ? Number(t.dataset.val) : t.dataset.val;
-        const cur = line.conds[ci];
-        line.conds[ci] = cur && cur.attr === t.dataset.attr && String(cur.val) === String(val) ? null : { attr: t.dataset.attr, val };
-      } else if (t.classList.contains("sp-act")) {
-        if (t.dataset.l === "else") guess.elseAction = guess.elseAction === t.dataset.act ? null : t.dataset.act;
-        else { const line = guess.lines[Number(t.dataset.l)]; line.action = line.action === t.dataset.act ? null : t.dataset.act; }
-      } else if (t.classList.contains("sp-use")) {
-        useAnswer(Number(t.dataset.q), t.dataset.act);
-        return;
-      } else return;
-      render();
+      if (t.dataset.mv) { if (move(Number(t.dataset.mv), Number(t.dataset.to))) render(); return; }
+      if (t.dataset.cross) { guess.crossed[t.dataset.cross] = !guess.crossed[t.dataset.cross]; render(); return; }
+      if (t.dataset.use) return o.onUse(Number(t.dataset.use), t.dataset.act);
+      if (t.dataset.reset) { guess.lines.forEach((l) => { l.conds.fill(null); l.action = null; }); guess.elseAction = null; guess.crossed = {}; render(); }
     });
     render();
+    return { guess, render };
   }
 
   window.SIG = { COLORS, ACTIONS, parseSignal, parseExample, shapeSVG, glyphsHTML, captionHTML, stageHTML, actionHTML,
-    mountScratchpad, shapeArities, predict };
+    actEn, cardHTML, byActionHTML, backHTML, seatHTML, answerRowHTML, mountMemo, shapeArities, predict };
 })();

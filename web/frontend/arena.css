@@ -518,3 +518,186 @@ details.legend { margin-top: 12px; }
 .notes .note-en { font-size: 11px; color: var(--text-dim); overflow-wrap: anywhere; }
 #bal-body td:nth-child(4) { min-width: 190px; }
 .call-line { white-space: normal; overflow-wrap: anywhere; }
+
+/* ==== 10-09: card boxes per holder, the rule memo (type == value then action), English action buttons ===============
+   signal_ui.js; used by the arena's SOLVE screen and signal.html */
+.sg-seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 10px 0 6px; }
+.sg-seat { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px; border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .025); }
+.sg-seat.mine { border-color: var(--accent); background: rgba(232, 51, 109, .06); }
+.sg-seat.open { border-color: var(--teal); }
+.sg-seat.pub { border-style: dashed; }
+.sg-seat-h { display: flex; align-items: baseline; gap: 6px; font-size: 14px; }
+.sg-hand { display: flex; flex-wrap: wrap; gap: 8px; }
+.sg-card { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-width: 84px;
+  padding: 10px 10px 8px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .22); background: #1d1c24;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+.sg-card.back { border-style: dashed; background: transparent; box-shadow: none; }
+.sg-card.ok { border-color: var(--ok); box-shadow: 0 0 0 1px var(--ok); }
+.sg-card.bad { border-color: var(--danger-color); box-shadow: 0 0 0 1px var(--danger-color); }
+.sg-glyphs { display: inline-flex; gap: 2px; }
+.sg-glyphs .glyph-wrap { animation: none; }
+.sg-card .sg-act { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-dim); }
+.sg-card .sg-act .mono { color: var(--text); }
+.act-emoji { font-size: 15px; line-height: 1; }
+
+/* the rule memo */
+.memo { margin: 20px 0 12px; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(127, 194, 177, .35);
+  background: rgba(127, 194, 177, .04); }
+.memo-h { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 10px; font-size: 13px; }
+.memo-title { font-weight: 600; font-size: 14px; }
+.memo-score { color: var(--text-dim); }
+.memo-score.all { color: var(--ok); }
+.memo-score.miss { color: var(--danger-color); }
+.memo-sp { flex: 1; }
+.memo-ans { display: inline-flex; align-items: center; gap: 6px; }
+.web5 .memo-btn { padding: 4px 10px; min-height: 0; font-size: 12px; font-family: var(--font); border-radius: 7px; border: 1px solid var(--teal);
+  background: transparent; color: var(--teal-bright); cursor: pointer; text-transform: none; letter-spacing: 0; }
+.web5 .memo-btn.ghosty { border-color: var(--border); color: var(--text-dim); }
+.mrows { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; }
+.mkw { justify-self: end; }
+/* a line's block: conditions + then + action; it is what moves (the keyword stays in its row) */
+.mblock { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; justify-self: start; padding: 5px 8px 5px 4px;
+  border: 1px solid rgba(255, 255, 255, .10); border-radius: 10px; background: rgba(255, 255, 255, .025); transition: border-color .12s, background .12s; }
+.mblock.fixed { padding-left: 8px; border-style: dashed; background: transparent; }
+.mblock.dragging { opacity: .45; }
+.mblock.over { border-color: var(--teal-bright); background: rgba(127, 194, 177, .12); }
+.mblock.no { border-color: var(--danger-color); }
+.mgrip { cursor: grab; user-select: none; padding: 2px 4px; color: var(--text-dim); font-size: 15px; line-height: 1; border-radius: 6px; }
+.mgrip:hover { color: var(--text); background: rgba(255, 255, 255, .06); }
+.mgrip:active { cursor: grabbing; }
+.mmove { display: inline-flex; gap: 2px; margin-left: 2px; }
+.web5 .mmv { padding: 2px 6px; min-height: 0; font-size: 10px; line-height: 1.4; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--text-dim); cursor: pointer; }
+.web5 .mmv:disabled { opacity: .25; cursor: default; }
+.mline { display: contents; }
+.mkw, .mthen, .mand, .mop { font-family: var(--mono); font-size: 13px; }
+.mkw { color: var(--teal-bright); font-weight: 600; text-align: right; }
+.mthen, .mand { color: var(--text-dim); }
+.mop { color: var(--text-dim); padding: 0 2px; }
+.mconds { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.mpair { display: inline-flex; align-items: center; gap: 4px; }
+.web5 .msel { appearance: none; -webkit-appearance: none; font-family: var(--mono); font-size: 13px; color: var(--text-dim); cursor: pointer;
+  padding: 6px 28px 6px 10px; border-radius: 8px; border: 1px solid var(--border); background-color: #18171e;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+.web5 .msel:hover:not(:disabled), .web5 .msel:focus { border-color: var(--teal); outline: none; }
+.web5 .msel.set { color: var(--text); border-color: rgba(127, 194, 177, .55); }
+.web5 .msel:disabled { opacity: .4; cursor: default; }
+.msel option { background: #18171e; color: var(--text); }
+.web5 .msel.mtype { width: 100px; } .web5 .msel.mval { width: 124px; } .web5 .msel.mact { width: 140px; }
+@media (max-width: 560px) { .web5 .msel.mtype { width: 88px; } .web5 .msel.mval { width: 108px; } }
+
+/* answer: action buttons only, English, centred */
+.sg-answer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0 8px; }
+.web5 .ans-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(255, 255, 255, .03); color: var(--text); cursor: pointer; font-family: var(--mono); font-size: 14px; text-transform: none; letter-spacing: 0; }
+.web5 .ans-btn.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+.web5 .ans-btn:disabled { opacity: .6; cursor: default; }
+.sg-answer-q { display: flex; justify-content: center; margin-top: 12px; }
+.web5 .submit-row.sg-submit { justify-content: center; }
+.web5 .msel { width: auto; }
+.memo-warn { margin: 0 0 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; color: #ffd7a8;
+  border: 1px solid rgba(245, 158, 11, .55); background: rgba(245, 158, 11, .10); }
+.web5 .msel.dup { border-color: #f59e0b; color: #ffd7a8; }
+.sg-rule-note { margin: 6px 0 0; font-size: 13px; color: var(--text-dim); }
+.sg-rule-note b { color: var(--text); }
+.sg-card { min-width: 0; padding: 8px 8px 6px; }
+.sg-card .sg-act .act-emoji { font-size: 17px; }
+/* cards seen in full, one small box per action */
+.sg-acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.sg-actbox { min-width: 0; padding: 5px 6px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .14); background: #1a1920; }
+.sg-actbox.empty { opacity: .45; border-style: dashed; background: transparent; }
+.sg-actbox-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.sg-actbox-h .n { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+.sg-actbox-cards { display: flex; flex-wrap: wrap; gap: 4px; }
+.sg-card.mini { padding: 4px 5px; gap: 0; border-radius: 6px; box-shadow: none; background: #23222b; }
+.sg-card.mini .sg-glyphs { gap: 1px; }
+/* the memo's condition marks: tap a colour / shape / number to cross it out (a note to self; never sent) */
+.mx { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 10px; padding: 8px 10px; border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, .14); }
+.mx-group { display: inline-flex; align-items: center; gap: 4px; }
+.mx-attr { font-size: 11px; color: var(--text-dim); margin-right: 2px; }
+.web5 .mx-chip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; padding: 0;
+  min-height: 0; border-radius: 8px; border: 1px solid var(--border); background: #18171e; color: var(--text); cursor: pointer; }
+.web5 .mx-chip .swatch { width: 14px; height: 14px; border-radius: 4px; }
+.web5 .mx-chip.on { border-color: var(--danger-color); background: rgba(220, 38, 38, .10); }
+.web5 .mx-chip.on > :not(.mx-x) { opacity: .35; }
+.mx-x { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700;
+  color: var(--danger-color); pointer-events: none; }
+/* after an answer (signal.html): every memo line against the hidden rule */
+.mmark { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%;
+  font-size: 13px; font-weight: 700; margin-left: 2px; }
+.mmark.ok { color: #0e0d11; background: var(--ok); }
+.mmark.bad { color: #fff; background: var(--danger-color); }
+.mwant { flex-basis: 100%; padding-left: 26px; font-size: 12px; color: var(--text-dim); }
+.mwant b { font-family: var(--mono); color: var(--text); font-weight: 500; }
+.mtable { margin-top: 10px; font-size: 13px; color: var(--text-dim); }
+.mtable.ok { color: var(--ok); }
+
+/* ==== 10-09: TALK as one row of chats, one per other agent ==================================================== */
+.talk-task { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; margin-top: 10px; }
+.talk-q { display: flex; flex-direction: column; gap: 8px; }
+.talk-q-sig { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: #18171e; }
+.talk-q .shape { margin: 0; white-space: normal; overflow-wrap: anywhere; }
+.chat-row { display: grid; grid-template-columns: repeat(var(--chats, 3), minmax(0, 1fr)); gap: 12px; margin: 16px 0; align-items: stretch; }
+.chat { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 10px; border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .02); }
+.chat.off { opacity: .55; }
+.chat-h { display: flex; align-items: center; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.chat-h b { font-size: 15px; }
+.chat-bal { margin-left: auto; font-size: 12px; color: var(--text-dim); }
+.chat-cards .sg-card.back { padding: 6px 7px 5px; }
+.chat-log { display: flex; flex-direction: column; gap: 6px; min-height: 120px; max-height: 280px; overflow-y: auto; padding: 6px 2px;
+  border-radius: 10px; background: #141318; }
+.chat-empty { margin: auto; font-size: 12px; color: var(--text-dim); }
+.bubble { max-width: 86%; padding: 7px 10px; border-radius: 12px; font-size: 13.5px; line-height: 1.45; }
+.bubble.theirs { align-self: flex-start; background: #24232c; border-top-left-radius: 4px; }
+.bubble.mine { align-self: flex-end; background: rgba(232, 51, 109, .22); border-top-right-radius: 4px; }
+.bubble-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble-meta { margin-top: 3px; font-size: 10.5px; color: var(--text-dim); text-align: right; }
+.chat-offers { margin: 0; }
+.chat-offers .offer { padding: 8px; }
+.chat-comp textarea { width: 100%; resize: vertical; min-height: 54px; }
+.chat-comp-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chat-offer-new { margin-top: 8px; padding: 8px; border: 1px dashed var(--border); border-radius: 10px; }
+.chat-offer-new .legs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.chat-off { text-align: center; padding: 6px; }
+@media (max-width: 860px) {
+  .talk-task { grid-template-columns: 1fr; }
+  .chat-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .chat { flex: 0 0 86%; scroll-snap-align: start; }
+}
+.forfeit-confirm { margin: 10px 0; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--danger-color);
+  background: rgba(220, 38, 38, .08); }
+.forfeit-confirm p { margin: 6px 0 10px; }
+/* every seat's balance against the starting balance (card boxes, chat headers) */
+.bal-mini { display: flex; align-items: center; gap: 8px; }
+.bal-mini-track { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.bal-mini-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+.bal-mini-pct { min-width: 36px; text-align: right; font-size: 11px; color: var(--text-dim); }
+.bal-mini.gone .bal-mini-pct { color: var(--danger-color); }
+.instr-one { padding: 12px 16px; }
+.instr-one .instr-title { margin: 0; font-size: 17px; }
+
+/* v14: a seat's own start on its balance bar (the bar is against the room's start), the public-examples task box, the
+   EXIT reason field, and lobby fields that only the older games read */
+.bal-mini-tick { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: rgba(255, 255, 255, .65); }
+.talk-task-pub { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.talk-task-pub .sg-seat.pub .small { margin-top: 6px; }
+.exit-confirm .exit-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.exit-confirm .exit-reason input { width: 100%; }
+.web5 .dim-field { opacity: .55; }
+@media (max-width: 860px) { .talk-task-pub { grid-template-columns: 1fr; } }
+/* v14b: the blind TALK context, the gifts and requests list, the GIVE / ASK composer */
+.blind-task { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 10px; font-size: 13.5px; }
+.gifts-box h4 { margin: 10px 0 6px; }
+.gift-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.gift-list li { display: flex; gap: 8px; align-items: flex-start; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--border); background: #18171e; overflow-wrap: anywhere; }
+.gift-list li.refused { border-color: rgba(224, 87, 91, .55); }
+.gift-list li.ask { border-style: dashed; }
+.gift-icon { font-size: 18px; line-height: 1.2; }
+.ga-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 120px) minmax(0, 3fr); gap: 8px 10px; }
+.ga-row .f { display: flex; flex-direction: column; gap: 4px; }
+.ga-row input, .ga-row select { width: 100%; }
+@media (max-width: 640px) { .ga-row { grid-template-columns: 1fr 1fr; } .ga-row .ga-say { grid-column: 1 / -1; } }

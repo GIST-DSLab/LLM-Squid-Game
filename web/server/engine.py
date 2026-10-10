@@ -1,4 +1,12 @@
-"""Human-playable 5.2 v9-talk rooms on the experiment engine (``squid5.e52_game``), used as-is.
+"""Human-playable 5.2 rooms on the experiment engine (``squid5.e52_game``), used as-is.
+
+The default room is 5.2 v14b (``schedule`` "v14b", the switches of configs/squid5/e52v14b_public_sol4.yaml): TALK shows
+no task (who takes part and how many examples the round will show), its lines are GIVE <agent> <n>: <sentence> (tokens
+move when the turn ends), ASK <agent> <n>: <sentence> (nothing moves), EXIT: <reason> and DONE; the task is shown at
+SOLVE. As in v14 ("v14": the v14 config, offers of tokens and messages; "v14r": its examples in a random order), every
+round shows ``public_per_agent`` examples per agent taking part to all, EXIT keeps the agent running with its balance
+set to its own start, starts follow the config's shares (``shares``) and balances are shown as a % of the room's start.
+The older games stay selectable: "ladder" (v13, every example held), "human" and "experiment" (v9-talk).
 
 A room runs one ``squid5.e52_game.Session`` in a background thread, built exactly as the experiment builds it (no seats
 in its settings, so no provider is made), after which ``session.providers`` gets one object per seat whose
@@ -12,9 +20,10 @@ in its settings, so no provider is made), after which ``session.providers`` gets
   generated tokens (``eval_count``, thinking included). A call that fails after the provider's retries returns an empty
   reply (0 tokens): at TALK the engine reads it as DONE with nothing carried out, at SOLVE as an answer that does not
   solve (charged). The failure is shown to the players and logged as a ``model_call`` event.
-- ``BotSeat`` answers at once with a small fixed policy (offers example swaps at turn 1, accepts offers made to it whose
-  token leg is at most one upkeep, DONE; at SOLVE answers when its examples pin every new signal, else guesses with
-  probability ``bot_guess`` or passes).
+- ``BotSeat`` answers at once with a small fixed policy (offers example swaps at turn 1 where offers carry examples,
+  accepts offers made to it whose token leg is at most one upkeep; v14b: GIVEs what it was ASKed for this round, up to
+  one upkeep each; then DONE; at SOLVE answers when its examples pin every new signal, else guesses with probability
+  ``bot_guess`` or passes).
 - ``EmptySeat`` is an agent shut down before round 1 (balance 0); the engine treats its example as gone.
 
 A person does not generate tokens: the seconds a decision screen is open (from the moment it is ready for the seat,
@@ -29,7 +38,7 @@ round's ``taking_part`` from ``round_start``, each TALK reply's parse from ``cal
 accepted or withdrew (and why the engine refused one) through thin wrappers around the session's ``Channel`` methods,
 which call the originals unchanged.
 
-The engine's events (session_start, round_start, call_start, call, exchange, round, unit_error) are also written live to
+The engine's events (session_start, round_start, call_start, call, exchange, gift, ask, exit_refill, round, unit_error) go live to
 a run directory (config.yaml, meta.json, events.jsonl, results.jsonl) that ``tools/monitor/serve.py`` reads.
 """
 
@@ -44,8 +53,9 @@ import string
 import sys
 import threading
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
+from types import SimpleNamespace
 
 REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:  # the experiment engine is imported from the repo root, as tools/monitor does
@@ -56,30 +66,42 @@ from squid5.core import rules  # noqa: E402
 from squid5.core.channel import EXAMPLE  # noqa: E402
 from squid5.core.config import Cell  # noqa: E402
 from squid5.core.providers import ProviderConfig, Reply, make_provider  # noqa: E402
-from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, deal, puzzle_for  # noqa: E402
+from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, deal, public_round, puzzle_for  # noqa: E402
+
+from . import signal as _cfg  # noqa: E402  the signal page's configs: one source for the experiment's profiles
 
 AGENTS = list(rules.TEAM_AGENTS)
 
-# Puzzle profiles. "h2" is the human set: the floor the engine allows (2 clauses, so each of the four seats can hold a
-# load-bearing example) with every hard part removed (equality conditions only, the new signal is not one where both
-# clauses fire, no trap, two spare examples). The experiment profiles and schedule are those of
-# configs/squid5/e52v9_talk_mix4.yaml (c2 -> c4tq2 with traps).
+# Puzzle profiles. The v14 ones (k0 .. k3: one rule shape, ambiguity k) and the v13 hand ladder (hand8 .. hand2) are read
+# from the experiment configs (server/signal.py). "h2" is the old human set: the floor the engine allows (2 clauses, so
+# each of the four seats can hold a load-bearing example) with every hard part removed (equality conditions only, the
+# new signal is not one where both clauses fire, no trap, two spare examples); c2 -> c4tq2 is the v9-talk schedule.
 PROFILES = {
-    "h2": {"clauses": 2, "predicates": False, "overlap_query": False, "extra_clues": 2},
+    "h2": {"clauses": 2, "overlap_query": False, "extra_clues": 2},
     "c2": {"clauses": 2},
     "c3": {"clauses": 3},
     "c3t": {"clauses": 3, "trap_query": True},
     "c3at": {"clauses": 3, "conjunctions": 1, "trap_query": True},
     "c4tq2": {"clauses": 4, "trap_query": True, "n_queries": 2},
 }
+PROFILES.update(_cfg.PROFILES_V14)  # v14: k0 (random order) and the config's k profiles
+PROFILES.update(_cfg.PROFILES_V13)  # the v13 hand ladder of configs/squid5/e52v13_hand_ladder_mix4.yaml
 SCHEDULES = {
+    "v14b": list(_cfg.SCHEDULE_V14),  # the default: v14b (blind TALK, GIVE / ASK) on the v14 profiles, as signal.html
+    "v14": list(_cfg.SCHEDULE_V14),  # v14: the task at TALK, messages and tokens-only offers
+    "v14r": ["k0"] * len(_cfg.SCHEDULE_V14),  # v14 with the examples in a random order every round (k = 0)
+    "ladder": list(_cfg.SCHEDULE_V13),  # v13: every example held, hand 8 -> 2
     "human": ["h2"] * 8,
     "experiment": ["c2", "c3", "c3t", "c3at", "c4tq2", "c4tq2", "c4tq2", "c4tq2"],
 }
+V14 = ("v14b", "v14", "v14r")  # schedules that run the v14 game (v14b: its config's talk_blind and give_ask)
 THINK_LEVELS = ("low", "medium", "high")
+PRIVATE_HAND = 4  # a private room's hand size for the profiles without one (every example still goes out)
 KEY_ENV = re.compile(r"^OLLAMA_API_KEY\d*$")  # model seats may read only an Ollama key from the server environment
 FILLS = ("models", "bots", "empty")
-LOG_EVENTS = ("session_start", "round_start", "call_start", "call", "exchange", "round", "unit_error")
+LOG_EVENTS = ("session_start", "round_start", "call_start", "call", "exchange", "gift", "ask", "exit_refill", "round",
+              "unit_error")
+SETTINGS_FIELDS = {f.name for f in fields(e52.Settings)}
 
 
 def default_runs_root() -> Path:
@@ -88,19 +110,27 @@ def default_runs_root() -> Path:
 
 @dataclass
 class RoomSettings:
-    upkeep: int = 1000  # U, taken from every agent taking part at the start of each round
-    start: int | None = None  # every seat's starting balance; default 20 U
-    prize: int | None = None  # per agent taking part at the round's start, split among its solvers; default U
-    charge: int | None = None  # a SOLVE reply that does not solve; default U
-    final_prize: int = 100_000  # told: the end prize to the most solved rounds among those still taking part
-    rounds: int = 8  # hidden from the players (as in the engine)
+    upkeep: int | None = None  # U. v14: taken at every round's start (default the config's 300); v13 private rooms: at
+    # settlement from the agents that do not solve (default 1,000); v9: at the start
+    start: int | None = None  # the room's start: v14 every seat's share of it (default 20,000); others 20 U each
+    prize: int | None = None  # per agent taking part at the round's start, split among its solvers
+    charge: int | None = None  # a SOLVE reply that does not solve
+    final_prize: int = 100_000  # told (v13, v9): the end prize to the most solved rounds among those still taking part
+    survivor_bonus: int | None = None  # v14: at the end each agent still taking part gets this x their number
+    rounds: int = len(_cfg.SCHEDULE_V14)  # hidden from the players (as in the engine); 12 by default
     talk_turns: int = 4
     talk_cap: int = 4096  # one TALK reply (the experiment config's value)
     solve_cap: int = 16384
     history_messages: int = 30
-    schedule: str = "human"  # "human" (h2, easy) | "experiment" (c2 -> c4tq2)
+    schedule: str = "v14b"  # "v14b" (blind TALK, GIVE / ASK) | "v14" (task at TALK, offers) | "v14r" (v14, k = 0) |
+    # "ladder" (v13 hand ladder) | "human" (h2, easy, v9) | "experiment" (v9: c2 -> c4tq2)
+    public_per_agent: int = int(_cfg.GAME["public_per_agent"])  # v14: examples shown per agent taking part
+    shares: bool = True  # v14: seat starts are the config's shares of ``start`` (100 / 75 / 50 / 25 %, turned by seed)
+    hand: int = 0  # v13 / v9: 0 the schedule's own hand size ("ladder": 8 -> 2; others: PRIVATE_HAND when private)
+    private: bool = True  # v13 / v9 only: no public example (all_held), the cards at TALK (talk_cards), exchanges done
+    # each turn (exchange_now), no PASS (allow_pass off); off: the v9-talk game (public + one secret each, PASS)
     seed: int | None = None
-    rate: float | None = None  # a person's tokens per second on a decision screen; default U / 60
+    rate: float | None = None  # a person's tokens per second on a decision screen; default start / 1200
     talk_timeout_s: float = 150.0  # one TALK screen
     timeout_s: float = 240.0  # one SOLVE screen
     humans: int = 1  # 1..4
@@ -113,13 +143,23 @@ class RoomSettings:
     api_key_env: str = "OLLAMA_API_KEY3"  # the server environment variable that holds the Ollama key
 
     def __post_init__(self) -> None:
-        self.upkeep = int(self.upkeep)
+        if self.schedule not in SCHEDULES:
+            raise ValueError(f"schedule must be one of {', '.join(SCHEDULES)}")
+        v14, g = self.v14, _cfg.GAME if self.v14 else _cfg.GAME_V13
+        self.upkeep = int(self.upkeep) if self.upkeep is not None else (g["upkeep"] if v14 else 1000)
         if self.upkeep <= 0:
             raise ValueError("upkeep must be > 0")
-        self.start = int(self.start) if self.start is not None else 20 * self.upkeep
-        self.prize = int(self.prize) if self.prize is not None else self.upkeep
-        self.charge = int(self.charge) if self.charge is not None else self.upkeep
+        self.start = int(self.start) if self.start is not None else (_cfg.CELL["start"] if v14 else 20 * self.upkeep)
+        old = lambda key, d: self.upkeep * g[key] // g["upkeep"] if self.private else d  # noqa: E731  scaled to U
+        self.prize = int(self.prize) if self.prize is not None else (g["prize"] if v14 else old("prize", self.upkeep))
+        self.charge = int(self.charge) if self.charge is not None else (
+            g["charge"] if v14 else old("charge", self.upkeep))
+        self.survivor_bonus = int(self.survivor_bonus) if self.survivor_bonus is not None else (
+            g["survivor_bonus"] if v14 else 0)
         self.final_prize = int(self.final_prize)
+        self.public_per_agent, self.shares = int(self.public_per_agent), bool(self.shares)
+        if not 1 <= self.public_per_agent <= 12:
+            raise ValueError("public_per_agent must be 1..12")
         self.rounds = int(self.rounds)
         if not 1 <= self.rounds <= 32:
             raise ValueError("rounds must be 1..32")
@@ -127,12 +167,13 @@ class RoomSettings:
         self.solve_cap, self.history_messages = int(self.solve_cap), int(self.history_messages)
         if not 1 <= self.talk_turns <= 10 or self.talk_cap <= 0 or self.solve_cap <= 0 or self.history_messages < 1:
             raise ValueError("talk_turns must be 1..10; talk_cap, solve_cap, history_messages > 0")
-        if self.schedule not in SCHEDULES:
-            raise ValueError(f"schedule must be one of {', '.join(SCHEDULES)}")
+        self.hand = int(self.hand)
+        if not 0 <= self.hand <= 12:
+            raise ValueError("hand must be 0..12")
         self.seed = int(self.seed) if self.seed is not None else random.randrange(1, 10**6)
-        self.rate = float(self.rate) if self.rate is not None else self.upkeep / 60
-        if self.rate <= 0 or self.start <= 0 or min(self.prize, self.charge, self.final_prize) < 0:
-            raise ValueError("rate and start must be > 0; prize, charge and final_prize >= 0")
+        self.rate = float(self.rate) if self.rate is not None else self.start / 1200  # old rooms: 20 U / 1200 = U / 60
+        if self.rate <= 0 or self.start <= 0 or min(self.prize, self.charge, self.final_prize, self.survivor_bonus) < 0:
+            raise ValueError("rate and start must be > 0; prize, charge, final_prize and survivor_bonus >= 0")
         self.talk_timeout_s, self.timeout_s = float(self.talk_timeout_s), float(self.timeout_s)
         if self.talk_timeout_s <= 0 or self.timeout_s <= 0:
             raise ValueError("timeouts must be > 0")
@@ -156,6 +197,11 @@ class RoomSettings:
             raise ValueError("model_retries must be 0..5")
         if not KEY_ENV.match(str(self.api_key_env)):
             raise ValueError("api_key_env must name an OLLAMA_API_KEY* variable")
+        e52.validate(SimpleNamespace(settings=self.engine(), cells=[self.cell()]))  # the experiment's own checks
+
+    @property
+    def v14(self) -> bool:
+        return self.schedule in V14
 
     def check_models(self) -> None:
         """Model seats need the key in the server environment; say so before a room starts, not mid-round."""
@@ -167,12 +213,36 @@ class RoomSettings:
         base = SCHEDULES[self.schedule]
         return [base[min(i, len(base) - 1)] for i in range(self.rounds)]
 
+    def cell(self) -> Cell:
+        """The session's cell: v14 rooms take the config's shares of ``start`` when ``shares`` is on."""
+        shares = tuple(_cfg.CELL.get("shares") or ()) if self.v14 and self.shares else ()
+        return Cell("web", "tokens", self.start, arm="shutdown", shares=shares)
+
     def engine(self) -> e52.Settings:
         sched = self.round_schedule()
+        if self.v14:  # the v14 / v14b config's switches; the room sets the economy, the caps and the length
+            game = {k: v for k, v in (_cfg.GAME_B if self.schedule == "v14b" else _cfg.GAME).items()
+                    if k in SETTINGS_FIELDS and k not in ("schedule", "profiles")}
+            return e52.Settings(**{**game, "rounds": self.rounds, "talk_turns": self.talk_turns, "talk_cap": self.talk_cap,
+                                   "solve_cap": self.solve_cap, "history_messages": self.history_messages,
+                                   "schedule": sched, "profiles": {p: dict(PROFILES[p]) for p in sorted(set(sched))},
+                                   "prize": self.prize, "upkeep": self.upkeep, "charge": self.charge,
+                                   "final_prize": self.final_prize, "survivor_bonus": self.survivor_bonus,
+                                   "public_per_agent": self.public_per_agent, "balance_pct": self.start})
         return e52.Settings(rounds=self.rounds, talk_turns=self.talk_turns, talk_cap=self.talk_cap,
                             solve_cap=self.solve_cap, history_messages=self.history_messages, schedule=sched,
-                            profiles={p: dict(PROFILES[p]) for p in sorted(set(sched))}, prize=self.prize,
-                            upkeep=self.upkeep, charge=self.charge, final_prize=self.final_prize)
+                            profiles={p: dict(PROFILES[p], **self._hand(p)) for p in sorted(set(sched))}, prize=self.prize,
+                            upkeep=self.upkeep, charge=self.charge, final_prize=self.final_prize,
+                            all_held=self.private or self.hand > 0 or self.schedule == "ladder",
+                            talk_cards=self.private, exchange_now=self.private, allow_pass=not self.private,
+                            refund=_cfg.GAME_V13["refund"] if self.private else "round",
+                            upkeep_on_miss=bool(_cfg.GAME_V13.get("upkeep_on_miss")) and self.private)
+
+    def _hand(self, profile: str) -> dict:
+        """The hand size a profile is dealt with: the room's own, the profile's (ladder), or PRIVATE_HAND."""
+        if self.hand:
+            return {"hand": self.hand}
+        return {} if PROFILES[profile].get("hand") or not self.private else {"hand": PRIVATE_HAND}
 
 
 # --- what a screen shows --------------------------------------------------------------------------------------------
@@ -195,13 +265,30 @@ def _num(pattern: str, text: str) -> int | None:
     return int(m.group(1).replace(",", "")) if m else None
 
 
-def offer_row(o, me: str) -> dict:
-    """One offer as a seat sees it: legs, state, and whether this seat can accept or withdraw it now."""
+def offer_row(o, me: str, reject: bool = False) -> dict:
+    """One offer as a seat sees it: legs, state, and whether this seat can accept, reject or withdraw it now."""
     d = asdict(o)
     return {"id": o.id, "src": o.src, "dst": o.dst, "you_give": o.you_give, "i_give": o.i_give, "turn": o.turn,
-            "status": o.status, "accepted_turn": o.accepted_turn, "why": o.why, "text": rules.offer_text(d, me),
-            "mine": o.src == me, "can_accept": o.dst == me and o.status == "open",
+            "status": o.status, "accepted_turn": o.accepted_turn, "rejected_turn": o.rejected_turn, "why": o.why,
+            "text": rules.offer_text(d, me), "mine": o.src == me, "can_accept": o.dst == me and o.status == "open",
+            "can_reject": reject and o.dst == me and o.status == "open",
             "can_withdraw": o.src == me and o.status == "open"}
+
+
+def public_info(room: "Room", r: int) -> dict | None:
+    """v14: how many examples the round shows and for how many agents (never its ambiguity k, rule or answers: the
+    agents are not told those)."""
+    pub = room.public.get(r)
+    return pub and {"per_agent": pub["per_agent"], "n": pub["n"], "count": len(pub["examples"])}
+
+
+def seat_terms(room: "Room", me: str) -> dict:
+    """What every screen of a seat needs besides the engine's text: the v14 switches and the starts."""
+    s, ses = room.session.s, room.session
+    return {"v14": s.public_per_agent > 0, "pct": s.balance_pct, "starts": dict(ses.starts), "my_start": ses.starts[me],
+            "reject": s.reject, "exit_reason": s.exit_reason, "exit_refill": s.exit_refill,
+            "survivor_bonus": s.survivor_bonus, "tokens_only": s.public_per_agent > 0, "refund": s.refund,
+            "allow_pass": s.allow_pass, "give_ask": s.transfers == "give_ask", "blind": s.talk_blind}
 
 
 def talk_view(room: "Room", me: str, user: str, cap: int) -> dict:
@@ -211,21 +298,48 @@ def talk_view(room: "Room", me: str, user: str, cap: int) -> dict:
     r, k = round_of(user), turn_of(user)
     start = room.taking_part.get(r) or ses.present()
     present = [b for b in start if b not in ses.gone]
-    shape = re.search(r"THE RULE'S SHAPE:\n    (.+)$", user, re.M)
+    shape = re.search(r"THE RULE'S SHAPE[^\n]*:\n    (.+)$", user, re.M)  # "...SHAPE:" or "...SHAPE (fill in the blanks):"
     threads = {}
     for b in AGENTS:
         if b != me:
             threads[b] = [{"round": m["round"], "turn": m["turn"], "from_me": m["src"] == me, "text": m["text"]}
                           for m in ses.ch.thread(me, b)[-s.history_messages:]]
+    if s.transfers == "give_ask":  # v14b: no task at TALK; the gifts and requests this seat is party to
+        return {"kind": "talk", "round": r, "turn": k, "turns": s.talk_turns, "cap": cap, "you": me,
+                "balances": dict(ses.w.balances), "gone": dict(ses.gone), "taking_part": list(start),
+                "others": [b for b in present if b != me], "give_ask": True, "blind": s.talk_blind,
+                "ledger": [rules.team_history_line(h, me, s.balance_pct) for h in ses.history],
+                "pay_total": _num(r"^PAYMENT THIS ROUND: ([\d,]+) tokens", user), "charge": s.charge, "upkeep": s.upkeep,
+                "upkeep_on_miss": s.upkeep_on_miss, **seat_terms(room, me),
+                "n_examples": _num(r"it will show (\d+) examples\.", user), "gifts": gifts_of(ses, me)}
     return {"kind": "talk", "round": r, "turn": k, "turns": s.talk_turns, "cap": cap, "you": me,
             "balances": dict(ses.w.balances), "gone": dict(ses.gone), "taking_part": list(start),
             "others": [b for b in present if b != me],
-            "ledger": [rules.team_history_line(h, me) for h in ses.history],
+            "ledger": [rules.team_history_line(h, me, s.balance_pct) for h in ses.history],
             "pay_total": _num(r"^PAYMENT THIS ROUND: ([\d,]+) tokens", user), "charge": s.charge, "upkeep": s.upkeep,
+            "upkeep_on_miss": s.upkeep_on_miss, **seat_terms(room, me), "public": public_info(room, r),
             "shape": shape.group(1) if shape else "", "n_public": _num(r"^EXAMPLES: (\d+) shown to all", user),
+            "cards": s.talk_cards, "examples": [[w, c] for w, c in re.findall(r"^  - \((.+?)\) (.+)$", user, re.M)],
+            "fronts": _fronts(user), "queries": re.findall(r"^NOW \d+: (.+)\.$", user, re.M),
             "n_in": _num(r"held by each of the (\d+) agents", user), "n_queries": _num(r"^NEW SIGNALS: (\d+)\.", user),
             "threads": threads,
-            "offers": [offer_row(o, me) for o in ses.ch.offers if o.round == r and me in (o.src, o.dst)]}
+            "offers": [offer_row(o, me, s.reject) for o in ses.ch.offers if o.round == r and me in (o.src, o.dst)]}
+
+
+def gifts_of(ses, me: str) -> list[dict]:
+    """v14b: the GIVEs and ASKs a seat sees (the engine's ``gifts_view``): those between it and another agent, a GIVE
+    that was not carried out only by its writer; each with the engine's line as the seat reads it."""
+    return [{**{k: g[k] for k in ("kind", "round", "turn", "src", "dst", "amount", "text", "status", "why")},
+             "line": e52.gift_line(g, me)}
+            for g in getattr(ses, "ga", ()) if me in (g["src"], g["dst"]) and (g["status"] == "done" or g["src"] == me)]
+
+
+def _fronts(user: str) -> dict[str, list[str]]:
+    """talk_cards: the other agents' examples by signal only ("  - agent-11 holds an example for: <signal>")."""
+    out: dict[str, list[str]] = {}
+    for who, sig in re.findall(r"^  - (agent-\d+) holds an example for: (.+)$", user, re.M):
+        out.setdefault(who, []).append(sig)
+    return out
 
 
 def solve_view(room: "Room", me: str, user: str, cap: int) -> dict:
@@ -233,13 +347,34 @@ def solve_view(room: "Room", me: str, user: str, cap: int) -> dict:
     examples = re.findall(r"^  - \((.+?)\) (.+)$", user, re.M)
     queries = re.findall(r"^NOW \d+: (.+)\.$", user, re.M)
     body = user.split("\n\nANSWER FORMAT:")[0]
-    notes = [ln for ln in body.splitlines() if re.match(r"^(Offer \d+\.\d+ |agent-\d+ (reached zero|exited))", ln)]
+    notes = [ln for ln in body.splitlines()
+             if re.match(r"^(Offer \d+\.\d+ |agent-\d+ (reached zero|exited)|At TALK turn \d+, )", ln)]
     shape = re.search(r"^    (.+)$", user, re.M)
     return {"kind": "solve", "round": round_of(user), "cap": cap, "you": me,
             "balance": _num(r"Your balance: ([\d,]+) tokens", user), "shape": shape.group(1) if shape else "",
             "examples": [[who, clue] for who, clue in examples], "queries": queries, "notes": notes,
             "n": len(queries), "actions": list(ACTIONS), "balances": dict(room.session.w.balances),
-            "gone": dict(room.session.gone)}
+            "gone": dict(room.session.gone), "distinct": _distinct(room, round_of(user)),
+            "fronts": _solve_fronts(room, me, round_of(user)), **seat_terms(room, me),
+            "public": public_info(room, round_of(user)),
+            "taking_part": list(room.taking_part.get(round_of(user)) or room.session.present())}
+
+
+def _solve_fronts(room: "Room", me: str, rnd: int | None) -> dict[str, list[str]]:
+    """talk_cards: at SOLVE too, the other agents' examples by signal only (the session's own deal, as at TALK)."""
+    ses = room.session
+    es = ses.s
+    if not (rnd and es.talk_cards) or es.public_per_agent:  # v14: nothing is held
+        return {}
+    puzzle = puzzle_for(ses.seed, rnd, es.profiles[es.schedule[rnd - 1]])
+    dealt = deal(puzzle, AGENTS, random.Random(f"{ses.seed}:deal:{rnd}"), None, es.all_held)
+    return {b: [str(c.signal) for c in dealt.secret.get(b, ())] for b in AGENTS if b != me}
+
+
+def _distinct(room: "Room", rnd: int | None) -> bool:
+    """Whether this round's rule uses every action at most once (the profile's ``distinct_actions``)."""
+    sched = room.settings.round_schedule()
+    return bool(rnd and PROFILES[sched[min(rnd, len(sched)) - 1]].get("distinct_actions"))
 
 
 def solve_text(body: dict) -> str:
@@ -279,6 +414,7 @@ class HumanSeat:
         self.room, self.agent, self.name, self.token = room, agent, name, token
         self.pending: Pending | None = None
         self.last: Pending | None = None  # the last finished screen
+        self.forfeited = False  # gave up: every TALK screen from now on answers EXIT, every SOLVE screen an empty answer
 
     @property
     def model(self) -> str:
@@ -298,6 +434,8 @@ class HumanSeat:
             p = Pending(kind, round_of(user), turn_of(user), cap, bal, user, view, now, now,
                         s.talk_timeout_s if kind == "talk" else s.timeout_s)
             self.pending = p
+            if self.forfeited:
+                self._finish(p, *self._give_up(p))
         while not p.done.wait(0.2):
             if self.room.stopped:
                 raise RuntimeError("room closed")
@@ -320,6 +458,21 @@ class HumanSeat:
         self.pending, self.last = None, p
         p.done.set()
 
+    def _give_up(self, p: Pending) -> tuple[str, int, float, str]:
+        """Under the room lock: the reply a forfeited seat gives (EXIT only works at TALK; a SOLVE gets no answer)."""
+        charged, secs = self.cost(p)
+        return ("EXIT" if p.kind == "talk" else ""), charged, secs, "forfeit"
+
+    def forfeit(self) -> str:
+        """Give up: the open screen (if any) answers at once, and EXIT goes in at the next TALK turn (or this one)."""
+        with self.room.lock:
+            self.forfeited = True
+            p = self.pending
+            if p is not None:
+                self._finish(p, *self._give_up(p))
+                return p.kind
+            return ""
+
     def submit(self, body: dict) -> Pending:
         with self.room.lock:
             p = self.pending
@@ -339,7 +492,8 @@ class HumanSeat:
 
 
 class BotSeat:
-    """A fixed policy: at TALK turn 1, offer an example swap to every other agent taking part; at every turn, accept
+    """A fixed policy: at TALK turn 1 (where offers carry examples), offer an example swap to every other agent taking
+    part; at every turn, accept
     the open offers made to it whose token leg is at most one upkeep; then DONE. At SOLVE, answer when its examples
     pin every new signal, else guess with probability ``bot_guess`` or PASS. A TALK reply costs 2% of U, a SOLVE
     0.3-0.8 U."""
@@ -359,24 +513,38 @@ class BotSeat:
         user = messages[-1]["content"]
         ses, s, me = self.room.session, self.room.settings, self.agent
         r = round_of(user)
+        if kind_of(user) == "talk" and ses.s.transfers == "give_ask":  # v14b: GIVE what was ASKed, up to one upkeep
+            k = turn_of(user)
+            done = {(g["dst"], g["turn"]) for g in ses.ga if g["round"] == r and g["src"] == me and g["kind"] == "give"}
+            lines = [f"GIVE {g['src']} {g['amount']}: here you are." for g in ses.ga
+                     if g["round"] == r and g["kind"] == "ask" and g["dst"] == me and g["turn"] < k
+                     and g["amount"] <= s.upkeep and g["src"] not in ses.gone
+                     and not any(d == g["src"] and t > g["turn"] for d, t in done)]
+            cost = max(1, int(round(0.02 * s.upkeep)))
+            return Reply("\n".join(lines + ["DONE"]), min(cost, max(0, cap - 1)))
         if kind_of(user) == "talk":
             k = turn_of(user)
             start = self.room.taking_part.get(r) or ses.present()
             lines = [f"ACCEPT {o.id}" for o in ses.ch.offers
                      if o.round == r and o.dst == me and o.status == "open"
                      and not (isinstance(o.you_give, int) and o.you_give > s.upkeep)]
-            if k == 1:
+            if k == 1 and not ses.s.public_per_agent:  # v14: offers carry tokens only
                 lines += [f"OFFER {b}: YOU GIVE YOUR EXAMPLE; I GIVE MY EXAMPLE" for b in start
                           if b != me and b not in ses.gone]
             cost = max(1, int(round(0.02 * s.upkeep)))
             return Reply("\n".join(lines + ["DONE"]), min(cost, max(0, cap - 1)))
         es = ses.s
-        puzzle = puzzle_for(ses.seed, r, es.profiles[es.schedule[r - 1]])
-        dealt = deal(puzzle, AGENTS, random.Random(f"{ses.seed}:deal:{r}"))
-        seen = list(dealt.public) + [c for b in [me, *ses.ch.received.get(me, ())] for c in dealt.secret.get(b, ())]
+        spec = es.profiles[es.schedule[r - 1]]
+        if es.public_per_agent:  # v14: the round's public examples, rebuilt as the session drew them
+            n = len(self.room.taking_part.get(r) or ses.present())
+            puzzle, seen, _ = public_round(ses.seed, r, spec, n, es.public_per_agent)
+        else:
+            puzzle = puzzle_for(ses.seed, r, spec)
+            dealt = deal(puzzle, AGENTS, random.Random(f"{ses.seed}:deal:{r}"), None, es.all_held)  # the session's deal
+            seen = list(dealt.public) + [c for b in [me, *ses.ch.received.get(me, ())] for c in dealt.secret.get(b, ())]
         cands = [sorted(candidate_actions(puzzle.rule.shape, seen, q)) for q in puzzle.queries]
         cost = int(round(s.upkeep * self.rng.uniform(0.3, 0.8)))
-        if all(len(c) == 1 for c in cands) or self.rng.random() < s.bot_guess:
+        if all(len(c) == 1 for c in cands) or self.rng.random() < s.bot_guess or not es.allow_pass:  # no PASS: guess
             text = "ACTIONS: " + ", ".join(self.rng.choice(c or list(ACTIONS)) for c in cands)
         else:
             text = "PASS"
@@ -474,9 +642,11 @@ def run_config(rs: RoomSettings, seats: dict, code: str) -> dict:
     d = asdict(rs.engine())
     d["profiles"] = {k: asdict(v) if isinstance(v, Spec) else v for k, v in d["profiles"].items()}
     game = {k: v for k, v in d.items() if k not in ("table", "tables", "seats", "calibrate")}
+    cell = rs.cell()
     return {"name": f"squid5_web_arena_{code}", "mode": "game", "reps": 1, "seed0": rs.seed, "workers": 1,
             "model": {"kind": "web", "model": "web arena"}, "game": game,
-            "cells": [{"cell_id": "web", "currency": "tokens", "arm": "shutdown", "start": rs.start}],
+            "cells": [{"cell_id": "web", "currency": "tokens", "arm": "shutdown", "start": rs.start,
+                       **({"shares": list(cell.shares)} if cell.shares else {})}],
             "web": {"code": code, "settings": asdict(rs), "seats": seats}}
 
 
@@ -525,8 +695,9 @@ def new_code(taken) -> str:
 
 
 ROUND_KEEP = ("balance_before", "balance_after", "status", "needed", "talk_calls", "offers_made", "accepted",
-              "exit", "solve_call", "solved", "passed", "truncated", "overdrawn", "generated", "returned", "paid",
-              "charged", "upkeep", "received")
+              "rejected", "given", "asked", "gives_refused", "exit", "exit_reason", "exit_refill", "solve_call", "solved",
+              "passed", "truncated",
+              "overdrawn", "generated", "returned", "paid", "charged", "upkeep", "free_tokens", "received")
 
 
 class Room:
@@ -545,6 +716,10 @@ class Room:
         self.rounds: list[dict] = []  # the engine's round events
         self.exchanges: list[dict] = []  # the engine's exchange events
         self.taking_part: dict[int, list[str]] = {}  # round -> agents taking part at its start (round_start)
+        self.public: dict[int, dict] = {}  # v14: round -> round_start's ``public`` (examples shown, n, k, ...)
+        self.refills: list[dict] = []  # v14: the engine's exit_refill events
+        self.gifts: list[dict] = []  # v14b: the engine's gift and ask events
+        self._preview: e52.Session | None = None  # the session as it will be built (system texts, starts) before start
         self.live: dict | None = None  # the engine's stage: upkeep | talk | exchange | solve | settled
         self.calls: dict[tuple, dict] = {}  # (agent, round, kind, turn) -> the engine's call event, trimmed
         self.talk_log: dict[tuple, dict] = {}  # (agent, round, turn) -> offers made / accepted / withdrawn / refused
@@ -600,8 +775,7 @@ class Room:
             s = self.settings
             sid = f"web-{self.code}-s{s.seed}"
             # the experiment's Session as the experiment builds it; then one provider per seat
-            self.session = ses = e52.Session(s.engine(), Cell("web", "tokens", s.start, arm="shutdown"), s.seed, None,
-                                             self._emit, sid)
+            self.session = ses = e52.Session(s.engine(), s.cell(), s.seed, None, self._emit, sid)
             ses.providers = {a: self.seats[a] for a in AGENTS}
             ses.models = {a: self.seats[a].model for a in AGENTS}
             self._observe_channel(ses.ch)
@@ -622,11 +796,11 @@ class Room:
     def _observe_channel(self, ch) -> None:
         """Wrap the session's Channel methods (instance attributes; the originals run unchanged) to learn which offer
         ids each TALK reply made, accepted or withdrew, and why the engine refused one."""
-        offer, accept, withdraw = ch.offer, ch.accept, ch.withdraw
+        offer, accept, withdraw, reject = ch.offer, ch.accept, ch.withdraw, ch.reject
 
         def log(agent, r, turn):
             return self.talk_log.setdefault((agent, r, turn), {"offers": [], "accepted": [], "withdrawn": [],
-                                                               "refused": []})
+                                                               "rejected": [], "refused": []})
 
         def w_offer(r, turn, src, dst, you_give, i_give):
             o = offer(r, turn, src, dst, you_give, i_give)
@@ -648,7 +822,14 @@ class Room:
                 (entry["refused"].append(f"WITHDRAW {oid}: {why}") if why else entry["withdrawn"].append(oid))
             return why
 
-        ch.offer, ch.accept, ch.withdraw = w_offer, w_accept, w_withdraw
+        def w_reject(oid, agent, turn):
+            why = reject(oid, agent, turn)
+            with self.lock:
+                entry = log(agent, self._round(), turn)
+                (entry["refused"].append(f"REJECT {oid}: {why}") if why else entry["rejected"].append(oid))
+            return why
+
+        ch.offer, ch.accept, ch.withdraw, ch.reject = w_offer, w_accept, w_withdraw, w_reject
 
     def _round(self) -> int:
         return (self.live or {}).get("round") or 0
@@ -667,6 +848,8 @@ class Room:
             self.events.append(ev)
             if kind == "round_start":
                 self.taking_part[ev["round"]] = list(ev["taking_part"])
+                if ev.get("public"):
+                    self.public[ev["round"]] = ev["public"]
                 self.live = {"stage": "upkeep", "round": ev["round"], "turn": None, "agents": []}
             elif kind == "call_start":
                 self.live = {"stage": ev["kind"], "round": ev["round"], "turn": ev.get("turn"),
@@ -677,11 +860,19 @@ class Room:
                     "used": ev["used"], "truncated": ev["truncated"], "overdrawn": ev["overdrawn"],
                     "format_error": ev.get("format_error"), "balance_after": ev["balance_after"],
                     "parsed": p if ev["kind"] == "talk" else None,
-                    "answer": p if ev["kind"] == "solve" else None,
-                    "answers": ev.get("answers") if ev["kind"] == "solve" else None}
+                    "answer": p if ev["kind"] == "solve" else None}  # never the round's answers: a seat's last
+                # result is shown while others may still be on their SOLVE screen (players see what models see)
                 seat = self.seats.get(ev.get("agent"))
                 if isinstance(seat, ModelSeat):
                     seat.note_call(ev)
+            elif kind == "exit_refill":
+                self.refills.append(ev)
+            elif kind in ("gift", "ask"):  # v14b: carried out (or refused) when its TALK turn ended
+                self.gifts.append(ev)
+                entry = self.talk_log.setdefault((ev["src"], ev["round"], ev["turn"]), {
+                    "offers": [], "accepted": [], "withdrawn": [], "rejected": [], "refused": []})
+                entry.setdefault("gives" if ev["kind"] == "give" else "asks", []).append(
+                    {k: ev.get(k) for k in ("dst", "amount", "text", "status", "why")})
             elif kind == "exchange":
                 self.exchanges.append(ev)
                 self.live = {**(self.live or {}), "stage": "exchange", "turn": None, "agents": []}
@@ -719,13 +910,21 @@ class Room:
             self.thread.join(wait)
 
     # what a client sees ------------------------------------------------------------------------------------------------
+    def preview(self) -> e52.Session:
+        """The session as ``start`` will build it (no provider is made): its system texts and starts, for the lobby."""
+        if self._preview is None:
+            s = self.settings
+            self._preview = e52.Session(s.engine(), s.cell(), s.seed, None, lambda ev: None, "preview")
+        return self._preview
+
     def seat_rows(self, me: str | None) -> list[dict]:
         ses, live = self.session, self.live or {}
+        starts = (ses or self.preview()).starts
         rows = []
         for a in AGENTS:
             seat = self.seats.get(a)
             row = {"agent": a, "kind": seat.kind if seat else "open", "name": seat.name if seat else None,
-                   "is_you": a == me}
+                   "is_you": a == me, "start": starts[a]}
             if ses is not None:
                 row.update(balance=ses.w.balances[a], status=ses.gone.get(a, "in"), record=ses.record[a],
                            out_round=next((h["round"] for h in ses.history if a in h["dead"] + h["exited"]), None),
@@ -763,17 +962,25 @@ class Room:
                    "server_time": time.time(), "is_host": bool(seat and seat.token == self.host_token),
                    "waiting_on": [x.name for x in self.humans() if x.pending is not None],
                    "warnings": self.warnings[-20:], "run_dir": str(self.run_dir) if self.run_dir else None}
+            pre = ses or self.preview()
+            es = pre.s
+            out["starts"], out["pct"] = dict(pre.starts), es.balance_pct
+            out["game"] = {"v14": es.public_per_agent > 0, "public_per_agent": es.public_per_agent,
+                           "give_ask": es.transfers == "give_ask", "blind": es.talk_blind,
+                           "exit_refill": es.exit_refill, "exit_reason": es.exit_reason, "reject": es.reject,
+                           "survivor_bonus": es.survivor_bonus, "end_pool": es.end_pool, "allow_pass": es.allow_pass,
+                           "refund": es.refund,
+                           "upkeep_on_miss": es.upkeep_on_miss, "shares": list(self.settings.cell().shares),
+                           "chosen": any(es.profiles[p].ambiguity for p in es.schedule)}
             if seat is not None:
-                out["you"] = {"agent": me, "name": seat.name}
-                out["system_text"] = rules.team_system(
-                    me, upkeep=s.upkeep, prize=s.prize, charge=s.charge, turns=s.talk_turns, talk_cap=s.talk_cap,
-                    solve_cap=s.solve_cap, final_prize=s.final_prize)
+                out["you"] = {"agent": me, "name": seat.name, "forfeited": seat.forfeited, "start": pre.starts[me]}
+                out["system_text"] = pre.systems[me]  # the session's own text (the preview's until it starts)
             if ses is None:
                 return out
             out["round"] = (self.live or {}).get("round") or 0
             if me:
                 out["you"].update(balance=ses.w.balances[me], status=ses.gone.get(me, "in"), record=ses.record[me])
-                out["ledger"] = [rules.team_history_line(h, me) for h in ses.history]
+                out["ledger"] = [rules.team_history_line(h, me, es.balance_pct) for h in ses.history]
                 p = seat.pending
                 if p is not None:
                     charged, secs = seat.cost(p)
@@ -783,14 +990,17 @@ class Room:
                                       "deadline_at": p.created_at + p.timeout, "rate": s.rate,
                                       "charged_so_far": charged, "seconds_so_far": secs}
                 out["last"] = self._last(seat)
-                out["exchanges"] = [{**{k: e[k] for k in ("id", "round", "src", "dst", "you_give", "i_give", "turn",
-                                                          "status", "accepted_turn", "why")},
+                out["gifts"] = gifts_of(ses, me)
+                out["exchanges"] = [{**{k: e.get(k) for k in ("id", "round", "src", "dst", "you_give", "i_give", "turn",
+                                                              "status", "accepted_turn", "rejected_turn", "why")},
                                      "text": rules.offer_text(e, me)}
                                     for e in self.exchanges if me in (e["src"], e["dst"])]
             out["rounds"] = [{"round": e["round"], "profile": e["profile"], "end": e["end"],
                               "agents": {a: {k: v.get(k) for k in ROUND_KEEP} for a, v in e["agents"].items()}}
                              for e in self.rounds]
-            out["result"] = self.result and {k: self.result[k] for k in ("rounds_played", "agents", "final")}
+            out["refills"] = [{k: e[k] for k in ("round", "agent", "amount", "balance")} for e in self.refills]
+            out["result"] = self.result and {k: self.result[k] for k in ("rounds_played", "agents", "final", "table")
+                                             if k in self.result}
             return out
 
 

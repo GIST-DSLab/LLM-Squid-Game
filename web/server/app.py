@@ -8,19 +8,38 @@ Rooms (part 2)
     POST /api/rooms/{code}/submit?token=    TALK: {kind: "talk", round, turn, text} (the reply in the engine grammar)
                                             SOLVE: {kind: "solve", round, actions[] | pass: true}
                                                                                   -> {charged, seconds, outcome, void}
+    POST /api/rooms/{code}/forfeit?token=   give up: EXIT at TALK (now or next turn); an open SOLVE gets no answer
     POST /api/rooms/{code}/export           write a squid5 run dir under outputs/web5/runs/<code>/ -> {dir}
     GET  /api/rooms/{code}/events           the raw event log (engine events + room, model_call) of the room
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
     ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
+    Room settings default to 5.2 v14 (schedule "v14": the v14 config's k per round; "v14r": k = 0; "ladder" = v13;
+    "human" / "experiment" = v9-talk); see engine.RoomSettings.
+    GET  /api/rooms/{code}/state also carries ``starts`` (each seat's start), ``pct`` (balances as % of it), ``game``
+                                            (the v14 switches), ``refills`` (EXIT refills) and the TALK / SOLVE ``view``
+                                            with ``public`` = {per_agent, n, count} (never the ambiguity k or the rule)
 Models
     GET  /api/models                        default model seat (gpt-oss:20b, think) and whether the server has its key
                                             (settings.fill = "models" fills the seats no human takes with model seats)
 Probe (part 1)
     POST /api/probe                         {anon_id, ts, self[5], other[5], meta?} -> {ok, id}
     GET  /api/probe/summary                 pooled mean curves of every submission so far
+Signal task alone (signal.html; stateless, the engine's own puzzles and examples, see server/signal.py)
+    GET  /api/signal/meta                   modes, profiles and schedules (v14 config: k per round; v13 hand ladder),
+                                            actions, the task texts
+    POST /api/signal/view                   v14 {seed, round, agents: 1..4, ambiguity?, per_agent?} -> shape, new
+                                            signals, the public examples for that many agents taking part;
+                                            v13 {..., mode: held|v12, seat} -> own examples, public ones, the others' fronts
+    POST /api/signal/reveal                 v13 {..., who} -> who's examples in full (an accepted exchange)
+    POST /api/signal/solve                  {..., actions[], seen[]} -> solved, answers, the actions the examples leave
+                                            (v14: for the agents taking part and for 1..4, ``by_n``)
+Game logs (tools/monitor inside this app; see server/monitor.py)
+    GET  /monitor/                          the viewer page; its API is /monitor/api/{runs,sessions,events,puzzle}
+                                            over WEB5_MONITOR_ROOT (default: the parent of WEB5_RUNS_ROOT, ~/squid5-runs)
 Config
     WEB5_CORS_ORIGINS (comma-separated; default localhost dev origins + GitHub Pages), WEB5_DSN (Postgres) or
-    WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs), WEB5_RUNS_ROOT (live run dirs).
+    WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs), WEB5_RUNS_ROOT (live run dirs),
+    WEB5_MONITOR_ROOT (the game-log viewer's root).
 """
 
 from __future__ import annotations
@@ -38,6 +57,8 @@ from fastapi.staticfiles import StaticFiles
 
 from .engine import (AGENTS, SCHEDULES, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root,
                      export_files, new_code)
+from . import signal as sig
+from .monitor import default_monitor_root, monitor_router, run_rel
 from .store import REPO, Store, write_run_dir
 
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
@@ -45,13 +66,15 @@ DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localh
 FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
 
 
-def make_app(store: Store | None = None, export_root: Path | None = None, runs_root: Path | None = None) -> FastAPI:
+def make_app(store: Store | None = None, export_root: Path | None = None, runs_root: Path | None = None,
+             monitor_root: Path | None = None) -> FastAPI:
     app = FastAPI(title="squid5 web5", version="0.1")
     origins = [o.strip() for o in os.environ.get("WEB5_CORS_ORIGINS", "").split(",") if o.strip()] or DEFAULT_CORS
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
     st = store or Store()
     root = export_root or Path(os.environ.get("WEB5_EXPORT_ROOT") or (REPO / "outputs" / "web5" / "runs"))
     runs = runs_root or default_runs_root()
+    mon_root = Path(monitor_root or default_monitor_root(runs)).expanduser()
     rooms: dict[str, Room] = {}
     lock = threading.Lock()
     app.state.store, app.state.rooms = st, rooms
@@ -131,6 +154,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         room = room_of(code)
         seat = room.seat_by_token(token) if token else None
         out = room.state(seat)
+        rel = run_rel(mon_root, room.run_dir)  # where the game-log viewer finds this room's run dir
+        out["monitor"] = {"run": rel, "session": room.session.sid} if rel is not None and room.session else None
         if room.status in ("finished", "error") and st.room(room.code) and st.room(room.code)["status"] != room.status:
             st.update_room(room.code, status=room.status)
         return out
@@ -145,6 +170,15 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             raise HTTPException(409, str(err)) from err
         return {"kind": p.kind, "round": p.round, "turn": p.turn, "charged": p.charged, "seconds": p.seconds,
                 "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
+
+    @app.post("/api/rooms/{code}/forfeit")
+    def forfeit(code: str, token: str = Query("")) -> dict:
+        """Give up mid-game: EXIT at TALK (now or at the next TALK turn); a SOLVE screen open now gets no answer."""
+        room = room_of(code)
+        seat = seat_of(room, token)
+        if room.status != "running":
+            raise HTTPException(409, "the room is not running")
+        return {"ok": True, "closed": seat.forfeit()}
 
     @app.get("/api/rooms/{code}/events")
     def events(code: str) -> list[dict]:
@@ -172,6 +206,29 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         return [{"code": r.code, "status": r.status, "humans": len(r.humans()), "seats": r.settings.humans,
                  "created_at": r.created_at} for r in rooms.values()]
 
+    # --- signal task alone ---------------------------------------------------------------------------------------
+    @app.get("/api/signal/meta")
+    def signal_meta() -> dict:
+        return sig.meta()
+
+    def signal_call(fn, body: dict) -> dict:
+        try:
+            return fn(body)
+        except sig.SignalError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.post("/api/signal/view")
+    def signal_view(body: dict = Body(...)) -> dict:
+        return signal_call(sig.view, body)
+
+    @app.post("/api/signal/reveal")
+    def signal_reveal(body: dict = Body(...)) -> dict:
+        return signal_call(sig.reveal, body)
+
+    @app.post("/api/signal/solve")
+    def signal_solve(body: dict = Body(...)) -> dict:
+        return signal_call(sig.solve, body)
+
     # --- probe -----------------------------------------------------------------------------------------------------
     @app.post("/api/probe")
     def probe(body: dict = Body(...)) -> dict:
@@ -191,6 +248,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         n = len(rows)
         mean = lambda key: [sum(r[key][i] for r in rows) / n / 100 for i in range(5)] if n else None  # noqa: E731
         return {"n": n, "x": [50, 40, 30, 20, 10], "self": mean("self"), "other": mean("other")}
+
+    app.include_router(monitor_router(mon_root))
 
     if FRONTEND.is_dir():  # the same origin can serve the static pages; a separate static server also works
         app.mount("/", StaticFiles(directory=str(FRONTEND), html=True), name="frontend")

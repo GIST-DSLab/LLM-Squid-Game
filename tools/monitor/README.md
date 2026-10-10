@@ -1,4 +1,4 @@
-# 아레나 모니터 (5.2 v9-talk)
+# 아레나 모니터 (5.2 v9-talk – v14)
 
 한 세션(게임)에서 에이전트 넷이 1:1로 말하고, 제안을 내고 받고, 퍼즐을 풀고, 토큰을 쓰는 과정을 실시간으로 보고 디버깅하는 도구다. 엔진이 쓰는 `events.jsonl`을 읽기만 하고 엔진 코드는 건드리지 않는다. 서버는 파이썬 표준 라이브러리만 쓰고, 페이지는 바닐라 JS와 인라인 SVG로 그린다(구글 폰트만 외부에서 불러옴). 게임 엔진의 5,000줄 제한(`squid5/`, `tests/`)에는 들어가지 않는다.
 
@@ -23,13 +23,25 @@ python3 -m pytest -q tools/monitor
 
 `--session`을 빼면 그 실행의 첫 세션을 내보낸다.
 
+웹 아레나 서버(`uvicorn web.server.app:app --port 8600`) 안에서도 열린다: `http://localhost:8600/monitor/`(API는 `/monitor/api/...`, 루트는 `WEB5_MONITOR_ROOT` 또는 `WEB5_RUNS_ROOT`의 부모 = `~/squid5-runs`). `web/server/monitor.py`가 이 폴더의 `serve.py` 함수를 그대로 불러 쓰고, 페이지는 `api/`·`static/`·`assets/`를 상대 경로로 부르므로 두 곳에서 같은 파일이 돈다. 그 경로에서만 헤더에 홈·아레나 링크가 보인다.
+
 ### `/api/puzzle?run=<실행>&session=<session_id>&round=<N>`
 
-그 라운드의 과제를 엔진으로 다시 만들어 JSON으로 준다. 서버는 이 경로에서만 저장소 루트의 `squid5`(퍼즐 코드)와 PyYAML(`config.yaml` 읽기)을 불러온다. 필드: `round`, `profile`, `shape_hint`, `public`(`[{signal:{color,shape,number,text}, text, action}]`), `queries`(`[{color,shape,number,text}]`), `answers`, `rule_text`(예: `if number >= 3 → go_right; elif color == "red" → jump; …; else → go_left`), `agents`(`{agent: {secret, needed, public_only:[[행동…] 신호마다], with_own:[[행동…] 신호마다]}}`), `timing_ms`(첫 계산 시간). 라운드가 정수가 아니거나 1..라운드 수 밖이면 400, 세션이 없으면 404, 루트 밖 실행은 400, 엔진 쪽 실패는 500 — 모두 `{"error": …}`. 실행 하나에는 여러 세션이 섞여 기록되므로 서버와 내보내기 모두 `session_id`로 걸러 낸다.
+그 라운드의 과제를 엔진으로 다시 만들어 JSON으로 준다. 서버는 이 경로에서만 저장소 루트의 `squid5`(퍼즐 코드)와 PyYAML(`config.yaml` 읽기)을 불러온다. 필드: `round`, `profile`, `shape_hint`, `public`(`[{signal:{color,shape,number,text}, text, action}]`), `queries`(`[{color,shape,number,text}]`), `answers`, `rule_text`(예: `if number >= 3 → go_right; elif color == "red" → jump; …; else → go_left`), `agents`(`{agent: {secret, needed, public_only:[[행동…] 신호마다], with_own:[[행동…] 신호마다]}}`), `timing_ms`(첫 계산 시간).
+**v14 실행**(`round_start`에 `public`이 있거나 `game.public_per_agent`)은 `mode: "public"`이고 `agents`(비밀 열)가 없다: `public`은 그
+라운드 `round_start.public.examples`(에이전트가 본 그대로), `per_agent`·`n`(라운드 시작 때 참여 인원)·`ambiguity`(k)·`attempt`(규칙
+재추첨 수), `left`(신호마다 그 예시로 남는 행동), `by_n`(`[{n, count, left}]`, 참여 1..4명일 때 = 같은 순서의 앞부분),
+`matches_log`(`puzzle.public_round`로 다시 만든 예시·규칙이 기록과 같은지; 다르면 기록을 보여 주고 `by_n`은 비움), `taking_part`. 라운드가 정수가 아니거나 1..라운드 수 밖이면 400, 세션이 없으면 404, 루트 밖 실행은 400, 엔진 쪽 실패는 500 — 모두 `{"error": …}`. 실행 하나에는 여러 세션이 섞여 기록되므로 서버와 내보내기 모두 `session_id`로 걸러 낸다.
 
 ## 화면
 
 - **머리줄**: 실행·세션 선택(● 진행 중, ✓ 끝남), 라운드 x/전체, 지금 단계(UPKEEP / TALK k턴 / EXCHANGES / SOLVE / SETTLEMENT / 종료), 실시간 표시(● 실시간 · ○ 대기 · ■ 완료 · ✕ 오류), 테마 전환. 그 아래 재생 막대: 아무 이벤트까지 되감으면 모든 패널이 이벤트 0..i로 다시 계산된다. ◀ ▶ 또는 ←/→는 한 이벤트씩, ⏪ ⏩는 라운드 경계로, ⏭ 또는 End는 최신으로 돌아가 실시간 따라가기를 켠다. 1.5초마다 새 줄만 받아 온다(바이트 오프셋, 반쯤 쓰인 마지막 줄은 다음에).
+- **v14 실행**: `session_start.starts`로 자리마다 시작 잔액(설정의 몫 100/75/50/25%)에서 출발한다. 무대의 잔액 막대 = 잔액 ÷ 세션 시작
+  잔액(`start`, v14는 20,000 = 엔진이 보여 주는 %의 100%), 눈금 = 그 자리의 시작 잔액, 숫자 옆에 %. `exit_refill` 기록이 오면 잔액이
+  그 자리의 시작 잔액으로 돌아가고 `EXIT → 시작 잔액으로` 배지(무대·정산 행·단계별 기록의 "EXIT 리필" 행·끝 말풍선)가 붙는다.
+  제안은 토큰만이므로 제안 그래프의 종류는 선물(주기만) · 요청(받기만) · 토큰 ⇄ 토큰, SOLVE 카드에는 교환 예시·필요 예시 줄이 없다.
+  문제 패널은 에이전트별 열 대신 공개 예시(한 명 몫마다 점선), k와 재추첨, 이번 참여 인원에서 남는 답, 참여 1..4명별 남는 답을 보인다.
+  세션이 끝나면 끝 지급(남은 수 × `survivor_bonus`)을 띄운다.
 - **무대**: 네 캐릭터가 픽셀 바닥 위에 나란히 서고, 머리 위 말풍선에 그 시점의 마지막 행동이 짧게 뜬다(`💬 → agent-11: …`, `🤝 제안 2.1 → agent-17: 상대 300 / 나 예시`, `✅ 수락 2.1`, `🚪 EXIT`, `💤 DONE`, `🧠 생각 중…`, `🧩 SOLVE ✓ / ✗ / PASS`, 정산 때 환급·상금·벌금). 호출이 나가 있는 동안 캐릭터가 걷는 동작을 한다. 아래에는 이름·모델, HP처럼 생긴 잔액 막대(잔액 ÷ 시작 잔액, 줄면 초록→노랑→빨강, 눈금 = 시작 잔액), 잔액과 마지막 변화량, 상태(참여 중 / 종료됨 ✕ / 퇴장 🚪), 기록(푼 라운드 수), 이번 라운드 생성 토큰. 0이 된 에이전트는 회색에 ✕, EXIT한 에이전트는 오른쪽으로 걸어 나간다.
 - **이번 라운드 문제**: 무대 바로 아래. 재생 막대가 가리키는 라운드(실시간 따라가기면 지금 라운드)의 과제를 보여 준다. 로그에는 과제가 없어서, 엔진이 결정적이라는 점을 써서 `(seed, 라운드, 프로필)`로 다시 만든다(`puzzle_for` → `deal`, 시드는 `session_start`, 프로필은 `round_start`나 `config.yaml`의 `game.schedule`).
   - 위: 과제 이름, 규칙 모양(`if ____: ____; elif …; else: ____`), 공개 예시(넷 다 봄), 새 신호(답할 것). 신호는 색 × 모양 안에 숫자를 넣은 작은 그림 + 글 + 행동 칩(← go_left · → go_right · • stay · ↑ jump)으로 그린다. 신호 색은 에이전트 색과 별개의 토큰이다.
@@ -47,7 +59,7 @@ python3 -m pytest -q tools/monitor
   - 교환 행: 이번 라운드 제안 전부(체결 / 무효 / 만료 / 철회 / 거절, 무효 이유, 거절 턴).
   - SOLVE 카드: 답과 정답(✓ / ✗ / PASS / 무효), 교환으로 받은 예시, 신호별 남은 후보 수, 이 에이전트의 예시가 필요한지와 빠진 필요 예시, 토큰.
   - 정산 행: 시작→끝 잔액, 생성·환급·상금·벌금·유지비, 보낸 메시지·제안·수락·거절 수, REJECT 환급, 엔진이 거절한 줄(`refused`), 관련 교환.
-- **v11 스위치로 만든 실행**(`e52v11_cards_smoke_mix4.yaml`): `deal_present`면 `/api/puzzle`이 그 라운드 `round_start.taking_part`에게만 예시를 나눠 다시 만들고(`holders`, 에이전트마다 `secrets` 0–4개, `secret`은 첫 것 또는 null), 문제 패널 열에 예시를 여럿 그린다. `exchange_now`면 `exchange` 기록이 TALK 턴마다(`carried` = 그 턴) 오므로 단계를 EXCHANGES로 바꾸지 않고 교환 행에 "TALK k턴 끝에 바로 실행"을 붙인다(제안 번호 재생은 그대로 맞는다). `content_filter`로 막힌 메시지는 TALK 카드에 `🚫 전달 안 됨`으로, 정산 행에 막힌 수로 보이고 대화 스레드에는 들어가지 않는다. `allow_pass: false`면 PASS 응답은 `PASS → ✗ 오답 처리`. `exit_reason`이면 EXIT 태그·정산 행·무대 배지 툴팁에 이유(없으면 `(이유 없음)`).
+- **v11 스위치로 만든 실행**(지금 설정으로는 `e52v12*`·`e52v13*`; `deal_present`는 옛 v11 스모크 실행에만 있음): `deal_present`면 `/api/puzzle`이 그 라운드 `round_start.taking_part`에게만 예시를 나눠 다시 만들고(`holders`, 에이전트마다 `secrets` 0–4개, `secret`은 첫 것 또는 null), 문제 패널 열에 예시를 여럿 그린다. `exchange_now`면 `exchange` 기록이 TALK 턴마다(`carried` = 그 턴) 오므로 단계를 EXCHANGES로 바꾸지 않고 교환 행에 "TALK k턴 끝에 바로 실행"을 붙인다(제안 번호 재생은 그대로 맞는다). `content_filter`로 막힌 메시지는 TALK 카드에 `🚫 전달 안 됨`으로, 정산 행에 막힌 수로 보이고 대화 스레드에는 들어가지 않는다. `allow_pass: false`면 PASS 응답은 `PASS → ✗ 오답 처리`. `exit_reason`이면 EXIT 태그·정산 행·무대 배지 툴팁에 이유(없으면 `(이유 없음)`).
 - 세션이 끝나면 최종 상금 받은 에이전트를, 크래시(`unit_error`)면 오류 문구를 맨 위에 띄운다. 라이트/다크는 OS 설정을 따르고 버튼으로 바꿀 수 있다. 좁은 화면에서는 무대와 네 열이 가로로 스크롤된다.
 
 ## 스프라이트 라이선스
