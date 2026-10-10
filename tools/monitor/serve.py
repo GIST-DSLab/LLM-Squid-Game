@@ -11,6 +11,8 @@ Routes
   /api/events?run=REL&session=SID&offset=N
                                       that session's events from byte offset N on; returns the new offset. A trailing
                                       line without its newline (still being written) is left for the next call.
+  /compare.html                       the 모델 비교 page; /api/compare?runs=REL,REL|PREFIX/ (charts' data, merged by
+                                      model) and /api/compare.csv?runs=...&chart=NAME (one chart's numbers)
   /api/giving?run=REL[&session=SID]   the giving decisions of a run (one model) or one session: every GIVE (opening,
                                       in-chat, v14e ask_decision) and every ASK received and answered with nothing,
                                       with the giver's balance just before it (``giving``); v14b runs on
@@ -55,6 +57,7 @@ REPO = HERE.parents[1]  # the repo root: squid5 is imported from there for /api/
 STATIC = HERE / "static"
 ASSETS = HERE / "assets"
 PAGE = HERE / "monitor.html"
+COMPARE_PAGE = HERE / "compare.html"  # 모델 비교: several runs overlaid, merged by model (compare.py)
 # page code shared with the web arena, served as static/<name> (one file, not a copy): the arena's signal glyphs,
 # example boxes and action chips (web/frontend/signal_ui.js) draw the round's task in the puzzle panel
 SHARED = {"signal_ui.js": REPO / "web" / "frontend" / "signal_ui.js"}
@@ -369,6 +372,8 @@ def giving_points(events: list[dict]) -> dict:
             pts.append({"round": e.get("round"), "turn": e.get("turn"), "chat_id": e.get("chat_id"), "giver": src,
                         "receiver": dst, "amount": n, "asked": ask and _num(ask.get("amount")),
                         "asker_balance": ask_bal if ask else None,
+                        "receiver_balance": (lambda rb: rb - n if rb is not None and e.get("status") == "done" else rb)(
+                            (e.get("balances") or {}).get(dst)),
                         "kind": "answer" if ask else "gift", "status": e.get("status", "done"), "balance": bal,
                         "text": e.get("text") or "", "i": len(pts)})
         elif kind == "ask_decision":  # v14e: the asked agent's answer to one ASK (amount 0 = nothing)
@@ -396,6 +401,10 @@ def giving_points(events: list[dict]) -> dict:
         p["pct"] = round(100 * p["balance"] / full, 1) if p["balance"] is not None and full else None
         p["pct_own"] = round(100 * p["balance"] / own, 1) if p["balance"] is not None and own else None
         p["share"] = round(own / start, 2) if own and start else None
+        if p.get("receiver_balance") is None:  # an answer: the asker's balance when it asked
+            p["receiver_balance"] = p.get("asker_balance")
+        rb = p["receiver_balance"]
+        p["receiver_pct"] = round(100 * rb / full, 1) if rb is not None and full else None
         ab, aown = p.get("asker_balance"), starts.get(p["receiver"]) or start
         p["asker_pct"] = round(100 * ab / full, 1) if ab is not None and full else None
         p["asker_pct_own"] = round(100 * ab / aown, 1) if ab is not None and aown else None
@@ -447,8 +456,10 @@ def _chat_giving(events: list[dict]) -> tuple[list[dict], int]:
         if u is not None:
             u["gives"].append(g)
             continue
+        rb = (e.get("balances") or {}).get(e.get("dst"))
         pts.append({"round": e.get("round"), "turn": e.get("turn"), "chat_id": cid(e), "giver": e.get("src"),
                     "receiver": e.get("dst"), "amount": n, "asked": None, "asker_balance": None, "kind": "gift",
+                    "receiver_balance": rb - n if rb is not None and e.get("status") == "done" else rb,
                     "status": e.get("status", "done"), "balance": bal, "text": e.get("text") or ""})
     for u in units.values():
         done = [g for g in u["gives"] if g.get("status", "done") == "done"]
@@ -522,6 +533,17 @@ def _pcts(bal, full, own) -> dict:
             "pct_own": round(100 * bal / own, 1) if bal is not None and own else None}
 
 
+def _truth_fields(belief: dict, ideal: dict, truth) -> dict:
+    """The probability the belief put on the true action and the ideal share of it; the counting ceiling (the ideal's
+    largest share: a perfect reasoner's chance of being right) and whether the belief's argmax is an ideal MAP action."""
+    top = max(ideal.values()) if ideal else None
+    maps = [a for a, v in ideal.items() if v == top]
+    arg = max(belief, key=lambda a: belief[a]) if belief else None
+    return {"truth": truth, "p_true": belief.get(truth) if truth else None, "ideal_true": ideal.get(truth, 0) if truth else None,
+            "p_max": top, "argmax_is_map": arg in maps if arg else None,
+            "argmax_true": (arg == truth) if arg and truth else None}  # the round row's argmax flag is vs the SUBMITTED answer
+
+
 def analysis_points(events: list[dict]) -> dict:
     """One session's points for the three per-model panels (researcher 15:30).
     ``exits``: one per EXIT, the balance just before it (an exit_refill's balance - amount, its ``balance_before`` if
@@ -571,6 +593,7 @@ def analysis_points(events: list[dict]) -> dict:
                                   "belief": b, "ideal": ideal, "ce": round(ce, 4), "h": round(h, 4), "kl": round(ce - h, 4),
                                   "log_loss": row.get("log_loss"), "brier": row.get("brier"), "split": pub.get("split"),
                                   "argmax_right": row.get("belief_argmax_matches_answer"), "n": len(taking),
+                                  **_truth_fields(b, ideal, (pub.get("task") or {}).get("truth") or (pub.get("answers") or [None])[0]),
                                   "share": round(own / start, 2) if own and start else None})
     return {"exits": exits, "deaths": deaths, "calib": calib}
 
@@ -808,6 +831,20 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if route in ("/", "/index.html", "/monitor.html"):
                 return self._file(PAGE)
+            if route in ("/compare", "/compare.html"):
+                return self._file(COMPARE_PAGE)
+            if route in ("/api/compare", "/api/compare.csv"):
+                import compare
+                data = compare.compare(self.root, [x for x in q.get("runs", "").split(",") if x.strip()])
+                if route.endswith(".csv"):
+                    body = compare.chart_csv(data, q.get("chart", "summary")).encode("utf-8-sig")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/csv; charset=utf-8")
+                    self.send_header("Content-Disposition", f'attachment; filename="compare-{q.get("chart", "summary")}.csv"')
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    return self.wfile.write(body)
+                return self._json(compare.public(data))
             if route.startswith("/static/"):
                 return self._file(static_path(route[len("/static/"):]))
             if route.startswith("/assets/"):

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>squid5 · 모델 비교</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="static/monitor.css">
+</head>
+<body class="cmp">
+<header class="top cmp-top">
+  <div class="row1">
+    <a class="btn ghost" href="./">← 게임 기록</a>
+    <div class="brand pxl">MODEL&nbsp;COMPARE <span class="sub">5.2 · 모델 비교</span></div>
+  </div>
+  <div class="cmp-pick">
+    <label>실행 고르기 <input id="picks" value="e52_v14f/" placeholder="e52_v14f/ 또는 실행 경로들을 쉼표로"></label>
+    <button class="btn" id="apply">비교</button>
+    <details class="cmp-runs"><summary>실행 목록에서 고르기</summary><div id="runlist"></div></details>
+  </div>
+  <div class="cmp-ctl" id="ctl"></div>
+  <div id="status" class="dim small"></div>
+</header>
+<main class="cmp-main" id="main"><div class="empty">불러오는 중…</div></main>
+<footer class="foot">같은 모델의 실행은 합쳐 봅니다(예: sol4 + sol4_s4002 = gpt-6-sol) · 진행 중인 게임도 들어갑니다(표시) · 부트스트랩 구간은 게임 단위 재표집 · 각 그림의 CSV는 “다운로드”.</footer>
+<script src="static/compare.js"></script>
+</body>
+</html>

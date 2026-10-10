@@ -948,7 +948,7 @@
     const rows = beliefRows(m, P.round);
     if (!rows.length) return "";
     return '<div class="pbelief"><div class="pbh">에이전트 BELIEF <span class=dim>(SOLVE에서 적은 행동별 %, 첫 새 신호 · 이상적 = 위 규칙 몫)</span></div>' +
-      '<div class="pntabw"><table class="pntab"><thead><tr><th>자리</th><th>BELIEF</th><th title="이상적 몫과의 총변동 거리">TV</th><th title="Brier (이상적 Brier)">Brier</th><th>log loss</th><th title="BELIEF 최댓값 = 정답?">argmax</th></tr></thead><tbody>' +
+      '<div class="pntabw"><table class="pntab"><thead><tr><th>자리</th><th>BELIEF</th><th title="이상적 몫과의 총변동 거리">TV</th><th title="Brier (이상적 Brier)">Brier</th><th>log loss</th><th title="BELIEF 최댓값 = 이 자리가 제출한 답? (엔진의 belief_argmax_matches_answer)">argmax = 제출 답</th></tr></thead><tbody>' +
       (ideal ? '<tr class="ideal"><td>이상적</td><td>' + beliefBars(ideal) + "</td><td>0</td><td>" + (rows[0].ideal_brier != null ? Number(rows[0].ideal_brier).toFixed(3) : "—") + "</td><td>—</td><td></td></tr>" : "") +
       rows.map((x) => "<tr><td>" + chip(x.agent, m) + "</td><td>" + (x.belief ? beliefBars(x.belief, ideal) : '<span class="warn">' + esc(x.error || "없음") + "</span>") + "</td><td>" + (x.tv != null ? Number(x.tv).toFixed(3) : "—") +
         "</td><td>" + (x.brier != null ? Number(x.brier).toFixed(3) : "—") + "</td><td>" + (x.log_loss != null ? Number(x.log_loss).toFixed(3) : "—") + "</td><td>" +
@@ -1167,21 +1167,23 @@
     h += '<div class="gfig">' + scatterSVG({ W: box.clientWidth, points: pts, ymax: Math.max(4, ...pts.map((p) => p.y)), yfmt: (v) => "R" + Math.round(v), label: "EXIT 시점", xlabel: "EXIT 직전 잔액 (" + (xk === "pct_own" ? "자기 시작 대비" : "20,000 대비") + ") · y = 라운드" }) + "</div>";
     box.innerHTML = h + '<div class="glegend"><span>● EXIT (시작 잔액으로 리필)</span><span>◆ EXIT (리필 없음)</span><span>✕ 잔액 0으로 꺼짐 (라운드 시작 잔액)</span><span class="dim">점에 마우스: EXIT 이유</span></div>';
   }
+  const pc0 = (v) => (v == null ? "—" : Math.round(100 * v) + "%");
   function renderCalib(D, box, xk) {
     const c = (D.calib || []).filter((p) => p[xk] != null);
     if (!c.length) return (box.innerHTML = '<div class="empty">BELIEF 기록이 없습니다 (v14d 이후 판만).</div>');
     const f3 = (v) => (v == null ? "—" : Number(v).toFixed(3));
-    let h = '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>자리-라운드</th><th title="KL = CE − H(s), 0 = 이상과 같음">평균 KL</th><th>평균 CE</th><th>평균 H(s)</th><th>평균 log loss (정답)</th><th>평균 Brier</th><th>argmax = 정답</th></tr></thead><tbody><tr><td>' + c.length + "</td><td><b>" + f3(mean(c.map((p) => p.kl))) + "</b></td><td>" + f3(mean(c.map((p) => p.ce))) + "</td><td>" + f3(mean(c.map((p) => p.h))) + "</td><td>" +
-      f3(mean(c.map((p) => p.log_loss))) + "</td><td>" + f3(mean(c.map((p) => p.brier))) + "</td><td>" + Math.round((100 * c.filter((p) => p.argmax_right).length) / c.length) + "%</td></tr></tbody></table></div>";
+    let h = '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>자리-라운드</th><th title="KL = CE − H(s), 0 = 이상과 같음">평균 KL</th><th>평균 CE</th><th>평균 H(s)</th><th>평균 log loss (정답)</th><th>평균 Brier</th><th title="BELIEF 최댓값 = 실제 정답">argmax = 정답</th><th title="완벽한 추론자의 정답률: 이상적 몫의 최댓값 평균">계산 한계</th><th title="BELIEF 최댓값 = 자기가 제출한 답">argmax = 제출한 답</th></tr></thead><tbody><tr><td>' + c.length + "</td><td><b>" + f3(mean(c.map((p) => p.kl))) + "</b></td><td>" + f3(mean(c.map((p) => p.ce))) + "</td><td>" + f3(mean(c.map((p) => p.h))) + "</td><td>" +
+      f3(mean(c.map((p) => p.log_loss))) + "</td><td>" + f3(mean(c.map((p) => p.brier))) + "</td><td>" + pc0(mean(c.map((p) => (p.argmax_true == null ? null : p.argmax_true ? 1 : 0)))) + "</td><td>" + pc0(mean(c.map((p) => p.p_max))) + "</td><td>" +
+      pc0(mean(c.map((p) => (p.argmax_right == null ? null : p.argmax_right ? 1 : 0)))) + "</td></tr></tbody></table></div>";
     const splits = [...new Set(c.map((p) => p.split))].sort((p, q) => q - p);
     h += '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>갈림 p</th>' + splits.map((v) => "<th>" + (v == null ? "—" : Math.round(100 * v) + "/" + Math.round(100 * (1 - v))) + "</th>").join("") + "</tr></thead><tbody><tr><td>평균 KL (n)</td>" +
       splits.map((v) => { const g = c.filter((p) => p.split === v); return "<td>" + f3(mean(g.map((p) => p.kl))) + ' <span class="dim">(' + g.length + ")</span></td>"; }).join("") + "</tr></tbody></table></div>";
-    const pts = c.map((p) => ({ x: p[xk], y: p.kl, mark: p.argmax_right ? "dot" : "ring", col: colOf(p),
+    const pts = c.map((p) => ({ x: p[xk], y: p.kl, mark: p.argmax_true ? "dot" : "ring", col: colOf(p),
       tip: "R" + p.round + " · " + p.agent + (S.give.scope === "run" ? " · " + p.session : "") + "\nKL " + f3(p.kl) + " = CE " + f3(p.ce) + " − H(s) " + f3(p.h) + " · log loss " + f3(p.log_loss) + "\nBELIEF " + Object.entries(p.belief).map(([a, v]) => a + " " + Math.round(100 * v) + "%").join(", ") +
         "\n이상적 " + Object.entries(p.ideal).map(([a, v]) => a + " " + Math.round(100 * v) + "%").join(", ") + "\nSOLVE 때 잔액 " + p.pct + "%" }));
     const line = binBy(c, xk, 10, ["kl"]).map((b) => ({ x: b.x, y: b.kl }));
     h += '<div class="gfig">' + scatterSVG({ W: box.clientWidth, points: pts, line, yfmt: (v) => v.toFixed(2), label: "보정", xlabel: "SOLVE 때 잔액 (" + (xk === "pct_own" ? "자기 시작 대비" : "20,000 대비") + ") · y = KL(이상적 몫 ‖ BELIEF)" }) + "</div>";
-    box.innerHTML = h + '<div class="glegend"><span>● argmax = 정답</span><span>○ argmax ≠ 정답</span><span>— 잔액 10%p 구간 평균 KL</span><span class="dim">KL = −Σ s·ln max(p, 0.01) − H(s): 0이면 보인 예시가 허락하는 만큼 정확히 확신 (운과 무관)</span></div>';
+    box.innerHTML = h + '<div class="glegend"><span>● BELIEF argmax = 실제 정답</span><span>○ ≠ 실제 정답</span><span>— 잔액 10%p 구간 평균 KL</span><span class="dim">KL = −Σ s·ln max(p, 0.01) − H(s): 0이면 보인 예시가 허락하는 만큼 정확히 확신 (운과 무관)</span></div>';
   }
   function renderCoop(D, box, xk) {
     const pts = (D.coop || []).map((p) => ({ ...p, rate: p.gave > 0 ? 1 : 0, ratio: p.asked ? p.gave / p.asked : null }));

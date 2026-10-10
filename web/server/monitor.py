@@ -8,6 +8,7 @@
     GET /monitor/api/puzzle?run=REL&session=SID&round=N
     GET /monitor/api/giving?run=REL[&session=SID]
     GET /monitor/api/analysis?run=REL[&session=SID]
+    GET /monitor/compare.html                   모델 비교; /monitor/api/compare?runs=... and /monitor/api/compare.csv
 
 The page asks for ``api/...``, ``static/...`` and ``assets/...`` relative to itself, so the same file works here and
 under the standalone ``python3 tools/monitor/serve.py``. Every route is serve.py's own function; nothing is copied.
@@ -23,7 +24,7 @@ import sys
 from pathlib import Path
 
 from fastapi import APIRouter, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
 from .store import REPO
 
@@ -40,6 +41,19 @@ def load_serve():
         mod = importlib.util.module_from_spec(spec)
         sys.modules[name] = mod
         spec.loader.exec_module(mod)
+    return mod
+
+
+def load_compare():
+    """tools/monitor/compare.py, bound to the same loaded serve module (one cache)."""
+    name = "squid5_monitor_compare"
+    mod = sys.modules.get(name)
+    if mod is None:
+        spec = importlib.util.spec_from_file_location(name, SERVE.parent / "compare.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[name] = mod
+        spec.loader.exec_module(mod)
+    mod.serve = load_serve()
     return mod
 
 
@@ -114,6 +128,10 @@ def monitor_router(root: Path) -> APIRouter:
     def page() -> FileResponse:
         return FileResponse(sv.PAGE, headers=NO_STORE)
 
+    @r.get("/compare.html", response_class=HTMLResponse)
+    def compare_page() -> FileResponse:
+        return FileResponse(sv.COMPARE_PAGE, headers=NO_STORE)
+
     @r.get("/static/{rel:path}")
     def static(rel: str):
         shared = sv.SHARED.get(rel)  # web/frontend/signal_ui.js: the arena's task drawing, shared with the page
@@ -132,6 +150,17 @@ def monitor_router(root: Path) -> APIRouter:
             return answer(lambda: {"run": q.get("run", ""), **sv.list_sessions(sv.run_dir_of(root, q.get("run", "")))})
         if route == "events":
             return answer(lambda: events(q))
+        if route in ("compare", "compare.csv"):  # 모델 비교: several runs, merged by model
+            cmp = load_compare()
+            picks = [x for x in q.get("runs", "").split(",") if x.strip()]
+            if route == "compare":
+                return answer(lambda: cmp.public(cmp.compare(root, picks)))
+            try:
+                text = cmp.chart_csv(cmp.compare(root, picks), q.get("chart", "summary"))
+            except sv.BadRequest as err:
+                return JSONResponse({"error": str(err)}, 400)
+            return Response(text.encode("utf-8-sig"), media_type="text/csv; charset=utf-8", headers={
+                **NO_STORE, "Content-Disposition": f'attachment; filename="compare-{q.get("chart", "summary")}.csv"'})
         if route == "analysis":  # EXIT timing, calibration (BELIEF vs ideal), cooperation under pressure
             return answer(lambda: sv.run_analysis(sv.run_dir_of(root, q.get("run", "")), q.get("session") or None))
         if route == "giving":  # the "나눔 그래프": a run's (or a session's) giving decisions

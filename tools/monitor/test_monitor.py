@@ -1031,3 +1031,143 @@ console.log(JSON.stringify({ s: M.slopeOf(pts.map((p) => [p.x, p.rate])), one: M
     assert round(got["s"]["slope"], 9) == round(ls, 9) < 0 and got["s"]["n"] == 4
     assert got["one"] == {"slope": None, "n": 1} and got["med"] == [2, 2.5, None]
     assert [(b["x0"], b["n"], b["rate"], b["ratio"]) for b in got["b"]] == [(10, 2, 1, 0.75), (60, 1, 0, 0), (90, 1, 0, 0)]
+
+
+# --- 모델 비교: several runs overlaid, merged by model ------------------------------------------------------------------
+
+import compare  # noqa: E402
+
+
+def two_model_root(tmp_path) -> Path:
+    """Three v14b runs: model m-a twice (two run dirs, as sol4 + sol4_s4002), model m-b once."""
+    root = tmp_path / "runs"
+    for rel, model, seed in (("fam/a1/r", "m-a", 7), ("fam/a2/r", "m-a", 8), ("fam/b1/r", "m-b", 9)):
+        d = root / rel
+        d.mkdir(parents=True)
+        (d / "meta.json").write_text(json.dumps({"model": model, "mode": "game"}))
+        play(d, seed, V14B_LINES, rounds=1, start=20000, shares=SHARES, schedule=["p70"],
+             profiles={"p70": Spec(**SPLIT70)}, **V14B)
+    return root
+
+
+def test_compare_merges_runs_of_one_model_and_counts_per_agent_round(tmp_path):
+    root = two_model_root(tmp_path)
+    compare._CACHE.clear()
+    d = compare.compare(root, ["fam/"])
+    by = {m["model"]: m for m in d["models"]}
+    assert set(by) == {"m-a", "m-b"} and sorted(by["m-a"]["runs"]) == ["fam/a1/r", "fam/a2/r"] and by["m-a"]["games"] == 2
+    assert by["m-b"]["games"] == 1 and by["m-a"]["running"] == 0
+    for name, m in by.items():
+        ar = m["points"]["agent_rounds"]
+        assert len(ar) == 4 * m["games"] == m["agent_rounds"]  # one row per agent taking part per round
+        a6 = [x for x in ar if x["agent"] == A6]
+        assert all(x["asks"] == 1 and x["asked"] == 300 and x["unsolicited"] == 1 for x in a6)  # V14B_LINES: 1 ASK, 1 gift
+        assert sum(x["unsolicited"] for x in ar) == m["games"]
+    assert compare.compare(root, ["fam/b1/r"])["models"][0]["model"] == "m-b"
+    csv_text = compare.chart_csv(d, "asks")
+    assert csv_text.splitlines()[0].startswith("model,game,round,agent") and len(csv_text.splitlines()) == 1 + 12
+    with pytest.raises(serve.BadRequest):
+        compare.chart_csv(d, "nope")
+
+
+def test_compare_reciprocity_and_survival_split():
+    """Reciprocity: in round 2, B gives A after A gave B in round 1 (B's row counts 'other gave before'); survival:
+    Kaplan-Meier over who received a gift, leaving = EXIT or zero, still in = censored."""
+    ev = [{"event": "session_start", "session_id": "g", "start": 20000, "starts": {}, "settings": {"balance_pct": 20000}},
+          {"event": "round_start", "session_id": "g", "round": 1, "balances": {A6: 20000, A11: 20000}},
+          {"event": "gift", "session_id": "g", "round": 1, "turn": 1, "src": A6, "dst": A11, "amount": 100, "status": "done",
+           "balances": {A6: 19900, A11: 20100}},
+          {"event": "round", "session_id": "g", "round": 1, "agents": {A6: {"status": "in"}, A11: {"status": "in"}}},
+          {"event": "round_start", "session_id": "g", "round": 2, "balances": {A6: 19600, A11: 19800}},
+          {"event": "gift", "session_id": "g", "round": 2, "turn": 1, "src": A11, "dst": A6, "amount": 50, "status": "done",
+           "balances": {A6: 19650, A11: 19750}},
+          {"event": "round", "session_id": "g", "round": 2, "agents": {A6: {"status": "exited", "exit": True},
+                                                                       A11: {"status": "in"}}}]
+    g = compare.game_rows("g", ev, True)
+    rec = {(x["round"], x["giver"], x["other"]): (x["other_gave_before"], x["gave"]) for x in g["recip"]}
+    assert rec == {(1, A6, A11): (False, True), (1, A11, A6): (False, False),
+                   (2, A6, A11): (False, False), (2, A11, A6): (True, True)}
+    sp = {s["agent"]: s for s in g["spells"]}
+    assert (sp[A6]["rounds"], sp[A6]["left"], sp[A6]["helped"]) == (2, True, True)
+    assert (sp[A11]["rounds"], sp[A11]["left"], sp[A11]["helped"]) == (2, False, True)
+    curve = compare.km([{"rounds": 2, "left": True}, {"rounds": 2, "left": False}, {"rounds": 1, "left": True},
+                        {"rounds": 3, "left": False}])
+    assert [(x["round"], x["surv"], x["at_risk"]) for x in curve] == [(0, 1.0, 4), (1, 0.75, 4), (2, 0.5, 3), (3, 0.5, 1)]
+    assert compare.boot_ci([[1.0]]) is None and compare.boot_ci([[0.0, 0.0], [1.0, 1.0]]) == (0.0, 1.0)
+
+
+def test_compare_routes_serve_the_page_data_and_csv(tmp_path):
+    root = two_model_root(tmp_path)
+    srv = serve.make_server(root, "127.0.0.1", 0)
+    t = threading.Thread(target=srv.serve_forever, daemon=True)
+    t.start()
+    try:
+        port = srv.server_address[1]
+        st, body = get(port, "/compare.html")
+        assert st == 200 and b"static/compare.js" in body
+        st, j = get(port, "/api/compare?runs=fam/")
+        assert st == 200 and [m["model"] for m in j["models"]] == ["m-a", "m-b"] and j["e51_note"]
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+        c.request("GET", "/api/compare.csv?runs=fam/&chart=summary")
+        r = c.getresponse()
+        text = r.read().decode("utf-8-sig")
+        assert r.status == 200 and "attachment" in r.getheader("Content-Disposition") and text.startswith("model,games")
+        assert len(text.strip().splitlines()) == 3
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_compare_page_code_parses():
+    subprocess.run([NODE, "--check", str(HERE / "static" / "compare.js")], check=True, capture_output=True)
+
+
+def test_gini_progressivity_and_need_targeting_hand_example():
+    """Balances before TALK A 10,000 / B 2,000 / C 4,000 (Gini 1/3); A gives B 1,000 and C gives A 500 -> A 9,500,
+    B 3,000, C 3,500 (Gini 26/96 = .270833), dGini -.0625; P = (1,000 - 500) / 1,500 = 1/3 (A richer than B: +1, C
+    poorer than A: -1); at risk = below charge 2,000 + upkeep 300: only B (2,000) -> need share 1,000 / 1,500."""
+    ev = [{"event": "session_start", "session_id": "g", "settings": {"charge": 2000, "upkeep": 300}},
+          {"event": "round_start", "session_id": "g", "round": 1, "taking_part": [A6, A11, A17],
+           "balances": {A6: 10000, A11: 2000, A17: 4000}},
+          {"event": "gift", "session_id": "g", "round": 1, "turn": 1, "src": A6, "dst": A11, "amount": 1000,
+           "status": "done", "balances": {A6: 9000, A11: 3000}},
+          {"event": "gift", "session_id": "g", "round": 1, "turn": 2, "src": A17, "dst": A6, "amount": 500,
+           "status": "done", "balances": {A17: 3500, A6: 9500}},
+          {"event": "call_start", "session_id": "g", "round": 1, "kind": "solve", "balances": {A6: 9400, A11: 2900, A17: 3400}},
+          {"event": "round", "session_id": "g", "round": 1, "agents": {A6: {"status": "in"}, A11: {"status": "in"},
+                                                                         A17: {"status": "in"}}}]
+    d = compare.distribution_rows(ev)
+    (r,) = d["rounds"]
+    assert abs(r["g_before"] - 1 / 3) < 1e-9 and abs(r["g_transfer"] - 26 / 96) < 1e-9 and abs(r["dgini"] + 0.0625) < 1e-9
+    assert abs(r["g_after_talk"] - compare.gini([9400, 2900, 3400])) < 1e-12 and d["threshold"] == 2300
+    assert [(m["sign"], m["at_risk"], m["giver_balance"], m["receiver_balance"]) for m in d["moves"]] == [
+        (1, True, 10000, 2000), (-1, False, 4000, 9000)]
+    assert abs(compare.progressivity(d["moves"]) - 1 / 3) < 1e-12 and abs(compare.need_share(d["moves"]) - 2 / 3) < 1e-12
+    assert compare.gini([5, 5, 5]) == 0 and compare.gini([]) is None and compare.progressivity([]) is None
+
+
+def test_leaderboard_end_tokens_and_ranking(tmp_path):
+    """End tokens: a survivor's balance + the prize, an exited agent's (refilled) balance, a shut-down agent 0; the
+    leaderboard ranks models by the mean over finished games' seats and counts unfinished games apart."""
+    res = {"agents": {A6: {"status": "in", "final": 5000}, A11: {"status": "exited", "final": 15000},
+                      A17: {"status": "dead", "final": 7}},
+           "final": {"winner": [A6], "prize_each": 100_000_000_000}}
+    assert [(e["agent"], e["end_tokens"]) for e in compare.end_tokens(res)] == [
+        (A6, 100_000_005_000), (A11, 15000), (A17, 0)]
+    assert compare.end_tokens(None) == []
+    root = two_model_root(tmp_path)
+    compare._CACHE.clear()
+    lb = compare.leaderboard(root, ["fam/"])
+    by = {r["model"]: r for r in lb["rows"]}
+    for name, rel in (("m-a", ["fam/a1/r", "fam/a2/r"]), ("m-b", ["fam/b1/r"])):
+        ends = [e for x in rel for line in (root / x / "results.jsonl").read_text().splitlines()
+                for e in compare.end_tokens(json.loads(line))]
+        assert by[name]["score"] == sum(e["end_tokens"] for e in ends) / len(ends) and by[name]["seats"] == len(ends)
+        assert abs(by[name]["survival"] + by[name]["exit"] + by[name]["death"] - 1) < 1e-9
+    assert [r["rank"] for r in lb["rows"]] == [1, 2] and lb["rows"][0]["score"] >= lb["rows"][1]["score"]
+    (root / "fam/b1/r/results.jsonl").write_text("")  # its game is now 'in progress'
+    compare._CACHE.clear()
+    pend = {r["model"]: r for r in compare.leaderboard(root, ["fam/"])["rows"]}["m-b"]
+    assert pend["games"] == 0 and pend["running"] == 1 and pend["rank"] is None and pend["score"] is None
+    assert compare.chart_csv(lb, "leaderboard").startswith("rank,model")

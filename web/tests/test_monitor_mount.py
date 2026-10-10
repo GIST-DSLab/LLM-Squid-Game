@@ -23,12 +23,23 @@ def test_page_and_code(client):
     js = client.get("/monitor/static/monitor.js")
     assert js.status_code == 200 and 'getJSON("api/runs")' in js.text  # relative: works here and standalone
     assert client.get("/monitor/static/nope.js").status_code == 404
+    cmp = client.get("/monitor/compare.html")  # 모델 비교 page, its code, its (empty) data and CSV
+    assert cmp.status_code == 200 and "static/compare.js" in cmp.text
+    assert client.get("/monitor/static/compare.js").status_code == 200
+    assert client.get("/monitor/api/compare", params={"runs": "nope/"}).json()["models"] == []
+    csv = client.get("/monitor/api/compare.csv", params={"runs": "nope/", "chart": "summary"})
+    assert csv.status_code == 200 and csv.text.lstrip("\ufeff").startswith("model,games")
+    assert client.get("/monitor/api/compare.csv", params={"runs": "nope/", "chart": "x"}).status_code == 400
     sig = client.get("/monitor/static/signal_ui.js")  # the arena's task drawing, shared with the viewer (one file)
     assert sig.status_code == 200 and sig.text == client.get("/signal_ui.js").text and "byActionHTML" in sig.text
     assert client.get("/monitor/assets/nope.png").status_code == 404  # no sprites: the page falls back silently
     assert client.get("/api/health").status_code == 200  # the arena's own /api is untouched
-    for page in ("index.html", "probe.html", "arena.html", "signal.html"):
-        assert 'data-api-href="monitor/"' in client.get(f"/{page}").text, page
+    for page in ("index.html", "probe.html", "arena.html", "signal.html", "leaderboard.html"):
+        text = client.get(f"/{page}").text
+        assert 'data-api-href="monitor/"' in text and 'href="leaderboard.html"' in text, page
+    lb = client.get("/api/leaderboard", params={"runs": "nope/"})
+    assert lb.status_code == 200 and lb.json()["rows"] == [] and "자가 대국" in lb.json()["note"]
+    assert client.get("/api/leaderboard", params={"runs": "nope/", "csv": 1}).text.lstrip("\ufeff").startswith("rank,model")
 
 
 def test_api_reads_a_finished_room(client, runs_root):

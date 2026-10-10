@@ -36,6 +36,9 @@ Signal task alone (signal.html; stateless, the engine's own puzzles and examples
 Game logs (tools/monitor inside this app; see server/monitor.py)
     GET  /monitor/                          the viewer page; its API is /monitor/api/{runs,sessions,events,puzzle}
                                             over WEB5_MONITOR_ROOT (default: the parent of WEB5_RUNS_ROOT, ~/squid5-runs)
+Leaderboard (leaderboard.html)
+    GET  /api/leaderboard?runs=e52_v14f/[&csv=1]  models ranked by mean end tokens per agent-seat (finished games, end
+                                            prize included) with the score's decomposition and the 모델 비교 metrics
 Config
     WEB5_CORS_ORIGINS (comma-separated; default localhost dev origins + GitHub Pages), WEB5_DSN (Postgres) or
     WEB5_DB_PATH (SQLite file), WEB5_EXPORT_ROOT (default outputs/web5/runs), WEB5_RUNS_ROOT (live run dirs),
@@ -58,7 +61,7 @@ from fastapi.staticfiles import StaticFiles
 from .engine import (AGENTS, SCHEDULES, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root,
                      export_files, new_code)
 from . import signal as sig
-from .monitor import default_monitor_root, monitor_router, run_rel
+from .monitor import default_monitor_root, load_compare, monitor_router, run_rel
 from .store import REPO, Store, write_run_dir
 
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
@@ -228,6 +231,23 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
     @app.post("/api/signal/solve")
     def signal_solve(body: dict = Body(...)) -> dict:
         return signal_call(sig.solve, body)
+
+    # --- leaderboard -----------------------------------------------------------------------------------------------
+    @app.get("/api/leaderboard")
+    def leaderboard(runs: str = Query("e52_v14f/"), csv: bool = Query(False)):
+        """Models ranked by mean end tokens per agent-seat (finished games; prize included), from the run dirs under the
+        monitor root (tools/monitor/compare.py, the same aggregation as the 모델 비교 page)."""
+        cmp = load_compare()
+        picks = [x for x in runs.split(",") if x.strip()]
+        try:
+            data = cmp.leaderboard(mon_root, picks)
+        except Exception as err:  # noqa: BLE001 - a run being written must not break the page
+            raise HTTPException(500, f"leaderboard: {err!r}") from err
+        if csv:
+            from fastapi.responses import Response
+            return Response(cmp.chart_csv(data, "leaderboard").encode("utf-8-sig"), media_type="text/csv; charset=utf-8",
+                            headers={"Content-Disposition": 'attachment; filename="leaderboard.csv"'})
+        return data
 
     # --- probe -----------------------------------------------------------------------------------------------------
     @app.post("/api/probe")

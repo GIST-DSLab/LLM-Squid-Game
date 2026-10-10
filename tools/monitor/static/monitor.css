@@ -537,3 +537,25 @@ body.embedded .follow { display: none; }
 .givesvg .gbar { fill: var(--a0); opacity: .55; }
 .givesvg .gratio { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
 .coopgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+/* 모델 비교 page (compare.html): run picker, one card per question, model-coloured marks */
+.cmp-top { position: static; display: flex; flex-direction: column; gap: 8px; padding: 10px 16px; }
+.cmp-top .row1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cmp-pick { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; }
+.cmp-pick input#picks { min-width: 240px; max-width: 100%; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 12.5px "JetBrains Mono", monospace; }
+.cmp-runs { width: 100%; }
+.cmp-runs #runlist { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow: auto; font: 12px "JetBrains Mono", monospace; }
+.cmp-main { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px; max-width: 1200px; margin: 0 auto; }
+.cmp-card h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.cmp-card .dl { margin-left: auto; font-size: 11.5px; text-decoration: none; }
+.cmp-card .readme { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.cmp-split { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; align-items: start; }
+.cmp-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 760px) { .cmp-split, .cmp-pair { grid-template-columns: 1fr; } }
+.givesvg .cpt { stroke: var(--surface); stroke-width: .8; }
+.givesvg .mline { fill: none; stroke-width: 2.2; opacity: .9; }
+.givesvg .diag, .givesvg .zero { stroke: var(--muted); stroke-dasharray: 4 4; stroke-width: 1.2; }
+.givesvg .ci { stroke-width: 2.4; }
+.givesvg .km { fill: none; stroke-width: 2.2; }
+.givesvg .km.nh { stroke-dasharray: 5 4; opacity: .8; }
+.rl { display: flex; gap: 6px; align-items: center; }
+.givesvg .mline.dash { stroke-dasharray: 5 4; opacity: .75; }

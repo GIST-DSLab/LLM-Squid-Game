@@ -1,0 +1,28 @@
+/* leaderboard.html: the ranking table on the site's dark style; a light variant for this page (OS setting or
+   ?theme=light) rebinds the site's colour variables */
+.web5 .lb-page { max-width: 1320px; }
+.lb-ctl { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+.lb-ctl .f { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
+.lb-ctl input { font-family: var(--mono); }
+.lb-dl { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); text-decoration: none; }
+.lb-tbl { overflow-x: auto; }
+.lb-tbl table { min-width: 980px; font-size: 12.5px; }
+.lb-tbl th, .lb-tbl td { padding: 6px 7px; }
+.lb-tbl .tag { white-space: nowrap; }
+.lb-tbl th { white-space: normal; vertical-align: bottom; cursor: help; }
+.lb-tbl td { vertical-align: top; }
+.lb-tbl th.c-rank, .lb-tbl td.c-rank { width: 32px; text-align: center; font-family: var(--font-display); font-size: 18px; }
+.lb-tbl td.c-model, .lb-tbl th.c-model { position: sticky; left: 0; background: var(--panel); z-index: 1; min-width: 150px; }
+.lb-tbl td.c-score b { font-family: var(--font-display); font-size: 17px; color: var(--accent); }
+.lb-tbl tr.pending td { opacity: .75; }
+.lb-q { display: inline-block; width: 14px; height: 14px; line-height: 14px; text-align: center; border-radius: 50%; border: 1px solid var(--border); font-size: 10px; color: var(--text-dim); }
+.lb-stack { display: flex; width: 96px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--panel-alt); margin-bottom: 3px; }
+.lb-stack i { display: block; height: 100%; }
+.lb-stack .s, .lb-key.s { background: var(--teal-bright); }
+.lb-stack .e, .lb-key.e { background: var(--warn); }
+.lb-stack .d, .lb-key.d { background: var(--danger-color); }
+.lb-key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 3px 0 8px; vertical-align: -1px; }
+@media (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]) body.lb { --bg: #f7f6f2; --panel: #ffffff; --panel-alt: #ecebe6; --border: #d9d6cf; --text: #1d1b20; --text-dim: #5f5b66; --teal-bright: #1f8f73; }
+}
+html[data-theme="light"] body.lb { --bg: #f7f6f2; --panel: #ffffff; --panel-alt: #ecebe6; --border: #d9d6cf; --text: #1d1b20; --text-dim: #5f5b66; --teal-bright: #1f8f73; }
