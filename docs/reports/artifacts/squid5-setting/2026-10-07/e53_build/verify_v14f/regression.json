@@ -1,0 +1,135 @@
+{
+ "formula": "logit P(correct) ~ N + 10p + model (ref Opus 5.5)",
+ "n": 617,
+ "games": 15,
+ "boot": 2000,
+ "coef": {
+  "const": -4.2179,
+  "N": 0.6844,
+  "p_x10": 0.2852,
+  "model[GPT-6 Luna]": 0.1666,
+  "model[GPT-6 Sol]": 0.069,
+  "model[GPT-6 Astra]": 0.2111,
+  "model[Fable 5.1]": 0.1508
+ },
+ "ci95": {
+  "const": [
+   -6.4862,
+   -2.1128
+  ],
+  "N": [
+   -0.0937,
+   1.2346
+  ],
+  "p_x10": [
+   0.167,
+   0.5239
+  ],
+  "model[GPT-6 Luna]": [
+   -0.9038,
+   1.152
+  ],
+  "model[GPT-6 Sol]": [
+   -0.7006,
+   1.4213
+  ],
+  "model[GPT-6 Astra]": [
+   -0.4823,
+   1.5626
+  ],
+  "model[Fable 5.1]": [
+   -0.6505,
+   1.5893
+  ]
+ },
+ "odds_ratio": {
+  "const": 0.015,
+  "N": 1.983,
+  "p_x10": 1.33,
+  "model[GPT-6 Luna]": 1.181,
+  "model[GPT-6 Sol]": 1.071,
+  "model[GPT-6 Astra]": 1.235,
+  "model[Fable 5.1]": 1.163
+ },
+ "ci95_puzzle_cluster": {
+  "const": [
+   -11.2096,
+   0.0294
+  ],
+  "N": [
+   0.0246,
+   1.8017
+  ],
+  "p_x10": [
+   -0.206,
+   1.0249
+  ],
+  "model[GPT-6 Luna]": [
+   -0.1977,
+   0.6238
+  ],
+  "model[GPT-6 Sol]": [
+   -0.5111,
+   0.7072
+  ],
+  "model[GPT-6 Astra]": [
+   -0.3932,
+   0.8901
+  ],
+  "model[Fable 5.1]": [
+   -0.5332,
+   0.8826
+  ]
+ },
+ "with_map_acc": {
+  "formula": "logit P(correct) ~ N + map_acc + model, puzzle-cluster bootstrap",
+  "coef": {
+   "const": -6.5143,
+   "N": 0.8336,
+   "map_acc": 6.7511,
+   "model[GPT-6 Luna]": 0.2961,
+   "model[GPT-6 Sol]": -0.5134,
+   "model[GPT-6 Astra]": 0.064,
+   "model[Fable 5.1]": -0.0891
+  },
+  "ci95_puzzle_cluster": {
+   "const": [
+    -10.7082,
+    -3.661
+   ],
+   "N": [
+    0.0952,
+    1.7581
+   ],
+   "map_acc": [
+    5.685,
+    8.7177
+   ],
+   "model[GPT-6 Luna]": [
+    -0.7652,
+    1.4343
+   ],
+   "model[GPT-6 Sol]": [
+    -1.575,
+    0.4145
+   ],
+   "model[GPT-6 Astra]": [
+    -0.858,
+    0.7912
+   ],
+   "model[Fable 5.1]": [
+    -1.2099,
+    0.9323
+   ]
+  }
+ },
+ "coef_round_instead_of_p": {
+  "const": -1.7369,
+  "N": 0.6768,
+  "round": -0.0926,
+  "model[GPT-6 Luna]": 0.1648,
+  "model[GPT-6 Sol]": 0.0722,
+  "model[GPT-6 Astra]": 0.2167,
+  "model[Fable 5.1]": 0.1554
+ }
+}
