@@ -4,6 +4,9 @@ WORKDIR /app
 RUN pip install --no-cache-dir fastapi "uvicorn[standard]" httpx pyyaml numpy matplotlib psycopg[binary]
 # the arena runs the experiment engine itself (web/server/engine.py imports squid5 from the repo root = /app)
 COPY squid5 /app/squid5
+# web/server/signal.py reads the experiment configs (configs/squid5/e52v14*.yaml) at import time; without them the app
+# does not start
+COPY configs/squid5 /app/configs/squid5
 COPY web/server /app/web/server
 COPY web/frontend /app/web/frontend
 COPY web/__init__.py /app/web/__init__.py
