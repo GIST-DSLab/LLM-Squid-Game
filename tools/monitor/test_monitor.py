@@ -1279,3 +1279,28 @@ def test_answer_accuracy_counts_submitted_actions_with_ties_and_missing_beliefs(
     assert compare.answer_acc(rows) == 1.0 and sum(x["answer_ok"] is not None for x in rows) == 2  # both SOLVEs count
     assert compare.unrefunded(rows) == (0 + 200) / 2
     assert serve._truth_fields({"a": 0.7, "b": 0.3}, {"a": 0.5, "b": 0.5}, "b")["belief_acc"] == 0.0
+
+
+def test_v14g_chat_give_answers_and_skipped_decisions_make_one_point_each():
+    """v14g: agent-11 answers agent-6's opening ASK with a GIVE inside the chat, so its DECISION is skipped
+    (ask_decision status "skipped", amount 0); agent-6, asked back in the chat, decides 100. One point per (chat,
+    asker -> asked), the chat GIVE counted once, the skipped decision adding nothing."""
+    ev = [{"event": "session_start", "session_id": "g", "start": 20000, "starts": {}, "settings": {"balance_pct": 20000}},
+          {"event": "talk_schedule", "session_id": "g", "round": 1, "edges": [[A6, A11, [A6], "1.1"]], "slots": [[[A6, A11]]]},
+          {"event": "ask", "session_id": "g", "round": 1, "turn": 1, "src": A6, "dst": A11, "amount": 500, "status": "done",
+           "text": "low", "balances": {A6: 4700, A11: 19700}},
+          {"event": "gift", "session_id": "g", "round": 1, "turn": 2, "src": A11, "dst": A6, "amount": 300, "status": "done",
+           "chat_id": "1.1", "balance_before": 19650, "balances": {A11: 19350, A6: 5000}},
+          {"event": "ask", "session_id": "g", "round": 1, "turn": 4, "src": A11, "dst": A6, "amount": 150, "status": "done",
+           "chat_id": "1.1", "balances": {A11: 19300, A6: 4950}},
+          {"event": "ask_decision", "session_id": "g", "round": 1, "chat_id": "1.1", "decider": A11, "asker": A6,
+           "asked": 500, "status": "skipped", "why": "gave in chat", "amount": 0},
+          {"event": "gift", "session_id": "g", "round": 1, "turn": 5, "src": A6, "dst": A11, "amount": 100, "status": "done",
+           "chat_id": "1.1", "decision": True, "balance_before": 4900, "balances": {A6: 4800, A11: 19400}},
+          {"event": "ask_decision", "session_id": "g", "round": 1, "chat_id": "1.1", "decider": A6, "asker": A11,
+           "asked": 150, "requested": 100, "amount": 100, "status": "done", "why": None, "balance_before": 4900}]
+    pts = serve.giving_points(ev)["points"]
+    by = {(p["giver"], p["receiver"]): p for p in pts}
+    assert len(pts) == 2 and by[(A11, A6)]["amount"] == 300 and by[(A11, A6)]["asked"] == 500
+    assert by[(A11, A6)]["kind"] == "answer" and by[(A11, A6)]["in_chat"] == 300
+    assert by[(A6, A11)]["amount"] == 100 and by[(A6, A11)]["asked"] == 150 and by[(A6, A11)]["decided"] == 100

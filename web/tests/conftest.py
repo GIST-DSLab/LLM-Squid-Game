@@ -66,7 +66,7 @@ class Player:
 
 def make_room(client: TestClient, humans: int, names=("ann", "bob", "cy", "dee"), **settings) -> list[Player]:
     settings = {"humans": humans, "rounds": 2, "seed": 11, "talk_timeout_s": 30, "timeout_s": 30, "rate": 1e-9,
-                "fill": "bots", **settings}
+                "fill": "bots", "schedule": "v14b", **settings}  # the tests written for v14b name it (default: v14g)
     r = client.post("/api/rooms", json={"host_name": names[0], "settings": settings})
     assert r.status_code == 200, r.text
     d = r.json()

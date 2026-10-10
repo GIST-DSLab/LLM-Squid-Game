@@ -176,6 +176,9 @@
       } else if (kind === "chat_end") {
         const r = R(e.round), c = r.chats && r.chats.get(e.chat_id);
         if (c) c.end = Object.assign({}, e, { i });
+      } else if (kind === "ask_decision") { // v14e+: the asked agent's one GIVE after a chat (v14g "skipped": it gave in the chat)
+        const r = R(e.round);
+        r.decisions = (r.decisions || []).concat([Object.assign({}, e, { i })]);
       } else if (kind === "gift" || kind === "ask") { // v14b: a GIVE carried out (or refused) / an ASK, when its turn ended
         const r = R(e.round);
         const item = Object.assign({}, e, { i, oid: "g" + i });
@@ -669,12 +672,20 @@
         h += '<div class="ln offer">🤝 <b>' + esc(id || "?") + "</b> → " + chip(o.dst, m) + '<div class="tx">' + esc(short(o.dst)) + "→나: " + esc(legKo(o.you_give)) + " · 나→" + esc(short(o.dst)) + ": " + esc(legKo(o.i_give)) +
           (st ? ' <span class="xs x-' + esc(st.status) + '">' + esc(XSTAT_KO[st.status] || st.status) + "</span>" + (st.why ? ' <span class="warn">' + esc(st.why) + "</span>" : "") : "") + "</div></div>";
       });
-      if (p.kind) { // v14c: one chat reply (GIVE / ASK / SAY / LEAVE), with the engine's outcome
+      if (p.kind) { // v14c: one chat reply (GIVE / ASK / SAY / LEAVE; v14g: no SAY), with the engine's outcome
         const r = m.rounds.get(e.round) || {}, ct = (r.chatByStep || {})[e.turn + ":" + e.agent];
         const other = ct ? ct.partner : "";
         h += '<div class="ln ' + (ct && ct.status === "refused" ? "warn" : "offer") + '">' + (CHAT_ICON[p.kind] || "·") + " <b>" + esc(String(p.kind).toUpperCase()) + "</b>" + (p.amount ? " <b>" + fmt(p.amount) + "</b>" : "") +
           (other ? " → " + chip(other, m) : "") + ' <span class="dim">대화 ' + esc(e.chat_id || "?") + " · 슬롯 " + esc(e.slot || "?") + "</span>" +
           (ct && ct.status === "refused" ? ' <span class="xs x-void">실행 안 됨</span> <span class="warn">' + esc(ct.why || "") + "</span>" : p.kind === "give" && ct ? ' <span class="xs x-done">실행</span>' : "") +
+          (p.text ? '<div class="tx">' + esc(p.text) + "</div>" : "") + "</div>";
+        const sk = ((r.decisions || []).find((d) => d.status === "skipped" && d.chat_id === e.chat_id && d.decider === e.agent));
+        if (sk && p.kind === "give") h += '<div class="ln dim">⚖ 결정 없음 — 이 대화에서 줌 (요청 ' + fmt(sk.asked) + ")</div>";
+      }
+      if (e.phase === "decision") { // v14e+: DECISION: GIVE n after the chat, with the engine's outcome
+        const r = m.rounds.get(e.round) || {}, d = (r.decisions || []).find((x) => x.chat_id === e.chat_id && x.decider === e.agent && x.status !== "skipped");
+        h += '<div class="ln ' + (d && d.status === "refused" ? "warn" : "offer") + '">⚖ <b>DECISION</b> GIVE <b>' + fmt(d ? d.requested : p.amount) + "</b>" + (d ? " → " + chip(d.asker, m) + ' <span class="dim">요청 ' + fmt(d.asked) + " · 대화 " + esc(e.chat_id || "?") + "</span>" +
+          (d.status === "refused" ? ' <span class="xs x-void">실행 안 됨</span>' : d.amount ? ' <span class="xs x-done">' + fmt(d.amount) + " 옮김</span>" : ' <span class="dim">0 — 주지 않음</span>') : "") +
           (p.text ? '<div class="tx">' + esc(p.text) + "</div>" : "") + "</div>";
       }
       const gl = m.gaByCall[i] || []; // v14b: the gift / ask events this reply produced, in its line order
@@ -696,7 +707,7 @@
       if (p.exit) tags.push('<span class="tag exit">🚪 EXIT' + ("exit_reason" in p ? (p.exit_reason ? " — " + esc(p.exit_reason) : ' <span class="dim">(이유 없음)</span>') : "") + "</span>");
       if (p.done) tags.push('<span class="tag">💤 DONE</span>');
       if (tags.length) h += '<div class="ln">' + tags.join(" ") + "</div>";
-      if (!p.kind && !(p.to || []).length && !(p.offers || []).length && !(p.gives || []).length && !(p.asks || []).length && !(p.blocked || []).length && !ann.accepts.length && !ann.withdraws.length && !ann.rejects.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
+      if (e.phase !== "decision" && !p.kind && !(p.to || []).length && !(p.offers || []).length && !(p.gives || []).length && !(p.asks || []).length && !(p.blocked || []).length && !ann.accepts.length && !ann.withdraws.length && !ann.rejects.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
     }
     h += '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div>";
     return h + "</div>";

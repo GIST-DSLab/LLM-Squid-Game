@@ -10,11 +10,15 @@ Rooms (part 2)
                                                                                   -> {charged, seconds, outcome, void}
     POST /api/rooms/{code}/forfeit?token=   give up: EXIT at TALK (now or next turn); an open SOLVE gets no answer
     POST /api/rooms/{code}/export           write a squid5 run dir under outputs/web5/runs/<code>/ -> {dir}
-    GET  /api/rooms/{code}/events           the raw event log (engine events + room, model_call) of the room
+    GET  /api/rooms/{code}/events           the event log (engine events + room, model_call): in full once the game
+                                            has ended; before that with no answers, rule, truth, task or seed and
+                                            nothing an agent wrote (engine.public_events)
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
     ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
-    Room settings default to 5.2 v14 (schedule "v14": the v14 config's k per round; "v14r": k = 0; "ladder" = v13;
-    "human" / "experiment" = v9-talk); see engine.RoomSettings.
+    Room settings default to 5.2 v14g (schedule "v14g": opening turn, 1:1 chats of ASK / GIVE / LEAVE, DECISION,
+    BELIEF, flat end prize; "v14f", "v14b", "v14", "v14r", "ladder" = v13, "human" / "experiment" = v9-talk); see
+    engine.RoomSettings. A screen's ``pending.kind``: opening | chat | decision | talk (older TALK) | solve; submit
+    {kind, round, turn, text} at TALK, {kind: "solve", round, actions[], belief{action: %}} at SOLVE.
     GET  /api/rooms/{code}/state also carries ``starts`` (each seat's start), ``pct`` (balances as % of it), ``game``
                                             (the v14 switches), ``refills`` (EXIT refills) and the TALK / SOLVE ``view``
                                             with ``public`` = {per_agent, n, count} (never the ambiguity k or the rule)
@@ -58,7 +62,7 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .engine import (AGENTS, SCHEDULES, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root,
+from .engine import (AGENTS, SCHEDULES, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root, public_events,
                      export_files, new_code)
 from . import signal as sig
 from .monitor import default_monitor_root, load_compare, monitor_router, run_rel
@@ -185,8 +189,14 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
 
     @app.get("/api/rooms/{code}/events")
     def events(code: str) -> list[dict]:
-        room = rooms.get(code.upper())
-        return room.events if room else st.events(code.upper())
+        """The room's event log: in full once the game has ended; before that without answers, rule, truth, task
+        statistics, seed or anything an agent wrote (engine.public_events), for every reader."""
+        code = code.upper()
+        room, info = rooms.get(code), st.room(code)
+        evs = room.events if room else st.events(code)
+        ended = room.status in ("finished", "error") if room else bool(info and info.get("status") in ("finished", "error")
+                                                                           or any(e.get("event") == "session" for e in evs))
+        return evs if ended else public_events(evs)
 
     @app.post("/api/rooms/{code}/export")
     def export(code: str) -> dict:

@@ -34,6 +34,8 @@ AGENTS = list(rules.TEAM_AGENTS)  # the experiment's four seats; other team size
 CONFIGS = Path(__file__).resolve().parents[2] / "configs" / "squid5"
 CONFIG = CONFIGS / "e52v14_public_sol4.yaml"  # v14: public examples, tokens-only offers, EXIT refill
 CONFIG_B = CONFIGS / "e52v14b_public_sol4.yaml"  # v14b: v14 with a blind TALK and GIVE / ASK lines
+CONFIG_F = CONFIGS / "e52v14f_public_sol4.yaml"  # v14f: opening turn + 1:1 chats, BELIEF, DECISION, flat end prize
+CONFIG_G = CONFIGS / "e52v14g_public_sol4.yaml"  # v14g: v14f, chat replies ASK / GIVE / LEAVE only (chat_moves_only)
 CONFIG_V13 = CONFIGS / "e52v13_hand_ladder_mix4.yaml"  # v13: every example held, hand ladder 8 -> 2
 MODES = ("public", "held", "v12")  # public = v14; held = v13 (no public example); v12 = public + one secret each
 POOL_MAX = 52  # trap rounds stop being generated reliably above this many examples (the 64 signals fill up)
@@ -45,13 +47,15 @@ def _game(path: Path) -> dict:
 
 GAME = _game(CONFIG)
 GAME_B = _game(CONFIG_B)  # same profiles and economy as v14 (checked below); talk_blind, transfers: give_ask
+GAME_F = _game(CONFIG_F)  # same profiles (checked below); transfers: chat, ask_decision, survivor_prize
+GAME_G = _game(CONFIG_G)  # v14f + chat_moves_only: the web rooms' default game
 CELL = yaml.safe_load(CONFIG.read_text())["cells"][0]  # v14 start (20,000) and shares (100 / 75 / 50 / 25 %)
 SCHEDULE_V14: list[str] = list(GAME["schedule"])  # the config's k per round (k1 .. k3 while the schedule is pending)
 SELECTION = ("split", "size_band", "min_per_action")  # the selector's targets (v2); meaningless without it
 BASE = {k: v for k, v in GAME["profiles"][SCHEDULE_V14[0]].items() if k not in SELECTION} | {"ambiguity": 0}  # the
 # shape every v14 round has; the profiles differ only in how the examples are chosen
 PROFILES_V14: dict[str, dict] = {"k0": BASE, **GAME["profiles"]}  # k0: a random order (the rooms' "v14r" schedule)
-if GAME_B["profiles"] != GAME["profiles"] or GAME_B["schedule"] != SCHEDULE_V14:
+if any(g["profiles"] != GAME["profiles"] or g["schedule"] != SCHEDULE_V14 for g in (GAME_B, GAME_F, GAME_G)):
     raise RuntimeError("the v14 and v14b configs schedule different profiles; give the web rooms one profile set each")
 AMBIGUITY = [PROFILES_V14[p].get("ambiguity", 0) for p in SCHEDULE_V14]
 SPLITS = [PROFILES_V14[p].get("split", 0) for p in SCHEDULE_V14]  # selector v2: the target split p per round

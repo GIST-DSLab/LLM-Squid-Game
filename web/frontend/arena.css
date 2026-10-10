@@ -701,3 +701,33 @@ details.legend { margin-top: 12px; }
 .ga-row .f { display: flex; flex-direction: column; gap: 4px; }
 .ga-row input, .ga-row select { width: 100%; }
 @media (max-width: 640px) { .ga-row { grid-template-columns: 1fr 1fr; } .ga-row .ga-say { grid-column: 1 / -1; } }
+
+/* #12 ---- v14c+ TALK: opening turn, 1:1 chat, DECISION, the chat schedule, BELIEF at SOLVE -------------------------- */
+.ok-text { color: var(--ok); }
+.chat-box { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+.chat-head { font-weight: 600; margin-bottom: 6px; }
+.chat-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.chat-line { display: flex; flex-direction: column; max-width: 86%; }
+.chat-line.mine { align-self: flex-end; align-items: flex-end; }
+.chat-line .chat-who { font-size: 12px; color: var(--text-dim); margin-bottom: 2px; }
+.chat-bubble { padding: 7px 10px; border-radius: 12px; border: 1px solid var(--border); background: #18171e; overflow-wrap: anywhere; }
+.chat-line.mine .chat-bubble { background: color-mix(in srgb, var(--accent) 14%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.chat-line.opening .chat-bubble { border-style: dashed; }
+.chat-past { margin: 8px 0; padding-top: 6px; border-top: 1px dashed var(--border); }
+.move-pick { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 8px; }
+.move-opt { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 13.5px; }
+.move-opt:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.exit-box .chk { display: flex; align-items: center; gap: 6px; font-size: 13.5px; }
+.sched { margin: 10px 0; }
+.sched-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 6px 0; }
+.sched-slot { padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; }
+.sched-slot.live { border-color: var(--accent); }
+.sched-h { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.sched-chat { padding: 4px 0; overflow-wrap: anywhere; }
+.sched-chat.mine b { color: var(--accent); }
+.dec-list { margin: 4px 0 0; padding-left: 18px; }
+.belief { margin: 10px 0; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 10px; }
+.belief-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 6px 0; }
+.belief-f { display: flex; flex-direction: column; gap: 3px; }
+.belief-f input { width: 100%; }
+@media (max-width: 560px) { .belief-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .chat-line { max-width: 100%; } }

@@ -174,7 +174,7 @@ def test_missing_key_is_a_clear_error(client, monkeypatch):
     monkeypatch.delenv(KEY, raising=False)
     m = client.get("/api/models").json()
     assert m["available"] is False and m["api_key_env"] == KEY and m["model"] == "gpt-oss:20b"
-    assert m["schedules"] == ["v14b", "v14", "v14r", "ladder", "human", "experiment"] and m["defaults"]["talk_turns"] == 4
+    assert m["schedules"] == ["v14g", "v14f", "v14b", "v14", "v14r", "ladder", "human", "experiment"] and m["defaults"]["talk_turns"] == 4
     r = client.post("/api/rooms", json={"host_name": "ann", "settings": {"humans": 1, "fill": "models"}})
     assert r.status_code == 400 and KEY in r.json()["detail"] and "not set" in r.json()["detail"]
     monkeypatch.setenv(KEY, "x")
