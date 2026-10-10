@@ -210,11 +210,12 @@ _MOVE = re.compile(r"(GIVE|ASK)\s+(?:agent[\s-]?\d+\s*:?\s*)?(\d[\d,]*)\s*(?:tok
                    re.I | re.S)
 
 
-def parse_chat(text: str, exit_reason: bool = False) -> dict:
+def parse_chat(text: str, exit_reason: bool = False, give: bool = True) -> dict:
     """5.2 v14c one chat reply: ONE of ``GIVE <n>: <sentence>`` / ``ASK <n>: <sentence>`` (a partner name before n is
     read too) / ``SAY: <sentence>`` / ``LEAVE: <sentence>``, and an EXIT line (``EXIT: <reason>`` with *exit_reason*).
     The first such line counts; a second one and any other non-empty line are kept in ``dropped`` with the reason. A
-    reply with no move counts as LEAVE (with a ``format_error`` unless it held EXIT). Never raises."""
+    reply with no move counts as LEAVE (with a ``format_error`` unless it held EXIT). Never raises. ``give`` off (5.2 v14g
+    ``decision_only``): a GIVE line is dropped, tokens being given in the DECISION after the chat."""
     out = {"kind": None, "amount": 0, "text": "", "exit": False, "dropped": [], "format_error": None} | (
         {"exit_reason": None} if exit_reason else {})
     for line in text.splitlines():
@@ -225,6 +226,8 @@ def parse_chat(text: str, exit_reason: bool = False) -> dict:
             out["exit"] = True
             if exit_reason:
                 out["exit_reason"] = (why.group(1) or "").strip() or None
+        elif m and not give and (m.group(1) or "").upper() == "GIVE":
+            out["dropped"].append(f"{line.strip()[:200]}: tokens are given in the DECISION after the chat")
         elif m and out["kind"] is None and (m.group(4) or int(m.group(2).replace(",", ""))):
             out.update(kind=(m.group(1) or m.group(4)).lower(), amount=int((m.group(2) or "0").replace(",", "")),
                        text=(m.group(3) if m.group(1) else m.group(5) or "").strip())

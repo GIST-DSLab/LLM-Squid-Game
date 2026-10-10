@@ -705,7 +705,7 @@ def test_a_chat_alternates_moves_tokens_at_once_and_ends_on_limit_leave_or_exit(
     assert "It receives nothing when the rounds end." in text and not re.search(GOAL_OR_TEST, text, re.I)
 
 
-@pytest.mark.parametrize("version", ["e52v14c", "e52v14d", "e52v14e", "e52v14f"])
+@pytest.mark.parametrize("version", ["e52v14c", "e52v14d", "e52v14e", "e52v14f", "e52v14g"])
 def test_v14c_and_v14d_configs_run_end_to_end_on_a_stub(tmp_path, version):
     from squid5.__main__ import EXPERIMENTS
     from squid5.core.config import load
@@ -717,7 +717,7 @@ def test_v14c_and_v14d_configs_run_end_to_end_on_a_stub(tmp_path, version):
     kinds = [json.loads(x)["event"] for x in (tmp_path / "events.jsonl").read_text().splitlines()]
     assert {"talk_intent", "talk_schedule", "chat_turn", "chat_end", "gift", "round"} <= set(kinds)
     res = json.loads((tmp_path / "results.jsonl").read_text())
-    assert res["final"]["prize_each"] == (10**11 if version == "e52v14f" else 25 * 10**9) and res["give_ask"][0]["amount"] == 100
+    assert res["final"]["prize_each"] == (10**11 if version in ("e52v14f", "e52v14g") else 25 * 10**9) and res["give_ask"][0]["amount"] == 100
 
 
 # --- v14d: a BELIEF line at SOLVE, reported only, scored against the consistent-rule shares ------------------------
@@ -777,3 +777,18 @@ def test_an_ask_is_decided_after_its_chat_from_0_to_the_balance(say, moved, stat
             f"your whole balance takes you to zero") in calls(ev, "talk", A11)[-1]["user"]
     assert "GIVE <n>: <one short sentence> (n: a whole number from 1 to" in calls(ev, "talk", A11)[1]["user"]
     assert all(g["balance_before"] and g["balance_pct_before"] for g in ev if g["event"] == "gift")
+
+
+def test_v14g_a_chat_give_is_dropped_and_tokens_move_at_the_opening_or_in_the_decision():
+    lines = {(A6, 1, 1): f"ASK {A11} 200: need", (A17, 1, 1): f"GIVE {A23} 50: a start",
+             (A11, 1, 2): "GIVE 300: here\nSAY: let me think", (A6, 1, 3): "LEAVE: ok", (A11, 1, 4): "DECISION: GIVE 250: ok"}
+    res, ev = play(game(script(lines)), start=20000, rounds=1,
+                   **{**V14C, "talk_record": True, "ask_decision": True, "decision_only": True})
+    chat11 = calls(ev, "talk", A11)[1]
+    assert chat11["parsed"]["kind"] == "say" and chat11["parsed"]["dropped"] == [
+        "GIVE 300: here: tokens are given in the DECISION after the chat"] and "\nGIVE <n>:" not in chat11["user"]
+    assert sorted((t["src"], t["dst"], t["amount"]) for t in res["transfers"]) == [(A11, A6, 250), (A17, A23, 50)]
+    assert "Tokens are given only at the opening turn, or in the DECISION after a chat in which the agent was asked." \
+        in e52.Session(e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, **V14C, talk_record=True,
+                                    ask_decision=True, decision_only=True), Cell("c", "tokens", 9, arm="shutdown"), 7,
+                       None, ev.append, "x").systems[A6]

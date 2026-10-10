@@ -71,7 +71,7 @@ def team_system(me: str, *, upkeep: int, prize: int, charge: int, turns: int, ta
                 end_pool: int = 0, survivor_prize: int = 0, all_held: bool = False, copies: bool = False, distinct: bool = False,
                 public_per_agent: int = 0, chosen: bool = False, exit_refill: bool = False, start: int = 0,
                 talk_blind: bool = False, transfers: str = "offers", chat_turns: int = 3, solve_belief: bool = False,
-                talk_record: bool = False, ask_decision: bool = False) -> str:
+                talk_record: bool = False, ask_decision: bool = False, decision_only: bool = False) -> str:
     """5.2 (v9-talk on): length and the other models untold, zero is shutdown, 1:1 messages, accepted offers only, a
     solved round's tokens back, EXIT keeps the balance. Every switch is the ``e52_game.Settings`` field of that name (see
     its module docstring); ``open_rounds`` / ``copies`` / ``distinct`` / ``chosen`` (``ambiguity``) follow the round
@@ -184,7 +184,8 @@ def team_system(me: str, *, upkeep: int, prize: int, charge: int, turns: int, ta
         if transfers == "chat":
             text = re.sub(r"1\. TALK: .*?\n(?=2\. )", lambda _: CHAT_STEP.format(cap=talk_cap), text, flags=re.S)
     for old, new in (ALL_HELD * all_held + DISTINCT * distinct + GIVE_ASK_EDITS * (transfers in ("give_ask", "chat"))
-                     + BLIND * talk_blind + RECORD * talk_record + DECIDE * ask_decision):
+                     + BLIND * talk_blind + RECORD * talk_record + DECIDE * ask_decision
+                     + DECISION_ONLY * decision_only):
         text = text.replace(old, new)
     return text
 
@@ -221,6 +222,10 @@ DECIDE = (("An ASK or SAY moves nothing.", "A GIVE is at most the giver's balanc
            "it gives: a whole number from 0 up to its balance at that moment; it need not be the amount asked, and a "
            "larger amount is not carried out."), ("TALK ends when the last chat ends.", "TALK ends after the last chat "
                                                   "and the decisions that follow it."))
+DECISION_ONLY = (("A reply is one of: GIVE <n>: <sentence>, ASK <n>: <sentence>, SAY: <sentence>, or LEAVE",
+                  "In a chat an agent can ask, talk or leave: a reply is one of ASK <n>: <sentence>, SAY: <sentence>, or "
+                  "LEAVE"), ("LEAVE. A GIVE moves the tokens", "LEAVE. Tokens are given only at the opening turn, or in the "
+                  "DECISION after a chat in which the agent was asked. A GIVE moves the tokens"))  # v14g (#9)
 BELIEF = (" With its answer an agent writes a BELIEF line: one percentage per action, how likely each action is the "
           "right one for the new signal; they sum to 100. The ACTIONS line alone decides whether the round is solved.")
 CHAT_STEP = ("1. TALK: first the opening turn, in which every agent taking part is called at the same time; then the "
