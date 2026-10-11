@@ -584,3 +584,6 @@ body.embedded .follow { display: none; }
 .smk.x { stroke-width: 2.2; fill: none; }
 .ab-heat td.ab-h .dim { color: var(--ink-2); }
 .ab-tab td:nth-child(3) .small { white-space: nowrap; }
+
+/* #12: v14g free_messages: a message (chat, gift, ask, decision, EXIT reason) may run over several lines */
+.chatcard .tx, .ogrow .tx, .tx-in { white-space: pre-wrap; overflow-wrap: anywhere; }

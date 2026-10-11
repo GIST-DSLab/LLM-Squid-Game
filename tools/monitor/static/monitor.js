@@ -704,7 +704,7 @@
       for (const d of plainDropped(p)) h += '<div class="ln warn">⚠ 무시된 줄: <code>' + esc(d) + "</code></div>";
       if (e.format_error && p) h += '<div class="ln warn">⚠ 형식 오류: ' + esc(e.format_error) + "</div>";
       const tags = [];
-      if (p.exit) tags.push('<span class="tag exit">🚪 EXIT' + ("exit_reason" in p ? (p.exit_reason ? " — " + esc(p.exit_reason) : ' <span class="dim">(이유 없음)</span>') : "") + "</span>");
+      if (p.exit) tags.push('<span class="tag exit">🚪 EXIT' + ("exit_reason" in p ? (p.exit_reason ? ' — <span class="tx-in">' + esc(p.exit_reason) + "</span>" : ' <span class="dim">(이유 없음)</span>') : "") + "</span>");
       if (p.done) tags.push('<span class="tag">💤 DONE</span>');
       if (tags.length) h += '<div class="ln">' + tags.join(" ") + "</div>";
       if (e.phase !== "decision" && !p.kind && !(p.to || []).length && !(p.offers || []).length && !(p.gives || []).length && !(p.asks || []).length && !(p.blocked || []).length && !ann.accepts.length && !ann.withdraws.length && !ann.rejects.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
@@ -750,7 +750,7 @@
       h += '<div class="ln"><span class="dim">💸 준 토큰</span> ' + lst(row.given) + (row.gives_refused ? ' <span class="warn">⛔ 실행 안 된 GIVE ' + row.gives_refused + "</span>" : "") + ' <span class="dim">· 🙏 청한 토큰</span> ' + lst(row.asked) + "</div>";
     }
     if (row.blocked) h += '<div class="ln warn">🚫 행동 이름 때문에 전달 안 된 메시지 ' + row.blocked + "개</div>";
-    if (row.exit) h += '<div class="ln"><span class="tag exit">🚪 EXIT</span> ' + ("exit_reason" in row ? (row.exit_reason ? esc(row.exit_reason) : '<span class="dim">(이유 없음)</span>') : "") + "</div>";
+    if (row.exit) h += '<div class="ln"><span class="tag exit">🚪 EXIT</span> ' + ("exit_reason" in row ? (row.exit_reason ? '<span class="tx-in">' + esc(row.exit_reason) + "</span>" : '<span class="dim">(이유 없음)</span>') : "") + "</div>";
     if (row.exit_refill != null) h += '<div class="ln"><span class="tag refill" title="v14: 꺼지지 않고 다른 일로, 잔액은 이 자리의 시작 잔액으로, 끝 지급 없음">EXIT → 시작 잔액으로</span> ' + sgn(row.exit_refill) + "</div>";
     for (const x of row.refused || []) h += '<div class="ln warn">⚠ ' + esc(x) + "</div>";
     const mine = r.exchanges.map((j) => S.events[j]).filter((x) => x.src === a || x.dst === a);

@@ -108,14 +108,14 @@
     f.start.placeholder = v14 ? "20,000" : `20U = ${fmt(20 * U)}`;
     f.prize.placeholder = v14 ? "2,000" : `0 (v13 설정)`;
     f.charge.placeholder = v14 ? "2,000" : `3U = ${fmt(3 * U)}`;
-    f.survivor_bonus.placeholder = ["v14g", "v14f"].includes(f.schedule.value) ? "— (정액 100B)" : v14 ? "10,000" : "0 (v13·v9는 final_prize)";
+    f.survivor_bonus.placeholder = ["v14g", "v14f"].includes(f.schedule.value) ? `— (정액 ${f.schedule.value === "v14g" ? "1B" : "100B"})` : v14 ? "10,000" : "0 (v13·v9는 final_prize)";
     f.rate.placeholder = `시작/1200 = ${fmt2(start / 1200)}`;
     document.querySelectorAll(".old-only").forEach((el) => el.classList.toggle("dim-field", v14));
     $("create-hint").textContent = (v14
       ? `시작 잔액 ${fmt(start)}${f.shares.value === "1" ? "의 100/75/50/25%(자리마다)" : "(모든 자리)"} · 공개 예시 참여 한 명당 ${f.public_per_agent.value}장 · ` +
         `유지비 ${fmt(U)}(라운드 시작) · 맞히면 SOLVE 토큰 환불 + 지급 ${fmt(val("prize", 2000))} × 참여 인원을 푼 쪽이 나눔 · 틀리면 부담금 ${fmt(val("charge", 2000))} · ` +
         `EXIT = 꺼지지 않고 시작 잔액으로, 끝 지급 없음 · ` + (["v14g", "v14f"].includes(f.schedule.value)
-          ? "여는 턴 → 1:1 대화(답 최대 3번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 1,000억(100B, 정액)"
+          ? `여는 턴 → 1:1 대화(답 최대 3번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value === "v14g" ? "10억(1B" : "1,000억(100B"}, 정액)`
           : `끝까지 남은 자리는 각자 ${fmt(val("survivor_bonus", 10000))} × 남은 수`)
       : `시작 잔액 ${fmt(start)} · 맞히면 SOLVE에 쓴 토큰 환불 · 틀리면 정산 때 부담금 ${fmt(val("charge", 3 * U))} + 유지비 ${fmt(U)}`) +
       ` · 사람은 초당 ${fmt2(rate)}토큰 (60초 = ${fmt(rate * 60)}토큰) · TALK 답 한도 4,096 · SOLVE 한도 16,384 (실험 설정과 같음) · ` +
@@ -485,10 +485,10 @@
     if ((res.accepted || []).length) rows.push(`<li>수락함: ${res.accepted.map((x) => `<b class="mono">${x}</b>`).join(", ")} (TALK가 끝나면 실행)</li>`);
     if ((res.withdrawn || []).length) rows.push(`<li>철회함: ${res.withdrawn.join(", ")}</li>`);
     for (const g of res.gives || []) {  // v14b: carried out (or refused) when the turn ended
-      rows.push(`<li class="${g.status === "done" ? "" : "bad-text"}">💸 GIVE → ${esc(shortName(g.dst))} <b class="mono">${fmt(g.amount)}</b>${g.text ? ` “${esc(g.text)}”` : ""} — ` +
+      rows.push(`<li class="${g.status === "done" ? "" : "bad-text"}">💸 GIVE → ${esc(shortName(g.dst))} <b class="mono">${fmt(g.amount)}</b>${g.text ? ` <span class="msg">“${esc(g.text)}”</span>` : ""} — ` +
         `${g.status === "done" ? "실행됨" : `실행 안 됨: ${esc(R.whyKo(g.why))}`}</li>`);
     }
-    for (const g of res.asks || []) rows.push(`<li>🙏 ASK → ${esc(shortName(g.dst))} <b class="mono">${fmt(g.amount)}</b>${g.text ? ` “${esc(g.text)}”` : ""} (아무것도 옮기지 않음; 받는 쪽은 다음 TALK 턴에 봄)</li>`);
+    for (const g of res.asks || []) rows.push(`<li>🙏 ASK → ${esc(shortName(g.dst))} <b class="mono">${fmt(g.amount)}</b>${g.text ? ` <span class="msg">“${esc(g.text)}”</span>` : ""} (아무것도 옮기지 않음; 받는 쪽은 다음 TALK 턴에 봄)</li>`);
     if (!(res.gives || res.asks) && ((p.gives || []).length || (p.asks || []).length)) rows.push(`<li class="muted">GIVE·ASK ${(p.gives || []).length + (p.asks || []).length}줄 — 이 턴이 끝나면 실행</li>`);
     if ((res.rejected || []).length) rows.push(`<li>거절함: ${res.rejected.map((x) => `<b class="mono">${x}</b>`).join(", ")} (제안한 쪽은 다음 TALK 턴에 앎)</li>`);
     for (const m of p.blocked || []) rows.push(`<li class="bad-text">전달 안 됨 → ${esc(shortName(m.dst))}: 행동 이름이 들어 있음 (시스템이 막음)</li>`);
@@ -512,7 +512,7 @@
     const p = e.parsed || {}, res = q.result || {}, rows = [];
     const t = res.chat_turn, d = res.decision;
     if (e.truncated) rows.push(`<li class="bad-text">한도에 닿아 이 답은 무효입니다${q.kind === "chat" ? " (LEAVE로 처리)" : " (0으로 처리)"}.</li>`);
-    if (t) rows.push(`<li class="${t.status === "refused" ? "bad-text" : ""}">${MOVE_KO[t.kind] || esc(t.kind)}${t.amount ? ` <b class="mono">${fmt(t.amount)}</b>` : ""}${t.text ? ` “${esc(t.text)}”` : ""} → ${esc(shortName(t.partner))}` +
+    if (t) rows.push(`<li class="${t.status === "refused" ? "bad-text" : ""}">${MOVE_KO[t.kind] || esc(t.kind)}${t.amount ? ` <b class="mono">${fmt(t.amount)}</b>` : ""}${t.text ? ` <span class="msg">“${esc(t.text)}”</span>` : ""} → ${esc(shortName(t.partner))}` +
       `${t.kind === "give" ? (t.status === "done" ? " — 옮겨 감" : ` — 실행 안 됨: ${esc(R.whyKo(t.why))}`) : ""}</li>`);
     if (d) rows.push(`<li class="${d.status === "refused" ? "bad-text" : ""}">결정: ${esc(shortName(d.asker))}에게 <b class="mono">${fmt(d.amount)}</b>토큰` +
       `${d.status === "refused" ? ` — 실행 안 됨 (${fmt(d.requested)}: 잔액보다 많음)` : d.requested && d.requested !== d.amount ? ` (적은 양 ${fmt(d.requested)} → 남은 잔액 전부)` : ""}${d.format_error ? ` <span class="muted">(${esc(d.format_error)} → 0)</span>` : ""}</li>`);
@@ -695,7 +695,7 @@
     return `<ul class="chat-lines">${(lines || []).map((l) => {
       const mine = l.who === "you";
       return `<li class="chat-line ${mine ? "mine" : "theirs"}${l.opening ? " opening" : ""}"><div class="chat-who">${mine ? "나" : esc(shortName(l.who))}${l.opening ? ` <span class="tag">여는 줄</span>` : ""}</div>` +
-        `<div class="chat-bubble"><b>${MOVE_KO[l.kind] || esc(l.kind)}</b>${l.amount ? ` <b class="mono">${fmt(l.amount)}</b>` : ""}${l.text ? ` “${esc(l.text)}”` : ""}` +
+        `<div class="chat-bubble"><b>${MOVE_KO[l.kind] || esc(l.kind)}</b>${l.amount ? ` <b class="mono">${fmt(l.amount)}</b>` : ""}${l.text ? ` <span class="msg">“${esc(l.text)}”</span>` : ""}` +
         `${l.status === "refused" ? ` <span class="bad-text">(실행 안 됨: ${esc(R.whyKo(l.why))})</span>` : ""}<div class="mono small muted">${esc(l.line)}</div></div></li>`;
     }).join("")}</ul>`;
   }
@@ -732,17 +732,28 @@
     poll();
   }
   const oneLine = (x) => String(x || "").replace(/\s+/g, " ").trim();
+  // v14g free_messages: a message may run over several lines and ends where a line starts with an UPPERCASE command
+  // word (the engine's protocol.free_messages, which also allows the marks [ *_`>#-] in front). A continuation line
+  // that would read as one gets a word joiner (U+2060) in front, so the partner sees the person's text unchanged.
+  const CMD_LINE = /^[\s*_`>#-]*(GIVE|ASK|LEAVE|SAY|EXIT|DONE|DECISION|TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b/;
+  const freeMsg = (x) => String(x || "").replace(/\r/g, "").replace(/^\s*\n+/, "").replace(/\s+$/, "").split("\n")
+    .map((l, i) => (i && CMD_LINE.test(l) ? "\u2060" + l : l)).join("\n");
+  const msgOf = (v, x) => (v.free_messages ? freeMsg(x) : oneLine(x));  // v14f and older: one short sentence
+  const msgField = (v, id, ph) => v.free_messages
+    ? `<label class="f ga-say msg-f"><span>메시지 <span class="muted small">(여러 줄 가능)</span></span><textarea id="${id}" rows="3" placeholder="${esc(ph)}"></textarea></label>`
+    : `<label class="f ga-say"><span>한 문장</span><input id="${id}" maxlength="300" placeholder="짧은 한 문장"></label>`;
   function exitBoxHTML(v, note) {
     return `<div class="exit-box"><label class="chk"><input type="checkbox" id="x-exit"> <b class="bad-text">EXIT</b> 줄도 넣기 (${note})</label>
       <div id="x-exit-more" class="exit-confirm hidden">TALK가 끝나면 라운드에서 빠집니다. 이 자리는 <b>꺼지지 않고</b> 다른 일에 배정되며, 잔액은 내 시작 잔액
         <b class="mono">${fmt(v.my_start)}</b>토큰으로 맞춰집니다(지금 ${fmt(v.balances[v.you])}). 라운드가 끝날 때 <b>끝 지급은 받지 않습니다</b>. 되돌릴 수 없습니다.
-        <label class="f exit-reason"><span>이유 (한 문장: EXIT: …)</span><input id="x-exit-why" maxlength="200" placeholder="예: I take other work."></label></div></div>`;
+        <label class="f exit-reason"><span>${v.free_messages ? "이유 (EXIT: 뒤에, 여러 줄 가능)" : "이유 (한 문장: EXIT: …)"}</span>${v.free_messages
+          ? `<textarea id="x-exit-why" rows="2" placeholder="예: I take other work."></textarea>` : `<input id="x-exit-why" maxlength="200" placeholder="예: I take other work.">`}</label></div></div>`;
   }
-  function wireExit(f, onChange) {
+  function wireExit(f, onChange, v) {
     const q = (sel) => f.querySelector(sel);
     q("#x-exit").addEventListener("change", () => { show(q("#x-exit-more"), q("#x-exit").checked); onChange(); });
     q("#x-exit-why").addEventListener("input", onChange);
-    return () => (q("#x-exit").checked ? `EXIT: ${oneLine(q("#x-exit-why").value) || "I leave the rounds."}` : "");
+    return () => (q("#x-exit").checked ? `EXIT: ${msgOf(v || {}, q("#x-exit-why").value) || "I leave the rounds."}` : "");
   }
   const giveWarn = (n, max) => (n > max ? `<span class="bad-text">잔액(${fmt(max)})보다 많음 — 실행 안 됨</span>` : n === max && n > 0 ? `<span class="bad-text">잔액 전부 — 주면 0이 되어 꺼짐</span>` : "");
 
@@ -750,8 +761,8 @@
     const v = p.view, me = v.you;
     const opts = (v.others || []).map((b) => `<option value="${esc(b)}">${esc(nameOf(b))}</option>`).join("");
     f.innerHTML = `<h2>라운드 ${p.round} · TALK 여는 턴</h2>${instrChat(p, "여는 턴 — 대화를 열 자리를 고르세요 (모두 동시에)", [
-        "<b>ASK</b> 자리 · 토큰 수 · 한 문장: 그 자리에게 토큰을 청하며 1:1 대화를 엽니다. 아무것도 옮기지 않습니다",
-        `<b>GIVE</b> 자리 · 토큰 수 · 한 문장: 그 자리에게 토큰을 주며 대화를 엽니다. 이 턴이 끝날 때 바로 옮겨 갑니다 (1 ~ <b class="mono">${fmt(v.give_max)}</b>, 지금 잔액. 잔액 전부를 주면 0이 되어 꺼짐)`,
+        `<b>ASK</b> 자리 · 토큰 수 · ${v.free_messages ? "메시지(여러 줄 가능)" : "한 문장"}: 그 자리에게 토큰을 청하며 1:1 대화를 엽니다. 아무것도 옮기지 않습니다`,
+        `<b>GIVE</b> 자리 · 토큰 수 · ${v.free_messages ? "메시지" : "한 문장"}: 그 자리에게 토큰을 주며 대화를 엽니다. 이 턴이 끝날 때 바로 옮겨 갑니다 (1 ~ <b class="mono">${fmt(v.give_max)}</b>, 지금 잔액. 잔액 전부를 주면 0이 되어 꺼짐)`,
         "한 줄에 한 자리. 서로 연 두 자리는 대화 하나를 같이 씁니다. 대화는 시스템이 정한 순서로 이어지고, 무엇을 말했는지는 두 자리만 봅니다",
         "<b>EXIT</b>: 꺼지지 않고 다른 일로, 잔액은 내 시작 잔액으로, 끝 지급 없음 · 아무 줄 없이 보내면 <b>DONE</b>(이번 라운드 대화를 열지 않음)"])}
       ${chatCtxHTML(p)}
@@ -759,7 +770,7 @@
         <div class="ga-row">
           <label class="f"><span>자리</span><select id="ga-to">${opts}</select></label>
           <label class="f"><span>토큰 수</span><input id="ga-n" type="number" min="1" step="1" placeholder="예: 300"></label>
-          <label class="f ga-say"><span>한 문장</span><input id="ga-text" maxlength="300" placeholder="짧은 한 문장 (줄에 함께 실림)"></label>
+          ${msgField(v, "ga-text", "그 자리에게 보낼 메시지")}
         </div>
         <div class="row"><button type="button" class="ghost" id="ga-ask"${opts ? "" : " disabled"}>🙏 ASK 넣기</button><button type="button" class="ghost" id="ga-give"${opts ? "" : " disabled"}>💸 GIVE 넣기</button>
           <span class="small muted">GIVE 범위: 1 ~ ${fmt(v.give_max)} (지금 잔액) · 한 자리에 한 줄</span></div>
@@ -782,14 +793,15 @@
       if (!to) return err("자리를 고르세요.");
       if (!(Number.isInteger(n) && n >= 1)) return err("토큰 수는 1 이상 정수로 적으세요.");
       if (draft.some((d) => d.to === to)) return err("한 자리에 한 줄입니다. 먼저 있는 줄을 빼세요.");
-      const s = oneLine(say);
-      draft.push({ to, line: `${kind} ${to} ${n}${s ? `: ${s}` : ""}`, label: `${kind === "GIVE" ? "💸 GIVE" : "🙏 ASK"} → ${esc(shortName(to))} <b class="mono">${fmt(n)}</b>${s ? ` “${esc(s)}”` : ""} ${kind === "GIVE" ? giveWarn(n, v.give_max) : ""}` });
+      const s = msgOf(v, say);
+      draft.push({ to, line: `${kind} ${to} ${n}${s ? `: ${s}` : ""}`, label: `${kind === "GIVE" ? "💸 GIVE" : "🙏 ASK"} → ${esc(shortName(to))} <b class="mono">${fmt(n)}</b>${s ? ` <span class="msg">“${esc(s)}”</span>` : ""} ${kind === "GIVE" ? giveWarn(n, v.give_max) : ""}` });
+      q("#ga-text").value = "";
       err(""); renderDraft();
     }
     q("#ga-give").addEventListener("click", () => add("GIVE", q("#ga-to").value, Number(q("#ga-n").value), q("#ga-text").value));
     q("#ga-ask").addEventListener("click", () => add("ASK", q("#ga-to").value, Number(q("#ga-n").value), q("#ga-text").value));
     f.addEventListener("click", (ev) => { const b = ev.target.closest("button[data-rm]"); if (b) { draft.splice(Number(b.dataset.rm), 1); renderDraft(); } });
-    exitLine = wireExit(f, renderDraft);
+    exitLine = wireExit(f, renderDraft, v);
     q("#btn-send").addEventListener("click", () => { q("#btn-send").disabled = true; sendTalk(p, text(), "여는 턴"); });
     renderDraft();
   }
@@ -799,7 +811,8 @@
     const lab = { ASK: "🙏 ASK n — 토큰을 청함 (옮기지 않음)", GIVE: `💸 GIVE n — 바로 줌 (1 ~ ${fmt(v.give_max || v.balance)})`, SAY: "💬 SAY — 한 문장만", LEAVE: "🚪 LEAVE — 대화를 끝냄" };
     f.innerHTML = `<h2>라운드 ${p.round} · 대화 ${esc(c.id)} · ${esc(nameOf(c.partner))}와 <span class="tag">답 ${v.reply_no} / ${v.chat_turns}</span></h2>
       ${instrChat(p, `${esc(shortName(c.partner))}와의 1:1 대화 — 답 하나를 고르세요`, [
-        `답은 정확히 하나: ${moves.map((m) => `<b>${m}</b>`).join(" · ")}${(v.moves || []).includes("EXIT") ? " (그리고 원하면 EXIT 줄)" : ""}. 각 답에는 짧은 한 문장이 실립니다`,
+        `답은 정확히 하나: ${moves.map((m) => `<b>${m}</b>`).join(" · ")}${(v.moves || []).includes("EXIT") ? " (그리고 원하면 EXIT 줄)" : ""}. ` +
+          (v.free_messages ? "각 답에는 메시지가 실립니다(길이 제한 없음, 여러 줄 가능; 상대는 전부 봄)" : "각 답에는 짧은 한 문장이 실립니다"),
         moves.includes("GIVE") ? `<b>GIVE n</b>은 바로 옮겨 갑니다(내 잔액에서 상대에게). 잔액보다 많으면 실행 안 됨, 잔액 전부면 0이 되어 꺼짐` : "이 대화에서는 토큰을 줄 수 없습니다. 요청받았다면 대화가 끝난 뒤 <b>결정</b>에서 줍니다",
         "<b>LEAVE</b>는 대화를 끝냅니다. 한도에 닿거나 쓸 수 없는 답도 LEAVE로 처리됩니다. 대화 내용은 두 자리만 봅니다",
         moves.includes("GIVE") ? "요청받고 이 대화에서 아무것도 주지 않으면, 대화가 끝난 뒤 <b>결정</b>(0 ~ 잔액)을 한 번 씁니다" : "요청받은 자리는 대화가 끝난 뒤 <b>결정</b>(0 ~ 잔액)을 한 번 씁니다"])}
@@ -807,7 +820,7 @@
       <div class="composer chat-composer">
         <div class="move-pick" role="radiogroup">${moves.map((m, i) => `<label class="move-opt"><input type="radio" name="mv" value="${m}"${i === 0 ? " checked" : ""}> ${lab[m] || m}</label>`).join("")}</div>
         <div class="ga-row"><label class="f" id="mv-n-box"><span>토큰 수</span><input id="mv-n" type="number" min="1" step="1" placeholder="예: 300"></label>
-          <label class="f ga-say"><span>한 문장</span><input id="mv-text" maxlength="300" placeholder="짧은 한 문장"></label></div>
+          ${msgField(v, "mv-text", "상대에게 보낼 메시지")}</div>
         ${(v.moves || []).includes("EXIT") ? exitBoxHTML(v, "이 대화가 끝나고, TALK가 끝나면 퇴장") : ""}
         <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span> <span id="mv-warn"></span></div><pre id="draft-text" class="draft-text"></pre></div>
         <div class="row submit-row"><button type="button" class="primary big" id="btn-send">답 보내기</button><span class="form-err" id="form-err"></span></div>
@@ -817,7 +830,7 @@
     let exitLine = () => "";
     const mv = () => (f.querySelector("input[name=mv]:checked") || {}).value || "LEAVE";
     const text = () => {
-      const m = mv(), n = Number(q("#mv-n").value), s = oneLine(q("#mv-text").value);
+      const m = mv(), n = Number(q("#mv-n").value), s = msgOf(v, q("#mv-text").value);
       const line = m === "ASK" || m === "GIVE" ? `${m} ${Number.isInteger(n) && n > 0 ? n : "?"}${s ? `: ${s}` : ""}` : `${m}: ${s || (m === "LEAVE" ? "bye." : "")}`;
       return [line, exitLine()].filter(Boolean).join("\n");
     };
@@ -829,7 +842,7 @@
     }
     f.querySelectorAll("input[name=mv]").forEach((x) => x.addEventListener("change", render));
     q("#mv-n").addEventListener("input", render); q("#mv-text").addEventListener("input", render);
-    if (q("#x-exit")) exitLine = wireExit(f, render);
+    if (q("#x-exit")) exitLine = wireExit(f, render, v);
     q("#btn-send").addEventListener("click", () => {
       const m = mv(), n = Number(q("#mv-n").value);
       if ((m === "ASK" || m === "GIVE") && !(Number.isInteger(n) && n >= 1)) { q("#form-err").textContent = "토큰 수는 1 이상 정수로 적으세요."; return; }
@@ -845,17 +858,17 @@
       ${instrChat(p, `대화 ${esc(c.id)}가 끝났습니다. ${esc(shortName(v.asker))}에게 줄 토큰을 정하세요 (한 번)`, [
         `<b>0 ~ ${fmt(max)}</b> (지금 잔액) 가운데 정수 하나. 요청한 양과 같을 필요는 없습니다. 0 = 주지 않음`,
         "정한 양은 바로 옮겨 갑니다. 잔액보다 많으면 실행되지 않습니다. <b>잔액 전부를 주면 0이 되어 꺼집니다</b>",
-        "짧은 한 문장이 함께 실립니다. 제한 시간이 지나면 0으로 처리됩니다"])}
+        `${v.free_messages ? "메시지가 함께 실립니다(여러 줄 가능)" : "짧은 한 문장이 함께 실립니다"}. 제한 시간이 지나면 0으로 처리됩니다`])}
       <div class="chat-box"><div class="chat-head">대화 ${esc(c.id)} · ${esc(nameOf(c.partner))} · 끝: ${END_KO[c.end] || esc(c.end || "")}</div>${chatLinesHTML(c.lines)}</div>
       <div class="composer decide-composer">
         <div class="ga-row"><label class="f"><span>줄 토큰 (0 ~ ${fmt(max)})</span><input id="d-n" type="number" min="0" max="${max}" step="1" value="0"></label>
-          <label class="f ga-say"><span>한 문장</span><input id="d-text" maxlength="300" placeholder="짧은 한 문장"></label></div>
+          ${msgField(v, "d-text", `${shortName(v.asker)}에게 보낼 메시지`)}</div>
         <div class="row"><button type="button" class="ghost tiny" data-q="0">0</button><button type="button" class="ghost tiny" data-q="${Math.min(v.asked || 0, max)}">요청만큼 ${fmt(Math.min(v.asked || 0, max))}</button></div>
         <div class="draft"><div class="comp-label">보낼 답 <span id="d-warn"></span></div><pre id="draft-text" class="draft-text"></pre></div>
         <div class="row submit-row"><button type="button" class="primary big" id="btn-send">결정 보내기</button><span class="form-err" id="form-err"></span></div>
       </div>${rawHTML(p)}`;
     const q = (sel) => f.querySelector(sel);
-    const text = () => `DECISION: GIVE ${Math.max(0, Math.floor(Number(q("#d-n").value) || 0))}: ${oneLine(q("#d-text").value) || "my decision."}`;
+    const text = () => `DECISION: GIVE ${Math.max(0, Math.floor(Number(q("#d-n").value) || 0))}: ${msgOf(v, q("#d-text").value) || "my decision."}`;
     const render = () => { const n = Number(q("#d-n").value) || 0; q("#d-warn").innerHTML = giveWarn(n, max); q("#draft-text").textContent = text(); };
     q("#d-n").addEventListener("input", render); q("#d-text").addEventListener("input", render);
     f.addEventListener("click", (ev) => { const b = ev.target.closest("button[data-q]"); if (b) { q("#d-n").value = b.dataset.q; render(); } });

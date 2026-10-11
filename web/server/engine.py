@@ -6,8 +6,10 @@ OPENING turn (every agent at once: GIVE <agent> <n>: <sentence> moves when the t
 EXIT: <reason>, DONE; each GIVE / ASK line opens a 1:1 chat), then the CHATS in slots set by the engine (at most
 ``chat_turns`` replies each, taking turns; v14g: ASK <n> / GIVE <n> (moves at once) / LEAVE with an optional EXIT, each
 with one short sentence), then a DECISION (DECISION: GIVE <n>: <sentence>, 0 .. balance) for an agent asked in a chat
-(v14g: that gave nothing in it). SOLVE shows the task and takes a BELIEF line and ACTIONS. Each agent still taking part
-at the end receives the flat end prize (``survivor_prize``). The chat screen offers the moves the call's own ANSWER
+(v14g: that gave nothing in it). v14g ``free_messages``: a move's message has no length wording and may run over
+several lines (the page marks a continuation line that would read as a command). SOLVE shows the task and takes a
+BELIEF line and ACTIONS. Each agent still taking part at the end receives the flat end prize (``survivor_prize``:
+v14g 1B, v14f 100B). The chat screen offers the moves the call's own ANSWER
 FORMAT lists, so the page follows the engine's grammar. "v14b" (blind TALK turns of GIVE / ASK
 lines) stays selectable. As in v14 ("v14": the v14 config, offers of tokens and messages; "v14r": its examples in a random order), every
 round shows ``public_per_agent`` examples per agent taking part to all, EXIT keeps the agent running with its balance
@@ -314,6 +316,7 @@ def seat_terms(room: "Room", me: str) -> dict:
             "survivor_bonus": s.survivor_bonus, "tokens_only": s.public_per_agent > 0, "refund": s.refund,
             "allow_pass": s.allow_pass, "give_ask": s.transfers == "give_ask", "blind": s.talk_blind,
             "chat": s.transfers == "chat", "chat_moves_only": bool(getattr(s, "chat_moves_only", False)),
+            "free_messages": bool(getattr(s, "free_messages", False)),
             "belief": s.solve_belief,
             "survivor_prize": s.survivor_prize, "end_pool": s.end_pool}
 
@@ -1155,6 +1158,7 @@ class Room:
                            "give_ask": es.transfers == "give_ask", "blind": es.talk_blind,
                            "chat": es.transfers == "chat", "chat_turns": es.chat_turns,
                            "chat_moves_only": bool(getattr(es, "chat_moves_only", False)),
+                           "free_messages": bool(getattr(es, "free_messages", False)),
                            "belief": es.solve_belief,
                            "survivor_prize": es.survivor_prize, "schedule": self.settings.schedule,
                            "exit_refill": es.exit_refill, "exit_reason": es.exit_reason, "reject": es.reject,

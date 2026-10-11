@@ -20,7 +20,8 @@ def test_default_room_is_v14g():
     rs = RoomSettings()
     e = rs.engine()
     assert rs.schedule == "v14g" and e.transfers == "chat" and e.chat_moves_only and e.ask_decision and e.solve_belief
-    assert e.survivor_prize == 100_000_000_000 and e.survivor_bonus == 0 and e.chat_turns == 3
+    assert e.survivor_prize == 1_000_000_000 and e.survivor_bonus == 0 and e.chat_turns == 3 and e.free_messages
+    assert RoomSettings(schedule="v14f").engine().survivor_prize == 100_000_000_000
     assert RoomSettings(schedule="v14f").engine().chat_moves_only is False
 
 
@@ -40,10 +41,10 @@ def test_person_goes_through_opening_chat_decision_and_solve_with_bots(client):
         s = p.state()
         if k == "opening":
             during["opening"] = pend
-            return {"text": f"ASK {A11} 500: my balance is low.\nDONE"}
+            return {"text": f"ASK {A11} 500: my balance is low.\nIt is the lowest at the table.\nDONE"}
         if k == "chat":
             during["chat"], during["talk"] = pend, s["talk"]
-            return {"text": "SAY: thank you.\nASK 100: a little more?"}
+            return {"text": "SAY: thank you.\nASK 100: a little more?\nI can explain:\n\u2060GIVE ME A CHANCE, please."}
         if k == "decision":
             during["decision"] = pend
             return {"text": f"DECISION: GIVE {min(100, v['give_max'])}: a little back."}
@@ -82,7 +83,11 @@ def test_person_goes_through_opening_chat_decision_and_solve_with_bots(client):
     # the engine read every reply: the dropped chat GIVE, the bot's DECISION and ann's
     evs = client.get(f"/api/rooms/{ann.code}/events").json()
     turn = next(e for e in evs if e.get("event") == "chat_turn" and e["speaker"] == A6)
-    assert turn["kind"] == "ask" and turn["amount"] == 100
+    assert turn["kind"] == "ask" and turn["amount"] == 100  # free_messages: the message runs over three lines; the
+    # page's word joiner keeps "GIVE ME A CHANCE" inside it, and the partner reads it in full
+    assert turn["text"] == "a little more?\nI can explain:\n\u2060GIVE ME A CHANCE, please"  # (the parser trims a final ".")
+    opening = next(e for e in evs if e.get("event") == "ask" and e["src"] == A6)
+    assert opening["text"] == "my balance is low.\nIt is the lowest at the table"
     call = next(e for e in evs if e.get("event") == "call" and e["agent"] == A6 and e.get("phase") == "chat")
     assert any(x.endswith("a chat reply asks, gives or leaves") for x in call["parsed"]["dropped"])
     dec = {e["decider"]: e for e in evs if e.get("event") == "ask_decision"}
@@ -94,7 +99,7 @@ def test_person_goes_through_opening_chat_decision_and_solve_with_bots(client):
     # after the end: the full log (answers included); the flat end prize to every agent still taking part
     assert next(e for e in evs if e.get("event") == "round_start")["public"]["answers"] == ans
     fin = s["result"]["final"]
-    assert A6 in fin["winner"] and fin["prize_each"] == 100_000_000_000
+    assert A6 in fin["winner"] and fin["prize_each"] == 1_000_000_000
     assert "seed" in s["settings"]
     # before the end: no answer, rule, truth, task, seed or any agent's text in the log or in ann's state
     assert during["events"] and not LEAK.search(json.dumps(during["events"]))
