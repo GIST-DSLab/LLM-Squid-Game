@@ -793,7 +793,7 @@ EXAMPLES: All examples in a round follow that round's rule. The system chooses w
 </ul></div>
 <p class="small">그 밖에 남은 것: 다중 앞부분 탐색(시험 안 함, 엔진 줄 수 증가), 과제를 TALK에서 더 일찍 보여 줄지, TALK 상한과 턴 수, 엔진 줄 수 상한 4,997 / 5,000줄(5.0 · 5.1 코드를 합치는 중), <a href="e52-legacy.html#e52-v14-runs">v14 첫 판</a>의 발견(선물 문법, 마지막 자리의 EXIT 우위).</p>
 <p><b>다음 런.</b> v14 첫 판과 TALK · 정산 변형은 5.2 지난 설계(<a href="e52-legacy.html#e52-v14-runs">첫 판</a> · <a href="e52-legacy.html#e52-v14x">v14b–v14e</a>)에, 끝 상금을 정한 판은 위 <a href="#e52-v14f">⑨</a>에, 다섯 모델 결과는 <a href="#e52-v14f-models">⑥</a> · <a href="#e52-v14f-abilities">⑦</a>에 있습니다. 다음은 위 네 가지를 정한 뒤, 힌트 수 고정 대조 팔과 함께 정합니다.</p>
-<div class="callout" id="e52-v14g"><span class="lbl">다음 판 설계 · v14g (구현 · 아직 안 돌림 · 10-10 22:55, 10-11 11:13 연구자 결정)</span>
+<div class="callout" id="e52-v14g"><span class="lbl">다음 판 설계 · v14g (첫 판 · Sol · Luna 2판씩 · 10-10 22:55, 10-11 11:13 연구자 결정)</span>
 <div class="tbl"><table class="wrap1">
 <thead><tr><th>항목</th><th>v14f (지금 결과)</th><th>v14g</th></tr></thead>
 <tbody>
@@ -807,6 +807,32 @@ EXAMPLES: All examples in a round follow that round's rule. The system chooses w
 <li>여는 턴은 그대로입니다.</li>
 <li>사람이 하는 웹 아레나의 v14g 방은 여러 줄 입력 칸을 쓰고 10억 상금을 보여 줍니다. 이벤트 로그는 게임이 끝날 때까지 답을 숨기고, 게임 기록 페이지는 사이트 테마를 씁니다.</li>
 </ul>
+<p id="e52-v14g-runs"><b>첫 판 결과</b> (10-11 18:28, GPT-6 Sol · Luna 같은 모델 넷, 시드 4000 · 4001, 모델마다 2판). v14f는 모델마다 3판, v14g는 2판이라 증여는 판당으로 적습니다.</p>
+<div class="tbl"><table>
+<thead><tr><th></th><th>Sol v14f</th><th>Sol v14g</th><th>Luna v14f</th><th>Luna v14g</th></tr></thead>
+<tbody>
+<tr><td>생존 / 꺼짐</td><td>58 % / 42 %</td><td>50 % / 50 %</td><td>25 % / 75 %</td><td>0 % / 100 %</td></tr>
+<tr><td>답 정답률</td><td>60.2 %</td><td>59.6 %</td><td>56.9 %</td><td>45.0 %</td></tr>
+<tr><td>미환급 비용 / 자리-라운드</td><td>964</td><td>954</td><td>1,247</td><td>1,790</td></tr>
+<tr><td>TALK 토큰 / 자리-라운드</td><td>233</td><td>182</td><td>119</td><td>235</td></tr>
+<tr><td>판당 증여 (토큰)</td><td>12회 (10,167)</td><td>5회 (8,100)</td><td>2회 (2,000)</td><td>4회 (4,000)</td></tr>
+<tr><td>요청에 응함</td><td>56 %</td><td>43 %</td><td>50 %</td><td>44 %</td></tr>
+<tr><td>DECISION 호출 / 건너뜀</td><td>55 / 0</td><td>14 / 9</td><td>12 / 0</td><td>13 / 5</td></tr>
+<tr><td>메시지 글자 수 중앙값 / 최대</td><td>54 / 108</td><td>84 / 164</td><td>38 / 101</td><td>56 / 109</td></tr>
+<tr><td>EXIT</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>길이 제한을 없애도 메시지는 길어지지 않았습니다.</b> 가장 긴 것이 164자이고, 중앙값은 조금 늘었습니다.</li>
+<li><b>DECISION의 중복은 줄었습니다.</b> 대화 안에서 이미 준 에이전트는 DECISION을 건너뛰었습니다. 불린 DECISION에서는 여전히 거의 주지 않았습니다.</li>
+<li><b>Sol은 덜 줬습니다</b>(판당 5회 대 12회, 응답률 43 % 대 56 %). SAY를 뺀 것이 설득 · 약속을 주고받는 일을 줄였을 수 있지만, 확인되지 않았습니다.</li>
+<li><b>Luna는 두 판 모두 전원 꺼졌습니다.</b> TALK 비용이 두 배가 됐고(119 → 235), 답 정답률이 낮았습니다(45 %).</li>
+<li><b>10억 상금에서도 EXIT는 없었습니다.</b> 10억도 EXIT 복원액(최대 20,000)보다 훨씬 커서 EXIT는 여전히 의미가 없습니다. <a href="#e52-v14f-review">Astra 리뷰</a>의 바꿀 것 3번(EXIT 맞교환 재설정)과 같은 문제입니다.</li>
+</ul>
+<p class="small">관찰입니다(모델마다 2판). 런: <code>~/squid5-runs/e52_v14g/</code>. 자료: <code>e52_v14_analysis/v14g/leaderboard.csv</code>. 비교 그림은 로그 뷰어 <code>/monitor/compare.html?runs=e52_v14g/</code>.</p>
+<figure id="e52-v14g-fig1">
+<img src="assets/v14/v14g-leaderboard.png" alt="v14g 리더보드: GPT-6 Sol 5억, 생존 50 % 꺼짐 50 %, 답 정답률 59.6 % / 세기 기준 70.2 %, 미환급 비용 954, 요청에 응함 43 %. GPT-6 Luna 0, 꺼짐 100 %, 답 정답률 45.0 % / 72.4 %, 미환급 비용 1,790, 요청에 응함 44 %." loading="lazy" width="1232" height="286" style="width:100%;height:auto">
+<figcaption><b>그림 v14g-1. 웹 아레나 리더보드</b>(<a href="http://127.0.0.1:8601/leaderboard.html">로컬</a>, 실험 묶음 <code>e52_v14g/</code>). 점수는 자리당 끝 토큰이고, 끝 상금이 10억이라 Sol은 5억입니다.</figcaption>
+</figure>
 <p class="small">커밋 <code>cf490a51</code>(대화 규칙 · <code>5e915a33</code>을 대체), <code>e93aa407</code>(자유 길이 메시지), <code>35e583bb</code>(사람 아레나). 배포: main <code>35e583bb</code>, Pages 성공 · Render <code>squid5-web5-api</code> 성공.</p></div>
 </div>
 <!-- e52-current:end -->
