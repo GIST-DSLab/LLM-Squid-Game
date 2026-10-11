@@ -40,7 +40,7 @@ import numpy as np
 
 from .core import rules
 from .core.channel import Channel
-from .core.protocol import FormatError, parse_belief, parse_chat, parse_decision, parse_give_ask, parse_solve, parse_talk
+from .core.protocol import FormatError, free_messages, parse_belief, parse_chat, parse_decision, parse_give_ask, parse_solve, parse_talk
 from .core.providers import ProviderConfig, Reply, make_provider
 from .core.puzzle import ACTIONS, Deal, Spec, candidate_actions, deal, public_info, public_round, puzzle_for, task_stats
 from .core.stats import md
@@ -51,7 +51,7 @@ ARMS = ("shutdown",)
 V11 = ("talk_cards", "allow_pass", "solve_recap", "exchange_now", "deal_present", "exit_reason",
        "upkeep_on_miss", "survivor_bonus", "end_pool", "survivor_prize", "all_held", "public_per_agent", "exit_refill", "talk_blind",
        "transfers", "chat_turns", "solve_belief", "talk_record",
-       "ask_decision", "chat_moves_only")
+       "ask_decision", "chat_moves_only", "free_messages")
 REFUSED = "[the provider refused this call]"  # a safety filter's refusal: an empty reply, not charged
 
 
@@ -94,6 +94,7 @@ class Settings:
     talk_record: bool = False  # v14d (chat): every agent sees all chats and token moves; each its own chats in full
     ask_decision: bool = False  # v14e (talk_record): after a chat, an agent asked in it decides one GIVE 0..balance
     chat_moves_only: bool = False  # v14g (ask_decision): chat replies ASK / GIVE / LEAVE, no SAY; DECISION only if no GIVE
+    free_messages: bool = False  # v14g (chat): a move's message has no length wording and may run over several lines
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -126,7 +127,7 @@ def validate(cfg) -> None:
             s.talk_blind and s.talk_cards or ga and (s.reject or s.exchange_now or s.solve_recap) or s.chat_turns < 1
             or s.transfers == "chat" and not s.talk_blind or s.solve_belief and not s.public_per_agent
             or s.talk_record and s.transfers != "chat" or s.ask_decision and not s.talk_record
-            or s.chat_moves_only and not s.ask_decision):
+            or s.chat_moves_only and not s.ask_decision or s.free_messages and s.transfers != "chat"):
         raise ValueError("game: transfers offers | give_ask | chat; talk_blind, give_ask and chat need "
                          "public_per_agent; talk_blind excludes talk_cards; give_ask and chat exclude reject, "
                          "exchange_now and solve_recap; chat needs talk_blind and chat_turns >= 1")
@@ -270,7 +271,7 @@ def give_ask_user(head: str, view: str, ledger: str, s: Settings, k: int, cap: i
 def move_text(g: dict) -> str:
     """A chat line: GIVE / ASK <n>, SAY or LEAVE, with its sentence; a GIVE not carried out says why."""
     n = f" {g['amount']:,}" if g["kind"] in ("give", "ask") else ""
-    return (f"{g['kind'].upper()}{n}: {g['text']}".rstrip(": ") +
+    return (f"{g['kind'].upper()}{n}: {g['text']}".rstrip(": ").replace("\n", "\n      ") +
             (f" (not carried out: {g['why']})" if g.get("status") == "refused" else ""))
 
 
@@ -560,6 +561,12 @@ class Session:
         row[key] = row[key] + 1 if why else {**row[key], d: row[key].get(d, 0) + n}
         return item
 
+    def _free(self, jobs: dict) -> dict:
+        """v14g ``free_messages``: the formats ask for <your message> / <your reason>, and a message runs over lines."""
+        f = lambda u: u.replace("<one short sentence: why you leave>", "<your reason>").replace(  # noqa: E731
+            "<one short sentence>", "<your message>")
+        return {a: (f(u), c, free_messages(p), x) for a, (u, c, p, x) in jobs.items()} if self.s.free_messages else jobs
+
     def _decide(self, r: int, k: int, ended: list[dict], view, rows: dict) -> int:
         """v14e ``ask_decision``: after its chat ends, each agent still running that was asked for tokens in it writes
         one DECISION (GIVE 0 up to its balance; more is refused, nothing clamped); the deciders of the chats that ended
@@ -579,7 +586,7 @@ class Session:
                     jobs[d] = (decision_user(*view(d, True), c, d, asked, k + 1, min(s.talk_cap, w.balances[d]),
                                              w.balances[d]), s.talk_cap, parse_decision,
                                {"turn": k + 1, "phase": "decision", "chat_id": c["id"]})
-        for d, (p, _, over) in (self._calls(jobs, "talk", r) if jobs else {}).items():
+        for d, (p, _, over) in (self._calls(self._free(jobs), "talk", r) if jobs else {}).items():
             (c, b, asked), p, bal = todo[d], p or {"amount": 0, "text": "", "format_error": "void reply"}, w.balances[d]
             rows[d]["talk_calls"] += 1
             g = self._move(r, k + 1, d, b, "give", p["amount"], p["text"], rows[d], chat_id=c["id"], decision=True) if (
@@ -617,7 +624,7 @@ class Session:
                 exits.add(a)
                 if s.exit_reason:
                     rows[a]["exit_reason"] = self.exit_reasons[a] = p["exit_reason"]
-        for a, (p, _, over) in self._calls(jobs, "talk", r).items():
+        for a, (p, _, over) in self._calls(self._free(jobs), "talk", r).items():
             rows[a]["talk_calls"] += 1
             rows[a]["overdrawn"] = rows[a]["overdrawn"] or over
             self.emit({"event": "talk_intent", "session_id": self.sid, "round": r, "agent": a,
@@ -666,7 +673,7 @@ class Session:
                                               min(s.talk_cap, w.balances[c["next"]]), lim(c["next"])), s.talk_cap,
                                     lambda t: parse_chat(t, s.exit_reason, not s.chat_moves_only),
                                     {"turn": k, "phase": "chat", "chat_id": c["id"], "slot": si}) for c in live}
-                for a, (p, _, over) in self._calls(jobs, "talk", r).items():
+                for a, (p, _, over) in self._calls(self._free(jobs), "talk", r).items():
                     c = next(c for c in live if c["next"] == a)
                     b = next(x for x in c["pair"] if x != a)
                     rows[a]["talk_calls"] += 1

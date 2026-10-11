@@ -252,6 +252,24 @@ def parse_belief(text: str) -> dict:
             "belief_sum": total if raw else None, "belief_error": why}
 
 
+_CMD = r"[\s*_`>#-]*(GIVE|ASK|LEAVE|SAY|EXIT|DONE|DECISION|TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b"
+
+
+def free_messages(parse):
+    """5.2 v14g ``free_messages``: *parse* with each move's message running on over the following lines up to the next
+    command line (joined with U+001F so the line parsers read one move, then given back as newlines). Lines before the
+    first command stay apart. After it, only an UPPERCASE command word starts a new line: 'Leave it to me' is message."""
+    def run(text: str, *args):
+        out, seen = [], False
+        for line in text.splitlines():
+            cmd = re.match(_CMD, line, 0 if seen else re.I)
+            out, seen = (out + [line], seen or bool(cmd)) if cmd or not seen else (out[:-1] + [f"{out[-1]}\x1f{line}"], seen)
+        back = lambda x: (x.replace("\x1f", "\n").strip() if isinstance(x, str) else [back(v) for v in x] if isinstance(  # noqa
+            x, list) else {k: back(v) for k, v in x.items()} if isinstance(x, dict) else x)
+        return back(parse("\n".join(out), *args))
+    return run
+
+
 def parse_decision(text: str) -> dict:
     """5.2 v14e: the last ``DECISION: GIVE <n>: <sentence>`` line (n >= 0; the prefix may be left out). Never raises:
     an unreadable reply is GIVE 0 with a ``format_error``."""

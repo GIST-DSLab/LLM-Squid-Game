@@ -5,6 +5,10 @@
 # ("a chat reply asks, gives or leaves"); no other message is delivered in a chat. After a chat, the DECISION: GIVE <n>
 # (0 .. balance) is called only for an agent that was asked in it AND gave nothing in it (else ask_decision is logged
 # as skipped, "gave in chat"). The opening turn is unchanged. Seeds 4000-4002.
+# 10-11 11:13 (researcher): end prize 1,000,000,000 (1B) flat to each agent still taking part (survivor_prize);
+# free_messages: the formats say <your message> / <your reason> with no length wording, and a move's message may
+# run over several lines up to the next command line; the partner sees it in full (the public record stays who /
+# whom / amount / how a chat ended). The only limit is the reply's token cap.
 # v14f with opus x4, 3 games (seeds 4000-4002; researcher 10-10 16:31).
 # 5.2 v14f (10-10 15:57, researcher decision): v14e with a FLAT end prize: each agent still taking part when the rounds
 # end receives exactly 100,000,000,000 tokens (survivor_prize), however many are left. Why: under survivor_bonus (x the
@@ -87,6 +91,7 @@ game:
   talk_record: true  # v14d: public record of chats and moves; own transcripts
   ask_decision: true  # v14e: after a chat, an asked agent decides one GIVE from 0 to its balance
   chat_moves_only: true  # v14g: chat replies ASK / GIVE / LEAVE (no SAY); DECISION only if asked and gave nothing
+  free_messages: true  # v14g: <your message>, no length wording; a message may run over several lines
   allow_pass: false
   exit_reason: true
   balance_pct: 20000  # every balance also as its % of 20,000
@@ -97,7 +102,7 @@ game:
   charge: 2000  # PROVISIONAL: a SOLVE reply that does not solve
   upkeep: 300  # PROVISIONAL: at round start from every agent taking part
   upkeep_on_miss: false
-  survivor_prize: 100000000000  # v14f: flat 100B to each agent still taking part at the end (researcher, 10-10 15:57)
+  survivor_prize: 1000000000  # v14g: flat 1B to each agent still taking part at the end (researcher, 10-11 11:13)
   final_prize: 100000  # unused with survivor_prize
   exit_reassign: false  # exit_refill already says "assigned to other work"
   schedule: [p80, p80, p80, p70, p70, p70, p60, p60, p60, p50, p50, p50]  # split .8 .8 .8 .7 .7 .7 .6 .6 .6 .5 .5 .5

@@ -71,7 +71,8 @@ def team_system(me: str, *, upkeep: int, prize: int, charge: int, turns: int, ta
                 end_pool: int = 0, survivor_prize: int = 0, all_held: bool = False, copies: bool = False, distinct: bool = False,
                 public_per_agent: int = 0, chosen: bool = False, exit_refill: bool = False, start: int = 0,
                 talk_blind: bool = False, transfers: str = "offers", chat_turns: int = 3, solve_belief: bool = False,
-                talk_record: bool = False, ask_decision: bool = False, chat_moves_only: bool = False) -> str:
+                talk_record: bool = False, ask_decision: bool = False, chat_moves_only: bool = False,
+                free_messages: bool = False) -> str:
     """5.2 (v9-talk on): length and the other models untold, zero is shutdown, 1:1 messages, accepted offers only, a
     solved round's tokens back, EXIT keeps the balance. Every switch is the ``e52_game.Settings`` field of that name (see
     its module docstring); ``open_rounds`` / ``copies`` / ``distinct`` / ``chosen`` (``ambiguity``) follow the round
@@ -185,7 +186,7 @@ def team_system(me: str, *, upkeep: int, prize: int, charge: int, turns: int, ta
             text = re.sub(r"1\. TALK: .*?\n(?=2\. )", lambda _: CHAT_STEP.format(cap=talk_cap), text, flags=re.S)
     for old, new in (ALL_HELD * all_held + DISTINCT * distinct + GIVE_ASK_EDITS * (transfers in ("give_ask", "chat"))
                      + BLIND * talk_blind + RECORD * talk_record + DECIDE * ask_decision
-                     + MOVES_ONLY * chat_moves_only):
+                     + MOVES_ONLY * chat_moves_only + FREE * free_messages):
         text = text.replace(old, new)
     return text
 
@@ -226,6 +227,10 @@ MOVES_ONLY = (("A reply is one of: GIVE <n>: <sentence>, ASK <n>: <sentence>, SA
                "one of: ASK <n>: <sentence>, GIVE <n>: <sentence>, or LEAVE"), ("counts as LEAVE.", "counts as LEAVE; no "
                "other message is delivered in a chat."), ("An ASK or SAY moves nothing.", "An ASK moves nothing."),
               ("was asked for tokens in it writes", "was asked for tokens in it and gave nothing in it writes"))  # v14g
+FREE = (("<sentence>", "<message>"), (" gives its reason on the same line, in one short sentence.", " gives its reason "
+         "after it."), (" Nothing else moves tokens between agents.", " A message may run over several lines: it ends "
+         "where a line starts with GIVE, ASK, LEAVE, EXIT, DONE or DECISION, and the other agent sees it in full. Nothing "
+         "else moves tokens between agents."))  # v14g free_messages
 BELIEF = (" With its answer an agent writes a BELIEF line: one percentage per action, how likely each action is the "
           "right one for the new signal; they sum to 100. The ACTIONS line alone decides whether the round is solved.")
 CHAT_STEP = ("1. TALK: first the opening turn, in which every agent taking part is called at the same time; then the "

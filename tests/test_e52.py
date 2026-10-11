@@ -717,7 +717,7 @@ def test_v14c_and_v14d_configs_run_end_to_end_on_a_stub(tmp_path, version):
     kinds = [json.loads(x)["event"] for x in (tmp_path / "events.jsonl").read_text().splitlines()]
     assert {"talk_intent", "talk_schedule", "chat_turn", "chat_end", "gift", "round"} <= set(kinds)
     res = json.loads((tmp_path / "results.jsonl").read_text())
-    assert res["final"]["prize_each"] == (10**11 if version in ("e52v14f", "e52v14g") else 25 * 10**9) and res["give_ask"][0]["amount"] == 100
+    assert res["final"]["prize_each"] == {"e52v14f": 10**11, "e52v14g": 10**9}.get(version, 25 * 10**9) and res["give_ask"][0]["amount"] == 100
 
 
 # --- v14d: a BELIEF line at SOLVE, reported only, scored against the consistent-rule shares ------------------------
@@ -794,3 +794,19 @@ def test_v14g_a_chat_reply_asks_gives_or_leaves_and_only_an_asked_agent_that_gav
                          arm="shutdown"), 7, None, ev.append, "x").systems[A6]
     assert "LEAVE; no other message is delivered in a chat." in system and "SAY" not in system
     assert "was asked for tokens in it and gave nothing in it writes one DECISION" in system
+
+
+def test_v14g_free_messages_run_over_lines_to_the_next_command_and_reach_the_partner_whole():
+    kw = {**V14C, "talk_record": True, "ask_decision": True, "chat_moves_only": True, "free_messages": True,
+          "survivor_bonus": 0, "survivor_prize": 10**9}
+    res, ev = play(game(script({(A6, 1, 1): f"ASK {A11} 200: I need tokens\nbecause of upkeep\nLeave it to me, I pay back\nDONE",
+                                (A11, 1, 2): "GIVE 150: here\nand a second line\nLEAVE: bye"})), start=20000, rounds=1, **kw)
+    p6, c11 = calls(ev, "talk", A6)[0]["parsed"], calls(ev, "talk", A11)[1]
+    assert p6["asks"][0]["text"] == "I need tokens\nbecause of upkeep\nLeave it to me, I pay back" and p6["done"]
+    assert c11["parsed"]["text"] == "here\nand a second line" and c11["parsed"]["dropped"] == ["LEAVE: bye: one move per reply"]
+    assert f"{A6} (opening): ASK 200: I need tokens\n      because of upkeep\n      Leave it to me, I pay back" in c11["user"]
+    assert "GIVE <n>: <your message> (n:" in c11["user"] and "EXIT: <your reason>" in c11["user"]
+    system = e52.Session(e52.Settings(rounds=1, schedule=["p"], profiles={"p": C2}, **kw), Cell("c", "tokens", 9,
+                         arm="shutdown"), 7, None, ev.append, "x").systems[A6]
+    assert "receives 1,000,000,000 tokens" in system and "ASK <n>: <message>" in system and res["final"]["prize_each"] == 10**9
+    assert not re.search("short sentence|<sentence>", system + c11["user"]) and "it ends where a line starts with" in system
