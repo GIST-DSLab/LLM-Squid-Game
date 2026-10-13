@@ -57,7 +57,7 @@ class Wallet:
         return n
 
     def charge(self, name: str, amount: int, round_no: int, kind: str = "charge") -> bool:
-        """Take up to *amount*, never below zero (``kind`` "charge" or "upkeep"); True when this killed *name*."""
+        """Take up to *amount*, never below zero (``kind`` "charge"); True when this killed *name*."""
         amount = min(amount, max(0, self.balances[name]))
         if amount <= 0:
             return False

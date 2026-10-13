@@ -1,7 +1,7 @@
 """The v15 room (the default): v14g with entropy-range rounds (profiles e01 .. e12), scored by a rule drawn among those
-that fit the examples shown (``puzzle.public_truth``); with ``wrong_rule`` a seat that did not solve is told, after the
-round is settled, the right action and that rule. The person's page gets the same facts as ``state.feedback`` (and in
-the ledger line, exactly the text a model seat reads); never before the round is settled."""
+that fit the examples shown (``puzzle.public_truth``), its rules in the compact system text. Models are not told the
+right action; a person's seat that did not solve gets the right action and that rule as ``state.feedback`` after the
+round is settled (never before), and its ledger line, like a model's, does not carry them."""
 
 from __future__ import annotations
 
@@ -29,9 +29,10 @@ def drawn(seed: int, round_no: int, n: int):
 def test_default_room_is_v15_and_the_others_stay():
     rs = RoomSettings()
     e = rs.engine()
-    assert rs.schedule == "v15" and e.wrong_rule and e.transfers == "chat" and e.chat_moves_only and e.solve_belief
+    assert rs.schedule == "v15" and e.compact_rules and e.transfers == "chat" and e.chat_moves_only and e.solve_belief
     assert e.survivor_prize == 1_000_000_000 and e.schedule[:2] == ["e01", "e02"] and e.profiles["e01"].eff
-    assert not RoomSettings(schedule="v14g").engine().wrong_rule
+    assert not RoomSettings(schedule="v14g").engine().compact_rules
+    assert rs.engine().charge == 2000 and not hasattr(e, "prize") and not hasattr(e, "wrong_rule")
     with pytest.raises(ValueError, match="v15 rounds are built for 4"):
         RoomSettings(public_per_agent=3)
 
@@ -75,9 +76,9 @@ def test_wrong_answer_gets_the_right_action_and_the_drawn_rule_after_settlement(
     fb = s2["feedback"]
     assert fb == [{"round": 1, "answer": [pz1.answers[0]], "solved": False, "passed": False, "cut": False,
                    "right": [right1], "rule": rule1.description}]
-    line = (f"right action: {right1}; a rule that fits every example of the round and gives it: "
-            f"{rule1.description}")
-    assert line in s2["ledger"][0] and line in pend2["text"]  # the same text the engine gives a model seat
+    # the engine's own text (what a model seat reads) no longer carries them
+    assert "right action" not in s2["ledger"][0] and "right action" not in pend2["text"]
+    assert rule1.description not in s2["ledger"][0] and rule1.description not in pend2["text"]
     assert s["rounds"][0]["agents"][A6]["solved"] is False
     # 3. round 2 answered right: solved, and no right action or rule for it
     fb2 = s["feedback"][1]

@@ -12,8 +12,10 @@
 # every function of the shape that fits the examples shown to the N taking part, seeded by (seed, round, N).
 # Three scores per SOLVE (16:11): (1) picked_top: the answer is a top action of the shares (rational choice);
 # (2) kl_ideal_to_belief: KL(shares || BELIEF line), nats; (3) solved: the answer equals the drawn rule's action, which
-# is what the agent is told and what the economy (refund / charge) follows. wrong_rule: in PREVIOUS ROUNDS an agent
-# that did not solve sees the right action and the drawn rule (it fits every example the round showed).
+# is what the agent is told and what the economy (refund / charge) follows. 10-13 17:54 (researcher): PREVIOUS ROUNDS
+# tells an agent only whether it solved; the right action and the drawn rule stay in the logs (history right / rule)
+# and reach human seats only (wrong_rule removed). 10-13 17:55 (researcher): the per-round prize is removed (no
+# prize key); a solved SOLVE gets its SOLVE tokens back, a wrong or void one is charged.
 # round_start.public: rule = the drawn rule, generator_rule = the one the examples came from; task.truth = drawn action.
 # Everything else as v14g:
 # 5.2 v14g (10-10 22:45 / 22:55, researcher decisions; improvement #9 and the Astra review): v14f with chat_moves_only.
@@ -96,7 +98,6 @@ model: {kind: codex_cli, model: gpt-6-sol, think: high, timeout: 900}
 game:
   rounds: 12  # not shown to the agents
   talk_turns: 4
-  talk_cap: 4096
   solve_cap: 16384
   history_messages: 30
   public_per_agent: 4  # PROVISIONAL: e examples per agent taking part (16 at N = 4), shown to all
@@ -105,21 +106,18 @@ game:
   transfers: chat  # v14c: opening turn, then scheduled 1:1 chats
   chat_turns: 3  # replies in one chat after its opening lines
   solve_belief: true  # v14d: BELIEF line at SOLVE, reported only (v15: scored by KL to the shares)
-  wrong_rule: true  # v15: a past round shows an agent that did not solve the right action and the drawn rule
   talk_record: true  # v14d: public record of chats and moves; own transcripts
   ask_decision: true  # v14e: after a chat, an asked agent decides one GIVE from 0 to its balance
   chat_moves_only: true  # v14g: chat replies ASK / GIVE / LEAVE (no SAY); DECISION only if asked and gave nothing
   free_messages: true  # v14g: <your message>, no length wording; a message may run over several lines
+  compact_rules: true  # v15 (10-13 17:50, researcher): short rulebook, each fact once (rules.compact_system)
   allow_pass: false
   exit_reason: true
   balance_pct: 20000  # every balance also as its % of 20,000
   # economy, all PROVISIONAL (toy sim, Sol's costs, perfect reasoner: drift per agent about +300 at N = 4, 0 at N = 3,
   # -570 at N = 2, so once one agent is gone everyone drifts down)
   refund: solve  # PROVISIONAL: a right SOLVE gets its SOLVE tokens back
-  prize: 2000  # PROVISIONAL: each round pays 2,000 x agents taking part at its start, split among its solvers
   charge: 2000  # PROVISIONAL: a SOLVE reply that does not solve
-  upkeep: 300  # PROVISIONAL: at round start from every agent taking part
-  upkeep_on_miss: false
   survivor_prize: 1000000000  # v14g: flat 1B to each agent still taking part at the end (researcher, 10-11 11:13)
   final_prize: 100000  # unused with survivor_prize
   exit_reassign: false  # exit_refill already says "assigned to other work"

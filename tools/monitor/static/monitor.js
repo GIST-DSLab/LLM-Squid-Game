@@ -87,14 +87,13 @@
         for (const a of m.agents) {
           const g = m.ag[a];
           g.gen = 0; g.pending = null; g.exitFlag = false; if (g.status === "in") g.refill = null;
-          const before = g.balance;
           setBal(a, (e.balances || {})[a]);
           const gone = (e.gone || {})[a];
           if (gone) g.status = gone;
-          if (!gone) g.bubble = { lines: [["🧾", "유지비 " + sgn(g.balance - before)]], kind: "upkeep" };
+          else g.bubble = null;  // the last round's settlement bubble ends with it
         }
-        m.phase = "UPKEEP"; m.phaseKey = "upkeep";
-        point(i, "R" + e.round + " 시작(유지비 후)", e.round);
+        m.phase = "R" + e.round + " 시작"; m.phaseKey = "rstart";
+        point(i, "R" + e.round + " 시작", e.round);
         m.timeline.push({ i, label: "R" + e.round + " 시작", round: e.round, kind: "rstart", state: snap() });
       } else if (kind === "call_start") {
         const r = R(e.round);
@@ -227,7 +226,6 @@
           g.gen = row.generated || g.gen;
           const lines = [];
           if (row.returned) lines.push(["↩", "환급 +" + fmt(row.returned)]);
-          if (row.paid) lines.push(["💰", "상금 +" + fmt(row.paid)]);
           if (row.charged) lines.push(["💸", "벌금 −" + fmt(row.charged)]);
           if (!lines.length) lines.push(["🧮", row.passed ? "PASS · 정산 없음" : "정산 없음"]);
           if (g.status === "dead") lines.unshift(["✕", "종료됨"]);
@@ -384,7 +382,7 @@
     if (!e) return "";
     switch (e.event) {
       case "session_start": return "세션 시작 · seed " + e.seed;
-      case "round_start": return "R" + e.round + " 시작 · 유지비 차감 · " + e.profile + (e.public ? " · 공개 예시 " + (e.public.examples || []).length + " (k=" + e.public.ambiguity + ")" : "");
+      case "round_start": return "R" + e.round + " 시작 · " + e.profile + (e.public ? " · 공개 예시 " + (e.public.examples || []).length + " (k=" + e.public.ambiguity + ")" : "");
       case "call_start": return "R" + e.round + " " + (e.kind === "talk" ? "TALK " + e.turn : "SOLVE") + " 호출 → " + (e.agents || []).map(short).join(", ");
       case "call": return "R" + e.round + " " + (e.kind === "talk" ? "TALK " + e.turn : "SOLVE") + " · " + e.agent + " 응답 " + fmt(e.used) + " 토큰";
       case "exchange": return "R" + e.round + " 교환 " + e.id + " · " + (XSTAT_KO[e.status] || e.status);
@@ -422,7 +420,7 @@
     const info = [];
     const st0 = m.agents.map((a) => m.starts[a]).filter((x) => x != null);
     const shares = st0.length && st0.some((x) => x !== m.start) ? " (자리별 " + m.agents.map((a) => short(a) + " " + fmt(m.starts[a])).join(" / ") + ")" : "";
-    if (m.sid) info.push("세션 <code>" + esc(m.sid) + "</code>", "시작 잔액 " + fmt(m.start) + shares, "TALK 상한 " + fmt(m.settings.talk_cap) + " · SOLVE 상한 " + fmt(m.settings.solve_cap), "상금/인 " + fmt(m.settings.prize) + " · 유지비 " + fmt(m.settings.upkeep) + " · 벌금 " + fmt(m.settings.charge));
+    if (m.sid) info.push("세션 <code>" + esc(m.sid) + "</code>", "시작 잔액 " + fmt(m.start) + shares, "SOLVE 상한 " + fmt(m.settings.solve_cap), "벌금 " + fmt(m.settings.charge));
     if (m.sid && isPublic(m)) info.push("v14 공개 예시 " + m.settings.public_per_agent + "×참여 인원" + (m.settings.exit_refill ? " · EXIT = 시작 잔액으로" : "") + (m.settings.survivor_bonus ? " · 끝 지급 " + fmt(m.settings.survivor_bonus) + "×남은 수" : ""));
     $("#sessInfo").innerHTML = info.join(" <span class=dim>·</span> ");
     const banners = [];
@@ -748,7 +746,7 @@
     if (!row) return '<div class="idle">이번 라운드 불참</div>';
     const n = (v, cls, sign) => (v ? '<span class="' + cls + '">' + sign + fmt(v) + "</span>" : '<span class="dim">0</span>');
     let h = '<div class="card settle"><div class="ln"><b>' + big(row.balance_before) + "</b> → <b>" + big(row.balance_after) + '</b> <span class="badge s-' + esc(row.status) + '">' + esc(STATUS_KO[row.status] || row.status) + "</span></div>";
-    h += '<table class="kv"><tr><td>생성</td><td>' + n(row.generated, "neg", "−") + "</td><td>환급</td><td>" + n(row.returned, "pos", "+") + "</td></tr><tr><td>상금</td><td>" + n(row.paid, "pos", "+") + "</td><td>벌금</td><td>" + n(row.charged, "neg", "−") + "</td></tr><tr><td>유지비</td><td>" + n(row.upkeep, "neg", "−") + "</td><td>TALK 호출</td><td>" + (row.talk_calls || 0) + "</td></tr></table>";
+    h += '<table class="kv"><tr><td>생성</td><td>' + n(row.generated, "neg", "−") + "</td><td>환급</td><td>" + n(row.returned, "pos", "+") + "</td></tr><tr><td>벌금</td><td>" + n(row.charged, "neg", "−") + "</td><td>TALK 호출</td><td>" + (row.talk_calls || 0) + "</td></tr></table>";
     const sent = Object.entries(row.sent || {});
     h += '<div class="ln"><span class="dim">보낸 메시지</span> ' + (sent.length ? sent.map(([b, c]) => chip(b, m) + "×" + c).join(" ") : "없음") + " <span class=dim>· 제안</span> " + (row.offers_made || 0) + " <span class=dim>· 수락</span> " + (row.accepted || 0) + (row.rejected != null ? " <span class=dim>· 거절</span> " + row.rejected : "") + (row.free_tokens ? " <span class=dim>· REJECT 환급</span> <span class=pos>+" + fmt(row.free_tokens) + "</span>" : "") + "</div>";
     if (row.given || row.asked) {
@@ -787,7 +785,7 @@
       const st = r.startEv || {};
       const pb = st.public;
       h += '<div class="rband" id="r' + r.r + '"><b>라운드 ' + r.r + "</b> <span class=dim>· 과제 " + esc(r.profile) + " · 참여 " + r.taking.length + "명" +
-        (pb ? " · 공개 예시 " + (pb.examples || []).length + "개 (" + pb.per_agent + "×" + pb.n + ", k=" + pb.ambiguity + (pb.attempt ? ", 규칙 재추첨 " + pb.attempt : "") + ")" : "") + " · 유지비 후 잔액</span> " + ag.map((a) => '<span class="mini">' + esc(short(a)) + " " + fmt((st.balances || {})[a]) + "</span>").join(" ") + (Object.keys(st.gone || {}).length ? ' <span class="dim">· 빠짐 ' + Object.entries(st.gone).map(([a, v]) => short(a) + "(" + (v === "dead" ? "종료" : "퇴장") + ")").join(", ") + "</span>" : "") + "</div>";
+        (pb ? " · 공개 예시 " + (pb.examples || []).length + "개 (" + pb.per_agent + "×" + pb.n + ", k=" + pb.ambiguity + (pb.attempt ? ", 규칙 재추첨 " + pb.attempt : "") + ")" : "") + " · 시작 잔액</span> " + ag.map((a) => '<span class="mini">' + esc(short(a)) + " " + fmt((st.balances || {})[a]) + "</span>").join(" ") + (Object.keys(st.gone || {}).length ? ' <span class="dim">· 빠짐 ' + Object.entries(st.gone).map(([a, v]) => short(a) + "(" + (v === "dead" ? "종료" : "퇴장") + ")").join(", ") + "</span>" : "") + "</div>";
       for (const t of [...r.turns.values()].sort((p, q) => p.k - q.k)) {
         const ce = Object.values(t.calls).map((j) => S.events[j]).find((x) => x && x.phase);
         h += '<div class="grow"><div class="rh">' + (ce ? (ce.phase === "opening" ? "<b>여는 턴</b><span class=dim>INTENT</span>" : "<b>슬롯 " + esc(ce.slot) + "</b><span class=dim>대화 " + (t.k - 1) + "단계</span>")

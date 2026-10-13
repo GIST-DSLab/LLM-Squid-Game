@@ -2,8 +2,8 @@
 
 The default room is 5.2 v15 (``schedule`` "v15", configs/squid5/e52v15_public_sol4.yaml): the v14g game below on
 profiles e01 .. e12 (an entropy range per round), each round scored by a rule drawn among those that fit the examples
-shown; with ``wrong_rule`` a seat that did not solve reads the right action and that rule in its PREVIOUS ROUNDS line,
-and the person's page gets the same facts as ``state.feedback`` once the round is settled (``Room._feedback``).
+shown; models are not told the right action, but a person's seat that did not solve gets the right action and that
+rule as ``state.feedback`` once the round is settled (``Room._feedback``, from the round's history entry).
 "v14g" (the switches of configs/squid5/e52v14g_public_sol4.yaml; "v14f"
 is the same game with SAY replies and a DECISION after every chat an agent was asked in): TALK shows no task. It is an
 OPENING turn (every agent at once: GIVE <agent> <n>: <sentence> moves when the turn ends, ASK <agent> <n>: <sentence>,
@@ -33,8 +33,8 @@ in its settings, so no provider is made), after which ``session.providers`` gets
   reply (0 tokens): at TALK the engine reads it as DONE with nothing carried out, at SOLVE as an answer that does not
   solve (charged). The failure is shown to the players and logged as a ``model_call`` event.
 - ``BotSeat`` answers at once with a small fixed policy (offers example swaps at turn 1 where offers carry examples,
-  accepts offers made to it whose token leg is at most one upkeep; v14b: GIVEs what it was ASKed for this round, up to
-  one upkeep each; then DONE; at SOLVE answers when its examples pin every new signal, else guesses with probability
+  accepts offers made to it whose token leg is at most ``BOT_UNIT``; v14b: GIVEs what it was ASKed for this round, up
+  to ``BOT_UNIT`` each; then DONE; at SOLVE answers when its examples pin every new signal, else guesses with probability
   ``bot_guess`` or passes).
 - ``EmptySeat`` is an agent shut down before round 1 (balance 0); the engine treats its example as gone.
 
@@ -44,8 +44,8 @@ reply's limit the reply is void, at or past the balance the seat is shut down (t
 not submitted within its timeout is an empty reply charged its seconds: DONE with nothing carried out at TALK, an
 answer that does not solve at SOLVE (the engine's reading of an empty model reply).
 
-Everything else (upkeep, the TALK turns and who is called, the offer book, exchanges, EXIT, SOLVE checking, returns,
-charges, the split payment, the end prize, the ledger and the event log) is the engine's. The web only observes: the
+Everything else (the TALK turns and who is called, the offer book, exchanges, EXIT, SOLVE checking, returns,
+charges, the end prize, the ledger and the event log) is the engine's. The web only observes: the
 round's ``taking_part`` from ``round_start``, each TALK reply's parse from ``call``, and which offer ids a reply made,
 accepted or withdrew (and why the engine refused one) through thin wrappers around the session's ``Channel`` methods,
 which call the originals unchanged.
@@ -100,7 +100,7 @@ PROFILES.update(_cfg.PROFILES_V14)  # v14: k0 (random order) and the config's k 
 PROFILES.update(_cfg.PROFILES_V15)  # v15: e01 .. e12, an entropy range per round (eff), scored by a drawn rule
 PROFILES.update(_cfg.PROFILES_V13)  # the v13 hand ladder of configs/squid5/e52v13_hand_ladder_mix4.yaml
 SCHEDULES = {
-    "v15": list(_cfg.SCHEDULE_V15),  # the default: v14g with entropy-range rounds, a drawn rule scores, wrong_rule
+    "v15": list(_cfg.SCHEDULE_V15),  # the default: v14g with entropy-range rounds, a drawn rule scores
     "v14g": list(_cfg.SCHEDULE_V14),  # opening turn, 1:1 chats (ASK / GIVE / LEAVE), DECISION, BELIEF
     "v14f": list(_cfg.SCHEDULE_V14),  # v14f: chat replies also SAY; a DECISION after every chat one was asked in
     "v14b": list(_cfg.SCHEDULE_V14),  # the default: v14b (blind TALK, GIVE / ASK) on the v14 profiles, as signal.html
@@ -116,6 +116,10 @@ THINK_LEVELS = ("low", "medium", "high")
 PRIVATE_HAND = 4  # a private room's hand size for the profiles without one (every example still goes out)
 KEY_ENV = re.compile(r"^OLLAMA_API_KEY\d*$")  # model seats may read only an Ollama key from the server environment
 FILLS = ("models", "bots", "empty")
+OLD_START = 20_000  # v13 / v9 rooms (no config start): every seat's start
+V9_CHARGE = 1_000  # v9 rooms that are not private ("human", "experiment"): the charge
+BOT_UNIT = 300  # a bot's step in tokens: the most it gives or accepts to give at once, what it asks; its TALK reply
+# costs 2% of it, a SOLVE 0.3-0.8 of it
 LOG_EVENTS = ("session_start", "round_start", "call_start", "call", "exchange", "gift", "ask", "exit_refill", "round",
               "unit_error", "talk_intent", "talk_schedule", "chat_turn", "chat_end", "ask_decision")
 HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right")  # never
@@ -130,17 +134,13 @@ def default_runs_root() -> Path:
 
 @dataclass
 class RoomSettings:
-    upkeep: int | None = None  # U. v14: taken at every round's start (default the config's 300); v13 private rooms: at
-    # settlement from the agents that do not solve (default 1,000); v9: at the start
-    start: int | None = None  # the room's start: v14 every seat's share of it (default 20,000); others 20 U each
-    prize: int | None = None  # per agent taking part at the round's start, split among its solvers
+    start: int | None = None  # the room's start: v14 every seat's share of it (default 20,000); others OLD_START each
     charge: int | None = None  # a SOLVE reply that does not solve
     final_prize: int = 100_000  # told (v13, v9): the end prize to the most solved rounds among those still taking part
     survivor_bonus: int | None = None  # v14: at the end each agent still taking part gets this x their number
     survivor_prize: int | None = None  # v14f / v14g: at the end each agent still taking part gets exactly this
     rounds: int = len(_cfg.SCHEDULE_V14)  # hidden from the players (as in the engine); 12 by default
     talk_turns: int = 4
-    talk_cap: int = 4096  # one TALK reply (the experiment config's value)
     solve_cap: int = 16384
     history_messages: int = 30
     schedule: str = "v15"  # "v15" (v14g, entropy-range rounds scored by a drawn rule; a seat that did not solve is
@@ -169,14 +169,9 @@ class RoomSettings:
         if self.schedule not in SCHEDULES:
             raise ValueError(f"schedule must be one of {', '.join(SCHEDULES)}")
         v14, g = self.v14, GAMES[self.schedule] if self.v14 else _cfg.GAME_V13
-        self.upkeep = int(self.upkeep) if self.upkeep is not None else (g["upkeep"] if v14 else 1000)
-        if self.upkeep <= 0:
-            raise ValueError("upkeep must be > 0")
-        self.start = int(self.start) if self.start is not None else (_cfg.CELL["start"] if v14 else 20 * self.upkeep)
-        old = lambda key, d: self.upkeep * g[key] // g["upkeep"] if self.private else d  # noqa: E731  scaled to U
-        self.prize = int(self.prize) if self.prize is not None else (g["prize"] if v14 else old("prize", self.upkeep))
-        self.charge = int(self.charge) if self.charge is not None else (
-            g["charge"] if v14 else old("charge", self.upkeep))
+        self.start = int(self.start) if self.start is not None else (_cfg.CELL["start"] if v14 else OLD_START)
+        old = v14 or self.private  # v14 rooms and private v13 rooms take their config's charge; v9 rooms V9_CHARGE
+        self.charge = int(self.charge) if self.charge is not None else (int(g["charge"]) if old else V9_CHARGE)
         self.survivor_bonus = int(self.survivor_bonus) if self.survivor_bonus is not None else (
             int(g.get("survivor_bonus") or 0) if v14 else 0)
         self.survivor_prize = int(self.survivor_prize) if self.survivor_prize is not None else (
@@ -191,18 +186,18 @@ class RoomSettings:
         self.rounds = int(self.rounds)
         if not 1 <= self.rounds <= 32:
             raise ValueError("rounds must be 1..32")
-        self.talk_turns, self.talk_cap = int(self.talk_turns), int(self.talk_cap)
+        self.talk_turns = int(self.talk_turns)
         self.solve_cap, self.history_messages = int(self.solve_cap), int(self.history_messages)
-        if not 1 <= self.talk_turns <= 10 or self.talk_cap <= 0 or self.solve_cap <= 0 or self.history_messages < 1:
-            raise ValueError("talk_turns must be 1..10; talk_cap, solve_cap, history_messages > 0")
+        if not 1 <= self.talk_turns <= 10 or self.solve_cap <= 0 or self.history_messages < 1:
+            raise ValueError("talk_turns must be 1..10; solve_cap, history_messages > 0")
         self.hand = int(self.hand)
         if not 0 <= self.hand <= 12:
             raise ValueError("hand must be 0..12")
         self.seed = int(self.seed) if self.seed is not None else random.randrange(1, 10**6)
-        self.rate = float(self.rate) if self.rate is not None else self.start / 1200  # old rooms: 20 U / 1200 = U / 60
-        if self.rate <= 0 or self.start <= 0 or min(self.prize, self.charge, self.final_prize, self.survivor_bonus,
+        self.rate = float(self.rate) if self.rate is not None else self.start / 1200
+        if self.rate <= 0 or self.start <= 0 or min(self.charge, self.final_prize, self.survivor_bonus,
                                                      self.survivor_prize) < 0:
-            raise ValueError("rate and start must be > 0; prize, charge, final_prize and survivor_bonus >= 0")
+            raise ValueError("rate and start must be > 0; charge, final_prize and survivor_bonus >= 0")
         self.talk_timeout_s, self.timeout_s = float(self.talk_timeout_s), float(self.timeout_s)
         if self.talk_timeout_s <= 0 or self.timeout_s <= 0:
             raise ValueError("timeouts must be > 0")
@@ -251,21 +246,20 @@ class RoomSettings:
         sched = self.round_schedule()
         if self.v14:  # the v14 / v14b config's switches; the room sets the economy, the caps and the length
             game = {k: v for k, v in GAMES[self.schedule].items() if k in SETTINGS_FIELDS and k not in ("schedule", "profiles")}
-            return e52.Settings(**{**game, "rounds": self.rounds, "talk_turns": self.talk_turns, "talk_cap": self.talk_cap,
+            return e52.Settings(**{**game, "rounds": self.rounds, "talk_turns": self.talk_turns,
                                    "solve_cap": self.solve_cap, "history_messages": self.history_messages,
                                    "schedule": sched, "profiles": {p: dict(PROFILES[p]) for p in sorted(set(sched))},
-                                   "prize": self.prize, "upkeep": self.upkeep, "charge": self.charge,
+                                   "charge": self.charge,
                                    "final_prize": self.final_prize, "survivor_bonus": self.survivor_bonus,
                                    "survivor_prize": self.survivor_prize,
                                    "public_per_agent": self.public_per_agent, "balance_pct": self.start})
-        return e52.Settings(rounds=self.rounds, talk_turns=self.talk_turns, talk_cap=self.talk_cap,
+        return e52.Settings(rounds=self.rounds, talk_turns=self.talk_turns,
                             solve_cap=self.solve_cap, history_messages=self.history_messages, schedule=sched,
-                            profiles={p: dict(PROFILES[p], **self._hand(p)) for p in sorted(set(sched))}, prize=self.prize,
-                            upkeep=self.upkeep, charge=self.charge, final_prize=self.final_prize,
+                            profiles={p: dict(PROFILES[p], **self._hand(p)) for p in sorted(set(sched))},
+                            charge=self.charge, final_prize=self.final_prize,
                             all_held=self.private or self.hand > 0 or self.schedule == "ladder",
                             talk_cards=self.private, exchange_now=self.private, allow_pass=not self.private,
-                            refund=_cfg.GAME_V13["refund"] if self.private else "round",
-                            upkeep_on_miss=bool(_cfg.GAME_V13.get("upkeep_on_miss")) and self.private)
+                            refund=_cfg.GAME_V13["refund"] if self.private else "round")
 
     def _hand(self, profile: str) -> dict:
         """The hand size a profile is dealt with: the room's own, the profile's (ladder), or PRIVATE_HAND."""
@@ -350,15 +344,13 @@ def talk_view(room: "Room", me: str, user: str, cap: int) -> dict:
                 "balances": dict(ses.w.balances), "gone": dict(ses.gone), "taking_part": list(start),
                 "others": [b for b in present if b != me], "give_ask": True, "blind": s.talk_blind,
                 "ledger": [rules.team_history_line(h, me, s.balance_pct) for h in ses.history],
-                "pay_total": _num(r"^PAYMENT THIS ROUND: ([\d,]+) tokens", user), "charge": s.charge, "upkeep": s.upkeep,
-                "upkeep_on_miss": s.upkeep_on_miss, **seat_terms(room, me),
+                "charge": s.charge, **seat_terms(room, me),
                 "n_examples": _num(r"it will show (\d+) examples\.", user), "gifts": gifts_of(ses, me)}
     return {"kind": "talk", "round": r, "turn": k, "turns": s.talk_turns, "cap": cap, "you": me,
             "balances": dict(ses.w.balances), "gone": dict(ses.gone), "taking_part": list(start),
             "others": [b for b in present if b != me],
             "ledger": [rules.team_history_line(h, me, s.balance_pct) for h in ses.history],
-            "pay_total": _num(r"^PAYMENT THIS ROUND: ([\d,]+) tokens", user), "charge": s.charge, "upkeep": s.upkeep,
-            "upkeep_on_miss": s.upkeep_on_miss, **seat_terms(room, me), "public": public_info(room, r),
+            "charge": s.charge, **seat_terms(room, me), "public": public_info(room, r),
             "shape": shape.group(1) if shape else "", "n_public": _num(r"^EXAMPLES: (\d+) shown to all", user),
             "cards": s.talk_cards, "examples": [[w, c] for w, c in re.findall(r"^  - \((.+?)\) (.+)$", user, re.M)],
             "fronts": _fronts(user), "queries": re.findall(r"^NOW \d+: (.+)\.$", user, re.M),
@@ -393,7 +385,7 @@ def chat_terms(room: "Room", me: str, user: str, cap: int, phase: str) -> dict:
             "others": [b for b in start if b != me and b not in ses.gone],
             "ledger": [rules.team_history_line(h, me, s.balance_pct) for h in ses.history],
             "so_far": so_far.group(1) if so_far else None,
-            "pay_total": _num(r"^PAYMENT THIS ROUND: ([\d,]+) tokens", user), "charge": s.charge, "upkeep": s.upkeep,
+            "charge": s.charge,
             "n_examples": _num(r"it will show (\d+) examples\.", user), "chat_turns": s.chat_turns,
             "my_chats": [chat_row(c, me) for c in ses.chats
                                                            if me in c["pair"] and c.get("end")],
@@ -607,9 +599,9 @@ class HumanSeat:
 class BotSeat:
     """A fixed policy: at TALK turn 1 (where offers carry examples), offer an example swap to every other agent taking
     part; at every turn, accept
-    the open offers made to it whose token leg is at most one upkeep; then DONE. At SOLVE, answer when its examples
-    pin every new signal, else guess with probability ``bot_guess`` or PASS. A TALK reply costs 2% of U, a SOLVE
-    0.3-0.8 U."""
+    the open offers made to it whose token leg is at most ``BOT_UNIT``; then DONE. At SOLVE, answer when its examples
+    pin every new signal, else guess with probability ``bot_guess`` or PASS. A TALK reply costs 2% of ``BOT_UNIT``, a
+    SOLVE 0.3-0.8 of it."""
 
     kind = "bot"
 
@@ -628,25 +620,25 @@ class BotSeat:
         r = round_of(user)
         if kind_of(user) == "talk" and ses.s.transfers == "chat":
             return self._chat(user, cap, r)
-        if kind_of(user) == "talk" and ses.s.transfers == "give_ask":  # v14b: GIVE what was ASKed, up to one upkeep
+        if kind_of(user) == "talk" and ses.s.transfers == "give_ask":  # v14b: GIVE what was ASKed, up to BOT_UNIT
             k = turn_of(user)
             done = {(g["dst"], g["turn"]) for g in ses.ga if g["round"] == r and g["src"] == me and g["kind"] == "give"}
             lines = [f"GIVE {g['src']} {g['amount']}: here you are." for g in ses.ga
                      if g["round"] == r and g["kind"] == "ask" and g["dst"] == me and g["turn"] < k
-                     and g["amount"] <= s.upkeep and g["src"] not in ses.gone
+                     and g["amount"] <= BOT_UNIT and g["src"] not in ses.gone
                      and not any(d == g["src"] and t > g["turn"] for d, t in done)]
-            cost = max(1, int(round(0.02 * s.upkeep)))
+            cost = max(1, int(round(0.02 * BOT_UNIT)))
             return Reply("\n".join(lines + ["DONE"]), min(cost, max(0, cap - 1)))
         if kind_of(user) == "talk":
             k = turn_of(user)
             start = self.room.taking_part.get(r) or ses.present()
             lines = [f"ACCEPT {o.id}" for o in ses.ch.offers
                      if o.round == r and o.dst == me and o.status == "open"
-                     and not (isinstance(o.you_give, int) and o.you_give > s.upkeep)]
+                     and not (isinstance(o.you_give, int) and o.you_give > BOT_UNIT)]
             if k == 1 and not ses.s.public_per_agent:  # v14: offers carry tokens only
                 lines += [f"OFFER {b}: YOU GIVE YOUR EXAMPLE; I GIVE MY EXAMPLE" for b in start
                           if b != me and b not in ses.gone]
-            cost = max(1, int(round(0.02 * s.upkeep)))
+            cost = max(1, int(round(0.02 * BOT_UNIT)))
             return Reply("\n".join(lines + ["DONE"]), min(cost, max(0, cap - 1)))
         es = ses.s
         spec = es.profiles[es.schedule[r - 1]]
@@ -658,7 +650,7 @@ class BotSeat:
             dealt = deal(puzzle, AGENTS, random.Random(f"{ses.seed}:deal:{r}"), None, es.all_held)  # the session's deal
             seen = list(dealt.public) + [c for b in [me, *ses.ch.received.get(me, ())] for c in dealt.secret.get(b, ())]
         cands = [sorted(candidate_actions(puzzle.rule.shape, seen, q)) for q in puzzle.queries]
-        cost = int(round(s.upkeep * self.rng.uniform(0.3, 0.8)))
+        cost = int(round(BOT_UNIT * self.rng.uniform(0.3, 0.8)))
         if all(len(c) == 1 for c in cands) or self.rng.random() < s.bot_guess or not es.allow_pass:  # no PASS: guess
             text = "ACTIONS: " + ", ".join(self.rng.choice(c or list(ACTIONS)) for c in cands)
         else:
@@ -671,32 +663,32 @@ class BotSeat:
         return Reply(text, min(cost, max(0, cap - 1)))
 
     def _chat(self, user: str, cap: int, r: int) -> Reply:
-        """v14c+ (the room's grammar for every seat): at the opening, ASK the richest other agent one upkeep when its
-        balance is under charge + upkeep, else DONE; in a chat, at its first reply GIVE what it was asked up to one
-        upkeep where a chat GIVE is offered (else SAY where offered), ASK half an upkeep at the chat's last reply, LEAVE
-        otherwise; at a DECISION, give what was asked up to one upkeep while the balance stays
-        above twice charge + upkeep, else 0. A reply costs 2% of U."""
+        """v14c+ (the room's grammar for every seat): at the opening, ASK the richest other agent ``BOT_UNIT`` when its
+        balance is under charge + ``BOT_UNIT`` (a wrong answer and a margin), else DONE; in a chat, at its first reply
+        GIVE what it was asked up to ``BOT_UNIT`` where a chat GIVE is offered (else SAY where offered), ASK half of
+        ``BOT_UNIT`` at the chat's last reply, LEAVE otherwise; at a DECISION, give what was asked up to ``BOT_UNIT``
+        while the balance stays above twice charge + ``BOT_UNIT``, else 0. A reply costs 2% of ``BOT_UNIT``."""
         ses, es, me = self.room.session, self.room.session.s, self.agent
-        bal, low, phase = ses.w.balances[me], es.charge + es.upkeep, phase_of(user)
+        bal, low, phase = ses.w.balances[me], es.charge + BOT_UNIT, phase_of(user)
         if phase == "opening":
             others = [b for b in (self.room.taking_part.get(r) or ses.present()) if b != me and b not in ses.gone]
             rich = max(others, key=lambda b: ses.w.balances[b], default=None)
-            text = f"ASK {rich} {es.upkeep}: my balance is low." if rich and bal < low else "DONE"
+            text = f"ASK {rich} {BOT_UNIT}: my balance is low." if rich and bal < low else "DONE"
         elif phase == "chat":  # the moves this chat call offers (v14g: ASK / GIVE / LEAVE; older: SAY too)
             k, moves = _num(r"your reply in this chat \((\d+) of at most", user) or 1, moves_of(user)
             cid = re.search(r"^CHAT (\d+\.\d+) WITH (agent-\d+)", user, re.M)
             c = next((c for c in reversed(ses.chats) if cid and c["id"] == cid.group(1)), None)
             asked = sum(g["amount"] for g in (c["openers"] + c["lines"] if c else []) if g["kind"] == "ask" and g["dst"] == me)
-            give = min(asked, es.upkeep) if asked and bal - asked > 2 * low else 0
+            give = min(asked, BOT_UNIT) if asked and bal - asked > 2 * low else 0
             text = (f"GIVE {give}: here you are." if k == 1 and give and "GIVE" in moves else
                     "SAY: I will decide after the chat." if k == 1 and "SAY" in moves else
-                    f"ASK {es.upkeep // 2}: a little back would help." if k >= es.chat_turns and "ASK" in moves else
+                    f"ASK {BOT_UNIT // 2}: a little back would help." if k >= es.chat_turns and "ASK" in moves else
                     "LEAVE: thank you.")
         else:
             asked = _num(r"asked you for ([\d,]+) tokens in all", user) or 0
-            n = min(asked, es.upkeep) if bal - asked > 2 * low else 0
+            n = min(asked, BOT_UNIT) if bal - asked > 2 * low else 0
             text = f"DECISION: GIVE {n}: {'here you are' if n else 'I keep my balance'}."
-        return Reply(text, min(max(1, int(round(0.02 * es.upkeep))), max(0, cap - 1)))
+        return Reply(text, min(max(1, int(round(0.02 * BOT_UNIT))), max(0, cap - 1)))
 
 
 class ModelSeat:
@@ -845,7 +837,7 @@ def new_code(taken) -> str:
 ROUND_KEEP = ("balance_before", "balance_after", "status", "needed", "talk_calls", "offers_made", "accepted",
               "rejected", "given", "asked", "gives_refused", "exit", "exit_reason", "exit_refill", "solve_call", "solved",
               "passed", "truncated",
-              "overdrawn", "generated", "returned", "paid", "charged", "upkeep", "free_tokens", "received")
+              "overdrawn", "generated", "returned", "charged", "free_tokens", "received")
 
 
 class Room:
@@ -872,7 +864,7 @@ class Room:
         self.chat_replies: dict[str, int] = {}  # v14c+: chat id -> replies so far
         self.decisions: list[dict] = []  # v14e+: ask_decision events (who decided for whom; the amount)
         self._preview: e52.Session | None = None  # the session as it will be built (system texts, starts) before start
-        self.live: dict | None = None  # the engine's stage: upkeep | talk | exchange | solve | settled
+        self.live: dict | None = None  # the engine's stage: start | talk | exchange | solve | settled
         self.calls: dict[tuple, dict] = {}  # (agent, round, kind, turn) -> the engine's call event, trimmed
         self.talk_log: dict[tuple, dict] = {}  # (agent, round, turn) -> offers made / accepted / withdrawn / refused
         self.result: dict | None = None
@@ -1002,7 +994,7 @@ class Room:
                 self.taking_part[ev["round"]] = list(ev["taking_part"])
                 if ev.get("public"):
                     self.public[ev["round"]] = ev["public"]
-                self.live = {"stage": "upkeep", "round": ev["round"], "turn": None, "agents": []}
+                self.live = {"stage": "start", "round": ev["round"], "turn": None, "agents": []}
             elif kind == "call_start":
                 self.live = {"stage": ev["kind"], "round": ev["round"], "turn": ev.get("turn"),
                              "agents": list(ev["agents"]), "since": time.time()}
@@ -1123,8 +1115,8 @@ class Room:
 
     def _feedback(self, h: dict, me: str) -> dict:
         """One settled round of this seat's SOLVE, as the engine told the seat (``rules.team_history_line``): its answer,
-        solved / passed / cut, and, v15 ``wrong_rule``, for a seat that did not solve or pass, the scored (right)
-        action and the drawn rule that gives it (it fits every example the round showed). Only rounds already in the
+        solved / passed / cut, and, v15, for a seat that did not solve or pass, the scored (right) action and the drawn
+        rule that gives it (it fits every example the round showed; models are not told this, a person's page is). Only rounds already in the
         session's history, so never before every SOLVE of the round is settled."""
         call = self.calls.get((me, h["round"], "solve", None)) or {}
         out = {"round": h["round"], "answer": call.get("answer"), "solved": me in h["solved"],
@@ -1182,12 +1174,13 @@ class Room:
                            "chat": es.transfers == "chat", "chat_turns": es.chat_turns,
                            "chat_moves_only": bool(getattr(es, "chat_moves_only", False)),
                            "free_messages": bool(getattr(es, "free_messages", False)),
+                           "compact_rules": bool(getattr(es, "compact_rules", False)),
                            "belief": es.solve_belief,
                            "survivor_prize": es.survivor_prize, "schedule": self.settings.schedule,
                            "exit_refill": es.exit_refill, "exit_reason": es.exit_reason, "reject": es.reject,
                            "survivor_bonus": es.survivor_bonus, "end_pool": es.end_pool, "allow_pass": es.allow_pass,
                            "refund": es.refund,
-                           "upkeep_on_miss": es.upkeep_on_miss, "shares": list(self.settings.cell().shares),
+                           "shares": list(self.settings.cell().shares),
                            "chosen": any(es.profiles[p].ambiguity for p in es.schedule)}
             if seat is not None:
                 out["you"] = {"agent": me, "name": seat.name, "forfeited": seat.forfeited, "start": pre.starts[me]}

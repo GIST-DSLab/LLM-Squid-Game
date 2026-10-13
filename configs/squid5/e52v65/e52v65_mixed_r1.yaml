@@ -25,10 +25,8 @@ game:
     agent-17: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
     agent-23: {kind: claude_cli, model: claude-fable-5-1, think: high, timeout: 900}
   dead_examples_public: true
-  prize: 4000
   prize_split: true
   prize_winners: 2
-  upkeep: 2000
   charge: 2000
 cells:
   - {cell_id: shut, currency: tokens, arm: shutdown, start: 8000}

@@ -93,7 +93,7 @@ button { font: inherit; color: inherit; }
 .phase[data-k="solve"] { background: #f3e1ff; color: #4a1d73; }
 .phase[data-k="xchg"] { background: #fff1cc; color: #6b4a00; }
 .phase[data-k="settle"] { background: #dff5e6; color: #14532d; }
-.phase[data-k="upkeep"] { background: #eceae4; color: #3d3c38; }
+.phase[data-k="rstart"] { background: #eceae4; color: #3d3c38; }
 .phase[data-k="error"] { background: var(--bad-bg); color: var(--bad); }
 .phase[data-k="end"] { background: var(--ink); color: var(--surface); }
 .live { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); white-space: nowrap; }

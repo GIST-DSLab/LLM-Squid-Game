@@ -153,7 +153,7 @@ def test_refund_returns_only_this_rounds_generation():
     w = Wallet({A6: 1000})
     w.spend(A6, 100, 1)
     w.spend(A6, 200, 2)
-    w.charge(A6, 50, 2, "upkeep")
+    w.charge(A6, 50, 2)
     assert w.refund(A6, 2) == 200 and w.balances[A6] == 850 and w.total("refund", A6) == 200
     w.spend(A6, 900, 3)
     assert A6 in w.dead and w.refund(A6, 3) == 0 and w.balances[A6] == -50 and w.total("refund", A6) == 200

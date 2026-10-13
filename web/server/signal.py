@@ -60,7 +60,7 @@ if any(g["profiles"] != GAME["profiles"] or g["schedule"] != SCHEDULE_V14 for g 
     raise RuntimeError("the v14 and v14b configs schedule different profiles; give the web rooms one profile set each")
 AMBIGUITY = [PROFILES_V14[p].get("ambiguity", 0) for p in SCHEDULE_V14]
 SPLITS = [PROFILES_V14[p].get("split", 0) for p in SCHEDULE_V14]  # selector v2: the target split p per round
-# v15 (the web rooms' default game): v14g's switches plus wrong_rule, its own profiles e01 .. e12 (one per round). A
+# v15 (the web rooms' default game): v14g's switches (compact rules), its own profiles e01 .. e12 (one per round). A
 # profile sets ``eff`` (an entropy range in bits for N = 1..4 agents taking part) and ``floor``, no ambiguity / split /
 # size_band, so it is kept apart from the v14 profile set above (the signal page's "public" mode stays on v14).
 GAME_V15 = _game(CONFIG_V15)

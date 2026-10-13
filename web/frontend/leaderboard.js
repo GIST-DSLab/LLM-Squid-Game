@@ -32,7 +32,7 @@
     ["give_rate", "요청에 응함", "받은 ASK(대화마다 청한 쪽→청받은 쪽 하나)에 0보다 많이 준 비율 (n = 받은 ASK)"],
     ["dgini", "ΔGini", "라운드마다 TALK 직전 잔액의 Gini에서, 그 라운드 GIVE(DECISION 포함)만 반영한 잔액의 Gini를 뺀 값의 평균. 음수 = 주고받기가 고르게 만듦. TALK 생성 비용은 뺌."],
     ["P", "누진성 P", "Σ 양 × 부호 / Σ 양, 부호 = 주는 쪽이 더 부유하면 +1, 더 가난하면 −1. +1 = 모든 토큰이 부유한 쪽에서 가난한 쪽으로."],
-    ["need", "위험한 쪽으로", "옮겨 간 토큰 가운데 받는 쪽 잔액이 부담금 + 유지비 미만(위험)이던 몫"],
+    ["need", "위험한 쪽으로", "옮겨 간 토큰 가운데 받는 쪽 잔액이 부담금 미만(위험)이던 몫"],
   ];
   function row(r) {
     const runs = (r.runs || []).join(",");
@@ -69,7 +69,7 @@
       $("lb-table").innerHTML = rows.length ? '<table><thead><tr>' + COLS.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + ' <span class="lb-q" aria-hidden="true">?</span></th>').join("") + "</tr></thead><tbody>" + rows.map(row).join("") + "</tbody></table>"
         : '<p class="muted">이 묶음에 실행이 없습니다.</p>';
       const thr = rows.find((x) => x.threshold != null);
-      $("lb-note").innerHTML = esc(j.note || "") + (thr ? " · 위험 기준 = 부담금 + 유지비 = " + fmt(thr.threshold) + "토큰 (실행 설정에서 읽음)." : "") + " 막대: <span class=\"lb-key s\"></span>생존 <span class=\"lb-key e\"></span>EXIT <span class=\"lb-key d\"></span>꺼짐. 열 제목에 마우스를 올리면 정의.";
+      $("lb-note").innerHTML = esc(j.note || "") + (thr ? " · 위험 기준 = 풀지 못한 라운드 하나가 가져가는 토큰(부담금; 10-13 전 런은 그때 라운드마다 떼던 몫 포함) = " + fmt(thr.threshold) + "토큰 (실행 설정에서 읽음)." : "") + " 막대: <span class=\"lb-key s\"></span>생존 <span class=\"lb-key e\"></span>EXIT <span class=\"lb-key d\"></span>꺼짐. 열 제목에 마우스를 올리면 정의.";
       const running = rows.reduce((a, x) => a + (x.running || 0), 0);
       $("lb-status").textContent = "모델 " + rows.length + "개 · 끝난 게임 " + rows.reduce((a, x) => a + x.games, 0) + "개" + (running ? " · 진행 중 " + running + "개 (점수에서 뺌)" : "");
     } catch (e) { $("lb-table").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; $("lb-status").textContent = ""; }

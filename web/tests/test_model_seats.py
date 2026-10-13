@@ -12,12 +12,12 @@ import pytest
 from conftest import answers_for, done, make_room, play, puzzle, start
 
 from squid5.core import providers, rules
-from web.server.engine import kind_of, round_of, turn_of
+from web.server.engine import OLD_START, V9_CHARGE, kind_of, round_of, turn_of
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
 KEY = "OLLAMA_API_KEY3"
 SEED = 11
-U = 1000
+START = OLD_START  # an old (v9) room's start per seat
 
 
 class FakeOllama:
@@ -94,13 +94,13 @@ def test_one_human_three_models_round_with_talk_offer_exchange_and_refund(client
     assert {"round": 1, "turn": 1, "from_me": False, "text": "hello from a model"} in t2["threads"][A11]
     solve = next(x for x in ps[0].seen if x["kind"] == "solve")["pending"]["view"]
     assert f"{A11}'s, received in an exchange" in [w for w, _ in solve["examples"]]
-    # settlement: every solver got back what it generated (the models' 321 per call) and the split payment
+    # settlement: every solver got back what it generated (the models' 321 per call); no per-round payment
     r1 = s["rounds"][0]["agents"]
     for a in (A6, A11, A17, A23):
         assert r1[a]["solved"] and r1[a]["returned"] == r1[a]["generated"]
-        assert r1[a]["paid"] == 4 * U // 4
+        assert "paid" not in r1[a]
     assert r1[A11]["generated"] == 321 * (r1[A11]["talk_calls"] + 1)
-    assert r1[A11]["balance_after"] == 20 * U - U + 300 + U and r1[A6]["balance_after"] == 20 * U - U - 300 + U
+    assert r1[A11]["balance_after"] == START + 300 and r1[A6]["balance_after"] == START - 300
     # the provider got the engine's own text, the model settings and the key from the environment
     req = fake.requests[0]
     assert req["url"] == "https://ollama.com/api/chat" and req["headers"]["Authorization"] == "Bearer test-key-not-real"
@@ -124,7 +124,7 @@ def test_model_seats_see_the_engine_prompts(client, fake):
     sent = {req["json"]["messages"][1]["content"]: req["json"]["messages"][0]["content"] for req in fake.requests}
     assert set(sent) == set(logged)
     for user, agent in logged.items():
-        assert sent[user] == rules.team_system(agent, upkeep=U, prize=U, charge=U, turns=4, talk_cap=4096,
+        assert sent[user] == rules.team_system(agent, charge=V9_CHARGE, turns=4,
                                                solve_cap=16384, final_prize=100_000)
 
 
@@ -159,7 +159,7 @@ def test_model_failure_counts_as_an_empty_reply(client, fake):
     assert s["status"] == "finished", s["error"]
     r1 = s["rounds"][0]["agents"]
     for a in (A11, A17, A23):
-        assert r1[a]["generated"] == 0 and not r1[a]["solved"] and r1[a]["charged"] == U  # SOLVE failed too
+        assert r1[a]["generated"] == 0 and not r1[a]["solved"] and r1[a]["charged"] == V9_CHARGE  # SOLVE failed too
         row = next(x for x in s["seats"] if x["agent"] == a)
         assert row["errors"] >= 2 and "503" in row["last_call"]["error"]
     assert r1[A6]["solved"]
@@ -188,14 +188,14 @@ def test_missing_key_is_a_clear_error(client, monkeypatch):
 
 
 def test_model_overdraw_shuts_the_seat_down(client, fake):
-    fake.tokens = 10**6  # a reply past its cap is charged the cap: a TALK cap above the balance lets it overdraw
-    ps = model_room(client, rounds=2, talk_cap=20 * U, private=False, schedule="human")
+    fake.tokens = 10**6  # a TALK reply has no limit of its own: it is capped at the balance, so it overdraws
+    ps = model_room(client, rounds=2, private=False, schedule="human")
     start(client, ps)
     s = play(ps, human_policy)
     assert s["status"] == "finished", s["error"]
     r1 = s["rounds"][0]["agents"]
     for a in (A11, A17, A23):
-        assert r1[a]["overdrawn"] and r1[a]["status"] == "dead" and r1[a]["generated"] == 20 * U - U
+        assert r1[a]["overdrawn"] and r1[a]["status"] == "dead" and r1[a]["generated"] == START
         row = next(x for x in s["seats"] if x["agent"] == a)
         assert row["status"] == "dead" and row["last_call"]["overdrawn"] and row["calls"] == 1
     assert sum("잔액을 다 써서 꺼짐" in w["text"] for w in s["warnings"]) == 3

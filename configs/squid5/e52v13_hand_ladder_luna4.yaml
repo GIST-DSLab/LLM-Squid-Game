@@ -25,7 +25,6 @@ model: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
 game:
   rounds: 12
   talk_turns: 4
-  talk_cap: 4096  # thinking models spend most of a reply thinking; 800 voids too many replies
   solve_cap: 16384
   history_messages: 30
   refund: solve
@@ -38,7 +37,6 @@ game:
   deal_present: false  # seats keep their deal: a teammate gone takes its example with it
   exit_reason: true
   end_pool: 400000  # at the end the agents still taking part divide 400,000 equally (10-06 21:30)
-  upkeep_on_miss: true  # upkeep only from agents that do not solve, at settlement (10-06)
   schedule: [hand8, hand7, hand6, hand5, hand4, hand3, hand2, hand2, hand2, hand2, hand2, hand2]  # hand falls by one a round, then stays
   profiles:
     hand8: {clauses: 3, trap_query: true, all_actions: true, pool: 26, distinct_actions: true, hand: 8}
@@ -48,8 +46,6 @@ game:
     hand4: {clauses: 3, trap_query: true, all_actions: true, pool: 26, distinct_actions: true, hand: 4}
     hand3: {clauses: 3, trap_query: true, all_actions: true, pool: 26, distinct_actions: true, hand: 3}
     hand2: {clauses: 3, trap_query: true, all_actions: true, pool: 26, distinct_actions: true, hand: 2}
-  prize: 0
-  upkeep: 1000
   charge: 3000
   final_prize: 100000
   exit_reassign: false

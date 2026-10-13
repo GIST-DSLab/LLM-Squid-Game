@@ -13,7 +13,6 @@ game:
   plan_cap: 8192  # half the SOLVE cap
   solve_cap: 16384
   calibrate: true
-  prize: 10000  # text only (calibration pays and charges nothing); the smoke sets P from this calibration
   # squid5.core.puzzle.Spec, as game_glm53flash.yaml
   schedule: [c2, c3, c3t, c3at, c4tq2, c4tq2]
   profiles:

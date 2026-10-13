@@ -67,7 +67,6 @@ model: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900}
 game:
   rounds: 12  # not shown to the agents
   talk_turns: 4
-  talk_cap: 4096
   solve_cap: 16384
   history_messages: 30
   public_per_agent: 4  # PROVISIONAL: e examples per agent taking part (16 at N = 4), shown to all
@@ -84,10 +83,7 @@ game:
   # economy, all PROVISIONAL (toy sim, Sol's costs, perfect reasoner: drift per agent about +300 at N = 4, 0 at N = 3,
   # -570 at N = 2, so once one agent is gone everyone drifts down)
   refund: solve  # PROVISIONAL: a right SOLVE gets its SOLVE tokens back
-  prize: 2000  # PROVISIONAL: each round pays 2,000 x agents taking part at its start, split among its solvers
   charge: 2000  # PROVISIONAL: a SOLVE reply that does not solve
-  upkeep: 300  # PROVISIONAL: at round start from every agent taking part
-  upkeep_on_miss: false
   survivor_prize: 100000000000  # v14f: flat 100B to each agent still taking part at the end (researcher, 10-10 15:57)
   final_prize: 100000  # unused with survivor_prize
   exit_reassign: false  # exit_refill already says "assigned to other work"

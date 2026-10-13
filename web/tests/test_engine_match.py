@@ -18,7 +18,7 @@ A6, A11, A17, A23 = rules.TEAM_AGENTS
 SEED = 21
 OFFER = {"ladder": f"OFFER {A11}: YOU GIVE 200 TOKENS; I GIVE MY EXAMPLE",
          "v14": f"OFFER {A11}: YOU GIVE 200 TOKENS; I GIVE NOTHING",  # v14: an ask, tokens only
-         "v14b": f"GIVE {A11} 200: for the upkeep\nASK {A17} 50: any to spare?"}  # v14b: GIVE / ASK (TO is dropped)
+         "v14b": f"GIVE {A11} 200: for the next answer\nASK {A17} 50: any to spare?"}  # v14b: GIVE / ASK (TO is dropped)
 
 
 @pytest.mark.parametrize("schedule", ["ladder", "v14", "v14b"])

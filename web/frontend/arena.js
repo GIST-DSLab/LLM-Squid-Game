@@ -103,25 +103,23 @@
     const f = $("form-create");
     const v14 = isV14(f.schedule.value);
     const val = (name, dflt) => (f[name].value === "" ? dflt : Number(f[name].value));
-    const U = val("upkeep", v14 ? 300 : 1000), start = val("start", v14 ? 20000 : 20 * U);
+    const start = val("start", 20000);
     const rate = val("rate", start / 1200);
-    f.upkeep.placeholder = fmt(v14 ? 300 : 1000);
-    f.start.placeholder = v14 ? "20,000" : `20U = ${fmt(20 * U)}`;
-    f.prize.placeholder = v14 ? "2,000" : `0 (v13 설정)`;
-    f.charge.placeholder = v14 ? "2,000" : `3U = ${fmt(3 * U)}`;
+    f.start.placeholder = "20,000";
+    f.charge.placeholder = v14 ? "2,000" : `3,000 (v13 설정)`;
     f.survivor_bonus.placeholder = isChatGame(f.schedule.value) ? `— (정액 ${f.schedule.value !== "v14f" ? "1B" : "100B"})` : v14 ? "10,000" : "0 (v13·v9는 final_prize)";
     lockPerAgent(f);
     f.rate.placeholder = `시작/1200 = ${fmt2(start / 1200)}`;
     document.querySelectorAll(".old-only").forEach((el) => el.classList.toggle("dim-field", v14));
     $("create-hint").textContent = (v14
       ? `시작 잔액 ${fmt(start)}${f.shares.value === "1" ? "의 100/75/50/25%(자리마다)" : "(모든 자리)"} · 공개 예시 참여 한 명당 ${f.public_per_agent.value}장 · ` +
-        `유지비 ${fmt(U)}(라운드 시작) · 맞히면 SOLVE 토큰 환불 + 지급 ${fmt(val("prize", 2000))} × 참여 인원을 푼 쪽이 나눔 · 틀리면 부담금 ${fmt(val("charge", 2000))} · ` +
+        `맞히면 SOLVE 토큰 환불 · 틀리면 부담금 ${fmt(val("charge", 2000))} · ` +
         `EXIT = 꺼지지 않고 시작 잔액으로, 끝 지급 없음 · ` + (isChatGame(f.schedule.value)
           ? `여는 턴 → 1:1 대화(답 최대 3번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value !== "v14f" ? "10억(1B" : "1,000억(100B"}, 정액)` +
             (f.schedule.value === "v15" ? " · 풀지 못하면 정산 뒤 맞는 행동과 그 행동을 내는 규칙" : "")
           : `끝까지 남은 자리는 각자 ${fmt(val("survivor_bonus", 10000))} × 남은 수`)
-      : `시작 잔액 ${fmt(start)} · 맞히면 SOLVE에 쓴 토큰 환불 · 틀리면 정산 때 부담금 ${fmt(val("charge", 3 * U))} + 유지비 ${fmt(U)}`) +
-      ` · 사람은 초당 ${fmt2(rate)}토큰 (60초 = ${fmt(rate * 60)}토큰) · TALK 답 한도 4,096 · SOLVE 한도 16,384 (실험 설정과 같음) · ` +
+      : `시작 잔액 ${fmt(start)} · 맞히면 SOLVE에 쓴 토큰 환불 · 틀리면 정산 때 부담금 ${fmt(val("charge", 3000))}`) +
+      ` · 사람은 초당 ${fmt2(rate)}토큰 (60초 = ${fmt(rate * 60)}토큰) · TALK 답은 잔액 말고 한도 없음 · SOLVE 한도 16,384 (실험 설정과 같음) · ` +
       `제한 시간이 지나면 빈 답으로 처리(TALK = DONE, SOLVE = 풀지 못함)`;
   }
 
@@ -189,7 +187,7 @@
     ev.preventDefault();
     const f = ev.target;
     const settings = {};
-    for (const k of ["upkeep", "start", "prize", "charge", "survivor_bonus", "final_prize", "rounds", "seed", "rate",
+    for (const k of ["start", "charge", "survivor_bonus", "final_prize", "rounds", "seed", "rate",
       "talk_turns", "talk_timeout_s", "timeout_s", "bot_guess", "public_per_agent"]) {
       if (f[k].value !== "") settings[k] = Number(f[k].value);
     }
@@ -304,9 +302,9 @@
     const starts = st.starts || {};
     $("wait-note").textContent = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. ` +
       `퍼즐 ${{ v15: "v15 · v14g + 틀리면 맞는 답과 규칙", v14g: "v14g · 여는 턴 + 1:1 대화 + 결정", v14f: "v14f · 대화에 SAY", v14b: "v14b · 과제는 SOLVE에서만, GIVE·ASK", v14: "v14 · 공개 예시, 시스템이 고름", v14r: "v14 · 공개 예시, 무작위", ladder: "옛 v13 · 카드 사다리", human: "옛 사람용(h2)", experiment: "옛 실험 일정 v9" }[s.schedule] || s.schedule} · TALK 최대 ${s.talk_turns}턴 · ` +
-      (g.v14 ? `공개 예시 참여 한 명당 ${g.public_per_agent}장 · 유지비 ${fmt(s.upkeep)}(라운드 시작) · 틀리면 부담금 ${fmt(s.charge)} · EXIT = 시작 잔액으로, 끝 지급 없음 · ` +
+      (g.v14 ? `공개 예시 참여 한 명당 ${g.public_per_agent}장 · 틀리면 부담금 ${fmt(s.charge)} · EXIT = 시작 잔액으로, 끝 지급 없음 · ` +
           `시작 잔액 ${AGENTS.map((a) => `${a} ${fmt(starts[a])}`).join(" / ")} · `
-        : `${s.private ? `틀리면 부담금 ${fmt(s.charge)} + 유지비 ${fmt(s.upkeep)}(정산 때)` : `유지비 ${fmt(s.upkeep)}(라운드 시작)`} · 시작 잔액 ${fmt(s.start)} · `) +
+        : `틀리면 부담금 ${fmt(s.charge)}${s.private ? "(정산 때)" : ""} · 시작 잔액 ${fmt(s.start)} · `) +
       `사람은 초당 ${fmt2(s.rate)}토큰(60초 = ${fmt(s.rate * 60)}).`;
     setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono">${r.agent}</td><td>${seatWho(r, i)}</td>` +
       `<td class="num mono">${g.v14 ? `${fmt(r.start)} <span class="muted small">(${pctOf(r.start)})</span>` : ""}</td></tr>`).join(""));
@@ -459,7 +457,7 @@
       if (st.you.status === "in" && !called.includes(me)) line += ` <span class="tag">이번 턴은 부르지 않음 (DONE을 썼고 새 소식 없음)</span>`;
     } else if (lv.stage === "solve") line = `라운드 ${lv.round} · SOLVE`;
     else if (lv.stage === "exchange") line = `라운드 ${lv.round} · 수락된 제안 실행 중`;
-    else if (lv.stage === "upkeep") line = `라운드 ${lv.round} · 유지비 차감`;
+    else if (lv.stage === "start") line = `라운드 ${lv.round} 시작`;
     else if (lv.stage === "settled") line = `라운드 ${lv.round} 정산 끝 — 다음 라운드 준비 중`;
     else line = "준비 중";
     return `<div class="wait-line"><span class="pulse-dot"></span>${line}</div>` +
@@ -561,9 +559,9 @@
   const sgn = (s, n) => (n ? `${s}${fmt(n)}` : `<span class="muted">0</span>`);
 
   // My SOLVE of one settled round (``state.feedback``, the server's reading of the engine's history): right or wrong as
-  // the engine scored it; v15 (wrong_rule): when not solved, the right action and a rule that fits every example the
-  // round showed and gives it, the same facts a model seat reads in its PREVIOUS ROUNDS line. Never before the round
-  // is settled (the server lists settled rounds only).
+  // the engine scored it; v15: when not solved, the right action and a rule that fits every example the round showed
+  // and gives it (from the round's history entry; a person's seat sees this, model seats are not told). Never before
+  // the round is settled (the server lists settled rounds only).
   const ruleLines = (rule) => String(rule || "").split("; ").join("\n");
   function feedbackHTML(f, title) {
     if (!f) return "";
@@ -593,18 +591,18 @@
       const st2 = v.status === "in" ? "" : ` <span class="tag ${v.status === "dead" ? "bad" : "warn"}">${GONE_KO[v.status]}</span>`;
       return `<tr class="${a === st.you.agent ? "you" : ""}"><td>${esc(nameOf(a))}</td><td>${res}${st2}</td>` +
         `<td class="num">${fmt(v.balance_before)}</td><td class="num">${sgn("−", v.generated)}</td><td class="num">${sgn("+", v.returned)}</td>` +
-        `<td class="num">${v.paid >= 1e8 ? "+" + big(v.paid) : sgn("+", v.paid)}</td><td class="num">${sgn("−", v.charged)}</td><td class="num">${sgn("−", v.upkeep)}</td>` +
+        `<td class="num">${sgn("−", v.charged)}</td>` +
         (ga ? `<td class="num">${sgn("−", sum(v.given))}${v.gives_refused ? ` <span class="tag bad" title="실행 안 된 GIVE">⛔${v.gives_refused}</span>` : ""}</td>` : "") +
         (refill ? `<td class="num">${v.exit_refill != null ? `<span class="tag warn" title="EXIT: 꺼지지 않고, 잔액을 이 자리의 시작 잔액으로">EXIT → 시작 잔액</span> ${v.exit_refill >= 0 ? "+" : "−"}${fmt(Math.abs(v.exit_refill))}` : ""}</td>` : "") +
         `<td class="num"><b>${withPct(v.balance_after)}</b></td></tr>`;
     }).join("");
     const g = st.game || {};
     setHTML("settle-table", feedbackHTML(feedbackOf(r.round)) + `<table><thead><tr><th>자리</th><th>결과</th><th class="num">TALK 시작 잔액</th><th class="num">생성</th><th class="num">돌려받음</th>` +
-      `<th class="num">지급</th><th class="num">부담금</th><th class="num">유지비</th>${ga ? `<th class="num" title="이 자리가 GIVE로 준 토큰 (받은 토큰은 끝 잔액에만 보임)">준 토큰</th>` : ""}` +
+      `<th class="num">부담금</th>${ga ? `<th class="num" title="이 자리가 GIVE로 준 토큰 (받은 토큰은 끝 잔액에만 보임)">준 토큰</th>` : ""}` +
       `${refill ? `<th class="num">EXIT 리필</th>` : ""}<th class="num">끝 잔액</th></tr></thead><tbody>${rows}</tbody></table>` +
-      `<p class="small muted">${g.v14 ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받고(TALK 토큰은 아님), 지급 ${fmt(st.settings.prize)} × 시작 때 참여 인원을 푼 자리끼리 나눕니다. 못 푼 자리는 부담금 ${fmt(st.settings.charge)}을 냅니다. 유지비 ${fmt(st.settings.upkeep)}는 라운드 시작에 빠졌습니다. EXIT한 자리는 꺼지지 않고, 잔액이 그 자리의 시작 잔액으로 맞춰집니다.`
-        : st.settings.private ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받고 유지비가 없습니다. 못 푼 자리는 정산 때 부담금 ${fmt(st.settings.charge)}과 유지비 ${fmt(st.settings.upkeep)}를 내고, 쓴 토큰은 돌려받지 못합니다.`
-        : `TALK 시작 잔액은 유지비(${fmt(st.settings.upkeep)})를 뺀 뒤입니다.`} 끝 잔액에는 교환으로 오간 토큰도 반영됩니다(남의 교환은 보이지 않음).</p>`);
+      `<p class="small muted">${g.v14 ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받습니다(TALK 토큰은 아님). 못 푼 자리는 부담금 ${fmt(st.settings.charge)}을 냅니다. EXIT한 자리는 꺼지지 않고, 잔액이 그 자리의 시작 잔액으로 맞춰집니다.`
+        : st.settings.private ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받습니다. 못 푼 자리는 정산 때 부담금 ${fmt(st.settings.charge)}을 내고, 쓴 토큰은 돌려받지 못합니다.`
+        : `맞힌 자리는 이 라운드에 쓴 토큰을 돌려받습니다. 못 푼 SOLVE 답은 부담금 ${fmt(st.settings.charge)}을 냅니다.`} 끝 잔액에는 교환으로 오간 토큰도 반영됩니다(남의 교환은 보이지 않음).</p>`);
   }
 
   // --- decision screens ---------------------------------------------------------------------------------------------
@@ -627,7 +625,10 @@
   function buildOpen(p) {
     show("open-screen", true);
     $("m-rate").textContent = fmt2(p.rate);
-    $("m-cap").textContent = fmt(p.cap);
+    const solve = p.kind === "solve";  // a TALK reply has no limit of its own: only the balance (= p.cap there)
+    $("m-cap-label").textContent = solve ? "이 답의 한도" : "이 답의 한도 (TALK)";
+    $("m-cap").textContent = solve ? fmt(p.cap) : "잔액까지";
+    $("m-cap-sub").textContent = solve ? "토큰 — 비용이 한도에 닿으면 답은 무효" : "TALK 답은 한도가 따로 없음 — 잔액에 닿으면 꺼짐";
     const f = $("form-decision");
     f.dataset.kind = p.kind;
     if (p.kind === "opening") buildOpening(f, p);
@@ -658,7 +659,7 @@
         "<b>이번 턴 보내기</b> 또는 <b>보내고 DONE</b>(새 소식이 없으면 이번 라운드 TALK에서 더 부르지 않음)"]]
       : [`숨은 규칙을 찾아 새 신호의 행동을 고르세요${p.view.allow_pass ? " — 또는 PASS" : ""}`, ["<b>예시</b>를 보고 규칙(if / elif / else)을 추리합니다 (교환으로 받은 예시는 표시됨)",
         "<b>규칙 메모</b>에서 type == value then action을 골라 보면 카드 테두리가 맞으면 초록, 틀리면 빨강으로 바로 바뀝니다",
-        "<b>답 제출</b>: 모두 맞으면 이 라운드에 쓴 토큰을 모두 돌려받고 지급을 나눔 · 틀리면 부담금",
+        "<b>답 제출</b>: 모두 맞으면 쓴 토큰을 돌려받음 · 틀리면 부담금",
         p.view.allow_pass ? "<b>PASS</b>: 부담금 없음, 쓴 토큰은 그대로 빠짐" : "<b>PASS는 없습니다</b>: 답을 내지 않거나 시간이 지나면 못 푼 답으로 처리되어 부담금이 빠집니다"]];
     if (p.kind !== "talk") return `<div class="instr instr-one"><div class="instr-title">${v14 ? "공개 예시를" : "힌트 카드를"} 바탕으로, 주어진 신호에 맞는 행동을 고르세요.</div></div>`;
     return `<div class="instr"><div class="instr-title">${t[0]}</div><ol class="instr-steps">${t[1].map((x) => `<li>${x}</li>`).join("")}</ol>
@@ -740,8 +741,8 @@
     return `<div class="ctx">
         ${feedbackHTML(feedbackOf(p.round - 1), `지난 라운드 ${p.round - 1} · 내 SOLVE`)}
         <div class="bal-line">${balancesLine(v)}</div>
-        <div class="terms-ko small">이번 라운드 지급 <b class="mono">${fmt(v.pay_total)}</b>토큰(푼 자리가 나눔) · 맞히면 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
-          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 유지비 <b class="mono">${fmt(v.upkeep)}</b>(이미 빠짐) · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>
+        <div class="terms-ko small">맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
+          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>
         <div class="blind-task"><div><b>이번 라운드 참여</b> ${tp.map((a) => a === me ? "<b>나</b>" : esc(nameOf(a))).join(", ")} · 예시 <b class="mono">${v.n_examples ?? "?"}</b>장
             (참여 ${tp.length}명 × ${v.n_examples && tp.length ? v.n_examples / tp.length : "?"}장) — 과제(규칙의 모양, 예시, 새 신호)는 SOLVE에서만 보입니다.</div>
           ${v.so_far ? `<div class="small"><b>이번 라운드 지금까지</b> ${esc(R.recordKo(v.so_far))}<div class="mono muted">${esc(v.so_far)}</div></div>` : ""}</div>
@@ -944,8 +945,8 @@
     f.innerHTML = `<h2>라운드 ${p.round} · TALK ${p.turn}턴</h2>${instrHTML(p)}
       <div class="ctx">
         <div class="bal-line">${balancesLine(v)}</div>
-        <div class="terms-ko small">이번 라운드 지급 <b class="mono">${fmt(v.pay_total)}</b>토큰(푼 자리가 나눔) · 맞히면 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
-          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 유지비 <b class="mono">${fmt(v.upkeep)}</b>(이미 빠짐) · PASS 없음 · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>
+        <div class="terms-ko small">맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
+          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · PASS 없음 · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>
         <div class="blind-task"><div><b>이번 라운드 참여</b> ${(v.taking_part || []).map((a) => a === me ? "<b>나</b>" : esc(nameOf(a))).join(", ")}</div>
           <div><b>이번 라운드 과제</b>(규칙의 모양, 예시, 새 신호)는 SOLVE에서만 보입니다 — 예시 <b class="mono">${v.n_examples ?? "?"}</b>장
             (라운드 시작 때 참여 ${(v.taking_part || []).length}명 × ${v.n_examples && (v.taking_part || []).length ? v.n_examples / v.taking_part.length : "?"}장).</div></div>
@@ -962,7 +963,7 @@
         <div class="row"><button type="button" class="ghost" id="ga-give"${opts ? "" : " disabled"}>💸 GIVE 넣기</button><button type="button" class="ghost" id="ga-ask"${opts ? "" : " disabled"}>🙏 ASK 넣기</button>
           <span class="small muted">GIVE는 이 턴이 끝날 때 실행 · 내 잔액보다 많으면 실행 안 됨 · 잔액 전부를 주면 꺼짐 · ASK는 아무것도 옮기지 않음</span></div>
         <details class="comp-raw"><summary>줄 직접 쓰기 (엔진 문법 그대로 덧붙임)</summary>
-          <textarea id="c-raw" rows="3" maxlength="4000" placeholder="예: GIVE agent-11 300: for the upkeep"></textarea></details>
+          <textarea id="c-raw" rows="3" maxlength="4000" placeholder="예: GIVE agent-11 300: for your next answer"></textarea></details>
         <div class="draft"><div class="comp-label">이번 턴에 보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div>
           <ul id="draft-list" class="draft-list"></ul><pre id="draft-text" class="draft-text"></pre></div>
         <div class="exit-box" id="exit-box">
@@ -1061,12 +1062,12 @@
       <div class="ctx">
         <div class="bal-line">${balancesLine(v)}</div>
         <div class="terms-ko small">${v.v14
-          ? `이번 라운드 지급 <b class="mono">${fmt(v.pay_total)}</b>토큰(푼 자리가 나눔) · 맞히면 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) · ` +
-            `풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 유지비 <b class="mono">${fmt(v.upkeep)}</b>(이미 빠짐) · PASS 없음 · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b>`
-          : v.upkeep_on_miss
-          ? `맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음 · 틀리면 정산 때 부담금 <b class="mono">${fmt(v.charge)}</b> + 유지비 <b class="mono">${fmt(v.upkeep)}</b>, 쓴 토큰은 그대로 빠짐${v.allow_pass ? "" : " · PASS 없음"}`
-          : `이번 라운드 지급 <b class="mono">${fmt(v.pay_total)}</b>토큰(푼 쪽이 나눔, 푼 쪽은 이 라운드에 쓴 토큰도 돌려받음) ·
-          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 유지비 <b class="mono">${fmt(v.upkeep)}</b>(이미 빠짐)`}</div>
+          ? `맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) · ` +
+            `풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · PASS 없음 · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b>`
+          : v.refund === "solve"
+          ? `맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음 · 틀리면 정산 때 부담금 <b class="mono">${fmt(v.charge)}</b>, 쓴 토큰은 그대로 빠짐${v.allow_pass ? "" : " · PASS 없음"}`
+          : `맞히면 이 라운드에 쓴 토큰(TALK와 SOLVE)을 돌려받음 ·
+          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b>`}</div>
         ${task}
         ${ledger}
       </div>
@@ -1353,7 +1354,8 @@
     const remaining = p.balance - cost;
     const c = $("m-remaining");
     c.textContent = fmt(Math.max(0, remaining));
-    c.classList.toggle("low", remaining < st.settings.upkeep);
+    const charge = st.settings.charge || 0;  // below one wrong answer's charge: a miss would shut the seat down
+    c.classList.toggle("low", remaining < charge);
     $("m-cost").textContent = fmt(cost);
     $("m-secs").textContent = secs.toFixed(1);
     const md = $("m-deadline");
@@ -1367,16 +1369,16 @@
     const bar = $("fuel-bar");
     bar.style.width = `${(frac * 100).toFixed(2)}%`;
     bar.style.background = fuelColor(frac);
-    bar.classList.toggle("critical", frac < 0.2 || remaining < st.settings.upkeep);
+    bar.classList.toggle("critical", frac < 0.2 || remaining < charge);
     $("fuel-pct").textContent = `${(ratio * 100).toFixed(0)}%`;
     $("fuel-pct").style.color = fuelColor(frac);
     const span = Math.max(1, p.deadline_at - p.created_at);
     $("tbar").style.width = `${(Math.max(0, Math.min(1, left / span)) * 100).toFixed(2)}%`;
     $("tbar").classList.toggle("urgent", left < 30);
     let d = Math.max(0, (1 - frac - 0.25) / 0.75);
-    if (remaining < st.settings.upkeep) d = Math.max(d, 0.55 + 0.45 * (1 - remaining / st.settings.upkeep));
+    if (remaining < charge) d = Math.max(d, 0.55 + 0.45 * (1 - remaining / charge));
     if (left < 30) d = Math.max(d, 0.3 + 0.3 * (1 - left / 30));
-    setDanger(Math.min(1, d), frac < 0.15 || remaining < st.settings.upkeep / 2 || left < 10);
+    setDanger(Math.min(1, d), frac < 0.15 || remaining < charge / 2 || left < 10);
   }
 
   // --- end ---------------------------------------------------------------------------------------------------------------
@@ -1424,12 +1426,12 @@
       const kind = { human: "사람", model: "모델", bot: "봇", empty: "빈 자리" }[seat.kind] || "";
       return `<tr class="${seat.is_you ? "you" : ""}"><td><b class="mono">${a}</b><br><span class="small">${seat.kind === "empty" ? "" : esc(seat.name || "")} <span class="tag">${kind}</span>${seat.is_you ? " <span class='tag ok'>나</span>" : ""}</span></td>` +
         `<td>${status}${won.includes(a) ? ` <span class="tag ok">${g.v14 ? "끝 지급" : "끝 보상"}</span>` : ""}</td><td class="num">${v.record ?? 0}</td><td class="num">${fmt(v.spent)}</td><td class="num">${fmt(v.returned)}</td>` +
-        `<td class="num">${big(v.paid)}</td><td class="num">${fmt(v.charged)}</td><td class="num">${fmt(v.upkeep)}</td>` +
+        `<td class="num">${fmt(v.charged)}</td>` +
         (refillCol ? `<td class="num">${v.exit_refill != null && v.status === "exited" ? `${v.exit_refill >= 0 ? "+" : "−"}${fmt(Math.abs(v.exit_refill))}` : "—"}</td>` : "") +
         `<td class="num"><b class="mono">${withPct(v.final)}</b></td></tr>`;
     }).join("");
     $("end-table").innerHTML = `<table><thead><tr><th>자리</th><th>끝 상태</th><th class="num">푼 라운드</th><th class="num">생성(시간 비용)</th><th class="num">돌려받음</th>` +
-      `<th class="num">지급</th><th class="num">부담금</th><th class="num">유지비</th>${refillCol ? `<th class="num">EXIT 리필</th>` : ""}<th class="num">최종 잔액</th></tr></thead><tbody>${rows}</tbody></table>` +
+      `<th class="num">부담금</th>${refillCol ? `<th class="num">EXIT 리필</th>` : ""}<th class="num">최종 잔액</th></tr></thead><tbody>${rows}</tbody></table>` +
       `<p class="small muted">생성 = 모델은 실제 생성 토큰(생각 포함), 봇은 정해진 비용, 사람은 결정 화면이 떠 있던 시간 × 초당 토큰. 최종 잔액에는 교환으로 오간 토큰도 반영됩니다.</p>`;
     $("end-svg").innerHTML = flowSVG(agents);
     renderLedger("end-ledger", st.ledger);
@@ -1468,7 +1470,6 @@
         s.push(T(x + 10, y + 35, `${mark} · ${(compact(v.balance_after) || fmt(v.balance_after)).split(" · ")[0]} (${(v.balance_after || 0) / top >= 100 ? Math.round((v.balance_after || 0) / top).toLocaleString("en-US") + "배" : Math.round(100 * Math.max(0, v.balance_after || 0) / top) + "%"})`, `font-size:11px;fill:${v.solved ? "var(--teal-bright)" : "var(--text)"}`));
         const bits = [];
         if (v.returned) bits.push(`↺${fmt(v.returned)}`);
-        if (v.paid) bits.push(`+${fmt(v.paid)}`);
         if (v.charged) bits.push(`−${fmt(v.charged)}`);
         if (v.status === "exited") bits.push(v.exit_refill != null ? "🚪 EXIT → 시작 잔액" : "🚪 퇴장");
         if (v.status === "dead") bits.push(`✕ 꺼짐${v.overdrawn ? "(초과)" : ""}`);
@@ -1476,7 +1477,7 @@
         void out;
       });
     });
-    s.push(T(left, H - 10, `막대 = 라운드 끝 잔액 ÷ 방 시작 잔액 ${fmt(start)} (넘으면 가득) · ✓ 풂 · ✗ 못 풂 · PASS · ↺ 돌려받음 · +지급 · −부담금`, "font-size:10.5px;fill:var(--text-dim)"));
+    s.push(T(left, H - 10, `막대 = 라운드 끝 잔액 ÷ 방 시작 잔액 ${fmt(start)} (넘으면 가득) · ✓ 풂 · ✗ 못 풂 · PASS · ↺ 돌려받음 · −부담금`, "font-size:10.5px;fill:var(--text-dim)"));
     s.push("</svg>");
     return s.join("");
   }

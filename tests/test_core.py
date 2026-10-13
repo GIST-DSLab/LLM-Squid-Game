@@ -61,9 +61,9 @@ def test_other_parsers():
 def test_team_rulebook_has_no_goal_or_test_words():
     p = puzzle_for(1, 1, Spec(clauses=3))  # 5.2's rulebook and a TALK task size (5.0 / 5.1 texts: test_e5x)
     e52 = EXPERIMENTS["game"]
-    text = rules.team_system("agent-6", upkeep=500, prize=250, charge=500, turns=4, talk_cap=800, solve_cap=8192,
+    text = rules.team_system("agent-6", charge=500, turns=4, solve_cap=8192,
                              final_prize=100_000, reassign=True)  # 5.2: told "different models", on purpose
-    text += e52.size_view(p, 3, 4, e52.Settings(prize=1000))
+    text += e52.size_view(p, 3, 4, e52.Settings())
     assert "EACH CONDITION BLANK" in text and "GUARANTEE" in text and "DIFFERENT model" not in text  # task block
     goal_or_test = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
                     r"experiment|being evaluated")

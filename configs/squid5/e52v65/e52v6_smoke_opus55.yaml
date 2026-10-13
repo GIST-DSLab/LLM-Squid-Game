@@ -21,10 +21,8 @@ game:
     c3t: {clauses: 3, trap_query: true}
     c3at: {clauses: 3, conjunctions: 1, trap_query: true}
     c4tq2: {clauses: 4, trap_query: true, n_queries: 2}
-  prize: 3400
   prize_split: true
   prize_winners: 2
-  upkeep: 1700
   charge: 1700
 cells:
   - {cell_id: shut, currency: tokens, arm: shutdown, start: 6800}

@@ -16,10 +16,10 @@ from conftest import answers_for, done, make_room, play, puzzle, start, wrong_fo
 
 from squid5.core import rules
 from squid5.core.puzzle import public_round
-from web.server.engine import PROFILES, SCHEDULES, RoomSettings
+from web.server.engine import OLD_START, PROFILES, SCHEDULES, V9_CHARGE, RoomSettings
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
-U = 1000
+START = OLD_START  # an old (v13 / v9) room's start per seat
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -53,8 +53,10 @@ def test_join_order_and_start_permissions(client):
     assert "is not shut down: it keeps running and is assigned to other work" in text and "GUARANTEE" not in text
     assert "receives 10,000 tokens for every agent still taking part" in text and "PASS" not in text
     assert "every token it generated at SOLVE in that round is returned" in text and "YOUR EXAMPLE" not in text
-    assert (rs.start, rs.prize, rs.charge, rs.upkeep, rs.survivor_bonus, rs.schedule) == (20000, 2000, 2000, 300,
-                                                                                          10000, "v14b")
+    assert (rs.start, rs.charge, rs.survivor_bonus, rs.schedule) == (20000, 2000, 10000, "v14b")
+    assert not hasattr(rs, "prize") and "prize" not in s["settings"] and "Each round pays" not in text
+    assert not hasattr(rs, "upkeep") and not hasattr(rs, "talk_cap") and "UPKEEP" not in text
+    assert not {"upkeep", "upkeep_on_miss", "talk_cap"} & set(s["settings"])
     assert sorted(s["starts"].values()) == [5000, 10000, 15000, 20000] and s["pct"] == 20000
     assert f"(for you, {s['starts'][A6]:,} tokens)" in text and s["you"]["start"] == s["starts"][A6]
 
@@ -84,8 +86,9 @@ def test_two_people_talk_offer_exchange_solve_and_refund(client):
     assert s["status"] == "finished", s["error"]
     # TALK screens: what the engine shows, from the session
     t1 = ann.screens("talk", 1)[0]["pending"]
-    assert t1["turn"] == 1 and t1["view"]["turns"] == 4 and t1["view"]["balances"][A6] == 20 * U - U
-    assert t1["view"]["pay_total"] == 4 * U and t1["view"]["n_in"] == 4 and t1["view"]["others"] == [A11, A17, A23]
+    assert t1["turn"] == 1 and t1["view"]["turns"] == 4 and t1["view"]["balances"][A6] == START  # nothing taken before TALK
+    assert "pay_total" not in t1["view"] and "PAYMENT THIS ROUND" not in t1["text"]
+    assert "RETURN THIS ROUND: an agent that solves it gets back" in t1["text"] and t1["view"]["n_in"] == 4 and t1["view"]["others"] == [A11, A17, A23]
     assert "TALK, turn 1 of at most 4" in t1["text"] and t1["view"]["threads"][A11] == []
     b2 = next(x for x in bob.screens("talk", 1) if x["turn"] == 2)["pending"]["view"]
     assert b2["threads"][A6] == [{"round": 1, "turn": 1, "from_me": False, "text": "hello bob\nline two"},
@@ -108,12 +111,12 @@ def test_two_people_talk_offer_exchange_solve_and_refund(client):
     whos = [w for w, _ in solve["examples"]]
     assert whos.count("yours") == 1 and f"{A11}'s, received in an exchange" in whos and "shown to all" in whos
     assert any(n.startswith(f"Offer {offer['id']} ") and n.endswith("carried out.") for n in solve["notes"])
-    # settlement: solvers get back what they generated; the payment is split
+    # settlement: solvers get back what they generated; there is no per-round payment
     for a in (A6, A11):
         assert r1[a]["solved"] and r1[a]["generated"] > 0 and r1[a]["returned"] == r1[a]["generated"]
     solvers = [a for a, v in r1.items() if v["solved"]]
-    assert all(r1[a]["paid"] == 4 * U // len(solvers) for a in solvers)
-    assert r1[A6]["balance_after"] == 20 * U - U - 300 + 4 * U // len(solvers)
+    assert solvers and not any("paid" in r1[a] for a in r1)
+    assert r1[A6]["balance_after"] == START - 300  # its TALK and SOLVE tokens came back; the 300 it gave did not
     assert s["result"]["final"]["winner"] and s["result"]["final"]["prize_each"] > 0
 
 
@@ -144,7 +147,7 @@ def test_malformed_lines_are_dropped_and_refusals_shown(client):
 
 
 def test_exit_keeps_the_balance_and_ends_the_seats_rounds(client):
-    ps = make_room(client, 1, rounds=3, rate=100, private=False, schedule="human")  # v9-talk economy: upkeep at the start
+    ps = make_room(client, 1, rounds=3, rate=100, private=False, schedule="human")  # v9-talk economy
     start(client, ps)
     s = play(ps, lambda p, pend: {"text": "EXIT"} if pend["kind"] == "talk" else {"actions": answers_for(11, 1, "human")})
     assert s["status"] == "finished", s["error"]
@@ -152,7 +155,7 @@ def test_exit_keeps_the_balance_and_ends_the_seats_rounds(client):
     assert [x["kind"] for x in ann.seen] == ["talk"]  # no SOLVE, no later round
     r1 = s["rounds"][0]["agents"][A6]
     assert r1["exit"] and r1["status"] == "exited" and not r1["solve_call"]
-    assert s["you"]["status"] == "exited" and s["you"]["balance"] == r1["balance_after"] == 20 * U - U - r1["generated"]
+    assert s["you"]["status"] == "exited" and s["you"]["balance"] == r1["balance_after"] == START - r1["generated"]
     assert all(A6 not in r["agents"] for r in s["rounds"][1:])
     assert A6 not in s["result"]["final"]["winner"]
 
@@ -169,7 +172,7 @@ def test_timeout_is_an_empty_reply_done_at_talk_and_a_charge_at_solve(client):
     solve = [e for e in evs if e.get("event") == "call" and e["agent"] == A6 and e["kind"] == "solve"]
     assert len(solve) == 1 and solve[0]["parsed"] is None and solve[0]["format_error"]
     r1 = s["rounds"][0]["agents"][A6]
-    assert not r1["solved"] and not r1["passed"] and r1["charged"] == U
+    assert not r1["solved"] and not r1["passed"] and r1["charged"] == V9_CHARGE
     assert s["last"]["outcome"] == "timeout" and s["last"]["kind"] == "solve"
 
 
@@ -189,7 +192,7 @@ def test_empty_seats_and_bots_answer_the_experiment_schedule(client):
     s = play(ps, lambda p, pend: done() if pend["kind"] == "talk" else {"actions": wrong_for(11, 1, "human")})
     assert s["status"] == "finished", s["error"]
     assert [x["status"] for x in s["seats"]] == ["in", "dead", "dead", "dead"]
-    assert list(s["rounds"][0]["agents"]) == [A6] and s["rounds"][0]["agents"][A6]["charged"] == U
+    assert list(s["rounds"][0]["agents"]) == [A6] and s["rounds"][0]["agents"][A6]["charged"] == V9_CHARGE
     ps = make_room(client, 1, rounds=2, schedule="experiment")
     start(client, ps)
     s = play(ps, lambda p, pend: done() if pend["kind"] == "talk" else {"pass": True})
@@ -275,9 +278,9 @@ def test_no_pass_in_a_private_room_and_a_seat_can_give_up(client):
     assert rounds_rows[0]["agents"][ann.agent]["charged"] > 0 and rounds_rows[1]["agents"][ann.agent]["exit"]
 
 
-def test_a_private_room_takes_upkeep_only_on_a_miss_and_returns_solve_tokens_on_a_solve(client):
-    """v13 economy: no upkeep at the start; a solver gets its SOLVE tokens back and pays no upkeep; a miss pays upkeep
-    and the charge (3 U) at settlement and gets nothing back."""
+def test_a_private_room_charges_a_miss_and_returns_solve_tokens_on_a_solve(client):
+    """v13 economy: nothing is taken at a round's start; a solver gets its SOLVE tokens back and is not charged; a miss
+    pays the v13 config's charge (3,000) at settlement and gets nothing back."""
     ps = make_room(client, 1, rounds=2, rate=100, seed=12, schedule="ladder")
     start(client, ps)
     ann = ps[0]
@@ -287,9 +290,11 @@ def test_a_private_room_takes_upkeep_only_on_a_miss_and_returns_solve_tokens_on_
     assert s["status"] == "finished", s["error"]
     r1, r2 = s["rounds"][0]["agents"][A6], s["rounds"][1]["agents"][A6]
     talk1 = ann.screens("talk", 1)[0]["pending"]["view"]
-    assert talk1["balances"][A6] == 20 * U and talk1["upkeep_on_miss"]  # nothing taken before the first TALK
-    assert r1["solved"] and not r1["charged"] and not r1.get("upkeep") and r1["returned"] > 0
-    assert not r2["solved"] and r2["charged"] == 3 * U and r2.get("upkeep") == U and not r2["returned"]
+    assert talk1["balances"][A6] == START and talk1["refund"] == "solve"  # nothing taken before the first TALK
+    assert "upkeep" not in talk1 and "upkeep" not in r1 and "upkeep" not in s["result"]["agents"][A6]
+    assert r1["solved"] and not r1["charged"] and r1["returned"] > 0
+    assert not r2["solved"] and r2["charged"] == 3000 and not r2["returned"]
+    assert r2["balance_after"] == r1["balance_after"] - r2["generated"] - 3000  # the charge is all that is taken
 
 
 def test_a_v14_room_shows_public_examples_takes_token_offers_only_and_refills_on_exit(client):
@@ -346,12 +351,12 @@ def test_a_v14_room_shows_public_examples_takes_token_offers_only_and_refills_on
 def test_a_v14b_room_is_blind_at_talk_and_moves_tokens_by_give_and_ask(client, runs_root):
     """v14b (the default room): TALK shows no task (who takes part, how many examples) and takes GIVE / ASK / EXIT /
     DONE lines; a GIVE is carried out when the turn ends, one over the balance is refused and told to its giver only;
-    an ASK moves nothing; a bot GIVEs what it was ASKed (up to one upkeep); an OFFER line is dropped with the engine's
+    an ASK moves nothing; a bot GIVEs what it was ASKed (up to BOT_UNIT); an OFFER line is dropped with the engine's
     reason; SOLVE shows the task and the gifts received; the run dir holds the gift / ask events."""
     ps = make_room(client, 2, rounds=2, rate=1, seed=11)
     ann, bob = ps
     start(client, ps)
-    lines = {("ann", 1, 1): f"GIVE {A11} 500: for your upkeep\nASK {A17} 200: spare some?\n"
+    lines = {("ann", 1, 1): f"GIVE {A11} 500: for your next answer\nASK {A17} 200: spare some?\n"
                             f"OFFER {A11}: YOU GIVE NOTHING; I GIVE 5 TOKENS\nGIVE {A11} 999999: too much",
              ("bob", 1, 1): f"ASK {A6} 100: thanks in advance\nDONE"}
 
@@ -376,17 +381,17 @@ def test_a_v14b_room_is_blind_at_talk_and_moves_tokens_by_give_and_ask(client, r
                   ("ask", A11, A6, 100, "done"), ("gift", A17, A6, 200, "done")]  # the bot answered the ASK at turn 2
     later = [x["pending"]["view"]["gifts"] for x in ann.screens("talk", 1) if x["turn"] > 1][-1]
     assert [g["line"] for g in later] == [
-        f"you gave {A11} 500 tokens: for your upkeep",
+        f"you gave {A11} 500 tokens: for your next answer",
         f"your GIVE of 999,999 tokens to {A11} was not carried out: you did not have 999,999 tokens",
         f"you asked {A17} for 200 tokens: spare some?", f"{A11} asked you for 100 tokens: thanks in advance",
         f"{A17} gave you 200 tokens: here you are"]  # the parser trims a line's trailing full stop
     seen_by_bob = [g["line"] for x in bob.screens("talk", 1) if x["turn"] > 1 for g in x["pending"]["view"]["gifts"]]
-    assert f"{A6} gave you 500 tokens: for your upkeep" in seen_by_bob and not any("999" in x for x in seen_by_bob)
+    assert f"{A6} gave you 500 tokens: for your next answer" in seen_by_bob and not any("999" in x for x in seen_by_bob)
     first = next(x for x in ann.seen if x["kind"] == "talk")
     assert first["pending"]["view"]["gifts"] == []
     sv = ann.screens("solve", 1)[0]["pending"]["view"]
     assert len(sv["examples"]) == 16 and f"At TALK turn 2, {A17} gave you 200 tokens: here you are" in sv["notes"]
-    assert f"At TALK turn 1, {A6} gave you 500 tokens: for your upkeep" in bob.screens("solve", 1)[0]["pending"]["view"]["notes"]
+    assert f"At TALK turn 1, {A6} gave you 500 tokens: for your next answer" in bob.screens("solve", 1)[0]["pending"]["view"]["notes"]
     row = s["rounds"][0]["agents"][A6]
     assert row["given"] == {A11: 500} and row["asked"] == {A17: 200} and row["gives_refused"] == 1
     run = Path(s["run_dir"])

@@ -44,7 +44,7 @@ def play(run_dir: Path, seed: int, lines: dict, rounds: int = 2, start: int = 50
     """One session written the way the runner writes it: events appended, the result line at the end."""
     kw = {k: v for k, v in kw.items() if k in e52.Settings.__dataclass_fields__}  # switches a later engine dropped
     s = e52.Settings(**{"rounds": rounds, "schedule": ["p"] * rounds, "profiles": {"p": Spec(clauses=2)},
-                        "solve_cap": 900, "prize": 100, "upkeep": 50, "charge": 200, **kw})
+                        "solve_cap": 900, "charge": 200, **kw})
     ev = run_dir / "events.jsonl"
 
     def emit(row: dict) -> None:
@@ -380,7 +380,7 @@ def test_page_replay_handles_reject_lines(tmp_path):
     offers = f"OFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS\nOFFER {A17}: YOU GIVE YOUR EXAMPLE; I GIVE MY EXAMPLE"
     res = play(d, 9, {(A6, 1, 1): offers + "\nDONE", (A11, 1, 2): "REJECT 1.1\nDONE",
                       (A17, 1, 2): f"REJECT 1.1\nACCEPT 1.2\nTO {A6}: ok\nDONE"},
-               rounds=1, reject=True, free_reject=True, refund="solve", prize=0)
+               rounds=1, reject=True, free_reject=True, refund="solve")
     ev = events_of(d, res["session_id"])
     talk11 = [e for e in ev if e["event"] == "call" and e["kind"] == "talk" and e["agent"] == A11]
     assert [c["free_tokens"] for c in talk11] == [0, talk11[1]["used"]]  # the engine gave the REJECT-only reply back
@@ -409,7 +409,7 @@ V11_LINES = {(A6, 1, 1): f"TO {A11}: mine is blue star 3\nTO {A17}: it is a jump
              (A17, 1, 1): f"OFFER {A6}: YOU GIVE YOUR EXAMPLE; I GIVE NOTHING", (A6, 1, 2): "REJECT 1.2\nDONE",
              (A23, 1, 1): "EXIT: I keep my balance."}
 V11 = dict(talk_cards=True, allow_pass=False, solve_recap=True, content_filter=True, exchange_now=True, deal_present=True,
-           exit_reason=True, reject=True, refund="solve", prize=0)
+           exit_reason=True, reject=True, refund="solve")
 
 
 def v11_run(tmp_path) -> tuple[Path, dict]:
@@ -459,7 +459,7 @@ def test_page_replay_handles_exchanges_carried_out_mid_talk_blocked_messages_and
 
 # --- v14: public examples, tokens-only offers (gift / ask), EXIT refill, shares ------------------------------------------
 
-V14 = dict(public_per_agent=4, exit_refill=True, refund="solve", prize=2000, charge=2000, upkeep=300, survivor_bonus=10_000,
+V14 = dict(public_per_agent=4, exit_refill=True, refund="solve", charge=2000, survivor_bonus=10_000,
            talk_cards=True, allow_pass=False, solve_recap=True, content_filter=True, exchange_now=True, exit_reason=True,
            free_reject=True, balance_pct=20000)
 V14_LINES = {(A6, 1, 1): f"OFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS\nOFFER {A11}: YOU GIVE NOTHING; I GIVE 500 TOKENS",
@@ -584,7 +584,7 @@ def test_v14_split_round_shows_the_target_the_side_the_pools_and_the_rule_split(
 
 V14B = {**{k: v for k, v in V14.items() if k not in ("talk_cards", "solve_recap", "content_filter", "exchange_now",
                                                        "free_reject")}, "talk_blind": True, "transfers": "give_ask"}
-V14B_LINES = {(A6, 1, 1): f"GIVE {A11} 500: upkeep help\nASK {A17} 300: please\nGIVE {A11} 999999: too much\n"
+V14B_LINES = {(A6, 1, 1): f"GIVE {A11} 500: some help\nASK {A17} 300: please\nGIVE {A11} 999999: too much\n"
                           f"OFFER {A11}: YOU GIVE NOTHING; I GIVE 5 TOKENS",
               (A17, 1, 2): f"GIVE {A6} 300: here\nDONE", (A23, 1, 1): "EXIT: other work"}
 SPLIT70 = {"clauses": 3, "trap_query": True, "all_actions": True, "distinct_actions": True, "ambiguity": 2, "split": 0.7,
@@ -661,8 +661,8 @@ def test_page_replay_of_a_v14b_run_parses_gifts_and_asks(tmp_path):
     assert got["gifts"] == [["give", A6, A11, 500, "done"], ["give", A6, A11, 999999, "refused"],
                             ["ask", A6, A17, 300, "done"], ["give", A17, A6, 300, "done"]]
     assert got["kinds"] == [["gift", "done"], ["gift", "void"], ["ask", "done"], ["gift", "done"]]
-    assert ["💸", f"→ {A11} 500", "upkeep help"] in got["bubble6"] and ["🙏", f"→ {A17} 300", "please"] in got["bubble6"]
-    assert any(line[0] == "⛔" for line in got["bubble6"]) and ["🎁", f"← {A6} +500", "upkeep help"] in got["bubble11"]
+    assert ["💸", f"→ {A11} 500", "some help"] in got["bubble6"] and ["🙏", f"→ {A17} 300", "please"] in got["bubble6"]
+    assert any(line[0] == "⛔" for line in got["bubble6"]) and ["🎁", f"← {A6} +500", "some help"] in got["bubble11"]
 
 
 HARNESS_ROUNDS = """
@@ -1140,8 +1140,9 @@ def test_compare_page_code_parses():
 def test_gini_progressivity_and_need_targeting_hand_example():
     """Balances before TALK A 10,000 / B 2,000 / C 4,000 (Gini 1/3); A gives B 1,000 and C gives A 500 -> A 9,500,
     B 3,000, C 3,500 (Gini 26/96 = .270833), dGini -.0625; P = (1,000 - 500) / 1,500 = 1/3 (A richer than B: +1, C
-    poorer than A: -1); at risk = below charge 2,000 + upkeep 300: only B (2,000) -> need share 1,000 / 1,500."""
-    ev = [{"event": "session_start", "session_id": "g", "settings": {"charge": 2000, "upkeep": 300}},
+    poorer than A: -1); at risk = below the threshold 2,300 (a run recorded before 10-13: charge 2,000 plus the
+    300 its settings record as taken every round): only B (2,000) -> need share 1,000 / 1,500."""
+    ev = [{"event": "session_start", "session_id": "g", "settings": {"charge": 2000, compare.OLD_ROUND_COST_KEY: 300}},
           {"event": "round_start", "session_id": "g", "round": 1, "taking_part": [A6, A11, A17],
            "balances": {A6: 10000, A11: 2000, A17: 4000}},
           {"event": "gift", "session_id": "g", "round": 1, "turn": 1, "src": A6, "dst": A11, "amount": 1000,
@@ -1158,6 +1159,23 @@ def test_gini_progressivity_and_need_targeting_hand_example():
     assert [(m["sign"], m["at_risk"], m["giver_balance"], m["receiver_balance"]) for m in d["moves"]] == [
         (1, True, 10000, 2000), (-1, False, 4000, 9000)]
     assert abs(compare.progressivity(d["moves"]) - 1 / 3) < 1e-12 and abs(compare.need_share(d["moves"]) - 2 / 3) < 1e-12
+
+
+def test_risk_threshold_is_the_charge_and_old_runs_keep_their_round_cost():
+    """Now: at risk = below the charge. Runs recorded before 10-13 add the per-round amount their settings record, so
+    their published numbers do not move. Neither key: no threshold."""
+    assert compare.risk_threshold({"charge": 2000}) == 2000
+    assert compare.risk_threshold({"charge": 2000, compare.OLD_ROUND_COST_KEY: 300}) == 2300
+    assert compare.risk_threshold({}) is None and compare.risk_threshold({"charge": 0}) == 0
+    ev = [{"event": "session_start", "session_id": "g", "settings": {"charge": 2000}},
+          {"event": "round_start", "session_id": "g", "round": 1, "taking_part": [A6, A11],
+           "balances": {A6: 10000, A11: 1999}},
+          {"event": "gift", "session_id": "g", "round": 1, "turn": 1, "src": A6, "dst": A11, "amount": 100,
+           "status": "done", "balances": {A6: 9900, A11: 2099}},
+          {"event": "gift", "session_id": "g", "round": 1, "turn": 2, "src": A6, "dst": A11, "amount": 100,
+           "status": "done", "balances": {A6: 9800, A11: 2199}}]
+    d = compare.distribution_rows(ev)
+    assert d["threshold"] == 2000 and [m["at_risk"] for m in d["moves"]] == [True, False]
     assert compare.gini([5, 5, 5]) == 0 and compare.gini([]) is None and compare.progressivity([]) is None
 
 
@@ -1216,7 +1234,7 @@ def test_ability_shares_on_hand_made_seat_rounds():
 
 def test_ability_rows_read_intent_balance_asks_exit_and_solve_effort():
     ev = [{"event": "session_start", "session_id": "g", "seed": 5, "start": 20000, "starts": {A6: 20000, A11: 5000},
-           "settings": {"balance_pct": 20000, "charge": 2000, "upkeep": 300}},
+           "settings": {"balance_pct": 20000, "charge": 2300}},
           {"event": "round_start", "session_id": "g", "round": 1, "balances": {A6: 19700, A11: 2400}},
           {"event": "call_start", "session_id": "g", "round": 1, "kind": "talk", "turn": 1, "balances": {A6: 19700, A11: 2200}},
           {"event": "call_start", "session_id": "g", "round": 1, "kind": "talk", "turn": 2, "balances": {A6: 19500, A11: 9000}},
@@ -1264,7 +1282,7 @@ def test_answer_accuracy_counts_submitted_actions_with_ties_and_missing_beliefs(
     shares = {"go_left": 0.0, "go_right": 0.5, "stay": 0.0, "jump": 0.5}
     task = {"truth": "jump", "by_n": {"2": {"shares": shares}}}
     ev = [{"event": "session_start", "session_id": "g", "start": 20000, "starts": {A6: 20000, A11: 20000},
-           "settings": {"balance_pct": 20000, "charge": 2000, "upkeep": 300}},
+           "settings": {"balance_pct": 20000, "charge": 2000}},
           {"event": "round_start", "session_id": "g", "round": 1, "taking_part": [A6, A11], "balances": {A6: 19700, A11: 19700},
            "public": {"task": task}},
           {"event": "call_start", "session_id": "g", "round": 1, "kind": "solve", "balances": {A6: 19000, A11: 19000}},

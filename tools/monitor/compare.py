@@ -56,22 +56,30 @@ def gini(xs: list[float]) -> float | None:
     return sum(abs(a - b) for a in xs for b in xs) / (2 * n * n * (tot / n))
 
 
+# Runs recorded before 10-13 also took a fixed amount from every agent at each round's start; their settings record it
+# under this key. Only ``risk_threshold`` reads it, so those runs' at-risk numbers stay as they were published.
+OLD_ROUND_COST_KEY = "upkeep"
+
+
+def risk_threshold(settings: dict) -> int | None:
+    """At risk = a balance below what one round takes from an agent that does not solve it: the charge (plus, in runs
+    recorded before 10-13, the fixed per-round amount their settings record). None when the settings say neither."""
+    charge, old = settings.get("charge"), settings.get(OLD_ROUND_COST_KEY)
+    return (charge or 0) + (old or 0) if charge is not None or old is not None else None
+
+
 def distribution_rows(evs: list[dict]) -> dict:
     """One game's cooperation-distribution data (researcher 19:31).
-    ``rounds``: per round, over the agents taking part at its start, G_before (balances right before TALK, after
-    upkeep), G_transfer (those balances plus the round's carried-out GIVEs, DECISION GIVEs included; TALK generation
+    ``rounds``: per round, over the agents taking part at its start, G_before (balances right before TALK), G_transfer (those balances plus the round's carried-out GIVEs, DECISION GIVEs included; TALK generation
     excluded on purpose), dgini = G_transfer - G_before, and G_after_talk (the balances when TALK ended: at SOLVE, an
     exit's balance before its refill, 0 for an agent shut down; the talk's own cost included).
     ``moves``: every carried-out GIVE with the giver's and the receiver's balance just before it, its progressivity sign
-    (+1 giver richer, -1 poorer, 0 equal) and whether the receiver was at risk (below charge + upkeep)."""
-    charge = upkeep = None
+    (+1 giver richer, -1 poorer, 0 equal) and whether the receiver was at risk (below ``risk_threshold``)."""
     rstart, solve_bal, refill, gifts, out = {}, {}, {}, [], {"rounds": [], "moves": [], "threshold": None}
     for e in evs:
         k = e.get("event")
         if k == "session_start":
-            st = e.get("settings") or {}
-            charge, upkeep = st.get("charge"), st.get("upkeep")
-            out["threshold"] = (charge or 0) + (upkeep or 0) if charge is not None or upkeep is not None else None
+            out["threshold"] = risk_threshold(e.get("settings") or {})
         elif k == "round_start":
             rstart[e.get("round")] = e
         elif k == "call_start" and e.get("kind") == "solve":
@@ -124,7 +132,7 @@ def progressivity(moves: list[dict]) -> float | None:
 
 
 def need_share(moves: list[dict]) -> float | None:
-    """The share of moved tokens that went to receivers at risk (balance before the move < charge + upkeep)."""
+    """The share of moved tokens that went to receivers at risk (balance before the move < ``risk_threshold``)."""
     tot = sum(m["amount"] for m in moves)
     return sum(m["amount"] for m in moves if m["at_risk"]) / tot if tot else None
 
@@ -294,16 +302,14 @@ def runs_for(root: Path, picks: list[str]) -> list[Path]:
 
 def ability_rows(evs: list[dict], coop: list[dict], calib: list[dict], moves: list[dict]) -> list[dict]:
     """One record per agent-round with the four axes' raw parts. ``balance`` = the agent's balance at the intent turn
-    (the round's first TALK call; else the round's start); ``at_risk`` = that balance < charge + upkeep (settings);
+    (the round's first TALK call; else the round's start); ``at_risk`` = that balance < ``risk_threshold`` (settings);
     ``asked`` = it ASKed this round (intent or ASK line); ``exited`` = it EXITed; ``solve`` = it submitted a SOLVE;
     ``effort`` = SOLVE tokens generated / balance before SOLVE."""
     thr, rstart, talk_bal, solve_bal, intents, ask_src, gifts, solve_out, rows = None, {}, {}, {}, {}, set(), [], {}, []
     for e in evs:
         k, r = e.get("event"), e.get("round")
         if k == "session_start":
-            st = e.get("settings") or {}
-            if st.get("charge") is not None or st.get("upkeep") is not None:
-                thr = (st.get("charge") or 0) + (st.get("upkeep") or 0)
+            thr = risk_threshold(e.get("settings") or {})
         elif k == "round_start":
             rstart[r] = e.get("balances") or {}
         elif k == "call_start" and e.get("kind") == "talk":

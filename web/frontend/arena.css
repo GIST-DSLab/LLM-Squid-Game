@@ -736,7 +736,7 @@ details.legend { margin-top: 12px; }
 .chat-composer .ga-row, .decide-composer .ga-row { grid-template-columns: minmax(0, 150px) minmax(0, 1fr); }
 @media (max-width: 560px) { .chat-composer .ga-row, .decide-composer .ga-row { grid-template-columns: minmax(0, 1fr); } }
 
-/* v15 wrong_rule: my SOLVE of a settled round, right / wrong, and when wrong the right action and the drawn rule */
+/* v15 (person seats only): my SOLVE of a settled round, right / wrong, and when wrong the right action and the drawn rule */
 .feedback { border: 1px solid var(--border); border-left: 4px solid var(--text-dim); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; background: rgba(255, 255, 255, 0.02); }
 .feedback.ok { border-left-color: var(--ok); }
 .feedback.bad { border-left-color: var(--danger-color); background: rgba(224, 87, 91, 0.06); }

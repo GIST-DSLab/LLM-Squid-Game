@@ -46,7 +46,7 @@ def test_game_run_and_report(tmp_path):
     e52 = cli.EXPERIMENTS["game"]
     kw = dict(rounds=2, schedule=["p", "p"], profiles={"p": C2}, solve_cap=900)
     cfg = _cfg("game", [Cell("tight", "tokens", 3000, arm="shutdown"), Cell("loose", "tokens", 6000, arm="shutdown")],
-               e52.Settings(prize=400, **kw))
+               e52.Settings(**kw))
     e52.validate(cfg)
     run(cfg, e52, tmp_path / "g", game())
     text = cli.report(load_runs([str(tmp_path / "g")]), {}, tmp_path / "out")
