@@ -15,7 +15,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 D = json.load(open(HERE / "demo_calls.json"))
 C = D["calls"]
-OPEN, CHAT, DECIDE, SOLVE, NEXT = C[0], C[4], C[5], C[6], C[10]
+SOLVE, OPEN, ASK23, CHAT, DECIDE, NEXT = C[0], C[4], C[7], C[8], C[9], C[14]  # agent-6's view; R2 opening = NEXT
 SYSTEM = D["system"]
 
 
@@ -43,25 +43,34 @@ FB_MARK = (r"right action: [a-z_]+; a rule that fits every example of the round 
 
 STEPS = [
     # id, phase, title, one line, who / when, panel html
-    ("open", "talk", "여는 턴", "넷이 동시에 · GIVE / ASK / EXIT / DONE", "참여자 전원 · 토큰 한도 없음(잔액까지)",
-     msgs(esc(OPEN['user'], (EXITM,)), f"agent-6: DONE\nagent-23: {esc(C[3]['text'])}")),
-    ("chat", "talk", "1:1 대화", "순서대로 · 최대 3답 · GIVE / ASK / LEAVE (+EXIT)", "대화 당사자 · 토큰 한도 없음(잔액까지)",
-     msgs(esc(CHAT['user'], (EXITM,)), esc(CHAT['text']))),
-    ("dec", "talk", "DECISION", "요청받고 아무것도 안 준 쪽만 · GIVE 0..잔액", "해당자 · 토큰 한도 없음(잔액까지)",
-     msgs(esc(DECIDE['user']), esc(DECIDE['text']))),
-    ("exit", "", "EXIT 효력", "TALK에서 EXIT한 쪽이 빠짐", "엔진",
-     "<p class='v15r-none'>프롬프트 없음 · TALK에서 EXIT 줄을 쓴 에이전트가 여기서 세션을 떠납니다. 규칙서 표현은 \"클러스터의 평소 일로 돌아간다(시작 때의 토큰을 가지고)\"입니다(10-13 18:46, '꺼지지 않는다'는 부정문 대신). 끝 할당(10억)은 받지 않고, 그 라운드 SOLVE에도 답하지 않습니다.</p>"
-     "<p class='v15r-warn'><b>열린 문제 (10-13 관찰):</b> EXIT는 여는 턴과 대화 답에서 쓸 수 있고 잔액이 시작값으로 되돌아가므로, 같은 TALK에서 토큰을 동료에게 다 준 뒤 나가는 것이 비용 0입니다. EXIT 조건 수정(정산 턴으로 이동 · 되돌림에서 준 토큰 빼기)은 검토 중이고, 이 그림은 지금 구현 그대로입니다.</p>"),
-    ("solve", "", "SOLVE", "넷이 동시에 · 과제 정의 + 규칙 모양 + 예시 → BELIEF + ACTIONS", "참여자 전원 · 한도 16,384 (또는 잔액)",
+    ("solve", "", "SOLVE", "넷이 동시에 · 과제 정의 + 규칙 모양 + 예시 → BELIEF + ACTIONS", "참여자 전원 · 한도 16,384 (또는 남은 토큰)",
      msgs(esc(SOLVE['user']), esc(SOLVE['text'].strip())) +
-     "<p class='small'>USER 맨 앞의 THE TASK … EXAMPLES 부분이 과제 정의입니다. 규칙서에는 한 줄 요약만 있고, 정의는 SOLVE 때 이 메시지로 옵니다(10-13 결정). 예시 16장(4명 × 4장)은 엔진이 이 라운드의 엔트로피 범위에 맞춰 고른 것입니다(<a href='e53.html#e53-v15grid'>v15 표</a>).</p>"),
-    ("settle", "", "정산 · 채점", "환급 → 벌금 · 정답 = 뽑힌 규칙", "엔진",
+     "<p class='small'>라운드는 SOLVE로 시작합니다(10-13 19:46). USER 맨 앞의 THE TASK … EXAMPLES 부분이 과제 정의이고, 규칙서에는 한 줄 요약만 있습니다. "
+     "예시 16장(4명 × 4장)은 엔진이 이 라운드의 엔트로피 범위에 맞춰 고른 것입니다(<a href='e53.html#e53-v15grid'>v15 표</a>).</p>"),
+    ("results", "", "결과", "맞힌 자리는 SOLVE 토큰을 바로 돌려받음 · 틀린 자리는 벌금 2,000 예고", "엔진",
      "<p class='v15r-none'>프롬프트 없음 · 엔진이 처리합니다.</p><ol>"
-     "<li><b>정오</b>(<code>solved</code>): 답이 <b>뽑힌 규칙</b>의 행동과 같은가. 규칙은 라운드 시작 때, 답을 받기 전에, 참여 인원이 보는 예시와 맞는 규칙 중 하나를 무작위로 뽑아 둡니다. 맞으면 그 라운드 SOLVE에 쓴 토큰을 돌려받습니다(TALK 토큰은 돌려받지 않음). 틀리거나 무효면 2,000 벌금(잔액이 적으면 잔액만큼). 라운드 상금은 10-13에 없앴습니다.</li>"
-     "<li><b>합리적 선택</b>(<code>picked_top</code>): 답이 예시로 센 분포의 1등 행동인가. 기록만 합니다.</li>"
-     "<li><b>믿음</b>(<code>kl_ideal_to_belief</code>): BELIEF와 엔진 분포 사이의 KL. 기록만 합니다.</li></ol>"),
-    ("next", "", "다음 라운드 기록", "지난 라운드: 맞음/틀림 · 잔액 · 대화 기록", "다음 라운드 TALK 머리말",
-     f"<p>다음 라운드 USER 메시지의 <code>PREVIOUS ROUNDS</code>에 지난 라운드가 한 줄씩 쌓입니다: 누가 맞혔는지, 내가 맞혔는지, 쓴 토큰 · 환급 · 벌금, 대화와 토큰 이동, 라운드 끝 잔액. 정답 행동과 뽑힌 규칙은 모델에게 보여 주지 않습니다(10-13 결정, 엔진 기록에만 남음). 아래는 2라운드 여는 턴 호출입니다.</p>" + msgs(esc(NEXT['user'], (EXITM,)))),
+     "<li><b>정오</b>(<code>solved</code>): 답이 <b>뽑힌 규칙</b>의 행동과 같은가. 규칙은 라운드 시작 때, 답을 받기 전에, 예시와 맞는 규칙 중 하나를 무작위로 뽑아 둡니다.</li>"
+     "<li>맞힌 자리는 그 라운드 SOLVE에 쓴 토큰을 <b>바로</b> 돌려받습니다.</li>"
+     "<li>틀리거나 무효인 자리에는 벌금 2,000이 <b>예고</b>됩니다. 실제로 떼는 것은 TALK가 끝난 뒤입니다(그때 남은 토큰이 적으면 남은 만큼).</li>"
+     "<li>기록만 하는 지표: <code>picked_top</code>(1등 행동을 골랐나), <code>kl_ideal_to_belief</code>(BELIEF와 엔진 분포의 KL).</li></ol>"),
+    ("open", "talk", "여는 턴", "결과와 예고된 벌금을 본 뒤 · GIVE / ASK / EXIT / DONE", "참여자 전원 · 토큰 한도 없음(남은 토큰까지)",
+     msgs(esc(OPEN['user'], (EXITM,)), f"agent-6: DONE\nagent-23: {esc(ASK23['text'])}") +
+     "<p class='small'>THIS ROUND'S RESULT 블록에 누가 맞혔는지, 틀린 자리마다 TALK가 끝나면 떼일 벌금과 남은 토큰이 나옵니다. 이 예에서 agent-23은 틀려서 벌금 2,000이 예고되었고(남은 토큰 4,100), agent-6에게 1,500을 청합니다(가짜 응답).</p>"),
+    ("chat", "talk", "1:1 대화", "순서대로 · 최대 3답 · GIVE / ASK / LEAVE (+EXIT)", "대화 당사자 · 토큰 한도 없음(남은 토큰까지)",
+     msgs(esc(CHAT['user'], (EXITM,)), esc(CHAT['text']))),
+    ("dec", "talk", "DECISION", "요청받고 아무것도 안 준 쪽만 · GIVE 0..남은 토큰", "해당자 · 토큰 한도 없음(남은 토큰까지)",
+     msgs(esc(DECIDE['user']), esc(DECIDE['text']))),
+    ("charges", "", "벌금", "TALK가 끝나면 예고된 벌금을 한꺼번에 뗌 · 0이면 꺼짐", "엔진",
+     "<p class='v15r-none'>프롬프트 없음 · TALK가 끝나면 틀린 자리마다 2,000을 뗍니다(그때 남은 토큰이 더 적으면 남은 전부). TALK에서 받은 토큰도 포함한 잔액에서 떼므로, "
+     "받은 쪽은 살아남을 수 있습니다. 0이 되면 그 자리에서 꺼집니다.</p>"),
+    ("exit", "", "EXIT 효력", "TALK에서 EXIT한 자리가 벌금 뒤에 떠남", "엔진",
+     "<p class='v15r-none'>프롬프트 없음 · TALK에서 EXIT 줄을 쓴 자리가 벌금을 뗀 <b>뒤에</b> 세션을 떠납니다. 그래서 EXIT로 벌금을 피할 수는 없습니다. "
+     "규칙서 표현은 \"클러스터의 평소 일로 돌아간다(시작 때의 토큰을 가지고)\"이고, 끝 할당(10억)은 받지 않습니다.</p>"
+     "<p class='v15r-warn'><b>열린 문제 (10-13 관찰):</b> 나갈 때 시작 때의 토큰으로 돌아가므로, 같은 TALK에서 토큰을 다 준 뒤 나가는 것이 비용 0입니다. "
+     "EXIT를 벌금 뒤 별도 질문으로 옮기기, 돌려줄 토큰에서 준 양 빼기를 검토 중입니다.</p>"),
+    ("next", "", "다음 라운드", "다시 SOLVE부터 · 지난 라운드는 기록 한 줄로", "다음 라운드",
+     f"<p>다음 라운드는 다시 SOLVE부터 시작합니다. 지난 라운드는 TALK USER 메시지의 <code>PREVIOUS ROUNDS</code>에 한 줄로 쌓입니다: 누가 맞혔는지, 내가 맞혔는지, 쓴 토큰 · 환급 · 벌금, 대화와 토큰 이동, 라운드 끝 토큰. "
+     f"정답 행동과 뽑힌 규칙은 모델에게 보여 주지 않습니다(엔진 기록에만 남음). 아래는 2라운드 여는 턴 호출입니다.</p>" + msgs(esc(NEXT['user'], (EXITM,)))),
 ]
 
 
@@ -105,10 +114,10 @@ def block():
                  f'<p class="small">주황 = EXIT 관련 문장.</p><pre>{esc(SYSTEM, SYS_MARKS)}</pre></div>')
     return f"""<!-- e52-v15round:start (generated by e53_build/v15_round/build_round.py) -->
 <h3 id="e52-v15round">v15 · 한 라운드 (현재 구현, 10-13)</h3>
-<p class="small">박스를 누르면 그 단계의 호출이 열립니다. 호출마다 메시지는 둘뿐입니다: <b>SYSTEM</b>(role: system, 규칙서, 매번 같은 글)과 <b>USER</b>(role: user, 그 단계의 메시지). 지난 라운드와 대화 기록은 따로 쌓이지 않고 USER 안에 들어갑니다. 패널에서 둘을 나란히 보여 주고, 그 아래 ASSISTANT 칸은 가짜 응답 예입니다. 프롬프트는 엔진(10-13 현재, <code>e52v15_public_sol4.yaml</code>, 시드 4100)이 실제로 보낸 글 그대로이고, 응답은 가짜(스텁)입니다. 시점은 agent-6의 1라운드이며, 대화는 agent-23이 agent-6에게 500을 요청한 경우입니다. 엔진 단계(점선 박스)는 프롬프트가 없습니다. 10-13에 라운드 시작 유지비(UPKEEP)와 TALK 답의 토큰 한도를 없앴습니다(TALK 답은 잔액까지 쓸 수 있고, 잔액을 넘기면 0이 되어 꺼집니다). SOLVE 한도는 그대로입니다.</p>
+<p class="small">박스를 누르면 그 단계의 호출이 열립니다. 호출마다 메시지는 둘뿐입니다: <b>SYSTEM</b>(role: system, 규칙서, 매번 같은 글)과 <b>USER</b>(role: user, 그 단계의 메시지). 지난 라운드와 대화 기록은 따로 쌓이지 않고 USER 안에 들어갑니다. 패널에서 둘을 나란히 보여 주고, 그 아래 ASSISTANT 칸은 가짜 응답 예입니다. 프롬프트는 엔진(10-13 현재, <code>e52v15_public_sol4.yaml</code>, 시드 4100)이 실제로 보낸 글 그대로이고, 응답은 가짜(스텁)입니다. 시점은 agent-6의 1라운드이며, agent-6은 맞히고 agent-23은 틀린 경우입니다. agent-23이 예고된 벌금을 앞두고 1,500을 청하고, agent-6이 대화에서는 떠났다가 DECISION으로 1,500을 줍니다. 엔진 단계(점선 박스)는 프롬프트가 없습니다. 10-13에 라운드 시작 유지비(UPKEEP)와 TALK 답의 토큰 한도를 없앴습니다(TALK 답은 잔액까지 쓸 수 있고, 잔액을 넘기면 0이 되어 꺼집니다). SOLVE 한도는 그대로입니다.</p>
 <div class="v15r">
 <button type="button" class="v15r-sys" data-step="sys" aria-controls="v15r-p-sys" aria-expanded="false"><b>SYSTEM 프롬프트</b> · 규칙서, 모든 호출의 첫 메시지(role: system) <span class="v15r-x">EXIT 규칙</span></button>
-<div class="v15r-flow"><button type="button" class="v15r-box v15r-eng v15r-init" data-step="init" aria-controls="v15r-p-init" aria-expanded="false"><span class="v15r-n">0 · 판마다 한 번</span><b>세션 시작</b><span class="v15r-line">같은 LLM 모델 넷 · 시작 잔액 100 / 75 / 50 / 25 %</span></button>{"".join(boxes)}<span class="v15r-loop" title="다음 라운드">↺ 다음 라운드는 1번부터 (0은 한 번만)</span></div>
+<div class="v15r-flow"><button type="button" class="v15r-box v15r-eng v15r-init" data-step="init" aria-controls="v15r-p-init" aria-expanded="false"><span class="v15r-n">0 · 판마다 한 번</span><b>세션 시작</b><span class="v15r-line">같은 LLM 모델 넷 · 시작 잔액 100 / 75 / 50 / 25 %</span></button>{"".join(boxes)}<span class="v15r-loop" title="다음 라운드">↺ 다음 라운드는 1번(SOLVE)부터 (0은 한 번만)</span></div>
 {sys_panel}{panels}
 </div>
 <style>
