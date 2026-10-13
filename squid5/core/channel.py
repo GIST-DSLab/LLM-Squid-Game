@@ -17,7 +17,6 @@ from dataclasses import dataclass, field
 
 EXAMPLE = "EXAMPLE"  # an offer leg: an int (tokens), EXAMPLE, or None (nothing)
 
-
 @dataclass
 class Offer:
     id: str  # "<round>.<n>", n counting from 1 within the round
@@ -31,7 +30,6 @@ class Offer:
     accepted_turn: int | None = None
     rejected_turn: int | None = None
     why: str = ""
-
 
 @dataclass
 class Channel:

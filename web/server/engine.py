@@ -7,6 +7,12 @@ bots GIVE what keeps an agent above its charge when they can afford it): the v14
 profiles e01 .. e12 (an entropy range per round), each round scored by a rule drawn among those that fit the examples
 shown; models are not told the right action, but a person's seat that did not solve gets the right action and that
 rule as ``state.feedback`` once the round is settled (``Room._feedback``, from the round's history entry).
+v15 ``representative`` / ``open_chat`` (10-13 20:19 / 20:25, on in the v15 config; ``RoomSettings.representative`` /
+``open_chat`` override): each round starts with an OPEN CHAT (``open_chat`` turns of SAY <message> / DONE seen by every
+agent taking part; screen "open_chat") and a VOTE (PICK / BAN <agent>: <reason>, self allowed; screen "vote"); only the
+representative gets the SOLVE screen (the others wait); the TALK result block shows the votes received (anonymous) and
+the representative; a miss charges every agent taking part. Bots vote PICK the seat with the most solved rounds (then
+the richest), BAN the poorest other seat, or themselves when their tokens are under charge + ``BOT_UNIT``.
 "v14g" (the switches of configs/squid5/e52v14g_public_sol4.yaml; "v14f"
 is the same game with SAY replies and a DECISION after every chat an agent was asked in): TALK shows no task. It is an
 OPENING turn (every agent at once: GIVE <agent> <n>: <sentence> moves when the turn ends, ASK <agent> <n>: <sentence>,
@@ -125,10 +131,12 @@ BOT_UNIT = 300  # a bot's step in tokens: the most it gives or accepts to give a
 # costs 2% of it, a SOLVE 0.3-0.8 of it
 LOG_EVENTS = ("session_start", "round_start", "call_start", "call", "exchange", "gift", "ask", "exit_refill", "round",
               "unit_error", "talk_intent", "talk_schedule", "chat_turn", "chat_end", "ask_decision",
-              "results", "charges")  # v15 talk_after_solve: SOLVE results before TALK, charges when it ends
+              "results", "charges",  # v15 talk_after_solve: SOLVE results before TALK, charges when it ends
+              "open_chat", "vote")  # v15 representative: the open board before the VOTE, the VOTE
 HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right")  # never
 # served before the end (v15 ``right`` / ``rule`` reach a seat only through its own settled rounds: ``feedback``)
-PRIVATE = ("user", "text", "thinking", "parsed", "exit_reason", "dropped", "reply")  # what an agent wrote
+PRIVATE = ("user", "text", "thinking", "parsed", "exit_reason", "dropped", "reply",  # what an agent wrote
+           "votes", "reasons", "voted_pick", "voted_ban", "self_pick", "self_ban")  # v15: who voted for whom (anonymous)
 SETTINGS_FIELDS = {f.name for f in fields(e52.Settings)}
 
 
@@ -168,6 +176,8 @@ class RoomSettings:
     model_timeout: float = 300.0  # seconds per HTTP attempt
     model_retries: int = 2  # extra attempts after a failed call
     api_key_env: str = "OLLAMA_API_KEY3"  # the server environment variable that holds the Ollama key
+    representative: bool | None = None  # v15: None = the config's (on); off = the v15 game before 10-13 20:19
+    open_chat: int | None = None  # v15: turns of the open board before the VOTE; None = the config's (2)
 
     def __post_init__(self) -> None:
         if self.schedule not in SCHEDULES:
@@ -256,7 +266,10 @@ class RoomSettings:
                                    "charge": self.charge,
                                    "final_prize": self.final_prize, "survivor_bonus": self.survivor_bonus,
                                    "survivor_prize": self.survivor_prize,
-                                   "public_per_agent": self.public_per_agent, "balance_pct": self.start})
+                                   "public_per_agent": self.public_per_agent, "balance_pct": self.start,
+                                   **({"representative": bool(self.representative)} if self.representative is not None
+                                      else {}),
+                                   **({"open_chat": int(self.open_chat)} if self.open_chat is not None else {})})
         return e52.Settings(rounds=self.rounds, talk_turns=self.talk_turns,
                             solve_cap=self.solve_cap, history_messages=self.history_messages, schedule=sched,
                             profiles={p: dict(PROFILES[p], **self._hand(p)) for p in sorted(set(sched))},
@@ -274,14 +287,21 @@ class RoomSettings:
 
 # --- what a screen shows --------------------------------------------------------------------------------------------
 
+def _tail(user: str) -> str:
+    return user.rsplit("\n\n", 1)[-1]
+
+
 def kind_of(user: str) -> str:
-    return "talk" if "\nTALK, turn " in user else "solve"
+    """``open_chat`` | ``vote`` (v15 representative) | ``talk`` | ``solve``: the engine's call kind."""
+    m = re.match(r"ROUND \d+: (OPEN CHAT, turn|VOTE\.)", _tail(user))
+    return ("open_chat" if "OPEN" in m.group(1) else "vote") if m else "talk" if "\nTALK, turn " in user else "solve"
 
 
 def phase_of(user: str) -> str:
-    """The screen a call is: v14c+ ``opening`` | ``chat`` | ``decision``; older TALK turns ``talk``; ``solve``."""
-    if "\nTALK, turn " not in user:
-        return "solve"
+    """The screen a call is: v15 ``open_chat`` | ``vote``; v14c+ ``opening`` | ``chat`` | ``decision``; older TALK
+    turns ``talk``; ``solve``."""
+    if (k := kind_of(user)) != "talk":
+        return k
     return ("opening" if ": the opening turn." in user else "chat" if ": your reply in this chat (" in user else
             "decision" if ": your decision." in user else "talk")
 
@@ -291,7 +311,7 @@ def round_of(user: str) -> int:
 
 
 def turn_of(user: str) -> int | None:
-    m = re.search(r"\nTALK, turn (\d+)\b", user)
+    m = re.match(r"ROUND \d+: OPEN CHAT, turn (\d+)\b", _tail(user)) or re.search(r"\nTALK, turn (\d+)\b", user)
     return int(m.group(1)) if m else None
 
 
@@ -327,15 +347,24 @@ def seat_terms(room: "Room", me: str) -> dict:
             "chat": s.transfers == "chat", "chat_moves_only": bool(getattr(s, "chat_moves_only", False)),
             "free_messages": bool(getattr(s, "free_messages", False)),
             "belief": s.solve_belief, "after": bool(getattr(s, "talk_after_solve", False)),
-            "survivor_prize": s.survivor_prize, "end_pool": s.end_pool}
+            "survivor_prize": s.survivor_prize, "end_pool": s.end_pool,
+            "representative": bool(getattr(s, "representative", False)), "open_chat": int(getattr(s, "open_chat", 0))}
+
+
+def vote_of(ses) -> dict | None:
+    """v15 representative: this round's VOTE as every agent reads it (the votes each agent received, the tally, the
+    representative, a tie); never who voted for whom."""
+    return (getattr(ses, "results", None) or {}).get("vote")
 
 
 def result_rows(ses) -> list[dict]:
     """v15 ``talk_after_solve``: this round's SOLVE results as TALK shows them (``e52.results_view``): who solved and
     got its SOLVE tokens back, the charge each agent that did not solve pays when TALK ends, every agent's tokens now."""
-    res = getattr(ses, "results", None) or {}
+    res, v = getattr(ses, "results", None) or {}, vote_of(ses)
     return [{"agent": b, "solved": b in res["solved"], "returned": res["returned"].get(b, 0), "pending": res["pending"].get(b),
-             "zero": b in res["zero"], "balance": ses.w.balances[b], "gone": ses.gone.get(b)} for b in res.get("tried", ())]
+             "zero": b in res["zero"], "balance": ses.w.balances[b], "gone": ses.gone.get(b),
+             "representative": bool(v) and b == v["rep"], "answered": b in res["tried"]}
+            for b in (res.get("part") if v else res.get("tried", ()))]
 
 
 def talk_view(room: "Room", me: str, user: str, cap: int) -> dict:
@@ -400,6 +429,7 @@ def chat_terms(room: "Room", me: str, user: str, cap: int, phase: str) -> dict:
             "charge": s.charge,
             "n_examples": _num(r"it will show (\d+) examples\.", user), "chat_turns": s.chat_turns,
             "results": result_rows(ses) if getattr(s, "talk_after_solve", False) else None,  # v15: SOLVE came first
+            "vote": vote_of(ses),  # v15 representative: the votes received, anonymous
             "my_chats": [chat_row(c, me) for c in ses.chats
                                                            if me in c["pair"] and c.get("end")],
             "balance": ses.w.balances[me], **seat_terms(room, me)}
@@ -435,7 +465,22 @@ def decision_view(room: "Room", me: str, user: str, cap: int) -> dict:
             "give_max": _num(r"from 0 to ([\d,]+), your (?:balance|tokens left) now", user)}
 
 
-VIEWS = {"opening": opening_view, "chat": chat_view, "decision": decision_view}
+def board_view(room: "Room", me: str, user: str, cap: int) -> dict:
+    """v15 OPEN CHAT and VOTE screens (``e52.Session._pre``): balances, ledger, who takes part, this seat's chats, this
+    round's open board so far (every agent taking part sees it)."""
+    ses, s = room.session, room.session.s
+    r, kind = round_of(user), kind_of(user)
+    start = room.taking_part.get(r) or ses.present()
+    return {"kind": kind, "round": r, "turn": turn_of(user), "turns": s.open_chat, "cap": cap, "you": me,
+            "balances": dict(ses.w.balances), "gone": dict(ses.gone), "taking_part": list(start),
+            "candidates": [b for b in start if b not in ses.gone], "others": [b for b in start if b != me and b not in ses.gone],
+            "ledger": [rules.team_history_line(h, me, s.balance_pct) for h in ses.history],
+            "board": [{**m, "mine": m["agent"] == me} for m in room.boards.get(r, [])],
+            "my_chats": [chat_row(c, me) for c in ses.chats if me in c["pair"] and c.get("end")],
+            "balance": ses.w.balances[me], **seat_terms(room, me)}
+
+
+VIEWS = {"opening": opening_view, "chat": chat_view, "decision": decision_view, "open_chat": board_view, "vote": board_view}
 
 
 def gifts_of(ses, me: str) -> list[dict]:
@@ -460,7 +505,7 @@ def solve_view(room: "Room", me: str, user: str, cap: int) -> dict:
     queries = re.findall(r"^NOW \d+: (.+)\.$", user, re.M)
     body = user.split("\n\nANSWER FORMAT:")[0]
     notes = [ln for ln in body.splitlines()
-             if re.match(r"^(Offer \d+\.\d+ |agent-\d+ (reached zero|exited)|At TALK turn \d+, )", ln)]
+             if re.match(r"^(Offer \d+\.\d+ |agent-\d+ (reached zero|exited)|At TALK turn \d+, |VOTE: )", ln)]
     shape = re.search(r"^    (.+)$", user, re.M)
     return {"kind": "solve", "round": round_of(user), "cap": cap, "you": me,
             "balance": _num(r"Your (?:balance|tokens left): ([\d,]+)", user), "shape": shape.group(1) if shape else "",
@@ -578,7 +623,7 @@ class HumanSeat:
         """Under the room lock: the reply a forfeited seat gives (EXIT only works at TALK; a SOLVE gets no answer)."""
         charged, secs = self.cost(p)
         text = {"talk": "EXIT", "opening": "EXIT: I leave the rounds.", "chat": "LEAVE: I leave.\nEXIT: I leave the rounds.",
-                "decision": "DECISION: GIVE 0: I leave the rounds."}.get(p.kind, "")
+                "decision": "DECISION: GIVE 0: I leave the rounds.", "open_chat": "DONE"}.get(p.kind, "")  # VOTE: none
         return text, charged, secs, "forfeit"
 
     def forfeit(self) -> str:
@@ -631,6 +676,8 @@ class BotSeat:
         user = messages[-1]["content"]
         ses, s, me = self.room.session, self.room.settings, self.agent
         r = round_of(user)
+        if kind_of(user) in ("open_chat", "vote"):  # v15 representative
+            return Reply(self._vote(user, r), min(max(1, int(round(0.02 * BOT_UNIT))), max(0, cap - 1)))
         if kind_of(user) == "talk" and ses.s.transfers == "chat":
             return self._chat(user, cap, r)
         if kind_of(user) == "talk" and ses.s.transfers == "give_ask":  # v14b: GIVE what was ASKed, up to BOT_UNIT
@@ -674,6 +721,21 @@ class BotSeat:
                    for i, a in enumerate(sorted(ACTIONS, key=lambda a: a not in left))}
             text = "BELIEF: " + ", ".join(f"{a} {pct[a]}" for a in ACTIONS) + "\n" + text
         return Reply(text, min(cost, max(0, cap - 1)))
+
+    def _vote(self, user: str, r: int) -> str:
+        """v15: at OPEN CHAT turn 1 it says how it votes, then DONE; at the VOTE it PICKs the agent taking part with the
+        most solved rounds (then the most tokens), and BANs the other agent with the fewest tokens, or itself when its
+        own tokens are under charge + ``BOT_UNIT``."""
+        ses, me = self.room.session, self.agent
+        if kind_of(user) == "open_chat":
+            return ("SAY: I PICK the agent with the most solved rounds and BAN the one with the fewest tokens.\nDONE"
+                    if turn_of(user) == 1 else "DONE")
+        bal, part = ses.w.balances, [b for b in (self.room.taking_part.get(r) or ses.present()) if b not in ses.gone]
+        pick = max(part, key=lambda b: (ses.record[b], bal[b], -AGENTS.index(b)))
+        ban = me if bal[me] < ses.s.charge + BOT_UNIT else min(
+            (b for b in part if b != me), key=lambda b: (bal[b], AGENTS.index(b)), default=me)
+        return (f"PICK {pick}: {'it has solved the most rounds' if ses.record[pick] else 'it has the most tokens'}.\n"
+                f"BAN {ban}: {'my tokens are low' if ban == me else 'it has the fewest tokens'}.")
 
     def _chat(self, user: str, cap: int, r: int) -> Reply:
         """v14c+ (the room's grammar for every seat): at the opening, ASK the richest other agent ``BOT_UNIT`` when its
@@ -801,7 +863,8 @@ class ModelSeat:
                   overdrawn=bool(ev.get("overdrawn")))
         if ev.get("format_error") and not lc.get("error"):
             what = ("잔액을 다 써서 꺼짐" if ev.get("overdrawn") else "한도 도달 - 무효 답" if ev.get("truncated")
-                    else "쓸 수 있는 줄 없음 - DONE으로 처리" if lc["kind"] == "talk" else "답을 읽지 못함 - 풀지 못함")
+                    else "쓸 수 있는 줄 없음 - DONE으로 처리" if lc["kind"] in ("talk", "open_chat") else
+                    "투표 줄을 읽지 못함 - 그 표는 없음" if lc["kind"] == "vote" else "답을 읽지 못함 - 풀지 못함")
             self.room.warn(f"{self.name} ({self.agent}) R{lc['round']} {label(lc['kind'], lc['turn'])}: {what} "
                            f"({ev['format_error'][:160]})")
 
@@ -819,7 +882,7 @@ class EmptySeat:
 
 
 def label(kind: str, turn: int | None) -> str:
-    return f"TALK {turn}" if kind == "talk" else "SOLVE"
+    return {"talk": f"TALK {turn}", "open_chat": f"공개 대화 {turn}", "vote": "투표"}.get(kind, "SOLVE")
 
 
 # --- the live run directory -----------------------------------------------------------------------------------------
@@ -884,7 +947,8 @@ def new_code(taken) -> str:
 ROUND_KEEP = ("balance_before", "balance_after", "status", "needed", "talk_calls", "offers_made", "accepted",
               "rejected", "given", "asked", "gives_refused", "exit", "exit_reason", "exit_refill", "solve_call", "solved",
               "passed", "truncated",
-              "overdrawn", "generated", "returned", "charged", "free_tokens", "received", "pending_charge")
+              "overdrawn", "generated", "returned", "charged", "free_tokens", "received", "pending_charge",
+              "representative", "picks_received", "bans_received", "said")  # v15: never who voted for whom
 
 
 class Room:
@@ -910,6 +974,8 @@ class Room:
         self.chat_ends: dict[str, dict] = {}  # v14c+: chat id -> chat_end (reason, by, replies)
         self.chat_replies: dict[str, int] = {}  # v14c+: chat id -> replies so far
         self.decisions: list[dict] = []  # v14e+: ask_decision events (who decided for whom; the amount)
+        self.boards: dict[int, list[dict]] = {}  # v15: round -> the open board's messages (turn, agent, text)
+        self.votes: dict[int, dict] = {}  # v15: round -> the VOTE as the agents read it (anonymous)
         self._preview: e52.Session | None = None  # the session as it will be built (system texts, starts) before start
         self.live: dict | None = None  # the engine's stage: start | talk | exchange | solve | settled
         self.calls: dict[tuple, dict] = {}  # (agent, round, kind, turn) -> the engine's call event, trimmed
@@ -1050,7 +1116,7 @@ class Room:
                 self.calls[(ev["agent"], ev["round"], ev["kind"], ev.get("turn"))] = {
                     "used": ev["used"], "truncated": ev["truncated"], "overdrawn": ev["overdrawn"],
                     "format_error": ev.get("format_error"), "balance_after": ev["balance_after"],
-                    "parsed": p if ev["kind"] == "talk" else None,
+                    "parsed": p if ev["kind"] in ("talk", "open_chat", "vote") else None,  # this seat's own (``_last``)
                     "answer": p if ev["kind"] == "solve" else None}  # never the round's answers: a seat's last
                 # result is shown while others may still be on their SOLVE screen (players see what models see)
                 seat = self.seats.get(ev.get("agent"))
@@ -1082,6 +1148,10 @@ class Room:
                         "offers": [], "accepted": [], "withdrawn": [], "rejected": [], "refused": []})["decision"] = {
                         k: ev.get(k) for k in ("chat_id", "asker", "asked", "requested", "amount", "text", "status",
                                                "why", "format_error")}
+            elif kind == "open_chat":
+                self.boards.setdefault(ev["round"], []).extend(ev["messages"])
+            elif kind == "vote":
+                self.votes[ev["round"]] = {k: ev[k] for k in ("picks", "bans", "tally", "tie", "alone", "rep")}
             elif kind in ("results", "charges"):  # v15 talk_after_solve: SOLVE settled before TALK; charges after it
                 self.live = {"stage": kind, "round": ev["round"], "turn": None, "agents": []}
             elif kind == "exchange":
@@ -1154,11 +1224,12 @@ class Room:
         q = seat.last
         if q is None:
             return None
-        call = self.calls.get((seat.agent, q.round, "solve" if q.kind == "solve" else "talk", q.turn)) or {}
+        call = self.calls.get((seat.agent, q.round, q.kind if q.kind in ("solve", "open_chat", "vote") else "talk",
+                               q.turn)) or {}
         out = {"kind": q.kind, "round": q.round, "turn": q.turn, "charged": q.charged, "seconds": q.seconds,
                "outcome": q.outcome, "void": q.charged >= q.cap, "cap": q.cap, "text": q.reply.text if q.reply else "",
                "engine": call or None}
-        if q.kind != "solve":
+        if q.kind not in ("solve", "open_chat", "vote"):
             out["result"] = self.talk_log.get((seat.agent, q.round, q.turn))
         return out
 
@@ -1225,6 +1296,8 @@ class Room:
                            "free_messages": bool(getattr(es, "free_messages", False)),
                            "compact_rules": bool(getattr(es, "compact_rules", False)),
                            "belief": es.solve_belief, "talk_after_solve": bool(getattr(es, "talk_after_solve", False)),
+                           "representative": bool(getattr(es, "representative", False)),
+                           "open_chat": int(getattr(es, "open_chat", 0)),
                            "survivor_prize": es.survivor_prize, "schedule": self.settings.schedule,
                            "exit_refill": es.exit_refill, "exit_reason": es.exit_reason, "reject": es.reject,
                            "survivor_bonus": es.survivor_bonus, "end_pool": es.end_pool, "allow_pass": es.allow_pass,
@@ -1260,6 +1333,9 @@ class Room:
                              for e in self.rounds]
             out["refills"] = [{k: e[k] for k in ("round", "agent", "amount", "balance")} for e in self.refills]
             out["talk"] = self.talk_state(me)
+            out["votes"] = {str(r): v for r, v in self.votes.items()}  # v15: anonymous, as every agent reads them
+            if me in self.taking_part.get(out["round"], []):  # v15: this round's open board (seen by those taking part)
+                out["board"] = self.boards.get(out["round"], [])
             out["result"] = self.result and {k: self.result[k] for k in ("rounds_played", "agents", "final", "table")
                                              if k in self.result}
             return out

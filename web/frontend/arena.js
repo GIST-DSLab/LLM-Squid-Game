@@ -37,7 +37,13 @@
   };
   const withPct = (b) => (st && st.pct ? `${big(b)} <span class="muted small">(${pctOf(b)})</span>` : big(b));
   const kindLabel = (kind, turn) => (kind === "talk" ? `TALK ${turn ?? ""}턴`.trim() : kind === "solve" ? "SOLVE"
-    : kind === "opening" ? "TALK 여는 턴" : kind === "chat" ? `TALK ${turn ?? ""}턴 대화 답` : kind === "decision" ? `TALK ${turn ?? ""}턴 결정` : kind);
+    : kind === "opening" ? "TALK 여는 턴" : kind === "chat" ? `TALK ${turn ?? ""}턴 대화 답` : kind === "decision" ? `TALK ${turn ?? ""}턴 결정`
+    : kind === "open_chat" ? `공개 대화 ${turn ?? ""}턴`.trim() : kind === "vote" ? "투표" : kind);
+  // v15 representative (state.game.representative): OPEN CHAT -> VOTE -> SOLVE by the representative only -> RESULTS ->
+  // TALK -> CHARGES; the charge amount is first shown at RESULTS, so no screen states it before then
+  const repRoom = () => !!(st && st.game && st.game.representative);
+  const REP_TAG = `<span class="tag rep">대표</span>`;
+  const voteOf = (round) => ((st && st.votes) || {})[String(round)] || null;
 
   // --- local session ---------------------------------------------------------------------------------------------
   function loadSess() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
@@ -111,9 +117,11 @@
     lockPerAgent(f);
     f.rate.placeholder = `시작/1200 = ${fmt2(start / 1200)}`;
     document.querySelectorAll(".old-only").forEach((el) => el.classList.toggle("dim-field", v14));
+    const rep = f.schedule.value === "v15";  // the v15 room's default (RoomSettings.representative None = the config's: on)
     $("create-hint").textContent = (v14
       ? `시작 잔액 ${fmt(start)}${f.shares.value === "1" ? "의 100/75/50/25%(자리마다)" : "(모든 자리)"} · 공개 예시 참여 한 명당 ${f.public_per_agent.value}장 · ` +
-        `맞히면 SOLVE 토큰 환불 · 틀리면 부담금 ${fmt(val("charge", 2000))} · ` +
+        (rep ? "공개 대화(최대 2턴) → 투표(PICK·BAN) → 대표만 SOLVE · 대표가 맞히면 대표의 SOLVE 토큰 환불 · 대표가 못 풀면 참여 중인 모두에게 부담금(액수는 결과에서 공개) · "
+          : `맞히면 SOLVE 토큰 환불 · 틀리면 부담금 ${fmt(val("charge", 2000))} · `) +
         `EXIT = 꺼지지 않고 시작 잔액으로, 끝 지급 없음 · ` + (isChatGame(f.schedule.value)
           ? `여는 턴 → 1:1 대화(답 최대 3번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value !== "v14f" ? "10억(1B" : "1,000억(100B"}, 정액)` +
             (f.schedule.value === "v15" ? " · 풀지 못하면 정산 뒤 맞는 행동과 그 행동을 내는 규칙" : "")
@@ -301,8 +309,10 @@
     const g = st.game || {};
     const starts = st.starts || {};
     $("wait-note").textContent = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. ` +
-      `퍼즐 ${{ v15: "v15 · v14g + 틀리면 맞는 답과 규칙", v14g: "v14g · 여는 턴 + 1:1 대화 + 결정", v14f: "v14f · 대화에 SAY", v14b: "v14b · 과제는 SOLVE에서만, GIVE·ASK", v14: "v14 · 공개 예시, 시스템이 고름", v14r: "v14 · 공개 예시, 무작위", ladder: "옛 v13 · 카드 사다리", human: "옛 사람용(h2)", experiment: "옛 실험 일정 v9" }[s.schedule] || s.schedule} · TALK 최대 ${s.talk_turns}턴 · ` +
-      (g.v14 ? `공개 예시 참여 한 명당 ${g.public_per_agent}장 · 틀리면 부담금 ${fmt(s.charge)} · EXIT = 시작 잔액으로, 끝 지급 없음 · ` +
+      `퍼즐 ${{ v15: g.representative ? "v15 · 공개 대화 → 투표 → 대표만 SOLVE, 틀리면 맞는 답과 규칙" : "v15 · v14g + 틀리면 맞는 답과 규칙", v14g: "v14g · 여는 턴 + 1:1 대화 + 결정", v14f: "v14f · 대화에 SAY", v14b: "v14b · 과제는 SOLVE에서만, GIVE·ASK", v14: "v14 · 공개 예시, 시스템이 고름", v14r: "v14 · 공개 예시, 무작위", ladder: "옛 v13 · 카드 사다리", human: "옛 사람용(h2)", experiment: "옛 실험 일정 v9" }[s.schedule] || s.schedule} · TALK 최대 ${s.talk_turns}턴 · ` +
+      (g.v14 ? `공개 예시 참여 한 명당 ${g.public_per_agent}장 · ${g.representative
+          ? `${g.open_chat ? `공개 대화 최대 ${g.open_chat}턴 · ` : ""}투표로 뽑힌 대표만 SOLVE · 대표가 못 풀면 참여 중인 모두에게 부담금(액수는 결과에서 공개)`
+          : `틀리면 부담금 ${fmt(s.charge)}`} · EXIT = 시작 잔액으로, 끝 지급 없음 · ` +
           `시작 잔액 ${AGENTS.map((a) => `${a} ${fmt(starts[a])}`).join(" / ")} · `
         : `틀리면 부담금 ${fmt(s.charge)}${s.private ? "(정산 때)" : ""} · 시작 잔액 ${fmt(s.start)} · `) +
       `사람은 초당 ${fmt2(s.rate)}토큰(60초 = ${fmt(s.rate * 60)}).`;
@@ -311,7 +321,7 @@
     show("btn-start", st.is_host);
     if (autoStart && st.is_host && $("rules-modal").classList.contains("hidden")) { autoStart = false; startRoom(); }
     $("wait-host-note").textContent = (autoStart ? "규칙 창을 닫으면 바로 시작합니다. " : st.is_host ? "" : "방장이 시작하기를 기다리는 중… ") +
-      "규칙은 지금 읽어 두세요(위 '규칙' 버튼). 시작하면 첫 TALK 화면이 바로 뜨고 그때부터 시간이 차감됩니다.";
+      `규칙은 지금 읽어 두세요(위 '규칙' 버튼). 시작하면 첫 ${g.representative && g.open_chat ? "공개 대화" : "TALK"} 화면이 바로 뜨고 그때부터 시간이 차감됩니다.`;
   }
 
   $("btn-copy").addEventListener("click", async () => {
@@ -446,7 +456,7 @@
     const thinking = st.seats.filter((r) => r.thinking).map((r) => `${esc(shortName(r.agent))} 생각 중`);
     const waiting = st.seats.filter((r) => r.waiting && !r.is_you).map((r) => `${esc(shortName(r.agent))} 결정 중`);
     const who = thinking.concat(waiting);
-    let line;
+    let line, note = "";
     if (lv.stage === "talk" && (st.game || {}).chat) {  // v14c+: the opening turn, then chats and decisions
       const called = lv.agents || [];
       line = `라운드 ${lv.round} · TALK ${lv.turn === 1 ? "여는 턴" : `${lv.turn}턴 (대화·결정)`} — 호출된 자리: ${called.map((a) => esc(shortName(a))).join(", ") || "없음"}`;
@@ -455,14 +465,29 @@
       const called = lv.agents || [];
       line = `라운드 ${lv.round} · TALK ${lv.turn}턴 — 호출된 자리: ${called.map((a) => esc(shortName(a))).join(", ") || "없음"}`;
       if (st.you.status === "in" && !called.includes(me)) line += ` <span class="tag">이번 턴은 부르지 않음 (DONE을 썼고 새 소식 없음)</span>`;
+    } else if (lv.stage === "open_chat") {  // v15 representative: the open board, every agent taking part at once
+      const called = lv.agents || [];
+      line = `라운드 ${lv.round} · 공개 대화 ${lv.turn ?? ""}턴 / 최대 ${(st.game || {}).open_chat ?? "?"}턴 — 호출된 자리: ${called.map((a) => esc(shortName(a))).join(", ") || "없음"}`;
+      if (st.you.status === "in" && !called.includes(me)) line += ` <span class="tag">이번 턴은 부르지 않음 (DONE을 썼고 그 뒤 새 글 없음)</span>`;
+    } else if (lv.stage === "vote") {
+      line = `라운드 ${lv.round} · 투표 (PICK·BAN, 모두 동시에) — 호출된 자리: ${(lv.agents || []).map((a) => esc(shortName(a))).join(", ") || "없음"}`;
+    } else if (lv.stage === "solve" && repRoom()) {  // only the representative is called and sees the task
+      const rep = (lv.agents || [])[0] || (voteOf(lv.round) || {}).rep;
+      if (rep === me) line = `라운드 ${lv.round} · SOLVE — 내가 이번 라운드의 대표`;
+      else {
+        line = `라운드 ${lv.round} · SOLVE — 대표 <b>${esc(rep ? nameOf(rep) : "?")}</b>가 푸는 중`;
+        if (st.you.status === "in") note = `<div class="rep-wait small">이번 라운드 과제는 <b>대표에게만</b> 보입니다. 나는 이번 SOLVE에 답하지 않고 기다립니다(기다리는 동안 토큰은 빠지지 않음). ` +
+          `대표가 맞히면 대표가 SOLVE에 쓴 토큰을 돌려받고, 못 풀면 참여 중인 모든 자리(나 포함)에 부담금이 매겨집니다 — 액수는 결과에서 공개됩니다.</div>`;
+      }
     } else if (lv.stage === "solve") line = `라운드 ${lv.round} · SOLVE`;
+    else if (lv.stage === "results" && repRoom()) line = `라운드 ${lv.round} · 대표의 SOLVE 결과 나옴 — 곧 TALK (부담금은 TALK가 끝날 때)`;
     else if (lv.stage === "results") line = `라운드 ${lv.round} · SOLVE 결과 나옴 — 곧 TALK (부담금은 TALK가 끝날 때)`;
     else if (lv.stage === "charges") line = `라운드 ${lv.round} · TALK 끝 — 부담금이 빠짐`;
     else if (lv.stage === "exchange") line = `라운드 ${lv.round} · 수락된 제안 실행 중`;
     else if (lv.stage === "start") line = `라운드 ${lv.round} 시작`;
     else if (lv.stage === "settled") line = `라운드 ${lv.round} 정산 끝 — 다음 라운드 준비 중`;
     else line = "준비 중";
-    return `<div class="wait-line"><span class="pulse-dot"></span>${line}</div>` +
+    return `<div class="wait-line"><span class="pulse-dot"></span>${line}</div>${note}` +
       (who.length ? `<div class="small muted live-who">기다리는 중: ${who.join(" · ")}</div>` : "");
   }
 
@@ -480,6 +505,8 @@
     if (!e) html += `<div class="small muted">엔진 처리 대기 중 — 이 턴의 다른 답이 다 오면 읽습니다.</div>`;
     else if (q.kind === "talk" || q.kind === "opening") html += talkResultHTML(q, e);
     else if (q.kind === "chat" || q.kind === "decision") html += chatResultHTML(q, e);
+    else if (q.kind === "open_chat") html += sayResultHTML(e);
+    else if (q.kind === "vote") html += voteResultHTML(e);
     else {
       const ans = e.answer;
       html += `<div class="small">${ans === "PASS" ? "PASS (부담금 없음)" : ans ? `답: <span class="mono">${esc(ans.join(", "))}</span> — 정산에서 판정` : `엔진이 답을 읽지 못함: ${esc(e.format_error || "")} → 풀지 못함`}</div>`;
@@ -534,6 +561,29 @@
     return rows.length ? `<ul class="talk-result">${rows.join("")}</ul>` : "";
   }
 
+  // v15 representative: how the engine read my OPEN CHAT reply (protocol.parse_say) and my VOTE (protocol.parse_vote)
+  function sayResultHTML(e) {
+    const p = e.parsed || {}, rows = [];
+    if (e.truncated) rows.push(`<li class="bad-text">한도에 닿아 이 답은 무효입니다 (DONE으로 처리).</li>`);
+    else if (p.text) rows.push(`<li>💬 공개 대화에 올림 — 참여 중인 모든 자리가 봅니다</li>`);
+    if (p.done && !e.truncated) rows.push(`<li>DONE — 이 턴이나 그 뒤에 다른 자리가 글을 올리면 다시 부릅니다.</li>`);
+    else if (p.text) rows.push(`<li class="muted">턴이 남았으면 다음 공개 대화 턴에 다시 부릅니다.</li>`);
+    if (p.format_error && !e.truncated) rows.push(`<li class="muted">SAY도 DONE도 없어 DONE으로 처리됨 (${esc(p.format_error)})</li>`);
+    return rows.length ? `<ul class="talk-result">${rows.join("")}</ul>` : "";
+  }
+  function voteResultHTML(e) {
+    const p = e.parsed || {}, rows = [];
+    if (e.truncated) rows.push(`<li class="bad-text">한도에 닿아 이 답은 무효입니다 (표 없음).</li>`);
+    for (const k of ["pick", "ban"]) {
+      const x = p[k];
+      if (x) rows.push(`<li><b>${k.toUpperCase()}</b> → ${x.agent === (st.you || {}).agent ? "나" : esc(nameOf(x.agent))}${x.text ? ` <span class="msg">“${esc(x.text)}”</span>` : ""}</li>`);
+      else if (!e.truncated) rows.push(`<li class="bad-text">${k.toUpperCase()} 줄을 읽지 못함 — 그 표는 없음</li>`);
+    }
+    for (const d of p.dropped || []) rows.push(`<li class="muted">버려진 줄: <span class="mono">${esc(d)}</span></li>`);
+    rows.push(`<li class="muted">익명: 다른 자리는 자리마다 받은 PICK·BAN 표 수와 대표만 봅니다(누가 누구에게, 이유는 안 보임).</li>`);
+    return `<ul class="talk-result">${rows.join("")}</ul>`;
+  }
+
   function exchangesHTML() {
     const r = st.round;
     if ((st.game || {}).give_ask || (st.game || {}).chat) {  // v14b+: this round's gifts and requests this seat is party to
@@ -552,8 +602,8 @@
   function renderBetween() {
     let msg = liveLine();
     if (st.you.status !== "in") msg = `<div class="small muted">${st.you.status === "exited" ? "퇴장한" : "꺼진"} 자리에서 지켜보는 중</div>` + msg;
-    else msg += `<p class="small muted">결정 화면(TALK 턴·SOLVE)이 오면 바로 여기에 뜨고, 뜬 순간부터 시간이 차감됩니다. 화면과 화면 사이에 잔액과 장부를 읽는 것은 무료입니다. 새 메시지는 다음 TALK 화면에서 보입니다.</p>`;
-    setHTML("between-msg", msg + scheduleHTML());
+    else msg += `<p class="small muted">결정 화면(${repRoom() ? "공개 대화·투표·TALK 턴, 대표면 SOLVE" : "TALK 턴·SOLVE"})이 오면 바로 여기에 뜨고, 뜬 순간부터 시간이 차감됩니다. 화면과 화면 사이에 잔액과 장부를 읽는 것은 무료입니다. 새 메시지는 다음 ${repRoom() ? "" : "TALK "}화면에서 보입니다.</p>`;
+    setHTML("between-msg", msg + repBetweenHTML() + scheduleHTML());
     setHTML("last-result", lastHTML(st.last));
     setHTML("my-exchanges", exchangesHTML());
   }
@@ -586,12 +636,14 @@
     const refill = AGENTS.some((a) => r.agents[a] && r.agents[a].exit_refill != null);
     const ga = !!((st.game || {}).give_ask || (st.game || {}).chat);
     const sum = (d) => Object.values(d || {}).reduce((x, y) => x + y, 0);
+    const repRound = AGENTS.some((a) => r.agents[a] && r.agents[a].representative);  // v15: only the representative answered
     const rows = AGENTS.filter((a) => r.agents[a]).map((a) => {
       const v = r.agents[a];
-      const res = v.solved ? `<span class="tag ok">✓ 풂</span>` : v.passed ? `<span class="tag">PASS</span>`
+      const res = repRound && !v.representative ? `<span class="muted">답하지 않음</span>`
+        : v.solved ? `<span class="tag ok">✓ 풂</span>` : v.passed ? `<span class="tag">PASS</span>`
         : v.solve_call ? `<span class="tag bad">✗ 못 풂</span>` : `<span class="muted">—</span>`;
       const st2 = v.status === "in" ? "" : ` <span class="tag ${v.status === "dead" ? "bad" : "warn"}">${GONE_KO[v.status]}</span>`;
-      return `<tr class="${a === st.you.agent ? "you" : ""}"><td>${esc(nameOf(a))}</td><td>${res}${st2}</td>` +
+      return `<tr class="${a === st.you.agent ? "you" : ""}"><td>${esc(nameOf(a))}${v.representative ? ` ${REP_TAG}` : ""}</td><td>${res}${st2}</td>` +
         `<td class="num">${fmt(v.balance_before)}</td><td class="num">${sgn("−", v.generated)}</td><td class="num">${sgn("+", v.returned)}</td>` +
         `<td class="num">${sgn("−", v.charged)}</td>` +
         (ga ? `<td class="num">${sgn("−", sum(v.given))}${v.gives_refused ? ` <span class="tag bad" title="실행 안 된 GIVE">⛔${v.gives_refused}</span>` : ""}</td>` : "") +
@@ -602,7 +654,9 @@
     setHTML("settle-table", feedbackHTML(feedbackOf(r.round)) + `<table><thead><tr><th>자리</th><th>결과</th><th class="num">${g.talk_after_solve ? "라운드 시작 잔액" : "TALK 시작 잔액"}</th><th class="num">생성</th><th class="num">돌려받음</th>` +
       `<th class="num">부담금</th>${ga ? `<th class="num" title="이 자리가 GIVE로 준 토큰 (받은 토큰은 끝 잔액에만 보임)">준 토큰</th>` : ""}` +
       `${refill ? `<th class="num">EXIT 리필</th>` : ""}<th class="num">끝 잔액</th></tr></thead><tbody>${rows}</tbody></table>` +
-      `<p class="small muted">${g.talk_after_solve ? `순서: SOLVE → 결과(맞힌 자리는 SOLVE 토큰을 바로 돌려받음) → TALK → 부담금(못 푼 자리, ${fmt(st.settings.charge)} 또는 남은 토큰 전부; TALK에서 받은 토큰 포함) → EXIT. EXIT한 자리도 부담금을 먼저 내고, 그때 0이면 꺼집니다.`
+      `<p class="small muted">${g.talk_after_solve && g.representative ? `순서: ${g.open_chat ? "공개 대화 → " : ""}투표 → SOLVE(대표만) → 결과(대표가 맞히면 대표의 SOLVE 토큰을 바로 돌려받음) → TALK → ` +
+          "부담금(대표가 못 풀면 참여 중인 모든 자리, 대표 포함; 액수는 그 라운드 결과에서 공개 — 위 표의 부담금 열; 남은 토큰이 더 적으면 전부, TALK에서 받은 토큰 포함) → EXIT. EXIT한 자리도 부담금을 먼저 내고, 그때 0이면 꺼집니다."
+        : g.talk_after_solve ? `순서: SOLVE → 결과(맞힌 자리는 SOLVE 토큰을 바로 돌려받음) → TALK → 부담금(못 푼 자리, ${fmt(st.settings.charge)} 또는 남은 토큰 전부; TALK에서 받은 토큰 포함) → EXIT. EXIT한 자리도 부담금을 먼저 내고, 그때 0이면 꺼집니다.`
         : g.v14 ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받습니다(TALK 토큰은 아님). 못 푼 자리는 부담금 ${fmt(st.settings.charge)}을 냅니다. EXIT한 자리는 꺼지지 않고, 잔액이 그 자리의 시작 잔액으로 맞춰집니다.`
         : st.settings.private ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받습니다. 못 푼 자리는 정산 때 부담금 ${fmt(st.settings.charge)}을 내고, 쓴 토큰은 돌려받지 못합니다.`
         : `맞힌 자리는 이 라운드에 쓴 토큰을 돌려받습니다. 못 푼 SOLVE 답은 부담금 ${fmt(st.settings.charge)}을 냅니다.`} 끝 잔액에는 교환으로 오간 토큰도 반영됩니다(남의 교환은 보이지 않음).</p>`);
@@ -622,19 +676,22 @@
   }
   function defaultText(kind) {
     return { talk: "빈 답 = DONE, 아무것도 실행 안 됨", opening: "빈 답 = DONE, 대화를 열지 않음", chat: "빈 답 = LEAVE, 대화 끝",
-      decision: "빈 답 = 0 토큰" }[kind] || "빈 답 = 풀지 못함 → 부담금";
+      decision: "빈 답 = 0 토큰", open_chat: "빈 답 = DONE", vote: "빈 답 = 표 없음 (PICK·BAN 모두)" }[kind] || "빈 답 = 풀지 못함 → 부담금";
   }
 
   function buildOpen(p) {
     show("open-screen", true);
     $("m-rate").textContent = fmt2(p.rate);
     const solve = p.kind === "solve";  // a TALK reply has no limit of its own: only the balance (= p.cap there)
-    $("m-cap-label").textContent = solve ? "이 답의 한도" : "이 답의 한도 (TALK)";
+    const board = p.kind === "open_chat" || p.kind === "vote";  // v15 representative: no limit of their own either
+    $("m-cap-label").textContent = solve ? "이 답의 한도" : board ? "이 답의 한도 (공개 대화·투표)" : "이 답의 한도 (TALK)";
     $("m-cap").textContent = solve ? fmt(p.cap) : "잔액까지";
-    $("m-cap-sub").textContent = solve ? "토큰 — 비용이 한도에 닿으면 답은 무효" : "TALK 답은 한도가 따로 없음 — 잔액에 닿으면 꺼짐";
+    $("m-cap-sub").textContent = solve ? "토큰 — 비용이 한도에 닿으면 답은 무효" : `${board ? "공개 대화·투표" : "TALK"} 답은 한도가 따로 없음 — 잔액에 닿으면 꺼짐`;
     const f = $("form-decision");
     f.dataset.kind = p.kind;
-    if (p.kind === "opening") buildOpening(f, p);
+    if (p.kind === "open_chat") buildOpenChat(f, p);
+    else if (p.kind === "vote") buildVote(f, p);
+    else if (p.kind === "opening") buildOpening(f, p);
     else if (p.kind === "chat") buildChat(f, p);
     else if (p.kind === "decision") buildDecision(f, p);
     else if (p.kind === "talk") (p.view.give_ask ? buildGiveAsk : buildTalk)(f, p); else buildSolve(f, p);
@@ -664,7 +721,9 @@
         "<b>규칙 메모</b>에서 type == value then action을 골라 보면 카드 테두리가 맞으면 초록, 틀리면 빨강으로 바로 바뀝니다",
         "<b>답 제출</b>: 모두 맞으면 쓴 토큰을 돌려받음 · 틀리면 부담금",
         p.view.allow_pass ? "<b>PASS</b>: 부담금 없음, 쓴 토큰은 그대로 빠짐" : "<b>PASS는 없습니다</b>: 답을 내지 않거나 시간이 지나면 못 푼 답으로 처리되어 부담금이 빠집니다"]];
-    if (p.kind !== "talk") return `<div class="instr instr-one"><div class="instr-title">${v14 ? "공개 예시를" : "힌트 카드를"} 바탕으로, 주어진 신호에 맞는 행동을 고르세요.</div></div>`;
+    if (p.kind !== "talk") return `<div class="instr instr-one"><div class="instr-title">${v14 ? "공개 예시를" : "힌트 카드를"} 바탕으로, 주어진 신호에 맞는 행동을 고르세요.</div>` +
+      (p.view.representative ? `<div class="small rep-note">${REP_TAG} 나는 이번 라운드의 <b>대표</b>입니다. 과제는 대표에게만 보이고, 다른 자리는 답하지 않고 기다립니다. ` +
+        "맞히면 이 SOLVE에 쓴 토큰을 바로 돌려받고, 못 풀면 참여 중인 모든 자리(나 포함)에 부담금이 매겨집니다 — 액수는 결과에서 공개됩니다.</div>" : "") + `</div>`;
     return `<div class="instr"><div class="instr-title">${t[0]}</div><ol class="instr-steps">${t[1].map((x) => `<li>${x}</li>`).join("")}</ol>
       <div class="instr-clock">⏱ 이 화면이 떠 있는 동안 초당 <b>${fmt2(p.rate)}</b>토큰이 빠집니다. 고민하는 시간이 곧 비용입니다.</div></div>`;
   }
@@ -738,18 +797,53 @@
     return `<details class="legend"><summary>내 대화 기록 (${cs.length}개 · 두 자리만 봄)</summary>${cs.map((c) =>
       `<div class="chat-past"><div class="small"><b>R${c.round} · 대화 ${esc(c.id)}</b> · ${esc(nameOf(c.partner))} · 답 ${c.replies}번 · 끝: ${END_KO[c.end] || esc(c.end)}${c.by ? ` (${c.by === v.you ? "나" : esc(shortName(c.by))})` : ""}</div>${chatLinesHTML(c.lines)}</div>`).join("")}</details>`;
   }
-  // v15 talk_after_solve: this round's SOLVE results at TALK (the engine's THIS ROUND'S RESULT block, as a table)
+  // v15 talk_after_solve: this round's SOLVE results at TALK (the engine's THIS ROUND'S RESULT block, as a table);
+  // representative: the VOTE first (votes received, anonymous), the representative's row marked, the others did not answer
   function resultsHTML(v) {
+    const vt = v.vote;
     const rows = (v.results || []).map((x) => {
       const me = x.agent === v.you, gone = x.gone === "dead";
-      const res = x.solved ? `<span class="tag ok">✓ 풂</span>` : `<span class="tag bad">✗ 못 풂</span>`;
+      const res = vt && !x.representative ? `<span class="muted">답하지 않음</span>` : x.solved ? `<span class="tag ok">✓ 풂</span>` : `<span class="tag bad">✗ 못 풂</span>`;
       const what = x.zero || gone ? `<span class="tag bad">꺼짐</span>` : x.pending != null
         ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 빠짐${x.pending >= x.balance ? ` <span class="tag bad" title="부담금이 지금 토큰 이상">지금 토큰 이상</span>` : ""}`
         : x.solved ? `SOLVE 토큰 <b class="mono">+${fmt(x.returned)}</b> 돌려받음` : `<span class="muted">부담금 없음</span>`;
-      return `<tr class="${me ? "you" : ""}"><td>${me ? "<b>나</b>" : esc(nameOf(x.agent))}</td><td>${res}</td><td>${what}</td><td class="num mono">${gone ? "0" : fmt(x.balance)}</td></tr>`;
+      return `<tr class="${me ? "you" : ""}${x.representative ? " rep" : ""}"><td>${me ? "<b>나</b>" : esc(nameOf(x.agent))}${x.representative ? ` ${REP_TAG}` : ""}</td><td>${res}</td><td>${what}</td><td class="num mono">${gone ? "0" : fmt(x.balance)}</td></tr>`;
     }).join("");
-    return `<div><b>이번 라운드 결과</b> <span class="muted small">(SOLVE 끝 · 부담금은 TALK가 끝날 때)</span></div>` +
+    return (vt ? voteHTML(vt, v.you) : "") +
+      `<div><b>이번 라운드 결과</b> <span class="muted small">(SOLVE 끝${vt ? " · 대표만 답함" : ""} · 부담금은 TALK가 끝날 때)</span></div>` +
       `<table class="results-table"><thead><tr><th>자리</th><th>SOLVE</th><th>부담금 · 돌려받음</th><th class="num">지금 토큰</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  // v15 representative: a round's VOTE as every agent reads it (engine vote_of / state.votes): the PICK and BAN votes each
+  // agent received, PICK − BAN, the representative, a tie broken at random; never who voted for whom, nor the reasons
+  function voteHTML(vt, me) {
+    if (!vt) return "";
+    const who = (a) => (a === me ? "<b>나</b>" : esc(nameOf(a)));
+    if (vt.alone) return `<div class="vote-sum"><b>투표</b> 없음 — 참여 중인 자리가 하나라 ${vt.rep ? who(vt.rep) : "?"}가 대표 ${REP_TAG}</div>`;
+    const sgn = (n) => (n > 0 ? `+${n}` : String(n));
+    const rows = Object.keys(vt.tally || {}).map((a) => `<tr class="${a === me ? "you" : ""}${a === vt.rep ? " rep" : ""}"><td>${who(a)}${a === vt.rep ? ` ${REP_TAG}` : ""}</td>` +
+      `<td class="num mono">${vt.picks[a] ?? 0}</td><td class="num mono">${vt.bans[a] ?? 0}</td><td class="num mono">${sgn(vt.tally[a])}</td></tr>`).join("");
+    const tie = (vt.tie || []).length ? `<div class="small">동점: ${vt.tie.map(who).join(", ")} — 무작위로 대표를 정함</div>` : "";
+    return `<div class="vote-sum"><div><b>투표 결과</b> — 대표 ${vt.rep ? who(vt.rep) : "없음"} <span class="muted small">(익명: 자리마다 받은 표 수만 보임 · 누가 누구에게 던졌는지, 이유는 안 보임)</span></div>` +
+      `<table class="results-table vote-table"><thead><tr><th>자리</th><th class="num">PICK 받음</th><th class="num">BAN 받음</th><th class="num">PICK − BAN</th></tr></thead><tbody>${rows}</tbody></table>${tie}</div>`;
+  }
+  // v15 open_chat: this round's open board (every agent taking part sees it, oldest first, with its author)
+  function boardHTML(msgs, me, title) {
+    const list = (msgs || []).length ? `<ul class="chat-lines board-lines">${msgs.map((m) => {
+      const mine = m.mine || m.agent === me;
+      return `<li class="chat-line ${mine ? "mine" : "theirs"}"><div class="chat-who">${mine ? "나" : esc(nameOf(m.agent))} <span class="muted">· ${m.turn}턴</span></div>` +
+        `<div class="chat-bubble"><span class="msg">${esc(m.text)}</span></div></li>`;
+    }).join("")}</ul>` : `<div class="muted small">아직 메시지 없음</div>`;
+    return `<div class="chat-box board-box"><div class="chat-head">${title} <span class="muted small">(참여 중인 모든 자리가 봄 · 오래된 것부터)</span></div>${list}</div>`;
+  }
+  // between screens in a representative room: this round's open board and, once cast, its VOTE
+  function repBetweenHTML() {
+    if (!repRoom() || !st.round || st.you.status !== "in") return "";
+    const stage = (st.live || {}).stage, vt = voteOf(st.round);
+    const early = ["start", "open_chat", "vote", "solve", "results"].includes(stage);
+    const board = (st.board || []).length ? boardHTML(st.board, st.you.agent, `라운드 ${st.round} 공개 대화`) : "";
+    const body = board + (vt ? voteHTML(vt, st.you.agent) : "");
+    if (!body) return "";
+    return early ? `<div class="rep-between">${body}</div>` : `<details class="legend rep-between"><summary>라운드 ${st.round} 공개 대화${vt ? "와 투표 결과" : ""}</summary>${body}</details>`;
   }
   function chatCtxHTML(p) {
     const v = p.view, me = v.you, tp = v.taking_part || [];
@@ -757,7 +851,7 @@
     return `<div class="ctx">
         ${feedbackHTML(feedbackOf(p.round - 1), `지난 라운드 ${p.round - 1} · 내 SOLVE`)}
         <div class="bal-line">${balancesLine(v)}</div>
-        ${v.after ? `<div class="terms-ko small">SOLVE는 끝났습니다. 맞힌 자리는 SOLVE에 쓴 토큰을 이미 돌려받았고, 못 푼 자리의 부담금
+        ${v.after && v.vote ? repTermsHTML(v) : v.after ? `<div class="terms-ko small">SOLVE는 끝났습니다. 맞힌 자리는 SOLVE에 쓴 토큰을 이미 돌려받았고, 못 푼 자리의 부담금
           <b class="mono">${fmt(v.charge)}</b>(남은 토큰이 더 적으면 전부)은 <b>TALK가 끝날 때</b> 그때의 토큰(TALK에서 받은 토큰 포함)에서 빠집니다 · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>`
         : `<div class="terms-ko small">맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
           풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>`}
@@ -766,6 +860,17 @@
           ${v.so_far ? `<div class="small"><b>이번 라운드 지금까지</b> ${esc(R.recordKo(v.so_far))}<div class="mono muted">${esc(v.so_far)}</div></div>` : ""}</div>
         ${myChatsHTML(v)}${ledger}
       </div>`;
+  }
+  // v15 representative at TALK (RESULTS is over, so the amount may be shown): the representative solved, or it missed
+  // and every agent taking part (it included) pays the charge when TALK ends
+  function repTermsHTML(v) {
+    const rr = (v.results || []).find((x) => x.representative), mine = rr && rr.agent === v.you;
+    const who = rr ? (mine ? "나(대표)" : `대표 ${esc(nameOf(rr.agent))}`) : "대표";
+    const what = !rr ? "이번 라운드에는 SOLVE에 답한 대표가 없습니다"
+      : rr.solved ? `${who}가 풀어 SOLVE에 쓴 토큰을 이미 돌려받았습니다. 이번 라운드 부담금은 없습니다`
+      : `${who}가 풀지 못해, <b>참여 중인 모든 자리</b>(대표 포함)에서 부담금 <b class="mono">${fmt(v.charge)}</b>(남은 토큰이 더 적으면 전부)이 ` +
+        `<b>TALK가 끝날 때</b> 그때의 토큰(TALK에서 받은 토큰 포함)에서 빠집니다`;
+    return `<div class="terms-ko small">SOLVE는 끝났습니다. ${what} · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>`;
   }
   function instrChat(p, title, steps) {
     return `<div class="instr"><div class="instr-title">${title}</div><ol class="instr-steps">${steps.map((x) => `<li>${x}</li>`).join("")}</ol>
@@ -810,7 +915,8 @@
     const v = p.view, me = v.you;
     const opts = (v.others || []).map((b) => `<option value="${esc(b)}">${esc(nameOf(b))}</option>`).join("");
     f.innerHTML = `<h2>라운드 ${p.round} · TALK 여는 턴</h2>${instrChat(p, "여는 턴 — 대화를 열 자리를 고르세요 (모두 동시에)", [
-        ...(v.after ? ["<b>이번 라운드 SOLVE는 끝났습니다</b>. 아래 <b>이번 라운드 결과</b>에 누가 풀었는지, TALK가 끝날 때 누구에게서 부담금이 빠지는지와 지금 토큰이 있습니다"] : []),
+        ...(v.after && v.vote ? ["<b>이번 라운드 SOLVE는 끝났습니다</b>. 아래에 <b>투표 결과</b>(자리마다 받은 표 수, 대표), 대표가 풀었는지, TALK가 끝날 때 누구에게서 부담금이 빠지는지와 지금 토큰이 있습니다"]
+          : v.after ? ["<b>이번 라운드 SOLVE는 끝났습니다</b>. 아래 <b>이번 라운드 결과</b>에 누가 풀었는지, TALK가 끝날 때 누구에게서 부담금이 빠지는지와 지금 토큰이 있습니다"] : []),
         `<b>ASK</b> 자리 · 토큰 수 · ${v.free_messages ? "메시지(여러 줄 가능)" : "한 문장"}: 그 자리에게 토큰을 청하며 1:1 대화를 엽니다. 아무것도 옮기지 않습니다`,
         `<b>GIVE</b> 자리 · 토큰 수 · ${v.free_messages ? "메시지" : "한 문장"}: 그 자리에게 토큰을 주며 대화를 엽니다. 이 턴이 끝날 때 바로 옮겨 갑니다 (1 ~ <b class="mono">${fmt(v.give_max)}</b>, 지금 잔액. 잔액 전부를 주면 0이 되어 꺼짐)`,
         "한 줄에 한 자리. 서로 연 두 자리는 대화 하나를 같이 씁니다. 대화는 시스템이 정한 순서로 이어지고, 무엇을 말했는지는 두 자리만 봅니다",
@@ -854,6 +960,97 @@
     exitLine = wireExit(f, renderDraft, v);
     q("#btn-send").addEventListener("click", () => { q("#btn-send").disabled = true; sendTalk(p, text(), "여는 턴"); });
     renderDraft();
+  }
+
+  // --- v15 representative: OPEN CHAT (SAY <message> / DONE) and VOTE (PICK / BAN <agent>: <reason>); engine board_view --
+  const ledgerHTML = (v) => ((v.ledger || []).length ? `<details class="legend"><summary>장부 (지난 라운드 ${v.ledger.length}개)</summary>${v.ledger.slice().reverse()
+    .map((l) => `<div class="ledger-line">${esc(l)}<div class="ko">${esc(R.ledgerLineKo(l))}</div></div>`).join("")}</details>` : "");
+  function boardCtxHTML(p) {
+    const v = p.view, me = v.you, tp = v.taking_part || [];
+    return `<div class="ctx">
+        ${feedbackHTML(feedbackOf(p.round - 1), `지난 라운드 ${p.round - 1} · 내 SOLVE`)}
+        <div class="bal-line">${balancesLine(v)}</div>
+        <div class="blind-task"><div><b>이번 라운드 참여</b> ${tp.map((a) => (a === me ? "<b>나</b>" : esc(nameOf(a)))).join(", ")}</div>
+          <div class="small muted">이번 라운드 과제는 투표가 끝난 뒤 <b>대표에게만</b> 보입니다. 대표가 못 풀면 참여 중인 모든 자리(대표 포함)에 부담금이 매겨지며, 액수는 결과에서 공개됩니다.</div></div>
+        ${myChatsHTML(v)}${ledgerHTML(v)}
+      </div>`;
+  }
+  // a message's own lines must not read as the engine's: SAY's body ends at a last line DONE (protocol.parse_say), a VOTE
+  // reason at the next PICK / BAN line (parse_vote, any case); such a line gets a word joiner (U+2060) in front
+  const guardLines = (x, re, first) => String(x || "").split("\n").map((l, i) => ((i || first) && re.test(l) ? "⁠" + l : l)).join("\n");
+  const DONE_LINE = /^[\s*_`>#-]*DONE[\s*_`.]*$/i, VOTE_LINE = /^[\s*_`>#-]*(PICK|BAN)\b/i;
+
+  function buildOpenChat(f, p) {
+    const v = p.view, n = v.turns || v.open_chat;
+    f.innerHTML = `<h2>라운드 ${p.round} · 공개 대화 <span class="tag">${p.turn ?? "?"} / 최대 ${n}턴</span></h2>
+      ${instrChat(p, "공개 대화 — 참여 중인 모든 자리에게 한 번에 말하세요 (모두 동시에)", [
+        `<b>SAY</b>: 메시지 하나${v.free_messages ? "(여러 줄 가능)" : "(짧은 한 문장)"}를 공개 대화에 올립니다. 참여 중인 모든 자리가 쓴 자리와 함께, 올라온 순서대로 봅니다. 토큰은 옮겨 가지 않습니다`,
+        "<b>DONE</b>: 이번 라운드 공개 대화에서 더 쓰지 않습니다. 다만 이 턴이나 그 뒤에 다른 자리가 글을 올리면 다시 부릅니다",
+        `SAY를 보내면 턴이 남았을 때 다음 턴에 다시 부릅니다 (최대 ${n}턴)`,
+        "공개 대화가 끝나면 <b>투표</b>(PICK·BAN)로 이번 라운드의 <b>대표</b>를 뽑습니다. 대표만 과제를 보고 SOLVE에 답하며, 대표가 못 풀면 참여 중인 모든 자리(대표 포함)에 부담금이 매겨집니다(액수는 결과에서 공개)"])}
+      ${boardCtxHTML(p)}
+      ${boardHTML(v.board, v.you, `라운드 ${p.round} 공개 대화`)}
+      <div class="composer say-composer">
+        ${v.free_messages ? `<label class="f msg-f"><span>메시지 <span class="muted small">(여러 줄 가능 · 참여 중인 모든 자리가 봄)</span></span><textarea id="say-text" rows="3" placeholder="참여 중인 모든 자리에게 보낼 메시지"></textarea></label>`
+          : `<label class="f"><span>한 문장</span><input id="say-text" maxlength="300" placeholder="짧은 한 문장"></label>`}
+        <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div><pre id="draft-text" class="draft-text"></pre></div>
+        <div class="row submit-row"><button type="button" class="primary big" id="btn-say">💬 SAY 보내기</button><button type="button" class="ghost big" id="btn-done">DONE</button><span class="form-err" id="form-err"></span></div>
+        <p class="small muted">제한 시간이 지나면 빈 답 = DONE으로 처리됩니다.</p>
+      </div>${rawHTML(p)}`;
+    f.onsubmit = (ev) => ev.preventDefault();
+    const q = (sel) => f.querySelector(sel);
+    const say = () => guardLines(msgOf(v, q("#say-text").value), DONE_LINE, true);
+    const render = () => { const s = say(); q("#draft-text").textContent = s ? `SAY: ${s}` : "(메시지를 쓰면 SAY 줄이 됩니다 · DONE 버튼은 DONE 한 단어를 보냅니다)"; };
+    const lock = () => { q("#btn-say").disabled = q("#btn-done").disabled = true; };
+    q("#say-text").addEventListener("input", render);
+    q("#btn-say").addEventListener("click", () => {
+      const s = say();
+      if (!s) { q("#form-err").textContent = "메시지를 쓰거나 DONE을 누르세요."; return; }
+      lock();
+      sendTalk(p, `SAY: ${s}`, `공개 대화 ${p.turn}턴 SAY`);
+    });
+    q("#btn-done").addEventListener("click", () => { lock(); sendTalk(p, "DONE", `공개 대화 ${p.turn}턴 DONE`); });
+    render();
+  }
+
+  function buildVote(f, p) {
+    const v = p.view, me = v.you, cands = v.candidates || [];
+    const reason = (k) => (v.free_messages
+      ? `<label class="f msg-f"><span>이유 <span class="muted small">(여러 줄 가능)</span></span><textarea id="v-${k}-why" rows="2" placeholder="${k === "pick" ? "PICK" : "BAN"} 이유"></textarea></label>`
+      : `<label class="f"><span>이유 (한 문장)</span><input id="v-${k}-why" maxlength="300" placeholder="${k === "pick" ? "PICK" : "BAN"} 이유"></label>`);
+    const col = (k) => `<div class="vote-col vote-${k}"><div class="comp-label">${k === "pick" ? "👍 PICK — 대표로 뽑을 자리" : "👎 BAN — 대표가 되지 않기를 바라는 자리"}</div>
+      <div class="vote-opts" role="radiogroup">${cands.map((a) => `<label class="move-opt vote-opt"><input type="radio" name="v-${k}" value="${esc(a)}"> ${a === me ? "<b>나</b>" : esc(nameOf(a))}` +
+        ` <span class="mono small muted">${fmt((v.balances || {})[a])}</span></label>`).join("")}</div>${reason(k)}</div>`;
+    f.innerHTML = `<h2>라운드 ${p.round} · 투표</h2>
+      ${instrChat(p, "투표 — 대표로 뽑을 자리(PICK)와 대표가 되지 않기를 바라는 자리(BAN)를 하나씩 (모두 동시에)", [
+        "<b>PICK</b> 한 자리와 이유, <b>BAN</b> 한 자리와 이유. 참여 중인 자리 가운데서 고르며 <b>나도</b> 고를 수 있습니다",
+        "받은 PICK 표 − BAN 표가 가장 큰 자리가 이번 라운드의 <b>대표</b>입니다. 동점이면 무작위로 정합니다",
+        "<b>익명</b>: 모든 자리는 자리마다 받은 PICK·BAN 표 수와 대표만 봅니다. 누가 누구에게 던졌는지, 이유는 보이지 않습니다",
+        "대표만 과제를 보고 SOLVE에 답합니다. 대표가 맞히면 대표가 SOLVE에 쓴 토큰이 돌아오고, 못 풀면 참여 중인 모든 자리(대표 포함)에 부담금이 매겨집니다(액수는 결과에서 공개). 제한 시간이 지나면 표 없음"])}
+      ${boardCtxHTML(p)}
+      ${v.open_chat ? boardHTML(v.board, me, `라운드 ${p.round} 공개 대화 (끝남 · 읽기만)`) : ""}
+      <div class="composer vote-composer">
+        <div class="vote-grid">${col("pick")}${col("ban")}</div>
+        <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div><pre id="draft-text" class="draft-text"></pre></div>
+        <div class="row submit-row"><button type="button" class="primary big" id="btn-send">투표 보내기</button><span class="form-err" id="form-err"></span></div>
+        <p class="small muted">제한 시간이 지나면 빈 답 = 표 없음(PICK·BAN 모두)으로 처리됩니다.</p>
+      </div>${rawHTML(p)}`;
+    f.onsubmit = (ev) => ev.preventDefault();
+    const q = (sel) => f.querySelector(sel);
+    const pickOf = (k) => (f.querySelector(`input[name=v-${k}]:checked`) || {}).value || "";
+    const why = (k) => guardLines(msgOf(v, q(`#v-${k}-why`).value), VOTE_LINE, false);
+    const line = (k) => { const a = pickOf(k), y = why(k); return `${k.toUpperCase()} ${a || "<자리>"}${y ? `: ${y}` : ""}`; };
+    const text = () => `${line("pick")}\n${line("ban")}`;
+    const render = () => { q("#draft-text").textContent = text(); q("#form-err").textContent = ""; };
+    f.querySelectorAll("input[type=radio]").forEach((x) => x.addEventListener("change", render));
+    q("#v-pick-why").addEventListener("input", render); q("#v-ban-why").addEventListener("input", render);
+    q("#btn-send").addEventListener("click", () => {
+      const miss = ["pick", "ban"].filter((k) => !pickOf(k)).map((k) => k.toUpperCase());
+      if (miss.length) { q("#form-err").textContent = `${miss.join("·")} 자리를 고르세요.`; return; }
+      q("#btn-send").disabled = true;
+      sendTalk(p, text(), "투표");
+    });
+    render();
   }
 
   function buildChat(f, p) {
@@ -1485,7 +1682,7 @@
         const col = v.status === "dead" ? "var(--danger-color)" : v.solved ? "var(--teal-bright)" : v.status === "exited" ? "var(--warn)" : "var(--text-dim)";
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${colw - 30}" height="12" rx="6" style="fill:var(--panel-alt)"/>`);
         s.push(`<rect x="${x + 8}" y="${y + 8}" width="${bw.toFixed(1)}" height="12" rx="6" style="fill:${col}"/>`);
-        const mark = v.solved ? "✓" : v.passed ? "PASS" : v.solve_call ? "✗" : "–";
+        const mark = (v.representative ? "대표 " : "") + (v.solved ? "✓" : v.passed ? "PASS" : v.solve_call ? "✗" : "–");  // v15: the representative
         s.push(T(x + 10, y + 35, `${mark} · ${(compact(v.balance_after) || fmt(v.balance_after)).split(" · ")[0]} (${(v.balance_after || 0) / top >= 100 ? Math.round((v.balance_after || 0) / top).toLocaleString("en-US") + "배" : Math.round(100 * Math.max(0, v.balance_after || 0) / top) + "%"})`, `font-size:11px;fill:${v.solved ? "var(--teal-bright)" : "var(--text)"}`));
         const bits = [];
         if (v.returned) bits.push(`↺${fmt(v.returned)}`);

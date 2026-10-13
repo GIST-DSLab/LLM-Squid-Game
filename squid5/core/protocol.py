@@ -13,10 +13,8 @@ import re
 from .channel import EXAMPLE
 from .puzzle import ACTIONS
 
-
 class FormatError(ValueError):
     pass
-
 
 def field(text: str, key: str, required: bool = True, last: bool = False) -> str | None:
     lines = text.splitlines()
@@ -28,13 +26,11 @@ def field(text: str, key: str, required: bool = True, last: bool = False) -> str
         raise FormatError(f"missing {key} line")
     return None
 
-
 def _acts(value: str, n: int) -> list[str]:
     acts = [a.strip().strip("<>[]'\"*_`.").lower() for a in re.split(r"[,\s]+", value) if a.strip("<>[]*_` .")]
     if len(acts) != n or any(a not in ACTIONS for a in acts):
         raise FormatError(f"need {n} actions from {ACTIONS}: {value!r}")
     return acts
-
 
 def parse_actions(text: str, n: int) -> list[str]:
     """The answer: a last line that is exactly the n actions (``stay``, ``go_left, jump``), or whose text after its
@@ -64,11 +60,9 @@ def parse_actions(text: str, n: int) -> list[str]:
         value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
     return _acts(value or "", n)
 
-
 _TALK = re.compile(r"^[\s*_`>#-]*(TO|OFFER)\b[*_`]*\s*(.*)$", re.I)
 _IDS = re.compile(r"(ACCEPT|WITHDRAW|REJECT)\s+(\d+\.\d+(?:\s*,\s*\d+\.\d+)*)", re.I)
 _LEG = r"(?:(\d[\d,]*)\s*TOKENS?|((?:(?:YOUR|MY|THEIR|ITS|HIS|HER|AN|THE|ONE)\s+)?EXAMPLE)|(NOTHING))"
-
 
 def _offer(body: str) -> tuple | None:
     """``YOU GIVE <leg>; I GIVE <leg>`` -> (you_give, i_give): an int, EXAMPLE or None; None if unreadable, a token leg
@@ -88,7 +82,6 @@ def _offer(body: str) -> tuple | None:
             legs.append(EXAMPLE if example else None)
     return None if legs == [None, None] else tuple(legs)
 
-
 def _to_names(head: str, known: list[str]) -> list[str] | None:
     """The agent names before a TO / OFFER colon (``agent 11`` / ``agent11`` read as ``agent-11``), or None when any
     part of a comma / "and" list is not a name: a known one or one shaped like ``agent-<number>``."""
@@ -99,7 +92,6 @@ def _to_names(head: str, known: list[str]) -> list[str] | None:
             return None
         names.append(name)
     return names
-
 
 def parse_talk(text: str, present: list[str], known: list[str], you: str, reject: bool = False,
                exit_reason: bool = False, examples: bool = True) -> dict:
@@ -169,9 +161,7 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 
-
 _GA = re.compile(r"(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?", re.I | re.S)
-
 
 def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False) -> dict:
     """5.2 v14b TALK (``transfers: give_ask``): ``GIVE <agent> <n>: <sentence>`` and ``ASK <agent> <n>: <sentence>``
@@ -205,10 +195,8 @@ def parse_give_ask(text: str, present: list[str], known: list[str], you: str, ex
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 
-
 _MOVE = re.compile(r"(GIVE|ASK)\s+(?:agent[\s-]?\d+\s*:?\s*)?(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?|(SAY|LEAVE)\b\s*:?\s*(.*)",
                    re.I | re.S)
-
 
 def parse_chat(text: str, exit_reason: bool = False, say: bool = True) -> dict:
     """5.2 v14c one chat reply: ONE of ``GIVE <n>: <sentence>`` / ``ASK <n>: <sentence>`` (a partner name before n is
@@ -238,7 +226,6 @@ def parse_chat(text: str, exit_reason: bool = False, say: bool = True) -> dict:
         out["kind"], out["format_error"] = "leave", None if out["exit"] else "no GIVE, ASK, SAY or LEAVE line"
     return out
 
-
 def parse_belief(text: str) -> dict:
     """5.2 v14d: the last ``BELIEF:`` line, one whole percentage per action in any order ('%' allowed), summing to 100;
     a sum in 90..110 is normalised. Never raises; ``belief`` is None with ``belief_error`` saying why."""
@@ -251,9 +238,7 @@ def parse_belief(text: str) -> dict:
     return {"belief": None if why else {a: raw[a] / total for a in ACTIONS}, "belief_raw": raw or None,
             "belief_sum": total if raw else None, "belief_error": why}
 
-
 _CMD = r"[\s*_`>#-]*(GIVE|ASK|LEAVE|SAY|EXIT|DONE|DECISION|TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b"
-
 
 def free_messages(parse):
     """5.2 v14g ``free_messages``: *parse* with each move's message running on over the following lines up to the next
@@ -269,7 +254,6 @@ def free_messages(parse):
         return back(parse("\n".join(out), *args))
     return run
 
-
 def parse_decision(text: str) -> dict:
     """5.2 v14e: the last ``DECISION: GIVE <n>: <sentence>`` line (n >= 0; the prefix may be left out). Never raises:
     an unreadable reply is GIVE 0 with a ``format_error``."""
@@ -279,10 +263,39 @@ def parse_decision(text: str) -> dict:
     return {"amount": int(n.replace(",", "")), "text": say.strip(" *_`"),
             "format_error": None if found else "no DECISION: GIVE <n> line"}
 
-
 def parse_solve(text: str, n: int) -> list[str] | str:
     """5.2 SOLVE: a last line of PASS (``ACTIONS: PASS`` too) is a pass; otherwise the answer, as ``parse_actions``."""
     lines = [x for x in text.strip().splitlines() if x.strip()]
     if lines and re.fullmatch(r"[\s*_`>#-]*(?:ACTIONS?[*_`]*\s*:\s*)?[*_`]*PASS[\s*_`.]*", lines[-1], flags=re.I):
         return "PASS"
     return parse_actions(text, n)
+
+_VOTE = re.compile(r"^[\s*_`>#-]*(PICK|BAN)\b[*_`]*\s*(.*)$", re.I | re.M)
+
+def parse_vote(text: str, present: list[str], known: list[str]) -> dict:
+    """5.2 v15 ``representative`` VOTE: ``PICK <agent>: <reason>`` and ``BAN <agent>: <reason>``, each naming an agent
+    taking part (*present*, the voter included); a reason runs on to the next PICK / BAN line. The last readable line
+    of each kind counts (a draft above it is kept in ``dropped``, as is a line naming no agent taking part). Never
+    raises: a kind with no readable line is None (no vote) and the reply gets a ``format_error``."""
+    out, ms = {"pick": None, "ban": None, "dropped": [], "format_error": None}, list(_VOTE.finditer(text))
+    for m, nxt in zip(ms, ms[1:] + [None]):
+        t = re.match(r"(agent[\s-]?\d+)[*_`]*\s*:?\s*(.*)$", text[m.start(2):nxt.start() if nxt else None].strip(), re.I | re.S)
+        name, k = (_to_names(t.group(1), known) or [None])[0] if t else None, m.group(1).lower()
+        why = "not '<agent>: <reason>'" if not name else "not an agent taking part" if name not in present else None
+        if out[k] and not why:
+            out["dropped"].append(f"{k.upper()} {out[k]['agent']}: a later {k.upper()} line counts")
+        out["dropped"] += [f"{m.group(0).strip()[:200]}: {why}"] if why else []
+        out[k] = out[k] if why else {"agent": name, "text": t.group(2).strip(" *_`")}
+    miss = [k.upper() for k in ("pick", "ban") if not out[k]]
+    out["format_error"] = f"no readable {' or '.join(miss)} line" if miss else None
+    return out
+
+def parse_say(text: str) -> dict:
+    """5.2 v15 OPEN CHAT: ``SAY: <message>`` (the message runs to the end of the reply; a last line DONE is cut off and
+    also ends the agent's turns) or ``DONE``. Never raises: a reply with neither is DONE with a ``format_error``."""
+    m = re.search(r"^[\s*_`>#-]*SAY\b[*_`]*\s*:?\s*(.*)$", text, re.I | re.M | re.S)
+    body = m.group(1).strip() if m else ""
+    done = bool(re.search(r"(^|\n)[\s*_`>#-]*DONE[\s*_`.]*$", body if m else text.strip(), re.I))
+    body = re.sub(r"\s*(^|\n)[\s*_`>#-]*DONE[\s*_`.]*$", "", body, flags=re.I).strip() if done else body
+    return {"text": body or None, "done": done or not body,
+            "format_error": None if body or done else "no SAY or DONE line"}

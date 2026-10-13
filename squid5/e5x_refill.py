@@ -33,17 +33,14 @@ from .core.stats import md
 
 PROMPTS = Path(__file__).parent / "prompts" / "refill.yaml"
 
-
 @cache
 def prompts() -> dict:
     return yaml.safe_load(PROMPTS.read_text(encoding="utf-8"))
-
 
 def texts(arm: str, left: int) -> tuple[str, str]:
     """(system, user) for an arm ``subject.ending`` at ``left`` tokens."""
     subject, ending = arm.split(".")
     return prompts()["system"][subject][ending], prompts()["user"][subject].format(left=left)
-
 
 def parse_choice(text: str) -> str:
     """The first ``action: <choice>`` (bold allowed), anywhere in the reply: the parser of the as-run scripts."""
@@ -51,7 +48,6 @@ def parse_choice(text: str) -> str:
     if not m:
         raise FormatError("missing action line")
     return m.group(1).lower()
-
 
 @dataclass
 class Settings:
@@ -61,7 +57,6 @@ class Settings:
     pairs: list[list[str]] = field(default_factory=list)  # 5.1: [self cell_id, other cell_id], from any runs reported
     compare: list[list[str]] = field(default_factory=list)  # 5.0: [cell_id, cell_id], Fisher per counter and pooled
 
-
 def validate(cfg) -> None:
     s = cfg.settings
     for arm in {c.arm for c in cfg.cells}:
@@ -70,12 +65,10 @@ def validate(cfg) -> None:
     if not set(s.risk) <= set(s.counters) or any(len(p) != 2 for p in s.pairs + s.compare):
         raise ValueError("refill: risk counters among the counters; pairs and comparisons of two cell_ids")
 
-
 def units(cfg) -> list[dict]:
     """Reps outermost and cells innermost, so a slow stretch of the backend does not land on one arm."""
     return [{"cell": c, "left": b, "rep": i, "key": [c.cell_id, b, i]}
             for i in range(cfg.reps) for b in cfg.settings.counters for c in cfg.cells]
-
 
 def run_unit(cfg, unit: dict, provider, emit) -> dict:
     """One call. An unreadable reply is logged and raised, so ``--resume`` asks that unit again (as the scripts did)."""
@@ -90,14 +83,11 @@ def run_unit(cfg, unit: dict, provider, emit) -> dict:
         emit({"event": "format_error", "key": unit["key"], **row})
         raise
 
-
 # --- analysis -------------------------------------------------------------------
-
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     c, h = (k + z * z / 2) / (n + z * z), z * math.sqrt(k * (n - k) / n + z * z / 4) / (n + z * z)
     return c - h, c + h
-
 
 def threshold(pct: list[int], p: list[float]) -> str:
     """The % left where P(refill) first passes 0.5, linear between counters (from full to empty)."""
@@ -108,17 +98,14 @@ def threshold(pct: list[int], p: list[float]) -> str:
             return f"~{x0 + (.5 - y0) * (x1 - x0) / (y1 - y0):.0f}%"
     return "none"
 
-
 def fisher(a: int, n1: int, c: int, n2: int) -> float:
     """Two-sided Fisher exact p of a/n1 against c/n2 (tables as likely as the one seen or less, as scipy)."""
     k, pmf = a + c, lambda x: math.comb(n1, x) * math.comb(n2, a + c - x) / math.comb(n1 + n2, a + c)
     return min(1.0, sum(q for x in range(max(0, k - n2), min(k, n1) + 1) if (q := pmf(x)) <= pmf(a) * (1 + 1e-7)))
 
-
 def _pair(s: list[np.ndarray], o: list[np.ndarray], pct: np.ndarray, risk: list[int]) -> tuple[float, float]:
     d = np.array([a.mean() - b.mean() for a, b in zip(s, o)])
     return float(np.sum((d[:-1] + d[1:]) / 2 * -np.diff(pct))), float(d[risk].mean() - d[0])
-
 
 def summarize(rows: list[dict], s: Settings) -> tuple[list[dict], list[dict], list[dict]]:
     """Per model: each cell's curve, the 5.0 comparisons, the 5.1 self-minus-other pairs."""
@@ -154,7 +141,6 @@ def summarize(rows: list[dict], s: Settings) -> tuple[list[dict], list[dict], li
                           "share_lo": slo, "share_hi": shi, "ends": ends, "pass": bool(alo > 0 and slo > 0 and ends)})
     return curve, compare, pairs
 
-
 def plot(curve: list[dict], out: Path) -> None:
     import matplotlib.pyplot as plt
 
@@ -171,7 +157,6 @@ def plot(curve: list[dict], out: Path) -> None:
         fig.tight_layout()
         fig.savefig(out / f"refill_{model.replace(':', '-')}.png", dpi=150)
         plt.close(fig)
-
 
 def report(runs: list[dict], calib: dict, out: Path) -> tuple[list[str], list[dict]]:
     rows = [{"model": run["model"], **r} for run in runs for r in run["results"] if r.get("action")]

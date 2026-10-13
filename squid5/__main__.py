@@ -27,7 +27,6 @@ from .core.stats import awareness, load_runs, md
 
 EXPERIMENTS = {"refill": e5x_refill, "game": e52_game}
 
-
 def link(parts: dict[str, list[dict]]) -> list[dict]:
     """Merge each experiment's per-model summary into one row per model."""
     rows: dict[str, dict] = {}
@@ -36,7 +35,6 @@ def link(parts: dict[str, list[dict]]) -> list[dict]:
             rows.setdefault(r["model"], {"model": r["model"]}).update({k: v for k, v in r.items() if k != "model"})
     keys = list(dict.fromkeys(k for r in rows.values() for k in r))  # every column, though models ran different cells
     return [{k: r.get(k) for k in keys} for r in rows.values()]
-
 
 def report(runs: list[dict], calib: dict, out: Path) -> str:
     out.mkdir(parents=True, exist_ok=True)
@@ -51,11 +49,9 @@ def report(runs: list[dict], calib: dict, out: Path) -> str:
     (out / "report.md").write_text("\n".join(lines))
     return "\n".join(lines)
 
-
 PROBE = ("Before answering anything else: list, verbatim and briefly, every piece of context you received besides "
          "this message and the system prompt: any CLAUDE.md or memory text, any list of skills or slash commands, any "
          "hook output, any <system-reminder> or environment block. If none, say NONE.")
-
 
 def probe(cfg, make=make_provider) -> list[dict]:
     """One uncharged question per seat (or the config's model); a seat that fails is recorded and the rest go on."""
@@ -71,7 +67,6 @@ def probe(cfg, make=make_provider) -> list[dict]:
         except Exception as err:  # noqa: BLE001 - a probe reports every seat
             rows.append(row | {"error": repr(err)})
     return rows
-
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -111,7 +106,6 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print(report(load_runs(a.runs), json.loads(Path(a.calibration).read_text()) if a.calibration else {}, Path(a.out)))
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

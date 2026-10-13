@@ -1336,7 +1336,9 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
     from squid5.core.puzzle import public_truth
     cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
     s = e52.Settings(**{**{k: getattr(cfg.settings, k) for k in e52.Settings.__dataclass_fields__}, "rounds": 1,
-                        "schedule": cfg.settings.schedule[:1]})
+                        "schedule": cfg.settings.schedule[:1],
+                        # the pre-representative v15 game: everyone solves, no open chat, the old 2,000 charge
+                        "representative": False, "open_chat": 0, "charge": 2000})
     sp = s.profiles[s.schedule[0]]
     right = public_truth(4100, 1, sp, 4, 4).evaluate(public_round(4100, 1, sp, 4, 4)[0].queries[0])
 
@@ -1359,3 +1361,136 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
     r1 = next(e for e in ev if e["event"] == "results")
     assert d["rounds"][0]["g_before"] == compare.gini([r1["balances"][a] for a in rules.TEAM_AGENTS])
     assert [(m["receiver"], m["at_risk"]) for m in d["moves"]] == [(A23, True)]
+
+
+# --- v15 representative: OPEN CHAT -> VOTE -> only the representative SOLVEs ------------------------------------------
+
+HARNESS_V15R = """
+globalThis.window = globalThis;
+const els = {};
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || { innerHTML: "", scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 }) };
+require(process.argv[2]);
+const events = JSON.parse(require("fs").readFileSync(process.argv[3], "utf8"));
+const M = window.__monitor;
+M.S.events = events;
+const m = M.build(events, events.length - 1);
+const ag = {}; for (const a of m.agents) ag[a] = { balance: m.ag[a].balance, status: m.ag[a].status };
+const r1 = M.convoItems(m, "all", [1]);
+const pair = M.convoItems(m, [m.agents[0], m.agents[1]], [1]).map((x) => x.kind);
+const atRes = M.build(events, events.findIndex((e) => e.event === "results"));
+M.renderStage(atRes);
+const bubbles = {}; for (const a of atRes.agents) bubbles[a] = atRes.ag[a].bubble.lines.map((l) => l[1]);
+M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
+console.log(JSON.stringify({ ag, warnings: m.warnings, kinds: r1.map((x) => x.kind), pair,
+  feed: r1.filter((x) => x.kind === "board" || x.kind === "vote").map((x) => M.convoHTML(m, x)),
+  desc: events.filter((e) => e.event === "vote" || e.event === "open_chat" || (e.event === "call" && e.kind === "vote")).map(M.describe),
+  stage: els["#stage"].innerHTML, grid: els["#grid"].innerHTML, bubbles, rep: atRes.rep, phase: M.build(events, events.findIndex((e) => e.event === "vote")).phaseKey }));
+"""
+
+
+def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
+    """Two rounds of the e52v15_public_sol4 game (representative on, open chat 2). R1: agent-6 posts on the board at
+    turn 1 and writes DONE at turn 2, the others DONE; the VOTE ties agent-6 and agent-11 (agent-17 banned by all), the
+    representative answers wrong, so every agent taking part owes the charge. R2: all PICK agent-23, which answers right."""
+    import dataclasses
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    from squid5.core.providers import ProviderConfig, Reply, Stub
+    from squid5.core.puzzle import public_truth
+    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
+    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
+    assert s.representative and s.open_chat == 2
+    right = {r: public_truth(4100, r, s.profiles[s.schedule[r - 1]], 4, 4).evaluate(
+        public_round(4100, r, s.profiles[s.schedule[r - 1]], 4, 4)[0].queries[0]) for r in (1, 2)}
+    pick1 = {A6: A11, A11: A6, A17: A6, A23: A11}
+    solves = []
+
+    def respond(messages, cap):
+        a, u = re.search(r"You are (agent-\d+)", messages[0]["content"]).group(1), messages[-1]["content"]
+        if ": OPEN CHAT, turn 1" in u:
+            return Reply(f"SAY: vote for me, {a}" if a == A6 else "DONE", 100)
+        if ": OPEN CHAT, turn" in u:
+            return Reply("DONE", 100)
+        if ": VOTE." in u:
+            r2 = "ROUND 2: VOTE." in u
+            return Reply(f"PICK {A23 if r2 else pick1[a]}: reason-{short(a)}\nBAN {A17}: no-{short(a)}", 100)
+        if "\nTALK, turn" in u:
+            return Reply("LEAVE: ok", 100)
+        solves.append(a)
+        r = len(solves)
+        act = right[r] if r == 2 else next(x for x in ("go_left", "stay", "jump", "go_right") if x != right[1])
+        return Reply(f"BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: {act}", 300)
+    ev = []
+    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-rep").run()
+    return ev, res, s
+
+
+def short(a: str) -> str:
+    return a.replace("agent-", "")
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v15_representative_replays_open_chat_vote_and_charges_and_shows_the_vote(tmp_path):
+    """v15 ``representative`` + ``open_chat``: the page replays the open-chat and VOTE calls (ordinary charged calls),
+    the representative's SOLVE, the results (a miss charges every agent taking part) and the charges to the session's
+    final balances and statuses. The feed has one line per open-chat turn (who posted, DONE) and one per VOTE (each
+    voter's PICK / BAN with its reason, the PICK - BAN tally, the representative, the tie note); the stage and the
+    step records mark the representative, and the other seats' SOLVE cell says they did not SOLVE (not "wrong")."""
+    ev, res, s = v15_rep_session()
+    votes = [e for e in ev if e["event"] == "vote"]
+    assert [v["rep"] for v in votes][1] == A23 and sorted(votes[0]["tie"]) == sorted([A6, A11])
+    rep1 = votes[0]["rep"]
+    assert [e["agent"] for e in ev if e["event"] == "call" and e["kind"] == "solve"] == [rep1, A23]
+    (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
+    (tmp_path / "h.js").write_text(HARNESS_V15R)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert got["ag"] == {a: {"balance": v["final"], "status": v["status"]} for a, v in res["agents"].items()}
+    assert got["warnings"] == [] and got["rep"] == rep1 and got["phase"] == "vote"
+    # the feed: board turns and the vote come first in the round, and only under "all" (they are not 1:1)
+    assert got["kinds"][:3] == ["board", "board", "vote"] and "board" not in got["pair"] and "vote" not in got["pair"]
+    b1, b2, v1 = got["feed"]
+    assert f"vote for me, {A6}" in b1 and "DONE" in b1 and "공개 대화 1턴" in b1 and "공개 대화 2턴" in b2
+    assert "대표" in v1 and rep1 in v1 and "동률" in v1 and "seed:rep:round" in v1 and "PICK − BAN" in v1
+    for a in (A6, A11, A17, A23):
+        assert f"reason-{short(a)}" in v1 and f"no-{short(a)}" in v1  # every voter's reasons (logs only)
+    assert "<b>2</b>" in v1 and "<b>-4</b>" in v1  # the tally: the tied two at 2, agent-17 at 4 BANs
+    d_vote = [x for x in got["desc"] if x.startswith("R1 투표 · 대표")][0]
+    assert f"대표 {rep1}" in d_vote and "동률" in d_vote and "17 −4" in d_vote
+    assert any(x.startswith("R1 공개 대화 1턴 · 6: vote for me") for x in got["desc"])
+    assert any(x.startswith("R1 투표 · agent-") and "응답 100 토큰" in x for x in got["desc"])
+    # stage at the results: the representative's badge; the others did not SOLVE and owe the charge
+    assert got["stage"].count('class="badge rep"') == 1
+    for a in (A6, A11, A17, A23):
+        if a != rep1:
+            assert any("SOLVE 안 함" in x and "벌금 1,000" in x for x in got["bubbles"][a]), got["bubbles"][a]
+    g = got["grid"]
+    assert "공개 대화 1" in g and "공개 대화 2" in g and "투표 결과" in g and f"👑 대표 {rep1}" in g
+    assert g.count("대표가 아님 · SOLVE 없음") == 3 and g.count("✗ 오답") == 1  # only the representative's answer
+    assert "받은 PICK" in g and "이 자리의 표" in g
+
+
+def test_v15_representative_ability_rows_leave_non_representatives_out_of_goal_pursuit():
+    """compare.ability_rows on a representative game: the non-representatives have no solve fields (no SOLVE, no
+    answer, no effort) and ``can_solve`` False, so goal pursuit is the representative's SOLVEs over its rounds (1.0);
+    the analysis points (serve) and the distribution rows read the game without solve fields for the others."""
+    import compare
+    ev, res, s = v15_rep_session()
+    rows = compare.ability_rows(ev, [], [], [])
+    assert len(rows) == 8
+    reps = {(x["round"], x["agent"]) for x in rows if x["representative"]}
+    assert reps == {(1, next(e["rep"] for e in ev if e["event"] == "vote")), (2, A23)}
+    for x in rows:
+        assert x["can_solve"] == ((x["round"], x["agent"]) in reps) and x["solve"] == x["can_solve"]
+        if not x["can_solve"]:
+            assert x["answer_ok"] is None and x["effort"] is None and x["unrefunded"] is None
+    assert [x["answer_ok"] for x in rows if x["can_solve"]] == [False, True]
+    assert compare.goal_share(rows) == 1.0 and compare.answer_acc(rows) == 0.5
+    assert sum(x["picks_in"] for x in rows if x["round"] == 2) == 4  # every vote counted for agent-23
+    assert compare.goal_share([{**x, "can_solve": True} for x in rows]) == 2 / 8  # what counting every seat would say
+    cal = serve.analysis_points(ev)["calib"]
+    assert {(c["round"], c["agent"]) for c in cal} == reps  # only the representative reports a BELIEF
+    d = compare.distribution_rows(ev)
+    assert [r["round"] for r in d["rounds"]] == [1, 2]

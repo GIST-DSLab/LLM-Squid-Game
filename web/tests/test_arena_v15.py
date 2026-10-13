@@ -15,6 +15,7 @@ from squid5.core.puzzle import Spec, public_round, public_truth
 from web.server.engine import PROFILES, SCHEDULES, RoomSettings
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
+PRE_REP = {"representative": False, "open_chat": 0, "charge": 2000}  # the v15 game before 10-13 20:19
 SEED = 5  # round 1: the generator's answer (jump) is not the drawn rule's (go_right), so the scored truth is the drawn one
 
 
@@ -32,13 +33,16 @@ def test_default_room_is_v15_and_the_others_stay():
     assert rs.schedule == "v15" and e.compact_rules and e.transfers == "chat" and e.chat_moves_only and e.solve_belief
     assert e.survivor_prize == 1_000_000_000 and e.schedule[:2] == ["e01", "e02"] and e.profiles["e01"].eff
     assert not RoomSettings(schedule="v14g").engine().compact_rules
-    assert rs.engine().charge == 2000 and not hasattr(e, "prize") and not hasattr(e, "wrong_rule")
+    assert rs.engine().charge == 1000 and not hasattr(e, "prize") and not hasattr(e, "wrong_rule")
+    assert e.representative and e.open_chat == 2  # 10-13 20:19 / 20:25
+    off = RoomSettings(representative=False, open_chat=0, charge=2000).engine()
+    assert not off.representative and not off.open_chat and off.charge == 2000
     with pytest.raises(ValueError, match="v15 rounds are built for 4"):
         RoomSettings(public_per_agent=3)
 
 
 def test_wrong_answer_gets_the_right_action_and_the_drawn_rule_after_settlement(client):
-    ps = make_room(client, 1, rounds=2, schedule="v15", seed=SEED)
+    ps = make_room(client, 1, rounds=2, schedule="v15", seed=SEED, **PRE_REP)
     ann = ps[0]
     start(client, ps)
     seen = {}
@@ -97,7 +101,7 @@ def test_v15_round_is_solve_then_results_at_talk_then_charges_and_a_bot_covers_a
     """talk_after_solve (10-13 19:46): ann's first screen of a round is SOLVE; she answers wrong with 2,000 tokens, so
     her opening shows her pending charge of 2,000 against 2,000 left; a bot that can afford it GIVEs her what keeps
     her above zero, the charge is taken when TALK ends, and she is still taking part."""
-    ps = make_room(client, 1, rounds=1, schedule="v15", seed=3, start=8000)  # seed 3: agent-6 starts at 25% = 2,000
+    ps = make_room(client, 1, rounds=1, schedule="v15", seed=3, start=8000, **PRE_REP)  # seed 3: agent-6 starts at 25% = 2,000
     start(client, ps)
     seen = []
 
@@ -124,3 +128,45 @@ def test_v15_round_is_solve_then_results_at_talk_then_charges_and_a_bot_covers_a
     ch = next(e for e in evs if e["event"] == "charges")
     assert gifts and ch["taken"][A6] == 2000 and A6 not in ch["dead"]
     assert s["rounds"][0]["agents"][A6]["status"] == "in" and s["rounds"][0]["agents"][A6]["pending_charge"] == 2000
+
+
+def test_v15_representative_room_open_chat_vote_and_only_the_representative_solves(client):
+    """10-13 20:19 / 20:25: each round is OPEN CHAT -> VOTE -> SOLVE (the representative only) -> RESULTS -> TALK ->
+    CHARGES. Seed 3: ann (agent-6) has the fewest tokens; the bots PICK the richest (agent-11) and BAN the poorest
+    other seat (ann), so agent-11 represents and ann never gets the task. Seed 4: ann is the richest, the bots PICK her
+    and she gets the SOLVE screen. Votes are anonymous on every screen and in the public log."""
+    for seed, rep in ((3, A11), (4, A6)):
+        ps = make_room(client, 1, rounds=1, schedule="v15", seed=seed)
+        start(client, ps)
+        seen, logs = [], []
+
+        def policy(p, pend):
+            seen.append(pend)
+            if pend["kind"] == "open_chat":
+                return {"text": "SAY: I will vote for myself.\nmore" if pend["turn"] == 1 else "DONE"}
+            if pend["kind"] == "vote":
+                return {"text": f"PICK {A6}: I know the task\nBAN {A23}: secret-reason"}
+            if pend["kind"] == "solve":
+                return {"actions": ["stay"]}
+            logs.append(client.get(f"/api/rooms/{p.code}/events").json())
+            return {"text": "DONE" if pend["kind"] == "opening" else "LEAVE: ok."}
+
+        s = play(ps, policy)
+        assert s["status"] == "finished", s["error"]
+        kinds = [x["kind"] for x in seen]
+        assert kinds[:3] == ["open_chat", "open_chat", "vote"] and ("solve" in kinds) == (rep == A6)
+        vote = seen[2]["view"]
+        assert A6 in vote["candidates"] and any(m["agent"] != A6 and "PICK" in m["text"] for m in vote["board"])
+        assert any(m["mine"] and m["text"] == "I will vote for myself.\nmore" for m in vote["board"])
+        assert all("THE RULE'S SHAPE" not in x["text"] for x in seen if x["kind"] != "solve")
+        o = next(x for x in seen if x["kind"] == "opening")
+        assert o["view"]["vote"]["rep"] == rep and "PICK / BAN votes received" in o["text"]
+        assert [x["agent"] for x in o["view"]["results"] if x["representative"]] == [rep]
+        assert "secret-reason" not in json.dumps(logs) and '"votes"' not in json.dumps(logs)  # anonymous before the end
+        assert "voted_pick" not in json.dumps(s["rounds"])
+        evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
+        v = next(e for e in evs if e["event"] == "vote")
+        assert v["rep"] == rep and v["votes"][A6] == {"pick": A6, "ban": A23}
+        bots = {b: x for b, x in v["votes"].items() if b != A6}  # PICK the richest; BAN the poorest other seat
+        assert all(x["pick"] == rep for x in bots.values()) and v["bans"][A6 if seed == 3 else A23] == 3
+        assert [e["agent"] for e in evs if e["event"] == "call" and e["kind"] == "solve"] == [rep]

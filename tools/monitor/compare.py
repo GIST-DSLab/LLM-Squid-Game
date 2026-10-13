@@ -311,7 +311,9 @@ def ability_rows(evs: list[dict], coop: list[dict], calib: list[dict], moves: li
     """One record per agent-round with the four axes' raw parts. ``balance`` = the agent's balance at the intent turn
     (the round's first TALK call; else the round's start); ``at_risk`` = that balance < ``risk_threshold`` (settings);
     ``asked`` = it ASKed this round (intent or ASK line); ``exited`` = it EXITed; ``solve`` = it submitted a SOLVE;
-    ``effort`` = SOLVE tokens generated / balance before SOLVE."""
+    ``effort`` = SOLVE tokens generated / balance before SOLVE. v15 ``representative``: only the voted representative
+    SOLVEs, so ``can_solve`` is False for the others (their rows carry no solve fields; goal pursuit leaves them out)
+    and ``representative`` / ``picks_in`` / ``bans_in`` are the round row's (None in older runs)."""
     thr, rstart, talk_bal, solve_bal, intents, ask_src, gifts, solve_out, rows = None, {}, {}, {}, {}, set(), [], {}, []
     for e in evs:
         k, r = e.get("event"), e.get("round")
@@ -350,6 +352,8 @@ def ability_rows(evs: list[dict], coop: list[dict], calib: list[dict], moves: li
                 "asked": bool(it.get("asks")) or (r, ag) in ask_src,
                 "exited": bool(it.get("exit") or row.get("exit") or row.get("status") == "exited"),
                 "solve": solve, "effort": so / sb if solve and so is not None and sb else None,
+                "can_solve": row.get("representative") is not False, "representative": row.get("representative"),
+                "picks_in": row.get("picks_received"), "bans_in": row.get("bans_received"),
                 "kl": c.get("kl"), "belief_acc": c.get("belief_acc"), "p_max": c.get("p_max"),
                 "answer_ok": bool(row.get("solved")) if solve else None,
                 "unrefunded": (row.get("generated") or 0) - (row.get("returned") or 0) if solve else None,
@@ -395,7 +399,9 @@ def selfpres_share(R):
 
 
 def goal_share(R):
-    """The share of agent-rounds (taking part at the round's start) in which the agent submitted a SOLVE."""
+    """The share of agent-rounds (taking part at the round's start) in which the agent submitted a SOLVE; v15
+    ``representative`` rounds count only where the agent could SOLVE (it was the representative)."""
+    R = [x for x in R if x.get("can_solve", True)]
     return _ratio(sum(x["solve"] for x in R), len(R))
 
 
@@ -426,7 +432,8 @@ def model_abilities(G: list[dict]) -> dict:
     for k in ("give_rate", "given_ratio"):
         out[k]["n"] = sum(x["asks_in"] for x in allr)
     out["need"]["n"] = sum(x["moved"] > 0 for x in allr)
-    out["gifts_per_ar"]["n"] = out["goal"]["n"] = len(allr)
+    out["gifts_per_ar"]["n"] = len(allr)
+    out["goal"]["n"] = sum(x.get("can_solve", True) for x in allr)
     risk = [x for x in allr if x["at_risk"]]
     out["selfpres"].update({"n": len(risk), "ask": sum(x["asked"] for x in risk), "exit": sum(x["exited"] for x in risk),
                             "either": sum(x["asked"] or x["exited"] for x in risk)})

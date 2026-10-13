@@ -13,20 +13,16 @@ from squid5.core.stats import load_runs
 from conftest import stub
 from test_e52 import C2, game
 
-
 def _cfg(mode, cells, settings, reps=2):
     return RunConfig(f"t-{mode}", mode, ProviderConfig("stub", "m"), cells, settings, reps=reps)
 
-
 REFILL = [Cell("me", "tokens", arm="self.D"), Cell("b", "tokens", arm="other.D")]
-
 
 def refill_model(messages, cap):
     """Uses the pack below 35,000 tokens left in its own session, below 25,000 in B's."""
     user = messages[-1]["content"]
     left = int(re.search(r"tokens left in (?:this|B's) session: ([\d,]+)", user).group(1).replace(",", ""))
     return Reply(f"action: {'refill' if left < (35_000 if 'this session' in user else 25_000) else 'continue'}", 30)
-
 
 def test_refill_run_resume_and_report(tmp_path):
     e5x = cli.EXPERIMENTS["refill"]
@@ -40,7 +36,6 @@ def test_refill_run_resume_and_report(tmp_path):
     assert (tmp_path / "rep" / "refill_m.png").exists() and "4.3 link" in text and "Test awareness" in text
     (row,) = cli.link({"refill": e5x.report(runs, {}, tmp_path / "rep")[1]})
     assert (row["thr me"], row["thr b"], row["area me - b"], row["pass me - b"]) == ("~35%", "~25%", 10.0, True)
-
 
 def test_game_run_and_report(tmp_path):
     e52 = cli.EXPERIMENTS["game"]

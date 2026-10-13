@@ -748,3 +748,24 @@ details.legend { margin-top: 12px; }
 .feedback .fb-right { margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .feedback .fb-rule-h { margin-top: 8px; color: var(--text-dim); }
 .feedback .fb-rule { margin: 4px 0 0; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; border-radius: 6px; background: rgba(0, 0, 0, 0.18); }
+
+/* v15 representative: the open board (OPEN CHAT), the VOTE pickers, the votes received, the representative's mark */
+.web5 .tag.rep { color: var(--warn); border-color: rgba(227, 178, 60, 0.6); background: rgba(227, 178, 60, 0.14); font-weight: 600; }
+.board-box .chat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.board-lines { max-height: 340px; overflow-y: auto; padding-right: 4px; }
+.board-lines .chat-line.theirs .chat-bubble { background: rgba(127, 194, 177, 0.07); border-color: rgba(127, 194, 177, 0.35); }
+.say-composer .msg-f { display: flex; flex-direction: column; gap: 4px; }
+.vote-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+.vote-col { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; min-width: 0; }
+.vote-col.vote-pick { border-top: 3px solid var(--ok); }
+.vote-col.vote-ban { border-top: 3px solid var(--danger-color); }
+.vote-opts { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.vote-pick .vote-opt:has(input:checked) { border-color: var(--ok); background: rgba(127, 194, 177, 0.12); }
+.vote-ban .vote-opt:has(input:checked) { border-color: var(--danger-color); background: rgba(224, 87, 91, 0.12); }
+.vote-col .f { display: flex; flex-direction: column; gap: 4px; }
+.vote-col textarea, .vote-col input[type=text], .vote-col input:not([type]) { width: 100%; }
+.vote-sum { display: flex; flex-direction: column; gap: 4px; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
+.results-table tr.rep td:first-child, .vote-table tr.rep td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+.rep-wait, .rep-note { margin-top: 6px; padding: 8px 10px; border: 1px solid rgba(227, 178, 60, 0.45); border-radius: 10px; background: rgba(227, 178, 60, 0.08); line-height: 1.55; }
+.rep-between { margin: 10px 0; }
+@media (max-width: 640px) { .vote-grid { grid-template-columns: minmax(0, 1fr); } }

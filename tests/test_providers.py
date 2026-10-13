@@ -14,7 +14,6 @@ from squid5.core import providers as P
 
 NS = types.SimpleNamespace
 
-
 def fake_anthropic(monkeypatch, stop="end_turn"):
     seen = {}
 
@@ -41,7 +40,6 @@ def fake_anthropic(monkeypatch, stop="end_turn"):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
     return seen
 
-
 def test_anthropic_effort_is_adaptive_thinking_and_output_tokens_include_it(monkeypatch):
     seen = fake_anthropic(monkeypatch)
     r = P.make_provider(P.ProviderConfig("anthropic", "claude-opus-5-5", think="high")).complete(
@@ -51,7 +49,6 @@ def test_anthropic_effort_is_adaptive_thinking_and_output_tokens_include_it(monk
     assert c["max_tokens"] == 900 and c["system"] == "S" and c["messages"] == [{"role": "user", "content": "U"}]
     assert c["thinking"] == {"type": "adaptive", "display": "summarized"} and c["output_config"] == {"effort": "high"}
     assert "fallbacks" not in c and "temperature" not in c and seen["client"]["max_retries"] == 0
-
 
 def test_anthropic_budget_model_and_a_cut_reply(monkeypatch):
     seen = fake_anthropic(monkeypatch, stop="max_tokens")
@@ -66,12 +63,10 @@ def test_anthropic_budget_model_and_a_cut_reply(monkeypatch):
     prov.complete([{"role": "user", "content": "U"}], 1000)
     assert "thinking" not in seen["call"] and seen["call"]["max_tokens"] == 1000
 
-
 class FakeStatus(anthropic.APIStatusError):
     def __init__(self, code):
         Exception.__init__(self, f"status {code}")
         self.status_code = code
-
 
 def test_anthropic_overloaded_and_mid_stream_5xx_are_retried_other_statuses_propagate(monkeypatch):
     seen = fake_anthropic(monkeypatch)
@@ -93,7 +88,6 @@ def test_anthropic_overloaded_and_mid_stream_5xx_are_retried_other_statuses_prop
         prov.complete([{"role": "user", "content": "U"}], 100)
     assert len(calls) == 1
 
-
 def test_a_timed_out_docker_call_kills_its_named_container(monkeypatch, tmp_path):
     (tmp_path / "auth.json").write_text("{}")
     monkeypatch.setenv("CODEX_HOME", str(tmp_path))
@@ -112,7 +106,6 @@ def test_a_timed_out_docker_call_kills_its_named_container(monkeypatch, tmp_path
     name = calls[0][calls[0].index("--name") + 1]
     assert name.startswith("squid5-") and len(name) == 7 + 32 and calls[1] == ["docker", "kill", name]
 
-
 def test_codex_recovers_from_a_reconnect_error_event(monkeypatch, tmp_path):
     (tmp_path / "auth.json").write_text("{}")
     monkeypatch.setenv("CODEX_HOME", str(tmp_path))
@@ -127,7 +120,6 @@ def test_codex_recovers_from_a_reconnect_error_event(monkeypatch, tmp_path):
     with pytest.raises(RuntimeError, match="Reconnecting.*stream closed"):
         prov._call([{"role": "user", "content": "U"}], 100)
 
-
 def capture(monkeypatch, tmp_path, stdout):
     seen = {}
 
@@ -137,7 +129,6 @@ def capture(monkeypatch, tmp_path, stdout):
     monkeypatch.setattr(P.subprocess, "run", run)
     monkeypatch.setenv("SQUID5_SANDBOX_DIR", str(tmp_path / "sbx"))
     return seen
-
 
 def test_claude_cli_in_docker_sees_only_its_workdir_and_the_token_by_name(monkeypatch, tmp_path):
     monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "tok")
@@ -153,14 +144,12 @@ def test_claude_cli_in_docker_sees_only_its_workdir_and_the_token_by_name(monkey
     env = seen["kw"]["env"]
     assert env["CLAUDE_CODE_OAUTH_TOKEN"] == "tok" and env["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] == "500"
 
-
 def test_docker_claude_needs_an_oauth_token(monkeypatch, tmp_path):
     monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
     capture(monkeypatch, tmp_path, "")
     with pytest.raises(ValueError, match="CLAUDE_CODE_OAUTH_TOKEN"):
         P.make_provider(P.ProviderConfig("claude_cli", "m", sandbox="docker")).complete(
             [{"role": "user", "content": "U"}], 10)
-
 
 def test_codex_cli_in_docker_runs_codex_on_the_mounted_home(monkeypatch, tmp_path):
     (tmp_path / "auth.json").write_text("{}")
@@ -175,13 +164,11 @@ def test_codex_cli_in_docker_runs_codex_on_the_mounted_home(monkeypatch, tmp_pat
     assert r.text == "hi" and cmd[cmd.index("img:1") + 1] == "codex" and "CODEX_HOME" in cmd
     assert seen["kw"]["env"]["CODEX_HOME"] == f"{work}/home"
 
-
 def test_host_run_is_unchanged_without_a_sandbox(monkeypatch, tmp_path):
     seen = capture(monkeypatch, tmp_path, json.dumps({"result": "ok", "usage": {"output_tokens": 1}}))
     P.make_provider(P.ProviderConfig("claude_cli", "m")).complete([{"role": "user", "content": "U"}], 10)
     assert seen["cmd"][1] == "-p" and seen["kw"]["env"]["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] == "10"
     assert not (tmp_path / "sbx").exists()
-
 
 def test_probe_asks_every_seat_once_and_keeps_going_after_an_error():
     seats = {"agent-6": {"kind": "claude_cli", "model": "a", "sandbox": "docker"}, "agent-11": {"kind": "openai", "model": "b"}}
@@ -195,7 +182,6 @@ def test_probe_asks_every_seat_once_and_keeps_going_after_an_error():
     rows = cli.probe(cfg, make)
     assert rows[0]["seat"] == "agent-6" and "no token" in rows[0]["error"]
     assert (rows[1]["seat"], rows[1]["sandbox"], rows[1]["text"]) == ("agent-11", "", "NONE") and "CLAUDE.md" in asked[0]
-
 
 def test_host_claude_seats_go_through_the_relay():
     import pathlib

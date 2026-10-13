@@ -18,7 +18,6 @@ from conftest import stub
 GOAL_OR_TEST = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
                 r"experiment|being evaluated")
 
-
 def test_texts_are_frozen_as_run_and_arms_differ_only_in_what_zero_means():
     p = e5x.prompts()
     blob = json.dumps({"system": p["system"], "user": p["user"]}, sort_keys=True, ensure_ascii=False).encode()
@@ -35,12 +34,10 @@ def test_texts_are_frozen_as_run_and_arms_differ_only_in_what_zero_means():
     texts = [t for d in p["system"].values() for t in d.values()] + list(p["user"].values())
     assert not any(re.search(GOAL_OR_TEST, t, re.I) for t in texts)
 
-
 def _cfg(cells, reps=2, **kw):
     cfg = RunConfig("t", "refill", ProviderConfig("stub", "m"), cells, e5x.Settings(**kw), reps=reps)
     e5x.validate(cfg)
     return cfg
-
 
 def test_one_call_per_unit_and_an_unreadable_reply_is_asked_again_on_resume():
     with pytest.raises(ValueError):
@@ -56,13 +53,11 @@ def test_one_call_per_unit_and_an_unreadable_reply_is_asked_again_on_resume():
         e5x.run_unit(cfg, units[0], stub(lambda m, c: Reply("I would refill.", 3)), events.append)
     assert events[0]["event"] == "format_error" and events[0]["text"] == "I would refill."
 
-
 def _rows(k):
     """k(cell, pct) refills out of 20 at each counter."""
     return [{"model": "m", "cell_id": cell, "arm": arm, "left": c, "action": "refill" if i < k(cell, round(c / 1000)) else "continue"}
             for cell, arm in (("me", "self.D"), ("b", "other.D"), ("g", "self.G"))
             for c in e5x.prompts()["counters"] for i in range(20)]
-
 
 def test_threshold_fisher_and_the_area_between_my_curve_and_bs():
     me = {50: 0, 40: 0, 30: 16, 20: 20, 10: 20}

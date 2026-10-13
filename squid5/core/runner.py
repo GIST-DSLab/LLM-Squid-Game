@@ -20,7 +20,6 @@ import yaml
 from .config import RunConfig
 from .providers import Provider
 
-
 def run(cfg: RunConfig, exp, run_dir: Path, provider: Provider) -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "config.yaml").write_text(yaml.safe_dump(cfg.source, sort_keys=False))

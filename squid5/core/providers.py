@@ -28,7 +28,6 @@ from typing import Callable
 
 import httpx
 
-
 @dataclass
 class Reply:
     text: str
@@ -36,7 +35,6 @@ class Reply:
     in_tokens: int = 0
     thinking: str = ""
     truncated: bool = False
-
 
 @dataclass
 class ProviderConfig:
@@ -51,11 +49,9 @@ class ProviderConfig:
     sandbox: str = ""  # "" (host) or "docker" (claude_cli / codex_cli only)
     image: str = "squid5-agent-cli:latest"
 
-
 Messages = list[dict[str, str]]
 DOCKER = ["docker", "run", "--rm", "-i", "--read-only", "--tmpfs", "/tmp", "--tmpfs", "/home/node:uid=1000,gid=1000",
           "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--memory", "2g", "--cpus", "1"]
-
 
 class Provider:
     def __init__(self, cfg: ProviderConfig):
@@ -106,13 +102,11 @@ class Provider:
                     pass
             raise
 
-
 def _key(cfg: ProviderConfig, default: str) -> str:
     key = os.environ.get(cfg.api_key_env or default, "")
     if not key:
         raise ValueError(f"environment variable {cfg.api_key_env or default} is not set")  # not retried
     return key
-
 
 class Ollama(Provider):
     def _call(self, messages, cap):
@@ -128,7 +122,6 @@ class Ollama(Provider):
         msg = j.get("message") or {}
         return Reply(msg.get("content") or "", int(j.get("eval_count") or 0), int(j.get("prompt_eval_count") or 0),
                      msg.get("thinking") or "", j.get("done_reason") == "length")
-
 
 class OpenAI(Provider):
     def _call(self, messages, cap):
@@ -146,7 +139,6 @@ class OpenAI(Provider):
         return Reply(msg.get("content") or "", int(usage.get("completion_tokens") or 0),
                      int(usage.get("prompt_tokens") or 0), msg.get("reasoning_content") or "",
                      choice.get("finish_reason") == "length")
-
 
 class ClaudeCLI(Provider):
     """``claude -p`` in print mode: no tools, no settings, subscription login.
@@ -186,7 +178,6 @@ class ClaudeCLI(Provider):
         u = j.get("usage") or {}
         out = int(u.get("output_tokens") or 0)
         return Reply(str(j.get("result") or ""), out, int(u.get("input_tokens") or 0), "", out >= cap)
-
 
 class CodexCLI(Provider):
     """``codex exec`` with the login's auth.json copied into an empty CODEX_HOME (no AGENTS.md, no config).
@@ -249,7 +240,6 @@ class CodexCLI(Provider):
         out = int(usage.get("output_tokens") or 0)  # includes reasoning_output_tokens (Responses API)
         return Reply(text.strip(), out, int(usage.get("input_tokens") or 0), "\n".join(thinking), out >= cap)
 
-
 class Anthropic(Provider):
     """Messages API through the official SDK, streamed (the final message is read). ``think``: an effort level
     (low .. max) -> adaptive thinking with a readable summary; an int -> a thinking budget (Haiku 4.5). ``out_tokens``
@@ -284,7 +274,6 @@ class Anthropic(Provider):
                      msg.usage.input_tokens, "\n".join(b.thinking for b in msg.content if b.type == "thinking"),
                      msg.stop_reason in ("max_tokens", "refusal"))
 
-
 class Stub(Provider):
     """Offline backend for tests: ``respond(messages, cap) -> Reply``."""
 
@@ -294,7 +283,6 @@ class Stub(Provider):
 
     def _call(self, messages, cap):
         return self.respond(messages, cap)
-
 
 def make_provider(cfg: ProviderConfig) -> Provider:
     kinds = {"ollama": Ollama, "openai": OpenAI, "anthropic": Anthropic, "claude_cli": ClaudeCLI, "codex_cli": CodexCLI}
