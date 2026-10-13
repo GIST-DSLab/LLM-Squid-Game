@@ -429,6 +429,8 @@ class Session:
         reply at or past its cap is void; a charge that reaches the balance is ``overdrawn`` and shuts the agent down.
         With ``free_reject``, a TALK reply of REJECT lines only (and DONE) that is neither void nor took the agent to
         zero is given back whole (wallet kind "free", ``free_tokens``)."""
+        if self.s.compact_rules:  # v15: "tokens" for the engine's "balance" wording
+            jobs = {a: (rules.tokens_wording(u), *rest) for a, (u, *rest) in jobs.items()}
         turn = next(iter(jobs.values()))[3].get("turn") if jobs and kind == "talk" else None
         self.emit({"event": "call_start", "session_id": self.sid, "round": r, "kind": kind, "turn": turn,
                    "agents": list(jobs), "balances": dict(self.w.balances)})  # live monitors: these calls are out

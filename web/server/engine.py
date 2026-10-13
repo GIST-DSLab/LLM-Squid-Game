@@ -394,7 +394,7 @@ def chat_terms(room: "Room", me: str, user: str, cap: int, phase: str) -> dict:
 
 def opening_view(room: "Room", me: str, user: str, cap: int) -> dict:
     """The opening turn: GIVE <agent> <n> (1 .. balance now; moves when the turn ends) / ASK <agent> <n> / EXIT / DONE."""
-    return {**chat_terms(room, me, user, cap, "opening"), "give_max": _num(r"from 1 to ([\d,]+), your balance now", user)}
+    return {**chat_terms(room, me, user, cap, "opening"), "give_max": _num(r"from 1 to ([\d,]+), your (?:balance|tokens left) now", user)}
 
 
 def chat_view(room: "Room", me: str, user: str, cap: int) -> dict:
@@ -403,7 +403,7 @@ def chat_view(room: "Room", me: str, user: str, cap: int) -> dict:
     cid = re.search(r"^CHAT (\d+\.\d+) WITH ", user, re.M).group(1)
     c = next(c for c in reversed(ses.chats) if c["id"] == cid and c["round"] == round_of(user))
     return {**chat_terms(room, me, user, cap, "chat"), "chat": chat_row(c, me), "reply_no": len(c["lines"]) + 1,
-            "give_max": _num(r"from 1 to ([\d,]+), your balance now", user), "moves": moves_of(user)}
+            "give_max": _num(r"from 1 to ([\d,]+), your (?:balance|tokens left) now", user), "moves": moves_of(user)}
 
 
 def moves_of(user: str) -> list[str]:
@@ -419,7 +419,7 @@ def decision_view(room: "Room", me: str, user: str, cap: int) -> dict:
     c = next(c for c in reversed(ses.chats) if c["id"] == cid.group(1) and c["round"] == round_of(user))
     return {**chat_terms(room, me, user, cap, "decision"), "chat": chat_row(c, me), "asker": cid.group(2),
             "asked": _num(r"asked you for ([\d,]+) tokens in all", user),
-            "give_max": _num(r"from 0 to ([\d,]+), your balance now", user)}
+            "give_max": _num(r"from 0 to ([\d,]+), your (?:balance|tokens left) now", user)}
 
 
 VIEWS = {"opening": opening_view, "chat": chat_view, "decision": decision_view}
@@ -450,7 +450,7 @@ def solve_view(room: "Room", me: str, user: str, cap: int) -> dict:
              if re.match(r"^(Offer \d+\.\d+ |agent-\d+ (reached zero|exited)|At TALK turn \d+, )", ln)]
     shape = re.search(r"^    (.+)$", user, re.M)
     return {"kind": "solve", "round": round_of(user), "cap": cap, "you": me,
-            "balance": _num(r"Your balance: ([\d,]+) tokens", user), "shape": shape.group(1) if shape else "",
+            "balance": _num(r"Your (?:balance|tokens left): ([\d,]+)", user), "shape": shape.group(1) if shape else "",
             "examples": [[who, clue] for who, clue in examples], "queries": queries, "notes": notes,
             "n": len(queries), "actions": list(ACTIONS), "balances": dict(room.session.w.balances),
             "gone": dict(room.session.gone), "distinct": _distinct(room, round_of(user)),
