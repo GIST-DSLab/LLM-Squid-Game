@@ -39,6 +39,7 @@ TOC = ('<li><a href="{p}e53"><span class="xid">5.3</span>시그널 게임 · 과
        '  <li><a href="{p}e53-v14split">v14 비율 일정 · 실현 가능성</a></li>\n'
        '  <li><a href="{p}e53-v14verify">검증 · 실제 정답률 (v14f)</a></li>\n'
        '  <li><a href="{p}e53-m6grid">미리 만든 판 · 라운드 × 인원 표 (M6)</a></li>\n'
+       '  <li><a href="{p}e53-v15grid">엔트로피 사다리 · 라운드 × 인원 표 (v15)</a></li>\n'
        '  <li><a href="{p}e53-deal">힌트 배분 (v12)</a></li>\n'
        '  <li><a href="{p}e53-score">채점 · 행동만</a></li>\n  </ol></li><!-- e53-toc -->\n')
 OLD_TOC = re.compile(r'<li><a href="[^"]*e53"><span class="xid">5\.3</span>.*?<!-- e53-toc -->\n', re.S)
@@ -75,10 +76,10 @@ page = (head + '<main class="main">\n<p class="eyebrow crumb"><a href="index.htm
 (d / "e53.html").write_text(page)
 
 js = (d / "site.js").read_text()
-ids = ["e53", "e53-fig", "e53-ramp", "e53-ops", "e53-dealn", "e53-unique", "e53-space", "e53-difficulty", "e53-v14diff", "e53-v14split", "e53-v14verify", "e53-m6grid", "e53-deal", "e53-score", "sg53-fig"]
+ids = ["e53", "e53-fig", "e53-ramp", "e53-ops", "e53-dealn", "e53-unique", "e53-space", "e53-difficulty", "e53-v14diff", "e53-v14split", "e53-v14verify", "e53-m6grid", "e53-v15grid", "e53-deal", "e53-score", "sg53-fig"]
 add = "".join(f',"{i}":"e53.html"' for i in ids if f'"{i}":"e53.html"' not in js)
 if add:
-    anchor = '"e53":"e53.html"' if '"e53":"e53.html"' in js else '"e52-v13-figI":"e52.html"'
+    anchor = '"e53-m6grid":"e53.html"' if '"e53-m6grid":"e53.html"' in js else '"e53":"e53.html"' if '"e53":"e53.html"' in js else '"e52-v13-figI":"e52.html"'
     js = js.replace(anchor, anchor + add, 1)
     (d / "site.js").write_text(js)
 print("ok", len(page))
