@@ -33,6 +33,6 @@ if __name__ == '__main__':
     with Pool(8) as pool:
         rows = pool.map(one, jobs, chunksize=4)
     json.dump({'space': 25996,
-               'ladder': {k: v['eff'] for k, v in CFG['profiles'].items()}, 'floor': 0.4, 'rows': rows},
+               'ladder': {k: v['eff'] for k, v in CFG['profiles'].items()}, 'floor': 0.4, 'unit': 'bits', 'rows': rows},
               open(sys.argv[1], 'w'))
     print('fails', sum(r['fail'] for r in rows), 'max time', max(r.get('time', 0) for r in rows))

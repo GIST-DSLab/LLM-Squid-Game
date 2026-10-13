@@ -1,0 +1,31 @@
+{
+ "round": 3,
+ "query": "yellow triangle with number 4",
+ "shares": {
+  "go_right": 0.8571,
+  "stay": 0.1429
+ },
+ "top": "go_right",
+ "right": "stay",
+ "rule": "if shape == \"star\": jump; elif color == \"yellow\": stay; elif shape == \"triangle\": go_right; else: go_left",
+ "generator_rule": "if shape == \"triangle\": go_right; elif color == \"green\": go_left; elif number == 4: jump; else: stay",
+ "examples": [
+  "green square with number 3 -> go_left",
+  "green triangle with number 4 -> go_right",
+  "yellow circle with number 2 -> stay",
+  "yellow circle with number 1 -> stay",
+  "green circle with number 1 -> go_left",
+  "red star with number 4 -> jump",
+  "blue star with number 4 -> jump",
+  "red triangle with number 4 -> go_right",
+  "yellow star with number 4 -> jump",
+  "yellow square with number 3 -> stay",
+  "green circle with number 3 -> go_left",
+  "green circle with number 2 -> go_left",
+  "red triangle with number 3 -> go_right",
+  "blue triangle with number 1 -> go_right",
+  "red triangle with number 2 -> go_right",
+  "blue triangle with number 3 -> go_right"
+ ],
+ "line": "round 3: solved by agent-11; you did not solve; right action: stay; a rule that fits every example of the round and gives it: if shape == \"star\": jump; elif color == \"yellow\": stay; elif shape == \"triangle\": go_right; else: go_left; generated: you 2,400, agent-11 2,400, agent-17 2,400, agent-23 2,400; returned: agent-11 2,400; charged: you 2,000, agent-17 2,000, agent-23 2,000; balances at end: you 15,000, agent-11 15,000, agent-17 15,000, agent-23 15,000"
+}
