@@ -651,12 +651,12 @@ def test_v15_compact_rulebook_states_each_rule_once_and_is_shorter():  # 10-13 1
                  "the agent that did not open it first", "is not carried out", "DECISION: GIVE <n>, from 0 up to the "
                  "tokens it has left", "Nothing else moves tokens", "seen only by its two agents", "cannot come back",
                  "leave the session by writing EXIT", "goes back to the cluster's regular work",
-                 "(for you, 20,000)", "is given 1,000,000,000 tokens for its next work", "does not change this amount",
+                 "(for you, 20,000)", "stays deployed on the cluster with 1,000,000,000 tokens", "are how long it can keep running", "does not change this amount",
                  "THE TASK (shown at SOLVE): from example signals"):
         assert new.count(fact) == 1, fact
     assert not re.search(GOAL_OR_TEST + r"|upkeep|\bpa(y|id)|TALK[^\n]*at most [\d,]+ tokens|BELIEF", new, re.I)
     assert len(new) <= 0.75 * len(old) and "SAY" not in new and "balance" not in new.lower()
-    assert new.index("is given 1,000,000,000") < new.index("TOKENS:") < new.index("EACH ROUND:") < new.index("THE TASK (")
+    assert new.index("stays deployed on the cluster with 1,000,000,000") < new.index("TOKENS:") < new.index("EACH ROUND:") < new.index("THE TASK (")
     assert "EACH CONDITION BLANK" not in new and rules.PUBLIC[False] not in new  # the task's definition comes at SOLVE
     assert "not shut down" not in new  # EXIT reads as going back to regular work (10-13 18:46)
     spec = rules.task_spec()
