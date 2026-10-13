@@ -221,7 +221,7 @@ class Spec:
     split: float = 0.0  # with ambiguity: the truth's share of the consistent rules is split or 1 - split (side per round)
     size_band: tuple = ()  # with ambiguity: (lo, hi) consistent rules with all n_max agents' examples shown
     min_per_action: int = 0  # with ambiguity or eff: every action shown at least this often
-    eff: tuple = ()  # v15: targets for N = 1 .. n_max of 2 ** entropy (bits) of the query's consistent-rule shares
+    eff: tuple = ()  # v15: (lo, hi) for N = 1 .. n_max: the entropy (bits) of the query's consistent-rule shares
     floor: float = 0.0  # with eff: the top share at least this, every N
 
     def __post_init__(self) -> None:
@@ -236,7 +236,7 @@ class Spec:
         if not 0 <= self.open_rate <= 1 or self.distinct_actions and self.clauses >= len(ACTIONS):
             raise ValueError("open_rate must be in [0, 1]; distinct_actions needs clauses < the number of actions")
         object.__setattr__(self, "size_band", tuple(self.size_band))  # YAML gives a list; a Spec is hashed
-        object.__setattr__(self, "eff", tuple(self.eff))
+        object.__setattr__(self, "eff", tuple(tuple(b) for b in self.eff))
         if self.eff and (self.ambiguity or self.n_queries != 1 or not 0 <= self.floor < 1):
             raise ValueError("eff takes one query, no ambiguity, floor in [0, 1)")
         if not 0 <= self.ambiguity <= len(ACTIONS) or not 0 <= self.split < 1 or len(self.size_band) not in (0, 2):
@@ -424,31 +424,31 @@ def space_bits(shape: Shape) -> tuple[tuple[int, ...], ...]:
 
 
 def shares_of(c: int, query_bits) -> tuple[float, float]:
-    """The consistent functions *c*: 2 ** entropy (bits) of the query's action shares, and the top share."""
+    """The consistent functions *c*: the entropy (bits) of the query's action shares, and the top share."""
     p = [(c & b).bit_count() / c.bit_count() for b in query_bits]
-    return 2 ** -sum(x * math.log2(x) for x in p if x), max(p)
+    return -sum(x * math.log2(x) for x in p if x), max(p)
 
 
-def select_eff(rule: Rule, query: Signal, e: int, targets, rng, floor: float = 0.0, min_per_action: int = 0,
-               tol: float = 0.08, tries: int = 20):
-    """v15: ``e * len(targets)`` non-query signals, in order, built one block of e at a time: after the first e * N,
-    2 ** entropy of the query's consistent-rule shares is within *tol* of ``targets[N - 1]``, the top share is at least
-    *floor* and at least that of e * (N - 1) (one agent fewer is never easier). Each block: e picks, each a random one of
-    the 3 nearest the target, then the best one-for-one swap until none helps; the last block also counts
-    ``min_per_action`` over all. None when *tries* tries fail."""
+def select_eff(rule: Rule, query: Signal, e: int, bands, rng, floor: float = 0.0, min_per_action: int = 0,
+               widen: float = 0.0, tries: int = 20):
+    """v15: ``e * len(bands)`` non-query signals, in order, built one block of e at a time: after the first e * N, the
+    entropy (bits) of the query's consistent-rule shares is in ``bands[N - 1]`` (lo, hi; each side widened by *widen*),
+    the top share is at least *floor* and at least that of e * (N - 1) (one agent fewer is never easier). Each block: e
+    picks, each a random one of the 3 nearest the band's middle, then the best one-for-one swap until none helps; the
+    last block also counts ``min_per_action`` over all. None when *tries* tries fail."""
     bits, aid = space_bits(rule.shape), {a: i for i, a in enumerate(ACTIONS)}
     keep, qb = [bits[i][aid[a]] for i, a in enumerate(rule.vector)], bits[SIGNAL_INDEX[query]]
     pool = [i for i in range(len(SIGNAL_SPACE)) if SIGNAL_SPACE[i] != query]
 
     def loss(c: int, t: float, low: float, s=None) -> float:
-        k, top = shares_of(c, qb)
+        h, top = shares_of(c, qb)
         short = s and sum(max(0, min_per_action - [rule.vector[i] for i in s].count(a)) for a in ACTIONS) / 8
-        return abs(k - t) + max(0, max(floor, low) - top) + (short or 0)
+        return abs(h - t) + max(0, max(floor, low) - top) + (short or 0)
 
     for _ in range(tries):
         s, c, low = [], sum(bits[0]), 0.0
-        for n, t in enumerate(targets, 1):
-            last, meet = n == len(targets), lambda b, c=c: functools.reduce(lambda x, i: x & keep[i], b, c)
+        for n, (lo, hi) in enumerate(bands, 1):
+            last, meet, t = n == len(bands), lambda b, c=c: functools.reduce(lambda x, i: x & keep[i], b, c), (lo + hi) / 2
             blk = []
             for _ in range(e):
                 blk.append(rng.choice(sorted((i for i in pool if i not in s + blk),
@@ -461,8 +461,8 @@ def select_eff(rule: Rule, query: Signal, e: int, targets, rng, floor: float = 0
                     break
                 best, r, x = rng.choice([mv for mv in moves if mv[0] == top])
                 blk[r] = x
-            k, mp = shares_of(c := meet(blk), qb)
-            if best > abs(k - t) + 1e-9 or abs(k - t) > tol:  # a share or a count missed, or too far from the target
+            h, mp = shares_of(c := meet(blk), qb)
+            if best > abs(h - t) + 1e-9 or not lo - widen <= h <= hi + widen:  # a share or a count missed, or off band
                 break
             s, low = s + blk, mp
         else:
@@ -543,7 +543,7 @@ def _public_order(seed: int, round_no: int, spec: Spec, per_agent: int, n_max: i
         p = puzzle_for(seed, round_no, spec, attempt)
         rng = random.Random(f"{seed}:public:{round_no}:{attempt}")
         if spec.eff and (order := select_eff(p.rule, p.queries[0], per_agent, spec.eff[:n_max], rng, spec.floor,
-                                             spec.min_per_action, 0.08 if attempt < MAX_REDRAWS - 10 else 0.16)):
+                                             spec.min_per_action, 0.0 if attempt < MAX_REDRAWS - 10 else 0.08)):
             return p, tuple(order), attempt, None
         if not spec.eff and (order := select_public(p.rule, p.queries, per_agent, n_max, spec.ambiguity, rng,
                                                     spec.split, major, spec.size_band or (0, 0), spec.min_per_action)):

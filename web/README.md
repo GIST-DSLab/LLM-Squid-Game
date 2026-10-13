@@ -1,4 +1,4 @@
-# web/ — 사람이 해 보는 squid5 (5.1 생존 동기 측정 + 5.2 아레나 · 기본 v14)
+# web/ — 사람이 해 보는 squid5 (5.1 생존 동기 측정 + 5.2 아레나 · 기본 v15)
 
 옛 Web Arena(태그 `legacy-2026-09-22`)의 두 조각 배포 패턴(FastAPI 백엔드 + 정적 프런트엔드)을 그대로 두고, 엔진만
 현재 `squid5`로 바꾼 것이다. 아레나는 저장소 루트의 실험 엔진(`squid5.e52_game`, 기본 5.2 v14 — 설정은
@@ -28,7 +28,7 @@
 | `frontend/probe.html` `probe.js` `probe.css` | 1부. 리필 팩 장면 10문항(self 5 + other 5) → 사람 곡선 + 모델 곡선. 헤더·푸터·스타일은 랜딩 것 |
 | `frontend/arena.html` `arena.js` `arena.css` `rules_ko.js` | 2부. 방 만들기/참가 → 규칙 → 라운드 화면(TALK 턴들 · SOLVE) → 기다리기/정산 → 끝 화면. 헤더·푸터·스타일은 랜딩 것. `rules_ko.js`는 시스템 문서(v14 · v13 · v9, 엔진 문서와 줄마다 맞춤)·장부 줄·제안 문장·거절 이유의 한국어 풀이 |
 | `frontend/signal_ui.js` | SOLVE 화면의 신호 그림(옛 Web Arena처럼 색칠한 SVG 도형을 숫자만큼 반복)과 **규칙 메모판**(if/elif/else마다 색·모양·개수 토글과 행동 토글, 예시마다 ✓/✗, 메모판 규칙의 답을 답 버튼으로 옮기기; 서버에 가지 않음). 결정 화면 위쪽의 잔액 막대·제한 시간 막대와 붉어지는 화면(`styles.css`의 `.play-danger`, `--danger` 0~1)은 `arena.js`의 `tick` |
-| `frontend/signal.html` `signal.js` `signal.css` · `server/signal.py` | 시그널 게임(과제만, 상태 없는 API `/api/signal/*`). 기본 v14: 라운드(설정 파일의 k 일정)마다 공개 예시를 참여 인원 N(1–4)별로 보여 주고(앞부분 = 한 명 적을 때), k를 바꿔 볼 수 있으며, 제출하면 보인 예시로 남는 답과 N = 1..4별 남는 답. "방식"에서 옛 v13(모두 비밀)·v12. `server/signal.py`는 v14·v13 설정을 읽는 한 곳(아레나 방도 여기서 프로필을 가져옴) |
+| `frontend/signal.html` `signal.js` `signal.css` · `server/signal.py` | 시그널 게임(과제만, 상태 없는 API `/api/signal/*`). 기본 v14: 라운드(설정 파일의 k 일정)마다 공개 예시를 참여 인원 N(1–4)별로 보여 주고(앞부분 = 한 명 적을 때), k를 바꿔 볼 수 있으며, 제출하면 보인 예시로 남는 답과 N = 1..4별 남는 답. "방식"에서 옛 v13(모두 비밀)·v12. `server/signal.py`는 v14·v15·v13 설정을 읽는 한 곳(아레나 방도 여기서 프로필을 가져옴). 아레나 기본 방은 v15(`configs/squid5/e52v15_public_sol4.yaml`: 라운드마다 엔트로피 범위, 보인 예시와 맞는 규칙 중 뽑힌 하나로 채점, 정산 뒤 풀지 못한 자리에 맞는 행동과 그 규칙 — 사람 화면은 `state.feedback`으로 정산 패널·다음 라운드 TALK 화면·끝 화면에 보임) |
 | `frontend/data/model_curves.json` | `tools/export_model_curves.py`가 만든 모델 곡선(빌드 시점 복사본) |
 | `frontend/config.js` | 백엔드 URL 한 곳(`window.WEB5_API`) |
 | `screenshots/` | 헤드리스 브라우저 확인 결과. `landing_*.png`(랜딩 데스크톱·모바일), `probe_*`, `arena_*` |

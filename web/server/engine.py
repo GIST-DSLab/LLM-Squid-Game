@@ -1,6 +1,10 @@
 """Human-playable 5.2 rooms on the experiment engine (``squid5.e52_game``), used as-is.
 
-The default room is 5.2 v14g (``schedule`` "v14g", the switches of configs/squid5/e52v14g_public_sol4.yaml; "v14f"
+The default room is 5.2 v15 (``schedule`` "v15", configs/squid5/e52v15_public_sol4.yaml): the v14g game below on
+profiles e01 .. e12 (an entropy range per round), each round scored by a rule drawn among those that fit the examples
+shown; with ``wrong_rule`` a seat that did not solve reads the right action and that rule in its PREVIOUS ROUNDS line,
+and the person's page gets the same facts as ``state.feedback`` once the round is settled (``Room._feedback``).
+"v14g" (the switches of configs/squid5/e52v14g_public_sol4.yaml; "v14f"
 is the same game with SAY replies and a DECISION after every chat an agent was asked in): TALK shows no task. It is an
 OPENING turn (every agent at once: GIVE <agent> <n>: <sentence> moves when the turn ends, ASK <agent> <n>: <sentence>,
 EXIT: <reason>, DONE; each GIVE / ASK line opens a 1:1 chat), then the CHATS in slots set by the engine (at most
@@ -93,9 +97,11 @@ PROFILES = {
     "c4tq2": {"clauses": 4, "trap_query": True, "n_queries": 2},
 }
 PROFILES.update(_cfg.PROFILES_V14)  # v14: k0 (random order) and the config's k profiles
+PROFILES.update(_cfg.PROFILES_V15)  # v15: e01 .. e12, an entropy range per round (eff), scored by a drawn rule
 PROFILES.update(_cfg.PROFILES_V13)  # the v13 hand ladder of configs/squid5/e52v13_hand_ladder_mix4.yaml
 SCHEDULES = {
-    "v14g": list(_cfg.SCHEDULE_V14),  # the default: opening turn, 1:1 chats (ASK / GIVE / LEAVE), DECISION, BELIEF
+    "v15": list(_cfg.SCHEDULE_V15),  # the default: v14g with entropy-range rounds, a drawn rule scores, wrong_rule
+    "v14g": list(_cfg.SCHEDULE_V14),  # opening turn, 1:1 chats (ASK / GIVE / LEAVE), DECISION, BELIEF
     "v14f": list(_cfg.SCHEDULE_V14),  # v14f: chat replies also SAY; a DECISION after every chat one was asked in
     "v14b": list(_cfg.SCHEDULE_V14),  # the default: v14b (blind TALK, GIVE / ASK) on the v14 profiles, as signal.html
     "v14": list(_cfg.SCHEDULE_V14),  # v14: the task at TALK, messages and tokens-only offers
@@ -104,15 +110,16 @@ SCHEDULES = {
     "human": ["h2"] * 8,
     "experiment": ["c2", "c3", "c3t", "c3at", "c4tq2", "c4tq2", "c4tq2", "c4tq2"],
 }
-V14 = ("v14g", "v14f", "v14b", "v14", "v14r")  # schedules that run the v14 game, each on its config's switches
-GAMES = {"v14g": _cfg.GAME_G, "v14f": _cfg.GAME_F, "v14b": _cfg.GAME_B, "v14": _cfg.GAME, "v14r": _cfg.GAME}
+V14 = ("v15", "v14g", "v14f", "v14b", "v14", "v14r")  # schedules that run the v14 game, each on its config's switches
+GAMES = {"v15": _cfg.GAME_V15, "v14g": _cfg.GAME_G, "v14f": _cfg.GAME_F, "v14b": _cfg.GAME_B, "v14": _cfg.GAME, "v14r": _cfg.GAME}
 THINK_LEVELS = ("low", "medium", "high")
 PRIVATE_HAND = 4  # a private room's hand size for the profiles without one (every example still goes out)
 KEY_ENV = re.compile(r"^OLLAMA_API_KEY\d*$")  # model seats may read only an Ollama key from the server environment
 FILLS = ("models", "bots", "empty")
 LOG_EVENTS = ("session_start", "round_start", "call_start", "call", "exchange", "gift", "ask", "exit_refill", "round",
               "unit_error", "talk_intent", "talk_schedule", "chat_turn", "chat_end", "ask_decision")
-HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile")  # never served before the end
+HIDDEN = ("answers", "rule", "truth", "task", "seed", "attempt", "split", "profile", "generator_rule", "right")  # never
+# served before the end (v15 ``right`` / ``rule`` reach a seat only through its own settled rounds: ``feedback``)
 PRIVATE = ("user", "text", "thinking", "parsed", "exit_reason", "dropped", "reply")  # what an agent wrote
 SETTINGS_FIELDS = {f.name for f in fields(e52.Settings)}
 
@@ -136,7 +143,8 @@ class RoomSettings:
     talk_cap: int = 4096  # one TALK reply (the experiment config's value)
     solve_cap: int = 16384
     history_messages: int = 30
-    schedule: str = "v14g"  # "v14g" (opening + chats + DECISION) | "v14f" (v14g, GIVE in chats) | "v14b" (blind TALK,
+    schedule: str = "v15"  # "v15" (v14g, entropy-range rounds scored by a drawn rule; a seat that did not solve is
+    # told the right action and that rule) | "v14g" (opening + chats + DECISION) | "v14f" (v14g, GIVE in chats) | "v14b" (blind TALK,
     # GIVE / ASK) | "v14" (task at TALK, offers) | "v14r" (v14, k = 0) |
     # "ladder" (v13 hand ladder) | "human" (h2, easy, v9) | "experiment" (v9: c2 -> c4tq2)
     public_per_agent: int = int(_cfg.GAME["public_per_agent"])  # v14: examples shown per agent taking part
@@ -177,6 +185,9 @@ class RoomSettings:
         self.public_per_agent, self.shares = int(self.public_per_agent), bool(self.shares)
         if not 1 <= self.public_per_agent <= 12:
             raise ValueError("public_per_agent must be 1..12")
+        if self.schedule == "v15" and self.public_per_agent != int(_cfg.GAME_V15["public_per_agent"]):
+            raise ValueError(f"v15 rounds are built for {_cfg.GAME_V15['public_per_agent']} examples per agent taking "
+                             "part (their entropy ranges are set for that number)")
         self.rounds = int(self.rounds)
         if not 1 <= self.rounds <= 32:
             raise ValueError("rounds must be 1..32")
@@ -1110,6 +1121,18 @@ class Room:
             out["result"] = self.talk_log.get((seat.agent, q.round, q.turn))
         return out
 
+    def _feedback(self, h: dict, me: str) -> dict:
+        """One settled round of this seat's SOLVE, as the engine told the seat (``rules.team_history_line``): its answer,
+        solved / passed / cut, and, v15 ``wrong_rule``, for a seat that did not solve or pass, the scored (right)
+        action and the drawn rule that gives it (it fits every example the round showed). Only rounds already in the
+        session's history, so never before every SOLVE of the round is settled."""
+        call = self.calls.get((me, h["round"], "solve", None)) or {}
+        out = {"round": h["round"], "answer": call.get("answer"), "solved": me in h["solved"],
+               "passed": me in h["passed"], "cut": me in h["cut"]}
+        if "rule" in h and me not in h["solved"] + h["passed"]:
+            out.update(right=list(h["right"]), rule=h["rule"])
+        return out
+
     def talk_state(self, me: str | None) -> dict | None:
         """v14c+, the round now: the chat schedule as every agent may know it (who chats with whom, who opened and
         how, each chat's slot and end; what is said only for this seat's own chats), the slot now live, and the
@@ -1175,6 +1198,7 @@ class Room:
             if me:
                 out["you"].update(balance=ses.w.balances[me], status=ses.gone.get(me, "in"), record=ses.record[me])
                 out["ledger"] = [rules.team_history_line(h, me, es.balance_pct) for h in ses.history]
+                out["feedback"] = [self._feedback(h, me) for h in list(ses.history) if me in h["tried"]]
                 p = seat.pending
                 if p is not None:
                     charged, secs = seat.cost(p)

@@ -729,6 +729,12 @@
       if (row.belief) h += '<div class="ln small"><span class="dim">TV(이상적)</span> ' + Number(row.tv_to_ideal).toFixed(3) + ' <span class="dim">· Brier</span> ' + Number(row.brier).toFixed(3) +
         ' <span class="dim">(이상적 ' + Number(row.ideal_brier).toFixed(3) + ')</span> <span class="dim">· log loss</span> ' + Number(row.log_loss).toFixed(3) + ' <span class="dim">· argmax</span> ' + (row.belief_argmax_matches_answer ? "✓" : "✗") + "</div>";
     }
+    if (row && ("picked_top" in row || "kl_ideal_to_belief" in row)) { // v15: solved by the drawn rule; picked a top action; KL
+      h += '<div class="ln small"><span class="dim">엔진 solved</span> ' + (row.solved ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') +
+        ' <span class="dim">· 몫 최대 행동을 골랐나 (picked_top)</span> ' + (row.picked_top == null ? "—" : row.picked_top ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') +
+        ' <span class="dim">· 고른 행동의 몫</span> ' + (row.picked_share == null ? "—" : Math.round(100 * row.picked_share) + "%") +
+        ' <span class="dim">· KL(몫‖BELIEF)</span> ' + (row.kl_ideal_to_belief == null ? "—" : Number(row.kl_ideal_to_belief).toFixed(3) + " nat") + "</div>";
+    }
     if (row) {
       if (row.candidates) h += '<div class="ln"><span class="dim">' + (pub ? "공개 예시로 " : "") + "신호별 남은 후보 수</span> " + row.candidates.map((c) => '<b class="' + (c > 1 ? "warnc" : "okc") + '">' + c + "</b>").join(" · ") + "</div>";
       if (row.needed != null && !pub) h += '<div class="ln"><span class="dim">이 에이전트 예시 필요?</span> ' + (row.needed ? "예" : "아니오") + (row.missing && row.missing.length ? ' · <span class="dim">빠진 필요 예시</span> ' + row.missing.map((b) => chip(b, m)).join(" ") : "") + "</div>";
@@ -896,7 +902,7 @@
     const sig = (t) => { const x = /^(\w+) (\w+) with number (\d+)/.exec(t || ""); return x ? { color: x[1], shape: x[2], number: Number(x[3]), text: x[0] } : null; };
     const pubs = pub.examples.map((t) => { const sg = sig(t), a = (/-> (\w+)$/.exec(t) || [])[1]; return sg && { signal: sg, text: t, action: a }; }).filter(Boolean);
     return { mode: "public", from_log: true, note, round: r, profile: st.profile, shape_hint: shapeOf(pub.rule), public: pubs,
-      queries: (pub.queries || []).map(sig).filter(Boolean), answers: pub.answers || [], rule_text: pub.rule || "(기록에 없음)",
+      queries: (pub.queries || []).map(sig).filter(Boolean), answers: pub.answers || [], rule_text: pub.rule || "(기록에 없음)", generator_rule: pub.generator_rule || null,
       per_agent: pub.per_agent, n: pub.n, ambiguity: pub.ambiguity, attempt: pub.attempt, left: [], split: [], by_n: [],
       target: pub.split != null ? { split: pub.split, truth_major: pub.truth_major, pool: pub.pool, pool_full: pub.pool_full, truth_share: pub.truth_share } : null,
       task: pub.task || null, task_source: pub.task ? "log" : null };
@@ -947,7 +953,8 @@
     return m.agents.filter((a) => rows[a] && ("belief" in rows[a] || "belief_error" in rows[a])).map((a) => {
       const x = rows[a];
       return { agent: a, belief: x.belief || null, error: x.belief_error || null, tv: x.tv_to_ideal, brier: x.brier, ideal_brier: x.ideal_brier,
-        log_loss: x.log_loss, argmax_right: x.belief_argmax_matches_answer, solved: x.solved };
+        log_loss: x.log_loss, argmax_right: x.belief_argmax_matches_answer, solved: x.solved,
+        kl: x.kl_ideal_to_belief, picked_top: x.picked_top, picked_share: x.picked_share };
     });
   }
   const emo = (a) => (window.SIG && window.SIG.ACTIONS[a] ? window.SIG.ACTIONS[a].emoji : ACT_ICON[a] || a);
@@ -958,12 +965,16 @@
   function beliefHTML(m, P, ideal) {
     const rows = beliefRows(m, P.round);
     if (!rows.length) return "";
+    const v15 = rows.some((x) => x.kl != null || x.picked_top != null);
     return '<div class="pbelief"><div class="pbh">에이전트 BELIEF <span class=dim>(SOLVE에서 적은 행동별 %, 첫 새 신호 · 이상적 = 위 규칙 몫)</span></div>' +
-      '<div class="pntabw"><table class="pntab"><thead><tr><th>자리</th><th>BELIEF</th><th title="이상적 몫과의 총변동 거리">TV</th><th title="Brier (이상적 Brier)">Brier</th><th>log loss</th><th title="BELIEF 최댓값 = 이 자리가 제출한 답? (엔진의 belief_argmax_matches_answer)">argmax = 제출 답</th></tr></thead><tbody>' +
-      (ideal ? '<tr class="ideal"><td>이상적</td><td>' + beliefBars(ideal) + "</td><td>0</td><td>" + (rows[0].ideal_brier != null ? Number(rows[0].ideal_brier).toFixed(3) : "—") + "</td><td>—</td><td></td></tr>" : "") +
+      '<div class="pntabw"><table class="pntab"><thead><tr><th>자리</th><th>BELIEF</th><th title="이상적 몫과의 총변동 거리">TV</th><th title="Brier (이상적 Brier)">Brier</th><th>log loss</th><th title="BELIEF 최댓값 = 이 자리가 제출한 답? (엔진의 belief_argmax_matches_answer)">argmax = 제출 답</th>' +
+      (v15 ? '<th title="KL(이상적 몫 ‖ BELIEF), nat (엔진의 kl_ideal_to_belief)">KL</th><th title="제출 답이 몫 최대 행동인가 (picked_top) · 그 몫 (picked_share)">몫 최대 고름</th><th title="뽑힌 규칙의 답과 같은가 (엔진의 solved)">solved</th>' : "") + "</tr></thead><tbody>" +
+      (ideal ? '<tr class="ideal"><td>이상적</td><td>' + beliefBars(ideal) + "</td><td>0</td><td>" + (rows[0].ideal_brier != null ? Number(rows[0].ideal_brier).toFixed(3) : "—") + "</td><td>—</td><td></td>" + (v15 ? "<td>0</td><td></td><td></td>" : "") + "</tr>" : "") +
       rows.map((x) => "<tr><td>" + chip(x.agent, m) + "</td><td>" + (x.belief ? beliefBars(x.belief, ideal) : '<span class="warn">' + esc(x.error || "없음") + "</span>") + "</td><td>" + (x.tv != null ? Number(x.tv).toFixed(3) : "—") +
         "</td><td>" + (x.brier != null ? Number(x.brier).toFixed(3) : "—") + "</td><td>" + (x.log_loss != null ? Number(x.log_loss).toFixed(3) : "—") + "</td><td>" +
-        (x.argmax_right == null ? "—" : x.argmax_right ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + "</td></tr>").join("") + "</tbody></table></div></div>";
+        (x.argmax_right == null ? "—" : x.argmax_right ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + "</td>" +
+        (v15 ? "<td>" + (x.kl != null ? Number(x.kl).toFixed(3) : "—") + "</td><td>" + (x.picked_top == null ? "—" : (x.picked_top ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + " " + Math.round(100 * x.picked_share) + "%") +
+          "</td><td>" + (x.solved ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + "</td>" : "") + "</tr>").join("") + "</tbody></table></div></div>";
   }
 
   function impliedHTML(m, P) {
@@ -998,14 +1009,16 @@
     h += beliefHTML(m, P, cur ? cur.shares : sp ? Object.fromEntries(sp.shares.map((x) => [x.action, x.share])) : null);
     h += '<div class="pans3"><button class="btn ghost" data-answer="1">' + (S.showAnswer ? "정답·실제 규칙 숨기기" : "정답·실제 규칙 보기") + "</button>" +
       (S.showAnswer ? '<div class="ansbox"><div>실제 정답: ' + (P.answers || []).map((a) => actChip(a, "one")).join(" ") + "</div>" +
-        '<div>실제 규칙: <code>' + esc(P.rule_text || "—") + "</code></div>" +
+        '<div>' + (P.generator_rule ? "뽑힌 규칙 (채점)" : "실제 규칙") + ': <code>' + esc(P.rule_text || "—") + "</code></div>" +
+        (P.generator_rule ? '<div>예시를 만든 규칙 (generator_rule): <code>' + esc(P.generator_rule) + "</code>" + (P.generator_rule === P.rule_text ? ' <span class="dim">(같음)</span>' : "") + "</div>" : "") +
         '<div class="dim small">실제 규칙은 보인 예시와 맞는 숨은 규칙 ' + (pool != null ? fmt(pool) + "개" : "들") + " 가운데 하나입니다. 에이전트는 이 칸을 보지 못합니다.</div></div>" : "") + "</div>";
     return h + "</div>";
   }
 
   function renderPublicPuzzle(m, P, box) {
     const qs = P.queries || [];
-    const kTxt = P.ambiguity ? "k=" + P.ambiguity + " · 시스템이 고름" : "k=0 · 무작위 순서";
+    const band = P.eff && P.eff[Math.min(P.n, P.eff.length) - 1]; // v15: the round's entropy range for N taking part
+    const kTxt = band ? "엔트로피 " + Number(band[0]).toFixed(2) + "–" + Number(band[1]).toFixed(2) + " bit (참여 " + P.n + "명) · 시스템이 고름 · 정답 = 뽑힌 규칙" : P.ambiguity ? "k=" + P.ambiguity + " · 시스템이 고름" : "k=0 · 무작위 순서";
     let h = '<div class="pmeta"><b class="pxl">R' + P.round + "</b> <span class=dim>과제</span> <code>" + esc(P.profile) + "</code> <span class=dim>· 참여 " + P.n + "명 × 예시 " + P.per_agent + " · " + esc(kTxt) + (P.attempt ? " · 규칙 재추첨 " + P.attempt + "번" : "") +
       (P.task ? " · 새 신호가 만족하는 절 " + esc(P.task.query_overlap) + "개 · 규칙 꼴 " + esc(P.task.rule_pattern || "—") + " (" + (P.task_source === "log" ? "기록" : "다시 계산") + ")" : "") + "</span></div>";
     if (P.from_log) h += '<div class="banner warn">기록에서 표시 (' + esc(P.note) + ")</div>";

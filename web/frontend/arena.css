@@ -735,3 +735,12 @@ details.legend { margin-top: 12px; }
 .msg-f textarea { width: 100%; min-height: 64px; resize: vertical; font: inherit; }
 .chat-composer .ga-row, .decide-composer .ga-row { grid-template-columns: minmax(0, 150px) minmax(0, 1fr); }
 @media (max-width: 560px) { .chat-composer .ga-row, .decide-composer .ga-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* v15 wrong_rule: my SOLVE of a settled round, right / wrong, and when wrong the right action and the drawn rule */
+.feedback { border: 1px solid var(--border); border-left: 4px solid var(--text-dim); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; background: rgba(255, 255, 255, 0.02); }
+.feedback.ok { border-left-color: var(--ok); }
+.feedback.bad { border-left-color: var(--danger-color); background: rgba(224, 87, 91, 0.06); }
+.feedback .fb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.feedback .fb-right { margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.feedback .fb-rule-h { margin-top: 8px; color: var(--text-dim); }
+.feedback .fb-rule { margin: 4px 0 0; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; border-radius: 6px; background: rgba(0, 0, 0, 0.18); }

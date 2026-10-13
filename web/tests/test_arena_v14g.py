@@ -1,4 +1,4 @@
-"""The v14g room (the default): an opening turn, scheduled 1:1 chats with no GIVE in a reply, a DECISION for an agent
+"""The v14g room (the default until v15): an opening turn, scheduled 1:1 chats with no GIVE in a reply, a DECISION for an agent
 asked in a chat, SOLVE with BELIEF, the flat end prize; one person and three bots on the same grammar; and the event
 log, which serves no answers, rule, truth, seed or anything an agent wrote before the game ends."""
 
@@ -16,8 +16,8 @@ A6, A11, A17, A23 = rules.TEAM_AGENTS
 LEAK = re.compile(r'"(answers|rule|truth|task|seed|split|truth_share|user|thinking)"')
 
 
-def test_default_room_is_v14g():
-    rs = RoomSettings()
+def test_v14g_room():  # the default until v15 (10-13); v15 = v14g + wrong_rule on its own profiles
+    rs = RoomSettings(schedule="v14g")
     e = rs.engine()
     assert rs.schedule == "v14g" and e.transfers == "chat" and e.chat_moves_only and e.ask_decision and e.solve_belief
     assert e.survivor_prize == 1_000_000_000 and e.survivor_bonus == 0 and e.chat_turns == 3 and e.free_messages

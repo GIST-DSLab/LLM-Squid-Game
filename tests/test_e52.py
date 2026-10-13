@@ -598,33 +598,42 @@ def test_split_honest_side_band_and_two_per_action(split):  # selector v2, 10-10
     assert True in sides and False in sides  # the truth is placed on both sides over the rounds
 
 
-def test_eff_ladder_hits_entropy_targets_and_scores_by_a_drawn_rule():  # v15, 10-13 15:04
-    sp = Spec(clauses=3, trap_query=True, all_actions=True, distinct_actions=True, eff=[3.1, 2.8, 2.5, 2.2], floor=0.4,
-              min_per_action=2)
+def test_eff_ladder_hits_entropy_ranges_and_scores_by_a_drawn_rule():  # v15, 10-13 15:04 / 16:11
+    bands = [[1.57, 1.73], [1.37, 1.53], [1.17, 1.33], [0.97, 1.13]]
+    sp = Spec(clauses=3, trap_query=True, all_actions=True, distinct_actions=True, eff=bands, floor=0.4, min_per_action=2)
     drawn = set()
     for seed in (1, 2, 3):
         p, shown, attempt = e52.public_round(seed, 12, sp, 4, 4)
         tops = []
-        for n, t in enumerate(sp.eff, 1):
+        for n, (lo, hi) in enumerate(bands, 1):
             left = _left(p, shown[:4 * n])
-            k, top = 2 ** -sum(x * math.log2(x) for x in left.values()), max(left.values())
-            assert abs(k - t) <= 0.08 and top >= 0.4 and top >= (tops or [0])[-1]  # one fewer is never easier
+            h, top = -sum(x * math.log2(x) for x in left.values()), max(left.values())
+            assert lo <= h <= hi and top >= 0.4 and top >= (tops or [0])[-1]  # one fewer is never easier
             tops.append(top)
             rule = public_truth(seed, 12, sp, n, 4)  # fits what n agents see; fixed by (seed, round, n)
             assert all(rule.evaluate(c.signal) == c.action for c in shown[:4 * n]) and rule == public_truth(seed, 12, sp, n, 4)
+            assert len(rule.clauses) == 3  # the shape the agents are shown
             drawn.add(rule.evaluate(p.queries[0]))
         assert min(Counter(c.action for c in shown)[a] for a in ACTIONS) >= 2 and e52.public_round(seed, 12, sp, 2, 4)[1] == shown[:8]
     assert len(drawn) > 1  # the scored action is not always the generator's
-    s = e52.Settings(rounds=2, schedule=["q"] * 2, profiles={"q": sp}, solve_cap=900, **V14)
+    s = e52.Settings(rounds=3, schedule=["q"] * 3, profiles={"q": sp}, solve_cap=900, wrong_rule=True, **V14)
     ev = []
-    e52.Session(s, Cell("c", "tokens", 20000, arm="shutdown"), 1, game(oracle=False), ev.append, "sid").run()
+    ses = e52.Session(s, Cell("c", "tokens", 20000, arm="shutdown"), 1, game(oracle=False), ev.append, "sid")
+    ses.run()
     for r in (1, 2):  # every agent answers go_left: solved exactly when the drawn rule says go_left
         pub = next(e["public"] for e in ev if e["event"] == "round_start" and e["round"] == r)
         truth, p = public_truth(1, r, sp, pub["n"], 4), e52.public_round(1, r, sp, pub["n"], 4)[0]
         assert pub["rule"] == truth.description and pub["generator_rule"] == p.rule.description
         assert pub["answers"] == [truth.evaluate(q) for q in p.queries] == calls(ev, "solve", A6, r)[0]["answers"]
         row = next(e for e in ev if e["event"] == "round" and e["round"] == r)["agents"]
+        sh = pub["task"]["by_n"][str(pub["n"])]["shares"]
         assert row and all(row[a]["solved"] == (pub["answers"] == ["go_left"]) for a in row)
+        assert all(row[a]["picked_top"] == (sh.get("go_left", 0) == max(sh.values())) for a in row)
+        line = rules.team_history_line(ses.history[r - 1], A6)  # the feedback: the drawn rule, only when not solved
+        assert (f"right action: {pub['answers'][0]}; a rule that fits every example of the round and gives it: "
+                f"{truth.description}" in line) != row[A6]["solved"]
+    kl = e52.belief_scores({"go_left": 0.5, "go_right": 0.5, "stay": 0, "jump": 0}, "go_left", {"go_left": 1.0}, ["go_left"])
+    assert abs(kl["kl_ideal_to_belief"] - math.log(1 / 0.5)) < 0.01  # KL(shares || belief), nats
 
 
 # --- v14b: blind TALK, tokens move only by GIVE, ASK moves nothing, task statistics --------------------------------
@@ -771,7 +780,8 @@ def test_belief_parses_normalises_near_100_never_decides_solving_and_is_scored()
     sc = e52.belief_scores({"go_left": .1, "go_right": .6, "stay": 0, "jump": .3}, "go_right", {"go_right": .8, "jump": .2},
                            ["jump"])
     assert sc == pytest.approx({"brier": .26, "log_loss": round(-math.log(.6), 4), "tv_to_ideal": .2, "ideal_brier": .08,
-                                "belief_argmax_matches_answer": False})
+                                "belief_argmax_matches_answer": False, "kl_ideal_to_belief": round(
+                                    .8 * math.log(.8 * 1.001 / .6) + .2 * math.log(.2 * 1.001 / .3), 4)})
 
 
 def test_talk_record_shows_every_chat_and_move_to_all_and_own_transcripts_to_each():

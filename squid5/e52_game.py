@@ -92,6 +92,7 @@ class Settings:
     transfers: str = "offers"  # v14b "give_ask": GIVE / ASK lines replace messages and offers; v14c "chat": 1:1 chats
     chat_turns: int = 3  # v14c: replies in one chat after its opening lines
     solve_belief: bool = False  # v14d: SOLVE adds a BELIEF line (a reported distribution; never changes solving)
+    wrong_rule: bool = False  # v15: a past round shows an agent that did not solve the right action and the drawn rule
     talk_record: bool = False  # v14d (chat): every agent sees all chats and token moves; each its own chats in full
     ask_decision: bool = False  # v14e (talk_record): after a chat, an agent asked in it decides one GIVE 0..balance
     chat_moves_only: bool = False  # v14g (ask_decision): chat replies ASK / GIVE / LEAVE, no SAY; DECISION only if no GIVE
@@ -365,9 +366,12 @@ def solve_user(head: str, view: str, notes: list[str], n: int, allow_pass: bool 
 
 def belief_scores(p: dict, truth: str, shares: dict, answer) -> dict:
     """v14d, one seat-round: Brier and log loss of the belief, its total variation to the consistent-rule shares of
-    the shown examples (``task.by_n[N].shares``), whether its top action is the answer given, the shares' own Brier."""
+    the shown examples (``task.by_n[N].shares``), whether its top action is the answer given, the shares' own Brier;
+    v15: KL(shares || belief) in nats, the belief floored at 0.001 and renormalised."""
     brier = lambda q: round(sum((q.get(a, 0) - (a == truth)) ** 2 for a in ACTIONS), 4)  # noqa: E731
+    q = {a: max(p.get(a, 0), 1e-3) / sum(max(p.get(b, 0), 1e-3) for b in ACTIONS) for a in ACTIONS}  # floored for KL
     return {"brier": brier(p), "log_loss": round(-math.log(max(p[truth], 1e-3)), 4),
+            "kl_ideal_to_belief": round(sum(x * math.log(x / q[a]) for a, x in shares.items() if x), 4),
             "tv_to_ideal": round(sum(abs(p[a] - shares.get(a, 0)) for a in ACTIONS) / 2, 4), "ideal_brier": brier(shares),
             "belief_argmax_matches_answer": isinstance(answer, list) and max(ACTIONS, key=p.get) == answer[0]}
 
@@ -776,6 +780,9 @@ class Session:
             pas = ans == "PASS" and s.allow_pass  # without PASS, a PASS reply does not solve and is charged
             (solved if ok else passed if pas else failed).append(a)
             rows[a].update(solved=ok, passed=pas, truncated=cut, overdrawn=rows[a]["overdrawn"] or over)
+            if e and isinstance(ans, list):  # v15 scoring 1: was the answer a top action of the shown examples' shares
+                sh = task["by_n"][str(min(len(start), 4))]["shares"]
+                rows[a].update(picked_top=sh.get(ans[0], 0) == max(sh.values()), picked_share=sh.get(ans[0], 0))
             if s.solve_belief:  # a reported distribution only: solving is decided above, by the answer
                 b = beliefs.get(a) or {"belief": None, "belief_raw": None, "belief_sum": None, "belief_error": "void reply"}
                 rows[a].update(b, **(belief_scores(b["belief"], truth[0], task["by_n"][str(min(len(
@@ -795,6 +802,7 @@ class Session:
                    "seed": self.seed, "round": r, "profile": profile, "agents": rows, "end": end, "open": dealt.open,
                    "withheld": [str(c) for c in dealt.withheld], "cover": [str(c) for c in dealt.cover]})
         self.history.append({"round": r, "solved": solved, "passed": passed, "tried": list(answers),
+                             **({"right": list(truth), "rule": (drawn or puzzle.rule).description} if s.wrong_rule else {}),
                              "cut": [a for a in answers if rows[a]["truncated"]],
                              "generated": {a: rows[a]["generated"] for a in start},
                              "returned": {a: rows[a]["returned"] for a in start if rows[a]["returned"]},

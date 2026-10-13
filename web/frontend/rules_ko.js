@@ -379,10 +379,16 @@
       .replace(/^chats: none/, "대화: 없음").replace(/^chats: /, "대화: ").replace(/; moves: none$/, "; 옮김: 없음").replace(/; moves: /, "; 옮김: ");
     return t;
   }
+  // v15 wrong_rule: "right action: X; a rule that fits every example of the round and gives it: if ...; elif ...;
+  // else: Y" (the rule's own "; " must not split it; it ends where "; generated: " begins)
+  const RIGHT_RULE = /right action: ([^;]+); a rule that fits every example of the round and gives it: (.+?)(?=; generated: |$)/;
   function ledgerLineKo(line) {
-    const rec = /chats: .*?; moves: [^;]*/.exec(String(line));  // its own "; " must not split it
-    const body = rec ? String(line).replace(rec[0], "\u0000") : String(line);
-    return body.split("; ").map((part) => part === "\u0000" ? recordKo(rec[0]) : part.includes("\u0000") ? part.replace("\u0000", recordKo(rec[0])) : ((part) => {
+    const rr = RIGHT_RULE.exec(String(line));
+    const line2 = rr ? String(line).replace(rr[0], "\u0001") : String(line);
+    const rec = /chats: .*?; moves: [^;]*/.exec(line2);  // its own "; " must not split it
+    const body = rec ? line2.replace(rec[0], "\u0000") : line2;
+    return body.split("; ").map((part) => part === "\u0001" ? `맞는 행동: ${rr[1]}; 이 라운드의 예시를 모두 만족하고 이 행동을 내는 규칙: ${rr[2]}`
+      : part === "\u0000" ? recordKo(rec[0]) : part.includes("\u0000") ? part.replace("\u0000", recordKo(rec[0])) : ((part) => {
       let m = /^round (\d+): solved by (.+)$/.exec(part);
       if (m) return `라운드 ${m[1]}: 푼 에이전트 ${m[2] === "no one" ? "없음" : whoList(m[2])}`;
       m = /^passed: (.+)$/.exec(part);

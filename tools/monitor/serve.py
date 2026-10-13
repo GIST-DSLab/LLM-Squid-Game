@@ -785,8 +785,12 @@ def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
     if pub is not None or game.get("public_per_agent"):  # v14: public examples only, recorded in round_start
         if pub is None:
             raise NotFound(f"round {r} has not started (its public examples are in its round_start)")
+        drawn = "generator_rule" in pub  # v15: the round is scored by a rule drawn among the consistent ones
         out = _public_puzzle(int(s["seed"]), r, _hashable(spec), int(pub["per_agent"]), int(pub["n"]),
-                             tuple(pub.get("examples") or ()), pub.get("rule"))
+                             tuple(pub.get("examples") or ()), pub.get("generator_rule") if drawn else pub.get("rule"))
+        if drawn:  # the examples come from generator_rule; the answers and the rule shown are the drawn (scored) ones
+            out = {**out, "answers": list(pub.get("answers") or out["answers"]), "rule_text": pub["rule"],
+                   "generator_rule": pub["generator_rule"], "eff": spec.get("eff"), "floor": spec.get("floor")}
         logged = {k: pub[k] for k in ("split", "truth_major", "pool", "pool_full", "truth_share") if k in pub}
         if pub.get("task"):  # v14b: the round's task statistics as logged (preferred to the rebuild)
             out = {**out, "task": pub["task"], "task_source": "log"}

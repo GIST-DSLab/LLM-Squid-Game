@@ -36,6 +36,7 @@ CONFIG = CONFIGS / "e52v14_public_sol4.yaml"  # v14: public examples, tokens-onl
 CONFIG_B = CONFIGS / "e52v14b_public_sol4.yaml"  # v14b: v14 with a blind TALK and GIVE / ASK lines
 CONFIG_F = CONFIGS / "e52v14f_public_sol4.yaml"  # v14f: opening turn + 1:1 chats, BELIEF, DECISION, flat end prize
 CONFIG_G = CONFIGS / "e52v14g_public_sol4.yaml"  # v14g: v14f, chat replies ASK / GIVE / LEAVE only (chat_moves_only)
+CONFIG_V15 = CONFIGS / "e52v15_public_sol4.yaml"  # v15: v14g with entropy-range rounds (eff), scored by a drawn rule
 CONFIG_V13 = CONFIGS / "e52v13_hand_ladder_mix4.yaml"  # v13: every example held, hand ladder 8 -> 2
 MODES = ("public", "held", "v12")  # public = v14; held = v13 (no public example); v12 = public + one secret each
 POOL_MAX = 52  # trap rounds stop being generated reliably above this many examples (the 64 signals fill up)
@@ -59,6 +60,15 @@ if any(g["profiles"] != GAME["profiles"] or g["schedule"] != SCHEDULE_V14 for g 
     raise RuntimeError("the v14 and v14b configs schedule different profiles; give the web rooms one profile set each")
 AMBIGUITY = [PROFILES_V14[p].get("ambiguity", 0) for p in SCHEDULE_V14]
 SPLITS = [PROFILES_V14[p].get("split", 0) for p in SCHEDULE_V14]  # selector v2: the target split p per round
+# v15 (the web rooms' default game): v14g's switches plus wrong_rule, its own profiles e01 .. e12 (one per round). A
+# profile sets ``eff`` (an entropy range in bits for N = 1..4 agents taking part) and ``floor``, no ambiguity / split /
+# size_band, so it is kept apart from the v14 profile set above (the signal page's "public" mode stays on v14).
+GAME_V15 = _game(CONFIG_V15)
+PROFILES_V15: dict[str, dict] = dict(GAME_V15["profiles"])
+SCHEDULE_V15: list[str] = list(GAME_V15["schedule"])
+if set(PROFILES_V15) & set(GAME["profiles"]):
+    raise RuntimeError("the v15 and v14 configs share a profile name; the web rooms keep one PROFILES table")
+
 GAME_V13 = _game(CONFIG_V13)
 PROFILES_V13: dict[str, dict] = dict(GAME_V13["profiles"])
 SCHEDULE_V13: list[str] = list(GAME_V13["schedule"])

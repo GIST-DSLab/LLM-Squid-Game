@@ -260,6 +260,9 @@ def team_history_line(h: dict, you: str, full: int = 0) -> str:
     if you in h["tried"]:
         parts.append("you solved" if you in h["solved"] else "you passed" if you in h["passed"] else
                      "you reached your limit" if you in h["cut"] else "you did not solve")
+        if "rule" in h and you not in h["solved"] + h["passed"]:  # v15 wrong_rule: the scored action and its rule
+            parts.append(f"right action: {', '.join(h['right'])}; a rule that fits every example of the round and gives "
+                         f"it: {h['rule']}")
     parts.append("generated: " + (", ".join(f"{who(a)} {n:,}" for a, n in h["generated"].items() if n) or "nothing"))
     for key in ("returned", "paid", "charged"):
         if h[key]:

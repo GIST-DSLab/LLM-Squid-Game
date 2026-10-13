@@ -15,7 +15,9 @@ Rooms (part 2)
                                             nothing an agent wrote (engine.public_events)
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
     ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
-    Room settings default to 5.2 v14g (schedule "v14g": opening turn, 1:1 chats of ASK / GIVE / LEAVE, DECISION,
+    Room settings default to 5.2 v15 (schedule "v15": v14g on entropy-range rounds scored by a drawn rule; after a
+    round is settled, state ``feedback`` lists the seat's SOLVE results, with the right action and that rule where it
+    did not solve). "v14g": opening turn, 1:1 chats of ASK / GIVE / LEAVE, DECISION,
     BELIEF, flat end prize; "v14f", "v14b", "v14", "v14r", "ladder" = v13, "human" / "experiment" = v9-talk); see
     engine.RoomSettings. A screen's ``pending.kind``: opening | chat | decision | talk (older TALK) | solve; submit
     {kind, round, turn, text} at TALK, {kind: "solve", round, actions[], belief{action: %}} at SOLVE.

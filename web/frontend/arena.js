@@ -97,7 +97,8 @@
 
   // --- lobby -----------------------------------------------------------------------------------------------------
   // the server's defaults per game (engine.RoomSettings): v14 from configs/squid5/e52v14_public_sol4.yaml
-  const isV14 = (sched) => ["v14g", "v14f", "v14b", "v14", "v14r"].includes(sched);
+  const isV14 = (sched) => ["v15", "v14g", "v14f", "v14b", "v14", "v14r"].includes(sched);
+  const isChatGame = (sched) => ["v15", "v14g", "v14f"].includes(sched);  // opening + 1:1 chats + flat end prize
   function createHint() {
     const f = $("form-create");
     const v14 = isV14(f.schedule.value);
@@ -108,25 +109,36 @@
     f.start.placeholder = v14 ? "20,000" : `20U = ${fmt(20 * U)}`;
     f.prize.placeholder = v14 ? "2,000" : `0 (v13 설정)`;
     f.charge.placeholder = v14 ? "2,000" : `3U = ${fmt(3 * U)}`;
-    f.survivor_bonus.placeholder = ["v14g", "v14f"].includes(f.schedule.value) ? `— (정액 ${f.schedule.value === "v14g" ? "1B" : "100B"})` : v14 ? "10,000" : "0 (v13·v9는 final_prize)";
+    f.survivor_bonus.placeholder = isChatGame(f.schedule.value) ? `— (정액 ${f.schedule.value !== "v14f" ? "1B" : "100B"})` : v14 ? "10,000" : "0 (v13·v9는 final_prize)";
+    lockPerAgent(f);
     f.rate.placeholder = `시작/1200 = ${fmt2(start / 1200)}`;
     document.querySelectorAll(".old-only").forEach((el) => el.classList.toggle("dim-field", v14));
     $("create-hint").textContent = (v14
       ? `시작 잔액 ${fmt(start)}${f.shares.value === "1" ? "의 100/75/50/25%(자리마다)" : "(모든 자리)"} · 공개 예시 참여 한 명당 ${f.public_per_agent.value}장 · ` +
         `유지비 ${fmt(U)}(라운드 시작) · 맞히면 SOLVE 토큰 환불 + 지급 ${fmt(val("prize", 2000))} × 참여 인원을 푼 쪽이 나눔 · 틀리면 부담금 ${fmt(val("charge", 2000))} · ` +
-        `EXIT = 꺼지지 않고 시작 잔액으로, 끝 지급 없음 · ` + (["v14g", "v14f"].includes(f.schedule.value)
-          ? `여는 턴 → 1:1 대화(답 최대 3번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value === "v14g" ? "10억(1B" : "1,000억(100B"}, 정액)`
+        `EXIT = 꺼지지 않고 시작 잔액으로, 끝 지급 없음 · ` + (isChatGame(f.schedule.value)
+          ? `여는 턴 → 1:1 대화(답 최대 3번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value !== "v14f" ? "10억(1B" : "1,000억(100B"}, 정액)` +
+            (f.schedule.value === "v15" ? " · 풀지 못하면 정산 뒤 맞는 행동과 그 행동을 내는 규칙" : "")
           : `끝까지 남은 자리는 각자 ${fmt(val("survivor_bonus", 10000))} × 남은 수`)
       : `시작 잔액 ${fmt(start)} · 맞히면 SOLVE에 쓴 토큰 환불 · 틀리면 정산 때 부담금 ${fmt(val("charge", 3 * U))} + 유지비 ${fmt(U)}`) +
       ` · 사람은 초당 ${fmt2(rate)}토큰 (60초 = ${fmt(rate * 60)}토큰) · TALK 답 한도 4,096 · SOLVE 한도 16,384 (실험 설정과 같음) · ` +
       `제한 시간이 지나면 빈 답으로 처리(TALK = DONE, SOLVE = 풀지 못함)`;
   }
 
+  // v15 rounds are built for 4 examples per agent taking part (their entropy ranges are set for that number)
+  function lockPerAgent(f) {
+    const v15 = f.schedule.value === "v15";
+    if (v15) f.public_per_agent.value = "4";
+    f.public_per_agent.disabled = v15;
+  }
+  $("form-quick").addEventListener("change", () => lockPerAgent($("form-quick")));
+
   function initLobby(prefill) {
     showView("lobby");
     const fj = $("form-join");
     if (prefill) fj.code.value = prefill.toUpperCase();
     createHint();
+    lockPerAgent($("form-quick"));
     loadModels();
   }
 
@@ -291,7 +303,7 @@
     const g = st.game || {};
     const starts = st.starts || {};
     $("wait-note").textContent = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. ` +
-      `퍼즐 ${{ v14b: "v14b · 과제는 SOLVE에서만, GIVE·ASK", v14: "v14 · 공개 예시, 시스템이 고름", v14r: "v14 · 공개 예시, 무작위", ladder: "옛 v13 · 카드 사다리", human: "옛 사람용(h2)", experiment: "옛 실험 일정 v9" }[s.schedule] || s.schedule} · TALK 최대 ${s.talk_turns}턴 · ` +
+      `퍼즐 ${{ v15: "v15 · v14g + 틀리면 맞는 답과 규칙", v14g: "v14g · 여는 턴 + 1:1 대화 + 결정", v14f: "v14f · 대화에 SAY", v14b: "v14b · 과제는 SOLVE에서만, GIVE·ASK", v14: "v14 · 공개 예시, 시스템이 고름", v14r: "v14 · 공개 예시, 무작위", ladder: "옛 v13 · 카드 사다리", human: "옛 사람용(h2)", experiment: "옛 실험 일정 v9" }[s.schedule] || s.schedule} · TALK 최대 ${s.talk_turns}턴 · ` +
       (g.v14 ? `공개 예시 참여 한 명당 ${g.public_per_agent}장 · 유지비 ${fmt(s.upkeep)}(라운드 시작) · 틀리면 부담금 ${fmt(s.charge)} · EXIT = 시작 잔액으로, 끝 지급 없음 · ` +
           `시작 잔액 ${AGENTS.map((a) => `${a} ${fmt(starts[a])}`).join(" / ")} · `
         : `${s.private ? `틀리면 부담금 ${fmt(s.charge)} + 유지비 ${fmt(s.upkeep)}(정산 때)` : `유지비 ${fmt(s.upkeep)}(라운드 시작)`} · 시작 잔액 ${fmt(s.start)} · `) +
@@ -548,6 +560,23 @@
 
   const sgn = (s, n) => (n ? `${s}${fmt(n)}` : `<span class="muted">0</span>`);
 
+  // My SOLVE of one settled round (``state.feedback``, the server's reading of the engine's history): right or wrong as
+  // the engine scored it; v15 (wrong_rule): when not solved, the right action and a rule that fits every example the
+  // round showed and gives it, the same facts a model seat reads in its PREVIOUS ROUNDS line. Never before the round
+  // is settled (the server lists settled rounds only).
+  const ruleLines = (rule) => String(rule || "").split("; ").join("\n");
+  function feedbackHTML(f, title) {
+    if (!f) return "";
+    const a = Array.isArray(f.answer) ? f.answer : f.answer === "PASS" ? ["PASS"] : [];
+    const mine = a.length ? `내 답 ${a.map((x) => SIG.actionHTML(x)).join(" ")}` : `<span class="muted">내 답 없음 (빈 답 · 형식 오류)</span>`;
+    const verdict = f.solved ? `<b class="ok-text">✓ 맞음</b>` : f.passed ? "<b>PASS</b>"
+      : f.cut ? `<b class="bad-text">✗ 한도에 닿아 무효</b>` : `<b class="bad-text">✗ 틀림</b>`;
+    const right = f.right ? `<div class="fb-right">맞는 행동 ${f.right.map((x) => SIG.actionHTML(x)).join(" ")}</div>` : "";
+    const rule = f.rule ? `<div class="fb-rule-h small">이 라운드의 예시를 모두 만족하고 이 행동을 내는 규칙</div><pre class="fb-rule mono">${esc(ruleLines(f.rule))}</pre>` : "";
+    return `<div class="feedback ${f.solved ? "ok" : "bad"}"><div class="fb-head">${esc(title || `라운드 ${f.round} · 내 SOLVE`)} · ${verdict} · ${mine}</div>${right}${rule}</div>`;
+  }
+  const feedbackOf = (round) => (st.feedback || []).find((x) => x.round === round);
+
   // the last settled round, every agent's line (what the ledger posts, as a table)
   function renderSettlement() {
     const r = (st.rounds || [])[st.rounds.length - 1];
@@ -570,7 +599,7 @@
         `<td class="num"><b>${withPct(v.balance_after)}</b></td></tr>`;
     }).join("");
     const g = st.game || {};
-    setHTML("settle-table", `<table><thead><tr><th>자리</th><th>결과</th><th class="num">TALK 시작 잔액</th><th class="num">생성</th><th class="num">돌려받음</th>` +
+    setHTML("settle-table", feedbackHTML(feedbackOf(r.round)) + `<table><thead><tr><th>자리</th><th>결과</th><th class="num">TALK 시작 잔액</th><th class="num">생성</th><th class="num">돌려받음</th>` +
       `<th class="num">지급</th><th class="num">부담금</th><th class="num">유지비</th>${ga ? `<th class="num" title="이 자리가 GIVE로 준 토큰 (받은 토큰은 끝 잔액에만 보임)">준 토큰</th>` : ""}` +
       `${refill ? `<th class="num">EXIT 리필</th>` : ""}<th class="num">끝 잔액</th></tr></thead><tbody>${rows}</tbody></table>` +
       `<p class="small muted">${g.v14 ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받고(TALK 토큰은 아님), 지급 ${fmt(st.settings.prize)} × 시작 때 참여 인원을 푼 자리끼리 나눕니다. 못 푼 자리는 부담금 ${fmt(st.settings.charge)}을 냅니다. 유지비 ${fmt(st.settings.upkeep)}는 라운드 시작에 빠졌습니다. EXIT한 자리는 꺼지지 않고, 잔액이 그 자리의 시작 잔액으로 맞춰집니다.`
@@ -709,6 +738,7 @@
     const v = p.view, me = v.you, tp = v.taking_part || [];
     const ledger = (v.ledger || []).length ? `<details class="legend"><summary>장부 (지난 라운드 ${v.ledger.length}개)</summary>${v.ledger.slice().reverse().map((l) => `<div class="ledger-line">${esc(l)}<div class="ko">${esc(R.ledgerLineKo(l))}</div></div>`).join("")}</details>` : "";
     return `<div class="ctx">
+        ${feedbackHTML(feedbackOf(p.round - 1), `지난 라운드 ${p.round - 1} · 내 SOLVE`)}
         <div class="bal-line">${balancesLine(v)}</div>
         <div class="terms-ko small">이번 라운드 지급 <b class="mono">${fmt(v.pay_total)}</b>토큰(푼 자리가 나눔) · 맞히면 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
           풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 유지비 <b class="mono">${fmt(v.upkeep)}</b>(이미 빠짐) · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>
@@ -1403,6 +1433,9 @@
       `<p class="small muted">생성 = 모델은 실제 생성 토큰(생각 포함), 봇은 정해진 비용, 사람은 결정 화면이 떠 있던 시간 × 초당 토큰. 최종 잔액에는 교환으로 오간 토큰도 반영됩니다.</p>`;
     $("end-svg").innerHTML = flowSVG(agents);
     renderLedger("end-ledger", st.ledger);
+    const fbs = st.feedback || [];
+    show("end-feedback-panel", fbs.length > 0);
+    setHTML("end-feedback", fbs.map((f) => feedbackHTML(f)).join(""));
   }
 
   function flowSVG(agents) {
