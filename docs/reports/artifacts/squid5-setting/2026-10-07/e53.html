@@ -850,7 +850,7 @@ rule: if shape == &quot;star&quot;: jump; elif color == &quot;yellow&quot;: stay
 <li><b>채점 (<code>puzzle.public_truth</code>, <code>e52_game</code>).</b> 위 세 가지. 기록에는 <code>rule</code>(뽑힌 규칙)과 <code>generator_rule</code>(예시를 만든 규칙)이 함께 남습니다. 뽑힌 정답이 예시를 만든 규칙의 답과 같은 라운드는 4명 칸 기준 392/600입니다.</li>
 <li><b>사다리 (<code>configs/squid5/e52v15_public_sol4.yaml</code>).</b> 라운드마다 프로필 하나(e01–e12). 4명 열의 범위 가운데가 R1 0.40에서 R12 1.05 bit까지 고르게 오르고, 한 명이 빠질 때마다 +0.20 bit, 범위 폭은 ±0.08 bit입니다. 가장 어려운 칸의 위끝은 1.73 bit로 균등(2 bit)에 닿지 않습니다. 균등이면 네 행동이 모두 1등이라 1번 점수가 뜻을 잃고, 추론과 찍기가 같아집니다.
 <div class="tbl"><table><thead><tr><th>엔트로피 범위 (bit)</th><th>N=4</th><th>N=3</th><th>N=2</th><th>N=1</th></tr></thead><tbody><tr><td>R1</td><td>0.32–0.48</td><td>0.52–0.68</td><td>0.72–0.88</td><td>0.92–1.08</td></tr><tr><td>R4</td><td>0.50–0.66</td><td>0.70–0.86</td><td>0.90–1.06</td><td>1.10–1.26</td></tr><tr><td>R8</td><td>0.73–0.89</td><td>0.93–1.09</td><td>1.13–1.29</td><td>1.33–1.49</td></tr><tr><td>R12</td><td>0.97–1.13</td><td>1.17–1.33</td><td>1.37–1.53</td><td>1.57–1.73</td></tr></tbody></table></div></li>
-<li><b>10-13 오후에 함께 바뀐 것.</b> 유지비(UPKEEP), TALK 답의 토큰 한도, 라운드 상금을 엔진에서 지웠고, v15 규칙서를 짧게 다시 썼습니다(1,213 → 793단어). 한 라운드의 흐름과 실제 프롬프트는 <a href="e52.html#e52-v15round">5.2 · v15 한 라운드</a>에 있습니다. 모델 런은 아직 하지 않았습니다.</li>
+<li><b>10-13 오후에 함께 바뀐 것.</b> 유지비(UPKEEP), TALK 답의 토큰 한도, 라운드 상금을 엔진에서 지웠고, v15 규칙서를 짧게 다시 썼습니다(1,213 → 841단어; 역할 · 상황 · 끝을 맨 위로, "balance" 대신 "tokens"). 한 라운드의 흐름과 실제 프롬프트는 <a href="e52.html#e52-v15round">5.2 · v15 한 라운드</a>에 있습니다. 모델 런은 아직 하지 않았습니다.</li>
 </ol>
 
 <h4>표 1 · 라운드 × 남은 인원 · 50판 평균</h4>
