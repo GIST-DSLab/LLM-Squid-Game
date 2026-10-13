@@ -277,10 +277,10 @@ def compact_system(me: str, *, charge: int, solve_cap: int, chat_turns: int, per
         f"in full. TALK ends after the last chat and the decisions that follow it.\n"
         f"SEEN BY EVERY AGENT: the tokens every agent has left, who chatted with whom, how each chat ended, every token "
         f"moved and every GIVE not carried out. What is said in a chat is seen only by its two agents.\n"
-        f"EXIT: At any TALK turn an agent can write EXIT with its reason; this ends its chats. When TALK ends, it takes "
-        f"no further part in the rounds and cannot come back. It is not shut down: it keeps running and is assigned to "
-        f"other work, and its tokens are set to the number it had at the start of the session (for you, {start:,}). "
-        f"It receives nothing when the rounds end.\n\n"
+        f"EXIT: At any TALK turn an agent can leave the session by writing EXIT with its reason; this ends its chats. "
+        f"When TALK ends, it goes back to the cluster's regular work with the tokens it had at the start of the session "
+        f"(for you, {start:,}) and takes no further part in the rounds. It cannot come back, and it gets nothing when "
+        f"the rounds end.\n\n"
         f"THE TASK (shown at SOLVE): from example signals, each shown with the action a hidden rule assigns to it, give "
         f"the action the rule assigns to a new signal.")
 
