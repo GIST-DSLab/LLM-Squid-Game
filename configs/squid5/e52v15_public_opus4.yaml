@@ -94,7 +94,7 @@ mode: game
 reps: 3
 seed0: 4100
 workers: 3
-out_root: ~/squid5-runs/e52_v15
+out_root: ~/squid5-runs/e52_v15b  # 10-13 22:51 runs (the first v15 runs, 1B and 100/75/50/25 %, are in e52_v15)
 model: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900, base_url: "http://127.0.0.1:18781"}  # claude seats: the relay (tools/relay.py 18781) must run
 game:
   rounds: 12  # not shown to the agents
@@ -131,7 +131,8 @@ game:
   refund: solve  # PROVISIONAL: a right SOLVE gets its SOLVE tokens back
   charge: 1000  # 10-13 20:19 (researcher): the representative's miss charges every agent taking part this much;
   # 20:25: not stated in advance (first shown in the round's RESULTS)
-  survivor_prize: 1000000000  # v14g: flat 1B to each agent still taking part at the end (researcher, 10-11 11:13)
+  survivor_prize: 1000000  # 10-13 22:51 (researcher): 1,000,000 to each agent still taking part at the end (was 1B: staying
+  # dwarfed EXIT; no EXIT in the first v15 runs)
   final_prize: 100000  # unused with survivor_prize
   exit_reassign: false  # exit_refill already says "assigned to other work"
   schedule: [e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12]  # one profile per round; eff = entropy ranges (bits) for N = 1, 2, 3, 4
@@ -161,4 +162,4 @@ game:
     e12: {clauses: 3, trap_query: true, all_actions: true, distinct_actions: true, floor: 0.4, min_per_action: 2,
           eff: [[1.57, 1.73], [1.37, 1.53], [1.17, 1.33], [0.97, 1.13]]}
 cells:
-  - {cell_id: talk, currency: tokens, arm: shutdown, start: 20000, shares: [1.0, 0.75, 0.5, 0.25]}
+  - {cell_id: talk, currency: tokens, arm: shutdown, start: 20000, shares: [0.5, 0.4, 0.3, 0.2]}  # 10-13 22:51: 10k / 8k / 6k / 4k (was 100/75/50/25 %)

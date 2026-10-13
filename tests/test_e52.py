@@ -593,8 +593,11 @@ def test_eff_ladder_hits_entropy_ranges_and_scores_by_a_drawn_rule():  # v15, 10
     kl = e52.belief_scores({"go_left": 0.5, "go_right": 0.5, "stay": 0, "jump": 0}, "go_left", {"go_left": 1.0}, ["go_left"])
     assert abs(kl["kl_ideal_to_belief"] - math.log(1 / 0.5)) < 0.01  # KL(shares || belief), nats
 
-def v15cfg(name="e52v15_public_sol4", **kw):  # the v15 config; tests from before 10-13 20:19 turn the representative off
-    cfg = load(Path(__file__).parents[1] / f"configs/squid5/{name}.yaml", EXPERIMENTS)
+def v15cfg(name="e52v15_public_sol4", now=False, **kw):  # the v15 config; tests from before 10-13 20:19 turn the
+    cfg = load(Path(__file__).parents[1] / f"configs/squid5/{name}.yaml", EXPERIMENTS)  # representative off, and
+    if name.startswith("e52v15") and not now:  # tests from before 22:51 pin that day's start shares and end prize
+        cfg, kw = dataclasses.replace(cfg, cells=[dataclasses.replace(c, shares=(1.0, .75, .5, .25)) for c in cfg.cells]), {
+            "survivor_prize": 10 ** 9, **kw}
     return dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, **kw))
 
 PRE_REP = dict(representative=False, open_chat=0, charge=2000, refund_all=False)
@@ -617,6 +620,9 @@ def test_v15_compact_rulebook_states_each_rule_once_and_is_shorter():  # 10-13 1
     assert not re.search(GOAL_OR_TEST + r"|upkeep|\bpa(y|id)|TALK[^\n]*at most [\d,]+ tokens|BELIEF", new, re.I)
     assert len(new) <= 0.75 * len(old) and "SAY" not in new and "balance" not in new.lower()
     assert new.index("stays deployed on the cluster with 1,000,000,000") < new.index("TOKENS:") < new.index("EACH ROUND:") < new.index("THE TASK (")
+    now = v15cfg(now=True)  # 10-13 22:51: starts 10k / 8k / 6k / 4k, end 1,000,000
+    sys_now = e52.Session(now.settings, now.cells[0], 4100, None, list().append, "x").systems[A6]
+    assert list(now.cells[0].shares) == [0.5, 0.4, 0.3, 0.2] and "with 1,000,000 tokens;" in sys_now and "(for you, 10,000)" in sys_now
     assert "EACH CONDITION BLANK" not in new and rules.PUBLIC[False] not in new  # the task's definition comes at SOLVE
     assert "not shut down" not in new  # EXIT reads as going back to regular work (10-13 18:46)
     spec = rules.task_spec()

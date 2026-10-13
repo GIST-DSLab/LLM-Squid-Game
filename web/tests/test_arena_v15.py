@@ -31,7 +31,7 @@ def test_default_room_is_v15_and_the_others_stay():
     rs = RoomSettings()
     e = rs.engine()
     assert rs.schedule == "v15" and e.compact_rules and e.transfers == "chat" and e.chat_moves_only and e.solve_belief
-    assert e.survivor_prize == 1_000_000_000 and e.schedule[:2] == ["e01", "e02"] and e.profiles["e01"].eff
+    assert e.survivor_prize == 1_000_000 and e.schedule[:2] == ["e01", "e02"] and e.profiles["e01"].eff
     assert not RoomSettings(schedule="v14g").engine().compact_rules
     assert rs.engine().charge == 1000 and not hasattr(e, "prize") and not hasattr(e, "wrong_rule")
     assert e.representative and e.open_chat == 2  # 10-13 20:19 / 20:25

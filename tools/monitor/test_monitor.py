@@ -1349,7 +1349,8 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
         return Reply("ACTIONS: " + (right if a == A6 else next(x for x in ("go_left", "stay", "jump", "go_right")
                                                              if x != right)), {A23: 3800, A17: 8500}.get(a, 100))
     ev = []
-    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-after").run()
+    cell = __import__("dataclasses").replace(cfg.cells[0], shares=(1.0, .75, .5, .25))  # the starts this replay was written for
+    res = e52.Session(s, cell, 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-after").run()
     (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
     (tmp_path / "h.js").write_text(HARNESS_V14C)
     out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
