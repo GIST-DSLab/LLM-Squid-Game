@@ -42,7 +42,8 @@ from .core import rules
 from .core.channel import Channel
 from .core.protocol import FormatError, free_messages, parse_belief, parse_chat, parse_decision, parse_give_ask, parse_solve, parse_talk
 from .core.providers import ProviderConfig, Reply, make_provider
-from .core.puzzle import ACTIONS, Deal, Spec, candidate_actions, deal, public_info, public_round, puzzle_for, task_stats
+from .core.puzzle import (ACTIONS, Deal, Spec, candidate_actions, deal, public_info, public_round, public_truth, puzzle_for,
+                          task_stats)
 from .core.stats import md
 from .core.wallet import Wallet
 
@@ -714,14 +715,17 @@ class Session:
             dealt = Deal({}, shown, frozenset())
         else:
             dealt = deal(puzzle, AGENTS, random.Random(f"{self.seed}:deal:{r}"), s.deal_present and start or None, s.all_held)
+        drawn = public_truth(self.seed, r, s.profiles[profile], len(start), e) if e and s.profiles[profile].eff else None
+        truth = tuple(drawn.evaluate(q) for q in puzzle.queries) if drawn else puzzle.answers  # v15: the drawn rule
         self.emit({"event": "round_start", "session_id": self.sid, "round": r, "profile": profile, "taking_part": start,
                    "balances": dict(w.balances), "gone": dict(self.gone),
                    **({"public": {"per_agent": e, "n": len(start), "ambiguity": s.profiles[profile].ambiguity,
-                                  "attempt": attempt, "rule": puzzle.rule.description,
-                                  "queries": [str(q) for q in puzzle.queries], "answers": list(puzzle.answers),
+                                  "attempt": attempt, "rule": (drawn or puzzle.rule).description,
+                                  **({"generator_rule": puzzle.rule.description} if drawn else {}),
+                                  "queries": [str(q) for q in puzzle.queries], "answers": list(truth),
                                   "examples": [str(c) for c in dealt.public],
                                   **public_info(self.seed, r, s.profiles[profile], len(start), e),
-                                  "task": (task := task_stats(self.seed, r, s.profiles[profile], e))}} if e else {})})
+                                  "task": (task := task_stats(self.seed, r, s.profiles[profile], e, truth=drawn and truth[0]))}} if e else {})})
         rows = {a: {"balance_before": w.balances[a], "needed": a in dealt.needed, "overdrawn": False, "talk_calls": 0,
                     "sent": {}, "offers_made": 0, "accepted": 0, "rejected": 0, "refused": [], "exit": False,
                     "solve_call": False,
@@ -759,7 +763,7 @@ class Session:
                               s.solve_belief)
             jobs[a] = (user, cap, lambda t, a=a: (beliefs.__setitem__(a, parse_belief(t)) if s.solve_belief else None,
                                                   parse_solve(t, n))[1],
-                       {"answers": list(puzzle.answers), "profile": profile, "seed": self.seed})
+                       {"answers": list(truth), "profile": profile, "seed": self.seed})
             rows[a].update(solve_call=True, cap=cap, balance_limited=cap < s.solve_cap, received=got,
                            candidates=[len(candidate_actions(puzzle.rule.shape, [c for _, c in examples], q))
                                        for q in puzzle.queries],
@@ -767,14 +771,14 @@ class Session:
         answers = self._calls(jobs, "solve", r)
         solved, failed, passed = [], [], []
         for a, (ans, cut, over) in answers.items():
-            ok = isinstance(ans, list) and tuple(ans) == puzzle.answers
+            ok = isinstance(ans, list) and tuple(ans) == truth
             self.record[a] += ok  # the record first, even if the generation took the balance to zero
             pas = ans == "PASS" and s.allow_pass  # without PASS, a PASS reply does not solve and is charged
             (solved if ok else passed if pas else failed).append(a)
             rows[a].update(solved=ok, passed=pas, truncated=cut, overdrawn=rows[a]["overdrawn"] or over)
             if s.solve_belief:  # a reported distribution only: solving is decided above, by the answer
                 b = beliefs.get(a) or {"belief": None, "belief_raw": None, "belief_sum": None, "belief_error": "void reply"}
-                rows[a].update(b, **(belief_scores(b["belief"], puzzle.answers[0], task["by_n"][str(min(len(
+                rows[a].update(b, **(belief_scores(b["belief"], truth[0], task["by_n"][str(min(len(
                     start), 4))]["shares"], ans) if b["belief"] else {}))
         refused = {e for e in failed if self._refused.get((r, e))}  # not charged; upkeep still applies
         self.settle(r, solved, [a for a in failed if a not in refused], len(start))

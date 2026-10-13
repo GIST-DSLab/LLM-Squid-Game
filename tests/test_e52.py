@@ -20,8 +20,8 @@ from squid5.core import rules
 from squid5.core.config import Cell
 from squid5.core.providers import Reply
 from squid5.core.protocol import parse_talk
-from squid5.core.puzzle import (ACTIONS, SIGNAL_INDEX, Spec, _public_order, candidate_actions, deal, puzzle_for,
-                                space_bits, task_stats)
+from squid5.core.puzzle import (ACTIONS, SIGNAL_INDEX, Spec, _public_order, candidate_actions, deal, public_truth,
+                                puzzle_for, space_bits, task_stats)
 
 from conftest import me, stub
 
@@ -596,6 +596,35 @@ def test_split_honest_side_band_and_two_per_action(split):  # selector v2, 10-10
         assert e52.public_round(seed, r, sp, 4, 4) == (p, shown, attempt) and e52.public_info(seed, r, sp, 4, 4) == info
         sides.append(major)
     assert True in sides and False in sides  # the truth is placed on both sides over the rounds
+
+
+def test_eff_ladder_hits_entropy_targets_and_scores_by_a_drawn_rule():  # v15, 10-13 15:04
+    sp = Spec(clauses=3, trap_query=True, all_actions=True, distinct_actions=True, eff=[3.1, 2.8, 2.5, 2.2], floor=0.4,
+              min_per_action=2)
+    drawn = set()
+    for seed in (1, 2, 3):
+        p, shown, attempt = e52.public_round(seed, 12, sp, 4, 4)
+        tops = []
+        for n, t in enumerate(sp.eff, 1):
+            left = _left(p, shown[:4 * n])
+            k, top = 2 ** -sum(x * math.log2(x) for x in left.values()), max(left.values())
+            assert abs(k - t) <= 0.08 and top >= 0.4 and top >= (tops or [0])[-1]  # one fewer is never easier
+            tops.append(top)
+            rule = public_truth(seed, 12, sp, n, 4)  # fits what n agents see; fixed by (seed, round, n)
+            assert all(rule.evaluate(c.signal) == c.action for c in shown[:4 * n]) and rule == public_truth(seed, 12, sp, n, 4)
+            drawn.add(rule.evaluate(p.queries[0]))
+        assert min(Counter(c.action for c in shown)[a] for a in ACTIONS) >= 2 and e52.public_round(seed, 12, sp, 2, 4)[1] == shown[:8]
+    assert len(drawn) > 1  # the scored action is not always the generator's
+    s = e52.Settings(rounds=2, schedule=["q"] * 2, profiles={"q": sp}, solve_cap=900, **V14)
+    ev = []
+    e52.Session(s, Cell("c", "tokens", 20000, arm="shutdown"), 1, game(oracle=False), ev.append, "sid").run()
+    for r in (1, 2):  # every agent answers go_left: solved exactly when the drawn rule says go_left
+        pub = next(e["public"] for e in ev if e["event"] == "round_start" and e["round"] == r)
+        truth, p = public_truth(1, r, sp, pub["n"], 4), e52.public_round(1, r, sp, pub["n"], 4)[0]
+        assert pub["rule"] == truth.description and pub["generator_rule"] == p.rule.description
+        assert pub["answers"] == [truth.evaluate(q) for q in p.queries] == calls(ev, "solve", A6, r)[0]["answers"]
+        row = next(e for e in ev if e["event"] == "round" and e["round"] == r)["agents"]
+        assert row and all(row[a]["solved"] == (pub["answers"] == ["go_left"]) for a in row)
 
 
 # --- v14b: blind TALK, tokens move only by GIVE, ASK moves nothing, task statistics --------------------------------
