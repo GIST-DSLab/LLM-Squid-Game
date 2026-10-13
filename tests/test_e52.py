@@ -597,7 +597,7 @@ def v15cfg(name="e52v15_public_sol4", **kw):  # the v15 config; tests from befor
     cfg = load(Path(__file__).parents[1] / f"configs/squid5/{name}.yaml", EXPERIMENTS)
     return dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, **kw))
 
-PRE_REP = dict(representative=False, open_chat=0, charge=2000)
+PRE_REP = dict(representative=False, open_chat=0, charge=2000, refund_all=False)
 
 def test_v15_compact_rulebook_states_each_rule_once_and_is_shorter():  # 10-13 17:50
     cfg = v15cfg(**PRE_REP)
@@ -751,11 +751,12 @@ def test_v15_a_wrong_representative_charges_everyone_at_talk_end_and_a_right_one
         assert ch["pending"] == dict.fromkeys(AG, 1000) and ch["dead"] == ([] if gift else [A23])
         assert res["agents"][A23]["status"] == ("in" if gift else "dead") and row[A11]["charged"] == 1000
     res, ev, _, row = rep_run(votes, right=(A6,))
-    assert next(e for e in ev if e["event"] == "charges")["pending"] == {} and row[A6]["returned"] == 700
+    assert next(e for e in ev if e["event"] == "charges")["pending"] == {}  # 10-13 21:12: every token of the round comes back
+    assert all(row[a]["returned"] == row[a]["generated"] > 0 for a in AG) and row[A6]["returned"] > 700
     assert row[A6]["solved"] and row[A6]["picked_top"] is not None and "kl_ideal_to_belief" in row[A6]
     o11 = calls(ev, "talk", A11)[0]["user"]
     assert "  agent-6 (representative): solved; the 700 tokens it generated at SOLVE came back" in o11
-    assert "  you: nothing is taken; you have" in o11
+    assert "  you: nothing is taken; you have" in o11 and "Every agent taking part gets back every token it generated this round when TALK ends." in o11
     h = {"round": 1, "solved": [A6], "passed": [], "tried": [A6], "cut": [], "generated": {}, "returned": {}, "charged": {},
          "exchanges": [], "exited": [], "dead": [], "end": {}, "gone": {}, "vote": next(e for e in ev if e["event"] == "results")["vote"]}
     assert "round 1: solved by agent-6; VOTE: PICK / BAN votes received: agent-6 4 / 0, you 0 / 0" in rules.team_history_line(h, A11)

@@ -80,6 +80,7 @@ class Settings:
     compact_rules: bool = False  # v15 (10-13): rules.compact_system, the v15 rulebook with each fact once
     talk_after_solve: bool = False  # v15 (10-13 19:46): SOLVE -> results (refund now, charge pending) -> TALK -> charges
     representative: bool = False  # v15 (10-13 20:19, talk_after_solve): VOTE; one agent solves; its miss charges all
+    refund_all: bool = False  # v15 (10-13 21:12; only with representative): a solved round gives every agent all its round's tokens
     open_chat: int = 0  # v15 (10-13 20:25, representative): turns of an open board (SAY / DONE) before the VOTE
 
     def __post_init__(self) -> None:
@@ -231,7 +232,8 @@ def results_view(res: dict, a: str, bal: dict, gone: dict) -> str:
                                    f"{now}." if b in res["pending"] else
                                    f"solved; the {res['returned'][b]:,} tokens {it} generated at SOLVE came back; {now}."
                                    if b in res["solved"] else f"did not solve; nothing is taken; {now}."))
-    return "\n".join(out)
+    return "\n".join(out + ["  Every agent taking part gets back every token it generated this round when TALK ends."]
+                     * bool(res.get("back_all")))
 
 def board_view(msgs: list[dict], a: str) -> str:
     """v15 ``open_chat``: this round's open board, oldest first, with authors."""
@@ -390,7 +392,7 @@ class Session:
                                                 chat_turns=s.chat_turns, per_agent=s.public_per_agent,
                                                 start=self.starts[a], survivor_prize=s.survivor_prize,
                                                 after=s.talk_after_solve, rep=s.representative,
-                                                board=s.open_chat)
+                                                board=s.open_chat, back_all=s.refund_all)
                         for a in AGENTS} if s.compact_rules else {a: rules.team_system(a, charge=s.charge, turns=s.talk_turns,
                                              solve_cap=s.solve_cap, final_prize=s.final_prize,
                                              reassign=s.exit_reassign, refund=s.refund, reject=s.reject,
@@ -885,11 +887,14 @@ class Session:
         w = self.w
         self.results = {"tried": tried, "solved": solved, "pending": pending, "returned": {
             a: w.total("refund", a, r) for a in solved}, "zero": [a for a in tried if self.gone.get(a) == "dead"]} | ({
-            "vote": self.vote, "part": [a for a in start if a not in self.gone or a in tried]} if self.vote else {})
+            "vote": self.vote, "part": [a for a in start if a not in self.gone or a in tried]} if self.vote else {}) | (
+            {"back_all": True} if self.s.refund_all and self.vote and solved else {})
         for a, n in pending.items():
             rows[a]["pending_charge"] = n
         self.emit({"event": "results", "session_id": self.sid, "round": r, **self.results, "balances": dict(w.balances)})
         exits = self._chats(r, [a for a in start if a not in self.gone], dealt, rows)
+        for a in start if self.results.get("back_all") else ():  # every token of the round not yet returned
+            w.pay(a, w.spent(a, r) - w.total("refund", a, r), r, "refund")
         before, taken = dict(w.balances), {}
         for a, n in pending.items():
             if a not in self.gone:  # one that reached zero at TALK has nothing left to take
