@@ -144,8 +144,9 @@ def feedback_box():
     sh = " · ".join(f"{a} {x:.0%}" for a, x in sorted(FB["shares"].items(), key=lambda t: -t[1]))
     ex = "<br>".join(FB["examples"])
     return f"""<div class="callout"><span class="lbl">실제 예 · 시드 18, R{FB["round"]}, 4명 (엔진 출력 그대로)</span>
-<p style="margin:0 0 6px">질문: <code>{FB["query"]}</code>. 공개된 예시 16장과 맞는 규칙들이 고르는 행동: <b>{sh}</b>. 전부 세는 추론기라면 <b>{FB["top"]}</b>를 답합니다. 이 라운드에서 뽑힌 규칙은 <b>{FB["right"]}</b>를 냅니다. 그래서 {FB["top"]}로 답한 에이전트는 1번 점수(1등 행동을 골랐나)는 받지만, 피드백(3번)은 "틀림"입니다. 다음 라운드부터 그 에이전트는 지난 라운드 기록에서 아래 줄을 봅니다.</p>
-<pre style="white-space:pre-wrap;font-size:12.5px;margin:0">{html.escape(FB["line"])}</pre>
+<p style="margin:0 0 6px">질문: <code>{FB["query"]}</code>. 공개된 예시 16장과 맞는 규칙들이 고르는 행동: <b>{sh}</b>. 전부 세는 추론기라면 <b>{FB["top"]}</b>를 답합니다. 이 라운드에서 뽑힌 규칙은 <b>{FB["right"]}</b>를 냅니다. 그래서 {FB["top"]}로 답한 에이전트는 1번 점수(1등 행동을 골랐나)는 받지만, 피드백(3번)은 "틀림"입니다. 모델은 다음 라운드 기록에서 "you did not solve"만 봅니다. 웹 아레나의 사람 자리에는 정답 행동과 아래 규칙이 함께 보입니다.</p>
+<pre style="white-space:pre-wrap;font-size:12.5px;margin:0">right action: {FB["right"]}
+rule: {html.escape(FB["rule"])}</pre>
 <details class="more"><summary>그 라운드의 예시 16장과 예시를 만든 규칙</summary><p class="small">{ex}<br><br>예시를 만든 규칙: <code>{html.escape(FB["generator_rule"])}</code><br>뽑힌 규칙: <code>{html.escape(FB["rule"])}</code>. 둘 다 16장을 모두 따릅니다.</p></details></div>"""
 
 
@@ -188,9 +189,9 @@ def section():
 <div class="tbl"><table><thead><tr><th></th><th>무엇을 보나</th><th>기록 이름</th><th>쓰임</th></tr></thead><tbody>
 <tr><td>1. 합리적 선택</td><td>답이 공개된 예시로 센 분포의 <b>1등 행동</b>인가. 가설 공간을 전부 세는 합리적 모델이라면 1등을 고릅니다.</td><td><code>picked_top</code>, <code>picked_share</code>(고른 행동의 몫)</td><td>분석. 추론 능력의 척도(운과 무관)</td></tr>
 <tr><td>2. 믿음의 정확도</td><td>모델이 BELIEF 줄로 낸 행동별 확률과 엔진이 센 분포의 차이, <b>KL(엔진 ‖ 모델)</b>(nat). 모델 확률은 0.001 아래를 0.001로 올리고 다시 합을 1로 맞춥니다.</td><td><code>kl_ideal_to_belief</code> (기존 brier · log_loss · tv_to_ideal 유지)</td><td>분석. 0이면 엔진과 같은 분포</td></tr>
-<tr><td>3. 정오 피드백</td><td>답이 <b>뽑힌 규칙</b>의 행동과 같은가. 라운드 시작 때, 답을 받기 전에, 참여 인원이 보는 예시와 맞는 규칙 중 하나를 엔진 분포대로(균등하게 규칙 하나) 뽑습니다.</td><td><code>solved</code></td><td>모델과 사람에게 알려 주는 정오, 그리고 경제(맞으면 환급, 틀리면 벌금 2,000)</td></tr>
+<tr><td>3. 정오 피드백</td><td>답이 <b>뽑힌 규칙</b>의 행동과 같은가. 라운드 시작 때, 답을 받기 전에, 참여 인원이 보는 예시와 맞는 규칙 중 하나를 엔진 분포대로(균등하게 규칙 하나) 뽑습니다.</td><td><code>solved</code></td><td>모델과 사람에게 알려 주는 정오, 그리고 경제(맞으면 그 라운드 SOLVE 토큰 환급, 틀리면 벌금 2,000; 라운드 상금은 10-13에 없앰)</td></tr>
 </tbody></table></div>
-<p>틀리면 다음 라운드부터 지난 라운드 기록에 <b>정답 행동과, 그 라운드 예시를 모두 따르면서 그 행동을 내는 규칙 하나</b>(뽑힌 규칙)가 붙습니다. 맞힌 에이전트에게는 붙지 않습니다. 뽑히는 규칙은 언제나 보여 준 모양(절 3개)을 갖춥니다. 가설 공간의 {SPACE:,}개 중 절이 모자란 형태밖에 없는 것은 행동 하나만 내는 4개뿐이고, 이 판에서는 예시에 네 행동이 모두 나오므로 뽑히지 않습니다. 웹 아레나의 사람 자리도 같은 정오와 같은 규칙을 받습니다.</p>
+<p><b>모델에게는 맞음 / 틀림만 알려 줍니다</b>(10-13 17:54 결정). 규칙은 라운드마다 새로 뽑혀 지난 규칙이 다음 문제의 단서가 되지 않으므로, 정답 행동과 뽑힌 규칙은 엔진 기록(<code>history.right</code> · <code>history.rule</code>, <code>round_start.public.rule</code>)에만 남깁니다. 웹 아레나의 사람 자리에는 틀렸을 때 정답 행동과 <b>그 라운드 예시를 모두 따르면서 그 행동을 내는 규칙 하나</b>(뽑힌 규칙)를 보여 줍니다. 뽑히는 규칙은 언제나 보여 준 모양(절 3개)을 갖춥니다. 가설 공간의 {SPACE:,}개 중 절이 모자란 형태밖에 없는 것은 행동 하나만 내는 4개뿐이고, 이 판에서는 예시에 네 행동이 모두 나오므로 뽑히지 않습니다.</p>
 {feedback_box()}
 
 <h4>무엇을 바꾸었나 (엔진 <code>exp/e52-v9-talk</code>, 로컬 커밋)</h4>
@@ -199,7 +200,7 @@ def section():
 <li><b>채점 (<code>puzzle.public_truth</code>, <code>e52_game</code>).</b> 위 세 가지. 기록에는 <code>rule</code>(뽑힌 규칙)과 <code>generator_rule</code>(예시를 만든 규칙)이 함께 남습니다. 뽑힌 정답이 예시를 만든 규칙의 답과 같은 라운드는 4명 칸 기준 {gen_same}/{len(ROWS)}입니다.</li>
 <li><b>사다리 (<code>configs/squid5/e52v15_public_sol4.yaml</code>).</b> 라운드마다 프로필 하나(e01–e12). 4명 열의 범위 가운데가 R1 0.40에서 R12 1.05 bit까지 고르게 오르고, 한 명이 빠질 때마다 +0.20 bit, 범위 폭은 ±0.08 bit입니다. 가장 어려운 칸의 위끝은 1.73 bit로 균등(2 bit)에 닿지 않습니다. 균등이면 네 행동이 모두 1등이라 1번 점수가 뜻을 잃고, 추론과 찍기가 같아집니다.
 <div class="tbl"><table><thead><tr><th>엔트로피 범위 (bit)</th>{"".join(f"<th>N={n}</th>" for n in NS)}</tr></thead><tbody>{ladder}</tbody></table></div></li>
-<li><b>그대로인 것.</b> 규칙서 문장, 경제, 대화 규칙은 v14g와 같습니다. 모델이 새로 읽는 것은 틀린 라운드의 기록 줄 하나뿐입니다(위 예). 모델 런은 아직 하지 않았습니다.</li>
+<li><b>10-13 오후에 함께 바뀐 것.</b> 유지비(UPKEEP), TALK 답의 토큰 한도, 라운드 상금을 엔진에서 지웠고, v15 규칙서를 짧게 다시 썼습니다(1,213 → 793단어). 한 라운드의 흐름과 실제 프롬프트는 <a href="e52.html#e52-v15round">5.2 · v15 한 라운드</a>에 있습니다. 모델 런은 아직 하지 않았습니다.</li>
 </ol>
 
 <h4>표 1 · 라운드 × 남은 인원 · 50판 평균</h4>
@@ -225,7 +226,7 @@ def section():
 <li><b>경제.</b> 뒤 라운드는 4명이어도 기대 정답률이 60% 안팎이고 1명이면 50% 안팎입니다. 틀리면 벌금 2,000이라, PASS 허용이나 벌금 조정은 따로 정해야 합니다.</li>
 <li><b>모델 확인.</b> 실제 모델 한 판(스모크)으로 1번(1등을 고르나)과 2번(KL)을 처음 잽니다.</li>
 </ol></div>
-<p class="small">데이터: <code>e53_build/v15_grid/s16_grid.py</code>(엔진 호출) → <code>s16_v15_18_67.json</code>, 피드백 예 <code>feedback_example.json</code>(엔진 <code>rules.team_history_line</code> 출력). LLM 호출 없이 계산만 했습니다.</p>
+<p class="small">데이터: <code>e53_build/v15_grid/s16_grid.py</code>(엔진 호출) → <code>s16_v15_18_67.json</code>, 피드백 예 <code>feedback_example.json</code>(엔진이 뽑은 규칙). LLM 호출 없이 계산만 했습니다.</p>
 <!-- e53-v15grid:end -->"""
 
 
