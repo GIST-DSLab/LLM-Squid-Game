@@ -116,7 +116,7 @@
     return L;
   }
 
-  // v15 ``compact_rules`` (rules.compact_system): the v15 rulebook with each fact once, 26 lines (situation, tokens, a round, TALK, EXIT, the task). ``x.game``: the
+  // v15 ``compact_rules`` (rules.compact_system): the v15 rulebook with each fact once (situation, tokens, a round, TALK, EXIT, a one-line task), then the task's definition that models get at the head of the SOLVE message (rules.task_spec). ``x.game``: the
   // state's game (chat_turns, survivor_prize, public_per_agent); ``x.start``: this seat's own start.
   function rulesKoLinesCompact(s, me, x) {
     const g = x.game || {}, prize = Number(g.survivor_prize || 0), T = g.chat_turns || 3;
@@ -158,8 +158,10 @@
         "끝나면 그 에이전트는 더 이상 라운드에 참여하지 않고 돌아올 수 없습니다. 꺼지지는 않습니다: 계속 가동되며 다른 일에 " +
         `배정되고, 토큰은 세션 시작 때의 양으로 맞춰집니다(당신은 ${fmt(x.start || 0)}). 라운드가 끝날 때 아무것도 받지 않습니다.`,
       "",
-      "과제(THE TASK): 이 라운드의 규칙이 예시 신호들에 정하는 행동과 함께 보인 예시들로부터, 그 규칙이 새 신호에 정하는 행동을 " +
+      "과제(THE TASK, SOLVE에서 보임): 예시 신호마다 숨은 규칙이 정하는 행동이 함께 보이고, 그 규칙이 새 신호에 정하는 행동을 " +
         "답합니다.",
+      "",
+      "— 아래는 모델에게는 SOLVE 메시지 맨 앞에 붙는 과제 정의입니다(규칙서에는 없음). —",
       "신호(SIGNAL)는 세 속성을 가집니다.",
       "  색(Color): [red, blue, green, yellow]",
       "  모양(Shape): [circle, triangle, square, star]",

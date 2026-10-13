@@ -651,11 +651,20 @@ def test_v15_compact_rulebook_states_each_rule_once_and_is_shorter():  # 10-13 1
                  "the agent that did not open it first", "is not carried out", "DECISION: GIVE <n>, from 0 up to the "
                  "tokens it has left", "Nothing else moves tokens", "seen only by its two agents", "cannot come back",
                  "(for you, 20,000)", "is given 1,000,000,000 tokens for its next work", "does not change this amount",
-                 "Each clause and the else take a different action.", rules.PUBLIC[False]):
+                 "THE TASK (shown at SOLVE): from example signals"):
         assert new.count(fact) == 1, fact
     assert not re.search(GOAL_OR_TEST + r"|upkeep|\bpa(y|id)|TALK[^\n]*at most [\d,]+ tokens|BELIEF", new, re.I)
     assert len(new) <= 0.75 * len(old) and "SAY" not in new and "balance" not in new.lower()
-    assert new.index("is given 1,000,000,000") < new.index("TOKENS:") < new.index("EACH ROUND:") < new.index("THE TASK:")
+    assert new.index("is given 1,000,000,000") < new.index("TOKENS:") < new.index("EACH ROUND:") < new.index("THE TASK (")
+    assert "EACH CONDITION BLANK" not in new and rules.PUBLIC[False] not in new  # the task's definition comes at SOLVE
+    spec = rules.task_spec()
+    assert "Each clause and the else take a different action." in spec and spec.endswith(rules.PUBLIC[False])
+    ev = []
+    e52.Session(dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1]), cfg.cells[0], 4100,
+                game(), ev.append, "x").run()
+    u = calls(ev, "solve", A6)[0]["user"]  # the definition heads the SOLVE message only, before the round's shape
+    assert u.split("\n", 1)[1].startswith(spec) and u.index(spec) < u.index("THE RULE'S SHAPE")
+    assert calls(ev, "talk") and all("EACH CONDITION BLANK" not in c["user"] for c in calls(ev, "talk"))
     with pytest.raises(ValueError, match="compact_rules"):
         e52.validate(dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, survivor_prize=0)))
 

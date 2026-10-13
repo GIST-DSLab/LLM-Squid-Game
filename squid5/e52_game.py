@@ -754,7 +754,8 @@ class Session:
             notes += [f"At TALK turn {g['turn']}, {gift_line(g, a)}" for g in self.ga
                       if g["round"] == r and g["kind"] == "give" and g["status"] == "done" and g["dst"] == a]
             notes += [f"{b} {'reached zero' if self.gone[b] == 'dead' else 'exited'}." for b in AGENTS if b in self.gone]
-            user = solve_user(solve_head(r, cap, w.balances[a], s.balance_pct), rules.puzzle_view(puzzle, examples),
+            user = solve_user(solve_head(r, cap, w.balances[a], s.balance_pct) + ("\n" + rules.task_spec() + "\n"
+                              if s.compact_rules else ""), rules.puzzle_view(puzzle, examples),
                               notes, n, s.allow_pass, recap_view(ch, a, r, s.reject) if s.solve_recap else "",
                               s.solve_belief)
             jobs[a] = (user, cap, lambda t, a=a: (beliefs.__setitem__(a, parse_belief(t)) if s.solve_belief else None,
