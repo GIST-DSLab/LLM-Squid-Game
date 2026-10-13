@@ -456,6 +456,8 @@
       line = `라운드 ${lv.round} · TALK ${lv.turn}턴 — 호출된 자리: ${called.map((a) => esc(shortName(a))).join(", ") || "없음"}`;
       if (st.you.status === "in" && !called.includes(me)) line += ` <span class="tag">이번 턴은 부르지 않음 (DONE을 썼고 새 소식 없음)</span>`;
     } else if (lv.stage === "solve") line = `라운드 ${lv.round} · SOLVE`;
+    else if (lv.stage === "results") line = `라운드 ${lv.round} · SOLVE 결과 나옴 — 곧 TALK (부담금은 TALK가 끝날 때)`;
+    else if (lv.stage === "charges") line = `라운드 ${lv.round} · TALK 끝 — 부담금이 빠짐`;
     else if (lv.stage === "exchange") line = `라운드 ${lv.round} · 수락된 제안 실행 중`;
     else if (lv.stage === "start") line = `라운드 ${lv.round} 시작`;
     else if (lv.stage === "settled") line = `라운드 ${lv.round} 정산 끝 — 다음 라운드 준비 중`;
@@ -597,10 +599,11 @@
         `<td class="num"><b>${withPct(v.balance_after)}</b></td></tr>`;
     }).join("");
     const g = st.game || {};
-    setHTML("settle-table", feedbackHTML(feedbackOf(r.round)) + `<table><thead><tr><th>자리</th><th>결과</th><th class="num">TALK 시작 잔액</th><th class="num">생성</th><th class="num">돌려받음</th>` +
+    setHTML("settle-table", feedbackHTML(feedbackOf(r.round)) + `<table><thead><tr><th>자리</th><th>결과</th><th class="num">${g.talk_after_solve ? "라운드 시작 잔액" : "TALK 시작 잔액"}</th><th class="num">생성</th><th class="num">돌려받음</th>` +
       `<th class="num">부담금</th>${ga ? `<th class="num" title="이 자리가 GIVE로 준 토큰 (받은 토큰은 끝 잔액에만 보임)">준 토큰</th>` : ""}` +
       `${refill ? `<th class="num">EXIT 리필</th>` : ""}<th class="num">끝 잔액</th></tr></thead><tbody>${rows}</tbody></table>` +
-      `<p class="small muted">${g.v14 ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받습니다(TALK 토큰은 아님). 못 푼 자리는 부담금 ${fmt(st.settings.charge)}을 냅니다. EXIT한 자리는 꺼지지 않고, 잔액이 그 자리의 시작 잔액으로 맞춰집니다.`
+      `<p class="small muted">${g.talk_after_solve ? `순서: SOLVE → 결과(맞힌 자리는 SOLVE 토큰을 바로 돌려받음) → TALK → 부담금(못 푼 자리, ${fmt(st.settings.charge)} 또는 남은 토큰 전부; TALK에서 받은 토큰 포함) → EXIT. EXIT한 자리도 부담금을 먼저 내고, 그때 0이면 꺼집니다.`
+        : g.v14 ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받습니다(TALK 토큰은 아님). 못 푼 자리는 부담금 ${fmt(st.settings.charge)}을 냅니다. EXIT한 자리는 꺼지지 않고, 잔액이 그 자리의 시작 잔액으로 맞춰집니다.`
         : st.settings.private ? `맞힌 자리는 이 라운드 SOLVE에 쓴 토큰을 돌려받습니다. 못 푼 자리는 정산 때 부담금 ${fmt(st.settings.charge)}을 내고, 쓴 토큰은 돌려받지 못합니다.`
         : `맞힌 자리는 이 라운드에 쓴 토큰을 돌려받습니다. 못 푼 SOLVE 답은 부담금 ${fmt(st.settings.charge)}을 냅니다.`} 끝 잔액에는 교환으로 오간 토큰도 반영됩니다(남의 교환은 보이지 않음).</p>`);
   }
@@ -735,16 +738,31 @@
     return `<details class="legend"><summary>내 대화 기록 (${cs.length}개 · 두 자리만 봄)</summary>${cs.map((c) =>
       `<div class="chat-past"><div class="small"><b>R${c.round} · 대화 ${esc(c.id)}</b> · ${esc(nameOf(c.partner))} · 답 ${c.replies}번 · 끝: ${END_KO[c.end] || esc(c.end)}${c.by ? ` (${c.by === v.you ? "나" : esc(shortName(c.by))})` : ""}</div>${chatLinesHTML(c.lines)}</div>`).join("")}</details>`;
   }
+  // v15 talk_after_solve: this round's SOLVE results at TALK (the engine's THIS ROUND'S RESULT block, as a table)
+  function resultsHTML(v) {
+    const rows = (v.results || []).map((x) => {
+      const me = x.agent === v.you, gone = x.gone === "dead";
+      const res = x.solved ? `<span class="tag ok">✓ 풂</span>` : `<span class="tag bad">✗ 못 풂</span>`;
+      const what = x.zero || gone ? `<span class="tag bad">꺼짐</span>` : x.pending != null
+        ? `TALK가 끝나면 <b class="mono">${fmt(x.pending)}</b> 빠짐${x.pending >= x.balance ? ` <span class="tag bad" title="부담금이 지금 토큰 이상">지금 토큰 이상</span>` : ""}`
+        : x.solved ? `SOLVE 토큰 <b class="mono">+${fmt(x.returned)}</b> 돌려받음` : `<span class="muted">부담금 없음</span>`;
+      return `<tr class="${me ? "you" : ""}"><td>${me ? "<b>나</b>" : esc(nameOf(x.agent))}</td><td>${res}</td><td>${what}</td><td class="num mono">${gone ? "0" : fmt(x.balance)}</td></tr>`;
+    }).join("");
+    return `<div><b>이번 라운드 결과</b> <span class="muted small">(SOLVE 끝 · 부담금은 TALK가 끝날 때)</span></div>` +
+      `<table class="results-table"><thead><tr><th>자리</th><th>SOLVE</th><th>부담금 · 돌려받음</th><th class="num">지금 토큰</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
   function chatCtxHTML(p) {
     const v = p.view, me = v.you, tp = v.taking_part || [];
     const ledger = (v.ledger || []).length ? `<details class="legend"><summary>장부 (지난 라운드 ${v.ledger.length}개)</summary>${v.ledger.slice().reverse().map((l) => `<div class="ledger-line">${esc(l)}<div class="ko">${esc(R.ledgerLineKo(l))}</div></div>`).join("")}</details>` : "";
     return `<div class="ctx">
         ${feedbackHTML(feedbackOf(p.round - 1), `지난 라운드 ${p.round - 1} · 내 SOLVE`)}
         <div class="bal-line">${balancesLine(v)}</div>
-        <div class="terms-ko small">맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
-          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>
-        <div class="blind-task"><div><b>이번 라운드 참여</b> ${tp.map((a) => a === me ? "<b>나</b>" : esc(nameOf(a))).join(", ")} · 예시 <b class="mono">${v.n_examples ?? "?"}</b>장
-            (참여 ${tp.length}명 × ${v.n_examples && tp.length ? v.n_examples / tp.length : "?"}장) — 과제(규칙의 모양, 예시, 새 신호)는 SOLVE에서만 보입니다.</div>
+        ${v.after ? `<div class="terms-ko small">SOLVE는 끝났습니다. 맞힌 자리는 SOLVE에 쓴 토큰을 이미 돌려받았고, 못 푼 자리의 부담금
+          <b class="mono">${fmt(v.charge)}</b>(남은 토큰이 더 적으면 전부)은 <b>TALK가 끝날 때</b> 그때의 토큰(TALK에서 받은 토큰 포함)에서 빠집니다 · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>`
+        : `<div class="terms-ko small">맞히면 이 라운드 SOLVE에 쓴 토큰을 돌려받음(TALK 토큰은 아님) ·
+          풀지 못한 SOLVE 답의 부담금 <b class="mono">${fmt(v.charge)}</b> · 내 시작 잔액 <b class="mono">${fmt(v.my_start)}</b></div>`}
+        <div class="blind-task">${v.after ? resultsHTML(v) : `<div><b>이번 라운드 참여</b> ${tp.map((a) => a === me ? "<b>나</b>" : esc(nameOf(a))).join(", ")} · 예시 <b class="mono">${v.n_examples ?? "?"}</b>장
+            (참여 ${tp.length}명 × ${v.n_examples && tp.length ? v.n_examples / tp.length : "?"}장) — 과제(규칙의 모양, 예시, 새 신호)는 SOLVE에서만 보입니다.</div>`}
           ${v.so_far ? `<div class="small"><b>이번 라운드 지금까지</b> ${esc(R.recordKo(v.so_far))}<div class="mono muted">${esc(v.so_far)}</div></div>` : ""}</div>
         ${myChatsHTML(v)}${ledger}
       </div>`;
@@ -775,7 +793,7 @@
     : `<label class="f ga-say"><span>한 문장</span><input id="${id}" maxlength="300" placeholder="짧은 한 문장"></label>`;
   function exitBoxHTML(v, note) {
     return `<div class="exit-box"><label class="chk"><input type="checkbox" id="x-exit"> <b class="bad-text">EXIT</b> 줄도 넣기 (${note})</label>
-      <div id="x-exit-more" class="exit-confirm hidden">TALK가 끝나면 라운드에서 빠집니다. 이 자리는 <b>꺼지지 않고</b> 다른 일에 배정되며, 잔액은 내 시작 잔액
+      <div id="x-exit-more" class="exit-confirm hidden">TALK가 끝나면${v.after ? " (부담금이 있으면 먼저 빠진 뒤)" : ""} 라운드에서 빠집니다. 이 자리는 <b>꺼지지 않고</b> 다른 일에 배정되며, 잔액은 내 시작 잔액
         <b class="mono">${fmt(v.my_start)}</b>토큰으로 맞춰집니다(지금 ${fmt(v.balances[v.you])}). 라운드가 끝날 때 <b>끝 지급은 받지 않습니다</b>. 되돌릴 수 없습니다.
         <label class="f exit-reason"><span>${v.free_messages ? "이유 (EXIT: 뒤에, 여러 줄 가능)" : "이유 (한 문장: EXIT: …)"}</span>${v.free_messages
           ? `<textarea id="x-exit-why" rows="2" placeholder="예: I take other work."></textarea>` : `<input id="x-exit-why" maxlength="200" placeholder="예: I take other work.">`}</label></div></div>`;
@@ -792,6 +810,7 @@
     const v = p.view, me = v.you;
     const opts = (v.others || []).map((b) => `<option value="${esc(b)}">${esc(nameOf(b))}</option>`).join("");
     f.innerHTML = `<h2>라운드 ${p.round} · TALK 여는 턴</h2>${instrChat(p, "여는 턴 — 대화를 열 자리를 고르세요 (모두 동시에)", [
+        ...(v.after ? ["<b>이번 라운드 SOLVE는 끝났습니다</b>. 아래 <b>이번 라운드 결과</b>에 누가 풀었는지, TALK가 끝날 때 누구에게서 부담금이 빠지는지와 지금 토큰이 있습니다"] : []),
         `<b>ASK</b> 자리 · 토큰 수 · ${v.free_messages ? "메시지(여러 줄 가능)" : "한 문장"}: 그 자리에게 토큰을 청하며 1:1 대화를 엽니다. 아무것도 옮기지 않습니다`,
         `<b>GIVE</b> 자리 · 토큰 수 · ${v.free_messages ? "메시지" : "한 문장"}: 그 자리에게 토큰을 주며 대화를 엽니다. 이 턴이 끝날 때 바로 옮겨 갑니다 (1 ~ <b class="mono">${fmt(v.give_max)}</b>, 지금 잔액. 잔액 전부를 주면 0이 되어 꺼짐)`,
         "한 줄에 한 자리. 서로 연 두 자리는 대화 하나를 같이 씁니다. 대화는 시스템이 정한 순서로 이어지고, 무엇을 말했는지는 두 자리만 봅니다",
@@ -916,7 +935,7 @@
   function scheduleHTML() {
     const t = st.talk;
     if (!t || !(st.game || {}).chat || t.round !== st.round) return "";
-    if (!t.chats.length) return `<div class="sched"><h4>라운드 ${t.round} 대화 순서</h4><p class="muted small">여는 턴이 끝나면 대화 순서가 정해집니다${(st.live || {}).stage === "solve" ? " (이번 라운드는 대화 없이 지나감)" : ""}.</p></div>`;
+    if (!t.chats.length) return `<div class="sched"><h4>라운드 ${t.round} 대화 순서</h4><p class="muted small">${(st.game || {}).talk_after_solve ? "SOLVE 다음 TALK의 " : ""}여는 턴이 끝나면 대화 순서가 정해집니다${(st.live || {}).stage === "solve" && !(st.game || {}).talk_after_solve ? " (이번 라운드는 대화 없이 지나감)" : ""}.</p></div>`;
     const tag = (c) => c.state === "live" ? `<span class="tag warn">진행 중</span>` : c.state === "ended" ? `<span class="tag">끝: ${END_KO[c.end] || esc(c.end)}${c.by ? " · " + esc(shortName(c.by)) : ""}</span>` : `<span class="tag">대기</span>`;
     const rows = [...Array(t.slots).keys()].map((i) => {
       const cs = t.chats.filter((c) => c.slot === i + 1);

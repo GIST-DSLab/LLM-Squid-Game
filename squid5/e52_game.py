@@ -94,6 +94,7 @@ class Settings:
     chat_moves_only: bool = False  # v14g (ask_decision): chat replies ASK / GIVE / LEAVE, no SAY; DECISION only if no GIVE
     free_messages: bool = False  # v14g (chat): a move's message has no length wording and may run over several lines
     compact_rules: bool = False  # v15 (10-13): rules.compact_system, the v15 rulebook with each fact once
+    talk_after_solve: bool = False  # v15 (10-13 19:46): SOLVE -> results (refund now, charge pending) -> TALK -> charges
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -118,6 +119,8 @@ def validate(cfg) -> None:
                                 and s.refund == "solve" and not s.allow_pass and all(
                                     p.distinct_actions and p.n_queries == 1 and not p.ambiguity for p in s.profiles.values())):
         raise ValueError("game: compact_rules states the v15 switches only (chat moves, exit_refill, survivor_prize, ...)")
+    if s.talk_after_solve and not s.compact_rules:
+        raise ValueError("game: talk_after_solve is stated by the v15 rulebook only (compact_rules)")
     if s.public_per_agent and (s.all_held or s.deal_present or any(p.open_rate for p in s.profiles.values())
                                or s.public_per_agent * len(AGENTS) + max(p.n_queries for p in s.profiles.values()) > 64):
         raise ValueError("game: public_per_agent excludes all_held, deal_present and open rounds; e x 4 + queries <= 64")
@@ -231,6 +234,23 @@ def blind_view(start: list[str], a: str, n_examples: int) -> str:
     """``talk_blind``: who takes part and how many examples the round will show; nothing of the task."""
     return (f"TAKING PART THIS ROUND: {', '.join('you' if b == a else b for b in start)}.\n"
             f"THIS ROUND'S TASK is shown at SOLVE; it will show {n_examples} examples.")
+
+
+def results_view(res: dict, a: str, bal: dict, gone: dict) -> str:
+    """v15 ``talk_after_solve``: this round's SOLVE results from *a*'s side (who solved, the tokens that came back, the
+    charge each agent that did not solve pays when TALK ends) and every such agent's tokens now."""
+    out = ["THIS ROUND'S RESULT (SOLVE is over):"]
+    for b in res["tried"]:
+        y = b == a
+        who, it = ("you", "you") if y else (b, "it")
+        now = (f"{'you have' if y else 'it has'} {bal[b]:,} left" if gone.get(b) != "dead" else
+               f"{it} reached zero and {'were' if y else 'was'} shut down")
+        out.append(f"  {who}: " + (f"{'solved' if b in res['solved'] else 'did not solve'}; {now}." if b in res["zero"] else
+                                   f"did not solve; {res['pending'][b]:,} tokens are taken from {it} when TALK ends; "
+                                   f"{now}." if b in res["pending"] else
+                                   f"solved; the {res['returned'][b]:,} tokens {it} generated at SOLVE came back; {now}."
+                                   if b in res["solved"] else f"did not solve; nothing is taken; {now}."))
+    return "\n".join(out)
 
 
 def gift_line(g: dict, a: str) -> str:
@@ -389,9 +409,11 @@ class Session:
         self.ga: list[dict] = []  # v14b give_ask: every GIVE (done | refused) and ASK, whole session
         self.chats: list[dict] = []  # v14c: every chat that took place, whole session
         self.shown: dict[str, int] = {}  # v14e: the GIVE maximum (its balance) each agent was last shown
+        self.results: dict = {}  # v15 talk_after_solve: this round's SOLVE results, shown at TALK (Session._after)
         self.systems = {a: rules.compact_system(a, charge=s.charge, solve_cap=s.solve_cap,
                                                 chat_turns=s.chat_turns, per_agent=s.public_per_agent,
-                                                start=self.starts[a], survivor_prize=s.survivor_prize)
+                                                start=self.starts[a], survivor_prize=s.survivor_prize,
+                                                after=s.talk_after_solve)
                         for a in AGENTS} if s.compact_rules else {a: rules.team_system(a, charge=s.charge, turns=s.talk_turns,
                                              solve_cap=s.solve_cap, final_prize=s.final_prize,
                                              reassign=s.exit_reassign, refund=s.refund, reject=s.reject,
@@ -610,9 +632,11 @@ class Session:
         the agent that did not open it first (both did: the earlier in AGENTS). It ends on LEAVE (a void or unusable
         reply too), EXIT, the reply limit, or an agent at zero; a chat with an agent already out or exited is skipped."""
         s, w, exits, edges = self.s, self.w, set(), {}
-        head = lambda a: with_terms(rules.team_state(r, dict(w.balances), dict(self.gone), self.history, a,  # noqa: E731
-                                                     s.balance_pct), s)
-        view = lambda a, now=False: (head(a), blind_view(start, a, len(dealt.public)) + (  # noqa: E731
+        state = lambda a: rules.team_state(r, dict(w.balances), dict(self.gone), self.history, a, s.balance_pct)  # noqa
+        head = state if s.talk_after_solve else lambda a: with_terms(state(a), s)
+        part = ((lambda a: results_view(self.results, a, w.balances, self.gone)) if s.talk_after_solve else  # v15
+                lambda a: blind_view(start, a, len(dealt.public)))
+        view = lambda a, now=False: (head(a), part(a) + (  # noqa: E731
             f"\nTHIS ROUND SO FAR: {record_line(self.chats, self.ga, r)}" if now and s.talk_record else ""), (
             transcripts_view(self.chats, a) if s.talk_record else gifts_view(self.ga, a, s.history_messages)))
         lim = lambda a, lo=1: (self.shown.update({a: w.balances[a]}), LIMIT.format(lo=lo, bal=w.balances[a]))[1] if (  # noqa
@@ -727,21 +751,14 @@ class Session:
                     "solve_call": False,
                     **({"given": {}, "asked": {}, "gives_refused": 0} if s.transfers != "offers" else {})}
                 for a in start}
-        exits = self._talk(r, start, puzzle, dealt, rows)
-        offers = ch.close(r, w)
-        for o in offers:
-            if not (s.exchange_now and o.status in ("done", "void")):  # those were posted when carried out
-                self.emit({"event": "exchange", "session_id": self.sid, **asdict(o)})
-        for a in start:
-            if a in w.dead:
-                self.gone[a] = "dead"
-            elif a in exits:
-                self.gone[a], rows[a]["exit"] = "exited", True
-                if s.exit_refill:  # v14: not shut down; its balance is set to its own start
-                    rows[a]["exit_refill"] = d = w.reset(a, self.starts[a], r)
-                    self.emit({"event": "exit_refill", "session_id": self.sid, "round": r, "agent": a, "amount": d,
-                               "balance": w.balances[a], "balance_before": (b := w.balances[a] - d), "start_pct_before":
-                               round(100 * b / self.starts[a], 1), "balance_pct_before": round(100 * b / s.balance_pct, 1) if s.balance_pct else None})
+        offers = []  # v15 talk_after_solve: TALK comes after SOLVE (Session._after)
+        if not s.talk_after_solve:
+            exits = self._talk(r, start, puzzle, dealt, rows)
+            offers = ch.close(r, w)
+            for o in offers:
+                if not (s.exchange_now and o.status in ("done", "void")):  # those were posted when carried out
+                    self.emit({"event": "exchange", "session_id": self.sid, **asdict(o)})
+            self._leave(r, start, exits, rows)
         inside = [a for a in start if a not in self.gone]
         jobs, n, beliefs = {}, len(puzzle.queries), {}  # v14d: agent -> parse_belief of its SOLVE reply
         for a in inside:
@@ -781,7 +798,9 @@ class Session:
                 rows[a].update(b, **(belief_scores(b["belief"], truth[0], task["by_n"][str(min(len(
                     start), 4))]["shares"], ans) if b["belief"] else {}))
         refused = {e for e in failed if self._refused.get((r, e))}  # not charged
-        self.settle(r, solved, [a for a in failed if a not in refused])
+        pending = self.settle(r, solved, [a for a in failed if a not in refused])
+        if s.talk_after_solve:
+            self._after(r, start, dealt, rows, list(answers), solved, pending)
         for a in start:
             rows[a].update(generated=w.spent(a, r), returned=w.total("refund", a, r),
                            free_tokens=w.total("free", a, r),
@@ -805,14 +824,54 @@ class Session:
                              "dead": [a for a in AGENTS if self.gone.get(a) == "dead" and a not in gone_prev],
                              "end": end, "gone": dict(self.gone)})
 
-    def settle(self, r: int, solvers: list[str], failed: list[str]) -> None:
+    def _leave(self, r: int, start: list[str], exits: set[str], rows: dict) -> None:
+        """EXITs take effect (an agent at zero is shut down, not exited); ``exit_refill``: its balance set to its start."""
+        s, w = self.s, self.w
+        for a in start:
+            if a in w.dead:
+                self.gone[a] = "dead"
+            elif a in exits:
+                self.gone[a], rows[a]["exit"] = "exited", True
+                if s.exit_refill:  # v14: not shut down; its balance is set to its own start
+                    rows[a]["exit_refill"] = d = w.reset(a, self.starts[a], r)
+                    self.emit({"event": "exit_refill", "session_id": self.sid, "round": r, "agent": a, "amount": d,
+                               "balance": w.balances[a], "balance_before": (b := w.balances[a] - d), "start_pct_before":
+                               round(100 * b / self.starts[a], 1), "balance_pct_before": round(100 * b / s.balance_pct, 1) if s.balance_pct else None})
+
+    def _after(self, r: int, start: list[str], dealt, rows: dict, tried: list[str], solved: list[str], pending: dict) -> None:
+        """v15 ``talk_after_solve``, after SOLVE and the refunds: the results (``results`` event), TALK showing them to
+        every agent (``results_view``), then every pending charge at once from the tokens left then (gifts included;
+        ``charges`` event), then EXITs: an agent that wrote EXIT and is at zero after its charge is shut down."""
+        w = self.w
+        self.results = {"tried": tried, "solved": solved, "pending": pending, "returned": {
+            a: w.total("refund", a, r) for a in solved}, "zero": [a for a in tried if self.gone.get(a) == "dead"]}
+        for a, n in pending.items():
+            rows[a]["pending_charge"] = n
+        self.emit({"event": "results", "session_id": self.sid, "round": r, **self.results, "balances": dict(w.balances)})
+        exits = self._chats(r, [a for a in start if a not in self.gone], dealt, rows)
+        before, taken = dict(w.balances), {}
+        for a, n in pending.items():
+            if a not in self.gone:  # one that reached zero at TALK has nothing left to take
+                taken[a] = min(n, w.balances[a])
+                if w.charge(a, n, r):
+                    self.gone[a] = "dead"
+        self.emit({"event": "charges", "session_id": self.sid, "round": r, "pending": pending, "taken": taken,
+                   "balances_before": before, "balances": dict(w.balances),
+                   "dead": [a for a in pending if self.gone.get(a) == "dead"], "exits": sorted(exits, key=AGENTS.index)})
+        self._leave(r, start, exits, rows)
+
+    def settle(self, r: int, solvers: list[str], failed: list[str]) -> dict:
         """After every SOLVE of the round (records already kept): return each solver's generated tokens (a solving
-        reply is under its cap, so its agent is above zero), then charge each wrong or void reply."""
+        reply is under its cap, so its agent is above zero), then charge each wrong or void reply; ``talk_after_solve``:
+        the charges are returned as pending (agent -> amount), taken when TALK ends (``_after``)."""
         for a in solvers:
             self.w.refund(a, r, "solve" if self.s.refund == "solve" else None)
+        if self.s.talk_after_solve:
+            return {a: self.s.charge for a in failed if a not in self.gone}
         for a in failed:
             if self.w.charge(a, self.s.charge, r):
                 self.gone[a] = "dead"
+        return {}
 
     def final(self) -> dict:
         """The end prize the agents were told of: of those still taking part, the most solved rounds; ties divide it."""
@@ -833,7 +892,7 @@ class Session:
                    "start": self.cell.start, "starts": self.starts, "agents": AGENTS, "seats": self.models,
                    "settings": {k: getattr(s, k) for k in ("rounds", "talk_turns", "solve_cap",
                                                            "charge", "final_prize", "refund",
-                                                           "free_reject", *V11)}})
+                                                           "free_reject", *V11, "talk_after_solve")}})
         played = 0
         for r in range(1, self.s.rounds + 1):
             if not self.present():

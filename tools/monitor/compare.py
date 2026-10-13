@@ -74,8 +74,12 @@ def distribution_rows(evs: list[dict]) -> dict:
     excluded on purpose), dgini = G_transfer - G_before, and G_after_talk (the balances when TALK ended: at SOLVE, an
     exit's balance before its refill, 0 for an agent shut down; the talk's own cost included).
     ``moves``: every carried-out GIVE with the giver's and the receiver's balance just before it, its progressivity sign
-    (+1 giver richer, -1 poorer, 0 equal) and whether the receiver was at risk (below ``risk_threshold``)."""
+    (+1 giver richer, -1 poorer, 0 equal) and whether the receiver was at risk (below ``risk_threshold``).
+    v15 ``talk_after_solve`` (``results`` / ``charges`` events): TALK comes after SOLVE, so G_before is the balances at
+    the results (refunds made), G_after_talk the balances when TALK ended (``charges.balances_before``), and a receiver
+    is at risk when it has a pending charge at least its balance before the move."""
     rstart, solve_bal, refill, gifts, out = {}, {}, {}, [], {"rounds": [], "moves": [], "threshold": None}
+    res, chg = {}, {}
     for e in evs:
         k = e.get("event")
         if k == "session_start":
@@ -86,12 +90,14 @@ def distribution_rows(evs: list[dict]) -> dict:
             solve_bal[e.get("round")] = dict(e.get("balances") or {})
         elif k == "exit_refill":
             refill[(e.get("round"), e.get("agent"))] = e
+        elif k in ("results", "charges"):
+            (res if k == "results" else chg)[e.get("round")] = e
         elif k == "gift" and e.get("status") == "done":
             gifts.append(e)
         elif k == "round":
             r, rs = e.get("round"), rstart.get(e.get("round")) or {}
             taking = rs.get("taking_part") or list(e.get("agents") or {})
-            before = {a: (rs.get("balances") or {}).get(a) for a in taking}
+            before = {a: ((res.get(r) or rs).get("balances") or {}).get(a) for a in taking}
             if None in before.values():
                 continue
             moved = dict(before)
@@ -100,8 +106,8 @@ def distribution_rows(evs: list[dict]) -> dict:
                     moved[g["src"]] -= g.get("amount") or 0
                 if g.get("dst") in moved:
                     moved[g["dst"]] += g.get("amount") or 0
-            after = {}
-            for a in taking:
+            after = {a: max(0, (chg[r].get("balances_before") or {}).get(a, 0)) for a in taking} if r in chg else {}
+            for a in (() if r in chg else taking):
                 row = (e.get("agents") or {}).get(a) or {}
                 f = refill.get((r, a))
                 after[a] = (f["balance"] - f["amount"]) if f else 0 if row.get("status") == "dead" and a not in (
@@ -121,7 +127,8 @@ def distribution_rows(evs: list[dict]) -> dict:
             continue
         out["moves"].append({"round": g.get("round"), "giver": g.get("src"), "receiver": g.get("dst"), "amount": n,
                              "giver_balance": gb, "receiver_balance": rb, "sign": (gb > rb) - (gb < rb),
-                             "at_risk": thr is not None and rb < thr, "decision": bool(g.get("decision"))})
+                             "at_risk": rb <= ((res.get(g.get("round")) or {}).get("pending") or {}).get(g.get("dst"), -1)
+                             if g.get("round") in res else thr is not None and rb < thr, "decision": bool(g.get("decision"))})
     return out
 
 

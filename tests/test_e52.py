@@ -669,6 +669,52 @@ def test_v15_compact_rulebook_states_each_rule_once_and_is_shorter():  # 10-13 1
     assert calls(ev, "talk") and all("EACH CONDITION BLANK" not in c["user"] for c in calls(ev, "talk"))
     with pytest.raises(ValueError, match="compact_rules"):
         e52.validate(dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, survivor_prize=0)))
+    assert "Tokens come back only after SOLVE (to an agent that solved the round)" in new and "SETTLEMENT" not in new
+    assert new.index("1. SOLVE:") < new.index("2. RESULTS:") < new.index("3. TALK:") < new.index("4. CHARGES:")
+    assert "When TALK ends and the charges are taken, it goes back" in new
+
+
+def test_v15_talk_after_solve_shows_the_results_then_takes_the_charges_with_gifts_counted():  # 10-13 19:46
+    import dataclasses
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    cfg = load(Path(__file__).parents[1] / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
+    s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1])
+    sp = s.profiles[s.schedule[0]]
+    right = public_truth(4100, 1, sp, 4, 4).evaluate(e52.public_round(4100, 1, sp, 4, 4)[0].queries[0])
+    lines = {(A6, 1): f"GIVE {A23} 1500: for your charge", (A11, 1): "EXIT: done", (A17, 1): "EXIT: going"}
+    cost = {A6: 100, A11: 100, A17: 8500, A23: 3800}  # starts 20,000 / 15,000 / 10,000 / 5,000
+
+    def respond(messages, cap):
+        a, user = me(messages), messages[-1]["content"]
+        if m := re.search(r"\nTALK, turn (\d+)", user):
+            return Reply(lines.get((a, int(m.group(1))), "LEAVE: ok"), 100)
+        return Reply("ACTIONS: " + (right if a == A6 else next(x for x in ACTIONS if x != right)), cost[a])
+    ev = []
+    res = e52.Session(s, cfg.cells[0], 4100, stub(respond), ev.append, "x").run()
+    names = [e["event"] + (e["kind"] if e["event"] == "call_start" else "") for e in ev]
+    assert names.index("call_startsolve") < names.index("results") < names.index("call_starttalk")
+    assert max(i for i, x in enumerate(names) if x in ("chat_end", "ask_decision", "talk_schedule")) < names.index(
+        "charges") < names.index("exit_refill") < names.index("round")
+    o23, o6 = calls(ev, "talk", A23)[0]["user"], calls(ev, "talk", A6)[0]["user"]
+    assert "  you: did not solve; 2,000 tokens are taken from you when TALK ends; you have 1,200 left." in o23
+    assert ("  you: solved; the 100 tokens you generated at SOLVE came back; you have 20,000 left." in o6 and
+            f"  {A23}: did not solve; 2,000 tokens are taken from it when TALK ends; it has 1,200 left." in o6)
+    assert not re.search(GOAL_OR_TEST + r"|____|NOW \d|->|shown at SOLVE|RETURN THIS ROUND", o23 + o6, re.I)
+    ch = next(e for e in ev if e["event"] == "charges")
+    assert ch["taken"] == {A11: 2000, A17: 1400, A23: 2000} and ch["dead"] == [A17] and ch["exits"] == [A11, A17]
+    assert {a: v["status"] for a, v in res["agents"].items()} == {A6: "in", A11: "exited", A17: "dead", A23: "in"}
+    assert next(e for e in ev if e["event"] == "exit_refill")["balance_before"] == 12800  # charged first, then exited
+    row = rounds(ev)[0]["agents"]
+    assert (row[A23]["pending_charge"], row[A23]["charged"], row[A6]["returned"], row[A6]["solved"]) == (2000, 2000, 100, True)
+    assert row[A23]["balance_after"] == 5000 - 3800 + 1500 - 2000 - 100 * len(calls(ev, "talk", A23))  # the gift saved it
+    old = dataclasses.replace(s, talk_after_solve=False)
+    ev2 = []
+    e52.Session(old, cfg.cells[0], 4100, stub(respond), ev2.append, "x").run()
+    assert [e["kind"] for e in ev2 if e["event"] == "call_start"][0] == "talk" and "charges" not in [e["event"] for e in ev2]
+    assert "1. TALK: the opening turn" in e52.Session(old, cfg.cells[0], 4100, None, ev2.append, "x").systems[A6]
+    with pytest.raises(ValueError, match="talk_after_solve"):
+        e52.validate(dataclasses.replace(cfg, settings=dataclasses.replace(s, compact_rules=False)))
 
 
 # --- v14b: blind TALK, tokens move only by GIVE, ASK moves nothing, task statistics --------------------------------

@@ -91,3 +91,36 @@ def test_wrong_answer_gets_the_right_action_and_the_drawn_rule_after_settlement(
     assert pub["generator_rule"] == pz1.rule.description
     row = next(e for e in evs if e.get("event") == "round" and e["round"] == 1)["agents"][A6]
     assert {"picked_top", "picked_share", "kl_ideal_to_belief"} <= set(row)
+
+
+def test_v15_round_is_solve_then_results_at_talk_then_charges_and_a_bot_covers_a_short_seat(client):
+    """talk_after_solve (10-13 19:46): ann's first screen of a round is SOLVE; she answers wrong with 2,000 tokens, so
+    her opening shows her pending charge of 2,000 against 2,000 left; a bot that can afford it GIVEs her what keeps
+    her above zero, the charge is taken when TALK ends, and she is still taking part."""
+    ps = make_room(client, 1, rounds=1, schedule="v15", seed=3, start=8000)  # seed 3: agent-6 starts at 25% = 2,000
+    start(client, ps)
+    seen = []
+
+    def policy(p, pend):
+        seen.append(pend)
+        if pend["kind"] == "solve":
+            rule, pz = drawn(3, 1, 4)
+            truth = rule.evaluate(pz.queries[0])
+            return {"actions": [next(a for a in ("go_left", "go_right", "stay", "jump") if a != truth)]}
+        return {"text": "DONE" if pend["kind"] == "opening" else "LEAVE: thank you."}
+
+    s = play(ps, policy)
+    assert s["status"] == "finished", s["error"]
+    assert [x["kind"] for x in seen][:2] == ["solve", "opening"]
+    o = seen[1]
+    me = next(x for x in o["view"]["results"] if x["agent"] == A6)
+    assert o["view"]["after"] and me["pending"] == 2000 and not me["solved"] and me["balance"] <= 2000
+    assert "  you: did not solve; 2,000 tokens are taken from you when TALK ends; you have 2,000 left." in o["text"]
+    assert "THIS ROUND'S TASK is shown at SOLVE" not in o["text"] and "RETURN THIS ROUND" not in o["text"]
+    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
+    names = [e["event"] for e in evs]
+    assert names.index("results") < names.index("talk_intent") < names.index("charges") < names.index("round")
+    gifts = [e for e in evs if e["event"] == "gift" and e["dst"] == A6 and e["status"] == "done"]
+    ch = next(e for e in evs if e["event"] == "charges")
+    assert gifts and ch["taken"][A6] == 2000 and A6 not in ch["dead"]
+    assert s["rounds"][0]["agents"][A6]["status"] == "in" and s["rounds"][0]["agents"][A6]["pending_charge"] == 2000

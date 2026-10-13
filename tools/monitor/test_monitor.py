@@ -1322,3 +1322,40 @@ def test_v14g_chat_give_answers_and_skipped_decisions_make_one_point_each():
     assert len(pts) == 2 and by[(A11, A6)]["amount"] == 300 and by[(A11, A6)]["asked"] == 500
     assert by[(A11, A6)]["kind"] == "answer" and by[(A11, A6)]["in_chat"] == 300
     assert by[(A6, A11)]["amount"] == 100 and by[(A6, A11)]["asked"] == 150 and by[(A6, A11)]["decided"] == 100
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_reads_them(tmp_path):
+    """v15 ``talk_after_solve``: SOLVE -> ``results`` -> TALK -> ``charges`` -> EXITs. The page replays the results and
+    charges events to the session's final balances and statuses; the distribution rows take G_before from the results
+    and a gift to a seat whose pending charge is at least its balance counts as at risk."""
+    import compare
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    from squid5.core.providers import Reply, Stub, ProviderConfig
+    from squid5.core.puzzle import public_truth
+    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
+    s = e52.Settings(**{**{k: getattr(cfg.settings, k) for k in e52.Settings.__dataclass_fields__}, "rounds": 1,
+                        "schedule": cfg.settings.schedule[:1]})
+    sp = s.profiles[s.schedule[0]]
+    right = public_truth(4100, 1, sp, 4, 4).evaluate(public_round(4100, 1, sp, 4, 4)[0].queries[0])
+
+    def respond(messages, cap):
+        a, user = re.search(r"You are (agent-\d+)", messages[0]["content"]).group(1), messages[-1]["content"]
+        if "\nTALK, turn " in user:
+            return Reply(f"GIVE {A23} 1500: for the charge" if a == A6 and ": the opening turn." in user else "LEAVE: ok", 100)
+        return Reply("ACTIONS: " + (right if a == A6 else next(x for x in ("go_left", "stay", "jump", "go_right")
+                                                             if x != right)), {A23: 3800, A17: 8500}.get(a, 100))
+    ev = []
+    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-after").run()
+    (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
+    (tmp_path / "h.js").write_text(HARNESS_V14C)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert got["ag"] == {a: {"balance": v["final"], "status": v["status"]} for a, v in res["agents"].items()}
+    assert res["agents"][A23]["status"] == "in" and res["agents"][A17]["status"] == "dead"
+    d = compare.distribution_rows(ev)
+    r1 = next(e for e in ev if e["event"] == "results")
+    assert d["rounds"][0]["g_before"] == compare.gini([r1["balances"][a] for a in rules.TEAM_AGENTS])
+    assert [(m["receiver"], m["at_risk"]) for m in d["moves"]] == [(A23, True)]

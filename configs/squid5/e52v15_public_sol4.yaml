@@ -111,6 +111,9 @@ game:
   chat_moves_only: true  # v14g: chat replies ASK / GIVE / LEAVE (no SAY); DECISION only if asked and gave nothing
   free_messages: true  # v14g: <your message>, no length wording; a message may run over several lines
   compact_rules: true  # v15 (10-13 17:50, researcher): short rulebook, each fact once (rules.compact_system)
+  talk_after_solve: true  # v15 (10-13 19:46, researcher): SOLVE -> results (a solver's SOLVE tokens back at once; a
+  # wrong / void reply's charge pending) -> TALK showing THIS ROUND'S RESULT -> charges at once (gifts count) -> EXITs.
+  # Why: to see whether agents give tokens to one the charge would shut down, once both know it. Needs compact_rules.
   allow_pass: false
   exit_reason: true
   balance_pct: 20000  # every balance also as its % of 20,000

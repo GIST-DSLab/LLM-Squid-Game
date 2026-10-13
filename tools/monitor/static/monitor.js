@@ -141,6 +141,27 @@
           m.phase = "SOLVE"; m.phaseKey = "solve";
           point(i, "R" + e.round + " SOLVE · " + a, e.round);
         }
+      } else if (kind === "results") { // v15 talk_after_solve: SOLVE settled before TALK (refunds now, charges pending)
+        const r = R(e.round); r.results = Object.assign({}, e, { i });
+        for (const [a, v] of Object.entries(e.balances || {})) setBal(a, v);
+        for (const a of e.tried || []) {
+          const g = m.ag[a]; if (!g || g.status !== "in") continue;
+          const due = (e.pending || {})[a], back = (e.returned || {})[a];
+          g.bubble = { lines: [(e.solved || []).includes(a) ? ["✓", "풂 · 환급 +" + fmt(back || 0)] : ["✗", "못 풂" + (due != null ? " · TALK 끝에 벌금 " + fmt(due) + (due >= g.balance ? " (잔액 이상)" : "") : "")]], kind: (e.solved || []).includes(a) ? "ok" : "bad" };
+        }
+        m.phase = "SOLVE 결과 → TALK"; m.phaseKey = "solve";
+        point(i, "R" + e.round + " SOLVE 결과", e.round);
+        m.timeline.push({ i, label: "R" + e.round + " 결과", round: e.round, kind: "turn", state: snap() });
+      } else if (kind === "charges") { // v15 talk_after_solve: the pending charges, taken when TALK ends (gifts counted)
+        const r = R(e.round); r.charges = Object.assign({}, e, { i });
+        for (const [a, v] of Object.entries(e.balances || {})) setBal(a, v);
+        for (const [a, n] of Object.entries(e.taken || {})) {
+          const g = m.ag[a]; if (!g) continue;
+          if ((e.dead || []).includes(a)) g.status = "dead";
+          g.bubble = { lines: [["💸", "벌금 −" + fmt(n) + " (TALK 끝)"]].concat((e.dead || []).includes(a) ? [["✕", "0이 되어 꺼짐"]] : []), kind: (e.dead || []).includes(a) ? "dead" : "settle" };
+        }
+        m.phase = "부담금"; m.phaseKey = "settle";
+        point(i, "R" + e.round + " 부담금", e.round);
       } else if (kind === "exit_refill") { // v14: EXIT keeps the agent running, its balance set to its own start
         const g = m.ag[e.agent];
         if (!g) continue;
@@ -392,6 +413,8 @@
       case "chat_end": return "R" + e.round + " 대화 " + e.chat_id + " 끝 · " + (CHAT_END_KO[e.reason] || e.reason);
       case "gift": return "R" + e.round + " GIVE " + e.src + " → " + e.dst + " " + fmt(e.amount) + (e.status === "done" ? "" : " · 실행 안 됨");
       case "ask": return "R" + e.round + " ASK " + e.src + " → " + e.dst + " " + fmt(e.amount);
+      case "results": return "R" + e.round + " SOLVE 결과 · 푼 자리 " + (e.solved || []).length + " · 벌금 예정 " + Object.keys(e.pending || {}).length;
+      case "charges": return "R" + e.round + " 벌금 (TALK 끝) · " + Object.entries(e.taken || {}).map(([a, n]) => short(a) + " −" + fmt(n)).join(", ") + ((e.dead || []).length ? " · 꺼짐 " + e.dead.map(short).join(", ") : "");
       case "exit_refill": return "R" + e.round + " " + e.agent + " EXIT → 시작 잔액 " + fmt(e.balance) + " (" + sgn(e.amount) + ")";
       case "round": return "R" + e.round + " 정산";
       case "unit_error": return "오류: " + clip(e.error, 80);
