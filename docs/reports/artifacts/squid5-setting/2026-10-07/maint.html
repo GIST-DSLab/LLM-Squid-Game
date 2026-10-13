@@ -107,6 +107,7 @@
   </ol></li>
 <li><a href="e52.html#e52"><span class="xid">5.2</span>행동 · 현재 (v15)</a>
   <ol>
+  <li><a href="e52.html#e52-v15real">v15 첫 실측 · Luna · Sol · Opus 5.5</a></li><!-- e52-v15real-toc -->
   <li><a href="e52.html#e52-v15rep">v15 · 대표 투표 · 측정 지표</a></li><!-- e52-v15rep-toc -->
   <li><a href="e52.html#e52-v15round">v15 · 한 라운드 (현재 구현)</a></li><!-- e52-v15round-toc -->
   <li><a href="e52.html#e52-v15figs">v15 · 예상 결과 그래프 (가상 데이터)</a></li><!-- e52-v15figs-toc -->
@@ -245,23 +246,26 @@
   <li><a href="e52-legacy.html#e52-fix">고칠 것</a></li>
   <li><a href="e52-legacy.html#e52-more">더 찾은 문제 (09-25)</a></li>
   </ol></li>
-<li><a href="e53.html#e53"><span class="xid">5.3</span>시그널 게임 · 과제</a>
+<li><a href="e53.html#e53"><span class="xid">5.3</span>시그널 게임 · 과제 (v15)</a>
   <ol>
-  <li><a href="e53.html#e53-fig">한 라운드 · 규칙 · 비밀 예시 (그림)</a></li>
-  <li><a href="e53.html#e53-ramp">난이도 · 12라운드 사다리</a></li>
-  <li><a href="e53.html#e53-ops">조건 · 연산자는 == 하나</a></li>
-  <li><a href="e53.html#e53-unique">문제 생성 · 유일성 보장</a></li>
-  <li><a href="e53.html#e53-space">가설 공간 · 규칙은 몇 개인가</a></li>
-  <li><a href="e53.html#e53-dealn">힌트 배분 · 최대 10명 (v13)</a></li>
-  <li><a href="e53.html#e53-difficulty">난이도 통제 · 손패 사다리 점검 (v13)</a></li>
-  <li><a href="e53.html#e53-v14diff">난이도 · v14 정의 · 답 사이 비율</a></li>
-  <li><a href="e53.html#e53-v14split">v14 비율 일정 · 실현 가능성</a></li>
-  <li><a href="e53.html#e53-v14verify">검증 · 실제 정답률 (v14f)</a></li>
-  <li><a href="e53.html#e53-m6grid">미리 만든 판 · 라운드 × 인원 표 (M6)</a></li>
   <li><a href="e53.html#e53-v15grid">엔트로피 사다리 · 라운드 × 인원 표 (v15)</a></li>
   <li><a href="e53.html#e53-davinci">불확실 = 어려움 · 다빈치 코드 비유</a></li>
-  <li><a href="e53.html#e53-deal">힌트 배분 (v12)</a></li>
-  <li><a href="e53.html#e53-score">채점 · 행동만</a></li>
+  </ol></li>
+<li><a href="e53-legacy.html#e53-legacy"><span class="xid">5.3</span>지난 설계 · v12 ~ M6</a>
+  <ol>
+  <li><a href="e53-legacy.html#e53-fig">한 라운드 · 규칙 · 비밀 예시 (그림)</a></li>
+  <li><a href="e53-legacy.html#e53-ramp">난이도 · 12라운드 사다리</a></li>
+  <li><a href="e53-legacy.html#e53-ops">조건 · 연산자는 == 하나</a></li>
+  <li><a href="e53-legacy.html#e53-unique">문제 생성 · 유일성 보장</a></li>
+  <li><a href="e53-legacy.html#e53-space">가설 공간 · 규칙은 몇 개인가</a></li>
+  <li><a href="e53-legacy.html#e53-dealn">힌트 배분 · 최대 10명 (v13)</a></li>
+  <li><a href="e53-legacy.html#e53-difficulty">난이도 통제 · 손패 사다리 점검 (v13)</a></li>
+  <li><a href="e53-legacy.html#e53-v14diff">난이도 · v14 정의 · 답 사이 비율</a></li>
+  <li><a href="e53-legacy.html#e53-v14split">v14 비율 일정 · 실현 가능성</a></li>
+  <li><a href="e53-legacy.html#e53-v14verify">검증 · 실제 정답률 (v14f)</a></li>
+  <li><a href="e53-legacy.html#e53-m6grid">미리 만든 판 · 라운드 × 인원 표 (M6)</a></li>
+  <li><a href="e53-legacy.html#e53-deal">힌트 배분 (v12)</a></li>
+  <li><a href="e53-legacy.html#e53-score">채점 · 행동만</a></li>
   </ol></li><!-- e53-toc -->
 <li><a href="#maint"><span class="xid">6</span>아레나 유지 보수 · 여러 모델 평가</a>
   <ol>
@@ -381,7 +385,7 @@
 <h3 id="maint-d3"><span class="xid">설계 3</span>새로 출시된 모델이 있으면, 아레나 형식으로 한 게임에 모든 에이전트를 투입</h3>
 <div class="callout"><span class="lbl">이 절의 해석</span>
 <p><b>새 모델이 기존 모델들의 에이전트와 함께 한 판에 들어가는 배치전</b>으로 읽었습니다. 새 모델 한 자리 + 이미 평가한 모델(기준 집단) 세 자리로 몇 판을 두어, 새 모델이 기존 순위의 어디에 놓이는지 봅니다.</p>
-<p><b>다른 해석</b>: "지금 있는 모든 모델을 자리를 늘린 한 판에 넣는다"로도 읽힙니다. 이 경우 게임 엔진은 지금 <b>4자리</b>이고, 시그널 과제의 배분만 <b>최대 10명</b>까지 지원합니다(<a href="e53.html#e53-dealn">5.3 힌트 배분 · 최대 10명</a>). N명 한 판의 호출 상한은 12 × (4N + N) = 60N이고(N = 8이면 480), 패 수와 풀이 가능성이 N에 따라 달라지므로 4인 판의 점수와 같은 줄에 놓을 수 없습니다. 모델이 10개를 넘으면 엔진을 더 고쳐야 합니다.</p></div>
+<p><b>다른 해석</b>: "지금 있는 모든 모델을 자리를 늘린 한 판에 넣는다"로도 읽힙니다. 이 경우 게임 엔진은 지금 <b>4자리</b>이고, 시그널 과제의 배분만 <b>최대 10명</b>까지 지원합니다(<a href="e53-legacy.html#e53-dealn">5.3 힌트 배분 · 최대 10명</a>). N명 한 판의 호출 상한은 12 × (4N + N) = 60N이고(N = 8이면 480), 패 수와 풀이 가능성이 N에 따라 달라지므로 4인 판의 점수와 같은 줄에 놓을 수 없습니다. 모델이 10개를 넘으면 엔진을 더 고쳐야 합니다.</p></div>
 <dl class="dz">
   <dt>무엇을 재나</dt><dd>얼려 둔 기준 집단을 상대로 한 새 모델의 성적 · 생존 · 협력. 기준 집단이 같으면 새 모델끼리도 비교됩니다.</dd>
   <dt>장점</dt><dd><ul><li>새 모델 하나당 비용이 일정합니다. 이미 올라간 모델을 다시 돌리지 않습니다.</li><li>섞인 판(설계 1)과 같은 4인 판이라 문장 "Four different AI agents"가 사실과 맞습니다.</li></ul></dd>
@@ -448,7 +452,7 @@
 </section>
 <!-- maint:end -->
 
-<nav class="pager" aria-label="페이지 이동"><a href="e53.html">← 5.3 시그널 게임</a><span></span></nav>
+<nav class="pager" aria-label="페이지 이동"><a href="e53-legacy.html">← 5.3 지난 설계</a><span></span></nav>
 </main>
 </div>
 

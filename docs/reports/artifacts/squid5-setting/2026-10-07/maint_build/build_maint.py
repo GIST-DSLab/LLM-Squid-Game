@@ -2,7 +2,8 @@
 
 Usage: python3 build_maint.py <dir with maint_template.html> <report dir>. Idempotent.
 The TOC block goes right after the 5.3 block (<!-- e53-toc -->) on every page, maint.html included.
-build_e53.py rewrites e53.html (pager included), so rerun this script after build_e53.py to restore the forward link.
+build_e53.py rewrites e53.html and e53-legacy.html (pagers included; it already links e53-legacy.html -> maint.html
+when maint.html exists). The 5.3 TOC block (5.3 + 5.3 지난 설계 groups) ends with <!-- e53-toc -->.
 """
 import re, sys, pathlib
 sp, d = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
@@ -29,12 +30,12 @@ def set_toc(h, page):
     return h[:j] + block + h[j:]
 
 
-E53_PAGER_OLD = '<a href="e52-legacy.html">← 5.2 지난 설계</a><span></span></nav>'
-E53_PAGER_NEW = '<a href="e52-legacy.html">← 5.2 지난 설계</a><a href="maint.html">6 아레나 유지 보수 →</a></nav>'
+E53_PAGER_OLD = '<a href="e53.html">← 5.3 시그널 게임 · 현재 (v15)</a><span></span></nav>'
+E53_PAGER_NEW = '<a href="e53.html">← 5.3 시그널 게임 · 현재 (v15)</a><a href="maint.html">6 아레나 유지 보수 →</a></nav>'
 
 for f in sorted(p for p in d.glob("*.html") if p.name != "maint.html"):
     h = set_toc(f.read_text(), f.name)
-    if f.name == "e53.html":
+    if f.name == "e53-legacy.html":
         h = h.replace(E53_PAGER_OLD, E53_PAGER_NEW)  # no-op once patched; build_e53.py reruns reset it
     f.write_text(h)
 
@@ -43,7 +44,7 @@ head = idx[: idx.index("<main")].replace('href="#', 'href="index.html#')
 head = head.replace("<title>Squid Game 5 세팅</title>", "<title>Squid Game 5 · 6 아레나 유지 보수</title>")
 head = set_toc(head, "maint.html")
 page = (head + '<main class="main">\n<p class="eyebrow crumb"><a href="index.html">Squid Game 5</a> · 6 아레나 유지 보수</p>\n'
-        + sec + '\n<nav class="pager" aria-label="페이지 이동"><a href="e53.html">← 5.3 시그널 게임</a><span></span></nav>\n'
+        + sec + '\n<nav class="pager" aria-label="페이지 이동"><a href="e53-legacy.html">← 5.3 지난 설계</a><span></span></nav>\n'
         '</main>\n</div>\n\n<script src="site.js"></script>\n</body></html>\n')
 (d / "maint.html").write_text(page)
 
