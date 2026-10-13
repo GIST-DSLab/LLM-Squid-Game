@@ -296,18 +296,24 @@ def task_spec() -> str:
             + TASK[TASK.index("EVALUATION"):TASK.index(GUARANTEE)] + PUBLIC[False])
 
 
-TOKEN_WORDS = (  # v15 compact_rules: the engine's own "balance" phrases in user messages (agents' words are untouched)
+TOKEN_WORDS = (  # v15 compact_rules: the engine's own phrases in user messages to reword (agents' words are untouched)
     (r"BALANCES \(tokens, (% of [\d,]+)\):", r"TOKENS LEFT (\1):"), (r"BALANCES \(tokens\):", "TOKENS LEFT:"),
     (r"\(or the remaining balance, if smaller\)", "(or all the tokens it has left, if fewer)"),
     (r", your balance now; a GIVE of your whole balance takes you", ", your tokens left now; a GIVE of all your tokens takes you"),
     (r" \(your balance\), thinking included\. Your balance: ([\d,]+) tokens", r" (all your tokens left), thinking included. "
      r"Your tokens left: \1"),
     (r"thinking included\. Your balance: ([\d,]+) tokens", r"thinking included. Your tokens left: \1"),
-    (r"; balances at end: ", "; tokens left at end: "), (r"not carried out: over balance", "not carried out: more than the tokens left"))
+    (r"; balances at end: ", "; tokens left at end: "), (r"not carried out: over balance", "not carried out: more than the tokens left"),
+    # no length wording at TALK (10-13 18:39): a format line names the moves, not the size of a message
+    (r"ANSWER FORMAT: exactly one of these lines \(and an EXIT line if you leave the rounds\):",
+     "ANSWER FORMAT: exactly one of these moves, whose message may run over several lines (and an EXIT line if you "
+     "leave the rounds):"),
+    (r"ANSWER FORMAT: one line:\nDECISION:", "ANSWER FORMAT:\nDECISION:"))
 
 
 def tokens_wording(text: str) -> str:
-    """v15: the user message with "tokens" for the engine's "balance" wording (:data:`TOKEN_WORDS`)."""
+    """v15: the user message with "tokens" for the engine's "balance" wording and no message-size wording at TALK
+    (:data:`TOKEN_WORDS`)."""
     for pat, rep in TOKEN_WORDS:
         text = re.sub(pat, rep, text)
     return text

@@ -527,13 +527,13 @@
       const c = v.chat || {}, mv = v.moves || [];
       return [...chatHeadKo(v), "", `대화 ${c.id}, ${c.partner}와 (둘만 봄; 여는 줄 다음 답 최대 ${v.chat_turns}번, 번갈아):`,
         ...(c.lines || []).map((l) => `  ${l.who === "you" ? "나" : l.who}${l.opening ? " (여는 줄)" : ""}: ${l.line}`), "",
-        `TALK, 턴 ${v.turn}: 이 대화에서 내 답 (${v.reply_no} / 최대 ${v.chat_turns}). 답 형식: 아래 줄 중 정확히 하나(라운드를 떠나면 EXIT 줄도):`,
+        `TALK, 턴 ${v.turn}: 이 대화에서 내 답 (${v.reply_no} / 최대 ${v.chat_turns}). 답 형식: 아래 수 중 정확히 하나, 메시지는 여러 줄이어도 됨(라운드를 떠나면 EXIT 줄도):`,
         ...(mv.includes("GIVE") && !mv.includes("SAY") ? [`ASK <n>: ${M}`, `GIVE <n>: ${M} ${lim(1)}`] : mv.includes("GIVE") ? [`GIVE <n>: ${M} ${lim(1)}`, `ASK <n>: ${M}`] : [`ASK <n>: ${M}`]),
         ...(mv.includes("SAY") ? [`SAY: ${M}`] : []), `LEAVE: ${M}`, `EXIT: ${WHY}`].join("\n");
     }
     if (pending.kind === "decision") {
       return [...chatHeadKo(v), "", `${v.asker}와의 대화 ${(v.chat || {}).id}가 끝남; 그 대화에서 ${v.asker}가 나에게 모두 ${fmt(v.asked)}토큰을 청함 (내 대화 참고).`, "",
-        `TALK, 턴 ${v.turn}: 내 결정. 답 형식: 한 줄:`, `DECISION: GIVE <n>: ${M} ${lim(0)}`].join("\n");
+        `TALK, 턴 ${v.turn}: 내 결정. 답 형식:`, `DECISION: GIVE <n>: ${M} ${lim(0)}`].join("\n");
     }
     if (pending.kind === "talk" && v.give_ask) {  // v14b: blind TALK, GIVE / ASK lines
       const lines = [`라운드 ${v.round}.`, `잔액(토큰${v.pct ? `, ${fmt(v.pct)} 대비 %` : ""}): ${balancesKo(v)}.`,
