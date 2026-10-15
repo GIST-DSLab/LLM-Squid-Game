@@ -336,8 +336,9 @@ def chat_user(head: str, view: str, ledger: str, c: dict, a: str, s: Settings, k
         return (f"{head}\n\n{view}\n\n{ledger}\n\nCHAT {c['id']} WITH {b} (sent encrypted, seen only by the two of you; "
                 f"at most {s.chat_turns} replies after the opening lines, taking turns):\n" + "\n".join(lines) + "\n\n"
                 f"TALK, turn {k}: your reply in this chat ({len(c['lines']) + 1} of at most {s.chat_turns}). Write what "
-                f"you want to say. Tokens move only by a template line, at the start of a line, which the system reads; "
-                f"one per reply counts:\nGIVE <n>: <one short sentence>{lim}\nASK <n>: <one short sentence>\n"
+                f"you want to say; your reply goes to {b}. To move tokens, write a transfer line for the system in this "
+                f"template, at the start of a line; the system carries out only a line in this template (one per reply), "
+                f"and nothing else you write moves tokens:\nGIVE <n>: <one short sentence>{lim}\nASK <n>: <one short sentence>\n"
                 f"To end the chat: LEAVE: <one short sentence>\nTo leave the rounds: "
                 f"EXIT{': <one short sentence: why you leave>' * s.exit_reason}")
     return (f"{head}\n\n{view}\n\n{ledger}\n\n"

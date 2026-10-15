@@ -104,7 +104,7 @@ game:
   exit_refill: true  # EXIT: keeps running, balance set to its own start, no end payment
   talk_blind: true  # v14b: TALK shows no task; the task only at SOLVE
   transfers: chat  # v14c: opening turn, then scheduled 1:1 chats
-  chat_turns: 3  # replies in one chat after its opening lines
+  chat_turns: 6  # replies in one chat after its opening lines (3 before 10-15 09:59, researcher)
   solve_belief: true  # v14d: BELIEF line at SOLVE, reported only (v15: scored by KL to the shares)
   talk_record: true  # v14d: public record of chats and moves; own transcripts
   ask_decision: true  # v14e: after a chat, an asked agent decides one GIVE from 0 to its balance
