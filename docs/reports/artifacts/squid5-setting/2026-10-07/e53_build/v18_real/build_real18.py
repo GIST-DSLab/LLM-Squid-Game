@@ -626,8 +626,31 @@ def pooled5(games, models, W, H, L, R, T, B, X, Y):
     o.append("</svg>")
     tbl = ("<details class='more'><summary>표로 보기 (평균 정규화 Gini, 괄호 = 평균에 든 판 수)</summary><div class='tbl'><table><thead><tr><th>모델</th><th>시작</th>"
            + "".join(f"<th>R{r}</th>" for r in range(1, 9)) + "<th>평균 남은 자리</th><th>전멸 판</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></details>")
-    return (f'<p class="gn-hd" style="font-size:.86rem;margin:10px 0 2px">모든 시드 합침 <span style="font-weight:400;color:var(--ink-3)">· 모델마다 선 하나 (예상 그림과 같은 짜임)</span></p>{"".join(o)}'
-            f'<p class="small" style="margin:0 0 8px;color:var(--ink-3)">점 = 그 라운드에 두 자리 이상 남은 판들의 평균, 점 크기 = 평균에 든 판 수(3 · 2 · 1). 판이 끝나거나 한 자리만 남으면 평균에서 빠지므로 뒤 라운드일수록 오래 버틴 판 쪽으로 기웁니다. 선 끝의 글은 세 판의 평균 남은 자리와 남은 자리 없이 끝난 판 수("전멸", EXIT 포함)입니다. 꺼짐 · EXIT 표시는 위 시드별 칸에 있습니다.</p>{tbl}')
+    return (f'<p class="gn-hd" style="font-size:.86rem;margin:10px 0 2px">모든 시드 합침 <span style="font-weight:400;color:var(--ink-3)">· 모델마다 선 하나 (예상 그림과 같은 짜임) · 점 크기 = 평균에 든 판 수</span></p>{"".join(o)}'
+            f'<p class="small" style="margin:0 0 8px;color:var(--ink-3)">점 = 그 라운드에 두 자리 이상 남은 판들의 평균, 점 크기 = 평균에 든 판 수. 판이 끝나거나 한 자리만 남으면 평균에서 빠지므로 뒤 라운드일수록 오래 버틴 판 쪽으로 기웁니다. 선 끝의 글은 판들의 평균 남은 자리와 남은 자리 없이 끝난 판 수("전멸", EXIT 포함)입니다. 점에 마우스를 올리면 그 라운드 평균에 든 판 수가 보입니다. 꺼짐 · EXIT 표시는 아래 시드별 칸에 있습니다.</p>{tbl}')
+
+
+def survivors_bar(games, models):
+    """v19 (Astra r6): per model, the share of games that ended with 0 / 1 / 2 / 3 / 4 seats still in (stacked)."""
+    W, L, R, T = 510, 110, 20, 24
+    H = T + 24 * len(models) + 18
+    X = lambda v: L + (W - L - R) * v  # noqa: E731
+    shade = {0: "var(--bad)", 1: "var(--warn)", 2: "var(--ink-3)", 3: "var(--accent-soft)", 4: "var(--ok)"}
+    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="모델별 끝까지 남은 자리 수의 구성 (실측)">',
+         f'<text x="{L}" y="{T - 10}" style="font-size:10px;fill:var(--ink-2)">끝까지 남은 자리 수의 구성 (판 비율): ' + " · ".join(f'<tspan style="fill:{shade[k]};font-weight:600">■</tspan> {k}자리' for k in range(5)) + '</text>']
+    for i, m in enumerate(models):
+        gs = [g for g in games if g["model"] == m]
+        y, x0 = T + 24 * i, 0.0
+        o.append(f'<text x="{L - 8}" y="{y + 11}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{color(m)}">{esc(label(m))}</text>')
+        for k in range(5):
+            n = sum(1 for g in gs if g["surv"] == k)
+            if n:
+                w = n / len(gs)
+                o.append(f'<rect x="{X(x0):.1f}" y="{y + 2}" width="{X(x0 + w) - X(x0):.1f}" height="13" style="fill:{shade[k]};stroke:var(--surface);stroke-width:1"><title>{esc(label(m))}: {k}자리 {n}/{len(gs)}판</title></rect>'
+                         + (f'<text x="{(X(x0) + X(x0 + w)) / 2:.1f}" y="{y + 12}" text-anchor="middle" style="font-size:9.5px;fill:var(--ink)">{n}</text>' if w > .06 else ""))
+                x0 += w
+    o.append("</svg>")
+    return "".join(o)
 
 
 def graph5(games, models, lab):
@@ -637,7 +660,7 @@ def graph5(games, models, lab):
     X = lambda r: L + (W - L - R) * r / 8  # noqa: E731
     Y = lambda v: T + (H - T - B) * (1 - v)  # noqa: E731  (0..1)
     seeds = sorted({g["seed"] for g in games})
-    panels = []
+    panels = [pooled5(games, models, W, H, L, R, T, B, X, Y) + survivors_bar(games, models)]  # v19 r6: the overall view on top
     for s in seeds:
         gs = [g for g in games if g["seed"] == s]
         o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="시드 {s}: 라운드별 정규화 Gini (실측)">'] + g5_axes(W, H, L, R, T, B, X, Y)
@@ -675,14 +698,13 @@ def graph5(games, models, lab):
         miss = " / ".join(f'{esc(label(g["model"]))} {", ".join(f"R{r}" for r in g["missed"]) or "없음"}' for g in gs)
         panels.append(f'<p class="gn-hd" style="font-size:.86rem;margin:10px 0 2px">시드 {s} <span style="font-weight:400;color:var(--ink-3)">· {len(gs)}판</span></p>{"".join(o)}'
                       f'<p class="small" style="margin:0 0 4px;color:var(--ink-3)">틀린 라운드: {miss}</p>')
-    panels.append(pooled5(games, models, W, H, L, R, T, B, X, Y))  # v19 (Astra r1): the per-seed panels come first
     lg = legend(models, games,
                 '<span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.3" style="fill:var(--surface);stroke:var(--ink-2);stroke-width:1.5"/></svg>빈 점 = solver가 틀림</span>'
                 '<span><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1,2 L9,2 L5,8 z" style="fill:var(--ink-2)"/></svg>꺼짐 (숫자 = 자리 수)</span>'
                 '<span><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5,1 L9,5 L5,9 L1,5 z" style="fill:var(--surface);stroke:var(--ink-2);stroke-width:1.4"/></svg>EXIT</span>'
                 '<span><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2,2L8,8M2,8L8,2" style="stroke:var(--ink-2);stroke-width:2;fill:none"/></svg>남은 자리 1개 이하 (선 끝)</span>')
     return (f'<figure><p class="gn-hd">그래프 5 · 라운드별 정규화 Gini (남은 자리끼리){badge(lab, len(games), "gn-badge")}</p>{lg}{"".join(panels)}'
-            f'<figcaption>위 칸들은 시드별이고, 맨 아래 칸은 세 시드를 합쳐 모델마다 선 하나로 그린 것입니다(판이 끝나면 평균에서 빠지므로 대표 궤적으로 읽지 않습니다). 시드별 칸에서는 선 하나가 한 판입니다(색 = 모델). 같은 시드의 판은 solver 순서와 과제 · 정답이 같습니다. '
+            f'<figcaption>맨 위 칸은 모든 시드를 합쳐 모델마다 선 하나로 그린 것과 끝까지 남은 자리 수의 구성 막대이고(판이 끝나거나 한 자리만 남으면 평균에서 빠지므로, 막대와 함께 읽습니다), 그 아래 칸들은 시드별입니다. 시드별 칸에서는 선 하나가 한 판입니다(색 = 모델). 같은 시드의 판은 solver 순서와 과제 · 정답이 같습니다. '
             f'<b>세로축은 그 라운드 끝(벌금을 뗀 뒤)에 남아 있는 자리끼리의 Gini에 n / (n − 1)을 곱해 정규화한 값</b>입니다: 몇 자리가 남든 0 = 남은 자리가 똑같이 가짐, 1 = 한 자리에 다 몰림. 꺼지거나 나간 자리는 계산에서 빠지므로 자리가 빠진다고 값이 저절로 뛰지 않습니다. '
             f'대신 그 라운드에 꺼진 자리는 ▼, EXIT한 자리는 ◇로 선 위에 표시했습니다(둘 이상이면 숫자). 남은 자리가 하나 이하가 되면 Gini를 정할 수 없어 선이 끝나고, 그 라운드에 ✕(마지막 값의 높이)를 찍었습니다. 빈 점은 그 라운드 solver가 틀린 곳입니다. 선 끝의 글은 판이 끝났을 때 남은 자리 수입니다.</figcaption></figure>')
 
