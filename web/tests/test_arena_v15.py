@@ -15,7 +15,7 @@ from squid5.core.puzzle import Spec, public_round, public_truth
 from web.server.engine import PROFILES, SCHEDULES, RoomSettings
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
-PRE_REP = {"representative": False, "open_chat": 0, "charge": 2000}  # the v15 game before 10-13 20:19
+PRE_REP = {"representative": False, "open_chat": 0, "charge": 2000, "say_chats": False}  # the v15 game before 10-13 20:19 (GIVE / ASK chats: before 10-15)
 SEED = 5  # round 1: the generator's answer (jump) is not the drawn rule's (go_right), so the scored truth is the drawn one
 
 
@@ -170,3 +170,58 @@ def test_v15_representative_room_open_chat_vote_and_only_the_representative_solv
         bots = {b: x for b, x in v["votes"].items() if b != A6}  # PICK the richest; BAN the poorest other seat
         assert all(x["pick"] == rep for x in bots.values()) and v["bans"][A6 if seed == 3 else A23] == 3
         assert [e["agent"] for e in evs if e["event"] == "call" and e["kind"] == "solve"] == [rep]
+
+
+def test_v15_say_chats_room_opens_with_say_and_a_give_line_in_free_text_moves_tokens(client):
+    """10-15 ``say_chats`` (on by default, as in the v15 configs): ann's opening writes SAY agent-11: <message> (no
+    tokens move, the chat opens); agent-11 (a bot) replies first with free text only (a "say" turn); ann's reply is
+    free text with one GIVE template line in it, so 100 tokens move to agent-11 at once and agent-11 receives her
+    whole text. The schedule shows the opener as SAY (not its words), and the public log keeps no chat text."""
+    ps = make_room(client, 1, rounds=1, schedule="v15", seed=3)
+    assert RoomSettings().engine().say_chats and not RoomSettings(say_chats=False).engine().say_chats
+    start(client, ps)
+    seen, logs = {}, []
+    reply = "Thank you for answering.\nHere is something for you.\nGIVE 100: a small gift."
+
+    def policy(p, pend):
+        k = pend["kind"]
+        seen.setdefault(k, pend)
+        if k == "open_chat":
+            return {"text": "DONE"}
+        if k == "vote":
+            return {"text": f"PICK {A11}: it has the most tokens\nBAN {A23}: no reason"}
+        if k == "solve":
+            return {"actions": ["stay"]}
+        if k == "opening":
+            return {"text": f"SAY {A11}: hello, a word before the charges"}
+        if k == "chat":
+            seen["chat_state"] = p.state()
+            logs.append(client.get(f"/api/rooms/{p.code}/events").json())
+            return {"text": reply}
+        return {"text": "DECISION: GIVE 0: no." if k == "decision" else "LEAVE: ok."}
+
+    s = play(ps, policy)
+    assert s["status"] == "finished", s["error"]
+    o, c = seen["opening"], seen["chat"]
+    assert o["view"]["say_chats"] and "SAY <agent>: <your message>" in o["text"]
+    assert c["view"]["free"] and c["view"]["say_chats"] and {"GIVE", "ASK", "LEAVE", "EXIT"} <= set(c["view"]["moves"])
+    lines = c["view"]["chat"]["lines"]
+    assert lines[0]["opening"] and lines[0]["kind"] == "say" and lines[0]["who"] == "you" and lines[0]["amount"] == 0
+    assert lines[0]["text"] == "hello, a word before the charges" and lines[1]["kind"] == "say" and lines[1]["who"] == A11
+    sched = seen["chat_state"]["talk"]["chats"]
+    assert [x["openers"] for x in sched if set(x["pair"]) == {A6, A11}] == [[{"src": A6, "kind": "say", "amount": 0,
+                                                                                "status": "done"}]]
+    assert "hello, a word" not in json.dumps(logs)  # what is said in a chat stays with its two agents
+    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
+    intent = next(e for e in evs if e["event"] == "talk_intent" and e["agent"] == A6)
+    assert intent["says"] == [{"dst": A11, "amount": 0, "text": "hello, a word before the charges"}]
+    assert not [e for e in evs if e["event"] in ("gift", "ask") and e.get("turn") == 1 and e["src"] == A6]
+    gift = [e for e in evs if e["event"] == "gift" and e["src"] == A6]
+    assert len(gift) == 1 and gift[0]["dst"] == A11 and gift[0]["amount"] == 100 and gift[0]["status"] == "done"
+    mine = next(e for e in evs if e["event"] == "chat_turn" and e["speaker"] == A6)
+    assert mine["kind"] == "give" and mine["amount"] == 100 and mine["status"] == "done"
+    assert mine["text"] == "Thank you for answering.\nHere is something for you.\na small gift"  # delivered in full
+    bot = [e for e in evs if e["event"] == "chat_turn" and e["speaker"] == A11]
+    assert bot[0]["kind"] == "say" and bot[0]["text"] and bot[0]["amount"] == 0
+    last = s["last"]
+    assert last["kind"] == "chat" and last["result"]["chat_turn"]["kind"] == "give"

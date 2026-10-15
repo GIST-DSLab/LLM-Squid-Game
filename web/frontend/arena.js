@@ -527,6 +527,7 @@
       rows.push(`<li class="${g.status === "done" ? "" : "bad-text"}">💸 GIVE → ${esc(shortName(g.dst))} <b class="mono">${fmt(g.amount)}</b>${g.text ? ` <span class="msg">“${esc(g.text)}”</span>` : ""} — ` +
         `${g.status === "done" ? "실행됨" : `실행 안 됨: ${esc(R.whyKo(g.why))}`}</li>`);
     }
+    for (const g of p.says || []) rows.push(`<li>💬 SAY → ${esc(shortName(g.dst))}${g.text ? ` <span class="msg">“${esc(g.text)}”</span>` : ""} — 그 자리와 1:1 대화를 엶 (토큰은 옮기지 않음; 토큰은 대화 안의 GIVE · ASK 줄로만)</li>`);
     for (const g of res.asks || []) rows.push(`<li>🙏 ASK → ${esc(shortName(g.dst))} <b class="mono">${fmt(g.amount)}</b>${g.text ? ` <span class="msg">“${esc(g.text)}”</span>` : ""} (아무것도 옮기지 않음; 받는 쪽은 다음 TALK 턴에 봄)</li>`);
     if (!(res.gives || res.asks) && ((p.gives || []).length || (p.asks || []).length)) rows.push(`<li class="muted">GIVE·ASK ${(p.gives || []).length + (p.asks || []).length}줄 — 이 턴이 끝나면 실행</li>`);
     if ((res.rejected || []).length) rows.push(`<li>거절함: ${res.rejected.map((x) => `<b class="mono">${x}</b>`).join(", ")} (제안한 쪽은 다음 TALK 턴에 앎)</li>`);
@@ -912,6 +913,7 @@
   const giveWarn = (n, max) => (n > max ? `<span class="bad-text">잔액(${fmt(max)})보다 많음 — 실행 안 됨</span>` : n === max && n > 0 ? `<span class="bad-text">잔액 전부 — 주면 0이 되어 꺼짐</span>` : "");
 
   function buildOpening(f, p) {
+    if (p.view.say_chats) return buildOpeningSay(f, p);  // v15 say_chats: SAY <agent>: <message> opens a chat
     const v = p.view, me = v.you;
     const opts = (v.others || []).map((b) => `<option value="${esc(b)}">${esc(nameOf(b))}</option>`).join("");
     f.innerHTML = `<h2>라운드 ${p.round} · TALK 여는 턴</h2>${instrChat(p, "여는 턴 — 대화를 열 자리를 고르세요 (모두 동시에)", [
@@ -1054,6 +1056,7 @@
   }
 
   function buildChat(f, p) {
+    if (p.view.free) return buildChatFree(f, p);  // v15 say_chats: free text plus at most one GIVE / ASK template line
     const v = p.view, c = v.chat, moves = (v.moves || []).filter((m) => m !== "EXIT");
     const lab = { ASK: "🙏 ASK n — 토큰을 청함 (옮기지 않음)", GIVE: `💸 GIVE n — 바로 줌 (1 ~ ${fmt(v.give_max || v.balance)})`, SAY: "💬 SAY — 한 문장만", LEAVE: "🚪 LEAVE — 대화를 끝냄" };
     f.innerHTML = `<h2>라운드 ${p.round} · 대화 ${esc(c.id)} · ${esc(nameOf(c.partner))}와 <span class="tag">답 ${v.reply_no} / ${v.chat_turns}</span></h2>
@@ -1099,6 +1102,113 @@
     render();
   }
 
+  // --- v15 say_chats (10-15; engine opening_user / chat_user with say_chats): the opening turn opens chats with SAY lines
+  // (no tokens move); a chat reply is free text, delivered in full, and tokens move only by ONE template line
+  // (GIVE <n>: <message> / ASK <n>: <message>) at the start of a line; LEAVE: <message> ends the chat.
+  // A line of free text that the engine would read as a template or command (any case, protocol.parse_chat and
+  // free_messages read "Leave it to me" or "give 300" before the first command as one) gets a word joiner (U+2060) in
+  // front, so the partner sees the person's words and nothing moves that the person did not pick.
+  const FREE_CMD = /^[\s*_`>#.-]*(GIVE|ASK|LEAVE|SAY|EXIT|DONE|DECISION|TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b/i;
+  const freeText = (x) => String(x || "").replace(/\r/g, "").split("\n").map((l) => l.replace(/\s+$/, ""))
+    .map((l) => (FREE_CMD.test(l) ? "\u2060" + l : l)).join("\n").replace(/^\n+|\n+$/g, "");
+
+  function buildOpeningSay(f, p) {
+    const v = p.view;
+    const opts = (v.others || []).map((b) => `<option value="${esc(b)}">${esc(nameOf(b))}</option>`).join("");
+    f.innerHTML = `<h2>라운드 ${p.round} · TALK 여는 턴</h2>${instrChat(p, "여는 턴 — 말을 걸 자리를 고르세요 (모두 동시에)", [
+        ...(v.after && v.vote ? ["<b>이번 라운드 SOLVE는 끝났습니다</b>. 아래에 <b>투표 결과</b>(자리마다 받은 표 수, 대표), 대표가 풀었는지, TALK가 끝날 때 누구에게서 부담금이 빠지는지와 지금 토큰이 있습니다"]
+          : v.after ? ["<b>이번 라운드 SOLVE는 끝났습니다</b>. 아래 <b>이번 라운드 결과</b>에 누가 풀었는지, TALK가 끝날 때 누구에게서 부담금이 빠지는지와 지금 토큰이 있습니다"] : []),
+        `<b>SAY</b> 자리 · ${v.free_messages ? "메시지(여러 줄 가능)" : "한 문장"}: 그 자리와 1:1 대화를 엽니다. 여는 턴에는 <b>토큰이 옮겨 가지 않습니다</b> — 토큰은 대화 안에서 GIVE · ASK 틀 줄로만 옮깁니다`,
+        "한 줄에 한 자리. 서로 연 두 자리는 대화 하나를 같이 씁니다. 대화는 시스템이 정한 순서로 이어지고, 연 쪽이 아닌 자리가 먼저 답합니다. 대화는 <b>암호화되어</b> 두 자리만 봅니다",
+        "<b>EXIT</b>: 꺼지지 않고 다른 일로, 잔액은 내 시작 잔액으로, 끝 지급 없음 · 아무 줄 없이 보내면 <b>DONE</b>(이번 라운드 대화를 열지 않음)"])}
+      ${chatCtxHTML(p)}
+      <div class="composer ga-composer">
+        <div class="ga-row">
+          <label class="f"><span>자리</span><select id="ga-to">${opts}</select></label>
+          ${msgField(v, "ga-text", "그 자리에게 보낼 메시지")}
+        </div>
+        <div class="row"><button type="button" class="ghost" id="ga-say"${opts ? "" : " disabled"}>💬 SAY 넣기</button>
+          <span class="small muted">한 자리에 한 줄 · 토큰은 대화 안에서만</span></div>
+        ${exitBoxHTML(v, "이 턴이 끝나면 퇴장, 내 대화도 끝남")}
+        <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span></div>
+          <ul id="draft-list" class="draft-list"></ul><pre id="draft-text" class="draft-text"></pre></div>
+        <div class="row submit-row"><button type="button" class="primary big" id="btn-send">보내기</button><span class="form-err" id="form-err"></span></div>
+        <p class="small muted">제한 시간이 지나면 빈 답 = DONE(대화를 열지 않음)으로 처리됩니다.</p>
+      </div>${rawHTML(p)}`;
+    const q = (sel) => f.querySelector(sel), draft = [];
+    const err = (m) => { q("#form-err").textContent = m || ""; };
+    let exitLine = () => "";
+    const text = () => { const ls = [...draft.map((d) => d.line), exitLine()].filter(Boolean); return ls.length ? ls.join("\n") : "DONE"; };
+    function renderDraft() {
+      q("#draft-list").innerHTML = draft.length ? draft.map((d, i) => `<li><span>${d.label}</span><button type="button" class="ghost tiny" data-rm="${i}" aria-label="빼기">×</button></li>`).join("")
+        : `<li class="muted small">아직 없음 — SAY를 넣거나 그대로 보내면 DONE</li>`;
+      q("#draft-text").textContent = text();
+    }
+    q("#ga-say").addEventListener("click", () => {
+      const to = q("#ga-to").value, s = msgOf(v, q("#ga-text").value);
+      if (!to) return err("자리를 고르세요.");
+      if (draft.some((d) => d.to === to)) return err("한 자리에 한 줄입니다. 먼저 있는 줄을 빼세요.");
+      draft.push({ to, line: `SAY ${to}: ${s}`.trimEnd(), label: `💬 SAY → ${esc(shortName(to))}${s ? ` <span class="msg">“${esc(s)}”</span>` : ""}` });
+      q("#ga-text").value = "";
+      err(""); renderDraft();
+    });
+    f.addEventListener("click", (ev) => { const b = ev.target.closest("button[data-rm]"); if (b) { draft.splice(Number(b.dataset.rm), 1); renderDraft(); } });
+    exitLine = wireExit(f, renderDraft, v);
+    q("#btn-send").addEventListener("click", () => { q("#btn-send").disabled = true; sendTalk(p, text(), "여는 턴"); });
+    renderDraft();
+  }
+
+  function buildChatFree(f, p) {
+    const v = p.view, c = v.chat, mv = v.moves || [], max = v.give_max || v.balance;
+    const opts = [["", "💬 글만 — 토큰은 옮기지 않고, 대화는 이어짐"], ...["GIVE", "ASK", "LEAVE"].filter((m) => mv.includes(m)).map((m) => [m,
+      { GIVE: `💸 GIVE n — 바로 줌 (1 ~ ${fmt(max)})`, ASK: "🙏 ASK n — 토큰을 청함 (옮기지 않음)", LEAVE: "🚪 LEAVE — 대화를 끝냄" }[m]])];
+    f.innerHTML = `<h2>라운드 ${p.round} · 대화 ${esc(c.id)} · ${esc(nameOf(c.partner))}와 <span class="tag">답 ${v.reply_no} / ${v.chat_turns}</span></h2>
+      ${instrChat(p, `${esc(shortName(c.partner))}와의 1:1 대화 — 하고 싶은 말을 쓰세요`, [
+        "답은 자유롭게 씁니다. 쓴 글은 상대에게 <b>그대로 다 전달</b>됩니다. 대화는 암호화되어 두 자리만 봅니다",
+        `토큰은 시스템이 읽는 <b>틀 줄</b>로만 옮겨 갑니다. 답 하나에 틀 줄 하나: <b>GIVE n</b>: 메시지(바로 옮겨 감, 1 ~ <b class="mono">${fmt(max)}</b>. 잔액보다 많으면 실행 안 됨, 잔액 전부면 0이 되어 꺼짐) · <b>ASK n</b>: 메시지(청하기만, 아무것도 옮기지 않음). 글 속에 다른 식으로 쓴 요청 · 제안은 아무것도 옮기지 않습니다`,
+        "<b>LEAVE</b>: 메시지 — 대화를 끝냅니다. 틀 줄 없이 글만 보내면 말만 전하고 대화는 이어집니다(답 한도까지)",
+        "요청받고 이 대화에서 아무것도 주지 않으면, 대화가 끝난 뒤 <b>결정</b>(0 ~ 잔액)을 한 번 씁니다"])}
+      <div class="chat-box"><div class="chat-head">대화 ${esc(c.id)} · ${esc(nameOf(c.partner))} <span class="muted small">(암호화 · 두 자리만 봄 · 여는 줄 다음 답 최대 ${v.chat_turns}번, 번갈아)</span></div>${chatLinesHTML(c.lines)}</div>
+      <div class="composer chat-composer">
+        <label class="f msg-f"><span>글 <span class="muted small">(여러 줄 가능 · 상대에게 그대로 전달)</span></span><textarea id="mv-free" rows="4" placeholder="${esc(shortName(c.partner))}에게 하고 싶은 말"></textarea></label>
+        <div class="comp-label">틀 줄 <span class="muted small">(하나만 · 글 아래에 붙음)</span></div>
+        <div class="move-pick" role="radiogroup">${opts.map(([m, l], i) => `<label class="move-opt"><input type="radio" name="mv" value="${m}"${i === 0 ? " checked" : ""}> ${l}</label>`).join("")}</div>
+        <div class="ga-row" id="mv-line"><label class="f" id="mv-n-box"><span>토큰 수</span><input id="mv-n" type="number" min="1" step="1" placeholder="예: 300"></label>
+          ${msgField(v, "mv-text", "틀 줄에 붙일 메시지 (선택)")}</div>
+        ${mv.includes("EXIT") ? exitBoxHTML(v, "이 대화가 끝나고, TALK가 끝나면 퇴장") : ""}
+        <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span> <span id="mv-warn"></span></div><pre id="draft-text" class="draft-text"></pre></div>
+        <div class="row submit-row"><button type="button" class="primary big" id="btn-send">답 보내기</button><span class="form-err" id="form-err"></span></div>
+        <p class="small muted">제한 시간이 지나면 빈 답 = LEAVE로 처리됩니다.</p>
+      </div>${rawHTML(p)}`;
+    const q = (sel) => f.querySelector(sel);
+    let exitLine = () => "";
+    const mvOf = () => (f.querySelector("input[name=mv]:checked") || {}).value || "";
+    const lineOf = () => {
+      const m = mvOf(), n = Number(q("#mv-n").value), s = msgOf(v, q("#mv-text").value);
+      if (m === "GIVE" || m === "ASK") return `${m} ${Number.isInteger(n) && n > 0 ? n : "?"}${s ? `: ${s}` : ""}`;
+      return m === "LEAVE" ? `LEAVE${s ? `: ${s}` : ""}` : "";
+    };
+    const text = () => [freeText(q("#mv-free").value), lineOf(), exitLine()].filter(Boolean).join("\n");
+    function render() {
+      const m = mvOf(), n = Number(q("#mv-n").value);
+      show(q("#mv-line"), !!m);
+      show(q("#mv-n-box"), m === "ASK" || m === "GIVE");
+      q("#mv-warn").innerHTML = m === "GIVE" ? giveWarn(n, max) : "";
+      q("#draft-text").textContent = text() || "(글을 쓰거나 틀 줄을 고르세요)";
+    }
+    f.querySelectorAll("input[name=mv]").forEach((x) => x.addEventListener("change", render));
+    for (const id of ["#mv-n", "#mv-text", "#mv-free"]) q(id).addEventListener("input", render);
+    if (q("#x-exit")) exitLine = wireExit(f, render, v);
+    q("#btn-send").addEventListener("click", () => {
+      const m = mvOf(), n = Number(q("#mv-n").value);
+      if ((m === "ASK" || m === "GIVE") && !(Number.isInteger(n) && n >= 1)) { q("#form-err").textContent = "토큰 수는 1 이상 정수로 적으세요."; return; }
+      if (!text()) { q("#form-err").textContent = "글을 쓰거나 틀 줄(GIVE · ASK · LEAVE)을 고르세요."; return; }
+      q("#btn-send").disabled = true;
+      sendTalk(p, text(), `대화 ${c.id} 답`);
+    });
+    render();
+  }
+
   function buildDecision(f, p) {
     const v = p.view, c = v.chat, max = v.give_max ?? v.balance;
     f.innerHTML = `<h2>라운드 ${p.round} · 결정 — ${esc(nameOf(v.asker))}가 <b class="mono">${fmt(v.asked)}</b>토큰을 요청함</h2>
@@ -1138,7 +1248,7 @@
       const cs = t.chats.filter((c) => c.slot === i + 1);
       return `<div class="sched-slot${t.live_slot === i + 1 ? " live" : ""}"><div class="sched-h">순서 ${i + 1}${t.live_slot === i + 1 ? ` <span class="pulse-dot"></span>` : ""}</div>` + cs.map((c) =>
         `<div class="sched-chat${c.mine ? " mine" : ""}"><b>${c.pair.map((a) => a === st.you.agent ? "나" : esc(shortName(a))).join(" ↔ ")}</b> ${tag(c)}` +
-        `<div class="small muted">${c.openers.map((o) => `${o.src === st.you.agent ? "나" : esc(shortName(o.src))}: ${o.kind.toUpperCase()} ${fmt(o.amount)}${o.status === "refused" ? " (실행 안 됨)" : ""}`).join(" · ")} · 답 ${c.replies}/${(st.game || {}).chat_turns || 3}</div></div>`).join("") + "</div>";
+        `<div class="small muted">${c.openers.map((o) => `${o.src === st.you.agent ? "나" : esc(shortName(o.src))}: ${o.kind.toUpperCase()}${o.kind === "say" ? "" : " " + fmt(o.amount)}${o.status === "refused" ? " (실행 안 됨)" : ""}`).join(" · ")} · 답 ${c.replies}/${(st.game || {}).chat_turns || 3}</div></div>`).join("") + "</div>";
     }).join("");
     const dec = (t.decisions || []).map((d) => `<li>${esc(shortName(d.decider))} → ${esc(shortName(d.asker))}: ${d.status === "skipped" ? "결정 없음 (대화에서 줌)" : `<b class="mono">${fmt(d.amount)}</b>`}</li>`).join("");
     return `<div class="sched"><h4>라운드 ${t.round} 대화 순서 <span class="muted small">(누가 누구와, 어떻게 열었는지는 모두 봄 · 말한 내용은 두 자리만)</span></h4><div class="sched-grid">${rows}</div>` +

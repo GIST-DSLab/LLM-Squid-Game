@@ -1495,3 +1495,75 @@ def test_v15_representative_ability_rows_leave_non_representatives_out_of_goal_p
     assert {(c["round"], c["agent"]) for c in cal} == reps  # only the representative reports a BELIEF
     d = compare.distribution_rows(ev)
     assert [r["round"] for r in d["rounds"]] == [1, 2]
+
+
+# --- v15 say_chats: SAY <agent> opens a chat; a reply is free text; tokens move by GIVE / ASK template lines ---------
+
+HARNESS_V15S = """
+globalThis.window = globalThis;
+const els = {};
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || { innerHTML: "", hidden: false, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 }) };
+require(process.argv[2]);
+const events = JSON.parse(require("fs").readFileSync(process.argv[3], "utf8"));
+const M = window.__monitor;
+M.S.events = events;
+const m = M.build(events, events.length - 1);
+const ag = {}; for (const a of m.agents) ag[a] = { balance: m.ag[a].balance, status: m.ag[a].status };
+const items = M.convoItems(m, "all", [1]);
+const bubbles = [];
+events.forEach((e, i) => { if (e.event === "chat_turn" || e.event === "talk_intent") { const b = M.build(events, i); M.renderStage(b);
+  for (const a of b.agents) if (b.ag[a].bubble) bubbles.push(b.ag[a].bubble.lines.map((l) => l.slice(1).join(" ")).join(" | ")); } });
+M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
+console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), feed: items.map((x) => M.convoHTML(m, x)),
+  desc: events.filter((e) => ["talk_intent", "chat_turn"].includes(e.event)).map(M.describe), bubbles, grid: els["#grid"].innerHTML }));
+"""
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v15_say_chats_replays_say_openers_and_free_chat_turns(tmp_path):
+    """v15 ``say_chats``: agent-6 opens a chat with SAY agent-11 (no tokens); agent-11 replies with free text and a GIVE
+    200 template line (tokens move); agent-6 answers with free text only (a "say" turn); agent-11 LEAVEs. The page
+    shows the SAY opener as an opening line with no amount, the free text of each turn, the GIVE moved, and never a
+    "SAY 0"; balances agree with the result."""
+    import dataclasses
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    from squid5.core.providers import ProviderConfig, Reply, Stub
+    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
+    s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1])
+    assert s.say_chats
+
+    def respond(messages, cap):
+        a, u = re.search(r"You are (agent-\d+)", messages[0]["content"]).group(1), messages[-1]["content"]
+        if ": OPEN CHAT, turn" in u:
+            return Reply("DONE", 100)
+        if ": VOTE." in u:
+            return Reply(f"PICK {A11}: it has tokens\nBAN {A17}: none", 100)
+        if ": the opening turn." in u:
+            return Reply(f"SAY {A11}: hi from six" if a == A6 else "DONE", 100)
+        if ": your reply in this chat (" in u:
+            n = int(re.search(r"your reply in this chat \((\d+) of", u).group(1))
+            return Reply({1: "hello back, six\nGIVE 200: for your charge", 2: "thanks a lot\nreally"}.get(n, "LEAVE: bye"), 100)
+        if ": your decision." in u:
+            return Reply("DECISION: GIVE 0: no", 100)
+        return Reply("BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: stay", 300)
+    ev = []
+    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-say").run()
+    turns = [e for e in ev if e["event"] == "chat_turn"]
+    assert [(e["speaker"], e["kind"], e["amount"]) for e in turns] == [(A11, "give", 200), (A6, "say", 0), (A11, "leave", 0)]
+    (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
+    (tmp_path / "h.js").write_text(HARNESS_V15S)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert got["ag"] == {a: {"balance": v["final"], "status": v["status"]} for a, v in res["agents"].items()}
+    assert got["warnings"] == []
+    chat = next(c for c in got["rows"]["chats"] if sorted(c["pair"]) == sorted([A6, A11]))
+    assert chat["opening"] == [["say", A6, 0, "done"]] and [t[2] for t in chat["turns"]] == ["give", "say", "leave"]
+    every = json.dumps(got, ensure_ascii=False)
+    assert "SAY 0" not in every and "SAY → agent-11" in every
+    assert f"R1 여는 턴 · {A6} SAY → 11" in got["desc"] and f"R1 여는 턴 · {A17} DONE" in got["desc"]
+    assert any("hi from six" in h and "SAY" in h for h in got["feed"])  # the opening call's SAY line
+    assert any("hello back, six" in h and "GIVE" in h for h in got["feed"]) and any("thanks a lot" in h for h in got["feed"])
+    assert "💬 SAY → " in got["grid"] and "hi from six" in got["grid"]  # agent-6's opening call in the step record

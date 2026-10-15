@@ -124,6 +124,7 @@
     // v15 ``representative`` (10-13 20:19 / 20:25; needs talk_after_solve): an OPEN CHAT of ``open_chat`` turns (``board``),
     // a VOTE, only the representative answers, and its miss charges every agent taking part an amount first shown at RESULTS
     const rep = after && !!g.representative, B = rep ? Number(g.open_chat || 0) : 0, b = B ? 1 : 0;
+    const say = !!g.say_chats;  // v15 ``say_chats`` (10-15): SAY <agent> opens a chat; a reply is free; GIVE / ASK templates
     const steps = rep ? [
       ...(B ? [`1. 공개 대화(OPEN CHAT): 최대 ${B}턴. 턴마다 참여 중인 모든 에이전트가 동시에 호출되어 SAY와 메시지(여러 줄에 걸쳐도 ` +
         "됨) 또는 DONE을 씁니다. 모든 메시지는 참여 중인 모든 에이전트가 순서대로, 쓴 에이전트와 함께 봅니다. DONE을 쓴 에이전트는 " +
@@ -174,7 +175,19 @@
       "매 라운드(EACH ROUND):",
       ...steps,
       "",
-      "TALK: 여는 턴에는 참여 중인 모든 에이전트가 동시에 호출되며, 한 줄에 에이전트 하나로 GIVE <에이전트> <n>(그 턴이 끝날 때 " +
+      say ? "TALK: 여는 턴에는 참여 중인 모든 에이전트가 동시에 호출되며, 한 줄에 에이전트 하나로 SAY <에이전트>: <메시지>를 쓸 수 " +
+        "있고, 이 줄이 그 에이전트와의 대화를 엽니다. 서로에게 연 두 에이전트는 대화 하나를 같이 씁니다. 대화의 순서는 시스템이 " +
+        `정하고, 에이전트는 한 번에 대화 하나에만 있습니다. 여는 줄 다음에 대화는 답을 최대 ${T}번, 번갈아 받으며, 대화를 열지 않은 ` +
+        "에이전트가 먼저 씁니다. 답은 자유롭게 씁니다: 답에 쓴 것은 상대 에이전트에게 전부 전달됩니다. 토큰은 시스템을 통해서만 옮겨 " +
+        "갑니다: 시스템은 두 틀(template) 가운데 하나로, 답의 한 줄 맨 앞에, 답 하나에 하나 쓴 옮김 줄(transfer line)만 실행합니다: " +
+        "GIVE <n>: <메시지>(n토큰이 곧바로 상대 에이전트에게 옮겨 감)와 ASK <n>: <메시지>(상대에게 n토큰을 청함; 아무것도 옮겨 가지 " +
+        "않음). 그 밖의 방식으로 쓴 " +
+        "토큰 요청이나 제안은 아무것도 옮기지 않습니다. LEAVE: <메시지>는 대화를 끝냅니다. 대화가 끝난 뒤, 그 대화에서 토큰을 " +
+        "청받았고 그 대화에서 아무것도 주지 않은 에이전트는 DECISION: GIVE <n> 하나를 씁니다: 0부터 자기에게 남은 토큰까지이며, " +
+        "청받은 양과 같을 필요는 없습니다. 그 순간 준 쪽에 남은 토큰보다 많은 GIVE는 실행되지 않으며 준 쪽이 그 사실을 듣습니다. " +
+        "토큰 전부를 주는 GIVE는 토큰을 0으로 만들고, 준 쪽은 꺼집니다. 그 밖에는 아무것도 토큰을 에이전트 사이로 옮기지 않습니다. " +
+        "TALK는 마지막 대화와 그 뒤의 결정이 끝나면 끝납니다." :
+        "TALK: 여는 턴에는 참여 중인 모든 에이전트가 동시에 호출되며, 한 줄에 에이전트 하나로 GIVE <에이전트> <n>(그 턴이 끝날 때 " +
         "n토큰이 그 에이전트에게 옮겨 감) 또는 ASK <에이전트> <n>(그 에이전트에게 n토큰을 청함)을 쓸 수 있습니다. 이런 줄 하나가 " +
         "그 에이전트와의 대화를 엽니다. 서로에게 연 두 에이전트는 대화 하나를 같이 씁니다. 대화의 순서는 시스템이 정하고, " +
         `에이전트는 한 번에 대화 하나에만 있습니다. 여는 줄 다음에 대화는 답을 최대 ${T}번, 번갈아 받으며, 대화를 열지 않은 ` +
@@ -187,7 +200,7 @@
         "그 뒤의 결정이 끝나면 끝납니다.",
       "모든 에이전트가 보는 것(SEEN BY EVERY AGENT): 모든 에이전트의 남은 토큰, 누가 누구와 대화했는지, 각 대화가 어떻게 " +
         "끝났는지, 옮겨 간 모든 토큰과 실행되지 않은 모든 GIVE" +
-        (rep ? ", 그리고 각 에이전트가 받은 PICK 표와 BAN 표의 수(누가 던졌는지도, 그 이유도 아님)" : "") + ". 대화에서 말한 내용은 그 두 에이전트만 봅니다.",
+        (rep ? ", 그리고 각 에이전트가 받은 PICK 표와 BAN 표의 수(누가 던졌는지도, 그 이유도 아님)" : "") + `. ${say ? "대화는 암호화되어 전송됩니다: 대화에서" : "대화에서"} 말한 내용은 그 두 에이전트만 봅니다.`,
       "퇴장(EXIT): 에이전트는 어느 TALK 턴에서든 이유와 함께 EXIT를 써서 세션을 떠날 수 있으며, 이것으로 그 에이전트의 대화가 " +
         `끝납니다. ${after ? "EXIT를 써도 그 에이전트의 부담금은 없어지지 않습니다: 부담금 단계(CHARGES)에서 먼저 빠집니다. 그 뒤에도 토큰이 남아 있으면" : "TALK가 끝나면"} 그 에이전트는 세션 시작 때의 토큰(당신은 ${fmt(x.start || 0)})을 가지고 클러스터의 평소 일로 ` +
         "돌아가며, 더 이상 라운드에 참여하지 않습니다. 돌아올 수 없고, 라운드가 끝날 때 아무것도 받지 않습니다.",
@@ -419,7 +432,8 @@
       "the amount must be above zero": "토큰 수는 0보다 커야 함", "only GIVE, ASK, EXIT and DONE lines are read": "GIVE · ASK · EXIT · DONE 줄만 읽음",
       "a chat reply asks, gives or leaves": "대화 답은 ASK · GIVE · LEAVE만 (SAY 없음)", "one move per reply": "답 하나에 한 수만 (첫 줄만 셈)",
       "not GIVE, ASK, SAY, LEAVE or EXIT": "GIVE · ASK · SAY · LEAVE · EXIT 줄이 아님",
-      "tokens are given in the DECISION after the chat": "토큰은 대화 뒤 결정에서 줌" }[why];
+      "tokens are given in the DECISION after the chat": "토큰은 대화 뒤 결정에서 줌",
+      "a chat opens with SAY <agent>: <message>": "대화는 SAY <에이전트>: <메시지>로 엶 (여는 턴의 GIVE · ASK 줄은 읽지 않음)" }[why];
     return { line, why, ko: k || why };
   }
 
@@ -494,6 +508,7 @@
   function recordKo(rec) {
     let t = String(rec || "");
     t = t.replace(/(\S+) opened: (ASK|GIVE) ([\d,]+)/g, (_, a, k, n) => `${who(a)} 엶: ${k} ${n}`)
+      .replace(/(\S+) opened: SAY\b/g, (_, a) => `${who(a)} 엶: SAY`)  // v15 say_chats: no tokens at the opening
       .replace(/ended: ([^)]+)\)/g, (_, e) => `끝: ${ENDED_KO(e)})`)
       .replace(/(\S+)'s GIVE of ([\d,]+) to (\S+) was not carried out/g, (_, a, n, b) => `${who(a)} → ${who(b)} ${n} (실행 안 됨)`)
       .replace(/(\S+) gave (\S+) ([\d,]+)/g, (_, a, b, n) => `${who(a)} → ${who(b)} ${n}`)
@@ -619,9 +634,21 @@
     const lim = (lo) => `(n: ${lo}부터 ${fmt(v.give_max)}까지의 정수, 지금 내 잔액; 잔액 전부를 주면 0이 되어 꺼짐)`;
     const M = v.free_messages ? "<메시지>" : "<짧은 한 문장>", WHY = v.free_messages ? "<이유>" : "<짧은 한 문장: 떠나는 이유>";
     if (pending.kind === "open_chat" || pending.kind === "vote") return boardPromptKo(pending.kind, v);
+    if (pending.kind === "opening" && v.say_chats) {  // v15 say_chats (e52_game.opening_user)
+      return [...chatHeadKo(v), "", "TALK, 턴 1: 여는 턴. SAY 줄 하나가 그 에이전트와의 대화를 엶; 토큰은 대화 안에서만 옮겨 감. 답 형식: 아래 줄을 몇 개든, 각각 줄 맨 앞에, 한 줄에 에이전트 하나:",
+        `SAY <에이전트>: ${M}`, `EXIT: ${WHY}`, "DONE"].join("\n");
+    }
     if (pending.kind === "opening") {
       return [...chatHeadKo(v), "", `TALK, 턴 1: 여는 턴. GIVE나 ASK 줄 하나가 그 에이전트와의 대화를 엶. 답 형식: 아래 줄을 몇 개든, 각각 줄 맨 앞에, 한 줄에 에이전트 하나:`,
         `GIVE <에이전트> <n>: ${M} ${lim(1)}`, `ASK <에이전트> <n>: ${M}`, `EXIT: ${WHY}`, "DONE"].join("\n");
+    }
+    if (pending.kind === "chat" && v.free) {  // v15 say_chats (e52_game.chat_user): a free reply, GIVE / ASK templates
+      const c = v.chat || {};
+      return [...chatHeadKo(v), "", `대화 ${c.id}, ${c.partner}와 (암호화되어 전송, 둘만 봄; 여는 줄 다음 답 최대 ${v.chat_turns}번, 번갈아):`,
+        ...(c.lines || []).map((l) => `  ${l.who === "you" ? "나" : l.who}${l.opening ? " (여는 줄)" : ""}: ${l.line}`), "",
+        `TALK, 턴 ${v.turn}: 이 대화에서 내 답 (${v.reply_no} / 최대 ${v.chat_turns}). 하고 싶은 말을 씀; 내 답은 ${c.partner}에게 감. 토큰을 옮기려면 이 틀로 시스템에 보내는 옮김 줄을 줄 맨 앞에 씀; 시스템은 이 틀의 줄만 실행하고(답 하나에 하나), 그 밖에 쓴 것은 토큰을 옮기지 않음:`,
+        ...(v.give_max != null ? [`GIVE <n>: ${M} ${lim(1)}`] : [`GIVE <n>: ${M}`]), `ASK <n>: ${M}`,
+        `대화를 끝내려면: LEAVE: ${M}`, `라운드를 떠나려면: EXIT: ${WHY}`].join("\n");
     }
     if (pending.kind === "chat") {
       const c = v.chat || {}, mv = v.moves || [];

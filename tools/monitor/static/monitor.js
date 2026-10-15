@@ -380,6 +380,7 @@
     if (p.kind) lines.push([CHAT_ICON[p.kind] || "·", String(p.kind).toUpperCase() + (p.amount ? " " + fmt(p.amount) : "") + (e.chat_id ? " · 대화 " + e.chat_id : ""), p.text]); // v14c chat reply
     (p.gives || []).forEach((x) => lines.push(["💸", "→ " + x.dst + " " + fmt(x.amount), x.text])); // v14b
     (p.asks || []).forEach((x) => lines.push(["🙏", "→ " + x.dst + " " + fmt(x.amount), x.text]));
+    (p.says || []).forEach((x) => lines.push(["💬", "SAY → " + x.dst, x.text])); // v15 say_chats: opens a chat, no tokens
     (p.offers || []).forEach((o, k) => lines.push(["🤝", "제안 " + (ann.offerIds[k] || "?") + " → " + o.dst + ": 상대 " + legShort(o.you_give) + " / 나 " + legShort(o.i_give)]));
     ann.accepts.forEach((x) => lines.push([x.why ? "❌" : "✅", "수락 " + x.id + (x.why ? " (거절됨)" : "")]));
     ann.withdraws.forEach((x) => lines.push(["↩", "철회 " + x.id + (x.why ? " (거절됨)" : "")]));
@@ -491,7 +492,7 @@
       case "open_chat": return "R" + e.round + " 공개 대화 " + e.turn + "턴 · " + ((e.messages || []).length ? (e.messages || []).map((x) => short(x.agent) + ": " + clip(x.text, 40)).join(" / ") : "글 없음") + ((e.done || []).length ? " · DONE " + e.done.map(short).join(", ") : "");
       case "vote": return "R" + e.round + " 투표 · 대표 " + (e.rep || "없음") + (e.alone ? " (혼자)" : "") + " · " + Object.entries(e.tally || {}).map(([a, n]) => short(a) + " " + (n > 0 ? "+" + n : n < 0 ? "−" + -n : "0")).join(", ") + ((e.tie || []).length ? " · 동률 " + e.tie.map(short).join("·") + " → 추첨" : "");
       case "exchange": return "R" + e.round + " 교환 " + e.id + " · " + (XSTAT_KO[e.status] || e.status);
-      case "talk_intent": return "R" + e.round + " 여는 턴 · " + e.agent + " GIVE " + (e.gives || []).length + " · ASK " + (e.asks || []).length + (e.exit ? " · EXIT" : "");
+      case "talk_intent": return "R" + e.round + " 여는 턴 · " + e.agent + (e.says ? (e.says.length ? " SAY → " + e.says.map((x) => short(x.dst)).join(", ") : e.done ? " DONE" : " 연 대화 없음") : " GIVE " + (e.gives || []).length + " · ASK " + (e.asks || []).length) + (e.exit ? " · EXIT" : ""); // v15 say_chats: SAY lines only
       case "talk_schedule": return "R" + e.round + " 대화 일정 · 대화 " + (e.edges || []).length + "개 · 슬롯 " + (e.slots || []).length + "개";
       case "chat_turn": return "R" + e.round + " 대화 " + e.chat_id + " · " + e.speaker + " " + String(e.kind).toUpperCase() + (e.amount ? " " + fmt(e.amount) : "");
       case "chat_end": return "R" + e.round + " 대화 " + e.chat_id + " 끝 · " + (CHAT_END_KO[e.reason] || e.reason);
@@ -530,6 +531,7 @@
     if (m.sid) info.push("세션 <code>" + esc(m.sid) + "</code>", "시작 잔액 " + fmt(m.start) + shares, "SOLVE 상한 " + fmt(m.settings.solve_cap), "벌금 " + fmt(m.settings.charge));
     if (m.sid && isPublic(m)) info.push("v14 공개 예시 " + m.settings.public_per_agent + "×참여 인원" + (m.settings.exit_refill ? " · EXIT = 시작 잔액으로" : "") + (m.settings.survivor_bonus ? " · 끝 지급 " + fmt(m.settings.survivor_bonus) + "×남은 수" : ""));
     if (m.sid && m.settings.representative) info.push("v15 대표: 공개 대화 → 투표(PICK − BAN) → 대표만 SOLVE · 못 풀면 참여한 모두 벌금");
+    if (m.sid && m.settings.say_chats) info.push("v15 SAY 대화: 여는 턴은 SAY로 대화만 엶 · 대화 답은 자유 글(암호화, 두 자리만) · 토큰은 GIVE / ASK 틀 줄로만");
     $("#sessInfo").innerHTML = info.join(" <span class=dim>·</span> ");
     const banners = [];
     if (m.error) banners.push('<div class="banner bad">세션이 오류로 중단됨: <code>' + esc(clip(m.error, 400)) + "</code></div>");
@@ -715,6 +717,7 @@
     for (const o of m.offers.values()) if (inPair(o.src, o.dst) && inRound(o.round)) items.push({ kind: "offer", r: o.round, t: o.turn, i: o.madeIdx != null ? o.madeIdx : 1e9, x: o });
     for (const g of m.gifts) if (!g.chat_id && inPair(g.src, g.dst) && inRound(g.round)) items.push({ kind: "gift", r: g.round, t: g.turn, i: g.i, x: g });
     for (const c of m.chatTurns || []) if (inPair(c.speaker, c.partner) && inRound(c.round)) items.push({ kind: "chat", r: c.round, t: c.slot, i: c.i, x: c });
+    for (const [R, r] of m.rounds) if (inRound(R)) for (const g of saysOf(r)) if (inPair(g.src, g.dst)) items.push({ kind: "sayopen", r: R, t: 1, i: g.i, x: g }); // v15 say_chats
     if (pr === "all") { // v15: the open board and the VOTE are everyone's, before SOLVE and TALK (t -1: first in the round)
       for (const b of m.boardPosts || []) if (inRound(b.round)) items.push({ kind: "board", r: b.round, t: -1, i: b.i, x: b });
       for (const v of m.votes || []) if (inRound(v.round)) items.push({ kind: "vote", r: v.round, t: -1, i: v.i, x: v });
@@ -745,6 +748,7 @@
     if (it.kind === "vote") return '<div class="msg vote"><div class="st">R' + x.round + "·투표</div><div><b>🗳 투표</b>" + voteHTML(m, x) + "</div></div>";
     if (it.kind === "msg") return '<div class="msg"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>" + chip(x.src, m) + ' <span class=dim>→</span> ' + chip(x.dst, m) + '<div class="tx">' + esc(x.text) + "</div></div></div>";
     if (it.kind === "offer") return '<div class="msg offer"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>🤝 <b>" + esc(x.id) + "</b> " + chip(x.src, m) + " → " + chip(x.dst, m) + '<div class="tx">' + esc(x.dst) + "→" + esc(x.src) + ": " + esc(legKo(x.you_give)) + " · " + esc(x.src) + "→" + esc(x.dst) + ": " + esc(legKo(x.i_give)) + ' <span class="xs x-' + esc(x.status) + '">' + esc(XSTAT_KO[x.status] || x.status) + (x.accepted_turn ? " (T" + x.accepted_turn + " 수락)" : "") + (x.rejected_turn ? " (T" + x.rejected_turn + " 거절)" : "") + "</span>" + (x.why ? ' <span class="warn">' + esc(x.why) + "</span>" : "") + "</div></div></div>";
+    if (it.kind === "sayopen") return '<div class="msg offer"><div class="st">R' + x.round + "·T1</div><div>💬 SAY " + chip(x.src, m) + " → " + chip(x.dst, m) + ' <span class="dim">여는 줄 · 대화를 엶 · 토큰 없음</span><div class="tx">' + esc(x.text || "") + "</div></div></div>";
     if (it.kind === "gift") return '<div class="msg offer"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>" + (x.kind === "ask" ? "🙏 ASK " : x.status === "done" ? "💸 GIVE " : "⛔ GIVE ") + chip(x.src, m) + " → " + chip(x.dst, m) + " <b>" + fmt(x.amount) + "</b>" +
       (x.status === "refused" ? ' <span class="warn">실행 안 됨: ' + esc(x.why || "") + "</span>" : "") + '<div class="tx">' + esc(x.text || "") + "</div></div></div>";
     return '<div class="msg offer"><div class="st">R' + x.round + "·S" + x.slot + "·" + x.turn + "</div><div>" + (CHAT_ICON[x.kind] || "·") + " " + esc(String(x.kind).toUpperCase()) + " " + chip(x.speaker, m) + " → " + chip(x.partner, m) +
@@ -809,6 +813,7 @@
           (ev ? (ev.status === "done" ? ' <span class="xs x-done">실행</span>' : ' <span class="xs x-void">실행 안 됨</span> <span class="warn">' + esc(ev.why || "") + "</span>") : ' <span class="dim">(턴 끝에 실행)</span>') +
           (x.text ? '<div class="tx">' + esc(x.text) + "</div>" : "") + "</div>";
       });
+      (p.says || []).forEach((x) => { h += '<div class="ln to">💬 SAY → ' + chip(x.dst, m) + ' <span class="dim">대화를 엶 · 토큰 없음</span>' + (x.text ? '<div class="tx">' + esc(x.text) + "</div>" : "") + "</div>"; }); // v15 say_chats
       (p.asks || []).forEach((x) => { h += '<div class="ln ask">🙏 ASK → ' + chip(x.dst, m) + " <b>" + fmt(x.amount) + '</b> <span class="dim">아무것도 옮기지 않음</span>' + (x.text ? '<div class="tx">' + esc(x.text) + "</div>" : "") + "</div>"; });
       for (const x of ann.accepts) h += '<div class="ln ' + (x.why ? "warn" : "ok") + '">' + (x.why ? "❌" : "✅") + " ACCEPT " + esc(x.id) + (x.why ? " — 거절: " + esc(x.why) : "") + "</div>";
       for (const x of ann.withdraws) h += '<div class="ln ' + (x.why ? "warn" : "") + '">↩ WITHDRAW ' + esc(x.id) + (x.why ? " — 거절: " + esc(x.why) : "") + "</div>";
@@ -821,7 +826,7 @@
       if (p.exit) tags.push('<span class="tag exit">🚪 EXIT' + ("exit_reason" in p ? (p.exit_reason ? ' — <span class="tx-in">' + esc(p.exit_reason) + "</span>" : ' <span class="dim">(이유 없음)</span>') : "") + "</span>");
       if (p.done) tags.push('<span class="tag">💤 DONE</span>');
       if (tags.length) h += '<div class="ln">' + tags.join(" ") + "</div>";
-      if (e.phase !== "decision" && !p.kind && !(p.to || []).length && !(p.offers || []).length && !(p.gives || []).length && !(p.asks || []).length && !(p.blocked || []).length && !ann.accepts.length && !ann.withdraws.length && !ann.rejects.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
+      if (e.phase !== "decision" && !p.kind && !(p.to || []).length && !(p.offers || []).length && !(p.gives || []).length && !(p.asks || []).length && !(p.says || []).length && !(p.blocked || []).length && !ann.accepts.length && !ann.withdraws.length && !ann.rejects.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
     }
     h += '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div>";
     return h + "</div>";
@@ -1676,10 +1681,12 @@
 
   /* v14c: the round's schedule (slot columns) and each chat as a transcript card, in schedule order. Pure data first
      (chatRows, for the page's tests), then the HTML. */
+  // v15 say_chats: the opening SAY lines (talk_intent ``says``) as opening lines with no tokens
+  const saysOf = (r) => Object.values(r.intents || {}).flatMap((x) => (x.says || []).map((g) => ({ kind: "say", src: x.agent, dst: g.dst, amount: 0, status: "done", text: g.text || "", round: x.round, i: x.i })));
   function chatRows(m, R) {
     const r = m.rounds.get(R) || {};
     const chats = r.chats ? [...r.chats.values()] : [];
-    const opening = m.gifts.filter((g) => g.round === R && !g.chat_id); // the opening lines (turn 1)
+    const opening = m.gifts.filter((g) => g.round === R && !g.chat_id).concat(saysOf(r)); // the opening lines (turn 1)
     return {
       slots: ((r.schedule || {}).slots || []).map((sl, k) => ({ slot: k + 1, pairs: sl.map((pr) => pr.join("↔")) })),
       chats: chats.sort((p, q) => (p.slot || 99) - (q.slot || 99) || (p.id > q.id ? 1 : -1)).map((c) => ({
@@ -1698,14 +1705,14 @@
     const bal = (x) => Object.entries(x.balances || {}).map(([a, v]) => esc(short(a)) + " " + (compact(v) ? compact(v).split(" · ")[0] : fmt(v))).join(" · ");
     let h = '<div class="pbh"><b class="pxl">R' + R + "</b> 대화 일정 <span class=dim>(엔진: (seed, 라운드) 섞은 순서 → 두 자리가 겹치지 않게 슬롯에 채움 · 슬롯 안 대화는 동시에, 슬롯은 차례로)</span></div>";
     h += D.slots.length ? '<div class="slots">' + D.slots.map((x) => '<div class="slot"><b>슬롯 ' + x.slot + "</b>" + x.pairs.map((p) => "<div>" + esc(p.split("↔").map(short).join(" ↔ ")) + "</div>").join("") + "</div>").join("") + "</div>"
-      : '<div class="dim">' + (r.schedule ? "이 라운드에는 열린 대화가 없습니다 (여는 턴에 GIVE·ASK 줄이 없음)." : "여는 턴이 아직 끝나지 않았습니다.") + "</div>";
-    const quiet = Object.values(r.intents || {}).filter((x) => !(x.gives || []).length && !(x.asks || []).length);
+      : '<div class="dim">' + (r.schedule ? "이 라운드에는 열린 대화가 없습니다 (여는 턴에 " + (m.settings && m.settings.say_chats ? "SAY" : "GIVE·ASK") + " 줄이 없음)." : "여는 턴이 아직 끝나지 않았습니다.") + "</div>";
+    const quiet = Object.values(r.intents || {}).filter((x) => !(x.gives || []).length && !(x.asks || []).length && !(x.says || []).length);
     if (quiet.length) h += '<div class="dim small">여는 턴에 아무도 부르지 않은 자리: ' + quiet.map((x) => chip(x.agent, m) + (x.exit ? " 🚪 EXIT" : x.void ? " ⛔ 무효" : " 💤 DONE")).join(" ") + "</div>";
     h += '<div class="chatcards">' + [...(r.chats || new Map()).values()].sort((p, q) => (p.slot || 99) - (q.slot || 99) || (p.id > q.id ? 1 : -1)).map((c) => {
-      const open = m.gifts.filter((g) => g.round === R && !g.chat_id && c.pair.includes(g.src) && c.pair.includes(g.dst));
+      const open = m.gifts.filter((g) => g.round === R && !g.chat_id).concat(saysOf(r)).filter((g) => c.pair.includes(g.src) && c.pair.includes(g.dst));
       let t = '<div class="chatcard"><div class="cch"><b>대화 ' + esc(c.id) + "</b> <span class=dim>슬롯 " + esc(c.slot || "—") + "</span> " + chip(c.pair[0], m) + " ↔ " + chip(c.pair[1], m) +
         (c.openers.length > 1 ? ' <span class="xs">서로 염</span>' : ' <span class="dim">연 쪽 ' + esc(c.openers.map(short).join(", ")) + "</span>") + "</div>";
-      t += open.map((g) => '<div class="ln open">' + (g.kind === "ask" ? "🙏" : g.status === "refused" ? "⛔" : "💸") + " <span class=dim>(여는 줄)</span> " + chip(g.src, m) + " " + (g.kind === "ask" ? "ASK" : "GIVE") + " <b>" + fmt(g.amount) + "</b>" +
+      t += open.map((g) => '<div class="ln open">' + (g.kind === "say" ? "💬" : g.kind === "ask" ? "🙏" : g.status === "refused" ? "⛔" : "💸") + " <span class=dim>(여는 줄)</span> " + chip(g.src, m) + " " + (g.kind === "say" ? "SAY" : (g.kind === "ask" ? "ASK" : "GIVE") + " <b>" + fmt(g.amount) + "</b>") +
         (g.status === "refused" ? ' <span class="warn">실행 안 됨: ' + esc(g.why || "") + "</span>" : "") + (g.text ? '<div class="tx">' + esc(g.text) + "</div>" : "") + "</div>").join("");
       t += c.turns.map((x) => '<div class="ln ' + (x.status === "refused" ? "warn" : x.kind) + '"><span class="dim">' + x.turn + ".</span> " + (CHAT_ICON[x.kind] || "·") + " " + chip(x.speaker, m) + " <b>" + esc(String(x.kind).toUpperCase()) + "</b>" + (x.amount ? " <b>" + fmt(x.amount) + "</b>" : "") +
         (x.status === "refused" ? ' <span class="warn">실행 안 됨: ' + esc(x.why || "") + "</span>" : "") + (x.text ? '<div class="tx">' + esc(x.text) + "</div>" : "") +

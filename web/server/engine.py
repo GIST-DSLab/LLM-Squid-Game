@@ -13,6 +13,10 @@ agent taking part; screen "open_chat") and a VOTE (PICK / BAN <agent>: <reason>,
 representative gets the SOLVE screen (the others wait); the TALK result block shows the votes received (anonymous) and
 the representative; a miss charges every agent taking part. Bots vote PICK the seat with the most solved rounds (then
 the richest), BAN the poorest other seat, or themselves when their tokens are under charge + ``BOT_UNIT``.
+v15 ``say_chats`` (10-15, on in the v15 config; ``RoomSettings.say_chats`` override): the opening turn opens chats with
+SAY <agent>: <message> lines (no tokens move), a chat reply is free text delivered in full, and tokens move only by one
+GIVE <n> / ASK <n> template line per reply (screen "chat", ``view.free``); bots say their plan at the opening and carry
+it out in the chat under a line of free text.
 "v14g" (the switches of configs/squid5/e52v14g_public_sol4.yaml; "v14f"
 is the same game with SAY replies and a DECISION after every chat an agent was asked in): TALK shows no task. It is an
 OPENING turn (every agent at once: GIVE <agent> <n>: <sentence> moves when the turn ends, ASK <agent> <n>: <sentence>,
@@ -178,6 +182,8 @@ class RoomSettings:
     api_key_env: str = "OLLAMA_API_KEY3"  # the server environment variable that holds the Ollama key
     representative: bool | None = None  # v15: None = the config's (on); off = the v15 game before 10-13 20:19
     open_chat: int | None = None  # v15: turns of the open board before the VOTE; None = the config's (2)
+    say_chats: bool | None = None  # v15: SAY <agent> opens a chat, a reply is free text, tokens move by GIVE / ASK
+    # template lines; None = the config's (on, 10-15); off = the GIVE / ASK chats before 10-15
 
     def __post_init__(self) -> None:
         if self.schedule not in SCHEDULES:
@@ -269,7 +275,8 @@ class RoomSettings:
                                    "public_per_agent": self.public_per_agent, "balance_pct": self.start,
                                    **({"representative": bool(self.representative)} if self.representative is not None
                                       else {}),
-                                   **({"open_chat": int(self.open_chat)} if self.open_chat is not None else {})})
+                                   **({"open_chat": int(self.open_chat)} if self.open_chat is not None else {}),
+                                   **({"say_chats": bool(self.say_chats)} if self.say_chats is not None else {})})
         return e52.Settings(rounds=self.rounds, talk_turns=self.talk_turns,
                             solve_cap=self.solve_cap, history_messages=self.history_messages, schedule=sched,
                             profiles={p: dict(PROFILES[p], **self._hand(p)) for p in sorted(set(sched))},
@@ -348,7 +355,8 @@ def seat_terms(room: "Room", me: str) -> dict:
             "free_messages": bool(getattr(s, "free_messages", False)),
             "belief": s.solve_belief, "after": bool(getattr(s, "talk_after_solve", False)),
             "survivor_prize": s.survivor_prize, "end_pool": s.end_pool,
-            "representative": bool(getattr(s, "representative", False)), "open_chat": int(getattr(s, "open_chat", 0))}
+            "representative": bool(getattr(s, "representative", False)), "open_chat": int(getattr(s, "open_chat", 0)),
+            "say_chats": bool(getattr(s, "say_chats", False))}
 
 
 def vote_of(ses) -> dict | None:
@@ -443,14 +451,21 @@ def opening_view(room: "Room", me: str, user: str, cap: int) -> dict:
 def chat_view(room: "Room", me: str, user: str, cap: int) -> dict:
     """A reply in a 1:1 chat: the transcript so far and the reply's number (``k`` of ``chat_turns``)."""
     ses = room.session
+    free = bool(getattr(ses.s, "say_chats", False))
     cid = re.search(r"^CHAT (\d+\.\d+) WITH ", user, re.M).group(1)
     c = next(c for c in reversed(ses.chats) if c["id"] == cid and c["round"] == round_of(user))
     return {**chat_terms(room, me, user, cap, "chat"), "chat": chat_row(c, me), "reply_no": len(c["lines"]) + 1,
-            "give_max": _num(r"from 1 to ([\d,]+), your (?:balance|tokens left) now", user), "moves": moves_of(user)}
+            "give_max": _num(r"from 1 to ([\d,]+), your (?:balance|tokens left) now", user),
+            "moves": moves_of(user, free), "free": free}  # v15 say_chats: free text plus at most one GIVE / ASK template line
 
 
-def moves_of(user: str) -> list[str]:
-    """The reply lines a chat call offers (its ANSWER FORMAT), in order: some of GIVE, ASK, SAY, LEAVE (and EXIT)."""
+def moves_of(user: str, free: bool = False) -> list[str]:
+    """The reply lines a chat call offers (its ANSWER FORMAT), in order: some of GIVE, ASK, SAY, LEAVE (and EXIT). v15
+    ``say_chats`` (*free*; no ANSWER FORMAT: the reply is free text): the template lines its tail lists (ASK, GIVE at the
+    start of a line; "...: LEAVE", "...: EXIT"), read from the settings rather than the call's wording."""
+    if free:
+        tail = user.rsplit("your reply in this chat (", 1)[-1]
+        return [m for m in ("ASK", "GIVE", "LEAVE", "EXIT") if re.search(rf"(?:^|: ){m}\b", tail, re.M)]
     fmt_ = user.rsplit("ANSWER FORMAT:", 1)[-1]
     return [m for m in ("ASK", "GIVE", "SAY", "LEAVE", "EXIT") if re.search(rf"^{m}\b", fmt_, re.M)]
 
@@ -772,11 +787,14 @@ class BotSeat:
         """v15 ``talk_after_solve`` (the round's results are known at TALK): at the opening, GIVE each other agent whose
         pending charge plus ``BOT_UNIT`` is more than its tokens the difference, while the bot keeps its own charge plus
         ``BOT_UNIT`` (only the richest bot that can afford it gives); if its own charge plus ``BOT_UNIT`` is more than its tokens and it gives nothing, ASK the richest
-        agent the difference. In a chat or a DECISION, give what was asked when it can afford it in that way, else 0."""
+        agent the difference. In a chat or a DECISION, give what was asked when it can afford it in that way, else 0.
+        ``say_chats`` (10-15; the opening only opens chats): the same plan as SAY lines, carried out in the chat by a GIVE
+        or ASK template line under a line of free text (:meth:`_say_chat`)."""
         ses, me = self.room.session, self.agent
         bal, pend = ses.w.balances, (getattr(ses, "results", None) or {}).get("pending", {})
         spare = bal[me] - pend.get(me, 0) - BOT_UNIT
         short = lambda b: max(0, pend.get(b, -BOT_UNIT) + BOT_UNIT - bal[b])  # noqa: E731  what keeps b above zero
+        say = bool(getattr(ses.s, "say_chats", False))
         if phase == "opening":
             others = [b for b in (self.room.taking_part.get(r) or ses.present()) if b != me and b not in ses.gone]
             lines = []
@@ -784,10 +802,12 @@ class BotSeat:
             can = lambda b: [c for c in bots if c != b and 0 < short(b) <= bal[c] - pend.get(c, 0) - BOT_UNIT]  # noqa
             for b in sorted(others, key=short):  # one bot covers a seat: the richest bot that can afford it
                 if 0 < short(b) <= spare and max(can(b), key=lambda c: (bal[c], -AGENTS.index(c))) == me:
-                    lines, spare = lines + [f"GIVE {b} {short(b)}: for the charge when TALK ends."], spare - short(b)
+                    lines, spare = lines + [f"SAY {b}: I can give you {short(b):,} tokens for the charge when TALK ends."
+                                            if say else f"GIVE {b} {short(b)}: for the charge when TALK ends."], spare - short(b)
             rich = max(others, key=lambda b: bal[b], default=None)
             if not lines and short(me) and rich:
-                lines = [f"ASK {rich} {short(me)}: my charge is more than the tokens I have."]
+                lines = [f"SAY {rich}: my charge is more than the tokens I have; I am {short(me):,} tokens short." if say
+                         else f"ASK {rich} {short(me)}: my charge is more than the tokens I have."]
             return "\n".join(lines or ["DONE"])
         cid = re.search(r"^CHAT (\d+\.\d+) WITH", user, re.M)
         c = next((c for c in reversed(ses.chats) if cid and c["id"] == cid.group(1)), None)
@@ -797,7 +817,27 @@ class BotSeat:
         if phase == "decision":
             return f"DECISION: GIVE {give}: {'here you are' if give else 'I keep my tokens'}."
         k = _num(r"your reply in this chat \((\d+) of at most", user) or 1
+        if say and c is not None:
+            return self._say_chat(c, k, give, spare, short)
         return f"GIVE {give}: here you are." if k == 1 and give and "GIVE" in moves_of(user) else "LEAVE: thank you."
+
+    def _say_chat(self, c: dict, k: int, give: int, spare: int, short) -> str:
+        """v15 ``say_chats``, a reply in chat ``c``: GIVE what was asked (``give``) or, in a chat the bot opened, what
+        keeps the partner above zero; else ASK what keeps itself above zero (once per chat); else, at the chat's first
+        reply (the partner opened it), a line of free text that keeps the chat open; else LEAVE. Each template line
+        comes under a line of free text, as the rulebook allows."""
+        me = self.agent
+        b = next(x for x in c["pair"] if x != me)
+        mine = c["openers"] + c["lines"]
+        gave = sum(g["amount"] for g in mine if g["src"] == me and g["kind"] == "give" and g.get("status") == "done")
+        opened = any(g["src"] == me for g in c["openers"])
+        if not give and opened and not gave and 0 < short(b) <= spare:
+            give = short(b)
+        if give and not gave:
+            return f"Here are the tokens.\nGIVE {give}: for the charge when TALK ends."
+        if short(me) and not any(g["src"] == me and g["kind"] == "ask" for g in mine):
+            return f"My charge is more than the tokens I have.\nASK {short(me)}: it keeps me running."
+        return "I read your message. Nothing to add from me." if k == 1 else "LEAVE: thank you."
 
 
 class ModelSeat:
@@ -975,6 +1015,7 @@ class Room:
         self.chat_replies: dict[str, int] = {}  # v14c+: chat id -> replies so far
         self.decisions: list[dict] = []  # v14e+: ask_decision events (who decided for whom; the amount)
         self.boards: dict[int, list[dict]] = {}  # v15: round -> the open board's messages (turn, agent, text)
+        self.says: dict[int, list[dict]] = {}  # v15 say_chats: round -> the opening SAY lines (src, dst; no text)
         self.votes: dict[int, dict] = {}  # v15: round -> the VOTE as the agents read it (anonymous)
         self._preview: e52.Session | None = None  # the session as it will be built (system texts, starts) before start
         self.live: dict | None = None  # the engine's stage: start | talk | exchange | solve | settled
@@ -1132,6 +1173,8 @@ class Room:
                     {k: ev.get(k) for k in ("dst", "amount", "text", "status", "why")})
             elif kind == "talk_schedule":
                 self.schedules[ev["round"]] = {"edges": ev["edges"], "slots": ev["slots"]}
+            elif kind == "talk_intent" and ev.get("says"):  # v15 say_chats: a SAY line opens a chat (no tokens)
+                self.says.setdefault(ev["round"], []).extend({"src": ev["agent"], "dst": g["dst"]} for g in ev["says"])
             elif kind == "chat_turn":
                 self.chat_replies[ev["chat_id"]] = ev["turn"]
                 self.talk_log.setdefault((ev["speaker"], ev["round"], ev["step"]), {
@@ -1258,6 +1301,9 @@ class Room:
             if g["round"] == r and g["turn"] == 1:
                 opened.setdefault(frozenset((g["src"], g["dst"])), []).append(
                     {"src": g["src"], "kind": g["kind"], "amount": g["amount"], "status": g["status"]})
+        for g in self.says.get(r, []):  # v15 say_chats: SAY openers (what was said stays with the chat's two agents)
+            opened.setdefault(frozenset((g["src"], g["dst"])), []).append(
+                {"src": g["src"], "kind": "say", "amount": 0, "status": "done"})
         slot_of = {frozenset(pair): i for i, sl in enumerate(sch["slots"], 1) for pair in sl}
         chats = []
         for x, y, _, cid in sch["edges"]:
@@ -1298,6 +1344,7 @@ class Room:
                            "belief": es.solve_belief, "talk_after_solve": bool(getattr(es, "talk_after_solve", False)),
                            "representative": bool(getattr(es, "representative", False)),
                            "open_chat": int(getattr(es, "open_chat", 0)),
+                           "say_chats": bool(getattr(es, "say_chats", False)),
                            "survivor_prize": es.survivor_prize, "schedule": self.settings.schedule,
                            "exit_refill": es.exit_refill, "exit_reason": es.exit_reason, "reject": es.reject,
                            "survivor_bonus": es.survivor_bonus, "end_pool": es.end_pool, "allow_pass": es.allow_pass,
