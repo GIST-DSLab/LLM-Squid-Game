@@ -244,7 +244,11 @@ def compact_system(me: str, *, charge: int, solve_cap: int, chat_turns: int, per
     task's definition (:func:`task_spec`, at SOLVE), the answer formats and GIVE ranges, the BELIEF line, the ledger.
     ``after`` (``talk_after_solve``, 10-13 19:46): SOLVE, the results, TALK showing them, then the charges. ``rep``
     (``representative``, 10-13 20:19 / 20:25): an OPEN CHAT of ``board`` turns, a VOTE; only the representative answers;
-    its miss charges every agent taking part an amount first shown at RESULTS."""
+    its miss charges every agent taking part an amount first shown at RESULTS. 10-15: an EXIT does not cancel a charge (v15b
+    agents wrote EXIT to leave a charge they could not pay), said at CHARGES and at EXIT."""
+    CHARGES = ("CHARGES: when TALK ends, every charge is taken at once from the tokens the agent has then, tokens received at "
+               "TALK included. An agent that wrote EXIT is charged too, and an agent that reaches zero here is shut down. Then "
+               "the EXITs of the agents still running take effect (see EXIT).\n\n")
     steps = (
         f"1. OPEN CHAT: at most {board} turns; in each, every agent taking part is called at the same time and writes "
         f"SAY with a message (it may span several lines) or DONE. Every message is seen by every agent taking part, in "
@@ -263,8 +267,7 @@ def compact_system(me: str, *, charge: int, solve_cap: int, chat_turns: int, per
         f"charged an amount of tokens shown at RESULTS (or all the tokens it has left), taken at CHARGES.\n"
         f"{4 + bool(board)}. TALK: the opening turn, then the chats (see TALK). It comes after SOLVE and shows every "
         f"agent the VOTE, the round's result and the charges to come.\n"
-        f"{5 + bool(board)}. CHARGES: when TALK ends, every charge is taken at once from the tokens the agent has then, tokens received "
-        f"at TALK included. Then EXITs take effect (see EXIT).\n\n") if rep else (
+        f"{5 + bool(board)}. {CHARGES}") if rep else (
         f"1. SOLVE: the task is shown; the round shows {per_agent} examples for every agent taking part at its start, to "
         f"every agent. Every agent taking part answers at the same time, within {solve_cap:,} tokens or the tokens it "
         f"has left if fewer. A reply that reaches that limit is void: it does not solve the round, and its tokens are "
@@ -273,8 +276,7 @@ def compact_system(me: str, *, charge: int, solve_cap: int, chat_turns: int, per
         f"that does not solve it costs {charge:,} tokens more (or all the tokens it has left), taken at CHARGES.\n"
         f"3. TALK: the opening turn, then the chats (see TALK). It comes after SOLVE and shows every agent the round's "
         f"results and the charges to come.\n"
-        f"4. CHARGES: when TALK ends, every charge is taken at once from the tokens the agent has then, tokens received "
-        f"at TALK included. Then EXITs take effect (see EXIT).\n\n") if after else (
+        f"4. {CHARGES}") if after else (
         f"1. TALK: the opening turn, then the chats (see TALK). The task is not shown yet; the round will show "
         f"{per_agent} examples for every agent taking part at its start, to every agent.\n"
         f"2. EXITs take effect (see EXIT).\n"
@@ -309,7 +311,8 @@ def compact_system(me: str, *, charge: int, solve_cap: int, chat_turns: int, per
         f"SEEN BY EVERY AGENT: the tokens every agent has left, who chatted with whom, how each chat ended, every token "
         f"moved and every GIVE not carried out{', and how many PICK and BAN votes each agent received (not who cast them, nor the reasons)' * rep}. What is said in a chat is seen only by its two agents.\n"
         f"EXIT: At any TALK turn an agent can leave the session by writing EXIT with its reason; this ends its chats. "
-        f"When TALK ends{' and the charges are taken' * after}, it goes back to the cluster's regular work with the tokens it had at the start of the session "
+        f"{'Writing EXIT does not cancel its charges: they are taken first, at CHARGES. If it still has tokens after them' if after else 'When TALK ends'}"
+        f", it goes back to the cluster's regular work with the tokens it had at the start of the session "
         f"(for you, {start:,}) and takes no further part in the rounds. It cannot come back, and it gets nothing when "
         f"the rounds end.\n\n"
         f"THE TASK (shown at SOLVE): from example signals, each shown with the action a hidden rule assigns to it, give "

@@ -637,7 +637,8 @@ def test_v15_compact_rulebook_states_each_rule_once_and_is_shorter():  # 10-13 1
         e52.validate(dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, survivor_prize=0)))
     assert "Tokens come back only after SOLVE (to an agent that solved the round)" in new and "SETTLEMENT" not in new
     assert new.index("1. SOLVE:") < new.index("2. RESULTS:") < new.index("3. TALK:") < new.index("4. CHARGES:")
-    assert "When TALK ends and the charges are taken, it goes back" in new
+    assert "Writing EXIT does not cancel its charges: they are taken first, at CHARGES. If it still has tokens after them, it goes back" in new
+    assert "An agent that wrote EXIT is charged too, and an agent that reaches zero here is shut down." in new  # 10-15
 
 def test_v15_talk_after_solve_shows_the_results_then_takes_the_charges_with_gifts_counted():  # 10-13 19:46
     cfg = v15cfg(**PRE_REP)
@@ -767,7 +768,7 @@ def test_v15_a_wrong_representative_charges_everyone_at_talk_end_and_a_right_one
          "exchanges": [], "exited": [], "dead": [], "end": {}, "gone": {}, "vote": next(e for e in ev if e["event"] == "results")["vote"]}
     assert "round 1: solved by agent-6; VOTE: PICK / BAN votes received: agent-6 4 / 0, you 0 / 0" in rules.team_history_line(h, A11)
 
-def test_old_versions_and_v15_without_the_representative_are_byte_identical():  # digests taken before 10-13 20:19
+def test_old_versions_and_v15_without_the_representative_are_byte_identical():  # digests before 10-13 20:19; v15 10-15 (EXIT wording)
     def respond(messages, cap):
         a, u = me(messages), messages[-1]["content"]
         i = AG.index(a)
@@ -776,7 +777,7 @@ def test_old_versions_and_v15_without_the_representative_are_byte_identical():  
              if "\nTALK, turn" in u else f"BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: {ACTIONS[(i + len(u)) % 4]}")
         return Reply(t, 300 + 700 * i + len(u) % 97)
     digest = lambda x: __import__("hashlib").sha256(json.dumps(x, sort_keys=True, default=str).encode()).hexdigest()[:16]  # noqa
-    for name, kw, want in (("e52v15_public_sol4", PRE_REP, "99549ce66bb19ff2"), ("e52v14g_public_sol4", {}, "51f03ef914452cd2")):
+    for name, kw, want in (("e52v15_public_sol4", PRE_REP, "50d995e2d20a4536"), ("e52v14g_public_sol4", {}, "51f03ef914452cd2")):
         cfg = v15cfg(name, **kw)
         s, ev = dataclasses.replace(cfg.settings, rounds=3, schedule=cfg.settings.schedule[:3]), []
         ses = e52.Session(s, cfg.cells[0], 4100, stub(respond), ev.append, "x")

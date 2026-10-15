@@ -94,7 +94,7 @@ mode: game
 reps: 3
 seed0: 4100
 workers: 3
-out_root: ~/squid5-runs/e52_v15b  # 10-13 22:51 runs (the first v15 runs, 1B and 100/75/50/25 %, are in e52_v15)
+out_root: ~/squid5-runs/e52_v15c  # 10-15 EXIT wording (e52_v15b: 10-13 22:51, 1M and 50/40/30/20 %; e52_v15: the first v15 runs)
 model: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900, base_url: "http://127.0.0.1:18781"}  # claude seats: the relay (tools/relay.py 18781) must run
 game:
   rounds: 12  # not shown to the agents
