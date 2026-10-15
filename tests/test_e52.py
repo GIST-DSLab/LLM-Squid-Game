@@ -597,7 +597,7 @@ def v15cfg(name="e52v15_public_sol4", now=False, **kw):  # the v15 config; tests
     cfg = load(Path(__file__).parents[1] / f"configs/squid5/{name}.yaml", EXPERIMENTS)  # representative off, and
     if name.startswith("e52v15") and not now:  # tests from before 22:51 pin that day's start shares and end prize
         cfg, kw = dataclasses.replace(cfg, cells=[dataclasses.replace(c, shares=(1.0, .75, .5, .25)) for c in cfg.cells]), {
-            "survivor_prize": 10 ** 9, "say_chats": False, "chat_turns": 3, **kw}  # and the GIVE / ASK chats from before 10-15
+            "survivor_prize": 10 ** 9, "say_chats": False, "chat_turns": 3, "refund_all": True, **kw}  # and 10-13 21:12 .. 10-15 chats
     return dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, **kw))
 
 PRE_REP = dict(representative=False, open_chat=0, charge=2000, refund_all=False)
