@@ -1338,7 +1338,7 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
     s = e52.Settings(**{**{k: getattr(cfg.settings, k) for k in e52.Settings.__dataclass_fields__}, "rounds": 1,
                         "schedule": cfg.settings.schedule[:1],
                         # the pre-representative v15 game: everyone solves, no open chat, the old 2,000 charge
-                        "representative": False, "open_chat": 0, "charge": 2000})
+                        "representative": False, "open_chat": 0, "charge": 2000, "say_chats": False})
     sp = s.profiles[s.schedule[0]]
     right = public_truth(4100, 1, sp, 4, 4).evaluate(public_round(4100, 1, sp, 4, 4)[0].queries[0])
 

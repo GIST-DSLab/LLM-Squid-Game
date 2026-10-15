@@ -163,14 +163,16 @@ def parse_talk(text: str, present: list[str], known: list[str], you: str, reject
 
 _GA = re.compile(r"(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?", re.I | re.S)
 
-def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False) -> dict:
+def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False,
+                   say: bool = False) -> dict:
     """5.2 v14b TALK (``transfers: give_ask``): ``GIVE <agent> <n>: <sentence>`` and ``ASK <agent> <n>: <sentence>``
     lines (one agent and a whole number above zero each; the sentence may be left out) and EXIT / DONE alone on a line,
     as in :func:`parse_talk`. A TO / OFFER / ACCEPT / WITHDRAW / REJECT line, or a GIVE / ASK line that cannot be
     carried out, is kept in ``dropped`` with the reason; any other line is ignored. Never raises: a reply with nothing
-    usable counts as DONE and gets a ``format_error``. ``present`` = the other agents taking part."""
+    usable counts as DONE and gets a ``format_error``. ``present`` = the other agents taking part. ``say`` (v15
+    ``say_chats``, 10-15): ``SAY <agent>: <message>`` lines open chats (``says``) and GIVE / ASK lines are dropped."""
     out = {"gives": [], "asks": [], "exit": False, "done": False, "dropped": [], "format_error": None} | (
-        {"exit_reason": None} if exit_reason else {})
+        {"exit_reason": None} if exit_reason else {}) | ({"says": []} if say else {})
     for line in text.splitlines():
         bare = re.sub(r"[*`]", "", line).strip().strip("#>-. _")
         why = re.fullmatch(r"EXIT\s*:\s*(.*)", bare, flags=re.I | re.S) if exit_reason else None
@@ -178,6 +180,12 @@ def parse_give_ask(text: str, present: list[str], known: list[str], you: str, ex
             out["exit" if why else bare.lower()] = True
             if why:
                 out["exit_reason"] = why.group(1).strip() or None
+        elif say and (m := re.match(r"(SAY|GIVE|ASK)\b\s*(agent[\s-]?\d+)?\s*:?\s*(.*)$", bare, re.I | re.S)):
+            name = (_to_names(m.group(2) or "", known) or [None])[0]
+            why = ("a chat opens with SAY <agent>: <message>" if m.group(1).upper() != "SAY" or not name else
+                   "not another agent" if name == you else "that agent is not taking part" if name not in present else None)
+            out["dropped" if why else "says"].append(f"{line.strip()}: {why}" if why else {"dst": name, "amount": 0,
+                                                                                         "text": m.group(3).strip()})
         elif m := re.match(r"(GIVE|ASK)\s+(.*)$", bare, re.I | re.S):
             b = _GA.fullmatch(m.group(2).strip())
             name = (_to_names(b.group(1), known) or [None])[0] if b else None
@@ -191,21 +199,23 @@ def parse_give_ask(text: str, present: list[str], known: list[str], you: str, ex
                 out[m.group(1).lower() + "s"].append({"dst": name, "amount": n, "text": (b.group(3) or "").strip()})
         elif re.match(r"(TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b", bare, re.I):
             out["dropped"].append(f"{line.strip()}: only GIVE, ASK, EXIT and DONE lines are read")
-    if not any(out[k] for k in ("gives", "asks", "exit", "done")):
+    if not any(out.get(k) for k in ("gives", "asks", "says", "exit", "done")):
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 
 _MOVE = re.compile(r"(GIVE|ASK)\s+(?:agent[\s-]?\d+\s*:?\s*)?(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?|(SAY|LEAVE)\b\s*:?\s*(.*)",
                    re.I | re.S)
 
-def parse_chat(text: str, exit_reason: bool = False, say: bool = True) -> dict:
+def parse_chat(text: str, exit_reason: bool = False, say: bool = True, free: bool = False) -> dict:
     """5.2 v14c one chat reply: ONE of ``GIVE <n>: <sentence>`` / ``ASK <n>: <sentence>`` (a partner name before n is
     read too) / ``SAY: <sentence>`` / ``LEAVE: <sentence>``, and an EXIT line (``EXIT: <reason>`` with *exit_reason*).
     The first such line counts; a second one and any other non-empty line are kept in ``dropped`` with the reason. A
     reply with no move counts as LEAVE (with a ``format_error`` unless it held EXIT). Never raises. ``say`` off (5.2 v14g
-    ``chat_moves_only``): a SAY line is dropped, a chat reply asking, giving or leaving."""
+    ``chat_moves_only``): a SAY line is dropped, a chat reply asking, giving or leaving. ``free`` (v15 ``say_chats``,
+    10-15): every other line is message, kept in ``text`` before the move's own; a reply with no move is a SAY."""
     out = {"kind": None, "amount": 0, "text": "", "exit": False, "dropped": [], "format_error": None} | (
         {"exit_reason": None} if exit_reason else {})
+    prose = []
     for line in text.splitlines():
         bare = re.sub(r"[*`]", "", line).strip().strip("#>-. _")
         why = re.fullmatch(r"EXIT\s*(?::\s*(.*))?", bare, flags=re.I | re.S)
@@ -219,11 +229,16 @@ def parse_chat(text: str, exit_reason: bool = False, say: bool = True) -> dict:
         elif m and out["kind"] is None and (m.group(4) or int(m.group(2).replace(",", ""))):
             out.update(kind=(m.group(1) or m.group(4)).lower(), amount=int((m.group(2) or "0").replace(",", "")),
                        text=(m.group(3) if m.group(1) else m.group(5) or "").strip())
+        elif free and line.strip() and not (m and out["kind"]):
+            prose.append(line.strip())
         elif bare:
             out["dropped"].append(f"{line.strip()[:200]}: " + ("one move per reply" if m and out["kind"] else
                                                                 "not GIVE, ASK, SAY, LEAVE or EXIT"))
+    if out["kind"] is None and free and prose:
+        out["kind"] = "say"
     if out["kind"] is None:
         out["kind"], out["format_error"] = "leave", None if out["exit"] else "no GIVE, ASK, SAY or LEAVE line"
+    out["text"] = "\n".join(prose + [out["text"]] * bool(out["text"]))
     return out
 
 def parse_belief(text: str) -> dict:

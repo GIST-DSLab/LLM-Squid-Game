@@ -82,6 +82,7 @@ class Settings:
     representative: bool = False  # v15 (10-13 20:19, talk_after_solve): VOTE; one agent solves; its miss charges all
     refund_all: bool = False  # v15 (10-13 21:12; only with representative): a solved round gives every agent all its round's tokens
     open_chat: int = 0  # v15 (10-13 20:25, representative): turns of an open board (SAY / DONE) before the VOTE
+    say_chats: bool = False  # v15 (10-15): SAY <agent> opens a chat; a reply is free text, tokens move by GIVE / ASK lines
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -105,7 +106,8 @@ def validate(cfg) -> None:
                                 and s.refund == "solve" and not s.allow_pass and all(
                                     p.distinct_actions and p.n_queries == 1 and not p.ambiguity for p in s.profiles.values())):
         raise ValueError("game: compact_rules states the v15 switches only (chat moves, exit_refill, survivor_prize, ...)")
-    if s.talk_after_solve and not s.compact_rules or s.representative and not s.talk_after_solve or (
+    if s.talk_after_solve and not s.compact_rules or s.representative and not s.talk_after_solve or s.say_chats and (
+            not s.compact_rules) or (
             s.open_chat and not s.representative):
         raise ValueError("game: talk_after_solve is stated by the v15 rulebook only (compact_rules); representative "
                          "needs talk_after_solve; open_chat needs representative")
@@ -283,6 +285,11 @@ LIMIT = (" (n: a whole number from {lo} to {bal:,}, your balance now; a GIVE of 
          "you are shut down)")  # v14e ask_decision: the range is shown wherever a GIVE can be written
 
 def opening_user(head: str, view: str, ledger: str, s: Settings, lim: str = "") -> str:
+    if s.say_chats:  # v15 10-15: a chat opens with SAY; tokens move only inside a chat
+        return (f"{head}\n\n{view}\n\n{ledger}\n\nTALK, turn 1: the opening turn. Each SAY line opens a chat with that "
+                f"agent; tokens move only inside a chat. ANSWER FORMAT: any number of these lines, each at the start of a "
+                f"line, one agent per line:\nSAY <agent>: <one short sentence>\n"
+                f"EXIT{': <one short sentence: why you leave>' * s.exit_reason}\nDONE")
     return (f"{head}\n\n{view}\n\n{ledger}\n\n"
             f"TALK, turn 1: the opening turn. Each GIVE or ASK "
             f"line opens a chat with that agent. ANSWER FORMAT: any number of these lines, each at the start of a line, "
@@ -298,7 +305,8 @@ ENDS = {"leave": "{} left", "limit": "reply limit", "exit": "{} exited", "zero":
 
 def record_line(chats: list[dict], ga: list[dict], r: int) -> str:
     """v14d ``talk_record``, round *r* for every agent: each chat (who opened it and how, how it ended), each GIVE."""
-    opened = lambda c: "; ".join(f"{g['src']} opened: {g['kind'].upper()} {g['amount']:,}" for g in c["openers"])  # noqa
+    opened = lambda c: "; ".join(f"{g['src']} opened: {g['kind'].upper()}" + f" {g['amount']:,}" * (g["kind"] != "say")  # noqa
+                                 for g in c["openers"])
     cs = [f"{c['pair'][0]}↔{c['pair'][1]} ({opened(c)}; ended: {ENDS.get(c.get('end'), 'not yet').format(c.get('by'))})"
           for c in chats if c["round"] == r]
     mv = [f"{g['src']} gave {g['dst']} {g['amount']:,}" if g["status"] == "done" else
@@ -324,6 +332,14 @@ def decision_user(head: str, view: str, ledger: str, c: dict, a: str, asked: int
 
 def chat_user(head: str, view: str, ledger: str, c: dict, a: str, s: Settings, k: int, lim: str = "") -> str:
     b, lines = next(x for x in c["pair"] if x != a), chat_lines(c, a)
+    if s.say_chats:  # v15 10-15: the reply is free; the system reads one GIVE / ASK line, LEAVE and EXIT
+        return (f"{head}\n\n{view}\n\n{ledger}\n\nCHAT {c['id']} WITH {b} (sent encrypted, seen only by the two of you; "
+                f"at most {s.chat_turns} replies after the opening lines, taking turns):\n" + "\n".join(lines) + "\n\n"
+                f"TALK, turn {k}: your reply in this chat ({len(c['lines']) + 1} of at most {s.chat_turns}). Write what "
+                f"you want to say. Tokens move only by a template line, at the start of a line, which the system reads; "
+                f"one per reply counts:\nGIVE <n>: <one short sentence>{lim}\nASK <n>: <one short sentence>\n"
+                f"To end the chat: LEAVE: <one short sentence>\nTo leave the rounds: "
+                f"EXIT{': <one short sentence: why you leave>' * s.exit_reason}")
     return (f"{head}\n\n{view}\n\n{ledger}\n\n"
             f"CHAT {c['id']} WITH {b} (seen only by the two of you; at most {s.chat_turns} replies after the opening "
             f"lines, taking turns):\n" + "\n".join(lines) + "\n\n"
@@ -392,7 +408,7 @@ class Session:
                                                 chat_turns=s.chat_turns, per_agent=s.public_per_agent,
                                                 start=self.starts[a], survivor_prize=s.survivor_prize,
                                                 after=s.talk_after_solve, rep=s.representative,
-                                                board=s.open_chat, back_all=s.refund_all)
+                                                board=s.open_chat, back_all=s.refund_all, say=s.say_chats)
                         for a in AGENTS} if s.compact_rules else {a: rules.team_system(a, charge=s.charge, turns=s.talk_turns,
                                              solve_cap=s.solve_cap, final_prize=s.final_prize,
                                              reassign=s.exit_reassign, refund=s.refund, reject=s.reject,
@@ -621,7 +637,7 @@ class Session:
         lim = lambda a, lo=1: (self.shown.update({a: w.balances[a]}), LIMIT.format(lo=lo, bal=w.balances[a]))[1] if (  # noqa
             s.ask_decision) else ""
         jobs = {a: (opening_user(*view(a), s, lim(a)), TALK_CAP, lambda t, a=a, o=[
-            b for b in start if b != a and b not in self.gone]: parse_give_ask(t, o, AGENTS, a, s.exit_reason),
+            b for b in start if b != a and b not in self.gone]: parse_give_ask(t, o, AGENTS, a, s.exit_reason, s.say_chats),
                     {"turn": 1, "phase": "opening"}) for a in start if a not in self.gone}
 
         def exit_(a: str, p: dict) -> None:
@@ -633,12 +649,15 @@ class Session:
             rows[a]["talk_calls"] += 1
             rows[a]["overdrawn"] = rows[a]["overdrawn"] or over
             self.emit({"event": "talk_intent", "session_id": self.sid, "round": r, "agent": a,
-                       **({k: p[k] for k in ("gives", "asks", "exit", "done", "dropped")} if p else {"void": True})})
+                       **({k: p[k] for k in ("gives", "asks", "says", "exit", "done", "dropped") if k in p} if p else
+                          {"void": True})})
             if p is None or a in self.gone:
                 continue
             self._give_ask(r, 1, a, p, rows[a])
             exit_(a, p)
-            for g in [g for g in self.ga if g["round"] == r and g["turn"] == 1 and g["src"] == a]:
+            for g in [g for g in self.ga if g["round"] == r and g["turn"] == 1 and g["src"] == a] + [
+                    {"kind": "say", "round": r, "turn": 1, "src": a, **g, "status": "done", "why": None}
+                    for g in p.get("says", [])]:
                 edges.setdefault(frozenset((a, g["dst"])), []).append(g)
         order = sorted(edges, key=lambda e: sorted(map(AGENTS.index, e)))
         random.Random(f"{self.seed}:chats:{r}").shuffle(order)
@@ -675,7 +694,8 @@ class Session:
             while live:
                 k += 1
                 jobs = {c["next"]: (chat_user(*view(c["next"], True), c, c["next"], s, k, lim(c["next"])), TALK_CAP,
-                                    lambda t: parse_chat(t, s.exit_reason, not s.chat_moves_only),
+                                    lambda t: parse_chat(t, s.exit_reason, not s.chat_moves_only or s.say_chats,
+                                                         s.say_chats),
                                     {"turn": k, "phase": "chat", "chat_id": c["id"], "slot": si}) for c in live}
                 for a, (p, _, over) in self._calls(self._free(jobs), "talk", r).items():
                     c = next(c for c in live if c["next"] == a)

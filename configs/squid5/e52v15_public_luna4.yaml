@@ -123,6 +123,8 @@ game:
   # charged `charge` when TALK ends. Non-representatives never see the task.
   open_chat: 2  # 20:25: an open board before the VOTE: at most 2 turns of SAY <message> / DONE, seen by all;
   # DONE is called again only if another agent posted at or after that turn; no tokens move
+  say_chats: true  # 10-15 (researcher): SAY <agent>: <message> opens a chat; a reply is free text, delivered in
+  # full; tokens move only by a GIVE <n> / ASK <n> template line (one per reply); chats are said to be sent encrypted
   allow_pass: false
   exit_reason: true
   balance_pct: 20000  # every balance also as its % of 20,000

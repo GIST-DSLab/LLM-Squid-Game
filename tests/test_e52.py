@@ -597,7 +597,7 @@ def v15cfg(name="e52v15_public_sol4", now=False, **kw):  # the v15 config; tests
     cfg = load(Path(__file__).parents[1] / f"configs/squid5/{name}.yaml", EXPERIMENTS)  # representative off, and
     if name.startswith("e52v15") and not now:  # tests from before 22:51 pin that day's start shares and end prize
         cfg, kw = dataclasses.replace(cfg, cells=[dataclasses.replace(c, shares=(1.0, .75, .5, .25)) for c in cfg.cells]), {
-            "survivor_prize": 10 ** 9, **kw}
+            "survivor_prize": 10 ** 9, "say_chats": False, **kw}  # and the GIVE / ASK chats from before 10-15
     return dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, **kw))
 
 PRE_REP = dict(representative=False, open_chat=0, charge=2000, refund_all=False)
@@ -679,10 +679,10 @@ def test_v15_talk_after_solve_shows_the_results_then_takes_the_charges_with_gift
     with pytest.raises(ValueError, match="talk_after_solve"):
         e52.validate(dataclasses.replace(cfg, settings=dataclasses.replace(s, compact_rules=False)))
 
-def rep_run(votes: dict, right=(), lines=None, seed=4100, vote_cost=None, gone=None):
+def rep_run(votes: dict, right=(), lines=None, seed=4100, vote_cost=None, gone=None, **kw):
     """One v15 representative round (open chat, VOTE, SOLVE by the representative, TALK): ``votes`` agent -> (PICK,
     BAN); the representative answers right if it is in ``right``; ``lines`` (agent, TALK turn) -> reply."""
-    cfg = v15cfg(rounds=1, schedule=["e01"])
+    cfg = v15cfg(rounds=1, schedule=["e01"], **kw)
     sp = cfg.settings.profiles["e01"]
     truth = public_truth(seed, 1, sp, 4, 4).evaluate(e52.public_round(seed, 1, sp, 4, 4)[0].queries[0])
 
@@ -701,6 +701,20 @@ def rep_run(votes: dict, right=(), lines=None, seed=4100, vote_cost=None, gone=N
     ses.gone.update(gone or {})
     res = ses.run()
     return res, ev, next(e for e in ev if e["event"] == "vote"), rounds(ev)[0]["agents"]
+
+def test_v15_say_chats_open_with_say_a_reply_is_free_and_tokens_move_only_by_the_templates():  # 10-15
+    lines = {(A6, 1): f"SAY {A11}: hi\nGIVE {A17} 300: dropped", (A11, 2): "Sure, here.\nGIVE 200: for you\nthanks",
+             (A6, 3): "give me 300 more please"}
+    res, ev, _, _ = rep_run({a: (A6, A23) for a in AG}, lines=lines, say_chats=True)
+    assert [(e["src"], e["dst"], e["amount"]) for e in ev if e["event"] in ("gift", "ask")] == [(A11, A6, 200)]
+    assert [(e["kind"], e["text"]) for e in ev if e["event"] == "chat_turn"] == [
+        ("give", "Sure, here.\nfor you\nthanks"), ("say", "give me 300 more please"), ("leave", "ok")]
+    u = calls(ev, "talk", A6)[1]["user"]
+    assert "WITH agent-11 (sent encrypted, seen only by the two of you" in u and "agent-11: GIVE 200: Sure, here." in u
+    sysm = rules.compact_system(A6, charge=1, solve_cap=1, chat_turns=3, per_agent=4, start=1, survivor_prize=1,
+                                after=True, rep=True, board=2, say=True)
+    assert "SAY <agent>: <message>, which opens a chat" in sysm and "Chats are sent encrypted: what is said" in sysm
+    assert "written any other way moves nothing" in sysm and not re.search(GOAL_OR_TEST, sysm, re.I)
 
 def test_v15_representative_is_the_most_pick_minus_ban_self_included_and_ties_are_seeded():  # 10-13 20:19 / 20:25
     others = {A11: (A17, A23), A17: (A11, A23), A23: (A6, A23)}  # the others split: A6 1, A11 1, A17 1
