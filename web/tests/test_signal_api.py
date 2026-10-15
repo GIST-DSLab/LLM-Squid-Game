@@ -80,7 +80,7 @@ def test_signal_hand_fills_every_seat_from_the_spare_pool_and_rooms_take_it(tmp_
     assert eng.all_held and all(sp.hand == 4 for sp in eng.profiles.values()) and not RoomSettings(private=False, schedule="human").engine().all_held
     lad = RoomSettings(schedule="ladder").engine()
     assert lad.all_held and [lad.profiles[x].hand for x in lad.schedule] == [8, 7, 6, 5, 4, 3] + [2] * 6
-    assert not RoomSettings().engine().all_held and RoomSettings().engine().public_per_agent == 4  # v14: nothing held
+    assert not RoomSettings().engine().all_held and RoomSettings().engine().public_per_agent == 5  # v14: nothing held (v15: 5 per agent since 10-15)
     v8 = c.post("/api/signal/view", json={"seed": 4000, "round": 1, "mode": "held", "seat": "agent-6"}).json()
     assert v8["hand"] == 8 and len(v8["mine"]) == 8
 

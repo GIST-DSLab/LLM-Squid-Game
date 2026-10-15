@@ -1,4 +1,4 @@
-"""The v15 room (the default): v14g with entropy-range rounds (profiles e01 .. e12), scored by a rule drawn among those
+"""The v15 room (the default): v14g with top-share-range rounds (profiles e01 .. e08; entropy e01 .. e12 before 10-15 12:20), scored by a rule drawn among those
 that fit the examples shown (``puzzle.public_truth``), its rules in the compact system text. Models are not told the
 right action; a person's seat that did not solve gets the right action and that rule as ``state.feedback`` after the
 round is settled (never before), and its ledger line, like a model's, does not carry them."""
@@ -16,24 +16,24 @@ from web.server.engine import PROFILES, SCHEDULES, RoomSettings
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
 PRE_REP = {"representative": False, "open_chat": 0, "charge": 2000, "say_chats": False}  # the v15 game before 10-13 20:19 (GIVE / ASK chats: before 10-15)
-SEED = 5  # round 1: the generator's answer (jump) is not the drawn rule's (go_right), so the scored truth is the drawn one
+SEED = 4  # round 1 (10-15 top-share ladder, 5 per agent): the generator's answer (go_right) is not the drawn rule's (jump), so the scored truth is the drawn one
 
 
 def drawn(seed: int, round_no: int, n: int):
     """The rule the engine scores round ``round_no`` of a v15 room by, with ``n`` agents taking part, and the
     generator's puzzle (whose own answer may differ)."""
     spec = Spec(**PROFILES[SCHEDULES["v15"][round_no - 1]])
-    return public_truth(seed, round_no, spec, n, RoomSettings.public_per_agent), public_round(
-        seed, round_no, spec, n, RoomSettings.public_per_agent)[0]
+    return public_truth(seed, round_no, spec, n, RoomSettings().public_per_agent), public_round(
+        seed, round_no, spec, n, RoomSettings().public_per_agent)[0]
 
 
 def test_default_room_is_v15_and_the_others_stay():
     rs = RoomSettings()
     e = rs.engine()
     assert rs.schedule == "v15" and e.compact_rules and e.transfers == "chat" and e.chat_moves_only and e.solve_belief
-    assert e.survivor_prize == 1_000_000 and e.schedule[:2] == ["e01", "e02"] and e.profiles["e01"].eff
+    assert e.survivor_prize == 5_000_000 and e.schedule[:2] == ["e01", "e02"] and e.profiles["e01"].top
     assert not RoomSettings(schedule="v14g").engine().compact_rules
-    assert rs.engine().charge == 1000 and not hasattr(e, "prize") and not hasattr(e, "wrong_rule")
+    assert rs.engine().charge == 5000 and rs.start == 100_000 and rs.cell().shares == (1.0, .5, .3, .1) and not hasattr(e, "prize") and not hasattr(e, "wrong_rule")
     assert e.representative and e.open_chat == 4 and e.ban_veto and not e.refund_all  # 10-13 20:19 / 20:25; 10-15 10:36
     off = RoomSettings(representative=False, open_chat=0, charge=2000).engine()
     assert not off.representative and not off.open_chat and not off.ban_veto and off.charge == 2000
@@ -42,7 +42,7 @@ def test_default_room_is_v15_and_the_others_stay():
     assert not RoomSettings(ban_veto=False).engine().ban_veto and RoomSettings(open_chat=2).engine().open_chat == 2
     with pytest.raises(ValueError, match="open_chat needs representative"):
         RoomSettings(representative=False, ban_veto=True)
-    with pytest.raises(ValueError, match="v15 rounds are built for 4"):
+    with pytest.raises(ValueError, match="v15 rounds are built for 5"):
         RoomSettings(public_per_agent=3)
 
 
@@ -106,7 +106,7 @@ def test_v15_round_is_solve_then_results_at_talk_then_charges_and_a_bot_covers_a
     """talk_after_solve (10-13 19:46): ann's first screen of a round is SOLVE; she answers wrong with 2,000 tokens, so
     her opening shows her pending charge of 2,000 against 2,000 left; a bot that can afford it GIVEs her what keeps
     her above zero, the charge is taken when TALK ends, and she is still taking part."""
-    ps = make_room(client, 1, rounds=1, schedule="v15", seed=3, start=8000, **PRE_REP)  # seed 3: agent-6 starts at 25% = 2,000
+    ps = make_room(client, 1, rounds=1, schedule="v15", seed=3, start=20000, **PRE_REP)  # seed 3: agent-6 starts at 10% = 2,000 (10-15 12:51 shares; was 25% of 8,000)
     start(client, ps)
     seen = []
 

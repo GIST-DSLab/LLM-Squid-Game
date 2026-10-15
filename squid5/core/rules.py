@@ -372,6 +372,7 @@ def team_history_line(h: dict, you: str, full: int = 0) -> str:
     who = lambda a: "you" if a == you else a  # noqa: E731
     parts = [f"round {h['round']}: solved by {', '.join(map(who, h['solved'])) or 'no one'}"]
     parts += [f"VOTE: {vote_text(h['vote'], you)}"] if "vote" in h else []  # v15 representative
+    parts += [f"examples shown: {h['shown']}, agents taking part: {len(h['generated'])}"] if h.get("shown") else []
     if h["passed"]:
         parts.append("passed: " + ", ".join(map(who, h["passed"])))
     if you in h["tried"]:

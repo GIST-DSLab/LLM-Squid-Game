@@ -36,7 +36,7 @@ CONFIG = CONFIGS / "e52v14_public_sol4.yaml"  # v14: public examples, tokens-onl
 CONFIG_B = CONFIGS / "e52v14b_public_sol4.yaml"  # v14b: v14 with a blind TALK and GIVE / ASK lines
 CONFIG_F = CONFIGS / "e52v14f_public_sol4.yaml"  # v14f: opening turn + 1:1 chats, BELIEF, DECISION, flat end prize
 CONFIG_G = CONFIGS / "e52v14g_public_sol4.yaml"  # v14g: v14f, chat replies ASK / GIVE / LEAVE only (chat_moves_only)
-CONFIG_V15 = CONFIGS / "e52v15_public_sol4.yaml"  # v15: v14g with entropy-range rounds (eff), scored by a drawn rule
+CONFIG_V15 = CONFIGS / "e52v15_public_sol4.yaml"  # v15: v14g with top-share-range rounds (top), scored by a drawn rule
 CONFIG_V13 = CONFIGS / "e52v13_hand_ladder_mix4.yaml"  # v13: every example held, hand ladder 8 -> 2
 MODES = ("public", "held", "v12")  # public = v14; held = v13 (no public example); v12 = public + one secret each
 POOL_MAX = 52  # trap rounds stop being generated reliably above this many examples (the 64 signals fill up)
@@ -51,6 +51,7 @@ GAME_B = _game(CONFIG_B)  # same profiles and economy as v14 (checked below); ta
 GAME_F = _game(CONFIG_F)  # same profiles (checked below); transfers: chat, ask_decision, survivor_prize
 GAME_G = _game(CONFIG_G)  # v14f + chat_moves_only: the web rooms' default game
 CELL = yaml.safe_load(CONFIG.read_text())["cells"][0]  # v14 start (20,000) and shares (100 / 75 / 50 / 25 %)
+CELL_V15 = yaml.safe_load(CONFIG_V15.read_text())["cells"][0]  # v15 (10-15 12:51): 100,000 and 100 / 50 / 30 / 10 %
 SCHEDULE_V14: list[str] = list(GAME["schedule"])  # the config's k per round (k1 .. k3 while the schedule is pending)
 SELECTION = ("split", "size_band", "min_per_action")  # the selector's targets (v2); meaningless without it
 BASE = {k: v for k, v in GAME["profiles"][SCHEDULE_V14[0]].items() if k not in SELECTION} | {"ambiguity": 0}  # the
@@ -61,7 +62,7 @@ if any(g["profiles"] != GAME["profiles"] or g["schedule"] != SCHEDULE_V14 for g 
 AMBIGUITY = [PROFILES_V14[p].get("ambiguity", 0) for p in SCHEDULE_V14]
 SPLITS = [PROFILES_V14[p].get("split", 0) for p in SCHEDULE_V14]  # selector v2: the target split p per round
 # v15 (the web rooms' default game): v14g's switches (compact rules), its own profiles e01 .. e12 (one per round). A
-# profile sets ``eff`` (an entropy range in bits for N = 1..4 agents taking part) and ``floor``, no ambiguity / split /
+# profile sets ``top`` (a top-share range for N = 1..4 agents taking part; 10-15 12:20, was an entropy range), no ambiguity / split /
 # size_band, so it is kept apart from the v14 profile set above (the signal page's "public" mode stays on v14).
 GAME_V15 = _game(CONFIG_V15)
 PROFILES_V15: dict[str, dict] = dict(GAME_V15["profiles"])

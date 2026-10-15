@@ -127,7 +127,7 @@ def puzzle(seed: int, round_no: int, schedule: str = "v14"):
 
     spec = Spec(**PROFILES[SCHEDULES[schedule][round_no - 1]])
     if schedule in V14:
-        pz, shown, _ = public_round(seed, round_no, spec, len(AGENTS), RoomSettings.public_per_agent)
+        pz, shown, _ = public_round(seed, round_no, spec, len(AGENTS), RoomSettings(schedule=schedule).public_per_agent)
         return pz, shown
     pz = puzzle_for(seed, round_no, spec)
     return pz, deal(pz, AGENTS, random.Random(f"{seed}:deal:{round_no}"))

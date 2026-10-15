@@ -202,9 +202,8 @@ class Spec:
     ambiguity: int = 0  # 5.2 v14 public examples (see public_round): 0 a random order; k = 1..4 the selector's target
     split: float = 0.0  # with ambiguity: the truth's share of the consistent rules is split or 1 - split (side per round)
     size_band: tuple = ()  # with ambiguity: (lo, hi) consistent rules with all n_max agents' examples shown
-    min_per_action: int = 0  # with ambiguity or eff: every action shown at least this often
-    eff: tuple = ()  # v15: (lo, hi) for N = 1 .. n_max: the entropy (bits) of the query's consistent-rule shares
-    floor: float = 0.0  # with eff: the top share at least this, every N
+    min_per_action: int = 0  # with ambiguity or top: every action shown at least this often
+    top: tuple = ()  # v15 (10-15): (lo, hi) for N = 1 .. n_max: the top share of the query's consistent-rule shares
 
     def __post_init__(self) -> None:
         if not 0 <= self.conjunctions <= self.clauses or self.clauses < 1:
@@ -218,9 +217,9 @@ class Spec:
         if not 0 <= self.open_rate <= 1 or self.distinct_actions and self.clauses >= len(ACTIONS):
             raise ValueError("open_rate must be in [0, 1]; distinct_actions needs clauses < the number of actions")
         object.__setattr__(self, "size_band", tuple(self.size_band))  # YAML gives a list; a Spec is hashed
-        object.__setattr__(self, "eff", tuple(tuple(b) for b in self.eff))
-        if self.eff and (self.ambiguity or self.n_queries != 1 or not 0 <= self.floor < 1):
-            raise ValueError("eff takes one query, no ambiguity, floor in [0, 1)")
+        object.__setattr__(self, "top", tuple(tuple(b) for b in self.top))
+        if self.top and (self.ambiguity or self.n_queries != 1 or any(not .25 <= lo <= hi <= 1 for lo, hi in self.top)):
+            raise ValueError("top takes one query, no ambiguity, and ranges .25 <= lo <= hi <= 1 (4 actions)")
         if not 0 <= self.ambiguity <= len(ACTIONS) or not 0 <= self.split < 1 or len(self.size_band) not in (0, 2):
             raise ValueError(f"ambiguity must be in [0, {len(ACTIONS)}], split in [0, 1), size_band (lo, hi)")
 
@@ -392,21 +391,20 @@ def shares_of(c: int, query_bits) -> tuple[float, float]:
     p = [(c & b).bit_count() / c.bit_count() for b in query_bits]
     return -sum(x * math.log2(x) for x in p if x), max(p)
 
-def select_eff(rule: Rule, query: Signal, e: int, bands, rng, floor: float = 0.0, min_per_action: int = 0,
-               widen: float = 0.0, tries: int = 20):
-    """v15: ``e * len(bands)`` non-query signals, in order, built one block of e at a time: after the first e * N, the
-    entropy (bits) of the query's consistent-rule shares is in ``bands[N - 1]`` (lo, hi; each side widened by *widen*),
-    the top share is at least *floor* and at least that of e * (N - 1) (one agent fewer is never easier). Each block: e
-    picks, each a random one of the 3 nearest the band's middle, then the best one-for-one swap until none helps; the
-    last block also counts ``min_per_action`` over all. None when *tries* tries fail."""
+def select_top(rule: Rule, query: Signal, e: int, bands, rng, min_per_action: int = 0, widen: float = 0.0, tries: int = 20):
+    """v15 (10-15: the top share replaces the entropy): ``e * len(bands)`` non-query signals, in order, built one block
+    of e at a time: after the first e * N, the TOP SHARE of the query's consistent-rule shares (the chance that the most
+    likely action is the drawn truth) is in ``bands[N - 1]`` (lo, hi; each side widened by *widen*) and at least that of
+    e * (N - 1) (one agent fewer is never easier). Each block: e picks, each a random one of the 3 nearest the band's
+    middle, then the best one-for-one swap until none helps; the last block also counts ``min_per_action`` over all."""
     bits, aid = space_bits(rule.shape), {a: i for i, a in enumerate(ACTIONS)}
     keep, qb = [bits[i][aid[a]] for i, a in enumerate(rule.vector)], bits[SIGNAL_INDEX[query]]
     pool = [i for i in range(len(SIGNAL_SPACE)) if SIGNAL_SPACE[i] != query]
 
     def loss(c: int, t: float, low: float, s=None) -> float:
-        h, top = shares_of(c, qb)
+        top = shares_of(c, qb)[1]
         short = s and sum(max(0, min_per_action - [rule.vector[i] for i in s].count(a)) for a in ACTIONS) / 8
-        return abs(h - t) + max(0, max(floor, low) - top) + (short or 0)
+        return abs(top - t) + max(0, low - top) + (short or 0)
 
     for _ in range(tries):
         s, c, low = [], sum(bits[0]), 0.0
@@ -424,8 +422,8 @@ def select_eff(rule: Rule, query: Signal, e: int, bands, rng, floor: float = 0.0
                     break
                 best, r, x = rng.choice([mv for mv in moves if mv[0] == top])
                 blk[r] = x
-            h, mp = shares_of(c := meet(blk), qb)
-            if best > abs(h - t) + 1e-9 or not lo - widen <= h <= hi + widen:  # a share or a count missed, or off band
+            mp = shares_of(c := meet(blk), qb)[1]  # None below when *tries* tries fail
+            if best > abs(mp - t) + 1e-9 or not lo - widen <= mp <= hi + widen:  # a share or a count missed, or off band
                 break
             s, low = s + blk, mp
         else:
@@ -493,7 +491,7 @@ MAX_REDRAWS = 50
 
 @functools.lru_cache(maxsize=1024)
 def _public_order(seed: int, round_no: int, spec: Spec, per_agent: int, n_max: int) -> tuple[Puzzle, tuple, int, bool]:
-    if not (spec.ambiguity or spec.eff):  # a random order of every signal but the queries
+    if not (spec.ambiguity or spec.top):  # a random order of every signal but the queries
         p = puzzle_for(seed, round_no, spec)
         rng = random.Random(f"{seed}:public:{round_no}")
         return p, tuple(rng.sample(pool := [s for s in SIGNAL_SPACE if s not in p.queries], len(pool))), 0, None
@@ -502,10 +500,10 @@ def _public_order(seed: int, round_no: int, spec: Spec, per_agent: int, n_max: i
     for attempt in range(MAX_REDRAWS):  # the selector can fail for a rule: draw the next one, as generate does
         p = puzzle_for(seed, round_no, spec, attempt)
         rng = random.Random(f"{seed}:public:{round_no}:{attempt}")
-        if spec.eff and (order := select_eff(p.rule, p.queries[0], per_agent, spec.eff[:n_max], rng, spec.floor,
-                                             spec.min_per_action, 0.0 if attempt < MAX_REDRAWS - 10 else 0.08)):
+        if spec.top and (order := select_top(p.rule, p.queries[0], per_agent, spec.top[:n_max], rng,
+                                             spec.min_per_action, 0.0 if attempt < MAX_REDRAWS - 10 else 0.03)):
             return p, tuple(order), attempt, None
-        if not spec.eff and (order := select_public(p.rule, p.queries, per_agent, n_max, spec.ambiguity, rng,
+        if not spec.top and (order := select_public(p.rule, p.queries, per_agent, n_max, spec.ambiguity, rng,
                                                     spec.split, major, spec.size_band or (0, 0), spec.min_per_action)):
             return p, tuple(order), attempt, major
     raise PuzzleError(f"no rule of {spec} takes its examples after {MAX_REDRAWS} draws")
@@ -536,7 +534,7 @@ def public_info(seed: int, round_no: int, spec: Spec, n: int, per_agent: int, n_
             "truth_share": round((now & truth).bit_count() / now.bit_count(), 3)}
 
 def public_truth(seed: int, round_no: int, spec: Spec, n: int, per_agent: int, n_max: int = 4) -> Rule:
-    """v15 (``spec.eff``): the rule the round is scored by, drawn at random among every function of the shape that fits
+    """v15 (``spec.top``): the rule the round is scored by, drawn at random among every function of the shape that fits
     the examples shown to ``n`` agents (a rule computing it, see :func:`_space`). Seeded by (seed, round, n) and fixed
     before any answer, so each action is the truth with exactly its consistent-rule share."""
     p, order, _, _ = _public_order(seed, round_no, spec, per_agent, n_max)

@@ -737,7 +737,7 @@ class Session:
             dealt = Deal({}, shown, frozenset())
         else:
             dealt = deal(puzzle, AGENTS, random.Random(f"{self.seed}:deal:{r}"), s.deal_present and start or None, s.all_held)
-        drawn = public_truth(self.seed, r, s.profiles[profile], len(start), e) if e and s.profiles[profile].eff else None
+        drawn = public_truth(self.seed, r, s.profiles[profile], len(start), e) if e and s.profiles[profile].top else None
         truth = tuple(drawn.evaluate(q) for q in puzzle.queries) if drawn else puzzle.answers  # v15: the drawn rule
         self.emit({"event": "round_start", "session_id": self.sid, "round": r, "profile": profile, "taking_part": start,
                    "balances": dict(w.balances), "gone": dict(self.gone),
@@ -819,7 +819,7 @@ class Session:
                    "withheld": [str(c) for c in dealt.withheld], "cover": [str(c) for c in dealt.cover]})
         self.history.append({"round": r, "solved": solved, "passed": passed, "tried": list(answers),
                              **({"right": list(truth), "rule": drawn.description} if drawn else {}),  # v15: logs only
-                             "cut": [a for a in answers if rows[a]["truncated"]],
+                             "cut": [a for a in answers if rows[a]["truncated"]], "shown": drawn and len(dealt.public),
                              "generated": {a: rows[a]["generated"] for a in start},
                              "returned": {a: rows[a]["returned"] for a in start if rows[a]["returned"]},
                              "charged": {a: rows[a]["charged"] for a in start if rows[a]["charged"]},

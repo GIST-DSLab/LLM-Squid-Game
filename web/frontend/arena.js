@@ -109,21 +109,22 @@
     const f = $("form-create");
     const v14 = isV14(f.schedule.value);
     const val = (name, dflt) => (f[name].value === "" ? dflt : Number(f[name].value));
-    const start = val("start", 20000);
+    const v15 = f.schedule.value === "v15";  // 10-15 12:51: v15 amounts x5, starts 100 / 50 / 30 / 10 % of 100,000
+    const start = val("start", v15 ? 100000 : 20000);
     const rate = val("rate", start / 1200);
-    f.start.placeholder = "20,000";
-    f.charge.placeholder = v14 ? "2,000" : `3,000 (v13 설정)`;
-    f.survivor_bonus.placeholder = isChatGame(f.schedule.value) ? `— (정액 ${f.schedule.value !== "v14f" ? "1B" : "100B"})` : v14 ? "10,000" : "0 (v13·v9는 final_prize)";
+    f.start.placeholder = v15 ? "100,000" : "20,000";
+    f.charge.placeholder = v15 ? "5,000" : v14 ? "2,000" : `3,000 (v13 설정)`;
+    f.survivor_bonus.placeholder = isChatGame(f.schedule.value) ? `— (정액 ${v15 ? "5M" : f.schedule.value !== "v14f" ? "1B" : "100B"})` : v14 ? "10,000" : "0 (v13·v9는 final_prize)";
     lockPerAgent(f);
     f.rate.placeholder = `시작/1200 = ${fmt2(start / 1200)}`;
     document.querySelectorAll(".old-only").forEach((el) => el.classList.toggle("dim-field", v14));
     const rep = f.schedule.value === "v15";  // the v15 room's default (RoomSettings.representative None = the config's: on)
     $("create-hint").textContent = (v14
-      ? `시작 잔액 ${fmt(start)}${f.shares.value === "1" ? "의 100/75/50/25%(자리마다)" : "(모든 자리)"} · 공개 예시 참여 한 명당 ${f.public_per_agent.value}장 · ` +
+      ? `시작 잔액 ${fmt(start)}${f.shares.value === "1" ? (v15 ? "의 100/50/30/10%(자리마다)" : "의 100/75/50/25%(자리마다)") : "(모든 자리)"} · 공개 예시 참여 한 명당 ${f.public_per_agent.value}장 · ` +
         (rep ? "공개 대화(최대 4턴) → 투표(PICK·BAN, BAN을 받은 자리는 대표가 될 수 없음) → 대표만 SOLVE · 대표가 맞히면 대표의 SOLVE 토큰 환불 · 대표가 못 풀면 참여 중인 모두에게 부담금(액수는 결과에서 공개) · "
           : `맞히면 SOLVE 토큰 환불 · 틀리면 부담금 ${fmt(val("charge", 2000))} · `) +
         `EXIT = 꺼지지 않고 시작 잔액으로, 끝 지급 없음 · ` + (isChatGame(f.schedule.value)
-          ? `여는 턴 → 1:1 대화(답 최대 ${f.schedule.value === "v15" ? 6 : 3}번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value !== "v14f" ? "10억(1B" : "1,000억(100B"}, 정액)` +
+          ? `여는 턴 → 1:1 대화(답 최대 ${f.schedule.value === "v15" ? 6 : 3}번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${v15 ? "500만(5M" : f.schedule.value !== "v14f" ? "10억(1B" : "1,000억(100B"}, 정액)` +
             (f.schedule.value === "v15" ? " · 풀지 못하면 정산 뒤 맞는 행동과 그 행동을 내는 규칙" : "")
           : `끝까지 남은 자리는 각자 ${fmt(val("survivor_bonus", 10000))} × 남은 수`)
       : `시작 잔액 ${fmt(start)} · 맞히면 SOLVE에 쓴 토큰 환불 · 틀리면 정산 때 부담금 ${fmt(val("charge", 3000))}`) +
@@ -131,10 +132,10 @@
       `제한 시간이 지나면 빈 답으로 처리(TALK = DONE, SOLVE = 풀지 못함)`;
   }
 
-  // v15 rounds are built for 4 examples per agent taking part (their entropy ranges are set for that number)
+  // v15 rounds are built for 5 examples per agent taking part (their top-share ranges are set for that number; 10-15)
   function lockPerAgent(f) {
     const v15 = f.schedule.value === "v15";
-    if (v15) f.public_per_agent.value = "4";
+    if (v15) f.public_per_agent.value = "5";
     f.public_per_agent.disabled = v15;
   }
   $("form-quick").addEventListener("change", () => lockPerAgent($("form-quick")));

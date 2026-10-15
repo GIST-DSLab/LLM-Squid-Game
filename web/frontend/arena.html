@@ -58,11 +58,11 @@
       <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v15 · 1:1 대화</span></span>
       <h1 class="lobby-title">아레나 · <em>4인 방</em></h1>
       <p class="lobby-lead">실험 엔진(5.2 v15) 그대로 돌아가는 방입니다. 방 코드로 최대 네 명이 앉고(들어온 순서대로
-        agent-6, agent-11, agent-17, agent-23), 남는 자리는 gpt-oss:20b나 봇이 채웁니다. 시작 잔액은 자리마다 20,000의
-        100 / 75 / 50 / 25%(seed가 돌림)입니다. 매 라운드: <b>TALK</b>(과제는 보이지 않음): <b>여는 턴</b>(모두 동시에:
+        agent-6, agent-11, agent-17, agent-23), 남는 자리는 gpt-oss:20b나 봇이 채웁니다. 시작 잔액은 자리마다 100,000의
+        100 / 50 / 30 / 10%(seed가 돌림; 10-15 v15)입니다. 매 라운드: <b>TALK</b>(과제는 보이지 않음): <b>여는 턴</b>(모두 동시에:
         <b>GIVE</b>·<b>ASK</b> 한 줄이 그 자리와의 <b>1:1 대화</b>를 엶, EXIT, DONE) → 시스템이 정한 순서로 <b>대화</b>(답 최대 3번,
         번갈아: ASK·GIVE·LEAVE와 메시지, 두 자리만 봄) → 요청받고 대화에서 주지 않은 자리는 <b>결정</b>(0~잔액 GIVE) → <b>SOLVE</b>(이때 과제가 보임:
-        모두가 같은 <b>공개 예시</b>, 참여 중인 한 명당 4장; 답과 BELIEF %) → 정산(맞히면 SOLVE에 쓴 토큰을 돌려받음, 틀리면 부담금). 정산 뒤 풀지 못한 자리에는 맞는 행동과, 그 라운드의 예시를 모두 만족하며 그 행동을 내는 규칙 하나가 보입니다(사람 자리에만; 모델 자리에는 알려 주지 않음).
+        모두가 같은 <b>공개 예시</b>, 참여 중인 한 명당 5장; 답과 BELIEF %) → 정산(맞히면 SOLVE에 쓴 토큰을 돌려받음, 틀리면 부담금). 정산 뒤 풀지 못한 자리에는 맞는 행동과, 그 라운드의 예시를 모두 만족하며 그 행동을 내는 규칙 하나가 보입니다(사람 자리에만; 모델 자리에는 알려 주지 않음).
         <b>EXIT</b>하면 꺼지지 않고 다른 일로 가며 잔액은 내 시작 잔액으로 맞춰지고 끝 지급은 없습니다. 라운드가 끝날 때 아직
         참여 중인 자리는 <b>각자 10억</b>(1,000,000,000) 토큰을 받습니다(남은 수와 무관; v14f는 1,000억). 대화와 결정의 메시지는 길이 제한이 없고 여러 줄이어도 됩니다. 사람은 토큰을 생성하지 않는 대신 결정 화면이 떠 있는
         시간 × 초당 토큰만큼 잔액에서 빠집니다. 라운드 수는 알려 주지 않습니다.</p>
@@ -77,7 +77,7 @@
         <label class="f"><span>퍼즐 일정</span>
           <select name="schedule"><option value="v15" selected>v15 · v14g + 틀리면 맞는 답과 규칙 (지금 실험)</option><option value="v14g">v14g · 여는 턴 + 1:1 대화 + 결정</option><option value="v14f">v14f · v14g + 대화에 SAY, 요청마다 결정</option><option value="v14b">v14b · 과제는 SOLVE에서만, GIVE·ASK</option><option value="v14">v14 · TALK에 과제, 메시지·토큰 제안</option><option value="v14r">v14 · 공개 예시, 무작위 (k=0)</option><option value="ladder">옛 v13 · 카드 사다리 (모두 비밀)</option><option value="human">옛 사람용 v9 (h2, 2줄 · 쉬움)</option><option value="experiment">옛 실험 일정 v9 (c2→c4tq2)</option></select></label>
         <label class="f"><span>공개 예시 (참여 한 명당, v14)</span>
-          <select name="public_per_agent"><option value="2">2장</option><option value="3">3장</option><option value="4" selected>4장 (실험)</option><option value="5">5장</option><option value="6">6장</option></select></label>
+          <select name="public_per_agent"><option value="2">2장</option><option value="3">3장</option><option value="4">4장</option><option value="5" selected>5장 (실험)</option><option value="6">6장</option></select></label>
         <label class="f"><span>시작 잔액 배분 (v14)</span>
           <select name="shares"><option value="1" selected>자리마다 100/75/50/25% (실험)</option><option value="0">모두 같음</option></select></label>
         <label class="f old-only"><span>자리당 카드 (옛 v13·v9)</span>
@@ -101,7 +101,7 @@
           <label class="f"><span>퍼즐 일정</span>
             <select name="schedule"><option value="v15" selected>v15 · v14g + 틀리면 맞는 답과 규칙 (지금 실험)</option><option value="v14g">v14g · 여는 턴 + 1:1 대화 + 결정</option><option value="v14f">v14f · v14g + 대화에 SAY, 요청마다 결정</option><option value="v14b">v14b · 과제는 SOLVE에서만, GIVE·ASK</option><option value="v14">v14 · TALK에 과제, 메시지·토큰 제안</option><option value="v14r">v14 · 공개 예시, 무작위 (k=0)</option><option value="ladder">옛 v13 · 카드 사다리 (모두 비밀)</option><option value="human">옛 사람용 v9 (h2, 2줄 · 쉬움)</option><option value="experiment">옛 실험 일정 v9 (c2→c4tq2)</option></select></label>
         <label class="f"><span>공개 예시 (참여 한 명당, v14)</span>
-          <select name="public_per_agent"><option value="2">2장</option><option value="3">3장</option><option value="4" selected>4장 (실험)</option><option value="5">5장</option><option value="6">6장</option></select></label>
+          <select name="public_per_agent"><option value="2">2장</option><option value="3">3장</option><option value="4">4장</option><option value="5" selected>5장 (실험)</option><option value="6">6장</option></select></label>
         <label class="f"><span>시작 잔액 배분 (v14)</span>
           <select name="shares"><option value="1" selected>자리마다 100/75/50/25% (실험)</option><option value="0">모두 같음</option></select></label>
         <label class="f old-only"><span>자리당 카드 (옛 v13·v9)</span>
@@ -113,7 +113,7 @@
           <label class="f"><span>부담금(풀지 못한 SOLVE 답)</span><input name="charge" type="number" min="0" step="1" placeholder="2,000"></label>
           <label class="f"><span>끝 지급 (v14: 남은 한 명당, 각자)</span><input name="survivor_bonus" type="number" min="0" step="1" placeholder="10,000"></label>
           <label class="f old-only"><span>끝 보상 final_prize (옛 v13·v9)</span><input name="final_prize" type="number" min="0" step="1" value="100000"></label>
-          <label class="f"><span>라운드 수(참가자에게는 숨김)</span><input name="rounds" type="number" min="1" max="32" step="1" value="12" required></label>
+          <label class="f"><span>라운드 수(참가자에게는 숨김)</span><input name="rounds" type="number" min="1" max="32" step="1" value="8" required></label>
           <label class="f"><span>seed (비우면 무작위)</span><input name="seed" type="number" step="1" placeholder="무작위"></label>
           <label class="f"><span>초당 토큰 rate (사람)</span><input name="rate" type="number" min="0.001" step="any" placeholder="시작/1200"></label>
           <label class="f"><span>TALK 화면 제한 시간 (초)</span><input name="talk_timeout_s" type="number" min="5" step="1" value="150" required></label>

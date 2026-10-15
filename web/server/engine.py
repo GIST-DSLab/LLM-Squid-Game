@@ -4,7 +4,7 @@ The default room is 5.2 v15 (``schedule`` "v15", configs/squid5/e52v15_public_so
 round is SOLVE, then the results (``results`` event: a solver's SOLVE tokens back at once, a pending charge for each
 other reply), then TALK whose screens show those results (``result_rows``), then the charges (``charges``), then EXITs;
 bots GIVE what keeps an agent above its charge when they can afford it): the v14g game below on
-profiles e01 .. e12 (an entropy range per round), each round scored by a rule drawn among those that fit the examples
+profiles e01 .. e08 (a top-share range per round; 10-15 12:20, was e01 .. e12 by entropy), each round scored by a rule drawn among those that fit the examples
 shown; models are not told the right action, but a person's seat that did not solve gets the right action and that
 rule as ``state.feedback`` once the round is settled (``Room._feedback``, from the round's history entry).
 v15 ``representative`` / ``open_chat`` (10-13 20:19 / 20:25, on in the v15 config; ``RoomSettings.representative`` /
@@ -114,10 +114,10 @@ PROFILES = {
     "c4tq2": {"clauses": 4, "trap_query": True, "n_queries": 2},
 }
 PROFILES.update(_cfg.PROFILES_V14)  # v14: k0 (random order) and the config's k profiles
-PROFILES.update(_cfg.PROFILES_V15)  # v15: e01 .. e12, an entropy range per round (eff), scored by a drawn rule
+PROFILES.update(_cfg.PROFILES_V15)  # v15: e01 .. e08, a top-share range per round (top), scored by a drawn rule
 PROFILES.update(_cfg.PROFILES_V13)  # the v13 hand ladder of configs/squid5/e52v13_hand_ladder_mix4.yaml
 SCHEDULES = {
-    "v15": list(_cfg.SCHEDULE_V15),  # the default: v14g with entropy-range rounds, a drawn rule scores
+    "v15": list(_cfg.SCHEDULE_V15),  # the default: v14g with top-share-range rounds, a drawn rule scores
     "v14g": list(_cfg.SCHEDULE_V14),  # opening turn, 1:1 chats (ASK / GIVE / LEAVE), DECISION, BELIEF
     "v14f": list(_cfg.SCHEDULE_V14),  # v14f: chat replies also SAY; a DECISION after every chat one was asked in
     "v14b": list(_cfg.SCHEDULE_V14),  # the default: v14b (blind TALK, GIVE / ASK) on the v14 profiles, as signal.html
@@ -159,15 +159,15 @@ class RoomSettings:
     final_prize: int = 100_000  # told (v13, v9): the end prize to the most solved rounds among those still taking part
     survivor_bonus: int | None = None  # v14: at the end each agent still taking part gets this x their number
     survivor_prize: int | None = None  # v14f / v14g: at the end each agent still taking part gets exactly this
-    rounds: int = len(_cfg.SCHEDULE_V14)  # hidden from the players (as in the engine); 12 by default
+    rounds: int | None = None  # hidden from the players (as in the engine); None: v15 8 (10-15 12:20), others 12
     talk_turns: int = 4
     solve_cap: int = 16384
     history_messages: int = 30
-    schedule: str = "v15"  # "v15" (v14g, entropy-range rounds scored by a drawn rule; a seat that did not solve is
+    schedule: str = "v15"  # "v15" (v14g, top-share-range rounds scored by a drawn rule; a seat that did not solve is
     # told the right action and that rule) | "v14g" (opening + chats + DECISION) | "v14f" (v14g, GIVE in chats) | "v14b" (blind TALK,
     # GIVE / ASK) | "v14" (task at TALK, offers) | "v14r" (v14, k = 0) |
     # "ladder" (v13 hand ladder) | "human" (h2, easy, v9) | "experiment" (v9: c2 -> c4tq2)
-    public_per_agent: int = int(_cfg.GAME["public_per_agent"])  # v14: examples shown per agent taking part
+    public_per_agent: int | None = None  # v14: examples shown per agent taking part; None: the schedule's (v15 5, else 4)
     shares: bool = True  # v14: seat starts are the config's shares of ``start`` (100 / 75 / 50 / 25 %, turned by seed)
     hand: int = 0  # v13 / v9: 0 the schedule's own hand size ("ladder": 8 -> 2; others: PRIVATE_HAND when private)
     private: bool = True  # v13 / v9 only: no public example (all_held), the cards at TALK (talk_cards), exchanges done
@@ -196,7 +196,7 @@ class RoomSettings:
         if self.schedule not in SCHEDULES:
             raise ValueError(f"schedule must be one of {', '.join(SCHEDULES)}")
         v14, g = self.v14, GAMES[self.schedule] if self.v14 else _cfg.GAME_V13
-        self.start = int(self.start) if self.start is not None else (_cfg.CELL["start"] if v14 else OLD_START)
+        self.start = int(self.start) if self.start is not None else ((_cfg.CELL_V15 if self.schedule == "v15" else _cfg.CELL)["start"] if v14 else OLD_START)
         old = v14 or self.private  # v14 rooms and private v13 rooms take their config's charge; v9 rooms V9_CHARGE
         self.charge = int(self.charge) if self.charge is not None else (int(g["charge"]) if old else V9_CHARGE)
         self.survivor_bonus = int(self.survivor_bonus) if self.survivor_bonus is not None else (
@@ -204,13 +204,16 @@ class RoomSettings:
         self.survivor_prize = int(self.survivor_prize) if self.survivor_prize is not None else (
             int(g.get("survivor_prize") or 0) if v14 else 0)
         self.final_prize = int(self.final_prize)
-        self.public_per_agent, self.shares = int(self.public_per_agent), bool(self.shares)
+        v15 = self.schedule == "v15"  # 10-15 12:20: v15 is 8 rounds of 5 examples per agent; the others keep 12 / 4
+        self.public_per_agent = int(self.public_per_agent if self.public_per_agent is not None else
+                                    (_cfg.GAME_V15 if v15 else _cfg.GAME)["public_per_agent"])
+        self.shares = bool(self.shares)
         if not 1 <= self.public_per_agent <= 12:
             raise ValueError("public_per_agent must be 1..12")
         if self.schedule == "v15" and self.public_per_agent != int(_cfg.GAME_V15["public_per_agent"]):
             raise ValueError(f"v15 rounds are built for {_cfg.GAME_V15['public_per_agent']} examples per agent taking "
-                             "part (their entropy ranges are set for that number)")
-        self.rounds = int(self.rounds)
+                             "part (their top-share ranges are set for that number)")
+        self.rounds = int(self.rounds if self.rounds is not None else len(_cfg.SCHEDULE_V15 if v15 else _cfg.SCHEDULE_V14))
         if not 1 <= self.rounds <= 32:
             raise ValueError("rounds must be 1..32")
         self.talk_turns = int(self.talk_turns)
@@ -266,7 +269,8 @@ class RoomSettings:
 
     def cell(self) -> Cell:
         """The session's cell: v14 rooms take the config's shares of ``start`` when ``shares`` is on."""
-        shares = tuple(_cfg.CELL.get("shares") or ()) if self.v14 and self.shares else ()
+        cell = _cfg.CELL_V15 if self.schedule == "v15" else _cfg.CELL  # 10-15 12:51: v15 rooms take the v15 config's
+        shares = tuple(cell.get("shares") or ()) if self.v14 and self.shares else ()
         return Cell("web", "tokens", self.start, arm="shutdown", shares=shares)
 
     def engine(self) -> e52.Settings:
