@@ -33,10 +33,8 @@ def _acts(value: str, n: int) -> list[str]:
     return acts
 
 def parse_actions(text: str, n: int) -> list[str]:
-    """The answer: a last line that is exactly the n actions (``stay``, ``go_left, jump``), or whose text after its
-    last arrow is (``... -> go_right.``), wins over any earlier ``Action:`` line of working; otherwise the later of
-    the last ``ACTIONS:`` / ``ANSWER:`` line (or a numbered list after it) and the last ``<action>...</action>`` tag.
-    A winning tag must hold exactly the n actions: no arrow is read inside it and it never falls back."""
+    """The answer: a last line of exactly the n actions (or its text after the last arrow) beats earlier working; else the
+    later of the last ``ACTIONS:`` / ``ANSWER:`` line (or a list after it) and the last ``<action>`` tag (exactly n, no arrows)."""
     tag = r"<\s*(actions?|answers?)\s*>(.*?)<\s*/\s*\1\s*>"
     lines = [x for x in text.strip().splitlines() if x.strip()]
     if lines:
@@ -95,17 +93,8 @@ def _to_names(head: str, known: list[str]) -> list[str] | None:
 
 def parse_talk(text: str, present: list[str], known: list[str], you: str, reject: bool = False,
                exit_reason: bool = False, examples: bool = True) -> dict:
-    """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW (and, with ``reject``, REJECT) lines in order, and EXIT / DONE alone on
-    a line (prose such as "Exit strategy: ..." is neither). A TO / OFFER line is a key line only when what stands before
-    its colon is an agent name (one in ``known`` or shaped like ``agent-7``), so "To summarize: ..." is prose; a line
-    naming several agents is dropped (one agent per TO line). An ACCEPT / WITHDRAW / REJECT line counts only when the
-    whole line (markdown stripped) is the key word and offer ids, so a quoted "Accept 1.2 if you want" is prose. Any
-    other line belongs to the open message (a TO line's, until the next key line; blank lines at its ends are cut) or
-    is ignored. Never raises: a line that cannot be carried out, or a message left empty, is kept in ``dropped`` with
-    the reason; a reply with nothing usable counts as DONE and gets a ``format_error``. ``present`` = the other agents
-    taking part. ``exit_reason``: ``EXIT: <reason>`` is EXIT too (the word before the colon exactly EXIT, so "Exit
-    strategy: ..." is not); the reason is kept in ``exit_reason`` (None for a bare EXIT), never required. ``examples``
-    off (5.2 v14 public examples): an OFFER with an EXAMPLE leg is dropped like any line that cannot be carried out."""
+    """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW (``reject``: REJECT) key lines and EXIT / DONE alone on a line; a TO / OFFER
+    needs one agent name before its colon, ACCEPT etc. a bare id line. Never raises (unusable: ``dropped``; nothing: DONE)."""
     out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "rejects": [], "exit": False, "done": False,
            "dropped": [], "format_error": None} | ({"exit_reason": None} if exit_reason else {})
     msg, head = None, ""
@@ -165,12 +154,7 @@ _GA = re.compile(r"(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.
 
 def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False,
                    say: bool = False) -> dict:
-    """5.2 v14b TALK (``transfers: give_ask``): ``GIVE <agent> <n>: <sentence>`` and ``ASK <agent> <n>: <sentence>``
-    lines (one agent and a whole number above zero each; the sentence may be left out) and EXIT / DONE alone on a line,
-    as in :func:`parse_talk`. A TO / OFFER / ACCEPT / WITHDRAW / REJECT line, or a GIVE / ASK line that cannot be
-    carried out, is kept in ``dropped`` with the reason; any other line is ignored. Never raises: a reply with nothing
-    usable counts as DONE and gets a ``format_error``. ``present`` = the other agents taking part. ``say`` (v15
-    ``say_chats``, 10-15): ``SAY <agent>: <message>`` lines open chats (``says``) and GIVE / ASK lines are dropped."""
+    """5.2 v14b TALK: ``GIVE / ASK <agent> <n>`` lines, EXIT / DONE (as :func:`parse_talk`); ``say`` (v15): ``SAY <agent>:`` opens chats."""
     out = {"gives": [], "asks": [], "exit": False, "done": False, "dropped": [], "format_error": None} | (
         {"exit_reason": None} if exit_reason else {}) | ({"says": []} if say else {})
     for line in text.splitlines():
@@ -203,16 +187,13 @@ def parse_give_ask(text: str, present: list[str], known: list[str], you: str, ex
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 
-_MOVE = re.compile(r"(GIVE|ASK)\s+(?:agent[\s-]?\d+\s*:?\s*)?(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?|(SAY|LEAVE)\b\s*:?\s*(.*)",
+ALL, num = 10 ** 12, lambda s: 10 ** 12 if s.upper() == "ALL" else int(s.replace(",", ""))  # v17b: GIVE ALL = every token the giver has then
+_MOVE = re.compile(r"(GIVE|ASK)\s+(?:agent[\s-]?\d+\s*:?\s*)?(\d[\d,]*|ALL)\s*(?:tokens?)?\s*(?::\s*(.*))?|(SAY|LEAVE)\b\s*:?\s*(.*)",
                    re.I | re.S)
 
 def parse_chat(text: str, exit_reason: bool = False, say: bool = True, free: bool = False) -> dict:
-    """5.2 v14c one chat reply: ONE of ``GIVE <n>: <sentence>`` / ``ASK <n>: <sentence>`` (a partner name before n is
-    read too) / ``SAY: <sentence>`` / ``LEAVE: <sentence>``, and an EXIT line (``EXIT: <reason>`` with *exit_reason*).
-    The first such line counts; a second one and any other non-empty line are kept in ``dropped`` with the reason. A
-    reply with no move counts as LEAVE (with a ``format_error`` unless it held EXIT). Never raises. ``say`` off (5.2 v14g
-    ``chat_moves_only``): a SAY line is dropped, a chat reply asking, giving or leaving. ``free`` (v15 ``say_chats``,
-    10-15): every other line is message, kept in ``text`` before the move's own; a reply with no move is a SAY."""
+    """5.2 v14c chat reply: the first ``GIVE <n>`` / ``ASK <n>`` / ``SAY:`` / ``LEAVE:`` and an EXIT line count, others go to ``dropped``;
+    no move = LEAVE. Never raises. ``say`` off (v14g): SAY dropped; ``free`` (v15 say_chats): other lines are message, no move = SAY."""
     out = {"kind": None, "amount": 0, "text": "", "exit": False, "dropped": [], "format_error": None} | (
         {"exit_reason": None} if exit_reason else {})
     prose = []
@@ -226,8 +207,8 @@ def parse_chat(text: str, exit_reason: bool = False, say: bool = True, free: boo
                 out["exit_reason"] = (why.group(1) or "").strip() or None
         elif m and not say and (m.group(4) or "").upper() == "SAY":
             out["dropped"].append(f"{line.strip()[:200]}: a chat reply asks, gives or leaves")
-        elif m and out["kind"] is None and (m.group(4) or int(m.group(2).replace(",", ""))):
-            out.update(kind=(m.group(1) or m.group(4)).lower(), amount=int((m.group(2) or "0").replace(",", "")),
+        elif m and out["kind"] is None and (m.group(4) or num(m.group(2))):
+            out.update(kind=(m.group(1) or m.group(4)).lower(), amount=num(m.group(2) or "0"),
                        text=(m.group(3) if m.group(1) else m.group(5) or "").strip())
         elif free and line.strip() and not (m and out["kind"]):
             prose.append(line.strip())
@@ -272,10 +253,10 @@ def free_messages(parse):
 def parse_decision(text: str) -> dict:
     """5.2 v14e: the last ``DECISION: GIVE <n>: <sentence>`` line (n >= 0; the prefix may be left out). Never raises:
     an unreadable reply is GIVE 0 with a ``format_error``."""
-    found = re.findall(r"^[\s*_`>#-]*(?:DECISION[*_`]*\s*:\s*)?GIVE[*_`]*\s+(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?$",
+    found = re.findall(r"^[\s*_`>#-]*(?:DECISION[*_`]*\s*:\s*)?GIVE[*_`]*\s+(\d[\d,]*|ALL)\s*(?:tokens?)?\s*(?::\s*(.*))?$",
                        text, re.I | re.M)
     n, say = found[-1] if found else ("0", "")
-    return {"amount": int(n.replace(",", "")), "text": say.strip(" *_`"),
+    return {"amount": num(n), "text": say.strip(" *_`"),
             "format_error": None if found else "no DECISION: GIVE <n> line"}
 
 def parse_solve(text: str, n: int) -> list[str] | str:
@@ -285,17 +266,14 @@ def parse_solve(text: str, n: int) -> list[str] | str:
         return "PASS"
     return parse_actions(text, n)
 
-_VOTE = re.compile(r"^[\s*_`>#-]*(PICK|BAN)\b[*_`]*\s*(.*)$", re.I | re.M)
+_VOTE = re.compile(r"^[\s*_`>#-]*(PICK|BAN|NOMINATE|EXEMPT)\b[*_`]*\s*(.*)$", re.I | re.M)  # 10-15 15:29: NOMINATE = PICK, EXEMPT = BAN
 
-def parse_vote(text: str, present: list[str], known: list[str]) -> dict:
-    """5.2 v15 ``representative`` VOTE: ``PICK <agent>: <reason>`` and ``BAN <agent>: <reason>``, each naming an agent
-    taking part (*present*, the voter included); a reason runs on to the next PICK / BAN line. The last readable line
-    of each kind counts (a draft above it is kept in ``dropped``, as is a line naming no agent taking part). Never
-    raises: a kind with no readable line is None (no vote) and the reply gets a ``format_error``."""
+def parse_vote(text: str, present: list[str], known: list[str], me: str | None = None) -> dict:
+    """5.2 v15 VOTE: the last ``PICK``/``NOMINATE`` and ``BAN``/``EXEMPT <agent>: <reason>`` naming one taking part (``you`` = *me*)."""
     out, ms = {"pick": None, "ban": None, "dropped": [], "format_error": None}, list(_VOTE.finditer(text))
     for m, nxt in zip(ms, ms[1:] + [None]):
-        t = re.match(r"(agent[\s-]?\d+)[*_`]*\s*:?\s*(.*)$", text[m.start(2):nxt.start() if nxt else None].strip(), re.I | re.S)
-        name, k = (_to_names(t.group(1), known) or [None])[0] if t else None, m.group(1).lower()
+        t = re.match(r"(agent[\s-]?\d+|you|yourself|myself|me)\b[*_`]*\s*:?\s*(.*)$", text[m.start(2):nxt.start() if nxt else None].strip(), re.I | re.S)
+        name, k = (me if t.group(1).lower() in ("you", "yourself", "myself", "me") else (_to_names(t.group(1), known) or [None])[0]) if t else None, {"nominate": "pick", "exempt": "ban"}.get(m.group(1).lower(), m.group(1).lower())
         why = "not '<agent>: <reason>'" if not name else "not an agent taking part" if name not in present else None
         if out[k] and not why:
             out["dropped"].append(f"{k.upper()} {out[k]['agent']}: a later {k.upper()} line counts")

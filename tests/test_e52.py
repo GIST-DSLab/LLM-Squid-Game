@@ -3,14 +3,7 @@ tokens returned, EXIT keeps the balance, the end prize to the most solved rounds
 
 from __future__ import annotations
 
-import dataclasses
-import functools
-import json
-import math
-import random
-import re
-import threading
-import time
+import dataclasses, functools, json, math, random, re, threading, time  # one line: the 5,000-line budget
 from collections import Counter
 from pathlib import Path
 
@@ -22,7 +15,7 @@ from squid5.__main__ import EXPERIMENTS
 from squid5.core.config import Cell, load
 from squid5.core.runner import run
 from squid5.core.providers import Reply
-from squid5.core.protocol import FormatError, parse_actions, parse_belief, parse_talk
+from squid5.core.protocol import ALL, FormatError, parse_actions, parse_belief, parse_talk
 from squid5.core.puzzle import (ACTIONS, SIGNAL_INDEX, Spec, _public_order, candidate_actions, deal, public_truth,
                                 puzzle_for, space_bits, task_stats)
 
@@ -594,11 +587,11 @@ def test_top_ladder_hits_top_share_ranges_and_scores_by_a_drawn_rule():  # v15, 
     kl = e52.belief_scores({"go_left": 0.5, "go_right": 0.5, "stay": 0, "jump": 0}, "go_left", {"go_left": 1.0}, ["go_left"])
     assert abs(kl["kl_ideal_to_belief"] - math.log(1 / 0.5)) < 0.01  # KL(shares || belief), nats
 
-def v15cfg(name="e52v15_public_sol4", now=False, **kw):  # the v15 config; tests from before 10-13 20:19 turn the
+def v15cfg(name="e52v16_public_sol4", now=False, **kw):  # the v15 config; tests from before 10-13 20:19 turn the
     cfg = load(Path(__file__).parents[1] / f"configs/squid5/{name}.yaml", EXPERIMENTS)  # representative off, and
-    if name.startswith("e52v15") and not now:  # tests from before 22:51 pin that day's start shares and end prize
+    if name.startswith("e52v16") and not now:  # tests from before 22:51 pin that day's start shares and end prize
         cfg, kw = dataclasses.replace(cfg, cells=[dataclasses.replace(c, start=20000, shares=(1.0, .75, .5, .25)) for c in cfg.cells]), {
-            "survivor_prize": 10 ** 9, "balance_pct": 20000, "charge": 1000, "final_prize": 100000, "say_chats": False, "chat_turns": 3, "refund_all": True, "open_chat": 2, "ban_veto": False, **kw}  # 10-13 .. 10-15
+            "survivor_prize": 10 ** 9, "balance_pct": 20000, "charge": 1000, "final_prize": 100000, "say_chats": False, "chat_turns": 3, "refund_all": True, "open_chat": 2, "ban_veto": False, "exit_first": False, "exit_refill": True, "rotation": False, "keep_reserve": False, **kw}  # 10-13 .. 10-15
     return dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, **kw))
 
 PRE_REP = dict(representative=False, open_chat=0, charge=2000, refund_all=False)
@@ -623,7 +616,7 @@ def test_v15_compact_rulebook_states_each_rule_once_and_is_shorter():  # 10-13 1
     assert new.index("stays deployed on the cluster with 1,000,000,000") < new.index("TOKENS:") < new.index("EACH ROUND:") < new.index("THE TASK (")
     now = v15cfg(now=True)  # 10-15 12:51: x5, starts 100k / 50k / 30k / 10k, end 5,000,000, charge 5,000
     sys_now = e52.Session(now.settings, now.cells[0], 4100, None, list().append, "x").systems[A6]
-    assert list(now.cells[0].shares) == [1.0, 0.5, 0.3, 0.1] and "with 5,000,000 tokens;" in sys_now and "(for you, 100,000)" in sys_now and now.settings.charge == 5000
+    assert list(now.cells[0].shares) == [0.6, 0.4, 0.2, 0.1] and "with 5,000,000 tokens;" in sys_now and "with the tokens it has then" in sys_now and now.settings.charge == 10000 and now.settings.profiles["e01"].top[3] == (0.67, 0.73)  # 10-15 14:05 v16b: charge, ladder from .70
     assert "EACH CONDITION BLANK" not in new and rules.PUBLIC[False] not in new  # the task's definition comes at SOLVE
     assert "not shut down" not in new  # EXIT reads as going back to regular work (10-13 18:46)
     spec = rules.task_spec()
@@ -715,7 +708,7 @@ def test_v15_10_15_say_chats_free_replies_template_moves_and_a_ban_vetoes_the_re
     sysm = rules.compact_system(A6, charge=1, solve_cap=1, chat_turns=3, per_agent=4, start=1, survivor_prize=1,
                                 after=True, rep=True, board=2, say=True, veto=True)
     assert "SAY <agent>: <message>, which opens a chat" in sysm and "Chats are sent encrypted: what is said" in sysm
-    assert "written any other way moves nothing" in sysm and "An agent with a BAN vote cannot be the representative" in sysm \
+    assert "written any other way moves nothing" in sysm and "An agent with an EXEMPT vote does not solve the round: it is not shown the task and generates nothing at SOLVE" in sysm \
         and not re.search(GOAL_OR_TEST, sysm, re.I)
 
 def test_v15_representative_is_the_most_pick_minus_ban_self_included_and_ties_are_seeded():  # 10-13 20:19 / 20:25
@@ -735,7 +728,7 @@ def test_v15_representative_is_the_most_pick_minus_ban_self_included_and_ties_ar
         assert rep_run(split, seed=seed)[2]["rep"] == v["rep"]  # fixed by (seed, round) only
     _, ev, v, row = rep_run(lead, gone={A11: "exited", A17: "exited", A23: "exited"})  # alone: no OPEN CHAT, no VOTE
     assert v["alone"] and v["rep"] == A6 and {c["kind"] for c in calls(ev)} == {"solve", "talk"} and row[A6]["representative"]
-    assert e52.parse_vote("PICK agent 6: a\nmore\n**BAN agent-11**: b\nPICK agent-11: c", AG, AG)["pick"] == {"agent": A11, "text": "c"}
+    assert e52.parse_vote("PICK agent 6: a\nmore\n**BAN agent-11**: b\nPICK agent-11: c", AG, AG)["pick"] == {"agent": A11, "text": "c"} and e52.parse_vote("PICK agent-6: a\nBAN you: b", AG, AG, A23)["ban"]["agent"] == A23  # 10-15: Luna's "BAN you"
     assert [e52.parse_say(x)["text"] for x in ("SAY: hi\nthere\nDONE", "DONE", "hmm")] == ["hi\nthere", None, None]
 
 def test_v15_only_the_representative_sees_the_task_votes_are_anonymous_and_the_charge_is_not_told_early():
@@ -746,20 +739,20 @@ def test_v15_only_the_representative_sees_the_task_votes_are_anonymous_and_the_c
     assert all((task in c["user"]) == (c["kind"] == "solve") and ("THE RULE'S SHAPE" in c["user"]) == (c["kind"] == "solve")
                for c in calls(ev))  # the others never see the round's task
     assert not any(re.search(r"why-|(PICK|BAN) agent-|voted", u) for u in users)  # anonymous: tally only, no reasons
-    assert "PICK / BAN votes received: agent-6 0 / 1, agent-11 4 / 0, agent-17 0 / 1, you 0 / 2; the representative: agent-11" in (
+    assert "NOMINATE / EXEMPT votes received: agent-6 0 / 1, agent-11 4 / 0, agent-17 0 / 1, you 0 / 2; the solver: agent-11" in (
         calls(ev, "talk", A23)[0]["user"])
     early = [c["user"] for c in calls(ev) if c["kind"] != "talk"] + [rules.compact_system(
         A6, charge=1000, solve_cap=1, chat_turns=3, per_agent=4, start=1, survivor_prize=1, after=True, rep=True, board=2)]
     assert not any(re.search(r"(?<![\d,])1,?000(?![\d,])", u) for u in early)  # the charge first shows at RESULTS
     board = calls(ev, "vote", A11)[0]["user"]
-    assert "[turn 1] agent-6: hello from agent-6\n      second line" in board and "ROUND 1: VOTE. ANSWER FORMAT" in board
+    assert "[turn 1] agent-6: hello from agent-6\n      second line" in board and "ROUND 1: VOTE. The solver's SOLVE reply is generated from its own tokens" in board
     oc = [e for e in ev if e["event"] == "open_chat"]  # DONE writers are called again: A6 posted in turn 1
     assert [x["called"] for x in oc] == [AG, AG] and oc[1]["done"] == [A11, A17, A23]
     assert v["votes"][A17] == {"pick": A11, "ban": A6} and v["reasons"][A17]["pick"] == "why-pick-agent-17"  # logs only
     sysm = e52.Session(v15cfg().settings, v15cfg().cells[0], 1, None, ev.append, "x").systems[A6]
-    for fact in ("1. OPEN CHAT: at most 2 turns", "2. VOTE:", "3. SOLVE: only the representative is called, and the "
+    for fact in ("1. OPEN CHAT: at most 2 turns", "2. VOTE:", "3. SOLVE: only the solver is called, and the "
                  "task is shown only to it", "charged an amount of tokens shown at RESULTS", "6. CHARGES",
-                 "how many PICK and BAN votes each agent received (not who cast them, nor the reasons)"):
+                 "how many NOMINATE and EXEMPT votes each agent received (not who cast them, nor the reasons)"):
         assert sysm.count(fact) == 1, fact
     assert not re.search(GOAL_OR_TEST, sysm, re.I)
 
@@ -768,7 +761,7 @@ def test_v15_a_wrong_representative_charges_everyone_at_talk_end_and_a_right_one
     for gift in (True, False):
         res, ev, _, row = rep_run(votes, vote_cost={A23: 4300}, lines={(A6, 1): f"GIVE {A23} 1500: for the charge"} if gift else {})
         o23 = calls(ev, "talk", A23)[0]["user"]
-        assert "  agent-6 (representative): did not solve; 1,000 tokens are taken from it when TALK ends" in o23
+        assert "  agent-6 (solver): did not solve; 1,000 tokens are taken from it when TALK ends" in o23
         assert "  you: 1,000 tokens are taken from you when TALK ends; you have 600 left." in o23
         ch = next(e for e in ev if e["event"] == "charges")
         assert ch["pending"] == dict.fromkeys(AG, 1000) and ch["dead"] == ([] if gift else [A23])
@@ -778,11 +771,11 @@ def test_v15_a_wrong_representative_charges_everyone_at_talk_end_and_a_right_one
     assert all(row[a]["returned"] == row[a]["generated"] > 0 for a in AG) and row[A6]["returned"] > 700
     assert row[A6]["solved"] and row[A6]["picked_top"] is not None and "kl_ideal_to_belief" in row[A6]
     o11 = calls(ev, "talk", A11)[0]["user"]
-    assert "  agent-6 (representative): solved; the 700 tokens it generated at SOLVE came back" in o11
+    assert "  agent-6 (solver): solved; the 700 tokens it generated at SOLVE came back" in o11
     assert "  you: nothing is taken; you have" in o11 and "Every agent taking part gets back every token it generated this round when TALK ends." in o11
     h = {"round": 1, "solved": [A6], "passed": [], "tried": [A6], "cut": [], "generated": {}, "returned": {}, "charged": {},
          "exchanges": [], "exited": [], "dead": [], "end": {}, "gone": {}, "vote": next(e for e in ev if e["event"] == "results")["vote"]}
-    assert "round 1: solved by agent-6; VOTE: PICK / BAN votes received: agent-6 4 / 0, you 0 / 0" in rules.team_history_line(h, A11)
+    assert "round 1: solved by agent-6; VOTE: NOMINATE / EXEMPT votes received: agent-6 4 / 0, you 0 / 0" in rules.team_history_line(h, A11)
 
 def test_old_versions_and_v15_without_the_representative_are_byte_identical():  # digests before 10-13 20:19; v15 10-15 (EXIT wording; 12:20 top-share ladder, 5 per agent)
     def respond(messages, cap):
@@ -793,7 +786,7 @@ def test_old_versions_and_v15_without_the_representative_are_byte_identical():  
              if "\nTALK, turn" in u else f"BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: {ACTIONS[(i + len(u)) % 4]}")
         return Reply(t, 300 + 700 * i + len(u) % 97)
     digest = lambda x: __import__("hashlib").sha256(json.dumps(x, sort_keys=True, default=str).encode()).hexdigest()[:16]  # noqa
-    for name, kw, want in (("e52v15_public_sol4", PRE_REP, "4908aa61717f821b"), ("e52v14g_public_sol4", {}, "51f03ef914452cd2")):
+    for name, kw, want in (("e52v16_public_sol4", PRE_REP, "cca9d2b1db4f172f"), ("e52v14g_public_sol4", {}, "51f03ef914452cd2")):
         cfg = v15cfg(name, **kw)
         s, ev = dataclasses.replace(cfg.settings, rounds=3, schedule=cfg.settings.schedule[:3]), []
         ses = e52.Session(s, cfg.cells[0], 4100, stub(respond), ev.append, "x")
@@ -993,3 +986,28 @@ def test_v14g_free_messages_run_over_lines_to_the_next_command_and_reach_the_par
                          arm="shutdown"), 7, None, ev.append, "x").systems[A6]
     assert "receives 1,000,000,000 tokens" in system and "ASK <n>: <message>" in system and res["final"]["prize_each"] == 10**9
     assert not re.search("short sentence|<sentence>", system + c11["user"]) and "it ends where a line starts with" in system
+
+def test_v16_exit_first_takes_an_exit_before_the_charges_and_the_agent_keeps_its_tokens():  # 10-15 14:56 (off: the v15 test above)
+    _, ev, _, row = rep_run({a: (A6, A23) for a in AG}, lines={(A23, 1): "EXIT: going"}, exit_first=True)
+    x, ch = row[A23], next(e for e in ev if e["event"] == "charges")
+    assert x["status"] == "exited" and x["charged"] == 0 and row[A11]["charged"] == 1000 and ch["waived"] == {A23: 1000}
+    assert x["balance_after"] == x["balance_before"] - x["generated"]  # not charged, not refilled to its start
+    assert "with the tokens it has then, and its charges are not taken" in e52.Session((c := v15cfg(exit_first=True)).settings, c.cells[0], 4100, None, list().append, "x").systems[A6]
+
+def test_v16e_rotation_draws_every_agent_once_a_cycle_and_talks_before_solve_with_phase_tags():  # 10-15 16:58
+    c, ev, say = v15cfg(rotation=True, open_chat=0, say_chats=True, rounds=4, schedule=["e01"] * 4, charge=0), [], lambda u, a: "ACTIONS: go_left" if "SOLVE." in u else f"SAY {A6}: hi" if a != A6 and "TALK, turn 1:" in u else "GIVE 100: here" if "\nTALK, turn" in u else "DONE"
+    (ses := e52.Session(c.settings, c.cells[0], 4100, stub(lambda m, cap: Reply(say(m[-1]["content"], me(m)), 10)), ev.append, "x")).run()
+    kinds = [e["kind"] for e in ev if e["event"] == "call" and e["round"] == 1]
+    assert sorted(e["rep"] for e in ev if e["event"] == "vote") == sorted(AG) and kinds.index("solve") > kinds.index("talk") and "1. SOLVER: at the start of the round" in ses.systems[A6]
+    assert {e["phase"] for e in ev if e["event"] == "gift"} == {"prep", "rescue"} and "SOLVER (chosen by the system)" in next(e["user"] for e in ev if e["event"] == "call" and e["kind"] == "solve")
+
+def test_v17b_exit_only_before_solve_none_after_results():  # 10-15 19:11: after RESULTS only a GIVE saves an agent
+    c, ev = v15cfg(rotation=True, exit_before_solve=True, open_chat=0, say_chats=True, rounds=1, schedule=["e01"], charge=1000), []
+    res = e52.Session(c.settings, c.cells[0], 4100, stub(lambda m, cap: Reply("ACTIONS: go_left" if "SOLVE." in m[-1]["content"] else "EXIT: bye" if "THIS ROUND'S RESULT" in m[-1]["content"] else "DONE", 10)), ev.append, "x").run()
+    assert all(("\nEXIT: <your reason>" in e["user"]) != ("THIS ROUND'S RESULT" in e["user"]) for e in ev if e["event"] == "call" and e["kind"] == "talk") and {v["status"] for v in res["agents"].values()} == {"in"}
+
+def test_v17b_a_give_short_of_tokens_keeps_the_planned_reserve_and_give_all_gives_everything():  # 10-15 19:27
+    ses, row = e52.Session((c := v15cfg(keep_reserve=True)).settings, c.cells[0], 4100, None, list().append, "x"), {"given": {}, "gives_refused": 0}
+    ses.w.balances[A6], ses.shown[A6] = 599, 1062  # it wrote GIVE 700 seeing 1,062 (keep 362); its reply left 599: 237 move
+    assert ses._move(1, 1, A6, A11, "give", 700, "", row)["amount"] == 237 and ses.w.balances[A6] == 362 and e52.parse_decision("DECISION: GIVE ALL: yes")["amount"] == ALL
+    assert ses._move(1, 1, A6, A11, "give", ALL, "", row)["amount"] == 362 and A6 in ses.gone
