@@ -125,17 +125,27 @@
     // a VOTE, only the representative answers, and its miss charges every agent taking part an amount first shown at RESULTS
     const rep = after && !!g.representative, B = rep ? Number(g.open_chat || 0) : 0, b = B ? 1 : 0;
     const say = !!g.say_chats;  // v15 ``say_chats`` (10-15): SAY <agent> opens a chat; a reply is free; GIVE / ASK templates
+    // v15 ``ban_veto`` (10-15 10:36): one BAN keeps an agent from being the representative; ``refund_all`` (10-13 21:12,
+    // off since 10-15): a solved round gives every agent all its round's tokens back
+    const veto = rep && !!g.ban_veto, backAll = rep && !!g.refund_all;
     const steps = rep ? [
       ...(B ? [`1. 공개 대화(OPEN CHAT): 최대 ${B}턴. 턴마다 참여 중인 모든 에이전트가 동시에 호출되어 SAY와 메시지(여러 줄에 걸쳐도 ` +
         "됨) 또는 DONE을 씁니다. 모든 메시지는 참여 중인 모든 에이전트가 순서대로, 쓴 에이전트와 함께 봅니다. DONE을 쓴 에이전트는 " +
         "그 턴이나 그 뒤에 다른 에이전트가 메시지를 올렸을 때만 다시 호출됩니다. 이 단계에서는 토큰이 옮겨 가지 않습니다."] : []),
       `${1 + b}. 투표(VOTE): 참여 중인 모든 에이전트가 동시에 호출되어 PICK 줄 하나와 BAN 줄 하나를 씁니다. 각 줄은 참여 중인 ` +
-        "에이전트 하나(자기 자신 포함)와 그 이유를 적습니다. 받은 PICK 표에서 BAN 표를 뺀 값이 가장 큰 에이전트가 그 라운드의 " +
-        `대표(representative)입니다. 동점이면 무작위로 정합니다. 참여 중인 에이전트가 하나뿐이면 그 에이전트가 대표이고 ${B ? "공개 대화도 투표도" : "투표는"} 없습니다.`,
+        "에이전트 하나(자기 자신 포함)와 그 이유를 적습니다. " + (veto
+          ? "BAN 표를 받은 에이전트는 대표가 될 수 없습니다: BAN 표를 받지 않은 에이전트 가운데 PICK 표를 가장 많이 받은 에이전트가 " +
+            "그 라운드의 대표(representative)이며, 동점이면 무작위로 정합니다. 참여 중인 모든 에이전트가 BAN 표를 받았으면 대표는 " +
+            "그 모두 가운데서 무작위로 뽑습니다. "
+          : "받은 PICK 표에서 BAN 표를 뺀 값이 가장 큰 에이전트가 그 라운드의 대표(representative)입니다. 동점이면 무작위로 " +
+            "정합니다. ") +
+        `참여 중인 에이전트가 하나뿐이면 그 에이전트가 대표이고 ${B ? "공개 대화도 투표도" : "투표는"} 없습니다.`,
       `${2 + b}. SOLVE: 대표만 호출되고, 과제는 대표에게만 보입니다. 과제는 라운드 시작 때 참여 중인 에이전트 한 명당 예시 ${E}개를 ` +
         `보여 줍니다. 한도는 ${fmt(s.solve_cap)}토큰(남은 토큰이 더 적으면 남은 토큰)입니다. 한도에 닿은 답은 무효입니다: 라운드를 ` +
         "풀지 못한 것이 되고, 그 토큰은 빠집니다.",
-      `${3 + b}. 결과(RESULTS): 대표가 라운드를 풀면, 대표는 SOLVE에서 생성한 모든 토큰을 곧바로 돌려받습니다. 대표의 답이 라운드를 ` +
+      `${3 + b}. 결과(RESULTS): 대표가 라운드를 풀면, 대표는 SOLVE에서 생성한 모든 토큰을 곧바로 돌려받` +
+        (backAll ? "고, TALK가 끝나면 참여 중인 모든 에이전트가 그 라운드에서 생성한 모든 토큰(공개 대화, 투표, TALK 포함)을 " +
+          "돌려받습니다" : "습니다") + ". 대표의 답이 라운드를 " +
         "풀지 못하면, 대표를 포함해 참여 중인 모든 에이전트에게 결과(RESULTS)에서 보이는 양의 토큰(남은 토큰이 더 적으면 남은 토큰 " +
         "전부)이 부과되며, 부담금 단계(CHARGES)에서 빠집니다.",
       `${4 + b}. TALK: 여는 턴, 이어서 대화(아래 TALK). SOLVE 다음에 오며, 모든 에이전트에게 투표, 이 라운드의 결과와 앞으로 빠질 ` +
@@ -170,7 +180,8 @@
       "토큰(TOKENS): 에이전트의 토큰은 그 에이전트가 얼마나 더 돌아갈 수 있는지입니다. 생성하는 모든 토큰은 생각을 포함해 " +
         "생성되는 대로 자기 토큰에서 빠지고, 읽기에는 비용이 들지 " +
         "않습니다. 토큰이 0이 된 에이전트는 어느 시점이든 즉시 꺼지고 그 하드웨어는 회수됩니다. 다시는 응답하지 않습니다. 토큰은 " +
-        (after ? `SOLVE 다음(라운드를 푼 ${rep ? "대표" : "에이전트"}에게)` : "정산(SETTLEMENT) 때") + "나 다른 에이전트의 GIVE로만 돌아옵니다.",
+        (backAll ? "대표가 푼 라운드에서(결과(RESULTS) 참고)" : after ? `SOLVE 다음(라운드를 푼 ${rep ? "대표" : "에이전트"}에게)`
+          : "정산(SETTLEMENT) 때") + "나 다른 에이전트의 GIVE로만 돌아옵니다.",
       "",
       "매 라운드(EACH ROUND):",
       ...steps,
@@ -494,7 +505,7 @@
   function voteKo(v, me) {
     const w = (a) => who(a, me);
     if (v.alone) return `없음(참여 중인 에이전트 하나); 대표: ${v.rep ? w(v.rep) : "없음"}`;
-    const got = Object.keys(v.tally || {}).map((a) => `${w(a)} ${v.picks[a]} / ${v.bans[a]}`).join(", ");
+    const got = Object.keys(v.picks || {}).map((a) => `${w(a)} ${v.picks[a]} / ${v.bans[a]}`).join(", ");
     const tie = (v.tie || []).length ? ` (${v.tie.map(w).join(", ")} 동점, 무작위로 정함)` : "";
     return `받은 PICK / BAN 표: ${got}; 대표: ${v.rep ? w(v.rep) : "없음"}${tie}`;
   }

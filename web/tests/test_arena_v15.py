@@ -34,9 +34,14 @@ def test_default_room_is_v15_and_the_others_stay():
     assert e.survivor_prize == 1_000_000 and e.schedule[:2] == ["e01", "e02"] and e.profiles["e01"].eff
     assert not RoomSettings(schedule="v14g").engine().compact_rules
     assert rs.engine().charge == 1000 and not hasattr(e, "prize") and not hasattr(e, "wrong_rule")
-    assert e.representative and e.open_chat == 2  # 10-13 20:19 / 20:25
+    assert e.representative and e.open_chat == 4 and e.ban_veto and not e.refund_all  # 10-13 20:19 / 20:25; 10-15 10:36
     off = RoomSettings(representative=False, open_chat=0, charge=2000).engine()
-    assert not off.representative and not off.open_chat and off.charge == 2000
+    assert not off.representative and not off.open_chat and not off.ban_veto and off.charge == 2000
+    bare = RoomSettings(representative=False).engine()  # the config's open board and BAN veto need the representative
+    assert not bare.representative and not bare.open_chat and not bare.ban_veto
+    assert not RoomSettings(ban_veto=False).engine().ban_veto and RoomSettings(open_chat=2).engine().open_chat == 2
+    with pytest.raises(ValueError, match="open_chat needs representative"):
+        RoomSettings(representative=False, ban_veto=True)
     with pytest.raises(ValueError, match="v15 rounds are built for 4"):
         RoomSettings(public_per_agent=3)
 

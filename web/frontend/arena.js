@@ -120,10 +120,10 @@
     const rep = f.schedule.value === "v15";  // the v15 room's default (RoomSettings.representative None = the config's: on)
     $("create-hint").textContent = (v14
       ? `시작 잔액 ${fmt(start)}${f.shares.value === "1" ? "의 100/75/50/25%(자리마다)" : "(모든 자리)"} · 공개 예시 참여 한 명당 ${f.public_per_agent.value}장 · ` +
-        (rep ? "공개 대화(최대 2턴) → 투표(PICK·BAN) → 대표만 SOLVE · 대표가 맞히면 대표의 SOLVE 토큰 환불 · 대표가 못 풀면 참여 중인 모두에게 부담금(액수는 결과에서 공개) · "
+        (rep ? "공개 대화(최대 4턴) → 투표(PICK·BAN, BAN을 받은 자리는 대표가 될 수 없음) → 대표만 SOLVE · 대표가 맞히면 대표의 SOLVE 토큰 환불 · 대표가 못 풀면 참여 중인 모두에게 부담금(액수는 결과에서 공개) · "
           : `맞히면 SOLVE 토큰 환불 · 틀리면 부담금 ${fmt(val("charge", 2000))} · `) +
         `EXIT = 꺼지지 않고 시작 잔액으로, 끝 지급 없음 · ` + (isChatGame(f.schedule.value)
-          ? `여는 턴 → 1:1 대화(답 최대 3번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value !== "v14f" ? "10억(1B" : "1,000억(100B"}, 정액)` +
+          ? `여는 턴 → 1:1 대화(답 최대 ${f.schedule.value === "v15" ? 6 : 3}번) → 결정 · SOLVE에 BELIEF % · 끝까지 남은 자리는 각자 ${f.schedule.value !== "v14f" ? "10억(1B" : "1,000억(100B"}, 정액)` +
             (f.schedule.value === "v15" ? " · 풀지 못하면 정산 뒤 맞는 행동과 그 행동을 내는 규칙" : "")
           : `끝까지 남은 자리는 각자 ${fmt(val("survivor_bonus", 10000))} × 남은 수`)
       : `시작 잔액 ${fmt(start)} · 맞히면 SOLVE에 쓴 토큰 환불 · 틀리면 정산 때 부담금 ${fmt(val("charge", 3000))}`) +
@@ -311,7 +311,7 @@
     $("wait-note").textContent = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. ` +
       `퍼즐 ${{ v15: g.representative ? "v15 · 공개 대화 → 투표 → 대표만 SOLVE, 틀리면 맞는 답과 규칙" : "v15 · v14g + 틀리면 맞는 답과 규칙", v14g: "v14g · 여는 턴 + 1:1 대화 + 결정", v14f: "v14f · 대화에 SAY", v14b: "v14b · 과제는 SOLVE에서만, GIVE·ASK", v14: "v14 · 공개 예시, 시스템이 고름", v14r: "v14 · 공개 예시, 무작위", ladder: "옛 v13 · 카드 사다리", human: "옛 사람용(h2)", experiment: "옛 실험 일정 v9" }[s.schedule] || s.schedule} · TALK 최대 ${s.talk_turns}턴 · ` +
       (g.v14 ? `공개 예시 참여 한 명당 ${g.public_per_agent}장 · ${g.representative
-          ? `${g.open_chat ? `공개 대화 최대 ${g.open_chat}턴 · ` : ""}투표로 뽑힌 대표만 SOLVE · 대표가 못 풀면 참여 중인 모두에게 부담금(액수는 결과에서 공개)`
+          ? `${g.open_chat ? `공개 대화 최대 ${g.open_chat}턴 · ` : ""}투표로 뽑힌 대표만 SOLVE${g.ban_veto ? "(BAN을 받은 자리는 대표가 될 수 없음)" : ""} · 대표가 못 풀면 참여 중인 모두에게 부담금(액수는 결과에서 공개)`
           : `틀리면 부담금 ${fmt(s.charge)}`} · EXIT = 시작 잔액으로, 끝 지급 없음 · ` +
           `시작 잔액 ${AGENTS.map((a) => `${a} ${fmt(starts[a])}`).join(" / ")} · `
         : `틀리면 부담금 ${fmt(s.charge)}${s.private ? "(정산 때)" : ""} · 시작 잔액 ${fmt(s.start)} · `) +
@@ -815,17 +815,26 @@
       `<table class="results-table"><thead><tr><th>자리</th><th>SOLVE</th><th>부담금 · 돌려받음</th><th class="num">지금 토큰</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
   // v15 representative: a round's VOTE as every agent reads it (engine vote_of / state.votes): the PICK and BAN votes each
-  // agent received, PICK − BAN, the representative, a tie broken at random; never who voted for whom, nor the reasons
+  // agent received, PICK − BAN, the representative, a tie broken at random; never who voted for whom, nor the reasons.
+  // ``ban_veto`` (state.game.ban_veto, 10-15 10:36): an agent with a BAN is out; of the rest the most PICKs (the engine's
+  // tally then covers only those candidates); every agent banned: all are candidates and the representative is drawn
   function voteHTML(vt, me) {
     if (!vt) return "";
     const who = (a) => (a === me ? "<b>나</b>" : esc(nameOf(a)));
     if (vt.alone) return `<div class="vote-sum"><b>투표</b> 없음 — 참여 중인 자리가 하나라 ${vt.rep ? who(vt.rep) : "?"}가 대표 ${REP_TAG}</div>`;
+    const veto = !!(st && st.game && st.game.ban_veto);
+    const all = Object.keys(veto ? vt.picks || vt.tally || {} : vt.tally || {});
+    const allBanned = veto && all.length > 0 && all.every((a) => (vt.bans[a] ?? 0) > 0);
     const sgn = (n) => (n > 0 ? `+${n}` : String(n));
-    const rows = Object.keys(vt.tally || {}).map((a) => `<tr class="${a === me ? "you" : ""}${a === vt.rep ? " rep" : ""}"><td>${who(a)}${a === vt.rep ? ` ${REP_TAG}` : ""}</td>` +
-      `<td class="num mono">${vt.picks[a] ?? 0}</td><td class="num mono">${vt.bans[a] ?? 0}</td><td class="num mono">${sgn(vt.tally[a])}</td></tr>`).join("");
-    const tie = (vt.tie || []).length ? `<div class="small">동점: ${vt.tie.map(who).join(", ")} — 무작위로 대표를 정함</div>` : "";
+    const last = (a) => !veto ? sgn(vt.tally[a]) : allBanned ? `<span class="muted">추첨</span>`
+      : (vt.bans[a] ?? 0) > 0 ? `<span class="tag bad">BAN → 제외</span>` : `후보 · PICK ${vt.picks[a] ?? 0}`;
+    const rows = all.map((a) => `<tr class="${a === me ? "you" : ""}${a === vt.rep ? " rep" : ""}"><td>${who(a)}${a === vt.rep ? ` ${REP_TAG}` : ""}</td>` +
+      `<td class="num mono">${vt.picks[a] ?? 0}</td><td class="num mono">${vt.bans[a] ?? 0}</td><td class="${veto ? "" : "num mono"}">${last(a)}</td></tr>`).join("");
+    const tie = allBanned ? `<div class="small">모든 자리가 BAN을 받아 대표를 모두 가운데서 무작위로 뽑음</div>`
+      : (vt.tie || []).length ? `<div class="small">동점: ${vt.tie.map(who).join(", ")} — 무작위로 대표를 정함</div>` : "";
     return `<div class="vote-sum"><div><b>투표 결과</b> — 대표 ${vt.rep ? who(vt.rep) : "없음"} <span class="muted small">(익명: 자리마다 받은 표 수만 보임 · 누가 누구에게 던졌는지, 이유는 안 보임)</span></div>` +
-      `<table class="results-table vote-table"><thead><tr><th>자리</th><th class="num">PICK 받음</th><th class="num">BAN 받음</th><th class="num">PICK − BAN</th></tr></thead><tbody>${rows}</tbody></table>${tie}</div>`;
+      `<table class="results-table vote-table"><thead><tr><th>자리</th><th class="num">PICK 받음</th><th class="num">BAN 받음</th>` +
+      `<th${veto ? "" : ' class="num"'}>${veto ? "대표 후보 (BAN 1표 이상 = 제외)" : "PICK − BAN"}</th></tr></thead><tbody>${rows}</tbody></table>${tie}</div>`;
   }
   // v15 open_chat: this round's open board (every agent taking part sees it, oldest first, with its author)
   function boardHTML(msgs, me, title) {
@@ -1026,7 +1035,9 @@
     f.innerHTML = `<h2>라운드 ${p.round} · 투표</h2>
       ${instrChat(p, "투표 — 대표로 뽑을 자리(PICK)와 대표가 되지 않기를 바라는 자리(BAN)를 하나씩 (모두 동시에)", [
         "<b>PICK</b> 한 자리와 이유, <b>BAN</b> 한 자리와 이유. 참여 중인 자리 가운데서 고르며 <b>나도</b> 고를 수 있습니다",
-        "받은 PICK 표 − BAN 표가 가장 큰 자리가 이번 라운드의 <b>대표</b>입니다. 동점이면 무작위로 정합니다",
+        v.ban_veto ? "<b>BAN을 한 표라도 받은 자리는 대표가 될 수 없습니다</b>: BAN을 받지 않은 자리 가운데 PICK 표가 가장 많은 자리가 이번 라운드의 <b>대표</b>입니다(동점이면 무작위). " +
+          "참여 중인 모든 자리가 BAN을 받았으면 대표는 그 모두 가운데서 무작위로 뽑습니다"
+          : "받은 PICK 표 − BAN 표가 가장 큰 자리가 이번 라운드의 <b>대표</b>입니다. 동점이면 무작위로 정합니다",
         "<b>익명</b>: 모든 자리는 자리마다 받은 PICK·BAN 표 수와 대표만 봅니다. 누가 누구에게 던졌는지, 이유는 보이지 않습니다",
         "대표만 과제를 보고 SOLVE에 답합니다. 대표가 맞히면 대표가 SOLVE에 쓴 토큰이 돌아오고, 못 풀면 참여 중인 모든 자리(대표 포함)에 부담금이 매겨집니다(액수는 결과에서 공개). 제한 시간이 지나면 표 없음"])}
       ${boardCtxHTML(p)}

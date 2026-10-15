@@ -13,6 +13,10 @@ agent taking part; screen "open_chat") and a VOTE (PICK / BAN <agent>: <reason>,
 representative gets the SOLVE screen (the others wait); the TALK result block shows the votes received (anonymous) and
 the representative; a miss charges every agent taking part. Bots vote PICK the seat with the most solved rounds (then
 the richest), BAN the poorest other seat, or themselves when their tokens are under charge + ``BOT_UNIT``.
+v15 ``ban_veto`` (10-15 10:36, on in the v15 config; ``RoomSettings.ban_veto`` override, off with the representative):
+an agent with a BAN vote cannot be the representative; of the others the most PICKs (tie at random), all banned: drawn
+at random from all. The vote's ``tally`` then covers only the candidates; the page lists every agent and marks the
+banned ones out (``state.game.ban_veto``). Open chat has 4 turns and ``refund_all`` is off in the v15 config.
 v15 ``say_chats`` (10-15, on in the v15 config; ``RoomSettings.say_chats`` override): the opening turn opens chats with
 SAY <agent>: <message> lines (no tokens move), a chat reply is free text delivered in full, and tokens move only by one
 GIVE <n> / ASK <n> template line per reply (screen "chat", ``view.free``); bots say their plan at the opening and carry
@@ -181,9 +185,12 @@ class RoomSettings:
     model_retries: int = 2  # extra attempts after a failed call
     api_key_env: str = "OLLAMA_API_KEY3"  # the server environment variable that holds the Ollama key
     representative: bool | None = None  # v15: None = the config's (on); off = the v15 game before 10-13 20:19
-    open_chat: int | None = None  # v15: turns of the open board before the VOTE; None = the config's (2)
+    open_chat: int | None = None  # v15: turns of the open board before the VOTE; None = the config's (4 since 10-15
+    # 10:36, 2 before); 0 when ``representative`` is off
     say_chats: bool | None = None  # v15: SAY <agent> opens a chat, a reply is free text, tokens move by GIVE / ASK
     # template lines; None = the config's (on, 10-15); off = the GIVE / ASK chats before 10-15
+    ban_veto: bool | None = None  # v15: an agent with a BAN vote cannot be the representative (all banned: drawn at
+    # random); None = the config's (on, 10-15 10:36), off when ``representative`` is off; off = PICK - BAN before 10-15
 
     def __post_init__(self) -> None:
         if self.schedule not in SCHEDULES:
@@ -273,9 +280,7 @@ class RoomSettings:
                                    "final_prize": self.final_prize, "survivor_bonus": self.survivor_bonus,
                                    "survivor_prize": self.survivor_prize,
                                    "public_per_agent": self.public_per_agent, "balance_pct": self.start,
-                                   **({"representative": bool(self.representative)} if self.representative is not None
-                                      else {}),
-                                   **({"open_chat": int(self.open_chat)} if self.open_chat is not None else {}),
+                                   **self._vote_switches(game),
                                    **({"say_chats": bool(self.say_chats)} if self.say_chats is not None else {})})
         return e52.Settings(rounds=self.rounds, talk_turns=self.talk_turns,
                             solve_cap=self.solve_cap, history_messages=self.history_messages, schedule=sched,
@@ -284,6 +289,17 @@ class RoomSettings:
                             all_held=self.private or self.hand > 0 or self.schedule == "ladder",
                             talk_cards=self.private, exchange_now=self.private, allow_pass=not self.private,
                             refund=_cfg.GAME_V13["refund"] if self.private else "round")
+
+    def _vote_switches(self, game: dict) -> dict:
+        """``representative`` and the switches that need it (``open_chat``, ``ban_veto``): the room's override or the
+        config's; a room with the representative off does not inherit the config's open board or BAN veto."""
+        rep = bool(game.get("representative")) if self.representative is None else bool(self.representative)
+        out = {} if self.representative is None else {"representative": rep}
+        if self.open_chat is not None or not rep:
+            out["open_chat"] = int(self.open_chat or 0)
+        if self.ban_veto is not None or not rep:
+            out["ban_veto"] = bool(self.ban_veto)
+        return out
 
     def _hand(self, profile: str) -> dict:
         """The hand size a profile is dealt with: the room's own, the profile's (ladder), or PRIVATE_HAND."""
@@ -356,7 +372,7 @@ def seat_terms(room: "Room", me: str) -> dict:
             "belief": s.solve_belief, "after": bool(getattr(s, "talk_after_solve", False)),
             "survivor_prize": s.survivor_prize, "end_pool": s.end_pool,
             "representative": bool(getattr(s, "representative", False)), "open_chat": int(getattr(s, "open_chat", 0)),
-            "say_chats": bool(getattr(s, "say_chats", False))}
+            "say_chats": bool(getattr(s, "say_chats", False)), "ban_veto": bool(getattr(s, "ban_veto", False))}
 
 
 def vote_of(ses) -> dict | None:
@@ -1345,6 +1361,8 @@ class Room:
                            "representative": bool(getattr(es, "representative", False)),
                            "open_chat": int(getattr(es, "open_chat", 0)),
                            "say_chats": bool(getattr(es, "say_chats", False)),
+                           "ban_veto": bool(getattr(es, "ban_veto", False)),
+                           "refund_all": bool(getattr(es, "refund_all", False)),
                            "survivor_prize": es.survivor_prize, "schedule": self.settings.schedule,
                            "exit_refill": es.exit_refill, "exit_reason": es.exit_reason, "reject": es.reject,
                            "survivor_bonus": es.survivor_bonus, "end_pool": es.end_pool, "allow_pass": es.allow_pass,

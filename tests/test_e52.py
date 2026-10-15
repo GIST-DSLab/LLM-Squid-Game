@@ -706,10 +706,10 @@ def test_v15_10_15_say_chats_free_replies_template_moves_and_a_ban_vetoes_the_re
     ev = rep_run({a: (A6, A23) for a in AG}, lines={(A6, 1): f"SAY {A11}: hi\nGIVE {A17} 300: dropped", (A11, 2): "Sure, "
                  "here.\nGIVE 200: for you\nthanks", (A6, 3): "give me 300 more please"}, say_chats=True)[1]
     assert [(e["src"], e["dst"], e["amount"]) for e in ev if e["event"] in ("gift", "ask")] == [(A11, A6, 200)]
-    assert [(e["kind"], e["text"]) for e in ev if e["event"] == "chat_turn"] == [
-        ("give", "Sure, here.\nfor you\nthanks"), ("say", "give me 300 more please"), ("leave", "ok")]
+    assert [(e["kind"], e["text"]) for e in ev if e["event"] == "chat_turn"] == [("give", "Sure, here.\nfor you\nthanks"), ("say", "give me 300 more please"), ("leave", "ok")]
     assert "WITH agent-11 (sent encrypted, seen only by the two of you" in calls(ev, "talk", A6)[1]["user"]
-    assert rep_run({A6: (A6, A6), A11: (A6, A23), A17: (A6, A23), A23: (A11, A23)}, ban_veto=True)[2]["rep"] == A11
+    v = rep_run({A6: (A6, A6), A11: (A6, A23), A17: (A6, A23), A23: (A11, A23)}, ban_veto=True)[2]  # every count shown
+    assert v["rep"] == A11 and "you 3 / 1, agent-11 1 / 0, agent-17 0 / 0, agent-23 0 / 3;" in rules.vote_text(v, A6)
     assert rep_run({a: (A6, a) for a in AG}, ban_veto=True)[2]["tie"] == AG  # all banned: drawn from all
     sysm = rules.compact_system(A6, charge=1, solve_cap=1, chat_turns=3, per_agent=4, start=1, survivor_prize=1,
                                 after=True, rep=True, board=2, say=True, veto=True)

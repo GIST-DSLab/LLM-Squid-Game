@@ -403,7 +403,7 @@ def vote_text(v: dict, you: str) -> str:
     who = lambda a: "you" if a == you else a  # noqa: E731
     if v["alone"]:
         return f"none (one agent taking part); the representative: {who(v['rep'])}"
-    got = ", ".join(f"{who(a)} {v['picks'][a]} / {v['bans'][a]}" for a in v["tally"])
+    got = ", ".join(f"{who(a)} {v['picks'][a]} / {v['bans'][a]}" for a in v["picks"])  # ban_veto: tally = candidates
     tie = f" (a tie among {', '.join(map(who, v['tie']))}, broken at random)" if v["tie"] else ""
     return f"PICK / BAN votes received: {got}; the representative: {who(v['rep']) if v['rep'] else 'none'}{tie}"
 

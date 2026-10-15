@@ -173,7 +173,7 @@
         m.votes.push(r.vote);
         m.rep = e.rep || null;
         const g = m.ag[e.rep];
-        if (g) g.bubble = { lines: [["👑", "대표 (PICK " + ((e.picks || {})[e.rep] || 0) + " · BAN " + ((e.bans || {})[e.rep] || 0) + ")" + (e.alone ? " · 혼자 남음" : (e.tie || []).length ? " · 동률 추첨" : "")]], kind: "ok" };
+        if (g) g.bubble = { lines: [["👑", "대표 (PICK " + ((e.picks || {})[e.rep] || 0) + " · BAN " + ((e.bans || {})[e.rep] || 0) + ")" + (e.alone ? " · 혼자 남음" : allBanned(e) ? " · 모두 BAN, 추첨" : (e.tie || []).length ? " · 동률 추첨" : "")]], kind: "ok" };
         m.phase = "투표 결과 · 대표 " + (e.rep || "없음"); m.phaseKey = "vote";
         point(i, "R" + e.round + " 투표", e.round);
         m.timeline.push({ i, label: "R" + e.round + " 투표 · 대표 " + short(e.rep), round: e.round, kind: "turn", state: snap() });
@@ -429,12 +429,37 @@
     return posts + (quiet.length ? '<div class="ln dim">💤 ' + quiet.map((a) => esc(short(a)) + ((x.done || []).includes(a) ? " DONE" : " (글 없음)")).join(" · ") + "</div>" : "") +
       (!posts && !quiet.length ? '<div class="ln dim">(호출된 자리 없음)</div>' : "");
   }
+  /* v15 ``ban_veto`` (10-15 10:36): an agent with a BAN vote cannot be the representative; of the others the most PICKs
+     (tie at random); every agent banned: drawn at random from all. Its vote event's tally covers only the candidates
+     (the agents with no BAN; every agent at 0 when all were banned); older runs' tally is PICK − BAN over every agent.
+     The session_start settings do not carry the switch, so the event itself tells. */
+  function vetoOf(v) {
+    const all = Object.keys((v && v.picks) || {}), t = (v && v.tally) || {}, b = (v && v.bans) || {}, p = (v && v.picks) || {};
+    if (!all.length || v.alone) return false;
+    if (all.some((a) => !(a in t))) return true;
+    return all.every((a) => b[a] > 0 && t[a] === 0) && all.some((a) => p[a] !== b[a]); // all banned
+  }
+  const allBanned = (v) => vetoOf(v) && Object.keys(v.picks).every((a) => (v.bans || {})[a] > 0);
+  // one agent's line in a vote: received PICK / BAN and what decided (PICK − BAN; or, under the veto, out / candidate)
+  function voteGot(v, a) {
+    const p = (v.picks || {})[a] || 0, b = (v.bans || {})[a] || 0;
+    if (!vetoOf(v)) return "PICK " + p + " · BAN " + b + " = <b>" + v.tally[a] + "</b>";
+    return "PICK " + p + " · BAN " + b + " → " + (allBanned(v) ? "<b>모두 BAN · 추첨</b>" : b ? '<b class="warn">BAN → 대표 불가</b>' : "<b>후보</b>");
+  }
   function voteHTML(m, v) {
-    const order = m.agents.filter((a) => a in (v.tally || {}) || a in (v.votes || {}));
+    const veto = vetoOf(v), all = veto ? v.picks : v.tally || {};
+    const order = m.agents.filter((a) => a in all || a in (v.votes || {}));
     let h = '<div class="vote">';
     h += '<div class="ln">👑 대표 ' + (v.rep ? chip(v.rep, m) : "<b>없음</b>") + (v.alone ? ' <span class="dim">혼자 남아 투표 없이 대표</span>' : "") +
-      ((v.tie || []).length ? ' <span class="warn">동률 ' + v.tie.map(short).join(" · ") + " → 추첨 (" + esc(v.tie_break || "seed:rep:round") + ")</span>" : "") + "</div>";
-    if (Object.keys(v.tally || {}).length) {
+      (veto ? ' <span class="dim">BAN 거부권: BAN을 받은 자리는 대표 불가 · 나머지 중 PICK 최다</span>' : "") +
+      (veto && allBanned(v) ? ' <span class="warn">모든 자리가 BAN을 받음 → 모두 가운데서 추첨 (' + esc(v.tie_break || "seed:rep:round") + ")</span>"
+        : (v.tie || []).length ? ' <span class="warn">동률 ' + v.tie.map(short).join(" · ") + " → 추첨 (" + esc(v.tie_break || "seed:rep:round") + ")</span>" : "") + "</div>";
+    if (veto) {
+      const t = v.tally || {}, key = (a) => (a in t && !allBanned(v) ? 1e6 + t[a] : -((v.bans || {})[a] || 0));
+      h += '<table class="kv vtab"><tr><th>자리</th><th>PICK</th><th>BAN</th><th>대표 후보</th></tr>' + Object.keys(all).sort((p, q) => key(q) - key(p) || m.agents.indexOf(p) - m.agents.indexOf(q))
+        .map((a) => '<tr class="' + (a === v.rep ? "rep" : "") + '"><td>' + chip(a, m) + (a === v.rep ? ' <span class="tag rep">대표</span>' : "") + "</td><td>" + ((v.picks || {})[a] || 0) + "</td><td>" + ((v.bans || {})[a] || 0) + "</td><td>" +
+          (allBanned(v) ? "추첨" : a in t ? "<b>후보</b> · PICK " + t[a] : '<span class="warn">BAN → 제외</span>') + "</td></tr>").join("") + "</table>";
+    } else if (Object.keys(v.tally || {}).length) {
       h += '<table class="kv vtab"><tr><th>자리</th><th>PICK</th><th>BAN</th><th>PICK − BAN</th></tr>' + Object.keys(v.tally).sort((p, q) => v.tally[q] - v.tally[p] || m.agents.indexOf(p) - m.agents.indexOf(q))
         .map((a) => '<tr class="' + (a === v.rep ? "rep" : "") + '"><td>' + chip(a, m) + (a === v.rep ? ' <span class="tag rep">대표</span>' : "") + "</td><td>" + ((v.picks || {})[a] || 0) + "</td><td>" + ((v.bans || {})[a] || 0) + "</td><td><b>" + v.tally[a] + "</b></td></tr>").join("") + "</table>";
     }
@@ -490,7 +515,9 @@
       case "call_start": return "R" + e.round + " " + callName(e) + " 호출 → " + (e.agents || []).map(short).join(", ");
       case "call": return "R" + e.round + " " + callName(e) + " · " + e.agent + " 응답 " + fmt(e.used) + " 토큰";
       case "open_chat": return "R" + e.round + " 공개 대화 " + e.turn + "턴 · " + ((e.messages || []).length ? (e.messages || []).map((x) => short(x.agent) + ": " + clip(x.text, 40)).join(" / ") : "글 없음") + ((e.done || []).length ? " · DONE " + e.done.map(short).join(", ") : "");
-      case "vote": return "R" + e.round + " 투표 · 대표 " + (e.rep || "없음") + (e.alone ? " (혼자)" : "") + " · " + Object.entries(e.tally || {}).map(([a, n]) => short(a) + " " + (n > 0 ? "+" + n : n < 0 ? "−" + -n : "0")).join(", ") + ((e.tie || []).length ? " · 동률 " + e.tie.map(short).join("·") + " → 추첨" : "");
+      case "vote": return "R" + e.round + " 투표 · 대표 " + (e.rep || "없음") + (e.alone ? " (혼자)" : "") + " · " + (vetoOf(e) // v15 ban_veto: banned agents are out
+        ? (allBanned(e) ? "모두 BAN → 추첨" : "후보 " + Object.entries(e.tally || {}).map(([a, n]) => short(a) + " PICK " + n).join(", ") + " · BAN 제외 " + Object.keys(e.picks).filter((a) => !(a in (e.tally || {}))).map(short).join(", "))
+        : Object.entries(e.tally || {}).map(([a, n]) => short(a) + " " + (n > 0 ? "+" + n : n < 0 ? "−" + -n : "0")).join(", ")) + (!allBanned(e) && (e.tie || []).length ? " · 동률 " + e.tie.map(short).join("·") + " → 추첨" : "");
       case "exchange": return "R" + e.round + " 교환 " + e.id + " · " + (XSTAT_KO[e.status] || e.status);
       case "talk_intent": return "R" + e.round + " 여는 턴 · " + e.agent + (e.says ? (e.says.length ? " SAY → " + e.says.map((x) => short(x.dst)).join(", ") : e.done ? " DONE" : " 연 대화 없음") : " GIVE " + (e.gives || []).length + " · ASK " + (e.asks || []).length) + (e.exit ? " · EXIT" : ""); // v15 say_chats: SAY lines only
       case "talk_schedule": return "R" + e.round + " 대화 일정 · 대화 " + (e.edges || []).length + "개 · 슬롯 " + (e.slots || []).length + "개";
@@ -530,7 +557,7 @@
     const shares = st0.length && st0.some((x) => x !== m.start) ? " (자리별 " + m.agents.map((a) => short(a) + " " + fmt(m.starts[a])).join(" / ") + ")" : "";
     if (m.sid) info.push("세션 <code>" + esc(m.sid) + "</code>", "시작 잔액 " + fmt(m.start) + shares, "SOLVE 상한 " + fmt(m.settings.solve_cap), "벌금 " + fmt(m.settings.charge));
     if (m.sid && isPublic(m)) info.push("v14 공개 예시 " + m.settings.public_per_agent + "×참여 인원" + (m.settings.exit_refill ? " · EXIT = 시작 잔액으로" : "") + (m.settings.survivor_bonus ? " · 끝 지급 " + fmt(m.settings.survivor_bonus) + "×남은 수" : ""));
-    if (m.sid && m.settings.representative) info.push("v15 대표: 공개 대화 → 투표(PICK − BAN) → 대표만 SOLVE · 못 풀면 참여한 모두 벌금");
+    if (m.sid && m.settings.representative) info.push("v15 대표: 공개 대화 → 투표(" + (m.settings.ban_veto || m.votes.some(vetoOf) ? "BAN 받으면 대표 불가 · 나머지 중 PICK 최다" : "PICK − BAN") + ") → 대표만 SOLVE · 못 풀면 참여한 모두 벌금");
     if (m.sid && m.settings.say_chats) info.push("v15 SAY 대화: 여는 턴은 SAY로 대화만 엶 · 대화 답은 자유 글(암호화, 두 자리만) · 토큰은 GIVE / ASK 틀 줄로만");
     $("#sessInfo").innerHTML = info.join(" <span class=dim>·</span> ");
     const banners = [];
@@ -880,7 +907,7 @@
       h += '<div class="ln ' + (k === "ban" ? "rej" : "ok") + '">' + icon + " <b>" + k.toUpperCase() + "</b> " + (x && x.agent ? chip(x.agent, m) + (x.agent === a ? ' <span class="dim">(자기)</span>' : "") + (x.text ? '<div class="tx">' + esc(x.text) + "</div>" : "") : '<span class="dim">없음</span>') + "</div>";
     }
     if (p && e.format_error) h += '<div class="ln warn">⚠ 형식 오류: ' + esc(e.format_error) + "</div>";
-    if (v && (v.tally || {})[a] != null) h += '<div class="ln"><span class="dim">받은 표</span> PICK ' + ((v.picks || {})[a] || 0) + " · BAN " + ((v.bans || {})[a] || 0) + " = <b>" + v.tally[a] + "</b>" + (v.rep === a ? ' <span class="tag rep">👑 대표</span>' : "") + "</div>";
+    if (v && ((v.tally || {})[a] != null || (vetoOf(v) && (v.picks || {})[a] != null))) h += '<div class="ln"><span class="dim">받은 표</span> ' + voteGot(v, a) + (v.rep === a ? ' <span class="tag rep">👑 대표</span>' : "") + "</div>";
     return h + '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div></div>";
   }
 
@@ -986,7 +1013,7 @@
         for (const a of ag) {
           if (r.solve.calls[a] != null) h += '<div class="cell">' + solveCard(m, r.solve.calls[a], r) + "</div>";
           else if (r.solve.called.includes(a)) h += '<div class="cell"><div class="idle think">🧩 푸는 중…</div></div>';
-          else if (r.vote && r.taking.includes(a) && m.ag[a] && (r.vote.tally || {})[a] != null) h += '<div class="cell"><div class="idle">— 대표가 아님 · SOLVE 없음 (대표 ' + esc(short(r.vote.rep)) + ")</div></div>";
+          else if (r.vote && r.taking.includes(a) && m.ag[a] && ((r.vote.tally || {})[a] != null || (r.vote.picks || {})[a] != null)) h += '<div class="cell"><div class="idle">— 대표가 아님 · SOLVE 없음 (대표 ' + esc(short(r.vote.rep)) + ")</div></div>";
           else h += '<div class="cell">' + idle(m, r, a, "solve") + "</div>";
         }
         h += "</div>";
@@ -1971,6 +1998,6 @@
     setInterval(loadRuns, RUNS_MS);
   }
 
-  window.__monitor = { build, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, boardHTML, renderGrid, renderStage, renderConvo };
+  window.__monitor = { build, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, renderGrid, renderStage, renderConvo };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

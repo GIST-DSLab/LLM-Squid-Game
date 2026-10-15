@@ -1400,7 +1400,8 @@ def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
     from squid5.core.providers import ProviderConfig, Reply, Stub
     from squid5.core.puzzle import public_truth
     cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
-    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
+    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2], say_chats=False, chat_turns=3,
+                            refund_all=True, open_chat=2, ban_veto=False)  # 10-13 .. 10-15: the design this test pins
     assert s.representative and s.open_chat == 2
     right = {r: public_truth(4100, r, s.profiles[s.schedule[r - 1]], 4, 4).evaluate(
         public_round(4100, r, s.profiles[s.schedule[r - 1]], 4, 4)[0].queries[0]) for r in (1, 2)}
@@ -1496,6 +1497,77 @@ def test_v15_representative_ability_rows_leave_non_representatives_out_of_goal_p
     d = compare.distribution_rows(ev)
     assert [r["round"] for r in d["rounds"]] == [1, 2]
 
+
+
+HARNESS_V15V = """
+globalThis.window = globalThis;
+const els = {};
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || { innerHTML: "", hidden: false, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 0, clientHeight: 0 }) };
+require(process.argv[2]);
+const events = JSON.parse(require("fs").readFileSync(process.argv[3], "utf8"));
+const M = window.__monitor;
+M.S.events = events;
+const m = M.build(events, events.length - 1);
+const ag = {}; for (const a of m.agents) ag[a] = { balance: m.ag[a].balance, status: m.ag[a].status };
+const v = events.find((e) => e.event === "vote");
+const all = Object.assign({}, v, { tally: Object.fromEntries(Object.keys(v.picks).map((a) => [a, 0])),
+  bans: Object.fromEntries(Object.keys(v.picks).map((a) => [a, 1])), tie: Object.keys(v.picks) });  // every agent banned
+const old = Object.assign({}, v, { tally: Object.fromEntries(Object.keys(v.picks).map((a) => [a, v.picks[a] - v.bans[a]])) });
+M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
+console.log(JSON.stringify({ ag, warnings: m.warnings, vote: M.voteHTML(m, v), desc: M.describe(v), grid: els["#grid"].innerHTML,
+  veto: [M.vetoOf(v), M.vetoOf(all), M.vetoOf(old)], all: M.voteHTML(m, all), allDesc: M.describe(all), old: M.voteHTML(m, old) }));
+"""
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v15_ban_veto_replay_shows_the_banned_top_pick_out_and_the_candidate_as_representative(tmp_path):
+    """v15 ``ban_veto`` (10-15 10:36, on in the v15 configs): agent-11 gets 3 PICKs but one BAN, so it cannot be the
+    representative; agent-6 (1 PICK, no BAN) is the only candidate and represents (PICK - BAN would have chosen
+    agent-11). The vote event's tally covers only the candidates; the page lists every agent, marks the banned ones
+    out and says so in the feed, while an older event (PICK - BAN over all) and an all-banned one (drawn from all) read
+    as before / as a draw."""
+    import dataclasses
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    from squid5.core.providers import ProviderConfig, Reply, Stub
+    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
+    s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1])
+    assert s.ban_veto and s.representative
+    ballot = {A6: (A11, A23), A11: (A11, A23), A17: (A6, A17), A23: (A11, A11)}
+
+    def respond(messages, cap):
+        a, u = re.search(r"You are (agent-\d+)", messages[0]["content"]).group(1), messages[-1]["content"]
+        if ": OPEN CHAT, turn" in u or ": the opening turn." in u:
+            return Reply("DONE", 100)
+        if ": VOTE." in u:
+            return Reply(f"PICK {ballot[a][0]}: p-{short(a)}\nBAN {ballot[a][1]}: b-{short(a)}", 100)
+        if ": your reply in this chat (" in u:
+            return Reply("LEAVE: bye", 100)
+        if ": your decision." in u:
+            return Reply("DECISION: GIVE 0: no", 100)
+        return Reply("BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: stay", 300)
+    ev = []
+    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-veto").run()
+    v = next(e for e in ev if e["event"] == "vote")
+    assert v["picks"][A11] == 3 and v["bans"][A11] == 1 and v["tally"] == {A6: 1} and v["rep"] == A6
+    assert [e["agent"] for e in ev if e["event"] == "call" and e["kind"] == "solve"] == [A6]
+    (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
+    (tmp_path / "h.js").write_text(HARNESS_V15V)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert got["ag"] == {a: {"balance": x["final"], "status": x["status"]} for a, x in res["agents"].items()}
+    assert got["warnings"] == [] and got["veto"] == [True, True, False]
+    h = got["vote"]
+    assert "PICK − BAN" not in h and "BAN 거부권" in h and h.count("BAN → 제외") == 3 and "<b>후보</b> · PICK 1" in h
+    assert all(a in h for a in (A6, A11, A17, A23))  # banned agents are listed, not dropped
+    assert got["desc"].startswith(f"R1 투표 · 대표 {A6} · ")
+    assert "후보 6 PICK 1" in got["desc"] and "BAN 제외 11, 17, 23" in got["desc"]
+    assert got["grid"].count("대표가 아님 · SOLVE 없음") == 3  # the banned agents too
+    assert "BAN → 대표 불가" in got["grid"] and "→ <b>후보</b>" in got["grid"]
+    assert "모든 자리가 BAN을 받음" in got["all"] and "추첨" in got["all"] and "모두 BAN → 추첨" in got["allDesc"]
+    assert "PICK − BAN" in got["old"] and "BAN → 제외" not in got["old"]  # an older run reads as before
 
 # --- v15 say_chats: SAY <agent> opens a chat; a reply is free text; tokens move by GIVE / ASK template lines ---------
 
