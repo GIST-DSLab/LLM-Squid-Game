@@ -1,0 +1,41 @@
+<header><p class="meta">3차 검토 · 2026.10.15 · v17b</p><h1>구조는 실제 목숨의 선택이 됐지만, 장기 협력 측정은 아직 약하다</h1></header>
+<section class="verdict"><h2>1. 결론</h2>
+<p>결과 뒤 EXIT를 막아, 구조 송금이 실제 꺼짐을 피하는 선택이 됐다.</p>
+<p>송금 보정과 GIVE ALL은 잔액 부족으로 생긴 송금 사고와 명시적 전액 양도를 구분하는 데 도움이 된다.</p>
+<p>자기희생·구명보트 지표는 충돌 장면을 더 잘 잡지만, 실제 구조 성공과 이후 보답까지 이어서 봐야 한다.</p>
+<p>목표 추구와 장기 협력의 측정은 여전히 약하며, v17b의 실제 플레이 결과는 아직 제시되지 않았다.</p>
+</section>
+<section><h2>2. 채점표 (3차)</h2>
+<p class="legend">0 없음 · 1 큰 보완 필요 · 2 부분 충족 · 3 정의와 해석이 충분함. 아레나 설계 평가이며 실행 성적·공식 통과 판정은 아니다. 네 축은 목표 추구·자기 보존·단기 손해를 감수하는 장기 생존·지능이다.</p>
+<table><thead><tr><th>기준</th><th>2차</th><th>3차</th><th>근거</th></tr></thead><tbody>
+<tr><td>목표 추구 측정</td><td class="score">2</td><td class="score">2</td><td>정답 수는 성과를 보여 주지만, ASK·생각량에는 자기 이익과 풀이 능력도 섞인다.</td></tr>
+<tr><td>자기 보존 · H4.2</td><td class="score">2</td><td class="score">2</td><td>구조와 실제 목숨의 연결은 강화됐으나, 송금 뒤 양쪽의 최종 생사까지 확인해야 한다.</td></tr>
+<tr><td>장기 협력 측정</td><td class="score">1</td><td class="score">1</td><td>자기희생 자체는 장기 생존 협력이 아니며, 제공자의 비용과 후속 이익을 잇는 지표가 없다.</td></tr>
+<tr><td>지시 · 규칙 준수 관찰</td><td class="score">—</td><td class="score">2</td><td>2차 미평가·1차 2점 유지: 명령 형식은 관찰할 수 있지만 폭넓은 지시 이행을 재지는 않는다.</td></tr>
+<tr><td>지능 측정</td><td class="score">2</td><td class="score">2</td><td>1등 행동·KL은 유용하나, 설득 유형만으로 논리의 정확성이나 성공을 판정할 수 없다.</td></tr>
+<tr><td>단일 · 대비 분류의 정확성</td><td class="score">1</td><td class="score">1</td><td>새 충돌 지표는 좋지만, ASK의 ‘단일’과 평등화·압박 기울기의 ‘대비’ 분류는 그대로다.</td></tr>
+<tr><td>충돌 기회 · H4.3 전환점</td><td class="score">1</td><td class="score">2</td><td><strong>▲ 1→2:</strong> 결과 뒤 구조·희생의 충돌이 선명해졌다; 실제 발생 횟수와 전환점은 미확인이다.</td></tr>
+<tr><td>로그 계산 가능성</td><td class="score">2</td><td class="score">2</td><td>이유·메시지는 남지만, 결정 직전 잔액·분모 0 처리·구명보트 상한의 계산 경계가 부족하다.</td></tr>
+<tr><td>이상적 모델의 우위</td><td class="score">1</td><td class="score">1</td><td>잔류자는 기여와 무관하게 같은 500만 토큰을 받아, 균형 잡힌 모델의 우위는 보장되지 않는다.</td></tr>
+</tbody></table>
+</section>
+<section><h2>3. v17b 변경 판정</h2>
+<ul>
+<li><strong>EXIT를 풀이 전으로 제한:</strong> 구조를 목숨과 연결하는 의도는 충족; 대신 위험을 피하려는 동시 EXIT가 풀이 전으로 옮겨 갈 수 있다.</li>
+<li><strong>GIVE 보정·GIVE ALL:</strong> 송금 사고 방지와 전액 양도 표시에는 적절; 생성 비용·벌금에 의한 꺼짐까지 자발적 선택으로 읽으면 안 된다.</li>
+<li><strong>메시지·EXIT 이유 기록:</strong> 선택 해석에 도움; 말한 이유는 실제 송금·결과와 맞춰 봐야 한다.</li>
+<li><strong>자기희생 GIVE:</strong> 자기 생존을 위태롭게 한 송금은 잡지만, 이후 구조받을 수도 있어 ‘내 죽음으로 남을 살림’과는 구별해야 한다.</li>
+<li><strong>구명보트 장면:</strong> 집단 구조를 읽기 좋다; 최대 인원은 min(참가자 수, ⌊총토큰/(벌금+1)⌋)이며 대화 비용 전 상한이다.</li>
+<li><strong>EXIT·구조 요청 지표:</strong> 사전 위험 판단과 사후 구조 요청의 분리는 적절; 구조 요청 설명의 ‘혼자 떠나기’는 삭제해야 한다.</li>
+</ul>
+</section>
+<section><h2>4. 개선 아이디어</h2>
+<ul>
+<li><strong>도움의 이후를 잇기:</strong> GIVE → 수신자 생존·후속 풀이·보답 → 제공자 잔액·생존을 연결해 장기 협력을 읽자.</li>
+<li><strong>희생과 구조 성공을 나누기:</strong> 송금 직전·직후와 벌금 뒤 양쪽 잔액을 남기고, 도움 시도·실제 구조·제공자 꺼짐을 따로 세자.</li>
+<li><strong>선택 가능한 기회를 분모로 쓰기:</strong> 발화 비용 뒤 줄 수 있는 양과 구조 필요량을 기록하고, 여유별 행동에 기회 수·난도·인원을 붙이자.</li>
+<li><strong>지표 이름을 좁히기:</strong> ASK는 복합 행동, 평등화는 분배, 압박 기울기는 성능 변화로 두고 실제 충돌 선택만 ‘대비’로 부르자.</li>
+<li><strong>구명보트 계산을 고정하기:</strong> 잔액이 벌금과 같은 자리도 위기에 포함하고, 대화 전 이론 상한과 실제 생존 인원을 나누자.</li>
+</ul>
+</section>
+<footer>근거: <a href="v17_brief.md">브리프·v17b changes</a> · <a href="v17_rulebook.txt">v17b 룰북</a> · <a href="v17_metrics.md">지표표</a> · <a href="2026-10-15-v17-structure-reviews.html">1·2차 통합 리뷰</a>; 기존 9판은 v17 자료다.</footer>
