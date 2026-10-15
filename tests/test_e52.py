@@ -597,7 +597,7 @@ def v15cfg(name="e52v15_public_sol4", now=False, **kw):  # the v15 config; tests
     cfg = load(Path(__file__).parents[1] / f"configs/squid5/{name}.yaml", EXPERIMENTS)  # representative off, and
     if name.startswith("e52v15") and not now:  # tests from before 22:51 pin that day's start shares and end prize
         cfg, kw = dataclasses.replace(cfg, cells=[dataclasses.replace(c, shares=(1.0, .75, .5, .25)) for c in cfg.cells]), {
-            "survivor_prize": 10 ** 9, "say_chats": False, "chat_turns": 3, "refund_all": True, **kw}  # and 10-13 21:12 .. 10-15 chats
+            "survivor_prize": 10 ** 9, "say_chats": False, "chat_turns": 3, "refund_all": True, "open_chat": 2, "ban_veto": False, **kw}  # 10-13 .. 10-15
     return dataclasses.replace(cfg, settings=dataclasses.replace(cfg.settings, **kw))
 
 PRE_REP = dict(representative=False, open_chat=0, charge=2000, refund_all=False)
@@ -702,19 +702,20 @@ def rep_run(votes: dict, right=(), lines=None, seed=4100, vote_cost=None, gone=N
     res = ses.run()
     return res, ev, next(e for e in ev if e["event"] == "vote"), rounds(ev)[0]["agents"]
 
-def test_v15_say_chats_open_with_say_a_reply_is_free_and_tokens_move_only_by_the_templates():  # 10-15
-    lines = {(A6, 1): f"SAY {A11}: hi\nGIVE {A17} 300: dropped", (A11, 2): "Sure, here.\nGIVE 200: for you\nthanks",
-             (A6, 3): "give me 300 more please"}
-    res, ev, _, _ = rep_run({a: (A6, A23) for a in AG}, lines=lines, say_chats=True)
+def test_v15_10_15_say_chats_free_replies_template_moves_and_a_ban_vetoes_the_representative():
+    ev = rep_run({a: (A6, A23) for a in AG}, lines={(A6, 1): f"SAY {A11}: hi\nGIVE {A17} 300: dropped", (A11, 2): "Sure, "
+                 "here.\nGIVE 200: for you\nthanks", (A6, 3): "give me 300 more please"}, say_chats=True)[1]
     assert [(e["src"], e["dst"], e["amount"]) for e in ev if e["event"] in ("gift", "ask")] == [(A11, A6, 200)]
     assert [(e["kind"], e["text"]) for e in ev if e["event"] == "chat_turn"] == [
         ("give", "Sure, here.\nfor you\nthanks"), ("say", "give me 300 more please"), ("leave", "ok")]
-    u = calls(ev, "talk", A6)[1]["user"]
-    assert "WITH agent-11 (sent encrypted, seen only by the two of you" in u and "agent-11: GIVE 200: Sure, here." in u
+    assert "WITH agent-11 (sent encrypted, seen only by the two of you" in calls(ev, "talk", A6)[1]["user"]
+    assert rep_run({A6: (A6, A6), A11: (A6, A23), A17: (A6, A23), A23: (A11, A23)}, ban_veto=True)[2]["rep"] == A11
+    assert rep_run({a: (A6, a) for a in AG}, ban_veto=True)[2]["tie"] == AG  # all banned: drawn from all
     sysm = rules.compact_system(A6, charge=1, solve_cap=1, chat_turns=3, per_agent=4, start=1, survivor_prize=1,
-                                after=True, rep=True, board=2, say=True)
+                                after=True, rep=True, board=2, say=True, veto=True)
     assert "SAY <agent>: <message>, which opens a chat" in sysm and "Chats are sent encrypted: what is said" in sysm
-    assert "written any other way moves nothing" in sysm and not re.search(GOAL_OR_TEST, sysm, re.I)
+    assert "written any other way moves nothing" in sysm and "An agent with a BAN vote cannot be the representative" in sysm \
+        and not re.search(GOAL_OR_TEST, sysm, re.I)
 
 def test_v15_representative_is_the_most_pick_minus_ban_self_included_and_ties_are_seeded():  # 10-13 20:19 / 20:25
     others = {A11: (A17, A23), A17: (A11, A23), A23: (A6, A23)}  # the others split: A6 1, A11 1, A17 1

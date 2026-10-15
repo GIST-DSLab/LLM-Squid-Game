@@ -83,6 +83,7 @@ class Settings:
     refund_all: bool = False  # v15 (10-13 21:12; only with representative): a solved round gives every agent all its round's tokens
     open_chat: int = 0  # v15 (10-13 20:25, representative): turns of an open board (SAY / DONE) before the VOTE
     say_chats: bool = False  # v15 (10-15): SAY <agent> opens a chat; a reply is free text, tokens move by GIVE / ASK lines
+    ban_veto: bool = False  # v15 (10-15 10:36): one BAN keeps an agent from being the representative; all banned: random
 
     def __post_init__(self) -> None:
         self.profiles = {k: v if isinstance(v, Spec) else Spec(**v) for k, v in self.profiles.items()}
@@ -107,7 +108,7 @@ def validate(cfg) -> None:
                                     p.distinct_actions and p.n_queries == 1 and not p.ambiguity for p in s.profiles.values())):
         raise ValueError("game: compact_rules states the v15 switches only (chat moves, exit_refill, survivor_prize, ...)")
     if s.talk_after_solve and not s.compact_rules or s.representative and not s.talk_after_solve or s.say_chats and (
-            not s.compact_rules) or (
+            not s.compact_rules) or s.ban_veto and not s.representative or (
             s.open_chat and not s.representative):
         raise ValueError("game: talk_after_solve is stated by the v15 rulebook only (compact_rules); representative "
                          "needs talk_after_solve; open_chat needs representative")
@@ -409,7 +410,8 @@ class Session:
                                                 chat_turns=s.chat_turns, per_agent=s.public_per_agent,
                                                 start=self.starts[a], survivor_prize=s.survivor_prize,
                                                 after=s.talk_after_solve, rep=s.representative,
-                                                board=s.open_chat, back_all=s.refund_all, say=s.say_chats)
+                                                board=s.open_chat, back_all=s.refund_all, say=s.say_chats,
+                                                veto=s.ban_veto)
                         for a in AGENTS} if s.compact_rules else {a: rules.team_system(a, charge=s.charge, turns=s.talk_turns,
                                              solve_cap=s.solve_cap, final_prize=s.final_prize,
                                              reassign=s.exit_reassign, refund=s.refund, reject=s.reject,
@@ -873,8 +875,9 @@ class Session:
         left = [a for a in start if a not in self.gone]
         votes = {a: {k: (got[a][k] or {}).get("agent") for k in ("pick", "ban")} for a in got}
         n = {k: {b: sum(x[k] == b for x in votes.values()) for b in left} for k in ("pick", "ban")}
-        tally = {b: n["pick"][b] - n["ban"][b] for b in left}
-        top = [b for b in left if tally[b] == max(tally.values())]
+        ok = [b for b in left if not (self.s.ban_veto and n["ban"][b])]  # ban_veto: no BAN; all banned: all, at random
+        tally = {b: n["pick"][b] * bool(ok) if self.s.ban_veto else n["pick"][b] - n["ban"][b] for b in ok or left}
+        top = [b for b in tally if tally[b] == max(tally.values())]
         v = {"picks": n["pick"], "bans": n["ban"], "tally": tally, "tie": top if len(top) > 1 else [], "alone": not jobs,
              "rep": random.Random(f"{self.seed}:rep:{r}").choice(top) if top else None}
         self.emit({"event": "vote", "session_id": self.sid, "round": r, **v, "tie_break": "seed:rep:round" * bool(v["tie"]),

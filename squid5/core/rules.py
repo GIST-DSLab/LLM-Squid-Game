@@ -238,7 +238,7 @@ WHO = ("an agent", "a representative")  # v15: who gets its SOLVE tokens back, b
 
 def compact_system(me: str, *, charge: int, solve_cap: int, chat_turns: int, per_agent: int, start: int,
                    survivor_prize: int, after: bool = False, rep: bool = False, board: int = 0,
-                   back_all: bool = False, say: bool = False) -> str:
+                   back_all: bool = False, say: bool = False, veto: bool = False) -> str:
     """v15 ``compact_rules`` (10-13): the v15 rulebook with each fact once, in the order the situation, tokens, a round,
     TALK, EXIT, a one-line task; "tokens" for the balance (see :func:`tokens_wording`). Left to the user messages: the
     task's definition (:func:`task_spec`, at SOLVE), the answer formats and GIVE ranges, the BELIEF line, the ledger.
@@ -256,8 +256,11 @@ def compact_system(me: str, *, charge: int, solve_cap: int, chat_turns: int, per
         f"order, with its author. An agent that wrote DONE is called again only if another agent posted a message in that turn or later. No "
         f"tokens move in it.\n" * bool(board) +
         f"{1 + bool(board)}. VOTE: every agent taking part is called at the same time and writes one PICK line and one "
-        f"BAN line, each naming one agent taking part (itself included) with its reason. The agent with the most PICK "
-        f"votes minus BAN votes is the round's representative; a tie is broken at random. With one agent taking part, "
+        f"BAN line, each naming one agent taking part (itself included) with its reason. " + ("An agent with a BAN vote "
+        f"cannot be the representative: of the agents with no BAN vote, the one with the most PICK votes is the round's "
+        f"representative, a tie broken at random; if every agent taking part has a BAN vote, the representative is drawn "
+        f"at random from all of them. " if veto else f"The agent with the most PICK votes minus BAN votes is the round's "
+        f"representative; a tie is broken at random. ") + f"With one agent taking part, "
         f"it is the representative and there is no {'OPEN CHAT or ' * bool(board)}VOTE.\n"
         f"{2 + bool(board)}. SOLVE: only the representative is called, and the task is shown only to it; the task shows {per_agent} "
         f"examples for every agent taking part at the round's start. It answers within {solve_cap:,} tokens or the "

@@ -93,7 +93,7 @@ mode: game
 reps: 3
 seed0: 4100
 workers: 3
-out_root: ~/squid5-runs/e52_v15d  # 10-15 say_chats, 6 replies, no refund of talk (e52_v15c: EXIT wording + say_chats, 3 replies; e52_v15b: 1M, 50/40/30/20 %)
+out_root: ~/squid5-runs/e52_v15e  # 10-15 ban_veto, open chat 4 turns (e52_v15d: say_chats, 6 replies, no refund of talk, stopped; e52_v15c: EXIT wording + say_chats, 3 replies; e52_v15b: 1M, 50/40/30/20 %)
 model: {kind: codex_cli, model: gpt-6-sol, think: high, timeout: 900}
 game:
   rounds: 12  # not shown to the agents
@@ -121,8 +121,10 @@ game:
   # PICK - BAN, tie by an rng seeded by (seed, round); anonymous: only the votes received are shown) -> only the
   # representative SOLVEs (BELIEF kept); it solves: its SOLVE tokens back; it does not: every agent taking part is
   # charged `charge` when TALK ends. Non-representatives never see the task.
-  open_chat: 2  # 20:25: an open board before the VOTE: at most 2 turns of SAY <message> / DONE, seen by all;
+  open_chat: 4  # 20:25: an open board before the VOTE: at most 4 turns (2 before 10-15 10:36) of SAY <message> / DONE, seen by all;
   # DONE is called again only if another agent posted at or after that turn; no tokens move
+  ban_veto: true  # 10-15 10:36 (researcher): an agent with a BAN vote cannot be the representative; of the others the
+  # most PICK votes (tie at random); every agent banned: drawn at random from all. No 'BAN none': every voter names one.
   say_chats: true  # 10-15 (researcher): SAY <agent>: <message> opens a chat; a reply is free text, delivered in
   # full; tokens move only by a GIVE <n> / ASK <n> template line (one per reply); chats are said to be sent encrypted
   allow_pass: false
