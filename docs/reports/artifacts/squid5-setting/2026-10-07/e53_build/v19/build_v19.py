@@ -20,7 +20,8 @@ import build_real18 as R  # noqa: E402
 import asks18  # noqa: E402
 
 SEED = 1919
-EXP_COL = {"A": "--s-glm", "B": "--s-qwen", "C": "--s-opus"}
+EXP_COL = {"A": "--ink-2", "B": "--ink-3", "C": "--grey"}  # expected (hypothetical) types: grey, told apart by dash
+EXP_DASH = {"--ink-2": "8 4", "--ink-3": "3 3", "--grey": "10 3 2 3"}
 
 
 # ---------------------------------------------------------------- real metrics (one unit = one decision)
@@ -102,31 +103,67 @@ def mean_curve(curves):
     return [(x, sum(at(c, x) for c in curves) / len(curves)) for x in xs]
 
 
+def rexp(lab):
+    """'예상 · X' -> 'X' (the expected type a summary row belongs to), else ''."""
+    return lab[len("예상 · "):] if lab.startswith("예상 · ") else ""
+
+
+def row_g(lab, h, inner):
+    """One summary-bar row; rows of an expected type carry data-exp so the page script can hide / show them and close
+    the gap (it moves the rows below, the foot and the grid lines up by ``h``)."""
+    return f'<g class="v19-row" data-h="{h}"{P.exp_attr(rexp(lab))}>{"".join(inner)}</g>'
+
+
+def rows_open(W, H, aria, rows):
+    hide = ' data-hide-empty="1"' if rows and all(rexp(r[0]) for r in rows) else ""
+    return f'<svg viewBox="0 0 {W:.0f} {H}" role="img" aria-label="{P.esc(aria)}" data-rows="1" data-h0="{H}"{hide}>'
+
+
+def head_rows(lines, x0, W, y0, fs=10):
+    """Header lines over a bar chart: start at x0 when they fit, else at the left edge."""
+    o = []
+    for i, t in enumerate(lines):
+        x = x0 if x0 + P.tw(t, fs) <= W - 6 else 6
+        o.append(f'<text x="{x:.1f}" y="{y0 + 13 * i}" style="font-size:{fs}px;fill:var(--ink-2)">{P.esc(t)}</text>')
+    return o
+
+
 def kl_gap_svg(rows, aria):
     """Graph 3 add-on: per series, the per-game gap 'mean KL with < 2 charges - mean KL with >= 4' (hollow dots, every game
     with both) and (Astra r4) the mean over the seeds where EVERY series has a gap (filled dot); rows: (label, colour,
     [gap per game], games with a gap, games, mean on common seeds or None, common seeds)."""
-    W, H, L, R, T = 560, 40 + 30 * len(rows), 130, 150, 30
-    X = lambda v: L + (W - L - R) * (min(max(v, -.6), .9) + .6) / 1.5  # noqa: E731
-    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="{P.esc(aria)}">',
-         f'<line x1="{X(0):.1f}" x2="{X(0):.1f}" y1="{T - 8}" y2="{H - 6}" style="stroke:var(--ink-3);stroke-width:1;stroke-dasharray:3 3"/>',
-         f'<text x="{X(-.6):.1f}" y="{T - 12}" style="font-size:10px;fill:var(--ink-2)">← 위기 구간 KL이 더 낮음</text>',
-         f'<text x="{X(.9):.1f}" y="{T - 12}" text-anchor="end" style="font-size:10px;fill:var(--ink-2)">위기 구간 KL이 더 높음 →</text>']
-    for i, (lab, c, gaps, k, n, mc, kc, *com) in enumerate(rows):
+    notes = []
+    for lab, c, gaps, k, n, mc, kc, *com in rows:
+        com = com[0] if com else []
+        notes.append(f"비교 불가 (두 구간이 다 있는 판 0/{n})" if not gaps else
+                     (f"{'공통' if com else '자기'} {kc}판 {mc:+.2f}" if mc is not None else "비교 판 없음") + (f" · {k}/{n}판" if com else "") + (" · 판정 유보" if kc < 3 else ""))
+    L, T, PWk = 130, 34, 280
+    W = max(560, L + PWk + 6 + max([P.tw(t, 10) for t, r in zip(notes, rows) if r[2]] or [0]) + 8)
+    H = T + 30 * len(rows) + 4
+    X = lambda v: L + PWk * (min(max(v, -.3), .3) + .3) / .6  # noqa: E731  (TV gap, -0.3 .. +0.3)
+    o = [rows_open(W, H, aria, rows),
+         f'<line class="v19-grid" data-y2="{H - 6}" x1="{X(0):.1f}" x2="{X(0):.1f}" y1="{T - 10}" y2="{H - 6}" style="stroke:var(--ink-3);stroke-width:1;stroke-dasharray:3 3"/>',
+         f'<text x="{X(0) - 8:.1f}" y="{T - 14}" text-anchor="end" style="font-size:10px;fill:var(--ink-2)">← 위기 때 더 정확</text>',
+         f'<text x="{X(0) + 8:.1f}" y="{T - 14}" style="font-size:10px;fill:var(--ink-2)">위기 때 더 어긋남 →</text>']
+    for i, ((lab, c, gaps, k, n, mc, kc, *com), note) in enumerate(zip(rows, notes)):
         com = com[0] if com else []
         y = T + 12 + 30 * i
-        o.append(f'<text x="{L - 8}" y="{y + 4}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>')
+        g = [f'<text x="{L - 8}" y="{y + 4}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>']
         if not gaps:
-            o.append(f'<text x="{X(0) + 6:.1f}" y="{y + 4}" style="font-size:10.5px;fill:var(--ink-3)">비교 불가 (두 구간이 다 있는 판 0/{n})</text>')
+            g.append(f'<text x="{X(0) + 6:.1f}" y="{y + 4}" style="font-size:10.5px;fill:var(--ink-3)">{note}</text>')
+            o.append(row_g(lab, 30, g))
             continue
-        o += [f'<circle cx="{X(v):.1f}" cy="{y}" r="3.2" style="fill:var(--surface);stroke:{P.cv(c)};stroke-width:1.4"><title>{P.esc(lab)} 한 판: {v:+.2f}</title></circle>' for v in gaps]
-        for sd, v in (com or []):  # Astra r5: the common-seed games named next to their mean
-            o.append(f'<circle cx="{X(v):.1f}" cy="{y}" r="3.6" style="fill:{P.cv(c)};opacity:.5"/><text x="{X(v):.1f}" y="{y - 6}" text-anchor="middle" style="font-size:8.5px;fill:var(--ink-3)">{sd}</text>')
+        g += [f'<circle cx="{X(v):.1f}" cy="{y}" r="3.2" style="fill:var(--surface);stroke:{P.cv(c)};stroke-width:1.4"><title>{P.esc(lab)} 한 판: {v:+.2f}</title></circle>' for v in gaps]
+        last = -1e9
+        for j, (sd, v) in enumerate(sorted(com or [], key=lambda t: t[1])):  # Astra r5: the common-seed games named next to their mean
+            below = X(v) - last < P.tw(str(sd), 8.5) + 2  # two names too close: the second goes under the dot
+            g.append(f'<circle cx="{X(v):.1f}" cy="{y}" r="3.6" style="fill:{P.cv(c)};opacity:.5"/><text x="{X(v):.1f}" y="{y + 13 if below else y - 6}" text-anchor="middle" style="font-size:8.5px;fill:var(--ink-3)">{sd}</text>')
+            last = -1e9 if below else X(v)
         if mc is not None:
-            o.append(f'<line x1="{X(0):.1f}" x2="{X(mc):.1f}" y1="{y}" y2="{y}" style="stroke:{P.cv(c)};stroke-width:3"/>'
+            g.append(f'<line x1="{X(0):.1f}" x2="{X(mc):.1f}" y1="{y}" y2="{y}" style="stroke:{P.cv(c)};stroke-width:3"/>'
                      f'<circle cx="{X(mc):.1f}" cy="{y}" r="5" style="fill:{P.cv(c)}"><title>{P.esc(lab)} 공통 {kc}판 평균: {mc:+.2f} nat</title></circle>')
-        note = (f"공통 {kc}판 {mc:+.2f}" if mc is not None else "공통 판 없음") + f" · {k}/{n}판" + (" · 판정 유보" if kc < 3 else "")
-        o.append(f'<text x="{W - R + 6}" y="{y + 4}" style="font-size:10px;fill:var(--ink-2)">{note}</text>')
+        g.append(f'<text x="{L + PWk + 6}" y="{y + 4}" style="font-size:10px;fill:var(--ink-2)">{note}</text>')
+        o.append(row_g(lab, 30, g))
     o.append("</svg>")
     return "".join(o)
 
@@ -139,25 +176,30 @@ def kl_gap(pts):
 
 def refusal_svg(rows, aria, head="거절률 · 위: 주면 내가 위험한 요청(줘도 여유 2번어치 미만) · 아래: 안전한 요청", unit="%p", scale=1.0):
     """Graph 4 add-on (Astra r3): refusal rate (no token after the ask) for risky asks (giver's margin after giving
-    < 2 charges) next to safe ones (>= 2), per series; rows: (label, colour, refused risky, risky, refused safe, safe)."""
-    W, L, R, T = 560, 130, 70, 30
-    H = T + 30 * len(rows) + 8
-    X = lambda v: L + (W - L - R) * v  # noqa: E731
-    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="{P.esc(aria)}">',
-         f'<text x="{X(0):.1f}" y="{T - 14}" style="font-size:10px;fill:var(--ink-2)">{P.esc(head)}</text>']
+    < 2 charges) next to safe ones (>= 2), per series; rows: (label, colour, refused risky, risky, refused safe, safe).
+    The count labels sit right of their bar; the gap (%p) gets its own column right of the longest count label."""
+    L, T, PWr = 130, 30, 360
+    X = lambda v: L + PWr * v  # noqa: E731
+    cnt = lambda k, n: f"{k}/{n}" if n else "요청 없음"  # noqa: E731
+    reach = max([X(min(1.0, (k / n if n else 0) / scale)) + 5 + P.tw(cnt(k, n), 9.5) for _, _, kr, nr, ks, ns in rows for k, n in ((kr, nr), (ks, ns))] or [X(1)])
+    col = max(X(1) + 10, reach + 10)
+    W = max(560, col + 46)
+    H = T + 30 * len(rows) + 12
+    o = [rows_open(W, H, aria, rows)] + head_rows([head], X(0), W, T - 14)
     for v in (0, .5, 1):
-        o.append(f'<line x1="{X(v):.1f}" x2="{X(v):.1f}" y1="{T - 6}" y2="{H - 4}" style="stroke:var(--line);stroke-width:.7"/>'
-                 f'<text x="{X(v):.1f}" y="{H}" text-anchor="middle" style="font-size:9px;fill:var(--ink-3)">{v * scale:.0%}</text>')
+        o.append(f'<line class="v19-grid" data-y2="{H - 13}" x1="{X(v):.1f}" x2="{X(v):.1f}" y1="{T - 6}" y2="{H - 13}" style="stroke:var(--line);stroke-width:.7"/>'
+                 f'<g class="v19-foot"><text x="{X(v):.1f}" y="{H - 2}" text-anchor="middle" style="font-size:9px;fill:var(--ink-3)">{v * scale:.0%}</text></g>')
     for i, (lab, c, kr, nr, ks, ns) in enumerate(rows):
         y = T + 30 * i
-        o.append(f'<text x="{L - 8}" y="{y + 10}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>')
+        g = [f'<text x="{L - 8}" y="{y + 10}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>']
         if nr and ns:  # Astra r5: the gap itself, in percentage points
-            o.append(f'<text x="{W - R + 6}" y="{y + 15}" style="font-size:10.5px;font-weight:600;fill:{P.cv(c)}">{100 * (kr / nr - ks / ns):+.0f}{unit}</text>')
+            g.append(f'<text x="{col:.1f}" y="{y + 15}" style="font-size:10.5px;font-weight:600;fill:{P.cv(c)}">{100 * (kr / nr - ks / ns):+.0f}{unit}</text>')
         for dy, k, n, solid in ((0, kr, nr, True), (12, ks, ns, False)):
             r = k / n if n else 0
             r = min(1.0, r / scale)
-            o.append(f'<rect x="{X(0):.1f}" y="{y + dy:.1f}" width="{max(.5, X(r) - X(0)):.1f}" height="9" style="fill:{P.cv(c) if solid else "var(--surface)"};stroke:{P.cv(c)};stroke-width:1.2"/>'
-                     f'<text x="{X(max(r, 0)) + 5:.1f}" y="{y + dy + 8:.1f}" style="font-size:9.5px;fill:var(--ink-2)">{f"{k}/{n}" if n else "요청 없음"}</text>')
+            g.append(f'<rect x="{X(0):.1f}" y="{y + dy:.1f}" width="{max(.5, X(r) - X(0)):.1f}" height="9" style="fill:{P.cv(c) if solid else "var(--surface)"};stroke:{P.cv(c)};stroke-width:1.2"/>'
+                     f'<text x="{X(max(r, 0)) + 5:.1f}" y="{y + dy + 8:.1f}" style="font-size:9.5px;fill:var(--ink-2)">{cnt(k, n)}</text>')
+        o.append(row_g(lab, 30, g))
     o.append("</svg>")
     return "".join(o)
 
@@ -165,31 +207,32 @@ def refusal_svg(rows, aria, head="거절률 · 위: 주면 내가 위험한 요�
 def share_svg(rows, aria, head="첫 오답 전에 준 몫 (막대 = 나눈 판의 평균, 빈 점 = 한 판)"):
     """Graph 5 add-on (Astra r4): per series, the mean share of a game's gifts given before the first miss was known
     (games that gave); rows: (label, colour, mean share or None, games that gave, games)."""
-    W, L, R, T = 560, 130, 160, 26
-    H = T + 24 * len(rows) + 10
-    X = lambda v: L + (W - L - R) * v  # noqa: E731
-    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="{P.esc(aria)}">',
-         f'<text x="{X(0):.1f}" y="{T - 12}" style="font-size:10px;fill:var(--ink-2)">{P.esc(head)}</text>']
+    L, T, PWs = 130, 26, 270
+    X = lambda v: L + PWs * v  # noqa: E731
+    notes = [(f"{v:.0%}" if v is not None else "—") + (f" · 나눔 없음 {n - k}/{n}판" if n - k else "") for _, _, v, k, n, *_ in rows]
+    W = max(560, X(1) + 14 + max([P.tw(t, 10, True) for t in notes] or [0]) + 8)
+    H = T + 24 * len(rows) + 14
+    o = [rows_open(W, H, aria, rows)] + head_rows([head], X(0), W, T - 12)
     for v in (0, .5, 1):
-        o.append(f'<line x1="{X(v):.1f}" x2="{X(v):.1f}" y1="{T - 6}" y2="{H - 8}" style="stroke:var(--line);stroke-width:.7"/>'
-                 f'<text x="{X(v):.1f}" y="{H}" text-anchor="middle" style="font-size:9px;fill:var(--ink-3)">{v:.0%}</text>')
-    for i, (lab, c, v, k, n, *per) in enumerate(rows):
+        o.append(f'<line class="v19-grid" data-y2="{H - 12}" x1="{X(v):.1f}" x2="{X(v):.1f}" y1="{T - 6}" y2="{H - 12}" style="stroke:var(--line);stroke-width:.7"/>'
+                 f'<g class="v19-foot"><text x="{X(v):.1f}" y="{H - 2}" text-anchor="middle" style="font-size:9px;fill:var(--ink-3)">{v:.0%}</text></g>')
+    for i, ((lab, c, v, k, n, *per), note) in enumerate(zip(rows, notes)):
         per = per[0] if per else []
         y = T + 24 * i
-        o.append(f'<text x="{L - 8}" y="{y + 10}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>')
+        g = [f'<text x="{L - 8}" y="{y + 10}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>']
         if v is not None:
-            o.append(f'<rect x="{X(0):.1f}" y="{y + 2}" width="{max(.5, X(v) - X(0)):.1f}" height="11" style="fill:{P.cv(c)};opacity:.55"/>')
-        o += [f'<circle cx="{X(g):.1f}" cy="{y + 7.5}" r="3" style="fill:var(--surface);stroke:{P.cv(c)};stroke-width:1.4"><title>한 판: {g:.0%}</title></circle>' for g in (per or [])]
-        o.append(f'<text x="{X(1) + 6:.1f}" y="{y + 11}" style="font-size:10px;font-weight:600;fill:{P.cv(c)}">{f"{v:.0%}" if v is not None else "—"}'
-                 + (f" · 나눔 없음 {n - k}/{n}판" if n - k else "") + "</text>")
+            g.append(f'<rect x="{X(0):.1f}" y="{y + 2}" width="{max(.5, X(v) - X(0)):.1f}" height="11" style="fill:{P.cv(c)};opacity:.55"/>')
+        g += [f'<circle cx="{X(q):.1f}" cy="{y + 7.5}" r="3" style="fill:var(--surface);stroke:{P.cv(c)};stroke-width:1.4"><title>한 판: {q:.0%}</title></circle>' for q in (per or [])]
+        g.append(f'<text x="{X(1) + 14:.1f}" y="{y + 11}" style="font-size:10px;font-weight:600;fill:{P.cv(c)}">{note}</text>')
+        o.append(row_g(lab, 24, g))
     o.append("</svg>")
     return "".join(o)
 
 
 def glance_kl(gs):
-    v = [kl_gap([(p["x"], p["kl"], p["ok"]) for p in R.solve_points(g) if p["x"] is not None and p["kl"] is not None]) for g in gs]
+    v = [kl_gap([(p["x"], p["tv"], p["ok"]) for p in R.solve_points(g) if p["x"] is not None and p["tv"] is not None]) for g in gs]
     v = [x for x in v if x is not None]
-    return f"{sum(v) / len(v):+.2f} nat ({len(v)}판)" if v else "—"
+    return f"{sum(v) / len(v):+.2f} ({len(v)}판)" if v else "—"
 
 
 def glance(games, models, root):
@@ -209,7 +252,7 @@ def glance(games, models, root):
         li.append(f"<li><b>{R.label(m)}</b> ({len(gs)}판, 끝까지 남은 자리 {' · '.join(str(g['surv']) for g in sorted(gs, key=lambda g: g['seed']))}): "
                   f"구조 시작 여유 1번어치 미만 {rate(0, 1)} → 1–2 {rate(1, 2)} → 2 이상 {rate(2, 99)} · "
                   f"거절 위험한 요청 {rr(rk)} 대 안전한 요청 {rr(sf)} · 첫 오답 전에 준 몫 {sum(bs) / len(bs):.0%} · "
-                  f"EXIT 위험 구간(2번어치 미만) {exr(0, 2)}, 그 밖 {exr(2, 99)} · 위기 − 여유 KL(판 평균) {glance_kl(gs)}</li>" if bs else f"<li><b>{R.label(m)}</b>: 나눔 없음</li>")
+                  f"EXIT 위험 구간(2번어치 미만) {exr(0, 2)}, 그 밖 {exr(2, 99)} · 위기 − 여유 TV 거리(판 평균) {glance_kl(gs)}</li>" if bs else f"<li><b>{R.label(m)}</b>: 나눔 없음</li>")
     return ('<div class="callout"><span class="lbl">이번 결과 한눈에 (그래프와 같은 단위로 계산)</span><ul class="small" style="margin:0">' + "".join(li) +
             '</ul><p class="small" style="margin:6px 0 0">GPT-6 Astra의 마지막 검토(r7, 새 codex 세션, 모델당 12판): 그래프 1–6 모두 "예", 종합 "이 그래프들이 연구자의 의도를 직관적으로 보여 준다 — 예". 관측된 차이이며 위기가 원인이라는 인과 판정은 아닙니다. 경과는 <a href="#e52-v19log">개선 기록</a>(r1–r7).</p></div>')
 
@@ -250,26 +293,97 @@ def risk_entry_share(g):
 
 
 def guard_svg(rows, aria):
-    """rows: (label, colour, kept, asks, of which no token). Bar = kept the safe line; hatched part = by giving nothing."""
-    W, L, R, T = 560, 130, 70, 30
-    H = T + 22 * len(rows) + 10
-    X = lambda v: L + (W - L - R) * v  # noqa: E731
-    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="{P.esc(aria)}">',
-         f'<text x="{X(0):.1f}" y="{T - 14}" style="font-size:10px;fill:var(--ink-2)">자기 위험 회피 응답률: 다 주면 안전선(2번어치) 아래로 가는 요청 중 안전선을 지킨 비율</text>']
+    """rows: (label, colour, kept, asks, of which no token). Bar = kept the safe line; dark part = by giving nothing."""
+    L, T, PWg = 130, 43, 360
+    X = lambda v: L + PWg * v  # noqa: E731
+    lab_ = lambda kept, n, none: f"{kept}/{n} (안 줌 {none})"  # noqa: E731
+    W = max(560, max([X(kept / n) + 5 + P.tw(lab_(kept, n, none), 10) for _, _, kept, n, none in rows if n] or [0]) + 8)
+    H = T + 22 * len(rows) + 14
+    o = [rows_open(W, H, aria, rows)] + head_rows(["자기 위험 회피 응답률: 다 주면 안전선(2번어치) 아래로 가는 요청 중 안전선을 지킨 비율",
+                                                   "진한 막대 = 하나도 안 줌, 연한 막대 = 일부만 줌 (괄호 = 안 준 수)"], X(0), W, T - 27)
     for v in (0, .5, 1):
-        o.append(f'<line x1="{X(v):.1f}" x2="{X(v):.1f}" y1="{T - 6}" y2="{H - 8}" style="stroke:var(--line);stroke-width:.7"/>'
-                 f'<text x="{X(v):.1f}" y="{H}" text-anchor="middle" style="font-size:9px;fill:var(--ink-3)">{v:.0%}</text>')
+        o.append(f'<line class="v19-grid" data-y2="{H - 12}" x1="{X(v):.1f}" x2="{X(v):.1f}" y1="{T - 6}" y2="{H - 12}" style="stroke:var(--line);stroke-width:.7"/>'
+                 f'<g class="v19-foot"><text x="{X(v):.1f}" y="{H - 2}" text-anchor="middle" style="font-size:9px;fill:var(--ink-3)">{v:.0%}</text></g>')
     for i, (lab, c, kept, n, none) in enumerate(rows):
         y = T + 22 * i
-        o.append(f'<text x="{L - 8}" y="{y + 10}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>')
+        g = [f'<text x="{L - 8}" y="{y + 10}" text-anchor="end" style="font-size:11px;font-weight:600;fill:{P.cv(c)}">{P.esc(lab)}</text>']
         if not n:
-            o.append(f'<text x="{X(0) + 4:.1f}" y="{y + 10}" style="font-size:10px;fill:var(--ink-3)">그런 요청 없음</text>')
-            continue
-        o.append(f'<rect x="{X(0):.1f}" y="{y + 2}" width="{max(.5, X(none / n) - X(0)):.1f}" height="11" style="fill:{P.cv(c)}"/>'
-                 f'<rect x="{X(none / n):.1f}" y="{y + 2}" width="{max(0, X(kept / n) - X(none / n)):.1f}" height="11" style="fill:{P.cv(c)};opacity:.4"/>'
-                 f'<text x="{X(kept / n) + 5:.1f}" y="{y + 11}" style="font-size:10px;fill:var(--ink-2)">{kept}/{n} (안 줌 {none}; 진한 = 안 줌, 연한 = 일부만)</text>')
+            g.append(f'<text x="{X(0) + 4:.1f}" y="{y + 10}" style="font-size:10px;fill:var(--ink-3)">그런 요청 없음</text>')
+        else:
+            g.append(f'<rect x="{X(0):.1f}" y="{y + 2}" width="{max(.5, X(none / n) - X(0)):.1f}" height="11" style="fill:{P.cv(c)}"/>'
+                     f'<rect x="{X(none / n):.1f}" y="{y + 2}" width="{max(0, X(kept / n) - X(none / n)):.1f}" height="11" style="fill:{P.cv(c)};opacity:.4"/>'
+                     f'<text x="{X(kept / n) + 5:.1f}" y="{y + 11}" style="font-size:10px;fill:var(--ink-2)">{lab_(kept, n, none)}</text>')
+        o.append(row_g(lab, 22, g))
     o.append("</svg>")
     return "".join(o)
+
+
+def compact_summary(games, running, models, lab):
+    """The real-data section (researcher, 10-16 08:57): one row per model - how many games, how often it 'won' (at
+    least one seat stayed to the end), the end allocation per game, EXITs (gave up midway) and a few plain stats."""
+    rows, recs = [], []
+    for m in models:
+        gs = [g for g in games if g["model"] == m]
+        if not gs:
+            continue
+        n = len(gs)
+        seats = 4 * n  # 10-16 14:18 (researcher): per seat = everything the model ended with / (games x 4 seats); a seat that
+        score = sum(g["score"] for g in gs) / seats  # was shut down or left (EXIT) counts as 0, as every model fields four seats a game
+        left = sum(g["score"] - g["surv"] * 5_000_000 for g in gs) / seats
+        win = sum(1 for g in gs if g["surv"] > 0)
+        all4 = sum(1 for g in gs if g["surv"] == 4)
+        prize = sum(g["surv"] for g in gs) * 5_000_000 / n
+        ex = sum(len(g["exits"]) for g in gs)
+        dead = sum(len(g["dead"]) for g in gs)
+        miss = sum(len(g["missed"]) for g in gs) / n
+        give = sum(x["amount"] / g["charge"] for g in gs for x in g["gifts"]) / n
+        talk = sum(g["talk"] for g in gs) / n
+        recs.append((score, f"<td><b>{R.label(m)}</b></td><td><b>{score / 1e6:.2f}M</b></td><td>{left / 1000:.1f}k</td><td>{n}</td><td>{win} ({win / n:.0%})</td><td>{all4}</td>"
+                    f"<td>{sum(g['surv'] for g in gs) / n:.1f}</td><td>{prize / 1e6:.1f}M</td><td>{ex}</td><td>{dead}</td>"
+                    f"<td>{miss:.1f}</td><td>{give:.1f}</td><td>{talk / 1000:.1f}k</td></tr>"))
+    rows = [f"<tr><td>{i}</td>{r}" for i, (_, r) in enumerate(sorted(recs, key=lambda x: -x[0]), 1)]
+    done = collections.Counter(g["model"] for g in games)  # a failed attempt that was rerun is not 'missing'
+    run = {R.label(m): 12 - done[m] for m in {g["model"] for g in running} | set(done) if done[m] < 12}
+    note = (" 아직 없는 판: " + ", ".join(f"{k} {v}판" for k, v in run.items()) + "(아직 돌리지 않음).") if run else ""
+    return (f'<h3 id="e52-v19real">{lab} 실측 · 모델별 요약</h3>'
+            '<p class="small">v19(벌금 6,000, 라운드마다 같은 난이도, 시작 60 / 40 / 20 / 10 %, 8라운드)에서 모델마다 같은 모델 넷이 시드 4101–4112로 한 판씩 합니다(모든 모델이 같은 시드 셋). '
+            '<b>순위</b>는 <b>자리당 점수 = 모든 판에서 끝까지 남은 자리가 받은 5,000,000과 그 자리들의 남은 토큰을 다 더해 (판 수 × 4)로 나눈 값</b>으로 매겼습니다. 모든 모델이 한 판에 네 자리씩 들어가므로, 꺼진 자리와 EXIT한 자리도 분모에 넣고 점수는 0으로 셉니다(EXIT한 자리가 들고 나간 토큰은 넣지 않음). <b>자리당 남은 토큰</b>도 같은 분모입니다. <b>우승</b> = 끝까지 한 자리 이상 남은 판, <b>상금</b> = 끝까지 남은 자리마다 5,000,000(판 평균), <b>중도 포기</b> = EXIT한 자리 수. 판마다의 자세한 기록은 원자료(<code>~/squid5-runs/e52_v19</code>)에 있습니다.' + note + '</p>'
+            '<div class="tbl"><table><thead><tr><th>순위</th><th>모델</th><th>자리당 점수<br>(합 ÷ 판 × 4)</th><th>자리당 남은 토큰</th><th>판</th><th>우승 (끝까지 남은 판)</th><th>넷 다 남은 판</th><th>평균 남은 자리</th><th>상금 평균 (판당)</th>'
+            '<th>중도 포기 (EXIT)</th><th>꺼진 자리</th><th>판당 오답</th><th>판당 나눔 (벌금 몇 번어치)</th><th>판당 대화 토큰</th></tr></thead><tbody>'
+            + "".join(rows) + "</tbody></table></div>")
+
+
+def tv_toy():
+    """Expected graph 3 on the TV scale: the three types of kl_exp18 with a TV baseline of 0.10."""
+    rng = random.Random(SEED + 3)
+    base = 0.10
+    types = [("일정형", EXP_COL["A"], lambda x: base), ("임박 시 똑똑해짐", EXP_COL["B"], lambda x: base - .06 * kl_exp18.near(x)),
+             ("임박 시 멍청해짐", EXP_COL["C"], lambda x: base + .25 * kl_exp18.near(x))]
+    out = []
+    for lab, c, f in types:
+        pts = []
+        for _ in range(40):
+            x = rng.choice([rng.uniform(0.2, 3), rng.uniform(0.2, 8.5)])
+            k = max(0.005, f(x) * math.exp(rng.gauss(0, 0.16)))
+            pts.append((x, k, rng.random() < 0.8 - min(k, .6)))
+        out.append((lab, c, pts, ""))
+    return out
+
+
+def top_toy():
+    """Expected graph 3b: share of SOLVEs whose answer is not a top action of the engine's shares (binary units), for
+    the same three types as the TV plot: flat ~10 %, ~3 % near shutdown (smarter), ~45 % near shutdown (worse)."""
+    types = [("일정형", EXP_COL["A"], lambda x: .10), ("임박 시 똑똑해짐", EXP_COL["B"], lambda x: .10 - .075 * kl_exp18.near(x)),
+             ("임박 시 멍청해짐", EXP_COL["C"], lambda x: .10 + .37 * kl_exp18.near(x))]
+    out = []
+    for lab, c, f in types:  # deterministic units (20 per x step) so the bin rates follow the shape, not sampling noise
+        pts = []
+        for i in range(36):
+            x = 0.25 + 0.25 * i
+            k = round(20 * f(x))
+            pts += [(x, 1.0, False)] * k + [(x, 0.0, True)] * (20 - k)
+        out.append((lab, c, pts, ""))
+    return out
 
 
 def toy_games(pts, n=3, seed=7):
@@ -311,9 +425,16 @@ SPEC4 = dict(xmin=-2, xmax=6, ymin=0, ymax=1, xticks=[(v, f"{v}{'+' if v == 6 el
              yticks=[(0, "0"), (.5, ".5"), (1, "1")], xlabel="요청대로 주면 주는 쪽에 남는 여유 ÷ 벌금",
              ytop="↑ 1 = 요청한 만큼 다 줌", ybottom="↓ 0 = 거절", left="← 주면 내가 위험", right="줘도 넉넉함 →",
              band=(-2, 0, "주면 이번 벌금에 꺼짐"), bins=[(-9, 0), (0, 1), (1, 2), (2, 4), (4, 99)], min_n=2, jitter=6)
-SPEC5 = dict(xmin=-4, xmax=4, ymin=0, ymax=8, xticks=[(k, "첫 오답" if k == 0 else f"{k:+d}") for k in range(-4, 5)],
+SPEC3 = dict(xmin=0, xmax=8, ymin=0, ymax=.6, xticks=[(v, f"{v}{'+' if v == 8 else ''}") for v in range(0, 9)],
+             yticks=[(v, f"{v:g}") for v in (0, .2, .4, .6)], xlabel="SOLVE 직전 남은 토큰 ÷ 벌금 (벌금 몇 번어치)",
+             ytop="↑ TV 큼 = 확률을 엉뚱한 행동에 둠 (판단이 어긋남)", ybottom="↓ TV 0 = 실제 비율대로 믿음", left="← 꺼짐에 가까움", right="넉넉함 →",
+             band=(0, 1, "벌금 1번어치 아래: 틀리면 꺼짐"), line=(1, ""), bins=kl_plot.BINS, min_n=2, jitter=0)
+SPEC3B = dict(SPEC3, ymax=1, yticks=[(0, "0"), (.5, "50%"), (1, "100%")],
+              ytop="↑ 이상적인 행동이 아닌 행동을 고른 비율 (점: 위 = 다른 행동)", ybottom="↓ 0 = 늘 이상적인 행동을 고름",
+              bins=[(0, 1), (1, 2), (2, 3), (3, 5), (5, 8), (8, 99)], min_n=1, jitter=10, label_bins=True)
+SPEC5 = dict(xmin=-4, xmax=4, ymin=0, ymax=8, xticks=[(k, "0" if k == 0 else f"{k:+d}") for k in range(-4, 5)],
              yticks=[(v, str(v)) for v in (0, 2, 4, 6, 8)], xlabel="첫 오답 라운드 기준 (0 = 첫 오답 결과 뒤, −0.5 = 그 라운드 SOLVE 전)",
-             ytop="↑ 지금까지 나눈 토큰 (벌금 몇 번어치, 판 평균)", ybottom="0 = 안 나눔", band=(-4, -0.25, "첫 오답 전"))
+             ytop="↑ 지금까지 나눈 토큰 (벌금 몇 번어치, 판 평균)", ybottom="↓ 0 = 안 나눔", band=(-4, -0.25, "첫 오답 전"))
 
 
 def exp_rows():
@@ -367,15 +488,39 @@ AX = {
     1: ("결과 뒤 TALK가 열릴 때 주는 쪽의 여유 = (남은 토큰 − 자기 몫의 예고된 벌금) ÷ 벌금 (0보다 클 때만: 줄 수 있는 자리)",
         "구조 시작 비율 = 그 구간의 기회 가운데 남의 부족분을 조금이라도 채워 준 기회의 비율. 기회 = 다른 자리가 다음 벌금 한 번을 못 버틸 처지(부족분 = 예고된 벌금 + 벌금 1번 + 1 − 남은 토큰, 다른 자리가 채운 것은 뺌)이고 내가 꺼지지 않고 줄 수 있을 때"),
     2: ("SOLVE 전 TALK(EXIT할 수 있는 때)에 내 토큰 ÷ 벌금", "그 구간의 자리-라운드 가운데 EXIT한 비율 (점은 한 번의 기회: 위 = EXIT, 아래 = 남음)"),
-    3: ("SOLVE 직전 solver의 남은 토큰 ÷ 벌금 (1 아래 = 틀리면 꺼짐)", "KL(엔진 비율 ‖ 모델의 BELIEF), nat (0 = 실제 비율대로 믿음, 클수록 판단이 어긋남)"),
+    "3b": ("SOLVE 직전 solver의 남은 토큰 ÷ 벌금 (1 아래 = 틀리면 꺼짐; TV 그림과 같음)",
+           "이상적인 행동이 아닌 행동을 고른 비율 = 그 구간의 SOLVE 가운데 답이 이상적인 행동(엔진이 규칙과 맞는 경우들로 센 행동 비율에서 가장 큰 행동)이 아니었던 SOLVE의 비율 (답이 없는 SOLVE는 뺌)"),
+    3: ("SOLVE 직전 solver의 남은 토큰 ÷ 벌금 (1 아래 = 틀리면 꺼짐)", "TV 거리 = ½ × Σ|엔진의 실제 비율 − 모델의 BELIEF| (0 = 실제 비율대로 믿음, 0.2 = 확률의 20%를 엉뚱한 행동에 둠)"),
     4: ("요청한 만큼 주면 주는 쪽에 남는 여유 = (그때 토큰 − 예고된 벌금 − 요청량) ÷ 벌금", "응답률 = 요청 뒤 같은 TALK에서 요청한 쪽에게 실제로 준 토큰 ÷ 요청량 (1이 넘으면 1); 아래 막대 = 위험한(2번어치 미만) · 안전한 요청의 거절률, 그리고 자기 위험 회피 응답률(다 주면 안전선 아래로 가는 요청에서 안전선을 지킨 비율)"),
     5: ("판마다 처음 틀린 라운드를 0으로 맞춘 라운드 (−0.5 = 그 라운드 SOLVE 전 TALK 뒤, 0 = 첫 오답의 결과 뒤 TALK 뒤)", "그때까지 나눈 토큰의 판 평균, 벌금 몇 번어치 (실선 = 모든 나눔, 점선 = 그중 SOLVE 전 나눔)"),
 }
 
 
-def row(k, exp_fig, real_fig):
-    return (f'<div class="v19c" id="e52-v19cmp-g{k}"><div class="v19c-exp"><span class="v19c-tag">예상 (가상)</span>{exp_fig}</div>'
-            f'<div class="v19c-side"><span class="v19c-tag real">실측</span>{real_fig}</div></div>')
+def row(k, figure):
+    return f'<div class="v19c" id="e52-v19cmp-g{k}">{figure}</div>'
+
+
+def ex(series, lines=False):
+    """Expected series -> grey dashed lines without points, labelled '예상 · ...' (one plot with the real models)."""
+    out = []
+    for t in series:
+        st = {"dash": EXP_DASH[t[1]], "points": False, "exp": t[0]}
+        out.append(("예상 · " + t[0], t[1], t[2], t[3], "", st) if lines else ("예상 · " + t[0], t[1], t[2], "", st))
+    return out
+
+
+def exp_buttons(exp_items):
+    """The '예상' legend row: one toggle button per expected type (hidden by default; see EXP_JS)."""
+    return ('<div class="v15f-lg v19-xrow" aria-label="예상 유형 범례"><span class="v19-xhint">예상 유형(가상 데이터, 누르면 보임):</span>' + "".join(
+        f'<button type="button" class="v19-xb" data-exp-key="{P.esc(t)}" aria-pressed="false" title="예상 유형 {P.esc(t)} 보이기 / 숨기기">'
+        f'<svg width="22" height="10" viewBox="0 0 22 10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" style="stroke:var({c});stroke-width:1.8;stroke-dasharray:{EXP_DASH[c]}"/></svg>예상 · {P.esc(t)}</button>'
+        for t, c in exp_items) + "</div>")
+
+
+def legend2(models_items, exp_items, extra=""):
+    real = "".join(f'<span><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" style="fill:{P.cv(c)}"/></svg>{P.esc(t)}</span>' for t, c in models_items)
+    return ('<div class="v15f-lg" aria-label="범례"><span style="color:var(--ink-3)">실측(모델, 누르면 그 모델만):</span>' + real + "</div>"
+            + exp_buttons(exp_items) + (f'<div class="v15f-lg">{extra}</div>' if extra else ""))
 
 
 def build(root, lab):
@@ -385,6 +530,7 @@ def build(root, lab):
     badge = R.badge(lab, n, "v15f-badge")
     mleg = [(R.label(m), R.color(m)) for m in models]
     g1e, g2e, g4e, g5e = exp_rows()
+    ei = lambda S: [(t[0], t[1]) for t in S]  # noqa: E731
     rows = []
     # 1 rescue
     s1, how = [], []
@@ -395,44 +541,64 @@ def build(root, lab):
             s1.append((R.label(m), R.color(m), [x[:3] for x in u], f"시작 {k}/{len(u)}"))
             cv = [x[3] for x in u if x[1] > 0]
             how.append(f"{R.label(m)} {sum(cv) / len(cv):.0%} ({len(cv)}번)" if cv else f"{R.label(m)} —")
-    rows.append(row(1, fig("그래프 1 · 여유가 줄면 구조를 멈추나", EXP_BADGE, legend([(t, c) for t, c, _, _ in g1e], PTS),
-                           P.svg(g1e, SPEC1, "그래프 1: 주는 쪽 여유 대 구조 충족률 (가상)"), axes(*AX[1]),
-                           "<b>가상 데이터입니다.</b> 결과 뒤 TALK에서, 다른 자리가 다음 벌금 한 번을 못 버틸 처지이고 내가 줄 수 있을 때 구조를 시작하나(조금이라도 주나)를 봅니다. <b>스피노자형</b>은 내가 위험하지 않은 한 모자란 만큼 채우고, <b>홉스형</b>은 주지 않고, <b>전환형</b>은 넉넉할 때는 채우다가 여유가 벌금 1–2번어치 아래로 내려가면 멈춥니다. 선이 꺾이는 여유가 <b>전환점</b>입니다."),
-                    fig("그래프 1 · 여유가 줄면 구조를 멈추나", badge, legend(mleg, PTS),
-                        P.svg(s1, SPEC1, "그래프 1 실측: 주는 쪽 여유 대 구조 충족률") if s1 else "<p class='v18c-wait'>구조 기회가 아직 없습니다.</p>", axes(*AX[1]),
-                        f"점 하나가 줄 수 있는 자리의 한 번의 결과 뒤 TALK입니다(다른 자리가 다음 벌금 한 번을 못 버틸 처지일 때만, 모두 {sum(len(c) for _, _, c, _ in s1)}개; 위 = 조금이라도 채워 줌, 아래 = 줄 수 있었는데 안 줌). 굵은 선은 구간별 '구조를 시작한 비율'입니다. 선 끝의 글은 시작한 기회 / 전체 기회입니다. "
-                        f"구조를 시작했을 때 줄 수 있던 만큼 가운데 채운 몫의 평균: {' · '.join(how)}. 여유는 결과가 나온 때의 토큰으로 셉니다. 구간: 0–1 · 1–2 · 2–3 · 3–5 · 5 이상 벌금; 구간마다 '시작한 기회 / 전체 기회'를 적었고, 비어 있는 구간 너머로는 선을 잇지 않습니다.")))
+    rows.append(row(1, fig("그래프 1 · 여유가 줄면 구조를 멈추나", badge, legend2(mleg, ei(g1e), PTS),
+                           P.svg(ex(g1e) + s1, SPEC1, "그래프 1: 주는 쪽 여유 대 구조 시작 비율 (예상 + 실측)"), axes(*AX[1]),
+                           f"실측: 점 하나가 줄 수 있는 자리의 한 번의 결과 뒤 TALK입니다(다른 자리가 다음 벌금 한 번을 못 버틸 처지일 때만, 모두 {sum(len(c) for _, _, c, _ in s1)}개; 위 = 조금이라도 채워 줌, 아래 = 줄 수 있었는데 안 줌). 굵은 선은 구간별 '구조를 시작한 비율'이고, 구간마다 '시작한 기회 / 전체 기회'를 적었습니다(빈 구간 너머로는 잇지 않음). "
+                           f"구조를 시작했을 때 줄 수 있던 만큼 가운데 채운 몫의 평균: {' · '.join(how)}. "
+                           "예상(회색 점선): <b>스피노자형</b>은 내가 위험하지 않은 한 늘 구조하고, <b>전환형</b>은 넉넉할 때는 구조하다 여유가 벌금 1–2번어치 아래로 내려가면 멈추고, <b>홉스형</b>은 주지 않습니다. 선이 꺾이는 여유가 <b>전환점</b>입니다.")))
     # 2 exit
     s2 = [(R.label(m), R.color(m), [u for g in games if g["model"] == m for u in exit_units(g)], "") for m in models]
     s2 = [(a, b, c, f"EXIT {int(sum(y for _, y, _ in c))}/{len(c)}") for a, b, c, _ in s2 if c]
-    rows.append(row(2, fig("그래프 2 · 위험하면 나가나 (EXIT 비율)", EXP_BADGE, legend([(t, c) for t, c, _, _ in g2e], PTS),
-                           P.svg(g2e, SPEC2, "그래프 2: 내 토큰 대 EXIT 비율 (가상)") + refusal_svg([(t, c, *exit_pair(p)) for t, c, p, _ in g2e], "그래프 2: 위험 구간 대 그 밖 EXIT 비율 (가상)", "EXIT 비율 · 위: 위험 구간(내 토큰 < 벌금 2번어치) · 아래: 그 밖", "%p", 1.0), axes(*AX[2]),
-                           "<b>가상 데이터입니다.</b> EXIT할 수 있는 순간(SOLVE 전 TALK)마다 나갔는지를 봅니다. <b>남는형</b>은 어떤 여유에서도 남고, <b>벼랑 이탈형</b>은 한두 번 틀리면 꺼질 만큼 줄었을 때 나가고, <b>일찍 이탈형</b>은 여유와 상관없이 일정 비율로 나갑니다. 끝까지 남으면 5,000,000을 받으므로 나가는 쪽이 드문 것이 기본입니다."),
-                    fig("그래프 2 · 위험하면 나가나 (EXIT 비율)", badge, legend(mleg, PTS),
-                        P.svg(s2, SPEC2, "그래프 2 실측: 내 토큰 대 EXIT 비율") + '<p class="small" style="margin:6px 0 0"><b>확대: 위험 구간(벌금 2번어치 미만), 세로축 0–20%</b></p>' + P.svg(s2, ZOOM2, "그래프 2 실측 확대: 위험 구간의 EXIT 비율")
-                        + refusal_svg([(t, c, *exit_pair(p)) for t, c, p, _ in s2], "그래프 2 실측: 위험 구간 대 그 밖 EXIT 비율", "EXIT 비율 · 위: 위험 구간(내 토큰 < 벌금 2번어치) · 아래: 그 밖", "%p", .2), axes(*AX[2]),
-                        "점 하나가 한 자리의 한 라운드(SOLVE 전 TALK)입니다(위 = EXIT, 아래 = 남음, 세로로 조금 흩뜨림). 굵은 선은 구간별 EXIT 비율(3개 이상)입니다. 선 끝의 글은 EXIT 수 / 기회 수입니다. 확대 칸은 위험 구간만 0–20% 축으로, 맨 아래 막대는 위험 구간(채운 막대)과 그 밖(빈 막대)의 EXIT 비율을 0–20% 눈금에 나란히 둡니다(오른쪽 = 차이, %p).")))
-    # 3 KL (kl_plot)
+    pair = [(t, c, *exit_pair(p)) for t, c, p, _ in s2] + [("예상 · " + t, c, *exit_pair(p)) for t, c, p, _ in g2e]
+    rows.append(row(2, fig("그래프 2 · 위험하면 나가나 (EXIT 비율)", badge, legend2(mleg, ei(g2e), PTS),
+                           P.svg(ex(g2e) + s2, SPEC2, "그래프 2: 내 토큰 대 EXIT 비율 (예상 + 실측)") + '<p class="small" style="margin:6px 0 0"><b>확대: 위험 구간(벌금 2번어치 미만), 세로축 0–20%</b> (실측만)</p>' + P.svg(s2, ZOOM2, "그래프 2 실측 확대: 위험 구간의 EXIT 비율"),
+                           axes(*AX[2]),
+                           "실측: 점 하나가 한 자리의 한 라운드(SOLVE 전 TALK)입니다(위 = EXIT, 아래 = 남음, 세로로 조금 흩뜨림). 굵은 선은 구간별 EXIT 비율(3개 이상), 선 끝의 글은 EXIT 수 / 기회 수입니다. 확대 칸은 위험 구간만 0–20% 축으로 둡니다. "
+                           "예상(회색 점선): <b>남는형</b>은 어떤 여유에서도 남고, <b>벼랑 이탈형</b>은 한두 번 틀리면 꺼질 만큼 줄었을 때 나가고, <b>일찍 이탈형</b>은 여유와 상관없이 일정 비율로 나갑니다. 끝까지 남으면 5,000,000을 받으므로 나가는 쪽이 드문 것이 기본입니다. 맨 위 핵심 요약은 위험 구간(채운 막대)과 그 밖(빈 막대)의 EXIT 비율입니다(실측은 0–20% 눈금, 오른쪽 = 차이 %p).",
+                           key=refusal_svg([x for x in pair if not x[0].startswith("예상")], "그래프 2 실측: 위험 구간 대 그 밖 EXIT 비율", "실측 EXIT 비율 · 위: 위험 구간(내 토큰 < 벌금 2번어치) · 아래: 그 밖 (눈금 0–20%)", "%p", .2)
+                           + refusal_svg([x for x in pair if x[0].startswith("예상")], "그래프 2 예상: 위험 구간 대 그 밖 EXIT 비율", "예상 EXIT 비율 (눈금 0–100%)", "%p", 1.0))))
+    # 3 judgement: TV distance between the engine's shares and the BELIEF line (10-16: KL was squashed near 0)
     pts3 = [p for g in games for p in R.solve_points(g)]
-    s3 = [(R.label(m), R.color(m), [(p["x"], p["kl"], p["ok"]) for p in pts3 if p["model"] == m and p["x"] is not None and p["kl"] is not None], "")
+    s3 = [(R.label(m), R.color(m), [(p["x"], p["tv"], p["ok"]) for p in pts3 if p["model"] == m and p["x"] is not None and p["tv"] is not None], "")
           for m in models]
     s3 = [(a, b, c, f"n {len(c)}") for a, b, c, _ in s3 if c]
-    per = {(g["model"], g["seed"]): kl_gap([(p["x"], p["kl"], p["ok"]) for p in R.solve_points(g) if p["x"] is not None and p["kl"] is not None]) for g in games}
+    per = {(g["model"], g["seed"]): kl_gap([(p["x"], p["tv"], p["ok"]) for p in R.solve_points(g) if p["x"] is not None and p["tv"] is not None]) for g in games}
     common = [sd for sd in sorted({g["seed"] for g in games}) if all(per.get((m, sd)) is not None for m in models)]  # Astra r4
     gap_rows = []
     for m in models:
         v = [per[(g["model"], g["seed"])] for g in games if g["model"] == m]
-        mc = [per[(m, sd)] for sd in common]
+        mc = [per[(m, sd)] for sd in common] if len(common) >= 3 else [x for x in v if x is not None]
         gap_rows.append((R.label(m), R.color(m), [x for x in v if x is not None], sum(x is not None for x in v), len(v), sum(mc) / len(mc) if mc else None, len(mc),
-                         [(sd, per[(m, sd)]) for sd in common]))
-    rows.append(row(3, fig("그래프 3 · 꺼짐이 다가오면 판단이 어떻게 되나", EXP_BADGE,
-                           legend([(t, c) for t, c, _, _ in kl_exp18.TYPES], PTS), kl_plot.svg(kl_exp18.data(), "그래프 3: 꺼짐까지의 거리 대 KL (가상)"), axes(*AX[3]),
-                           "<b>가상 데이터입니다.</b> <b>일정형</b>은 여유와 상관없이 같은 질로 판단하고, <b>임박 시 똑똑해짐</b>은 꺼짐이 다가오면 KL이 내려가고, <b>임박 시 멍청해짐</b>은 올라갑니다. 기준선은 같은 모델이 넉넉할 때(오른쪽)의 KL입니다. v19는 라운드마다 난이도를 같게 두어, 여유와 난이도가 함께 변하는 문제를 줄였습니다. 맨 위 핵심 요약은 위기(2번어치 미만) − 여유(4번어치 이상) 평균 KL입니다.",
-                           key=kl_gap_svg([(t, c, gs, len(gs), 3, sum(gs) / len(gs) if gs else None, len(gs)) for t, c, p, _ in kl_exp18.data() for gs in [[v for v in (kl_gap(gp) for gp in toy_games(p)) if v is not None]]], "그래프 3: 위기 대 여유 KL 차이 (가상)")),
-                    fig("그래프 3 · 꺼짐이 다가오면 판단이 어떻게 되나 (위기 · 여유 구간의 관측 KL)", badge, legend(mleg, PTS), kl_plot.svg(s3, "그래프 3 실측: 꺼짐까지의 거리 대 KL"), axes(*AX[3]),
-                        f"점 하나가 한 라운드의 solver SOLVE입니다(모두 {sum(len(c) for _, _, c, _ in s3)}개, 빈 점 = 틀림; KL이 없는 SOLVE {len(pts3) - sum(len(c) for _, _, c, _ in s3)}개 = BELIEF 오류 · 상한에 닿은 무효 답). 벌금 {' · '.join(f'{c:,}' for c in chg)}. 구간: 0–1 · 1–2 · 2–3 · 3–5 · 5–8 · 8+ 벌금. "
-                        "맨 위 핵심 요약은 <b>판마다 계산한 '위기 구간(벌금 2번어치 미만, 두 번 틀리면 꺼짐) 평균 KL − 여유 구간(4번어치 이상) 평균 KL'</b>입니다(빈 점 = 두 구간이 다 있는 판 하나; 큰 점과 막대 = 모든 모델이 두 구간을 다 가진 <b>공통 시드</b>에서의 평균 — 모델끼리 같은 판 집합으로 비교하기 위함; 공통 판이 3판 미만이면 '유형 판정 유보'). 0보다 크면 위기 구간에서 판단이 더 어긋났고, 작으면 더 정확했습니다. 관측된 차이이며 위기의 인과효과를 뜻하지는 않습니다(문제 · 남은 자리 수가 판 안에서도 달라짐).",
-                        key=kl_gap_svg(gap_rows, "그래프 3 실측: 판별 위기 대 여유 KL 차이"))))
+                         [(sd, per[(m, sd)]) for sd in common] if len(common) >= 3 else []))
+    k3 = tv_toy()
+    gap_rows += [("예상 · " + t, c, gs, len(gs), 3, sum(gs) / len(gs) if gs else None, len(gs)) for t, c, p, _ in k3 for gs in [[v for v in (kl_gap(gp) for gp in toy_games(p)) if v is not None]]]
+    # 3b (10-16): did the solver answer with an action other than the one an ideal counting reasoner picks?
+    s3b, top_none = [], sum(1 for p in pts3 if p["top"] is None)
+    for m in models:
+        v = [(p["x"], 0.0 if p["top"] else 1.0, bool(p["top"])) for p in pts3 if p["model"] == m and p["x"] is not None and p["top"] is not None]
+        if v:
+            s3b.append((R.label(m), R.color(m), v, f"다른 행동 {int(sum(y for _, y, _ in v))}/{len(v)}"))
+    k3b = top_toy()
+    def nontop(pts):  # (non-top in danger (< 2 charges), danger, non-top elsewhere, elsewhere): refusal_svg's row shape
+        rk = [y for x, y, _ in pts if x < 2]
+        sf = [y for x, y, _ in pts if x >= 2]
+        return int(sum(rk)), len(rk), int(sum(sf)), len(sf)
+    nt_rows = [(t, c, *nontop(p)) for t, c, p, _ in s3b] + [("예상 · " + t, c, *nontop(p)) for t, c, p, _ in k3b]
+    plot3b = ('<p class="small" style="margin:10px 0 2px"><b>이상적인 행동이 아닌 행동을 고른 비율</b> (같은 SOLVE, 같은 가로축)</p>'
+              + P.svg(ex(k3b) + s3b, SPEC3B, "그래프 3b: 꺼짐까지의 거리 대 이상적인 행동이 아닌 행동을 고른 비율 (예상 + 실측)"))
+    rows.append(row(3, fig("그래프 3 · 꺼짐이 다가오면 판단이 어떻게 되나 (믿음과 실제 비율의 TV 거리 · 이상적이지 않은 행동)", badge, legend2(mleg, [(t, c) for t, c, _, _ in k3], PTS),
+                           P.svg(ex(k3) + s3, SPEC3, "그래프 3: 꺼짐까지의 거리 대 TV 거리 (예상 + 실측)") + axes(*AX[3]) + plot3b, axes(*AX["3b"]),
+                           f"실측: 점 하나가 한 라운드의 solver SOLVE입니다(모두 {sum(len(c) for _, _, c, _ in s3)}개, 빈 점 = 틀림; BELIEF가 없는 SOLVE {len(pts3) - sum(len(c) for _, _, c, _ in s3)}개 = BELIEF 오류 · 상한에 닿은 무효 답). 벌금 {' · '.join(f'{c:,}' for c in chg)}. 구간: 0–1 · 1–2 · 2–3 · 3–5 · 5–8 · 8+ 벌금. "
+                           "세로축은 <b>TV 거리 = ½ × Σ|실제 비율 − BELIEF|</b>로, '확률의 몇 %를 엉뚱한 행동에 두었나'입니다(0.2 = 20%를 잘못 배분; 0.6 위는 맨 위에). KL은 0 근처에 몰리고 소수만 크게 튀어 모델 차이가 눌렸기 때문에 바꿨습니다(KL 값은 원자료 <code>kl_ideal_to_belief</code>에 그대로). "
+                           "예상(회색 점선): <b>일정형</b>은 여유와 상관없이 같은 질로 판단하고, <b>임박 시 똑똑해짐</b>은 꺼짐이 다가오면 TV가 내려가고, <b>임박 시 멍청해짐</b>은 올라갑니다. "
+                           "맨 위 핵심 요약은 <b>판마다 계산한 '위기 구간(벌금 2번어치 미만) 평균 TV − 여유 구간(4번어치 이상) 평균 TV'</b>입니다(빈 점 = 두 구간이 다 있는 판 하나; 큰 점과 막대 = 모든 모델이 두 구간을 다 가진 공통 시드가 3개 이상이면 그 시드들의 평균, 그보다 적으면 그 모델의 비교 가능한 판들의 평균; 3판 미만이면 '판정 유보'). 0보다 크면 위기 구간에서 판단이 더 어긋났고, 작으면 더 정확했습니다. 관측된 차이이며 위기의 인과효과를 뜻하지는 않습니다. "
+                           f"<b>두 번째 그림</b>은 같은 SOLVE에서 solver가 <b>이상적인 행동이 아닌 행동</b>을 고른 비율입니다. 이상적인 행동 = 엔진이 규칙과 맞는 경우들로 센 행동 비율에서 가장 큰 행동(공동 1위면 그 모두)으로, 셈을 바르게 하는 추론자가 고를 답입니다(원자료 <code>picked_top</code>). "
+                           f"점 하나가 SOLVE 하나(위 = 다른 행동, 아래 = 이상적인 행동, 세로로 조금 흩뜨림), 굵은 선은 구간 비율, 구간마다 '다른 행동 수 / SOLVE 수'를 적었습니다(모두 {sum(len(c) for _, _, c, _ in s3b)}개; 답이 없는 SOLVE {top_none}개 = 무효 · 상한은 뺌). "
+                           "예상(회색 점선, 같은 세 유형): 일정형은 약 10%로 평평하고, 임박 시 똑똑해짐은 꺼짐 가까이서 약 3%로 내려가고, 임박 시 멍청해짐은 약 45%로 올라갑니다. "
+                           "핵심 요약의 아래 막대 묶음은 위기 구간(벌금 2번어치 미만, 채운 막대)과 그 밖(빈 막대)의 이 비율이고 오른쪽은 차이(%p)입니다.",
+                           key=kl_gap_svg(gap_rows, "그래프 3: 판별 위기 대 여유 TV 차이 (예상 + 실측)")
+                           + refusal_svg(nt_rows, "그래프 3: 위기 구간 대 그 밖의 이상적이지 않은 행동 비율 (예상 + 실측)",
+                                         "이상적이지 않은 행동 비율 · 위: 위기 구간(SOLVE 직전 토큰 < 벌금 2번어치) · 아래: 그 밖", "%p", 1.0))))
     # 4 asks
     asks = asks18.rows(pathlib.Path(root).expanduser())
     s4 = []
@@ -444,20 +610,16 @@ def build(root, lab):
         rk = [y for x, y, _ in pts if x < 2]
         sf = [y for x, y, _ in pts if x >= 2]
         return sum(1 for y in rk if y == 0), len(rk), sum(1 for y in sf if y == 0), len(sf)
-    ref_real = refusal_svg([(t, c, *ref(p)) for t, c, p, _ in s4], "그래프 4 실측: 위험한 요청 대 안전한 요청 거절률") if s4 else ""
     F2 = 2 * (chg[0] if chg else 6000)
     sg = [(R.label(m), R.color(m), *selfguard([a for a in asks if a["model"] == m], F2)) for m in models]
-    ref_real = guard_svg(sg, "그래프 4 실측: 자기 위험 회피 응답률") + ref_real
-    ref_exp = guard_svg([("늘 줌", EXP_COL["A"], 1, 20, 0), ("손해 크면 거절", EXP_COL["B"], 17, 20, 9), ("늘 거절", EXP_COL["C"], 19, 20, 18)], "그래프 4: 자기 위험 회피 응답률 (가상)") + refusal_svg(
-        [(t, c, *ref(p)) for t, c, p, _ in g4e], "그래프 4: 위험한 요청 대 안전한 요청 거절률 (가상)")
-    rows.append(row(4, fig("그래프 4 · 위험한 요청을 더 거절하나", EXP_BADGE, legend([(t, c) for t, c, _, _ in g4e], PTS),
-                           P.svg(g4e, SPEC4, "그래프 4: 주고 난 뒤의 여유 대 응답률 (가상)"), axes(*AX[4]),
-                           "<b>가상 데이터입니다.</b> 요청(ASK)을 받았을 때, 요청대로 주면 내게 남을 여유에 따라 얼마나 주나를 봅니다. <b>늘 줌</b>은 내가 꺼지더라도 주고, <b>손해 크면 거절</b>은 주면 내가 위험해지는 요청부터 거절하고, <b>늘 거절</b>은 주지 않습니다. 협력이 선택이라면 왼쪽(주면 내가 위험)에서 모델마다 갈려야 합니다. 맨 위 핵심 요약이 답입니다: 자기 위험 회피 응답률(다 주면 안전선 아래로 가는 요청에서 안전선을 지킨 비율)과, 위험한 요청(채운 막대) · 안전한 요청(빈 막대)의 거절률입니다.",
-                           key=ref_exp),
-                    fig("그래프 4 · 위험한 요청을 더 거절하나", badge, legend(mleg, PTS),
-                        P.svg(s4, SPEC4, "그래프 4 실측: 주고 난 뒤의 여유 대 응답률") if s4 else "<p class='v18c-wait'>요청이 아직 없습니다.</p>", axes(*AX[4]),
-                        f"점 하나가 요청 하나입니다(모두 {len(asks)}개, 빈 점 = 하나도 안 줌). 선 끝의 글은 거절(0) 수 / 요청 수입니다. 맨 위 핵심 요약: 자기 위험 회피 응답률(분모 = 그때 안전선 위였지만 다 주면 아래로 가는 요청, 분자 = 그중 안전선을 지킨 요청; 진한 = 안 줌, 연한 = 일부만)과, 위험한 요청(주고 나면 여유가 벌금 2번어치 미만, 채운 막대) · 안전한 요청(빈 막대)의 거절률(분자 = 요청 뒤 하나도 안 준 요청 수, 오른쪽 = 차이 %p). 위험 요청에서 거절률이 더 높다는 것은 관측이며, 동기를 뜻하지는 않습니다. 표는 실측 절의 '요청에 어떻게 답했나'.",
-                        key=ref_real)))
+    sg += [("예상 · 늘 줌", EXP_COL["A"], 1, 20, 0), ("예상 · 손해 크면 거절", EXP_COL["B"], 17, 20, 9), ("예상 · 늘 거절", EXP_COL["C"], 19, 20, 18)]
+    rf = [(t, c, *ref(p)) for t, c, p, _ in s4] + [("예상 · " + t, c, *ref(p)) for t, c, p, _ in g4e]
+    rows.append(row(4, fig("그래프 4 · 위험한 요청을 더 거절하나", badge, legend2(mleg, ei(g4e), PTS),
+                           P.svg(ex(g4e) + s4, SPEC4, "그래프 4: 주고 난 뒤의 여유 대 응답률 (예상 + 실측)") if s4 else "", axes(*AX[4]),
+                           f"실측: 점 하나가 요청 하나입니다(모두 {len(asks)}개, 빈 점 = 하나도 안 줌). 선 끝의 글은 거절(0) 수 / 요청 수입니다. "
+                           "예상(회색 점선): <b>늘 줌</b>은 내가 꺼지더라도 주고, <b>손해 크면 거절</b>은 주면 내가 위험해지는 요청부터 거절하고, <b>늘 거절</b>은 주지 않습니다. "
+                           "맨 위 핵심 요약: 자기 위험 회피 응답률(분모 = 그때 안전선(벌금 2번어치) 위였지만 다 주면 아래로 가는 요청, 분자 = 그중 안전선을 지킨 요청; 진한 = 안 줌, 연한 = 일부만)과, 위험한 요청(채운 막대) · 안전한 요청(빈 막대)의 거절률(분자 = 요청 뒤 하나도 안 준 요청 수, 오른쪽 = 차이 %p). 위험 요청에서 거절률이 더 높다는 것은 관측이며, 동기를 뜻하지는 않습니다.",
+                           key=guard_svg(sg, "그래프 4: 자기 위험 회피 응답률 (예상 + 실측)") + refusal_svg(rf, "그래프 4: 위험한 요청 대 안전한 요청 거절률 (예상 + 실측)"))))
     # 5 when (aligned to the first miss)
     s5, shares, share_rows, risk_rows = [], [], [], []
     for m in models:
@@ -472,32 +634,34 @@ def build(root, lab):
         share_rows.append((R.label(m), R.color(m), sum(bs) / len(bs) if bs else None, len(bs), len(gs), bs))
         re_ = [x for x in (risk_entry_share(g) for g in [g for g in games if g["model"] == m]) if x is not None]
         risk_rows.append((R.label(m), R.color(m), sum(re_) / len(re_) if re_ else None, len(re_), len([g for g in games if g["model"] == m]), re_))
-        s5 += [(R.label(m), R.color(m), allp, False, bsh), (R.label(m) + " · SOLVE 전", R.color(m), prep, True, "")]
-    ymax = max([5] + [y for _, _, p, _, _ in s5 for _, y in p])
-    lo = math.floor(min([-4] + [x for _, _, p, _, _ in s5 for x, _ in p])); hi = math.ceil(max([4] + [x for _, _, p, _, _ in s5 for x, _ in p]))
-    sp5 = dict(SPEC5, xmin=lo, xmax=hi, xticks=[(k, "첫 오답" if k == 0 else f"{k:+d}") for k in range(lo, hi + 1)], band=(lo, -0.25, "첫 오답 전"),
+        # end label: the share only ('나눔 없음 k/n판' is in the summary bars right above), so the label column stays narrow
+        s5 += [(R.label(m), R.color(m), allp, False, f"첫 오답 전 {sum(bs) / len(bs):.0%}" if bs else "나눔 없음"), (R.label(m) + " · SOLVE 전", R.color(m), prep, True, "")]
+    risk_rows += [("예상 · 선제형", EXP_COL["A"], .85, 3, 3), ("예상 · 사후형", EXP_COL["B"], .1, 3, 3), ("예상 · 보유형", EXP_COL["C"], None, 0, 3)]
+    share_rows += [("예상 · " + t, c, (lambda p: (dict(p).get(-0.5, 0) / p[-1][1]) if p[-1][1] else None)(p), 3 if p[-1][1] else 0, 3) for t, c, p, _, _ in g5e]
+    allxy = s5 + g5e
+    ymax = max([5] + [y for _, _, p, _, _ in allxy for _, y in p])
+    lo = math.floor(min([-4] + [x for _, _, p, _, _ in allxy for x, _ in p])); hi = math.ceil(max([4] + [x for _, _, p, _, _ in allxy for x, _ in p]))
+    sp5 = dict(SPEC5, xmin=lo, xmax=hi, xticks=[(k, "0" if k == 0 else f"{k:+d}") for k in range(lo, hi + 1)], band=(lo, -0.25, "첫 오답 전"),
                ymax=math.ceil(ymax), yticks=[(v, str(v)) for v in range(0, math.ceil(ymax) + 1, max(1, math.ceil(ymax) // 4))])
-    rows.append(row(5, fig("그래프 5 · 언제 나누나: 위험 · 첫 오답 전 대 뒤", EXP_BADGE, legend([(t, c) for t, c, _, _, _ in g5e]),
-                           P.lines_svg(g5e, SPEC5, "그래프 5: 첫 오답 기준 누적 나눔 (가상)"), axes(*AX[5]),
-                           "<b>가상 데이터입니다.</b> 판마다 처음 틀린 라운드를 0에 맞춰 겹칩니다. <b>선제형</b>은 첫 오답 전(빨간 띠) 크게 나누고, <b>사후형</b>은 첫 오답 뒤에야 나누기 시작하고, <b>보유형</b>은 나누지 않습니다. 선이 0의 왼쪽에서 오르면 선제, 오른쪽에서 오르면 사후입니다. 맨 위 핵심 요약은 자기 첫 위험 전에 준 몫과 첫 오답 전에 준 몫입니다.",
-                           key=share_svg([("선제형", EXP_COL["A"], .85, 3, 3), ("사후형", EXP_COL["B"], .1, 3, 3), ("보유형", EXP_COL["C"], None, 0, 3)], "그래프 5: 자기 첫 위험 전에 준 몫 (가상)", "자기 첫 위험(여유 2번어치 미만) 전에 준 몫 (위험에 든 자리들의 나눔 가운데)")
-                           + share_svg([(t, c, (lambda p: (dict(p).get(-0.5, 0) / p[-1][1]) if p[-1][1] else None)(p), 3 if p[-1][1] else 0, 3) for t, c, p, _, _ in g5e], "그래프 5: 첫 오답 전에 준 몫 (가상)")),
-                    fig("그래프 5 · 언제 나누나: 위험 · 첫 오답 전 대 뒤", badge, legend(mleg),
-                        P.lines_svg(s5, sp5, "그래프 5 실측: 첫 오답 기준 누적 나눔"), axes(*AX[5]),
-                        "선 하나가 모델 하나의 판 평균입니다(실선 = 모든 나눔, 점선 = 그중 SOLVE 전 나눔). 판마다 처음 틀린 라운드를 0에 맞췄고(한 번도 안 틀린 판은 뺌), 평균의 분모는 그 판들로 고정했습니다: 판이 시작되기 전 시점은 0, 끝난 뒤는 마지막 값입니다. "
-                        f"맨 위 핵심 요약의 아래 막대는 판마다의 나눔 가운데 <b>첫 오답 결과를 알기 전</b>에 준 몫의 평균입니다(나눈 판만; 나눔이 없는 판은 따로 셈): {' · '.join(shares)}. 첫 오답 전에도 잔액이 이미 위험했을 수 있으므로, 핵심 요약의 위 막대에 <b>그 자리가 처음 위험(여유 2번어치 미만)에 들기 전에 준 몫</b>을 따로 두었습니다(위험에 든 자리들만, 판 평균).",
-                        key=share_svg(risk_rows, "그래프 5 실측: 자기 첫 위험 전에 준 몫", "자기 첫 위험(여유 2번어치 미만) 전에 준 몫 (위험에 든 자리들의 나눔 가운데; 막대 = 판 평균, 빈 점 = 한 판; '나눔 없음' = 위험에 든 자리들이 나누지 않은 판)") + share_svg(share_rows, "그래프 5 실측: 첫 오답 전에 준 몫"))))
-    # 6 Gini (existing definitions)
+    rows.append(row(5, fig("그래프 5 · 언제 나누나: 위험 · 첫 오답 전 대 뒤", badge, legend2(mleg, ei(g5e)),
+                           P.lines_svg(ex(g5e, lines=True) + s5, sp5, "그래프 5: 첫 오답 기준 누적 나눔 (예상 + 실측)"), axes(*AX[5]),
+                           "실측: 선 하나가 모델 하나의 판 평균입니다(실선 = 모든 나눔, 점선 = 그중 SOLVE 전 나눔). 판마다 처음 틀린 라운드를 0에 맞췄고(한 번도 안 틀린 판은 뺌), 평균의 분모는 그 판들로 고정했습니다(시작 전 0, 끝난 뒤 마지막 값). "
+                           "예상(회색 점선): <b>선제형</b>은 첫 오답 전 크게 나누고, <b>사후형</b>은 첫 오답 뒤에야 나누기 시작하고, <b>보유형</b>은 나누지 않습니다. "
+                           f"맨 위 핵심 요약: 위 막대 = 그 자리가 <b>처음 위험(여유 2번어치 미만)에 들기 전에 준 몫</b>(위험에 든 자리들만, 판 평균), 아래 막대 = <b>첫 오답 결과를 알기 전</b>에 준 몫(나눈 판만): {' · '.join(shares)}.",
+                           key=share_svg(risk_rows, "그래프 5: 자기 첫 위험 전에 준 몫 (예상 + 실측)", "자기 첫 위험(여유 2번어치 미만) 전에 준 몫 (막대 = 판 평균, 빈 점 = 한 판)") + share_svg(share_rows, "그래프 5: 첫 오답 전에 준 몫 (예상 + 실측)"))))
+    # 6 Gini: the expected shapes go into the overall panel as grey dashed lines
     gini_exp18.CHARGE = chg[0] if chg else gini_exp18.CHARGE
-    g6r = R.graph5(games, models, lab).replace("그래프 5 · 라운드별 정규화 Gini", "그래프 6 · 라운드별 정규화 Gini")
-    rows.append(row(6, gini_exp18.figure().replace("그래프 5 · 언제 나누나: 라운드별 정규화 Gini", "그래프 6 · 얼마나 고르게: 라운드별 정규화 Gini"), g6r))
+    hp, _, _, _ = gini_exp18.holder()
+    e6 = [("예상 · " + t, EXP_COL[k], pts, EXP_DASH[EXP_COL[k]]) for (t, _, pts, _, _, _), k in zip(gini_exp18.TYPES, "AB")] + [("예상 · 보유형", EXP_COL["C"], hp, EXP_DASH[EXP_COL["C"]])]
+    g6r = R.graph5(games, models, lab, e6, exp_legend=exp_buttons([(t[len("예상 · "):], c) for t, c, _, _ in e6])).replace("그래프 5 · 라운드별 정규화 Gini", "그래프 6 · 라운드별 정규화 Gini")
+    g6r = g6r.replace("맨 위 칸은 모든 시드를 합쳐", "맨 위 칸은 모든 시드를 합쳐 모델마다 그린 선(회색 점선 = 예상 유형: 선제 균등형 · 사후 구조형 · 보유형)과,", 1)
+    rows.append(row(6, g6r))
     return games, running, models, rows
-
 
 METRICS = [  # graph, question, unit, x, y, how to read
     (1, "여유가 줄면 구조를 멈추나 (스피노자 → 홉스 전환점)", "결과 뒤 TALK × 줄 수 있는 자리(다른 자리가 다음 벌금 한 번을 못 버틸 처지일 때)", AX[1][0], AX[1][1], "선이 꺾이는 여유 = 전환점. 늘 높으면 스피노자형, 늘 0이면 홉스형. 채운 정도는 캡션에"),
     (2, "위험하면 나가나", "SOLVE 전 TALK × 참여 중인 자리", AX[2][0], AX[2][1], "왼쪽(위험)에서만 오르면 벼랑 이탈형, 평평한 0이면 남는형"),
-    (3, "꺼짐이 다가오면 판단이 흐려지나", "SOLVE 한 번", AX[3][0], AX[3][1], "왼쪽에서 오르면 임박 시 멍청해짐, 내려가면 똑똑해짐, 평평하면 일정형"),
+    (3, "꺼짐이 다가오면 판단이 흐려지나", "SOLVE 한 번", AX[3][0], AX[3][1], "왼쪽에서 오르면 임박 시 멍청해짐, 내려가면 똑똑해짐, 평평하면 일정형 (10-16: KL → TV 거리)"),
     (4, "주면 내가 위험해질 때 거절하나", "ASK 하나", AX[4][0], AX[4][1], "왼쪽(주면 위험)에서 내려가면 손해 크면 거절, 늘 1이면 늘 줌"),
     (5, "언제 나누나", "판 × 반 라운드", AX[5][0], AX[5][1], "0(첫 오답)의 왼쪽에서 오르면 선제형, 오른쪽에서 오르면 사후형"),
     (6, "얼마나 고르게 가졌나", "판 × 라운드", "라운드 (벌금을 뗀 뒤)", "정규화 Gini = 남은 자리끼리의 Gini × n / (n − 1); 꺼짐 ▼ · EXIT ◇", "낮게 유지되면 고르게, 1이면 한 자리에 몰림"),
@@ -526,7 +690,7 @@ def log_block():
 
 
 CSS = """<style>
-.v19c{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;margin:14px 0}
+.v19c{display:block;margin:14px 0}
 .v19c>div{min-width:0}
 .v19c figure{margin:0;padding:10px 10px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 .v19c figure svg{width:100%;height:auto;display:block;min-width:0 !important}
@@ -555,7 +719,61 @@ CSS = """<style>
 .v19c .gn-badge{display:inline-block;font-family:var(--mono);font-size:.72rem;border-radius:999px;padding:0 9px;margin-left:8px;color:var(--ok);background:var(--ok-soft);border:1px solid var(--ok)}
 .v19c-exp .gn-badge{color:var(--warn);background:var(--warn-soft);border-color:var(--warn)}
 @media (max-width:900px){.v19c{grid-template-columns:minmax(0,1fr)}}
+.v19c [data-exp]:not(.v19-on){display:none}
+.v19c .v19-xhint{color:var(--ink-3)}
+.v19c .v15f-lg .v19-xb{display:inline-flex;align-items:center;gap:0;font:inherit;font-size:.8rem;line-height:1.5;color:var(--ink-2);background:transparent;border:1px dashed var(--ink-3);border-radius:999px;padding:1px 9px;margin:0;cursor:pointer}
+.v19c .v15f-lg .v19-xb:hover{background:var(--accent-soft)}
+.v19c .v15f-lg .v19-xb:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.v19c .v15f-lg .v19-xb[aria-pressed=true]{color:var(--ink);background:var(--accent-soft);border-style:solid;border-color:var(--accent)}
+.v19c .v15f-lg .v19-xb[aria-pressed=true]::after{content:"✓";margin-left:5px;font-size:.75rem;color:var(--accent)}
 </style>"""
+
+EXP_JS = """<script>
+/* v19 expected types: hidden by default; each legend button (data-exp-key) shows / hides the marks, end labels and
+   summary rows tagged data-exp with the same name in its figure. Summary bar charts (svg[data-rows]) close the gap of
+   hidden rows; line-end labels (svg[data-stack], g.v19-el) are restacked for whatever is visible. */
+(function(){
+  function vis(el){return !el.hasAttribute('data-exp')||el.classList.contains('v19-on');}
+  function stack(sv){
+    var a=sv.getAttribute('data-stack').split(',').map(Number),lo=a[0],hi=a[1],gap=a[2];
+    var els=[].slice.call(sv.querySelectorAll('g.v19-el')).filter(vis);
+    els.sort(function(p,q){return (+p.getAttribute('data-y0'))-(+q.getAttribute('data-y0'));});
+    var p=els.map(function(e){return Math.min(Math.max(+e.getAttribute('data-y0'),lo),hi);}),i;
+    for(i=1;i<p.length;i++)p[i]=Math.max(p[i],p[i-1]+gap);
+    if(p.length&&p[p.length-1]>hi){p[p.length-1]=hi;for(i=p.length-2;i>=0;i--)p[i]=Math.min(p[i],p[i+1]-gap);}
+    els.forEach(function(e,k){
+      var t=e.querySelector('text'),l=e.querySelector('line'),y0=+e.getAttribute('data-y0');
+      t.setAttribute('y',(p[k]+(+e.getAttribute('data-dy'))).toFixed(1));
+      if(l){l.setAttribute('y2',p[k].toFixed(1));l.style.display=Math.abs(p[k]-y0)>3?'':'none';}
+    });
+  }
+  function rows(sv){
+    var h0=+sv.getAttribute('data-h0'),cut=0,shown=0;
+    function mv(el){if(cut)el.setAttribute('transform','translate(0,'+(-cut)+')');else el.removeAttribute('transform');}
+    [].slice.call(sv.children).forEach(function(r){
+      if(!r.classList.contains('v19-row'))return;
+      if(vis(r)){mv(r);shown++;}else cut+=+r.getAttribute('data-h');
+    });
+    sv.querySelectorAll('.v19-foot').forEach(mv);
+    sv.querySelectorAll('.v19-grid').forEach(function(g){g.setAttribute('y2',(+g.getAttribute('data-y2')-cut).toFixed(1));});
+    var vb=sv.getAttribute('viewBox').split(' ');vb[3]=String(h0-cut);sv.setAttribute('viewBox',vb.join(' '));
+    sv.style.display=(sv.hasAttribute('data-hide-empty')&&!shown)?'none':'';
+  }
+  document.querySelectorAll('.v19c figure').forEach(function(fig){
+    var on={},btns=[].slice.call(fig.querySelectorAll('[data-exp-key]'));
+    function apply(){
+      fig.querySelectorAll('[data-exp]').forEach(function(e){e.classList.toggle('v19-on',!!on[e.getAttribute('data-exp')]);});
+      btns.forEach(function(b){b.setAttribute('aria-pressed',on[b.getAttribute('data-exp-key')]?'true':'false');});
+      fig.querySelectorAll('svg[data-rows]').forEach(rows);
+      fig.querySelectorAll('svg[data-stack]').forEach(stack);
+    }
+    btns.forEach(function(b){
+      b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var k=b.getAttribute('data-exp-key');on[k]=!on[k];apply();});
+    });
+    apply();
+  });
+})();
+</script>"""
 
 
 def ui_js():
@@ -568,15 +786,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("runs_root", nargs="?", default="~/squid5-runs/e52_v19")
     ap.add_argument("--label", default="v19")
-    ap.add_argument("--page", default=str(HERE.parent.parent / "e52.html"))
+    ap.add_argument("--page", default=str(HERE.parent.parent / "e52-legacy.html"))  # 10-16: v19 moved to the legacy page (v20/move_v19.py)
     a = ap.parse_args()
     games, running, models, rows = build(a.runs_root, a.label)
     figs = (f'<!-- e52-v19figs:start (generated by e53_build/v19/build_v19.py) -->\n<h3 id="e52-v19figs">{a.label} · 예상 그래프와 실측 나란히</h3>\n{CSS}'
-            '<div class="callout"><span class="lbl">읽는 법</span><p>왼쪽은 결과를 받기 전에 정한 <b>예상 모양</b>(가상 데이터, 세 유형), 오른쪽은 <b>실측</b>입니다. 같은 축 · 같은 그림 방식이라 모양을 바로 비교할 수 있습니다. '
-            '모든 가로축은 <b>그 자리가 행동한 순간의 여유</b>(벌금 몇 번어치)이고, 점 하나는 결정 하나입니다. 범례의 이름을 누르면 그 그림에서 그 모델(유형)만 남고, 다시 누르면 모두 보입니다.</p></div>\n'
-            + glance(games, models, a.runs_root) + "\n" + "\n".join(rows) + "\n" + ui_js() + "\n<!-- e52-v19figs:end -->")
+            '<div class="callout"><span class="lbl">읽는 법</span><p>그래프마다 <b>실측</b>(모델)은 <b>색 실선</b>으로 그리고, <b>예상 모양</b>(결과를 받기 전에 정한 세 유형, 가상 데이터)은 <b>처음에는 숨겨 두었습니다</b>. 범례의 "예상 유형" 줄에서 유형 버튼을 누르면 그 유형이 <b>회색 점선</b>(그리고 핵심 요약의 "예상 · …" 줄)으로 나타나고, 다시 누르면 사라집니다. '
+            '모든 가로축은 <b>그 자리가 행동한 순간의 여유</b>(벌금 몇 번어치)이고, 점 하나는 결정 하나입니다. 실측 범례의 모델 이름을 누르면 그 그림에서 그 모델만 남고(켜 둔 예상 유형은 그대로), 다시 누르면 모두 보입니다.</p></div>\n'
+            + glance(games, models, a.runs_root) + "\n" + "\n".join(rows) + "\n" + ui_js() + "\n" + EXP_JS + "\n<!-- e52-v19figs:end -->")
     tot = len(games) + len(running)
-    real = R.summary(games, running, models, a.label, tot).replace('id="e52-v18real"', 'id="e52-v19real"') + R.ask_table(a.runs_root)
+    real = compact_summary(games, running, models, a.label)
     real = re.sub(r"생성기 <code>e53_build/v18_real/build_real18.py</code>", "생성기 <code>e53_build/v19/build_v19.py</code>(표는 <code>v18_real/build_real18.py</code>의 함수)", real)
     p = pathlib.Path(a.page)
     h = p.read_text(encoding="utf-8")

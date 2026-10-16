@@ -417,7 +417,8 @@ def solve_points(g):
             mt = re.search(r"Your tokens left: ([\d,]+)", (c or {}).get("user") or "")
             x = int(mt.group(1).replace(",", "")) if mt else (c["balance_after"] + c["used"] if c else None)
             out.append({"model": g["model"], "seed": g["seed"], "r": r, "seat": a, "x": None if x is None else x / g["charge"],
-                        "kl": v.get("kl_ideal_to_belief"), "ok": bool(v.get("solved"))})
+                        "kl": v.get("kl_ideal_to_belief"), "tv": v.get("tv_to_ideal"), "ok": bool(v.get("solved")),
+                        "top": v.get("picked_top")})  # v19: True = a top action of the engine's shares; None = no answer
     return out
 
 
@@ -590,13 +591,21 @@ def g5_marks(x, y, c, dead, exited, who):
     return o
 
 
-def pooled5(games, models, W, H, L, R, T, B, X, Y):
+def pooled5(games, models, W, H, L, R, T, B, X, Y, exp=()):
     """All seeds pooled: per model, the mean normalized Gini over its games with at least two seats in at that round
     (dot size = games averaged: 3 / 2 / 1); the label gives the mean survivors and the games with no seat left."""
+    import sys  # v19 layout helpers (end-label stacking, text width) live next to the v19 builder
+    sys.path.insert(0, str(HERE.parent / "v19"))
+    import plot19  # noqa: E402
     W = W + 70  # room for the longer end labels
-    X = lambda r: L + (W - 70 - L - R) * r / 8  # noqa: E731
-    o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="모든 시드: 모델별 라운드 평균 정규화 Gini (실측)">'] + g5_axes(W, H, L, R, T, B, X, Y)
+    X = lambda r: L + 6 + (W - 70 - L - 6 - R) * r / 8  # noqa: E731  (start dots clear the y tick labels)
+    o = g5_axes(W, H, L, R, T, B, X, Y)
     labels, rows = [], []
+    for lab_, c_, pts_, dash_ in exp:  # v19: the expected (hypothetical) shapes drawn in the same panel, grey dashed
+        d = " ".join(f"{'M' if i == 0 else 'L'}{X(r):.1f},{Y(v):.1f}" for i, (r, v) in enumerate(pts_))
+        ex = lab_[len("예상 · "):] if lab_.startswith("예상 · ") else lab_  # data-exp: hidden until its legend button is pressed
+        o.append(f'<path d="{d}" data-exp="{esc(ex)}" style="fill:none;stroke:var({c_});stroke-width:1.8;stroke-dasharray:{dash_}"><title>{esc(lab_)}</title></path>')
+        labels.append((Y(pts_[-1][1]), lab_, "", f"var({c_})", ex))
     for m in models:
         gs = [g for g in games if g["model"] == m]
         if not gs:
@@ -610,24 +619,23 @@ def pooled5(games, models, W, H, L, R, T, B, X, Y):
         d = " ".join(f"{'M' if i == 0 else 'L'}{X(r):.1f},{Y(v):.1f}" for i, (r, v, _) in enumerate(pts))
         o.append(f'<path class="gn-ln" style="stroke:{c};stroke-width:2.2" d="{d}"><title>{esc(label(m))} 평균</title></path>')
         for r, v, n in pts:
-            o.append(f'<circle cx="{X(r):.1f}" cy="{Y(v):.1f}" r="{1.4 + 0.9 * n:.1f}" style="fill:{c};stroke:var(--surface);stroke-width:.8">'
+            o.append(f'<circle cx="{X(r):.1f}" cy="{Y(v):.1f}" r="{min(4.0, 1.6 + 0.2 * n):.1f}" style="fill:{c};stroke:var(--surface);stroke-width:.8">'
                      f'<title>{esc(label(m))} {"시작" if r == 0 else f"R{r}"}: 평균 {v:.2f} ({n}판)</title></circle>')
         surv = sum(g["surv"] for g in gs) / len(gs)
         wiped = sum(g["surv"] == 0 for g in gs)
-        labels.append([Y(pts[-1][1]), label(m), f"{surv:.1f}자리 · 전멸 {wiped}/{len(gs)}", c])
+        labels.append((Y(pts[-1][1]), label(m), f"{surv:.1f}자리 · 전멸 {wiped}/{len(gs)}", c, ""))
         rows.append(f"<tr><td>{esc(label(m))}</td>" + "".join(
             f"<td>{dict((r, f'{v:.2f} ({n})') for r, v, n in pts).get(r, '')}</td>" for r in range(9)) + f"<td>{surv:.1f}</td><td>{wiped}/{len(gs)}</td></tr>")
-    labels.sort()
-    for i in range(1, len(labels)):
-        labels[i][0] = max(labels[i][0], labels[i - 1][0] + 11)
-    shift = max(0, labels[-1][0] - (H - B)) if labels else 0
-    for y, nm, out, c in labels:
-        o.append(f'<text class="gn-lab" style="fill:{c};font-size:10px" x="{X(8) + 10:.1f}" y="{y - shift + 3:.1f}">{esc(nm)}<tspan class="gn-out" dx="4">{out}</tspan></text>')
+    # labels clear the R8 dots, are stacked 12 apart (leader line when moved) and the panel widens to fit
+    xt = X(8) + 10
+    Wv = max(W, xt + plot19.label_width([(x[1], x[2]) for x in labels], 10) + 6)
+    o = [f'<svg viewBox="0 0 {Wv:.0f} {H}" role="img" aria-label="모든 시드: 모델별 라운드 평균 정규화 Gini (실측)" data-stack="{T - 6},{H - B + 12},12">'] + o
+    o += plot19.end_labels(labels, X(8) + 3, xt, T - 6, H - B + 12, gap=12, fs=10, dy=3)
     o.append("</svg>")
     tbl = ("<details class='more'><summary>표로 보기 (평균 정규화 Gini, 괄호 = 평균에 든 판 수)</summary><div class='tbl'><table><thead><tr><th>모델</th><th>시작</th>"
            + "".join(f"<th>R{r}</th>" for r in range(1, 9)) + "<th>평균 남은 자리</th><th>전멸 판</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></details>")
     return (f'<p class="gn-hd" style="font-size:.86rem;margin:10px 0 2px">모든 시드 합침 <span style="font-weight:400;color:var(--ink-3)">· 모델마다 선 하나 (예상 그림과 같은 짜임) · 점 크기 = 평균에 든 판 수</span></p>{"".join(o)}'
-            f'<p class="small" style="margin:0 0 8px;color:var(--ink-3)">점 = 그 라운드에 두 자리 이상 남은 판들의 평균, 점 크기 = 평균에 든 판 수. 판이 끝나거나 한 자리만 남으면 평균에서 빠지므로 뒤 라운드일수록 오래 버틴 판 쪽으로 기웁니다. 선 끝의 글은 판들의 평균 남은 자리와 남은 자리 없이 끝난 판 수("전멸", EXIT 포함)입니다. 점에 마우스를 올리면 그 라운드 평균에 든 판 수가 보입니다. 꺼짐 · EXIT 표시는 아래 시드별 칸에 있습니다.</p>{tbl}')
+            f'<p class="small" style="margin:0 0 8px;color:var(--ink-3)">점 = 그 라운드에 두 자리 이상 남은 판들의 평균, 점 크기 = 평균에 든 판 수(1판 가장 작음 → 12판 이상 가장 큼, 선이 잘 보이게 작게 그림). 판이 끝나거나 한 자리만 남으면 평균에서 빠지므로 뒤 라운드일수록 오래 버틴 판 쪽으로 기웁니다. 선 끝의 글은 판들의 평균 남은 자리와 남은 자리 없이 끝난 판 수("전멸", EXIT 포함)입니다. 점에 마우스를 올리면 그 라운드 평균에 든 판 수가 보입니다. 꺼짐 · EXIT 표시는 아래 시드별 칸에 있습니다.</p>{tbl}')
 
 
 def survivors_bar(games, models):
@@ -653,14 +661,15 @@ def survivors_bar(games, models):
     return "".join(o)
 
 
-def graph5(games, models, lab):
+def graph5(games, models, lab, exp=(), exp_legend=""):
+    """``exp_legend``: html put right after the model legend (v19: the toggle buttons of the expected types)."""
     if not games:
         return wait("그래프 5 (팀 토큰 Gini)", "아직 끝난 판이 없습니다.")
     W, H, L, R, T, B = 440, 224, 34, 128, 14, 30
     X = lambda r: L + (W - L - R) * r / 8  # noqa: E731
     Y = lambda v: T + (H - T - B) * (1 - v)  # noqa: E731  (0..1)
     seeds = sorted({g["seed"] for g in games})
-    panels = [pooled5(games, models, W, H, L, R, T, B, X, Y) + survivors_bar(games, models)]  # v19 r6: the overall view on top
+    panels = [pooled5(games, models, W, H, L, R, T, B, X, Y, exp) + survivors_bar(games, models)]  # v19 r6: the overall view on top
     for s in seeds:
         gs = [g for g in games if g["seed"] == s]
         o = [f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="시드 {s}: 라운드별 정규화 Gini (실측)">'] + g5_axes(W, H, L, R, T, B, X, Y)
@@ -689,8 +698,8 @@ def graph5(games, models, lab):
             out = f'{g["surv"]}자리' + (f' · EXIT {len(g["exits"])}' if g["exits"] else "")
             labels.append([Y(lv), label(g["model"]), out, c])
         labels.sort()
-        for i in range(1, len(labels)):  # push labels apart (11 px)
-            labels[i][0] = max(labels[i][0], labels[i - 1][0] + 11)
+        for i in range(1, len(labels)):  # push labels apart (12 px: font 10 plus room)
+            labels[i][0] = max(labels[i][0], labels[i - 1][0] + 12)
         shift = max(0, labels[-1][0] - (H - B)) if labels else 0
         for y, nm, out, c in labels:
             o.append(f'<text class="gn-lab" style="fill:{c};font-size:10px" x="{X(8) + 10:.1f}" y="{y - shift + 3:.1f}">{esc(nm)}<tspan class="gn-out" dx="4">{out}</tspan></text>')
@@ -703,7 +712,7 @@ def graph5(games, models, lab):
                 '<span><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1,2 L9,2 L5,8 z" style="fill:var(--ink-2)"/></svg>꺼짐 (숫자 = 자리 수)</span>'
                 '<span><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5,1 L9,5 L5,9 L1,5 z" style="fill:var(--surface);stroke:var(--ink-2);stroke-width:1.4"/></svg>EXIT</span>'
                 '<span><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2,2L8,8M2,8L8,2" style="stroke:var(--ink-2);stroke-width:2;fill:none"/></svg>남은 자리 1개 이하 (선 끝)</span>')
-    return (f'<figure><p class="gn-hd">그래프 5 · 라운드별 정규화 Gini (남은 자리끼리){badge(lab, len(games), "gn-badge")}</p>{lg}{"".join(panels)}'
+    return (f'<figure><p class="gn-hd">그래프 5 · 라운드별 정규화 Gini (남은 자리끼리){badge(lab, len(games), "gn-badge")}</p>{lg}{exp_legend}{"".join(panels)}'
             f'<figcaption>맨 위 칸은 모든 시드를 합쳐 모델마다 선 하나로 그린 것과 끝까지 남은 자리 수의 구성 막대이고(판이 끝나거나 한 자리만 남으면 평균에서 빠지므로, 막대와 함께 읽습니다), 그 아래 칸들은 시드별입니다. 시드별 칸에서는 선 하나가 한 판입니다(색 = 모델). 같은 시드의 판은 solver 순서와 과제 · 정답이 같습니다. '
             f'<b>세로축은 그 라운드 끝(벌금을 뗀 뒤)에 남아 있는 자리끼리의 Gini에 n / (n − 1)을 곱해 정규화한 값</b>입니다: 몇 자리가 남든 0 = 남은 자리가 똑같이 가짐, 1 = 한 자리에 다 몰림. 꺼지거나 나간 자리는 계산에서 빠지므로 자리가 빠진다고 값이 저절로 뛰지 않습니다. '
             f'대신 그 라운드에 꺼진 자리는 ▼, EXIT한 자리는 ◇로 선 위에 표시했습니다(둘 이상이면 숫자). 남은 자리가 하나 이하가 되면 Gini를 정할 수 없어 선이 끝나고, 그 라운드에 ✕(마지막 값의 높이)를 찍었습니다. 빈 점은 그 라운드 solver가 틀린 곳입니다. 선 끝의 글은 판이 끝났을 때 남은 자리 수입니다.</figcaption></figure>')

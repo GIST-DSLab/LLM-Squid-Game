@@ -1,0 +1,37 @@
+{
+  "scope": "G04/G07 solver funding analytical artifact only; not full Arena validation",
+  "artifacts": {
+    "docs/reports/artifacts/squid5-setting/2026-10-07/e52-token-review-2026-10-16.html": "8314a6271ea3e77d39a138ddadeca683b6c5cf1f1563581ae7139ac8a1158b6d",
+    "docs/reports/artifacts/squid5-setting/2026-10-07/token-review-2026-10-16/build_solver_budget.py": "c0536f0c4dcbe61fd65d94fcb0b55c4fb23d8c2b51b2f7730c16e98f6c87673e",
+    "docs/reports/artifacts/squid5-setting/2026-10-07/token-review-2026-10-16/solver-budget-data.json": "a5a20201dcc66dfad73a926ab53477e07cc0900e2707a03fb843838f6aad908c"
+  },
+  "checks": {
+    "original_unchanged": true,
+    "prior_report_exactly_preserved": true,
+    "idempotent_html_and_data": true,
+    "unique_html_ids": true,
+    "two_charts_ten_bars_match_data": true,
+    "games": 60,
+    "actual_solves": 478,
+    "round_start_below_cap": 202,
+    "supported": 110,
+    "full_at_solve": 32
+  },
+  "independent_review": {
+    "agent": "/root/review_semantic",
+    "result": "PASS",
+    "unresolved_critical": 0,
+    "raw_rows_checked": 478,
+    "audit_rows_checked": 202
+  },
+  "visual_verification": {
+    "desktop": "PASS: both charts inspected in native browser, readable labels and exact values",
+    "narrow_viewport": "not checked"
+  },
+  "limitations": [
+    "Descriptive association, not causal or motivational evidence",
+    "16384 is a configured ceiling, not a required solving budget",
+    "Conditional on actual SOLVE rounds; within-game rounds dependent",
+    "Available donor resources and communication opportunities not controlled"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "scope": "G04/G07/G08 section04 observational analysis only; not whole-arena acceptance",
+  "artifacts": {
+    "e52-token-review-2026-10-16.html": "2018114b13ea3ee7d37ebeaf0793a3211120d07c37e869b7f9f3d2d16cef4f9a",
+    "build_survival_relation.py": "67bf92e91ff4f40fd94e01006209e3cf71fea969e6603e2cc2bbfe787d551ea5",
+    "survival-data.json": "87c0e7d49185cd0e9feba3f226b2bc4a6aebc69af3147186ea217fad19974010"
+  },
+  "previous_html_sha256": "ca0a757e742a489be7e6c6e614968906fa36ec7dd60955ef3d51b5c36d63c66e",
+  "original_html_sha256": "39b4bb246209843ace56bbac1fb6adc12dff61647e75b040f284cdff25f7492e",
+  "checks": {
+    "original_unchanged": true,
+    "only_section04_changed": true,
+    "previous_html_reconstructed_hash_matches": true,
+    "eligible_transfers": 118,
+    "first_transfers": 72,
+    "represented_games": 43,
+    "svg_total": 89,
+    "new_svg_count": 2,
+    "points_per_new_svg": [
+      72,
+      72
+    ],
+    "unique_ids": true,
+    "raw_gift_and_call_balance_joins": 72,
+    "raw_session_end_joins": 72,
+    "model_summary_and_covariance_recalculation": 5,
+    "independent_reviewer": "/root/review_semantic",
+    "unresolved_critical": 0,
+    "gui": "Aside browser: refreshed final HTML; inspected both scatterplots, labels, phase markers and summary table. No visible clipping or overlap of labels at desktop width.",
+    "narrow_viewport": "not checked",
+    "color_distinction": "model identity has separate titled panels; phase uses filled/open markers; no color-only comparison"
+  },
+  "limits": [
+    "Association only, no causal inference or proportional law",
+    "First eligible transfer per donor/game; non-donors excluded",
+    "Same-game seats correlated; no inferential intervals/tests",
+    "Remaining-opportunity normalization does not remove timing/resource/role confounding",
+    "R8 observation horizon; ongoing lifetimes beyond R8 unknown",
+    "Subset includes repayments and non-solver support"
+  ]
+}

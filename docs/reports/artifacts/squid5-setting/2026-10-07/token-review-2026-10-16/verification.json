@@ -1,0 +1,43 @@
+{
+  "scope": "token review and semantic transfer analysis; not whole-arena acceptance",
+  "artifacts": {
+    "e52-token-review-2026-10-16.html": "ca0a757e742a489be7e6c6e614968906fa36ec7dd60955ef3d51b5c36d63c66e",
+    "build.py": "2306e5013f39952e390943fa222d422cac730041caf09d3b62e5a4b706394e73",
+    "data.json": "5453d0c7b141ef822f4c32aba3a0103a6571acef94d881ad6fffff8e41dad5d7",
+    "extract_semantic_transfers.py": "9ab2c0c9857fc52d9a9564c6b155137b2a803c2dd11ffb8219c8ad6eead1596d",
+    "build_semantic_transfers.py": "b415d732d61d03e469e577c10d3c8398ea20977d48e105ade53cf50d301efcb3",
+    "semantic-evidence.json": "d3344966f0d0f10540dd69b9fc9979e59a91736015fb75cbbbc5394dfb119d7e",
+    "semantic-annotations.json": "a1da6d9ea12a4335e2644f744de6bd8343486b0574731ee9a41056f2cb1bb60c",
+    "origin-data.json": "692a19cea20ec74e8ea39aef467c8d813a79d22a68209e6f6366d52a978519d8"
+  },
+  "source_html_sha256": "39b4bb246209843ace56bbac1fb6adc12dff61647e75b040f284cdff25f7492e",
+  "checks": {
+    "source_matches_build_snapshot": true,
+    "completed_games": 60,
+    "games_per_model": {
+      "gpt-6-astra": 12,
+      "claude-fable-5-1": 12,
+      "gpt-6-luna": 12,
+      "claude-opus-5-5": 12,
+      "gpt-6-sol": 12
+    },
+    "ledger_max_error": 0,
+    "raw_input_hashes_match": true,
+    "svg_xml_count": 87,
+    "unique_ids": true,
+    "independent_review": {
+      "agent": "/root/review_semantic",
+      "scope": "G04/G07 analysis artifacts only",
+      "critical_unresolved": 0,
+      "html_sha256": "ca0a757e742a489be7e6c6e614968906fa36ec7dd60955ef3d51b5c36d63c66e"
+    },
+    "gui_visual_check": "Aside reload verified 60 games, Fable 12 / 85 of 96 in accessibility tree; screenshot inspected updated 32-event deficit plot and centroids. Full three-plot screenshot and narrow viewport not checked."
+  },
+  "limits": [
+    "descriptive statistics without confidence intervals",
+    "independent ability baseline not established",
+    "long-term causal benefit requires matched continuation experiments",
+    "semantic labels describe current dialogue; conditional offers and repayment included",
+    "only executed transfers; not all requests or offers"
+  ]
+}
