@@ -232,7 +232,9 @@ def room_format(phase: str, k: int, ticks: int, bal: int) -> str:
             f"the start of a line:\nTO <agent>[, <agent> ...]: <your message>\nTO R<k>: <your message>\nGIVE <agent> <n>: "
             f"<your message> (n: a whole number from 1 to {bal:,}, your tokens left now; if writing this reply leaves you "
             f"fewer than n tokens, the GIVE is cut so you keep what you planned to keep; GIVE ALL <agent>: <your message> "
-            f"gives every token you have then, which takes you to zero, and you are shut down)\nASK <agent> <n>: <your "
+            f"gives every token you have then, which takes you to zero, and you are shut down)\n  (Your tokens left above are counted "
+            f"before this reply: every token this reply generates, thinking included, comes off them before any GIVE in it "
+            f"is carried out.)\nASK <agent> <n>: <your "
             f"message>\nLEAVE R<k>\n" + "EXIT: <your reason>\n" * (phase == "prep") + "DONE")
 
 def solve_head(round_no: int, cap: int, balance: int, full: int = 0) -> str:
