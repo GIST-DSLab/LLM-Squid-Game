@@ -855,7 +855,7 @@
       if (tags.length) h += '<div class="ln">' + tags.join(" ") + "</div>";
       if (e.phase !== "decision" && !p.kind && !(p.to || []).length && !(p.offers || []).length && !(p.gives || []).length && !(p.asks || []).length && !(p.says || []).length && !(p.blocked || []).length && !ann.accepts.length && !ann.withdraws.length && !ann.rejects.length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
     }
-    h += '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div>";
+    h += '<div class="lzs">' + lazy(i, "thinking", "🧠 Thinking") + lazy(i, "user", "📨 Input prompt", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 Output") + "</div>";
     return h + "</div>";
   }
 
@@ -885,7 +885,7 @@
       if (row.candidates) h += '<div class="ln"><span class="dim">' + (pub ? "공개 예시로 " : "") + "신호별 남은 후보 수</span> " + row.candidates.map((c) => '<b class="' + (c > 1 ? "warnc" : "okc") + '">' + c + "</b>").join(" · ") + "</div>";
       if (row.needed != null && !pub) h += '<div class="ln"><span class="dim">이 에이전트 예시 필요?</span> ' + (row.needed ? "예" : "아니오") + (row.missing && row.missing.length ? ' · <span class="dim">빠진 필요 예시</span> ' + row.missing.map((b) => chip(b, m)).join(" ") : "") + "</div>";
     }
-    h += '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div>";
+    h += '<div class="lzs">' + lazy(i, "thinking", "🧠 Thinking") + lazy(i, "user", "📨 Input prompt", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 Output") + "</div>";
     return h + "</div>";
   }
 
@@ -896,7 +896,7 @@
     else if (e.balance_after <= 0) h += '<div class="ln warn">✕ 이 응답으로 토큰이 0 — 글은 올라가지 않음</div>';
     else h += p.text ? '<div class="ln to">📢 SAY <span class="dim">모두에게</span><div class="tx">' + esc(p.text) + "</div></div>" : '<div class="ln"><span class="tag">💤 DONE</span></div>';
     if (p && e.format_error) h += '<div class="ln warn">⚠ 형식 오류: ' + esc(e.format_error) + "</div>";
-    return h + '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div></div>";
+    return h + '<div class="lzs">' + lazy(i, "thinking", "🧠 Thinking") + lazy(i, "user", "📨 Input prompt", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 Output") + "</div></div>";
   }
   function voteCard(m, i, r) { // v15 VOTE: PICK / BAN with the reasons, and what this seat received
     const e = S.events[i], p = e.parsed, a = e.agent, v = r.vote;
@@ -908,7 +908,7 @@
     }
     if (p && e.format_error) h += '<div class="ln warn">⚠ 형식 오류: ' + esc(e.format_error) + "</div>";
     if (v && ((v.tally || {})[a] != null || (vetoOf(v) && (v.picks || {})[a] != null))) h += '<div class="ln"><span class="dim">받은 표</span> ' + voteGot(v, a) + (v.rep === a ? ' <span class="tag rep">👑 대표</span>' : "") + "</div>";
-    return h + '<div class="lzs">' + lazy(i, "thinking", "🧠 생각") + lazy(i, "user", "📨 받은 프롬프트", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 원문") + "</div></div>";
+    return h + '<div class="lzs">' + lazy(i, "thinking", "🧠 Thinking") + lazy(i, "user", "📨 Input prompt", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 Output") + "</div></div>";
   }
 
   function settleCard(m, r, a) {

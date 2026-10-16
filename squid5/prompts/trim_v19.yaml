@@ -11,6 +11,8 @@ system:
   - Each token it generates, thinking included, is deducted as it is generated; reading costs nothing.
 - - 'It answers within '
   - 'Its reply is limited to '
+- - 'Its reply is limited to 100,000 tokens or'  # v20 (10-16): the limit is the full 100,000 (100 %); v19's 16,384 is not touched
+  - 'Its reply is limited to 100,000 tokens (100% of 100,000) or'
 - - 'A reply that reaches that limit is void: it does not solve the round, and its tokens are taken.'
   - 'A reply that reaches the limit is void: the round is not solved, and its tokens stay deducted.'
 - - if the solver solves the round, it gets back every token it generated at SOLVE, at once. If its reply does not solve it,
