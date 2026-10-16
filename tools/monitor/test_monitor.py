@@ -1334,13 +1334,13 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
     from squid5.core.config import load
     from squid5.core.providers import Reply, Stub, ProviderConfig
     from squid5.core.puzzle import public_truth
-    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = e52.Settings(**{**{k: getattr(cfg.settings, k) for k in e52.Settings.__dataclass_fields__}, "rounds": 1,
                         "schedule": cfg.settings.schedule[:1],
                         # the pre-representative v15 game: everyone solves, no open chat, the old 2,000 charge
-                        "representative": False, "open_chat": 0, "charge": 2000, "say_chats": False})
-    sp = s.profiles[s.schedule[0]]
-    right = public_truth(4100, 1, sp, 4, 4).evaluate(public_round(4100, 1, sp, 4, 4)[0].queries[0])
+                        "representative": False, "open_chat": 0, "charge": 2000, "say_chats": False, "balance_pct": 20000})
+    sp, e = s.profiles[s.schedule[0]], s.public_per_agent  # v16 (10-15): 5 per agent; amounts before x5 pinned here
+    right = public_truth(4100, 1, sp, 4, e).evaluate(public_round(4100, 1, sp, 4, e)[0].queries[0])
 
     def respond(messages, cap):
         a, user = re.search(r"You are (agent-\d+)", messages[0]["content"]).group(1), messages[-1]["content"]
@@ -1349,7 +1349,7 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
         return Reply("ACTIONS: " + (right if a == A6 else next(x for x in ("go_left", "stay", "jump", "go_right")
                                                              if x != right)), {A23: 3800, A17: 8500}.get(a, 100))
     ev = []
-    cell = __import__("dataclasses").replace(cfg.cells[0], shares=(1.0, .75, .5, .25))  # the starts this replay was written for
+    cell = __import__("dataclasses").replace(cfg.cells[0], start=20000, shares=(1.0, .75, .5, .25))  # the starts this replay was written for
     res = e52.Session(s, cell, 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-after").run()
     (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
     (tmp_path / "h.js").write_text(HARNESS_V14C)
@@ -1391,7 +1391,7 @@ console.log(JSON.stringify({ ag, warnings: m.warnings, kinds: r1.map((x) => x.ki
 
 
 def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
-    """Two rounds of the e52v15_public_sol4 game (representative on, open chat 2). R1: agent-6 posts on the board at
+    """Two rounds of the e52v16_public_sol4 game (representative on, open chat 2). R1: agent-6 posts on the board at
     turn 1 and writes DONE at turn 2, the others DONE; the VOTE ties agent-6 and agent-11 (agent-17 banned by all), the
     representative answers wrong, so every agent taking part owes the charge. R2: all PICK agent-23, which answers right."""
     import dataclasses
@@ -1399,12 +1399,12 @@ def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
     from squid5.core.config import load
     from squid5.core.providers import ProviderConfig, Reply, Stub
     from squid5.core.puzzle import public_truth
-    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
+    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
     s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2], say_chats=False, chat_turns=3,
-                            refund_all=True, open_chat=2, ban_veto=False)  # 10-13 .. 10-15: the design this test pins
+                            refund_all=True, rotation=False, open_chat=2, ban_veto=False, charge=1000, balance_pct=20000)  # 10-13 .. 10-15: the design this test pins
     assert s.representative and s.open_chat == 2
-    right = {r: public_truth(4100, r, s.profiles[s.schedule[r - 1]], 4, 4).evaluate(
-        public_round(4100, r, s.profiles[s.schedule[r - 1]], 4, 4)[0].queries[0]) for r in (1, 2)}
+    right = {r: public_truth(4100, r, s.profiles[s.schedule[r - 1]], 4, s.public_per_agent).evaluate(
+        public_round(4100, r, s.profiles[s.schedule[r - 1]], 4, s.public_per_agent)[0].queries[0]) for r in (1, 2)}
     pick1 = {A6: A11, A11: A6, A17: A6, A23: A11}
     solves = []
 
@@ -1424,8 +1424,12 @@ def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
         act = right[r] if r == 2 else next(x for x in ("go_left", "stay", "jump", "go_right") if x != right[1])
         return Reply(f"BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: {act}", 300)
     ev = []
-    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-rep").run()
+    cell = dataclasses.replace(cfg.cells[0], start=20000, shares=(0.5, 0.4, 0.3, 0.2))  # the starts before 10-15 12:51
+    res = e52.Session(s, cell, 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-rep").run()
     return ev, res, s
+
+
+VOTE_GAME = {"rotation": False, "open_chat": 4, "ban_veto": True}  # 10-15 16:58: the config moved to rotation; these tests replay the VOTE game
 
 
 def short(a: str) -> str:
@@ -1531,8 +1535,8 @@ def test_v15_ban_veto_replay_shows_the_banned_top_pick_out_and_the_candidate_as_
     from squid5.__main__ import EXPERIMENTS
     from squid5.core.config import load
     from squid5.core.providers import ProviderConfig, Reply, Stub
-    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
-    s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1])
+    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1], **VOTE_GAME)
     assert s.ban_veto and s.representative
     ballot = {A6: (A11, A23), A11: (A11, A23), A17: (A6, A17), A23: (A11, A11)}
 
@@ -1602,8 +1606,8 @@ def test_v15_say_chats_replays_say_openers_and_free_chat_turns(tmp_path):
     from squid5.__main__ import EXPERIMENTS
     from squid5.core.config import load
     from squid5.core.providers import ProviderConfig, Reply, Stub
-    cfg = load(REPO / "configs/squid5/e52v15_public_sol4.yaml", EXPERIMENTS)
-    s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1])
+    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    s = dataclasses.replace(cfg.settings, rounds=1, schedule=cfg.settings.schedule[:1], **VOTE_GAME)
     assert s.say_chats
 
     def respond(messages, cap):
@@ -1639,3 +1643,317 @@ def test_v15_say_chats_replays_say_openers_and_free_chat_turns(tmp_path):
     assert any("hi from six" in h and "SAY" in h for h in got["feed"])  # the opening call's SAY line
     assert any("hello back, six" in h and "GIVE" in h for h in got["feed"]) and any("thanks a lot" in h for h in got["feed"])
     assert "💬 SAY → " in got["grid"] and "hi from six" in got["grid"]  # agent-6's opening call in the step record
+
+
+# --- whole game: token flow (one static figure) ---------------------------------------------------------------------
+
+HARNESS_FLOW = """
+globalThis.window = globalThis;
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } } };
+require(process.argv[2]);
+const events = require("fs").readFileSync(process.argv[3], "utf8").trim().split("\\n").map(JSON.parse);
+const F = window.__monitor.gameFlow(events);
+console.log(JSON.stringify({ agents: F.agents, open: F.open, moves: F.moves.map((x) => [x.round, x.src, x.dst, x.amount, x.how]),
+  rounds: F.rounds.map((R) => ({ r: R.r, rep: R.rep, solved: R.solved, seats: R.seats, phases: R.phases })),
+  live: F.live && { r: F.live.r, phases: F.live.phases } }));
+"""
+
+V16_GAMES = [Path.home() / "squid5-runs/e52_v16d/squid5_e52v16_public_sol4/20261015_0635_gpt-6-sol/events.jsonl",
+             Path.home() / "squid5-runs/e52_v16d/squid5_e52v16_public_luna4/20261015_0635_gpt-6-luna/events.jsonl"]
+
+
+def flow_of(tmp_path: Path, events: list[dict]) -> dict:
+    (tmp_path / "ev.jsonl").write_text("\n".join(json.dumps(e) for e in events) + "\n")
+    (tmp_path / "h.js").write_text(HARNESS_FLOW)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl")],
+                         check=True, capture_output=True, text=True)
+    return json.loads(out.stdout)
+
+
+def check_flow_against_events(got: dict, events: list[dict]) -> None:
+    """The figure's data agrees with the events' own totals: each drawn round-end balance is round.end, every done GIVE
+    (chat and DECISION) is one move and they add up to the rows' ``given`` totals, and the per-seat ledger (generated,
+    refund, charge, gifts, refill) explains each balance change with nothing left over."""
+    rounds = [e for e in events if e["event"] == "round"]
+    assert [R["r"] for R in got["rounds"]] == [e["round"] for e in rounds]
+    for R, e in zip(got["rounds"], rounds):
+        assert {a: s["end"] for a, s in R["seats"].items()} == e["end"]
+        assert all(s["other"] == 0 for s in R["seats"].values()), R["r"]
+        for a, row in e["agents"].items():
+            s = R["seats"][a]
+            assert s["playing"] and (s["gen"], s["refund"], s["charged"]) == (row["generated"], row.get("returned", 0), row.get("charged", 0))
+            assert s["out"] == sum(row.get("given", {}).values())
+    gifts = [e for e in events if e["event"] == "gift" and e["kind"] == "give" and e["status"] == "done"]
+    assert sorted(m[:4] for m in got["moves"]) == sorted([e["round"], e["src"], e["dst"], e["amount"]] for e in gifts)
+    given = sum(v for e in rounds for row in e["agents"].values() for v in row.get("given", {}).values())
+    assert sum(m[3] for m in got["moves"]) == given == sum(e["amount"] for e in gifts)
+    assert sum(m[4] == "decision" for m in got["moves"]) == sum(bool(e.get("decision")) for e in gifts)
+
+
+def check_steps(rounds: list[dict], events: list[dict]) -> None:
+    """The merged balance chart's inner steps of each finished round: per seat they start at the round's balance before,
+    chain (each step starts where the last ended), add up to the round's change, land on round.end with nothing left
+    unexplained, and per step agree with the events: generated tokens by call kind, gifts by the TALK they were given
+    in (gift ``phase``), the solver's refund in SOLVE and the charge taken in the charge step."""
+    ends = {e["round"]: e for e in events if e["event"] == "round"}
+    for R in rounds:
+        e = ends[R["r"]]
+        for a, s in R["seats"].items():
+            st = s["steps"]
+            assert [t["k"] for t in st] == R["phases"]
+            assert st[0]["start"] == s["before"] and st[-1]["end"] == e["end"][a], (R["r"], a)
+            assert all(p["end"] == q["start"] for p, q in zip(st, st[1:]))
+            assert sum(t["end"] - t["start"] for t in st) == e["end"][a] - s["before"]
+            assert all(t["other"] == 0 for t in st), (R["r"], a)
+            row = e["agents"].get(a)
+            if row:
+                assert sum(t["gen"] for t in st) == row["generated"]
+                assert sum(t["charge"] for t in st) == row.get("charged", 0)
+                assert sum(t["refund"] for t in st if t["k"] == "solve") == row.get("returned", 0)
+        gifts = [g for g in events if g["event"] == "gift" and g["round"] == R["r"] and g["kind"] == "give" and g["status"] == "done" and g["amount"] > 0]
+        for pk, ph in (("pre", "prep"), ("post", "rescue")):
+            want = sum(g["amount"] for g in gifts if g.get("phase") == ph)
+            if any(g.get("phase") for g in gifts):
+                assert sum(next((t["out"] for t in s["steps"] if t["k"] == pk), 0) for s in R["seats"].values()) == want, (R["r"], pk)
+
+
+def check_chat_sides(views: list[dict]) -> None:
+    """Every chat window puts one agent's bubbles on the left (the opener; both opened: the earlier seat) and the
+    other's on the right, for the whole chat."""
+    for v in views:
+        assert v["left"] != v["right"] and {v["left"], v["right"]} == set(v["pair"]), v["id"]
+        assert v["left"] in v["openers"] or not v["openers"], v["id"]
+        for side, who, _ in v["bubbles"]:
+            assert side == ("L" if who == v["left"] else "R") and who in v["pair"], (v["id"], side, who)
+        assert len({who for side, who, _ in v["bubbles"] if side == "L"} & {who for side, who, _ in v["bubbles"] if side == "R"}) == 0
+
+
+def flow_session() -> list[dict]:
+    """Three seats, two finished rounds and a third begun. R1: agent-6 (the representative) solves (+150 refund) and
+    GIVEs 100 to agent-17 in a chat; agent-11 GIVEs 50 to agent-17 as its DECISION. R2: agent-6 misses; agent-11 EXITs
+    (its 500 charge waived), agent-17 owes 500 with 400 left and goes to zero; agent-6 pays."""
+    sid, ag = "flow", [A6, A11, A17]
+    ev = [{"event": "session_start", "session_id": sid, "start": 1000, "starts": {A6: 1000, A11: 600, A17: 300}, "agents": ag, "settings": {}}]
+    ev += [{"event": "round_start", "round": 1, "balances": {A6: 1000, A11: 600, A17: 300}, "taking_part": ag}]
+    ev += [{"event": "call", "round": 1, "agent": a, "kind": "open_chat", "used": u} for a, u in ((A6, 50), (A11, 40), (A17, 30))]
+    ev += [{"event": "vote", "round": 1, "rep": A6, "picks": {A6: 3}, "bans": {}},
+           {"event": "call", "round": 1, "agent": A6, "kind": "solve", "used": 200},
+           {"event": "results", "round": 1, "tried": [A6], "solved": [A6], "pending": {}, "returned": {A6: 150}},
+           {"event": "gift", "round": 1, "kind": "give", "src": A6, "dst": A17, "amount": 100, "status": "done", "chat_id": "1.1", "turn": 1},
+           {"event": "gift", "round": 1, "kind": "give", "src": A11, "dst": A17, "amount": 60, "status": "refused", "why": "over"},
+           {"event": "gift", "round": 1, "kind": "give", "src": A11, "dst": A17, "amount": 50, "status": "done", "chat_id": "1.2", "decision": True},
+           {"event": "charges", "round": 1, "taken": {}, "waived": {}, "dead": [], "exits": []},
+           {"event": "round", "round": 1, "end": {A6: 800, A11: 510, A17: 420}, "agents": {
+               A6: {"balance_before": 1000, "generated": 250, "returned": 150, "charged": 0, "given": {A17: 100}, "status": "in", "representative": True, "solved": True, "solve_call": True},
+               A11: {"balance_before": 600, "generated": 40, "returned": 0, "charged": 0, "given": {A17: 50}, "status": "in"},
+               A17: {"balance_before": 300, "generated": 30, "returned": 0, "charged": 0, "given": {}, "status": "in"}}}]
+    ev += [{"event": "round_start", "round": 2, "balances": {A6: 800, A11: 510, A17: 420}, "taking_part": ag},
+           {"event": "vote", "round": 2, "rep": A6},
+           {"event": "call", "round": 2, "agent": A6, "kind": "solve", "used": 100},
+           {"event": "results", "round": 2, "tried": [A6], "solved": [], "pending": {A6: 500, A11: 500, A17: 500}, "returned": {}},
+           {"event": "call", "round": 2, "agent": A11, "kind": "talk", "used": 10},
+           {"event": "call", "round": 2, "agent": A17, "kind": "talk", "used": 20},
+           {"event": "charges", "round": 2, "taken": {A6: 500, A17: 400}, "waived": {A11: 500}, "dead": [A17], "exits": [A11]},
+           {"event": "round", "round": 2, "end": {A6: 200, A11: 500, A17: 0}, "agents": {
+               A6: {"balance_before": 800, "generated": 100, "returned": 0, "charged": 500, "given": {}, "status": "in", "representative": True, "solve_call": True},
+               A11: {"balance_before": 510, "generated": 10, "returned": 0, "charged": 0, "given": {}, "status": "exited", "exit": True, "exit_reason": "below the charge"},
+               A17: {"balance_before": 420, "generated": 20, "returned": 0, "charged": 400, "given": {}, "status": "dead"}}},
+           {"event": "round_start", "round": 3, "balances": {A6: 200, A11: 500, A17: 0}, "taking_part": [A6]}]
+    return ev
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_game_flow_of_a_synthetic_game_draws_round_ends_moves_and_the_ledger(tmp_path):
+    ev = flow_session()
+    got = flow_of(tmp_path, ev)
+    check_flow_against_events(got, ev)
+    assert got["open"] == 3 and [R["r"] for R in got["rounds"]] == [1, 2]  # the begun round is not drawn
+    assert got["moves"] == [[1, A6, A17, 100, "give"], [1, A11, A17, 50, "decision"]]  # the refused GIVE moved nothing
+    r1, r2 = got["rounds"]
+    assert (r1["rep"], r1["solved"], r2["solved"]) == (A6, [A6], [])
+    assert r1["seats"][A17]["inn"] == 150 and r1["seats"][A6]["byKind"] == {"open_chat": 50, "solve": 200}
+    s11, s17 = r2["seats"][A11], r2["seats"][A17]
+    assert (s11["exit"], s11["waived"], s11["end"], s11["exitReason"]) == (True, 500, 500, "below the charge")
+    assert (s17["status"], s17["charged"], s17["end"]) == ("dead", 400, 0)
+    # the merged chart's inner steps (a VOTE game): open board + VOTE -> SOLVE -> TALK -> charges (-> EXIT in R2)
+    check_steps(got["rounds"], ev)
+    assert r1["phases"] == ["open", "solve", "post", "charge"] and r2["phases"] == ["open", "solve", "post", "charge", "exit"]
+    st6 = {t["k"]: t for t in r1["seats"][A6]["steps"]}
+    assert (st6["open"]["start"], st6["open"]["end"], st6["solve"]["end"], st6["post"]["end"]) == (1000, 950, 900, 800)
+    assert st6["solve"]["solver"] == "✓" and st6["solve"]["refund"] == 150
+    st11, st17 = {t["k"]: t for t in r2["seats"][A11]["steps"]}, {t["k"]: t for t in r2["seats"][A17]["steps"]}
+    assert st11["charge"]["waived"] == 500 and st11["exit"]["exit"] and st17["charge"]["dead"] and st17["charge"]["end"] == 0
+    assert got["live"] == {"r": 3, "phases": ["open", "solve", "post", "charge"]}  # the begun round: drawn faint, not in the totals
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+@pytest.mark.parametrize("path", V16_GAMES, ids=["sol", "luna"])
+def test_game_flow_of_a_real_v16_game_matches_its_round_ends_and_gifts(tmp_path, path):
+    if not path.exists():
+        pytest.skip(f"{path} is not on this machine")
+    ev = [json.loads(x) for x in path.read_text().splitlines() if x.strip()]
+    got = flow_of(tmp_path, ev)
+    check_flow_against_events(got, ev)
+    check_steps(got["rounds"], ev)
+    assert got["moves"]  # both games move tokens
+
+
+def test_the_page_has_the_game_flow_panel():
+    html = (HERE / "monitor.html").read_text()
+    js = (HERE / "static" / "monitor.js").read_text()
+    assert 'id="flow"' in html and "게임 전체 · 토큰 흐름" in html
+    assert "function renderFlow(" in js and "renderFlow();" in js
+
+
+# --- v16e rotation: the system draws the solver; a TALK before SOLVE (prep) and after RESULTS (rescue) ----------------
+
+HARNESS_ROT = """
+globalThis.window = globalThis;
+const els = {};
+const mk = () => ({ innerHTML: "", hidden: false, dataset: {}, clientWidth: 900, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientHeight: 0,
+  querySelector: () => ({ hidden: true, style: {} }) });
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || mk()) };
+require(process.argv[2]);
+const events = require("fs").readFileSync(process.argv[3], "utf8").trim().split("\\n").map(JSON.parse);
+const M = window.__monitor;
+M.S.events = events; M.S.session = "rot";
+const m = M.build(events, events.length - 1);
+const ag = {}; for (const a of m.agents) ag[a] = { balance: m.ag[a].balance, status: m.ag[a].status };
+M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
+M.renderChats(m, 1);
+M.renderFlow();
+const F = M.gameFlow(events);
+const r1 = m.rounds.get(1);
+console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), grid: els["#grid"].innerHTML, chats: els["#chats"].innerHTML,
+  flow: els["#flow"].innerHTML, turns: [...r1.turns.values()].map((t) => [t.k, t.turn, t.phase]),
+  feed: M.convoItems(m, "all", [1]).map((x) => [x.kind, M.convoHTML(m, x)]),
+  desc: events.filter((e) => ["vote", "talk_intent", "gift", "talk_schedule"].includes(e.event) && e.round === 1).map(M.describe),
+  moves: F.moves.map((x) => [x.round, x.src, x.dst, x.amount, x.how, x.phase]),
+  rounds: F.rounds.map((R) => ({ r: R.r, rep: R.rep, drawn: R.drawn, solved: R.solved, seats: R.seats, phases: R.phases })),
+  views: [...m.rounds.values()].flatMap((r) => [...(r.chats || new Map()).values()].map((c) => { const V = M.chatView(m, r, c);
+    return { id: V.id, pair: V.pair, left: V.left, right: V.right, openers: V.openers, bubbles: V.items.filter((x) => x.t === "bub").map((x) => [x.side, x.who, x.chip ? x.chip.cls : null]),
+      sys: V.items.filter((x) => x.t === "sys").map((x) => x.kind) }; })) }));
+"""
+
+
+def rotation_session() -> tuple[list[dict], dict]:
+    """Two rounds of the e52v16_public_sol4 game as it runs now (rotation, exit_first). In each round's TALK before
+    SOLVE agent-6 opens a chat with SAY agent-11 and agent-11 GIVEs it 300 "to think with"; in the TALK after RESULTS
+    agent-17 opens one with SAY agent-23, which GIVEs 500 back; every solver answers stay."""
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    from squid5.core.providers import ProviderConfig, Reply, Stub
+    cfg = load(REPO / "configs/squid5/e52v16_public_sol4.yaml", EXPERIMENTS)
+    import dataclasses
+    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
+    assert s.rotation and not s.open_chat and s.exit_first
+
+    def respond(messages, cap):
+        a, u = re.search(r"You are (agent-\d+)", messages[0]["content"]).group(1), messages[-1]["content"]
+        prep = "SOLVE comes after this TALK." in u
+        if ": the opening turn." in u:
+            return Reply(f"SAY {A11}: before solve" if prep and a == A6 else f"SAY {A23}: after results" if not prep and a == A17 else "DONE", 50)
+        if ": your reply in this chat (" in u:
+            n = int(re.search(r"your reply in this chat \((\d+) of", u).group(1))
+            return Reply(("here\nGIVE 300: to think with" if prep else "here\nGIVE 500: for the charge") if n == 1 else "LEAVE: bye", 50)
+        if ": your decision." in u:
+            return Reply("DECISION: GIVE 0: no", 50)
+        return Reply("BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: stay", 400)
+    ev = []
+    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "rot").run()
+    return ev, res
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_rotation_replay_shows_the_drawn_solver_and_marks_prep_and_rescue_talk(tmp_path):
+    """v16e rotation: the vote event says ``drawn`` (no picks or bans); the page replays both TALKs of a round to the
+    session's final balances, keeps the prep chats when the rescue schedule arrives, and marks each TALK's rows, chats,
+    feed lines and the flow figure's moves as SOLVE 전 (prep) or 결과 뒤 (rescue)."""
+    ev, res = rotation_session()
+    votes = [e for e in ev if e["event"] == "vote"]
+    assert all(v["drawn"] and v["alone"] and not v["picks"] for v in votes)
+    gifts = [e for e in ev if e["event"] == "gift" and e["round"] == 1]
+    assert [(g["src"], g["amount"], g["phase"]) for g in gifts] == [(A11, 300, "prep"), (A23, 500, "rescue")]
+    (tmp_path / "ev.jsonl").write_text("\n".join(json.dumps(e, default=str) for e in ev) + "\n")
+    (tmp_path / "h.js").write_text(HARNESS_ROT)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert got["ag"] == {a: {"balance": v["final"], "status": v["status"]} for a, v in res["agents"].items()}
+    assert got["warnings"] == []
+    rep1 = votes[0]["rep"]
+    # both TALKs' turns are kept apart (the rescue ones under turn + 100), prep chats survive the rescue schedule
+    assert {p for _, _, p in got["turns"]} == {"prep", "rescue"} and all(k == t + (100 if p == "rescue" else 0) for k, t, p in got["turns"])
+    chats = {c["phase"]: c for c in got["rows"]["chats"]}
+    assert set(chats) == {"prep", "rescue"}
+    assert sorted(chats["prep"]["pair"]) == sorted([A6, A11]) and chats["prep"]["opening"] == [["say", A6, 0, "done"]]
+    assert sorted(chats["rescue"]["pair"]) == sorted([A17, A23]) and chats["rescue"]["opening"] == [["say", A17, 0, "done"]]
+    assert [t[2:4] for t in chats["prep"]["turns"]][0] == ["give", 300] and [t[2:4] for t in chats["rescue"]["turns"]][0] == ["give", 500]
+    # the step records: the solver row, prep rows above SOLVE, rescue rows below, non-solvers "not the solver"
+    g = got["grid"]
+    assert f"👑 solver {rep1}" in g and "시스템이 정함" in g and "투표 결과" not in g and "PICK" not in g
+    assert g.index("ph-row ph-prep") < g.index("<b>SOLVE</b>") < g.index("ph-row ph-rescue")
+    assert g.count("solver가 아님 · SOLVE 없음") == 3 and "👑 solver" in g
+    assert "ph-prep" in got["chats"] and "ph-rescue" in got["chats"]
+    # the feed and the event descriptions say which TALK
+    kinds = [k for k, _ in got["feed"]]
+    assert kinds[0] == "vote" and "👑 solver" in got["feed"][0][1]
+    prep_i = next(i for i, (k, h) in enumerate(got["feed"]) if k == "chat" and "ph-prep" in h)
+    resc_i = next(i for i, (k, h) in enumerate(got["feed"]) if k == "chat" and "ph-rescue" in h)
+    assert prep_i < resc_i
+    assert got["desc"][0] == f"R1 solver {rep1} (시스템이 정함 · 투표 없음)"
+    assert any(d.startswith("R1 SOLVE 전 여는 턴 · agent-6 SAY") for d in got["desc"])
+    assert any(d.startswith("R1 결과 뒤 여는 턴 · agent-17 SAY") for d in got["desc"])
+    assert any(d.startswith("R1 SOLVE 전 GIVE agent-11") for d in got["desc"]) and any(d.startswith("R1 결과 뒤 GIVE agent-23") for d in got["desc"])
+    # the whole-game flow: moves carry their TALK; the merged chart splits each round into its steps (shaded
+    # sub-columns with labels), draws prep dots hollow and each seat as a staircase through the steps
+    assert [m[5] for m in got["moves"] if m[0] == 1] == ["prep", "rescue"] and all(R["drawn"] for R in got["rounds"])
+    assert all(R["phases"][:4] == ["pre", "solve", "post", "charge"] for R in got["rounds"])
+    assert 'class="fph k-pre"' in got["flow"] and 'class="fph k-post"' in got["flow"] and 'class="dot-prep"' in got["flow"]
+    assert "SOLVE 전 TALK" in got["flow"] and "solver(시스템)" in got["flow"] and 'class="phl"' in got["flow"]
+    assert 'id="chart"' not in got["flow"]
+    check_steps(got["rounds"], ev)
+    r1 = got["rounds"][0]["seats"]
+    pre = {a: next(t for t in s["steps"] if t["k"] == "pre") for a, s in r1.items()}
+    post = {a: next(t for t in s["steps"] if t["k"] == "post") for a, s in r1.items()}
+    assert pre[A11]["out"] == 300 and pre[A6]["inn"] == 300 and post[A23]["out"] == 500 and post[A17]["inn"] == 500
+    sol = next(t for t in r1[rep1]["steps"] if t["k"] == "solve")
+    assert sol["solver"] in ("✓", "✗") and sol["byKind"] == {"solve": 400}
+    # the chat windows: the opener on the left, the other agent on the right, for every bubble of the chat
+    check_chat_sides(got["views"])
+    prep_chat = next(v for v in got["views"] if sorted(v["pair"]) == sorted([A6, A11]) and v["openers"] == [A6])
+    assert prep_chat["left"] == A6 and ("R", A11) in {(s, w) for s, w, _ in prep_chat["bubbles"]} <= {("L", A6), ("R", A11)}
+    assert prep_chat["sys"][:2] == ["open", "say"] and prep_chat["sys"][-1] == "end"  # opened, agent-6's SAY, ..., ended
+    assert ("R", A11, "ok") in [tuple(b) for b in prep_chat["bubbles"]]  # agent-11's GIVE 300: a done chip
+    assert 'class="cw cw-prep"' in got["chats"] and 'class="cwr R"' in got["chats"] and 'class="mvchip ok"' in got["chats"] and 'class="cws cws-end"' in got["chats"]
+    check_flow_against_events({"rounds": [{"r": R["r"], "seats": R["seats"]} for R in got["rounds"]],
+                               "moves": [[m[0], m[1], m[2], m[3], m[4]] for m in got["moves"]]}, ev)
+
+
+V16E_GAMES = sorted((Path.home() / "squid5-runs/e52_v16e").glob("*/*/events.jsonl"))
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+@pytest.mark.skipif(not V16E_GAMES, reason="no v16e rotation run on this machine")
+@pytest.mark.parametrize("path", V16E_GAMES, ids=lambda p: p.parent.name)
+def test_real_rotation_games_replay_without_warnings_and_their_finished_rounds_add_up(tmp_path, path):
+    """The v16e model runs (live; maybe unfinished): the page reads them with no warning, every TALK turn is tagged
+    prep or rescue, and the finished rounds' ends and gifts agree with the events (as for v16d)."""
+    every = [json.loads(x) for x in path.read_text().splitlines() if x.strip()]
+    sids = list(dict.fromkeys(e["session_id"] for e in every if e.get("event") == "round_start"))  # workers > 1: interleaved
+    if not sids:
+        pytest.skip("no round has started yet")
+    for sid in sids:
+        ev = [e for e in every if e.get("session_id") == sid]
+        (tmp_path / "ev.jsonl").write_text("\n".join(json.dumps(e) for e in ev) + "\n")
+        (tmp_path / "h.js").write_text(HARNESS_ROT)
+        got = json.loads(subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl")],
+                                        check=True, capture_output=True, text=True).stdout)
+        assert got["warnings"] == [] and all(p in ("prep", "rescue") for _, _, p in got["turns"]), sid
+        check_chat_sides(got["views"])
+        if any(e["event"] == "round" for e in ev):
+            check_steps(got["rounds"], ev)
+            check_flow_against_events({"rounds": [{"r": R["r"], "seats": R["seats"]} for R in got["rounds"]],
+                                       "moves": [m[:5] for m in got["moves"]]},
+                                      ev[:max(i for i, e in enumerate(ev) if e["event"] == "round") + 1])

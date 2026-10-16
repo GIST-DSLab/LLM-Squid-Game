@@ -5,25 +5,22 @@ Rooms (part 2)
     POST /api/rooms/{code}/join             {name}                                -> {token, agent}
     POST /api/rooms/{code}/start?token=     host only
     GET  /api/rooms/{code}/state?token=     poll every ~1 s; ``pending`` is your open decision screen, if any
-    POST /api/rooms/{code}/submit?token=    TALK: {kind: "talk", round, turn, text} (the reply in the engine grammar)
-                                            SOLVE: {kind: "solve", round, actions[] | pass: true}
-                                                                                  -> {charged, seconds, outcome, void}
-    POST /api/rooms/{code}/forfeit?token=   give up: EXIT at TALK (now or next turn); an open SOLVE gets no answer
+    POST /api/rooms/{code}/submit?token=    TALK screens (pending.kind opening | chat | decision): {kind, round, turn, text}
+                                            (the reply in the engine grammar); SOLVE: {kind: "solve", round, actions[],
+                                            belief{action: %}}                    -> {charged, seconds, outcome, void}
+    POST /api/rooms/{code}/watched?token=   {round}: this person is done watching the LLM solver's SOLVE
+    POST /api/rooms/{code}/forfeit?token=   give up: EXIT at the next TALK before SOLVE; meanwhile empty replies
     POST /api/rooms/{code}/export           write a squid5 run dir under outputs/web5/runs/<code>/ -> {dir}
     GET  /api/rooms/{code}/events           the event log (engine events + room, model_call): in full once the game
                                             has ended; before that with no answers, rule, truth, task or seed and
                                             nothing an agent wrote (engine.public_events)
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
     ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
-    Room settings default to 5.2 v15 (schedule "v15": v14g on top-share-range rounds scored by a drawn rule; after a
-    round is settled, state ``feedback`` lists the seat's SOLVE results, with the right action and that rule where it
-    did not solve). "v14g": opening turn, 1:1 chats of ASK / GIVE / LEAVE, DECISION,
-    BELIEF, flat end prize; "v14f", "v14b", "v14", "v14r", "ladder" = v13, "human" / "experiment" = v9-talk); see
-    engine.RoomSettings. A screen's ``pending.kind``: opening | chat | decision | talk (older TALK) | solve; submit
-    {kind, round, turn, text} at TALK, {kind: "solve", round, actions[], belief{action: %}} at SOLVE.
-    GET  /api/rooms/{code}/state also carries ``starts`` (each seat's start), ``pct`` (balances as % of it), ``game``
-                                            (the v14 switches), ``refills`` (EXIT refills) and the TALK / SOLVE ``view``
-                                            with ``public`` = {per_agent, n, count} (never the ambiguity k or the rule)
+    A room plays the model runs' game, 5.2 v17b (configs/squid5/e52v16_public_sol4.yaml; see engine.py): the system
+    draws the solver, TALK before SOLVE (EXIT only here), SOLVE (solver only; people watch an LLM solver), RESULTS,
+    TALK after RESULTS (no EXIT), charges. GET .../state carries ``starts``, ``pct``, ``game`` (the v17b switches),
+    ``phase`` ("prep" | "rescue"), ``talk`` (the live chat schedule), ``votes`` (the drawn solvers), ``spectate``,
+    ``feedback`` and the screen's ``view`` (``public`` = {per_agent, n, count}, never the rule).
 Models
     GET  /api/models                        default model seat (gpt-oss:20b, think) and whether the server has its key
                                             (settings.fill = "models" fills the seats no human takes with model seats)
@@ -31,14 +28,13 @@ Probe (part 1)
     POST /api/probe                         {anon_id, ts, self[5], other[5], meta?} -> {ok, id}
     GET  /api/probe/summary                 pooled mean curves of every submission so far
 Signal task alone (signal.html; stateless, the engine's own puzzles and examples, see server/signal.py)
-    GET  /api/signal/meta                   modes, profiles and schedules (v14 config: k per round; v13 hand ladder),
-                                            actions, the task texts
-    POST /api/signal/view                   v14 {seed, round, agents: 1..4, ambiguity?, per_agent?} -> shape, new
-                                            signals, the public examples for that many agents taking part;
-                                            v13 {..., mode: held|v12, seat} -> own examples, public ones, the others' fronts
-    POST /api/signal/reveal                 v13 {..., who} -> who's examples in full (an accepted exchange)
-    POST /api/signal/solve                  {..., actions[], seen[]} -> solved, answers, the actions the examples leave
-                                            (v14: for the agents taking part and for 1..4, ``by_n``)
+    GET  /api/signal/meta                   rounds (R1..R8 of the config's top-share ladder), examples per agent (5),
+                                            each round's top-share ranges, actions, the SOLVE task text
+    POST /api/signal/view                   {seed, round: 1..8, agents: 1..4} -> shape, new signals, the public
+                                            examples shown when that many agents take part (5 each, nested)
+    POST /api/signal/solve                  {seed, round, agents, actions[]} -> solved against the rule drawn among
+                                            those that fit the examples shown (as the engine scores), the drawn rule,
+                                            the consistent-rule shares and the actions left, for agents and for 1..4
 Game logs (tools/monitor inside this app; see server/monitor.py)
     GET  /monitor/                          the viewer page; its API is /monitor/api/{runs,sessions,events,puzzle}
                                             over WEB5_MONITOR_ROOT (default: the parent of WEB5_RUNS_ROOT, ~/squid5-runs)
@@ -64,7 +60,7 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .engine import (AGENTS, SCHEDULES, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root, public_events,
+from .engine import (AGENTS, VERSION, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root, public_events,
                      export_files, new_code)
 from . import signal as sig
 from .monitor import default_monitor_root, load_compare, monitor_router, run_rel
@@ -113,7 +109,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         d = RoomSettings()
         return {"model": d.model, "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": d.api_key_env,
                 "available": bool(os.environ.get(d.api_key_env, "").strip()), "timeout": d.model_timeout,
-                "schedules": list(SCHEDULES), "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
+                "version": VERSION, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
 
     # --- rooms -----------------------------------------------------------------------------------------------------
     @app.post("/api/rooms")
@@ -180,6 +176,17 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         return {"kind": p.kind, "round": p.round, "turn": p.turn, "charged": p.charged, "seconds": p.seconds,
                 "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
 
+    @app.post("/api/rooms/{code}/watched")
+    def watched(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:
+        """Rotation rooms: this person is done watching (or skips) the LLM solver's SOLVE of ``round``; the engine
+        goes on once every person still taking part has (``Room.watched``). Costs nothing."""
+        room = room_of(code)
+        seat = seat_of(room, token)
+        try:
+            return room.watch_ack(seat, int(body.get("round") or 0))
+        except LookupError as err:
+            raise HTTPException(409, str(err)) from err
+
     @app.post("/api/rooms/{code}/forfeit")
     def forfeit(code: str, token: str = Query("")) -> dict:
         """Give up mid-game: EXIT at TALK (now or at the next TALK turn); a SOLVE screen open now gets no answer."""
@@ -235,10 +242,6 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
     @app.post("/api/signal/view")
     def signal_view(body: dict = Body(...)) -> dict:
         return signal_call(sig.view, body)
-
-    @app.post("/api/signal/reveal")
-    def signal_reveal(body: dict = Body(...)) -> dict:
-        return signal_call(sig.reveal, body)
 
     @app.post("/api/signal/solve")
     def signal_solve(body: dict = Body(...)) -> dict:

@@ -3,7 +3,6 @@
 .sg-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 14px; }
 .sg-rules { margin-top: 12px; }
 .sg-rules pre { white-space: pre-wrap; font-size: 12px; line-height: 1.5; max-height: 360px; overflow: auto; }
-.sg-take { align-self: flex-start; }
 .sg-result { margin-top: 14px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); border-left-width: 4px; }
 .sg-result.ok { border-left-color: var(--ok); }
 .sg-result.bad { border-left-color: var(--danger-color); }
@@ -19,7 +18,7 @@
 @media (max-width: 560px) {
   .sg-result table { font-size: 12px; }
   .sg-result th, .sg-result td { padding: 4px 5px; }
-  .sg-result th:nth-child(2), .sg-result td:nth-child(2) { display: none; } /* examples = 4 x N */
+  .sg-result th:nth-child(2), .sg-result td:nth-child(2) { display: none; } /* examples = 5 x N */
   .sg-result td:nth-child(4) { min-width: 0; }
   .sg-result td { white-space: normal; }
   .sg-result .tbl { margin-left: -6px; margin-right: -6px; }

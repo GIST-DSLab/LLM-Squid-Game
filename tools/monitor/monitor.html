@@ -67,29 +67,27 @@
     <div id="giveCtl" class="ogctl"></div>
     <div id="give" class="give"></div>
   </section>
+  <section class="panel flow-panel">
+    <h2>게임 전체 · 토큰 흐름 <span class="hint">처음부터 끝(또는 마지막으로 끝난 라운드)까지 한 장 · 재생 막대와 무관 · 계단 선 = 라운드 안 단계(TALK·SOLVE·벌금 …)마다의 잔액, 라운드 끝 = round.end · 화살표 = 자리 사이 토큰 이동 · 막대 = 그 라운드에 잔액을 바꾼 것 · 마우스를 올리거나 누르면 자세히, 더블클릭하면 재생 막대가 그 단계로</span></h2>
+    <div id="flow" class="flow"></div>
+  </section>
   <section class="panel">
     <h2>타임라인 <span class="hint">라운드마다 한 점, 지금 라운드는 TALK 턴마다 한 점 · 누르면 그 시점으로</span></h2>
     <div id="timeline" class="timeline"></div>
   </section>
-  <div class="two">
-    <section class="panel">
-      <h2>잔액 추이 <span class="hint">호출·교환·정산마다 한 점 · 세로선 = 라운드 시작</span></h2>
-      <div id="chart" class="chart"></div>
-    </section>
-    <section class="panel">
-      <h2>대화 <span class="hint">1:1 메시지와 제안 (v14b: GIVE·ASK) · v15 대표: 공개 대화와 투표(누가 누구를 PICK·BAN, 이유)는 "전체"에 · 기본은 재생 막대의 라운드</span></h2>
-      <div id="convoCtl" class="ogctl"></div>
-      <div id="pairs" class="pairs"></div>
-      <div id="convo" class="convo"></div>
-    </section>
-  </div>
+  <section class="panel">
+    <h2>대화 <span class="hint">1:1 메시지와 제안 (v14b: GIVE·ASK) · v15 대표: 공개 대화와 투표(누가 누구를 PICK·BAN, 이유)는 "전체"에 · 기본은 재생 막대의 라운드</span></h2>
+    <div id="convoCtl" class="ogctl"></div>
+    <div id="pairs" class="pairs"></div>
+    <div id="convo" class="convo"></div>
+  </section>
   <section class="panel graph-panel">
     <h2>제안 그래프 <span class="hint">라운드마다 누가 누구에게 무엇을 제안했나 · 화살표 = 제안자 → 받는 쪽 · 색 = 종류 · 선 모양 = 상태</span></h2>
     <div id="ographCtl" class="ogctl"></div>
     <div id="ograph" class="ograph"></div>
   </section>
   <section class="panel" id="chatPanel" hidden>
-    <h2>대화 일정과 대화록 <span class="hint">v14c · 여는 턴의 GIVE·ASK 줄이 1:1 대화를 엶 · 위 그래프 = 여는 줄 · 위 그래프의 라운드를 따라감</span></h2>
+    <h2>대화 일정과 대화록 <span class="hint">v14c · 여는 턴의 GIVE·ASK·SAY 줄이 1:1 대화를 엶 · 대화 하나 = 메신저 창 하나 · 왼쪽 = 대화를 연 쪽 · 위 그래프의 라운드를 따라감</span></h2>
     <div id="chats" class="chats"></div>
   </section>
   <section class="panel">

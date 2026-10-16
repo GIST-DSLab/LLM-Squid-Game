@@ -66,7 +66,7 @@ class Player:
 
 def make_room(client: TestClient, humans: int, names=("ann", "bob", "cy", "dee"), **settings) -> list[Player]:
     settings = {"humans": humans, "rounds": 2, "seed": 11, "talk_timeout_s": 30, "timeout_s": 30, "rate": 1e-9,
-                "fill": "bots", "schedule": "v14b", **settings}  # the tests written for v14b name it (default: v14g)
+                "fill": "bots", "watch_hold_s": 0, **settings}
     r = client.post("/api/rooms", json={"host_name": names[0], "settings": settings})
     assert r.status_code == 200, r.text
     d = r.json()
@@ -83,8 +83,10 @@ def start(client: TestClient, players: list[Player]) -> None:
     assert r.status_code == 200, r.text
 
 
-def key_of(pend: dict) -> tuple:
-    return pend["round"], pend["kind"], pend.get("turn")
+def key_of(pend: dict) -> tuple:  # two TALKs a round (view.phase "prep" / "rescue"), several chats a TALK
+    view = pend.get("view") or (pend.get("pending") or {}).get("view") or {}  # a screen, or a ``Player.seen`` record
+    chat = view.get("chat")
+    return pend["round"], pend["kind"], pend.get("turn"), view.get("phase"), chat and chat["id"]
 
 
 def play(players: list[Player], policy, until_status=("finished", "error"), max_s: float = 60.0,
@@ -116,34 +118,46 @@ def play(players: list[Player], policy, until_status=("finished", "error"), max_
     raise AssertionError(f"room did not reach {until_status} in {max_s}s: {s and s['status']} live {s and s['live']}")
 
 
-def puzzle(seed: int, round_no: int, schedule: str = "v14"):
-    """The round's puzzle as a room of ``schedule`` builds it, and its deal (v13 / v9) or its public examples with all
-    four taking part (v14: the puzzle may be a redraw, so it comes from ``public_round``)."""
-    import random
+def puzzle(seed: int, round_no: int, n: int = 4):
+    """The round's puzzle as a room builds it and the public examples shown when ``n`` agents take part (the puzzle may
+    be a redraw, so it comes from ``public_round``)."""
+    from squid5.core.puzzle import Spec, public_round
 
-    from squid5.core.puzzle import Spec, deal, public_round, puzzle_for
+    from web.server.engine import GAME, PROFILES, SCHEDULE
 
-    from web.server.engine import AGENTS, PROFILES, SCHEDULES, V14, RoomSettings
-
-    spec = Spec(**PROFILES[SCHEDULES[schedule][round_no - 1]])
-    if schedule in V14:
-        pz, shown, _ = public_round(seed, round_no, spec, len(AGENTS), RoomSettings(schedule=schedule).public_per_agent)
-        return pz, shown
-    pz = puzzle_for(seed, round_no, spec)
-    return pz, deal(pz, AGENTS, random.Random(f"{seed}:deal:{round_no}"))
+    spec = Spec(**PROFILES[SCHEDULE[round_no - 1]])
+    pz, shown, _ = public_round(seed, round_no, spec, n, GAME["public_per_agent"])
+    return pz, shown
 
 
-def answers_for(seed: int, round_no: int, schedule: str = "v14") -> list[str]:
-    return list(puzzle(seed, round_no, schedule)[0].answers)
+def answers_for(seed: int, round_no: int, n: int = 4) -> list[str]:
+    """The scored actions: those of the rule drawn among the rules that fit the examples ``n`` agents are shown."""
+    from squid5.core.puzzle import Spec, public_truth
+
+    from web.server.engine import GAME, PROFILES, SCHEDULE
+
+    spec = Spec(**PROFILES[SCHEDULE[round_no - 1]])
+    drawn = public_truth(seed, round_no, spec, n, GAME["public_per_agent"])
+    return [drawn.evaluate(q) for q in puzzle(seed, round_no, n)[0].queries]
 
 
-def wrong_for(seed: int, round_no: int, schedule: str = "v14") -> list[str]:
+def wrong_for(seed: int, round_no: int, n: int = 4) -> list[str]:
     from squid5.core.puzzle import ACTIONS
 
-    ans = answers_for(seed, round_no, schedule)
+    ans = answers_for(seed, round_no, n)
     return [next(a for a in ACTIONS if a != ans[0])] + ans[1:]
 
 
+def solver_of(seed: int, round_no: int = 1, taking_part=None) -> str:
+    """The solver the engine draws in round 1 when nobody has left (``Session._rotate``)."""
+    import random
+
+    from squid5.core.rules import TEAM_AGENTS
+
+    left = list(taking_part or TEAM_AGENTS)
+    return random.Random(f"{seed}:rot:{round_no}:0").sample(left, len(left))[0]
+
+
 def done(*lines: str) -> dict:
-    """A TALK body: the given lines and DONE."""
+    """An opening body: the given lines and DONE."""
     return {"text": "\n".join([*lines, "DONE"])}

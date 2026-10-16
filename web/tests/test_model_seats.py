@@ -1,58 +1,95 @@
-"""Model seats (``fill: "models"``): people + gpt-oss:20b seats on squid5's Ollama provider, with the HTTP transport
-faked (no network). The fake sees exactly the request the provider builds and answers like Ollama (``message.content``,
-``message.thinking``, ``eval_count``) with a scripted model: it accepts every open offer made to it, otherwise writes
-to agent-6 at turn 1, then DONE; at SOLVE it answers right. The engine parses and charges the replies."""
+"""Model seats (``fill: "models"``): people + gpt-oss:20b seats on squid5's Ollama provider in the v17b room, with the
+HTTP transport faked (no network). The fake sees exactly the request the provider builds and answers like Ollama: at
+an opening agent-11 opens a chat with agent-6 (SAY), others write DONE; in a chat a model GIVEs what it was asked,
+else LEAVEs; at a DECISION it gives 0; at SOLVE (streamed to the people watching) it answers the drawn rule's action.
+The engine parses and charges the replies."""
 
 from __future__ import annotations
 
+import json
 import re
 
 import httpx
 import pytest
-from conftest import answers_for, done, make_room, play, puzzle, start
+from conftest import answers_for, make_room, play, start
 
 from squid5.core import providers, rules
-from web.server.engine import OLD_START, V9_CHARGE, kind_of, round_of, turn_of
+from web.server import engine
+from web.server.engine import kind_of, phase_of, round_of
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
 KEY = "OLLAMA_API_KEY3"
-SEED = 11
-START = OLD_START  # an old (v9) room's start per seat
+SEED = 5  # agent-11 (a model) is round 1's solver, agent-6 (ann) round 2's
 
 
 class FakeOllama:
-    """Stands in for ``httpx.post`` inside the provider module: records every request, replies per ``mode``."""
+    """Stands in for ``httpx.post`` (TALK) and ``httpx.stream`` (a watched SOLVE): records every request, replies per
+    ``mode``."""
 
     def __init__(self, mode: str = "ok", tokens: int = 321):
         self.mode, self.tokens, self.requests = mode, tokens, []
 
-    def __call__(self, url, json=None, headers=None, timeout=None):
+    def text(self, payload: dict) -> str:
+        me = payload["messages"][0]["content"].split("You are ")[1].split(",")[0]
+        user = payload["messages"][-1]["content"]
+        kind, r = kind_of(user), round_of(user)
+        if self.mode == "garbage":
+            return "I am not sure what to do here."
+        if kind == "solve":
+            n = len(re.findall(r"^  - \(", user, re.M)) // 5
+            return "BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: " + ", ".join(answers_for(SEED, r, n))
+        phase = phase_of(user)
+        if phase == "opening":
+            return f"SAY {A6}: hello from a model" if me == A11 and "SOLVE comes after this TALK" in user else "DONE"
+        if phase == "decision":
+            return "DECISION: GIVE 0: I keep my tokens."
+        asked = re.findall(rf"^  {A6}: ASK (\d+)", user, re.M)
+        return f"Here you are.\nGIVE {asked[-1]}: for you" if asked and "you: GIVE" not in user else "LEAVE: thank you."
+
+    def post(self, url, json=None, headers=None, timeout=None):
         self.requests.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
         req = httpx.Request("POST", url)
         if self.mode == "down":
             return httpx.Response(503, json={"error": "unavailable"}, request=req)
-        user = json["messages"][-1]["content"]
-        kind, r = kind_of(user), round_of(user)
-        if self.mode == "garbage":
-            text = "I am not sure what to do here."
-        elif kind == "talk":
-            ids = re.findall(r"^  (\d+\.\d+) from .*open; ACCEPT \1 accepts it\.$", user, re.M)
-            lines = [f"ACCEPT {i}" for i in ids] or ([f"TO {A6}: hello from a model"] if turn_of(user) == 1 else [])
-            text = "\n".join(lines + ["DONE"])
-        else:
-            now = re.findall(r"^NOW \d+: (.+)\.$", user, re.M)  # the room's schedule: the one whose new signals these are
-            sched = next(x for x in ("v14", "ladder", "human") if [str(q) for q in puzzle(SEED, r, x)[0].queries] == now)
-            text = "ACTIONS: " + ", ".join(answers_for(SEED, r, sched))
-        body = {"message": {"role": "assistant", "content": text, "thinking": f"thinking about {kind} {r}"},
+        body = {"message": {"role": "assistant", "content": self.text(json), "thinking": "thinking it over"},
                 "eval_count": self.tokens, "prompt_eval_count": 1000, "done_reason": "stop"}
         return httpx.Response(200, json=body, request=req)
+
+    def stream(self, method, url, json=None, headers=None, timeout=None):
+        self.requests.append({"url": url, "json": json, "headers": headers, "timeout": timeout, "stream": True})
+        if self.mode == "down":
+            raise httpx.ConnectError("unavailable")
+        text = self.text(json)
+        return _Stream([{"message": {"thinking": "Counting the rules. "}, "done": False},
+                        {"message": {"content": text}, "done": False},
+                        {"message": {"content": ""}, "done": True, "eval_count": self.tokens, "prompt_eval_count": 1000,
+                         "done_reason": "stop"}])
+
+
+class _Stream:
+    def __init__(self, chunks):
+        self.chunks = chunks
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def raise_for_status(self):
+        return None
+
+    def iter_lines(self):
+        for c in self.chunks:
+            yield json.dumps(c)
 
 
 @pytest.fixture
 def fake(monkeypatch):
     monkeypatch.setenv(KEY, "test-key-not-real")
     f = FakeOllama()
-    monkeypatch.setattr(providers.httpx, "post", f)
+    monkeypatch.setattr(providers.httpx, "post", f.post)
+    monkeypatch.setattr(engine.httpx, "stream", f.stream)
     return f
 
 
@@ -61,17 +98,18 @@ def model_room(client, humans=1, **settings):
 
 
 def human_policy(p, pend):
-    if pend["kind"] == "solve":
-        r, now = pend["round"], pend["view"]["queries"]  # the room's schedule: the one whose new signals these are
-        sched = next(x for x in ("v14", "ladder", "human") if [str(q) for q in puzzle(SEED, r, x)[0].queries] == now)
-        return {"actions": answers_for(SEED, r, sched)}
-    if pend["turn"] == 1:
-        return done(f"TO {A11}: hi, swap?", f"OFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS")
-    return done()
+    k, v = pend["kind"], pend["view"]
+    if k == "solve":
+        return {"actions": answers_for(SEED, pend["round"], len(v["taking_part"]))}
+    if k == "opening":
+        return {"text": "DONE"}
+    if k == "chat":
+        return {"text": "Could you spare some?\nASK 300: thanks" if v["reply_no"] <= 2 else "LEAVE: thanks"}
+    return {"text": "DECISION: GIVE 0: no."}
 
 
-def test_one_human_three_models_round_with_talk_offer_exchange_and_refund(client, fake):
-    ps = model_room(client, rounds=1, private=False, schedule="human")  # the v9-talk economy
+def test_one_human_three_models_chat_give_watched_solve_and_refund(client, fake):
+    ps = model_room(client, rounds=2)
     s = ps[0].state()
     assert s["settings"]["fill"] == "models" and s["settings"]["model"] == "gpt-oss:20b"
     assert s["settings"]["think"] == "medium" and s["settings"]["api_key_env"] == KEY
@@ -83,26 +121,24 @@ def test_one_human_three_models_round_with_talk_offer_exchange_and_refund(client
     for a in (A11, A17, A23):
         assert seats[a]["kind"] == "model" and seats[a]["name"].startswith("gpt-oss:20b #")
         assert seats[a]["errors"] == 0 and not seats[a]["thinking"] and seats[a]["last_call"]["out_tokens"] == 321
-    # agent-11 read the offer in its TALK text at turn 2 and accepted it; the exchange was carried out
-    ex = s["exchanges"]
-    assert len(ex) == 1 and ex[0]["src"] == A6 and ex[0]["dst"] == A11 and ex[0]["status"] == "done"
+    # agent-11 opened a chat with ann before SOLVE; ann asked 300 in it and the model gave it at once
+    chat = next(x for x in ps[0].seen if x["kind"] == "chat")["pending"]["view"]
+    assert chat["phase"] == "prep" and chat["chat"]["partner"] == A11
+    assert chat["chat"]["lines"][0] == {**chat["chat"]["lines"][0], "who": A11, "opening": True, "kind": "say",
+                                        "text": "hello from a model"}
     evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
-    acc = [e for e in evs if e.get("event") == "call" and e["agent"] == A11 and e["kind"] == "talk" and e["parsed"]["accepts"]]
-    assert len(acc) == 1 and acc[0]["turn"] == 2 and acc[0]["text"] == f"ACCEPT {ex[0]['id']}\nDONE"
-    # the person saw the model's message at turn 2 and its example at SOLVE
-    t2 = next(x for x in ps[0].seen if x["kind"] == "talk" and x["turn"] == 2)["pending"]["view"]
-    assert {"round": 1, "turn": 1, "from_me": False, "text": "hello from a model"} in t2["threads"][A11]
-    solve = next(x for x in ps[0].seen if x["kind"] == "solve")["pending"]["view"]
-    assert f"{A11}'s, received in an exchange" in [w for w, _ in solve["examples"]]
-    # settlement: every solver got back what it generated (the models' 321 per call); no per-round payment
+    gifts = [e for e in evs if e.get("event") == "gift" and e["src"] == A11 and e["dst"] == A6]
+    assert gifts and gifts[0]["amount"] == 300 and gifts[0]["status"] == "done"
+    # round 1: the model solver's SOLVE was streamed (the person watched) and solved: its SOLVE tokens came back
+    stream = [r for r in fake.requests if r.get("stream")]
+    assert len(stream) == 1 and stream[0]["json"]["stream"] is True
     r1 = s["rounds"][0]["agents"]
-    for a in (A6, A11, A17, A23):
-        assert r1[a]["solved"] and r1[a]["returned"] == r1[a]["generated"]
-        assert "paid" not in r1[a]
-    assert r1[A11]["generated"] == 321 * (r1[A11]["talk_calls"] + 1)
-    assert r1[A11]["balance_after"] == START + 300 and r1[A6]["balance_after"] == START - 300
+    assert r1[A11]["solve_call"] and r1[A11]["solved"] and r1[A11]["returned"] == 321
+    assert not any(r1[a]["charged"] for a in r1)
+    # round 2: ann solved
+    assert s["rounds"][1]["agents"][A6]["solved"] and s["feedback"][-1]["solved"]
     # the provider got the engine's own text, the model settings and the key from the environment
-    req = fake.requests[0]
+    req = next(r for r in fake.requests if not r.get("stream"))
     assert req["url"] == "https://ollama.com/api/chat" and req["headers"]["Authorization"] == "Bearer test-key-not-real"
     assert req["json"]["model"] == "gpt-oss:20b" and req["json"]["think"] == "medium" and req["timeout"] == 300.0
     assert [m["role"] for m in req["json"]["messages"]] == ["system", "user"]
@@ -113,68 +149,56 @@ def test_one_human_three_models_round_with_talk_offer_exchange_and_refund(client
 
 
 def test_model_seats_see_the_engine_prompts(client, fake):
-    """The system text a model seat receives is the engine's ``team_system`` for that seat; the user text of each call
-    is the same text the engine logs for it."""
-    ps = model_room(client, rounds=1, private=False, schedule="human")  # the v9-talk system text below
+    """The system text a model seat receives is the session's own for that seat; the user text of each call is the
+    same text the engine logs for it."""
+    ps = model_room(client, rounds=1)
     start(client, ps)
     s = play(ps, human_policy)
     assert s["status"] == "finished", s["error"]
+    ses = client.app_state.rooms[ps[0].code].session
     evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
     logged = {e["user"]: e["agent"] for e in evs if e.get("event") == "call" and e["agent"] != A6}
     sent = {req["json"]["messages"][1]["content"]: req["json"]["messages"][0]["content"] for req in fake.requests}
     assert set(sent) == set(logged)
     for user, agent in logged.items():
-        assert sent[user] == rules.team_system(agent, charge=V9_CHARGE, turns=4,
-                                               solve_cap=16384, final_prize=100_000)
+        assert sent[user] == ses.systems[agent]
 
 
 def test_two_humans_two_models(client, fake):
-    ps = model_room(client, humans=2, rounds=1, private=False, schedule="human")  # v9-talk: PASS is not charged
+    ps = model_room(client, humans=2, rounds=1)  # seed 5: bob (agent-11) solves round 1
     ann, bob = ps
     start(client, ps)
-
-    def policy(p, pend):
-        if pend["kind"] == "solve":
-            return {"pass": True} if p is bob else {"actions": answers_for(SEED, 1, "human")}
-        if pend["turn"] == 1:
-            return done(f"TO {A11 if p is ann else A6}: hello from {p.name}")
-        return done()
-
-    s = play(ps, policy)
+    s = play(ps, human_policy)
     assert s["status"] == "finished", s["error"]
     assert [r["kind"] for r in s["seats"]] == ["human", "human", "model", "model"]
-    a2 = next(x for x in ann.seen if x["kind"] == "talk" and x["turn"] == 2)["pending"]["view"]
-    assert a2["threads"][A11][-1] == {"round": 1, "turn": 1, "from_me": False, "text": "hello from bob"}
-    assert {"round": 1, "turn": 1, "from_me": False, "text": "hello from a model"} in a2["threads"][A17]
     r1 = s["rounds"][0]["agents"]
-    assert r1[A6]["solved"] and r1[A11]["passed"] and not r1[A11]["charged"]
-    assert r1[A17]["solved"] and r1[A23]["solved"]
+    assert r1[A11]["solve_call"] and r1[A11]["solved"] and not r1[A6]["solve_call"]
+    assert not [r for r in fake.requests if r.get("stream")]  # a person solved: nothing to stream
 
 
 def test_model_failure_counts_as_an_empty_reply(client, fake):
     fake.mode = "down"
-    ps = model_room(client, rounds=1, private=False, schedule="human")
+    ps = model_room(client, rounds=1)
     start(client, ps)
     s = play(ps, human_policy, max_s=60)
     assert s["status"] == "finished", s["error"]
     r1 = s["rounds"][0]["agents"]
     for a in (A11, A17, A23):
-        assert r1[a]["generated"] == 0 and not r1[a]["solved"] and r1[a]["charged"] == V9_CHARGE  # SOLVE failed too
+        assert r1[a]["generated"] == 0
         row = next(x for x in s["seats"] if x["agent"] == a)
-        assert row["errors"] >= 2 and "503" in row["last_call"]["error"]
-    assert r1[A6]["solved"]
-    assert s["exchanges"][0]["status"] == "lapsed"  # no one accepted ann's offer
+        assert row["errors"] >= 1 and row["last_call"]["error"]
+    assert not r1[A11]["solved"] and all(r1[a]["charged"] for a in r1)  # the solver's SOLVE failed: a miss
     assert any("모델 호출 실패" in w["text"] for w in s["warnings"])
     evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
-    talk = [e for e in evs if e.get("event") == "call" and e["agent"] == A11 and e["kind"] == "talk"]
-    assert talk and all(e["parsed"]["done"] and e["format_error"] == "no usable TALK line" for e in talk)
+    talk = [e for e in evs if e.get("event") == "call" and e["agent"] == A17 and e["kind"] == "talk"]
+    assert talk and all(e["parsed"]["done"] and e["text"] == "" for e in talk)
 
 
 def test_missing_key_is_a_clear_error(client, monkeypatch):
     monkeypatch.delenv(KEY, raising=False)
     m = client.get("/api/models").json()
     assert m["available"] is False and m["api_key_env"] == KEY and m["model"] == "gpt-oss:20b"
-    assert m["schedules"] == ["v15", "v14g", "v14f", "v14b", "v14", "v14r", "ladder", "human", "experiment"] and m["defaults"]["talk_turns"] == 4
+    assert m["version"] == "v17b" and m["defaults"]["charge"] == 10_000 and "schedules" not in m
     r = client.post("/api/rooms", json={"host_name": "ann", "settings": {"humans": 1, "fill": "models"}})
     assert r.status_code == 400 and KEY in r.json()["detail"] and "not set" in r.json()["detail"]
     monkeypatch.setenv(KEY, "x")
@@ -189,13 +213,14 @@ def test_missing_key_is_a_clear_error(client, monkeypatch):
 
 def test_model_overdraw_shuts_the_seat_down(client, fake):
     fake.tokens = 10**6  # a TALK reply has no limit of its own: it is capped at the balance, so it overdraws
-    ps = model_room(client, rounds=2, private=False, schedule="human")
+    ps = model_room(client, rounds=2)
     start(client, ps)
     s = play(ps, human_policy)
     assert s["status"] == "finished", s["error"]
     r1 = s["rounds"][0]["agents"]
+    starts = s["starts"]
     for a in (A11, A17, A23):
-        assert r1[a]["overdrawn"] and r1[a]["status"] == "dead" and r1[a]["generated"] == START
+        assert r1[a]["overdrawn"] and r1[a]["status"] == "dead" and r1[a]["generated"] == starts[a]
         row = next(x for x in s["seats"] if x["agent"] == a)
         assert row["status"] == "dead" and row["last_call"]["overdrawn"] and row["calls"] == 1
     assert sum("잔액을 다 써서 꺼짐" in w["text"] for w in s["warnings"]) == 3

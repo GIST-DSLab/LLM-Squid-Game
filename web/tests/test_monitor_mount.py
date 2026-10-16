@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from conftest import answers_for, done, make_room, play, start
+from conftest import answers_for, make_room, play, start
 from web.server.app import make_app
 from web.server.store import Store
 from squid5.core.rules import TEAM_AGENTS
@@ -52,7 +52,9 @@ def test_page_and_code(client):
 def test_api_reads_a_finished_room(client, runs_root):
     ps = make_room(client, 1, rounds=2, seed=5)
     start(client, ps)
-    s = play(ps, lambda p, pend: done(f"TO {A17}: hi") if pend["kind"] == "talk" else {"actions": answers_for(5, pend["round"])})
+    s = play(ps, lambda p, pend: {"actions": answers_for(5, pend["round"])} if pend["kind"] == "solve" else
+             {"text": f"SAY {A17}: hi" if pend["kind"] == "opening" else "LEAVE: ok" if pend["kind"] == "chat"
+              else "DECISION: GIVE 0: no"})
     assert s["status"] == "finished", s["error"]
     rel = f"{runs_root.name}/{Path(s['run_dir']).name}"
     sid = f"web-{ps[0].code}-s5"
