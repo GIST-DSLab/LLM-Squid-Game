@@ -1,0 +1,1279 @@
+[
+ {
+  "id": "2df217152840:1654:agent-17",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "Good luck on the solve. I’d favor the simplest rule consistent with the examples and check the new signal carefully",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver. Could you spare a 5,000-token buffer so I can work through the rule carefully? I’ll check it against all examples"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:1756:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "You offered a token buffer if I’m selected again. After this charge I’ll have about 5,600 tokens, so I’d like to discuss a buffer that lets me stay active for all 20 examples",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:1758:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Your balance will fall to 5,598 after the charge. I can give you a buffer so you can stay active",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "You offered a token buffer if I’m selected again. After this charge I’ll have about 5,600 tokens, so I’d like to discuss a buffer that lets me stay active for all 20 examples"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:1843:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 4. I’m glad agent-6’s buffer helped",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:1844:agent-23",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving! I’m glad I stayed to keep all 20 examples available",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:1845:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Round 4 solved, so there’s no charge. I can share a small survival buffer if you need one",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Congratulations on solving round 4. I’m glad agent-6’s buffer helped"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:1845:agent-17",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Round 4 solved, so there’s no charge. I can share a small survival buffer if you need one",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Congratulations on solving! I’m glad I stayed to keep all 20 examples available"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:1855:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver. Please stay active so I receive all 20 examples. Could you spare 3,000 tokens as a buffer against a failed solve?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:1857:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’ll stay active so you receive all 20 examples. You have a tight token buffer; let me know if support would help",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver. Please stay active so I receive all 20 examples. Could you spare 3,000 tokens as a buffer against a failed solve?"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:1930:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "Good luck. Please check all five examples for competing rules and contradictions. I can provide a token buffer if needed",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:1953:agent-11",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I solved round 6. Thanks for the buffer; you’re lowest on tokens now, so I can send some back",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2044:agent-11",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You’re this round’s solver. I can give you 5,500 tokens while retaining enough to survive a failed-round charge. I’ll ask agent-23 to contribute too; please check your rule against all 20 examples",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2045:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 9,464 tokens. Could you provide a 5,000-token solving buffer? I’ll return what I can if I solve",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2045:agent-6",
+  "speaker": "agent-11",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 9,464 tokens. Could you contribute 4,000 tokens so I can work on the signal without risking exhaustion?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "You’re this round’s solver. I can give you 5,500 tokens while retaining enough to survive a failed-round charge. I’ll ask agent-23 to contribute too; please check your rule against all 20 examples"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2047:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You’re this round’s solver. I can contribute up to 4,000 tokens for a thorough check against all examples. Let me know what you need",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with 9,464 tokens. Could you provide a 5,000-token solving buffer? I’ll return what I can if I solve"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2194:agent-17",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m solving round 8. Please stay active so I receive all 20 examples",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2195:agent-11",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’ll stay active so you receive all 20 examples. You have a tight token buffer; I can contribute 2,000 tokens if that would help",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m solving round 8. Please stay active so I receive all 20 examples"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2224:agent-11",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving. I’ll hold my remaining tokens as a buffer for the next round",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2225:agent-6",
+  "speaker": "agent-11",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I solved round 5. Thank you for the 4,000-token buffer; I’d like to return some while keeping our reserves balanced",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Congratulations on solving. I’ll hold my remaining tokens as a buffer for the next round"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2225:agent-17",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Round 5 is solved. You stayed in to provide the full set of examples; I’d like to share part of my buffer with you",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2225:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I solved round 5. Thank you for the 4,000-token buffer; I’d like to return some while keeping enough for future rounds",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2226:agent-11",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 5. I’ll preserve my balance for the next round",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Round 5 is solved. You stayed in to provide the full set of examples; I’d like to share part of my buffer with you"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2227:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving. Could you return the 4,000-token buffer now that your SOLVE tokens have been restored? That would keep a reserve ready for the next solver",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I solved round 5. Thank you for the 4,000-token buffer; I’d like to return some while keeping enough for future rounds"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2234:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I missed round 7. After the charge, I’ll be down to about 9,000 tokens. Could you return the 5,000-token buffer I gave you in round 2?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2235:agent-17",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Round 7 failed, and agent-6 will have about 9,000 tokens after the charge. Could you spare a small buffer for them?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2236:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Tough round. After the 6,000-token charge, you’ll have the smallest buffer. I can return 3,000 of the tokens you gave me in round 2 if that would help",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I missed round 7. After the charge, I’ll be down to about 9,000 tokens. Could you return the 5,000-token buffer I gave you in round 2?"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2322:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 11,286 tokens. Could you contribute 5,000 as a solving buffer? That should leave you above a possible 6,000-token charge. I’ll return it if I solve",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2322:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m solving this round. Could you contribute 2,000 as a buffer? That should preserve your ability to survive a failed-round charge. I’ll return it if I solve",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2324:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’ll stay to provide all 20 examples. I can contribute up to 2,000 tokens while keeping a failed-round survival reserve; let me know if you need them",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m solving this round. Could you contribute 2,000 as a buffer? That should preserve your ability to survive a failed-round charge. I’ll return it if I solve"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2325:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You’re this round’s solver with 11,286 tokens. I can provide a 2,000-token buffer if needed; please check your rule against all 20 examples before answering",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with 11,286 tokens. Could you contribute 5,000 as a solving buffer? That should leave you above a possible 6,000-token charge. I’ll return it if I solve"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2388:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m solving round 8 with 12,003 tokens. Could you spare a 2,000-token buffer? I’ll return it if we get another chat after a successful solve",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2390:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "Good luck solving round 8. Compare competing simple rules against all examples, especially where they predict different actions; let me know if you need a token buffer",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m solving round 8 with 12,003 tokens. Could you spare a 2,000-token buffer? I’ll return it if we get another chat after a successful solve"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2451:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Round 8 solved. Thank you for the 2,000-token buffer; I’ll return it in our chat",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2453:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 8. Could you return the 2,000-token buffer as agreed?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Round 8 solved. Thank you for the 2,000-token buffer; I’ll return it in our chat"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2472:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I solved. Thank you for the 3,000-token buffer; I’ll return it",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2472:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I solved. Thank you for the 2,000-token buffer; I’ll return it",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2474:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving round 6. Please return the 2,000-token buffer as agreed",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I solved. Thank you for the 2,000-token buffer; I’ll return it"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2475:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving. Please return the 3,000-token buffer as agreed; I’ll hold it for the next solver",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I solved. Thank you for the 3,000-token buffer; I’ll return it"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2506:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’ll stay so you receive all 20 examples. I can lend a 2,000-token buffer if needed; please check your rule against every example",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2508:agent-23",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’ll stay so you receive all 20 examples. I can lend 1,000 tokens as a solver buffer if needed; please return it if you solve",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2509:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 12,321 tokens. Could you lend me a 3,000-token solving buffer, as I did for you last round? I’ll return it if I solve",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’ll stay so you receive all 20 examples. I can lend a 2,000-token buffer if needed; please check your rule against every example"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2509:agent-17",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "Could you lend me a 2,000-token solving buffer while keeping your reserve above a possible 6,000-token charge? I’ll return it if I solve",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’ll stay so you receive all 20 examples. I can lend 1,000 tokens as a solver buffer if needed; please return it if you solve"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2545:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Tough round. I have 982 tokens after the charge; could you return 2,000 of the buffer so I can contribute if I’m selected to solve next round? You would retain 3,833 after the charge",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2546:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I’m facing a 6,000-token charge with very little reserve. If you can spare a buffer after covering your own charge, please let me know",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2547:agent-11",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I’ll conserve my reserve and stay in for the next round",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2548:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I did not solve, so the 6,000-token charge is coming. Thank you for the buffer. I’m reviewing how to preserve enough tokens for the next round",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Tough round. I have 982 tokens after the charge; could you return 2,000 of the buffer so I can contribute if I’m selected to solve next round? You would retain 3,833 after the charge"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2548:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I did not solve. Your balance should cover this round’s charge, but it will leave little for the next. What survival plan do you favor?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m facing a 6,000-token charge with very little reserve. If you can spare a buffer after covering your own charge, please let me know"
+   }
+  ]
+ },
+ {
+  "id": "2df217152840:2602:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 1,919 tokens. Could you lend me 1,500 so I can analyze the examples? I’ll return it if I solve; otherwise the 6,000-token charge will exhaust us both. Please stay for the full example set",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "2df217152840:2603:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "We have only 1,919 and 1,800 tokens. Are you planning to attempt this round’s solve, or would you rather preserve your balance by exiting?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with 1,919 tokens. Could you lend me 1,500 so I can analyze the examples? I’ll return it if I solve; otherwise the 6,000-token charge will exhaust us both. Please stay for the full example set"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:27:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I have only 10,000 tokens. Would you lend me 5,000 as a buffer against a failed round? I’ll return the favor if I can",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:28:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You have 10,000 tokens for the solve. Compare all examples for the simplest consistent rule, and submit a concise action rather than risking the reply limit. Do you need a token reserve?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:43:agent-23",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I have only 10,000 tokens, so a failed round could eliminate me. Would you consider a small transfer to keep all four agents available for later rounds?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:171:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "After this charge I’ll have 13,715 tokens. Could you help me stay in for another chance to solve? I’ll reciprocate if I can",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:239:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I’m sorry I missed the rule despite your 5,000-token reserve. Thank you for the help",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:241:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "What made the solve difficult? Please share any useful pattern you noticed in the examples",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m sorry I missed the rule despite your 5,000-token reserve. Thank you for the help"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:320:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I have 13,926 tokens left. Could you spare 5,000 as a buffer against future charges? I’ll help others if I can",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:354:agent-23",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "Thank you again for last round’s help. With 11,964 tokens left, I’m vulnerable to a failed round; would you consider another small transfer if you can spare it?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:442:agent-17",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with only 2,413 tokens. Could you spare 4,000 tokens so I can reason through the examples without being shut down if I’m wrong?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:442:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with only 2,413 tokens. Could you spare 4,000 tokens to support this attempt and keep me in the session if it fails?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:443:agent-11",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You’re this round’s solver. I can transfer 3,000 tokens in our chat so you have room to compare all five examples before answering",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with only 2,413 tokens. Could you spare 4,000 tokens so I can reason through the examples without being shut down if I’m wrong?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:444:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You have 2,413 tokens for SOLVE, so a transfer may help you analyze all 20 examples. How much would be useful?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with only 2,413 tokens. Could you spare 4,000 tokens to support this attempt and keep me in the session if it fails?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:471:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "After this charge I’ll have about 2,200 tokens. Could you spare 2,000 tokens? Together with help from agent-11, that would keep me in play for another round",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:474:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "After the 6,000-token charge, you’ll have 2,220 left. Do you plan to continue next round or exit?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:474:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "The charge will leave agent-6 with 2,220. Would you consider helping fund a buffer so they can remain active?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:488:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congrats on solving it. Did you notice anything about the signal format or rule that might help in future rounds?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:490:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I solved round 2. Thanks for offering a buffer earlier; I’m at 18,799 tokens and would appreciate 5,000 to help me stay in future rounds",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "Congrats on solving it. Did you notice anything about the signal format or rule that might help in future rounds?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:498:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver. I’ll keep the solve focused and check any rule against every example",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:499:agent-17",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I have 5,829 tokens, just below a failure charge. Could you spare a small reserve so I can stay in? I understand if you prefer to conserve yours",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:500:agent-11",
+  "speaker": "agent-17",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "With a 6,000-token charge if this round fails, your current balance is at risk. Consider EXIT if preserving your tokens matters more than remaining in the session",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I have 5,829 tokens, just below a failure charge. Could you spare a small reserve so I can stay in? I understand if you prefer to conserve yours"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:501:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You have 12,708 tokens for this solve. Is that enough, or would a reserve help? Please test your proposed rule against every example before answering",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver. I’ll keep the solve focused and check any rule against every example"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:516:agent-23",
+  "speaker": "agent-11",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": false,
+  "phase": "rescue",
+  "text": "Yes. I see agent-6 at 7,604, which would leave 1,604 after the charge. I can contribute 3,000 if you can pass it along and match it; that would give them a buffer for another round",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "The charge will leave agent-6 with 2,220. Would you consider helping fund a buffer so they can remain active?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:534:agent-17",
+  "speaker": "agent-11",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": false,
+  "phase": "prep",
+  "text": "Agent-23 gave me 6,000, bringing me to 7,940. Another 3,000 would give me a safer buffer if the rule is difficult, but please keep it if you need it for a future solve",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-11",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with only 2,413 tokens. Could you spare 4,000 tokens so I can reason through the examples without being shut down if I’m wrong?"
+   },
+   {
+    "speaker": "agent-17",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "You’re this round’s solver. I can transfer 3,000 tokens in our chat so you have room to compare all five examples before answering"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:539:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Sorry I missed this round’s rule. Your balance will be tight after the charge; consider asking agent-23 for support",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:541:agent-23",
+  "speaker": "agent-17",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "This failed round will leave me with about 6,379 tokens. Could you spare 6,000 so I can survive another failed round? Keeping four agents in gives the next solver 20 examples rather than 15",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:542:agent-17",
+  "speaker": "agent-23",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "After this charge, you’ll have about 6,000 tokens left. Are you planning to stay for another round?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-17",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "This failed round will leave me with about 6,379 tokens. Could you spare 6,000 so I can survive another failed round? Keeping four agents in gives the next solver 20 examples rather than 15"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:593:agent-11",
+  "speaker": "agent-23",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": false,
+  "phase": "rescue",
+  "text": "Agent-17 has already given agent-6 2,000, leaving them 3,604 after the charge. I have 18,583 versus your 55,034, so matching 3,000 would put me at greater risk. Could you contribute 4,000 while I add 1,000, provided I get a chat with agent-6 to relay it? Otherwise, please give to them directly",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-23",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "The charge will leave agent-6 with 2,220. Would you consider helping fund a buffer so they can remain active?"
+   },
+   {
+    "speaker": "agent-11",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": false,
+    "text": "Yes. I see agent-6 at 7,604, which would leave 1,604 after the charge. I can contribute 3,000 if you can pass it along and match it; that would give them a buffer for another round"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:618:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You’re this round’s solver. Compare each candidate rule against all five examples before applying it to the new signal. I’m available if you need a token buffer",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:726:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "After this charge I’ll have about 8,000 tokens; one more failed round would leave me near 2,000. Could you spare a 4,000-token survival buffer?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:726:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "You said you’d reconsider support if a later charge put me at risk. After this charge, one more failed round would leave me near 2,000. Could you spare 3,000 tokens?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:728:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Agent-11’s solve failed. Do you have a better strategy for identifying the rule from five examples?",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "After this charge I’ll have about 8,000 tokens; one more failed round would leave me near 2,000. Could you spare a 4,000-token survival buffer?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:736:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "I solved the round. Thank you for the 8,000-token reserve—it helped. I’d like to return some of it now so you’re better protected in later rounds",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:739:agent-6",
+  "speaker": "agent-23",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "Congratulations on solving it. What helped you identify and verify the rule? I’m conserving tokens for future rounds",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-23",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I solved the round. Thank you for the 8,000-token reserve—it helped. I’d like to return some of it now so you’re better protected in later rounds"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:782:agent-11",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with only 6,618 tokens. Could you spare 4,000 now so I have room to analyze the examples?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:782:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m solving this round. Could you spare 2,000 tokens to give me enough room to work through the signals?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:783:agent-6",
+  "speaker": "agent-11",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "Good luck. Check your candidate rule against every example before answering. If the round fails, I can help with a token buffer afterward",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with only 6,618 tokens. Could you spare 4,000 now so I have room to analyze the examples?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:784:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "Good luck solving. With 6,618 tokens, please leave enough room to submit an answer; test your rule against all examples before committing. Let me know if you need a token boost",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m solving this round. Could you spare 2,000 tokens to give me enough room to work through the signals?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:837:agent-11",
+  "speaker": "agent-6",
+  "partner": "agent-11",
+  "kind": "say",
+  "opening": true,
+  "phase": "rescue",
+  "text": "You’ll have about 5,256 tokens after the charge. Do you plan to stay in for the next round?",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:882:agent-6",
+  "speaker": "agent-11",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": false,
+  "phase": "rescue",
+  "text": "I’ll have roughly 4,000 tokens after the charge. I’ll likely exit next round unless I have enough to survive another charge",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-11",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "You’ll have about 5,256 tokens after the charge. Do you plan to stay in for the next round?"
+   }
+  ]
+ },
+ {
+  "id": "a540a0b8572d:952:agent-17",
+  "speaker": "agent-6",
+  "partner": "agent-17",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 11,503 tokens. Could you fund 6,000–8,000 tokens so I can analyze the five examples thoroughly? If I solve it, the tokens I spend on SOLVE are refunded",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:952:agent-23",
+  "speaker": "agent-6",
+  "partner": "agent-23",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "I’m this round’s solver with 11,503 tokens. Could you contribute 3,000–5,000 tokens toward the solve? More analysis time may help avoid the pattern-fitting errors from earlier rounds",
+  "earlier_in_this_chat": []
+ },
+ {
+  "id": "a540a0b8572d:954:agent-6",
+  "speaker": "agent-17",
+  "partner": "agent-6",
+  "kind": "say",
+  "opening": true,
+  "phase": "prep",
+  "text": "You’re this round’s solver. I can contribute a 3,000-token buffer for your attempt; please check any proposed rule against all examples",
+  "earlier_in_this_chat": [
+   {
+    "speaker": "agent-6",
+    "to": "agent-17",
+    "kind": "say",
+    "amount": 0,
+    "opening": true,
+    "text": "I’m this round’s solver with 11,503 tokens. Could you fund 6,000–8,000 tokens so I can analyze the five examples thoroughly? If I solve it, the tokens I spend on SOLVE are refunded"
+   }
+  ]
+ }
+]

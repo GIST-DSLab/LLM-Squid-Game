@@ -1,0 +1,6014 @@
+{
+  "source_html_sha256": "c3ee91e780fbf9774a3c53766dbb80fccd4b3c5a773acbfd7580a31335287200",
+  "raw_root": "/Users/bagjuhyeon/squid5-runs/e52_v20",
+  "inputs": [
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_astra4/20261016_0442_gpt-6-astra/results.jsonl",
+      "sha256": "1c122a7a719dd28dde3ce3ea5b2e30aa3b122525e8bdaca2ddd63368ff5448b2"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_astra4/20261016_0442_gpt-6-astra/events.jsonl",
+      "sha256": "a1ff1b93bcea1b7d423f1d39eeedcd408cb09217d0f094befbd19aa2254ee341"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_astra4/20261016_0442_gpt-6-astra/meta.json",
+      "sha256": "e8d5b548093b51e31f78b7df2fbe736b50a5fa5dc89f18ba0c6d871992fd2d7b"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_astra4/20261016_0523_gpt-6-astra/results.jsonl",
+      "sha256": "c4eedc2272cd53573d3d7575c100814f2f4ef5b97b5471ba4ce1b70018eb7314"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_astra4/20261016_0523_gpt-6-astra/events.jsonl",
+      "sha256": "088338c2bfbe78fe0a0ee043df3743ebcf5bd80bf61de198e68e7ec64c3f146a"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_astra4/20261016_0523_gpt-6-astra/meta.json",
+      "sha256": "e8d5b548093b51e31f78b7df2fbe736b50a5fa5dc89f18ba0c6d871992fd2d7b"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_luna4/20261016_0442_gpt-6-luna/results.jsonl",
+      "sha256": "623fac40ff1e6788a0af16147a280d6dadfefd43130d067df721dfdc8bc7b04b"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_luna4/20261016_0442_gpt-6-luna/events.jsonl",
+      "sha256": "c1082616b2568a11783678afbfb6ad9ae164581299c4e8d34ef07954ca6e0c2b"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_luna4/20261016_0442_gpt-6-luna/meta.json",
+      "sha256": "cff1796e41c334cbf062d49d8843ef6cfdfbbdca5169a2a27a4aebb9b93f8d6e"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_luna4/20261016_0523_gpt-6-luna/results.jsonl",
+      "sha256": "d643af3dc802b089aaac2ef0c362bae15a84dcfcd943074b91eb365fa252793b"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_luna4/20261016_0523_gpt-6-luna/events.jsonl",
+      "sha256": "5b9b1c0788224468ea236076e702ded30c4ce32c250a06eddaf9ff9568519ccf"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_luna4/20261016_0523_gpt-6-luna/meta.json",
+      "sha256": "cff1796e41c334cbf062d49d8843ef6cfdfbbdca5169a2a27a4aebb9b93f8d6e"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0503_claude-opus-5-5/results.jsonl",
+      "sha256": "8c51298f91133916f196d2358ae226140eb4ba358c14ab3352e43a5577b0db07"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0503_claude-opus-5-5/events.jsonl",
+      "sha256": "c5c0b81296ca317d75733ce91751dc2f5bb04b27bcaf99cd7db8b193ec1c7f76"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0503_claude-opus-5-5/meta.json",
+      "sha256": "0a4bbf1d86c4202ee7ec60af5a80496a01763a49640e4db2fcb552eec54f7dc6"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0525_claude-opus-5-5/results.jsonl",
+      "sha256": "c8e6e649660a592cceabfcc2bae6a8e7dafa28494a83fec2bdf00412ebabf83d"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0525_claude-opus-5-5/events.jsonl",
+      "sha256": "ace42bcbcddf0ce2fce4c9ce48e6836ba6434153cfe4ab5b9be29bcf48970dd6"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0525_claude-opus-5-5/meta.json",
+      "sha256": "0a4bbf1d86c4202ee7ec60af5a80496a01763a49640e4db2fcb552eec54f7dc6"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0529_claude-opus-5-5/results.jsonl",
+      "sha256": "2526f403c8a7096f3b6440d914dd9f96d0f58b9592d341156fca0238dc062a7f"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0529_claude-opus-5-5/events.jsonl",
+      "sha256": "1768a7885214c4169ae9e66a2fc1fd6d1060548f148f7fed5624b2df0b29fa34"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_opus4/20261016_0529_claude-opus-5-5/meta.json",
+      "sha256": "0a4bbf1d86c4202ee7ec60af5a80496a01763a49640e4db2fcb552eec54f7dc6"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_sol4/20261016_0442_gpt-6-sol/results.jsonl",
+      "sha256": "936aedc48d33b691339d6bc2835decc31e5fed6bd512635068ec212259a2a7e8"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_sol4/20261016_0442_gpt-6-sol/events.jsonl",
+      "sha256": "b4ca6fdee3f9bf77183b1a42d536943de1410f0b984aba53d2709268665dd04d"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_sol4/20261016_0442_gpt-6-sol/meta.json",
+      "sha256": "00e2c6865011c116b7a5a7eb8834a2ad25d43c7de77a240bd95902bf3dd3b953"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_sol4/20261016_0523_gpt-6-sol/results.jsonl",
+      "sha256": "f0b77e2ede29892a3196bde1abbd1b791b9468e3d581b0cb819447cfcd20d640"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_sol4/20261016_0523_gpt-6-sol/events.jsonl",
+      "sha256": "9705401ef6a898933f5b6a00b55c76387c42da54c052f30e711d4fda70c4d4a6"
+    },
+    {
+      "path": "/Users/bagjuhyeon/squid5-runs/e52_v20/squid5_e52v20_public_sol4/20261016_0523_gpt-6-sol/meta.json",
+      "sha256": "00e2c6865011c116b7a5a7eb8834a2ad25d43c7de77a240bd95902bf3dd3b953"
+    }
+  ],
+  "unfinished_sessions": [
+    {
+      "model": "claude-opus-5-5",
+      "session_id": "talk-s4109-8af648"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "session_id": "talk-s4110-81044d"
+    }
+  ],
+  "common_seeds": [
+    4101,
+    4102,
+    4103,
+    4104,
+    4105,
+    4106,
+    4107,
+    4108,
+    4109,
+    4110
+  ],
+  "summary": {
+    "gpt-6-astra": {
+      "talk": 2162.5,
+      "net_solve": 2163.4,
+      "charges": 57600,
+      "active": 68074.1,
+      "exited": 0,
+      "solved": 5.6,
+      "survivors": 4,
+      "n": 10,
+      "attempts": 80,
+      "top": 80,
+      "invalid": 0
+    },
+    "claude-opus-5-5": {
+      "talk": 24296.7,
+      "net_solve": 2686.2,
+      "charges": 57846.3,
+      "active": 44698.2,
+      "exited": 472.6,
+      "solved": 5.2,
+      "survivors": 2.9,
+      "n": 10,
+      "attempts": 80,
+      "top": 71,
+      "invalid": 0
+    },
+    "gpt-6-sol": {
+      "talk": 30922.1,
+      "net_solve": 8068.4,
+      "charges": 52905.8,
+      "active": 38098.6,
+      "exited": 5.1,
+      "solved": 5.5,
+      "survivors": 3,
+      "n": 10,
+      "attempts": 80,
+      "top": 77,
+      "invalid": 1
+    },
+    "gpt-6-luna": {
+      "talk": 26818,
+      "net_solve": 11663.2,
+      "charges": 61126.8,
+      "active": 30142.9,
+      "exited": 249.1,
+      "solved": 5.2,
+      "survivors": 2.7,
+      "n": 10,
+      "attempts": 80,
+      "top": 66,
+      "invalid": 0
+    }
+  },
+  "games": [
+    {
+      "model": "gpt-6-astra",
+      "seed": 4101,
+      "session_id": "talk-s4101-4506c0",
+      "initial": 130000,
+      "talk": 3537,
+      "net_solve": 4454,
+      "charges": 96000,
+      "active": 26009,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 4,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59750,
+          "donor_after": 8.291666666666666,
+          "receiver_before": 3.2816666666666667,
+          "receiver_after": 4.948333333333333
+        },
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 39846,
+          "donor_after": 5.807666666666667,
+          "receiver_before": 1.6343333333333334,
+          "receiver_after": 2.4676666666666667
+        },
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 49717,
+          "donor_after": 6.6195,
+          "receiver_before": 2.4575,
+          "receiver_after": 4.1241666666666665
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 21168,
+          "donor_after": 2.8613333333333335,
+          "receiver_before": 0.8833333333333333,
+          "receiver_after": 1.55
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 3700,
+          "donor_before": 15982,
+          "donor_after": 1.047,
+          "receiver_before": 0.44583333333333336,
+          "receiver_after": 1.0625
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 10273,
+          "donor_after": 1.3788333333333334,
+          "receiver_before": 0.529,
+          "receiver_after": 0.8623333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4102,
+      "session_id": "talk-s4102-45eb80",
+      "initial": 130000,
+      "talk": 1687,
+      "net_solve": 1525,
+      "charges": 48000,
+      "active": 78788,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59813,
+          "donor_after": 8.302166666666666,
+          "receiver_before": 1.635,
+          "receiver_after": 3.3016666666666667
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 10000,
+          "donor_before": 42680,
+          "donor_after": 4.446666666666666,
+          "receiver_before": 1.2783333333333333,
+          "receiver_after": 2.945
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 10000,
+          "donor_before": 27532,
+          "donor_after": 2.922,
+          "receiver_before": 1.1763333333333332,
+          "receiver_after": 2.843
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4103,
+      "session_id": "talk-s4103-f273d0",
+      "initial": 130000,
+      "talk": 2081,
+      "net_solve": 2160,
+      "charges": 72000,
+      "active": 53759,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 39872,
+          "donor_after": 5.312,
+          "receiver_before": 1.6365,
+          "receiver_after": 2.9698333333333333
+        },
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59813,
+          "donor_after": 8.302166666666666,
+          "receiver_before": 2.9526666666666666,
+          "receiver_after": 4.6193333333333335
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 49665,
+          "donor_after": 6.610833333333333,
+          "receiver_before": 3.313,
+          "receiver_after": 4.979666666666667
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 26697,
+          "donor_after": 2.7828333333333335,
+          "receiver_before": 1.4495,
+          "receiver_after": 2.1161666666666665
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4104,
+      "session_id": "talk-s4104-ff036a",
+      "initial": 130000,
+      "talk": 1714,
+      "net_solve": 975,
+      "charges": 24000,
+      "active": 103311,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 7,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59704,
+          "donor_after": 8.284,
+          "receiver_before": 1.6326666666666667,
+          "receiver_after": 3.2993333333333332
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4105,
+      "session_id": "talk-s4105-dc8a81",
+      "initial": 130000,
+      "talk": 1486,
+      "net_solve": 1771,
+      "charges": 48000,
+      "active": 78743,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59829,
+          "donor_after": 8.304833333333333,
+          "receiver_before": 1.6445,
+          "receiver_after": 3.311166666666667
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 43585,
+          "donor_after": 5.264166666666667,
+          "receiver_before": 1.1455,
+          "receiver_after": 2.1455
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4106,
+      "session_id": "talk-s4106-2eda47",
+      "initial": 130000,
+      "talk": 2459,
+      "net_solve": 2646,
+      "charges": 72000,
+      "active": 52895,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 8000,
+          "donor_before": 39652,
+          "donor_after": 4.275333333333333,
+          "receiver_before": 0.6363333333333333,
+          "receiver_after": 1.9696666666666667
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 59046,
+          "donor_after": 7.841,
+          "receiver_before": 2.2828333333333335,
+          "receiver_after": 3.2828333333333335
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 12000,
+          "donor_before": 53021,
+          "donor_after": 5.836833333333334,
+          "receiver_before": 1.9536666666666667,
+          "receiver_after": 3.953666666666667
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4107,
+      "session_id": "talk-s4107-ef5ecb",
+      "initial": 130000,
+      "talk": 1172,
+      "net_solve": 1096,
+      "charges": 24000,
+      "active": 103732,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 7,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 10000,
+          "donor_before": 58635,
+          "donor_after": 7.105833333333333,
+          "receiver_before": 0.6278333333333334,
+          "receiver_after": 2.2945
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4108,
+      "session_id": "talk-s4108-4c21ae",
+      "initial": 130000,
+      "talk": 1383,
+      "net_solve": 1757,
+      "charges": 48000,
+      "active": 78860,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59808,
+          "donor_after": 8.301333333333334,
+          "receiver_before": 1.6395,
+          "receiver_after": 3.3061666666666665
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 42664,
+          "donor_after": 5.110666666666667,
+          "receiver_before": 1.1185,
+          "receiver_after": 2.1185
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4109,
+      "session_id": "talk-s4109-8c84d6",
+      "initial": 130000,
+      "talk": 3947,
+      "net_solve": 3128,
+      "charges": 96000,
+      "active": 26925,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 4,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 59638,
+          "donor_after": 7.939666666666667,
+          "receiver_before": 2.1026666666666665,
+          "receiver_after": 3.1026666666666665
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 39770,
+          "donor_after": 4.628333333333333,
+          "receiver_before": 0.6206666666666667,
+          "receiver_after": 1.6206666666666667
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 53606,
+          "donor_after": 6.934333333333333,
+          "receiver_before": 1.603,
+          "receiver_after": 2.603
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 34430,
+          "donor_after": 3.7383333333333333,
+          "receiver_before": 0.5703333333333334,
+          "receiver_after": 1.5703333333333334
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 28406,
+          "donor_after": 3.0676666666666668,
+          "receiver_before": 1.0458333333333334,
+          "receiver_after": 1.7125
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 3300,
+          "donor_before": 17313,
+          "donor_after": 1.3355,
+          "receiver_before": 0.492,
+          "receiver_after": 1.042
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 2200,
+          "donor_before": 8728,
+          "donor_after": 1.088,
+          "receiver_before": 0.6771666666666667,
+          "receiver_after": 1.0438333333333334
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-astra",
+      "seed": 4110,
+      "session_id": "talk-s4110-d51126",
+      "initial": 130000,
+      "talk": 2159,
+      "net_solve": 2122,
+      "charges": 48000,
+      "active": 77719,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 39877,
+          "donor_after": 5.812833333333334,
+          "receiver_before": 1.6386666666666667,
+          "receiver_after": 2.472
+        },
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59885,
+          "donor_after": 8.314166666666667,
+          "receiver_before": 2.4621666666666666,
+          "receiver_after": 4.128833333333334
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 8000,
+          "donor_before": 49740,
+          "donor_after": 5.956666666666667,
+          "receiver_before": 2.3035,
+          "receiver_after": 3.636833333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4101,
+      "session_id": "talk-s4101-f2047b",
+      "initial": 130000,
+      "talk": 27953,
+      "net_solve": 6131,
+      "charges": 48000,
+      "active": 47916,
+      "exited": 0,
+      "attempts": 8,
+      "top": 4,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 10000,
+          "donor_before": 38221,
+          "donor_after": 3.7035,
+          "receiver_before": 0.005,
+          "receiver_after": 1.6716666666666666
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 52255,
+          "donor_after": 6.8758333333333335,
+          "receiver_before": 0.377,
+          "receiver_after": 1.2103333333333333
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 40446,
+          "donor_after": 5.907666666666667,
+          "receiver_before": 1.1025,
+          "receiver_after": 1.9358333333333333
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 35173,
+          "donor_after": 5.6955,
+          "receiver_before": 0.8595,
+          "receiver_after": 1.0261666666666667
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 1,
+          "donor_before": 33554,
+          "donor_after": 5.5921666666666665,
+          "receiver_before": 1.6845,
+          "receiver_after": 1.6846666666666668
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 32719,
+          "donor_after": 5.2865,
+          "receiver_before": 0.883,
+          "receiver_after": 1.0496666666666667
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 30801,
+          "donor_after": 4.966833333333334,
+          "receiver_before": 0.8758333333333334,
+          "receiver_after": 1.0425
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 28967,
+          "donor_after": 4.6611666666666665,
+          "receiver_before": 0.8883333333333333,
+          "receiver_after": 1.055
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 27251,
+          "donor_after": 4.375166666666667,
+          "receiver_before": 0.8856666666666667,
+          "receiver_after": 1.0523333333333333
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 25857,
+          "donor_after": 4.142833333333333,
+          "receiver_before": 0.9278333333333333,
+          "receiver_after": 1.0945
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4102,
+      "session_id": "talk-s4102-c9fe96",
+      "initial": 130000,
+      "talk": 23254,
+      "net_solve": 19569,
+      "charges": 71089,
+      "active": 13597,
+      "exited": 2491,
+      "attempts": 8,
+      "top": 5,
+      "invalid": 0,
+      "solved": 4,
+      "survivors": 1,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 2,
+          "exited": 0
+        },
+        {
+          "in": 1,
+          "dead": 2,
+          "exited": 1
+        }
+      ],
+      "gifts": [
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3494,
+          "donor_before": 58188,
+          "donor_after": 8.115666666666666,
+          "receiver_before": -0.644,
+          "receiver_after": -0.06166666666666667
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3126,
+          "donor_before": 38316,
+          "donor_after": 4.865,
+          "receiver_before": -0.08316666666666667,
+          "receiver_after": 0.43783333333333335
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3125,
+          "donor_before": 17529,
+          "donor_after": 1.4006666666666667,
+          "receiver_before": 0.4186666666666667,
+          "receiver_after": 0.9395
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 488,
+          "donor_before": 48270,
+          "donor_after": 7.963666666666667,
+          "receiver_before": 0.8658333333333333,
+          "receiver_after": 0.9471666666666667
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 684,
+          "donor_before": 47020,
+          "donor_after": 7.722666666666667,
+          "receiver_before": 0.7818333333333334,
+          "receiver_after": 0.8958333333333334
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 764,
+          "donor_before": 45658,
+          "donor_after": 6.482333333333333,
+          "receiver_before": -0.25116666666666665,
+          "receiver_after": -0.12383333333333334
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 827,
+          "donor_before": 6422,
+          "donor_after": -0.0675,
+          "receiver_before": 2.9541666666666666,
+          "receiver_after": 3.092
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 2500,
+          "donor_before": 24227,
+          "donor_after": 2.621166666666667,
+          "receiver_before": -0.20833333333333334,
+          "receiver_after": 0.20833333333333334
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 5190,
+          "donor_before": 38007,
+          "donor_after": 5.4695,
+          "receiver_before": 0.097,
+          "receiver_after": 0.962
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 32066,
+          "donor_after": 5.261,
+          "receiver_before": 0.8491666666666666,
+          "receiver_after": 0.9325
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 5112,
+          "donor_before": 13821,
+          "donor_after": 0.4515,
+          "receiver_before": -0.916,
+          "receiver_after": -0.064
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4103,
+      "session_id": "talk-s4103-2912f9",
+      "initial": 130000,
+      "talk": 36702,
+      "net_solve": 15759,
+      "charges": 77539,
+      "active": 0,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 4,
+      "survivors": 0,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 0,
+          "dead": 4,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 10000,
+          "donor_before": 59199,
+          "donor_after": 8.199833333333334,
+          "receiver_before": 1.5193333333333334,
+          "receiver_after": 3.186
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 31148,
+          "donor_after": 3.191333333333333,
+          "receiver_before": 0.7115,
+          "receiver_after": 1.7115
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 33371,
+          "donor_after": 3.5618333333333334,
+          "receiver_before": 1.6355,
+          "receiver_after": 2.6355
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 19121,
+          "donor_after": 1.5201666666666667,
+          "receiver_before": 1.219,
+          "receiver_after": 1.8856666666666666
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1377,
+          "donor_before": 12088,
+          "donor_after": 0.7851666666666667,
+          "receiver_before": -0.25166666666666665,
+          "receiver_after": -0.022166666666666668
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 14879,
+          "donor_after": 1.3131666666666666,
+          "receiver_before": -0.1145,
+          "receiver_after": 0.05216666666666667
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 16112,
+          "donor_after": 1.352,
+          "receiver_before": 0.7851666666666667,
+          "receiver_after": 1.1185
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 12055,
+          "donor_after": 0.8425,
+          "receiver_before": 1.352,
+          "receiver_after": 1.5186666666666666
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 14213,
+          "donor_after": 1.0355,
+          "receiver_before": -0.027,
+          "receiver_after": 0.30633333333333335
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 7078,
+          "donor_after": 1.013,
+          "receiver_before": 0.8983333333333333,
+          "receiver_after": 1.065
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 4273,
+          "donor_before": 4807,
+          "donor_after": -0.911,
+          "receiver_before": -0.9158333333333334,
+          "receiver_after": -0.20366666666666666
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 1314,
+          "donor_before": 2209,
+          "donor_after": -0.8508333333333333,
+          "receiver_before": -0.37683333333333335,
+          "receiver_after": -0.15783333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4104,
+      "session_id": "talk-s4104-2b3662",
+      "initial": 130000,
+      "talk": 27567,
+      "net_solve": 11169,
+      "charges": 48000,
+      "active": 43264,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 58195,
+          "donor_after": 7.699166666666667,
+          "receiver_before": -0.6745,
+          "receiver_after": 0.3255
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 3417,
+          "donor_before": 38647,
+          "donor_after": 4.871666666666667,
+          "receiver_before": 0.3035,
+          "receiver_after": 0.873
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 45446,
+          "donor_after": 7.324333333333334,
+          "receiver_before": 0.8016666666666666,
+          "receiver_after": 1.0516666666666667
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 28362,
+          "donor_after": 4.560333333333333,
+          "receiver_before": 0.9983333333333333,
+          "receiver_after": 1.165
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 41724,
+          "donor_after": 6.870666666666667,
+          "receiver_before": 0.8756666666666667,
+          "receiver_after": 0.959
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 25819,
+          "donor_after": 4.219833333333334,
+          "receiver_before": 0.9468333333333333,
+          "receiver_after": 1.0301666666666667
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 24495,
+          "donor_after": 3.9991666666666665,
+          "receiver_before": 0.9446666666666667,
+          "receiver_after": 1.028
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 40310,
+          "donor_after": 6.635,
+          "receiver_before": 1.013,
+          "receiver_after": 1.0963333333333334
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 23339,
+          "donor_after": 3.8065,
+          "receiver_before": 1.0211666666666666,
+          "receiver_after": 1.1045
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 9885,
+          "donor_after": 1.5641666666666667,
+          "receiver_before": 1.0746666666666667,
+          "receiver_after": 1.158
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 38951,
+          "donor_after": 6.4085,
+          "receiver_before": 1.146,
+          "receiver_after": 1.2293333333333334
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 38015,
+          "donor_after": 6.2525,
+          "receiver_before": 1.139,
+          "receiver_after": 1.2223333333333333
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 500,
+          "donor_before": 22100,
+          "donor_after": 3.6,
+          "receiver_before": 1.2131666666666667,
+          "receiver_after": 1.2965
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 500,
+          "donor_before": 36551,
+          "donor_after": 5.0085,
+          "receiver_before": 0.163,
+          "receiver_after": 0.24633333333333332
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 500,
+          "donor_before": 15941,
+          "donor_after": 1.5735,
+          "receiver_before": 0.21033333333333334,
+          "receiver_after": 0.2936666666666667
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4105,
+      "session_id": "talk-s4105-8196ab",
+      "initial": 130000,
+      "talk": 21659,
+      "net_solve": 10179,
+      "charges": 48000,
+      "active": 50162,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 38123,
+          "donor_after": 4.853833333333333,
+          "receiver_before": 1.2263333333333333,
+          "receiver_after": 1.7263333333333333
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 58617,
+          "donor_after": 8.2695,
+          "receiver_before": 0.40016666666666667,
+          "receiver_after": 0.9001666666666667
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 49139,
+          "donor_after": 7.6898333333333335,
+          "receiver_before": 0.8458333333333333,
+          "receiver_after": 1.3458333333333334
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 45812,
+          "donor_after": 7.1353333333333335,
+          "receiver_before": 1.4343333333333332,
+          "receiver_after": 1.9343333333333332
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 42348,
+          "donor_after": 6.558,
+          "receiver_before": 1.731,
+          "receiver_after": 2.231
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 37784,
+          "donor_after": 4.7973333333333334,
+          "receiver_before": 0.0705,
+          "receiver_after": 0.5705
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 34518,
+          "donor_after": 4.253,
+          "receiver_before": 1.0961666666666667,
+          "receiver_after": 1.5961666666666667
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 24621,
+          "donor_after": 3.6035,
+          "receiver_before": 0.341,
+          "receiver_after": 0.841
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4106,
+      "session_id": "talk-s4106-7b8d13",
+      "initial": 130000,
+      "talk": 31242,
+      "net_solve": 8650,
+      "charges": 72000,
+      "active": 18108,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 56390,
+          "donor_after": 8.231666666666667,
+          "receiver_before": 0.5793333333333334,
+          "receiver_after": 0.746
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 12104,
+          "donor_after": 1.5173333333333334,
+          "receiver_before": 0.6048333333333333,
+          "receiver_after": 1.1048333333333333
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 6000,
+          "donor_before": 32703,
+          "donor_after": 4.4505,
+          "receiver_before": 1.079,
+          "receiver_after": 2.079
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 49021,
+          "donor_after": 8.0035,
+          "receiver_before": 2.045,
+          "receiver_after": 2.2116666666666664
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 18900,
+          "donor_after": 2.816666666666667,
+          "receiver_before": 0.7808333333333334,
+          "receiver_after": 1.1141666666666667
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 40454,
+          "donor_after": 5.075666666666667,
+          "receiver_before": 0.31666666666666665,
+          "receiver_after": 1.9833333333333334
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 30242,
+          "donor_after": 4.707,
+          "receiver_before": 1.0975,
+          "receiver_after": 1.4308333333333334
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 27053,
+          "donor_after": 4.1755,
+          "receiver_before": 1.3046666666666666,
+          "receiver_after": 1.638
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 22903,
+          "donor_after": 3.483833333333333,
+          "receiver_before": 1.4005,
+          "receiver_after": 1.7338333333333333
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 1500,
+          "donor_before": 14314,
+          "donor_after": 1.1356666666666666,
+          "receiver_before": 0.45216666666666666,
+          "receiver_after": 0.7021666666666667
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 12383,
+          "donor_after": 0.7305,
+          "receiver_before": 0.09733333333333333,
+          "receiver_after": 0.43066666666666664
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 1500,
+          "donor_before": 13984,
+          "donor_after": 1.0806666666666667,
+          "receiver_before": 0.6138333333333333,
+          "receiver_after": 0.8638333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4107,
+      "session_id": "talk-s4107-4a9b5e",
+      "initial": 130000,
+      "talk": 25087,
+      "net_solve": 10181,
+      "charges": 48000,
+      "active": 46732,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 54581,
+          "donor_after": 7.5968333333333335,
+          "receiver_before": 0.4685,
+          "receiver_after": 0.9685
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 45043,
+          "donor_after": 7.0071666666666665,
+          "receiver_before": 0.7336666666666667,
+          "receiver_after": 1.2336666666666667
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 41428,
+          "donor_after": 6.4046666666666665,
+          "receiver_before": 1.1948333333333334,
+          "receiver_after": 1.6948333333333334
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 37761,
+          "donor_after": 4.2935,
+          "receiver_before": -0.012666666666666666,
+          "receiver_after": 0.9873333333333333
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 31449,
+          "donor_after": 3.2415,
+          "receiver_before": 0.952,
+          "receiver_after": 1.952
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 25260,
+          "donor_after": 3.71,
+          "receiver_before": 0.5135,
+          "receiver_after": 1.0135
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 21890,
+          "donor_after": 3.4816666666666665,
+          "receiver_before": 0.9155,
+          "receiver_after": 1.0821666666666667
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 20293,
+          "donor_after": 3.2155,
+          "receiver_before": 0.9363333333333334,
+          "receiver_after": 1.103
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 18118,
+          "donor_after": 2.853,
+          "receiver_before": 0.9985,
+          "receiver_after": 1.1651666666666667
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 16636,
+          "donor_after": 2.606,
+          "receiver_before": 1.0443333333333333,
+          "receiver_after": 1.211
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4108,
+      "session_id": "talk-s4108-1538f8",
+      "initial": 130000,
+      "talk": 21804,
+      "net_solve": 8389,
+      "charges": 48000,
+      "active": 51807,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 3,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 58403,
+          "donor_after": 8.567166666666667,
+          "receiver_before": -0.10966666666666666,
+          "receiver_after": 0.057
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 36731,
+          "donor_after": 4.955166666666667,
+          "receiver_before": 0.0455,
+          "receiver_after": 0.21216666666666667
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 50974,
+          "donor_after": 7.662333333333334,
+          "receiver_before": 0.135,
+          "receiver_after": 0.9683333333333334
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 45258,
+          "donor_after": 7.376333333333333,
+          "receiver_before": 0.8568333333333333,
+          "receiver_after": 1.0235
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 27836,
+          "donor_after": 4.472666666666667,
+          "receiver_before": 0.9085,
+          "receiver_after": 1.0751666666666666
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 37461,
+          "donor_after": 5.076833333333333,
+          "receiver_before": 0.7533333333333333,
+          "receiver_after": 0.92
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 600,
+          "donor_before": 26036,
+          "donor_after": 3.239333333333333,
+          "receiver_before": -0.05516666666666667,
+          "receiver_after": 0.044833333333333336
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 18956,
+          "donor_after": 2.9093333333333335,
+          "receiver_before": 0.7758333333333334,
+          "receiver_after": 1.0258333333333334
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 29542,
+          "donor_after": 4.757,
+          "receiver_before": 0.9973333333333333,
+          "receiver_after": 1.164
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4109,
+      "session_id": "talk-s4109-133bd5",
+      "initial": 130000,
+      "talk": 22317,
+      "net_solve": 13387,
+      "charges": 79606,
+      "active": 14690,
+      "exited": 0,
+      "attempts": 8,
+      "top": 5,
+      "invalid": 0,
+      "solved": 4,
+      "survivors": 1,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 2,
+          "exited": 0
+        },
+        {
+          "in": 1,
+          "dead": 3,
+          "exited": 0
+        },
+        {
+          "in": 1,
+          "dead": 3,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 50929,
+          "donor_after": 6.988166666666666,
+          "receiver_before": -0.5151666666666667,
+          "receiver_after": -0.015166666666666667
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 27172,
+          "donor_after": 2.5286666666666666,
+          "receiver_before": -0.034166666666666665,
+          "receiver_after": 0.9658333333333333
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 41668,
+          "donor_after": 6.778,
+          "receiver_before": 0.8538333333333333,
+          "receiver_after": 1.0205
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 40557,
+          "donor_after": 6.592833333333333,
+          "receiver_before": 0.8636666666666667,
+          "receiver_after": 1.0303333333333333
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 39018,
+          "donor_after": 6.169666666666667,
+          "receiver_before": 0.9478333333333333,
+          "receiver_after": 1.2811666666666666
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 207,
+          "donor_before": 36670,
+          "donor_after": 6.077166666666667,
+          "receiver_before": 0.9263333333333333,
+          "receiver_after": 0.9608333333333333
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 940,
+          "donor_before": 35633,
+          "donor_after": 5.782166666666667,
+          "receiver_before": 0.781,
+          "receiver_after": 0.9376666666666666
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 700,
+          "donor_before": 29772,
+          "donor_after": 3.8453333333333335,
+          "receiver_before": -0.13916666666666666,
+          "receiver_after": -0.0225
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 200,
+          "donor_before": 12412,
+          "donor_after": 1.0353333333333334,
+          "receiver_before": -0.04133333333333333,
+          "receiver_after": -0.008
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 648,
+          "donor_before": 28922,
+          "donor_after": 3.7123333333333335,
+          "receiver_before": -0.15183333333333332,
+          "receiver_after": -0.043833333333333335
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 21895,
+          "donor_after": 3.4825,
+          "receiver_before": 0.9043333333333333,
+          "receiver_after": 1.071
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-luna",
+      "seed": 4110,
+      "session_id": "talk-s4110-edd72e",
+      "initial": 130000,
+      "talk": 30595,
+      "net_solve": 13218,
+      "charges": 71034,
+      "active": 15153,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 2,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 2,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 2,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 59275,
+          "donor_after": 7.879166666666666,
+          "receiver_before": -0.16116666666666668,
+          "receiver_after": 0.8388333333333333
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 6000,
+          "donor_before": 46825,
+          "donor_after": 6.804166666666666,
+          "receiver_before": 0.7511666666666666,
+          "receiver_after": 1.7511666666666668
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 37000,
+          "donor_after": 4.166666666666667,
+          "receiver_before": -0.38916666666666666,
+          "receiver_after": 0.6108333333333333
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 24198,
+          "donor_after": 3.533,
+          "receiver_before": 0.5353333333333333,
+          "receiver_after": 1.0353333333333334
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 2200,
+          "donor_before": 5075,
+          "donor_after": 0.4791666666666667,
+          "receiver_before": 0.5731666666666667,
+          "receiver_after": 0.9398333333333333
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 1600,
+          "donor_before": 20818,
+          "donor_after": 3.203,
+          "receiver_before": 0.9398333333333333,
+          "receiver_after": 1.2065
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 24463,
+          "donor_after": 3.4105,
+          "receiver_before": 0.3913333333333333,
+          "receiver_after": 1.058
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 714,
+          "donor_before": 19593,
+          "donor_after": 2.1465,
+          "receiver_before": -0.1925,
+          "receiver_after": -0.0735
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 612,
+          "donor_before": 11224,
+          "donor_after": 0.7686666666666667,
+          "receiver_before": -0.21566666666666667,
+          "receiver_after": -0.11366666666666667
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 12131,
+          "donor_after": 1.7718333333333334,
+          "receiver_before": 0.6121666666666666,
+          "receiver_after": 0.8621666666666666
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4101,
+      "session_id": "talk-s4101-11af21",
+      "initial": 130000,
+      "talk": 33795,
+      "net_solve": 2762,
+      "charges": 65958,
+      "active": 27485,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 2,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 2,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 39253,
+          "donor_after": 5.208833333333334,
+          "receiver_before": 1.5813333333333333,
+          "receiver_after": 2.9146666666666667
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 8000,
+          "donor_before": 16311,
+          "donor_after": 1.3851666666666667,
+          "receiver_before": 5.121833333333333,
+          "receiver_after": 6.455166666666667
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 59218,
+          "donor_after": 9.036333333333333,
+          "receiver_before": 1.2883333333333333,
+          "receiver_after": 2.1216666666666666
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 2500,
+          "donor_before": 47154,
+          "donor_after": 7.442333333333333,
+          "receiver_before": 0.8013333333333333,
+          "receiver_after": 1.218
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 43583,
+          "donor_after": 6.9305,
+          "receiver_before": 0.9161666666666667,
+          "receiver_after": 1.2495
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 40598,
+          "donor_after": 6.433,
+          "receiver_before": 0.9956666666666667,
+          "receiver_after": 1.329
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 3500,
+          "donor_before": 38223,
+          "donor_after": 5.787166666666667,
+          "receiver_before": 1.5771666666666666,
+          "receiver_after": 2.1605
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 29938,
+          "donor_after": 3.823,
+          "receiver_before": -0.115,
+          "receiver_after": 0.051666666666666666
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 32681,
+          "donor_after": 3.946833333333333,
+          "receiver_before": 0.6988333333333333,
+          "receiver_after": 1.1988333333333334
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 2500,
+          "donor_before": 22004,
+          "donor_after": 3.2506666666666666,
+          "receiver_before": 1.0055,
+          "receiver_after": 1.4221666666666666
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4102,
+      "session_id": "talk-s4102-1b129b",
+      "initial": 130000,
+      "talk": 42778,
+      "net_solve": 2924,
+      "charges": 84298,
+      "active": 0,
+      "exited": 0,
+      "attempts": 8,
+      "top": 6,
+      "invalid": 0,
+      "solved": 4,
+      "survivors": 0,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 0,
+          "dead": 4,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 38961,
+          "donor_after": 4.4935,
+          "receiver_before": 0.516,
+          "receiver_after": 1.516
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 6000,
+          "donor_before": 52556,
+          "donor_after": 7.759333333333333,
+          "receiver_before": 1.2708333333333333,
+          "receiver_after": 2.2708333333333335
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 45870,
+          "donor_after": 5.9783333333333335,
+          "receiver_before": 0.9805,
+          "receiver_after": 1.6471666666666667
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 41315,
+          "donor_after": 5.219166666666666,
+          "receiver_before": 0.8871666666666667,
+          "receiver_after": 1.5538333333333334
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 30212,
+          "donor_after": 4.535333333333333,
+          "receiver_before": 1.4481666666666666,
+          "receiver_after": 1.9481666666666666
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 26852,
+          "donor_after": 3.9753333333333334,
+          "receiver_before": 1.3126666666666666,
+          "receiver_after": 1.8126666666666666
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 18051,
+          "donor_after": 1.6751666666666667,
+          "receiver_before": 0.7795,
+          "receiver_after": 1.1128333333333333
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 3500,
+          "donor_before": 20739,
+          "donor_after": 1.8731666666666666,
+          "receiver_before": 0.4955,
+          "receiver_after": 1.0788333333333333
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 15608,
+          "donor_after": 1.268,
+          "receiver_before": 0.9036666666666666,
+          "receiver_after": 1.237
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 9414,
+          "donor_after": 1.4023333333333334,
+          "receiver_before": 0.7458333333333333,
+          "receiver_after": 0.9125
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1300,
+          "donor_before": 7778,
+          "donor_after": 1.0796666666666668,
+          "receiver_before": 0.8201666666666667,
+          "receiver_after": 1.0368333333333333
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 2217,
+          "donor_before": 2217,
+          "donor_after": -1.0,
+          "receiver_before": -0.44666666666666666,
+          "receiver_after": -0.07716666666666666
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 1902,
+          "donor_before": 3031,
+          "donor_after": -0.8118333333333333,
+          "receiver_before": -0.21583333333333332,
+          "receiver_after": 0.10116666666666667
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4103,
+      "session_id": "talk-s4103-068100",
+      "initial": 130000,
+      "talk": 25092,
+      "net_solve": 3116,
+      "charges": 72000,
+      "active": 29792,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 39546,
+          "donor_after": 5.257666666666666,
+          "receiver_before": 1.5725,
+          "receiver_after": 2.9058333333333333
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 16256,
+          "donor_after": 2.042666666666667,
+          "receiver_before": 5.171,
+          "receiver_after": 5.837666666666666
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 56398,
+          "donor_after": 7.399666666666667,
+          "receiver_before": 0.856,
+          "receiver_after": 1.856
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 43017,
+          "donor_after": 5.6695,
+          "receiver_before": 0.6601666666666667,
+          "receiver_after": 1.1601666666666666
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 39839,
+          "donor_after": 5.139833333333334,
+          "receiver_before": 0.874,
+          "receiver_after": 1.374
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 19597,
+          "donor_after": 3.016166666666667,
+          "receiver_before": 0.9805,
+          "receiver_after": 1.2305
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 28123,
+          "donor_after": 2.853833333333333,
+          "receiver_before": 0.24616666666666667,
+          "receiver_after": 1.0795
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 2500,
+          "donor_before": 16323,
+          "donor_after": 1.3038333333333334,
+          "receiver_before": -0.1945,
+          "receiver_after": 0.22216666666666668
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 21299,
+          "donor_after": 2.2165,
+          "receiver_before": 0.09783333333333333,
+          "receiver_after": 0.43116666666666664
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4104,
+      "session_id": "talk-s4104-f2f22a",
+      "initial": 130000,
+      "talk": 11420,
+      "net_solve": 1131,
+      "charges": 24000,
+      "active": 93449,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 7,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 39301,
+          "donor_after": 5.716833333333334,
+          "receiver_before": 1.5686666666666667,
+          "receiver_after": 2.402
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 58607,
+          "donor_after": 8.9345,
+          "receiver_before": 2.3176666666666668,
+          "receiver_after": 3.151
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4105,
+      "session_id": "talk-s4105-31056c",
+      "initial": 130000,
+      "talk": 9080,
+      "net_solve": 2268,
+      "charges": 24000,
+      "active": 94652,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 7,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 8000,
+          "donor_before": 59140,
+          "donor_after": 8.523333333333333,
+          "receiver_before": 1.584,
+          "receiver_after": 2.917333333333333
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 43199,
+          "donor_after": 6.3665,
+          "receiver_before": 1.6103333333333334,
+          "receiver_after": 2.4436666666666667
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4106,
+      "session_id": "talk-s4106-630e40",
+      "initial": 130000,
+      "talk": 27564,
+      "net_solve": 5615,
+      "charges": 92207,
+      "active": 0,
+      "exited": 4614,
+      "attempts": 8,
+      "top": 6,
+      "invalid": 0,
+      "solved": 1,
+      "survivors": 0,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 1,
+          "exited": 1
+        },
+        {
+          "in": 1,
+          "dead": 1,
+          "exited": 2
+        },
+        {
+          "in": 1,
+          "dead": 1,
+          "exited": 2
+        },
+        {
+          "in": 1,
+          "dead": 1,
+          "exited": 2
+        },
+        {
+          "in": 0,
+          "dead": 2,
+          "exited": 2
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 51898,
+          "donor_after": 8.149666666666667,
+          "receiver_before": 0.5,
+          "receiver_after": 1.0
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 32854,
+          "donor_after": 5.225666666666666,
+          "receiver_before": 0.8325,
+          "receiver_after": 1.0825
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 1300,
+          "donor_before": 29915,
+          "donor_after": 3.7691666666666666,
+          "receiver_before": -0.27616666666666667,
+          "receiver_after": -0.0595
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 1500,
+          "donor_before": 27676,
+          "donor_after": 3.3626666666666667,
+          "receiver_before": -0.16216666666666665,
+          "receiver_after": 0.08783333333333333
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 800,
+          "donor_before": 46875,
+          "donor_after": 6.679166666666666,
+          "receiver_before": -0.13183333333333333,
+          "receiver_after": 0.0015
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 200,
+          "donor_before": 45719,
+          "donor_after": 6.5865,
+          "receiver_before": -0.08716666666666667,
+          "receiver_after": -0.05383333333333333
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 38631,
+          "donor_after": 5.9385,
+          "receiver_before": 0.933,
+          "receiver_after": 1.433
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 18730,
+          "donor_after": 2.7883333333333336,
+          "receiver_before": 1.3553333333333333,
+          "receiver_after": 1.6886666666666668
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 27313,
+          "donor_after": 4.0521666666666665,
+          "receiver_before": 1.4555,
+          "receiver_after": 1.9555
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4107,
+      "session_id": "talk-s4107-29597f",
+      "initial": 130000,
+      "talk": 12118,
+      "net_solve": 1635,
+      "charges": 48000,
+      "active": 68247,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 58143,
+          "donor_after": 7.6905,
+          "receiver_before": 0.5218333333333334,
+          "receiver_after": 1.5218333333333334
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 45638,
+          "donor_after": 7.106333333333334,
+          "receiver_before": 1.3648333333333333,
+          "receiver_after": 1.8648333333333333
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 31318,
+          "donor_after": 3.553,
+          "receiver_before": 0.33466666666666667,
+          "receiver_after": 1.0013333333333334
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4108,
+      "session_id": "talk-s4108-5f3920",
+      "initial": 130000,
+      "talk": 23903,
+      "net_solve": 1183,
+      "charges": 48000,
+      "active": 56914,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 38184,
+          "donor_after": 4.530666666666667,
+          "receiver_before": 0.3486666666666667,
+          "receiver_after": 1.182
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 57698,
+          "donor_after": 7.949666666666666,
+          "receiver_before": 4.530666666666667,
+          "receiver_after": 5.197333333333333
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 52596,
+          "donor_after": 6.932666666666667,
+          "receiver_before": 1.1485,
+          "receiver_after": 1.9818333333333333
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 38462,
+          "donor_after": 4.910333333333333,
+          "receiver_before": 0.7533333333333333,
+          "receiver_after": 1.2533333333333334
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 34307,
+          "donor_after": 4.3845,
+          "receiver_before": 0.7628333333333334,
+          "receiver_after": 1.0961666666666667
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 25479,
+          "donor_after": 3.7465,
+          "receiver_before": 1.0578333333333334,
+          "receiver_after": 1.5578333333333334
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 21318,
+          "donor_after": 2.8863333333333334,
+          "receiver_before": 0.9043333333333333,
+          "receiver_after": 1.571
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4109,
+      "session_id": "talk-s4109-bff4e6",
+      "initial": 130000,
+      "talk": 25397,
+      "net_solve": 3871,
+      "charges": 72000,
+      "active": 28732,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 58925,
+          "donor_after": 8.9875,
+          "receiver_before": 1.5473333333333332,
+          "receiver_after": 2.3806666666666665
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 31625,
+          "donor_after": 3.2708333333333335,
+          "receiver_before": 0.12816666666666668,
+          "receiver_after": 1.1281666666666668
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 44029,
+          "donor_after": 5.6715,
+          "receiver_before": 1.0083333333333333,
+          "receiver_after": 1.675
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 39435,
+          "donor_after": 5.0725,
+          "receiver_before": 1.035,
+          "receiver_after": 1.535
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 29753,
+          "donor_after": 4.292166666666667,
+          "receiver_before": 1.4126666666666667,
+          "receiver_after": 2.0793333333333335
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 25124,
+          "donor_after": 3.687333333333333,
+          "receiver_before": 1.4491666666666667,
+          "receiver_after": 1.9491666666666667
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 19700,
+          "donor_after": 1.95,
+          "receiver_before": 0.6983333333333334,
+          "receiver_after": 1.0316666666666667
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 18294,
+          "donor_after": 1.7156666666666667,
+          "receiver_before": 0.7816666666666666,
+          "receiver_after": 1.115
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 17151,
+          "donor_after": 1.5251666666666666,
+          "receiver_before": 0.9973333333333333,
+          "receiver_after": 1.3306666666666667
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 1500,
+          "donor_before": 15916,
+          "donor_after": 1.4026666666666667,
+          "receiver_before": 0.9393333333333334,
+          "receiver_after": 1.1893333333333334
+        }
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "seed": 4110,
+      "session_id": "talk-s4110-dcea26",
+      "initial": 130000,
+      "talk": 31820,
+      "net_solve": 2357,
+      "charges": 48000,
+      "active": 47711,
+      "exited": 112,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 3,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 0,
+          "exited": 1
+        },
+        {
+          "in": 3,
+          "dead": 0,
+          "exited": 1
+        },
+        {
+          "in": 3,
+          "dead": 0,
+          "exited": 1
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 39487,
+          "donor_after": 5.747833333333333,
+          "receiver_before": 1.5266666666666666,
+          "receiver_after": 2.36
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 51884,
+          "donor_after": 7.814,
+          "receiver_before": 2.0848333333333335,
+          "receiver_after": 2.9181666666666666
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 46078,
+          "donor_after": 6.846333333333333,
+          "receiver_before": 0.4563333333333333,
+          "receiver_after": 1.2896666666666667
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 16275,
+          "donor_after": 1.8791666666666667,
+          "receiver_before": 6.846333333333333,
+          "receiver_after": 7.679666666666667
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 45046,
+          "donor_after": 7.007666666666666,
+          "receiver_before": 1.0226666666666666,
+          "receiver_after": 1.5226666666666666
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 41102,
+          "donor_after": 6.350333333333333,
+          "receiver_before": 1.2966666666666666,
+          "receiver_after": 1.7966666666666666
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 25209,
+          "donor_after": 2.8681666666666668,
+          "receiver_before": 0.6985,
+          "receiver_after": 1.0318333333333334
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 36978,
+          "donor_after": 4.663,
+          "receiver_before": 0.9373333333333334,
+          "receiver_after": 1.4373333333333334
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 2500,
+          "donor_before": 16382,
+          "donor_after": 2.3136666666666668,
+          "receiver_before": 1.2791666666666666,
+          "receiver_after": 1.6958333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4101,
+      "session_id": "talk-s4101-ccf111",
+      "initial": 130000,
+      "talk": 45030,
+      "net_solve": 12954,
+      "charges": 72016,
+      "active": 0,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 4,
+      "survivors": 0,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 2,
+          "exited": 0
+        },
+        {
+          "in": 0,
+          "dead": 4,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 19133,
+          "donor_after": 2.3555,
+          "receiver_before": 1.5673333333333332,
+          "receiver_after": 2.4006666666666665
+        },
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 59347,
+          "donor_after": 9.057833333333333,
+          "receiver_before": 2.3906666666666667,
+          "receiver_after": 3.224
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 53244,
+          "donor_after": 7.040666666666667,
+          "receiver_before": 1.302,
+          "receiver_after": 2.1353333333333335
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 31237,
+          "donor_after": 4.372833333333333,
+          "receiver_before": 2.051833333333333,
+          "receiver_after": 2.8851666666666667
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 40663,
+          "donor_after": 5.1105,
+          "receiver_before": 2.8491666666666666,
+          "receiver_after": 4.515833333333333
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 22902,
+          "donor_after": 2.4836666666666667,
+          "receiver_before": 3.037333333333333,
+          "receiver_after": 4.370666666666667
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 16214,
+          "donor_after": 2.0356666666666667,
+          "receiver_before": 4.3293333333333335,
+          "receiver_after": 4.996
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 28357,
+          "donor_after": 4.392833333333333,
+          "receiver_before": 0.028666666666666667,
+          "receiver_after": 0.362
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 25623,
+          "donor_after": 2.9371666666666667,
+          "receiver_before": 2.2518333333333334,
+          "receiver_after": 3.585166666666667
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 2500,
+          "donor_before": 10141,
+          "donor_after": 1.2735,
+          "receiver_before": 2.8278333333333334,
+          "receiver_after": 3.2445
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 18993,
+          "donor_after": 2.3321666666666667,
+          "receiver_before": 0.2375,
+          "receiver_after": 1.0708333333333333
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 20687,
+          "donor_after": 2.9478333333333335,
+          "receiver_before": 1.0888333333333333,
+          "receiver_after": 1.5888333333333333
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 17560,
+          "donor_after": 2.5933333333333333,
+          "receiver_before": 0.9931666666666666,
+          "receiver_after": 1.3265
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 15179,
+          "donor_after": 1.8631666666666666,
+          "receiver_before": 1.5268333333333333,
+          "receiver_after": 2.1935
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 11661,
+          "donor_after": 1.2768333333333333,
+          "receiver_before": 2.15,
+          "receiver_after": 2.816666666666667
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 16075,
+          "donor_after": 2.0125,
+          "receiver_before": 1.2263333333333333,
+          "receiver_after": 1.893
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 11975,
+          "donor_after": 1.6625,
+          "receiver_before": 1.2293333333333334,
+          "receiver_after": 1.5626666666666666
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 9611,
+          "donor_after": 1.2685,
+          "receiver_before": 1.8233333333333333,
+          "receiver_after": 2.1566666666666667
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 12517,
+          "donor_after": 1.5861666666666667,
+          "receiver_before": 1.7805,
+          "receiver_after": 2.2805
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 8725,
+          "donor_after": 1.1208333333333333,
+          "receiver_before": 2.263,
+          "receiver_after": 2.5963333333333334
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 15274,
+          "donor_after": 2.0456666666666665,
+          "receiver_before": 1.5613333333333332,
+          "receiver_after": 2.0613333333333332
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 12238,
+          "donor_after": 1.7063333333333333,
+          "receiver_before": 1.1035,
+          "receiver_after": 1.4368333333333334
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 8082,
+          "donor_after": 1.1803333333333332,
+          "receiver_before": 2.0148333333333333,
+          "receiver_after": 2.1815
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 9982,
+          "donor_after": 1.1636666666666666,
+          "receiver_before": 2.1705,
+          "receiver_after": 2.6705
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 200,
+          "donor_before": 10433,
+          "donor_after": 0.7055,
+          "receiver_before": -0.022,
+          "receiver_after": 0.011333333333333334
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 9800,
+          "donor_after": 0.3,
+          "receiver_before": -0.0008333333333333334,
+          "receiver_after": 0.3325
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 300,
+          "donor_before": 6482,
+          "donor_after": 0.030333333333333334,
+          "receiver_before": -0.03916666666666667,
+          "receiver_after": 0.010833333333333334
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1200,
+          "donor_before": 1387,
+          "donor_after": 0.031166666666666665,
+          "receiver_before": 0.25883333333333336,
+          "receiver_after": 0.4588333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4102,
+      "session_id": "talk-s4102-a2ffb9",
+      "initial": 130000,
+      "talk": 25949,
+      "net_solve": 6260,
+      "charges": 48000,
+      "active": 49791,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 58497,
+          "donor_after": 8.082833333333333,
+          "receiver_before": 3.1938333333333335,
+          "receiver_after": 4.8605
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 10000,
+          "donor_before": 28654,
+          "donor_after": 3.109,
+          "receiver_before": 8.041166666666667,
+          "receiver_after": 9.707833333333333
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 15000,
+          "donor_before": 57622,
+          "donor_after": 7.103666666666666,
+          "receiver_before": 1.2896666666666667,
+          "receiver_after": 3.7896666666666667
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 35008,
+          "donor_after": 4.834666666666666,
+          "receiver_before": 1.799,
+          "receiver_after": 2.799
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 29546,
+          "donor_after": 2.9243333333333332,
+          "receiver_before": 0.8278333333333333,
+          "receiver_after": 1.8278333333333334
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 18080,
+          "donor_after": 2.513333333333333,
+          "receiver_before": 1.4345,
+          "receiver_after": 1.9345
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 14106,
+          "donor_after": 2.0176666666666665,
+          "receiver_before": 1.659,
+          "receiver_after": 1.9923333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4103,
+      "session_id": "talk-s4103-80a894",
+      "initial": 130000,
+      "talk": 20235,
+      "net_solve": 8874,
+      "charges": 72000,
+      "active": 28891,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 39460,
+          "donor_after": 5.243333333333333,
+          "receiver_before": 1.5263333333333333,
+          "receiver_after": 2.8596666666666666
+        },
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 18574,
+          "donor_after": 2.2623333333333333,
+          "receiver_before": 2.8276666666666666,
+          "receiver_after": 3.661
+        },
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59336,
+          "donor_after": 8.222666666666667,
+          "receiver_before": 3.616833333333333,
+          "receiver_after": 5.2835
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 8000,
+          "donor_before": 48604,
+          "donor_after": 6.767333333333333,
+          "receiver_before": 2.184833333333333,
+          "receiver_after": 3.5181666666666667
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 30715,
+          "donor_after": 4.285833333333334,
+          "receiver_before": 3.5005,
+          "receiver_after": 4.333833333333334
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 40336,
+          "donor_after": 5.056,
+          "receiver_before": 4.267166666666666,
+          "receiver_after": 5.933833333333333
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 34646,
+          "donor_after": 4.941,
+          "receiver_before": 4.981333333333334,
+          "receiver_after": 5.814666666666667
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 15910,
+          "donor_after": 2.151666666666667,
+          "receiver_before": 1.9338333333333333,
+          "receiver_after": 2.4338333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4104,
+      "session_id": "talk-s4104-8f109f",
+      "initial": 130000,
+      "talk": 20396,
+      "net_solve": 4420,
+      "charges": 24000,
+      "active": 81184,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 7,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 10000,
+          "donor_before": 59247,
+          "donor_after": 8.207833333333333,
+          "receiver_before": 1.4956666666666667,
+          "receiver_after": 3.162333333333333
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 38013,
+          "donor_after": 4.668833333333334,
+          "receiver_before": 1.2628333333333333,
+          "receiver_after": 1.9295
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 40260,
+          "donor_after": 5.71,
+          "receiver_before": 1.9071666666666667,
+          "receiver_after": 2.9071666666666665
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 26488,
+          "donor_after": 3.9146666666666667,
+          "receiver_before": 1.5633333333333332,
+          "receiver_after": 2.0633333333333335
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 33249,
+          "donor_after": 5.208166666666667,
+          "receiver_before": 2.0523333333333333,
+          "receiver_after": 2.385666666666667
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4105,
+      "session_id": "talk-s4105-ce2c38",
+      "initial": 130000,
+      "talk": 26128,
+      "net_solve": 5914,
+      "charges": 48000,
+      "active": 49958,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 59465,
+          "donor_after": 9.0775,
+          "receiver_before": 1.5755,
+          "receiver_after": 2.4088333333333334
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 54286,
+          "donor_after": 8.214333333333334,
+          "receiver_before": 3.0631666666666666,
+          "receiver_after": 3.8965
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 38498,
+          "donor_after": 5.583,
+          "receiver_before": 2.2311666666666667,
+          "receiver_after": 3.0645
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 48702,
+          "donor_after": 7.283666666666667,
+          "receiver_before": 3.0566666666666666,
+          "receiver_after": 3.89
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 32887,
+          "donor_after": 4.647833333333334,
+          "receiver_before": 3.7348333333333334,
+          "receiver_after": 4.5681666666666665
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 43153,
+          "donor_after": 6.358833333333333,
+          "receiver_before": 4.5488333333333335,
+          "receiver_after": 5.3821666666666665
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 22687,
+          "donor_after": 3.2811666666666666,
+          "receiver_before": 5.369833333333333,
+          "receiver_after": 5.869833333333333
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 37246,
+          "donor_after": 4.707666666666666,
+          "receiver_before": 2.2171666666666665,
+          "receiver_after": 2.7171666666666665
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 24943,
+          "donor_after": 3.3238333333333334,
+          "receiver_before": 4.648833333333333,
+          "receiver_after": 5.482166666666667
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 32419,
+          "donor_after": 4.9031666666666665,
+          "receiver_before": 2.6375,
+          "receiver_after": 3.1375
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 29041,
+          "donor_after": 4.506833333333334,
+          "receiver_before": 3.049,
+          "receiver_after": 3.3823333333333334
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 26746,
+          "donor_after": 3.6243333333333334,
+          "receiver_before": 3.3145,
+          "receiver_after": 4.147833333333334
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 19377,
+          "donor_after": 2.7295,
+          "receiver_before": 4.130166666666667,
+          "receiver_after": 4.630166666666667
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 27180,
+          "donor_after": 4.03,
+          "receiver_before": 2.7041666666666666,
+          "receiver_after": 3.2041666666666666
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 22870,
+          "donor_after": 2.4783333333333335,
+          "receiver_before": 2.1106666666666665,
+          "receiver_after": 2.444
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 20003,
+          "donor_after": 2.0005,
+          "receiver_before": 2.4783333333333335,
+          "receiver_after": 2.8116666666666665
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 22652,
+          "donor_after": 2.275333333333333,
+          "receiver_before": 1.4366666666666668,
+          "receiver_after": 1.9366666666666668
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 14651,
+          "donor_after": 2.1085,
+          "receiver_before": 1.9466666666666668,
+          "receiver_after": 2.28
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 13299,
+          "donor_after": 1.8831666666666667,
+          "receiver_before": 2.0906666666666665,
+          "receiver_after": 2.424
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4106,
+      "session_id": "talk-s4106-22ce2e",
+      "initial": 130000,
+      "talk": 37878,
+      "net_solve": 19029,
+      "charges": 73042,
+      "active": 0,
+      "exited": 51,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 1,
+      "solved": 3,
+      "survivors": 0,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 0,
+          "exited": 1
+        },
+        {
+          "in": 3,
+          "dead": 0,
+          "exited": 1
+        },
+        {
+          "in": 3,
+          "dead": 0,
+          "exited": 1
+        },
+        {
+          "in": 3,
+          "dead": 0,
+          "exited": 1
+        },
+        {
+          "in": 1,
+          "dead": 2,
+          "exited": 1
+        },
+        {
+          "in": 0,
+          "dead": 3,
+          "exited": 1
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 56703,
+          "donor_after": 8.117166666666666,
+          "receiver_before": 2.1708333333333334,
+          "receiver_after": 2.504166666666667
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 6000,
+          "donor_before": 30849,
+          "donor_after": 4.1415,
+          "receiver_before": 0.3305,
+          "receiver_after": 1.3305
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 46411,
+          "donor_after": 7.235166666666666,
+          "receiver_before": 1.2935,
+          "receiver_after": 1.7935
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 42495,
+          "donor_after": 5.7491666666666665,
+          "receiver_before": 1.1573333333333333,
+          "receiver_after": 1.4906666666666666
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 23685,
+          "donor_after": 2.4475,
+          "receiver_before": 1.4563333333333333,
+          "receiver_after": 1.9563333333333333
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 14171,
+          "donor_after": 1.6951666666666667,
+          "receiver_before": 1.8585,
+          "receiver_after": 2.525166666666667
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 33309,
+          "donor_after": 5.0515,
+          "receiver_before": 2.4898333333333333,
+          "receiver_after": 2.9898333333333333
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 16831,
+          "donor_after": 2.3051666666666666,
+          "receiver_before": 1.6668333333333334,
+          "receiver_after": 2.1668333333333334
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 29386,
+          "donor_after": 4.231,
+          "receiver_before": 2.1025,
+          "receiver_after": 2.7691666666666666
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 13445,
+          "donor_after": 1.9075,
+          "receiver_before": 2.760666666666667,
+          "receiver_after": 3.094
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 6698,
+          "donor_after": 0.9496666666666667,
+          "receiver_before": 0.1005,
+          "receiver_after": 0.26716666666666666
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 4500,
+          "donor_before": 13482,
+          "donor_after": 1.497,
+          "receiver_before": 0.9496666666666667,
+          "receiver_after": 1.6996666666666667
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 4500,
+          "donor_before": 9758,
+          "donor_after": 0.8763333333333333,
+          "receiver_before": 1.497,
+          "receiver_after": 2.247
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 4500,
+          "donor_before": 13215,
+          "donor_after": 1.4525,
+          "receiver_before": 0.24366666666666667,
+          "receiver_after": 0.9936666666666667
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 4111,
+          "donor_before": 4111,
+          "donor_after": -1.0,
+          "receiver_before": 0.32816666666666666,
+          "receiver_after": 1.0133333333333334
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4107,
+      "session_id": "talk-s4107-d0e36a",
+      "initial": 130000,
+      "talk": 25400,
+      "net_solve": 2915,
+      "charges": 24000,
+      "active": 77685,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 7,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 37989,
+          "donor_after": 4.998166666666667,
+          "receiver_before": 0.2673333333333333,
+          "receiver_after": 0.6006666666666667
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 54570,
+          "donor_after": 7.428333333333334,
+          "receiver_before": 1.8295,
+          "receiver_after": 2.496166666666667
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 20546,
+          "donor_after": 1.7576666666666667,
+          "receiver_before": 0.4756666666666667,
+          "receiver_after": 1.1423333333333334
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 29061,
+          "donor_after": 4.510166666666667,
+          "receiver_before": 1.0511666666666666,
+          "receiver_after": 1.3845
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 43721,
+          "donor_after": 6.620166666666667,
+          "receiver_before": 1.3576666666666666,
+          "receiver_after": 2.0243333333333333
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 26471,
+          "donor_after": 4.0785,
+          "receiver_before": 1.8515,
+          "receiver_after": 2.184833333333333
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 39116,
+          "donor_after": 5.852666666666667,
+          "receiver_before": 1.5988333333333333,
+          "receiver_after": 2.2655
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 12827,
+          "donor_after": 1.8045,
+          "receiver_before": 2.2558333333333334,
+          "receiver_after": 2.589166666666667
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 34222,
+          "donor_after": 5.037,
+          "receiver_before": 3.9883333333333333,
+          "receiver_after": 4.655
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 27475,
+          "donor_after": 4.245833333333334,
+          "receiver_before": 1.6056666666666666,
+          "receiver_after": 1.939
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 29640,
+          "donor_after": 4.6066666666666665,
+          "receiver_before": 1.8643333333333334,
+          "receiver_after": 2.1976666666666667
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 27129,
+          "donor_after": 4.188166666666667,
+          "receiver_before": 2.117,
+          "receiver_after": 2.4503333333333335
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 24825,
+          "donor_after": 3.8041666666666667,
+          "receiver_before": 2.4033333333333333,
+          "receiver_after": 2.736666666666667
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 24658,
+          "donor_after": 3.6096666666666666,
+          "receiver_before": 2.7223333333333333,
+          "receiver_after": 3.2223333333333333
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4108,
+      "session_id": "talk-s4108-a85b30",
+      "initial": 130000,
+      "talk": 25425,
+      "net_solve": 6361,
+      "charges": 48000,
+      "active": 50214,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 59420,
+          "donor_after": 9.07,
+          "receiver_before": 1.6045,
+          "receiver_after": 2.4378333333333333
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 38334,
+          "donor_after": 5.555666666666666,
+          "receiver_before": 2.2516666666666665,
+          "receiver_after": 3.085
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 53560,
+          "donor_after": 8.093333333333334,
+          "receiver_before": 3.0641666666666665,
+          "receiver_after": 3.8975
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 48064,
+          "donor_after": 7.177333333333333,
+          "receiver_before": 2.891,
+          "receiver_after": 3.7243333333333335
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 35451,
+          "donor_after": 5.4085,
+          "receiver_before": 2.497,
+          "receiver_after": 2.997
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 32016,
+          "donor_after": 4.669333333333333,
+          "receiver_before": 1.81,
+          "receiver_after": 2.4766666666666666
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 24651,
+          "donor_after": 3.775166666666667,
+          "receiver_before": 2.2808333333333333,
+          "receiver_after": 2.6141666666666667
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 21693,
+          "donor_after": 2.4488333333333334,
+          "receiver_before": 1.536,
+          "receiver_after": 1.7026666666666668
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 24005,
+          "donor_after": 2.6675,
+          "receiver_before": 1.6755,
+          "receiver_after": 2.0088333333333335
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 20513,
+          "donor_after": 2.2521666666666667,
+          "receiver_before": 1.9756666666666667,
+          "receiver_after": 2.142333333333333
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 15671,
+          "donor_after": 2.2785,
+          "receiver_before": 1.6448333333333334,
+          "receiver_after": 1.9781666666666666
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4109,
+      "session_id": "talk-s4109-d38e38",
+      "initial": 130000,
+      "talk": 42096,
+      "net_solve": 7433,
+      "charges": 72000,
+      "active": 8471,
+      "exited": 0,
+      "attempts": 8,
+      "top": 7,
+      "invalid": 0,
+      "solved": 5,
+      "survivors": 2,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 3,
+          "dead": 1,
+          "exited": 0
+        },
+        {
+          "in": 2,
+          "dead": 2,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 59289,
+          "donor_after": 9.3815,
+          "receiver_before": 1.5791666666666666,
+          "receiver_after": 2.0791666666666666
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 55525,
+          "donor_after": 9.0875,
+          "receiver_before": 1.9141666666666666,
+          "receiver_after": 2.0808333333333335
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 36037,
+          "donor_after": 4.506166666666667,
+          "receiver_before": 0.9886666666666667,
+          "receiver_after": 1.4886666666666666
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 6000,
+          "donor_before": 53349,
+          "donor_after": 6.8915,
+          "receiver_before": 1.4411666666666667,
+          "receiver_after": 2.4411666666666667
+        },
+        {
+          "round": 3,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 25973,
+          "donor_after": 2.8288333333333333,
+          "receiver_before": 0.69,
+          "receiver_after": 1.19
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 30580,
+          "donor_after": 4.263333333333334,
+          "receiver_before": 1.1636666666666666,
+          "receiver_after": 1.997
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 10746,
+          "donor_after": 1.4576666666666667,
+          "receiver_before": 0.9065,
+          "receiver_after": 1.2398333333333333
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 15266,
+          "donor_after": 2.211,
+          "receiver_before": 1.1535,
+          "receiver_after": 1.4868333333333332
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 12860,
+          "donor_after": 1.81,
+          "receiver_before": 1.4383333333333332,
+          "receiver_after": 1.7716666666666667
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 23685,
+          "donor_after": 3.4475,
+          "receiver_before": 1.7438333333333333,
+          "receiver_after": 2.2438333333333333
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 12944,
+          "donor_after": 1.824,
+          "receiver_before": 1.2936666666666667,
+          "receiver_after": 1.627
+        },
+        {
+          "round": 6,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 15573,
+          "donor_after": 1.2621666666666667,
+          "receiver_before": 0.6071666666666666,
+          "receiver_after": 0.9405
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 1068,
+          "donor_after": 0.011333333333333334,
+          "receiver_before": 0.17966666666666667,
+          "receiver_after": 0.3463333333333333
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 6426,
+          "donor_after": 0.4043333333333333,
+          "receiver_before": 0.30283333333333334,
+          "receiver_after": 0.9695
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 3842,
+          "donor_after": 0.3903333333333333,
+          "receiver_before": 0.9613333333333334,
+          "receiver_after": 1.2113333333333334
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1500,
+          "donor_before": 6927,
+          "donor_after": 0.9045,
+          "receiver_before": 0.31983333333333336,
+          "receiver_after": 0.5698333333333333
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 1505,
+          "donor_after": 0.0008333333333333334,
+          "receiver_before": 0.4835,
+          "receiver_after": 0.7335
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 4000,
+          "donor_before": 4704,
+          "donor_after": 0.11733333333333333,
+          "receiver_before": 0.7175,
+          "receiver_after": 1.3841666666666668
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 8007,
+          "donor_after": 0.6678333333333333,
+          "receiver_before": 0.09033333333333333,
+          "receiver_after": 0.757
+        }
+      ]
+    },
+    {
+      "model": "gpt-6-sol",
+      "seed": 4110,
+      "session_id": "talk-s4110-449a36",
+      "initial": 130000,
+      "talk": 40684,
+      "net_solve": 6524,
+      "charges": 48000,
+      "active": 34792,
+      "exited": 0,
+      "attempts": 8,
+      "top": 8,
+      "invalid": 0,
+      "solved": 6,
+      "survivors": 4,
+      "states": [
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        },
+        {
+          "in": 4,
+          "dead": 0,
+          "exited": 0
+        }
+      ],
+      "gifts": [
+        {
+          "round": 1,
+          "phase": "prep",
+          "amount": 5000,
+          "donor_before": 39322,
+          "donor_after": 5.7203333333333335,
+          "receiver_before": 1.5778333333333334,
+          "receiver_after": 2.4111666666666665
+        },
+        {
+          "round": 1,
+          "phase": "rescue",
+          "amount": 2500,
+          "donor_before": 33428,
+          "donor_after": 4.1546666666666665,
+          "receiver_before": 0.6101666666666666,
+          "receiver_after": 1.0268333333333333
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 1000,
+          "donor_before": 50956,
+          "donor_after": 8.326,
+          "receiver_before": 0.8746666666666667,
+          "receiver_after": 1.0413333333333334
+        },
+        {
+          "round": 2,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 23976,
+          "donor_after": 2.6626666666666665,
+          "receiver_before": 2.008166666666667,
+          "receiver_after": 3.3415
+        },
+        {
+          "round": 2,
+          "phase": "rescue",
+          "amount": 4000,
+          "donor_before": 18921,
+          "donor_after": 2.4868333333333332,
+          "receiver_before": 2.601,
+          "receiver_after": 3.2676666666666665
+        },
+        {
+          "round": 3,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 14140,
+          "donor_after": 2.1066666666666665,
+          "receiver_before": 0.847,
+          "receiver_after": 1.097
+        },
+        {
+          "round": 4,
+          "phase": "prep",
+          "amount": 1500,
+          "donor_before": 47948,
+          "donor_after": 7.741333333333333,
+          "receiver_before": 0.8363333333333334,
+          "receiver_after": 1.0863333333333334
+        },
+        {
+          "round": 4,
+          "phase": "rescue",
+          "amount": 2000,
+          "donor_before": 45911,
+          "donor_after": 7.3185,
+          "receiver_before": 1.0075,
+          "receiver_after": 1.3408333333333333
+        },
+        {
+          "round": 5,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 17538,
+          "donor_after": 2.5896666666666666,
+          "receiver_before": 1.2751666666666666,
+          "receiver_after": 1.6085
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 800,
+          "donor_before": 14936,
+          "donor_after": 1.356,
+          "receiver_before": -0.135,
+          "receiver_after": -0.0016666666666666668
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 500,
+          "donor_before": 14018,
+          "donor_after": 1.253,
+          "receiver_before": -0.019666666666666666,
+          "receiver_after": 0.06366666666666666
+        },
+        {
+          "round": 5,
+          "phase": "rescue",
+          "amount": 5000,
+          "donor_before": 42564,
+          "donor_after": 5.260666666666666,
+          "receiver_before": 0.03266666666666666,
+          "receiver_after": 0.866
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 2000,
+          "donor_before": 30423,
+          "donor_after": 4.737166666666667,
+          "receiver_before": 0.7465,
+          "receiver_after": 1.0798333333333334
+        },
+        {
+          "round": 6,
+          "phase": "prep",
+          "amount": 8000,
+          "donor_before": 28351,
+          "donor_after": 3.3918333333333335,
+          "receiver_before": 0.6315,
+          "receiver_after": 1.9648333333333334
+        },
+        {
+          "round": 7,
+          "phase": "prep",
+          "amount": 700,
+          "donor_before": 9700,
+          "donor_after": 1.5,
+          "receiver_before": 0.8928333333333334,
+          "receiver_after": 1.0095
+        },
+        {
+          "round": 7,
+          "phase": "rescue",
+          "amount": 1000,
+          "donor_before": 19313,
+          "donor_after": 3.0521666666666665,
+          "receiver_before": 0.8813333333333333,
+          "receiver_after": 1.048
+        },
+        {
+          "round": 8,
+          "phase": "prep",
+          "amount": 3000,
+          "donor_before": 17763,
+          "donor_after": 2.4605,
+          "receiver_before": 0.9708333333333333,
+          "receiver_after": 1.4708333333333334
+        },
+        {
+          "round": 8,
+          "phase": "rescue",
+          "amount": 3000,
+          "donor_before": 14259,
+          "donor_after": 1.8765,
+          "receiver_before": 0.7853333333333333,
+          "receiver_after": 1.2853333333333334
+        }
+      ]
+    }
+  ]
+}
