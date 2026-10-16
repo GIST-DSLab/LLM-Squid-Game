@@ -96,7 +96,7 @@ ROOM_REPLIES = {  # v22 (agent, round, phase, tick) -> stub reply: TO one and tw
     ("agent-17", 1, "prep", 2): "ASK agent-6 3000: A little more, to pay a charge if I miss.\nDONE",
     ("agent-6", 1, "prep", 2): "TO R2: I can put in 5,000 if agent-11 does too.\nDONE",
     ("agent-11", 1, "prep", 2): "TO R2: I will keep mine for now.\nLEAVE R2\nDONE",
-    ("agent-11", 1, "rescue", 1): "ASK agent-23 5000: After this charge I would be down to about 14,000, two more misses from the edge.\nDONE",
+    ("agent-11", 1, "rescue", 1): "ASK agent-23 5000: After this charge I would be down to about 14,000, two more misses from the edge.\nASK 2,000: from anyone who can spare it.\nDONE",  # the 2nd ASK names no agent: NOT DELIVERED at tick 3
     ("agent-23", 1, "rescue", 2): "GIVE agent-11 5000: That keeps you above the next charge.\nDONE"}
 
 

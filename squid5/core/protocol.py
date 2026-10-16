@@ -103,6 +103,7 @@ def parse_rooms(text: str, you: str, known: list[str], present: list[str], room,
     out = {"messages": [], "gives": [], "asks": [], "leaves": [], "exit": False, "exit_reason": None, "done": False,
            "dropped": [], "format_error": None}
     cur, seen, why_ = None, False, {"text": ""}
+    text = re.sub(r"(?m)(\S)[ \t]+DONE[ \t.*_`]*$", r"\1\nDONE", text)  # 10-16 Luna test: 'TO X: ... DONE' ends a line with DONE
     for line in text.splitlines():
         m = _ROOM.match(line) or (None if seen else re.match(_ROOM.pattern, line, re.I | re.S))
         if not m:

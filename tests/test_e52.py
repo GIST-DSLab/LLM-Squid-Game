@@ -532,3 +532,10 @@ def test_the_answer_line_wins_and_is_validated_whole():  # Astra rounds 7-8 (A21
     for text, n in NOT_ANSWERS:
         with pytest.raises(FormatError):
             parse_actions(text, n)
+
+def test_v22_done_at_a_line_end_counts_and_an_undelivered_line_is_told_at_the_next_call():  # 10-16 Luna test (drip loop)
+    p = e52.parse_rooms("ASK agent-23 1000: please send 271. DONE", A17, AG, AG, lambda n, i: ("R1", None), True)
+    assert p["done"] and p["asks"][0]["text"] == "please send 271." and not e52.parse_rooms("TO agent-6: we are DONE here", A17, AG, AG, lambda n, i: ("R1", None), True)["done"]
+    c, ev = cfg(V22, rounds=1, schedule=["e01"]), []
+    e52.Session(c.settings, c.cells[0], 4101, stub(lambda m, cap: Reply("ACTIONS: go_left" if "SOLVE." in m[-1]["content"] else "ASK 3,000: help\nDONE" if me(m) == A6 and "tick 1 " in m[-1]["content"] else "TO agent-11: hi" if me(m) == A6 and "tick 2 " in m[-1]["content"] else "DONE", 30)), ev.append, "x").run()
+    assert any("NOT DELIVERED from your last reply: ASK 3,000: help" in e["user"] for e in ev if e["event"] == "call" and e["agent"] == A6)

@@ -280,7 +280,8 @@ class Session:
         self.ga: list[dict] = []  # every GIVE (done | refused) and ASK, whole session
         self.chats: list[dict] = []  # v14c: every chat that took place, whole session
         self.shown: dict[str, int] = {}  # v14e: the GIVE maximum (its balance) each agent was last shown
-        self.results: dict = {}  # v15 talk_after_solve: this round's SOLVE results, shown at TALK (Session._after)
+        self.results: dict = {}
+        self.undelivered: dict[str, list] = {}  # v22: the lines of an agent's last reply that were not delivered, told at its next call  # v15 talk_after_solve: this round's SOLVE results, shown at TALK (Session._after)
         self.vote, self.phase, self.cycle = None, "rescue", []  # this round's solver (Session._rotate), TALK phase, solver cycle
         self.rooms, self.seq, self.seen = [], 0, {}  # v22 messenger: every room; message counter; agent -> seq at its last call
         self.systems = {a: rules.compact_system(a, solve_cap=s.solve_cap, chat_turns=s.chat_turns, per_agent=s.public_per_agent,
@@ -551,8 +552,9 @@ class Session:
             for a in called:
                 head, part = self._head(r, a)
                 self.shown[a] = w.balances[a]
+                bad = "".join(f"NOT DELIVERED from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
                 jobs[a] = (f"{head}\n\n{part}\n\n{rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history)}\n\n"
-                           f"{room_format(ph, k, s.max_ticks, w.balances[a])}", TALK_CAP, lambda t, a=a: parse_rooms(
+                           f"{bad}{room_format(ph, k, s.max_ticks, w.balances[a])}", TALK_CAP, lambda t, a=a: parse_rooms(
                                t, a, AGENTS, [b for b in start if b not in self.gone], lambda n, i, a=a: self._room(a, n, i),
                                ph == "prep"), {"turn": k, "tick": k, "phase": ph})
                 self.seen[a] = self.seq
@@ -576,6 +578,7 @@ class Session:
                     x["left"][a] = self.seq
                     x["closed"] = len(x["members"]) - len(x["left"]) < 2
                     self.emit({"event": "room_leave", **base, "tick": k, "room": rid, "agent": a, "closed": x["closed"]})
+                self.undelivered[a] = p["dropped"]
                 gives += [(a, g) for g in p["gives"]]
                 self._exit(a, p, exits, rows)
                 (done.add if p["done"] or p["exit"] else done.discard)(a)
