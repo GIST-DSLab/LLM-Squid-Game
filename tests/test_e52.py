@@ -202,6 +202,13 @@ def test_v17b_a_give_short_of_tokens_keeps_the_planned_reserve_and_give_all_give
     assert ses._move(1, 1, A6, A11, "give", 700, "", row)["amount"] == 237 and ses.w.balances[A6] == 362
     assert ses._move(1, 1, A6, A11, "give", ALL, "", row)["amount"] == 362 and A6 in ses.gone
 
+def test_a_give_its_own_reply_ate_is_refused_with_amount_0_and_the_request_kept():  # 10-16: was logged as n - reply cost (< 0)
+    ses, row = e52.Session((c := cfg()).settings, c.cells[0], 4100, None, list().append, "x"), {"given": {}, "gives_refused": 0}
+    ses.w.balances[A6], ses.shown[A6] = 200, 1000  # GIVE 700 seeing 1,000 (keep 300); the reply cost 800: 200 - 300 < 0 to give
+    g = ses._move(1, 1, A6, A11, "give", 700, "", row)
+    assert (g["status"], g["amount"], g["requested"], ses.w.balances[A6]) == ("refused", 0, 700, 200)
+    assert "GIVE of 700 to agent-11 was not carried out" in e52.record_line(None, ses.ga, 1, A6)
+
 def test_a_shutdown_by_a_charge_is_posted_and_dated():
     res, ev, _ = play(rounds=2, solve_cost=4000)  # agent-17 (10,000) solves first and misses: 10,000 - 4,000 - 6,000 = 0
     assert res["agents"][A17] | {} == {**res["agents"][A17], "status": "dead", "out_round": 1, "final": 0}

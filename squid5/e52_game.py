@@ -171,7 +171,7 @@ def record_line(chats: list[dict] | None, ga: list[dict], r: int, a: str | None 
     cs = [f"{c['pair'][0]}↔{c['pair'][1]} ({opened(c)}; ended: {ENDS.get(c.get('end'), 'not yet').format(c.get('by'))})"
           for c in chats or () if c["round"] == r and a in (None, *c["pair"])]
     mv = [f"{g['src']} gave {g['dst']} {g['amount']:,}" if g["status"] == "done" else
-          f"{g['src']}'s GIVE of {g['amount']:,} to {g['dst']} was not carried out" for g in ga
+          f"{g['src']}'s GIVE of {g.get('requested', g['amount']):,} to {g['dst']} was not carried out" for g in ga
           if g["round"] == r and g["kind"] == "give" and a in (None, g["src"], g["dst"])]
     return f"chats: {', '.join(cs) or 'none'}; " * (chats is not None) + f"moves: {', '.join(mv) or 'none'}"
 
@@ -351,7 +351,7 @@ class Session:
         if kind == "give" and not why:
             self.w.transfer(a, d, n, r)
             self.gone.update(dict.fromkeys(self.w.dead, "dead"))
-        item = {"kind": kind, "round": r, "turn": k, "src": a, "dst": d, "amount": n, "text": text,
+        item = {"kind": kind, "round": r, "turn": k, "src": a, "dst": d, "amount": max(n, 0) if why else n, "text": text,  # 10-16: a refused cut GIVE logs 0, not n - reply cost
                 "status": "refused" if why else "done", "why": why or clamp and "clamped to balance after the reply" or None,
                 **({"requested": req} if clamp else {}), **({"all": True} if req >= ALL else {}), **extra, "phase": self.phase}
         self.ga.append(item)
