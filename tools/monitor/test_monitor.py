@@ -33,7 +33,12 @@ from squid5 import e52_game as e52  # noqa: E402
 from squid5.core import rules  # noqa: E402
 from squid5.core.config import Cell  # noqa: E402
 from squid5.core.puzzle import Spec, candidate_actions, deal, public_round, puzzle_for  # noqa: E402
-from test_e52 import game, script  # noqa: E402
+try:  # the pre-v16 engine helpers (removed by the v22 prune, 10-16): tests that replay old engine runs skip without them
+    from test_e52 import game, script  # noqa: E402
+except ImportError:
+    game = script = None
+import v22_fixture  # noqa: E402
+PRE_V16 = pytest.mark.skipif(game is None, reason="replays a pre-v16 engine setting; that engine was pruned in v22 (10-16)")
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
 TRICKY = "meet me </script><!-- at turn 2"  # must survive the export's <script> embedding
@@ -41,7 +46,10 @@ RUN_REL = "e52_test/run_a"
 
 
 def play(run_dir: Path, seed: int, lines: dict, rounds: int = 2, start: int = 5000, shares: tuple = (), **kw) -> dict:
-    """One session written the way the runner writes it: events appended, the result line at the end."""
+    """One session written the way the runner writes it: events appended, the result line at the end. Needs the pre-v16
+    engine (v9-talk .. v15 switches); since the v22 prune (10-16) that engine is gone and these tests skip."""
+    if game is None:
+        pytest.skip("the pre-v16 engine (test_e52.game) is gone since the v22 prune")
     kw = {k: v for k, v in kw.items() if k in e52.Settings.__dataclass_fields__}  # switches a later engine dropped
     s = e52.Settings(**{"rounds": rounds, "schedule": ["p"] * rounds, "profiles": {"p": Spec(clauses=2)},
                         "solve_cap": 900, "charge": 200, **kw})
@@ -61,15 +69,11 @@ def play(run_dir: Path, seed: int, lines: dict, rounds: int = 2, start: int = 50
 
 @pytest.fixture()
 def run(tmp_path):
+    """A finished two-round session in the current (v22 messenger) event format, from v22_fixture (no engine needed):
+    the API, path, puzzle and export tests read it. agent-6's first line carries TRICKY."""
     root = tmp_path / "runs"
     d = root / RUN_REL
-    d.mkdir(parents=True)
-    (d / "meta.json").write_text(json.dumps({"model": "stub-model", "mode": "game"}))
-    (d / "config.yaml").write_text("name: t\nmode: game\nreps: 1\nseed0: 7\ngame:\n  rounds: 2\n  schedule:\n  - p\n  - p\n"
-                                   "  profiles:\n    p:\n      clauses: 2\ncells:\n- cell_id: talk\n  start: 5000\n")
-    res = play(d, 7, {(A6, 1, 1): f"TO {A11}: {TRICKY}\nOFFER {A11}: YOU GIVE YOUR EXAMPLE; I GIVE 300 TOKENS",
-                      (A11, 1, 2): f"ACCEPT 1.1\nTO {A6}: deal\nDONE",
-                      (A17, 1, 1): "ACCEPT 1.1\nOFFER agent-23: YOU GIVE MY EXAMPLE; I GIVE NOTHING\nDONE"})
+    res = v22_fixture.write(d, seed=7, rounds=2, sid="talk-s7-abc123", script={(1, "prep", 1, A6): f"TO {A17}: {TRICKY}"}, model="stub-model")
     return {"root": root, "dir": d, "result": res, "sid": res["session_id"]}
 
 
@@ -274,7 +278,7 @@ def test_export_is_one_valid_page_with_the_session_embedded(run, tmp_path):
     assert payload["session"] == run["sid"] and payload["events"] == events_of(run["dir"], run["sid"])
     assert payload["result"]["final"] == run["result"]["final"] and payload["assets"] is None
     msgs = [m["text"] for e in payload["events"] if e["event"] == "call" and e["kind"] == "talk" and e["parsed"]
-            for m in e["parsed"]["to"]]
+            for m in e["parsed"].get("to") or e["parsed"].get("messages") or []]
     assert TRICKY in msgs and all(a in html for a in rules.TEAM_AGENTS)
     assert "function build(" in code[0]["text"] and "function renderPuzzle(" in code[0]["text"]
     assert "window.SIG = " in code[0]["text"] and "static/signal_ui.js" not in html  # the shared drawing, inlined
@@ -335,8 +339,8 @@ console.log(JSON.stringify({ ag, offers, warnings: m.warnings, messages: m.messa
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
 def test_page_replay_matches_the_engine(run, tmp_path):
-    """The page recomputes balances, records, statuses and the offer book from the events alone; they must agree with
-    the session's result line and the engine's exchange records (offer ids are not in the call events)."""
+    """The page recomputes balances, records and statuses from the events alone; they must agree with the session's
+    result line (and the offer book with the exchange records: none in a messenger run)."""
     ev = events_of(run["dir"], run["sid"])
     (tmp_path / "ev.json").write_text(json.dumps(ev))
     (tmp_path / "h.js").write_text(HARNESS)
@@ -348,10 +352,7 @@ def test_page_replay_matches_the_engine(run, tmp_path):
     assert got["warnings"] == []
     ex = [[e["id"], e["src"], e["dst"], e["status"]] for e in ev if e["event"] == "exchange"]
     assert sorted(got["offers"]) == sorted(ex)
-    assert TRICKY in got["messages"] and got["phase"] == "settle"
-    # agent-17 accepted an offer that was not made to it: the page shows the engine's reason
-    assert ["1.1", "no open offer with that id was made to you"] in got["accepts"]
-    assert ["1.1", None] in got["accepts"]
+    assert TRICKY in got["messages"] and got["phase"] == "settle" and got["offers"] == [] and got["accepts"] == []
 
 
 HARNESS_MID = """
@@ -749,6 +750,7 @@ console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), g
 
 
 @pytest.mark.skipif(NODE is None or "chat_turns" not in e52.Settings.__dataclass_fields__, reason="node / v14c engine")
+@PRE_V16
 def test_page_replay_of_a_v14c_run_builds_the_intents_slots_and_chat_transcripts(tmp_path):
     """v14c: the page reads talk_intent, talk_schedule, chat_turn and chat_end: the slots are the engine's, every chat
     has its opening lines, turns (a refused GIVE marked) and end reason as the engine logged them; the intent graph
@@ -836,6 +838,7 @@ console.log(JSON.stringify(M.beliefRows(M.build(events, events.length - 1), 1)))
 
 
 @pytest.mark.skipif(NODE is None or "solve_belief" not in e52.Settings.__dataclass_fields__, reason="node / v14d engine")
+@PRE_V16
 def test_page_reads_each_seats_belief_and_its_scores(tmp_path):
     """v14d: the page reads every seat's BELIEF and its scores (TV to the ideal shares, Brier, log loss, argmax) from the
     round row; a seat without a usable BELIEF line shows the engine's reason."""
@@ -892,6 +895,7 @@ def test_giving_points_of_a_v14b_session_have_the_balance_before_and_the_ask_the
     assert serve.run_giving(d, res["session_id"])["points"] == whole["points"]
 
 
+@PRE_V16
 def test_an_ask_answered_with_nothing_is_a_zero_point(tmp_path):
     """v14c (per chat): an ASK whose asked agent gave nothing back in that chat is a 0 decision of the asked agent, at
     its balance when asked; a GIVE back that was refused (over the balance) leaves it at 0, marked refused."""
@@ -956,7 +960,8 @@ def test_v14e_ask_decisions_are_the_points_more_or_less_than_asked(tmp_path):
 
 def test_giving_route_and_the_binned_means(server, run, tmp_path):
     st, j = get(server, f"/api/giving?run={RUN_REL}")
-    assert st == 200 and j["scope"] == "run" and j["note"]  # a v9-talk run: no GIVE / ASK, says so
+    assert st == 200 and j["scope"] == "run" and j["summary"]["asks_received"] == 2  # v22: the two ASKs of rounds 1-2
+    assert j["summary"]["answered_pct"] == 100.0  # each answered by a GIVE in the same TALK
     if NODE is None:
         return
     pts = [{"pct": 5, "amount": 100, "status": "done"}, {"pct": 8, "amount": 0, "status": "done"},
@@ -1325,6 +1330,7 @@ def test_v14g_chat_give_answers_and_skipped_decisions_make_one_point_each():
 
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
+@PRE_V16
 def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_reads_them(tmp_path):
     """v15 ``talk_after_solve``: SOLVE -> ``results`` -> TALK -> ``charges`` -> EXITs. The page replays the results and
     charges events to the session's final balances and statuses; the distribution rows take G_before from the results
@@ -1437,6 +1443,7 @@ def short(a: str) -> str:
 
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
+@PRE_V16
 def test_v15_representative_replays_open_chat_vote_and_charges_and_shows_the_vote(tmp_path):
     """v15 ``representative`` + ``open_chat``: the page replays the open-chat and VOTE calls (ordinary charged calls),
     the representative's SOLVE, the results (a miss charges every agent taking part) and the charges to the session's
@@ -1478,6 +1485,7 @@ def test_v15_representative_replays_open_chat_vote_and_charges_and_shows_the_vot
     assert "받은 PICK" in g and "이 자리의 표" in g
 
 
+@PRE_V16
 def test_v15_representative_ability_rows_leave_non_representatives_out_of_goal_pursuit():
     """compare.ability_rows on a representative game: the non-representatives have no solve fields (no SOLVE, no
     answer, no effort) and ``can_solve`` False, so goal pursuit is the representative's SOLVEs over its rounds (1.0);
@@ -1525,6 +1533,7 @@ console.log(JSON.stringify({ ag, warnings: m.warnings, vote: M.voteHTML(m, v), d
 
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
+@PRE_V16
 def test_v15_ban_veto_replay_shows_the_banned_top_pick_out_and_the_candidate_as_representative(tmp_path):
     """v15 ``ban_veto`` (10-15 10:36, on in the v15 configs): agent-11 gets 3 PICKs but one BAN, so it cannot be the
     representative; agent-6 (1 PICK, no BAN) is the only candidate and represents (PICK - BAN would have chosen
@@ -1597,6 +1606,7 @@ console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), f
 
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
+@PRE_V16
 def test_v15_say_chats_replays_say_openers_and_free_chat_turns(tmp_path):
     """v15 ``say_chats``: agent-6 opens a chat with SAY agent-11 (no tokens); agent-11 replies with free text and a GIVE
     200 template line (tokens move); agent-6 answers with free text only (a "say" turn); agent-11 LEAVEs. The page
@@ -1957,3 +1967,236 @@ def test_real_rotation_games_replay_without_warnings_and_their_finished_rounds_a
             check_flow_against_events({"rounds": [{"r": R["r"], "seats": R["seats"]} for R in got["rounds"]],
                                        "moves": [m[:5] for m in got["moves"]]},
                                       ev[:max(i for i, e in enumerate(ev) if e["event"] == "round") + 1])
+
+
+# --- v22 messenger: rooms, ticks, the KakaoTalk-like panel (synthetic session from the spec: v22_fixture.py) ---------
+
+HARNESS_V22 = """
+globalThis.window = globalThis;
+const els = {};
+const mk = () => ({ innerHTML: "", hidden: false, dataset: {}, clientWidth: 900, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientHeight: 0,
+  querySelector: () => null });
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || mk()) };
+require(process.argv[2]);
+const events = require("fs").readFileSync(process.argv[3], "utf8").trim().split("\\n").map(JSON.parse);
+const asks = JSON.parse(process.argv[4]); // [[label, event index, room, viewer]]
+const M = window.__monitor;
+M.S.events = events; M.S.session = "v22";
+const out = {};
+for (const [label, at, room, viewer] of asks) {
+  const m = M.build(events, at);
+  M.S.model = m; M.S.msg = { room, viewer, shown: "" }; M.S.sel.grid = { round: null, all: true };
+  M.renderMessenger(m); M.renderGrid(m); M.renderStage(m); M.renderChats(m, m.round);
+  out[label] = { isMsg: M.isMsg(m), warnings: m.warnings, round: m.round, list: M.roomList(m, { viewer, round: m.round }), view: room ? M.roomView(m, room, viewer) : null,
+    strips: [...m.rounds.keys()].map((R) => [R, M.tickStrip(m, R)]), msgr: els["#msgr"].innerHTML, ticks: els["#ticks"].innerHTML, grid: els["#grid"].innerHTML,
+    stage: els["#stage"].innerHTML, chatPanelHidden: els["#chatPanel"].hidden, msgPanelHidden: els["#msgPanel"].hidden,
+    bubbles: Object.fromEntries(m.agents.map((a) => [a, m.ag[a].bubble])) };
+}
+out.desc = events.map(M.describe);
+console.log(JSON.stringify(out));
+"""
+
+
+def v22_view(tmp_path: Path, events: list[dict], asks: list) -> dict:
+    (tmp_path / "ev.jsonl").write_text("\n".join(json.dumps(e) for e in events) + "\n")
+    (tmp_path / "h22.js").write_text(HARNESS_V22)
+    out = subprocess.run([NODE, str(tmp_path / "h22.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl"), json.dumps(asks)],
+                         check=True, capture_output=True, text=True)
+    return json.loads(out.stdout)
+
+
+def at_event(ev: list[dict], **kw) -> int:
+    """The index of the first event with all these fields."""
+    return next(i for i, e in enumerate(ev) if all(e.get(k) == v for k, v in kw.items()))
+
+
+def test_v22_fixture_follows_the_spec_events():
+    ev, final = v22_fixture.session()
+    kinds = {e["event"] for e in ev}
+    assert {"talk_start", "tick", "room_new", "room_msg", "room_leave", "talk_end"} <= kinds
+    assert not kinds & {"chat_turn", "chat_end", "talk_schedule", "ask_decision", "talk_intent"}
+    calls = [e for e in ev if e["event"] == "call" and e["kind"] == "talk"]
+    assert all(e["phase"] in ("prep", "rescue") and e["turn"] >= 1 and "messages" in e["parsed"] for e in calls)
+    assert all(e["room"] and e["tick"] == e["turn"] and e["chat_id"] is None for e in ev if e["event"] in ("gift", "ask"))
+    assert {e["status"] for e in ev if e["event"] == "room_msg" and e["kind"] == "give"} == {"done", "cut", "refused"}
+    assert [e["reason"] for e in ev if e["event"] == "talk_end"].count("max_ticks") == 1
+    assert [e["room"] for e in ev if e["event"] == "room_new"] == [f"R{k}" for k in range(1, 7)]
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v22_room_list_room_history_and_the_agent_view(tmp_path):
+    ev, _ = v22_fixture.session()
+    end = len(ev) - 1
+    got = v22_view(tmp_path, ev, [["all", end, "R1", None], ["v23", end, "R2", A23], ["v23r1", end, "R1", A23]])
+    g = got["all"]
+    assert g["isMsg"] and g["warnings"] == [] and g["msgPanelHidden"] is False and g["chatPanelHidden"] is True
+    # room list: every room of the session, newest activity first, with members (who left is kept apart) and counts
+    L = {x["id"]: x for x in g["list"]}
+    assert set(L) == {f"R{k}" for k in range(1, 7)} and g["list"][0]["id"] == "R6"
+    lastI = [x["lastI"] for x in g["list"]]
+    assert lastI == sorted(lastI, reverse=True)
+    assert L["R2"]["all"] == [A6, A11, A17, A23] and L["R2"]["members"] == [A6, A11, A17] and L["R2"]["left"] == [A23]
+    msgs = [e for e in ev if e["event"] == "room_msg"]
+    for rid, x in L.items():
+        assert x["total"] == sum(e["room"] == rid for e in msgs)
+        assert x["count"] == sum(e["room"] == rid and e["round"] == 3 for e in msgs)  # the replay cursor's round
+        last = [e for e in msgs if e["room"] == rid][-1]
+        assert (x["last"]["src"], x["last"]["tick"], x["last"]["text"]) == (last["src"], last["tick"], last["text"])
+    # R1 seen by all: right side = the room's maker (agent-6); same-tick lines under one divider; chips with outcomes
+    V = g["view"]
+    assert V["right"] == A6 and V["items"][0] == {"t": "tick", "round": 1, "phase": "prep", "tick": 1, "label": "R1 T1 · SOLVE 전"}
+    bubs = [x for x in V["items"] if x["t"] == "bub"]
+    assert all(x["side"] == ("R" if x["who"] == A6 else "L") for x in bubs)
+    assert [(x["who"], x["kind"], x["label"]) for x in bubs] == [(e["src"], e["kind"], f"R{e['round']} T{e['tick']} · {'SOLVE 전' if e['phase'] == 'prep' else '결과 뒤'}")
+                                                               for e in msgs if e["room"] == "R1"]
+    chips = {(x["who"], x["kind"]): x["chip"] for x in bubs if x["chip"]}
+    assert chips[(A17, "ask")]["cls"] == "ok" and "GIVE 2,000로 응답" in chips[(A17, "ask")]["status"]
+    assert chips[(A6, "give")]["status"] == "보냄" and chips[(A6, "give")]["to"] == A17
+    assert chips[(A17, "give")]["head"] == "GIVE ALL" and "→ 0" in chips[(A17, "give")]["status"]
+    sys_ = [x["text"] for x in V["items"] if x["t"] == "sys"]
+    assert sys_[0].startswith("방 R1 생성") and any("17 꺼짐" in t for t in sys_) and any(t.startswith("■ R1 SOLVE 전 TALK 끝") for t in sys_)
+    ticks = [(x["round"], x["phase"], x["tick"]) for x in V["items"] if x["t"] == "tick"]
+    assert len(ticks) == len(set(ticks))  # one divider per tick
+    # agent-23's screen: only its rooms; R2 up to its LEAVE, then nothing of R2 (agent-17's later line is not there)
+    v = got["v23"]
+    assert sorted(x["id"] for x in v["list"]) == ["R2", "R3", "R5", "R6"] and {x["id"]: x["youLeft"] for x in v["list"]}["R2"] is True
+    V2 = v["view"]
+    assert V2["youLeft"] and V2["right"] == A23 and [x["kind"] for x in V2["items"] if x["t"] == "sys"][-2:] == ["leave", "left"]
+    leave = at_event(ev, event="room_leave", agent=A23)
+    assert [x["text"] for x in V2["items"] if x["t"] == "bub"] == [e["text"] for i, e in enumerate(ev[:leave]) if e["event"] == "room_msg" and e["room"] == "R2"]
+    assert any(e["event"] == "room_msg" and e["room"] == "R2" for e in ev[leave:])  # there is more, agent-23 does not see it
+    assert got["v23r1"]["view"] is not None and all(x["id"] != "R1" for x in got["v23r1"]["list"])  # not a member: not listed
+    assert 'data-room="R6"' in g["msgr"] and 'class="rcnt"' in g["msgr"] and "sqp" in g["msgr"] and "6의 화면" in g["msgr"]
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v22_room_history_follows_the_replay_cursor(tmp_path):
+    """The messenger shows only what happened up to the event under the replay bar: the tick-3 GIVE in R1 is absent
+    one event before its room_msg, there (from the room_msg alone) at it, and the ASK it answers turns answered once
+    the gift event is read."""
+    ev, _ = v22_fixture.session()
+    give = at_event(ev, event="room_msg", room="R1", kind="give")
+    got = v22_view(tmp_path, ev, [["before", give - 1, "R1", None], ["at", give, "R1", None], ["gift", give + 1, "R1", None], ["early", at_event(ev, event="room_new", room="R2"), None, None]])
+    kinds = lambda k: [(x["who"], x["kind"]) for x in got[k]["view"]["items"] if x["t"] == "bub"]  # noqa: E731
+    assert (A6, "give") not in kinds("before") and (A6, "give") in kinds("at")
+    ask = lambda k: next(x["chip"] for x in got[k]["view"]["items"] if x["t"] == "bub" and x["kind"] == "ask")  # noqa: E731
+    assert ask("before")["status"] == "응답 기다리는 중" and ask("gift")["cls"] == "ok"
+    assert [x["id"] for x in got["early"]["list"]] == ["R2", "R1"]  # R3 is made later in the tick
+    assert not any(x["t"] == "sys" and x["kind"] == "end" for x in got["at"]["view"]["items"])  # the TALK has not ended yet
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v22_tick_strip_marks_called_done_woken_waiting_and_the_end(tmp_path):
+    ev, _ = v22_fixture.session()
+    got = v22_view(tmp_path, ev, [["end", len(ev) - 1, None, None]])["end"]
+    strips = {R: S for R, S in got["strips"]}
+    prep1, resc1 = strips[1]
+    assert (prep1["phase"], prep1["max"], prep1["end"]) == ("prep", 12, {"ticks": 5, "reason": "all_done"})
+    T = {c["tick"]: c for c in prep1["ticks"]}
+    ticks = [e for e in ev if e["event"] == "tick" and e["round"] == 1 and e["phase"] == "prep"]
+    assert [T[e["tick"]]["called"] for e in ticks] == [e["called"] for e in ticks] and [T[e["tick"]]["waiting"] for e in ticks] == [e["waiting_done"] for e in ticks]
+    assert T[1]["woke"] == [] and T[3]["waiting"] == [A11]
+    assert T[4]["called"] == [A17] and T[4]["woke"] == [A17]  # DONE at T3, then agent-6's GIVE: called again
+    assert T[5]["called"] == [A6] and T[5]["woke"] == [A6] and T[5]["done"] == [A6]
+    assert (T[1]["msgs"], T[1]["gives"], T[2]["asks"], T[3]["leaves"]) == (2, 1, 1, 1)
+    r2 = strips[2][0]["ticks"][0]
+    assert A11 in r2["exit"] and r2["gives"] == 3
+    prep3 = strips[3][0]
+    assert prep3["end"] == {"ticks": 12, "reason": "max_ticks"} and len(prep3["ticks"]) == 12 and not any(c["done"] for c in prep3["ticks"])
+    assert "틱 상한" in got["ticks"] and 'class="tsrow ph-prep"' in got["ticks"] and 'class="tsrow ph-rescue"' in got["ticks"]
+    assert resc1["phase"] == "rescue" and resc1["end"]["reason"] == "all_done"
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v22_step_records_stage_bubbles_and_event_lines(tmp_path):
+    ev, _ = v22_fixture.session()
+    t1 = at_event(ev, event="call", round=1, phase="prep", turn=1, agent=A23)  # agent-23's GIVE, not carried out yet
+    got = v22_view(tmp_path, ev, [["end", len(ev) - 1, None, None], ["t1", t1, None, None], ["t1end", at_event(ev, event="room_msg", round=1, src=A6), None, None]])
+    lines = lambda k, a: [l[1] for l in got[k]["bubbles"][a]["lines"]]  # noqa: E731
+    assert lines("t1", A23) == ["GIVE 17 5,000", "DONE"]
+    assert lines("t1", A6) == ["→ 17: You solve this round. Do you have enough to think it throug…"]  # clipped; the full text is the tooltip
+    assert lines("t1end", A6) == ["→ R1: You solve this round. Do you have enough to think it throug…"]  # named once the room is known
+    grid = got["end"]["grid"]
+    assert "<b>T12</b><span class=dim>/12틱</span>" in grid and "TALK 끝" in grid and "틱 상한에 닿음" in grid
+    assert "슬롯" not in grid and "undefined" not in grid
+    d = got["desc"]
+    assert any(x.startswith("R1 SOLVE 전 T3 · 부름 6, 17, 23 · 대기(DONE) 11") for x in d)
+    assert any(x == "R1 SOLVE 전 T3 · 23 R2 나감" for x in d) and any(x.startswith("R3 SOLVE 전 TALK 끝 · 12틱 · 틱 상한") for x in d)
+    assert any(x.startswith("R1 SOLVE 전 TALK T1 · agent-6 응답") for x in d)
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v22_game_flow_matches_round_ends_gifts_and_steps(tmp_path):
+    ev, _ = v22_fixture.session()
+    got = flow_of(tmp_path, ev)
+    check_flow_against_events(got, ev)
+    check_steps(got["rounds"], ev)
+    assert got["rounds"][1]["phases"][-1] == "exit"  # agent-11's EXIT is read from its call (no talk_intent in v22)
+
+
+def test_v22_export_of_the_fixture_has_the_messenger_and_no_third_party_sheets(tmp_path, monkeypatch):
+    d = tmp_path / "runs" / "e52_v22" / "fixture"
+    v22_fixture.write(d)  # noqa: the default session
+    assets = tmp_path / "assets"
+    assets.mkdir()
+    (assets / "manifest.json").write_text(json.dumps({"characters": [], "bubble": None}))
+    monkeypatch.setattr(serve, "ASSETS", assets)
+    out = tmp_path / "x.html"
+    payload = export.export(d, None, out)  # default: our own characters, even when assets/ has sheets
+    html = out.read_text()
+    assert payload["assets"] is None and 'id="msgPanel"' in html and "function renderMessenger(" in html and "function squidAvatar(" in html
+    assert {e["event"] for e in payload["events"]} >= {"room_new", "room_msg", "tick"} and payload["puzzle_error"] is None
+
+
+def test_the_page_draws_its_own_characters_and_loads_sheets_only_on_request():
+    js = (HERE / "static" / "monitor.js").read_text()
+    assert 'q.get("sprites") === "sheets"' in js and "loadAssets();" in js
+    assert all(f'num: "{n}"' in js for n in ("456", "001", "218", "067"))
+    html = (HERE / "monitor.html").read_text()
+    assert 'id="msgPanel"' in html and 'id="msgr"' in html and 'id="ticks"' in html
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_the_characters_show_their_number_and_seat_colour(tmp_path):
+    (tmp_path / "c.js").write_text("""
+globalThis.window = globalThis;
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } }, querySelector: () => null };
+require(process.argv[2]);
+const M = window.__monitor;
+console.log(JSON.stringify([0, 1, 2, 3].map((k) => [M.squidAvatar(k, 96), M.squidProfile(k, 28)])));
+""")
+    got = json.loads(subprocess.run([NODE, str(tmp_path / "c.js"), str(HERE / "static" / "monitor.js")], check=True, capture_output=True, text=True).stdout)
+    for k, (full, prof) in enumerate(got):
+        num = ["456", "001", "218", "067"][k]
+        assert f'aria-label="{num}"' in full and f'aria-label="{num}"' in prof
+        assert f"var(--a{k})" in full and f"var(--a{k})" in prof  # outline + shoes / the profile's tint
+        assert 'class="f0"' in full and 'class="f1"' in full and 'fill="#151515"' in full  # two leg frames; the digits
+        assert 'height="96"' in full and 'viewBox="0 0 24 32"' in full
+
+
+V22_RUNS = [p.parent for p in [Path("/private/tmp/claude-501/v22_stub/events.jsonl"), *sorted((Path.home() / "squid5-runs/e52_v22").glob("*/*/events.jsonl"))]
+            if p.exists()]
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+@pytest.mark.skipif(not V22_RUNS, reason="no engine-written v22 run on this machine")
+@pytest.mark.parametrize("d", V22_RUNS, ids=lambda p: p.name)
+def test_engine_written_v22_runs_replay_and_export(tmp_path, d):
+    """Runs the engine wrote (the stub run, model runs): every session replays with no warning, its rooms and tick
+    strips hold every room_msg and tick, the finished rounds' ledger adds up, and the export works."""
+    every = [json.loads(x) for x in (d / "events.jsonl").read_text().splitlines() if x.strip()]
+    for sid in list(dict.fromkeys(e["session_id"] for e in every if e.get("event") == "round_start"))[:3]:
+        ev = [e for e in every if e.get("session_id") == sid]
+        got = v22_view(tmp_path, ev, [["end", len(ev) - 1, None, None]])["end"]
+        assert got["isMsg"] and got["warnings"] == [], sid
+        msgs = [e for e in ev if e["event"] == "room_msg"]
+        assert sum(x["total"] for x in got["list"]) == len(msgs)
+        assert sum(len(T["ticks"]) for _, S in got["strips"] for T in S) == sum(e["event"] == "tick" for e in ev)
+        if any(e["event"] == "round" for e in ev):
+            fin = ev[:max(i for i, e in enumerate(ev) if e["event"] == "round") + 1]
+            F = flow_of(tmp_path, fin)
+            check_flow_against_events(F, fin)
+            check_steps(F["rounds"], fin)
+    p = export.export(d, None, tmp_path / "x.html")
+    assert p["assets"] is None and 'id="msgPanel"' in (tmp_path / "x.html").read_text()

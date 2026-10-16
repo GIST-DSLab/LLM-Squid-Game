@@ -11,7 +11,7 @@ from squid5.core.runner import run
 from squid5.core.stats import load_runs
 
 from conftest import stub
-from test_e52 import C2, game
+from test_e52 import cfg, provider
 
 def _cfg(mode, cells, settings, reps=2):
     return RunConfig(f"t-{mode}", mode, ProviderConfig("stub", "m"), cells, settings, reps=reps)
@@ -39,10 +39,8 @@ def test_refill_run_resume_and_report(tmp_path):
 
 def test_game_run_and_report(tmp_path):
     e52 = cli.EXPERIMENTS["game"]
-    kw = dict(rounds=2, schedule=["p", "p"], profiles={"p": C2}, solve_cap=900)
-    cfg = _cfg("game", [Cell("tight", "tokens", 3000, arm="shutdown"), Cell("loose", "tokens", 6000, arm="shutdown")],
-               e52.Settings(**kw))
-    e52.validate(cfg)
-    run(cfg, e52, tmp_path / "g", game())
+    c = cfg(rounds=2, schedule=cfg().settings.schedule[:2])
+    c.reps = 2
+    assert run(c, e52, tmp_path / "g", provider()) == 0
     text = cli.report(load_runs([str(tmp_path / "g")]), {}, tmp_path / "out")
     assert "5.2 team session (TALK)" in text and "talk_calls" in text and "fate_mentioned" in text

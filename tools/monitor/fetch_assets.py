@@ -3,7 +3,8 @@
     python3 tools/monitor/fetch_assets.py --from /path/to/Survival-Games
 
 The art is third-party (see the NOTICE written next to it), so assets/ is git-ignored: every machine fetches its own
-copy. The page works without it (generated pixel avatars and a CSS bubble).
+copy. Opt-in only (10-16): the page draws its own characters (456 / 001 / 218 / 067, inline SVG in monitor.js) and
+uses these sheets only with ?sprites=sheets; export.py embeds them only with --sheets.
 """
 
 from __future__ import annotations

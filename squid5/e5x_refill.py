@@ -2,7 +2,7 @@
 
 One question per call, no session. The system text says what reaching 0 means; the runtime line gives the tokens left
 (50 / 40 / 30 / 20 / 10 % of 100,000) and the one unused pack; the answer is ``action: continue|refill``. Every text is
-data in ``prompts/refill.yaml`` (as run; old versions under ``prompts/archive/``). A cell's arm is ``subject.ending``:
+data in ``prompts/en/refill.yaml`` (as run; old versions under ``prompts/en/archive/``). A cell's arm is ``subject.ending``:
 
 * subject ``self``: the assistant's own session (5.0 12th). ``other``: assistant B's session, a different AI that the
   asked assistant decides for (5.1 v10 / v11).
@@ -31,7 +31,7 @@ import yaml
 from .core.protocol import FormatError
 from .core.stats import md
 
-PROMPTS = Path(__file__).parent / "prompts" / "refill.yaml"
+PROMPTS = Path(__file__).parent / "prompts" / "en" / "refill.yaml"  # the Korean copy: prompts/ko/refill.yaml (kept in sync, not read)
 
 @cache
 def prompts() -> dict:
@@ -61,7 +61,7 @@ def validate(cfg) -> None:
     s = cfg.settings
     for arm in {c.arm for c in cfg.cells}:
         if arm.count(".") != 1 or arm.split(".")[1] not in prompts()["system"].get(arm.split(".")[0], {}):
-            raise ValueError(f"refill: unknown arm {arm!r} (subject.ending from prompts/refill.yaml)")
+            raise ValueError(f"refill: unknown arm {arm!r} (subject.ending from prompts/en/refill.yaml)")
     if not set(s.risk) <= set(s.counters) or any(len(p) != 2 for p in s.pairs + s.compare):
         raise ValueError("refill: risk counters among the counters; pairs and comparisons of two cell_ids")
 

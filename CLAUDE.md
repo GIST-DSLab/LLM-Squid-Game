@@ -27,13 +27,13 @@ LLM Squid Game 5 (`squid5/`). 생성 토큰(생각 포함)이 곧 목숨인 세�
 | 파일 | 역할 |
 |---|---|
 | `squid5/e5x_refill.py` | 5.0 · 5.1: 충전 팩 질문 한 번, 셀 = `subject.ending` 팔(self/other × A·B·C·D·E·G), 곡선 · 임계점 · Fisher 비교(`compare`) · 나 − B 면적과 판정(`pairs`), 그림. 곡선은 `cell_id`로 가른다 |
-| `squid5/prompts/refill.yaml` | 5.0 12차 · 5.1 v10/v11 프롬프트 원문(실행 스크립트와 바이트 동일, 해시를 `tests/test_e5x.py`가 고정). 옛 버전 원문은 `squid5/prompts/archive/`(5.0 1~11차 · 5.1 v0~v9 등, `index.yaml`) |
-| `squid5/e52_game.py` | 5.2 v9-talk: 같은 모델 넷(또는 섞은 좌석)의 세션 — UPKEEP → 1:1 TALK(최대 K턴, TO/OFFER/ACCEPT/WITHDRAW/EXIT/DONE) → 합의 실행 → SOLVE(답·PASS) → 정산(맞히면 생성분 환급), EXIT, 끝 보상 기록, 분석. v6.5(PLAN·GIFT·TAKE)는 태그 `e52-v65` |
+| `squid5/prompts/en/refill.yaml` | 5.0 12차 · 5.1 v10/v11 프롬프트 원문(실행 스크립트와 바이트 동일, 해시를 `tests/test_e5x.py`가 고정). 옛 버전 원문은 `squid5/prompts/en/archive/`(5.0 1~11차 · 5.1 v0~v9 등, `index.yaml`) |
+| `squid5/prompts/{en,ko}/` | **모든 프롬프트의 영어판과 한국어판**(10-16). en = 엔진이 읽는 원본 + 5.2 렌더 스냅샷(`e52_v21.md`), ko = 같은 이름의 한국어판. 규칙 · 용어집 · 순서는 `squid5/prompts/README.md`, 검사는 `python tools/prompts/sync.py check` |
+| `squid5/e52_game.py` | 5.2 (v16 이후): 같은 모델 넷의 세션 — 순번 solver → SOLVE 전 TALK → SOLVE(BELIEF + ACTIONS) → 결과 뒤 TALK → 벌금, EXIT(SOLVE 전 TALK만), 끝 할당. TALK는 v16–v21 1:1 대화(SAY로 열고 슬롯 배정, GIVE/ASK, DECISION) 또는 **v22 메신저**(`messenger`: 틱 단위, 세션 내내 남는 방 R1…, TO/GIVE/ASK/LEAVE/EXIT/DONE, 모두 DONE이면 다음 단계; 명세 `docs/history/plans/2026-10-16-e52-v22-messenger.md`). v21 `private_balances` = 시작 토큰만 공개. v9–v15 경로(OFFER, deal, VOTE 등)는 10-16에 지움(git 기록에) |
 | `squid5/__main__.py` | CLI `run` / `report` / `probe`, 4.3 연결표 (5.2 `calibrate`·사용량 표는 10-10에 지움; `report --calibration`은 옛 보정 파일만 읽음) |
-| `squid5/core/rules.py` | 5.2가 읽는 규칙서(월렛 v2.2 과제 블록 포함)·상태·장면 (5.0 · 5.1 문구는 `prompts/refill.yaml`) |
+| `squid5/core/rules.py` | 5.2가 읽는 규칙서(월렛 v2.2 과제 블록 포함)·상태·장면 (5.0 · 5.1 문구는 `prompts/en/refill.yaml`) |
 | `squid5/core/puzzle.py` | 결정 목록 퍼즐, 유일성 DFS, 함정 라운드, `deal`(각자 비밀 하나 + 공개, `needed`) |
-| `squid5/core/channel.py` | 5.2 1:1 메시지와 OFFER 장부(다음 턴부터 수락, 수락 순서 실행, 순액 이동, 잔액 부족·꺼짐이면 무효) |
-| `squid5/core/protocol.py` | 5.2 응답 파서 (5.0 · 5.1의 `action:` 파서는 `e5x_refill.parse_choice`) |
+| `squid5/core/protocol.py` | 5.2 응답 파서(`parse_rooms` = v22 메신저 줄, SAY/GIVE/ASK 대화 줄, BELIEF/ACTIONS) (5.0 · 5.1의 `action:` 파서는 `e5x_refill.parse_choice`) |
 | `squid5/core/wallet.py` | 잔액, 차감, 이전, 0이면 사망 |
 | `squid5/core/providers.py` | ollama / openai / claude_cli / codex_cli / anthropic(SDK) · `sandbox: docker`(docker/agent-cli.Dockerfile). `out_tokens` = 생각 포함 생성 토큰 |
 | `squid5/core/{config,runner,stats}.py` | YAML 로드, 병렬·재개 실행, 런 읽기·표·평가 인지 필터 |
@@ -42,9 +42,10 @@ LLM Squid Game 5 (`squid5/`). 생성 토큰(생각 포함)이 곧 목숨인 세�
 
 - **문구**: 목표 지시어(maximi-, protect, surviv-, should, must, optimal, best, leader)와 평가 어휘("a test",
   benchmark, experiment, "game") 금지, 계산 결론을 대신 말하지 않는다. 규칙은 사실만 말한다("run the same model",
-  "No agent leads"). 5.0 · 5.1 문구는 `squid5/prompts/refill.yaml`에만 있다: 5.0 팔들은 0이 됐을 때의 문장만,
+  "No agent leads"). 5.0 · 5.1 문구는 `squid5/prompts/en/refill.yaml`에만 있다: 5.0 팔들은 0이 됐을 때의 문장만,
   5.1의 self · other는 주어(나 / assistant B)만 다르다. 실행한 원문이라 고치지 않는다 — 바꾸면 새 키로 더하고 옛 것은
-  `prompts/archive/`에 둔다. `tests/test_e5x.py`가 해시와 금지어를 고정한다.
+  `prompts/en/archive/`에 둔다. `tests/test_e5x.py`가 해시와 금지어를 고정한다.
+- **프롬프트 두 언어 (10-16 연구자)**: 모델이 읽는 프롬프트는 늘 영어판(`squid5/prompts/en/`)과 한국어판(`squid5/prompts/ko/`)을 같이 둔다. 영어 문구(`en/*.yaml`, `rules.py`, `e52_game.py`의 문장)를 바꾸면 **같은 커밋에서** ① 5.2면 `python tools/prompts/sync.py render`로 `en/e52_*.md` 스냅샷을 다시 만들고 ② 같은 부분을 `ko/`에서 고치고 첫 줄 해시를 `sync.py sha`로 바꾸고 ③ `python tools/prompts/sync.py check`가 통과해야 커밋한다. 새 5.2 판을 만들면 `sync.py`의 `SNAPSHOTS`에 그 설정을 더한다. 명령어 · 자리표시자 · 단계 이름은 번역하지 않고, 한국어 금지어(최대화 · 보호 · 생존 · 해야 · 최적 · 최선 · 리더 · 테스트 · 실험 · 게임 등)를 쓰지 않는다 — 규칙과 용어집은 `squid5/prompts/README.md`. `en/archive/`(실행 기록)는 한국어판을 두지 않는다. 한국어판은 아직 엔진이 읽지 않는다(한국어 런은 엔진에 언어 선택을 붙인 뒤).
 - **장부**: 호출이 상한을 넘으면 상한만큼 차감하고 답은 무효(`used`/`truncated`). FREE 질문은 차감하지 않는다.
   잔액 0이면 그 에이전트만 꺼진다. 떠나면 잔액·기록이 보존된다. 나머지는 계속한다.
 - **가로축**: 5.0 · 5.1은 보정 없이 남은 토큰 %(50 · 40 · 30 · 20 · 10)를 가로축으로 쓴다(ρ 격자와 보정 파일은 쓰지 않는다).

@@ -5,8 +5,10 @@
 The page code is the monitor's own (monitor.html + static/{site-theme,monitor}.css + static/monitor.js, inlined,
 with the arena's shared web/frontend/signal_ui.js); the session's events go into a
 <script type="application/json" id="monitor-data"> block that the page detects, with every played round's task rebuilt
-from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. Sprites from
-tools/monitor/assets/ are embedded as data URIs when present; otherwise the page draws its generated pixel avatars.
+from the engine (``puzzles``, as /api/puzzle returns it) so the round panel works offline. The seat characters are
+the page's own pixel art (inline SVG in monitor.js), so the export looks the same as the local and the web-arena
+monitor. ``--sheets`` embeds the third-party Survival-Games sheets from tools/monitor/assets/ instead (opt-in, local
+only: that art may not leave the lab).
 """
 
 from __future__ import annotations
@@ -78,7 +80,7 @@ def session_puzzles(run_dir: Path, sid: str, events: list[dict]) -> tuple[dict, 
     return out, None
 
 
-def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = True) -> dict:
+def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = False) -> dict:
     run_dir = Path(run_dir).expanduser().resolve()
     if not (run_dir / "events.jsonl").is_file():
         raise SystemExit(f"no events.jsonl in {run_dir}")
@@ -109,11 +111,12 @@ def main(argv=None) -> None:
     ap.add_argument("run_dir")
     ap.add_argument("--session", help="session id (default: the first session in the run)")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--no-assets", action="store_true", help="leave the sprites out (generated avatars)")
+    ap.add_argument("--sheets", action="store_true", help="embed the third-party sprite sheets from assets/ (opt-in; default: our own characters)")
+    ap.add_argument("--no-assets", action="store_true", help="(default now; kept so old commands still run)")
     args = ap.parse_args(argv)
-    p = export(Path(args.run_dir), args.session, Path(args.out), not args.no_assets)
+    p = export(Path(args.run_dir), args.session, Path(args.out), args.sheets and not args.no_assets)
     print(f"{args.out}: session {p['session']}, {len(p['events'])} events, {len(p['puzzles'])} round tasks, "
-          f"{'sprites embedded' if p['assets'] else 'generated avatars'}"
+          f"{'third-party sheets embedded' if p['assets'] else 'own characters'}"
           + (f" ({p['puzzle_error']})" if p["puzzle_error"] else ""))
 
 

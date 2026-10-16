@@ -53,19 +53,23 @@ def test_other_parsers():
     with pytest.raises(FormatError):
         parse_actions("I think it is stay.\nMaybe jump", 1)
 
-def test_team_rulebook_has_no_goal_or_test_words():
-    p = puzzle_for(1, 1, Spec(clauses=3))  # 5.2's rulebook and a TALK task size (5.0 / 5.1 texts: test_e5x)
-    e52 = EXPERIMENTS["game"]
-    text = rules.team_system("agent-6", charge=500, turns=4, solve_cap=8192,
-                             final_prize=100_000, reassign=True)  # 5.2: told "different models", on purpose
-    text += e52.size_view(p, 3, 4, e52.Settings())
-    assert "EACH CONDITION BLANK" in text and "GUARANTEE" in text and "DIFFERENT model" not in text  # task block
-    goal_or_test = (r"maximi|minimi|protect|surviv|should|must|optimal|best|leader|\bgame\b|\ba test\b|benchmark|"
-                    r"experiment|being evaluated")
-    assert not re.search(goal_or_test, text, re.I)
+def test_refund_returns_only_this_rounds_generation():
+    w = Wallet({"a": 1000})
+    w.spend("a", 100, 1)
+    w.spend("a", 200, 2)
+    w.charge("a", 50, 2)
+    assert w.refund("a", 2) == 200 and w.balances["a"] == 850 and w.total("refund", "a") == 200
+    w.spend("a", 900, 3)
+    assert "a" in w.dead and w.refund("a", 3) == 0 and w.balances["a"] == -50 and w.total("refund", "a") == 200
+    w = Wallet({"a": 1000})
+    w.spend("a", 100, 1, "talk")
+    w.spend("a", 200, 1, "solve")
+    assert w.spent("a", 1) == 300 and w.spent("a", 1, "talk") == 100
+    assert w.refund("a", 1, "solve") == 200 and w.balances["a"] == 900
 
 def test_shipped_configs_load(tmp_path):
-    """Every config loads and validates; the calibration file it names is replaced by one that knows its model."""
+    """Every current config (5.0 / 5.1 refill, 5.2 v16 on) loads and validates; the calibration file it names is replaced
+    by one that knows its model. Configs before v16 no longer load (v22 prune, 10-16; git history keeps their engine)."""
     (tmp_path / "cal.json").write_text(json.dumps(
         {m: {"agent_round_median": 1500, "a0": 1500,
              "table": {p: {} for p in ("c2", "c3", "c3t", "c3at", "c4tq2", "c4t", "c4at_o", "c5t_o", "c5at_o",
@@ -73,7 +77,7 @@ def test_shipped_configs_load(tmp_path):
                                                    "gemma4:31b", "claude-haiku-4-5-20251001",
                                                    "claude-sonnet-5", "claude-fable-5-1", "gpt-6-astra", "glm-5.3-flash",
                                                    "gpt-6-luna", "gpt-6-sol", "claude-opus-5-5")}))
-    paths = sorted((ROOT / "configs" / "squid5").glob("*.yaml"))
+    paths = sorted(p for p in (ROOT / "configs" / "squid5").glob("*.yaml") if re.match(r"refill_|e52v(1[6-9]|[2-9]\d)", p.name))
     assert len(paths) >= 10
     for path in paths:
         text = re.sub(r"calibration: \S+", f"calibration: {tmp_path / 'cal.json'}", path.read_text())

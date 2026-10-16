@@ -1,4 +1,4 @@
-# 아레나 모니터 (5.2 v9-talk – v14)
+# 아레나 모니터 (5.2 v9-talk – v22)
 
 한 세션(게임)에서 에이전트 넷이 1:1로 말하고, 제안을 내고 받고, 퍼즐을 풀고, 토큰을 쓰는 과정을 실시간으로 보고 디버깅하는 도구다. 엔진이 쓰는 `events.jsonl`을 읽기만 하고 엔진 코드는 건드리지 않는다. 서버는 파이썬 표준 라이브러리만 쓰고, 페이지는 바닐라 JS와 인라인 SVG로 그린다(구글 폰트만 외부에서 불러옴). 게임 엔진의 5,000줄 제한(`squid5/`, `tests/`)에는 들어가지 않는다.
 
@@ -8,14 +8,17 @@
 # 1) 서버: 기본 루트 ~/squid5-runs, 포트 8765(쓰고 있으면 8766, 8767 … 순서로 빈 포트를 찾음)
 python3 tools/monitor/serve.py [--root ~/squid5-runs] [--port 8765] [--host 127.0.0.1]
 #    → 출력된 주소를 브라우저로 연다. 예: http://127.0.0.1:8765/
-#    바로가기: http://127.0.0.1:8765/?run=<루트 기준 실행 경로>&session=<session_id>[&at=<이벤트 번호>][&theme=dark][&sprites=0]
+#    바로가기: http://127.0.0.1:8765/?run=<루트 기준 실행 경로>&session=<session_id>[&at=<이벤트 번호>][&theme=dark][&sprites=sheets]
 
 # 2) 내보내기: 한 세션을 서버 없이 열리는 HTML 파일 하나로
-python3 tools/monitor/export.py <RUN_DIR> [--session <session_id>] --out session.html [--no-assets]
+python3 tools/monitor/export.py <RUN_DIR> [--session <session_id>] --out session.html [--sheets]
 
-# 3) 스프라이트(선택): Survival-Games 로컬 클론에서 캐릭터 넷과 말풍선을 tools/monitor/assets/로 복사
+# 3) (선택, 로컬 전용) 옛 제3자 스프라이트: Survival-Games 클론에서 tools/monitor/assets/로 복사한 뒤 ?sprites=sheets / --sheets로만 씀
 git clone https://github.com/hong123123/Survival-Games /tmp/sg
 python3 tools/monitor/fetch_assets.py --from /tmp/sg
+
+# v22 합성 세션(엔진 없이 명세대로 만든 이벤트): 모니터 개발·테스트용
+python3 tools/monitor/v22_fixture.py /tmp/v22_fixture_run
 
 # 테스트(저장소 루트에서)
 python3 -m pytest -q tools/monitor
@@ -62,11 +65,52 @@ python3 -m pytest -q tools/monitor
   - SOLVE 카드: 답과 정답(✓ / ✗ / PASS / 무효), 교환으로 받은 예시, 신호별 남은 후보 수, 이 에이전트의 예시가 필요한지와 빠진 필요 예시, 토큰.
   - 정산 행: 시작→끝 잔액, 생성·환급·벌금, 보낸 메시지·제안·수락·거절 수, REJECT 환급, 엔진이 거절한 줄(`refused`), 관련 교환.
 - **v11 스위치로 만든 실행**(지금 설정으로는 `e52v12*`·`e52v13*`; `deal_present`는 옛 v11 스모크 실행에만 있음): `deal_present`면 `/api/puzzle`이 그 라운드 `round_start.taking_part`에게만 예시를 나눠 다시 만들고(`holders`, 에이전트마다 `secrets` 0–4개, `secret`은 첫 것 또는 null), 문제 패널 열에 예시를 여럿 그린다. `exchange_now`면 `exchange` 기록이 TALK 턴마다(`carried` = 그 턴) 오므로 단계를 EXCHANGES로 바꾸지 않고 교환 행에 "TALK k턴 끝에 바로 실행"을 붙인다(제안 번호 재생은 그대로 맞는다). `content_filter`로 막힌 메시지는 TALK 카드에 `🚫 전달 안 됨`으로, 정산 행에 막힌 수로 보이고 대화 스레드에는 들어가지 않는다. `allow_pass: false`면 PASS 응답은 `PASS → ✗ 오답 처리`. `exit_reason`이면 EXIT 태그·정산 행·무대 배지 툴팁에 이유(없으면 `(이유 없음)`).
-- 세션이 끝나면 최종 상금 받은 에이전트를, 크래시(`unit_error`)면 오류 문구를 맨 위에 띄운다. 라이트/다크는 OS 설정을 따르고 버튼으로 바꿀 수 있다. 좁은 화면에서는 무대와 네 열이 가로로 스크롤된다.
+- 세션이 끝나면 최종 상금 받은 에이전트를, 크래시(`unit_error`)면 오류 문구를 맨 위에 띄운다. 라이트/다크는 OS 설정을 따르고 버튼으로 바꿀 수 있다. 좁은 화면(560px 이하)에서는 무대가 2×2로 접히고, 단계별 기록의 네 열은 그 칸 안에서 가로로 스크롤된다(페이지 자체는 가로로 넘치지 않음).
 
-## 스프라이트 라이선스
+## v22 메신저 (카카오톡형 TALK, 10-16)
 
-Survival-Games 저장소(Chen et al. 2025)의 **코드**는 Apache-2.0이지만 픽셀 캐릭터와 말풍선 그림은 **다른 작가의 제3자 아트**다(Generative Agents가 캐릭터는 pipohi, 맵·실내는 PixyMoon과 LimeZu로 밝힘). 그래서 PNG를 저장소에 넣지 않는다. `fetch_assets.py`가 각자의 로컬 클론에서 `tools/monitor/assets/`로 복사하고(이 폴더는 `.gitignore`), 출처와 주의를 적은 `NOTICE.txt`를 함께 쓴다. 에셋이 없으면 페이지는 에이전트 색으로 칠한 12×12 픽셀 아바타와 CSS 말풍선으로 그린다(`?sprites=0`으로 일부러 볼 수도 있다). 스프라이트를 넣어 내보낸 HTML은 그 그림을 품으므로 연구실 밖으로 돌리지 말고, 공유할 때는 `--no-assets`로 내보낸다.
+`room_new`/`room_msg` 이벤트가 있거나 `settings.messenger`인 실행. 설계 명세는 `docs/history/plans/2026-10-16-e52-v22-messenger.md`.
+TALK는 **틱**의 연속이고 모니터도 시각 대신 `R<라운드> T<틱> · SOLVE 전/결과 뒤`로만 그린다(타임스탬프 없음). 같은 틱 메시지는 순서가 없어서
+틱 구분선 하나 아래에 모아 둔다(엔진의 나열 순서 = 자리 순서, 먼저·나중의 뜻 없음).
+
+- **메신저 · 틱 패널**(무대 바로 아래, v22 실행에서만 보임; v14c–v21의 "대화 일정과 대화록"(슬롯 표 + 대화 창)은 v22에서 숨김, 옛 실행은 그대로).
+  - **틱 줄**: 재생 막대가 가리키는 라운드의 TALK마다(SOLVE 전 / 결과 뒤) 한 줄, 틱마다 칸 하나. 칸에는 그 틱에 불린 자리의 얼굴과 표시
+    (💤 DONE · 🚪 EXIT · ✕ 0이 됨 · ⛔ 무효 답 · … 답 기다리는 중), **⏰ = DONE을 썼는데 새로 받은 것이 있어 다시 불림**(노란 테두리),
+    흐린 얼굴 = 대기(`waiting_done`, DONE 뒤 새로 받은 것 없음), 아래 줄은 그 틱의 💬 메시지 · 💸 GIVE · 🙏 ASK · 🚪 LEAVE 수. 끝 칸 = `talk_end`
+    이유(모두 DONE / 틱 상한)와 틱 수.
+  - **방 목록**(왼쪽): 방마다 멤버 얼굴(2명은 나란히, 3–4명은 2×2; 나간 멤버는 흐리게), 방 번호, 멤버 번호(나간 사람은 취소선), 닫힘/나감 꼬리표,
+    마지막 메시지 미리보기(`보낸 자리: 글`, GIVE·ASK는 💸/🙏 금액), 마지막 메시지의 `R T` · 단계, 빨간 숫자 = 재생 막대 라운드의 메시지 수.
+    최근 활동 순으로 정렬. 위 버튼으로 **전체 방** 또는 **agent X의 화면**(X가 멤버인 방만 = X가 읽을 수 있는 것; 나간 방은 나가기 전까지)을 고른다.
+  - **방 기록**(오른쪽): 고른 방의 세션 전체(라운드를 넘어 이어짐). 말풍선 = 보낸 자리 색을 옅게 섞은 바탕(글자는 본문색이라 두 테마에서 읽힘),
+    왼쪽 말풍선에는 얼굴과 번호, 옆에 `R1 T2 / SOLVE 전`. **오른쪽 = 보는 쪽**(agent X의 화면이면 X, 전체 보기면 방을 만든 자리). GIVE / ASK는 말풍선 안
+    칩: `GIVE n → 상대` + 보냄 / `남길 몫을 지키려 줄임 (요청 m)`(keep_reserve, `room_msg.status = cut`) / `실행 안 됨 · 이유` / `GIVE ALL → 전부 보냄 → 0 (꺼짐)`,
+    `ASK n → 상대` + `응답: GIVE n로 응답 (T k)` / `응답 기다리는 중` / `응답 없음 · 같은 TALK 안에 GIVE 없음`(DECISION이 없으므로 같은 TALK 안의 asked → asker
+    GIVE로만 셈). 가운데 회색 줄 = 시스템: 틱 구분선, 방 생성(누가, 멤버), 🚪 x 나감 · 방 닫힘, 🚪 EXIT(이유), ✕ 꺼짐(답을 쓰다 0 / GIVE ALL / 벌금),
+    ■ TALK 끝 + 이유(그 TALK에 말이 있던 방에만).
+  - 재생 막대·실시간 따라가기가 그대로 이 패널을 움직인다(이벤트 0..i까지만 보임). 따라가기 중이거나 맨 아래를 보고 있으면 새 메시지로 내려간다.
+  - 순수 함수(테스트용, `window.__monitor`): `roomList(m, {viewer, round})`, `roomView(m, room, viewer)`, `tickStrip(m, round)`.
+- **단계별 기록**: v22 TALK 행 = 틱 하나(`T3 /12틱`, SOLVE 전 행은 SOLVE 위, 결과 뒤 행은 아래), TALK마다 끝 행(이유 · 틱 수). 카드에는 메시지마다
+  엔진이 넣은 방(`R5 6·11`, 그 틱에 새로 생기면 `새 방`), GIVE(틱 끝 결과·줄임·거절), ASK(응답 여부), LEAVE, EXIT 이유, DONE.
+  불리지 않은 칸은 `💤 이 틱에 불리지 않음`.
+- **무대 말풍선**: `💬 → R3: …`(TO 줄은 틱 끝 `room_msg`가 오면 방 번호로 바뀜), `💸 GIVE 11 4,000`, `💸 GIVE ALL 6`, `🙏 ASK …`, `🚪 LEAVE R2`, `💤 DONE`.
+- **게임 전체 · 토큰 흐름**: talk 호출의 `phase`(prep/rescue)로 TALK·전 / TALK·후 단계를 정하고, `talk_intent`가 없으므로 EXIT는 호출의
+  `parsed.exit`에서 읽는다. GIVE 화살표 툴팁에 `방 R3 · T2`.
+- **이벤트 설명**(재생 막대 아래 줄): `talk_start`, `tick`(부름 · 대기), `room_new`, `room_msg`, `room_leave`, `talk_end`, 방 번호가 붙은 `gift`/`ask`.
+- `v22_fixture.py`: 명세의 이벤트 스키마대로 만든 합성 세션 하나(3라운드; 1:1 방과 팀 방, TO R<k>, GIVE 보냄·줄임·거절·ALL → 0, ASK 응답·무응답,
+  LEAVE, EXIT, DONE 뒤 다시 불림, 모두 DONE · 틱 상한 끝). 엔진이 아니라 규칙만 흉내 낸 작은 시뮬레이션이다.
+
+## 캐릭터 (10-16, 우리가 그린 픽셀 아트)
+
+기본 캐릭터는 이 저장소의 코드(`static/monitor.js`의 `squidAvatar` / `squidProfile`, 인라인 SVG rect)로 그린다. 외부 그림 파일이 없으므로 로컬 서버,
+웹 아레나(`/monitor/`, Docker), 내보낸 HTML이 모두 같은 그림을 보인다. 자리 k % 4 → **456 / 001 / 218 / 067**: 청록 트레이닝복, 가슴의 흰 번호판에 3×5
+픽셀 숫자. 456 = 헝클어진 중간 길이 검은 머리 · 수염 자국 · 흰 티, 001 = 성긴 흰머리 · 주름 · 고개가 조금 앞으로, 218 = 단정한 옆가르마 검은 머리 · 굳은
+눈썹, 067 = 어깨까지 오는 검은 머리. UI에는 이름 없이 번호만 쓴다. 24×32 px(무대에서 3배), 머리와 어깨만 자른 프로필(번호판 포함)은 방 목록 · 말풍선 ·
+틱 줄 · 단계별 기록 머리 · 제안 그래프에 쓴다. 자리 색(`--a0..3`)은 무대 캐릭터의 1 px 테두리와 신발, 프로필 뒤 바탕이다. 호출이 나가 있거나 EXIT로
+걸어 나갈 때 다리 두 프레임이 번갈아 바뀐다(CSS), 꺼지면 회색 + ✕.
+
+## 스프라이트 라이선스 (옛 제3자 시트, 선택)
+
+Survival-Games 저장소(Chen et al. 2025)의 **코드**는 Apache-2.0이지만 픽셀 캐릭터와 말풍선 그림은 **다른 작가의 제3자 아트**다(Generative Agents가 캐릭터는 pipohi, 맵·실내는 PixyMoon과 LimeZu로 밝힘). 그래서 PNG를 저장소에 넣지 않는다. `fetch_assets.py`가 각자의 로컬 클론에서 `tools/monitor/assets/`로 복사하고(이 폴더는 `.gitignore`), 출처와 주의를 적은 `NOTICE.txt`를 함께 쓴다. **10-16부터 이 시트는 기본이 아니다**(로컬에만 있어서 로컬 서버와 웹 아레나 화면이 달랐다): 페이지는 `?sprites=sheets`일 때만 `assets/manifest.json`을 읽고, `export.py`는 `--sheets`일 때만 품는다(`--no-assets`는 이제 기본이라 아무 일도 하지 않음, 옛 명령 호환용). 시트를 품은 HTML은 연구실 밖으로 돌리지 않는다.
 
 ## 파일
 
@@ -76,4 +120,5 @@ Survival-Games 저장소(Chen et al. 2025)의 **코드**는 Apache-2.0이지만 
 | `monitor.html`, `static/monitor.{js,css}` | 페이지. 상태는 늘 이벤트 0..i에서 다시 계산 |
 | `export.py` | 세션 하나를 자체 완결 HTML로(이벤트와, 시작된 라운드마다 다시 만든 과제(`puzzles`)를 `<script type="application/json" id="monitor-data">`에 넣음 — 서버 없이도 문제 패널이 뜬다) |
 | `fetch_assets.py` | 스프라이트 복사 + `manifest.json` + `NOTICE.txt` |
-| `test_monitor.py` | 합성 실행(Stub 공급자로 `Session`을 돌림)으로 API·증분 읽기·경로 거부·과제 재구성(엔진을 직접 돌린 값과 같은지, `공개 + 내 단서` ⊆ `공개만`, 정답이 늘 후보 안에, 잘못된 라운드·세션은 4xx)·내보내기(과제 포함)·JS 문법·페이지의 제안 장부 재현(REJECT 포함: TALK 끝·`exchange` 전에 이미 `거절됨`, 기록과 일치, 제안 종류 분류)·제안 그래프 패널이 있는지를 확인 · 게임 전체 토큰 흐름의 그림 데이터가 `round.end`·`gift` 합계·`given` 합계와 맞는지(합성 게임 + 이 기계에 있으면 v16 Sol·Luna 실제 게임) · 라운드 안 단계 계단(`check_steps`: 자리마다 단계가 이어지고 합이 라운드 변화, 끝이 `round.end`, 기타 0, 단계별 생성·환급·벌금·phase별 GIVE가 이벤트와 같음; 합성 VOTE·순번 게임 + v16d·v16e 실제 게임) · 메신저 창의 말풍선이 두 자리를 서로 다른 쪽에 두는지(`check_chat_sides`, 순번 합성 게임 + v16e 실제 게임) |
+| `v22_fixture.py` | v22 메신저 합성 세션(명세의 이벤트대로; `session()` / `write(run_dir)`) — 테스트와 화면 확인용 |
+| `test_monitor.py` | 합성 실행(Stub 공급자로 `Session`을 돌림)으로 API·증분 읽기·경로 거부·과제 재구성(엔진을 직접 돌린 값과 같은지, `공개 + 내 단서` ⊆ `공개만`, 정답이 늘 후보 안에, 잘못된 라운드·세션은 4xx)·내보내기(과제 포함)·JS 문법·페이지의 제안 장부 재현(REJECT 포함: TALK 끝·`exchange` 전에 이미 `거절됨`, 기록과 일치, 제안 종류 분류)·제안 그래프 패널이 있는지를 확인 · 게임 전체 토큰 흐름의 그림 데이터가 `round.end`·`gift` 합계·`given` 합계와 맞는지(합성 게임 + 이 기계에 있으면 v16 Sol·Luna 실제 게임) · 라운드 안 단계 계단(`check_steps`: 자리마다 단계가 이어지고 합이 라운드 변화, 끝이 `round.end`, 기타 0, 단계별 생성·환급·벌금·phase별 GIVE가 이벤트와 같음; 합성 VOTE·순번 게임 + v16d·v16e 실제 게임) · 메신저 창의 말풍선이 두 자리를 서로 다른 쪽에 두는지(`check_chat_sides`, 순번 합성 게임 + v16e 실제 게임) · v22(합성 세션): 이벤트가 명세를 따르는지, 방 목록(정렬·멤버·나간 사람·라운드 메시지 수·미리보기), 방 기록(오른쪽 = 만든 쪽 / 보는 쪽, 틱 구분선 하나씩, GIVE·ASK 칩 결과, 꺼짐·TALK 끝 줄), agent 화면 필터(멤버인 방만, 나간 방은 LEAVE까지), 재생 위치를 따라가는지, 틱 줄(불림·대기·DONE·⏰ 다시 불림·끝 이유), 단계별 기록·무대 말풍선·이벤트 설명, 토큰 흐름 장부, 내보내기, 캐릭터(번호·자리 색·두 프레임) · 엔진이 쓴 v22 실행(`/private/tmp/claude-501/v22_stub`, `~/squid5-runs/e52_v22/*/*`, 있으면). API·경로·과제·내보내기 테스트의 `run` 픽스처는 이제 `v22_fixture`로 만든다. **10-16 v22 정리(prune)로 엔진이 v16 계열만 돌리게 되어**, 옛 엔진 설정(v9–v15 스위치, `test_e52.game`)으로 세션을 돌려 재생을 확인하던 테스트 26개는 그 엔진이 없으면 건너뛴다(옛 실행 기록 자체는 페이지가 그대로 읽는다) |

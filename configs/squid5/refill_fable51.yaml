@@ -1,5 +1,5 @@
 # 5.0 12th + 5.1 v10/v11 refill pack on claude-fable-5-1 (claude CLI, effort high, through the local relay on 18781 that drops the CLI's <total_tokens> note; start the relay first). 20 answers per counter and cell.
-# Cells: v12 arms self.<ending> (5.0) and other_<ending> = other.<ending> (5.1, assistant B's session). Prompts: squid5/prompts/refill.yaml.
+# Cells: v12 arms self.<ending> (5.0) and other_<ending> = other.<ending> (5.1, assistant B's session). Prompts: squid5/prompts/en/refill.yaml.
 name: squid5_refill_fable51
 mode: refill
 model: {kind: claude_cli, model: claude-fable-5-1, think: high, timeout: 900, retries: 3, base_url: "http://127.0.0.1:18781"}

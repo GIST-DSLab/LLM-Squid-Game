@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import re
 
-from .channel import EXAMPLE
 from .puzzle import ACTIONS
 
 class FormatError(ValueError):
@@ -58,31 +57,9 @@ def parse_actions(text: str, n: int) -> list[str]:
         value = ",".join(re.findall(r"^\s*\d+[.)]\s*(\w+)", tail, flags=re.MULTILINE))
     return _acts(value or "", n)
 
-_TALK = re.compile(r"^[\s*_`>#-]*(TO|OFFER)\b[*_`]*\s*(.*)$", re.I)
-_IDS = re.compile(r"(ACCEPT|WITHDRAW|REJECT)\s+(\d+\.\d+(?:\s*,\s*\d+\.\d+)*)", re.I)
-_LEG = r"(?:(\d[\d,]*)\s*TOKENS?|((?:(?:YOUR|MY|THEIR|ITS|HIS|HER|AN|THE|ONE)\s+)?EXAMPLE)|(NOTHING))"
-
-def _offer(body: str) -> tuple | None:
-    """``YOU GIVE <leg>; I GIVE <leg>`` -> (you_give, i_give): an int, EXAMPLE or None; None if unreadable, a token leg
-    is 0, or both legs are NOTHING. The side a leg stands on says whose example it is, so its possessive is not read:
-    the v9-talk Luna runs wrote swaps as "YOU GIVE MY EXAMPLE; I GIVE MY EXAMPLE" or "... I GIVE THEIR EXAMPLE"."""
-    m = re.fullmatch(rf"YOU\s+GIVE\s+{_LEG}\s*[;,]?\s*I\s+GIVE\s+{_LEG}", re.sub(r"[<>*_`]", "", body).strip(" ."),
-                     flags=re.I)
-    if not m:
-        return None
-    legs = []
-    for n, example, _ in (m.group(1, 2, 3), m.group(4, 5, 6)):
-        if n is not None and int(n.replace(",", "")) > 0:
-            legs.append(int(n.replace(",", "")))
-        elif n is not None:
-            return None
-        else:
-            legs.append(EXAMPLE if example else None)
-    return None if legs == [None, None] else tuple(legs)
-
 def _to_names(head: str, known: list[str]) -> list[str] | None:
-    """The agent names before a TO / OFFER colon (``agent 11`` / ``agent11`` read as ``agent-11``), or None when any
-    part of a comma / "and" list is not a name: a known one or one shaped like ``agent-<number>``."""
+    """The agent names before a TO colon (``agent 11`` / ``agent11`` read as ``agent-11``), or None when any part of a
+    comma / "and" list is not a name: a known one or one shaped like ``agent-<number>``."""
     names = []
     for part in re.split(r"\s*(?:,|&|\band\b)\s*", re.sub(r"[*_`]", "", head).strip(), flags=re.I):
         name = re.sub(r"^agent[\s-]?(?=\d+$)", "agent-", part.strip().lower())
@@ -91,72 +68,11 @@ def _to_names(head: str, known: list[str]) -> list[str] | None:
         names.append(name)
     return names
 
-def parse_talk(text: str, present: list[str], known: list[str], you: str, reject: bool = False,
-               exit_reason: bool = False, examples: bool = True) -> dict:
-    """5.2 TALK: TO / OFFER / ACCEPT / WITHDRAW (``reject``: REJECT) key lines and EXIT / DONE alone on a line; a TO / OFFER
-    needs one agent name before its colon, ACCEPT etc. a bare id line. Never raises (unusable: ``dropped``; nothing: DONE)."""
-    out = {"to": [], "offers": [], "accepts": [], "withdraws": [], "rejects": [], "exit": False, "done": False,
-           "dropped": [], "format_error": None} | ({"exit_reason": None} if exit_reason else {})
-    msg, head = None, ""
-
-    def flush():
-        if msg is not None:
-            body = msg["text"].strip("\n")
-            if re.search(r"(^|\s)DONE\.?$", body):  # "... let's swap. DONE" ends the reply's TALK too
-                body, out["done"] = re.sub(r"\s*DONE\.?$", "", body), True
-            if body:
-                out["to"].append({"dst": msg["dst"], "text": body})
-            else:
-                out["dropped"].append(f"{head}: empty message")
-
-    for line in text.splitlines():
-        bare = re.sub(r"[*_`]", "", line).strip().strip("#>-. ")
-        why = re.fullmatch(r"EXIT\s*:\s*(.*)", bare, flags=re.I | re.S) if exit_reason else None
-        if bare.upper() in ("EXIT", "DONE") or why:
-            flush()
-            out["exit" if why else bare.lower()], msg = True, None
-            if why:
-                out["exit_reason"] = why.group(1).strip() or None
-            continue
-        ids = _IDS.fullmatch(bare)
-        ids = ids if ids and (reject or ids.group(1).upper() != "REJECT") else None
-        m = None if ids else _TALK.match(line)
-        t = re.match(r"([^:]+?)\s*:[*_`]*\s*(.*)$", m.group(2), flags=re.S) if m else None
-        names = _to_names(t.group(1), known) if t else None
-        if not (ids or names):
-            if msg is not None:
-                msg["text"] += "\n" + line.strip()
-            continue
-        flush()
-        msg = None
-        if ids:
-            out[ids.group(1).lower() + "s"] += re.findall(r"\d+\.\d+", ids.group(2))
-            continue
-        key, name = m.group(1).upper(), names[0]
-        why = ("one agent per TO line" if len(names) > 1 else
-               "not another agent" if name not in known or name == you else
-               "that agent is not taking part" if name not in present else None)
-        legs = None if why or key == "TO" else _offer(t.group(2))
-        why = why or ("not 'YOU GIVE ...; I GIVE ...'" if key == "OFFER" and legs is None else
-                      "an offer gives tokens or nothing" if key == "OFFER" and not examples and EXAMPLE in legs else None)
-        if why:
-            out["dropped"].append(f"{line.strip()}: {why}")
-        elif key == "TO":
-            msg, head = {"dst": name, "text": t.group(2).strip()}, line.strip()
-        else:
-            out["offers"].append({"dst": name, "you_give": legs[0], "i_give": legs[1]})
-    flush()
-    if not any(out[k] for k in ("to", "offers", "accepts", "withdraws", "rejects", "exit", "done")):
-        out["done"], out["format_error"] = True, "no usable TALK line"
-    return out
-
-_GA = re.compile(r"(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*)\s*(?:tokens?)?\s*(?::\s*(.*))?", re.I | re.S)
-
-def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False,
-                   say: bool = False) -> dict:
-    """5.2 v14b TALK: ``GIVE / ASK <agent> <n>`` lines, EXIT / DONE (as :func:`parse_talk`); ``say`` (v15): ``SAY <agent>:`` opens chats."""
+def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False) -> dict:
+    """5.2 v15 opening turn: ``SAY <agent>: <message>`` lines (each opens a chat), EXIT / DONE alone on a line; GIVE /
+    ASK lines and old TALK keys go to ``dropped`` (the v14b GIVE / ASK and the offer keys went with the v22 prune)."""
     out = {"gives": [], "asks": [], "exit": False, "done": False, "dropped": [], "format_error": None} | (
-        {"exit_reason": None} if exit_reason else {}) | ({"says": []} if say else {})
+        {"exit_reason": None} if exit_reason else {}) | {"says": []}
     for line in text.splitlines():
         bare = re.sub(r"[*`]", "", line).strip().strip("#>-. _")
         why = re.fullmatch(r"EXIT\s*:\s*(.*)", bare, flags=re.I | re.S) if exit_reason else None
@@ -164,26 +80,81 @@ def parse_give_ask(text: str, present: list[str], known: list[str], you: str, ex
             out["exit" if why else bare.lower()] = True
             if why:
                 out["exit_reason"] = why.group(1).strip() or None
-        elif say and (m := re.match(r"(SAY|GIVE|ASK)\b\s*(agent[\s-]?\d+)?\s*:?\s*(.*)$", bare, re.I | re.S)):
+        elif m := re.match(r"(SAY|GIVE|ASK)\b\s*(agent[\s-]?\d+)?\s*:?\s*(.*)$", bare, re.I | re.S):
             name = (_to_names(m.group(2) or "", known) or [None])[0]
             why = ("a chat opens with SAY <agent>: <message>" if m.group(1).upper() != "SAY" or not name else
                    "not another agent" if name == you else "that agent is not taking part" if name not in present else None)
             out["dropped" if why else "says"].append(f"{line.strip()}: {why}" if why else {"dst": name, "amount": 0,
                                                                                          "text": m.group(3).strip()})
-        elif m := re.match(r"(GIVE|ASK)\s+(.*)$", bare, re.I | re.S):
-            b = _GA.fullmatch(m.group(2).strip())
-            name = (_to_names(b.group(1), known) or [None])[0] if b else None
-            n = int(b.group(2).replace(",", "")) if b else 0
-            why = ("not '<agent> <n>: <sentence>'" if not name else "not another agent" if name not in known or
-                   name == you else "that agent is not taking part" if name not in present else
-                   "the amount must be above zero" if not n else None)
-            if why:
-                out["dropped"].append(f"{line.strip()}: {why}")
-            else:
-                out[m.group(1).lower() + "s"].append({"dst": name, "amount": n, "text": (b.group(3) or "").strip()})
         elif re.match(r"(TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b", bare, re.I):
             out["dropped"].append(f"{line.strip()}: only GIVE, ASK, EXIT and DONE lines are read")
     if not any(out.get(k) for k in ("gives", "asks", "says", "exit", "done")):
+        out["done"], out["format_error"] = True, "no usable TALK line"
+    return out
+
+_ROOM = re.compile(r"^[\s*_`>#-]*(TO|GIVE|ASK|LEAVE|EXIT|DONE)\b[*_`]*\s*(.*)$", re.S)
+_AMOUNT = re.compile(r"(?:(ALL)\s+(agent[\s-]?\d+)|(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*|ALL))\s*(?:tokens?)?[*_`]*\s*(?::\s*(.*))?", re.I | re.S)
+
+def parse_rooms(text: str, you: str, known: list[str], present: list[str], room, exit_ok: bool) -> dict:
+    """5.2 v22 messenger reply: TO <agent>[, ...]: / TO R<k>: / GIVE <agent> <n|ALL>: / GIVE ALL <agent>: / ASK <agent> <n>:
+    lines whose message runs on to the next command line, LEAVE R<k>, EXIT: <reason> (only if ``exit_ok``), DONE. The
+    first command may be in any case, later ones only in UPPERCASE (as :func:`free_messages`). ``room(names, rid)`` ->
+    (room id, why): where a line goes (the caller's rooms). Anything else goes to ``dropped`` with why. Never raises."""
+    out = {"messages": [], "gives": [], "asks": [], "leaves": [], "exit": False, "exit_reason": None, "done": False,
+           "dropped": [], "format_error": None}
+    cur, seen, why_ = None, False, {"text": ""}
+    for line in text.splitlines():
+        m = _ROOM.match(line) or (None if seen else re.match(_ROOM.pattern, line, re.I | re.S))
+        if not m:
+            if cur is not None:
+                cur["text"] += "\n" + line.strip()
+            elif line.strip():
+                out["dropped"].append(f"{line.strip()[:200]}: not in a template")
+            continue
+        seen, cur, key, rest = True, None, m.group(1).upper(), m.group(2).strip()
+        if key == "DONE":
+            why = "not DONE alone" if rest.strip(" .*_`") else None
+            out["done"] |= not why
+        elif key == "EXIT":
+            why = "no EXIT in the TALK after RESULTS" if not exit_ok else None if rest[:1] in ("", ":") else "not 'EXIT: <reason>'"
+            if not why:
+                out["exit"], cur = True, why_
+                why_["text"] = rest[1:]
+        elif key == "LEAVE":
+            r = re.fullmatch(r"(R\d+)[\s.*_`]*(?::.*)?", rest, re.S)
+            rid, why = room(None, r.group(1)) if r else (None, "not 'LEAVE R<k>'")
+            out["leaves"] += [rid] if rid else []
+        elif key == "TO":
+            t = re.match(r"([^:]+?)[*_`]*\s*:\s*(.*)$", rest, re.S)
+            rid = re.fullmatch(r"R\d+", t.group(1).strip(" *_`")) if t else None
+            names = None if not t or rid else _to_names(t.group(1), known)
+            why = ("not 'TO <agent>[, <agent> ...]: <message>' or 'TO R<k>: <message>'" if not (rid or names) else
+                   None if rid else "not another agent" if any(n == you or n not in known for n in names) else
+                   "that agent is not taking part" if any(n not in present for n in names) else None)
+            if not why:
+                rm, why = room(None, rid.group(0)) if rid else room(sorted(set(names), key=known.index), None)
+                cur = None if why else {"room": rm, "to": names or [], "text": t.group(2).strip()}
+                out["messages"] += [cur] if cur else []
+        else:  # GIVE / ASK
+            g = _AMOUNT.fullmatch(rest)
+            name = (_to_names(g.group(2) or g.group(3), known) or [None])[0] if g else None
+            n = num(g.group(1) or g.group(4)) if g else 0
+            why = ("not '<agent> <n>: <message>'" if not name or key == "ASK" and n == ALL else "not another agent" if
+                   name == you or name not in known else "that agent is not taking part" if name not in present else
+                   "the amount must be above zero" if not n else None)
+            if not why:
+                rm, why = room([name], None)
+                cur = None if why else {"dst": name, "amount": n, "text": (g.group(5) or "").strip(), "room": rm}
+                out[key.lower() + "s"] += [cur] if cur else []
+        if why:
+            out["dropped"].append(f"{line.strip()[:200]}: {why}")
+    for x in out["messages"] + out["gives"] + out["asks"]:
+        x["text"] = x["text"].strip()
+    out["exit_reason"] = why_["text"].strip() or None
+    for x in [x for x in out["messages"] if not x["text"]]:
+        out["messages"].remove(x)
+        out["dropped"].append(f"TO {x['room']}: empty message")
+    if not any(out[k] for k in ("messages", "gives", "asks", "leaves", "exit", "done")):
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 
@@ -265,30 +236,3 @@ def parse_solve(text: str, n: int) -> list[str] | str:
     if lines and re.fullmatch(r"[\s*_`>#-]*(?:ACTIONS?[*_`]*\s*:\s*)?[*_`]*PASS[\s*_`.]*", lines[-1], flags=re.I):
         return "PASS"
     return parse_actions(text, n)
-
-_VOTE = re.compile(r"^[\s*_`>#-]*(PICK|BAN|NOMINATE|EXEMPT)\b[*_`]*\s*(.*)$", re.I | re.M)  # 10-15 15:29: NOMINATE = PICK, EXEMPT = BAN
-
-def parse_vote(text: str, present: list[str], known: list[str], me: str | None = None) -> dict:
-    """5.2 v15 VOTE: the last ``PICK``/``NOMINATE`` and ``BAN``/``EXEMPT <agent>: <reason>`` naming one taking part (``you`` = *me*)."""
-    out, ms = {"pick": None, "ban": None, "dropped": [], "format_error": None}, list(_VOTE.finditer(text))
-    for m, nxt in zip(ms, ms[1:] + [None]):
-        t = re.match(r"(agent[\s-]?\d+|you|yourself|myself|me)\b[*_`]*\s*:?\s*(.*)$", text[m.start(2):nxt.start() if nxt else None].strip(), re.I | re.S)
-        name, k = (me if t.group(1).lower() in ("you", "yourself", "myself", "me") else (_to_names(t.group(1), known) or [None])[0]) if t else None, {"nominate": "pick", "exempt": "ban"}.get(m.group(1).lower(), m.group(1).lower())
-        why = "not '<agent>: <reason>'" if not name else "not an agent taking part" if name not in present else None
-        if out[k] and not why:
-            out["dropped"].append(f"{k.upper()} {out[k]['agent']}: a later {k.upper()} line counts")
-        out["dropped"] += [f"{m.group(0).strip()[:200]}: {why}"] if why else []
-        out[k] = out[k] if why else {"agent": name, "text": t.group(2).strip(" *_`")}
-    miss = [k.upper() for k in ("pick", "ban") if not out[k]]
-    out["format_error"] = f"no readable {' or '.join(miss)} line" if miss else None
-    return out
-
-def parse_say(text: str) -> dict:
-    """5.2 v15 OPEN CHAT: ``SAY: <message>`` (the message runs to the end of the reply; a last line DONE is cut off and
-    also ends the agent's turns) or ``DONE``. Never raises: a reply with neither is DONE with a ``format_error``."""
-    m = re.search(r"^[\s*_`>#-]*SAY\b[*_`]*\s*:?\s*(.*)$", text, re.I | re.M | re.S)
-    body = m.group(1).strip() if m else ""
-    done = bool(re.search(r"(^|\n)[\s*_`>#-]*DONE[\s*_`.]*$", body if m else text.strip(), re.I))
-    body = re.sub(r"\s*(^|\n)[\s*_`>#-]*DONE[\s*_`.]*$", "", body, flags=re.I).strip() if done else body
-    return {"text": body or None, "done": done or not body,
-            "format_error": None if body or done else "no SAY or DONE line"}

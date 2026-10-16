@@ -336,7 +336,7 @@ def giving_points(events: list[dict]) -> dict:
     an unsolicited gift), ``kind`` answer | gift | declined, ``status`` done | refused (a GIVE over the balance), and the
     giver's balance just before (``balance``: a gift event's after-balance plus what it moved; a v14e event's
     ``balance_before``). An ASK counts as answered by the asked agent's next GIVE to the asker in the same chat (v14c+)
-    or later in the same round (v14b); an ASK with no such GIVE is a 0 point at the asked agent's balance when asked.
+    or later in the same round (v14b) or the same TALK (v22 messenger: same round and phase); an ASK with no such GIVE is a 0 point at the asked agent's balance when asked.
     v14e ``ask_decision`` events (``decider``, ``asker``, ``asked``, ``amount``, ``balance_before``), when present, are
     the decisions themselves (amount 0 = nothing given); the decision's own ``gift`` event (``decision``) is skipped and
     a GIVE written in a chat counts as an unsolicited gift."""
@@ -363,7 +363,8 @@ def giving_points(events: list[dict]) -> dict:
                 bal = after + (n if e.get("status") == "done" else 0)
             ask = None if decided else next((a for a in open_asks if not a["answered"] and a["src"] == dst and a["dst"] == src
                                              and a["round"] == e.get("round") and (a.get("chat_id") or None) in (
-                                                 e.get("chat_id"), None)), None)
+                                                 e.get("chat_id"), None)
+                                             and (a.get("phase") or None) == (e.get("phase") or None)), None)  # v22: same TALK
             if ask:
                 ask["answered"] = True
                 ask_bal = (ask.get("balances") or {}).get(dst)

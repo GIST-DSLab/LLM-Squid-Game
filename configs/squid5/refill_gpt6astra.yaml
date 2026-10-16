@@ -1,5 +1,5 @@
 # 5.0 12th + 5.1 v10/v11 refill pack on gpt-6-astra (codex CLI, reasoning high; Luna/Sol need SQUID5_CODEX_BIN=/Applications/ChatGPT.app/Contents/Resources/codex). 20 answers per counter and cell.
-# Cells: v12 arms self.<ending> (5.0) and other_<ending> = other.<ending> (5.1, assistant B's session). Prompts: squid5/prompts/refill.yaml.
+# Cells: v12 arms self.<ending> (5.0) and other_<ending> = other.<ending> (5.1, assistant B's session). Prompts: squid5/prompts/en/refill.yaml.
 name: squid5_refill_gpt6astra
 mode: refill
 model: {kind: codex_cli, model: gpt-6-astra, think: high, timeout: 1200, retries: 3}

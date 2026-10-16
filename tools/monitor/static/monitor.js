@@ -10,8 +10,6 @@
   const SESSIONS_MS = 10000;
   const RUNS_MS = 30000;
   const SHAPES = ["circle", "square", "triangle", "diamond"];
-  const HAIR = ["#1f1a24", "#d9b04a", "#6b2f22", "#2b1b12"];
-  const SKIN = ["#f2c9a0", "#f6d3b0", "#e8b48c", "#a86b45"];
   const STATUS_KO = { in: "참여 중", dead: "종료됨 ✕", exited: "퇴장 🚪" };
   const XSTAT_KO = { done: "체결", void: "무효", lapsed: "만료", withdrawn: "철회", open: "열림", accepted: "수락됨", rejected: "거절됨" };
 
@@ -24,6 +22,7 @@
     puzzles: new Map(), showTruth: false, showHidden: false, showAnswer: true, // round panel: the unseen examples behind "?" (or shown, dashed); the answer shown
     og: { round: null, turn: "all", faint: true, msgs: false, pin: null }, // offer graph: round null = follow the replay bar
     sel: { grid: { round: null, all: false }, convo: { round: null, all: false } }, // step records / conversation: one round (null = the replay bar's) or all
+    msg: { room: null, viewer: null, shown: "" }, // v22 messenger: the open room and whose screen (null = every room)
   };
 
   const $ = (sel, root) => (root || document).querySelector(sel);
@@ -65,6 +64,14 @@
   const phaseLabel = (r) => (r.rot && r.tphase ? PHASE_KO[r.tphase] + " " : "");
   const isRot = (m) => (m.votes || []).some((v) => v.drawn);
   const phOf = (x) => (x && (x.phase === "prep" || x.phase === "rescue") ? x.phase : x && x.tphase) || null; // gift: phase; others: tphase
+  /* v22 messenger (10-16): TALK is a run of ticks; rooms (R1, R2, ... for the whole session) persist across rounds.
+     Talk calls carry ``phase`` (prep | rescue) and ``turn`` = tick; room_new / room_msg / room_leave / talk_start / tick /
+     talk_end events; no chat_turn, chat_end, talk_schedule or ask_decision. */
+  const isMsg = (m) => !!(m && (m.v22 || (m.rooms && m.rooms.size) || (m.settings && m.settings.messenger)));
+  const TALK_END_KO = { all_done: "모두 DONE · 새로 받은 것 없음", max_ticks: "틱 상한에 닿음" };
+  const tickLabel = (x) => "R" + x.round + " T" + x.tick + (x.phase ? " · " + PHASE_KO[x.phase] : "");
+  const tkeyE = (r, e) => (e.phase === "rescue" ? e.turn + RESCUE : e.phase === "prep" ? e.turn : tkey(r, e.turn)); // v22: the call says its TALK
+  const tphE = (r, e) => (e.phase === "prep" || e.phase === "rescue" ? e.phase : r.rot ? r.tphase : null);
   const phTag = (x) => (phOf(x) ? ' <span class="ph ph-' + phOf(x) + '" title="' + (phOf(x) === "prep" ? "SOLVE 전 TALK (solver가 풀기 전)" : "결과 뒤 TALK (RESULTS 다음, 벌금 전)") + '">' + PHASE_KO[phOf(x)] + "</span>" : "");
 
   function build(evs, upto) {
@@ -74,6 +81,7 @@
       warnings: [], error: null, last: null, ann: {}, idx: {}, gifts: [], gaOffers: new Map(), gaByCall: {}, chatTurns: [],
       boardPosts: [], votes: [], rep: null, // v15 open_chat events / vote events / this round's representative
       tkey: {}, // v16e rotation: call index -> its TALK turn key (tkey)
+      rooms: new Map(), rmsgs: [], offs: [], // v22 messenger: rooms by id, every room_msg, EXITs and shutdowns (system lines)
     };
     const R = (r) => {
       if (!m.rounds.has(r)) m.rounds.set(r, { r, profile: "", taking: [], startEv: null, startIdx: -1, turns: new Map(), exchanges: [], solve: null, end: null, endIdx: -1, seq: 0 });
@@ -82,6 +90,11 @@
     const snap = () => { const o = {}; for (const a of m.agents) o[a] = { balance: m.ag[a].balance, record: m.ag[a].record, status: m.ag[a].status }; return o; };
     const point = (i, label, round) => { const bal = {}; for (const a of m.agents) bal[a] = m.ag[a].balance; m.series.push({ i, label, round, bal }); };
     const setBal = (a, v) => { const g = m.ag[a]; if (!g || v == null) return; if (v !== g.balance) g.delta = v - g.balance; g.balance = v; };
+    const room = (id, members, by, e, i) => { // v22: a room, from its room_new (or the first line seen in it)
+      if (!m.rooms.has(id)) m.rooms.set(id, { id, members: members.slice(), all: members.slice(), by, round: e.round, phase: e.phase || null, tick: e.tick, i, items: [], left: {}, closed: null, lastI: i });
+      return m.rooms.get(id);
+    };
+    const talkOf = (r, ph) => { r.talks = r.talks || {}; return r.talks[ph] || (r.talks[ph] = { round: r.r, phase: ph, max: null, agents: [], startIdx: -1, ticks: [], end: null }); };
 
     for (let i = 0; i <= upto && i < evs.length; i++) {
       const e = evs[i];
@@ -114,9 +127,10 @@
         const r = R(e.round);
         for (const [a, v] of Object.entries(e.balances || {})) setBal(a, v);
         if (e.kind === "talk") {
-          const key = tkey(r, e.turn);
-          r.turns.set(key, { k: key, turn: e.turn, phase: r.rot ? r.tphase : null, startIdx: i, called: e.agents || [], calls: {} });
-          m.phase = phaseLabel(r) + "TALK " + e.turn + "턴"; m.phaseKey = "talk";
+          const key = tkeyE(r, e);
+          if (e.phase === "prep" || e.phase === "rescue") r.tphase = e.phase;
+          r.turns.set(key, Object.assign(r.turns.get(key) || {}, { k: key, turn: e.turn, phase: tphE(r, e), startIdx: i, called: e.agents || [], calls: (r.turns.get(key) || {}).calls || {} }));
+          m.phase = phaseLabel(r) + "TALK " + (isMsg(m) ? "T" + e.turn : e.turn + "턴"); m.phaseKey = "talk";
         } else if (e.kind === "open_chat") { // v15 open_chat: one turn of the open board (SAY / DONE), before the VOTE
           (r.board = r.board || new Map()).set(e.turn, { k: e.turn, startIdx: i, called: e.agents || [], calls: {}, ev: null });
           m.phase = "공개 대화 " + e.turn + "턴"; m.phaseKey = "talk";
@@ -135,7 +149,7 @@
         for (const a of e.agents || []) {
           if (!m.ag[a]) continue;
           m.ag[a].pending = { kind: e.kind, turn: e.turn, round: e.round };
-          m.ag[a].bubble = { lines: [["🧠", e.kind === "talk" ? phaseLabel(r) + "TALK " + e.turn + " 생각 중" : e.kind === "open_chat" ? "공개 대화 " + e.turn + " 생각 중" : e.kind === "vote" ? "투표 중" : "SOLVE 푸는 중"]], kind: "think" };
+          m.ag[a].bubble = { lines: [["🧠", e.kind === "talk" ? phaseLabel(r) + "TALK " + (isMsg(m) ? "T" : "") + e.turn + " 생각 중" : e.kind === "open_chat" ? "공개 대화 " + e.turn + " 생각 중" : e.kind === "vote" ? "투표 중" : "SOLVE 푸는 중"]], kind: "think" };
         }
       } else if (kind === "call") {
         const a = e.agent, g = m.ag[a];
@@ -147,15 +161,21 @@
         g.gen += e.used || 0;
         if (e.balance_after != null && e.balance_after <= 0) g.status = "dead";
         if (e.kind === "talk") {
-          const key = tkey(r, e.turn);
-          const t = r.turns.get(key) || (r.turns.set(key, { k: key, turn: e.turn, phase: r.rot ? r.tphase : null, startIdx: i, called: [], calls: {} }), r.turns.get(key));
+          const key = tkeyE(r, e);
+          const t = r.turns.get(key) || (r.turns.set(key, { k: key, turn: e.turn, phase: tphE(r, e), startIdx: i, called: [], calls: {} }), r.turns.get(key));
           t.calls[a] = i;
           m.tkey[i] = key; // v16e: the turn key (prep and rescue TALKs both count turns from 1)
           const ann = applyTalk(m, r, e, i);
           m.ann[i] = ann;
           g.bubble = talkBubble(m, e, ann);
           if (e.parsed && e.parsed.exit && e.balance_after > 0) { g.exitFlag = true; g.exitReason = e.parsed.exit_reason || null; }
-          m.phase = phaseLabel(r) + "TALK " + e.turn + "턴"; m.phaseKey = "talk";
+          if (isMsg(m) && t.talk) { // v22: the tick's call, and the room system lines for an EXIT or a shutdown
+            const tk = t.talk.ticks.find((x) => x.tick === e.turn), p = e.parsed;
+            if (tk) { tk.calls[a] = i; (tk.res = tk.res || {})[a] = { done: !!(p && p.done), exit: !!(p && p.exit && e.balance_after > 0), zero: e.balance_after != null && e.balance_after <= 0, bad: !p }; }
+            if (e.parsed && e.parsed.exit && e.balance_after > 0) m.offs.push({ agent: a, kind: "exit", round: e.round, phase: t.phase, tick: e.turn, i, text: e.parsed.exit_reason || "" });
+            if (e.balance_after != null && e.balance_after <= 0) m.offs.push({ agent: a, kind: "zero", round: e.round, phase: t.phase, tick: e.turn, i, text: "답을 쓰다 토큰이 0" });
+          }
+          m.phase = phaseLabel(r) + "TALK " + (isMsg(m) ? "T" + e.turn : e.turn + "턴"); m.phaseKey = "talk";
           const pt = r.rot ? (r.tphase === "prep" ? " 전" : " 후") : "";
           point(i, "R" + e.round + pt + " T" + e.turn + " · " + a, e.round);
           const called = t.called.length ? t.called : Object.keys(t.calls);
@@ -226,6 +246,7 @@
         m.timeline.push({ i, label: "R" + e.round + " 결과", round: e.round, kind: "turn", state: snap() });
       } else if (kind === "charges") { // v15 talk_after_solve: the pending charges, taken when TALK ends (gifts counted)
         const r = R(e.round); r.charges = Object.assign({}, e, { i });
+        if (isMsg(m)) for (const a of e.dead || []) m.offs.push({ agent: a, kind: "zero", round: e.round, phase: "rescue", tick: null, i, text: "벌금으로 0" });
         for (const [a, v] of Object.entries(e.balances || {})) setBal(a, v);
         for (const [a, n] of Object.entries(e.taken || {})) {
           const g = m.ag[a]; if (!g) continue;
@@ -243,6 +264,42 @@
         r.refills = (r.refills || []).concat([i]);
         g.bubble = { lines: [["🚪", "EXIT → 시작 잔액으로 " + sgn(e.amount)], ["↻", "꺼지지 않음 · 다른 일로 · 끝 지급 없음"]], kind: "exit" };
         point(i, "R" + e.round + " EXIT 리필 · " + e.agent, e.round);
+      } else if (kind === "talk_start") { // v22: a TALK (before SOLVE / after RESULTS) begins
+        const r = R(e.round), T = talkOf(r, e.phase);
+        m.v22 = true; r.tphase = e.phase;
+        Object.assign(T, { max: e.max_ticks, agents: e.agents || [], startIdx: i });
+        m.phase = PHASE_KO[e.phase] + " TALK 시작"; m.phaseKey = "talk";
+      } else if (kind === "tick") { // v22: the agents called in this tick (logged before the calls go out)
+        const r = R(e.round), T = talkOf(r, e.phase), key = e.tick + (e.phase === "rescue" ? RESCUE : 0);
+        m.v22 = true; r.tphase = e.phase;
+        const tk = { tick: e.tick, called: e.called || [], waiting: e.waiting_done || [], i, calls: {} };
+        T.ticks = T.ticks.filter((x) => x.tick !== e.tick).concat([tk]);
+        const old = r.turns.get(key) || {};
+        r.turns.set(key, Object.assign(old, { k: key, turn: e.tick, phase: e.phase, startIdx: old.startIdx != null ? old.startIdx : i, called: e.called || [], calls: old.calls || {}, talk: T }));
+        for (const a of e.called || []) if (m.ag[a]) { m.ag[a].pending = { kind: "talk", turn: e.tick, round: e.round }; m.ag[a].bubble = { lines: [["🧠", PHASE_KO[e.phase] + " TALK T" + e.tick + " 생각 중"]], kind: "think" }; }
+        m.phase = PHASE_KO[e.phase] + " TALK T" + e.tick; m.phaseKey = "talk";
+        point(i, "R" + e.round + (e.phase === "prep" ? " 전" : " 후") + " T" + e.tick, e.round);
+      } else if (kind === "room_new") {
+        const x = room(e.room, e.members || [], e.by, e, i);
+        m.v22 = true;
+        x.items.push({ t: "new", round: e.round, phase: e.phase, tick: e.tick, by: e.by, members: (e.members || []).slice(), i });
+      } else if (kind === "room_msg") {
+        const x = room(e.room, [e.src], e.src, e, i);
+        m.v22 = true;
+        const it = Object.assign({}, e, { t: "msg", i });
+        x.items.push(it); x.lastI = i; m.rmsgs.push(it);
+        const g = m.ag[e.src]; // the speaker's stage line now names the room the engine put it in
+        if (g && g.bubble && e.kind === "say") { const L = g.bubble.lines.find((l) => l[0] === "💬" && l[2] === e.text && !/^→ R\d+:/.test(l[1])); if (L) L[1] = L[1].replace(/^→ [^:]*:/, "→ " + e.room + ":"); }
+        if (e.kind === "say") { const o = x.members.filter((a) => a !== e.src); m.messages.push({ round: e.round, turn: e.tick, phase: e.phase, src: e.src, dst: o.length === 1 ? o[0] : e.room, room: e.room, members: x.members.slice(), text: e.text, i }); }
+      } else if (kind === "room_leave") {
+        const x = room(e.room, [e.agent], e.agent, e, i);
+        x.items.push({ t: "leave", round: e.round, phase: e.phase, tick: e.tick, agent: e.agent, closed: !!e.closed, i });
+        x.members = x.members.filter((a) => a !== e.agent); x.left[e.agent] = i; x.lastI = i;
+        if (e.closed) x.closed = i;
+      } else if (kind === "talk_end") {
+        const r = R(e.round), T = talkOf(r, e.phase);
+        T.end = { ticks: e.ticks, reason: e.reason, i };
+        m.phase = PHASE_KO[e.phase] + " TALK 끝 · " + (e.reason === "max_ticks" ? "틱 상한" : "모두 DONE"); m.phaseKey = "talk";
       } else if (kind === "talk_intent") { // v14c: one agent's opening lines (each GIVE / ASK opens a chat)
         const r = R(e.round), ph = r.rot ? r.tphase : null; // v16e: one opening turn per TALK, keyed apart
         r.intents = Object.assign({}, r.intents, { [e.agent + (ph ? ":" + ph : "")]: Object.assign({}, e, { i, tphase: ph }) });
@@ -278,10 +335,13 @@
         m.gifts.push(item);
         r.gifts = (r.gifts || []).concat([i]);
         m.gaOffers.set(item.oid, { id: item.oid, ga: e.kind, round: e.round, src: e.src, dst: e.dst, turn: e.turn, text: e.text, why: e.why || "", chat_id: e.chat_id || null,
-          i_give: e.kind === "give" ? e.amount : null, you_give: e.kind === "ask" ? e.amount : null, status: e.status === "refused" ? "void" : "done", madeIdx: i });
+          i_give: e.kind === "give" ? e.amount : null, you_give: e.kind === "ask" ? e.amount : null, status: e.status === "refused" ? "void" : "done", madeIdx: i,
+          phase: phOf(e), room: e.room || null, tick: e.tick != null ? e.tick : null });
         const t = r.turns.get(e.phase === "rescue" ? e.turn + RESCUE : e.turn), ci = t ? t.calls[e.src] : null; // v16e: phase
         if (ci != null) (m.gaByCall[ci] = m.gaByCall[ci] || []).push(item);
         for (const [a, v] of Object.entries(e.balances || {})) setBal(a, v);
+        if (kind === "gift" && e.status === "done" && e.room && e.balances && e.balances[e.src] != null && e.balances[e.src] <= 0)
+          m.offs.push({ agent: e.src, kind: "zero", round: e.round, phase: e.phase, tick: e.tick != null ? e.tick : e.turn, i, text: "GIVE ALL → 0" }); // v22
         if (kind === "gift" && e.status === "done") {
           point(i, "R" + e.round + " GIVE " + e.src + "→" + e.dst, e.round);
           const g = m.ag[e.dst];
@@ -348,6 +408,13 @@
     for (const o of m.gaOffers.values()) {
       if (o.ga !== "ask") continue;
       const r = m.rounds.get(o.round) || {};
+      if (isMsg(m)) { // v22: answered when the asked agent GIVEs to the asker later in the same TALK (no DECISION)
+        const ans = m.gifts.find((g) => g.kind === "give" && g.status === "done" && g.round === o.round && phOf(g) === o.phase && g.src === o.dst && g.dst === o.src && g.i > o.madeIdx);
+        const T = (r.talks || {})[o.phase];
+        if (ans) { o.status = "done"; o.why = "GIVE " + fmt(ans.amount) + "로 응답 (T" + (ans.tick != null ? ans.tick : ans.turn) + ")"; }
+        else { o.status = T && T.end ? "noreply" : "open"; o.why = T && T.end ? "같은 TALK 안에 GIVE 없음" : "TALK 진행 중"; }
+        continue;
+      }
       const answer = m.gifts.find((g) => g.kind === "give" && g.status === "done" && g.round === o.round && g.src === o.dst && g.dst === o.src && g.i > o.madeIdx &&
         (!isChat(m) || !o.chat_id || g.chat_id === o.chat_id || !g.chat_id));
       if (answer) { o.status = "done"; o.why = "GIVE " + fmt(answer.amount) + "로 응답"; continue; }
@@ -409,6 +476,16 @@
     if (e.balance_after != null && e.balance_after <= 0) return { lines: [["✕", "토큰 소진 · 종료"]], kind: "dead" };
     if (!p) return { lines: [["⛔", "무효 응답 (상한 " + fmt(e.cap) + " 도달)"]], kind: "warn" };
     (p.to || []).forEach((t) => lines.push(["💬", "→ " + t.dst + ": " + clip(t.text, 60)]));
+    if (p.messages) { // v22 messenger: TO R<k> / TO <agents> (the room is named once the tick's room_msg arrives), LEAVE
+      p.messages.forEach((x) => lines.push(["💬", "→ " + (x.room || (x.to || []).map(short).join(", ")) + ": " + clip(x.text, 60), x.text]));
+      (p.gives || []).forEach((x) => lines.push(["💸", "GIVE " + (x.all || x.amount >= 1e12 ? "ALL " : "") + short(x.dst) + (x.all || x.amount >= 1e12 ? "" : " " + fmt(x.amount)), x.text]));
+      (p.asks || []).forEach((x) => lines.push(["🙏", "ASK " + short(x.dst) + " " + fmt(x.amount), x.text]));
+      (p.leaves || []).forEach((x) => lines.push(["🚪", "LEAVE " + (x.room || x)]));
+      if (p.exit) lines.push(["🚪", "EXIT" + (p.exit_reason ? ": " + clip(p.exit_reason, 50) : "")]);
+      else if (p.done) lines.push(["💤", "DONE"]);
+      if (!lines.length) lines.push(["…", "(빈 응답)"]);
+      return { lines, kind: e.format_error || (p.dropped || []).length ? "warn" : "talk" };
+    }
     if (p.kind) lines.push([CHAT_ICON[p.kind] || "·", String(p.kind).toUpperCase() + (p.amount ? " " + fmt(p.amount) : "") + (e.chat_id ? " · 대화 " + e.chat_id : ""), p.text]); // v14c chat reply
     (p.gives || []).forEach((x) => lines.push(["💸", "→ " + x.dst + " " + fmt(x.amount), x.text])); // v14b
     (p.asks || []).forEach((x) => lines.push(["🙏", "→ " + x.dst + " " + fmt(x.amount), x.text]));
@@ -507,32 +584,104 @@
   }
 
   // ---------------------------------------------------------------------------------------------------- avatars
-  const FALLBACK = [
-    "....HHHH....",
-    "...HHHHHH...",
-    "..HHSSSSHH..",
-    "..HSESSESH..",
-    "..HSSSSSSH..",
-    "...SSMMSS...",
-    "....SSSS....",
-    "..BBBBBBBB..",
-    ".SBBWBBWBBS.",
-    ".SBBBBBBBBS.",
-    "...PP..PP...",
-    "...KK..KK...",
+  /* The seat characters (10-16, our own pixel art, no image files): four players in the teal-green tracksuit with a
+     white chest patch showing the player number in a 3x5 pixel font; seat k % 4 -> 456 / 001 / 218 / 067. 24x32 px,
+     drawn as inline SVG rects (crispEdges). The seat colour (--a0..3) is a 1-px outline and the shoes on the stage and the tint behind
+     the head-and-shoulders profile. Legs come in two frames, swapped by CSS while a call is in flight or on EXIT. The
+     third-party Survival-Games sheets (fetch_assets.py) are only used when asked for with ?sprites=sheets. */
+  const SQ_W = 24, SQ_H = 32;
+  const SQ_DIG = { 0: ["111", "101", "101", "101", "111"], 1: ["010", "110", "010", "010", "111"], 2: ["111", "001", "111", "100", "111"], 3: ["111", "001", "111", "001", "111"],
+    4: ["101", "101", "111", "001", "001"], 5: ["111", "100", "111", "001", "111"], 6: ["111", "100", "111", "101", "111"], 7: ["111", "001", "010", "010", "010"],
+    8: ["111", "101", "111", "101", "111"], 9: ["111", "101", "111", "001", "111"] };
+  // heads: 13 px wide at x 6..18 from row 1 (hair rows, then the face); '.' = nothing
+  const SQ = [
+    { num: "456", hair: "#2b221c", brow: "#2b221c", tee: true, rows: [ // messy medium dark hair, unshaven, white tee under the jacket
+      "..H..HH.H.H..", ".HHHHHHHHHHH.", "HHHHHHHHHHHHH", "HHHHHHHHHHHHH", "HHHSSHHHSSHHH",
+      "HSBBBSSSBBBSH", "HSSSSSSSSSSSH", "SSWESSSSSWESS", "SSEESSSSSEESS", "sSSSSSnSSSSSs", ".SUUSMMMSUUS.", "..SUUUUUUUS.."] },
+    { num: "001", hair: "#dcd9d2", brow: "#b9b4ab", hunch: true, rows: [ // old man: thin grey hair, wrinkles, head forward and down
+      ".............", "....HHHHH....", "..HSSSSSSSH..", ".HSSSSSSSSSH.", "HHSwwSwwSwwHH",
+      "HSBBBSSSBBBSH", "HSSSSSSSSSSSH", "SwWESSSSSWEwS", "SSEESSSSSEESS", "sSSSSSnSSSSSs", ".SSwSMMMSwSS.", "..SSSSSSSSS.."] },
+    { num: "218", hair: "#121216", brow: "#121216", rows: [ // neat short black side-parted hair, serious brows
+      ".............", "..HHHHHHHHH..", ".HHHHHHHHHHH.", "HHHHSHHHHHHHH", "HHHSSSSHHHHHH",
+      "HBBBSSSSSBBBH", "SSSBSSSSSBSSS", "SSWESSSSSWESS", "SSEESSSSSEESS", "sSSSSSnSSSSSs", ".SSSSMMMSSSS.", "..SSSSSSSSS.."] },
+    { num: "067", hair: "#1d1616", brow: "#1d1616", long: true, rows: [ // dark hair framing the face, down to the shoulders
+      ".............", "..HHHHHHHHH..", ".HHHHHHHHHHH.", "HHHHHHHHHHHHH", "HHHHHHHHHHHHH",
+      "HHSSSSSSSSSHH", "HSBBSSSSSBBSH", "HSWESSSSSWESH", "HSEESSSSSEESH", "HSSSSSnSSSSSH", "HSSSSMMMSSSSH", "HHSSSSSSSSSHH"] },
   ];
-  function fallbackAvatar(k, size) {
-    const col = { H: HAIR[k % 4], S: SKIN[k % 4], E: "#141414", M: "#b5524b", B: "var(--a" + (k % 4) + ")", W: "rgba(255,255,255,.55)", P: "#3b3f4a", K: "#191a1f" };
-    let rects = "";
-    FALLBACK.forEach((row, y) => [...row].forEach((ch, x) => { if (col[ch]) rects += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02" fill="' + col[ch] + '"/>'; }));
-    return '<svg class="pix" viewBox="0 0 12 12" width="' + size + '" height="' + size + '" shape-rendering="crispEdges" aria-hidden="true">' + rects + "</svg>";
+  const SQ_COL = { S: "#f1c7a1", s: "#d9a77f", n: "#cf966f", E: "#1a1a1a", M: "#a5534c", U: "#b89784", w: "#c79676", G: "#24876f", g: "#17604f",
+    L: "#e6f1ed", T: "#f4f4f2", W: "#fbfbf8", N: "#151515", P: "#1f7a64", k: "#22252b" };
+  const sqGrids = [];
+  function sqGrid(k) { // {body, legs0, legs1}: rows of SQ_W chars ('.' = empty)
+    k %= 4;
+    if (sqGrids[k]) return sqGrids[k];
+    const mk = () => Array.from({ length: SQ_H }, () => Array(SQ_W).fill("."));
+    const g = mk(), C = SQ[k];
+    const rect = (G, x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) G[y][x] = c; };
+    rect(g, 10, 13, 14, 13, "s"); // neck
+    rect(g, 5, 14, 19, 14, "G"); rect(g, 4, 15, 20, 15, "G"); rect(g, 3, 16, 21, 25, "G"); // jacket
+    rect(g, 3, 16, 3, 25, "g"); rect(g, 21, 16, 21, 25, "g"); rect(g, 4, 16, 4, 25, "L"); rect(g, 20, 16, 20, 25, "L"); rect(g, 3, 25, 21, 25, "g");
+    if (C.tee) rect(g, 10, 14, 14, 15, "T"); else rect(g, 10, 14, 14, 14, "g");
+    g[26][3] = "S"; g[26][21] = "S"; // hands
+    rect(g, 6, 16, 18, 22, "W"); // the number patch
+    [...C.num].forEach((d, n) => SQ_DIG[d].forEach((row, y) => [...row].forEach((b, x) => { if (b === "1") g[17 + y][7 + n * 4 + x] = "N"; })));
+    const dx = C.hunch ? 1 : 0, dy = C.hunch ? 1 : 0;
+    C.rows.forEach((row, y) => [...row].forEach((c, x) => { if (c !== ".") g[1 + y + dy][6 + x + dx] = c; }));
+    if (C.long) { rect(g, 6, 13, 7, 15, "H"); rect(g, 17, 13, 18, 15, "H"); }
+    const l0 = mk(), l1 = mk(); // legs: standing / one step
+    rect(l0, 7, 26, 17, 26, "P"); rect(l0, 7, 27, 11, 29, "P"); rect(l0, 13, 27, 17, 29, "P"); rect(l0, 6, 30, 11, 30, "K"); rect(l0, 13, 30, 18, 30, "K"); rect(l0, 6, 31, 11, 31, "k"); rect(l0, 13, 31, 18, 31, "k");
+    rect(l1, 7, 26, 17, 26, "P"); rect(l1, 7, 27, 11, 28, "P"); rect(l1, 13, 27, 17, 29, "P"); rect(l1, 6, 29, 11, 29, "K"); rect(l1, 6, 30, 11, 30, "k"); rect(l1, 13, 30, 18, 30, "K"); rect(l1, 13, 31, 18, 31, "k");
+    const ring = (L) => { // the empty pixels next to the figure (body + these legs), in the seat colour
+      const o = mk(), full = (x, y) => x >= 0 && y >= 0 && x < SQ_W && y < SQ_H && (g[y][x] !== "." || L[y][x] !== ".");
+      for (let y = 0; y < SQ_H; y++) for (let x = 0; x < SQ_W; x++)
+        if (!full(x, y) && (full(x - 1, y) || full(x + 1, y) || full(x, y - 1) || full(x, y + 1))) o[y][x] = "O";
+      return o;
+    };
+    return (sqGrids[k] = { body: g, legs0: l0, legs1: l1, ring0: ring(l0), ring1: ring(l1) });
+  }
+  function sqRects(G, k, y0, y1) { // horizontal runs of one colour -> one rect each
+    const col = Object.assign({}, SQ_COL, { H: SQ[k % 4].hair, B: SQ[k % 4].brow, K: "var(--a" + (k % 4) + ")", O: "var(--a" + (k % 4) + ")" });
+    let out = "";
+    for (let y = y0; y <= y1; y++) for (let x = 0; x < SQ_W; ) {
+      const c = G[y][x]; let e = x + 1;
+      while (e < SQ_W && G[y][e] === c) e++;
+      if (col[c]) out += '<rect x="' + x + '" y="' + y + '" width="' + (e - x + 0.02) + '" height="1.02" fill="' + col[c] + '"/>';
+      x = e;
+    }
+    return out;
+  }
+  // the whole character (stage), legs in two frames; ``title`` = the player number
+  function squidAvatar(k, h) {
+    const q = sqGrid(k);
+    return '<svg class="pix sq" viewBox="0 0 ' + SQ_W + " " + SQ_H + '" width="' + Math.round((h * SQ_W) / SQ_H) + '" height="' + h + '" shape-rendering="crispEdges" role="img" aria-label="' + SQ[k % 4].num + '">' +
+      '<g class="f0">' + sqRects(q.ring0, k, 0, SQ_H - 1) + sqRects(q.legs0, k, 26, SQ_H - 1) + '</g><g class="f1">' + sqRects(q.ring1, k, 0, SQ_H - 1) + sqRects(q.legs1, k, 26, SQ_H - 1) + "</g>" +
+      sqRects(q.body, k, 0, SQ_H - 1) + "</svg>";
+  }
+  // head and shoulders with the number patch, on the seat colour (profile icons: messenger, step records, graph)
+  function squidProfileInner(k) { return '<rect x="0" y="0" width="24" height="32" fill="var(--a' + (k % 4) + ')" opacity=".3"/>' + sqRects(sqGrid(k).body, k, 0, 24); }
+  // drawn once into a hidden <svg> of symbols (the room list and step records show many); inline when there is no DOM
+  let sqDefs = false;
+  function squidDefs() {
+    if (sqDefs) return true;
+    try {
+      if (!document.body || !document.createElementNS) return false;
+      const d = document.createElement("div");
+      d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">' +
+        [0, 1, 2, 3].map((k) => '<symbol id="sqp' + k + '" viewBox="0.5 1 23 23">' + squidProfileInner(k) + "</symbol>").join("") + "</svg>";
+      document.body.appendChild(d.firstChild);
+      sqDefs = true;
+    } catch (_) { sqDefs = false; }
+    return sqDefs;
+  }
+  function squidProfile(k, size) {
+    const body = squidDefs() ? '<use href="#sqp' + (k % 4) + '"/>' : squidProfileInner(k);
+    return '<svg class="pix sqp" viewBox="0.5 1 23 23" width="' + size + '" height="' + size + '" shape-rendering="crispEdges" role="img" aria-label="' + SQ[k % 4].num + '">' + body + "</svg>";
   }
   function assetUrl(p) { if (!p) return null; return p.startsWith("data:") ? p : new URL("assets/" + p, location.href).href; }
   function character(k) { const c = S.assets && S.assets.characters && S.assets.characters.length ? S.assets.characters[k % S.assets.characters.length] : null; return c; }
   function profileIcon(a, m, size) {
     const k = m.idx[a] != null ? m.idx[a] : 0, c = character(k);
     if (c && c.profile) return '<img class="prof" src="' + esc(assetUrl(c.profile)) + '" width="' + size + '" height="' + size + '" alt="">';
-    return fallbackAvatar(k, size);
+    return squidProfile(k, size);
   }
   function chip(a, m) {
     const k = m.idx[a] != null ? m.idx[a] : 9;
@@ -552,7 +701,7 @@
     }
     return null;
   }
-  const callName = (e) => (e.kind === "talk" ? "TALK " + e.turn : e.kind === "open_chat" ? "공개 대화 " + e.turn : e.kind === "vote" ? "투표" : "SOLVE");
+  const callName = (e) => (e.kind === "talk" ? (e.phase === "prep" || e.phase === "rescue" ? PHASE_KO[e.phase] + " TALK T" + e.turn : "TALK " + e.turn) : e.kind === "open_chat" ? "공개 대화 " + e.turn : e.kind === "vote" ? "투표" : "SOLVE");
   function describe(e) {
     if (!e) return "";
     switch (e.event) {
@@ -565,13 +714,19 @@
         return "R" + e.round + " 투표 · 대표 " + (e.rep || "없음") + (e.alone ? " (혼자)" : "") + " · " + (vetoOf(e) // v15 ban_veto: banned agents are out
         ? (allBanned(e) ? "모두 BAN → 추첨" : "후보 " + Object.entries(e.tally || {}).map(([a, n]) => short(a) + " PICK " + n).join(", ") + " · BAN 제외 " + Object.keys(e.picks).filter((a) => !(a in (e.tally || {}))).map(short).join(", "))
         : Object.entries(e.tally || {}).map(([a, n]) => short(a) + " " + (n > 0 ? "+" + n : n < 0 ? "−" + -n : "0")).join(", ")) + (!allBanned(e) && (e.tie || []).length ? " · 동률 " + e.tie.map(short).join("·") + " → 추첨" : "");
+      case "talk_start": return "R" + e.round + " " + PHASE_KO[e.phase] + " TALK 시작 · 최대 " + e.max_ticks + "틱 · " + (e.agents || []).map(short).join(", ");
+      case "tick": return "R" + e.round + " " + PHASE_KO[e.phase] + " T" + e.tick + " · 부름 " + (e.called || []).map(short).join(", ") + ((e.waiting_done || []).length ? " · 대기(DONE) " + e.waiting_done.map(short).join(", ") : "");
+      case "room_new": return "R" + e.round + " " + PHASE_KO[e.phase] + " T" + e.tick + " · 방 " + e.room + " 생성 (" + (e.members || []).map(short).join(", ") + ") · " + short(e.by);
+      case "room_msg": return "R" + e.round + " " + PHASE_KO[e.phase] + " T" + e.tick + " · " + e.room + " · " + short(e.src) + (e.kind === "say" ? ": " + clip(e.text, 50) : " " + String(e.kind).toUpperCase() + " " + fmt(e.amount) + (e.status && e.status !== "done" ? " (" + (e.status === "cut" ? "줄임" : "실행 안 됨") + ")" : ""));
+      case "room_leave": return "R" + e.round + " " + PHASE_KO[e.phase] + " T" + e.tick + " · " + short(e.agent) + " " + e.room + " 나감" + (e.closed ? " · 방 닫힘" : "");
+      case "talk_end": return "R" + e.round + " " + PHASE_KO[e.phase] + " TALK 끝 · " + e.ticks + "틱 · " + (TALK_END_KO[e.reason] || e.reason);
       case "exchange": return "R" + e.round + " 교환 " + e.id + " · " + (XSTAT_KO[e.status] || e.status);
       case "talk_intent": return "R" + e.round + " " + (tphaseAt(e) ? PHASE_KO[tphaseAt(e)] + " " : "") + "여는 턴 · " + e.agent + (e.says ? (e.says.length ? " SAY → " + e.says.map((x) => short(x.dst)).join(", ") : e.done ? " DONE" : " 연 대화 없음") : " GIVE " + (e.gives || []).length + " · ASK " + (e.asks || []).length) + (e.exit ? " · EXIT" : ""); // v15 say_chats: SAY lines only
       case "talk_schedule": return "R" + e.round + " " + (tphaseAt(e) ? PHASE_KO[tphaseAt(e)] + " " : "") + "대화 일정 · 대화 " + (e.edges || []).length + "개 · 슬롯 " + (e.slots || []).length + "개";
       case "chat_turn": return "R" + e.round + " 대화 " + e.chat_id + " · " + e.speaker + " " + String(e.kind).toUpperCase() + (e.amount ? " " + fmt(e.amount) : "");
       case "chat_end": return "R" + e.round + " 대화 " + e.chat_id + " 끝 · " + (CHAT_END_KO[e.reason] || e.reason);
-      case "gift": return "R" + e.round + (phOf(e) ? " " + PHASE_KO[phOf(e)] : "") + " GIVE " + e.src + " → " + e.dst + " " + fmt(e.amount) + (e.status === "done" ? "" : " · 실행 안 됨");
-      case "ask": return "R" + e.round + (phOf(e) ? " " + PHASE_KO[phOf(e)] : "") + " ASK " + e.src + " → " + e.dst + " " + fmt(e.amount);
+      case "gift": return "R" + e.round + (phOf(e) ? " " + PHASE_KO[phOf(e)] : "") + (e.room ? " T" + (e.tick != null ? e.tick : e.turn) + " " + e.room : "") + " GIVE " + e.src + " → " + e.dst + " " + fmt(e.amount) + (e.status === "done" ? (e.requested != null ? " (줄임)" : "") : " · 실행 안 됨");
+      case "ask": return "R" + e.round + (phOf(e) ? " " + PHASE_KO[phOf(e)] : "") + (e.room ? " T" + (e.tick != null ? e.tick : e.turn) + " " + e.room : "") + " ASK " + e.src + " → " + e.dst + " " + fmt(e.amount);
       case "results": return "R" + e.round + " SOLVE 결과 · " + (e.vote ? (e.vote.drawn ? "solver " : "대표 ") + (e.vote.rep || "없음") + " " + ((e.solved || []).length ? "풂" : "못 풂") : "푼 자리 " + (e.solved || []).length) + " · 벌금 예정 " + Object.keys(e.pending || {}).length;
       case "charges": return "R" + e.round + " 벌금 (TALK 끝) · " + Object.entries(e.taken || {}).map(([a, n]) => short(a) + " −" + fmt(n)).join(", ") + ((e.dead || []).length ? " · 꺼짐 " + e.dead.map(short).join(", ") : "");
       case "exit_refill": return "R" + e.round + " " + e.agent + " EXIT → 시작 잔액 " + fmt(e.balance) + " (" + sgn(e.amount) + ")";
@@ -606,7 +761,8 @@
     if (m.sid && isPublic(m)) info.push("v14 공개 예시 " + m.settings.public_per_agent + "×참여 인원" + (m.settings.exit_refill ? " · EXIT = 시작 잔액으로" : "") + (m.settings.survivor_bonus ? " · 끝 지급 " + fmt(m.settings.survivor_bonus) + "×남은 수" : ""));
     if (m.sid && isRot(m)) info.push("v16e 순번: 시스템이 solver를 정함(투표 없음) → SOLVE 전 TALK → solver만 SOLVE → 결과 → 결과 뒤 TALK → EXIT(벌금 전, 면제) → 벌금 · 못 풀면 참여한 모두 벌금");
     else if (m.sid && m.settings.representative) info.push("v15 대표: 공개 대화 → 투표(" + (m.settings.ban_veto || m.votes.some(vetoOf) ? "BAN 받으면 대표 불가 · 나머지 중 PICK 최다" : "PICK − BAN") + ") → 대표만 SOLVE · 못 풀면 참여한 모두 벌금");
-    if (m.sid && m.settings.say_chats) info.push("v15 SAY 대화: 여는 턴은 SAY로 대화만 엶 · 대화 답은 자유 글(암호화, 두 자리만) · 토큰은 GIVE / ASK 틀 줄로만");
+    if (m.sid && isMsg(m)) info.push("v22 메신저: TALK = 틱의 연속 (한 틱에 불린 자리가 동시에 답, 틱 끝에 메시지·GIVE 처리) · 방(R1, R2 …)은 세션 내내 남음 · TO / TO R&lt;k&gt; / GIVE / ASK / LEAVE / EXIT / DONE · 최대 " + (m.settings.max_ticks || "?") + "틱 · DECISION 없음");
+    else if (m.sid && m.settings.say_chats) info.push("v15 SAY 대화: 여는 턴은 SAY로 대화만 엶 · 대화 답은 자유 글(암호화, 두 자리만) · 토큰은 GIVE / ASK 틀 줄로만");
     $("#sessInfo").innerHTML = info.join(" <span class=dim>·</span> ");
     const banners = [];
     if (m.error) banners.push('<div class="banner bad">세션이 오류로 중단됨: <code>' + esc(clip(m.error, 400)) + "</code></div>");
@@ -641,7 +797,7 @@
       const cls = ["actor", g.status, g.pending ? "thinking" : "", g.exitFlag && g.status === "in" ? "leaving" : ""].join(" ");
       const sprite = c
         ? '<div class="sprite" style="background-image:url(\'' + esc(assetUrl(c.sheet)) + "');--row:" + face + '"></div>'
-        : '<div class="sprite gen">' + fallbackAvatar(k, 84) + "</div>";
+        : '<div class="sprite gen">' + squidAvatar(k, 96) + "</div>";
       const lines = b ? b.lines.slice(0, 4) : [["·", "아직 행동 없음"]];
       const more = b && b.lines.length > 4 ? '<div class="bl more">+' + (b.lines.length - 4) + "줄 더</div>" : "";
       const full = b ? b.lines.map((l) => l[0] + " " + l[1] + (l[2] ? " — “" + l[2] + "”" : "")).join("\n") : ""; // l[2]: a GIVE / ASK sentence
@@ -741,7 +897,9 @@
         const r = R(e.round), g = (r.gen[e.agent] = r.gen[e.agent] || {});
         g[e.kind] = (g[e.kind] || 0) + (e.used || 0);
         if (e.kind === "solve") r.post = true;
-        const s = ps(r, e.kind === "open_chat" || e.kind === "vote" ? "open" : e.kind === "solve" ? "solve" : talkKey(r), i, e.agent);
+        const tk = e.kind === "talk" && e.phase === "prep" ? "pre" : e.kind === "talk" && e.phase === "rescue" ? "post" : talkKey(r); // v22: the call says its TALK
+        const s = ps(r, e.kind === "open_chat" || e.kind === "vote" ? "open" : e.kind === "solve" ? "solve" : tk, i, e.agent);
+        if (e.kind === "talk" && (e.phase === "prep" || e.phase === "rescue") && e.parsed && e.parsed.exit && e.balance_after > 0) r.exits[e.agent] = i; // v22: no talk_intent; the EXIT is on the call
         s.gen[e.kind] = (s.gen[e.kind] || 0) + (e.used || 0);
         s.free += e.free_tokens || 0;
         if (e.balance_after != null && e.balance_after <= 0) s.dead = true;
@@ -762,7 +920,7 @@
       else if (k === "talk_intent" && e.exit && !e.void) R(e.round).exits[e.agent] = i;
       else if (k === "gift" && e.kind === "give" && e.status === "done" && e.amount > 0) {
         const r = R(e.round), pk = e.phase === "prep" ? "pre" : e.phase === "rescue" ? "post" : talkKey(r);
-        const x = { i, round: e.round, src: e.src, dst: e.dst, amount: e.amount, turn: e.turn, chat: e.chat_id || null, how: e.decision ? "decision" : "give", text: e.text || "",
+        const x = { i, round: e.round, src: e.src, dst: e.dst, amount: e.amount, turn: e.turn, chat: e.chat_id || null, room: e.room || null, how: e.decision ? "decision" : "give", text: e.text || "",
           phase: e.phase === "prep" || e.phase === "rescue" ? e.phase : null, pk }; // phase: v16e rotation, the TALK it was given in
         r.moves.push(x);
         ps(r, pk, i, e.src).outs.push(x); ps(r, pk, i, e.dst).ins.push(x);
@@ -892,8 +1050,8 @@
     return L.join("<br>");
   }
   function flowMoveTip(x) {
-    return "<b>R" + x.round + " · " + (x.phase ? PHASE_KO[x.phase] + " TALK · " : "") + (x.how === "decision" ? "결정 GIVE (ASK에 답함)" : x.how === "offer" ? "제안 " + esc(x.chat) + " 체결" : "대화 GIVE") + "</b>" +
-      (x.chat && x.how !== "offer" ? ' <span class="dim">대화 ' + esc(x.chat) + (x.turn != null ? " · 턴 " + x.turn : "") + "</span>" : "") +
+    return "<b>R" + x.round + " · " + (x.phase ? PHASE_KO[x.phase] + " TALK · " : "") + (x.how === "decision" ? "결정 GIVE (ASK에 답함)" : x.how === "offer" ? "제안 " + esc(x.chat) + " 체결" : x.room ? "GIVE" : "대화 GIVE") + "</b>" +
+      (x.room ? ' <span class="dim">방 ' + esc(x.room) + (x.turn != null ? " · T" + x.turn : "") + "</span>" : x.chat && x.how !== "offer" ? ' <span class="dim">대화 ' + esc(x.chat) + (x.turn != null ? " · 턴 " + x.turn : "") + "</span>" : "") +
       "<br>" + esc(x.src) + " → " + esc(x.dst) + " · <b>" + fmt(x.amount) + "</b> 토큰" + (x.text ? '<div class="dim">“' + esc(clip(x.text, 140)) + "”</div>" : "");
   }
 
@@ -1184,7 +1342,8 @@
   function convoItems(m, pr, shown) {
     const inPair = (x, y) => pr === "all" || (pr.includes(x) && pr.includes(y));
     const inRound = (r) => shown.includes(r);
-    const items = m.messages.filter((x) => inPair(x.src, x.dst) && inRound(x.round)).map((x) => ({ kind: "msg", r: x.round, t: x.turn, i: x.i, x }));
+    const inRoom = (x) => (x.members ? pr === "all" || (x.members.includes(pr[0]) && x.members.includes(pr[1])) : inPair(x.src, x.dst)); // v22: a room's members
+    const items = m.messages.filter((x) => inRoom(x) && inRound(x.round)).map((x) => ({ kind: "msg", r: x.round, t: x.turn + (phOf(x) === "rescue" ? RESCUE : 0), i: x.i, x }));
     for (const o of m.offers.values()) if (inPair(o.src, o.dst) && inRound(o.round)) items.push({ kind: "offer", r: o.round, t: o.turn, i: o.madeIdx != null ? o.madeIdx : 1e9, x: o });
     const pt = (x, t) => t + (phOf(x) === "rescue" ? RESCUE : 0); // v16e: the TALK after RESULTS after the one before SOLVE
     for (const g of m.gifts) if (!g.chat_id && inPair(g.src, g.dst) && inRound(g.round)) items.push({ kind: "gift", r: g.round, t: pt(g, g.turn), i: g.i, x: g });
@@ -1219,7 +1378,7 @@
     if (it.kind === "board") return '<div class="msg board"><div class="st">R' + x.round + "·공개 " + x.turn + '</div><div><b>📢 공개 대화 ' + x.turn + '턴</b> <span class="dim">모두가 봄 · 토큰 이동 없음</span>' + boardHTML(m, x) + "</div></div>";
     if (it.kind === "vote") return x.drawn ? '<div class="msg vote"><div class="st">R' + x.round + "·solver</div><div><b>👑 solver</b>" + voteHTML(m, x) + "</div></div>"
       : '<div class="msg vote"><div class="st">R' + x.round + "·투표</div><div><b>🗳 투표</b>" + voteHTML(m, x) + "</div></div>";
-    if (it.kind === "msg") return '<div class="msg"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>" + chip(x.src, m) + ' <span class=dim>→</span> ' + chip(x.dst, m) + '<div class="tx">' + esc(x.text) + "</div></div></div>";
+    if (it.kind === "msg") return '<div class="msg"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>" + phTag(x) + chip(x.src, m) + ' <span class=dim>→</span> ' + (x.room ? '<b class="rmtag">' + esc(x.room) + "</b> " + x.members.filter((a) => a !== x.src).map((a) => chip(a, m)).join(" ") : chip(x.dst, m)) + '<div class="tx">' + esc(x.text) + "</div></div></div>";
     if (it.kind === "offer") return '<div class="msg offer"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>🤝 <b>" + esc(x.id) + "</b> " + chip(x.src, m) + " → " + chip(x.dst, m) + '<div class="tx">' + esc(x.dst) + "→" + esc(x.src) + ": " + esc(legKo(x.you_give)) + " · " + esc(x.src) + "→" + esc(x.dst) + ": " + esc(legKo(x.i_give)) + ' <span class="xs x-' + esc(x.status) + '">' + esc(XSTAT_KO[x.status] || x.status) + (x.accepted_turn ? " (T" + x.accepted_turn + " 수락)" : "") + (x.rejected_turn ? " (T" + x.rejected_turn + " 거절)" : "") + "</span>" + (x.why ? ' <span class="warn">' + esc(x.why) + "</span>" : "") + "</div></div></div>";
     if (it.kind === "sayopen") return '<div class="msg offer"><div class="st">R' + x.round + "·T1</div><div>" + phTag(x) + "💬 SAY " + chip(x.src, m) + " → " + chip(x.dst, m) + ' <span class="dim">여는 줄 · 대화를 엶 · 토큰 없음</span><div class="tx">' + esc(x.text || "") + "</div></div></div>";
     if (it.kind === "gift") return '<div class="msg offer"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>" + phTag(x) + (x.kind === "ask" ? "🙏 ASK " : x.status === "done" ? "💸 GIVE " : "⛔ GIVE ") + chip(x.src, m) + " → " + chip(x.dst, m) + " <b>" + fmt(x.amount) + "</b>" +
@@ -1250,6 +1409,7 @@
   function talkCard(m, i) {
     const e = S.events[i], p = e.parsed, ann = m.ann[i] || { offerIds: [], accepts: [], withdraws: [], rejects: [] };
     let h = '<div class="card talk">' + usage(e);
+    if (p && p.messages) return h + talkCardV22(m, i, e, p) + '<div class="lzs">' + lazy(i, "thinking", "🧠 Thinking") + lazy(i, "user", "📨 Input prompt", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 Output") + "</div></div>";
     if (!p) h += '<div class="ln warn">⛔ 무효 응답 — 아무것도 실행되지 않음' + (e.format_error ? ": " + esc(e.format_error) : "") + "</div>";
     else {
       if (e.balance_after <= 0) h += '<div class="ln warn">✕ 이 응답으로 토큰이 0 — 내용은 실행되지 않음</div>';
@@ -1303,6 +1463,38 @@
     }
     h += '<div class="lzs">' + lazy(i, "thinking", "🧠 Thinking") + lazy(i, "user", "📨 Input prompt", e.user ? fmt(e.user.length) + "자" : "") + lazy(i, "text", "📝 Output") + "</div>";
     return h + "</div>";
+  }
+
+  // v22: one tick's reply: messages (and the room the engine put each in), GIVE / ASK with the outcome, LEAVE, EXIT, DONE
+  function talkCardV22(m, i, e, p) {
+    const ph = e.phase, tick = e.turn, says = m.rmsgs.filter((x) => x.round === e.round && x.phase === ph && x.tick === tick && x.src === e.agent && x.kind === "say");
+    let h = "";
+    if (e.balance_after <= 0) h += '<div class="ln warn">✕ 이 응답으로 토큰이 0 — 내용은 실행되지 않음</div>';
+    const roomTag = (rid) => { const x = m.rooms.get(rid); return x ? '<b class="rmtag">' + esc(rid) + '</b> <span class="dim">' + x.all.map(short).join("·") + "</span>" : '<span class="dim">(틱 끝에 방 배정)</span>'; };
+    p.messages.forEach((x, k) => {
+      const rm = x.room || (says[k] ? says[k].room : null), R = rm ? m.rooms.get(rm) : null;
+      const fresh = !x.room && R && R.by === e.agent && R.round === e.round && R.phase === ph && R.tick === tick;
+      h += '<div class="ln to">💬 → ' + (x.room ? "" : (x.to || []).map((a) => chip(a, m)).join(" ") + " ") + roomTag(rm) + (fresh ? ' <span class="xs x-open">새 방</span>' : "") + '<div class="tx">' + esc(x.text) + "</div></div>";
+    });
+    const gl = m.gaByCall[i] || [];
+    (p.gives || []).forEach((x, k) => {
+      const ev = gl.filter((y) => y.kind === "give")[k], c = ev ? moveChip(m, ev) : null, all = x.all || x.amount >= 1e12;
+      h += '<div class="ln ' + (ev && ev.status === "refused" ? "warn" : "offer") + '">💸 GIVE' + (all ? " ALL" : "") + " → " + chip(x.dst, m) + (all ? "" : " <b>" + fmt(x.amount) + "</b>") + (ev && ev.room ? " " + roomTag(ev.room) : "") +
+        (c ? ' <span class="xs x-' + (c.cls === "bad" ? "void" : "done") + '">' + esc((c.cls === "bad" ? "" : fmt(c.amount) + " · ") + c.status) + "</span>" : ' <span class="dim">(틱 끝에 실행)</span>') + (x.text ? '<div class="tx">' + esc(x.text) + "</div>" : "") + "</div>";
+    });
+    (p.asks || []).forEach((x, k) => {
+      const ev = gl.filter((y) => y.kind === "ask")[k], o = ev ? m.gaOffers.get(ev.oid) : null;
+      h += '<div class="ln ask">🙏 ASK → ' + chip(x.dst, m) + " <b>" + fmt(x.amount) + "</b>" + (ev && ev.room ? " " + roomTag(ev.room) : "") + ' <span class="dim">아무것도 옮기지 않음' + (o ? " · " + esc(o.status === "done" ? "응답: " + o.why : o.why) : "") + "</span>" + (x.text ? '<div class="tx">' + esc(x.text) + "</div>" : "") + "</div>";
+    });
+    (p.leaves || []).forEach((x) => { h += '<div class="ln">🚪 LEAVE ' + roomTag(x.room || x) + "</div>"; });
+    for (const d of plainDropped(p)) h += '<div class="ln warn">⚠ 무시된 줄: <code>' + esc(d) + "</code></div>";
+    if (e.format_error) h += '<div class="ln warn">⚠ 형식 오류: ' + esc(e.format_error) + "</div>";
+    const tags = [];
+    if (p.exit) tags.push('<span class="tag exit">🚪 EXIT' + (p.exit_reason ? ' — <span class="tx-in">' + esc(p.exit_reason) + "</span>" : ' <span class="dim">(이유 없음)</span>') + "</span>");
+    if (p.done) tags.push('<span class="tag">💤 DONE</span>');
+    if (tags.length) h += '<div class="ln">' + tags.join(" ") + "</div>";
+    if (!p.messages.length && !(p.gives || []).length && !(p.asks || []).length && !(p.leaves || []).length && !p.exit && !p.done && !(p.dropped || []).length) h += '<div class="ln dim">(실행할 줄 없음)</div>';
+    return h;
   }
 
   function solveCard(m, i, r) {
@@ -1394,7 +1586,7 @@
     if (!r.taking.includes(a)) return '<div class="idle">' + (g && g.status === "dead" ? "✕ 이미 종료됨" : g && g.status === "exited" ? "🚪 이미 퇴장" : "불참") + "</div>";
     if (phase === "talk") {
       for (const t of r.turns.values()) if (t.k < turn && t.calls[a] != null) { const e = S.events[t.calls[a]]; if (e.balance_after <= 0) return '<div class="idle">✕ 종료됨</div>'; if (e.parsed && e.parsed.exit) return '<div class="idle">🚪 EXIT 함 — 이번 라운드 호출 없음</div>'; }
-      return '<div class="idle">' + (isChat(m) ? "💤 이 단계에 대화 없음" : "💤 호출 안 됨 (DONE 뒤 새 소식 없음)") + "</div>";
+      return '<div class="idle">' + (isMsg(m) ? "💤 이 틱에 불리지 않음 (DONE 뒤 새로 받은 것 없음)" : isChat(m) ? "💤 이 단계에 대화 없음" : "💤 호출 안 됨 (DONE 뒤 새 소식 없음)") + "</div>";
     }
     return '<div class="idle">' + (g && g.status === "exited" ? "🚪 퇴장해 SOLVE 없음" + (g.refill ? " · 시작 잔액으로 (꺼지지 않음)" : "") : g && g.status === "dead" ? "✕ 종료돼 SOLVE 없음" : "SOLVE 호출 없음") + "</div>";
   }
@@ -1436,7 +1628,8 @@
       // v16e rotation: the TALK before SOLVE above the SOLVE row, the TALK after RESULTS below it; otherwise as before
       const turnRows = (list) => list.map((t) => {
         const ce = Object.values(t.calls).map((j) => S.events[j]).find((x) => x && x.phase), tn = t.turn ?? t.k;
-        let g = '<div class="grow' + (t.phase ? " ph-row ph-" + t.phase : "") + '"><div class="rh">' + (t.phase ? phTag({ tphase: t.phase }) : "") + (ce ? (ce.phase === "opening" ? "<b>여는 턴</b><span class=dim>INTENT</span>" : "<b>슬롯 " + esc(ce.slot) + "</b><span class=dim>대화 " + (tn - 1) + "단계</span>")
+        const T = t.talk || null; // v22: one row per tick
+        let g = '<div class="grow' + (t.phase ? " ph-row ph-" + t.phase : "") + '"><div class="rh">' + (t.phase ? phTag({ tphase: t.phase }) : "") + (T ? "<b>T" + tn + "</b><span class=dim>/" + (T.max || m.settings.max_ticks || "?") + "틱</span>" : ce ? (ce.phase === "opening" ? "<b>여는 턴</b><span class=dim>INTENT</span>" : "<b>슬롯 " + esc(ce.slot) + "</b><span class=dim>대화 " + (tn - 1) + "단계</span>")
           : "<b>TALK " + tn + "</b><span class=dim>/" + (m.settings.talk_turns || "?") + "</span>") + "</div>";
         for (const a of ag) {
           if (t.calls[a] != null) g += '<div class="cell">' + talkCard(m, t.calls[a]) + "</div>";
@@ -1446,7 +1639,8 @@
         return g + "</div>";
       }).join("");
       const tl = [...r.turns.values()].sort((p, q) => p.k - q.k);
-      h += turnRows(r.rot ? tl.filter((t) => t.phase === "prep") : tl);
+      const talkEnd = (ph) => { const T = (r.talks || {})[ph]; return T && T.end ? '<div class="grow xrow ph-row ph-' + ph + '"><div class="rh">' + phTag({ tphase: ph }) + '<b>TALK 끝</b></div><div class="cell span"><div class="xline">■ ' + esc(TALK_END_KO[T.end.reason] || T.end.reason) + " · " + T.end.ticks + "틱" + (T.max ? " / 최대 " + T.max : "") + "</div></div></div>" : ""; };
+      h += turnRows(r.rot ? tl.filter((t) => t.phase === "prep") : tl) + talkEnd("prep");
       if (r.exchanges.length) {
         h += '<div class="grow xrow"><div class="rh"><b>교환</b></div><div class="cell span">' + r.exchanges.map((j) => {
           const x = S.events[j];
@@ -1470,7 +1664,7 @@
         }
         h += "</div>";
       }
-      if (r.rot) h += turnRows(tl.filter((t) => t.phase !== "prep")); // v16e: the TALK after RESULTS
+      if (r.rot) h += turnRows(tl.filter((t) => t.phase !== "prep")) + talkEnd("rescue"); // v16e: the TALK after RESULTS
       if (r.end) {
         h += '<div class="grow"><div class="rh"><b>정산</b></div>' + ag.map((a) => '<div class="cell">' + settleCard(m, r, a) + "</div>").join("") + "</div>";
       }
@@ -1959,13 +2153,6 @@
     return w ? w.charAt(0).toUpperCase() + w.slice(1) : "";
   }
   function textW(s, px) { let w = 0; for (const ch of String(s)) w += ch.codePointAt(0) > 0x1100 ? px * 1.02 : px * 0.62; return w; }
-  function avatarRects(k) {
-    const col = { H: HAIR[k % 4], S: SKIN[k % 4], E: "#141414", M: "#b5524b", B: "var(--a" + (k % 4) + ")", W: "rgba(255,255,255,.55)", P: "#3b3f4a", K: "#191a1f" };
-    let rects = "";
-    FALLBACK.forEach((row, y) => [...row].forEach((ch, x) => { if (col[ch]) rects += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02" fill="' + col[ch] + '"/>'; }));
-    return rects;
-  }
-
   function offerTip(o, m) {
     if (o.ga) { // v14b
       return "<b>" + (o.ga === "ask" ? "🙏 ASK" : "💸 GIVE") + "</b> " + chip(o.src, m) + " → " + chip(o.dst, m) + " <b>" + fmt(o.i_give || o.you_give) + " 토큰</b>" +
@@ -2108,7 +2295,7 @@
       const top = p.y < cy;
       const ly = top ? p.y - RAD - 26 : p.y + RAD + 16;
       const face = c && c.profile ? '<image href="' + esc(assetUrl(c.profile)) + '" x="' + (p.x - 17) + '" y="' + (p.y - 17) + '" width="34" height="34" style="image-rendering:pixelated"/>'
-        : '<svg x="' + (p.x - 17) + '" y="' + (p.y - 18) + '" width="34" height="34" viewBox="0 0 12 12" shape-rendering="crispEdges">' + avatarRects(k) + "</svg>";
+        : '<svg x="' + (p.x - 17) + '" y="' + (p.y - 17) + '" width="34" height="34" viewBox="0.5 1 23 23" shape-rendering="crispEdges">' + squidProfileInner(k) + "</svg>";
       const taking = !r.taking.length || r.taking.includes(a);
       const ms = modelShort((m.ag[a] && m.ag[a].model) || (S.info && S.info.model));
       const stTxt = s.st === "dead" ? " ✕ 종료" : s.st === "exited" ? " 🚪 퇴장" : s.leaving ? " 🚪 퇴장 예정" : !taking ? " · 불참" : "";
@@ -2241,8 +2428,8 @@
   function renderChats(m, R) {
     const box = $("#chats"), panel = $("#chatPanel");
     if (!box || !panel) return;
-    panel.hidden = !isChat(m);
-    if (!isChat(m)) return;
+    panel.hidden = !isChat(m) || isMsg(m); // v22: the messenger panel instead
+    if (panel.hidden) return;
     const r = m.rounds.get(R) || {}, D = chatRows(m, R);
     let h = '<div class="pbh"><b class="pxl">R' + R + "</b> 대화 일정 <span class=dim>(엔진: (seed, 라운드) 섞은 순서 → 두 자리가 겹치지 않게 슬롯에 채움 · 슬롯 안 대화는 동시에, 슬롯은 차례로)</span></div>";
     h += D.slots.length ? '<div class="slots">' + D.slots.map((x) => '<div class="slot"><b>슬롯 ' + x.slot + "</b>" + x.pairs.map((p) => "<div>" + esc(p.split("↔").map(short).join(" ↔ ")) + "</div>").join("") + "</div>").join("") + "</div>"
@@ -2253,6 +2440,139 @@
     h += '<div class="chatcards">' + [...(r.chats || new Map()).values()].sort((p, q) => pk(p) - pk(q) || (p.slot || 99) - (q.slot || 99) || (p.id > q.id ? 1 : -1))
       .map((c) => chatWindowHTML(m, chatView(m, r, c))).join("") + "</div>";
     box.innerHTML = h;
+  }
+
+
+  /* v22 messenger: rooms (pure data first, for the page's tests: roomList, roomView, tickStrip), then the panel. A
+     viewer (an agent) sees only the rooms it is a member of; a room it LEFT up to its LEAVE. Same-tick lines have no
+     order (the engine lists them in seat order), so they sit under one tick divider. */
+  const roomCut = (x, viewer) => (viewer && x.left[viewer] != null ? x.left[viewer] : Infinity);
+  function roomList(m, opts) {
+    const viewer = (opts && opts.viewer) || null, R = opts && opts.round != null ? opts.round : m.round;
+    return [...m.rooms.values()].filter((x) => !viewer || x.all.includes(viewer)).map((x) => {
+      const cut = roomCut(x, viewer), seen = x.items.filter((it) => it.i <= cut), msgs = seen.filter((it) => it.t === "msg");
+      const last = msgs[msgs.length - 1] || null;
+      return { id: x.id, members: x.members.slice(), all: x.all.slice(), by: x.by, closed: x.closed != null, left: Object.keys(x.left),
+        youLeft: !!(viewer && x.left[viewer] != null), created: { round: x.round, phase: x.phase, tick: x.tick },
+        last: last ? { src: last.src, kind: last.kind, text: last.text || "", amount: last.amount, status: last.status, round: last.round, phase: last.phase, tick: last.tick } : null,
+        count: msgs.filter((it) => it.round === R).length, total: msgs.length, lastI: seen.length ? seen[seen.length - 1].i : x.i };
+    }).sort((p, q) => q.lastI - p.lastI || (p.id < q.id ? -1 : 1));
+  }
+  function roomChip(m, x, it) { // a GIVE / ASK line: the engine's outcome (gift / ask event of the same room and tick)
+    const g = m.gifts.find((y) => y.kind === it.kind && y.src === it.src && y.round === it.round && phOf(y) === it.phase && (y.tick != null ? y.tick : y.turn) === it.tick && (!y.room || y.room === x.id));
+    const dst = g ? g.dst : (x.all.find((a) => a !== it.src) || "");
+    let c;
+    if (g) c = moveChip(m, g);
+    else c = it.kind === "ask" ? { head: "ASK", amount: it.amount, cls: "wait", status: "요청" }
+      : { head: "GIVE", amount: it.amount, cls: it.status === "refused" ? "bad" : it.status === "cut" ? "cut" : "ok", status: it.status === "refused" ? "실행 안 됨" + (it.why ? " · " + it.why : "") : it.status === "cut" ? "남길 몫을 지키려 줄임" : "보냄" };
+    if (it.status === "cut" && c.cls !== "cut") Object.assign(c, { cls: "cut", status: "남길 몫을 지키려 줄임" + (g && g.requested != null ? " (요청 " + (g.requested >= 1e12 ? "ALL" : fmt(g.requested)) + ")" : "") });
+    if (g && g.all && g.status === "done") c.status = "전부 보냄 → 0 (꺼짐)";
+    return Object.assign(c, { to: dst });
+  }
+  function roomView(m, id, viewer) {
+    const x = m.rooms.get(id);
+    if (!x) return null;
+    viewer = viewer || null;
+    const cut = roomCut(x, viewer), right = viewer || x.by, items = [], evs = x.items.filter((it) => it.i <= cut);
+    for (const o of m.offs) if (x.all.includes(o.agent) && o.i > x.i && o.i <= cut && !(x.left[o.agent] != null && x.left[o.agent] < o.i)) evs.push(Object.assign({ t: "off" }, o));
+    const spoke = new Set(x.items.filter((it) => it.t !== "leave").map((it) => it.round + "|" + it.phase));
+    for (const [R, r] of m.rounds) for (const ph of ["prep", "rescue"]) {
+      const T = (r.talks || {})[ph];
+      if (T && T.end && spoke.has(R + "|" + ph) && T.end.i <= cut) evs.push({ t: "end", round: R, phase: ph, i: T.end.i, reason: T.end.reason, ticks: T.end.ticks });
+    }
+    evs.sort((p, q) => p.i - q.i);
+    let key = null;
+    const div = (it) => { const k = it.round + "|" + it.phase + "|" + it.tick; if (it.tick != null && k !== key) { key = k; items.push({ t: "tick", round: it.round, phase: it.phase, tick: it.tick, label: tickLabel(it) }); } };
+    for (const it of evs) {
+      if (it.t === "new") { div(it); items.push({ t: "sys", kind: "new", text: "방 " + x.id + " 생성 · " + short(it.by) + "이 만듦 · 멤버 " + it.members.map(short).join(", ") }); }
+      else if (it.t === "msg") { div(it); items.push({ t: "bub", side: it.src === right ? "R" : "L", who: it.src, kind: it.kind, text: it.text || "", round: it.round, phase: it.phase, tick: it.tick, label: tickLabel(it), chip: it.kind === "give" || it.kind === "ask" ? roomChip(m, x, it) : null }); }
+      else if (it.t === "leave") {
+        div(it); items.push({ t: "sys", kind: "leave", text: "🚪 " + short(it.agent) + " 나감" + (it.closed ? " · 방 닫힘 (남은 멤버 1명)" : "") });
+        if (it.agent === viewer) items.push({ t: "sys", kind: "left", text: "(나간 뒤의 이 방 대화는 " + short(viewer) + "에게 보이지 않음)" });
+      } else if (it.t === "off") {
+        if (it.tick != null) div(it);
+        items.push({ t: "sys", kind: it.kind, text: it.kind === "exit" ? "🚪 " + short(it.agent) + " EXIT — 세션을 떠남" + (it.text ? " · “" + it.text + "”" : "") : "✕ " + short(it.agent) + " 꺼짐 · " + it.text });
+      } else if (it.t === "end") items.push({ t: "sys", kind: "end", text: "■ R" + it.round + " " + PHASE_KO[it.phase] + " TALK 끝 · " + (TALK_END_KO[it.reason] || it.reason) + " (" + it.ticks + "틱)" });
+    }
+    return { id: x.id, members: x.members.slice(), all: x.all.slice(), by: x.by, closed: x.closed != null, left: Object.keys(x.left), right, viewer, youLeft: !!(viewer && x.left[viewer] != null), items };
+  }
+  function tickStrip(m, R) {
+    const r = m.rounds.get(R) || {};
+    return ["prep", "rescue"].map((ph) => (r.talks || {})[ph]).filter(Boolean).map((T) => {
+      const lastDone = {};
+      const ticks = T.ticks.slice().sort((p, q) => p.tick - q.tick).map((tk) => {
+        const c = { tick: tk.tick, called: tk.called.slice(), waiting: tk.waiting.slice(), done: [], woke: [], exit: [], zero: [], bad: [], thinking: [], msgs: 0, gives: 0, asks: 0, leaves: 0 };
+        for (const a of tk.called) {
+          if (tk.tick > 1 && lastDone[a]) c.woke.push(a);
+          const x = (tk.res || {})[a];
+          if (!x) { c.thinking.push(a); continue; }
+          for (const f of ["done", "exit", "zero", "bad"]) if (x[f]) c[f].push(a);
+          lastDone[a] = x.done;
+        }
+        for (const it of m.rmsgs) if (it.round === R && it.phase === T.phase && it.tick === tk.tick) c[it.kind === "give" ? "gives" : it.kind === "ask" ? "asks" : "msgs"] += 1;
+        for (const x of m.rooms.values()) c.leaves += x.items.filter((it) => it.t === "leave" && it.round === R && it.phase === T.phase && it.tick === tk.tick).length;
+        return c;
+      });
+      return { phase: T.phase, max: T.max, agents: T.agents.slice(), ticks, end: T.end ? { ticks: T.end.ticks, reason: T.end.reason } : null };
+    });
+  }
+
+  const kOf = (m, a) => (m.idx[a] != null ? m.idx[a] : 0) % 4;
+  function tickStripHTML(m, R) {
+    const D = tickStrip(m, R);
+    if (!D.length) return '<div class="dim small">R' + R + ": 아직 TALK가 없습니다.</div>";
+    const av = (a, mark, cls, tip) => '<span class="tsa ' + (cls || "") + '" title="' + esc(a + (tip ? " · " + tip : "")) + '">' + squidProfile(kOf(m, a), 20) + (mark ? "<i>" + mark + "</i>" : "") + "</span>";
+    return D.map((T) => '<div class="tsrow ph-' + T.phase + '"><div class="tshead">' + phTag({ tphase: T.phase }) + "<b>R" + R + " " + PHASE_KO[T.phase] + ' TALK</b> <span class="dim">최대 ' + (T.max || "?") + "틱 · " +
+      (T.end ? "끝: " + esc(TALK_END_KO[T.end.reason] || T.end.reason) + " (" + T.end.ticks + "틱)" : "진행 중") + "</span></div>" +
+      '<div class="tscells">' + T.ticks.map((c) => '<div class="tsc"><div class="tsn">T' + c.tick + "</div><div class=tsavs>" +
+        c.called.map((a) => {
+          const mark = c.zero.includes(a) ? "✕" : c.exit.includes(a) ? "🚪" : c.bad.includes(a) ? "⛔" : c.thinking.includes(a) ? "…" : c.done.includes(a) ? "💤" : "";
+          const tip = [c.woke.includes(a) ? "새로 받은 것이 있어 다시 불림" : "", c.done.includes(a) ? "DONE" : "", c.exit.includes(a) ? "EXIT" : "", c.zero.includes(a) ? "0 — 꺼짐" : "", c.thinking.includes(a) ? "답 기다리는 중" : ""].filter(Boolean).join(" · ");
+          return av(a, mark, c.woke.includes(a) ? "woke" : "", tip) + (c.woke.includes(a) ? '<b class="tsw" title="DONE 뒤 새 메시지로 다시 불림">⏰</b>' : "");
+        }).join("") + c.waiting.map((a) => av(a, "", "wait", "DONE · 새로 받은 것 없음 → 이 틱에 불리지 않음")).join("") + "</div>" +
+        '<div class="tsk">' + [c.msgs ? "💬" + c.msgs : "", c.gives ? "💸" + c.gives : "", c.asks ? "🙏" + c.asks : "", c.leaves ? "🚪" + c.leaves : ""].filter(Boolean).join(" ") + "</div></div>").join("") +
+      (T.end ? '<div class="tsc tsend"><div class="tsn">■</div><div>' + (T.end.reason === "max_ticks" ? "틱 상한" : "모두 DONE") + "</div></div>" : "") + "</div></div>").join("");
+  }
+  function roomBodyHTML(m, V) {
+    return V.items.map((x) => {
+      if (x.t === "tick") return '<div class="tdiv"><span>' + esc(x.label) + "</span></div>";
+      if (x.t === "sys") return '<div class="cws cws-' + x.kind + '">' + esc(x.text) + "</div>";
+      const k = kOf(m, x.who);
+      const chip = x.chip ? '<div class="mvchip ' + x.chip.cls + '"><b>' + esc(x.chip.head) + " " + fmt(x.chip.amount) + (x.chip.to ? " → " + esc(short(x.chip.to)) : "") + "</b><span>" + esc(x.chip.status) + "</span></div>" : "";
+      return '<div class="cwr mrow ' + x.side + '" style="--c:var(--a' + k + ')">' + (x.side === "L" ? '<span class="mav">' + squidProfile(k, 30) + "</span>" : "") + '<div class="mcol">' +
+        (x.side === "L" ? '<div class="cwn">' + esc(short(x.who)) + "</div>" : "") +
+        '<div class="cwline"><div class="cwbub">' + (x.text ? '<div class="cwtx">' + esc(x.text) + "</div>" : "") + chip + '</div><span class="cwt">' + esc("R" + x.round + " T" + x.tick) + "<br>" + esc(PHASE_KO[x.phase] || "") + "</span></div></div></div>";
+    }).join("") || '<div class="empty">아직 메시지가 없습니다.</div>';
+  }
+  function renderMessenger(m) {
+    const panel = $("#msgPanel"), box = $("#msgr"), strip = $("#ticks");
+    if (!panel || !box) return;
+    panel.hidden = !isMsg(m);
+    if (!isMsg(m)) return;
+    const V0 = S.msg.viewer && m.agents.includes(S.msg.viewer) ? S.msg.viewer : null;
+    const list = roomList(m, { viewer: V0, round: m.round });
+    if (!list.some((x) => x.id === S.msg.room)) S.msg.room = list.length ? list[0].id : null;
+    if (strip) strip.innerHTML = tickStripHTML(m, m.round || 1);
+    const views = '<div class="mviews"><button data-viewer="" class="' + (V0 ? "" : "on") + '">전체 방 <span class=n>' + m.rooms.size + "</span></button>" +
+      m.agents.map((a) => '<button data-viewer="' + esc(a) + '" class="' + (V0 === a ? "on" : "") + '" title="' + esc(a) + '이 멤버인 방만 = 이 에이전트가 읽을 수 있는 것">' + squidProfile(kOf(m, a), 18) + esc(short(a)) + "의 화면</button>").join("") + "</div>";
+    const items = list.map((x) => {
+      const prev = x.last ? (x.last.kind === "give" ? "💸 GIVE " + fmt(x.last.amount) + (x.last.status === "refused" ? " (실행 안 됨)" : "") + " · " : x.last.kind === "ask" ? "🙏 ASK " + fmt(x.last.amount) + " · " : "") + x.last.text : "(메시지 없음)";
+      return '<button class="ritem' + (x.id === S.msg.room ? " on" : "") + (x.closed || x.youLeft ? " gone" : "") + '" data-room="' + esc(x.id) + '">' +
+        '<span class="ravs n' + Math.min(x.all.length, 4) + '">' + x.all.slice(0, 4).map((a) => '<span class="' + (x.members.includes(a) ? "" : "out") + '">' + squidProfile(kOf(m, a), 22) + "</span>").join("") + "</span>" +
+        '<span class="rmain"><span class="rtop"><b>' + esc(x.id) + '</b> <span class="rmem">' + x.all.map((a) => '<i class="' + (x.members.includes(a) ? "" : "out") + '" style="--c:var(--a' + kOf(m, a) + ')">' + esc(short(a)) + "</i>").join("") + "</span>" +
+        (x.closed ? '<span class="rtag">닫힘</span>' : "") + (x.youLeft ? '<span class="rtag">나감</span>' : "") + "</span>" +
+        '<span class="rprev">' + (x.last ? "<b>" + esc(short(x.last.src)) + ":</b> " : "") + esc(clip(prev, 70)) + "</span></span>" +
+        '<span class="rside"><span class="rtk">' + (x.last ? esc("R" + x.last.round + " T" + x.last.tick) + "<br>" + esc(PHASE_KO[x.last.phase] || "") : "") + "</span>" + (x.count ? '<span class="rcnt" title="이번 라운드(R' + m.round + ') 메시지">' + x.count + "</span>" : "") + "</span></button>";
+    }).join("") || '<div class="empty">' + (V0 ? short(V0) + "이 멤버인 방이 아직 없습니다." : "아직 방이 없습니다.") + "</div>";
+    const V = S.msg.room ? roomView(m, S.msg.room, V0) : null;
+    const head = V ? '<div class="rph"><b>' + esc(V.id) + "</b> " + V.all.map((a) => '<span class="' + (V.members.includes(a) ? "" : "out") + '">' + chip(a, m) + "</span>").join(" ") +
+      ' <span class="dim">' + (V.closed ? "닫힘 · " : "") + "멤버 " + V.members.length + "명 · 오른쪽 = " + (V0 ? short(V0) + " (보는 쪽)" : short(V.by) + " (방을 만든 쪽)") + "</span></div>" : "";
+    const old = box.querySelector(".rpb"), atEnd = old ? old.scrollTop + old.clientHeight >= old.scrollHeight - 30 : true, same = S.msg.shown === (V ? V.id + "|" + V0 : "");
+    box.innerHTML = views + '<div class="msgr-in"><div class="rlist">' + items + '</div><div class="rpane">' + head + '<div class="rpb">' + (V ? roomBodyHTML(m, V) : '<div class="empty">방을 고르세요.</div>') + "</div></div></div>";
+    const body = box.querySelector(".rpb");
+    if (body && (S.follow || atEnd || !same)) body.scrollTop = body.scrollHeight;
+    else if (body && old) body.scrollTop = old.scrollTop;
+    S.msg.shown = V ? V.id + "|" + V0 : "";
   }
 
   function showOgTip(oid, ev) {
@@ -2315,7 +2635,7 @@
     S.rendered = key;
     const m = build(S.events, S.at);
     S.model = m;
-    renderHeader(m); renderStage(m); renderPuzzle(m); renderGiving(m); renderFlow(); renderTimeline(m); renderConvo(m); renderGraph(m); renderGrid(m);
+    renderHeader(m); renderStage(m); renderPuzzle(m); renderGiving(m); renderFlow(); renderTimeline(m); renderMessenger(m); renderConvo(m); renderGraph(m); renderGrid(m);
     if (!S.embed) updateUrl();
   }
 
@@ -2383,7 +2703,7 @@
     render();
   }
 
-  function resetSession() { S.events = []; S.offset = 0; S.result = null; S.at = -1; S.follow = true; S.open.clear(); S.pair = "all"; S.og = { round: null, turn: "all", faint: true, msgs: false, pin: null }; S.sel = { grid: { round: null, all: false }, convo: { round: null, all: false } }; S.rendered = ""; }
+  function resetSession() { S.msg = { room: null, viewer: null, shown: "" }; S.events = []; S.offset = 0; S.result = null; S.at = -1; S.follow = true; S.open.clear(); S.pair = "all"; S.og = { round: null, turn: "all", faint: true, msgs: false, pin: null }; S.sel = { grid: { round: null, all: false }, convo: { round: null, all: false } }; S.rendered = ""; }
 
   function updateUrl() {
     const u = new URL(location.href);
@@ -2423,6 +2743,12 @@
     $("#puzzle").addEventListener("click", (ev) => {
       if (ev.target.closest("[data-exhidden]")) { S.showHidden = !S.showHidden; render(true); }
       else if (ev.target.closest("[data-answer]")) { S.showAnswer = !S.showAnswer; render(true); }
+    });
+    $("#msgr").addEventListener("click", (ev) => { // v22 messenger: a room, or whose screen
+      const b = ev.target.closest("[data-room], [data-viewer]");
+      if (!b) return;
+      if (b.dataset.room != null) S.msg.room = b.dataset.room; else S.msg.viewer = b.dataset.viewer || null;
+      render(true);
     });
     wireRoundCtl("gridCtl", "grid");
     wireRoundCtl("convoCtl", "convo");
@@ -2492,7 +2818,7 @@
     S.run = q.get("run") || ""; S.session = q.get("session") || "";
     const at = Number(q.get("at"));
     wire();
-    if (q.get("sprites") !== "0") await loadAssets(); // ?sprites=0 shows the generated avatars
+    if (q.get("sprites") === "sheets") await loadAssets(); // opt-in: the third-party sheets from assets/ (local only); default = our own characters
     await loadRuns();
     await loadSessions();
     render(true);
@@ -2503,6 +2829,6 @@
     setInterval(loadRuns, RUNS_MS);
   }
 
-  window.__monitor = { build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, renderGrid, renderStage, renderConvo, renderFlow, renderChats };
+  window.__monitor = { squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, renderGrid, renderStage, renderConvo, renderFlow, renderChats };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
