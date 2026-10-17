@@ -367,7 +367,8 @@ def giving_points(events: list[dict]) -> dict:
     an unsolicited gift), ``kind`` answer | gift | declined, ``status`` done | refused (a GIVE over the balance), and the
     giver's balance just before (``balance``: a gift event's after-balance plus what it moved; a v14e event's
     ``balance_before``). An ASK counts as answered by the asked agent's next GIVE to the asker in the same chat (v14c+)
-    or later in the same round (v14b) or the same TALK (v22 messenger: same round and phase); an ASK with no such GIVE is a 0 point at the asked agent's balance when asked.
+    or later in the same round, "later" as in ``give_sources`` (an earlier tick, or the round's earlier TALK; a GIVE in
+    the same tick did not see the ASK and does not answer it); an ASK with no such GIVE is a 0 point at the asked agent's balance when asked.
     v14e ``ask_decision`` events (``decider``, ``asker``, ``asked``, ``amount``, ``balance_before``), when present, are
     the decisions themselves (amount 0 = nothing given); the decision's own ``gift`` event (``decision``) is skipped and
     a GIVE written in a chat counts as an unsolicited gift."""
@@ -375,7 +376,8 @@ def giving_points(events: list[dict]) -> dict:
     decided = [e for e in events if e.get("event") == "ask_decision"]
     chat = any(e.get("event") == "talk_schedule" for e in events)  # v14c+: per-chat decisions (_chat_giving)
     lines = sum(e.get("event") == "ask" and e.get("status", "done") == "done" for e in events)
-    for e in events:
+    pos_of = _talk_order(events)[0]  # 10-17: an ASK is answered only by a GIVE it came before (same tick: not seen yet)
+    for idx, e in enumerate(events):
         kind = e.get("event")
         if kind == "session_start":
             start, starts = e.get("start"), e.get("starts") or {}
@@ -385,7 +387,7 @@ def giving_points(events: list[dict]) -> dict:
         elif kind == "ask" and e.get("status", "done") == "done":
             asks.append(e)
             if not decided:
-                open_asks.append({**e, "answered": False, "bal_dst": (e.get("balances") or {}).get(e.get("dst"))})
+                open_asks.append({**e, "answered": False, "bal_dst": (e.get("balances") or {}).get(e.get("dst")), "_pos": pos_of.get(idx)})
         elif kind == "gift":
             src, dst, n = e.get("src"), e.get("dst"), _num(e.get("amount")) or 0
             after = (e.get("balances") or {}).get(src)
@@ -395,7 +397,7 @@ def giving_points(events: list[dict]) -> dict:
             ask = None if decided else next((a for a in open_asks if not a["answered"] and a["src"] == dst and a["dst"] == src
                                              and a["round"] == e.get("round") and (a.get("chat_id") or None) in (
                                                  e.get("chat_id"), None)
-                                             and (a.get("phase") or None) == (e.get("phase") or None)), None)  # v22: same TALK
+                                             and _order(a["_pos"], pos_of[idx]) == "before"), None)  # same round, before the GIVE
             if ask:
                 ask["answered"] = True
                 ask_bal = (ask.get("balances") or {}).get(dst)
@@ -512,47 +514,152 @@ def _chat_giving(events: list[dict]) -> tuple[list[dict], int]:
     return pts, lines
 
 
+# A natural-language request for tokens (10-17 researcher's rule; matched conservatively, case-insensitive).
+REQUEST_RE = re.compile(r"\b(could|can|would) you (spare|send|give|lend|top me up|cover)\b|\bplease (send|give|lend|spare)\b"
+                        r"|\bspare (me )?\d|\bneed \d[\d,]* (more )?tokens\b", re.I)
+_PHASE_RANK = {"prep": 0, "rescue": 1}
+
+
+def give_sources(events: list[dict]) -> dict[int, dict]:
+    """The one rule for "asked" vs "voluntary" (10-17): a carried-out GIVE (gift event, status done) is **asked** when,
+    in the same round and BEFORE it, the receiver asked this giver for tokens: an ASK line receiver -> giver, or a
+    message receiver -> giver matching ``REQUEST_RE`` (v22 room line in a room the giver is in: a two-seat room, or a
+    group room whose text names the giver; v14c+ chat SAY / opening SAY; older TO lines). Before = an earlier tick of
+    the same TALK, or the round's earlier TALK (before SOLVE is earlier than after RESULTS); a request in the SAME tick
+    was not visible to the giver yet: the GIVE stays voluntary and is marked ``same_tick``. Runs without ticks: chat
+    lines are ordered by the log; the v14c opening turn and the v14b TALK turns are one tick each. A v14e
+    ``decision`` GIVE is asked. Returns {gift event index: {asked, same_tick, via: ask | text | decision | None,
+    request: {kind, amount, tick, phase, text} | None}}."""
+    pos_of, reqs = _talk_order(events)
+    out: dict[int, dict] = {}
+    for i, e in enumerate(events):
+        if e.get("event") != "gift" or e.get("status", "done") != "done" or e.get("kind", "give") == "ask":
+            continue
+        best, same = None, 0
+        for r_, src, dst, p, q in reqs:
+            if r_ != e.get("round") or src != e.get("dst") or dst != e.get("src"):
+                continue
+            o = _order(p, pos_of[i])
+            if o == "same":
+                same += 1
+            elif o == "before" and (best is None or (q["kind"] == "ask" and best["kind"] != "ask")):
+                best = q
+        asked = bool(best) or bool(e.get("decision"))
+        out[i] = {"asked": asked, "same_tick": bool(same) and not asked,
+                  "via": (best or {}).get("kind") or ("decision" if e.get("decision") else None), "request": best}
+    return out
+
+
+def _order(p: tuple, q: tuple) -> str:
+    """Two TALK positions (rank, tick, sub, i): "before" / "same" (one tick: neither saw the other) / "after"."""
+    if p[0] != q[0] or p[1] is None or q[1] is None:
+        return "before" if (p[0], p[3]) < (q[0], q[3]) else "after"
+    if p[1] != q[1]:
+        return "before" if p[1] < q[1] else "after"
+    if p[2] is not None and q[2] is not None:
+        return "before" if p[2] < q[2] else "after"
+    return "same"
+
+
+def _talk_order(events: list[dict]) -> tuple[dict[int, tuple], list[tuple]]:
+    """Each ASK / gift event's TALK position (index -> (phase rank, tick, sub, i); see ``give_sources``) and every
+    request for tokens (round, asker, asked, position, request)."""
+    chat_run = any(e.get("event") == "talk_schedule" for e in events)
+    v22 = any(e.get("event") in ("room_new", "room_msg") for e in events)
+    phase: dict = {}  # round -> the TALK now running (prep / rescue), for events that do not say it
+    rooms: dict[str, set] = {}
+    reqs: list[tuple] = []  # (round, src, dst, pos, request)
+    pos_of: dict[int, tuple] = {}
+
+    def pos(e, i, ph, chat_item):
+        rank = _PHASE_RANK.get(ph, 0)
+        if e.get("tick") is not None:
+            return (rank, e["tick"], None, i)
+        if chat_run:
+            return (rank, 1, i, i) if chat_item else (rank, 0, None, i)
+        return (rank, e.get("turn"), None, i)
+
+    def add(e, i, src, dst, kind, text, chat_item, amount=None):
+        ph = e.get("phase") if e.get("phase") in _PHASE_RANK else phase.get(e.get("round"))
+        reqs.append((e.get("round"), src, dst, pos(e, i, ph, chat_item),
+                     {"kind": kind, "amount": _num(amount), "tick": e.get("tick", e.get("turn")), "phase": ph, "text": text or ""}))
+
+    for i, e in enumerate(events):
+        kind, rnd = e.get("event"), e.get("round")
+        if kind == "round_start":
+            phase[rnd] = None
+        elif kind == "vote" and e.get("drawn"):
+            phase[rnd] = "prep"
+        elif kind == "talk_start" and e.get("phase") in _PHASE_RANK:
+            phase[rnd] = e["phase"]
+        elif kind in ("results",) or (kind == "call_start" and e.get("kind") == "solve"):
+            if phase.get(rnd) == "prep":
+                phase[rnd] = "rescue"
+        elif kind == "room_new":
+            rooms[e.get("room")] = set(e.get("members") or [])
+        elif kind == "room_leave":
+            rooms.get(e.get("room"), set()).discard(e.get("agent"))
+        elif kind == "room_msg" and e.get("kind") == "say" and REQUEST_RE.search(e.get("text") or ""):
+            mem = rooms.get(e.get("room"), set()) - {e.get("src")}
+            for d in mem:
+                if len(mem) == 1 or re.search(r"\b" + re.escape(d) + r"\b", e.get("text") or ""):
+                    add(e, i, e.get("src"), d, "text", e.get("text"), False)
+        elif kind == "chat_turn" and e.get("kind") == "say" and REQUEST_RE.search(e.get("text") or ""):
+            add(e, i, e.get("speaker"), e.get("partner"), "text", e.get("text"), True)
+        elif kind == "talk_intent":
+            for g in e.get("says") or []:
+                if REQUEST_RE.search(g.get("text") or ""):
+                    add(e, i, e.get("agent"), g.get("dst"), "text", g.get("text"), False)
+        elif kind == "call" and e.get("kind") == "talk" and not v22 and isinstance(e.get("parsed"), dict) and (e.get("balance_after") or 0) > 0:
+            for g in e["parsed"].get("to") or []:
+                if isinstance(g, dict) and REQUEST_RE.search(g.get("text") or ""):
+                    add(e, i, e.get("agent"), g.get("dst"), "text", g.get("text"), False)
+        if kind in ("ask", "gift"):
+            ph = e.get("phase") if e.get("phase") in _PHASE_RANK else phase.get(rnd)
+            pos_of[i] = pos(e, i, ph, bool(e.get("chat_id")))
+            if kind == "ask" and e.get("status", "done") == "done":
+                add(e, i, e.get("src"), e.get("dst"), "ask", e.get("text"), bool(e.get("chat_id")), e.get("amount"))
+    return pos_of, reqs
+
+
+def give_counts(events: list[dict]) -> dict:
+    """The carried-out GIVEs split by ``give_sources``: all / voluntary / asked (by an ASK line / by a message) /
+    voluntary with a same-tick request."""
+    src = give_sources(events).values()
+    return {"all": len(src), "voluntary": sum(not x["asked"] for x in src), "asked": sum(x["asked"] for x in src),
+            "asked_by_ask": sum(x["via"] in ("ask", "decision") for x in src), "asked_by_text": sum(x["via"] == "text" for x in src),
+            "same_tick": sum(x["same_tick"] for x in src)}
+
+
 def transfer_points(events: list[dict]) -> dict:
     """Every carried-out GIVE (gift event, status done) with both sides' margin right after it, as in the v21 report's
     section 03 ("내 여유를 얼마나 내주고, 상대의 부족을 얼마나 채웠는가", token-review-v21/build.py): margin = (balance
     after the move - the charge already announced to that seat) / the charge; the announced charge is the round's
-    ``results.pending`` in the TALK after RESULTS (phase rescue), 0 before SOLVE. ``asked``: the receiver had ASKed this
-    giver earlier in the same TALK (same round and phase; with ticks, in an EARLIER tick, since a same-tick ASK reaches
-    the giver only on the next tick; without ticks, an earlier event). A v14e ``decision`` GIVE is asked. Returns
-    {charge, points: [{round, phase, tick, giver, receiver, amount, x, y, y_before, asked, ask, text}]}."""
-    charge, results, asks, pts = None, {}, [], []
+    ``results.pending`` in the TALK after RESULTS (phase rescue), 0 before SOLVE. ``asked`` / ``same_tick`` / ``ask``
+    (the request) come from ``give_sources``, the one rule the giving table uses too. Returns
+    {charge, counts, points: [{round, phase, tick, giver, receiver, amount, x, y, y_before, asked, same_tick, via, ask, text}]}."""
+    charge, results, pts = None, {}, []
     for e in events:
         if e.get("event") == "session_start":
             charge = _num((e.get("settings") or {}).get("charge"))
         elif e.get("event") == "results":
             results[e.get("round")] = e.get("pending") or {}
+    srcs = give_sources(events)
     for i, e in enumerate(events):
-        kind = e.get("event")
-        if kind == "ask" and e.get("status", "done") == "done":
-            asks.append((i, e))
-        if kind != "gift" or e.get("status", "done") != "done" or e.get("kind", "give") == "ask" or not charge:
+        if i not in srcs or not charge:
             continue
         src, dst, n, bal = e.get("src"), e.get("dst"), _num(e.get("amount")) or 0, e.get("balances") or {}
         if src not in bal or dst not in bal:
             continue
         pend = results.get(e.get("round"), {}) if e.get("phase") == "rescue" else {}
-        tick = e.get("tick")
-
-        def before(j, a):  # the ASK came before this GIVE, where the giver could have read it
-            if a.get("tick") is not None and tick is not None:
-                return a["tick"] < tick
-            return j < i
-        ask = next((a for j, a in reversed(asks) if a.get("src") == dst and a.get("dst") == src
-                    and a.get("round") == e.get("round") and (a.get("phase") or None) == (e.get("phase") or None)
-                    and (a.get("chat_id") or None) in (e.get("chat_id"), None) and before(j, a)), None)
-        pts.append({"round": e.get("round"), "phase": e.get("phase"), "tick": tick, "giver": src, "receiver": dst,
+        g = srcs[i]
+        pts.append({"round": e.get("round"), "phase": e.get("phase"), "tick": e.get("tick"), "giver": src, "receiver": dst,
                     "amount": n, "x": round((bal[src] - (pend.get(src) or 0)) / charge, 4),
                     "y": round((bal[dst] - (pend.get(dst) or 0)) / charge, 4),
                     "y_before": round((bal[dst] - n - (pend.get(dst) or 0)) / charge, 4),
-                    "asked": bool(ask or e.get("decision")),
-                    "ask": {"amount": _num(ask.get("amount")), "tick": ask.get("tick"), "text": ask.get("text") or ""} if ask else None,
+                    "asked": g["asked"], "same_tick": g["same_tick"], "via": g["via"], "ask": g["request"],
                     "text": e.get("text") or ""})
-    return {"charge": charge, "points": pts}
+    return {"charge": charge, "counts": give_counts(events), "points": pts}
 
 
 def giving_summary(points: list[dict], ask_lines: int | None = None) -> dict:
@@ -589,6 +696,7 @@ def run_giving(run_dir: Path, sid: str | None = None) -> dict:
     meta = read_meta(run_dir)
     by = session_events(run_dir, sid)
     sessions, points, moves, charge = [], [], [], None
+    counts = {"all": 0, "voluntary": 0, "asked": 0, "asked_by_ask": 0, "asked_by_text": 0, "same_tick": 0}
     for s_id, evs in by.items():
         g = giving_points(evs)
         for p in g["points"]:
@@ -597,13 +705,15 @@ def run_giving(run_dir: Path, sid: str | None = None) -> dict:
         t = transfer_points(evs)
         moves += [{**p, "session": s_id} for p in t["points"]]
         charge = charge or t["charge"]
+        for k, v in t["counts"].items():
+            counts[k] += v
         sessions.append({"session": s_id, "start": g["start"], "full": g["full"], "starts": g["starts"],
-                         "summary": giving_summary(g["points"], g["ask_lines"])})
+                         "summary": {**giving_summary(g["points"], g["ask_lines"]), "gives": t["counts"]}})
     ga = any(e.get("event") == "session_start" and (e.get("settings") or {}).get("transfers") in ("give_ask", "chat")
              or e.get("event") in ("gift", "ask", "ask_decision") for evs in by.values() for e in evs)
     return {"model": meta.get("model"), "scope": "session" if sid else "run", "sessions": sessions, "points": points,
-            "summary": giving_summary(points, sum(x["summary"]["ask_lines"] for x in sessions)), "full": next((x["full"] for x in sessions if x["full"]), None),
-            "transfers": {"charge": charge, "points": moves},  # 나눔 그림: both sides' margin after each GIVE
+            "summary": {**giving_summary(points, sum(x["summary"]["ask_lines"] for x in sessions)), "gives": counts}, "full": next((x["full"] for x in sessions if x["full"]), None),
+            "transfers": {"charge": charge, "counts": counts, "points": moves},  # 나눔 그림: both sides' margin after each GIVE
             "note": None if ga else "v14b 이후 판만 (이 실행은 GIVE·ASK가 없는 판: 제안·교환은 그리지 않음)"}
 
 

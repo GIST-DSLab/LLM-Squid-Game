@@ -530,10 +530,23 @@ body.embedded .follow { display: none; }
 .rc-track { height: 16px; border-radius: 4px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
 .rc-track i { display: block; height: 100%; background: var(--muted); }
 .rc-bar.top .rc-track i { background: var(--ink-2); }
-.rc-bar.truth .rc-track i { background: var(--ok); }
 .rc-n { font: 12.5px var(--mono, monospace); white-space: nowrap; }
 .rc-n b { font-size: 15px; }
-.rc-bar .truthb { font: 600 10px var(--font, sans-serif); padding: 0 4px; border-radius: 3px; color: var(--ok); border: 1px solid var(--ok); }
+.rc-bar .idealb { font: 600 10px var(--font, sans-serif); padding: 0 4px; border-radius: 3px; color: var(--ink); border: 1px solid var(--ink-2); background: var(--surface); cursor: help; }
+.rc-truth { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 12.5px; }
+/* the search space's building blocks, at the top of the hidden-rule box */
+.rblocks { font: 12px/1.4 var(--font, sans-serif); margin: -2px 0 8px; padding-bottom: 7px; border-bottom: 1px dashed var(--line); display: flex; flex-direction: column; gap: 3px; }
+.rb-row { display: flex; align-items: center; gap: 8px; }
+.rb-k { width: 2.6em; flex: none; color: var(--muted); font-size: 11.5px; }
+.rb-v { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.rb-i { display: inline-flex; align-items: center; gap: 2px; min-width: 18px; justify-content: center; }
+.rb-shape { color: var(--ink-2); }
+.rb-shape svg { display: block; }
+.rb-sw { display: inline-block; width: 13px; height: 13px; border-radius: 2px; border: 1px solid var(--line); }
+.rb-num { font: 600 12px var(--mono, monospace); color: var(--ink); width: 18px; height: 18px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
+.rb-act { font-size: 13px; }
+.rb-an { font: 10.5px var(--mono, monospace); color: var(--ink-2); }
+.rb-note { color: var(--ink-2); font-size: 11px; line-height: 1.4; }
 .rc-note { margin-top: 6px; text-align: left; line-height: 1.45; font-size: 11.5px; }
 .exacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .exbox { padding: 5px 6px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); min-width: 0; }
@@ -551,19 +564,13 @@ body.embedded .follow { display: none; }
 .exhidden { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; padding: 5px 6px; border: 1px dashed var(--line); border-radius: 6px; }
 .exlegend { margin-top: 6px; font-size: 11.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
 .exlegend .excard { padding: 1px 4px; }
-.sbars { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-.sbar { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; gap: 6px; align-items: center; font-size: 12px; }
-.sbar .st { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
-.sbar .st i { display: block; height: 100%; background: var(--muted); }
-.sbar.map .st i { background: var(--ink-2); }
-.sbar.truth .st i { background: var(--ok); }
-.sbar .mapb, .sbar .truthb { font-size: 10px; padding: 0 4px; border-radius: 3px; border: 1px solid var(--line); }
-.sbar .truthb { color: var(--ok); border-color: var(--ok); }
 .pkv { width: 100%; font-size: 12px; margin-bottom: 6px; }
 .pkv td { padding: 2px 4px; border-bottom: 1px dashed var(--line); }
-.pans3 { margin-top: 8px; }
-.ansbox { margin-top: 6px; padding: 8px 10px; border-radius: 6px; border: 2px solid var(--ok); background: var(--ok-bg); display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
-.ansbox code { white-space: normal; overflow-wrap: anywhere; }
+/* 10-17: the belief row of a seat whose submitted action is (green) / is not (red) the scoring answer */
+.pntab tr.bl-ok td { background: var(--ok-bg); }
+.pntab tr.bl-bad td { background: var(--bad-bg); }
+.pntab tr.bl-ok td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
+.pntab tr.bl-bad td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
 @media (max-width: 980px) { .p3, .p3.p3n { grid-template-columns: 1fr 1fr; } .p3 .pcol3 { grid-column: 1 / -1; } }
 @media (max-width: 640px) { .p3, .p3.p3n { grid-template-columns: 1fr; } }
 /* v14c: the schedule's slot columns and one transcript card per chat */

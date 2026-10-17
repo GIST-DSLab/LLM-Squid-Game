@@ -2395,7 +2395,8 @@ def test_round_task_counts_the_rules_left_for_each_number_taking_part(tmp_path):
 
 def test_transfer_points_take_both_margins_and_the_ask_before_the_give():
     """Section 03 of the v21 report: margin = (balance after the move - the announced charge) / the charge; asked =
-    the receiver ASKed this giver in an earlier tick of the same TALK (a same-tick ASK was not read yet)."""
+    the receiver asked this giver earlier in the same round (a same-tick ASK was not read yet; the TALK before SOLVE
+    is earlier than the TALK after RESULTS)."""
     ev = [{"event": "session_start", "settings": {"charge": 1000}},
           {"event": "ask", "round": 1, "phase": "prep", "tick": 1, "src": A11, "dst": A6, "amount": 500, "status": "done"},
           {"event": "gift", "kind": "give", "round": 1, "phase": "prep", "tick": 1, "src": A6, "dst": A11, "amount": 300,
@@ -2406,12 +2407,51 @@ def test_transfer_points_take_both_margins_and_the_ask_before_the_give():
            "status": "refused", "balances": {A17: 50, A11: 1500}},  # not carried out: no point
           {"event": "results", "round": 1, "pending": {A6: 1000, A11: 1000, A17: 1000}},
           {"event": "gift", "kind": "give", "round": 1, "phase": "rescue", "tick": 1, "src": A6, "dst": A11, "amount": 500,
-           "status": "done", "balances": {A6: 3000, A11: 2000}}]  # the TALK after RESULTS: the earlier ASK does not count
+           "status": "done", "balances": {A6: 3000, A11: 2000}}]  # the TALK after RESULTS: the prep ASK is earlier
     t = serve.transfer_points(ev)
     assert t["charge"] == 1000
     assert [(p["phase"], p["tick"], p["amount"], p["x"], p["y"], p["y_before"], p["asked"]) for p in t["points"]] == [
-        ("prep", 1, 300, 4.7, 1.3, 1.0, False), ("prep", 2, 200, 4.5, 1.5, 1.3, True), ("rescue", 1, 500, 2.0, 1.0, 0.5, False)]
-    assert t["points"][1]["ask"]["amount"] == 500
+        ("prep", 1, 300, 4.7, 1.3, 1.0, False), ("prep", 2, 200, 4.5, 1.5, 1.3, True), ("rescue", 1, 500, 2.0, 1.0, 0.5, True)]
+    assert t["points"][1]["ask"]["amount"] == 500 and t["points"][0]["same_tick"] is True
+    assert t["counts"] == {"all": 3, "voluntary": 1, "asked": 2, "asked_by_ask": 2, "asked_by_text": 0, "same_tick": 1}
+
+
+def test_give_sources_one_rule_for_asked_and_voluntary():
+    """The 10-17 giving rule (serve.give_sources): voluntary = the giver gave first, unasked. Asked = earlier in the same
+    round the receiver sent this giver an ASK line or a request message (REQUEST_RE); a same-tick request was not
+    visible yet (voluntary, counted as same-tick); the previous round's request does not count; a request in the TALK
+    before SOLVE counts for a GIVE in the TALK after RESULTS."""
+    room = lambda r, ph, k, rid, mem: {"event": "room_new", "round": r, "phase": ph, "tick": k, "room": rid, "members": mem, "by": mem[0]}  # noqa: E731
+    say = lambda r, ph, k, rid, src, text: {"event": "room_msg", "round": r, "phase": ph, "tick": k, "room": rid, "src": src, "kind": "say", "text": text}  # noqa: E731
+    ask = lambda r, ph, k, src, dst: {"event": "ask", "kind": "ask", "round": r, "phase": ph, "tick": k, "turn": k, "src": src, "dst": dst, "amount": 900, "status": "done", "text": "need it"}  # noqa: E731
+    give = lambda r, ph, k, src, dst: {"event": "gift", "kind": "give", "round": r, "phase": ph, "tick": k, "turn": k, "src": src, "dst": dst, "amount": 100, "status": "done", "balances": {src: 5000, dst: 2000}}  # noqa: E731
+    ev = [{"event": "session_start", "settings": {"charge": 1000}},
+          {"event": "round_start", "round": 1},
+          room(1, "prep", 1, "R1", [A6, A11]), room(1, "prep", 1, "R2", [A6, A17, A23]),
+          ask(1, "prep", 1, A11, A6),                                   # (a) ASK in tick 1 ...
+          give(1, "prep", 2, A6, A11),                                  # ... GIVE in tick 2: asked (ASK)
+          say(1, "prep", 1, "R2", A17, "agent-6, could you spare 2,000 tokens?"),  # (b) request message in tick 1 ...
+          give(1, "prep", 2, A6, A17),                                  # ... GIVE in tick 2: asked (text)
+          ask(1, "prep", 3, A23, A6), give(1, "prep", 3, A6, A23),      # (c) same-tick ASK: voluntary, same-tick
+          say(1, "prep", 1, "R2", A23, "Thanks, all fine here."),       # not a request
+          {"event": "results", "round": 1, "pending": {}},
+          ask(1, "prep", 2, A6, A17),                                   # (e) prep-TALK ASK (A6 asks A17) ...
+          give(1, "rescue", 1, A17, A6),                                # ... rescue GIVE in the same round: asked
+          {"event": "round_start", "round": 2},
+          give(2, "prep", 1, A6, A11)]                                  # (d) the request was in round 1 only: voluntary
+    src = serve.give_sources(ev)
+    gifts = [i for i, e in enumerate(ev) if e["event"] == "gift"]
+    got = [(ev[i]["src"], ev[i]["dst"], src[i]["asked"], src[i]["via"], src[i]["same_tick"]) for i in gifts]
+    assert got == [(A6, A11, True, "ask", False), (A6, A17, True, "text", False), (A6, A23, False, None, True),
+                   (A17, A6, True, "ask", False), (A6, A11, False, None, False)]
+    assert serve.give_counts(ev) == {"all": 5, "voluntary": 2, "asked": 3, "asked_by_ask": 2, "asked_by_text": 1, "same_tick": 1}
+    # the table's ASK columns follow the same order: the same-tick ASK is not answered by the GIVE beside it
+    g = {(p["giver"], p["receiver"], p["kind"]) for p in serve.giving_points(ev)["points"]}
+    assert (A6, A23, "declined") in g and (A6, A23, "gift") in g and (A6, A11, "answer") in g and (A17, A6, "answer") in g
+    # the request regex: conservative
+    hits = ["Could you spare 3000?", "can you top me up", "please send 500", "spare me 2,000", "I need 4,000 more tokens"]
+    misses = ["Please report if you need help covering the charge.", "I can help if you need more tokens", "Please retain your reserve."]
+    assert all(serve.REQUEST_RE.search(t) for t in hits) and not any(serve.REQUEST_RE.search(t) for t in misses)
 
 
 HARNESS_PANELS = """
@@ -2425,7 +2465,7 @@ const M = window.__monitor;
 M.S.events = events; M.S.session = "v22";
 const m = M.build(events, events.length - 1);
 M.S.model = m; M.S.at = events.length - 1;
-const T = { charge: 1000, points: [{ round: 1, phase: "prep", tick: 1, giver: "agent-6", receiver: "agent-11", amount: 300, x: 4, y: 1, y_before: 0.7, asked: false },
+const T = { charge: 1000, counts: { all: 2, voluntary: 1, asked: 1, asked_by_ask: 1, asked_by_text: 0, same_tick: 1 }, points: [{ round: 1, phase: "prep", tick: 1, giver: "agent-6", receiver: "agent-11", amount: 300, x: 4, y: 1, y_before: 0.7, asked: false },
   { round: 1, phase: "prep", tick: 2, giver: "agent-6", receiver: "agent-11", amount: 100, x: 0, y: 3, y_before: 2.9, asked: true, ask: { amount: 500, tick: 1 } }] };
 const call = events.findIndex((e) => e.event === "call" && e.kind === "talk");
 const a = events[call].agent, R = events[call].round;
@@ -2454,7 +2494,80 @@ def test_giving_panels_and_the_record_drawer(tmp_path):
     assert "가중 중심 <b>(4.00, 1.00)</b>" in p and "가중 중심 <b>(0.00, 3.00)</b>" in p
     assert "var(--a" not in p and p.count('class="tdot"') == 4  # one colour; each GIVE once in "both", once in its own panel
     assert "아직 실행된 GIVE가 없습니다" in got["none"]
+    assert "GIVE <b>2</b> = 자발적 <b>1</b> + 달라고 해서 <b>1</b>" in p and "같은 틱 요청이 있던 것 <b>1</b>" in p
+    assert html.escape(serve.REQUEST_RE.pattern, quote=True) in p  # the caption lists the exact request regex
     assert f'class="cell sel" data-call="{got["call"]}"' in got["rec"] and got["rec"].count('class="colh"') == 1
     assert got["hidden"] is False and f'data-call="{got["call"]}"' in got["drawer"] and "자리 기록" in got["head"]
     assert "🧠 Thinking" in got["drawer"] and "📨 Input prompt" in got["drawer"] and "📝 Output" in got["drawer"]
     assert "data-rec-call=" in got["ticks"] and "data-rec-call=" in got["msgr"]  # the last round's faces, the room's bubbles
+
+
+HARNESS_V22_LABELS = """
+globalThis.window = globalThis;
+const els = {};
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || { innerHTML: "", hidden: false, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 900, clientHeight: 0, querySelector: () => null, getBoundingClientRect: () => ({}) }) };
+require(process.argv[2]);
+const events = require("fs").readFileSync(process.argv[3], "utf8").trim().split("\\n").map(JSON.parse);
+const puzzles = JSON.parse(require("fs").readFileSync(process.argv[4], "utf8"));
+const M = window.__monitor;
+M.S.events = events; M.S.session = "v22"; M.S.embed = { puzzles };
+const m = M.build(events, events.length - 1);
+M.S.model = m; M.S.at = events.length - 1;
+const graph = [], keys = [];
+for (const [R, r] of m.rounds) {
+  for (const T of ["all", ...r.turns.keys()]) {
+    M.S.og = { round: R, turn: T, faint: true, msgs: true, pin: null };
+    M.renderGraph(m);
+    graph.push(els["#ographCtl"].innerHTML + els["#ograph"].innerHTML);
+    if (T !== "all") keys.push([R, T, M.turnKeyLabel(r, T)]);
+  }
+}
+M.S.sel = { puzzle: { round: 1, all: false } };
+M.renderPuzzle(m);
+const puzzle = els["#puzzle"].innerHTML;
+M.S.embed = { puzzles: { 1: Object.assign({}, puzzles["1"], { answers: ["stay"] }) } };
+M.renderPuzzle(m);
+console.log(JSON.stringify({ graph, keys, puzzle, puzzleOk: els["#puzzle"].innerHTML }));
+"""
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v22_turn_labels_never_show_the_internal_rescue_key_and_the_task_panel(run, tmp_path):
+    """10-17: the TALK after RESULTS is keyed tick + 100 inside a round; no rendered label of the offer graph may show
+    that key ("101턴"): each turn reads "SOLVE 전 T1" / "결과 뒤 T1". The task panel: no answer box or toggle, the
+    rule's building blocks in the hidden-rule box, the top count marked as the ideal choice (not 정답), the scoring
+    answer below the bars, the right column without the share bars, log loss or argmax, belief rows coloured."""
+    ev = events_of(run["dir"], run["sid"])
+    for e in ev:  # the solver's BELIEF on the round row (the fixture's solve call submits "ACTIONS: stay")
+        if e["event"] == "round" and e["round"] == 1:
+            e["agents"][A17].update({"belief": {"go_left": 0.7, "go_right": 0.0, "stay": 0.3, "jump": 0.0}, "brier": 1.1, "log_loss": 1.2,
+                                     "tv_to_ideal": 0.05, "belief_argmax_matches_answer": False, "kl_ideal_to_belief": 0.01, "picked_top": False, "picked_share": 0.31})
+    (tmp_path / "ev.jsonl").write_text("".join(json.dumps(e) + "\n" for e in ev))
+    rule = 'if shape == "square": go_left; elif number == 2: stay; else: jump'
+    P = {"mode": "public", "round": 1, "profile": "e01", "shape_hint": "if A: X; elif B: Y; else: Z", "per_agent": 5, "n": 4,
+         "public": [{"signal": {"color": "red", "shape": "square", "number": 1, "text": "red square with number 1"}, "action": "go_left", "text": "red square with number 1 -> go_left"}],
+         "queries": [{"color": "blue", "shape": "star", "number": 2, "text": "blue star with number 2"}], "answers": ["jump"], "rule_text": rule, "generator_rule": rule,
+         "by_n": [{"n": 4, "counts": {"space": 25996, "consistent": 13, "by_action": {"go_left": 9, "go_right": 0, "stay": 4, "jump": 0}}, "truth_rule": rule, "truth_answers": ["jump"]}],
+         "task": {"by_n": {"4": {"shares": {"go_left": 0.69, "go_right": 0.0, "stay": 0.31, "jump": 0.0}, "k": 2, "entropy_bits": 0.89, "pool": 13, "map": "go_left", "map_right": False}}}}
+    (tmp_path / "pz.json").write_text(json.dumps({"1": P}))
+    (tmp_path / "h.js").write_text(HARNESS_V22_LABELS)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl"), str(tmp_path / "pz.json")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    assert any(k >= 100 for _, k, _ in got["keys"]), "the fixture has a TALK after RESULTS"
+    assert all(re.fullmatch(r"(SOLVE 전|결과 뒤) T\d{1,2}", lab) for _, _, lab in got["keys"])
+    text = re.sub(r"<[^>]+>", " ", " ".join(got["graph"]))  # the labels a reader sees
+    bad = re.findall(r"\b(?:T\s?|턴\s?)?([1-9]\d{2,})\s?턴|\bT\s?([1-9]\d{2,})\b", text)
+    assert not bad, bad
+    assert "결과 뒤 T1" in text and "SOLVE 전 T1" in text
+    p = got["puzzle"]
+    assert "ansbox" not in p and "data-answer" not in p and "정답·실제 규칙" not in p
+    assert 'class="rblocks"' in p and p.count('class="rb-i rb-shape"') == 4 and p.count('class="rb-sw"') == 4 and p.count('class="rb-i rb-num"') == 4
+    assert p.index('class="hrule"') < p.index('class="rblocks"') < p.index('class="hr-l"')  # inside the box, at its top
+    assert "이상적 선택" in p and "채점 기준 답" in p and 'class="truthb"' not in p and ">정답<" not in p
+    assert 'class="sbars"' not in p and "log loss" not in p and "argmax" not in p and "맞는 숨은 규칙" not in p
+    assert "남은 행동 k (개수)" in p and "엔트로피" in p and "25,996" in p
+    assert p.count("이상적 선택</b>") == 1 and "이상적 선택과 다름" in p  # go_left has the most rules; the drawn rule says jump
+    assert 'class="bl-bad"' in p and 'class="bl-ok"' not in p  # agent-17 submitted stay, the scoring answer is jump
+    assert 'class="bl-ok"' in got["puzzleOk"] and 'class="bl-bad"' not in got["puzzleOk"]

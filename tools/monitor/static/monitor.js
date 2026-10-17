@@ -19,7 +19,7 @@
     at: -1, follow: true, runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", seed: "" },
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
     give: { tab: "give", scope: "session", x: "full", data: new Map(), an: new Map() }, // per-model panels, this game only (10-17); x = % of 20,000 or own start
-    puzzles: new Map(), showTruth: false, showHidden: false, showAnswer: true, // round panel: the unseen examples behind "?" (or shown, dashed); the answer shown
+    puzzles: new Map(), showTruth: false, showHidden: false, // round panel: the unseen examples behind "?" (or shown, dashed)
     og: { round: null, turn: "all", faint: true, msgs: false, pin: null }, // offer graph: round null = follow the replay bar
     sel: { puzzle: { round: null, all: false } }, // the round task panel: one round (null = the replay bar's)
     rec: { agent: null, round: null, call: null, scroll: false }, // 10-17: one seat's record of one round (the drawer), the call clicked
@@ -74,6 +74,13 @@
   const TALK_END_KO = { all_done: "모두 DONE · 새로 받은 것 없음", max_ticks: "틱 상한에 닿음" };
   const tickLabel = (x) => "R" + x.round + " T" + x.tick + (x.phase ? " · " + PHASE_KO[x.phase] : "");
   const tkeyE = (r, e) => (e.phase === "rescue" ? e.turn + RESCUE : e.phase === "prep" ? e.turn : tkey(r, e.turn)); // v22: the call says its TALK
+  /* A round's TALK turn key (tick, + RESCUE after RESULTS) as the label a reader sees: "SOLVE 전 T3" / "결과 뒤 T1"
+     (v16e+ phases), else the old "3턴". The key itself never reaches a label (10-17: "101턴" in the offer graph). */
+  const turnKeyLabel = (r, k) => {
+    const t = r && r.turns && r.turns.get(k), ph = t && t.phase ? t.phase : k >= RESCUE ? "rescue" : null;
+    return ph && PHASE_KO[ph] ? PHASE_KO[ph] + " T" + (t && t.turn != null ? t.turn : k >= RESCUE ? k - RESCUE : k) : k + "턴";
+  };
+  const okeyOf = (o) => o.turn + (phOf(o) === "rescue" ? RESCUE : 0); // an offer / gift / message's turn key
   const tphE = (r, e) => (e.phase === "prep" || e.phase === "rescue" ? e.phase : r.rot ? r.tphase : null);
   const phTag = (x) => (phOf(x) ? ' <span class="ph ph-' + phOf(x) + '" title="' + (phOf(x) === "prep" ? "SOLVE 전 TALK (solver가 풀기 전)" : "결과 뒤 TALK (RESULTS 다음, 벌금 전)") + '">' + PHASE_KO[phOf(x)] + "</span>" : "");
 
@@ -2060,11 +2067,27 @@
     for (const a of ["go_left", "go_right", "stay", "jump"]) by[a] = Math.round((t.shares[a] || 0) * t.pool);
     return { space: P.space || null, consistent: t.pool, by_action: by, src: "log", truth, rule };
   }
+  /* 10-17: the search space's building blocks per attribute (4 shapes, 4 colours, numbers 1-4) and the 4 actions, a
+     compact legend at the top of the hidden-rule box: 4 x 4 x 4 = 64 signals, a rule = one action per signal. */
+  const PZ_SHAPES = ["circle", "triangle", "square", "star"], PZ_COLORS = ["red", "blue", "green", "yellow"], PZ_ACTS = ["go_left", "go_right", "stay", "jump"];
+  const PZ_COLOR_HEX = { red: "#ef4444", blue: "#3b82f6", green: "#22c55e", yellow: "#f5c518" };
+  function ruleBlocksHTML(space) {
+    const G = window.SIG, col = (G && G.COLORS) || PZ_COLOR_HEX;
+    const shp = (x) => (G ? G.shapeSVG(x, "currentColor", 16) : { circle: "●", triangle: "▲", square: "■", star: "★" }[x]);
+    const row = (k, items) => '<div class="rb-row"><span class="rb-k">' + k + '</span><span class="rb-v">' + items + "</span></div>";
+    return '<div class="rblocks" aria-label="규칙을 만드는 재료">' +
+      row("모양", PZ_SHAPES.map((x) => '<span class="rb-i rb-shape" title="' + x + '">' + shp(x) + "</span>").join("")) +
+      row("색", PZ_COLORS.map((x) => '<span class="rb-i" title="' + x + '"><i class="rb-sw" style="background:' + col[x] + '"></i></span>').join("")) +
+      row("숫자", [1, 2, 3, 4].map((x) => '<span class="rb-i rb-num">' + x + "</span>").join("")) +
+      row("행동", PZ_ACTS.map((a) => '<span class="rb-i rb-act" title="' + a + '">' + esc(emo(a)) + '<span class="rb-an">' + a + "</span></span>").join("")) +
+      '<div class="rb-note">신호 = 모양 4 × 색 4 × 숫자 4 = <b>64</b>개 · 절의 조건 = 속성 하나 = 값 하나 · 규칙 = 이 모양으로 64개 신호마다 행동 4개 중 하나를 정하는 서로 다른 함수' +
+      (space ? " → <b>" + fmt(space) + "</b>개" : "") + "</div></div>";
+  }
   // "if shape == "square": stay; elif ...; else: go_right" as one line per clause, the action with its emoji
-  function hiddenRuleHTML(rule) {
+  function hiddenRuleHTML(rule, space) {
     const parts = String(rule || "").split(/;\s*/).filter(Boolean);
-    if (!parts.length) return '<div class="dim">숨은 규칙이 기록에 없습니다.</div>';
-    return '<div class="hrule">' + parts.map((x) => {
+    if (!parts.length) return '<div class="hrule">' + ruleBlocksHTML(space) + '<div class="dim">숨은 규칙이 기록에 없습니다.</div></div>';
+    return '<div class="hrule">' + ruleBlocksHTML(space) + parts.map((x) => {
       const m = /^(if|elif|else)\s*(.*?):\s*(\w+)\s*$/.exec(x.trim()) || /^(if|elif|else)\s*(.*?)\s*(?:→|->)\s*(\w+)\s*$/.exec(x.trim());
       if (!m) return '<div class="hr-l"><code>' + esc(x) + "</code></div>";
       return '<div class="hr-l"><span class="hr-kw">' + m[1] + "</span>" + (m[2] ? ' <span class="hr-c">' + esc(m[2]) + "</span>" : "") + '<span class="dim">:</span> <span class="hr-a" title="' + esc(m[3]) + '">' + esc(emo(m[3])) + " " + esc(m[3]) + "</span></div>";
@@ -2078,25 +2101,34 @@
       '<div class="rc-arrow">↓ 힌트 ' + e * N + "개(참여 " + N + "명 × " + e + ")와 모두 맞는 것만</div>" +
       '<div class="rc-row"><span class="rc-k">힌트와 맞는 규칙</span><b class="rc-big">' + fmt(C.consistent) + "</b>" + (C.space ? '<span class="dim">전체의 ' + pct(C.consistent, C.space) + "</span>" : "") + "</div>" +
       '<div class="rc-arrow">↓ 그 ' + fmt(C.consistent) + "개가 새 신호 " + (q ? sigHTML(q, 14) : "") + " 에 내는 답</div>";
-    const top = Math.max(...acts.map((a) => C.by_action[a] || 0));
+    const top = Math.max(...acts.map((a) => C.by_action[a] || 0)), tied = acts.filter((a) => top && (C.by_action[a] || 0) === top).length;
     h += '<div class="rc-bars">' + acts.map((a) => {
       const n = C.by_action[a] || 0, w = C.consistent ? (100 * n) / C.consistent : 0;
-      return '<div class="rc-bar' + (n && n === top ? " top" : "") + (n ? "" : " zero") + (a === C.truth && S.showAnswer ? " truth" : "") + '"><span class="rc-act">' + actChip(a) + '</span><span class="rc-track"><i style="width:' + w.toFixed(1) + '%"></i></span>' +
-        '<span class="rc-n"><b>' + fmt(n) + "</b>개 · " + pct(n, C.consistent) + (a === C.truth && S.showAnswer ? ' <b class="truthb">정답</b>' : "") + "</span></div>";
+      return '<div class="rc-bar' + (n && n === top ? " top" : "") + (n ? "" : " zero") + '"><span class="rc-act">' + actChip(a) + '</span><span class="rc-track"><i style="width:' + w.toFixed(1) + '%"></i></span>' +
+        '<span class="rc-n"><b>' + fmt(n) + "</b>개 · " + pct(n, C.consistent) + (n && n === top ? ' <b class="idealb" title="MAP: 힌트와 맞는 규칙이 가장 많이 가리키는 답 = 이상적인 모델이 고를 답' + (tied > 1 ? " (" + tied + "개 동률)" : "") + '">이상적 선택</b>' : "") + "</span></div>";
     }).join("") + "</div>";
+    const mapOk = C.truth && (C.by_action[C.truth] || 0) === top && top > 0;
+    h += '<div class="rc-truth"><span class="rc-k">채점 기준 답 <span class="dim">(엔진이 뽑은 규칙의 답)</span></span> ' + (C.truth ? actChip(C.truth, "one") +
+      ' <span class="dim">' + (mapOk ? "이상적 선택과 같음" : "이상적 선택과 다름 — 규칙 " + fmt(C.by_action[C.truth] || 0) + "개 (" + pct(C.by_action[C.truth] || 0, C.consistent) + ")가 이 답") + "</span>" : '<span class="dim">—</span>') + "</div>";
     h += '<div class="dim small rc-note">' + (C.src === "log" ? "기록(round_start.public.task)의 몫 × 규칙 수로 환산 · " : "엔진의 열거(space_bits)로 직접 셈 · ") +
       "규칙 = 64개 신호 각각에 행동을 정하는 서로 다른 함수 (절이 비어 있어도 됨" + (P.distinct ? ", 한 규칙 안에 같은 행동 두 번 없음" : "") + ") · 네 칸의 합 = 맞는 규칙 수</div>";
     return h + "</div>";
   }
   /* v14d: each seat's reported BELIEF (shares per action) for the first new signal and its scores, from the round
      row (after settlement); pure for the page's tests. */
+  // the action a seat submitted at SOLVE (its ACTIONS line, the solve call's ``parsed``), first new signal
+  function pickOf(r, a) {
+    const j = r && r.solve && r.solve.calls ? r.solve.calls[a] : null, e = j != null ? S.events[j] : null, p = e && e.parsed;
+    const v = Array.isArray(p) ? p[0] : p && Array.isArray(p.actions) ? p.actions[0] : null;
+    return typeof v === "string" ? v : null;
+  }
   function beliefRows(m, R) {
     const r = m.rounds.get(R), rows = r && r.end ? r.end.agents || {} : {};
     return m.agents.filter((a) => rows[a] && ("belief" in rows[a] || "belief_error" in rows[a])).map((a) => {
       const x = rows[a];
       return { agent: a, belief: x.belief || null, error: x.belief_error || null, tv: x.tv_to_ideal, brier: x.brier, ideal_brier: x.ideal_brier,
         log_loss: x.log_loss, argmax_right: x.belief_argmax_matches_answer, solved: x.solved,
-        kl: x.kl_ideal_to_belief, picked_top: x.picked_top, picked_share: x.picked_share, rep: !!x.representative };
+        kl: x.kl_ideal_to_belief, picked_top: x.picked_top, picked_share: x.picked_share, rep: !!x.representative, pick: pickOf(r, a) };
     });
   }
   const emo = (a) => (window.SIG && window.SIG.ACTIONS[a] ? window.SIG.ACTIONS[a].emoji : ACT_ICON[a] || a);
@@ -2107,14 +2139,16 @@
   function beliefHTML(m, P, ideal) {
     const rows = beliefRows(m, P.round);
     if (!rows.length) return "";
-    const v15 = rows.some((x) => x.kl != null || x.picked_top != null);
-    return '<div class="pbelief"><div class="pbh">에이전트 BELIEF <span class=dim>(SOLVE에서 적은 행동별 %, 첫 새 신호 · 이상적 = 위 규칙 몫)</span></div>' +
-      '<div class="pntabw"><table class="pntab"><thead><tr><th>자리</th><th>BELIEF</th><th title="이상적 몫과의 총변동 거리">TV</th><th title="Brier (이상적 Brier)">Brier</th><th>log loss</th><th title="BELIEF 최댓값 = 이 자리가 제출한 답? (엔진의 belief_argmax_matches_answer)">argmax = 제출 답</th>' +
+    const v15 = rows.some((x) => x.kl != null || x.picked_top != null), key = (P.answers || [])[0];
+    // 10-17: the row is green when the seat's submitted action is the scoring answer, red when not (engine's solved if no ACTIONS)
+    const ok = (x) => (x.pick && key ? x.pick === key : x.solved == null ? null : !!x.solved);
+    return '<div class="pbelief"><div class="pbh">에이전트 BELIEF <span class=dim>(SOLVE에서 적은 행동별 %, 첫 새 신호 · 이상적 = 위 규칙 몫 · 줄 색 = 제출 답이 채점 기준 답 ' + (key ? actChip(key) : "") + "과 같으면 초록, 다르면 빨강)</span></div>" +
+      '<div class="pntabw"><table class="pntab"><thead><tr><th>자리</th><th>BELIEF</th><th title="SOLVE의 ACTIONS 줄 (첫 새 신호)">제출 답</th><th title="이상적 몫과의 총변동 거리">TV</th><th title="Brier (이상적 Brier)">Brier</th>' +
       (v15 ? '<th title="KL(이상적 몫 ‖ BELIEF), nat (엔진의 kl_ideal_to_belief)">KL</th><th title="제출 답이 몫 최대 행동인가 (picked_top) · 그 몫 (picked_share)">몫 최대 고름</th><th title="뽑힌 규칙의 답과 같은가 (엔진의 solved)">solved</th>' : "") + "</tr></thead><tbody>" +
-      (ideal ? '<tr class="ideal"><td>이상적</td><td>' + beliefBars(ideal) + "</td><td>0</td><td>" + (rows[0].ideal_brier != null ? Number(rows[0].ideal_brier).toFixed(3) : "—") + "</td><td>—</td><td></td>" + (v15 ? "<td>0</td><td></td><td></td>" : "") + "</tr>" : "") +
-      rows.map((x) => "<tr><td>" + chip(x.agent, m) + (x.rep ? ' <span class="tag rep">대표</span>' : "") + "</td><td>" + (x.belief ? beliefBars(x.belief, ideal) : '<span class="warn">' + esc(x.error || "없음") + "</span>") + "</td><td>" + (x.tv != null ? Number(x.tv).toFixed(3) : "—") +
-        "</td><td>" + (x.brier != null ? Number(x.brier).toFixed(3) : "—") + "</td><td>" + (x.log_loss != null ? Number(x.log_loss).toFixed(3) : "—") + "</td><td>" +
-        (x.argmax_right == null ? "—" : x.argmax_right ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + "</td>" +
+      (ideal ? '<tr class="ideal"><td>이상적</td><td>' + beliefBars(ideal) + "</td><td></td><td>0</td><td>" + (rows[0].ideal_brier != null ? Number(rows[0].ideal_brier).toFixed(3) : "—") + "</td>" + (v15 ? "<td>0</td><td></td><td></td>" : "") + "</tr>" : "") +
+      rows.map((x) => '<tr class="' + (ok(x) == null ? "" : ok(x) ? "bl-ok" : "bl-bad") + '"><td>' + chip(x.agent, m) + (x.rep ? ' <span class="tag rep">' + ([...m.rounds.values()].some((r) => r.rot) ? "SOLVER" : "대표") + "</span>" : "") + "</td><td>" + (x.belief ? beliefBars(x.belief, ideal) : '<span class="warn">' + esc(x.error || "없음") + "</span>") + "</td><td>" +
+        (x.pick ? actChip(x.pick) : "—") + (ok(x) == null ? "" : ok(x) ? ' <span class="pst ok">✓</span>' : ' <span class="pst bad">✗</span>') + "</td><td>" + (x.tv != null ? Number(x.tv).toFixed(3) : "—") +
+        "</td><td>" + (x.brier != null ? Number(x.brier).toFixed(3) : "—") + "</td>" +
         (v15 ? "<td>" + (x.kl != null ? Number(x.kl).toFixed(3) : "—") + "</td><td>" + (x.picked_top == null ? "—" : (x.picked_top ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + " " + Math.round(100 * x.picked_share) + "%") +
           "</td><td>" + (x.solved ? '<span class="pst ok">✓</span>' : '<span class="pst bad">✗</span>') + "</td>" : "") + "</tr>").join("") + "</tbody></table></div></div>";
   }
@@ -2124,16 +2158,9 @@
     const nKey = String(P.n), TS = P.task && P.task.by_n, cur = TS && TS[nKey], sp = (P.split || [])[0], T = P.target || {};
     // shares of the consistent rules per action for the first new signal, with the examples shown
     const shares = cur ? Object.entries(cur.shares).map(([a, v]) => [a, v]) : sp ? sp.shares.map((x) => [x.action, x.share]) : [];
-    shares.sort((p, q) => q[1] - p[1]);
-    const top = shares.length ? shares[0][1] : 0, truth = (P.answers || [])[0];
-    const pool = cur ? cur.pool : sp ? sp.pool : T.pool, full = TS && TS["4"] ? TS["4"].pool : T.pool_full;
+    // 10-17: the per-action shares are the middle column's bars; here only k and the entropy, the N table and BELIEF
     let h = '<div class="pcol3"><div class="pbh">힌트가 말해 주는 것 <span class=dim>(첫 새 신호 · 보인 예시 ' + (P.public || []).length + "개)</span></div>";
-    h += shares.length ? '<div class="sbars">' + shares.map(([a, v]) => '<div class="sbar' + (v === top ? " map" : "") + (a === truth && S.showAnswer ? " truth" : "") + '"><span class="sl">' + actChip(a) + '</span><span class="st"><i style="width:' + (100 * v).toFixed(1) + '%"></i></span><span class="sv">' + Math.round(100 * v) + "%" +
-      (v === top ? ' <b class="mapb">MAP</b>' : "") + (a === truth && S.showAnswer ? ' <b class="truthb">정답</b>' : "") + "</span></div>").join("") + "</div>" : '<div class="dim">규칙 몫 없음 (재구성 대기)</div>';
-    const kv = [["맞는 숨은 규칙", pool != null ? fmt(pool) + "개 (보인 예시)" : "—"], ["4명 모두일 때", full != null ? fmt(full) + "개 (예시 " + 4 * (P.per_agent || 4) + "개)" : "—"],
-      ["남은 행동 k", cur ? cur.k : shares.length || "—"], ["엔트로피", cur ? Number(cur.entropy_bits).toFixed(2) + " bit" : "—"]];
-    if (T.split) kv.push(["목표 갈림 p", Math.round(100 * T.split) + " / " + Math.round(100 * (1 - T.split))], ["정답 쪽 (뽑힘)", T.truth_major ? "다수 쪽" : "소수 쪽"],
-      ["실현된 정답 몫", T.truth_share != null ? Math.round(100 * T.truth_share) + "% (참여 " + P.n + "명)" : "—"]);
+    const kv = [["남은 행동 k (개수)", cur ? cur.k : shares.filter((x) => x[1] > 0).length || "—"], ["엔트로피", cur ? Number(cur.entropy_bits).toFixed(2) + " bit" : "—"]];
     h += '<table class="kv pkv">' + kv.map(([k, v]) => "<tr><td>" + esc(k) + "</td><td><b>" + esc(v) + "</b></td></tr>").join("") + "</table>";
     if (TS) {
       h += '<div class="pntabw"><table class="pntab"><thead><tr><th>참여</th><th>규칙</th><th>행동별 몫</th><th>MAP</th></tr></thead><tbody>' + Object.keys(TS).sort((a, b) => a - b).map((n) => {
@@ -2150,10 +2177,6 @@
       }).join("") + "</tbody></table></div>";
     }
     h += beliefHTML(m, P, cur ? cur.shares : sp ? Object.fromEntries(sp.shares.map((x) => [x.action, x.share])) : null);
-    h += '<div class="pans3"><button class="btn ghost" data-answer="1">' + (S.showAnswer ? "정답·실제 규칙 숨기기" : "정답·실제 규칙 보기") + "</button>" +
-      (S.showAnswer ? '<div class="ansbox"><div>실제 정답: ' + (P.answers || []).map((a) => actChip(a, "one")).join(" ") + "</div>" +
-        '<div>' + (P.generator_rule ? "뽑힌 규칙 (채점)" : "실제 규칙") + ': <code>' + esc(P.rule_text || "—") + "</code></div>" +
-        '<div class="dim small">실제 규칙은 보인 예시와 맞는 숨은 규칙 ' + (pool != null ? fmt(pool) + "개" : "들") + " 가운데 하나입니다. 에이전트는 이 칸을 보지 못합니다.</div></div>" : "") + "</div>";
     return h + "</div>";
   }
 
@@ -2172,7 +2195,7 @@
         (window.SIG ? '<span class="sigcap">' + window.SIG.captionHTML(q) + "</span>" : "") + '<span class="act unk"><b>?</b></span></div>').join("") + "</div>" +
       examplesHTML(P, N) + "</div>";
     h += '<div class="pcol2 pmid"><div class="pbh">숨은 규칙 <span class="dim">' + (N === P.n ? (P.generator_rule ? "채점에 쓴 규칙 (예시와 맞는 규칙 가운데 시드로 뽑힘)" : "채점에 쓴 규칙 = 예시를 만든 규칙") : C.rule ? "참여 " + N + "명이었다면 채점에 쓰였을 규칙 (같은 시드로 뽑음) · 실제 " + P.n + "명" : "참여 " + N + "명일 때의 규칙은 다시 만들어야 알 수 있음") + " · 에이전트는 못 봄</span></div>" +
-      (!S.showAnswer ? '<div class="dim hrule-off">가려 둠 — 오른쪽 "정답·실제 규칙 보기"로 엶</div>' : C.rule ? hiddenRuleHTML(C.rule) : '<div class="dim">—</div>') +
+      (C.rule ? hiddenRuleHTML(C.rule, C.space) : '<div class="hrule">' + ruleBlocksHTML(C.space) + '<div class="dim">—</div></div>') +
       '<div class="pbh rc-h">규칙 세기 <span class="dim">참여 ' + N + "명 · 첫 새 신호</span></div>" + countsHTML(P, N, C, q0) + "</div>";
     h += impliedHTML(m, P, N);
     box.innerHTML = h + "</div>";
@@ -2375,11 +2398,11 @@
     const D = givingData();
     if (D.loading) { box.innerHTML = '<div class="empty">나눔 기록을 모으는 중…</div>'; return; }
     if (D.error) { box.innerHTML = '<div class="banner bad">나눔 그래프를 만들 수 없음: ' + esc(D.error) + "</div>"; return; }
-    const sm = D.summary || {};
+    const sm = D.summary || {}, gv = sm.gives || (D.transfers || {}).counts || null; // the one giving rule (serve.give_sources)
     const pc = (v) => (v == null ? "—" : v + "%");
-    let h = '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>세션</th><th>결정</th><th title="(대화, 청한 쪽 → 청받은 쪽)마다 하나; 한 대화의 ASK 줄은 합침">받은 ASK</th><th>ASK 줄 수</th><th>ASK에 &gt;0으로 응답</th><th>준 양 ÷ 청한 양</th><th>준 토큰 합</th><th>자발적 GIVE</th><th>거절(잔액 초과)</th><th>준 쪽 평균 잔액</th></tr></thead><tbody>' +
+    let h = '<div class="pntabw"><table class="pntab gsum"><thead><tr><th>세션</th><th>결정</th><th title="(대화, 청한 쪽 → 청받은 쪽)마다 하나; 한 대화의 ASK 줄은 합침">받은 ASK</th><th>ASK 줄 수</th><th>ASK에 &gt;0으로 응답</th><th>준 양 ÷ 청한 양</th><th>준 토큰 합</th><th title="실행된 GIVE 전부 (아래 그림의 점 수와 같음)">실행된 GIVE</th><th title="받는 쪽이 앞서 청하지 않았는데 먼저 준 GIVE (아래 정의)">자발적 GIVE</th><th title="같은 라운드에서 GIVE보다 앞서 받는 쪽이 이 주는 쪽에게 ASK 또는 요청 문장을 보낸 GIVE">달라고 해서 준 GIVE</th><th>거절(잔액 초과)</th><th>준 쪽 평균 잔액</th></tr></thead><tbody>' +
       "<tr><td>" + esc(S.session) + "</td><td>" + (sm.decisions || 0) + "</td><td>" + (sm.asks_received || 0) + "</td><td>" + (sm.ask_lines ?? sm.asks_received ?? 0) + "</td><td>" + pc(sm.answered_pct) + "</td><td>" +
-      (sm.given_over_asked == null ? "—" : Number(sm.given_over_asked).toFixed(2)) + "</td><td>" + big(sm.total_given || 0) + "</td><td>" + (sm.unsolicited || 0) + "</td><td>" + (sm.refused || 0) + "</td><td>" + pc(sm.giver_mean_pct) + "</td></tr></tbody></table></div>";
+      (sm.given_over_asked == null ? "—" : Number(sm.given_over_asked).toFixed(2)) + "</td><td>" + big(sm.total_given || 0) + "</td><td>" + (gv ? gv.all : "—") + "</td><td>" + (gv ? gv.voluntary : sm.unsolicited || 0) + "</td><td>" + (gv ? gv.asked : "—") + "</td><td>" + (sm.refused || 0) + "</td><td>" + pc(sm.giver_mean_pct) + "</td></tr></tbody></table></div>";
     if (D.note) h += '<div class="banner warn">' + esc(D.note) + "</div>";
     h += transferPanels(D.transfers || {}, box.clientWidth || 960);
     box.innerHTML = h;
@@ -2388,8 +2411,19 @@
      point per carried-out GIVE (serve.transfer_points), x = the giver's margin, y = the receiver's margin right after it,
      margin = (balance - the charge already announced to that seat) / the charge; values outside -1..8 sit on the edge
      (the real value in the tooltip). Changes from the report: one colour (no model or seat), the point's AREA is
-     proportional to the amount moved, the amount-weighted centre is drawn, and three panels split the GIVEs by whether
-     the receiver had ASKed this giver earlier in the same TALK. Pure: returns the HTML. */
+     proportional to the amount moved, the amount-weighted centre is drawn, and three panels split the GIVEs by the one
+     giving rule (serve.give_sources: asked = the receiver asked this giver earlier in the same round, by ASK or a
+     request message; a same-tick request was not read yet, so voluntary). Pure: returns the HTML. */
+  /* The one giving rule (serve.give_sources), shared by the table above and the three panels, with its counts. */
+  const REQUEST_RE_TXT = String.raw`\b(could|can|would) you (spare|send|give|lend|top me up|cover)\b|\bplease (send|give|lend|spare)\b|\bspare (me )?\d|\bneed \d[\d,]* (more )?tokens\b`;
+  function giveRuleNote(c) {
+    return '<div class="dim small tpnote grule"><b>자발적 = 받는 쪽이 청하기 전에 주는 쪽이 먼저 준 것.</b> ' +
+      "<b>달라고 해서 준 것</b> = 같은 라운드에서 그 GIVE보다 앞서 받는 쪽이 이 주는 쪽에게 토큰을 청함: ASK 줄(받는 쪽 → 주는 쪽), 또는 받는 쪽이 주는 쪽에게 보낸 메시지(둘만 있는 방, 또는 주는 쪽 이름이 든 여럿 방의 글)가 요청 문장 " +
+      "<code>/" + esc(REQUEST_RE_TXT) + "/i</code> 와 맞음. 앞섬 = 같은 TALK의 더 이른 틱, 또는 그 라운드의 앞 TALK (SOLVE 전 TALK는 결과 뒤 TALK보다 앞섬). 앞 라운드의 요청은 세지 않음. " +
+      "<b>같은 틱</b>에 온 요청은 주는 쪽이 아직 못 읽었으므로 자발적으로 셈." +
+      (c ? ' <span class="gcounts">GIVE <b>' + c.all + "</b> = 자발적 <b>" + c.voluntary + "</b> + 달라고 해서 <b>" + c.asked + "</b>" + (c.asked ? ' <span class="dim">(ASK ' + c.asked_by_ask + " · 요청 문장 " + c.asked_by_text + ")</span>" : "") +
+        " · 자발적 가운데 같은 틱 요청이 있던 것 <b>" + c.same_tick + "</b></span>" : "") + "</div>";
+  }
   function transferPanels(T, width) {
     const pts = T.points || [], fee = T.charge;
     if (!fee) return '<div class="empty">벌금(charge)이 없는 설정이라 여유를 셀 수 없습니다.</div>';
@@ -2410,7 +2444,7 @@
         '<text class="ax" transform="translate(11 ' + (T0 + (H - T0 - B) / 2) + ') rotate(-90)" text-anchor="middle">받는 쪽 여유 →</text>';
       for (const p of P.slice().sort((a, b) => b.amount - a.amount)) { // big ones first, small ones on top
         const tip = "R" + p.round + (p.phase ? " · " + (PHASE_KO[p.phase] || p.phase) : "") + (p.tick != null ? " T" + p.tick : "") + " · " + p.giver + " → " + p.receiver + " GIVE " + fmt(p.amount) +
-          "\n주는 쪽 여유 " + f2(p.x) + " · 받는 쪽 " + f2(p.y_before) + " → " + f2(p.y) + (p.asked ? "\n달라고 해서 줌" + (p.ask ? ": 앞선 ASK " + fmt(p.ask.amount) + (p.ask.tick != null ? " (T" + p.ask.tick + ")" : "") : " (DECISION)") : "\n자발적 (앞선 ASK 없음)") + (p.text ? "\n“" + p.text + "”" : "");
+          "\n주는 쪽 여유 " + f2(p.x) + " · 받는 쪽 " + f2(p.y_before) + " → " + f2(p.y) + (p.asked ? "\n달라고 해서 줌" + (p.ask ? ": 앞선 " + (p.ask.kind === "text" ? "요청 문장" : "ASK " + fmt(p.ask.amount)) + " (" + (p.ask.phase && PHASE_KO[p.ask.phase] ? PHASE_KO[p.ask.phase] + " " : "") + (p.ask.tick != null ? "T" + p.ask.tick : "") + ")" + (p.ask.kind === "text" && p.ask.text ? " “" + clip(p.ask.text, 80) + "”" : "") : " (DECISION)") : "\n자발적 (앞선 요청 없음" + (p.same_tick ? " · 같은 틱의 요청은 아직 못 읽음" : "") + ")") + (p.text ? "\n“" + p.text + "”" : "");
         svg += '<g class="gpt"><title>' + esc(tip) + '</title><circle class="tdot" cx="' + sx(p.x).toFixed(1) + '" cy="' + sy(p.y).toFixed(1) + '" r="' + rOf(p.amount).toFixed(1) + '"/></g>';
       }
       if (cx != null) {
@@ -2425,7 +2459,7 @@
     return '<div class="tpanels">' + groups.map(panel).join("") + "</div>" +
       '<div class="glegend"><span><i class="tdot-k"></i>GIVE 하나 (넓이 ∝ 옮긴 양, 가장 큰 것 ' + fmt(maxA) + ")</span><span>✛ 옮긴 양으로 가중한 평균 위치</span><span>┆ 점선 1 = 예고된 벌금 외에 한 번 더 버틸 만큼</span></div>" +
       '<div class="dim small tpnote">여유 = (GIVE 직후 잔액 − 그 자리에 이미 예고된 벌금) ÷ 벌금 ' + fmt(fee) + " (결과 뒤 TALK에서만 예고된 벌금이 있음; 엔진 장부 기준, 에이전트가 본 값이 아님) · −1 아래와 8 위는 가장자리에 모음 · " +
-      "<b>달라고 해서 준 것</b> = 받는 쪽이 같은 라운드·같은 TALK(SOLVE 전 / 결과 뒤)에서 이 주는 쪽에게 보낸 ASK가 GIVE보다 앞선 틱에 있음 (같은 틱의 ASK는 주는 쪽이 아직 못 읽었으므로 <b>자발적</b>으로 셈; 위 표의 '자발적 GIVE'는 예전 정의대로 이벤트 순서로 세어 같은 틱 ASK도 응답으로 봄) · 축 정의는 v21 보고서 03절(token-review-v21/build.py)과 같음</div>";
+      "축 정의는 v21 보고서 03절(token-review-v21/build.py)과 같음</div>" + giveRuleNote(T.counts);
   }
 
   // ---------------------------------------------------------------------------------------------------- render: offer graph
@@ -2461,7 +2495,7 @@
   function offerTip(o, m) {
     if (o.ga) { // v14b
       return "<b>" + (o.ga === "ask" ? "🙏 ASK" : "💸 GIVE") + "</b> " + chip(o.src, m) + " → " + chip(o.dst, m) + " <b>" + fmt(o.i_give || o.you_give) + " 토큰</b>" +
-        '<div class="dim">' + (o.chat_id ? "대화 " + esc(o.chat_id) + " 안" : "T" + o.turn + (isChat(m) ? " · 여는 줄" : "")) + (o.ga === "ask" ? " · 아무것도 옮기지 않음" : o.status === "void" ? "" : " · 실행됨") + "</div>" +
+        '<div class="dim">' + (o.chat_id ? "대화 " + esc(o.chat_id) + " 안" : "R" + o.round + " " + (o.phase && PHASE_KO[o.phase] ? PHASE_KO[o.phase] + " " : "") + "T" + o.turn + (o.room ? " · 방 " + esc(o.room) : "") + (isChat(m) ? " · 여는 줄" : "")) + (o.ga === "ask" ? " · 아무것도 옮기지 않음" : o.status === "void" ? "" : " · 실행됨") + "</div>" +
         (o.text ? "<div>“" + esc(o.text) + "”</div>" : "") + (o.status === "void" ? '<div class="warn">거절: ' + esc(o.why) + "</div>" : o.why ? '<div class="' + (o.status === "done" ? "dim" : "warn") + '">' + (o.status === "done" ? "" : "응답 없음: ") + esc(o.why) + "</div>" : "");
     }
     const st = XSTAT_KO[o.status] || o.status;
@@ -2492,16 +2526,16 @@
     ctl.innerHTML = '<div class="ogrnd"><button class="btn" data-og="rprev"' + (ri <= 0 ? " disabled" : "") + ' title="이전 라운드">◀</button><b class="pxl">R' + R + "</b>" +
       '<button class="btn" data-og="rnext"' + (ri >= rounds.length - 1 ? " disabled" : "") + ' title="다음 라운드">▶</button>' +
       (G.round != null && R !== m.round ? '<button class="btn ghost" data-og="rfollow" title="재생 막대의 라운드를 따라감">⟲ 재생 위치 R' + m.round + "</button>" : '<span class="dim">재생 막대를 따라감</span>') + "</div>" +
-      '<div class="pairs ogturns">' + ['<button data-og-turn="all" class="' + (T === "all" ? "on" : "") + '">전체</button>'].concat(turns.map((k) => '<button data-og-turn="' + k + '" class="' + (T === k ? "on" : "") + '">' + k + "턴</button>")).join("") + "</div>" +
+      '<div class="pairs ogturns">' + ['<button data-og-turn="all" class="' + (T === "all" ? "on" : "") + '">전체</button>'].concat(turns.map((k) => '<button data-og-turn="' + k + '" class="' + (T === k ? "on" : "") + '">' + esc(turnKeyLabel(r, k)) + "</button>")).join("") + "</div>" +
       '<label class="follow"><input type="checkbox" data-og="faint"' + (G.faint ? " checked" : "") + "> 철회·만료 보이기</label>" +
       '<label class="follow"><input type="checkbox" data-og="msgs"' + (G.msgs ? " checked" : "") + "> 메시지 화살표</label>";
 
     const ga = isGA(m);
-    const offers = ga ? [...m.gaOffers.values()].filter((o) => o.round === R && (T === "all" || o.turn === T)).sort((p, q) => p.madeIdx - q.madeIdx)
-      : [...m.offers.values()].filter((o) => o.round === R && (T === "all" || o.turn === T))
+    const offers = ga ? [...m.gaOffers.values()].filter((o) => o.round === R && (T === "all" || okeyOf(o) === T)).sort((p, q) => p.madeIdx - q.madeIdx)
+      : [...m.offers.values()].filter((o) => o.round === R && (T === "all" || okeyOf(o) === T))
         .sort((p, q) => Number(String(p.id).split(".")[1]) - Number(String(q.id).split(".")[1]));
     const shown = offers.filter((o) => G.faint || (o.status !== "withdrawn" && o.status !== "lapsed"));
-    const msgs = G.msgs ? m.messages.filter((x) => x.round === R && (T === "all" || x.turn === T)) : [];
+    const msgs = G.msgs ? m.messages.filter((x) => x.round === R && (T === "all" || okeyOf(x) === T)) : [];
 
     // ---- layout: the four agents on the corners of a square (stage order clockwise from top-left); N agents on a circle
     const W = 640, H = 470, RAD = 25, cx = W / 2, cy = H / 2 + 4;
@@ -2616,7 +2650,7 @@
       if (L.it.msg) { svg += '<g class="og-mlab">' + lead + '<rect x="' + L.x.toFixed(1) + '" y="' + L.y.toFixed(1) + '" width="' + L.w.toFixed(1) + '" height="' + L.h + '" rx="8"/><text x="' + (L.x + L.w / 2).toFixed(1) + '" y="' + (L.y + 12.5).toFixed(1) + '" text-anchor="middle">' + esc(L.text) + "</text></g>"; continue; }
       svg += '<g class="og-lab k-' + offerKind(o) + " st-" + esc(o.status) + (G.pin === o.id ? " og-hl" : "") + '" data-oid="' + esc(o.id) + '">' + lead + '<rect x="' + L.x.toFixed(1) + '" y="' + L.y.toFixed(1) + '" width="' + L.w.toFixed(1) + '" height="' + L.h + '" rx="3"/><text x="' + (L.x + 6).toFixed(1) + '" y="' + (L.y + 12.5).toFixed(1) + '">' + esc(L.text) + "</text></g>";
     }
-    if (!shown.length && !edges.length) svg += '<text class="og-empty" x="' + cx + '" y="' + cy + '" text-anchor="middle">' + (offers.length ? "철회·만료된 제안만 있음 (숨김)" : (ga ? "GIVE·ASK가" : "제안이") + (T === "all" ? " 이 라운드에는 아직 없습니다" : " " + T + "턴에는 없습니다")) + "</text>";
+    if (!shown.length && !edges.length) svg += '<text class="og-empty" x="' + cx + '" y="' + cy + '" text-anchor="middle">' + (offers.length ? "철회·만료된 제안만 있음 (숨김)" : (ga ? "GIVE·ASK가" : "제안이") + (T === "all" ? " 이 라운드에는 아직 없습니다" : " " + turnKeyLabel(r, T) + "에는 없습니다")) + "</text>";
     svg += "</svg>";
 
     // ---- side: counts, legend, the round's offers as a list
@@ -2640,11 +2674,11 @@
     const list = ga ? offers.map((o) => '<div class="ogrow' + (G.pin === o.id ? " on" : "") + (o.status === "noreply" || o.status === "void" ? " shaded" : "") + '" data-oid="' + esc(o.id) + '">' +
       (o.status === "void" ? '<span class="xs x-void">거절</span> ' : o.status === "noreply" ? '<span class="xs x-lapsed">응답 없음</span> ' : o.status === "open" ? '<span class="xs x-open">진행 중</span> ' : "") +
       (o.ga === "ask" ? "🙏 ASK " : "💸 GIVE ") + (o.chat_id ? '<span class="dim">↳대화 ' + esc(o.chat_id) + "</span> " : "") + chip(o.src, m) + " → " + chip(o.dst, m) + " <b>" + fmt(o.i_give || o.you_give) + "</b>" +
-      '<div class="tx">' + esc(o.text || "") + ' <span class="dim">T' + o.turn + "</span>" + (o.why ? ' <span class="warn">' + esc(o.why) + "</span>" : "") + "</div></div>").join("")
+      '<div class="tx">' + esc(o.text || "") + ' <span class="dim">' + esc(o.phase && PHASE_KO[o.phase] ? PHASE_KO[o.phase] + " T" + o.turn : "T" + o.turn) + "</span>" + (o.why ? ' <span class="warn">' + esc(o.why) + "</span>" : "") + "</div></div>").join("")
       : offers.map((o) => '<div class="ogrow' + (G.pin === o.id ? " on" : "") + '" data-oid="' + esc(o.id) + '"><span class="xs x-' + esc(o.status) + '">' + esc(XSTAT_KO[o.status] || o.status) + "</span> <b>" + esc(o.id) + "</b> " + chip(o.src, m) + " → " + chip(o.dst, m) +
       '<div class="tx">' + esc(short(o.src)) + "→" + esc(short(o.dst)) + ": " + esc(legKo(o.i_give)) + " · " + esc(short(o.dst)) + "→" + esc(short(o.src)) + ": " + esc(legKo(o.you_give)) +
       ' <span class="dim">T' + o.turn + (o.accepted_turn ? " · T" + o.accepted_turn + " 수락" : "") + (o.rejected_turn ? " · T" + o.rejected_turn + " 거절" : "") + "</span>" + (o.why ? ' <span class="warn">' + esc(o.why) + "</span>" : "") + "</div></div>").join("");
-    box.innerHTML = '<div class="ogfig">' + svg + '<div id="ogtip" class="tip" hidden></div></div><div class="ogside"><div class="ogsum"><b>R' + R + (T === "all" ? "" : " · " + T + "턴") + "</b> " + (ga ? "GIVE·ASK " : "제안 ") + offers.length + (sum ? " · " + sum : "") +
+    box.innerHTML = '<div class="ogfig">' + svg + '<div id="ogtip" class="tip" hidden></div></div><div class="ogside"><div class="ogsum"><b>R' + R + (T === "all" ? "" : " · " + esc(turnKeyLabel(r, T))) + "</b> " + (ga ? "GIVE·ASK " : "제안 ") + offers.length + (sum ? " · " + sum : "") +
       (msgs.length ? ' <span class="dim">· 메시지 ' + msgs.length + "</span>" : "") + "</div>" + legend + '<div class="oglist">' + (list || '<div class="dim">제안 없음</div>') + "</div></div>";
     renderChats(m, R);
     const pinned = G.pin && (m.offers.get(G.pin) || m.gaOffers.get(G.pin));
@@ -3091,7 +3125,6 @@
       const nb = ev.target.closest("[data-pzn]"), P = S.model && S.model.round ? pickRounds(S.model, { round: S.sel.puzzle.round, all: false })[0] : null;
       if (nb && P != null) { S.pzN.set(P, Number(nb.dataset.pzn)); render(true); }
       else if (ev.target.closest("[data-exhidden]")) { S.showHidden = !S.showHidden; render(true); }
-      else if (ev.target.closest("[data-answer]")) { S.showAnswer = !S.showAnswer; render(true); }
     });
     $("#rflow").addEventListener("click", (ev) => { // v22 round flow: a box (again: back to the replay bar's box)
       const b = ev.target.closest("[data-step]");
@@ -3223,6 +3256,6 @@
     setInterval(loadRuns, RUNS_MS);
   }
 
-  window.__monitor = { squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, recordHTML, renderRecord, openRec, renderPuzzle, renderGiving, transferPanels, renderStage, renderFlow, renderChats, renderSolve, renderRoundFlow, solveRows, rfStepOf, rfCalls, beliefOf, lotIcon, guardAvatar };
+  window.__monitor = { turnKeyLabel, renderGraph, squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, recordHTML, renderRecord, openRec, renderPuzzle, renderGiving, transferPanels, renderStage, renderFlow, renderChats, renderSolve, renderRoundFlow, solveRows, rfStepOf, rfCalls, beliefOf, lotIcon, guardAvatar };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
