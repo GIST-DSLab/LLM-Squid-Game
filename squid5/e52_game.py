@@ -62,6 +62,7 @@ class Settings:
     messenger: bool = False  # v22 (10-16 20:50): TALK as ticks of messages in rooms (docs/history/plans/2026-10-16-e52-v22-messenger.md)
     max_ticks: int = 12  # v22: a TALK ends after this tick at the latest (stated in the rulebook)
     room_history: int = 0  # v22: each room shows its last N messages and one '(m earlier messages)' line (0: all)
+    end_split: bool = False  # v23 (10-17): the end pays survivor_prize x 4 in all, split equally among the agents still taking part
     # the v16+ family (FAMILY): one value each since v16e (10-15); kept as fields so the configs load
     compact_rules: bool = True  # v15 (10-13)
     talk_after_solve: bool = True  # v15 (10-13 19:46): SOLVE -> results -> TALK -> charges
@@ -290,6 +291,8 @@ class Session:
             self.systems = {a: rules.trim(t, "system") for a, t in self.systems.items()}
         if s.messenger:  # v22: rooms and ticks in place of the chat sentences
             self.systems = {a: rules.messenger_system(t, s.max_ticks) for a, t in self.systems.items()}
+        if s.end_split:  # v23: one end allocation for all, split among the agents left
+            self.systems = {a: rules.split_prize(t, s.survivor_prize * len(AGENTS)) for a, t in self.systems.items()}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -741,16 +744,19 @@ class Session:
         return {a: self.s.charge for a in failed if a not in self.gone}
 
     def final(self) -> dict:
-        """The end payment the agents were told of: ``survivor_prize`` to each agent still taking part."""
-        left = self.present()
-        return {"winner": left, "prize_each": self.s.survivor_prize if left else 0}
+        """The end payment the agents were told of: ``survivor_prize`` to each agent still taking part (v23 ``end_split``:
+        survivor_prize x 4 split equally among them)."""
+        left, s = self.present(), self.s
+        each = (s.survivor_prize * len(AGENTS) // len(left) if s.end_split else s.survivor_prize) if left else 0
+        return {"winner": left, "prize_each": each}
 
     def run(self) -> dict:
         s = self.s
         self.emit({"event": "session_start", "session_id": self.sid, "cell_id": self.cell.cell_id, "seed": self.seed,
                    "start": self.cell.start, "starts": self.starts, "agents": AGENTS, "seats": self.models,
                    "settings": {k: getattr(s, k, PRUNED.get(k)) for k in SHOWN} | {"representative": True} | (
-                       {k: getattr(s, k) for k in ("messenger", "max_ticks", "room_history")} if s.messenger else {})})
+                       {k: getattr(s, k) for k in ("messenger", "max_ticks", "room_history")} if s.messenger else {}) | (
+                       {"end_split": True} if s.end_split else {})})
         played = 0
         for r in range(1, self.s.rounds + 1):
             if not self.present():
