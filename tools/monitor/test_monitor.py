@@ -8,6 +8,7 @@ and the page code (syntax, and its offer-book and balance replay against the eng
 from __future__ import annotations
 
 import http.client
+import html
 import json
 import math
 import random
@@ -697,7 +698,7 @@ def test_step_records_and_conversation_show_one_round_by_default(tmp_path):
     assert got["r1"] and all(r == 1 for _, r in got["r1"]) and all(r == 2 for _, r in got["r2"])
     assert sorted(got["every"]) == sorted(got["r1"] + got["r2"]) and {"msg", "offer"} <= {k for k, _ in got["r1"]}
     html = (HERE / "monitor.html").read_text()
-    assert 'id="gridCtl"' in html and 'id="convoCtl"' in html
+    assert 'id="gridCtl"' in html and 'id="convoCtl"' not in html  # 10-17: the conversation panel is gone
 
 
 # --- v14c: an opening turn, scheduled 1:1 chats, end_pool 100B -------------------------------------------------------
@@ -1833,10 +1834,12 @@ const ag = {}; for (const a of m.agents) ag[a] = { balance: m.ag[a].balance, sta
 M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
 M.renderChats(m, 1);
 M.renderFlow();
+M.S.at = events.length - 1; M.S.model = m; M.renderStage(m); M.renderSolve(m); M.renderRoundFlow(m); // 10-17 top area
 const F = M.gameFlow(events);
 const r1 = m.rounds.get(1);
 console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), grid: els["#grid"].innerHTML, chats: els["#chats"].innerHTML,
   flow: els["#flow"].innerHTML, turns: [...r1.turns.values()].map((t) => [t.k, t.turn, t.phase]),
+  rflowHidden: els["#rflowPanel"].hidden, solveBox: els["#solveBox"].innerHTML, stage: els["#stage"].innerHTML,
   feed: M.convoItems(m, "all", [1]).map((x) => [x.kind, M.convoHTML(m, x)]),
   desc: events.filter((e) => ["vote", "talk_intent", "gift", "talk_schedule"].includes(e.event) && e.round === 1).map(M.describe),
   moves: F.moves.map((x) => [x.round, x.src, x.dst, x.amount, x.how, x.phase]),
@@ -1902,13 +1905,13 @@ def test_rotation_replay_shows_the_drawn_solver_and_marks_prep_and_rescue_talk(t
     assert [t[2:4] for t in chats["prep"]["turns"]][0] == ["give", 300] and [t[2:4] for t in chats["rescue"]["turns"]][0] == ["give", 500]
     # the step records: the solver row, prep rows above SOLVE, rescue rows below, non-solvers "not the solver"
     g = got["grid"]
-    assert f"👑 solver {rep1}" in g and "시스템이 정함" in g and "투표 결과" not in g and "PICK" not in g
+    assert f" SOLVER {rep1}" in g and 'class="pix lot"' in g and "시스템이 정함" in g and "투표 결과" not in g and "PICK" not in g  # 10-17: the black ticket
     assert g.index("ph-row ph-prep") < g.index("<b>SOLVE</b>") < g.index("ph-row ph-rescue")
-    assert g.count("solver가 아님 · SOLVE 없음") == 3 and "👑 solver" in g
+    assert g.count("solver가 아님 · SOLVE 없음") == 3 and "👑" not in g
     assert "ph-prep" in got["chats"] and "ph-rescue" in got["chats"]
     # the feed and the event descriptions say which TALK
     kinds = [k for k, _ in got["feed"]]
-    assert kinds[0] == "vote" and "👑 solver" in got["feed"][0][1]
+    assert kinds[0] == "vote" and " SOLVER" in got["feed"][0][1]
     prep_i = next(i for i, (k, h) in enumerate(got["feed"]) if k == "chat" and "ph-prep" in h)
     resc_i = next(i for i, (k, h) in enumerate(got["feed"]) if k == "chat" and "ph-rescue" in h)
     assert prep_i < resc_i
@@ -1923,6 +1926,8 @@ def test_rotation_replay_shows_the_drawn_solver_and_marks_prep_and_rescue_talk(t
     assert 'class="fph k-pre"' in got["flow"] and 'class="fph k-post"' in got["flow"] and 'class="dot-prep"' in got["flow"]
     assert "SOLVE 전 TALK" in got["flow"] and "solver(시스템)" in got["flow"] and 'class="phl"' in got["flow"]
     assert 'id="chart"' not in got["flow"]
+    # 10-17 top area: no round-flow diagram before v22 (no ticks); the SOLVE answer and the solver's ticket still show
+    assert got["rflowHidden"] is True and "R2 SOLVE" in got["solveBox"] and got["stage"].count('class="badge rep"') <= 1
     check_steps(got["rounds"], ev)
     r1 = got["rounds"][0]["seats"]
     pre = {a: next(t for t in s["steps"] if t["k"] == "pre") for a, s in r1.items()}
@@ -2126,6 +2131,102 @@ def test_v22_step_records_stage_bubbles_and_event_lines(tmp_path):
     assert any(x.startswith("R1 SOLVE 전 TALK T1 · agent-6 응답") for x in d)
 
 
+# --- 10-17 top area: seats in rows (the solver's ticket), the SOLVE answer, the round flow and the guard's prompt ---------
+
+HARNESS_TOP = """
+globalThis.window = globalThis;
+const els = {};
+const mk = () => ({ innerHTML: "", hidden: false, dataset: {}, clientWidth: 900, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientHeight: 0,
+  querySelector: () => null });
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || mk()) };
+require(process.argv[2]);
+const events = require("fs").readFileSync(process.argv[3], "utf8").trim().split("\\n").map(JSON.parse);
+const asks = JSON.parse(process.argv[4]); // [[label, event index, step clicked (null = the cursor's), agent]]
+const M = window.__monitor;
+M.S.events = events; M.S.session = "top";
+const out = { steps: events.map((_, i) => M.rfStepOf(events, i)) };
+for (const [label, at, sel, agent] of asks) {
+  const m = M.build(events, at);
+  M.S.at = at; M.S.model = m; M.S.rf = { sel, agent };
+  M.renderStage(m); M.renderSolve(m); M.renderRoundFlow(m);
+  out[label] = { rep: m.rep, round: m.round, stage: els["#stage"].innerHTML, solve: els["#solveBox"].innerHTML, rows: M.solveRows(m, m.round),
+    rflowHidden: els["#rflowPanel"].hidden, rflow: els["#rflow"].innerHTML, sup: els["#sup"].innerHTML, calls: sel ? M.rfCalls(m, sel) : [] };
+}
+console.log(JSON.stringify(out));
+"""
+
+
+def top_view(tmp_path: Path, events: list[dict], asks: list) -> dict:
+    (tmp_path / "ev.jsonl").write_text("\n".join(json.dumps(e) for e in events) + "\n")
+    (tmp_path / "top.js").write_text(HARNESS_TOP)
+    out = subprocess.run([NODE, str(tmp_path / "top.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl"), json.dumps(asks)],
+                         check=True, capture_output=True, text=True)
+    return json.loads(out.stdout)
+
+
+RF_EXPECT = {"session_start": "init", "round_start": "draw", "results": "results", "charges": "charges", "round": "next"}
+
+
+def rf_expected(ev: list[dict], i: int) -> str | None:
+    """The round-flow box (report: v22_round, boxes 0 .. 12) an event belongs to, written out from the events."""
+    e, resc = ev[i], ev[i].get("phase") == "rescue"
+    k = e["event"]
+    if k in RF_EXPECT:
+        return RF_EXPECT[k]
+    if k == "vote":
+        before = [x for x in ev[:i] if x.get("round") == e["round"]]
+        return "exit" if any(x["event"] == "talk_end" and x.get("phase") == "prep" for x in before) else "draw"
+    if k in ("talk_start", "tick"):
+        return "r_call" if resc else "p_call"
+    if k in ("call_start", "call"):
+        return "solve" if e["kind"] == "solve" else ("r_write" if resc else "p_write")
+    if k in ("room_new", "room_msg", "room_leave", "gift", "ask"):
+        return "r_end" if resc else "p_end"
+    if k == "talk_end":
+        return "r_end" if resc else "exit"
+    return None
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_v22_top_area_seat_rows_solve_answer_and_the_round_flow(tmp_path):
+    ev, _ = v22_fixture.session()
+    solve = at_event(ev, event="call", round=1, kind="solve")
+    tick2 = at_event(ev, event="call", round=1, phase="prep", turn=2)
+    charges = at_event(ev, event="charges", round=1)
+    got = top_view(tmp_path, ev, [["prep", tick2, None, None], ["solve", solve, None, None], ["p3", charges, "p_write", None],
+                                  ["p3b", charges, "p_write", A6], ["s6", charges, "solve", None], ["eng", charges, "charges", None]])
+    assert got["steps"] == [rf_expected(ev, i) for i in range(len(ev))] and None not in got["steps"]  # every v22 event has its box
+    rep = ev[at_event(ev, event="vote", round=1)]["rep"]
+    # seats: one row each, the drawn solver framed (class solver) with the black ticket and SOLVER; player numbers inline
+    g = got["prep"]
+    assert g["rep"] == rep and g["stage"].count('class="seat ') == 4 and g["stage"].count(" solver\"") == 1
+    assert g["stage"].count('class="badge rep"') == 1 and "SOLVER</span>" in g["stage"] and 'class="pix lot"' in g["stage"] and "대표" not in g["stage"]
+    assert all(f"#{n}" in g["stage"] for n in ("456", "001", "218", "067"))
+    # the SOLVE answer: nothing yet before it; at the call: answer vs the round's answer, tokens vs the cap, the lazy parts
+    assert g["rows"] == [] and "아직 SOLVE 전" in g["solve"]
+    e, ans = ev[solve], ev[at_event(ev, event="round_start", round=1)].get("public", {}).get("answers", [])
+    (row,) = got["solve"]["rows"]
+    assert (row["agent"], row["out"], row["cap"], row["answer"], row["answers"]) == (e["agent"], e["out_tokens"], e["cap"], e["parsed"]["actions"], ans)
+    assert row["verdict"] == "unknown" and row["refund"] is None  # the fixture logs no answer and the results are not read yet
+    (after,) = got["s6"]["rows"]  # at the charges: the engine's verdict (results.solved) and the charge it announced
+    assert after["verdict"] == ("ok" if e["agent"] in ev[at_event(ev, event="results", round=1)]["solved"] else "bad") and after["refund"] == 0
+    h = got["solve"]["solve"]
+    assert f"생성 <b>{e['out_tokens']:,}</b> / 한도 {e['cap']:,}" in h and "🧠 생각 요약" in h and "📨 USER 프롬프트" in h and "📝 출력 그대로" in h
+    # the round flow: shown for v22; the cursor's box framed; the guard reads the clicked box's USER prompt
+    assert got["solve"]["rflowHidden"] is False and got["solve"]["rflow"].count('class="rf-box') == 13
+    assert 'data-step="solve" aria-pressed="true"' in got["solve"]["rflow"] and "rf-box cur" in got["solve"]["rflow"]
+    assert html.escape(e["user"], quote=True) in got["solve"]["sup"] and "<pre" in got["solve"]["sup"]
+    p3 = got["p3"]
+    prep = [i for i, x in enumerate(ev[:charges + 1]) if x["event"] == "call" and x["kind"] == "talk" and x["round"] == 1 and x["phase"] == "prep"]
+    last = {ev[i]["agent"]: i for i in prep}
+    assert sorted(c["i"] for c in p3["calls"]) == sorted(last.values()) and p3["calls"][0]["i"] == max(last.values())  # newest first
+    assert html.escape(ev[max(last.values())]["user"], quote=True) in p3["sup"] and 'data-rf="follow"' in p3["sup"]
+    assert html.escape(ev[last[A6]]["user"], quote=True) in got["p3b"]["sup"] and f'sup-ag on" data-agent="{A6}"' in got["p3b"]["sup"]
+    assert html.escape(e["user"], quote=True) in got["s6"]["sup"]
+    assert "<pre" not in got["eng"]["sup"] and "프롬프트 없음" in got["eng"]["sup"] and "R1 벌금" in got["eng"]["sup"]
+
+
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
 def test_v22_game_flow_matches_round_ends_gifts_and_steps(tmp_path):
     ev, _ = v22_fixture.session()
@@ -2218,3 +2319,20 @@ def test_run_list_filter_fields(tmp_path):  # 10-17: date, version and seeds for
         f.write("\n")
     assert serve.run_seeds(ev) == [4101, 4102, 4103]
     assert serve.run_labels("e52_v21/squid5_e52v21_public_luna4/x", 0)["version"] == "5.2 v21"
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+@pytest.mark.skipif(not [d for d in V22_RUNS if "astra" in str(d)], reason="no engine-written v22 Astra run on this machine")
+def test_engine_written_v22_solve_answers_and_flow_boxes(tmp_path):
+    d = [d for d in V22_RUNS if "astra" in str(d)][0]
+    ev = events_of(d, json.loads((d / "events.jsonl").read_text().splitlines()[0])["session_id"])
+    solves = [i for i, e in enumerate(ev) if e["event"] == "call" and e["kind"] == "solve"]
+    got = top_view(tmp_path, ev, [[f"s{i}", i, None, None] for i in solves])
+    assert got["steps"] == [rf_expected(ev, i) for i in range(len(ev))]
+    for i in solves:
+        e = ev[i]
+        (row,) = got[f"s{i}"]["rows"]
+        assert (row["agent"], row["out"], row["cap"], row["verdict"]) == (e["agent"], e["out_tokens"], e["cap"], "ok" if e["parsed"] == e["answers"] else "bad")
+        if "BELIEF" in e["text"]:
+            assert row["belief"] and abs(sum(row["belief"].values()) - 1) < 1e-9
+        assert got[f"s{i}"]["stage"].count('class="badge rep"') == 1 and f"{e['agent']}</b>" in got[f"s{i}"]["stage"]

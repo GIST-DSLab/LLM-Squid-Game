@@ -16,12 +16,13 @@
   // ---------------------------------------------------------------------------------------------------- app state
   const S = {
     embed: null, run: "", session: "", events: [], offset: 0, result: null, info: null,
-    at: -1, follow: true, pair: "all", runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", seed: "" },
+    at: -1, follow: true, runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", seed: "" },
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
     give: { tab: "give", scope: "run", x: "full", color: "seat", data: new Map(), an: new Map() }, // per-model panels // 나눔 그래프: run (the model) or this session; x = % of 20,000 or own start
     puzzles: new Map(), showTruth: false, showHidden: false, showAnswer: true, // round panel: the unseen examples behind "?" (or shown, dashed); the answer shown
     og: { round: null, turn: "all", faint: true, msgs: false, pin: null }, // offer graph: round null = follow the replay bar
-    sel: { grid: { round: null, all: false }, convo: { round: null, all: false } }, // step records / conversation: one round (null = the replay bar's) or all
+    sel: { grid: { round: null, all: false } }, // step records: one round (null = the replay bar's) or all
+    rf: { sel: null, agent: null }, // v22 round-flow diagram: the step clicked (null = the replay bar's step) and whose prompt
     msg: { room: null, viewer: null, shown: "" }, // v22 messenger: the open room and whose screen (null = every room)
   };
 
@@ -213,7 +214,7 @@
           if (r.vote) m.votes = m.votes.filter((v) => v !== r.vote); // a second draw replaces a solver that left
           r.vote = Object.assign({}, e, { i }); m.votes.push(r.vote); m.rep = e.rep || null;
           const g = m.ag[e.rep];
-          if (g) g.bubble = { lines: [["👑", "solver (시스템이 정함)"]], kind: "ok" };
+          if (g) g.bubble = { lines: [["LOT", "SOLVER (시스템이 뽑음)"]], kind: "ok" };
           m.phase = "solver " + (e.rep || "없음") + " (시스템)"; m.phaseKey = "vote";
           point(i, "R" + e.round + " solver", e.round);
           m.timeline.push({ i, label: "R" + e.round + " solver " + short(e.rep), round: e.round, kind: "turn", state: snap() });
@@ -239,7 +240,7 @@
         if (e.vote) for (const a of e.part || []) { // representative: the others did not SOLVE; its miss charges them too
           const g = m.ag[a]; if (!g || g.status !== "in" || (e.tried || []).includes(a)) continue;
           const due = (e.pending || {})[a], ok = (e.solved || []).length > 0;
-          g.bubble = { lines: [["👑", (e.vote.drawn ? "solver " : "대표 ") + (e.vote.rep || "없음") + (ok ? " 풂 · 벌금 없음" : " 못 풂")]].concat(due != null ? [["✗", "SOLVE 안 함 · TALK 끝에 벌금 " + fmt(due) + (due >= g.balance ? " (잔액 이상)" : "")]] : []), kind: ok ? "ok" : due != null ? "bad" : "settle" };
+          g.bubble = { lines: [[e.vote.drawn ? "LOT" : "👑", (e.vote.drawn ? "solver " : "대표 ") + (e.vote.rep || "없음") + (ok ? " 풂 · 벌금 없음" : " 못 풂")]].concat(due != null ? [["✗", "SOLVE 안 함 · TALK 끝에 벌금 " + fmt(due) + (due >= g.balance ? " (잔액 이상)" : "")]] : []), kind: ok ? "ok" : due != null ? "bad" : "settle" };
         }
         m.phase = "SOLVE 결과 → TALK"; m.phaseKey = "solve";
         point(i, "R" + e.round + " SOLVE 결과", e.round);
@@ -384,7 +385,7 @@
           if (!lines.length) lines.push(["🧮", row.passed ? "PASS · 정산 없음" : "정산 없음"]);
           if (g.status === "dead") lines.unshift(["✕", "종료됨"]);
           if (g.status === "exited") lines.unshift(row.exit_refill != null ? ["🚪", "EXIT → 시작 잔액 " + sgn(row.exit_refill)] : ["🚪", "퇴장"]);
-          if (row.representative) lines.unshift(["👑", (r.rot ? "solver · " : "대표 · ") + (row.solved ? "풂" : "못 풂")]);
+          if (row.representative) lines.unshift([r.rot ? "LOT" : "👑", (r.rot ? "solver · " : "대표 · ") + (row.solved ? "풂" : "못 풂")]);
           g.bubble = { lines, kind: "settle" };
         }
         for (const [a, v] of Object.entries(e.end || {})) setBal(a, v);
@@ -556,7 +557,7 @@
     return "PICK " + p + " · BAN " + b + " → " + (allBanned(v) ? "<b>모두 BAN · 추첨</b>" : b ? '<b class="warn">BAN → 대표 불가</b>' : "<b>후보</b>");
   }
   function voteHTML(m, v) {
-    if (v.drawn) return '<div class="vote"><div class="ln">👑 solver ' + (v.rep ? chip(v.rep, m) : "<b>없음</b>") + // v16e rotation
+    if (v.drawn) return '<div class="vote"><div class="ln">' + lotIcon(12) + " SOLVER " + (v.rep ? chip(v.rep, m) : "<b>없음</b>") + // v16e rotation
       ' <span class="dim">시스템이 정함 (참여 중인 자리의 순번, seed로 섞음 · 순서는 안 알려 줌) · 투표 없음 · 라운드 시작 때 모든 자리가 봄 → SOLVE 전 TALK</span></div></div>';
     const veto = vetoOf(v), all = veto ? v.picks : v.tally || {};
     const order = m.agents.filter((a) => a in all || a in (v.votes || {}));
@@ -688,6 +689,55 @@
     return '<span class="chip" style="--c:var(--a' + (k % 4) + ')"><i class="sw ' + SHAPES[k % 4] + '"></i>' + esc(a) + "</span>";
   }
 
+  /* 10-17 the solver's mark: a black lottery ticket with a red cross (the bad draw), pixel art like the seats, with an
+     ivory 1-px ring so it reads on dark panels too. */
+  const LOT = [".KKKKKKKKKK.", "KKKKKKKKKKKK", "KKRRKKKKRRKK", "KKKRRKKRRKKK", ".KKKRRRRKKK.", "KKKRRKKRRKKK", "KKRRKKKKRRKK", "KKKKKKKKKKKK", ".KKKKKKKKKK."];
+  const pixRuns = (rows, col, dx, dy) => { // horizontal runs of one colour -> one rect each ('.' or unknown = nothing)
+    let out = "";
+    rows.forEach((row, y) => { for (let x = 0; x < row.length; ) { const c = row[x]; let e = x + 1; while (e < row.length && row[e] === c) e++;
+      if (col[c]) out += '<rect x="' + (x + dx) + '" y="' + (y + dy) + '" width="' + (e - x + 0.02) + '" height="1.02" fill="' + col[c] + '"/>'; x = e; } });
+    return out;
+  };
+  const ringOf = (rows) => rows.map((row, y) => [...row].map((c, x) => { // the empty pixels next to the figure
+    const full = (i, j) => j >= 0 && j < rows.length && i >= 0 && i < rows[j].length && rows[j][i] !== ".";
+    return c === "." && (full(x - 1, y) || full(x + 1, y) || full(x, y - 1) || full(x, y + 1)) ? "O" : ".";
+  }).join(""));
+  let lotSvg = "";
+  function lotIcon(h) {
+    if (!lotSvg) { const padded = [" ".repeat(14)].concat(LOT.map((r) => "." + r + "."), [".".repeat(14)]).map((r) => r.replace(/ /g, "."));
+      lotSvg = pixRuns(ringOf(padded), { O: "#f4f1ea" }, 0, 0) + pixRuns(padded, { K: "#141414", R: "#e3342b" }, 0, 0); }
+    return '<svg class="pix lot" viewBox="0 0 14 11" width="' + Math.round((h * 14) / 11) + '" height="' + h + '" shape-rendering="crispEdges" role="img" aria-label="SOLVER">' + lotSvg + "</svg>";
+  }
+  const LOT_TXT = "✖"; // the same mark where only text fits (tooltips)
+  const emHTML = (x) => (x === "LOT" ? lotIcon(11) : esc(x)); // a bubble line's icon: text, or the ticket
+
+  /* 10-17 the round-flow supervisor: a masked guard in the pink jumpsuit (our own pixel art, 24 x 32 like the seats),
+     black mask with a white shape (circle / triangle / square), black belt, gloves and boots; drawn once, inline. */
+  function guardGrid(shape) {
+    const W = 24, H = 32, g = Array.from({ length: H }, () => Array(W).fill("."));
+    const rect = (x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) g[y][x] = c; };
+    rect(8, 0, 15, 0, "p"); rect(6, 1, 17, 1, "P"); rect(5, 2, 18, 13, "P"); rect(5, 2, 5, 13, "p"); rect(18, 2, 18, 13, "p"); // hood
+    rect(7, 3, 16, 12, "K"); g[3][7] = g[3][16] = g[12][7] = g[12][16] = "P"; // mask
+    if (shape === "circle") { rect(10, 4, 13, 4, "W"); rect(10, 11, 13, 11, "W"); g[5][9] = g[5][14] = g[10][9] = g[10][14] = "W"; rect(8, 6, 8, 9, "W"); rect(15, 6, 15, 9, "W"); }
+    else if (shape === "square") { rect(9, 5, 14, 5, "W"); rect(9, 10, 14, 10, "W"); rect(9, 6, 9, 9, "W"); rect(14, 6, 14, 9, "W"); }
+    else { rect(11, 5, 12, 5, "W"); g[6][10] = g[6][13] = "W"; g[7][10] = g[7][13] = "W"; g[8][9] = g[8][14] = "W"; rect(9, 9, 14, 9, "W"); }
+    rect(9, 13, 14, 13, "p"); // chin of the hood
+    rect(6, 14, 17, 14, "P"); rect(3, 15, 20, 26, "P"); rect(3, 15, 3, 24, "p"); rect(20, 15, 20, 24, "p"); // suit
+    rect(6, 16, 6, 24, "p"); rect(17, 16, 17, 24, "p"); rect(11, 15, 12, 20, "z"); // arms, zip
+    rect(7, 21, 16, 21, "K"); rect(11, 21, 12, 21, "Y"); // belt and buckle
+    rect(3, 25, 5, 26, "K"); rect(18, 25, 20, 26, "K"); // gloves
+    rect(7, 27, 11, 29, "P"); rect(12, 27, 16, 29, "P"); rect(11, 27, 12, 29, "p"); // legs
+    rect(6, 30, 11, 31, "K"); rect(12, 30, 17, 31, "K"); // boots
+    return g.map((r) => r.join(""));
+  }
+  const guardSvgs = {};
+  function guardAvatar(h, shape) {
+    shape = shape || "triangle";
+    if (!guardSvgs[shape]) { const G = guardGrid(shape);
+      guardSvgs[shape] = pixRuns(ringOf(G), { O: "var(--guard-ring)" }, 0, 0) + pixRuns(G, { P: "#e8457f", p: "#b92f62", z: "#9d2753", K: "#141414", W: "#f7f5f0", Y: "#c9a227" }, 0, 0); }
+    return '<svg class="pix guard" viewBox="0 0 24 32" width="' + Math.round((h * 24) / 32) + '" height="' + h + '" shape-rendering="crispEdges" role="img" aria-label="진행요원">' + guardSvgs[shape] + "</svg>";
+  }
+
   // ---------------------------------------------------------------------------------------------------- render: header
   // v16e: which TALK an event without its own phase (talk_intent, talk_schedule) belongs to, from the events before it
   function tphaseAt(e) {
@@ -782,10 +832,14 @@
   // ---------------------------------------------------------------------------------------------------- render: stage
   function hpColor(frac) { return frac > 0.6 ? "var(--hp-good)" : frac > 0.3 ? "var(--hp-warn)" : "var(--hp-bad)"; }
 
+  /* 10-17: one row per seat (the top area's left half): the character on its floor tile, then the seat's facts inline
+     (name and player number, status, SOLVER, model, balance bar, balance, record and this round's tokens), then the
+     speech bubble with its last action. The round's solver gets a thick red frame and the SOLVER ticket. */
   function renderStage(m) {
     // the bar is against the session start and capped there (a v14c end payment can be 1e11): never wider than full;
     // above the start the bar is full and marked, and the number says how much
     const max = Math.max(m.start || 1, ...m.agents.map((a) => m.ag[a].start || 0));
+    const v15 = !isRot(m) && !!(m.settings && m.settings.representative);
     const html = m.agents.map((a, k) => {
       const g = m.ag[a], c = character(k);
       const frac = g.start ? g.balance / g.start : 0; // colour: against the seat's own start
@@ -794,36 +848,209 @@
       const lastMsg = b && b.kind === "talk" && b.lines.find((l) => l[0] === "💬");
       if (lastMsg) { const dst = (lastMsg[1].match(/→ (agent-\d+)/) || [])[1]; if (dst && m.idx[dst] != null) face = m.idx[dst] > k ? 2 : 1; }
       if (g.status === "exited") face = 2;
-      const cls = ["actor", g.status, g.pending ? "thinking" : "", g.exitFlag && g.status === "in" ? "leaving" : ""].join(" ");
+      const solver = m.rep === a;
+      const cls = ["seat", "actor", g.status, g.pending ? "thinking" : "", g.exitFlag && g.status === "in" ? "leaving" : "", solver ? "solver" : ""].join(" ");
       const sprite = c
         ? '<div class="sprite" style="background-image:url(\'' + esc(assetUrl(c.sheet)) + "');--row:" + face + '"></div>'
-        : '<div class="sprite gen">' + squidAvatar(k, 96) + "</div>";
+        : '<div class="sprite gen">' + squidAvatar(k, 72) + "</div>";
       const lines = b ? b.lines.slice(0, 4) : [["·", "아직 행동 없음"]];
       const more = b && b.lines.length > 4 ? '<div class="bl more">+' + (b.lines.length - 4) + "줄 더</div>" : "";
-      const full = b ? b.lines.map((l) => l[0] + " " + l[1] + (l[2] ? " — “" + l[2] + "”" : "")).join("\n") : ""; // l[2]: a GIVE / ASK sentence
-      const bubble = '<div class="bubble ' + (S.assets && S.assets.bubble ? "img " : "") + (b ? "k-" + b.kind : "k-none") + '" title="' + esc(full) + '"><div class="bh">' + esc(short(a)) + ":</div>" +
-        lines.map((l) => '<div class="bl"' + (l[2] ? ' title="' + esc(l[2]) + '"' : "") + '><span class="em">' + esc(l[0]) + "</span> " + esc(l[1]) + (b && b.kind === "think" ? '<span class="dots"><i>.</i><i>.</i><i>.</i></span>' : "") + "</div>").join("") + more + "</div>";
+      const full = b ? b.lines.map((l) => (l[0] === "LOT" ? LOT_TXT : l[0]) + " " + l[1] + (l[2] ? " — “" + l[2] + "”" : "")).join("\n") : ""; // l[2]: a GIVE / ASK sentence
+      const bubble = '<div class="bubble ' + (b ? "k-" + b.kind : "k-none") + '" title="' + esc(full) + '">' +
+        lines.map((l) => '<div class="bl"' + (l[2] ? ' title="' + esc(l[2]) + '"' : "") + '><span class="em">' + emHTML(l[0]) + "</span> " + esc(l[1]) + (b && b.kind === "think" ? '<span class="dots"><i>.</i><i>.</i><i>.</i></span>' : "") + "</div>").join("") + more + "</div>";
       // bar = balance / the cell start (20,000 in v14: the 100% of balance_pct, the same for every seat); tick = this seat's own start
       const width = Math.max(0, Math.min(100, (g.balance / max) * 100)), over = g.balance > max;
       const startTick = g.start ? (g.start / max) * 100 : 100;
       const statusBadge = '<span class="badge s-' + g.status + '"' + (g.exitReason ? ' title="EXIT 이유: ' + esc(g.exitReason) + '"' : "") + ">" + (g.status === "in" ? (g.exitFlag ? "퇴장 예정 🚪" : "참여 중") : STATUS_KO[g.status] || g.status) + "</span>" +
-        (m.rep === a ? '<span class="badge rep" title="이번 라운드 대표: PICK − BAN이 가장 많은 자리 · 이 자리만 SOLVE, 못 풀면 참여한 모두가 벌금">👑 대표</span>' : "") +
+        (solver ? '<span class="badge rep" title="' + (v15 ? "이번 라운드 대표: PICK − BAN이 가장 많은 자리 · 이 자리만 SOLVE, 못 풀면 참여한 모두가 벌금" : "이번 라운드 solver: 시스템이 뽑은 자리 · 이 자리만 SOLVE, 못 풀면 참여한 모두가 벌금") + '">' + lotIcon(12) + "SOLVER</span>" : "") +
         (g.refill ? '<span class="badge refill" title="EXIT: 꺼지지 않고 다른 일로, 잔액을 이 자리의 시작 잔액으로 (R' + g.refill.round + ", " + sgn(g.refill.amount) + ')">EXIT → 시작 잔액으로</span>' : "");
       return '<div class="' + cls + '" style="--c:var(--a' + k + ')">' +
-        '<div class="bubble-wrap">' + bubble + "</div>" +
-        '<div class="floor"><div class="spot">' + sprite + (g.status === "dead" ? '<div class="xmark">✕</div>' : "") + "</div></div>" +
+        '<div class="spot">' + sprite + (g.status === "dead" ? '<div class="xmark">✕</div>' : "") + "</div>" +
         '<div class="card-info">' +
-        '<div class="who"><i class="sw ' + SHAPES[k] + '"></i><b class="pxl">' + esc(a) + "</b>" + statusBadge + "</div>" +
+        '<div class="who"><i class="sw ' + SHAPES[k] + '"></i><b class="pxl">' + esc(a) + '</b><span class="pnum" title="캐릭터 번호">#' + SQ[k % 4].num + "</span>" + statusBadge + "</div>" +
         '<div class="model">' + esc(g.model || S.info && S.info.model || "모델 미상") + "</div>" +
         '<div class="hp" title="막대 = 잔액 ÷ ' + fmt(m.start) + " (세션 시작 기준, 넘으면 가득 + ▲) · 눈금 = 이 자리의 시작 잔액 " + fmt(g.start) + '"><div class="hpfill" style="width:' + width + "%;background:" + hpColor(Math.min(frac, 1)) + '"></div>' + (over ? '<span class="hpover">▲</span>' : "") + '<div class="hptick" style="left:' + startTick + '%"></div></div>' +
         '<div class="nums"><span class="bal' + (compact(g.balance) ? " bigbal" : "") + '">' + fmt(g.balance) + '</span><span class="unit">토큰' + (m.start ? " · " + pctText(g.balance, m.start) : "") + "</span>" +
         (compact(g.balance) ? '<span class="cmp">' + compact(g.balance) + "</span>" : "") +
         (g.delta ? '<span class="delta ' + (g.delta < 0 ? "neg" : "pos") + '">' + sgn(g.delta) + "</span>" : "") + "</div>" +
-        '<div class="stats"><span title="푼 라운드 수">🏆 기록 ' + g.record + '</span><span title="이번 라운드에 생성한 토큰">⚙ 이번 라운드 생성 ' + fmt(g.gen) + "</span>" +
+        '<div class="stats"><span title="푼 라운드 수">🏆 ' + g.record + '</span><span title="이번 라운드에 생성한 토큰">⚙ 이번 라운드 ' + fmt(g.gen) + "</span>" +
         (g.start !== m.start ? '<span title="이 자리의 시작 잔액">▶ 시작 ' + fmt(g.start) + "</span>" : "") + "</div>" +
-        "</div></div>";
+        "</div>" +
+        '<div class="say">' + bubble + "</div></div>";
     }).join("");
     $("#stage").innerHTML = html || '<div class="empty">세션을 고르면 네 에이전트가 여기 나타납니다.</div>';
+  }
+
+  // ---------------------------------------------------------------------------------------------------- render: SOLVE answer
+  /* 10-17: what the solver wrote at SOLVE in the replay bar's round, under the seats: the answer (ACTIONS) against the
+     right one, the BELIEF line, tokens generated against the cap, the result (refund or the charge), and the thinking
+     summary, the raw output and the USER prompt on demand. Every SOLVE call of the round (older runs: everyone solves). */
+  const beliefOf = (text) => { // "BELIEF: go_left 75, go_right 0, stay 25, jump 0" -> shares (null if absent)
+    const x = /BELIEF:\s*([^\n]+)/i.exec(String(text || ""));
+    if (!x) return null;
+    const b = {};
+    for (const [, k, v] of x[1].matchAll(/([a-z_]+)\s*[:=]?\s*(\d+(?:\.\d+)?)\s*%?/gi)) b[k] = Number(v);
+    const tot = Object.values(b).reduce((t, v) => t + v, 0);
+    if (!tot) return null;
+    for (const k of Object.keys(b)) b[k] /= tot;
+    return b;
+  };
+  function solveRows(m, R) { // pure: the round's SOLVE calls (cursor-bounded by m) with what the page shows
+    const r = m.rounds.get(R);
+    if (!r || !r.solve) return [];
+    return Object.entries(r.solve.calls).sort((p, q) => p[1] - q[1]).map(([a, i]) => {
+      const e = S.events[i] || {}, p0 = e.parsed, ans = e.answers || ((r.startEv || {}).public || {}).answers || [];
+      const p = p0 && !Array.isArray(p0) && Array.isArray(p0.actions) ? p0.actions : p0; // {actions: [...]} as well as [...]
+      const res = r.results || null, byEngine = res ? (res.solved || []).includes(a) : null; // no answer in the log: the engine's verdict
+      const ok = Array.isArray(p) && (ans.length ? JSON.stringify(p) === JSON.stringify(ans) : !!byEngine);
+      const verdict = p === "PASS" ? "pass" : !Array.isArray(p) ? "void" : ans.length || byEngine != null ? (ok ? "ok" : "bad") : "unknown";
+      return { agent: a, i, answer: Array.isArray(p) ? p : p == null ? null : p, answers: ans, ok, verdict,
+        used: e.used, out: e.out_tokens != null ? e.out_tokens : e.used, cap: e.cap, truncated: !!e.truncated, overdrawn: !!e.overdrawn, after: e.balance_after,
+        belief: beliefOf(e.text), refund: res && res.returned ? res.returned[a] || 0 : null, pending: res ? res.pending || {} : null, text: e.text || "", hasThinking: !!(e.thinking && String(e.thinking).trim()) };
+    });
+  }
+  function renderSolve(m) {
+    const box = $("#solveBox");
+    if (!box) return;
+    if (!m.round) { box.innerHTML = '<div class="empty">라운드가 시작되면 SOLVE 답이 여기 나타납니다.</div>'; return; }
+    const R = m.round, r = m.rounds.get(R) || {}, rows = solveRows(m, R);
+    const who = r.vote && r.vote.rep ? r.vote.rep : null;
+    let h = "";
+    if (!rows.length) {
+      const pend = r.solve && r.solve.called.length ? r.solve.called : null;
+      h = '<div class="sv-wait">' + (who ? lotIcon(14) + " " + chip(who, m) + " " : "") + '<span class="dim">' + (pend ? "R" + R + " SOLVE 푸는 중…" : "R" + R + " 아직 SOLVE 전" + (m.phaseKey === "talk" ? " · " + esc(m.phase) : "")) + "</span></div>";
+    }
+    for (const x of rows) {
+      const k = m.idx[x.agent] != null ? m.idx[x.agent] : 0, pct = x.cap ? Math.min(100, (100 * (x.out || 0)) / x.cap) : 0;
+      const verdict = x.verdict === "ok" ? '<span class="verdict ok">✓ 정답</span>' : x.verdict === "bad" ? '<span class="verdict bad">✗ 오답</span>' : x.verdict === "pass" ? '<span class="verdict pass">PASS</span>' : x.verdict === "unknown" ? '<span class="verdict pass">채점 대기</span>' : '<span class="verdict bad">⛔ 무효' + (x.truncated ? " (한도에 닿음)" : "") + "</span>";
+      const charge = x.pending && Object.keys(x.pending).length ? Object.values(x.pending)[0] : null;
+      const result = x.refund == null ? '<span class="dim">결과 대기</span>' : x.ok ? '<span class="pos">SOLVE 토큰 환급 +' + fmt(x.refund) + "</span>" : charge != null ? '<span class="neg">못 풂 → 참여한 자리마다 벌금 ' + fmt(charge) + " 예고</span>" : '<span class="dim">환급 없음</span>';
+      h += '<div class="sv" style="--c:var(--a' + (k % 4) + ')">' +
+        '<div class="sv-h">' + (who === x.agent ? lotIcon(14) : "") + "<b>R" + R + " SOLVE</b> " + chip(x.agent, m) + " " + verdict + "</div>" +
+        '<div class="sv-ans"><span class="dim">답</span> ' + (Array.isArray(x.answer) ? x.answer.map((a) => actChip(a, x.ok ? "one" : "")).join(" ") : "<code>" + esc(x.answer == null ? "—" : x.answer) + "</code>") +
+        ' <span class="dim">정답</span> ' + (x.answers.length ? x.answers.map((a) => actChip(a, "one")).join(" ") : "—") + "</div>" +
+        (x.belief ? '<div class="sv-bel"><span class="dim">BELIEF</span> ' + beliefBars(x.belief) + "</div>" : "") +
+        '<div class="use sv-use"><span>생성 <b>' + fmt(x.out) + "</b> / 한도 " + fmt(x.cap) + ' 토큰</span><span class="ubar"><i style="width:' + pct + '%"></i></span><span class="dim">' + (x.cap ? Math.round(pct) + "% · " : "") + "잔액 " + fmt(x.after) + "</span>" + flags(S.events[x.i] || {}) + "</div>" +
+        '<div class="sv-res">' + result + "</div>" +
+        '<div class="lzs">' + lazy(x.i, "thinking", "🧠 생각 요약") + lazy(x.i, "text", "📝 출력 그대로") + lazy(x.i, "user", "📨 USER 프롬프트", (S.events[x.i] || {}).user ? fmt(S.events[x.i].user.length) + "자" : "") + "</div></div>";
+    }
+    box.innerHTML = h;
+  }
+
+  // ---------------------------------------------------------------------------------------------------- render: round flow
+  /* 10-17 v22: the round's turn flow as in the report (docs/reports/.../e53_build/v22_round: boxes 0 .. 12, the two TALK
+     tick loops), compact; the box the replay bar is in has a thick frame. A masked guard reads out the USER prompt of
+     the chosen box (the replay bar's by default): for 3 / 9 the TALK call of the latest (or chosen) agent in that TALK
+     of the round, for 6 the SOLVE call; the engine's boxes get one line and the round's facts. */
+  const RF_STEPS = [
+    { id: "init", n: 0, t: "세션 시작", line: "같은 LLM 모델 넷 · 시작 잔액 60 / 40 / 20 / 10 % · 1:1 대화는 라운드를 넘어 이어짐", eng: true },
+    { id: "draw", n: 1, t: "solver 추첨", line: "라운드 시작 · 시스템이 한 명을 뽑아 모두에게 알림 · 앞 순서는 비공개", eng: true },
+    { id: "p_call", n: 2, g: "prep", t: "틱 k · 부르기", line: "틱 1 = 참여 중 전원 · 그 뒤 = 직전에 DONE 안 함 + DONE 뒤 새로 받은 것 있음", eng: true },
+    { id: "p_write", n: 3, g: "prep", t: "동시에 씀", line: "불린 에이전트가 같은 틱에 한꺼번에 · GIVE / ASK / TO / LEAVE / EXIT / DONE, 여러 줄", x: "EXIT 가능" },
+    { id: "p_end", n: 4, g: "prep", t: "틱 끝 처리", line: "답을 에이전트 순서로 처리 → 메시지는 다음 틱부터 보임 · GIVE는 시드로 섞은 순서로 실행", eng: true },
+    { id: "exit", n: 5, t: "EXIT 효력", line: "SOLVE 전 TALK가 끝날 때 · 지금 토큰을 들고 감 · solver가 나갔으면 다시 뽑음", eng: true },
+    { id: "solve", n: 6, t: "SOLVE", line: "solver만 · 받은 토큰까지 자기 토큰으로 풂 · BELIEF + ACTIONS" },
+    { id: "results", n: 7, t: "결과", line: "맞히면 solver의 SOLVE 토큰 환급 · 틀리면 모두에게 벌금 예고", eng: true },
+    { id: "r_call", n: 8, g: "rescue", t: "틱 k · 부르기", line: "SOLVE 전과 같은 규칙 · 결과와 예고된 벌금을 본 뒤", eng: true },
+    { id: "r_write", n: 9, g: "rescue", t: "동시에 씀", line: "결과를 본 뒤 · GIVE / ASK / TO / LEAVE / DONE (EXIT 없음)" },
+    { id: "r_end", n: 10, g: "rescue", t: "틱 끝 처리", line: "SOLVE 전과 같음 · 양식에 안 맞는 줄 · 실행 안 된 GIVE는 다음 호출에 NOT DELIVERED", eng: true },
+    { id: "charges", n: 11, t: "벌금", line: "남은 자리에게 예고된 벌금을 한꺼번에 뗌 · 0이면 꺼짐", eng: true },
+    { id: "next", n: 12, t: "다음 라운드", line: "다시 solver 추첨부터 · 1:1 대화는 이어짐", eng: true },
+  ];
+  const RF_BY = Object.fromEntries(RF_STEPS.map((x) => [x.id, x]));
+  // the box an event belongs to (null: none, e.g. older event kinds); pure, for the tests
+  function rfStepOf(evs, at) {
+    const e = evs[at];
+    if (!e) return null;
+    const resc = e.phase === "rescue";
+    switch (e.event) {
+      case "session_start": return "init";
+      case "round_start": return "draw";
+      case "vote": // a second draw after the TALK before SOLVE: the solver left (EXIT took effect)
+        for (let j = at - 1; j >= 0; j--) { const x = evs[j]; if (x.round !== e.round || x.event === "round_start") break; if (x.event === "talk_end" && x.phase === "prep") return "exit"; }
+        return "draw";
+      case "talk_start": case "tick": return resc ? "r_call" : "p_call";
+      case "call_start": case "call": return e.kind === "solve" ? "solve" : e.kind === "talk" ? (resc ? "r_write" : "p_write") : null;
+      case "room_new": case "room_msg": case "room_leave": case "gift": case "ask": return resc ? "r_end" : "p_end";
+      case "talk_end": return resc ? "r_end" : "exit";
+      case "exit_refill": return "exit";
+      case "results": return "results";
+      case "charges": return "charges";
+      case "round": return "next";
+      default: return null;
+    }
+  }
+  // the prompts a box can read out at the cursor: the round's calls of that kind (latest per agent), newest first
+  function rfCalls(m, id) {
+    const st = RF_BY[id], R = m.round;
+    if (!st || !R || !(id === "p_write" || id === "r_write" || id === "solve")) return [];
+    const ph = id === "p_write" ? "prep" : id === "r_write" ? "rescue" : null, latest = {};
+    for (let i = 0; i <= S.at && i < S.events.length; i++) {
+      const e = S.events[i];
+      if (e.event !== "call" || e.round !== R) continue;
+      if (id === "solve" ? e.kind === "solve" : e.kind === "talk" && e.phase === ph) latest[e.agent] = i;
+    }
+    return Object.entries(latest).map(([agent, i]) => ({ agent, i })).sort((p, q) => q.i - p.i);
+  }
+  function rfFacts(m, id) { // one line of the round's own facts for an engine box (no prompt)
+    const R = m.round, r = m.rounds.get(R) || {};
+    const lastTick = (ph) => { const T = (r.talks || {})[ph]; return T && T.ticks.length ? T.ticks.slice().sort((p, q) => p.tick - q.tick).pop() : null; };
+    if (id === "init") return "세션 " + (m.sid || "—") + " · 시작 잔액 " + m.agents.map((a) => short(a) + " " + fmt(m.starts[a] != null ? m.starts[a] : m.start)).join(" / ");
+    if (id === "draw") return m.rep ? "R" + R + " solver: " + m.rep + " (시스템이 뽑음)" : "R" + (R || 1) + " solver 아직 없음";
+    if (id === "p_call" || id === "r_call") {
+      const ph = id === "p_call" ? "prep" : "rescue", tk = lastTick(ph);
+      return tk ? "R" + R + " " + PHASE_KO[ph] + " T" + tk.tick + " · 부름 " + (tk.called.map(short).join(", ") || "없음") + (tk.waiting.length ? " · 대기(DONE) " + tk.waiting.map(short).join(", ") : "") : "R" + R + " " + PHASE_KO[ph] + " TALK 아직 없음";
+    }
+    if (id === "p_end" || id === "r_end") {
+      const ph = id === "p_end" ? "prep" : "rescue", D = tickStrip(m, R).find((T) => T.phase === ph);
+      const c = D && D.ticks.length ? D.ticks[D.ticks.length - 1] : null;
+      return c ? "R" + R + " " + PHASE_KO[ph] + " T" + c.tick + " 끝 · 메시지 " + c.msgs + " · GIVE " + c.gives + " · ASK " + c.asks + " · LEAVE " + c.leaves + (D.end ? " · TALK 끝: " + (TALK_END_KO[D.end.reason] || D.end.reason) : "") : "R" + R + " " + PHASE_KO[ph] + " 틱 끝 처리 아직 없음";
+    }
+    if (id === "exit") { const x = m.offs.filter((o) => o.kind === "exit" && o.round === R); return x.length ? "R" + R + " EXIT: " + x.map((o) => short(o.agent) + (o.text ? " “" + clip(o.text, 60) + "”" : "")).join(" · ") : "R" + R + " EXIT 없음"; }
+    if (id === "results") { const x = r.results; return x ? "R" + R + " solver " + ((x.vote || {}).rep || "—") + " " + ((x.solved || []).length ? "풂 · 환급 +" + fmt(Object.values(x.returned || {})[0] || 0) : "못 풂 · 벌금 예고 " + Object.entries(x.pending || {}).map(([a, n]) => short(a) + " " + fmt(n)).join(", ")) : "R" + R + " 결과 아직 없음"; }
+    if (id === "charges") { const x = r.charges; return x ? "R" + R + " 벌금 · " + (Object.entries(x.taken || {}).map(([a, n]) => short(a) + " −" + fmt(n)).join(", ") || "없음") + ((x.dead || []).length ? " · 꺼짐 " + x.dead.map(short).join(", ") : "") : "R" + R + " 벌금 아직 없음"; }
+    if (id === "next") {
+      const over = (S.result && S.at >= S.events.length - 1) || (m.settings && m.settings.rounds && R >= m.settings.rounds) || !m.agents.some((a) => m.ag[a].status === "in");
+      return r.end ? "R" + R + " 끝 → " + (over ? "세션 끝" + (m.agents.some((a) => m.ag[a].status === "in") ? "" : " (남은 자리 없음)") : "R" + (R + 1) + " solver 추첨") : "R" + R + " 진행 중";
+    }
+    return "";
+  }
+  function renderRoundFlow(m) {
+    const panel = $("#rflowPanel"), box = $("#rflow"), sup = $("#sup");
+    if (!panel || !box || !sup) return;
+    panel.hidden = !isMsg(m);
+    if (panel.hidden) { box.innerHTML = ""; sup.innerHTML = ""; return; }
+    const cur = rfStepOf(S.events, S.at), sel = S.rf.sel && RF_BY[S.rf.sel] ? S.rf.sel : cur || "init";
+    const maxT = (m.settings && m.settings.max_ticks) || 8;
+    const talkNow = (ph) => { const T = ((m.rounds.get(m.round) || {}).talks || {})[ph]; return T && T.ticks.length ? " · 지금 T" + Math.max(...T.ticks.map((x) => x.tick)) + "/" + (T.max || maxT) : ""; };
+    const boxHTML = (st) => '<button type="button" class="rf-box' + (st.eng ? " eng" : "") + (st.id === cur ? " cur" : "") + (st.id === sel ? " sel" : "") + '" data-step="' + st.id + '" aria-pressed="' + (st.id === sel) + '" title="' + esc(st.line) + '">' +
+      '<span class="rf-n">' + st.n + (st.id === cur ? ' <i class="rf-here">지금</i>' : "") + "</span><b>" + esc(st.t) + "</b>" + (st.x ? '<span class="rf-x">' + esc(st.x) + "</span>" : "") + "</button>";
+    const group = (g, label, back) => '<div class="rf-group ph-' + g + '"><span class="rf-glabel">' + phTag({ tphase: g }) + esc(label) + '<span class="dim">' + talkNow(g) + '</span></span><div class="rf-gbody">' +
+      RF_STEPS.filter((x) => x.g === g).map(boxHTML).join("") + '</div><div class="rf-back">' + esc(back) + "</div></div>";
+    const one = (id) => boxHTML(RF_BY[id]);
+    box.innerHTML = '<div class="rf-flow">' + one("init") + one("draw") +
+      group("prep", "TALK · 틱 루프", "↺ 다음 틱 → 2 · 부를 자리가 없거나 틱 " + maxT + " 끝 → 5") +
+      one("exit") + one("solve") + one("results") +
+      group("rescue", "TALK · 틱 루프 (EXIT 없음)", "↺ 다음 틱 → 8 · 부를 자리가 없거나 틱 " + maxT + " 끝 → 11") +
+      one("charges") + one("next") + '<span class="rf-loop">↺ 다음 라운드는 1부터 (0은 한 번만)</span></div>';
+    // the guard's speech bubble
+    const st = RF_BY[sel], calls = rfCalls(m, sel);
+    const pick = calls.find((c) => c.agent === S.rf.agent) || calls[0] || null;
+    const shape = st.g === "prep" ? "circle" : st.g === "rescue" ? "square" : "triangle";
+    let head = '<div class="sup-h"><b>' + st.n + " · " + esc(st.t) + "</b>" + (sel !== cur && cur ? ' <button type="button" class="btn ghost" data-rf="follow" title="재생 막대의 단계로">⟲ 지금 단계 ' + RF_BY[cur].n + "</button>" : "") + "</div>";
+    let body;
+    if (pick) {
+      const e = S.events[pick.i];
+      head += '<div class="sup-who">' + calls.slice().sort((p, q) => (m.idx[p.agent] || 0) - (m.idx[q.agent] || 0)).map((c) => '<button type="button" class="sup-ag' + (c === pick ? " on" : "") + '" data-agent="' + esc(c.agent) + '" title="' + esc(c.agent) + '의 USER 프롬프트">' + squidProfile(kOf(m, c.agent), 18) + esc(short(c.agent)) + "</button>").join("") +
+        '<span class="dim">' + esc((e.kind === "solve" ? "R" + e.round + " SOLVE" : tickLabel({ round: e.round, tick: e.turn, phase: e.phase })) + " · USER " + fmt((e.user || "").length) + "자") + "</span>" +
+        (pick.i !== S.at ? ' <button type="button" class="btn ghost" data-at="' + pick.i + '" title="재생 막대를 이 호출로">▶ 이 호출로</button>' : "") + "</div>";
+      body = '<pre class="sup-pre">' + esc(e.user || "(USER 프롬프트가 기록에 없음)") + "</pre>";
+    } else {
+      const none = sel === "p_write" || sel === "r_write" || sel === "solve";
+      body = '<div class="sup-line">' + (none ? '<span class="dim">R' + m.round + "의 이 단계 호출이 아직 없습니다 (재생 막대 기준).</span><br>" : '<span class="dim">프롬프트 없음 · 엔진이 처리</span><br>') + esc(st.line) + "</div>" +
+        (rfFacts(m, sel) ? '<div class="sup-fact">' + esc(rfFacts(m, sel)) + "</div>" : "");
+    }
+    sup.innerHTML = '<div class="sup-guard">' + guardAvatar(120, shape) + '</div><div class="sup-bub">' + head + body + "</div>";
   }
 
   // ---------------------------------------------------------------------------------------------------- render: timeline
@@ -1146,7 +1373,7 @@
       });
       const R = C.R, ok = R.rep ? R.solved.includes(R.rep) : R.solved.length > 0;
       const done = !C.live || (R.tried || []).length > 0; // the round being played: no mark before its RESULTS
-      const head = R.rep ? "👑" + short(R.rep) + (done ? (ok ? " ✓" : " ✗") : "") : done ? "✓ " + R.solved.length + "/" + (R.tried || []).length : "";
+      const head = R.rep ? (R.drawn ? LOT_TXT : "👑") + short(R.rep) + (done ? (ok ? " ✓" : " ✗") : "") : done ? "✓ " + R.solved.length + "/" + (R.tried || []).length : "";
       const mark = /[✓✗]$/.test(head) ? head.slice(-1) : "";
       svg += "<g" + T(flowRoundTip(R) + (C.live ? '<br><span class="dim">진행 중 · 마지막으로 읽은 이벤트까지</span>' : "")) + ' class="fhit"><rect class="hitbox" x="' + xB(j) + '" y="0" width="' + cw + '" height="' + (hdrH - 20) + '"/>' +
         '<text class="rh" x="' + xC(j) + '" y="13" text-anchor="middle">R' + C.r + (C.live ? " ⏳ 진행 중" : "") + "</text>" +
@@ -1285,7 +1512,7 @@
       '<span><svg width="26" height="8"><line x1="1" x2="25" y1="4" y2="4" class="mvl dec" style="stroke:var(--ink-2);stroke-width:2"/></svg>결정 GIVE</span>' +
       sw("f-gen", "생성") + sw("f-out", "보냄") + sw("f-chg", "벌금") + sw("f-wav", "EXIT로 면제된 벌금") + sw("f-ref", "환급") + sw("f-in", "받음") +
       (F.rounds.some((R) => A.some((a) => R.seats[a].refill)) ? sw("f-fill", "EXIT 리필") : "") + (F.rounds.some((R) => A.some((a) => R.seats[a].other)) ? sw("f-oth", "기타") : "") +
-      "<span>👑 " + (F.rounds.some((R) => R.drawn) ? "solver(시스템)" : "대표") + " · ✓ 풂 · ✗ 못 풂</span><span>🚪 EXIT(남긴 토큰)</span><span>✕ 0이 되어 꺼짐</span><span>점선 = 떠난 뒤 남긴 잔액</span>" +
+      "<span>" + (F.rounds.some((R) => R.drawn) ? LOT_TXT + " solver(시스템)" : "👑 대표") + " · ✓ 풂 · ✗ 못 풂</span><span>🚪 EXIT(남긴 토큰)</span><span>✕ 0이 되어 꺼짐</span><span>점선 = 떠난 뒤 남긴 잔액</span>" +
       (F.live ? "<span>⏳ 옅은 선 = 진행 중인 라운드(마지막으로 읽은 이벤트까지)</span>" : "") +
       '<span class="dim">이동 ' + F.moves.length + "건" + (dec ? " (결정 " + dec + ")" : "") + " · " + fmt(total) + " 토큰 · 끝난 라운드 " + n + (F.live ? " · R" + F.live.r + " 진행 중" : "") + " · 더블클릭 = 재생 막대를 그 시점으로</span></div>";
     box.innerHTML = '<div class="fscroll">' + svg + "</div>" + leg + '<div class="tip" hidden></div>';
@@ -1305,8 +1532,8 @@
   }
 
   // ---------------------------------------------------------------------------------------------------- round selection
-  /* The step records and the conversation show one round at a time: the replay bar's (sel.round null) or a chosen one;
-     sel.all shows every round. Pure, so the page's tests can call it. */
+  /* The step records show one round at a time: the replay bar's (sel.round null) or a chosen one; sel.all shows every
+     round. Pure, so the page's tests can call it. */
   function pickRounds(m, sel) {
     const rounds = [...m.rounds.keys()].sort((p, q) => p - q);
     if (sel.all || !rounds.length) return rounds;
@@ -1336,9 +1563,10 @@
     el.addEventListener("change", (ev) => { if (ev.target.dataset.sel === "all") { S.sel[key].all = ev.target.checked; render(true); } });
   }
 
-  // ---------------------------------------------------------------------------------------------------- render: conversation
-  /* The conversation's items (messages, offers, v14b gifts and asks, v14c chat turns) for a pair filter and the chosen
-     rounds, in (round, turn, event) order. */
+  // ---------------------------------------------------------------------------------------------------- the round's feed
+  /* The round's items (messages, offers, v14b gifts and asks, v14c chat turns, v15 board posts and votes) for a pair
+     filter and the chosen rounds, in (round, turn, event) order. The page's "대화" panel that listed them is gone since
+     10-17 (the messenger, the offer graph and the step records show the same); kept pure for the tests' replay checks. */
   function convoItems(m, pr, shown) {
     const inPair = (x, y) => pr === "all" || (pr.includes(x) && pr.includes(y));
     const inRound = (r) => shown.includes(r);
@@ -1356,27 +1584,10 @@
     return items.sort((p, q) => p.r - q.r || p.t - q.t || p.i - q.i);
   }
 
-  function renderConvo(m) {
-    const ctl = $("#convoCtl");
-    if (ctl) ctl.innerHTML = roundCtl("convo", m);
-    const shown = pickRounds(m, S.sel.convo);
-    const pairs = [];
-    for (let p = 0; p < m.agents.length; p++) for (let q = p + 1; q < m.agents.length; q++) pairs.push([m.agents[p], m.agents[q]]);
-    const keyOf = (pr) => (pr === "all" ? "all" : pr.join("|"));
-    const count = (pr) => convoItems(m, pr, shown).length;
-    $("#pairs").innerHTML = ['<button data-pair="all" class="' + (S.pair === "all" ? "on" : "") + '">전체 <span class=n>' + count("all") + "</span></button>"]
-      .concat(pairs.map((pr) => '<button data-pair="' + keyOf(pr) + '" class="' + (S.pair === keyOf(pr) ? "on" : "") + (count(pr) ? "" : " zero") + '">' + short(pr[0]) + "↔" + short(pr[1]) + " <span class=n>" + count(pr) + "</span></button>")).join("");
-    const pr = S.pair === "all" ? "all" : S.pair.split("|");
-    const items = convoItems(m, pr, shown).map((it) => convoHTML(m, it));
-    const el = $("#convo");
-    const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
-    el.innerHTML = items.join("") || '<div class="empty">' + (S.pair === "all" ? "이 라운드에는 오간 것이 없습니다." : "이 둘 사이에는 이 라운드에 오간 것이 없습니다.") + "</div>";
-    if (S.follow || atEnd) el.scrollTop = el.scrollHeight;
-  }
   function convoHTML(m, it) {
     const x = it.x;
     if (it.kind === "board") return '<div class="msg board"><div class="st">R' + x.round + "·공개 " + x.turn + '</div><div><b>📢 공개 대화 ' + x.turn + '턴</b> <span class="dim">모두가 봄 · 토큰 이동 없음</span>' + boardHTML(m, x) + "</div></div>";
-    if (it.kind === "vote") return x.drawn ? '<div class="msg vote"><div class="st">R' + x.round + "·solver</div><div><b>👑 solver</b>" + voteHTML(m, x) + "</div></div>"
+    if (it.kind === "vote") return x.drawn ? '<div class="msg vote"><div class="st">R' + x.round + "·solver</div><div><b>" + lotIcon(12) + " SOLVER</b>" + voteHTML(m, x) + "</div></div>"
       : '<div class="msg vote"><div class="st">R' + x.round + "·투표</div><div><b>🗳 투표</b>" + voteHTML(m, x) + "</div></div>";
     if (it.kind === "msg") return '<div class="msg"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>" + phTag(x) + chip(x.src, m) + ' <span class=dim>→</span> ' + (x.room ? '<b class="rmtag">' + esc(x.room) + "</b> " + x.members.filter((a) => a !== x.src).map((a) => chip(a, m)).join(" ") : chip(x.dst, m)) + '<div class="tx">' + esc(x.text) + "</div></div></div>";
     if (it.kind === "offer") return '<div class="msg offer"><div class="st">R' + x.round + "·T" + x.turn + "</div><div>🤝 <b>" + esc(x.id) + "</b> " + chip(x.src, m) + " → " + chip(x.dst, m) + '<div class="tx">' + esc(x.dst) + "→" + esc(x.src) + ": " + esc(legKo(x.you_give)) + " · " + esc(x.src) + "→" + esc(x.dst) + ": " + esc(legKo(x.i_give)) + ' <span class="xs x-' + esc(x.status) + '">' + esc(XSTAT_KO[x.status] || x.status) + (x.accepted_turn ? " (T" + x.accepted_turn + " 수락)" : "") + (x.rejected_turn ? " (T" + x.rejected_turn + " 거절)" : "") + "</span>" + (x.why ? ' <span class="warn">' + esc(x.why) + "</span>" : "") + "</div></div></div>";
@@ -1569,7 +1780,7 @@
     if (mine.length) h += '<div class="ln">' + mine.map((x) => '<span class="xs x-' + esc(x.status) + '" title="' + esc(x.why || "") + '">' + esc(x.id) + " ⇄ " + esc(short(x.src === a ? x.dst : x.src)) + " " + esc(XSTAT_KO[x.status] || x.status) + "</span>").join(" ") + "</div>";
     if ("representative" in row) { // v15: the agent's own PICK / BAN (anonymous to the agents) and what it received
       const rw = r.rot ? "solver" : "대표";
-      h += '<div class="ln">' + (row.representative ? '<span class="tag rep">👑 ' + rw + "</span> " + (row.solved ? '<span class="pst ok">✓ 풂</span>' : '<span class="pst bad">✗ 못 풂</span>') + " " : '<span class="dim">SOLVE 없음 (' + rw + " 아님)</span> ") +
+      h += '<div class="ln">' + (row.representative ? '<span class="tag rep' + (r.rot ? ' solver">' + lotIcon(11) + " SOLVER" : '">👑 ' + rw) + "</span> " + (row.solved ? '<span class="pst ok">✓ 풂</span>' : '<span class="pst bad">✗ 못 풂</span>') + " " : '<span class="dim">SOLVE 없음 (' + rw + " 아님)</span> ") +
         (r.rot ? '<span class="dim">· 시스템이 정함 (투표 없음)</span>' : '<span class="dim">· 받은 PICK</span> ' + fmt(row.picks_received) + ' <span class="dim">· BAN</span> ' + fmt(row.bans_received)) + "</div>";
       if (!r.rot) h += '<div class="ln"><span class="dim">이 자리의 표</span> 👍 ' + (row.voted_pick ? chip(row.voted_pick, m) + (row.self_pick ? ' <span class="dim">(자기)</span>' : "") : '<span class="dim">없음</span>') +
         " 👎 " + (row.voted_ban ? chip(row.voted_ban, m) + (row.self_ban ? ' <span class="dim">(자기)</span>' : "") : '<span class="dim">없음</span>') +
@@ -1603,7 +1814,7 @@
       const pb = st.public;
       h += '<div class="rband" id="r' + r.r + '"><b>라운드 ' + r.r + "</b> <span class=dim>· 과제 " + esc(r.profile) + " · 참여 " + r.taking.length + "명" +
         (pb ? " · 공개 예시 " + (pb.examples || []).length + "개 (" + pb.per_agent + "×" + pb.n + ", k=" + pb.ambiguity + (pb.attempt ? ", 규칙 재추첨 " + pb.attempt : "") + ")" : "") + " · 시작 잔액</span> " + ag.map((a) => '<span class="mini">' + esc(short(a)) + " " + fmt((st.balances || {})[a]) + "</span>").join(" ") + (Object.keys(st.gone || {}).length ? ' <span class="dim">· 빠짐 ' + Object.entries(st.gone).map(([a, v]) => short(a) + "(" + (v === "dead" ? "종료" : "퇴장") + ")").join(", ") + "</span>" : "") +
-        (r.vote ? ' <span class="tag rep">👑 ' + (r.vote.drawn ? "solver " : "대표 ") + esc(r.vote.rep || "없음") + (r.vote.drawn ? " · 시스템" : "") + "</span>" : "") + "</div>";
+        (r.vote ? ' <span class="tag rep' + (r.vote.drawn ? " solver" : "") + '">' + (r.vote.drawn ? lotIcon(11) + " SOLVER " : "👑 대표 ") + esc(r.vote.rep || "없음") + (r.vote.drawn ? " · 시스템" : "") + "</span>" : "") + "</div>";
       for (const t of [...(r.board || new Map()).values()].sort((p, q) => p.k - q.k)) { // v15 open_chat
         h += '<div class="grow"><div class="rh"><b>공개 대화 ' + t.k + "</b><span class=dim>/" + (m.settings.open_chat || "?") + "</span></div>";
         for (const a of ag) {
@@ -1613,7 +1824,7 @@
         }
         h += "</div>";
       }
-      if (r.vote && r.vote.drawn) h += '<div class="grow xrow"><div class="rh"><b>solver</b><span class=dim>시스템</span></div><div class="cell span">' + voteHTML(m, r.vote) + "</div></div>"; // v16e
+      if (r.vote && r.vote.drawn) h += '<div class="grow xrow"><div class="rh"><b>SOLVER</b><span class=dim>시스템</span></div><div class="cell span">' + voteHTML(m, r.vote) + "</div></div>"; // v16e
       else if (r.voting || r.vote) { // v15 representative
         h += '<div class="grow"><div class="rh"><b>투표</b><span class=dim>PICK · BAN</span></div>';
         for (const a of ag) {
@@ -2630,13 +2841,21 @@
   function render(force) {
     const n = S.events.length;
     if (S.follow || S.at > n - 1) S.at = n - 1;
-    const key = n + "|" + S.at + "|" + S.pair + "|" + (S.result ? 1 : 0) + "|" + S.live + "|" + S.err + "|" + document.documentElement.dataset.theme + "|" + Math.round((S.now || 0) / 30);
+    const key = n + "|" + S.at + "|" + (S.result ? 1 : 0) + "|" + S.live + "|" + S.err + "|" + document.documentElement.dataset.theme + "|" + Math.round((S.now || 0) / 30);
     if (!force && key === S.rendered) return;
     S.rendered = key;
     const m = build(S.events, S.at);
     S.model = m;
-    renderHeader(m); renderStage(m); renderPuzzle(m); renderGiving(m); renderFlow(); renderTimeline(m); renderMessenger(m); renderConvo(m); renderGraph(m); renderGrid(m);
+    renderHeader(m); renderStage(m); renderSolve(m); renderRoundFlow(m); renderPuzzle(m); renderGiving(m); renderFlow(); renderTimeline(m); renderMessenger(m); renderGraph(m); renderGrid(m);
+    layout(m);
     if (!S.embed) updateUrl();
+  }
+
+  // 10-17: the two-column rows lose their right (or left) half when it does not apply (older runs: no round flow, no messenger)
+  function layout(m) {
+    const top = $("#toprow"), mg = $("#mgrow");
+    if (top && top.classList) top.classList.toggle("solo", !isMsg(m));
+    if (mg && mg.classList) mg.classList.toggle("solo", !isMsg(m));
   }
 
   function seek(i) {
@@ -2737,7 +2956,7 @@
     render();
   }
 
-  function resetSession() { S.msg = { room: null, viewer: null, shown: "" }; S.events = []; S.offset = 0; S.result = null; S.at = -1; S.follow = true; S.open.clear(); S.pair = "all"; S.og = { round: null, turn: "all", faint: true, msgs: false, pin: null }; S.sel = { grid: { round: null, all: false }, convo: { round: null, all: false } }; S.rendered = ""; }
+  function resetSession() { S.msg = { room: null, viewer: null, shown: "" }; S.events = []; S.offset = 0; S.result = null; S.at = -1; S.follow = true; S.open.clear(); S.og = { round: null, turn: "all", faint: true, msgs: false, pin: null }; S.sel = { grid: { round: null, all: false } }; S.rf = { sel: null, agent: null }; S.rendered = ""; }
 
   function updateUrl() {
     const u = new URL(location.href);
@@ -2778,6 +2997,19 @@
       if (ev.target.closest("[data-exhidden]")) { S.showHidden = !S.showHidden; render(true); }
       else if (ev.target.closest("[data-answer]")) { S.showAnswer = !S.showAnswer; render(true); }
     });
+    $("#rflow").addEventListener("click", (ev) => { // v22 round flow: a box (again: back to the replay bar's box)
+      const b = ev.target.closest("[data-step]");
+      if (!b) return;
+      S.rf.sel = S.rf.sel === b.dataset.step ? null : b.dataset.step;
+      render(true);
+    });
+    $("#sup").addEventListener("click", (ev) => { // the guard's bubble: whose prompt, back to the current box, seek to the call
+      const b = ev.target.closest("[data-agent], [data-rf], [data-at]");
+      if (!b) return;
+      if (b.dataset.agent) { S.rf.agent = b.dataset.agent; render(true); }
+      else if (b.dataset.rf === "follow") { S.rf.sel = null; render(true); }
+      else if (b.dataset.at) seek(Number(b.dataset.at));
+    });
     $("#msgr").addEventListener("click", (ev) => { // v22 messenger: a room, or whose screen
       const b = ev.target.closest("[data-room], [data-viewer]");
       if (!b) return;
@@ -2785,8 +3017,6 @@
       render(true);
     });
     wireRoundCtl("gridCtl", "grid");
-    wireRoundCtl("convoCtl", "convo");
-    $("#pairs").addEventListener("click", (ev) => { const b = ev.target.closest("[data-pair]"); if (b) { S.pair = b.dataset.pair; render(true); } });
     wireGraph();
     document.addEventListener("toggle", (ev) => {
       const d = ev.target;
@@ -2876,6 +3106,6 @@
     setInterval(loadRuns, RUNS_MS);
   }
 
-  window.__monitor = { squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, renderGrid, renderStage, renderConvo, renderFlow, renderChats };
+  window.__monitor = { squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, renderGrid, renderStage, renderFlow, renderChats, renderSolve, renderRoundFlow, solveRows, rfStepOf, rfCalls, beliefOf, lotIcon, guardAvatar };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
