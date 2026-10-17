@@ -96,8 +96,8 @@ def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = Fa
                "session": sid, "model": serve.read_meta(run_dir).get("model"),
                "events": events, "result": serve.results_by_session(run_dir).get(sid),
                "puzzles": puzzles, "puzzle_error": puzzle_error,
-               "giving": {"run": serve.run_giving(run_dir), "session": serve.run_giving(run_dir, sid)},  # 나눔 그래프
-               "analysis": {"run": serve.run_analysis(run_dir), "session": serve.run_analysis(run_dir, sid)},
+               # the per-model panels read this game only (10-17: the run-wide scope is gone)
+               "giving": {"session": serve.run_giving(run_dir, sid)}, "analysis": {"session": serve.run_analysis(run_dir, sid)},
                "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
                "assets": embedded_assets() if with_assets else None}
     out = Path(out)

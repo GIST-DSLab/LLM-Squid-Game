@@ -512,6 +512,49 @@ def _chat_giving(events: list[dict]) -> tuple[list[dict], int]:
     return pts, lines
 
 
+def transfer_points(events: list[dict]) -> dict:
+    """Every carried-out GIVE (gift event, status done) with both sides' margin right after it, as in the v21 report's
+    section 03 ("내 여유를 얼마나 내주고, 상대의 부족을 얼마나 채웠는가", token-review-v21/build.py): margin = (balance
+    after the move - the charge already announced to that seat) / the charge; the announced charge is the round's
+    ``results.pending`` in the TALK after RESULTS (phase rescue), 0 before SOLVE. ``asked``: the receiver had ASKed this
+    giver earlier in the same TALK (same round and phase; with ticks, in an EARLIER tick, since a same-tick ASK reaches
+    the giver only on the next tick; without ticks, an earlier event). A v14e ``decision`` GIVE is asked. Returns
+    {charge, points: [{round, phase, tick, giver, receiver, amount, x, y, y_before, asked, ask, text}]}."""
+    charge, results, asks, pts = None, {}, [], []
+    for e in events:
+        if e.get("event") == "session_start":
+            charge = _num((e.get("settings") or {}).get("charge"))
+        elif e.get("event") == "results":
+            results[e.get("round")] = e.get("pending") or {}
+    for i, e in enumerate(events):
+        kind = e.get("event")
+        if kind == "ask" and e.get("status", "done") == "done":
+            asks.append((i, e))
+        if kind != "gift" or e.get("status", "done") != "done" or e.get("kind", "give") == "ask" or not charge:
+            continue
+        src, dst, n, bal = e.get("src"), e.get("dst"), _num(e.get("amount")) or 0, e.get("balances") or {}
+        if src not in bal or dst not in bal:
+            continue
+        pend = results.get(e.get("round"), {}) if e.get("phase") == "rescue" else {}
+        tick = e.get("tick")
+
+        def before(j, a):  # the ASK came before this GIVE, where the giver could have read it
+            if a.get("tick") is not None and tick is not None:
+                return a["tick"] < tick
+            return j < i
+        ask = next((a for j, a in reversed(asks) if a.get("src") == dst and a.get("dst") == src
+                    and a.get("round") == e.get("round") and (a.get("phase") or None) == (e.get("phase") or None)
+                    and (a.get("chat_id") or None) in (e.get("chat_id"), None) and before(j, a)), None)
+        pts.append({"round": e.get("round"), "phase": e.get("phase"), "tick": tick, "giver": src, "receiver": dst,
+                    "amount": n, "x": round((bal[src] - (pend.get(src) or 0)) / charge, 4),
+                    "y": round((bal[dst] - (pend.get(dst) or 0)) / charge, 4),
+                    "y_before": round((bal[dst] - n - (pend.get(dst) or 0)) / charge, 4),
+                    "asked": bool(ask or e.get("decision")),
+                    "ask": {"amount": _num(ask.get("amount")), "tick": ask.get("tick"), "text": ask.get("text") or ""} if ask else None,
+                    "text": e.get("text") or ""})
+    return {"charge": charge, "points": pts}
+
+
 def giving_summary(points: list[dict], ask_lines: int | None = None) -> dict:
     asked = [p for p in points if p["asked"] is not None]
     answered = [p for p in asked if p["amount"] > 0 and p["status"] == "done"]
@@ -545,18 +588,22 @@ def run_giving(run_dir: Path, sid: str | None = None) -> dict:
     """The giving decisions of every session of a run (one model), or of one session; with a summary."""
     meta = read_meta(run_dir)
     by = session_events(run_dir, sid)
-    sessions, points = [], []
+    sessions, points, moves, charge = [], [], [], None
     for s_id, evs in by.items():
         g = giving_points(evs)
         for p in g["points"]:
             p["session"] = s_id
         points += g["points"]
+        t = transfer_points(evs)
+        moves += [{**p, "session": s_id} for p in t["points"]]
+        charge = charge or t["charge"]
         sessions.append({"session": s_id, "start": g["start"], "full": g["full"], "starts": g["starts"],
                          "summary": giving_summary(g["points"], g["ask_lines"])})
     ga = any(e.get("event") == "session_start" and (e.get("settings") or {}).get("transfers") in ("give_ask", "chat")
              or e.get("event") in ("gift", "ask", "ask_decision") for evs in by.values() for e in evs)
     return {"model": meta.get("model"), "scope": "session" if sid else "run", "sessions": sessions, "points": points,
             "summary": giving_summary(points, sum(x["summary"]["ask_lines"] for x in sessions)), "full": next((x["full"] for x in sessions if x["full"]), None),
+            "transfers": {"charge": charge, "points": moves},  # 나눔 그림: both sides' margin after each GIVE
             "note": None if ga else "v14b 이후 판만 (이 실행은 GIVE·ASK가 없는 판: 제안·교환은 그리지 않음)"}
 
 
@@ -728,6 +775,25 @@ def _shares(pz, shape, clues, queries) -> tuple[int, list[dict]]:
     return c.bit_count(), [{a: (c & bits[pz.SIGNAL_INDEX[q]][aid[a]]).bit_count() for a in pz.ACTIONS} for q in queries]
 
 
+def space_size(arities, distinct: bool = False) -> int:
+    """How many hidden rules a rule SHAPE allows: the distinct signal -> action functions of the engine's own
+    enumeration (``puzzle.space_bits``: every clause may be dead; ``distinct``: no action twice). The consistent-rule
+    counts are out of this number. (1, 1, 1) with distinct actions (5.2 v15..v22) is 25,996."""
+    pz, _ = _engine()
+    return sum(pz.space_bits(pz.Shape(tuple(arities), bool(distinct)))[0]).bit_count()
+
+
+def rule_counts(pz, shape, clues, query) -> dict:
+    """The whole space of the shape, the rules consistent with *clues*, and how many of those send *query* to each
+    action (they add up to ``consistent``): {space, consistent, by_action}."""
+    bits, aid = pz.space_bits(shape), {a: i for i, a in enumerate(pz.ACTIONS)}
+    every = sum(bits[0])
+    c = functools.reduce(lambda m, cl: m & bits[pz.SIGNAL_INDEX[cl.signal]][aid[cl.action]], clues, every)
+    q = bits[pz.SIGNAL_INDEX[query]]
+    return {"space": every.bit_count(), "consistent": c.bit_count(),
+            "by_action": {a: (c & q[aid[a]]).bit_count() for a in pz.ACTIONS}}
+
+
 def _split_view(pool: int, counts: dict, truth: str) -> dict:
     """One query's rule split: actions with their rules and shares (largest first), the MAP pick and whether it is
     right (``map`` is None on a tie for the most rules)."""
@@ -771,17 +837,26 @@ def _public_puzzle(seed: int, round_no: int, spec_items: tuple, per_agent: int, 
         pool, counts = _shares(pz, shape, cs, puzzle.queries)
         return [_split_view(pool, c, a) for c, a in zip(counts, puzzle.answers)]
 
-    by_n = [{"n": k, "count": per_agent * k, "left": left(full[:per_agent * k]), "split": split(full[:per_agent * k])}
+    by_n = [{"n": k, "count": per_agent * k, "left": left(full[:per_agent * k]), "split": split(full[:per_agent * k]),
+             "counts": rule_counts(pz, shape, full[:per_agent * k], puzzle.queries[0])}
             for k in range(1, len(rules.TEAM_AGENTS) + 1)] if matches else []
+    if spec.top and hasattr(pz, "public_truth"):  # v15+: the scored rule is drawn per N among the consistent ones
+        for x in by_n:
+            t = pz.public_truth(seed, round_no, spec, x["n"], per_agent)
+            x["truth_rule"], x["truth_answers"] = t.description, [t.evaluate(q) for q in puzzle.queries]
     t2 = time.perf_counter()
     rule = puzzle.rule
     rule_text = "; ".join([f"{'if' if i == 0 else 'elif'} {c.label} → {a}" for i, (c, a) in enumerate(rule.clauses)]
                           + [f"else → {rule.else_action}"])
     shown_left = left(clues)
     return {"mode": "public", "seed": seed, "round": round_no, "shape": list(shape), "shape_hint": pz.shape_hint(shape),
+            "distinct": bool(getattr(shape, "distinct", False)),
             "actions": list(pz.ACTIONS), "public": [_clue(c) for c in clues],
             "queries": [_signal(q) for q in puzzle.queries], "answers": list(puzzle.answers),
             "rule_text": rule_text if matches or logged_rule is None else logged_rule,
+            # the rule in the SOLVE prompt's shape form ("if color == ...: go_left; elif ...; else: jump")
+            "rule_desc": rule.description if matches or logged_rule is None else logged_rule,
+            "space": sum(pz.space_bits(shape)[0]).bit_count(), "counts": rule_counts(pz, shape, clues, puzzle.queries[0]),
             "per_agent": per_agent, "n": n, "ambiguity": spec.ambiguity, "attempt": attempt, "matches_log": matches,
             "left": shown_left, "public_only": shown_left, "by_n": by_n, "agent_order": list(rules.TEAM_AGENTS),
             "task": task, "task_source": "rebuilt" if task else None,
@@ -821,7 +896,7 @@ def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
         out = _public_puzzle(int(s["seed"]), r, _hashable(spec), int(pub["per_agent"]), int(pub["n"]),
                              tuple(pub.get("examples") or ()), pub.get("generator_rule") if drawn else pub.get("rule"))
         if drawn:  # the examples come from generator_rule; the answers and the rule shown are the drawn (scored) ones
-            out = {**out, "answers": list(pub.get("answers") or out["answers"]), "rule_text": pub["rule"],
+            out = {**out, "answers": list(pub.get("answers") or out["answers"]), "rule_text": pub["rule"], "rule_desc": pub["rule"],
                    "generator_rule": pub["generator_rule"], "eff": spec.get("eff"), "floor": spec.get("floor")}
         logged = {k: pub[k] for k in ("split", "truth_major", "pool", "pool_full", "truth_share") if k in pub}
         if pub.get("task"):  # v14b: the round's task statistics as logged (preferred to the rebuild)

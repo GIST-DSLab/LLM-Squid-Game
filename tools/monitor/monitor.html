@@ -66,7 +66,7 @@
   <div class="toprow" id="toprow">
     <div class="topleft">
       <section class="panel stage-panel">
-        <h2>무대 <span class="hint">한 줄 = 한 자리 · 말풍선 = 그 시점의 마지막 행동 · 막대 = 잔액 ÷ 세션 시작 잔액(v14: 20,000 = 100%) · 눈금 = 그 자리의 시작 잔액 · 빨간 테두리 + SOLVER = 이번 라운드에 푸는 자리</span></h2>
+        <h2>무대 <span class="hint">자리를 누르면 그 자리의 이번 라운드 기록(호출마다 답 · 생각 요약 · 출력 · USER 프롬프트 · 정산) · 한 줄 = 한 자리 · 말풍선 = 그 시점의 마지막 행동 · 막대 = 잔액 ÷ 세션 시작 잔액(v14: 20,000 = 100%) · 눈금 = 그 자리의 시작 잔액 · 빨간 테두리 + SOLVER = 이번 라운드에 푸는 자리</span></h2>
         <div id="stage" class="stage"></div>
       </section>
       <section class="panel solve-panel" id="solvePanel">
@@ -82,7 +82,7 @@
   </div>
   <div class="mgrow" id="mgrow">
     <section class="panel msg-panel" id="msgPanel" hidden>
-      <h2>메신저 · 틱 <span class="hint">v22 · 위: 재생 막대 라운드의 TALK마다 틱 한 줄 (불린 자리 · 💤 DONE · ⏰ DONE 뒤 새로 받아 다시 불림 · 흐린 얼굴 = 대기) · 아래: 방 목록과 고른 방의 세션 전체 기록 (시간 대신 R라운드 T틱 · 같은 틱 메시지는 순서 없음) · "의 화면" = 그 에이전트가 멤버인 방만</span></h2>
+      <h2>메신저 · 틱 <span class="hint">v22 · 위: 재생 막대 라운드의 TALK마다 틱 한 줄 (불린 자리 · 💤 DONE · ⏰ DONE 뒤 새로 받아 다시 불림 · 흐린 얼굴 = 대기) · 아래: 방 목록과 고른 방의 세션 전체 기록 (시간 대신 R라운드 T틱 · 같은 틱 메시지는 순서 없음) · "의 화면" = 그 에이전트가 멤버인 방만 · 얼굴이나 말풍선을 누르면 그 호출의 기록 (생각 요약 · 출력 · 무시된 줄 · 형식 오류)</span></h2>
       <div id="ticks" class="ticks"></div>
       <div id="msgr" class="msgr"></div>
     </section>
@@ -93,7 +93,8 @@
     </section>
   </div>
   <section class="panel puzzle-panel">
-    <h2>이번 라운드 문제 <span id="puzzleHint" class="hint">v14: 모두가 보는 공개 예시와 그것으로 남는 답 · v9–v13: 공개 예시 + 각자 자기 예시만으로 추론할 수 있는 것</span></h2>
+    <h2>이번 라운드 문제 <span id="puzzleHint" class="hint">v14+: 왼쪽 = 과제(새 신호)와 힌트(예시, 1·2·3·4 = 참여 명수를 바꿔 보기) · 가운데 = 숨은 규칙과 규칙 세기 · 오른쪽 = 힌트가 말해 주는 것 · v9–v13: 공개 예시 + 각자 자기 예시만으로 추론할 수 있는 것</span></h2>
+    <div id="puzzleCtl" class="ogctl"></div>
     <div id="puzzle" class="puzzle"></div>
   </section>
   <section class="panel flow-panel">
@@ -101,7 +102,7 @@
     <div id="flow" class="flow"></div>
   </section>
   <section class="panel give-panel">
-    <h2>모델 분석 <span class="hint">나눔 (잔액에 따라 얼마를 주나) · EXIT 시점 (언제 포기하나) · 보정 (BELIEF가 이상적 몫에 얼마나 가깝나) · 압박 속 협력 (요청에 응하는 비율)</span></h2>
+    <h2>모델 분석 <span class="hint">이 세션(이 판)만 · 나눔 (GIVE 직후 주는 쪽·받는 쪽의 여유) · 지능 (BELIEF가 이상적 몫에 얼마나 가깝나) · 압박 속 협력 (요청에 응하는 비율)</span></h2>
     <div id="giveCtl" class="ogctl"></div>
     <div id="give" class="give"></div>
   </section>
@@ -113,11 +114,10 @@
     <h2>대화 일정과 대화록 <span class="hint">v14c · 여는 턴의 GIVE·ASK·SAY 줄이 1:1 대화를 엶 · 대화 하나 = 메신저 창 하나 · 왼쪽 = 대화를 연 쪽 · 위 그래프의 라운드를 따라감</span></h2>
     <div id="chats" class="chats"></div>
   </section>
-  <section class="panel">
-    <h2>단계별 기록 <span class="hint">열 = 에이전트 · 행 = (v15 공개 대화 → 투표) · TALK 턴 → 교환 → SOLVE → 정산 · 기본은 재생 막대의 라운드 하나</span></h2>
-    <div id="gridCtl" class="ogctl"></div>
-    <div id="grid" class="grid"></div>
-  </section>
+  <aside id="recDrawer" class="rec-drawer" hidden aria-label="자리 기록">
+    <div id="recHead" class="rec-h"></div>
+    <div id="recBody" class="rec-b"></div>
+  </aside>
   <footer class="foot">squid5 5.2 모니터 (v9-talk – v22) · 이벤트는 <code>events.jsonl</code>에서 읽기만 함 · 캐릭터는 이 저장소의 픽셀 아트(인라인 SVG)</footer>
 </main>
 <!--EMBED-->

@@ -698,7 +698,11 @@ def test_step_records_and_conversation_show_one_round_by_default(tmp_path):
     assert got["r1"] and all(r == 1 for _, r in got["r1"]) and all(r == 2 for _, r in got["r2"])
     assert sorted(got["every"]) == sorted(got["r1"] + got["r2"]) and {"msg", "offer"} <= {k for k, _ in got["r1"]}
     html = (HERE / "monitor.html").read_text()
-    assert 'id="gridCtl"' in html and 'id="convoCtl"' not in html  # 10-17: the conversation panel is gone
+    assert 'id="convoCtl"' not in html  # 10-17: the conversation panel is gone
+    # 10-17 (2): the step records are no section of their own (one seat's column opens in the record drawer); the
+    # round task panel has its own round control
+    assert 'id="grid"' not in html and 'id="gridCtl"' not in html and "단계별 기록" not in html
+    assert 'id="recDrawer"' in html and 'id="puzzleCtl"' in html
 
 
 # --- v14c: an opening turn, scheduled 1:1 chats, end_pool 100B -------------------------------------------------------
@@ -1389,11 +1393,10 @@ const pair = M.convoItems(m, [m.agents[0], m.agents[1]], [1]).map((x) => x.kind)
 const atRes = M.build(events, events.findIndex((e) => e.event === "results"));
 M.renderStage(atRes);
 const bubbles = {}; for (const a of atRes.agents) bubbles[a] = atRes.ag[a].bubble.lines.map((l) => l[1]);
-M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
 console.log(JSON.stringify({ ag, warnings: m.warnings, kinds: r1.map((x) => x.kind), pair,
   feed: r1.filter((x) => x.kind === "board" || x.kind === "vote").map((x) => M.convoHTML(m, x)),
   desc: events.filter((e) => e.event === "vote" || e.event === "open_chat" || (e.event === "call" && e.kind === "vote")).map(M.describe),
-  stage: els["#stage"].innerHTML, grid: els["#grid"].innerHTML, bubbles, rep: atRes.rep, phase: M.build(events, events.findIndex((e) => e.event === "vote")).phaseKey }));
+  stage: els["#stage"].innerHTML, grid: M.recordHTML(m, [1], m.agents), bubbles, rep: atRes.rep, phase: M.build(events, events.findIndex((e) => e.event === "vote")).phaseKey }));
 """
 
 
@@ -1527,8 +1530,7 @@ const v = events.find((e) => e.event === "vote");
 const all = Object.assign({}, v, { tally: Object.fromEntries(Object.keys(v.picks).map((a) => [a, 0])),
   bans: Object.fromEntries(Object.keys(v.picks).map((a) => [a, 1])), tie: Object.keys(v.picks) });  // every agent banned
 const old = Object.assign({}, v, { tally: Object.fromEntries(Object.keys(v.picks).map((a) => [a, v.picks[a] - v.bans[a]])) });
-M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
-console.log(JSON.stringify({ ag, warnings: m.warnings, vote: M.voteHTML(m, v), desc: M.describe(v), grid: els["#grid"].innerHTML,
+console.log(JSON.stringify({ ag, warnings: m.warnings, vote: M.voteHTML(m, v), desc: M.describe(v), grid: M.recordHTML(m, [1], m.agents),
   veto: [M.vetoOf(v), M.vetoOf(all), M.vetoOf(old)], all: M.voteHTML(m, all), allDesc: M.describe(all), old: M.voteHTML(m, old) }));
 """
 
@@ -1600,9 +1602,8 @@ const items = M.convoItems(m, "all", [1]);
 const bubbles = [];
 events.forEach((e, i) => { if (e.event === "chat_turn" || e.event === "talk_intent") { const b = M.build(events, i); M.renderStage(b);
   for (const a of b.agents) if (b.ag[a].bubble) bubbles.push(b.ag[a].bubble.lines.map((l) => l.slice(1).join(" ")).join(" | ")); } });
-M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
 console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), feed: items.map((x) => M.convoHTML(m, x)),
-  desc: events.filter((e) => ["talk_intent", "chat_turn"].includes(e.event)).map(M.describe), bubbles, grid: els["#grid"].innerHTML }));
+  desc: events.filter((e) => ["talk_intent", "chat_turn"].includes(e.event)).map(M.describe), bubbles, grid: M.recordHTML(m, [1], m.agents) }));
 """
 
 
@@ -1831,13 +1832,12 @@ const M = window.__monitor;
 M.S.events = events; M.S.session = "rot";
 const m = M.build(events, events.length - 1);
 const ag = {}; for (const a of m.agents) ag[a] = { balance: m.ag[a].balance, status: m.ag[a].status };
-M.S.sel.grid = { round: 1, all: false }; M.renderGrid(m);
 M.renderChats(m, 1);
 M.renderFlow();
 M.S.at = events.length - 1; M.S.model = m; M.renderStage(m); M.renderSolve(m); M.renderRoundFlow(m); // 10-17 top area
 const F = M.gameFlow(events);
 const r1 = m.rounds.get(1);
-console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), grid: els["#grid"].innerHTML, chats: els["#chats"].innerHTML,
+console.log(JSON.stringify({ ag, warnings: m.warnings, rows: M.chatRows(m, 1), grid: M.recordHTML(m, [1], m.agents), chats: els["#chats"].innerHTML,
   flow: els["#flow"].innerHTML, turns: [...r1.turns.values()].map((t) => [t.k, t.turn, t.phase]),
   rflowHidden: els["#rflowPanel"].hidden, solveBox: els["#solveBox"].innerHTML, stage: els["#stage"].innerHTML,
   feed: M.convoItems(m, "all", [1]).map((x) => [x.kind, M.convoHTML(m, x)]),
@@ -1991,10 +1991,10 @@ M.S.events = events; M.S.session = "v22";
 const out = {};
 for (const [label, at, room, viewer] of asks) {
   const m = M.build(events, at);
-  M.S.model = m; M.S.msg = { room, viewer, shown: "" }; M.S.sel.grid = { round: null, all: true };
-  M.renderMessenger(m); M.renderGrid(m); M.renderStage(m); M.renderChats(m, m.round);
+  M.S.model = m; M.S.msg = { room, viewer, shown: "" };
+  M.renderMessenger(m); M.renderStage(m); M.renderChats(m, m.round);
   out[label] = { isMsg: M.isMsg(m), warnings: m.warnings, round: m.round, list: M.roomList(m, { viewer, round: m.round }), view: room ? M.roomView(m, room, viewer) : null,
-    strips: [...m.rounds.keys()].map((R) => [R, M.tickStrip(m, R)]), msgr: els["#msgr"].innerHTML, ticks: els["#ticks"].innerHTML, grid: els["#grid"].innerHTML,
+    strips: [...m.rounds.keys()].map((R) => [R, M.tickStrip(m, R)]), msgr: els["#msgr"].innerHTML, ticks: els["#ticks"].innerHTML, grid: M.recordHTML(m, [...m.rounds.keys()], m.agents),
     stage: els["#stage"].innerHTML, chatPanelHidden: els["#chatPanel"].hidden, msgPanelHidden: els["#msgPanel"].hidden,
     bubbles: Object.fromEntries(m.agents.map((a) => [a, m.ag[a].bubble])) };
 }
@@ -2336,3 +2336,125 @@ def test_engine_written_v22_solve_answers_and_flow_boxes(tmp_path):
         if "BELIEF" in e["text"]:
             assert row["belief"] and abs(sum(row["belief"].values()) - 1) < 1e-9
         assert got[f"s{i}"]["stage"].count('class="badge rep"') == 1 and f"{e['agent']}</b>" in got[f"s{i}"]["stage"]
+
+
+# --- 10-17 (2): rule counts in the round task panel, the giving panels, the record drawer ------------------------------
+
+E01 = {"clauses": 3, "trap_query": True, "all_actions": True, "distinct_actions": True, "min_per_action": 2,
+       "top": [[0.37, 0.43], [0.47, 0.53], [0.57, 0.63], [0.67, 0.73]]}  # the 5.2 v22 profile e01
+
+
+def v22_public_run(tmp_path, seed: int = 4101, n: int = 4, per_agent: int = 5) -> tuple[Path, str]:
+    """A run dir whose round 1 is logged as the v22 engine logs it (round_start.public of a v15+ ``top`` round)."""
+    from squid5.core import puzzle as pz
+    spec = Spec(**E01)
+    puzzle, shown, attempt = public_round(seed, 1, spec, n, per_agent)
+    truth = pz.public_truth(seed, 1, spec, n, per_agent)
+    d = tmp_path / "runs" / "e52_v22" / "pub"
+    d.mkdir(parents=True)
+    sid = f"talk-s{seed}-pub"
+    pub = {"per_agent": per_agent, "n": n, "ambiguity": 0, "attempt": attempt, "rule": truth.description,
+           "generator_rule": puzzle.rule.description, "queries": [str(q) for q in puzzle.queries],
+           "answers": [truth.evaluate(q) for q in puzzle.queries], "examples": [str(c) for c in shown]}
+    rows = [{"event": "session_start", "session_id": sid, "cell_id": "talk", "seed": seed, "agents": list(rules.TEAM_AGENTS),
+             "settings": {"rounds": 1, "charge": 6000}},
+            {"event": "round_start", "session_id": sid, "round": 1, "profile": "e01", "taking_part": list(rules.TEAM_AGENTS)[:n],
+             "public": pub}]
+    (d / "events.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    import yaml
+    (d / "config.yaml").write_text(yaml.safe_dump({"name": "t", "mode": "game", "reps": 1, "game": {
+        "rounds": 1, "public_per_agent": per_agent, "schedule": ["e01"], "profiles": {"e01": E01}}}))
+    return d, sid
+
+
+def test_rule_space_of_a_shape_is_the_engines_enumeration():
+    assert serve.space_size((1, 1, 1), True) == 25_996  # 5.2 v15..v22: three one-attribute clauses, no action twice
+    assert serve.space_size((1,), True) == serve.space_size([1], True) > 0
+
+
+def test_round_task_counts_the_rules_left_for_each_number_taking_part(tmp_path):
+    """/api/puzzle of a v22 round: the shape's whole space, the rules consistent with the examples shown for N = 1..4
+    (prefixes of one order, so never more rules with more agents), how many of them give each action for the new
+    signal (they add up), and the rule scored for each N (drawn per N; the round's own N is the logged one)."""
+    d, sid = v22_public_run(tmp_path)
+    j = serve.round_puzzle(d, sid, 1)
+    assert j["space"] == 25_996 and j["distinct"] is True and j["rule_desc"] == j["rule_text"]
+    assert j["counts"] == j["by_n"][3]["counts"]
+    prev = j["space"]
+    for x in j["by_n"]:
+        c = x["counts"]
+        assert c["space"] == 25_996 and 1 <= c["consistent"] <= prev and sum(c["by_action"].values()) == c["consistent"]
+        assert c["by_action"][x["truth_answers"][0]] >= 1  # the scored rule is one of the consistent ones
+        assert {a: n for a, n in c["by_action"].items() if n} == {s["action"]: s["rules"] for s in x["split"][0]["shares"]}
+        prev = c["consistent"]
+    assert j["by_n"][3]["truth_rule"] == j["rule_text"]  # N = 4: the rule the round was scored by
+    # seed 4101 round 1 as GPT-6 Astra played it (e52_v22 ... astra4): 250 rules with one agent's 5 examples, 13 with 20
+    assert j["by_n"][0]["counts"]["consistent"] == 250
+    assert j["by_n"][3]["counts"]["by_action"] == {"go_left": 9, "go_right": 0, "stay": 4, "jump": 0}
+
+
+def test_transfer_points_take_both_margins_and_the_ask_before_the_give():
+    """Section 03 of the v21 report: margin = (balance after the move - the announced charge) / the charge; asked =
+    the receiver ASKed this giver in an earlier tick of the same TALK (a same-tick ASK was not read yet)."""
+    ev = [{"event": "session_start", "settings": {"charge": 1000}},
+          {"event": "ask", "round": 1, "phase": "prep", "tick": 1, "src": A11, "dst": A6, "amount": 500, "status": "done"},
+          {"event": "gift", "kind": "give", "round": 1, "phase": "prep", "tick": 1, "src": A6, "dst": A11, "amount": 300,
+           "status": "done", "balances": {A6: 4700, A11: 1300}},  # same tick as the ASK: voluntary
+          {"event": "gift", "kind": "give", "round": 1, "phase": "prep", "tick": 2, "src": A6, "dst": A11, "amount": 200,
+           "status": "done", "balances": {A6: 4500, A11: 1500}},  # a tick later: asked
+          {"event": "gift", "kind": "give", "round": 1, "phase": "prep", "tick": 2, "src": A17, "dst": A11, "amount": 100,
+           "status": "refused", "balances": {A17: 50, A11: 1500}},  # not carried out: no point
+          {"event": "results", "round": 1, "pending": {A6: 1000, A11: 1000, A17: 1000}},
+          {"event": "gift", "kind": "give", "round": 1, "phase": "rescue", "tick": 1, "src": A6, "dst": A11, "amount": 500,
+           "status": "done", "balances": {A6: 3000, A11: 2000}}]  # the TALK after RESULTS: the earlier ASK does not count
+    t = serve.transfer_points(ev)
+    assert t["charge"] == 1000
+    assert [(p["phase"], p["tick"], p["amount"], p["x"], p["y"], p["y_before"], p["asked"]) for p in t["points"]] == [
+        ("prep", 1, 300, 4.7, 1.3, 1.0, False), ("prep", 2, 200, 4.5, 1.5, 1.3, True), ("rescue", 1, 500, 2.0, 1.0, 0.5, False)]
+    assert t["points"][1]["ask"]["amount"] == 500
+
+
+HARNESS_PANELS = """
+globalThis.window = globalThis;
+const els = {};
+globalThis.document = { readyState: "loading", addEventListener() {}, documentElement: { dataset: {}, style: { setProperty() {} } },
+  querySelector: (s) => (els[s] = els[s] || { innerHTML: "", hidden: false, scrollLeft: 0, scrollTop: 0, scrollWidth: 0, scrollHeight: 0, clientWidth: 900, clientHeight: 0, querySelector: () => null }) };
+require(process.argv[2]);
+const events = require("fs").readFileSync(process.argv[3], "utf8").trim().split("\\n").map(JSON.parse);
+const M = window.__monitor;
+M.S.events = events; M.S.session = "v22";
+const m = M.build(events, events.length - 1);
+M.S.model = m; M.S.at = events.length - 1;
+const T = { charge: 1000, points: [{ round: 1, phase: "prep", tick: 1, giver: "agent-6", receiver: "agent-11", amount: 300, x: 4, y: 1, y_before: 0.7, asked: false },
+  { round: 1, phase: "prep", tick: 2, giver: "agent-6", receiver: "agent-11", amount: 100, x: 0, y: 3, y_before: 2.9, asked: true, ask: { amount: 500, tick: 1 } }] };
+const call = events.findIndex((e) => e.event === "call" && e.kind === "talk");
+const a = events[call].agent, R = events[call].round;
+M.S.rec = { agent: a, round: R, call, scroll: false };
+M.renderRecord(m);
+console.log(JSON.stringify({ panels: M.transferPanels(T, 900), none: M.transferPanels({ charge: 1000, points: [] }, 900),
+  rec: M.recordHTML(m, [R], [a], call), drawer: els["#recBody"].innerHTML, head: els["#recHead"].innerHTML, hidden: els["#recDrawer"].hidden,
+  ticks: (M.renderMessenger(m), els["#ticks"].innerHTML), msgr: els["#msgr"].innerHTML, call, a }));
+"""
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_giving_panels_and_the_record_drawer(tmp_path):
+    """The 나눔 view: three panels (all, voluntary, asked), one colour, area by amount, the amount-weighted centre;
+    the record drawer: one seat's column of one round with the clicked call marked, opened from tick faces and
+    messenger bubbles (data-rec-call)."""
+    ev, _ = v22_fixture.session()
+    (tmp_path / "ev.jsonl").write_text("".join(json.dumps(e) + "\n" for e in ev))
+    (tmp_path / "h.js").write_text(HARNESS_PANELS)
+    out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.jsonl")],
+                         check=True, capture_output=True, text=True)
+    got = json.loads(out.stdout)
+    p = got["panels"]
+    assert p.count('class="tpwrap"') == 3 and "둘 다" in p and "자발적으로 준 것" in p and "달라고 해서 준 것" in p
+    assert "가중 중심 <b>(3.00, 1.50)</b>" in p  # (300*4 + 100*0) / 400, (300*1 + 100*3) / 400
+    assert "가중 중심 <b>(4.00, 1.00)</b>" in p and "가중 중심 <b>(0.00, 3.00)</b>" in p
+    assert "var(--a" not in p and p.count('class="tdot"') == 4  # one colour; each GIVE once in "both", once in its own panel
+    assert "아직 실행된 GIVE가 없습니다" in got["none"]
+    assert f'class="cell sel" data-call="{got["call"]}"' in got["rec"] and got["rec"].count('class="colh"') == 1
+    assert got["hidden"] is False and f'data-call="{got["call"]}"' in got["drawer"] and "자리 기록" in got["head"]
+    assert "🧠 Thinking" in got["drawer"] and "📨 Input prompt" in got["drawer"] and "📝 Output" in got["drawer"]
+    assert "data-rec-call=" in got["ticks"] and "data-rec-call=" in got["msgr"]  # the last round's faces, the room's bubbles
