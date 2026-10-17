@@ -2200,3 +2200,21 @@ def test_engine_written_v22_runs_replay_and_export(tmp_path, d):
             check_steps(F["rounds"], fin)
     p = export.export(d, None, tmp_path / "x.html")
     assert p["assets"] is None and 'id="msgPanel"' in (tmp_path / "x.html").read_text()
+
+
+def test_run_list_filter_fields(tmp_path):  # 10-17: date, version and seeds for the run filters
+    d = tmp_path / "e52_v22" / "squid5_e52v22_public_sol4" / "20261017_1001_gpt-6-sol"
+    d.mkdir(parents=True)
+    ev = d / "events.jsonl"
+    ev.write_text('{"event": "session_start", "session_id": "a", "cell_id": "talk", "seed": 4102}\n'
+                  '{"event": "call", "session_id": "a", "seed": 1}\n'
+                  '{"event": "session_start", "session_id": "b", "cell_id": "talk", "seed": 4101}\n')
+    (r,) = serve.list_runs(tmp_path)
+    assert (r["date"], r["version"], r["seeds"]) == ("2026-10-17", "5.2 v22", [4101, 4102])
+    with ev.open("a") as f:
+        f.write('{"event": "session_start", "session_id": "c", "cell_id": "talk", "seed": 4103}')  # no newline yet
+    assert serve.run_seeds(ev) == [4101, 4102]
+    with ev.open("a") as f:
+        f.write("\n")
+    assert serve.run_seeds(ev) == [4101, 4102, 4103]
+    assert serve.run_labels("e52_v21/squid5_e52v21_public_luna4/x", 0)["version"] == "5.2 v21"

@@ -224,6 +224,36 @@ def read_meta(run_dir: Path) -> dict:
         return {}
 
 
+_SEEDS: dict[Path, tuple[int, set]] = {}  # events.jsonl -> (bytes scanned, seeds of its session_start lines)
+_SEED_RE = re.compile(rb'"event": "session_start"[^\n]*?"seed": (\d+)')
+
+
+def run_seeds(ev: Path) -> list[int]:
+    """The seeds of a run's sessions, scanning only the bytes added since the last call (a filter for the run list)."""
+    size = ev.stat().st_size
+    done, seeds = _SEEDS.get(ev, (0, set()))
+    if size < done:
+        done, seeds = 0, set()
+    if size > done:
+        with ev.open("rb") as f:
+            f.seek(done)
+            data = f.read(size - done)
+        end = data.rfind(b"\n") + 1
+        seeds = seeds | {int(m.group(1)) for m in _SEED_RE.finditer(data[:end])}
+        done += end
+    _SEEDS[ev] = (done, seeds)
+    return sorted(seeds)
+
+
+def run_labels(rel: str, mtime: float) -> dict:
+    """The run list's filter fields: date (YYYY-MM-DD, from the run folder name or the file time) and the setting
+    version (e.g. '5.2 v22' from 'squid5_e52v22_public_luna4/...' or 'e52_v21/...')."""
+    d = re.search(r"(20\d\d)(\d\d)(\d\d)_\d{4}", rel)
+    date = "-".join(d.groups()) if d else time.strftime("%Y-%m-%d", time.localtime(mtime))
+    v = re.search(r"e5(\d)_?v(\d+[a-z]?)", rel)
+    return {"date": date, "version": f"5.{v.group(1)} v{v.group(2)}" if v else rel.split("/")[0]}
+
+
 def list_runs(root: Path) -> list[dict]:
     root = root.resolve()
     out = []
@@ -243,7 +273,8 @@ def list_runs(root: Path) -> list[dict]:
         out.append({"run": d.relative_to(root).as_posix(), "mtime": mtime, "size": st.st_size,
                     "model": meta.get("model"), "mode": meta.get("mode"), "finished": finished,
                     "expected": expected, "done": expected is not None and finished >= expected,
-                    "live": time.time() - st.st_mtime < LIVE_SECONDS})
+                    "live": time.time() - st.st_mtime < LIVE_SECONDS, "seeds": run_seeds(ev),
+                    **run_labels(d.relative_to(root).as_posix(), mtime)})
     out.sort(key=lambda r: r["mtime"], reverse=True)
     return out
 

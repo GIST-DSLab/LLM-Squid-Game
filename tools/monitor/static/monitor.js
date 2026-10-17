@@ -16,7 +16,7 @@
   // ---------------------------------------------------------------------------------------------------- app state
   const S = {
     embed: null, run: "", session: "", events: [], offset: 0, result: null, info: null,
-    at: -1, follow: true, pair: "all", runs: [], sessions: [], assets: null, open: new Set(),
+    at: -1, follow: true, pair: "all", runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", seed: "" },
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
     give: { tab: "give", scope: "run", x: "full", color: "seat", data: new Map(), an: new Map() }, // per-model panels // 나눔 그래프: run (the model) or this session; x = % of 20,000 or own start
     puzzles: new Map(), showTruth: false, showHidden: false, showAnswer: true, // round panel: the unseen examples behind "?" (or shown, dashed); the answer shown
@@ -2654,19 +2654,52 @@
     return j;
   }
 
+  /* 10-17: run filters (date, model, setting version, seed); kept in the URL (?date=&model=&ver=&seed=). The run list
+     shows the runs that match; the session list keeps the chosen seed. */
+  const FKEYS = [["date", "#fDate", "날짜"], ["model", "#fModel", "모델"], ["ver", "#fVer", "버전"], ["seed", "#fSeed", "시드"]];
+  const runVal = (r, k) => (k === "date" ? r.date : k === "model" ? r.model : k === "ver" ? r.version : null);
+  function runMatch(r, skip) {
+    return FKEYS.every(([k]) => k === skip || !S.filt[k] || (k === "seed" ? (r.seeds || []).map(String).includes(S.filt.seed) : String(runVal(r, k) || "") === S.filt[k]));
+  }
+  function fillFilters() {
+    for (const [k, id, ko] of FKEYS) {
+      const pool = S.runs.filter((r) => runMatch(r, k));  // the options a choice of the other filters leaves
+      const vals = [...new Set(pool.flatMap((r) => (k === "seed" ? (r.seeds || []).map(String) : [String(runVal(r, k) || "")])).filter(Boolean))];
+      vals.sort((a, b) => (k === "seed" ? Number(a) - Number(b) : k === "model" ? a.localeCompare(b) :
+        b.localeCompare(a, undefined, { numeric: true })));
+      if (S.filt[k] && !vals.includes(S.filt[k])) vals.unshift(S.filt[k]);
+      $(id).innerHTML = '<option value="">전체 ' + ko + "</option>" + vals.map((v) => '<option value="' + esc(v) + '">' + esc(v) + "</option>").join("");
+      $(id).value = S.filt[k] || "";
+    }
+  }
+  function syncFilterUrl() {
+    const u = new URL(location.href);
+    for (const [k] of FKEYS) { if (S.filt[k]) u.searchParams.set(k, S.filt[k]); else u.searchParams.delete(k); }
+    if (S.run) u.searchParams.set("run", S.run); else u.searchParams.delete("run");
+    history.replaceState(null, "", u);
+  }
+  function fillRunSel() {
+    const shown = S.runs.filter((r) => runMatch(r));
+    const sel = $("#runSel");
+    const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + "</option>");
+    if (!shown.length) opts.push("<option value=''>조건에 맞는 실행 없음</option>");
+    sel.innerHTML = opts.join("");
+    $("#fCount").textContent = "실행 " + shown.length + " / " + S.runs.length;
+    if (!shown.some((r) => r.run === S.run)) {
+      const pick = shown.find((r) => r.live) || shown.find((r) => /e52/.test(r.run)) || shown[0];
+      S.run = pick ? pick.run : "";
+    }
+    sel.value = S.run;
+  }
+
   async function loadRuns() {
     try {
       const j = await getJSON("api/runs");
+      const before = S.run;
       S.runs = j.runs || [];
-      const sel = $("#runSel");
-      const opts = S.runs.map((r) => '<option value="' + esc(r.run) + '">' + (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + "</option>");
-      if (S.run && !S.runs.some((r) => r.run === S.run)) opts.unshift('<option value="' + esc(S.run) + '">' + esc(S.run) + "</option>");
-      sel.innerHTML = opts.join("");
-      if (!S.run && S.runs.length) {
-        const pick = S.runs.find((r) => r.live) || S.runs.find((r) => /e52/.test(r.run)) || S.runs[0];
-        S.run = pick.run;
-      }
-      sel.value = S.run;
+      fillFilters();
+      fillRunSel();
+      if (S.run !== before && before) { S.session = ""; resetSession(); await loadSessions(); render(true); poll(); }
     } catch (err) { S.err = "실행 목록을 못 읽음: " + err.message; render(true); }
   }
 
@@ -2677,8 +2710,9 @@
       S.sessions = j.sessions || [];
       S.info = { model: j.model };
       const sel = $("#sessSel");
-      sel.innerHTML = S.sessions.map((s) => '<option value="' + esc(s.id) + '">' + "seed " + esc(s.seed) + " · " + esc(s.cell) + " · R" + s.round + "/" + (s.rounds || "?") + " · " + (s.crashed ? "오류" : s.finished ? "완료" : "진행 중") + " · " + esc(s.id) + "</option>").join("") || "<option value=''>세션 없음</option>";
-      if (!S.session || !S.sessions.some((s) => s.id === S.session)) S.session = (S.sessions.find((s) => !s.finished && !s.crashed) || S.sessions[0] || {}).id || "";
+      const list = S.filt.seed ? S.sessions.filter((s) => String(s.seed) === S.filt.seed) : S.sessions;
+      sel.innerHTML = list.map((s) => '<option value="' + esc(s.id) + '">' + "seed " + esc(s.seed) + " · " + esc(s.cell) + " · R" + s.round + "/" + (s.rounds || "?") + " · " + (s.crashed ? "오류" : s.finished ? "완료" : "진행 중") + " · " + esc(s.id) + "</option>").join("") || "<option value=''>세션 없음</option>";
+      if (!S.session || !list.some((s) => s.id === S.session)) S.session = (list.find((s) => !s.finished && !s.crashed) || list[0] || {}).id || "";
       sel.value = S.session;
       S.err = "";
     } catch (err) { S.err = "세션 목록을 못 읽음: " + err.message; render(true); }
@@ -2782,7 +2816,19 @@
     if (!S.embed) {
       $("#runSel").addEventListener("change", async (ev) => { S.run = ev.target.value; S.session = ""; resetSession(); await loadSessions(); render(true); poll(); });
       $("#sessSel").addEventListener("change", (ev) => { S.session = ev.target.value; resetSession(); render(true); poll(); });
+      for (const [k, id] of FKEYS) $(id).addEventListener("change", (ev) => applyFilter(k, ev.target.value));
+      $("#fReset").addEventListener("click", () => applyFilter(null, ""));
     }
+  }
+  async function applyFilter(k, v) {
+    if (k) S.filt[k] = v; else for (const [x] of FKEYS) S.filt[x] = "";
+    const run0 = S.run, sess0 = S.session;
+    fillFilters();
+    fillRunSel();
+    if (S.run !== run0) S.session = "";
+    await loadSessions();
+    if (S.run !== run0 || S.session !== sess0) { resetSession(); render(true); poll(); }
+    syncFilterUrl();
   }
   function jumpPhase(dir) {
     const ks = S.events.map((e, i) => (e.event === "round_start" || e.event === "round" ? i : -1)).filter((i) => i >= 0);
@@ -2816,6 +2862,7 @@
     // Mounted in the web app (/monitor/), the header links back to the site; the standalone server serves it at /.
     if (!/^\/(index\.html|monitor\.html)?$/.test(location.pathname)) $("#home").hidden = false;
     S.run = q.get("run") || ""; S.session = q.get("session") || "";
+    S.filt = Object.fromEntries(FKEYS.map(([k]) => [k, q.get(k) || ""]));
     const at = Number(q.get("at"));
     wire();
     if (q.get("sprites") === "sheets") await loadAssets(); // opt-in: the third-party sheets from assets/ (local only); default = our own characters
