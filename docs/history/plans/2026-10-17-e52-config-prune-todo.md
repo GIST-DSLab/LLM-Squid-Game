@@ -49,6 +49,25 @@
 - [ ] 모니터는 로그만 읽으므로 옛 런 표시가 그대로인지 확인 (`tools/monitor/test_monitor.py`, 옛 v20/v21 런 몇 개를 띄워 보기).
 - 예상: 엔진 약 300줄, 테스트 약 200줄 감소 (지금 엔진 3,7xx줄).
 
+## 줄 수 추정 (10-17 20:41 실측 기준)
+
+`tests/test_core.py::test_code_stays_compact`가 세는 범위(`squid5/` + `tests/`)는 지금 약 3,780줄(엔진 2,803 + 테스트 980). A + B를 하면 약 3,100–3,300줄(−13~18%)로 본다.
+
+| 정리 대상 | 줄 수 | 비고 |
+|---|---|---|
+| v21식 1:1 대화 경로 (`_chats` 88 · `_decide` 30 · `chat_user` · `decision_user` · `opening_user` · `transcripts_view` · `chat_lines` · `_free`, 파서 `parse_give_ask` · `parse_decision`, `rules.trim`) | 약 205 | 함수 단위 실측 |
+| `Settings`의 안 쓰는 필드 26개, `FAMILY` · `PRUNED` · `SHOWN`, `validate`의 옛 검사 | 약 40 | |
+| 규칙서 세 겹 → v22/v23 문장 직접 쓰기 (`compact_system` 53 + `messenger_system` 30 + 치환 목록 → 한 함수) | 약 40 | |
+| 공개 잔액(v20) 분기: `results_view` · `team_state` · `round_line`의 `private=False` 쪽 | 약 15 | |
+| **엔진 소계** | **약 300** | |
+| (선택) `puzzle.py` 676줄 중 v10–v14 전용 (`deal`, 열린 라운드, ambiguity 선택기, split / size_band 등) | 약 150–250 | 아래 주의 |
+| 테스트: v16–v21 전용 (chat, DECISION, v16 · v17 EXIT 등) | 약 120 | puzzle 정리까지 하면 약 200 |
+
+주의:
+- [ ] `puzzle.py` 정리는 따로 판단한다. 모니터 `/api/puzzle`이 옛 런(v9–v13)의 문제 화면을 엔진으로 다시 만들 때 `deal` 등 옛 기능을 쓴다. 10-17 모니터 2차 수정(문제 화면의 "단서를 만족하는 규칙 수")도 puzzle의 규칙 열거에 기댄다 → 그 작업이 쓰는 함수를 확인하고 남긴다.
+- `e5x_refill.py`(5.0 · 5.1, 176줄)는 이 정리와 무관.
+- 줄 수보다 큰 이득: 규칙서가 한 번에 쓰이고 config가 15줄 안팎이 되어, 새 판(v24 …)을 만들 때 실수할 여지가 줄어든다.
+
 ## 관련해서 남은 일
 - [ ] `tools/prompts/sync.py check`는 ko 첫 줄의 해시와 구조만 본다. 해시만 바꾸면 옛 번역도 통과하므로, en 블록이 바뀐 부분에 대응하는 ko 블록도 바뀌었는지(블록별 해시 등) 확인하도록 보강.
 - [ ] 보고서 `e53_build/v22/build_v22.py`의 생성 문구에 "1:1 방도, 셋 이상 방도", "판당 방 수 (1:1 / 3명 이상)" 열이 남아 있음 → v22 1:1 기준으로 고친 뒤 실측 블록 생성.
