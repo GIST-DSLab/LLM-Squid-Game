@@ -140,7 +140,7 @@
       $("quick-model").textContent = m.model;
       h.textContent = m.available
         ? `서버에 ${m.api_key_env}가 있습니다 · 모델 ${m.model} · 호출 제한 ${fmt(m.timeout)}초 · 모델이 생각하는 동안에도 내 화면의 시계는 돕니다.`
-        : `이 서버에는 ${m.api_key_env}가 없어 모델 자리를 만들 수 없습니다. web/tools/serve_local.py로 서버를 띄우세요.`;
+        : `이 서버에는 ${m.api_key_env}가 없어 모델 자리를 만들 수 없습니다. 서버 관리자가 Worker 비밀값(OLLAMA_API_KEY3)을 등록해야 합니다.`;
       h.classList.toggle("warn-text", !m.available);
       $("btn-quick").disabled = !m.available;
       if (!m.available) $("form-create").fill.value = "bots";
@@ -270,7 +270,7 @@
     if (row.kind === "empty") return `<span class="muted">빈 자리(꺼짐)</span>`;
     if (i < s.humans) return `<span class="muted">사람 자리 — 아직 아무도 없음</span>`;
     return s.fill === "bots" ? `<span class="muted">봇 (시작할 때 채움)</span>`
-      : s.fill === "models" ? `<span class="muted">${esc(s.model)} 모델 (think ${esc(s.think)}, 시작할 때 채움)</span>`
+      : s.fill === "models" ? `<span class="muted">${esc(s.model)} 모델 (think ${esc(s.think || "off")}, 시작할 때 채움)</span>`
       : `<span class="muted">빈 자리(꺼짐)</span>`;
   }
 
@@ -283,7 +283,7 @@
     if ($("wait-link").value !== link) $("wait-link").value = link;
     const humans = st.seats.filter((r) => r.kind === "human").length;
     const s = st.settings;
-    const rest = s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `${s.model} 모델(think ${s.think})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
+    const rest = s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `${s.model} 모델(think ${s.think || "off"})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
     const g = st.game || {};
     const starts = st.starts || {};
     $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 v17b(모델 실험과 같은 게임) · ` +

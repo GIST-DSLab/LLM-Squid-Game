@@ -58,7 +58,7 @@
       <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v17b · 모델 실험과 같은 게임</span></span>
       <h1 class="lobby-title">아레나 · <em>4인 방</em></h1>
       <p class="lobby-lead">모델 실험(5.2 v17b)과 똑같은 게임이 실험 엔진 그대로 돌아가는 방입니다. 방 코드로 최대 네 명이 앉고(들어온 순서대로
-        agent-6, agent-11, agent-17, agent-23), 남는 자리는 gpt-oss:20b나 봇이 채웁니다. 시작 잔액은 자리마다 100,000의
+        agent-6, agent-11, agent-17, agent-23), 남는 자리는 gemma4:31b나 봇이 채웁니다. 시작 잔액은 자리마다 100,000의
         60 / 40 / 20 / 10%(seed가 돌림)입니다. 매 라운드: 시스템이 <b>solver</b>를 정함(순번, 순서는 알려 주지 않음) →
         <b>SOLVE 전 TALK</b>(<b>여는 턴</b>: <b>SAY</b> 한 줄이 그 자리와의 <b>1:1 대화</b>를 엶 → 시스템이 정한 순서로 <b>대화</b>(답 최대 6번, 번갈아; 글은 자유,
         토큰은 <b>GIVE n</b> · <b>GIVE ALL</b> · <b>ASK n</b> 틀 줄로만) → 요청받고 주지 않은 자리는 <b>결정</b>; <b>EXIT는 여기서만</b>: SOLVE 전에, 그때 가진 토큰을 들고 떠남,
@@ -69,8 +69,8 @@
         <b>각자 5,000,000</b>토큰을 받습니다. 사람은 토큰을 생성하지 않는 대신 결정 화면이 떠 있는 시간 × 초당 토큰만큼 잔액에서 빠집니다.</p>
     </div>
     <form id="form-quick" class="panel quick-panel" autocomplete="off">
-      <h2 class="panel-title h-shape s-triangle">gpt-oss:20b 세 명과 플레이</h2>
-      <p class="small quick-lead">나 한 명 + 실제 모델 세 자리(<span class="mono" id="quick-model">gpt-oss:20b</span>, Ollama Cloud).
+      <h2 class="panel-title h-shape s-triangle">gemma4:31b 세 명과 플레이</h2>
+      <p class="small quick-lead">나 한 명 + 실제 모델 세 자리(<span class="mono" id="quick-model">gemma4:31b</span>, Ollama Cloud).
         모델 자리는 엔진이 만든 프롬프트를 그대로 받고, 실제로 생성한 토큰(생각 포함)만큼 잔액에서 빠집니다.
         규칙 창을 닫으면 바로 1라운드가 시작됩니다.</p>
       <div class="fields quick-fields">
@@ -78,10 +78,10 @@
         <label class="f"><span>시작 잔액 배분</span>
           <select name="shares"><option value="1" selected>자리마다 60/40/20/10% (실험)</option><option value="0">모두 같음</option></select></label>
         <label class="f"><span>모델 생각 수준 (think)</span>
-          <select name="think"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
+          <select name="think"><option value="off" selected>off (기본 · 빠름)</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option></select></label>
       </div>
       <p class="small muted hint-line" id="quick-hint">서버 확인 중…</p>
-      <div class="row"><button class="primary big" type="submit" id="btn-quick">gpt-oss:20b 세 명과 플레이</button></div>
+      <div class="row"><button class="primary big" type="submit" id="btn-quick">gemma4:31b 세 명과 플레이</button></div>
     </form>
 
     <div class="grid2 lobby-grid">
@@ -92,11 +92,11 @@
           <label class="f"><span>사람 자리 수</span>
             <select name="humans"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
           <label class="f"><span>남는 자리</span>
-            <select name="fill"><option value="models">gpt-oss:20b 모델로 채움</option><option value="bots">봇으로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
+            <select name="fill"><option value="models">gemma4:31b 모델로 채움</option><option value="bots">봇으로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
           <label class="f"><span>시작 잔액 배분</span>
             <select name="shares"><option value="1" selected>자리마다 60/40/20/10% (실험)</option><option value="0">모두 같음</option></select></label>
           <label class="f"><span>모델 생각 수준 think (모델 자리)</span>
-            <select name="think"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
+            <select name="think"><option value="off" selected>off (기본 · 빠름)</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option></select></label>
           <label class="f"><span>시작 잔액 (방 기준, % 표시의 100%)</span><input name="start" type="number" min="1" step="1" placeholder="100,000"></label>
           <label class="f"><span>부담금 (solver가 못 풀면 참여 중인 모두)</span><input name="charge" type="number" min="0" step="1" placeholder="10,000"></label>
           <label class="f"><span>끝 지급 (끝까지 남은 자리마다, 정액)</span><input name="survivor_prize" type="number" min="0" step="1" placeholder="5,000,000"></label>
