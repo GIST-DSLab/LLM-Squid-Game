@@ -89,13 +89,13 @@ def render(config: str) -> str:
     return "\n".join(out) + "\n"
 
 
-ROOM_REPLIES = {  # v22 (agent, round, phase, tick) -> stub reply: TO one and two agents, GIVE, ASK, LEAVE, DONE
+ROOM_REPLIES = {  # v22 (agent, round, phase, tick) -> stub reply: TO one agent (two: not delivered), GIVE, ASK, LEAVE, DONE
     ("agent-17", 1, "prep", 1): "TO agent-23: I am this round's solver and I have 10,000 tokens; thinking it through could take all of them. Could you help?",
-    ("agent-23", 1, "prep", 1): "TO agent-6, agent-11: agent-17 solves this round with 10,000. Shall we each put something in?\nDONE",
+    ("agent-23", 1, "prep", 1): "TO agent-6: agent-17 solves this round with 10,000. Shall we each put something in?\nTO agent-6, agent-11: Both of you?\nDONE",
     ("agent-23", 1, "prep", 2): "GIVE agent-17 15000: Here you go. Take the time you need.\nDONE",
     ("agent-17", 1, "prep", 2): "ASK agent-6 3000: A little more, to pay a charge if I miss.\nDONE",
-    ("agent-6", 1, "prep", 2): "TO R2: I can put in 5,000 if agent-11 does too.\nDONE",
-    ("agent-11", 1, "prep", 2): "TO R2: I will keep mine for now.\nLEAVE R2\nDONE",
+    ("agent-6", 1, "prep", 2): "TO R2: I can put in 5,000 if agent-11 does too.\nLEAVE R2\nDONE",
+    ("agent-11", 1, "prep", 2): "TO agent-23: I will keep mine for now.\nDONE",
     ("agent-11", 1, "rescue", 1): "ASK agent-23 5000: After this charge I would be down to about 14,000, two more misses from the edge.\nASK 2,000: from anyone who can spare it.\nDONE",  # the 2nd ASK names no agent: NOT DELIVERED at tick 3
     ("agent-23", 1, "rescue", 2): "GIVE agent-11 5000: That keeps you above the next charge.\nDONE"}
 
@@ -119,7 +119,7 @@ def render_rooms(config: str, cfg, s) -> str:
     calls = [e for e in ev if e["event"] == "call"]
     pick = lambda **k: next(c for c in calls if all(c.get(x) == v for x, v in k.items()))  # noqa: E731
     shown = [("TALK before SOLVE · tick 1", pick(round=1, agent="agent-17", phase="prep", tick=1)),
-             ("TALK before SOLVE · tick 2 (NEW messages, a room of three)", pick(round=1, agent="agent-6", phase="prep", tick=2)),
+             ("TALK before SOLVE · tick 2 (a NEW message, a two-agent line NOT DELIVERED)", pick(round=1, agent="agent-23", phase="prep", tick=2)),
              ("SOLVE (the solver only)", pick(round=1, kind="solve")),
              ("TALK after RESULTS · tick 1", pick(round=1, agent="agent-11", phase="rescue", tick=1)),
              ("TALK after RESULTS · tick 3 (a GIVE received)", pick(round=1, agent="agent-11", phase="rescue", tick=3)),

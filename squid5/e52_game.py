@@ -124,8 +124,8 @@ def results_view(res: dict, a: str, bal: dict, gone: dict, private: bool = False
     for b in res["part"]:
         y = b == a
         who, it = ("you", "you") if y else (b, "it")
-        now = ("it is still running" if private and not y else f"{'you have' if y else 'it has'} {bal[b]:,} left" if gone.get(b) != "dead" else
-               f"{it} reached zero and {'were' if y else 'was'} shut down")
+        now = (f"{it} reached zero and {'were' if y else 'was'} shut down" if gone.get(b) == "dead" else  # 10-17: v21 said running
+               "it is still running" if private and not y else f"{'you have' if y else 'it has'} {bal[b]:,} left")
         if b != v["rep"]:
             out.append(f"  {who}: " + (f"{res['pending'][b]:,} tokens are taken from {it} when TALK ends; {now}." if b in
                                        res["pending"] else f"nothing is taken; {now}."))
@@ -209,7 +209,7 @@ WHEN = {"prep": "before SOLVE", "rescue": "after RESULTS"}  # v22: a TALK's labe
 def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0) -> str:
     """v22 ``messenger``: *a*'s rooms, oldest first, each message labelled [R<round> T<tick> before SOLVE|after RESULTS],
     same-tick messages agent by agent; NEW = posted since *a*'s last call (seq > *since*); a left room up to the leave."""
-    out, who = ["YOUR ROOMS (oldest first; NEW = since your last call):"], lambda b: "you" if b == a else b
+    out, who = ["YOUR CHATS (oldest first; NEW = since your last call):"], lambda b: "you" if b == a else b
     for x in (x for x in rooms if a in x["members"]):
         upto = x["left"].get(a)
         ms = sorted((m for m in x["msgs"] if upto is None or m["seq"] <= upto), key=lambda m: (
@@ -229,13 +229,13 @@ def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0) -> str:
 def room_format(phase: str, k: int, ticks: int, bal: int) -> str:
     """v22 ``messenger``: the ANSWER FORMAT of a tick (EXIT only before SOLVE; the GIVE range and reserve as v21)."""
     return (f"TALK {WHEN[phase].upper()}, tick {k} (at most {ticks}). ANSWER FORMAT: any number of these lines, each at "
-            f"the start of a line:\nTO <agent>[, <agent> ...]: <your message>\nTO R<k>: <your message>\nGIVE <agent> <n>: "
+            f"the start of a line:\nGIVE <agent> <n>: "
             f"<your message> (n: a whole number from 1 to {bal:,}, your tokens left now; if writing this reply leaves you "
-            f"fewer than n tokens, the GIVE is cut so you keep what you planned to keep; GIVE ALL <agent>: <your message> "
-            f"gives every token you have then, which takes you to zero, and you are shut down)\n  (Your tokens left above are counted "
+            f"fewer than n tokens, the GIVE is cut by what this reply generates, so you keep your tokens left above minus n; "
+            f"GIVE ALL <agent>: <your message> gives every token you have when that line is carried out)\n  (Your tokens left above are counted "
             f"before this reply: every token this reply generates, thinking included, comes off them before any GIVE in it "
             f"is carried out.)\nASK <agent> <n>: <your "
-            f"message>\nLEAVE R<k>\n" + "EXIT: <your reason>\n" * (phase == "prep") + "DONE")
+            f"message>\nTO <agent>: <your message>\nTO R<k>: <your message>\nLEAVE R<k>\n" + "EXIT: <your reason>\n" * (phase == "prep") + "DONE")
 
 def solve_head(round_no: int, cap: int, balance: int, full: int = 0) -> str:
     limit = f"at most {cap:,} tokens" + (" (your balance)" if cap >= balance else "")
@@ -514,7 +514,9 @@ class Session:
         if rid:
             x = next((x for x in self.rooms if x["id"] == rid), None)
             ok = x and a in x["members"] and a not in x["left"]
-            return (rid, None) if ok and not x["closed"] else (None, "that room is closed" if ok else "not a room you are a member of")
+            return (rid, None) if ok and not x["closed"] else (None, "that chat is closed" if ok else "not a chat you are in")
+        if len(names) > 1:  # 10-17: one-to-one chats only
+            return None, "one agent per line: 'TO <agent>: <message>'"
         want = sorted({a, *names}, key=AGENTS.index)
         x = next((x for x in self.rooms if x["members"] == want and not x["left"]), None)
         if x is None and a not in self.gone:
@@ -578,7 +580,7 @@ class Session:
                     x["left"][a] = self.seq
                     x["closed"] = len(x["members"]) - len(x["left"]) < 2
                     self.emit({"event": "room_leave", **base, "tick": k, "room": rid, "agent": a, "closed": x["closed"]})
-                self.undelivered[a] = p["dropped"]
+                self.undelivered[a] = list(p["dropped"])
                 gives += [(a, g) for g in p["gives"]]
                 self._exit(a, p, exits, rows)
                 (done.add if p["done"] or p["exit"] else done.discard)(a)
@@ -587,6 +589,11 @@ class Session:
             for a, g in gives:  # v17b keep_reserve over all of a tick's GIVEs: what the giver planned to keep stays
                 self.shown[a] = plan[a] + g["amount"] if g["amount"] < ALL else self.shown[a]
                 item = self._move(r, k, a, g["dst"], "give", g["amount"], g["text"], rows[a], chat_id=None, room=g["room"], tick=k)
+                if item["status"] == "refused":  # 10-17: told to the giver alone; its chat would show the receiver a bound on its tokens
+                    n = "ALL" if g["amount"] >= ALL else format(item.get("requested", g["amount"]), ",")
+                    self.undelivered.setdefault(a, []).append(f"GIVE {g['dst']} {n}: not carried out: {item['why']}")
+                    news |= {a} - set(self.gone)
+                    continue
                 news |= self._post(g["room"], r, k, a, "give", g["text"], item.get("requested", item["amount"]) if item["status"] ==
                                    "refused" else item["amount"], "cut" if "requested" in item and item["status"] == "done" else
                                    item["status"], item["why"])
@@ -670,6 +677,8 @@ class Session:
                              "record": {x: record_line(chats, self.ga, r, x) for x in AGENTS} if s.private_balances else record_line(chats, self.ga, r),
                              "exited": [a for a in start if self.gone.get(a) == "exited" and a not in gone_prev],
                              "dead": [a for a in AGENTS if self.gone.get(a) == "dead" and a not in gone_prev],
+                             **({"all_had": [a for a in start if rows[a]["charged"] and self.gone.get(a) == "dead" and a not in
+                                             gone_prev]} if s.messenger else {}),  # 10-17: not the amount it had left
                              "end": end, "gone": dict(self.gone), "vote": self.vote})
 
     def _rotate(self, r: int, inside: list[str], rows: dict) -> dict:

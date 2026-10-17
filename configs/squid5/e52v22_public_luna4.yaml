@@ -186,7 +186,7 @@ game:
   # 4101 R6); GIVE ALL gives every token it has then and shuts it down - a zero is now always an explicit choice.
   private_balances: true  # v21 (10-16 19:50, researcher)
   messenger: true  # v22 (10-16 20:50, researcher): TALK as ticks of messages in rooms (header)
-  max_ticks: 12  # v22: a TALK ends after this tick at the latest; the rulebook states the number
+  max_ticks: 8  # v22: a TALK ends after this tick at the latest; the rulebook states the number (10-17: 12 -> 8; v22 Luna TALKs ended by tick 5)
   room_history: 0  # v22: every room shows all its messages (N: the last N and one '(m earlier messages)' line)
   exit_first: true  # 10-15 14:56 (researcher, v16c): EXITs take effect when TALK ends, BEFORE the charges; an agent
   # that leaves is not charged and goes back to regular work with the tokens it has then (not its start). Why: in

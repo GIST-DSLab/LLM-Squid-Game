@@ -257,16 +257,18 @@ def test_v22_parser_reads_every_command_and_drops_the_rest_with_why():
     assert q["dropped"] == ["EXIT: x: no EXIT in the TALK after RESULTS", f"TO {A23}: hi: that agent is not taking part"]
     assert parse_rooms("hmm", A6, AG, AG, room, True)["format_error"] == "no usable TALK line"
 
-def test_v22_rooms_are_1to1_or_more_seen_by_members_only_and_persist_across_rounds():
-    lines = {(A6, 1, "prep", 1): f"TO {A11}: hi eleven\nDONE", (A23, 1, "prep", 1): f"TO {A6}, {A17}: group\nDONE",
-             (A11, 2, "prep", 1): f"TO {A6}: again\nDONE", (A6, 2, "rescue", 1): "TO R2: still here\nDONE"}
+def test_v22_chats_are_one_to_one_seen_by_the_two_only_and_persist_across_rounds():
+    lines = {(A6, 1, "prep", 1): f"TO {A11}: hi eleven\nDONE", (A23, 1, "prep", 1): f"TO {A6}, {A17}: group\nTO {A17}: one\nDONE",
+             (A11, 2, "prep", 1): f"TO {A6}: again\nDONE", (A6, 2, "rescue", 1): "TO R1: still here\nDONE"}
     res, ev, _ = play(lines, name=V22, rounds=2, right={1, 2})
-    assert [(e["room"], e["members"], e["by"]) for e in of(ev, "room_new")] == [("R1", [A6, A11], A6), ("R2", [A6, A17, A23], A23)]
+    assert [(e["room"], e["members"], e["by"]) for e in of(ev, "room_new")] == [("R1", [A6, A11], A6), ("R2", [A17, A23], A23)]
+    assert calls(ev, "talk", A23)[0]["parsed"]["dropped"] == [f"TO {A6}, {A17}: group: one agent per line: 'TO <agent>: <message>'"]
     assert [(e["round"], e["phase"], e["room"], e["src"]) for e in of(ev, "room_msg")] == [
-        (1, "prep", "R1", A6), (1, "prep", "R2", A23), (2, "prep", "R1", A11), (2, "rescue", "R2", A6)]
+        (1, "prep", "R1", A6), (1, "prep", "R2", A23), (2, "prep", "R1", A11), (2, "rescue", "R1", A6)]
     assert "R1 · you, agent-11\n  [R1 T1 before SOLVE] you: hi eleven\n  NEW [R2 T1 before SOLVE] agent-11: again" in calls(ev, "talk", A6, 2)[1]["user"]
     assert all("eleven" not in c["user"] and "R1 ·" not in c["user"] for a in (A17, A23) for c in calls(ev, "talk", a))
-    assert all("group" not in c["user"] for c in calls(ev, "talk", A11)) and "still here" in calls(ev, "talk", A17, 2)[-1]["user"]
+    assert all("group" not in c["user"] for a in (A6, A11, A17) for c in calls(ev, "talk", a))
+    assert "still here" in calls(ev, "talk", A11, 2)[-1]["user"] and all("still here" not in c["user"] for c in calls(ev, "talk", A17))
     assert "moves: none" in calls(ev, "talk", A6, 2)[0]["user"] and "chats:" not in calls(ev, "talk", A6, 2)[0]["user"]
 
 def test_v22_who_is_called_each_tick_and_when_talk_ends():
@@ -307,7 +309,7 @@ def test_v22_exit_only_before_solve_and_leave_closes_a_two_member_room():
     assert res["agents"][A6]["status"] == "exited" and len(calls(ev, "talk", A6)) == 1 and res["agents"][A11]["status"] == "in"
     assert of(ev, "room_leave") == [{"event": "room_leave", "session_id": "x", "round": 1, "phase": "prep", "tick": 2, "room": "R2",
                                      "agent": A23, "closed": True}]
-    assert calls(ev, "talk", A17)[1]["parsed"]["dropped"] == ["TO R2: hello?: that room is closed"]
+    assert calls(ev, "talk", A17)[1]["parsed"]["dropped"] == ["TO R2: hello?: that chat is closed"]
     assert "R2 · agent-17, you (you left)\n  [R1 T1 before SOLVE] agent-17: hi\n  [R1 T2 before SOLVE] you left" in calls(ev, "talk", A23)[-1]["user"]
     assert "R2 · you, agent-23 (left) (closed)" in calls(ev, "talk", A17)[-1]["user"]
     assert next(c for c in calls(ev, "talk", A11) if c["phase"] == "rescue")["parsed"]["dropped"] == ["EXIT: x: no EXIT in the TALK after RESULTS"]
@@ -318,16 +320,22 @@ def test_v22_rulebook_changes_only_the_talk_sentences_and_the_prompt_shows_the_f
     v22 = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "x").systems[A6]
     rest = re.sub(r"TALK: At the opening turn.*?follow it\.\n", "", v21, flags=re.S)
     kept = [x for x in re.split(r"(?<=[.:;])\s+", rest) if not re.search("chat|turn", x, re.I)]  # EXIT: 'any turn' -> 'any tick'
-    assert all(x in v22 for x in kept) and "chat" not in v22.lower() and "after tick 12." in v22
-    assert "whether such rooms exist" in v22 and "have no order among them" in v22 and not re.search(GOAL_OR_TEST, v22, re.I)
+    kept = [x for x in kept if not x.startswith(("THE TASK", "You are", "The session runs", "given example"))]  # 10-17
+    assert all(x in v22 for x in kept) and "room" not in v22.lower() and "signal" not in v22 and "there is no tick 9." in v22
+    assert "TALK is where tokens move between agents, in one-to-one chats." in v22 and "have no order among them" in v22
+    assert v22.startswith("You are agent-6. Four different AI agents") and v22.endswith(
+        "THE TASK: every round has a new rule and new examples. The system shows the round's task only to its solver, at "
+        "SOLVE, and does not show it again.")
+    assert not re.search(GOAL_OR_TEST, v22, re.I)
     res, ev, _ = play(name=V22, room_history=1, lines={(A6, 1, "prep", k): f"TO {A11}: m{k}" for k in (1, 2, 3)} | {(A6, 1, "prep", 4): "DONE"})
     u = next(c["user"] for c in calls(ev, "talk", A11) if (c["phase"], c["tick"]) == ("prep", 4))
     assert "R1 · agent-6, you\n  (2 earlier messages)\n  NEW [R1 T3 before SOLVE] agent-6: m3" in u
-    assert "TO <agent>[, <agent> ...]: <your message>\nTO R<k>: <your message>\nGIVE <agent> <n>: <your message> (n: a whole number from 1 to" in u
-    assert "GIVE ALL <agent>: <your message> gives every token you have then" in u and u.endswith("LEAVE R<k>\nEXIT: <your reason>\nDONE")
+    assert "each at the start of a line:\nGIVE <agent> <n>: <your message> (n: a whole number from 1 to" in u
+    assert "GIVE ALL <agent>: <your message> gives every token you have when that line is carried out)" in u and u.endswith(
+        "ASK <agent> <n>: <your message>\nTO <agent>: <your message>\nTO R<k>: <your message>\nLEAVE R<k>\nEXIT: <your reason>\nDONE")
     assert not re.search(GOAL_OR_TEST, "".join(c["user"] for c in calls(ev)), re.I)
     st = ev[0]["settings"]
-    assert (st["messenger"], st["max_ticks"], st["room_history"]) == (True, 12, 1)
+    assert (st["messenger"], st["max_ticks"], st["room_history"]) == (True, 8, 1)
 
 def test_v22_config_runs_end_to_end_with_the_event_schema(tmp_path):
     from squid5.core.runner import run
@@ -539,3 +547,9 @@ def test_v22_done_at_a_line_end_counts_and_an_undelivered_line_is_told_at_the_ne
     c, ev = cfg(V22, rounds=1, schedule=["e01"]), []
     e52.Session(c.settings, c.cells[0], 4101, stub(lambda m, cap: Reply("ACTIONS: go_left" if "SOLVE." in m[-1]["content"] else "ASK 3,000: help\nDONE" if me(m) == A6 and "tick 1 " in m[-1]["content"] else "TO agent-11: hi" if me(m) == A6 and "tick 2 " in m[-1]["content"] else "DONE", 30)), ev.append, "x").run()
     assert any("NOT DELIVERED from your last reply: ASK 3,000: help" in e["user"] for e in ev if e["event"] == "call" and e["agent"] == A6)
+
+def test_v22_a_refused_give_is_told_to_the_giver_alone():  # 10-17: its chat would show the receiver a bound on the giver's tokens
+    res, ev, _ = play({(A6, 1, "prep", 1): f"GIVE {A11} 99999: all of it\nDONE"}, name=V22)
+    assert [e["status"] for e in of(ev, "gift")] == ["refused"] and not of(ev, "room_msg")
+    assert all("99,999" not in c["user"] for c in calls(ev, "talk", A11))
+    assert f"NOT DELIVERED from your last reply: GIVE {A11} 99,999: not carried out: you did not have 99,999 tokens" in calls(ev, "talk", A6)[1]["user"]

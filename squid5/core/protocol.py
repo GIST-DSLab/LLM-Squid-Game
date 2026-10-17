@@ -129,7 +129,7 @@ def parse_rooms(text: str, you: str, known: list[str], present: list[str], room,
             t = re.match(r"([^:]+?)[*_`]*\s*:\s*(.*)$", rest, re.S)
             rid = re.fullmatch(r"R\d+", t.group(1).strip(" *_`")) if t else None
             names = None if not t or rid else _to_names(t.group(1), known)
-            why = ("not 'TO <agent>[, <agent> ...]: <message>' or 'TO R<k>: <message>'" if not (rid or names) else
+            why = ("not 'TO <agent>: <message>' or 'TO R<k>: <message>'" if not (rid or names) else
                    None if rid else "not another agent" if any(n == you or n not in known for n in names) else
                    "that agent is not taking part" if any(n not in present for n in names) else None)
             if not why:

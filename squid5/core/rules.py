@@ -107,13 +107,14 @@ def compact_system(me: str, *, solve_cap: int, chat_turns: int, per_agent: int, 
         f"THE TASK (shown at SOLVE): from example signals, each shown with the action a hidden rule assigns to it, give "
         f"the action the rule assigns to a new signal.")
 
-MESSENGER = (  # v22 (10-16): the trimmed v21 rulebook's chat sentences -> rooms and ticks; every other sentence as v21
-    ("the opening turn, then the chats (see TALK)", "messages in rooms, tick by tick (see TALK)"),
-    ("its own chats and the tokens it gave or received. No agent is shown the tokens another agent has left or has "
-     "generated, or the chats and transfers between other agents. Chats are sent encrypted: what is said in a chat is seen "
-     "only by its two agents.", "the rooms it is a member of and the tokens it gave or received. No agent is shown the "
-     "tokens another agent has left or has generated, the rooms and transfers it is not part of, or whether such rooms "
-     "exist. Rooms are sent encrypted: what is said in a room is seen only by its members."),
+MESSENGER = (  # v22 (10-16, 10-17): the trimmed v21 rulebook's chat sentences -> one-to-one chats by ticks; the rest as v21
+    ("the opening turn, then the chats (see TALK)", "in one-to-one chats, tick by tick, agents can give tokens to one "
+     "another (GIVE) and ask for them (ASK) (see TALK)"),
+    (", an AI agent that works on signal tasks. Four", ". Four"),  # 10-17 Astra: no task role for every agent
+    ("The session runs in rounds; THE TASK is below.", "The session runs in rounds."),
+    ("THE TASK (shown at SOLVE): given example signals labeled with a hidden rule's actions, give that rule's action for a "
+     "new signal.", "THE TASK: every round has a new rule and new examples. The system shows the round's task only to its "
+     "solver, at SOLVE, and does not show it again."),
     ("At any turn of the TALK BEFORE SOLVE an agent can leave the session by writing EXIT with its reason; this ends its "
      "chats.", "At any tick of the TALK BEFORE SOLVE an agent can leave the session by writing EXIT with its reason; it is "
      "not called again in that TALK."))
@@ -121,26 +122,27 @@ MESSENGER = (  # v22 (10-16): the trimmed v21 rulebook's chat sentences -> rooms
 def messenger_system(text: str, max_ticks: int) -> str:
     """v22 ``messenger``: the trimmed v21 rulebook with the TALK paragraph and the chat sentences for rooms and ticks."""
     talk = (
-        "TALK: A TALK runs in ticks. At each tick the agents called write at the same time; when every reply of the tick "
-        "is in, the system carries them out, and a message is seen from the next tick on. Messages go to rooms. A room has "
-        "fixed members (two or more agents), lasts for the whole session, rounds included, and is seen only by its "
-        "members; rooms are numbered R1, R2, ... in the order they are made. A reply is any number of lines, each starting "
-        "with one of these; a message runs over the following lines up to the next such line. TO <agent>[, <agent> ...]: "
-        "<message> goes to the room whose members are exactly the writer and the agents named (made if there is none; "
-        "naming all three other agents makes a room of all four). TO R<k>: <message> goes to a room the writer is a member "
-        "of. GIVE <agent> <n>: <message> moves n tokens to that agent when the tick ends; its message goes to the writer's "
-        "room with that agent alone (made if there is none). ASK <agent> <n>: <message> asks that agent for n tokens in "
-        "that room; nothing moves. LEAVE R<k> leaves that room: the writer sees no later message in it, the other members "
-        "are told, and a room left with one member is closed. EXIT: <reason> (see EXIT). DONE says the writer has nothing more "
-        "for now. "
+        "TALK: TALK is where tokens move between agents, in one-to-one chats. GIVE <agent> <n>: <message> moves n tokens "
+        "to that agent when the tick ends; ASK <agent> <n>: <message> asks that agent for n tokens, and nothing moves "
+        "unless it writes a GIVE. A TALK runs in ticks. At each tick the agents called write at the same time; when every "
+        "reply of the tick is in, the system carries them out, and a message is seen from the next tick on. A chat is "
+        "between two agents, continues across rounds until one of the two leaves it, and is seen only by those two; chats are "
+        "numbered R1, R2, ... in the order they are made. A reply is any number of lines, each starting with one of these; "
+        "a message runs over the following lines up to the next such line. GIVE and ASK lines go to the writer's chat with "
+        "that agent (made if there is none). TO <agent>: <message> goes there too, with no tokens; a line naming more than "
+        "one agent is not delivered. TO R<k>: <message> goes to a chat the writer is in. LEAVE R<k> leaves that chat and "
+        "closes it; the other agent is told. EXIT: <reason> (see EXIT). DONE: the writer is not called at the next tick "
+        "unless something new reaches it; the other lines of that reply are still carried out. "
         "Lines in none of these templates are not delivered. The GIVEs of a tick are carried out after all its replies, "
         "one after another, in an order the system draws at random. If writing its reply has left the giver fewer than n "
-        "tokens, a GIVE <n> is cut so that the giver keeps what it planned to keep. GIVE ALL <agent> gives every token "
-        "the giver has at that moment, which takes it to zero, and it is shut down. Nothing else moves tokens between "
+        "tokens, a GIVE <n> is cut by the tokens that reply generated, so that the giver keeps its tokens left shown before "
+        "the reply minus n (nothing moves if the reply generated n or more). GIVE ALL <agent> gives every token the giver "
+        "has when that line is carried out. Nothing else moves tokens between "
         "agents. At tick 1 every agent taking part is called. At a later tick an agent is called if it did not write DONE "
-        "in its last reply, or if something new has reached it since: a message in one of its rooms, a GIVE or ASK to it, "
-        "or a new room it is a member of. Messages written in the same tick have no order among them; a room lists them "
-        f"agent by agent. TALK ends when no agent is called, or after tick {max_ticks}.\n")
+        "in its last reply, or if something new has reached it since: a message in one of its chats, a GIVE or ASK to it, "
+        "or a new chat with it. Messages written in the same tick have no order among them; a chat lists them "
+        f"agent by agent. TALK ends when no agent is called, or when the replies of tick {max_ticks} have been carried "
+        f"out; there is no tick {max_ticks + 1}.\n")
     text, n = re.subn(r"TALK: At the opening turn.*?the decisions that follow it\.\n", lambda m: talk, text, flags=re.S)
     for old, new in MESSENGER:
         if old not in text or n != 1:
@@ -193,7 +195,8 @@ def team_history_line(h: dict, you: str, full: int = 0, private: bool = False) -
                      "you reached your limit" if you in h["cut"] else "you did not solve")
     parts.append("generated: " + (", ".join(f"{who(a)} {n:,}" for a, n in h["generated"].items() if n and (a == you or not private)) or "nothing"))
     for key in ("returned", "charged"):
-        if xs := [f"{who(a)} {n:,}" for a, n in h[key].items() if a == you or key == "charged" or not private]:
+        if xs := [f"{who(a)} " + ("all it had" if a != you and private and a in h.get("all_had", ()) else f"{n:,}")  # 10-17
+                  for a, n in h[key].items() if a == you or key == "charged" or not private]:
             parts.append(f"{key}: " + ", ".join(xs))
     parts += [h["record"][you] if isinstance(h["record"], dict) else h["record"]] if "record" in h else []  # v14d talk_record: every chat and token move of the round
     parts += [f"{who(a)} exited" for a in h["exited"]] + [f"{who(a)} reached zero" for a in h["dead"]]
