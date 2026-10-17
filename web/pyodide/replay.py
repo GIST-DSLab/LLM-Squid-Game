@@ -9,10 +9,14 @@ answer arrives:
 - every reply the engine has received from a person or a model, per agent in call order (``replies``), with a hash
   of the prompt it answered; bots answer again on every replay (``BotSeat`` is a fixed function of the session).
 
+Used by the browser engine (browser.py, Pyodide in a Web Worker; the room lives in the Worker's memory and the page's
+localStorage) and by the offline verifier (tools/arena/verify_games.py), which replays an uploaded game the same way.
+It was written for a Cloudflare Durable Object (now parked in web/cloudflare/legacy/).
+
 ``replay()`` builds the session exactly as ``Room.start`` builds it and runs it. A seat whose next reply is recorded
 returns it; one whose reply is missing registers a *need* and raises ``Suspend`` (a ``BaseException``, so no
-``except Exception`` in the engine catches it). Because ``compat.InlineExecutor`` runs every job of a batch before
-``result()`` re-raises, every missing reply of the batch is registered. The session object left behind is the state at
+``except Exception`` in the engine catches it). Because ``compat.InlineExecutor`` (swapped in for the replay) runs
+every job of a batch before ``result()`` re-raises, every missing reply of the batch is registered. The session object left behind is the state at
 that call: balances, chats, results, the solver, so ``Room.state()`` and every screen view of web/server/engine.py work
 on it unchanged, and the response shapes stay the FastAPI server's.
 
@@ -231,7 +235,8 @@ class ReplayRoom(E.Room):
         self.emit_extra({"event": "room", "session_id": sid, "code": self.code, "version": E.VERSION,
                          "settings": asdict(s), "seats": self.seats_info(), "run_dir": None})
         try:
-            res = ses.run()
+            with compat.inline_executor():
+                res = ses.run()
         except Suspend:
             self.status = "running"
         except Exception as err:  # noqa: BLE001 - an engine error ends the room, as on the server

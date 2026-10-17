@@ -1,10 +1,15 @@
-# GitHub Pages deploy: web/frontend plus the static game logs / model comparison / leaderboard (monitor/), built from the
-# run snapshot in web/data/runs by tools/monitor/build_static.py (copy of web/deploy/deploy-pages.yml).
+# GitHub Pages deploy: web/frontend (the arena and signal page run the engine in the browser: engine/ is the bundle
+# web/pyodide/build_bundle.py makes), plus the static game logs / model comparison / leaderboard (monitor/), built from
+# the run snapshot in web/data/runs and the browser games the offline verifier passed (tools/arena/verify_games.py)
+# by tools/monitor/build_static.py (copy of web/deploy/deploy-pages.yml).
 name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ["web/frontend/**", "tools/monitor/**", "web/data/runs/**", "squid5/**"]
+    paths: ["web/frontend/**", "tools/monitor/**", "tools/arena/**", "web/data/runs/**", "squid5/**", "web/server/**",
+            "web/pyodide/**", "configs/squid5/**"]
+  schedule:
+    - cron: "40 18 * * *"  # daily 03:40 KST: verified browser games from the Worker reach the game-log viewer
   workflow_dispatch:
 permissions: {contents: read, pages: write, id-token: write}
 concurrency: {group: pages, cancel-in-progress: true}
@@ -18,14 +23,26 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      # build_static.py needs only PyYAML beyond the standard library (serve.py reads config.yaml; squid5's puzzle code
-      # is pure Python)
+      # build_static.py, build_bundle.py and verify_games.py need only PyYAML beyond the standard library (squid5's
+      # puzzle code is pure Python; numpy / httpx get stand-ins from web/pyodide/compat.py when missing)
       - run: pip install pyyaml
       - name: Build the site
+        env:
+          # repo variable ARENA_WORKER_URL (https://squid5-api.<sub>.workers.dev) + secret ARENA_EXPORT_TOKEN (= the
+          # Worker secret of the same name); without them the site is built without browser games
+          ARENA_WORKER_URL: ${{ vars.ARENA_WORKER_URL }}
+          ARENA_EXPORT_TOKEN: ${{ secrets.ARENA_EXPORT_TOKEN }}
         run: |
           mkdir -p _site
           cp -R web/frontend/. _site/
-          python tools/monitor/build_static.py --root web/data/runs --out _site/monitor
+          python web/pyodide/build_bundle.py --out _site/engine
+          cp -R web/data/runs _runs
+          if [ -n "$ARENA_WORKER_URL" ] && [ -n "$ARENA_EXPORT_TOKEN" ]; then
+            # replay every uploaded browser game with the real engine; only verified, finished games become run dirs
+            python tools/arena/verify_games.py --fetch "$ARENA_WORKER_URL" --out _runs/web_arena --report _arena_verify.json \
+              || echo "arena verification failed; building without browser games"
+          fi
+          python tools/monitor/build_static.py --root _runs --out _site/monitor
           du -sh _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

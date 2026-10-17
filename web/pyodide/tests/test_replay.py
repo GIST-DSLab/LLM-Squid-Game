@@ -2,13 +2,19 @@
 
 import asyncio
 import json
+import sys
+from pathlib import Path
 
 import pytest
 
-import modelcalls
-import replay as R
-from replay import E
-from squid5.core.puzzle import ACTIONS
+for _p in (Path(__file__).resolve().parents[3], Path(__file__).resolve().parents[1]):  # the repo, web/pyodide
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+import modelcalls  # noqa: E402
+import replay as R  # noqa: E402
+from replay import E  # noqa: E402
+from squid5.core.puzzle import ACTIONS  # noqa: E402
 
 
 class Clock:
@@ -164,22 +170,20 @@ def test_model_seats_with_stub_one_call_at_a_time(clock):
     assert calls and all(c["error"] is None for c in calls)
 
 
-def test_modelcalls_run_all_sequential_and_no_key1_fallback(clock):
+def test_modelcalls_run_all_sequential_through_the_worker(clock):
     room = new_room(clock, humans=1, fill="models", rounds=1)
     seat = room.join("me").token
     room.start()
-    asked, live = [], {"n": 0, "max": 0}
-
-    def env_get(name):
-        asked.append(name)
-        return {"OLLAMA_API_KEY3": "k3", "OLLAMA_API_KEY1": "k1", "OLLAMA_KEY1_ENABLED": "on"}.get(name)
+    live, urls = {"n": 0, "max": 0}, set()
+    link = modelcalls.Link("https://w.example/llm", "game-token")
 
     async def failing(url, headers, payload, timeout, stream):
         live["n"] += 1
         live["max"] = max(live["max"], live["n"])
         await asyncio.sleep(0)
         live["n"] -= 1
-        assert headers["Authorization"] == "Bearer k3"
+        urls.add(url)
+        assert headers["Authorization"] == "Bearer game-token"  # the game token, never a key: the Worker holds keys
         raise ollama_error()
 
     def ollama_error():
@@ -188,9 +192,9 @@ def test_modelcalls_run_all_sequential_and_no_key1_fallback(clock):
     async def nosleep(_):
         return None
 
-    made = asyncio.run(modelcalls.run_all(room, env_get, failing, clock=clock, sleep=nosleep))
+    made = asyncio.run(modelcalls.run_all(room, link, failing, clock=clock, sleep=nosleep))
     assert made >= 3 and live["max"] == 1  # one call at a time
-    assert "OLLAMA_API_KEY1" not in asked  # key 3 failed: key 1 is never read
+    assert urls == {"https://w.example/llm/api/chat"}
     room.submit(seat, human_reply(me(room, seat).pending))  # the person's opening completes the batch: replay
     errs = [e for e in room.events if e.get("event") == "model_call"]
     assert errs and all("429" in e["error"] for e in errs)
@@ -202,9 +206,7 @@ def test_modelcalls_streams_solve_to_watchers(clock):
     seat = room.join("me").token
     room.start()
 
-    def env_get(name):
-        return {"OLLAMA_API_KEY3": "k3"}.get(name)
-
+    link = modelcalls.Link("http://127.0.0.1:1/llm", "t")
     seen = []
 
     async def transport(url, headers, payload, timeout, stream):
@@ -229,7 +231,7 @@ def test_modelcalls_streams_solve_to_watchers(clock):
         if me(room, seat).pending is not None:
             room.submit(seat, human_reply(me(room, seat).pending))
         elif room.model_jobs():
-            asyncio.run(modelcalls.run_all(room, env_get, transport, clock=clock))
+            asyncio.run(modelcalls.run_all(room, link, transport, clock=clock))
         elif any(k[0] == "watch" for k in room.needs):
             room.watch_ack(me(room, seat), room.watch["round"])
             room.advance()

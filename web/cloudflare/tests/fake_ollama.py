@@ -1,10 +1,10 @@
-"""A local stand-in for Ollama Cloud's /api/chat, to test the Worker's real fetch path (ollama_fetch.js_transport).
+"""A local stand-in for Ollama Cloud's /api/chat, to test the thin Worker's real fetch path (entry.py ``upstream``).
 
     python web/cloudflare/tests/fake_ollama.py [--port 11435]
 
 Answers like stub_transport.py (DONE / LEAVE / GIVE 0 / first action), streams NDJSON when asked, sleeps 0.3 s per
 call, and logs one JSON line per request to stdout: model, think (absent = null), stream, the Authorization header's
-key, and how many requests were open at once (the Worker must make a room's calls one at a time).
+key, and how many requests were open at once (the browser engine makes a room's calls one at a time).
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-sys.path[:0] = [str(Path(__file__).resolve().parents[3]), str(Path(__file__).resolve().parents[1] / "src")]
+sys.path[:0] = [str(Path(__file__).resolve().parents[3]), str(Path(__file__).resolve().parents[2] / "pyodide")]
 from stub_transport import answer  # noqa: E402
 
 OPEN = {"n": 0, "max": 0}

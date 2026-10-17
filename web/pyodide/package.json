@@ -1,0 +1,9 @@
+{
+  "name": "squid5-browser-engine-check",
+  "private": true,
+  "description": "Runs the squid5 engine under Pyodide in Node (CI guard for the browser arena): node node_check.mjs",
+  "type": "module",
+  "devDependencies": {
+    "pyodide": "314.0.7"
+  }
+}

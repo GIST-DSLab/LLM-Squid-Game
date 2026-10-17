@@ -1,4 +1,6 @@
-"""Copy the one squid5 engine (and the web room code built on it) into the Worker bundle.
+"""PARKED (10-18): the thin Worker bundles no engine; see legacy/README.md.
+
+Copy the one squid5 engine (and the web room code built on it) into the Worker bundle.
 
     python web/cloudflare/vendor.py [--check]
 

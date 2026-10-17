@@ -1,5 +1,5 @@
-# squid5 web API: Python Worker + one Durable Object per room + D1 + R2 (run-dir exports).
-# Build first: python vendor.py (copies squid5/ and web/server/{engine,signal}.py into src/). See README.md.
+# squid5 thin API (FREE plan): Python Worker for model calls, game records and the survey. The game engine runs in
+# the visitor's browser (web/pyodide); nothing here imports it. See README.md.
 name = "squid5-api"
 main = "src/entry.py"
 compatibility_date = "2026-10-01"
@@ -8,22 +8,8 @@ compatibility_flags = ["python_workers"]
 # Dashboard variables survive deploys (OLLAMA_KEY1_ENABLED is set only there, never here).
 keep_vars = true
 
-# Engine data files read at import (rules.py: prompts/en/trim_v19.yaml; signal.py: configs/squid5/*.yaml).
-[[rules]]
-type = "Data"
-globs = ["**/*.yaml"]
-fallthrough = true
-
 [python_modules]
 exclude = ["**/*.pyc", "**/__pycache__"]
-
-[[durable_objects.bindings]]
-name = "ROOMS"
-class_name = "RoomDO"
-
-[[migrations]]
-tag = "v1"
-new_sqlite_classes = ["RoomDO"]
 
 [[d1_databases]]
 binding = "DB"
@@ -33,12 +19,13 @@ migrations_dir = "migrations"
 
 [[r2_buckets]]
 binding = "RUNS"
-bucket_name = "squid5-runs"
+bucket_name = "squid5-runs"  # arena/games/<id>/record.json.gz
 
 [vars]
 # Allowed browser origins (comma-separated); the default list in entry.py applies when empty.
 CORS_ORIGINS = "https://gist-dslab.github.io,http://localhost:5600,http://127.0.0.1:5600,http://localhost:8600,http://127.0.0.1:8600"
-
-# Paid plan only: CPU per request (a cold room replays its whole game; signal/solve builds puzzles).
-# [limits]
-# cpu_ms = 120000
+# Abuse limits (entry.py LIMITS has the same defaults): model calls per game / per IP per hour, games per IP per hour.
+LIMIT_GAME_CALLS = "600"
+LIMIT_IP_CALLS_HOUR = "1200"
+LIMIT_IP_GAMES_HOUR = "12"
+LIMIT_TOKEN_TTL_S = "21600"

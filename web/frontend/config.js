@@ -1,18 +1,18 @@
-// squid5 web5 frontend config. The one knob for the backend URL.
-// GitHub Pages (static only) -> the Render API for what needs a server (arena rooms, signal task, probe survey); the
-// backend's WEB5_CORS_ORIGINS must list the Pages origin.
-// Local dev: the backend at 8600 serves this folder itself, so a same-origin "" works; a separate static server
-// (python -m http.server 5600) needs the explicit backend URL.
-window.WEB5_API = location.hostname.endsWith("github.io") ? "https://squid5-web5-api.onrender.com"
-  : location.port === "5600" ? "http://localhost:8600" : "";
-// GitHub Pages also carries a static copy of the game logs, model comparison and leaderboard (monitor/, built by
-// tools/monitor/build_static.py in the Pages workflow): there those pages read monitor/data/ and never call the API.
-window.WEB5_STATIC = location.hostname.endsWith("github.io");
-// Links marked data-api-href (the game-log viewer, monitor/) go to the API origin when the pages are served elsewhere
-// without the static copy (the 5600 static server); on Pages and same-origin they keep the relative href.
-window.WEB5_LINK = (path) => (window.WEB5_API && !window.WEB5_STATIC ? window.WEB5_API + "/" : "") + path;
-// A page of the API server itself (an arena room's live game log under the server's monitor/): always the API origin.
-window.WEB5_API_LINK = (path) => (window.WEB5_API ? window.WEB5_API + "/" : "") + path;
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.WEB5_API && !window.WEB5_STATIC) document.querySelectorAll("a[data-api-href]").forEach((a) => { a.href = window.WEB5_LINK(a.dataset.apiHref); });
-});
+// squid5 web5 frontend config. The one knob for the backend.
+// The game engine runs in this browser (Pyodide in a Web Worker: engine.js, engine_worker.js, engine/ bundle). The only
+// server is a thin Cloudflare Worker (web/cloudflare, FREE plan): model calls for model seats (it holds the Ollama key),
+// game-record uploads and the survey. Set WORKER_URL after `wrangler deploy` (it prints https://squid5-api.<sub>.workers.dev).
+(function () {
+  const WORKER_URL = "https://squid5-api.REPLACE-ME.workers.dev";  // <- the deployed Worker (no trailing slash)
+  const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+  // Local: `wrangler dev` on 8788 (web/cloudflare/README.md); a ?worker= query overrides (tests, previews).
+  const q = new URLSearchParams(location.search).get("worker");
+  const url = q || (local ? `http://${location.hostname}:8788` : WORKER_URL);
+  window.WEB5_WORKER = /REPLACE-ME/.test(url) ? "" : url;  // "" = no Worker: bot games only, not recorded
+  window.WEB5_API = window.WEB5_WORKER;  // probe.js posts the survey here (/api/probe)
+})();
+// The game logs, model comparison and leaderboard are a static copy (monitor/, built by tools/monitor/build_static.py in
+// the Pages workflow) everywhere but the old local monitor server (tools/monitor/serve.py, web/server/app.py on 8600).
+window.WEB5_STATIC = location.port !== "8600";
+window.WEB5_LINK = (path) => path;
+window.WEB5_API_LINK = (path) => path;

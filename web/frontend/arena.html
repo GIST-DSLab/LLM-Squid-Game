@@ -57,8 +57,8 @@
       <div class="lobby-glow" aria-hidden="true"></div>
       <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v17b · 모델 실험과 같은 게임</span></span>
       <h1 class="lobby-title">아레나 · <em>4인 방</em></h1>
-      <p class="lobby-lead">모델 실험(5.2 v17b)과 똑같은 게임이 실험 엔진 그대로 돌아가는 방입니다. 방 코드로 최대 네 명이 앉고(들어온 순서대로
-        agent-6, agent-11, agent-17, agent-23), 남는 자리는 gemma4:31b나 봇이 채웁니다. 시작 잔액은 자리마다 100,000의
+      <p class="lobby-lead">모델 실험(5.2 v17b)과 똑같은 게임이 실험 엔진 그대로 — 이 브라우저 안에서 — 돌아가는 방입니다. 지금은 나 한 명이 agent-6에 앉고
+        (여러 사람 방은 다음 버전), 남는 자리는 gemma4:31b나 봇이 채웁니다. 시작 잔액은 자리마다 100,000의
         60 / 40 / 20 / 10%(seed가 돌림)입니다. 매 라운드: 시스템이 <b>solver</b>를 정함(순번, 순서는 알려 주지 않음) →
         <b>SOLVE 전 TALK</b>(<b>여는 턴</b>: <b>SAY</b> 한 줄이 그 자리와의 <b>1:1 대화</b>를 엶 → 시스템이 정한 순서로 <b>대화</b>(답 최대 6번, 번갈아; 글은 자유,
         토큰은 <b>GIVE n</b> · <b>GIVE ALL</b> · <b>ASK n</b> 틀 줄로만) → 요청받고 주지 않은 자리는 <b>결정</b>; <b>EXIT는 여기서만</b>: SOLVE 전에, 그때 가진 토큰을 들고 떠남,
@@ -90,7 +90,7 @@
         <div class="fields">
           <label class="f"><span>내 이름</span><input name="host_name" maxlength="24" placeholder="host"></label>
           <label class="f"><span>사람 자리 수</span>
-            <select name="humans"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
+            <select name="humans"><option selected>1</option><option disabled>2 (다음 버전)</option><option disabled>3 (다음 버전)</option><option disabled>4 (다음 버전)</option></select></label>
           <label class="f"><span>남는 자리</span>
             <select name="fill"><option value="models">gemma4:31b 모델로 채움</option><option value="bots">봇으로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
           <label class="f"><span>시작 잔액 배분</span>
@@ -112,11 +112,13 @@
 
       <form id="form-join" class="panel" autocomplete="off">
         <h2 class="panel-title h-shape s-triangle">참가하기</h2>
+        <p class="small warn-text">지금 버전은 게임 엔진이 각자의 브라우저에서 돌아서, 다른 사람의 방에 들어갈 수 없습니다.
+          여러 사람이 함께 하는 방은 다음 버전에서 엽니다. 새로고침하면 이 브라우저의 내 방으로 돌아옵니다.</p>
         <div class="fields fields-1">
-          <label class="f"><span>방 코드 (6자)</span><input name="code" maxlength="6" class="mono upper code-input" placeholder="ABC234" required></label>
-          <label class="f"><span>표시 이름</span><input name="name" maxlength="24" placeholder="player"></label>
+          <label class="f"><span>방 코드 (6자)</span><input name="code" maxlength="6" class="mono upper code-input" placeholder="ABC234" disabled></label>
+          <label class="f"><span>표시 이름</span><input name="name" maxlength="24" placeholder="player" disabled></label>
         </div>
-        <div class="row"><button class="primary" type="submit">참가</button></div>
+        <div class="row"><button class="primary" type="submit" disabled>참가 (다음 버전)</button></div>
         <p class="small muted hint-line">링크 <span class="mono code-inline">arena.html?room=코드</span>로 들어오면 코드가 채워져 있습니다.
           새로고침해도 이 브라우저는 같은 자리로 돌아옵니다.</p>
       </form>
@@ -262,7 +264,8 @@
       <div id="end-ledger"></div>
     </div>
     <div class="row end-actions">
-      <button id="btn-export" class="ghost" type="button">결과 내보내기(연구용 run dir)</button>
+      <button id="btn-export" class="ghost" type="button">기록 다시 올리기</button>
+      <button id="btn-download" class="ghost" type="button">기록 내려받기(JSON)</button>
       <button id="btn-new" class="primary" type="button">새 방</button>
       <span id="export-out" class="mono small"></span>
     </div>
@@ -282,7 +285,7 @@
   <span class="shapes">&#9675; &#9651; &#9633;</span>
   LLM Squid Game: A Factorial Benchmark for Measuring Functional Self-Preservation Drive in Large Language Models
   &middot; <a href="https://sundong.kim" target="_blank" rel="noopener">DS Lab</a>, GIST.<br>
-  Server-authoritative scoring. Backend:
+  The game engine runs in this browser (Pyodide); games are verified offline by replay.
   <code id="api-base"></code><br>
   <a href="https://github.com/GIST-DSLab/LLM-Squid-Game" target="_blank" rel="noopener">github.com/GIST-DSLab/LLM-Squid-Game</a>
 </footer>
@@ -308,6 +311,7 @@
 </div>
 
 <script src="config.js"></script>
+<script src="engine.js"></script>
 <script src="rules_ko.js"></script>
 <script src="signal_ui.js"></script>
 <script src="arena.js"></script>

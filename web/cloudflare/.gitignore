@@ -1,4 +1,4 @@
-# build output of vendor.py (the repo's squid5/ and web/server/ are the source of truth)
+# build output of the parked legacy/vendor.py (the thin Worker bundles no engine; keep these out of src/)
 src/squid5/
 src/web/
 src/configs/
@@ -9,3 +9,4 @@ python_modules/
 node_modules/
 .dev.vars
 __pycache__/
+pylock.toml

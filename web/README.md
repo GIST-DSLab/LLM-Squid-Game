@@ -1,5 +1,12 @@
 # web/ — 사람이 해 보는 squid5 (5.1 생존 동기 측정 + 5.2 아레나 · v17b)
 
+> **10-18부터 배포 구조가 바뀌었다.** 아레나와 시그널 페이지의 엔진(`squid5/` + `server/engine.py` · `signal.py`)은
+> 방문자의 브라우저에서 Pyodide로 돈다(`pyodide/`: 묶음 · 접착 코드 · 시험, `frontend/engine.js` · `engine_worker.js`).
+> 서버는 Cloudflare 무료 플랜의 얇은 Worker(`cloudflare/`: 모델 호출 대리 · 게임 기록 저장 · 설문) 하나다. 게임 기록은
+> `tools/arena/verify_games.py`가 엔진으로 다시 돌려 검증한 뒤 정적 게임 기록(`monitor/`)에 실린다. 지금은 사람 한 명 +
+> 봇/모델만 된다(여러 사람 방은 다음 버전). 설계: `docs/history/plans/2026-10-18-browser-engine.md`. 아래의 FastAPI
+> 서버(`server/app.py`)와 Render 배포 설명은 로컬 도구로만 남은 옛 구조다.
+
 옛 Web Arena(태그 `legacy-2026-09-22`)의 두 조각 배포 패턴(FastAPI 백엔드 + 정적 프런트엔드)을 그대로 두고, 엔진만
 현재 `squid5`로 바꾼 것이다. 아레나는 저장소 루트의 실험 엔진(`squid5.e52_game`)을 모델 실험과 **같은 게임**(5.2 v17b — 설정은
 `configs/squid5/e52v16_public_sol4.yaml`에서 그대로 읽음; 옛 v14·v13·v9 게임과 투표 방은 웹에서 지웠다)으로 **그대로** import해

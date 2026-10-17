@@ -1,4 +1,6 @@
-"""HTTP smoke test against a running local Worker (`pywrangler dev`, see README.md); standard library only.
+"""PARKED (10-18): the Durable Object room's smoke; see legacy/README.md.
+
+HTTP smoke test against a running local Worker (`pywrangler dev`, see README.md); standard library only.
 
     python web/cloudflare/tests/smoke_dev.py [--base http://localhost:8788] [--rounds 2]
 

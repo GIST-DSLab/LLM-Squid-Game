@@ -7,7 +7,9 @@
   with ``mean`` keeps the bundle and the cold start small (the real package adds megabytes to the snapshot).
 - threads: ``Session._calls`` runs a batch of model calls in a ``ThreadPoolExecutor``; Pyodide cannot start a thread.
   ``InlineExecutor`` runs each job at once, in order, and keeps its exception, so every call of a batch is made (and
-  every missing reply registered, see replay.py) before the first exception is raised by ``result()``.
+  every missing reply registered, see replay.py) before the first exception is raised by ``result()``. It is swapped
+  in only while a replay runs (``inline_executor()``), so a CPython process that also runs the experiment keeps its
+  threads.
 
 Each stand-in is installed only when the real module cannot be imported, so the same code runs under CPython with
 the real packages (the tests in web/cloudflare/tests use them).
@@ -15,6 +17,7 @@ the real packages (the tests in web/cloudflare/tests use them).
 
 from __future__ import annotations
 
+import contextlib
 import sys
 import types
 
@@ -89,6 +92,16 @@ def install() -> None:
     """Call once before importing ``squid5`` or ``web.server``."""
     _stub_httpx()
     _stub_numpy()
+
+
+@contextlib.contextmanager
+def inline_executor():
+    """``Session._calls`` without threads for the duration (it looks ``ThreadPoolExecutor`` up at call time)."""
     from squid5 import e52_game
 
-    e52_game.ThreadPoolExecutor = InlineExecutor  # the name Session._calls looks up at call time
+    before = e52_game.ThreadPoolExecutor
+    e52_game.ThreadPoolExecutor = InlineExecutor
+    try:
+        yield
+    finally:
+        e52_game.ThreadPoolExecutor = before

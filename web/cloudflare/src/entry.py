@@ -1,54 +1,72 @@
-"""squid5 web API on Cloudflare: one Python Worker (router, signal page, probe survey) and one Durable Object per room.
+"""squid5 web API on Cloudflare, FREE plan: a thin Python Worker. The game engine runs in the visitor's browser
+(web/pyodide, Pyodide in a Web Worker); this Worker never imports it.
 
-Routes (the FastAPI server's, web/server/app.py; the same request and response shapes, errors as {"detail": ...}):
+Routes (CORS for the Pages origins in ``CORS_ORIGINS``; errors as {"detail": <Korean>, "code"?}):
 
-    GET  /api/health                         {ok, rooms, time, backend}
-    GET  /api/models                         the model seats on offer (gemma4:31b first, think off), key present?
-    POST /api/rooms                          {host_name, settings} -> {code, token, agent, name}   (D1 + RoomDO)
-    GET  /api/rooms                          the latest rooms (D1)
-    POST /api/rooms/{code}/join|start|submit|watched|forfeit|export      -> RoomDO
-    GET  /api/rooms/{code}/state|events                                  -> RoomDO
-    GET  /api/signal/meta, POST /api/signal/view|solve                   web/server/signal.py, stateless
-    POST /api/probe, GET /api/probe/summary                              D1 ``probes``
-    GET  /api/leaderboard                    410: the leaderboard is a static GitHub Pages page now
+    GET  /api/health                      {ok, backend, time}
+    GET  /api/models                      the models on offer (gemma4:31b first, think off), key 3 present?, limits
+    POST /api/games                       register a browser game -> {game, token, expires_at, limits}
+    POST /llm/api/chat                    Ollama-compatible chat for a game's model seats (Bearer = game token);
+                                          the Worker picks the key (keys.py), counts the call, passes the answer or
+                                          its NDJSON stream through
+    POST /api/games/{id}/record           the browser's game record (gzip JSON, Bearer = game token) -> R2 + D1 row
+    GET  /api/games, /api/games/{id}/record|calls     export for the offline verifier (Bearer = ARENA_EXPORT_TOKEN)
+    POST /api/probe, GET /api/probe/summary           the 5.1 survey (D1 ``probes``)
+    /api/rooms*, /api/signal*             410: the engine runs in the browser now
 
-A room is a ``RoomDO`` named by its code. It holds the room's doc and every reply (its own SQLite), replays the
-session after each reply (replay.py) and makes model calls from its alarm, one at a time (modelcalls.py). Events are
-mirrored to D1 (``events``) for listing and export; finished rooms export their run dir to R2 (``RUNS``).
+Free-plan fit: every request does a little JSON and hashing and waits on I/O (D1, R2, Ollama); waiting is not CPU
+time. The record upload is stored as the raw bytes it came in (never parsed here). Limits (vars, defaults below):
+calls per game, calls per IP per hour, games per IP per hour, a short token lifetime, num_predict at most the
+model's context (clamped), a model allow-list. Counters live in D1 (``games.calls``, ``quota``): one batch per call.
+
+Keys (keys.py): OLLAMA_API_KEY3 for every call by default; OLLAMA_API_KEY1 only for a game registered with it while
+the dashboard variable OLLAMA_KEY1_ENABLED is exactly "on", re-checked at every call; never a fallback.
 """
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
 import json
+import secrets
 import time
-from dataclasses import asdict
 from urllib.parse import parse_qs, urlparse
 
-import compat
+import keys
 
-compat.install()
-
-from workers import DurableObject, Response, WorkerEntrypoint  # noqa: E402
-
-import keys  # noqa: E402
-import modelcalls  # noqa: E402
-import ollama_fetch  # noqa: E402
-import replay  # noqa: E402
-import settings as S  # noqa: E402
-import stub_transport  # noqa: E402
-from web.server import engine as E  # noqa: E402
-from web.server import signal as sig  # noqa: E402
+try:  # the Worker runtime; the CPU bench (tests/bench_cpu.mjs) and the unit tests provide stand-ins
+    from workers import Response, WorkerEntrypoint
+except ImportError:  # pragma: no cover
+    Response = WorkerEntrypoint = None
 
 DEFAULT_CORS = ["http://localhost:5600", "http://127.0.0.1:5600", "http://localhost:8600", "http://127.0.0.1:8600",
                 "https://gist-dslab.github.io"]
 JSON_HEADERS = {"content-type": "application/json; charset=utf-8"}
-ALARM_BUDGET_S = 600.0  # model calls per alarm (an alarm may run 15 minutes); the rest goes to the next alarm
+OLLAMA = "https://ollama.com"
+DEFAULT_MODEL = "gemma4:31b"
+MODELS = [  # the allow-list, the default first (web/pyodide/room_settings.py offers the same)
+    {"model": DEFAULT_MODEL, "think": None, "default": True, "note": "기본: 생각 끔, TALK 한 번 약 1.5초"},
+    {"model": "gpt-oss:20b", "think": "medium", "default": False, "note": "서버의 옛 기본값"},
+]
+ALLOWED = {m["model"] for m in MODELS}
+THINK = (None, True, False, "low", "medium", "high")
+LIMITS = {  # overridable as plain vars (LIMIT_<NAME>), numbers
+    "GAME_CALLS": 600,  # model calls per game (8 rounds x 3 model seats is ~150-400 with retries)
+    "IP_CALLS_HOUR": 1200,  # model calls per IP per hour
+    "IP_GAMES_HOUR": 12,  # games registered per IP per hour
+    "TOKEN_TTL_S": 6 * 3600,  # a game token's lifetime
+    "MAX_PREDICT": 131072,  # num_predict is clamped here (a TALK's cap is the seat's balance; no model writes more)
+    "MAX_CHAT_BYTES": 400_000,  # one chat request (the engine keeps history_messages short)
+    "MAX_RECORD_BYTES": 4_000_000,  # one gzip game record
+    "GAME_UPLOADS": 80,  # record uploads per game (one per round + the end + a few by hand)
+}
 
 
 class HttpError(Exception):
-    def __init__(self, status: int, detail: str):
+    def __init__(self, status: int, detail: str, code: str = ""):
         super().__init__(detail)
-        self.status, self.detail = status, detail
+        self.status, self.detail, self.code = status, detail, code
 
 
 def env_getter(env):
@@ -63,8 +81,15 @@ def env_getter(env):
     return get
 
 
+def limit(env_get, name: str) -> int:
+    raw = env_get(f"LIMIT_{name}")
+    try:
+        return int(raw) if raw not in (None, "") else LIMITS[name]
+    except ValueError:
+        return LIMITS[name]
+
+
 def _py(x):
-    """A JS value as Python (the SDK's binding wrappers convert some results already)."""
     x = x.to_py() if hasattr(x, "to_py") else x
     if isinstance(x, list):
         return [_py(v) for v in x]
@@ -74,111 +99,261 @@ def _py(x):
 
 
 async def d1_all(db, sql: str, *args) -> list[dict]:
-    res = await db.prepare(sql).bind(*args).all()
-    res = _py(res)
+    res = _py(await db.prepare(sql).bind(*args).all())
     return (res.get("results") if isinstance(res, dict) else _py(res.results)) or []
 
 
-async def d1_run(db, sql: str, *args):
-    return await db.prepare(sql).bind(*args).run()
+async def d1_batch(db, stmts: list[tuple[str, tuple]]) -> list[list[dict]]:
+    res = _py(await db.batch([db.prepare(sql).bind(*args) for sql, args in stmts]))
+    return [(r.get("results") if isinstance(r, dict) else _py(r.results)) or [] for r in res]
 
 
-# --- the Worker ---------------------------------------------------------------------------------------------------------
+# --- game tokens: base64url(json) "." base64url(hmac-sha256) -------------------------------------------------------------
 
-class Default(WorkerEntrypoint):
-    def cors(self, request) -> dict:
-        origin = request.headers.get("origin") or ""
-        allowed = [o.strip() for o in (env_getter(self.env)("CORS_ORIGINS") or "").split(",") if o.strip()] or DEFAULT_CORS
-        if origin in allowed:
-            return {"access-control-allow-origin": origin, "vary": "Origin",
-                    "access-control-allow-methods": "GET, POST, OPTIONS",
-                    "access-control-allow-headers": "Content-Type", "access-control-max-age": "86400"}
-        return {}
+def _b64(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
 
-    def reply(self, request, data, status: int = 200) -> Response:
-        return Response(json.dumps(data, ensure_ascii=False, default=str), status=status,
-                        headers={**JSON_HEADERS, **self.cors(request)})
 
-    async def fetch(self, request):
-        if request.method == "OPTIONS":
-            return Response("", status=204, headers=self.cors(request))
+def _unb64(s: str) -> bytes:
+    return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+
+def sign(secret: str, claims: dict) -> str:
+    body = _b64(json.dumps(claims, separators=(",", ":"), sort_keys=True).encode())
+    mac = hmac.new(secret.encode(), body.encode(), hashlib.sha256).digest()
+    return f"{body}.{_b64(mac)}"
+
+
+def verify(secret: str, token: str, now: float) -> dict:
+    """The claims of a valid, unexpired token; HttpError 401 otherwise."""
+    try:
+        body, mac = token.split(".")
+        good = hmac.compare_digest(_unb64(mac), hmac.new(secret.encode(), body.encode(), hashlib.sha256).digest())
+        claims = json.loads(_unb64(body)) if good else None
+    except (ValueError, TypeError):
+        claims = None
+    if not isinstance(claims, dict):
+        raise HttpError(401, "게임 토큰이 올바르지 않습니다. 새 게임을 시작하세요.", "token")
+    if now > float(claims.get("exp", 0)):
+        raise HttpError(401, "게임 토큰이 만료되었습니다(게임 시작 뒤 시간 제한). 새 게임을 시작하세요.", "token_expired")
+    return claims
+
+
+def ip_hash(secret: str, ip: str) -> str:
+    return hashlib.sha256(f"{secret}|{ip}".encode()).hexdigest()[:16]
+
+
+def digest(text: str) -> str:
+    """The engine's prompt hash (web/pyodide/replay.py ``digest``): the verifier matches records to logged calls."""
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:16]
+
+
+def chat_payload(body: dict, model: str, max_predict: int) -> dict:
+    """The Ollama request the Worker sends: only the fields the engine uses, bounded."""
+    if body.get("model") != model:
+        raise HttpError(403, f"이 게임의 모델은 {model}입니다(요청: {str(body.get('model'))[:40]}).", "model")
+    msgs = body.get("messages")
+    if not isinstance(msgs, list) or not msgs or len(msgs) > 200:
+        raise HttpError(400, "messages가 없거나 너무 깁니다.", "bad_request")
+    clean = []
+    for m in msgs:
+        if not isinstance(m, dict) or m.get("role") not in ("system", "user", "assistant") \
+                or not isinstance(m.get("content"), str):
+            raise HttpError(400, "messages의 형식이 맞지 않습니다.", "bad_request")
+        clean.append({"role": m["role"], "content": m["content"]})
+    opts = body.get("options") if isinstance(body.get("options"), dict) else {}
+    try:
+        temp = min(2.0, max(0.0, float(opts.get("temperature", 1.0))))
+        cap = int(opts.get("num_predict", max_predict))
+    except (TypeError, ValueError) as err:
+        raise HttpError(400, "options가 숫자가 아닙니다.", "bad_request") from err
+    if cap < 1:
+        raise HttpError(400, "num_predict는 1 이상이어야 합니다.", "bad_request")
+    cap = min(cap, max_predict)  # the engine sends a TALK's cap = the balance (up to millions); the model's context ends sooner
+    out = {"model": model, "messages": clean, "stream": bool(body.get("stream")),
+           "options": {"temperature": temp, "num_predict": cap}}
+    if body.get("think") is not None:
+        if body["think"] not in THINK:
+            raise HttpError(400, "think는 low · medium · high만 됩니다.", "bad_request")
+        out["think"] = body["think"]
+    return out
+
+
+UPSTREAM = {  # Ollama's refusals, in Korean; 429 stays 429 (the browser retries it), the rest are final
+    401: (502, "Ollama가 서버 키를 거부했습니다(401). 연구자에게 알려 주세요.", "upstream_auth"),
+    403: (502, "Ollama가 서버 키를 거부했습니다(403). 연구자에게 알려 주세요.", "upstream_auth"),
+    402: (402, "OLLAMA_API_KEY3의 무료 사용량이 끝났습니다(402). 다른 키로 넘어가지 않습니다 — 연구자가 충전하거나 "
+               "내일 다시 해 주세요.", "upstream_quota"),
+    429: (429, "Ollama가 지금 요청이 많다고 거절했습니다(429, KEY3). 잠시 뒤 자동으로 다시 시도합니다. 다른 키로는 "
+               "넘어가지 않습니다.", "upstream_429"),
+}
+
+
+# --- the Worker -----------------------------------------------------------------------------------------------------------
+
+class Api:
+    """The routes, independent of the runtime's Request / Response (``fetch`` adapts them)."""
+
+    def __init__(self, env, now=time.time):
+        self.env, self.get, self.now = env, env_getter(env), now
+
+    # helpers ------------------------------------------------------------------------------------------------------------
+    def secret(self) -> str:
+        s = (self.get("GAME_TOKEN_SECRET") or "").strip()
+        if len(s) < 16:
+            raise HttpError(503, "서버에 GAME_TOKEN_SECRET(16자 이상)이 없어 게임을 등록할 수 없습니다 "
+                                 "(wrangler secret put GAME_TOKEN_SECRET).", "config")
+        return s
+
+    def bearer(self, headers) -> str:
+        auth = headers.get("authorization") or ""
+        return auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+
+    def admin(self, headers) -> None:
+        want = (self.get("ARENA_EXPORT_TOKEN") or "").strip()
+        if len(want) < 16:
+            raise HttpError(503, "ARENA_EXPORT_TOKEN이 없어 내보내기가 꺼져 있습니다.", "config")
+        if not hmac.compare_digest(self.bearer(headers), want):
+            raise HttpError(401, "내보내기 토큰이 맞지 않습니다.", "admin")
+
+    def ollama_base(self) -> str:
+        """``OLLAMA_BASE_URL`` for local tests (tests/fake_ollama.py): only a loopback address is honoured, so a stray
+        value in production can never send a key to another host."""
+        url = (self.get("OLLAMA_BASE_URL") or "").strip()
+        return url if url.startswith(("http://127.0.0.1:", "http://localhost:")) else OLLAMA
+
+    async def bump(self, key: str, ttl: float) -> int:
+        rows = await d1_all(self.env.DB, "INSERT INTO quota (k, n, exp) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE "
+                                         "SET n = n + 1 RETURNING n", key, self.now() + ttl)
+        return int(rows[0]["n"]) if rows else 0
+
+    # routes -------------------------------------------------------------------------------------------------------------
+    def models(self) -> dict:
+        return {"model": DEFAULT_MODEL, "think": None, "think_levels": ["off", "low", "medium", "high"],
+                "models": MODELS, "api_key_env": keys.DEFAULT_KEY,
+                "available": bool((self.get(keys.DEFAULT_KEY) or "").strip()),
+                "key1_enabled": keys.key1_enabled(self.get), "backend": "cloudflare-thin", "engine": "browser",
+                "limits": {k: limit(self.get, k) for k in ("GAME_CALLS", "IP_CALLS_HOUR", "IP_GAMES_HOUR",
+                                                           "TOKEN_TTL_S", "MAX_PREDICT")}}
+
+    async def new_game(self, body: dict, ip: str) -> dict:
+        secret = self.secret()
+        s = body.get("settings") if isinstance(body.get("settings"), dict) else {}
+        fill = str(s.get("fill") or "bots")
+        model = str(s.get("model") or DEFAULT_MODEL)
+        uses_models = fill == "models" and int(s.get("humans") or 1) < 4
         try:
-            return self.reply(request, *await self.route(request))
-        except HttpError as err:
-            return self.reply(request, {"detail": err.detail}, err.status)
-        except Exception as err:  # noqa: BLE001
-            return self.reply(request, {"detail": f"server error: {type(err).__name__}: {err}"}, 500)
+            key_name = keys.choose_key(s.get("api_key_env"), self.get)
+            if uses_models:
+                if model not in ALLOWED:
+                    raise HttpError(400, f"이 모델은 쓸 수 없습니다: {model[:40]} (허용: {', '.join(sorted(ALLOWED))}).",
+                                    "model")
+                keys.key_value(key_name, self.get)
+        except keys.KeyError_ as err:
+            raise HttpError(400, str(err), "key") from err
+        now, iph = self.now(), ip_hash(secret, ip)
+        n = await self.bump(f"games:{iph}:{int(now // 3600)}", 7200)
+        if n > limit(self.get, "IP_GAMES_HOUR"):
+            raise HttpError(429, f"이 주소에서 한 시간에 시작할 수 있는 게임 수({limit(self.get, 'IP_GAMES_HOUR')})를 "
+                                 "넘었습니다. 잠시 뒤 다시 해 주세요.", "limit_ip_games")
+        gid = secrets.token_hex(8)
+        ttl, eng = limit(self.get, "TOKEN_TTL_S"), body.get("engine") if isinstance(body.get("engine"), dict) else {}
+        exp = now + ttl
+        claims = {"g": gid, "m": model if uses_models else "", "k": key_name, "exp": exp}
+        info = {k: s.get(k) for k in ("model", "think", "fill", "humans", "rounds", "seed")}
+        await d1_batch(self.env.DB, [
+            ("INSERT INTO games (id, created_at, ip, code, model, key_name, settings, engine, engine_version, calls, "
+             "uploads, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 'started', ?)",
+             (gid, now, iph, str(body.get("code") or "")[:12], claims["m"], key_name, json.dumps(info)[:2000],
+              str(eng.get("bundle") or "")[:64], str(eng.get("version") or "")[:32], now)),
+            ("DELETE FROM quota WHERE exp < ?", (now,))])
+        return {"game": gid, "token": sign(secret, claims), "expires_at": exp,
+                "limits": {"calls": limit(self.get, "GAME_CALLS"), "ttl_s": ttl}}
 
-    async def body(self, request) -> dict:
-        text = await request.text()
-        if not text:
-            return {}
+    async def chat(self, headers, body_text: str, ip: str):
+        """-> (status, headers, body) where body is text or the upstream JS stream."""
+        secret = self.secret()
+        claims = verify(secret, self.bearer(headers), self.now())
+        if not claims.get("m"):
+            raise HttpError(403, "이 게임은 모델 자리가 없습니다.", "model")
+        if len(body_text) > limit(self.get, "MAX_CHAT_BYTES"):
+            raise HttpError(413, "요청이 너무 큽니다.", "bad_request")
         try:
-            data = json.loads(text)
+            body = json.loads(body_text)
         except ValueError as err:
-            raise HttpError(400, f"bad JSON: {err}") from err
-        return data if isinstance(data, dict) else {}
+            raise HttpError(400, "JSON이 아닙니다.", "bad_request") from err
+        payload = chat_payload(body if isinstance(body, dict) else {}, claims["m"], limit(self.get, "MAX_PREDICT"))
+        try:
+            key = keys.key_value(keys.choose_key(claims.get("k"), self.get), self.get)  # the switch, every call
+        except keys.KeyError_ as err:
+            raise HttpError(403, str(err), "key") from err
+        gid, now = claims["g"], self.now()
+        iph = ip_hash(secret, ip)
+        game_rows, ip_rows = await d1_batch(self.env.DB, [
+            ("UPDATE games SET calls = calls + 1, updated_at = ? WHERE id = ? AND calls < ? RETURNING calls",
+             (now, gid, limit(self.get, "GAME_CALLS"))),
+            ("INSERT INTO quota (k, n, exp) VALUES (?, 1, ?) ON CONFLICT(k) DO UPDATE SET n = n + 1 RETURNING n",
+             (f"calls:{iph}:{int(now // 3600)}", now + 7200))])
+        if not game_rows:
+            raise HttpError(429, f"이 게임의 모델 호출 수 한도({limit(self.get, 'GAME_CALLS')}번)에 닿았습니다. "
+                                 "남은 모델 답은 빈 답으로 처리됩니다.", "limit_game")
+        if int(ip_rows[0]["n"]) > limit(self.get, "IP_CALLS_HOUR"):
+            raise HttpError(429, f"이 주소의 한 시간 모델 호출 한도({limit(self.get, 'IP_CALLS_HOUR')}번)에 닿았습니다. "
+                                 "잠시 뒤 다시 해 주세요.", "limit_ip")
+        n = int(game_rows[0]["calls"])
+        user = next((m["content"] for m in reversed(payload["messages"]) if m["role"] == "user"), "")
+        status, resp = await self.upstream(payload, key)
+        log = ("INSERT INTO llm_calls (game, n, ts, model, prompt_h, status, stream, eval_count, content_h) "
+               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        if status != 200:
+            await d1_batch(self.env.DB, [(log, (gid, n, now, payload["model"], digest(user), status,
+                                                int(payload["stream"]), None, None))])
+            st, detail, code = UPSTREAM.get(status, (502, f"Ollama 오류(HTTP {status}).", "upstream"))
+            raise HttpError(st, detail, code)
+        if payload["stream"]:
+            await d1_batch(self.env.DB, [(log, (gid, n, now, payload["model"], digest(user), 200, 1, None, None))])
+            return 200, {"content-type": "application/x-ndjson"}, resp.body
+        text = await resp.text()
+        try:
+            j = json.loads(text)
+            ev, content_h = int(j.get("eval_count") or 0), digest((j.get("message") or {}).get("content") or "")
+        except (ValueError, AttributeError):
+            ev, content_h = None, None
+        await d1_batch(self.env.DB, [(log, (gid, n, now, payload["model"], digest(user), 200, 0, ev, content_h))])
+        return 200, JSON_HEADERS, text
 
-    def room_stub(self, code: str):
-        ns = self.env.ROOMS
-        return ns.get(ns.idFromName(code.upper()))
+    async def upstream(self, payload: dict, key: str):
+        import js
+        from pyodide.ffi import to_js
 
-    async def to_room(self, code: str, op: str, token: str, body: dict, method: str):
-        out = json.loads(await self.room_stub(code).api(op, token, json.dumps(body), method))
-        return out["body"], out["status"]
+        opts = to_js({"method": "POST", "body": json.dumps(payload),
+                      "headers": {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}},
+                     dict_converter=js.Object.fromEntries)
+        resp = await js.fetch(self.ollama_base() + "/api/chat", opts)
+        return int(resp.status), resp
 
-    async def route(self, request):
-        url = urlparse(request.url)
-        path, q = url.path.rstrip("/") or "/", {k: v[0] for k, v in parse_qs(url.query).items()}
-        m, env_get = request.method, env_getter(self.env)
-        parts = path.split("/")
-        if path == "/api/health":
-            rows = await d1_all(self.env.DB, "SELECT COUNT(*) AS n FROM rooms WHERE status IN ('lobby', 'running')")
-            return {"ok": True, "rooms": rows[0]["n"] if rows else 0, "time": time.time(), "backend": "cloudflare"}, 200
-        if path == "/api/models":
-            return self.models(env_get), 200
-        if path == "/api/rooms" and m == "POST":
-            return await self.create_room(await self.body(request), env_get)
-        if path == "/api/rooms" and m == "GET":
-            rows = await d1_all(self.env.DB, "SELECT code, created_at, settings, seats, status FROM rooms "
-                                             "ORDER BY created_at DESC LIMIT 50")
-            return [{"code": r["code"], "status": r["status"], "created_at": r["created_at"],
-                     "humans": sum(v.get("kind") == "human" for v in json.loads(r["seats"] or "{}").values()),
-                     "seats": json.loads(r["settings"] or "{}").get("humans")} for r in rows], 200
-        if len(parts) == 5 and parts[1:3] == ["api", "rooms"]:
-            code, op = parts[3].upper(), parts[4]
-            allowed = {"GET": ("state", "events"), "POST": ("join", "start", "submit", "watched", "forfeit", "export")}
-            if op not in allowed.get(m, ()):
-                raise HttpError(405 if op in sum(allowed.values(), ()) else 404, f"{m} {path}")
-            body = await self.body(request) if m == "POST" else {}
-            return await self.to_room(code, op, q.get("token", ""), body, m)
-        if path == "/api/signal/meta":
-            return sig.meta(), 200
-        if path in ("/api/signal/view", "/api/signal/solve") and m == "POST":
-            fn = sig.view if path.endswith("view") else sig.solve
-            try:
-                return fn(await self.body(request)), 200
-            except sig.SignalError as err:
-                raise HttpError(400, str(err)) from err
-        if path == "/api/probe" and m == "POST":
-            return await self.probe(await self.body(request)), 200
-        if path == "/api/probe/summary":
-            rows = await d1_all(self.env.DB, "SELECT self_vals, other_vals FROM probes ORDER BY id")
-            n = len(rows)
-            vals = [{"self": json.loads(r["self_vals"]), "other": json.loads(r["other_vals"])} for r in rows]
-            mean = lambda k: [sum(v[k][i] for v in vals) / n / 100 for i in range(5)] if n else None  # noqa: E731
-            return {"n": n, "x": [50, 40, 30, 20, 10], "self": mean("self"), "other": mean("other")}, 200
-        if path == "/api/leaderboard":
-            raise HttpError(410, "리더보드는 GitHub Pages의 정적 페이지(leaderboard.html, monitor/data)로 옮겼습니다.")
-        raise HttpError(404, f"no route {m} {path}")
-
-    def models(self, env_get) -> dict:
-        d = S.defaults()
-        return {"model": S.DEFAULT_MODEL, "think": None, "think_levels": ["off", *E.THINK_LEVELS],
-                "models": S.MODELS, "api_key_env": keys.DEFAULT_KEY,
-                "available": bool((env_get(keys.DEFAULT_KEY) or "").strip()),
-                "key1_enabled": keys.key1_enabled(env_get), "timeout": d["model_timeout"], "version": E.VERSION,
-                "sequential_model_calls": True, "defaults": d}
+    async def record(self, gid: str, headers, size: int, read_body) -> dict:
+        claims = verify(self.secret(), self.bearer(headers), self.now() - 24 * 3600)  # an hour-long game may end late
+        if claims.get("g") != gid:
+            raise HttpError(403, "이 게임의 토큰이 아닙니다.", "token")
+        if not 0 < size <= limit(self.get, "MAX_RECORD_BYTES"):
+            raise HttpError(413, "기록이 비었거나 너무 큽니다.", "bad_request")
+        try:
+            summ = json.loads(headers.get("x-squid5-summary") or "{}")
+        except ValueError:
+            summ = {}
+        summ = summ if isinstance(summ, dict) else {}
+        now = self.now()
+        rows = await d1_all(self.env.DB, "UPDATE games SET uploads = uploads + 1, status = ?, rounds = ?, events = ?, "
+                                         "digest = ?, bytes = ?, updated_at = ? WHERE id = ? AND uploads < ? "
+                                         "RETURNING uploads",
+                            str(summ.get("status") or "")[:16], int(summ.get("rounds") or 0),
+                            int(summ.get("events") or 0), str(summ.get("digest") or "")[:64], size, now, gid,
+                            limit(self.get, "GAME_UPLOADS"))
+        if not rows:
+            raise HttpError(429, "이 게임의 기록 올리기 횟수 한도에 닿았습니다.", "limit_uploads")
+        await self.env.RUNS.put(f"arena/games/{gid}/record.json.gz", await read_body())
+        return {"ok": True, "game": gid, "uploads": int(rows[0]["uploads"]), "bytes": size}
 
     async def probe(self, body: dict) -> dict:
         """The 5.1 survey (web/server/app.py ``probe``): self and other, 5 values in 0..100 each."""
@@ -189,230 +364,117 @@ class Default(WorkerEntrypoint):
         if any(len(v) != 5 or not all(0 <= x <= 100 for x in v) for v in vals.values()):
             raise HttpError(400, "self and other must each hold 5 values in 0..100")
         meta = {k: v for k, v in (body.get("meta") or {}).items() if isinstance(k, str)}
-        res = await d1_run(self.env.DB, "INSERT INTO probes (ts, anon_id, client_ts, self_vals, other_vals, meta) "
-                                        "VALUES (?, ?, ?, ?, ?, ?)", time.time(), str(body.get("anon_id") or "")[:64],
-                           str(body.get("ts") or "")[:40], json.dumps(vals["self"]), json.dumps(vals["other"]),
-                           json.dumps(meta))
-        res = _py(res)
+        res = _py(await self.env.DB.prepare(
+            "INSERT INTO probes (ts, anon_id, client_ts, self_vals, other_vals, meta) VALUES (?, ?, ?, ?, ?, ?)").bind(
+            self.now(), str(body.get("anon_id") or "")[:64], str(body.get("ts") or "")[:40], json.dumps(vals["self"]),
+            json.dumps(vals["other"]), json.dumps(meta)[:4000]).run())
         meta = res.get("meta") if isinstance(res, dict) else _py(res.meta)
         return {"ok": True, "id": int(meta["last_row_id"])}
 
-    async def create_room(self, body: dict, env_get):
+    async def probe_summary(self) -> dict:
+        rows = await d1_all(self.env.DB, "SELECT self_vals, other_vals FROM probes ORDER BY id")
+        n = len(rows)
+        vals = [{"self": json.loads(r["self_vals"]), "other": json.loads(r["other_vals"])} for r in rows]
+        mean = lambda k: [sum(v[k][i] for v in vals) / n / 100 for i in range(5)] if n else None  # noqa: E731
+        return {"n": n, "x": [50, 40, 30, 20, 10], "self": mean("self"), "other": mean("other")}
+
+    async def route(self, method: str, url: str, headers, read_text, read_body, size: int, ip: str):
+        """-> (status, extra headers, body): body is a dict / list (JSON), text, or a JS stream / buffer."""
+        u = urlparse(url)
+        path, q = u.path.rstrip("/") or "/", {k: v[0] for k, v in parse_qs(u.query).items()}
+        parts = path.split("/")
+        if path == "/api/health":
+            return 200, {}, {"ok": True, "backend": "cloudflare-thin", "engine": "browser", "time": self.now()}
+        if path == "/api/models":
+            return 200, {}, self.models()
+        if path == "/llm/api/chat" and method == "POST":
+            return await self.chat(headers, await read_text(), ip)
+        if path == "/api/games" and method == "POST":
+            return 200, {}, await self.new_game(await self.json_body(read_text), ip)
+        if path == "/api/games" and method == "GET":
+            self.admin(headers)
+            rows = await d1_all(self.env.DB, "SELECT id, created_at, code, model, key_name, settings, engine, "
+                                             "engine_version, calls, uploads, status, rounds, events, digest, bytes, "
+                                             "updated_at FROM games WHERE updated_at >= ? AND uploads > 0 "
+                                             "ORDER BY updated_at LIMIT ?",
+                                float(q.get("since") or 0), min(int(q.get("limit") or 200), 1000))
+            return 200, {}, rows
+        if len(parts) == 5 and parts[1:3] == ["api", "games"]:
+            gid, op = parts[3], parts[4]
+            if op == "record" and method == "POST":
+                return 200, {}, await self.record(gid, headers, size, read_body)
+            if op == "record" and method == "GET":
+                self.admin(headers)
+                obj = await self.env.RUNS.get(f"arena/games/{gid}/record.json.gz")
+                if obj is None or str(type(obj)).endswith("JsNull'>"):
+                    raise HttpError(404, "no record")
+                return 200, {"content-type": "application/gzip"}, obj.body
+            if op == "calls" and method == "GET":
+                self.admin(headers)
+                return 200, {}, await d1_all(self.env.DB, "SELECT n, ts, model, prompt_h, status, stream, eval_count, "
+                                                          "content_h FROM llm_calls WHERE game = ? ORDER BY n", gid)
+        if path == "/api/probe" and method == "POST":
+            return 200, {}, await self.probe(await self.json_body(read_text))
+        if path == "/api/probe/summary":
+            return 200, {}, await self.probe_summary()
+        if path.startswith(("/api/rooms", "/api/signal")):
+            raise HttpError(410, "게임 엔진은 이제 브라우저에서 돕니다(arena.html · signal.html). 이 서버는 모델 호출과 "
+                                 "기록 저장만 합니다.", "moved")
+        if path == "/api/leaderboard":
+            raise HttpError(410, "리더보드는 GitHub Pages의 정적 페이지(leaderboard.html, monitor/data)로 옮겼습니다.")
+        raise HttpError(404, f"no route {method} {path}")
+
+    async def json_body(self, read_text) -> dict:
+        text = await read_text()
+        if len(text) > 100_000:
+            raise HttpError(413, "요청이 너무 큽니다.")
         try:
-            s = S.make(body.get("settings") or {}, env_get)
-        except keys.KeyError_ as err:
-            raise HttpError(400, str(err)) from err
-        except (TypeError, ValueError) as err:
-            raise HttpError(400, f"bad settings: {err}") from err
-        if s.fill == "models" and s.humans < 4:
+            data = json.loads(text) if text else {}
+        except ValueError as err:
+            raise HttpError(400, f"bad JSON: {err}") from err
+        return data if isinstance(data, dict) else {}
+
+
+def cors(env_get, origin: str) -> dict:
+    allowed = [o.strip() for o in (env_get("CORS_ORIGINS") or "").split(",") if o.strip()] or DEFAULT_CORS
+    if origin in allowed:
+        return {"access-control-allow-origin": origin, "vary": "Origin",
+                "access-control-allow-methods": "GET, POST, OPTIONS",
+                "access-control-allow-headers": "Content-Type, Authorization, X-Squid5-Summary",
+                "access-control-max-age": "86400"}
+    return {}
+
+
+if WorkerEntrypoint is not None:
+    class Default(WorkerEntrypoint):
+        async def fetch(self, request):
+            env_get = env_getter(self.env)
+            ch = cors(env_get, request.headers.get("origin") or "")
+            if request.method == "OPTIONS":
+                return Response("", status=204, headers=ch)
+            api = Api(self.env)
+            js_req = request.js_object
+
+            async def read_text():
+                return await request.text()
+
+            async def read_body():
+                return await js_req.arrayBuffer()  # stays a JS ArrayBuffer: stored as is, never parsed here
+
             try:
-                keys.key_value(s.api_key_env, env_get)
-            except keys.KeyError_ as err:
-                raise HttpError(400, str(err)) from err
-        for _ in range(20):
-            code = E.new_code(())
-            if not await d1_all(self.env.DB, "SELECT code FROM rooms WHERE code = ?", code):
-                break
-        else:
-            raise HttpError(503, "no free room code")
-        out, status = await self.to_room(code, "create", "", {"code": code, "host_name": body.get("host_name") or "host",
-                                                              "settings": asdict(s)}, "POST")
-        return out, status
-
-
-# --- the room -----------------------------------------------------------------------------------------------------------
-
-class RoomDO(DurableObject):
-    def __init__(self, ctx, env):
-        super().__init__(ctx, env)
-        self.sql = ctx.storage.sql
-        self.sql.exec("CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)")
-        self.sql.exec("CREATE TABLE IF NOT EXISTS replies (agent TEXT, idx INTEGER, body TEXT, PRIMARY KEY (agent, idx))")
-        self.room: replay.ReplayRoom | None = None
-        self.env_get = env_getter(env)
-
-    # storage -------------------------------------------------------------------------------------------------------------
-    def _rows(self, sql: str, *args) -> list[dict]:
-        return _py(self.sql.exec(sql, *args).toArray())
-
-    def load(self) -> replay.ReplayRoom | None:
-        if self.room is None:
-            rows = self._rows("SELECT v FROM meta WHERE k = 'doc'")
-            if not rows:
-                return None
-            replies: dict = {}
-            for r in self._rows("SELECT agent, idx, body FROM replies"):
-                replies.setdefault(r["agent"], {})[int(r["idx"])] = json.loads(r["body"])
-            self.room = replay.ReplayRoom.load(json.loads(rows[0]["v"]), replies, make=S.make)
-        return self.room
-
-    def save(self) -> None:
-        room = self.room
-        for a, i in room.dirty:
-            self.sql.exec("INSERT OR REPLACE INTO replies (agent, idx, body) VALUES (?, ?, ?)", a, i,
-                          json.dumps(room.replies[a][i], ensure_ascii=False))
-        room.dirty.clear()
-        self.sql.exec("INSERT OR REPLACE INTO meta (k, v) VALUES ('doc', ?)", json.dumps(room.doc, ensure_ascii=False))
-
-    async def mirror(self) -> None:
-        """The room row and the events not yet in D1 (best effort: a failure is retried at the next save)."""
-        room, db = self.room, self.env.DB
-        rows = [("INSERT INTO rooms (code, created_at, settings, seats, status, updated_at) VALUES (?, ?, ?, ?, ?, ?) "
-                 "ON CONFLICT(code) DO UPDATE SET seats = excluded.seats, status = excluded.status, "
-                 "updated_at = excluded.updated_at",
-                 (room.code, room.created_at, json.dumps(room.state(None)["settings"] | {"rounds": room.settings.rounds}),
-                  json.dumps(room.seats_info()), room.status, time.time()))]
-        new = room.new_events()
-        rows += [("INSERT OR IGNORE INTO events (code, seq, ts, kind, body) VALUES (?, ?, ?, ?, ?)",
-                  (room.code, seq, time.time(), str(ev.get("event")), json.dumps(ev, ensure_ascii=False, default=str)))
-                 for seq, ev in new]
-        try:
-            for i in range(0, len(rows), 50):  # statements are made right before their batch (JS proxies)
-                stmts = [db.prepare(sql).bind(*args) for sql, args in rows[i:i + 50]]
-                await db.batch(stmts)  # the SDK converts the list and unwraps each statement
-        except Exception:  # noqa: BLE001 - D1 is a mirror; the DO holds the truth
-            room.doc["saved_events"] -= len(new)
-            raise
-
-    async def schedule(self) -> None:
-        t = self.room.wake_at() if self.room else None
-        if t is not None:
-            await self.ctx.storage.setAlarm(int(max(t, time.time()) * 1000))
-
-    async def persist(self) -> None:
-        self.save()
-        try:
-            await self.mirror()
-        except Exception as err:  # noqa: BLE001 - logged; the next save retries the same events
-            print(f"room {self.room.code}: D1 mirror failed: {type(err).__name__}: {err}")
-        self.save()
-        await self.schedule()
-
-    # the API -------------------------------------------------------------------------------------------------------------
-    async def api(self, op: str, token: str, body: str, method: str = "POST") -> str:
-        try:
-            out, status = await self.handle(op, token, json.loads(body or "{}"))
-        except HttpError as err:
-            out, status = {"detail": err.detail}, err.status
-        return json.dumps({"status": status, "body": out}, ensure_ascii=False, default=str)
-
-    def seat(self, token: str):
-        seat = self.room.seat_by_token(token or "")
-        if seat is None:
-            raise HttpError(403, "bad token")
-        return seat
-
-    async def handle(self, op: str, token: str, body: dict):
-        if op == "create":
-            if self.load() is not None:
-                raise HttpError(409, "room exists")
-            s = S.make(body["settings"])
-            self.room = room = replay.ReplayRoom(body["code"], s)
-            return await self._create(room, body)
-        room = self.load()
-        if room is None:
-            raise HttpError(404, "no such room")
-        changed = room.tick()
-        if op == "state":
-            seat = room.seat_by_token(token) if token else None
-            out = room.state(seat)
-            out["monitor"] = None  # the live game log is not served by the Worker (static Pages viewer + export)
-            if changed:
-                await self.persist()
-            return out, 200
-        if op == "events":
-            if changed:
-                await self.persist()
-            ended = room.status in ("finished", "error")
-            return (room.events if ended else E.public_events(room.events)), 200
-        if op == "join":
+                size = int(request.headers.get("content-length") or 0)
+            except ValueError:
+                size = 0
+            ip = request.headers.get("cf-connecting-ip") or "local"
             try:
-                seat = room.join(body.get("name") or "")
-            except ValueError as err:
-                raise HttpError(409, str(err)) from err
-            await self.persist()
-            return {"code": room.code, "token": seat.token, "agent": seat.agent, "name": seat.name}, 200
-        if op == "start":
-            seat = self.seat(token)
-            if seat.token != room.host_token:
-                raise HttpError(403, "only the host starts the session")
-            s = room.settings
-            if s.fill == "models" and s.humans < 4:
-                try:
-                    keys.key_value(keys.choose_key(s.api_key_env, self.env_get), self.env_get)
-                except keys.KeyError_ as err:
-                    raise HttpError(400, str(err)) from err
-            try:
-                room.start()
-            except ValueError as err:
-                raise HttpError(409, str(err)) from err
-            await self.persist()
-            return {"ok": True}, 200
-        if op == "submit":
-            try:
-                out = room.submit(token, body)
-            except PermissionError as err:
-                raise HttpError(403, str(err)) from err
-            except (LookupError, ValueError) as err:
-                raise HttpError(409, str(err)) from err
-            await self.persist()
-            return out, 200
-        if op == "watched":
-            seat = self.seat(token)
-            try:
-                out = room.watch_ack(seat, int(body.get("round") or 0))
-            except LookupError as err:
-                raise HttpError(409, str(err)) from err
-            room.advance()
-            await self.persist()
-            return out, 200
-        if op == "forfeit":
-            self.seat(token)
-            try:
-                closed = room.forfeit(token)
-            except ValueError as err:
-                raise HttpError(409, str(err)) from err
-            await self.persist()
-            return {"ok": True, "closed": closed}, 200
-        if op == "export":
-            return await self.export(room)
-        raise HttpError(404, f"no room operation {op}")
-
-    async def _create(self, room, body: dict):
-        seat = room.join(body.get("host_name") or "host")
-        await self.persist()
-        return {"code": room.code, "token": seat.token, "agent": seat.agent, "name": seat.name}, 200
-
-    async def export(self, room):
-        """The room's run dir (config.yaml, meta.json, events.jsonl, results.jsonl) to R2 ``RUNS`` under
-        web5/runs/<code>/, the layout the game-log viewer and ``python -m squid5 report`` read."""
-        import yaml
-
-        evs = room.events
-        if not any(e.get("event") == "round" for e in evs):
-            raise HttpError(409, "no round has been played yet")
-        bucket = getattr(self.env, "RUNS", None)
-        if bucket is None:
-            raise HttpError(501, "이 Worker에는 R2 버킷(RUNS)이 묶여 있지 않아 내보낼 수 없습니다.")
-        seats = {a: {"kind": v["kind"], "model": v["model"], "name": v.get("name")} for a, v in room.seats_info().items()}
-        rs = room.settings
-        files = {"config.yaml": yaml.safe_dump(E.run_config(rs, seats, room.code), sort_keys=False),
-                 "meta.json": json.dumps(E.run_meta(rs, seats)),
-                 "events.jsonl": "".join(json.dumps(e, ensure_ascii=False, default=str) + "\n" for e in evs
-                                         if e.get("event") in E.LOG_EVENTS),
-                 "results.jsonl": "".join(json.dumps(e, ensure_ascii=False, default=str) + "\n" for e in evs
-                                          if e.get("event") == "session")}
-        prefix = f"web5/runs/{room.code}/"
-        for name, text in files.items():
-            await bucket.put(prefix + name, text)
-        return {"dir": f"r2://RUNS/{prefix}", "rounds": sum(e.get("event") == "round" for e in evs),
-                "finished": any(e.get("event") == "session" for e in evs)}, 200
-
-    async def alarm(self, *args):
-        room = self.load()
-        if room is None:
-            return
-        room.tick()
-        transport = stub_transport.transport if self.env_get("MODEL_STUB") == "on" else ollama_fetch.js_transport
-        await modelcalls.run_all(room, self.env_get, transport, budget_s=ALARM_BUDGET_S, on_step=self.persist)
-        await self.persist()
+                status, extra, body = await api.route(request.method, request.url, request.headers, read_text,
+                                                      read_body, size, ip)
+            except HttpError as err:
+                status, extra = err.status, {}
+                body = {"detail": err.detail, **({"code": err.code} if err.code else {})}
+            except Exception as err:  # noqa: BLE001
+                status, extra, body = 500, {}, {"detail": f"server error: {type(err).__name__}: {err}"}
+            if isinstance(body, (dict, list)):
+                return Response(json.dumps(body, ensure_ascii=False, default=str), status=status,
+                                headers={**JSON_HEADERS, **ch, **extra})
+            return Response(body, status=status, headers={**ch, **extra})

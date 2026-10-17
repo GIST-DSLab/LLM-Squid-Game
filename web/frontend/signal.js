@@ -2,24 +2,16 @@
 // those shown when N agents take part (5 x N, nested: the buttons in the public-examples box switch N and show the
 // prefix); the round is scored by a rule the system drew among those that fit the examples shown to the N taking part.
 // After answering: the drawn rule, the consistent-rule shares, and what the examples leave for N = 1..4. Every puzzle
-// and example comes from the engine through /api/signal/* (server/signal.py); nothing here decides what is right. Card
+// and example comes from the engine (web/server/signal.py, running in this browser under Pyodide: engine.js); nothing
+// here decides what is right. Card
 // boxes, the rule memo and the answer buttons are signal_ui.js's, the same as the arena's SOLVE screen.
 (function () {
   "use strict";
-  const API = (window.WEB5_API || "") + "/api";
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   let META = null, cur = null, nNow = 4, choice = [], memo = null, done = null;
 
-  async function api(method, path, body) {
-    const opt = { method, headers: {} };
-    if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
-    const r = await fetch(API + path, opt);
-    let data = null;
-    try { data = await r.json(); } catch { /* empty */ }
-    if (!r.ok) throw new Error((data && (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail))) || r.statusText);
-    return data;
-  }
+  const api = (method, path, body) => window.Squid5Engine.api(method, path, body);  // the engine in this browser
   function flash(msg) {
     const f = $("flash");
     f.textContent = msg; f.className = msg ? "flash" : "flash hidden";
@@ -137,5 +129,5 @@
   }
 
   api("GET", "/signal/meta").then((m) => { META = m; setup(); open(); })
-    .catch((e) => flash(`서버에 연결하지 못했습니다(${e.message}). 백엔드: python3 -m uvicorn web.server.app:app --port 8600`));
+    .catch((e) => flash(`게임 엔진을 불러오지 못했습니다(${e.message}). 새로고침해 보세요.`));
 })();

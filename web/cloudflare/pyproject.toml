@@ -1,11 +1,9 @@
 [project]
 name = "squid5-cloudflare"
 version = "0.1.0"
-description = "squid5 web backend on Cloudflare Python Workers + Durable Objects + D1"
+description = "squid5 thin web API on Cloudflare Python Workers (FREE plan): model-call proxy, game records, survey"
 requires-python = ">=3.12"
-dependencies = [
-    "pyyaml",
-]
+dependencies = []
 
 [dependency-groups]
 dev = [

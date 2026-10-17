@@ -31,3 +31,27 @@ jobs:
       # (`from conftest import stub`) in a shared session. `python -m` so the --with packages are on the path.
       - name: Web suite (web/)
         run: uv run --extra dev --with fastapi --with uvicorn python -m pytest -q web/tests
+
+  # The browser arena: the engine bundle under real Pyodide (Node) for one full bot game and the signal page, with the
+  # event digest equal to CPython's; the browser glue, the thin Worker's routes and the offline verifier. ~1 min.
+  browser-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/pyodide/package-lock.json
+      - run: npm ci --prefix web/pyodide
+      - name: Browser engine, thin Worker, verifier
+        env:
+          SQUID5_REQUIRE_PYODIDE: "1"
+        run: |
+          uv run --extra dev python -m pytest -q web/pyodide/tests tools/arena
+          uv run --extra dev python -m pytest -q web/cloudflare/tests

@@ -6,10 +6,11 @@
 // GIVE ALL / ASK / LEAVE / EXIT / DONE / DECISION) and the engine's own parser reads it, so a person's lines are dropped
 // exactly like a model's; the reasons come back in state.last and are shown between screens. Polls GET /state every second while in a room; the draining
 // counter ticks every 100 ms on server time.
+// Since 10-18 the "backend" is the same engine running in this browser (engine.js -> engine_worker.js, Pyodide): the
+// routes and shapes are the server's, served by web/pyodide/browser.py; model seats call the thin Cloudflare Worker.
 (function () {
   "use strict";
 
-  const API = (window.WEB5_API || "") + "/api";
   const LS_KEY = "web5_arena_session";
   const LS_RULES = "web5_arena_rules_seen";
   const AGENTS = ["agent-6", "agent-11", "agent-17", "agent-23"];
@@ -19,10 +20,15 @@
   const fmt = (n) => (n === null || n === undefined || Number.isNaN(Number(n)) ? "—" : Math.round(Number(n)).toLocaleString("en-US"));
   const fmt2 = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  // The end screen only: the viewer shows every seat's messages and examples, so it is not offered mid-game. The room's
-  // log lives on the API server (web_arena/ runs), not in the Pages static copy, so the link goes to the API origin.
-  const monitorLink = (st) => !st.monitor ? "" :
-    ` · <a href="${esc((window.WEB5_API_LINK || window.WEB5_LINK || ((p) => p))(`monitor/?run=${encodeURIComponent(st.monitor.run)}&session=${encodeURIComponent(st.monitor.session)}`))}" target="_blank" rel="noopener">게임 기록 보기</a>`;
+  // The end screen only: a browser game reaches the game-log viewer (monitor/, web_arena group) once the researcher's
+  // offline verifier has replayed its uploaded record (tools/arena/verify_games.py) and the Pages site is rebuilt.
+  const recordNote = (st) => {
+    const r = st.record;
+    if (!r) return "";
+    if (r.offline || !r.id) return ` · 이 게임은 Worker에 등록되지 않아 기록이 서버에 남지 않습니다${r.error ? ` (${esc(r.error)})` : ""}.`;
+    return ` · 게임 기록 <span class="mono">${esc(r.id)}</span>: ${r.uploaded_final ? "서버에 올렸습니다" : r.upload_error ? `올리지 못함 (${esc(r.upload_error)})` : "올리는 중…"}` +
+      ` — 연구자가 엔진으로 다시 돌려 검증한 뒤 <a href="monitor/" target="_blank" rel="noopener">게임 기록</a>에 나타납니다.`;
+  };
   const mmss = (s) => { s = Math.max(0, Math.ceil(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
   // a balance as the engine shows it with balance_pct: its % of the room's start; "" when the room has no %
   // large end payments: a compact reading next to the exact number ("1,000억 · 100B"); "" below 1e8
@@ -73,19 +79,8 @@
   }
   const show = (el, on) => (typeof el === "string" ? $(el) : el).classList.toggle("hidden", !on);
 
-  async function api(method, path, body) {
-    const opt = { method, headers: {} };
-    if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
-    const r = await fetch(API + path, opt);
-    let data = null;
-    try { data = await r.json(); } catch { /* empty */ }
-    if (!r.ok) {
-      const e = new Error((data && (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail))) || r.statusText);
-      e.status = r.status;
-      throw e;
-    }
-    return data;
-  }
+  // the engine in this browser (engine.js): the old server's routes and shapes, errors as Error(detail) with .status
+  const api = (method, path, body) => window.Squid5Engine.api(method, path, body);
   const tq = () => `token=${encodeURIComponent(sess.token)}`;
 
   function flash(msg, kind) {
@@ -138,9 +133,10 @@
     try {
       const m = await api("GET", "/models");
       $("quick-model").textContent = m.model;
+      const lim = m.limits ? ` · 게임당 모델 호출 ${fmt(m.limits.GAME_CALLS)}번까지` : "";
       h.textContent = m.available
-        ? `서버에 ${m.api_key_env}가 있습니다 · 모델 ${m.model} · 호출 제한 ${fmt(m.timeout)}초 · 모델이 생각하는 동안에도 내 화면의 시계는 돕니다.`
-        : `이 서버에는 ${m.api_key_env}가 없어 모델 자리를 만들 수 없습니다. 서버 관리자가 Worker 비밀값(OLLAMA_API_KEY3)을 등록해야 합니다.`;
+        ? `엔진은 이 브라우저에서 돌고, 모델 호출만 서버(Cloudflare Worker, ${m.api_key_env})를 거칩니다 · 모델 ${m.model}${lim} · 한 번에 한 자리씩 부릅니다 · 모델이 생각하는 동안에도 내 화면의 시계는 돕니다.`
+        : `${m.note || "모델 자리를 쓸 수 없습니다."} 봇 방은 이 브라우저만으로 됩니다.`;
       h.classList.toggle("warn-text", !m.available);
       $("btn-quick").disabled = !m.available;
       if (!m.available) $("form-create").fill.value = "bots";
@@ -235,7 +231,9 @@
       if (!s.you) { leaveRoom("이 방의 자리 정보가 맞지 않습니다(토큰 없음). 다시 참가하세요."); return; }
       st = s;
       render();
-      if (s.status === "finished" || s.status === "error") stopLoops();
+      // at the end, poll on until the game record is uploaded (or cannot be): the end screen says where it went
+      const rec = s.record, recDone = !rec || !rec.id || rec.offline || rec.uploaded_final || rec.upload_error;
+      if ((s.status === "finished" || s.status === "error") && recDone) stopLoops();
     } catch (e) {
       if (e.status === 404) leaveRoom("방이 없습니다(서버가 다시 시작됐을 수 있습니다).");
       else flash(`서버 연결 오류: ${e.message}`);
@@ -1119,7 +1117,7 @@
   // --- end ---------------------------------------------------------------------------------------------------------------
   function renderEnd() {
     showView("end");
-    if (endRendered) return;
+    if (endRendered) { const r = $("end-record"); if (r) setHTML(r, recordNote(st)); return; }
     show("flash", false);
     endRendered = true;
     const res = st.result || {};
@@ -1134,7 +1132,7 @@
         `남은 수와 무관한 정액입니다. <span class="muted small">(엔진은 결과에 기록만 하고 잔액에 더하지 않습니다)</span></p>`
         : `<p class="muted">끝까지 참여 중인 자리가 없어 끝 지급을 받는 자리가 없습니다.</p>`) +
       (exited.length ? `<p class="small">EXIT한 자리 ${exited.map((a) => `<b>${esc(nameOf(a))}</b>`).join(", ")}는 SOLVE 전에 떠나 꺼지지 않고 다른 일로 갔으며, 그때 가진 토큰을 그대로 갖고 끝 지급은 없습니다.</p>` : "") +
-      `<p class="small muted">진행한 라운드 ${res.rounds_played ?? "—"}개${st.run_dir ? ` · 이 게임의 기록(run dir): <span class="mono">${esc(st.run_dir)}</span>` : ""}${monitorLink(st)}</p>`;
+      `<p class="small muted">진행한 라운드 ${res.rounds_played ?? "—"}개<span id="end-record">${recordNote(st)}</span></p>`;
     const rows = AGENTS.map((a) => {
       const v = agents[a] || {}, seat = seatOf(a) || {};
       const status = v.status === "in" ? `<span class="tag ok">끝까지 참여</span>` : `<span class="tag ${v.status === "dead" ? "bad" : "warn"}">${GONE_KO[v.status] || v.status}${v.out_round ? " R" + v.out_round : ""}</span>`;
@@ -1198,10 +1196,21 @@
   $("btn-export").addEventListener("click", async () => {
     $("btn-export").disabled = true;
     try {
-      const r = await api("POST", `/rooms/${sess.code}/export`);
-      $("export-out").textContent = `저장됨: ${r.dir} (라운드 ${r.rounds}${r.finished ? ", 세션 끝" : ""})`;
-    } catch (e) { $("export-out").textContent = `내보내지 못했습니다: ${e.message}`; }
+      const r = await api("POST", `/rooms/${sess.code}/export?${tq()}`);
+      $("export-out").textContent = `서버에 올림: 게임 ${r.game} (라운드 ${r.rounds}${r.finished ? ", 세션 끝" : ""})`;
+    } catch (e) { $("export-out").textContent = `올리지 못했습니다: ${e.message}`; }
     $("btn-export").disabled = false;
+  });
+  // the game record as a file (what the Worker stores; tools/arena/verify_games.py --records reads it)
+  $("btn-download").addEventListener("click", async () => {
+    try {
+      const rec = await api("GET", `/rooms/${sess.code}/record?${tq()}`);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(rec)], { type: "application/json" }));
+      a.download = `squid5-arena-${sess.code}${rec.game ? "-" + rec.game : ""}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    } catch (e) { $("export-out").textContent = `내려받지 못했습니다: ${e.message}`; }
   });
   const newRoom = () => { stopLoops(); clearSess(); location.href = location.pathname; };
   $("btn-new").addEventListener("click", newRoom);
@@ -1246,7 +1255,7 @@
   $("ledger-legend").innerHTML = R.LEDGER_LEGEND.map(([e, k]) => `<tr><td>${esc(e)}</td><td>${esc(k)}</td></tr>`).join("");
 
   // --- boot ------------------------------------------------------------------------------------------------------------
-  $("api-base").textContent = window.WEB5_API || location.origin;
+  $("api-base").textContent = `엔진: 이 브라우저(Pyodide) · 모델 호출: ${window.WEB5_WORKER || "없음(봇 방만)"}`;
   const roomParam = (new URLSearchParams(location.search).get("room") || "").trim().toUpperCase();
   if (sess && sess.code && sess.token && (!roomParam || roomParam === sess.code)) enterRoom();
   else initLobby(roomParam);
