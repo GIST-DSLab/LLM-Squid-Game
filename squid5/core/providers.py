@@ -41,7 +41,7 @@ class ProviderConfig:
     kind: str  # ollama | openai | anthropic | claude_cli | codex_cli | stub
     model: str
     api_key_env: str = ""
-    base_url: str = ""  # claude_cli: passed as ANTHROPIC_BASE_URL (the relay that drops the CLI's token note)
+    base_url: str = ""  # claude_cli: ANTHROPIC_BASE_URL (the relay that drops the CLI's token note); codex_cli: a /v1 model server
     think: str | bool | int | None = None  # ollama `think`, openai `reasoning_effort`, claude/anthropic effort; int = thinking budget
     temperature: float = 1.0
     timeout: float = 300.0
@@ -215,6 +215,9 @@ class CodexCLI(Provider):
             cmd += [x for feat in self.OFF for x in ("--disable", feat)]
             if self.cfg.think:
                 cmd += ["-c", f"model_reasoning_effort={self.cfg.think}"]
+            if self.cfg.base_url:  # 10-17: another model server through the same harness (e.g. the local Ollama daemon's /v1)
+                cmd += ["-c", "model_provider=squid5", "-c", 'model_providers.squid5.name="squid5"', "-c",
+                        f'model_providers.squid5.base_url="{self.cfg.base_url}"', "-c", 'model_providers.squid5.wire_api="responses"']
             env = {k: v for k, v in os.environ.items() if not k.startswith("CODEX_")}
             p = self._exec(cmd + ["-"], prompt, cwd, env, {"CODEX_HOME": f"{cwd}/home"})
         text, thinking, usage, errors = None, [], None, []
