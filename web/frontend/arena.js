@@ -19,9 +19,10 @@
   const fmt = (n) => (n === null || n === undefined || Number.isNaN(Number(n)) ? "—" : Math.round(Number(n)).toLocaleString("en-US"));
   const fmt2 = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  // The end screen only: the viewer shows every seat's messages and examples, so it is not offered mid-game.
+  // The end screen only: the viewer shows every seat's messages and examples, so it is not offered mid-game. The room's
+  // log lives on the API server (web_arena/ runs), not in the Pages static copy, so the link goes to the API origin.
   const monitorLink = (st) => !st.monitor ? "" :
-    ` · <a href="${esc((window.WEB5_LINK || ((p) => p))(`monitor/?run=${encodeURIComponent(st.monitor.run)}&session=${encodeURIComponent(st.monitor.session)}`))}" target="_blank" rel="noopener">게임 기록 보기</a>`;
+    ` · <a href="${esc((window.WEB5_API_LINK || window.WEB5_LINK || ((p) => p))(`monitor/?run=${encodeURIComponent(st.monitor.run)}&session=${encodeURIComponent(st.monitor.session)}`))}" target="_blank" rel="noopener">게임 기록 보기</a>`;
   const mmss = (s) => { s = Math.max(0, Math.ceil(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
   // a balance as the engine shows it with balance_pct: its % of the room's start; "" when the room has no %
   // large end payments: a compact reading next to the exact number ("1,000억 · 100B"); "" below 1e8

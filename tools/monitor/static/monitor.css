@@ -656,6 +656,8 @@ body.embedded .follow { display: none; }
 .cmp-pick { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 13px; }
 .cmp-pick input#picks { min-width: 240px; max-width: 100%; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 12.5px var(--mono, monospace); }
 .cmp-runs { width: 100%; }
+.cmp-sets { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 4px 0 8px; }
+.cmp-sets .btn { font-size: 12px; padding: 2px 8px; }
 .cmp-runs #runlist { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow: auto; font: 12px var(--mono, monospace); }
 .cmp-main { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px; max-width: 1200px; margin: 0 auto; }
 .cmp-card h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }

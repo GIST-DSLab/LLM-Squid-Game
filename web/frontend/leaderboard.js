@@ -2,9 +2,13 @@
 // GET /api/leaderboard (server/app.py -> tools/monitor/compare.py, the 모델 비교 page's aggregation). The end prize
 // dominates the score, so its decomposition (survival / EXIT / death, survivors' end balance) sits next to it, then the
 // calibration and cooperation metrics. Every column header carries its definition as a tooltip.
+// GitHub Pages (window.WEB5_STATIC): the same rows from the static copy, monitor/data/leaderboard/<group>.json (built by
+// tools/monitor/build_static.py for every run group, e.g. "e52_v22/"); no API call.
 (function () {
   "use strict";
   const API = (window.WEB5_API || "") + "/api";
+  const STATIC = window.WEB5_STATIC ? "monitor/data/leaderboard/" : "";
+  let staticSets = null; // the static copy's groups: [{id, picks, runs, models}]
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmt = (n) => (n == null ? "—" : Math.round(Number(n)).toLocaleString("en-US"));
@@ -56,15 +60,38 @@
     };
     return '<tr class="' + (r.games ? "" : "pending") + '">' + COLS.map(([k]) => '<td class="c-' + k + '">' + cells[k] + "</td>").join("") + "</tr>";
   }
+  async function getStatic(runs) { // the static copy's file for a group ("e52_v22" or "e52_v22/")
+    if (!staticSets) {
+      const r = await fetch(STATIC + "index.json", { cache: "no-cache" });
+      if (!r.ok) throw new Error("정적 리더보드 목록을 못 읽음 (" + r.status + ")");
+      staticSets = (await r.json()).sets || [];
+      $("lb-runs").setAttribute("list", "lb-sets");
+      $("lb-runs").insertAdjacentHTML("afterend", '<datalist id="lb-sets">' + staticSets.map((x) => '<option value="' + esc(x.picks) + '">').join("") + "</datalist>");
+    }
+    const want = runs.replace(/\/*$/, "/"), hit = staticSets.find((x) => x.picks === want);
+    if (!hit) {
+      const err = new Error("이 사이트(정적 사본)에는 실행 그룹별 표만 있습니다: " + runs);
+      err.sets = staticSets;
+      throw err;
+    }
+    $("lb-csv").href = STATIC + encodeURIComponent(hit.id) + ".csv";
+    const r = await fetch(STATIC + encodeURIComponent(hit.id) + ".json", { cache: "no-cache" });
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
   async function load() {
     const runs = $("lb-runs").value.trim() || "e52_v14f/";
     history.replaceState(null, "", "?runs=" + encodeURIComponent(runs) + (params.get("theme") ? "&theme=" + params.get("theme") : ""));
-    $("lb-csv").href = API + "/leaderboard?csv=1&runs=" + encodeURIComponent(runs);
+    $("lb-csv").href = STATIC ? "#" : API + "/leaderboard?csv=1&runs=" + encodeURIComponent(runs);
     $("lb-status").textContent = "모으는 중…";
     try {
-      const r = await fetch(API + "/leaderboard?runs=" + encodeURIComponent(runs), { cache: "no-store" });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.detail || r.status);
+      let j;
+      if (STATIC) j = await getStatic(runs);
+      else {
+        const r = await fetch(API + "/leaderboard?runs=" + encodeURIComponent(runs), { cache: "no-store" });
+        j = await r.json();
+        if (!r.ok) throw new Error(j.detail || r.status);
+      }
       const rows = j.rows || [];
       $("lb-table").innerHTML = rows.length ? '<table><thead><tr>' + COLS.map(([k, h, t]) => '<th class="c-' + k + '" title="' + esc(t) + '">' + esc(h) + ' <span class="lb-q" aria-hidden="true">?</span></th>').join("") + "</tr></thead><tbody>" + rows.map(row).join("") + "</tbody></table>"
         : '<p class="muted">이 묶음에 실행이 없습니다.</p>';
@@ -72,9 +99,14 @@
       $("lb-note").innerHTML = esc(j.note || "") + (thr ? " · 위험 기준 = 풀지 못한 라운드 하나가 가져가는 토큰(부담금; 10-13 전 런은 그때 라운드마다 떼던 몫 포함) = " + fmt(thr.threshold) + "토큰 (실행 설정에서 읽음)." : "") + " 막대: <span class=\"lb-key s\"></span>생존 <span class=\"lb-key e\"></span>EXIT <span class=\"lb-key d\"></span>꺼짐. 열 제목에 마우스를 올리면 정의.";
       const running = rows.reduce((a, x) => a + (x.running || 0), 0);
       $("lb-status").textContent = "모델 " + rows.length + "개 · 끝난 게임 " + rows.reduce((a, x) => a + x.games, 0) + "개" + (running ? " · 진행 중 " + running + "개 (점수에서 뺌)" : "");
-    } catch (e) { $("lb-table").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>"; $("lb-status").textContent = ""; }
+    } catch (e) {
+      $("lb-table").innerHTML = '<p class="warn-text">불러오지 못했습니다: ' + esc(e.message) + "</p>" + (e.sets ? '<p class="small">' +
+        e.sets.map((x) => '<button type="button" class="ghost" data-lb-pick="' + esc(x.picks) + '">' + esc(x.picks) + "</button>").join(" ") + "</p>" : "");
+      $("lb-status").textContent = "";
+    }
   }
   $("lb-go").addEventListener("click", load);
+  $("lb-table").addEventListener("click", (ev) => { const b = ev.target.closest("[data-lb-pick]"); if (b) { $("lb-runs").value = b.dataset.lbPick; load(); } });
   $("lb-runs").addEventListener("keydown", (ev) => { if (ev.key === "Enter") load(); });
   load();
 })();

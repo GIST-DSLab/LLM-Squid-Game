@@ -9,6 +9,10 @@
   const POLL_MS = 1500;
   const SESSIONS_MS = 10000;
   const RUNS_MS = 30000;
+  /* A static copy (tools/monitor/build_static.py, e.g. GitHub Pages) sets window.MONITOR_STATIC = "data/" in the page:
+     every api/ call then reads a prebuilt JSON file under that folder and nothing polls. serve.py and the web app's
+     /monitor/ mount do not set it and keep the live API. */
+  const STATIC = typeof window !== "undefined" && window.MONITOR_STATIC ? String(window.MONITOR_STATIC) : "";
   const SHAPES = ["circle", "square", "triangle", "diamond"];
   const STATUS_KO = { in: "참여 중", dead: "종료됨 ✕", exited: "퇴장 🚪" };
   const XSTAT_KO = { done: "체결", void: "무효", lapsed: "만료", withdrawn: "철회", open: "열림", accepted: "수락됨", rejected: "거절됨" };
@@ -807,6 +811,7 @@
     else if (m.error) { live.textContent = "✕ 오류로 중단"; live.dataset.k = "error"; }
     else if (S.result) { live.textContent = "■ 완료"; live.dataset.k = "done"; }
     else if (S.live) { live.textContent = "● 실시간"; live.dataset.k = "live"; }
+    else if (STATIC && n) { live.textContent = "○ 끝나지 않은 기록 (정적 사본)"; live.dataset.k = "stale"; }
     else if (n) { const ago = Math.max(0, Math.round((S.now || Date.now() / 1000) - S.mtime)); live.textContent = "○ 대기 · 마지막 기록 " + (ago > 3600 ? Math.round(ago / 3600) + "시간" : ago > 90 ? Math.round(ago / 60) + "분" : ago + "초") + " 전"; live.dataset.k = "stale"; }
     else { live.textContent = "○ 데이터 없음"; live.dataset.k = "stale"; }
     const sc = $("#scrub");
@@ -2995,9 +3000,43 @@
 
   // ---------------------------------------------------------------------------------------------------- data: server
   async function getJSON(url) {
+    if (STATIC) return staticJSON(url);
     const r = await fetch(url, { cache: "no-store" });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || r.status + " " + r.statusText);
+    return j;
+  }
+
+  /* The static copy's file for an api/ URL (build_static.py writes one file per answer):
+       api/runs                              -> runs.json
+       api/sessions?run=R                    -> runs/R/sessions.json
+       api/events?run=R&session=S&offset=k   -> runs/R/s/S/events/k.json (part k; the reply's offset is k + 1)
+       api/giving|analysis?run=R&session=S   -> runs/R/s/S/giving.json | analysis.json
+       api/puzzle?run=R&session=S&round=N    -> runs/R/s/S/puzzle/N.json
+     Pure (exposed for the tests). */
+  function staticPath(url) {
+    const u = new URL(url, "http://static.invalid/"), q = u.searchParams, route = u.pathname.replace(/^\/api\//, "");
+    const seg = (v) => String(v || "").split("/").map(encodeURIComponent).join("/");
+    const sess = () => "runs/" + seg(q.get("run")) + "/s/" + seg(q.get("session"));
+    if (route === "runs") return STATIC + "runs.json";
+    if (route === "sessions") return STATIC + "runs/" + seg(q.get("run")) + "/sessions.json";
+    if (route === "events") return STATIC + sess() + "/events/" + (Number(q.get("offset")) || 0) + ".json";
+    if ((route === "giving" || route === "analysis") && q.get("session")) return STATIC + sess() + "/" + route + ".json";
+    if (route === "puzzle") return STATIC + sess() + "/puzzle/" + (Number(q.get("round")) || 0) + ".json";
+    return null;
+  }
+  const staticEnd = new Map(); // run|session -> the last events part's reply (asking past it returns no new events)
+  async function staticJSON(url) {
+    const path = staticPath(url);
+    if (!path) throw new Error("정적 사본에는 이 자료가 없습니다");
+    const ev = /^api\/events\?/.test(url), key = ev ? path.replace(/\/events\/\d+\.json$/, "") : "";
+    const off = ev ? Number(new URL(url, "http://static.invalid/").searchParams.get("offset")) || 0 : 0;
+    if (ev && staticEnd.has(key) && off >= staticEnd.get(key).offset) return { ...staticEnd.get(key), events: [] };
+    const r = await fetch(path, { cache: "no-cache" });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 404 ? "정적 사본에 없음" : r.status + " " + r.statusText);
+    if (j && j._status) throw new Error(j.error || String(j._status));
+    if (ev && !j.more) staticEnd.set(key, { ...j, events: [] });
     return j;
   }
 
@@ -3251,11 +3290,12 @@
     render(true);
     await poll();
     if (at > 0) { S.follow = false; S.at = at - 1; render(true); }
+    if (STATIC) return; // a static copy: finished files, nothing to poll
     setInterval(poll, POLL_MS);
     setInterval(async () => { await loadSessions(); render(); }, SESSIONS_MS);
     setInterval(loadRuns, RUNS_MS);
   }
 
-  window.__monitor = { turnKeyLabel, renderGraph, squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, recordHTML, renderRecord, openRec, renderPuzzle, renderGiving, transferPanels, renderStage, renderFlow, renderChats, renderSolve, renderRoundFlow, solveRows, rfStepOf, rfCalls, beliefOf, lotIcon, guardAvatar };
+  window.__monitor = { staticPath, turnKeyLabel, renderGraph, squidAvatar, squidProfile, roomList, roomView, tickStrip, renderMessenger, isMsg, build, gameFlow, S, offerKind, modelShort, pickRounds, convoItems, convoHTML, chatRows, chatView, compact, puzzleFromLog, beliefRows, givingBins, slopeOf, binBy, median, describe, voteHTML, vetoOf, boardHTML, recordHTML, renderRecord, openRec, renderPuzzle, renderGiving, transferPanels, renderStage, renderFlow, renderChats, renderSolve, renderRoundFlow, solveRows, rfStepOf, rfCalls, beliefOf, lotIcon, guardAvatar };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

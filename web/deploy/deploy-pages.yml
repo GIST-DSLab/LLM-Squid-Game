@@ -1,9 +1,10 @@
-# GitHub Pages deploy of web/frontend only. Copy to .github/workflows/deploy-pages.yml.
+# GitHub Pages deploy: web/frontend plus the static game logs / model comparison / leaderboard (monitor/), built from the
+# run snapshot in web/data/runs by tools/monitor/build_static.py. Copy to .github/workflows/deploy-pages.yml.
 name: deploy-pages
 on:
   push:
     branches: [main]
-    paths: ["web/frontend/**"]
+    paths: ["web/frontend/**", "tools/monitor/**", "web/data/runs/**", "squid5/**"]
   workflow_dispatch:
 permissions: {contents: read, pages: write, id-token: write}
 concurrency: {group: pages, cancel-in-progress: true}
@@ -15,8 +16,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      # build_static.py needs only PyYAML beyond the standard library (serve.py reads config.yaml; squid5's puzzle code
+      # is pure Python)
+      - run: pip install pyyaml
+      - name: Build the site
+        run: |
+          mkdir -p _site
+          cp -R web/frontend/. _site/
+          python tools/monitor/build_static.py --root web/data/runs --out _site/monitor
+          du -sh _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
-        with: {path: web/frontend}
+        with: {path: _site}
       - id: deployment
         uses: actions/deploy-pages@v4

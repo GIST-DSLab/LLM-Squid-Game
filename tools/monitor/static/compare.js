@@ -12,7 +12,10 @@
   const mean = (xs) => { const v = xs.filter((x) => x != null && !Number.isNaN(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
   const MODEL_COL = { "gpt-6-luna": "#2f6fdb", "gpt-6-sol": "#e0701c", "gpt-6-astra": "#8a4fd8", "claude-fable-5-1": "#159a6c", "claude-opus-5-5": "#d63d7c" };
   const SPARE = ["#5b7c99", "#b8860b", "#2a9d8f", "#9c6644"];
-  const S = { x: "pct", calibView: "kl", seatY: "tok_recv", data: null, picks: "" };
+  const S = { x: "pct", calibView: "kl", seatY: "tok_recv", data: null, picks: "", set: null };
+  /* A static copy (tools/monitor/build_static.py) sets window.MONITOR_STATIC = "data/": the page reads prebuilt run
+     sets (data/compare/index.json: every run group and every model in a group) instead of api/compare. */
+  const STATIC = typeof window !== "undefined" && window.MONITOR_STATIC ? String(window.MONITOR_STATIC) : "";
   const col = (m, k) => MODEL_COL[m] || SPARE[k % SPARE.length];
   const params = new URLSearchParams(location.search);
   if (params.get("theme")) document.documentElement.dataset.theme = params.get("theme");
@@ -53,7 +56,8 @@
   const caution = (n, min) => (n < (min || 10) ? ' <span class="warn">n = ' + n + ", 해석 주의</span>" : "");
 
   function card(id, q, read, body, extra) {
-    const href = "api/compare.csv?runs=" + encodeURIComponent(S.picks) + "&chart=" + id;
+    const href = STATIC ? STATIC + "compare/" + encodeURIComponent(S.set ? S.set.id : "") + "/" + id + ".csv"
+      : "api/compare.csv?runs=" + encodeURIComponent(S.picks) + "&chart=" + id;
     card.n = (card.n || 0) + 1;
     return '<section class="panel cmp-card" id="c-' + id + "-" + card.n + '"><h2>' + q + ' <a class="btn ghost dl" href="' + href + '" download>다운로드 CSV</a></h2>' + (extra || "") + body + '<p class="readme"><b>읽는 법</b> · ' + read + "</p></section>";
   }
@@ -368,17 +372,51 @@
     card.n = 0;
   }
 
+  /* Pure: the runs a pick string names, as compare.py's runs_for does (a run's path, or a prefix "group/"). */
+  function runsFor(all, picks) {
+    const out = [];
+    for (let p of String(picks || "").split(",")) {
+      p = p.trim();
+      if (!p) continue;
+      for (const r of all) if ((r === p || (p.endsWith("/") && r.startsWith(p)) || r.startsWith(p.replace(/\/+$/, "") + "/")) && !out.includes(r)) out.push(r);
+    }
+    return out;
+  }
+  /* Pure: the prebuilt set holding exactly these runs (order does not matter), or null. */
+  function findSet(sets, runs) {
+    const key = [...runs].sort().join(",");
+    return (sets || []).find((x) => [...x.runs].sort().join(",") === key) || null;
+  }
+  const staticIdx = {};
+  async function staticOnce(name) { return staticIdx[name] || (staticIdx[name] = getJSON(STATIC + name)); }
+  async function loadStatic() {
+    const [idx, rl] = await Promise.all([staticOnce("compare/index.json"), staticOnce("runs.json")]);
+    const runs = runsFor(rl.runs.map((r) => r.run), S.picks);
+    S.set = findSet(idx.sets, runs);
+    if (!S.set) {
+      const err = new Error((runs.length ? "고른 실행 " + runs.length + "개 묶음은" : "고른 실행이 없고,") + " 정적 사본에 미리 계산되어 있지 않습니다. 아래 묶음 가운데 하나를 고르세요.");
+      err.sets = idx.sets;
+      throw err;
+    }
+    return getJSON(STATIC + "compare/" + encodeURIComponent(S.set.id) + ".json");
+  }
+  function setLinks(sets) {
+    return '<div class="cmp-sets">' + sets.map((x) => '<a class="btn ghost" href="?runs=' + encodeURIComponent(x.picks) + '" title="' + esc(x.runs.join("\n")) + '">' +
+      esc(x.picks.endsWith("/") ? x.picks : x.runs[0].split("/")[0] + "/ · " + x.models.join(", ")) + ' <span class="dim">' + x.runs.length + "</span></a>").join(" ") + "</div>";
+  }
   async function load() {
     S.picks = $("#picks").value.trim();
     history.replaceState(null, "", "?runs=" + encodeURIComponent(S.picks) + (params.get("theme") ? "&theme=" + params.get("theme") : ""));
     $("#status").textContent = "모으는 중…";
-    try { S.data = await getJSON("api/compare?runs=" + encodeURIComponent(S.picks)); render(); }
-    catch (e) { $("#main").innerHTML = '<div class="banner bad">비교를 만들 수 없음: ' + esc(e.message) + "</div>"; }
+    try { S.data = await (STATIC ? loadStatic() : getJSON("api/compare?runs=" + encodeURIComponent(S.picks))); render(); }
+    catch (e) { $("#main").innerHTML = '<div class="banner bad">비교를 만들 수 없음: ' + esc(e.message) + "</div>" + (e.sets ? setLinks(e.sets) : ""); $("#status").textContent = ""; }
   }
   async function runList() {
     try {
-      const j = await getJSON("api/runs");
-      $("#runlist").innerHTML = j.runs.map((r) => '<label class="rl"><input type="checkbox" value="' + esc(r.run) + '">' + (r.live ? "● " : "") + esc(r.run) + ' <span class="dim">' + esc(r.model || "") + "</span></label>").join("");
+      const j = await (STATIC ? staticOnce("runs.json") : getJSON("api/runs"));
+      const sets = STATIC ? (await staticOnce("compare/index.json")).sets : null; // static: only prebuilt sets can be shown
+      $("#runlist").innerHTML = (sets ? '<div class="dim small">정적 사본: 아래 묶음(실행 그룹, 그룹 안 모델별)만 미리 계산되어 있습니다.</div>' + setLinks(sets) : "") +
+        j.runs.map((r) => '<label class="rl"><input type="checkbox" value="' + esc(r.run) + '">' + (r.live ? "● " : "") + esc(r.run) + ' <span class="dim">' + esc(r.model || "") + "</span></label>").join("");
       $("#runlist").addEventListener("change", () => { const v = [...$("#runlist").querySelectorAll("input:checked")].map((x) => x.value); if (v.length) $("#picks").value = v.join(","); });
     } catch (e) { $("#runlist").textContent = e.message; }
   }
@@ -391,6 +429,6 @@
     else if (b.dataset.sy) { S.seatY = b.dataset.sy; render(); }
   });
   window.addEventListener("resize", () => { clearTimeout(render.t); render.t = setTimeout(render, 200); });
-  window.__compare = { bins, S };
+  window.__compare = { bins, runsFor, findSet, S };
   if (typeof document.getElementById === "function" && document.getElementById("picks")) { runList(); load(); }
 })();
