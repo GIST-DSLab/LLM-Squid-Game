@@ -1,0 +1,11 @@
+# build output of vendor.py (the repo's squid5/ and web/server/ are the source of truth)
+src/squid5/
+src/web/
+src/configs/
+# pywrangler / wrangler
+python_modules/
+.venv-workers/
+.wrangler/
+node_modules/
+.dev.vars
+__pycache__/

@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `pywrangler dev` (local only; never committed). Production secrets: `wrangler secret put`.
+OLLAMA_API_KEY3=dummy-local-key
+# Model seats locally, without Ollama Cloud, one of:
+#   MODEL_STUB=on  -> stub_transport.py inside the Worker (no network at all)
+#   OLLAMA_BASE_URL=http://127.0.0.1:11435  -> tests/fake_ollama.py, through the real fetch path
+OLLAMA_BASE_URL=http://127.0.0.1:11435

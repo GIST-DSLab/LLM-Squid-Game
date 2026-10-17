@@ -1,0 +1,14 @@
+[project]
+name = "squid5-cloudflare"
+version = "0.1.0"
+description = "squid5 web backend on Cloudflare Python Workers + Durable Objects + D1"
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml",
+]
+
+[dependency-groups]
+dev = [
+    "workers-py",
+    "workers-runtime-sdk",
+]
