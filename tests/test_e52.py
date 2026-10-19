@@ -563,3 +563,17 @@ def test_v23_end_split_states_one_pool_and_pays_it_out_equally():  # 10-17 resea
     assert sys23.replace(*re.findall(r"When the rounds end[^.]*\.", sys23)[:1], *re.findall(r"When the rounds end[^.]*\.", sys22)[:1]) == sys22
     res, ev, _ = play(name="e52v23_public_sol4", rounds=1, right={1})
     assert ev[0]["settings"]["end_split"] is True and res["final"]["prize_each"] == 20_000_000 // len(res["final"]["winner"])
+
+def test_v24_own_chat_lines_show_the_tokens_at_the_start_of_that_reply_and_never_another_agents():  # 10-19 researcher
+    lines = {(A6, 1, "prep", 1): f"TO {A11}: hi eleven\nDONE", (A11, 1, "prep", 2): "TO R1: hi six\nDONE",
+             (A6, 1, "prep", 3): "TO R1: and again\nDONE"}
+    res, ev, _ = play(lines, name="e52v24_public_sol4", rounds=1, right={1})
+    c6 = [c for c in calls(ev, "talk", A6) if c["phase"] == "prep"]
+    start = c6[0]["balance_after"] + c6[0]["used"]
+    later = next(c["user"] for c in calls(ev, "talk", A6) if c["phase"] == "prep" and c["tick"] == 3)
+    assert f"you ({start:,} tokens at the start of this reply): hi eleven" in later
+    assert re.search(r"\] agent-11: hi six", later) and "agent-11 (" not in later  # another agent's line: no tokens
+    u11 = next(c["user"] for c in calls(ev, "talk", A11) if c["phase"] == "prep" and c["tick"] == 2)
+    assert "] agent-6: hi eleven" in u11 and "tokens at the start of this reply" not in u11.split("YOUR CHATS")[1].split("TALK ")[0].replace("you (", "")
+    res22, ev22, _ = play(lines, name=V22, rounds=1, right={1})
+    assert all("tokens at the start of this reply" not in c["user"] for c in calls(ev22, "talk"))

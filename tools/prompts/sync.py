@@ -22,7 +22,8 @@ sys.path.insert(0, str(ROOT))
 EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
 SNAPSHOTS = {"e52_v21.md": "configs/squid5/e52v21_public_sol4.yaml",  # the current 5.2 games; add a line per new version
              "e52_v22.md": "configs/squid5/e52v22_public_sol4.yaml",
-             "e52_v23.md": "configs/squid5/e52v23_public_sol4.yaml"}
+             "e52_v23.md": "configs/squid5/e52v23_public_sol4.yaml",
+             "e52_v24.md": "configs/squid5/e52v24_public_sol4.yaml"}
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
 

@@ -63,6 +63,7 @@ class Settings:
     max_ticks: int = 12  # v22: a TALK ends after this tick at the latest (stated in the rulebook)
     room_history: int = 0  # v22: each room shows its last N messages and one '(m earlier messages)' line (0: all)
     end_split: bool = False  # v23 (10-17): the end pays survivor_prize x 4 in all, split equally among the agents still taking part
+    talk_balances: bool = False  # v24 (10-19): each of the reader's own chat lines shows the tokens it had when it began that reply
     # the v16+ family (FAMILY): one value each since v16e (10-15); kept as fields so the configs load
     compact_rules: bool = True  # v15 (10-13)
     talk_after_solve: bool = True  # v15 (10-13 19:46): SOLVE -> results -> TALK -> charges
@@ -207,9 +208,10 @@ def chat_user(head: str, view: str, ledger: str, c: dict, a: str, s: Settings, k
 
 WHEN = {"prep": "before SOLVE", "rescue": "after RESULTS"}  # v22: a TALK's label in a room and in the format line
 
-def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0) -> str:
+def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0, marks: bool = False) -> str:
     """v22 ``messenger``: *a*'s rooms, oldest first, each message labelled [R<round> T<tick> before SOLVE|after RESULTS],
-    same-tick messages agent by agent; NEW = posted since *a*'s last call (seq > *since*); a left room up to the leave."""
+    same-tick messages agent by agent; NEW = posted since *a*'s last call (seq > *since*); a left room up to the leave.
+    v24 ``marks``: *a*'s own lines carry the tokens *a* had when it began that reply (never another agent's)."""
     out, who = ["YOUR CHATS (oldest first; NEW = since your last call):"], lambda b: "you" if b == a else b
     for x in (x for x in rooms if a in x["members"]):
         upto = x["left"].get(a)
@@ -220,7 +222,8 @@ def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0) -> str:
         if n and len(ms) > n:
             out, ms = out + [f"  ({len(ms) - n} earlier messages)"], ms[-n:]
         for m in ms:
-            body = (f"{who(m['src'])} left" if m["kind"] == "leave" else f"{who(m['src'])}: " + (
+            mine = f" ({m['bal']:,} tokens at the start of this reply)" if marks and m["src"] == a and m.get("bal") is not None else ""
+            body = (f"{who(m['src'])}{mine} left" if m["kind"] == "leave" else f"{who(m['src'])}{mine}: " + (
                 f"{m['kind'].upper()} {m['amount']:,}" + f" — {m['text']}" * bool(m["text"]) + (
                     f" (not carried out: {m['why']})" if m["status"] == "refused" else "") if m["kind"] != "say" else m["text"]))
             out.append(f"  {'NEW ' * (m['seq'] > since and m['src'] != a)}[R{m['round']} T{m['tick']} {WHEN[m['phase']]}] " +
@@ -281,6 +284,7 @@ class Session:
         self.ga: list[dict] = []  # every GIVE (done | refused) and ASK, whole session
         self.chats: list[dict] = []  # v14c: every chat that took place, whole session
         self.shown: dict[str, int] = {}  # v14e: the GIVE maximum (its balance) each agent was last shown
+        self.shown_at: dict[str, int] = {}  # v24: each agent's tokens when its current TALK call began (shown_at is never cut)
         self.results: dict = {}
         self.undelivered: dict[str, list] = {}  # v22: the lines of an agent's last reply that were not delivered, told at its next call  # v15 talk_after_solve: this round's SOLVE results, shown at TALK (Session._after)
         self.vote, self.phase, self.cycle = None, "rescue", []  # this round's solver (Session._rotate), TALK phase, solver cycle
@@ -527,12 +531,14 @@ class Session:
             self.rooms.append(x)
         return (x and x["id"], None)
 
-    def _post(self, rid: str, r: int, k: int, a: str, kind: str, text: str = "", amount=None, status=None, why=None) -> set:
-        """One line in a room (say | give | ask | leave); returns the members it reaches."""
+    def _post(self, rid: str, r: int, k: int, a: str, kind: str, text: str = "", amount=None, status=None, why=None,
+              bal: int | None = None) -> set:
+        """One line in a room (say | give | ask | leave); returns the members it reaches. ``bal``: the writer's tokens when it
+        began the reply (v24 ``talk_balances``; shown to the writer only)."""
         x = next(x for x in self.rooms if x["id"] == rid)
         self.seq += 1
         x["msgs"].append({"seq": self.seq, "round": r, "phase": self.phase, "tick": k, "src": a, "kind": kind, "text": text,
-                          "amount": amount, "status": status, "why": why})
+                          "amount": amount, "status": status, "why": why, "bal": bal})
         if kind != "leave":
             self.emit({"event": "room_msg", "session_id": self.sid, "round": r, "phase": self.phase, "tick": k, "room": rid,
                        "src": a, "kind": kind, "text": text, "amount": amount, "status": status, "why": why})
@@ -556,9 +562,9 @@ class Session:
             jobs, news, gives = {}, set(), []
             for a in called:
                 head, part = self._head(r, a)
-                self.shown[a] = w.balances[a]
+                self.shown[a] = self.shown_at[a] = w.balances[a]
                 bad = "".join(f"NOT DELIVERED from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
-                jobs[a] = (f"{head}\n\n{part}\n\n{rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history)}\n\n"
+                jobs[a] = (f"{head}\n\n{part}\n\n{rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, s.talk_balances)}\n\n"
                            f"{bad}{room_format(ph, k, s.max_ticks, w.balances[a])}", TALK_CAP, lambda t, a=a: parse_rooms(
                                t, a, AGENTS, [b for b in start if b not in self.gone], lambda n, i, a=a: self._room(a, n, i),
                                ph == "prep"), {"turn": k, "tick": k, "phase": ph})
@@ -573,13 +579,13 @@ class Session:
                     self.emit({"event": "room_new", **base, "tick": k, "room": x["id"], "members": x["members"], "by": x["by"]})
                     news |= set(x["members"]) - {a}
                 for m in p["messages"]:
-                    news |= self._post(m["room"], r, k, a, "say", m["text"])
+                    news |= self._post(m["room"], r, k, a, "say", m["text"], bal=self.shown_at.get(a))
                 for g in p["asks"]:
                     self._move(r, k, a, g["dst"], "ask", g["amount"], g["text"], rows[a], chat_id=None, room=g["room"], tick=k)
-                    news |= self._post(g["room"], r, k, a, "ask", g["text"], g["amount"])
+                    news |= self._post(g["room"], r, k, a, "ask", g["text"], g["amount"], bal=self.shown_at.get(a))
                 for rid in p["leaves"]:
                     x = next(x for x in self.rooms if x["id"] == rid)
-                    news |= self._post(rid, r, k, a, "leave")
+                    news |= self._post(rid, r, k, a, "leave", bal=self.shown_at.get(a))
                     x["left"][a] = self.seq
                     x["closed"] = len(x["members"]) - len(x["left"]) < 2
                     self.emit({"event": "room_leave", **base, "tick": k, "room": rid, "agent": a, "closed": x["closed"]})
@@ -599,7 +605,7 @@ class Session:
                     continue
                 news |= self._post(g["room"], r, k, a, "give", g["text"], item.get("requested", item["amount"]) if item["status"] ==
                                    "refused" else item["amount"], "cut" if "requested" in item and item["status"] == "done" else
-                                   item["status"], item["why"])
+                                   item["status"], item["why"], bal=self.shown_at.get(a))
         return exits
 
     # --- a round ------------------------------------------------------------------------------------------------------
