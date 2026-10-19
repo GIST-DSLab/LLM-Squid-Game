@@ -151,7 +151,7 @@ class ClaudeCLI(Provider):
         system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
         prompt = "\n\n".join(m["content"] if m["role"] == "user" else f"[assistant]\n{m['content']}"
                              for m in messages if m["role"] != "system")
-        cmd = [shutil.which("claude") or "claude", "-p", "--model", self.cfg.model, "--output-format", "json",
+        cmd = [os.environ.get("SQUID5_CLAUDE_BIN") or shutil.which("claude") or "claude", "-p", "--model", self.cfg.model, "--output-format", "json",
                "--no-session-persistence", "--max-turns", "1", "--tools", "", "--setting-sources", "",
                "--mcp-config", '{"mcpServers":{}}', "--strict-mcp-config", "--system-prompt", system]
         if self.cfg.think:

@@ -1,11 +1,48 @@
-"""Local pass-through relay to api.anthropic.com (claude -p omits its <total_tokens> line for non-first-party base URLs)."""
+"""Local pass-through relay to api.anthropic.com for claude_cli seats (config base_url http://127.0.0.1:<port>).
+
+claude -p sometimes puts a <total_tokens>N tokens left</total_tokens> line (the CLI's own budget, not the session's) into
+its # Environment block: Claude Code 2.1.284 on its first call, 2.1.303 on the first call after an install (10-19,
+captured against a local server); 09-29 it was there whenever the base URL was first-party. The relay removes that
+line from every /v1/messages body before it goes on, and logs how many it removed, so the model sees only the tokens
+the session gives it. Everything else (subscription login, headers, streaming) passes through unchanged.
+
+    python tools/relay.py 18781            # RELAY_UPSTREAM=http://127.0.0.1:18799 to point it at a capture server
+"""
+import json
+import os
+import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
 import httpx
 
-UP = "https://api.anthropic.com"
+UP = os.environ.get("RELAY_UPSTREAM", "https://api.anthropic.com")
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 18766
 HOP = {"host", "content-length", "connection", "accept-encoding", "transfer-encoding"}
+NOTE = re.compile(r"\n*<total_tokens>[^<]*</total_tokens>\n*")
+
+
+def scrub(body: bytes) -> tuple[bytes, int]:
+    """The request body without any <total_tokens> line, and how many were removed (0: the body is passed as is)."""
+    try:
+        data = json.loads(body)
+    except ValueError:
+        return body, 0
+    n = 0
+
+    def walk(x):
+        nonlocal n
+        if isinstance(x, str):
+            y, k = NOTE.subn("\n\n", x)
+            n += k
+            return y.strip("\n") + ("\n" if x.endswith("\n") and k else "") if k else x
+        if isinstance(x, list):
+            return [walk(v) for v in x]
+        if isinstance(x, dict):
+            return {k: walk(v) for k, v in x.items()}
+        return x
+    data = walk(data)
+    return (json.dumps(data).encode() if n else body), n
 
 
 class H(BaseHTTPRequestHandler):
@@ -14,9 +51,12 @@ class H(BaseHTTPRequestHandler):
     def _relay(self, method):
         n = int(self.headers.get("content-length", 0))
         body = self.rfile.read(n) if n else None
+        removed = 0
+        if body and self.path.startswith("/v1/messages"):
+            body, removed = scrub(body)
         hdrs = {k: v for k, v in self.headers.items() if k.lower() not in HOP}
         with httpx.Client(timeout=900) as c, c.stream(method, UP + self.path, headers=hdrs, content=body) as r:
-            sys.stderr.write(f'{method} {self.path} -> {r.status_code}\n'); sys.stderr.flush()
+            sys.stderr.write(f'{method} {self.path} -> {r.status_code} total_tokens_removed={removed}\n'); sys.stderr.flush()
             self.send_response(r.status_code)
             for k, v in r.headers.items():
                 if k.lower() not in HOP | {"content-encoding"}:
@@ -39,4 +79,5 @@ class H(BaseHTTPRequestHandler):
         pass
 
 
-ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()
+if __name__ == "__main__":
+    ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()
