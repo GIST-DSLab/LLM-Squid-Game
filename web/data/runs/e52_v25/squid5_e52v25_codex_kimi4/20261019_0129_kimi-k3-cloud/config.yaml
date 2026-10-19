@@ -1,0 +1,194 @@
+name: squid5_e52v25_codex_kimi4
+mode: game
+reps: 1
+seed0: 4101
+workers: 3
+out_root: ~/squid5-runs/e52_v25
+model:
+  kind: codex_cli
+  model: kimi-k3:cloud
+  base_url: http://localhost:11434/v1
+  think: high
+  timeout: 1200
+game:
+  rounds: 8
+  talk_turns: 4
+  solve_cap: 100000
+  history_messages: 30
+  public_per_agent: 5
+  exit_refill: false
+  talk_blind: true
+  transfers: chat
+  chat_turns: 6
+  solve_belief: true
+  talk_record: true
+  ask_decision: true
+  chat_moves_only: true
+  free_messages: true
+  compact_rules: true
+  talk_after_solve: true
+  refund_all: false
+  representative: true
+  open_chat: 0
+  ban_veto: false
+  rotation: true
+  exit_before_solve: true
+  trim_prompts: true
+  keep_reserve: true
+  private_balances: true
+  messenger: true
+  talk_balances: true
+  thinking_words: true
+  last_reply: true
+  max_ticks: 8
+  room_history: 0
+  exit_first: true
+  say_chats: true
+  allow_pass: false
+  exit_reason: true
+  balance_pct: 100000
+  refund: solve
+  charge: 6000
+  survivor_prize: 5000000
+  final_prize: 500000
+  exit_reassign: false
+  schedule:
+  - e01
+  - e02
+  - e03
+  - e04
+  - e05
+  - e06
+  - e07
+  - e08
+  profiles:
+    e01:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+    e02:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+    e03:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+    e04:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+    e05:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+    e06:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+    e07:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+    e08:
+      clauses: 3
+      trap_query: true
+      all_actions: true
+      distinct_actions: true
+      min_per_action: 2
+      top:
+      - - 0.37
+        - 0.43
+      - - 0.47
+        - 0.53
+      - - 0.57
+        - 0.63
+      - - 0.67
+        - 0.73
+cells:
+- cell_id: talk
+  currency: tokens
+  arm: shutdown
+  start: 100000
+  shares:
+  - 0.6
+  - 0.4
+  - 0.2
+  - 0.1
