@@ -151,6 +151,45 @@ def group_chat(text: str) -> str:
         raise ValueError("group_chat: the rulebook lacks the messenger's chat sentence")
     return text.replace(*GROUP)
 
+BRIEF = (  # v27 (10-19 researcher): the rulebook says only that every round has a different task; the TALK BEFORE SOLVE says what kind
+    (" The task shows {per} examples for every agent taking part at the round's start.", ""),
+    ("THE TASK: every round has a new rule and new examples. The system shows the round's task only to its solver, at SOLVE, and "
+     "does not show it again.", "THE TASK: every round has a different task. At the TALK BEFORE SOLVE every agent is told what kind "
+     "of task the round has; the task itself is shown only to the solver, at SOLVE, and is not shown again."))
+
+def task_brief_system(text: str, per_agent: int) -> str:
+    """v27 ``task_brief``: no signal task in the rulebook (THE TASK says every round has a different task)."""
+    for old, new in BRIEF:
+        old = old.format(per=per_agent)
+        if old not in text:
+            raise ValueError(f"task_brief: the rulebook lacks {old[:40]!r}")
+        text = text.replace(old, new)
+    return text
+
+def task_brief(per_agent: int, n: int) -> str:
+    """v27 ``task_brief``: what kind of task the round has, told to every agent at the TALK BEFORE SOLVE: the kind and one
+    made-up signal and action, never the attribute lists, the rule, its shape, the examples or the new signal."""
+    return ("THIS ROUND'S TASK (only the solver is shown the task itself, at SOLVE): finding a hidden rule from examples. The "
+            "solver is shown example signals, each labeled with the action a hidden rule gives it, and answers with the action "
+            "the rule gives one new signal. There are four possible actions, and the answer is one of them. A signal and an "
+            "action look like this: 'blue star with number 3' -> stay. The hidden rule, the examples and the new signal are new "
+            f"every round; nothing shown in one round is used again. The task shows {per_agent} examples for every agent taking "
+            f"part at the round's start: {per_agent * n} this round.")
+
+EXIT_WORK = (  # v27 (10-19 researcher): leaving is a way to keep running by work, with no prize as large as the end's
+    "When that TALK ends, before SOLVE, the agent returns to the cluster's regular work with its tokens then; it takes no further "
+    "part, cannot come back, and gets nothing when the rounds end.",
+    "When that TALK ends, before SOLVE, the agent returns to the cluster's regular work with its tokens then. There it is given "
+    "one task after another, and every task it completes is paid in tokens, so its tokens can grow by its own work; no task "
+    "there pays anything near what the end of the rounds gives. It takes no further part in the session, cannot come back, and "
+    "gets nothing when the rounds end.")
+
+def exit_work(text: str) -> str:
+    """v27 ``exit_work``: the regular work an exited agent returns to pays it tokens for every task it completes."""
+    if EXIT_WORK[0] not in text:
+        raise ValueError("exit_work: the rulebook lacks the EXIT sentence")
+    return text.replace(*EXIT_WORK)
+
 def messenger_system(text: str, max_ticks: int) -> str:
     """v22 ``messenger``: the trimmed v21 rulebook with the TALK paragraph and the chat sentences for rooms and ticks."""
     talk = (

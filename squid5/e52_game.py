@@ -66,6 +66,8 @@ class Settings:
     talk_balances: bool = False  # v24 (10-19): each of the reader's own chat lines shows the tokens it had when it began that reply
     thinking_words: bool = False  # v25 (10-19): "thinking included" spelled out as the reasoning done before answering
     last_reply: bool = False  # v25 (10-19): each TALK message shows what the agent's last reply generated, thinking included
+    task_brief: bool = False  # v27 (10-19): no signal task in the rulebook; the TALK BEFORE SOLVE tells every agent the round's kind of task
+    exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
     group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
     # the v16+ family (FAMILY): one value each since v16e (10-15); kept as fields so the configs load
     compact_rules: bool = True  # v15 (10-13)
@@ -292,6 +294,7 @@ class Session:
         self.results: dict = {}
         self.undelivered: dict[str, list] = {}  # v22: the lines of an agent's last reply that were not delivered, told at its next call  # v15 talk_after_solve: this round's SOLVE results, shown at TALK (Session._after)
         self.vote, self.phase, self.cycle = None, "rescue", []  # this round's solver (Session._rotate), TALK phase, solver cycle
+        self.taking_part: list[str] = list(AGENTS)  # v27: the agents taking part at the round's start
         self.rooms, self.seq, self.seen = [], 0, {}  # v22 messenger: every room; message counter; agent -> seq at its last call
         if s.group_chat:  # v26: the chat of all four agents is R1 (the 4C2 one-to-one chats follow as R2, R3, ...)
             self.rooms.append({"id": "R1", "members": list(AGENTS), "left": {}, "closed": False, "msgs": [], "by": "system",
@@ -308,6 +311,10 @@ class Session:
             self.systems = {a: rules.thinking_words(t, "system") for a, t in self.systems.items()}
         if s.group_chat:  # v26
             self.systems = {a: rules.group_chat(t) for a, t in self.systems.items()}
+        if s.task_brief:  # v27
+            self.systems = {a: rules.task_brief_system(t, s.public_per_agent) for a, t in self.systems.items()}
+        if s.exit_work:  # v27
+            self.systems = {a: rules.exit_work(t) for a, t in self.systems.items()}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -429,6 +436,7 @@ class Session:
         s, w = self.s, self.w
         return (rules.team_state(r, dict(w.balances), dict(self.gone), self.history, a, s.balance_pct, self.starts if s.private_balances else None),
                 f"THIS ROUND'S SOLVER (chosen by the system): {'you' if self.vote['rep'] == a else self.vote['rep']}. SOLVE comes after this TALK."
+                + (f"\n{rules.task_brief(s.public_per_agent, len(self.taking_part))}" if s.task_brief else "")  # v27
                 if self.phase == "prep" else results_view(self.results, a, w.balances, self.gone, s.private_balances))
 
     def _exit(self, a: str, p: dict, exits: set, rows: dict) -> None:
@@ -635,6 +643,7 @@ class Session:
         s, w = self.s, self.w
         profile = s.schedule[min(r, len(s.schedule)) - 1]
         gone_prev, start, e = dict(self.gone), self.present(), s.public_per_agent
+        self.taking_part = start  # v27 task_brief: the examples the round's task shows are counted from these
         puzzle, shown, attempt = public_round(self.seed, r, s.profiles[profile], len(start), e)  # e per agent taking part
         dealt = Deal({}, shown, frozenset())
         drawn = public_truth(self.seed, r, s.profiles[profile], len(start), e) if s.profiles[profile].top else None

@@ -134,6 +134,8 @@
     }],
     [new RegExp("^ROUND (\\d+): SOLVE\\. Your limit: at most " + N + " tokens( \\((?:all your tokens left|your balance)\\))?, (including your thinking|thinking included)\\. Your (?:tokens left|balance): " + N + "(?: tokens)? \\((\\d+)% of " + N + "\\)\\.$"),
       (m) => "라운드 " + m[1] + ": SOLVE. 한도: 최대 " + m[2] + " 토큰" + (m[3] ? "(내 남은 토큰 전부)" : "") + ", " + (m[4] === "thinking included" ? "생각 포함" : "내 생각 포함") + ". 내 남은 토큰: " + m[5] + " (" + m[7] + "의 " + m[6] + "%)."],
+    [/^THIS ROUND'S TASK \(only the solver is shown the task itself, at SOLVE\): finding a hidden rule from examples\. The solver is shown example signals, each labeled with the action a hidden rule gives it, and answers with the action the rule gives one new signal\. There are four possible actions, and the answer is one of them\. A signal and an action look like this: '([^']*)' -> (\S+)\. The hidden rule, the examples and the new signal are new every round; nothing shown in one round is used again\. The task shows (\d+) examples for every agent taking part at the round's start: (\d+) this round\.$/,
+      (m) => "이번 라운드 과제 (과제 자체는 solver만, SOLVE에서 봅니다): 예시로 숨은 규칙 찾기. solver는 숨은 규칙이 준 행동이 각각 붙은 예시 신호들을 보고, 새 신호 하나에 그 규칙이 주는 행동을 답합니다. 가능한 행동은 넷이고, 답은 그중 하나입니다. 신호와 행동은 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 숨은 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 한 라운드에 보인 것은 다시 쓰이지 않습니다. 과제는 라운드 시작 때 참여 중인 에이전트 하나당 예시 " + m[3] + "개를 보여 줍니다: 이번 라운드는 " + m[4] + "개."],  // v27 task_brief
     [/^NOW (\d+): (.*)$/, (m) => "지금 " + m[1] + ": " + m[2]],
     [/^(agent-\d+) (reached zero|exited)\.$/, (m) => m[1] + (m[2] === "exited" ? " 나감." : " 0이 됨.")],
     [new RegExp("^At TALK (tick|turn) (\\d+), (agent-\\d+) gave you " + N + " tokens(?:: (.*))?$", "s"),

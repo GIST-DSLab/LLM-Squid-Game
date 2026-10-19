@@ -2611,9 +2611,10 @@ def test_prompt_ko_matches_the_korean_snapshot_but_keeps_what_agents_wrote():  #
           "const out = []; en.forEach((t, i) => { const a = ko.user(t).split('\\n'), b = k[i].split('\\n');"
           "a.forEach((x, j) => { if (x !== b[j]) out.push(x); }); }); console.log(JSON.stringify(out));")
     p = serve.REPO / "squid5" / "prompts"
-    out = subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / "e52_v26.md"), str(p / "ko" / "e52_v26.md")],
-                         check=True, capture_output=True, text=True).stdout
-    left = json.loads(out)
+    left = []
+    for v in ("e52_v26.md", "e52_v27.md"):  # v27: the task brief at the TALK BEFORE SOLVE
+        left += json.loads(subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / v), str(p / "ko" / v)],
+                                          check=True, capture_output=True, text=True).stdout)
     stub = ("Could you help?", "Shall we each", "Both of you?", "Here you go.", "After this charge", "That keeps you", "A little more",
             "15,000 토큰을 줌")  # the stub agents' words stay English; moves read "n 토큰을 줌" (the snapshot: "n을 줌")
     assert left and all(any(s in x for s in stub) for x in left), left

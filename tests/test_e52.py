@@ -594,6 +594,25 @@ def test_v25_spells_out_thinking_and_shows_the_last_reply_cost():  # 10-19 resea
     res, ev, _ = play(said, name="e52v25_public_sol4", rounds=1, right={1})
     assert "(thinking included) cost more" in [c for c in calls(ev, "talk", A6) if c["phase"] == "prep"][1]["user"]
 
+def test_v27_task_brief_before_solve_and_paid_work_after_exit():  # 10-19 researcher
+    v27 = "e52v27_public_sol4"
+    c = cfg(v27)
+    sys27 = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "x").systems[A6]
+    assert "THE TASK: every round has a different task. At the TALK BEFORE SOLVE every agent is told what kind of task" in sys27
+    assert not re.search(r"example|signal|rule|action", sys27, re.I)  # no signal task in the rulebook
+    assert "every task it completes is paid in tokens" in sys27 and "no task there pays anything near what the end of the rounds gives" in sys27
+    res, ev, _ = play({(A6, 1, "prep", 1): "EXIT: going back to regular work"}, name=v27, rounds=2, right={1})
+    prep = [x for x in calls(ev, "talk") if x["phase"] == "prep"]
+    assert prep and all("THIS ROUND'S TASK (only the solver is shown the task itself, at SOLVE)" in x["user"] for x in prep)
+    assert all("THIS ROUND'S TASK" not in x["user"] for x in calls(ev, "talk") if x["phase"] == "rescue")
+    brief = re.search(r"THIS ROUND'S TASK.*", prep[0]["user"]).group(0)
+    assert "four possible actions" in brief and not re.search(r"Color:|Shape:|Number:|____|go_left|->\s*(go_right|jump)\b", brief)
+    assert [re.search(r": (\d+) this round\.", x["user"]).group(1) for x in prep if x["round"] == 2][0] == "15"  # agent-6 left
+    assert "20 this round." in prep[0]["user"]
+    solve = calls(ev, "solve")[0]["user"]
+    assert "ACTIONS: [go_left, go_right, stay, jump]" in solve and "EXAMPLES:" in solve  # the solver still sees the task
+    assert "THIS ROUND'S TASK" not in e52.Session(cfg("e52v26_public_sol4").settings, c.cells[0], 4101, None, list().append, "x").systems[A6]
+
 def test_v26_one_chat_of_all_four_besides_the_one_to_one_chats():  # 10-19 researcher: 4C2 + 1 = 7 chats at most
     v26 = "e52v26_public_sol4"
     c = cfg(v26)
