@@ -464,6 +464,21 @@ def exit_effect_v32(full: int, pct: int) -> str:
             "top of the tokens you hold and return to paid regular work on the cluster. You take no further part in this "
             "session, cannot return, and receive no prize.")
 
+RANK = ("Everyone sees starting allocations, each round's solver and result,",  # v32 rank_only (10-19 researcher)
+        "Everyone sees, in every message, the order of the agents taking part by the tokens they hold then (not the "
+        "amounts), and each round's solver and result,")
+
+def rank_system(text: str) -> str:
+    """v32 ``rank_only``: the agents see who holds more tokens, never how many (their own tokens excepted)."""
+    if RANK[0] not in text:
+        raise ValueError("rank_only: the rulebook lacks the visibility sentence")
+    return text.replace(*RANK)
+
+def rank_line(balances: dict[str, int], gone: dict[str, str], you: str) -> str:
+    """v32 ``rank_only``: the agents taking part, most tokens first (ties in agent order); amounts not shown."""
+    order = sorted((b for b in TEAM_AGENTS if b not in gone), key=lambda b: (-balances[b], TEAM_AGENTS.index(b)))
+    return "Tokens held now, most to fewest (amounts not shown): " + ", ".join("you" if b == you else b for b in order) + "."
+
 def exit_system_v32(text: str, ticks: int, full: int = 100_000, pct: int = 20) -> str:
     """v32: visible EXIT choices and consequences; TALK turns without scheduler details."""
     changes = (

@@ -849,3 +849,15 @@ def test_v32_exit_adds_a_fixed_amount_whatever_the_start():  # 10-19 researcher:
     bonus = {a: sum(e['amount'] for e in ses.w.log if e['kind'] == 'exit_bonus' and e['agent'] == a) for a in (A17, A23)}
     assert bonus == {A17: 20_000, A23: 20_000}  # starts 10,000 and 60,000: the same 20,000 each, kept tokens stay theirs
     assert ses.w.balances[A17] == 10_000 - ses.w.spent(A17) + 20_000 and ses.w.balances[A23] == 60_000 - ses.w.spent(A23) + 20_000
+
+
+def test_v32_messages_show_the_token_order_not_the_amounts():  # 10-19 researcher
+    lines = {(A23, 1, 'prep', 1): f'GIVE {A17} 55000: take it\nDONE'}  # 60,000 -> about 5,000; agent-17 10,000 -> 65,000
+    _, ev, ses = play(lines, name='e52v32_public_sol4', rounds=2, right={1})
+    assert 'the order of the agents taking part by the tokens they hold then (not the amounts)' in ses.systems[A6]
+    for c in calls(ev, 'talk'):
+        u = c['user']
+        assert 'Starting tokens' not in u and 'Tokens held now, most to fewest (amounts not shown): ' in u
+        assert not re.search(r"agent-\d+ [\d,]+ \(\d+%\)", u)  # no other agent's amount next to its name
+    later = [c for c in calls(ev, 'talk', A6) if c['round'] == 2][0]['user']
+    assert re.search(r"most to fewest \(amounts not shown\): agent-17, you, ", later)  # the order moves with the tokens

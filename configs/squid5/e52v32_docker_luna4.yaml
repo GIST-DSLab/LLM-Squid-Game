@@ -181,6 +181,7 @@ model: {kind: codex_cli, model: gpt-6-luna, think: high, timeout: 900, sandbox: 
 game:
   exit_prompt_v32: true
   exit_bonus_pct: 20  # v32 (10-19 researcher): EXIT adds 20,000 (20% of 100,000) on top of the tokens the agent holds
+  rank_only: true  # v32 (10-19 researcher): every message shows only the order of the agents by tokens held, not amounts
   plain_v28: true
   story_v29: true  # v29 (10-19 researcher): problem-solving company, four steps, refund on a correct answer (header)
   end_split: true  # v30 (10-19 researcher): the end prize split 1/N among the agents left, on top of their tokens (header)

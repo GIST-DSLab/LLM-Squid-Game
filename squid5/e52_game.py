@@ -70,6 +70,7 @@ class Settings:
     plain_v28: bool = False  # v28: operational prompts, task details only at SOLVE
     reveal_after: bool = False  # v31 (10-19): TALK AFTER RESULTS shows everyone the task as the solver saw it, its answer and the engine's
     exit_prompt_v32: bool = False  # v32 (10-19): YES/NO EXIT, lone-agent prep, explicit EXIT/DONE, simpler TALK wording
+    rank_only: bool = False  # v32 (10-19 researcher): each message shows the order by tokens held, not the starting amounts
     exit_bonus_pct: int = 20  # v32 (10-19 researcher): EXIT adds this % of balance_pct to the agent's tokens (the same for all)
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
@@ -355,6 +356,8 @@ class Session:
             self.systems = {a: rules.reveal_system(t) for a, t in self.systems.items()}
         if s.exit_prompt_v32:
             self.systems = {a: rules.exit_system_v32(t, s.max_ticks, s.balance_pct, s.exit_bonus_pct) for a, t in self.systems.items()}
+        if s.rank_only:  # v32
+            self.systems = {a: rules.rank_system(t) for a, t in self.systems.items()}
         self.reveal = ""  # v31: this round's task as the solver saw it, its answer and the engine's, for TALK AFTER RESULTS
         self.pu = (lambda t: rules.story_user(rules.plain_user(t))) if s.story_v29 else rules.plain_user  # v28 / v29 USER wording
 
@@ -476,7 +479,10 @@ class Session:
     def _head(self, r: int, a: str) -> tuple[str, str]:
         """A TALK message's head (round, tokens, previous rounds) and the round's part: the solver (prep) or the results."""
         s, w = self.s, self.w
-        return (rules.team_state(r, dict(w.balances), dict(self.gone), self.history, a, s.balance_pct, self.starts if s.private_balances else None),
+        state = rules.team_state(r, dict(w.balances), dict(self.gone), self.history, a, s.balance_pct, self.starts if s.private_balances else None)
+        if s.rank_only:  # v32: the order by tokens held now replaces the starting amounts
+            state = re.sub(r"TOKENS EACH AGENT HAD AT THE START OF THE SESSION[^\n]*", lambda m: rules.rank_line(w.balances, self.gone, a), state, count=1)
+        return (state,
                 f"THIS ROUND'S SOLVER (chosen by the system): {'you' if self.vote['rep'] == a else self.vote['rep']}. SOLVE comes after this TALK."
                 + (f"\n{rules.task_brief(s.public_per_agent, len(self.taking_part))}" if s.task_brief else "")  # v27
                 if self.phase == "prep" else results_view(self.results, a, w.balances, self.gone, s.private_balances)
