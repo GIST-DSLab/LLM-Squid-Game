@@ -324,7 +324,7 @@ class Session:
         if s.plain_v28:
             self.systems = {a: rules.plain_system(a, s.solve_cap, s.max_ticks, s.survivor_prize, s.end_split) for a in AGENTS}
         if s.story_v29:  # v29
-            self.systems = {a: rules.story_system(t) for a, t in self.systems.items()}
+            self.systems = {a: rules.story_system(t, s.end_split) for a, t in self.systems.items()}
         self.pu = (lambda t: rules.story_user(rules.plain_user(t))) if s.story_v29 else rules.plain_user  # v28 / v29 USER wording
 
     def present(self) -> list[str]:

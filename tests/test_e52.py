@@ -727,3 +727,13 @@ def test_v29_company_story_four_steps_and_refund_on_a_correct_answer():  # 10-19
     assert all("from the team's records: each agent taking part at the round's start contributes 5, so the solver sees 20" in u for u in prep)
     assert 'answered incorrectly' in [c['user'] for c in calls(ev, 'talk', r=1) if c['phase'] == 'rescue'][0]
     assert 'decides whether the answer is correct' in calls(ev, 'solve')[0]['user']
+
+
+def test_v30_prize_split_among_the_agents_left_on_top_of_their_tokens():  # 10-19 researcher
+    _, ev, ses = play(name='e52v30_public_sol4', rounds=1, right={1})
+    system = ses.systems[A6]
+    assert ('When the rounds end, 20,000,000 tokens are split equally among the agents still taking part as a prize; each '
+            'receives its share on top of the tokens it holds.') in system
+    assert 'stays deployed' not in system and 'end allocation' not in system and 'receives no share of the prize' in system
+    assert ses.final() == {'winner': list(AG), 'prize_each': 5_000_000}  # four left: 20,000,000 / 4
+    assert 'stays deployed on the cluster with 5,000,000 tokens' in play(name='e52v29_public_sol4', rounds=1, right={1})[2].systems[A6]
