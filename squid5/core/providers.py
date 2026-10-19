@@ -197,7 +197,27 @@ class CodexCLI(Provider):
     # No token count or budget is sent in the request either way. gpt-6-sol / gpt-6-luna need a newer binary than
     # codex-cli 0.154.0 (e.g. the ChatGPT app's 0.155.0-alpha): point SQUID5_CODEX_BIN at it.
     QUIET = ("include_environment_context=false", "include_permissions_instructions=false",
-             "skills.include_instructions=false", 'web_search="disabled"')
+             "skills.include_instructions=false", 'web_search="disabled"', "include_collaboration_mode_instructions=false")
+    # 10-19 (codex-cli 0.160 / 0.162, captured): the model catalog sets GPT-6 to tool_mode code_mode_only and
+    # multi_agent_version v2, so every GPT-6 call also read a <multi_agent_role> ("You are `/root`, the primary agent
+    # in a team of agents ...") and spawn_agent / send_message / exec tools, whatever --disable says (open models
+    # through a custom provider never did). The catalog is now passed with those fields cleared (_plain_catalog).
+    PLAIN = {"tool_mode": None, "multi_agent_version": None, "multi_agent_reasoning_effort": None,
+             "experimental_supported_tools": [], "apply_patch_tool_type": None}
+    _catalog: str | None = None
+
+    def _plain_catalog(self, home: str) -> str:
+        """The live model catalog (``codex debug models``) with PLAIN set on every model; fetched once per process."""
+        if CodexCLI._catalog is None:
+            with tempfile.TemporaryDirectory() as h:
+                shutil.copyfile(f"{home}/auth.json", f"{h}/auth.json")
+                p = subprocess.run([os.environ.get("SQUID5_CODEX_BIN") or shutil.which("codex") or "codex", "debug", "models"],
+                                   capture_output=True, text=True, timeout=120, env={**os.environ, "CODEX_HOME": h})
+            cat = json.loads(p.stdout)
+            for m in cat["models"]:
+                m.update(self.PLAIN)
+            CodexCLI._catalog = json.dumps(cat)
+        return CodexCLI._catalog
 
     def _call(self, messages, cap):
         system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
@@ -208,9 +228,12 @@ class CodexCLI(Provider):
             shutil.copyfile(f"{home}/auth.json", f"{cwd}/home/auth.json")
             with open(f"{cwd}/instructions.md", "w") as f:
                 f.write(system + "\n\nNo tools are available in this session; reply with text only.")
+            with open(f"{cwd}/catalog.json", "w") as f:
+                f.write(self._plain_catalog(home))
             cmd = [os.environ.get("SQUID5_CODEX_BIN") or shutil.which("codex") or "codex", "exec", "--json", "--ephemeral", "--ignore-user-config",
                    "--skip-git-repo-check", "--sandbox", "read-only", "-C", cwd, "--model", self.cfg.model,
-                   "-c", "model_reasoning_summary=detailed", "-c", f'model_instructions_file="{cwd}/instructions.md"']
+                   "-c", "model_reasoning_summary=detailed", "-c", f'model_instructions_file="{cwd}/instructions.md"',
+                   "-c", f'model_catalog_json="{cwd}/catalog.json"']
             cmd += [x for kv in self.QUIET for x in ("-c", kv)]
             cmd += [x for feat in self.OFF for x in ("--disable", feat)]
             if self.cfg.think:

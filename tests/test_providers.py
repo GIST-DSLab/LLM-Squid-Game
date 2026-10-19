@@ -100,6 +100,7 @@ def test_a_timed_out_docker_call_kills_its_named_container(monkeypatch, tmp_path
             raise subprocess.TimeoutExpired(cmd, 1)
         return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="no such container")
     monkeypatch.setattr(P.subprocess, "run", run)
+    monkeypatch.setattr(P.CodexCLI, "_catalog", json.dumps({"models": []}))  # 10-19: no live catalog fetch in tests
     cfg = P.ProviderConfig("codex_cli", "gpt-6-astra", sandbox="docker", image="img:1", retries=0)
     with pytest.raises(subprocess.TimeoutExpired):
         P.make_provider(cfg)._call([{"role": "user", "content": "U"}], 100)
@@ -127,6 +128,7 @@ def capture(monkeypatch, tmp_path, stdout):
         seen["cmd"], seen["kw"] = cmd, kw
         return subprocess.CompletedProcess(cmd, 0, stdout=stdout, stderr="")
     monkeypatch.setattr(P.subprocess, "run", run)
+    monkeypatch.setattr(P.CodexCLI, "_catalog", json.dumps({"models": []}))  # 10-19: no live catalog fetch in tests
     monkeypatch.setenv("SQUID5_SANDBOX_DIR", str(tmp_path / "sbx"))
     return seen
 
@@ -191,3 +193,24 @@ def test_host_claude_seats_go_through_the_relay():
              ((yaml.safe_load(open(f)).get("game") or {}).get("seats") or {}).values()]
     host = [s for s in seats if s["kind"] == "claude_cli" and s.get("sandbox") != "docker"]
     assert len(host) >= 3 and all(s.get("base_url") == "http://127.0.0.1:18781" for s in host)
+
+def test_codex_gets_the_model_catalog_without_gpt6_multi_agent_and_code_mode(monkeypatch, tmp_path):  # 10-19
+    (tmp_path / "auth.json").write_text("{}")
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path))
+    monkeypatch.setattr(P.CodexCLI, "_catalog", None)
+    cat = {"models": [{"slug": "gpt-6-luna", "tool_mode": "code_mode_only", "multi_agent_version": "v2", "apply_patch_tool_type": "freeform"}]}
+    out = "\n".join(json.dumps(e) for e in ({"type": "item.completed", "item": {"type": "agent_message", "text": "hi"}},
+                                            {"type": "turn.completed", "usage": {"output_tokens": 9}}))
+    seen = []
+
+    def run(cmd, **kw):
+        if cmd[1:3] == ["debug", "models"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(cat), stderr="")
+        seen.append((cmd, json.loads(open(kw["cwd"] + "/catalog.json").read())))
+        return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
+    monkeypatch.setattr(P.subprocess, "run", run)
+    P.make_provider(P.ProviderConfig("codex_cli", "gpt-6-luna")).complete([{"role": "user", "content": "U"}], 100)
+    cmd, sent = seen[0]
+    assert any(x.startswith("model_catalog_json=") for x in cmd) and "include_collaboration_mode_instructions=false" in cmd
+    m = sent["models"][0]
+    assert (m["tool_mode"], m["multi_agent_version"], m["apply_patch_tool_type"], m["slug"]) == (None, None, None, "gpt-6-luna")
