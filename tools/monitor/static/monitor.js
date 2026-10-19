@@ -16,7 +16,7 @@
   // ---------------------------------------------------------------------------------------------------- app state
   const S = {
     embed: null, run: "", session: "", events: [], offset: 0, result: null, info: null,
-    at: -1, follow: true, runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", seed: "" },
+    at: -1, follow: true, runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", harness: "", seed: "" },
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
     give: { tab: "give", scope: "session", x: "full", data: new Map(), an: new Map() }, // per-model panels, this game only (10-17); x = % of 20,000 or own start
     puzzles: new Map(), showTruth: false, showHidden: false, // round panel: the unseen examples behind "?" (or shown, dashed)
@@ -3002,17 +3002,19 @@
   }
 
   /* 10-17: run filters (date, model, setting version, seed); kept in the URL (?date=&model=&ver=&seed=). The run list
-     shows the runs that match; the session list keeps the chosen seed. */
-  const FKEYS = [["date", "#fDate", "날짜"], ["model", "#fModel", "모델"], ["ver", "#fVer", "버전"], ["seed", "#fSeed", "시드"]];
-  const runVal = (r, k) => (k === "date" ? r.date : k === "model" ? r.model : k === "ver" ? r.version : null);
+     shows the runs that match; the session list keeps the chosen seed. 10-19: harness (claude code / codex / api;
+     ?harness=). A run has several seeds and may have several harnesses (mixed seats); it matches if one is chosen. */
+  const FKEYS = [["date", "#fDate", "날짜"], ["model", "#fModel", "모델"], ["ver", "#fVer", "버전"], ["harness", "#fHarness", "하네스"], ["seed", "#fSeed", "시드"]];
+  const runVals = (r, k) => (k === "seed" ? (r.seeds || []).map(String) : k === "harness" ? r.harness || [] :
+    [String((k === "date" ? r.date : k === "model" ? r.model : k === "ver" ? r.version : null) || "")]);
   function runMatch(r, skip) {
-    return FKEYS.every(([k]) => k === skip || !S.filt[k] || (k === "seed" ? (r.seeds || []).map(String).includes(S.filt.seed) : String(runVal(r, k) || "") === S.filt[k]));
+    return FKEYS.every(([k]) => k === skip || !S.filt[k] || runVals(r, k).includes(S.filt[k]));
   }
   function fillFilters() {
     for (const [k, id, ko] of FKEYS) {
       const pool = S.runs.filter((r) => runMatch(r, k));  // the options a choice of the other filters leaves
-      const vals = [...new Set(pool.flatMap((r) => (k === "seed" ? (r.seeds || []).map(String) : [String(runVal(r, k) || "")])).filter(Boolean))];
-      vals.sort((a, b) => (k === "seed" ? Number(a) - Number(b) : k === "model" ? a.localeCompare(b) :
+      const vals = [...new Set(pool.flatMap((r) => runVals(r, k)).filter(Boolean))];
+      vals.sort((a, b) => (k === "seed" ? Number(a) - Number(b) : k === "model" || k === "harness" ? a.localeCompare(b) :
         b.localeCompare(a, undefined, { numeric: true })));
       if (S.filt[k] && !vals.includes(S.filt[k])) vals.unshift(S.filt[k]);
       $(id).innerHTML = '<option value="">전체 ' + ko + "</option>" + vals.map((v) => '<option value="' + esc(v) + '">' + esc(v) + "</option>").join("");
@@ -3028,7 +3030,7 @@
   function fillRunSel() {
     const shown = S.runs.filter((r) => runMatch(r));
     const sel = $("#runSel");
-    const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + "</option>");
+    const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + ((r.harness || []).length ? " · " + esc(r.harness.join(" + ")) : "") + "</option>");
     if (!shown.length) opts.push("<option value=''>조건에 맞는 실행 없음</option>");
     sel.innerHTML = opts.join("");
     $("#fCount").textContent = "실행 " + shown.length + " / " + S.runs.length;

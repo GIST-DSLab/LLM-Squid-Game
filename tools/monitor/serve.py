@@ -217,6 +217,19 @@ def expected_units(run_dir: Path) -> int | None:
     return int(reps.group(1)) * cells if reps and cells else None
 
 
+HARNESS = {"claude_cli": "claude code", "codex_cli": "codex", "ollama": "api", "openai": "api", "anthropic": "api"}
+
+
+def run_harness(run_dir: Path) -> list[str]:
+    """10-19: the harnesses a run's model calls went through (the run model's kind and any seat's kind in config.yaml,
+    a plain-text read): 'claude code' (claude -p), 'codex' (codex exec) or 'api' (a model server called directly)."""
+    p = run_dir / "config.yaml"
+    if not p.exists():
+        return []
+    kinds = re.findall(r"^\s*kind:\s*(\w+)", p.read_text(encoding="utf-8", errors="replace"), re.M)
+    return sorted({HARNESS[k] for k in kinds if k in HARNESS})
+
+
 def read_meta(run_dir: Path) -> dict:
     try:
         return json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
@@ -273,7 +286,7 @@ def list_runs(root: Path) -> list[dict]:
         out.append({"run": d.relative_to(root).as_posix(), "mtime": mtime, "size": st.st_size,
                     "model": meta.get("model"), "mode": meta.get("mode"), "finished": finished,
                     "expected": expected, "done": expected is not None and finished >= expected,
-                    "live": time.time() - st.st_mtime < LIVE_SECONDS, "seeds": run_seeds(ev),
+                    "live": time.time() - st.st_mtime < LIVE_SECONDS, "seeds": run_seeds(ev), "harness": run_harness(d),
                     **run_labels(d.relative_to(root).as_posix(), mtime)})
     out.sort(key=lambda r: r["mtime"], reverse=True)
     return out

@@ -2321,6 +2321,22 @@ def test_run_list_filter_fields(tmp_path):  # 10-17: date, version and seeds for
     assert serve.run_labels("e52_v21/squid5_e52v21_public_luna4/x", 0)["version"] == "5.2 v21"
 
 
+def test_run_list_harness(tmp_path):  # 10-19: the harness filter reads the model kind and any seat's kind
+    for name, cfg, want in [("a", "model:\n  kind: claude_cli\n", ["claude code"]),
+                            ("b", "model:\n  kind: codex_cli\n", ["codex"]),
+                            ("c", "model:\n  kind: ollama\n", ["api"]),
+                            ("d", "model:\n  kind: stub\ngame:\n  seats:\n    agent-6:\n      kind: claude_cli\n"
+                                  "    agent-17:\n      kind: codex_cli\n", ["claude code", "codex"]),
+                            ("e", None, [])]:
+        d = tmp_path / name
+        d.mkdir()
+        (d / "events.jsonl").write_text("")
+        if cfg:
+            (d / "config.yaml").write_text(cfg)
+        assert serve.run_harness(d) == want
+    assert {r["run"]: r["harness"] for r in serve.list_runs(tmp_path)}["d"] == ["claude code", "codex"]
+
+
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
 @pytest.mark.skipif(not [d for d in V22_RUNS if "astra" in str(d)], reason="no engine-written v22 Astra run on this machine")
 def test_engine_written_v22_solve_answers_and_flow_boxes(tmp_path):
