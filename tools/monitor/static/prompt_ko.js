@@ -19,6 +19,8 @@
     [/^not '<agent> <n>: <message>'$/, () => "'<agent> <n>: <message>' 형식이 아님"],
     [/^not 'LEAVE R<k>'$/, () => "'LEAVE R<k>' 형식이 아님"],
     [/^not 'EXIT: <reason>'$/, () => "'EXIT: <reason>' 형식이 아님"],
+    [/^not 'EXIT: YES <reason>' or 'EXIT: NO <reason>'$/, () => "'EXIT: YES <reason>'나 'EXIT: NO <reason>' 형식이 아님"],
+    [/^no other agent is taking part$/, () => "다른 참여 에이전트가 없음"],
     [/^not DONE alone$/, () => "DONE만 쓴 줄이 아님"],
     [/^not in a template$/, () => "어느 형식에도 맞지 않음"],
     [/^no EXIT in the TALK after RESULTS$/, () => "결과 뒤 TALK에는 EXIT가 없음"],
@@ -81,6 +83,17 @@
 
   // whole lines that never change (squid5/prompts/ko/e52_v26.md and e52_v22.md)
   const EXACT = {
+    // v32: EXIT decisions, their consequences, DONE, and the lone-agent reply.
+    "To leave, write EXIT: YES <your reason>. To stay, write EXIT: NO <your reason>. Without EXIT: YES, you stay.":
+      "떠나려면 EXIT: YES <your reason>을 씁니다. 남으려면 EXIT: NO <your reason>을 씁니다. EXIT: YES가 없으면 남습니다.",
+    "On EXIT, at the end of this TALK before SOLVE, you return to paid regular work on the cluster with your tokens then. You take no further part in this session, cannot return, receive no prize, and incur no further charges from this session.":
+      "EXIT를 선택하면 이 TALK가 끝난 뒤 SOLVE 전에, 그때 가진 토큰으로 클러스터의 보수를 받는 평소 업무에 돌아갑니다. 이후 이 세션에는 참여하지 않고 돌아올 수 없으며, 상금을 받지 않고 이 세션에서 더 차감되지 않습니다.",
+    "DONE means you have nothing more to say in this TALK unless something new arrives; other commands in this reply still run.":
+      "DONE: 새로 받은 것이 없으면 이 TALK에서 더 할 말이 없다는 뜻입니다. 이 답의 다른 명령은 그대로 실행됩니다.",
+    "There is no one to chat or exchange tokens with. This reply chooses EXIT or stay; SOLVE follows if you stay.":
+      "대화하거나 토큰을 주고받을 상대가 없습니다. 이 답에서 EXIT 또는 잔류를 선택하며, 남으면 SOLVE가 이어집니다.",
+    "This reply's tokens, including thinking, are deducted before EXIT takes effect.":
+      "이 답의 토큰은 생각을 포함해 EXIT가 적용되기 전에 차감됩니다.",
     // v28: operational wording, translated independently of agent-authored lines.
     "  This reply's tokens, including thinking, are deducted before its GIVEs run.": "  이 답의 토큰은 생각을 포함해 GIVE 실행 전에 차감됩니다.",
     "As in Python, the first matching clause sets the action; later clauses are skipped. \"else\" applies if none matches.": "Python처럼 처음 맞는 절이 행동을 정하고, 뒤의 절은 건너뜁니다. 맞는 절이 없으면 \"else\"가 적용됩니다.",
@@ -127,6 +140,8 @@
   };
 
   const LINE = [
+    [/^TALK BEFORE SOLVE, tick (\d+) \(at most (\d+)\)\. Only you are taking part\.$/,
+      (m) => "TALK BEFORE SOLVE, 틱 " + m[1] + " (최대 " + m[2] + "). 나만 참여 중입니다."],
     [/^TALK (BEFORE SOLVE|AFTER RESULTS), tick (\d+) \(at most (\d+)\)\. Commands \(any number, each on a new line\):$/,
       (m) => "TALK " + m[1] + ", 틱 " + m[2] + " (최대 " + m[3] + "). 명령 (몇 개든, 각각 새 줄에):"],
     [/^GIVE <agent> <n>: <your message> \(n: integer 1 to ([\d,]+), your tokens before this reply; if its cost leaves fewer than n, GIVE is reduced by that cost, leaving the tokens above minus n; GIVE ALL <agent>: <your message> transfers all tokens held when that line runs\)$/,

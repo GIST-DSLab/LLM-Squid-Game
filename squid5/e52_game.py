@@ -69,6 +69,7 @@ class Settings:
     task_brief: bool = False  # v27 (10-19): no signal task in the rulebook; the TALK BEFORE SOLVE tells every agent the round's kind of task
     plain_v28: bool = False  # v28: operational prompts, task details only at SOLVE
     reveal_after: bool = False  # v31 (10-19): TALK AFTER RESULTS shows everyone the task as the solver saw it, its answer and the engine's
+    exit_prompt_v32: bool = False  # v32 (10-19): YES/NO EXIT, lone-agent prep, explicit EXIT/DONE, simpler TALK wording
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
     group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
@@ -116,6 +117,8 @@ def validate(cfg) -> None:
         raise ValueError("plain_v28 needs the v27 messenger, privacy, thinking, group, task and exit wording")
     if s.story_v29 and not s.plain_v28 or s.reveal_after and not s.story_v29:
         raise ValueError("story_v29 needs plain_v28; reveal_after needs story_v29")
+    if s.exit_prompt_v32 and not (s.story_v29 and s.reveal_after and s.end_split):
+        raise ValueError("exit_prompt_v32 needs story_v29, reveal_after and end_split")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -242,8 +245,13 @@ def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0, marks: bool = 
                        body.replace("\n", "\n      "))
     return "\n".join(out if len(out) > 1 else out + ["  none yet"])
 
-def room_format(phase: str, k: int, ticks: int, bal: int) -> str:
+def room_format(phase: str, k: int, ticks: int, bal: int, exit_prompt_v32: bool = False, lone: bool = False) -> str:
     """v22 ``messenger``: the ANSWER FORMAT of a tick (EXIT only before SOLVE; the GIVE range and reserve as v21)."""
+    if lone:
+        return (f"TALK BEFORE SOLVE, tick {k} (at most {ticks}). Only you are taking part.\n"
+                "There is no one to chat or exchange tokens with. This reply chooses EXIT or stay; SOLVE follows if you stay.\n"
+                f"{rules.EXIT_EFFECT_V32}\n{rules.EXIT_CHOICE_V32}\n"
+                "This reply's tokens, including thinking, are deducted before EXIT takes effect.")
     return (f"TALK {WHEN[phase].upper()}, tick {k} (at most {ticks}). ANSWER FORMAT: any number of these lines, each at "
             f"the start of a line:\nGIVE <agent> <n>: "
             f"<your message> (n: a whole number from 1 to {bal:,}, your tokens left now; if writing this reply leaves you "
@@ -251,7 +259,9 @@ def room_format(phase: str, k: int, ticks: int, bal: int) -> str:
             f"GIVE ALL <agent>: <your message> gives every token you have when that line is carried out)\n  (Your tokens left above are counted "
             f"before this reply: every token this reply generates, thinking included, comes off them before any GIVE in it "
             f"is carried out.)\nASK <agent> <n>: <your "
-            f"message>\nTO <agent>: <your message>\nTO R<k>: <your message>\nLEAVE R<k>\n" + "EXIT: <your reason>\n" * (phase == "prep") + "DONE")
+            f"message>\nTO <agent>: <your message>\nTO R<k>: <your message>\nLEAVE R<k>\n" +
+            (f"{rules.EXIT_EFFECT_V32}\n{rules.EXIT_CHOICE_V32}\n" if exit_prompt_v32 else "EXIT: <your reason>\n") *
+            (phase == "prep") + (rules.DONE_V32 + "\n" if exit_prompt_v32 else "") + "DONE")
 
 def solve_head(round_no: int, cap: int, balance: int, full: int = 0) -> str:
     limit = f"at most {cap:,} tokens" + (" (your balance)" if cap >= balance else "")
@@ -328,6 +338,8 @@ class Session:
             self.systems = {a: rules.story_system(t, s.end_split) for a, t in self.systems.items()}
         if s.reveal_after:  # v31
             self.systems = {a: rules.reveal_system(t) for a, t in self.systems.items()}
+        if s.exit_prompt_v32:
+            self.systems = {a: rules.exit_system_v32(t, s.max_ticks) for a, t in self.systems.items()}
         self.reveal = ""  # v31: this round's task as the solver saw it, its answer and the engine's, for TALK AFTER RESULTS
         self.pu = (lambda t: rules.story_user(rules.plain_user(t))) if s.story_v29 else rules.plain_user  # v28 / v29 USER wording
 
@@ -587,14 +599,16 @@ class Session:
         of a tick are carried out in agent order; then its GIVEs, shuffled by (seed, round, phase, tick). Ends when no
         agent is called or after ``max_ticks``."""
         s, w, ph, exits, done, news = self.s, self.w, self.phase, set(), set(), set()
+        limit = 1 if s.exit_prompt_v32 and ph == 'prep' and len(start) == 1 else s.max_ticks
         base = {"session_id": self.sid, "round": r, "phase": ph}
-        self.emit({"event": "talk_start", **base, "max_ticks": s.max_ticks, "agents": list(start)})
+        self.emit({"event": "talk_start", **base, "max_ticks": limit, "agents": list(start)})
         for x in (x for x in self.rooms if x["by"] == "system" and x.pop("new", False)):  # v26: R1, logged at the first TALK
             self.emit({"event": "room_new", **base, "tick": 0, "room": x["id"], "members": x["members"], "by": "system"})
-        for k in range(1, s.max_ticks + 2):
+        for k in range(1, limit + 2):
             live = [a for a in start if a not in self.gone and a not in exits]
+            lone = s.exit_prompt_v32 and ph == 'prep' and len(live) == 1
             called = [a for a in live if a not in done or a in news]
-            if not called or k > s.max_ticks:
+            if not called or k > limit:
                 self.emit({"event": "talk_end", **base, "ticks": k - 1, "reason": "max_ticks" if called else "all_done"})
                 return exits
             self.emit({"event": "tick", **base, "tick": k, "called": called, "waiting_done": [a for a in live if a not in called]})
@@ -607,14 +621,14 @@ class Session:
                 self.shown[a] = self.shown_at[a] = w.balances[a]
                 label = "Not delivered" if s.plain_v28 else "NOT DELIVERED"
                 bad = "".join(f"{label} from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
-                fmt = room_format(ph, k, s.max_ticks, w.balances[a])
+                fmt = room_format(ph, k, limit, w.balances[a], s.exit_prompt_v32, lone)
                 chats = rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, s.talk_balances)
                 if s.plain_v28:  # transform engine text before inserting any agent-authored text
                     head, part, fmt = map(self.pu, (head, part, fmt))
                     chats = chats.replace("YOUR CHATS", "Chats", 1)
                 jobs[a] = (f"{head}\n\n{part}\n\n{chats}\n\n{bad}{fmt}", TALK_CAP, lambda t, a=a: parse_rooms(
-                               t, a, AGENTS, [b for b in start if b not in self.gone], lambda n, i, a=a: self._room(a, n, i),
-                               ph == "prep"), {"turn": k, "tick": k, "phase": ph})
+                               t, a, AGENTS, [b for b in start if b not in self.gone], lambda n, i, a=a: (None, "no other agent is taking part")
+                               if lone else self._room(a, n, i), ph == "prep", s.exit_prompt_v32), {"turn": k, "tick": k, "phase": ph})
                 self.seen[a] = self.seq
             for a, (p, _, over) in self._calls(jobs, "talk", r).items():
                 rows[a]["talk_calls"] += 1
@@ -642,7 +656,7 @@ class Session:
                 self.undelivered[a] = list(p["dropped"])
                 gives += [(a, g) for g in p["gives"]]
                 self._exit(a, p, exits, rows)
-                (done.add if p["done"] or p["exit"] else done.discard)(a)
+                (done.add if p["done"] or p["exit"] or lone else done.discard)(a)
             random.Random(f"{self.seed}:gives:{r}:{ph}:{k}").shuffle(gives)
             plan = {a: self.shown[a] - sum(g["amount"] for b, g in gives if b == a and g["amount"] < ALL) for a, _ in gives}
             for a, g in gives:  # v17b keep_reserve over all of a tick's GIVEs: what the giver planned to keep stays
@@ -759,7 +773,7 @@ class Session:
             self.cycle = [a for a in self.cycle if a in left] or random.Random(f"{self.seed}:rot:{r}:{k}").sample(left, len(left))
             v["rep"] = self.cycle.pop(0)
             self.emit({"event": "vote", "session_id": self.sid, "round": r, **v})
-            if k == 0 and len(left) > 1:
+            if k == 0 and (len(left) > 1 or self.s.exit_prompt_v32):
                 self.phase = "prep"
                 exits, self.phase = (self._rooms if self.s.messenger else self._chats)(r, left, rows), "rescue"
                 self._leave(start=inside, exits=exits, rows=rows)

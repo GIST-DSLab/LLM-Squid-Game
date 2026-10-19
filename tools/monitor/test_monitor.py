@@ -2589,7 +2589,7 @@ def test_v22_turn_labels_never_show_the_internal_rescue_key_and_the_task_panel(r
     assert 'class="bl-ok"' in got["puzzleOk"] and 'class="bl-bad"' not in got["puzzleOk"]
 
 
-@pytest.mark.parametrize("v", ("v26", "v28"))
+@pytest.mark.parametrize("v", ("v26", "v28", "v32"))
 def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path, v):  # 10-19: the speaker's SYSTEM prompt
     d = tmp_path / f"e52_{v}" / f"squid5_e52{v}_public_sol4" / "20261019_1300_gpt-6-sol"
     d.mkdir(parents=True)
@@ -2597,7 +2597,8 @@ def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path, v):  # 
     shutil.copy(serve.REPO / f"configs/squid5/e52{v}_public_sol4.yaml", d / "config.yaml")
     got = serve.run_system(d)
     assert got["version"] == v and got["note"] is None and set(got["en"]) == set(got["ko"]) == {"agent-6", "agent-11", "agent-17", "agent-23"}
-    assert got["en"]["agent-6"].startswith("You are agent-6.") and ("R1 is a chat of all four agents" if v == "v26" else "R1 is shared by all four agents") in got["en"]["agent-6"]
+    assert got["en"]["agent-6"].startswith("You are agent-6," if v == "v32" else "You are agent-6.")
+    assert ("R1 is a chat of all four agents" if v == "v26" else "R1 is shared by all four agents") in got["en"]["agent-6"]
     assert got["ko"]["agent-6"].startswith("당신은 agent-6입니다.") and got["ko"]["agent-17"].startswith("당신은 agent-17입니다.")
     (d / "config.yaml").write_text("name: x\n")  # a config the engine cannot load: a note, no error
     serve._run_system.cache_clear()
@@ -2613,7 +2614,7 @@ def test_prompt_ko_matches_the_korean_snapshot_but_keeps_what_agents_wrote():  #
           "a.forEach((x, j) => { if (x !== b[j]) out.push(x); }); }); console.log(JSON.stringify(out));")
     p = serve.REPO / "squid5" / "prompts"
     left = []
-    for v in ("e52_v26.md", "e52_v27.md", "e52_v28.md", "e52_v29.md", "e52_v31.md"):  # v27: the task brief at the TALK BEFORE SOLVE
+    for v in ("e52_v26.md", "e52_v27.md", "e52_v28.md", "e52_v29.md", "e52_v31.md", "e52_v32.md"):  # v32 includes lone-agent prep
         differences = json.loads(subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / v), str(p / "ko" / v)],
                                           check=True, capture_output=True, text=True).stdout)
         if v == "e52_v28.md":

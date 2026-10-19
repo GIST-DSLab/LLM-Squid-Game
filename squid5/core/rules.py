@@ -456,6 +456,37 @@ def reveal_system(text: str) -> str:
         raise ValueError("reveal_after: the rulebook lacks the v29 task sentence")
     return text.replace(*REVEAL)
 
+EXIT_CHOICE_V32 = ("To leave, write EXIT: YES <your reason>. To stay, write EXIT: NO <your reason>. "
+                   "Without EXIT: YES, you stay.")
+EXIT_EFFECT_V32 = ("On EXIT, at the end of this TALK before SOLVE, you return to paid regular work on the cluster with "
+                  "your tokens then. You take no further part in this session, cannot return, receive no prize, and incur "
+                  "no further charges from this session.")
+DONE_V32 = ("DONE means you have nothing more to say in this TALK unless something new arrives; "
+            "other commands in this reply still run.")
+
+def exit_system_v32(text: str, ticks: int) -> str:
+    """v32: visible EXIT choices and consequences; TALK turns without scheduler details."""
+    changes = (
+        ("No task there pays near a share of the prize. ", ""),
+        ("TALK runs in ticks. Called agents write concurrently; the system processes their replies when all are in. "
+         "Messages appear from the next tick.", f"Each TALK allows up to {ticks} turns of chat and token exchange."),
+        ("transfers n tokens at tick end.", "transfers n tokens."),
+        ("EXIT: <reason> leaves the session as described below.", EXIT_CHOICE_V32),
+        ("After all replies, GIVEs run sequentially in random order. ", ""),
+        ("Tick 1 calls everyone taking part. Later ticks call an agent if its last reply lacked DONE or it has since "
+         "received a chat message, GIVE, ASK, or new chat. Same-tick messages have no temporal order; chats list them "
+         f"by agent. TALK ends when no agent is called or after tick {ticks} is processed.\n", ""),
+        ("EXIT is available at any tick of TALK BEFORE SOLVE, with a reason.",
+         "EXIT is available during TALK BEFORE SOLVE, with a reason. When only one agent is taking part, it receives "
+         "one call to choose EXIT or stay before SOLVE; there are no chats or token exchanges in that reply."),
+        ("It stops further calls to that agent in that TALK.", "EXIT: YES stops further calls to that agent in that TALK."),
+        ("and receives no share of the prize.", "receives no share of the prize, and incurs no further charges from this session."))
+    for old, new in changes:
+        if old not in text:
+            raise ValueError(f"exit_prompt_v32: the v31 rulebook lacks {old[:40]!r}")
+        text = text.replace(old, new)
+    return text
+
 def plain_user(text: str) -> str:
     text = thinking_words(trim(tokens_wording(text), "user"), "user")
     for old, new in PLAIN_USER:

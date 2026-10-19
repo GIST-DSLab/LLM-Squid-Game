@@ -758,3 +758,83 @@ def test_v31_the_task_and_both_answers_are_shown_to_everyone_after_solve():  # 1
     for c in calls(ev, 'talk', r=2):  # not cumulative: one block, this round's task only (earlier rounds: solver and result only)
         assert c['user'].count('as the solver saw it') == (c['phase'] == 'rescue')
         assert not [l for l in ex if l in c['user'] and l not in calls(ev, 'solve', r=2)[0]['user']]
+
+
+@pytest.mark.parametrize('text,choice', [('EXIT: YES because', 'YES'), ('exit: no: because', 'NO'),
+    ('EXIT: NO\nbecause', 'NO'), ('EXIT: YES', 'YES'), ('EXIT: NO', 'NO'),
+    ('EXIT: YES first\nEXIT: NO second', 'NO'), ('EXIT: NO first\nEXIT: YES second', 'YES'),
+    ('EXIT: because', None), ('EXIT', None), ('EXIT: YESTERDAY', None), ('EXIT: NOPE', None)])
+def test_v32_exit_requires_yes_or_no_and_keeps_legacy_parsing(text, choice):
+    room = lambda n, i: ('R1', None)
+    p = parse_rooms(text, A6, AG, AG, room, True, exit_prompt_v32=True)
+    assert p['exit'] == (choice == 'YES') and p['exit_choice'] == choice
+    assert bool(p['format_error']) == (choice is None)
+    assert not parse_rooms(text, A6, AG, AG, room, False, exit_prompt_v32=True)['exit']
+    assert parse_rooms('EXIT: NO because', A6, AG, AG, room, True)['exit']  # v31: any EXIT leaves
+
+
+def test_v32_wording_and_other_commands_remain_available():
+    lines = {(A6, 1, 'prep', 1): f'EXIT: NO staying\nTO {A11}: hello\nGIVE {A11} 100: here\nDONE'}
+    _, ev, ses = play(lines, name='e52v32_public_sol4')
+    system = ses.systems[A6]
+    assert 'up to 8 turns' in system and 'No task there pays near' not in system and 'tick' not in system.lower()
+    assert 'four steps: TALK BEFORE SOLVE, SOLVE, TALK AFTER RESULTS and CHARGES' in system
+    assert 'EXIT: YES' in system and 'EXIT: NO' in system and 'no further charges' in system
+    for c in calls(ev):
+        assert not re.search(GOAL_OR_TEST, c['user'], re.I)
+        if c['kind'] == 'talk':
+            assert 'DONE means you have nothing more to say' in c['user']
+            assert ('To leave, write EXIT: YES' in c['user']) == (c['phase'] == 'prep')
+    assert not re.search(GOAL_OR_TEST, system, re.I)
+    assert A6 not in ses.gone and any(g['src'] == A6 and g['dst'] == A11 and g['amount'] == 100 for g in of(ev, 'gift'))
+    room = lambda n, i: ('R2', None)
+    p = parse_rooms(f'TO {A11}: hi\nTO R2: hi\nGIVE {A11} 1: a\nGIVE ALL {A11}: b\nASK {A11} 2: c\nLEAVE R2\nDONE',
+                    A6, AG, AG, room, True, exit_prompt_v32=True)
+    assert len(p['messages']) == 2 and len(p['gives']) == 2 and p['gives'][1]['amount'] == ALL
+    assert len(p['asks']) == 1 and p['leaves'] == ['R2'] and p['done'] and not p['dropped']
+
+
+@pytest.mark.parametrize('answer,exited', [('EXIT: YES regular work', True), ('EXIT: NO continue', False), ('DONE', False),
+    ('EXIT: NO continue\nTO R1: hello\nGIVE agent-11 100: here\nLEAVE R1', False)])
+def test_v32_lone_agent_gets_one_paid_exit_choice_before_solve(answer, exited):
+    lines = {(a, 1, 'prep', 1): 'EXIT: YES regular work' for a in AG if a != A6}
+    lines[A6, 2, 'prep', 1] = answer
+    _, ev, ses = play(lines, name='e52v31_public_sol4', exit_prompt_v32=True, rounds=2, right={1, 2})
+    prep = [c for c in calls(ev, 'talk', A6, 2) if c['phase'] == 'prep']
+    assert len(prep) == 1 and 'Only you are taking part.' in prep[0]['user']
+    assert 'GIVE <agent>' not in prep[0]['user'] and 'TO R<k>' not in prep[0]['user']
+    assert prep[0]['used'] == 37 and bool(calls(ev, 'solve', r=2)) != exited
+    assert (ses.gone.get(A6) == 'exited') == exited
+    if exited:
+        assert ses.w.balances[A6] == 40000 - 3 * 37 and ses.final()['prize_each'] == 0
+        assert not [c for c in calls(ev, r=2) if c is not prep[0]]
+    else:
+        assert ev.index(prep[0]) < ev.index(calls(ev, 'solve', r=2)[0])
+        assert not [e for e in of(ev, 'room_msg') + of(ev, 'gift') if e['round'] == 2 and e['phase'] == 'prep']
+
+
+@pytest.mark.parametrize('exit_cost', [5, 20, 21])
+def test_v31_lone_agent_still_skips_prep_and_v32_low_balance_exit_is_void(exit_cost):
+    lines = {(a, 1, 'prep', 1): 'EXIT: leaving' for a in AG if a != A6}
+    _, old, _ = play(lines, name='e52v31_public_sol4', rounds=2, right={1, 2})
+    assert not [c for c in calls(old, 'talk', r=2) if c['phase'] == 'prep']
+    lines = {key: 'EXIT: YES leaving' for key in lines}
+    lines[A6, 2, 'prep', 1] = 'EXIT: YES work'
+    paid = []
+    def cost(a, ph, k):
+        if a != A6:
+            return 37
+        paid.append(ph)
+        return 19990 if len(paid) <= 2 else exit_cost
+    _, ev, ses = play(lines, name='e52v31_public_sol4', exit_prompt_v32=True, rounds=2, right={1},
+                      cost=cost)
+    prep = [c for c in calls(ev, 'talk', A6, 2) if c['phase'] == 'prep']
+    assert len(prep) == 1 and prep[0]['used'] == min(exit_cost, 20) and prep[0]['truncated'] == (exit_cost >= 20)
+    assert ses.gone[A6] == ('dead' if exit_cost >= 20 else 'exited') and not calls(ev, 'solve', r=2)
+    assert ses.w.balances[A6] == max(20 - exit_cost, 0)
+
+
+@pytest.mark.parametrize('missing', ['story_v29', 'reveal_after', 'end_split'])
+def test_v32_requires_the_v31_story_reveal_and_prize(missing):
+    with pytest.raises(ValueError):
+        e52.validate(cfg('e52v32_public_sol4', **{missing: False}))

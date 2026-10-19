@@ -30,7 +30,8 @@ SNAPSHOTS = {"e52_v21.md": "configs/squid5/e52v21_public_sol4.yaml",  # the curr
              "e52_v28.md": "configs/squid5/e52v28_public_sol4.yaml",
              "e52_v29.md": "configs/squid5/e52v29_public_sol4.yaml",
              "e52_v30.md": "configs/squid5/e52v30_public_sol4.yaml",
-             "e52_v31.md": "configs/squid5/e52v31_public_sol4.yaml"}
+             "e52_v31.md": "configs/squid5/e52v31_public_sol4.yaml",
+             "e52_v32.md": "configs/squid5/e52v32_public_sol4.yaml"}
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
 
@@ -133,6 +134,18 @@ def render_rooms(config: str, cfg, s) -> str:
              ("TALK after RESULTS · tick 1", pick(round=1, agent="agent-11", phase="rescue", tick=1)),
              ("TALK after RESULTS · tick 3 (a GIVE received)", pick(round=1, agent="agent-11", phase="rescue", tick=3)),
              ("next round · TALK before SOLVE · tick 1", pick(round=2, agent="agent-17", phase="prep", tick=1))]
+    if s.exit_prompt_v32:  # Exercise the additional USER variant with three exits in round 1, then a lone reply.
+        lone_events = []
+        def lone_reply(m, cap):
+            a = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1)
+            u = m[-1]["content"]
+            if re.match(r"ROUND \d+: SOLVE\.", u):
+                return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 1)
+            return Reply("DONE" if "Current result (" in u else "EXIT: YES regular work" if a != "agent-17" else "EXIT: NO continue\nDONE", 40)
+        lone = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), lone_reply), lone_events.append, "lone-demo")
+        lone.run()
+        shown.append(("TALK before SOLVE · lone agent", next(c for c in lone_events if c["event"] == "call"
+                      and c["round"] == 2 and c.get("phase") == "prep")))
     out = [f"# 5.2 prompts as the engine sends them ({pathlib.Path(config).stem})", "",
            f"Rendered by `tools/prompts/sync.py render` from `{config}` (2 rounds, seed {SEED}, stub replies). "
            "Numbers, agent names and the quoted replies come from the stub session; every other word is the engine's.", "",

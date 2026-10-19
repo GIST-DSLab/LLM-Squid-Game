@@ -95,13 +95,15 @@ def parse_give_ask(text: str, present: list[str], known: list[str], you: str, ex
 _ROOM = re.compile(r"^[\s*_`>#-]*(TO|GIVE|ASK|LEAVE|EXIT|DONE)\b[*_`]*\s*(.*)$", re.S)
 _AMOUNT = re.compile(r"(?:(ALL)\s+(agent[\s-]?\d+)|(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*|ALL))\s*(?:tokens?)?[*_`]*\s*(?::\s*(.*))?", re.I | re.S)
 
-def parse_rooms(text: str, you: str, known: list[str], present: list[str], room, exit_ok: bool) -> dict:
+def parse_rooms(text: str, you: str, known: list[str], present: list[str], room, exit_ok: bool, exit_prompt_v32: bool = False) -> dict:
     """5.2 v22 messenger reply: TO <agent>[, ...]: / TO R<k>: / GIVE <agent> <n|ALL>: / GIVE ALL <agent>: / ASK <agent> <n>:
     lines whose message runs on to the next command line, LEAVE R<k>, EXIT: <reason> (only if ``exit_ok``), DONE. The
     first command may be in any case, later ones only in UPPERCASE (as :func:`free_messages`). ``room(names, rid)`` ->
     (room id, why): where a line goes (the caller's rooms). Anything else goes to ``dropped`` with why. Never raises."""
     out = {"messages": [], "gives": [], "asks": [], "leaves": [], "exit": False, "exit_reason": None, "done": False,
            "dropped": [], "format_error": None}
+    if exit_prompt_v32:
+        out['exit_choice'] = None
     cur, seen, why_ = None, False, {"text": ""}
     text = re.sub(r"(?m)(\S)[ \t]+DONE[ \t.*_`]*$", r"\1\nDONE", text)  # 10-16 Luna test: 'TO X: ... DONE' ends a line with DONE
     for line in text.splitlines():
@@ -118,9 +120,15 @@ def parse_rooms(text: str, you: str, known: list[str], present: list[str], room,
             out["done"] |= not why
         elif key == "EXIT":
             why = "no EXIT in the TALK after RESULTS" if not exit_ok else None if rest[:1] in ("", ":") else "not 'EXIT: <reason>'"
+            choice = re.fullmatch(r":\s*(YES|NO)(?:[\s:]+(.*))?", rest, re.I | re.S) if exit_prompt_v32 else None
+            if exit_prompt_v32 and not why and not choice:
+                why = "not 'EXIT: YES <reason>' or 'EXIT: NO <reason>'"
             if not why:
                 out["exit"], cur = True, why_
-                why_["text"] = rest[1:]
+                why_["text"] = (choice.group(2) or "") if choice else rest[1:]
+                if choice:
+                    out['exit_choice'] = choice.group(1).upper()
+                    out['exit'] = out['exit_choice'] == 'YES'
         elif key == "LEAVE":
             r = re.fullmatch(r"(R\d+)[\s.*_`]*(?::.*)?", rest, re.S)
             rid, why = room(None, r.group(1)) if r else (None, "not 'LEAVE R<k>'")
@@ -155,7 +163,7 @@ def parse_rooms(text: str, you: str, known: list[str], present: list[str], room,
     for x in [x for x in out["messages"] if not x["text"]]:
         out["messages"].remove(x)
         out["dropped"].append(f"TO {x['room']}: empty message")
-    if not any(out[k] for k in ("messages", "gives", "asks", "leaves", "exit", "done")):
+    if not any(out[k] for k in ("messages", "gives", "asks", "leaves", "exit", "done")) and not out.get('exit_choice'):
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 
