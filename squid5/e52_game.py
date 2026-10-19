@@ -66,6 +66,7 @@ class Settings:
     talk_balances: bool = False  # v24 (10-19): each of the reader's own chat lines shows the tokens it had when it began that reply
     thinking_words: bool = False  # v25 (10-19): "thinking included" spelled out as the reasoning done before answering
     last_reply: bool = False  # v25 (10-19): each TALK message shows what the agent's last reply generated, thinking included
+    group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
     # the v16+ family (FAMILY): one value each since v16e (10-15); kept as fields so the configs load
     compact_rules: bool = True  # v15 (10-13)
     talk_after_solve: bool = True  # v15 (10-13 19:46): SOLVE -> results -> TALK -> charges
@@ -104,8 +105,8 @@ def validate(cfg) -> None:
             p.clauses >= 2 and p.distinct_actions and p.n_queries == 1 and not p.ambiguity and not p.open_rate
             for p in s.profiles.values())):
         raise ValueError("game: survivor_prize, 1..15 public examples per agent, one-query distinct-action profiles")
-    if s.messenger and not (s.private_balances and s.trim_prompts) or s.max_ticks < 1 or s.room_history < 0:
-        raise ValueError("game: messenger needs private_balances and trim_prompts; max_ticks >= 1; room_history >= 0")
+    if s.messenger and not (s.private_balances and s.trim_prompts) or s.max_ticks < 1 or s.room_history < 0 or s.group_chat and not s.messenger:
+        raise ValueError("game: messenger needs private_balances and trim_prompts; max_ticks >= 1; room_history >= 0; group_chat needs messenger")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -292,6 +293,9 @@ class Session:
         self.undelivered: dict[str, list] = {}  # v22: the lines of an agent's last reply that were not delivered, told at its next call  # v15 talk_after_solve: this round's SOLVE results, shown at TALK (Session._after)
         self.vote, self.phase, self.cycle = None, "rescue", []  # this round's solver (Session._rotate), TALK phase, solver cycle
         self.rooms, self.seq, self.seen = [], 0, {}  # v22 messenger: every room; message counter; agent -> seq at its last call
+        if s.group_chat:  # v26: the chat of all four agents is R1 (the 4C2 one-to-one chats follow as R2, R3, ...)
+            self.rooms.append({"id": "R1", "members": list(AGENTS), "left": {}, "closed": False, "msgs": [], "by": "system",
+                               "new": True, "group": True})
         self.systems = {a: rules.compact_system(a, solve_cap=s.solve_cap, chat_turns=s.chat_turns, per_agent=s.public_per_agent,
                                                 survivor_prize=s.survivor_prize, private=s.private_balances) for a in AGENTS}
         if s.trim_prompts:  # v19: the same rulebook in fewer words
@@ -302,6 +306,8 @@ class Session:
             self.systems = {a: rules.split_prize(t, s.survivor_prize * len(AGENTS)) for a, t in self.systems.items()}
         if s.thinking_words:  # v25
             self.systems = {a: rules.thinking_words(t, "system") for a, t in self.systems.items()}
+        if s.group_chat:  # v26
+            self.systems = {a: rules.group_chat(t) for a, t in self.systems.items()}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -529,8 +535,8 @@ class Session:
             x = next((x for x in self.rooms if x["id"] == rid), None)
             ok = x and a in x["members"] and a not in x["left"]
             return (rid, None) if ok and not x["closed"] else (None, "that chat is closed" if ok else "not a chat you are in")
-        if len(names) > 1:  # 10-17: one-to-one chats only
-            return None, "one agent per line: 'TO <agent>: <message>'"
+        if len(names) > 1:  # 10-17: one-to-one chats only (v26: and R1, the chat of all four)
+            return None, "one agent per line: 'TO <agent>: <message>'" + "; 'TO R1: <message>' reaches all four" * self.s.group_chat
         want = sorted({a, *names}, key=AGENTS.index)
         x = next((x for x in self.rooms if x["members"] == want and not x["left"]), None)
         if x is None and a not in self.gone:
@@ -559,6 +565,8 @@ class Session:
         s, w, ph, exits, done, news = self.s, self.w, self.phase, set(), set(), set()
         base = {"session_id": self.sid, "round": r, "phase": ph}
         self.emit({"event": "talk_start", **base, "max_ticks": s.max_ticks, "agents": list(start)})
+        for x in (x for x in self.rooms if x["by"] == "system" and x.pop("new", False)):  # v26: R1, logged at the first TALK
+            self.emit({"event": "room_new", **base, "tick": 0, "room": x["id"], "members": x["members"], "by": "system"})
         for k in range(1, s.max_ticks + 2):
             live = [a for a in start if a not in self.gone and a not in exits]
             called = [a for a in live if a not in done or a in news]
@@ -595,6 +603,9 @@ class Session:
                     news |= self._post(g["room"], r, k, a, "ask", g["text"], g["amount"], bal=self.shown_at.get(a))
                 for rid in p["leaves"]:
                     x = next(x for x in self.rooms if x["id"] == rid)
+                    if x.get("group"):  # v26: R1 is never left
+                        p["dropped"].append(f"LEAVE {rid}: {rid} cannot be left")
+                        continue
                     news |= self._post(rid, r, k, a, "leave", bal=self.shown_at.get(a))
                     x["left"][a] = self.seq
                     x["closed"] = len(x["members"]) - len(x["left"]) < 2

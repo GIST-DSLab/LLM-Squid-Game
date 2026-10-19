@@ -593,3 +593,25 @@ def test_v25_spells_out_thinking_and_shows_the_last_reply_cost():  # 10-19 resea
     said = {**lines, (A11, 1, "prep", 2): "TO R1: my replies (thinking included) cost more\nDONE"}  # GLM 4101 (10-19) stopped here
     res, ev, _ = play(said, name="e52v25_public_sol4", rounds=1, right={1})
     assert "(thinking included) cost more" in [c for c in calls(ev, "talk", A6) if c["phase"] == "prep"][1]["user"]
+
+def test_v26_one_chat_of_all_four_besides_the_one_to_one_chats():  # 10-19 researcher: 4C2 + 1 = 7 chats at most
+    v26 = "e52v26_public_sol4"
+    c = cfg(v26)
+    sys26 = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "x").systems[A6]
+    assert "R1 is a chat of all four agents, made when the session starts; it cannot be left. Every other chat is between two agents" in sys26
+    assert "R1 is a chat" not in e52.Session(cfg("e52v25_public_sol4").settings, c.cells[0], 4101, None, list().append, "x").systems[A6]
+    lines = {(A6, 1, "prep", 1): f"TO R1: hello all\nTO {A11}, {A17}: two of you\nLEAVE R1\nDONE",
+             (A11, 1, "prep", 1): f"TO {A6}: hi\nDONE"}
+    res, ev, _ = play(lines, name=v26, rounds=1, right={1})
+    new = [e for e in ev if e["event"] == "room_new"]
+    assert (new[0]["room"], new[0]["members"], new[0]["by"], new[0]["tick"]) == ("R1", list(AG), "system", 0)
+    assert [(e["room"], e["members"]) for e in new[1:]] == [("R2", [A6, A11])]  # the first one-to-one chat is R2
+    assert [(e["room"], e["text"]) for e in ev if e["event"] == "room_msg" and e["src"] == A6] == [("R1", "hello all")]
+    for b in (A11, A17, A23):  # R1 reaches all four; nothing leaves R1
+        assert "hello all" in [x for x in calls(ev, "talk", b) if x["phase"] == "prep"][1]["user"]
+    nxt = [x for x in calls(ev, "talk", A6) if x["phase"] == "prep"][1]["user"]
+    assert "'TO R1: <message>' reaches all four" in nxt and "LEAVE R1: R1 cannot be left" in nxt
+    assert not [e for e in ev if e["event"] == "room_leave"]
+    res25, ev25, _ = play(lines, name="e52v25_public_sol4", rounds=1, right={1})
+    assert [e["room"] for e in ev25 if e["event"] == "room_new"] == ["R1"] and not any(
+        e["event"] == "room_msg" and e["text"] == "hello all" for e in ev25)
