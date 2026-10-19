@@ -2587,3 +2587,33 @@ def test_v22_turn_labels_never_show_the_internal_rescue_key_and_the_task_panel(r
     assert p.count("이상적 선택</b>") == 1 and "이상적 선택과 다름" in p  # go_left has the most rules; the drawn rule says jump
     assert 'class="bl-bad"' in p and 'class="bl-ok"' not in p  # agent-17 submitted stay, the scoring answer is jump
     assert 'class="bl-ok"' in got["puzzleOk"] and 'class="bl-bad"' not in got["puzzleOk"]
+
+
+def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path):  # 10-19: the speaker's SYSTEM prompt
+    d = tmp_path / "e52_v26" / "squid5_e52v26_public_sol4" / "20261019_1300_gpt-6-sol"
+    d.mkdir(parents=True)
+    (d / "events.jsonl").write_text("")
+    shutil.copy(serve.REPO / "configs/squid5/e52v26_public_sol4.yaml", d / "config.yaml")
+    got = serve.run_system(d)
+    assert got["version"] == "v26" and got["note"] is None and set(got["en"]) == set(got["ko"]) == {"agent-6", "agent-11", "agent-17", "agent-23"}
+    assert got["en"]["agent-6"].startswith("You are agent-6.") and "R1 is a chat of all four agents" in got["en"]["agent-6"]
+    assert got["ko"]["agent-6"].startswith("당신은 agent-6입니다.") and got["ko"]["agent-17"].startswith("당신은 agent-17입니다.")
+    (d / "config.yaml").write_text("name: x\n")  # a config the engine cannot load: a note, no error
+    serve._run_system.cache_clear()
+    assert serve.run_system(d)["en"] is None and "다시 만들지 못함" in serve.run_system(d)["note"]
+
+
+@pytest.mark.skipif(NODE is None, reason="node is not installed")
+def test_prompt_ko_matches_the_korean_snapshot_but_keeps_what_agents_wrote():  # 10-19
+    js = ("const ko = require(process.argv[1]), fs = require('fs');"
+          "const B = (t) => [...t.matchAll(/^## (.*?)\\n\\n```text\\n([\\s\\S]*?)\\n```/gm)].map((m) => m[2]).slice(1);"
+          "const en = B(fs.readFileSync(process.argv[2], 'utf8')), k = B(fs.readFileSync(process.argv[3], 'utf8'));"
+          "const out = []; en.forEach((t, i) => { const a = ko.user(t).split('\\n'), b = k[i].split('\\n');"
+          "a.forEach((x, j) => { if (x !== b[j]) out.push(x); }); }); console.log(JSON.stringify(out));")
+    p = serve.REPO / "squid5" / "prompts"
+    out = subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / "e52_v26.md"), str(p / "ko" / "e52_v26.md")],
+                         check=True, capture_output=True, text=True).stdout
+    left = json.loads(out)
+    stub = ("Could you help?", "Shall we each", "Both of you?", "Here you go.", "After this charge", "That keeps you", "A little more",
+            "15,000 토큰을 줌")  # the stub agents' words stay English; moves read "n 토큰을 줌" (the snapshot: "n을 줌")
+    assert left and all(any(s in x for s in stub) for x in left), left

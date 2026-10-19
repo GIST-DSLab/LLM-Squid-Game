@@ -937,6 +937,11 @@ body.embedded .follow { display: none; }
 .rf-loop { align-self: center; font-size: 11px; color: var(--muted); }
 .sup { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 16px; align-items: start; margin-top: 14px; }
 .sup-guard { display: flex; justify-content: center; padding-top: 6px; }
+.sup-spk { display: flex; justify-content: center; padding-top: 10px; } /* 10-19: the SYSTEM speaker, above the guard */
+.sup-spk svg { image-rendering: pixelated; }
+.sup-bub.sys { border-style: dashed; }
+.sup-pre.sys { max-height: 220px; }
+.sup-lang { margin-left: auto; padding: 1px 8px; font-size: 11px; }
 .sup-guard svg { image-rendering: pixelated; }
 .sup-bub { position: relative; min-width: 0; background: var(--surface); color: var(--ink); border: 3px solid var(--ink); border-radius: 8px; padding: 7px 10px 9px; box-shadow: 3px 3px 0 color-mix(in srgb, var(--ink) 18%, transparent); }
 .sup-bub::before { content: ""; position: absolute; left: -15px; top: 26px; border: 8px solid transparent; border-right: 12px solid var(--ink); border-left-width: 0; }
@@ -951,6 +956,7 @@ body.embedded .follow { display: none; }
 @media (max-width: 560px) {
   .sup { grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; }
   .sup-guard svg { width: 60px; height: 80px; }
+  .sup-spk svg { width: 48px; height: 36px; }
   .rf-box { width: 88px; }
 }
 /* ---------- 10-17 messenger (left) + offer graph (right, smaller); older runs: the graph alone, full width */

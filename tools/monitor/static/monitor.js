@@ -19,6 +19,7 @@
     at: -1, follow: true, runs: [], sessions: [], assets: null, open: new Set(), filt: { date: "", model: "", ver: "", harness: "", seed: "" },
     live: false, mtime: 0, now: 0, rendered: "", polling: false, err: "",
     give: { tab: "give", scope: "session", x: "full", data: new Map(), an: new Map() }, // per-model panels, this game only (10-17); x = % of 20,000 or own start
+    lang: "ko", sys: { run: "", data: null }, // 10-19: prompts in Korean (engine wording only) or as sent; the run's SYSTEM prompts (api/system)
     puzzles: new Map(), showTruth: false, showHidden: false, // round panel: the unseen examples behind "?" (or shown, dashed)
     og: { round: null, turn: "all", faint: true, msgs: false, pin: null }, // offer graph: round null = follow the replay bar
     sel: { puzzle: { round: null, all: false } }, // the round task panel: one round (null = the replay bar's)
@@ -747,6 +748,29 @@
     return '<svg class="pix guard" viewBox="0 0 24 32" width="' + Math.round((h * 24) / 32) + '" height="' + h + '" shape-rendering="crispEdges" role="img" aria-label="진행요원">' + guardSvgs[shape] + "</svg>";
   }
 
+  /* 10-19 the SYSTEM prompt's speaker: the dormitory's horn loudspeaker (our own pixel art, 24 x 18), grey horn on a
+     wall bracket with two pink sound waves; it reads out the rulebook every call is sent with. */
+  function speakerGrid() {
+    const W = 24, H = 18, g = Array.from({ length: H }, () => Array(W).fill("."));
+    const rect = (x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) g[y][x] = c; };
+    rect(0, 5, 1, 12, "g"); rect(2, 8, 3, 9, "K"); // wall plate, arm
+    rect(4, 6, 8, 11, "g"); rect(5, 7, 7, 10, "G"); // driver box
+    for (let x = 9; x <= 15; x++) { const t = 6 - Math.round(((x - 9) * 5) / 6), b = 11 + Math.round(((x - 9) * 5) / 6);
+      rect(x, t, x, b, "G"); g[t][x] = g[b][x] = "g"; } // the horn widens to the right
+    rect(16, 0, 16, 17, "K"); rect(15, 1, 15, 16, "L"); // the mouth's rim
+    for (const [x, t, b] of [[18, 6, 11], [21, 3, 14]]) { rect(x, t + 1, x, b - 1, "R"); g[t][x - 1] = g[b][x - 1] = "R"; } // sound waves
+    return g.map((r) => r.join(""));
+  }
+  let speakerSvg = "";
+  function speakerIcon(h) {
+    if (!speakerSvg) { const G = speakerGrid();
+      speakerSvg = pixRuns(ringOf(G), { O: "var(--guard-ring)" }, 0, 0) + pixRuns(G, { g: "#5b5f66", G: "#8b8f96", L: "#c9ccd1", K: "#141414", R: "#e8457f" }, 0, 0); }
+    return '<svg class="pix speaker" viewBox="0 0 24 18" width="' + Math.round((h * 24) / 18) + '" height="' + h + '" shape-rendering="crispEdges" role="img" aria-label="스피커 (SYSTEM)">' + speakerSvg + "</svg>";
+  }
+  const koUser = (t) => (S.lang === "ko" && window.promptKo ? window.promptKo.user(t) : t); // 10-19: engine wording in Korean
+  const langBtn = () => '<button type="button" class="btn ghost sup-lang" data-lang="' + (S.lang === "ko" ? "en" : "ko") + '" title="' +
+    (S.lang === "ko" ? "모델이 받은 영어 원문으로" : "한국어로 (엔진 문구만 번역 · 에이전트가 쓴 말은 원문)") + '">' + (S.lang === "ko" ? "EN 원문" : "한국어") + "</button>";
+
   // ---------------------------------------------------------------------------------------------------- render: header
   // v16e: which TALK an event without its own phase (talk_intent, talk_schedule) belongs to, from the events before it
   function tphaseAt(e) {
@@ -1051,16 +1075,24 @@
     if (pick) {
       const e = S.events[pick.i];
       head += '<div class="sup-who">' + calls.slice().sort((p, q) => (m.idx[p.agent] || 0) - (m.idx[q.agent] || 0)).map((c) => '<button type="button" class="sup-ag' + (c === pick ? " on" : "") + '" data-agent="' + esc(c.agent) + '" title="' + esc(c.agent) + '의 USER 프롬프트">' + squidProfile(kOf(m, c.agent), 18) + esc(short(c.agent)) + "</button>").join("") +
-        '<span class="dim">' + esc((e.kind === "solve" ? "R" + e.round + " SOLVE" : tickLabel({ round: e.round, tick: e.turn, phase: e.phase })) + " · USER " + fmt((e.user || "").length) + "자") + "</span>" +
+        '<span class="dim">' + esc((e.kind === "solve" ? "R" + e.round + " SOLVE" : tickLabel({ round: e.round, tick: e.turn, phase: e.phase })) + " · USER " + fmt((e.user || "").length) + "자" + (S.lang === "ko" ? " · 한국어 (에이전트가 쓴 말은 원문)" : " · 영어 원문")) + "</span>" + " " + langBtn() +
         (pick.i !== S.at ? ' <button type="button" class="btn ghost" data-at="' + pick.i + '" title="재생 막대를 이 호출로">▶ 이 호출로</button>' : "") +
         ' <button type="button" class="btn ghost" data-rec-call="' + pick.i + '" title="이 호출의 답 · 생각 요약 · 출력 · 실행 결과">📋 기록</button></div>';
-      body = '<pre class="sup-pre">' + esc(e.user || "(USER 프롬프트가 기록에 없음)") + "</pre>";
+      body = '<pre class="sup-pre">' + esc(e.user ? koUser(e.user) : "(USER 프롬프트가 기록에 없음)") + "</pre>";
     } else {
       const none = sel === "p_write" || sel === "r_write" || sel === "solve";
       body = '<div class="sup-line">' + (none ? '<span class="dim">R' + m.round + "의 이 단계 호출이 아직 없습니다 (재생 막대 기준).</span><br>" : '<span class="dim">프롬프트 없음 · 엔진이 처리</span><br>') + esc(st.line) + "</div>" +
         (rfFacts(m, sel) ? '<div class="sup-fact">' + esc(rfFacts(m, sel)) + "</div>" : "");
     }
-    sup.innerHTML = '<div class="sup-guard">' + guardAvatar(120, shape) + '</div><div class="sup-bub">' + head + body + "</div>";
+    // 10-19 the speaker above the guard reads out the SYSTEM prompt (the same at every call of the session)
+    const sa = pick ? pick.agent : S.rf.agent && m.agents.includes(S.rf.agent) ? S.rf.agent : m.agents[0];
+    const sd = S.sys.run === S.run ? S.sys.data : null, sk = sd && S.lang === "ko" && sd.ko ? "ko" : "en";
+    const stext = sd && sd[sk] ? sd[sk][sa] : null;
+    const shead = '<div class="sup-h"><b>SYSTEM</b> <span class="dim">' + esc(sa || "") + (stext ? " · " + fmt(stext.length) + "자 · 모든 호출에 같음 · " + (sk === "ko" ? "한국어 (squid5/prompts/ko/e52_" + sd.version + ".md)" : "영어 원문") : "") + "</span> " + langBtn() + "</div>" +
+      (sd && sd.note && S.lang === "ko" ? '<div class="sup-line dim">' + esc(sd.note) + "</div>" : "");
+    const sbody = stext ? '<pre class="sup-pre sys">' + esc(stext) + "</pre>" : '<div class="sup-line dim">' + (sd ? esc(sd.note || "SYSTEM 프롬프트 없음") : "SYSTEM 프롬프트를 읽는 중…") + "</div>";
+    sup.innerHTML = '<div class="sup-spk">' + speakerIcon(54) + '</div><div class="sup-bub sys">' + shead + sbody + "</div>" +
+      '<div class="sup-guard">' + guardAvatar(120, shape) + '</div><div class="sup-bub">' + head + body + "</div>";
   }
 
   // ---------------------------------------------------------------------------------------------------- render: timeline
@@ -1613,7 +1645,8 @@
     const id = i + ":" + part, e = S.events[i];
     const v = e && e[part];
     const empty = !v || (typeof v === "string" && !v.trim());
-    return '<details class="lz" data-id="' + id + '"' + (S.open.has(id) ? " open" : "") + '><summary>' + label + (extra ? ' <span class="dim">' + extra + "</span>" : "") + (empty ? ' <span class="dim">(비어 있음)</span>' : "") + "</summary>" + (S.open.has(id) ? '<pre class="raw">' + esc(v) + "</pre>" : "") + "</details>";
+    const shown = part === "user" ? koUser(v) : v; // 10-19: the USER prompt in Korean unless EN is chosen
+    return '<details class="lz" data-id="' + id + '"' + (S.open.has(id) ? " open" : "") + '><summary>' + label + (part === "user" && S.lang === "ko" ? " (한국어)" : "") + (extra ? ' <span class="dim">' + extra + "</span>" : "") + (empty ? ' <span class="dim">(비어 있음)</span>' : "") + "</summary>" + (S.open.has(id) ? '<pre class="raw">' + esc(shown) + "</pre>" : "") + "</details>";
   }
   function flags(e) {
     const f = [];
@@ -3052,8 +3085,18 @@
     } catch (err) { S.err = "실행 목록을 못 읽음: " + err.message; render(true); }
   }
 
+  async function loadSystem() { // 10-19: the run's SYSTEM prompts (rebuilt by the server from config.yaml) and their Korean copy
+    const run = S.run;
+    if (!run || S.sys.run === run) return;
+    S.sys = { run, data: null };
+    try { const j = await getJSON("api/system?run=" + encodeURIComponent(run)); if (S.sys.run === run) S.sys.data = j; }
+    catch (err) { if (S.sys.run === run) S.sys.data = { en: null, ko: null, note: "SYSTEM 프롬프트를 못 읽음: " + err.message }; }
+    render(true);
+  }
+
   async function loadSessions() {
     if (!S.run) return;
+    loadSystem();
     try {
       const j = await getJSON("api/sessions?run=" + encodeURIComponent(S.run));
       S.sessions = j.sessions || [];
@@ -3135,9 +3178,10 @@
       render(true);
     });
     $("#sup").addEventListener("click", (ev) => { // the guard's bubble: whose prompt, back to the current box, seek to the call
-      const b = ev.target.closest("[data-agent], [data-rf], [data-at]");
+      const b = ev.target.closest("[data-agent], [data-rf], [data-at], [data-lang]");
       if (!b) return;
-      if (b.dataset.agent) { S.rf.agent = b.dataset.agent; render(true); }
+      if (b.dataset.lang) { S.lang = b.dataset.lang; render(true); }
+      else if (b.dataset.agent) { S.rf.agent = b.dataset.agent; render(true); }
       else if (b.dataset.rf === "follow") { S.rf.sel = null; render(true); }
       else if (b.dataset.at) seek(Number(b.dataset.at));
     });
@@ -3232,6 +3276,7 @@
       S.embed = JSON.parse(emb.textContent);
       S.run = S.embed.run; S.session = S.embed.session; S.events = S.embed.events || []; S.result = S.embed.result || null;
       S.info = { model: S.embed.model }; S.assets = S.embed.assets || null; applyBubbleAsset();
+      S.sys = { run: S.run, data: S.embed.system || { en: null, ko: null, note: "내보낸 파일에 SYSTEM 프롬프트가 없습니다." } };
       document.body.classList.add("embedded");
       $("#runSel").outerHTML = '<span class="static">' + esc(S.run) + "</span>";
       $("#sessSel").outerHTML = '<span class="static">' + esc(S.session) + "</span>";

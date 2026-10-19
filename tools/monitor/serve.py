@@ -16,6 +16,8 @@ Routes
   /api/giving?run=REL[&session=SID]   the giving decisions of a run (one model) or one session: every GIVE (opening,
                                       in-chat, v14e ask_decision) and every ASK received and answered with nothing,
                                       with the giver's balance just before it (``giving``); v14b runs on
+  /api/system?run=REL                 10-19: each agent's SYSTEM prompt (not logged; rebuilt from config.yaml) and
+                                      its Korean copy (squid5/prompts/ko/e52_<version>.md, when its English matches)
   /api/puzzle?run=REL&session=SID&round=N
                                       that round's task rebuilt from the engine. v9..v13 (the logs do not hold it): the
                                       public examples, the queries, each agent's own examples (``secrets``; ``secret``
@@ -990,6 +992,42 @@ def _public_puzzle(seed: int, round_no: int, spec_items: tuple, per_agent: int, 
             "timing_ms": {"rebuild": round((t1 - t0) * 1000, 1), "candidates": round((t2 - t1) * 1000, 1)}}
 
 
+def _snapshot_system(version: str, lang: str) -> str | None:
+    """The SYSTEM block of squid5/prompts/<lang>/e52_<version>.md (agent-17's copy), or None."""
+    p = REPO / "squid5" / "prompts" / lang / f"e52_{version}.md"
+    m = re.search(r"^## [^\n]*\n\n```text\n(.*?)\n```", p.read_text(encoding="utf-8"), re.S | re.M) if p.exists() else None
+    return m.group(1) if m else None
+
+
+@functools.lru_cache(maxsize=64)
+def _run_system(config: str, mtime: float) -> dict:
+    _engine()
+    from squid5 import e52_game as e52
+    from squid5.__main__ import EXPERIMENTS
+    from squid5.core.config import load
+    c = load(config, EXPERIMENTS)
+    en = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "monitor").systems
+    v = re.search(r"e52_?(v\d+[a-z]?)", config)
+    ko = None
+    if v and en.get("agent-17") == _snapshot_system(v.group(1), "en") and (ko17 := _snapshot_system(v.group(1), "ko")):
+        ko = {a: ko17.replace("당신은 agent-17입니다.", f"당신은 {a}입니다.", 1) for a in en}
+    return {"version": v.group(1) if v else None, "en": en, "ko": ko,
+            "note": None if ko else "한국어판 없음: squid5/prompts/ko에 이 설정의 SYSTEM과 같은 영어판이 없어 영어 원문만 보여 줌"}
+
+
+def run_system(run_dir: Path) -> dict:
+    """10-19: the SYSTEM prompt of each agent of a 5.2 run (not logged; the engine rebuilds it from the run's
+    config.yaml, the same for every call of the session) and its Korean copy from squid5/prompts/ko/e52_<version>.md
+    when the English snapshot there is the same text."""
+    p = run_dir / "config.yaml"
+    if not p.exists():
+        raise NotFound("no config.yaml in that run")
+    try:
+        return _run_system(str(p), p.stat().st_mtime)
+    except Exception as err:  # noqa: BLE001 - an old config the engine no longer runs
+        return {"version": None, "en": None, "ko": None, "note": f"SYSTEM 프롬프트를 다시 만들지 못함: {err!r}"[:300]}
+
+
 def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
     """The task of one round of one session, as /api/puzzle returns it."""
     try:
@@ -1107,6 +1145,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(run_analysis(run_dir_of(self.root, q.get("run", "")), q.get("session") or None))
             if route == "/api/giving":
                 return self._json(run_giving(run_dir_of(self.root, q.get("run", "")), q.get("session") or None))
+            if route == "/api/system":
+                return self._json(run_system(run_dir_of(self.root, q.get("run", ""))))
             if route == "/api/puzzle":
                 sid = q.get("session")
                 if not sid:

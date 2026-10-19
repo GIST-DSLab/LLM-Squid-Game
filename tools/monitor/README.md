@@ -28,6 +28,10 @@ python3 -m pytest -q tools/monitor
 
 웹 아레나 서버(`uvicorn web.server.app:app --port 8600`) 안에서도 열린다: `http://localhost:8600/monitor/`(API는 `/monitor/api/...`, 루트는 `WEB5_MONITOR_ROOT` 또는 `WEB5_RUNS_ROOT`의 부모 = `~/squid5-runs`). `web/server/monitor.py`가 이 폴더의 `serve.py` 함수를 그대로 불러 쓰고, 페이지는 `api/`·`static/`·`assets/`를 상대 경로로 부르므로 두 곳에서 같은 파일이 돈다. 그 경로에서만 헤더에 홈·아레나 링크가 보인다.
 
+### `/api/system?run=<실행>` (10-19)
+
+에이전트마다 SYSTEM 프롬프트(기록에 없으므로 엔진이 run의 `config.yaml`로 다시 만듦 · 세션의 모든 호출에 같음)와 한국어판(`squid5/prompts/ko/e52_<버전>.md`의 SYSTEM, 그 en 스냅샷이 다시 만든 영어와 같을 때만; 아니면 `ko: null` + `note`). 라운드 흐름 패널의 스피커가 이것을 읽어 주고, 진행요원 말풍선은 USER 프롬프트만 읽어 준다. 둘 다 기본은 한국어(`static/prompt_ko.js`: 엔진 문구만 ko 스냅샷의 번역으로 바꾸고 에이전트가 쓴 말은 원문 그대로), `EN 원문` 단추로 모델이 받은 그대로.
+
 ### `/api/puzzle?run=<실행>&session=<session_id>&round=<N>`
 
 그 라운드의 과제를 엔진으로 다시 만들어 JSON으로 준다. 서버는 이 경로에서만 저장소 루트의 `squid5`(퍼즐 코드)와 PyYAML(`config.yaml` 읽기)을 불러온다. 필드: `round`, `profile`, `shape_hint`, `public`(`[{signal:{color,shape,number,text}, text, action}]`), `queries`(`[{color,shape,number,text}]`), `answers`, `rule_text`(예: `if number >= 3 → go_right; elif color == "red" → jump; …; else → go_left`), `agents`(`{agent: {secret, needed, public_only:[[행동…] 신호마다], with_own:[[행동…] 신호마다]}}`), `timing_ms`(첫 계산 시간).

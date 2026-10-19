@@ -63,7 +63,9 @@ def build_page(payload: dict) -> str:
     sig = serve.SHARED["signal_ui.js"]
     sig_js = sig.read_text(encoding="utf-8").replace("</script", "<\\/script") if sig.is_file() else ""
     html = html.replace('<script src="static/signal_ui.js"></script>\n', "")  # inlined with the page code, one script
-    html = html.replace('<script src="static/monitor.js"></script>', f"<script>\n{sig_js}\n{js}\n</script>")
+    ko_js = (serve.STATIC / "prompt_ko.js").read_text(encoding="utf-8").replace("</script", "<\\/script")  # 10-19
+    html = html.replace('<script src="static/prompt_ko.js"></script>\n', "")
+    html = html.replace('<script src="static/monitor.js"></script>', f"<script>\n{sig_js}\n{ko_js}\n{js}\n</script>")
     data = f'<script type="application/json" id="monitor-data">{script_json(payload)}</script>'
     return html.replace("<!--EMBED-->", data)
 
@@ -98,6 +100,7 @@ def export(run_dir: Path, session: str | None, out: Path, with_assets: bool = Fa
                "puzzles": puzzles, "puzzle_error": puzzle_error,
                # the per-model panels read this game only (10-17: the run-wide scope is gone)
                "giving": {"session": serve.run_giving(run_dir, sid)}, "analysis": {"session": serve.run_analysis(run_dir, sid)},
+               "system": serve.run_system(run_dir),  # 10-19: the speaker's SYSTEM prompts (en, ko)
                "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
                "assets": embedded_assets() if with_assets else None}
     out = Path(out)

@@ -165,6 +165,8 @@ def monitor_router(root: Path) -> APIRouter:
             return answer(lambda: sv.run_analysis(sv.run_dir_of(root, q.get("run", "")), q.get("session") or None))
         if route == "giving":  # the "나눔 그래프": a run's (or a session's) giving decisions
             return answer(lambda: sv.run_giving(sv.run_dir_of(root, q.get("run", "")), q.get("session") or None))
+        if route == "system":  # 10-19: each agent's SYSTEM prompt (rebuilt from config.yaml) and its Korean copy
+            return answer(lambda: sv.run_system(sv.run_dir_of(root, q.get("run", ""))))
         if route == "puzzle":
             try:
                 return answer(lambda: puzzle(q))
