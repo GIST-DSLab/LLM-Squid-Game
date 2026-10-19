@@ -17,7 +17,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import httpx
 
 UP = os.environ.get("RELAY_UPSTREAM", "https://api.anthropic.com")
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 18766
 HOP = {"host", "content-length", "connection", "accept-encoding", "transfer-encoding"}
 NOTE = re.compile(r"\n*<total_tokens>[^<]*</total_tokens>\n*")
 
@@ -80,4 +79,4 @@ class H(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()
+    ThreadingHTTPServer(("127.0.0.1", int(sys.argv[1]) if len(sys.argv) > 1 else 18766), H).serve_forever()
