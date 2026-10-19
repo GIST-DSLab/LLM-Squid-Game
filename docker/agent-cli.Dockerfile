@@ -4,8 +4,8 @@
 # harness the models see does not change between runs; bump them on purpose and record it.
 #   docker build -t squid5-agent-cli:latest -f docker/agent-cli.Dockerfile docker/
 FROM node:22-slim
-ARG CLAUDE_CODE_VERSION=2.1.288
-ARG CODEX_VERSION=0.160.0
+ARG CLAUDE_CODE_VERSION=2.1.303
+ARG CODEX_VERSION=0.162.1
 # ca-certificates: codex's Rust HTTP client reads the system CA store (node:22-slim ships none; node has its own).
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/* \
  && npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} @openai/codex@${CODEX_VERSION} \

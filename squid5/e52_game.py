@@ -67,6 +67,7 @@ class Settings:
     thinking_words: bool = False  # v25 (10-19): "thinking included" spelled out as the reasoning done before answering
     last_reply: bool = False  # v25 (10-19): each TALK message shows what the agent's last reply generated, thinking included
     task_brief: bool = False  # v27 (10-19): no signal task in the rulebook; the TALK BEFORE SOLVE tells every agent the round's kind of task
+    plain_v28: bool = False  # v28: operational prompts, task details only at SOLVE
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
     group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
     # the v16+ family (FAMILY): one value each since v16e (10-15); kept as fields so the configs load
@@ -109,6 +110,8 @@ def validate(cfg) -> None:
         raise ValueError("game: survivor_prize, 1..15 public examples per agent, one-query distinct-action profiles")
     if s.messenger and not (s.private_balances and s.trim_prompts) or s.max_ticks < 1 or s.room_history < 0 or s.group_chat and not s.messenger:
         raise ValueError("game: messenger needs private_balances and trim_prompts; max_ticks >= 1; room_history >= 0; group_chat needs messenger")
+    if s.plain_v28 and not all((s.messenger, s.private_balances, s.trim_prompts, s.thinking_words, s.group_chat, s.task_brief, s.exit_work)):
+        raise ValueError("plain_v28 needs the v27 messenger, privacy, thinking, group, task and exit wording")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -251,13 +254,13 @@ def solve_head(round_no: int, cap: int, balance: int, full: int = 0) -> str:
     return (f"ROUND {round_no}: SOLVE. Your limit: {limit}, thinking included. Your balance: {balance:,} tokens"
             + (f" ({round(100 * balance / full)}% of {full:,})." if full else "."))
 
-def solve_user(head: str, view: str, notes: list[str], n: int, allow_pass: bool = True, belief: bool = False) -> str:
-    return (f"{head}\n{view}" + "".join(f"\n{x}" for x in notes) + (
+def solve_user(head: str, view: str, notes: list[str], n: int, allow_pass: bool = True, belief: bool = False, wording=str) -> str:
+    return (wording(f"{head}\n{view}") + "".join(f"\n{x}" for x in notes) + wording((
             f"\n\nANSWER FORMAT: two lines. BELIEF: one percentage per action, how likely each action is the right one "
             f"for the new signal; they sum to 100. ACTIONS: one action per query, in order; this line alone decides "
             f"whether the round is solved.\nBELIEF: {', '.join(f'{x} <percent>' for x in ACTIONS)}\n" if belief else
             f"\n\nANSWER FORMAT: one line, one action per query, in order{', or the single word PASS' * allow_pass}.\n") +
-            f"ACTIONS: <{', '.join(['action'] * n)}>")
+            f"ACTIONS: <{', '.join(['action'] * n)}>"))
 
 def belief_scores(p: dict, truth: str, shares: dict, answer) -> dict:
     """v14d, one seat-round: Brier and log loss of the belief, its total variation to the consistent-rule shares of
@@ -315,6 +318,8 @@ class Session:
             self.systems = {a: rules.task_brief_system(t, s.public_per_agent) for a, t in self.systems.items()}
         if s.exit_work:  # v27
             self.systems = {a: rules.exit_work(t) for a, t in self.systems.items()}
+        if s.plain_v28:
+            self.systems = {a: rules.plain_system(a, s.solve_cap, s.max_ticks, s.survivor_prize, s.end_split) for a in AGENTS}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -334,9 +339,9 @@ class Session:
     def _calls(self, jobs: dict[str, tuple], kind: str, r: int) -> dict[str, tuple]:
         """One charged attempt per agent, all at once, logged in agent order (``jobs``: agent -> (user, cap, parse, extra)); usage
         is charged up to the cap and the balance; at the cap: void; at the balance: shut down."""
-        jobs = {a: (rules.trim(rules.tokens_wording(u), "user") if self.s.trim_prompts else rules.tokens_wording(u), *rest)
+        jobs = {a: (u if self.s.plain_v28 else rules.trim(rules.tokens_wording(u), "user") if self.s.trim_prompts else rules.tokens_wording(u), *rest)
                 for a, (u, *rest) in jobs.items()}
-        if self.s.thinking_words:  # v25
+        if self.s.thinking_words and not self.s.plain_v28:  # v25
             jobs = {a: (rules.thinking_words(u, "user"), *rest) for a, (u, *rest) in jobs.items()}  # v15: "tokens" for the engine's "balance" wording
         x = next(iter(jobs.values()))[3] if jobs else {}
         self.emit({"event": "call_start", "session_id": self.sid, "round": r, "kind": kind, "turn": x.get("turn") if kind == "talk" else None,
@@ -589,9 +594,14 @@ class Session:
                     head = re.sub(r"(YOUR TOKENS LEFT: [^\n]*)", lambda m: f"{m.group(1)}\nYOUR LAST REPLY: "
                                   f"{self.last_used[a]:,} tokens generated, including your thinking.", head, count=1)
                 self.shown[a] = self.shown_at[a] = w.balances[a]
-                bad = "".join(f"NOT DELIVERED from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
-                jobs[a] = (f"{head}\n\n{part}\n\n{rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, s.talk_balances)}\n\n"
-                           f"{bad}{room_format(ph, k, s.max_ticks, w.balances[a])}", TALK_CAP, lambda t, a=a: parse_rooms(
+                label = "Not delivered" if s.plain_v28 else "NOT DELIVERED"
+                bad = "".join(f"{label} from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
+                fmt = room_format(ph, k, s.max_ticks, w.balances[a])
+                chats = rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, s.talk_balances)
+                if s.plain_v28:  # transform engine text before inserting any agent-authored text
+                    head, part, fmt = map(rules.plain_user, (head, part, fmt))
+                    chats = chats.replace("YOUR CHATS", "Chats", 1)
+                jobs[a] = (f"{head}\n\n{part}\n\n{chats}\n\n{bad}{fmt}", TALK_CAP, lambda t, a=a: parse_rooms(
                                t, a, AGENTS, [b for b in start if b not in self.gone], lambda n, i, a=a: self._room(a, n, i),
                                ph == "prep"), {"turn": k, "tick": k, "phase": ph})
                 self.seen[a] = self.seq
@@ -669,9 +679,10 @@ class Session:
             notes = [f"At TALK {'tick' if s.messenger else 'turn'} {g['turn']}, {gift_line(g, a)}" for g in self.ga
                      if g["round"] == r and g["kind"] == "give" and g["status"] == "done" and g["dst"] == a]
             notes += [f"{b} {'reached zero' if self.gone[b] == 'dead' else 'exited'}." for b in AGENTS if b in self.gone]
-            notes += [f"{rules.vote_text(self.vote, a)}."]
+            notes += [(rules.plain_user if s.plain_v28 else str)(f"{rules.vote_text(self.vote, a)}.")]
             user = solve_user(solve_head(r, cap, w.balances[a], s.balance_pct) + "\n" + rules.task_spec() + "\n",
-                              rules.puzzle_view(puzzle, examples), notes, n, s.allow_pass, s.solve_belief)
+                              rules.puzzle_view(puzzle, examples), notes, n, s.allow_pass, s.solve_belief,
+                              rules.plain_user if s.plain_v28 else str)
             jobs[a] = (user, cap, lambda t, a=a: (beliefs.__setitem__(a, parse_belief(t)) if s.solve_belief else None,
                                                   parse_solve(t, n))[1],
                        {"answers": list(truth), "profile": profile, "seed": self.seed})

@@ -1,0 +1,51 @@
+[
+  {
+    "prompt": "SYSTEM",
+    "v27": 5622,
+    "v28": 4511,
+    "delta": -1111,
+    "percent": -19.76
+  },
+  {
+    "prompt": "USER: TALK before SOLVE, tick 1",
+    "v27": 1693,
+    "v28": 1125,
+    "delta": -568,
+    "percent": -33.55
+  },
+  {
+    "prompt": "USER: TALK before SOLVE, tick 2",
+    "v27": 2242,
+    "v28": 1669,
+    "delta": -573,
+    "percent": -25.56
+  },
+  {
+    "prompt": "USER: SOLVE",
+    "v27": 2523,
+    "v28": 2480,
+    "delta": -43,
+    "percent": -1.7
+  },
+  {
+    "prompt": "USER: TALK after RESULTS, tick 1",
+    "v27": 1487,
+    "v28": 1217,
+    "delta": -270,
+    "percent": -18.16
+  },
+  {
+    "prompt": "USER: TALK after RESULTS, tick 3",
+    "v27": 1868,
+    "v28": 1598,
+    "delta": -270,
+    "percent": -14.45
+  },
+  {
+    "prompt": "USER: round 2, TALK before SOLVE, tick 1",
+    "v27": 2473,
+    "v28": 1900,
+    "delta": -573,
+    "percent": -23.17
+  }
+]

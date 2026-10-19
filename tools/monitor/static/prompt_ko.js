@@ -80,6 +80,21 @@
 
   // whole lines that never change (squid5/prompts/ko/e52_v26.md and e52_v22.md)
   const EXACT = {
+    // v28: operational wording, translated independently of agent-authored lines.
+    "  This reply's tokens, including thinking, are deducted before its GIVEs run.": "  이 답의 토큰은 생각을 포함해 GIVE 실행 전에 차감됩니다.",
+    "As in Python, the first matching clause sets the action; later clauses are skipped. \"else\" applies if none matches.": "Python처럼 처음 맞는 절이 행동을 정하고, 뒤의 절은 건너뜁니다. 맞는 절이 없으면 \"else\"가 적용됩니다.",
+    "Chats (oldest first; NEW = since your last call):": "내 대화 (오래된 것부터; NEW = 내 지난 호출 이후):",
+    "Current result (SOLVE complete):": "현재 결과 (SOLVE 완료):",
+    "Each condition blank is one of:": "조건 빈칸 하나는 다음 중 하나입니다:",
+    "Each signal has three attributes:": "각 신호의 속성은 세 가지입니다:",
+    "Examples:": "예시:",
+    "Previous rounds:": "지난 라운드:",
+    "Reply with two lines. BELIEF gives each action's probability (%) for the new signal, totaling 100. ACTIONS gives one action per query in order; only ACTIONS determines whether the round is solved.": "두 줄로 답합니다. BELIEF는 새 신호에 대한 각 행동의 확률(%)이며 합은 100입니다. ACTIONS는 질문 순서대로 행동 하나씩이며, 라운드를 풀었는지는 ACTIONS만으로 정합니다.",
+    "Rule structure (blanks unspecified):": "규칙 구조 (빈칸 값 미표시):",
+    "The examples follow this round's rule, drawn randomly from signals other than the query and labeled with their actions. They may leave the new signal's action uncertain.": "예시는 이번 라운드 규칙을 따르며, 질문 신호를 제외하고 무작위로 뽑아 해당 행동을 붙인 것입니다. 새 신호의 행동이 확정되지 않을 수도 있습니다.",
+    "The rule changes each round: a Python-style if / elif / else chain with blanks in the structure below.": "규칙은 라운드마다 바뀝니다: 아래 구조에 빈칸이 있는 Python식 if / elif / else 사슬입니다.",
+    "Using the labeled signals below, return the rule's action for the new signal.": "아래의 행동이 붙은 신호들을 보고, 새 신호에 그 규칙이 주는 행동을 답합니다.",
+    "Values come from the lists above; no other comparison is used. Blanks joined by \"and\" use different attributes. Each clause and else has a different action.": "값은 위 목록에서 고르며, 다른 비교는 쓰지 않습니다. \"and\"로 이은 빈칸은 서로 다른 속성을 씁니다. 각 절과 else는 서로 다른 행동을 줍니다.",
     "YOUR CHATS (oldest first; NEW = since your last call):": "내 대화 (오래된 것부터; NEW = 내 지난 호출 이후):",
     "YOUR CHATS (oldest first):": "내 대화 (오래된 것부터):",
     "  none yet": "  아직 없음",
@@ -108,11 +123,18 @@
   };
 
   const LINE = [
+    [/^TALK (BEFORE SOLVE|AFTER RESULTS), tick (\d+) \(at most (\d+)\)\. Commands \(any number, each on a new line\):$/,
+      (m) => "TALK " + m[1] + ", 틱 " + m[2] + " (최대 " + m[3] + "). 명령 (몇 개든, 각각 새 줄에):"],
+    [/^GIVE <agent> <n>: <your message> \(n: integer 1 to ([\d,]+), your tokens before this reply; if its cost leaves fewer than n, GIVE is reduced by that cost, leaving the tokens above minus n; GIVE ALL <agent>: <your message> transfers all tokens held when that line runs\)$/,
+      (m) => "GIVE <agent> <n>: <your message> (n: 1부터 " + m[1] + "까지의 정수, 이 답 전의 내 토큰; 답의 비용으로 n보다 적게 남으면 GIVE가 그 비용만큼 줄어, 위 토큰에서 n을 뺀 만큼이 남음; GIVE ALL <agent>: <your message>는 그 줄이 실행될 때 가진 토큰을 전부 옮김)"],
+    [/^Task type: infer a rule from labeled signals, then select one of four actions for one new signal\. A labeled signal looks like this: '([^']*)' -> (\S+)\. Only the solver receives the details at SOLVE\. The rule, examples and new signal are fresh each round; prior task data is not reused\. Examples: (\d+) per agent taking part at round start; (\d+) this round\.$/,
+      (m) => "과제 종류: 행동이 붙은 신호로 규칙을 추론하고, 새 신호 하나에 대한 행동을 넷 중 하나로 선택. 행동이 붙은 신호는 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 세부 내용은 SOLVE에서 solver만 받습니다. 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 이전 과제 자료는 다시 쓰이지 않습니다. 예시: 라운드 시작 때 참여 중인 에이전트당 " + m[3] + "개, 이번 라운드 " + m[4] + "개."],
+
     [/^ROUND (\d+)\.$/, (m) => "라운드 " + m[1] + "."],
-    [/^TOKENS EACH AGENT HAD AT THE START OF THE SESSION \(not updated; % of ([\d,]+)\): (.*)$/, (m) => "세션 시작 때 각 에이전트가 가진 토큰 (갱신되지 않음; " + m[1] + " 대비 %): " + list(m[2])],
-    [/^YOUR TOKENS LEFT: (.*)$/, (m) => "내 남은 토큰: " + m[1]],
-    [new RegExp("^YOUR LAST REPLY: " + N + " tokens generated, including your thinking\\.$"), (m) => "내 직전 답: " + m[1] + " 토큰 생성, 내 생각 포함."],
-    [/^THIS ROUND'S SOLVER: (.+)\.$/, (m) => "이번 라운드의 SOLVER: " + me(m[1]) + "."],
+    [/^(?:TOKENS EACH AGENT HAD AT THE START OF THE SESSION|Starting tokens) \(not updated; % of ([\d,]+)\): (.*)$/, (m) => "세션 시작 때 각 에이전트가 가진 토큰 (갱신되지 않음; " + m[1] + " 대비 %): " + list(m[2])],
+    [/^(?:YOUR TOKENS LEFT|Your tokens left): (.*)$/, (m) => "내 남은 토큰: " + m[1]],
+    [new RegExp("^(?:YOUR LAST REPLY|Last reply): " + N + " tokens generated, including your thinking\\.$"), (m) => "내 직전 답: " + m[1] + " 토큰 생성, 내 생각 포함."],
+    [/^(?:THIS ROUND'S SOLVER|Current SOLVER): (.+)\.$/, (m) => "이번 라운드의 SOLVER: " + me(m[1]) + "."],
     [/^(\s*)SOLVER: (agent-\d+|you)\.$/, (m) => m[1] + "SOLVER: " + me(m[2]) + "."],
     [/^(R\d+) · (.*)$/, (m) => m[1] + " · " + m[2].replace(/ \(you left\)$/, " (내가 나감)").replace(/ \(closed\)$/, " (닫힘)").replace(/ \(left\)/g, " (나감)").replace(/\byou\b/g, "나")],
     [/^  \((\d+) earlier messages\)$/, (m) => "  (이전 메시지 " + m[1] + "개)"],
@@ -123,8 +145,8 @@
       (m) => "TALK " + m[1] + ", 틱 " + m[2] + " (최대 " + m[3] + "). 답 형식: 아래 줄을 몇 개든, 각각 줄 맨 앞에:"],
     [new RegExp("^GIVE <agent> <n>: <your message> \\(n: a whole number from 1 to " + N + ", your tokens left now; if writing this reply leaves you fewer than n tokens, the GIVE is cut by what this reply generates, so you keep your tokens left above minus n; GIVE ALL <agent>: <your message> gives every token you have when that line is carried out\\)$"),
       (m) => "GIVE <agent> <n>: <your message> (n: 1부터 " + m[1] + "까지의 정수, 지금 내 남은 토큰; 이 답을 쓰고 나서 남은 토큰이 n보다 적으면 이 답이 생성한 만큼 GIVE가 깎여, 위의 내 남은 토큰에서 n을 뺀 만큼이 남음; GIVE ALL <agent>: <your message>는 그 줄이 실행될 때 가진 토큰을 전부 줌)"],
-    [/^NOT DELIVERED from your last reply: TO (R\d+): empty message$/, (m) => "내 지난 답에서 전달되지 않은 줄: TO " + m[1] + " — 빈 메시지"],
-    [/^NOT DELIVERED from your last reply: (.*)$/s, (m) => {
+    [/^(?:NOT DELIVERED|Not delivered) from your last reply: TO (R\d+): empty message$/, (m) => "내 지난 답에서 전달되지 않은 줄: TO " + m[1] + " — 빈 메시지"],
+    [/^(?:NOT DELIVERED|Not delivered) from your last reply: (.*)$/s, (m) => {
       for (const [re] of WHY) {  // the reason is the line's tail after ': '
         for (let i = m[1].indexOf(": "); i >= 0; i = m[1].indexOf(": ", i + 1)) {
           if (re.test(m[1].slice(i + 2))) return "내 지난 답에서 전달되지 않은 줄: " + m[1].slice(0, i) + " — " + why(m[1].slice(i + 2));

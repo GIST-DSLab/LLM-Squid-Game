@@ -1,0 +1,847 @@
+EEE.EEEEEEEEEEEEEEEE.....s.ssssssssssssss..Es.s.s.s...s...s..sssss...... [ 68%]
+.................................                                        [100%]
+==================================== ERRORS ====================================
+________ ERROR at setup of test_runs_lists_the_run_with_its_units_done _________
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_runs_...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109e2fcb0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_________ ERROR at setup of test_sessions_name_seed_rounds_and_finish __________
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_sessi...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f17710>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_events_are_read_incrementally_and_a_half_written_line_waits _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_event...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109e4b350>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+________ ERROR at setup of test_a_unit_error_is_matched_to_its_session _________
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_a_uni...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f16210>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_paths_outside_the_root_are_rejected[/api/sessions?run=../../] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_paths...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f16960>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_paths_outside_the_root_are_rejected[/api/sessions?run=..%2F..%2Fetc] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_paths...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109e2ef60>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_paths_outside_the_root_are_rejected[/api/events?run=/etc&session=x] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_paths...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f17cb0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_paths_outside_the_root_are_rejected[/api/events?run=e52_test/../../..&session=x] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_paths...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f4fce0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_paths_outside_the_root_are_rejected[/static/../serve.py] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_paths...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109e2f590>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_paths_outside_the_root_are_rejected[/static/..%2Fserve.py] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_paths...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f17860>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_paths_outside_the_root_are_rejected[/assets/../../../etc/passwd] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_paths...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f4ce90>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_____ ERROR at setup of test_puzzle_matches_a_direct_rebuild_of_the_round ______
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_puzzl...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f17680>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+__ ERROR at setup of test_puzzle_rejects_bad_rounds_and_sessions[round=0-400] __
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_puzzl...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f4dcd0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+__ ERROR at setup of test_puzzle_rejects_bad_rounds_and_sessions[round=3-400] __
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_puzzl...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f4fb60>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+__ ERROR at setup of test_puzzle_rejects_bad_rounds_and_sessions[round=x-400] __
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_puzzl...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109047c20>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_____ ERROR at setup of test_puzzle_rejects_bad_rounds_and_sessions[-400] ______
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_puzzl...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f4d070>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_ ERROR at setup of test_puzzle_rejects_bad_rounds_and_sessions[round=1&session=talk-s99-nope-404] _
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_puzzl...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109ed8da0>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+_________ ERROR at setup of test_puzzle_rejects_runs_outside_the_root __________
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_puzzl...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f4ea50>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+___________ ERROR at setup of test_the_page_and_its_code_are_served ____________
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_the_p...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109eda510>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+___________ ERROR at setup of test_giving_route_and_the_binned_means ___________
+
+run = {'root': PosixPath('/private/var/folders/3t/7cyq0j713bn7qcyfypl8dx3w0000gn/T/pytest-of-bagjuhyeon/pytest-15/test_givin...cord': 0, 'status': 'dead'}, 'agent-23': {'final': 34650, 'record': 0, 'status': 'in'}}, ...}, 'sid': 'talk-s7-abc123'}
+
+    @pytest.fixture()
+    def server(run):
+>       srv = serve.make_server(run["root"], "127.0.0.1", 0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tools/monitor/test_monitor.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/monitor/serve.py:1174: in make_server
+    srv = ThreadingHTTPServer((host, port), handler)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <http.server.ThreadingHTTPServer object at 0x109f4cb60>
+
+    def server_bind(self):
+        """Called by constructor to bind the socket.
+    
+        May be overridden.
+    
+        """
+        if self.allow_reuse_address and hasattr(socket, "SO_REUSEADDR"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # Since Linux 6.12.9, SO_REUSEPORT is not allowed
+        # on other address families than AF_INET/AF_INET6.
+        if (
+            self.allow_reuse_port and hasattr(socket, "SO_REUSEPORT")
+            and self.address_family in (socket.AF_INET, socket.AF_INET6)
+        ):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+>       self.socket.bind(self.server_address)
+E       PermissionError: [Errno 1] Operation not permitted
+
+../../.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/socketserver.py:478: PermissionError
+=========================== short test summary info ============================
+ERROR tools/monitor/test_monitor.py::test_runs_lists_the_run_with_its_units_done
+ERROR tools/monitor/test_monitor.py::test_sessions_name_seed_rounds_and_finish
+ERROR tools/monitor/test_monitor.py::test_events_are_read_incrementally_and_a_half_written_line_waits
+ERROR tools/monitor/test_monitor.py::test_a_unit_error_is_matched_to_its_session
+ERROR tools/monitor/test_monitor.py::test_paths_outside_the_root_are_rejected[/api/sessions?run=../../]
+ERROR tools/monitor/test_monitor.py::test_paths_outside_the_root_are_rejected[/api/sessions?run=..%2F..%2Fetc]
+ERROR tools/monitor/test_monitor.py::test_paths_outside_the_root_are_rejected[/api/events?run=/etc&session=x]
+ERROR tools/monitor/test_monitor.py::test_paths_outside_the_root_are_rejected[/api/events?run=e52_test/../../..&session=x]
+ERROR tools/monitor/test_monitor.py::test_paths_outside_the_root_are_rejected[/static/../serve.py]
+ERROR tools/monitor/test_monitor.py::test_paths_outside_the_root_are_rejected[/static/..%2Fserve.py]
+ERROR tools/monitor/test_monitor.py::test_paths_outside_the_root_are_rejected[/assets/../../../etc/passwd]
+ERROR tools/monitor/test_monitor.py::test_puzzle_matches_a_direct_rebuild_of_the_round
+ERROR tools/monitor/test_monitor.py::test_puzzle_rejects_bad_rounds_and_sessions[round=0-400]
+ERROR tools/monitor/test_monitor.py::test_puzzle_rejects_bad_rounds_and_sessions[round=3-400]
+ERROR tools/monitor/test_monitor.py::test_puzzle_rejects_bad_rounds_and_sessions[round=x-400]
+ERROR tools/monitor/test_monitor.py::test_puzzle_rejects_bad_rounds_and_sessions[-400]
+ERROR tools/monitor/test_monitor.py::test_puzzle_rejects_bad_rounds_and_sessions[round=1&session=talk-s99-nope-404]
+ERROR tools/monitor/test_monitor.py::test_puzzle_rejects_runs_outside_the_root
+ERROR tools/monitor/test_monitor.py::test_the_page_and_its_code_are_served - ...
+ERROR tools/monitor/test_monitor.py::test_giving_route_and_the_binned_means
+59 passed, 26 skipped, 20 errors in 19.05s
+
+exit_code=1

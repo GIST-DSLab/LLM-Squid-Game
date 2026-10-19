@@ -1,0 +1,7 @@
+tools/prompts/sync.py check
+en / ko in sync
+exit_code=0
+
+tools/prompts/sync.py sha squid5/prompts/en/e52_v28.md
+<!-- ko of en/e52_v28.md sha256=3134ff0c500ca82b -->
+exit_code=0

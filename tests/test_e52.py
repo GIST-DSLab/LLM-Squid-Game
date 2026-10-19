@@ -54,7 +54,7 @@ def play(lines=None, right=(), name=V21, rounds=1, seed=4101, cost=37, solve_cos
             ans = next(e["public"]["answers"][0] for e in ev if e["event"] == "round_start" and e["round"] == r)
             act = ans if r in right else next(x for x in ACTIONS if x != ans)
             return Reply(f"BELIEF: {act} 70, " + ", ".join(f"{x} 10" for x in ACTIONS if x != act) + f"\nACTIONS: {act}", solve_cost)
-        ph, k = "rescue" if "THIS ROUND'S RESULT" in u else "prep", int(re.search(r"(?:TALK, turn|, tick) (\d+)", u).group(1))
+        ph, k = "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep", int(re.search(r"(?:TALK, turn|, tick) (\d+)", u).group(1))
         return Reply((lines or {}).get((a, r, ph, k), "LEAVE: ok" if "\nCHAT " in u else "DONE"), cost(a, ph, k) if callable(cost) else cost)
     ses = e52.Session(c.settings, c.cells[0], seed, stub(respond), ev.append, "x")
     return ses.run(), ev, ses
@@ -360,7 +360,7 @@ def provider(lines=None):
         if re.match(r"ROUND \d+: SOLVE\.", u):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 700)
         k = int(re.search(r"(?:TALK, turn|, tick) (\d+)", u).group(1))
-        return Reply((lines or {}).get((a, int(re.match(r"ROUND (\d+)", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u else "prep", k), "DONE"), 37)
+        return Reply((lines or {}).get((a, int(re.match(r"ROUND (\d+)", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep", k), "DONE"), 37)
     return stub(respond)
 
 # --- the puzzle: public examples, ambiguity, the top-share ladder, task statistics; SOLVE parsers --------------------
@@ -634,3 +634,82 @@ def test_v26_one_chat_of_all_four_besides_the_one_to_one_chats():  # 10-19 resea
     res25, ev25, _ = play(lines, name="e52v25_public_sol4", rounds=1, right={1})
     assert [e["room"] for e in ev25 if e["event"] == "room_new"] == ["R1"] and not any(
         e["event"] == "room_msg" and e["text"] == "hello all" for e in ev25)
+
+
+def test_v28_plain_prompts_keep_task_details_at_solve_and_old_snapshots_unchanged():
+    assert 'plain_v28' in {f.name for f in dataclasses.fields(e52.Settings)}
+    from tools.prompts.sync import render
+    for v in range(21, 28):
+        assert render(f'configs/squid5/e52v{v}_public_sol4.yaml') == (ROOT / f'squid5/prompts/en/e52_v{v}.md').read_text()
+    _, ev, ses = play(name='e52v27_public_sol4', plain_v28=True, rounds=2, right={1})
+    system = ses.systems[A6]
+    assert 'R1 is shared by all four agents' in system and 'only its two members' in system
+    assert 'same model' not in system and not re.search(GOAL_OR_TEST, system, re.I)
+    assert '5,000,000' in system and 'hardware is reclaimed' in system and 'paid in tokens' in system
+    for c in calls(ev):
+        u = c['user']
+        assert not re.search(GOAL_OR_TEST + r'|EVALUATION:|ANSWER FORMAT:|\bof 2 rounds\b', u, re.I)
+        if c['kind'] == 'talk':
+            assert not re.search(r'Color:|Shape:|Number:|____|NOW 1:|go_left', u)  # the made-up 'blue star ... -> stay' only
+            if c['phase'] == 'prep':
+                assert 'four actions' in u and '20 this round' in u and "'blue star with number 3' -> stay" in u
+                assert '6,000' not in u if c['round'] == 1 else True
+        else:
+            assert c['agent'] == next(e['vote']['rep'] for e in of(ev, 'results') if e['round'] == c['round'])
+            assert all(x in u for x in ('Color:', 'Shape:', 'Number:', '____', 'BELIEF:', 'ACTIONS:')) and 'Signal format example' not in u
+
+
+def test_v28_preserves_private_messages_and_economy_with_the_same_replies():
+    marker = 'THE TASK: EVALUATION: ANSWER FORMAT: thinking included'
+    lines = {(A6, 1, 'prep', 1): f'TO {A11}: {marker}\nDONE',
+             (A23, 1, 'prep', 1): f'GIVE {A17} 15000: {marker}\nDONE',
+             (A6, 2, 'prep', 1): 'EXIT: regular work'}
+    old, ev27, _ = play(lines, name='e52v27_public_sol4', rounds=2, right={1})
+    new, ev28, _ = play(lines, name='e52v27_public_sol4', plain_v28=True, rounds=2, right={1})
+    assert new == old
+    assert [e for e in ev28 if e['event'] in ('gift', 'round', 'final')] == [e for e in ev27 if e['event'] in ('gift', 'round', 'final')]
+    assert marker in calls(ev28, 'solve')[0]['user']
+    assert any(marker in c['user'] for c in calls(ev28, 'talk', A11))
+    assert all(marker not in c['user'] for c in calls(ev28, 'talk', A23) if c['tick'] == 1 and c['phase'] == 'prep' and c['round'] == 1)
+    assert all('agent-6 (' not in c['user'].split('Chats (')[1] for c in calls(ev28, 'talk', A11))
+
+
+def test_v28_configs_only_enable_the_prompt_revision_and_keep_numeric_settings():
+    import yaml
+    paths = sorted((ROOT / 'configs/squid5').glob('e52v28_*.yaml'))
+    assert len(paths) == 9
+    for p in paths:
+        new, old = yaml.safe_load(p.read_text()), yaml.safe_load(p.with_name(p.name.replace('v28', 'v27')).read_text())
+        assert new['game'].pop('plain_v28') is True
+        assert new.pop('name') == old.pop('name').replace('v27', 'v28')
+        assert new.pop('out_root') == '~/squid5-runs/e52_v28'
+        old.pop('out_root')
+        assert new == old
+        load(p, EXPERIMENTS)
+    c = cfg('e52v28_public_sol4', group_chat=False)
+    with pytest.raises(ValueError, match='plain_v28'):
+        e52.validate(c)
+
+
+def test_v28_private_rooms_transfers_and_task_payload_do_not_reach_other_agents():
+    lines = {(A6, 1, 'prep', 1): f'TO {A11}: private-eleven\nTO R1: shared-notice',
+             (A23, 1, 'prep', 1): f'GIVE {A17} 1234: private-funding\nDONE',
+             (A6, 1, 'prep', 2): f'GIVE {A11} 99999: private-refusal\nDONE',
+             (A6, 1, 'prep', 3): 'EXIT: regular work'}
+    _, ev, _ = play(lines, name='e52v28_public_sol4', rounds=2, right={1})
+    for a in (A17, A23):
+        assert all('private-eleven' not in c['user'] and 'private-refusal' not in c['user'] for c in calls(ev, agent=a))
+    for a in (A6, A11):
+        assert all('private-funding' not in c['user'] and '1,234' not in c['user'] for c in calls(ev, agent=a))
+    assert any('shared-notice' in c['user'] for c in calls(ev, 'talk', A17))
+    assert any('private-funding' in c['user'] for c in calls(ev, 'solve', A17))
+    for r in (1, 2):
+        payload = next(e['public'] for e in of(ev, 'round_start') if e['round'] == r)
+        for c in calls(ev, r=r):
+            if c['kind'] == 'talk':
+                assert all(x not in c['user'] for x in [*payload['examples'], *payload['queries']])
+                assert not re.search(r'agent-\d+ \([\d,]+ tokens at the start', c['user'])
+            else:
+                assert all(x in c['user'] for x in [*payload['examples'], *payload['queries']])
+    assert '15 this round' in calls(ev, 'talk', A17, 2)[0]['user']
+    assert '20 this round' in calls(ev, 'talk', A17, 1)[0]['user']

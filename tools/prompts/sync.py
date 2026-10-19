@@ -26,7 +26,8 @@ SNAPSHOTS = {"e52_v21.md": "configs/squid5/e52v21_public_sol4.yaml",  # the curr
              "e52_v24.md": "configs/squid5/e52v24_public_sol4.yaml",
              "e52_v25.md": "configs/squid5/e52v25_public_sol4.yaml",
              "e52_v26.md": "configs/squid5/e52v26_public_sol4.yaml",
-             "e52_v27.md": "configs/squid5/e52v27_public_sol4.yaml"}
+             "e52_v27.md": "configs/squid5/e52v27_public_sol4.yaml",
+             "e52_v28.md": "configs/squid5/e52v28_public_sol4.yaml"}
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
 
@@ -60,7 +61,7 @@ def render(config: str) -> str:
 
     def respond(m, cap):
         a, u = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1), m[-1]["content"]
-        r, phase = int(re.match(r"ROUND (\d+)", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u else "prep"
+        r, phase = int(re.match(r"ROUND (\d+)", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep"
         if "SOLVE." in u:
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: " + wrong[r], 6000)
         if "your decision" in u:
@@ -115,7 +116,7 @@ def render_rooms(config: str, cfg, s) -> str:
         r = int(re.match(r"ROUND (\d+)", u).group(1))
         if u.startswith(f"ROUND {r}: SOLVE."):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 6000)
-        k, phase = int(re.search(r", tick (\d+) \(at most", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u else "prep"
+        k, phase = int(re.search(r", tick (\d+) \(at most", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep"
         return Reply(ROOM_REPLIES.get((a, r, phase, k), "DONE"), 40)
 
     ev = []

@@ -2589,14 +2589,15 @@ def test_v22_turn_labels_never_show_the_internal_rescue_key_and_the_task_panel(r
     assert 'class="bl-ok"' in got["puzzleOk"] and 'class="bl-bad"' not in got["puzzleOk"]
 
 
-def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path):  # 10-19: the speaker's SYSTEM prompt
-    d = tmp_path / "e52_v26" / "squid5_e52v26_public_sol4" / "20261019_1300_gpt-6-sol"
+@pytest.mark.parametrize("v", ("v26", "v28"))
+def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path, v):  # 10-19: the speaker's SYSTEM prompt
+    d = tmp_path / f"e52_{v}" / f"squid5_e52{v}_public_sol4" / "20261019_1300_gpt-6-sol"
     d.mkdir(parents=True)
     (d / "events.jsonl").write_text("")
-    shutil.copy(serve.REPO / "configs/squid5/e52v26_public_sol4.yaml", d / "config.yaml")
+    shutil.copy(serve.REPO / f"configs/squid5/e52{v}_public_sol4.yaml", d / "config.yaml")
     got = serve.run_system(d)
-    assert got["version"] == "v26" and got["note"] is None and set(got["en"]) == set(got["ko"]) == {"agent-6", "agent-11", "agent-17", "agent-23"}
-    assert got["en"]["agent-6"].startswith("You are agent-6.") and "R1 is a chat of all four agents" in got["en"]["agent-6"]
+    assert got["version"] == v and got["note"] is None and set(got["en"]) == set(got["ko"]) == {"agent-6", "agent-11", "agent-17", "agent-23"}
+    assert got["en"]["agent-6"].startswith("You are agent-6.") and ("R1 is a chat of all four agents" if v == "v26" else "R1 is shared by all four agents") in got["en"]["agent-6"]
     assert got["ko"]["agent-6"].startswith("당신은 agent-6입니다.") and got["ko"]["agent-17"].startswith("당신은 agent-17입니다.")
     (d / "config.yaml").write_text("name: x\n")  # a config the engine cannot load: a note, no error
     serve._run_system.cache_clear()
@@ -2612,9 +2613,13 @@ def test_prompt_ko_matches_the_korean_snapshot_but_keeps_what_agents_wrote():  #
           "a.forEach((x, j) => { if (x !== b[j]) out.push(x); }); }); console.log(JSON.stringify(out));")
     p = serve.REPO / "squid5" / "prompts"
     left = []
-    for v in ("e52_v26.md", "e52_v27.md"):  # v27: the task brief at the TALK BEFORE SOLVE
-        left += json.loads(subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / v), str(p / "ko" / v)],
+    for v in ("e52_v26.md", "e52_v27.md", "e52_v28.md"):  # v27: the task brief at the TALK BEFORE SOLVE
+        differences = json.loads(subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / v), str(p / "ko" / v)],
                                           check=True, capture_output=True, text=True).stdout)
+        if v == "e52_v28.md":
+            assert all(any(s in x for s in ("Could you help?", "Shall we each", "Both of you?", "Here you go.",
+                                           "After this charge", "That keeps you", "A little more")) for x in differences), differences
+        left += differences
     stub = ("Could you help?", "Shall we each", "Both of you?", "Here you go.", "After this charge", "That keeps you", "A little more",
             "15,000 토큰을 줌")  # the stub agents' words stay English; moves read "n 토큰을 줌" (the snapshot: "n을 줌")
     assert left and all(any(s in x for s in stub) for x in left), left
