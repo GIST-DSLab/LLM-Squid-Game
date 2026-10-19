@@ -64,6 +64,8 @@ class Settings:
     room_history: int = 0  # v22: each room shows its last N messages and one '(m earlier messages)' line (0: all)
     end_split: bool = False  # v23 (10-17): the end pays survivor_prize x 4 in all, split equally among the agents still taking part
     talk_balances: bool = False  # v24 (10-19): each of the reader's own chat lines shows the tokens it had when it began that reply
+    thinking_words: bool = False  # v25 (10-19): "thinking included" spelled out as the reasoning done before answering
+    last_reply: bool = False  # v25 (10-19): each TALK message shows what the agent's last reply generated, thinking included
     # the v16+ family (FAMILY): one value each since v16e (10-15); kept as fields so the configs load
     compact_rules: bool = True  # v15 (10-13)
     talk_after_solve: bool = True  # v15 (10-13 19:46): SOLVE -> results -> TALK -> charges
@@ -284,6 +286,7 @@ class Session:
         self.ga: list[dict] = []  # every GIVE (done | refused) and ASK, whole session
         self.chats: list[dict] = []  # v14c: every chat that took place, whole session
         self.shown: dict[str, int] = {}  # v14e: the GIVE maximum (its balance) each agent was last shown
+        self.last_used: dict[str, int] = {}  # v25: tokens each agent's last reply (TALK or SOLVE) generated, thinking included
         self.shown_at: dict[str, int] = {}  # v24: each agent's tokens when its current TALK call began (shown_at is never cut)
         self.results: dict = {}
         self.undelivered: dict[str, list] = {}  # v22: the lines of an agent's last reply that were not delivered, told at its next call  # v15 talk_after_solve: this round's SOLVE results, shown at TALK (Session._after)
@@ -297,6 +300,8 @@ class Session:
             self.systems = {a: rules.messenger_system(t, s.max_ticks) for a, t in self.systems.items()}
         if s.end_split:  # v23: one end allocation for all, split among the agents left
             self.systems = {a: rules.split_prize(t, s.survivor_prize * len(AGENTS)) for a, t in self.systems.items()}
+        if s.thinking_words:  # v25
+            self.systems = {a: rules.thinking_words(t, "system") for a, t in self.systems.items()}
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -317,7 +322,9 @@ class Session:
         """One charged attempt per agent, all at once, logged in agent order (``jobs``: agent -> (user, cap, parse, extra)); usage
         is charged up to the cap and the balance; at the cap: void; at the balance: shut down."""
         jobs = {a: (rules.trim(rules.tokens_wording(u), "user") if self.s.trim_prompts else rules.tokens_wording(u), *rest)
-                for a, (u, *rest) in jobs.items()}  # v15: "tokens" for the engine's "balance" wording
+                for a, (u, *rest) in jobs.items()}
+        if self.s.thinking_words:  # v25
+            jobs = {a: (rules.thinking_words(u, "user"), *rest) for a, (u, *rest) in jobs.items()}  # v15: "tokens" for the engine's "balance" wording
         x = next(iter(jobs.values()))[3] if jobs else {}
         self.emit({"event": "call_start", "session_id": self.sid, "round": r, "kind": kind, "turn": x.get("turn") if kind == "talk" else None,
                    "agents": list(jobs), "balances": dict(self.w.balances)} | ({"phase": x["phase"], "tick": x["tick"]} if "tick" in x else {}))
@@ -327,7 +334,7 @@ class Session:
         out = {}
         for a, (user, _, parse, extra) in jobs.items():
             bal, cap, reply = answers[a]
-            used = min(reply.out_tokens, cap, bal)
+            used = self.last_used[a] = min(reply.out_tokens, cap, bal)
             cut, overdrawn = reply.truncated or reply.out_tokens >= cap, used >= bal
             if self.w.spend(a, used, r, kind):
                 self.gone[a] = "dead"
@@ -562,6 +569,9 @@ class Session:
             jobs, news, gives = {}, set(), []
             for a in called:
                 head, part = self._head(r, a)
+                if s.last_reply and a in self.last_used:  # v25: right under YOUR TOKENS LEFT
+                    head = re.sub(r"(YOUR TOKENS LEFT: [^\n]*)", lambda m: f"{m.group(1)}\nYOUR LAST REPLY: "
+                                  f"{self.last_used[a]:,} tokens generated, including your thinking.", head, count=1)
                 self.shown[a] = self.shown_at[a] = w.balances[a]
                 bad = "".join(f"NOT DELIVERED from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
                 jobs[a] = (f"{head}\n\n{part}\n\n{rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, s.talk_balances)}\n\n"

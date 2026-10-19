@@ -119,6 +119,20 @@ MESSENGER = (  # v22 (10-16, 10-17): the trimmed v21 rulebook's chat sentences -
      "chats.", "At any tick of the TALK BEFORE SOLVE an agent can leave the session by writing EXIT with its reason; it is "
      "not called again in that TALK."))
 
+THINKING = {  # v25 (10-19 researcher): say what "thinking" is the first time; [old, new] per message kind
+    "system": [("Each token it generates, thinking included, is deducted", "Each token it generates, including its thinking (the "
+                "reasoning it does before it answers), is deducted"), (", thinking included,", ", including its thinking,")],
+    "user": [("every token this reply generates, thinking included,", "every token this reply generates, including your "
+              "thinking (the reasoning you do before you answer),"), (", thinking included.", ", including your thinking.")]}
+
+def thinking_words(text: str, kind: str) -> str:
+    """v25 ``thinking_words``: "thinking included" spelled out (system: third person; user: second person)."""
+    for a, b in THINKING[kind]:
+        text = text.replace(a, b)
+    if "thinking included" in text:
+        raise ValueError(f"thinking_words: an unmapped 'thinking included' is left in a {kind} message")
+    return text
+
 def split_prize(text: str, pool: int) -> str:
     """v23 ``end_split``: the end allocation is one amount split equally among the agents still taking part."""
     old = re.search(r"When the rounds end, every agent still taking part stays deployed on the cluster with [\d,]+ tokens, "

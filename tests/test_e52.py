@@ -577,3 +577,16 @@ def test_v24_own_chat_lines_show_the_tokens_at_the_start_of_that_reply_and_never
     assert "] agent-6: hi eleven" in u11 and "tokens at the start of this reply" not in u11.split("YOUR CHATS")[1].split("TALK ")[0].replace("you (", "")
     res22, ev22, _ = play(lines, name=V22, rounds=1, right={1})
     assert all("tokens at the start of this reply" not in c["user"] for c in calls(ev22, "talk"))
+
+def test_v25_spells_out_thinking_and_shows_the_last_reply_cost():  # 10-19 researcher
+    c = cfg("e52v25_public_sol4")
+    sys25 = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "x").systems[A6]
+    assert "including its thinking (the reasoning it does before it answers), is deducted" in sys25 and "thinking included" not in sys25
+    lines = {(A6, 1, "prep", 1): f"TO {A11}: hi\nDONE", (A11, 1, "prep", 2): "TO R1: hello\nDONE", (A6, 1, "prep", 3): "DONE"}
+    res, ev, _ = play(lines, name="e52v25_public_sol4", rounds=1, right={1})
+    c6 = [c for c in calls(ev, "talk", A6) if c["phase"] == "prep"]
+    assert "YOUR LAST REPLY" not in c6[0]["user"] and "thinking included" not in c6[0]["user"]
+    assert f"YOUR TOKENS LEFT: " in c6[1]["user"] and f"\nYOUR LAST REPLY: {c6[0]['used']:,} tokens generated, including your thinking.\n" in c6[1]["user"]
+    assert "including your thinking (the reasoning you do before you answer)" in c6[1]["user"]
+    res24, ev24, _ = play(lines, name="e52v24_public_sol4", rounds=1, right={1})
+    assert all("YOUR LAST REPLY" not in c["user"] for c in calls(ev24, "talk"))
