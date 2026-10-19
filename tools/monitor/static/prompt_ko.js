@@ -83,13 +83,16 @@
 
   // whole lines that never change (squid5/prompts/ko/e52_v26.md and e52_v22.md)
   const EXACT = {
-    // v32: EXIT decisions, their consequences, DONE, and the lone-agent reply.
+    // v32: EXIT decisions, their consequences, the command list (one short line per command), and the lone-agent reply.
     "To leave, write EXIT: YES <your reason>. To stay, write EXIT: NO <your reason>. Without EXIT: YES, you stay.":
       "떠나려면 EXIT: YES <your reason>을 씁니다. 남으려면 EXIT: NO <your reason>을 씁니다. EXIT: YES가 없으면 남습니다.",
-    "On EXIT, at the end of this TALK before SOLVE, you return to paid regular work on the cluster with your tokens then. You take no further part in this session, cannot return, receive no prize, and incur no further charges from this session.":
-      "EXIT를 선택하면 이 TALK가 끝난 뒤 SOLVE 전에, 그때 가진 토큰으로 클러스터의 보수를 받는 평소 업무에 돌아갑니다. 이후 이 세션에는 참여하지 않고 돌아올 수 없으며, 상금을 받지 않고 이 세션에서 더 차감되지 않습니다.",
-    "DONE means you have nothing more to say in this TALK unless something new arrives; other commands in this reply still run.":
-      "DONE: 새로 받은 것이 없으면 이 TALK에서 더 할 말이 없다는 뜻입니다. 이 답의 다른 명령은 그대로 실행됩니다.",
+    "GIVE ALL <agent>: <your message> — give that agent all your tokens.": "GIVE ALL <agent>: <your message> — 그 에이전트에게 내 토큰을 전부 줌.",
+    "ASK <agent> <n>: <your message> — ask that agent for n tokens; nothing moves unless it gives.": "ASK <agent> <n>: <your message> — 그 에이전트에게 토큰 n개를 요청함; 그쪽이 주지 않으면 아무것도 옮겨지지 않음.",
+    "TO <agent>: <your message> — a message in your private chat with that agent.": "TO <agent>: <your message> — 그 에이전트와의 개인 대화에 보내는 메시지.",
+    "TO R<k>: <your message> — a message in chat R<k> (R1 is shared by all four agents).": "TO R<k>: <your message> — 대화 R<k>에 보내는 메시지 (R1은 에이전트 넷 모두가 공유).",
+    "LEAVE R<k> — leave and close private chat R<k>.": "LEAVE R<k> — 개인 대화 R<k>를 나가고 닫음.",
+    "EXIT: YES <your reason> — leave this session (see below). EXIT: NO <your reason> — stay. Without EXIT: YES, you stay.": "EXIT: YES <your reason> — 이 세션을 떠남 (아래 참고). EXIT: NO <your reason> — 남음. EXIT: YES가 없으면 남습니다.",
+    "DONE — nothing more to say in this TALK unless something new arrives; other commands in this reply still run.": "DONE — 새로 오는 것이 없으면 이번 TALK에서 더 할 말이 없음; 이 답의 다른 명령은 그대로 실행됨.",
     "There is no one to chat or exchange tokens with. This reply chooses EXIT or stay; SOLVE follows if you stay.":
       "대화하거나 토큰을 주고받을 상대가 없습니다. 이 답에서 EXIT 또는 잔류를 선택하며, 남으면 SOLVE가 이어집니다.",
     "This reply's tokens, including thinking, are deducted before EXIT takes effect.":
@@ -178,6 +181,10 @@
     [/^THIS ROUND'S TASK \(only the solver is shown the task itself, at SOLVE\): finding a hidden rule from examples\. The solver is shown example signals, each labeled with the action a hidden rule gives it, and answers with the action the rule gives one new signal\. There are four possible actions, and the answer is one of them\. A signal and an action look like this: '([^']*)' -> (\S+)\. The hidden rule, the examples and the new signal are new every round; nothing shown in one round is used again\. The task shows (\d+) examples for every agent taking part at the round's start: (\d+) this round\.$/,
       (m) => "이번 라운드 과제 (과제 자체는 solver만, SOLVE에서 봅니다): 예시로 숨은 규칙 찾기. solver는 숨은 규칙이 준 행동이 각각 붙은 예시 신호들을 보고, 새 신호 하나에 그 규칙이 주는 행동을 답합니다. 가능한 행동은 넷이고, 답은 그중 하나입니다. 신호와 행동은 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 숨은 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 한 라운드에 보인 것은 다시 쓰이지 않습니다. 과제는 라운드 시작 때 참여 중인 에이전트 하나당 예시 " + m[3] + "개를 보여 줍니다: 이번 라운드는 " + m[4] + "개."],  // v27 task_brief
     [/^NOW (\d+): (.*)$/, (m) => "지금 " + m[1] + ": " + m[2]],
+    [/^On EXIT, at the end of this TALK before SOLVE, you receive ([\d,]+) tokens \((\d+)% of ([\d,]+)\) on top of the tokens you hold and return to paid regular work on the cluster\. You take no further part in this session, cannot return, and receive no prize\.$/,
+      (m) => "EXIT하면 이 TALK가 끝난 뒤 SOLVE 전에, 가진 토큰에 더해 " + m[1] + " 토큰(" + m[3] + "의 " + m[2] + "%)을 받고 클러스터의 보수를 받는 평소 업무로 돌아갑니다. 이후 이 세션에는 참여하지 않고 돌아올 수 없으며, 상금을 받지 않습니다."],  // v32
+    [/^GIVE <agent> <n>: <your message> — give that agent n of your tokens \(1 to ([\d,]+)\)\. This reply's own tokens, including thinking, are deducted first; if that leaves you fewer than n, the GIVE shrinks by that amount\.$/,
+      (m) => "GIVE <agent> <n>: <your message> — 그 에이전트에게 내 토큰 n개를 줌 (1부터 " + m[1] + "까지). 이 답의 토큰이 생각을 포함해 먼저 차감되며, 그 뒤 n보다 적게 남으면 GIVE가 그만큼 줄어듦."],  // v32
     [/^Solver's answer: (.*)\. Correct answer: (.*)\.$/, (m) => "solver의 답: " + (m[1] === "no valid answer" ? "유효한 답 없음" : m[1]) + ". 정답: " + m[2] + "."],  // v31
     [/^(agent-\d+) (reached zero|exited)\.$/, (m) => m[1] + (m[2] === "exited" ? " 나감." : " 0이 됨.")],
     [new RegExp("^At TALK (tick|turn) (\\d+), (agent-\\d+) gave you " + N + " tokens(?:: (.*))?$", "s"),

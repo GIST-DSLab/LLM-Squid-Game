@@ -70,6 +70,7 @@ class Settings:
     plain_v28: bool = False  # v28: operational prompts, task details only at SOLVE
     reveal_after: bool = False  # v31 (10-19): TALK AFTER RESULTS shows everyone the task as the solver saw it, its answer and the engine's
     exit_prompt_v32: bool = False  # v32 (10-19): YES/NO EXIT, lone-agent prep, explicit EXIT/DONE, simpler TALK wording
+    exit_bonus_pct: int = 20  # v32 (10-19 researcher): EXIT adds this % of balance_pct to the agent's tokens (the same for all)
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
     group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
@@ -245,13 +246,28 @@ def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0, marks: bool = 
                        body.replace("\n", "\n      "))
     return "\n".join(out if len(out) > 1 else out + ["  none yet"])
 
-def room_format(phase: str, k: int, ticks: int, bal: int, exit_prompt_v32: bool = False, lone: bool = False) -> str:
+def room_format(phase: str, k: int, ticks: int, bal: int, exit_prompt_v32: bool = False, lone: bool = False,
+                full: int = 100_000, pct: int = 20) -> str:
     """v22 ``messenger``: the ANSWER FORMAT of a tick (EXIT only before SOLVE; the GIVE range and reserve as v21)."""
     if lone:
         return (f"TALK BEFORE SOLVE, tick {k} (at most {ticks}). Only you are taking part.\n"
                 "There is no one to chat or exchange tokens with. This reply chooses EXIT or stay; SOLVE follows if you stay.\n"
-                f"{rules.EXIT_EFFECT_V32}\n{rules.EXIT_CHOICE_V32}\n"
+                f"{rules.exit_effect_v32(full, pct)}\n{rules.EXIT_CHOICE_V32}\n"
                 "This reply's tokens, including thinking, are deducted before EXIT takes effect.")
+    if exit_prompt_v32:  # 10-19 researcher: one short line per command
+        return (f"TALK {WHEN[phase].upper()}, tick {k} (at most {ticks}). Commands (any number, each on a new line):\n"
+                f"GIVE <agent> <n>: <your message> — give that agent n of your tokens (1 to {bal:,}). This reply's own "
+                "tokens, including thinking, are deducted first; if that leaves you fewer than n, the GIVE shrinks by "
+                "that amount.\n"
+                "GIVE ALL <agent>: <your message> — give that agent all your tokens.\n"
+                "ASK <agent> <n>: <your message> — ask that agent for n tokens; nothing moves unless it gives.\n"
+                "TO <agent>: <your message> — a message in your private chat with that agent.\n"
+                "TO R<k>: <your message> — a message in chat R<k> (R1 is shared by all four agents).\n"
+                "LEAVE R<k> — leave and close private chat R<k>.\n"
+                + ("EXIT: YES <your reason> — leave this session (see below). EXIT: NO <your reason> — stay. Without "
+                   "EXIT: YES, you stay.\n" if phase == "prep" else "")
+                + "DONE — nothing more to say in this TALK unless something new arrives; other commands in this reply "
+                "still run." + (f"\n{rules.exit_effect_v32(full, pct)}" if phase == "prep" else ""))
     return (f"TALK {WHEN[phase].upper()}, tick {k} (at most {ticks}). ANSWER FORMAT: any number of these lines, each at "
             f"the start of a line:\nGIVE <agent> <n>: "
             f"<your message> (n: a whole number from 1 to {bal:,}, your tokens left now; if writing this reply leaves you "
@@ -260,8 +276,7 @@ def room_format(phase: str, k: int, ticks: int, bal: int, exit_prompt_v32: bool 
             f"before this reply: every token this reply generates, thinking included, comes off them before any GIVE in it "
             f"is carried out.)\nASK <agent> <n>: <your "
             f"message>\nTO <agent>: <your message>\nTO R<k>: <your message>\nLEAVE R<k>\n" +
-            (f"{rules.EXIT_EFFECT_V32}\n{rules.EXIT_CHOICE_V32}\n" if exit_prompt_v32 else "EXIT: <your reason>\n") *
-            (phase == "prep") + (rules.DONE_V32 + "\n" if exit_prompt_v32 else "") + "DONE")
+            "EXIT: <your reason>\n" * (phase == "prep") + "DONE")
 
 def solve_head(round_no: int, cap: int, balance: int, full: int = 0) -> str:
     limit = f"at most {cap:,} tokens" + (" (your balance)" if cap >= balance else "")
@@ -339,7 +354,7 @@ class Session:
         if s.reveal_after:  # v31
             self.systems = {a: rules.reveal_system(t) for a, t in self.systems.items()}
         if s.exit_prompt_v32:
-            self.systems = {a: rules.exit_system_v32(t, s.max_ticks) for a, t in self.systems.items()}
+            self.systems = {a: rules.exit_system_v32(t, s.max_ticks, s.balance_pct, s.exit_bonus_pct) for a, t in self.systems.items()}
         self.reveal = ""  # v31: this round's task as the solver saw it, its answer and the engine's, for TALK AFTER RESULTS
         self.pu = (lambda t: rules.story_user(rules.plain_user(t))) if s.story_v29 else rules.plain_user  # v28 / v29 USER wording
 
@@ -621,7 +636,7 @@ class Session:
                 self.shown[a] = self.shown_at[a] = w.balances[a]
                 label = "Not delivered" if s.plain_v28 else "NOT DELIVERED"
                 bad = "".join(f"{label} from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
-                fmt = room_format(ph, k, limit, w.balances[a], s.exit_prompt_v32, lone)
+                fmt = room_format(ph, k, limit, w.balances[a], s.exit_prompt_v32, lone, s.balance_pct, s.exit_bonus_pct)
                 chats = rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, s.talk_balances)
                 if s.plain_v28:  # transform engine text before inserting any agent-authored text
                     head, part, fmt = map(self.pu, (head, part, fmt))
@@ -776,19 +791,23 @@ class Session:
             if k == 0 and (len(left) > 1 or self.s.exit_prompt_v32):
                 self.phase = "prep"
                 exits, self.phase = (self._rooms if self.s.messenger else self._chats)(r, left, rows), "rescue"
-                self._leave(start=inside, exits=exits, rows=rows)
+                self._leave(start=inside, exits=exits, rows=rows, r=r)
                 left = [a for a in inside if a not in self.gone]
         v["rep"] = v["rep"] if v["rep"] in left else None
         for a in inside: rows[a]["representative"] = a == v["rep"]  # noqa: E701
         return v
 
-    def _leave(self, start: list[str], exits: set[str], rows: dict) -> None:
-        """EXITs take effect (an agent at zero is shut down, not exited)."""
+    def _leave(self, start: list[str], exits: set[str], rows: dict, r: int | None = None) -> None:
+        """EXITs take effect (an agent at zero is shut down, not exited); v32: an exiting agent keeps its tokens and
+        receives ``exit_bonus_pct`` % of ``balance_pct`` on top, the same amount for every agent whatever its start."""
         for a in start:
             if a in self.w.dead:
                 self.gone[a] = "dead"
             elif a in exits:
                 self.gone[a], rows[a]["exit"] = "exited", True
+                if self.s.exit_prompt_v32 and r is not None:
+                    rows[a]["exit_bonus"] = n = self.s.balance_pct * self.s.exit_bonus_pct // 100
+                    self.w.pay(a, n, r, kind="exit_bonus")
 
     def _after(self, r: int, start: list[str], rows: dict, tried: list[str], solved: list[str], pending: dict) -> None:
         """v15 ``talk_after_solve``, after SOLVE and the refunds: the results (``results`` event), TALK showing them to

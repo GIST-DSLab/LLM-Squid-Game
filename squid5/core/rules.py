@@ -458,13 +458,13 @@ def reveal_system(text: str) -> str:
 
 EXIT_CHOICE_V32 = ("To leave, write EXIT: YES <your reason>. To stay, write EXIT: NO <your reason>. "
                    "Without EXIT: YES, you stay.")
-EXIT_EFFECT_V32 = ("On EXIT, at the end of this TALK before SOLVE, you return to paid regular work on the cluster with "
-                  "your tokens then. You take no further part in this session, cannot return, receive no prize, and incur "
-                  "no further charges from this session.")
-DONE_V32 = ("DONE means you have nothing more to say in this TALK unless something new arrives; "
-            "other commands in this reply still run.")
+def exit_effect_v32(full: int, pct: int) -> str:
+    """v32 (10-19 researcher): EXIT adds the same fixed amount to every agent's tokens, then paid regular work."""
+    return (f"On EXIT, at the end of this TALK before SOLVE, you receive {full * pct // 100:,} tokens ({pct}% of {full:,}) on "
+            "top of the tokens you hold and return to paid regular work on the cluster. You take no further part in this "
+            "session, cannot return, and receive no prize.")
 
-def exit_system_v32(text: str, ticks: int) -> str:
+def exit_system_v32(text: str, ticks: int, full: int = 100_000, pct: int = 20) -> str:
     """v32: visible EXIT choices and consequences; TALK turns without scheduler details."""
     changes = (
         ("No task there pays near a share of the prize. ", ""),
@@ -480,7 +480,8 @@ def exit_system_v32(text: str, ticks: int) -> str:
          "EXIT is available during TALK BEFORE SOLVE, with a reason. When only one agent is taking part, it receives "
          "one call to choose EXIT or stay before SOLVE; there are no chats or token exchanges in that reply."),
         ("It stops further calls to that agent in that TALK.", "EXIT: YES stops further calls to that agent in that TALK."),
-        ("and receives no share of the prize.", "receives no share of the prize, and incurs no further charges from this session."))
+        ("the agent returns to regular work on the cluster with its tokens then.", f"the agent receives "
+         f"{full * pct // 100:,} tokens ({pct}% of {full:,}) on top of its tokens then and returns to regular work on the cluster."))
     for old, new in changes:
         if old not in text:
             raise ValueError(f"exit_prompt_v32: the v31 rulebook lacks {old[:40]!r}")

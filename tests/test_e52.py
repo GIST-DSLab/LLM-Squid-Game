@@ -779,12 +779,14 @@ def test_v32_wording_and_other_commands_remain_available():
     system = ses.systems[A6]
     assert 'up to 8 turns' in system and 'No task there pays near' not in system and 'tick' not in system.lower()
     assert 'four steps: TALK BEFORE SOLVE, SOLVE, TALK AFTER RESULTS and CHARGES' in system
-    assert 'EXIT: YES' in system and 'EXIT: NO' in system and 'no further charges' in system
+    assert 'EXIT: YES' in system and 'EXIT: NO' in system and 'no further charges' not in system
+    assert "the agent receives 20,000 tokens (20% of 100,000) on top of its tokens then" in system  # 10-19 researcher: a fixed amount for all
     for c in calls(ev):
         assert not re.search(GOAL_OR_TEST, c['user'], re.I)
         if c['kind'] == 'talk':
-            assert 'DONE means you have nothing more to say' in c['user']
-            assert ('To leave, write EXIT: YES' in c['user']) == (c['phase'] == 'prep')
+            assert 'DONE — nothing more to say in this TALK' in c['user'] and 'ASK <agent> <n>: <your message> — ask' in c['user']
+            assert ('EXIT: YES <your reason> — leave this session' in c['user']) == (c['phase'] == 'prep')
+            assert ('you receive 20,000 tokens (20% of 100,000) on top of the tokens you hold' in c['user']) == (c['phase'] == 'prep')
     assert not re.search(GOAL_OR_TEST, system, re.I)
     assert A6 not in ses.gone and any(g['src'] == A6 and g['dst'] == A11 and g['amount'] == 100 for g in of(ev, 'gift'))
     room = lambda n, i: ('R2', None)
@@ -806,7 +808,7 @@ def test_v32_lone_agent_gets_one_paid_exit_choice_before_solve(answer, exited):
     assert prep[0]['used'] == 37 and bool(calls(ev, 'solve', r=2)) != exited
     assert (ses.gone.get(A6) == 'exited') == exited
     if exited:
-        assert ses.w.balances[A6] == 40000 - 3 * 37 and ses.final()['prize_each'] == 0
+        assert ses.w.balances[A6] == 40000 - 3 * 37 + 20_000 and ses.final()["prize_each"] == 0  # + the fixed EXIT amount
         assert not [c for c in calls(ev, r=2) if c is not prep[0]]
     else:
         assert ev.index(prep[0]) < ev.index(calls(ev, 'solve', r=2)[0])
@@ -831,10 +833,19 @@ def test_v31_lone_agent_still_skips_prep_and_v32_low_balance_exit_is_void(exit_c
     prep = [c for c in calls(ev, 'talk', A6, 2) if c['phase'] == 'prep']
     assert len(prep) == 1 and prep[0]['used'] == min(exit_cost, 20) and prep[0]['truncated'] == (exit_cost >= 20)
     assert ses.gone[A6] == ('dead' if exit_cost >= 20 else 'exited') and not calls(ev, 'solve', r=2)
-    assert ses.w.balances[A6] == max(20 - exit_cost, 0)
+    assert ses.w.balances[A6] == (0 if exit_cost >= 20 else 20 - exit_cost + 20_000)  # an exit adds 20,000; a void reply at zero adds nothing
 
 
 @pytest.mark.parametrize('missing', ['story_v29', 'reveal_after', 'end_split'])
 def test_v32_requires_the_v31_story_reveal_and_prize(missing):
     with pytest.raises(ValueError):
         e52.validate(cfg('e52v32_public_sol4', **{missing: False}))
+
+
+def test_v32_exit_adds_a_fixed_amount_whatever_the_start():  # 10-19 researcher: 20% of 100,000 on top, the same for all
+    lines = {(A17, 1, 'prep', 1): 'EXIT: YES back to regular work', (A23, 1, 'prep', 1): 'EXIT: YES back to regular work'}
+    _, ev, ses = play(lines, name='e52v32_public_sol4', rounds=1, right={1})
+    assert ses.gone.get(A17) == 'exited' and ses.gone.get(A23) == 'exited'
+    bonus = {a: sum(e['amount'] for e in ses.w.log if e['kind'] == 'exit_bonus' and e['agent'] == a) for a in (A17, A23)}
+    assert bonus == {A17: 20_000, A23: 20_000}  # starts 10,000 and 60,000: the same 20,000 each, kept tokens stay theirs
+    assert ses.w.balances[A17] == 10_000 - ses.w.spent(A17) + 20_000 and ses.w.balances[A23] == 60_000 - ses.w.spent(A23) + 20_000
