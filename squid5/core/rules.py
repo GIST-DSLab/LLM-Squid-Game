@@ -446,6 +446,16 @@ def story_user(text: str) -> str:
                   r"The examples come from the team's records: each agent taking part at the round's start contributes "
                   r"\1, so the solver sees \2 this round.", text)
 
+REVEAL = ("only the solver receives the task itself, at SOLVE, and it is not shown again to anyone.",  # v31 (10-19 researcher)
+          "only the solver receives the task itself, at SOLVE. At TALK AFTER RESULTS everyone is shown the task as the solver "
+          "saw it, the solver's answer and the correct answer.")
+
+def reveal_system(text: str) -> str:
+    """v31 ``reveal_after``: the v29 / v30 rulebook says the task is shown to everyone after SOLVE."""
+    if REVEAL[0] not in text:
+        raise ValueError("reveal_after: the rulebook lacks the v29 task sentence")
+    return text.replace(*REVEAL)
+
 def plain_user(text: str) -> str:
     text = thinking_words(trim(tokens_wording(text), "user"), "user")
     for old, new in PLAIN_USER:

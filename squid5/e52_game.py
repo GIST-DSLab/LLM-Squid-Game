@@ -68,6 +68,7 @@ class Settings:
     last_reply: bool = False  # v25 (10-19): each TALK message shows what the agent's last reply generated, thinking included
     task_brief: bool = False  # v27 (10-19): no signal task in the rulebook; the TALK BEFORE SOLVE tells every agent the round's kind of task
     plain_v28: bool = False  # v28: operational prompts, task details only at SOLVE
+    reveal_after: bool = False  # v31 (10-19): TALK AFTER RESULTS shows everyone the task as the solver saw it, its answer and the engine's
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
     group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
@@ -113,8 +114,8 @@ def validate(cfg) -> None:
         raise ValueError("game: messenger needs private_balances and trim_prompts; max_ticks >= 1; room_history >= 0; group_chat needs messenger")
     if s.plain_v28 and not all((s.messenger, s.private_balances, s.trim_prompts, s.thinking_words, s.group_chat, s.task_brief, s.exit_work)):
         raise ValueError("plain_v28 needs the v27 messenger, privacy, thinking, group, task and exit wording")
-    if s.story_v29 and not s.plain_v28:
-        raise ValueError("story_v29 needs plain_v28")
+    if s.story_v29 and not s.plain_v28 or s.reveal_after and not s.story_v29:
+        raise ValueError("story_v29 needs plain_v28; reveal_after needs story_v29")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -325,6 +326,9 @@ class Session:
             self.systems = {a: rules.plain_system(a, s.solve_cap, s.max_ticks, s.survivor_prize, s.end_split) for a in AGENTS}
         if s.story_v29:  # v29
             self.systems = {a: rules.story_system(t, s.end_split) for a, t in self.systems.items()}
+        if s.reveal_after:  # v31
+            self.systems = {a: rules.reveal_system(t) for a, t in self.systems.items()}
+        self.reveal = ""  # v31: this round's task as the solver saw it, its answer and the engine's, for TALK AFTER RESULTS
         self.pu = (lambda t: rules.story_user(rules.plain_user(t))) if s.story_v29 else rules.plain_user  # v28 / v29 USER wording
 
     def present(self) -> list[str]:
@@ -448,7 +452,8 @@ class Session:
         return (rules.team_state(r, dict(w.balances), dict(self.gone), self.history, a, s.balance_pct, self.starts if s.private_balances else None),
                 f"THIS ROUND'S SOLVER (chosen by the system): {'you' if self.vote['rep'] == a else self.vote['rep']}. SOLVE comes after this TALK."
                 + (f"\n{rules.task_brief(s.public_per_agent, len(self.taking_part))}" if s.task_brief else "")  # v27
-                if self.phase == "prep" else results_view(self.results, a, w.balances, self.gone, s.private_balances))
+                if self.phase == "prep" else results_view(self.results, a, w.balances, self.gone, s.private_balances)
+                + (f"\n\n{self.reveal}" if s.reveal_after and self.reveal else ""))
 
     def _exit(self, a: str, p: dict, exits: set, rows: dict) -> None:
         p["exit"] = p.get("exit") and self.phase == "prep"  # v17b: no EXIT after RESULTS
@@ -710,6 +715,13 @@ class Session:
                 b = beliefs.get(a) or {"belief": None, "belief_raw": None, "belief_sum": None, "belief_error": "void reply"}
                 rows[a].update(b, **(belief_scores(b["belief"], truth[0], task["by_n"][str(min(len(
                     start), 4))]["shares"], ans) if b["belief"] else {}))
+        if s.reveal_after:  # v31: as the solver saw it (the same wording pass as its SOLVE message), then both answers
+            said = answers.get(self.vote["rep"], (None,))[0] if self.vote["rep"] else None
+            self.reveal = ("This round's task, as the solver saw it (now shown to everyone):\n"  # without the solver's instruction line
+                           + rules.task_spec().split("\n", 1)[1] + "\n"
+                           + rules.puzzle_view(puzzle, [("shown to all", c) for c in dealt.public])
+                           + f"\nSolver's answer: {', '.join(said) if isinstance(said, list) else 'no valid answer'}. "
+                           f"Correct answer: {', '.join(truth)}.")
         refused = {e for e in failed if self._refused.get((r, e))}  # not charged
         charged = [a for a in failed if a not in refused]  # the solver's miss charges every agent taking part
         pending = self.settle(r, solved, start if charged else [])

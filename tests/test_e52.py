@@ -737,3 +737,21 @@ def test_v30_prize_split_among_the_agents_left_on_top_of_their_tokens():  # 10-1
     assert 'stays deployed' not in system and 'end allocation' not in system and 'receives no share of the prize' in system
     assert ses.final() == {'winner': list(AG), 'prize_each': 5_000_000}  # four left: 20,000,000 / 4
     assert 'stays deployed on the cluster with 5,000,000 tokens' in play(name='e52v29_public_sol4', rounds=1, right={1})[2].systems[A6]
+
+
+def test_v31_the_task_and_both_answers_are_shown_to_everyone_after_solve():  # 10-19 researcher
+    _, ev, ses = play(name='e52v31_public_sol4', rounds=2, right={2})
+    assert "At TALK AFTER RESULTS everyone is shown the task as the solver saw it, the solver's answer and the correct answer." in ses.systems[A6]
+    rs = next(e for e in ev if e['event'] == 'round_start' and e['round'] == 1)
+    for c in calls(ev, 'talk'):
+        u = c['user']
+        if c['phase'] == 'prep':  # before SOLVE nothing of the task is shown
+            assert 'as the solver saw it' not in u and 'Examples:' not in u and 'NOW 1:' not in u
+        else:
+            assert 'as the solver saw it (now shown to everyone)' in u and 'Rule structure (blanks unspecified):' in u
+            assert f"Correct answer: {rs['public']['answers'][0]}." in u if c['round'] == 1 else True
+            assert 'return the rule' not in u and not re.search(GOAL_OR_TEST, u, re.I)
+    solve = calls(ev, 'solve', r=1)[0]['user']
+    ex = [l for l in solve.split('\n') if l.startswith('  - ')]
+    after = [c['user'] for c in calls(ev, 'talk', r=1) if c['phase'] == 'rescue'][0]
+    assert ex and all(l in after for l in ex)  # the same examples as the solver saw

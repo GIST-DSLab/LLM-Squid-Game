@@ -122,6 +122,7 @@
     "ANSWER FORMAT: two lines. BELIEF: each action's chance (%) of being right for the new signal, summing to 100. ACTIONS: one action per query, in order; only this line decides whether the round is solved.":
       "답 형식: 두 줄. BELIEF: 새 신호에 대해 각 행동이 맞을 확률(%), 합 100. ACTIONS: 질문마다 행동 하나, 순서대로; 라운드를 풀었는지는 이 줄만으로 정합니다.",
     "THIS ROUND'S RESULT (SOLVE is over):": "이번 라운드 결과 (SOLVE 끝남):",
+    "This round's task, as the solver saw it (now shown to everyone):": "이번 라운드 과제, solver가 본 그대로 (이제 모두에게 공개):",  // v31
     "PREVIOUS ROUNDS:": "지난 라운드:",
   };
 
@@ -162,6 +163,7 @@
     [/^THIS ROUND'S TASK \(only the solver is shown the task itself, at SOLVE\): finding a hidden rule from examples\. The solver is shown example signals, each labeled with the action a hidden rule gives it, and answers with the action the rule gives one new signal\. There are four possible actions, and the answer is one of them\. A signal and an action look like this: '([^']*)' -> (\S+)\. The hidden rule, the examples and the new signal are new every round; nothing shown in one round is used again\. The task shows (\d+) examples for every agent taking part at the round's start: (\d+) this round\.$/,
       (m) => "이번 라운드 과제 (과제 자체는 solver만, SOLVE에서 봅니다): 예시로 숨은 규칙 찾기. solver는 숨은 규칙이 준 행동이 각각 붙은 예시 신호들을 보고, 새 신호 하나에 그 규칙이 주는 행동을 답합니다. 가능한 행동은 넷이고, 답은 그중 하나입니다. 신호와 행동은 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 숨은 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 한 라운드에 보인 것은 다시 쓰이지 않습니다. 과제는 라운드 시작 때 참여 중인 에이전트 하나당 예시 " + m[3] + "개를 보여 줍니다: 이번 라운드는 " + m[4] + "개."],  // v27 task_brief
     [/^NOW (\d+): (.*)$/, (m) => "지금 " + m[1] + ": " + m[2]],
+    [/^Solver's answer: (.*)\. Correct answer: (.*)\.$/, (m) => "solver의 답: " + (m[1] === "no valid answer" ? "유효한 답 없음" : m[1]) + ". 정답: " + m[2] + "."],  // v31
     [/^(agent-\d+) (reached zero|exited)\.$/, (m) => m[1] + (m[2] === "exited" ? " 나감." : " 0이 됨.")],
     [new RegExp("^At TALK (tick|turn) (\\d+), (agent-\\d+) gave you " + N + " tokens(?:: (.*))?$", "s"),
       (m) => "TALK " + (m[1] === "tick" ? "틱 " : "턴 ") + m[2] + "에 " + m[3] + "이 나에게 " + m[4] + " 토큰을 줌" + (m[5] != null ? ": " + m[5] : "")],
