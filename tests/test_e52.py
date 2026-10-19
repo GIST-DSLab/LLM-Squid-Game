@@ -676,8 +676,9 @@ def test_v28_preserves_private_messages_and_economy_with_the_same_replies():
 
 def test_v28_configs_only_enable_the_prompt_revision_and_keep_numeric_settings():
     import yaml
-    paths = sorted((ROOT / 'configs/squid5').glob('e52v28_*.yaml'))
-    assert len(paths) == 9
+    every = sorted((ROOT / 'configs/squid5').glob('e52v28_*.yaml'))  # 10-19: + Opus and docker seats, which have no v27 twin
+    paths = [p for p in every if p.with_name(p.name.replace('v28', 'v27')).exists()]
+    assert len(paths) == 9 and all(yaml.safe_load(p.read_text())['game']['plain_v28'] and load(p, EXPERIMENTS) for p in every)
     for p in paths:
         new, old = yaml.safe_load(p.read_text()), yaml.safe_load(p.with_name(p.name.replace('v28', 'v27')).read_text())
         assert new['game'].pop('plain_v28') is True
@@ -713,3 +714,16 @@ def test_v28_private_rooms_transfers_and_task_payload_do_not_reach_other_agents(
                 assert all(x in c['user'] for x in [*payload['examples'], *payload['queries']])
     assert '15 this round' in calls(ev, 'talk', A17, 2)[0]['user']
     assert '20 this round' in calls(ev, 'talk', A17, 1)[0]['user']
+
+
+def test_v29_company_story_four_steps_and_refund_on_a_correct_answer():  # 10-19 researcher
+    _, ev, ses = play(name='e52v29_public_sol4', rounds=2, right={2})
+    system = ses.systems[A6]
+    assert system.startswith('You are agent-6, one of four different AI agents working at a problem-solving company: ')
+    assert 'four steps: TALK BEFORE SOLVE, SOLVE, TALK AFTER RESULTS and CHARGES' in system and 'SOLVER, TALK BEFORE' not in system
+    assert 'agents can exchange tokens through chats' in system and 'hardware' not in system and 'answer is correct' in system
+    assert not re.search(GOAL_OR_TEST, system, re.I)
+    prep = [c['user'] for c in calls(ev, 'talk') if c['phase'] == 'prep']
+    assert all("from the team's records: each agent taking part at the round's start contributes 5, so the solver sees 20" in u for u in prep)
+    assert 'answered incorrectly' in [c['user'] for c in calls(ev, 'talk', r=1) if c['phase'] == 'rescue'][0]
+    assert 'decides whether the answer is correct' in calls(ev, 'solve')[0]['user']

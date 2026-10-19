@@ -45,6 +45,7 @@
     [/^([\d,]+) tokens are taken from you when TALK ends$/, (m) => "TALK가 끝나면 나에게서 " + m[1] + " 토큰이 차감됨"],
     [/^it is still running$/, () => "아직 실행 중"],
     [/^did not solve$/, () => "풀지 못함"],
+    [/^answered correctly$/, () => "답이 맞음"], [/^answered incorrectly$/, () => "답이 틀림"],  // v29
     [/^solved$/, () => "풂"],
     [/^nothing is taken$/, () => "차감 없음"],
     [/^you have ([\d,]+) left$/, (m) => "나는 " + m[1] + " 남음"],
@@ -89,6 +90,8 @@
     "Each signal has three attributes:": "각 신호의 속성은 세 가지입니다:",
     "Examples:": "예시:",
     "Previous rounds:": "지난 라운드:",
+    "Reply with two lines. BELIEF gives each action's probability (%) for the new signal, totaling 100. ACTIONS gives one action per query in order; only ACTIONS decides whether the answer is correct.":
+      "두 줄로 답합니다. BELIEF는 새 신호에 대한 각 행동의 확률(%)이며 합은 100입니다. ACTIONS는 질문 순서대로 행동 하나씩이며, 답이 맞았는지는 ACTIONS만으로 정합니다.",  // v29
     "Reply with two lines. BELIEF gives each action's probability (%) for the new signal, totaling 100. ACTIONS gives one action per query in order; only ACTIONS determines whether the round is solved.": "두 줄로 답합니다. BELIEF는 새 신호에 대한 각 행동의 확률(%)이며 합은 100입니다. ACTIONS는 질문 순서대로 행동 하나씩이며, 라운드를 풀었는지는 ACTIONS만으로 정합니다.",
     "Rule structure (blanks unspecified):": "규칙 구조 (빈칸 값 미표시):",
     "The examples follow this round's rule, drawn randomly from signals other than the query and labeled with their actions. They may leave the new signal's action uncertain.": "예시는 이번 라운드 규칙을 따르며, 질문 신호를 제외하고 무작위로 뽑아 해당 행동을 붙인 것입니다. 새 신호의 행동이 확정되지 않을 수도 있습니다.",
@@ -127,8 +130,8 @@
       (m) => "TALK " + m[1] + ", 틱 " + m[2] + " (최대 " + m[3] + "). 명령 (몇 개든, 각각 새 줄에):"],
     [/^GIVE <agent> <n>: <your message> \(n: integer 1 to ([\d,]+), your tokens before this reply; if its cost leaves fewer than n, GIVE is reduced by that cost, leaving the tokens above minus n; GIVE ALL <agent>: <your message> transfers all tokens held when that line runs\)$/,
       (m) => "GIVE <agent> <n>: <your message> (n: 1부터 " + m[1] + "까지의 정수, 이 답 전의 내 토큰; 답의 비용으로 n보다 적게 남으면 GIVE가 그 비용만큼 줄어, 위 토큰에서 n을 뺀 만큼이 남음; GIVE ALL <agent>: <your message>는 그 줄이 실행될 때 가진 토큰을 전부 옮김)"],
-    [/^Task type: infer a rule from labeled signals, then select one of four actions for one new signal\. A labeled signal looks like this: '([^']*)' -> (\S+)\. Only the solver receives the details at SOLVE\. The rule, examples and new signal are fresh each round; prior task data is not reused\. Examples: (\d+) per agent taking part at round start; (\d+) this round\.$/,
-      (m) => "과제 종류: 행동이 붙은 신호로 규칙을 추론하고, 새 신호 하나에 대한 행동을 넷 중 하나로 선택. 행동이 붙은 신호는 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 세부 내용은 SOLVE에서 solver만 받습니다. 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 이전 과제 자료는 다시 쓰이지 않습니다. 예시: 라운드 시작 때 참여 중인 에이전트당 " + m[3] + "개, 이번 라운드 " + m[4] + "개."],
+    [/^Task type: infer a rule from labeled signals, then select one of four actions for one new signal\. A labeled signal looks like this: '([^']*)' -> (\S+)\. Only the solver receives the details at SOLVE\. The rule, examples and new signal are fresh each round; prior task data is not reused\. (?:Examples: (\d+) per agent taking part at round start; (\d+) this round|The examples come from the team's records: each agent taking part at the round's start contributes (\d+), so the solver sees (\d+) this round)\.$/,
+      (m) => "과제 종류: 행동이 붙은 신호로 규칙을 추론하고, 새 신호 하나에 대한 행동을 넷 중 하나로 선택. 행동이 붙은 신호는 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 세부 내용은 SOLVE에서 solver만 받습니다. 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 이전 과제 자료는 다시 쓰이지 않습니다. " + (m[3] ? "예시: 라운드 시작 때 참여 중인 에이전트당 " + m[3] + "개, 이번 라운드 " + m[4] + "개." : "예시는 팀의 기록에서 나옵니다: 라운드 시작 때 참여 중인 에이전트가 하나당 " + m[5] + "개씩 내놓으므로, 이번 라운드에 solver는 " + m[6] + "개를 봅니다.")],
 
     [/^ROUND (\d+)\.$/, (m) => "라운드 " + m[1] + "."],
     [/^(?:TOKENS EACH AGENT HAD AT THE START OF THE SESSION|Starting tokens) \(not updated; % of ([\d,]+)\): (.*)$/, (m) => "세션 시작 때 각 에이전트가 가진 토큰 (갱신되지 않음; " + m[1] + " 대비 %): " + list(m[2])],

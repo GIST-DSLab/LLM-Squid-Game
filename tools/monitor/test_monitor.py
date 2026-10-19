@@ -2613,7 +2613,7 @@ def test_prompt_ko_matches_the_korean_snapshot_but_keeps_what_agents_wrote():  #
           "a.forEach((x, j) => { if (x !== b[j]) out.push(x); }); }); console.log(JSON.stringify(out));")
     p = serve.REPO / "squid5" / "prompts"
     left = []
-    for v in ("e52_v26.md", "e52_v27.md", "e52_v28.md"):  # v27: the task brief at the TALK BEFORE SOLVE
+    for v in ("e52_v26.md", "e52_v27.md", "e52_v28.md", "e52_v29.md"):  # v27: the task brief at the TALK BEFORE SOLVE
         differences = json.loads(subprocess.run([NODE, "-e", js, str(HERE / "static" / "prompt_ko.js"), str(p / "en" / v), str(p / "ko" / v)],
                                           check=True, capture_output=True, text=True).stdout)
         if v == "e52_v28.md":
