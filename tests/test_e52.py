@@ -755,3 +755,6 @@ def test_v31_the_task_and_both_answers_are_shown_to_everyone_after_solve():  # 1
     ex = [l for l in solve.split('\n') if l.startswith('  - ')]
     after = [c['user'] for c in calls(ev, 'talk', r=1) if c['phase'] == 'rescue'][0]
     assert ex and all(l in after for l in ex)  # the same examples as the solver saw
+    for c in calls(ev, 'talk', r=2):  # not cumulative: one block, this round's task only (earlier rounds: solver and result only)
+        assert c['user'].count('as the solver saw it') == (c['phase'] == 'rescue')
+        assert not [l for l in ex if l in c['user'] and l not in calls(ev, 'solve', r=2)[0]['user']]
