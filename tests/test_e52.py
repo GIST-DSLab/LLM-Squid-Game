@@ -590,3 +590,6 @@ def test_v25_spells_out_thinking_and_shows_the_last_reply_cost():  # 10-19 resea
     assert "including your thinking (the reasoning you do before you answer)" in c6[1]["user"]
     res24, ev24, _ = play(lines, name="e52v24_public_sol4", rounds=1, right={1})
     assert all("YOUR LAST REPLY" not in c["user"] for c in calls(ev24, "talk"))
+    said = {**lines, (A11, 1, "prep", 2): "TO R1: my replies (thinking included) cost more\nDONE"}  # GLM 4101 (10-19) stopped here
+    res, ev, _ = play(said, name="e52v25_public_sol4", rounds=1, right={1})
+    assert "(thinking included) cost more" in [c for c in calls(ev, "talk", A6) if c["phase"] == "prep"][1]["user"]

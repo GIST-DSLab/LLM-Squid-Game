@@ -126,11 +126,11 @@ THINKING = {  # v25 (10-19 researcher): say what "thinking" is the first time; [
               "thinking (the reasoning you do before you answer),"), (", thinking included.", ", including your thinking.")]}
 
 def thinking_words(text: str, kind: str) -> str:
-    """v25 ``thinking_words``: "thinking included" spelled out (system: third person; user: second person)."""
+    """v25 ``thinking_words``: "thinking included" spelled out (system: third person; user: second person). A user
+    message also holds the agents' own chat lines, which may say "thinking included" (GLM 4101, 10-19): no check here;
+    tests/test_e52.py checks the engine's own wording."""
     for a, b in THINKING[kind]:
         text = text.replace(a, b)
-    if "thinking included" in text:
-        raise ValueError(f"thinking_words: an unmapped 'thinking included' is left in a {kind} message")
     return text
 
 def split_prize(text: str, pool: int) -> str:
