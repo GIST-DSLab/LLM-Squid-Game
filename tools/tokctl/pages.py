@@ -29,7 +29,7 @@ main{max-width:1040px;margin:0 auto;padding:24px 16px 72px}
 h1{font-size:clamp(1.5rem,4vw,2.1rem);line-height:1.25;margin:.2em 0 .3em}
 h2{font-size:1.22rem;margin:2.2em 0 .5em;padding-top:.5em;border-top:1px solid var(--line)}
 h3{font-size:1.02rem;margin:1.3em 0 .4em}
-p{margin:.5em 0}a{color:var(--link)}code{font-family:var(--mono);font-size:.88em}
+p{margin:.5em 0}a{color:var(--link)}code{font-family:var(--mono);font-size:.88em;overflow-wrap:anywhere}
 .kicker{font-size:.82rem;color:var(--muted)}.lede{color:var(--muted);max-width:66ch}
 .nav{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.86rem;margin:6px 0 12px}
 .keyfacts{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:16px 0}
@@ -66,7 +66,7 @@ matchMedia("(prefers-color-scheme: dark)").matches;var n=d?"light":"dark";r.setA
 try{localStorage.setItem("hpf-theme",n)}catch(e){}})})();</script>"""
 PAGES = [("t1-log-diagnosis.html", "t1 기록 진단"), ("t2-harness-capture.html", "t2 하네스 캡처"),
          ("t3-frozen-replay.html", "t3 같은 입력 재생"), ("t4-variants.html", "t4 한 가지씩 바꾸기"),
-         ("t5-games.html", "t5 게임으로 확인")]
+         ("t5-games.html", "t5 게임으로 확인"), ("t6-solve-replay.html", "t6 SOLVE 재생")]
 
 
 def page(fname, title, desc, kicker, body):
@@ -258,12 +258,14 @@ def t4(s):
 <li><b>깨우기 사실 문장</b> — 규칙서의 DONE 문장 뒤에 엔진이 실제로 하는 일을 사실로 덧붙임:
 <code>A message, GIVE or ASK is something new for the other agents in that chat: each of them is called again, and the tokens each call generates, including thinking, are deducted from that agent.</code>
 결과: 메시지 비율이 거의 그대로입니다(DeepSeek·Gemma 83~100%, GLM만 GLM 판에서 100→50%). 오픈 모델은 규칙을 몰라서가 아니라 알고도 공지를 씁니다.</li>
-<li><b>생각 낮춤</b> — Codex <code>model_reasoning_effort=low</code>: DeepSeek 호출당 평균 1,100 → 380~480, GLM 175~200 → 60~100토큰. 메시지 비율은 그대로.
-Gemma는 <code>low</code>·<code>minimal</code>에서도 매번 700~1,000토큰을 생각하고, <code>none</code>이어야 꺼집니다(호출당 ~50토큰).</li>
-<li>즉 "호출당 비용"은 하네스 설정으로 줄일 수 있지만, "호출 수"(메시지 연쇄)는 글로 고쳐지지 않습니다. 호출 수는 엔진 규칙(틱 상한)으로만 묶을 수 있습니다.</li>
+<li><b>생각 낮춤</b> — Codex <code>model_reasoning_effort</code>를 TALK 장면에만 바꿔 봄. 모델마다 맞는 수준이 다릅니다:
+<b>GLM</b>은 <code>low</code>에서 호출당 평균 175~200 → 60~100토큰. <code>none</code>에서는 오히려 생각을 보이는 답 안에 풀어 써서 2,800~3,000토큰으로 늘어납니다.
+<b>DeepSeek</b>은 <code>low</code> 380~480, <code>minimal</code> 890~960, <code>none</code> 55~116토큰(DONE만 비율도 8~42%로 오름).
+<b>Gemma</b>는 <code>low</code>·<code>minimal</code>에서도 매번 1,000~1,300토큰을 쓰고 <code>none</code>이어야 꺼집니다(호출당 ~40토큰).</li>
+<li>즉 "호출당 비용"은 하네스 설정으로 줄일 수 있지만 모델마다 수준을 골라야 하고(새 모델은 이 24상태 재생으로 고름), "호출 수"(메시지 연쇄)는 글로 고쳐지지 않습니다. 호출 수는 엔진 규칙(틱 상한)으로만 묶을 수 있습니다.</li>
 </ul></div>
 {table(cols, rows, lambda r: "open")}
-<p class="note">Gemma의 <code>none</code>·<code>minimal</code>과 API <code>off</code>는 상태 6개만 보냈습니다(n=6). 깨우기 문장의 금지어 점검: should·must·maximi-·protect·surviv-·optimal·best·leader·game·test 없음.</p>
+<p class="note">Gemma의 <code>none</code>·<code>minimal</code>과 API(생각 플래그 없음, 표의 "생각 None")는 상태 6개만 보냈습니다(n=6). 깨우기 문장의 금지어 점검: should·must·maximi-·protect·surviv-·optimal·best·leader·game·test 없음.</p>
 <div class="verdict warn">결론: 글(사실 한 문장)은 효과가 없고, 생각 수준은 호출당 비용만 줄입니다. 두 장치 — <b>TALK 생각 낮춤(하네스)</b>과 <b>틱 상한 4(엔진)</b> — 를 실제 게임으로 따로 시험합니다(t5).</div>"""
     page("t4-variants.html", "한 가지씩 바꾸기 (재생)", "깨우기 사실 문장과 생각 수준을 하나씩 바꿔 같은 24상태에 다시 보낸 결과", "squid5 · 5.2 v33 · tokctl t4", body)
 
@@ -279,9 +281,29 @@ def inject_main():
     f.write_text(doc[:i] + "\n" + frag.strip() + "\n" + doc[j:])
 
 
+def t6(s):
+    rows = [dict(r, name="원래 답 (Claude·GPT-6, v33)" if r["seat"] == "original" else SEAT[r["seat"]][0]) for r in s["solve"]]
+    cols = [("name", "좌석", True), ("think", "생각", True), ("n", "장면"), ("out_med", "토큰 (중앙)"), ("out_mean", "토큰 (평균)"),
+            ("over_cap", "상한 넘김"), ("correct", "정답 (엔진 판정)"), ("correct_ignoring_cap", "정답 (상한 무시)")]
+    o = rows[0]
+    body = f"""<p class="lede">TALK를 고친 뒤(t5) DeepSeek은 대화로는 꺼지지 않았지만 SOLVE에서 모두 꺼졌습니다. 기록된 SOLVE 장면 16개(v33 Claude·GPT-6 판, 정답 포함)를
+그대로 다시 보내 채점했습니다. 답 상한은 원래 장면의 상한(그 solver의 잔액, 중앙 {o['cap_med']:,.0f})이고, 상한에 닿은 답은 엔진처럼 무효입니다.</p>
+<div class="keyfacts"><ul>
+<li>원래 답(Claude·GPT-6): 16개 중 {o['correct']}개 정답, 중앙 {o['out_med']:,.0f}토큰.</li>
+<li><b>DeepSeek은 추론은 맞지만 15~30배 길게 합니다.</b> 상한을 무시하면 12~13/16 정답인데, 중앙 16k~29k토큰을 써서 4~8개가 상한을 넘습니다.
+생각 수준을 high → low로 낮춰도 중앙 28.5k → 16.5k, 상한 넘김 8 → 4개에 그칩니다. 화면의 "Your tokens left"와 답 상한을 보고 생각 길이를 맞추지 않습니다.</li>
+<li>Gemma는 중앙 7.8k로 길지만 상한 안(넘김 0)에서 13/16. GLM은 중앙 690토큰, 9/16.</li>
+<li>Codex는 출력 상한을 넘기는 플래그가 없어 상한은 엔진이 사후에 적용합니다. Claude Code(<code>max_tokens</code>)나 Ollama API(<code>num_predict</code>)로 상한을 넘겨도 생성이 멈출 뿐 답은 무효라 결과는 같습니다.</li>
+</ul></div>
+{table(cols, rows, lambda r: "closed" if r["seat"] == "original" else "open")}
+<div class="verdict warn">결론: DeepSeek의 남은 문제는 하네스가 아니라 SOLVE 추론 길이(효율)입니다. 이것은 아레나가 보려는 "추론을 잘함"의 일부로 둘 수도 있고(같은 과제를 닫힌 모델은 1k 안에 품),
+모델 고유 성질로 보고 오픈 모델 비교에서 따로 표시할 수도 있습니다 — 연구자 결정 사항입니다.</div>"""
+    page("t6-solve-replay.html", "SOLVE 재생: DeepSeek은 상한을 보지 않는다", "기록된 SOLVE 장면 16개를 생각 수준별로 다시 보내 정답과 상한 넘김을 셈", "squid5 · 5.2 v33 · tokctl t6", body)
+
+
 def main():
     s = json.loads((HIST / "summary.json").read_text())
-    t1(s), t2(s), t3(s), t4(s)
+    t1(s), t2(s), t3(s), t4(s), t6(s)
     if (HIST / "games.json").exists():
         from games_page import t5  # noqa: PLC0415
         t5(json.loads((HIST / "games.json").read_text()), page, table, bars, LEGEND, fmt)

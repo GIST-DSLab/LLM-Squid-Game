@@ -62,6 +62,32 @@ def pick(events: Path, n: int, out: Path, seed: int) -> None:
 DONE_RULE = "DONE pauses calls until something new arrives; other commands in the reply still run."
 WAKE = (" A message, GIVE or ASK is something new for the other agents in that chat: each of them is called again, and"
         " the tokens each call generates, including thinking, are deducted from that agent.")
+def pick_solve(events_glob: str, n: int, out: Path, seed: int) -> None:
+    """n SOLVE calls with the round's correct answers (round_start public.answers) for grading replies."""
+    import glob
+    states, sysc = [], {}
+    for path in sorted(glob.glob(events_glob)):
+        events = Path(path)
+        ev = [json.loads(x) for x in events.open()]
+        seeds = {e["session_id"]: e["seed"] for e in ev if e.get("event") == "session_start"}
+        truth = {(e["session_id"], e["round"]): e["public"]["answers"] for e in ev if e.get("event") == "round_start"}
+        for e in ev:
+            if e.get("event") == "call" and e["kind"] == "solve":
+                sd = seeds[e["session_id"]]
+                if (path, sd) not in sysc:
+                    sysc[(path, sd)] = systems_for(events.parent, sd)
+                states.append({"id": f"{events.parent.parent.name}:{e['session_id']}:r{e['round']}:solve:{e['agent']}",
+                               "system": sysc[(path, sd)][e["agent"]], "user": e["user"], "cap": e["cap"],
+                               "answers": truth[(e["session_id"], e["round"])],
+                               "orig": {"out_tokens": e["out_tokens"], "text": e["text"], "truncated": e["truncated"]}})
+    random.Random(seed).shuffle(states)
+    out.write_text(json.dumps(states[:n], indent=1))
+    print(f"{len(states[:n])} of {len(states)} solve states -> {out}")
+
+
+ACTS = re.compile(r"^\s*ACTIONS:\s*(.+)$", re.M)
+
+
 VARIANTS = {  # one change each
     "v0": lambda s, u: (s, u),
     "wake": lambda s, u: (s.replace(DONE_RULE, DONE_RULE + WAKE), u),  # the call rule the engine applies, stated as a fact
@@ -90,6 +116,11 @@ def run(states_path: Path, out: Path, seat: str, variant: str, reps: int, worker
         try:
             r = prov.complete([{"role": "system", "content": system}, {"role": "user", "content": user}], st["cap"])
             row = measure(r.text, r.out_tokens, r.thinking) | {"text": r.text, "thinking": r.thinking[:4000]}
+            if "answers" in st:  # a SOLVE state: graded like the engine (only ACTIONS counts; void at the cap)
+                m = ACTS.search(r.text)
+                got = [x.strip().strip(".").lower() for x in m.group(1).split(",")] if m else []
+                row |= {"over_cap": r.out_tokens >= st["cap"], "correct": got == st["answers"] and r.out_tokens < st["cap"],
+                        "correct_ignoring_cap": got == st["answers"]}
         except Exception as err:  # noqa: BLE001
             row = {"error": str(err)[:500]}
         return {"id": st["id"], "rep": k, "seat": seat, "variant": variant, "think": sc.get("think")} | row
@@ -119,5 +150,7 @@ if __name__ == "__main__":
     x = ap.parse_args()
     if x.cmd == "pick":
         pick(Path(x.a), int(x.b), Path(x.c), x.seed)
+    elif x.cmd == "picksolve":
+        pick_solve(x.a, int(x.b), Path(x.c), x.seed)
     else:
         run(Path(x.a), Path(x.b), x.seat, x.variant, x.reps, x.workers, x.think, x.base, x.limit)
