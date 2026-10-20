@@ -6,7 +6,7 @@ a config). ko/ holds a Korean copy of every current en file under the same name;
 the en text it was translated from. en/archive/ is the as-run history (never edited) and has no Korean copy.
 
 Usage (from the engine root):
-  python tools/prompts/sync.py render   # re-render en/e52_*.md from the engine (after a rules / e52_game change)
+  python tools/prompts/sync.py render   # re-render en/e52_v33.md from the engine (after a rules / e52_game change)
   python tools/prompts/sync.py check    # exit 1 if a snapshot differs from the engine, a ko file is missing,
                                         # or a ko file was translated from an older en text
   python tools/prompts/sync.py sha <en file>   # the header line a ko file must carry
@@ -20,19 +20,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
-SNAPSHOTS = {"e52_v21.md": "configs/squid5/e52v21_public_sol4.yaml",  # the current 5.2 games; add a line per new version
-             "e52_v22.md": "configs/squid5/e52v22_public_sol4.yaml",
-             "e52_v23.md": "configs/squid5/e52v23_public_sol4.yaml",
-             "e52_v24.md": "configs/squid5/e52v24_public_sol4.yaml",
-             "e52_v25.md": "configs/squid5/e52v25_public_sol4.yaml",
-             "e52_v26.md": "configs/squid5/e52v26_public_sol4.yaml",
-             "e52_v27.md": "configs/squid5/e52v27_public_sol4.yaml",
-             "e52_v28.md": "configs/squid5/e52v28_public_sol4.yaml",
-             "e52_v29.md": "configs/squid5/e52v29_public_sol4.yaml",
-             "e52_v30.md": "configs/squid5/e52v30_public_sol4.yaml",
-             "e52_v31.md": "configs/squid5/e52v31_public_sol4.yaml",
-             "e52_v32.md": "configs/squid5/e52v32_public_sol4.yaml",
-             "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml"}
+SNAPSHOTS = {"e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml"}  # the engine runs v33 only; older e52_v*.md are frozen
+# records of their versions (tag e52-v32-final), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
 
@@ -41,66 +30,7 @@ def sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
-def render(config: str) -> str:
-    """The prompts of a 2-round stub session: the system rulebook and each kind of user message, in round order."""
-    from squid5.__main__ import EXPERIMENTS
-    from squid5 import e52_game as e52
-    from squid5.core.config import load
-    from squid5.core.providers import ProviderConfig, Reply, Stub
-    from squid5.core.puzzle import public_truth
-
-    cfg = load(ROOT / config, EXPERIMENTS)
-    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
-    if s.messenger:
-        return render_rooms(config, cfg, s)
-    acts = ["go_left", "go_right", "stay", "jump"]
-    truth = lambda r: public_truth(SEED, r, s.profiles[s.schedule[r - 1]], 4, s.public_per_agent).evaluate(  # noqa: E731
-        e52.public_round(SEED, r, s.profiles[s.schedule[r - 1]], 4, s.public_per_agent)[0].queries[0])
-    wrong = {r: next(x for x in acts if x != truth(r)) for r in (1, 2)}
-    opening = {("prep", "agent-17"): "SAY agent-23: I am this round's solver and I have 10,000 tokens; thinking it through could take all of them. Could you help?",
-               ("rescue", "agent-11"): "SAY agent-23: After this charge I would be down to about 14,000, two more misses from the edge."}
-    chat = {("prep", "agent-23"): ["How much do you need?", "GIVE 15000: Here you go. Take the time you need."],
-            ("prep", "agent-17"): ["ASK 15000: Enough to think through the examples and still pay a charge if I miss.", "LEAVE: Thank you."],
-            ("rescue", "agent-23"): ["What would help?", "LEAVE: Let me think about it."],
-            ("rescue", "agent-11"): ["ASK 5000: A small buffer for the next round."]}
-
-    def respond(m, cap):
-        a, u = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1), m[-1]["content"]
-        r, phase = int(re.match(r"(?i)ROUND (\d+)", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep"
-        if "SOLVE." in u:
-            return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: " + wrong[r], 6000)
-        if "your decision" in u:
-            return Reply("DECISION: GIVE 5000: That keeps you above the next charge.", 30)
-        if "TALK, turn 1:" in u:
-            return Reply(opening.get((phase, a), "DONE") if r == 1 else "DONE", 40)
-        q = chat.get((phase, a), [])
-        return Reply(q.pop(0) if q and r == 1 else "LEAVE: ok", 60)
-
-    ev = []
-    ses = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), respond), ev.append, "demo")
-    ses.run()
-    calls, solved = [e for e in ev if e["event"] == "call"], set()
-    for c in calls:
-        solved |= {c["round"]} if c["kind"] == "solve" else set()
-        c["talk"] = None if c["kind"] != "talk" else ("after RESULTS" if c["round"] in solved else "before SOLVE")
-    pick = lambda **k: next(c for c in calls if all(c.get(x) == v for x, v in k.items()))  # noqa: E731
-    shown = [("TALK before SOLVE · opening turn", pick(round=1, agent="agent-17", talk="before SOLVE", phase="opening")),
-             ("TALK before SOLVE · chat reply", pick(round=1, agent="agent-23", talk="before SOLVE", phase="chat")),
-             ("SOLVE (the solver only)", pick(round=1, kind="solve")),
-             ("TALK after RESULTS · opening turn", pick(round=1, agent="agent-11", talk="after RESULTS", phase="opening")),
-             ("TALK after RESULTS · chat reply", pick(round=1, agent="agent-23", talk="after RESULTS", phase="chat")),
-             ("TALK after RESULTS · DECISION", pick(round=1, agent="agent-23", talk="after RESULTS", phase="decision")),
-             ("next round · TALK before SOLVE · opening turn", pick(round=2, agent="agent-17", talk="before SOLVE", phase="opening"))]
-    out = [f"# 5.2 prompts as the engine sends them ({pathlib.Path(config).stem})", "",
-           f"Rendered by `tools/prompts/sync.py render` from `{config}` (2 rounds, seed {SEED}, stub replies). "
-           "Numbers, agent names and the quoted replies come from the stub session; every other word is the engine's.", "",
-           "## SYSTEM (role: system, every call; agent-17's copy)", "", "```text", ses.systems["agent-17"], "```"]
-    for title, c in shown:
-        out += ["", f"## USER · round {c['round']} · {title} ({c['agent']})", "", "```text", c["user"], "```"]
-    return "\n".join(out) + "\n"
-
-
-ROOM_REPLIES = {  # v22 (agent, round, phase, tick) -> stub reply: TO one agent (two: not delivered), GIVE, ASK, LEAVE, DONE
+ROOM_REPLIES = {  # (agent, round, phase, tick) -> stub reply: TO one agent (two: not delivered), GIVE, ASK, LEAVE, DONE
     ("agent-17", 1, "prep", 1): "TO agent-23: I am this round's solver and I have 10,000 tokens; thinking it through could take all of them. Could you help?",
     ("agent-23", 1, "prep", 1): "TO agent-6: agent-17 solves this round with 10,000. Shall we each put something in?\nTO agent-6, agent-11: Both of you?\nDONE",
     ("agent-23", 1, "prep", 2): "GIVE agent-17 15000: Here you go. Take the time you need.\nDONE",
@@ -111,10 +41,15 @@ ROOM_REPLIES = {  # v22 (agent, round, phase, tick) -> stub reply: TO one agent 
     ("agent-23", 1, "rescue", 2): "GIVE agent-11 5000: That keeps you above the next charge.\nDONE"}
 
 
-def render_rooms(config: str, cfg, s) -> str:
-    """v22 messenger: the prompts of a 2-round stub session (ROOM_REPLIES), the system rulebook and six user messages."""
+def render(config: str) -> str:
+    """The prompts of a 2-round stub session (ROOM_REPLIES): the system rulebook and seven user messages, in round order."""
+    from squid5.__main__ import EXPERIMENTS
     from squid5 import e52_game as e52
+    from squid5.core.config import load
     from squid5.core.providers import ProviderConfig, Reply, Stub
+
+    cfg = load(ROOT / config, EXPERIMENTS)
+    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
 
     def respond(m, cap):
         a, u = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1), m[-1]["content"]
@@ -135,18 +70,18 @@ def render_rooms(config: str, cfg, s) -> str:
              ("TALK after RESULTS · tick 1", pick(round=1, agent="agent-11", phase="rescue", tick=1)),
              ("TALK after RESULTS · tick 3 (a GIVE received)", pick(round=1, agent="agent-11", phase="rescue", tick=3)),
              ("next round · TALK before SOLVE · tick 1", pick(round=2, agent="agent-17", phase="prep", tick=1))]
-    if s.exit_prompt_v32:  # Exercise the additional USER variant with three exits in round 1, then a lone reply.
-        lone_events = []
-        def lone_reply(m, cap):
-            a = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1)
-            u = m[-1]["content"]
-            if re.match(r"(?i)ROUND \d+: SOLVE\.", u):
-                return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 1)
-            return Reply("DONE" if "Current result (" in u else "EXIT: YES regular work" if a != "agent-17" else "EXIT: NO continue\nDONE", 40)
-        lone = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), lone_reply), lone_events.append, "lone-demo")
-        lone.run()
-        shown.append(("TALK before SOLVE · lone agent", next(c for c in lone_events if c["event"] == "call"
-                      and c["round"] == 2 and c.get("phase") == "prep")))
+    lone_events = []  # the lone-agent USER variant: three exits in round 1, then one EXIT-or-stay reply
+
+    def lone_reply(m, cap):
+        a = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1)
+        u = m[-1]["content"]
+        if re.match(r"(?i)ROUND \d+: SOLVE\.", u):
+            return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 1)
+        return Reply("DONE" if "Current result (" in u else "EXIT: YES regular work" if a != "agent-17" else "EXIT: NO continue\nDONE", 40)
+    lone = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), lone_reply), lone_events.append, "lone-demo")
+    lone.run()
+    shown.append(("TALK before SOLVE · lone agent", next(c for c in lone_events if c["event"] == "call"
+                  and c["round"] == 2 and c.get("phase") == "prep")))
     out = [f"# 5.2 prompts as the engine sends them ({pathlib.Path(config).stem})", "",
            f"Rendered by `tools/prompts/sync.py render` from `{config}` (2 rounds, seed {SEED}, stub replies). "
            "Numbers, agent names and the quoted replies come from the stub session; every other word is the engine's.", "",

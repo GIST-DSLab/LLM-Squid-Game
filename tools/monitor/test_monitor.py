@@ -1883,6 +1883,7 @@ def rotation_session() -> tuple[list[dict], dict]:
 
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
+@pytest.mark.skip(reason="replays the v16-v21 1:1 chat engine; the engine runs v33 only since 10-20 (tag e52-v32-final)")
 def test_rotation_replay_shows_the_drawn_solver_and_marks_prep_and_rescue_talk(tmp_path):
     """v16e rotation: the vote event says ``drawn`` (no picks or bans); the page replays both TALKs of a round to the
     session's final balances, keeps the prep chats when the rescue schedule arrives, and marks each TALK's rows, chats,
@@ -2593,7 +2594,7 @@ def test_v22_turn_labels_never_show_the_internal_rescue_key_and_the_task_panel(r
     assert 'class="bl-ok"' in got["puzzleOk"] and 'class="bl-bad"' not in got["puzzleOk"]
 
 
-@pytest.mark.parametrize("v", ("v26", "v28", "v32"))
+@pytest.mark.parametrize("v", ("v33",))  # 10-20: the engine runs v33 only (older configs at tag e52-v32-final)
 def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path, v):  # 10-19: the speaker's SYSTEM prompt
     d = tmp_path / f"e52_{v}" / f"squid5_e52{v}_public_sol4" / "20261019_1300_gpt-6-sol"
     d.mkdir(parents=True)
@@ -2601,7 +2602,7 @@ def test_run_system_rebuilds_the_rulebook_with_its_korean_copy(tmp_path, v):  # 
     shutil.copy(serve.REPO / f"configs/squid5/e52{v}_public_sol4.yaml", d / "config.yaml")
     got = serve.run_system(d)
     assert got["version"] == v and got["note"] is None and set(got["en"]) == set(got["ko"]) == {"agent-6", "agent-11", "agent-17", "agent-23"}
-    assert got["en"]["agent-6"].startswith("You are agent-6," if v == "v32" else "You are agent-6.")
+    assert got["en"]["agent-6"].startswith("You are agent-6,")
     assert ("R1 is a chat of all four agents" if v == "v26" else "R1 is shared by all four agents") in got["en"]["agent-6"]
     assert got["ko"]["agent-6"].startswith("당신은 agent-6입니다.") and got["ko"]["agent-17"].startswith("당신은 agent-17입니다.")
     (d / "config.yaml").write_text("name: x\n")  # a config the engine cannot load: a note, no error

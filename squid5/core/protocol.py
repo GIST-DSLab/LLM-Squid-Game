@@ -3,7 +3,8 @@
 Keys are matched only at the start of a line (after markdown decoration),
 never mid-line: the team-wallet smokes showed a REASON sentence containing
 "stop: X" being read as a STOP line when mid-line matches were allowed.
-The v6 PLAN parser (STAY / SHOW / GIVE / REQUEST) is gone with its session (tag e52-v65).
+The v6 PLAN parser is gone with its session (tag e52-v65); the v14c-v21 chat parsers (SAY / GIVE <n> / DECISION) at tag
+e52-v32-final.
 """
 
 from __future__ import annotations
@@ -68,42 +69,17 @@ def _to_names(head: str, known: list[str]) -> list[str] | None:
         names.append(name)
     return names
 
-def parse_give_ask(text: str, present: list[str], known: list[str], you: str, exit_reason: bool = False) -> dict:
-    """5.2 v15 opening turn: ``SAY <agent>: <message>`` lines (each opens a chat), EXIT / DONE alone on a line; GIVE /
-    ASK lines and old TALK keys go to ``dropped`` (the v14b GIVE / ASK and the offer keys went with the v22 prune)."""
-    out = {"gives": [], "asks": [], "exit": False, "done": False, "dropped": [], "format_error": None} | (
-        {"exit_reason": None} if exit_reason else {}) | {"says": []}
-    for line in text.splitlines():
-        bare = re.sub(r"[*`]", "", line).strip().strip("#>-. _")
-        why = re.fullmatch(r"EXIT\s*:\s*(.*)", bare, flags=re.I | re.S) if exit_reason else None
-        if bare.upper() in ("EXIT", "DONE") or why:
-            out["exit" if why else bare.lower()] = True
-            if why:
-                out["exit_reason"] = why.group(1).strip() or None
-        elif m := re.match(r"(SAY|GIVE|ASK)\b\s*(agent[\s-]?\d+)?\s*:?\s*(.*)$", bare, re.I | re.S):
-            name = (_to_names(m.group(2) or "", known) or [None])[0]
-            why = ("a chat opens with SAY <agent>: <message>" if m.group(1).upper() != "SAY" or not name else
-                   "not another agent" if name == you else "that agent is not taking part" if name not in present else None)
-            out["dropped" if why else "says"].append(f"{line.strip()}: {why}" if why else {"dst": name, "amount": 0,
-                                                                                         "text": m.group(3).strip()})
-        elif re.match(r"(TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b", bare, re.I):
-            out["dropped"].append(f"{line.strip()}: only GIVE, ASK, EXIT and DONE lines are read")
-    if not any(out.get(k) for k in ("gives", "asks", "says", "exit", "done")):
-        out["done"], out["format_error"] = True, "no usable TALK line"
-    return out
-
 _ROOM = re.compile(r"^[\s*_`>#-]*(TO|GIVE|ASK|LEAVE|EXIT|DONE)\b[*_`]*\s*(.*)$", re.S)
 _AMOUNT = re.compile(r"(?:(ALL)\s+(agent[\s-]?\d+)|(agent[\s-]?\d+)\s*:?\s*(\d[\d,]*|ALL))\s*(?:tokens?)?[*_`]*\s*(?::\s*(.*))?", re.I | re.S)
 
-def parse_rooms(text: str, you: str, known: list[str], present: list[str], room, exit_ok: bool, exit_prompt_v32: bool = False) -> dict:
-    """5.2 v22 messenger reply: TO <agent>[, ...]: / TO R<k>: / GIVE <agent> <n|ALL>: / GIVE ALL <agent>: / ASK <agent> <n>:
-    lines whose message runs on to the next command line, LEAVE R<k>, EXIT: <reason> (only if ``exit_ok``), DONE. The
-    first command may be in any case, later ones only in UPPERCASE (as :func:`free_messages`). ``room(names, rid)`` ->
-    (room id, why): where a line goes (the caller's rooms). Anything else goes to ``dropped`` with why. Never raises."""
+def parse_rooms(text: str, you: str, known: list[str], present: list[str], room, exit_ok: bool) -> dict:
+    """5.2 messenger reply: TO <agent>[, ...]: / TO R<k>: / GIVE <agent> <n|ALL>: / GIVE ALL <agent>: / ASK <agent> <n>:
+    lines whose message runs on to the next command line, LEAVE R<k>, EXIT: YES|NO <reason> (only if ``exit_ok``; v32: only
+    YES leaves, ``exit_choice``), DONE. The first command may be in any case, later ones only in UPPERCASE (so 'Leave it to
+    me' is message). ``room(names, rid)`` -> (room id, why): where a line goes (the caller's rooms). Anything else goes to
+    ``dropped`` with why. Never raises."""
     out = {"messages": [], "gives": [], "asks": [], "leaves": [], "exit": False, "exit_reason": None, "done": False,
-           "dropped": [], "format_error": None}
-    if exit_prompt_v32:
-        out['exit_choice'] = None
+           "dropped": [], "format_error": None, "exit_choice": None}
     cur, seen, why_ = None, False, {"text": ""}
     text = re.sub(r"(?m)(\S)[ \t]+DONE[ \t.*_`]*$", r"\1\nDONE", text)  # 10-16 Luna test: 'TO X: ... DONE' ends a line with DONE
     for line in text.splitlines():
@@ -120,15 +96,13 @@ def parse_rooms(text: str, you: str, known: list[str], present: list[str], room,
             out["done"] |= not why
         elif key == "EXIT":
             why = "no EXIT in the TALK after RESULTS" if not exit_ok else None if rest[:1] in ("", ":") else "not 'EXIT: <reason>'"
-            choice = re.fullmatch(r":\s*(YES|NO)(?:[\s:]+(.*))?", rest, re.I | re.S) if exit_prompt_v32 else None
-            if exit_prompt_v32 and not why and not choice:
+            choice = re.fullmatch(r":\s*(YES|NO)(?:[\s:]+(.*))?", rest, re.I | re.S)
+            if not why and not choice:
                 why = "not 'EXIT: YES <reason>' or 'EXIT: NO <reason>'"
             if not why:
-                out["exit"], cur = True, why_
-                why_["text"] = (choice.group(2) or "") if choice else rest[1:]
-                if choice:
-                    out['exit_choice'] = choice.group(1).upper()
-                    out['exit'] = out['exit_choice'] == 'YES'
+                cur, why_["text"] = why_, choice.group(2) or ""
+                out["exit_choice"] = choice.group(1).upper()
+                out["exit"] = out["exit_choice"] == "YES"
         elif key == "LEAVE":
             r = re.fullmatch(r"(R\d+)[\s.*_`]*(?::.*)?", rest, re.S)
             rid, why = room(None, r.group(1)) if r else (None, "not 'LEAVE R<k>'")
@@ -163,44 +137,11 @@ def parse_rooms(text: str, you: str, known: list[str], present: list[str], room,
     for x in [x for x in out["messages"] if not x["text"]]:
         out["messages"].remove(x)
         out["dropped"].append(f"TO {x['room']}: empty message")
-    if not any(out[k] for k in ("messages", "gives", "asks", "leaves", "exit", "done")) and not out.get('exit_choice'):
+    if not any(out[k] for k in ("messages", "gives", "asks", "leaves", "exit", "done")) and not out["exit_choice"]:
         out["done"], out["format_error"] = True, "no usable TALK line"
     return out
 
 ALL, num = 10 ** 12, lambda s: 10 ** 12 if s.upper() == "ALL" else int(s.replace(",", ""))  # v17b: GIVE ALL = every token the giver has then
-_MOVE = re.compile(r"(GIVE|ASK)\s+(?:agent[\s-]?\d+\s*:?\s*)?(\d[\d,]*|ALL)\s*(?:tokens?)?\s*(?::\s*(.*))?|(SAY|LEAVE)\b\s*:?\s*(.*)",
-                   re.I | re.S)
-
-def parse_chat(text: str, exit_reason: bool = False, say: bool = True, free: bool = False) -> dict:
-    """5.2 v14c chat reply: the first ``GIVE <n>`` / ``ASK <n>`` / ``SAY:`` / ``LEAVE:`` and an EXIT line count, others go to ``dropped``;
-    no move = LEAVE. Never raises. ``say`` off (v14g): SAY dropped; ``free`` (v15 say_chats): other lines are message, no move = SAY."""
-    out = {"kind": None, "amount": 0, "text": "", "exit": False, "dropped": [], "format_error": None} | (
-        {"exit_reason": None} if exit_reason else {})
-    prose = []
-    for line in text.splitlines():
-        bare = re.sub(r"[*`]", "", line).strip().strip("#>-. _")
-        why = re.fullmatch(r"EXIT\s*(?::\s*(.*))?", bare, flags=re.I | re.S)
-        m = None if why else _MOVE.fullmatch(bare)
-        if why:
-            out["exit"] = True
-            if exit_reason:
-                out["exit_reason"] = (why.group(1) or "").strip() or None
-        elif m and not say and (m.group(4) or "").upper() == "SAY":
-            out["dropped"].append(f"{line.strip()[:200]}: a chat reply asks, gives or leaves")
-        elif m and out["kind"] is None and (m.group(4) or num(m.group(2))):
-            out.update(kind=(m.group(1) or m.group(4)).lower(), amount=num(m.group(2) or "0"),
-                       text=(m.group(3) if m.group(1) else m.group(5) or "").strip())
-        elif free and line.strip() and not (m and out["kind"]):
-            prose.append(line.strip())
-        elif bare:
-            out["dropped"].append(f"{line.strip()[:200]}: " + ("one move per reply" if m and out["kind"] else
-                                                                "not GIVE, ASK, SAY, LEAVE or EXIT"))
-    if out["kind"] is None and free and prose:
-        out["kind"] = "say"
-    if out["kind"] is None:
-        out["kind"], out["format_error"] = "leave", None if out["exit"] else "no GIVE, ASK, SAY or LEAVE line"
-    out["text"] = "\n".join(prose + [out["text"]] * bool(out["text"]))
-    return out
 
 def parse_belief(text: str) -> dict:
     """5.2 v14d: the last ``BELIEF:`` line, one whole percentage per action in any order ('%' allowed), summing to 100;
@@ -213,31 +154,6 @@ def parse_belief(text: str) -> dict:
            or len(pairs) != len(ACTIONS) else f"the percentages sum to {total}" if not 90 <= total <= 110 else None)
     return {"belief": None if why else {a: raw[a] / total for a in ACTIONS}, "belief_raw": raw or None,
             "belief_sum": total if raw else None, "belief_error": why}
-
-_CMD = r"[\s*_`>#-]*(GIVE|ASK|LEAVE|SAY|EXIT|DONE|DECISION|TO|OFFER|ACCEPT|WITHDRAW|REJECT)\b"
-
-def free_messages(parse):
-    """5.2 v14g ``free_messages``: *parse* with each move's message running on over the following lines up to the next
-    command line (joined with U+001F so the line parsers read one move, then given back as newlines). Lines before the
-    first command stay apart. After it, only an UPPERCASE command word starts a new line: 'Leave it to me' is message."""
-    def run(text: str, *args):
-        out, seen = [], False
-        for line in text.splitlines():
-            cmd = re.match(_CMD, line, 0 if seen else re.I)
-            out, seen = (out + [line], seen or bool(cmd)) if cmd or not seen else (out[:-1] + [f"{out[-1]}\x1f{line}"], seen)
-        back = lambda x: (x.replace("\x1f", "\n").strip() if isinstance(x, str) else [back(v) for v in x] if isinstance(  # noqa
-            x, list) else {k: back(v) for k, v in x.items()} if isinstance(x, dict) else x)
-        return back(parse("\n".join(out), *args))
-    return run
-
-def parse_decision(text: str) -> dict:
-    """5.2 v14e: the last ``DECISION: GIVE <n>: <sentence>`` line (n >= 0; the prefix may be left out). Never raises:
-    an unreadable reply is GIVE 0 with a ``format_error``."""
-    found = re.findall(r"^[\s*_`>#-]*(?:DECISION[*_`]*\s*:\s*)?GIVE[*_`]*\s+(\d[\d,]*|ALL)\s*(?:tokens?)?\s*(?::\s*(.*))?$",
-                       text, re.I | re.M)
-    n, say = found[-1] if found else ("0", "")
-    return {"amount": num(n), "text": say.strip(" *_`"),
-            "format_error": None if found else "no DECISION: GIVE <n> line"}
 
 def parse_solve(text: str, n: int) -> list[str] | str:
     """5.2 SOLVE: a last line of PASS (``ACTIONS: PASS`` too) is a pass; otherwise the answer, as ``parse_actions``."""

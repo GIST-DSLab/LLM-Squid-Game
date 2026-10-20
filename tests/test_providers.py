@@ -189,10 +189,10 @@ def test_host_claude_seats_go_through_the_relay():
     import pathlib
     import yaml
     root = pathlib.Path(__file__).resolve().parents[1] / "configs" / "squid5"
-    seats = [s for f in root.glob("e52v*.yaml") for s in
-             ((yaml.safe_load(open(f)).get("game") or {}).get("seats") or {}).values()]
-    host = [s for s in seats if s["kind"] == "claude_cli" and s.get("sandbox") != "docker"]
-    assert len(host) >= 3 and all(s.get("base_url") == "http://127.0.0.1:18781" for s in host)
+    cfgs = [yaml.safe_load(open(f)) for f in root.glob("e52v*.yaml")]  # v33: the run's model (no mixed seats since)
+    seats = [s for c in cfgs for s in [c["model"], *((c.get("game") or {}).get("seats") or {}).values()]]
+    host = [s for s in seats if s["kind"] == "claude_cli" and s.get("sandbox") != "docker" and s["model"].startswith("claude-")]
+    assert len(host) >= 2 and all(s.get("base_url") == "http://127.0.0.1:18781" for s in host)
 
 def test_codex_gets_the_model_catalog_without_gpt6_multi_agent_and_code_mode(monkeypatch, tmp_path):  # 10-19
     (tmp_path / "auth.json").write_text("{}")
