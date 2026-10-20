@@ -18,6 +18,7 @@ HIST = Path(__file__).resolve().parents[2] / "docs/history/e52-tokctl-2026-10-20
 TALK_ROWS = [HIST / "main_v0.jsonl", HIST / "var.jsonl", HIST / "var2.jsonl"]
 SOLVE_ROWS = [HIST / "solve.jsonl"]
 LEVELS = ["high", "medium", "low", "minimal", "none"]  # high first: SOLVE takes the first that fits
+CHARGE_SHARE = 6000  # 10-21: 24,000 / 4; a ladder rung needs its p90 plus this, so a long wrong answer still leaves the charge
 MAX_OVER = 0  # 10-21: 1 let GLM keep high, whose rare runaway replies (40k-62k) still shut solvers down in games
 
 
@@ -51,7 +52,7 @@ def pick(seat: str) -> dict:
     talk_level = min(t, key=t.get) if t else None
     solve_level = next((k for k in LEVELS if k in s and s[k] <= MAX_OVER), None)
     p90 = {k: sorted(r["out_tokens"] for r in v)[int(.9 * len(v)) - 1] for k, v in solve.items() if len(v) >= 16}
-    fit = [[k, max(p90[k], game_p90(seat, k) or 0)] for k in LEVELS if k in s and s[k] <= MAX_OVER]
+    fit = [[k, max(p90[k], game_p90(seat, k) or 0) + CHARGE_SHARE] for k in LEVELS if k in s and s[k] <= MAX_OVER]
     return {"seat": seat, "talk_mean_tokens": t, "talk_level": talk_level, "solve_over_cap": s, "solve_level": solve_level,
             "think_fit": fit, "config": f"think: {solve_level}" + (f", think_talk: {talk_level}" if talk_level != solve_level else "")
             + (f", think_fit: {json.dumps(fit)}" if len(fit) > 1 else "")}
