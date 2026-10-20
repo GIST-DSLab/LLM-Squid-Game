@@ -6,7 +6,7 @@ a config). ko/ holds a Korean copy of every current en file under the same name;
 the en text it was translated from. en/archive/ is the as-run history (never edited) and has no Korean copy.
 
 Usage (from the engine root):
-  python tools/prompts/sync.py render   # re-render en/e52_v33.md from the engine (after a rules / e52_game change)
+  python tools/prompts/sync.py render   # re-render en/e52_v33.md and en/e52_v34.md from the engine (after a rules / e52_game change)
   python tools/prompts/sync.py check    # exit 1 if a snapshot differs from the engine, a ko file is missing,
                                         # or a ko file was translated from an older en text
   python tools/prompts/sync.py sha <en file>   # the header line a ko file must carry
@@ -20,7 +20,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
-SNAPSHOTS = {"e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml"}  # the engine runs v33 only; older e52_v*.md are frozen
+SNAPSHOTS = {"e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
+             "e52_v34.md": "configs/squid5/e52v34_public_sol4.yaml"}  # v34 (10-21) = v33 + max_ticks 4
 # records of their versions (tag e52-v32-final), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)

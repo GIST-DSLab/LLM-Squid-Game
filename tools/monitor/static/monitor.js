@@ -3063,7 +3063,7 @@
   function fillRunSel() {
     const shown = S.runs.filter((r) => runMatch(r));
     const sel = $("#runSel");
-    const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + ((r.harness || []).length ? " · " + esc(r.harness.join(" + ")) : "") + "</option>");
+    const opts = shown.map((r) => '<option value="' + esc(r.run) + '">' + (r.live ? "● " : r.done ? "✓ " : "○ ") + esc(r.run) + (r.model ? " · " + esc(r.model) : "") + ((r.harness || []).length ? " · " + esc(r.harness.join(" + ")) : "") + (r.think ? " · " + esc(r.think) : "") + "</option>");
     if (!shown.length) opts.push("<option value=''>조건에 맞는 실행 없음</option>");
     sel.innerHTML = opts.join("");
     $("#fCount").textContent = "실행 " + shown.length + " / " + S.runs.length;

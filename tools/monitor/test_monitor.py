@@ -2342,6 +2342,18 @@ def test_run_list_harness(tmp_path):  # 10-19: the harness filter reads the mode
     assert {r["run"]: r["harness"] for r in serve.list_runs(tmp_path)}["d"] == ["claude code", "codex"]
 
 
+def test_run_list_think(tmp_path):  # 10-21 (tokctl): calibrated open-model seats show the levels the harness picks
+    import yaml
+    d = tmp_path / "g"
+    d.mkdir()
+    (d / "events.jsonl").write_text("")
+    (d / "config.yaml").write_text(yaml.safe_dump({"model": {"kind": "codex_cli", "think": "high", "think_talk": "none",
+                                                             "think_fit": [["high", 11256], ["none", 1092]]}}))
+    assert serve.run_think(d) == "think high · talk none · fit high<11,256 none<1,092"
+    (d / "config.yaml").write_text("model:\n  kind: codex_cli\n  think: high\n")
+    assert serve.run_think(d) == ""
+
+
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
 @pytest.mark.skipif(not [d for d in V22_RUNS if "astra" in str(d)], reason="no engine-written v22 Astra run on this machine")
 def test_engine_written_v22_solve_answers_and_flow_boxes(tmp_path):

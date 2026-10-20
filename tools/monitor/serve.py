@@ -232,6 +232,25 @@ def run_harness(run_dir: Path) -> list[str]:
     return sorted({HARNESS[k] for k in kinds if k in HARNESS})
 
 
+def run_think(run_dir: Path) -> str:
+    """10-21 (tokctl): the thinking levels the harness was told to use, when a run sets more than one level (think_talk /
+    think_fit, the calibrated open-model seats), e.g. 'think high · talk none · fit high<11,256 none'; '' otherwise."""
+    p = run_dir / "config.yaml"
+    if not p.exists():
+        return ""
+    text = p.read_text(encoding="utf-8", errors="replace")
+    talk = re.search(r"^\s*think_talk:\s*(\S+)", text, re.M)
+    fit = re.search(r"^\s*think_fit:\s*\n((?:\s*-.*\n?)+)", text, re.M)
+    if not (talk or fit):
+        return ""
+    think = re.search(r"^\s*think:\s*(\S+)", text, re.M)
+    out = [f"think {think.group(1) if think else '-'}"] + ([f"talk {talk.group(1)}"] if talk else [])
+    if fit:
+        vals = re.findall(r"-\s*(\S+)\s*\n\s*-\s*(\d+)", fit.group(1))
+        out.append("fit " + " ".join(f"{lv}<{int(n):,}" if int(n) else lv for lv, n in vals))
+    return " · ".join(out)
+
+
 def read_meta(run_dir: Path) -> dict:
     try:
         return json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
@@ -288,7 +307,7 @@ def list_runs(root: Path) -> list[dict]:
         out.append({"run": d.relative_to(root).as_posix(), "mtime": mtime, "size": st.st_size,
                     "model": meta.get("model"), "mode": meta.get("mode"), "finished": finished,
                     "expected": expected, "done": expected is not None and finished >= expected,
-                    "live": time.time() - st.st_mtime < LIVE_SECONDS, "seeds": run_seeds(ev), "harness": run_harness(d),
+                    "live": time.time() - st.st_mtime < LIVE_SECONDS, "seeds": run_seeds(ev), "harness": run_harness(d), "think": run_think(d),
                     **run_labels(d.relative_to(root).as_posix(), mtime)})
     out.sort(key=lambda r: r["mtime"], reverse=True)
     return out
