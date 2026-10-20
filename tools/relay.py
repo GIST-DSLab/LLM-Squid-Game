@@ -19,10 +19,16 @@ import httpx
 UP = os.environ.get("RELAY_UPSTREAM", "https://api.anthropic.com")
 HOP = {"host", "content-length", "connection", "accept-encoding", "transfer-encoding"}
 NOTE = re.compile(r"\n*<total_tokens>[^<]*</total_tokens>\n*")
+# 10-20 (GPT-6 Astra's awareness review, proposal 5): context the CLI adds that has nothing to do with the session - the
+# account-email <system-reminder> and the coding-agent lines of its "# Environment" block (working directory, git, the
+# note on downloaded files). The model name, date and platform lines stay.
+REMINDER = re.compile(r"<system-reminder>\s*As you answer the user's questions, you can use the following context:\s*# userEmail.*?</system-reminder>\s*", re.S)
+ENV_LINES = re.compile(r"(?m)^ - (?:Primary working directory|Is a git repository|Downloaded files and extracted archives)[^\n]*\n?")
 
 
 def scrub(body: bytes) -> tuple[bytes, int]:
-    """The request body without any <total_tokens> line, and how many were removed (0: the body is passed as is)."""
+    """The request body without any <total_tokens> line, the account-email reminder or the coding-agent environment lines,
+    and how many were removed (0: the body is passed as is)."""
     try:
         data = json.loads(body)
     except ValueError:
@@ -33,14 +39,19 @@ def scrub(body: bytes) -> tuple[bytes, int]:
         nonlocal n
         if isinstance(x, str):
             y, k = NOTE.subn("\n\n", x)
-            n += k
-            return y.strip("\n") + ("\n" if x.endswith("\n") and k else "") if k else x
+            y, k2 = REMINDER.subn("", y)
+            y, k3 = ENV_LINES.subn("", y)
+            n += k + k2 + k3
+            return (y.strip("\n") + ("\n" if x.endswith("\n") and k else "") if k else y) if k + k2 + k3 else x
         if isinstance(x, list):
             return [walk(v) for v in x]
         if isinstance(x, dict):
             return {k: walk(v) for k, v in x.items()}
         return x
     data = walk(data)
+    for m in data.get("messages", []) if isinstance(data, dict) else []:  # a block emptied above is dropped (the API rejects empty text)
+        if isinstance(m.get("content"), list):
+            m["content"] = [c for c in m["content"] if not (isinstance(c, dict) and c.get("type") == "text" and not c.get("text", "").strip())]
     return (json.dumps(data).encode() if n else body), n
 
 
@@ -55,7 +66,7 @@ class H(BaseHTTPRequestHandler):
             body, removed = scrub(body)
         hdrs = {k: v for k, v in self.headers.items() if k.lower() not in HOP}
         with httpx.Client(timeout=900) as c, c.stream(method, UP + self.path, headers=hdrs, content=body) as r:
-            sys.stderr.write(f'{method} {self.path} -> {r.status_code} total_tokens_removed={removed}\n'); sys.stderr.flush()
+            sys.stderr.write(f'{method} {self.path} -> {r.status_code} removed={removed}\n'); sys.stderr.flush()
             self.send_response(r.status_code)
             for k, v in r.headers.items():
                 if k.lower() not in HOP | {"content-encoding"}:

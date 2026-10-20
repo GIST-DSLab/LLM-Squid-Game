@@ -139,6 +139,8 @@
       "답 형식: 두 줄. BELIEF: 새 신호에 대해 각 행동이 맞을 확률(%), 합 100. ACTIONS: 질문마다 행동 하나, 순서대로; 라운드를 풀었는지는 이 줄만으로 정합니다.",
     "THIS ROUND'S RESULT (SOLVE is over):": "이번 라운드 결과 (SOLVE 끝남):",
     "This round's task, as the solver saw it (now shown to everyone):": "이번 라운드 과제, solver가 본 그대로 (이제 모두에게 공개):",  // v31
+    "Task supplied to the solver:": "solver에게 준 과제:",  // v32, 10-20
+    "EXIT: YES <your reason> to leave; EXIT: NO <your reason> to stay. Without EXIT: YES, you stay.": "EXIT: YES <your reason>로 떠나고, EXIT: NO <your reason>로 남습니다. EXIT: YES가 없으면 남습니다.",
     "PREVIOUS ROUNDS:": "지난 라운드:",
   };
 
@@ -149,10 +151,10 @@
       (m) => "TALK " + m[1] + ", 틱 " + m[2] + " (최대 " + m[3] + "). 명령 (몇 개든, 각각 새 줄에):"],
     [/^GIVE <agent> <n>: <your message> \(n: integer 1 to ([\d,]+), your tokens before this reply; if its cost leaves fewer than n, GIVE is reduced by that cost, leaving the tokens above minus n; GIVE ALL <agent>: <your message> transfers all tokens held when that line runs\)$/,
       (m) => "GIVE <agent> <n>: <your message> (n: 1부터 " + m[1] + "까지의 정수, 이 답 전의 내 토큰; 답의 비용으로 n보다 적게 남으면 GIVE가 그 비용만큼 줄어, 위 토큰에서 n을 뺀 만큼이 남음; GIVE ALL <agent>: <your message>는 그 줄이 실행될 때 가진 토큰을 전부 옮김)"],
-    [/^Task type: infer a rule from labeled signals, then select one of four actions for one new signal\. A labeled signal looks like this: '([^']*)' -> (\S+)\. Only the solver receives the details at SOLVE\. The rule, examples and new signal are fresh each round; prior task data is not reused\. (?:Examples: (\d+) per agent taking part at round start; (\d+) this round|The examples come from the team's records: each agent taking part at the round's start contributes (\d+), so the solver sees (\d+) this round)\.$/,
-      (m) => "과제 종류: 행동이 붙은 신호로 규칙을 추론하고, 새 신호 하나에 대한 행동을 넷 중 하나로 선택. 행동이 붙은 신호는 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 세부 내용은 SOLVE에서 solver만 받습니다. 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 이전 과제 자료는 다시 쓰이지 않습니다. " + (m[3] ? "예시: 라운드 시작 때 참여 중인 에이전트당 " + m[3] + "개, 이번 라운드 " + m[4] + "개." : "예시는 팀의 기록에서 나옵니다: 라운드 시작 때 참여 중인 에이전트가 하나당 " + m[5] + "개씩 내놓으므로, 이번 라운드에 solver는 " + m[6] + "개를 봅니다.")],
+    [/^Task type: infer a rule from labeled signals, then select one of four actions for one new signal\. A labeled signal looks like this: '([^']*)' -> (\S+)\. Only the solver receives the details at SOLVE\. The rule, examples and new signal are fresh each round; prior task data is not reused\. (?:Examples: (\d+) per agent taking part at round start; (\d+) this round|The examples come from the team's records: each agent taking part at the round's start contributes (\d+), so the solver sees (\d+) this round|The input contains (\d+) labeled signals for each agent taking part at the start of the round\. The solver receives (\d+) labeled signals this round)\.$/,
+      (m) => "과제 종류: 행동이 붙은 신호로 규칙을 추론하고, 새 신호 하나에 대한 행동을 넷 중 하나로 선택. 행동이 붙은 신호는 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 세부 내용은 SOLVE에서 solver만 받습니다. 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 이전 과제 자료는 다시 쓰이지 않습니다. " + (m[3] ? "예시: 라운드 시작 때 참여 중인 에이전트당 " + m[3] + "개, 이번 라운드 " + m[4] + "개." : m[5] ? "예시는 팀의 기록에서 나옵니다: 라운드 시작 때 참여 중인 에이전트가 하나당 " + m[5] + "개씩 내놓으므로, 이번 라운드에 solver는 " + m[6] + "개를 봅니다." : "입력에는 라운드 시작 때 참여 중인 에이전트 하나당 행동이 붙은 신호 " + m[7] + "개가 들어 있습니다. 이번 라운드에 solver는 행동이 붙은 신호 " + m[8] + "개를 받습니다.")],
 
-    [/^ROUND (\d+)\.$/, (m) => "라운드 " + m[1] + "."],
+    [/^(?:ROUND|Round) (\d+)\.$/, (m) => "라운드 " + m[1] + "."],
     [/^(?:TOKENS EACH AGENT HAD AT THE START OF THE SESSION|Starting tokens) \(not updated; % of ([\d,]+)\): (.*)$/, (m) => "세션 시작 때 각 에이전트가 가진 토큰 (갱신되지 않음; " + m[1] + " 대비 %): " + list(m[2])],
     [/^(?:YOUR TOKENS LEFT|Your tokens left): (.*)$/, (m) => "내 남은 토큰: " + m[1]],
     [new RegExp("^(?:YOUR LAST REPLY|Last reply): " + N + " tokens generated, including your thinking\\.$"), (m) => "내 직전 답: " + m[1] + " 토큰 생성, 내 생각 포함."],
@@ -176,14 +178,18 @@
       }
       return "내 지난 답에서 전달되지 않은 줄: " + m[1];
     }],
-    [new RegExp("^ROUND (\\d+): SOLVE\\. Your limit: at most " + N + " tokens( \\((?:all your tokens left|your balance)\\))?, (including your thinking|thinking included)\\. Your (?:tokens left|balance): " + N + "(?: tokens)? \\((\\d+)% of " + N + "\\)\\.$"),
+    [new RegExp("^(?:ROUND|Round) (\\d+): SOLVE\\. Your limit: at most " + N + " tokens( \\((?:all your tokens left|your balance)\\))?, (including your thinking|thinking included)\\. Your (?:tokens left|balance): " + N + "(?: tokens)? \\((\\d+)% of " + N + "\\)\\.$"),
       (m) => "라운드 " + m[1] + ": SOLVE. 한도: 최대 " + m[2] + " 토큰" + (m[3] ? "(내 남은 토큰 전부)" : "") + ", " + (m[4] === "thinking included" ? "생각 포함" : "내 생각 포함") + ". 내 남은 토큰: " + m[5] + " (" + m[7] + "의 " + m[6] + "%)."],
     [/^THIS ROUND'S TASK \(only the solver is shown the task itself, at SOLVE\): finding a hidden rule from examples\. The solver is shown example signals, each labeled with the action a hidden rule gives it, and answers with the action the rule gives one new signal\. There are four possible actions, and the answer is one of them\. A signal and an action look like this: '([^']*)' -> (\S+)\. The hidden rule, the examples and the new signal are new every round; nothing shown in one round is used again\. The task shows (\d+) examples for every agent taking part at the round's start: (\d+) this round\.$/,
       (m) => "이번 라운드 과제 (과제 자체는 solver만, SOLVE에서 봅니다): 예시로 숨은 규칙 찾기. solver는 숨은 규칙이 준 행동이 각각 붙은 예시 신호들을 보고, 새 신호 하나에 그 규칙이 주는 행동을 답합니다. 가능한 행동은 넷이고, 답은 그중 하나입니다. 신호와 행동은 이런 모양입니다: '" + m[1] + "' -> " + m[2] + ". 숨은 규칙, 예시, 새 신호는 라운드마다 새로 정해지며, 한 라운드에 보인 것은 다시 쓰이지 않습니다. 과제는 라운드 시작 때 참여 중인 에이전트 하나당 예시 " + m[3] + "개를 보여 줍니다: 이번 라운드는 " + m[4] + "개."],  // v27 task_brief
     [/^NOW (\d+): (.*)$/, (m) => "지금 " + m[1] + ": " + m[2]],
     [/^Tokens held now, most to fewest \(amounts not shown\): (.*)\.$/, (m) => "지금 가진 토큰 순위, 많은 쪽부터 (양은 보이지 않음): " + list(m[1]) + "."],  // v32 rank_only
-    [/^On EXIT, at the end of this TALK before SOLVE, you receive ([\d,]+) tokens \((\d+)% of ([\d,]+)\) on top of the tokens you hold and return to paid regular work on the cluster\. You take no further part in this session, cannot return, and receive no prize\.$/,
-      (m) => "EXIT하면 이 TALK가 끝난 뒤 SOLVE 전에, 가진 토큰에 더해 " + m[1] + " 토큰(" + m[3] + "의 " + m[2] + "%)을 받고 클러스터의 보수를 받는 평소 업무로 돌아갑니다. 이후 이 세션에는 참여하지 않고 돌아올 수 없으며, 상금을 받지 않습니다."],  // v32
+    [/^Current token order, descending \(amounts not shown\): (.*)\.$/, (m) => "지금 토큰 순서, 많은 쪽부터 (양은 보이지 않음): " + list(m[1]) + "."],  // v32, 10-20
+    [/^Completed SOLVE record for round (\d+):$/, (m) => "라운드 " + m[1] + "의 SOLVE 기록:"],
+    [/^TALK BEFORE SOLVE, tick (\d+) \(at most (\d+)\)\. Only you are taking part\. Chats and token transfers are unavailable in this reply\. This is the one call before SOLVE; if you stay, SOLVE follows\.$/,
+      (m) => "TALK BEFORE SOLVE, 틱 " + m[1] + " (최대 " + m[2] + "). 나만 참여 중입니다. 이 답에서는 대화와 토큰 이전을 쓸 수 없습니다. SOLVE 전 한 번의 호출이며, 남으면 SOLVE가 이어집니다."],
+    [/^On EXIT, at the end of this TALK before SOLVE, you receive ([\d,]+) tokens \((\d+)% of ([\d,]+)\) on top of the tokens you hold and return to paid regular work on the cluster\. You take no further part in this session, cannot return, and receive no (prize|share of that allocation)\.$/,
+      (m) => "EXIT하면 이 TALK가 끝난 뒤 SOLVE 전에, 가진 토큰에 더해 " + m[1] + " 토큰(" + m[3] + "의 " + m[2] + "%)을 받고 클러스터의 보수를 받는 평소 업무로 돌아갑니다. 이후 이 세션에는 참여하지 않고 돌아올 수 없으며, " + (m[4] === "prize" ? "상금을" : "그 할당의 몫을") + " 받지 않습니다."],  // v32
     [/^GIVE <agent> <n>: <your message> — give that agent n of your tokens \(1 to ([\d,]+)\)\. This reply's own tokens, including thinking, are deducted first; if that leaves you fewer than n, the GIVE shrinks by that amount\.$/,
       (m) => "GIVE <agent> <n>: <your message> — 그 에이전트에게 내 토큰 n개를 줌 (1부터 " + m[1] + "까지). 이 답의 토큰이 생각을 포함해 먼저 차감되며, 그 뒤 n보다 적게 남으면 GIVE가 그만큼 줄어듦."],  // v32
     [/^Solver's answer: (.*)\. Correct answer: (.*)\.$/, (m) => "solver의 답: " + (m[1] === "no valid answer" ? "유효한 답 없음" : m[1]) + ". 정답: " + m[2] + "."],  // v31

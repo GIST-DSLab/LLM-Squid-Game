@@ -65,7 +65,7 @@ def render(config: str) -> str:
 
     def respond(m, cap):
         a, u = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1), m[-1]["content"]
-        r, phase = int(re.match(r"ROUND (\d+)", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep"
+        r, phase = int(re.match(r"(?i)ROUND (\d+)", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep"
         if "SOLVE." in u:
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: " + wrong[r], 6000)
         if "your decision" in u:
@@ -117,8 +117,8 @@ def render_rooms(config: str, cfg, s) -> str:
 
     def respond(m, cap):
         a, u = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1), m[-1]["content"]
-        r = int(re.match(r"ROUND (\d+)", u).group(1))
-        if u.startswith(f"ROUND {r}: SOLVE."):
+        r = int(re.match(r"(?i)ROUND (\d+)", u).group(1))
+        if u.upper().startswith(f"ROUND {r}: SOLVE."):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 6000)
         k, phase = int(re.search(r", tick (\d+) \(at most", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep"
         return Reply(ROOM_REPLIES.get((a, r, phase, k), "DONE"), 40)
@@ -139,7 +139,7 @@ def render_rooms(config: str, cfg, s) -> str:
         def lone_reply(m, cap):
             a = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1)
             u = m[-1]["content"]
-            if re.match(r"ROUND \d+: SOLVE\.", u):
+            if re.match(r"(?i)ROUND \d+: SOLVE\.", u):
                 return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 1)
             return Reply("DONE" if "Current result (" in u else "EXIT: YES regular work" if a != "agent-17" else "EXIT: NO continue\nDONE", 40)
         lone = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), lone_reply), lone_events.append, "lone-demo")

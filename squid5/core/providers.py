@@ -227,7 +227,7 @@ class CodexCLI(Provider):
             os.makedirs(f"{cwd}/home")
             shutil.copyfile(f"{home}/auth.json", f"{cwd}/home/auth.json")
             with open(f"{cwd}/instructions.md", "w") as f:
-                f.write(system + "\n\nNo tools are available in this session; reply with text only.")
+                f.write(system + "\n\nReply with text only.")  # 10-20 (Astra): codex still offers request_user_input, so not "No tools"
             with open(f"{cwd}/catalog.json", "w") as f:
                 f.write(self._plain_catalog(home))
             cmd = [os.environ.get("SQUID5_CODEX_BIN") or shutil.which("codex") or "codex", "exec", "--json", "--ephemeral", "--ignore-user-config",

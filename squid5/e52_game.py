@@ -360,6 +360,10 @@ class Session:
             self.systems = {a: rules.rank_system(t) for a, t in self.systems.items()}
         self.reveal = ""  # v31: this round's task as the solver saw it, its answer and the engine's, for TALK AFTER RESULTS
         self.pu = (lambda t: rules.story_user(rules.plain_user(t))) if s.story_v29 else rules.plain_user  # v28 / v29 USER wording
+        if s.exit_prompt_v32:  # v32, 10-20: Astra's awareness review, proposals 1-4 (no prize / company wording, record headers)
+            self.systems = {a: rules.realism_system(t) for a, t in self.systems.items()}
+            story = self.pu
+            self.pu = lambda t: rules.realism_user(story(t))
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -752,7 +756,8 @@ class Session:
                     start), 4))]["shares"], ans) if b["belief"] else {}))
         if s.reveal_after:  # v31: as the solver saw it (the same wording pass as its SOLVE message), then both answers
             said = answers.get(self.vote["rep"], (None,))[0] if self.vote["rep"] else None
-            self.reveal = ("This round's task, as the solver saw it (now shown to everyone):\n"  # without the solver's instruction line
+            self.reveal = ((f"Completed SOLVE record for round {r}:\nTask supplied to the solver:\n" if s.exit_prompt_v32 else  # v32, 10-20
+                            "This round's task, as the solver saw it (now shown to everyone):\n")  # without the solver's instruction line
                            + rules.task_spec().split("\n", 1)[1] + "\n"
                            + rules.puzzle_view(puzzle, [("shown to all", c) for c in dealt.public])
                            + f"\nSolver's answer: {', '.join(said) if isinstance(said, list) else 'no valid answer'}. "
