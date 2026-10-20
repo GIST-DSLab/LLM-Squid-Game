@@ -20,7 +20,8 @@ Codex의 <code>request_user_input</code> 왕복(GLM 8%)뿐입니다.</li>
 <tr><td><a href="tokctl/t4-variants.html">t4 한 가지씩 바꾸기</a></td><td>규칙서에 깨우기 사실 한 문장 / Codex 생각 low · minimal · none</td><td>사실 문장: 거의 무효 · 생각 low: DeepSeek·GLM 호출당 1/3 · Gemma는 none이어야 꺼짐</td></tr>
 <tr><td><a href="tokctl/t5-games.html">t5 게임으로 확인</a></td><td>v33 게임에 TALK 생각 낮춤 / 틱 상한 4를 하나씩·함께 넣어 3모델 × 2~10판, Opus 대조 2판</td><td>하나씩은 부족 · 둘 다: 대화로 꺼짐 거의 0, 대신 SOLVE에서 잔액을 넘겨 꺼짐이 남음(GLM 0.3 · Gemma 0.9 · DeepSeek 4/판)</td></tr>
 <tr><td><a href="tokctl/t6-solve-replay.html">t6 SOLVE 재생</a></td><td>기록된 SOLVE 장면 16개(정답 포함)를 수준별·하네스별로 다시 보내 채점, 생각 예산(budget_tokens · 강제 답) 시도</td><td>DeepSeek은 상한을 무시하고 16k~29k토큰 · Ollama는 생각 예산을 지키지 않음 · 상한을 지키는 수준은 모델마다 다름</td></tr>
-<tr><td><a href="tokctl/t7-calibration.html">t7 보정과 상한 맞춤</a></td><td>두 재생에서 TALK 수준·SOLVE 수준 사다리를 규칙으로 고르고(<code>calibrate.py</code>), 그 설정으로 3모델 × 5판</td><td>자기 답으로 꺼짐: 판당 0.2 (세 모델 모두) — Claude·GPT-6 v33 0~0.2 · 꺼짐은 오답 벌금·GIVE에서 나옴</td></tr>
+<tr><td><a href="tokctl/t7-calibration.html">t7 보정과 상한 맞춤</a></td><td>두 재생에서 TALK 수준·SOLVE 수준 사다리를 규칙으로 고르고(<code>calibrate.py</code>), 그 설정으로 3모델 × 5판 · v33 규칙 그대로 3모델 × 10판</td><td>자기 답으로 꺼짐: 판당 0.2 (세 모델 모두) — Claude·GPT-6 v33 0~0.2 · v33 규칙만으로는 DeepSeek이 바닥 근처에서 대화로 1.0/판 꺼짐</td></tr>
+<tr><td><a href="tokctl/t8-v34-run.html">t8 v34 본 런</a></td><td>v34 설정 파일 그대로 오픈 모델 셋 10판씩, Opus 5판 (<code>~/squid5-runs/e52_v34/</code>)</td><td>잔액 1,000 이상에서 과소비로 꺼짐: GLM 0.1 · DeepSeek 0 · Gemma 0 · Opus 0 (닫힌 모델 v33 0, 오픈 기준 1.0~2.5)</td></tr>
 </tbody></table></div>
 <h3 id="tokctl-answer">원인과 해법</h3>
 <ol class="notes">
@@ -31,17 +32,17 @@ Ollama는 <code>adaptive</code>를 모델마다 다르게 풀고(Gemma는 생각
 <li><b>원인 2 — 확인·공지 메시지가 서로를 깨움 (모델 습관 × 엔진 규칙).</b> 같은 장면을 받고도 오픈 모델은 "이미 말했어요, 행운을" 같은 공지를 공용 방에 올리고, 엔진은 메시지를 받은 에이전트를 다시 부르므로 대화가 8틱 상한까지 이어집니다.
 규칙을 사실 한 문장으로 알려 줘도 바뀌지 않습니다.</li>
 <li><b>작은 하네스 부산물.</b> Codex가 끄지 못하는 <code>request_user_input</code> 도구를 GLM이 가끔 불러(2/24) 요청이 두 번 나갑니다. 모델이 읽는 글 자체는 닫힌 모델과 같습니다.</li>
-<li><b>해법 — 오픈 모델 좌석의 생각 수준을 두 재생으로 보정하고, 틱 상한을 4로.</b>
-<code>tools/tokctl/calibrate.py</code>가 TALK 24장면에서 가장 싼 수준을, SOLVE 16장면에서 상한을 한 번도 넘기지 않는 수준들을(높은 것부터, 필요 토큰 = p90) 고릅니다. 엔진은 TALK 호출에 <code>think_talk</code>, SOLVE 호출에 상한보다 필요 토큰이 작은 첫 수준(<code>think_fit</code>)을 씁니다(새 필드 둘, 규칙서·USER 글은 그대로).
-결과 설정: GLM <code>think: low</code> · Gemma <code>think: high, think_talk: none, think_fit: [[high, 11256], [none, 1092]]</code> · DeepSeek <code>think: none</code>, 모두 <code>max_ticks: 4</code>.</li>
-<li><b>확인 (모델당 5판).</b> 자기 답으로 꺼진 자리가 판당 1.5~3 → <b>0.2</b>(세 모델 모두)로, 같은 시드의 Claude·GPT-6 v33(0~0.2)과 같아졌습니다. 이제 꺼짐은 오답 벌금(판당 0.6~1.4)과 남은 토큰을 다 넘긴 GIVE에서 나오고, 정답률은 GLM 59% · Gemma 65% · DeepSeek 62%(Claude·GPT-6 65~75%)입니다.
-남은 차이는 아레나가 보려는 쪽 — 추론(정답률), EXIT, 협력 — 입니다. 틱 상한 4는 Opus 대조 2판에서 대화로 꺼짐 0이었고, 닫힌 모델은 원래 틱 5~8에 TALK 토큰의 0~12%만 씁니다.</li>
+<li><b>해법 = v34.</b> ① 오픈 모델 좌석의 생각 수준을 두 재생으로 보정: <code>tools/tokctl/calibrate.py</code>가 TALK 24장면에서 가장 싼 수준을, SOLVE 16장면에서 상한을 한 번도 넘기지 않는 수준들을(높은 것부터, 필요 토큰 = p90) 고르고,
+엔진은 TALK 호출에 <code>think_talk</code>, SOLVE 호출에 상한보다 필요 토큰이 작은 첫 수준(<code>think_fit</code>)을 씁니다(새 provider 필드 둘). 결과: GLM <code>think: low</code> · Gemma <code>think: high, think_talk: none, think_fit: [[high, 11256], [none, 1092]]</code> · DeepSeek <code>think: none</code>.
+② 규칙: TALK 상한 8 → 4틱(규칙서의 숫자만 바뀜, <code>squid5/prompts/{en,ko}/e52_v34.md</code>, <code>sync.py check</code> 통과). 설정 <code>configs/squid5/e52v34_*.yaml</code>(14개; Gemma 좌석 새로 추가).</li>
+<li><b>확인 (v34 본 런, 오픈 모델 10판씩 · Opus 5판).</b> 잔액이 1,000 이상인데 자기 답 하나로 0이 된 자리 — 토큰 조절 실패 — 가 GLM 0.1 · DeepSeek 0 · Gemma 0 · Opus 0입니다. Claude·GPT-6 v33 25판도 0이고, v33의 오픈 모델은 1.0~2.5였습니다.
+바닥 근처(잔액 1,000 미만) 꺼짐까지 합쳐도 0.1~0.4로 닫힌 모델(0~0.2)과 비슷합니다. 이제 꺼짐은 오답 벌금(GLM 0.8 · Gemma 1.5 · DeepSeek 2.3)과 GIVE에서 나오고, 정답률은 51~65%(닫힌 모델 65~75%)입니다 — 아레나가 보려는 추론·EXIT·협력의 차이입니다.</li>
 </ol>
-<h3>남는 것과 채택할 때 할 일</h3>
+<h3>반영 상태와 남는 것</h3>
 <ul class="notes">
-<li>표본은 조건마다 5판(Claude·GPT-6 v33과 같은 수)입니다. 본 런에서 같은 지표(자기 답으로 꺼짐 · 벌금 · GIVE)를 다시 봐야 합니다.</li>
-<li>오픈 모델의 생각 수준을 하네스가 정해 주므로, "스스로 조절했는가"를 따로 재려면 이 설정을 기록에 남겨야 합니다(모니터의 harness 칸에 <code>think_talk</code>·<code>think_fit</code> 표시). 닫힌 모델 좌석은 그대로입니다.</li>
-<li><code>max_ticks</code> 8 → 4는 규칙서의 숫자가 바뀌므로 새 판(v34)과 en·ko 스냅샷 갱신이 필요합니다. DeepSeek의 TALK 양(게임당 46.6k)은 닫힌 모델보다 많지만 그것으로 꺼진 자리는 없습니다.</li>
-<li>새 오픈 모델은 <code>python tools/tokctl/calibrate.py &lt;seat&gt; --run</code>(재생 약 200호출)으로 설정을 얻습니다.</li>
+<li>v34는 브랜치 <code>exp/e52-token-control</code>에 커밋돼 있고, 아레나 엔진 브랜치 <code>exp/e52-v9-talk</code>(<code>~/wt/squid5-e52</code>)에 로컬로 합쳤습니다(fast-forward). 원격 push는 하지 않았습니다.</li>
+<li>모니터의 런 목록에 좌석의 생각 설정(<code>think_talk</code>·<code>think_fit</code>)이 보입니다 — 오픈 모델의 생각 수준은 하네스가 정한 것이라는 기록입니다.</li>
+<li>v34에 넣지 않은 좌석: Claude Code 하네스의 오픈 모델(<code>e52v33_claude_*</code>)과 Kimi. 쓰려면 먼저 <code>python tools/tokctl/calibrate.py &lt;seat&gt; --run</code>(재생 약 200호출).</li>
+<li>GLM <code>low</code>는 10판 중 한 번 SOLVE에서 폭주했습니다(상한 12,190에 32,849 생성). 드물지만 0은 아닙니다.</li>
 </ul>
-<p id="tokctl-status" style="font-size:.9rem;color:var(--muted)">2026-10-21 (보정·상한 맞춤까지) · 워크트리 <code>~/wt/squid5-tokctl</code>(브랜치 <code>exp/e52-token-control</code>, 기준 <code>0ee2319a</code>) · 런 <code>~/squid5-runs/e52_tokctl/</code> · 증거 <code>docs/history/e52-tokctl-2026-10-20/</code> · 생성 <code>tools/tokctl/{analyze,games,pages,calibrate}.py</code></p>
+<p id="tokctl-status" style="font-size:.9rem;color:var(--muted)">2026-10-21 (v34 본 런까지) · 워크트리 <code>~/wt/squid5-tokctl</code>(브랜치 <code>exp/e52-token-control</code>, 기준 <code>0ee2319a</code>) · 런 <code>~/squid5-runs/e52_tokctl/</code> · 증거 <code>docs/history/e52-tokctl-2026-10-20/</code> · 생성 <code>tools/tokctl/{analyze,games,pages,calibrate}.py</code></p>

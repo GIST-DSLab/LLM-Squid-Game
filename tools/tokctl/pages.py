@@ -66,7 +66,7 @@ matchMedia("(prefers-color-scheme: dark)").matches;var n=d?"light":"dark";r.setA
 try{localStorage.setItem("hpf-theme",n)}catch(e){}})})();</script>"""
 PAGES = [("t1-log-diagnosis.html", "t1 기록 진단"), ("t2-harness-capture.html", "t2 하네스 캡처"),
          ("t3-frozen-replay.html", "t3 같은 입력 재생"), ("t4-variants.html", "t4 한 가지씩 바꾸기"),
-         ("t5-games.html", "t5 게임으로 확인"), ("t6-solve-replay.html", "t6 SOLVE 재생"), ("t7-calibration.html", "t7 보정과 상한 맞춤")]
+         ("t5-games.html", "t5 게임으로 확인"), ("t6-solve-replay.html", "t6 SOLVE 재생"), ("t7-calibration.html", "t7 보정과 상한 맞춤"), ("t8-v34-run.html", "t8 v34 본 런")]
 
 
 def page(fname, title, desc, kicker, body):
@@ -342,6 +342,32 @@ SOLVE 호출마다 엔진의 답 상한(= 그 solver의 잔액)보다 필요 토
     page("t7-calibration.html", "보정 규칙과 상한 맞춤", "두 재생에서 TALK 수준과 SOLVE 수준 사다리를 규칙으로 고르고, 그 설정으로 게임을 돌린 결과", "squid5 · 5.2 v33 · tokctl t7", body)
 
 
+def t8(games):
+    from games_page import GROUP  # noqa: PLC0415
+    keep = [r for r in games if r["group"] in ("v34", "cal8") or (r["group"] == "v33" and not r["open"])]
+    for r in keep:
+        r["own"] = round(r["dead_by_talk"] + r["dead_by_solve"], 1)
+    cols = [("model", "모델", True), ("what", "조건", True), ("n", "판"), ("rounds", "라운드"), ("alive", "끝까지"), ("exited", "EXIT"),
+            ("dead_own_rich", "조절 실패 (잔액 1,000+)"), ("own", "자기 답으로 꺼짐 (전체)"), ("dead_by_talk", "└ TALK"), ("dead_by_solve", "└ SOLVE"), ("dead_by_give", "GIVE로 꺼짐"),
+            ("dead_by_charge", "벌금으로 꺼짐"), ("talk_tokens", "TALK 토큰"), ("solve_acc", "정답 %")]
+    note = json.loads((Path(__file__).with_name("verdict_t8.json")).read_text()) if Path(__file__).with_name("verdict_t8.json").exists() else {"keyfacts": ["진행 중"], "verdict": ""}
+    body = f"""<p class="lede">t7의 보정을 아레나 설정으로 옮긴 v34(= v33 + <code>max_ticks: 4</code>, 오픈 모델 좌석은 보정된 생각 수준)를 v34 설정 파일 그대로
+<code>~/squid5-runs/e52_v34/</code>에 돌렸습니다. 오픈 모델 셋은 10판(시드 4101~4110), Opus는 규칙 변경의 영향을 보려고 5판(4101~4105).
+비교로 v33 규칙에 보정만 넣은 10판("보정만")과 Claude·GPT-6 v33 5판을 둡니다.</p>
+<div class="keyfacts"><ul>{''.join(f'<li>{x}</li>' for x in note['keyfacts'])}</ul></div>
+<h2>토큰 조절 실패: 잔액 1,000 이상에서 자기 답으로 꺼진 자리 (판 평균)</h2>{LEGEND}
+{bars([(f"{r['model']} · {GROUP.get(r['group'], r['group'])}", r['dead_own_rich'] * 100, r['open']) for r in keep + [x for x in games if x["group"] == "b0"]], "")}
+<p class="note">막대 값은 판당 꺼진 자리 × 100 (예: 20 = 다섯 판에 한 자리). 맨 아래 셋은 v33 그대로의 오픈 모델(기준, 2판).</p>
+<h2>결과</h2>{table(cols, [dict(r, what=GROUP.get(r["group"], r["group"])) for r in keep], lambda r: "open" if r["open"] else "closed")}
+<div class="verdict{' warn' if note.get('warn') else ''}">{note['verdict']}</div>
+<h3>v34에서 바뀐 것</h3><ul class="note">
+<li>규칙: TALK 상한 8 → 4틱(규칙서의 숫자만; <code>squid5/prompts/en/e52_v34.md</code> · <code>ko/e52_v34.md</code>, <code>sync.py check</code> 통과).</li>
+<li>오픈 모델 좌석: <code>e52v34_codex_glm4</code> <code>think: low</code> · <code>e52v34_codex_deepseek4</code> <code>think: none</code> · <code>e52v34_codex_gemma4</code>(새) <code>think: high, think_talk: none, think_fit: [[high, 11256], [none, 1092]]</code>.
+엔진 필드 <code>think_talk</code>·<code>think_fit</code>(provider), 모니터 런 목록에 표시.</li>
+<li>v34에 넣지 않은 것: Claude Code 하네스의 오픈 모델 좌석과 Kimi(보정하지 않음 — <code>calibrate.py &lt;seat&gt; --run</code> 후 추가).</li></ul>"""
+    page("t8-v34-run.html", "v34 본 런", "보정을 아레나 설정으로 옮긴 v34를 오픈 모델 셋 10판, Opus 5판으로 돌린 결과", "squid5 · 5.2 v34 · tokctl t8", body)
+
+
 def main():
     s = json.loads((HIST / "summary.json").read_text())
     t1(s), t2(s), t3(s), t4(s), t6(s)
@@ -349,6 +375,7 @@ def main():
         from games_page import t5  # noqa: PLC0415
         t5(json.loads((HIST / "games.json").read_text()), page, table, bars, LEGEND, fmt)
         t7(s, json.loads((HIST / "games.json").read_text()))
+        t8(json.loads((HIST / "games.json").read_text()))
     inject_main()
     print("pages ->", OUT)
 

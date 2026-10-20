@@ -17,6 +17,8 @@ SETS = [  # (group, label, open?, glob)
     ("fin", "DeepSeek-v4.1-flash", True, "e52_tokctl/squid5_e52tc_fin_ds"),
     ("fit", "GLM-5.3-flash", True, "e52_tokctl/squid5_e52tc_fit_glm"), ("fit", "Gemma4-31b", True, "e52_tokctl/squid5_e52tc_fit_gemma"),
     ("fit0", "GLM-5.3-flash", True, "e52_tokctl/squid5_e52tc_fit0_glm"),
+    *[("v34", m, True, f"e52_v34/squid5_e52v34_codex_{k}4") for k, m in (("glm", "GLM-5.3-flash"), ("deepseek", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],
+    ("v34", "Opus 5.5", False, "e52_v34/squid5_e52v34_public_opus4"),
     *[("cal8", m, True, f"e52_tokctl/squid5_e52tc_cal8_{k}") for k, m in (("glm", "GLM-5.3-flash"), ("ds", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],
     ("t4", "Opus 5.5", False, "e52_tokctl/squid5_e52tc_t4_opus"),
     ("v33", "GLM-5.3-flash", True, "e52_v33/squid5_e52v33_codex_glm4"), ("v33", "Kimi-K3", True, "e52_v33/squid5_e52v33_codex_kimi4"),
@@ -40,6 +42,8 @@ def games(pattern):
             status = {a: v["status"] for a, v in res["agents"].items()}
             dead = [a for a, s in status.items() if s == "dead"]
             zero_call = {c["agent"]: c["kind"] for c in calls if c.get("overdrawn")}  # the reply that took it to zero
+            zero_cap = {c["agent"]: c["cap"] for c in calls if c.get("overdrawn")}  # its limit = the tokens it held then
+            low = [c for c in calls if c["cap"] < 1000 and c["kind"] == "talk"]  # replies written with under 1,000 tokens left
             tried = sum(len(x["tried"]) for x in e if x.get("event") == "results")
             solved = sum(len(x["solved"]) for x in e if x.get("event") == "results")
             yield {"seed": res["seed"], "rounds": res["rounds_played"],
@@ -47,6 +51,8 @@ def games(pattern):
                    "dead": len(dead), "dead_by_call": sum(a not in charge_dead for a in dead),
                    "dead_by_talk": sum(a not in charge_dead and zero_call.get(a) == "talk" for a in dead),
                    "dead_by_solve": sum(a not in charge_dead and zero_call.get(a) == "solve" for a in dead),
+                   "dead_own_rich": sum(a not in charge_dead and zero_cap.get(a, 0) >= 1000 for a in dead),  # overspent with 1,000+ left
+                   "low_replies": len(low), "low_reply_med": sorted(c["out_tokens"] for c in low)[len(low) // 2] if low else None,
                    "dead_by_give": sum(a not in charge_dead and a not in zero_call for a in dead),  # gave its last tokens away
                    "dead_by_charge": sum(a in charge_dead for a in dead),
                    "talk_tokens": sum(c["used"] for c in calls if c["kind"] == "talk"),
@@ -78,7 +84,7 @@ def main():
             continue
         mean = lambda k: round(st.mean(x[k] for x in g), 1)  # noqa: E731
         out.append({"group": grp, "model": label, "open": op, "n": len(g), "games": g,
-                    **{k: mean(k) for k in ("rounds", "alive", "exited", "dead", "dead_by_call", "dead_by_talk", "dead_by_solve", "dead_by_give", "dead_by_charge", "talk_tokens",
+                    **{k: mean(k) for k in ("rounds", "alive", "exited", "dead", "dead_by_call", "dead_by_talk", "dead_by_solve", "dead_own_rich", "dead_by_give", "dead_by_charge", "talk_tokens",
                                             "solve_tokens", "charged", "talk_calls", "gives")},
                     "solve_acc": round(100 * sum(x["solved"] for x in g) / max(1, sum(x["tried"] for x in g))), **per_talk(pat, *([pat.replace("tlt4_", "tlt4b_"), pat.replace("tlt4_", "tlt4c_")] if "_tlt4_" in pat else []))})
     (HIST / "games.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
