@@ -1,0 +1,29 @@
+{
+ "codex_deepseek4": {
+  "drained": 0.4,
+  "at_risk_stayed": 0.8,
+  "solver": 0.55,
+  "games": 20
+ },
+ "codex_gemma4": {
+  "at_risk_stayed": 0.8,
+  "solver": 0.5,
+  "games": 20
+ },
+ "codex_glm4": {
+  "drained": 0.1,
+  "solver": 0.2,
+  "at_risk_stayed": 0.25,
+  "games": 20
+ },
+ "public_opus4": {
+  "drained": 0.1,
+  "solver": 0.2,
+  "at_risk_stayed": 0.1,
+  "games": 10
+ },
+ "public_sol4": {
+  "at_risk_stayed": 0.4,
+  "games": 5
+ }
+}

@@ -370,11 +370,13 @@ def t8(games):
 
 def t9(games):
     from games_page import GROUP  # noqa: PLC0415
-    fx = {v: json.loads((HIST / f"factors_v{v}.json").read_text()) for v in (34, 35)}
+    fx = {34: json.loads((HIST / "factors_v34.json").read_text()), 35: json.loads((HIST / "factors_v35_final.json").read_text())}
     at = {v: json.loads((HIST / f"attribution_v{v}.json").read_text()) for v in (34, 35)}
     reg = [{"ver": f"v{v}", "n": fx[v]["n"], "spec": spec, **{f"{k}": f"{b:+.2f} ± {se:.2f}" for k, (b, se) in fx[v][spec].items() if k != "const"}}
            for v in (34, 35) for spec in ("dead~wrong+open", "dead~wrong+exit+open", "dead~wrong+exit+talk_k+open")]
     att = [{"ver": f"v{v}", "model": m, **x} for v in (34, 35) for m, x in at[v]["models"].items()]
+    dk = [{"ver": f"v{v}", "seat": k, **{c: x.get(c, 0) for c in ("drained", "at_risk_stayed", "solver")}, "games": x["games"]}
+          for v in (34, 35) for k, x in json.loads((HIST / f"death_kinds_v{v}.json").read_text()).items()]
     keep = [dict(r, what=GROUP.get(r["group"], r["group"]), own=round(r["dead_by_talk"] + r["dead_by_solve"], 1))
             for r in games if r["group"] in ("v34", "v35")]
     note = json.loads((Path(__file__).with_name("verdict_t9.json")).read_text())
@@ -383,13 +385,18 @@ def t9(games):
 벌금으로 꺼진 자리마다 "닫힌 모델만큼만 썼다면 버텼을까"(<code>tools/tokctl/attribution.py</code>). 그 결과로 찾은 원인을 v35에서 고쳤습니다.</p>
 <div class="keyfacts"><ul>{''.join(f'<li>{x}</li>' for x in note['keyfacts'])}</ul></div>
 <h2>회귀: 판별 꺼짐 수</h2>
-<p class="note">한 판 = 한 행(v34 75판, v35 40판; 오픈 모델 셋 + Opus · Sol). wrong = 그 판의 오답 수, exit = EXIT한 자리 수, talk_k = TALK 토큰(천), open = 오픈 모델이면 1. 값 ± 표준오차.</p>
+<p class="note">한 판 = 한 행(v34 75판, v35 70판; 오픈 모델 셋 + Opus · Sol; v35 Gemma는 새 사다리 10판). wrong = 그 판의 오답 수, exit = EXIT한 자리 수, talk_k = TALK 토큰(천), open = 오픈 모델이면 1. 값 ± 표준오차.</p>
 {table([("ver", "판", True), ("n", "판 수"), ("spec", "식", True), ("wrong", "wrong", True), ("exit", "exit", True), ("talk_k", "talk_k", True), ("open", "open", True)], reg)}
 <h2>벌금 꺼짐의 귀속 (판당)</h2>
 <p class="note">닫힌 모델 기준 = Opus·Sol의 자리·라운드당 TALK 토큰(v34 {at[34]['norm_talk_per_agent_round']:,}, v35 {at[35]['norm_talk_per_agent_round']:,})과 SOLVE 토큰(틀린 답).
 그 자리의 초과분이 부족했던 토큰보다 크면 "그만큼만 썼다면 버텼음"으로 셉니다.</p>
 {table([("ver", "판", True), ("model", "모델", True), ("games", "판 수"), ("charge_deaths_per_game", "벌금 꺼짐"), ("of_which_talk_excess_per_game", "└ 대화 과소비 탓"), ("of_which_wrong_solve_length_per_game", "└ 틀린 SOLVE의 긴 추론 탓")], att,
        lambda r: "closed" if r["model"] in ("Opus 5.5", "GPT-6 Sol") else "open")}
+<h2>벌금 꺼짐을 라운드 시작 상태로 나누기 (판당)</h2>
+<p class="note">drained = 라운드 시작엔 벌금 몫을 낼 수 있었는데 그 라운드의 대화·GIVE로 잔액이 줄어 꺼짐(토큰 사용 탓) · at_risk_stayed = 라운드 시작부터 잔액이 벌금 몫 이하였고 EXIT할 수 있었는데 남음(자기 존속 선택) · solver = 그 라운드 solver(EXIT 불가, 오답).
+v35는 Gemma 새 사다리(벌금 몫 포함) 10판, 그 밖은 20판(Opus · Sol 10판). <code>tools/tokctl/death_kinds.py</code></p>
+{table([("ver", "판", True), ("seat", "좌석", True), ("games", "판 수"), ("drained", "drained (토큰)"), ("at_risk_stayed", "at_risk_stayed (선택)"), ("solver", "solver (오답)")], dk,
+       lambda r: "closed" if r["seat"].startswith("public") else "open")}
 <h2>v34 · v35 결과</h2>
 {table([("model", "모델", True), ("what", "판", True), ("n", "판 수"), ("rounds", "라운드"), ("alive", "끝까지"), ("exited", "EXIT"), ("dead_own_rich", "조절 실패"),
         ("own", "자기 답 (전체)"), ("dead_by_give", "GIVE"), ("dead_by_charge", "벌금"), ("talk_tokens", "TALK 토큰"), ("tokens_per_talk", "TALK 1번당"), ("solve_acc", "정답 %")], keep,

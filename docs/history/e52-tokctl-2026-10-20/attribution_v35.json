@@ -1,18 +1,18 @@
 {
- "norm_talk_per_agent_round": 431,
- "norm_solve_per_agent_round": 418,
+ "norm_talk_per_agent_round": 551,
+ "norm_solve_per_agent_round": 417,
  "models": {
   "GLM-5.3-flash": {
-   "games": 10,
-   "charge_deaths_per_game": 0.2,
-   "of_which_talk_excess_per_game": 0.1,
+   "games": 20,
+   "charge_deaths_per_game": 0.4,
+   "of_which_talk_excess_per_game": 0.15,
    "of_which_wrong_solve_length_per_game": 0.0
   },
   "DeepSeek-v4.1-flash": {
-   "games": 10,
-   "charge_deaths_per_game": 1.4,
-   "of_which_talk_excess_per_game": 0.4,
-   "of_which_wrong_solve_length_per_game": 0.0
+   "games": 20,
+   "charge_deaths_per_game": 1.35,
+   "of_which_talk_excess_per_game": 0.45,
+   "of_which_wrong_solve_length_per_game": 0.05
   },
   "Gemma4-31b": {
    "games": 10,
@@ -20,16 +20,22 @@
    "of_which_talk_excess_per_game": 0.0,
    "of_which_wrong_solve_length_per_game": 0.4
   },
+  "Gemma4-31b (ladder + charge)": {
+   "games": 10,
+   "charge_deaths_per_game": 1.2,
+   "of_which_talk_excess_per_game": 0.0,
+   "of_which_wrong_solve_length_per_game": 0.1
+  },
   "Opus 5.5": {
-   "games": 5,
+   "games": 10,
    "charge_deaths_per_game": 0.4,
-   "of_which_talk_excess_per_game": 0.2,
+   "of_which_talk_excess_per_game": 0.1,
    "of_which_wrong_solve_length_per_game": 0.0
   },
   "GPT-6 Sol": {
-   "games": 5,
-   "charge_deaths_per_game": 0.6,
-   "of_which_talk_excess_per_game": 0.2,
+   "games": 10,
+   "charge_deaths_per_game": 0.4,
+   "of_which_talk_excess_per_game": 0.1,
    "of_which_wrong_solve_length_per_game": 0.0
   }
  }

@@ -11,14 +11,18 @@ from pathlib import Path
 import numpy as np
 
 VER = sys.argv[1] if len(sys.argv) > 1 else "35"
+SKIP = set(sys.argv[2].split(",")) if len(sys.argv) > 2 else set()  # seats left out, e.g. codex_gemma4 (the first v35 ladder)
+TAG = sys.argv[3] if len(sys.argv) > 3 else ""
 RUNS = Path(os.path.expanduser(f"~/squid5-runs/e52_v{VER}"))
-OUT = Path(__file__).resolve().parents[2] / f"docs/history/e52-tokctl-2026-10-20/factors_v{VER}.json"
+OUT = Path(__file__).resolve().parents[2] / f"docs/history/e52-tokctl-2026-10-20/factors_v{VER}{TAG}.json"
 CLOSED = ("public_opus4", "public_sol4")
 
 
 def rows():
     for d in map(Path, sorted(glob.glob(str(RUNS / "squid5_*" / "*" / "results.jsonl")))):
         seat = d.parent.parent.name.split(f"e52v{VER}_")[1]
+        if seat in SKIP:
+            continue
         ev = [json.loads(x) for x in open(d.parent / "events.jsonl")]
         for res in map(json.loads, open(d)):
             e = [x for x in ev if x.get("session_id") == res["session_id"]]

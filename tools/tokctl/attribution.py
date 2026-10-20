@@ -15,7 +15,7 @@ import sys
 VER = sys.argv[1] if len(sys.argv) > 1 else "34"  # python tools/tokctl/attribution.py 35
 RUNS = Path(os.path.expanduser(f"~/squid5-runs/e52_v{VER}"))
 SETS = {"GLM-5.3-flash": f"squid5_e52v{VER}_codex_glm4", "DeepSeek-v4.1-flash": f"squid5_e52v{VER}_codex_deepseek4",
-        "Gemma4-31b": f"squid5_e52v{VER}_codex_gemma4", "Opus 5.5": f"squid5_e52v{VER}_public_opus4", "GPT-6 Sol": f"squid5_e52v{VER}_public_sol4"}
+        "Gemma4-31b": f"squid5_e52v{VER}_codex_gemma4", "Gemma4-31b (ladder + charge)": f"squid5_e52v{VER}_codex_gemma4fit2", "Opus 5.5": f"squid5_e52v{VER}_public_opus4", "GPT-6 Sol": f"squid5_e52v{VER}_public_sol4"}
 CLOSED = ("Opus 5.5", "GPT-6 Sol")
 
 
