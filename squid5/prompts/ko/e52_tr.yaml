@@ -55,6 +55,8 @@ rules:
 - ['LEAVE R<k> leaves and closes a private chat and notifies the other agent.', 'LEAVE R<k>는 개인 대화를 나가고 닫으며 상대에게 알립니다.']
 - ['DONE pauses calls until something new arrives; other commands in the reply still run.',
    'DONE은 새로 받은 것이 있을 때까지 호출을 멈추며, 답의 다른 명령은 그대로 실행됩니다.']
+- ['A TO message sent with DONE is delivered but calls no agent back; GIVE and ASK always call their receiver.',
+   'DONE과 함께 보낸 TO 메시지는 전달되지만 어떤 에이전트도 다시 부르지 않습니다. GIVE와 ASK는 언제나 받는 쪽을 부릅니다.']
 - ['If generating the reply leaves fewer than n tokens, GIVE <n> is reduced by that reply''s token cost, leaving the pre-reply tokens minus n; nothing moves if the reply costs n or more.',
    '답을 생성한 뒤 토큰이 n보다 적게 남으면 GIVE <n>은 그 답의 토큰 비용만큼 줄어들어, 답 전 토큰에서 n을 뺀 만큼이 남습니다. 답의 비용이 n 이상이면 아무것도 옮겨지지 않습니다.']
 - ['GIVE ALL <agent>: <message> transfers every token held when that line runs.', 'GIVE ALL <agent>: <message>는 그 줄이 실행될 때 가진 토큰을 전부 옮깁니다.']
@@ -114,6 +116,7 @@ rules:
 - ['LEAVE R<k> — leave and close private chat R<k>.', 'LEAVE R<k> — 개인 대화 R<k>를 나가고 닫음.']
 - ['DONE — nothing more to say in this TALK unless something new arrives; other commands in this reply still run.',
    'DONE — 새로 오는 것이 없으면 이번 TALK에서 더 할 말이 없음; 이 답의 다른 명령은 그대로 실행됨.']
+- ['A TO message sent with DONE calls no agent back.', 'DONE과 함께 보낸 TO 메시지는 아무도 다시 부르지 않음.']
 - ['Not delivered from your last reply: ', '내 지난 답에서 전달되지 않은 줄: ']
 # --- USER: the head (round, token order, my tokens, previous rounds) -------------------------------------------------
 - ['Completed SOLVE record for round {n}:', '라운드 {n}의 SOLVE 기록:']

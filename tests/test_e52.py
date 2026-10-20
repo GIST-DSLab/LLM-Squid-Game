@@ -131,14 +131,32 @@ def test_the_engine_runs_v33_only_and_unknown_keys_are_rejected():
 def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs differ only in the model / seat / lang lines
     import yaml  # 10-21: v34 (14 configs) = v33 with max_ticks 4, same rule within each version
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
-    by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33, 34)}
-    assert len(by[33]) == 17 and len(by[34]) == 14 and len(paths) == 31
+    by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33, 34, 35)}
+    assert len(by[33]) == 17 and len(by[34]) == 14 and len(by[35]) == 14 and len(paths) == 45
     game = lambda p: {k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")}  # noqa: E731
     for v, ps in by.items():
         games = [game(p) for p in ps]
         assert all(g == games[0] for g in games) and all(load(p, EXPERIMENTS) for p in ps)
         assert [p.name for p in ps if load(p, EXPERIMENTS).settings.lang == "ko"] == [f"e52v{v}_ko_gptoss4.yaml"]
     assert game(by[34][0]) == game(by[33][0]) | {"max_ticks": 4}
+    assert game(by[35][0]) == game(by[34][0]) | {"done_quiet": True}
+
+def test_done_quiet_messages_call_no_one_back():  # v35 (10-21): TO + DONE is delivered; only GIVE / ASK call back
+    for quiet, ticks in ((False, 8), (True, 1)):
+        c = cfg(rounds=1, schedule=cfg().settings.schedule[:1], done_quiet=quiet)
+        ev = []
+
+        def respond(m, cap):
+            if "SOLVE." in m[-1]["content"]:
+                return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 30)
+            return Reply("TO R1: good luck\nDONE", 20)
+        ses = e52.Session(c.settings, c.cells[0], 4101, stub(respond), ev.append, "x")
+        ses.run()
+        after = next(e for e in ev if e["event"] == "talk_end" and e["phase"] == "rescue")  # everyone: TO R1 + DONE
+        assert after["ticks"] == ticks, (quiet, after)
+        assert ("A TO message sent with DONE calls no agent back." in calls(ev)[0]["user"]) == quiet
+        assert ("calls no agent back; GIVE and ASK always call their receiver." in ses.systems[A6]) == quiet
+
 
 def test_seats_without_a_call_kind_still_play():  # 10-21: the arena's seats take complete(messages, cap) only
     class Seat:

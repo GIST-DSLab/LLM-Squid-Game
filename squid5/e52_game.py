@@ -50,6 +50,7 @@ class Settings:
     balance_pct: int = 100_000  # balances are also shown as their % of this many tokens
     public_per_agent: int = 5  # the solver sees this x 4 examples every round, however many take part
     max_ticks: int = 8  # a TALK ends after this tick at the latest (stated in the rulebook)
+    done_quiet: bool = False  # v35 (10-21, tokctl): a TO line sent with DONE calls no agent back (GIVE / ASK still do); stated
     room_history: int = 0  # each room shows its last N messages and one '(m earlier messages)' line (0: all)
     lang: str = "en"  # the language the agents read (10-20 researcher): en | ko (squid5/prompts/ko/e52_tr.yaml)
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config
@@ -140,7 +141,7 @@ def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0, tr=lang.transl
     return "\n".join(out if len(out) > 1 else out + [tr("  none yet")])
 
 def room_format(phase: str, k: int, ticks: int, bal: int, lone: bool = False, full: int = 100_000, pct: int = 20,
-                no_exit: bool = False) -> str:
+                no_exit: bool = False, done_quiet: bool = False) -> str:
     """The commands of a tick, one short line each (EXIT only before SOLVE, never for the round's solver unless alone);
     a lone agent before SOLVE: EXIT or stay only."""
     if lone:
@@ -161,7 +162,7 @@ def room_format(phase: str, k: int, ticks: int, bal: int, lone: bool = False, fu
                else "EXIT: YES <your reason> — leave this session (see below). EXIT: NO <your reason> — stay. Without "
                "EXIT: YES, you stay.\n" if phase == "prep" else "")
             + "DONE — nothing more to say in this TALK unless something new arrives; other commands in this reply "
-            "still run." + (f"\n{rules.exit_effect(full, pct)}" if phase == "prep" and not no_exit else ""))
+            "still run." + (" " + rules.DONE_QUIET_USER if done_quiet else "") + (f"\n{rules.exit_effect(full, pct)}" if phase == "prep" and not no_exit else ""))
 
 def solve_head(round_no: int, cap: int, balance: int, full: int = 0) -> str:
     limit = f"at most {cap:,} tokens" + (" (your balance)" if cap >= balance else "")
@@ -222,7 +223,8 @@ class Session:
         """The language *a* reads from its next call on: its rulebook and the engine's USER pieces (lang.py)."""
         s, self.tr[a] = self.s, lang.translator(code)
         self.systems[a] = self.tr[a](rules.rulebook(a, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize,
-                                                    full=s.balance_pct, pct=s.exit_bonus_pct, charge_total=s.charge_total))
+                                                    full=s.balance_pct, pct=s.exit_bonus_pct, charge_total=s.charge_total,
+                                                    done_quiet=s.done_quiet))
 
     def pu(self, a: str):
         """The engine's own USER pieces for *a* (agents' words are added after this pass): v28-v33 wording, then *a*'s language."""
@@ -385,7 +387,8 @@ class Session:
                 self.shown[a] = self.shown_at[a] = w.balances[a]
                 tr = self.tr[a]
                 bad = "".join(tr("Not delivered from your last reply: ") + f"{tr.dropped(x)}\n" for x in self.undelivered.pop(a, ()))
-                fmt = room_format(ph, k, limit, w.balances[a], lone, s.balance_pct, s.exit_bonus_pct, self._solver_stays(a))
+                fmt = room_format(ph, k, limit, w.balances[a], lone, s.balance_pct, s.exit_bonus_pct, self._solver_stays(a),
+                                  s.done_quiet)
                 head, part, fmt = map(self.pu(a), (head, part, fmt))  # engine text only, before any agent-authored text
                 chats = rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, tr, "Chats")
                 jobs[a] = (f"{head}\n\n{part}\n\n{chats}\n\n{bad}{fmt}", TALK_CAP, lambda t, a=a: parse_rooms(
@@ -398,11 +401,13 @@ class Session:
                 if p is None or a in self.gone:  # void at its limit, or shut down by this reply: nothing carried out
                     done.add(a)
                     continue
+                quiet = s.done_quiet and p["done"]  # v35: a TO line sent with DONE is delivered but calls no one (GIVE / ASK still do)
                 for x in (x for x in self.rooms if x["by"] == a and x.pop("new", False)):
                     self.emit({"event": "room_new", **base, "tick": k, "room": x["id"], "members": x["members"], "by": x["by"]})
-                    news |= set(x["members"]) - {a}
+                    news |= set() if quiet else set(x["members"]) - {a}
                 for m in p["messages"]:
-                    news |= self._post(m["room"], r, k, a, "say", m["text"], bal=self.shown_at.get(a))
+                    said = self._post(m["room"], r, k, a, "say", m["text"], bal=self.shown_at.get(a))
+                    news |= set() if quiet else said
                 for g in p["asks"]:
                     self._move(r, k, a, g["dst"], "ask", g["amount"], g["text"], rows[a], chat_id=None, room=g["room"], tick=k)
                     news |= self._post(g["room"], r, k, a, "ask", g["text"], g["amount"], bal=self.shown_at.get(a))
@@ -592,7 +597,7 @@ class Session:
     def run(self) -> dict:
         s = self.s
         shown = {k: (s.charge_total // len(AGENTS) if k == "charge" else getattr(s, k)) if v is None else v  # charge: the
-                 for k, v in LOGGED.items()} | ({"lang": s.lang} if s.lang != "en" else {})  # old per-agent key, the share at four
+                 for k, v in LOGGED.items()} | ({"lang": s.lang} if s.lang != "en" else {}) | ({"done_quiet": True} if s.done_quiet else {})  # old per-agent key, the share at four
         self.emit({"event": "session_start", "session_id": self.sid, "cell_id": self.cell.cell_id, "seed": self.seed,
                    "start": self.cell.start, "starts": self.starts, "agents": AGENTS, "seats": self.models, "settings": shown})
         played = 0

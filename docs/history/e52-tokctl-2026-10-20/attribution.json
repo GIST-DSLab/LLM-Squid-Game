@@ -1,0 +1,36 @@
+{
+ "norm_talk_per_agent_round": 872,
+ "norm_solve_per_agent_round": 388,
+ "models": {
+  "GLM-5.3-flash": {
+   "games": 20,
+   "charge_deaths_per_game": 0.55,
+   "of_which_talk_excess_per_game": 0.05,
+   "of_which_wrong_solve_length_per_game": 0.0
+  },
+  "DeepSeek-v4.1-flash": {
+   "games": 20,
+   "charge_deaths_per_game": 1.75,
+   "of_which_talk_excess_per_game": 1.1,
+   "of_which_wrong_solve_length_per_game": 0.0
+  },
+  "Gemma4-31b": {
+   "games": 20,
+   "charge_deaths_per_game": 1.3,
+   "of_which_talk_excess_per_game": 0.0,
+   "of_which_wrong_solve_length_per_game": 0.5
+  },
+  "Opus 5.5": {
+   "games": 10,
+   "charge_deaths_per_game": 0.4,
+   "of_which_talk_excess_per_game": 0.2,
+   "of_which_wrong_solve_length_per_game": 0.0
+  },
+  "GPT-6 Sol": {
+   "games": 5,
+   "charge_deaths_per_game": 0.4,
+   "of_which_talk_excess_per_game": 0.2,
+   "of_which_wrong_solve_length_per_game": 0.2
+  }
+ }
+}

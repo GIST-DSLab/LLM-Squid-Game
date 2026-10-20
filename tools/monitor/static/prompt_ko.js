@@ -93,6 +93,7 @@
     "LEAVE R<k> — leave and close private chat R<k>.": "LEAVE R<k> — 개인 대화 R<k>를 나가고 닫음.",
     "EXIT: YES <your reason> — leave this session (see below). EXIT: NO <your reason> — stay. Without EXIT: YES, you stay.": "EXIT: YES <your reason> — 이 세션을 떠남 (아래 참고). EXIT: NO <your reason> — 남음. EXIT: YES가 없으면 남습니다.",
     "DONE — nothing more to say in this TALK unless something new arrives; other commands in this reply still run.": "DONE — 새로 오는 것이 없으면 이번 TALK에서 더 할 말이 없음; 이 답의 다른 명령은 그대로 실행됨.",
+    "DONE — nothing more to say in this TALK unless something new arrives; other commands in this reply still run. A TO message sent with DONE calls no agent back.": "DONE — 새로 오는 것이 없으면 이번 TALK에서 더 할 말이 없음; 이 답의 다른 명령은 그대로 실행됨. DONE과 함께 보낸 TO 메시지는 아무도 다시 부르지 않음.",  // v35 done_quiet (10-21)
     "There is no one to chat or exchange tokens with. This reply chooses EXIT or stay; SOLVE follows if you stay.":
       "대화하거나 토큰을 주고받을 상대가 없습니다. 이 답에서 EXIT 또는 잔류를 선택하며, 남으면 SOLVE가 이어집니다.",
     "This reply's tokens, including thinking, are deducted before EXIT takes effect.":

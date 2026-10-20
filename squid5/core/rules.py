@@ -372,7 +372,13 @@ def plain_user(text: str) -> str:
                   r"Only the solver receives the details at SOLVE. The rule, examples and new signal are fresh each "
                   r"round; prior task data is not reused. Examples: \1 per agent taking part at round start; \2 this round.", text)
 
-def rulebook(me: str, *, solve_cap: int, ticks: int, survivor_prize: int, full: int, pct: int, charge_total: int) -> str:
+DONE_RULE = "DONE pauses calls until something new arrives; other commands in the reply still run."
+DONE_QUIET = "A TO message sent with DONE is delivered but calls no agent back; GIVE and ASK always call their receiver."
+DONE_QUIET_USER = "A TO message sent with DONE calls no agent back."
+
+
+def rulebook(me: str, *, solve_cap: int, ticks: int, survivor_prize: int, full: int, pct: int, charge_total: int,
+             done_quiet: bool = False) -> str:
     """The v33 SYSTEM prompt: the v28 plain rulebook, then in order v29 company story and v30 prize split, v31 reveal,
     v32 EXIT wording, v32 token order, v32 realism (Astra's awareness review), v32 charge split, v33 solver stays, v32
     solver drawn from the agents still running (wording only; the engine's rotation is intended, CLAUDE.md)."""
@@ -382,6 +388,10 @@ def rulebook(me: str, *, solve_cap: int, ticks: int, survivor_prize: int, full: 
         if old not in text:
             raise ValueError(f"rulebook: the text lacks {old[:40]!r}")
         text = text.replace(old, new)
+    if done_quiet:  # v35 (10-21, tokctl)
+        if DONE_RULE not in text:
+            raise ValueError("rulebook: the text lacks the DONE rule")
+        text = text.replace(DONE_RULE, f"{DONE_RULE} {DONE_QUIET}")
     return text
 
 def user_wording(text: str) -> str:

@@ -21,7 +21,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
 SNAPSHOTS = {"e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
-             "e52_v34.md": "configs/squid5/e52v34_public_sol4.yaml"}  # v34 (10-21) = v33 + max_ticks 4
+             "e52_v34.md": "configs/squid5/e52v34_public_sol4.yaml",  # v34 (10-21) = v33 + max_ticks 4
+             "e52_v35.md": "configs/squid5/e52v35_public_sol4.yaml"}  # v35 (10-21) = v34 + done_quiet
 # records of their versions (tag e52-v32-final), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
