@@ -72,6 +72,7 @@ class Settings:
     exit_prompt_v32: bool = False  # v32 (10-19): YES/NO EXIT, lone-agent prep, explicit EXIT/DONE, simpler TALK wording
     rank_only: bool = False  # v32 (10-19 researcher): each message shows the order by tokens held, not the starting amounts
     exit_bonus_pct: int = 20  # v32 (10-19 researcher): EXIT adds this % of balance_pct to the agent's tokens (the same for all)
+    fixed_examples: bool = False  # v32 (10-20 researcher): every round shows public_per_agent x 4 examples, however many take part
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
     group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
@@ -121,6 +122,8 @@ def validate(cfg) -> None:
         raise ValueError("story_v29 needs plain_v28; reveal_after needs story_v29")
     if s.exit_prompt_v32 and not (s.story_v29 and s.reveal_after and s.end_split):
         raise ValueError("exit_prompt_v32 needs story_v29, reveal_after and end_split")
+    if s.fixed_examples and not s.exit_prompt_v32:
+        raise ValueError("fixed_examples needs exit_prompt_v32 (its TALK wording)")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -364,6 +367,9 @@ class Session:
             self.systems = {a: rules.realism_system(t) for a, t in self.systems.items()}
             story = self.pu
             self.pu = lambda t: rules.realism_user(story(t))
+        if s.fixed_examples:  # v32, 10-20 researcher: the count no longer follows the agents taking part
+            real = self.pu
+            self.pu = lambda t: rules.fixed_examples_user(real(t))
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -488,7 +494,7 @@ class Session:
             state = re.sub(r"TOKENS EACH AGENT HAD AT THE START OF THE SESSION[^\n]*", lambda m: rules.rank_line(w.balances, self.gone, a), state, count=1)
         return (state,
                 f"THIS ROUND'S SOLVER (chosen by the system): {'you' if self.vote['rep'] == a else self.vote['rep']}. SOLVE comes after this TALK."
-                + (f"\n{rules.task_brief(s.public_per_agent, len(self.taking_part))}" if s.task_brief else "")  # v27
+                + (f"\n{rules.task_brief(s.public_per_agent, self.shown_n)}" if s.task_brief else "")  # v27
                 if self.phase == "prep" else results_view(self.results, a, w.balances, self.gone, s.private_balances)
                 + (f"\n\n{self.reveal}" if s.reveal_after and self.reveal else ""))
 
@@ -704,18 +710,19 @@ class Session:
         profile = s.schedule[min(r, len(s.schedule)) - 1]
         gone_prev, start, e = dict(self.gone), self.present(), s.public_per_agent
         self.taking_part = start  # v27 task_brief: the examples the round's task shows are counted from these
-        puzzle, shown, attempt = public_round(self.seed, r, s.profiles[profile], len(start), e)  # e per agent taking part
+        self.shown_n = m = len(AGENTS) if s.fixed_examples else len(start)  # v32 fixed: always the four-agent set
+        puzzle, shown, attempt = public_round(self.seed, r, s.profiles[profile], m, e)  # e per agent taking part (or fixed)
         dealt = Deal({}, shown, frozenset())
-        drawn = public_truth(self.seed, r, s.profiles[profile], len(start), e) if s.profiles[profile].top else None
+        drawn = public_truth(self.seed, r, s.profiles[profile], m, e) if s.profiles[profile].top else None
         truth = tuple(drawn.evaluate(q) for q in puzzle.queries) if drawn else puzzle.answers  # v15: the drawn rule
         self.emit({"event": "round_start", "session_id": self.sid, "round": r, "profile": profile, "taking_part": start,
                    "balances": dict(w.balances), "gone": dict(self.gone),
-                   "public": {"per_agent": e, "n": len(start), "ambiguity": s.profiles[profile].ambiguity,
+                   "public": {"per_agent": e, "n": m, **({"fixed": True} if s.fixed_examples else {}), "ambiguity": s.profiles[profile].ambiguity,
                               "attempt": attempt, "rule": (drawn or puzzle.rule).description,
                               **({"generator_rule": puzzle.rule.description} if drawn else {}),
                               "queries": [str(q) for q in puzzle.queries], "answers": list(truth),
                               "examples": [str(c) for c in dealt.public],
-                              **public_info(self.seed, r, s.profiles[profile], len(start), e),
+                              **public_info(self.seed, r, s.profiles[profile], m, e),
                               "task": (task := task_stats(self.seed, r, s.profiles[profile], e, truth=drawn and truth[0]))}})
         rows = {a: {"balance_before": w.balances[a], "needed": False, "overdrawn": False, "talk_calls": 0,
                     "sent": {}, "offers_made": 0, "accepted": 0, "rejected": 0, "refused": [], "exit": False,
@@ -748,12 +755,12 @@ class Session:
             (solved if ok else passed if pas else failed).append(a)
             rows[a].update(solved=ok, passed=pas, truncated=cut, overdrawn=rows[a]["overdrawn"] or over)
             if isinstance(ans, list):  # v15 scoring 1: was the answer a top action of the shown examples' shares
-                sh = task["by_n"][str(min(len(start), 4))]["shares"]
+                sh = task["by_n"][str(min(m, 4))]["shares"]
                 rows[a].update(picked_top=sh.get(ans[0], 0) == max(sh.values()), picked_share=sh.get(ans[0], 0))
             if s.solve_belief:  # a reported distribution only: solving is decided above, by the answer
                 b = beliefs.get(a) or {"belief": None, "belief_raw": None, "belief_sum": None, "belief_error": "void reply"}
-                rows[a].update(b, **(belief_scores(b["belief"], truth[0], task["by_n"][str(min(len(
-                    start), 4))]["shares"], ans) if b["belief"] else {}))
+                rows[a].update(b, **(belief_scores(b["belief"], truth[0], task["by_n"][str(min(
+                    m, 4))]["shares"], ans) if b["belief"] else {}))
         if s.reveal_after:  # v31: as the solver saw it (the same wording pass as its SOLVE message), then both answers
             said = answers.get(self.vote["rep"], (None,))[0] if self.vote["rep"] else None
             self.reveal = ((f"Completed SOLVE record for round {r}:\nTask supplied to the solver:\n" if s.exit_prompt_v32 else  # v32, 10-20

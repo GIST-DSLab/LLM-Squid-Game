@@ -539,6 +539,11 @@ def realism_user(text: str) -> str:
                   r"(\d+), so the solver sees (\d+) this round\.", r"The input contains \1 labeled signals for each agent taking "
                   r"part at the start of the round. The solver receives \2 labeled signals this round.", text)
 
+def fixed_examples_user(text: str) -> str:
+    """v32 ``fixed_examples`` (10-20 researcher): the same number of examples every round, not one share per agent."""
+    return re.sub(r"The input contains \d+ labeled signals for each agent taking part at the start of the round\. "
+                  r"The solver receives (\d+) labeled signals this round\.", r"The solver receives \1 labeled signals every round.", text)
+
 def plain_user(text: str) -> str:
     text = thinking_words(trim(tokens_wording(text), "user"), "user")
     for old, new in PLAIN_USER:

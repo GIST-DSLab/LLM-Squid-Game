@@ -861,3 +861,16 @@ def test_v32_messages_show_the_token_order_not_the_amounts():  # 10-19 researche
         assert not re.search(r"agent-\d+ [\d,]+ \(\d+%\)", u)  # no other agent's amount next to its name
     later = [c for c in calls(ev, 'talk', A6) if c['round'] == 2][0]['user']
     assert re.search(r"descending \(amounts not shown\): agent-17, you, ", later)  # the order moves with the tokens
+
+
+def test_v32_fixed_examples_show_twenty_whatever_the_number_taking_part():  # 10-20 researcher
+    lines = {(a, 1, 'prep', 1): 'EXIT: YES back to regular work' for a in (A17, A23)}
+    _, ev, _ = play(lines, name='e52v32_public_sol4', rounds=2)
+    pub = [e['public'] for e in of(ev, 'round_start')]
+    assert [(x['n'], x.get('fixed'), len(x['examples'])) for x in pub] == [(4, True, 20), (4, True, 20)]
+    prep = [c['user'] for c in calls(ev, 'talk', r=2) if c['phase'] == 'prep']
+    assert prep and all('The solver receives 20 labeled signals every round.' in u and 'for each agent' not in u for u in prep)
+    _, old, _ = play(lines, name='e52v32_public_sol4', rounds=2, fixed_examples=False)
+    assert [len(e['public']['examples']) for e in of(old, 'round_start')] == [20, 10]
+    with pytest.raises(ValueError):
+        e52.validate(cfg('e52v31_public_sol4', fixed_examples=True))
