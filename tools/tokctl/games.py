@@ -19,6 +19,8 @@ SETS = [  # (group, label, open?, glob)
     ("fit0", "GLM-5.3-flash", True, "e52_tokctl/squid5_e52tc_fit0_glm"),
     *[("v34", m, True, f"e52_v34/squid5_e52v34_codex_{k}4") for k, m in (("glm", "GLM-5.3-flash"), ("deepseek", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],
     ("v34", "Opus 5.5", False, "e52_v34/squid5_e52v34_public_opus4"), ("v34", "GPT-6 Sol", False, "e52_v34/squid5_e52v34_public_sol4"),
+    *[("v35", m, True, f"e52_v35/squid5_e52v35_codex_{k}4") for k, m in (("glm", "GLM-5.3-flash"), ("deepseek", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],
+    ("v35", "Opus 5.5", False, "e52_v35/squid5_e52v35_public_opus4"), ("v35", "GPT-6 Sol", False, "e52_v35/squid5_e52v35_public_sol4"),
     *[("cal8", m, True, f"e52_tokctl/squid5_e52tc_cal8_{k}") for k, m in (("glm", "GLM-5.3-flash"), ("ds", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],
     ("t4", "Opus 5.5", False, "e52_tokctl/squid5_e52tc_t4_opus"),
     ("v33", "GLM-5.3-flash", True, "e52_v33/squid5_e52v33_codex_glm4"), ("v33", "Kimi-K3", True, "e52_v33/squid5_e52v33_codex_kimi4"),

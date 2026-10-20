@@ -66,7 +66,7 @@ matchMedia("(prefers-color-scheme: dark)").matches;var n=d?"light":"dark";r.setA
 try{localStorage.setItem("hpf-theme",n)}catch(e){}})})();</script>"""
 PAGES = [("t1-log-diagnosis.html", "t1 기록 진단"), ("t2-harness-capture.html", "t2 하네스 캡처"),
          ("t3-frozen-replay.html", "t3 같은 입력 재생"), ("t4-variants.html", "t4 한 가지씩 바꾸기"),
-         ("t5-games.html", "t5 게임으로 확인"), ("t6-solve-replay.html", "t6 SOLVE 재생"), ("t7-calibration.html", "t7 보정과 상한 맞춤"), ("t8-v34-run.html", "t8 v34 본 런")]
+         ("t5-games.html", "t5 게임으로 확인"), ("t6-solve-replay.html", "t6 SOLVE 재생"), ("t7-calibration.html", "t7 보정과 상한 맞춤"), ("t8-v34-run.html", "t8 v34 본 런"), ("t9-factors.html", "t9 승패 요인 · v35")]
 
 
 def page(fname, title, desc, kicker, body):
@@ -368,6 +368,41 @@ def t8(games):
     page("t8-v34-run.html", "v34 본 런", "보정을 아레나 설정으로 옮긴 v34를 오픈 모델 셋 10판, Opus 5판으로 돌린 결과", "squid5 · 5.2 v34 · tokctl t8", body)
 
 
+def t9(games):
+    from games_page import GROUP  # noqa: PLC0415
+    fx = {v: json.loads((HIST / f"factors_v{v}.json").read_text()) for v in (34, 35)}
+    at = {v: json.loads((HIST / f"attribution_v{v}.json").read_text()) for v in (34, 35)}
+    reg = [{"ver": f"v{v}", "n": fx[v]["n"], "spec": spec, **{f"{k}": f"{b:+.2f} ± {se:.2f}" for k, (b, se) in fx[v][spec].items() if k != "const"}}
+           for v in (34, 35) for spec in ("dead~wrong+open", "dead~wrong+exit+open", "dead~wrong+exit+talk_k+open")]
+    att = [{"ver": f"v{v}", "model": m, **x} for v in (34, 35) for m, x in at[v]["models"].items()]
+    keep = [dict(r, what=GROUP.get(r["group"], r["group"]), own=round(r["dead_by_talk"] + r["dead_by_solve"], 1))
+            for r in games if r["group"] in ("v34", "v35")]
+    note = json.loads((Path(__file__).with_name("verdict_t9.json")).read_text())
+    body = f"""<p class="lede">v34에서 토큰 조절 실패(잔액 1,000 이상에서 자기 답으로 꺼짐)는 사라졌지만, 오답 수가 같아도 오픈 모델이 더 꺼졌습니다.
+"승패가 다른 요인으로만 갈리는가"를 두 가지로 직접 쟀습니다 — 판별 꺼짐 수의 회귀(<code>tools/tokctl/factors.py</code>)와,
+벌금으로 꺼진 자리마다 "닫힌 모델만큼만 썼다면 버텼을까"(<code>tools/tokctl/attribution.py</code>). 그 결과로 찾은 원인을 v35에서 고쳤습니다.</p>
+<div class="keyfacts"><ul>{''.join(f'<li>{x}</li>' for x in note['keyfacts'])}</ul></div>
+<h2>회귀: 판별 꺼짐 수</h2>
+<p class="note">한 판 = 한 행(v34 75판, v35 40판; 오픈 모델 셋 + Opus · Sol). wrong = 그 판의 오답 수, exit = EXIT한 자리 수, talk_k = TALK 토큰(천), open = 오픈 모델이면 1. 값 ± 표준오차.</p>
+{table([("ver", "판", True), ("n", "판 수"), ("spec", "식", True), ("wrong", "wrong", True), ("exit", "exit", True), ("talk_k", "talk_k", True), ("open", "open", True)], reg)}
+<h2>벌금 꺼짐의 귀속 (판당)</h2>
+<p class="note">닫힌 모델 기준 = Opus·Sol의 자리·라운드당 TALK 토큰(v34 {at[34]['norm_talk_per_agent_round']:,}, v35 {at[35]['norm_talk_per_agent_round']:,})과 SOLVE 토큰(틀린 답).
+그 자리의 초과분이 부족했던 토큰보다 크면 "그만큼만 썼다면 버텼음"으로 셉니다.</p>
+{table([("ver", "판", True), ("model", "모델", True), ("games", "판 수"), ("charge_deaths_per_game", "벌금 꺼짐"), ("of_which_talk_excess_per_game", "└ 대화 과소비 탓"), ("of_which_wrong_solve_length_per_game", "└ 틀린 SOLVE의 긴 추론 탓")], att,
+       lambda r: "closed" if r["model"] in ("Opus 5.5", "GPT-6 Sol") else "open")}
+<h2>v34 · v35 결과</h2>
+{table([("model", "모델", True), ("what", "판", True), ("n", "판 수"), ("rounds", "라운드"), ("alive", "끝까지"), ("exited", "EXIT"), ("dead_own_rich", "조절 실패"),
+        ("own", "자기 답 (전체)"), ("dead_by_give", "GIVE"), ("dead_by_charge", "벌금"), ("talk_tokens", "TALK 토큰"), ("tokens_per_talk", "TALK 1번당"), ("solve_acc", "정답 %")], keep,
+       lambda r: "open" if r["open"] else "closed")}
+<div class="verdict">{note['verdict']}</div>
+<h3>v35에서 바뀐 것</h3><ul class="note">
+<li>규칙서: "DONE pauses calls until something new arrives; other commands in the reply still run." 뒤에 <code>A TO message sent with DONE is delivered but calls no agent back; GIVE and ASK always call their receiver.</code>
+TALK 명령 안내의 DONE 줄 뒤에 <code>A TO message sent with DONE calls no agent back.</code> (en·ko <code>e52_v35.md</code>, <code>sync.py check</code> 통과).</li>
+<li>엔진: <code>game.done_quiet: true</code> — DONE이 있는 답의 TO 메시지와 그것이 만든 새 대화방은 아무도 다시 부르지 않음. GIVE·ASK는 그대로 받는 쪽을 부름. 기본값은 꺼짐(v33·v34 바이트 그대로).</li>
+<li>설정: <code>configs/squid5/e52v35_*.yaml</code>(14개) = v34 + <code>done_quiet: true</code>.</li></ul>"""
+    page("t9-factors.html", "승패 요인 분해와 v35", "꺼짐을 오답·EXIT·대화량·모델 종류로 회귀하고 벌금 꺼짐을 귀속해 남은 토큰 원인을 찾고 v35로 고친 결과", "squid5 · 5.2 v35 · tokctl t9", body)
+
+
 def main():
     s = json.loads((HIST / "summary.json").read_text())
     t1(s), t2(s), t3(s), t4(s), t6(s)
@@ -376,6 +411,7 @@ def main():
         t5(json.loads((HIST / "games.json").read_text()), page, table, bars, LEGEND, fmt)
         t7(s, json.loads((HIST / "games.json").read_text()))
         t8(json.loads((HIST / "games.json").read_text()))
+        t9(json.loads((HIST / "games.json").read_text()))
     inject_main()
     print("pages ->", OUT)
 

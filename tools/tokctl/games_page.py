@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 E = html.escape
-GROUP = {"b0": "기준 (v33 그대로)", "tl": "TALK 생각 낮춤", "tln": "TALK 생각 none", "t4": "틱 상한 4", "tlt4": "둘 다", "fin": "최종 보정 (none)", "fit": "둘 다 + SOLVE 상한 맞춤 (넘김 1 규칙)", "fit0": "최종 보정 (넘김 0 규칙)", "cal8": "보정만 (v33 규칙 그대로, 10판)", "v34": "v34 본 런", "v33": "v33 참고 런"}
+GROUP = {"b0": "기준 (v33 그대로)", "tl": "TALK 생각 낮춤", "tln": "TALK 생각 none", "t4": "틱 상한 4", "tlt4": "둘 다", "fin": "최종 보정 (none)", "fit": "둘 다 + SOLVE 상한 맞춤 (넘김 1 규칙)", "fit0": "최종 보정 (넘김 0 규칙)", "cal8": "보정만 (v33 규칙 그대로, 10판)", "v34": "v34 본 런", "v35": "v35 (DONE 조용히)", "v33": "v33 참고 런"}
 NOTES = Path(__file__).with_name("verdict_t5.json")  # {"keyfacts": [html, ...], "verdict": html, "warn": bool}
 
 

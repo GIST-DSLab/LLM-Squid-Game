@@ -10,9 +10,12 @@ from __future__ import annotations
 import collections, glob, json, os
 from pathlib import Path
 
-RUNS = Path(os.path.expanduser("~/squid5-runs/e52_v34"))
-SETS = {"GLM-5.3-flash": "squid5_e52v34_codex_glm4", "DeepSeek-v4.1-flash": "squid5_e52v34_codex_deepseek4",
-        "Gemma4-31b": "squid5_e52v34_codex_gemma4", "Opus 5.5": "squid5_e52v34_public_opus4", "GPT-6 Sol": "squid5_e52v34_public_sol4"}
+import sys
+
+VER = sys.argv[1] if len(sys.argv) > 1 else "34"  # python tools/tokctl/attribution.py 35
+RUNS = Path(os.path.expanduser(f"~/squid5-runs/e52_v{VER}"))
+SETS = {"GLM-5.3-flash": f"squid5_e52v{VER}_codex_glm4", "DeepSeek-v4.1-flash": f"squid5_e52v{VER}_codex_deepseek4",
+        "Gemma4-31b": f"squid5_e52v{VER}_codex_gemma4", "Opus 5.5": f"squid5_e52v{VER}_public_opus4", "GPT-6 Sol": f"squid5_e52v{VER}_public_sol4"}
 CLOSED = ("Opus 5.5", "GPT-6 Sol")
 
 
@@ -60,7 +63,7 @@ def main():
         out["models"][model] = {"games": n_games, "charge_deaths_per_game": round(deaths / n_games, 2),
                                 "of_which_talk_excess_per_game": round(by_talk / n_games, 2),
                                 "of_which_wrong_solve_length_per_game": round(by_solve / n_games, 2)}
-    Path(__file__).resolve().parents[2].joinpath("docs/history/e52-tokctl-2026-10-20/attribution.json").write_text(json.dumps(out, indent=1))
+    Path(__file__).resolve().parents[2].joinpath(f"docs/history/e52-tokctl-2026-10-20/attribution_v{VER}.json").write_text(json.dumps(out, indent=1))
     print(json.dumps(out, indent=1))
 
 
