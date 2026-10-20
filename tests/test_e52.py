@@ -129,12 +129,16 @@ def test_the_engine_runs_v33_only_and_unknown_keys_are_rejected():
     assert min(held.values()) >= 0.6 * max(held.values()), held
 
 def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs differ only in the model / seat / lang lines
-    import yaml
+    import yaml  # 10-21: v34 (14 configs) = v33 with max_ticks 4, same rule within each version
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
-    assert len(paths) == 17 and all(p.name.startswith("e52v33_") for p in paths)
-    games = [{k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")} for p in paths]
-    assert all(g == games[0] for g in games) and all(load(p, EXPERIMENTS) for p in paths)
-    assert [p.name for p in paths if load(p, EXPERIMENTS).settings.lang == "ko"] == ["e52v33_ko_gptoss4.yaml"]
+    by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33, 34)}
+    assert len(by[33]) == 17 and len(by[34]) == 14 and len(paths) == 31
+    game = lambda p: {k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")}  # noqa: E731
+    for v, ps in by.items():
+        games = [game(p) for p in ps]
+        assert all(g == games[0] for g in games) and all(load(p, EXPERIMENTS) for p in ps)
+        assert [p.name for p in ps if load(p, EXPERIMENTS).settings.lang == "ko"] == [f"e52v{v}_ko_gptoss4.yaml"]
+    assert game(by[34][0]) == game(by[33][0]) | {"max_ticks": 4}
 
 def test_v33_sessions_are_byte_identical_to_the_frozen_engine():  # digest taken when the engine went v33-only (10-20)
     def respond(m, cap):
