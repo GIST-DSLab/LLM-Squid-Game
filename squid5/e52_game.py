@@ -21,7 +21,7 @@ import numpy as np
 
 from .core import lang, rules
 from .core.protocol import ALL, FormatError, parse_belief, parse_rooms, parse_solve
-from .core.providers import ProviderConfig, Reply, make_provider
+from .core.providers import Provider, ProviderConfig, Reply, make_provider
 from .core.puzzle import ACTIONS, Deal, Spec, candidate_actions, public_info, public_round, public_truth, task_stats
 from .core.stats import md
 from .core.wallet import Wallet
@@ -236,8 +236,9 @@ class Session:
         bal = self.w.balances[a]
         cap = min(cap, bal)
         try:
-            return bal, cap, self.providers[a].complete([{"role": "system", "content": self.systems[a]},
-                                                         {"role": "user", "content": user}], cap, kind)
+            p, msgs = self.providers[a], [{"role": "system", "content": self.systems[a]}, {"role": "user", "content": user}]
+            # the call kind only for squid5 providers (think_talk / think_fit); arena seats take (messages, cap)
+            return bal, cap, p.complete(msgs, cap, kind) if isinstance(p, Provider) else p.complete(msgs, cap)
         except RuntimeError as err:  # a safety filter refusing a normal prompt ends this call, not the session
             if "safeguards flagged" not in str(err):
                 raise

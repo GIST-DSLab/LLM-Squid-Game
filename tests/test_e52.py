@@ -140,6 +140,16 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
         assert [p.name for p in ps if load(p, EXPERIMENTS).settings.lang == "ko"] == [f"e52v{v}_ko_gptoss4.yaml"]
     assert game(by[34][0]) == game(by[33][0]) | {"max_ticks": 4}
 
+def test_seats_without_a_call_kind_still_play():  # 10-21: the arena's seats take complete(messages, cap) only
+    class Seat:
+        def complete(self, messages, cap):
+            return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump" if "SOLVE." in messages[-1]["content"] else "DONE", 30)
+    c = cfg(rounds=1, schedule=cfg().settings.schedule[:1])
+    ses = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "x")
+    ses.providers = {a: Seat() for a in AG}
+    assert ses.run()
+
+
 def test_v33_sessions_are_byte_identical_to_the_frozen_engine():  # digest taken when the engine went v33-only (10-20)
     def respond(m, cap):
         a, u = me(m), m[-1]["content"]
