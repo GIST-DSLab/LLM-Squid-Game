@@ -31,7 +31,8 @@ SNAPSHOTS = {"e52_v21.md": "configs/squid5/e52v21_public_sol4.yaml",  # the curr
              "e52_v29.md": "configs/squid5/e52v29_public_sol4.yaml",
              "e52_v30.md": "configs/squid5/e52v30_public_sol4.yaml",
              "e52_v31.md": "configs/squid5/e52v31_public_sol4.yaml",
-             "e52_v32.md": "configs/squid5/e52v32_public_sol4.yaml"}
+             "e52_v32.md": "configs/squid5/e52v32_public_sol4.yaml",
+             "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml"}
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
 

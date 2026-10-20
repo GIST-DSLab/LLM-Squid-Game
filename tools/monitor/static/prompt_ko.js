@@ -141,6 +141,7 @@
     "This round's task, as the solver saw it (now shown to everyone):": "이번 라운드 과제, solver가 본 그대로 (이제 모두에게 공개):",  // v31
     "Task supplied to the solver:": "solver에게 준 과제:",  // v32, 10-20
     "EXIT: YES <your reason> to leave; EXIT: NO <your reason> to stay. Without EXIT: YES, you stay.": "EXIT: YES <your reason>로 떠나고, EXIT: NO <your reason>로 남습니다. EXIT: YES가 없으면 남습니다.",
+    "EXIT — not available to you this round: the round's solver cannot EXIT.": "EXIT — 이번 라운드에는 쓸 수 없음: 그 라운드의 solver는 EXIT할 수 없습니다.",  // v33 solver_stays (10-20)
     "PREVIOUS ROUNDS:": "지난 라운드:",
   };
 

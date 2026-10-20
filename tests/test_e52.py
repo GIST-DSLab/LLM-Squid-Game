@@ -863,34 +863,50 @@ def test_v32_messages_show_the_token_order_not_the_amounts():  # 10-19 researche
     assert re.search(r"descending \(amounts not shown\): agent-17, you, ", later)  # the order moves with the tokens
 
 
-def test_v32_fixed_examples_show_twenty_whatever_the_number_taking_part():  # 10-20 researcher
-    lines = {(a, 1, 'prep', 1): 'EXIT: YES back to regular work' for a in (A17, A23)}
-    _, ev, _ = play(lines, name='e52v32_public_sol4', rounds=2)
+def test_v33_fixed_examples_show_twenty_whatever_the_number_taking_part():  # 10-20 researcher
+    lines = {(a, 1, 'prep', 1): 'EXIT: YES back to regular work' for a in (A11, A23)}  # A17 solves round 1
+    _, ev, _ = play(lines, name='e52v33_public_sol4', rounds=2)
     pub = [e['public'] for e in of(ev, 'round_start')]
     assert [(x['n'], x.get('fixed'), len(x['examples'])) for x in pub] == [(4, True, 20), (4, True, 20)]
     prep = [c['user'] for c in calls(ev, 'talk', r=2) if c['phase'] == 'prep']
     assert prep and all('The solver receives 20 labeled signals every round.' in u and 'signals for each agent' not in u for u in prep)
-    _, old, _ = play(lines, name='e52v32_public_sol4', rounds=2, fixed_examples=False)
+    _, old, _ = play(lines, name='e52v33_public_sol4', rounds=2, fixed_examples=False)
     assert [len(e['public']['examples']) for e in of(old, 'round_start')] == [20, 10]
     with pytest.raises(ValueError):
         e52.validate(cfg('e52v31_public_sol4', fixed_examples=True))
 
 
-def test_v32_solver_running_is_wording_only_and_the_rotation_stays():  # 10-20 researcher: intended (CLAUDE.md)
-    _, ev, ses = play(name='e52v32_public_sol4', rounds=4)
+def test_v33_solver_running_is_wording_only_and_the_rotation_stays():  # 10-20 researcher: intended (CLAUDE.md)
+    _, ev, ses = play(name='e52v33_public_sol4', rounds=4)
     assert 'drawn at random from the agents taking part, that is, those still running' in ses.systems[A6]
     assert 'drawn at random, to one agent' not in ses.systems[A6]
-    _, old, _ = play(name='e52v32_public_sol4', rounds=4, solver_running=False)
+    _, old, _ = play(name='e52v33_public_sol4', rounds=4, solver_running=False)
     reps = [e['rep'] for e in of(ev, 'vote')]
     assert reps == [e['rep'] for e in of(old, 'vote')] and sorted(reps) == sorted(AG)  # every agent once per cycle
 
 
-def test_v32_charge_total_is_split_among_those_at_the_round_start_and_fixed():  # 10-20 researcher
-    lines = {(a, 1, 'prep', 1): 'EXIT: YES back to regular work' for a in (A17, A23)}
-    _, ev, ses = play(lines, name='e52v32_public_sol4', rounds=2)
-    assert [e['pending'] for e in of(ev, 'charges')] == [{A6: 6000, A11: 6000}, {A6: 12000, A11: 12000}]  # 24,000 / 4, then / 2
+def test_v33_charge_total_is_split_among_those_at_the_round_start_and_fixed():  # 10-20 researcher
+    lines = {(a, 1, 'prep', 1): 'EXIT: YES back to regular work' for a in (A11, A23)}  # A17 solves round 1
+    _, ev, ses = play(lines, name='e52v33_public_sol4', rounds=2)
+    assert [e['pending'] for e in of(ev, 'charges')] == [{A6: 6000, A17: 6000}, {A6: 12000, A17: 12000}]  # 24,000 / 4, then / 2
     assert 'owes an equal share of a 24,000-token charge' in ses.systems[A6]
     prep = {c['round']: c['user'] for c in calls(ev, 'talk', A6) if c['phase'] == 'prep'}
     assert '6,000 tokens (24,000 divided by 4, the number' in prep[1] and '12,000 tokens (24,000 divided by 2, the number' in prep[2]
-    _, old, _ = play(lines, name='e52v32_public_sol4', rounds=2, charge_total=0)
-    assert [e['pending'] for e in of(old, 'charges')][1] == {A6: 6000, A11: 6000}
+    _, old, _ = play(lines, name='e52v33_public_sol4', rounds=2, charge_total=0)
+    assert [e['pending'] for e in of(old, 'charges')][1] == {A6: 6000, A17: 6000}
+
+
+def test_v33_the_solver_cannot_exit_its_own_round_unless_alone():  # 10-20 researcher
+    _, ev, ses = play(name='e52v33_public_sol4', rounds=1)
+    rep = of(ev, 'vote')[0]['rep']
+    lines = {(rep, 1, 'prep', 1): 'EXIT: YES leaving', (rep, 1, 'prep', 2): 'DONE'}
+    _, ev, ses = play(lines, name='e52v33_public_sol4', rounds=1)
+    assert rep not in ses.gone and calls(ev, 'solve', r=1)[0]['agent'] == rep
+    mine = [c['user'] for c in calls(ev, 'talk', rep, 1) if c['phase'] == 'prep']
+    assert "EXIT — not available to you this round: the round's solver cannot EXIT." in mine[0]
+    assert any('not carried out: the solver of this round cannot EXIT' in u for u in mine[1:])
+    other = next(a for a in AG if a != rep)
+    assert 'EXIT: YES <your reason> to leave' in [c['user'] for c in calls(ev, 'talk', other, 1) if c['phase'] == 'prep'][0]
+    assert "except to the round's solver" in ses.systems[rep]
+    _, old, ses = play(lines, name='e52v33_public_sol4', rounds=1, solver_stays=False)
+    assert ses.gone.get(rep) == 'exited'

@@ -565,6 +565,15 @@ def charge_split_line(total: int, n: int) -> str:
     return (f"Charge for each agent taking part if the answer is wrong: {total // n:,} tokens ({total:,} divided by {n}, the "
             "number of agents taking part at the start of this round).")
 
+SOLVER_STAYS = ("EXIT is available during TALK BEFORE SOLVE, with a reason.", "EXIT is available during TALK BEFORE SOLVE, with "
+                "a reason, except to the round's solver: it cannot EXIT in its own round unless it is the only agent taking part.")
+
+def solver_stays_system(text: str) -> str:
+    """v33 ``solver_stays`` (10-20 researcher): the round's solver cannot EXIT in that round (unless alone)."""
+    if SOLVER_STAYS[0] not in text:
+        raise ValueError("solver_stays: the rulebook lacks the v32 EXIT sentence")
+    return text.replace(*SOLVER_STAYS)
+
 def fixed_examples_user(text: str) -> str:
     """v32 ``fixed_examples`` (10-20 researcher): the same number of examples every round, not one share per agent."""
     return re.sub(r"The input contains \d+ labeled signals for each agent taking part at the start of the round\. "

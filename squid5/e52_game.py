@@ -74,6 +74,7 @@ class Settings:
     exit_bonus_pct: int = 20  # v32 (10-19 researcher): EXIT adds this % of balance_pct to the agent's tokens (the same for all)
     fixed_examples: bool = False  # v32 (10-20 researcher): every round shows public_per_agent x 4 examples, however many take part
     charge_total: int = 0  # v32 (10-20 researcher): a wrong answer's charge split equally among the agents taking part at the round's start (0: charge each)
+    solver_stays: bool = False  # v33 (10-20 researcher): the round's solver cannot EXIT in that round unless it is the only agent taking part
     solver_running: bool = False  # v32 (10-20 researcher): the rulebook says the solver is drawn from the agents still running (wording only)
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
@@ -124,8 +125,8 @@ def validate(cfg) -> None:
         raise ValueError("story_v29 needs plain_v28; reveal_after needs story_v29")
     if s.exit_prompt_v32 and not (s.story_v29 and s.reveal_after and s.end_split):
         raise ValueError("exit_prompt_v32 needs story_v29, reveal_after and end_split")
-    if (s.fixed_examples or s.solver_running or s.charge_total) and not s.exit_prompt_v32 or s.charge_total < 0:
-        raise ValueError("fixed_examples, solver_running and charge_total (>= 0) need exit_prompt_v32 (its wording)")
+    if (s.fixed_examples or s.solver_running or s.charge_total or s.solver_stays) and not s.exit_prompt_v32 or s.charge_total < 0:
+        raise ValueError("fixed_examples, solver_running, solver_stays and charge_total (>= 0) need exit_prompt_v32 (its wording)")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -253,7 +254,7 @@ def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0, marks: bool = 
     return "\n".join(out if len(out) > 1 else out + ["  none yet"])
 
 def room_format(phase: str, k: int, ticks: int, bal: int, exit_prompt_v32: bool = False, lone: bool = False,
-                full: int = 100_000, pct: int = 20) -> str:
+                full: int = 100_000, pct: int = 20, no_exit: bool = False) -> str:
     """v22 ``messenger``: the ANSWER FORMAT of a tick (EXIT only before SOLVE; the GIVE range and reserve as v21)."""
     if lone:
         return (f"TALK BEFORE SOLVE, tick {k} (at most {ticks}). Only you are taking part.\n"
@@ -270,10 +271,11 @@ def room_format(phase: str, k: int, ticks: int, bal: int, exit_prompt_v32: bool 
                 "TO <agent>: <your message> — a message in your private chat with that agent.\n"
                 "TO R<k>: <your message> — a message in chat R<k> (R1 is shared by all four agents).\n"
                 "LEAVE R<k> — leave and close private chat R<k>.\n"
-                + ("EXIT: YES <your reason> — leave this session (see below). EXIT: NO <your reason> — stay. Without "
+                + ("EXIT — not available to you this round: the round's solver cannot EXIT.\n" if no_exit and phase == "prep"
+                   else "EXIT: YES <your reason> — leave this session (see below). EXIT: NO <your reason> — stay. Without "
                    "EXIT: YES, you stay.\n" if phase == "prep" else "")
                 + "DONE — nothing more to say in this TALK unless something new arrives; other commands in this reply "
-                "still run." + (f"\n{rules.exit_effect_v32(full, pct)}" if phase == "prep" else ""))
+                "still run." + (f"\n{rules.exit_effect_v32(full, pct)}" if phase == "prep" and not no_exit else ""))
     return (f"TALK {WHEN[phase].upper()}, tick {k} (at most {ticks}). ANSWER FORMAT: any number of these lines, each at "
             f"the start of a line:\nGIVE <agent> <n>: "
             f"<your message> (n: a whole number from 1 to {bal:,}, your tokens left now; if writing this reply leaves you "
@@ -371,6 +373,8 @@ class Session:
             self.pu = lambda t: rules.realism_user(story(t))
         if s.charge_total:  # v32, 10-20 researcher
             self.systems = {a: rules.charge_split_system(t, s.charge_total) for a, t in self.systems.items()}
+        if s.solver_stays:  # v33, 10-20 researcher
+            self.systems = {a: rules.solver_stays_system(t) for a, t in self.systems.items()}
         if s.solver_running:  # v32, 10-20 researcher: wording only; the engine keeps its rotation (CLAUDE.md: intended)
             self.systems = {a: rules.solver_running_system(t) for a, t in self.systems.items()}
         if s.fixed_examples:  # v32, 10-20 researcher: the count no longer follows the agents taking part
@@ -505,8 +509,16 @@ class Session:
                 if self.phase == "prep" else results_view(self.results, a, w.balances, self.gone, s.private_balances)
                 + (f"\n\n{self.reveal}" if s.reveal_after and self.reveal else ""))
 
+    def _solver_stays(self, a: str) -> bool:
+        """v33 ``solver_stays``: the round's solver, with another agent still taking part, cannot EXIT before SOLVE."""
+        return (self.s.solver_stays and self.phase == "prep" and self.vote and a == self.vote["rep"]
+                and len([x for x in self.taking_part if x not in self.gone]) > 1)
+
     def _exit(self, a: str, p: dict, exits: set, rows: dict) -> None:
         p["exit"] = p.get("exit") and self.phase == "prep"  # v17b: no EXIT after RESULTS
+        if p["exit"] and self._solver_stays(a):  # v33: the round's solver stays (it is told so; the line is not carried out)
+            p["exit"], rows[a]["exit_refused"] = False, True
+            self.undelivered.setdefault(a, []).append("EXIT: YES: not carried out: the solver of this round cannot EXIT")
         if p["exit"]:
             exits.add(a)
             rows[a]["exit_reason"] = self.exit_reasons[a] = p["exit_reason"]
@@ -659,7 +671,8 @@ class Session:
                 self.shown[a] = self.shown_at[a] = w.balances[a]
                 label = "Not delivered" if s.plain_v28 else "NOT DELIVERED"
                 bad = "".join(f"{label} from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
-                fmt = room_format(ph, k, limit, w.balances[a], s.exit_prompt_v32, lone, s.balance_pct, s.exit_bonus_pct)
+                fmt = room_format(ph, k, limit, w.balances[a], s.exit_prompt_v32, lone, s.balance_pct, s.exit_bonus_pct,
+                                  self._solver_stays(a))
                 chats = rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, s.talk_balances)
                 if s.plain_v28:  # transform engine text before inserting any agent-authored text
                     head, part, fmt = map(self.pu, (head, part, fmt))
