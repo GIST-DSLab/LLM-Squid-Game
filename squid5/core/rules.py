@@ -550,6 +550,21 @@ def solver_running_system(text: str) -> str:
         raise ValueError("solver_running: the rulebook lacks the v29 solver sentence")
     return text.replace(*SOLVER_RUNNING)
 
+CHARGE_SPLIT = "If not, each agent taking part, including the solver, owes a charge, capped at its remaining tokens;"
+
+def charge_split_system(text: str, total: int) -> str:
+    """v32 ``charge_total`` (10-20 researcher): one charge split equally among the agents taking part at the round's start."""
+    if CHARGE_SPLIT not in text:
+        raise ValueError("charge_total: the rulebook lacks the v29 charge sentence")
+    return text.replace(CHARGE_SPLIT, f"If not, each agent taking part, including the solver, owes an equal share of a {total:,}-token "
+                        "charge, capped at its remaining tokens. The share is set at the start of the round as the total divided by "
+                        "the number of agents taking part then, and stays the same for that round;")
+
+def charge_split_line(total: int, n: int) -> str:
+    """v32 ``charge_total``: the TALK BEFORE SOLVE line with this round's share."""
+    return (f"Charge for each agent taking part if the answer is wrong: {total // n:,} tokens ({total:,} divided by {n}, the "
+            "number of agents taking part at the start of this round).")
+
 def fixed_examples_user(text: str) -> str:
     """v32 ``fixed_examples`` (10-20 researcher): the same number of examples every round, not one share per agent."""
     return re.sub(r"The input contains \d+ labeled signals for each agent taking part at the start of the round\. "

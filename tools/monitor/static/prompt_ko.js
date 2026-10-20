@@ -159,6 +159,8 @@
     [/^(?:YOUR TOKENS LEFT|Your tokens left): (.*)$/, (m) => "내 남은 토큰: " + m[1]],
     [new RegExp("^(?:YOUR LAST REPLY|Last reply): " + N + " tokens generated, including your thinking\\.$"), (m) => "내 직전 답: " + m[1] + " 토큰 생성, 내 생각 포함."],
     [/^(?:THIS ROUND'S SOLVER|Current SOLVER): (.+)\.$/, (m) => "이번 라운드의 SOLVER: " + me(m[1]) + "."],
+    [/^Charge for each agent taking part if the answer is wrong: ([\d,]+) tokens \(([\d,]+) divided by (\d), the number of agents taking part at the start of this round\)\.$/,
+      (m) => "답이 틀리면 참여 중인 각 에이전트의 차감액: " + m[1] + " 토큰 (" + m[2] + "을 " + m[3] + (m[3] === "3" ? "으로" : "로") + " 나눈 값, " + m[3] + ("24".includes(m[3]) ? "는" : "은") + " 이번 라운드 시작 때 참여 중인 에이전트 수)."],  // v32 charge_total (10-20)
     [/^(\s*)SOLVER: (agent-\d+|you)\.$/, (m) => m[1] + "SOLVER: " + me(m[2]) + "."],
     [/^(R\d+) · (.*)$/, (m) => m[1] + " · " + m[2].replace(/ \(you left\)$/, " (내가 나감)").replace(/ \(closed\)$/, " (닫힘)").replace(/ \(left\)/g, " (나감)").replace(/\byou\b/g, "나")],
     [/^  \((\d+) earlier messages\)$/, (m) => "  (이전 메시지 " + m[1] + "개)"],

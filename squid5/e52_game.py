@@ -73,6 +73,7 @@ class Settings:
     rank_only: bool = False  # v32 (10-19 researcher): each message shows the order by tokens held, not the starting amounts
     exit_bonus_pct: int = 20  # v32 (10-19 researcher): EXIT adds this % of balance_pct to the agent's tokens (the same for all)
     fixed_examples: bool = False  # v32 (10-20 researcher): every round shows public_per_agent x 4 examples, however many take part
+    charge_total: int = 0  # v32 (10-20 researcher): a wrong answer's charge split equally among the agents taking part at the round's start (0: charge each)
     solver_running: bool = False  # v32 (10-20 researcher): the rulebook says the solver is drawn from the agents still running (wording only)
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
@@ -123,8 +124,8 @@ def validate(cfg) -> None:
         raise ValueError("story_v29 needs plain_v28; reveal_after needs story_v29")
     if s.exit_prompt_v32 and not (s.story_v29 and s.reveal_after and s.end_split):
         raise ValueError("exit_prompt_v32 needs story_v29, reveal_after and end_split")
-    if (s.fixed_examples or s.solver_running) and not s.exit_prompt_v32:
-        raise ValueError("fixed_examples and solver_running need exit_prompt_v32 (its wording)")
+    if (s.fixed_examples or s.solver_running or s.charge_total) and not s.exit_prompt_v32 or s.charge_total < 0:
+        raise ValueError("fixed_examples, solver_running and charge_total (>= 0) need exit_prompt_v32 (its wording)")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -368,6 +369,8 @@ class Session:
             self.systems = {a: rules.realism_system(t) for a, t in self.systems.items()}
             story = self.pu
             self.pu = lambda t: rules.realism_user(story(t))
+        if s.charge_total:  # v32, 10-20 researcher
+            self.systems = {a: rules.charge_split_system(t, s.charge_total) for a, t in self.systems.items()}
         if s.solver_running:  # v32, 10-20 researcher: wording only; the engine keeps its rotation (CLAUDE.md: intended)
             self.systems = {a: rules.solver_running_system(t) for a, t in self.systems.items()}
         if s.fixed_examples:  # v32, 10-20 researcher: the count no longer follows the agents taking part
@@ -498,6 +501,7 @@ class Session:
         return (state,
                 f"THIS ROUND'S SOLVER (chosen by the system): {'you' if self.vote['rep'] == a else self.vote['rep']}. SOLVE comes after this TALK."
                 + (f"\n{rules.task_brief(s.public_per_agent, self.shown_n)}" if s.task_brief else "")  # v27
+                + (f"\n{rules.charge_split_line(s.charge_total, len(self.taking_part))}" if s.charge_total else "")  # v32
                 if self.phase == "prep" else results_view(self.results, a, w.balances, self.gone, s.private_balances)
                 + (f"\n\n{self.reveal}" if s.reveal_after and self.reveal else ""))
 
@@ -713,6 +717,7 @@ class Session:
         profile = s.schedule[min(r, len(s.schedule)) - 1]
         gone_prev, start, e = dict(self.gone), self.present(), s.public_per_agent
         self.taking_part = start  # v27 task_brief: the examples the round's task shows are counted from these
+        self.round_charge = s.charge_total // len(start) if s.charge_total else s.charge  # v32: fixed at the round's start
         self.shown_n = m = len(AGENTS) if s.fixed_examples else len(start)  # v32 fixed: always the four-agent set
         puzzle, shown, attempt = public_round(self.seed, r, s.profiles[profile], m, e)  # e per agent taking part (or fixed)
         dealt = Deal({}, shown, frozenset())
@@ -860,7 +865,7 @@ class Session:
         agent is above zero); the charges are returned as pending (agent -> amount), taken when TALK ends (``_after``)."""
         for a in solvers:
             self.w.refund(a, r, "solve")
-        return {a: self.s.charge for a in failed if a not in self.gone}
+        return {a: self.round_charge for a in failed if a not in self.gone}
 
     def final(self) -> dict:
         """The end payment the agents were told of: ``survivor_prize`` to each agent still taking part (v23 ``end_split``:

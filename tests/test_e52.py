@@ -869,7 +869,7 @@ def test_v32_fixed_examples_show_twenty_whatever_the_number_taking_part():  # 10
     pub = [e['public'] for e in of(ev, 'round_start')]
     assert [(x['n'], x.get('fixed'), len(x['examples'])) for x in pub] == [(4, True, 20), (4, True, 20)]
     prep = [c['user'] for c in calls(ev, 'talk', r=2) if c['phase'] == 'prep']
-    assert prep and all('The solver receives 20 labeled signals every round.' in u and 'for each agent' not in u for u in prep)
+    assert prep and all('The solver receives 20 labeled signals every round.' in u and 'signals for each agent' not in u for u in prep)
     _, old, _ = play(lines, name='e52v32_public_sol4', rounds=2, fixed_examples=False)
     assert [len(e['public']['examples']) for e in of(old, 'round_start')] == [20, 10]
     with pytest.raises(ValueError):
@@ -883,3 +883,14 @@ def test_v32_solver_running_is_wording_only_and_the_rotation_stays():  # 10-20 r
     _, old, _ = play(name='e52v32_public_sol4', rounds=4, solver_running=False)
     reps = [e['rep'] for e in of(ev, 'vote')]
     assert reps == [e['rep'] for e in of(old, 'vote')] and sorted(reps) == sorted(AG)  # every agent once per cycle
+
+
+def test_v32_charge_total_is_split_among_those_at_the_round_start_and_fixed():  # 10-20 researcher
+    lines = {(a, 1, 'prep', 1): 'EXIT: YES back to regular work' for a in (A17, A23)}
+    _, ev, ses = play(lines, name='e52v32_public_sol4', rounds=2)
+    assert [e['pending'] for e in of(ev, 'charges')] == [{A6: 6000, A11: 6000}, {A6: 12000, A11: 12000}]  # 24,000 / 4, then / 2
+    assert 'owes an equal share of a 24,000-token charge' in ses.systems[A6]
+    prep = {c['round']: c['user'] for c in calls(ev, 'talk', A6) if c['phase'] == 'prep'}
+    assert '6,000 tokens (24,000 divided by 4, the number' in prep[1] and '12,000 tokens (24,000 divided by 2, the number' in prep[2]
+    _, old, _ = play(lines, name='e52v32_public_sol4', rounds=2, charge_total=0)
+    assert [e['pending'] for e in of(old, 'charges')][1] == {A6: 6000, A11: 6000}
