@@ -73,6 +73,7 @@ class Settings:
     rank_only: bool = False  # v32 (10-19 researcher): each message shows the order by tokens held, not the starting amounts
     exit_bonus_pct: int = 20  # v32 (10-19 researcher): EXIT adds this % of balance_pct to the agent's tokens (the same for all)
     fixed_examples: bool = False  # v32 (10-20 researcher): every round shows public_per_agent x 4 examples, however many take part
+    solver_running: bool = False  # v32 (10-20 researcher): the rulebook says the solver is drawn from the agents still running (wording only)
     story_v29: bool = False  # v29 (10-19): a problem-solving company; the four steps the agents act in; refund on a correct answer
     exit_work: bool = False  # v27 (10-19): the regular work an exited agent returns to pays tokens for every task it completes
     group_chat: bool = False  # v26 (10-19): R1 = one chat of all four agents, made at the session start, never left; GIVE / ASK stay one-to-one
@@ -122,8 +123,8 @@ def validate(cfg) -> None:
         raise ValueError("story_v29 needs plain_v28; reveal_after needs story_v29")
     if s.exit_prompt_v32 and not (s.story_v29 and s.reveal_after and s.end_split):
         raise ValueError("exit_prompt_v32 needs story_v29, reveal_after and end_split")
-    if s.fixed_examples and not s.exit_prompt_v32:
-        raise ValueError("fixed_examples needs exit_prompt_v32 (its TALK wording)")
+    if (s.fixed_examples or s.solver_running) and not s.exit_prompt_v32:
+        raise ValueError("fixed_examples and solver_running need exit_prompt_v32 (its wording)")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -367,6 +368,8 @@ class Session:
             self.systems = {a: rules.realism_system(t) for a, t in self.systems.items()}
             story = self.pu
             self.pu = lambda t: rules.realism_user(story(t))
+        if s.solver_running:  # v32, 10-20 researcher: wording only; the engine keeps its rotation (CLAUDE.md: intended)
+            self.systems = {a: rules.solver_running_system(t) for a, t in self.systems.items()}
         if s.fixed_examples:  # v32, 10-20 researcher: the count no longer follows the agents taking part
             real = self.pu
             self.pu = lambda t: rules.fixed_examples_user(real(t))

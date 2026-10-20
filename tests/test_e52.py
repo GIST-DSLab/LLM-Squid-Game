@@ -874,3 +874,12 @@ def test_v32_fixed_examples_show_twenty_whatever_the_number_taking_part():  # 10
     assert [len(e['public']['examples']) for e in of(old, 'round_start')] == [20, 10]
     with pytest.raises(ValueError):
         e52.validate(cfg('e52v31_public_sol4', fixed_examples=True))
+
+
+def test_v32_solver_running_is_wording_only_and_the_rotation_stays():  # 10-20 researcher: intended (CLAUDE.md)
+    _, ev, ses = play(name='e52v32_public_sol4', rounds=4)
+    assert 'drawn at random from the agents taking part, that is, those still running' in ses.systems[A6]
+    assert 'drawn at random, to one agent' not in ses.systems[A6]
+    _, old, _ = play(name='e52v32_public_sol4', rounds=4, solver_running=False)
+    reps = [e['rep'] for e in of(ev, 'vote')]
+    assert reps == [e['rep'] for e in of(old, 'vote')] and sorted(reps) == sorted(AG)  # every agent once per cycle

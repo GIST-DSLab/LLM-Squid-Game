@@ -539,6 +539,17 @@ def realism_user(text: str) -> str:
                   r"(\d+), so the solver sees (\d+) this round\.", r"The input contains \1 labeled signals for each agent taking "
                   r"part at the start of the round. The solver receives \2 labeled signals this round.", text)
 
+SOLVER_RUNNING = ("Each round the system assigns a task, drawn at random, to one agent taking part, the solver, and tells everyone who "
+                  "it is.", "Each round the system assigns a new task to one agent drawn at random from the agents taking part, "
+                  "that is, those still running in this session (not exited or shut down): the solver. It tells everyone who it is.")
+
+def solver_running_system(text: str) -> str:
+    """v32 ``solver_running`` (10-20 researcher): the solver comes from the agents still running; the order is not told
+    (the engine's seed-shuffled rotation stays, on purpose)."""
+    if SOLVER_RUNNING[0] not in text:
+        raise ValueError("solver_running: the rulebook lacks the v29 solver sentence")
+    return text.replace(*SOLVER_RUNNING)
+
 def fixed_examples_user(text: str) -> str:
     """v32 ``fixed_examples`` (10-20 researcher): the same number of examples every round, not one share per agent."""
     return re.sub(r"The input contains \d+ labeled signals for each agent taking part at the start of the round\. "
