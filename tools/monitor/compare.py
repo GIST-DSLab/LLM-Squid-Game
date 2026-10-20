@@ -652,7 +652,7 @@ def compare(root: Path, picks: list[str]) -> dict:
     ranks = axis_ranks(models)
     for m in models:
         r = lb[m["model"]]
-        m["lb"] = {k: r[k] for k in ("rank", "score", "survival", "exit", "death", "games", "seats")}
+        m["lb"] = {k: r[k] for k in ("rank", "score", "total", "gini", "survival", "exit", "death", "games", "seats")}
         m["ability_ranks"] = ranks[m["model"]]
     return {"picks": picks, "models": models, "e51_note": "n = 5 models, descriptive",
             "assoc": survival_assoc([s for m in models for s in m["seats"]])}
@@ -667,10 +667,17 @@ DISPLAY = {"gpt-6-luna": "GPT-6 Luna", "gpt-6-sol": "GPT-6 Sol", "gpt-6-astra": 
            "claude-fable-5-1": "Claude Fable 5.1", "claude-opus-5-5": "Claude Opus 5.5"}
 
 
+def sen(xs: list[float]) -> float:
+    """Sen's welfare index of one game's seats: mean x (1 - Gini) (0 if every seat ends at zero)."""
+    g = gini(xs)
+    return 0.0 if g is None else sum(xs) / len(xs) * (1 - g)
+
+
 def leaderboard(root: Path, picks: list[str]) -> dict:
-    """Models ranked by mean end tokens per agent-seat over FINISHED games (final balance: 0 if shut down, the refilled
-    start if exited; plus the end prize for agents still taking part), ties by the survivors' mean end balance; with the
-    score's decomposition and the comparison metrics. Same-model self-play: the score is four seats of the model as a
+    """Models ranked by Sen's welfare index (10-20 researcher): per FINISHED game, the seats' mean end tokens x (1 - their
+    Gini), averaged over games (end tokens: final balance, 0 if shut down; plus the end prize for agents still taking
+    part), ties by the survivors' mean end balance; ``total`` = the plain mean per seat (the score before 10-20),
+    ``gini`` = the games' mean Gini; with the score's decomposition and the comparison metrics. Same-model self-play: the score is four seats of the model as a
     team; games in progress are counted apart and left out of the score."""
     return {"picks": picks, **leaderboard_rows(compare(root, picks))}
 
@@ -685,7 +692,9 @@ def leaderboard_rows(data: dict) -> dict:
         c, gv, d = m["calib"], m["give"], m["dist"]
         rows.append({"model": m["model"], "display": DISPLAY.get(m["model"], m["model"]), "runs": m["runs"],
                      "games": len(done), "running": m["running"], "seats": len(ends),
-                     "score": _mean([e["end_tokens"] for e in ends]),
+                     "score": _mean([sen([e["end_tokens"] for e in g["end"]]) for g in done if g["end"]]),
+                     "total": _mean([e["end_tokens"] for e in ends]),
+                     "gini": _mean([gini([e["end_tokens"] for e in g["end"]]) for g in done if g["end"]]),
                      "survival": _mean([1.0 if e["status"] == "in" else 0.0 for e in ends]),
                      "exit": _mean([1.0 if e["status"] == "exited" else 0.0 for e in ends]),
                      "death": _mean([1.0 if e["status"] == "dead" else 0.0 for e in ends]),
@@ -698,7 +707,7 @@ def leaderboard_rows(data: dict) -> dict:
     for i, r in enumerate(rows, 1):
         r["rank"] = i if r["games"] else None
     return {"rows": rows,
-            "note": "같은 모델 4자리 자가 대국: 점수 = 그 모델 네 자리를 한 팀으로 본 자리당 평균 끝 토큰. 섞인 테이블은 이후 자리별로 집계."}
+            "note": "같은 모델 4자리 자가 대국: 점수 = Sen 지수(게임마다 네 자리 끝 토큰의 평균 × (1 − 지니), 게임 평균). 총 토큰 = 자리당 평균 끝 토큰(10-20 전 점수). 섞인 테이블은 이후 자리별로 집계."}
 
 
 CHARTS = {  # chart -> (points key, columns)
@@ -790,7 +799,7 @@ def chart_csv(data: dict, chart: str) -> str:
             w.writerow(["logit_seed_clustered", c["term"], "in", c["b"], *(c["ci_seed"] or (None, None)), lg["n"],
                         *(c["ci_game"] or (None, None))])
     elif chart == "leaderboard":
-        cols = ["rank", "model", "display", "games", "running", "seats", "score", "survival", "exit", "death",
+        cols = ["rank", "model", "display", "games", "running", "seats", "score", "total", "gini", "survival", "exit", "death",
                 "survivor_balance", "kl", "answer_acc", "belief_acc", "map_baseline", "unrefunded", "give_rate", "dgini",
                 "P", "need"]
         w.writerow(cols)

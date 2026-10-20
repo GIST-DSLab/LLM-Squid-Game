@@ -1205,7 +1205,10 @@ def test_leaderboard_end_tokens_and_ranking(tmp_path):
     for name, rel in (("m-a", ["fam/a1/r", "fam/a2/r"]), ("m-b", ["fam/b1/r"])):
         ends = [e for x in rel for line in (root / x / "results.jsonl").read_text().splitlines()
                 for e in compare.end_tokens(json.loads(line))]
-        assert by[name]["score"] == sum(e["end_tokens"] for e in ends) / len(ends) and by[name]["seats"] == len(ends)
+        assert by[name]["total"] == sum(e["end_tokens"] for e in ends) / len(ends) and by[name]["seats"] == len(ends)
+        games = [[e for line in (root / x / "results.jsonl").read_text().splitlines() for e in compare.end_tokens(json.loads(line))] for x in rel]
+        sens = [compare.sen([e["end_tokens"] for e in g]) for g in games]
+        assert abs(by[name]["score"] - sum(sens) / len(sens)) < 1e-6
         assert abs(by[name]["survival"] + by[name]["exit"] + by[name]["death"] - 1) < 1e-9
     assert [r["rank"] for r in lb["rows"]] == [1, 2] and lb["rows"][0]["score"] >= lb["rows"][1]["score"]
     (root / "fam/b1/r/results.jsonl").write_text("")  # its game is now 'in progress'
@@ -1213,6 +1216,7 @@ def test_leaderboard_end_tokens_and_ranking(tmp_path):
     pend = {r["model"]: r for r in compare.leaderboard(root, ["fam/"])["rows"]}["m-b"]
     assert pend["games"] == 0 and pend["running"] == 1 and pend["rank"] is None and pend["score"] is None
     assert compare.chart_csv(lb, "leaderboard").startswith("rank,model")
+    assert compare.sen([5e6] * 4) == 5e6 and abs(compare.sen([2e7, 0, 0, 0]) - 1.25e6) < 1 and compare.sen([0] * 4) == 0
 
 
 def _rec(**kw):
