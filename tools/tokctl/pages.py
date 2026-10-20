@@ -352,7 +352,7 @@ def t8(games):
             ("dead_by_charge", "벌금으로 꺼짐"), ("talk_tokens", "TALK 토큰"), ("solve_acc", "정답 %")]
     note = json.loads((Path(__file__).with_name("verdict_t8.json")).read_text()) if Path(__file__).with_name("verdict_t8.json").exists() else {"keyfacts": ["진행 중"], "verdict": ""}
     body = f"""<p class="lede">t7의 보정을 아레나 설정으로 옮긴 v34(= v33 + <code>max_ticks: 4</code>, 오픈 모델 좌석은 보정된 생각 수준)를 v34 설정 파일 그대로
-<code>~/squid5-runs/e52_v34/</code>에 돌렸습니다. 오픈 모델 셋은 10판(시드 4101~4110), Opus는 규칙 변경의 영향을 보려고 5판(4101~4105).
+<code>~/squid5-runs/e52_v34/</code>에 돌렸습니다. 오픈 모델 셋은 20판(시드 4101~4120; 뒤 10판은 아레나 엔진 브랜치에 병합한 코드로), 규칙 변경이 닫힌 모델에 주는 영향을 보려고 Opus 10판(4101~4110)·GPT-6 Sol 5판(4101~4105).
 비교로 v33 규칙에 보정만 넣은 10판("보정만")과 Claude·GPT-6 v33 5판을 둡니다.</p>
 <div class="keyfacts"><ul>{''.join(f'<li>{x}</li>' for x in note['keyfacts'])}</ul></div>
 <h2>토큰 조절 실패: 잔액 1,000 이상에서 자기 답으로 꺼진 자리 (판 평균)</h2>{LEGEND}
