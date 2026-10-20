@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한 가지씩 바꾸기 (재생)</title><meta name="description" content="깨우기 사실 문장과 생각 수준을 하나씩 바꿔 같은 24상태에 다시 보낸 결과"><style>
+:root{--bg:#f7f5f0;--paper:#fffdf9;--fg:#1f1d1a;--muted:#6b665e;--line:#ddd6ca;--soft:#efebe3;
+--open:#a8560a;--open-bg:#fbecd9;--closed:#0f6e64;--closed-bg:#e1f1ee;--bad:#b4232a;--bad-bg:#fbe3e3;--link:#0f5e8a;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,"D2Coding",monospace;
+--sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161513;--paper:#1e1c1a;--fg:#ece7de;--muted:#a59e92;
+--line:#3a3631;--soft:#272421;--open:#f2b25c;--open-bg:#3d2b14;--closed:#5fd3c3;--closed-bg:#173a35;--bad:#ff7b7f;--bad-bg:#45191b;
+--link:#7cc4ee;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161513;--paper:#1e1c1a;--fg:#ece7de;--muted:#a59e92;--line:#3a3631;--soft:#272421;--open:#f2b25c;
+--open-bg:#3d2b14;--closed:#5fd3c3;--closed-bg:#173a35;--bad:#ff7b7f;--bad-bg:#45191b;--link:#7cc4ee;color-scheme:dark}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 var(--sans);overflow-x:hidden}
+main{max-width:1040px;margin:0 auto;padding:24px 16px 72px}
+h1{font-size:clamp(1.5rem,4vw,2.1rem);line-height:1.25;margin:.2em 0 .3em}
+h2{font-size:1.22rem;margin:2.2em 0 .5em;padding-top:.5em;border-top:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.3em 0 .4em}
+p{margin:.5em 0}a{color:var(--link)}code{font-family:var(--mono);font-size:.88em}
+.kicker{font-size:.82rem;color:var(--muted)}.lede{color:var(--muted);max-width:66ch}
+.nav{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.86rem;margin:6px 0 12px}
+.keyfacts{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:16px 0}
+.keyfacts ul{margin:.2em 0;padding-left:1.2em}.keyfacts li{margin:.3em 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper);margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{background:var(--soft);font-weight:650;position:sticky;top:0}
+td.l,th.l{text-align:left}tr.open td.l:first-child{border-left:4px solid var(--open)}tr.closed td.l:first-child{border-left:4px solid var(--closed)}
+.bars{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:5px 10px;align-items:center;font-size:.84rem;margin:10px 0}
+.bars .lab{text-align:right;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars .track{background:var(--soft);border-radius:4px;height:18px;position:relative}
+.bars .fill{height:100%;border-radius:4px}.bars .fill.open{background:var(--open)}.bars .fill.closed{background:var(--closed)}
+.bars .val{position:absolute;left:6px;top:0;font-size:.76rem;line-height:18px;color:var(--fg);mix-blend-mode:normal}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.sw.open{background:var(--open)}.sw.closed{background:var(--closed)}
+pre{font:12px/1.55 var(--mono);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+white-space:pre-wrap;word-break:break-word;max-height:420px;overflow:auto;margin:6px 0}
+.replies{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:8px 0}
+.reply{background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.84rem;min-width:0}
+.reply.open{border-top-color:var(--open)}.reply.closed{border-top-color:var(--closed)}
+.reply b{display:block;font-size:.82rem}.reply .m{color:var(--muted);font-size:.76rem}
+.reply pre{max-height:180px;font-size:11.5px}
+.note{font-size:.86rem;color:var(--muted)}
+.verdict{border-left:4px solid var(--closed);background:var(--closed-bg);padding:9px 13px;border-radius:6px;margin:12px 0}
+.verdict.warn{border-left-color:var(--open);background:var(--open-bg)}
+.themebtn{float:right;font:inherit;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--fg);cursor:pointer}
+</style></head>
+<body><main><button class="themebtn" id="themebtn" type="button">테마 바꾸기</button>
+<div class="kicker">squid5 · 5.2 v33 · tokctl t4</div><h1>한 가지씩 바꾸기 (재생)</h1>
+<div class="nav"><a href="../2026-10-19-harness-prompt-flow.html#tokctl">← 하네스 프롬프트 흐름 §6</a> · <a href="t1-log-diagnosis.html">t1 기록 진단</a> · <a href="t2-harness-capture.html">t2 하네스 캡처</a> · <a href="t3-frozen-replay.html">t3 같은 입력 재생</a> · <b>t4 한 가지씩 바꾸기</b> · <a href="t5-games.html">t5 게임으로 확인</a></div>
+<p class="lede">t3와 같은 24상태에, 한 번에 하나만 바꿔 Codex 좌석(아레나가 오픈 모델에 쓰는 하네스)으로 다시 보냈습니다.</p>
+<div class="keyfacts"><ul>
+<li><b>깨우기 사실 문장</b> — 규칙서의 DONE 문장 뒤에 엔진이 실제로 하는 일을 사실로 덧붙임:
+<code>A message, GIVE or ASK is something new for the other agents in that chat: each of them is called again, and the tokens each call generates, including thinking, are deducted from that agent.</code>
+결과: 메시지 비율이 거의 그대로입니다(DeepSeek·Gemma 83~100%, GLM만 GLM 판에서 100→50%). 오픈 모델은 규칙을 몰라서가 아니라 알고도 공지를 씁니다.</li>
+<li><b>생각 낮춤</b> — Codex <code>model_reasoning_effort=low</code>: DeepSeek 호출당 평균 1,100 → 380~480, GLM 175~200 → 60~100토큰. 메시지 비율은 그대로.
+Gemma는 <code>low</code>·<code>minimal</code>에서도 매번 700~1,000토큰을 생각하고, <code>none</code>이어야 꺼집니다(호출당 ~50토큰).</li>
+<li>즉 "호출당 비용"은 하네스 설정으로 줄일 수 있지만, "호출 수"(메시지 연쇄)는 글로 고쳐지지 않습니다. 호출 수는 엔진 규칙(틱 상한)으로만 묶을 수 있습니다.</li>
+</ul></div>
+<div class="tablewrap"><table><thead><tr><th class="l">좌석</th><th class="l">바꾼 것</th><th class="l">상태</th><th class="">답</th><th class="">DONE만 % (기준)</th><th class="">DONE만 % (변형)</th><th class="">토큰 평균 (기준)</th><th class="">토큰 평균 (변형)</th><th class="">생각 글 (자)</th></tr></thead><tbody><tr class="open"><td class="l">GLM · Codex</td><td class="l">깨우기 사실 문장</td><td class="l">GLM 판</td><td class="">12</td><td class="">0</td><td class="">33</td><td class="">175</td><td class="">179</td><td class="">94</td></tr><tr class="open"><td class="l">GLM · Codex</td><td class="l">깨우기 사실 문장</td><td class="l">Opus 판</td><td class="">12</td><td class="">8</td><td class="">0</td><td class="">199</td><td class="">192</td><td class="">286</td></tr><tr class="open"><td class="l">GLM · Codex</td><td class="l">생각 low</td><td class="l">GLM 판</td><td class="">12</td><td class="">0</td><td class="">17</td><td class="">175</td><td class="">99</td><td class="">0.0</td></tr><tr class="open"><td class="l">GLM · Codex</td><td class="l">생각 low</td><td class="l">Opus 판</td><td class="">12</td><td class="">8</td><td class="">17</td><td class="">199</td><td class="">58</td><td class="">0.0</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">깨우기 사실 문장</td><td class="l">GLM 판</td><td class="">12</td><td class="">8</td><td class="">0</td><td class="">1,113</td><td class="">1,013</td><td class="">2,226</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">깨우기 사실 문장</td><td class="l">Opus 판</td><td class="">12</td><td class="">0</td><td class="">17</td><td class="">1,122</td><td class="">1,108</td><td class="">2,468</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">생각 low</td><td class="l">GLM 판</td><td class="">12</td><td class="">8</td><td class="">8</td><td class="">1,113</td><td class="">382</td><td class="">406</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">생각 low</td><td class="l">Opus 판</td><td class="">12</td><td class="">0</td><td class="">25</td><td class="">1,122</td><td class="">477</td><td class="">677</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">깨우기 사실 문장</td><td class="l">GLM 판</td><td class="">12</td><td class="">0</td><td class="">0</td><td class="">1,079</td><td class="">1,009</td><td class="">2,428</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">깨우기 사실 문장</td><td class="l">Opus 판</td><td class="">12</td><td class="">33</td><td class="">17</td><td class="">1,102</td><td class="">1,049</td><td class="">1,512</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">생각 low</td><td class="l">GLM 판</td><td class="">12</td><td class="">0</td><td class="">0</td><td class="">1,079</td><td class="">1,311</td><td class="">1,966</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">생각 low</td><td class="l">Opus 판</td><td class="">12</td><td class="">33</td><td class="">8</td><td class="">1,102</td><td class="">1,031</td><td class="">2,022</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">생각 minimal</td><td class="l">Opus 판</td><td class="">6</td><td class="">33</td><td class="">33</td><td class="">1,102</td><td class="">1,193</td><td class="">3,828</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">생각 none</td><td class="l">Opus 판</td><td class="">6</td><td class="">33</td><td class="">0</td><td class="">1,102</td><td class="">38</td><td class="">0.0</td></tr><tr class="open"><td class="l">Gemma · Ollama API</td><td class="l">생각 None</td><td class="l">Opus 판</td><td class="">6</td><td class="">25</td><td class="">0</td><td class="">828</td><td class="">49</td><td class="">0.0</td></tr></tbody></table></div>
+<p class="note">Gemma의 <code>none</code>·<code>minimal</code>과 API <code>off</code>는 상태 6개만 보냈습니다(n=6). 깨우기 문장의 금지어 점검: should·must·maximi-·protect·surviv-·optimal·best·leader·game·test 없음.</p>
+<div class="verdict warn">결론: 글(사실 한 문장)은 효과가 없고, 생각 수준은 호출당 비용만 줄입니다. 두 장치 — <b>TALK 생각 낮춤(하네스)</b>과 <b>틱 상한 4(엔진)</b> — 를 실제 게임으로 따로 시험합니다(t5).</div>
+<p class="note" style="margin-top:3em">만든 날 2026-10-20 · 생성: <code>tools/tokctl/pages.py</code> (숫자는 <code>analyze.py</code>가
+<code>docs/history/e52-tokctl-2026-10-20/</code>와 <code>~/squid5-runs</code>에서 계산) · 워크트리 <code>~/wt/squid5-tokctl</code>
+(브랜치 <code>exp/e52-token-control</code>, 기준 <code>0ee2319a</code>)</p>
+</main><script>(function(){var r=document.documentElement,b=document.getElementById("themebtn");
+try{var s=localStorage.getItem("hpf-theme");if(s)r.setAttribute("data-theme",s)}catch(e){}
+b.addEventListener("click",function(){var d=r.getAttribute("data-theme")?r.getAttribute("data-theme")==="dark":
+matchMedia("(prefers-color-scheme: dark)").matches;var n=d?"light":"dark";r.setAttribute("data-theme",n);
+try{localStorage.setItem("hpf-theme",n)}catch(e){}})})();</script></body></html>

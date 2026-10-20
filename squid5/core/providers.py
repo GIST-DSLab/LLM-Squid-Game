@@ -15,6 +15,8 @@ CODEX_HOME). Nothing of the host's ~/.claude, ~/.codex or ~/.agents is visible t
 
 from __future__ import annotations
 
+import copy
+import dataclasses
 import json
 import os
 import shutil
@@ -43,6 +45,7 @@ class ProviderConfig:
     api_key_env: str = ""
     base_url: str = ""  # claude_cli: ANTHROPIC_BASE_URL (the relay that drops the CLI's token note); codex_cli: a /v1 model server
     think: str | bool | int | None = None  # ollama `think`, openai `reasoning_effort`, claude/anthropic effort; int = thinking budget
+    think_talk: str | bool | int | None = None  # tokctl (10-20): the level for TALK replies (None: think), e.g. low / none
     temperature: float = 1.0
     timeout: float = 300.0
     retries: int = 3
@@ -57,11 +60,15 @@ class Provider:
     def __init__(self, cfg: ProviderConfig):
         self.cfg = cfg
 
-    def complete(self, messages: Messages, cap: int) -> Reply:
+    def complete(self, messages: Messages, cap: int, kind: str | None = None) -> Reply:
         last: Exception | None = None
+        p = self
+        if kind == "talk" and self.cfg.think_talk is not None:  # a copy, so concurrent SOLVE calls keep their level
+            p = copy.copy(self)
+            p.cfg = dataclasses.replace(self.cfg, think=self.cfg.think_talk)
         for attempt in range(self.cfg.retries + 1):
             try:
-                return self._call(messages, cap)
+                return p._call(messages, cap)
             except (httpx.HTTPError, subprocess.SubprocessError, RuntimeError) as err:
                 last = err
                 time.sleep(min(30, 2**attempt))

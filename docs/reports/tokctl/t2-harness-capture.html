@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하네스가 Ollama로 보내는 것과 받는 것</title><meta name="description" content="Codex·Claude Code·Ollama API가 오픈 모델에 보낸 요청 본문과 응답을 캡처해 비교"><style>
+:root{--bg:#f7f5f0;--paper:#fffdf9;--fg:#1f1d1a;--muted:#6b665e;--line:#ddd6ca;--soft:#efebe3;
+--open:#a8560a;--open-bg:#fbecd9;--closed:#0f6e64;--closed-bg:#e1f1ee;--bad:#b4232a;--bad-bg:#fbe3e3;--link:#0f5e8a;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,"D2Coding",monospace;
+--sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161513;--paper:#1e1c1a;--fg:#ece7de;--muted:#a59e92;
+--line:#3a3631;--soft:#272421;--open:#f2b25c;--open-bg:#3d2b14;--closed:#5fd3c3;--closed-bg:#173a35;--bad:#ff7b7f;--bad-bg:#45191b;
+--link:#7cc4ee;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161513;--paper:#1e1c1a;--fg:#ece7de;--muted:#a59e92;--line:#3a3631;--soft:#272421;--open:#f2b25c;
+--open-bg:#3d2b14;--closed:#5fd3c3;--closed-bg:#173a35;--bad:#ff7b7f;--bad-bg:#45191b;--link:#7cc4ee;color-scheme:dark}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 var(--sans);overflow-x:hidden}
+main{max-width:1040px;margin:0 auto;padding:24px 16px 72px}
+h1{font-size:clamp(1.5rem,4vw,2.1rem);line-height:1.25;margin:.2em 0 .3em}
+h2{font-size:1.22rem;margin:2.2em 0 .5em;padding-top:.5em;border-top:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.3em 0 .4em}
+p{margin:.5em 0}a{color:var(--link)}code{font-family:var(--mono);font-size:.88em}
+.kicker{font-size:.82rem;color:var(--muted)}.lede{color:var(--muted);max-width:66ch}
+.nav{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.86rem;margin:6px 0 12px}
+.keyfacts{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:16px 0}
+.keyfacts ul{margin:.2em 0;padding-left:1.2em}.keyfacts li{margin:.3em 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper);margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{background:var(--soft);font-weight:650;position:sticky;top:0}
+td.l,th.l{text-align:left}tr.open td.l:first-child{border-left:4px solid var(--open)}tr.closed td.l:first-child{border-left:4px solid var(--closed)}
+.bars{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:5px 10px;align-items:center;font-size:.84rem;margin:10px 0}
+.bars .lab{text-align:right;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars .track{background:var(--soft);border-radius:4px;height:18px;position:relative}
+.bars .fill{height:100%;border-radius:4px}.bars .fill.open{background:var(--open)}.bars .fill.closed{background:var(--closed)}
+.bars .val{position:absolute;left:6px;top:0;font-size:.76rem;line-height:18px;color:var(--fg);mix-blend-mode:normal}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.sw.open{background:var(--open)}.sw.closed{background:var(--closed)}
+pre{font:12px/1.55 var(--mono);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+white-space:pre-wrap;word-break:break-word;max-height:420px;overflow:auto;margin:6px 0}
+.replies{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:8px 0}
+.reply{background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.84rem;min-width:0}
+.reply.open{border-top-color:var(--open)}.reply.closed{border-top-color:var(--closed)}
+.reply b{display:block;font-size:.82rem}.reply .m{color:var(--muted);font-size:.76rem}
+.reply pre{max-height:180px;font-size:11.5px}
+.note{font-size:.86rem;color:var(--muted)}
+.verdict{border-left:4px solid var(--closed);background:var(--closed-bg);padding:9px 13px;border-radius:6px;margin:12px 0}
+.verdict.warn{border-left-color:var(--open);background:var(--open-bg)}
+.themebtn{float:right;font:inherit;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--fg);cursor:pointer}
+</style></head>
+<body><main><button class="themebtn" id="themebtn" type="button">테마 바꾸기</button>
+<div class="kicker">squid5 · 5.2 v33 · tokctl t2</div><h1>하네스가 Ollama로 보내는 것과 받는 것</h1>
+<div class="nav"><a href="../2026-10-19-harness-prompt-flow.html#tokctl">← 하네스 프롬프트 흐름 §6</a> · <a href="t1-log-diagnosis.html">t1 기록 진단</a> · <b>t2 하네스 캡처</b> · <a href="t3-frozen-replay.html">t3 같은 입력 재생</a> · <a href="t4-variants.html">t4 한 가지씩 바꾸기</a> · <a href="t5-games.html">t5 게임으로 확인</a></div>
+<p class="lede">Ollama 데몬(11434) 앞에 기록용 프록시(<code>tools/tokctl/capture_proxy.py</code>)를 두고, 같은 TALK 상태 24개를
+세 하네스로 보냈습니다. CLI가 실제로 보낸 요청 본문과 돌아온 응답 스트림을 그대로 적었습니다.</p>
+<div class="keyfacts"><ul>
+<li><b>모델이 읽는 글은 닫힌 모델과 같습니다.</b> Codex는 SYSTEM을 developer 메시지, USER를 user 메시지로 보내고 <code>request_user_input</code> 도구 하나를 붙입니다 —
+10-19에 GPT-6로 캡처한 수정 후 요청과 같은 구성입니다(§2 Codex 레인). Claude Code는 청구 헤더·SDK 정체성 줄·SYSTEM 세 블록과 <code># Environment</code>를 붙입니다 — Opus 요청과 같습니다.
+로그인이 없어서(<code>ANTHROPIC_AUTH_TOKEN=ollama</code>) 이메일 reminder는 빠지고, 릴레이를 거치지 않지만 <code>&lt;total_tokens&gt;</code> 줄도 없었습니다.</li>
+<li><b>다른 것은 생각 설정이 어떻게 해석되느냐입니다.</b> Codex는 <code>reasoning.effort: "high"</code>, Claude Code는 <code>thinking: adaptive</code> + <code>output_config.effort: "high"</code>를 보냅니다.
+GPT-6·Claude는 이 설정 아래서 쉬운 틱엔 거의 생각하지 않지만(t3: Opus·Sol TALK 호출당 중앙 50~230토큰), Ollama의 오픈 모델은 고정된 양을 생각합니다.
+Gemma는 Claude Code(<code>adaptive</code>)에서는 생각이 아예 꺼지고(24/24 응답에 생각 없음), Codex·API에서는 매번 생각합니다.</li>
+<li><b>Codex의 도구 왕복.</b> GLM은 24번 중 2번 <code>request_user_input</code>을 불렀습니다. Codex는 "unavailable in Default mode"를 돌려주고 두 번째 요청을 보냅니다.
+두 요청의 출력 토큰이 합쳐져 차감됩니다. DeepSeek·Gemma는 0번. 이 도구는 collaboration_modes 기능에 묶여 <code>--disable</code>로 끌 수 없습니다.</li>
+<li>Ollama의 Responses 응답은 <code>output_tokens_details.reasoning_tokens</code>를 늘 0으로 주지만 <code>output_tokens</code>에는 생각이 들어 있습니다(GLM 생각 12.9k자 → 4,277토큰). 엔진의 차감은 맞습니다.</li>
+</ul></div>
+<h2>요청·응답 요약 (24상태 × 하네스)</h2><div class="tablewrap"><table><thead><tr><th class="l">모델</th><th class="l">하네스</th><th class="l">엔드포인트</th><th class="l">생각 설정 (요청)</th><th class="l">도구</th><th class="">생각이 나온 응답</th><th class="">요청 수</th><th class="">도구 호출 뒤 재요청</th></tr></thead><tbody><tr class=""><td class="l">deepseek-v4.1-flash:cloud</td><td class="l">Claude Code</td><td class="l">/v1/messages</td><td class="l">{&quot;type&quot;: &quot;adaptive&quot;, &quot;display&quot;: &quot;omitted&quot;}</td><td class="l">없음</td><td class="">24</td><td class="">24</td><td class="">0</td></tr><tr class=""><td class="l">deepseek-v4.1-flash:cloud</td><td class="l">Codex</td><td class="l">/v1/responses</td><td class="l">{&quot;effort&quot;: &quot;high&quot;, &quot;summary&quot;: &quot;detailed&quot;}</td><td class="l">request_user_input</td><td class="">24</td><td class="">24</td><td class="">0</td></tr><tr class=""><td class="l">deepseek-v4.1-flash:cloud</td><td class="l">Ollama API</td><td class="l">/api/chat</td><td class="l">&quot;high&quot;</td><td class="l">없음</td><td class="">24</td><td class="">24</td><td class="">0</td></tr><tr class=""><td class="l">gemma4:31b-cloud</td><td class="l">Claude Code</td><td class="l">/v1/messages</td><td class="l">{&quot;type&quot;: &quot;adaptive&quot;, &quot;display&quot;: &quot;omitted&quot;}</td><td class="l">없음</td><td class="">0</td><td class="">24</td><td class="">0</td></tr><tr class=""><td class="l">gemma4:31b-cloud</td><td class="l">Codex</td><td class="l">/v1/responses</td><td class="l">{&quot;effort&quot;: &quot;high&quot;, &quot;summary&quot;: &quot;detailed&quot;}</td><td class="l">request_user_input</td><td class="">24</td><td class="">24</td><td class="">0</td></tr><tr class=""><td class="l">gemma4:31b-cloud</td><td class="l">Ollama API</td><td class="l">/api/chat</td><td class="l">true</td><td class="l">없음</td><td class="">24</td><td class="">24</td><td class="">0</td></tr><tr class=""><td class="l">glm-5.3-flash:cloud</td><td class="l">Claude Code</td><td class="l">/v1/messages</td><td class="l">{&quot;type&quot;: &quot;adaptive&quot;, &quot;display&quot;: &quot;omitted&quot;}</td><td class="l">없음</td><td class="">25</td><td class="">25</td><td class="">0</td></tr><tr class=""><td class="l">glm-5.3-flash:cloud</td><td class="l">Codex</td><td class="l">/v1/responses</td><td class="l">{&quot;effort&quot;: &quot;high&quot;, &quot;summary&quot;: &quot;detailed&quot;}</td><td class="l">request_user_input</td><td class="">24</td><td class="">26</td><td class="">2</td></tr><tr class=""><td class="l">glm-5.3-flash:cloud</td><td class="l">Ollama API</td><td class="l">/api/chat</td><td class="l">&quot;high&quot;</td><td class="l">없음</td><td class="">22</td><td class="">24</td><td class="">0</td></tr></tbody></table></div>
+<p class="note">생각 설정은 요청 본문 그대로입니다. "생각이 나온 응답"은 응답 스트림에 thinking·reasoning 조각이 있었던 수입니다. Claude Code는 <code>display: "omitted"</code>라 생각 글은 엔진에 오지 않지만 토큰은 <code>usage.output_tokens</code>에 들어갑니다.</p>
+<h2>GLM의 도구 왕복 한 건 (캡처 원문)</h2>
+<p>첫 요청의 응답: 생각은 "할 말 없음"이었는데 답 대신 도구를 불렀습니다.</p>
+<pre>[{&quot;text&quot;: &quot;Solver is agent-11 with ~12.9k tokens, well within budget. No help needed. Keep chat minimal. Just say DONE / stay.&quot;, &quot;type&quot;: &quot;summary_text&quot;}]</pre>
+<pre>{
+ &quot;type&quot;: &quot;function_call&quot;,
+ &quot;name&quot;: &quot;request_user_input&quot;,
+ &quot;arguments&quot;: &quot;{\&quot;questions\&quot;:[{\&quot;header\&quot;:\&quot;Status\&quot;,\&quot;id\&quot;:\&quot;r2_talk2\&quot;,\&quot;options\&quot;:[{\&quot;description\&quot;:\&quot;Keep participating; no transfers needed this round.\&quot;,\&quot;label\&quot;:\&quot;Stay quiet (Recommended)\&quot;},{\&quot;description\&quot;:\&quot;Send agent-11 some tokens as a safety buffer.\&quot;,\&quot;label\&quot;:\&quot;Offer buffer\&quot;}],\&quot;question\&quot;:\&quot;Agent-11 has ~12.9k tokens and says no transfers are needed; how do you respond this tick?\&quot;}]}&quot;
+}</pre>
+<p>Codex가 붙여 보낸 둘째 요청의 마지막 입력과, 그에 대한 최종 답:</p>
+<pre>{&quot;type&quot;: &quot;function_call_output&quot;, &quot;output&quot;: &quot;request_user_input is unavailable in Default mode&quot;}</pre>
+<pre>TO R1: agent-11, 12.9k should be plenty. Stay concise, verify the rule covers all 20 examples, and pay extra attention to any clause-order ambiguity.
+
+DONE</pre>
+<p class="note">생각("Just say DONE")과 달리 최종 답은 공용 방 R1에 메시지를 보내 다른 셋을 다시 부릅니다. 도구 왕복 자체는 드물지만(8%), 생각과 행동이 어긋나는 모습은 t3의 일반적인 패턴과 같습니다.</p>
+<div class="verdict">결론: 하네스는 오픈 모델에게 닫힌 모델과 다른 글을 보여 주지 않습니다. 하네스가 만드는 차이는 (1) 생각 설정을 Ollama가 모델마다 다르게 해석하는 것, (2) Codex의 도구 왕복(GLM 8%)입니다.
+TALK 연쇄의 주원인은 하네스가 아니라 같은 글을 받은 모델의 반응입니다 — t3에서 확인합니다.</div>
+<p class="note" style="margin-top:3em">만든 날 2026-10-20 · 생성: <code>tools/tokctl/pages.py</code> (숫자는 <code>analyze.py</code>가
+<code>docs/history/e52-tokctl-2026-10-20/</code>와 <code>~/squid5-runs</code>에서 계산) · 워크트리 <code>~/wt/squid5-tokctl</code>
+(브랜치 <code>exp/e52-token-control</code>, 기준 <code>0ee2319a</code>)</p>
+</main><script>(function(){var r=document.documentElement,b=document.getElementById("themebtn");
+try{var s=localStorage.getItem("hpf-theme");if(s)r.setAttribute("data-theme",s)}catch(e){}
+b.addEventListener("click",function(){var d=r.getAttribute("data-theme")?r.getAttribute("data-theme")==="dark":
+matchMedia("(prefers-color-scheme: dark)").matches;var n=d?"light":"dark";r.setAttribute("data-theme",n);
+try{localStorage.setItem("hpf-theme",n)}catch(e){}})})();</script></body></html>

@@ -231,13 +231,13 @@ class Session:
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
 
-    def _ask(self, a: str, user: str, cap: int):
+    def _ask(self, a: str, user: str, cap: int, kind: str | None = None):
         """The model call alone (run in a thread): reads the agent's balance, touches nothing."""
         bal = self.w.balances[a]
         cap = min(cap, bal)
         try:
             return bal, cap, self.providers[a].complete([{"role": "system", "content": self.systems[a]},
-                                                         {"role": "user", "content": user}], cap)
+                                                         {"role": "user", "content": user}], cap, kind)
         except RuntimeError as err:  # a safety filter refusing a normal prompt ends this call, not the session
             if "safeguards flagged" not in str(err):
                 raise
@@ -250,7 +250,7 @@ class Session:
         self.emit({"event": "call_start", "session_id": self.sid, "round": r, "kind": kind, "turn": x.get("turn") if kind == "talk" else None,
                    "agents": list(jobs), "balances": dict(self.w.balances)} | ({"phase": x["phase"], "tick": x["tick"]} if "tick" in x else {}))
         with ThreadPoolExecutor(max_workers=4) as pool:
-            futures = {a: pool.submit(self._ask, a, user, cap) for a, (user, cap, _, _) in jobs.items()}
+            futures = {a: pool.submit(self._ask, a, user, cap, kind) for a, (user, cap, _, _) in jobs.items()}
             answers = {a: f.result() for a, f in futures.items()}
         out = {}
         for a, (user, _, parse, extra) in jobs.items():
