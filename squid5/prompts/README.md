@@ -13,6 +13,7 @@
 | `en/archive/` | 옛 버전 원문(5.0 1~11차, 5.1 v0~v9 등). 실행 기록이라 고치지 않는다 | 아니오 |
 | `ko/refill.yaml` | `en/refill.yaml`의 한국어판 (키 구조 동일) | 아직 아니오 |
 | `ko/e52_v21.md` | `en/e52_v21.md`의 한국어판 | 아직 아니오 |
+| `ko/e52_tr.yaml` | 5.2 v33 엔진 문장의 영어 → 한국어 템플릿 표(`squid5/core/lang.py`). `game.lang: ko`와 웹 아레나의 한국어 보기가 이것 하나를 읽는다. 엔진의 한국어 렌더는 `ko/e52_v33.md`의 글과 같아야 한다(`sync.py check`) | 예 (`lang: ko`) |
 
 - `en/archive/`는 영어 실행 기록이라 한국어판을 두지 않는다. `en/trim_v19.yaml`은 영어 문장 편집 목록이고, 그 결과는 `e52_v21.md`에 이미 들어 있으므로 한국어판은 `ko/e52_v21.md`가 대신한다.
 - 한국어판 첫 줄은 번역한 영어판의 해시다: md는 `<!-- ko of en/<file> sha256=<16자리> -->`, yaml은 `# ko of en/<file> sha256=<16자리>`.

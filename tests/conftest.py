@@ -10,5 +10,5 @@ def stub(respond) -> Stub:
     return Stub(ProviderConfig("stub", "stub-model"), respond)
 
 def me(messages) -> str:
-    """Which agent a call is addressed to (from its system prompt)."""
-    return re.search(r"You are (agent-?\d+)", messages[0]["content"]).group(1)
+    """Which agent a call is addressed to (the first name in its system prompt, in either language)."""
+    return re.search(r"agent-\d+", messages[0]["content"]).group(0)

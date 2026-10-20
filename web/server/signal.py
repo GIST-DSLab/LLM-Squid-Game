@@ -1,5 +1,6 @@
-"""The signal task alone, for a person to practise: one round of the 5.2 game the model runs play (v17b,
-configs/squid5/e52v16_public_sol4.yaml), nothing else (no tokens, no talk).
+"""The signal task alone, for a person to practise: one round of the 5.2 game the model runs play (v33,
+configs/squid5/e52v33_public_sol4.yaml), nothing else (no tokens, no talk). v33 always shows the four-agent set (20
+examples, ``fixed_examples``); the page's 1..4 switch shows the nested smaller sets the older versions used.
 
 Every puzzle and every set of examples is the engine's own, made exactly as ``squid5.e52_game.Session`` makes round
 ``round`` of seed ``seed``: ``public_round(seed, round, Spec(profile), n, PER_AGENT)`` gives the round's puzzle and
@@ -31,7 +32,7 @@ from squid5.core.puzzle import (ACTIONS, SIGNAL_INDEX, PuzzleError, Spec, candid
 
 AGENTS = list(rules.TEAM_AGENTS)  # the experiment's four seats
 CONFIGS = Path(__file__).resolve().parents[2] / "configs" / "squid5"
-CONFIG = CONFIGS / "e52v16_public_sol4.yaml"  # the model runs' game (v17b): rotation, top-share ladder, drawn rule
+CONFIG = CONFIGS / "e52v33_public_sol4.yaml"  # the model runs' game (v33): rotation, top-share ladder, drawn rule
 _DOC = yaml.safe_load(CONFIG.read_text())
 GAME: dict = _DOC["game"]
 CELL: dict = _DOC["cells"][0]  # start 100,000 and shares 60 / 40 / 20 / 10 %

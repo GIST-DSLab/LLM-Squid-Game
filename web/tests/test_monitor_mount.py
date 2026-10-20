@@ -53,8 +53,7 @@ def test_api_reads_a_finished_room(client, runs_root):
     ps = make_room(client, 1, rounds=2, seed=5)
     start(client, ps)
     s = play(ps, lambda p, pend: {"actions": answers_for(5, pend["round"])} if pend["kind"] == "solve" else
-             {"text": f"SAY {A17}: hi" if pend["kind"] == "opening" else "LEAVE: ok" if pend["kind"] == "chat"
-              else "DECISION: GIVE 0: no"})
+             {"text": f"TO {A17}: hi\nDONE" if pend["tick"] == 1 else "DONE"})
     assert s["status"] == "finished", s["error"]
     rel = f"{runs_root.name}/{Path(s['run_dir']).name}"
     sid = f"web-{ps[0].code}-s5"

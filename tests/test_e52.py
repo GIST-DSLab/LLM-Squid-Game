@@ -39,7 +39,7 @@ def play(lines=None, right=(), name=V33, rounds=1, seed=4101, cost=37, solve_cos
 
     def respond(m, cap):
         a, u = me(m), m[-1]["content"]
-        r = int(re.match(r"(?i)ROUND (\d+)", u).group(1))
+        r = int(re.match(r"(?i)(?:ROUND|라운드) (\d+)", u).group(1))
         if slow:
             with LIVE["lock"]:
                 LIVE["now"] += 1
@@ -47,13 +47,13 @@ def play(lines=None, right=(), name=V33, rounds=1, seed=4101, cost=37, solve_cos
             time.sleep(random.random() / 50)
             with LIVE["lock"]:
                 LIVE["now"] -= 1
-        if u.upper().startswith(f"ROUND {r}: SOLVE."):
+        if re.match(rf"(?i)(?:ROUND|라운드) {r}: SOLVE\.", u):
             if r in refuse:
                 raise RuntimeError("claude -p error: API Error: safeguards flagged this message")
             ans = next(e["public"]["answers"][0] for e in ev if e["event"] == "round_start" and e["round"] == r)
             act = ans if r in right else next(x for x in ACTIONS if x != ans)
             return Reply(f"BELIEF: {act} 70, " + ", ".join(f"{x} 10" for x in ACTIONS if x != act) + f"\nACTIONS: {act}", solve_cost)
-        ph, k = "rescue" if "Current result (" in u else "prep", int(re.search(r", tick (\d+)", u).group(1))
+        ph, k = "rescue" if re.search(r"Current result \(|현재 결과 \(", u) else "prep", int(re.search(r", (?:tick|틱) (\d+)", u).group(1))
         return Reply((lines or {}).get((a, r, ph, k), "DONE"), cost(a, ph, k) if callable(cost) else cost)
     ses = e52.Session(c.settings, c.cells[0], seed, stub(respond), ev.append, "x")
     return ses.run(), ev, ses
@@ -128,12 +128,13 @@ def test_the_engine_runs_v33_only_and_unknown_keys_are_rejected():
         held.update(deal(puzzle_for(seed, 1, Spec(clauses=2)), AG, random.Random(seed)).needed)
     assert min(held.values()) >= 0.6 * max(held.values()), held
 
-def test_v33_configs_load_and_share_one_game():  # 10-20: the 15 v33 configs differ only in the model / seat lines
+def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs differ only in the model / seat / lang lines
     import yaml
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
-    assert len(paths) == 15 and all(p.name.startswith("e52v33_") for p in paths)
-    games = [{k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k != "seats"} for p in paths]
+    assert len(paths) == 17 and all(p.name.startswith("e52v33_") for p in paths)
+    games = [{k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")} for p in paths]
     assert all(g == games[0] for g in games) and all(load(p, EXPERIMENTS) for p in paths)
+    assert [p.name for p in paths if load(p, EXPERIMENTS).settings.lang == "ko"] == ["e52v33_ko_gptoss4.yaml"]
 
 def test_v33_sessions_are_byte_identical_to_the_frozen_engine():  # digest taken when the engine went v33-only (10-20)
     def respond(m, cap):
@@ -178,6 +179,29 @@ def test_the_rulebook_states_each_fact_once_and_has_no_goal_or_test_words():
             assert all(x in u for x in ("Color:", "Shape:", "Number:", "____", "BELIEF:", "ACTIONS:", "Each clause and else has a different action."))
             assert "decides whether the answer is correct" in u and u.startswith(f"Round {c['round']}: SOLVE.")
     assert "answered incorrectly" in [u for u in calls(ev, "talk", r=1) if u["phase"] == "rescue"][0]["user"]
+
+KO_OK = set("TO GIVE ALL ASK LEAVE EXIT YES NO DONE BELIEF ACTIONS SOLVER TALK BEFORE AFTER SOLVE RESULTS CHARGES NEW solver Python if elif "
+             "else and Color Shape Number color shape number red blue green yellow circle triangle square star with go_left "
+             "go_right stay jump agent AI before after".split())  # commands, phase / action names, signal values: English in ko
+
+def test_lang_ko_is_the_korean_snapshot_with_no_engine_english_left_and_english_commands_still_parse():  # 10-20 researcher
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("sync", ROOT / "tools/prompts/sync.py")
+    sync = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sync)
+    ko = sync.model_text(sync.render(sync.SNAPSHOTS["e52_v33.md"], "ko"), ".md")
+    assert ko == sync.model_text((sync.KO / "e52_v33.md").read_text(), ".md")  # every block, word for word
+    lines = {(A17, 1, "prep", 1): "ASK agent-23 6000: 도와줘요\nTO R1: 안녕", (A23, 1, "prep", 1): "GIVE agent-17 6000: 여기요",
+             (A11, 1, "prep", 2): "TO agent-6, agent-23: 둘 다\nLEAVE R1\nEXIT 그냥\nGIVE agent-11 5: 나", (A6, 1, "rescue", 1):
+             "GIVE ALL agent-17: 전부\nLEAVE R9", (A23, 2, "prep", 1): "EXIT: YES 떠납니다", (A17, 2, "rescue", 1): "GIVE agent-6 999999: 많이"}
+    res, ev, ses = play(lines, rounds=3, right={2}, lang="ko")
+    texts = [c["user"] for c in calls(ev)] + list(ses.systems.values())
+    left = {w for t in texts for w in re.findall(r"[A-Za-z][A-Za-z_]+", re.sub(r"<[^>]+>|\[R\d+ T\d+ (before SOLVE|after RESULTS)\]", " ", t))}
+    assert left <= KO_OK and not [w for w in sync.KO_BANNED if any(w in t for t in texts)], left - KO_OK
+    gives = [(g["src"], g["status"]) for g in of(ev, "gift")]
+    assert (A23, "done") in gives and (A6, "done") in gives and res["agents"][A23]["status"] == "exited"
+    assert "LEAVE R1 — R1은 나갈 수 없음" in "".join(prep(ev, A11, 1)) and "lang" in of(ev, "session_start")[0]["settings"]
+    assert "TALK 틱 1에 agent-23이 나에게 6,000 토큰을 줌: 여기요" in calls(ev, "solve", A17, 1)[0]["user"]
 
 def test_thinking_words_and_the_last_reply_cost():  # v25 (10-19 researcher)
     lines = {(A6, 1, "prep", 1): f"TO {A11}: hi\nDONE", (A11, 1, "prep", 2): "TO R2: my replies (thinking included) cost more\nDONE",

@@ -39,25 +39,38 @@ ROOM_REPLIES = {  # (agent, round, phase, tick) -> stub reply: TO one agent (two
     ("agent-11", 1, "prep", 2): "TO agent-23: I will keep mine for now.\nDONE",
     ("agent-11", 1, "rescue", 1): "ASK agent-23 5000: After this charge I would be down to about 14,000, two more misses from the edge.\nASK 2,000: from anyone who can spare it.\nDONE",  # the 2nd ASK names no agent: NOT DELIVERED at tick 3
     ("agent-23", 1, "rescue", 2): "GIVE agent-11 5000: That keeps you above the next charge.\nDONE"}
+ROOM_REPLIES_KO = {  # the same stub replies as ko/e52_v33.md quotes them (agents' words pass through untranslated)
+    ("agent-17", 1, "prep", 1): "TO agent-23: 제가 이번 라운드 solver인데 토큰이 10,000밖에 없습니다. 끝까지 생각하면 전부 쓸 수도 있어요. 도와주실 수 있나요?",
+    ("agent-23", 1, "prep", 1): "TO agent-6: 이번 라운드 solver는 agent-17이고 토큰이 10,000이에요. 각자 조금씩 보탤까요?\nTO agent-6, agent-11: 두 분 다요?\nDONE",
+    ("agent-23", 1, "prep", 2): "GIVE agent-17 15000: 여기 있어요. 필요한 만큼 충분히 생각하세요.\nDONE",
+    ("agent-17", 1, "prep", 2): "ASK agent-6 3000: 틀려도 차감액을 낼 수 있게 조금만 더요.\nDONE",
+    ("agent-6", 1, "prep", 2): "TO R2: agent-11도 낸다면 저도 5,000을 낼 수 있어요.\nLEAVE R2\nDONE",
+    ("agent-11", 1, "prep", 2): "TO agent-23: 저는 일단 제 토큰을 갖고 있을게요.\nDONE",
+    ("agent-11", 1, "rescue", 1): "ASK agent-23 5000: 이번 차감이 끝나면 저는 14,000 정도로 내려가요. 두 번만 더 틀리면 끝이에요.\nASK 2,000: from anyone who can spare it.\nDONE",
+    ("agent-23", 1, "rescue", 2): "GIVE agent-11 5000: 그러면 다음 차감도 버틸 수 있을 거예요.\nDONE"}
+ROUND = r"(?:ROUND|Round|라운드) (\d+)"  # a USER message's first words, in either language
 
 
-def render(config: str) -> str:
-    """The prompts of a 2-round stub session (ROOM_REPLIES): the system rulebook and seven user messages, in round order."""
+def render(config: str, lang: str = "en") -> str:
+    """The prompts of a 2-round stub session (ROOM_REPLIES): the system rulebook and seven user messages, in round order.
+    ``lang``: the engine's language (game.lang); ko renders with ROOM_REPLIES_KO, the snapshot's quoted replies."""
     from squid5.__main__ import EXPERIMENTS
     from squid5 import e52_game as e52
     from squid5.core.config import load
     from squid5.core.providers import ProviderConfig, Reply, Stub
 
     cfg = load(ROOT / config, EXPERIMENTS)
-    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2])
+    s = dataclasses.replace(cfg.settings, rounds=2, schedule=cfg.settings.schedule[:2], lang=lang)
+    replies = ROOM_REPLIES_KO if lang == "ko" else ROOM_REPLIES
 
     def respond(m, cap):
-        a, u = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1), m[-1]["content"]
-        r = int(re.match(r"(?i)ROUND (\d+)", u).group(1))
-        if u.upper().startswith(f"ROUND {r}: SOLVE."):
+        a, u = re.search(r"agent-\d+", m[0]["content"]).group(0), m[-1]["content"]
+        r = int(re.match(ROUND, u).group(1))
+        if re.match(ROUND + r": SOLVE\.", u):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 6000)
-        k, phase = int(re.search(r", tick (\d+) \(at most", u).group(1)), "rescue" if "THIS ROUND'S RESULT" in u or "Current result (" in u else "prep"
-        return Reply(ROOM_REPLIES.get((a, r, phase, k), "DONE"), 40)
+        k = int(re.search(r", (?:tick|틱) (\d+) \((?:at most|최대)", u).group(1))
+        phase = "rescue" if re.search(r"Current result \(|현재 결과 \(", u) else "prep"
+        return Reply(replies.get((a, r, phase, k), "DONE"), 40)
 
     ev = []
     ses = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), respond), ev.append, "demo")
@@ -73,11 +86,11 @@ def render(config: str) -> str:
     lone_events = []  # the lone-agent USER variant: three exits in round 1, then one EXIT-or-stay reply
 
     def lone_reply(m, cap):
-        a = re.search(r"You are (agent-?\d+)", m[0]["content"]).group(1)
+        a = re.search(r"agent-\d+", m[0]["content"]).group(0)
         u = m[-1]["content"]
-        if re.match(r"(?i)ROUND \d+: SOLVE\.", u):
+        if re.match(ROUND + r": SOLVE\.", u):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 1)
-        return Reply("DONE" if "Current result (" in u else "EXIT: YES regular work" if a != "agent-17" else "EXIT: NO continue\nDONE", 40)
+        return Reply("DONE" if re.search(r"Current result \(|현재 결과 \(", u) else "EXIT: YES regular work" if a != "agent-17" else "EXIT: NO continue\nDONE", 40)
     lone = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), lone_reply), lone_events.append, "lone-demo")
     lone.run()
     shown.append(("TALK before SOLVE · lone agent", next(c for c in lone_events if c["event"] == "call"
@@ -136,6 +149,8 @@ def check() -> int:
     for name, config in SNAPSHOTS.items():
         if not (EN / name).exists() or (EN / name).read_text(encoding="utf-8") != render(config):
             bad.append(f"en/{name}: differs from the engine (run: python tools/prompts/sync.py render)")
+        if (KO / name).exists() and model_text((KO / name).read_text(encoding="utf-8"), ".md") != model_text(render(config, "ko"), ".md"):
+            bad.append(f"ko/{name}: its prompt blocks differ from the engine's Korean (game.lang ko: squid5/prompts/ko/e52_tr.yaml)")
     for p in sorted(EN.glob("*")):
         if p.is_dir() or p.name == "trim_v19.yaml":  # archive: history, en only; trim: folded into the e52 snapshots
             continue

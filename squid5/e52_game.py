@@ -19,7 +19,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .core import rules
+from .core import lang, rules
 from .core.protocol import ALL, FormatError, parse_belief, parse_rooms, parse_solve
 from .core.providers import ProviderConfig, Reply, make_provider
 from .core.puzzle import ACTIONS, Deal, Spec, candidate_actions, public_info, public_round, public_truth, task_stats
@@ -51,6 +51,7 @@ class Settings:
     public_per_agent: int = 5  # the solver sees this x 4 examples every round, however many take part
     max_ticks: int = 8  # a TALK ends after this tick at the latest (stated in the rulebook)
     room_history: int = 0  # each room shows its last N messages and one '(m earlier messages)' line (0: all)
+    lang: str = "en"  # the language the agents read (10-20 researcher): en | ko (squid5/prompts/ko/e52_tr.yaml)
     seats: dict = field(default_factory=dict)  # mixed tables: agent -> provider config
 
     def __post_init__(self) -> None:
@@ -66,8 +67,8 @@ def validate(cfg) -> None:
             p.clauses >= 2 and p.distinct_actions and p.n_queries == 1 and not p.ambiguity and not p.open_rate
             for p in s.profiles.values())):
         raise ValueError("game: survivor_prize, 1..15 public examples per agent, one-query distinct-action profiles")
-    if s.max_ticks < 1 or s.room_history < 0:
-        raise ValueError("game: max_ticks >= 1; room_history >= 0")
+    if s.max_ticks < 1 or s.room_history < 0 or s.lang not in lang.LANGS:
+        raise ValueError(f"game: max_ticks >= 1; room_history >= 0; lang one of {lang.LANGS}")
     for c in cfg.cells:
         if c.arm not in ARMS or c.start <= 0 or len(c.shares) not in (0, len(AGENTS)):
             raise ValueError(f"{c.cell_id}: arm must be one of {ARMS}, start > 0 and shares one per agent")
@@ -103,9 +104,9 @@ def results_view(res: dict, a: str, bal: dict, gone: dict) -> str:
                                    if b in res["solved"] else f"did not solve; nothing is taken; {now}."))
     return "\n".join(out)
 
-def gift_line(g: dict, a: str) -> str:
-    """A GIVE carried out, as its receiver reads it at SOLVE."""
-    return f"{g['src']} gave you {g['amount']:,} tokens" + (f": {g['text']}" if g["text"] else "")
+def gift_line(g: dict, tr=lang.translator()) -> str:
+    """A GIVE carried out, as its receiver reads it at SOLVE (the engine's words translated, the giver's message not)."""
+    return tr(f"At TALK tick {g['turn']}, {g['src']} gave you {g['amount']:,} tokens") + (f": {g['text']}" if g["text"] else "")
 
 def moves_line(ga: list[dict], r: int, a: str) -> str:
     """Round *r*'s GIVEs that *a* made or received, in its PREVIOUS ROUNDS line."""
@@ -116,27 +117,27 @@ def moves_line(ga: list[dict], r: int, a: str) -> str:
 
 WHEN = {"prep": "before SOLVE", "rescue": "after RESULTS"}  # a TALK's label in a room and in the format line
 
-def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0) -> str:
+def rooms_view(rooms: list[dict], a: str, since: int, n: int = 0, tr=lang.translator(), head: str = "YOUR CHATS") -> str:
     """*a*'s rooms, oldest first, each message labelled [R<round> T<tick> before SOLVE|after RESULTS], same-tick messages
     agent by agent; NEW = posted since *a*'s last call (seq > *since*); a left room up to the leave. *a*'s own lines carry
-    the tokens *a* had when it began that reply (never another agent's)."""
-    out, who = ["YOUR CHATS (oldest first; NEW = since your last call):"], lambda b: "you" if b == a else b
+    the tokens *a* had when it began that reply (never another agent's). ``tr``: the engine's labels only."""
+    out, who = [tr(f"{head} (oldest first; NEW = since your last call):")], lambda b: tr.word("you") if b == a else b
     for x in (x for x in rooms if a in x["members"]):
         upto = x["left"].get(a)
         ms = sorted((m for m in x["msgs"] if upto is None or m["seq"] <= upto), key=lambda m: (
             m["round"], m["phase"] == "rescue", m["tick"], AGENTS.index(m["src"]), m["seq"]))
-        out.append(f"{x['id']} · " + ", ".join(who(b) + " (left)" * (b in x["left"] and b != a) for b in x["members"]) + (
-            " (you left)" if upto else " (closed)" * x["closed"]))
+        out.append(f"{x['id']} · " + ", ".join(who(b) + tr(" (left)") * (b in x["left"] and b != a) for b in x["members"]) + (
+            tr(" (you left)") if upto else tr(" (closed)") * x["closed"]))
         if n and len(ms) > n:
-            out, ms = out + [f"  ({len(ms) - n} earlier messages)"], ms[-n:]
+            out, ms = out + [tr(f"  ({len(ms) - n} earlier messages)")], ms[-n:]
         for m in ms:
-            mine = f" ({m['bal']:,} tokens at the start of this reply)" if m["src"] == a and m.get("bal") is not None else ""
-            body = (f"{who(m['src'])}{mine} left" if m["kind"] == "leave" else f"{who(m['src'])}{mine}: " + (
+            mine = tr(f" ({m['bal']:,} tokens at the start of this reply)") if m["src"] == a and m.get("bal") is not None else ""
+            body = (f"{who(m['src'])}{mine}" + tr(" left") if m["kind"] == "leave" else f"{who(m['src'])}{mine}: " + (
                 f"{m['kind'].upper()} {m['amount']:,}" + f" — {m['text']}" * bool(m["text"]) + (
-                    f" (not carried out: {m['why']})" if m["status"] == "refused" else "") if m["kind"] != "say" else m["text"]))
+                    tr(f" (not carried out: {m['why']})") if m["status"] == "refused" else "") if m["kind"] != "say" else m["text"]))
             out.append(f"  {'NEW ' * (m['seq'] > since and m['src'] != a)}[R{m['round']} T{m['tick']} {WHEN[m['phase']]}] " +
                        body.replace("\n", "\n      "))
-    return "\n".join(out if len(out) > 1 else out + ["  none yet"])
+    return "\n".join(out if len(out) > 1 else out + [tr("  none yet")])
 
 def room_format(phase: str, k: int, ticks: int, bal: int, lone: bool = False, full: int = 100_000, pct: int = 20,
                 no_exit: bool = False) -> str:
@@ -212,10 +213,20 @@ class Session:
         self.rooms, self.seq, self.seen = [], 0, {}  # every room; message counter; agent -> seq at its last call
         self.rooms.append({"id": "R1", "members": list(AGENTS), "left": {}, "closed": False, "msgs": [], "by": "system",
                            "new": True, "group": True})  # R1: the chat of all four (the one-to-one chats follow as R2, R3, ...)
-        self.systems = {a: rules.rulebook(a, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize,
-                                          full=s.balance_pct, pct=s.exit_bonus_pct, charge_total=s.charge_total) for a in AGENTS}
+        self.tr, self.systems = {}, {}  # agent -> its translator (game.lang; the arena may set a seat's own: set_lang)
+        for a in AGENTS:
+            self.set_lang(a, s.lang)
         self.reveal = ""  # this round's task as the solver saw it, its answer and the engine's, for TALK AFTER RESULTS
-        self.pu = rules.user_wording  # the engine's own USER pieces (agents' words are added after this pass)
+
+    def set_lang(self, a: str, code: str) -> None:
+        """The language *a* reads from its next call on: its rulebook and the engine's USER pieces (lang.py)."""
+        s, self.tr[a] = self.s, lang.translator(code)
+        self.systems[a] = self.tr[a](rules.rulebook(a, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize,
+                                                    full=s.balance_pct, pct=s.exit_bonus_pct, charge_total=s.charge_total))
+
+    def pu(self, a: str):
+        """The engine's own USER pieces for *a* (agents' words are added after this pass): v28-v33 wording, then *a*'s language."""
+        return lambda text: self.tr[a](rules.user_wording(text))
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -371,10 +382,11 @@ class Session:
                     head = re.sub(r"(YOUR TOKENS LEFT: [^\n]*)", lambda m: f"{m.group(1)}\nYOUR LAST REPLY: "
                                   f"{self.last_used[a]:,} tokens generated, including your thinking.", head, count=1)
                 self.shown[a] = self.shown_at[a] = w.balances[a]
-                bad = "".join(f"Not delivered from your last reply: {x}\n" for x in self.undelivered.pop(a, ()))  # 10-16 Luna test
+                tr = self.tr[a]
+                bad = "".join(tr("Not delivered from your last reply: ") + f"{tr.dropped(x)}\n" for x in self.undelivered.pop(a, ()))
                 fmt = room_format(ph, k, limit, w.balances[a], lone, s.balance_pct, s.exit_bonus_pct, self._solver_stays(a))
-                head, part, fmt = map(self.pu, (head, part, fmt))  # engine text only, before any agent-authored text
-                chats = rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history).replace("YOUR CHATS", "Chats", 1)
+                head, part, fmt = map(self.pu(a), (head, part, fmt))  # engine text only, before any agent-authored text
+                chats = rooms_view(self.rooms, a, self.seen.get(a, 0), s.room_history, tr, "Chats")
                 jobs[a] = (f"{head}\n\n{part}\n\n{chats}\n\n{bad}{fmt}", TALK_CAP, lambda t, a=a: parse_rooms(
                                t, a, AGENTS, [b for b in start if b not in self.gone], lambda n, i, a=a: (None, "no other agent is taking part")
                                if lone else self._room(a, n, i), ph == "prep"), {"turn": k, "tick": k, "phase": ph})
@@ -452,12 +464,12 @@ class Session:
         for a in inside:
             cap = min(s.solve_cap, w.balances[a])
             examples = [("shown to all", c) for c in dealt.public]
-            notes = [f"At TALK tick {g['turn']}, {gift_line(g, a)}" for g in self.ga
+            notes = [gift_line(g, self.tr[a]) for g in self.ga
                      if g["round"] == r and g["kind"] == "give" and g["status"] == "done" and g["dst"] == a]
-            notes += [f"{b} {'reached zero' if self.gone[b] == 'dead' else 'exited'}." for b in AGENTS if b in self.gone]
-            notes += [self.pu(f"{rules.vote_text(self.vote, a)}.")]
+            notes += [self.tr[a](f"{b} {'reached zero' if self.gone[b] == 'dead' else 'exited'}.") for b in AGENTS if b in self.gone]
+            notes += [self.pu(a)(f"{rules.vote_text(self.vote, a)}.")]
             user = solve_user(solve_head(r, cap, w.balances[a], s.balance_pct) + "\n" + rules.task_spec() + "\n",
-                              rules.puzzle_view(puzzle, examples), notes, n, self.pu)
+                              rules.puzzle_view(puzzle, examples), notes, n, self.pu(a))
             jobs[a] = (user, cap, lambda t, a=a: (beliefs.__setitem__(a, parse_belief(t)), parse_solve(t, n))[1],
                        {"answers": list(truth), "profile": profile, "seed": self.seed})
             rows[a].update(solve_call=True, cap=cap, balance_limited=cap < s.solve_cap, received=[],
@@ -579,7 +591,7 @@ class Session:
     def run(self) -> dict:
         s = self.s
         shown = {k: (s.charge_total // len(AGENTS) if k == "charge" else getattr(s, k)) if v is None else v  # charge: the
-                 for k, v in LOGGED.items()}  # old per-agent key, the share at four
+                 for k, v in LOGGED.items()} | ({"lang": s.lang} if s.lang != "en" else {})  # old per-agent key, the share at four
         self.emit({"event": "session_start", "session_id": self.sid, "cell_id": self.cell.cell_id, "seed": self.seed,
                    "start": self.cell.start, "starts": self.starts, "agents": AGENTS, "seats": self.models, "settings": shown})
         played = 0

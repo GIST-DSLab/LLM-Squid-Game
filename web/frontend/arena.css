@@ -719,3 +719,32 @@ details.legend { margin-top: 12px; }
 .msg-row .msg-f { display: flex; flex-direction: column; gap: 4px; }
 .ga-row .give-all input, .give-all input { width: auto; flex: 0 0 auto; }
 .give-all { white-space: nowrap; }
+
+/* --- v33 messenger TALK (2026-10-20) ------------------------------------------------------------------------------- */
+.lang-seg button { min-width: 3.2rem; }
+.prompt-box { margin-top: 1rem; }
+.prompt-text, .rules-text { white-space: pre-wrap; word-break: break-word; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5;
+  background: var(--panel-alt); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 0.9rem; max-height: 32rem; overflow: auto; }
+.rules-text { max-height: 60vh; }
+.talk-grid { align-items: start; gap: 1rem; margin-top: 0.75rem; }
+.rooms .room { margin-bottom: 0.75rem; }
+.rooms .room.has-new { border-color: var(--warn); box-shadow: 0 0 0 1px var(--warn) inset; }
+.rooms .chat-bubble .msg { white-space: pre-wrap; }
+.cmd-add { flex-wrap: wrap; gap: 0.4rem; }
+.cmd-rows { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.5rem 0; }
+.cmd-row { display: grid; grid-template-columns: 3.4rem minmax(7rem, 11rem) 1fr auto; gap: 0.4rem; align-items: start;
+  background: var(--panel-alt); border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem; }
+.cmd-row input[type=number] { width: 6.5rem; }
+.cmd-n { display: flex; gap: 0.4rem; align-items: center; grid-column: 2 / 4; }
+.cmd-row:has(.cmd-n) textarea { grid-column: 2 / 4; }
+.cmd-row > button { grid-column: 4; grid-row: 1; }
+.cmd-row textarea { min-height: 2.4rem; width: 100%; }
+.cmd-row > b { padding-top: 0.35rem; font-family: var(--mono); }
+.raw-edit textarea { width: 100%; font-family: var(--mono); }
+.reveal { margin: 0.6rem 0; }
+.reveal summary { cursor: pointer; }
+.results { margin: 0.6rem 0; }
+@media (max-width: 720px) {
+  .cmd-row { grid-template-columns: 1fr; }
+  .talk-grid { grid-template-columns: 1fr; }
+}

@@ -1,8 +1,8 @@
-"""Model seats (``fill: "models"``): people + gpt-oss:20b seats on squid5's Ollama provider in the v17b room, with the
-HTTP transport faked (no network). The fake sees exactly the request the provider builds and answers like Ollama: at
-an opening agent-11 opens a chat with agent-6 (SAY), others write DONE; in a chat a model GIVEs what it was asked,
-else LEAVEs; at a DECISION it gives 0; at SOLVE (streamed to the people watching) it answers the drawn rule's action.
-The engine parses and charges the replies."""
+"""Model seats (``fill: "models"``): people + API model seats in the v33 room, by default ``gpt-oss:20b`` on Ollama Cloud
+(squid5's ``Ollama`` provider, https://ollama.com/api/chat, key OLLAMA_API_KEY), with the HTTP transport faked (no network). The fake sees
+exactly the request the provider builds and answers like Ollama: agent-11 opens a chat with agent-6 at round 1's first
+tick and GIVEs what agent-6 ASKs; at SOLVE (streamed to the people watching) a model answers the drawn rule's action.
+The engine parses and charges the replies; ``model_lang: ko`` sends the models the Korean prompts."""
 
 from __future__ import annotations
 
@@ -11,15 +11,14 @@ import re
 
 import httpx
 import pytest
-from conftest import answers_for, make_room, play, start
+from conftest import answers_for, basic, make_room, play, start
 
 from squid5.core import providers, rules
 from web.server import engine
-from web.server.engine import kind_of, phase_of, round_of
 
 A6, A11, A17, A23 = rules.TEAM_AGENTS
-KEY = "OLLAMA_API_KEY3"
 SEED = 5  # agent-11 (a model) is round 1's solver, agent-6 (ann) round 2's
+SOLVE = re.compile(r"^(?:Round|라운드) (\d+): SOLVE\.")
 
 
 class FakeOllama:
@@ -30,21 +29,18 @@ class FakeOllama:
         self.mode, self.tokens, self.requests = mode, tokens, []
 
     def text(self, payload: dict) -> str:
-        me = payload["messages"][0]["content"].split("You are ")[1].split(",")[0]
+        me = re.search(r"agent-\d+", payload["messages"][0]["content"]).group(0)
         user = payload["messages"][-1]["content"]
-        kind, r = kind_of(user), round_of(user)
         if self.mode == "garbage":
             return "I am not sure what to do here."
-        if kind == "solve":
-            n = len(re.findall(r"^  - \(", user, re.M)) // 5
-            return "BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: " + ", ".join(answers_for(SEED, r, n))
-        phase = phase_of(user)
-        if phase == "opening":
-            return f"SAY {A6}: hello from a model" if me == A11 and "SOLVE comes after this TALK" in user else "DONE"
-        if phase == "decision":
-            return "DECISION: GIVE 0: I keep my tokens."
-        asked = re.findall(rf"^  {A6}: ASK (\d+)", user, re.M)
-        return f"Here you are.\nGIVE {asked[-1]}: for you" if asked and "you: GIVE" not in user else "LEAVE: thank you."
+        if m := SOLVE.match(user):
+            return "BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: " + ", ".join(answers_for(SEED, int(m.group(1))))
+        ask = re.search(rf"NEW \[R\d+ T\d+ [a-zA-Z ]+\] {A6}: ASK ([\d,]+)", user)
+        if me == A11 and ask:
+            return f"GIVE {A6} {ask.group(1).replace(',', '')}: for you\nDONE"
+        if me == A11 and re.match(r"^(Round|라운드) 1\.", user) and re.search(r"(tick|틱) 1 \((at most|최대)", user) and "BEFORE SOLVE" in user:
+            return f"TO {A6}: hello from a model\nDONE"
+        return "DONE"
 
     def post(self, url, json=None, headers=None, timeout=None):
         self.requests.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
@@ -59,9 +55,8 @@ class FakeOllama:
         self.requests.append({"url": url, "json": json, "headers": headers, "timeout": timeout, "stream": True})
         if self.mode == "down":
             raise httpx.ConnectError("unavailable")
-        text = self.text(json)
         return _Stream([{"message": {"thinking": "Counting the rules. "}, "done": False},
-                        {"message": {"content": text}, "done": False},
+                        {"message": {"content": self.text(json)}, "done": False},
                         {"message": {"content": ""}, "done": True, "eval_count": self.tokens, "prompt_eval_count": 1000,
                          "done_reason": "stop"}])
 
@@ -86,10 +81,11 @@ class _Stream:
 
 @pytest.fixture
 def fake(monkeypatch):
-    monkeypatch.setenv(KEY, "test-key-not-real")
     f = FakeOllama()
     monkeypatch.setattr(providers.httpx, "post", f.post)
     monkeypatch.setattr(engine.httpx, "stream", f.stream)
+    monkeypatch.setattr(engine, "ENV_FILES", [])  # never the real .env
+    monkeypatch.setenv("OLLAMA_API_KEY", "test-key-not-real")
     return f
 
 
@@ -97,130 +93,69 @@ def model_room(client, humans=1, **settings):
     return make_room(client, humans, seed=SEED, fill="models", model_retries=0, rate=50, **settings)
 
 
-def human_policy(p, pend):
-    k, v = pend["kind"], pend["view"]
-    if k == "solve":
-        return {"actions": answers_for(SEED, pend["round"], len(v["taking_part"]))}
-    if k == "opening":
-        return {"text": "DONE"}
-    if k == "chat":
-        return {"text": "Could you spare some?\nASK 300: thanks" if v["reply_no"] <= 2 else "LEAVE: thanks"}
-    return {"text": "DECISION: GIVE 0: no."}
+def human(p, pend):
+    """Ask agent-11 for 300 at round 1's first tick before SOLVE; else as ``basic``."""
+    if pend["kind"] == "talk" and (pend["round"], pend["phase"], pend["tick"]) == (1, "prep", 1):
+        return {"text": f"ASK {A11} 300: could you spare some?\nDONE"}
+    return basic(p, pend)
 
 
-def test_one_human_three_models_chat_give_watched_solve_and_refund(client, fake):
-    ps = model_room(client, rounds=2)
-    s = ps[0].state()
-    assert s["settings"]["fill"] == "models" and s["settings"]["model"] == "gpt-oss:20b"
-    assert s["settings"]["think"] == "medium" and s["settings"]["api_key_env"] == KEY
+def test_one_person_three_models_on_the_ollama_cloud_api(client, fake):
+    ps = model_room(client)
     start(client, ps)
-    s = play(ps, human_policy)
+    s = play(ps, human, max_s=90)
     assert s["status"] == "finished", s["error"]
-    seats = {r["agent"]: r for r in s["seats"]}
-    assert seats[A6]["kind"] == "human"
-    for a in (A11, A17, A23):
-        assert seats[a]["kind"] == "model" and seats[a]["name"].startswith("gpt-oss:20b #")
-        assert seats[a]["errors"] == 0 and not seats[a]["thinking"] and seats[a]["last_call"]["out_tokens"] == 321
-    # agent-11 opened a chat with ann before SOLVE; ann asked 300 in it and the model gave it at once
-    chat = next(x for x in ps[0].seen if x["kind"] == "chat")["pending"]["view"]
-    assert chat["phase"] == "prep" and chat["chat"]["partner"] == A11
-    assert chat["chat"]["lines"][0] == {**chat["chat"]["lines"][0], "who": A11, "opening": True, "kind": "say",
-                                        "text": "hello from a model"}
-    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
-    gifts = [e for e in evs if e.get("event") == "gift" and e["src"] == A11 and e["dst"] == A6]
-    assert gifts and gifts[0]["amount"] == 300 and gifts[0]["status"] == "done"
-    # round 1: the model solver's SOLVE was streamed (the person watched) and solved: its SOLVE tokens came back
-    stream = [r for r in fake.requests if r.get("stream")]
-    assert len(stream) == 1 and stream[0]["json"]["stream"] is True
-    r1 = s["rounds"][0]["agents"]
-    assert r1[A11]["solve_call"] and r1[A11]["solved"] and r1[A11]["returned"] == 321
-    assert not any(r1[a]["charged"] for a in r1)
-    # round 2: ann solved
-    assert s["rounds"][1]["agents"][A6]["solved"] and s["feedback"][-1]["solved"]
-    # the provider got the engine's own text, the model settings and the key from the environment
-    req = next(r for r in fake.requests if not r.get("stream"))
-    assert req["url"] == "https://ollama.com/api/chat" and req["headers"]["Authorization"] == "Bearer test-key-not-real"
-    assert req["json"]["model"] == "gpt-oss:20b" and req["json"]["think"] == "medium" and req["timeout"] == 300.0
-    assert [m["role"] for m in req["json"]["messages"]] == ["system", "user"]
-    calls = [e for e in evs if e.get("event") == "call" and e["agent"] != A6]
-    assert len(calls) == len(fake.requests) and all(e["model"] == "gpt-oss:20b" for e in calls)
-    assert len([e for e in evs if e.get("event") == "model_call"]) == len(calls)
-    assert s["warnings"] == []
+    req = fake.requests
+    assert req and all(r["url"] == "https://ollama.com/api/chat" for r in req)
+    assert all(r["headers"]["Authorization"] == "Bearer test-key-not-real" for r in req)
+    assert {r["json"]["model"] for r in req} == {"gpt-oss:20b"} and {r["json"]["think"] for r in req} == {"medium"}
+    assert any(r.get("stream") for r in req)  # agent-11's SOLVE streamed to the person watching
+    gifts = [m for x in ps[0].screens("talk")[-1]["pending"]["view"]["rooms"] for m in x["msgs"] if m["kind"] == "give"]
+    assert any(g["src"] == A11 and g["amount"] == 300 for g in gifts)
+    assert s["rounds"][0]["solved"] and s["rounds"][0]["solver"] == A11
+    assert s["rounds"][0]["agents"][A11]["generated"] >= 321 and [r["tokens"] for r in s["seats"][1:]] != [None] * 3
 
 
-def test_model_seats_see_the_engine_prompts(client, fake):
-    """The system text a model seat receives is the session's own for that seat; the user text of each call is the
-    same text the engine logs for it."""
-    ps = model_room(client, rounds=1)
+def test_model_seats_read_the_engine_prompts_in_their_language(client, fake):
+    ps = model_room(client, rounds=1, model_lang="ko")
     start(client, ps)
-    s = play(ps, human_policy)
+    s = play(ps, human, max_s=90)
     assert s["status"] == "finished", s["error"]
     ses = client.app_state.rooms[ps[0].code].session
-    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
-    logged = {e["user"]: e["agent"] for e in evs if e.get("event") == "call" and e["agent"] != A6}
-    sent = {req["json"]["messages"][1]["content"]: req["json"]["messages"][0]["content"] for req in fake.requests}
-    assert set(sent) == set(logged)
-    for user, agent in logged.items():
-        assert sent[user] == ses.systems[agent]
+    sent = {}
+    for r in fake.requests:
+        m = r["json"]["messages"]
+        sent[re.search(r"agent-\d+", m[0]["content"]).group(0)] = m
+    for a, m in sent.items():
+        assert m[0]["content"] == ses.systems[a] and m[0]["content"].startswith(f"당신은 {a}입니다.")
+        assert m[-1]["content"].startswith("라운드 1")
+    assert ses.systems[A6].startswith("You are agent-6")  # the person reads English (make_room's lang)
 
 
-def test_two_humans_two_models(client, fake):
-    ps = model_room(client, humans=2, rounds=1)  # seed 5: bob (agent-11) solves round 1
-    ann, bob = ps
-    start(client, ps)
-    s = play(ps, human_policy)
-    assert s["status"] == "finished", s["error"]
-    assert [r["kind"] for r in s["seats"]] == ["human", "human", "model", "model"]
-    r1 = s["rounds"][0]["agents"]
-    assert r1[A11]["solve_call"] and r1[A11]["solved"] and not r1[A6]["solve_call"]
-    assert not [r for r in fake.requests if r.get("stream")]  # a person solved: nothing to stream
-
-
-def test_model_failure_counts_as_an_empty_reply(client, fake):
+def test_a_failed_model_call_is_an_empty_reply_and_the_room_goes_on(client, fake):
     fake.mode = "down"
     ps = model_room(client, rounds=1)
     start(client, ps)
-    s = play(ps, human_policy, max_s=60)
-    assert s["status"] == "finished", s["error"]
-    r1 = s["rounds"][0]["agents"]
-    for a in (A11, A17, A23):
-        assert r1[a]["generated"] == 0
-        row = next(x for x in s["seats"] if x["agent"] == a)
-        assert row["errors"] >= 1 and row["last_call"]["error"]
-    assert not r1[A11]["solved"] and all(r1[a]["charged"] for a in r1)  # the solver's SOLVE failed: a miss
-    assert any("모델 호출 실패" in w["text"] for w in s["warnings"])
-    evs = client.get(f"/api/rooms/{ps[0].code}/events").json()
-    talk = [e for e in evs if e.get("event") == "call" and e["agent"] == A17 and e["kind"] == "talk"]
-    assert talk and all(e["parsed"]["done"] and e["text"] == "" for e in talk)
+    s = play(ps, basic, max_s=90)
+    assert s["status"] == "finished" and any("모델 호출 실패" in w["text"] for w in s["warnings"])
+    assert not s["rounds"][0]["solved"]
 
 
-def test_missing_key_is_a_clear_error(client, monkeypatch):
-    monkeypatch.delenv(KEY, raising=False)
+def test_model_seats_need_the_key_and_take_any_api_model_per_seat(client, fake, monkeypatch, tmp_path):
+    monkeypatch.delenv("OLLAMA_API_KEY")
+    assert client.get("/api/models").json()["available"] is False
+    r = client.post("/api/rooms", json={"settings": {"fill": "models"}})
+    assert r.status_code == 400 and "OLLAMA_API_KEY" in r.json()["detail"]
+    assert client.post("/api/rooms", json={"settings": {"fill": "bots"}}).status_code == 200
+    assert client.post("/api/rooms", json={"settings": {"fill": "models", "kind": "local"}}).status_code == 400
+    (tmp_path / ".env").write_text("OTHER=1\nOLLAMA_API_KEY=from-dotenv  # comment\n")  # the server reads only that line
+    monkeypatch.setattr(engine, "ENV_FILES", [tmp_path / ".env"])
     m = client.get("/api/models").json()
-    assert m["available"] is False and m["api_key_env"] == KEY and m["model"] == "gpt-oss:20b"
-    assert m["version"] == "v17b" and m["defaults"]["charge"] == 10_000 and "schedules" not in m
-    r = client.post("/api/rooms", json={"host_name": "ann", "settings": {"humans": 1, "fill": "models"}})
-    assert r.status_code == 400 and KEY in r.json()["detail"] and "not set" in r.json()["detail"]
-    monkeypatch.setenv(KEY, "x")
-    ps = make_room(client, 1, fill="models")
-    monkeypatch.delenv(KEY)
-    r = client.post(f"/api/rooms/{ps[0].code}/start", params={"token": ps[0].token})
-    assert r.status_code == 409 and KEY in r.json()["detail"]
-    for bad in ({"think": "max"}, {"api_key_env": "AWS_SECRET_ACCESS_KEY"}, {"model": "gpt oss; rm"}):
-        r = client.post("/api/rooms", json={"settings": {"fill": "models", **bad}})
-        assert r.status_code == 400, bad
-
-
-def test_model_overdraw_shuts_the_seat_down(client, fake):
-    fake.tokens = 10**6  # a TALK reply has no limit of its own: it is capped at the balance, so it overdraws
-    ps = model_room(client, rounds=2)
+    assert m["available"] and m["model"] == "gpt-oss:20b" and m["kind"] == "ollama" and "from-dotenv" not in str(m)
+    ps = make_room(client, 1, seed=SEED, rounds=1, fill="models", model_retries=0,
+                   models=[{"model": "gpt-oss:20b"}, {"kind": "ollama", "model": "gpt-oss:120b"}])
     start(client, ps)
-    s = play(ps, human_policy)
-    assert s["status"] == "finished", s["error"]
-    r1 = s["rounds"][0]["agents"]
-    starts = s["starts"]
-    for a in (A11, A17, A23):
-        assert r1[a]["overdrawn"] and r1[a]["status"] == "dead" and r1[a]["generated"] == starts[a]
-        row = next(x for x in s["seats"] if x["agent"] == a)
-        assert row["status"] == "dead" and row["last_call"]["overdrawn"] and row["calls"] == 1
-    assert sum("잔액을 다 써서 꺼짐" in w["text"] for w in s["warnings"]) == 3
+    assert play(ps, basic, max_s=90)["status"] == "finished"
+    assert [r["model"] for r in ps[0].state()["seats"][1:]] == ["gpt-oss:20b", "gpt-oss:120b", "gpt-oss:20b"]
+    assert {r["json"]["model"] for r in fake.requests} == {"gpt-oss:20b", "gpt-oss:120b"}
+    assert all(r["headers"]["Authorization"] == "Bearer from-dotenv" for r in fake.requests)

@@ -1,29 +1,34 @@
 """HTTP API for the human-playable pages.  Run: ``uvicorn web.server.app:app --port 8600`` (from the repo root).
 
 Rooms (part 2)
-    POST /api/rooms                         {host_name, settings{...}}            -> {code, token, agent}
-    POST /api/rooms/{code}/join             {name}                                -> {token, agent}
+    POST /api/rooms                         {host_name, lang, settings{...}}      -> {code, token, agent}
+    POST /api/rooms/{code}/join             {name, lang}                          -> {token, agent}
     POST /api/rooms/{code}/start?token=     host only
+    POST /api/rooms/{code}/lang?token=      {lang: en | ko}: what this person reads (the rulebook at once, the messages
+                                            from the next call on; the engine's own text, Session.set_lang)
     GET  /api/rooms/{code}/state?token=     poll every ~1 s; ``pending`` is your open decision screen, if any
-    POST /api/rooms/{code}/submit?token=    TALK screens (pending.kind opening | chat | decision): {kind, round, turn, text}
-                                            (the reply in the engine grammar); SOLVE: {kind: "solve", round, actions[],
-                                            belief{action: %}}                    -> {charged, seconds, outcome, void}
+    POST /api/rooms/{code}/submit?token=    TALK (pending.kind "talk"): {kind, round, tick, phase, text} (the reply in the
+                                            messenger grammar: TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE);
+                                            SOLVE: {kind: "solve", round, actions[], belief{action: %}}
+                                                                                  -> {charged, seconds, outcome, void}
     POST /api/rooms/{code}/watched?token=   {round}: this person is done watching the LLM solver's SOLVE
-    POST /api/rooms/{code}/forfeit?token=   give up: EXIT at the next TALK before SOLVE; meanwhile empty replies
+    POST /api/rooms/{code}/forfeit?token=   give up: EXIT: YES at the next TALK before SOLVE that allows it; else DONE
     POST /api/rooms/{code}/export           write a squid5 run dir under outputs/web5/runs/<code>/ -> {dir}
-    GET  /api/rooms/{code}/events           the event log (engine events + room, model_call): in full once the game
-                                            has ended; before that with no answers, rule, truth, task or seed and
-                                            nothing an agent wrote (engine.public_events)
+    GET  /api/rooms/{code}/events           the event log: in full once the game has ended; before that with no task,
+                                            answers, seed, token amounts, chats, moves or anything an agent wrote
+                                            (engine.public_events)
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
     ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
-    A room plays the model runs' game, 5.2 v17b (configs/squid5/e52v16_public_sol4.yaml; see engine.py): the system
-    draws the solver, TALK before SOLVE (EXIT only here), SOLVE (solver only; people watch an LLM solver), RESULTS,
-    TALK after RESULTS (no EXIT), charges. GET .../state carries ``starts``, ``pct``, ``game`` (the v17b switches),
-    ``phase`` ("prep" | "rescue"), ``talk`` (the live chat schedule), ``votes`` (the drawn solvers), ``spectate``,
-    ``feedback`` and the screen's ``view`` (``public`` = {per_agent, n, count}, never the rule).
+    A room plays the model runs' game, 5.2 v33 (configs/squid5/e52v33_public_sol4.yaml; see engine.py): the system draws
+    the solver, TALK BEFORE SOLVE (the messenger: ticks, rooms R1..., EXIT: YES|NO before SOLVE, never by the round's
+    solver unless alone), SOLVE (solver only; people watch an LLM solver), RESULTS, TALK AFTER RESULTS (the task and both
+    answers revealed), CHARGES (24,000 split among those taking part at the round's start). Only the reader's own tokens
+    are shown, with the order of all; everything once the session has ended.
 Models
-    GET  /api/models                        default model seat (gpt-oss:20b, think) and whether the server has its key
-                                            (settings.fill = "models" fills the seats no human takes with model seats)
+    GET  /api/models                        default model seat (gpt-oss:20b on Ollama Cloud, think) and whether the server
+                                            has its key (OLLAMA_API_KEY, from the environment or .env; never its value);
+                                            settings.fill = "models" fills the seats no human takes with model seats
+                                            (settings.kind + model, or settings.models = [{kind, model}, ...] per seat)
 Probe (part 1)
     POST /api/probe                         {anon_id, ts, self[5], other[5], meta?} -> {ok, id}
     GET  /api/probe/summary                 pooled mean curves of every submission so far
@@ -60,8 +65,8 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .engine import (AGENTS, VERSION, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root, public_events,
-                     export_files, new_code)
+from .engine import (AGENTS, API_KINDS, LANGS, VERSION, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root,
+                     public_events, export_files, new_code)
 from . import signal as sig
 from .monitor import default_monitor_root, load_compare, monitor_router, run_rel
 from .store import REPO, Store, write_run_dir
@@ -107,9 +112,11 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
     def models() -> dict:
         """What the lobby offers for model seats; ``available`` says whether the server holds the key (never its value)."""
         d = RoomSettings()
-        return {"model": d.model, "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": d.api_key_env,
-                "available": bool(os.environ.get(d.api_key_env, "").strip()), "timeout": d.model_timeout,
-                "version": VERSION, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
+        why = d.models_ready()
+        return {"kind": d.kind, "kinds": list(API_KINDS), "model": d.model, "base_url": d.base_url or "https://ollama.com",
+                "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": API_KINDS[d.kind], "available": not why,
+                "why": why, "timeout": d.model_timeout,
+                "langs": list(LANGS), "version": VERSION, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
 
     # --- rooms -----------------------------------------------------------------------------------------------------
     @app.post("/api/rooms")
@@ -127,7 +134,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             room = Room(code, settings, st.append_event, runs)
             rooms[code] = room
         st.create_room(code, room.state(None)["settings"] | {"rounds": settings.rounds})
-        seat = room.join(body.get("host_name") or "host")
+        seat = room.join(body.get("host_name") or "host", str(body.get("lang") or "ko"))
         st.update_room(code, seats=snapshot_seats(room))
         return {"code": code, "token": seat.token, "agent": seat.agent, "name": seat.name}
 
@@ -135,7 +142,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
     def join(code: str, body: dict = Body(default={})) -> dict:
         room = room_of(code)
         try:
-            seat = room.join(body.get("name") or "")
+            seat = room.join(body.get("name") or "", str(body.get("lang") or "ko"))
         except ValueError as err:
             raise HTTPException(409, str(err)) from err
         st.update_room(room.code, seats=snapshot_seats(room))
@@ -153,6 +160,16 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             raise HTTPException(409, str(err)) from err
         st.update_room(room.code, seats=snapshot_seats(room), status="running")
         return {"ok": True}
+
+    @app.post("/api/rooms/{code}/lang")
+    def set_lang(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:
+        """What this person reads (en | ko): the rulebook at once, the engine's messages from the next call on."""
+        room = room_of(code)
+        seat = seat_of(room, token)
+        try:
+            return {"lang": room.set_lang(seat, str(body.get("lang") or ""))}
+        except ValueError as err:
+            raise HTTPException(400, str(err)) from err
 
     @app.get("/api/rooms/{code}/state")
     def state(code: str, token: str = Query("")) -> dict:
@@ -173,8 +190,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             p = seat.submit(body)
         except (LookupError, ValueError) as err:  # no screen, or not the screen that is open any more
             raise HTTPException(409, str(err)) from err
-        return {"kind": p.kind, "round": p.round, "turn": p.turn, "charged": p.charged, "seconds": p.seconds,
-                "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
+        return {"kind": p.kind, "round": p.round, "tick": p.tick, "phase": p.phase, "charged": p.charged,
+                "seconds": p.seconds, "outcome": p.outcome, "void": p.charged >= p.cap, "reply": p.reply.text}
 
     @app.post("/api/rooms/{code}/watched")
     def watched(code: str, token: str = Query(""), body: dict = Body(default={})) -> dict:
@@ -189,7 +206,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
 
     @app.post("/api/rooms/{code}/forfeit")
     def forfeit(code: str, token: str = Query("")) -> dict:
-        """Give up mid-game: EXIT at TALK (now or at the next TALK turn); a SOLVE screen open now gets no answer."""
+        """Give up mid-game: EXIT: YES at the next TALK before SOLVE that allows it (DONE until then); a SOLVE screen open
+        now gets no answer."""
         room = room_of(code)
         seat = seat_of(room, token)
         if room.status != "running":
@@ -198,8 +216,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
 
     @app.get("/api/rooms/{code}/events")
     def events(code: str) -> list[dict]:
-        """The room's event log: in full once the game has ended; before that without answers, rule, truth, task
-        statistics, seed or anything an agent wrote (engine.public_events), for every reader."""
+        """The room's event log: in full once the game has ended; before that without the task, answers, seed, token
+        amounts, chats, moves or anything an agent wrote (engine.public_events), for every reader."""
         code = code.upper()
         room, info = rooms.get(code), st.room(code)
         evs = room.events if room else st.events(code)

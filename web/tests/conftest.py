@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import sys
 import time
 from pathlib import Path
@@ -64,15 +65,16 @@ class Player:
                 and (round_no is None or x["round"] == round_no)]
 
 
-def make_room(client: TestClient, humans: int, names=("ann", "bob", "cy", "dee"), **settings) -> list[Player]:
+def make_room(client: TestClient, humans: int, names=("ann", "bob", "cy", "dee"), lang: str = "en", **settings) -> list[Player]:
     settings = {"humans": humans, "rounds": 2, "seed": 11, "talk_timeout_s": 30, "timeout_s": 30, "rate": 1e-9,
                 "fill": "bots", "watch_hold_s": 0, **settings}
-    r = client.post("/api/rooms", json={"host_name": names[0], "settings": settings})
+    r = client.post("/api/rooms", json={"host_name": names[0], "lang": lang, "settings": settings})
     assert r.status_code == 200, r.text
     d = r.json()
+    SEEDS[d["code"]] = settings["seed"]
     players = [Player(client, d["code"], d["token"], d["agent"], d["name"])]
     for name in names[1:humans]:
-        j = client.post(f"/api/rooms/{d['code']}/join", json={"name": name})
+        j = client.post(f"/api/rooms/{d['code']}/join", json={"name": name, "lang": lang})
         assert j.status_code == 200, j.text
         players.append(Player(client, d["code"], j.json()["token"], j.json()["agent"], name))
     return players
@@ -83,10 +85,8 @@ def start(client: TestClient, players: list[Player]) -> None:
     assert r.status_code == 200, r.text
 
 
-def key_of(pend: dict) -> tuple:  # two TALKs a round (view.phase "prep" / "rescue"), several chats a TALK
-    view = pend.get("view") or (pend.get("pending") or {}).get("view") or {}  # a screen, or a ``Player.seen`` record
-    chat = view.get("chat")
-    return pend["round"], pend["kind"], pend.get("turn"), view.get("phase"), chat and chat["id"]
+def key_of(pend: dict) -> tuple:  # a screen: round, kind, tick, phase (two TALKs a round, many ticks a TALK)
+    return pend["round"], pend["kind"], pend.get("tick"), pend.get("phase")
 
 
 def play(players: list[Player], policy, until_status=("finished", "error"), max_s: float = 60.0,
@@ -106,18 +106,19 @@ def play(players: list[Player], policy, until_status=("finished", "error"), max_
                 continue
             body = policy(p, pend)
             if body is None:
-                p.seen.append({"round": pend["round"], "kind": pend["kind"], "turn": pend.get("turn"),
-                               "pending": pend, "skipped": True})
+                p.seen.append({"round": pend["round"], "kind": pend["kind"], "tick": pend.get("tick"),
+                               "phase": pend.get("phase"), "pending": pend, "skipped": True})
                 continue
             if hold:
                 time.sleep(hold)
-            reply = p.submit({"kind": pend["kind"], "round": pend["round"], "turn": pend.get("turn"), **body})
-            p.seen.append({"round": pend["round"], "kind": pend["kind"], "turn": pend.get("turn"), "pending": pend,
-                           "reply": reply})
+            reply = p.submit({"kind": pend["kind"], "round": pend["round"], "tick": pend.get("tick"), "phase": pend.get("phase"), **body})
+            p.seen.append({"round": pend["round"], "kind": pend["kind"], "tick": pend.get("tick"), "phase": pend.get("phase"),
+                           "pending": pend, "reply": reply})
         time.sleep(0.03)
     raise AssertionError(f"room did not reach {until_status} in {max_s}s: {s and s['status']} live {s and s['live']}")
 
 
+@functools.lru_cache(maxsize=None)
 def puzzle(seed: int, round_no: int, n: int = 4):
     """The round's puzzle as a room builds it and the public examples shown when ``n`` agents take part (the puzzle may
     be a redraw, so it comes from ``public_round``)."""
@@ -130,7 +131,16 @@ def puzzle(seed: int, round_no: int, n: int = 4):
     return pz, shown
 
 
+@functools.lru_cache(maxsize=None)
+def _answers(seed: int, round_no: int, n: int = 4) -> tuple:
+    return tuple(answers_for_(seed, round_no, n))
+
+
 def answers_for(seed: int, round_no: int, n: int = 4) -> list[str]:
+    return list(_answers(seed, round_no, n))
+
+
+def answers_for_(seed: int, round_no: int, n: int = 4) -> list[str]:
     """The scored actions: those of the rule drawn among the rules that fit the examples ``n`` agents are shown."""
     from squid5.core.puzzle import Spec, public_truth
 
@@ -159,5 +169,16 @@ def solver_of(seed: int, round_no: int = 1, taking_part=None) -> str:
 
 
 def done(*lines: str) -> dict:
-    """An opening body: the given lines and DONE."""
+    """A TALK body: the given lines and DONE."""
     return {"text": "\n".join([*lines, "DONE"])}
+
+
+def basic(p, pend) -> dict:
+    """Answer every screen: the right action at SOLVE, DONE at TALK (EXIT: NO when alone)."""
+    if pend["kind"] == "solve":
+        return {"actions": answers_for(int(p.state()["settings"].get("seed") or SEEDS[p.code]), pend["round"]),
+                "belief": {"go_left": 25, "go_right": 25, "stay": 25, "jump": 25}}
+    return {"text": "EXIT: NO stay" if pend["view"]["lone"] else "DONE"}
+
+
+SEEDS: dict[str, int] = {}  # room code -> seed (the state hides the seed until the end)
