@@ -186,7 +186,7 @@
 # Measured ceilings: counting-reasoner (MAP) accuracy at N=4 -> N=2 is 80->63, 68->57, 57->54, 50->48 % for split
 # .8 / .7 / .6 / .5; uniform guess 50 -> 31 %; a pool of 10 at N=4 is ~300 consistent rules at N=2.
 # Starts: 20,000 x shares 100 / 75 / 50 / 25 %, turned by the seed; balances shown with % of 20,000.
-name: squid5_e52v32_docker_opus4
+name: squid5_e52v33_docker_opus4
 mode: game
 reps: 10
 seed0: 4101
