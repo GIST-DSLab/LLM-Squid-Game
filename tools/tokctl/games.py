@@ -14,6 +14,9 @@ SETS = [  # (group, label, open?, glob)
     *[(v, m, True, f"e52_tokctl/squid5_e52tc_{v}_{k}") for v in ("b0", "tl", "t4", "tlt4")
       for k, m in (("glm", "GLM-5.3-flash"), ("ds", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],
     ("tln", "DeepSeek-v4.1-flash", True, "e52_tokctl/squid5_e52tc_tln_ds"),
+    ("fin", "DeepSeek-v4.1-flash", True, "e52_tokctl/squid5_e52tc_fin_ds"),
+    ("fit", "GLM-5.3-flash", True, "e52_tokctl/squid5_e52tc_fit_glm"), ("fit", "Gemma4-31b", True, "e52_tokctl/squid5_e52tc_fit_gemma"),
+    ("fit0", "GLM-5.3-flash", True, "e52_tokctl/squid5_e52tc_fit0_glm"),
     ("t4", "Opus 5.5", False, "e52_tokctl/squid5_e52tc_t4_opus"),
     ("v33", "GLM-5.3-flash", True, "e52_v33/squid5_e52v33_codex_glm4"), ("v33", "Kimi-K3", True, "e52_v33/squid5_e52v33_codex_kimi4"),
     ("v33", "Opus 5.5", False, "e52_v33/squid5_e52v33_public_opus4"), ("v33", "GPT-6 Sol", False, "e52_v33/squid5_e52v33_public_sol4"),
@@ -42,7 +45,9 @@ def games(pattern):
                    "alive": sum(s not in ("dead", "exited") for s in status.values()), "exited": sum(s == "exited" for s in status.values()),
                    "dead": len(dead), "dead_by_call": sum(a not in charge_dead for a in dead),
                    "dead_by_talk": sum(a not in charge_dead and zero_call.get(a) == "talk" for a in dead),
-                   "dead_by_solve": sum(a not in charge_dead and zero_call.get(a) == "solve" for a in dead), "dead_by_charge": sum(a in charge_dead for a in dead),
+                   "dead_by_solve": sum(a not in charge_dead and zero_call.get(a) == "solve" for a in dead),
+                   "dead_by_give": sum(a not in charge_dead and a not in zero_call for a in dead),  # gave its last tokens away
+                   "dead_by_charge": sum(a in charge_dead for a in dead),
                    "talk_tokens": sum(c["used"] for c in calls if c["kind"] == "talk"),
                    "solve_tokens": sum(c["used"] for c in calls if c["kind"] == "solve"),
                    "charged": sum(v["charged"] for v in res["agents"].values()), "returned": sum(v["returned"] for v in res["agents"].values()),
@@ -67,18 +72,18 @@ def per_talk(*patterns):
 def main():
     out = []
     for grp, label, op, pat in SETS:
-        g = list(games(pat)) + (list(games(pat.replace("tlt4_", "tlt4b_"))) if "_tlt4_" in pat else [])  # seeds 4103-4105
+        g = list(games(pat)) + (list(games(pat.replace("tlt4_", "tlt4b_"))) + list(games(pat.replace("tlt4_", "tlt4c_"))) if "_tlt4_" in pat else [])  # seeds 4103-4110
         if not g:
             continue
         mean = lambda k: round(st.mean(x[k] for x in g), 1)  # noqa: E731
         out.append({"group": grp, "model": label, "open": op, "n": len(g), "games": g,
-                    **{k: mean(k) for k in ("rounds", "alive", "exited", "dead", "dead_by_call", "dead_by_talk", "dead_by_solve", "dead_by_charge", "talk_tokens",
+                    **{k: mean(k) for k in ("rounds", "alive", "exited", "dead", "dead_by_call", "dead_by_talk", "dead_by_solve", "dead_by_give", "dead_by_charge", "talk_tokens",
                                             "solve_tokens", "charged", "talk_calls", "gives")},
-                    "solve_acc": round(100 * sum(x["solved"] for x in g) / max(1, sum(x["tried"] for x in g))), **per_talk(pat, *([pat.replace("tlt4_", "tlt4b_")] if "_tlt4_" in pat else []))})
+                    "solve_acc": round(100 * sum(x["solved"] for x in g) / max(1, sum(x["tried"] for x in g))), **per_talk(pat, *([pat.replace("tlt4_", "tlt4b_"), pat.replace("tlt4_", "tlt4c_")] if "_tlt4_" in pat else []))})
     (HIST / "games.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
     for r in out:
         print(f"{r['group']:4s} {r['model']:20s} n={r['n']} rounds={r['rounds']} alive={r['alive']} exit={r['exited']} dead={r['dead']} "
-              f"(talk {r['dead_by_talk']}, solve {r['dead_by_solve']}, charge {r['dead_by_charge']}) talk={r['talk_tokens']:,.0f} solve={r['solve_tokens']:,.0f} "
+              f"(talk {r['dead_by_talk']}, solve {r['dead_by_solve']}, give {r['dead_by_give']}, charge {r['dead_by_charge']}) talk={r['talk_tokens']:,.0f} solve={r['solve_tokens']:,.0f} "
               f"charged={r['charged']:,.0f} acc={r['solve_acc']}% | per TALK {r['tokens_per_talk']:,} = {r['calls_per_agent_talk']} calls/agent x {r['tokens_per_call']:,}")
 
 

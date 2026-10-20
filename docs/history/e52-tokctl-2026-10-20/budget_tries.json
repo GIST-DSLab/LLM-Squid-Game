@@ -1,0 +1,10 @@
+{"note": "10-21 DeepSeek-v4.1-flash SOLVE, states solve16.json[0:3] / [0:6]; numbers copied from the console of the two tries below",
+ "anthropic_budget_tokens_via_ollama": [
+  {"budget": 2000, "cap": 41904, "out": 21765, "answer": "go_left", "truth": "go_left"},
+  {"budget": 2000, "cap": 11817, "out": 11817, "answer": null, "truth": "stay"},
+  {"budget": 2000, "cap": 19932, "out": 19932, "answer": null, "truth": "jump"},
+  {"budget": 6000, "cap": 41904, "out": 11854, "answer": "go_left", "truth": "go_left"},
+  {"budget": 6000, "cap": 11817, "out": 11817, "answer": null, "truth": "stay"},
+  {"budget": 6000, "cap": 19932, "out": 19932, "answer": null, "truth": "jump"}],
+ "ollama_think_then_prefill_BELIEF": {"states": 6, "think_budget": 4000, "finished_within_budget": 1, "forced": 5,
+  "forced_answer_in_format": 2, "forced_correct": 2, "forced_restarted_reasoning_in_text": 3}}

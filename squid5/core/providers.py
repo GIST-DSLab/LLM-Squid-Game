@@ -46,6 +46,7 @@ class ProviderConfig:
     base_url: str = ""  # claude_cli: ANTHROPIC_BASE_URL (the relay that drops the CLI's token note); codex_cli: a /v1 model server
     think: str | bool | int | None = None  # ollama `think`, openai `reasoning_effort`, claude/anthropic effort; int = thinking budget
     think_talk: str | bool | int | None = None  # tokctl (10-20): the level for TALK replies (None: think), e.g. low / none
+    think_fit: list | None = None  # tokctl (10-21): [[level, tokens], ...] for other calls: the first level whose calibrated p90 < the cap
     temperature: float = 1.0
     timeout: float = 300.0
     retries: int = 3
@@ -63,9 +64,14 @@ class Provider:
     def complete(self, messages: Messages, cap: int, kind: str | None = None) -> Reply:
         last: Exception | None = None
         p = self
-        if kind == "talk" and self.cfg.think_talk is not None:  # a copy, so concurrent SOLVE calls keep their level
+        level = self.cfg.think
+        if kind == "talk" and self.cfg.think_talk is not None:
+            level = self.cfg.think_talk
+        elif kind != "talk" and self.cfg.think_fit:
+            level = next((lv for lv, need in self.cfg.think_fit if need < cap), self.cfg.think_fit[-1][0])
+        if level != self.cfg.think:  # a copy, so concurrent calls keep their own level
             p = copy.copy(self)
-            p.cfg = dataclasses.replace(self.cfg, think=self.cfg.think_talk)
+            p.cfg = dataclasses.replace(self.cfg, think=level)
         for attempt in range(self.cfg.retries + 1):
             try:
                 return p._call(messages, cap)

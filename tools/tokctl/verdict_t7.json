@@ -1,0 +1,11 @@
+{
+ "keyfacts": [
+  "규칙으로 고른 설정: <b>GLM</b> <code>think: low</code> · <b>Gemma</b> <code>think: high, think_talk: none, think_fit: [[high, 11256], [none, 1092]]</code> · <b>DeepSeek</b> <code>think: none</code>, 셋 다 <code>max_ticks: 4</code>.",
+  "SOLVE 넘김 허용을 처음엔 1개로 뒀다가 0개로 좁혔습니다: 1개 허용이면 GLM이 high를 쓰는데, high는 드물게 폭주해(상한 1~2만에 4만~6만 토큰) 게임에서 판당 0.3~0.4자리를 꺼뜨렸습니다(10판·5판).",
+  "<b>최종 설정 15판(모델당 5판, 시드 4101~4105)</b>: 자기 답으로 꺼진 자리가 판당 GLM 0.2 · Gemma 0.2 · DeepSeek 0.2입니다. 같은 시드의 Claude·GPT-6 v33은 0~0.2(Opus 0.2 · Luna 0.2 · Sol·Astra·Fable 0). 기준(v33 그대로)에서는 1.5~3이었습니다.",
+  "남은 사례는 셋: GLM <code>low</code>의 드문 폭주 1번(상한 21,788에 43,141), DeepSeek <code>none</code>의 15,379토큰 답 1번, 잔액이 69·469토큰뿐인 자리의 답(어떤 모델이든 0이 되는 경우).",
+  "이제 꺼짐은 대부분 오답 벌금(판당 0.6~1.4)과 GIVE로 남은 토큰을 다 넘긴 선택(DeepSeek 0.6)에서 나옵니다 — 아레나가 보려는 추론·협력의 결과입니다. 정답률은 GLM 59% · Gemma 65% · DeepSeek 62%(Claude·GPT-6 65~75%)."
+ ],
+ "verdict": "결론: 두 재생으로 고른 설정에서 세 오픈 모델 모두 토큰 조절 실패로 꺼지는 비율이 Claude·GPT-6과 같은 수준(판당 0.2)이 되고, 판의 승패는 정답률(벌금)·EXIT·GIVE에서 갈립니다. DeepSeek의 TALK 양(게임당 46.6k)은 닫힌 모델(1k~26k)보다 많지만 그것으로 꺼진 자리는 없습니다. 조건마다 5판이라 본 런에서 다시 확인해야 합니다.",
+ "warn": false
+}

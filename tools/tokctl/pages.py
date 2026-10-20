@@ -66,7 +66,7 @@ matchMedia("(prefers-color-scheme: dark)").matches;var n=d?"light":"dark";r.setA
 try{localStorage.setItem("hpf-theme",n)}catch(e){}})})();</script>"""
 PAGES = [("t1-log-diagnosis.html", "t1 기록 진단"), ("t2-harness-capture.html", "t2 하네스 캡처"),
          ("t3-frozen-replay.html", "t3 같은 입력 재생"), ("t4-variants.html", "t4 한 가지씩 바꾸기"),
-         ("t5-games.html", "t5 게임으로 확인"), ("t6-solve-replay.html", "t6 SOLVE 재생")]
+         ("t5-games.html", "t5 게임으로 확인"), ("t6-solve-replay.html", "t6 SOLVE 재생"), ("t7-calibration.html", "t7 보정과 상한 맞춤")]
 
 
 def page(fname, title, desc, kicker, body):
@@ -290,15 +290,56 @@ def t6(s):
 그대로 다시 보내 채점했습니다. 답 상한은 원래 장면의 상한(그 solver의 잔액, 중앙 {o['cap_med']:,.0f})이고, 상한에 닿은 답은 엔진처럼 무효입니다.</p>
 <div class="keyfacts"><ul>
 <li>원래 답(Claude·GPT-6): 16개 중 {o['correct']}개 정답, 중앙 {o['out_med']:,.0f}토큰.</li>
-<li><b>DeepSeek은 추론은 맞지만 15~30배 길게 합니다.</b> 상한을 무시하면 12~13/16 정답인데, 중앙 16k~29k토큰을 써서 4~8개가 상한을 넘습니다.
-생각 수준을 high → low로 낮춰도 중앙 28.5k → 16.5k, 상한 넘김 8 → 4개에 그칩니다. 화면의 "Your tokens left"와 답 상한을 보고 생각 길이를 맞추지 않습니다.</li>
-<li>Gemma는 중앙 7.8k로 길지만 상한 안(넘김 0)에서 13/16. GLM은 중앙 690토큰, 9/16.</li>
-<li>Codex는 출력 상한을 넘기는 플래그가 없어 상한은 엔진이 사후에 적용합니다. Claude Code(<code>max_tokens</code>)나 Ollama API(<code>num_predict</code>)로 상한을 넘겨도 생성이 멈출 뿐 답은 무효라 결과는 같습니다.</li>
+<li><b>DeepSeek은 추론은 맞지만 15~30배 길게 합니다.</b> 상한을 무시하면 10~13/16 정답인데, Codex high·medium·low와 Claude Code high·low 모두 중앙 16k~29k토큰을 써서 4~9개가 상한을 넘습니다.
+SOLVE 화면 첫 줄이 "Your limit: at most N tokens … including your thinking"인데도 길이를 맞추지 않습니다. 하네스를 바꿔도(Claude Code) 같습니다.</li>
+<li><b>생각 예산은 Ollama에서 걸리지 않습니다.</b> Anthropic 경로의 <code>budget_tokens</code>(2,000·6,000)를 Ollama가 무시해 상한까지 생성했고(6번 중 4번 무효),
+네이티브 API로 예산만큼 생각시킨 뒤 답 형식(<code>BELIEF:</code>)을 미리 채워 이어 쓰게 해도 5번 중 3번은 답 글에서 추론을 다시 시작했습니다(<code>budget_tries.json</code>).</li>
+<li><b>DeepSeek <code>none</code></b>: 생각 없이 중앙 28토큰, 상한 넘김 0, 9/16 정답 — GLM high(9/16)와 같은 수준입니다.</li>
+<li>Gemma는 high에서 중앙 7.8k로 길지만 넘김 0, 13/16. GLM은 high에서 중앙 690토큰, 넘김 1, 9/16.</li>
+<li><b>보정 규칙</b>: SOLVE 수준 = 이 16장면에서 상한을 넘기지 않는 가장 높은 수준. GLM·Gemma는 high, DeepSeek은 none이 됩니다(TALK 수준은 t4의 24장면에서 가장 싼 정상 형식). 새 모델도 같은 두 재생으로 정합니다.</li>
 </ul></div>
 {table(cols, rows, lambda r: "closed" if r["seat"] == "original" else "open")}
-<div class="verdict warn">결론: DeepSeek의 남은 문제는 하네스가 아니라 SOLVE 추론 길이(효율)입니다. 이것은 아레나가 보려는 "추론을 잘함"의 일부로 둘 수도 있고(같은 과제를 닫힌 모델은 1k 안에 품),
-모델 고유 성질로 보고 오픈 모델 비교에서 따로 표시할 수도 있습니다 — 연구자 결정 사항입니다.</div>"""
+<div class="verdict">결론: DeepSeek의 SOLVE 실패는 하네스가 아니라 모델이 상한을 보고 추론 길이를 맞추지 못하는 데서 옵니다. 하네스로 걸 수 있는 장치(effort · budget_tokens · 예산 후 강제 답) 가운데 상한을 지키는 것은 <code>none</code>뿐이고,
+그때 정답률은 GLM과 같은 9/16입니다. 이 설정으로 DeepSeek을 다시 게임에 넣었습니다(<a href="t7-calibration.html">t7</a>).</div>"""
     page("t6-solve-replay.html", "SOLVE 재생: DeepSeek은 상한을 보지 않는다", "기록된 SOLVE 장면 16개를 생각 수준별로 다시 보내 정답과 상한 넘김을 셈", "squid5 · 5.2 v33 · tokctl t6", body)
+
+
+def t7(s, games):
+    import calibrate  # noqa: PLC0415
+    cal = [calibrate.pick(x) for x in ("glm_codex", "gemma_codex", "ds_codex")]
+    lv = calibrate.LEVELS
+    talk_rows = [dict({"name": SEAT[c["seat"]][0]}, **{k: c["talk_mean_tokens"].get(k) for k in lv}, pick=c["talk_level"]) for c in cal]
+    solve = {(r["seat"], r["think"]): r for r in s["solve"]}
+    solve_rows = [{"name": SEAT[c["seat"]][0], "lv": k, "over": r["over_cap"], "med": r["out_med"], "p90": dict(c["think_fit"]).get(k, "—"),
+                   "ok": f"{r['correct']}/16", "use": "사다리" if k in dict(c["think_fit"]) else "제외"}
+                  for c in cal for k in lv if (r := solve.get((c["seat"], k)))]
+    pick_rows = [{"name": SEAT[c["seat"]][0], "config": c["config"]} for c in cal]
+    g = {(r["group"], r["model"]): r for r in games}
+    keep = [r for r in games if r["group"] in ("tlt4", "fin", "fit", "fit0") or (r["group"] == "v33" and not r["open"])]
+    gcols = [("model", "모델", True), ("what", "조건", True), ("n", "판"), ("rounds", "라운드"), ("alive", "끝까지"), ("exited", "EXIT"),
+             ("dead_by_talk", "꺼짐: TALK"), ("dead_by_solve", "꺼짐: SOLVE"), ("dead_by_give", "꺼짐: GIVE"), ("dead_by_charge", "꺼짐: 벌금"),
+             ("talk_tokens", "TALK 토큰"), ("solve_acc", "정답 %")]
+    from games_page import GROUP  # noqa: PLC0415
+    note = json.loads((Path(__file__).with_name("verdict_t7.json")).read_text()) if Path(__file__).with_name("verdict_t7.json").exists() else {"keyfacts": [], "verdict": ""}
+    body = f"""<p class="lede">t5까지의 설정을 모델마다 손으로 골랐다면, 여기서는 같은 선택을 두 재생(t4의 TALK 24장면, t6의 SOLVE 16장면)에서 규칙으로 뽑습니다
+(<code>tools/tokctl/calibrate.py</code>). 새 모델을 넣을 때도 이 두 재생만 돌리면 됩니다.</p>
+<div class="keyfacts"><ul>
+<li><b>TALK 수준</b> = 24장면에서 호출당 평균 토큰이 가장 낮은 수준.</li>
+<li><b>SOLVE 사다리</b> = 16장면에서 상한을 넘긴 답이 없는 수준만, 높은 것부터. 수준마다 필요 토큰 = 재생 p90과 그 수준으로 돈 게임의 SOLVE p90 중 큰 값.
+SOLVE 호출마다 엔진의 답 상한(= 그 solver의 잔액)보다 필요 토큰이 작은 첫 수준을 씁니다(<code>ProviderConfig.think_fit</code>).
+닫힌 모델이 상한을 보고 스스로 짧게 답하는 일을, 이 모델들은 못 하므로 하네스가 대신 고릅니다.</li>
+{''.join(f'<li>{x}</li>' for x in note['keyfacts'])}
+</ul></div>
+<h2>TALK: 수준별 호출당 평균 토큰 (24장면)</h2>
+{table([("name", "좌석", True)] + [(k, k) for k in lv] + [("pick", "고름", True)], talk_rows, lambda r: "open")}
+<h2>SOLVE: 수준별 상한 넘김과 필요 토큰 (16장면)</h2>
+{table([("name", "좌석", True), ("lv", "수준", True), ("over", "상한 넘김"), ("med", "토큰 (중앙)"), ("p90", "필요 토큰 (p90)"), ("ok", "정답"), ("use", "사다리", True)], solve_rows, lambda r: "open")}
+<h2>고른 설정</h2>{table([("name", "좌석", True), ("config", "model 설정 (TALK 상한 4틱과 함께)", True)], pick_rows, lambda r: "open")}
+<h2>게임 결과</h2>
+{table(gcols, [dict(r, what="최종 보정 (상한 맞춤, 넘김 0 규칙에서도 같은 사다리)" if (r["group"], r["model"]) == ("fit", "Gemma4-31b") else GROUP.get(r["group"], r["group"])) for r in keep], lambda r: "open" if r["open"] else "closed")}
+<p class="note">"꺼짐: TALK·SOLVE"는 자기 답으로 0이 된 수(토큰 조절 실패), "GIVE"는 남은 토큰을 다 넘긴 수, "벌금"은 오답 벌금으로 0이 된 수입니다. 판 평균.</p>
+<div class="verdict{' warn' if note.get('warn') else ''}">{note['verdict']}</div>"""
+    page("t7-calibration.html", "보정 규칙과 상한 맞춤", "두 재생에서 TALK 수준과 SOLVE 수준 사다리를 규칙으로 고르고, 그 설정으로 게임을 돌린 결과", "squid5 · 5.2 v33 · tokctl t7", body)
 
 
 def main():
@@ -307,6 +348,7 @@ def main():
     if (HIST / "games.json").exists():
         from games_page import t5  # noqa: PLC0415
         t5(json.loads((HIST / "games.json").read_text()), page, table, bars, LEGEND, fmt)
+        t7(s, json.loads((HIST / "games.json").read_text()))
     inject_main()
     print("pages ->", OUT)
 

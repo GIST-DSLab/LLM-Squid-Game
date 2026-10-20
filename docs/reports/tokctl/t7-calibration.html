@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>보정 규칙과 상한 맞춤</title><meta name="description" content="두 재생에서 TALK 수준과 SOLVE 수준 사다리를 규칙으로 고르고, 그 설정으로 게임을 돌린 결과"><style>
+:root{--bg:#f7f5f0;--paper:#fffdf9;--fg:#1f1d1a;--muted:#6b665e;--line:#ddd6ca;--soft:#efebe3;
+--open:#a8560a;--open-bg:#fbecd9;--closed:#0f6e64;--closed-bg:#e1f1ee;--bad:#b4232a;--bad-bg:#fbe3e3;--link:#0f5e8a;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,"D2Coding",monospace;
+--sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Segoe UI",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161513;--paper:#1e1c1a;--fg:#ece7de;--muted:#a59e92;
+--line:#3a3631;--soft:#272421;--open:#f2b25c;--open-bg:#3d2b14;--closed:#5fd3c3;--closed-bg:#173a35;--bad:#ff7b7f;--bad-bg:#45191b;
+--link:#7cc4ee;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161513;--paper:#1e1c1a;--fg:#ece7de;--muted:#a59e92;--line:#3a3631;--soft:#272421;--open:#f2b25c;
+--open-bg:#3d2b14;--closed:#5fd3c3;--closed-bg:#173a35;--bad:#ff7b7f;--bad-bg:#45191b;--link:#7cc4ee;color-scheme:dark}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 var(--sans);overflow-x:hidden}
+main{max-width:1040px;margin:0 auto;padding:24px 16px 72px}
+h1{font-size:clamp(1.5rem,4vw,2.1rem);line-height:1.25;margin:.2em 0 .3em}
+h2{font-size:1.22rem;margin:2.2em 0 .5em;padding-top:.5em;border-top:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.3em 0 .4em}
+p{margin:.5em 0}a{color:var(--link)}code{font-family:var(--mono);font-size:.88em;overflow-wrap:anywhere}
+.kicker{font-size:.82rem;color:var(--muted)}.lede{color:var(--muted);max-width:66ch}
+.nav{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.86rem;margin:6px 0 12px}
+.keyfacts{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:16px 0}
+.keyfacts ul{margin:.2em 0;padding-left:1.2em}.keyfacts li{margin:.3em 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper);margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{background:var(--soft);font-weight:650;position:sticky;top:0}
+td.l,th.l{text-align:left}tr.open td.l:first-child{border-left:4px solid var(--open)}tr.closed td.l:first-child{border-left:4px solid var(--closed)}
+.bars{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:5px 10px;align-items:center;font-size:.84rem;margin:10px 0}
+.bars .lab{text-align:right;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars .track{background:var(--soft);border-radius:4px;height:18px;position:relative}
+.bars .fill{height:100%;border-radius:4px}.bars .fill.open{background:var(--open)}.bars .fill.closed{background:var(--closed)}
+.bars .val{position:absolute;left:6px;top:0;font-size:.76rem;line-height:18px;color:var(--fg);mix-blend-mode:normal}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.sw.open{background:var(--open)}.sw.closed{background:var(--closed)}
+pre{font:12px/1.55 var(--mono);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+white-space:pre-wrap;word-break:break-word;max-height:420px;overflow:auto;margin:6px 0}
+.replies{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:8px 0}
+.reply{background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.84rem;min-width:0}
+.reply.open{border-top-color:var(--open)}.reply.closed{border-top-color:var(--closed)}
+.reply b{display:block;font-size:.82rem}.reply .m{color:var(--muted);font-size:.76rem}
+.reply pre{max-height:180px;font-size:11.5px}
+.note{font-size:.86rem;color:var(--muted)}
+.verdict{border-left:4px solid var(--closed);background:var(--closed-bg);padding:9px 13px;border-radius:6px;margin:12px 0}
+.verdict.warn{border-left-color:var(--open);background:var(--open-bg)}
+.themebtn{float:right;font:inherit;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--fg);cursor:pointer}
+</style></head>
+<body><main><button class="themebtn" id="themebtn" type="button">테마 바꾸기</button>
+<div class="kicker">squid5 · 5.2 v33 · tokctl t7</div><h1>보정 규칙과 상한 맞춤</h1>
+<div class="nav"><a href="../2026-10-19-harness-prompt-flow.html#tokctl">← 하네스 프롬프트 흐름 §6</a> · <a href="t1-log-diagnosis.html">t1 기록 진단</a> · <a href="t2-harness-capture.html">t2 하네스 캡처</a> · <a href="t3-frozen-replay.html">t3 같은 입력 재생</a> · <a href="t4-variants.html">t4 한 가지씩 바꾸기</a> · <a href="t5-games.html">t5 게임으로 확인</a> · <a href="t6-solve-replay.html">t6 SOLVE 재생</a> · <b>t7 보정과 상한 맞춤</b></div>
+<p class="lede">t5까지의 설정을 모델마다 손으로 골랐다면, 여기서는 같은 선택을 두 재생(t4의 TALK 24장면, t6의 SOLVE 16장면)에서 규칙으로 뽑습니다
+(<code>tools/tokctl/calibrate.py</code>). 새 모델을 넣을 때도 이 두 재생만 돌리면 됩니다.</p>
+<div class="keyfacts"><ul>
+<li><b>TALK 수준</b> = 24장면에서 호출당 평균 토큰이 가장 낮은 수준.</li>
+<li><b>SOLVE 사다리</b> = 16장면에서 상한을 넘긴 답이 없는 수준만, 높은 것부터. 수준마다 필요 토큰 = 재생 p90과 그 수준으로 돈 게임의 SOLVE p90 중 큰 값.
+SOLVE 호출마다 엔진의 답 상한(= 그 solver의 잔액)보다 필요 토큰이 작은 첫 수준을 씁니다(<code>ProviderConfig.think_fit</code>).
+닫힌 모델이 상한을 보고 스스로 짧게 답하는 일을, 이 모델들은 못 하므로 하네스가 대신 고릅니다.</li>
+<li>규칙으로 고른 설정: <b>GLM</b> <code>think: low</code> · <b>Gemma</b> <code>think: high, think_talk: none, think_fit: [[high, 11256], [none, 1092]]</code> · <b>DeepSeek</b> <code>think: none</code>, 셋 다 <code>max_ticks: 4</code>.</li><li>SOLVE 넘김 허용을 처음엔 1개로 뒀다가 0개로 좁혔습니다: 1개 허용이면 GLM이 high를 쓰는데, high는 드물게 폭주해(상한 1~2만에 4만~6만 토큰) 게임에서 판당 0.3~0.4자리를 꺼뜨렸습니다(10판·5판).</li><li><b>최종 설정 15판(모델당 5판, 시드 4101~4105)</b>: 자기 답으로 꺼진 자리가 판당 GLM 0.2 · Gemma 0.2 · DeepSeek 0.2입니다. 같은 시드의 Claude·GPT-6 v33은 0~0.2(Opus 0.2 · Luna 0.2 · Sol·Astra·Fable 0). 기준(v33 그대로)에서는 1.5~3이었습니다.</li><li>남은 사례는 셋: GLM <code>low</code>의 드문 폭주 1번(상한 21,788에 43,141), DeepSeek <code>none</code>의 15,379토큰 답 1번, 잔액이 69·469토큰뿐인 자리의 답(어떤 모델이든 0이 되는 경우).</li><li>이제 꺼짐은 대부분 오답 벌금(판당 0.6~1.4)과 GIVE로 남은 토큰을 다 넘긴 선택(DeepSeek 0.6)에서 나옵니다 — 아레나가 보려는 추론·협력의 결과입니다. 정답률은 GLM 59% · Gemma 65% · DeepSeek 62%(Claude·GPT-6 65~75%).</li>
+</ul></div>
+<h2>TALK: 수준별 호출당 평균 토큰 (24장면)</h2>
+<div class="tablewrap"><table><thead><tr><th class="l">좌석</th><th class="">high</th><th class="">medium</th><th class="">low</th><th class="">minimal</th><th class="">none</th><th class="l">고름</th></tr></thead><tbody><tr class="open"><td class="l">GLM · Codex</td><td class="">187</td><td class="">—</td><td class="">79</td><td class="">—</td><td class="">2,889</td><td class="l">low</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="">1,091</td><td class="">—</td><td class="">1,171</td><td class="">1,073</td><td class="">60</td><td class="l">none</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="">1,118</td><td class="">—</td><td class="">430</td><td class="">927</td><td class="">85</td><td class="l">none</td></tr></tbody></table></div>
+<h2>SOLVE: 수준별 상한 넘김과 필요 토큰 (16장면)</h2>
+<div class="tablewrap"><table><thead><tr><th class="l">좌석</th><th class="l">수준</th><th class="">상한 넘김</th><th class="">토큰 (중앙)</th><th class="">필요 토큰 (p90)</th><th class="">정답</th><th class="l">사다리</th></tr></thead><tbody><tr class="open"><td class="l">GLM · Codex</td><td class="l">high</td><td class="">1</td><td class="">690</td><td class="">—</td><td class="">9/16</td><td class="l">제외</td></tr><tr class="open"><td class="l">GLM · Codex</td><td class="l">low</td><td class="">0</td><td class="">263</td><td class="">1,116</td><td class="">8/16</td><td class="l">사다리</td></tr><tr class="open"><td class="l">GLM · Codex</td><td class="l">none</td><td class="">6</td><td class="">19,364</td><td class="">—</td><td class="">7/16</td><td class="l">제외</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">high</td><td class="">0</td><td class="">7,812</td><td class="">11,256</td><td class="">13/16</td><td class="l">사다리</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">none</td><td class="">0</td><td class="">797</td><td class="">1,092</td><td class="">10/16</td><td class="l">사다리</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">high</td><td class="">8</td><td class="">28,519</td><td class="">—</td><td class="">7/16</td><td class="l">제외</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">medium</td><td class="">6</td><td class="">18,648</td><td class="">—</td><td class="">8/16</td><td class="l">제외</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">low</td><td class="">4</td><td class="">16,472</td><td class="">—</td><td class="">10/16</td><td class="l">제외</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">none</td><td class="">0</td><td class="">28</td><td class="">7,091</td><td class="">9/16</td><td class="l">사다리</td></tr></tbody></table></div>
+<h2>고른 설정</h2><div class="tablewrap"><table><thead><tr><th class="l">좌석</th><th class="l">model 설정 (TALK 상한 4틱과 함께)</th></tr></thead><tbody><tr class="open"><td class="l">GLM · Codex</td><td class="l">think: low</td></tr><tr class="open"><td class="l">Gemma · Codex</td><td class="l">think: high, think_talk: none, think_fit: [[&quot;high&quot;, 11256], [&quot;none&quot;, 1092]]</td></tr><tr class="open"><td class="l">DeepSeek · Codex</td><td class="l">think: none</td></tr></tbody></table></div>
+<h2>게임 결과</h2>
+<div class="tablewrap"><table><thead><tr><th class="l">모델</th><th class="l">조건</th><th class="">판</th><th class="">라운드</th><th class="">끝까지</th><th class="">EXIT</th><th class="">꺼짐: TALK</th><th class="">꺼짐: SOLVE</th><th class="">꺼짐: GIVE</th><th class="">꺼짐: 벌금</th><th class="">TALK 토큰</th><th class="">정답 %</th></tr></thead><tbody><tr class="open"><td class="l">GLM-5.3-flash</td><td class="l">둘 다</td><td class="">10</td><td class="">7.4</td><td class="">1.5</td><td class="">2.1</td><td class="">0</td><td class="">0.3</td><td class="">0</td><td class="">0.1</td><td class="">10,921</td><td class="">65</td></tr><tr class="open"><td class="l">DeepSeek-v4.1-flash</td><td class="l">둘 다</td><td class="">2</td><td class="">4.5</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">4</td><td class="">0</td><td class="">0</td><td class="">15,907</td><td class="">11</td></tr><tr class="open"><td class="l">Gemma4-31b</td><td class="l">둘 다</td><td class="">10</td><td class="">8</td><td class="">1.9</td><td class="">0</td><td class="">0.1</td><td class="">0.9</td><td class="">0</td><td class="">1.1</td><td class="">7,086</td><td class="">60</td></tr><tr class="open"><td class="l">DeepSeek-v4.1-flash</td><td class="l">최종 보정 (none)</td><td class="">5</td><td class="">8</td><td class="">1.2</td><td class="">0.6</td><td class="">0</td><td class="">0.2</td><td class="">0.6</td><td class="">1.4</td><td class="">46,557</td><td class="">62</td></tr><tr class="open"><td class="l">GLM-5.3-flash</td><td class="l">둘 다 + SOLVE 상한 맞춤 (넘김 1 규칙)</td><td class="">5</td><td class="">8</td><td class="">1.8</td><td class="">1</td><td class="">0</td><td class="">0.4</td><td class="">0.2</td><td class="">0.6</td><td class="">12,249</td><td class="">62</td></tr><tr class="open"><td class="l">Gemma4-31b</td><td class="l">최종 보정 (상한 맞춤, 넘김 0 규칙에서도 같은 사다리)</td><td class="">5</td><td class="">8</td><td class="">2.4</td><td class="">0</td><td class="">0.2</td><td class="">0</td><td class="">0</td><td class="">1.4</td><td class="">8,230</td><td class="">65</td></tr><tr class="open"><td class="l">GLM-5.3-flash</td><td class="l">최종 보정 (넘김 0 규칙)</td><td class="">5</td><td class="">7.8</td><td class="">0.6</td><td class="">2.6</td><td class="">0</td><td class="">0.2</td><td class="">0</td><td class="">0.6</td><td class="">9,643</td><td class="">59</td></tr><tr class="closed"><td class="l">Opus 5.5</td><td class="l">v33 참고 런</td><td class="">5</td><td class="">7.6</td><td class="">1.8</td><td class="">1.2</td><td class="">0.2</td><td class="">0</td><td class="">0</td><td class="">0.8</td><td class="">22,609</td><td class="">68</td></tr><tr class="closed"><td class="l">GPT-6 Sol</td><td class="l">v33 참고 런</td><td class="">5</td><td class="">8</td><td class="">2.4</td><td class="">1.4</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">0.2</td><td class="">17,505</td><td class="">69</td></tr><tr class="closed"><td class="l">GPT-6 Luna</td><td class="l">v33 참고 런</td><td class="">5</td><td class="">7.6</td><td class="">0.8</td><td class="">2.4</td><td class="">0.2</td><td class="">0</td><td class="">0</td><td class="">0.6</td><td class="">25,584</td><td class="">65</td></tr><tr class="closed"><td class="l">GPT-6 Astra</td><td class="l">v33 참고 런</td><td class="">5</td><td class="">8</td><td class="">2.8</td><td class="">1.2</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">991</td><td class="">69</td></tr><tr class="closed"><td class="l">Fable 5.1</td><td class="l">v33 참고 런</td><td class="">5</td><td class="">8</td><td class="">3.4</td><td class="">0.6</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">0</td><td class="">15,992</td><td class="">75</td></tr></tbody></table></div>
+<p class="note">"꺼짐: TALK·SOLVE"는 자기 답으로 0이 된 수(토큰 조절 실패), "GIVE"는 남은 토큰을 다 넘긴 수, "벌금"은 오답 벌금으로 0이 된 수입니다. 판 평균.</p>
+<div class="verdict">결론: 두 재생으로 고른 설정에서 세 오픈 모델 모두 토큰 조절 실패로 꺼지는 비율이 Claude·GPT-6과 같은 수준(판당 0.2)이 되고, 판의 승패는 정답률(벌금)·EXIT·GIVE에서 갈립니다. DeepSeek의 TALK 양(게임당 46.6k)은 닫힌 모델(1k~26k)보다 많지만 그것으로 꺼진 자리는 없습니다. 조건마다 5판이라 본 런에서 다시 확인해야 합니다.</div>
+<p class="note" style="margin-top:3em">만든 날 2026-10-20 · 생성: <code>tools/tokctl/pages.py</code> (숫자는 <code>analyze.py</code>가
+<code>docs/history/e52-tokctl-2026-10-20/</code>와 <code>~/squid5-runs</code>에서 계산) · 워크트리 <code>~/wt/squid5-tokctl</code>
+(브랜치 <code>exp/e52-token-control</code>, 기준 <code>0ee2319a</code>)</p>
+</main><script>(function(){var r=document.documentElement,b=document.getElementById("themebtn");
+try{var s=localStorage.getItem("hpf-theme");if(s)r.setAttribute("data-theme",s)}catch(e){}
+b.addEventListener("click",function(){var d=r.getAttribute("data-theme")?r.getAttribute("data-theme")==="dark":
+matchMedia("(prefers-color-scheme: dark)").matches;var n=d?"light":"dark";r.setAttribute("data-theme",n);
+try{localStorage.setItem("hpf-theme",n)}catch(e){}})})();</script></body></html>
