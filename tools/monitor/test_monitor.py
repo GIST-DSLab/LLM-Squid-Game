@@ -2641,3 +2641,19 @@ def test_prompt_ko_matches_the_korean_snapshot_but_keeps_what_agents_wrote():  #
     stub = ("Could you help?", "Shall we each", "Both of you?", "Here you go.", "After this charge", "That keeps you", "A little more",
             "15,000 토큰을 줌")  # the stub agents' words stay English; moves read "n 토큰을 줌" (the snapshot: "n을 줌")
     assert left and all(any(s in x for s in stub) for x in left), left
+
+
+def test_line_blocks_yield_complete_lines_in_bounded_blocks(tmp_path):
+    import serve as sv
+    lines = [b'{"n": %d}\n' % i for i in range(50)] + [b'{"long": "' + b"x" * 300 + b'"}\n']
+    p = tmp_path / "events.jsonl"
+    p.write_bytes(b"".join(lines) + b'{"half": ')  # a line still being written
+    size = p.stat().st_size
+    blocks = list(sv.line_blocks(p, 0, size, chunk=64))
+    assert b"".join(b for _, b in blocks) == b"".join(lines)
+    assert all(b.endswith(b"\n") for _, b in blocks)
+    assert [at for at, _ in blocks] == [sum(len(b) for _, b in blocks[:i]) for i in range(len(blocks))]
+    short = max(len(x) for x in lines[:50])  # a block = the line carried over + one chunk
+    assert max(len(b) for _, b in blocks[:-1]) <= 64 + short and len(blocks[-1][1]) > 300
+    start = len(b"".join(lines[:10]))
+    assert b"".join(b for _, b in sv.line_blocks(p, start, size, chunk=64)) == b"".join(lines[10:])

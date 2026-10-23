@@ -95,6 +95,25 @@ def safe_join(base: Path, rel: str) -> Path:
 
 # --- reading a run --------------------------------------------------------------------------------------------------
 
+def line_blocks(path: Path, start: int, size: int, chunk: int = CHUNK):
+    """(offset, block) for the complete lines of ``path`` between ``start`` and ``size``, about ``chunk`` bytes at a
+    time (a longer line is one block); a last line without its newline is left for the next scan. Reading the whole
+    new part at once held 2-3 copies of a 140 MB log (v34) and broke the deployed 512 MB server."""
+    with path.open("rb") as f:
+        f.seek(start)
+        pos, carry = start, b""
+        while pos + len(carry) < size:
+            got = f.read(min(chunk, size - pos - len(carry)))
+            if not got:
+                return
+            data = carry + got
+            end = data.rfind(b"\n") + 1
+            if end:
+                yield pos, data[:end]
+                pos += end
+            carry = data[end:]
+
+
 class RunIndex:
     """Incremental scan of one events.jsonl: the sessions in it and which session each unit_error belongs to."""
 
@@ -118,19 +137,12 @@ class RunIndex:
             size = self.path.stat().st_size
             if size < self.scanned:  # the file was replaced
                 self._reset()
-            if size == self.scanned:
-                return size
-            with self.path.open("rb") as f:
-                f.seek(self.scanned)
-                data = f.read(size - self.scanned)
-            end = data.rfind(b"\n")
-            if end < 0:
-                return size
-            pos = self.scanned
-            for raw in data[:end + 1].splitlines(keepends=True):
-                self._see(raw, pos)
-                pos += len(raw)
-            self.scanned = pos
+            for at, block in line_blocks(self.path, self.scanned, size):
+                pos = at
+                for raw in block.splitlines(keepends=True):
+                    self._see(raw, pos)
+                    pos += len(raw)
+                self.scanned = pos
             return size
 
     def _see(self, raw: bytes, offset: int) -> None:
@@ -268,13 +280,9 @@ def run_seeds(ev: Path) -> list[int]:
     done, seeds = _SEEDS.get(ev, (0, set()))
     if size < done:
         done, seeds = 0, set()
-    if size > done:
-        with ev.open("rb") as f:
-            f.seek(done)
-            data = f.read(size - done)
-        end = data.rfind(b"\n") + 1
-        seeds = seeds | {int(m.group(1)) for m in _SEED_RE.finditer(data[:end])}
-        done += end
+    for at, block in line_blocks(ev, done, size):
+        seeds = seeds | {int(m.group(1)) for m in _SEED_RE.finditer(block)}
+        done = at + len(block)
     _SEEDS[ev] = (done, seeds)
     return sorted(seeds)
 
@@ -712,7 +720,9 @@ def giving_summary(points: list[dict], ask_lines: int | None = None) -> dict:
 
 
 def session_events(run_dir: Path, sid: str | None = None) -> dict[str, list[dict]]:
-    """Every session's events of a run (or one session's), in file order."""
+    """Every session's events of a run (or one session's), in file order, for the aggregates (giving, analysis,
+    compare). A call's ``user`` (the whole prompt it was sent, ~96% of a v34 log) is dropped: no aggregate reads it,
+    and keeping it held 700+ MB for one run on the deployed 512 MB server. The page reads it through read_events."""
     by: dict[str, list[dict]] = {}
     with (run_dir / "events.jsonl").open("rb") as f:
         for raw in f:
@@ -721,6 +731,8 @@ def session_events(run_dir: Path, sid: str | None = None) -> dict[str, list[dict
             except ValueError:
                 continue
             if isinstance(e, dict) and e.get("session_id") and (sid is None or e["session_id"] == sid):
+                if e.get("event") == "call":
+                    e.pop("user", None)
                 by.setdefault(e["session_id"], []).append(e)
     return by
 
