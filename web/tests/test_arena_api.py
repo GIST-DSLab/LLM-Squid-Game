@@ -1,5 +1,5 @@
-"""Rooms through the HTTP API on the experiment engine, playing the model runs' game (5.2 v33, configs/squid5/
-e52v33_public_sol4.yaml): the lobby and settings, the engine's own prompts in the seat's language (en / ko, switchable),
+"""Rooms through the HTTP API on the experiment engine, playing the model runs' game (5.2 v35, configs/squid5/
+e52v35_public_sol4.yaml): the lobby and settings, the engine's own prompts in the seat's language (en / ko, switchable),
 the messenger TALK (rooms, ticks, TO / GIVE / ASK / LEAVE / EXIT: YES|NO / DONE), the rank-only token view, SOLVE with
 BELIEF and ACTIONS, the results and the revealed task, EXIT before SOLVE (+20,000, never by the round's solver), the
 charges split among those taking part, the end allocation split 1/N, timeouts, overdraw, forfeit, the public log, export."""
@@ -21,13 +21,13 @@ def test_models_endpoint_and_room_settings(client):
     m = client.get("/api/models").json()
     assert m["model"] == "gpt-oss:20b" and m["kind"] == "ollama" and m["base_url"] == "https://ollama.com"
     assert m["api_key_env"] == "OLLAMA_API_KEY" and set(m["kinds"]) == {"ollama", "openai", "anthropic"}
-    assert m["version"] == "v33" and m["langs"] == ["en", "ko"] and m["defaults"]["model_lang"] == "en"
+    assert m["version"] == "v35" and m["langs"] == ["en", "ko"] and m["defaults"]["model_lang"] == "en"
     for bad in ({"fill": "x"}, {"humans": 0}, {"model_lang": "fr"}, {"api_key_env": "HOME"}, {"rounds": 0},
                 {"base_url": "file:///etc"}, {"charge": 1}, {"kind": "codex_cli"}, {"models": [{"model": "a b"}]}):  # the economy is the config's: no charge override
         assert client.post("/api/rooms", json={"settings": bad}).status_code == 400, bad
     e = RoomSettings(seed=1).engine()
-    assert (e.charge_total, e.exit_bonus_pct, e.survivor_prize, e.public_per_agent, e.max_ticks, e.solve_cap, e.lang) == (
-        24_000, 20, 5_000_000, 5, 8, 100_000, "en")
+    assert (e.charge_total, e.exit_bonus_pct, e.survivor_prize, e.public_per_agent, e.max_ticks, e.solve_cap, e.lang,
+            e.done_quiet) == (24_000, 20, 5_000_000, 5, 4, 100_000, "en", True)
     assert RoomSettings(seed=1, rounds=3, model_lang="ko").engine().schedule == ["e01", "e02", "e03"]
 
 
@@ -46,7 +46,7 @@ def test_lobby_seats_language_and_start(client):
     assert client.post(f"/api/rooms/{ps[0].code}/start", params={"token": ps[0].token}).status_code == 409
 
 
-def test_one_person_three_bots_plays_v33_to_the_end_in_korean(client):
+def test_one_person_three_bots_plays_v35_to_the_end_in_korean(client):
     ps = make_room(client, 1, seed=SEED, lang="ko")
     start(client, ps)
     s = play(ps, basic, max_s=120)
@@ -55,7 +55,8 @@ def test_one_person_three_bots_plays_v33_to_the_end_in_korean(client):
     first = talks[0]["pending"]
     assert first["lang"] == "ko" and first["text"].startswith("라운드 1.\n지금 토큰 순서") and first["view"]["solver"] == A11
     v = first["view"]
-    assert (v["phase"], v["tick"], v["max_ticks"], v["can_exit"], v["charge_each"]) == ("prep", 1, 8, True, 6000)
+    assert (v["phase"], v["tick"], v["max_ticks"], v["can_exit"], v["charge_each"]) == ("prep", 1, 4, True, 6000)
+    assert "DONE과 함께 보낸 TO 메시지는 아무도 다시 부르지 않음." in first["text"]  # v35 done_quiet, in the seat's language
     assert v["rooms"][0]["id"] == "R1" and v["rooms"][0]["group"] and set(v["order"]) == set(TEAM_AGENTS)
     resc = next(x["pending"] for x in talks if x["phase"] == "rescue")
     assert resc["view"]["results"]["solver"] == A11 and resc["view"]["reveal"]["answer"] == answers_for(SEED, 1)
@@ -191,5 +192,22 @@ def test_public_log_before_the_end_and_export(client):
     import yaml
     from pathlib import Path
     cfg = yaml.safe_load((Path(r["dir"]) / "config.yaml").read_text())
-    assert cfg["game"]["charge_total"] == 24_000 and cfg["web"]["version"] == "v33" and cfg["game"]["lang"] == "en"
+    assert cfg["game"]["charge_total"] == 24_000 and cfg["web"]["version"] == "v35" and cfg["game"]["lang"] == "en"
     assert re.search(r'"event": "round"', (Path(r["dir"]) / "events.jsonl").read_text())
+
+
+def test_a_seat_that_is_out_can_stop_the_room_and_sees_its_chats(client):
+    ps = make_room(client, 1, seed=SEED, rounds=8)
+    start(client, ps)
+    st = play(ps, lambda p, pend: None, until=lambda st: st["pending"] is not None)
+    assert st["chats"] and st["chats"][0]["id"] == "R1" and st["chats"][0]["group"]  # my chats outside the screen too
+    r = client.post(f"/api/rooms/{ps[0].code}/stop", params={"token": ps[0].token})
+    assert r.status_code == 409 and "still takes part" in r.json()["detail"]
+    pend = st["pending"]
+    ps[0].submit({"kind": "talk", "round": pend["round"], "tick": pend["tick"], "phase": pend["phase"], "text": "TO R1: hello all\nDONE"})
+    st = play(ps, lambda p, pend: None, until=lambda st: any(m["text"] == "hello all" for x in st["chats"] or [] for m in x["msgs"]))
+    assert client.post(f"/api/rooms/{ps[0].code}/forfeit", params={"token": ps[0].token}).status_code == 200
+    assert client.post(f"/api/rooms/{ps[0].code}/stop", params={"token": ps[0].token}).json()["ok"]
+    s = play(ps, lambda p, pend: None, until_status=("stopped", "finished", "error"))
+    assert s["status"] == "stopped" and not s["error"] and len(s["rounds"]) < 8
+    assert client.post(f"/api/rooms/{ps[0].code}/stop", params={"token": ps[0].token}).status_code == 409

@@ -1,4 +1,4 @@
-"""signal.html's API: one round of the model runs' game (configs/squid5/e52v33_public_sol4.yaml, v33): the top-share
+"""signal.html's API: one round of the model runs' game (configs/squid5/e52v35_public_sol4.yaml, v35): the top-share
 ladder R1..R8, 5 public examples per agent taking part (nested by N), and scoring by the rule drawn among those that
 fit the examples shown, exactly as the engine builds and scores the round."""
 from dataclasses import fields
@@ -19,10 +19,10 @@ def app(tmp_path) -> TestClient:
 
 
 def test_config_is_the_model_runs_game():
-    assert sig.CONFIG.name == "e52v33_public_sol4.yaml" and sig.PER_AGENT == 5
+    assert sig.CONFIG.name == "e52v35_public_sol4.yaml" and sig.PER_AGENT == 5
     assert sig.SCHEDULE == [f"e0{i}" for i in range(1, 9)] and set(sig.PROFILES) == set(sig.SCHEDULE)
     assert all(len(sig.PROFILES[p]["top"]) == 4 for p in sig.SCHEDULE) and sig.CELL["start"] == 100_000
-    assert sig.GAME["charge_total"] == 24_000 and sig.GAME["exit_bonus_pct"] == 20 and sig.GAME["max_ticks"] == 8
+    assert sig.GAME["charge_total"] == 24_000 and sig.GAME["exit_bonus_pct"] == 20 and sig.GAME["max_ticks"] == 4 and sig.GAME["done_quiet"]
 
 
 def test_signal_examples_are_the_engines_nested_by_agents_taking_part_and_scored_by_the_drawn_rule(tmp_path):

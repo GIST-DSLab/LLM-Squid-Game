@@ -14,3 +14,15 @@ services:
         sync: false        # Postgres URI (Supabase); unset -> SQLite on the ephemeral disk
       - key: WEB5_CORS_ORIGINS
         sync: false        # e.g. https://gist-dslab.github.io
+      - key: WEB5_PUBLIC
+        value: "1"         # public mode (web/server/engine.py PUBLIC): no client-chosen provider, base_url or key name
+      - key: WEB5_MODELS
+        value: gpt-oss:120b   # the only model seats offered (comma list)
+      - key: OLLAMA_API_KEY
+        sync: false        # SECRET: set in the Render dashboard only (a key made just for this site); never in git
+      - key: WEB5_MAX_MODEL_ROOMS
+        value: "2"         # model rooms at once
+      - key: WEB5_ROOMS_PER_IP_HOUR
+        value: "4"         # new model rooms per client per hour
+      - key: WEB5_DAILY_TOKENS
+        value: "3000000"   # model tokens the server may generate per UTC day; then model rooms close until tomorrow

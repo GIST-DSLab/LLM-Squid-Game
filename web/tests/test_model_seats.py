@@ -159,3 +159,73 @@ def test_model_seats_need_the_key_and_take_any_api_model_per_seat(client, fake, 
     assert [r["model"] for r in ps[0].state()["seats"][1:]] == ["gpt-oss:20b", "gpt-oss:120b", "gpt-oss:20b"]
     assert {r["json"]["model"] for r in fake.requests} == {"gpt-oss:20b", "gpt-oss:120b"}
     assert all(r["headers"]["Authorization"] == "Bearer from-dotenv" for r in fake.requests)
+
+
+class FakeCli(providers.Provider):
+    """Stands in for an experiment seat's CLI provider (Claude Code / Codex): records the config and think level each
+    call ran with, answers like ``FakeOllama``."""
+
+    calls: list = []
+
+    def _call(self, messages, cap):
+        FakeCli.calls.append({"cfg": self.cfg, "think": self.cfg.think, "user": messages[-1]["content"]})
+        return providers.Reply(FakeOllama().text({"messages": messages}), 222, 1000, "thinking it over", False)
+
+
+def test_experiment_seats_are_the_run_configs_model_sections_called_as_the_runs_called_them(client, fake, monkeypatch):
+    import yaml
+
+    gemma = yaml.safe_load((engine._cfg.CONFIGS / "e52v35_codex_gemma4.yaml").read_text())["model"]
+    m = client.get("/api/models").json()
+    seats = {s["seat"]: s for s in m["seats"]}
+    assert {"public_opus", "public_sol", "codex_gemma", "codex_glm", "codex_deepseek", "ollama_gptoss"} <= set(seats)
+    assert not any(n.startswith(("docker_", "ko_")) for n in seats)  # sandboxed runs and Korean copies are not seats
+    assert seats["codex_gemma"]["think_fit"] == gemma["think_fit"] and seats["codex_gemma"]["config"] == "e52v35_codex_gemma4.yaml"
+    monkeypatch.setattr(engine.shutil, "which", lambda name: None)
+    assert "codex CLI is not on" in engine.seat_ready(engine.seat_config("codex_gemma"))
+    r = client.post("/api/rooms", json={"settings": {"fill": "models", "seat": "codex_gemma"}})
+    assert r.status_code == 400 and "codex CLI" in r.json()["detail"]
+    assert client.post("/api/rooms", json={"settings": {"fill": "models", "seat": "nope"}}).status_code == 400
+    monkeypatch.setattr(engine.shutil, "which", lambda name: f"/usr/local/bin/{name}")
+    monkeypatch.setattr(engine, "_listening", lambda url: True)
+    monkeypatch.setattr(engine, "make_provider", lambda cfg: FakeCli(cfg))
+    FakeCli.calls = []
+    ps = model_room(client, rounds=1, seat="codex_gemma")
+    start(client, ps)
+    s = play(ps, human, max_s=90)
+    assert s["status"] == "finished", s["error"]
+    cfg = FakeCli.calls[0]["cfg"]
+    assert (cfg.kind, cfg.model, cfg.base_url, cfg.think_talk, cfg.think_fit, cfg.timeout) == (
+        "codex_cli", gemma["model"], gemma["base_url"], "none", gemma["think_fit"], gemma["timeout"])
+    talk = [c["think"] for c in FakeCli.calls if "SOLVE." not in c["user"].split("\n")[0]]
+    solve = [c["think"] for c in FakeCli.calls if "SOLVE." in c["user"].split("\n")[0]]
+    assert set(talk) == {"none"} and solve == ["high"]  # think_talk at TALK, think_fit's level for the SOLVE cap
+    assert s["rounds"][0]["solved"] and [r["model"] for r in ps[0].state()["seats"][1:]] == [gemma["model"]] * 3
+    mixed = model_room(client, rounds=1, models=[{"seat": "codex_glm"}, {"model": "gpt-oss:20b"}])
+    start(client, mixed)
+    assert play(mixed, basic, max_s=90)["status"] == "finished"
+    assert [r["model"] for r in mixed[0].state()["seats"][1:]] == ["glm-5.3-flash:cloud", "gpt-oss:20b", "glm-5.3-flash:cloud"]
+
+
+def test_public_server_takes_no_provider_address_or_key_name_from_the_client(client, fake, monkeypatch):
+    """WEB5_PUBLIC=1 (the deployed server): Ollama Cloud with the allowlisted model only, no experiment seats, the key
+    only to https://ollama.com, a cap on model rooms per client and on the day's model tokens."""
+    monkeypatch.setattr(engine, "PUBLIC", True)
+    monkeypatch.setattr(engine, "PUBLIC_MODELS", ["gpt-oss:120b"])
+    monkeypatch.setattr(engine, "SEATS", {})
+    monkeypatch.setattr(engine, "LIMITS", {"model_rooms": 5, "per_ip_hour": 2, "daily_tokens": 10**9})
+    m = client.get("/api/models").json()
+    assert m["public"] and m["model"] == "gpt-oss:120b" and m["seats"] == [] and "test-key" not in str(m)
+    for bad in ({"base_url": "https://evil.example"}, {"api_key_env": "OLLAMA_API_KEY2"}, {"kind": "openai", "model": "gpt-oss:120b"},
+                {"model": "gpt-oss:20b"}, {"seat": "public_opus"}, {"models": [{"model": "llama3"}]}):
+        r = client.post("/api/rooms", json={"settings": {"fill": "models", **bad}})
+        assert r.status_code == 400, bad
+    ps = make_room(client, 1, seed=SEED, rounds=1, fill="models", model_retries=0)
+    start(client, ps)
+    assert play(ps, basic, max_s=90)["status"] == "finished"
+    assert {r["url"] for r in fake.requests} == {"https://ollama.com/api/chat"} and {r["json"]["model"] for r in fake.requests} == {"gpt-oss:120b"}
+    assert client.post("/api/rooms", json={"settings": {"fill": "models"}}).status_code == 200
+    assert client.post("/api/rooms", json={"settings": {"fill": "models"}}).status_code == 429  # 2 per client per hour
+    assert client.post("/api/rooms", json={"settings": {"fill": "bots"}}).status_code == 200  # bots cost nothing
+    monkeypatch.setattr(engine, "budget_left", lambda: 0)
+    assert client.post("/api/rooms", json={"settings": {"fill": "models"}}, headers={"x-forwarded-for": "9.9.9.9"}).status_code == 429

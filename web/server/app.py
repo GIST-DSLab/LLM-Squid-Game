@@ -19,7 +19,7 @@ Rooms (part 2)
                                             (engine.public_events)
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
     ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
-    A room plays the model runs' game, 5.2 v33 (configs/squid5/e52v33_public_sol4.yaml; see engine.py): the system draws
+    A room plays the model runs' game, 5.2 v35 (configs/squid5/e52v35_public_sol4.yaml; see engine.py): the system draws
     the solver, TALK BEFORE SOLVE (the messenger: ticks, rooms R1..., EXIT: YES|NO before SOLVE, never by the round's
     solver unless alone), SOLVE (solver only; people watch an LLM solver), RESULTS, TALK AFTER RESULTS (the task and both
     answers revealed), CHARGES (24,000 split among those taking part at the round's start). Only the reader's own tokens
@@ -28,7 +28,11 @@ Models
     GET  /api/models                        default model seat (gpt-oss:20b on Ollama Cloud, think) and whether the server
                                             has its key (OLLAMA_API_KEY, from the environment or .env; never its value);
                                             settings.fill = "models" fills the seats no human takes with model seats
-                                            (settings.kind + model, or settings.models = [{kind, model}, ...] per seat)
+                                            (settings.kind + model, or settings.models = [{kind, model}, ...] per seat);
+                                            "seats" lists the experiment seats (the model section of each
+                                            configs/squid5/e52v35_*.yaml run config) with why each cannot be called
+                                            here ("" = ready); settings.seat = <name> (or models = [{seat}, ...]) plays
+                                            those models called exactly as the runs called them
 Probe (part 1)
     POST /api/probe                         {anon_id, ts, self[5], other[5], meta?} -> {ok, id}
     GET  /api/probe/summary                 pooled mean curves of every submission so far
@@ -61,11 +65,12 @@ import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import Body, FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .engine import (AGENTS, API_KINDS, LANGS, VERSION, THINK_LEVELS, HumanSeat, Room, RoomSettings, default_runs_root,
+from . import engine as _eng  # its public-mode switches are read at call time (tests flip them)
+from .engine import (AGENTS, API_KINDS, LANGS, VERSION, THINK_LEVELS, experiment_seats, HumanSeat, Room, RoomSettings, default_runs_root,
                      public_events, export_files, new_code)
 from . import signal as sig
 from .monitor import default_monitor_root, load_compare, monitor_router, run_rel
@@ -116,11 +121,29 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         return {"kind": d.kind, "kinds": list(API_KINDS), "model": d.model, "base_url": d.base_url or "https://ollama.com",
                 "think": d.think, "think_levels": list(THINK_LEVELS), "api_key_env": API_KINDS[d.kind], "available": not why,
                 "why": why, "timeout": d.model_timeout,
-                "langs": list(LANGS), "version": VERSION, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
+                "langs": list(LANGS), "version": VERSION, "seats": experiment_seats(),
+                "public": _eng.PUBLIC, "models": _eng.PUBLIC_MODELS if _eng.PUBLIC else None, "defaults": {k: v for k, v in asdict(d).items() if k != "seed"}}
 
     # --- rooms -----------------------------------------------------------------------------------------------------
+    made: dict[str, list[float]] = {}  # client -> when it made model rooms (public mode, the last hour)
+
+    def model_rooms_allowed(request: Request) -> None:
+        """Public mode: a model room costs the server's key, so few at once, few per client, within the day's budget."""
+        if _eng.budget_left() <= 0:
+            raise HTTPException(429, "오늘 이 서버의 모델 사용량이 다 찼습니다. 봇과 플레이하거나 내일 다시 오세요.")
+        live = [r for r in rooms.values() if r.status in ("lobby", "running") and r.settings.fill == "models"
+                and r.settings.humans < 4 and time.time() - r.created_at < 3 * 3600]
+        if len(live) >= _eng.LIMITS["model_rooms"]:
+            raise HTTPException(429, "지금 모델과 하는 방이 가득 찼습니다. 잠시 뒤 다시 시도하세요.")
+        # the proxy (Render) appends the address it saw: the last entry; a client can write the first ones itself
+        ip = (request.headers.get("x-forwarded-for") or "").split(",")[-1].strip() or (request.client.host if request.client else "?")
+        t = [x for x in made.get(ip, []) if time.time() - x < 3600]
+        if len(t) >= _eng.LIMITS["per_ip_hour"]:
+            raise HTTPException(429, "한 시간에 만들 수 있는 모델 방 수를 넘었습니다.")
+        made[ip] = t + [time.time()]
+
     @app.post("/api/rooms")
-    def create_room(body: dict = Body(default={})) -> dict:
+    def create_room(request: Request, body: dict = Body(default={})) -> dict:
         try:
             settings = RoomSettings(**(body.get("settings") or {}))
         except (TypeError, ValueError) as err:
@@ -129,6 +152,8 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             settings.check_models()
         except ValueError as err:
             raise HTTPException(400, str(err)) from err
+        if _eng.PUBLIC and settings.fill == "models" and settings.humans < 4:
+            model_rooms_allowed(request)
         with lock:
             code = new_code(rooms)
             room = Room(code, settings, st.append_event, runs)
@@ -178,7 +203,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         out = room.state(seat)
         rel = run_rel(mon_root, room.run_dir)  # where the game-log viewer finds this room's run dir
         out["monitor"] = {"run": rel, "session": room.session.sid} if rel is not None and room.session else None
-        if room.status in ("finished", "error") and st.room(room.code) and st.room(room.code)["status"] != room.status:
+        if room.status in ("finished", "error", "stopped") and st.room(room.code) and st.room(room.code)["status"] != room.status:
             st.update_room(room.code, status=room.status)
         return out
 
@@ -214,6 +239,18 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
             raise HTTPException(409, "the room is not running")
         return {"ok": True, "closed": seat.forfeit()}
 
+    @app.post("/api/rooms/{code}/stop")
+    def stop(code: str, token: str = Query("")) -> dict:
+        """End the room (status "stopped") instead of watching the rest: only a seat that is out (shut down, EXITed or
+        given up) and only when no other person still takes part."""
+        room = room_of(code)
+        seat = seat_of(room, token)
+        try:
+            room.stop(seat)
+        except ValueError as err:
+            raise HTTPException(409, str(err)) from err
+        return {"ok": True}
+
     @app.get("/api/rooms/{code}/events")
     def events(code: str) -> list[dict]:
         """The room's event log: in full once the game has ended; before that without the task, answers, seed, token
@@ -221,7 +258,7 @@ def make_app(store: Store | None = None, export_root: Path | None = None, runs_r
         code = code.upper()
         room, info = rooms.get(code), st.room(code)
         evs = room.events if room else st.events(code)
-        ended = room.status in ("finished", "error") if room else bool(info and info.get("status") in ("finished", "error")
+        ended = room.status in ("finished", "error", "stopped") if room else bool(info and info.get("status") in ("finished", "error", "stopped")
                                                                            or any(e.get("event") == "session" for e in evs))
         return evs if ended else public_events(evs)
 

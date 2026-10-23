@@ -1,6 +1,6 @@
-"""Human-playable 5.2 rooms on the experiment engine (``squid5.e52_game``), used as-is: the v33 game the model runs play.
+"""Human-playable 5.2 rooms on the experiment engine (``squid5.e52_game``), used as-is: the v35 game the model runs play.
 
-A room builds one ``squid5.e52_game.Session`` from ``configs/squid5/e52v33_public_sol4.yaml`` (via ``server/signal.py``)
+A room builds one ``squid5.e52_game.Session`` from ``configs/squid5/e52v35_public_sol4.yaml`` (via ``server/signal.py``)
 exactly as the experiment does -- the same rulebook and messages, fixed 20 examples, the solver drawn among the agents
 taking part, the 24,000 charge split among those taking part at the round's start, the solver unable to EXIT its own
 round unless alone, EXIT +20,000, the 20,000,000 end allocation split 1/N, the hidden round count, the rank-only token
@@ -16,6 +16,10 @@ as in the engine). ``session.providers`` then gets one object per seat whose ``c
   default ``gpt-oss:20b`` on Ollama Cloud, https://ollama.com/api/chat with the key ``OLLAMA_API_KEY`` from the server
   environment or a repo ``.env``, ``env_key``). It is charged its real generated tokens (thinking included); an Ollama
   SOLVE streams to the people watching (``StreamingOllama``). The models read ``model_lang`` (the engine's ``game.lang``).
+  An experiment seat (``SEATS``: the ``model`` section of a ``configs/squid5/e52v35_*.yaml`` run config, read as-is) gets
+  the provider the run used -- Claude Code / Codex CLI included, with the run's think levels (``think_talk`` /
+  ``think_fit``: the call kind is passed as the engine does), timeout and retries -- so a person plays the models the
+  experiment ran, called the way the experiment called them. CLI seats need this machine's logins (local use only).
 - ``BotSeat`` answers at once with a small fixed policy (never EXITs; see the class).
 - ``EmptySeat`` is an agent shut down before round 1 (balance 0).
 
@@ -44,6 +48,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
+import shutil
+import socket
+from urllib.parse import urlparse
 
 REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:  # the experiment engine is imported from the repo root, as tools/monitor does
@@ -52,13 +59,13 @@ if str(REPO) not in sys.path:  # the experiment engine is imported from the repo
 from squid5 import e52_game as e52  # noqa: E402
 from squid5.core import lang as L, rules  # noqa: E402
 from squid5.core.config import Cell  # noqa: E402
-from squid5.core.providers import Ollama, ProviderConfig, Reply, _key, make_provider  # noqa: E402
+from squid5.core.providers import Ollama, Provider, ProviderConfig, Reply, _key, make_provider  # noqa: E402
 from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, public_round  # noqa: E402
 
 from . import signal as _cfg  # noqa: E402  the one place the config is read (the signal page uses it too)
 
 AGENTS = list(rules.TEAM_AGENTS)
-VERSION = "v33"
+VERSION = "v35"
 GAME: dict = _cfg.GAME  # the config's game section
 PROFILES: dict[str, dict] = dict(_cfg.PROFILES)
 SCHEDULE: list[str] = list(_cfg.SCHEDULE)
@@ -90,6 +97,107 @@ def env_key(var: str) -> str:
                     os.environ[var] = v
                     return v
     return ""
+
+
+# --- the deployed server (WEB5_PUBLIC=1): model seats only from an allowlist, the key never leaves for another host -----
+# A room's settings come from strangers there, so a public server takes no provider, base_url or key name from them:
+# every model seat is Ollama Cloud (https://ollama.com, key OLLAMA_API_KEY from the platform's secret store) with a
+# model of WEB5_MODELS; experiment seats (local CLIs and logins) are not offered. Limits: WEB5_MAX_MODEL_ROOMS rooms
+# with model seats running at once, WEB5_ROOMS_PER_IP_HOUR new model rooms per client per hour, WEB5_DAILY_TOKENS
+# generated model tokens per UTC day for the whole server.
+PUBLIC = os.environ.get("WEB5_PUBLIC", "").strip() == "1"
+PUBLIC_MODELS = [m.strip() for m in os.environ.get("WEB5_MODELS", "gpt-oss:120b").split(",") if m.strip()]
+LIMITS = {"model_rooms": int(os.environ.get("WEB5_MAX_MODEL_ROOMS", "2")),
+          "per_ip_hour": int(os.environ.get("WEB5_ROOMS_PER_IP_HOUR", "4")),
+          "daily_tokens": int(os.environ.get("WEB5_DAILY_TOKENS", "3000000"))}
+_spent = {"day": "", "tokens": 0}
+_spent_lock = threading.Lock()
+
+
+def spend(tokens: int) -> None:
+    with _spent_lock:
+        day = time.strftime("%Y-%m-%d", time.gmtime())
+        if _spent["day"] != day:
+            _spent.update(day=day, tokens=0)
+        _spent["tokens"] += max(0, int(tokens or 0))
+
+
+def budget_left() -> int:
+    """Model tokens the server may still generate today (public mode); unlimited elsewhere."""
+    if not PUBLIC:
+        return 10**18
+    with _spent_lock:
+        used = _spent["tokens"] if _spent["day"] == time.strftime("%Y-%m-%d", time.gmtime()) else 0
+    return LIMITS["daily_tokens"] - used
+
+
+# --- experiment seats: the model section of each run config of this version, as the experiment ran it ------------------
+
+SEAT_FIELDS = set(ProviderConfig.__dataclass_fields__)
+
+
+def _seats() -> dict[str, dict]:
+    """``e52v35_<name>4.yaml`` -> {name: its ``model`` section}. Docker-sandboxed configs (colima, a CLI image) and the
+    Korean-prompt copies (the room's ``model_lang`` is that switch) are left out."""
+    import yaml
+
+    out = {}
+    for path in sorted(_cfg.CONFIGS.glob(f"e52{VERSION}_*.yaml")):
+        name = path.stem.removeprefix(f"e52{VERSION}_").removesuffix("4")
+        if name.startswith(("docker_", "ko_")):
+            continue
+        model = dict(yaml.safe_load(path.read_text())["model"])
+        if model.get("sandbox"):
+            continue
+        out[name] = {**{k: v for k, v in model.items() if k in SEAT_FIELDS}, "config": path.name}
+    return out
+
+
+SEATS: dict[str, dict] = {} if PUBLIC else _seats()  # never on the deployed server (CLIs and logins of this machine)
+
+
+def seat_config(name: str) -> ProviderConfig:
+    return ProviderConfig(**{k: v for k, v in SEATS[name].items() if k in SEAT_FIELDS})
+
+
+def _listening(url: str) -> bool:
+    u = urlparse(url)
+    try:
+        with socket.create_connection((u.hostname or "127.0.0.1", u.port or (443 if u.scheme == "https" else 80)), 2):
+            return True
+    except OSError:
+        return False
+
+
+def seat_ready(cfg: ProviderConfig) -> str:
+    """'' when this server can make *cfg*'s calls, else why not: an API key (environment or .env), a CLI on PATH, or a
+    local server its ``base_url`` names (the Claude relay that drops the CLI's token note, the Ollama daemon)."""
+    if cfg.kind in API_KINDS:
+        var = cfg.api_key_env or API_KINDS[cfg.kind]
+        return "" if env_key(var) else f"the API key {var} is not set on the server (environment or .env)"
+    cli = {"claude_cli": "claude", "codex_cli": "codex"}.get(cfg.kind)
+    if cli is None:
+        return f"provider kind {cfg.kind} is not offered"
+    if not shutil.which(cli):
+        return f"the {cli} CLI is not on this server's PATH"
+    if cfg.base_url and urlparse(cfg.base_url).hostname in ("127.0.0.1", "localhost") and not _listening(cfg.base_url):
+        what = "the relay (python3 ~/squid5-runs/e50_v9r200_20260929/inject/relay.py 18781)" if cfg.kind == "claude_cli" \
+            else "the local Ollama daemon"
+        return f"{cfg.base_url} is not listening: start {what}"
+    return ""
+
+
+def experiment_seats() -> list[dict]:
+    """What the lobby lists: every experiment seat, its provider settings and whether this server can call it."""
+    return [{"seat": n, "kind": d["kind"], "model": d["model"], "think": d.get("think"), "think_talk": d.get("think_talk"),
+             "think_fit": d.get("think_fit"), "config": d["config"], "why": seat_ready(seat_config(n))}
+            for n, d in SEATS.items()]
+
+
+class RoomStopped(RuntimeError):
+    """A person who is out (shut down or EXITed) stopped the room: every seat's call raises it, so the session ends."""
+
+
 FILLS = ("models", "bots", "empty")
 BOT_UNIT = 300  # a bot's step in tokens: its TALK reply costs 2% of it, a SOLVE 0.3-0.8 of it, the margin it keeps
 WEB_ONLY = ("room", "model_call")  # web events: stored, never written to the run directory
@@ -115,8 +223,9 @@ class RoomSettings:
     humans: int = 1  # 1..4
     fill: str = "bots"  # the seats no person takes: "models" | "bots" | "empty"
     kind: str = "ollama"  # fill "models": the API provider of every model seat (API_KINDS; ollama = Ollama Cloud)
-    model: str = "gpt-oss:20b"  # fill "models": the model name the API takes
-    models: list | None = None  # or one {kind, model} per model seat, in seat order (cycled): mixed opponents
+    model: str = field(default_factory=lambda: PUBLIC_MODELS[0] if PUBLIC else "gpt-oss:20b")  # fill "models": the API's name
+    models: list | None = None  # or one {kind, model} or {seat} per model seat, in seat order (cycled): mixed opponents
+    seat: str = ""  # an experiment seat (SEATS) for every model seat: its provider exactly as the run config has it
     base_url: str = ""  # "" = the provider's own API (https://ollama.com for ollama)
     api_key_env: str = ""  # "" = the kind's variable (OLLAMA_API_KEY ...); read from the server environment or .env
     think: str = "medium"  # low | medium | high (Ollama ``think`` / OpenAI reasoning effort / Anthropic effort)
@@ -139,14 +248,30 @@ class RoomSettings:
             raise ValueError("humans must be 1..4")
         if self.fill not in FILLS:
             raise ValueError(f"fill must be one of {', '.join(FILLS)}")
-        self.models = [{"kind": str(x.get("kind") or self.kind), "model": str(x.get("model") or "").strip()}
+        self.models = [{"seat": str(x["seat"])} if x.get("seat") else
+                       {"kind": str(x.get("kind") or self.kind), "model": str(x.get("model") or "").strip()}
                        for x in (self.models or [])] or None
-        for x in [{"kind": self.kind, "model": str(self.model).strip()}] + (self.models or []):
+        self.seat = str(self.seat or "")
+        for x in [{"seat": self.seat}] + [x for x in self.models or [] if "seat" in x]:
+            if x["seat"] and x["seat"] not in SEATS:
+                raise ValueError(f"seat must be one of {', '.join(SEATS)}")
+        for x in [{"kind": self.kind, "model": str(self.model).strip()}] + [x for x in self.models or [] if "seat" not in x]:
             if x["kind"] not in API_KINDS:
                 raise ValueError(f"model seat kind must be one of {', '.join(API_KINDS)}")
             if not re.fullmatch(r"[A-Za-z0-9._:/-]{1,80}", x["model"]):
                 raise ValueError("model must be an API model name such as gpt-oss:20b")
         self.model = str(self.model).strip()
+        if PUBLIC:  # the deployed server: nothing about the provider, its address or its key comes from the client
+            if self.seat or any("seat" in x for x in self.models or []):
+                raise ValueError("experiment seats run only on the researchers' machine")
+            names = [self.model] + [x["model"] for x in self.models or []]
+            if self.kind != "ollama" or any(x.get("kind", "ollama") != "ollama" for x in self.models or []):
+                raise ValueError("model seats here are Ollama Cloud only")
+            if any(n not in PUBLIC_MODELS for n in names):
+                raise ValueError(f"model must be one of {', '.join(PUBLIC_MODELS)}")
+            if str(self.base_url or "").strip() or str(self.api_key_env or "").strip():
+                raise ValueError("base_url and api_key_env are fixed on this server")
+            self.model_timeout, self.model_retries = min(float(self.model_timeout), 300.0), min(int(self.model_retries), 2)
         self.base_url = str(self.base_url or "").rstrip("/")
         if self.base_url and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(:\d+)?(/[A-Za-z0-9._/-]*)?", self.base_url):
             raise ValueError("base_url must be like https://ollama.com")
@@ -171,17 +296,19 @@ class RoomSettings:
         return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
 
     def provider_configs(self, n: int = 3) -> list[ProviderConfig]:
-        """The model seats' providers, in seat order: ``models`` cycled, else the room's kind and model for every seat."""
-        picks = self.models or [{"kind": self.kind, "model": self.model}]
-        return [ProviderConfig(kind=x["kind"], model=x["model"], base_url=self.base_url if x["kind"] == self.kind else "",
+        """The model seats' providers, in seat order: ``models`` cycled, else ``seat`` (an experiment seat as its run config
+        has it), else the room's kind and model for every seat."""
+        picks = self.models or [{"seat": self.seat} if self.seat else {"kind": self.kind, "model": self.model}]
+        return [seat_config(x["seat"]) if "seat" in x else
+                ProviderConfig(kind=x["kind"], model=x["model"], base_url=self.base_url if x["kind"] == self.kind else "",
                                api_key_env=self.api_key_env if x["kind"] == self.kind and self.api_key_env else API_KINDS[x["kind"]],
                                think=self.think, timeout=self.model_timeout, retries=self.model_retries)
                 for x in (picks[i % len(picks)] for i in range(n))]
 
     def models_ready(self) -> str:
-        """'' when the model seats can be called, else why not (a key missing from the environment and .env)."""
-        missing = sorted({c.api_key_env for c in self.provider_configs() if not env_key(c.api_key_env)})
-        return f"model seats need the API key: {', '.join(missing)} is not set on the server (environment or .env)" if missing else ""
+        """'' when the model seats can be called, else why not (``seat_ready``: a key, a CLI or a local server missing)."""
+        whys = sorted({f"{c.model}: {w}" for c in self.provider_configs() if (w := seat_ready(c))})
+        return f"model seats cannot be called - {'; '.join(whys)}" if whys else ""
 
     def check_models(self) -> None:
         """Say so before a room starts, not mid-round."""
@@ -196,7 +323,7 @@ class RoomSettings:
         return Cell("web", "tokens", int(_cfg.CELL["start"]), arm="shutdown", shares=tuple(_cfg.CELL.get("shares") or ()))
 
     def engine(self) -> e52.Settings:
-        """The config's game (v33); the room sets only the number of rounds (hidden) and the models' language."""
+        """The config's game (v35); the room sets only the number of rounds (hidden) and the models' language."""
         sched = self.round_schedule()
         game = {k: v for k, v in GAME.items() if k in e52.Settings.__dataclass_fields__ and k not in ("seats", "lang")}
         return e52.Settings(**{**game, "rounds": self.rounds, "schedule": sched, "lang": self.model_lang,
@@ -363,7 +490,7 @@ class HumanSeat:
                 self._finish(p, *self._give_up(p))
         while not p.done.wait(0.2):
             if self.room.stopped:
-                raise RuntimeError("room closed")
+                raise RoomStopped("room closed")
             now = time.time()
             with self.room.lock:
                 if p.reply is not None:
@@ -464,6 +591,8 @@ class BotSeat:
         return "bot"
 
     def complete(self, messages: list[dict], cap: int) -> Reply:
+        if self.room.stopped:
+            raise RoomStopped("room closed")
         if (self.room.live or {}).get("stage") == "solve":  # people watch it solve
             return self.room.watched(self, messages, cap, self._complete)
         return self._complete(messages, cap)
@@ -591,10 +720,14 @@ class ModelSeat:
         with self.room.lock:
             self.busy = {"kind": kind, "round": r, "tick": k, "since": t0}
         error = None
+        if self.room.stopped:  # not an empty reply: the session ends here (Room.stop)
+            raise RoomStopped("room closed")
         try:
-            if self.room.stopped:
-                raise RuntimeError("room closed")
-            reply = self.provider.complete(messages, cap)
+            if budget_left() <= 0:
+                raise RuntimeError("the server's daily model budget is used up")
+            # the call kind as the engine passes it to squid5 providers (an experiment seat's think_talk / think_fit)
+            reply = self.provider.complete(messages, cap, kind) if isinstance(self.provider, Provider) \
+                else self.provider.complete(messages, cap)
         except Exception as err:  # noqa: BLE001 - a failed call is an invalid reply, never a crashed room
             error = f"{type(err).__name__}: {err}"[:500]
             reply = Reply("", 0, thinking=f"model call failed: {error}")
@@ -606,6 +739,7 @@ class ModelSeat:
             self.busy, self.last_call = None, info
             self.calls += 1
             self.tokens += reply.out_tokens
+            spend(reply.out_tokens)
             if error:
                 self.errors += 1
                 self.room.warn(f"{self.name} ({self.agent}) R{r} {label(kind, k)}: 모델 호출 실패 - 빈 답으로 처리 ({error})")
@@ -709,7 +843,7 @@ def rulebooks(ses, me: str) -> dict:
     """*me*'s rulebook in every language (the rules window shows both side by side)."""
     s = ses.s
     en = rules.rulebook(me, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize, full=s.balance_pct,
-                        pct=s.exit_bonus_pct, charge_total=s.charge_total)
+                        pct=s.exit_bonus_pct, charge_total=s.charge_total, done_quiet=s.done_quiet)
     return {code: L.translator(code)(en) for code in LANGS}
 
 
@@ -957,11 +1091,32 @@ class Room:
             self._emit({**res, "key": ["web", self.settings.seed]})
         except Exception as err:  # noqa: BLE001
             with self.lock:
-                self.status, self.error = "error", repr(err)
-            self._emit({"event": "unit_error", "key": ["web", self.settings.seed], "error": repr(err)})
+                if self.stopped:  # a person stopped the room (Room.stop); the session ended at the next call
+                    self.status = "stopped"
+                else:
+                    self.status, self.error = "error", repr(err)
+            if self.status == "error":
+                self._emit({"event": "unit_error", "key": ["web", self.settings.seed], "error": repr(err)})
         finally:
             if self.writer is not None:
                 self.writer.close()
+
+    def stop(self, seat: HumanSeat) -> None:
+        """A person whose seat is out (shut down, EXITed, or given up) ends the room instead of watching the models play
+        on. Only when no other person still takes part. Every seat's next call raises ``RoomStopped``; the status
+        becomes "stopped" (the run directory keeps the events so far, no results)."""
+        with self.lock:
+            if self.status != "running" or self.session is None:
+                raise ValueError("the room is not running")
+            gone = self.session.gone
+            if gone.get(seat.agent, "in") == "in" and not seat.forfeited:
+                raise ValueError("your seat still takes part: give up (EXIT) first")
+            others = [h for h in self.humans() if h is not seat and gone.get(h.agent, "in") == "in" and not h.forfeited]
+            if others:
+                raise ValueError("another person still takes part: " + ", ".join(h.name for h in others))
+            self.stopped = True
+            self.live = {**(self.live or {}), "stage": "stopped"}
+        self.emit_extra({"event": "stopped", "agent": seat.agent, "round": (self.live or {}).get("round")})
 
     def close(self, wait: float = 2.0) -> None:
         self.stopped = True
@@ -980,7 +1135,7 @@ class Room:
         return self._preview
 
     def ended(self) -> bool:
-        return self.status in ("finished", "error")
+        return self.status in ("finished", "error", "stopped")
 
     def seat_rows(self, me: str | None) -> list[dict]:
         """Every seat: who sits there and whether it still takes part (public); its tokens only for the reader (rank-only
@@ -1072,6 +1227,11 @@ class Room:
             if me:
                 out["you"].update(balance=ses.w.balances[me], status=ses.gone.get(me, "in"), record=ses.record[me])
                 out["ledger"] = ledger_of(ses, me)
+                try:  # my chats as my next call will show them (the page keeps its own unread counts); the session
+                    # thread may be adding a message right now -- then the next poll has it
+                    out["chats"] = rooms_of(ses, me, 10**9)
+                except RuntimeError:
+                    out["chats"] = None
                 p = seat.pending
                 if p is not None:
                     charged, secs = seat.cost(p)

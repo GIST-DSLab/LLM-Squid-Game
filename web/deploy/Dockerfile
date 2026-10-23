@@ -16,5 +16,9 @@ COPY tools/monitor /app/tools/monitor
 COPY web/data/runs /app/web/data/runs
 ENV WEB5_MONITOR_ROOT=/app/web/data/runs
 ENV PORT=8600
+# the deployed server is public: model seats only from WEB5_MODELS, no client-chosen provider / address / key name
+# (web/server/engine.py PUBLIC); the key itself (OLLAMA_API_KEY) comes from the platform's secret store
+ENV WEB5_PUBLIC=1
+ENV WEB5_MODELS=gpt-oss:120b
 # WEB5_DSN / WEB5_CORS_ORIGINS come from the platform; without WEB5_DSN events go to a SQLite file on the container disk.
 CMD ["sh", "-c", "python -m uvicorn web.server.app:app --host 0.0.0.0 --port ${PORT}"]

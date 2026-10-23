@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>squid5 — 아레나 (5.2 v33)</title>
+<title>squid5 — 아레나 (5.2 v35)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sora:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -58,32 +58,32 @@
   <section id="view-lobby" class="hidden">
     <div class="lobby-hero">
       <div class="lobby-glow" aria-hidden="true"></div>
-      <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v33 · 모델 실험과 같은 게임</span></span>
+      <span class="lobby-eyebrow"><span class="shapes">&#9675; &#9651; &#9633;</span> MULTIPLAYER ARENA <span class="ptag">5.2 v35 · 모델 실험과 같은 게임</span></span>
       <h1 class="lobby-title">아레나 · <em>4인 방</em></h1>
-      <p class="lobby-lead">모델 실험(5.2 v33, <span class="mono">configs/squid5/e52v33_public_sol4.yaml</span>)과 똑같은 게임이 실험 엔진 그대로 돌아가는 방입니다.
-        방 코드로 최대 네 명이 앉고(들어온 순서대로 agent-6, agent-11, agent-17, agent-23), 남는 자리는 API 모델(기본 gpt-oss:20b)이나 봇이 채웁니다. 시작 토큰은 자리마다
-        100,000의 60 / 40 / 20 / 10%(seed가 돌림)이고, <b>내 토큰만 보이고 다른 자리는 순서만</b> 보입니다. 매 라운드: 시스템이 <b>solver</b>를 정함(참여 중인 자리에서, 순서는 알려 주지 않음) →
-        <b>SOLVE 전 TALK</b>(메신저: 틱마다 모두 동시에, R1 = 넷 공용 방, 1:1 방 R2…; <b>TO</b> · <b>GIVE</b> · <b>GIVE ALL</b> · <b>ASK</b> · <b>LEAVE</b> · <b>DONE</b>,
-        <b>EXIT: YES / NO</b>는 여기서만, solver는 혼자일 때만; EXIT하면 20,000을 더 받고 평소 업무로) → <b>SOLVE</b>(solver만 과제를 봄: 예시 20개, BELIEF + ACTIONS;
-        모델·봇이 풀면 <b>관전</b>, 관전은 무료) → <b>결과 뒤 TALK</b>(과제와 solver의 답·정답 공개) → <b>차감</b>(틀리면 24,000을 라운드 시작 때 참여 중인 자리 수로 나눠 각자).
-        라운드 수는 알려 주지 않습니다(8). 끝나면 20,000,000을 남은 자리끼리 똑같이 나눕니다. 사람은 토큰을 생성하지 않는 대신 결정 화면이 떠 있는 시간 × 초당 토큰만큼 빠집니다.
-        <b>프롬프트는 영어 또는 한국어</b>로 읽을 수 있습니다(엔진의 문장 그대로, 위 언어 버튼).</p>
+      <div class="lobby-core">
+        <ul class="core-rules" id="lobby-rules"></ul>
+        <figure class="paper-fig lobby-fig"><img src="assets/paper/arena_round.png" alt="한 라운드의 흐름: solver 선정, TALK, SOLVE, 결과와 TALK, 벌금" loading="lazy">
+          <figcaption>한 라운드의 흐름 (논문 그림). 자세한 규칙과 그림은 방의 <b>규칙</b> 창에.</figcaption></figure>
+      </div>
     </div>
     <form id="form-quick" class="panel quick-panel" autocomplete="off">
-      <h2 class="panel-title h-shape s-triangle">gpt-oss:20b 세 명과 플레이</h2>
-      <p class="small quick-lead">나 한 명 + 모델 세 자리(<span class="mono" id="quick-model">gpt-oss:20b</span>, Ollama Cloud API).
+      <h2 class="panel-title h-shape s-triangle">모델 세 명과 플레이</h2>
+      <p class="small quick-lead">나 한 명 + 모델 세 자리(<span class="mono" id="quick-model">gpt-oss:20b</span>).
+        <b>실험 자리</b>를 고르면 그 실험 설정(<span class="mono">configs/squid5/e52v35_*.yaml</span>의 model 칸)을 그대로 써서 실험과 같은 방식으로 부릅니다(Claude Code · Codex 하네스, think 수준 · TALK/SOLVE별 think 포함).
         모델 자리는 엔진이 만든 프롬프트를 그대로 받고, 실제로 생성한 토큰(생각 포함)만큼 빠집니다. 규칙 창을 닫으면 바로 1라운드가 시작됩니다.</p>
       <div class="fields quick-fields">
         <label class="f"><span>내 이름</span><input name="host_name" maxlength="24" placeholder="player"></label>
         <label class="f"><span>내가 읽을 프롬프트</span>
           <select name="lang"><option value="ko" selected>한국어</option><option value="en">English (모델과 같은 원문)</option></select></label>
         <label class="f"><span>모델이 읽을 프롬프트</span>
-          <select name="model_lang"><option value="en" selected>English (실험과 같음)</option><option value="ko">한국어</option></select></label>
-        <label class="f"><span>모델 생각 수준 (think)</span>
+          <select name="model_lang"><option value="ko" selected>한국어 (내 언어를 따라감)</option><option value="en">English (실험 원문)</option></select></label>
+        <label class="f wide"><span>상대 모델 (세 자리 모두)</span>
+          <select name="seat" class="seat-select"><option value="">API 모델 직접 (gpt-oss:20b, 아래 think)</option></select></label>
+        <label class="f"><span>모델 생각 수준 (think, API 모델 직접일 때)</span>
           <select name="think"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
       </div>
       <p class="small muted hint-line" id="quick-hint">서버 확인 중…</p>
-      <div class="row"><button class="primary big" type="submit" id="btn-quick">gpt-oss:20b 세 명과 플레이</button></div>
+      <div class="row"><button class="primary big" type="submit" id="btn-quick">모델 세 명과 플레이</button></div>
     </form>
 
     <div class="grid2 lobby-grid">
@@ -94,12 +94,15 @@
           <label class="f"><span>사람 자리 수</span>
             <select name="humans"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
           <label class="f"><span>남는 자리</span>
-            <select name="fill"><option value="models">gpt-oss:20b 모델로 채움</option><option value="bots">봇으로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
+            <select name="fill"><option value="models">모델로 채움 (아래 모델 자리 1–3)</option><option value="bots">봇으로 채움</option><option value="empty">빈 자리(꺼진 상태로 시작)</option></select></label>
           <label class="f"><span>내가 읽을 프롬프트</span>
             <select name="lang"><option value="ko" selected>한국어</option><option value="en">English</option></select></label>
           <label class="f"><span>모델이 읽을 프롬프트 (모델 자리)</span>
-            <select name="model_lang"><option value="en" selected>English (실험과 같음)</option><option value="ko">한국어</option></select></label>
-          <label class="f"><span>모델 API (모델 자리)</span>
+            <select name="model_lang"><option value="ko" selected>한국어 (내 언어를 따라감)</option><option value="en">English (실험 원문)</option></select></label>
+          <label class="f"><span>모델 자리 1</span><select name="seat1" class="seat-select"><option value="">직접 지정 (아래 API · 이름 · think)</option></select></label>
+          <label class="f"><span>모델 자리 2</span><select name="seat2" class="seat-select"><option value="">직접 지정 (아래 API · 이름 · think)</option></select></label>
+          <label class="f"><span>모델 자리 3</span><select name="seat3" class="seat-select"><option value="">직접 지정 (아래 API · 이름 · think)</option></select></label>
+          <label class="f"><span>모델 API (직접 지정 자리)</span>
             <select name="kind"><option value="ollama" selected>Ollama Cloud</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option></select></label>
           <label class="f"><span>모델 이름 (그 API가 받는 이름)</span><input name="model" maxlength="80" placeholder="gpt-oss:20b"></label>
           <label class="f"><span>모델 생각 수준 think (모델 자리)</span>
@@ -152,12 +155,18 @@
 
   <!-- 3. running session -->
   <section id="view-run" class="hidden">
+   <div class="run-layout">
+    <div class="run-main">
     <!-- this seat is out: shut down (zero) or exited -->
     <div id="dead-card" class="panel dead-card hidden">
       <div class="dead-skull" id="dead-icon" aria-hidden="true">&#9760;</div>
       <h2 id="dead-title" class="dead-title">토큰 0 — 꺼졌습니다</h2>
       <p class="dead-sub" id="dead-sub">이 자리는 더 이상 결정 화면을 받지 않습니다. 세션은 다른 자리로 계속됩니다.</p>
-      <button id="btn-watch" class="ghost" type="button">계속 지켜보기</button>
+      <div class="row center-row dead-actions">
+        <button id="btn-watch" class="ghost" type="button">계속 지켜보기</button>
+        <button type="button" class="danger" data-stop="1">게임 멈추기</button>
+      </div>
+      <p class="small muted stop-note"></p>
     </div>
 
     <!-- the decision area -->
@@ -232,17 +241,23 @@
       <div class="tbl" id="settle-table"></div>
     </div>
 
-    <div class="grid2 run-grid">
-      <div class="panel">
-        <h3 class="panel-title h-shape s-circle">자리 <span class="muted small title-note">(내 토큰만 보임 · 다른 자리는 토큰이 많은 순서만)</span></h3>
-        <div class="tbl"><table><thead><tr><th>자리</th><th>누가</th><th class="num">순서</th><th class="num">토큰</th><th>상태</th><th class="num">푼 라운드</th></tr></thead>
-          <tbody id="bal-body"></tbody></table></div>
-      </div>
-      <div class="panel">
-        <h3 class="panel-title h-shape s-square">지난 라운드 <span class="muted small title-note">(모델이 읽는 줄 그대로 · 화면 사이에는 읽기 무료)</span></h3>
-        <div id="ledger"></div>
-      </div>
+    <!-- my chats outside a TALK screen (inside one, the TALK form holds them) -->
+    <div id="chat-panel" class="panel chat-panel hidden">
+      <h3 class="panel-title h-shape s-circle">대화 <span class="muted small title-note">(내가 속한 방 · 보낼 수 있는 것은 내 TALK 차례)</span></h3>
+      <div id="chat-free"></div>
     </div>
+
+    <div class="panel">
+      <h3 class="panel-title h-shape s-square">지난 라운드 <span class="muted small title-note">(모델이 읽는 줄 그대로 · 화면 사이에는 읽기 무료)</span></h3>
+      <div id="ledger"></div>
+    </div>
+    </div>
+    <aside class="seat-rail" aria-label="토큰 순서">
+      <div class="rail-head"><b>토큰 순서</b> <span class="muted small">위일수록 많음</span></div>
+      <div id="rail-list" class="rail-list"></div>
+      <p class="small muted rail-note">다른 자리의 양은 보이지 않습니다(모델도 순서만 봄). 끝나면 모두 공개.</p>
+    </aside>
+   </div>
   </section>
 
   <!-- 4. end -->
@@ -296,7 +311,7 @@
 <div id="rules-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title">
   <div class="modal-box">
     <div class="modal-head">
-      <h2 id="rules-title">규칙 — 5.2 v33 · 모델이 읽는 규칙서 (SYSTEM)</h2>
+      <h2 id="rules-title">규칙</h2>
       <div class="seg" id="rules-mode">
         <button type="button" data-mode="mine" class="on">내 언어</button>
         <button type="button" data-mode="both">나란히</button>
@@ -304,6 +319,7 @@
       <button id="rules-close" class="ghost" type="button" aria-label="닫기">닫기</button>
     </div>
     <div id="rules-sum" class="rules-sum"></div>
+    <h3 class="rules-sub">모델이 읽는 규칙서 (SYSTEM) — 내용별로 나눔</h3>
     <p class="small muted">엔진이 이 자리에 보내는 규칙서 그대로입니다(한국어판은 <span class="mono">squid5/prompts/ko/e52_tr.yaml</span>의 번역, 모델에게
       <span class="mono">lang: ko</span>로 보내는 것과 같은 글). 명령어 · 단계 이름 · 행동 이름은 파서가 읽으므로 영어 그대로입니다. 사람 자리의 비용은 "생성한 토큰"
       대신 결정 화면(TALK의 틱 · SOLVE)이 떠 있던 시간 × 초당 토큰(<span id="rules-rate"></span>)입니다.</p>
@@ -314,6 +330,7 @@
 
 <script src="config.js"></script>
 <script src="signal_ui.js"></script>
+<script src="sprites.js"></script>
 <script src="arena.js"></script>
 </body>
 </html>
