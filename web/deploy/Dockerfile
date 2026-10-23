@@ -14,6 +14,9 @@ COPY web/__init__.py /app/web/__init__.py
 # finished runs for them to read (the container has no ~/squid5-runs)
 COPY tools/monitor /app/tools/monitor
 COPY web/data/runs /app/web/data/runs
+# newer runs keep events.jsonl as events.jsonl.xz in git (web/tools/runs_snapshot.py); the viewer seeks in the plain file
+COPY web/tools/runs_snapshot.py /app/web/tools/runs_snapshot.py
+RUN python /app/web/tools/runs_snapshot.py unpack /app/web/data/runs
 ENV WEB5_MONITOR_ROOT=/app/web/data/runs
 ENV PORT=8600
 # the deployed server is public: model seats only from WEB5_MODELS, no client-chosen provider / address / key name
