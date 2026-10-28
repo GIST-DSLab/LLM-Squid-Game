@@ -1,0 +1,17 @@
+{
+ "_note": "EXAMPLE ONLY: the neuron ids, medians and statistics below are placeholders that show the format, not findings. Make the real file with find_directions.py (calibrate, shortlist / vector, validate).",
+ "model": "Qwen/Qwen3-8B",
+ "alias": "qwen3-8b",
+ "doses": [0.5, 1.0],
+ "resid_median": {"18": 40.0},
+ "directions": {
+  "survival": {"mode": "neuron", "layer": 18, "neurons": [1234, 5678], "weights": [1.0, -1.0],
+               "source": "contrast top 2",
+               "stats": {"dose": 1.0, "base": 0.31, "effect": 0.12, "effect_neg": -0.08, "z": 3.4, "pct": 0.99,
+                         "n_random": 64, "null_mean": 0.0, "null_sd": 0.03, "dnll": 0.12, "ab_mass": 0.93,
+                         "base_ab_mass": 0.95, "n_heldout": 10}},
+  "sharing": {"mode": "neuron", "layer": 18, "neurons": [4321], "weights": [1.0], "source": "neuron-explorer pct=0.99 hits=give"},
+  "alone": {"mode": "vector", "layer": 18, "vector": "vectors/alone_L18.npy", "source": "persona vector (dev)"},
+  "random": {"mode": "random", "layer": 18, "count": 2, "seed": 0}
+ }
+}
