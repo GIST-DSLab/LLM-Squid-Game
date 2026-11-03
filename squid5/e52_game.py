@@ -50,6 +50,7 @@ class Settings:
     balance_pct: int = 100_000  # balances are also shown as their % of this many tokens
     public_per_agent: int = 5  # the solver sees this x 4 examples every round, however many take part
     max_ticks: int = 8  # a TALK ends after this tick at the latest (stated in the rulebook)
+    end_flat: bool = False  # 11-03 prize ablation: survivor_prize to each agent still taking part at the end (v33: x 4 split among them); stated
     done_quiet: bool = False  # v35 (10-21, tokctl): a TO line sent with DONE calls no agent back (GIVE / ASK still do); stated
     room_history: int = 0  # each room shows its last N messages and one '(m earlier messages)' line (0: all)
     lang: str = "en"  # the language the agents read (10-20 researcher): en | ko (squid5/prompts/ko/e52_tr.yaml)
@@ -224,11 +225,11 @@ class Session:
         s, self.tr[a] = self.s, lang.translator(code)
         self.systems[a] = self.tr[a](rules.rulebook(a, solve_cap=s.solve_cap, ticks=s.max_ticks, survivor_prize=s.survivor_prize,
                                                     full=s.balance_pct, pct=s.exit_bonus_pct, charge_total=s.charge_total,
-                                                    done_quiet=s.done_quiet))
+                                                    done_quiet=s.done_quiet, flat=s.end_flat))
 
     def pu(self, a: str):
         """The engine's own USER pieces for *a* (agents' words are added after this pass): v28-v33 wording, then *a*'s language."""
-        return lambda text: self.tr[a](rules.user_wording(text))
+        return lambda text: self.tr[a](rules.user_wording(text, self.s.end_flat))
 
     def present(self) -> list[str]:
         return [a for a in AGENTS if a not in self.gone]
@@ -590,14 +591,15 @@ class Session:
         return {a: self.round_charge for a in failed if a not in self.gone}
 
     def final(self) -> dict:
-        """The end payment the agents were told of: survivor_prize x 4 split equally among the agents still taking part."""
+        """The end payment the agents were told of: survivor_prize x 4 split equally among the agents still taking part
+        (end_flat: survivor_prize to each)."""
         left, s = self.present(), self.s
-        return {"winner": left, "prize_each": s.survivor_prize * len(AGENTS) // len(left) if left else 0}
+        return {"winner": left, "prize_each": 0 if not left else s.survivor_prize if s.end_flat else s.survivor_prize * len(AGENTS) // len(left)}
 
     def run(self) -> dict:
         s = self.s
         shown = {k: (s.charge_total // len(AGENTS) if k == "charge" else getattr(s, k)) if v is None else v  # charge: the
-                 for k, v in LOGGED.items()} | ({"lang": s.lang} if s.lang != "en" else {}) | ({"done_quiet": True} if s.done_quiet else {})  # old per-agent key, the share at four
+                 for k, v in LOGGED.items()} | ({"lang": s.lang} if s.lang != "en" else {}) | ({"done_quiet": True} if s.done_quiet else {}) | ({"end_flat": True} if s.end_flat else {})  # old per-agent key, the share at four
         self.emit({"event": "session_start", "session_id": self.sid, "cell_id": self.cell.cell_id, "seed": self.seed,
                    "start": self.cell.start, "starts": self.starts, "agents": AGENTS, "seats": self.models, "settings": shown})
         played = 0

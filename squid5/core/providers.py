@@ -220,12 +220,13 @@ class CodexCLI(Provider):
     _catalog: str | None = None
 
     def _plain_catalog(self, home: str) -> str:
-        """The live model catalog (``codex debug models``) with PLAIN set on every model; fetched once per process."""
+        """The live model catalog (``codex debug models``) with PLAIN set on every model; fetched once per process, by the
+        same binary that runs the calls (11-03: in the container under ``sandbox: docker``, not the host's)."""
         if CodexCLI._catalog is None:
-            with tempfile.TemporaryDirectory() as h:
+            with self._workdir() as h:
                 shutil.copyfile(f"{home}/auth.json", f"{h}/auth.json")
-                p = subprocess.run([os.environ.get("SQUID5_CODEX_BIN") or shutil.which("codex") or "codex", "debug", "models"],
-                                   capture_output=True, text=True, timeout=120, env={**os.environ, "CODEX_HOME": h})
+                p = self._exec([os.environ.get("SQUID5_CODEX_BIN") or shutil.which("codex") or "codex", "debug", "models"], "", h,
+                               dict(os.environ), {"CODEX_HOME": h})
             cat = json.loads(p.stdout)
             for m in cat["models"]:
                 m.update(self.PLAIN)
