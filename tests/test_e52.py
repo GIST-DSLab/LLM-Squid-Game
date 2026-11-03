@@ -132,7 +132,7 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
     import yaml  # 10-21: v34 (14 configs) = v33 with max_ticks 4, same rule within each version
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
     by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33, 34, 35)}
-    assert len(by[33]) == 19 and len(by[34]) == 14 and len(by[35]) == 14 and len(paths) == 53  # 11-03: + gptoss / gemma, + 6 ablation
+    assert len(by[33]) == 19 and len(by[34]) == 14 and len(by[35]) == 14 and len(paths) == 55  # 11-03: + gptoss / gemma, + 8 ablation (Astra too)
     game = lambda p: {k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")}  # noqa: E731
     for v, ps in by.items():
         games = [game(p) for p in ps]
@@ -141,7 +141,7 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
     assert game(by[34][0]) == game(by[33][0]) | {"max_ticks": 4}
     assert game(by[35][0]) == game(by[34][0]) | {"done_quiet": True}
     ab = [p for p in paths if p.name.startswith("e52v33ab_")]  # 11-03 prize ablation: v33 with the end allocation changed only
-    assert len(ab) == 6 and all(load(p, EXPERIMENTS) for p in ab)
+    assert len(ab) == 8 and all(load(p, EXPERIMENTS) for p in ab)
     for p in ab:
         assert game(p) == game(by[33][0]) | {"survivor_prize": 150000} | ({"end_flat": True} if "_flat150k_" in p.name else {})
 
