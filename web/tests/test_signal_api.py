@@ -76,7 +76,7 @@ def test_the_page_round_is_the_one_the_engine_plays_and_scores():
     game = {k: v for k, v in sig.GAME.items() if k in keep and k not in ("schedule", "profiles")}
     s = e52.Settings(**{**game, "rounds": 1, "schedule": sig.SCHEDULE[:1], "profiles": {"e01": dict(sig.PROFILES["e01"])}})
     evs = []
-    ses = e52.Session(s, Cell("web", "tokens", sig.CELL["start"], arm="shutdown", shares=tuple(sig.CELL["shares"])), 4100,
+    ses = e52.Game(s, Cell("web", "tokens", sig.CELL["start"], arm="shutdown", shares=tuple(sig.CELL["shares"])), 4100,
                       None, evs.append, "t")
     ses.providers = {a: _Stub() for a in sig.AGENTS}
     ses.models = {a: "stub" for a in sig.AGENTS}

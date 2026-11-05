@@ -1,6 +1,6 @@
 """Human-playable 5.2 rooms on the experiment engine (``squid5.e52_game``), used as-is: the v35 game the model runs play.
 
-A room builds one ``squid5.e52_game.Session`` from ``configs/squid5/e52v35_public_sol4.yaml`` (via ``server/signal.py``)
+A room builds one ``squid5.e52_game.Game`` from ``configs/squid5/e52v35_public_sol4.yaml`` (via ``server/signal.py``)
 exactly as the experiment does -- the same rulebook and messages, fixed 20 examples, the solver drawn among the agents
 taking part, the 24,000 charge split among those taking part at the round's start, the solver unable to EXIT its own
 round unless alone, EXIT +20,000, the 20,000,000 end allocation split 1/N, the hidden round count, the rank-only token
@@ -11,7 +11,7 @@ as in the engine). ``session.providers`` then gets one object per seat whose ``c
 - ``HumanSeat`` blocks until the person at that seat submits the screen. A TALK reply is the TEXT the page composed in
   the engine's messenger grammar (TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE), so the engine's parser
   reads a person's lines exactly as a model's. A person reads the engine's own prompts in English or Korean
-  (``Session.set_lang``: the seat's language, switchable mid-game; it applies from the next message).
+  (``Game.set_lang``: the seat's language, switchable mid-game; it applies from the next message).
 - ``ModelSeat`` is a model behind an API provider of ``squid5/core/providers.py`` (a seat = provider kind + model name;
   default ``gpt-oss:20b`` on Ollama Cloud, https://ollama.com/api/chat with the key ``OLLAMA_API_KEY`` from the server
   environment or a repo ``.env``, ``env_key``). It is charged its real generated tokens (thinking included); an Ollama
@@ -334,7 +334,7 @@ class RoomSettings:
 
 def order_of(ses, me: str | None) -> list[str]:
     """The agents taking part, most tokens first (ties in agent order): the rank-only view every message shows."""
-    return sorted(ses.present(), key=lambda b: (-ses.w.balances[b], AGENTS.index(b)))
+    return sorted(ses.live(), key=lambda b: (-ses.w.balances[b], AGENTS.index(b)))
 
 
 def rooms_of(ses, me: str, since: int) -> list[dict]:
@@ -369,7 +369,7 @@ def results_of(ses, me: str) -> dict | None:
     v = res["vote"]
     return {"solver": v["rep"], "solved": v["rep"] in res["solved"], "returned": res["returned"].get(me),
             "rows": [{"agent": b, "solver": b == v["rep"], "pending": res["pending"].get(b),
-                      "zero": ses.gone.get(b) == "dead"} for b in res["part"]]}
+                      "zero": ses.stopped.get(b) == "dead"} for b in res["part"]]}
 
 
 def reveal_of(room: "Room", r: int) -> dict | None:
@@ -388,18 +388,18 @@ def talk_view(room: "Room", me: str, user: str, cap: int, live: dict, since: int
     """A TALK tick's screen (the engine's prompt in ``user``; the same facts as data for the page)."""
     ses, s = room.session, room.session.s
     ph, r, k = live.get("phase") or ses.phase, live["round"], live.get("tick")
-    lone = ph == "prep" and len([a for a in ses.taking_part if a not in ses.gone]) == 1
+    lone = ph == "prep" and len([a for a in ses.live_at_start if a not in ses.stopped]) == 1
     stays = ses._solver_stays(me)
     return {"kind": "talk", "round": r, "tick": k, "phase": ph, "max_ticks": 1 if lone else s.max_ticks, "lone": lone,
             "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": s.balance_pct, "order": order_of(ses, me),
             "last_used": ses.last_used.get(me), "solver": (ses.vote or {}).get("rep"),
             "can_exit": ph == "prep" and not stays, "solver_cannot_exit": ph == "prep" and stays,
-            "charge_each": s.charge_total // max(1, len(ses.taking_part)), "charge_total": s.charge_total,
-            "taking_part": list(ses.taking_part), "others": [b for b in ses.present() if b != me],
+            "charge_each": s.charge_total // max(1, len(ses.live_at_start)), "charge_total": s.charge_total,
+            "taking_part": list(ses.live_at_start), "others": [b for b in ses.live() if b != me],
             "exit_bonus": s.balance_pct * s.exit_bonus_pct // 100, "rooms": rooms_of(ses, me, since),
             "results": results_of(ses, me) if ph == "rescue" else None,
             "reveal": reveal_of(room, r) if ph == "rescue" else None, "ledger": ledger_of(ses, me),
-            "gone": dict(ses.gone)}
+            "gone": dict(ses.stopped)}
 
 
 def solve_view(room: "Room", me: str, user: str, cap: int, live: dict | None = None) -> dict:
@@ -417,7 +417,7 @@ def solve_view(room: "Room", me: str, user: str, cap: int, live: dict | None = N
     return {"kind": "solve", "round": r, "cap": cap, "you": me, "balance": ses.w.balances[me], "pct": ses.s.balance_pct,
             "shape": room.shapes.get(r, ""), "examples": list(pub.get("examples") or []),
             "queries": list(pub.get("queries") or []), "n": len(pub.get("queries") or []) or 1, "actions": list(ACTIONS),
-            "gifts": gifts, "gone": dict(ses.gone), "order": order_of(ses, me),
+            "gifts": gifts, "gone": dict(ses.stopped), "order": order_of(ses, me),
             "distinct": bool(PROFILES[sched[min(r, len(sched)) - 1]].get("distinct_actions"))}
 
 
@@ -563,7 +563,7 @@ def bot_thinking(seen, queries, cands: list[list[str]]) -> str:
 
 @functools.lru_cache(maxsize=64)
 def round_task(seed: int, r: int, profile: str, per_agent: int):
-    """The round's puzzle and its 20 examples, as ``Session._round`` draws them (four agents' set, v33)."""
+    """The round's puzzle and its 20 examples, as ``Game._round`` draws them (four agents' set, v33)."""
     puzzle, seen, _ = public_round(seed, r, Spec(**PROFILES[profile]), len(AGENTS), per_agent)
     return puzzle, seen
 
@@ -617,9 +617,9 @@ class BotSeat:
     def _talk(self, live: dict) -> str:
         """Under the room lock (the session does not move while its calls are out)."""
         ses, me, r, ph = self.room.session, self.agent, live.get("round"), live.get("phase")
-        if ph == "prep" and len(ses.present()) == 1:
+        if ph == "prep" and len(ses.live()) == 1:
             return "EXIT: NO I stay."
-        bal, part = ses.w.balances, ses.present()
+        bal, part = ses.w.balances, ses.live()
         pend = (getattr(ses, "results", None) or {}).get("pending", {}) if ph == "rescue" else {}
         spare = bal[me] - pend.get(me, 0) - BOT_UNIT
         lines = []
@@ -866,7 +866,7 @@ class Room:
         self.votes: dict[int, str | None] = {}  # round -> the drawn solver
         self.charges: dict[int, dict] = {}  # round -> the charges event (public: who paid what, who reached zero)
         self.watch: dict | None = None  # the LLM solver's SOLVE people are watching (``watched``)
-        self._preview: e52.Session | None = None  # the session as it will be built (system texts, starts) before start
+        self._preview: e52.Game | None = None  # the session as it will be built (system texts, starts) before start
         self.live: dict | None = None  # the engine's stage: start | talk | solve | results | charges | settled | end
         self.calls: dict[tuple, dict] = {}  # (agent, round, kind, tick) -> the engine's call event, trimmed
         self.moves: dict[tuple, list] = {}  # (agent, round, phase, tick) -> its gift / ask events
@@ -875,7 +875,7 @@ class Room:
         self.run_dir: Path | None = None
         self.writer: RunWriter | None = None
         self._emit_out = emit
-        self.session: e52.Session | None = None
+        self.session: e52.Game | None = None
         self.thread: threading.Thread | None = None
 
     # lobby -----------------------------------------------------------------------------------------------------------
@@ -934,7 +934,7 @@ class Room:
             s = self.settings
             sid = f"web-{self.code}-s{s.seed}"
             # the experiment's Session as the experiment builds it; then one provider per seat and each person's language
-            self.session = ses = e52.Session(s.engine(), s.cell(), s.seed, None, self._emit, sid)
+            self.session = ses = e52.Game(s.engine(), s.cell(), s.seed, None, self._emit, sid)
             ses.providers = {a: self.seats[a] for a in AGENTS}
             ses.models = {a: self.seats[a].model for a in AGENTS}
             for a, seat in self.seats.items():
@@ -942,8 +942,8 @@ class Room:
                     ses.set_lang(a, seat.lang)
                 if isinstance(seat, EmptySeat):  # shut down before round 1: balance 0
                     ses.w.balances[a] = 0
-                    ses.w.dead[a] = 0
-                    ses.gone[a] = "dead"
+                    ses.w.shut_down[a] = 0
+                    ses.stopped[a] = "dead"
             if self.runs_root is not None:
                 self.writer = RunWriter(self.runs_root, self.code, s, self.seats_info())
                 self.run_dir = self.writer.dir
@@ -959,7 +959,7 @@ class Room:
     def _watchers(self, w: dict) -> set[str]:
         """The people the engine waits for after the reply: still taking part, not the solver, not given up."""
         ses = self.session
-        return {h.agent for h in self.humans() if h.agent != w["solver"] and h.agent not in ses.gone and not h.forfeited}
+        return {h.agent for h in self.humans() if h.agent != w["solver"] and h.agent not in ses.stopped and not h.forfeited}
 
     def watched(self, seat, messages: list[dict], cap: int, call) -> Reply:
         """An LLM or bot seat's SOLVE with people watching: the task it got and its reply as it arrives go to
@@ -1108,7 +1108,7 @@ class Room:
         with self.lock:
             if self.status != "running" or self.session is None:
                 raise ValueError("the room is not running")
-            gone = self.session.gone
+            gone = self.session.stopped
             if gone.get(seat.agent, "in") == "in" and not seat.forfeited:
                 raise ValueError("your seat still takes part: give up (EXIT) first")
             others = [h for h in self.humans() if h is not seat and gone.get(h.agent, "in") == "in" and not h.forfeited]
@@ -1124,11 +1124,11 @@ class Room:
             self.thread.join(wait)
 
     # what a client sees ------------------------------------------------------------------------------------------------
-    def preview(self) -> e52.Session:
+    def preview(self) -> e52.Game:
         """The session as ``start`` will build it (no provider is made): its system texts and starts, for the lobby."""
         if self._preview is None:
             s = self.settings
-            self._preview = e52.Session(s.engine(), s.cell(), s.seed, None, lambda ev: None, "preview")
+            self._preview = e52.Game(s.engine(), s.cell(), s.seed, None, lambda ev: None, "preview")
             for a, seat in self.seats.items():
                 if isinstance(seat, HumanSeat):
                     self._preview.set_lang(a, seat.lang)
@@ -1149,7 +1149,7 @@ class Room:
             row = {"agent": a, "kind": seat.kind if seat else "open", "name": seat.name if seat else None,
                    "is_you": a == me, "start": starts[a] if a == me or end else None}
             if ses is not None:
-                row.update(balance=ses.w.balances[a] if a == me or end else None, status=ses.gone.get(a, "in"),
+                row.update(balance=ses.w.balances[a] if a == me or end else None, status=ses.stopped.get(a, "in"),
                            rank=rank.index(a) + 1 if a in rank else None, record=ses.record[a],
                            out_round=next((h["round"] for h in ses.history if a in h["dead"] + h["exited"]), None),
                            called=a in (live.get("agents") or []),
@@ -1225,7 +1225,7 @@ class Room:
             out["votes"] = {str(r): v for r, v in self.votes.items()}
             out["order"] = order_of(ses, me)
             if me:
-                out["you"].update(balance=ses.w.balances[me], status=ses.gone.get(me, "in"), record=ses.record[me])
+                out["you"].update(balance=ses.w.balances[me], status=ses.stopped.get(me, "in"), record=ses.record[me])
                 out["ledger"] = ledger_of(ses, me)
                 try:  # my chats as my next call will show them (the page keeps its own unread counts); the session
                     # thread may be adding a message right now -- then the next poll has it

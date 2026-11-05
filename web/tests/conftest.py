@@ -159,7 +159,7 @@ def wrong_for(seed: int, round_no: int, n: int = 4) -> list[str]:
 
 
 def solver_of(seed: int, round_no: int = 1, taking_part=None) -> str:
-    """The solver the engine draws in round 1 when nobody has left (``Session._rotate``)."""
+    """The solver the engine draws in round 1 when nobody has left (``Game._rotate``)."""
     import random
 
     from squid5.core.rules import TEAM_AGENTS

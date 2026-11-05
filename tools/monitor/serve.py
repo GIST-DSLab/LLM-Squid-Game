@@ -1037,7 +1037,7 @@ def _run_system(config: str, mtime: float) -> dict:
     from squid5.__main__ import EXPERIMENTS
     from squid5.core.config import load
     c = load(config, EXPERIMENTS)
-    en = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "monitor").systems
+    en = e52.Game(c.settings, c.cells[0], 4101, None, list().append, "monitor").systems
     v = re.search(r"e52_?(v\d+[a-z]?)", config)
     ko = None
     if v and en.get("agent-17") == _snapshot_system(v.group(1), "en") and (ko17 := _snapshot_system(v.group(1), "ko")):

@@ -5,7 +5,7 @@ Rooms (part 2)
     POST /api/rooms/{code}/join             {name, lang}                          -> {token, agent}
     POST /api/rooms/{code}/start?token=     host only
     POST /api/rooms/{code}/lang?token=      {lang: en | ko}: what this person reads (the rulebook at once, the messages
-                                            from the next call on; the engine's own text, Session.set_lang)
+                                            from the next call on; the engine's own text, Game.set_lang)
     GET  /api/rooms/{code}/state?token=     poll every ~1 s; ``pending`` is your open decision screen, if any
     POST /api/rooms/{code}/submit?token=    TALK (pending.kind "talk"): {kind, round, tick, phase, text} (the reply in the
                                             messenger grammar: TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE);

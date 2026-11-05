@@ -1,6 +1,6 @@
 """Frozen-state probe: replay recorded TALK calls of a 5.2 run to other models / harnesses and compare what they spend.
 
-The SYSTEM is rebuilt from the run's own config (Session.systems), the USER is the recorded text, so every seat reads
+The SYSTEM is rebuilt from the run's own config (Game.systems), the USER is the recorded text, so every seat reads
 the same bytes the original agent read. Nothing is carried out; each reply is only measured.
 
     python tools/tokctl/probe.py pick <events.jsonl> <n> <out_states.json> [--seed 1]
@@ -38,7 +38,7 @@ DONE = re.compile(r"^\s*DONE\b", re.M)
 
 def systems_for(run_dir: Path, seed: int) -> dict[str, str]:
     c = load(run_dir / "config.yaml", EXPERIMENTS)
-    return e52.Session(c.settings, c.cells[0], seed, None, list().append, "probe").systems
+    return e52.Game(c.settings, c.cells[0], seed, None, list().append, "probe").systems
 
 
 def pick(events: Path, n: int, out: Path, seed: int) -> None:

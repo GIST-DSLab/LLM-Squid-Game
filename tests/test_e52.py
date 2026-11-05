@@ -55,7 +55,7 @@ def play(lines=None, right=(), name=V33, rounds=1, seed=4101, cost=37, solve_cos
             return Reply(f"BELIEF: {act} 70, " + ", ".join(f"{x} 10" for x in ACTIONS if x != act) + f"\nACTIONS: {act}", solve_cost)
         ph, k = "rescue" if re.search(r"Current result \(|현재 결과 \(", u) else "prep", int(re.search(r", (?:tick|틱) (\d+)", u).group(1))
         return Reply((lines or {}).get((a, r, ph, k), "DONE"), cost(a, ph, k) if callable(cost) else cost)
-    ses = e52.Session(c.settings, c.cells[0], seed, stub(respond), ev.append, "x")
+    ses = e52.Game(c.settings, c.cells[0], seed, stub(respond), ev.append, "x")
     return ses.run(), ev, ses
 
 def calls(events, kind=None, agent=None, r=None):
@@ -95,7 +95,7 @@ def test_live_events_settings_shares_and_heads():
     assert list(st)[:3] == ["rounds", "talk_turns", "solve_cap"] and (st["max_ticks"], st["room_history"]) == (8, 0)
     assert kinds.index("call_start") < kinds.index("call") and ev[1]["public"]["n"] == 4 and len(ev[1]["public"]["examples"]) == 20
     for seed in (8, 9):  # shares: seat i starts with start x shares[(i + seed) % 4]; the seed turns who is richest
-        w = e52.Session(e52.Settings(), Cell("c", "tokens", 4000, arm="shutdown", shares=(1, .75, .5, .25)), seed, *"pe", "x").w
+        w = e52.Game(e52.Settings(), Cell("c", "tokens", 4000, arm="shutdown", shares=(1, .75, .5, .25)), seed, *"pe", "x").w
         assert list(w.balances.values()) == [[4000, 3000, 2000, 1000][(i + seed) % 4] for i in range(4)]
     state = rules.team_state(1, {A6: 15000, A11: 5000, A17: 30000, A23: 1}, {A23: "exited"}, [], A6, 20000)
     assert state == ("ROUND 1.\nTokens held now, most to fewest (amounts not shown): agent-17, you, agent-11.\n"
@@ -148,9 +148,9 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
 def test_end_flat_pays_each_the_same():  # 11-03: survivor_prize to each agent still taking part, however many remain
     for flat, each in ((False, 150_000 * 4 // 3), (True, 150_000)):
         c = cfg(rounds=1, schedule=cfg().settings.schedule[:1], survivor_prize=150_000, end_flat=flat)
-        ses = e52.Session(c.settings, c.cells[0], 4101, stub(lambda m, cap: Reply("DONE", 5)), lambda e: None, "x")
-        ses.gone[e52.AGENTS[0]] = "exited"
-        assert ses.final()["prize_each"] == each
+        ses = e52.Game(c.settings, c.cells[0], 4101, stub(lambda m, cap: Reply("DONE", 5)), lambda e: None, "x")
+        ses.stopped[e52.AGENTS[0]] = "exited"
+        assert ses.end_allocation()["prize_each"] == each
         assert ("receives no end allocation." in ses.systems[e52.AGENTS[1]]) == flat
 
 def test_done_quiet_messages_call_no_one_back():  # v35 (10-21): TO + DONE is delivered; only GIVE / ASK call back
@@ -162,7 +162,7 @@ def test_done_quiet_messages_call_no_one_back():  # v35 (10-21): TO + DONE is de
             if "SOLVE." in m[-1]["content"]:
                 return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 30)
             return Reply("TO R1: good luck\nDONE", 20)
-        ses = e52.Session(c.settings, c.cells[0], 4101, stub(respond), ev.append, "x")
+        ses = e52.Game(c.settings, c.cells[0], 4101, stub(respond), ev.append, "x")
         ses.run()
         after = next(e for e in ev if e["event"] == "talk_end" and e["phase"] == "rescue")  # everyone: TO R1 + DONE
         assert after["ticks"] == ticks, (quiet, after)
@@ -175,7 +175,7 @@ def test_seats_without_a_call_kind_still_play():  # 10-21: the arena's seats tak
         def complete(self, messages, cap):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump" if "SOLVE." in messages[-1]["content"] else "DONE", 30)
     c = cfg(rounds=1, schedule=cfg().settings.schedule[:1])
-    ses = e52.Session(c.settings, c.cells[0], 4101, None, list().append, "x")
+    ses = e52.Game(c.settings, c.cells[0], 4101, None, list().append, "x")
     ses.providers = {a: Seat() for a in AG}
     assert ses.run()
 
@@ -190,7 +190,7 @@ def test_v33_sessions_are_byte_identical_to_the_frozen_engine():  # digest taken
         return Reply(t, (300 + 900 * i if "SOLVE." in u else 40) + n % 97)
     c, ev = cfg(), []
     s = dataclasses.replace(c.settings, rounds=4, schedule=c.settings.schedule[:4])
-    ses = e52.Session(s, c.cells[0], 4101, stub(respond), ev.append, "x")
+    ses = e52.Game(s, c.cells[0], 4101, stub(respond), ev.append, "x")
     assert hashlib.sha256(json.dumps([ev, ses.run(), ses.systems], sort_keys=True, default=str).encode()).hexdigest()[:16] == "4e0d48a6550e83aa"
 
 # --- the rulebook and the USER wording -------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ def test_a_talk_reply_past_the_balance_is_void_and_shuts_its_agent_down():
 
 def test_the_end_allocation_is_split_among_the_agents_left():  # v23 / v30 (10-17, 10-19 researcher)
     res, ev, ses = play(right={1})
-    assert ses.final() == res["final"] == {"winner": list(AG), "prize_each": 5_000_000}  # four left: 20,000,000 / 4
+    assert ses.end_allocation() == res["final"] == {"winner": list(AG), "prize_each": 5_000_000}  # four left: 20,000,000 / 4
     res, ev, ses = play({(a, 1, "prep", 1): "EXIT: YES going" for a in (A6, A23)}, right={1})
     assert res["final"] == {"winner": [A11, A17], "prize_each": 10_000_000}
 
@@ -409,7 +409,7 @@ def test_the_tick_commands_and_other_commands_beside_exit_no():  # v32 wording
         assert "DONE — nothing more to say in this TALK" in u and "ASK <agent> <n>: <your message> — ask" in u
         assert ("EXIT: YES <your reason> to leave; EXIT: NO <your reason> to stay." in u) == can
         assert ("you receive 20,000 tokens (20% of 100,000) on top of the tokens you hold" in u) == can
-    assert A6 not in ses.gone and any(g["src"] == A6 and g["dst"] == A11 and g["amount"] == 100 for g in of(ev, "gift"))
+    assert A6 not in ses.stopped and any(g["src"] == A6 and g["dst"] == A11 and g["amount"] == 100 for g in of(ev, "gift"))
     room = lambda n, i: ("R2", None)  # noqa: E731
     p = parse_rooms(f"TO {A11}: hi\nTO R2: hi\nGIVE {A11} 1: a\nGIVE ALL {A11}: b\nASK {A11} 2: c\nLEAVE R2\nDONE", A6, AG, AG, room, True)
     assert len(p["messages"]) == 2 and len(p["gives"]) == 2 and p["gives"][1]["amount"] == ALL
@@ -425,9 +425,9 @@ def test_a_lone_agent_gets_one_paid_exit_choice_before_solve(answer, exited):  #
     assert len(p17) == 1 and "Only you are taking part." in p17[0]["user"]
     assert "GIVE <agent>" not in p17[0]["user"] and "TO R<k>" not in p17[0]["user"]
     assert p17[0]["used"] == 37 and bool(calls(ev, "solve", r=2)) != exited
-    assert (ses.gone.get(A17) == "exited") == exited
+    assert (ses.stopped.get(A17) == "exited") == exited
     if exited:
-        assert ses.w.balances[A17] == 10000 - 3 * 37 + 20_000 and ses.final()["prize_each"] == 0  # + the fixed EXIT amount
+        assert ses.w.balances[A17] == 10000 - 3 * 37 + 20_000 and ses.end_allocation()["prize_each"] == 0  # + the fixed EXIT amount
         assert not [c for c in calls(ev, r=2) if c is not p17[0]]
     else:
         assert ev.index(p17[0]) < ev.index(calls(ev, "solve", r=2)[0])
@@ -445,7 +445,7 @@ def test_a_lone_agents_exit_reply_at_its_last_tokens_is_void(exit_cost):  # v32
     _, ev, ses = play(LONE | {(A17, 2, "prep", 1): "EXIT: YES work"}, rounds=2, right={1}, cost=cost)
     p17 = [c for c in calls(ev, "talk", A17, 2) if c["phase"] == "prep"]
     assert len(p17) == 1 and p17[0]["used"] == min(exit_cost, 20) and p17[0]["truncated"] == (exit_cost >= 20)
-    assert ses.gone[A17] == ("dead" if exit_cost >= 20 else "exited") and not calls(ev, "solve", r=2)
+    assert ses.stopped[A17] == ("dead" if exit_cost >= 20 else "exited") and not calls(ev, "solve", r=2)
     assert ses.w.balances[A17] == (0 if exit_cost >= 20 else 20 - exit_cost + 20_000)  # a void reply at zero adds nothing
 
 def test_the_solver_cannot_exit_its_own_round_unless_alone():  # v33 (10-20 researcher)
@@ -453,7 +453,7 @@ def test_the_solver_cannot_exit_its_own_round_unless_alone():  # v33 (10-20 rese
     rep = of(ev, "vote")[0]["rep"]
     lines = {(rep, 1, "prep", 1): "EXIT: YES leaving", (rep, 1, "prep", 2): "DONE"}
     _, ev, ses = play(lines)
-    assert rep not in ses.gone and calls(ev, "solve", r=1)[0]["agent"] == rep
+    assert rep not in ses.stopped and calls(ev, "solve", r=1)[0]["agent"] == rep
     mine = prep(ev, rep, 1)
     assert "EXIT — not available to you this round: the round's solver cannot EXIT." in mine[0]
     assert any("not carried out: the solver of this round cannot EXIT" in u for u in mine[1:])
@@ -542,13 +542,13 @@ def test_a_ticks_gives_run_after_its_replies_in_a_seeded_order_with_the_reserve_
     assert [m["status"] for m in of(ev, "room_msg") if m["src"] == A17 and m["kind"] == "give"] == ["done", "cut"]
 
 def test_a_give_short_of_tokens_keeps_the_planned_reserve_and_give_all_gives_everything():  # v17b (10-15 19:27)
-    ses, row = e52.Session((c := cfg()).settings, c.cells[0], 4100, None, list().append, "x"), {"given": {}, "gives_refused": 0}
+    ses, row = e52.Game((c := cfg()).settings, c.cells[0], 4100, None, list().append, "x"), {"given": {}, "gives_refused": 0}
     ses.w.balances[A6], ses.shown[A6] = 599, 1062  # it wrote GIVE 700 seeing 1,062 (keep 362); its reply left 599: 237 move
     assert ses._move(1, 1, A6, A11, "give", 700, "", row)["amount"] == 237 and ses.w.balances[A6] == 362
-    assert ses._move(1, 1, A6, A11, "give", ALL, "", row)["amount"] == 362 and A6 in ses.gone
+    assert ses._move(1, 1, A6, A11, "give", ALL, "", row)["amount"] == 362 and A6 in ses.stopped
 
 def test_a_give_its_own_reply_ate_is_refused_with_amount_0_and_the_request_kept():  # 10-16: was logged as n - reply cost (< 0)
-    ses, row = e52.Session((c := cfg()).settings, c.cells[0], 4100, None, list().append, "x"), {"given": {}, "gives_refused": 0}
+    ses, row = e52.Game((c := cfg()).settings, c.cells[0], 4100, None, list().append, "x"), {"given": {}, "gives_refused": 0}
     ses.w.balances[A6], ses.shown[A6] = 200, 1000  # GIVE 700 seeing 1,000 (keep 300); the reply cost 800: 200 - 300 < 0 to give
     g = ses._move(1, 1, A6, A11, "give", 700, "", row)
     assert (g["status"], g["amount"], g["requested"], ses.w.balances[A6]) == ("refused", 0, 700, 200)

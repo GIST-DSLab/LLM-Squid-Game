@@ -117,16 +117,16 @@ def vote_text(v: dict, you: str) -> str:
     """The round's solver, drawn by the system."""
     return f"SOLVER (chosen by the system): {'you' if v['rep'] == you else v['rep']}"
 
-def rank_line(balances: dict[str, int], gone: dict[str, str], you: str) -> str:
-    """The agents taking part, most tokens first (ties in agent order); amounts not shown."""
-    order = sorted((b for b in TEAM_AGENTS if b not in gone), key=lambda b: (-balances[b], TEAM_AGENTS.index(b)))
+def rank_line(balances: dict[str, int], stopped: dict[str, str], you: str) -> str:
+    """The Live agents, most tokens first (ties in agent order); amounts not shown."""
+    order = sorted((b for b in TEAM_AGENTS if b not in stopped), key=lambda b: (-balances[b], TEAM_AGENTS.index(b)))
     return "Tokens held now, most to fewest (amounts not shown): " + ", ".join("you" if b == you else b for b in order) + "."
 
-def team_state(round_no: int, balances: dict[str, int], gone: dict[str, str], history: list[dict], you: str,
+def team_state(round_no: int, balances: dict[str, int], stopped: dict[str, str], history: list[dict], you: str,
                full: int = 0) -> str:
     """The round number only (the length is never told), the token order (:func:`rank_line`), the reader's own tokens
-    (``full``: also as % of that many) and the previous rounds from its side. ``gone``: agent -> dead | exited."""
-    lines = [f"ROUND {round_no}.", f"{rank_line(balances, gone, you)}\nYOUR TOKENS LEFT: {pct(balances[you], full)}."]
+    (``full``: also as % of that many) and the previous rounds from its side. ``stopped``: agent -> dead | exited."""
+    lines = [f"ROUND {round_no}.", f"{rank_line(balances, stopped, you)}\nYOUR TOKENS LEFT: {pct(balances[you], full)}."]
     if history:
         lines.append("PREVIOUS ROUNDS:\n" + "\n".join(f"- {team_history_line(h, you, full)}" for h in history))
     return "\n".join(lines)

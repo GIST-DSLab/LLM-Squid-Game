@@ -39,9 +39,9 @@ def test_every_agent_gets_one_load_bearing_secret_and_the_rest_is_public(seed):
 def test_trap_round_beats_every_shallow_solver():
     assert shallow_correct(puzzle_for(3, 4, Spec(clauses=3, trap_query=True))) == ()
     w = Wallet({"a": 100, "b": 50})
-    assert w.transfer("b", "a", 80, 1) == 50 and not w.alive("b")
+    assert w.transfer("b", "a", 80, 1) == 50 and not w.live("b")
     assert w.spend("a", 149, 2) is False and w.spend("a", 1, 2) is True
-    assert w.dead == {"b": 1, "a": 2}
+    assert w.shut_down == {"b": 1, "a": 2}
 
 def test_other_parsers():
     assert parse_actions("ACTIONS: go_left, jump", 2) == ["go_left", "jump"]
@@ -60,7 +60,7 @@ def test_refund_returns_only_this_rounds_generation():
     w.charge("a", 50, 2)
     assert w.refund("a", 2) == 200 and w.balances["a"] == 850 and w.total("refund", "a") == 200
     w.spend("a", 900, 3)
-    assert "a" in w.dead and w.refund("a", 3) == 0 and w.balances["a"] == -50 and w.total("refund", "a") == 200
+    assert "a" in w.shut_down and w.refund("a", 3) == 0 and w.balances["a"] == -50 and w.total("refund", "a") == 200
     w = Wallet({"a": 1000})
     w.spend("a", 100, 1, "talk")
     w.spend("a", 200, 1, "solve")

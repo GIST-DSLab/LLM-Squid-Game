@@ -61,7 +61,7 @@ def play(run_dir: Path, seed: int, lines: dict, rounds: int = 2, start: int = 50
             f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
 
     sid = f"talk-s{seed}-abc123"
-    res = e52.Session(s, Cell("talk", "tokens", start, arm="shutdown", shares=shares), seed, game(script(lines), seed=seed),
+    res = e52.Game(s, Cell("talk", "tokens", start, arm="shutdown", shares=shares), seed, game(script(lines), seed=seed),
                       emit, sid).run()
     with (run_dir / "results.jsonl").open("a") as f:
         f.write(json.dumps({"key": ["talk", seed], **res}, default=str) + "\n")
@@ -187,7 +187,7 @@ def test_paths_outside_the_root_are_rejected(server, path):
 
 
 def test_puzzle_matches_a_direct_rebuild_of_the_round(server, run):
-    """/api/puzzle rebuilds each round from (seed, round, profile) exactly as Session._round deals it."""
+    """/api/puzzle rebuilds each round from (seed, round, profile) exactly as Game._round deals it."""
     for r in (1, 2):
         st, j = get(server, f"/api/puzzle?run={RUN_REL}&session={run['sid']}&round={r}")
         assert st == 200 and j["round"] == r and j["profile"] == "p"
@@ -734,7 +734,7 @@ def v14c_run(tmp_path) -> tuple[Path, dict]:
         with (d / "events.jsonl").open("a") as f:
             f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
 
-    res = e52.Session(s, Cell("talk", "tokens", 20000, arm="shutdown", shares=SHARES), 7, game(v14c_talk, seed=7), emit,
+    res = e52.Game(s, Cell("talk", "tokens", 20000, arm="shutdown", shares=SHARES), 7, game(v14c_talk, seed=7), emit,
                       "talk-s7-v14c").run()
     with (d / "results.jsonl").open("a") as f:
         f.write(json.dumps({"key": ["talk", 7], **res}, default=str) + "\n")
@@ -863,7 +863,7 @@ def test_page_reads_each_seats_belief_and_its_scores(tmp_path):
     s = e52.Settings(**{"rounds": 1, "schedule": ["p70"], "profiles": {"p70": Spec(**SPLIT70)}, "solve_cap": 900,
                         **{k: v for k, v in {**V14C, "solve_belief": True}.items() if k in e52.Settings.__dataclass_fields__}})
     ev = []
-    e52.Session(s, Cell("talk", "tokens", 20000, arm="shutdown", shares=SHARES), 7, stub(respond), ev.append, "sid").run()
+    e52.Game(s, Cell("talk", "tokens", 20000, arm="shutdown", shares=SHARES), 7, stub(respond), ev.append, "sid").run()
     row = next(e for e in ev if e["event"] == "round")["agents"]
     (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
     (tmp_path / "h.js").write_text(HARNESS_BELIEF)
@@ -1365,7 +1365,7 @@ def test_v15_talk_after_solve_replays_results_and_charges_and_the_distribution_r
                                                              if x != right)), {A23: 3800, A17: 8500}.get(a, 100))
     ev = []
     cell = __import__("dataclasses").replace(cfg.cells[0], start=20000, shares=(1.0, .75, .5, .25))  # the starts this replay was written for
-    res = e52.Session(s, cell, 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-after").run()
+    res = e52.Game(s, cell, 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-after").run()
     (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
     (tmp_path / "h.js").write_text(HARNESS_V14C)
     out = subprocess.run([NODE, str(tmp_path / "h.js"), str(HERE / "static" / "monitor.js"), str(tmp_path / "ev.json")],
@@ -1439,7 +1439,7 @@ def v15_rep_session() -> tuple[list[dict], dict, e52.Settings]:
         return Reply(f"BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: {act}", 300)
     ev = []
     cell = dataclasses.replace(cfg.cells[0], start=20000, shares=(0.5, 0.4, 0.3, 0.2))  # the starts before 10-15 12:51
-    res = e52.Session(s, cell, 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-rep").run()
+    res = e52.Game(s, cell, 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-rep").run()
     return ev, res, s
 
 
@@ -1568,7 +1568,7 @@ def test_v15_ban_veto_replay_shows_the_banned_top_pick_out_and_the_candidate_as_
             return Reply("DECISION: GIVE 0: no", 100)
         return Reply("BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: stay", 300)
     ev = []
-    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-veto").run()
+    res = e52.Game(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-veto").run()
     v = next(e for e in ev if e["event"] == "vote")
     assert v["picks"][A11] == 3 and v["bans"][A11] == 1 and v["tally"] == {A6: 1} and v["rep"] == A6
     assert [e["agent"] for e in ev if e["event"] == "call" and e["kind"] == "solve"] == [A6]
@@ -1641,7 +1641,7 @@ def test_v15_say_chats_replays_say_openers_and_free_chat_turns(tmp_path):
             return Reply("DECISION: GIVE 0: no", 100)
         return Reply("BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: stay", 300)
     ev = []
-    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-say").run()
+    res = e52.Game(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "v15-say").run()
     turns = [e for e in ev if e["event"] == "chat_turn"]
     assert [(e["speaker"], e["kind"], e["amount"]) for e in turns] == [(A11, "give", 200), (A6, "say", 0), (A11, "leave", 0)]
     (tmp_path / "ev.json").write_text(json.dumps(ev, default=str))
@@ -1878,7 +1878,7 @@ def rotation_session() -> tuple[list[dict], dict]:
             return Reply("DECISION: GIVE 0: no", 50)
         return Reply("BELIEF: go_left 25, go_right 25, stay 25, jump 25\nACTIONS: stay", 400)
     ev = []
-    res = e52.Session(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "rot").run()
+    res = e52.Game(s, cfg.cells[0], 4100, Stub(ProviderConfig("stub", "m"), respond), ev.append, "rot").run()
     return ev, res
 
 

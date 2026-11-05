@@ -1,5 +1,5 @@
 """The room path (API -> seats -> engine) is the experiment engine itself: replaying every reply the room's seats gave
-(text and tokens, from the room's call events) to a ``squid5.e52_game.Session`` built directly on the same seed gives
+(text and tokens, from the room's call events) to a ``squid5.e52_game.Game`` built directly on the same seed gives
 the same round starts, solvers, room messages, gifts and asks, results, charges, rounds and result. The room covers the
 v33 messenger moves: TO <agent>, TO R1, ASK, GIVE, GIVE ALL, an EXIT: YES before SOLVE and one after RESULTS (dropped)."""
 
@@ -55,7 +55,7 @@ def test_room_matches_direct_engine_run(client):
 
     rs = RoomSettings(seed=SEED, rounds=3, humans=2)
     ref: list[dict] = []
-    res = e52.Session(rs.engine(), rs.cell(), SEED, Stub(ProviderConfig("stub", "stub", retries=0), respond),
+    res = e52.Game(rs.engine(), rs.cell(), SEED, Stub(ProviderConfig("stub", "stub", retries=0), respond),
                       ref.append, "ref").run()
     strip = lambda e: {k: v for k, v in e.items() if k not in ("session_id", "model", "thinking", "seats")}  # noqa: E731
     for kind in ("round_start", "vote", "room_msg", "gift", "ask", "results", "charges", "round", "talk_end"):

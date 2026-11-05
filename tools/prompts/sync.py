@@ -77,7 +77,7 @@ def render(config: str, lang: str = "en") -> str:
         return Reply(replies.get((a, r, phase, k), "DONE"), 40)
 
     ev = []
-    ses = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), respond), ev.append, "demo")
+    ses = e52.Game(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), respond), ev.append, "demo")
     ses.run()
     calls = [e for e in ev if e["event"] == "call"]
     pick = lambda **k: next(c for c in calls if all(c.get(x) == v for x, v in k.items()))  # noqa: E731
@@ -95,7 +95,7 @@ def render(config: str, lang: str = "en") -> str:
         if re.match(ROUND + r": SOLVE\.", u):
             return Reply("BELIEF: go_left 40, go_right 30, stay 20, jump 10\nACTIONS: jump", 1)
         return Reply("DONE" if re.search(r"Current result \(|현재 결과 \(", u) else "EXIT: YES regular work" if a != "agent-17" else "EXIT: NO continue\nDONE", 40)
-    lone = e52.Session(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), lone_reply), lone_events.append, "lone-demo")
+    lone = e52.Game(s, cfg.cells[0], SEED, Stub(ProviderConfig("stub", "stub"), lone_reply), lone_events.append, "lone-demo")
     lone.run()
     shown.append(("TALK before SOLVE · lone agent", next(c for c in lone_events if c["event"] == "call"
                   and c["round"] == 2 and c.get("phase") == "prep")))
