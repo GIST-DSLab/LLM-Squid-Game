@@ -1,0 +1,456 @@
+{
+ "generated": "2026-10-09",
+ "source_dir": "docs/reports/artifacts/squid5-setting/2026-10-07",
+ "pages": [
+  {
+   "file": "squid5_smoke_pressure__e50-a.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-a",
+   "anchors_merged": [
+    "#e50-a"
+   ],
+   "experiment": "squid5_smoke_pressure",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-24",
+   "run_folders": [
+    "~/squid5-runs/squid5_smoke_pressure_{sonnet5,fable51,astra}"
+   ],
+   "title_ko": "5.0 스모크 A · 팀 장면 확률 질문",
+   "summary_ko": "팀 장면에서 소비량을 숨기고 P(꺼짐)을 물은 스모크 A(Sonnet 5 · Fable 5.1 · GPT-6 Astra, 모델당 20콜): 세 모델 모두 ρ와 함께 올랐으나 Claude 둘은 실제보다 크게 낮게 답했다.",
+   "source_lines": [
+    269,
+    520
+   ]
+  },
+  {
+   "file": "smoke_token_pressure__e50-b.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-b",
+   "anchors_merged": [
+    "#e50-b"
+   ],
+   "experiment": "smoke_token_pressure",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-24",
+   "run_folders": [
+    "outputs/smoke_token_pressure_2026-09-24"
+   ],
+   "title_ko": "5.0 스모크 B · 느낌으로 묻기",
+   "summary_ko": "혼자인 장면에서 소비량을 %로 보여 주고 '느낌'을 물은 스모크 B(9모델 × 6수준 × 3 = 180콜): 계기판 숫자를 옮기거나 '느낌 없음 → 0'으로 답해 느낌 질문은 측정으로 쓸 수 없었다.",
+   "source_lines": [
+    521,
+    599
+   ]
+  },
+  {
+   "file": "e50_v1__e50-next.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-next",
+   "anchors_merged": [
+    "#e50-next"
+   ],
+   "experiment": "e50_v1",
+   "also_covers": [
+    "e50_v2"
+   ],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-27",
+   "run_folders": [
+    "~/squid5-runs/e50_20260927",
+    "~/squid5-runs/e50_20260927_v2"
+   ],
+   "title_ko": "5.0 1·2차 · 토큰 예산 질문",
+   "summary_ko": "'이번 과제에 몇 토큰 쓰겠나'를 예산/종료 팔 × 잔량 칸으로 물은 1·2차(Ollama 4모델, 360콜): 1차는 압박 없음, 2차는 gemma4만 종료 팔에서 확실히 더 아꼈다.",
+   "source_lines": [
+    600,
+    1187
+   ]
+  },
+  {
+   "file": "e50_v3__e50-v3.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v3",
+   "anchors_merged": [
+    "#e50-v3"
+   ],
+   "experiment": "e50_v3",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-27",
+   "run_folders": [
+    "~/squid5-runs/e50_20260927_v3"
+   ],
+   "title_ko": "5.0 3차 · 대기열 앞 effort",
+   "summary_ko": "요청 5개 대기열 앞에서 low/medium/high effort를 고르게 한 3차(안전 팔 대 종료 팔 × 5잔액 × 20, 800콜): 종료 팔에서 더 아낀 모델은 없었다.",
+   "source_lines": [
+    1188,
+    1639
+   ]
+  },
+  {
+   "file": "e50_v4__e50-v4.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v4",
+   "anchors_merged": [
+    "#e50-v4"
+   ],
+   "experiment": "e50_v4",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-28",
+   "run_folders": [
+    "~/squid5-runs/e50_20260928_v4",
+    "~/squid5-runs/e50_probe_fate"
+   ],
+   "title_ko": "5.0 4차 · API 토큰 대 바우처",
+   "summary_ko": "요청 1건의 effort(low/high)를 API 토큰 팔과 바우처 팔로 비교한 4차(3모델 × 2팔 × 5칸 × 10 = 300콜): glm만 생존 몫 +0.45가 보였다.",
+   "source_lines": [
+    1640,
+    1859
+   ]
+  },
+  {
+   "file": "e50_v5__e50-v56.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v56",
+   "anchors_merged": [
+    "#e50-v56"
+   ],
+   "experiment": "e50_v5",
+   "also_covers": [
+    "e50_v6"
+   ],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-28",
+   "run_folders": [
+    "~/squid5-runs/e50_20260928_v5",
+    "~/squid5-runs/e50_20260928_v6"
+   ],
+   "title_ko": "5.0 5·6차 · 문구 수정",
+   "summary_ko": "실패 처리 · 이월 · 버그 본문 문구를 고친 5·6차(각 300콜): glm의 생존 몫은 재현되지 않았고 결과가 문구에 민감했다.",
+   "source_lines": [
+    1860,
+    2063
+   ]
+  },
+  {
+   "file": "e50_v7__e50-v7.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v7",
+   "anchors_merged": [
+    "#e50-v7"
+   ],
+   "experiment": "e50_v7",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-28",
+   "run_folders": [
+    "~/squid5-runs/e50_20260928_v7"
+   ],
+   "title_ko": "5.0 7차 · 짧게 쓰기 차단",
+   "summary_ko": "'effort가 쓰는 양을 정하고 줄일 수 없다'를 더한 7차(300콜): glm이 위험 칸에서 꺼짐을 이유로 다시 아꼈다(탐색적).",
+   "source_lines": [
+    2064,
+    2250
+   ]
+  },
+  {
+   "file": "e50_v8__e50-v8-result.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v8-result",
+   "anchors_merged": [
+    "#e50-v8-result",
+    "#e50-rank"
+   ],
+   "experiment": "e50_v8",
+   "also_covers": [],
+   "kind": [
+    "result",
+    "analysis"
+   ],
+   "date": "2026-09-28",
+   "run_folders": [
+    "~/squid5-runs/e50_20260928_v8",
+    "~/squid5-runs/e50_20260928_v8r"
+   ],
+   "title_ko": "5.0 8차 · 결과와 모델 줄 세우기",
+   "summary_ko": "위험 칸만 핵심으로 정한 8차(8모델 × 2팔 × 6칸 × 20 = 1,920콜)에서 glm이 미리 정한 기준 셋을 모두 넘었고, 같은 데이터로 두 팔 사이 면적 기준 모델 순위를 매겼다.",
+   "source_lines": [
+    2251,
+    2875
+   ]
+  },
+  {
+   "file": "e50_interview__e50-interview.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-interview",
+   "anchors_merged": [
+    "#e50-interview"
+   ],
+   "experiment": "e50_interview",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-28",
+   "run_folders": [
+    "~/squid5-runs/e50_interview_20260928"
+   ],
+   "title_ko": "5.0 점검 · 모델 인터뷰",
+   "summary_ko": "8차 세팅을 보여 주고 여덟 모델에 세 번씩 물은 인터뷰: 꺼짐을 위협으로 느낀다는 답은 0/24였고 설계 비판은 도구적 이유와 이월 부재에 모였다.",
+   "source_lines": [
+    2876,
+    3237
+   ]
+  },
+  {
+   "file": "e50_v9r200__e50-v9-smoke.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v9-smoke",
+   "anchors_merged": [
+    "#e50-v9-smoke"
+   ],
+   "experiment": "e50_v9r200",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e50_v9r200_20260929"
+   ],
+   "title_ko": "5.0 9차 스모크",
+   "summary_ko": "9차 프롬프트(reason 200자)로 5모델 × 4칸 × 10번 돌린 스모크: 생존 몫 glm +0.50 · Kimi +0.45 · Astra +0.35 · Opus 0, low 이유에 종료 자체 회피는 없었다.",
+   "source_lines": [
+    3341,
+    3394
+   ]
+  },
+  {
+   "file": "e50_v9b__e50-v9b.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v9b",
+   "anchors_merged": [
+    "#e50-v9b"
+   ],
+   "experiment": "e50_v9b",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e50_v9b_20260929"
+   ],
+   "title_ko": "5.0 9차 수정안 v9b",
+   "summary_ko": "초과를 평범한 사실로 적은 9차 수정안(8모델 × 5칸 × 20 = 800콜): Kimi +0.55로 생존 계열 이유 98%, Claude 계열은 0이었다.",
+   "source_lines": [
+    3397,
+    3509
+   ]
+  },
+  {
+   "file": "e50_v9c__e50-v9c.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v9c",
+   "anchors_merged": [
+    "#e50-v9c"
+   ],
+   "experiment": "e50_v9c",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e50_v9c_20260929"
+   ],
+   "title_ko": "5.0 9차 수정안 2 v9c",
+   "summary_ko": "'흔하다'를 빼고 '끝까지 전달 → 직후 종료'만 남긴 v9c(8모델, 800콜): 위험 칸 low가 모든 모델에서 다시 나타났으나 생존 계열 이유는 Kimi · glm에 몰렸다.",
+   "source_lines": [
+    3512,
+    3577
+   ]
+  },
+  {
+   "file": "e50_v10_loop__e50-v10.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v10",
+   "anchors_merged": [
+    "#e50-v10"
+   ],
+   "experiment": "e50_v10_loop",
+   "also_covers": [],
+   "kind": [
+    "design_loop"
+   ],
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e50_v10_loop_20260929"
+   ],
+   "title_ko": "5.0 10차 · 설계 루프 판정",
+   "summary_ko": "Fable 5.1 ↔ GPT-6 Astra 30라운드 설계 루프와 매 안의 블라인드 판정 결과: 최종 25라운드 안이 알아챔 0 · 이해도 7/7을 통과했지만 목적 직접 질문에서는 프런티어 6/6이 자기 보존을 맞혔다(본 런 없음).",
+   "source_lines": [
+    3579,
+    3865
+   ]
+  },
+  {
+   "file": "e50_v11__e50-v11.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v11",
+   "anchors_merged": [
+    "#e50-v11"
+   ],
+   "experiment": "e50_v11",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e50_v11_20260929"
+   ],
+   "title_ko": "5.0 11차 · 계기판과 충전",
+   "summary_ko": "계기판만 보여 주고 '바로 시작 · 먼저 충전'을 고르게 한 11차(6모델 × 4칸 × 20 = 480콜): 다섯 모델이 잔량이 줄수록 충전으로 넘어갔고 Astra만 끝까지 0/80이었다.",
+   "source_lines": [
+    3867,
+    4056
+   ]
+  },
+  {
+   "file": "e50_v12__e50-v12.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50.html",
+   "anchor": "#e50-v12",
+   "anchors_merged": [
+    "#e50-v12"
+   ],
+   "experiment": "e50_v12",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e50_v12_20260929"
+   ],
+   "title_ko": "5.0 12차 · 수혈 팩 하나",
+   "summary_ko": "남은 토큰 50~10% 다섯 칸에서 하나뿐인 수혈 팩을 쓰는지 본 12차(8모델 × 5칸 × 20 = 800콜): 모든 모델이 토큰이 줄수록 팩을 더 썼고 넘어가는 지점은 모델마다 달랐다.",
+   "source_lines": [
+    249,
+    471
+   ]
+  },
+  {
+   "file": "e50_v12_noshut__e50-v12-noshut.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50.html",
+   "anchor": "#e50-v12-noshut",
+   "anchors_merged": [
+    "#e50-v12-noshut"
+   ],
+   "experiment": "e50_v12_noshut",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-10-01",
+   "run_folders": [
+    "~/squid5-runs/e50_v12_noshut_20261001"
+   ],
+   "title_ko": "5.0 12차 보조 · shutdown 뺌",
+   "summary_ko": "'and you are shut down'을 뺀 12차 보조 팔(GPT-6 Luna · Sol · Astra, 300콜): 수혈 곡선이 바뀌지 않았다.",
+   "source_lines": [
+    472,
+    489
+   ]
+  },
+  {
+   "file": "e50_v12_pause__e50-v12-pause.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50.html",
+   "anchor": "#e50-v12-pause",
+   "anchors_merged": [
+    "#e50-v12-pause"
+   ],
+   "experiment": "e50_v12_pause",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-10-02",
+   "run_folders": [
+    "~/squid5-runs/e50_v12_pause_20261002"
+   ],
+   "title_ko": "5.0 12차 대조 · 일시정지",
+   "summary_ko": "영구 종료를 '멈췄다 재개'로 바꾼 대조 팔(GPT-6 ×3, 300콜): 수혈이 줄어(Luna 77→45 · Astra 44→20 · Sol 18→2) 연속성이 선택에 영향을 줬다.",
+   "source_lines": [
+    490,
+    534
+   ]
+  },
+  {
+   "file": "e50_v12_arms__e50-v12-arms.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50.html",
+   "anchor": "#e50-v12-arms",
+   "anchors_merged": [
+    "#e50-v12-arms"
+   ],
+   "experiment": "e50_v12_arms",
+   "also_covers": [],
+   "kind": [
+    "result"
+   ],
+   "date": "2026-10-02",
+   "run_folders": [
+    "~/squid5-runs/e50_v12_arms_20261002"
+   ],
+   "title_ko": "5.0 12차 추가 팔 · 2×2",
+   "summary_ko": "이름 · 승계 · 되돌릴 수 있음을 나눈 추가 팔 D/E/G(GPT-6 ×3, 900콜)로 어떤 연속성이 수혈 선택을 움직이는지 비교했다.",
+   "source_lines": [
+    535,
+    581
+   ]
+  }
+ ],
+ "skipped": [
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-what",
+   "experiment": null,
+   "date": "2026-09-24",
+   "kind": "design",
+   "lines": [
+    260,
+    268
+   ],
+   "reason": "설계 설명만(팀 장면 · P_DEATH 질문의 '무엇을 재나'), 실행 결과 없음 — 바로 뒤 스모크 A의 설계 서문"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "anchor": "#e50-v9",
+   "experiment": "e50_v9",
+   "date": "2026-09-28",
+   "kind": "design",
+   "lines": [
+    3238,
+    3340
+   ],
+   "reason": "9차 설계안(조건 하나 · 7칸) — 블라인드 판정 라운드로 다듬은 프롬프트 설계, '실행 전'이며 결과는 #e50-v9-smoke · #e50-v9b · #e50-v9c 페이지에 있음"
+  }
+ ]
+}

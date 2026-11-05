@@ -1,0 +1,165 @@
+{
+ "id": "T01",
+ "year": 2022,
+ "group": "tenenbaum",
+ "award": "발표 논문 (수상 아님)",
+ "title": "Identifying concept libraries from language about object structure",
+ "authors": [
+  "Catherine Wong",
+  "William P. McCarthy",
+  "Gabriel Grand",
+  "Yoni Friedman",
+  "Joshua B. Tenenbaum",
+  "Jacob Andreas",
+  "Robert D. Hawkins",
+  "Judith E. Fan"
+ ],
+ "affiliations": "MIT (Wong, Grand, Friedman, Tenenbaum, Andreas); University of California San Diego (McCarthy, Fan); Princeton Neuroscience Institute (Hawkins). Wong, McCarthy, Grand는 공동 제1저자(⋆), 교신은 Wong(catwong@mit.edu). 학과 줄 없음.",
+ "url_page": "https://escholarship.org/uc/item/9b35t6qh",
+ "url_pdf": "https://escholarship.org/content/qt9b35t6qh/qt9b35t6qh.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the 44th Annual Conference of the Cognitive Science Society, vol. 44, 2022; 인쇄 쪽번호 2701–2708; 9쪽 PDF = 표지 1 + 원고 8쪽). 학회 수상 페이지(cognitivesciencesociety.org/conference-awards)의 2022년 수상자 목록에 저자 이름이 없어 수상 아님으로 둠.",
+ "abstract_en": "Our understanding of the visual world goes beyond naming objects, encompassing our ability to parse objects into meaningful parts, attributes, and relations. In this work, we leverage natural language descriptions for a diverse set of 2K procedurally generated objects to identify the parts people use and the principles leading these parts to be favored over others. We formalize our problem as search over a space of program libraries that contain different part concepts, using tools from machine translation to evaluate how well programs expressed in each library align to human language. By combining naturalistic language at scale with structured program representations, we discover a fundamental information-theoretic tradeoff governing the part concepts people name: people favor a lexicon that allows concise descriptions of each object, while also minimizing the size of the lexicon itself.",
+ "abstract_ko": "우리가 시각 세계를 이해하는 방식은 사물의 이름을 대는 데 그치지 않고, 사물을 의미 있는 부분(part)·속성·관계로 나누어 파악하는 능력까지 포함한다. 이 연구는 절차적으로 생성한 다양한 사물 2천 개에 대한 자연어 묘사를 활용해, 사람들이 쓰는 부분이 무엇이며 어떤 원리 때문에 그 부분들이 다른 부분들보다 선호되는지를 밝힌다. 우리는 이 문제를 서로 다른 부분 개념을 담은 프로그램 라이브러리(program library)들의 공간에서의 탐색으로 정식화하고, 기계 번역 도구를 사용해 각 라이브러리로 표현한 프로그램이 인간의 언어와 얼마나 잘 맞는지를 평가한다. 대규모의 자연스러운 언어와 구조화된 프로그램 표현을 결합한 결과, 사람들이 이름 붙이는 부분 개념을 지배하는 근본적인 정보이론적 상충관계(tradeoff)를 발견했다. 사람들은 각 사물을 간결하게 묘사할 수 있게 하면서도 어휘집(lexicon) 자체의 크기는 최소화하는 어휘집을 선호한다.",
+ "pages_body": 8,
+ "references_location": "p.7–8: p.7 왼쪽 단 위에 Acknowledgments(86단어)와 코드 링크 상자, 그 아래 References가 왼쪽 단 나머지와 오른쪽 단 전체를 채우고, p.8 왼쪽 단 ~2/3까지 이어짐(p.8 오른쪽 단은 빈칸). 본문은 p.6 오른쪽 단 아래에서 Discussion으로 끝남.",
+ "extras": "Acknowledgments는 p.7 왼쪽 단 맨 위. 그 바로 아래 테두리 상자 'All code and materials available at: https://github.com/cogtoolslab/lax-cogsci22'. 각주 2개(p.4 오른쪽 단: 상위 라이브러리 정의가 자동 라이브러리 학습 방법과 유사하다는 설명; p.5 왼쪽 단: 프로그램 길이와 라이브러리 크기 상충관계의 출처). 별행 수식 1개(Eq. 1 PMI, p.3). 부록·사전등록 없음. p.1에 Proceedings 편집자/CC BY 꼬리말.",
+ "words_body_total": 3620,
+ "words_note": "본문 합계에서 제목 블록, 초록(133단어)과 keywords(7), 그림 캡션과 그림 안 글자(Fig. 2B의 단어 목록, Fig. 3 프로그램 코드, Fig. 4 축 라벨), 별행 수식 Eq. 1, 각주 2개, 쪽 번호·꼬리말, 제목만 있는 줄(Part I/II, Methods, Results, Discussion), Acknowledgments(86), 코드 링크 상자, 참고문헌(~708)은 뺌. run-in 3수준 제목 단어는 그 문단에 넣어 셈. pdftotext -bbox-layout 줄 좌표로 단(x 306 기준)과 y 범위를 잘라 읽기 순서대로 셈; 줄바꿈 하이픈은 두 단어, 본문 안 수식 기호(L_i, π 등)는 글자·숫자가 든 토큰마다 한 단어.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "(Introduction, no heading)",
+   "role": "intro",
+   "page_start": 1,
+   "words": 604,
+   "share": 0.167,
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Part I: Eliciting language about object structure",
+   "role": "result",
+   "page_start": 2,
+   "words": 1213,
+   "share": 0.335,
+   "children": [
+    {
+     "level": 2,
+     "title": "(lead paragraph)",
+     "page_start": 2,
+     "words": 41
+    },
+    {
+     "level": 2,
+     "title": "Methods",
+     "page_start": 2,
+     "words": 488,
+     "children": [
+      {"level": 3, "title": "Participants", "page_start": 2, "words": 23},
+      {"level": 3, "title": "Stimuli", "page_start": 2, "words": 257},
+      {"level": 3, "title": "Task procedure", "page_start": 2, "words": 156},
+      {"level": 3, "title": "Language preprocessing", "page_start": 3, "words": 52}
+     ]
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 3,
+     "words": 684,
+     "children": [
+      {"level": 3, "title": "People use more words for more complex objects", "page_start": 3, "words": 306},
+      {"level": 3, "title": "People use different parts for different subdomains", "page_start": 3, "words": 378}
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Part II: Identifying concepts from language",
+   "role": "result",
+   "page_start": 4,
+   "words": 1229,
+   "share": 0.339,
+   "children": [
+    {
+     "level": 2,
+     "title": "(lead paragraph)",
+     "page_start": 4,
+     "words": 209
+    },
+    {
+     "level": 2,
+     "title": "Methods",
+     "page_start": 4,
+     "words": 516,
+     "children": [
+      {"level": 3, "title": "Modeling a space of candidate concept libraries", "page_start": 4, "words": 285},
+      {"level": 3, "title": "Modeling alignment between libraries and vocabularies", "page_start": 5, "words": 231}
+     ]
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 5,
+     "words": 504,
+     "children": [
+      {"level": 3, "title": "Libraries produce different trade-off between concise object representation and overall library size", "page_start": 5, "words": 287},
+      {"level": 3, "title": "People favor vocabularies that jointly minimize object representation and library size", "page_start": 5, "words": 217}
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "role": "disc",
+   "page_start": 5,
+   "words": 574,
+   "share": 0.159,
+   "children": []
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "전체 폭, 쪽 위 ~0.3쪽(캡션 포함 ~0.37); 패널 A(Drawings·Towers 8개 하위 영역의 예시 사물 격자), 패널 B(개념 라이브러리 -> 프로그램 -> 언어 도식)",
+   "section": "Introduction (본문은 p.1에서 Fig. 1A/1B를 먼저 언급; 그림은 Part I 시작 위에 놓임)"
+  },
+  {
+   "n": 2,
+   "page": 3,
+   "size": "전체 폭, 쪽 위 ~0.3쪽; 패널 A(하위 영역 8개의 프로그램 길이-묘사 길이 산점도), 패널 B(영역별 빈도 상위 10단어와 PMI 상위 10단어 목록)",
+   "section": "Part I > Results"
+  },
+  {
+   "n": 3,
+   "page": 4,
+   "size": "한 단(오른쪽 위), 단 높이의 ~1/3(캡션 포함 ~0.37); 후보 라이브러리 L_base-L_3의 부분 개념과 프로그램 예시",
+   "section": "Part II > Methods (Modeling a space of candidate concept libraries)"
+  },
+  {
+   "n": 4,
+   "page": 6,
+   "size": "전체 폭, 쪽 위 ~0.3쪽; 하위 영역 8개 패널(라이브러리 크기+평균 프로그램 길이(점선)와 라이브러리-어휘 정렬(실선))",
+   "section": "Part II > Results"
+  }
+ ],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": true,
+  "experiments_note": "실험 대신 'Part I'(행동 자료 수집·기술 분석)과 'Part II'(라이브러리 식별 모델)를 1수준 절로 두고, 각 Part 아래 같은 꼴의 Methods/Results 2수준과 굵은 run-in 3수준을 둔다. 새 실험은 Part I의 묘사 수집 하나뿐이고 Part II는 같은 자료에 모델을 맞춘다.",
+  "final_section_name": "Discussion (2수준 제목 모양으로 Part II Results 바로 뒤에 붙지만 내용은 논문 전체의 논의)",
+  "final_section_subheadings": [],
+  "discussion_structure": "소제목 없는 다섯 문단: 요약('In this paper, we look to natural language...'; 'basic level' 부분 명명 함의) -> 추상 용어의 소통 비용과 청중 설계 실험 제안 -> 참조 게임과의 비교·묘사로 사물 재구성하기(향후 연구) -> 선행연구(프로그램·라이브러리 모델, 통계 학습)와의 관계 -> 'More broadly' 일반 전략과 인공 시스템에 대한 함의.",
+  "ends_with_conclusion_paragraph": true,
+  "ends_note": "별도 Conclusion 절은 없고, Discussion 마지막 문단('More broadly, our work proposes and validates a general strategy...')이 결론 문단 역할을 한다.",
+  "model_description_location": "Part II의 Methods 2수준 안 run-in 소절 두 개: 'Modeling a space of candidate concept libraries'(L_base, L_1-L_3 정의, Fig. 3)와 'Modeling alignment between libraries and vocabularies'(IBM Model 1 번역 확률, 교차 검증 평균 단어당 로그우도). 결합 표상 비용 C_L = |L| + (1/N)Σ|π_L|은 별행 수식이 아니라 Part II Results 본문 안 인라인 수식. Part II 도입 문단(209단어)이 모델의 목적을 미리 말함.",
+  "first_page_use": "제목 + 저자 8명(두 줄)·소속이 위 ~18%; 초록(133단어 + keywords)이 왼쪽 단 위 ~1/3; Introduction이 왼쪽 단 중간부터 시작해 오른쪽 단 전체를 채움(그림 없음). Introduction은 p.1 안에서 끝나고 p.2는 전폭 Fig. 1 뒤 Part I로 시작.",
+  "links": "코드·자료 GitHub(https://github.com/cogtoolslab/lax-cogsci22)는 p.7 Acknowledgments 아래 테두리 상자. 사전등록·OSF 없음."
+ },
+ "structure_summary_ko": "제목 없는 서론(본문의 17%, p.1 한 쪽)으로 시작하며, 다섯 문단(부분 개념 문제 제기 -> Fig. 1A 예시 -> 지각 조직화 이론의 한계 -> 언어를 창으로 쓰는 접근 -> Part I/II 미리보기)으로 마지막 문단에 두 Part의 결과를 먼저 요약한다. 본문의 2/3는 'Part I: Eliciting language about object structure'(34%)와 'Part II: Identifying concepts from language'(34%) 두 1수준 절이 나누어 가지며, 각 Part는 짧은 도입 문단 뒤에 같은 꼴의 Methods/Results 2수준과 굵은 run-in 3수준 소제목을 둔다. Part I은 묘사 자료 수집과 기술 분석(묘사 길이, PMI·JSD로 본 하위 영역별 어휘)이고, Part II는 같은 자료에 후보 프로그램 라이브러리와 번역 모델 기반 정렬 지표를 맞추는 모델 절이어서, 별도 Model 절 없이 모델 설명이 Part II의 Methods에 들어간다. Results 소제목이 모두 결과를 말하는 문장('People use more words for more complex objects' 등)이라 소제목만 읽어도 결론을 따라갈 수 있다. 마지막 Discussion(16%)은 소제목 없이 요약 -> 향후 연구 세 갈래 -> 선행연구 관계 -> 일반 전략 문단으로 끝나고, 본문은 정확히 6쪽, 감사의 글·코드 링크·참고문헌은 7-8쪽에 있다.",
+ "text_pages": 6
+}

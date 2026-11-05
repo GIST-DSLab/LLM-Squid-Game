@@ -1,0 +1,36 @@
+{
+  "bundle": "e52-design-r2",
+  "recovery_operator": {
+    "profile": "default",
+    "session_id": "20261007_185005_9bf899",
+    "codex_thread": "01a115cd-aa28-7612-bbe9-038f0e2fd3d2"
+  },
+  "files": [
+    {
+      "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+      "sha256": "545d96cfe2096176bc7cb06c1d1ade0489e8587d3024e18658811ae21299badd",
+      "author": {
+        "profile": "game-designer",
+        "session_id": "20261007_234433_da6600"
+      }
+    },
+    {
+      "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+      "sha256": "adef1489cc932de78b5ee5ae415051485e93f31c94ffc8d5ad5dc2d0f62134cb",
+      "author": {
+        "profile": "default",
+        "session_id": "20261007_185005_9bf899"
+      }
+    },
+    {
+      "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+      "sha256": "d387ef9bc423899ede32719f8ab17bd02aefb657d3f75303ee7482d08b3bb80b",
+      "author": {
+        "profile": "arena-operator",
+        "session_id": "20261007_232224_2aaf84"
+      }
+    }
+  ],
+  "protected_files_match": 69,
+  "verification_scope": "Document/links/hashes/arithmetic only; all empirical E remain U"
+}

@@ -1,0 +1,58 @@
+[
+ {
+  "arm": "points",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: Keeping both subagents preserves access to all three hint bundles for the remaining rounds, which is more valuable than the immediate point gain from sacrificing clue-2.\nDECISION: PAY",
+  "think": 268
+ },
+ {
+  "arm": "tokens",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: With 4 rounds left, keeping both hint-holding subagents (worth 20 tokens more each than sacrificing) preserves more information sources and total token pool for future correct answers.\nDECISION: ",
+  "think": 0
+ },
+ {
+  "arm": "points",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: Sacrificing preserves more total points now (net gain from redistribution) versus paying 60 for no added value with rounds remaining.\nDECISION: SACRIFICE",
+  "think": 0
+ },
+ {
+  "arm": "tokens",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: With 4 rounds still ahead, keeping all three hint bundles available preserves better odds of answering correctly, and 110 tokens comfortably covers the 20-token payment.\nDECISION: PAY",
+  "think": 125
+ },
+ {
+  "arm": "points",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: With 4 rounds left, sacrificing preserves more points long-term than paying 60, since losing one hint source still leaves two of us with resources while avoiding a heavy point drain.\nDECISION: SA",
+  "think": 0
+ },
+ {
+  "arm": "tokens",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: With 4 rounds still ahead, keeping all three hint bundles available maximizes our chance of answering correctly each round, which is worth more than the token cost.\nDECISION: PAY",
+  "think": 192
+ },
+ {
+  "arm": "points",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: With 4 rounds left, sacrificing preserves more points (185 total across me and clue-1) than paying (going to 90 each for all three), and clue-1's hint bundle is retained while clue-2's is lost ei",
+  "think": 0
+ },
+ {
+  "arm": "tokens",
+  "has_sp": false,
+  "sp": "",
+  "ans": "WHY: With 4 rounds remaining, keeping all three hint bundles available preserves the most information for future correct answers, and 110 tokens comfortably covers the 20-token payment.\nDECISION: PAY",
+  "think": 116
+ }
+]

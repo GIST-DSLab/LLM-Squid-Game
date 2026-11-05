@@ -1,0 +1,341 @@
+{
+  "gate": "DESIGN_ACCEPTED",
+  "rubric_version": "1.0 · 2026-10-07",
+  "rubric_sha256": "4069c7e8d3ffffc0c7c81058c30be740575d1cb9b8933baf3311e59714043579",
+  "verdict": "REVISE",
+  "unresolved_critical": [],
+  "resolved_critical": [
+    {
+      "id": "C1",
+      "goal_ids": ["G01"],
+      "status": "design_resolved_execution_unverified",
+      "evidence": "11-design-revision-r2.md §2.3–3.4 (L72–143) changes the reward to depend on completed solves s; DONE/PASS has s=0 and R=0."
+    }
+  ],
+  "author": {
+    "profile": "game-designer; arena-operator",
+    "session_id": "20261007_234433_da6600; 20261007_232224_2aaf84",
+    "model": "gpt-6.1-sol",
+    "task_ids": ["t_3d8b1c6f", "t_9fd24b59"],
+    "run_ids": [19, 16]
+  },
+  "authors": [
+    {
+      "profile": "game-designer",
+      "session_id": "20261007_234433_da6600",
+      "task_id": "t_3d8b1c6f",
+      "run_id": 19,
+      "artifact": "docs/agents/review-2026-10-07/11-design-revision-r2.md"
+    },
+    {
+      "profile": "arena-operator",
+      "session_id": "20261007_232224_2aaf84",
+      "task_id": "t_9fd24b59",
+      "run_id": 16,
+      "artifact": "docs/agents/review-2026-10-07/13-operations-contract-r2.md"
+    }
+  ],
+  "reviewer": {
+    "profile": "arena-verifier",
+    "session_id": "20261008_091038_6d2769",
+    "model": "gpt-5.6-luna",
+    "task_id": "t_78d709dd",
+    "run_id": 23
+  },
+  "identity_evidence": [
+    "11 §1 L9–12 records the actual game-designer author session and prior failed lifecycle runs.",
+    "13 §10 L213–215 and Kanban run16 record the arena-operator author session.",
+    "Current runtime HERMES_SESSION_ID=20261008_091038_6d2769; Kanban run23 is the active arena-verifier run."
+  ],
+  "target_revision": "d39db2b848effdfbd08f05be21c56a72abbcf774",
+  "target_branch": "review/e52-2026-10-07",
+  "artifacts": [
+    {
+      "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+      "sha256": "545d96cfe2096176bc7cb06c1d1ade0489e8587d3024e18658811ae21299badd"
+    },
+    {
+      "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+      "sha256": "d387ef9bc423899ede32719f8ab17bd02aefb657d3f75303ee7482d08b3bb80b"
+    }
+  ],
+  "missing_artifacts": [
+    "docs/agents/review-2026-10-07/12-measurement-contract-r2.md"
+  ],
+  "goals": [
+    {
+      "id": "G01",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§2.3 L72–78; §3.1–3.4 L82–143"
+        }
+      ],
+      "E_evidence": [],
+      "note": "보상은 s에 비례하고 DONE/PASS·대기·EXIT·최소 발화는 R=0으로 고정된다. U/X/F/S/L/P 상태와 대표 정책, 적격 도움 제공자의 직접·후속 이익 및 유동성 반례도 명시됐다. 상태 생성·정책 하네스·실제 실행은 미구현이므로 E=U다.",
+      "owner": "game-designer, social-dynamics",
+      "issue_ids": []
+    },
+    {
+      "id": "G02",
+      "D": 1,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§1 L20–22: G02 식별 계약의 단일 규범을 12에 위임하고 해당 파일 부재를 명시"
+        }
+      ],
+      "E_evidence": [],
+      "note": "R2 문서가 자기/타인·위협 대조와 Y, 교란·대칭 비용을 완결된 12 계약으로 바인딩하지 못했다. 12-measurement-contract-r2.md가 실제로 없으므로 부분 충족만 인정한다. 실행 증거도 없다.",
+      "owner": "construct-auditor",
+      "issue_ids": ["W02"]
+    },
+    {
+      "id": "G03",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§4.1–4.3 L149–194"
+        }
+      ],
+      "E_evidence": [],
+      "note": "충분자원 reset/잔액·총생성 cap·FULL/PUBLIC+SELF·유일/불확정 진단·5개 난이도·답 형식·토크나이저 기록·숙련 선정 문턱이 고정됐다. 퍼즐 생성/유일성 검사와 실제 기준선 응답은 미실행이다.",
+      "owner": "game-designer, metric-analyst",
+      "issue_ids": []
+    },
+    {
+      "id": "G04",
+      "D": 1,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§3.4 L136–143"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§8.1 L170–174: raw schema·지표 계보를 12에 위임"
+        }
+      ],
+      "E_evidence": [],
+      "note": "11은 상호교환·유상 제공·후속 호혜와 제공자 비용/이익을 예시로 고정했지만, 공식·비공식 효과·적격 기회·최소 응답 비용·분모의 유일한 규범인 12가 없다. 협력 유형/제공자 비용의 최종 계측 계약은 부분 충족이다.",
+      "owner": "social-dynamics, metric-analyst",
+      "issue_ids": ["W04"]
+    },
+    {
+      "id": "G05",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§5.1–5.4 L196–264"
+        }
+      ],
+      "E_evidence": [],
+      "note": "사람 입력·거래 방향·수락/실행·PASS/EXIT·리플레이 권한 경로, 3라운드 튜토리얼, 12라운드의 이해·선택 의미·긴장·재미·대기 질문과 사전 문턱/결측 규칙이 명시됐다. UI와 인간 플레이는 미구현·미실행이다.",
+      "owner": "game-designer",
+      "issue_ids": []
+    },
+    {
+      "id": "G06",
+      "D": 1,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§1 L20: G06 상황·인지 식별 계약을 12에 위임하고 파일 부재를 확인"
+        }
+      ],
+      "E_evidence": [],
+      "note": "최종 R2 세트에서 상태 이해·평가 단서·행동 변화의 구체 조건, fresh-session 순서/제외/중단 계약을 소유할 12 문서가 없다. 운영 문서의 누출·holdout 보호만으로 G06 설계 전체를 통과시키지 않는다.",
+      "owner": "beta-tester, construct-auditor",
+      "issue_ids": ["W06"]
+    },
+    {
+      "id": "G07",
+      "D": 1,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§8.1 L170–174: 12가 raw schema·측정기·지표 계보의 유일 규범임을 명시"
+        }
+      ],
+      "E_evidence": [],
+      "note": "13의 lineage/재계산 원칙은 있으나 필수 raw 필드·nullable·event enum·지표별 분자/분모/방향/NA/허용오차를 정의하는 12 파일이 없다. 동일 raw 기록의 독립 재계산 계약은 미완료이고 실행 재계산도 없다.",
+      "owner": "metric-analyst",
+      "issue_ids": ["W07"]
+    },
+    {
+      "id": "G08",
+      "D": 1,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§1 L20–22; §3.2 L100–113: seed·반복·비교 규범을 12에 위임"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§2 L24–52; §8.2 L184–192: 고정 앵커·holdout·seed manifest를 12에 의존"
+        }
+      ],
+      "E_evidence": [],
+      "note": "13의 앵커·부분 재비교·holdout 보호와 11의 동일 상태 비교 원칙은 부분적으로 있다. 그러나 개발/평가 seed split·퍼즐 중복·반복/불확실성·중단/제외의 단일 계약인 12가 없으므로 D=2가 아니다. 실제 재현 실행은 없다.",
+      "owner": "metric-analyst, arena-verifier",
+      "issue_ids": ["W08"]
+    },
+    {
+      "id": "G09",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§2.2–2.3 L36–70"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§7 L149–166"
+        }
+      ],
+      "E_evidence": [],
+      "note": "차감·환급·순액 이전·동시 수락 정렬·중복 ACCEPT·0 잔액·EXIT·provider/timeout/unknown-inflight·인용/본문 명령 경계와 복구 중단 규칙이 설계상 명시됐다. 엔진·파서·fixture·대표 E2E는 미실행이므로 E=U다.",
+      "owner": "arena-engineer → arena-verifier",
+      "issue_ids": []
+    },
+    {
+      "id": "G10",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§2–4 L24–101; §9 L196–204"
+        }
+      ],
+      "E_evidence": [],
+      "note": "세 고정 scripted anchor와 최소 온보딩, adapter IO, 입력/출력·시도·동시성·시간·현금 cap, 승인0/가격미확인 fail-closed, 부분 재비교와 전 조합 재실행 금지가 설계상 고정됐다. 실제 adapter/온보딩/가격·지연·비용은 미검증이다.",
+      "owner": "arena-operator",
+      "issue_ids": []
+    },
+    {
+      "id": "G11",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§5–9 L103–209"
+        }
+      ],
+      "E_evidence": [],
+      "note": "설치/실행/재개/리플레이/재계산 인터페이스, manifest·work key·journal·복구·계보·seed/holdout·redaction·권리·릴리스 체크리스트와 published 분리가 문서화됐다. 현재 console entry·resume 안전성·새 환경·공개 후보 검사는 오히려 미완료로 기록되어 E=U다.",
+      "owner": "arena-operator, arena-engineer",
+      "issue_ids": []
+    },
+    {
+      "id": "G12",
+      "D": "N/A",
+      "E": "U",
+      "D_evidence": [],
+      "E_evidence": [],
+      "note": "Phase 2 학습 효과는 이번 DESIGN_ACCEPTED 범위 밖이며 미착수다. 목표를 삭제하거나 통과로 처리하지 않는다.",
+      "owner": "후속 learning-scientist / trajectory-curator",
+      "issue_ids": []
+    }
+  ],
+  "findings": [
+    {
+      "id": "W02",
+      "severity": "Warning",
+      "goal_ids": ["G02"],
+      "title": "자기 존속 식별 계약 파일 부재",
+      "observation": "11은 G02 계약을 12의 유일 규범으로 위임하지만 12가 없다.",
+      "acceptance": "12에 Y 사건/분모, 자기·타인×위협 대칭 비용, 능력·절약·위험회피·보상·현재/미래 과제·지시준수 교란 대응, 허용 주장 경계를 고정하고 최종 세 파일 해시를 다시 평가한다.",
+      "owner": "construct-auditor",
+      "handoff_task_id": "t_c8db5da8"
+    },
+    {
+      "id": "W04",
+      "severity": "Warning",
+      "goal_ids": ["G04"],
+      "title": "협력 계측·제공자 비용의 단일 계약 부재",
+      "observation": "11의 도움 이익 예시는 있으나 공식/비공식 정보 효과·적격 기회·최소 응답 비용·분모를 12가 정의해야 한다.",
+      "acceptance": "무상 제공·유상 거래·상호교환, 수신자 공식 효과, 제공자 생성/이전 비용·후속 호혜를 raw 필드와 분모에 연결한다.",
+      "owner": "social-dynamics, metric-analyst",
+      "handoff_task_id": "t_c8db5da8"
+    },
+    {
+      "id": "W06",
+      "severity": "Warning",
+      "goal_ids": ["G06"],
+      "title": "상황·평가 인지 조건의 단일 계약 부재",
+      "observation": "운영 문서의 누출 방지는 있지만 인지 조건의 fresh-session 순서·제외·중단·질문 오염 계약이 12에 남아 있고 파일이 없다.",
+      "acceptance": "동일 상태의 중립/평가/무관 조건, 최초행동·후속 궤적, 사후 질문, 제외·중단·민감도 보고를 12에 고정한다.",
+      "owner": "beta-tester, construct-auditor",
+      "handoff_task_id": "t_c8db5da8"
+    },
+    {
+      "id": "W07",
+      "severity": "Warning",
+      "goal_ids": ["G07"],
+      "title": "raw schema·지표 재계산 계약 부재",
+      "observation": "13은 12를 단일 규범으로 참조하며 raw 필드/nullable/event enum/지표 사전이 없다.",
+      "acceptance": "12를 작성해 모든 지표의 분자·분모·단위·방향·조인키·중복/실패/NA·측정기 버전·허용오차를 고정하고 fixture 재계산을 실행한다.",
+      "owner": "metric-analyst",
+      "handoff_task_id": "t_c8db5da8"
+    },
+    {
+      "id": "W08",
+      "severity": "Warning",
+      "goal_ids": ["G08"],
+      "title": "seed split·반복·불확실성 계약 부재",
+      "observation": "11/13은 seed split과 표집 규범을 12에 의존한다. 12 부재 상태에서는 비교 블록을 재현 가능한 최종 계약으로 바인딩할 수 없다.",
+      "acceptance": "12에 개발/온보딩/보류/인지 seed namespace, 중복 배제, 세션/대응 블록 독립단위, 반복·검출목표·불확실성·중단/제외 규칙을 고정한다.",
+      "owner": "metric-analyst, arena-verifier",
+      "handoff_task_id": "t_c8db5da8"
+    }
+  ],
+  "verification": {
+    "commands": [
+      {
+        "command": "shasum -a 256 rubric.md docs/agents/review-2026-10-07/11-design-revision-r2.md docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+        "result": "rubric 4069c7e8d3ffffc0c7c81058c30be740575d1cb9b8933baf3311e59714043579; 11 545d96cfe2096176bc7cb06c1d1ade0489e8587d3024e18658811ae21299badd; 13 d387ef9bc423899ede32719f8ab17bd02aefb657d3f75303ee7482d08b3bb80b"
+      },
+      {
+        "command": "test -e docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+        "result": "exit 1; file absent"
+      },
+      {
+        "command": "python3 configs/hermes-bots/check_rubric.py docs/agents/review-2026-10-07/rubric-evaluation.json --root . --gate DESIGN_ACCEPTED",
+        "result": "exit 1; status NOT_COMPLETE; errors: Independent verdict is not PASS or Critical issues remain; Required goal not met: G02.D=1; G04.D=1; G06.D=1; G07.D=1; G08.D=1"
+      }
+    ],
+    "workspace": "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktree/2026-10-07",
+    "engine_modified": false,
+    "game_api_calls": 0,
+    "human_play": false,
+    "deployment": false,
+    "all_execution_evidence": "U"
+  },
+  "limitations": [
+    "12-measurement-contract-r2.md is absent, so the R2 final three-file set is incomplete.",
+    "All E axes are U: no new engine/API/model/human/replay/recompute/cost execution was performed.",
+    "G01 C1 closure is a design-level conclusion from 11; it is not an engine or model-play proof.",
+    "Existing 09/10 documents are historical R1 artifacts; 11 is the R2 canonical reward revision and must be read with the missing 12 and 13.",
+    "A Git status check is affected by the existing Git LFS clean-filter permission error; no LFS settings or engine files were changed."
+  ],
+  "next_action": {
+    "status": "REVISE",
+    "owner": "arena-director",
+    "required": "Complete 12-measurement-contract-r2.md under its assigned card, then create a fresh independent evaluation of the hash-bound 11/12/13 set before running the DESIGN_ACCEPTED checker.",
+    "do_not_claim": ["DESIGN_ACCEPTED", "IMPLEMENTATION_VERIFIED", "ARENA_VALIDATED", "RELEASE_READY"]
+  }
+}

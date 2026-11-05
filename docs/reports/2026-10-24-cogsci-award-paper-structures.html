@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CogSci 수상작 10편 · Tenenbaum 5편 구조</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one reading column; summary first, then a scannable table, then one card per paper */
+:root {
+  --bg: #f7f7f4; --surface: #ffffff; --fg: #1d2129; --muted: #5d6470; --line: #d9dbd3;
+  --accent: #2f5d8a; --accent-ink: #ffffff;
+  --intro: #c9d7e8; --method: #d6e4c8; --result: #f1dcb3; --disc: #e5cfd9; --other: #e2e2dc;
+  --display: "Noto Serif KR", "Apple SD Gothic Neo", serif;
+  --body: "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15181d; --surface: #1d2127; --fg: #e8e9e4; --muted: #a2a8b3; --line: #343941;
+  --accent: #8fb6dd; --accent-ink: #10131a;
+  --intro: #2e4664; --method: #3a5230; --result: #6a5422; --disc: #5a3a4c; --other: #3a3d42; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15181d; --surface: #1d2127; --fg: #e8e9e4; --muted: #a2a8b3; --line: #343941;
+  --accent: #8fb6dd; --accent-ink: #10131a;
+  --intro: #2e4664; --method: #3a5230; --result: #6a5422; --disc: #5a3a4c; --other: #3a3d42; color-scheme: dark }
+* { box-sizing: border-box }
+html, body { margin: 0 }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.65;
+  padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+main { max-width: 980px; margin: 0 auto }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.3 }
+h1 { font-size: 2rem; margin: 0 0 .25rem }
+h2 { font-size: 1.35rem; margin: 2.5rem 0 .75rem; padding-top: 1rem; border-top: 1px solid var(--line) }
+h3 { font-size: 1.15rem; margin: .25rem 0 .4rem }
+h4 { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.1rem 0 .35rem; font-weight: 700 }
+p { margin: .3rem 0 .6rem }
+a { color: var(--accent) }
+.lede { color: var(--muted); max-width: 70ch }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums }
+ul.points { padding-left: 1.2em; max-width: 78ch }
+ul.points li { margin: .35rem 0 }
+ul.shape { list-style: none; padding: 0; display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) }
+ul.shape li { background: var(--surface); border: 1px solid var(--line); padding: .7rem .9rem; border-radius: 4px; min-width: 0 }
+ul.shape b { display: block; color: var(--accent) }
+.legend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; font-size: .82rem; color: var(--muted); margin: .4rem 0 }
+.legend span::before { content: ""; display: inline-block; width: .9em; height: .9em; margin-right: .35em; vertical-align: -.1em; border: 1px solid var(--line) }
+.legend .intro::before { background: var(--intro) } .legend .method::before { background: var(--method) }
+.legend .result::before { background: var(--result) } .legend .disc::before { background: var(--disc) } .legend .other::before { background: var(--other) }
+.bar { display: flex; width: 100%; height: 22px; border: 1px solid var(--line); overflow: hidden; margin-top: .5rem; min-width: 0 }
+.bar .seg { display: block; min-width: 0; overflow: hidden; white-space: nowrap; font-size: .68rem; line-height: 20px; padding: 0 .3em; color: var(--fg) }
+.bar .seg i { font-style: normal }
+.seg.intro { background: var(--intro) } .seg.method { background: var(--method) } .seg.result { background: var(--result) }
+.seg.disc { background: var(--disc) } .seg.other { background: var(--other) }
+.bar.mean { height: 28px } .bar.mean .seg { line-height: 26px; font-size: .8rem }
+.scroll { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: .88rem }
+th, td { text-align: left; vertical-align: top; padding: .4rem .5rem; border-bottom: 1px solid var(--line) }
+th { font-size: .75rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted) }
+td.n, th.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap }
+.overview td .sub { font-size: .78rem; color: var(--muted) }
+.overview td.barcell { min-width: 180px }
+.overview tr.ours td { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); font-weight: 500 }
+.cmpbars { display: grid; gap: .4rem; margin: .4rem 0 }
+.cmprow { display: grid; grid-template-columns: 9em 1fr; align-items: center; gap: .6rem; min-width: 0 }
+.cmprow .lab { font-size: .82rem; color: var(--muted) }
+.cmprow .bar { margin-top: 0; height: 26px } .cmprow .bar .seg { line-height: 24px; font-size: .74rem }
+table.cmp td.t { white-space: pre-wrap; font-weight: 500 } table.cmp td.o { background: color-mix(in srgb, var(--accent) 8%, var(--surface)) }
+article.paper.ours { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent) }
+.cmpbars.vol { gap: .3rem } .cmpbars.vol .cmprow { grid-template-columns: 11em 1fr }
+.cmpbars.vol .lab a { color: var(--fg); text-decoration: none; font-family: var(--mono); font-size: .78rem }
+.cmpbars.vol .lab a:hover { color: var(--accent); text-decoration: underline }
+.cmpbars.vol .cmprow.mean .lab { font-weight: 700; color: var(--fg) }
+.cmpbars.vol .cmprow.mean { margin-bottom: .2rem }
+@media (max-width: 640px) { .cmprow, .cmpbars.vol .cmprow { grid-template-columns: 1fr; gap: .15rem } }
+.overview td.barcell .bar { margin-top: 0; height: 16px } .overview .bar .seg i { display: none }
+article.paper { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.2rem 1.4rem; margin: 1.4rem 0 }
+article.paper header .eyebrow { font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted) }
+article.paper header .k { font-family: var(--mono); color: var(--accent); margin-right: .4em }
+.meta { color: var(--muted); font-size: .9rem; margin: 0 } .aff { font-size: .82rem }
+.src { font-size: .82rem; color: var(--muted); word-break: break-all } .src .note { color: var(--accent) }
+.abs p { max-width: 74ch } .abs .en { color: var(--muted); font-size: .88rem }
+details summary { cursor: pointer; color: var(--accent); font-size: .85rem }
+dl.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .3rem 1rem; margin: 0; font-size: .88rem }
+dl.facts dt { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em } dl.facts dd { margin: 0 }
+table.outline tr.lv1 td.t { font-weight: 700 }
+table.outline tr.lv2 td.t { padding-left: 1.6rem }
+table.outline tr.lv3 td.t { padding-left: 3rem; color: var(--muted) }
+table.outline tr.lv4 td.t { padding-left: 4.2rem; color: var(--muted); font-style: italic }
+ul.kv, ul.figs { list-style: none; padding: 0; margin: 0; font-size: .88rem }
+ul.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .15rem 1rem }
+ul.kv b { color: var(--muted); font-weight: 500; margin-right: .4em }
+ul.figs li { color: var(--muted) }
+.summary { max-width: 74ch }
+ol.sources { font-size: .86rem; padding-left: 1.4em } ol.sources li { margin: .3rem 0; word-break: break-word }
+ul.sources { font-size: .86rem; padding-left: 1.2em }
+@media (max-width: 640px) { body { font-size: 14px } h1 { font-size: 1.6rem } article.paper { padding: 1rem } }
+@media (prefers-reduced-motion: no-preference) { a { transition: color .15s } }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+</style>
+</head>
+<body>
+<main>
+<h1>CogSci 수상작 10편 · Tenenbaum 5편 구조</h1>
+<p class="lede">CogSci(Cognitive Science Society 연례 학회) 2022–2025 수상작 가운데 6쪽 본문 제한으로 쓰인 논문 10편. Marr Prize(최우수 학생 논문) 3편, Computational Modeling Prize(응용 인지·고차 인지·언어 부문) 7편. 각 논문의 초록(한국어 번역), 목차와 절별 분량, 소제목 짜임새를 eScholarship PDF에서 읽어 정리했다.</p>
+<p class="lede">수상작과 따로, Joshua B. Tenenbaum이 공저자인 CogSci 논문 5편을 같은 형식으로 <a href="#tenenbaum">아래 절</a>에 정리했다. 아래 평균은 수상작 10편만으로 낸 값이다.</p>
+
+<h2>핵심</h2>
+<h4>공통으로 보이는 특징</h4>
+<ul class="points"><li>본문 글은 10편 모두 정확히 6쪽에서 끝난다. 참고문헌은 쪽 제한 밖이라 1~4쪽까지 더 붙는다(PDF 7~10쪽). 본문 단어 수는 약 2,900~4,450(중앙값 3,750), 초록은 100~215단어.</li><li>1수준 절은 4~7개(중앙값 5). &#x27;Introduction → (모델·배경) → 실험·연구 N개 → Discussion/Conclusion&#x27;의 한 줄 뼈대이고, 절 번호는 붙이지 않는다.</li><li>서론에는 소제목이 없다(10편 중 9편). 3~7문단, 본문의 6~31%(중앙값 15%). 마지막 문단에 가설·예측이나 &#x27;이 논문에서는…&#x27; 로드맵을 둔다. 별도 Related Work 절은 3편뿐이고, 그마저 배경 이론이나 모델 설정을 겸하거나(P08, P10) 실험 뒤에 짧게 온다(P11).</li><li>형식 모델·시뮬레이션 틀은 서론 바로 뒤 독립 1수준 절(Model, Preliminaries, Simulation Framework, Bounded LoT model 등)에 수식과 함께 모아 둔다(6편). 그 덕에 뒤의 실험 절들은 &#x27;Setup/Method → Results&#x27; 두 소제목만 반복하는 짧은 평행 구조가 된다.</li><li>실험이 여럿이면 각 실험을 1수준 절(Experiment 1 / Study 2 …)로 두고, 안에 같은 2수준 소제목(Methods, Results, 때로 Discussion)을 똑같이 되풀이한다(7편). 참가자·절차·분석은 2수준이 아니라 굵은 run-in 3수준(&#x27;Participants.&#x27; &#x27;Procedure.&#x27;)으로 처리해 세로 공간을 아낀다. 실험이 하나면 평평한 IMRaD(P07, P04).</li><li>마지막 절(Discussion · General Discussion · Conclusion)은 10편 모두 소제목이 없다. 분량은 본문의 2~25%(중앙값 11%). 한계는 &#x27;Limitations&#x27; 소제목이 아니라 문단 하나(&#x27;Despite these limitations, …&#x27;)로 처리하고, 결론은 1문단짜리 Conclusion 절을 따로 두거나(4편) Discussion 끝 문단(&#x27;In conclusion, …&#x27;)으로 끝낸다.</li><li>그림 2~6개(대부분 4), 표 0~2개. 전폭 그림을 결과 절에 몰아 두고, 서론에 개념도 하나를 두는 경우가 있다(P04). 코드·OSF 링크는 6편에 있으며 위치는 서론 끝, Results 제목의 각주, &#x27;Overview of Experiments&#x27; 소절, 감사의 글 등 제각각이다.</li><li>첫 쪽은 제목·저자가 20~30%, 초록이 왼쪽 단의 절반, 서론이 첫 쪽에서 시작해 대개 1쪽 안에 끝난다. 모델 절이 1쪽에서 시작하는 논문도 있다(P03, P11).</li></ul>
+<h4>좋은 논문의 구조 (10편 평균)</h4>
+<div class="legend"><span class="intro">서론·배경</span><span class="method">방법·모델</span><span class="result">실험·결과</span><span class="disc">논의·결론</span><span class="other">기타</span></div>
+<div class="bar mean"><span class="seg intro" style="flex:0.2353"><i>서론·배경 24%</i></span><span class="seg method" style="flex:0.1879"><i>방법·모델 19%</i></span><span class="seg result" style="flex:0.4479"><i>실험·결과 45%</i></span><span class="seg disc" style="flex:0.1291"><i>논의·결론 13%</i></span></div>
+<p class="lede">1수준 절 제목을 역할별로 묶어 본문 단어 수 비율을 평균한 값. 실험 절(Experiment 1, Study 2 …)은 그 안의 방법·결과를 모두 "실험·결과"로 셈.</p>
+<ul class="shape"><li><b>1. Introduction (약 1쪽, 소제목 없음)</b> 현상·문헌의 틈 → 제안 → 마지막 문단에 가설과 로드맵. 관련 연구는 여기서 인용으로 녹인다.</li><li><b>2. Model / Preliminaries (선택, 0.5~1.5쪽)</b> 형식 정의·수식·알고리즘 상자를 여기 한 번만. 2수준 소제목 2~4개.</li><li><b>3. Experiment·Study N (각 0.7~1.5쪽)</b> 짧은 도입 문단 → Methods(run-in 3수준: Participants. Procedure. …) → Results(그림) → 필요하면 짧은 Discussion. 모든 실험이 같은 소제목을 반복.</li><li><b>4. (General) Discussion (0.5~1쪽, 소제목 없음)</b> 요약 → 함의 → 한계 문단 → &#x27;In conclusion&#x27; 문단. 또는 Discussion 뒤에 1문단 Conclusion 절.</li><li><b>5. References</b> 쪽 제한 밖. 본문은 6쪽에서 정확히 끝낸다.</li></ul>
+
+<h4>우리 원고와 비교</h4>
+<div class="cmpbars">
+  <div class="cmprow"><span class="lab">수상작 10편 평균</span><div class="bar mean"><span class="seg intro" style="flex:0.2353"><i>서론·배경 24%</i></span><span class="seg method" style="flex:0.1879"><i>방법·모델 19%</i></span><span class="seg result" style="flex:0.4479"><i>실험·결과 45%</i></span><span class="seg disc" style="flex:0.1291"><i>논의·결론 13%</i></span></div></div>
+  <div class="cmprow"><span class="lab">우리 원고 10-23</span><div class="bar"><span class="seg intro" style="flex:0.0940" title="서론 · 9%"><i>서론</i></span><span class="seg intro" style="flex:0.1270" title="관련 연구 · 13%"><i>관련 연구</i></span><span class="seg method" style="flex:0.2060" title="LLM Squid Game: 공존 아레나 · 21%"><i>LLM Squid Game: 공존 아레나</i></span><span class="seg method" style="flex:0.2150" title="평가 · 22%"><i>평가</i></span><span class="seg result" style="flex:0.2400" title="결과 · 24%"><i>결과</i></span><span class="seg disc" style="flex:0.1180" title="종합 논의 · 12%"><i>종합 논의</i></span></div></div><div class="cmprow"><span class="lab">우리 원고 10-26</span><div class="bar"><span class="seg intro" style="flex:0.1190" title="서론 · 12%"><i>서론</i></span><span class="seg method" style="flex:0.3040" title="아레나 · 30%"><i>아레나</i></span><span class="seg result" style="flex:0.5080" title="분석 · 51%"><i>분석</i></span><span class="seg disc" style="flex:0.0690" title="논의 및 결론 · 7%"><i>논의 및 결론</i></span></div></div>
+</div>
+<p class="lede">비교 대상은 CogSci 2027 한국어판 원고, 2026-10-23 no-appendix 빌드. 절별 어절 수를 tex에서 세고(그림·표·캡션 제외) 비율로 바꿨다. 위 막대는 1수준 절 단위이며 아래 표는 그 비율과 짜임새를 수상작과 나란히 둔 것. 10-23 줄 바로 아래 우리 원고 10-26 막대는 같은 방식으로 센 새 판이며 표는 바꾸지 않았다.</p>
+<div class="scroll"><table class="cmp">
+<thead><tr><th>항목</th><th>수상작 10편</th><th>우리 원고</th></tr></thead>
+<tbody><tr><td class="t">본문 글이 끝나는 쪽</td><td>6쪽 (10/10편, 모두 6쪽을 꽉 채움)</td><td class="o">6쪽 (왼쪽 단까지; 참고문헌이 p.6 오른쪽 단에서 시작)</td></tr><tr><td class="t">본문 길이</td><td>2,937–4,448단어 (중앙값 3,756)</td><td class="o">2,856어절 (단위가 달라 길이는 직접 비교 불가)</td></tr><tr><td class="t">1수준 절 수</td><td>4–7 (중앙값 5)</td><td class="o">6</td></tr><tr><td class="t">2수준 이하 소제목 수</td><td>4–24 (중앙값 13)</td><td class="o">17 (모두 2수준)</td></tr><tr><td class="t">서론·배경 비율 (서론 + 관련 연구·배경 절)</td><td>24%</td><td class="o">22%</td></tr><tr><td class="t">  그중 Introduction 절만</td><td>6%–31% (중앙값 15%)</td><td class="o">9%</td></tr><tr><td class="t">방법·모델 비율</td><td>19%</td><td class="o">42% (아레나 규칙 + 평가 지표)</td></tr><tr><td class="t">실험·결과 비율</td><td>45%</td><td class="o">24%</td></tr><tr><td class="t">논의·결론 비율</td><td>13%</td><td class="o">12%</td></tr><tr><td class="t">  그중 마지막 절만</td><td>2%–25% (중앙값 9%)</td><td class="o">12%</td></tr><tr><td class="t">서론 소제목</td><td>1/10편</td><td class="o">없음</td></tr><tr><td class="t">별도 관련 연구 절</td><td>3/10편</td><td class="o">있음 (2수준 3개)</td></tr><tr><td class="t">마지막 절 소제목</td><td>0/10편</td><td class="o">3개: 목표를 이어가며 함께 살아남기 · 한계와 향후 과제 · 결론</td></tr><tr><td class="t">Conclusion을 1수준 절로</td><td>4/10편 (모두 1문단)</td><td class="o">아니오 (종합 논의 안의 2수준 &#x27;결론&#x27;)</td></tr><tr><td class="t">그림 / 표</td><td>2–6 / 0–2 (중앙값 4 / 1)</td><td class="o">4 / 4</td></tr></tbody>
+</table></div>
+
+
+<h2 id="volume">분량 비교</h2>
+<p class="lede">논문마다 1수준 절이 본문 단어 수의 몇 %를 쓰는지 한 줄 막대로 모았다. 색은 절의 역할, 칸 안 글자는 절 제목과 비율(칸이 좁으면 마우스를 올리면 보임). 이름을 누르면 그 논문 정리로 간다.</p>
+<div class="legend"><span class="intro">서론·배경</span><span class="method">방법·모델</span><span class="result">실험·결과</span><span class="disc">논의·결론</span><span class="other">기타</span></div>
+<h4>우리 원고</h4><div class="cmpbars vol"><div class="cmprow"><span class="lab"><a href="#ours">우리 원고 10-23</a></span><div class="bar"><span class="seg intro" style="flex:0.0940" title="서론 · 9%"><i>서론 9%</i></span><span class="seg intro" style="flex:0.1270" title="관련 연구 · 13%"><i>관련 연구 13%</i></span><span class="seg method" style="flex:0.2060" title="LLM Squid Game: 공존 아레나 · 21%"><i>LLM Squid Game: 공존 아레나 21%</i></span><span class="seg method" style="flex:0.2150" title="평가 · 22%"><i>평가 22%</i></span><span class="seg result" style="flex:0.2400" title="결과 · 24%"><i>결과 24%</i></span><span class="seg disc" style="flex:0.1180" title="종합 논의 · 12%"><i>종합 논의 12%</i></span></div></div><div class="cmprow"><span class="lab">우리 원고 10-26</span><div class="bar"><span class="seg intro" style="flex:0.1190" title="서론 · 12%"><i>서론 12%</i></span><span class="seg method" style="flex:0.3040" title="아레나 · 30%"><i>아레나 30%</i></span><span class="seg result" style="flex:0.5080" title="분석 · 51%"><i>분석 51%</i></span><span class="seg disc" style="flex:0.0690" title="논의 및 결론 · 7%"><i>논의 및 결론 7%</i></span></div></div></div><h4>수상작 10편</h4><div class="cmpbars vol"><div class="cmprow mean"><span class="lab">10편 평균</span><div class="bar mean"><span class="seg intro" style="flex:0.2353"><i>서론·배경 24%</i></span><span class="seg method" style="flex:0.1879"><i>방법·모델 19%</i></span><span class="seg result" style="flex:0.4479"><i>실험·결과 45%</i></span><span class="seg disc" style="flex:0.1291"><i>논의·결론 13%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p02">01 Suresh 2025</a></span><div class="bar"><span class="seg intro" style="flex:0.1530" title="Introduction · 15%"><i>Introduction 15%</i></span><span class="seg result" style="flex:0.5830" title="Study I: Building NOVA · 58%"><i>Study I: Building NOVA 58%</i></span><span class="seg method" style="flex:0.1650" title="Study 2: Using the new norms dataset to predict human semantic judgments · 16%"><i>Study 2: Using the new norms dataset to predict human semantic judgments 16%</i></span><span class="seg disc" style="flex:0.1000" title="Discussion · 10%"><i>Discussion 10%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p03">02 Rathi 2025</a></span><div class="bar"><span class="seg intro" style="flex:0.1480" title="Introduction · 15%"><i>Introduction 15%</i></span><span class="seg method" style="flex:0.2370" title="Model · 24%"><i>Model 24%</i></span><span class="seg result" style="flex:0.1320" title="Study 1: Frequency Effects in Ordering · 13%"><i>Study 1: Frequency Effects in Ordering 13%</i></span><span class="seg method" style="flex:0.1390" title="Study 2: Modeling Heavy-NP Shift · 14%"><i>Study 2: Modeling Heavy-NP Shift 14%</i></span><span class="seg result" style="flex:0.1320" title="Study 3: Agreement Attraction · 13%"><i>Study 3: Agreement Attraction 13%</i></span><span class="seg result" style="flex:0.1510" title="Study 4: Thematic Role Entropy · 15%"><i>Study 4: Thematic Role Entropy 15%</i></span><span class="seg disc" style="flex:0.0620" title="Conclusion · 6%"><i>Conclusion 6%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p04">03 Cheng 2025</a></span><div class="bar"><span class="seg intro" style="flex:0.3130" title="Introduction · 31%"><i>Introduction 31%</i></span><span class="seg method" style="flex:0.0650" title="Methodology – Experimental Tasks · 6%"><i>Methodology – Experimental Tasks 6%</i></span><span class="seg method" style="flex:0.1420" title="Simulation Framework · 14%"><i>Simulation Framework 14%</i></span><span class="seg method" style="flex:0.0990" title="Simulation Results · 10%"><i>Simulation Results 10%</i></span><span class="seg result" style="flex:0.1450" title="Empirical Results · 14%"><i>Empirical Results 14%</i></span><span class="seg disc" style="flex:0.2360" title="Discussion · 24%"><i>Discussion 24%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p05">04 Royka 2024</a></span><div class="bar"><span class="seg intro" style="flex:0.2040" title="Introduction · 20%"><i>Introduction 20%</i></span><span class="seg result" style="flex:0.2590" title="Study 1 · 26%"><i>Study 1 26%</i></span><span class="seg result" style="flex:0.1560" title="Study 2 · 16%"><i>Study 2 16%</i></span><span class="seg result" style="flex:0.1320" title="Study 3 · 13%"><i>Study 3 13%</i></span><span class="seg disc" style="flex:0.2500" title="General Discussion · 25%"><i>General Discussion 25%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p06">05 Chuang 2024</a></span><div class="bar"><span class="seg intro" style="flex:0.1430" title="Introduction · 14%"><i>Introduction 14%</i></span><span class="seg method" style="flex:0.2180" title="Preliminaries · 22%"><i>Preliminaries 22%</i></span><span class="seg result" style="flex:0.4050" title="Experiment 1 · 40%"><i>Experiment 1 40%</i></span><span class="seg result" style="flex:0.1860" title="Experiment 2 · 19%"><i>Experiment 2 19%</i></span><span class="seg disc" style="flex:0.0480" title="Conclusion · 5%"><i>Conclusion 5%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p07">06 Wilschut 2024</a></span><div class="bar"><span class="seg intro" style="flex:0.2760" title="Introduction · 28%"><i>Introduction 28%</i></span><span class="seg method" style="flex:0.3290" title="Methods · 33%"><i>Methods 33%</i></span><span class="seg result" style="flex:0.1620" title="Results · 16%"><i>Results 16%</i></span><span class="seg disc" style="flex:0.1970" title="Discussion · 20%"><i>Discussion 20%</i></span><span class="seg disc" style="flex:0.0370" title="Conclusion · 4%"><i>Conclusion 4%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p08">07 Chandra 2023</a></span><div class="bar"><span class="seg intro" style="flex:0.1290" title="Introduction · 13%"><i>Introduction 13%</i></span><span class="seg intro" style="flex:0.2500" title="Background: Bayesian inverse planning · 25%"><i>Background: Bayesian inverse planning 25%</i></span><span class="seg result" style="flex:0.5430" title="Inverse inverse planning · 54%"><i>Inverse inverse planning 54%</i></span><span class="seg disc" style="flex:0.0770" title="Discussion · 8%"><i>Discussion 8%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p09">08 Cheyette 2023</a></span><div class="bar"><span class="seg intro" style="flex:0.2570" title="Introduction · 26%"><i>Introduction 26%</i></span><span class="seg method" style="flex:0.1140" title="Bounded LoT model · 11%"><i>Bounded LoT model 11%</i></span><span class="seg result" style="flex:0.1950" title="Experiment 1 · 20%"><i>Experiment 1 20%</i></span><span class="seg result" style="flex:0.1140" title="Experiment 2 · 11%"><i>Experiment 2 11%</i></span><span class="seg result" style="flex:0.1730" title="Experiment 3 · 17%"><i>Experiment 3 17%</i></span><span class="seg disc" style="flex:0.1460" title="Discussion · 15%"><i>Discussion 15%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p11">09 Futrell 2023</a></span><div class="bar"><span class="seg intro" style="flex:0.1360" title="Introduction · 14%"><i>Introduction 14%</i></span><span class="seg method" style="flex:0.3710" title="Model · 37%"><i>Model 37%</i></span><span class="seg result" style="flex:0.2180" title="Study 1: Complementizer Dropping in English Relative Clauses · 22%"><i>Study 1: Complementizer Dropping in English Relative Clauses 22%</i></span><span class="seg result" style="flex:0.1620" title="Study 2: Mandarin Classifier Choice · 16%"><i>Study 2: Mandarin Classifier Choice 16%</i></span><span class="seg intro" style="flex:0.0960" title="Related Work · 10%"><i>Related Work 10%</i></span><span class="seg disc" style="flex:0.0170" title="Conclusion · 2%"><i>Conclusion 2%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#p10">10 Oktar 2022</a></span><div class="bar"><span class="seg intro" style="flex:0.0590" title="Introduction · 6%"><i>Introduction 6%</i></span><span class="seg intro" style="flex:0.1890" title="Persistent Disagreement · 19%"><i>Persistent Disagreement 19%</i></span><span class="seg result" style="flex:0.3250" title="Experiment 1 · 32%"><i>Experiment 1 32%</i></span><span class="seg result" style="flex:0.3060" title="Experiment 2 · 31%"><i>Experiment 2 31%</i></span><span class="seg disc" style="flex:0.1210" title="General Discussion · 12%"><i>General Discussion 12%</i></span></div></div></div><h4>Tenenbaum 참여 5편</h4><div class="cmpbars vol"><div class="cmprow mean"><span class="lab">5편 평균</span><div class="bar mean"><span class="seg intro" style="flex:0.2004"><i>서론·배경 20%</i></span><span class="seg method" style="flex:0.2708"><i>방법·모델 27%</i></span><span class="seg result" style="flex:0.3560"><i>실험·결과 36%</i></span><span class="seg disc" style="flex:0.1728"><i>논의·결론 17%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#t05">T01 Cheyette 2025</a></span><div class="bar"><span class="seg intro" style="flex:0.2080" title="Introduction · 21%"><i>Introduction 21%</i></span><span class="seg method" style="flex:0.2630" title="Model · 26%"><i>Model 26%</i></span><span class="seg result" style="flex:0.3660" title="Experiments and Results · 37%"><i>Experiments and Results 37%</i></span><span class="seg disc" style="flex:0.1630" title="Discussion and Future Work · 16%"><i>Discussion and Future Work 16%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#t03">T02 Ying 2024</a></span><div class="bar"><span class="seg intro" style="flex:0.1990" title="Introduction · 20%"><i>Introduction 20%</i></span><span class="seg method" style="flex:0.3660" title="Computational Model · 37%"><i>Computational Model 37%</i></span><span class="seg method" style="flex:0.1610" title="Experiments · 16%"><i>Experiments 16%</i></span><span class="seg result" style="flex:0.1800" title="Results · 18%"><i>Results 18%</i></span><span class="seg disc" style="flex:0.0940" title="Discussion · 9%"><i>Discussion 9%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#t04">T03 Chandra 2024</a></span><div class="bar"><span class="seg intro" style="flex:0.1090" title="Introduction · 11%"><i>Introduction 11%</i></span><span class="seg method" style="flex:0.2490" title="Computational framework · 25%"><i>Computational framework 25%</i></span><span class="seg result" style="flex:0.4350" title="Instantiating the framework to explain surprising plans · 44%"><i>Instantiating the framework to explain surprising plans 44%</i></span><span class="seg disc" style="flex:0.1800" title="Discussion · 18%"><i>Discussion 18%</i></span><span class="seg disc" style="flex:0.0270" title="Conclusion · 3%"><i>Conclusion 3%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#t02">T04 Lipkin 2023</a></span><div class="bar"><span class="seg intro" style="flex:0.3190" title="Introduction · 32%"><i>Introduction 32%</i></span><span class="seg method" style="flex:0.3150" title="Methods · 32%"><i>Methods 32%</i></span><span class="seg result" style="flex:0.1250" title="Results · 12%"><i>Results 12%</i></span><span class="seg disc" style="flex:0.2410" title="Discussion · 24%"><i>Discussion 24%</i></span></div></div><div class="cmprow"><span class="lab"><a href="#t01">T05 Wong 2022</a></span><div class="bar"><span class="seg intro" style="flex:0.1670" title="(Introduction, no heading) · 17%"><i>(Introduction, no heading) 17%</i></span><span class="seg result" style="flex:0.3350" title="Part I: Eliciting language about object structure · 34%"><i>Part I: Eliciting language about object structure 34%</i></span><span class="seg result" style="flex:0.3390" title="Part II: Identifying concepts from language · 34%"><i>Part II: Identifying concepts from language 34%</i></span><span class="seg disc" style="flex:0.1590" title="Discussion · 16%"><i>Discussion 16%</i></span></div></div></div>
+
+
+<h2>한눈에 보기</h2>
+<div class="scroll"><table class="overview">
+<thead><tr><th class="n">#</th><th>논문</th><th class="n">글/PDF 쪽</th><th class="n">절 1/2수준</th><th class="n">그림/표</th><th>서론 소제목</th><th>실험을 절로</th><th>마지막 절 (소제목)</th><th>분량 비율</th></tr></thead>
+<tbody><tr class="ours"><td class="n">우리</td><td><a href="#ours">생존이 걸린 토큰을 언어 모델은 어떻게 나누는가</a><div class="sub">2027 · CogSci 2027 한국어판 원고, 2026-10-23 no-appendix 빌드</div></td><td class="n">6 / 7</td><td class="n">6 / 17</td><td class="n">4 / 4</td><td>—</td><td>—</td><td>종합 논의 <span class="sub">(목표를 이어가며 함께 살아남기 · 한계와 향후 과제 · 결론)</span></td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.0940" title="서론 · 9%"><i>서론</i></span><span class="seg intro" style="flex:0.1270" title="관련 연구 · 13%"><i>관련 연구</i></span><span class="seg method" style="flex:0.2060" title="LLM Squid Game: 공존 아레나 · 21%"><i>LLM Squid Game: 공존 아레나</i></span><span class="seg method" style="flex:0.2150" title="평가 · 22%"><i>평가</i></span><span class="seg result" style="flex:0.2400" title="결과 · 24%"><i>결과</i></span><span class="seg disc" style="flex:0.1180" title="종합 논의 · 12%"><i>종합 논의</i></span></div></td></tr>
+<tr><td class="n">01</td><td><a href="#p02">AI-enhanced semantic feature norms for 786 concepts</a><div class="sub">2025 · Computational Modeling Prize, Applied Cognition</div></td><td class="n">6 / 8</td><td class="n">4 / 21</td><td class="n">5 / 0</td><td>—</td><td>예</td><td>Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1530" title="Introduction · 15%"><i>Introduction</i></span><span class="seg result" style="flex:0.5830" title="Study I: Building NOVA · 58%"><i>Study I: Building NOVA</i></span><span class="seg method" style="flex:0.1650" title="Study 2: Using the new norms dataset to predict human semantic judgments · 16%"><i>Study 2: Using the new norms dataset to predict human semantic judgments</i></span><span class="seg disc" style="flex:0.1000" title="Discussion · 10%"><i>Discussion</i></span></div></td></tr>
+<tr><td class="n">02</td><td><a href="#p03">Soft production preferences emerge from a bottleneck on memory</a><div class="sub">2025 · Computational Modeling Prize, Language</div></td><td class="n">6 / 8</td><td class="n">7 / 12</td><td class="n">4 / 1</td><td>—</td><td>예</td><td>Conclusion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1480" title="Introduction · 15%"><i>Introduction</i></span><span class="seg method" style="flex:0.2370" title="Model · 24%"><i>Model</i></span><span class="seg result" style="flex:0.1320" title="Study 1: Frequency Effects in Ordering · 13%"><i>Study 1: Frequency Effects in Ordering</i></span><span class="seg method" style="flex:0.1390" title="Study 2: Modeling Heavy-NP Shift · 14%"><i>Study 2: Modeling Heavy-NP Shift</i></span><span class="seg result" style="flex:0.1320" title="Study 3: Agreement Attraction · 13%"><i>Study 3: Agreement Attraction</i></span><span class="seg result" style="flex:0.1510" title="Study 4: Thematic Role Entropy · 15%"><i>Study 4: Thematic Role Entropy</i></span><span class="seg disc" style="flex:0.0620" title="Conclusion · 6%"><i>Conclusion</i></span></div></td></tr>
+<tr><td class="n">03</td><td><a href="#p04">Incentive Effects Capture Variability in Task-General Control Allocation</a><div class="sub">2025 · Computational Modeling Prize – Higher-Level Cognition</div></td><td class="n">6 / 7</td><td class="n">6 / 4</td><td class="n">4 / 1</td><td>—</td><td>—</td><td>Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.3130" title="Introduction · 31%"><i>Introduction</i></span><span class="seg method" style="flex:0.0650" title="Methodology – Experimental Tasks · 6%"><i>Methodology – Experimental Tasks</i></span><span class="seg method" style="flex:0.1420" title="Simulation Framework · 14%"><i>Simulation Framework</i></span><span class="seg method" style="flex:0.0990" title="Simulation Results · 10%"><i>Simulation Results</i></span><span class="seg result" style="flex:0.1450" title="Empirical Results · 14%"><i>Empirical Results</i></span><span class="seg disc" style="flex:0.2360" title="Discussion · 24%"><i>Discussion</i></span></div></td></tr>
+<tr><td class="n">04</td><td><a href="#p05">Probing Nonhuman Primate Errors on False Belief Tasks to Explore the Evolutionary Roots of Theory of Mind</a><div class="sub">2024 · Marr Prize (best student paper)</div></td><td class="n">6 / 8</td><td class="n">5 / 17</td><td class="n">2 / 1</td><td>—</td><td>예</td><td>General Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.2040" title="Introduction · 20%"><i>Introduction</i></span><span class="seg result" style="flex:0.2590" title="Study 1 · 26%"><i>Study 1</i></span><span class="seg result" style="flex:0.1560" title="Study 2 · 16%"><i>Study 2</i></span><span class="seg result" style="flex:0.1320" title="Study 3 · 13%"><i>Study 3</i></span><span class="seg disc" style="flex:0.2500" title="General Discussion · 25%"><i>General Discussion</i></span></div></td></tr>
+<tr><td class="n">05</td><td><a href="#p06">The Delusional Hedge Algorithm as a Model of Human Learning from Diverse Opinions</a><div class="sub">2024 · Computational Modeling Prize – Higher-Level Cognition</div></td><td class="n">6 / 7</td><td class="n">5 / 21</td><td class="n">4 / 0</td><td>—</td><td>예</td><td>Conclusion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1430" title="Introduction · 14%"><i>Introduction</i></span><span class="seg method" style="flex:0.2180" title="Preliminaries · 22%"><i>Preliminaries</i></span><span class="seg result" style="flex:0.4050" title="Experiment 1 · 40%"><i>Experiment 1</i></span><span class="seg result" style="flex:0.1860" title="Experiment 2 · 19%"><i>Experiment 2</i></span><span class="seg disc" style="flex:0.0480" title="Conclusion · 5%"><i>Conclusion</i></span></div></td></tr>
+<tr><td class="n">06</td><td><a href="#p07">Modality Matters: Evidence for the Benefits of Speech-Based Adaptive Retrieval Practice in Learners with Dyslexia</a><div class="sub">2024 · Computational Modeling Prize – Applied Cognition</div></td><td class="n">6 / 7</td><td class="n">5 / 11</td><td class="n">4 / 2</td><td>—</td><td>—</td><td>Conclusion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.2760" title="Introduction · 28%"><i>Introduction</i></span><span class="seg method" style="flex:0.3290" title="Methods · 33%"><i>Methods</i></span><span class="seg result" style="flex:0.1620" title="Results · 16%"><i>Results</i></span><span class="seg disc" style="flex:0.1970" title="Discussion · 20%"><i>Discussion</i></span><span class="seg disc" style="flex:0.0370" title="Conclusion · 4%"><i>Conclusion</i></span></div></td></tr>
+<tr><td class="n">07</td><td><a href="#p08">Storytelling as Inverse Inverse Planning</a><div class="sub">2023 · Marr Prize (best student paper)</div></td><td class="n">6 / 10</td><td class="n">4 / 11</td><td class="n">4 / 0</td><td>—</td><td>—</td><td>Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1290" title="Introduction · 13%"><i>Introduction</i></span><span class="seg intro" style="flex:0.2500" title="Background: Bayesian inverse planning · 25%"><i>Background: Bayesian inverse planning</i></span><span class="seg result" style="flex:0.5430" title="Inverse inverse planning · 54%"><i>Inverse inverse planning</i></span><span class="seg disc" style="flex:0.0770" title="Discussion · 8%"><i>Discussion</i></span></div></td></tr>
+<tr><td class="n">08</td><td><a href="#p09">People seek easily interpretable information</a><div class="sub">2023 · Computational Modeling Prize – Higher-Level Cognition</div></td><td class="n">6 / 7</td><td class="n">6 / 7</td><td class="n">6 / 0</td><td>예</td><td>예</td><td>Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.2570" title="Introduction · 26%"><i>Introduction</i></span><span class="seg method" style="flex:0.1140" title="Bounded LoT model · 11%"><i>Bounded LoT model</i></span><span class="seg result" style="flex:0.1950" title="Experiment 1 · 20%"><i>Experiment 1</i></span><span class="seg result" style="flex:0.1140" title="Experiment 2 · 11%"><i>Experiment 2</i></span><span class="seg result" style="flex:0.1730" title="Experiment 3 · 17%"><i>Experiment 3</i></span><span class="seg disc" style="flex:0.1460" title="Discussion · 15%"><i>Discussion</i></span></div></td></tr>
+<tr><td class="n">09</td><td><a href="#p11">An information-theoretic account of availability effects in language production</a><div class="sub">2023 · Computational Modeling Prize – Language</div></td><td class="n">6 / 9</td><td class="n">6 / 14</td><td class="n">3 / 2</td><td>—</td><td>예</td><td>Conclusion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1360" title="Introduction · 14%"><i>Introduction</i></span><span class="seg method" style="flex:0.3710" title="Model · 37%"><i>Model</i></span><span class="seg result" style="flex:0.2180" title="Study 1: Complementizer Dropping in English Relative Clauses · 22%"><i>Study 1: Complementizer Dropping in English Relative Clauses</i></span><span class="seg result" style="flex:0.1620" title="Study 2: Mandarin Classifier Choice · 16%"><i>Study 2: Mandarin Classifier Choice</i></span><span class="seg intro" style="flex:0.0960" title="Related Work · 10%"><i>Related Work</i></span><span class="seg disc" style="flex:0.0170" title="Conclusion · 2%"><i>Conclusion</i></span></div></td></tr>
+<tr><td class="n">10</td><td><a href="#p10">Mechanisms of Belief Persistence in the Face of Societal Disagreement</a><div class="sub">2022 · Marr Prize (best student paper)</div></td><td class="n">6 / 7</td><td class="n">5 / 24</td><td class="n">2 / 2</td><td>—</td><td>예</td><td>General Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.0590" title="Introduction · 6%"><i>Introduction</i></span><span class="seg intro" style="flex:0.1890" title="Persistent Disagreement · 19%"><i>Persistent Disagreement</i></span><span class="seg result" style="flex:0.3250" title="Experiment 1 · 32%"><i>Experiment 1</i></span><span class="seg result" style="flex:0.3060" title="Experiment 2 · 31%"><i>Experiment 2</i></span><span class="seg disc" style="flex:0.1210" title="General Discussion · 12%"><i>General Discussion</i></span></div></td></tr></tbody>
+</table></div>
+
+<h2>논문별 정리</h2>
+
+<article class="paper ours" id="ours">
+  <header>
+    <div class="eyebrow"><span class="k">우리</span> 우리 원고 · CogSci 2027 한국어판 원고, 2026-10-23 no-appendix 빌드</div>
+    <h3>생존이 걸린 토큰을 언어 모델은 어떻게 나누는가</h3>
+    
+    <p class="src">원고: paper/cogsci2027/ko/ · PDF paper/dist/ko_cogsci2027_2026-10-23_no_appendix.pdf</p>
+  </header>
+
+  <section class="abs">
+    <h4>초록</h4>
+    <p>우리는 LLM이 다른 에이전트들과 생존 게임에서 공존을 추구하는지 평가하는 아레나 LLM Squid Game을 제안한다. 아레나에서 모델들은 서로 주고받을 수 있는 생존 자원인 token을 소모하며 과제를 해결하고, 끝까지 살아남으면 상금 token을 나눠 갖는다. 우리는 별도의 지시 없는 생존 게임에서 모델들이 공존하는지 하위 개념인 목표 추구, 자기 보존, 협력으로 나누어 측정한다. 프론티어 다섯 모델의 결과에서 Fable 5.1은 최종 토큰의 평균과 불평등을 함께 반영하는 Sen 지수 427만 토큰으로 다섯 모델 중 가장 공존에 성공했다. 자기 보존은 토큰을 다른 에이전트한테 나눠 줄 때 상대와 나에게 남은 token 비율을 전달하는 token 양으로 가중한 M 로 정의했고, Fable 5.1이 M = 0.31로 가장 강한 자기 보존을 보였다. Fable 5.1은 주로 벌금이 정해지기 전에 소량의 자원을 여러 번 이전하고, GPT-6 Astra는 주로 오답 뒤에 큰 양을 이전하는 등 모델별 전략의 차이가 관찰되었다. Keywords: 대규모 언어 모델; 자기 보존; 공존; 다중 에이전트 아레나; 토큰 예산</p>
+    
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 2856어절 (PDF 7쪽)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.6부터 (본문과 같은 쪽에서 시작)</dd></div>
+      <div><dt>그 밖에</dt><dd>감사의 글 있음. 부록(보조 실험 · 사례)은 제출 때 보충 자료로 옮길 예정이라 제외.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 6 · 2수준 이하 17</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 4</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.0940" title="서론 · 9%"><i>서론</i></span><span class="seg intro" style="flex:0.1270" title="관련 연구 · 13%"><i>관련 연구</i></span><span class="seg method" style="flex:0.2060" title="LLM Squid Game: 공존 아레나 · 21%"><i>LLM Squid Game: 공존 아레나</i></span><span class="seg method" style="flex:0.2150" title="평가 · 22%"><i>평가</i></span><span class="seg result" style="flex:0.2400" title="결과 · 24%"><i>결과</i></span><span class="seg disc" style="flex:0.1180" title="종합 논의 · 12%"><i>종합 논의</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 어절 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>어절</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">서론</td><td class="n">p.1</td><td class="n">268</td><td class="n">9%</td></tr>
+<tr class="lv1"><td class="t">관련 연구</td><td class="n">p.1</td><td class="n">363</td><td class="n">13%</td></tr>
+<tr class="lv2"><td class="t">공존의 정의와 조건</td><td class="n">p.1</td><td class="n">109</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">자원을 나누어 함께 사는 환경</td><td class="n">p.1</td><td class="n">60</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">종료 회피로 잰 자기 보존</td><td class="n">p.2</td><td class="n">194</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">LLM Squid Game: 공존 아레나</td><td class="n">p.2</td><td class="n">588</td><td class="n">21%</td></tr>
+<tr class="lv2"><td class="t">참여자와 생존 자원</td><td class="n">p.2</td><td class="n">130</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">한 게임</td><td class="n">p.2</td><td class="n">99</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">한 라운드</td><td class="n">p.2</td><td class="n">243</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">시그널 게임</td><td class="n">p.3</td><td class="n">116</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">평가</td><td class="n">p.3</td><td class="n">614</td><td class="n">22%</td></tr>
+<tr class="lv2"><td class="t">공존 지표인 Sen 지수</td><td class="n">p.3</td><td class="n">154</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">자기 보존 지표 ρ</td><td class="n">p.3</td><td class="n">154</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">협력의 빈도와 이전량</td><td class="n">p.4</td><td class="n">181</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">풀이 판단의 JS 거리</td><td class="n">p.4</td><td class="n">125</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">결과</td><td class="n">p.4</td><td class="n">686</td><td class="n">24%</td></tr>
+<tr class="lv2"><td class="t">어느 모델이 함께 살아남았는가?</td><td class="n">p.4</td><td class="n">89</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">언제, 어떤 자원 조건에서 떠났는가?</td><td class="n">p.4</td><td class="n">160</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">모델들은 어떤 토큰 분배 전략을 썼는가?</td><td class="n">p.5</td><td class="n">399</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">종합 논의</td><td class="n">p.6</td><td class="n">337</td><td class="n">12%</td></tr>
+<tr class="lv2"><td class="t">목표를 이어가며 함께 살아남기</td><td class="n">p.6</td><td class="n">220</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">한계와 향후 과제</td><td class="n">p.6</td><td class="n">69</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">결론</td><td class="n">p.6</td><td class="n">48</td><td class="n"></td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 따로 있음</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> 종합 논의</li>
+      <li><b>마지막 절 소제목</b> 목표를 이어가며 함께 살아남기 · 한계와 향후 과제 · 결론</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> 아레나 규칙은 독립 1수준 절 &#x27;LLM Squid Game: 공존 아레나&#x27;(2수준 넷), 지표는 &#x27;평가&#x27; 절(2수준 넷)</li>
+      <li><b>첫 쪽 사용</b> 제목 · 초록 · 서론 · 관련 연구 첫 소절까지 1쪽</li>
+      <li><b>링크</b> —</li>
+    </ul>
+    
+  </section>
+</article>
+
+<article class="paper" id="p02">
+  <header>
+    <div class="eyebrow"><span class="k">01</span> CogSci 2025 · Computational Modeling Prize, Applied Cognition</div>
+    <h3>AI-enhanced semantic feature norms for 786 concepts</h3>
+    <p class="meta">Siddharth Suresh*, Kushin Mukherjee*, Tyler Giallanza, Xizheng Yu, Mia Patil, Jonathan D. Cohen, Timothy T. Rogers<br><span class="aff">Dept. of Psychology, University of Wisconsin-Madison; Dept. of Computer Sciences, University of Wisconsin-Madison; Wisconsin Institute for Discovery; Dept. of Psychology, Stanford University (Mukherjee); Dept. of Psychology, Princeton University (Giallanza); Dept. of Computer Science, Brown University (Yu, Cohen); Princeton Neuroscience Institute (Cohen). * = equal contribution</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/83q779kc" target="_blank" rel="noopener">https://escholarship.org/uc/item/83q779kc</a> · <a href="https://escholarship.org/content/qt83q779kc/qt83q779kc.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (CogSci 2025 proceedings pp.947-954); 9쪽 PDF = 표지 + 본문 8쪽</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>의미 자질 규준(semantic feature norms)은 인간 개념 지식 연구의 토대가 되어 왔지만, 규준 수집(norming) 연구가 노동 집약적이기 때문에 전통적 방법은 개념·자질의 포괄 범위와 품질 검증 가능성 사이에서 상충 관계를 피하지 못한다. 여기서 우리는 인간이 생성한 자질 규준 데이터셋을 대규모 언어 모델(LLM)의 응답으로 보강하되, 신뢰할 수 있는 인간 판단에 비추어 규준의 품질을 검증하는 새로운 접근을 소개한다. 우리가 만든 AI 보강 자질 규준 데이터셋 NOVA(Norms Optimized Via AI)는 개념 간 자질 밀도와 중첩이 훨씬 높으며, 사람들의 의미 유사성 판단을 예측하는 데에서 비교 가능한 인간 전용 규준 데이터셋과 단어 임베딩(word-embedding) 모델을 능가한다. 종합하면, 우리는 인간의 개념 지식이 기존 규준 데이터셋에 담긴 것보다 풍부하다는 것을 보이고, 적절한 검증을 거치면 LLM이 인지과학 연구의 강력한 도구가 될 수 있음을 보인다.</p>
+    <details><summary>영어 원문</summary><p class="en">Semantic feature norms have been foundational in the study of human conceptual knowledge, yet traditional methods face trade-offs between concept/feature coverage and verifiability of quality due to the labor-intensive nature of norming studies. Here, we introduce a novel approach that augments a dataset of human-generated feature norms with responses from large language models (LLMs) while verifying the quality of norms against reliable human judgments. We find that our AI-enhanced feature norm dataset, NOVA: Norms Optimized Via AI, shows much higher feature density and overlap among concepts while outperforming a comparable human-only norm dataset and word-embedding models in predicting people’s semantic similarity judgments. Taken together, we demonstrate that human conceptual knowledge is richer than captured in previous norm datasets and show that, with proper validation, LLMs can serve as powerful tools for cognitive science research.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3259단어 (PDF 8쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7 왼쪽 단 위 ~30% 지점(Acknowledgments + 코드 링크 상자 다음)부터 오른쪽 단 전체, 이어서 p.8 왼쪽 단 전체 + 오른쪽 단 위 ~40% (참고문헌 ~1.5쪽, 10pt). 본문은 p.6에서 끝남(Discussion이 p.6 오른쪽 단을 채움).</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments는 p.7 위(왼쪽 단, 연구비 포함 ~60단어); 바로 아래 테두리 상자 &#x27;All code and materials will be available at: https://github.com/Knowledge-and-Concepts-Lab/llm-norms-cogsci2025&#x27;. 각주 1개(p.6, Study 2 참가자). 초록 아래 Keywords 줄. 부록 없음. Proceedings 쪽수 947-954.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 4 · 2수준 이하 21</dd></div>
+      <div><dt>그림·표</dt><dd>그림 5 · 표 0</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1530" title="Introduction · 15%"><i>Introduction</i></span><span class="seg result" style="flex:0.5830" title="Study I: Building NOVA · 58%"><i>Study I: Building NOVA</i></span><span class="seg method" style="flex:0.1650" title="Study 2: Using the new norms dataset to predict human semantic judgments · 16%"><i>Study 2: Using the new norms dataset to predict human semantic judgments</i></span><span class="seg disc" style="flex:0.1000" title="Discussion · 10%"><i>Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">497</td><td class="n">15%</td></tr>
+<tr class="lv1"><td class="t">Study I: Building NOVA</td><td class="n">p.1</td><td class="n">52</td><td class="n">58%</td></tr>
+<tr class="lv4"><td class="t">Concept selection.</td><td class="n">p.1</td><td class="n">127</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Feature elicitation.</td><td class="n">p.2</td><td class="n">13</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Feature reduction.</td><td class="n">p.2</td><td class="n">178</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Feature verification.</td><td class="n">p.2</td><td class="n">220</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.3</td><td class="n">0</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Human feature elicitation.</td><td class="n">p.3</td><td class="n">24</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Participants.</td><td class="n">p.3</td><td class="n">35</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Stimuli and procedure.</td><td class="n">p.3</td><td class="n">82</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Human feature verification.</td><td class="n">p.3</td><td class="n">24</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Participants.</td><td class="n">p.3</td><td class="n">28</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Stimuli and procedure.</td><td class="n">p.3</td><td class="n">160</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">AI-enhanced feature verification.</td><td class="n">p.3</td><td class="n">114</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Model Suite.</td><td class="n">p.4</td><td class="n">119</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Evaluation Protocol.</td><td class="n">p.4</td><td class="n">111</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Post-processing.</td><td class="n">p.5</td><td class="n">61</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Results.</td><td class="n">p.5</td><td class="n">273</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Using Flan T5 and GPT-4o to impute the AI-enhanced matrix.</td><td class="n">p.5</td><td class="n">279</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 2: Using the new norms dataset to predict human semantic judgments</td><td class="n">p.5</td><td class="n">263</td><td class="n">16%</td></tr>
+<tr class="lv3"><td class="t">Generating maximally disagreeing triplets.</td><td class="n">p.6</td><td class="n">101</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Participants</td><td class="n">p.6</td><td class="n">30</td><td class="n"></td></tr>
+<tr class="lv4"><td class="t">Stimuli and Procedure.</td><td class="n">p.6</td><td class="n">53</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Results.</td><td class="n">p.6</td><td class="n">90</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">325</td><td class="n">10%</td></tr>
+<tr class="lv1"><td class="t">Acknowledgments</td><td class="n">p.7</td><td class="n">62</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">References</td><td class="n">p.7</td><td class="n">1236</td><td class="n"></td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> Discussion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 아니오</li>
+      <li><b>모델·형식 설명 위치</b> 별도 모델 절 없음. LLM 파이프라인(모델 묶음, 프롬프트, 평가 절차, 후처리)은 Study I의 &#x27;Methods&#x27; 안에서 굵은 run-in &#x27;AI-enhanced feature verification.&#x27;과 이탤릭 run-in 문단으로 서술; 프롬프트 원문은 p.4 고정폭 블록에 그대로 실림.</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 7명 + 3줄 소속 블록이 위 ~20%. 초록(9pt, 137단어) + Keywords가 왼쪽 단 위 절반; Introduction은 왼쪽 단 중간에서 시작해 p.1 나머지를 채움(~500단어, 3문단); Study I 제목은 오른쪽 단 아래 ~20%에서 시작 → p.1 = 초록 + Introduction 전체 + Study I 시작.</li>
+      <li><b>링크</b> Acknowledgments 바로 뒤 테두리 상자에 GitHub 코드·자료 링크(p.7); Methods에 IRB 승인 번호; OSF·사전등록 없음.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 전체 폭(두 단), 쪽 위 ~27% + 3줄 캡션 · Study I: Building NOVA (작업 흐름 도식: 크라우드소싱 -&gt; 축약 -&gt; 표집 -&gt; 사람 검증 -&gt; LLM 보충)</li><li>Fig. 2 · p.3 · 전체 폭, 쪽 위 ~19% + 4줄 캡션 · Study I, AI-enhanced feature verification (모델 비교 막대그래프, d&#x27;)</li><li>Fig. 3 · p.3 · 한 단(왼쪽), 단 아래 ~25% + 캡션 · Study I, Results / imputation (NOVA 의미 벡터의 t-SNE)</li><li>Fig. 4 · p.4 · 전체 폭, 쪽 위 ~48%(패널 A: 히스토그램, B: 유사도 행렬) + 3줄 캡션 · Study I, Results (사람만 대 AI 보강 행렬 비교)</li><li>Fig. 5 · p.5 · 한 단(오른쪽), 단 위 ~39% + 6줄 캡션(패널 A: 세 쌍(triplet) 절차, B: 선택 비율) · Study 2 (절차와 결과)</li></ul><h4>구조 읽기</h4><p class="summary">1수준 절은 Introduction · Study I · Study 2 · Discussion 넷뿐이고, 본문 약 3,260단어 가운데 Study I이 58%를 차지한다. 서론은 소제목 없이 세 문단(약 500단어, 1쪽 안에 끝남): 규준 연구의 역사·쓰임 → 사람 손이 많이 드는 문제와 임베딩·LLM 대안의 한계 → &#x27;인간 생성 + LLM 검증&#x27;이라는 중간 길과 NOVA 소개 순이다. 별도 관련 연구 절 대신 Study I 첫머리가 규준 수집의 네 단계(concept selection · elicitation · reduction · verification)를 기울임 run-in 문단으로 하나씩 짚으며 &#x27;선행 연구의 한계 → 우리의 선택&#x27;을 바로 잇는다. 이 구조가 관련 연구와 방법 근거를 한 번에 처리한다. 그 뒤 2수준 Methods 아래 굵은 run-in(인간 산출·인간 검증·AI 검증·Results) + 기울임 run-in(Participants · Stimuli and procedure)의 3층 위계로 촘촘히 나눴고, Study 2는 Methods 소제목 없이 run-in 둘(triplet 생성 · Results)로 짧게 끝낸다. Discussion은 소제목 없는 세 문단(요약 → 의의 → &#x27;Lastly&#x27; LLM 활용의 전망)이고 한계 절이나 따로 둔 결론 문단은 없다. 그림 다섯 개 중 셋이 전폭(워크플로 도식이 p.2 맨 위)이라 시각 자료가 쪽마다 하나 이상 놓인다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p03">
+  <header>
+    <div class="eyebrow"><span class="k">02</span> CogSci 2025 · Computational Modeling Prize, Language</div>
+    <h3>Soft production preferences emerge from a bottleneck on memory</h3>
+    <p class="meta">Neil Rathi, Richard Futrell, Dan Jurafsky<br><span class="aff">Rathi and Jurafsky: Stanford University; Futrell: University of California, Irvine (emails given under each name)</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/8d87v78d" target="_blank" rel="noopener">https://escholarship.org/uc/item/8d87v78d</a> · <a href="https://escholarship.org/content/qt8d87v78d/qt8d87v78d.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (CogSci 2025 proceedings pp.65-72); 9쪽 PDF = 표지 + 본문 8쪽</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>부드러운 산출 선호(soft production preferences)는 점진적 언어 산출(incremental language production)의 핵심 특징이지만, 이를 통일적으로 설명하는 잘 정의된 이론은 아직 없다. 여기서 우리는 손실 맥락 작업 기억(lossy-context working memory) 개념에 근거해 가용성 효과(availability effects)를 설명하는 정보이론적 이론을 제안한다. 이 이론은 언어 산출의 어떤 계산 수준 모델(computational-level model)에도 붙일 수 있는 비용 함수(cost function)의 형태를 띤다. 우리는 이 비용 함수를 최소화하는 산출 정책(production policy)이 경험 자료에서 관찰되는 핵심적인 부드러운 선호들, 곧 빈도 편향(frequency bias), 무거운 명사구 후치(heavy-NP shift), 일치 유인(agreement attraction)을 자연스럽게 낳는다는 것을 보인다. 이어서 논항의 의미역(thematic role) 엔트로피에 관해 모델이 내놓는 새로운 예측을 제시하고, 이 효과가 코퍼스 자료에서 성립함을 보인다.</p>
+    <details><summary>영어 원문</summary><p class="en">Soft production preferences are a key feature of incremental language production, yet they lack a well-defined unified explanatory theory. Here, we propose an information-theoretic theory of availability effects grounded in the notion of lossy-context working memory, which takes the form of a cost function that can be applied to any computational-level model of language production. We show that production policies that minimize this cost function naturally give rise to key soft preferences observed in empirical data, including frequency bias, heavy-NP shift, and agreement attraction. We then show a novel prediction made by the model regarding the entropy of arguments’ thematic roles, and show that this effect holds in corpus data.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3436단어 (PDF 8쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7(쪽 전체, 두 단) + p.8 왼쪽 단 전체와 오른쪽 단 위 ~55% (~1.8쪽, 10pt). 본문 + Acknowledgements는 p.6 아래에서 끝남.</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgements는 p.6 오른쪽 단 아래(~30단어, 연구비 줄 없음). 각주 4개(p.2 Model; p.5 Study 3 2개; p.5 Study 4). 초록 아래 Keywords 줄. 부록·보충자료·코드 링크 없음. Proceedings 쪽수 65-72.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 7 · 2수준 이하 12</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 1</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1480" title="Introduction · 15%"><i>Introduction</i></span><span class="seg method" style="flex:0.2370" title="Model · 24%"><i>Model</i></span><span class="seg result" style="flex:0.1320" title="Study 1: Frequency Effects in Ordering · 13%"><i>Study 1: Frequency Effects in Ordering</i></span><span class="seg method" style="flex:0.1390" title="Study 2: Modeling Heavy-NP Shift · 14%"><i>Study 2: Modeling Heavy-NP Shift</i></span><span class="seg result" style="flex:0.1320" title="Study 3: Agreement Attraction · 13%"><i>Study 3: Agreement Attraction</i></span><span class="seg result" style="flex:0.1510" title="Study 4: Thematic Role Entropy · 15%"><i>Study 4: Thematic Role Entropy</i></span><span class="seg disc" style="flex:0.0620" title="Conclusion · 6%"><i>Conclusion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">508</td><td class="n">15%</td></tr>
+<tr class="lv1"><td class="t">Model</td><td class="n">p.1</td><td class="n">326</td><td class="n">24%</td></tr>
+<tr class="lv2"><td class="t">Predictive Information</td><td class="n">p.2</td><td class="n">229</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Discounting</td><td class="n">p.2</td><td class="n">167</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Measuring Predictive Information</td><td class="n">p.2</td><td class="n">91</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 1: Frequency Effects in Ordering</td><td class="n">p.2</td><td class="n">172</td><td class="n">13%</td></tr>
+<tr class="lv2"><td class="t">Simulation Setup</td><td class="n">p.3</td><td class="n">234</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.3</td><td class="n">47</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 2: Modeling Heavy-NP Shift</td><td class="n">p.3</td><td class="n">153</td><td class="n">14%</td></tr>
+<tr class="lv2"><td class="t">Simulation Setup</td><td class="n">p.3</td><td class="n">275</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.4</td><td class="n">48</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 3: Agreement Attraction</td><td class="n">p.4</td><td class="n">183</td><td class="n">13%</td></tr>
+<tr class="lv2"><td class="t">Simulation Setup</td><td class="n">p.4</td><td class="n">183</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.5</td><td class="n">87</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 4: Thematic Role Entropy</td><td class="n">p.5</td><td class="n">97</td><td class="n">15%</td></tr>
+<tr class="lv2"><td class="t">Model Prediction</td><td class="n">p.5</td><td class="n">197</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Corpus Preparation</td><td class="n">p.5</td><td class="n">156</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.6</td><td class="n">69</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Conclusion</td><td class="n">p.6</td><td class="n">214</td><td class="n">6%</td></tr>
+<tr class="lv1"><td class="t">Acknowledgements</td><td class="n">p.6</td><td class="n">32</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">References</td><td class="n">p.7</td><td class="n">1351</td><td class="n"></td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> Conclusion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> Introduction 바로 뒤 독립 1단계 절 &#x27;Model&#x27;(본문 단어의 ~24%), 2단계 하위 절 3개(Predictive Information, Discounting, Measuring Predictive Information)에 번호 붙은 식 (1)-(6). 각 Study의 &#x27;Simulation Setup&#x27;이 이를 재사용; Study 4는 코퍼스 검증 앞에 &#x27;Model Prediction&#x27; 하위 절을 더함.</li>
+      <li><b>첫 쪽 사용</b> 제목(14pt) + 저자 3명 나란히(소속·이메일 포함)가 위 ~25%. 초록(9pt, 114단어) + Keywords가 왼쪽 단 위 절반; Introduction(~510단어, 첫 문단에 번호 붙은 언어 예문 (1a/b))이 왼쪽 단 중간부터 오른쪽 단 대부분까지; &#x27;Model&#x27; 제목이 이미 p.1 오른쪽 단 아래 1/3에서 시작.</li>
+      <li><b>링크</b> 없음(코드·데이터·OSF·사전등록 링크 없음). 관련 연구 인용은 Introduction과 Model 절에 녹아 있음; Study 4에서 코퍼스(Switchboard / Bresnan et al. 2007 여격 데이터) 인용.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.3 · 한 단(왼쪽), 단 위 ~25% + 5줄 캡션(산점도) · Study 1: Results</li><li>Fig. 2 · p.4 · 전체 폭, 쪽 위 ~27%, 나란한 두 패널 (a) head-initial, (b) head-final + 5줄 캡션 · Study 2: Results</li><li>Fig. 3 · p.5 · 한 단(왼쪽), 단 위 ~25% + 8줄 캡션(선 그래프) · Study 3: Results</li><li>Fig. 4 · p.6 · 전체 폭, 쪽 위 ~27%, 두 패널 (a) 시뮬레이션, (b) Switchboard 코퍼스 + 3줄 캡션 · Study 4: Results</li><li>Table 1 · p.6 · 전체 폭, 쪽의 ~10%(나란한 4행 회귀표 2개: 시뮬레이션 대 자연 코퍼스) + 4줄 캡션, Figure 4 바로 아래 · Study 4: Results</li></ul><h4>구조 읽기</h4><p class="summary">1수준 절이 일곱 개다: Introduction(15%) · Model(24%) · Study 1~4(각 13~15%) · Conclusion(6%). 본문은 약 3,440단어다. 서론은 소제목 없이 네 문단으로 1쪽 안에 끝난다. 첫 문단에 번호 붙은 언어 예문 (1a/b)를 넣어 현상을 바로 보여 주고, 용어 정의 → 기존 설명의 공백과 &#x27;이렇게 제안한다&#x27; → &#x27;In what follows&#x27; 로드맵 순으로 간다. 별도 관련 연구 절은 없고, 이론(예측 정보량 비용 함수)은 서론 바로 뒤 독립 1수준 절 &#x27;Model&#x27; 아래 2수준 셋에 수식과 함께 모아 둔다. 그 덕에 Study 1~3은 &#x27;Simulation Setup / Results&#x27; 두 소제목만 되풀이하는 짧은 평행 구조가 된다(각 결과 문단은 50~90단어와 그림 하나). Study 4만 &#x27;Model Prediction → Corpus Preparation → Results&#x27;로 &#x27;새 예측 → 코퍼스 검증&#x27;의 클라이맥스를 이룬다. 맺음은 &#x27;General Discussion&#x27;이 아닌 소제목 없는 짧은 Conclusion(두 문단)으로, 이론 요약 → RSA·RDC 같은 다른 산출 모델과의 결합 가능성 → &#x27;It remains to be seen&#x27; 미해결 질문 한 문장으로 끝난다. 그림 넷과 표 하나가 모두 각 Study의 Results에 붙고, 둘은 전폭·둘은 한 단이다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p04">
+  <header>
+    <div class="eyebrow"><span class="k">03</span> CogSci 2025 · Computational Modeling Prize – Higher-Level Cognition</div>
+    <h3>Incentive Effects Capture Variability in Task-General Control Allocation</h3>
+    <p class="meta">Ziwei Cheng, Xiamin Leng, Amitai Shenhav<br><span class="aff">Department of Psychology, University of California Berkeley, Berkeley, CA, USA</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/7bd3x7n7" target="_blank" rel="noopener">https://escholarship.org/uc/item/7bd3x7n7</a> · <a href="https://escholarship.org/content/qt7bd3x7n7/qt7bd3x7n7.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (PDF 8쪽 = 표지 1 + 본문 7쪽; proceedings pp. 782-788, Proceedings of CogSci 47). 본문 p.1 제목 확인함.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>사람들이 인지 통제(cognitive control)를 얼마나 투입하는지의 개인차를 이해하기 위해, 연구자들은 여러 실험실 과제를 사용하여 통제 요구가 더 큰 시행과 더 작은 시행의 수행을 비교한다(예: 일치성 효과(congruency effects)). 그러나 선행 연구는 인지 통제 과제들 사이에서 일관된 상관 패턴을 찾는 데 어려움을 겪었고, 이는 이러한 과제들의 효용과 과제 일반적 통제(task-general control)의 존재 자체에 의문을 불러일으켰다. 본 연구는 이러한 타당도 문제가 과제 자체가 아니라 일치성 효과가 자극에 의해 좌우된다는(stimulus-driven) 성질에서 비롯된 것일 수 있는지를 검증하고자 했다. 이 걸림돌을 넘기 위해 우리는 자극 특징은 일정하게 유지한 채 과제의 유인(incentive)을 변화시켰다. 우리는 이론적으로도 경험적으로도, 통제 배분(control allocation)에 대한 유인의 효과가 과제 간에 상관됨을 보인다. 종합하면, 이 결과는 서로 다른 맥락에 걸쳐 작동하는 과제 일반적 통제 과정을 지지한다.</p>
+    <details><summary>영어 원문</summary><p class="en">To understand how people vary in their cognitive control engagement, researchers use different laboratory tasks and compare performance on trials that are more versus less control-demanding (e.g., congruency effects). However, previous research has struggled to uncover consistent patterns of correlation across cognitive control tasks, leading to questions about the utility of these tasks and the existence of task-general control. The current study sought to test whether these validity concerns may center on the stimulus-driven nature of congruency effects, rather than the tasks themselves. To overcome this obstacle, we varied task incentives while holding stimulus features constant. We show both theoretically and empirically that the effects of incentives on control allocation correlate across tasks. Together, findings support task-general control processes that operate across different contexts.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 2937단어 (PDF 7쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.6 왼쪽 단 위 1/5 지점(맺음 문단과 Acknowledgments 다음)부터 오른쪽 단 전체 – p.7 왼쪽 단 위 절반(총 ~1.3쪽; 본문은 p.6 위에서 끝남)</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments는 p.6(&#x27;In conclusion&#x27; 문단과 References 사이, ~31단어, NIH/NSF 연구비). p.4에 Figure 3에 붙은 각주 1개(robust regression 설명). 부록·OSF/코드/보충자료 링크·사전등록 없음.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 6 · 2수준 이하 4</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 1</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.3130" title="Introduction · 31%"><i>Introduction</i></span><span class="seg method" style="flex:0.0650" title="Methodology – Experimental Tasks · 6%"><i>Methodology – Experimental Tasks</i></span><span class="seg method" style="flex:0.1420" title="Simulation Framework · 14%"><i>Simulation Framework</i></span><span class="seg method" style="flex:0.0990" title="Simulation Results · 10%"><i>Simulation Results</i></span><span class="seg result" style="flex:0.1450" title="Empirical Results · 14%"><i>Empirical Results</i></span><span class="seg disc" style="flex:0.2360" title="Discussion · 24%"><i>Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">918</td><td class="n">31%</td></tr>
+<tr class="lv1"><td class="t">Methodology – Experimental Tasks</td><td class="n">p.2</td><td class="n">192</td><td class="n">6%</td></tr>
+<tr class="lv1"><td class="t">Simulation Framework</td><td class="n">p.3</td><td class="n">416</td><td class="n">14%</td></tr>
+<tr class="lv1"><td class="t">Simulation Results</td><td class="n">p.3</td><td class="n">292</td><td class="n">10%</td></tr>
+<tr class="lv2"><td class="t">Analyses of Task Performance</td><td class="n">p.3</td><td class="n">101</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Analyses of Task-General Control</td><td class="n">p.3</td><td class="n">191</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Empirical Results</td><td class="n">p.4</td><td class="n">425</td><td class="n">14%</td></tr>
+<tr class="lv2"><td class="t">Analyses of Task Performance</td><td class="n">p.4</td><td class="n">208</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Analyses of Task-General Control</td><td class="n">p.4</td><td class="n">217</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.5</td><td class="n">694</td><td class="n">24%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> Discussion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> 독립 1단계 절 &#x27;Simulation Framework&#x27;(p.3, 단어의 ~14%): EVC + drift-diffusion model(DDM)을 본문 수식으로, 과제 절과 결과 사이에 둠. 이어서 시뮬레이션 결과와 실험 결과가 2단계 소제목이 똑같은 평행한 1단계 절 두 개. 참가자 정보(N=106, Prolific)와 HDDM 적합은 Methods 절 대신 &#x27;Empirical Results&#x27; 안에 들어감.</li>
+      <li><b>첫 쪽 사용</b> 위 ~20%: 제목(1줄) + 이메일 포함 저자 3줄. 왼쪽 단: 초록(124단어) + keywords가 단의 ~55%까지; Introduction은 왼쪽 단 아래 ~40%에서 시작해 오른쪽 단 전체를 채움(p.1의 Introduction ~0.6쪽); 맨 아래 CogSci 저작권 꼬리말.</li>
+      <li><b>링크</b> 없음(OSF·코드·데이터·사전등록 링크 없음). 참고문헌 목록 안의 DOI뿐.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 한 단(왼쪽), 긴 캡션 포함 단 높이의 ~40%(그림 ~135pt + 캡션 ~115pt) · Introduction (개념적 예측 도식: 하향식 대 상향식 기여가 congruency 효과와 incentive 효과에 미치는 몫)</li><li>Fig. 2 · p.2 · 한 단(오른쪽), 캡션 포함 단의 ~1/3; 캡션이 p.3 위로 넘어감 · Methodology – Experimental Tasks (과제·시행 도식)</li><li>Fig. 3 · p.4 · 한 단(오른쪽), 캡션 포함 단의 ~절반 · Empirical Results – Analyses of Task Performance / Task-General Control (행동 효과 + 과제 간 산점도)</li><li>Fig. 4 · p.5 · 한 단(왼쪽 위), 캡션 포함 단의 ~45% · Empirical Results – Analyses of Task-General Control (DDM 모수 효과 + 과제 간 상관); Discussion 제목 바로 위</li><li>Table 1 · p.4 · 한 단(왼쪽 위), 단의 ~30% · Simulation Results (시뮬레이션한 congruency/reward/penalty 효과와 과제 간 r)</li></ul><h4>구조 읽기</h4><p class="summary">본문 약 5.2쪽 + 참고문헌 약 1.3쪽(총 7쪽). 서론이 918단어(31%)로 가장 길고 소제목 없이 7문단이며, 마지막 문단에서 &#x27;유인 효과는 과제 간에 상관하지만 일치성 효과는 아니다&#x27;라는 예측을 명시하고, 그림 1(서론 안의 개념도)로 가설을 먼저 시각화한다. 이어 1수준 절을 &#x27;Methodology – Experimental Tasks(과제 한 쪽 남짓) → Simulation Framework(EVC+DDM 수식) → Simulation Results → Empirical Results&#x27;로 잘게 나누고, 두 결과 절에 같은 2수준 소제목 쌍(Analyses of Task Performance / Analyses of Task-General Control)을 반복해 이론 예측과 실측을 나란히 대조하게 했다. 참가자·모형 적합 정보는 별도 Methods 없이 Empirical Results 첫 소절에 넣어 지면을 아꼈다. Discussion(24%)은 소제목 없이 요약 → 논쟁 속 위치 → 측정 실무 함의(NIH Toolbox) → 한계·향후 연구 → &#x27;In conclusion&#x27; 한 문단으로 끝나며, 결론 절을 따로 두지 않는다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p05">
+  <header>
+    <div class="eyebrow"><span class="k">04</span> CogSci 2024 · Marr Prize (best student paper)</div>
+    <h3>Probing Nonhuman Primate Errors on False Belief Tasks to Explore the Evolutionary Roots of Theory of Mind</h3>
+    <p class="meta">Amanda Royka, Daniel Horschler, Walker Bargmann, Laurie Santos<br><span class="aff">Department of Psychology, Yale University, New Haven, CT, USA (Royka and Horschler equal contribution)</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/43h3z261" target="_blank" rel="noopener">https://escholarship.org/uc/item/43h3z261</a> · <a href="https://www.danielhorschler.com/docs/RoykaEtAl-2024-ToMErrors.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">저자 사이트 PDF(Daniel Horschler 웹사이트), CogSci 2단 형식 8쪽, 표지 없음. eScholarship 항목 43h3z261 (PDF https://escholarship.org/content/qt43h3z261/qt43h3z261.pdf)은 초록만 실림(본문 1쪽, proceedings p.1661, CogSci 46) → 전문은 저자 사이트에서 가져옴; 그 초록은 eScholarship 초록보다 긴 판이고, 안의 OSF 링크는 익명 열람 전용 링크(proceedings 조판본이 아니라 제출본/최종본 원고로 보임). 학술지 후속판은 Cognition 270, 106400(연구 4개).</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>마음 이론(Theory of Mind, ToM)은 인간 사회 인지의 핵심이지만, 이 능력의 기원은 여전히 잘 이해되지 않았다. 영아와 비인간 영장류는 모두 틀린 믿음 과제(false belief tasks)에서 일관되지 않은 수행을 보이며, 이 때문에 ToM의 토대를 이루는 표상에 대한 이해가 제한된다. 이 연구에서 우리는 이러한 실패를 해부함으로써 복잡하고 종종 서로 모순되는 이 문헌을 더 잘 이해하고자 한다. 구체적으로, 비인간 영장류가 틀린 믿음 과제에서 보이는 특징적인 영(null) 수행에 초점을 맞추어, 이들이 어떤 조건에서 행위자(agent)의 행동에 대한 예측을 생성하는지 검증한다. 세 연구(n=419 개체)에 걸쳐, 붉은털원숭이(rhesus monkeys)는 밀접하게 대응된 통제 조건에서는 성공하면서도, 틀린 믿음을 가진 행위자가 어떻게 행동할지는 예측하지 못했으며, 이는 행위자가 매우 예상 밖의, 일어날 법하지 않은 행동을 할 때조차 마찬가지였다. 우리는 이 수행 패턴을, 행위자가 인식하지 못하는 사이에 장면이 바뀌고 나면 원숭이가 그 행위자의 과거 인식(past awareness)에 대한 표상을 전혀 갖지 않을 수 있고, 그 결과 행위자의 이후 행동을 예측하지 못한다는 증거로 해석한다. 전반적으로 이 연구는 ToM 평가에 흔히 쓰이는 성공/실패 이분법을 넘어, 영장류 ToM의 고유한 한계(signature limits)를 더 정밀하게 특징짓는 데 기여하며, 우리는 이 한계가 인간 영아에게도 공유될 수 있다고 주장한다.</p>
+    <details><summary>영어 원문</summary><p class="en">Theory of Mind (ToM) is central to human social cognition, yet the roots of this capacity remain poorly understood. Both infants and nonhuman primates show inconsistent performance on false belief tasks, limiting our understanding of the representations that characterize the foundations of ToM. Here, we try to better understand this complex and often contradictory literature by dissecting these failures. Specifically, we focus on nonhuman primates’ characteristic null performance on false belief tasks to test the circumstances under which they generate predictions about the behavior of an agent. Across three studies (n=419 subjects), we find that—despite succeeding on a closely matched control—rhesus monkeys fail to predict how agents with false beliefs will behave even when the agents perform highly unexpected, unlikely actions. We interpret this pattern of performance as evidence that monkeys may have no representation of another agent’s past awareness once the scene changes outside of that agent’s awareness, thus preventing them from making predictions about the agent&#x27;s future actions. Overall, this work helps to move beyond the success/failure dichotomy typically used to assess ToM, and instead gives a more precise characterization of primates’ signature limits in ToM, which we argue may also be shared with human infants.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 4448단어 (PDF 8쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7(쪽 전체, 제목은 왼쪽 단 맨 위) – p.8 왼쪽 단 위 ~1/4 (~1.15쪽); 본문은 정확히 pp.1-6</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments 없음. p.1에 공동 저자 각주(&#x27;*Denotes equal authorship credit&#x27;). General Discussion 끝(p.6)에 굵은 run-in 줄 &#x27;OSF Repository&#x27;와 익명 열람 전용 OSF 링크. 부록·사전등록 진술 없음.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 5 · 2수준 이하 17</dd></div>
+      <div><dt>그림·표</dt><dd>그림 2 · 표 1</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.2040" title="Introduction · 20%"><i>Introduction</i></span><span class="seg result" style="flex:0.2590" title="Study 1 · 26%"><i>Study 1</i></span><span class="seg result" style="flex:0.1560" title="Study 2 · 16%"><i>Study 2</i></span><span class="seg result" style="flex:0.1320" title="Study 3 · 13%"><i>Study 3</i></span><span class="seg disc" style="flex:0.2500" title="General Discussion · 25%"><i>General Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">907</td><td class="n">20%</td></tr>
+<tr class="lv1"><td class="t">Study 1</td><td class="n">p.2</td><td class="n">1151</td><td class="n">26%</td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.2</td><td class="n">700</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Subjects</td><td class="n">p.2</td><td class="n">110</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Apparatus</td><td class="n">p.2</td><td class="n">195</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Procedure</td><td class="n">p.2</td><td class="n">373</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Video Coding</td><td class="n">p.3</td><td class="n">22</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results and Discussion</td><td class="n">p.3</td><td class="n">451</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 2</td><td class="n">p.3</td><td class="n">694</td><td class="n">16%</td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.3</td><td class="n">348</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Subjects</td><td class="n">p.3</td><td class="n">44</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Procedure</td><td class="n">p.3</td><td class="n">288</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Video Coding</td><td class="n">p.4</td><td class="n">16</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results and Discussion</td><td class="n">p.4</td><td class="n">346</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 3</td><td class="n">p.4</td><td class="n">586</td><td class="n">13%</td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.4</td><td class="n">218</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Subjects</td><td class="n">p.4</td><td class="n">58</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Procedure</td><td class="n">p.5</td><td class="n">145</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Video Coding</td><td class="n">p.5</td><td class="n">15</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results and Discussion</td><td class="n">p.5</td><td class="n">287</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">General Discussion</td><td class="n">p.5</td><td class="n">1110</td><td class="n">25%</td></tr>
+<tr class="lv3"><td class="t">OSF Repository</td><td class="n">p.6</td><td class="n">6</td><td class="n"></td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> General Discussion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 아니오</li>
+      <li><b>모델·형식 설명 위치</b> 형식/계산 모델 없음. 언어로 된 두 가설(&#x27;multiple predictions account&#x27; 대 &#x27;no prediction account&#x27;)을 Introduction(3-6문단)에서 이름 붙이고 예측을 도출; 설계 논리(무관한 숨김 위치 추가)도 Introduction에 있음.</li>
+      <li><b>첫 쪽 사용</b> 위 ~25%: 2줄 제목 + 저자 1줄(공동 기여 별표) + 소속. 왼쪽 단: 긴 초록(~198단어) + keywords가 단의 ~65%까지; Introduction은 왼쪽 단 아래 ~30%에서 시작해 오른쪽 단을 채움(p.1의 Introduction ~0.6쪽); 공동 저자 각주.</li>
+      <li><b>링크</b> 논문 본문의 마지막 항목으로 익명 열람 전용 OSF 저장소 링크(굵은 run-in &#x27;OSF Repository&#x27;, General Discussion 끝, p.6). 사전등록·코드 링크 없음.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 한 단(오른쪽 위), 단의 ~60%: 스토리보드 패널 a-f(~25%) + 매우 긴 캡션(~30%) · Study 1 – Methods (Apparatus/Procedure); 그림 하나로 세 연구의 절차를 모두 보여 줌</li><li>Fig. 2 · p.4 · 전체 폭(두 단), 2줄 캡션 포함 쪽 위 ~28% · Studies 1-3의 Results(연구마다 패널 하나, 총 3개); Study 2 Results / Study 3 시작 지점에 배치</li><li>Table 1 · p.5 · 한 단(오른쪽 위), 단의 ~60%, 작은 7pt 글꼴 · Study 3 Results and Discussion (Studies 1-3 회귀계수를 한 표에 합침)</li></ul><h4>구조 읽기</h4><p class="summary">본문 6쪽을 꽉 채우고 참고문헌이 7쪽 전체와 8쪽 왼쪽 단 상단을 쓴다(총 8쪽). 서론(20%)은 소제목 없이 6문단으로 &#x27;문헌의 모순 → 두 설명(multiple predictions account vs no prediction account) 명명 → 전형적 패러다임 → 무관한 위치를 더한 본 연구 설계와 예측&#x27;으로 좁혀 간다. 세 연구를 각각 1수준 절(Study 1/2/3)로 두고 그 안에 2수준 Methods / Results and Discussion, Methods 안에 3수준 run-in(Subjects, Apparatus, Procedure, Video Coding)을 똑같이 반복하는 고전적 다실험 구조이며, Study 2·3은 &#x27;앞과 같다&#x27;고 참조해 Methods를 줄이므로 분량이 26%→16%→13%로 줄어든다. 각 Results and Discussion의 끝 문단이 다음 연구의 동기(대안 해석 배제)를 제시해 연구를 잇고, 절차 그림 하나·결과 그림 하나(전폭)·회귀표 하나가 세 연구를 한꺼번에 묶어 지면을 아낀다. General Discussion(25%)은 소제목 없이 약 7문단(요약 → 이론적 설명 → 단서 → 예견 응시 결과와의 조화 → 영아 연구로의 확장)이며 결론 문단 없이 열린 질문으로 끝나고, 마지막 줄에 &#x27;OSF Repository&#x27; 링크를 둔다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p06">
+  <header>
+    <div class="eyebrow"><span class="k">05</span> CogSci 2024 · Computational Modeling Prize – Higher-Level Cognition</div>
+    <h3>The Delusional Hedge Algorithm as a Model of Human Learning from Diverse Opinions</h3>
+    <p class="meta">Yun-Shiuan Chuang, Xiaojin Zhu, Timothy T. Rogers<br><span class="aff">University of Wisconsin-Madison, Madison, WI, USA</span></p>
+    <p class="src">출처: <a href="https://arxiv.org/abs/2402.13927" target="_blank" rel="noopener">https://arxiv.org/abs/2402.13927</a> · <a href="https://pages.cs.wisc.edu/~jerryzhu/pub/ChuangCogSci2024.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">저자 사이트 PDF(Jerry Zhu의 UW-Madison 페이지, 파일 &#x27;ChuangCogSci2024.pdf&#x27;), CogSci 2단 LaTeX 형식 7쪽, 표지 없음; acknowledgements에 익명 심사자 감사가 있어 최종본(camera-ready)임. eScholarship 항목은 찾지 못함(eScholarship 검색은 봇 확인에 막히고 웹 검색에도 없음) — 확장판이 Topics in Cognitive Science(2025, doi:10.1111/tops.12783)에 실려 초록만 게재됐거나 색인되지 않은 것으로 보임. arXiv 2402.13927이 프리프린트 기록; eScholarship 페이지가 없어 url_page는 그곳을 가리킴.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>학습에 관한 인지 모형은 흔히 사건의 특징과 참 레이블(또는 결과)을 모두 직접 경험한다고 가정하지만, 일상 학습의 상당 부분은 경험이나 정답 결과(ground truth)에 직접 접근하지 못한 채 다른 사람들의 의견을 듣는 데서 일어난다. 우리는 이런 상황에서 사람들이 어떤 의견을 신뢰할지를 어떻게 학습하는지를, 다양한 정보원으로부터 학습하는 고전적 해법인 hedge 알고리즘(hedge algorithm)을 확장하여 다룬다. 먼저 지도(supervised) 경험과 비지도(unsupervised) 경험 모두로부터 학습할 수 있는 준지도(semi-supervised) 변형을 제안하고, 이를 delusional hedge라 부른다. 두 실험에서 우리는 인간의 판단이 표준 hedge, delusional hedge, 그리고 휴리스틱 기저 모형(heuristic baseline model)의 예측과 얼마나 일치하는지 검토한다. 결과는 인간이 레이블이 있는 정보와 없는 정보를 delusional hedge 알고리즘과 부합하는 방식으로 효과적으로 통합함을 보여 주며, 이는 인간 학습자가 정보원의 정확도뿐 아니라 다른 신뢰할 만한 정보원과의 일관성까지 가늠한다는 점을 시사한다. 이 발견은 다양한 의견으로부터 배우는 인간 학습에 대한 이해를 넓히며, 사람들이 서로 상충하는 정보원에 가중치를 두는 방식을 더 잘 포착하는 알고리즘을 개발하는 데 시사점을 준다.</p>
+    <details><summary>영어 원문</summary><p class="en">Whereas cognitive models of learning often assume direct experience with both the features of an event and with a true label or outcome, much of everyday learning arises from hearing the opinions of others, without direct access to either the experience or the ground truth outcome. We consider how people can learn which opinions to trust in such scenarios by extending the hedge algorithm: a classic solution for learning from diverse information sources. We first introduce a semi-supervised variant we call the delusional hedge capable of learning from both supervised and unsupervised experiences. In two experiments, we examine the alignment between human judgments and predictions from the standard hedge, the delusional hedge, and a heuristic baseline model. Results indicate that humans effectively incorporate both labeled and unlabeled information in a manner consistent with the delusional hedge algorithm—suggesting that human learners not only gauge the accuracy of information sources but also their consistency with other reliable sources. The findings advance our understanding of human learning from diverse opinions, with implications for the development of algorithms that better capture how people learn to weigh conflicting information sources.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3796단어 (PDF 7쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7 왼쪽 단만(맨 위 Acknowledgements, References 제목은 ~1/5 지점, 목록은 단의 ~80%에서 끝남; 참고문헌 14개); p.7 오른쪽 단은 비어 있음. 본문은 p.6 아래에서 끝남.</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgements는 p.7(익명 심사자 감사; NSF/ARO/AF 연구비). p.1 아래 용어 각주 1. p.2에 Algorithm 1 의사코드 상자. 부록·코드/데이터/OSF 링크·사전등록 없음.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 5 · 2수준 이하 21</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 0</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1430" title="Introduction · 14%"><i>Introduction</i></span><span class="seg method" style="flex:0.2180" title="Preliminaries · 22%"><i>Preliminaries</i></span><span class="seg result" style="flex:0.4050" title="Experiment 1 · 40%"><i>Experiment 1</i></span><span class="seg result" style="flex:0.1860" title="Experiment 2 · 19%"><i>Experiment 2</i></span><span class="seg disc" style="flex:0.0480" title="Conclusion · 5%"><i>Conclusion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">541</td><td class="n">14%</td></tr>
+<tr class="lv1"><td class="t">Preliminaries</td><td class="n">p.2</td><td class="n">827</td><td class="n">22%</td></tr>
+<tr class="lv2"><td class="t">Online SSL with Source Opinion</td><td class="n">p.2</td><td class="n">215</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Online Learning with Diverse Opinions Algorithms</td><td class="n">p.2</td><td class="n">612</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Hedge Algorithm</td><td class="n">p.2</td><td class="n">234</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Delusional Hedge Algorithm</td><td class="n">p.2</td><td class="n">240</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Accuracy-Majority Heuristic</td><td class="n">p.2</td><td class="n">133</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiment 1</td><td class="n">p.2</td><td class="n">1538</td><td class="n">40%</td></tr>
+<tr class="lv3"><td class="t">Behavioral Experiment Procedure</td><td class="n">p.2</td><td class="n">439</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Conditions of Different Supervision Levels</td><td class="n">p.3</td><td class="n">77</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Participants</td><td class="n">p.3</td><td class="n">76</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Model Fitting</td><td class="n">p.3</td><td class="n">49</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results of Experiment 1</td><td class="n">p.3</td><td class="n">897</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Online Learning Behavior</td><td class="n">p.3</td><td class="n">402</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Final-State Trust in Algorithm Simulations</td><td class="n">p.4</td><td class="n">134</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Source Ratings</td><td class="n">p.4</td><td class="n">236</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Discussion</td><td class="n">p.5</td><td class="n">125</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiment 2</td><td class="n">p.5</td><td class="n">706</td><td class="n">19%</td></tr>
+<tr class="lv3"><td class="t">Behavioral Experiment Procedure</td><td class="n">p.5</td><td class="n">255</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Participants</td><td class="n">p.5</td><td class="n">44</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Model Fitting</td><td class="n">p.6</td><td class="n">27</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results of Experiment 2</td><td class="n">p.6</td><td class="n">380</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Final-State Trust in Algorithm Simulations</td><td class="n">p.6</td><td class="n">160</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Source ratings</td><td class="n">p.6</td><td class="n">109</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">111</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Conclusion</td><td class="n">p.6</td><td class="n">184</td><td class="n">5%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> Conclusion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> 실험 앞 독립 1단계 절 &#x27;Preliminaries&#x27;(p.2, 단어의 ~22%): 온라인 준지도 학습의 형식적 설정(2단계)과 후보 모델 3개(2단계, run-in 3단계 &#x27;Hedge Algorithm.&#x27;, &#x27;Delusional Hedge Algorithm.&#x27;, &#x27;Accuracy-Majority Heuristic.&#x27;) + 표준·delusional hedge를 담은 Algorithm 1 의사코드 상자. 모델 적합 세부는 실험마다 run-in &#x27;Model Fitting.&#x27; 문단으로 다시 나옴.</li>
+      <li><b>첫 쪽 사용</b> 위 ~25%: 2줄 제목 + 저자 3명 나란히(소속/이메일). 왼쪽 단: 초록(~186단어) + keywords가 y=440 부근(단의 ~55-60%)까지; Introduction은 왼쪽 아래(단의 ~35%)에서 시작해 오른쪽 단을 채우고, 맨 아래 7줄 용어 각주(p.1의 Introduction ~0.6쪽).</li>
+      <li><b>링크</b> 없음(코드·데이터·OSF·사전등록 링크 없음).</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.3 · 한 단(왼쪽 위), 캡션 포함 단의 ~40% · Experiment 1 – Behavioral Experiment Procedure (과제 공간 + UI 화면, 패널 a-d)</li><li>Fig. 2 · p.4 · 전체 폭(두 단), 캡션 포함 쪽 위 ~절반 · Results of Experiment 1 – Online Learning Behavior (사람 대 모델 3개, 100시행, 패널 격자)</li><li>Fig. 3 · p.5 · 한 단(왼쪽), 12줄 캡션 포함 단 높이의 ~85%(5행 다중 패널) · Results of Experiment 1 – Final-State Trust / Source Ratings</li><li>Fig. 4 · p.6 · 한 단(왼쪽 위), 캡션 포함 단의 ~70% · Results of Experiment 2</li></ul><h4>구조 읽기</h4><p class="summary">본문 6쪽 + 7쪽 왼쪽 단의 감사의 글·참고문헌(14편으로 짧음)으로 구성된다. 서론은 541단어(14%) 3문단으로 짧은 대신, &#x27;Preliminaries&#x27; 1수준 절(22%)에서 형식적 문제 설정(2수준 Online SSL with Source Opinion)과 비교 모형 셋(2수준 아래 run-in: Hedge / Delusional Hedge / Accuracy-Majority Heuristic, 의사코드 Algorithm 1 상자)을 실험보다 먼저 모두 정의한다. 두 실험은 각각 1수준 절이며, &#x27;Methods&#x27; 2수준 없이 run-in(Behavioral Experiment Procedure, Conditions, Participants, Model Fitting)을 바로 두고, &#x27;Results of Experiment N&#x27; 2수준 아래 run-in 소절들과 &#x27;Discussion.&#x27; run-in 한 문단으로 실험별 논의를 마무리한다. Experiment 1이 41%로 가장 길고, Experiment 2(19%)는 두 모형의 예측이 갈리도록 설계된 조건만 짧게 다룬다. General Discussion이 없고 &#x27;Conclusion&#x27; 한 문단(5%)으로 끝나며, 큰 다패널 그림(전폭 1개, 거의 한 단 높이 2개)이 결과 서술의 상당 부분을 대신한다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p07">
+  <header>
+    <div class="eyebrow"><span class="k">06</span> CogSci 2024 · Computational Modeling Prize – Applied Cognition</div>
+    <h3>Modality Matters: Evidence for the Benefits of Speech-Based Adaptive Retrieval Practice in Learners with Dyslexia</h3>
+    <p class="meta">Thomas Wilschut, Florian Sense, Hedderik van Rijn<br><span class="aff">Department of Experimental Psychology, University of Groningen, Groningen, The Netherlands (Wilschut, van Rijn); Infinite Tactics LLC, Dayton, OH, USA (Sense)</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/57w2x9vr" target="_blank" rel="noopener">https://escholarship.org/uc/item/57w2x9vr</a> · <a href="https://escholarship.org/content/qt57w2x9vr/qt57w2x9vr.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the 46th Annual Conference of the Cognitive Science Society, vol. 46, pp. 572-578; 8쪽 PDF = 표지 1 + 본문 7쪽). 이후 학술지판이 Topics in Cognitive Science 17(1), 2025에 실림 — 여기서는 쓰지 않음.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>인출 연습(retrieval practice), 곧 자료를 수동적으로 공부하는 대신 정보를 능동적으로 떠올리는 과정은 매우 효과적인 학습 전략으로 입증되어 왔다. 그러나 응용 교육 현장에서 인출 연습의 최적 조건이 학습자마다 어떻게 다른지를 연구자들이 살피기 시작한 것은 최근의 일이다. 이 연구(N = 118)는 인출 연습 문헌에서 대개 다루지 않는 집단인 난독증(dyslexia) 학습자에 초점을 맞춘다. 우리는 타이핑 기반 응답 조건과 음성 기반 응답 조건을 모두 쓰는 적응형(adaptive) 인출 연습 기반 단어 학습 과제에서 이들의 수행을 일반 학습자(typical learners)의 수행과 비교한다. 그 결과, 타이핑으로 답하도록 했을 때는 일반 학습자가 난독증 학습자보다 수행이 높았지만, 음성으로 답할 수 있을 때는 이 차이가 훨씬 작았다. 이 결과는 신경다양성(neurodivergent) 학습자도 효과적이고 포용적으로 배울 수 있게 하는 교육 기술의 개발에 기여할 수 있다.</p>
+    <details><summary>영어 원문</summary><p class="en">Retrieval practice—the process of actively calling information to mind rather than passively studying materials—has been proven to be a highly effective learning strategy. However, only recently, researchers have started to examine differences between learners in terms of the optimal conditions of retrieval practice in applied educational settings. In this study (N = 118), we focus on learners with dyslexia: a group that is usually not included in the retrieval practice literature. We compare their performance to the performance of typical learners in an adaptive, retrieval practice-based word learning task using both typing-based and speech-based response conditions. We find that typical learners outperform learners with dyslexia when they are asked to respond by typing, but that this difference is much smaller when learners can respond by speech. These results can contribute to the development of educational technology that allows for effective and inclusive learning in neurodivergent individuals.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3716단어 (PDF 7쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7만(References 제목은 p.7 왼쪽 단 맨 위; 두 단, p.7의 ~85%). 본문은 p.6 아래에서 Conclusion으로 끝남.</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments·부록 없음. &#x27;Results&#x27; 제목에 붙은 각주 1(p.3): 분석 코드·데이터·자료는 OSF(https://osf.io/gxydk/). Methods 본문에 학습 앱(memorylab.nl/en/)과 Google speech API 링크. 각주 2(p.6, Discussion)는 천장 효과 가능성. p.1에 Proceedings 저작권/CC-BY 꼬리말.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 5 · 2수준 이하 11</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 2</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.2760" title="Introduction · 28%"><i>Introduction</i></span><span class="seg method" style="flex:0.3290" title="Methods · 33%"><i>Methods</i></span><span class="seg result" style="flex:0.1620" title="Results · 16%"><i>Results</i></span><span class="seg disc" style="flex:0.1970" title="Discussion · 20%"><i>Discussion</i></span><span class="seg disc" style="flex:0.0370" title="Conclusion · 4%"><i>Conclusion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">1025</td><td class="n">28%</td></tr>
+<tr class="lv1"><td class="t">Methods</td><td class="n">p.2</td><td class="n">1222</td><td class="n">33%</td></tr>
+<tr class="lv2"><td class="t">Participants</td><td class="n">p.2</td><td class="n">154</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Design and Procedure</td><td class="n">p.2</td><td class="n">567</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(lead paragraph, before run-in headings)</td><td class="n">p.2</td><td class="n">90</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Learning blocks</td><td class="n">p.2</td><td class="n">318</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Test</td><td class="n">p.3</td><td class="n">105</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Questionnaire</td><td class="n">p.3</td><td class="n">54</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Materials</td><td class="n">p.3</td><td class="n">139</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Adaptive item scheduling</td><td class="n">p.3</td><td class="n">208</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Analyses</td><td class="n">p.3</td><td class="n">154</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Results</td><td class="n">p.3</td><td class="n">601</td><td class="n">16%</td></tr>
+<tr class="lv2"><td class="t">Performance during learning</td><td class="n">p.3</td><td class="n">476</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Test performance</td><td class="n">p.5</td><td class="n">125</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">732</td><td class="n">20%</td></tr>
+<tr class="lv1"><td class="t">Conclusion</td><td class="n">p.6</td><td class="n">136</td><td class="n">4%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> Conclusion (앞에 소제목 없는 Discussion이 옴)</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> Methods 안 2단계 하위 절 &#x27;Adaptive item scheduling&#x27;(~208단어, p.3): ACT-R 기반 간격 알고리즘과 망각 속도(speed-of-forgetting) 모수를 말로 설명; 수식 없음. 이 모수(망각 속도)는 Results에서 종속변수(M3)로 다시 등장.</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 3명/소속이 p.1의 ~22%; 초록(154단어 + keywords)이 왼쪽 단 ~1/3; Introduction은 왼쪽 단 중간에서 시작해 p.1 나머지(쪽 본문 영역의 약 2/3)를 채움. Introduction은 p.2 왼쪽 단 ~70% 지점까지 이어지고 Methods가 p.2에서 시작.</li>
+      <li><b>링크</b> OSF(코드·데이터·자료)는 p.3 &#x27;Results&#x27; 제목에 붙은 각주 1; 사전등록 언급 없음. 앱 URL과 Google speech API URL은 Methods 본문(p.2).</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 한 단(오른쪽), 단 높이 ~1/3; 학습 앱 화면 4칸 격자 · Methods &gt; Design and Procedure</li><li>Fig. 2 · p.4 · 전체 폭(두 단 걸침), ~0.3쪽; 패널 3개(정확도, RT, 망각 속도), 집단 x 양식별 · Results &gt; Performance during learning</li><li>Fig. 3 · p.4 · 전체 폭, ~0.35쪽; 연속형 난독증 설문 점수에 대한 산점도 패널 3개 · Results &gt; Performance during learning</li><li>Fig. 4 · p.5 · 전체 폭이지만 실제로는 폭의 ~절반만 씀, ~0.25쪽; 패널 2개(집단 x 양식별 검사 회상; 말하기−타이핑 이득) · Results &gt; Test performance</li><li>Table 1 · p.2 · 한 단(오른쪽 아래), 단의 ~1/8로 작음; 인구통계(N, 여성 N, 평균 연령, 국적 수) · Methods &gt; Participants (Learning blocks 옆에 배치)</li><li>Table 2 · p.5 · 전체 폭, ~0.4쪽; 혼합효과모형 4개 전부(M1 정확도, M2 log RT, M3 망각 속도, M4 검사 정확도) · Results</li></ul><h4>구조 읽기</h4><p class="summary">단일 실험 논문이라 1수준 절이 Introduction-Methods-Results-Discussion-Conclusion 다섯 개뿐인 평평한 IMRaD 구조다. 서론은 약 1,000단어(본문의 28%)로 길고 소제목 없이 다섯 문단(인출 연습과 적응형 학습 -&gt; 난독증 정의·유병률 -&gt; 난독증에서의 인출 연습 선행연구 -&gt; 음성 모달리티가 유리할 이유 -&gt; 이번 실험과 가설)으로 흘러가며, 가설을 서론 마지막 문단에 명시한다. Methods가 본문의 33%로 가장 크며 2수준 소제목 다섯 개(Participants, Design and Procedure, Materials, Adaptive item scheduling, Analyses)와 Design and Procedure 아래 run-in 3수준 셋을 둔다; 계산 모델(ACT-R 기반 일정 알고리즘)은 별도 절이 아니라 Methods 안 200단어 소절로 짧게 설명하고, 그 모델 파라미터(speed of forgetting)를 결과의 종속변수로 다시 쓰는 것이 이 논문의 &#x27;모델링&#x27; 연결고리다. Results(16%)는 그림 셋과 표 하나가 전폭으로 p.4-5를 차지해 글보다 그림이 결과를 운반하며, Discussion은 소제목 없이 &#x27;First/Second&#x27; 두 발견 + 한계(음성 인식 오류) + 함의로, 이어 한 문단짜리 Conclusion으로 끝난다. 참고문헌은 p.7 한 쪽에 들어가 본문 6쪽을 꽉 채운다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p08">
+  <header>
+    <div class="eyebrow"><span class="k">07</span> CogSci 2023 · Marr Prize (best student paper)</div>
+    <h3>Storytelling as Inverse Inverse Planning</h3>
+    <p class="meta">Kartik Chandra, Tzu-Mao Li, Joshua B. Tenenbaum, Jonathan Ragan-Kelley<br><span class="aff">MIT CSAIL (Chandra, Ragan-Kelley); UC San Diego (Li); MIT BCS &amp; CSAIL (Tenenbaum)</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/3cx919kp" target="_blank" rel="noopener">https://escholarship.org/uc/item/3cx919kp</a> · <a href="https://escholarship.org/content/qt3cx919kp/qt3cx919kp.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the 45th Annual Conference of the Cognitive Science Society, vol. 45, pp. 903-912; 11쪽 PDF = 표지 1 + 10쪽: 내용 6쪽 + acknowledgements/참고문헌 4쪽, 마지막 쪽은 4줄뿐).</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>훌륭한 이야기는 평범한 현실이 좀처럼 주지 못하는 여정으로 우리를 데려간다. 그런데 &#x27;여정&#x27;이란 정확히 무엇을 뜻하는가? 최근 문학 이론가 Kukkonen(2014)은 이야기하기(storytelling)를 &#x27;확률 설계(probability design)&#x27;, 곧 청중에게 정보를 조금씩 건네어 허구 세계에 대한 그들의 믿음이 바뀌어 가는 여정을 빚어내는 기술이라고 제안했다. 좋은 &#x27;확률 설계&#x27;는 이야기가 처음부터 끝까지 펼쳐지는 동안 독자의 마음속에서 확신과 놀라움이 주고받는 섬세한 춤을 안무한다. 이 논문은 이러한 이야기하기 개념을 계산적으로 모형화한다. 인간 사회 인지의 고전적 베이지안 역계획(Bayesian inverse planning) 모형을 바탕으로, 우리는 이야기하기를 역-역계획(inverse inverse planning), 곧 역계획자(inverse planner)의 추론을, 나아가 인간 청중의 믿음을 조작하도록 행동을 선택하는 과제로 다룬다. 먼저 역-역계획자를 써서 사회적·물리적 상황을 묘사하고, 역-역계획이 일반적인 &#x27;순진한 계획(naïve planning)&#x27;보다 더 표현력 있는 행동을 만든다는 행동 연구 결과를 제시한다. 이어 일련의 예시를 통해 역-역계획이 여러 이야기 요소를 제1원리로부터 포착함을 보인다: 인물, 서사 곡선(narrative arc), 반전(plot twist), 아이러니, 플래시백, 데우스 엑스 마키나가 모두 확률 설계라는 유연한 언어로 자연스럽게 표현된다. 이 논문은 SIGGRAPH 2023에서 발표될 연구(Chandra, Li, Tenenbaum, &amp; Ragan-Kelley, 2023)를 보고한다.</p>
+    <details><summary>영어 원문</summary><p class="en">Great storytelling takes us on a journey the way ordinary reality rarely does. But what exactly do we mean by a “journey”? Recently, literary theorist Kukkonen (2014) proposed that storytelling is “probability design”: the art of giving an audience pieces of information bit by bit, to craft the journey of their changing beliefs about the fictional world. A good “probability design” choreographs a delicate dance of certainty and surprise in the reader’s mind as the story unfolds from beginning to end. In this paper, we computationally model this conception of storytelling. Building on the classic Bayesian inverse planning model of human social cognition, we treat storytelling as inverse inverse planning: the task of choosing actions to manipulate an inverse planner’s inferences, and therefore a human audience’s beliefs. First, we use an inverse inverse planner to depict social and physical situations, and present behavioral studies indicating that inverse inverse planning produces more expressive behavior than ordinary “naïve planning.” Then, through a series of examples, we demonstrate how inverse inverse planning captures many storytelling elements from first principles: character, narrative arcs, plot twists, irony, flashbacks, and deus ex machina are all naturally encoded in the flexible language of probability design. This paper reports on work to be presented at SIGGRAPH 2023 (Chandra, Li, Tenenbaum, &amp; Ragan-Kelley, 2023).</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 4181단어 (PDF 10쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7(p.7 왼쪽 단 맨 위 Acknowledgements, 이어서 References) – p.10(p.10은 4줄뿐); 참고문헌 ~3.1쪽, 대부분 항목에 &#x27;Retrieved from&#x27; URL이 붙어 길어짐.</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgements는 p.7(왼쪽 위, ~84단어, 연구비 + 감사). 부록 없음. p.1 Introduction 끝에 코드 링크(https://people.csail.mit.edu/kach/a2i2p/). &#x27;Inverse inverse planning&#x27; 첫머리(p.2)에 각주 1: 모든 애니메이션은 OSF(익명 열람 전용 링크 https://osf.io/gyh8a/...); 곳곳의 절 라벨과 &#x27;(video)&#x27; 표시는 개별 영상으로 가는 하이퍼링크. 초록 끝에 SIGGRAPH 2023판 안내.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 4 · 2수준 이하 11</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 0</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1290" title="Introduction · 13%"><i>Introduction</i></span><span class="seg intro" style="flex:0.2500" title="Background: Bayesian inverse planning · 25%"><i>Background: Bayesian inverse planning</i></span><span class="seg result" style="flex:0.5430" title="Inverse inverse planning · 54%"><i>Inverse inverse planning</i></span><span class="seg disc" style="flex:0.0770" title="Discussion · 8%"><i>Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">541</td><td class="n">13%</td></tr>
+<tr class="lv1"><td class="t">Background: Bayesian inverse planning</td><td class="n">p.1</td><td class="n">1045</td><td class="n">25%</td></tr>
+<tr class="lv1"><td class="t">Inverse inverse planning</td><td class="n">p.2</td><td class="n">2271</td><td class="n">54%</td></tr>
+<tr class="lv2"><td class="t">(lead text: scripts, objective f_help, beam search, help/hinder demos)</td><td class="n">p.2</td><td class="n">463</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Behavioral experiment 1</td><td class="n">p.3</td><td class="n">293</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Miming by “inverse inverse physics”</td><td class="n">p.4</td><td class="n">292</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Behavioral experiment 2</td><td class="n">p.4</td><td class="n">191</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Flexibility of inverse inverse planning (all videos)</td><td class="n">p.5</td><td class="n">1032</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(lead paragraph)</td><td class="n">p.5</td><td class="n">63</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Plot twists (video)</td><td class="n">p.5</td><td class="n">189</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Irony (video)</td><td class="n">p.5</td><td class="n">140</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Flashbacks (video)</td><td class="n">p.6</td><td class="n">165</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Narrative arc (video)</td><td class="n">p.6</td><td class="n">376</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Stumbling (video)</td><td class="n">p.6</td><td class="n">99</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">324</td><td class="n">8%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 따로 있음</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> Discussion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 아니오</li>
+      <li><b>모델·형식 설명 위치</b> 나뉨: 청중 모델(Ullman et al. MDP 위의 inverse planner, Bayes 규칙 수식)은 1단계 Background 절에; 논문 자체 기여(inverse inverse planning = inverse planner에 대해 대본을 최적화, 목적함수 f_help, beam search)는 1단계 &#x27;Inverse inverse planning&#x27; 절 첫머리에 두고, 뒤의 데모마다 run-in 제목 아래 본문에서 자기 목적함수 식(f_twist, f_irony, f_arc)을 소개.</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 4명 2x2 격자가 p.1의 ~30%. 초록(215단어, 이례적으로 길고 서사적)이 왼쪽 단 ~45%; Introduction은 왼쪽 단 아래에서 시작해 오른쪽 단을 채우고, 1단계 &#x27;Background&#x27; 제목이 이미 p.1 오른쪽 단 맨 아래에서 시작. 따라서 p.1 본문 영역의 ~0.55가 Introduction.</li>
+      <li><b>링크</b> Introduction 끝에 코드 링크(p.1); 방법 절 첫머리 각주 1에 OSF 영상 저장소(p.2); run-in 제목과 본문 곳곳에 절별 &#x27;(video)&#x27; 하이퍼링크. 사전등록 없음.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.3 · 전체 폭(두 단 걸침), ~0.4쪽; 애니메이션 프레임 4개 + 시간에 따른 믿음 그래프 3개 + 긴 캡션 · Background에서 참조(naïve-planning 기준선); &#x27;Inverse inverse planning&#x27;의 p.3 위에 배치</li><li>Fig. 2 · p.4 · 전체 폭, ~0.4쪽; inverse-inverse-planning 애니메이션을 Fig.1과 같은 배치로 · Inverse inverse planning (도입 본문)</li><li>Fig. 3 · p.5 · 전체 폭, 캡션 포함 ~0.25쪽; 막대그래프 패널 6개(help/hinder/indifferent x ours/naive) · Inverse inverse planning &gt; Behavioral experiment 1</li><li>Fig. 4 · p.5 · 전체 폭, ~0.25쪽; 하위 패널 3개 (a) hopper 장면, (b) 상자 무게 판단, (c) &#x27;stumble&#x27; 가치함수 궤적, 각자 하위 캡션 · Inverse inverse planning &gt; Miming / Behavioral experiment 2 / Stumbling</li></ul><h4>구조 읽기</h4><p class="summary">1수준 절은 Introduction - Background - Inverse inverse planning - Discussion 넷뿐이며, 본문의 54%가 &#x27;Inverse inverse planning&#x27; 한 절에 몰려 있다. 서론은 약 540단어(13%)로 짧고 소제목 없이 여섯 문단(Heider-Simmel 일화 -&gt; 사람은 쉽게 이야기를 만든다 -&gt; 계획만으로는 극적 효과가 없다 -&gt; &#x27;acting in&#x27; 대 &#x27;acting out&#x27; 핵심 통찰 -&gt; 기존 접근의 한계 -&gt; 우리 접근과 주요 수치 12배/5배)으로 빠르게 기여를 던진다. Background(25%)는 관련연구 두 문단 뒤에 바로 쓸 세계 모형(MDP)과 역계획자를 수식으로 정의해 &#x27;관련연구 + 모델 기초&#x27;를 한 절에 겸한다. 핵심 절은 &#x27;시연 -&gt; 그 시연을 검증하는 행동 실험&#x27; 쌍을 두 번(grid world -&gt; 실험 1, 물리 hopper &#x27;mime&#x27; -&gt; 실험 2) 반복한 뒤 &#x27;Flexibility&#x27; 소절에서 run-in 3수준 다섯 개(반전, 아이러니, 플래시백, 서사 곡선, 비틀거림)로 각 이야기 요소를 목적함수 한 줄 + 생성 결과 묘사로 보여 주는 쇼케이스 구조이고, 실험은 별도 1수준 절이나 Methods/Results 분리 없이 각 200~300단어로 압축된다. 전폭 그림 네 장이 p.3-5 상단을 차지하며 Discussion(8%)은 소제목 없이 요약-한계-향후과제 세 문단으로 끝나고 별도 Conclusion은 없다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p09">
+  <header>
+    <div class="eyebrow"><span class="k">08</span> CogSci 2023 · Computational Modeling Prize – Higher-Level Cognition</div>
+    <h3>People seek easily interpretable information</h3>
+    <p class="meta">Samuel Cheyette, Frederick Callaway, Neil Bramley, Jonathan Nelson, Joshua Tenenbaum<br><span class="aff">Emails only on the paper: MIT (Cheyette, Tenenbaum), Princeton (Callaway), University of Edinburgh (Bramley), University of Surrey (Nelson). No department/affiliation lines printed.</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/5sm2b484" target="_blank" rel="noopener">https://escholarship.org/uc/item/5sm2b484</a> · <a href="https://escholarship.org/content/qt5sm2b484/qt5sm2b484.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (CogSci 2023 Proceedings vol. 45, pp. 913–919). 수상 목록은 가제 &#x27;Limits on information-processing governs active learning in humans&#x27;를 썼고, 출판된 proceedings 제목은 &#x27;People seek easily interpretable information&#x27;(Bramley 연구실 출판 페이지가 이 eScholarship 항목을 링크하고 Computational Modeling Prize in Higher-level Cognition 수상을 적어 둠).</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>심리학과 인공지능 연구는 정보 탐색 행동을 합리성의 관점에서 설명하려 해 왔으며, 대개 사람이나 에이전트가 정보량이 적은 데이터보다 정보량이 많은 데이터를 선호한다고 가정한다. 겉보기에는 타당해 보이지만, 이 가정은 정보성(informativeness)을 데이터와 (잠재적으로 제한된) 학습자의 공동 속성이 아니라 데이터만의 속성으로 본다. 다시 말해, 이론적으로 ‘정보량이 높은’ 데이터에서 올바른 추론을 끌어내기 어려운 만큼, 그 데이터는 실제로 학습자에게 높은 정보를 주지 못한다. 이 연구는 증거로부터의 연역 추론을 요구하는 암호 풀이 게임 마스터마인드(Mastermind)를 사용해 인간의 능동 학습(active learning)을 조사한다. 그 결과 사람들은 무작위 추측보다도 정보량이 적은 질의(query)를 던지며, 이는 정보 탐색에 대한 표준적인 합리적(rational) 또는 자원-합리적(resource-rational) 설명에 도전한다. 이어서 추론 능력이 제한되어 있다고 가정하면 사람들의 질의가 그들 자신에게는 정보성이 있음을 보인다. 또한 참가자들은 정보는 더 많지만 해석하기 어려운 질의보다 해석하기 쉬운 정보를 주는 질의를 선호했다. 이 결과는 사람들이 자신의 인지적 한계를 알고 있으며 자신이 실제로 사용할 수 있는 정보를 찾는다는 것을 시사한다.</p>
+    <details><summary>영어 원문</summary><p class="en">Research in psychology and artificial intelligence has sought to ground information-seeking behavior in rational terms, typically assuming that people or agents prefer more informative data over less informative data. While this seems reasonable on its surface, it assumes that informativeness is only a property of the data, rather than a joint property of the data and a (potentially bounded) learner. That is, to the extent that it is hard to draw the right inferences from data that are theoretically “high information,” the data will not actually be highly informative to the learner. Here, we investigate active learning in humans using the code-breaking game Mastermind, which requires deductive reasoning from evidence. We find that people make queries that are less informative than random guesses, challenging standard rational or resource-rational accounts of information-seeking. We then show that people make queries are informative to them assuming they have a bounded capacity to draw inferences. We also find that participants prefer queries that provide easily-interpretable information over queries that provide more information but are less interpretable. Our results suggest that people are aware of their own cognitive limitations and seek information that they can use.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 4175단어 (PDF 7쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7만: 왼쪽 단 맨 위 Acknowledgements, References가 왼쪽 단 나머지와 오른쪽 단 ~40%를 채움(p.7 나머지는 빈칸); 본문은 p.6 아래에서 끝남</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgements는 p.7(짧은 한 문단, References 위). 각주 3개(p.2에 2개: Mastermind 숫자 집합, &#x27;description length&#x27; = 음의 로그 확률; p.5에 1개: 시행 부호화). 부록·OSF/코드/데이터 링크·보충자료 없음.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 6 · 2수준 이하 7</dd></div>
+      <div><dt>그림·표</dt><dd>그림 6 · 표 0</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.2570" title="Introduction · 26%"><i>Introduction</i></span><span class="seg method" style="flex:0.1140" title="Bounded LoT model · 11%"><i>Bounded LoT model</i></span><span class="seg result" style="flex:0.1950" title="Experiment 1 · 20%"><i>Experiment 1</i></span><span class="seg result" style="flex:0.1140" title="Experiment 2 · 11%"><i>Experiment 2</i></span><span class="seg result" style="flex:0.1730" title="Experiment 3 · 17%"><i>Experiment 3</i></span><span class="seg disc" style="flex:0.1460" title="Discussion · 15%"><i>Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">1071</td><td class="n">26%</td></tr>
+<tr class="lv2"><td class="t">Mastermind</td><td class="n">p.2</td><td class="n">238</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Bounded LoT model</td><td class="n">p.2</td><td class="n">477</td><td class="n">11%</td></tr>
+<tr class="lv1"><td class="t">Experiment 1</td><td class="n">p.3</td><td class="n">816</td><td class="n">20%</td></tr>
+<tr class="lv2"><td class="t">Method</td><td class="n">p.3</td><td class="n">95</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.3</td><td class="n">596</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiment 2</td><td class="n">p.4</td><td class="n">477</td><td class="n">11%</td></tr>
+<tr class="lv2"><td class="t">Method</td><td class="n">p.4</td><td class="n">117</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.4</td><td class="n">243</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiment 3</td><td class="n">p.5</td><td class="n">724</td><td class="n">17%</td></tr>
+<tr class="lv2"><td class="t">Method</td><td class="n">p.5</td><td class="n">125</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.5</td><td class="n">486</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">610</td><td class="n">15%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 있음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> Discussion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 아니오</li>
+      <li><b>모델·형식 설명 위치</b> Introduction과 Experiment 1 사이의 독립 1단계 절 &#x27;Bounded LoT model&#x27;(p.2–3); 과제 자체는 Introduction 끝 2단계 하위 절 &#x27;Mastermind&#x27;에서 설명. 원시 연산 문법은 본문에 두 단 목록으로 실림(번호 붙은 표 아님); Figure 2는 서로 다른 description-length 한계에서의 모델 행동과 풀이 예시(첫 추측 &#x27;1123&#x27; 대 &#x27;1111&#x27;)를 보여 줌.</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 5명(두 줄, 이메일만)이 위 ~20%; 초록(9pt, ~190단어)이 왼쪽 단 위 절반; Introduction은 왼쪽 단 중간에서 시작해 오른쪽 단 전체로 이어지고, 그 아래에 Figure 1(게임 예시). p.1의 약 1/3이 초록, ~2/3가 Introduction + Fig. 1.</li>
+      <li><b>링크</b> 없음. 논문 어디에도 사전등록·OSF·코드·데이터 링크 없음.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.1 · 한 단, 단의 ~1/4(오른쪽 단 아래; Mastermind 판 예시 그림) · Introduction</li><li>Fig. 2 · p.3 · 한 단, 단의 ~1/3(왼쪽 단 위; 모델 선 그래프) · Bounded LoT model</li><li>Fig. 3 · p.4 · 전체 폭, 쪽의 ~1/4(위; 패널 3개 a–c) · Experiment 1 / Results</li><li>Fig. 4 · p.4 · 한 단, 단의 ~1/4(왼쪽 단 아래쪽) · Experiment 1 / Results</li><li>Fig. 5 · p.5 · 한 단, 단의 ~1/3(왼쪽 단 위-중간) · Experiment 2 / Results</li><li>Fig. 6 · p.6 · 전체 폭, 쪽의 ~1/4(위; 패널 3개 a–c) · Experiment 3 / Results</li></ul><h4>구조 읽기</h4><p class="summary">서론(Introduction)이 약 0.9쪽(본문 단어의 약 26%)으로 가장 길다. 소제목 없는 다섯 문단(OED 전통 → 최근 반례 → 가설 → 모델 예고 → 실험 1–3 결과 미리보기)으로 시작하고, 끝에 2수준 &#x27;Mastermind&#x27; 소절로 과제 규칙을 따로 설명한다. 형식 모델은 &#x27;Bounded LoT model&#x27;이라는 독립 1수준 절(약 11%)로 서론과 실험 사이에 두며, 문법 목록과 그림 2·예시 계산으로 &#x27;정보량은 처리 한계에 따라 뒤집힌다&#x27;는 핵심 예측을 실험 전에 보여 준다. 실험 셋은 각각 1수준 절이고, 짧은 도입 문단(동기·예측, 약 50–125단어) 뒤에 Method/Results 2수준을 둔다. Results가 Method보다 3–6배 길어 지면 대부분이 결과와 그림(6개 중 4개가 결과 그림)에 쓰인다. 마지막 &#x27;Discussion&#x27;은 소제목 없이 요약 → 선행연구(Entropy Mastermind·mental models)와의 관계 → 한계 두 가지로 끝나며 별도 결론 문단은 없다. 참고문헌과 감사의 글은 7쪽에 몰아 본문은 정확히 6쪽을 쓴다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p11">
+  <header>
+    <div class="eyebrow"><span class="k">09</span> CogSci 2023 · Computational Modeling Prize – Language</div>
+    <h3>An information-theoretic account of availability effects in language production</h3>
+    <p class="meta">Richard Futrell<br><span class="aff">Department of Language Science, University of California, Irvine</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/23q9k7pc" target="_blank" rel="noopener">https://escholarship.org/uc/item/23q9k7pc</a> · <a href="https://escholarship.org/content/qt23q9k7pc/qt23q9k7pc.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the Annual Meeting of the Cognitive Science Society, 45; proceedings pp. 71–79). Proceedings 제목은 수상 목록 제목과 같음. 이후 학술지판이 Topics in Cognitive Science(doi 10.1111/tops.12716)에 있으나 여기서는 분석하지 않음.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>나는 정보 이론(information theory)과 제어 이론(control theory)을 결합한 언어 산출의 계산 수준(computational-level) 모형을 제시한다. 이 모형에서 단어는 정보 이론적 용량 제약(information-theoretic capacity constraint) 아래에서 의사소통 가치(communicative value)를 최대화하도록 점진적으로(incrementally) 선택된다. 이 이론은 일반적으로 산출의 용이성과 의사소통의 정확성 사이의 상충 관계(tradeoff)를 예측한다. 나는 이 이론을 언어 산출에서 나타나는 두 가지 가용성 효과(availability effects) 사례에 적용한다. 이 사례들에서 단어는 발화의 나머지 부분을 아직 완전히 계획하지 못한 화자에게 그 단어가 얼마나 접근 가능한가(accessibility)에 따라 선택되는 것으로 보인다. Levy &amp; Jaeger (2007)의 영어 관계절 보문소 탈락(complementizer dropping) 말뭉치 자료와 Zhan &amp; Levy (2019)의 중국어(만다린) 명사 분류사(classifier) 선택 실험 자료를 사용하여, 나는 이 이론이 관찰된 현상을 재현함을 보인다. 이로써 이 이론은 균일 정보 밀도(Uniform Information Density, UID)에 대한 대안적 설명이자, 계산 신경과학(computational neuroscience)에서 새로 등장하는 이론들과 긴밀히 연결된 유망한 일반 언어 산출 모형을 제공한다.</p>
+    <details><summary>영어 원문</summary><p class="en">I present a computational-level model of language production in terms of a combination of information theory and control theory in which words are chosen incrementally in order to maximize communicative value subject to an information-theoretic capacity constraint. The theory generally predicts a tradeoff between ease of production and communicative accuracy. I apply the theory to two cases of apparent availability effects in language production, in which words are selected on the basis of their accessibility to a speaker who has not yet perfectly planned the rest of the utterance. Using corpus data on English relative clause complementizer dropping from Levy &amp; Jaeger (2007) and experimental data on Mandarin noun classifier choice from Zhan &amp; Levy (2019), I show that the theory reproduces the observed phenomena, providing an alternative account to Uniform Information Density (UID) and a promising general model of language production which is tightly linked to emerging theories in computational neuroscience.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3647단어 (PDF 9쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>References는 p.7 맨 위(왼쪽 단, 6쪽 본문 바로 뒤)에서 시작해 p.9까지(pp.7–8 전체, p.9 왼쪽 단 전체 + 오른쪽 단 ~1/3) ≈ 2.6쪽; proceedings 쪽수 77–79</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments(≈46단어, p.6 오른쪽 단 끝)에 유일한 코드 링크(http://github.com/Futrell/rdclangprod)도 들어 있음. 부록·보충자료·OSF 없음. 초록 아래 Keywords 줄. p.1 왼쪽 단 아래 CC BY 각주.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 6 · 2수준 이하 14</dd></div>
+      <div><dt>그림·표</dt><dd>그림 3 · 표 2</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1360" title="Introduction · 14%"><i>Introduction</i></span><span class="seg method" style="flex:0.3710" title="Model · 37%"><i>Model</i></span><span class="seg result" style="flex:0.2180" title="Study 1: Complementizer Dropping in English Relative Clauses · 22%"><i>Study 1: Complementizer Dropping in English Relative Clauses</i></span><span class="seg result" style="flex:0.1620" title="Study 2: Mandarin Classifier Choice · 16%"><i>Study 2: Mandarin Classifier Choice</i></span><span class="seg intro" style="flex:0.0960" title="Related Work · 10%"><i>Related Work</i></span><span class="seg disc" style="flex:0.0170" title="Conclusion · 2%"><i>Conclusion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">497</td><td class="n">14%</td></tr>
+<tr class="lv1"><td class="t">Model</td><td class="n">p.1</td><td class="n">1353</td><td class="n">37%</td></tr>
+<tr class="lv2"><td class="t">Setting</td><td class="n">p.1</td><td class="n">228</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Intuition</td><td class="n">p.2</td><td class="n">259</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Formal specification</td><td class="n">p.2</td><td class="n">744</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Source of availability effects</td><td class="n">p.3</td><td class="n">122</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 1: Complementizer Dropping in English Relative Clauses</td><td class="n">p.3</td><td class="n">795</td><td class="n">22%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in: phenomenon, UID vs. availability accounts)</td><td class="n">p.3</td><td class="n">283</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">RDC simulation</td><td class="n">p.4</td><td class="n">364</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Corpus Study</td><td class="n">p.5</td><td class="n">91</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Discussion</td><td class="n">p.5</td><td class="n">57</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Study 2: Mandarin Classifier Choice</td><td class="n">p.5</td><td class="n">591</td><td class="n">16%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in: phenomenon, Zhan &amp; Levy 2019 findings, contrast with UID)</td><td class="n">p.5</td><td class="n">234</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">RDC simulation</td><td class="n">p.5</td><td class="n">171</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.5</td><td class="n">186</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Related Work</td><td class="n">p.6</td><td class="n">349</td><td class="n">10%</td></tr>
+<tr class="lv3"><td class="t">(untitled lead-in: availability factors in prior work)</td><td class="n">p.6</td><td class="n">118</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Production models</td><td class="n">p.6</td><td class="n">106</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Pragmatics models</td><td class="n">p.6</td><td class="n">125</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Conclusion</td><td class="n">p.6</td><td class="n">62</td><td class="n">2%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 따로 있음</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> Conclusion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> Introduction 바로 뒤 독립 1단계 절 &#x27;Model&#x27;(p.1 오른쪽 단 → p.3), 가장 큰 절(본문 단어의 ~37%), 2단계 하위 절 4개 Setting → Intuition → Formal specification (Eqs. 1–5) → Source of availability effects; Figure 1(전체 폭 도식)이 모델을 시각적으로 보여 줌. 이어서 각 Study에 모델을 장난감 언어에 적용하는 짧은 &#x27;RDC simulation&#x27; 하위 절(Study 1의 Eq. 6–8).</li>
+      <li><b>첫 쪽 사용</b> 왼쪽 단: 제목 블록, 초록(~150단어) + keywords, 이어서 2문단 분량 Introduction 시작; 맨 아래 CC BY 각주. 오른쪽 단: Introduction 끝(셋째 문단: RDC 틀과 Marr의 계산 수준에 기여한다는 주장)과, 단 중간부터 Model 절 제목과 &#x27;Setting&#x27; 하위 절. 모델이 이미 p.1에서 시작.</li>
+      <li><b>링크</b> 링크 하나: 코드 http://github.com/Futrell/rdclangprod, Acknowledgments 문단(p.6 끝)에. OSF·데이터 링크 없음(데이터 출처는 Acknowledgments에서 Roger Levy로 밝힘).</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 전체 폭(두 단), 쪽 위, 캡션 포함 쪽 높이의 ~1/3(패널 3개 도식: A 목표/상태, B 정책, C 식을 그림으로) · Model (Setting/Intuition; Model 절 전체에서 참조)</li><li>Fig. 2 · p.4 · 한 단(오른쪽), 단 높이의 ~40%, 위아래로 쌓은 히트맵 2개(alpha × gamma) · Study 1 – RDC simulation</li><li>Fig. 3 · p.6 · 전체 폭(두 단), 쪽 위, 캡션 포함 쪽 높이의 ~1/3(패널 3개: 실험 데이터, 모델, 엔트로피 효과) · Study 2 – Results</li><li>Table 1 · p.4 · 한 단(왼쪽), 단 위, 캡션 포함 단 높이의 ~1/5(장난감 언어의 need 확률, 본문 막대 기호 포함) · Study 1 – RDC simulation (도입 본문이 이어지는 동안 p.4 위로 떠 있음)</li><li>Table 2 · p.5 · 한 단(왼쪽), 단 위, 캡션 포함 단 높이의 ~1/6(3열 회귀계수 표, 2행) · Study 1 – Corpus Study</li></ul><h4>구조 읽기</h4><p class="summary">이 논문은 Introduction(약 14%) → Model(약 37%) → Study 1(약 22%) → Study 2(약 16%) → Related Work(약 10%) → 한 문단 Conclusion(약 2%)의 단순한 6장 구조로, 서론을 3문단으로 짧게 끝내고 1쪽 오른쪽 단에서 바로 모형을 시작한다. 모형 장은 Setting → Intuition → Formal specification → Source of availability effects로 &#x27;직관을 먼저, 수식을 나중에, 그리고 이 모형에서 왜 가용성 효과가 나오는가&#x27;를 순서대로 밟아, 뒤의 두 연구가 같은 메커니즘(미래 할인 γ)의 사례임을 미리 예고한다. 두 연구는 각각 독립 level-1 장으로, 현상과 UID 대 가용성 설명의 대비를 제목 없는 도입 문단으로 깔고 &#x27;RDC simulation&#x27; 다음에 경험 자료(말뭉치 회귀 또는 기존 실험 자료)를 붙이는 동일한 틀을 반복해서, Study 1은 UID와 같은 예측, Study 2는 UID와 반대 예측이라는 대조가 구조만으로 드러난다. 관련 연구는 앞이 아니라 뒤에 두고 run-in 소제목(Production models, Pragmatics models)으로 짧게 위치 짓기만 하며, 한계·향후 과제 장 없이 4문장 Conclusion으로 끝내고 코드 링크는 Acknowledgments에 넣어 본문 6쪽을 모형과 시뮬레이션에 집중시킨다.</p>
+  </section>
+</article>
+
+<article class="paper" id="p10">
+  <header>
+    <div class="eyebrow"><span class="k">10</span> CogSci 2022 · Marr Prize (best student paper)</div>
+    <h3>Mechanisms of Belief Persistence in the Face of Societal Disagreement</h3>
+    <p class="meta">Kerem Oktar, Tania Lombrozo<br><span class="aff">Department of Psychology, Princeton University, Princeton, NJ 08540 USA</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/3380n01h" target="_blank" rel="noopener">https://escholarship.org/uc/item/3380n01h</a> · <a href="https://escholarship.org/content/qt3380n01h/qt3380n01h.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (CogSci 2022 Proceedings vol. 44, pp. 1277–1283); LaTeX가 아니라 Word 템플릿(Acrobat PDFMaker)으로 만듦.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>사람들은 대규모의 반대 의견 앞에서도 자신의 믿음을 꿋꿋이 유지하는 놀라운 능력을 지니고 있다. 이는 중요한 결과(예: 사회적 양극화, societal polarization)를 낳지만, 그 심리적 기반은 거의 이해되지 않았다. 이 논문에서 우리는 믿음 고수(belief persistence)에 관한 근본적인 질문들, 즉 그것이 얼마나 흔한지부터 어떻게 달라지는지까지에 답한다. 두 실험(N = 356, N = 354)에 걸쳐, 참가자들은 논쟁적 사안에 대한 사회적 이견을 알고 있으면서도, 그 이견에 대해 성찰해 보라는 요청을 받았을 때 압도적인 다수(약 85%)가 자신의 견해를 의심하지 않았다. 두 연구 모두 믿음 고수에 대한 설명이 영역(domain)에 따라 달라지며, 그중 인식적(epistemic)·메타인식적(meta-epistemic) 설명이 가장 흔한 축에 속한다는 증거를 제공한다.</p>
+    <details><summary>영어 원문</summary><p class="en">People have a remarkable ability to remain steadfast in their beliefs in the face of large-scale disagreement. This has important consequences (e.g., societal polarization), yet its psychological underpinnings are poorly understood. In this paper, we answer foundational questions regarding belief persistence, from its prevalence to variability. Across two Experiments (N = 356, N = 354), we find that participants are aware of societal disagreement about controversial issues, yet overwhelmingly (~85%) do not question their views if asked to reflect on this disagreement. Both studies provide evidence that explanations for persistence vary across domains, with epistemic and meta-epistemic explanations among the most prevalent.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3954단어 (PDF 7쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7만: 왼쪽 단 맨 위 Acknowledgments, References가 p.7 두 단의 나머지를 채움; 본문은 p.6 아래에서 끝남</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments는 p.7(한 문장, References 위). p.1 초록 아래 Keywords 줄. 각주 1개(p.4, Exp. 1 회귀 세부). OSF 링크(사전등록·자료·데이터)는 p.2 &#x27;Overview of Experiments&#x27; 문단 본문에. 부록·보충 절 없음.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 5 · 2수준 이하 24</dd></div>
+      <div><dt>그림·표</dt><dd>그림 2 · 표 2</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.0590" title="Introduction · 6%"><i>Introduction</i></span><span class="seg intro" style="flex:0.1890" title="Persistent Disagreement · 19%"><i>Persistent Disagreement</i></span><span class="seg result" style="flex:0.3250" title="Experiment 1 · 32%"><i>Experiment 1</i></span><span class="seg result" style="flex:0.3060" title="Experiment 2 · 31%"><i>Experiment 2</i></span><span class="seg disc" style="flex:0.1210" title="General Discussion · 12%"><i>General Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">235</td><td class="n">6%</td></tr>
+<tr class="lv1"><td class="t">Persistent Disagreement</td><td class="n">p.1</td><td class="n">748</td><td class="n">19%</td></tr>
+<tr class="lv2"><td class="t">Responses to Disagreement</td><td class="n">p.1</td><td class="n">157</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Explaining Persistence</td><td class="n">p.1</td><td class="n">341</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Overview of Experiments</td><td class="n">p.2</td><td class="n">111</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiment 1</td><td class="n">p.2</td><td class="n">1286</td><td class="n">32%</td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.2</td><td class="n">341</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Participants</td><td class="n">p.2</td><td class="n">65</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Materials and Procedure</td><td class="n">p.2</td><td class="n">276</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.3</td><td class="n">616</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Explanation coding</td><td class="n">p.3</td><td class="n">320</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Perceived Consensus &amp; Persistence</td><td class="n">p.3</td><td class="n">183</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Explanations for Persistence</td><td class="n">p.3</td><td class="n">48</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Cross-domain Variation</td><td class="n">p.4</td><td class="n">65</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Discussion</td><td class="n">p.4</td><td class="n">75</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiment 2</td><td class="n">p.4</td><td class="n">1208</td><td class="n">31%</td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.5</td><td class="n">387</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Participants</td><td class="n">p.5</td><td class="n">34</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Materials and Procedure</td><td class="n">p.5</td><td class="n">147</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Epistemic Items</td><td class="n">p.5</td><td class="n">81</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Meta-Epistemic Items</td><td class="n">p.5</td><td class="n">47</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Non-Epistemic Items</td><td class="n">p.5</td><td class="n">34</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Rejection of Premise Items</td><td class="n">p.5</td><td class="n">44</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.5</td><td class="n">532</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Perceived Consensus &amp; Persistence</td><td class="n">p.5</td><td class="n">105</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Explanations for Persistence</td><td class="n">p.5</td><td class="n">194</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Cross-domain Variation</td><td class="n">p.6</td><td class="n">233</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">157</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">General Discussion</td><td class="n">p.6</td><td class="n">477</td><td class="n">12%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 따로 있음</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> General Discussion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> 형식/계산 모델 없음. 이론 틀(Oktar &amp; Lombrozo의 4요인 모델: rejection, epistemic, non-epistemic, meta-epistemic)은 1단계 배경 절 &#x27;Persistent Disagreement&#x27; 안의 2단계 하위 절 &#x27;Explaining Persistence&#x27;에 펼쳐지고, 그 배경 절은 2단계 &#x27;Overview of Experiments&#x27;로 끝남.</li>
+      <li><b>첫 쪽 사용</b> 가운데 정렬 제목, 저자 2명, 소속 블록 하나가 위 ~20%; 초록(+ keywords)이 왼쪽 단 위 절반가량; Introduction(짧은 3문단, ~235단어)이 왼쪽 단 아래 절반과 오른쪽 단 위; 배경 절 &#x27;Persistent Disagreement&#x27;가 이미 p.1(오른쪽 단)에서 첫 2단계 &#x27;Responses to Disagreement&#x27;와 함께 시작. p.1의 약 1/3이 초록, ~1/3 Introduction, ~1/3 배경.</li>
+      <li><b>링크</b> OSF 저장소 https://osf.io/qfz7m/(사전등록·자료·데이터)를 &#x27;Overview of Experiments&#x27; 문단(p.2, 왼쪽 단) 본문에, 사전등록한 두 실험을 소개하는 자리에서 제시.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.4 · 한 단, 단의 ~1/5(왼쪽 단 아래; 영역별 설명 유형 막대그래프) · Experiment 1 / Results (Cross-domain Variation)</li><li>Fig. 2 · p.5 · 한 단, 단의 ~1/5(오른쪽 단 맨 아래; 요인 부하량 히트맵) · Experiment 2 / Results (Explanations for Persistence)</li><li>Table 1 · p.3 · 전체 폭, 쪽의 ~1/5(쪽 아래; 영역 4개 열에 진술문 16개 + 주석) · Experiment 1 / Methods (자극, Exp. 1과 2가 공유)</li><li>Table 2 · p.4 · 전체 폭, 쪽의 ~45%(위 절반; 하위 코드·비율·응답 예시와 설명이 담긴 부호화 체계 + 주석) · Experiment 1 / Results (Explanation coding)</li></ul><h4>구조 읽기</h4><p class="summary">서론은 소제목 없는 세 문단(약 235단어, 본문의 6%)으로 짧게 끝내고 기여 셋을 &#x27;First/Second/Third&#x27;로 나열한 뒤, 바로 1수준 배경 절 &#x27;Persistent Disagreement&#x27;(19%)를 따로 둔다. 이 배경 절은 2수준 소절 셋(Responses to Disagreement → Explaining Persistence(4요인 틀) → Overview of Experiments(사전등록·OSF 링크·두 실험 예고))으로 이론에서 실험으로 다리를 놓는다. 실험 둘은 각각 1수준 절(각 31–33%)이고, 짧은 도입 문단 뒤에 Methods/Results/Discussion 2수준을 두며, 그 안에서 &#x27;Participants&#x27;, &#x27;Materials and Procedure&#x27;, &#x27;Perceived Consensus &amp; Persistence&#x27;, &#x27;Explanations for Persistence&#x27;, &#x27;Cross-domain Variation&#x27; 같은 굵은 런인(run-in) 3수준 제목을 두 실험에 똑같이 반복해 결과를 나란히 비교하게 한다. 각 실험 끝의 짧은 Discussion(75·157단어)이 요약을 맡고, 마지막 General Discussion(12%)은 소제목 없이 동기 재진술 → 결과 종합과 함의 → 한계·후속 연구 → &#x27;Despite these limitations…&#x27; 마무리 문단으로 끝난다. 표 2개(자극 목록, 코딩 체계 예시)가 질적 코딩의 근거를 지면에서 보여 주고, 그림은 2개뿐이다.</p>
+  </section>
+</article>
+
+<h2 id="tenenbaum">Tenenbaum 참여 논문 5편</h2>
+<p class="lede">Joshua B. Tenenbaum(MIT)이 공저자로 참여한 CogSci 2022–2025 논문 5편(수상작 아님). 수상작 10편 가운데 P08(Chandra et al., 2023 Marr Prize)·P09(Cheyette et al., 2023 고차 인지 부문)에도 Tenenbaum이 참여했으므로, 이 둘과 겹치지 않게 eScholarship에 전문이 있는 논문을 해마다 골랐다. 읽는 방법과 항목은 위 10편과 같다.</p>
+<h4>공통으로 보이는 특징</h4>
+<ul class="points"><li>본문 글은 5편 모두 6쪽에서 끝나고 참고문헌·감사의 글이 7~8쪽에 붙는다. 본문 3,320~3,760단어로 수상작 범위 안이다.</li><li>1수준 절은 4~5개다. 별도 Related Work 절은 5편 모두 없고, 서론 소제목은 1편(T02)만 있다.</li><li>모델·틀 절이 서론 바로 뒤 독립 1수준 절로 온다(T03 Computational Model · T04 Computational framework · T05 Model). 그래서 방법·모델 몫이 평균 27%로 수상작 평균(19%)보다 크고, 실험·결과 몫(36%)은 작다.</li><li>실험이 하나인 논문이 많다. 실험을 1수준 절로 나눈 것은 T01(Part I · Part II) 하나이고, 나머지는 Experiments → Results 또는 &#x27;Experiments and Results&#x27; 한 절로 처리한다.</li><li>마지막 절은 수상작보다 느슨하다. 소제목 없는 Discussion으로 끝나는 논문이 3편이고, T02는 run-in &#x27;Limitations · Future Directions&#x27;를, T04는 Discussion 안에 2수준 소제목 셋과 한 문단짜리 Conclusion을 둔다. 그림은 3~6개, 표는 0~1개다.</li></ul>
+<h4>구조 비교 (1수준 절 역할별 평균)</h4>
+<div class="cmpbars">
+  <div class="cmprow"><span class="lab">수상작 10편 평균</span><div class="bar mean"><span class="seg intro" style="flex:0.2353"><i>서론·배경 24%</i></span><span class="seg method" style="flex:0.1879"><i>방법·모델 19%</i></span><span class="seg result" style="flex:0.4479"><i>실험·결과 45%</i></span><span class="seg disc" style="flex:0.1291"><i>논의·결론 13%</i></span></div></div>
+  <div class="cmprow"><span class="lab">Tenenbaum 5편 평균</span><div class="bar mean"><span class="seg intro" style="flex:0.2004"><i>서론·배경 20%</i></span><span class="seg method" style="flex:0.2708"><i>방법·모델 27%</i></span><span class="seg result" style="flex:0.3560"><i>실험·결과 36%</i></span><span class="seg disc" style="flex:0.1728"><i>논의·결론 17%</i></span></div></div>
+  <div class="cmprow"><span class="lab">우리 원고 10-23</span><div class="bar"><span class="seg intro" style="flex:0.0940" title="서론 · 9%"><i>서론</i></span><span class="seg intro" style="flex:0.1270" title="관련 연구 · 13%"><i>관련 연구</i></span><span class="seg method" style="flex:0.2060" title="LLM Squid Game: 공존 아레나 · 21%"><i>LLM Squid Game: 공존 아레나</i></span><span class="seg method" style="flex:0.2150" title="평가 · 22%"><i>평가</i></span><span class="seg result" style="flex:0.2400" title="결과 · 24%"><i>결과</i></span><span class="seg disc" style="flex:0.1180" title="종합 논의 · 12%"><i>종합 논의</i></span></div></div><div class="cmprow"><span class="lab">우리 원고 10-26</span><div class="bar"><span class="seg intro" style="flex:0.1190" title="서론 · 12%"><i>서론</i></span><span class="seg method" style="flex:0.3040" title="아레나 · 30%"><i>아레나</i></span><span class="seg result" style="flex:0.5080" title="분석 · 51%"><i>분석</i></span><span class="seg disc" style="flex:0.0690" title="논의 및 결론 · 7%"><i>논의 및 결론</i></span></div></div>
+</div>
+<div class="scroll"><table class="overview">
+<thead><tr><th class="n">#</th><th>논문</th><th class="n">글/PDF 쪽</th><th class="n">절 1/2수준</th><th class="n">그림/표</th><th>서론 소제목</th><th>실험을 절로</th><th>마지막 절 (소제목)</th><th>분량 비율</th></tr></thead>
+<tbody><tr><td class="n">T01</td><td><a href="#t05">Decompose, Deduce, and Dispose: A Memory-Limited Metacognitive Model of Human Problem Solving</a><div class="sub">2025 · 발표 논문 (수상 아님)</div></td><td class="n">6 / 8</td><td class="n">4 / 13</td><td class="n">6 / 1</td><td>—</td><td>—</td><td>Discussion and Future Work</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.2080" title="Introduction · 21%"><i>Introduction</i></span><span class="seg method" style="flex:0.2630" title="Model · 26%"><i>Model</i></span><span class="seg result" style="flex:0.3660" title="Experiments and Results · 37%"><i>Experiments and Results</i></span><span class="seg disc" style="flex:0.1630" title="Discussion and Future Work · 16%"><i>Discussion and Future Work</i></span></div></td></tr>
+<tr><td class="n">T02</td><td><a href="#t03">Grounding Language about Belief in a Bayesian Theory-of-Mind</a><div class="sub">2024 · 발표 논문 (수상 아님)</div></td><td class="n">6 / 7</td><td class="n">5 / 17</td><td class="n">3 / 1</td><td>—</td><td>—</td><td>Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1990" title="Introduction · 20%"><i>Introduction</i></span><span class="seg method" style="flex:0.3660" title="Computational Model · 37%"><i>Computational Model</i></span><span class="seg method" style="flex:0.1610" title="Experiments · 16%"><i>Experiments</i></span><span class="seg result" style="flex:0.1800" title="Results · 18%"><i>Results</i></span><span class="seg disc" style="flex:0.0940" title="Discussion · 9%"><i>Discussion</i></span></div></td></tr>
+<tr><td class="n">T03</td><td><a href="#t04">Cooperative Explanation as Rational Communication</a><div class="sub">2024 · 발표 논문 (수상 아님)</div></td><td class="n">6 / 8</td><td class="n">5 / 15</td><td class="n">4 / 1</td><td>—</td><td>—</td><td>Conclusion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1090" title="Introduction · 11%"><i>Introduction</i></span><span class="seg method" style="flex:0.2490" title="Computational framework · 25%"><i>Computational framework</i></span><span class="seg result" style="flex:0.4350" title="Instantiating the framework to explain surprising plans · 44%"><i>Instantiating the framework to explain surprising plans</i></span><span class="seg disc" style="flex:0.1800" title="Discussion · 18%"><i>Discussion</i></span><span class="seg disc" style="flex:0.0270" title="Conclusion · 3%"><i>Conclusion</i></span></div></td></tr>
+<tr><td class="n">T04</td><td><a href="#t02">Evaluating statistical language models as pragmatic reasoners</a><div class="sub">2023 · 발표 논문 (수상 아님)</div></td><td class="n">6 / 8</td><td class="n">4 / 24</td><td class="n">4 / 0</td><td>예</td><td>—</td><td>Discussion <span class="sub">(Limitations · Future Directions)</span></td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.3190" title="Introduction · 32%"><i>Introduction</i></span><span class="seg method" style="flex:0.3150" title="Methods · 32%"><i>Methods</i></span><span class="seg result" style="flex:0.1250" title="Results · 12%"><i>Results</i></span><span class="seg disc" style="flex:0.2410" title="Discussion · 24%"><i>Discussion</i></span></div></td></tr>
+<tr><td class="n">T05</td><td><a href="#t01">Identifying concept libraries from language about object structure</a><div class="sub">2022 · 발표 논문 (수상 아님)</div></td><td class="n">6 / 8</td><td class="n">4 / 16</td><td class="n">4 / 0</td><td>—</td><td>예</td><td>Discussion</td><td class="barcell"><div class="bar"><span class="seg intro" style="flex:0.1670" title="(Introduction, no heading) · 17%"><i>(Introduction, no heading)</i></span><span class="seg result" style="flex:0.3350" title="Part I: Eliciting language about object structure · 34%"><i>Part I: Eliciting language about object structure</i></span><span class="seg result" style="flex:0.3390" title="Part II: Identifying concepts from language · 34%"><i>Part II: Identifying concepts from language</i></span><span class="seg disc" style="flex:0.1590" title="Discussion · 16%"><i>Discussion</i></span></div></td></tr></tbody>
+</table></div>
+
+<article class="paper" id="t05">
+  <header>
+    <div class="eyebrow"><span class="k">T01</span> CogSci 2025 · 발표 논문 (수상 아님)</div>
+    <h3>Decompose, Deduce, and Dispose: A Memory-Limited Metacognitive Model of Human Problem Solving</h3>
+    <p class="meta">Samuel Cheyette, Tony Chen, Matthias Hofer, Frederick Callaway, Neil Bramley, Joshua Tenenbaum<br><span class="aff">Massachusetts Institute of Technology (Cheyette, Chen, Hofer, Tenenbaum); New York University (Callaway); University of Edinburgh (Bramley). 앞의 세 저자(Cheyette, Chen, Hofer)는 동등 기여(†) 표시.</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/517147vr" target="_blank" rel="noopener">https://escholarship.org/uc/item/517147vr</a> · <a href="https://escholarship.org/content/qt517147vr/qt517147vr.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the 47th Annual Conference of the Cognitive Science Society, vol. 47, pp. 4754-4761; 9쪽 PDF = 표지 1 + 학회 원고 8쪽). CogSci 2025 학회 페이지의 수상작 목록에 이 논문은 없음.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>현실의 많은 문제는 서로 맞물린 제약(constraint)들의 복잡한 체계로 정의된다. 사람들이 이렇게 제한된 작업기억 용량으로 어떻게 이런 문제를 풀 수 있는지는 아직 잘 이해되지 않았다. 우리는 자신의 기억 한계와 불완전한 추론에 관한 메타인지적 지식을 써서 하위 문제(subproblem) 선택을 이끄는 인간 문제 해결의 형식 모델을 제안한다. 고전 게임 지뢰찾기(Minesweeper)의 변형을 쓰는 두 실험에서 이 모델을 사람의 게임 플레이와 비교한다. 실험 1에서는 참가자의 정확도가 하위 문제의 순서와 중간 결과를 외부화(externalize)할 수 있는지의 영향을 모두 받았으며, 이는 추론에 기억 병목이 있음을 가리킨다. 실험 2에서는 마우스 추적(mouse-tracking) 패러다임을 써서 참가자의 하위 문제 선택과 시간 배분을 측정했다. 모델은 하위 문제 순서, 오류, 시간 배분의 핵심 패턴을 포착한다. 이 결과는 기억 한계와 그 한계를 다루는 전략, 곧 하위 문제를 신중하게 고르는 것과 기억 부담을 바깥으로 넘기는 것(memory-offloading)이 인간 문제 해결의 중심 요소임을 가리킨다.</p>
+    <details><summary>영어 원문</summary><p class="en">Many real-world problems are defined by complex systems of interlocking constraints. How people are able to solve these problems with such limited working memory capacity remains poorly understood. We propose a formal model of human problem-solving that uses metacognitive knowledge of its own memory limits and imperfect reasoning to guide subproblem choice. We compare our model to human gameplay in two experiments using a variant of the classic game Minesweeper. In Experiment 1, we find that participants’ accuracy was influenced both by the order of subproblems and their ability to externalize intermediate results, indicative of a memory bottleneck in reasoning. In Experiment 2, we used a mouse-tracking paradigm to assess participants’ subproblem choice and time allocation. The model captures key patterns of subproblem ordering, error, and time allocation. Our results point toward memory limits and strategies for navigating those limits — including the careful choice of subproblems and memory-offloading — as central elements of human problem-solving.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3675단어 (PDF 8쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7-8: p.7은 두 단 모두 References로 꽉 차고, p.8은 왼쪽 단 위 ~1/4만 씀(오른쪽 단은 빈칸). 본문은 p.6 오른쪽 단 끝에서 Discussion and Future Work로 끝남.</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments·부록·각주 없음(p.1 왼쪽 단 아래 학회 편집자/CC BY 꼬리말만). 번호 없는 별행 수식 2개(Model 안: 기억 버퍼 컬링 확률 p_L, 제약 통합의 가치 Q(a_c|s)); 우도 L(θ)는 Experiment 2 Results 본문 안 인라인. 저자 셋 동등 기여 표시.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 4 · 2수준 이하 13</dd></div>
+      <div><dt>그림·표</dt><dd>그림 6 · 표 1</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.2080" title="Introduction · 21%"><i>Introduction</i></span><span class="seg method" style="flex:0.2630" title="Model · 26%"><i>Model</i></span><span class="seg result" style="flex:0.3660" title="Experiments and Results · 37%"><i>Experiments and Results</i></span><span class="seg disc" style="flex:0.1630" title="Discussion and Future Work · 16%"><i>Discussion and Future Work</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">764</td><td class="n">21%</td></tr>
+<tr class="lv1"><td class="t">Model</td><td class="n">p.2</td><td class="n">966</td><td class="n">26%</td></tr>
+<tr class="lv3"><td class="t">(untitled lead-in: CSP formalism, subproblem idea)</td><td class="n">p.2</td><td class="n">241</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Bounded Reasoner</td><td class="n">p.3</td><td class="n">407</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Metacognitive Planner</td><td class="n">p.3</td><td class="n">231</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(untitled closing paragraph: model simulations, Fig. 2)</td><td class="n">p.4</td><td class="n">87</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiments and Results</td><td class="n">p.4</td><td class="n">1345</td><td class="n">37%</td></tr>
+<tr class="lv2"><td class="t">Experiment 1: Guided Subproblem Solving</td><td class="n">p.4</td><td class="n">626</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(untitled lead-in: manipulations and predictions)</td><td class="n">p.4</td><td class="n">240</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Stimuli</td><td class="n">p.4</td><td class="n">66</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Procedure</td><td class="n">p.4</td><td class="n">173</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Results</td><td class="n">p.4</td><td class="n">147</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Experiment 2: Self-directed Subproblem Selection</td><td class="n">p.5</td><td class="n">719</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(untitled lead-in: free-play spotlight paradigm)</td><td class="n">p.5</td><td class="n">128</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Procedure</td><td class="n">p.5</td><td class="n">63</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Results</td><td class="n">p.5</td><td class="n">528</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion and Future Work</td><td class="n">p.6</td><td class="n">600</td><td class="n">16%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> Discussion and Future Work</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 아니오</li>
+      <li><b>모델·형식 설명 위치</b> Introduction 바로 뒤 독립 1단계 절 &#x27;Model&#x27;(p.2-4, 본문의 26%): CSP 형식화 도입 문단 + run-in &#x27;Bounded Reasoner&#x27;(기억 버퍼, 확률적 컬링 p_L, 런타임, capacity overflow) + run-in &#x27;Metacognitive Planner&#x27;(Q 값, 정보 이득 - β_O·정보 손실 - β_T·시간, softmax) + 제목 없는 시뮬레이션 문단(Fig. 2). 모델 적합(PyBADS, 모수 추정치, 제거 모델 3개 비교, Table 1)은 Experiment 2 Results 안에 있음.</li>
+      <li><b>첫 쪽 사용</b> 제목(두 줄) + 저자 6명·소속·동등 기여·이메일이 p.1 위 ~22%; 초록(154단어 + keywords)이 왼쪽 단 위 ~45%; Introduction은 왼쪽 단 중간에서 시작해 p.1 나머지를 채우고, p.2에서 전폭 Figure 1 아래 왼쪽 단 끝까지 이어짐. Model은 p.2 오른쪽 단에서 시작.</li>
+      <li><b>링크</b> 없음. 사전등록·OSF·코드·데이터 링크 없음(PyBADS DOI는 참고문헌에만).</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 전체 폭(두 단 걸침), 캡션 포함 ~0.4쪽; 패널 A(지뢰찾기 판 -&gt; 그래프 표현), B(상태·메타인지 planner·bounded reasoner 3단계 흐름도) · Model (Introduction 뒤 p.2 맨 위에 배치)</li><li>Fig. 2 · p.3 · 한 단(오른쪽 위), 캡션 포함 단의 ~1/3; 2x2 패널(β_O=0/1 x 풀이 비율/오류 확률), 용량 5-40 bits별 선 · Model</li><li>Fig. 3 · p.4 · 한 단(왼쪽 위), 캡션 포함 단의 ~1/3; 실험 1(정해진 순서) 대 실험 2(3x3 창) 과제 화면 도식 · Model 끝 / Experiments and Results</li><li>Fig. 4 · p.4 · 한 단(오른쪽 위), 캡션 포함 단의 ~1/3; 패널 2개(Curriculum/Unhelpful Order), 진행도별 P(correct), Regular 대 No Marking · Experiments and Results &gt; Experiment 1 &gt; Results</li><li>Fig. 5 · p.5 · 전체 폭, 캡션 포함 ~0.3쪽; 2x5 패널(사람/모델 x 판 5개), 칸별 정답 확률 곡선 · Experiments and Results &gt; Experiment 2 &gt; Results</li><li>Fig. 6 · p.6 · 한 단(왼쪽 위), 캡션 포함 단의 ~0.4; 산점도 2개(칸별 총 주시 시간, 첫 정답 시점; 사람 대 모델) · Experiments and Results &gt; Experiment 2 &gt; Results</li><li>Table 1 · p.5 · 한 단(오른쪽 아래쪽), 캡션 포함 단의 ~1/6로 작음; 모델 4개(Full, No RT, No Metacognition, Unbounded Memory)의 교차검증 ΔLL · Experiments and Results &gt; Experiment 2 &gt; Results</li></ul><h4>구조 읽기</h4><p class="summary">1수준 절이 Introduction - Model - Experiments and Results - Discussion and Future Work 넷뿐인 &#x27;서론-모델-실험-논의&#x27; 구조다. 서론은 소제목 없이 다섯 문단(복잡한 문제와 표상 한계 -&gt; Newell &amp; Simon 이후 탐색 모델 -&gt; 그 모델들이 기억 부담을 비켜 간다는 공백과 핵심 질문 -&gt; 이 논문의 알고리즘 수준 모델과 가설 -&gt; 지뢰찾기 실험 1·2와 결과 미리보기)으로 본문의 21%를 쓴다. 독립 1수준 절 &#x27;Model&#x27;(26%)은 CSP 형식화 뒤 run-in 소제목 둘(Bounded Reasoner, Metacognitive Planner)과 별행 수식 둘로 모델을 정의하고, 실험 전에 시뮬레이션 그림(Fig. 2)으로 예측을 먼저 보인다. 실험 둘은 1수준 &#x27;Experiments and Results&#x27;(37%, 가장 큼) 아래 2수준 절로 묶이고, 각각 제목 없는 도입 문단 뒤 Stimuli/Procedure/Results run-in을 두며, 모델 적합과 제거 모델 비교(Table 1)는 실험 2 Results 안에 들어간다. 마지막 &#x27;Discussion and Future Work&#x27;는 소제목 없이 요약 -&gt; 선행연구와의 관계 -&gt; 메타인지 해석 -&gt; 한계와 향후 과제로 끝나며 별도 결론 문단은 없다. 본문은 6쪽을 꽉 채우고 참고문헌은 7-8쪽에 둔다.</p>
+  </section>
+</article>
+
+<article class="paper" id="t03">
+  <header>
+    <div class="eyebrow"><span class="k">T02</span> CogSci 2024 · 발표 논문 (수상 아님)</div>
+    <h3>Grounding Language about Belief in a Bayesian Theory-of-Mind</h3>
+    <p class="meta">Lance Ying, Tan Zhi-Xuan, Lionel Wong, Vikash Mansinghka, Joshua B. Tenenbaum<br><span class="aff">Massachusetts Institute of Technology, Cambridge, MA, USA (전원); Harvard University, Cambridge, MA, USA (Ying). Ying과 Zhi-Xuan은 공동 제1저자(Equal Contribution 각주).</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/2tk4d5jw" target="_blank" rel="noopener">https://escholarship.org/uc/item/2tk4d5jw</a> · <a href="https://escholarship.org/content/qt2tk4d5jw/qt2tk4d5jw.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the 46th Annual Conference of the Cognitive Science Society, vol. 46, pp. 6087-6093; 8쪽 PDF = 표지 1 + 원고 7쪽). 같은 원고가 arXiv 2402.10416으로도 있음 — 여기서는 쓰지 않음.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>믿음은 직접 관찰할 수 없는 정신 상태인데도, 사람들은 서로의 믿음에 대해 일상적으로 이야기하며, 다른 사람이 무엇을 생각하고 아는지를 풍부한 합성적(compositional) 언어로 묘사하곤 한다. 다른 마음의 숨겨진 인식적(epistemic) 내용을 해석하는 이 능력은 무엇으로 설명되는가? 이 논문은 믿음 진술의 의미론을 베이지안 마음 이론(Bayesian theory-of-mind)에 근거 지음으로써 그 답을 향해 한 걸음 나아간다. 사람들이 에이전트의 행동을 설명하는 목표·믿음·계획의 정합적 집합을 어떻게 함께 추론하는지를 모델링한 뒤, 그 에이전트의 믿음에 관한 진술을 인식 논리(epistemic logic)로 이 추론에 비추어 평가함으로써, 우리의 틀은 믿음에 대한 기능적 역할 의미론(functional role semantics)을 제공하고, 인간의 믿음 귀인이 지닌 정도성(gradedness)과 합성성, 그리고 목표·계획과의 밀접한 연결을 설명한다. 우리는 사람들이 숨겨진 물체에 대한 도구적 추론을 요구하는 문-열쇠(doors-and-keys) 격자 세계 퍼즐을 에이전트가 푸는 모습을 보면서 목표를 귀인하고 믿음 문장을 평가하는 방식을 연구해 이 틀을 평가한다. 순수한 논리적 연역, 마음을 읽지 않는(non-mentalizing) 기준선, 도구적 계획의 역할을 무시하는 마음 읽기와 달리, 우리 모델은 인간의 목표 귀인과 믿음 귀인에 훨씬 더 잘 맞으며, 이는 사람들이 믿음에 관한 언어를 이해하는 방식을 모델링하는 데 마음 이론이 중요함을 보여 준다.</p>
+    <details><summary>영어 원문</summary><p class="en">Despite the fact that beliefs are mental states that cannot be directly observed, humans talk about each others’ beliefs on a regular basis, often using rich compositional language to describe what others think and know. What explains this capacity to interpret the hidden epistemic content of other minds? In this paper, we take a step towards an answer by grounding the semantics of belief statements in a Bayesian theory-of-mind: By modeling how humans jointly infer coherent sets of goals, beliefs, and plans that explain an agent’s actions, then evaluating statements about the agent’s beliefs against these inferences via epistemic logic, our framework provides a functional role semantics for belief, explaining the gradedness and compositionality of human belief attributions, as well as their intimate connection with goals and plans. We evaluate this framework by studying how humans attribute goals and evaluate belief sentences while watching an agent solve a doors-and-keys gridworld puzzle that requires instrumental reasoning about hidden objects. In contrast to pure logical deduction, non-mentalizing baselines, and mentalizing that ignores the role of instrumental plans, our model provides a much better fit to human goal and belief attributions, demonstrating the importance of theory-of-mind for modeling how humans understand language about beliefs.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3321단어 (PDF 7쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7만(전체 한 쪽; 두 단, p.7의 ~95%). 본문은 p.6 오른쪽 단 중간에서 Discussion으로 끝나고 그 아래 Acknowledgements.</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgements는 p.6 오른쪽 단 아래(두 문단, 68단어; 자금 출처와 동료 감사). 각주는 p.1의 &#x27;Equal Contribution&#x27; 하나뿐. 부록·OSF/코드/데이터 링크·사전등록·보충자료 없음. p.1 왼쪽 단 아래에 Proceedings 편집자/CC BY 꼬리말.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 5 · 2수준 이하 17</dd></div>
+      <div><dt>그림·표</dt><dd>그림 3 · 표 1</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1990" title="Introduction · 20%"><i>Introduction</i></span><span class="seg method" style="flex:0.3660" title="Computational Model · 37%"><i>Computational Model</i></span><span class="seg method" style="flex:0.1610" title="Experiments · 16%"><i>Experiments</i></span><span class="seg result" style="flex:0.1800" title="Results · 18%"><i>Results</i></span><span class="seg disc" style="flex:0.0940" title="Discussion · 9%"><i>Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">662</td><td class="n">20%</td></tr>
+<tr class="lv1"><td class="t">Computational Model</td><td class="n">p.2</td><td class="n">1214</td><td class="n">37%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in, before first subheading)</td><td class="n">p.2</td><td class="n">83</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Representing Belief Statements</td><td class="n">p.2</td><td class="n">272</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Modeling the Functional Role of Belief</td><td class="n">p.2</td><td class="n">309</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Joint Inference of Goals and Beliefs</td><td class="n">p.3</td><td class="n">240</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Quantitatively Interpreting Belief Statements</td><td class="n">p.3</td><td class="n">310</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Experiments</td><td class="n">p.4</td><td class="n">536</td><td class="n">16%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in, before first subheading)</td><td class="n">p.4</td><td class="n">93</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Scenario Generation</td><td class="n">p.4</td><td class="n">105</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Experiment Design</td><td class="n">p.4</td><td class="n">106</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Participants</td><td class="n">p.4</td><td class="n">54</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Alternative Models</td><td class="n">p.4</td><td class="n">178</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(lead paragraph, before run-in headings)</td><td class="n">p.4</td><td class="n">39</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Omniscient Observer</td><td class="n">p.4</td><td class="n">41</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Ignorant Observer</td><td class="n">p.4</td><td class="n">35</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(Uncertain) Non-Mentalizing Observer</td><td class="n">p.4</td><td class="n">24</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Heuristic Mentalizer</td><td class="n">p.4</td><td class="n">39</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Results</td><td class="n">p.4</td><td class="n">597</td><td class="n">18%</td></tr>
+<tr class="lv2"><td class="t">Qualitative Analysis</td><td class="n">p.4</td><td class="n">297</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Quantitative Analysis</td><td class="n">p.4</td><td class="n">300</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">312</td><td class="n">9%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> Discussion</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 아니오</li>
+      <li><b>모델·형식 설명 위치</b> Introduction 바로 뒤 독립 1단계 절 &#x27;Computational Model&#x27;(p.2-3, 본문의 37%로 가장 큼): (i)-(iv) 구성 요소를 예고하는 도입 문단 + 2단계 넷(인식 논리를 더한 PDDL 표현, 생성 모델 Eq. 1-5와 Boltzmann 행동 선택 Eq. 6, 목표·믿음 결합 추론 Eq. 7-8과 정확한 베이지안 필터링, LLM 번역 + 기댓값으로 믿음 진술 평가와 두 사전분포 US0 / Uψ). 번호 붙은 별행 수식 8개가 모두 이 절에 있음.</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 5명/소속 두 줄이 p.1 위 ~15%; 초록(201단어 + keywords)이 왼쪽 단 위 ~45%; Introduction은 왼쪽 단 아래에서 시작해 오른쪽 단 전체를 채움. p.1의 약 1/3이 초록, ~1/2이 Introduction. Introduction은 p.2 왼쪽 단 위(Fig. 1 아래) 9줄까지 이어지고 같은 단에서 Computational Model이 시작.</li>
+      <li><b>링크</b> 없음. 사전등록·OSF·코드·데이터 링크 없음(본문에 Gen 확률 프로그래밍 시스템 등 도구 인용만 있음).</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 전체 폭(두 단 걸침), 쪽 위 ~0.3쪽(캡션 포함 y ~75-305pt); 모델 개요 도식 3칸((a) LLM 문장 번역, (b) 베이지안 역계획, (c) 공식 평가) · Introduction 끝 / Computational Model 앞 (Introduction에서 처음 인용)</li><li>Fig. 2 · p.5 · 전체 한 쪽(p.5 전부가 그림 + 캡션); 예시 시나리오 6개 x (격자 지도 + 목표 평정 막대 + 믿음 평정 선 그래프, 사람 대 BToM 모델) · Results &gt; Qualitative Analysis (Experiments &gt; Scenario Generation에서도 인용)</li><li>Fig. 3 · p.6 · 전체 폭, ~0.2쪽(Table 1 바로 아래, y ~195-330pt); 상관 산점도 패널 5개(BToM, Heuristic Mentalizer, Non-Mentalizer, Omniscient Observer, Ignorant Observer; 사람 대 모델 믿음 평정) · Results &gt; Quantitative Analysis</li><li>Table 1 · p.6 · 전체 폭, 쪽 위 ~0.15쪽(y ~73-190pt); 모델 7행 x (Belief Prior, 목표 귀인 상관, 믿음 진술 상관 + 부트스트랩 95% CI) · Results &gt; Quantitative Analysis</li></ul><h4>구조 읽기</h4><p class="summary">1수준 절이 Introduction-Computational Model-Experiments-Results-Discussion 다섯 개인 모델 중심 단일 실험 논문이다. 서론은 약 660단어(본문의 20%)로 소제목 없이 네 문단(일상의 믿음 언어 예시 -&gt; 철학·논리학과 BToM 선행연구의 빈틈 -&gt; &#x27;In this paper&#x27; 기여: 기능적 역할 의미론 + LLM 번역 + 역계획 -&gt; 실험 예고)으로 짜이고, 관련 연구는 별도 절 없이 둘째 문단에 녹아 있다. 가장 큰 절은 Computational Model(37%)로, 도입 문단의 (i)-(iv) 예고 뒤 2수준 네 소절에 번호 붙은 별행 수식 8개를 모두 몰아 두며, 그림 1(전폭 모델 개요)이 이 절 직전에 놓여 모델의 세 단계를 먼저 보여 준다. Experiments(16%)는 방법만 담은 2수준 넷(Scenario Generation, Experiment Design, Participants, Alternative Models)이고, 비교 모델 넷은 굵은 run-in 이름으로 나열되며, 결과는 별도 1수준 Results(18%)가 Qualitative/Quantitative Analysis로 나눠 받는다. 그림 2가 p.5 한 쪽 전체를, Table 1과 그림 3이 p.6 위쪽을 차지해 결과를 운반하고, 소제목 없는 두 문단짜리 Discussion(9%)은 요약 뒤 한계·향후 과제로 끝나며 결론 문단은 없다. 참고문헌은 p.7 한 쪽에 들어가 본문은 6쪽을 쓴다.</p>
+  </section>
+</article>
+
+<article class="paper" id="t04">
+  <header>
+    <div class="eyebrow"><span class="k">T03</span> CogSci 2024 · 발표 논문 (수상 아님)</div>
+    <h3>Cooperative Explanation as Rational Communication</h3>
+    <p class="meta">Kartik Chandra, Tony Chen, Tzu-Mao Li, Jonathan Ragan-Kelley, Joshua B. Tenenbaum<br><span class="aff">MIT CSAIL, Cambridge, MA (Chandra, Ragan-Kelley); MIT BCS, Cambridge, MA (Chen, Tenenbaum); UCSD ECE, San Diego, CA (Li)</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/8bf5g4h6" target="_blank" rel="noopener">https://escholarship.org/uc/item/8bf5g4h6</a> · <a href="https://escholarship.org/content/qt8bf5g4h6/qt8bf5g4h6.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the 46th Annual Conference of the Cognitive Science Society, vol. 46, pp. 610-617; 9쪽 PDF = 표지 1 + 본문 6쪽 + Acknowledgements/참고문헌 2쪽). CogSci 2024 수상 목록(cognitivesciencesociety.org/cogsci-2024/)에 이 논문은 없음.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>이 논문은 설명(explanation)을 협력적인 합리적 의사소통(cooperative rational communication)으로 모형화하는 계산적 틀을 제시한다. 이 틀에서 설명하는 사람은 &#x27;왜?&#x27;라는 질문을 받으면 질문한 사람의 현재 정신 모형(mental model)을 추론하고, 듣는 사람의 미래 효용을 최대화하도록 그 정신 모형에 개입한다. 우리는 이 틀을 계획(planning) 영역에 구체화하고, 이 틀이 매우 다양한 시나리오에서 계획에 관한 사람들의 설명을 모형화할 수 있음을 보인다.</p>
+    <details><summary>영어 원문</summary><p class="en">We offer a computational framework for modeling explanation as cooperative rational communication. Under our framework, when an explainer is faced with a “why?” question, they reason about the question-asker’s current mental model, and intervene on that mental model in order to maximize the listener’s future utility. We instantiate our framework in a planning domain, and show that our framework can model human explanations about plans across a wide variety of scenarios.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3753단어 (PDF 8쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7-8: p.7 왼쪽 단 맨 위 Acknowledgements(45단어), 그 아래 References가 p.7 두 단을 채우고 p.8 왼쪽 단 ~2/3까지 이어짐(p.8 오른쪽 단은 빈칸). 본문은 p.6 오른쪽 단 아래 Conclusion으로 끝남.</dd></div>
+      <div><dt>그 밖에</dt><dd>각주 없음(p.1 아래 Proceedings 편집자·CC BY 꼬리말만). 별행 수식 3개(번호 없음; 모두 &#x27;Computational framework&#x27; 절, p.2). 번호 없는 지도 그림 하나가 p.3 왼쪽 단에 있음(과제 마을 지도). 부록·OSF/코드/데이터 링크·사전등록 없음. Discussion의 응용 소절이 동시 진행 연구(Chandra et al., 2024, arXiv &#x27;Watchat&#x27;)를 소개.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 5 · 2수준 이하 15</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 1</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1090" title="Introduction · 11%"><i>Introduction</i></span><span class="seg method" style="flex:0.2490" title="Computational framework · 25%"><i>Computational framework</i></span><span class="seg result" style="flex:0.4350" title="Instantiating the framework to explain surprising plans · 44%"><i>Instantiating the framework to explain surprising plans</i></span><span class="seg disc" style="flex:0.1800" title="Discussion · 18%"><i>Discussion</i></span><span class="seg disc" style="flex:0.0270" title="Conclusion · 3%"><i>Conclusion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">410</td><td class="n">11%</td></tr>
+<tr class="lv1"><td class="t">Computational framework</td><td class="n">p.1</td><td class="n">936</td><td class="n">25%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in, before first subheading)</td><td class="n">p.1</td><td class="n">208</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Inferring Bob’s erroneous mental model</td><td class="n">p.2</td><td class="n">208</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Correcting Bob’s mental model</td><td class="n">p.2</td><td class="n">520</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Instantiating the framework to explain surprising plans</td><td class="n">p.3</td><td class="n">1631</td><td class="n">44%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in: planning domain and scenario)</td><td class="n">p.3</td><td class="n">211</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Computational model</td><td class="n">p.3</td><td class="n">264</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Alternate models</td><td class="n">p.3</td><td class="n">155</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Experiment</td><td class="n">p.4</td><td class="n">268</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.4</td><td class="n">733</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(lead paragraph, before run-in headings)</td><td class="n">p.4</td><td class="n">108</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Effect of the social cost</td><td class="n">p.5</td><td class="n">328</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Effect of reasoning about the future</td><td class="n">p.5</td><td class="n">191</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Effect of reasoning about the past</td><td class="n">p.6</td><td class="n">106</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.6</td><td class="n">675</td><td class="n">18%</td></tr>
+<tr class="lv2"><td class="t">Potential extensions to the framework</td><td class="n">p.6</td><td class="n">112</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">When do people ask “why?” questions?</td><td class="n">p.6</td><td class="n">219</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Practical applications of the framework</td><td class="n">p.6</td><td class="n">344</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Conclusion</td><td class="n">p.6</td><td class="n">101</td><td class="n">3%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> Conclusion (앞에 2수준 소제목 셋이 있는 Discussion이 옴)</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> 두 곳. 일반 틀은 서론 바로 뒤 독립 1수준 절 &#x27;Computational framework&#x27;(p.1-2, 본문의 25%)에서 Bob 모형 추론(베이즈 규칙)과 발화 선택(미래 효용 V(u), 전달 비용, 사회 비용, softmax)을 별행 수식 3개로 정식화. 과제에 맞춘 구체 모형은 다음 1수준 절 안 2수준 &#x27;Computational model&#x27;(p.3)과 비교 모형 넷을 적은 &#x27;Alternate models&#x27;(글머리표 목록, p.3-4).</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 5명(이메일·소속, 세 줄 두 칸)이 위 ~25%; 초록(71단어 + keywords)이 왼쪽 단 ~1/7; Introduction은 왼쪽 단 중간에서 시작해 오른쪽 단 Figure 1(+캡션) 아래로 이어짐. p.1 오른쪽 단 아래에서 &#x27;Computational framework&#x27; 1수준 절이 이미 시작됨.</li>
+      <li><b>링크</b> 없음. 사전등록·OSF·코드·데이터 링크 없음; 실험은 Prolific 모집, IRB 승인만 언급.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.1 · 한 단(오른쪽 단 위), 그림 단 높이의 ~1/3 + 캡션 5줄; Alice가 Bob의 틀린 정신 모형을 추론하고 고치는 2단 개념도 · Introduction (오른쪽 단 맨 위)</li><li>Fig. 2 · p.3 · 전체 폭(쪽 아래), 캡션 포함 쪽의 ~1/5; 같은 지도 위 경로 패널 3개(Bob의 질문 말풍선) · Instantiating the framework (lead-in/Computational model)</li><li>Fig. 3 · p.4 · 전체 폭(쪽 위), 캡션 포함 쪽의 ~1/2; 시나리오 15개 x (막대그래프 + 지도) 격자, 인간 대 모델 · Instantiating the framework &gt; Results</li><li>Fig. 4 · p.5 · 전체 폭(쪽 위), 캡션 포함 쪽의 ~1/4; 산점도 패널 3개(S1 무사회비용, S2 무사회비용, S1+사회비용 전체 모형), r² 표기 · Instantiating the framework &gt; Results</li><li>Table 1 · p.5 · 한 단(왼쪽 단 위), 단의 ~1/5; 모형 5개와 적합도 r² · Instantiating the framework &gt; Results</li></ul><h4>구조 읽기</h4><p class="summary">서론은 약 410단어(본문의 11%)로 짧고 소제목 없이 다섯 문단(이상한 나라의 앨리스 문지기 일화 -&gt; 설명은 협력적 사회 상호작용이라는 주장 -&gt; 설명 연구의 여러 차원 -&gt; RSA를 확장해 사회 비용 항을 더한다는 기여 -&gt; 다음 절 로드맵)으로 끝난다. 이어 독립 1수준 절 &#x27;Computational framework&#x27;(25%)가 2수준 둘(정신 모형 추론, 정신 모형 교정)과 번호 없는 별행 수식 셋으로 일반 모형을 정식화한다. 가장 큰 1수준 절 &#x27;Instantiating the framework to explain surprising plans&#x27;(43%)는 과제 영역 소개, Computational model, Alternate models(절제 모형 넷), Experiment, Results를 모두 2수준으로 한데 담아, 모형 구체화와 실험·결과를 한 절에서 처리한다. Results는 전체 적합도(r² = 0.88)를 먼저 말한 뒤 run-in 3수준 셋(&#x27;Effect of ...&#x27;)으로 절제 모형마다 적합도 하락과 대표 시나리오를 짚고, 전폭 그림 둘(Fig. 3-4)과 표 하나가 결과를 운반한다. Discussion(18%)은 확장·질문 발생·실용 응용의 2수준 셋으로 나뉘고, 한 문단짜리 Conclusion으로 끝난다. 본문은 정확히 6쪽이고 Acknowledgements와 참고문헌은 7-8쪽에 있다.</p>
+  </section>
+</article>
+
+<article class="paper" id="t02">
+  <header>
+    <div class="eyebrow"><span class="k">T04</span> CogSci 2023 · 발표 논문 (수상 아님)</div>
+    <h3>Evaluating statistical language models as pragmatic reasoners</h3>
+    <p class="meta">Benjamin Lipkin, Lionel Wong, Gabriel Grand, Joshua B. Tenenbaum<br><span class="aff">1 BCS, MIT (Lipkin, Wong, Tenenbaum); 2 CSAIL, MIT (Grand, Tenenbaum). 이메일 한 줄({lipkinb, zyzzyva, gg, jbt}@mit.edu).</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/1024f51v" target="_blank" rel="noopener">https://escholarship.org/uc/item/1024f51v</a> · <a href="https://escholarship.org/content/qt1024f51v/qt1024f51v.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the 45th Annual Conference of the Cognitive Science Society, vol. 45, pp. 1593-1600; 9쪽 PDF = 표지 1 + 원고 8쪽). CogSci 2023 수상 목록(Marr Prize, 분야별 Computational Modeling Prize 등)에 이 논문은 없음.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>전달된 언어와 의도된 의미 사이의 관계는 흔히 확률적이며 맥락에 민감하다. 이 대응을 추정하려는 여러 전략이 있으며, 대개 의사소통의 재귀적 베이즈 모형(recursive Bayesian models)을 활용한다. 이와 나란히, 대형 언어 모델(LLM)은 자연어로부터 논리적 표상을 추론하는 의미 파싱(semantic parsing) 응용에 점점 더 많이 쓰여 왔다. 기존의 LLM 연구는 주로 문자 그대로의(literal) 언어 사용에 한정되어 왔지만, 이 연구에서는 LLM이 화용적(pragmatic) 발화의 의미를 추론하는 능력을 평가한다. 구체적으로, 힘(strength)에 대한 사전분포를 맥락으로 조건화한 상태에서 등급 형용사(gradable adjective) “strong”의 문턱값(threshold)을 추정하는 경우를 살피고, 이를 한정어(qualification), 부정(negation), 극성 반전(polarity inversion), 비교 집단(class comparison)과의 합성으로 확장한다. 그 결과 LLM은 여러 복잡한 화용적 발화의 해석에 대해 맥락에 근거한, 사람과 비슷한 분포를 도출할 수 있지만, 부정과의 합성에서는 어려움을 겪었다. 이 결과는 통계적 언어 모델의 추론 능력과, 화용 및 의미 파싱 응용에서의 그 쓰임에 시사점을 준다. 관련 코드는 모두 공개되어 있다.</p>
+    <details><summary>영어 원문</summary><p class="en">The relationship between communicated language and intended meaning is often probabilistic and sensitive to context. Numerous strategies attempt to estimate such a mapping, often leveraging recursive Bayesian models of communication. In parallel, large language models (LLMs) have been increasingly applied to semantic parsing applications, tasked with inferring logical representations from natural language. While existing LLM explorations have been largely restricted to literal language use, in this work, we evaluate the capacity of LLMs to infer the meanings of pragmatic utterances. Specifically, we explore the case of threshold estimation on the gradable adjective “strong”, contextually conditioned on a strength prior, then extended to composition with qualification, negation, polarity inversion, and class comparison. We find that LLMs can derive context-grounded, human-like distributions over the interpretations of several complex pragmatic utterances, yet struggle composing with negation. These results inform the inferential capacity of statistical language models, and their use in pragmatic and semantic parsing applications. All corresponding code is made publicly available.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3757단어 (PDF 8쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7-8: Acknowledgments가 p.7 왼쪽 단 맨 위(61단어), 이어 References가 p.7 왼쪽 단 나머지·오른쪽 단 전체, p.8 왼쪽 단 전체와 오른쪽 단 ~1/3을 채움(약 1.6쪽, ~1,185단어). 본문은 p.6 오른쪽 단 아래에서 Future Directions 문단으로 끝남.</dd></div>
+      <div><dt>그 밖에</dt><dd>각주 1(p.1, 초록 마지막 문장 &#x27;publicly available&#x27;에 붙음): GitHub 코드 저장소(benlipkin/probsem, 태그 CogSci2023). Methods 본문에 실험 원본 파일·전체 프롬프트가 &#x27;paper repository&#x27;에 공개돼 있다고 적음. 번호 붙은 별행 수식 4개(Eq. 1-4, 모두 Methods). Task Description 안에 Church 코드 블록(league별 gaussian 사전분포) 하나가 별행으로 실림. 부록·사전등록 없음. p.1에 Proceedings 편집자/CC BY 꼬리말.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 4 · 2수준 이하 24</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 0</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.3190" title="Introduction · 32%"><i>Introduction</i></span><span class="seg method" style="flex:0.3150" title="Methods · 32%"><i>Methods</i></span><span class="seg result" style="flex:0.1250" title="Results · 12%"><i>Results</i></span><span class="seg disc" style="flex:0.2410" title="Discussion · 24%"><i>Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">Introduction</td><td class="n">p.1</td><td class="n">1199</td><td class="n">32%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in, before first subheading)</td><td class="n">p.1</td><td class="n">493</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Meaning as probabilistic programs</td><td class="n">p.1</td><td class="n">302</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Present study</td><td class="n">p.2</td><td class="n">404</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Methods</td><td class="n">p.3</td><td class="n">1185</td><td class="n">32%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in, before first subheading)</td><td class="n">p.3</td><td class="n">144</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Domain Model and LLM Context</td><td class="n">p.3</td><td class="n">130</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Task Description</td><td class="n">p.3</td><td class="n">462</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(lead paragraph, before run-in headings)</td><td class="n">p.3</td><td class="n">110</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">E1: Qualifiers</td><td class="n">p.3</td><td class="n">175</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">E2: Comparison Classes</td><td class="n">p.3</td><td class="n">177</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Human Participant Evaluation</td><td class="n">p.4</td><td class="n">97</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">LLM Scoring Function</td><td class="n">p.4</td><td class="n">123</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Comparing P_human(θ) and P_model(θ)</td><td class="n">p.4</td><td class="n">229</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Results</td><td class="n">p.4</td><td class="n">469</td><td class="n">12%</td></tr>
+<tr class="lv2"><td class="t">(untitled lead-in, before first subheading)</td><td class="n">p.4</td><td class="n">21</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">E1: Qualifiers</td><td class="n">p.4</td><td class="n">297</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(lead paragraph, before run-in claim headings)</td><td class="n">p.4</td><td class="n">23</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">LLMs make contextually-aware, pragmatically-sensitive inferences over graded adjectives and qualifiers.</td><td class="n">p.4</td><td class="n">58</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">LLMs make mostly human-like inferences, but struggle with negation.</td><td class="n">p.4</td><td class="n">62</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">LLMs struggle further with polarity inversion.</td><td class="n">p.4</td><td class="n">154</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">E2: Comparison Classes</td><td class="n">p.5</td><td class="n">151</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">(lead paragraph, before run-in claim heading)</td><td class="n">p.5</td><td class="n">59</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">LLMs accurately parse conditional mixtures, even inferring group membership from indirect descriptors.</td><td class="n">p.5</td><td class="n">92</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.5</td><td class="n">904</td><td class="n">24%</td></tr>
+<tr class="lv3"><td class="t">(lead paragraphs, before run-in headings)</td><td class="n">p.5</td><td class="n">694</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Limitations</td><td class="n">p.6</td><td class="n">68</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Future Directions</td><td class="n">p.6</td><td class="n">142</td><td class="n"></td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 있음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나누지 않음</li>
+      <li><b>마지막 절 이름</b> Discussion</li>
+      <li><b>마지막 절 소제목</b> Limitations · Future Directions</li>
+      <li><b>결론 문단으로 끝남</b> 아니오</li>
+      <li><b>모델·형식 설명 위치</b> 따로 &#x27;Model&#x27; 절이 없다. 배경 틀(확률 프로그램으로서의 의미, Goodman &amp; Lassiter 2015)은 Introduction 안 2수준 &#x27;Meaning as probabilistic programs&#x27;; 도메인 모델(Church 줄다리기 프로그램)은 Methods &gt; Domain Model and LLM Context와 Figure 2 코드 그림; LLM 점수 함수(소프트맥스 온도 α, LOOCV)와 비교 지표(JSD, 순열 검정, FDR)는 Methods 2수준 두 절에 Eq. 1-4로.</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 4명 한 줄 + 소속 두 개 + 이메일 한 줄이 위 ~16%; 초록(9pt, 159단어 + keywords)이 왼쪽 단 위 ~1/3; Introduction이 왼쪽 단 중간에서 시작해 오른쪽 단 전체를 채우고, 오른쪽 단 맨 아래에서 2수준 &#x27;Meaning as probabilistic programs&#x27;가 시작. 왼쪽 단 아래에 각주 1(GitHub URL)과 Proceedings 꼬리말. 그림은 없음.</li>
+      <li><b>링크</b> GitHub 코드(https://github.com/benlipkin/probsem/tree/CogSci2023)는 초록 마지막 문장에 붙은 각주 1. 실험 원본 파일과 E2 전체 프롬프트도 같은 저장소에 있다고 Methods 본문에 적음. 사전등록·OSF 언급 없음.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 한 단(오른쪽 단 위), 높이 ~250pt로 단의 ~37%; 개념도(문장 -&gt; 수작업 번역 / LLM 의미 파싱 -&gt; condition 프로그램 -&gt; 사람 과제·RSA·LLM 추론 -&gt; 인간 대 모델 막대그래프) · Introduction &gt; Present study</li><li>Fig. 2 · p.3 · 한 단(왼쪽 단 중간), 단의 ~38%; LLM에 넣는 전체 프롬프트(Church 줄다리기 도메인 모델·과제 지시·문장·후보 프로그램)를 색으로 구분한 코드 그림 · Methods &gt; Domain Model and LLM Context</li><li>Fig. 3 · p.5 · 한 단(왼쪽 단 위), ~350pt로 단의 ~52%(캡션 포함 ~60%); 패널 A·B(각 3x3 = 문장 9개씩, 총 18개 작은 막대그래프), 별표로 유의한 일치 표시 · Results &gt; E1: Qualifiers</li><li>Fig. 4 · p.6 · 한 단(왼쪽 단 위), ~355pt로 단의 ~53%(캡션 포함 ~60%); 패널 A-C(정확한 리그 이름 / 동의어 / 암시, 각 2x3 = 18개 작은 막대그래프) · Results &gt; E2: Comparison Classes (Discussion 옆 쪽에 배치)</li></ul><h4>구조 읽기</h4><p class="summary">1수준 절이 Introduction-Methods-Results-Discussion 네 개뿐인 IMRaD 구조이고, 실험 두 개(E1, E2)는 1수준 절이 아니라 Methods 안 run-in 소제목과 Results 안 2수준 절로 두 번 나뉘어 나온다. 서론이 약 1,200단어(본문의 32%)로 가장 길며, 소제목 없는 도입(화용론 -&gt; LLM 의미 파싱 -&gt; RSA와 연구 질문 -&gt; 결과 미리보기) 뒤에 배경 2수준 &#x27;Meaning as probabilistic programs&#x27;와 &#x27;Present study&#x27;를 두어 관련 연구 절의 역할을 서론 안에서 해결한다. Methods(32%)는 도메인 모델, 과제·자극, 참가자, LLM 점수 함수, 비교 지표의 2수준 다섯 개로 나뉘고 별행 수식 4개와 Church 코드 그림이 모두 여기 몰려 있다. Results는 13%로 짧고, 각 문단 앞에 &#x27;LLMs struggle further with polarity inversion.&#x27; 같은 굵은 주장 문장을 run-in 소제목처럼 달아 결과를 한 줄로 먼저 말한다. Discussion(24%)은 요약과 두 해석 뒤 run-in &#x27;Limitations&#x27;·&#x27;Future Directions&#x27;로 끝나며 별도 결론 문단은 없고, 그림 넷은 모두 한 단 폭이다. 본문은 6쪽에서 끝나고 감사의 글과 참고문헌이 7-8쪽을 쓴다.</p>
+  </section>
+</article>
+
+<article class="paper" id="t01">
+  <header>
+    <div class="eyebrow"><span class="k">T05</span> CogSci 2022 · 발표 논문 (수상 아님)</div>
+    <h3>Identifying concept libraries from language about object structure</h3>
+    <p class="meta">Catherine Wong, William P. McCarthy, Gabriel Grand, Yoni Friedman, Joshua B. Tenenbaum, Jacob Andreas, Robert D. Hawkins, Judith E. Fan<br><span class="aff">MIT (Wong, Grand, Friedman, Tenenbaum, Andreas); University of California San Diego (McCarthy, Fan); Princeton Neuroscience Institute (Hawkins). Wong, McCarthy, Grand는 공동 제1저자(⋆), 교신은 Wong(catwong@mit.edu). 학과 줄 없음.</span></p>
+    <p class="src">출처: <a href="https://escholarship.org/uc/item/9b35t6qh" target="_blank" rel="noopener">https://escholarship.org/uc/item/9b35t6qh</a> · <a href="https://escholarship.org/content/qt9b35t6qh/qt9b35t6qh.pdf" target="_blank" rel="noopener">PDF</a> · <span class="note">eScholarship (Proceedings of the 44th Annual Conference of the Cognitive Science Society, vol. 44, 2022; 인쇄 쪽번호 2701–2708; 9쪽 PDF = 표지 1 + 원고 8쪽). 학회 수상 페이지(cognitivesciencesociety.org/conference-awards)의 2022년 수상자 목록에 저자 이름이 없어 수상 아님으로 둠.</span></p>
+  </header>
+
+  <section class="abs">
+    <h4>초록 (한국어 번역)</h4>
+    <p>우리가 시각 세계를 이해하는 방식은 사물의 이름을 대는 데 그치지 않고, 사물을 의미 있는 부분(part)·속성·관계로 나누어 파악하는 능력까지 포함한다. 이 연구는 절차적으로 생성한 다양한 사물 2천 개에 대한 자연어 묘사를 활용해, 사람들이 쓰는 부분이 무엇이며 어떤 원리 때문에 그 부분들이 다른 부분들보다 선호되는지를 밝힌다. 우리는 이 문제를 서로 다른 부분 개념을 담은 프로그램 라이브러리(program library)들의 공간에서의 탐색으로 정식화하고, 기계 번역 도구를 사용해 각 라이브러리로 표현한 프로그램이 인간의 언어와 얼마나 잘 맞는지를 평가한다. 대규모의 자연스러운 언어와 구조화된 프로그램 표현을 결합한 결과, 사람들이 이름 붙이는 부분 개념을 지배하는 근본적인 정보이론적 상충관계(tradeoff)를 발견했다. 사람들은 각 사물을 간결하게 묘사할 수 있게 하면서도 어휘집(lexicon) 자체의 크기는 최소화하는 어휘집을 선호한다.</p>
+    <details><summary>영어 원문</summary><p class="en">Our understanding of the visual world goes beyond naming objects, encompassing our ability to parse objects into meaningful parts, attributes, and relations. In this work, we leverage natural language descriptions for a diverse set of 2K procedurally generated objects to identify the parts people use and the principles leading these parts to be favored over others. We formalize our problem as search over a space of program libraries that contain different part concepts, using tools from machine translation to evaluate how well programs expressed in each library align to human language. By combining naturalistic language at scale with structured program representations, we discover a fundamental information-theoretic tradeoff governing the part concepts people name: people favor a lexicon that allows concise descriptions of each object, while also minimizing the size of the lexicon itself.</p></details>
+  </section>
+
+  <section class="layout">
+    <h4>분량</h4>
+    <dl class="facts">
+      <div><dt>본문 글</dt><dd>6쪽 · 약 3620단어 (PDF 8쪽, 표지 제외)</dd></div>
+      <div><dt>참고문헌</dt><dd>p.7–8: p.7 왼쪽 단 위에 Acknowledgments(86단어)와 코드 링크 상자, 그 아래 References가 왼쪽 단 나머지와 오른쪽 단 전체를 채우고, p.8 왼쪽 단 ~2/3까지 이어짐(p.8 오른쪽 단은 빈칸). 본문은 p.6 오른쪽 단 아래에서 Discussion으로 끝남.</dd></div>
+      <div><dt>그 밖에</dt><dd>Acknowledgments는 p.7 왼쪽 단 맨 위. 그 바로 아래 테두리 상자 &#x27;All code and materials available at: https://github.com/cogtoolslab/lax-cogsci22&#x27;. 각주 2개(p.4 오른쪽 단: 상위 라이브러리 정의가 자동 라이브러리 학습 방법과 유사하다는 설명; p.5 왼쪽 단: 프로그램 길이와 라이브러리 크기 상충관계의 출처). 별행 수식 1개(Eq. 1 PMI, p.3). 부록·사전등록 없음. p.1에 Proceedings 편집자/CC BY 꼬리말.</dd></div>
+      <div><dt>절 수</dt><dd>1수준 4 · 2수준 이하 16</dd></div>
+      <div><dt>그림·표</dt><dd>그림 4 · 표 0</dd></div>
+    </dl>
+    <div class="bar"><span class="seg intro" style="flex:0.1670" title="(Introduction, no heading) · 17%"><i>(Introduction, no heading)</i></span><span class="seg result" style="flex:0.3350" title="Part I: Eliciting language about object structure · 34%"><i>Part I: Eliciting language about object structure</i></span><span class="seg result" style="flex:0.3390" title="Part II: Identifying concepts from language · 34%"><i>Part II: Identifying concepts from language</i></span><span class="seg disc" style="flex:0.1590" title="Discussion · 16%"><i>Discussion</i></span></div>
+  </section>
+
+  <section class="toc">
+    <h4>목차 (제목 · 시작 쪽 · 단어 수 · 본문 비율)</h4>
+    <div class="scroll"><table class="outline">
+      <thead><tr><th>제목</th><th>쪽</th><th>단어</th><th>비율</th></tr></thead>
+      <tbody><tr class="lv1"><td class="t">(Introduction, no heading)</td><td class="n">p.1</td><td class="n">604</td><td class="n">17%</td></tr>
+<tr class="lv1"><td class="t">Part I: Eliciting language about object structure</td><td class="n">p.2</td><td class="n">1213</td><td class="n">34%</td></tr>
+<tr class="lv2"><td class="t">(lead paragraph)</td><td class="n">p.2</td><td class="n">41</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.2</td><td class="n">488</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Participants</td><td class="n">p.2</td><td class="n">23</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Stimuli</td><td class="n">p.2</td><td class="n">257</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Task procedure</td><td class="n">p.2</td><td class="n">156</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Language preprocessing</td><td class="n">p.3</td><td class="n">52</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.3</td><td class="n">684</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">People use more words for more complex objects</td><td class="n">p.3</td><td class="n">306</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">People use different parts for different subdomains</td><td class="n">p.3</td><td class="n">378</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Part II: Identifying concepts from language</td><td class="n">p.4</td><td class="n">1229</td><td class="n">34%</td></tr>
+<tr class="lv2"><td class="t">(lead paragraph)</td><td class="n">p.4</td><td class="n">209</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Methods</td><td class="n">p.4</td><td class="n">516</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Modeling a space of candidate concept libraries</td><td class="n">p.4</td><td class="n">285</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Modeling alignment between libraries and vocabularies</td><td class="n">p.5</td><td class="n">231</td><td class="n"></td></tr>
+<tr class="lv2"><td class="t">Results</td><td class="n">p.5</td><td class="n">504</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">Libraries produce different trade-off between concise object representation and overall library size</td><td class="n">p.5</td><td class="n">287</td><td class="n"></td></tr>
+<tr class="lv3"><td class="t">People favor vocabularies that jointly minimize object representation and library size</td><td class="n">p.5</td><td class="n">217</td><td class="n"></td></tr>
+<tr class="lv1"><td class="t">Discussion</td><td class="n">p.5</td><td class="n">574</td><td class="n">16%</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="obs">
+    <h4>제목 짜임새</h4>
+    <ul class="kv">
+      <li><b>서론 소제목</b> 없음</li>
+      <li><b>관련 연구 절</b> 없음(서론에 녹임)</li>
+      <li><b>실험을 1수준 절로</b> 나눔</li>
+      <li><b>마지막 절 이름</b> Discussion (2수준 제목 모양으로 Part II Results 바로 뒤에 붙지만 내용은 논문 전체의 논의)</li>
+      <li><b>마지막 절 소제목</b> 없음</li>
+      <li><b>결론 문단으로 끝남</b> 예</li>
+      <li><b>모델·형식 설명 위치</b> Part II의 Methods 2수준 안 run-in 소절 두 개: &#x27;Modeling a space of candidate concept libraries&#x27;(L_base, L_1-L_3 정의, Fig. 3)와 &#x27;Modeling alignment between libraries and vocabularies&#x27;(IBM Model 1 번역 확률, 교차 검증 평균 단어당 로그우도). 결합 표상 비용 C_L = |L| + (1/N)Σ|π_L|은 별행 수식이 아니라 Part II Results 본문 안 인라인 수식. Part II 도입 문단(209단어)이 모델의 목적을 미리 말함.</li>
+      <li><b>첫 쪽 사용</b> 제목 + 저자 8명(두 줄)·소속이 위 ~18%; 초록(133단어 + keywords)이 왼쪽 단 위 ~1/3; Introduction이 왼쪽 단 중간부터 시작해 오른쪽 단 전체를 채움(그림 없음). Introduction은 p.1 안에서 끝나고 p.2는 전폭 Fig. 1 뒤 Part I로 시작.</li>
+      <li><b>링크</b> 코드·자료 GitHub(https://github.com/cogtoolslab/lax-cogsci22)는 p.7 Acknowledgments 아래 테두리 상자. 사전등록·OSF 없음.</li>
+    </ul>
+    <h4>그림·표 위치</h4><ul class="figs"><li>Fig. 1 · p.2 · 전체 폭, 쪽 위 ~0.3쪽(캡션 포함 ~0.37); 패널 A(Drawings·Towers 8개 하위 영역의 예시 사물 격자), 패널 B(개념 라이브러리 -&gt; 프로그램 -&gt; 언어 도식) · Introduction (본문은 p.1에서 Fig. 1A/1B를 먼저 언급; 그림은 Part I 시작 위에 놓임)</li><li>Fig. 2 · p.3 · 전체 폭, 쪽 위 ~0.3쪽; 패널 A(하위 영역 8개의 프로그램 길이-묘사 길이 산점도), 패널 B(영역별 빈도 상위 10단어와 PMI 상위 10단어 목록) · Part I &gt; Results</li><li>Fig. 3 · p.4 · 한 단(오른쪽 위), 단 높이의 ~1/3(캡션 포함 ~0.37); 후보 라이브러리 L_base-L_3의 부분 개념과 프로그램 예시 · Part II &gt; Methods (Modeling a space of candidate concept libraries)</li><li>Fig. 4 · p.6 · 전체 폭, 쪽 위 ~0.3쪽; 하위 영역 8개 패널(라이브러리 크기+평균 프로그램 길이(점선)와 라이브러리-어휘 정렬(실선)) · Part II &gt; Results</li></ul><h4>구조 읽기</h4><p class="summary">제목 없는 서론(본문의 17%, p.1 한 쪽)으로 시작하며, 다섯 문단(부분 개념 문제 제기 -&gt; Fig. 1A 예시 -&gt; 지각 조직화 이론의 한계 -&gt; 언어를 창으로 쓰는 접근 -&gt; Part I/II 미리보기)으로 마지막 문단에 두 Part의 결과를 먼저 요약한다. 본문의 2/3는 &#x27;Part I: Eliciting language about object structure&#x27;(34%)와 &#x27;Part II: Identifying concepts from language&#x27;(34%) 두 1수준 절이 나누어 가지며, 각 Part는 짧은 도입 문단 뒤에 같은 꼴의 Methods/Results 2수준과 굵은 run-in 3수준 소제목을 둔다. Part I은 묘사 자료 수집과 기술 분석(묘사 길이, PMI·JSD로 본 하위 영역별 어휘)이고, Part II는 같은 자료에 후보 프로그램 라이브러리와 번역 모델 기반 정렬 지표를 맞추는 모델 절이어서, 별도 Model 절 없이 모델 설명이 Part II의 Methods에 들어간다. Results 소제목이 모두 결과를 말하는 문장(&#x27;People use more words for more complex objects&#x27; 등)이라 소제목만 읽어도 결론을 따라갈 수 있다. 마지막 Discussion(16%)은 소제목 없이 요약 -&gt; 향후 연구 세 갈래 -&gt; 선행연구 관계 -&gt; 일반 전략 문단으로 끝나고, 본문은 정확히 6쪽, 감사의 글·코드 링크·참고문헌은 7-8쪽에 있다.</p>
+  </section>
+</article>
+
+
+<h2>출처</h2>
+<h4>논문</h4>
+<ol class="sources"><li>Siddharth Suresh*, Kushin Mukherjee*, Tyler Giallanza, Xizheng Yu, Mia Patil, Jonathan D. Cohen, Timothy T. Rogers (2025). AI-enhanced semantic feature norms for 786 concepts. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Computational Modeling Prize, Applied Cognition. <a href="https://escholarship.org/uc/item/83q779kc" target="_blank" rel="noopener">https://escholarship.org/uc/item/83q779kc</a></li><li>Neil Rathi, Richard Futrell, Dan Jurafsky (2025). Soft production preferences emerge from a bottleneck on memory. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Computational Modeling Prize, Language. <a href="https://escholarship.org/uc/item/8d87v78d" target="_blank" rel="noopener">https://escholarship.org/uc/item/8d87v78d</a></li><li>Ziwei Cheng, Xiamin Leng, Amitai Shenhav (2025). Incentive Effects Capture Variability in Task-General Control Allocation. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Computational Modeling Prize – Higher-Level Cognition. <a href="https://escholarship.org/uc/item/7bd3x7n7" target="_blank" rel="noopener">https://escholarship.org/uc/item/7bd3x7n7</a></li><li>Amanda Royka, Daniel Horschler, Walker Bargmann, Laurie Santos (2024). Probing Nonhuman Primate Errors on False Belief Tasks to Explore the Evolutionary Roots of Theory of Mind. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Marr Prize (best student paper). <a href="https://escholarship.org/uc/item/43h3z261" target="_blank" rel="noopener">https://escholarship.org/uc/item/43h3z261</a></li><li>Yun-Shiuan Chuang, Xiaojin Zhu, Timothy T. Rogers (2024). The Delusional Hedge Algorithm as a Model of Human Learning from Diverse Opinions. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Computational Modeling Prize – Higher-Level Cognition. <a href="https://arxiv.org/abs/2402.13927" target="_blank" rel="noopener">https://arxiv.org/abs/2402.13927</a></li><li>Thomas Wilschut, Florian Sense, Hedderik van Rijn (2024). Modality Matters: Evidence for the Benefits of Speech-Based Adaptive Retrieval Practice in Learners with Dyslexia. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Computational Modeling Prize – Applied Cognition. <a href="https://escholarship.org/uc/item/57w2x9vr" target="_blank" rel="noopener">https://escholarship.org/uc/item/57w2x9vr</a></li><li>Kartik Chandra, Tzu-Mao Li, Joshua B. Tenenbaum, Jonathan Ragan-Kelley (2023). Storytelling as Inverse Inverse Planning. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Marr Prize (best student paper). <a href="https://escholarship.org/uc/item/3cx919kp" target="_blank" rel="noopener">https://escholarship.org/uc/item/3cx919kp</a></li><li>Samuel Cheyette, Frederick Callaway, Neil Bramley, Jonathan Nelson, Joshua Tenenbaum (2023). People seek easily interpretable information. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Computational Modeling Prize – Higher-Level Cognition. <a href="https://escholarship.org/uc/item/5sm2b484" target="_blank" rel="noopener">https://escholarship.org/uc/item/5sm2b484</a></li><li>Richard Futrell (2023). An information-theoretic account of availability effects in language production. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Computational Modeling Prize – Language. <a href="https://escholarship.org/uc/item/23q9k7pc" target="_blank" rel="noopener">https://escholarship.org/uc/item/23q9k7pc</a></li><li>Kerem Oktar, Tania Lombrozo (2022). Mechanisms of Belief Persistence in the Face of Societal Disagreement. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. Marr Prize (best student paper). <a href="https://escholarship.org/uc/item/3380n01h" target="_blank" rel="noopener">https://escholarship.org/uc/item/3380n01h</a></li><li>Samuel Cheyette, Tony Chen, Matthias Hofer, Frederick Callaway, Neil Bramley, Joshua Tenenbaum (2025). Decompose, Deduce, and Dispose: A Memory-Limited Metacognitive Model of Human Problem Solving. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. 발표 논문 (수상 아님). <a href="https://escholarship.org/uc/item/517147vr" target="_blank" rel="noopener">https://escholarship.org/uc/item/517147vr</a></li><li>Lance Ying, Tan Zhi-Xuan, Lionel Wong, Vikash Mansinghka, Joshua B. Tenenbaum (2024). Grounding Language about Belief in a Bayesian Theory-of-Mind. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. 발표 논문 (수상 아님). <a href="https://escholarship.org/uc/item/2tk4d5jw" target="_blank" rel="noopener">https://escholarship.org/uc/item/2tk4d5jw</a></li><li>Kartik Chandra, Tony Chen, Tzu-Mao Li, Jonathan Ragan-Kelley, Joshua B. Tenenbaum (2024). Cooperative Explanation as Rational Communication. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. 발표 논문 (수상 아님). <a href="https://escholarship.org/uc/item/8bf5g4h6" target="_blank" rel="noopener">https://escholarship.org/uc/item/8bf5g4h6</a></li><li>Benjamin Lipkin, Lionel Wong, Gabriel Grand, Joshua B. Tenenbaum (2023). Evaluating statistical language models as pragmatic reasoners. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. 발표 논문 (수상 아님). <a href="https://escholarship.org/uc/item/1024f51v" target="_blank" rel="noopener">https://escholarship.org/uc/item/1024f51v</a></li><li>Catherine Wong, William P. McCarthy, Gabriel Grand, Yoni Friedman, Joshua B. Tenenbaum, Jacob Andreas, Robert D. Hawkins, Judith E. Fan (2022). Identifying concept libraries from language about object structure. <i>Proceedings of the Annual Meeting of the Cognitive Science Society</i>. 발표 논문 (수상 아님). <a href="https://escholarship.org/uc/item/9b35t6qh" target="_blank" rel="noopener">https://escholarship.org/uc/item/9b35t6qh</a></li></ol>
+<h4>수상 목록</h4>
+<ul class="sources"><li><a href="https://cognitivesciencesociety.org/conference-awards/" target="_blank" rel="noopener">https://cognitivesciencesociety.org/conference-awards/</a> — Cognitive Science Society 학회 수상 목록(연도별 Marr Prize · Computational Modeling Prize)</li><li><a href="https://cognitivesciencesociety.org/cogsci-2025/" target="_blank" rel="noopener">https://cognitivesciencesociety.org/cogsci-2025/</a> — CogSci 2025 수상자</li><li><a href="https://cognitivesciencesociety.org/cogsci-2024/" target="_blank" rel="noopener">https://cognitivesciencesociety.org/cogsci-2024/</a> — CogSci 2024 수상자</li><li><a href="https://cognitivesciencesociety.org/?p=323057" target="_blank" rel="noopener">https://cognitivesciencesociety.org/?p=323057</a> — CogSci 2023 수상자</li><li><a href="https://cognitivesciencesociety.org/?p=276542" target="_blank" rel="noopener">https://cognitivesciencesociety.org/?p=276542</a> — CogSci 2022 수상자</li><li><a href="https://escholarship.org/uc/cognitivesciencesociety" target="_blank" rel="noopener">https://escholarship.org/uc/cognitivesciencesociety</a> — CogSci 발표 논문집(eScholarship)</li></ul>
+<p class="lede">선정 기준: CogSci에는 spotlight 제도가 없어 학회가 주는 논문상(Marr Prize, Computational Modeling Prize 4부문) 수상작 가운데 2022~2025년, 즉 6쪽 본문 제한 시기의 논문을 골랐다. 2025 Marr Prize(Braswell et al., &#x27;Wild Possibilities&#x27;)는 논문집에 한 쪽짜리 초록만 실려 제외하고 2023 언어 부문 수상작(Futrell)으로 대체했다. 2024 Marr Prize(Royka et al.)와 2024 고차 인지 부문(Chuang et al.)도 논문집에는 초록만 있어 저자 사이트의 전문 PDF를 읽었다. 2023 Marr Prize는 수상 목록의 제목(&#x27;Acting as Inverse Inverse Planning&#x27;)이 SIGGRAPH 판이고 CogSci 논문집 판은 &#x27;Storytelling as Inverse Inverse Planning&#x27;이다. 단어 수는 pdftotext로 센 근사치이며 초록·그림 설명·각주·참고문헌을 뺀 값이다. 절 비율은 1수준 절 기준(하위 절 포함).</p>
+<p class="lede">선정: OpenAlex에서 Tenenbaum 공저 CogSci 2019–2025 논문 목록을 뽑아, eScholarship PDF가 2쪽짜리 초록본인 것(2025 Wong et al., 2024 Zhang et al. 등)은 빼고 2022–2025 전문 논문 가운데 해마다 1~2편을 골랐다.</p>
+</main>
+</body>
+</html>

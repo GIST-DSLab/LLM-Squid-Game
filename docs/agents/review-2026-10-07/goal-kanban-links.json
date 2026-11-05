@@ -1,0 +1,44 @@
+{
+  "board": "llm-squid-game",
+  "goal_task": "t_6ed7c54b",
+  "goal_gate": "DESIGN_ACCEPTED",
+  "rubric_version": "1.0",
+  "rubric_sha256": "4069c7e8d3ffffc0c7c81058c30be740575d1cb9b8933baf3311e59714043579",
+  "phase1_release_task": "t_30a00c95",
+  "approved_game_api_budget": 0,
+  "design_review_time_limit_seconds": 3600,
+  "r1": {
+    "evaluation_task": "t_b55a77e6",
+    "evaluation_run": 13,
+    "reviewer_session": "20261007_231320_59f96a",
+    "verdict": "REVISE",
+    "checker_exit_code": 1,
+    "evaluation_json": "evaluation-r1/rubric-evaluation.json"
+  },
+  "r2": {
+    "design_id": "e52-design-r2",
+    "game_task": "t_3d8b1c6f",
+    "game_run": 14,
+    "game_session": "20261007_232224_7b1eca",
+    "game_artifact": "11-design-revision-r2.md",
+    "measurement_task": "t_c8db5da8",
+    "measurement_run": 15,
+    "measurement_session": "20261007_232224_724d79",
+    "measurement_artifact": "12-measurement-contract-r2.md",
+    "operations_task": "t_9fd24b59",
+    "operations_run": 16,
+    "operations_session": "20261007_232224_2aaf84",
+    "operations_artifact": "13-operations-contract-r2.md",
+    "evaluation_task": "t_be851c27",
+    "evaluation_parents": ["t_3d8b1c6f", "t_c8db5da8", "t_9fd24b59"],
+    "evaluation_json": "evaluation-r2/rubric-evaluation.json",
+    "verdict": "pending"
+  },
+  "runtime_deviation": {
+    "effort_requested": "high",
+    "effort_observed_r1_r2_authors": "max",
+    "reason": "Kanban create tool does not expose reasoning_effort; native worker inherited default",
+    "profile_changes": false,
+    "game_experiment_budget_increased": false
+  }
+}

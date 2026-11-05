@@ -1,0 +1,276 @@
+{
+ "id": "P02",
+ "year": 2025,
+ "award": "Computational Modeling Prize, Applied Cognition",
+ "title": "AI-enhanced semantic feature norms for 786 concepts",
+ "authors": [
+  "Siddharth Suresh*",
+  "Kushin Mukherjee*",
+  "Tyler Giallanza",
+  "Xizheng Yu",
+  "Mia Patil",
+  "Jonathan D. Cohen",
+  "Timothy T. Rogers"
+ ],
+ "affiliations": "Dept. of Psychology, University of Wisconsin-Madison; Dept. of Computer Sciences, University of Wisconsin-Madison; Wisconsin Institute for Discovery; Dept. of Psychology, Stanford University (Mukherjee); Dept. of Psychology, Princeton University (Giallanza); Dept. of Computer Science, Brown University (Yu, Cohen); Princeton Neuroscience Institute (Cohen). * = equal contribution",
+ "url_page": "https://escholarship.org/uc/item/83q779kc",
+ "url_pdf": "https://escholarship.org/content/qt83q779kc/qt83q779kc.pdf",
+ "pdf_source_note": "eScholarship (CogSci 2025 proceedings pp.947-954); 9쪽 PDF = 표지 + 본문 8쪽",
+ "abstract_en": "Semantic feature norms have been foundational in the study of human conceptual knowledge, yet traditional methods face trade-offs between concept/feature coverage and verifiability of quality due to the labor-intensive nature of norming studies. Here, we introduce a novel approach that augments a dataset of human-generated feature norms with responses from large language models (LLMs) while verifying the quality of norms against reliable human judgments. We find that our AI-enhanced feature norm dataset, NOVA: Norms Optimized Via AI, shows much higher feature density and overlap among concepts while outperforming a comparable human-only norm dataset and word-embedding models in predicting people’s semantic similarity judgments. Taken together, we demonstrate that human conceptual knowledge is richer than captured in previous norm datasets and show that, with proper validation, LLMs can serve as powerful tools for cognitive science research.",
+ "abstract_ko": "의미 자질 규준(semantic feature norms)은 인간 개념 지식 연구의 토대가 되어 왔지만, 규준 수집(norming) 연구가 노동 집약적이기 때문에 전통적 방법은 개념·자질의 포괄 범위와 품질 검증 가능성 사이에서 상충 관계를 피하지 못한다. 여기서 우리는 인간이 생성한 자질 규준 데이터셋을 대규모 언어 모델(LLM)의 응답으로 보강하되, 신뢰할 수 있는 인간 판단에 비추어 규준의 품질을 검증하는 새로운 접근을 소개한다. 우리가 만든 AI 보강 자질 규준 데이터셋 NOVA(Norms Optimized Via AI)는 개념 간 자질 밀도와 중첩이 훨씬 높으며, 사람들의 의미 유사성 판단을 예측하는 데에서 비교 가능한 인간 전용 규준 데이터셋과 단어 임베딩(word-embedding) 모델을 능가한다. 종합하면, 우리는 인간의 개념 지식이 기존 규준 데이터셋에 담긴 것보다 풍부하다는 것을 보이고, 적절한 검증을 거치면 LLM이 인지과학 연구의 강력한 도구가 될 수 있음을 보인다.",
+ "pages_body": 8,
+ "pages_text_before_references": 6,
+ "references_location": "p.7 왼쪽 단 위 ~30% 지점(Acknowledgments + 코드 링크 상자 다음)부터 오른쪽 단 전체, 이어서 p.8 왼쪽 단 전체 + 오른쪽 단 위 ~40% (참고문헌 ~1.5쪽, 10pt). 본문은 p.6에서 끝남(Discussion이 p.6 오른쪽 단을 채움).",
+ "extras": "Acknowledgments는 p.7 위(왼쪽 단, 연구비 포함 ~60단어); 바로 아래 테두리 상자 'All code and materials will be available at: https://github.com/Knowledge-and-Concepts-Lab/llm-norms-cogsci2025'. 각주 1개(p.6, Study 2 참가자). 초록 아래 Keywords 줄. 부록 없음. Proceedings 쪽수 947-954.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 497,
+   "words_incl_children": 497,
+   "children": [],
+   "share": 0.153
+  },
+  {
+   "level": 1,
+   "title": "Study I: Building NOVA",
+   "page_start": 1,
+   "words": 52,
+   "words_incl_children": 1900,
+   "children": [
+    {
+     "level": 4,
+     "title": "Concept selection.",
+     "page_start": 1,
+     "words": 127,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Feature elicitation.",
+     "page_start": 2,
+     "words": 13,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Feature reduction.",
+     "page_start": 2,
+     "words": 178,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Feature verification.",
+     "page_start": 2,
+     "words": 220,
+     "style": "italic run-in"
+    },
+    {
+     "level": 2,
+     "title": "Methods",
+     "page_start": 3,
+     "words": 0
+    },
+    {
+     "level": 3,
+     "title": "Human feature elicitation.",
+     "page_start": 3,
+     "words": 24,
+     "style": "bold run-in"
+    },
+    {
+     "level": 4,
+     "title": "Participants.",
+     "page_start": 3,
+     "words": 35,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Stimuli and procedure.",
+     "page_start": 3,
+     "words": 82,
+     "style": "italic run-in"
+    },
+    {
+     "level": 3,
+     "title": "Human feature verification.",
+     "page_start": 3,
+     "words": 24,
+     "style": "bold run-in"
+    },
+    {
+     "level": 4,
+     "title": "Participants.",
+     "page_start": 3,
+     "words": 28,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Stimuli and procedure.",
+     "page_start": 3,
+     "words": 160,
+     "style": "italic run-in"
+    },
+    {
+     "level": 3,
+     "title": "AI-enhanced feature verification.",
+     "page_start": 3,
+     "words": 114,
+     "style": "bold run-in"
+    },
+    {
+     "level": 4,
+     "title": "Model Suite.",
+     "page_start": 4,
+     "words": 119,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Evaluation Protocol.",
+     "page_start": 4,
+     "words": 111,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Post-processing.",
+     "page_start": 5,
+     "words": 61,
+     "style": "italic run-in"
+    },
+    {
+     "level": 3,
+     "title": "Results.",
+     "page_start": 5,
+     "words": 273,
+     "style": "bold run-in"
+    },
+    {
+     "level": 3,
+     "title": "Using Flan T5 and GPT-4o to impute the AI-enhanced matrix.",
+     "page_start": 5,
+     "words": 279,
+     "style": "bold run-in"
+    }
+   ],
+   "share": 0.583
+  },
+  {
+   "level": 1,
+   "title": "Study 2: Using the new norms dataset to predict human semantic judgments",
+   "page_start": 5,
+   "words": 263,
+   "words_incl_children": 537,
+   "children": [
+    {
+     "level": 3,
+     "title": "Generating maximally disagreeing triplets.",
+     "page_start": 6,
+     "words": 101,
+     "style": "bold run-in"
+    },
+    {
+     "level": 4,
+     "title": "Participants",
+     "page_start": 6,
+     "words": 30,
+     "style": "italic run-in"
+    },
+    {
+     "level": 4,
+     "title": "Stimuli and Procedure.",
+     "page_start": 6,
+     "words": 53,
+     "style": "italic run-in"
+    },
+    {
+     "level": 3,
+     "title": "Results.",
+     "page_start": 6,
+     "words": 90,
+     "style": "bold run-in"
+    }
+   ],
+   "share": 0.165
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 6,
+   "words": 325,
+   "words_incl_children": 325,
+   "children": [],
+   "share": 0.1
+  },
+  {
+   "level": 1,
+   "title": "Acknowledgments",
+   "page_start": 7,
+   "words": 62,
+   "words_incl_children": 62,
+   "children": [],
+   "share": null
+  },
+  {
+   "level": 1,
+   "title": "References",
+   "page_start": 7,
+   "words": 1236,
+   "words_incl_children": 1236,
+   "children": [],
+   "share": null
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "전체 폭(두 단), 쪽 위 ~27% + 3줄 캡션",
+   "section": "Study I: Building NOVA (작업 흐름 도식: 크라우드소싱 -> 축약 -> 표집 -> 사람 검증 -> LLM 보충)"
+  },
+  {
+   "n": 2,
+   "page": 3,
+   "size": "전체 폭, 쪽 위 ~19% + 4줄 캡션",
+   "section": "Study I, AI-enhanced feature verification (모델 비교 막대그래프, d')"
+  },
+  {
+   "n": 3,
+   "page": 3,
+   "size": "한 단(왼쪽), 단 아래 ~25% + 캡션",
+   "section": "Study I, Results / imputation (NOVA 의미 벡터의 t-SNE)"
+  },
+  {
+   "n": 4,
+   "page": 4,
+   "size": "전체 폭, 쪽 위 ~48%(패널 A: 히스토그램, B: 유사도 행렬) + 3줄 캡션",
+   "section": "Study I, Results (사람만 대 AI 보강 행렬 비교)"
+  },
+  {
+   "n": 5,
+   "page": 5,
+   "size": "한 단(오른쪽), 단 위 ~39% + 6줄 캡션(패널 A: 세 쌍(triplet) 절차, B: 선택 비율)",
+   "section": "Study 2 (절차와 결과)"
+  }
+ ],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": true,
+  "final_section_name": "Discussion",
+  "final_section_subheadings": [],
+  "ends_with_conclusion_paragraph": false,
+  "model_description_location": "별도 모델 절 없음. LLM 파이프라인(모델 묶음, 프롬프트, 평가 절차, 후처리)은 Study I의 'Methods' 안에서 굵은 run-in 'AI-enhanced feature verification.'과 이탤릭 run-in 문단으로 서술; 프롬프트 원문은 p.4 고정폭 블록에 그대로 실림.",
+  "first_page_use": "제목 + 저자 7명 + 3줄 소속 블록이 위 ~20%. 초록(9pt, 137단어) + Keywords가 왼쪽 단 위 절반; Introduction은 왼쪽 단 중간에서 시작해 p.1 나머지를 채움(~500단어, 3문단); Study I 제목은 오른쪽 단 아래 ~20%에서 시작 → p.1 = 초록 + Introduction 전체 + Study I 시작.",
+  "links": "Acknowledgments 바로 뒤 테두리 상자에 GitHub 코드·자료 링크(p.7); Methods에 IRB 승인 번호; OSF·사전등록 없음."
+ },
+ "structure_summary_ko": "1수준 절은 Introduction · Study I · Study 2 · Discussion 넷뿐이고, 본문 약 3,260단어 가운데 Study I이 58%를 차지한다. 서론은 소제목 없이 세 문단(약 500단어, 1쪽 안에 끝남): 규준 연구의 역사·쓰임 → 사람 손이 많이 드는 문제와 임베딩·LLM 대안의 한계 → '인간 생성 + LLM 검증'이라는 중간 길과 NOVA 소개 순이다. 별도 관련 연구 절 대신 Study I 첫머리가 규준 수집의 네 단계(concept selection · elicitation · reduction · verification)를 기울임 run-in 문단으로 하나씩 짚으며 '선행 연구의 한계 → 우리의 선택'을 바로 잇는다. 이 구조가 관련 연구와 방법 근거를 한 번에 처리한다. 그 뒤 2수준 Methods 아래 굵은 run-in(인간 산출·인간 검증·AI 검증·Results) + 기울임 run-in(Participants · Stimuli and procedure)의 3층 위계로 촘촘히 나눴고, Study 2는 Methods 소제목 없이 run-in 둘(triplet 생성 · Results)로 짧게 끝낸다. Discussion은 소제목 없는 세 문단(요약 → 의의 → 'Lastly' LLM 활용의 전망)이고 한계 절이나 따로 둔 결론 문단은 없다. 그림 다섯 개 중 셋이 전폭(워크플로 도식이 p.2 맨 위)이라 시각 자료가 쪽마다 하나 이상 놓인다.",
+ "words_body_total": 3259,
+ "text_pages": 6
+}

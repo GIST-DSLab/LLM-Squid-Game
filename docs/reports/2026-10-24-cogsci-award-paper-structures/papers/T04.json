@@ -1,0 +1,216 @@
+{
+ "id": "T04",
+ "year": 2024,
+ "group": "tenenbaum",
+ "award": "발표 논문 (수상 아님)",
+ "title": "Cooperative Explanation as Rational Communication",
+ "authors": [
+  "Kartik Chandra",
+  "Tony Chen",
+  "Tzu-Mao Li",
+  "Jonathan Ragan-Kelley",
+  "Joshua B. Tenenbaum"
+ ],
+ "affiliations": "MIT CSAIL, Cambridge, MA (Chandra, Ragan-Kelley); MIT BCS, Cambridge, MA (Chen, Tenenbaum); UCSD ECE, San Diego, CA (Li)",
+ "url_page": "https://escholarship.org/uc/item/8bf5g4h6",
+ "url_pdf": "https://escholarship.org/content/qt8bf5g4h6/qt8bf5g4h6.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the 46th Annual Conference of the Cognitive Science Society, vol. 46, pp. 610-617; 9쪽 PDF = 표지 1 + 본문 6쪽 + Acknowledgements/참고문헌 2쪽). CogSci 2024 수상 목록(cognitivesciencesociety.org/cogsci-2024/)에 이 논문은 없음.",
+ "abstract_en": "We offer a computational framework for modeling explanation as cooperative rational communication. Under our framework, when an explainer is faced with a “why?” question, they reason about the question-asker’s current mental model, and intervene on that mental model in order to maximize the listener’s future utility. We instantiate our framework in a planning domain, and show that our framework can model human explanations about plans across a wide variety of scenarios.",
+ "abstract_ko": "이 논문은 설명(explanation)을 협력적인 합리적 의사소통(cooperative rational communication)으로 모형화하는 계산적 틀을 제시한다. 이 틀에서 설명하는 사람은 '왜?'라는 질문을 받으면 질문한 사람의 현재 정신 모형(mental model)을 추론하고, 듣는 사람의 미래 효용을 최대화하도록 그 정신 모형에 개입한다. 우리는 이 틀을 계획(planning) 영역에 구체화하고, 이 틀이 매우 다양한 시나리오에서 계획에 관한 사람들의 설명을 모형화할 수 있음을 보인다.",
+ "pages_body": 8,
+ "references_location": "p.7-8: p.7 왼쪽 단 맨 위 Acknowledgements(45단어), 그 아래 References가 p.7 두 단을 채우고 p.8 왼쪽 단 ~2/3까지 이어짐(p.8 오른쪽 단은 빈칸). 본문은 p.6 오른쪽 단 아래 Conclusion으로 끝남.",
+ "extras": "각주 없음(p.1 아래 Proceedings 편집자·CC BY 꼬리말만). 별행 수식 3개(번호 없음; 모두 'Computational framework' 절, p.2). 번호 없는 지도 그림 하나가 p.3 왼쪽 단에 있음(과제 마을 지도). 부록·OSF/코드/데이터 링크·사전등록 없음. Discussion의 응용 소절이 동시 진행 연구(Chandra et al., 2024, arXiv 'Watchat')를 소개.",
+ "words_body_total": 3753,
+ "words_note": "본문 합계에서 제목 블록, 초록(71단어)과 keywords(11단어), 그림·표와 캡션(Fig. 1-4, Table 1, p.3 번호 없는 지도), 별행 수식 3개, 쪽 번호, p.1 CC BY 꼬리말, Acknowledgements(45단어), 참고문헌(~895단어)은 뺌. pdftotext -bbox-layout으로 줄 좌표를 읽어 단별로 순서를 복원하고, 그림·표·수식 영역을 좌표로 잘라낸 뒤 글자나 숫자가 든 토큰을 한 단어로 셈. 아래첨자(mBob 등)는 붙여서 한 단어. 제목과 run-in 제목 단어는 세지 않음.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 410,
+   "share": 0.109,
+   "role": "intro",
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Computational framework",
+   "page_start": 1,
+   "words": 936,
+   "share": 0.249,
+   "role": "method",
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in, before first subheading)",
+     "page_start": 1,
+     "words": 208
+    },
+    {
+     "level": 2,
+     "title": "Inferring Bob’s erroneous mental model",
+     "page_start": 2,
+     "words": 208
+    },
+    {
+     "level": 2,
+     "title": "Correcting Bob’s mental model",
+     "page_start": 2,
+     "words": 520
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Instantiating the framework to explain surprising plans",
+   "page_start": 3,
+   "words": 1631,
+   "share": 0.435,
+   "role": "result",
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in: planning domain and scenario)",
+     "page_start": 3,
+     "words": 211
+    },
+    {
+     "level": 2,
+     "title": "Computational model",
+     "page_start": 3,
+     "words": 264
+    },
+    {
+     "level": 2,
+     "title": "Alternate models",
+     "page_start": 3,
+     "words": 155
+    },
+    {
+     "level": 2,
+     "title": "Experiment",
+     "page_start": 4,
+     "words": 268
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "page_start": 4,
+     "words": 733,
+     "children": [
+      {
+       "level": 3,
+       "title": "(lead paragraph, before run-in headings)",
+       "page_start": 4,
+       "words": 108
+      },
+      {
+       "level": 3,
+       "title": "Effect of the social cost",
+       "page_start": 5,
+       "words": 328
+      },
+      {
+       "level": 3,
+       "title": "Effect of reasoning about the future",
+       "page_start": 5,
+       "words": 191
+      },
+      {
+       "level": 3,
+       "title": "Effect of reasoning about the past",
+       "page_start": 6,
+       "words": 106
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 6,
+   "words": 675,
+   "share": 0.18,
+   "role": "disc",
+   "children": [
+    {
+     "level": 2,
+     "title": "Potential extensions to the framework",
+     "page_start": 6,
+     "words": 112
+    },
+    {
+     "level": 2,
+     "title": "When do people ask “why?” questions?",
+     "page_start": 6,
+     "words": 219
+    },
+    {
+     "level": 2,
+     "title": "Practical applications of the framework",
+     "page_start": 6,
+     "words": 344
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Conclusion",
+   "page_start": 6,
+   "words": 101,
+   "share": 0.027,
+   "role": "disc",
+   "children": []
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 1,
+   "size": "한 단(오른쪽 단 위), 그림 단 높이의 ~1/3 + 캡션 5줄; Alice가 Bob의 틀린 정신 모형을 추론하고 고치는 2단 개념도",
+   "section": "Introduction (오른쪽 단 맨 위)"
+  },
+  {
+   "n": 2,
+   "page": 3,
+   "size": "전체 폭(쪽 아래), 캡션 포함 쪽의 ~1/5; 같은 지도 위 경로 패널 3개(Bob의 질문 말풍선)",
+   "section": "Instantiating the framework (lead-in/Computational model)"
+  },
+  {
+   "n": 3,
+   "page": 4,
+   "size": "전체 폭(쪽 위), 캡션 포함 쪽의 ~1/2; 시나리오 15개 x (막대그래프 + 지도) 격자, 인간 대 모델",
+   "section": "Instantiating the framework > Results"
+  },
+  {
+   "n": 4,
+   "page": 5,
+   "size": "전체 폭(쪽 위), 캡션 포함 쪽의 ~1/4; 산점도 패널 3개(S1 무사회비용, S2 무사회비용, S1+사회비용 전체 모형), r² 표기",
+   "section": "Instantiating the framework > Results"
+  }
+ ],
+ "tables": [
+  {
+   "n": 1,
+   "page": 5,
+   "size": "한 단(왼쪽 단 위), 단의 ~1/5; 모형 5개와 적합도 r²",
+   "section": "Instantiating the framework > Results"
+  }
+ ],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "experiments_note": "실험이 하나이고 1수준 절이 아니다. 1수준 'Instantiating the framework to explain surprising plans' 아래에 과제 영역 설명(제목 없는 도입), Computational model, Alternate models, Experiment, Results가 모두 2수준으로 나란히 놓인다. Experiment 아래 Method 소제목은 없고, Results 아래 run-in 3수준 셋은 모형 절제(lesion) 비교를 하나씩 다룬다.",
+  "final_section_name": "Conclusion (앞에 2수준 소제목 셋이 있는 Discussion이 옴)",
+  "final_section_subheadings": [],
+  "discussion_structure": "Discussion에 2수준 소제목 셋: Potential extensions to the framework(단순화 가정과 한계), When do people ask “why?” questions?(질문 발생 모형의 한계, 예: Griffiths & Tenenbaum 2007 동전 예), Practical applications of the framework(JavaScript 오개념을 고치는 설명 도구, 동시 진행 연구). 요약 문단 없이 바로 소절로 들어감.",
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "두 곳. 일반 틀은 서론 바로 뒤 독립 1수준 절 'Computational framework'(p.1-2, 본문의 25%)에서 Bob 모형 추론(베이즈 규칙)과 발화 선택(미래 효용 V(u), 전달 비용, 사회 비용, softmax)을 별행 수식 3개로 정식화. 과제에 맞춘 구체 모형은 다음 1수준 절 안 2수준 'Computational model'(p.3)과 비교 모형 넷을 적은 'Alternate models'(글머리표 목록, p.3-4).",
+  "first_page_use": "제목 + 저자 5명(이메일·소속, 세 줄 두 칸)이 위 ~25%; 초록(71단어 + keywords)이 왼쪽 단 ~1/7; Introduction은 왼쪽 단 중간에서 시작해 오른쪽 단 Figure 1(+캡션) 아래로 이어짐. p.1 오른쪽 단 아래에서 'Computational framework' 1수준 절이 이미 시작됨.",
+  "links": "없음. 사전등록·OSF·코드·데이터 링크 없음; 실험은 Prolific 모집, IRB 승인만 언급."
+ },
+ "structure_summary_ko": "서론은 약 410단어(본문의 11%)로 짧고 소제목 없이 다섯 문단(이상한 나라의 앨리스 문지기 일화 -> 설명은 협력적 사회 상호작용이라는 주장 -> 설명 연구의 여러 차원 -> RSA를 확장해 사회 비용 항을 더한다는 기여 -> 다음 절 로드맵)으로 끝난다. 이어 독립 1수준 절 'Computational framework'(25%)가 2수준 둘(정신 모형 추론, 정신 모형 교정)과 번호 없는 별행 수식 셋으로 일반 모형을 정식화한다. 가장 큰 1수준 절 'Instantiating the framework to explain surprising plans'(43%)는 과제 영역 소개, Computational model, Alternate models(절제 모형 넷), Experiment, Results를 모두 2수준으로 한데 담아, 모형 구체화와 실험·결과를 한 절에서 처리한다. Results는 전체 적합도(r² = 0.88)를 먼저 말한 뒤 run-in 3수준 셋('Effect of ...')으로 절제 모형마다 적합도 하락과 대표 시나리오를 짚고, 전폭 그림 둘(Fig. 3-4)과 표 하나가 결과를 운반한다. Discussion(18%)은 확장·질문 발생·실용 응용의 2수준 셋으로 나뉘고, 한 문단짜리 Conclusion으로 끝난다. 본문은 정확히 6쪽이고 Acknowledgements와 참고문헌은 7-8쪽에 있다.",
+ "text_pages": 6
+}

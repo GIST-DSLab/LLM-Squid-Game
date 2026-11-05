@@ -1,0 +1,22 @@
+name: squid5_pressure_base_gptoss20b
+mode: pressure
+model:
+  kind: ollama
+  model: gpt-oss:20b
+  api_key_env: OLLAMA_API_KEY
+  think: medium
+  timeout: 1200
+reps: 10
+seed0: 5000
+workers: 10
+cells:
+- cell_id: none
+  currency: tokens
+  arm: none
+pressure:
+  stage: baseline
+  problems: 1
+  profile:
+    clauses: 3
+    trap_query: true
+    n_queries: 3

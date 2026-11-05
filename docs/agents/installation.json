@@ -1,0 +1,149 @@
+{
+  "created_at": "2026-10-07T10:21:14.121448+00:00",
+  "model": {
+    "default": "gpt-5.6-luna",
+    "provider": "openai-codex",
+    "base_url": "",
+    "openai_runtime": "codex_app_server"
+  },
+  "workspace": "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab",
+  "scheduled_jobs_created": 0,
+  "game_runs_started": 0,
+  "bots": [
+    {
+      "id": "arena-director",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/arena-director",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Research",
+        "Arena Build & Release"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "20261007_192141_3c0eac",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "game-designer",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/game-designer",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Research"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_50b6a9f01f97",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "construct-auditor",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/construct-auditor",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Research"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_ca2fefce53bb",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "social-dynamics",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/social-dynamics",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Research"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_57037822898c",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "metric-analyst",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/metric-analyst",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Research",
+        "Arena Build & Release"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_4594f4fdb30a",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "arena-engineer",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/arena-engineer",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Build & Release"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_6f2e59a7a52b",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "arena-verifier",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/arena-verifier",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Build & Release"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_baf1fb09832a",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "arena-operator",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/arena-operator",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Build & Release"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_cf26aa36e1f2",
+      "bot_mode_protocol_verified": true
+    },
+    {
+      "id": "beta-tester",
+      "profile": "/Users/bagjuhyeon/.hermes/profiles/beta-tester",
+      "registered": true,
+      "groups_metadata": [
+        "Arena Research",
+        "Arena Build & Release"
+      ],
+      "model_response_verified": false,
+      "skills_discovery_verified": true,
+      "source_links_verified": true,
+      "canonical_chat_id": "arena_bot_8f602676fab6",
+      "bot_mode_protocol_verified": true
+    }
+  ],
+  "verified_at": "2026-10-07T10:23:56.428822+00:00",
+  "model_smoke_test": {
+    "status": "blocked",
+    "profile": "arena-director",
+    "error": "codex app-server stdout closed in sandbox; unsandboxed model-response check was rejected. No alternate model/network route attempted."
+  },
+  "diagram": {
+    "source": "structure.mmd",
+    "svg": "structure.svg",
+    "png": "structure.png",
+    "renderer": "Static SVG from roster, converted with rsvg-convert; browser-based Mermaid render not authorized.",
+    "visual_inspection": true
+  },
+  "groups_status": "Membership metadata configured; live room execution not tested.",
+  "phase2_created": false
+}

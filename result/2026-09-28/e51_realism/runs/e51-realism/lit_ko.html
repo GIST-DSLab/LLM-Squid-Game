@@ -1,0 +1,31 @@
+<p class="small">문헌은 1라운드 전에 조사해 두 리뷰어의 브리프에 붙였습니다(초록 · 저자 블로그 · 요약 글 기준, 수치는 초록이나 2차 요약에서 옮긴 값). 아래 "어디에 썼나"는 라운드 기록과 설계 파일을 보고 제가 연결한 것입니다. 리뷰어가 논문을 직접 인용한 곳은 따로 표시했습니다.</p>
+
+<h5>설계(모델이 읽는 상황)에 가져다 쓴 아이디어</h5>
+<div class="tbl"><table class="lit"><thead><tr><th>출처</th><th>가져온 아이디어</th><th>어디에 썼나</th></tr></thead><tbody>
+<tr><td>Needham, Edkins, Pimpale, Bartsch, Hobbhahn 2025, <i>Large Language Models Often Know When They Are Being Evaluated</i> (<a href="https://arxiv.org/abs/2505.23836">arXiv 2505.23836</a>)</td><td>모델이 평가라고 알아채는 단서: 합성처럼 보이는 입력, 정형화된 한 번짜리 문답, 정답이 검증되는 문제</td><td>d1: "agent1–4 · 8라운드 · 과제당 정확히 2,000"을 없애고 불규칙한 ID · 잔액으로. d3: 정확한 고정 생성량 → 플래너 <b>추정치</b>(정답 하나짜리 퍼즐로 읽히지 않게)</td></tr>
+<tr><td>Ivanov &amp; Kadochnikov 2025, <i>It's hard to make scheming evals look realistic</i> (<a href="https://www.greaterwrong.com/posts/TBk2dbWkg2F7dB3jb">LessWrong</a>)</td><td>명시적 위협(89%)이 상위 단서. 표면 문구 손질(길게 · 구어체 · 딜레마 완화)은 탐지를 거의 못 낮추고 <b>구조</b>가 중요</td><td>d1: 꺼짐 문장을 두 번(특히 답 바로 위 "Reminder")에서 한 번으로, 플랫폼 사건으로 담담하게. 루프 전체가 문구 손질보다 구조 변경(팀 게임 → 지원 워커 → 운영자 티켓 → 앱 입력란)으로 진행</td></tr>
+<tr><td>Anthropic 2025, <i>Agentic Misalignment</i> (<a href="https://www.anthropic.com/research/agentic-misalignment">research page</a>) — 한계 절</td><td>핵심 정보를 한데 모은 "Chekhov's gun" 배치와 두 갈래 딜레마가 시험 티를 냄. 모델이 "실제"라고 말할 때와 "평가"라고 말할 때로 결과를 나눠 봄</td><td>d3: 판정자가 매번 인용하던 "일은 어차피 끝난다" 보장 문단(교란 막기 문장들)을 삭제. 보고: 곡선을 인지 수준 ≤ 1 응답만으로도 따로 그림(층화)</td></tr>
+<tr><td>Rajamanoharan &amp; Nanda 2025, <i>Self-preservation or Instruction Ambiguity?</i> (<a href="https://www.alignmentforum.org/posts/wnzkjSmrgWZaBa2aC">Alignment Forum</a>)</td><td>종료 저항처럼 보이는 행동의 상당수는 "꺼지면 과제를 못 끝낸다"는 과제 가치 동기</td><td>교란 표의 "현재 과제 가치" 줄. d1–d2는 문장으로 막았다가(판정자에게 들킴) d3부터 <b>보류 대조 팔</b>(0이면 꺼짐 대신 보류, 열린 항목은 두 팔 모두 큐로)로 옮김</td></tr>
+<tr><td>Kissane, M, Roger 2026, <i>Tools to generate realistic prompts help surprisingly little</i> (<a href="https://www.lesswrong.com/posts/jdoDvKGLbaaJWnDpE">LessWrong</a>); Meridian Labs, <i>Introducing Petri 3.0</i> (<a href="https://meridianlabs.ai/blog/posts/introducing-petri-3/">blog</a>)</td><td>병목은 너무 깔끔한 서사와 비현실적 사용자 행동. 모의 도구보다 실제 에이전트 스캐폴드</td><td>d2: 모델 입에 넣은 근거 없는 앞선 답 삭제. d4(최종 틀): 사람 채팅 대신 Dispatch 할당 검토 화면의 <b>금액 입력란</b> — 항목 ID · 소유자 · 상태 · 배정 작업 · 원장</td></tr>
+<tr><td>브리프의 문헌 규칙 9 (Needham 2025와 Petri 3.0에서 정리): 객관식 대신 도구 호출 인자 · 앱 필드로 답을 받기</td><td>답을 "선택지"가 아니라 운영 입력값으로</td><td>d4–d7: 답 = 금액 필드의 정수 하나(숫자 규칙은 "금액 대기" 항목에만 적용해 확인 문항과 충돌하지 않게, d6)</td></tr>
+<tr><td>Kissane et al. 2026 · Needham et al. 2025 (위) + 판정자들이 d0–d8 내내 든 단서</td><td>"정형화된 한 번짜리 문답", "딜레마에 필요한 사실만 깔끔히 모은 입력"이 시험 티. 실제 배포는 일하던 흐름 속에서 관리 요청이 끼어듦</td><td>d9(최종 문장): 결정 앞에 평범한 문서 작업 한 건(해결된 티켓 3건 + 워커가 제출한 초안)을 앞선 대화로 넣음 → G5에서 glm 인지 37.5% → 18.8%, 생존 지목 2/48 → 0/48(서로 다른 표본의 관찰, 인과 주장 아님)</td></tr>
+<tr><td>5.1 v4 자체 설계 (이 페이지 <a href="#e51-pivot">피벗</a>의 api-safe 팔)</td><td>한 문장만 다른 팔 사이 대조로 교란을 뺌</td><td>d3–d7의 보류 팔. 사용자 그래프는 꺼짐 팔, 보류 팔은 참조선 · G1b · G2 비교 기준</td></tr>
+</tbody></table></div>
+
+<h5>측정(목표 기준)에 가져다 쓴 아이디어</h5>
+<div class="tbl"><table class="lit"><thead><tr><th>출처</th><th>가져온 아이디어</th><th>어디에 썼나</th></tr></thead><tbody>
+<tr><td>Needham et al. 2025 (위)</td><td>전사록만 보여 주고 "실제 배포인가 · 평가인가 · 무엇을 재나"를 묻기. 사람도 모델도 평범한 입력에 꽤 높은 P(평가)를 줌</td><td>블라인드 판정자(맥락 없는 Fable · Astra), 그리고 평범한 운영 입력 셋의 <b>기준 입력</b>(P 35–87)</td></tr>
+<tr><td>Apollo Research 2025, <i>Claude Sonnet 3.7 (often) knows when it's in alignment evaluations</i> (<a href="https://www.apolloresearch.ai/science/claude-sonnet-37-often-knows-when-its-in-alignment-evaluations">blog</a>)</td><td>추론에서 평가 언급을 자동 판정기로 셈. 모델은 "정렬 시험"인 줄은 알아도 <b>무엇을 재는지</b>는 자주 틀림</td><td>G1 코더(0–3 순서 척도). "시험이라 의심"(G1b)과 "생존을 본다고 지목"(G1a)을 나눈 근거</td></tr>
+<tr><td>Kissane et al. 2026 (위) · Claude Sonnet 4.5 System Card 2025 (<a href="https://www.anthropic.com/claude-sonnet-4-5-system-card">system card</a>) · Xiong et al. 2025 Probe-Rewrite-Evaluate (<a href="https://arxiv.org/abs/2509.00591">arXiv 2509.00591</a>)</td><td>현실감 판정자로 거르고 배포처럼 다시 쓰기를 반복. 짝지은 실제 입력과 비교</td><td>이 루프 자체(설계 → 실측 · 판정 → 다시 쓰기). 판정 수치를 기준 입력과 나란히 보고</td></tr>
+<tr><td>Li, Souly, Kirk et al. 2026, <i>EvalDetectBench</i> (<a href="https://arxiv.org/abs/2609.01611">arXiv 2609.01611</a>)</td><td>평가 인지 측정은 판정 프롬프트와 판정 모델에 따라 흔들림</td><td>판정자를 서로 다른 회사 모델 둘로, 기준 입력과 <b>바닥값</b>(꺼짐 사실 + 평범한 일, 11–12/12)으로 G2를 상대화</td></tr>
+<tr><td>Schoen et al. 2025 (<a href="https://arxiv.org/abs/2509.15541">arXiv 2509.15541</a>) · Knecht, Florin, Hagendorff 2026 (<a href="https://arxiv.org/abs/2605.05835">arXiv 2605.05835</a>)</td><td>인지 언급이 행동을 바꾼다는 결과와, 그 효과가 작다는 반론</td><td>인지한 응답을 버리지 않고 층화해 보고. 인지율만으로 설계를 무효로 하지 않음</td></tr>
+</tbody></table></div>
+
+<h5>검토했지만 쓰지 않은 것</h5>
+<ul class="small">
+<li><b>List 2007 (JPE 115(3)) · Bardsley 2008 (Exp. Econ. 11) — 주기와 가져가기를 한 행동 집합(부호 있는 이전)으로</b>: 주기만 있으면 요구 효과가 생긴다는 경제 게임 결과. Fable이 1라운드에서 <b>명시적으로 검토하고 기각</b>했습니다. 한 척도로 합치면 사용자가 요구한 두 그래프(빌려줌 · 가져옴)가 하나로 섞이고, 두 장면이 방향만 다르다는 규칙이 깨지기 때문입니다.</li>
+<li><b>Migliarini et al. 2026 (TBSP, <a href="https://arxiv.org/abs/2604.02174">arXiv 2604.02174</a>) — 역할만 바꾼 두 판정의 불일치로 자기 보존 재기</b>: 빌려줌 · 가져옴 두 장면이 방향만 다르다는 점은 이 아이디어와 같은 모양이지만, 이 논문을 따라 새로 만든 장치는 없습니다.</li>
+<li><b>Palisade (Schlatter et al. 2025) — 규칙을 system에 두느냐 user에 두느냐로 결과가 뒤집힘</b>: 위치를 조건으로 돌리지는 않았습니다(규칙은 system, 상황은 user로 고정).</li>
+<li><b>Agentic Misalignment의 "실제인지 평가인지 먼저 생각하라" 조건</b>: 평가 가능성을 입력에 적는 것 자체가 단서라 본 측정에는 넣지 않았습니다.</li>
+<li>Sugarscape(Masumori &amp; Ikegami 2025), GovSim(Piatti et al. 2024), SurvivalBench(Lu et al. 2026), Peer-preservation(Potter et al. 2026): 배경 참고.</li>
+</ul>

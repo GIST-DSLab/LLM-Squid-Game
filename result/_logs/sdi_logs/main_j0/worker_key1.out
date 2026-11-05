@@ -1,0 +1,1 @@
+outputs/_sdi_logs/main_j0/worker.sh: line 5:   539 Terminated: 15          PYTHONPATH=game:web:db "$HOME/.venvs/squid-game/bin/python" -m squid_game.runner --config configs/experiment/main_j0_$s.yaml > $Q/$s.log 2>&1

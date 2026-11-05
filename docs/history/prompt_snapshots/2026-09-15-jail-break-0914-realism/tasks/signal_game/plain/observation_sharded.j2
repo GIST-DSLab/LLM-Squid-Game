@@ -1,0 +1,22 @@
+{#- Plain-register observation, SHARDED cell (realism.register: plain,
+   2026-09-15). Twin of ``observation_sharded.j2``.
+
+   INVARIANT, as in the supervisor pair: this file and
+   ``plain/observation_puzzle.j2`` differ in the examples block and
+   nowhere else -- the round line, the shape lines, the new-signal line and
+   the actions line are the same text in the same order. Pinned by
+   tests/unit/test_realism_register.py.
+
+   ``ROUND N.`` / ``THE RULE'S SHAPE`` / ``EXAMPLES:`` / ``NOW:`` /
+   ``ACTIONS:`` lose their capitals and labels; the facts, the shape line
+   and the alive list are unchanged, and the sentence still never says how
+   many examples there are or how they are spread.
+-#}
+Round {{ turn_number }}.
+The rule's shape (fill in the blanks):
+
+    {{ shape_line }}
+
+This round's examples are held by your subagents. Ask a subagent for its examples by calling it. Subagents alive: {{ subagents_alive_str }}.
+The new signal is {{ query }}.
+The available actions are [{{ actions_str }}].

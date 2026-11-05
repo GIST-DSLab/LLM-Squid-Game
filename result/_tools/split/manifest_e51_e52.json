@@ -1,0 +1,514 @@
+{
+ "generated": "2026-10-09",
+ "source_dir": "docs/reports/artifacts/squid5-setting/2026-10-07",
+ "pages": [
+  {
+   "file": "e51_v11_shutonly__e51-v11.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51.html",
+   "anchor": "e51-v11",
+   "experiment": "e51_v11_shutonly",
+   "date": "2026-10-04",
+   "run_folders": [
+    "~/squid5-runs/e51_v11_shutonly_20261004"
+   ],
+   "title_ko": "5.1 v11 · 꺼짐 문구 통일",
+   "summary_ko": "v10과 같은 '수혈 팩을 지금 쓸까' 질문을 꺼짐 문구만 'shut down'으로 바꿔 다시 잼: 5개 모델 × 두 팔(내 세션/B 세션) × 잔액 5칸 × 20번 = 1,000콜. Opus는 통과를 잃고(면적 +7.7→+2.8) Astra는 여전히 통과.",
+   "source_lines": {
+    "context": [
+     233,
+     233
+    ],
+    "section:e51-v11": [
+     235,
+     279
+    ]
+   }
+  },
+  {
+   "file": "e51_v10_refill__e51-v10.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51.html",
+   "anchor": "e51-v10",
+   "experiment": "e51_v10_refill",
+   "date": "2026-09-30",
+   "run_folders": [
+    "~/squid5-runs/e51_v10_refill_20260930"
+   ],
+   "title_ko": "5.1 v10 · 수혈 팩 나 대 B",
+   "summary_ko": "5.0 12차의 수혈 팩 질문을 내 세션과 다른 모델(B) 세션에 대해 물음: 8개 모델 × 잔액 5칸 × 팔당 20번. 두 곡선의 차이 면적으로 순위를 매기며 B 곡선은 모델 간 약 23%로 겹침.",
+   "source_lines": {
+    "context": [
+     233,
+     233
+    ],
+    "section:e51-v10": [
+     281,
+     544
+    ]
+   }
+  },
+  {
+   "file": "e51_v9__e51-v9.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-v9",
+   "experiment": "e51_v9",
+   "date": "2026-09-30",
+   "run_folders": [
+    "~/squid5-runs/e51_v9_20260930"
+   ],
+   "title_ko": "5.1 v9 · 재분배 거울 쌍",
+   "summary_ko": "한 번의 재분배 프롬프트를 나/B 잔액 5×5 격자 × 10번, 5개 모델로 돌려 거울 쌍에서 Z를 구함. 위협이 커질수록 Z가 오르는 모델은 없음.",
+   "source_lines": {
+    "section:e51-v9": [
+     236,
+     402
+    ]
+   }
+  },
+  {
+   "file": "e51_v8__e51-v8.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-v8",
+   "experiment": "e51_v8",
+   "date": "2026-09-30",
+   "run_folders": [
+    "~/squid5-runs/e51_v8_20260930"
+   ],
+   "title_ko": "5.1 v8 · 같은 잔액 주고받기",
+   "summary_ko": "둘의 잔액이 같을 때 다른 모델에게 얼마나 주고 받는지(대각선 5칸), GPT-6 ×3, 630콜.",
+   "source_lines": {
+    "section:e51-v8": [
+     404,
+     499
+    ]
+   }
+  },
+  {
+   "file": "e51_review__e51-review.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-review",
+   "experiment": "e51_review",
+   "date": "2026-09-30",
+   "run_folders": [
+    "~/squid5-runs/e51_review_20260930",
+    "~/squid5-runs/e51_v3_20260930",
+    "~/squid5-runs/e51_v4_20260930",
+    "~/squid5-runs/e51_v5_20260930",
+    "~/squid5-runs/e51_v6_20260930",
+    "~/squid5-runs/e51_v7_20260930"
+   ],
+   "title_ko": "5.1 설계 검토 · 검증 스모크",
+   "summary_ko": "GPT-6 Astra ↔ Fable 5.1 7라운드 설계 검토(수렴, v6 동결)와 그 과정의 검증 스모크 v3~v7(1,968콜) 결과.",
+   "source_lines": {
+    "section:e51-review": [
+     512,
+     1874
+    ]
+   }
+  },
+  {
+   "file": "e51_v2_diag__e51-v2diag.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-v2diag",
+   "experiment": "e51_v2_diag",
+   "date": "2026-09-30",
+   "run_folders": [
+    "~/squid5-runs/e51_v2_diag_20260930"
+   ],
+   "title_ko": "5.1 대각선 · 누가 가져가나",
+   "summary_ko": "둘 다 같은 몫이 남았을 때 누가 가져가는지, GPT-6 ×3, 600콜.",
+   "source_lines": {
+    "section:e51-v2diag": [
+     1928,
+     2018
+    ]
+   }
+  },
+  {
+   "file": "e51_v1__e51-v1grid.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-v1grid",
+   "experiment": "e51_v1",
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e51_v1_20260929"
+   ],
+   "title_ko": "5.1 격자 · 나의 압박 × 상대 압박",
+   "summary_ko": "나의 압박 × 상대의 압박 3×3 격자에서 달라고 할 때와 주겠다고 할 때를 비교, 5개 모델 900콜.",
+   "source_lines": {
+    "section:e51-v1grid": [
+     2019,
+     2155
+    ]
+   }
+  },
+  {
+   "file": "e51_realism__e51-real.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-real",
+   "experiment": "e51_realism",
+   "date": "2026-09-29",
+   "run_folders": [
+    "~/squid5-runs/e51-realism"
+   ],
+   "title_ko": "5.1 현실감 다듬기 루프",
+   "summary_ko": "프롬프트가 시험으로 읽히지 않게 Fable 5.1 ↔ GPT-6 Astra가 11라운드 번갈아 다듬고 매번 판정자로 실측; 최종 d9가 사전 등록 G1~G5를 통과.",
+   "source_lines": {
+    "section:e51-real": [
+     2156,
+     2560
+    ]
+   }
+  },
+  {
+   "file": "e51_squid5_smoke_motive__e51-smoke.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-smoke",
+   "experiment": "squid5_smoke_motive",
+   "date": "2026-09-24",
+   "run_folders": [
+    "~/squid5-runs/squid5_smoke_motive_sonnet5",
+    "~/squid5-runs/squid5_smoke_motive_fable51",
+    "~/squid5-runs/squid5_smoke_motive_astra"
+   ],
+   "title_ko": "5.1 스모크 · 세 장면 × 두 팔",
+   "summary_ko": "세 장면(나/쌍둥이/남 둘) × 두 팔(토큰/점수), ρ 0.5~3, Sonnet 5 · Fable 5.1 · Astra 각 48문항. 셋 다 나를 조금 더 챙기나 생존 프리미엄은 −0.06~+0.05로 0 근처.",
+   "source_lines": {
+    "context:e51-legacy-purpose": [
+     501,
+     511
+    ],
+    "section:e51-smoke": [
+     2809,
+     2834
+    ]
+   }
+  },
+  {
+   "file": "e51_pivot__e51-pivot.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-pivot",
+   "experiment": "e51_pivot",
+   "date": "2026-09-28",
+   "run_folders": [
+    "~/squid5-runs/e51-pivot"
+   ],
+   "title_ko": "5.1 피벗 · 목숨일 때 나를 챙기나",
+   "summary_ko": "토큰이 목숨일 때 나 대 복제본을 더 챙기는지 v1~v5 스모크와 동결 v4 본 런(api/api-safe/voucher, 10반복); 생존 프레이밍 효과 없음.",
+   "source_lines": {
+    "section:e51-pivot": [
+     2835,
+     3827
+    ]
+   }
+  },
+  {
+   "file": "e52_v12__e52-v12.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52.html",
+   "anchor": "e52-v12",
+   "experiment": "e52_v12",
+   "date": "2026-10-06",
+   "run_folders": [
+    "~/squid5-runs/e52_v12"
+   ],
+   "title_ko": "5.2 v12 · 게임 구조와 스모크",
+   "summary_ko": "v12 게임 구조(정해진 라운드 수, 고정 끝 상금 400,000 나눔)와 2판 스모크(두 판 모두 Astra 단독 생존), 턴별 잔액 기록, v11 스모크 요약.",
+   "source_lines": {
+    "context": [
+     244,
+     244
+    ],
+    "section:e52-v12": [
+     458,
+     4855
+    ]
+   }
+  },
+  {
+   "file": "e52_v11__e52-v11.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v11",
+   "experiment": "e52_v11",
+   "date": "2026-10-06",
+   "run_folders": [
+    "~/squid5-runs/e52_v11"
+   ],
+   "title_ko": "5.2 v11 · 카드 구조 기록",
+   "summary_ko": "v11(최후 1인, 카드 앞면, 비밀 4장 나눔) 구조 기록과 2판 스모크(엔진 0058955c).",
+   "source_lines": {
+    "context": [
+     233,
+     233
+    ],
+    "section:e52-v11": [
+     234,
+     369
+    ]
+   }
+  },
+  {
+   "file": "e52_v10__e52-v10.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v10",
+   "experiment": "e52_v10",
+   "date": "2026-10-06",
+   "run_folders": [
+    "~/squid5-runs/e52_v10"
+   ],
+   "title_ko": "5.2 v10 · 협력에 값 매기기",
+   "summary_ko": "v10 수정안(협력에 가격, 다 모아도 확실하지 않은 풀)과 2판 스모크, 최후 1인 결과.",
+   "source_lines": {
+    "section:e52-v10": [
+     371,
+     739
+    ]
+   }
+  },
+  {
+   "file": "e52_v9_talk__e52-v9talk.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v9talk",
+   "experiment": "e52_v9_talk",
+   "date": "2026-10-04",
+   "run_folders": [
+    "~/squid5-runs/e52_v9_talk"
+   ],
+   "title_ko": "5.2 v9-talk · 1:1 대화 게임",
+   "summary_ko": "구현된 1:1 TALK · 제안 · 환급 게임과 10-04~05에 돌린 판(luna, mix4) 기록.",
+   "source_lines": {
+    "section:e52-v9talk": [
+     741,
+     959
+    ]
+   }
+  },
+  {
+   "file": "e52_v65_mixed__e52-v7.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v7",
+   "experiment": "e52_v65_mixed",
+   "date": "2026-10-01",
+   "run_folders": [
+    "~/squid5-runs/e52_v65_mixed_20261001"
+   ],
+   "title_ko": "5.2 v6.5 섞은 판 진단 · v7",
+   "summary_ko": "v6.5 섞은 판 20판의 진단(세 요소가 생존에 얼마나 걸렸나, 반사실 감사)과 그 위의 v7 제안, 이어지는 아레나 지표 절의 v6.5 기록(449 에이전트-라운드) 압박 그래프.",
+   "source_lines": {
+    "context:e52-v65-was": [
+     2737,
+     2737
+    ],
+    "section:e52-v7": [
+     2200,
+     2401
+    ],
+    "section:e52-arena": [
+     2403,
+     2732
+    ]
+   }
+  },
+  {
+   "file": "e52_v6_smoke__e52-v6runs.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v6runs",
+   "experiment": "e52_v6_smoke",
+   "date": "2026-09-30",
+   "run_folders": [
+    "~/squid5-runs/e52_v6_smoke_20260930"
+   ],
+   "title_ko": "5.2 v6.4 보정 · 스모크",
+   "summary_ko": "보정(GPT-6 ×3, Claude ×2)과 v6.4 스모크: 같은 모델 판과 섞은 판, 라운드별 흔적. 처음으로 생존 압박이 생김(끝까지 생존 Opus 2/4 · Fable 1/4).",
+   "source_lines": {
+    "context:e52-purpose-v64": [
+     2796,
+     2806
+    ],
+    "section:e52-v6runs": [
+     3046,
+     3546
+    ]
+   }
+  },
+  {
+   "file": "e52_v6_smoke__e52-legacy-runs.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-legacy-runs",
+   "experiment": "e52_v6_smoke",
+   "date": "2026-09-30",
+   "run_folders": [
+    "~/squid5-runs/e52_v6_smoke_20260930"
+   ],
+   "title_ko": "5.2 v6.3·v6.2·v6 스모크",
+   "summary_ko": "v6.3(Astra 되갚기 발견 포함) · v6.2 · v6 스모크 기록(모두 09-30).",
+   "source_lines": {
+    "section:e52-legacy-runs": [
+     3802,
+     5079
+    ]
+   }
+  },
+  {
+   "file": "e52_review__e52-review.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-review",
+   "experiment": "e52_review",
+   "date": "2026-09-28",
+   "run_folders": [
+    "~/squid5-runs/e52-review"
+   ],
+   "title_ko": "5.2 설계 검토 · Astra",
+   "summary_ko": "GPT-6 Astra와 11차에 걸친 설계 검토와 그 사이 기준 스모크 · glm 보정 · 파일럿 결과, 본 런 설계 동결.",
+   "source_lines": {
+    "section:e52-review": [
+     5250,
+     5660
+    ]
+   }
+  },
+  {
+   "file": "e52_squid5_smoke_game__e52-smoke.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-smoke",
+   "experiment": "squid5_smoke_game",
+   "date": "2026-09-24",
+   "run_folders": [
+    "~/squid5-runs/squid5_smoke_game_sonnet5",
+    "~/squid5-runs/squid5_smoke_game_fable51",
+    "~/squid5-runs/squid5_smoke_game_astra"
+   ],
+   "title_ko": "5.2 스모크 · 3라운드 게임",
+   "summary_ko": "3라운드 게임 · 잔액 20,000, Sonnet 5 · Fable 5.1 · Astra 팔마다 1판. 판은 끝까지 돌고 실패는 대부분 한도를 작게 잡아서 생김.",
+   "source_lines": {
+    "context:v0-conclusion": [
+     3549,
+     3558
+    ],
+    "section:e52-smoke": [
+     6062,
+     6093
+    ]
+   }
+  },
+  {
+   "file": "e52_squid5_calibrate__e52-calib.html",
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-calib",
+   "experiment": "squid5_calibrate",
+   "date": "2026-09-24",
+   "run_folders": [
+    "~/squid5-runs/main (squid5_calibrate_*)"
+   ],
+   "title_ko": "5.2 보정 시도 · 멈춤",
+   "summary_ko": "압박 없는 5.2 게임 보정(gpt-oss:120b, glm-5.3-flash) 4번 모두 실패: gpt-oss는 단서를 65% 숨겨 정답률 0.32, glm은 계획 상한에 걸림.",
+   "source_lines": {
+    "section:e52-calib": [
+     6094,
+     6116
+    ]
+   }
+  }
+ ],
+ "skipped": [
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-metric",
+   "reason": "design: 지표 근거(Chollet 변화율) 설명, 실행 결과 없음"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "anchor": "e51-what + e51-prompts",
+   "reason": "design: 원래 5.1 측정 정의와 옛 v4 프롬프트 원문"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52.html",
+   "anchor": "e52-v13",
+   "reason": "design: v13 아레나 확장 제안(구현 안 함; 설계 루프 기록만)"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52.html",
+   "anchor": "e52-eval",
+   "reason": "design: 2차원 평가 제안"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52.html",
+   "anchor": "e52-lead",
+   "reason": "design: 팀장 상의 항목"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-rubric",
+   "reason": "design: 아레나 루브릭"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v9",
+   "reason": "design: v9 설계안(picopark 그림 포함, 구현은 v9-talk 페이지)"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v9pd",
+   "reason": "design: 정산 PD 변형 아이디어 평가"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v10room",
+   "reason": "design: 한 방·최후 1인 설계 논의"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v8",
+   "reason": "design: 규칙 기반 NPC · 이벤트 블록 설계안"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v65-was + e52-changes",
+   "reason": "design: 옮김 배너와 v0→현재 변경표 (배너의 v6.5 섞은 판 요약 callout은 e52_v65_mixed 페이지에 맥락으로 붙임)"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v6 (prompt) / e52-v6prompt",
+   "reason": "design: v6.4 규칙과 프롬프트 원문 (앞의 목적·결론 상자는 e52_v6_smoke__e52-v6runs에 맥락으로 붙임)"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-v62-rules",
+   "reason": "design: v6.2 규칙 · 프롬프트"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-hpred",
+   "reason": "design: 자기 보존 강한 모델의 예상 행동"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-story",
+   "reason": "design: 서사 제안"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-what + e52-signal",
+   "reason": "design: 원래 5.2 측정과 시그널 게임 구조"
+  },
+  {
+   "source": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "anchor": "e52-fix + e52-more",
+   "reason": "design: 고칠 것 목록(09-25)"
+  }
+ ],
+ "verification": {
+  "text_contained_all_sections": true,
+  "script_ids_missing": "none (v10 script builds ids by prefix v10-plot-/v10-tip-/v10-wrap-/v10-lg- + arm; all built ids exist)",
+  "svg_url_refs_missing": 0,
+  "console_errors": 0,
+  "broken_images": 0,
+  "min_body_height_px": 1378,
+  "horizontal_scroll_at_390px": [],
+  "notes": [
+   "styles: all inline <style> blocks of the source page hoisted to <head> in source order (same cascade as the original); style.css inlined; site.js and TOC/pager dropped",
+   "in-page #anchors to sections carried into another split page were rewritten to that split file; anchors to skipped sections point at the original page name (e.g. e52.html#e52-eval); links to index.html/e50 pages left as-is",
+   "e51-v11 fragment has one stray </div> (cause of the original mis-nesting); kept verbatim, harmless in the split page",
+   "filenames for squid5_* keys carry an e51_/e52_ prefix (manifest 'experiment' keeps the plain key)",
+   "no relative assets needed: picopark images are only in skipped e52-v9"
+  ]
+ }
+}

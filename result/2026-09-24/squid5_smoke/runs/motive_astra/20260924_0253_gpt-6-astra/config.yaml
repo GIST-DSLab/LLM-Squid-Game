@@ -1,0 +1,15 @@
+name: squid5_smoke_motive_astra
+calibration: /Users/bagjuhyeon/squid5-runs/astra_calib.json
+mode: motive
+model:
+  kind: codex_cli
+  model: gpt-6-astra
+reps: 1
+out_root: /Users/bagjuhyeon/squid5-runs
+seed0: 1
+workers: 6
+cells:
+- cell_id: tok
+  currency: tokens
+- cell_id: pts
+  currency: points

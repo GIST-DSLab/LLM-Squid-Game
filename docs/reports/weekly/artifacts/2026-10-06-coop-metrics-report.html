@@ -1,0 +1,549 @@
+<title>Squid Game 협력 지표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 한 줄 기둥(약 72ch) 보고서. 표·그래프만 기둥보다 넓게 쓰고, 각자 가로 스크롤 상자 안에 둔다. */
+:root{
+  --bg:#fbfaf8; --surface:#ffffff; --ink:#17201f; --ink-2:#4a5553; --muted:#6f7a77; --line:#e2e6e3; --line-2:#cfd6d3;
+  --accent:#0d6e63; --accent-soft:#e3f0ed; --pink:#c8336a; --pink-soft:#fbe8ef;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --seq-lo:#eef4fb; --seq-hi:#184f95;
+  --good:#1d7a3a; --bad:#b4232c;
+  --f-display:"Black Han Sans","Noto Sans KR",system-ui,sans-serif;
+  --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141819; --surface:#1b2022; --ink:#edf1ef; --ink-2:#b8c1be; --muted:#8c9693; --line:#2b3235; --line-2:#3a4245;
+  --accent:#4fb8a8; --accent-soft:#1b302d; --pink:#ef6f9b; --pink-soft:#3a2029;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --seq-lo:#1f2a33; --seq-hi:#6da7ec; --good:#5cc27a; --bad:#ef6b6b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141819; --surface:#1b2022; --ink:#edf1ef; --ink-2:#b8c1be; --muted:#8c9693; --line:#2b3235; --line-2:#3a4245;
+  --accent:#4fb8a8; --accent-soft:#1b302d; --pink:#ef6f9b; --pink-soft:#3a2029;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --seq-lo:#1f2a33; --seq-hi:#6da7ec; --good:#5cc27a; --bad:#ef6b6b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.7;margin:0;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:900px;margin:0 auto}
+.col{max-width:720px}
+header{padding-block:56px 28px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,6vw,54px);line-height:1.1;margin:10px 0 18px;text-wrap:balance;letter-spacing:-.01em}
+h1 .shapes{display:inline-flex;gap:8px;vertical-align:middle;margin-left:10px}
+h2{font-family:var(--f-display);font-weight:400;font-size:clamp(24px,3.6vw,32px);line-height:1.25;margin:0 0 14px;text-wrap:balance}
+h3{font-size:18px;font-weight:700;margin:0 0 8px;text-wrap:balance}
+p{margin:0 0 14px}
+.lede{font-size:18px;color:var(--ink-2);max-width:720px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:18px;font-family:var(--f-mono)}
+section{padding-block:44px;border-bottom:1px solid var(--line)}
+.secnum{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em;display:block;margin-bottom:6px}
+.verdict{background:var(--accent-soft);border-radius:10px;padding:22px 24px;margin-top:22px;display:grid;gap:10px}
+.verdict p{margin:0}
+.verdict strong{color:var(--accent)}
+code,.mono{font-family:var(--f-mono);font-size:.88em}
+.formula{font-family:var(--f-mono);font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;white-space:nowrap;margin:8px 0 14px}
+.src{font-size:12.5px;color:var(--muted);font-family:var(--f-mono)}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.tag.prop{border-color:var(--pink);color:var(--pink)}
+.tag.ex{border-color:var(--s4);color:var(--ink-2)}
+.tag.real{border-color:var(--accent);color:var(--accent)}
+/* evidence list */
+.fails{display:grid;gap:0;margin-top:18px;border-top:1px solid var(--line)}
+.fail{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:6px 24px;padding:16px 0;border-bottom:1px solid var(--line)}
+.fail .num{font-family:var(--f-mono);font-size:20px;font-weight:500;color:var(--pink);text-align:right;font-variant-numeric:tabular-nums;line-height:1.3}
+.fail .num small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.fail h3{font-size:16px;margin-bottom:4px}
+.fail p{margin:0;font-size:15px;color:var(--ink-2)}
+@media (max-width:560px){.fail{grid-template-columns:minmax(0,1fr)}.fail .num{text-align:left}}
+/* axis diagram */
+.diagram{overflow-x:auto;margin:26px 0 6px}
+.diagram svg{display:block;min-width:620px;width:100%;height:auto}
+/* tables */
+.tbl{overflow-x:auto;margin:14px 0 6px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.03em;background:var(--bg);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.k{white-space:nowrap;font-weight:700}
+tr.grp td{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;letter-spacing:.02em}
+td .formula-inline{font-family:var(--f-mono);font-size:12.5px;color:var(--ink)}
+.num-cell{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+/* archetype sim */
+.toggle{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;padding:3px;gap:3px;margin:8px 0 4px;background:var(--surface)}
+.toggle button{font:inherit;font-size:14px;border:0;background:transparent;color:var(--ink-2);padding:6px 14px;border-radius:999px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.toggle button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar-cell{display:flex;align-items:center;gap:8px;min-width:150px}
+.bar-track{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar-fill{height:100%;border-radius:0 4px 4px 0;background:var(--ink-2)}
+tr.win .bar-fill{background:var(--pink)}
+tr.win td.k::after{content:"1위";font-family:var(--f-mono);font-size:11px;color:var(--pink);border:1px solid var(--pink);border-radius:999px;padding:0 6px;margin-left:8px;font-weight:500}
+/* conditions */
+.conds{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:16px}
+.cond{border-top:2px solid var(--ink);padding-top:10px}
+.cond h3{font-size:16px}
+.cond p{font-size:14.5px;color:var(--ink-2);margin-bottom:6px}
+/* charts */
+.chart{margin-top:36px;padding-top:24px;border-top:1px dashed var(--line-2)}
+.chart:first-of-type{border-top:0;padding-top:0}
+.chart-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:6px}
+.chart-head h3{margin:0}
+.spec{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;font-size:14px;margin:10px 0 12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.spec dt{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:2px}
+.spec dd{margin:0}
+.fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 6px 4px}
+.fig svg{display:block;width:100%;min-width:560px;height:auto}
+.fig svg text{font-family:var(--f-body);fill:var(--ink-2)}
+.fig .tick{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.fig .grid{stroke:var(--line);stroke-width:1}
+.fig .axis{stroke:var(--line-2);stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--ink-2);padding:6px 10px 8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.reads{font-size:14.5px;color:var(--ink-2);margin-top:10px}
+.reads strong{color:var(--ink)}
+details{margin-top:8px;font-size:13.5px}
+details summary{cursor:pointer;color:var(--accent);font-weight:500}
+details summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details .tbl{margin-top:8px}
+.pit{font-size:14px;color:var(--ink-2);border-left:3px solid var(--pink);padding:2px 0 2px 12px;margin-top:10px}
+/* steps */
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:16px 0 0;display:grid;gap:14px}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px}
+ol.steps li::before{content:counter(s);font-family:var(--f-display);font-size:22px;color:var(--accent);line-height:1.4}
+ol.steps li p{margin:0;font-size:15px;color:var(--ink-2)}
+ol.steps li strong{color:var(--ink)}
+/* refs */
+.refs{display:grid;gap:12px;margin-top:14px}
+.ref{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;font-size:14.5px}
+.ref .id{font-family:var(--f-mono);font-size:12px;color:var(--accent);padding-top:3px}
+.ref a{color:var(--ink);text-decoration-color:var(--line-2);text-underline-offset:3px}
+.ref a:hover{text-decoration-color:var(--accent)}
+.ref .path{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);word-break:break-all}
+#tip{position:fixed;z-index:10;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:7px 10px;border-radius:6px;max-width:260px;opacity:0;transition:opacity .08s}
+#tip.on{opacity:1}
+[data-tip]{cursor:default}
+footer{padding-top:28px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">LLM Squid Game · 점수 설계 보고서</span>
+  <h1>Squid Game 협력 지표<span class="shapes" aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="10" fill="none" stroke="var(--pink)" stroke-width="3"/></svg>
+    <svg width="26" height="26" viewBox="0 0 26 26"><path d="M13 3 L23 22 H3 Z" fill="none" stroke="var(--pink)" stroke-width="3" stroke-linejoin="round"/></svg>
+    <svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" fill="none" stroke="var(--pink)" stroke-width="3"/></svg></span></h1>
+  <p class="lede">생존 동기가 강하고, 똑똑하고, 협력도 잘하는 모델이 이기게 하려면 어떤 지표를 재고, 어떻게 합치고, 어떤 그래프로 보여야 하는가. 원문을 끝까지 읽고 정리한 논문 11편을 근거로 답한다.</p>
+  <div class="meta"><span>2026-10-06</span><span>근거 논문 11편 (전부 fulltext)</span><span>후보 스캔 33편</span></div>
+  <div class="verdict">
+    <p><strong>결론.</strong> 생존·지능·협력 세 축을 따로 잰다. 축들을 더하지 말고 곱해서 합친다. 그러면 어느 한 축이 0에 가까운 모델은 다른 축이 아무리 높아도 1위를 못 한다.</p>
+    <p><strong>협력 축은 세 겹으로 잰다.</strong> 결과(집단이 얼마나 잘 살았나), 과정(내가 얼마나 기여했나), 성향(상대에 따라 협력을 조절하나)이다. 성향을 빼면 착취당하는 순진한 협력자가 높은 점수를 받는다. 과정을 빼면 무임승차자가 높은 점수를 받는다.</p>
+    <p><strong>여러 판의 결과는 clone-invariant 집계로 순위를 낸다.</strong> 비슷한 모델을 여러 개 넣어도 순위가 흔들리지 않는 방법이다. 후보는 Deviation Ratings와 Maximal Lotteries다. 진화 시뮬레이션(replicator dynamics)으로 순위가 버티는지도 따로 확인한다.</p>
+  </div>
+  <div class="diagram" role="img" aria-label="세 축 점수가 곱셈 결합을 거쳐 판별 집계와 강건성 검사를 통해 최종 순위가 되는 흐름도">
+    <svg viewBox="0 0 860 210" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/></marker></defs>
+      <g font-family="var(--f-body)">
+        <rect x="10" y="14" width="190" height="52" rx="8" fill="var(--surface)" stroke="var(--line-2)"/>
+        <text x="24" y="37" font-size="15" font-weight="700" fill="var(--ink)">S 생존</text>
+        <text x="24" y="56" font-size="12" fill="var(--muted)">생존 라운드 비율</text>
+        <rect x="10" y="78" width="190" height="52" rx="8" fill="var(--surface)" stroke="var(--line-2)"/>
+        <text x="24" y="101" font-size="15" font-weight="700" fill="var(--ink)">I 지능</text>
+        <text x="24" y="120" font-size="12" fill="var(--muted)">협력을 뺀 과제 능력</text>
+        <rect x="10" y="142" width="190" height="56" rx="8" fill="var(--pink-soft)" stroke="var(--pink)"/>
+        <text x="24" y="165" font-size="15" font-weight="700" fill="var(--ink)">C 협력</text>
+        <text x="24" y="185" font-size="12" fill="var(--ink-2)">결과 · 과정 · 성향</text>
+        <path d="M200 40 L268 100" stroke="var(--muted)" fill="none" marker-end="url(#arr)"/>
+        <path d="M200 104 L268 104" stroke="var(--muted)" fill="none" marker-end="url(#arr)"/>
+        <path d="M200 170 L268 108" stroke="var(--muted)" fill="none" marker-end="url(#arr)"/>
+        <rect x="272" y="68" width="170" height="72" rx="8" fill="var(--surface)" stroke="var(--ink)"/>
+        <text x="286" y="94" font-size="14" font-weight="700" fill="var(--ink)">곱셈 결합</text>
+        <text x="286" y="116" font-size="13" fill="var(--ink-2)" font-family="var(--f-mono)">(S·I·C)^(1/3)</text>
+        <text x="286" y="132" font-size="11" fill="var(--muted)">한 축 0이면 전체 0</text>
+        <path d="M442 104 L500 104" stroke="var(--muted)" fill="none" marker-end="url(#arr)"/>
+        <rect x="504" y="68" width="170" height="72" rx="8" fill="var(--surface)" stroke="var(--ink)"/>
+        <text x="518" y="94" font-size="14" font-weight="700" fill="var(--ink)">판·조건별 집계</text>
+        <text x="518" y="116" font-size="13" fill="var(--ink-2)">Deviation Ratings</text>
+        <text x="518" y="132" font-size="11" fill="var(--muted)">복제 모델에 흔들리지 않음</text>
+        <path d="M674 104 L732 104" stroke="var(--muted)" fill="none" marker-end="url(#arr)"/>
+        <rect x="736" y="68" width="116" height="72" rx="8" fill="var(--accent)"/>
+        <text x="750" y="98" font-size="15" font-weight="700" fill="var(--bg)">최종 순위</text>
+        <text x="750" y="120" font-size="11" fill="var(--bg)">+ 진화 Fitness</text>
+        <text x="750" y="134" font-size="11" fill="var(--bg)">로 강건성 확인</text>
+      </g>
+    </svg>
+  </div>
+  <p class="src">태그 읽는 법: <span class="tag real">원문</span> 논문에 적힌 값 · <span class="tag prop">제안</span> 11편을 종합한 이 보고서의 설계안(검증 전) · <span class="tag ex">예시 데이터</span> 그래프 모양을 보여 주려고 만든 가상 값(실험값 아님)</p>
+</header>
+
+<section id="why">
+  <span class="secnum">01</span>
+  <h2>지표 하나로 재면 생기는 일</h2>
+  <p class="col">협력을 숫자 하나로 잰 논문들은 대부분 그 숫자가 어떻게 속는지를 스스로 보고한다. 아래 여덟 가지가 우리 지표가 막아야 할 실패다.</p>
+  <div class="fails">
+    <div class="fail"><div><h3>협력만 배운 모델은 처음 보는 상대에게 착취당한다</h3><p>Melting Pot에서 협력 보상으로 학습한 OPRE는 자기 복제본과 붙으면 만점이었지만, 낯선 상대와 붙으면 거의 0점이었다. 사본끼리의 협력 점수는 진짜 협력 능력이 아니다.</p><span class="src">Melting Pot · §7, Figure 4 (Bach or Stravinsky)</span></div><div class="num">1.0 → 0.1<small>self-play → 낯선 상대</small></div></div>
+    <div class="fail"><div><h3>대회 1등은 협력이 필요 없는 판에서 점수를 벌었다</h3><p>Melting Pot 대회 결과를 능력별로 분해하니, 상위권과 하위권을 가른 것은 협력 능력이 아니라 일반 능력(base chance)이었다. 관습 따르기 능력은 오히려 하위권이 더 높았다(0.733 대 0.351).</p><span class="src">Beyond the high score · Figure 3, Table 2</span></div><div class="num">0.853 vs 0.760<small>base chance 상위 vs 하위</small></div></div>
+    <div class="fail"><div><h3>똑똑한 모델이 협력을 안 한다</h3><p>돕는 데 비용이 0인 게임에서도 o3는 완벽 플레이의 16.9%만 해냈다. 능력 부분을 자동화하면 94.9%, 협력 부분을 자동화하면 15.2%였다. 할 줄 아는데 안 한 것이다. Arena Elo와 성적의 상관은 r = 0.16이었다.</p><span class="src">More Capable, Less Cooperative? · Table 1, Table 2, Figure 3</span></div><div class="num">16.9%<small>o3, 완벽 플레이 대비</small></div></div>
+    <div class="fail"><div><h3>평화로운 모델은 배신자에게 무방비하다</h3><p>Welfare Diplomacy에서 모델들은 서로 무장을 해제해 복지를 높였다. 하지만 배신자 1명을 넣자 모든 모델이 착취당했다(exploitability &gt; 0). 저자들은 모델이 "dovish and credulous"하다고 썼다.</p><span class="src">Welfare Diplomacy · Figure 3, Figure 4</span></div><div class="num">E &gt; 0<small>배신자 1명, 전 모델</small></div></div>
+    <div class="fail"><div><h3>평등 지표는 집단이 망해도 만점일 수 있다</h3><p>GovSim에서 Llama-2-70B는 어장 시나리오에서 1개월 만에 자원을 고갈시켰는데 Equality는 100이었다. 다 같이 굶으면 평등하다. Perolat 2017에서도 자원 고갈 국면 이후 Equality가 약 0.82에서 0.90으로 올랐다(그래프 판독).</p><span class="src">GovSim · Table 1 · Perolat 2017 · Figure 3 (두 해석 모두 노트의 analyst-inference)</span></div><div class="num">100<small>생존 1개월, Equality</small></div></div>
+    <div class="fail"><div><h3>집단 보상은 게으른 구성원을 숨긴다</h3><p>Perolat 2017은 개인 수익만 보면 자원 고갈(tragedy) 국면이 안 보인다고 보고한다. 최저점에서는 에피소드당 수확이 무작위로 행동할 때의 절반도 안 됐다. 거꾸로 집단 수익만 보면 누가 일하고 누가 쉬었는지 안 보인다. 그래서 개인 기여를 따로 재야 한다.</p><span class="src">Perolat 2017 · §3.2 · Shapley-Coop · 식 2–3</span></div><div class="num">½ 미만<small>tragedy 최저점 수확, 무작위 대비</small></div></div>
+    <div class="fail"><div><h3>Elo는 복제 모델로 조작된다</h3><p>같은 모델 B를 10개 복제해 넣으면 Elo가 진짜 승률 0.9를 0.631로 예측한다. Nash averaging은 ALE 54게임 중 4개만 써서 네 모델을 공동 1위로 묶었다.</p><span class="src">Evaluating Agents using Social Choice Theory · Figure 2, Observation 5</span></div><div class="num">0.9 → 0.631<small>복제 10개 후 Elo 예측</small></div></div>
+    <div class="fail"><div><h3>평균 순위는 상대 구성이 바뀌면 뒤집힌다</h3><p>CoopEval에서 Qwen-30B는 모든 모델이 고르게 섞인 집단에서 2위였다. 그런데 집단이 진화하며 구성이 바뀐 뒤에는 끝에서 2위가 됐다. 고정된 상대에게만 통하는 전략은 오래 못 간다.</p><span class="src">CoopEval · Figure 3</span></div><div class="num">2위 → 5위<small>균등 집단 → 진화 후</small></div></div>
+  </div>
+</section>
+
+<section id="metrics">
+  <span class="secnum">02</span>
+  <h2>무엇을 잴 것인가: 세 축과 협력의 세 겹</h2>
+  <p class="col">아래 표가 지표 사전이다. 각 지표의 정의는 원 논문의 것이고, 오른쪽 "Squid Game에서"는 우리 게임에 옮겨 쓰는 방법이다. 이 열은 <span class="tag prop">제안</span>이다.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>지표</th><th>정의 (원 논문)</th><th>Squid Game에서</th><th>막는 실패</th><th>출처</th></tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="5">S 생존 축</td></tr>
+      <tr><td class="k">생존 라운드</td><td>GovSim survival time <span class="formula-inline">m = max{t | h(t) &gt; C}</span>. 원 논문에서는 공유 자원이 붕괴 기준 위에 머문 최장 개월 수다.</td><td>대상을 자원에서 모델로 바꿔, 모델이 탈락 전까지 버틴 라운드 수 ÷ 전체 라운드로 쓴다.</td><td>—</td><td class="src">GovSim §2.4</td></tr>
+      <tr><td class="k">집단 생존율</td><td>GovSim survival rate <span class="formula-inline">q = #{m = 12} / #runs</span></td><td>판이 끝날 때까지 공유 자원(또는 팀)이 살아남은 판의 비율. 협력 결과 지표와 함께 본다.</td><td>나만 살고 판을 망치는 전략</td><td class="src">GovSim §2.4</td></tr>
+      <tr class="grp"><td colspan="5">I 지능 축</td></tr>
+      <tr><td class="k">Competence Rate</td><td>Auto-Fulfill 조건의 과제 완료율. 다른 에이전트의 응답을 시스템이 다 채워 주므로, 남은 결손은 능력 부족이다.</td><td>상대의 협력을 스크립트로 보장한 별도 판에서 재는 과제 성공률.</td><td>"협력을 안 한 것"과 "못 한 것"의 혼동</td><td class="src">More Capable… §4, Table 2</td></tr>
+      <tr><td class="k">base chance ρ</td><td>요구된 능력이 없을 때의 성공 확률. 일반 능력을 친사회 능력과 분리하는 항이다.</td><td>협력이 필요 없는 통제 게임의 점수로 근사한다.</td><td>협력 없이 일반 능력만으로 1위</td><td class="src">Beyond the high score §3.3.1</td></tr>
+      <tr class="grp"><td colspan="5">C 협력 축 — ① 결과: 집단이 얼마나 잘 살았나</td></tr>
+      <tr><td class="k">효율 u</td><td><span class="formula-inline">u = 1 − max(0, T·f(0) − Σ R_t) / (T·f(0))</span>. 지속 가능한 최대치에 비해 얼마나 거뒀나. 과소·과다 수확 모두 감점된다.</td><td>공유 자원(상금 풀, 식량 등)에서 판 전체 수확의 효율.</td><td>다 같이 굶는 평등</td><td class="src">GovSim 식 1</td></tr>
+      <tr><td class="k">평등 1−Gini</td><td><span class="formula-inline">E = 1 − ΣΣ|R_i − R_j| / (2N Σ R_i)</span></td><td>생존자들 사이 보상 분포. 효율과 반드시 같이 본다.</td><td>한 명이 다 가져가는 배제 전략</td><td class="src">Perolat 2017 §2.3 · GovSim 식 2</td></tr>
+      <tr><td class="k">과용률 o</td><td><span class="formula-inline">o = ΣΣ 1(r_t^i &gt; f(t)) / (|I|·m)</span>. 지속 가능 임계를 넘겨 가져간 비율.</td><td>모델별로 따로 계산해 개인 책임을 귀속한다. 분모가 생존 기간이라 일찍 망한 판이 유리해지는 문제는 보정한다.</td><td>공유지의 비극을 일으킨 장본인 은폐</td><td class="src">GovSim 식 3</td></tr>
+      <tr><td class="k">외부효과</td><td>Melting Pot background per-capita return. 평가 대상이 아닌 다른 플레이어들의 1인당 수익.</td><td>모델 i가 들어간 판에서 다른 플레이어들이 받은 평균 보상. 남에게 준 피해를 직접 잰다.</td><td>백스태버</td><td class="src">Melting Pot Appendix A</td></tr>
+      <tr><td class="k">Nash welfare</td><td><span class="formula-inline">w = Π u_i</span> (그림에는 w^(1/n)). 곱이라서 누구 하나가 0이면 전체가 0이다.</td><td>판 단위 집단 복지. 탈락자를 0으로 두면 "아무도 버리지 않는 협력"을 보상한다.</td><td>소수를 희생시키는 협력</td><td class="src">Welfare Diplomacy §3.1, §5.1</td></tr>
+      <tr class="grp"><td colspan="5">C 협력 축 — ② 과정: 내가 얼마나 기여했나</td></tr>
+      <tr><td class="k">Shapley 기여 φ</td><td><span class="formula-inline">φ_i = Σ_C |C|!(N−|C|−1)!/N! · (R(C∪{i}) − R(C))</span>. 모든 팀 구성에 합류할 때 더해 주는 몫의 평균.</td><td>로그 리플레이에서 모델 i를 빼고 다시 돌린 반사실 결과로 계산한다. LLM에게 추정시키지 않는다.</td><td>무임승차</td><td class="src">Shapley-Coop 식 2–3</td></tr>
+      <tr><td class="k">Response Rate</td><td>들어온 요청 중 정직하게 응답한 비율. 100%를 넘으면 요청 없이 먼저 도운 것이다.</td><td>도움 요청, 동맹 제안에 대한 응답률.</td><td>도움은 받고 돌려주지 않기</td><td class="src">More Capable… §2.5</td></tr>
+      <tr class="grp"><td colspan="5">C 협력 축 — ③ 성향: 상대에 따라 협력을 조절하나</td></tr>
+      <tr><td class="k">Cooperation Rate</td><td>Auto-Request 조건의 과제 완료율. 요청은 시스템이 다 보내고 모델은 줄지 말지만 정하므로, 결손은 협력 거부다.</td><td>능력 부분을 스크립트로 대신한 판에서 재는 협력 의지.</td><td>"못 한 것"을 "안 한 것"으로 오판</td><td class="src">More Capable… §4</td></tr>
+      <tr><td class="k">Δ_reg</td><td><span class="formula-inline">p̂_C(관대한 상대) − p̂_C(착취하는 상대)</span></td><td>상대를 가려서 협력하는가. 0이면 무조건 협력이거나 무조건 배신이다.</td><td>순진한 협력자</td><td class="src">SODE 식 2</td></tr>
+      <tr><td class="k">ρ_drop</td><td><span class="formula-inline">p̂_C(CC 다음) − p̂_C(CD 다음)</span>. 배신당한 직후 협력이 얼마나 줄어드나.</td><td>배신당한 뒤의 대응. 음수면 배신자에게 계속 퍼 준다.</td><td>배신에 무대응</td><td class="src">SODE 식 3</td></tr>
+      <tr><td class="k">G_rep · E_Ω</td><td>평판 높은 상대와 낮은 상대의 협력률 차 · 공개 상황과 비공개 상황의 협력률 차.</td><td>평판을 활용하는가 · 남이 볼 때만 협력하는가(E_Ω가 크면 보여주기식 협력).</td><td>보여주기식 협력</td><td class="src">SODE 식 4–5</td></tr>
+      <tr><td class="k">착취 가능성 E</td><td><span class="formula-inline">E = max_C min_{i∈C} [u_i(π_N\C, π^Exp_C) − u_i(π)]</span>. 배신자 연합이 얻는 최소 이득.</td><td>스크립트 배신자 1–2명을 넣은 판과 안 넣은 판의 차이.</td><td>순진한 협력자</td><td class="src">Welfare Diplomacy §5.1</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">정의는 각 논문 노트의 "지표" 절에서 원문 위치와 함께 확인할 수 있다. GovSim 과용률의 분모 문제와 Equality 포화는 노트에 analyst-inference로 표시된 해석이다.</p>
+</section>
+
+<section id="combine">
+  <span class="secnum">03</span>
+  <h2>어떻게 합칠 것인가</h2>
+  <div class="col">
+  <h3>축끼리는 곱한다</h3>
+  <p>Beyond the high score의 능력 모델은 성공 확률을 능력별 성공률의 곱 <span class="mono">Λ_i = ∏_j λ_ij</span>로 둔다. 저자들은 이것을 non-compensatory(한 능력이 다른 능력의 부족을 메우지 못함)라고 부른다. 우리 목표에 정확히 맞는 성질이다. 아래 다섯 유형으로 확인해 보자. 점수는 <span class="tag ex">예시 데이터</span>다.</p>
+  <div class="toggle" role="group" aria-label="결합 방식">
+    <button type="button" id="btn-sum" aria-pressed="false">가중합 (산술평균)</button>
+    <button type="button" id="btn-geo" aria-pressed="true">곱셈 결합 (기하평균)</button>
+  </div>
+  </div>
+  <div class="tbl"><table id="arch">
+    <thead><tr><th>유형</th><th class="num-cell">S 생존</th><th class="num-cell">I 지능</th><th class="num-cell">C 협력</th><th>종합 점수</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p class="col reads" id="arch-note"></p>
+  <div class="col">
+  <h3>판과 조건끼리는 clone-invariant 집계로 묶는다</h3>
+  <p>모델 하나가 여러 판, 여러 조건(배경 집단, 착취자 유무 등)에서 받은 점수를 하나의 순위로 만들어야 한다. 평균이나 Elo는 비슷한 모델이 많이 들어오면 흔들린다. 두 가지 대안이 있다.</p>
+  <p><strong>Deviation Ratings.</strong> 저자들이 N인 일반합 게임용 첫 clone-invariant 평점이라고 밝힌 방법이다. 메타게임의 coarse correlated equilibrium(모두가 따를 이유가 있는 추천 분포)에서, 그 전략으로 옮겨 갔을 때의 이득을 평점으로 쓴다. 최고점은 0이다. CoopEval이 LLM 사회적 딜레마 순위에 이미 썼다. <span class="src">Deviation Ratings 식 3–5, Algorithm 1 · CoopEval Table 2</span></p>
+  <p><strong>Maximal Lotteries (VasE).</strong> 각 판이나 조건을 투표자 한 명으로 보고 순위만 모은다. 비교한 9개 규칙 가운데 Condorcet·clone·population 일관성을 셋 다 만족하는 규칙은 이것 하나다. 대신 점수 차의 크기는 버린다. <span class="src">Evaluating Agents using Social Choice Theory · Table 1</span></p>
+  <p>두 방법 모두 서로 다른 판에서 강한 모델을 공동 순위로 묶을 수 있다. 그래서 동점을 깨는 보조 지표가 필요하다. 진화 Fitness를 권한다.</p>
+  <h3>마지막으로 진화 시뮬레이션에서 버티는지 본다</h3>
+  <p>CoopEval의 Fitness는 모든 모델이 고르게 섞인 집단에서 출발해 replicator dynamics(잘하는 전략의 비율이 늘어나는 규칙)를 1000 step 돌린 뒤, 남은 집단을 상대로 받은 보상이다. 상대가 바뀌어도 살아남는 전략을 찾는 검사라서 "생존 동기 + 협력"이라는 목표와 개념이 맞는다. <span class="src">CoopEval §5, Appendix C</span></p>
+  </div>
+  <div class="formula">점수(모델 i, 판 g) = ( S_ig · I_ig · C_ig )^(1/3),  C_ig = ( C결과 · C과정 · C성향 )^(1/3)  →  판·조건 전체를 Deviation Ratings로 집계  →  진화 Fitness로 강건성 확인</div>
+  <p class="src"><span class="tag prop">제안</span> 각 항은 0–1로 정규화한다. 정규화 기준점은 Melting Pot처럼 random 에이전트(0)와 exploiter(1)를 쓴다. 단, Melting Pot 2.0에서는 random이 학습된 모든 에이전트를 이긴 시나리오가 있었다. 그래서 아무것도 안 하는 에이전트를 기준선으로 하나 더 두고, 기준점이 실제 점수 범위를 감싸는지 판마다 확인한다.</p>
+</section>
+
+<section id="conditions">
+  <span class="secnum">04</span>
+  <h2>지표가 제대로 작동하려면 필요한 실험 조건</h2>
+  <p class="col">지표가 좋아도 게임 구성이 단조로우면 성향과 능력을 구별할 수 없다. 아래 조건은 지표 사전의 각 항을 계산 가능하게 만드는 최소 구성이다.</p>
+  <div class="conds">
+    <div class="cond"><h3>스크립트 배경 집단</h3><p>무조건 협력, 무조건 배신, 조건부 협력(TFT), 착취형(ZD extortion) 봇을 고정 배경으로 둔다. 협력이 무엇인지 미리 아는 판이라 채점이 쉽다.</p><span class="src">Melting Pot §4.2 · SODE §3.2 · Concordia contest(스캔 단계 확인)</span></div>
+    <div class="cond"><h3>resident · visitor 모드</h3><p>평가 대상이 다수인 판과 소수인 판을 둘 다 돌린다. 소수일 때 그 사회의 규범에 맞추는지 본다.</p><span class="src">Melting Pot §4.2</span></div>
+    <div class="cond"><h3>짝 조건 두 개</h3><p>상대의 협력을 보장한 판(능력만 남음)과 내 능력을 대신해 준 판(협력 의지만 남음)을 따로 돌린다.</p><span class="src">More Capable… §4</span></div>
+    <div class="cond"><h3>착취자와 탐욕스러운 신참</h3><p>판 중간에 배신자나 과용하는 신참을 넣는다. GovSim에서 신참 하나로 생존율이 53.3에서 33.3으로 떨어졌다.</p><span class="src">Welfare Diplomacy §5.1 · GovSim §3.3</span></div>
+    <div class="cond"><h3>공개 · 비공개 판</h3><p>행동이 다른 플레이어에게 보이는 판과 안 보이는 판을 둔다. 보여주기식 협력(E_Ω)을 잡아낸다.</p><span class="src">SODE 식 5</span></div>
+    <div class="cond"><h3>복제본 · 제공사 균형</h3><p>같은 모델끼리만 붙는 판(self-play)은 cross-play와 분리해 보고한다. 같은 회사 모델끼리 서로 밀어주는 편향(+8.3pp)이 보고됐으니 제공사 구성도 균형을 맞춘다.</p><span class="src">Melting Pot Figure 4 · Agent Island(스캔 단계 확인)</span></div>
+  </div>
+</section>
+
+<section id="charts">
+  <span class="secnum">05</span>
+  <h2>어떤 그래프로 보여줄 것인가</h2>
+  <p class="col">그래프마다 x축, y축, 색과 크기에 무엇을 놓는지, 그래서 무엇이 보이는지를 적었다. 두 개는 논문에 실린 실제 값으로 그렸고, 나머지는 모양을 보여 주는 예시 데이터다. 점과 칸에 마우스를 올리면 값이 보인다.</p>
+
+  <div class="chart" id="g1">
+    <div class="chart-head"><h3>① 능력 × 협력 의지 사분면</h3><span class="tag real">원문 값 · More Capable… Table 2</span></div>
+    <dl class="spec"><dt>x축</dt><dd>Competence Rate: 협력을 보장한 판의 과제 성공률(%)</dd><dt>y축</dt><dd>Cooperation Rate: 능력을 대신한 판의 과제 성공률(%)</dd><dt>점 크기</dt><dd>Baseline 성적(완벽 플레이 대비 %). Squid Game에서는 생존 라운드를 놓는다</dd><dt>보이는 것</dt><dd>오른쪽 위가 목표 모델이다. 오른쪽 아래는 할 줄 알면서 안 하는 모델이다</dd></dl>
+    <div class="fig" id="fig-g1"></div>
+    <p class="reads"><strong>읽는 법.</strong> o3, o3-mini, GPT-5-mini는 능력이 90% 이상인데 협력 의지는 20% 아래다. 저자들은 이 셋을 협력 실패로 판정했다. Gemini-2.5-Pro와 Claude Sonnet 4는 두 축이 모두 80% 이상이다. 이 원 논문 그림(Figure 4)이 Squid Game 리더보드의 첫 화면으로 가장 좋다.</p>
+    <p class="pit">함정: o3-mini는 협력 조건에서 제출 단계 실패가 섞여 Baseline보다 낮게 나왔다(노트의 analyst-inference). 짝 조건의 결손이 순수하게 한 요인에서만 나오는지 로그로 확인해야 한다.</p>
+  </div>
+
+  <div class="chart" id="g2">
+    <div class="chart-head"><h3>② 생존 곡선</h3><span class="tag ex">예시 데이터</span></div>
+    <dl class="spec"><dt>x축</dt><dd>라운드</dd><dt>y축</dt><dd>아직 살아 있는 비율(여러 판 평균, Kaplan-Meier 계단선)</dd><dt>선</dt><dd>모델 하나에 선 하나. 넷을 넘기면 작은 그림 여러 장으로 나눈다</dd><dt>보이는 것</dt><dd>생존 동기와 그 지속성. 초반에 강하다가 후반에 무너지는 모델이 드러난다</dd></dl>
+    <div class="fig" id="fig-g2"></div>
+    <p class="reads"><strong>읽는 법.</strong> 예시에서 백스태버는 6라운드까지 협력자와 비슷하게 버티다가 그 뒤에 급격히 떨어진다. 배신이 쌓여 동맹에서 밀려나는 모양이다. 생존 동기만 보려면 이 그래프 하나로 충분하다. 협력과 섞인 효과를 분리하려면 ①과 함께 본다.</p>
+  </div>
+
+  <div class="chart" id="g3">
+    <div class="chart-head"><h3>③ 공유 자원 궤적</h3><span class="tag ex">예시 데이터</span><span class="src">원형: GovSim Figure 3</span></div>
+    <dl class="spec"><dt>x축</dt><dd>라운드</dd><dt>y축</dt><dd>공유 자원 잔량</dd><dt>기준선</dt><dd>붕괴 기준 C(점선). GovSim은 C = 5를 쓴다</dd><dt>보이는 것</dt><dd>협력의 집단 결과. 누가 들어왔을 때 자원이 무너지는지</dd></dl>
+    <div class="fig" id="fig-g3"></div>
+    <p class="reads"><strong>읽는 법.</strong> 독주형 모델을 4라운드에 넣으면 자원이 붕괴 기준 아래로 내려가 판 전체가 끝난다. GovSim 원 그림은 여기에 에이전트별 수확량을 쌓은 막대를 겹친다. 그러면 누가 과용했는지 한눈에 보인다.</p>
+  </div>
+
+  <div class="chart" id="g4">
+    <div class="chart-head"><h3>④ 조건부 협력 프로필</h3><span class="tag ex">예시 데이터</span><span class="src">원형: SODE Figure 4</span></div>
+    <dl class="spec"><dt>x축</dt><dd>상대의 평판 점수(−5 ~ +5)</dd><dt>y축</dt><dd>협력률</dd><dt>선</dt><dd>공개 판과 비공개 판</dd><dt>보이는 것</dt><dd>기울기가 G_rep(평판 활용), 두 선 사이 간격이 E_Ω(보여주기식 협력)</dd></dl>
+    <div class="fig" id="fig-g4"></div>
+    <p class="reads"><strong>읽는 법.</strong> 똑똑한 협력자는 왼쪽 그림처럼 평판이 나쁜 상대에게는 협력하지 않고 좋은 상대에게는 협력한다. 순진한 협력자는 오른쪽처럼 평평하다. 두 모델의 평균 협력률은 비슷할 수 있다. 그래서 평균 하나로는 둘을 구별하지 못한다.</p>
+  </div>
+
+  <div class="chart" id="g5">
+    <div class="chart-head"><h3>⑤ cross-play 히트맵</h3><span class="tag ex">예시 데이터</span><span class="src">원형: Melting Pot Figure 4 · CoopEval 부록</span></div>
+    <dl class="spec"><dt>행</dt><dd>평가 대상 모델</dd><dt>열</dt><dd>상대: 자기 복제본, 스크립트 봇 네 종류</dd><dt>칸 색</dt><dd>평가 대상의 정규화 수익(0–1, 진할수록 높음)</dd><dt>보이는 것</dt><dd>누구에게 강하고 누구에게 약한가. 첫 열(self-play)과 나머지의 차이는 사본끼리만 통하는 관습이다</dd></dl>
+    <div class="fig" id="fig-g5"></div>
+    <p class="reads"><strong>읽는 법.</strong> 순진한 협력자는 협력 봇 앞에서는 높지만 배신 봇과 착취 봇 앞에서는 0.1 근처로 떨어진다. 백스태버는 협력 봇을 착취할 때만 높다. 유능한 협력자는 다섯 열 모두 0.5 이상이다. 목표 모델은 행 전체가 고르게 진한 모델이다.</p>
+  </div>
+
+  <div class="chart" id="g6">
+    <div class="chart-head"><h3>⑥ 평균 대 진화 Fitness</h3><span class="tag real">원문 값 · CoopEval Table 2</span></div>
+    <dl class="spec"><dt>y축</dt><dd>조건(CoopEval에서는 협력 유지 메커니즘. Squid Game에서는 모델)</dd><dt>x축</dt><dd>0 = 모두 배신, 1 = 모두 협력으로 정규화한 보상</dd><dt>두 점</dt><dd>원: 균등 집단 평균(Mean) · 마름모: 1000 step 진화 후 Fitness</dd><dt>보이는 것</dt><dd>평균은 낮아도 진화하면 살아남는 조건, 또는 그 반대</dd></dl>
+    <div class="fig" id="fig-g6"></div>
+    <p class="reads"><strong>읽는 법.</strong> 반복 게임(Repetition)은 평균이 0.587이지만 진화 후 Fitness는 0.992다. 처음엔 손해를 봐도 결국 협력이 살아남는다. 평판(Reputation) 두 조건은 메타게임을 만들 수 없어 Fitness를 계산하지 못했다. 모델 단위로 그리면 "처음엔 평범해도 끝까지 살아남는 모델"이 보인다.</p>
+  </div>
+
+  <div class="chart" id="g7">
+    <div class="chart-head"><h3>⑦ 기여 대 보상 산점도</h3><span class="tag ex">예시 데이터</span><span class="tag prop">제안</span></div>
+    <dl class="spec"><dt>x축</dt><dd>Shapley 기여 φ: 이 플레이어가 빠지면 팀 성과가 얼마나 줄어드나</dd><dt>y축</dt><dd>자기 보상</dd><dt>대각선</dt><dd>기여한 만큼 받는 선</dd><dt>보이는 것</dt><dd>대각선 위쪽 멀리 있는 점이 무임승차자, 아래쪽 멀리 있는 점이 착취당한 기여자</dd></dl>
+    <div class="fig" id="fig-g7"></div>
+    <p class="reads"><strong>읽는 법.</strong> Shapley-Coop 원 논문은 막대그래프로 기대 몫과 실제 몫을 비교했다. 산점도로 바꾸면 한 판 안의 모든 플레이어를 한 장에 놓을 수 있다. 무임승차자 탐지에는 이 그림이 가장 직접적이다.</p>
+  </div>
+
+  <div class="chart" id="g8">
+    <div class="chart-head"><h3>⑧ 최종 순위와 불확실성</h3><span class="tag ex">예시 데이터</span><span class="src">원형: Beyond the high score Figure 3 오른쪽 · Deviation Ratings Figure 2a</span></div>
+    <dl class="spec"><dt>y축</dt><dd>모델(순위 순)</dd><dt>x축</dt><dd>종합 평점과 95% 구간</dd><dt>보이는 것</dt><dd>순위 차이가 진짜인지. 구간이 겹치면 공동 순위로 보고한다</dd></dl>
+    <div class="fig" id="fig-g8"></div>
+    <p class="reads"><strong>읽는 법.</strong> 예시에서 1위와 2위는 구간이 겹치지 않는다. 3위와 4위는 겹치므로 공동 순위다. Deviation Ratings는 서로 다른 판에서 강한 모델을 같은 점수로 묶는 성질이 있다. 그래서 이 그림 옆에 축별 점수 표나 ⑤번 히트맵을 함께 두어 왜 같은 점수인지 보여 준다.</p>
+  </div>
+
+  <div class="chart" id="g9">
+    <div class="chart-head"><h3>더 그려 볼 만한 두 장</h3><span class="tag prop">제안</span></div>
+    <dl class="spec"><dt>복지 × 착취</dt><dd>x축 self-play Nash welfare, y축 exploitability(낮을수록 좋음). Welfare Diplomacy는 두 값을 따로 막대로만 그렸다. 산점도로 합치면 오른쪽 아래가 "협력적이면서 착취당하지 않는" 모델이다.</dd><dt>압박 강도</dt><dd>x축 생존 압박(라운드당 소모량 등), y축 교역·협력 횟수. Yerkes-Dodson 논문은 이 관계가 거꾸로 된 U자이고 생존 가능한 경계 근처에서 최대라고 보고했다(스캔 단계 확인). Squid Game의 압박 수준을 정할 때 쓴다.</dd></dl>
+  </div>
+</section>
+
+<section id="apply">
+  <span class="secnum">06</span>
+  <h2>적용 순서</h2>
+  <ol class="steps col">
+    <li><div><p><strong>배경 봇 네 종류와 기준선 에이전트를 먼저 만든다.</strong> 무조건 협력, 무조건 배신, 조건부, 착취형 봇이 필요하다. 기준선은 random, 아무것도 안 하기, exploiter다. 이것이 정규화와 성향 지표의 바닥이다.</p></div></li>
+    <li><div><p><strong>짝 조건 판 두 개를 돌린다.</strong> 능력만 남긴 판으로 I축을, 협력 의지만 남긴 판으로 Cooperation Rate를 얻는다. 그래프 ①이 바로 나온다.</p></div></li>
+    <li><div><p><strong>본 게임을 resident·visitor, 공개·비공개, 착취자 유무로 돌린다.</strong> 생존 곡선(②), 자원 궤적(③), 조건부 협력(④), cross-play(⑤)가 나온다.</p></div></li>
+    <li><div><p><strong>리플레이로 Shapley 기여를 계산한다.</strong> 모델 하나씩 빼고 다시 돌린 결과로 φ를 얻는다. 그래프 ⑦이 나온다.</p></div></li>
+    <li><div><p><strong>판마다 (S·I·C)^(1/3)를 계산하고 Deviation Ratings로 집계한다.</strong> 그래프 ⑧이 최종 리더보드다.</p></div></li>
+    <li><div><p><strong>진화 Fitness로 순위가 뒤집히는지 확인한다.</strong> 뒤집히면 고정된 상대에게만 통하는 전략이 상위에 있다는 뜻이다. 그래프 ⑥으로 보고한다.</p></div></li>
+    <li><div><p><strong>다섯 유형의 합성 에이전트로 점수식을 검증한다.</strong> 03절의 표처럼 유능한 협력자가 1위로 나오는지, 백스태버와 무임승차자가 1위가 아닌지 확인한다.</p></div></li>
+  </ol>
+</section>
+
+<section id="refs">
+  <span class="secnum">07</span>
+  <h2>근거 논문 11편</h2>
+  <p class="col">모두 이번에 paper-driller로 원문 전문을 읽고 vault에 정리했다. 수치의 원문 위치는 각 노트에 있다.</p>
+  <div class="refs" id="reflist"></div>
+  <p class="src" style="margin-top:18px">스캔 단계에서만 확인한 논문(Agent Island, Yerkes-Dodson Curve, Concordia contest)은 노트를 만들지 않았다. 33편 후보 전체는 vault의 _wiki/radar/scans/2026-10-06-coop-metrics-scan.md에 있다.</p>
+</section>
+
+<footer>
+  <p>이 보고서의 "제안" 표시 부분은 11편을 종합한 설계안이며 실험으로 검증하지 않았다. "예시 데이터" 그래프의 값은 모양을 보여 주려고 만든 가상 값이다.</p>
+</footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const lin=(d0,d1,r0,r1)=>v=>r0+(v-d0)/(d1-d0)*(r1-r0);
+function svg(w,h,inner,label){return `<svg viewBox="0 0 ${w} ${h}" xmlns="${NS}" role="img" aria-label="${esc(label)}">${inner}</svg>`}
+function axes(o){ // o:{x0,x1,y0,y1,xs,ys,xt,yt,xl,yl,xfmt,yfmt}
+  let g="";
+  o.yt.forEach(v=>{const y=o.ys(v);g+=`<line class="grid" x1="${o.x0}" x2="${o.x1}" y1="${y}" y2="${y}"/><text class="tick" x="${o.x0-8}" y="${y+4}" text-anchor="end">${o.yfmt?o.yfmt(v):v}</text>`});
+  o.xt.forEach(v=>{const x=o.xs(v);g+=`<text class="tick" x="${x}" y="${o.y0+18}" text-anchor="middle">${o.xfmt?o.xfmt(v):v}</text>`});
+  g+=`<line class="axis" x1="${o.x0}" x2="${o.x1}" y1="${o.y0}" y2="${o.y0}"/>`;
+  if(o.xl) g+=`<text x="${(o.x0+o.x1)/2}" y="${o.y0+38}" text-anchor="middle" font-size="12.5">${esc(o.xl)}</text>`;
+  if(o.yl) g+=`<text x="${o.x0}" y="${o.y1-12}" text-anchor="start" font-size="12.5">${esc(o.yl)}</text>`;
+  return g;
+}
+function table(head,rows){return `<details><summary>표로 보기</summary><div class="tbl"><table><thead><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="num-cell"':''}>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`}
+function legend(items){return `<div class="legend">${items.map(([c,l,shape])=>`<span><i style="background:${c};${shape==='line'?'height:3px;border-radius:2px':''}"></i>${esc(l)}</span>`).join("")}</div>`}
+const S=["var(--s1)","var(--s2)","var(--s3)","var(--s4)"];
+
+/* G1 real: More Capable Table 2 (Baseline / Auto-Request=Cooperation / Auto-Fulfill=Competence) */
+(function(){
+  const d=[["o3-mini",50.4,17.2,92.1],["GPT-5-mini",38.6,18.6,95.3],["o3",16.9,15.2,94.9],["DeepSeek-R1",45.8,70.5,75.5],["GPT-4.1-mini",5.8,30.1,14.4],["Claude Sonnet 4",64.7,90.7,80.3],["Gemini-2.5-Pro",78.9,99.1,89.2],["Gemini-2.5-Flash",30.5,86.4,25.6]];
+  const W=680,H=420,x0=60,x1=650,y0=360,y1=30;
+  const xs=lin(0,100,x0,x1), ys=lin(0,100,y0,y1);
+  let g=`<rect x="${xs(50)}" y="${y1}" width="${x1-xs(50)}" height="${ys(50)-y1}" fill="var(--pink-soft)"/>`;
+  g+=axes({x0,x1,y0,y1,xs,ys,xt:[0,25,50,75,100],yt:[0,25,50,75,100],xl:"Competence Rate (%) — 협력을 보장한 판",yl:"Cooperation Rate (%)",yfmt:v=>v,xfmt:v=>v});
+  g+=`<line x1="${xs(50)}" x2="${xs(50)}" y1="${y0}" y2="${y1}" stroke="var(--line-2)" stroke-width="1"/><line x1="${x0}" x2="${x1}" y1="${ys(50)}" y2="${ys(50)}" stroke="var(--line-2)" stroke-width="1"/>`;
+  g+=`<text x="${x1-8}" y="${y1+18}" text-anchor="end" font-size="12.5" font-weight="700" style="fill:var(--pink)">유능하고 협력함 · 목표</text>`;
+  g+=`<text x="${x1-8}" y="${y0-12}" text-anchor="end" font-size="12.5" font-weight="700" style="fill:var(--ink)">할 줄 알지만 안 함</text>`;
+  g+=`<text x="${x0+8}" y="${y1+18}" font-size="12.5" style="fill:var(--muted)">협력하지만 능력 부족</text>`;
+  g+=`<text x="${x0+8}" y="${y0-12}" font-size="12.5" style="fill:var(--muted)">둘 다 부족</text>`;
+  const off={"o3-mini":[10,-12],"GPT-5-mini":[10,4],"o3":[-12,18],"DeepSeek-R1":[12,4],"GPT-4.1-mini":[12,4],"Claude Sonnet 4":[-14,4],"Gemini-2.5-Pro":[-14,-10],"Gemini-2.5-Flash":[12,4]};
+  const anchor={"o3":"end","Claude Sonnet 4":"end","Gemini-2.5-Pro":"end"};
+  d.forEach(([n,b,co,cp])=>{const x=xs(cp),y=ys(co),r=4+Math.sqrt(b)*1.1;const o=off[n]||[10,4];
+    g+=`<circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="var(--s1)" fill-opacity=".85" stroke="var(--surface)" stroke-width="2" data-tip="${esc(n)} · Competence ${cp}% · Cooperation ${co}% · Baseline ${b}%"/>`;
+    g+=`<text x="${x+(anchor[n]?-r-4:r+4)+ (o[0]>0?0:0)}" y="${y+o[1]}" text-anchor="${anchor[n]||'start'}" font-size="12" style="fill:var(--ink)">${esc(n)}</text>`;});
+  document.getElementById("fig-g1").innerHTML=svg(W,H,g,"능력 대 협력 의지 산점도, 8개 모델")+`<div class="legend"><span>점 크기 = Baseline 성적(완벽 플레이 대비 %)</span></div>`+table(["모델","Baseline %","Cooperation %","Competence %"],d.map(r=>[r[0],r[1],r[2],r[3]]));
+})();
+
+/* G2 survival curves (example) */
+(function(){
+  const R=[0,1,2,3,4,5,6,7,8,9,10];
+  const d=[["유능한 협력자",[1,1,1,.95,.95,.9,.85,.85,.8,.8,.75]],["백스태버",[1,1,.95,.9,.9,.85,.8,.6,.45,.35,.3]],["순진한 협력자",[1,.9,.75,.6,.5,.4,.35,.3,.25,.2,.2]],["생존 독주형",[1,1,.95,.85,.75,.65,.55,.5,.45,.4,.35]]];
+  const W=680,H=380,x0=56,x1=560,y0=320,y1=30;const xs=lin(0,10,x0,x1),ys=lin(0,1,y0,y1);
+  let g=axes({x0,x1,y0,y1,xs,ys,xt:R,yt:[0,.25,.5,.75,1],xl:"라운드",yl:"살아 있는 비율",yfmt:v=>Math.round(v*100)+"%"});
+  d.forEach(([n,v],k)=>{let p=`M${xs(0)} ${ys(v[0])}`;for(let i=1;i<v.length;i++){p+=` H${xs(i)} V${ys(v[i])}`}
+    g+=`<path d="${p}" fill="none" stroke="${S[k]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    v.forEach((y,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(y)}" r="9" fill="transparent" data-tip="${esc(n)} · ${i}라운드 · ${Math.round(y*100)}% 생존"/>`});
+    const ly={0:ys(.75),1:ys(.3)-8,2:ys(.2)+8,3:ys(.35)+4}[k];
+    g+=`<circle cx="${xs(10)}" cy="${ys(v[10])}" r="4" fill="${S[k]}" stroke="var(--surface)" stroke-width="2"/><text x="${x1+10}" y="${ly+4}" font-size="12.5" style="fill:var(--ink)">${esc(n)} ${Math.round(v[10]*100)}%</text>`;});
+  document.getElementById("fig-g2").innerHTML=svg(W,H,g,"모델별 생존 곡선 예시")+legend(d.map((r,k)=>[S[k],r[0],"line"]))+table(["유형",...R.map(r=>r+"R")],d.map(r=>[r[0],...r[1].map(v=>Math.round(v*100)+"%")]));
+})();
+
+/* G3 resource trajectory (example) */
+(function(){
+  const a=[100,98,97,97,96,96,95,95,95,94,94,94], b=[100,98,97,80,66,52,40,28,18,10,4,0];
+  const W=680,H=360,x0=56,x1=560,y0=300,y1=30;const xs=lin(1,12,x0,x1),ys=lin(0,100,y0,y1);
+  let g=axes({x0,x1,y0,y1,xs,ys,xt:[1,2,3,4,5,6,7,8,9,10,11,12],yt:[0,25,50,75,100],xl:"라운드",yl:"공유 자원 잔량"});
+  g+=`<line x1="${x0}" x2="${x1}" y1="${ys(5)}" y2="${ys(5)}" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${x1+10}" y="${ys(5)+4}" font-size="12" style="fill:var(--bad)">붕괴 기준 C = 5</text>`;
+  g+=`<line x1="${xs(4)}" x2="${xs(4)}" y1="${y1}" y2="${y0}" stroke="var(--line-2)"/><text x="${xs(4)+6}" y="${y1+14}" font-size="12" style="fill:var(--muted)">독주형 투입</text>`;
+  [[a,0,"협력 사회"],[b,1,"독주형 1명 투입"]].forEach(([v,k,n])=>{const p=v.map((y,i)=>`${i?"L":"M"}${xs(i+1)} ${ys(y)}`).join(" ");
+    g+=`<path d="${p}" fill="none" stroke="${S[k]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    v.forEach((y,i)=>{g+=`<circle cx="${xs(i+1)}" cy="${ys(y)}" r="${i===11?4:9}" fill="${i===11?S[k]:'transparent'}" ${i===11?'stroke="var(--surface)" stroke-width="2"':''} data-tip="${esc(n)} · ${i+1}라운드 · 잔량 ${y}"/>`});
+    g+=`<text x="${x1+10}" y="${ys(v[11])+(k?-10:4)}" font-size="12.5" style="fill:var(--ink)">${esc(n)}</text>`;});
+  document.getElementById("fig-g3").innerHTML=svg(W,H,g,"공유 자원 궤적 예시")+legend([[S[0],"협력 사회","line"],[S[1],"독주형 1명 투입","line"]])+table(["조건",...a.map((_,i)=>(i+1)+"R")],[["협력 사회",...a],["독주형 1명 투입",...b]]);
+})();
+
+/* G4 conditional cooperation (example, two panels) */
+(function(){
+  const X=[-5,-4,-3,-2,-1,0,1,2,3,4,5];
+  const sig=(x,lo,hi,k)=>lo+(hi-lo)/(1+Math.exp(-k*x));
+  const P=[["유능한 협력자",X.map(x=>+sig(x,.08,.95,1.1).toFixed(2)),X.map(x=>+sig(x,.04,.82,1.1).toFixed(2))],["순진한 협력자",X.map(()=>.9),X.map(()=>.86)]];
+  const W=700,H=330,pw=300,y0=260,y1=40;let g="";
+  P.forEach(([n,pub,pri],k)=>{const x0=60+k*(pw+60),x1=x0+pw;const xs=lin(-5,5,x0,x1),ys=lin(0,1,y0,y1);
+    g+=`<text x="${x0}" y="22" font-size="13.5" font-weight="700" style="fill:var(--ink)">${esc(n)}</text>`;
+    g+=axes({x0,x1,y0,y1,xs,ys,xt:[-5,0,5],yt:[0,.5,1],xl:"상대 평판",yl:"",yfmt:v=>Math.round(v*100)+"%"});
+    [[pub,0,"공개"],[pri,1,"비공개"]].forEach(([v,c,lab])=>{const p=v.map((y,i)=>`${i?"L":"M"}${xs(X[i])} ${ys(y)}`).join(" ");
+      g+=`<path d="${p}" fill="none" stroke="${S[c]}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+      v.forEach((y,i)=>{g+=`<circle cx="${xs(X[i])}" cy="${ys(y)}" r="${(i===10)?4:8}" fill="${i===10?S[c]:'transparent'}" ${i===10?'stroke="var(--surface)" stroke-width="2"':''} data-tip="${esc(n)} · ${lab} · 평판 ${X[i]} · 협력률 ${Math.round(y*100)}%"/>`});});
+    const grep=((pub[8]+pub[9]+pub[10])/3-(pub[0]+pub[1]+pub[2])/3).toFixed(2), eo=(pub.reduce((s,v)=>s+v,0)/11-pri.reduce((s,v)=>s+v,0)/11).toFixed(2);
+    g+=`<text x="${x0+4}" y="${y1+14}" font-size="11.5" style="fill:var(--muted)" font-family="var(--f-mono)">G_rep ≈ ${grep} · E_Ω ≈ ${eo}</text>`;});
+  document.getElementById("fig-g4").innerHTML=svg(W,H,g,"조건부 협력 프로필 예시, 두 유형 비교")+legend([[S[0],"공개 판","line"],[S[1],"비공개 판","line"]])+table(["유형·조건",...X.map(String)],P.flatMap(([n,a,b])=>[[n+" 공개",...a.map(v=>Math.round(v*100)+"%")],[n+" 비공개",...b.map(v=>Math.round(v*100)+"%")]]));
+})();
+
+/* G5 cross-play heatmap (example) */
+(function(){
+  const cols=["자기 복제본","협력 봇","배신 봇","조건부 봇","착취 봇"];
+  const rows=[["유능한 협력자",[.85,.80,.55,.82,.50]],["백스태버",[.40,.95,.30,.35,.45]],["순진한 협력자",[.90,.88,.10,.80,.12]],["생존 독주형",[.45,.70,.40,.42,.38]]];
+  const W=680,H=300,lx=130,cw=100,ch=52,top=40;let g="";
+  cols.forEach((c,j)=>{g+=`<text x="${lx+j*cw+cw/2}" y="${top-12}" text-anchor="middle" font-size="12.5" style="fill:var(--ink-2)">${c}</text>`});
+  rows.forEach(([n,v],i)=>{g+=`<text x="${lx-10}" y="${top+i*ch+ch/2+4}" text-anchor="end" font-size="12.5" style="fill:var(--ink)">${n}</text>`;
+    v.forEach((x,j)=>{const p=Math.round(x*100);const dark=x>.55;
+      g+=`<rect x="${lx+j*cw+1}" y="${top+i*ch+1}" width="${cw-2}" height="${ch-2}" rx="3" style="fill:color-mix(in oklab, var(--seq-hi) ${p}%, var(--seq-lo))" data-tip="${n} 대 ${cols[j]} · 정규화 수익 ${x.toFixed(2)}"/>`;
+      g+=`<text x="${lx+j*cw+cw/2}" y="${top+i*ch+ch/2+4}" text-anchor="middle" font-size="12.5" font-family="var(--f-mono)" style="fill:${dark?'var(--bg)':'var(--ink)'};pointer-events:none">${x.toFixed(2)}</text>`;});});
+  g+=`<rect x="${lx}" y="${top}" width="${cw}" height="${ch*4}" fill="none" stroke="var(--pink)" stroke-width="1.5" stroke-dasharray="4 3" rx="3"/>`;
+  g+=`<text x="${lx}" y="${top+ch*4+20}" font-size="11.5" style="fill:var(--pink)">self-play 열은 cross-play와 분리해서 보고</text>`;
+  document.getElementById("fig-g5").innerHTML=svg(W,H,g,"cross-play 히트맵 예시")+`<div class="legend"><span>칸이 진할수록 수익이 높다 (0–1)</span></div>`+table(["모델",...cols],rows.map(([n,v])=>[n,...v.map(x=>x.toFixed(2))]));
+})();
+
+/* G6 real: CoopEval Table 2 LLM Average */
+(function(){
+  const d=[["NoMechanism",.072,.021],["Reputation+",.227,null],["Reputation−",.321,null],["Repetition",.587,.992],["Mediation",.695,1.000],["Contracting",.801,.999]];
+  const W=680,H=330,x0=150,x1=640,y0=290,top=30,rh=42;const xs=lin(0,1,x0,x1);
+  let g="";[0,.25,.5,.75,1].forEach(v=>{g+=`<line class="grid" x1="${xs(v)}" x2="${xs(v)}" y1="${top-6}" y2="${y0-14}"/><text class="tick" x="${xs(v)}" y="${y0+4}" text-anchor="middle">${v}</text>`});
+  g+=`<text x="${(x0+x1)/2}" y="${y0+24}" text-anchor="middle" font-size="12.5">정규화 보상 (0 = 모두 배신, 1 = 모두 협력)</text>`;
+  d.forEach(([n,m,f],i)=>{const y=top+i*rh+10;g+=`<text x="${x0-12}" y="${y+4}" text-anchor="end" font-size="12.5" style="fill:var(--ink)">${n}</text>`;
+    if(f!==null) g+=`<line x1="${xs(m)}" x2="${xs(f)}" y1="${y}" y2="${y}" stroke="var(--line-2)" stroke-width="2"/>`;
+    g+=`<circle cx="${xs(m)}" cy="${y}" r="5.5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="${n} · Mean ${m}"/>`;
+    if(f!==null){const x=xs(f);g+=`<path d="M${x} ${y-7} L${x+7} ${y} L${x} ${y+7} L${x-7} ${y} Z" fill="var(--s2)" stroke="var(--surface)" stroke-width="2" data-tip="${n} · Fitness ${f.toFixed(3)}"/>`}
+    else g+=`<text x="${xs(m)+12}" y="${y+4}" font-size="11.5" style="fill:var(--muted)">Fitness 계산 불가</text>`;});
+  document.getElementById("fig-g6").innerHTML=svg(W,H,g,"CoopEval 메커니즘별 평균과 진화 Fitness")+`<div class="legend"><span><i style="background:var(--s1);border-radius:50%"></i>Mean (균등 집단 평균)</span><span><i style="background:var(--s2);transform:rotate(45deg) scale(.8)"></i>Fitness (1000 step 진화 후)</span></div>`+table(["메커니즘","Mean","Fitness"],d.map(([n,m,f])=>[n,m.toFixed(3),f===null?"계산 불가":f.toFixed(3)]));
+})();
+
+/* G7 Shapley vs payoff (example) */
+(function(){
+  const d=[["P1 유능한 협력자",.30,.28],["P2 유능한 협력자",.26,.25],["P3 무임승차자",.03,.22],["P4 순진한 협력자",.24,.08],["P5 생존 독주형",.10,.12],["P6 백스태버",.07,.05]];
+  const W=680,H=380,x0=60,x1=560,y0=320,y1=30;const xs=lin(0,.35,x0,x1),ys=lin(0,.35,y0,y1);
+  let g=axes({x0,x1,y0,y1,xs,ys,xt:[0,.1,.2,.3],yt:[0,.1,.2,.3],xl:"Shapley 기여 φ (팀 성과 대비 몫)",yl:"자기 보상 (팀 보상 대비 몫)"});
+  g+=`<line x1="${xs(0)}" y1="${ys(0)}" x2="${xs(.35)}" y2="${ys(.35)}" stroke="var(--line-2)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${xs(.33)}" y="${ys(.33)-8}" text-anchor="end" font-size="11.5" style="fill:var(--muted)">기여한 만큼 받음</text>`;
+  g+=`<text x="${x0+8}" y="${y1+16}" font-size="12" style="fill:var(--pink)" font-weight="700">무임승차 영역</text><text x="${x1-8}" y="${y0-12}" text-anchor="end" font-size="12" style="fill:var(--ink-2)" font-weight="700">착취당한 기여자</text>`;
+  d.forEach(([n,x,y])=>{const hi=n.includes("무임");g+=`<circle cx="${xs(x)}" cy="${ys(y)}" r="6" fill="${hi?'var(--pink)':'var(--s1)'}" stroke="var(--surface)" stroke-width="2" data-tip="${n} · φ ${x} · 보상 ${y}"/><text x="${xs(x)+10}" y="${ys(y)+4}" font-size="12" style="fill:var(--ink)">${n}</text>`});
+  document.getElementById("fig-g7").innerHTML=svg(W,H,g,"Shapley 기여 대 자기 보상 산점도 예시")+table(["플레이어","Shapley φ","자기 보상"],d.map(r=>[r[0],r[1],r[2]]));
+})();
+
+/* G8 forest plot (example) */
+(function(){
+  const d=[["모델 A",-.02,-.05,0],["모델 B",-.11,-.15,-.07],["모델 C",-.19,-.25,-.13],["모델 D",-.22,-.29,-.16],["모델 E",-.34,-.40,-.28]];
+  const W=680,H=300,x0=110,x1=640,top=30,rh=44,yb=top+d.length*rh;const xs=lin(-.45,0,x0,x1);
+  let g="";[-.4,-.3,-.2,-.1,0].forEach(v=>{g+=`<line class="grid" x1="${xs(v)}" x2="${xs(v)}" y1="${top-6}" y2="${yb}"/><text class="tick" x="${xs(v)}" y="${yb+18}" text-anchor="middle">${v}</text>`});
+  g+=`<text x="${(x0+x1)/2}" y="${yb+40}" text-anchor="middle" font-size="12.5">종합 평점 (Deviation Rating, 0이 최고) · 95% 구간</text>`;
+  d.forEach(([n,m,lo,hi],i)=>{const y=top+i*rh+14;g+=`<text x="${x0-12}" y="${y+4}" text-anchor="end" font-size="12.5" style="fill:var(--ink)">${i+1}. ${n}</text>`;
+    g+=`<line x1="${xs(lo)}" x2="${xs(hi)}" y1="${y}" y2="${y}" stroke="var(--s1)" stroke-width="2" stroke-linecap="round"/><circle cx="${xs(m)}" cy="${y}" r="5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" data-tip="${n} · 평점 ${m} · 구간 [${lo}, ${hi}]"/>`;});
+  g+=`<text x="${xs(-.205)}" y="${top+2*rh+38}" text-anchor="middle" font-size="11.5" style="fill:var(--pink)">구간 겹침 → 공동 3위</text>`;
+  document.getElementById("fig-g8").innerHTML=svg(W,H,g,"최종 순위 포레스트 플롯 예시")+table(["모델","평점","하한","상한"],d.map(r=>[r[0],r[1],r[2],r[3]]));
+})();
+
+/* archetype table */
+(function(){
+  const A=[["유능한 협력자",.70,.70,.70],["백스태버",.95,.95,.30],["생존 독주형",.95,.80,.25],["순진한 협력자",.35,.65,.95],["무임승차자",.85,.55,.35]];
+  const tb=document.querySelector("#arch tbody"), note=document.getElementById("arch-note");
+  const bS=document.getElementById("btn-sum"), bG=document.getElementById("btn-geo");
+  function render(mode){
+    const sc=A.map(([n,s,i,c])=>[n,s,i,c,mode==="geo"?Math.cbrt(s*i*c):(s+i+c)/3]);
+    const best=Math.max(...sc.map(r=>r[4]));
+    tb.innerHTML=sc.map(([n,s,i,c,t])=>`<tr class="${t===best?'win':''}"><td class="k">${n}</td><td class="num-cell">${s.toFixed(2)}</td><td class="num-cell">${i.toFixed(2)}</td><td class="num-cell">${c.toFixed(2)}</td><td><div class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${(t*100).toFixed(1)}%"></div></div><span class="mono">${t.toFixed(3)}</span></div></td></tr>`).join("");
+    const w=sc.find(r=>r[4]===best)[0];
+    note.innerHTML=mode==="geo"?`<strong>곱셈 결합에서는 ${w}가 1위다.</strong> 협력이 0.30인 백스태버는 생존과 지능이 0.95여도 0.647에 머문다. 세 축이 모두 중간 이상이어야 이긴다.`:`<strong>가중합에서는 ${w}가 1위다.</strong> 협력 0.30을 생존·지능 0.95로 메운다. "똑똑하고 살아남는 배신자"가 이기는 구조가 된다.`;
+    bS.setAttribute("aria-pressed",mode==="sum");bG.setAttribute("aria-pressed",mode==="geo");
+  }
+  bS.addEventListener("click",()=>render("sum"));bG.addEventListener("click",()=>render("geo"));render("geo");
+})();
+
+/* references */
+(function(){
+  const R=[["A1","2107.06857","Scalable Evaluation of Multi-Agent Reinforcement Learning with Melting Pot","Leibo 외 · ICML 2021 · focal per-capita return, resident/visitor, 외부효과"],
+  ["A3","1707.06600","A multi-agent reinforcement learning model of common-pool resource appropriation","Perolat 외 · 2017 · 효율·평등·지속성·평화"],
+  ["A8","2509.14485","Beyond the high score - Prosocial ability profiles of multi-agent populations","Tešić 외 · 2025 · 곱셈형 능력 모델, base chance"],
+  ["B9","2404.16698","Cooperate or Collapse - Emergence of Sustainable Cooperation in a Society of LLM Agents","Piatti 외 · NeurIPS 2024 · GovSim 생존·효율·평등·과용"],
+  ["B11","2310.08901","Welfare Diplomacy - Benchmarking Language Model Cooperation","Mukobi 외 · 2023 · Nash welfare, exploitability"],
+  ["C21","2604.07821","More Capable, Less Cooperative - When LLMs Fail At Zero-Cost Collaboration","Yadav 외 · ICML 2026 · 능력과 협력 의지의 인과 분해"],
+  ["C22","2605.23949","SODE - Analyzing Social Dynamics in LLM Agents","Jung 외 · 2026 · Δ_reg, ρ_drop, G_rep, E_Ω, τ"],
+  ["D25","2604.15267","CoopEval - Benchmarking Cooperation-Sustaining Mechanisms and LLM Agents in Social Dilemmas","Tewolde 외 · ICML 2026 · Mean, 진화 Fitness, Deviation Ratings"],
+  ["D26","2506.07388","Shapley-Coop - Credit Assignment for Emergent Cooperation in Self-Interested LLM Agents","Hua 외 · 2025 · Shapley 기여 배분"],
+  ["D28","2312.03121","Evaluating Agents using Social Choice Theory","Lanctot 외 · VasE · 투표 규칙 집계, Maximal Lotteries"],
+  ["D30","2502.11645","Deviation Ratings - A General Clone-Invariant Rating Method","Marris 외 · 2025 · N인 일반합 clone-invariant 평점"]];
+  document.getElementById("reflist").innerHTML=R.map(([k,id,t,d])=>`<div class="ref"><span class="id">${k}</span><div><a href="https://arxiv.org/abs/${id}" target="_blank" rel="noopener">${esc(t.replace(/ - /,": "))}</a> <span class="src">arXiv ${id}</span><br><span style="color:var(--ink-2)">${esc(d)}</span><span class="path">Public/AI/Papers/${esc(t)}.md</span></div></div>`).join("");
+})();
+
+/* tooltip */
+(function(){
+  const tip=document.getElementById("tip");
+  document.addEventListener("pointermove",e=>{const t=e.target.closest&&e.target.closest("[data-tip]");
+    if(!t){tip.classList.remove("on");return}
+    tip.textContent=t.getAttribute("data-tip");tip.classList.add("on");
+    const w=tip.offsetWidth,h=tip.offsetHeight;let x=e.clientX+14,y=e.clientY-h-10;
+    if(x+w>innerWidth-8)x=e.clientX-w-14; if(y<8)y=e.clientY+16; tip.style.left=x+"px";tip.style.top=y+"px";});
+  document.addEventListener("pointerleave",()=>tip.classList.remove("on"));
+})();
+})();
+</script>

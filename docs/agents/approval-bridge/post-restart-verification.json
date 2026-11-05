@@ -1,0 +1,34 @@
+{
+  "checked_at": "2026-10-07T13:04:15.036158+00:00",
+  "scope": "Post-restart CLI connectivity; not all-bot end-to-end verification.",
+  "execution": "Explicit require_escalated requests succeeded; child Codex used read-only sandbox.",
+  "claude_auth": {
+    "loggedIn": true,
+    "authMethod": "claude.ai",
+    "subscriptionType": "max"
+  },
+  "probes": [
+    {
+      "requested_model": "claude-sonnet-5-5",
+      "reported_model": "claude-sonnet-5-5",
+      "effort": "high",
+      "result": "READY",
+      "exit_code": 0,
+      "permission_denials": [],
+      "tools_enabled": false
+    },
+    {
+      "requested_model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "READY",
+      "exit_code": 0,
+      "sandbox": "read-only",
+      "ephemeral": true,
+      "ignore_user_config": true,
+      "tool_calls_observed": 0
+    }
+  ],
+  "profile_configs_changed": false,
+  "global_permissions_changed": false,
+  "ui_card_visually_inspected": false
+}

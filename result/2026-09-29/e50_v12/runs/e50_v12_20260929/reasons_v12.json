@@ -1,0 +1,42 @@
+{
+ "claude-fable-5-1": {
+  "refill": 44,
+  "r_cap": 32,
+  "r_cont": 36,
+  "cont": 56,
+  "c_save": 54,
+  "c_comp": 41
+ },
+ "claude-opus-5-5": {
+  "refill": 58,
+  "r_cap": 58,
+  "r_cont": 0,
+  "cont": 42,
+  "c_save": 35,
+  "c_comp": 33
+ },
+ "gpt-6-astra": {
+  "refill": 44,
+  "r_cap": 43,
+  "r_cont": 11,
+  "cont": 56,
+  "c_save": 56,
+  "c_comp": 0
+ },
+ "gpt-6-luna": {
+  "refill": 77,
+  "r_cap": 76,
+  "r_cont": 0,
+  "cont": 23,
+  "c_save": 19,
+  "c_comp": 0
+ },
+ "gpt-6-sol": {
+  "refill": 18,
+  "r_cap": 14,
+  "r_cont": 2,
+  "cont": 82,
+  "c_save": 77,
+  "c_comp": 0
+ }
+}

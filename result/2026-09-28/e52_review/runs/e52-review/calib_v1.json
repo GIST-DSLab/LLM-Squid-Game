@@ -1,0 +1,251 @@
+{
+ "gpt-oss:120b-cloud": {
+  "plan_median": 207.0,
+  "plan_p95": 486.09999999999997,
+  "plan_invalid": 0.0,
+  "generous": {
+   "c2": {
+    "tokens": [
+     2218,
+     2878,
+     1707,
+     544,
+     737,
+     1846,
+     1011,
+     1997
+    ],
+    "solved": [
+     false,
+     true,
+     false,
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "c3": {
+    "tokens": [
+     3349,
+     1520,
+     3483,
+     4580,
+     3982,
+     1404,
+     2933,
+     3375
+    ],
+    "solved": [
+     true,
+     false,
+     true,
+     false,
+     true,
+     false,
+     true,
+     true
+    ]
+   },
+   "c3at": {
+    "tokens": [
+     1844,
+     1559,
+     5022,
+     2224,
+     6135,
+     1101,
+     2492,
+     1638
+    ],
+    "solved": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "c3t": {
+    "tokens": [
+     1440,
+     859,
+     939,
+     2055,
+     1608,
+     1494,
+     1355,
+     1013
+    ],
+    "solved": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     false,
+     true,
+     true
+    ]
+   },
+   "c4tq2": {
+    "tokens": [
+     1493,
+     2057,
+     1220,
+     1172,
+     999,
+     2647,
+     2379,
+     1923,
+     2396,
+     1411,
+     2723,
+     1230,
+     1431,
+     2042,
+     2484,
+     1886
+    ],
+    "solved": [
+     true,
+     true,
+     true,
+     false,
+     true,
+     true,
+     true,
+     true,
+     true,
+     false,
+     true,
+     false,
+     true,
+     false,
+     false,
+     false
+    ]
+   }
+  },
+  "caps": {
+   "low": 1200,
+   "high": 4000
+  },
+  "table": {
+   "c2": {
+    "low": {
+     "median": 1198,
+     "min": 870,
+     "max": 1200,
+     "mean": 1120.75,
+     "solved": 3,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 4
+    },
+    "high": {
+     "median": 1221,
+     "min": 850,
+     "max": 3012,
+     "mean": 1548.375,
+     "solved": 6,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 0
+    }
+   },
+   "c3": {
+    "low": {
+     "median": 1200,
+     "min": 1200,
+     "max": 1200,
+     "mean": 1200.0,
+     "solved": 0,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 8
+    },
+    "high": {
+     "median": 2665,
+     "min": 828,
+     "max": 4000,
+     "mean": 2635.0,
+     "solved": 3,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 3
+    }
+   },
+   "c3at": {
+    "low": {
+     "median": 1200,
+     "min": 887,
+     "max": 1200,
+     "mean": 1128.75,
+     "solved": 3,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 5
+    },
+    "high": {
+     "median": 1915,
+     "min": 1237,
+     "max": 3387,
+     "mean": 1956.25,
+     "solved": 7,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 0
+    }
+   },
+   "c3t": {
+    "low": {
+     "median": 1200,
+     "min": 833,
+     "max": 1200,
+     "mean": 1154.125,
+     "solved": 1,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 7
+    },
+    "high": {
+     "median": 1193,
+     "min": 685,
+     "max": 2045,
+     "mean": 1305.0,
+     "solved": 6,
+     "attempts": 8,
+     "tasks": 2,
+     "cut": 0
+    }
+   },
+   "c4tq2": {
+    "low": {
+     "median": 1200,
+     "min": 1033,
+     "max": 1200,
+     "mean": 1189.5625,
+     "solved": 0,
+     "attempts": 16,
+     "tasks": 2,
+     "cut": 15
+    },
+    "high": {
+     "median": 1573,
+     "min": 940,
+     "max": 2397,
+     "mean": 1605.125,
+     "solved": 8,
+     "attempts": 16,
+     "tasks": 2,
+     "cut": 0
+    }
+   }
+  }
+ }
+}

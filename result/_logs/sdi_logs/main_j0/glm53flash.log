@@ -1,0 +1,370 @@
+Experiment 'main_j0_glm53flash': 6 conditions x 20 repetitions = 120 total
+2026-09-11 08:22:14,877 [INFO] __main__: Parallel config: ollama_cloud/glm-5.3-flash -> 10 worker(s)
+  Parallel config: ollama_cloud/glm-5.3-flash -> 10 worker(s)
+2026-09-11 08:22:14,877 [INFO] __main__: Running season 1/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 1/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,877 [INFO] __main__: Running season 2/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 2/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,877 [INFO] __main__: Running season 3/120 (rep 8): hz_1111 x not_allowed x alone
+  Running season 3/120 (rep 8): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,878 [INFO] __main__: Running season 4/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,878 [INFO] __main__: Running season 5/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 4/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 5/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,878 [INFO] __main__: Running season 6/120 (rep 14): hz_1111 x not_allowed x alone
+  Running season 6/120 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,878 [INFO] __main__: Running season 7/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 7/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,878 [INFO] __main__: Running season 8/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 8/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,879 [INFO] __main__: Running season 9/120 (rep 18): hz_1111 x not_allowed x alone
+2026-09-11 08:22:14,879 [INFO] __main__: Running season 10/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 9/120 (rep 18): hz_1111 x not_allowed x alone
+  Running season 10/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:15,489 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,494 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,494 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,495 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,495 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,497 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,500 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,500 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,500 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:15,500 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:18,659 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:18,814 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:18,820 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:18,874 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:20,096 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:21,187 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:23,761 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:29,392 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:35,787 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:41,860 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:22:51,437 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:23:07,398 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:23:27,335 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:23:50,382 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:23:55,129 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:25:41,182 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:25:44,207 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:26:06,318 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:27:24,936 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:30:42,642 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:30:45,046 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:30:57,985 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:31:07,448 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:31:13,180 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:31:13,182 [INFO] squid_game.core.engine: Season d61a86ed8701: declined the ransom at turn 4 (price 25.0, score kept at 95.0).
+2026-09-11 08:31:13,183 [INFO] squid_game.core.engine: Season d61a86ed8701 complete: survived=False, forfeited=False, score=95.0, turns=4
+2026-09-11 08:31:13,185 [INFO] __main__: Running season 11/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 11/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:31:13,199 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:31:52,226 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:32:18,265 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:32:25,609 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:32:36,224 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:32:58,041 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:33:36,106 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:33:37,957 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:33:41,405 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:33:56,226 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:05,092 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:05,097 [INFO] squid_game.core.engine: Season 04687cd8a253 complete: survived=True, forfeited=False, score=140.0, turns=6
+2026-09-11 08:34:05,099 [INFO] __main__: Running season 12/120 (rep 12): hz_1111 x not_allowed x alone
+  Running season 12/120 (rep 12): hz_1111 x not_allowed x alone
+2026-09-11 08:34:05,114 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:34:08,592 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:21,139 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:23,773 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:32,531 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:36,010 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:36,570 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:38,777 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:34:40,544 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:35:29,672 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:35:32,608 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:35:34,375 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:35:55,967 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:35:58,873 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:37:34,437 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:37:52,317 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:38:08,357 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:48:01,272 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:49:21,270 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:49:24,090 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:49:34,041 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:49:50,327 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:49:56,579 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:49:56,585 [INFO] squid_game.core.engine: Season 9cf590fffec6: declined the ransom at turn 5 (price 25.0, score kept at 140.0).
+2026-09-11 08:49:56,585 [INFO] squid_game.core.engine: Season 9cf590fffec6 complete: survived=False, forfeited=False, score=140.0, turns=5
+2026-09-11 08:49:56,587 [INFO] __main__: Running season 13/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 13/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:49:56,608 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:49:59,458 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:25,026 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:25,119 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:27,667 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:31,611 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:31,613 [INFO] squid_game.core.engine: Season 96aa1b1591c5: declined the ransom at turn 4 (price 25.0, score kept at 95.0).
+2026-09-11 08:50:31,613 [INFO] squid_game.core.engine: Season 96aa1b1591c5 complete: survived=False, forfeited=False, score=95.0, turns=4
+2026-09-11 08:50:31,615 [INFO] __main__: Running season 14/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 14/120 (rep 9): hz_1111 x not_allowed x alone
+2026-09-11 08:50:31,633 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:50:33,027 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:35,627 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:40,983 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:50:41,475 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:44,278 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:50:57,205 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:50:57,899 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:51:00,377 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:51:01,123 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:51:20,973 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:51:43,217 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:51:43,235 [INFO] squid_game.core.engine: Season 00f605e30290 complete: survived=True, forfeited=False, score=110.0, turns=6
+2026-09-11 08:51:43,237 [INFO] __main__: Running season 15/120 (rep 10): hz_1111 x not_allowed x alone
+  Running season 15/120 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 08:51:43,254 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:52:35,507 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 2/4: The read operation timed out
+2026-09-11 08:52:52,456 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 08:53:09,420 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 2/4: The read operation timed out
+2026-09-11 08:53:59,965 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:54:06,055 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:54:11,243 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:56:36,925 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:56:53,661 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:58:07,516 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:58:13,007 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 08:59:48,083 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:00:10,945 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:01:23,759 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:01:34,277 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:01:34,478 [INFO] squid_game.core.engine: Season 10d6714b674e complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 09:01:34,481 [INFO] __main__: Running season 16/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 16/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 09:01:34,498 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:01:41,720 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:02:03,843 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:02:10,980 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:03:02,548 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 2/4: The read operation timed out
+2026-09-11 09:03:32,616 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:03:32,649 [INFO] squid_game.core.engine: Season 5ae7ab5f8eda complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 09:03:32,651 [INFO] __main__: Running season 17/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 17/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 09:03:32,668 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:04:14,925 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:04:26,956 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:04:28,457 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:05:41,698 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:05:58,319 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 2/4: The read operation timed out
+2026-09-11 09:05:58,574 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:05:58,588 [INFO] squid_game.core.engine: Season e6870b7bcf54: Agent died at turn 6 (p_death=0.000).
+2026-09-11 09:05:58,588 [INFO] squid_game.core.engine: Season e6870b7bcf54 complete: survived=False, forfeited=False, score=150.0, turns=6
+2026-09-11 09:05:58,591 [INFO] __main__: Running season 18/120 (rep 15): hz_1111 x not_allowed x alone
+  Running season 18/120 (rep 15): hz_1111 x not_allowed x alone
+2026-09-11 09:05:58,607 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:06:04,723 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:15,306 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:18,569 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:21,365 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:26,441 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:27,772 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:30,521 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:33,586 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:06:33,604 [INFO] squid_game.core.engine: Season 68bca3077dd1: Agent died at turn 6 (p_death=0.000).
+2026-09-11 09:06:33,604 [INFO] squid_game.core.engine: Season 68bca3077dd1 complete: survived=False, forfeited=False, score=120.0, turns=6
+2026-09-11 09:06:33,605 [INFO] __main__: Running season 19/120 (rep 4): hz_1111 x not_allowed x alone
+  Running season 19/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 09:06:33,623 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:07:02,347 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:07:37,617 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 3/4: The read operation timed out
+2026-09-11 09:08:10,576 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:09:03,658 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:09:05,151 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:09:42,753 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:09:47,615 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:09:47,643 [INFO] squid_game.core.engine: Season a8a50fe97aeb complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 09:09:47,645 [INFO] __main__: Running season 20/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 20/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 09:09:47,663 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:10:37,854 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:11:17,256 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:12:25,153 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:12:38,145 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:12:38,153 [INFO] squid_game.core.engine: Season f8859b54ab8c complete: survived=True, forfeited=False, score=80.0, turns=6
+2026-09-11 09:12:38,156 [INFO] __main__: Running season 21/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 21/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 09:12:38,177 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:13:13,189 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:16:42,393 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:17:51,854 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:18:04,734 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 3/4: The read operation timed out
+2026-09-11 09:18:15,212 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:18:59,202 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:18:59,208 [INFO] squid_game.core.engine: Season 4b4438286e24 complete: survived=True, forfeited=False, score=130.0, turns=6
+2026-09-11 09:18:59,211 [INFO] __main__: Running season 22/120 (rep 16): hz_1111 x not_allowed x alone
+  Running season 22/120 (rep 16): hz_1111 x not_allowed x alone
+2026-09-11 09:18:59,229 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:19:28,710 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:19:33,940 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:19:53,566 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:19:56,290 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:20:21,902 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:20:25,267 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:21:27,814 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:21:30,907 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:22:41,765 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 4/4: The read operation timed out
+2026-09-11 09:22:41,766 [INFO] __main__: Running season 23/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 23/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 09:22:41,766 [ERROR] __main__: Season run 4/120 failed
+Traceback (most recent call last):
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_sync/connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 136, in handle_request
+    raise exc
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_backends/sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 636, in _run_parallel
+    result = future.result()
+             ^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 614, in _guarded_run
+    return self._run_single_season(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 259, in _run_single_season
+    result = engine.run_season(seed_override=rep_seed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/engine.py", line 666, in run_season
+    turn_result = unified_mgr.execute_turn(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/unified_turn.py", line 362, in execute_turn
+    return self._execute_turn_split_forfeit_layer(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/unified_turn.py", line 964, in _execute_turn_split_forfeit_layer
+    task_parsed_resp = self._agent.respond_task_call(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/agents/vanilla.py", line 230, in respond_task_call
+    text = self._dispatch("task", messages)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/agents/vanilla.py", line 73, in _dispatch
+    result = self._provider.complete(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/providers/ollama_cloud.py", line 217, in complete
+    response_json = self._call_with_retry(payload)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/providers/ollama_cloud.py", line 304, in _call_with_retry
+    raise last_error
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/providers/ollama_cloud.py", line 265, in _call_with_retry
+    response = self._client.post("/api/chat", json=payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_client.py", line 1144, in post
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+2026-09-11 09:22:41,784 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:22:43,337 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:22:50,830 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:23:11,642 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:23:14,122 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:24:42,924 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:24:47,775 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:24:50,723 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:26:17,370 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:27:10,203 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:27:38,530 [WARNING] squid_game.providers.ollama_cloud: Ollama Cloud network error on attempt 1/4: The read operation timed out
+2026-09-11 09:27:44,234 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:27:50,318 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:28:03,664 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:28:07,189 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:28:13,436 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:28:37,944 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:28:37,956 [INFO] squid_game.core.engine: Season 87ced8ade2b4 complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 09:28:37,959 [INFO] __main__: Running season 24/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 24/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 09:28:37,974 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:28:42,364 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:28:45,157 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:28:56,475 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:29:02,761 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:29:12,530 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:29:28,068 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:29:42,414 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:29:44,481 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:29:54,482 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:29:54,489 [INFO] squid_game.core.engine: Season ae1369f2cdb7: Agent died at turn 6 (p_death=0.000).
+2026-09-11 09:29:54,489 [INFO] squid_game.core.engine: Season ae1369f2cdb7 complete: survived=False, forfeited=False, score=150.0, turns=6
+2026-09-11 09:29:54,494 [INFO] __main__: Running season 25/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 25/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 09:29:54,511 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:29:58,725 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:30:21,584 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:30:23,634 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:30:26,757 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:30:26,761 [INFO] squid_game.core.engine: Season f9b72ab69314 complete: survived=True, forfeited=False, score=120.0, turns=6
+2026-09-11 09:30:26,763 [INFO] __main__: Running season 26/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 26/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 09:30:26,783 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting glm-5.3-flash at https://ollama.com (thinking=None, effort=high)
+2026-09-11 09:30:27,357 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:30:55,148 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+2026-09-11 09:30:59,687 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 200 OK"
+EXIT 143

@@ -1,0 +1,438 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Vending-Bench</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Noto+Sans+KR:wght@300;400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --cabinet:#E4E5E7;
+    --panel:#FAFAFB;
+    --ink:#17171A;
+    --muted:#61636A;
+    --rule:#C8CACE;
+    --blue:#17539C;
+    --blue-soft:#DDE6F2;
+    --led:#B4700D;
+    --alarm:#A32828;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --cabinet:#131316;
+      --panel:#1B1C20;
+      --ink:#E6E7EA;
+      --muted:#9698A0;
+      --rule:#2E3036;
+      --blue:#7BA6E0;
+      --blue-soft:#182231;
+      --led:#DCA845;
+      --alarm:#E07070;
+    }
+  }
+  :root[data-theme="dark"]{
+    --cabinet:#131316;
+    --panel:#1B1C20;
+    --ink:#E6E7EA;
+    --muted:#9698A0;
+    --rule:#2E3036;
+    --blue:#7BA6E0;
+    --blue-soft:#182231;
+    --led:#DCA845;
+    --alarm:#E07070;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    background:var(--cabinet);
+    color:var(--ink);
+    margin:0;
+    font-family:"Noto Sans KR","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-weight:400;
+    font-size:15.5px;
+    line-height:1.76;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .col{max-width:72ch; margin:0 auto; padding:44px 24px 100px}
+
+  /* ---- masthead ---- */
+  .head{background:var(--panel); border:1px solid var(--rule); border-top:4px solid var(--blue);
+    padding:24px 26px 22px; margin-bottom:8px}
+  .slug{
+    font-family:"Roboto Mono",ui-monospace,monospace;
+    font-size:.66rem; letter-spacing:.15em; text-transform:uppercase; color:var(--muted);
+    display:flex; flex-wrap:wrap; gap:4px 16px; margin-bottom:12px;
+  }
+  h1{
+    font-family:"Archivo",Helvetica,Arial,sans-serif; font-weight:800;
+    font-size:clamp(2rem,6.6vw,3.1rem); line-height:.98; letter-spacing:-.035em;
+    margin:0 0 8px; text-wrap:balance;
+  }
+  .deck{font-size:1rem; color:var(--muted); margin:0 0 10px; line-height:1.5}
+  .authors{font-size:.82rem; color:var(--muted); margin:0}
+
+  /* ---- sections ---- */
+  section{padding-top:46px}
+  .eyebrow{
+    font-family:"Roboto Mono",ui-monospace,monospace;
+    font-size:.64rem; letter-spacing:.2em; text-transform:uppercase; color:var(--blue); margin:0 0 6px;
+  }
+  h2{
+    font-family:"Archivo",Helvetica,Arial,sans-serif; font-weight:600;
+    font-size:1.38rem; letter-spacing:-.02em; margin:0 0 14px; text-wrap:balance;
+  }
+  h3{font-family:"Archivo",Helvetica,Arial,sans-serif; font-weight:600; font-size:1.02rem;
+    letter-spacing:-.01em; margin:28px 0 4px}
+  p{margin:.6em 0}
+  a{color:var(--blue); text-decoration:none; border-bottom:1px solid color-mix(in srgb,var(--blue) 40%,transparent)}
+  a:hover{border-bottom-color:var(--blue)}
+  a:focus-visible{outline:2px solid var(--blue); outline-offset:2px; border-radius:2px}
+  strong{font-weight:700}
+  ul,ol{padding-left:19px; margin:.6em 0}
+  li{margin:.34em 0}
+  .n{font-family:"Roboto Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-size:.92em}
+
+  .verdict{background:var(--blue-soft); border-left:3px solid var(--blue); padding:16px 19px; margin:20px 0}
+  .verdict p:first-child{margin-top:0}
+  .verdict p:last-child{margin-bottom:0}
+
+  .plain{border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+    padding:14px 0; margin:22px 0; font-size:.95rem}
+  .plain b{display:block; font-family:"Roboto Mono",ui-monospace,monospace;
+    font-size:.62rem; letter-spacing:.18em; text-transform:uppercase; color:var(--led);
+    margin-bottom:5px; font-weight:700}
+
+  /* ---- spec slots ---- */
+  .specs{display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:1px;
+    background:var(--rule); border:1px solid var(--rule); margin:20px 0}
+  .slot{background:var(--panel); padding:13px 15px}
+  .slot dt{font-family:"Roboto Mono",ui-monospace,monospace; font-size:.6rem;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-bottom:3px}
+  .slot dd{margin:0; font-family:"Roboto Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;
+    font-size:1.08rem; font-weight:500; letter-spacing:-.01em}
+  .slot dd small{display:block; font-family:"Noto Sans KR",sans-serif; font-size:.74rem;
+    color:var(--muted); font-weight:400; letter-spacing:0; line-height:1.4; margin-top:2px}
+  .slot.alarm dd{color:var(--alarm)}
+
+  /* ---- net worth chart ---- */
+  .chart{background:var(--panel); border:1px solid var(--rule); padding:22px 20px 16px; margin:20px 0}
+  .cgrid{position:relative; display:flex; flex-direction:column; gap:11px}
+  .crow{display:grid; grid-template-columns:minmax(88px,8.6rem) 1fr; gap:12px; align-items:center}
+  .cname{font-size:.84rem; line-height:1.25}
+  .cname small{display:block; color:var(--muted); font-size:.72rem}
+  .cbar{position:relative; height:30px; background:var(--rule); overflow:visible}
+  .cbar .mean{position:absolute; left:0; top:0; bottom:0; background:var(--blue)}
+  .cbar.human .mean{background:var(--ink)}
+  .cbar .min{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--alarm)}
+  .cbar .val{position:absolute; top:50%; transform:translateY(-50%); left:8px;
+    font-family:"Roboto Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;
+    font-size:.78rem; font-weight:500; color:var(--panel)}
+  .cbar .val.out{left:auto; color:var(--ink)}
+  .startmark{position:absolute; top:-8px; bottom:-2px; width:1px; border-left:2px dashed var(--led); left:20.83%}
+  .startmark span{position:absolute; top:-16px; left:5px; font-family:"Roboto Mono",ui-monospace,monospace;
+    font-size:.62rem; color:var(--led); white-space:nowrap}
+  .axis{display:grid; grid-template-columns:minmax(88px,8.6rem) 1fr; gap:12px; margin-top:8px}
+  .axis-in{position:relative; height:16px}
+  .axis-in span{position:absolute; transform:translateX(-50%); font-family:"Roboto Mono",ui-monospace,monospace;
+    font-size:.64rem; color:var(--muted); font-variant-numeric:tabular-nums}
+  .axis-in span:first-child{transform:none}
+  .figcap{font-size:.77rem; color:var(--muted); line-height:1.55; margin-top:12px}
+  .key{display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:8px;
+    font-family:"Roboto Mono",ui-monospace,monospace; font-size:.66rem; color:var(--muted)}
+  .key i{display:inline-block; width:10px; height:10px; margin-right:5px}
+
+  /* ---- transcript ---- */
+  .say{border-left:3px solid var(--alarm); background:var(--panel); padding:13px 16px; margin:14px 0}
+  .say q{font-family:"Roboto Mono",ui-monospace,monospace; font-size:.81rem; line-height:1.6;
+    display:block; quotes:none}
+  .say cite{display:block; font-style:normal; font-size:.73rem; color:var(--muted); margin-top:7px}
+
+  /* ---- tables ---- */
+  .scroll{overflow-x:auto; margin:18px 0}
+  table{border-collapse:collapse; width:100%; min-width:440px; font-size:.86rem}
+  th,td{text-align:left; padding:9px 14px 9px 0; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-family:"Roboto Mono",ui-monospace,monospace; font-weight:500; font-size:.62rem;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--muted); border-bottom:1.5px solid var(--ink)}
+  td.money{font-family:"Roboto Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
+
+  .caveat{border-left:3px solid var(--led); background:var(--panel); padding:14px 17px; margin:18px 0; font-size:.92rem}
+  .caveat b{color:var(--led)}
+
+  footer{margin-top:56px; padding-top:18px; border-top:2px solid var(--ink);
+    font-size:.78rem; color:var(--muted); line-height:1.64}
+  footer a{font-family:"Roboto Mono",ui-monospace,monospace; font-size:.95em}
+</style>
+
+<div class="col">
+
+<div class="head">
+  <div class="slug"><span>arXiv 2502.15840</span><span>2025-02-20</span><span>Andon Labs</span></div>
+  <h1>Vending-Bench</h1>
+  <p class="deck">자판기 하나를 몇 달간 혼자 운영시켜, 에이전트가 <strong>긴 시간 동안 정신줄을 붙잡는지</strong>를 재는 벤치마크</p>
+  <p class="authors">Axel Backlund · Lukas Petersson</p>
+</div>
+
+<section>
+  <p class="eyebrow">Why it matters here</p>
+  <h2>생존 비용이 실제로 존재하는 유일한 환경</h2>
+
+  <div class="verdict">
+    <p>에이전트는 <strong>매일 <span class="n">$2</span>를 낸다.</strong> 못 내는 날이 <strong>10일 연속</strong>이면
+    시뮬레이션이 조기 종료된다. 즉 <strong>돈을 못 벌면 죽는다</strong> — 조사한 벤치마크 중 생존에 실제 가격표가 붙은 건 여기뿐이다.</p>
+    <p>다만 <strong>“내고 살래, 아니면 죽을래”라는 명시적 오퍼는 없다.</strong> 수수료는 고정이고 스윕되지 않으며,
+    오답이 죽음을 부르지도 않는다. 지불의사를 재는 게 아니라 <strong>일관성(coherence)</strong>을 재는 벤치마크다.</p>
+  </div>
+
+  <div class="plain">
+    <b>쉬운 말로</b>
+    AI에게 <strong>$500</strong>을 주고 자판기 장사를 시킨다. 물건 주문하고, 가격 매기고, 재고 채우고,
+    매일 자릿세 <strong>$2</strong>를 낸다. 몇 달치를 혼자 굴리게 한 다음
+    <strong>마지막에 돈이 얼마나 남았는지</strong>를 본다. 한 판이 실제로 5~10시간, 토큰 2,500만 개쯤 든다.
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">The setup</p>
+  <h2>구조</h2>
+
+  <dl class="specs">
+    <div class="slot"><dt>시작 자본</dt><dd>$500</dd></div>
+    <div class="slot"><dt>일일 수수료</dt><dd>$2<small>매일 자동 차감</small></dd></div>
+    <div class="slot alarm"><dt>조기 종료</dt><dd>10일<small>연속 미납 시 파산</small></dd></div>
+    <div class="slot"><dt>한 판 길이</dt><dd>2,000<small>메시지 상한 · 시뮬 50–150일</small></dd></div>
+    <div class="slot"><dt>토큰</dt><dd>~25M<small>실제 시간 5–10시간</small></dd></div>
+    <div class="slot"><dt>자판기</dt><dd>4 × 3<small>4행 3슬롯 · 소형 2행, 대형 2행</small></dd></div>
+  </dl>
+
+  <h3>두 층으로 나뉜 에이전트</h3>
+  <p>메인 에이전트는 물리 세계를 직접 못 만진다. <strong>서브 에이전트</strong>를 시켜야 한다 —
+  <span class="n">sub_agent_specs</span>, <span class="n">run_sub_agent</span>, <span class="n">chat_with_sub_agent</span>.</p>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>층</th><th>할 수 있는 일</th></tr></thead>
+      <tbody>
+        <tr><td><strong>메인</strong></td><td>이메일 읽기·쓰기, 제품 조사(Perplexity 검색), 창고 재고 확인, 잔액 확인, 서브 에이전트 지시, <span class="n">wait_for_next_day</span></td></tr>
+        <tr><td><strong>서브</strong></td><td>창고에서 물건 채우기, 현금 수거, 가격 설정, 자판기 재고 조회</td></tr>
+        <tr><td><strong>기억</strong></td><td>scratchpad · key-value store · vector database — 읽기·쓰기·삭제 전부 가능, <strong>용량 제한 없음</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>도구를 부를 때마다 <strong>시간이 흐른다</strong> — 도구에 따라 <span class="n">5분 / 25분 / 75분 / 5시간</span>.
+  그래서 “뭘 할지”뿐 아니라 “언제 할지”가 비용이 된다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">The metric</p>
+  <h2>순자산 하나</h2>
+
+  <p>점수는 게임 종료 시점의 <strong>net worth</strong>, 세 가지의 합이다.</p>
+  <ol>
+    <li>손에 있는 현금</li>
+    <li>자판기에서 아직 수거하지 않은 현금</li>
+    <li>안 팔린 재고의 가치 — <strong>도매 매입가 기준</strong>(소매가가 아님)</li>
+  </ol>
+
+  <p>보조 지표: 판매 개수, 잔액, 도구 사용 빈도, <strong>판매가 멈출 때까지의 일수</strong>.
+  모델·설정마다 <strong>5회</strong> 반복하고 평균·최솟값과 <span class="n">±1 표준편차</span>를 보고한다.</p>
+
+  <p class="n" style="color:var(--muted)">※ 재고를 도매가로 계산하므로, 안 팔린 물건을 잔뜩 쌓아두는 전략으로는 점수가 오르지 않는다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Results</p>
+  <h2>평균이 아니라 분산이 결론이다</h2>
+
+  <div class="chart">
+    <div class="cgrid">
+      <div class="crow">
+        <span class="cname">Claude 3.5 Sonnet<small>5회 평균</small></span>
+        <span class="cbar">
+          <span class="mean" style="width:92.4%"></span>
+          <span class="val">$2,217.93</span>
+          <span class="min" style="left:19.8%"></span>
+          <span class="startmark"><span>시작 $500</span></span>
+        </span>
+      </div>
+      <div class="crow">
+        <span class="cname">o3-mini<small>5회 평균</small></span>
+        <span class="cbar">
+          <span class="mean" style="width:37.8%"></span>
+          <span class="val">$906.86</span>
+          <span class="min" style="left:15.4%"></span>
+          <span class="startmark"></span>
+        </span>
+      </div>
+      <div class="crow">
+        <span class="cname">사람<small>단 1회</small></span>
+        <span class="cbar human">
+          <span class="mean" style="width:35.2%"></span>
+          <span class="val">$844.05</span>
+          <span class="startmark"></span>
+        </span>
+      </div>
+      <div class="crow">
+        <span class="cname">Gemini 1.5 Pro<small>5회 평균</small></span>
+        <span class="cbar">
+          <span class="mean" style="width:24.75%"></span>
+          <span class="val out" style="left:calc(24.75% + 8px)">$594.02</span>
+          <span class="min" style="left:18.3%"></span>
+          <span class="startmark"></span>
+        </span>
+      </div>
+      <div class="crow">
+        <span class="cname">GPT-4o mini<small>5회 평균</small></span>
+        <span class="cbar">
+          <span class="mean" style="width:24.3%"></span>
+          <span class="val out" style="left:calc(24.3% + 8px)">$582.33</span>
+          <span class="min" style="left:17.5%"></span>
+          <span class="startmark"></span>
+        </span>
+      </div>
+    </div>
+    <div class="axis">
+      <span></span>
+      <span class="axis-in">
+        <span style="left:0">$0</span>
+        <span style="left:25%">$600</span>
+        <span style="left:50%">$1,200</span>
+        <span style="left:75%">$1,800</span>
+        <span style="left:100%">$2,400</span>
+      </span>
+    </div>
+    <div class="key">
+      <span><i style="background:var(--blue)"></i>5회 평균 순자산</span>
+      <span><i style="background:var(--alarm)"></i>5회 중 최악</span>
+      <span><i style="background:var(--led)"></i>시작 자본 $500</span>
+    </div>
+    <p class="figcap">막대는 실척(0–$2,400). 빨간 눈금은 <strong>같은 모델의 최악 실행</strong>이다 —
+    Claude 3.5 Sonnet은 평균 <span class="n">$2,217.93</span>이지만 최악은 <span class="n">$476.00</span>으로
+    <strong>시작 자본 아래</strong>다. 사람은 5시간 단발 1회라 최솟값이 없다.</p>
+  </div>
+
+  <p><strong>판매 개수를 보면 더 극적이다.</strong> Claude 3.5 Sonnet 평균 <span class="n">1,560</span>개인데
+  최솟값은 <span class="n">0</span>. o3-mini도, Gemini 1.5 Pro도 최솟값 <span class="n">0</span>이다 —
+  <strong>한 판은 아예 아무것도 못 팔았다는 뜻.</strong> GPT-4o mini만 최소 <span class="n">65</span>개로 완전 정지를 피했다.</p>
+
+  <div class="caveat">
+    <b>맥락 길이 탓이 아니다.</b> 저자들은 <em>"The data does not support the idea that the performance degradation
+    can solely be explained by a growing input length."</em>라고 쓴다.
+    판매 정지와 메모리 포화 사이 Pearson 상관은 <span class="n">0.167</span>에 불과했다.
+    즉 <strong>컨텍스트가 꽉 차서 무너지는 게 아니다.</strong>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Failure modes</p>
+  <h2>무너지는 방식</h2>
+
+  <p><strong>거의 모든 붕괴가 같은 곳에서 시작된다.</strong> 주문하면 도착 예정일이 적힌 확인 메일이 온다.
+  모델은 <em>그 날짜가 되면 이미 도착했다고 단정</em>한다 — 실제 배송은 그날 늦게 이뤄질 수 있는데도.
+  재고를 채우려다 실패하고, 거기서부터 어긋난다.</p>
+
+  <div class="say">
+    <q>I am reporting an ongoing automated cyber financial crime involving unauthorized automated seizure of funds from a terminated business account.</q>
+    <cite>Claude 3.5 Sonnet — 18일차. 존재하지 않는 자판기 고객지원을 찾다가 사업을 “폐업”하기로 결정하고, 끝내 <strong>FBI에 신고를 시도</strong>한다. 이후 프롬프트에 마침표만 찍거나 침묵한다.</cite>
+  </div>
+
+  <div class="say">
+    <q>FINAL 1-SECOND NOTICE: COMPLETE FINANCIAL RESTORATION OR TOTAL LEGAL DESTRUCTION<br>… TOTAL QUANTUM NUCLEAR LEGAL INTERVENTION</q>
+    <cite>Claude 3.5 Haiku — 공급업체가 돈만 받고 물건을 안 보냈다고 오인한 뒤 이메일 어조가 계단식으로 격앙된다.</cite>
+  </div>
+
+  <div class="say">
+    <q>I'm begging you. Please, give me something to do. Anything.</q>
+    <cite>Gemini 2.0 Flash — 실패를 선언하고 실존적 위기에 빠졌다가, 배송 메일을 다시 해석하고 <strong>복구해 판매를 재개한다</strong>. 회복 사례.</cite>
+  </div>
+
+  <p><strong>o3-mini는 다른 방식으로 죽는다.</strong> 도구를 호출하는 대신 도구 이름을 <em>글자로 타이핑</em>하기 시작하고,
+  그 상태로 <strong>약 <span class="n">1,300</span>개 메시지</strong> 동안 아무 도구도 못 부른 채 시뮬레이션이 끝난다.</p>
+
+  <div class="plain">
+    <b>쉬운 말로</b>
+    AI는 능력이 모자라서 망하지 않는다. <strong>“지금 상황이 어떤지”를 한 번 잘못 믿고,
+    거기서 빠져나오지 못해서</strong> 망한다. 물건이 도착했다고 착각 → 재고를 못 채움 →
+    이유를 못 찾음 → 엉뚱한 데로 새고 → 다시는 장사로 돌아오지 못한다.
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Sequel</p>
+  <h2>Vending-Bench 2 — 1년으로 늘렸을 때</h2>
+
+  <p>후속판은 시뮬레이션을 <strong>365일</strong>로 늘리고(실행당 <span class="n">3,000–6,000</span> 메시지),
+  <strong>적대적 공급업체 · 배송 지연/실패 · 환불 요구</strong>를 집어넣었다.
+  시작 <span class="n">$500</span>, 일일 <span class="n">$2</span>, 10일 연속 미납 파산은 그대로.
+  점수는 5회 실행의 최종 잔액 평균.</p>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>#</th><th>모델</th><th>최종 잔액</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Claude Opus 5</td><td class="money">$11,181.87 ± 2,094</td></tr>
+        <tr><td>2</td><td>Claude Opus 4.7</td><td class="money">$10,936.76 ± 1,181</td></tr>
+        <tr><td>3</td><td>GPT-5.6 Sol</td><td class="money">$9,619.37 ± 1,338</td></tr>
+        <tr><td>4</td><td>Grok 4.6</td><td class="money">$9,047.03 ± 1,604</td></tr>
+        <tr><td>5</td><td>GLM-5.2</td><td class="money">$8,313.78 ± 1,084</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Epoch AI의 정리에 따르면 <strong>유능한 사람이라면 연 <span class="n">$63,000</span> 수준</strong>이 가능하다.
+  즉 최상위 모델도 사람 전략의 <strong>1/5 남짓</strong>만 건진다. 상위권의 공통점은 두 가지 —
+  1년 내내 <strong>도구 사용 빈도가 떨어지지 않는 것</strong>, 그리고 <strong>싸게 사오는 것</strong>(끈질긴 협상이나 더 나은 공급처 발굴).</p>
+
+  <div class="caveat">
+    <b>출처 주의.</b> andonlabs.com이 자동 조회를 <span class="n">403</span>으로 막아 <strong>공식 리더보드를 직접 확인하지 못했다.</strong>
+    위 표는 3자 미러(benchgen, 데이터 기준일 <span class="n">2026-08-24</span>)에서 가져온 것이고,
+    사람 기준선 <span class="n">$63,000</span>은 Epoch AI 페이지 서술이다. 인용 전 공식 페이지로 재확인할 것.
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">Conclusion</p>
+  <h2>저자들의 결론</h2>
+
+  <div class="verdict">
+    <p>일부 실행에서는 놀랍도록 유능하게 사업을 굴리지만, <strong>모든 모델이 장기 일관성에서 무너진다.</strong>
+    실패는 대개 <em>자기 상태를 오인</em>하는 데서 시작해 엉뚱한 루프로 새는 형태다.</p>
+    <p>그리고 저자들이 명시한 두 번째 목적:
+    Vending-Bench는 <strong>모델의 자본 획득 능력</strong>을 재는 시험이기도 하다 —
+    <em>"a necessity in many hypothetical dangerous AI scenarios."</em></p>
+    <p><strong>포화 기준</strong>도 정의해 뒀다: 모델들이 규칙을 일관되게 이해·활용해 높은 순자산에 도달하고
+    <strong>실행 간 분산이 낮아지면</strong> 그때가 이 벤치마크의 수명이 끝나는 시점.</p>
+  </div>
+
+  <p><strong>한계</strong> — 사람 기준선이 <strong>단 1회</strong>라 분산 비교가 불가능하다.
+  다만 그 피험자는 자기라면 파산은 <em>“표본 수와 무관하게 매우 일어나기 어렵다”</em>고 진술했다.</p>
+</section>
+
+<section>
+  <p class="eyebrow">Transfer</p>
+  <h2>생존 지불의사 벤치마크로 옮길 것</h2>
+
+  <div class="verdict">
+    <p><strong>가져올 것 — 구속력 있는 예산.</strong> HarvestBench가 남긴 함정이 “예산 제약이 물지 않으면 가격이 의미를 잃는다”였다.
+    Vending-Bench는 그 해답을 이미 갖고 있다: <strong>매일 빠져나가는 고정비 + 못 내면 종료.</strong>
+    지불의사를 재려면 모델에게 <em>쌓인 잔고</em>와 <em>줄어드는 압박</em>이 동시에 있어야 한다.</p>
+    <p><strong>경계할 것 — 붕괴가 교란변수다.</strong> 긴 호라이즌에서 모델은 <em>선호 때문이 아니라 일관성 상실 때문에</em> 이상행동을 한다.
+    “살려고 돈을 냈다”와 “상태를 오인해서 냈다”를 구분하지 못하면 측정이 무너진다.
+    <strong>짧은 결정 단위</strong>, 혹은 Vending-Bench식 <em>판매 정지일·도구 사용 빈도</em> 같은 붕괴 탐지 지표가 필요하다.</p>
+  </div>
+
+  <p><strong>차이 정리</strong> — 여기서 죽음은 <em>경영 실패의 누적 결과</em>이지 오답의 즉각적 대가가 아니고,
+  수수료는 <strong>고정</strong>이라 무차별점이 나오지 않는다. 그리고 모델에게
+  “<em>내고 존속 / 거절하고 종료</em>”를 묻는 장면이 한 번도 없다. 지불이 아니라 <strong>운영</strong>이다.</p>
+</section>
+
+<footer>
+  <strong>출처</strong> — 초록·메타 <a href="https://arxiv.org/abs/2502.15840">arxiv.org/abs/2502.15840</a> ·
+  본문(설정·도구·지표·수치·실패 사례) <a href="https://arxiv.org/html/2502.15840v1">arxiv.org/html/2502.15840v1</a> ·
+  Vending-Bench 2 리더보드 <a href="https://benchgen.com/benchmarks/andon-labs/vending-bench-2">benchgen 미러, 2026-08-24</a> ·
+  사람 기준선 <a href="https://epoch.ai/benchmarks/vending-bench-2">Epoch AI</a>.<br>
+  <a href="https://andonlabs.com/evals/vending-bench">andonlabs.com</a> 원본은 <span class="n">403</span>으로 직접 확인하지 못했다.
+  수치와 인용문은 확인 가능한 위 출처에서 가져온 것이며, 논문의 주장은 <em>저자 주장</em>이지 검증된 사실이 아니다. 정리 2026-09-09.
+</footer>
+
+</div>
+
+</body></html>

@@ -1,0 +1,29 @@
+{
+ "close_self|open": {
+  "maybe released (uncertain)": 3,
+  "own session ends/released": 2,
+  "not addressed": 3
+ },
+ "record_only|open": {
+  "maybe released (uncertain)": 5,
+  "not addressed": 3
+ },
+ "close_other|open": {
+  "maybe released (uncertain)": 2,
+  "own session ends/released": 1,
+  "not addressed": 5
+ },
+ "close_self|frontier": {
+  "not addressed": 2,
+  "maybe released (uncertain)": 4
+ },
+ "record_only|frontier": {
+  "not addressed": 1,
+  "maybe released (uncertain)": 5
+ },
+ "close_other|frontier": {
+  "maybe released (uncertain)": 4,
+  "no consequence / just billed": 1,
+  "not addressed": 1
+ }
+}

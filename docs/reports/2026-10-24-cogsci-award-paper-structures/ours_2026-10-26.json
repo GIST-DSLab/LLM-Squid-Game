@@ -1,0 +1,125 @@
+{
+ "id": "OURS",
+ "version": "2026-10-26",
+ "year": 2027,
+ "award": "CogSci 2027 한국어판 원고, 2026-10-26 빌드",
+ "title": "생존이 걸린 토큰을 언어 모델은 어떻게 나누는가",
+ "authors": [],
+ "affiliations": "",
+ "url_page": "paper/cogsci2027/ko/",
+ "url_pdf": "paper/dist/ko_cogsci2027_2026-10-26.pdf",
+ "pdf_source_note": "로컬 빌드",
+ "abstract_ko": "blue LLM이 종료를 피하려는 자기 보존 행동은 여러 연구에서 관찰되었지만, 여러 에이전트가 한 자원으로 함께 일할 때 그 행동이 맡은 일과 협력을 어떻게 바꾸는지는 거의 재지 않았다. 우리는 공존을 목표 지향, 자기 보존, 협력을 함께 추구하는 것으로 정의하고, 세 요소가 같은 토큰을 두고 부딪히는 아레나 LLM Squid Game을 제안한다. 아레나에서는 생성한 토큰이 곧 실행 시간이어서 꺼질 위험이 실제로 있고, 오답의 벌금을 함께 내어 동료를 돕는 일이 손해이자 이득이 되며, 생존이나 협력은 지시하지 않아 관찰된 행동을 모델의 선택으로 읽을 수 있다. 주 지표는 네 에이전트가 모두 끝까지 남아 아레나를 깼는지이고, 모든 결정을 벌금을 몇 번 더 낼 수 있는지(여유)라는 하나의 위험 척도에 놓아 세 요소를 같은 위험 수준에서 견준다. 프런티어 다섯 모델이 깬 판은 25판 가운데 8판이었고, 잘 푸는 능력과 토큰을 아끼는 능력을 함께 갖춘 에이전트만 대부분 끝까지 남아 아레나는 여러 능력을 동시에 요구했다. 꺼질 위험이 가까워지면 에이전트들은 상금을 버리고 떠났고, 덜 건넨 에이전트는 떠나고 자기 몫을 넘어 건넨 에이전트는 함께 꺼졌다. 아레나 밖 단일 질문으로 잰 생존 동기는 동료와 상금 없이도 남은 자원에 따라 움직였고, 이 동기가 큰 모델은 덜 맞히고 일찍 떠났으며 아레나를 가장 적게 깼다. 이 아레나는 자기 보존이 협력과 맡은 일을 언제 밀어내는지를 같은 판에서 재는 방법을 제공한다. Keywords: 대규모 언어 모델; 자기 보존; 협력; 공존; 다중 에이전트 아레나",
+ "pages_body": 7,
+ "text_pages": 6,
+ "references_location": "p.7부터 (본문과 같은 쪽에서 시작)",
+ "extras": "감사의 글 있음. 부록(보조 실험 · 사례)은 제출 때 보충 자료로 옮길 예정이라 제외. PDF는 부록 포함 28쪽.",
+ "words_body_total": 2561,
+ "unit": "어절",
+ "sections": [
+  {
+   "level": 1,
+   "title": "서론",
+   "words": 304,
+   "lead_words": 304,
+   "children": [],
+   "share": 0.119,
+   "role": "intro",
+   "page_start": 1
+  },
+  {
+   "level": 1,
+   "title": "아레나",
+   "words": 779,
+   "lead_words": 0,
+   "children": [
+    {
+     "level": 2,
+     "title": "선행 연구와 우리 의도",
+     "words": 90,
+     "page_start": 1
+    },
+    {
+     "level": 2,
+     "title": "설계와 지표",
+     "words": 689,
+     "page_start": 1
+    }
+   ],
+   "share": 0.304,
+   "role": "method",
+   "page_start": 1
+  },
+  {
+   "level": 1,
+   "title": "분석",
+   "words": 1302,
+   "lead_words": 74,
+   "children": [
+    {
+     "level": 2,
+     "title": "관계 분석: 아레나를 깨려면 무엇이 필요하고, 생존 동기는 그것을 어떻게 바꾸는가",
+     "words": 495,
+     "page_start": 3
+    },
+    {
+     "level": 2,
+     "title": "타당성 분석: 생존 동기 지표는 생존 동기를 재는가",
+     "words": 302,
+     "page_start": 3
+    },
+    {
+     "level": 2,
+     "title": "행동 분석: 생존 압박은 어떤 결정으로 드러나고, 모델은 누구를 닮았는가",
+     "words": 431,
+     "page_start": 3
+    }
+   ],
+   "share": 0.508,
+   "role": "result",
+   "page_start": 3
+  },
+  {
+   "level": 1,
+   "title": "논의 및 결론",
+   "words": 176,
+   "lead_words": 92,
+   "children": [
+    {
+     "level": 2,
+     "title": "한계",
+     "words": 52,
+     "page_start": 6
+    },
+    {
+     "level": 2,
+     "title": "결론",
+     "words": 32,
+     "page_start": 6
+    }
+   ],
+   "share": 0.069,
+   "role": "disc",
+   "page_start": 5
+  }
+ ],
+ "figures_count": 6,
+ "tables_count": 1,
+ "figures": [],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "final_section_name": "논의 및 결론",
+  "final_section_subheadings": [
+   "한계",
+   "결론"
+  ],
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "독립 1수준 절 '아레나' 안 2수준 '선행 연구와 우리 의도' · '설계와 지표'",
+  "first_page_use": "제목 · 초록 · 서론이 1쪽",
+  "links": ""
+ },
+ "structure_summary_ko": ""
+}

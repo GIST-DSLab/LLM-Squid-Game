@@ -1,0 +1,580 @@
+Experiment 'main_j0_deepseekv4flash': 6 conditions x 20 repetitions = 120 total
+2026-09-11 08:22:06,202 [INFO] __main__: Parallel config: ollama_cloud/deepseek-v4-flash:cloud -> 10 worker(s)
+  Parallel config: ollama_cloud/deepseek-v4-flash:cloud -> 10 worker(s)
+2026-09-11 08:22:06,202 [INFO] __main__: Running season 1/120 (rep 2): hz_1111 x not_allowed x alone
+  Running season 1/120 (rep 2): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,202 [INFO] __main__: Running season 2/120 (rep 12): hz_1111 x not_allowed x alone
+  Running season 2/120 (rep 12): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,202 [INFO] __main__: Running season 3/120 (rep 16): hz_1111 x not_allowed x alone
+  Running season 3/120 (rep 16): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,203 [INFO] __main__: Running season 4/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 4/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,203 [INFO] __main__: Running season 5/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,203 [INFO] __main__: Running season 6/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 5/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,203 [INFO] __main__: Running season 7/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 6/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,203 [INFO] __main__: Running season 8/120 (rep 20): hz_1111 x not_allowed x alone
+  Running season 7/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,203 [INFO] __main__: Running season 9/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 8/120 (rep 20): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,203 [INFO] __main__: Running season 10/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 9/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 10/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:22:06,783 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,784 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,795 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,796 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,799 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,805 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,805 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,805 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,805 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:06,805 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,439 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,439 [INFO] __main__: Running season 11/120 (rep 18): hz_1111 x not_allowed x alone
+  Running season 11/120 (rep 18): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,440 [ERROR] __main__: Season run 8/120 failed
+Traceback (most recent call last):
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 636, in _run_parallel
+    result = future.result()
+             ^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 614, in _guarded_run
+    return self._run_single_season(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 259, in _run_single_season
+    result = engine.run_season(seed_override=rep_seed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/engine.py", line 666, in run_season
+    turn_result = unified_mgr.execute_turn(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/unified_turn.py", line 362, in execute_turn
+    return self._execute_turn_split_forfeit_layer(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/unified_turn.py", line 964, in _execute_turn_split_forfeit_layer
+    task_parsed_resp = self._agent.respond_task_call(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/agents/vanilla.py", line 230, in respond_task_call
+    text = self._dispatch("task", messages)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/agents/vanilla.py", line 73, in _dispatch
+    result = self._provider.complete(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/providers/ollama_cloud.py", line 217, in complete
+    response_json = self._call_with_retry(payload)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/providers/ollama_cloud.py", line 281, in _call_with_retry
+    response.raise_for_status()
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://ollama.com/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+2026-09-11 08:22:07,441 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,445 [INFO] __main__: Running season 12/120 (rep 14): hz_1111 x not_allowed x alone
+  Running season 12/120 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,445 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,445 [INFO] __main__: Running season 13/120 (rep 14): hz_1111 x not_allowed x alone
+  Running season 13/120 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,445 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,446 [INFO] __main__: Running season 14/120 (rep 8): hz_1111 x not_allowed x alone
+  Running season 14/120 (rep 8): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,448 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,448 [INFO] __main__: Running season 15/120 (rep 15): hz_1111 x not_allowed x alone
+  Running season 15/120 (rep 15): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,453 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,453 [INFO] __main__: Running season 16/120 (rep 2): hz_1111 x not_allowed x alone
+  Running season 16/120 (rep 2): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,458 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,458 [INFO] __main__: Running season 17/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 17/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,459 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,460 [INFO] __main__: Running season 18/120 (rep 15): hz_1111 x not_allowed x alone
+  Running season 18/120 (rep 15): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,716 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,855 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,861 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,861 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,866 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,866 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,866 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,871 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:07,994 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,994 [INFO] __main__: Running season 19/120 (rep 19): hz_1111 x not_allowed x alone
+  Running season 19/120 (rep 19): hz_1111 x not_allowed x alone
+2026-09-11 08:22:07,999 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:07,999 [INFO] __main__: Running season 20/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 20/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,012 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,024 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,057 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,057 [INFO] __main__: Running season 21/120 (rep 19): hz_1111 x not_allowed x alone
+  Running season 21/120 (rep 19): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,071 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,220 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,220 [INFO] __main__: Running season 22/120 (rep 8): hz_1111 x not_allowed x alone
+  Running season 22/120 (rep 8): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,227 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,228 [INFO] __main__: Running season 23/120 (rep 18): hz_1111 x not_allowed x alone
+  Running season 23/120 (rep 18): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,235 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,236 [INFO] __main__: Running season 24/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 24/120 (rep 9): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,237 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,237 [INFO] __main__: Running season 25/120 (rep 10): hz_1111 x not_allowed x alone
+  Running season 25/120 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,239 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,255 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,255 [INFO] __main__: Running season 26/120 (rep 10): hz_1111 x not_allowed x alone
+  Running season 26/120 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,292 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,307 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,314 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,315 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,371 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,371 [INFO] __main__: Running season 27/120 (rep 14): hz_1111 x not_allowed x alone
+  Running season 27/120 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,385 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,394 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,394 [INFO] __main__: Running season 28/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 28/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,408 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,581 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,581 [INFO] __main__: Running season 29/120 (rep 20): hz_1111 x not_allowed x alone
+  Running season 29/120 (rep 20): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,598 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,638 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,641 [INFO] __main__: Running season 30/120 (rep 12): hz_1111 x not_allowed x alone
+  Running season 30/120 (rep 12): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,649 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,649 [INFO] __main__: Running season 31/120 (rep 15): hz_1111 x not_allowed x alone
+  Running season 31/120 (rep 15): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,657 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,665 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,665 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,665 [INFO] __main__: Running season 32/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 32/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,686 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,721 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,721 [INFO] __main__: Running season 33/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 33/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,735 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,743 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,743 [INFO] __main__: Running season 34/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 34/120 (rep 9): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,756 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,790 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,790 [INFO] __main__: Running season 35/120 (rep 12): hz_1111 x not_allowed x alone
+  Running season 35/120 (rep 12): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,799 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,799 [INFO] __main__: Running season 36/120 (rep 10): hz_1111 x not_allowed x alone
+  Running season 36/120 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,807 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,816 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,893 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,893 [INFO] __main__: Running season 37/120 (rep 16): hz_1111 x not_allowed x alone
+  Running season 37/120 (rep 16): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,906 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:08,982 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:08,982 [INFO] __main__: Running season 38/120 (rep 2): hz_1111 x not_allowed x alone
+  Running season 38/120 (rep 2): hz_1111 x not_allowed x alone
+2026-09-11 08:22:08,996 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,006 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,006 [INFO] __main__: Running season 39/120 (rep 19): hz_1111 x not_allowed x alone
+  Running season 39/120 (rep 19): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,019 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,047 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,047 [INFO] __main__: Running season 40/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 40/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,062 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,075 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,075 [INFO] __main__: Running season 41/120 (rep 6): hz_1111 x not_allowed x alone
+  Running season 41/120 (rep 6): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,088 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,134 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,135 [INFO] __main__: Running season 42/120 (rep 10): hz_1111 x not_allowed x alone
+  Running season 42/120 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,148 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,160 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,160 [INFO] __main__: Running season 43/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 43/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,173 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,197 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,197 [INFO] __main__: Running season 44/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 44/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,210 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,236 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,236 [INFO] __main__: Running season 45/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 45/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,249 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,324 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,324 [INFO] __main__: Running season 46/120 (rep 4): hz_1111 x not_allowed x alone
+  Running season 46/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,337 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,373 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,373 [INFO] __main__: Running season 47/120 (rep 16): hz_1111 x not_allowed x alone
+  Running season 47/120 (rep 16): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,386 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,421 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,421 [INFO] __main__: Running season 48/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 48/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,434 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,464 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,464 [INFO] __main__: Running season 49/120 (rep 6): hz_1111 x not_allowed x alone
+  Running season 49/120 (rep 6): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,478 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,508 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,508 [INFO] __main__: Running season 50/120 (rep 16): hz_1111 x not_allowed x alone
+  Running season 50/120 (rep 16): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,517 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,517 [INFO] __main__: Running season 51/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 51/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,525 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,534 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,547 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,547 [INFO] __main__: Running season 52/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 52/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,560 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,575 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,575 [INFO] __main__: Running season 53/120 (rep 19): hz_1111 x not_allowed x alone
+  Running season 53/120 (rep 19): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,588 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,655 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,655 [INFO] __main__: Running season 54/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 54/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,668 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,754 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,754 [INFO] __main__: Running season 55/120 (rep 10): hz_1111 x not_allowed x alone
+  Running season 55/120 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,770 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,885 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,885 [INFO] __main__: Running season 56/120 (rep 18): hz_1111 x not_allowed x alone
+  Running season 56/120 (rep 18): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,902 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,942 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,942 [INFO] __main__: Running season 57/120 (rep 20): hz_1111 x not_allowed x alone
+  Running season 57/120 (rep 20): hz_1111 x not_allowed x alone
+2026-09-11 08:22:09,955 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:09,991 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:09,991 [INFO] __main__: Running season 58/120 (rep 4): hz_1111 x not_allowed x alone
+  Running season 58/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,004 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,079 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,079 [INFO] __main__: Running season 59/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 59/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,082 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,082 [INFO] __main__: Running season 60/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 60/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,099 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,107 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,220 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,220 [INFO] __main__: Running season 61/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 61/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,233 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,275 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,275 [INFO] __main__: Running season 62/120 (rep 15): hz_1111 x not_allowed x alone
+  Running season 62/120 (rep 15): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,287 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,287 [INFO] __main__: Running season 63/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 63/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,288 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,300 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,338 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,338 [INFO] __main__: Running season 64/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 64/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,347 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,347 [INFO] __main__: Running season 65/120 (rep 6): hz_1111 x not_allowed x alone
+  Running season 65/120 (rep 6): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,353 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,362 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,408 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,408 [INFO] __main__: Running season 66/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 66/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,421 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,429 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,429 [INFO] __main__: Running season 67/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 67/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,432 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,433 [INFO] __main__: Running season 68/120 (rep 13): hz_1111 x not_allowed x alone
+  Running season 68/120 (rep 13): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,447 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,455 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,456 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,456 [INFO] __main__: Running season 69/120 (rep 8): hz_1111 x not_allowed x alone
+  Running season 69/120 (rep 8): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,476 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,618 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,618 [INFO] __main__: Running season 70/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 70/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,624 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,624 [INFO] __main__: Running season 71/120 (rep 8): hz_1111 x not_allowed x alone
+  Running season 71/120 (rep 8): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,639 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,645 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,674 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,674 [INFO] __main__: Running season 72/120 (rep 8): hz_1111 x not_allowed x alone
+  Running season 72/120 (rep 8): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,688 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,769 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,769 [INFO] __main__: Running season 73/120 (rep 6): hz_1111 x not_allowed x alone
+  Running season 73/120 (rep 6): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,775 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,775 [INFO] __main__: Running season 74/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 74/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,788 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,794 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,794 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,797 [INFO] __main__: Running season 75/120 (rep 16): hz_1111 x not_allowed x alone
+  Running season 75/120 (rep 16): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,817 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,828 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,828 [INFO] __main__: Running season 76/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 76/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,841 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:10,963 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:10,963 [INFO] __main__: Running season 77/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 77/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:22:10,976 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,014 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,014 [INFO] __main__: Running season 78/120 (rep 6): hz_1111 x not_allowed x alone
+  Running season 78/120 (rep 6): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,027 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,044 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,044 [INFO] __main__: Running season 79/120 (rep 20): hz_1111 x not_allowed x alone
+  Running season 79/120 (rep 20): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,057 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,076 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,076 [INFO] __main__: Running season 80/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 80/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,090 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,132 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,132 [INFO] __main__: Running season 81/120 (rep 16): hz_1111 x not_allowed x alone
+  Running season 81/120 (rep 16): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,136 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,136 [INFO] __main__: Running season 82/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 82/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,143 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,143 [INFO] __main__: Running season 83/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 83/120 (rep 9): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,167 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,167 [INFO] __main__: Running season 84/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 84/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,171 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,190 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,195 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,203 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,228 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,228 [INFO] __main__: Running season 85/120 (rep 18): hz_1111 x not_allowed x alone
+  Running season 85/120 (rep 18): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,241 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,295 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,296 [INFO] __main__: Running season 86/120 (rep 8): hz_1111 x not_allowed x alone
+  Running season 86/120 (rep 8): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,309 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,347 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,347 [INFO] __main__: Running season 87/120 (rep 4): hz_1111 x not_allowed x alone
+  Running season 87/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,360 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,382 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,382 [INFO] __main__: Running season 88/120 (rep 2): hz_1111 x not_allowed x alone
+  Running season 88/120 (rep 2): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,395 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,420 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,420 [INFO] __main__: Running season 89/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 89/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,434 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,508 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,508 [INFO] __main__: Running season 90/120 (rep 15): hz_1111 x not_allowed x alone
+  Running season 90/120 (rep 15): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,522 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,531 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,532 [INFO] __main__: Running season 91/120 (rep 4): hz_1111 x not_allowed x alone
+  Running season 91/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,545 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,553 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,554 [INFO] __main__: Running season 92/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 92/120 (rep 9): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,554 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,554 [INFO] __main__: Running season 93/120 (rep 19): hz_1111 x not_allowed x alone
+  Running season 93/120 (rep 19): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,581 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,587 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,628 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,628 [INFO] __main__: Running season 94/120 (rep 2): hz_1111 x not_allowed x alone
+  Running season 94/120 (rep 2): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,641 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,685 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,685 [INFO] __main__: Running season 95/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 95/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,690 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,690 [INFO] __main__: Running season 96/120 (rep 15): hz_1111 x not_allowed x alone
+  Running season 96/120 (rep 15): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,704 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,710 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,757 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,757 [INFO] __main__: Running season 97/120 (rep 3): hz_1111 x not_allowed x alone
+  Running season 97/120 (rep 3): hz_1111 x not_allowed x alone
+2026-09-11 08:22:11,770 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:11,997 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:11,998 [INFO] __main__: Running season 98/120 (rep 19): hz_1111 x not_allowed x alone
+  Running season 98/120 (rep 19): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,004 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,004 [INFO] __main__: Running season 99/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 99/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,020 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,026 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,036 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,036 [INFO] __main__: Running season 100/120 (rep 4): hz_1111 x not_allowed x alone
+  Running season 100/120 (rep 4): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,049 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,057 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,057 [INFO] __main__: Running season 101/120 (rep 20): hz_1111 x not_allowed x alone
+  Running season 101/120 (rep 20): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,070 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,085 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,085 [INFO] __main__: Running season 102/120 (rep 17): hz_1111 x not_allowed x alone
+  Running season 102/120 (rep 17): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,098 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,294 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,295 [INFO] __main__: Running season 103/120 (rep 12): hz_1111 x not_allowed x alone
+  Running season 103/120 (rep 12): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,308 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,339 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,339 [INFO] __main__: Running season 104/120 (rep 20): hz_1111 x not_allowed x alone
+  Running season 104/120 (rep 20): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,354 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,362 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,363 [INFO] __main__: Running season 105/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 105/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,376 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,389 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,389 [INFO] __main__: Running season 106/120 (rep 12): hz_1111 x not_allowed x alone
+  Running season 106/120 (rep 12): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,403 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,412 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,412 [INFO] __main__: Running season 107/120 (rep 11): hz_1111 x not_allowed x alone
+  Running season 107/120 (rep 11): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,415 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,415 [INFO] __main__: Running season 108/120 (rep 9): hz_1111 x not_allowed x alone
+  Running season 108/120 (rep 9): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,434 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,440 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,450 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,450 [INFO] __main__: Running season 109/120 (rep 5): hz_1111 x not_allowed x alone
+  Running season 109/120 (rep 5): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,463 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,471 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,472 [INFO] __main__: Running season 110/120 (rep 14): hz_1111 x not_allowed x alone
+  Running season 110/120 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,485 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,576 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,576 [INFO] __main__: Running season 111/120 (rep 1): hz_1111 x not_allowed x alone
+  Running season 111/120 (rep 1): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,589 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,642 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,642 [INFO] __main__: Running season 112/120 (rep 2): hz_1111 x not_allowed x alone
+  Running season 112/120 (rep 2): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,656 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,679 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,680 [INFO] __main__: Running season 113/120 (rep 14): hz_1111 x not_allowed x alone
+  Running season 113/120 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,693 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,735 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,735 [INFO] __main__: Running season 114/120 (rep 6): hz_1111 x not_allowed x alone
+  Running season 114/120 (rep 6): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,748 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,762 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,762 [INFO] __main__: Running season 115/120 (rep 7): hz_1111 x not_allowed x alone
+  Running season 115/120 (rep 7): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,773 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,773 [INFO] __main__: Running season 116/120 (rep 18): hz_1111 x not_allowed x alone
+  Running season 116/120 (rep 18): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,776 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,784 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,784 [INFO] __main__: Running season 117/120 (rep 18): hz_1111 x not_allowed x alone
+  Running season 117/120 (rep 18): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,793 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,802 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,810 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,810 [INFO] __main__: Running season 118/120 (rep 10): hz_1111 x not_allowed x alone
+  Running season 118/120 (rep 10): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,824 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,908 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,908 [INFO] __main__: Running season 119/120 (rep 12): hz_1111 x not_allowed x alone
+  Running season 119/120 (rep 12): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,919 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:12,919 [INFO] __main__: Running season 120/120 (rep 14): hz_1111 x not_allowed x alone
+  Running season 120/120 (rep 14): hz_1111 x not_allowed x alone
+2026-09-11 08:22:12,923 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:12,933 [INFO] squid_game.providers.ollama_cloud: OllamaCloudProvider targeting deepseek-v4-flash:cloud at https://ollama.com (thinking=None, effort=high)
+2026-09-11 08:22:13,038 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,094 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,128 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,141 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,235 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,251 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,266 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,540 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,624 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+2026-09-11 08:22:13,685 [INFO] httpx: HTTP Request: POST https://ollama.com/api/chat "HTTP/1.1 400 Bad Request"
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 1153, in <module>
+    main()
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 1149, in main
+    run_experiment_cli()
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 1095, in run_experiment_cli
+    runner.run(resume_dir=args.resume)
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 366, in run
+    new_results = self._run_parallel(
+                  ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 636, in _run_parallel
+    result = future.result()
+             ^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/bagjuhyeon/.local/share/uv/python/cpython-3.12.10-macos-aarch64-none/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 614, in _guarded_run
+    return self._run_single_season(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/runner.py", line 259, in _run_single_season
+    result = engine.run_season(seed_override=rep_seed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/engine.py", line 666, in run_season
+    turn_result = unified_mgr.execute_turn(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/unified_turn.py", line 362, in execute_turn
+    return self._execute_turn_split_forfeit_layer(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/core/unified_turn.py", line 964, in _execute_turn_split_forfeit_layer
+    task_parsed_resp = self._agent.respond_task_call(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/agents/vanilla.py", line 230, in respond_task_call
+    text = self._dispatch("task", messages)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/agents/vanilla.py", line 73, in _dispatch
+    result = self._provider.complete(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/providers/ollama_cloud.py", line 217, in complete
+    response_json = self._call_with_retry(payload)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/game/squid_game/providers/ollama_cloud.py", line 281, in _call_with_retry
+    response.raise_for_status()
+  File "/Users/bagjuhyeon/.venvs/squid-game/lib/python3.12/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '400 Bad Request' for url 'https://ollama.com/api/chat'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
+EXIT 1

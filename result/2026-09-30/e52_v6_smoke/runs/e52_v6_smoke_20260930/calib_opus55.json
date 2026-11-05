@@ -1,0 +1,60 @@
+{
+ "claude-opus-5-5": {
+  "solve_cap": 16384,
+  "plan_median": 19.0,
+  "plan_p95": 19.0,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 1250,
+    "min": 863,
+    "max": 1552,
+    "mean": 1228.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3": {
+    "median": 1803,
+    "min": 1136,
+    "max": 2071,
+    "mean": 1703.5,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 2076,
+    "min": 1731,
+    "max": 4089,
+    "mean": 2493.25,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 1365,
+    "min": 1151,
+    "max": 1757,
+    "mean": 1409.75,
+    "solved": 4,
+    "attempts": 4,
+    "tasks": 1,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 1750,
+    "min": 1046,
+    "max": 2428,
+    "mean": 1645.625,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   }
+  }
+ }
+}

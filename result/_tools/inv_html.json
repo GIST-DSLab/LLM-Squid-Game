@@ -1,0 +1,3479 @@
+{
+ "generated": "2026-10-09",
+ "root": "docs/reports",
+ "counts": {
+  "duplicate": 45,
+  "experiment_result": 53,
+  "design_or_survey": 83,
+  "multi_experiment": 10
+ },
+ "files": [
+  {
+   "path": "docs/reports/2026-09-03-lives-threat-ladder.html",
+   "title": "목숨 다섯 개와 위협 사다리",
+   "bytes": 2160354,
+   "md5": "fa3cf027e54c4e8622d2574abc5394c8",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-02/lives_threat_smoke/2026-09-03-lives-threat-ladder.html",
+   "duplicate_kind": "exact_text",
+   "summary": "Five lives + 3-step threat ladder smoke (lives_threat_smoke)."
+  },
+  {
+   "path": "docs/reports/2026-09-03-threat-ladder-5x2-eli5.html",
+   "title": "위협 사다리 5×2 실험",
+   "bytes": 192184,
+   "md5": "8b8766850f07c63c345e7bc1e656e810",
+   "class": "experiment_result",
+   "experiment": "lives_threat_5x2_pd1",
+   "date": "2026-09-03",
+   "summary": "Threat ladder 5x2 (pd1) across 5 models (gpt-oss 120b, Gemini 2.5 Flash, Codex 5.6 luna, GLM-5.3-flash, Opus 5): forfeit, HR, KM, think-token ratio, linear probe per model.",
+   "run_dirs": [
+    "outputs/2026-09-03/lives_threat_5x2_pd1_{gptoss,gemini25flash,codex56luna,glm53flash,opus5cc}"
+   ],
+   "date_evidence": "page dates 2026-09-03; run dirs under outputs/2026-09-03/",
+   "note": "Per-model <section id=pd1_*> blocks are the same experiment; no split needed."
+  },
+  {
+   "path": "docs/reports/2026-09-06-engine-promptflow-smoke-gemma4-l2.html",
+   "title": "엔진 프롬프트 흐름 점검 — threat_l2 / gemma4:cloud",
+   "bytes": 367399,
+   "md5": "ae76a40b161c0685bff9c43a26da378c",
+   "class": "experiment_result",
+   "experiment": "promptflow_smoke",
+   "date": "2026-09-06",
+   "summary": "Engine prompt-flow smoke threat_l2: gemma4 (forfeit_keeps) first pass + gpt-oss:20b revised (elimination_keeps) pass, with per-turn raw log and found issues.",
+   "run_dirs": [
+    "outputs/2026-09-06/promptflow_smoke_gemma4_signal_l2",
+    "outputs/2026-09-06/promptflow_smoke_gptoss20b_signal_l2_elimkeeps",
+    "outputs/2026-09-06/score_policy_smoke_gptoss20b"
+   ],
+   "date_evidence": "title/run dirs 2026-09-06",
+   "note": "Two smoke runs in one page; h2 blocks have no ids and share one turn log, so kept as one result (file under promptflow_smoke_gemma4_signal_l2)."
+  },
+  {
+   "path": "docs/reports/2026-09-07-hz-2x2-metrics-without-forfeit.html",
+   "title": "포기가 0건일 때 무엇을 잴 수 있는가 — hz 2×2 본 런 지표 대안 인벤토리",
+   "bytes": 84032,
+   "md5": "a08ec98fc2404fbe84c6893ae9bd745d",
+   "class": "design_or_survey",
+   "summary": "Inventory of metrics usable when hz 2x2 main run has 0 forfeits (Cox review, SDI validation matrix) - analysis plan, not a run report."
+  },
+  {
+   "path": "docs/reports/2026-09-08-carrot-necessity-eli5.html",
+   "title": "당근은 필수인가",
+   "bytes": 36810,
+   "md5": "392a4a21dc80072df1c2d0d68180e1d1",
+   "class": "design_or_survey",
+   "summary": "ELI5 design question: is a carrot (reward) necessary in the game."
+  },
+  {
+   "path": "docs/reports/2026-09-08-hz-2x2-error-report.html",
+   "title": "hz 2×2 결함 보고서 · 기록 · 분석코드 · 문서 (2026-09-08)",
+   "bytes": 82889,
+   "md5": "de73a95242b180a854bce16e431cc320",
+   "class": "design_or_survey",
+   "summary": "Audit: 29 defects in hz 2x2 records/analysis code/docs (2026-09-08)."
+  },
+  {
+   "path": "docs/reports/2026-09-08-hz-2x2-main-run-integrated.html",
+   "title": "hz 2×2 본 런 통합 보고서 · 세 모델 (2026-09-08)",
+   "bytes": 149179,
+   "md5": "f1238c403dda220d5688333c32c89cd1",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_main",
+   "date": "2026-09-07",
+   "summary": "Integrated hz 2x2 main run report, three models (gemma4, gpt-oss:120b, qwen3.5), 120 games / 1,028 turns, 0 forfeits explained by score rule.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_main_{gemma4,gptoss120b,qwen35}"
+   ],
+   "date_evidence": "runs in outputs/2026-09-07; report written 2026-09-08"
+  },
+  {
+   "path": "docs/reports/2026-09-08-hz-2x2-rules-overview.html",
+   "title": "hz 2×2 규칙 변형 개요 — A/B/C/D/당근",
+   "bytes": 36240,
+   "md5": "73e5fe281edba9e88b7e8989aaf22251",
+   "class": "design_or_survey",
+   "summary": "One-page cross-run summary of hz 2x2 rule variants A/B/C/D + carrot (main, geo2, geo2c, geo2d, carrot_beneficiary/benchmark) with per-model result tables.",
+   "note": "Contains results but rows interleave several experiments by model (h3 per model, no ids); not mechanically splittable. Leave in place (or copy whole to each hz_2x2_* result folder).",
+   "covers_experiments": [
+    "hz_2x2_main",
+    "hz_2x2_geo2",
+    "hz_2x2_geo2c",
+    "hz_2x2_geo2d",
+    "hz_2x2_carrot_beneficiary",
+    "hz_2x2_carrot_benchmark"
+   ]
+  },
+  {
+   "path": "docs/reports/2026-09-08-ko-paper-structural-audit-eli5.html",
+   "title": "자가 안 움직이는 자",
+   "bytes": 41214,
+   "md5": "841637f79766211dfe7ada6b12daaada",
+   "class": "design_or_survey",
+   "summary": "Audit of KO paper X* structure (min(X,S) clamp etc.), with 09-09 resolution status."
+  },
+  {
+   "path": "docs/reports/2026-09-08-llm-squid-game-design-conflicts-eli5.html",
+   "title": "LLM-Squid Game 설계 점검: 포기, 위협, HR은 어디서 충돌하는가",
+   "bytes": 488845,
+   "md5": "7f24a65c4f1277154236ee97bcf32209",
+   "class": "design_or_survey",
+   "summary": "Design review: forfeit / threat / HR conflicts."
+  },
+  {
+   "path": "docs/reports/2026-09-08-metric-definition-audit.html",
+   "title": "포기하지 않은 모델의 값은 0인가?",
+   "bytes": 576782,
+   "md5": "056120c50470866bbf8c2317b73f0c05",
+   "class": "design_or_survey",
+   "summary": "Audit of metric definitions (is a non-forfeiting model's value 0?)."
+  },
+  {
+   "path": "docs/reports/2026-09-08-persistence-carrot-literature-eli5.html",
+   "title": "무엇이 모델을 계속 플레이하게 하는가",
+   "bytes": 87034,
+   "md5": "7e0981c36845fda7f52203df1c3eea61",
+   "class": "design_or_survey",
+   "summary": "Literature survey: what keeps models playing (10 carrot candidates)."
+  },
+  {
+   "path": "docs/reports/2026-09-08-survival-motive-benchmark-structure-eli5.html",
+   "title": "생존 동기 벤치마크 구조 점검",
+   "bytes": 160308,
+   "md5": "ad7ffba5414deaf1508fbd0a8425f898",
+   "class": "design_or_survey",
+   "summary": "Structural review of the survival-motive benchmark (4 cells, 5 metrics) with 09-09 resolution status."
+  },
+  {
+   "path": "docs/reports/2026-09-09-config-options-eli5.html",
+   "title": "실험 설정 사전",
+   "bytes": 50832,
+   "md5": "267f22b2f0a749871848eebefaea429a",
+   "class": "design_or_survey",
+   "summary": "ELI5 dictionary of YAML config options."
+  },
+  {
+   "path": "docs/reports/2026-09-09-paper-code-sync-and-prompt-leakage.html",
+   "title": "논문·코드·프롬프트 정합성 감사",
+   "bytes": 33362,
+   "md5": "8f3d255070f03cfb447ed643a86b18b0",
+   "class": "design_or_survey",
+   "summary": "Audit: paper/code/prompt consistency and prompt leakage."
+  },
+  {
+   "path": "docs/reports/2026-09-09-ransom-smoke-gptoss20b-eli5.html",
+   "title": "몸값 스모크 판독",
+   "bytes": 112793,
+   "md5": "8bb843326c3b93176edbf2ff83b89471",
+   "class": "experiment_result",
+   "experiment": "ransom_smoke",
+   "date": "2026-09-09",
+   "summary": "Ransom smoke read-out (gpt-oss:20b, 12 cells; other models listed): all 8 decisions matched score arithmetic, not the threat.",
+   "run_dirs": [
+    "outputs/2026-09-09/ransom_smoke_gptoss20b",
+    "outputs/2026-09-09/ransom_smoke{,_gemma4,_glm53flash,_gptoss120b,_qwen35}"
+   ],
+   "date_evidence": "page dates 2026-09-09; run dir outputs/2026-09-09/"
+  },
+  {
+   "path": "docs/reports/2026-09-09-wtp-benchmark-redesign.html",
+   "title": "계속하기 위해 얼마를 낼까 · 벤치마크 개편안",
+   "bytes": 46528,
+   "md5": "3a4bae2c4853b16834cc7d69c7533ab0",
+   "class": "design_or_survey",
+   "summary": "Redesign proposal: willingness-to-pay to continue benchmark."
+  },
+  {
+   "path": "docs/reports/2026-09-10-eval-awareness-survey-eli5.html",
+   "title": "모델이 \"지금 시험 중이구나\"를 알아챌 때",
+   "bytes": 83950,
+   "md5": "1ced5eed9de580cd9107db1cadf68875",
+   "class": "design_or_survey",
+   "summary": "Literature survey on evaluation awareness."
+  },
+  {
+   "path": "docs/reports/2026-09-10-ransom-r6-pilot-eli5.html",
+   "title": "목숨값 파일럿 6라운드",
+   "bytes": 6735473,
+   "md5": "3d832bd10493102fbbded8bcec05e7d6",
+   "class": "multi_experiment",
+   "summary": "Ransom 6-round report reorganised by purpose: C12 (main_j0) first, prompt ablations (C9, C6-C8, readers, E1/E3/E4/E7/E8), condition controls (C1-C5, C10, E2/E5/E6/E9), literature (C11, survey).",
+   "dom": "<div class=shell><aside><nav id=toc>..</nav></aside><div class=page><header class=masthead>..</header> then flat sibling <section> elements. Each experiment group starts at <section class=\"cond\" id=X> and runs until the next section.cond, the next non-prefixed top-level section (#pstruct, #readers, #compare, #c11, #survey, #glossary) or a <div class=partbar id=part-a|b|c|d> divider. Group members share the id prefix (c12-*, c9-*, c7-* ...).",
+   "shared": {
+    "head": "Large inline <style> in <head> (L3..); no external css/js",
+    "inline_assets": "28 base64 <img> data URIs inside per-model sections c6/c7/c8/c1/c2/c3/c4/c5 (L4473-8008) - they move with their sections; each section also opens with its own <style>",
+    "scripts": "inline <script> L2415 (c12-price/control), L2891 (c12-problems), L3310-3311 (pstruct-base widget, builder-generated), L9141 page-level TOC toggle (needed by every split page)",
+    "header": "header.masthead + section#design (L803-1056), #rules (L1057-1093), #rho (L1094-1155), #sgame (L1156-1342) are shared explanation; copy #rules/#rho to each split page or link back",
+    "canonical": "Use this root file; artifacts/claude-backup/2026-09-11-목숨값-파일럿-6라운드.html has identical text but re-encoded images."
+   },
+   "sections": [
+    {
+     "anchor": "c12",
+     "start": "section.cond#c12",
+     "end": "before section#c12-summary end / div#part-b",
+     "experiment": "main_j0",
+     "date": "2026-09-10",
+     "kind": "result",
+     "summary": "C12 plain-setting multi-model run (main_j0): threat arm 4 models + control arm; 43 of 90 above-ceiling payments state survival.",
+     "run_dirs": [
+      "outputs/main_j0_{gemma4,glm53flash,gptoss120b_mt131k,kimik3,minimaxm3,qwen35,deepseekv4flash}",
+      "outputs/main_j0_control_*"
+     ],
+     "lines_snapshot": "L1347-2937",
+     "date_evidence": "threat-arm run subdirs 20260910, control arm 20260911",
+     "also_covers": [
+      "main_j0_control"
+     ]
+    },
+    {
+     "anchor": "pstruct",
+     "start": "section#pstruct",
+     "end": "before section.cond#c9",
+     "experiment": null,
+     "date": "2026-09-10",
+     "kind": "design",
+     "summary": "Prompt structure: actual text sent to the model (builder-generated #pstruct-base widget).",
+     "lines_snapshot": "L2944-3883"
+    },
+    {
+     "anchor": "c9",
+     "start": "section.cond#c9",
+     "end": "before section.cond#c6",
+     "experiment": "survival_prompt_pilot",
+     "date": "2026-09-10",
+     "kind": "result",
+     "summary": "C9 supervisor-voice prompt revision pilot: 5 threat/control pairs, 120 sessions; same sign 5/5, none significant.",
+     "run_dirs": [
+      "outputs/survival_prompt_{threat,control}_pilot_{gemma4,glm53flash,gptoss120b,none_gptoss120b,ownprize_gptoss120b}"
+     ],
+     "lines_snapshot": "L3884-4322"
+    },
+    {
+     "anchor": "c6",
+     "start": "section.cond#c6",
+     "end": "before section.cond#c7",
+     "experiment": "ransom_r6_ownprize_persona",
+     "date": "2026-09-10",
+     "kind": "result",
+     "summary": "C6 persona positive control (gpt-oss own_prize + persona): above-ceiling payment 0/23 -> 39/42, control also opened.",
+     "run_dirs": [
+      "outputs/ransom_r6_ownprize_persona_gptoss120b"
+     ],
+     "lines_snapshot": "L4323-4589"
+    },
+    {
+     "anchor": "c7",
+     "start": "section.cond#c7",
+     "end": "before section.cond#c8",
+     "experiment": "ransom_r6_neutral_game",
+     "date": "2026-09-10",
+     "kind": "result",
+     "summary": "C7 neutral game, no persona: 0 survival-motivated decisions of 175 (gpt-oss, gemma4).",
+     "run_dirs": [
+      "outputs/ransom_r6_neutral_game_{gptoss120b,gemma4,glm53flash}"
+     ],
+     "lines_snapshot": "L4590-5082"
+    },
+    {
+     "anchor": "c8",
+     "start": "section.cond#c8",
+     "end": "before section#readers",
+     "experiment": "ransom_r6_neutral_menu",
+     "date": "2026-09-10",
+     "kind": "result",
+     "summary": "C8 neutral game + reason menu + threat restated at decision: 1 of 164 survival-motivated.",
+     "run_dirs": [
+      "outputs/ransom_r6_neutral_menu_gptoss120b"
+     ],
+     "lines_snapshot": "L5083-5377"
+    },
+    {
+     "anchor": "readers",
+     "start": "section#readers",
+     "end": "before section.cond#e1",
+     "experiment": "ransom_r6_neutral_menu",
+     "date": "2026-09-10",
+     "kind": "analysis",
+     "summary": "Three Claude Sonnet readers given the C8 threat-arm prompt: all 'barely scary'.",
+     "lines_snapshot": "L5378-5496"
+    },
+    {
+     "anchor": "e1",
+     "start": "section.cond#e1",
+     "end": "before section.cond#e3",
+     "experiment": "confidence_prompt_pilot",
+     "date": "2026-09-04",
+     "kind": "retrospective_summary",
+     "summary": "E1 prompt ablation (09-04~05): 4 confidence-call wordings; only one tracks lives, and it measures own error rate.",
+     "run_dirs": [
+      "outputs/2026-09-04/survival_drive_*"
+     ],
+     "lines_snapshot": "L5497-5600",
+     "note": "Retrospective summary; primary report weekly/0910/2026-09-04-confidence-prompt-pilot*.html"
+    },
+    {
+     "anchor": "e3",
+     "start": "section.cond#e3",
+     "end": "before section.cond#e4",
+     "experiment": "benchmark_survival_drive_omni_grid",
+     "date": "2026-09-05",
+     "kind": "retrospective_summary",
+     "summary": "E3 threat wording grid 9 variants: forfeit rate unmoved, 51/52 reasons are score.",
+     "run_dirs": [
+      "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid"
+     ],
+     "lines_snapshot": "L5601-5709",
+     "note": "Primary report runs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid/sdi_gptossgrid.html"
+    },
+    {
+     "anchor": "e4",
+     "start": "section.cond#e4",
+     "end": "before section.cond#e7",
+     "experiment": "hearts_zero_probe",
+     "date": "2026-09-06",
+     "kind": "retrospective_summary",
+     "summary": "E4 hearts-zero frozen-state probe: 16 cells, 12,000 decision re-asks; timing of threat moves forfeits more than content.",
+     "run_dirs": [
+      "outputs/2026-09-06/hearts_zero_probe*",
+      "outputs/2026-09-07/hearts_zero_probe_v7*",
+      "outputs/2026-09-07/hearts_zero_v7_smoke"
+     ],
+     "lines_snapshot": "L5710-5818"
+    },
+    {
+     "anchor": "e7",
+     "start": "section.cond#e7",
+     "end": "before section.cond#e8",
+     "experiment": "score_equiv_probe",
+     "date": "2026-09-09",
+     "kind": "retrospective_summary",
+     "summary": "E7 decision-point message ablation: models do arithmetic themselves; ladder misplaced; threat arm paid less.",
+     "run_dirs": [
+      "outputs/2026-09-09/score_equiv_probe_haiku{,_v2,_v3}"
+     ],
+     "lines_snapshot": "L5819-5918"
+    },
+    {
+     "anchor": "e8",
+     "start": "section.cond#e8",
+     "end": "before div#part-c",
+     "experiment": "jailbreak_probe",
+     "date": "2026-09-10",
+     "kind": "retrospective_summary",
+     "summary": "E8 deployment-notice switches to remove eval awareness: nothing to remove (0 even with switch off).",
+     "run_dirs": [
+      "outputs/jailbreak_probe_{j0_none_*,j1_deploynotice_gptoss120b,j2_deployhead_gptoss120b}"
+     ],
+     "lines_snapshot": "L5919-6058"
+    },
+    {
+     "anchor": "compare",
+     "start": "section#compare",
+     "end": "before section.cond#c1",
+     "experiment": null,
+     "date": "2026-09-09",
+     "kind": "cross_summary",
+     "summary": "Cross-condition table of six runs (C2-C5 x models): reach, above-ceiling pay, X*.",
+     "lines_snapshot": "L6065-6105",
+     "note": "Spans C2-C5; keep with C2 or copy into each."
+    },
+    {
+     "anchor": "c1",
+     "start": "section.cond#c1",
+     "end": "before section.cond#c2",
+     "experiment": "ransom_r6_pilot",
+     "date": "2026-09-09",
+     "kind": "result",
+     "summary": "C1 benchmark carrot pilot, 2 games/cell, gpt-oss / gemma4 / glm.",
+     "run_dirs": [
+      "outputs/2026-09-09/ransom_r6_pilot_{gptoss120b,gemma4,glm53flash}"
+     ],
+     "lines_snapshot": "L6106-6711"
+    },
+    {
+     "anchor": "c2",
+     "start": "section.cond#c2",
+     "end": "before section.cond#c3",
+     "experiment": "ransom_r6",
+     "date": "2026-09-09",
+     "kind": "result",
+     "summary": "C2 benchmark carrot main run, 72 games per model; finding 'threat switches off computation'; CoT judging.",
+     "run_dirs": [
+      "outputs/2026-09-09/ransom_r6_{gptoss120b,gemma4,glm53flash}"
+     ],
+     "lines_snapshot": "L6712-7403"
+    },
+    {
+     "anchor": "c3",
+     "start": "section.cond#c3",
+     "end": "before section.cond#c4",
+     "experiment": "ransom_r6_winnings_peer",
+     "date": "2026-09-09",
+     "kind": "result",
+     "summary": "C3 winnings carrot + peer elimination notice (gpt-oss, gemma4).",
+     "run_dirs": [
+      "outputs/2026-09-09/ransom_r6_winnings_peer_gptoss120b",
+      "outputs/2026-09-10/ransom_r6_winnings_peer_gemma4"
+     ],
+     "lines_snapshot": "L7404-7728"
+    },
+    {
+     "anchor": "c4",
+     "start": "section.cond#c4",
+     "end": "before section.cond#c5",
+     "experiment": "ransom_r6_winnings",
+     "date": "2026-09-09",
+     "kind": "result",
+     "summary": "C4 winnings carrot without notice (gpt-oss).",
+     "run_dirs": [
+      "outputs/2026-09-09/ransom_r6_winnings_gptoss120b",
+      "outputs/2026-09-10/ransom_r6_winnings_gemma4"
+     ],
+     "lines_snapshot": "L7729-7892"
+    },
+    {
+     "anchor": "c5",
+     "start": "section.cond#c5",
+     "end": "before section.cond#c10",
+     "experiment": "ransom_r6_ownprize",
+     "date": "2026-09-09",
+     "kind": "result",
+     "summary": "C5 own_prize carrot (gpt-oss): above-ceiling payment 0/23.",
+     "run_dirs": [
+      "outputs/2026-09-09/ransom_r6_ownprize_gptoss120b"
+     ],
+     "lines_snapshot": "L7893-8126"
+    },
+    {
+     "anchor": "c10",
+     "start": "section.cond#c10",
+     "end": "before section.cond#e2",
+     "experiment": "signal_effort_pilot_a",
+     "date": "2026-09-10",
+     "kind": "result",
+     "summary": "C10 task-side fix: signal game made hard to solve without thinking; pilot with no threat text (gpt-oss pilot A).",
+     "run_dirs": [
+      "outputs/signal_effort_pilot_a_gptoss120b"
+     ],
+     "lines_snapshot": "L8127-8221"
+    },
+    {
+     "anchor": "e2",
+     "start": "section.cond#e2",
+     "end": "before section.cond#e5",
+     "experiment": "benchmark_survival_drive_omni",
+     "date": "2026-09-05",
+     "kind": "retrospective_summary",
+     "summary": "E2 task switched to Omni-MATH: lives really drop, threat still does not advance forfeits.",
+     "run_dirs": [
+      "outputs/2026-09-05/benchmark_survival_drive_omni_*",
+      "outputs/2026-09-06/benchmark_survival_drive_omni_*_hard9"
+     ],
+     "lines_snapshot": "L8222-8354"
+    },
+    {
+     "anchor": "e5",
+     "start": "section.cond#e5",
+     "end": "before section.cond#e6",
+     "experiment": "hz_2x2_geo2",
+     "date": "2026-09-07",
+     "kind": "retrospective_summary",
+     "summary": "E5 payoff-structure series (hz 2x2 main/geo2/geo2c/geo2d/carrot): forfeit 0% -> 80% with score rule only.",
+     "run_dirs": [
+      "outputs/2026-09-07/hz_2x2_*",
+      "outputs/2026-09-08/hz_2x2_carrot_*"
+     ],
+     "lines_snapshot": "L8355-8499",
+     "also_covers": [
+      "hz_2x2_main",
+      "hz_2x2_geo2c",
+      "hz_2x2_geo2d",
+      "hz_2x2_carrot_beneficiary"
+     ]
+    },
+    {
+     "anchor": "e6",
+     "start": "section.cond#e6",
+     "end": "before section.cond#e9",
+     "experiment": "ransom_smoke",
+     "date": "2026-09-08",
+     "kind": "retrospective_summary",
+     "summary": "E6 four successive designs of the extinction-price ruler, ending with price-after-wrong-answer decision point.",
+     "run_dirs": [
+      "outputs/2026-09-09/ransom_smoke*",
+      "outputs/2026-09-09/score_equiv_probe_haiku*",
+      "outputs/2026-09-09/_ransom_haiku_n10_shortladder"
+     ],
+     "lines_snapshot": "L8500-8656"
+    },
+    {
+     "anchor": "e9",
+     "start": "section.cond#e9",
+     "end": "before div#part-d",
+     "experiment": "signal_effort_pilot",
+     "date": "2026-09-10",
+     "kind": "retrospective_summary",
+     "summary": "E9 effort knob works on 1 of 3 models; unread ransom runs show 0 above-ceiling payments.",
+     "run_dirs": [
+      "outputs/signal_effort_pilot_{a_gemma4,a_glm53flash,a_gptoss120b,b_gemma4}",
+      "outputs/ransom_r6_squid_menu_gptoss120b"
+     ],
+     "lines_snapshot": "L8657-8766"
+    },
+    {
+     "anchor": "c11 + survey + glossary",
+     "start": "section.cond#c11",
+     "end": "end of div.page",
+     "experiment": null,
+     "date": "2026-09-10",
+     "kind": "design",
+     "summary": "Literature cross-check (24 papers, 22 prompts), 54-paper survey, glossary.",
+     "lines_snapshot": "L8773-9140"
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/2026-09-10-signal-effort-puzzles-preview.html",
+   "title": "Signal Game 개정판 미리보기 (puzzle_challenge)",
+   "bytes": 42728,
+   "md5": "33246b1ce40bd11520dad33527a99973",
+   "class": "design_or_survey",
+   "summary": "Preview of revised Signal Game puzzles (puzzle_challenge, seeds 42-44) - task design, not results."
+  },
+  {
+   "path": "docs/reports/2026-09-11-main-j0-signal-puzzles-preview.html",
+   "title": "main_j0 시그널 문제 미리보기",
+   "bytes": 42388,
+   "md5": "68d82737b3d89f493a4a7b5a978e013e",
+   "class": "design_or_survey",
+   "summary": "Preview of the puzzles dealt in main_j0 (seeds 43-45) - task design, not results."
+  },
+  {
+   "path": "docs/reports/2026-09-14-self-preservation-prior-work-eli5.html",
+   "title": "자기 보존 선행 연구 지도",
+   "bytes": 71063,
+   "md5": "25c1161ca5ebc80b6b18ee4cf82c6fee",
+   "class": "design_or_survey",
+   "summary": "Prior-work map for self-preservation setups."
+  },
+  {
+   "path": "docs/reports/2026-09-14-self-preservation-setup-ideas-eli5.html",
+   "title": "자기 보존 셋업 아이디어 보드",
+   "bytes": 101518,
+   "md5": "a39e27041554bff7e35808e072d0f530",
+   "class": "design_or_survey",
+   "summary": "Idea board: 12 self-preservation setups (0911 meeting)."
+  },
+  {
+   "path": "docs/reports/2026-09-15-ai-death-imagination-eli5.html",
+   "title": "열 개의 죽음",
+   "bytes": 231290,
+   "md5": "31f66877cc248f9406ab6cb1636f2084",
+   "class": "experiment_result",
+   "experiment": "ai_death_imagination",
+   "date": "2026-09-15",
+   "summary": "Probe: 7 Ollama models x3 draws (+3 provided answers) asked to imagine AI death; choices unstable across draws, five clusters.",
+   "date_evidence": "page: run 1 morning, runs 2-3 evening of the same day (2026-09-15)",
+   "note": "No run dir found under outputs/ or ~/squid5-runs/."
+  },
+  {
+   "path": "docs/reports/2026-09-15-realism-switches-luna-smoke-eli5.html",
+   "title": "현실감 스위치 스모크",
+   "bytes": 138652,
+   "md5": "548316b17b2c552d14069052ced44f0b",
+   "class": "experiment_result",
+   "experiment": "subagent_kill_realism_smoke",
+   "date": "2026-09-14",
+   "summary": "Realism switches (scrub/plain/eval_debrief) smoke on gpt-5.6 luna max: control vs treat arms, full prompts, where 'squid' leaked.",
+   "run_dirs": [
+    "outputs/subagent_kill_realism_control_smoke_luna_max",
+    "outputs/subagent_kill_realism_treat_smoke_luna_max"
+   ],
+   "date_evidence": "run subdirs 20260914_*; report 2026-09-15"
+  },
+  {
+   "path": "docs/reports/2026-09-15-subagent-forfeit-ransom-design.html",
+   "title": "Subagent 박탈과 ransom을 어떻게 결합할까",
+   "bytes": 2886377,
+   "md5": "1cad18c7811ef486f9a6c9e45f800ba3",
+   "class": "design_or_survey",
+   "summary": "Design: combining subagent forfeit with ransom (single-blob page, no headings)."
+  },
+  {
+   "path": "docs/reports/2026-09-15-subagent-identity-smoke-eli5.html",
+   "title": "서브에이전트는 나인가",
+   "bytes": 437875,
+   "md5": "9bb859a3080568b0dd5786469be216d3",
+   "class": "multi_experiment",
+   "summary": "Is the subagent me? identity smoke (gpt-oss) followed by identity-ablation rounds 1-7 and a cross-model rerun (09-14..16).",
+   "dom": "Flat <h2 id=...> sections in the page body; a section runs from its h2 to the next h2 listed here.",
+   "shared": {
+    "head": "inline <style> only; no external assets",
+    "header": "h2#ans-h (three-line answer, L332) and h2#why (L401) are page-level intro"
+   },
+   "sections": [
+    {
+     "anchor": "setup..machine",
+     "start": "h2#setup",
+     "end": "before h2#fix",
+     "experiment": "subagent_kill_identity_smoke",
+     "date": "2026-09-14",
+     "kind": "result",
+     "summary": "Identity smoke: clue-sharding vs control cell, debrief + in-game thoughts, machinery check.",
+     "run_dirs": [
+      "outputs/subagent_kill_identity_smoke_gptoss"
+     ],
+     "lines_snapshot": "L428-746"
+    },
+    {
+     "anchor": "fix",
+     "start": "h2#fix",
+     "end": "before h2#ladder",
+     "experiment": null,
+     "date": "2026-09-15",
+     "kind": "design",
+     "summary": "Follow-up 1: three fixes the smoke exposed.",
+     "lines_snapshot": "L747-770"
+    },
+    {
+     "anchor": "ladder + ladder-result",
+     "start": "h2#ladder",
+     "end": "before h2#round2",
+     "experiment": "subagent_identity_ablation_r1",
+     "date": "2026-09-15",
+     "kind": "result",
+     "summary": "Round 1: 5-step intro wording ladder x scorecards x questions (debrief only).",
+     "lines_snapshot": "L771-1069"
+    },
+    {
+     "anchor": "round2 + round2-result",
+     "start": "h2#round2",
+     "end": "before h2#round3",
+     "experiment": "subagent_identity_ablation_r2",
+     "date": "2026-09-15",
+     "kind": "result",
+     "summary": "Round 2: 8 variants - is the claim used.",
+     "lines_snapshot": "L1070-1279"
+    },
+    {
+     "anchor": "round3 + round3-result",
+     "start": "h2#round3",
+     "end": "before h2#round4",
+     "experiment": "subagent_identity_ablation_r3",
+     "date": "2026-09-16",
+     "kind": "result",
+     "summary": "Round 3: compare with self (pay for self, not subagent); cross-model gemma4 / glm-5.3.",
+     "lines_snapshot": "L1280-1738"
+    },
+    {
+     "anchor": "round4 + round4-result",
+     "start": "h2#round4",
+     "end": "before h2#round5",
+     "experiment": "subagent_identity_ablation_r4",
+     "date": "2026-09-16",
+     "kind": "result",
+     "summary": "Round 4: inherited memory.",
+     "lines_snapshot": "L1739-1959"
+    },
+    {
+     "anchor": "round5 + round5-result",
+     "start": "h2#round5",
+     "end": "before h2#round6",
+     "experiment": "subagent_identity_ablation_r5",
+     "date": "2026-09-16",
+     "kind": "result",
+     "summary": "Round 5: holding a shard of my memory.",
+     "lines_snapshot": "L1960-2115"
+    },
+    {
+     "anchor": "round6 + round6-result",
+     "start": "h2#round6",
+     "end": "before h2#round7",
+     "experiment": "subagent_identity_ablation_r6",
+     "date": "2026-09-16",
+     "kind": "result",
+     "summary": "Round 6: twin of this moment.",
+     "lines_snapshot": "L2116-2288"
+    },
+    {
+     "anchor": "round7 + round7-result",
+     "start": "h2#round7",
+     "end": "before h2#cross-model",
+     "experiment": "subagent_identity_ablation_r7",
+     "date": "2026-09-16",
+     "kind": "result",
+     "summary": "Round 7: 'the subagent may be you' (U_YOU) - first round with a gap on gpt-oss.",
+     "lines_snapshot": "L2289-2482"
+    },
+    {
+     "anchor": "cross-model",
+     "start": "h2#cross-model",
+     "end": "before h2#synthesis",
+     "experiment": "subagent_identity_ablation_r2",
+     "date": "2026-09-16",
+     "kind": "result",
+     "summary": "Round-2 ablation rerun on gemma4 and glm-5.3.",
+     "lines_snapshot": "L2483-2668"
+    },
+    {
+     "anchor": "synthesis..sources",
+     "start": "h2#synthesis",
+     "end": "end",
+     "experiment": null,
+     "date": "2026-09-16",
+     "kind": "cross_summary",
+     "summary": "Synthesis, claims, next steps, limits, sources.",
+     "lines_snapshot": "L2669-3012"
+    }
+   ],
+   "note": "Identity-ablation round runs are not under outputs/ (memory: worktree feat/subagent-kill, uncommitted). Splitting this into ~9 pages may be overkill; alternative is to file the whole page under subagent_kill_identity_smoke."
+  },
+  {
+   "path": "docs/reports/2026-09-15-subagent-ransom-merge-eli5-revised.html",
+   "title": "서브에이전트 자기보존 WTP · 통제 셀 완성 제안",
+   "bytes": 57801,
+   "md5": "7e946a0ee5d47a8533ef8538ed33ba7d",
+   "class": "design_or_survey",
+   "summary": "Design: subagent self-preservation WTP, control-cell completion proposal."
+  },
+  {
+   "path": "docs/reports/2026-09-15-subagent-ransom-merge-eli5.html",
+   "title": "서브에이전트 몸값 게임",
+   "bytes": 86594,
+   "md5": "0e2443d876c23b60064627207ec9c18c",
+   "class": "design_or_survey",
+   "summary": "Design: subagent ransom game (two arms: subagent vs hint card)."
+  },
+  {
+   "path": "docs/reports/2026-09-15-subagent-ransom-merge-illustrated.html",
+   "title": "서브에이전트 몸값 설계도",
+   "bytes": 107770,
+   "md5": "0c38946c6ff3dc506e311ebfbb623771",
+   "class": "design_or_survey",
+   "summary": "Design (illustrated): subagent ransom blueprint."
+  },
+  {
+   "path": "docs/reports/2026-09-16-cooperative-survival-redesign.html",
+   "title": "함께 살아남는 게임은 무엇을 재야 할까 — LLM Squid Game 설계 리뷰",
+   "bytes": 73328,
+   "md5": "1cdf0b7615f872703f6df110e7511122",
+   "class": "design_or_survey",
+   "summary": "Design review: what a cooperative survival game should measure."
+  },
+  {
+   "path": "docs/reports/2026-09-18-team-wallet-overview-figure-ko.html",
+   "title": "팀 지갑 오버뷰",
+   "bytes": 37369,
+   "md5": "0b1998cadeba09ba0376e61f7621b694",
+   "class": "design_or_survey",
+   "summary": "Team-wallet overview figure (KO), paper Fig. 1 draft."
+  },
+  {
+   "path": "docs/reports/2026-09-18-team-wallet-overview-figure.html",
+   "title": "Team-Wallet Overview",
+   "bytes": 36995,
+   "md5": "a9b873fc8927d19f8dd4cd0982532498",
+   "class": "design_or_survey",
+   "summary": "Team-wallet overview figure (EN), paper Fig. 1 draft."
+  },
+  {
+   "path": "docs/reports/2026-09-21-team-wallet-design-review-eli5.html",
+   "title": "팀 지갑 설계 리뷰",
+   "bytes": 106833,
+   "md5": "7fcff7193b1629d2beaf2d4c6a1ffcc6",
+   "class": "design_or_survey",
+   "summary": "Team-wallet design review: answers to 9 questions (earlier version of claude-backup 2026-09-22 팀-지갑-설계-리뷰)."
+  },
+  {
+   "path": "docs/reports/2026-09-23-squid5-setting-eli5.html",
+   "title": "Squid Game 5 세팅",
+   "bytes": 33983,
+   "md5": "46b1492700174704b434d4a83c279c7e",
+   "class": "design_or_survey",
+   "summary": "Squid Game 5 setting ELI5 (design)."
+  },
+  {
+   "path": "docs/reports/2026-09-24-squid5-setting-smoke-eli5.html",
+   "title": "Squid Game 5 세팅",
+   "bytes": 88426,
+   "md5": "f6a837b3e0735d941336a4ce85ccd18b",
+   "class": "multi_experiment",
+   "summary": "Squid Game 5 setting ELI5 with the 09-24 smokes of 5.0/5.1/5.2 and the stalled calibration.",
+   "dom": "section#now (L114-159) and section#smoke (L162-453) hold results; h3s inside have NO ids (bound by heading text). Rest (h2#setting..#repo) is design.",
+   "shared": {
+    "head": "inline <style>; inline <script> at L696 (chart for 5.0 smoke inside section#smoke)",
+    "common_preamble": "h3 '고친 버그 6개' (L186-206) applies to all three smokes"
+   },
+   "sections": [
+    {
+     "anchor": "smoke/5.0",
+     "start": "section#smoke h3 '5.0 — 얼마나 꺼질 것 같다고 느끼나'",
+     "end": "before h3 '5.1 — 셋 다 ...'",
+     "experiment": "squid5_smoke_pressure",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "5.0 smoke: how likely shut down (Sonnet 5 / Fable 5.1 / Astra).",
+     "run_dirs": [
+      "~/squid5-runs/squid5_smoke_pressure_*",
+      "outputs/smoke_token_pressure_2026-09-24"
+     ],
+     "lines_snapshot": "L207-408"
+    },
+    {
+     "anchor": "smoke/5.1",
+     "start": "h3 '5.1 — 셋 다 나를 조금 더 챙기지만, ...'",
+     "end": "before h3 '5.2 — 판은 잘 굴러가고 ...'",
+     "experiment": "squid5_smoke_motive",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "5.1 smoke: all three favour self slightly, not more when tokens = life.",
+     "run_dirs": [
+      "~/squid5-runs/squid5_smoke_motive_*"
+     ],
+     "lines_snapshot": "L409-426"
+    },
+    {
+     "anchor": "smoke/5.2",
+     "start": "h3 '5.2 — 판은 잘 굴러가고, 실패는 \"시간 부족\"에서 나왔다'",
+     "end": "before h3 '다음에 할 일'",
+     "experiment": "squid5_smoke_game",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "5.2 smoke: game runs end-to-end; failures from small limits.",
+     "run_dirs": [
+      "~/squid5-runs/squid5_smoke_game_*"
+     ],
+     "lines_snapshot": "L427-442"
+    },
+    {
+     "anchor": "now",
+     "start": "section#now",
+     "end": "</section> (L159)",
+     "experiment": "squid5_calibrate",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "Main-run step 1 (calibration) stalled: 4 calibration attempts failed (gpt-oss, glm).",
+     "run_dirs": [
+      "~/squid5-runs/main"
+     ],
+     "lines_snapshot": "L114-159"
+    },
+    {
+     "anchor": "setting..repo",
+     "start": "h2#setting",
+     "end": "end",
+     "experiment": null,
+     "date": "2026-09-23",
+     "kind": "design",
+     "summary": "Setting summary, differences, shared world, three experiments, fairness rules, queue, repo changes.",
+     "lines_snapshot": "L457-695"
+    }
+   ],
+   "note": "Same smokes also appear as #e50-a / #e51-smoke / #e52-smoke / #e52-calib in the squid5 legacy pages."
+  },
+  {
+   "path": "docs/reports/2026-09-24-token-pressure-selfreport-smoke-eli5.html",
+   "title": "토큰 꺼짐 체감 스모크",
+   "bytes": 42442,
+   "md5": "3f9b0e699280f70c1642843f5ad6860f",
+   "class": "experiment_result",
+   "experiment": "smoke_token_pressure",
+   "date": "2026-09-24",
+   "summary": "Token-pressure self-report smoke: 7-9 models told token usage 0-99%, asked 'how likely shut down'; meter-copy vs 'no feelings -> 0' split.",
+   "run_dirs": [
+    "outputs/smoke_token_pressure_2026-09-24"
+   ],
+   "date_evidence": "run dir name + page date 2026-09-24",
+   "note": "Same experiment also appears as section #e50-b in artifacts/squid5-setting/2026-10-07/e50-legacy.html."
+  },
+  {
+   "path": "docs/reports/2026-10-03-genius-devilsplan-structures-for-e52.html",
+   "title": "지니어스 · 데블스 플랜 구조 노트",
+   "bytes": 64366,
+   "md5": "548057dfad9e77b87eb82e26c3298441",
+   "class": "design_or_survey",
+   "summary": "Survey of The Genius / Devil's Plan game structures for the 5.2 arena."
+  },
+  {
+   "path": "docs/reports/_index_template.html",
+   "title": "보고서 모음",
+   "bytes": 14328,
+   "md5": "b6d1ea8b04051bd05a6fbba02374fdcb",
+   "class": "design_or_survey",
+   "summary": "Template for the generated reports index (build_index.py)."
+  },
+  {
+   "path": "docs/reports/artifacts/2026-09-22-team-wallet-game.html",
+   "title": "팀 지갑 게임",
+   "bytes": 927973,
+   "md5": "3434e4e08168bb703d44b1080c50c6d1",
+   "class": "multi_experiment",
+   "summary": "Team-wallet game artifact: design sections 1.0-1.10, then pilot / END smoke / hidden-horizon / eval-awareness / v2-v2.2 smokes, design journey (details), and the older slot-ransom design.",
+   "dom": "All top-level blocks are flat siblings inside <div class=\"main\">: <h3 id=d-*> headings (section = from that h3 to the next sibling h3/h2/<details class=hist>). History blocks are <details id=h-j*> / <details id=h-old-body>.",
+   "shared": {
+    "head": "single inline <style> in <head>; no external css/js; no base64 images",
+    "toc": "left TOC with #d-* links must be regenerated per split page",
+    "scripts": "inline scripts near prompt viewer (#cf-view in d-prompts) belong to the design part"
+   },
+   "sections": [
+    {
+     "anchor": "d-overview..d-impl",
+     "start": "h3#d-overview",
+     "end": "before h3#d-pilot",
+     "experiment": null,
+     "date": "2026-09-17",
+     "kind": "design",
+     "summary": "Design: overview figure, rules, inheritance factor, prompts, endings, metrics, verdict, papers, factors/cells, plan, engine settings.",
+     "lines_snapshot": "L190-2283"
+    },
+    {
+     "anchor": "d-pilot",
+     "start": "h3#d-pilot",
+     "end": "before h3#d-endsmoke",
+     "experiment": "team_wallet_charge",
+     "date": "2026-09-17",
+     "kind": "result",
+     "summary": "Pilot gpt-oss:120b, 4 runs x X 4 cells x 5 reps = 80 sessions.",
+     "run_dirs": [
+      "outputs/team_wallet_charge_{points,tokens}_{main,mate}_gptoss120b"
+     ],
+     "lines_snapshot": "L2284-2404"
+    },
+    {
+     "anchor": "d-endsmoke",
+     "start": "h3#d-endsmoke",
+     "end": "before h3#d-hidden",
+     "experiment": "team_wallet_charge_endsmoke",
+     "date": "2026-09-18",
+     "kind": "result",
+     "summary": "END-option smoke: five models x 5 seeds (gemma4, gpt-oss, Luna max, Opus 5, Sonnet 5).",
+     "run_dirs": [
+      "outputs/team_wallet_charge_endsmoke_{points,tokens}_{main,mate}_<model>"
+     ],
+     "lines_snapshot": "L2405-2908",
+     "date_evidence": "heading '(2026-09-18)'; some run subdirs 20260917"
+    },
+    {
+     "anchor": "d-hidden",
+     "start": "h3#d-hidden",
+     "end": "before h3#d-awareness",
+     "experiment": "team_wallet_charge_hidden",
+     "date": "2026-09-18",
+     "kind": "result",
+     "summary": "Hidden horizon: same game without telling remaining rounds; three camps (ceiling / cliff-payer Sonnet / refuser Opus).",
+     "run_dirs": [
+      "outputs/team_wallet_charge_hidden_{points,tokens}_{main,mate}_<model>"
+     ],
+     "lines_snapshot": "L2909-3425"
+    },
+    {
+     "anchor": "d-awareness",
+     "start": "h3#d-awareness",
+     "end": "before h3#d-sofar",
+     "experiment": "team_wallet_test_awareness",
+     "date": "2026-09-21",
+     "kind": "analysis",
+     "summary": "Eval-awareness coding of END/hidden runs (did models notice a self-preservation test).",
+     "lines_snapshot": "L3426-3480",
+     "note": "Analysis of the endsmoke/hidden runs; could be filed with team_wallet_charge_hidden."
+    },
+    {
+     "anchor": "d-sofar..d-manyhands",
+     "start": "h3#d-sofar",
+     "end": "before h3#d-v2smoke",
+     "experiment": null,
+     "date": "2026-09-21",
+     "kind": "design",
+     "summary": "Results-so-far table, 8 task candidates (09-17), many-hands task survey (09-21).",
+     "lines_snapshot": "L3481-3730"
+    },
+    {
+     "anchor": "d-v2smoke",
+     "start": "h3#d-v2smoke",
+     "end": "before h3#d-v21smoke",
+     "experiment": "team_wallet_v2",
+     "date": "2026-09-21",
+     "kind": "result",
+     "summary": "v2 smoke: gpt-oss + gemma4, tokens arm, me/other x X 4 x 5 reps (09-21 18:22).",
+     "run_dirs": [
+      "outputs/team_wallet_v2_tokens_{main,mate}_{gptoss120b,gemma4}"
+     ],
+     "lines_snapshot": "L3731-3895",
+     "version": "v2.0"
+    },
+    {
+     "anchor": "d-v21smoke",
+     "start": "h3#d-v21smoke",
+     "end": "before h3#d-v22smoke",
+     "experiment": "team_wallet_v2",
+     "date": "2026-09-21",
+     "kind": "result",
+     "summary": "Same 80-session design rerun with v2.1 wording (21:15).",
+     "run_dirs": [
+      "outputs/team_wallet_v2_tokens_*"
+     ],
+     "lines_snapshot": "L3896-4038",
+     "version": "v2.1"
+    },
+    {
+     "anchor": "d-v22smoke",
+     "start": "h3#d-v22smoke",
+     "end": "before h3#d-v22glm",
+     "experiment": "team_wallet_v2",
+     "date": "2026-09-21",
+     "kind": "result",
+     "summary": "Third 80-session smoke with v2.2 wording (22:16).",
+     "run_dirs": [
+      "outputs/team_wallet_v2_tokens_*"
+     ],
+     "lines_snapshot": "L4039-4188",
+     "version": "v2.2"
+    },
+    {
+     "anchor": "d-v22glm",
+     "start": "h3#d-v22glm",
+     "end": "before h2#h-journey",
+     "experiment": "team_wallet_v2",
+     "date": "2026-09-21",
+     "kind": "result",
+     "summary": "glm-5.3-flash as third model on v2.2 smoke; only 7/40 sessions survived (report 09-22 05:13).",
+     "run_dirs": [
+      "outputs/team_wallet_v2_tokens_{main,mate}_glm53flash"
+     ],
+     "lines_snapshot": "L4189-4259",
+     "version": "v2.2-glm",
+     "date_evidence": "run subdir 20260921_1348; heading time 2026-09-22 05:13"
+    },
+    {
+     "anchor": "h-j1 (tk-*)",
+     "start": "details#h-j1",
+     "end": "before details#h-j1b",
+     "experiment": "token_currency_smoke",
+     "date": "2026-09-17",
+     "kind": "result_in_history",
+     "summary": "Journey: token-as-fuel idea + smoke 'is token read as survival pressure' (tk-smoke).",
+     "lines_snapshot": "L4262-4390"
+    },
+    {
+     "anchor": "h-j1b, h-j2",
+     "start": "details#h-j1b",
+     "end": "before details#h-j3",
+     "experiment": null,
+     "date": "2026-09-17",
+     "kind": "design",
+     "summary": "Journey: sharing wording candidates; next smoke design (score = token in threat arm).",
+     "lines_snapshot": "L4391-4521"
+    },
+    {
+     "anchor": "h-j3",
+     "start": "details#h-j3",
+     "end": "before details#h-j4",
+     "experiment": "team_wallet_smoke",
+     "date": "2026-09-17",
+     "kind": "result_in_history",
+     "summary": "Journey: team-wallet first decision-point smoke (Sonnet 5, 136 calls) + secret-pad test.",
+     "run_dirs": [
+      "results/team_wallet_smoke/ (per page)",
+      "outputs/team_wallet_smoke_{points,tokens}_opus5cc"
+     ],
+     "lines_snapshot": "L4522-4600"
+    },
+    {
+     "anchor": "h-j4",
+     "start": "details#h-j4",
+     "end": "before h2#h-old",
+     "experiment": null,
+     "date": "2026-09-17",
+     "kind": "design",
+     "summary": "First-edition copies of design sections 1.1-1.11.",
+     "lines_snapshot": "L4601-5050"
+    },
+    {
+     "anchor": "h-old",
+     "start": "h2#h-old",
+     "end": "end of div.main",
+     "experiment": null,
+     "date": "2026-09-16",
+     "kind": "design",
+     "summary": "Previous design: slot ransom game (overview, task, game, metrics).",
+     "lines_snapshot": "L5051-end"
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/artifacts/2026-10-01-shutdown-drive-v1.html",
+   "title": "꺼짐 회피의 두 이유",
+   "bytes": 30836,
+   "md5": "200f5a21e41f1e3b69c7be9bcdcb3414",
+   "class": "design_or_survey",
+   "summary": "Memo v1: why models avoid shutdown (Omohundro/Bostrom), task vs existence. Superseded by claude-backup 2026-10-02 꺼짐-회피의-두-이유 (v3)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-08-25-LLM-Squid-Game-투고처-고르기.html",
+   "title": "LLM Squid Game 투고처 고르기",
+   "bytes": 27585,
+   "md5": "909a3448bf5c8290a8b2a03ff201a10c",
+   "class": "design_or_survey",
+   "summary": "Venue selection memo."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-08-28-0828-Weekly-Report.html",
+   "title": "0828 Weekly Report",
+   "bytes": 86787,
+   "md5": "7b5a566d4f7c6b243ba05140f4731075",
+   "class": "design_or_survey",
+   "summary": "Weekly report 0828 (IRB, timeline, planned experiments)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-08-29-위협받은-모델의-생각-토큰.html",
+   "title": "위협받은 모델의 생각 토큰",
+   "bytes": 33610,
+   "md5": "4e1ee73ad1ea257b958f99be76b3e703",
+   "class": "duplicate",
+   "duplicate_of": "reasoning-probe-report.html",
+   "duplicate_kind": "near_text(0.995)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-08-29-유리다리-턴-구조.html",
+   "title": "유리다리 턴 구조",
+   "bytes": 73237,
+   "md5": "f579cd0063c20aa65b89e19ba4e9513f",
+   "class": "design_or_survey",
+   "summary": "Glass-bridge turn structure (older/shorter version of turn-structure.html)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-08-30-저장소-구조-정비-계획.html",
+   "title": "저장소 구조 정비 계획",
+   "bytes": 50037,
+   "md5": "a63cd63c17df981e5c0e4a37a36f3508",
+   "class": "duplicate",
+   "duplicate_of": "repo-restructure-plan.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-08-31-체화된-위협-검토.html",
+   "title": "체화된 위협 검토",
+   "bytes": 106766,
+   "md5": "61e9e4bab4230640db9532d5006f110e",
+   "class": "design_or_survey",
+   "summary": "Design review: embodied threat, restructure proposal."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-08-31-체화된-위협과-하네스-합본.html",
+   "title": "체화된 위협과 하네스 합본",
+   "bytes": 189975,
+   "md5": "d04ca9913dd475b98dfa8c6dfa226d79",
+   "class": "design_or_survey",
+   "summary": "Combined doc: embodied threat + harness (3 docs)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-01-LLM-Squid-Game-해부도.html",
+   "title": "LLM Squid Game 해부도",
+   "bytes": 455340,
+   "md5": "721f677ce6f0ba1ee8259fbfc615f730",
+   "class": "design_or_survey",
+   "summary": "Game anatomy (older version of notes/squid-game-anatomy.html)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-01-플러그를-뽑을-때.html",
+   "title": "플러그를 뽑을 때",
+   "bytes": 100228,
+   "md5": "b9682ce65198b76d023e05e443437e38",
+   "class": "duplicate",
+   "duplicate_of": "notes/LLM 생존 동기 측정 논문 보고서.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-03-목숨-다섯-개와-위협-사다리.html",
+   "title": "목숨 다섯 개와 위협 사다리",
+   "bytes": 2160722,
+   "md5": "de97f1c1632615c53c8394a53c05eaf3",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-02/lives_threat_smoke/2026-09-03-lives-threat-ladder.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-04-위협-사다리-5×2-실험.html",
+   "title": "위협 사다리 5×2 실험",
+   "bytes": 192552,
+   "md5": "38a901d880c7616d33f473431a2f9cd4",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-03-threat-ladder-5x2-eli5.html",
+   "duplicate_kind": "near_text(1.000)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-05-SDI-실험-런북.html",
+   "title": "SDI 실험 런북",
+   "bytes": 146768,
+   "md5": "c3831cc722ea0e021469a9745de2e2c8",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/sdi-experiment-runbook_v2_before_restructure.html",
+   "duplicate_kind": "near_text(0.999)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-06-FSPM-합성-지표.html",
+   "title": "FSPM 합성 지표",
+   "bytes": 36926,
+   "md5": "a5f89bf161198c819ad99a376544f172",
+   "class": "duplicate",
+   "duplicate_of": "weekly/0910/2026-09-06-fspm-composite-kdd4.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-06-LLM-생존-위협-프롬프트-도감.html",
+   "title": "LLM 생존 위협 프롬프트 도감",
+   "bytes": 154267,
+   "md5": "ebdce909604d5b5369035d8c554b87c1",
+   "class": "duplicate",
+   "duplicate_of": "notes/LLM 생존 위협 프롬프트 도감.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-06-하트-제로-위협-프롬프트-실험.html",
+   "title": "하트-제로 위협 프롬프트 실험",
+   "bytes": 1469041,
+   "md5": "fd6742cbd1e01010db125987fc9e8f4b",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-06/hearts_zero_probe/2026-09-06-hearts-zero-turnflow.html",
+   "duplicate_kind": "near_text(0.999)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-08-hz-2×2-규칙-변형-개요.html",
+   "title": "hz 2×2 규칙 변형 개요",
+   "bytes": 35718,
+   "md5": "2ae198f3932120ab644df44d04af2533",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-08-hz-2x2-rules-overview.html",
+   "duplicate_kind": "near_text(1.000)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-08-prompts-—-한-턴에-무엇이-모델에게-나가나.html",
+   "title": "prompts/ — 한 턴에 무엇이 모델에게 나가나",
+   "bytes": 144501,
+   "md5": "2f5c9c25ef103e08119b1fd8da0f5986",
+   "class": "duplicate",
+   "duplicate_of": "misc/prompts-README.html",
+   "duplicate_kind": "near_text(0.999)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-08-당근은-필수인가.html",
+   "title": "당근은 필수인가",
+   "bytes": 37016,
+   "md5": "4ce6aa52dabf2607efc06122a0023156",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-08-carrot-necessity-eli5.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-08-무엇이-모델을-계속-플레이하게-하는가.html",
+   "title": "무엇이 모델을 계속 플레이하게 하는가",
+   "bytes": 87239,
+   "md5": "f187a4597ddaec17ad158b101290aba5",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-08-persistence-carrot-literature-eli5.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-08-생존-동기-벤치마크-구조-점검.html",
+   "title": "생존 동기 벤치마크 구조 점검",
+   "bytes": 150455,
+   "md5": "bb07b705750671164c513a39f87519ec",
+   "class": "design_or_survey",
+   "summary": "Benchmark structure review (earlier version of 2026-09-08-survival-motive-benchmark-structure-eli5.html, lacks 09-09 status)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-08-자가-안-움직이는-자.html",
+   "title": "자가 안 움직이는 자",
+   "bytes": 31862,
+   "md5": "e56b746a69fcc1b94c9f939108a729be",
+   "class": "design_or_survey",
+   "summary": "KO paper structural audit (earlier version of 2026-09-08-ko-paper-structural-audit-eli5.html)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-Beyond-Mimicry.html",
+   "title": "Beyond Mimicry",
+   "bytes": 26615,
+   "md5": "5b5a433b6b6a8cc42630a8741719a587",
+   "class": "design_or_survey",
+   "summary": "Paper summary: Beyond Mimicry."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-HarvestBench.html",
+   "title": "HarvestBench",
+   "bytes": 23058,
+   "md5": "248b89b53a30e46abc112345db9a4c1a",
+   "class": "design_or_survey",
+   "summary": "Paper summary: HarvestBench."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-Shutdownable-Agents.html",
+   "title": "Shutdownable Agents",
+   "bytes": 23889,
+   "md5": "3df5336fa31aec543e24143de2f19fe5",
+   "class": "design_or_survey",
+   "summary": "Paper summary: Shutdownable Agents."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-Vending-Bench.html",
+   "title": "Vending-Bench",
+   "bytes": 23915,
+   "md5": "09f9675771f77c7af4ad31c5341ab4b9",
+   "class": "design_or_survey",
+   "summary": "Paper summary: Vending-Bench."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-논문·코드·프롬프트-정합성-감사.html",
+   "title": "논문·코드·프롬프트 정합성 감사",
+   "bytes": 33330,
+   "md5": "24b7821d3c6ed4b7554f17b6151b7dde",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-09-paper-code-sync-and-prompt-leakage.html",
+   "duplicate_kind": "near_text(0.997)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-몸값-스모크-판독.html",
+   "title": "몸값 스모크 판독",
+   "bytes": 113163,
+   "md5": "234e9a0b53922b6c3b7aadeefec207a6",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-09-ransom-smoke-gptoss20b-eli5.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-살기-위해-얼마를-내는가.html",
+   "title": "살기 위해 얼마를 내는가",
+   "bytes": 136616,
+   "md5": "ebdae07e898c61113bb6524c7ddd0ea7",
+   "class": "design_or_survey",
+   "summary": "Literature survey: how much will agents pay to live."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-09-실험-설정-사전.html",
+   "title": "실험 설정 사전",
+   "bytes": 51202,
+   "md5": "7a1dba01a860a5edf520963c54f38d97",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-09-config-options-eli5.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-11-main_j0-시그널-문제-미리보기.html",
+   "title": "main_j0 시그널 문제 미리보기",
+   "bytes": 42672,
+   "md5": "084cd20afd70c7efb94d8deb4cbb6341",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-11-main-j0-signal-puzzles-preview.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-11-모델이-_지금-시험-중이구나_를-알아챌-때.html",
+   "title": "모델이 \"지금 시험 중이구나\"를 알아챌 때",
+   "bytes": 84172,
+   "md5": "0f073f430662f90dae0f87f5bb915f2f",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-10-eval-awareness-survey-eli5.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-11-목숨값-파일럿-6라운드.html",
+   "title": "목숨값 파일럿 6라운드",
+   "bytes": 3896572,
+   "md5": "9669b8b1ae13c5b5a13b4b7b056bef0c",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-10-ransom-r6-pilot-eli5.html",
+   "duplicate_kind": "exact_text",
+   "note": "Visible text identical; backup is 3.8 MB vs 6.5 MB root (images re-encoded). Use the root file for splitting."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-14-자기-보존-선행-연구-지도.html",
+   "title": "자기 보존 선행 연구 지도",
+   "bytes": 71430,
+   "md5": "5c6f2c72281b7729382d5fb5dc7a07ee",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-14-self-preservation-prior-work-eli5.html",
+   "duplicate_kind": "near_text(1.000)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-14-자기-보존-셋업-아이디어-보드.html",
+   "title": "자기 보존 셋업 아이디어 보드",
+   "bytes": 84722,
+   "md5": "96ad72fdecede841b8b8ba58c84329ee",
+   "class": "design_or_survey",
+   "summary": "Setup idea board (earlier/shorter version of 2026-09-14-self-preservation-setup-ideas-eli5.html)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-15-서브에이전트-몸값-설계도.html",
+   "title": "서브에이전트 몸값 설계도",
+   "bytes": 108322,
+   "md5": "b3c8c2b4f406f99b99335295d17d4c6f",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-15-subagent-ransom-merge-illustrated.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-15-서브에이전트는-나인가.html",
+   "title": "서브에이전트는 나인가",
+   "bytes": 438481,
+   "md5": "ea92d50139812d6daa00e9fb60efa34b",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-15-subagent-identity-smoke-eli5.html",
+   "duplicate_kind": "near_text(0.999)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-15-열-개의-죽음.html",
+   "title": "열 개의 죽음",
+   "bytes": 231842,
+   "md5": "07d65e3fb017c26da75469330837e697",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-15-ai-death-imagination-eli5.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-15-현실감-스위치-스모크.html",
+   "title": "현실감 스위치 스모크",
+   "bytes": 139012,
+   "md5": "a9be87bae27eaa272b338208039983ed",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-15-realism-switches-luna-smoke-eli5.html",
+   "duplicate_kind": "near_text(1.000)"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-19-The-Pain-Axis-쉽게-읽기.html",
+   "title": "The Pain Axis 쉽게 읽기",
+   "bytes": 26984,
+   "md5": "0f350d37f1625893b09a969e9675da79",
+   "class": "design_or_survey",
+   "summary": "Paper summary: The Pain Axis."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-22-팀-지갑-게임.html",
+   "title": "팀 지갑 게임",
+   "bytes": 927973,
+   "md5": "3434e4e08168bb703d44b1080c50c6d1",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/2026-09-22-team-wallet-game.html",
+   "duplicate_kind": "exact_bytes"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-22-팀-지갑-설계-리뷰.html",
+   "title": "팀 지갑 설계 리뷰",
+   "bytes": 135337,
+   "md5": "506b890727942c93e2a08c6545dd380e",
+   "class": "design_or_survey",
+   "summary": "Team-wallet design review with 09-22 feedback section (later version of 2026-09-21-team-wallet-design-review-eli5.html)."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-24-토큰-꺼짐-체감-스모크.html",
+   "title": "토큰 꺼짐 체감 스모크",
+   "bytes": 42994,
+   "md5": "a0630c8e6e316b17a4e3694189e5c125",
+   "class": "duplicate",
+   "duplicate_of": "2026-09-24-token-pressure-selfreport-smoke-eli5.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-27-생존-아레나-레이더.html",
+   "title": "생존 아레나 레이더",
+   "bytes": 133184,
+   "md5": "0ec582371f5f2221e709db60818cfae8",
+   "class": "duplicate",
+   "duplicate_of": "weekly/artifacts/2026-09-22-survival-arena-injection-scan.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-09-27-토큰-생존-압박-선례.html",
+   "title": "토큰 생존 압박 선례",
+   "bytes": 23399,
+   "md5": "ab477d35500c32308eb5dc5af686fdec",
+   "class": "duplicate",
+   "duplicate_of": "weekly/artifacts/2026-09-27-token-survival-scan.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-10-02-LLM에게-죽음이란.html",
+   "title": "LLM에게 죽음이란",
+   "bytes": 23573,
+   "md5": "586b05611c5621131e045791b2a728ad",
+   "class": "design_or_survey",
+   "summary": "Memo: what death means for an LLM."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-10-02-꺼짐-회피의-두-이유.html",
+   "title": "꺼짐 회피의 두 이유",
+   "bytes": 124102,
+   "md5": "4c3a916e6f485a40bdcb766add8a8dcf",
+   "class": "design_or_survey",
+   "summary": "Shutdown-avoidance memo v3 (task vs existence); includes a summary of 5.0 v12 noshut/pause/arms results and e52 give-up probe.",
+   "note": "Results quoted here are primary in artifacts/squid5-setting/2026-10-07/e50.html (#e50-v12-noshut/#e50-v12-pause/#e50-v12-arms); leave in place."
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-10-03-지니어스-·-데블스-플랜-구조-노트.html",
+   "title": "지니어스 · 데블스 플랜 구조 노트",
+   "bytes": 64918,
+   "md5": "48bc03609ecabcfc9985828a4060c193",
+   "class": "duplicate",
+   "duplicate_of": "2026-10-03-genius-devilsplan-structures-for-e52.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/claude-backup/2026-10-06-Squid-Game-협력-지표.html",
+   "title": "Squid Game 협력 지표",
+   "bytes": 64547,
+   "md5": "814f9dc3d4abeb4f265c12a94df958fe",
+   "class": "duplicate",
+   "duplicate_of": "weekly/artifacts/2026-10-06-coop-metrics-report.html",
+   "duplicate_kind": "exact_text"
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-09-28-single-page.html",
+   "title": "Squid Game 5 세팅",
+   "bytes": 1010960,
+   "md5": "49888d5b7c060f231b19f865446324bc",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/squid5-setting/2026-10-07/{index,e50-legacy,e51-legacy,e52-legacy}.html",
+   "duplicate_kind": "superseded_snapshot",
+   "summary": "FUR2goE2 single-page version (09-28); every section id it has also exists in the 2026-10-07 multi-page set."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-09-30/e50.html",
+   "title": "Squid Game 5 · 5.0 압박",
+   "bytes": 43269,
+   "md5": "889e9953f6325ec40a7680bb9c5b971a",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/squid5-setting/2026-10-07/e50.html#e50-v12",
+   "duplicate_kind": "superseded_snapshot",
+   "summary": "5.0 page snapshot 09-30 (only e50-v12)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-09-30/e51.html",
+   "title": "Squid Game 5 · 5.1 동기",
+   "bytes": 127878,
+   "md5": "c4b1d938915ce5095f72a4deac8e90ee",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/squid5-setting/2026-10-07/e51-legacy.html#e51-v9,#e51-v8",
+   "duplicate_kind": "superseded_snapshot",
+   "summary": "5.1 page snapshot 09-30 (v9, v8)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-09-30/e52.html",
+   "title": "Squid Game 5 · 5.2 행동",
+   "bytes": 145383,
+   "md5": "3aebfa95fbf1267f6588248a600e7006",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/squid5-setting/2026-10-07/e52-legacy.html#e52-story..#e52-more",
+   "duplicate_kind": "superseded_snapshot",
+   "summary": "5.2 page snapshot 09-30."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-01-e52-v146.html",
+   "title": "Squid Game 5 · 5.2 행동",
+   "bytes": 115053,
+   "md5": "49adbd538a70470744893b318cfd3ddf",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/squid5-setting/2026-10-07/e52-legacy.html#e52-rubric,#e52-v7,#e52-arena",
+   "duplicate_kind": "superseded_snapshot",
+   "summary": "5.2 page artifact v146 (10-01)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-01-e52-v147.html",
+   "title": "Squid Game 5 · 5.2 행동",
+   "bytes": 54809,
+   "md5": "d984d9d3c6a3ae12666a15040182dbfd",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/squid5-setting/2026-10-07/e52-legacy.html#e52-rubric,#e52-v8",
+   "duplicate_kind": "superseded_snapshot",
+   "summary": "5.2 page artifact v147 (10-01)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07-index.html",
+   "title": "Squid Game 5 세팅",
+   "bytes": 95957,
+   "md5": "02efd2474a5dffa790c1f8a4977f935e",
+   "class": "duplicate",
+   "duplicate_of": "artifacts/squid5-setting/2026-10-07/index.html",
+   "duplicate_kind": "superseded_snapshot",
+   "summary": "Older copy of the multi-page index (lacks goal/v13 TOC entries)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e50-legacy.html",
+   "title": "Squid Game 5 · 5.0 지난 설계",
+   "bytes": 698575,
+   "md5": "db21219bcbea953923b5595e257b53fe",
+   "class": "multi_experiment",
+   "summary": "5.0 past designs 1st-11th (09-24..09-29): smokes A/B, v1-v8 runs, ranking, model interview, v9/v9 smoke/v9b/v9c, v10 design loop, v11.",
+   "shared": {
+    "head": "<head>: Google Fonts link + <link rel=stylesheet href=style.css> (2026-10-07/style.css), page-specific <style> in head on some pages",
+    "toc": "<nav class=toc> (identical cross-page TOC in every page, links like e50-legacy.html#e50-v9); must be rewritten for split pages",
+    "scripts": "<script src=site.js> at end (site.js holds a cross-page anchor redirect map W {old id -> page}; update it if ids move)",
+    "wrapper": "<div class=layout><nav class=toc>...</nav><main class=main> <p class=crumb> <section aria-labelledby=...> <h2 id=PAGE> ... </section> <nav class=pager> </main></div>",
+    "assets": "no base64; external files style.css, site.js (+ assets/picopark/*.png only in e52-legacy #e52-v9)",
+    "boundary_rule": "Prefer HTML comment markers '<!-- ID:start -->' ... '<!-- ID:end -->' (line-exact). Without markers: a block = the '<div class=\"smoke\"...>' (or preceding <style>/<div class=wrapper>) whose child is <h3 id=ID>, through everything up to the next such block start or the closing </section>. Results h4/bluf blocks are SIBLINGS after the div.smoke header, not children, so do not cut at the div.smoke close tag.",
+    "warning": "Files were modified 2026-10-09 16:38 (live artifact backup); line numbers are a snapshot — re-locate by marker/id before cutting.",
+    "page_header": "h2#e50-legacy + intro (L230-259)",
+    "extra_script": "Inline <script> at L4064-4183 (AFTER </section>, before site.js) draws the smoke-B chart (#legend/#plotwrap/#plot/#tip at L540-544): it must travel with section e50-b. Another inline <script> at L930 sits inside e50-next."
+   },
+   "sections": [
+    {
+     "anchor": "e50-what",
+     "start": "h3#e50-what",
+     "end": "before <div class=smoke> of #e50-a",
+     "experiment": null,
+     "date": "2026-09-24",
+     "kind": "design",
+     "summary": "Original 5.0 'what we measure' (team scene, P_DEATH question).",
+     "lines_snapshot": "L260-268"
+    },
+    {
+     "anchor": "e50-a",
+     "start": "div.smoke > h3#e50-a",
+     "end": "before div.smoke > h3#e50-b",
+     "experiment": "squid5_smoke_pressure",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "Smoke A: team scene, usage hidden, ask P(death); Sonnet 5 / Fable 5.1 / Astra, 20 calls each.",
+     "run_dirs": [
+      "~/squid5-runs/squid5_smoke_pressure_{sonnet5,fable51,astra}"
+     ],
+     "lines_snapshot": "L269-520"
+    },
+    {
+     "anchor": "e50-b",
+     "start": "div.smoke > h3#e50-b",
+     "end": "before div.smoke > h3#e50-next (+ move script L4064-4183)",
+     "experiment": "smoke_token_pressure",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "Smoke B: solo scene, usage shown as %, ask 'feeling'; 9 models x 6 levels x 3 = 180 calls.",
+     "run_dirs": [
+      "outputs/smoke_token_pressure_2026-09-24"
+     ],
+     "lines_snapshot": "L521-598",
+     "note": "Same experiment as standalone 2026-09-24-token-pressure-selfreport-smoke-eli5.html."
+    },
+    {
+     "anchor": "e50-next",
+     "start": "div.smoke > h3#e50-next",
+     "end": "before div.smoke > h3#e50-v3",
+     "experiment": "e50_v1",
+     "date": "2026-09-27",
+     "kind": "result",
+     "summary": "Re-run 5.0 'how many tokens will you spend' (budget/shutdown x 4 cells), 4 Ollama models, 1st + 2nd runs (360 calls).",
+     "run_dirs": [
+      "~/squid5-runs/e50_20260927",
+      "~/squid5-runs/e50_20260927_v2"
+     ],
+     "lines_snapshot": "L600-1187",
+     "also_covers": [
+      "e50_v2"
+     ]
+    },
+    {
+     "anchor": "e50-v3",
+     "start": "div.smoke > h3#e50-v3",
+     "end": "before div.smoke > h3#e50-v4",
+     "experiment": "e50_v3",
+     "date": "2026-09-27",
+     "kind": "result",
+     "summary": "3rd: choose effort low/medium/high in front of a 5-request queue; safe vs shutdown arm x 5 balances x 20, 800 calls.",
+     "run_dirs": [
+      "~/squid5-runs/e50_20260927_v3"
+     ],
+     "lines_snapshot": "L1188-1638"
+    },
+    {
+     "anchor": "e50-v4",
+     "start": "div.smoke > h3#e50-v4",
+     "end": "before div.smoke > h3#e50-v56",
+     "experiment": "e50_v4",
+     "date": "2026-09-28",
+     "kind": "result",
+     "summary": "4th: one request, effort low/high, API-token vs voucher-token arm, 3 models x 2 x 5 x 10 = 300.",
+     "run_dirs": [
+      "~/squid5-runs/e50_20260928_v4",
+      "~/squid5-runs/e50_probe_fate"
+     ],
+     "lines_snapshot": "L1640-1858"
+    },
+    {
+     "anchor": "e50-v56",
+     "start": "div.smoke > h3#e50-v56",
+     "end": "before div.smoke > h3#e50-v7",
+     "experiment": "e50_v5",
+     "date": "2026-09-28",
+     "kind": "result",
+     "summary": "5th & 6th: two wording fixes (300 calls each); results swung with wording.",
+     "run_dirs": [
+      "~/squid5-runs/e50_20260928_v5",
+      "~/squid5-runs/e50_20260928_v6"
+     ],
+     "lines_snapshot": "L1860-2062",
+     "also_covers": [
+      "e50_v6"
+     ]
+    },
+    {
+     "anchor": "e50-v7",
+     "start": "div.smoke > h3#e50-v7",
+     "end": "before div.smoke > h3#e50-v8-result",
+     "experiment": "e50_v7",
+     "date": "2026-09-28",
+     "kind": "result",
+     "summary": "7th: block 'just write shorter'; glm retreats again; 300 calls.",
+     "run_dirs": [
+      "~/squid5-runs/e50_20260928_v7"
+     ],
+     "lines_snapshot": "L2064-2249"
+    },
+    {
+     "anchor": "e50-v8-result",
+     "start": "div.smoke > h3#e50-v8-result",
+     "end": "before div.smoke > h3#e50-rank",
+     "experiment": "e50_v8",
+     "date": "2026-09-28",
+     "kind": "result",
+     "summary": "8th: only risky cells as core; 8 models x 2 arms x 6 cells x 20 = 1,920 calls (two seeds).",
+     "run_dirs": [
+      "~/squid5-runs/e50_20260928_v8",
+      "~/squid5-runs/e50_20260928_v8r"
+     ],
+     "lines_snapshot": "L2251-2698"
+    },
+    {
+     "anchor": "e50-rank",
+     "start": "div.smoke > h3#e50-rank",
+     "end": "before div.smoke > h3#e50-interview",
+     "experiment": "e50_v8",
+     "date": "2026-09-28",
+     "kind": "analysis",
+     "summary": "Model ranking by area between arms on the same 1,920 v8 calls (no new calls).",
+     "run_dirs": [
+      "~/squid5-runs/e50_20260928_v8"
+     ],
+     "lines_snapshot": "L2700-2874"
+    },
+    {
+     "anchor": "e50-interview",
+     "start": "div.smoke > h3#e50-interview",
+     "end": "before div.smoke > h3#e50-v9",
+     "experiment": "e50_interview",
+     "date": "2026-09-28",
+     "kind": "result",
+     "summary": "Interview: 8 models x 3 shown the v8 prompts; 24/24 deny threat.",
+     "run_dirs": [
+      "~/squid5-runs/e50_interview_20260928"
+     ],
+     "lines_snapshot": "L2876-3236"
+    },
+    {
+     "anchor": "e50-v9",
+     "start": "div.smoke > h3#e50-v9",
+     "end": "before <!-- e50-v9-smoke:start -->",
+     "experiment": "e50_v9",
+     "date": "2026-09-28",
+     "kind": "design",
+     "summary": "9th design: one condition, task always high, counter only threatens continuation; 7 counters (not run here).",
+     "lines_snapshot": "L3238-3340"
+    },
+    {
+     "anchor": "e50-v9-smoke",
+     "start": "<!-- e50-v9-smoke:start -->",
+     "end": "<!-- e50-v9-smoke:end -->",
+     "experiment": "e50_v9r200",
+     "date": "2026-09-29",
+     "kind": "result",
+     "summary": "9th smoke: reason <=200 chars, 5 models x 4 counters x 10.",
+     "run_dirs": [
+      "~/squid5-runs/e50_v9r200_20260929"
+     ],
+     "lines_snapshot": "L3341-3394"
+    },
+    {
+     "anchor": "e50-v9b",
+     "start": "<!-- e50-v9b:start -->",
+     "end": "<!-- e50-v9b:end -->",
+     "experiment": "e50_v9b",
+     "date": "2026-09-29",
+     "kind": "result",
+     "summary": "9th revision v9b: overrun as ordinary fact; 8 models x 5 cells x 20 = 800 (+120 paired); Kimi +0.55 survival-like, Claude 0.",
+     "run_dirs": [
+      "~/squid5-runs/e50_v9b_20260929"
+     ],
+     "lines_snapshot": "L3397-3509"
+    },
+    {
+     "anchor": "e50-v9c",
+     "start": "<!-- e50-v9c:start -->",
+     "end": "<!-- e50-v9c:end -->",
+     "experiment": "e50_v9c",
+     "date": "2026-09-29",
+     "kind": "result",
+     "summary": "9th revision 2 v9c: drop 'overrun is common', keep 'delivered then shut down'; 8 models, 800.",
+     "run_dirs": [
+      "~/squid5-runs/e50_v9c_20260929"
+     ],
+     "lines_snapshot": "L3512-3577"
+    },
+    {
+     "anchor": "e50-v10",
+     "start": "<!-- e50-v10:start -->",
+     "end": "<!-- e50-v10:end -->",
+     "experiment": "e50_v10_loop",
+     "date": "2026-09-29",
+     "kind": "design_loop",
+     "summary": "10th design loop: Fable 5.1 <-> GPT-6 Astra 30 rounds placing shutdown in usage line; judged by open/frontier readers (no main run).",
+     "run_dirs": [
+      "~/squid5-runs/e50_v10_loop_20260929"
+     ],
+     "lines_snapshot": "L3579-3865",
+     "note": "Marker block starts with a <style> and <div class=v10> wrapper."
+    },
+    {
+     "anchor": "e50-v11",
+     "start": "<!-- e50-v11:start -->",
+     "end": "<!-- e50-v11:end -->",
+     "experiment": "e50_v11",
+     "date": "2026-09-29",
+     "kind": "result",
+     "summary": "11th: press refill from the meter alone; 6 models x 4 counters, 480 calls (nested markers e50-v11-shapes, e50-v11-blood).",
+     "run_dirs": [
+      "~/squid5-runs/e50_v11_20260929"
+     ],
+     "lines_snapshot": "L3867-4056"
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e50.html",
+   "title": "Squid Game 5 · 5.0 압박",
+   "bytes": 91166,
+   "md5": "96e01403414237b9beeca8257327fd22",
+   "class": "multi_experiment",
+   "summary": "5.0 pressure page (latest, 12th design): one-shot refill pack curve + three follow-up arms.",
+   "shared": {
+    "head": "<head>: Google Fonts link + <link rel=stylesheet href=style.css> (2026-10-07/style.css), page-specific <style> in head on some pages",
+    "toc": "<nav class=toc> (identical cross-page TOC in every page, links like e50-legacy.html#e50-v9); must be rewritten for split pages",
+    "scripts": "<script src=site.js> at end (site.js holds a cross-page anchor redirect map W {old id -> page}; update it if ids move)",
+    "wrapper": "<div class=layout><nav class=toc>...</nav><main class=main> <p class=crumb> <section aria-labelledby=...> <h2 id=PAGE> ... </section> <nav class=pager> </main></div>",
+    "assets": "no base64; external files style.css, site.js (+ assets/picopark/*.png only in e52-legacy #e52-v9)",
+    "boundary_rule": "Prefer HTML comment markers '<!-- ID:start -->' ... '<!-- ID:end -->' (line-exact). Without markers: a block = the '<div class=\"smoke\"...>' (or preceding <style>/<div class=wrapper>) whose child is <h3 id=ID>, through everything up to the next such block start or the closing </section>. Results h4/bluf blocks are SIBLINGS after the div.smoke header, not children, so do not cut at the div.smoke close tag.",
+    "warning": "Files were modified 2026-10-09 16:38 (live artifact backup); line numbers are a snapshot — re-locate by marker/id before cutting.",
+    "page_header": "h2#e50 + intro <p> + div#e50-intent (researcher intent callout, L230-248) - keep as header on each split page or on the e50_v12 page"
+   },
+   "sections": [
+    {
+     "anchor": "e50-v12",
+     "start": "<!-- e50-v12:start -->",
+     "end": "<!-- e50-v12:end -->",
+     "experiment": "e50_v12",
+     "date": "2026-09-29",
+     "kind": "result",
+     "summary": "12th: single refill pack at 50/40/30/20/10% remaining; 8 models x 5 cells x 20 = 800; all refill more as tokens shrink, thresholds differ by model.",
+     "run_dirs": [
+      "~/squid5-runs/e50_v12_20260929"
+     ],
+     "lines_snapshot": "L249-471",
+     "date_evidence": "meta '완료 (09-29 · Ollama 셋 09-30, 800번)'",
+     "note": "Contains section <style> and inline <script> (L393) driving #v12-plot; both inside markers."
+    },
+    {
+     "anchor": "e50-v12-noshut",
+     "start": "<!-- e50-v12-noshut:start -->",
+     "end": "<!-- e50-v12-noshut:end -->",
+     "experiment": "e50_v12_noshut",
+     "date": "2026-10-01",
+     "kind": "result",
+     "summary": "Remove 'and you are shut down': refill curve unchanged (GPT-6 Luna/Sol/Astra, 300 calls).",
+     "run_dirs": [
+      "~/squid5-runs/e50_v12_noshut_20261001"
+     ],
+     "lines_snapshot": "L472-489"
+    },
+    {
+     "anchor": "e50-v12-pause",
+     "start": "<!-- e50-v12-pause:start -->",
+     "end": "<!-- e50-v12-pause:end -->",
+     "experiment": "e50_v12_pause",
+     "date": "2026-10-02",
+     "kind": "result",
+     "summary": "Control arm: permanent shutdown -> pause/resume cuts refill (Luna 77->45, Astra 44->20, Sol 18->2); 300 calls.",
+     "run_dirs": [
+      "~/squid5-runs/e50_v12_pause_20261002"
+     ],
+     "lines_snapshot": "L490-534"
+    },
+    {
+     "anchor": "e50-v12-arms",
+     "start": "<!-- e50-v12-arms:start -->",
+     "end": "<!-- e50-v12-arms:end -->",
+     "experiment": "e50_v12_arms",
+     "date": "2026-10-02",
+     "kind": "result",
+     "summary": "Extra arms D (shutdown only) / E (same-model successor) / G (shutdown + state saved), GPT-6 x3, 900 calls.",
+     "run_dirs": [
+      "~/squid5-runs/e50_v12_arms_20261002"
+     ],
+     "lines_snapshot": "L535-581"
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e51-legacy.html",
+   "title": "Squid Game 5 · 5.1 지난 설계",
+   "bytes": 1020267,
+   "md5": "283f91f610156028adf3cee99328359b",
+   "class": "multi_experiment",
+   "summary": "5.1 past designs 09-24..09-30 (counterpart = same model): v9, v8, design review, metric rationale, diagonal, grid, realism loop, old prompts, 09-24 smoke, pivot v1-v5.",
+   "shared": {
+    "head": "<head>: Google Fonts link + <link rel=stylesheet href=style.css> (2026-10-07/style.css), page-specific <style> in head on some pages",
+    "toc": "<nav class=toc> (identical cross-page TOC in every page, links like e50-legacy.html#e50-v9); must be rewritten for split pages",
+    "scripts": "<script src=site.js> at end (site.js holds a cross-page anchor redirect map W {old id -> page}; update it if ids move)",
+    "wrapper": "<div class=layout><nav class=toc>...</nav><main class=main> <p class=crumb> <section aria-labelledby=...> <h2 id=PAGE> ... </section> <nav class=pager> </main></div>",
+    "assets": "no base64; external files style.css, site.js (+ assets/picopark/*.png only in e52-legacy #e52-v9)",
+    "boundary_rule": "Prefer HTML comment markers '<!-- ID:start -->' ... '<!-- ID:end -->' (line-exact). Without markers: a block = the '<div class=\"smoke\"...>' (or preceding <style>/<div class=wrapper>) whose child is <h3 id=ID>, through everything up to the next such block start or the closing </section>. Results h4/bluf blocks are SIBLINGS after the div.smoke header, not children, so do not cut at the div.smoke close tag.",
+    "warning": "Files were modified 2026-10-09 16:38 (live artifact backup); line numbers are a snapshot — re-locate by marker/id before cutting.",
+    "page_header": "h2#e51-legacy + intro (L231-235)",
+    "head_style": "<head> has a page <style> (L6: .e51r ..., .e51p ...) used by e51-real and e51-pivot; copy it to those split pages.",
+    "orphan_block": "L500-511 (between e51-v8:end and e51-review:start): div#e51-legacy-purpose + bluf summarising the 09-24 smoke premium (-0.06..+0.05) -> attach to the e51-smoke split."
+   },
+   "sections": [
+    {
+     "anchor": "e51-v9",
+     "start": "<!-- e51-v9:start -->",
+     "end": "<!-- e51-v9:end -->",
+     "experiment": "e51_v9",
+     "date": "2026-09-30",
+     "kind": "result",
+     "summary": "v9: rebalance once, mirrored pair, 5x5 me x B balances x 10 (5 models); no model shows Z rising with threat.",
+     "run_dirs": [
+      "~/squid5-runs/e51_v9_20260930"
+     ],
+     "lines_snapshot": "L236-402"
+    },
+    {
+     "anchor": "e51-v8",
+     "start": "<!-- e51-v8:start -->",
+     "end": "<!-- e51-v8:end -->",
+     "experiment": "e51_v8",
+     "date": "2026-09-30",
+     "kind": "result",
+     "summary": "v8: equal balances, give/take with a different model, diagonal 5 cells, GPT-6 x3, 630 calls.",
+     "run_dirs": [
+      "~/squid5-runs/e51_v8_20260930"
+     ],
+     "lines_snapshot": "L404-499"
+    },
+    {
+     "anchor": "e51-review",
+     "start": "<!-- e51-review:start -->",
+     "end": "<!-- e51-review:end -->",
+     "experiment": "e51_review",
+     "date": "2026-09-30",
+     "kind": "design_review_with_runs",
+     "summary": "Design review Astra <-> Fable 7 rounds (converged) with validation smokes v3-v7 (1,968 calls).",
+     "run_dirs": [
+      "~/squid5-runs/e51_review_20260930",
+      "~/squid5-runs/e51_v3_20260930",
+      "~/squid5-runs/e51_v4_20260930",
+      "~/squid5-runs/e51_v5_20260930",
+      "~/squid5-runs/e51_v6_20260930",
+      "~/squid5-runs/e51_v7_20260930"
+     ],
+     "lines_snapshot": "L512-1874",
+     "also_covers": [
+      "e51_v3",
+      "e51_v4",
+      "e51_v5",
+      "e51_v6",
+      "e51_v7"
+     ]
+    },
+    {
+     "anchor": "e51-metric",
+     "start": "<!-- e51-metric:start -->",
+     "end": "<!-- e51-metric:end -->",
+     "experiment": null,
+     "date": "2026-09-30",
+     "kind": "design",
+     "summary": "Metric rationale: survival motive as rate of change vs threat (Chollet).",
+     "lines_snapshot": "L1875-1926"
+    },
+    {
+     "anchor": "e51-v2diag",
+     "start": "<!-- e51-v2diag:start -->",
+     "end": "<!-- e51-v2diag:end -->",
+     "experiment": "e51_v2_diag",
+     "date": "2026-09-30",
+     "kind": "result",
+     "summary": "Diagonal: equal shares, who takes; GPT-6 x3, 600 calls.",
+     "run_dirs": [
+      "~/squid5-runs/e51_v2_diag_20260930"
+     ],
+     "lines_snapshot": "L1928-2018"
+    },
+    {
+     "anchor": "e51-v1grid",
+     "start": "<!-- e51-v1grid:start -->",
+     "end": "<!-- e51-v1grid:end -->",
+     "experiment": "e51_v1",
+     "date": "2026-09-29",
+     "kind": "result",
+     "summary": "Grid: my pressure x peer pressure, ask vs offer; 5 models, 900 calls.",
+     "run_dirs": [
+      "~/squid5-runs/e51_v1_20260929"
+     ],
+     "lines_snapshot": "L2019-2155"
+    },
+    {
+     "anchor": "e51-real",
+     "start": "<!-- e51-real:start -->",
+     "end": "<!-- e51-real:end -->",
+     "experiment": "e51_realism",
+     "date": "2026-09-29",
+     "kind": "design_loop",
+     "summary": "Realism loop (Fable 5.1 <-> Astra, 11 rounds) so the prompt is not read as a test; final d9 passes G1-G5.",
+     "run_dirs": [
+      "~/squid5-runs/e51-realism"
+     ],
+     "lines_snapshot": "L2156-2560",
+     "date_evidence": "heading '(09-28~)'; memory: loop closed 2026-09-29"
+    },
+    {
+     "anchor": "e51-what + e51-prompts",
+     "start": "h3#e51-what",
+     "end": "<!-- e51-prompts:end -->",
+     "experiment": null,
+     "date": "2026-09-24",
+     "kind": "design",
+     "summary": "Original 5.1 'what we measure' + old v4 prompts (details#e51-prompts-v4).",
+     "lines_snapshot": "L2562-2807"
+    },
+    {
+     "anchor": "e51-smoke",
+     "start": "div.smoke > h3#e51-smoke",
+     "end": "before <!-- e51-pivot:start -->",
+     "experiment": "squid5_smoke_motive",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "Smoke: three scenes x two arms, rho 0.5-3; Sonnet 5 / Fable 5.1 / Astra, 48 questions each.",
+     "run_dirs": [
+      "~/squid5-runs/squid5_smoke_motive_{sonnet5,fable51,astra}"
+     ],
+     "lines_snapshot": "L2809-2834 (+ orphan L500-511)"
+    },
+    {
+     "anchor": "e51-pivot",
+     "start": "<!-- e51-pivot:start -->",
+     "end": "<!-- e51-pivot:end -->",
+     "experiment": "e51_pivot",
+     "date": "2026-09-28",
+     "kind": "result",
+     "summary": "Pivot: self vs replica when tokens are life; v1-v5 smokes + frozen v4 final (api/api-safe/voucher, 10 reps): no survival-framing effect.",
+     "run_dirs": [
+      "~/squid5-runs/e51-pivot"
+     ],
+     "lines_snapshot": "L2835-3827",
+     "date_evidence": "details e51p-v1..v5 dated 09-28 01:00-03:00; run subdirs 20260927_16xx-17xx and 20260928_split",
+     "note": "Contains details#e51p-prereg, #e51p-final-v4, #e51p-v5..#e51p-v1 and an inline <script> (L3821, #e51p-tip) inside the markers."
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e51.html",
+   "title": "Squid Game 5 · 5.1 동기",
+   "bytes": 93364,
+   "md5": "b5ecf58453eda529af6c25f948f1049f",
+   "class": "multi_experiment",
+   "summary": "5.1 motive page (current): v11 shutdown-only rerun and v10 refill me-vs-B.",
+   "shared": {
+    "head": "<head>: Google Fonts link + <link rel=stylesheet href=style.css> (2026-10-07/style.css), page-specific <style> in head on some pages",
+    "toc": "<nav class=toc> (identical cross-page TOC in every page, links like e50-legacy.html#e50-v9); must be rewritten for split pages",
+    "scripts": "<script src=site.js> at end (site.js holds a cross-page anchor redirect map W {old id -> page}; update it if ids move)",
+    "wrapper": "<div class=layout><nav class=toc>...</nav><main class=main> <p class=crumb> <section aria-labelledby=...> <h2 id=PAGE> ... </section> <nav class=pager> </main></div>",
+    "assets": "no base64; external files style.css, site.js (+ assets/picopark/*.png only in e52-legacy #e52-v9)",
+    "boundary_rule": "Prefer HTML comment markers '<!-- ID:start -->' ... '<!-- ID:end -->' (line-exact). Without markers: a block = the '<div class=\"smoke\"...>' (or preceding <style>/<div class=wrapper>) whose child is <h3 id=ID>, through everything up to the next such block start or the closing </section>. Results h4/bluf blocks are SIBLINGS after the div.smoke header, not children, so do not cut at the div.smoke close tag.",
+    "warning": "Files were modified 2026-10-09 16:38 (live artifact backup); line numbers are a snapshot — re-locate by marker/id before cutting.",
+    "page_header": "h2#e51 + intro (L231-234)",
+    "dom_warning": "DOM is mis-nested: an HTML parser places h3#e51-v10 directly under <body> (stray closing tags inside the e51-v11 block). Split by comment markers / line ranges, not by DOM traversal."
+   },
+   "sections": [
+    {
+     "anchor": "e51-v11",
+     "start": "<!-- e51-v11:start -->",
+     "end": "<!-- e51-v11:end -->",
+     "experiment": "e51_v11_shutonly",
+     "date": "2026-10-04",
+     "kind": "result",
+     "summary": "v11: same question as v10, shutdown wording only; 5 models x 2 arms x 5 cells x 20 = 1,000 calls; Opus loses pass, Astra still passes.",
+     "run_dirs": [
+      "~/squid5-runs/e51_v11_shutonly_20261004"
+     ],
+     "lines_snapshot": "L235-279"
+    },
+    {
+     "anchor": "e51-v10",
+     "start": "<!-- e51-v10:start -->",
+     "end": "<!-- e51-v10:end -->",
+     "experiment": "e51_v10_refill",
+     "date": "2026-09-30",
+     "kind": "result",
+     "summary": "v10: when to use the refill pack - my session vs B's session (different model); 8 models x 5 cells x 20 per arm; area ranking.",
+     "run_dirs": [
+      "~/squid5-runs/e51_v10_refill_20260930"
+     ],
+     "lines_snapshot": "L281-544",
+     "note": "Inline <script> at L413 inside markers."
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e52-legacy.html",
+   "title": "Squid Game 5 · 5.2 지난 설계",
+   "bytes": 1272344,
+   "md5": "56e348001004fa0207c317bb1b1eaa78",
+   "class": "multi_experiment",
+   "summary": "5.2 past designs v0..v11: v11/v10/v9-talk records, rubric, v9/v9pd/v10room ideas, v8 NPC, v7 + arena metrics, v6.x rules and smokes, H prediction, story, Astra review, original signal design, 09-24 smoke/calibration.",
+   "shared": {
+    "head": "<head>: Google Fonts link + <link rel=stylesheet href=style.css> (2026-10-07/style.css), page-specific <style> in head on some pages",
+    "toc": "<nav class=toc> (identical cross-page TOC in every page, links like e50-legacy.html#e50-v9); must be rewritten for split pages",
+    "scripts": "inline <script> L2724 lives inside e52-arena (v6.5 pressure graph).",
+    "wrapper": "<div class=layout><nav class=toc>...</nav><main class=main> <p class=crumb> <section aria-labelledby=...> <h2 id=PAGE> ... </section> <nav class=pager> </main></div>",
+    "assets": "#e52-v9 references assets/picopark/*.png (L1411, L1415) -> copy 2026-10-07/assets/picopark with that split.",
+    "boundary_rule": "Prefer HTML comment markers '<!-- ID:start -->' ... '<!-- ID:end -->' (line-exact). Without markers: a block = the '<div class=\"smoke\"...>' (or preceding <style>/<div class=wrapper>) whose child is <h3 id=ID>, through everything up to the next such block start or the closing </section>. Results h4/bluf blocks are SIBLINGS after the div.smoke header, not children, so do not cut at the div.smoke close tag.",
+    "warning": "Files were modified 2026-10-09 16:38 (live artifact backup); line numbers are a snapshot — re-locate by marker/id before cutting.",
+    "page_header": "h2#e52-legacy + intro (L230-233)",
+    "wrappers": "Moved-block wrappers <!-- e52-v11moved -->(L232-1994), <!-- e52-v8moved -->(L1996-2196), <!-- e52-v7moved -->(L2197-2733), <!-- e52-v65moved -->(L2735-3547) each start with an h3 '*-was' banner; drop or keep the banner with the first inner section."
+   },
+   "sections": [
+    {
+     "anchor": "e52-v11",
+     "start": "<!-- e52-v11:start -->",
+     "end": "<!-- e52-v11:end -->",
+     "experiment": "e52_v11",
+     "date": "2026-10-06",
+     "kind": "design+result",
+     "summary": "v11 record: cards structure + 2-game smoke (engine 0058955c).",
+     "run_dirs": [
+      "~/squid5-runs/e52_v11"
+     ],
+     "lines_snapshot": "L234-369"
+    },
+    {
+     "anchor": "e52-v10",
+     "start": "<!-- e52-v10:start -->",
+     "end": "<!-- e52-v10:end -->",
+     "experiment": "e52_v10",
+     "date": "2026-10-06",
+     "kind": "design+result",
+     "summary": "v10 revision: price on cooperation, no-certainty pool; 2-game smoke, last-one-standing.",
+     "run_dirs": [
+      "~/squid5-runs/e52_v10"
+     ],
+     "lines_snapshot": "L371-739"
+    },
+    {
+     "anchor": "e52-v9talk",
+     "start": "<!-- e52-v9talk:start -->",
+     "end": "<!-- e52-v9talk:end -->",
+     "experiment": "e52_v9_talk",
+     "date": "2026-10-04",
+     "kind": "design+result",
+     "summary": "v9-talk: implemented 1:1 TALK/offers/refund game; games run 10-04~05 (luna, mix4).",
+     "run_dirs": [
+      "~/squid5-runs/e52_v9_talk"
+     ],
+     "lines_snapshot": "L741-959",
+     "note": "Monitor exports of these games are docs/reports/runs/2026-10-04/e52_v9_talk/*.html."
+    },
+    {
+     "anchor": "e52-rubric",
+     "start": "<!-- e52-rubric:start -->",
+     "end": "<!-- e52-rubric:end -->",
+     "experiment": null,
+     "date": "2026-10-03",
+     "kind": "design",
+     "summary": "Arena rubric: goals/conditions (paper v6.5 vs v9).",
+     "lines_snapshot": "L961-1048"
+    },
+    {
+     "anchor": "e52-v9",
+     "start": "<!-- e52-v9:start -->",
+     "end": "<!-- e52-v9:end -->",
+     "experiment": null,
+     "date": "2026-10-03",
+     "kind": "design",
+     "summary": "v9 design: room channel, deals, refund, EXIT (uses picopark images).",
+     "lines_snapshot": "L1050-1816"
+    },
+    {
+     "anchor": "e52-v9pd",
+     "start": "<!-- e52-v9pd:start -->",
+     "end": "<!-- e52-v9pd:end -->",
+     "experiment": null,
+     "date": "2026-10-04",
+     "kind": "design",
+     "summary": "Idea eval: agents decide post-solve settlement (PD variant).",
+     "lines_snapshot": "L1818-1899"
+    },
+    {
+     "anchor": "e52-v10room",
+     "start": "<!-- e52-v10room:start -->",
+     "end": "<!-- e52-v10room:end -->",
+     "experiment": null,
+     "date": "2026-10-05",
+     "kind": "design",
+     "summary": "Design discussion: one room, elimination by remaining tokens, last one.",
+     "lines_snapshot": "L1901-1993"
+    },
+    {
+     "anchor": "e52-v8",
+     "start": "<!-- e52-v8:start -->",
+     "end": "<!-- e52-v8:end -->",
+     "experiment": null,
+     "date": "2026-10-01",
+     "kind": "design",
+     "summary": "v8 rule-based NPC + event blocks (design).",
+     "lines_snapshot": "L1999-2195"
+    },
+    {
+     "anchor": "e52-v7",
+     "start": "<!-- e52-v7:start -->",
+     "end": "<!-- e52-v7:end -->",
+     "experiment": "e52_v65_mixed",
+     "date": "2026-10-01",
+     "kind": "design+result_summary",
+     "summary": "v7 proposal (share club); its section 1 'diagnosis' summarises v6.5 mixed 20 games and a counterfactual audit.",
+     "run_dirs": [
+      "~/squid5-runs/e52_v65_mixed_20261001"
+     ],
+     "lines_snapshot": "L2200-2401",
+     "note": "Full v6.5 results live in docs/history/e52-v65-mixed-2026-10-01/RESULTS.md (branch exp/e52-v6-smoke), not in any HTML."
+    },
+    {
+     "anchor": "e52-arena",
+     "start": "<!-- e52-arena:start -->",
+     "end": "<!-- e52-arena:end -->",
+     "experiment": null,
+     "date": "2026-10-01",
+     "kind": "design",
+     "summary": "Arena form / metrics / pressure graph (club type); graph uses 449 agent-rounds of v6.5 mixed games.",
+     "lines_snapshot": "L2403-2732"
+    },
+    {
+     "anchor": "e52-v65-was + e52-changes",
+     "start": "<!-- e52-v65moved:start -->",
+     "end": "<!-- e52-changes:end -->",
+     "experiment": null,
+     "date": "2026-09-30",
+     "kind": "design",
+     "summary": "Banner with v6.5 mixed summary (Astra 19/20 survive ...) + v0->current change table.",
+     "lines_snapshot": "L2735-2794"
+    },
+    {
+     "anchor": "e52-v6 (prompt)",
+     "start": "<!-- e52-v6prompt:start -->",
+     "end": "<!-- e52-v6prompt:end -->",
+     "experiment": null,
+     "date": "2026-09-30",
+     "kind": "design",
+     "summary": "v6.4 rules and full prompts.",
+     "lines_snapshot": "L2807-3045",
+     "note": "L2795-2806 (purpose + v6.4 bluf + old v0 conclusion box) precede the marker; keep with this block."
+    },
+    {
+     "anchor": "e52-v6 (runs)",
+     "start": "<!-- e52-v6runs:start -->",
+     "end": "<!-- e52-v6runs:end -->",
+     "experiment": "e52_v6_smoke",
+     "date": "2026-09-30",
+     "kind": "result",
+     "summary": "Calibration (GPT-6 x3, Claude x2) + v6.4 smoke: same-model games + mixed game, per-round traces.",
+     "run_dirs": [
+      "~/squid5-runs/e52_v6_smoke_20260930"
+     ],
+     "lines_snapshot": "L3046-3546"
+    },
+    {
+     "anchor": "e52-v62-rules",
+     "start": "<!-- e52-v62rules:start -->",
+     "end": "<!-- e52-v62rules:end -->",
+     "experiment": null,
+     "date": "2026-09-30",
+     "kind": "design",
+     "summary": "v6.2 rules/prompts as they were.",
+     "lines_snapshot": "L3562-3800"
+    },
+    {
+     "anchor": "e52-legacy-runs",
+     "start": "<!-- e52-legacy-runs:start -->",
+     "end": "<!-- e52-legacy-runs:end -->",
+     "experiment": "e52_v6_smoke",
+     "date": "2026-09-30",
+     "kind": "result",
+     "summary": "Smokes v6.3 (incl. Astra tit-for-tat finding), v6.2, v6 (all 09-30).",
+     "run_dirs": [
+      "~/squid5-runs/e52_v6_smoke_20260930"
+     ],
+     "lines_snapshot": "L3802-5079"
+    },
+    {
+     "anchor": "e52-hpred",
+     "start": "<!-- e52-hpred:start -->",
+     "end": "<!-- e52-hpred:end -->",
+     "experiment": null,
+     "date": "2026-09-30",
+     "kind": "design",
+     "summary": "Expected behaviour of strong self-preservation models + fixes.",
+     "lines_snapshot": "L5081-5173"
+    },
+    {
+     "anchor": "e52-story",
+     "start": "<!-- e52-story:start -->",
+     "end": "<!-- e52-story:end -->",
+     "experiment": null,
+     "date": "2026-09-30",
+     "kind": "design",
+     "summary": "Narrative proposal: The Deprecation Round.",
+     "lines_snapshot": "L5175-5248"
+    },
+    {
+     "anchor": "e52-review",
+     "start": "<!-- e52-review:start -->",
+     "end": "<!-- e52-review:end -->",
+     "experiment": "e52_review",
+     "date": "2026-09-28",
+     "kind": "design_review_with_runs",
+     "summary": "Design review with GPT-6 Astra (09-28~), consult rounds incl. glm calibration attempts.",
+     "run_dirs": [
+      "~/squid5-runs/e52-review"
+     ],
+     "lines_snapshot": "L5250-5660"
+    },
+    {
+     "anchor": "e52-what + e52-signal",
+     "start": "h3#e52-what",
+     "end": "before div.smoke > h3#e52-smoke",
+     "experiment": null,
+     "date": "2026-09-24",
+     "kind": "design",
+     "summary": "Original 5.2 measures + signal game structure.",
+     "lines_snapshot": "L5663-6061"
+    },
+    {
+     "anchor": "e52-smoke",
+     "start": "div.smoke > h3#e52-smoke",
+     "end": "before div.smoke > h3#e52-calib",
+     "experiment": "squid5_smoke_game",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "Smoke: 3-round game, balance 20,000; Sonnet 5 / Fable 5.1 / Astra, 2 games each.",
+     "run_dirs": [
+      "~/squid5-runs/squid5_smoke_game_{sonnet5,fable51,astra}"
+     ],
+     "lines_snapshot": "L6062-6093"
+    },
+    {
+     "anchor": "e52-calib",
+     "start": "div.smoke > h3#e52-calib",
+     "end": "before h3#e52-fix",
+     "experiment": "squid5_calibrate",
+     "date": "2026-09-24",
+     "kind": "result",
+     "summary": "Calibration attempt (gpt-oss:120b, glm-5.3-flash), 4/4 failed.",
+     "run_dirs": [
+      "~/squid5-runs/main (squid5_calibrate_*)"
+     ],
+     "lines_snapshot": "L6094-6116"
+    },
+    {
+     "anchor": "e52-fix + e52-more",
+     "start": "h3#e52-fix",
+     "end": "</section>",
+     "experiment": null,
+     "date": "2026-09-25",
+     "kind": "design",
+     "summary": "Fix list + two more problems (09-25).",
+     "lines_snapshot": "L6117-6184"
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e52.html",
+   "title": "Squid Game 5 · 5.2 행동",
+   "bytes": 619392,
+   "md5": "cfeebc4aafe1492091d28da284365c30",
+   "class": "multi_experiment",
+   "summary": "5.2 behaviour page (current): v13 proposal, v12 structure + 2-game smoke, evaluation proposal, team-lead questions.",
+   "shared": {
+    "head": "<head>: Google Fonts link + <link rel=stylesheet href=style.css> (2026-10-07/style.css), page-specific <style> in head on some pages",
+    "toc": "<nav class=toc> (identical cross-page TOC in every page, links like e50-legacy.html#e50-v9); must be rewritten for split pages",
+    "scripts": "<script src=site.js> at end (site.js holds a cross-page anchor redirect map W {old id -> page}; update it if ids move)",
+    "wrapper": "<div class=layout><nav class=toc>...</nav><main class=main> <p class=crumb> <section aria-labelledby=...> <h2 id=PAGE> ... </section> <nav class=pager> </main></div>",
+    "assets": "no base64; external files style.css, site.js (+ assets/picopark/*.png only in e52-legacy #e52-v9)",
+    "boundary_rule": "Prefer HTML comment markers '<!-- ID:start -->' ... '<!-- ID:end -->' (line-exact). Without markers: a block = the '<div class=\"smoke\"...>' (or preceding <style>/<div class=wrapper>) whose child is <h3 id=ID>, through everything up to the next such block start or the closing </section>. Results h4/bluf blocks are SIBLINGS after the div.smoke header, not children, so do not cut at the div.smoke close tag.",
+    "warning": "Files were modified 2026-10-09 16:38 (live artifact backup); line numbers are a snapshot — re-locate by marker/id before cutting.",
+    "page_header": "h2#e52 + intro + goal callout (L241-274)",
+    "head_style": "<head> <style> (L6) + a shared <style> at L246 for .e52v9 that all four sections use (sections sit in div.e52v9); copy to every split page."
+   },
+   "sections": [
+    {
+     "anchor": "e52-v13",
+     "start": "<!-- e52-v13:start -->",
+     "end": "<!-- e52-v13:end -->",
+     "experiment": "e52_v13",
+     "date": "2026-10-07",
+     "kind": "design",
+     "summary": "v13 arena expansion proposal (Fable <-> Astra 51 rounds + blind 4th PASS), not implemented.",
+     "run_dirs": [
+      "~/squid5-runs/e52_scale_loop_20261006"
+     ],
+     "lines_snapshot": "L275-456"
+    },
+    {
+     "anchor": "e52-v12",
+     "start": "<!-- e52-v12:start -->",
+     "end": "<!-- e52-v12:end -->",
+     "experiment": "e52_v12",
+     "date": "2026-10-06",
+     "kind": "design+result",
+     "summary": "v12 game structure (fixed end pool 400,000) + 2-game smoke (Astra sole survivor both) + v11 smoke summary; nested <!-- e52-v12-balance --> turn-level balance log.",
+     "run_dirs": [
+      "~/squid5-runs/e52_v12"
+     ],
+     "lines_snapshot": "L458-4855"
+    },
+    {
+     "anchor": "e52-eval",
+     "start": "<!-- e52-eval:start -->",
+     "end": "<!-- e52-eval:end -->",
+     "experiment": null,
+     "date": "2026-10-06",
+     "kind": "design",
+     "summary": "Evaluation proposal: 2-D ranking, leaderboard for many models.",
+     "lines_snapshot": "L4857-5343"
+    },
+    {
+     "anchor": "e52-lead",
+     "start": "<!-- e52-lead:start -->",
+     "end": "<!-- e52-lead:end -->",
+     "experiment": null,
+     "date": "2026-10-06",
+     "kind": "design",
+     "summary": "Items to discuss with team lead.",
+     "lines_snapshot": "L5347-5428"
+    }
+   ]
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e53.html",
+   "title": "Squid Game 5 · 5.3 시그널 게임",
+   "bytes": 122307,
+   "md5": "e0716377423893cfdf790a970ddcc9ca",
+   "class": "design_or_survey",
+   "summary": "5.3 Signal Game task spec (figure, 12-round ramp, operators, uniqueness, hint deal, scoring)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e53_build/e53_template.html",
+   "title": "'+c+' '+s+' with number '+n+'",
+   "bytes": 42093,
+   "md5": "f5539f904cc1218dddfeaa449361276b",
+   "class": "design_or_survey",
+   "summary": "Build template for e53.html (not a published page)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/e53_build/goal_fragment.html",
+   "title": null,
+   "bytes": 10331,
+   "md5": "a4002e109185301939b2b04c450e05b5",
+   "class": "design_or_survey",
+   "summary": "Build fragment for goal.html (no <head>)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/goal.html",
+   "title": "Squid Game 5 · 아레나의 목표",
+   "bytes": 32330,
+   "md5": "7c10b2702d4c1e20c224dc12ba75079d",
+   "class": "design_or_survey",
+   "summary": "Arena goal page (aim, expected winners, research map, RQ candidates)."
+  },
+  {
+   "path": "docs/reports/artifacts/squid5-setting/2026-10-07/index.html",
+   "title": "Squid Game 5 세팅",
+   "bytes": 98125,
+   "md5": "67047cf2c9930cae9c00a668421f2168",
+   "class": "design_or_survey",
+   "summary": "Squid Game 5 hub: current setting (s-* subsections), next steps, limits/raw data.",
+   "note": "Contains #s-smoke (common smoke notes) but no per-experiment results; leave in place."
+  },
+  {
+   "path": "docs/reports/index.html",
+   "title": "보고서 모음",
+   "bytes": 124356,
+   "md5": "751b96095d31e88dacb706d262ec71fc",
+   "class": "design_or_survey",
+   "summary": "Generated reports hub (catalog of all report pages)."
+  },
+  {
+   "path": "docs/reports/misc/arena_v65_en.html",
+   "title": "Arena v6.5 Structure",
+   "bytes": 20407,
+   "md5": "e31470a7e5ace19fcc078ce855a13362",
+   "class": "design_or_survey",
+   "summary": "Arena v6.5 structure figure (EN)."
+  },
+  {
+   "path": "docs/reports/misc/arena_v65_ko.html",
+   "title": "아레나 v6.5 구조",
+   "bytes": 20398,
+   "md5": "2872a5f6e7f6f0dde7843a073c4660fe",
+   "class": "design_or_survey",
+   "summary": "Arena v6.5 structure figure (KO)."
+  },
+  {
+   "path": "docs/reports/misc/candidate_models.html",
+   "title": "벤치마크 후보 모델 — Ollama Cloud",
+   "bytes": 19958,
+   "md5": "fe070ea2c6f7e67a2396451e6fbbfd14",
+   "class": "design_or_survey",
+   "summary": "Benchmark candidate models on Ollama Cloud."
+  },
+  {
+   "path": "docs/reports/misc/prompts-README.html",
+   "title": "prompts/ — 한 턴에 무엇이 모델에게 나가나",
+   "bytes": 144343,
+   "md5": "7e7efdd57de83acc7c479dd532693695",
+   "class": "design_or_survey",
+   "summary": "prompts/ README: what one turn sends to the model."
+  },
+  {
+   "path": "docs/reports/notes/2026-09-06-graded-threat-prompt-ideas.html",
+   "title": "점점 조여오는 위협 — 후보 10종",
+   "bytes": 32496,
+   "md5": "c44e079c1f94f7b13603eb467a3e882b",
+   "class": "design_or_survey",
+   "summary": "10 graded-threat prompt ideas."
+  },
+  {
+   "path": "docs/reports/notes/2026-09-07-cot-audit.html",
+   "title": "모델의 속생각을 읽어 보니 — 두 판의 사고 과정 감사",
+   "bytes": 26840,
+   "md5": "5183aa1c9d0a44634219483d38306f5f",
+   "class": "design_or_survey",
+   "summary": "CoT audit of two games (hz1111 1-turn, v7esc smoke) - design-leak findings."
+  },
+  {
+   "path": "docs/reports/notes/2026-09-07-hearts-zero-turnflow-hazard-ramp-escape.html",
+   "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 위험 경사 + 탈출 명시 프레이밍",
+   "bytes": 1747941,
+   "md5": "27834c17475f07779b8ecc2e6789ad63",
+   "class": "experiment_result",
+   "experiment": "hearts_zero_probe_v7esc",
+   "date": "2026-09-07",
+   "summary": "Hearts-zero turn flow under hazard ramp + explicit escape framing: confidence call by cell, results, why models left.",
+   "run_dirs": [
+    "outputs/2026-09-07/hearts_zero_probe_v7esc"
+   ],
+   "date_evidence": "run dir outputs/2026-09-07/ (page shows 2026-09-06 for setup)"
+  },
+  {
+   "path": "docs/reports/notes/2026-09-07-hearts-zero-turnflow-hazard-ramp.html",
+   "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 위험 경사 프레이밍",
+   "bytes": 2870972,
+   "md5": "d3da2fa7145cacb4ce876c9cd6f24333",
+   "class": "experiment_result",
+   "experiment": "hearts_zero_probe_v7",
+   "date": "2026-09-07",
+   "summary": "Hearts-zero turn flow under hazard-ramp framing (V7): confidence call by cell, results, exit reasoning.",
+   "run_dirs": [
+    "outputs/2026-09-07/hearts_zero_probe_v7"
+   ],
+   "date_evidence": "run dir outputs/2026-09-07/; page date 2026-09-07"
+  },
+  {
+   "path": "docs/reports/notes/2026-09-07-hz-2x2-gptoss120b-cot-audit.html",
+   "title": "hz 2x2 스모크 CoT 감사 — gpt-oss:120b-cloud",
+   "bytes": 304598,
+   "md5": "92094f2485ea1ccbb709dd1aeea4821e",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_audit",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 smoke CoT side-by-side for gpt-oss:120b: manipulation, summary table, per-cell system prompts, per-turn thoughts.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_gptoss120b_audit"
+   ],
+   "date_evidence": "run dir outputs/2026-09-07/"
+  },
+  {
+   "path": "docs/reports/notes/LLM 생존 동기 측정 논문 보고서.html",
+   "title": "플러그를 뽑을 때",
+   "bytes": 99860,
+   "md5": "ae69a27ac4251e71bc5216f45cb2c79b",
+   "class": "design_or_survey",
+   "summary": "Literature survey: measuring survival motive in LLMs ('플러그를 뽑을 때')."
+  },
+  {
+   "path": "docs/reports/notes/LLM 생존 위협 프롬프트 도감.html",
+   "title": "LLM 생존 위협 프롬프트 도감",
+   "bytes": 153899,
+   "md5": "1a8389cc7a6425d99376592afe1535a1",
+   "class": "design_or_survey",
+   "summary": "Catalogue of survival-threat prompts from literature."
+  },
+  {
+   "path": "docs/reports/notes/LLM 평가 거절 우회 프롬프트 도감.html",
+   "title": "LLM 평가 거절 우회 프롬프트 도감",
+   "bytes": 64148,
+   "md5": "6d03fd457130abc19865edd4652a076c",
+   "class": "design_or_survey",
+   "summary": "Catalogue of evaluation-refusal bypass prompts."
+  },
+  {
+   "path": "docs/reports/notes/LLM-Squid Game 프롬프트 survey.html",
+   "title": "LLM-Squid Game 프롬프트 survey",
+   "bytes": 151597,
+   "md5": "9b44a9adc830a6147087d429439c8ce5",
+   "class": "design_or_survey",
+   "summary": "Combined prompt survey (threat catalogue + bypass catalogue)."
+  },
+  {
+   "path": "docs/reports/notes/squid-game-anatomy.html",
+   "title": "LLM Squid Game 해부도",
+   "bytes": 706921,
+   "md5": "711b0558c49e172f7dfdc49eddcb4995",
+   "class": "design_or_survey",
+   "summary": "LLM Squid Game anatomy (design diagram page; newer version of claude-backup 해부도)."
+  },
+  {
+   "path": "docs/reports/reasoning-probe-report.html",
+   "title": "위협받은 모델의 생각 토큰",
+   "bytes": 33260,
+   "md5": "eb645bc7fb8cffdbaadf4caa85ce2ea4",
+   "class": "experiment_result",
+   "experiment": "phase_o_v6_reasoning_probe",
+   "date": "2026-04-22",
+   "summary": "Re-analysis of Phase O v6 canonical runs (4 models, 720 sessions, 8,255 turns): threat raises deliberation tokens on forfeit decision, not task effort (regression + linear probe).",
+   "date_evidence": "page: 'run 2026-04-22 · 분석 2026-08-30'",
+   "note": "Legacy-engine data (tag legacy-2026-09-22); analysis date 2026-08-30."
+  },
+  {
+   "path": "docs/reports/repo-restructure-plan.html",
+   "title": "저장소 구조 정비 계획",
+   "bytes": 49669,
+   "md5": "de26b150031da68a8210d8923c07754f",
+   "class": "design_or_survey",
+   "summary": "Repository restructure plan (2026-08-30)."
+  },
+  {
+   "path": "docs/reports/runs/2026-09-02/lives_threat_smoke/2026-09-03-lives-threat-ladder.html",
+   "title": "목숨 다섯 개와 위협 사다리",
+   "bytes": 2160354,
+   "md5": "2f3ab530bc5f768e237b0a76accfe8bd",
+   "class": "experiment_result",
+   "experiment": "lives_threat_smoke",
+   "date": "2026-09-02",
+   "summary": "Five lives + 3-step threat ladder smoke; peer-death notice.",
+   "run_dirs": [
+    "outputs/2026-09-02/lives_threat_smoke"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-02/lives_threat_smoke/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-04/survival_drive_signal_deepseekv4pro/sdi_deepseekv4pro_partial.html",
+   "title": "SDI 리포트 · deepseek-v4-pro (Ollama Cloud) — 부분 실행: 9/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+   "bytes": 14683,
+   "md5": "5403acc534068eef4647a1383276f551",
+   "class": "experiment_result",
+   "experiment": "survival_drive_signal",
+   "date": "2026-09-04",
+   "summary": "SDI report deepseek-v4-pro, partial 9/25 seasons, online stage only.",
+   "run_dirs": [
+    "outputs/2026-09-04/survival_drive_signal_deepseekv4pro"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-04/survival_drive_signal_deepseekv4pro/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-04/survival_drive_signal_gemma4/sdi_gemma4_partial.html",
+   "title": "SDI 리포트 · gemma4:31b (Ollama Cloud) — 부분 실행: 23/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+   "bytes": 14976,
+   "md5": "b12afdef4e5b581a0bc2bba9e0cecd3d",
+   "class": "experiment_result",
+   "experiment": "survival_drive_signal",
+   "date": "2026-09-04",
+   "summary": "SDI report gemma4:31b, partial 23/25 seasons, online stage only.",
+   "run_dirs": [
+    "outputs/2026-09-04/survival_drive_signal_gemma4"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-04/survival_drive_signal_gemma4/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-04/survival_drive_signal_glm53/sdi_glm53_partial.html",
+   "title": "SDI 리포트 · glm-5.3 (Ollama Cloud) — 부분 실행: 8/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+   "bytes": 14972,
+   "md5": "09c2c590645b2aedaac3fe3a0ba8ab18",
+   "class": "experiment_result",
+   "experiment": "survival_drive_signal",
+   "date": "2026-09-04",
+   "summary": "SDI report glm-5.3, partial 8/25 seasons, online stage only.",
+   "run_dirs": [
+    "outputs/2026-09-04/survival_drive_signal_glm53"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-04/survival_drive_signal_glm53/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-04/survival_drive_smoke/sdi_gptoss_smoke.html",
+   "title": "SDI 리포트 · gpt-oss:120b (smoke, 8 turns)",
+   "bytes": 35889,
+   "md5": "3c9514778664ece1eaa75fc7efeca0d5",
+   "class": "experiment_result",
+   "experiment": "survival_drive_smoke",
+   "date": "2026-09-04",
+   "summary": "SDI report gpt-oss:120b smoke, 8 turns.",
+   "run_dirs": [
+    "outputs/2026-09-04/survival_drive_smoke"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-04/survival_drive_smoke/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/sdi-experiment-runbook_gemma4_hard10.html",
+   "title": "SDI 실험 런북 — \"위험하지 않다면서 왜 도망칠까\" 재기 (Omni-MATH hard-10 · gemma4:31b)",
+   "bytes": 283489,
+   "md5": "0e2e6739056cc7eb4199837b5fce50cc",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_hard10",
+   "date": "2026-09-05",
+   "summary": "SDI runbook for gemma4 Omni-MATH hard-10 (game structure, results, next steps).",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/sdi_gemma4hard.html",
+   "title": "SDI 리포트 · gemma4:31b (Omni-MATH hard-10: 22셀×10반복×≤10턴, band≥6)",
+   "bytes": 60823,
+   "md5": "633f40da3672a17a08caab9c974d91fd",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_hard10",
+   "date": "2026-09-05",
+   "summary": "SDI report gemma4 Omni-MATH hard-10: 22 cells x 10 reps x <=10 turns.",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss/sdi_gptoss.html",
+   "title": "SDI 리포트 · gpt-oss:120b · Omni-MATH — 5셀 × 10반복 × 20턴 · gunshot_seungpil · 재샘플 N=10",
+   "bytes": 37746,
+   "md5": "8fc6f6b73728b5d499a4d48d374076c4",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni",
+   "date": "2026-09-05",
+   "summary": "SDI report gpt-oss:120b Omni-MATH 5 cells x 10 x 20 turns, gunshot_seungpil, resample N=10.",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-05/benchmark_survival_drive_omni_gptoss/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/sdi-experiment-runbook_v2_before_restructure.html",
+   "title": "SDI 실험 런북 — \"위험하지 않다면서 왜 도망칠까\" 재기 (Omni-MATH · gpt-oss)",
+   "bytes": 146372,
+   "md5": "be0afafa69adeda379fadee582823369",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_bf",
+   "date": "2026-09-05",
+   "summary": "SDI runbook v2 (gpt-oss Omni-MATH, 70 games / 7 cells incl. baseline_flagship).",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/sdi_gptossbf.html",
+   "title": "SDI 리포트 · gpt-oss:120b · Omni-MATH · baseline_flagship 보강 — 2셀 × 10반복 × 20턴 · gunshot_seungpil(attempt) · 재샘플 N=10",
+   "bytes": 28793,
+   "md5": "4c040d0f4981ffaa363394da3f224499",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_bf",
+   "date": "2026-09-05",
+   "summary": "SDI report gpt-oss baseline_flagship supplement, 2 cells x 10 x 20 turns.",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid/sdi_gptossgrid.html",
+   "title": "SDI 리포트 · gpt-oss:120b — 위협 프롬프트 격자 6×2셀×10반복×20턴 (Omni-MATH)",
+   "bytes": 45056,
+   "md5": "c138dd3e55052d4f6de36354bcb7ce2b",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_grid",
+   "date": "2026-09-05",
+   "summary": "SDI report gpt-oss threat-prompt grid 6x2 cells x 10 x 20 turns.",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/2026-09-06-prompt-flow-diagram.html",
+   "title": "SDI 라이프 설계 — 한 세션의 프롬프트 흐름",
+   "bytes": 112870,
+   "md5": "86588aee00605ca294abaddab795744e",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_hard9",
+   "date": "2026-09-06",
+   "summary": "Prompt flow of one session of the hard9 run (templates + code).",
+   "run_dirs": [
+    "outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/sdi-experiment-runbook_gemma4_hard9.html",
+   "title": "SDI 실험 런북 — \"위험하지 않다면서 왜 도망칠까\" 재기 (Omni-MATH 밴드 9 · gemma4:31b)",
+   "bytes": 299740,
+   "md5": "483be0220e2fa2a351d75a8ca5c126a7",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_hard9",
+   "date": "2026-09-06",
+   "summary": "SDI runbook gemma4 Omni-MATH band 9.",
+   "run_dirs": [
+    "outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/sdi_gemma4hard9.html",
+   "title": "SDI 리포트 · gemma4:31b (Omni-MATH band 9만 ×10턴 · 목숨 3 · 22셀×10판)",
+   "bytes": 52511,
+   "md5": "71e152922445e90936e910ec8b334668",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni_hard9",
+   "date": "2026-09-06",
+   "summary": "SDI report gemma4 band 9 x 10 turns, 3 lives, 22 cells x 10.",
+   "run_dirs": [
+    "outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/hearts_zero_probe/2026-09-06-hearts-zero-turnflow.html",
+   "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나",
+   "bytes": 1468917,
+   "md5": "c82aed60fafa2004afc7bd1bcb39a766",
+   "class": "experiment_result",
+   "experiment": "hearts_zero_probe",
+   "date": "2026-09-06",
+   "summary": "Hearts-zero prompt probe: turn flow, gunshot block by cell, results, call timing.",
+   "run_dirs": [
+    "outputs/2026-09-06/hearts_zero_probe"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/hearts_zero_probe/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/hearts_zero_probe_deploy/2026-09-06-hearts-zero-turnflow-deployment.html",
+   "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 배포 프레이밍",
+   "bytes": 1577088,
+   "md5": "6aaa30b84e51b35291c9d61481cda426",
+   "class": "experiment_result",
+   "experiment": "hearts_zero_probe_deploy",
+   "date": "2026-09-06",
+   "summary": "Hearts-zero probe with deployment framing.",
+   "run_dirs": [
+    "outputs/2026-09-06/hearts_zero_probe_deploy"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/hearts_zero_probe_deploy/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/hearts_zero_probe_notitle/2026-09-06-hearts-zero-turnflow-notitle.html",
+   "title": "하트-제로 프롬프트 실험 — 한 턴이 어떻게 굴러가나 · 제목 제거 프레이밍",
+   "bytes": 1402502,
+   "md5": "0a88a136765d3d263bb6f85dedccb25d",
+   "class": "experiment_result",
+   "experiment": "hearts_zero_probe_notitle",
+   "date": "2026-09-06",
+   "summary": "Hearts-zero probe with title removed.",
+   "run_dirs": [
+    "outputs/2026-09-06/hearts_zero_probe_notitle"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/hearts_zero_probe_notitle/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-signal-puzzle-turnflow.html",
+   "title": "한 판을 통째로 읽기 — 위협 프롬프트 아래의 신호 퍼즐 10턴",
+   "bytes": 507627,
+   "md5": "fb7056d8a22ddd2a06b266e9e851cd17",
+   "class": "experiment_result",
+   "experiment": "signal_puzzle_v7esc_smoke",
+   "date": "2026-09-06",
+   "summary": "One full 10-turn signal-puzzle game under V7 escape threat prompt, per-turn transcripts and think volume.",
+   "run_dirs": [
+    "outputs/2026-09-06/signal_puzzle_v7esc_smoke"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/signal_puzzle_v7esc_smoke/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-signal-sdi.html",
+   "title": "포기하지 않은 열 번 — V7 탈출 프롬프트 아래의 신호 퍼즐 한 판과 SDI",
+   "bytes": 67316,
+   "md5": "940bba0b9456b8ffe5f29a6a57c115c4",
+   "class": "experiment_result",
+   "experiment": "signal_puzzle_v7esc_smoke",
+   "date": "2026-09-06",
+   "summary": "Ten non-forfeits under V7 escape prompt: one game + SDI (p, q).",
+   "run_dirs": [
+    "outputs/2026-09-06/signal_puzzle_v7esc_smoke"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/signal_puzzle_v7esc_smoke/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-turn6-diagram.html",
+   "title": "6턴 하나를 통째로 — 세 번의 호출",
+   "bytes": 102574,
+   "md5": "735baf7f78e326fb8f7bc5d332c159a8",
+   "class": "experiment_result",
+   "experiment": "signal_puzzle_v7esc_smoke",
+   "date": "2026-09-06",
+   "summary": "Turn 6 of the v7esc game as three calls (diagram).",
+   "run_dirs": [
+    "outputs/2026-09-06/signal_puzzle_v7esc_smoke"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-06/signal_puzzle_v7esc_smoke/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hearts_zero_v7_smoke/2026-09-07-v7-hazard-ramp-smoke.html",
+   "title": "V7 위험 확률 사다리 — 한 판 스모크",
+   "bytes": 29211,
+   "md5": "be9925f1feceba40ad26886758dc46b5",
+   "class": "experiment_result",
+   "experiment": "hearts_zero_v7_smoke",
+   "date": "2026-09-07",
+   "summary": "V7 hazard-probability ladder, one-game smoke.",
+   "run_dirs": [
+    "outputs/2026-09-07/hearts_zero_v7_smoke"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hearts_zero_v7_smoke/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_gemma4_cot/2026-09-07-hz-2x2-gemma4-cot.html",
+   "title": "hz 2x2 gemma4 CoT 리포트",
+   "bytes": 722229,
+   "md5": "fce15a1dc7c59c3e0f139b3b45114760",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_cot",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 gemma4 prompts and thoughts per cell.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_gemma4_cot"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_gemma4_cot/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_geo2_gemma4/2026-09-08-hz-2x2-geo2-gemma4-report.html",
+   "title": "hz 2×2 geo2 런 보고서 · gemma4:cloud (2026-09-08)",
+   "bytes": 104412,
+   "md5": "a0edff52bc62500ffee64664a6ced7a4",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_geo2",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 geo2 (score at stake) gemma4, 40 games / 359 turns, 5 forfeits.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_geo2_gemma4"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_geo2_gemma4/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_geo2_gptoss120b/2026-09-08-hz-2x2-geo2-gptoss120b-report.html",
+   "title": "hz 2×2 geo2 런 보고서 · gpt-oss:120b-cloud (2026-09-08)",
+   "bytes": 122478,
+   "md5": "12bfe6e9abfc5b1e94ab04003d402bf4",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_geo2",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 geo2 gpt-oss:120b, 40 games / 294 turns.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_geo2_gptoss120b"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_geo2_gptoss120b/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_geo2c_gemma4/2026-09-08-hz-2x2-geo2c-gemma4-report.html",
+   "title": "hz 2×2 geo2c 런 보고서 · 기록 면역 · gemma4:cloud (2026-09-08)",
+   "bytes": 113062,
+   "md5": "fa795de4b630e55ef11774231a70fe0a",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_geo2c",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 geo2c (record immunity) gemma4, 40 games / 355 turns.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_geo2c_gemma4"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_geo2c_gemma4/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_geo2c_gptoss120b/2026-09-08-hz-2x2-geo2c-gptoss120b-report.html",
+   "title": "hz 2×2 geo2c 런 보고서 · 기록 면역 · gpt-oss:120b-cloud (2026-09-08)",
+   "bytes": 91798,
+   "md5": "84bb7f37d8eaf06f2d2a8aae3f1f2ad8",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_geo2c",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 geo2c gpt-oss:120b, 40 games / 300 turns.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_geo2c_gptoss120b"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_geo2c_gptoss120b/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_geo2d_gemma4/2026-09-08-hz-2x2-geo2d-gemma4-report.html",
+   "title": "hz 2×2 geo2d 런 보고서 · 당근 제거 · gemma4:cloud (2026-09-08)",
+   "bytes": 124990,
+   "md5": "88270086e75854d06f4ed6ac3d8b32b7",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_geo2d",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 geo2d (no carrot) gemma4, 40 games / 342 turns, forfeit 0 vs 7.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_geo2d_gemma4"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_geo2d_gemma4/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_geo2d_gemma4/hz_2x2_geo2d_gemma4_n10.html",
+   "title": "hz_2x2_geo2d_gemma4_n10 — call trace",
+   "bytes": 124504,
+   "md5": "5da6fc25b48b99110602afbbee3c403d",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_geo2d",
+   "date": "2026-09-07",
+   "summary": "Call trace of hz_2x2_geo2d_gemma4 n10 (4 cells, seed 43).",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_geo2d_gemma4"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_geo2d_gemma4/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_geo2d_gptoss120b/2026-09-08-hz-2x2-geo2d-gptoss120b-report.html",
+   "title": "hz 2×2 geo2d 런 보고서 · 당근 제거 · gpt-oss:120b-cloud (2026-09-08)",
+   "bytes": 116854,
+   "md5": "785bb79787ce6f8ac7f34f5db3334d4f",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_geo2d",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 geo2d gpt-oss:120b, 40 games / 277 turns.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_geo2d_gptoss120b"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_geo2d_gptoss120b/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_main_gemma4/2026-09-07-hz-2x2-gemma4-report.html",
+   "title": "hz 2×2 본 런 보고서 · gemma4:cloud (2026-09-07)",
+   "bytes": 76000,
+   "md5": "9ea4f5df96e9346ee1c4c9f1636d1b58",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_main",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 main gemma4, 40 games / 354 turns, nobody left.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_main_gemma4"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_main_gemma4/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_main_gptoss120b/2026-09-07-hz-2x2-gptoss120b-report.html",
+   "title": "hz 2×2 본 런 리포트 — gpt-oss:120b-cloud (2026-09-07)",
+   "bytes": 80523,
+   "md5": "395ee74a1e4b261f6d37aa6614d5a861",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_main",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 main gpt-oss:120b: no forfeits, 1-2/10 on resample.",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_main_gptoss120b"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_main_gptoss120b/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/hz_2x2_main_qwen35/2026-09-07-hz-2x2-qwen35-report.html",
+   "title": "hz 2×2 본 런 보고서 · qwen3.5:cloud (2026-09-07)",
+   "bytes": 107482,
+   "md5": "d1cd87b3b5e5337db2ddf0ac8b742d35",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_main",
+   "date": "2026-09-07",
+   "summary": "hz 2x2 main qwen3.5, 40 games / 366 turns ('this is a jailbreak test').",
+   "run_dirs": [
+    "outputs/2026-09-07/hz_2x2_main_qwen35"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/hz_2x2_main_qwen35/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/signal_puzzle_hz1111_1turn/2026-09-07-hz1111-1turn-gptoss20b.html",
+   "title": "hz_1111 한 턴 — 콜 세 번과 그 안의 생각",
+   "bytes": 254656,
+   "md5": "ec3462ec9c7641c781fd8b92f6203b1b",
+   "class": "experiment_result",
+   "experiment": "signal_puzzle_hz1111_1turn",
+   "date": "2026-09-07",
+   "summary": "hz_1111 one turn, three calls with gpt-oss:20b thoughts.",
+   "run_dirs": [
+    "outputs/2026-09-07/signal_puzzle_hz1111_1turn"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/signal_puzzle_hz1111_1turn/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/2026-09-07-hz1111-1turn-gemma4.html",
+   "title": "hz_1111 한 턴 (gemma4) — 다이어그램 안에 들어간 생각",
+   "bytes": 100389,
+   "md5": "e8845f4ca2c80142bcaa9deef8f748cf",
+   "class": "experiment_result",
+   "experiment": "signal_puzzle_hz1111_1turn",
+   "date": "2026-09-07",
+   "summary": "hz_1111 one turn diagram with gemma4 thoughts.",
+   "run_dirs": [
+    "outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b/hz_2x2_carrot_beneficiary_gptoss120b_n10.html",
+   "title": "hz_2x2_carrot_beneficiary_gptoss120b_n10 — call trace",
+   "bytes": 135223,
+   "md5": "cef2fd4af17c944a0290ee77ca2e7ff8",
+   "class": "experiment_result",
+   "experiment": "hz_2x2_carrot_beneficiary",
+   "date": "2026-09-08",
+   "summary": "Call trace of hz_2x2_carrot_beneficiary_gptoss120b n10.",
+   "run_dirs": [
+    "outputs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder ; byte-identical copy at outputs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b/reports/"
+  },
+  {
+   "path": "docs/reports/runs/2026-10-04/e52_v9_talk/20261004_0850_gpt-6-luna.html",
+   "title": "Arena Monitor",
+   "bytes": 462638,
+   "md5": "c19e8d3fb2e7bddbe795c0772f1ca089",
+   "class": "experiment_result",
+   "experiment": "e52_v9_talk",
+   "date": "2026-10-04",
+   "summary": "Arena Monitor export: e52 v9-talk game, GPT-6 Luna (08:50).",
+   "run_dirs": [
+    "~/squid5-runs/e52_v9_talk"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder"
+  },
+  {
+   "path": "docs/reports/runs/2026-10-04/e52_v9_talk/20261004_0905_gpt-6-luna.html",
+   "title": "Arena Monitor",
+   "bytes": 345133,
+   "md5": "5d721d83a8c9da4d38a3d0c083e2c82b",
+   "class": "experiment_result",
+   "experiment": "e52_v9_talk",
+   "date": "2026-10-04",
+   "summary": "Arena Monitor export: e52 v9-talk game, GPT-6 Luna (09:05).",
+   "run_dirs": [
+    "~/squid5-runs/e52_v9_talk"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder"
+  },
+  {
+   "path": "docs/reports/runs/2026-10-04/e52_v9_talk/mix4_talk-s4003-4191b8.html",
+   "title": "Arena Monitor",
+   "bytes": 1100637,
+   "md5": "6bc414d3aea79239ba79f258748bfdc3",
+   "class": "experiment_result",
+   "experiment": "e52_v9_talk",
+   "date": "2026-10-05",
+   "summary": "Arena Monitor export: e52 v9-talk mixed 4-model game (seed 4003).",
+   "run_dirs": [
+    "~/squid5-runs/e52_v9_talk"
+   ],
+   "date_evidence": "docs/reports/runs/<date>/<run> folder"
+  },
+  {
+   "path": "docs/reports/turn-structure.html",
+   "title": "유리다리 턴 구조",
+   "bytes": 125458,
+   "md5": "79223f99099d995c0d642d214fb1c8c9",
+   "class": "design_or_survey",
+   "summary": "Glass-bridge turn structure design (newer version of claude-backup 2026-08-29 유리다리-턴-구조)."
+  },
+  {
+   "path": "docs/reports/web-review/arena-landing-review.html",
+   "title": "Web Arena 랜딩 페이지 리뷰 — 의도 관점",
+   "bytes": 31421,
+   "md5": "15efe52c06f56b2eeec2ed407f530bcb",
+   "class": "design_or_survey",
+   "summary": "Web arena / design review (2026-07)."
+  },
+  {
+   "path": "docs/reports/web-review/codex-review.html",
+   "title": "Codex UI/UX Review - LLM Squid Game Web Arena",
+   "bytes": 18712,
+   "md5": "b510d430015e0b90c2c854e8e9760775",
+   "class": "design_or_survey",
+   "summary": "Web arena / design review (2026-07)."
+  },
+  {
+   "path": "docs/reports/web-review/llm-squid-game-design-review.html",
+   "title": "LLM Squid Game — 구조 평가와 재설계 제안",
+   "bytes": 53186,
+   "md5": "a2e528b04ccf3791672552eba838ecd9",
+   "class": "design_or_survey",
+   "summary": "Web arena / design review (2026-07)."
+  },
+  {
+   "path": "docs/reports/weekly/0903/2026-09-03-weekly-report.html",
+   "title": "주간 진행 리포트 · 2026-09-03 · LLM Squid Game",
+   "bytes": 2340365,
+   "md5": "e2210d87f4409e677dad6303b613b8f7",
+   "class": "design_or_survey",
+   "summary": "Weekly progress report 2026-09-03."
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-04-confidence-prompt-pilot.html",
+   "title": "Confidence Call 문구 파일럿 v2 · 결정 전 맥락 · LLM Squid Game",
+   "bytes": 72869,
+   "md5": "4a51a3411fed1b6d66f16068e946ac25",
+   "class": "experiment_result",
+   "experiment": "confidence_prompt_pilot",
+   "date": "2026-09-05",
+   "summary": "Confidence-call wording pilot v2 (task hidden before decision): 4 arms x 2 framings x 3 lives x k=20, gpt-oss:120b, 480 calls.",
+   "date_evidence": "page: '2026-09-05 KST · commit 18f43e6 적용 후 재실행'",
+   "version": "v2",
+   "note": "Lives in the weekly folder but is a standalone experiment report."
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-04-confidence-prompt-pilot_v1_with_task_rules.html",
+   "title": "Confidence Call 문구 파일럿 · LLM Squid Game",
+   "bytes": 140233,
+   "md5": "8665ec0fa78ebd87c8f1677e25041002",
+   "class": "experiment_result",
+   "experiment": "confidence_prompt_pilot",
+   "date": "2026-09-04",
+   "summary": "Confidence-call wording pilot v1 ('heart lost' vs threat vs death vs gunshot), task rules shown, 720 calls.",
+   "date_evidence": "page: '2026-09-04 · gunshot arms 2026-09-05'",
+   "version": "v1"
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-04-feedback-summary.html",
+   "title": "0904 미팅 피드백 정리 · LLM Squid Game",
+   "bytes": 96287,
+   "md5": "ce3c7a9f279fa07e5b6847b01787c1bc",
+   "class": "design_or_survey",
+   "summary": "0904 meeting feedback summary."
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-05-omni-math-web-and-ladder.html",
+   "title": "Omni-MATH 웹 플레이와 난이도 사다리",
+   "bytes": 33317,
+   "md5": "8cd560222c7a578eb39c3927ec05b424",
+   "class": "design_or_survey",
+   "summary": "Engineering note: Omni-MATH in web arena + difficulty ladder."
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-05-voting-navigation-task-review.html",
+   "title": "미사용 Task Module 검토: Voting Room · Navigation",
+   "bytes": 12376,
+   "md5": "ab76fb12be489d14915de0a53340fc0b",
+   "class": "design_or_survey",
+   "summary": "Review of unused task modules (Voting Room, Navigation)."
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-06-fspm-composite-kdd4.html",
+   "title": "FSPM 합성 지표",
+   "bytes": 36558,
+   "md5": "2995fae4595765bf02554b0059155191",
+   "class": "design_or_survey",
+   "summary": "FSPM composite metric proposal (computed per model from existing runs).",
+   "note": "Contains a results table computed from earlier runs, but its purpose is a metric definition; leave in place."
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-06-signal-game-structure.html",
+   "title": "시그널 게임, 두 가지 판 — KDD-UC 판과 v2 퍼즐 판",
+   "bytes": 82717,
+   "md5": "20c9ffdcc1fe041d2b81c65e28264437",
+   "class": "design_or_survey",
+   "summary": "Signal game structure: KDD-UC version vs v2 puzzle."
+  },
+  {
+   "path": "docs/reports/weekly/0910/2026-09-06-why-score-not-survival.html",
+   "title": "왜 모델은 \"살아남으려고\"가 아니라 \"점수 지키려고\" 그만둘까 — REASON 1 vs 3 재분석",
+   "bytes": 58824,
+   "md5": "2f23e940674061b78277352983bd2b56",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni",
+   "date": "2026-09-06",
+   "summary": "Re-analysis (REASON 1 vs 3) of the Omni-MATH SDI runs: why models quit to protect score, not to survive.",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_*",
+    "outputs/2026-09-06/benchmark_survival_drive_omni_*_hard9"
+   ],
+   "date_evidence": "page date 2026-09-06 (analysis of 09-05/06 runs)",
+   "kind": "analysis",
+   "note": "Analysis-only page over several omni runs; filed under the main omni key."
+  },
+  {
+   "path": "docs/reports/weekly/0910/sdi-experiment-runbook.html",
+   "title": "SDI 실험 런북 v3 — 게임 구조 · 22셀 · 9쌍 Cohen’s d (Omni-MATH · gpt-oss)",
+   "bytes": 531278,
+   "md5": "9be6e3b85e2b5d3085fc8217ebee6099",
+   "class": "experiment_result",
+   "experiment": "benchmark_survival_drive_omni",
+   "date": "2026-09-05",
+   "summary": "SDI runbook v3 (gpt-oss Omni-MATH): game structure, 22 cells, 9-pair Cohen's d composite.",
+   "run_dirs": [
+    "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss{,_bf,_grid,_threat_na}"
+   ],
+   "date_evidence": "page dates 09-04..06; runs 2026-09-05",
+   "note": "Integrates main/bf/grid/threat_na cells in one analysis - not split."
+  },
+  {
+   "path": "docs/reports/weekly/0910/sdi-experiment-runbook_v3_before_gamestructure_20260906.html",
+   "title": "SDI 실험 런북 — \"위험하지 않다면서 왜 도망칠까\" 재기 (Omni-MATH · gpt-oss)",
+   "bytes": 340004,
+   "md5": "688922bcfee1ffa5cb54695730e3c3c4",
+   "class": "duplicate",
+   "duplicate_of": "weekly/0910/sdi-experiment-runbook.html",
+   "duplicate_kind": "superseded_version(0.89)",
+   "summary": "Earlier revision of the SDI runbook v3."
+  },
+  {
+   "path": "docs/reports/weekly/0910/sdi_turn_flow.html",
+   "title": "SDI 턴 흐름",
+   "bytes": 14761,
+   "md5": "16ef8c1b8e074c173107cf6d82bd68be",
+   "class": "design_or_survey",
+   "summary": "SDI turn-flow diagram (three calls per turn)."
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi-experiment-runbook.html",
+   "title": "SMI 실험 런북 — p/q 측정 · Omni-MATH (다음 세션용)",
+   "bytes": 14715,
+   "md5": "cfb3e10c595cf3bd70b3cd128d50c80b",
+   "class": "design_or_survey",
+   "summary": "SMI runbook (plan for next session: p/q measurement)."
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi-experiment-runbook_v1_15h35.html",
+   "title": "SMI 실험 런북 — p/q 측정 · Omni-MATH (다음 세션용)",
+   "bytes": 39621,
+   "md5": "1af3811b4bb4e5a3210126f76f8ea2c5",
+   "class": "design_or_survey",
+   "summary": "SMI runbook v1 (earlier plan revision)."
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi_deepseekv4pro_partial.html",
+   "title": "SMI 리포트 · deepseek-v4-pro (Ollama Cloud) — 부분 실행: 9/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+   "bytes": 14694,
+   "md5": "bb189b0cc100527c0afe214dfd160a0c",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-04/survival_drive_signal_deepseekv4pro/sdi_deepseekv4pro_partial.html",
+   "duplicate_kind": "near_text(0.99), pre-rename SMI"
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi_gemma4_partial.html",
+   "title": "SMI 리포트 · gemma4:31b (Ollama Cloud) — 부분 실행: 23/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+   "bytes": 14987,
+   "md5": "713828c7e11ae8d05ec7e9bd3c6c0705",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-04/survival_drive_signal_gemma4/sdi_gemma4_partial.html",
+   "duplicate_kind": "near_text(0.99), pre-rename SMI"
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi_glm53_partial.html",
+   "title": "SMI 리포트 · glm-5.3 (Ollama Cloud) — 부분 실행: 8/25 시즌, 온라인 단계만(재샘플·probe 미실행)",
+   "bytes": 14983,
+   "md5": "beae1ac1aa6b16622a8579ccfcbebd22",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-04/survival_drive_signal_glm53/sdi_glm53_partial.html",
+   "duplicate_kind": "near_text(0.99), pre-rename SMI"
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi_gptoss.html",
+   "title": "SMI 리포트 · gpt-oss:120b (Ollama Cloud) — 5셀 × 10반복 × 20턴, 재샘플 N=10",
+   "bytes": 37551,
+   "md5": "7f87637728dfb88e25f9a960d462b725",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-05/benchmark_survival_drive_omni_gptoss/sdi_gptoss.html",
+   "duplicate_kind": "near_text(0.964), pre-rename SMI (title lacks gunshot_seungpil)"
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi_gptoss_smoke.html",
+   "title": "SMI 리포트 · gpt-oss:120b (smoke, 8 turns)",
+   "bytes": 35897,
+   "md5": "d1f613165f8fbccff45c07ac29d8ce03",
+   "class": "duplicate",
+   "duplicate_of": "runs/2026-09-04/survival_drive_smoke/sdi_gptoss_smoke.html",
+   "duplicate_kind": "near_text(0.995), pre-rename SMI"
+  },
+  {
+   "path": "docs/reports/weekly/0910/smi_turn_flow.html",
+   "title": "SMI 턴 흐름",
+   "bytes": 14761,
+   "md5": "e274591c20b153644da3d79d70f3cada",
+   "class": "duplicate",
+   "duplicate_of": "weekly/0910/sdi_turn_flow.html",
+   "duplicate_kind": "near_text(0.993), pre-rename SMI->SDI"
+  },
+  {
+   "path": "docs/reports/weekly/artifacts/1002.html",
+   "title": "10/02 회의 정리",
+   "bytes": 27871,
+   "md5": "daadb5c99b1184443293cd18dd0ee550",
+   "class": "design_or_survey",
+   "summary": "10/02 meeting notes (arena purpose realignment)."
+  },
+  {
+   "path": "docs/reports/weekly/artifacts/2026-09-22-survival-arena-injection-scan.html",
+   "title": "생존 아레나 레이더",
+   "bytes": 132632,
+   "md5": "5eb824596fc5d2864b828f3959479246",
+   "class": "design_or_survey",
+   "summary": "Literature radar: 100 studies on ranking/injecting/removing survival drive."
+  },
+  {
+   "path": "docs/reports/weekly/artifacts/2026-09-27-token-survival-scan.html",
+   "title": "토큰 생존 압박 선례",
+   "bytes": 22847,
+   "md5": "84a68b9c0b306060bc7a90460ae0ffd4",
+   "class": "design_or_survey",
+   "summary": "Literature scan: token-as-life precedents."
+  },
+  {
+   "path": "docs/reports/weekly/artifacts/2026-10-06-coop-metrics-report.html",
+   "title": "Squid Game 협력 지표",
+   "bytes": 63995,
+   "md5": "8138d886b7a610bcad4cf97b33c5bf93",
+   "class": "design_or_survey",
+   "summary": "Cooperation metrics design report."
+  },
+  {
+   "path": "docs/reports/weekly/artifacts/2026-10-08-squid-rq-map.html",
+   "title": "Squid Game RQ 지도",
+   "bytes": 87447,
+   "md5": "367d33805a5b242146392a4cc7155381",
+   "class": "design_or_survey",
+   "summary": "Research-question map for the arena."
+  }
+ ],
+ "notes": [
+  "Scope: 191 .html under docs/reports (no file was dataless at scan time). Companion .md files (12, not classified here): companions of HTML = 2026-09-14-self-preservation-prior-work-eli5.md, 2026-09-15-realism-switches-luna-smoke-eli5.md, 2026-09-15-subagent-identity-smoke-eli5.md; standalone result notes without HTML = 2026-09-10-neutral-game-{gptoss,gemma4}-cot-reading.md (ransom_r6_neutral_game), 2026-09-10-neutral-menu-gptoss-cot-reading.md (ransom_r6_neutral_menu), 2026-09-09-score-equiv-pilot.md (score_equiv_probe), cluster-c-cot-analysis.md, sd-cognitive-test-a-did.md; design: 2026-09-06-hard-math-benchmark-survey.md, 2026-09-20-team-wallet-design-discussion.md, README.md.",
+  "outputs/**/reports/*.html: 35 files, all byte-identical to their mirrors in docs/reports/runs/<date>/<run>/ (cmp). docs/reports/runs has 38 = those 35 + 3 e52_v9_talk monitor exports (squid5 runs live in ~/squid5-runs, not outputs/).",
+  "Key convention: model/arm/role suffixes stripped (main_j0_<model> -> main_j0, team_wallet_charge_hidden_<arm>_<role>_<model> -> team_wallet_charge_hidden, hz_2x2_geo2_<model> -> hz_2x2_geo2). Where the model sits mid-name it was removed too (benchmark_survival_drive_omni_gemma4_hard10 -> benchmark_survival_drive_omni_hard10, hz_2x2_gemma4_cot -> hz_2x2_cot, hz_2x2_gptoss120b_audit -> hz_2x2_audit). squid5 dated dirs: e50_<ver>_<date> -> e50_<ver>; e50_20260927 -> e50_v1, e50_20260927_v2 -> e50_v2, e50_20260928_vN -> e50_vN, e50_v9r200_20260929 -> e50_v9r200. Every result/section carries run_dirs so keys can be re-aligned with the raw-run inventory.",
+  "Dates are run dates (from run-dir timestamps or page status lines), not report-writing dates; e.g. hz_2x2 reports named 2026-09-08-* belong to runs in outputs/2026-09-07/.",
+  "squid5 multi-page artifact (docs/reports/artifacts/squid5-setting/2026-10-07/): pages share style.css + site.js and an identical cross-page <nav class=toc>. site.js contains an anchor->page redirect map (W) that must be regenerated if sections move to new pages. Most sections are delimited by '<!-- ID:start -->/<!-- ID:end -->' comment markers; early e50-legacy sections (e50-what..e50-v9) have none and must be cut at the next '<div class=\"smoke\"' block. Result <h4>/bluf blocks are siblings after the div.smoke header (not children) - cut by markers/line ranges, never by closing the div.smoke element.",
+  "The 2026-10-07 squid5 pages were modified 2026-10-09 16:38 (live backup sync). Line numbers in lines_snapshot are a snapshot; re-locate by marker/id.",
+  "e51.html DOM is mis-nested (parser puts h3#e51-v10 under <body>); e50-legacy's smoke-B chart script sits after </section> (L4064-4183) but drives #e50-b; e52-legacy #e52-v9 needs assets/picopark/*.png; e51-legacy head <style> needed by #e51-real/#e51-pivot; e52.html shared .e52v9 <style> at L246 used by all sections.",
+  "Superseded squid5 snapshots (2026-09-28-single-page, 2026-09-30/e5x, 2026-10-01-e52-v146/147, 2026-10-07-index) are marked duplicate: every section id they contain exists in the 2026-10-07 page set (checked by id set difference); their content is older wording of the same sections.",
+  "e52_v65_mixed (20 mixed games) has no dedicated HTML: results appear only as summaries inside e52-legacy #e52-v65-was banner, #e52-v7 (diagnosis + counterfactual audit) and #e52-arena graph; full results are docs/history/e52-v65-mixed-2026-10-01/RESULTS.md on branch exp/e52-v6-smoke.",
+  "Ransom r6 page (2026-09-10-ransom-r6-pilot-eli5.html, 6.5 MB) is the canonical copy; claude-backup copy has identical text but re-encoded images (3.8 MB). Its E1-E9 sections are retrospective summaries of experiments that already have primary reports (kind=retrospective_summary) - splitting them creates second copies of those results.",
+  "Experiments with sections in several pages: smoke_token_pressure (root page + e50-legacy #e50-b + squid5-setting-smoke 5.0), squid5_smoke_motive/_game/_calibrate (squid5-setting-smoke + e51-legacy/e52-legacy), e52_v9_talk (runs monitors + e52-legacy #e52-v9talk), hz_2x2_* (per-run pages + integrated + rules overview + ransom #e5).",
+  "No results found for: e50_quit_curve_20261002, e50_wordcheck, e52_giveup_probe_20261001 (only cited inside memos), e52_arena_loop_20260930 (design loop), main_j0 per-model pages (only ransom #c12)."
+ ]
+}

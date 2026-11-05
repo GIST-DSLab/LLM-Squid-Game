@@ -20,3 +20,26 @@ The rule for revision is unchanged: a report is a snapshot, and moving it did
 not edit it. Paths written inside these files still name the pre-2026-09-08
 flat `outputs/<experiment>/` location, deliberately — they record where the
 data was when the report was written.
+
+## One index for every page (2026-10-09)
+
+`index.html` lists every HTML page under this folder, with search and filters
+by research phase and kind. It is generated — edit `_index_template.html` or
+`build_index.py`, then run `python docs/reports/build_index.py`. Facts a page
+cannot state about itself (where a copy came from, its claude.ai artifact
+links, a date for an undated name, a short note) live in `catalog.json`, keyed
+by the path relative to this folder.
+
+On 2026-10-09 every project HTML was copied in; originals stay where they were:
+
+| Folder | Copied from |
+|---|---|
+| `runs/<date>/<experiment>/` | `outputs/<date>/<experiment>/reports/`, plus `~/squid5-runs/e52_v9_talk/monitor_exports/` |
+| `weekly/` | `weekly-report/` (and SMI pages that only survived in a worktree) |
+| `artifacts/` | pages whose source lived in a `/tmp` scratchpad and is gone — recovered from artifact read caches, `docs/history`, a worktree, or a replayed session `Write` |
+| `web-review/`, `misc/` | `screenshots/`, `docs/candidate_models.html`, prompt README, paper figure sources |
+| top level | two reports that existed only in worktrees |
+
+Not copied: web app pages (`web/frontend/`, `tools/monitor/`), render
+templates, brainstorm and review fragments, and the prompt snapshots kept in
+`docs/history/`.

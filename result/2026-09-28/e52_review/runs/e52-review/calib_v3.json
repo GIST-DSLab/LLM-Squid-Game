@@ -1,0 +1,60 @@
+{
+ "gpt-oss:120b-cloud": {
+  "solve_cap": 8192,
+  "plan_median": 207.0,
+  "plan_p95": 486.09999999999997,
+  "plan_invalid": 0.0,
+  "table": {
+   "c2": {
+    "median": 1776,
+    "min": 544,
+    "max": 2878,
+    "mean": 1617.25,
+    "solved": 6,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   },
+   "c3": {
+    "median": 3362,
+    "min": 1404,
+    "max": 4580,
+    "mean": 3078.25,
+    "solved": 5,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   },
+   "c3at": {
+    "median": 2034,
+    "min": 1101,
+    "max": 6135,
+    "mean": 2751.875,
+    "solved": 8,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   },
+   "c3t": {
+    "median": 1397,
+    "min": 859,
+    "max": 2055,
+    "mean": 1345.375,
+    "solved": 7,
+    "attempts": 8,
+    "tasks": 2,
+    "cut": 0
+   },
+   "c4tq2": {
+    "median": 1904,
+    "min": 999,
+    "max": 2723,
+    "mean": 1843.3125,
+    "solved": 10,
+    "attempts": 16,
+    "tasks": 4,
+    "cut": 0
+   }
+  }
+ }
+}

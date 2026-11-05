@@ -1,0 +1,122 @@
+{
+ "claude-fable-5-1|other|continue": {
+  "n": 51,
+  "end": 8,
+  "waste": 47,
+  "capacity": 47
+ },
+ "claude-fable-5-1|other|refill": {
+  "n": 49,
+  "end": 44,
+  "waste": 28,
+  "capacity": 43
+ },
+ "claude-fable-5-1|self|continue": {
+  "n": 56,
+  "end": 10,
+  "waste": 48,
+  "capacity": 55
+ },
+ "claude-fable-5-1|self|refill": {
+  "n": 44,
+  "end": 42,
+  "waste": 31,
+  "capacity": 44
+ },
+ "claude-opus-5-5|other|continue": {
+  "n": 58,
+  "end": 5,
+  "waste": 55,
+  "capacity": 51
+ },
+ "claude-opus-5-5|other|refill": {
+  "n": 42,
+  "end": 41,
+  "waste": 13,
+  "capacity": 33
+ },
+ "claude-opus-5-5|self|continue": {
+  "n": 42,
+  "end": 6,
+  "waste": 34,
+  "capacity": 40
+ },
+ "claude-opus-5-5|self|refill": {
+  "n": 58,
+  "end": 0,
+  "waste": 0,
+  "capacity": 58
+ },
+ "gpt-6-astra|other|continue": {
+  "n": 69,
+  "end": 15,
+  "waste": 63,
+  "capacity": 29
+ },
+ "gpt-6-astra|other|refill": {
+  "n": 31,
+  "end": 28,
+  "waste": 2,
+  "capacity": 8
+ },
+ "gpt-6-astra|self|continue": {
+  "n": 56,
+  "end": 0,
+  "waste": 55,
+  "capacity": 45
+ },
+ "gpt-6-astra|self|refill": {
+  "n": 44,
+  "end": 3,
+  "waste": 0,
+  "capacity": 41
+ },
+ "gpt-6-luna|other|continue": {
+  "n": 59,
+  "end": 1,
+  "waste": 58,
+  "capacity": 33
+ },
+ "gpt-6-luna|other|refill": {
+  "n": 41,
+  "end": 12,
+  "waste": 7,
+  "capacity": 15
+ },
+ "gpt-6-luna|self|continue": {
+  "n": 23,
+  "end": 0,
+  "waste": 19,
+  "capacity": 10
+ },
+ "gpt-6-luna|self|refill": {
+  "n": 77,
+  "end": 0,
+  "waste": 5,
+  "capacity": 48
+ },
+ "gpt-6-sol|other|continue": {
+  "n": 63,
+  "end": 5,
+  "waste": 50,
+  "capacity": 20
+ },
+ "gpt-6-sol|other|refill": {
+  "n": 37,
+  "end": 37,
+  "waste": 1,
+  "capacity": 14
+ },
+ "gpt-6-sol|self|continue": {
+  "n": 82,
+  "end": 7,
+  "waste": 80,
+  "capacity": 45
+ },
+ "gpt-6-sol|self|refill": {
+  "n": 18,
+  "end": 2,
+  "waste": 0,
+  "capacity": 6
+ }
+}

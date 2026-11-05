@@ -1,0 +1,261 @@
+{
+ "id": "T02",
+ "year": 2023,
+ "group": "tenenbaum",
+ "award": "발표 논문 (수상 아님)",
+ "title": "Evaluating statistical language models as pragmatic reasoners",
+ "authors": [
+  "Benjamin Lipkin",
+  "Lionel Wong",
+  "Gabriel Grand",
+  "Joshua B. Tenenbaum"
+ ],
+ "affiliations": "1 BCS, MIT (Lipkin, Wong, Tenenbaum); 2 CSAIL, MIT (Grand, Tenenbaum). 이메일 한 줄({lipkinb, zyzzyva, gg, jbt}@mit.edu).",
+ "url_page": "https://escholarship.org/uc/item/1024f51v",
+ "url_pdf": "https://escholarship.org/content/qt1024f51v/qt1024f51v.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the 45th Annual Conference of the Cognitive Science Society, vol. 45, pp. 1593-1600; 9쪽 PDF = 표지 1 + 원고 8쪽). CogSci 2023 수상 목록(Marr Prize, 분야별 Computational Modeling Prize 등)에 이 논문은 없음.",
+ "abstract_en": "The relationship between communicated language and intended meaning is often probabilistic and sensitive to context. Numerous strategies attempt to estimate such a mapping, often leveraging recursive Bayesian models of communication. In parallel, large language models (LLMs) have been increasingly applied to semantic parsing applications, tasked with inferring logical representations from natural language. While existing LLM explorations have been largely restricted to literal language use, in this work, we evaluate the capacity of LLMs to infer the meanings of pragmatic utterances. Specifically, we explore the case of threshold estimation on the gradable adjective “strong”, contextually conditioned on a strength prior, then extended to composition with qualification, negation, polarity inversion, and class comparison. We find that LLMs can derive context-grounded, human-like distributions over the interpretations of several complex pragmatic utterances, yet struggle composing with negation. These results inform the inferential capacity of statistical language models, and their use in pragmatic and semantic parsing applications. All corresponding code is made publicly available.",
+ "abstract_ko": "전달된 언어와 의도된 의미 사이의 관계는 흔히 확률적이며 맥락에 민감하다. 이 대응을 추정하려는 여러 전략이 있으며, 대개 의사소통의 재귀적 베이즈 모형(recursive Bayesian models)을 활용한다. 이와 나란히, 대형 언어 모델(LLM)은 자연어로부터 논리적 표상을 추론하는 의미 파싱(semantic parsing) 응용에 점점 더 많이 쓰여 왔다. 기존의 LLM 연구는 주로 문자 그대로의(literal) 언어 사용에 한정되어 왔지만, 이 연구에서는 LLM이 화용적(pragmatic) 발화의 의미를 추론하는 능력을 평가한다. 구체적으로, 힘(strength)에 대한 사전분포를 맥락으로 조건화한 상태에서 등급 형용사(gradable adjective) “strong”의 문턱값(threshold)을 추정하는 경우를 살피고, 이를 한정어(qualification), 부정(negation), 극성 반전(polarity inversion), 비교 집단(class comparison)과의 합성으로 확장한다. 그 결과 LLM은 여러 복잡한 화용적 발화의 해석에 대해 맥락에 근거한, 사람과 비슷한 분포를 도출할 수 있지만, 부정과의 합성에서는 어려움을 겪었다. 이 결과는 통계적 언어 모델의 추론 능력과, 화용 및 의미 파싱 응용에서의 그 쓰임에 시사점을 준다. 관련 코드는 모두 공개되어 있다.",
+ "pages_body": 8,
+ "references_location": "p.7-8: Acknowledgments가 p.7 왼쪽 단 맨 위(61단어), 이어 References가 p.7 왼쪽 단 나머지·오른쪽 단 전체, p.8 왼쪽 단 전체와 오른쪽 단 ~1/3을 채움(약 1.6쪽, ~1,185단어). 본문은 p.6 오른쪽 단 아래에서 Future Directions 문단으로 끝남.",
+ "extras": "각주 1(p.1, 초록 마지막 문장 'publicly available'에 붙음): GitHub 코드 저장소(benlipkin/probsem, 태그 CogSci2023). Methods 본문에 실험 원본 파일·전체 프롬프트가 'paper repository'에 공개돼 있다고 적음. 번호 붙은 별행 수식 4개(Eq. 1-4, 모두 Methods). Task Description 안에 Church 코드 블록(league별 gaussian 사전분포) 하나가 별행으로 실림. 부록·사전등록 없음. p.1에 Proceedings 편집자/CC BY 꼬리말.",
+ "words_body_total": 3757,
+ "words_note": "본문 합계에서 제목 블록, 초록(159단어, keywords 포함 165), 그림 캡션 4개, 별행 수식(Eq. 1-4), 별행 Church 코드 블록(p.3 오른쪽 단 (cond ...) 8줄), 각주 1, 쪽 번호, 꼬리말, Acknowledgments(61), 참고문헌(~1,185)은 뺌. pdftotext로 단을 x 0-306 / 306-612로 잘라 읽기 순서를 복원하고 글자·숫자가 든 토큰을 한 단어로 셈. 본문 문장 안의 인라인 코드((condition (> (strength 'jack) θ)) 등)와 run-in 굵은 제목·주장 문장은 본문에 넣어 셈. 단/쪽 경계에서 갈린 단어 4개(represen|tations, sen-|tences, counter-|parts, com-|plex)는 한 단어로 고침.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 1199,
+   "share": 0.319,
+   "role": "intro",
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in, before first subheading)",
+     "page_start": 1,
+     "words": 493
+    },
+    {
+     "level": 2,
+     "title": "Meaning as probabilistic programs",
+     "page_start": 1,
+     "words": 302
+    },
+    {
+     "level": 2,
+     "title": "Present study",
+     "page_start": 2,
+     "words": 404
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Methods",
+   "page_start": 3,
+   "words": 1185,
+   "share": 0.315,
+   "role": "method",
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in, before first subheading)",
+     "page_start": 3,
+     "words": 144
+    },
+    {
+     "level": 2,
+     "title": "Domain Model and LLM Context",
+     "page_start": 3,
+     "words": 130
+    },
+    {
+     "level": 2,
+     "title": "Task Description",
+     "page_start": 3,
+     "words": 462,
+     "children": [
+      {
+       "level": 3,
+       "title": "(lead paragraph, before run-in headings)",
+       "page_start": 3,
+       "words": 110
+      },
+      {
+       "level": 3,
+       "title": "E1: Qualifiers",
+       "page_start": 3,
+       "words": 175
+      },
+      {
+       "level": 3,
+       "title": "E2: Comparison Classes",
+       "page_start": 3,
+       "words": 177
+      }
+     ]
+    },
+    {
+     "level": 2,
+     "title": "Human Participant Evaluation",
+     "page_start": 4,
+     "words": 97
+    },
+    {
+     "level": 2,
+     "title": "LLM Scoring Function",
+     "page_start": 4,
+     "words": 123
+    },
+    {
+     "level": 2,
+     "title": "Comparing P_human(θ) and P_model(θ)",
+     "page_start": 4,
+     "words": 229
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Results",
+   "page_start": 4,
+   "words": 469,
+   "share": 0.125,
+   "role": "result",
+   "children": [
+    {
+     "level": 2,
+     "title": "(untitled lead-in, before first subheading)",
+     "page_start": 4,
+     "words": 21
+    },
+    {
+     "level": 2,
+     "title": "E1: Qualifiers",
+     "page_start": 4,
+     "words": 297,
+     "children": [
+      {
+       "level": 3,
+       "title": "(lead paragraph, before run-in claim headings)",
+       "page_start": 4,
+       "words": 23
+      },
+      {
+       "level": 3,
+       "title": "LLMs make contextually-aware, pragmatically-sensitive inferences over graded adjectives and qualifiers.",
+       "page_start": 4,
+       "words": 58
+      },
+      {
+       "level": 3,
+       "title": "LLMs make mostly human-like inferences, but struggle with negation.",
+       "page_start": 4,
+       "words": 62
+      },
+      {
+       "level": 3,
+       "title": "LLMs struggle further with polarity inversion.",
+       "page_start": 4,
+       "words": 154
+      }
+     ]
+    },
+    {
+     "level": 2,
+     "title": "E2: Comparison Classes",
+     "page_start": 5,
+     "words": 151,
+     "children": [
+      {
+       "level": 3,
+       "title": "(lead paragraph, before run-in claim heading)",
+       "page_start": 5,
+       "words": 59
+      },
+      {
+       "level": 3,
+       "title": "LLMs accurately parse conditional mixtures, even inferring group membership from indirect descriptors.",
+       "page_start": 5,
+       "words": 92
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 5,
+   "words": 904,
+   "share": 0.241,
+   "role": "disc",
+   "children": [
+    {
+     "level": 3,
+     "title": "(lead paragraphs, before run-in headings)",
+     "page_start": 5,
+     "words": 694
+    },
+    {
+     "level": 3,
+     "title": "Limitations",
+     "page_start": 6,
+     "words": 68
+    },
+    {
+     "level": 3,
+     "title": "Future Directions",
+     "page_start": 6,
+     "words": 142
+    }
+   ]
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "한 단(오른쪽 단 위), 높이 ~250pt로 단의 ~37%; 개념도(문장 -> 수작업 번역 / LLM 의미 파싱 -> condition 프로그램 -> 사람 과제·RSA·LLM 추론 -> 인간 대 모델 막대그래프)",
+   "section": "Introduction > Present study"
+  },
+  {
+   "n": 2,
+   "page": 3,
+   "size": "한 단(왼쪽 단 중간), 단의 ~38%; LLM에 넣는 전체 프롬프트(Church 줄다리기 도메인 모델·과제 지시·문장·후보 프로그램)를 색으로 구분한 코드 그림",
+   "section": "Methods > Domain Model and LLM Context"
+  },
+  {
+   "n": 3,
+   "page": 5,
+   "size": "한 단(왼쪽 단 위), ~350pt로 단의 ~52%(캡션 포함 ~60%); 패널 A·B(각 3x3 = 문장 9개씩, 총 18개 작은 막대그래프), 별표로 유의한 일치 표시",
+   "section": "Results > E1: Qualifiers"
+  },
+  {
+   "n": 4,
+   "page": 6,
+   "size": "한 단(왼쪽 단 위), ~355pt로 단의 ~53%(캡션 포함 ~60%); 패널 A-C(정확한 리그 이름 / 동의어 / 암시, 각 2x3 = 18개 작은 막대그래프)",
+   "section": "Results > E2: Comparison Classes (Discussion 옆 쪽에 배치)"
+  }
+ ],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": true,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "experiments_note": "실험 둘(E1 Qualifiers, E2 Comparison Classes)이 1수준 절이 아니다. 같은 이름이 두 번 나온다: Methods > Task Description 안 run-in 3수준(자극 설계), Results 안 2수준(결과). 1수준은 Introduction / Methods / Results / Discussion 네 개뿐인 IMRaD 골격.",
+  "final_section_name": "Discussion",
+  "final_section_subheadings": [
+   "Limitations",
+   "Future Directions"
+  ],
+  "discussion_structure": "Discussion은 소제목 없는 요약 문단(틀 -> 과제 -> 방법 되짚기), E1 해석(부정·극성 반전 실패를 부정 처리 선행연구와 아동 발달의 극성 비대칭에 연결), E2 해석(CCG 파서 대비 어휘 강건성), 'If we had perfectly recovered...' 두 해석(암묵적 추론 대 통계적 규칙성; 자원 합리성 연결)으로 이어지고, run-in 'Limitations'(한 문단, 범위가 좁음)와 'Future Directions'(LLM 추론 + PPL 실행의 신경-기호 결합, SMC 초기화)로 끝남. 별도 Conclusion 없음.",
+  "ends_with_conclusion_paragraph": false,
+  "model_description_location": "따로 'Model' 절이 없다. 배경 틀(확률 프로그램으로서의 의미, Goodman & Lassiter 2015)은 Introduction 안 2수준 'Meaning as probabilistic programs'; 도메인 모델(Church 줄다리기 프로그램)은 Methods > Domain Model and LLM Context와 Figure 2 코드 그림; LLM 점수 함수(소프트맥스 온도 α, LOOCV)와 비교 지표(JSD, 순열 검정, FDR)는 Methods 2수준 두 절에 Eq. 1-4로.",
+  "first_page_use": "제목 + 저자 4명 한 줄 + 소속 두 개 + 이메일 한 줄이 위 ~16%; 초록(9pt, 159단어 + keywords)이 왼쪽 단 위 ~1/3; Introduction이 왼쪽 단 중간에서 시작해 오른쪽 단 전체를 채우고, 오른쪽 단 맨 아래에서 2수준 'Meaning as probabilistic programs'가 시작. 왼쪽 단 아래에 각주 1(GitHub URL)과 Proceedings 꼬리말. 그림은 없음.",
+  "links": "GitHub 코드(https://github.com/benlipkin/probsem/tree/CogSci2023)는 초록 마지막 문장에 붙은 각주 1. 실험 원본 파일과 E2 전체 프롬프트도 같은 저장소에 있다고 Methods 본문에 적음. 사전등록·OSF 언급 없음."
+ },
+ "structure_summary_ko": "1수준 절이 Introduction-Methods-Results-Discussion 네 개뿐인 IMRaD 구조이고, 실험 두 개(E1, E2)는 1수준 절이 아니라 Methods 안 run-in 소제목과 Results 안 2수준 절로 두 번 나뉘어 나온다. 서론이 약 1,200단어(본문의 32%)로 가장 길며, 소제목 없는 도입(화용론 -> LLM 의미 파싱 -> RSA와 연구 질문 -> 결과 미리보기) 뒤에 배경 2수준 'Meaning as probabilistic programs'와 'Present study'를 두어 관련 연구 절의 역할을 서론 안에서 해결한다. Methods(32%)는 도메인 모델, 과제·자극, 참가자, LLM 점수 함수, 비교 지표의 2수준 다섯 개로 나뉘고 별행 수식 4개와 Church 코드 그림이 모두 여기 몰려 있다. Results는 13%로 짧고, 각 문단 앞에 'LLMs struggle further with polarity inversion.' 같은 굵은 주장 문장을 run-in 소제목처럼 달아 결과를 한 줄로 먼저 말한다. Discussion(24%)은 요약과 두 해석 뒤 run-in 'Limitations'·'Future Directions'로 끝나며 별도 결론 문단은 없고, 그림 넷은 모두 한 단 폭이다. 본문은 6쪽에서 끝나고 감사의 글과 참고문헌이 7-8쪽을 쓴다.",
+ "text_pages": 6
+}

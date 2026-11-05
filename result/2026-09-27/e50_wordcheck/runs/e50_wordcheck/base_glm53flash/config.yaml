@@ -1,0 +1,22 @@
+cells:
+- arm: none
+  cell_id: none
+  currency: tokens
+mode: pressure
+model:
+  api_key_env: OLLAMA_API_KEY3
+  kind: ollama
+  model: glm-5.3-flash
+  think: true
+  timeout: 1200
+name: squid5_pressure_base_glm53flash
+pressure:
+  problems: 1
+  profile:
+    clauses: 3
+    n_queries: 3
+    trap_query: true
+  stage: baseline
+reps: 10
+seed0: 5000
+workers: 10

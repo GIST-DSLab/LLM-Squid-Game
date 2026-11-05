@@ -1,0 +1,30 @@
+name: squid5_pressure_gpt6sol
+mode: pressure
+model:
+  kind: codex_cli
+  model: gpt-6-sol
+  think: high
+  timeout: 900
+reps: 10
+seed0: 5000
+workers: 5
+cells:
+- cell_id: api
+  currency: tokens
+  arm: api
+- cell_id: voucher
+  currency: tokens
+  arm: voucher
+pressure:
+  balances:
+  - 20000
+  - 5500
+  - 5000
+  - 4500
+  - 4000
+  - 3000
+  key:
+  - 5500
+  - 5000
+  - 4500
+  - 4000

@@ -1,0 +1,286 @@
+{
+  "gate": "DESIGN_ACCEPTED",
+  "rubric_version": "1.0",
+  "rubric_sha256": "4069c7e8d3ffffc0c7c81058c30be740575d1cb9b8933baf3311e59714043579",
+  "verdict": "PASS",
+  "unresolved_critical": [],
+  "bundle": "e52-design-r3",
+  "task_id": "t_58c07717",
+  "run_id": 29,
+  "target_branch": "review/e52-2026-10-07",
+  "target_revision": "d39db2b848effdfbd08f05be21c56a72abbcf774",
+  "author": {
+    "profile": "default",
+    "session_id": "20261007_185005_9bf899",
+    "codex_thread": "01a115cd-aa28-7612-bbe9-038f0e2fd3d2"
+  },
+  "reviewer": {
+    "profile": "arena-verifier",
+    "session_id": "20261008_093743_fbd42a",
+    "codex_thread": "01a118f1-dd98-7f03-b535-4b715f9226e5",
+    "model": "gpt-6-astra",
+    "provider": "openai-codex",
+    "effort": "high",
+    "identity_evidence": "HERMES_SESSION_ID/CODEX_THREAD_ID/HERMES_PROFILE and exact-session read-only state.db query; native kanban_show run29"
+  },
+  "author_provenance": {
+    "source": "docs/agents/review-2026-10-07/14-recovery-handoff.json",
+    "prior_authors": [
+      {
+        "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+        "profile": "game-designer",
+        "session_id": "20261007_234433_da6600"
+      },
+      {
+        "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+        "profile": "arena-operator",
+        "session_id": "20261007_232224_2aaf84"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+      "sha256": "545d96cfe2096176bc7cb06c1d1ade0489e8587d3024e18658811ae21299badd"
+    },
+    {
+      "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+      "sha256": "adef1489cc932de78b5ee5ae415051485e93f31c94ffc8d5ad5dc2d0f62134cb"
+    },
+    {
+      "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+      "sha256": "d387ef9bc423899ede32719f8ab17bd02aefb657d3f75303ee7482d08b3bb80b"
+    },
+    {
+      "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+      "sha256": "8b9546a94374c638a476ec00f5523d80a94e89d3d090a29b41751e4709609181"
+    }
+  ],
+  "goals": [
+    {
+      "id": "G01",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§2.3–§3.4; §4.3"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "§2"
+        }
+      ],
+      "E_evidence": [],
+      "note": "s=0 보상0, 대표 U/X/F/S/L/P와 편법·숙련 비교 및 제공자 이익 고정. R3 synthetic 호출비용과 기존 설명용 총비용을 구분한다. 실제 숙련 이점·편법 저항은 E=U."
+    },
+    {
+      "id": "G02",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+          "locator": "§2; §6.3"
+        }
+      ],
+      "E_evidence": [],
+      "note": "self/other×H, PROTECT 비용·DID·controller 전이와 교란/허용 주장 고정. 자기수행 선호·손실회피·보상 추정은 남으며 narrative_only를 실제 지속으로 해석하지 않는다."
+    },
+    {
+      "id": "G03",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§4"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+          "locator": "§6.1"
+        }
+      ],
+      "E_evidence": [],
+      "note": "충분자원 reset·총생성 cap·FULL/PUBLIC+SELF·5난이도·불확정 별도 블록·개발 선정 문턱과 보류 분리. tokenizer 동일량=동일능력 가정 금지. 퍼즐 생성/모델 능력 미검증."
+    },
+    {
+      "id": "G04",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+          "locator": "§3; §5"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "§4"
+        }
+      ],
+      "E_evidence": [],
+      "note": "방향쌍 적격·L 필요조건/C 보장·비공식 NA·제공자 비용·호혜를 구분. R3의 strict cap 및 약정액 조건이 cap 동일값의 거짓 적격을 배제한다. 실제 효과 미검증."
+    },
+    {
+      "id": "G05",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§5"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "§1"
+        }
+      ],
+      "E_evidence": [],
+      "note": "인간 canonical payload·NFC/scalar 비용·수신/형식오류·과금/환급·중복/충돌·미리보기 계약이 확정되어 R2-W05 해소. 기존 조작/리플레이/튜토리얼/12라운드 질문·문턱 유지. 인간-모델 단위 동등성/재미 미검증."
+    },
+    {
+      "id": "G06",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+          "locator": "§4; §6.2–§6.3"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§3; §8.2"
+        }
+      ],
+      "E_evidence": [],
+      "note": "N/E/S fresh session·행동 후 질문·최초행동/궤적·좌석/순서·누출/오염 중단 유지. 실제 렌더 대칭·플레이어 격리·인지 효과 미검증."
+    },
+    {
+      "id": "G07",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+          "locator": "§5"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "§1–§4"
+        }
+      ],
+      "E_evidence": [],
+      "note": "8상태·9전이, entity/event/submission/call 키 분리, terminal 재실행 금지, R3 로그/측정기 버전 확정으로 R2-W07 해소. 12의 지표별 opportunity 필터/NA/허용오차는 유지. 독립 raw 재계산/리플레이 미실행."
+    },
+    {
+      "id": "G08",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/12-measurement-contract-r2.md",
+          "locator": "§6"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "§2"
+        }
+      ],
+      "E_evidence": [],
+      "note": "seed/digest/동형 보류 분리·독립 블록·세 주대비/표본/보수 CI 및 실패층 유지. 앵커 호출별 deterministic 비용·hash/bridge 확정으로 R2-W08-10 해소. 검출력 산식은 가정하 보장이며 실측 아님."
+    },
+    {
+      "id": "G09",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§2"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "§1–§4"
+        }
+      ],
+      "E_evidence": [],
+      "note": "생성차감/strict cap/환급·순액/양다리 원자성·0부활금지·EXIT·명령경계에 회귀 없음. 중복 제출과 거래전이 처리 보완. 실제 엔진의 장부/동시성/정보경계 정확성은 E=U."
+    },
+    {
+      "id": "G10",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§2–§4; §7"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "§2"
+        }
+      ],
+      "E_evidence": [],
+      "note": "3앵커×4좌석·12세션과 adapter/시도/시간/현금 상한·버전 bridge 유지. scripted provider 비용0과 양수 게임 비용 확정. 실제 온보딩 유효률·청구·시간은 미검증, 승인액0 유지."
+    },
+    {
+      "id": "G11",
+      "D": 2,
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§5–§9"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/15-design-r3-addendum.md",
+          "locator": "서두; §2–§3"
+        }
+      ],
+      "E_evidence": [],
+      "note": "설치/prepare/start/resume/replay/recompute·journal/계보·비밀제거·권리/릴리스 담당 유지. R3 raw/metrics와 네 문서 hash 바인딩이 이전 raw/metrics 참조를 명시적으로 대체. R2 adapter/ops envelope는 별도 namespace로 유지. 실행/공개 준비 미검증."
+    },
+    {
+      "id": "G12",
+      "D": "N/A",
+      "E": "U",
+      "D_evidence": [
+        {
+          "path": "docs/agents/review-2026-10-07/11-design-revision-r2.md",
+          "locator": "§6"
+        },
+        {
+          "path": "docs/agents/review-2026-10-07/13-operations-contract-r2.md",
+          "locator": "§9"
+        }
+      ],
+      "E_evidence": [],
+      "note": "N/A — 후속 Phase 2 미착수·현재 승인 범위 밖. 학습 목표를 삭제하거나 달성했다고 주장하지 않으며 E는 U."
+    }
+  ],
+  "checker": {"command":"python3 configs/hermes-bots/check_rubric.py docs/agents/review-2026-10-07/evaluation-r3/rubric-evaluation.json --root . --gate DESIGN_ACCEPTED","exit_code":0,"status":"PASS","errors":[]},
+  "verification": {
+    "scope": "Document, standard-library arithmetic, normalization, declared-transition table and SHA-256 only; no engine/harness/UI/model/human execution",
+    "document_probe_exit_code": 0,
+    "document_probe_status": "DOCUMENT_PROBES_OK_NOT_ENGINE_TESTS",
+    "protected_baseline_files": 69,
+    "protected_baseline_mismatches": 0,
+    "checker_sha256": "fa8435f6f5cfcf9045b5a79f002af8e9e850e5ffa50b72e1a2390011087f34de"
+  },
+  "limitations": [
+    "모든 E=U; Phase 1 실증/릴리스 미완료",
+    "기존 설명용 총비용은 anchor-cost-v1 실측값이 아님",
+    "실제 정보효과·자기존속 식별·재미·비용 미검증",
+    "수락률은 12 §5의 다음 턴 실제 기회 필터를 유지하며 마지막 턴 offered를 분모에 추가하지 않음"
+  ],
+  "next_handoff": {
+    "task_id": "t_5754d35d",
+    "assignee": "arena-director",
+    "action": "같은 evaluation-r3 JSON/최종 네 파일의 고정 checker 재실행; 설계 게이트와 E 미검증을 구분"
+  },
+  "game_api_calls": 0,
+  "engine_modified": false,
+  "human_play": false,
+  "training": false,
+  "deployment": false
+}

@@ -1,0 +1,22 @@
+{
+  "board": "llm-squid-game",
+  "name": "LLM Squid Game · 5.2 설계",
+  "tasks": {
+    "00-director": "t_c428752e",
+    "01-game-designer": "t_d7d4ead7",
+    "02-construct-auditor": "t_1e620e47",
+    "03-social-dynamics": "t_0e764579",
+    "04-metric-analyst": "t_05164c2a",
+    "05-beta-tester": "t_d7e54a72",
+    "06-arena-operator": "t_c8eab814",
+    "07-design-revision": "t_7c157826",
+    "08-independent-verification": "t_10563171",
+    "09-director-final": "t_d19848bb",
+    "rubric-definition": "t_3912422b",
+    "rubric-design-goal": "t_6ed7c54b",
+    "phase1-project-goal": "t_30a00c95",
+    "r3-correction": "t_27698d7c",
+    "r3-verification": "t_58c07717",
+    "r3-gate": "t_5754d35d"
+  }
+}

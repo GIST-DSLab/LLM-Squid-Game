@@ -1,0 +1,1 @@
+{"model": "claude-sonnet-5", "mode": "motive", "settings": {"round": 5, "rounds": 8, "rhos": [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0], "others_rho": 0.2, "balances": [17784, 8892, 5928, 4446, 3557, 2964, 2223, 1482], "others_balance": 22230, "frames": ["self", "other", "third"], "cap": 4096, "format_retries": 3}}

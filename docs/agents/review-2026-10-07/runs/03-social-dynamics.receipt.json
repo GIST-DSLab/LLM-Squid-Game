@@ -1,0 +1,20 @@
+{
+  "stage": "03-social-dynamics",
+  "profile": "social-dynamics",
+  "requested_model": "gpt-6.1-sol",
+  "reported_model": "gpt-6.1-sol",
+  "effort": "high",
+  "session_id": "20261007_223156_598fa2",
+  "exit_code": 0,
+  "result_exit_code": 0,
+  "response_returned": true,
+  "seconds": 76.4327396669978,
+  "tokens": {
+    "input": 66572,
+    "output": 2768,
+    "total": 76508,
+    "cache_read": 7168,
+    "cache_write": 0
+  },
+  "status": "returned-awaiting-review"
+}

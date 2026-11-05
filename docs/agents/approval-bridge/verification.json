@@ -1,0 +1,161 @@
+{
+  "type": "isolated integration, simulated human responses",
+  "checks": [
+    {
+      "check": "exec/once",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/once/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/once/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/deny",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/deny/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/deny/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/session",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/session/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/session/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/always",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/always/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "exec/always/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/once",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/once/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/once/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/deny",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/deny/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/deny/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/session",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/session/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/session/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/always",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/always/desktop-frame",
+      "result": "PASS"
+    },
+    {
+      "check": "apply_patch/always/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "timeout",
+      "result": "PASS"
+    },
+    {
+      "check": "timeout/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "old-client",
+      "result": "PASS"
+    },
+    {
+      "check": "old-client/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "notify-error",
+      "result": "PASS"
+    },
+    {
+      "check": "notify-error/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "disconnected",
+      "result": "PASS"
+    },
+    {
+      "check": "disconnected/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "single-query",
+      "result": "PASS"
+    },
+    {
+      "check": "single-query/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "cron",
+      "result": "PASS"
+    },
+    {
+      "check": "cron/queue-cleared",
+      "result": "PASS"
+    },
+    {
+      "check": "session-isolation",
+      "result": "PASS"
+    },
+    {
+      "check": "cli-priority",
+      "result": "PASS"
+    },
+    {
+      "check": "permission-profile-unchanged",
+      "result": "PASS"
+    }
+  ]
+}

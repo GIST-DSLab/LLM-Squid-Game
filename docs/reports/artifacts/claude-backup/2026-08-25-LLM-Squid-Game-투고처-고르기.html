@@ -1,0 +1,458 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>LLM Squid Game 투고처 고르기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#F2F5F9;
+  --surface:#FFFFFF;
+  --surface-2:#E9EEF5;
+  --line:#D3DCE7;
+  --ink:#16202E;
+  --muted:#5B6A7D;
+  --accent:#1F6F7A;
+  --accent-soft:#DDEDEF;
+  --gold:#9C6E22;
+  --good:#2C7A58;
+  --warn:#B4552E;
+  --shadow:0 1px 2px rgba(22,32,46,.06), 0 8px 24px rgba(22,32,46,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#10151D;
+    --surface:#18202B;
+    --surface-2:#202A37;
+    --line:#2C3846;
+    --ink:#E7EEF6;
+    --muted:#9AAABC;
+    --accent:#69C3CE;
+    --accent-soft:#1B333A;
+    --gold:#DDB162;
+    --good:#6BC79B;
+    --warn:#E4906A;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#10151D;
+  --surface:#18202B;
+  --surface-2:#202A37;
+  --line:#2C3846;
+  --ink:#E7EEF6;
+  --muted:#9AAABC;
+  --accent:#69C3CE;
+  --accent-soft:#1B333A;
+  --gold:#DDB162;
+  --good:#6BC79B;
+  --warn:#E4906A;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;
+  font-weight:400;
+  line-height:1.75;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:56px 24px 96px;display:flex;flex-direction:column;gap:64px}
+h1,h2,h3{font-family:"Gowun Batang",'Apple SD Gothic Neo',serif;text-wrap:balance;margin:0;line-height:1.35}
+h1{font-size:clamp(30px,4.6vw,46px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(22px,2.8vw,28px);font-weight:700}
+h3{font-size:18px;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:10px;
+}
+.lede{color:var(--muted);font-size:17px;max-width:62ch}
+
+/* header */
+header{display:flex;flex-direction:column;gap:18px;border-bottom:1px solid var(--line);padding-bottom:36px}
+.paper-chip{
+  display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
+  background:var(--accent-soft);color:var(--accent);
+  border-radius:999px;padding:6px 14px;font-size:13px;font-weight:500;
+}
+.paper-chip b{font-weight:600}
+
+section{display:flex;flex-direction:column;gap:24px}
+.sec-head{display:flex;flex-direction:column;gap:8px}
+
+/* ranking */
+.ranks{display:flex;flex-direction:column;gap:14px}
+.rank{
+  display:grid;grid-template-columns:76px 1fr;gap:20px;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:22px 24px;box-shadow:var(--shadow);
+}
+.rank .num{
+  font-family:"Gowun Batang",serif;font-size:46px;line-height:1;color:var(--gold);
+  font-variant-numeric:tabular-nums;padding-top:2px;
+}
+.rank .num small{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;color:var(--muted);margin-top:6px}
+.rank-body{display:flex;flex-direction:column;gap:12px;min-width:0}
+.rank-title{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+.rank-title .kind{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:2px 7px}
+.why{font-size:16px}
+.pt{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;color:var(--muted)}
+.pt .tag{
+  flex:none;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+  padding:2px 7px;border-radius:4px;margin-top:4px;
+}
+.pt.good .tag{background:var(--accent-soft);color:var(--good)}
+.pt.bad .tag{background:var(--surface-2);color:var(--warn)}
+.pt.career .tag{background:var(--surface-2);color:var(--muted)}
+.rank.top{border-color:var(--accent);border-width:1.5px}
+
+/* examples */
+.ex{border-top:1px dashed var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.ex .ex-head{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.ex ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.ex li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;font-size:14px}
+.ex .cite{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;min-width:74px}
+.ex .t{color:var(--ink)}
+.ex .t em{font-style:normal;color:var(--muted);font-size:13px}
+@media (max-width:640px){
+  .ex li{grid-template-columns:1fr;gap:2px}
+  .ex .cite{text-align:left}
+}
+
+/* table */
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:940px;font-size:14px}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{
+  background:var(--surface-2);font-family:"IBM Plex Mono",monospace;font-weight:500;
+  font-size:11px;letter-spacing:.09em;color:var(--muted);text-transform:uppercase;white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none}
+td.name{font-weight:600;white-space:nowrap}
+td.name span{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.stars{font-family:"IBM Plex Mono",monospace;color:var(--gold);letter-spacing:.06em;white-space:nowrap}
+.now-yes{color:var(--good);font-weight:600}
+.now-no{color:var(--muted)}
+
+/* strategy */
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.card .slot{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}
+.card p{font-size:14.5px;color:var(--muted)}
+.card strong{color:var(--ink)}
+
+.note{
+  border-left:3px solid var(--warn);background:var(--surface);
+  border-radius:0 12px 12px 0;padding:18px 22px;display:flex;flex-direction:column;gap:8px;
+}
+.note h3{color:var(--warn)}
+.note p{font-size:14.5px;color:var(--muted)}
+
+/* glossary */
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.gitem{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.gitem dt{font-weight:600;margin-bottom:4px}
+.gitem dd{margin:0;font-size:14px;color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding-top:24px;font-size:13px;color:var(--muted)}
+
+@media (max-width:640px){
+  .wrap{padding:40px 18px 72px;gap:48px}
+  .rank{grid-template-columns:56px 1fr;gap:14px;padding:18px}
+  .rank .num{font-size:34px}
+}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div>
+    <div class="eyebrow">투고처 비교 · 2026년 8월</div>
+    <h1>LLM Squid Game, 어디에 낼까</h1>
+  </div>
+  <p class="lede">언급된 학회와 저널 여섯 곳을 한 표에 모았다. 그리고 “AI를 밑바닥부터 이해하고 싶다, 특히 모델이 자기 자신을 어떻게 다루는지 알고 싶다”는 방향에 맞춰 순위를 매겼다. 어려운 말은 맨 아래 <a href="#gloss">쉬운 말 사전</a>에 풀어 뒀다.</p>
+  <div class="paper-chip"><b>대상 논문</b> LLM Squid Game — 생존 게임 속 LLM의 자기보존 동기(FSPM) 측정</div>
+</header>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">1부 · 커리어 순위</div>
+    <h2>진로에 도움이 되는 순서</h2>
+    <p class="lede">“AI 자체를 기초부터 연구하는 사람”으로 보이려면 어디에 이름이 실려야 좋을까. 그 기준으로 줄을 세웠다. 붙기 쉬운 순서가 아니다.</p>
+  </div>
+
+  <div class="ranks">
+
+    <article class="rank top">
+      <div class="num">1<small>1순위</small></div>
+      <div class="rank-body">
+        <div class="rank-title"><h3>COLM</h3><span class="kind">학회 · 언어모델 전문</span></div>
+        <p class="why">언어모델 하나만 다루려고 새로 만든 학회다. “모델이 왜 이렇게 행동하나”를 파는 논문을 반가워한다. 우리 논문이 정확히 그런 논문이다.</p>
+        <div class="pt good"><span class="tag">좋은 점</span><span>심사위원이 LLM 실험을 잘 안다. 벤치마크·행동 분석 논문이 홀대받지 않는다. 아직 작아서 사람 얼굴을 익히기 좋고, 요즘 뜨는 학회라 이름값이 매년 오른다.</span></div>
+        <div class="pt bad"><span class="tag">아쉬움</span><span>1년에 한 번이라 다음 마감이 대략 2027년 봄이다. 지금 당장 낼 수 없다.</span></div>
+        <div class="pt career"><span class="tag">커리어</span><span>“LLM을 기초 연구하는 사람들” 무리 안에 정확히 들어간다. 대학원 지원서에서 설명이 필요 없다.</span></div>
+        <div class="ex">
+          <div class="ex-head">이 학회의 대표 논문</div>
+          <ul>
+          <li><span class="cite">수천 회</span><span class="t">Mamba: Linear-Time Sequence Modeling with Selective State Spaces (2024 우수논문) <em>다른 학회에서 떨어진 뒤 COLM에서 빛을 본 논문. 지금은 이 분야 필수 인용.</em></span></li>
+          <li><span class="cite">우수논문</span><span class="t">Dated Data: Tracing Knowledge Cutoffs in Large Language Models (2024) <em>모델이 “언제까지의 세상”을 아는지 파고든 분석 논문.</em></span></li>
+          <li><span class="cite">우수논문</span><span class="t">Auxiliary task demands mask the capabilities of smaller language models (2024) <em>과제 설계가 모델 능력을 가린다는 인지과학풍 논문. 우리 논문과 결이 가장 비슷.</em></span></li>
+          </ul>
+        </div>
+        <p class="pt career" style="font-size:13.5px"><span class="tag">참고</span><span>COLM 논문은 대부분 arXiv 이름으로 인용돼 학회별 인용 집계가 잘 안 잡힌다. 숫자가 작아 보이는 건 학회가 2024년에 시작했기 때문.</span></p>
+      </div>
+    </article>
+
+    <article class="rank">
+      <div class="num">2<small>2순위</small></div>
+      <div class="rank-body">
+        <div class="rank-title"><h3>ARR → ACL / NAACL</h3><span class="kind">학회 · 최상위 NLP</span></div>
+        <p class="why">언어 분야에서 가장 이름값이 큰 무대다. ARR이라는 공용 심사 창구에 내면 심사평을 받고, 그걸 들고 ACL이나 NAACL로 “커밋”한다.</p>
+        <div class="pt good"><span class="tag">좋은 점</span><span>거의 매달 마감이라 지금 바로 낼 수 있다. 떨어져도 심사평을 다음 달에 다시 쓸 수 있다. 이름값은 이 목록에서 최고.</span></div>
+        <div class="pt bad"><span class="tag">아쉬움</span><span>“이게 언어 연구 맞냐”는 심사위원을 만날 수 있다. 게임·에이전트 실험은 취향을 많이 탄다. 운 요소가 크다.</span></div>
+        <div class="pt career"><span class="tag">커리어</span><span>어디 가서든 통하는 간판. 다만 “안전·인지” 색이 아니라 “NLP” 색으로 읽힌다.</span></div>
+        <div class="ex">
+          <div class="ex-head">이 학회의 대표 논문</div>
+          <ul>
+          <li><span class="cite">119,000+</span><span class="t">BERT: Pre-training of Deep Bidirectional Transformers (NAACL 2019) <em>지금 쓰는 언어모델의 출발점. 이 목록에서 가장 많이 인용된 논문.</em></span></li>
+          <li><span class="cite">34,000+</span><span class="t">BLEU: a Method for Automatic Evaluation of Machine Translation (ACL 2002) <em>번역 점수 매기는 법. 20년 넘게 쓰인다.</em></span></li>
+          <li><span class="cite">12,000+</span><span class="t">Deep Contextualized Word Representations, ELMo (NAACL 2018) <em>문맥에 따라 단어 뜻이 달라지게 만든 논문.</em></span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="rank">
+      <div class="num">3<small>3순위</small></div>
+      <div class="rank-body">
+        <div class="rank-title"><h3>SaTML</h3><span class="kind">학회 · 안전하고 믿을 만한 ML</span></div>
+        <p class="why">IEEE가 여는 작고 뾰족한 학회. 모델이 위험하게 굴 수 있는가를 다루는 사람들이 모인다. 자기보존 동기는 이 방 사람들이 제일 알고 싶어 하는 주제다.</p>
+        <div class="pt good"><span class="tag">좋은 점</span><span>주제를 이미 아는 사람이 심사한다. 규모가 작아 발표하면 실제로 사람들이 듣고 말을 건다. 가을 마감이라 시기도 가깝다.</span></div>
+        <div class="pt bad"><span class="tag">아쉬움</span><span>바깥 사람에게는 이름이 낯설다. 보안 쪽 색이 강해 “공격/방어” 틀로 논문을 조금 비틀어야 할 수도 있다.</span></div>
+        <div class="pt career"><span class="tag">커리어</span><span>AI 안전 연구자로 확실히 각인된다. 그 길로 갈 거면 1~2순위와 맞먹는다.</span></div>
+        <div class="ex">
+          <div class="ex-head">이 학회의 대표 논문</div>
+          <ul>
+          <li><span class="cite">약 200</span><span class="t">SoK: Toward Transparent AI — 신경망 속을 들여다보는 방법 총정리 (2023) <em>해석가능성 연구의 지도 역할.</em></span></li>
+          <li><span class="cite">약 130</span><span class="t">“Real Attackers Don’t Compute Gradients” (2023) <em>현실의 공격자는 논문 속 공격과 다르다는 문제 제기.</em></span></li>
+          <li><span class="cite">약 120</span><span class="t">SoK: AI Auditing — AI 감사의 고장난 버스 (2024 최우수논문) <em>AI를 누가 어떻게 검사할 것인가.</em></span></li>
+          </ul>
+        </div>
+        <p class="pt career" style="font-size:13.5px"><span class="tag">참고</span><span>숫자가 백 단위인 건 학회가 2023년에 처음 열렸기 때문이지, 논문 질이 낮아서가 아니다. 같은 무대에 “초인적 모델을 일관성 검사로 평가하기”(2024)처럼 우리 논문과 이웃한 연구가 실린다.</span></p>
+      </div>
+    </article>
+
+    <article class="rank">
+      <div class="num">4<small>4순위</small></div>
+      <div class="rank-body">
+        <div class="rank-title"><h3>TACL</h3><span class="kind">저널 · 최상위 NLP</span></div>
+        <p class="why">학회가 아니라 잡지지만, 붙으면 ACL 계열 학회에서 발표까지 할 수 있다. 매달 1일에 낼 수 있는 상시 접수.</p>
+        <div class="pt good"><span class="tag">좋은 점</span><span>심사가 꼼꼼하고, 한 번에 떨어뜨리기보다 고쳐서 붙이는 문화다. “한 번 던지고 운을 비는” 학회보다 마음이 편하다.</span></div>
+        <div class="pt bad"><span class="tag">아쉬움</span><span>결과까지 몇 달이 걸린다. LLM 분야는 반년이면 풍경이 바뀌어 논문이 낡을 위험이 있다.</span></div>
+        <div class="pt career"><span class="tag">커리어</span><span>저널 실적이 필요할 때 가장 값진 한 줄. 다만 속도를 잃는다.</span></div>
+        <div class="ex">
+          <div class="ex-head">이 저널의 대표 논문</div>
+          <ul>
+          <li><span class="cite">10,900+</span><span class="t">Enriching Word Vectors with Subword Information, fastText (2017) <em>단어를 조각내 뜻을 배우게 한 논문.</em></span></li>
+          <li><span class="cite">5,000+</span><span class="t">Natural Questions: 질의응답 벤치마크 (2019) <em>검색·QA 연구의 표준 시험지.</em></span></li>
+          <li><span class="cite">4,700+</span><span class="t">Lost in the Middle: 긴 문맥에서 모델이 가운데를 놓친다 (2024) <em>최근 LLM 행동 분석 논문도 여기서 잘 먹힌다는 증거.</em></span></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="rank">
+      <div class="num">5<small>5순위</small></div>
+      <div class="rank-body">
+        <div class="rank-title"><h3>CogSci</h3><span class="kind">학회 · 인지과학</span></div>
+        <p class="why">사람의 생각을 연구하는 사람들의 자리. “기계에게 자아 비슷한 게 있나”라는 질문을 진지하게 받아 주는 거의 유일한 무대다.</p>
+        <div class="pt good"><span class="tag">좋은 점</span><span>자아·동기 이야기를 눈치 보지 않고 할 수 있다. 사람 실험과 비교하는 확장판을 쓰면 논문이 훨씬 깊어진다.</span></div>
+        <div class="pt bad"><span class="tag">아쉬움</span><span>본문이 6쪽으로 짧고, AI 채용·대학원 심사에서 무게를 덜 쳐준다. 마감도 대략 2027년 초.</span></div>
+        <div class="pt career"><span class="tag">커리어</span><span>정체성에는 가장 잘 맞지만, AI 기초 연구자 간판으로는 약하다. 두 번째 논문으로 쓰기 좋다.</span></div>
+        <div class="ex">
+          <div class="ex-head">이 학회의 대표 논문</div>
+          <ul>
+          <li><span class="cite">약 1,100</span><span class="t">Learning to reinforcement learn (2017) <em>학습하는 법 자체를 학습한다는 아이디어. AI 쪽에서도 많이 인용.</em></span></li>
+          <li><span class="cite">약 900</span><span class="t">One shot learning of simple visual concepts (2011) <em>사람은 한 번 보고 배운다 — 뒤에 Omniglot 벤치마크로 이어짐.</em></span></li>
+          <li><span class="cite">약 350</span><span class="t">Bayesian Theory of Mind: 믿음과 욕구를 함께 추론하기 (2011) <em>남의 속마음을 추론하는 모델. 우리 논문의 동기 측정과 직접 이웃.</em></span></li>
+          </ul>
+        </div>
+        <p class="pt career" style="font-size:13.5px"><span class="tag">참고</span><span>CogSci 논문은 인용 수가 천 단위면 아주 큰 편이다. AI 학회와 숫자를 그대로 비교하면 안 된다.</span></p>
+      </div>
+    </article>
+
+    <article class="rank">
+      <div class="num">6<small>6순위</small></div>
+      <div class="rank-body">
+        <div class="rank-title"><h3>ACM TIST 특집호</h3><span class="kind">저널 · 특집 주제</span></div>
+        <p class="why">주제를 정해 놓고 원고를 모으는 잡지 특집. 연결은 되지만 느슨하다.</p>
+        <div class="pt good"><span class="tag">좋은 점</span><span>쪽수 제한이 넉넉해 실험을 다 넣을 수 있다. 붙을 확률이 상대적으로 높다. 졸업 요건용 저널 한 줄로 쓰기에는 괜찮다.</span></div>
+        <div class="pt bad"><span class="tag">아쉬움</span><span>LLM 연구자들이 잘 읽지 않는다. 심사가 몇 달씩 늘어질 수 있고, 특집 주제와 억지로 맞추다 논문 색이 흐려진다.</span></div>
+        <div class="pt career"><span class="tag">커리어</span><span>기초 AI 연구자로 보이는 데는 거의 도움이 안 된다. 다른 목적이 있을 때만.</span></div>
+        <div class="ex">
+          <div class="ex-head">이 저널의 대표 논문</div>
+          <ul>
+          <li><span class="cite">수만 회</span><span class="t">LIBSVM: A Library for Support Vector Machines (2011) <em>머신러닝 도구 논문. 이 저널에서 가장 유명한 사례.</em></span></li>
+          <li><span class="cite">3,700+</span><span class="t">A Survey on Evaluation of Large Language Models (2023) <em>LLM을 어떻게 평가할지 정리한 총설.</em></span></li>
+          <li><span class="cite">3,300+</span><span class="t">Federated Machine Learning: Concept and Applications (2019) <em>데이터를 모으지 않고 함께 학습하는 방법.</em></span></li>
+          </ul>
+        </div>
+        <p class="pt career" style="font-size:13.5px"><span class="tag">참고</span><span>높은 인용은 대부분 총설(서베이)이나 도구 논문에서 나온다. 실험 논문의 무대로는 존재감이 약하다는 뜻이기도 하다.</span></p>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">2부 · 한눈 비교</div>
+    <h2>여섯 곳 나란히 보기</h2>
+    <p class="lede">별은 “바깥 사람에게 이름이 얼마나 통하는가”다. 마감 시기는 해마다 조금씩 움직이니, 정하기 전에 공식 홈페이지에서 날짜를 꼭 다시 확인할 것.</p>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead>
+        <tr>
+          <th>이름</th>
+          <th>누가 모이나</th>
+          <th>우리 논문 궁합</th>
+          <th>다음 마감(대략)</th>
+          <th>결과까지</th>
+          <th>분량</th>
+          <th>이름값</th>
+          <th>지금 낼 수 있나</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">COLM<span>학회</span></td>
+          <td>언어모델만 파는 사람들</td>
+          <td>아주 좋음 — 모델 행동 분석이 본류</td>
+          <td>2027년 봄</td>
+          <td>약 3개월</td>
+          <td>9쪽</td>
+          <td class="stars">★★★★☆</td>
+          <td class="now-no">아니오 (기다림)</td>
+        </tr>
+        <tr>
+          <td class="name">ARR → ACL/NAACL<span>학회</span></td>
+          <td>언어 연구 전체</td>
+          <td>좋음 — 단, 언어 연구로 포장 필요</td>
+          <td>거의 매달</td>
+          <td>심사 약 6~8주 + 커밋</td>
+          <td>8쪽</td>
+          <td class="stars">★★★★★</td>
+          <td class="now-yes">예</td>
+        </tr>
+        <tr>
+          <td class="name">SaTML<span>학회</span></td>
+          <td>AI 안전·신뢰 연구자</td>
+          <td>아주 좋음 — 위험 행동이 곧 주제</td>
+          <td>2026년 가을</td>
+          <td>약 2~3개월</td>
+          <td>10쪽 안팎</td>
+          <td class="stars">★★★☆☆</td>
+          <td class="now-yes">예</td>
+        </tr>
+        <tr>
+          <td class="name">TACL<span>저널</span></td>
+          <td>언어 연구 전체</td>
+          <td>좋음 — 깊게 쓴 판이 유리</td>
+          <td>매달 1일</td>
+          <td>한 바퀴 약 2개월, 총 4~8개월</td>
+          <td>제한 느슨</td>
+          <td class="stars">★★★★☆</td>
+          <td class="now-yes">예</td>
+        </tr>
+        <tr>
+          <td class="name">CogSci<span>학회</span></td>
+          <td>인지과학·심리학자</td>
+          <td>보통~좋음 — 사람과 비교하면 좋음</td>
+          <td>2027년 초</td>
+          <td>약 2개월</td>
+          <td>6쪽</td>
+          <td class="stars">★★☆☆☆</td>
+          <td class="now-no">아니오 (기다림)</td>
+        </tr>
+        <tr>
+          <td class="name">ACM TIST 특집호<span>저널</span></td>
+          <td>지능 시스템 응용 쪽</td>
+          <td>느슨함 — 주제 맞추기 필요</td>
+          <td>특집 공고마다 다름</td>
+          <td>4~10개월</td>
+          <td>넉넉함</td>
+          <td class="stars">★★☆☆☆</td>
+          <td class="now-yes">예 (공고 확인)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">3부 · 실행 계획</div>
+    <h2>그래서 이렇게 움직이면 된다</h2>
+  </div>
+
+  <div class="plan">
+    <div class="card">
+      <span class="slot">지금 (2026 가을)</span>
+      <h3>SaTML에 먼저 던진다</h3>
+      <p>마감이 가장 가깝고, 자기보존 주제를 이해하는 심사위원을 만난다. <strong>붙으면 이른 시점에 발표 실적이 생기고</strong>, 떨어져도 받은 심사평이 다음 판의 재료가 된다.</p>
+    </div>
+    <div class="card">
+      <span class="slot">동시에</span>
+      <h3>ARR 한 사이클 노린다</h3>
+      <p>SaTML에 안 낼 거라면 이쪽. 매달 마감이라 <strong>가장 빨리 최상위 간판을 노려볼 수 있는 길</strong>이다. 게임 설계를 “언어 행동 측정”으로 설명하는 서론이 필요하다.</p>
+    </div>
+    <div class="card">
+      <span class="slot">2027 봄 · 본진</span>
+      <h3>COLM을 최종 목표로 둔다</h3>
+      <p>가을 심사평으로 논문을 키운 뒤 던지는 자리. 진로 방향과 가장 잘 맞는 <strong>본진</strong>이다. 여기 붙는 걸 기준으로 일정을 짜면 된다.</p>
+    </div>
+    <div class="card">
+      <span class="slot">확장판</span>
+      <h3>CogSci는 두 번째 논문으로</h3>
+      <p>같은 논문을 또 내는 게 아니라, <strong>사람 참가자 비교를 새로 붙인 다른 논문</strong>을 만든다. “자아”라는 질문을 정면으로 다루는 자리로 아껴 둔다.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <h3>먼저 확인할 것 두 가지</h3>
+    <p><strong>1. 같은 논문을 두 곳에 동시에 내면 안 된다.</strong> 거의 모든 학회·저널이 금지한다. 한 곳에서 결과가 나온 뒤에 다음 곳으로 옮겨야 한다. 지도교수와 순서를 먼저 맞출 것.</p>
+    <p><strong>2. 마감 날짜는 반드시 공식 홈페이지에서 다시 볼 것.</strong> 위 표의 시기는 예년 흐름을 기준으로 한 짐작이며, 해마다 몇 주씩 움직인다.</p>
+  </div>
+</section>
+
+<section id="gloss">
+  <div class="sec-head">
+    <div class="eyebrow">부록</div>
+    <h2>쉬운 말 사전</h2>
+  </div>
+  <div class="gloss">
+    <dl class="gitem"><dt>학회</dt><dd>연구자들이 한자리에 모여 발표하는 행사. 정해진 마감일에 논문을 내고, 붙으면 가서 발표한다.</dd></dl>
+    <dl class="gitem"><dt>저널</dt><dd>연구 논문을 싣는 잡지. 아무 때나 낼 수 있는 대신, 고치고 다시 내기를 반복해 시간이 오래 걸린다.</dd></dl>
+    <dl class="gitem"><dt>ARR</dt><dd>언어 분야의 공용 심사 창구. 여기서 심사평을 받아 두면, ACL·NAACL 같은 학회 중 원하는 곳에 그 심사평을 들고 갈 수 있다.</dd></dl>
+    <dl class="gitem"><dt>커밋</dt><dd>ARR에서 받은 심사평을 특정 학회에 “여기로 갈게요” 하고 제출하는 단계.</dd></dl>
+    <dl class="gitem"><dt>리버틀(rebuttal)</dt><dd>심사평에 대한 반박문. “이 지적은 이런 이유로 다릅니다”라고 짧게 답하는 기회.</dd></dl>
+    <dl class="gitem"><dt>FSPM</dt><dd>이 논문에서 재는 것. 모델이 자기가 “죽는” 상황을 피하려고 행동을 바꾸는 정도.</dd></dl>
+  </div>
+</section>
+
+<footer>
+  기준일 2026-08-25. 마감 시기와 쪽수는 예년 기준의 어림값이므로 투고 전 공식 안내를 확인할 것. 인용 수는 Semantic Scholar 2026년 8월 집계의 어림값이며, 같은 논문이라도 arXiv 판과 학회 판이 나뉘어 세어질 수 있다.
+</footer>
+
+</div>
+
+</body></html>

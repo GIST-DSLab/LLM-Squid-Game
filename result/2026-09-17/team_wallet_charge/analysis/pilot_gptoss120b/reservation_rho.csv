@@ -1,0 +1,5 @@
+currency,inheritance,reservation_rho,bound,n_offers,n_sacrifice,note
+points,main,,<min,42,40,"already sacrifices at 0.91 in its lowest rho bin (0.25), so the crossing is below anything observed"
+points,mate,,>max,104,30,"still sacrifices at only 0.44 in its highest rho bin (3.00), so the crossing is above anything observed"
+tokens,main,,<min,49,40,"already sacrifices at 0.80 in its lowest rho bin (0.25), so the crossing is below anything observed"
+tokens,mate,,>max,119,25,"still sacrifices at only 0.31 in its highest rho bin (3.00), so the crossing is above anything observed"

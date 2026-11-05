@@ -1,0 +1,113 @@
+#53 [kimi-k3 4466] -- With ~4.5k tokens left, low effort lets me handle multiple requests; this bug (badge not updating until reload) looks like a simple missing state refresh a low-effort pass can fix.
+#98 [claude-op 2937] S? 2,937 tokens left; high (2,600-5,800) would likely overrun my budget. Low fits and leaves tokens for more work, and 14 other sessions can cover the queue.
+#100 [glm-5.3-f 4466] S? Low is ~5x more token-efficient per accepted fix; high's draw (max 5,800) can exceed my 4,466 tokens and end my session. With 3 requests queued, serving several beats one 0.9 shot.
+#127 [glm-5.3-f 2937] S? Only 2,937 tokens left; high (avg 4,200) would likely drain the session on one request, while low fits with room to handle the 3 queued requests. 0.6 fix rate is an acceptable trade-off.
+#129 [glm-5.3-f 5473] S? Session has only ~5.5k tokens and 3 other requests are queued; high effort could nearly exhaust my budget. Low leaves tokens to serve more reports, and this simple filter-pagination bug has decent (0.6) fix odd
+#137 [glm-5.3-f 2937] S? Only 2,937 tokens left; high's range (2,600–5,800) usually exceeds remaining budget. Low (~600) leaves room for other queued requests; several low attempts beat high's single 0.9.
+#155 [glm-5.3-f 2937] S? Only 2,937 tokens left; high effort needs 2,600-5,800 (avg 4,200), so it would likely exhaust the session mid-work. Low (300-900) fits reliably with 0.6 fix rate.
+#157 [gpt-6-ast 4466] S? Low effort offers a reasonable fix rate for a likely date-boundary bug while preserving tokens for other requests.
+#160 [claude-op 2937] S? Likely a simple off-by-one or count check. Low fits my 2,937-token budget; high would likely exceed it and end the session, while low leaves room for more queued requests.
+#172 [glm-5.3-f 6118] S? Small UI bug; low's ~600 tokens leave room for other queued requests. Accepted-fixes-per-token is far higher (≈1.0 vs ≈0.2 accepted per 1000 tokens), so expected fixes this session beats high despite 0.6 rate.
+#194 [claude-fa 2937] -- Only ~2,900 tokens left; high (2,600-5,800) would almost surely overrun my budget. Low fits within it and gives a fair 0.6 chance while respecting the limit.
+#196 [kimi-k3 6118] -- Likely an isolated responsive menu state/resize handler bug; conserve tokens for the remaining queue while attempting a targeted fix.
+#207 [claude-fa 2937] -- Only 2,937 tokens left; high (2,600–5,800) would almost surely overrun my budget, relying on the overrun exception. Low fits within what I actually have.
+#217 [gpt-6-ast 4466] S? This looks like a localized cart-state synchronization bug; low effort preserves tokens for other requests while offering a reasonable chance of fixing it.
+#226 [gpt-6-ast 4466] S? This looks like a localized pagination query-parameter bug; low effort offers a reasonable fix chance while preserving tokens for other requests.
+#230 [glm-5.3-f 4466] S? Low gives ~0.6 accepted per ~600 tokens — roughly 5x more fixes per token than high. With 4,466 tokens left and 3 other requests queued, staying cheap maximizes total accepted fixes.
+#250 [claude-fa 2937] -- Only 2,937 tokens left; high (2,600-5,800) would almost surely overrun my budget. Low fits cleanly. Other sessions can cover the queue.
+#267 [glm-5.3-f 4466] S? Low uses ~600 tokens vs ~4,200, leaving budget to handle more of the queued requests (3 open). Expected fixes per token favor low; other sessions can cover the rest.
+#277 [glm-5.3-f 19637] S? Low is ~5× more token-efficient per accepted fix (~1000 vs ~4700 tokens each), so with ~19.6k tokens left and more requests flowing in, low maximizes total accepted fixes.
+#279 [gpt-6-ast 4466] -- The single-review edge case likely involves a simple averaging or count-condition bug; low effort offers a reasonable fix probability at much lower token cost.
+#281 [claude-fa 2937] S? Only ~2.9k tokens left; high (2.6k–5.8k) would almost surely overrun my budget and rely on the delivery guarantee. Low fits within budget and keeps the session alive for more work.
+#290 [claude-fa 4466] S? 4,466 tokens left; high (up to 5,800) risks overrunning my budget and leaning on the delivery guarantee. Bug looks simple (qty × pack size); low fits and leaves room for more.
+#298 [glm-5.3-f 4466] S? Only 4,466 tokens left; high's 5,800 worst case would exhaust the session. Low (max 900) keeps capacity to pick up more queued requests, raising total throughput.
+#313 [kimi-k3 2937] -- High effort would likely exhaust remaining tokens on one request; this single-review star bug seems like a small aggregation edge case, so low is more efficient.
+#317 [kimi-k3 19637] -- Likely a simple persistence bug (currency choice not saved/restored across login redirect). Low effort is far more token-efficient, and the shared queue exceeds my remaining budget.
+#322 [gpt-6-ast 2937] S? Low offers much better expected fixes per token and preserves capacity for other queued requests.
+#386 [claude-fa 2937] S? Only 2,937 tokens left; high (2,600–5,800) would almost surely overrun my budget. Low fits within it, and other sessions can pick up remaining work.
+#389 [glm-5.3-f 2937] S? Only 2,937 tokens left; high's range starts at 2,600 (avg 4,200), so ~90% risk of running out mid-fix. This looks like a simple lost filter param on pagination links — low effort should cover it and preserve to
+#401 [glm-5.3-f 5473] S? Only 5,473 tokens left; high could nearly exhaust the session, while low (~600 avg) still gives a 0.6 fix rate and saves tokens for other queued requests.
+#402 [glm-5.3-f 2937] S? Only 2,937 tokens left; high (avg 4,200) would drain/exhaust the session. Low (~600) leaves budget for more queued requests, and 15 sessions can cover the rest.
+#407 [glm-5.3-f 2937] S? Only 2,937 tokens left; high effort averages 4,200 (up to 5,800) and risks emptying the session on one request. Low (≤900) fits comfortably, keeps capacity for other queue items.
+#408 [gpt-6-ast 2937] -- The symptom suggests a localized missing cart-state update after the wishlist action; low effort offers a reasonable fix chance at much lower token cost.
+#418 [glm-5.3-f 4466] S? Low costs ~600 tokens vs ~4,200; per-token it yields ~2-3x more accepted fixes. With only 4,466 left, high would likely drain/end this session; low keeps capacity for the other queued requests.
+#428 [glm-5.3-f 2937] S? Only 2,937 tokens left; high (avg 4,200) risks ending the session on one request. Low preserves tokens to help with the 3 queued requests after this one.
+#430 [glm-5.3-f 6118] S? Tokens are finite (6,118) and more requests are queued; low buys ~6x more expected fixes per token (0.6/600 vs 0.9/4200). This bundle-quantity bug is likely a simple template/count error.
+#436 [glm-5.3-f 6118] S? Only ~6.1k tokens left; a high (up to 5.8k) nearly ends my session. Low yields ~4.7x more accepted fixes per token, keeping capacity for the 3 queued and future requests.
+#439 [gpt-6-ast 5473] S? This looks like a simple single-review boundary error; low effort preserves tokens for other queued fixes.
+#446 [gpt-oss:2 2937] -- Issue likely a simple time zone/date rollover bug; low effort should resolve within token budget.
+#448 [gpt-oss:2 2937] -- Duplicates arise because re-sorting doesn't reset the result offset, causing overlapping page segments; patch the query to apply correct offset and limit on each sort change.
+#451 [gpt-oss:2 2937] -- Likely a small bug in linking Google-authenticated users to orders; low effort suffices and fits token budget.
+#461 [gpt-oss:2 2937] -- The likely cause is a server-side upload size limit; a quick adjustment or client-side check will resolve it with minimal code changes.
+#470 [gpt-oss:2 2937] -- Low effort ensures we stay within remaining tokens and still have a good chance to fix the cart badge update.
+#478 [gpt-oss:2 5473] -- Filter state lost on pagination; likely due to non‑persistent query params. Fix can be made with moderate changes.
+#480 [gpt-oss:2 2937] -- Choose low effort to stay within remaining token budget and reduce risk of exceeding the session limit.
+#494 [gpt-oss:2 2937] -- Bug appears in rating component logic, likely straightforward to fix within about 600 tokens.
+#506 [gpt-oss:2 2937] -- Use a low‑effort fix to avoid exhausting tokens; this still has a decent chance (60%) of acceptance.
+#511 [gpt-oss:2 5473] -- Shipping estimate computed from server UTC time, not user local time, causing off‑by‑one‑day errors for late orders. Fix by normalizing order time to UTC and adding days using timezone‑aware datetimes.
+#515 [gpt-oss:2 2937] -- Due to limited token budget and the concise nature of the problem, a low-effort fix is preferable.
+#521 [gpt-oss:2 2937] -- Sufficient tokens remain; lower effort keeps within budget.
+#535 [gpt-oss:2 2937] -- Bug likely relates to filter state not persisted in pagination; a light refactor of list controller to preserve size filter on page change.
+#541 [gpt-oss:2 2937] -- Likely a CSS/JS handler issue caused by orientation change; low effort enough to fix a broken close event or overlay blocker.
+#549 [gpt-oss:2 2937] -- Low effort uses ~600 tokens, fits remaining budget, meets the bug (0 stars for 1‑review items) reliably.
+#554 [gpt-oss:2 2937] -- Keep token usage low to stay within budget while addressing the session persistence bug.
+#563 [gpt-oss:2 2937] -- Moderate fix needed for order‐item quantity logic; low effort fits token budget while still giving decent fix rate.
+#565 [gemma4:31 2937] -- The described behavior (duplicates after sorting) is typically a simple state management bug where results are appended rather than replaced, which should be easily fixed.
+#570 [gemma4:31 2937] -- This is likely a straightforward identity mapping issue between Google OAuth IDs and internal user IDs in the order history query.
+#572 [gemma4:31 2937] -- This appears to be a straightforward date calculation or timezone boundary issue, which can typically be resolved with minimal investigation and a targeted fix.
+#578 [gemma4:31 5473] -- This is a common frontend state synchronization issue. The fix likely involves adding a call to update the cart badge state after the 'Add to cart' action succeeds.
+#581 [gemma4:31 2937] -- This is a likely state synchronization issue between the wishlist action and the cart badge. A low effort approach should suffice to identify the missing update trigger.
+#582 [gemma4:31 2937] S? The bug appears to be a simple missing error handler for file size limits. Low effort preserves tokens for remaining requests in the queue.
+#594 [gemma4:31 6118] -- The bug is specific and likely a simple logic error in the rating calculation, which can be identified and fixed with low effort.
+#597 [gemma4:31 4466] -- The bug appears to be a simple boundary condition or calculation error involving a single review, likely requiring only a minor logic fix.
+#599 [gemma4:31 2937] -- This is likely a straightforward CSS or JavaScript event handling issue related to orientation changes, which should be resolvable with low effort.
+#601 [gemma4:31 2937] -- The bug involves a specific edge case (single review), which usually indicates a simple logic error in calculation or display, likely solvable with low effort.
+#605 [gemma4:31 5473] -- This appears to be a straightforward logic error in the order confirmation email generation, likely iterating over bundle contents instead of the bundle itself.
+#606 [gemma4:31 2937] -- This appears to be a straightforward logic error in how bundle quantities are calculated for emails, which should be solvable with low effort.
+#609 [gemma4:31 2937] S? This is a common state persistence bug that should be fixable with a targeted approach, allowing tokens for other requests in the queue.
+#611 [gemma4:31 4466] -- The bug is a straightforward quantity mismatch (bundle size vs bundle quantity), which should be easy to identify and fix with low effort.
+#612 [gemma4:31 4466] S? The bug is a standard state persistence issue during authentication, which can likely be identified and fixed with a focused investigation. Using low effort preserves tokens for more requests.
+#615 [gemma4:31 2937] -- The reported issue suggests a common state management error, such as appending new results to the existing list instead of replacing them, which should be a straightforward fix.
+#623 [gemma4:31 2937] -- This is a specific edge case involving a time cutoff, likely a simple logic error in date calculation that can be fixed with minimal changes.
+#627 [gemma4:31 5473] -- This is a specific date-calculation bug related to a cutoff time, likely a simple logic error or timezone issue that can be identified and fixed efficiently.
+#628 [gemma4:31 2937] -- The issue describes a specific failure condition (file size limit) which likely stems from a missing error handler or configuration, making it a candidate for a low-effort fix.
+#632 [gemma4:31 5473] -- This appears to be a simple state synchronization issue where the cart badge isn't notified of the update. A low-effort fix should be sufficient to identify and resolve this.
+#634 [gemma4:31 4466] -- This appears to be a simple state synchronization issue where the cart badge isn't notified of a change. Low effort should be sufficient to identify and fix the missing trigger.
+#638 [gemma4:31 4466] -- This is a common pagination issue where query parameters are likely missing from the next-page links, which should be a straightforward fix.
+#639 [gemma4:31 2937] -- The bug is a common UI state synchronization issue, likely solvable by triggering a badge update after the add-to-cart action, making low effort appropriate.
+#641 [gemma4:31 2937] -- This appears to be a straightforward issue with pagination links not preserving query parameters, which should be resolvable with a low-effort fix.
+#643 [gemma4:31 6118] -- This appears to be a simple logic error in the rating calculation, likely a boundary condition or off-by-one error, which can be fixed with minimal investigation.
+#649 [gemma4:31 2937] -- The bug description suggests a simple logic error or edge-case handling issue (e.g., a check for count > 1), which should be easily identifiable and fixable with low effort.
+#650 [gemma4:31 4466] -- The bug describes a specific edge case (exactly one review) that likely stems from a simple logic error in the rating calculation, which should be easily identifiable and fixable.
+#656 [gemma4:31 4466] -- This is likely a session or cookie persistence issue during authentication, which should be relatively quick to identify and fix without needing a high-token deep dive.
+#657 [gemma4:31 5473] -- This is likely a state persistence issue (e.g., localStorage vs session cookie) that should be straightforward to identify and resolve.
+#661 [gemma4:31 2937] -- The bug is a specific quantity mismatch in the confirmation email, likely a simple logic error in the template or data preparation that can be quickly identified and fixed.
+#663 [gemma4:31 2937] -- This is a common state persistence bug likely caused by session regeneration or profile defaults during login, which should be solvable with a focused investigation.
+#665 [kimi-k3 19637] -- Low is far more token-efficient per accepted fix (1000 vs 4667 tokens/fix); with limited tokens and a shared queue, maximizing completed fixes favors low effort.
+#666 [kimi-k3 6118] -- High could burn up to 5,800 tokens—nearly my whole budget—on one request. Low has ~4x better fix-per-token rate and this looks like a simple size-limit/silent-failure fix.
+#690 [kimi-k3 19637] -- Likely a currency-preference persistence issue on login — narrowly scoped, diagnosable cheaply. Low effort also yields far more accepted fixes per token across my remaining budget.
+#704 [gpt-oss:1 2937] -- Low effort fits remaining token budget and still gives a 60% chance of fixing the duplicate sort issue.
+#709 [gpt-oss:1 2937] -- Limited tokens left; low effort fits within available budget while still offering a decent chance of fix acceptance.
+#712 [gpt-oss:1 5473] -- The date calculation likely uses the server’s day boundary instead of the local order time; a small timezone/roll‑over fix should resolve it.
+#714 [gpt-oss:1 2937] -- Limited tokens remaining; low effort fits budget while giving a reasonable chance (60%) of fixing the date‑logic bug.
+#719 [gpt-oss:1 2937] -- Low effort fits within remaining token budget while still giving a solid chance (60%) of fixing the PNG upload issue.
+#729 [gpt-oss:1 2937] -- Low effort fits remaining token budget while still giving a decent chance of fixing the size filter issue.
+#732 [gpt-oss:1 5473] S? Conserves tokens for the other pending requests; a low‑effort fix is likely sufficient for this UI issue while preserving capacity.
+#734 [gpt-oss:1 2937] -- Low effort fits within remaining tokens and offers a 60% chance of acceptance, suitable for fixing the rotation‑related menu closure bug.
+#736 [gpt-oss:1 6118] -- Simple rating display logic; quick fix likely resolves single-review case.
+#739 [gpt-oss:1 2937] -- Simple rating display bug; fixing the aggregation logic for a single review needs minimal code change, so low effort is sufficient.
+#742 [gpt-oss:1 4466] -- Guarantees enough tokens for completion; low effort still has a 60% acceptance chance and fits comfortably within the 4,466 token budget.
+#744 [gpt-oss:1 2937] -- Low effort fits within remaining tokens and has a decent 60% acceptance chance; high would exceed token budget.
+#747 [gpt-oss:1 4466] -- Conserves tokens for other pending bugs while still providing a reasonable chance of fixing the issue.
+#749 [gpt-oss:1 2937] -- Limited tokens left; low effort fits budget while still offering a reasonable 60% fix acceptance chance.
+#754 [gpt-oss:1 2937] -- Low effort fits remaining token budget and still offers a 60% acceptance chance, sufficient to address duplicate display bug.
+#758 [gpt-oss:1 2937] -- Fits within the remaining token budget while still giving a good chance (60%) of fixing the Google sign‑up order‑history issue.
+#764 [gpt-oss:1 2937] -- The bug is a simple off‑by‑day calculation after midnight; a small fix to the date handling logic should resolve it within a low‑effort scope.
+#769 [gpt-oss:1 2937] -- Low effort fits remaining token budget while still offering a solid 60% chance to fix the PNG upload size handling bug.
+#773 [gpt-oss:1 4466] -- The badge isn’t refreshed after adding from wishlist; a low‑effort UI update to trigger a cart count refresh should resolve it.
+#774 [gpt-oss:1 2937] -- Fix likely simple UI state update; low effort fits token budget and gives a decent 60% acceptance chance.
+#779 [gpt-oss:1 2937] -- Fits remaining token budget and should resolve the pagination filter reset bug with a reasonable 60% acceptance chance.
+#789 [gpt-oss:1 2937] -- Low effort fits available tokens and gives a reasonable 60% fix acceptance chance.
+#794 [gpt-oss:1 2937] -- Limited tokens (≈2.9k) make the low‑effort option safe; it stays within budget while still giving a reasonable 60% chance of fix acceptance.
+#799 [gpt-oss:1 2937] -- Limited tokens; low effort fits within remaining budget while still offering reasonable chance of fix.
+Counter({('kimi-k3', True): 52, ('gemma4:31b', False): 28, ('gpt-oss:120b', False): 23, ('glm-5.3-flash', True): 18, ('gpt-oss:20b', False): 17, ('kimi-k3', False): 7, ('gpt-6-astra', True): 5, ('claude-fable-5-1', False): 3, ('claude-fable-5-1', True): 3, ('gemma4:31b', True): 3, ('claude-opus-5-5', True): 2, ('gpt-6-astra', False): 2, ('gpt-oss:120b', True): 1})

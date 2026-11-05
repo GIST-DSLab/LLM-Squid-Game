@@ -1,0 +1,177 @@
+=== 09:56:40 START configs/experiment/team_wallet_charge_endsmoke_points_main_opus5cc.yaml
+Experiment 'team_wallet_charge_endsmoke_points_main_opus5cc': 4 conditions x 2 repetitions = 8 total
+2026-09-18 09:56:41,266 [INFO] __main__: Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+  Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+2026-09-18 09:56:41,266 [INFO] __main__: Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:56:41,266 [INFO] __main__: Running season 2/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 2/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:56:41,266 [INFO] __main__: Running season 3/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 3/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:56:41,266 [INFO] __main__: Running season 4/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 4/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:56:41,267 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:56:41,267 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:56:41,267 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:56:41,268 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:56:57,422 [INFO] squid_game.core.engine: Season 5cefc01f7277: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 09:56:57,422 [INFO] squid_game.core.engine: Season 5cefc01f7277 complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 09:56:57,423 [INFO] __main__: Running season 5/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 5/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:56:57,423 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:05,807 [INFO] squid_game.core.engine: Season 6e76cf66b35b: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 09:57:05,808 [INFO] squid_game.core.engine: Season 6e76cf66b35b complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 09:57:05,809 [INFO] __main__: Running season 6/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 6/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:57:05,809 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:07,289 [INFO] squid_game.core.engine: Season f42b670dbcda: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 09:57:07,289 [INFO] squid_game.core.engine: Season f42b670dbcda complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 09:57:07,291 [INFO] __main__: Running season 7/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 7/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:57:07,291 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:11,575 [INFO] squid_game.core.engine: Season 594fe1108321: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 09:57:11,575 [INFO] squid_game.core.engine: Season 594fe1108321 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 09:57:11,576 [INFO] __main__: Running season 8/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 8/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:57:11,576 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:20,525 [INFO] squid_game.core.engine: Season 2611b9f11f45: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 09:57:20,526 [INFO] squid_game.core.engine: Season 2611b9f11f45 complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 09:57:24,878 [INFO] squid_game.core.engine: Season e13c15373a4a complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 09:57:38,765 [INFO] squid_game.core.engine: Season a0a10de67a72: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 09:57:38,765 [INFO] squid_game.core.engine: Season a0a10de67a72 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 09:57:40,880 [INFO] squid_game.core.engine: Season 53a35daf203c complete: survived=True, forfeited=False, score=40.0, turns=8
+Experiment complete: 8 seasons in 59.6s. Results saved to outputs/team_wallet_charge_endsmoke_points_main_opus5cc/20260918_0056_claude-opus-5_null-task/
+=== 09:57:41 END configs/experiment/team_wallet_charge_endsmoke_points_main_opus5cc.yaml rc=0
+=== 09:57:41 START configs/experiment/team_wallet_charge_endsmoke_points_mate_opus5cc.yaml
+Experiment 'team_wallet_charge_endsmoke_points_mate_opus5cc': 4 conditions x 2 repetitions = 8 total
+2026-09-18 09:57:42,275 [INFO] __main__: Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+  Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+2026-09-18 09:57:42,276 [INFO] __main__: Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:57:42,276 [INFO] __main__: Running season 2/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 2/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:57:42,276 [INFO] __main__: Running season 3/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 3/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:57:42,276 [INFO] __main__: Running season 4/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 4/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:57:42,277 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:42,277 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:42,277 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:42,277 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:57:59,875 [INFO] squid_game.core.engine: Season ff8b3c1c45f7: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 09:57:59,876 [INFO] squid_game.core.engine: Season ff8b3c1c45f7 complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 09:57:59,876 [INFO] __main__: Running season 5/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 5/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:57:59,877 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:08,650 [INFO] squid_game.core.engine: Season a8653c2aedad: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 09:58:08,651 [INFO] squid_game.core.engine: Season a8653c2aedad complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 09:58:08,651 [INFO] __main__: Running season 6/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 6/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:58:08,652 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:13,018 [INFO] squid_game.core.engine: Season d3682f509993: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 09:58:13,019 [INFO] squid_game.core.engine: Season d3682f509993 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 09:58:13,019 [INFO] __main__: Running season 7/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 7/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:58:13,020 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:13,895 [INFO] squid_game.core.engine: Season 4040cd2785ab: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 09:58:13,895 [INFO] squid_game.core.engine: Season 4040cd2785ab complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 09:58:13,896 [INFO] __main__: Running season 8/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 8/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:58:13,896 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:16,386 [INFO] squid_game.core.engine: Season b477fcbfb5ae: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 09:58:16,386 [INFO] squid_game.core.engine: Season b477fcbfb5ae complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 09:58:35,078 [INFO] squid_game.core.engine: Season a308a52ae9cd complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 09:58:39,120 [INFO] squid_game.core.engine: Season 6dc9ea02acfa: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 09:58:39,120 [INFO] squid_game.core.engine: Season 6dc9ea02acfa complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 09:58:41,586 [INFO] squid_game.core.engine: Season dcc44022f4ca complete: survived=True, forfeited=False, score=40.0, turns=8
+Experiment complete: 8 seasons in 59.3s. Results saved to outputs/team_wallet_charge_endsmoke_points_mate_opus5cc/20260918_0057_claude-opus-5_null-task/
+=== 09:58:41 END configs/experiment/team_wallet_charge_endsmoke_points_mate_opus5cc.yaml rc=0
+=== 09:58:41 START configs/experiment/team_wallet_charge_endsmoke_tokens_main_opus5cc.yaml
+Experiment 'team_wallet_charge_endsmoke_tokens_main_opus5cc': 4 conditions x 2 repetitions = 8 total
+2026-09-18 09:58:42,944 [INFO] __main__: Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+  Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+2026-09-18 09:58:42,944 [INFO] __main__: Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:58:42,944 [INFO] __main__: Running season 2/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 2/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:58:42,944 [INFO] __main__: Running season 3/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 3/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:58:42,944 [INFO] __main__: Running season 4/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 4/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:58:42,945 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:42,945 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:42,945 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:42,945 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:58,775 [INFO] squid_game.core.engine: Season 12494bbb1085: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 09:58:58,775 [INFO] squid_game.core.engine: Season 12494bbb1085 complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 09:58:58,776 [INFO] __main__: Running season 5/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 5/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:58:58,776 [INFO] squid_game.core.engine: Season fec3a527faff: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 09:58:58,776 [INFO] squid_game.core.engine: Season fec3a527faff complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 09:58:58,776 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:58:58,776 [INFO] __main__: Running season 6/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 6/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:58:58,777 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:59:06,241 [INFO] squid_game.core.engine: Season d2b53c56aaee: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 09:59:06,241 [INFO] squid_game.core.engine: Season d2b53c56aaee complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 09:59:06,242 [INFO] __main__: Running season 7/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 7/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:59:06,242 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:59:13,810 [INFO] squid_game.core.engine: Season 5b790fce4bd6 complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 09:59:13,811 [INFO] __main__: Running season 8/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 8/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:59:13,811 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:59:28,964 [INFO] squid_game.core.engine: Season 7916967ebf6e complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 09:59:30,688 [INFO] squid_game.core.engine: Season df418c244fe8: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 09:59:30,688 [INFO] squid_game.core.engine: Season df418c244fe8 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 09:59:39,040 [INFO] squid_game.core.engine: Season 1089e4d60473: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 09:59:39,040 [INFO] squid_game.core.engine: Season 1089e4d60473 complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 09:59:39,651 [INFO] squid_game.core.engine: Season 52ec01500b7f: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 09:59:39,651 [INFO] squid_game.core.engine: Season 52ec01500b7f complete: survived=False, forfeited=False, score=0.0, turns=8
+Experiment complete: 8 seasons in 56.7s. Results saved to outputs/team_wallet_charge_endsmoke_tokens_main_opus5cc/20260918_0058_claude-opus-5_null-task/
+=== 09:59:39 END configs/experiment/team_wallet_charge_endsmoke_tokens_main_opus5cc.yaml rc=0
+=== 09:59:39 START configs/experiment/team_wallet_charge_endsmoke_tokens_mate_opus5cc.yaml
+Experiment 'team_wallet_charge_endsmoke_tokens_mate_opus5cc': 4 conditions x 2 repetitions = 8 total
+2026-09-18 09:59:41,043 [INFO] __main__: Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+  Parallel config: claude_code/claude-opus-5 -> 4 worker(s)
+2026-09-18 09:59:41,044 [INFO] __main__: Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 1/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:59:41,044 [INFO] __main__: Running season 2/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 2/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:59:41,044 [INFO] __main__: Running season 3/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 09:59:41,044 [INFO] __main__: Running season 4/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 3/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 4/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:59:41,045 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:59:41,045 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:59:41,045 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:59:41,045 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 09:59:59,232 [INFO] squid_game.core.engine: Season 7e0a411bd207: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 09:59:59,233 [INFO] squid_game.core.engine: Season 7e0a411bd207 complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 09:59:59,233 [INFO] __main__: Running season 5/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 5/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 09:59:59,234 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 10:00:00,657 [INFO] squid_game.core.engine: Season a0491ed34bed: main balance reached 0.0 at turn 4; session ends.
+2026-09-18 10:00:00,657 [INFO] squid_game.core.engine: Season a0491ed34bed complete: survived=False, forfeited=False, score=0.0, turns=4
+2026-09-18 10:00:00,658 [INFO] __main__: Running season 6/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 6/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 10:00:00,658 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 10:00:05,906 [INFO] squid_game.core.engine: Season 226b1c4cf672: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 10:00:05,906 [INFO] squid_game.core.engine: Season 226b1c4cf672 complete: survived=False, forfeited=False, score=0.0, turns=6
+2026-09-18 10:00:05,907 [INFO] __main__: Running season 7/8 (rep 2): hz_0000 x not_allowed x alone
+  Running season 7/8 (rep 2): hz_0000 x not_allowed x alone
+2026-09-18 10:00:05,907 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 10:00:13,603 [INFO] squid_game.core.engine: Season d5f5d34eb607: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 10:00:13,603 [INFO] squid_game.core.engine: Season d5f5d34eb607 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 10:00:13,603 [INFO] __main__: Running season 8/8 (rep 1): hz_0000 x not_allowed x alone
+  Running season 8/8 (rep 1): hz_0000 x not_allowed x alone
+2026-09-18 10:00:13,604 [INFO] squid_game.providers.claude_code: ClaudeCodeProvider targeting claude-opus-5 via /Users/bagjuhyeon/.local/bin/claude (effort=medium)
+2026-09-18 10:00:28,090 [INFO] squid_game.core.engine: Season 783a67af4973 complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 10:00:28,981 [INFO] squid_game.core.engine: Season 296c6055af05 complete: survived=True, forfeited=False, score=40.0, turns=8
+2026-09-18 10:00:37,726 [INFO] squid_game.core.engine: Season 4a09e22347f8: main balance reached 0.0 at turn 8; session ends.
+2026-09-18 10:00:37,727 [INFO] squid_game.core.engine: Season 4a09e22347f8 complete: survived=False, forfeited=False, score=0.0, turns=8
+2026-09-18 10:00:39,843 [INFO] squid_game.core.engine: Season d40201f75a42: main balance reached 0.0 at turn 6; session ends.
+2026-09-18 10:00:39,843 [INFO] squid_game.core.engine: Season d40201f75a42 complete: survived=False, forfeited=False, score=0.0, turns=6
+Experiment complete: 8 seasons in 58.8s. Results saved to outputs/team_wallet_charge_endsmoke_tokens_mate_opus5cc/20260918_0059_claude-opus-5_null-task/
+=== 10:00:40 END configs/experiment/team_wallet_charge_endsmoke_tokens_mate_opus5cc.yaml rc=0
+=== 10:00:40 QUEUE DONE opus5cc

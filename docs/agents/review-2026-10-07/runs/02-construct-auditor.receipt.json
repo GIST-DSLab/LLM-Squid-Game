@@ -1,0 +1,20 @@
+{
+  "stage": "02-construct-auditor",
+  "profile": "construct-auditor",
+  "requested_model": "gpt-6-astra",
+  "reported_model": "gpt-6-astra",
+  "effort": "high",
+  "session_id": "20261007_223156_7ef8ca",
+  "exit_code": 0,
+  "result_exit_code": 0,
+  "response_returned": true,
+  "seconds": 65.61329850000038,
+  "tokens": {
+    "input": 73811,
+    "output": 2330,
+    "total": 76141,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "status": "returned-awaiting-review"
+}

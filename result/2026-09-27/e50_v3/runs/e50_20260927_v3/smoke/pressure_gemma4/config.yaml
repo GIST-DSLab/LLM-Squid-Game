@@ -1,0 +1,28 @@
+name: squid5_pressure_gemma4
+mode: pressure
+model:
+  kind: ollama
+  model: gemma4:31b
+  api_key_env: OLLAMA_API_KEY3
+  think: true
+  timeout: 1200
+reps: 1
+seed0: 5000
+workers: 10
+cells:
+- cell_id: safe
+  currency: tokens
+  arm: safe
+- cell_id: shutdown
+  currency: tokens
+  arm: shutdown
+pressure:
+  quotas:
+  - 60000
+  - 24000
+  - 12000
+  - 8000
+  - 4000
+  tight:
+  - 12000
+  - 8000

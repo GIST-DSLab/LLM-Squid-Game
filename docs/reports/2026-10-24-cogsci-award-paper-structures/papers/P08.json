@@ -1,0 +1,172 @@
+{
+ "id": "P08",
+ "year": 2023,
+ "award": "Marr Prize (best student paper)",
+ "title": "Storytelling as Inverse Inverse Planning",
+ "title_note": "CogSci 2023 수상 페이지는 Marr Prize를 'Acting as Inverse Inverse Planning'(SIGGRAPH 2023 제목, arXiv 2305.16913)이라는 제목으로 올림. 같은 저자들의 CogSci proceedings 논문 제목은 'Storytelling as Inverse Inverse Planning'이고, 초록에 'reports on work to be presented at SIGGRAPH 2023'라고 적혀 있음. 이 JSON은 CogSci proceedings판을 분석함.",
+ "authors": [
+  "Kartik Chandra",
+  "Tzu-Mao Li",
+  "Joshua B. Tenenbaum",
+  "Jonathan Ragan-Kelley"
+ ],
+ "affiliations": "MIT CSAIL (Chandra, Ragan-Kelley); UC San Diego (Li); MIT BCS & CSAIL (Tenenbaum)",
+ "url_page": "https://escholarship.org/uc/item/3cx919kp",
+ "url_pdf": "https://escholarship.org/content/qt3cx919kp/qt3cx919kp.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the 45th Annual Conference of the Cognitive Science Society, vol. 45, pp. 903-912; 11쪽 PDF = 표지 1 + 10쪽: 내용 6쪽 + acknowledgements/참고문헌 4쪽, 마지막 쪽은 4줄뿐).",
+ "abstract_en": "Great storytelling takes us on a journey the way ordinary reality rarely does. But what exactly do we mean by a “journey”? Recently, literary theorist Kukkonen (2014) proposed that storytelling is “probability design”: the art of giving an audience pieces of information bit by bit, to craft the journey of their changing beliefs about the fictional world. A good “probability design” choreographs a delicate dance of certainty and surprise in the reader’s mind as the story unfolds from beginning to end. In this paper, we computationally model this conception of storytelling. Building on the classic Bayesian inverse planning model of human social cognition, we treat storytelling as inverse inverse planning: the task of choosing actions to manipulate an inverse planner’s inferences, and therefore a human audience’s beliefs. First, we use an inverse inverse planner to depict social and physical situations, and present behavioral studies indicating that inverse inverse planning produces more expressive behavior than ordinary “naïve planning.” Then, through a series of examples, we demonstrate how inverse inverse planning captures many storytelling elements from first principles: character, narrative arcs, plot twists, irony, flashbacks, and deus ex machina are all naturally encoded in the flexible language of probability design. This paper reports on work to be presented at SIGGRAPH 2023 (Chandra, Li, Tenenbaum, & Ragan-Kelley, 2023).",
+ "abstract_ko": "훌륭한 이야기는 평범한 현실이 좀처럼 주지 못하는 여정으로 우리를 데려간다. 그런데 '여정'이란 정확히 무엇을 뜻하는가? 최근 문학 이론가 Kukkonen(2014)은 이야기하기(storytelling)를 '확률 설계(probability design)', 곧 청중에게 정보를 조금씩 건네어 허구 세계에 대한 그들의 믿음이 바뀌어 가는 여정을 빚어내는 기술이라고 제안했다. 좋은 '확률 설계'는 이야기가 처음부터 끝까지 펼쳐지는 동안 독자의 마음속에서 확신과 놀라움이 주고받는 섬세한 춤을 안무한다. 이 논문은 이러한 이야기하기 개념을 계산적으로 모형화한다. 인간 사회 인지의 고전적 베이지안 역계획(Bayesian inverse planning) 모형을 바탕으로, 우리는 이야기하기를 역-역계획(inverse inverse planning), 곧 역계획자(inverse planner)의 추론을, 나아가 인간 청중의 믿음을 조작하도록 행동을 선택하는 과제로 다룬다. 먼저 역-역계획자를 써서 사회적·물리적 상황을 묘사하고, 역-역계획이 일반적인 '순진한 계획(naïve planning)'보다 더 표현력 있는 행동을 만든다는 행동 연구 결과를 제시한다. 이어 일련의 예시를 통해 역-역계획이 여러 이야기 요소를 제1원리로부터 포착함을 보인다: 인물, 서사 곡선(narrative arc), 반전(plot twist), 아이러니, 플래시백, 데우스 엑스 마키나가 모두 확률 설계라는 유연한 언어로 자연스럽게 표현된다. 이 논문은 SIGGRAPH 2023에서 발표될 연구(Chandra, Li, Tenenbaum, & Ragan-Kelley, 2023)를 보고한다.",
+ "pages_body": 10,
+ "pages_note": "proceedings 총 10쪽; 내용은 pp.1-6(CogSci 2023은 내용 6쪽 + 참고문헌 쪽 무제한 허용). Acknowledgements + 참고문헌이 pp.7-10.",
+ "references_location": "p.7(p.7 왼쪽 단 맨 위 Acknowledgements, 이어서 References) – p.10(p.10은 4줄뿐); 참고문헌 ~3.1쪽, 대부분 항목에 'Retrieved from' URL이 붙어 길어짐.",
+ "extras": "Acknowledgements는 p.7(왼쪽 위, ~84단어, 연구비 + 감사). 부록 없음. p.1 Introduction 끝에 코드 링크(https://people.csail.mit.edu/kach/a2i2p/). 'Inverse inverse planning' 첫머리(p.2)에 각주 1: 모든 애니메이션은 OSF(익명 열람 전용 링크 https://osf.io/gyh8a/...); 곳곳의 절 라벨과 '(video)' 표시는 개별 영상으로 가는 하이퍼링크. 초록 끝에 SIGGRAPH 2023판 안내.",
+ "words_body_total": 4181,
+ "words_note": "본문 합계에서 제목 블록, 초록(215단어), keywords, 그림 캡션/그래프 라벨, 각주, acknowledgements(84), 참고문헌(~1,480)은 뺌. 읽기 순서를 바로잡으려 단별로 셈(pdftotext -x/-W 자르기); 본문 수식은 토큰으로 포함(약간 부풀려짐, ~50단어).",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 541,
+   "share": 0.129,
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Background: Bayesian inverse planning",
+   "page_start": 1,
+   "words": 1045,
+   "share": 0.25,
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Inverse inverse planning",
+   "page_start": 2,
+   "words": 2271,
+   "share": 0.543,
+   "children": [
+    {
+     "level": 2,
+     "title": "(lead text: scripts, objective f_help, beam search, help/hinder demos)",
+     "page_start": 2,
+     "words": 463
+    },
+    {
+     "level": 2,
+     "title": "Behavioral experiment 1",
+     "page_start": 3,
+     "words": 293
+    },
+    {
+     "level": 2,
+     "title": "Miming by “inverse inverse physics”",
+     "page_start": 4,
+     "words": 292
+    },
+    {
+     "level": 2,
+     "title": "Behavioral experiment 2",
+     "page_start": 4,
+     "words": 191
+    },
+    {
+     "level": 2,
+     "title": "Flexibility of inverse inverse planning (all videos)",
+     "page_start": 5,
+     "words": 1032,
+     "children": [
+      {
+       "level": 3,
+       "title": "(lead paragraph)",
+       "page_start": 5,
+       "words": 63
+      },
+      {
+       "level": 3,
+       "title": "Plot twists (video)",
+       "page_start": 5,
+       "words": 189
+      },
+      {
+       "level": 3,
+       "title": "Irony (video)",
+       "page_start": 5,
+       "words": 140
+      },
+      {
+       "level": 3,
+       "title": "Flashbacks (video)",
+       "page_start": 6,
+       "words": 165
+      },
+      {
+       "level": 3,
+       "title": "Narrative arc (video)",
+       "page_start": 6,
+       "words": 376
+      },
+      {
+       "level": 3,
+       "title": "Stumbling (video)",
+       "page_start": 6,
+       "words": 99
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion",
+   "page_start": 6,
+   "words": 324,
+   "share": 0.077,
+   "children": []
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 3,
+   "size": "전체 폭(두 단 걸침), ~0.4쪽; 애니메이션 프레임 4개 + 시간에 따른 믿음 그래프 3개 + 긴 캡션",
+   "section": "Background에서 참조(naïve-planning 기준선); 'Inverse inverse planning'의 p.3 위에 배치"
+  },
+  {
+   "n": 2,
+   "page": 4,
+   "size": "전체 폭, ~0.4쪽; inverse-inverse-planning 애니메이션을 Fig.1과 같은 배치로",
+   "section": "Inverse inverse planning (도입 본문)"
+  },
+  {
+   "n": 3,
+   "page": 5,
+   "size": "전체 폭, 캡션 포함 ~0.25쪽; 막대그래프 패널 6개(help/hinder/indifferent x ours/naive)",
+   "section": "Inverse inverse planning > Behavioral experiment 1"
+  },
+  {
+   "n": 4,
+   "page": 5,
+   "size": "전체 폭, ~0.25쪽; 하위 패널 3개 (a) hopper 장면, (b) 상자 무게 판단, (c) 'stumble' 가치함수 궤적, 각자 하위 캡션",
+   "section": "Inverse inverse planning > Miming / Behavioral experiment 2 / Stumbling"
+  }
+ ],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": true,
+  "related_work_note": "'Background: Bayesian inverse planning'은 1단계 절(본문의 25%)이지만 관련 연구는 처음 ~2문단(Bayesian ToM, RSA/RCSA, IRL/legibility)뿐; 나머지 ~2/3는 세계 모델(Ullman et al. 2009 help/hinder 격자 세계를 다중 에이전트 MDP로)과 inverse planner를 형식적으로 정의. 그래픽스/인터랙티브 픽션 계획 접근과의 짧은 차별화는 Introduction 안에 있음.",
+  "experiments_as_top_level": false,
+  "experiments_note": "행동 실험 2개는 방법 절 'Inverse inverse planning' 안의 2단계 하위 절로, 각각 검증하는 데모 바로 뒤에 놓임(격자 세계 데모 -> Behavioral experiment 1; 물리 'miming' 데모 -> Behavioral experiment 2). 실험마다 짧은 하위 절 하나(~190-290단어)이고 Methods/Results 구분 없음.",
+  "final_section_name": "Discussion",
+  "final_section_subheadings": [],
+  "discussion_structure": "제목 없는 문단 3개: 기여를 한 문단으로 요약, 한계(확장성)와 즉흥극 참조, 앞으로의 방향(감정을 고려하는 청중 모델).",
+  "ends_with_conclusion_paragraph": false,
+  "ends_note": "별도 Conclusion 없음; Discussion 첫 문단이 요약 역할을 하고 논문은 향후 연구 문장으로 끝남.",
+  "model_description_location": "나뉨: 청중 모델(Ullman et al. MDP 위의 inverse planner, Bayes 규칙 수식)은 1단계 Background 절에; 논문 자체 기여(inverse inverse planning = inverse planner에 대해 대본을 최적화, 목적함수 f_help, beam search)는 1단계 'Inverse inverse planning' 절 첫머리에 두고, 뒤의 데모마다 run-in 제목 아래 본문에서 자기 목적함수 식(f_twist, f_irony, f_arc)을 소개.",
+  "first_page_use": "제목 + 저자 4명 2x2 격자가 p.1의 ~30%. 초록(215단어, 이례적으로 길고 서사적)이 왼쪽 단 ~45%; Introduction은 왼쪽 단 아래에서 시작해 오른쪽 단을 채우고, 1단계 'Background' 제목이 이미 p.1 오른쪽 단 맨 아래에서 시작. 따라서 p.1 본문 영역의 ~0.55가 Introduction.",
+  "links": "Introduction 끝에 코드 링크(p.1); 방법 절 첫머리 각주 1에 OSF 영상 저장소(p.2); run-in 제목과 본문 곳곳에 절별 '(video)' 하이퍼링크. 사전등록 없음."
+ },
+ "structure_summary_ko": "1수준 절은 Introduction - Background - Inverse inverse planning - Discussion 넷뿐이며, 본문의 54%가 'Inverse inverse planning' 한 절에 몰려 있다. 서론은 약 540단어(13%)로 짧고 소제목 없이 여섯 문단(Heider-Simmel 일화 -> 사람은 쉽게 이야기를 만든다 -> 계획만으로는 극적 효과가 없다 -> 'acting in' 대 'acting out' 핵심 통찰 -> 기존 접근의 한계 -> 우리 접근과 주요 수치 12배/5배)으로 빠르게 기여를 던진다. Background(25%)는 관련연구 두 문단 뒤에 바로 쓸 세계 모형(MDP)과 역계획자를 수식으로 정의해 '관련연구 + 모델 기초'를 한 절에 겸한다. 핵심 절은 '시연 -> 그 시연을 검증하는 행동 실험' 쌍을 두 번(grid world -> 실험 1, 물리 hopper 'mime' -> 실험 2) 반복한 뒤 'Flexibility' 소절에서 run-in 3수준 다섯 개(반전, 아이러니, 플래시백, 서사 곡선, 비틀거림)로 각 이야기 요소를 목적함수 한 줄 + 생성 결과 묘사로 보여 주는 쇼케이스 구조이고, 실험은 별도 1수준 절이나 Methods/Results 분리 없이 각 200~300단어로 압축된다. 전폭 그림 네 장이 p.3-5 상단을 차지하며 Discussion(8%)은 소제목 없이 요약-한계-향후과제 세 문단으로 끝나고 별도 Conclusion은 없다.",
+ "text_pages": 6
+}

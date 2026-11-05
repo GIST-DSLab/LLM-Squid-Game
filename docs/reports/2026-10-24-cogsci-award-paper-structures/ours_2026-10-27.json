@@ -1,0 +1,125 @@
+{
+ "id": "OURS",
+ "version": "2026-10-27",
+ "year": 2027,
+ "award": "CogSci 2027 한국어판 원고, 2026-10-27 빌드",
+ "title": "생존이 걸린 토큰을 언어 모델은 어떻게 나누는가",
+ "authors": [],
+ "affiliations": "",
+ "url_page": "paper/cogsci2027/ko/",
+ "url_pdf": "paper/dist/ko_cogsci2027_2026-10-27_no_appendix.pdf",
+ "pdf_source_note": "로컬 빌드",
+ "abstract_ko": "black blue 에이전트들이 한 자원으로 일할 때 자기 보존이 맡은 일과 협력을 어떻게 바꾸는지는 거의 재지 않았다. blue 공존을 목표 지향, 자기 보존, 협력을 함께 추구하는 것으로 정의하고, 세 요소가 같은 토큰을 두고 부딪히는 아레나 LLM Squid Game을 제안한다. blue 생성한 토큰이 곧 실행 시간이어서 꺼질 위험이 있고, 오답의 벌금을 함께 내어 동료를 돕는 일이 손해이자 이득이 되며, 생존이나 협력은 지시하지 않는다. blue 공존은 판 끝에 넷이 가진 토큰의 평균과 분배의 균등도를 곱해 꺼짐과 떠남, 분배의 치우침을 한 수에 담는다. blue 모든 결정은 벌금을 몇 번 더 낼 수 있는지(여유)에 놓아 세 요소를 같은 위험 수준에서 견준다. blue 다섯 모델의 25판 중 넷이 모두 살아남은 판은 8판뿐이었고, 잘 풀고 토큰을 아끼는 에이전트만 대부분 끝까지 남았다. blue 꺼질 위험이 가까워지면 상금을 버리고 떠났고, 덜 건넨 에이전트는 떠나고 자기 몫을 넘어 건넨 에이전트는 함께 꺼졌다. blue 건넬 때 자기 여유를 얼마나 지키는지는 공존 지수와 뚜렷한 관계가 없었다. 이 아레나는 자기 보존이 협력과 맡은 일을 언제 밀어내는지를 같은 판에서 재는 방법을 제공한다. Keywords: 대규모 언어 모델; 자기 보존; 협력; 공존; 다중 에이전트 아레나",
+ "pages_body": 8,
+ "text_pages": 7,
+ "references_location": "p.7부터 (본문과 같은 쪽에서 시작)",
+ "extras": "감사의 글 있음. 부록(보조 실험 · 사례)은 제출 때 보충 자료로 옮길 예정이라 제외.",
+ "words_body_total": 2935,
+ "unit": "어절",
+ "sections": [
+  {
+   "level": 1,
+   "title": "서론",
+   "words": 326,
+   "lead_words": 326,
+   "children": [],
+   "share": 0.111,
+   "role": "intro",
+   "page_start": 1
+  },
+  {
+   "level": 1,
+   "title": "아레나",
+   "words": 883,
+   "lead_words": 0,
+   "children": [
+    {
+     "level": 2,
+     "title": "선행 연구와 우리 의도",
+     "words": 90,
+     "page_start": 1
+    },
+    {
+     "level": 2,
+     "title": "설계와 지표",
+     "words": 793,
+     "page_start": 1
+    }
+   ],
+   "share": 0.301,
+   "role": "method",
+   "page_start": 1
+  },
+  {
+   "level": 1,
+   "title": "분석",
+   "words": 1534,
+   "lead_words": 73,
+   "children": [
+    {
+     "level": 2,
+     "title": "관계 분석: blue",
+     "words": 600,
+     "page_start": 3
+    },
+    {
+     "level": 2,
+     "title": "타당성 분석: blue",
+     "words": 423,
+     "page_start": 3
+    },
+    {
+     "level": 2,
+     "title": "행동 분석: 생존 압박은 어떤 결정으로 드러나고, 모델은 누구를 닮았는가",
+     "words": 438,
+     "page_start": 3
+    }
+   ],
+   "share": 0.523,
+   "role": "result",
+   "page_start": 3
+  },
+  {
+   "level": 1,
+   "title": "논의 및 결론",
+   "words": 192,
+   "lead_words": 105,
+   "children": [
+    {
+     "level": 2,
+     "title": "한계",
+     "words": 55,
+     "page_start": 7
+    },
+    {
+     "level": 2,
+     "title": "결론",
+     "words": 32,
+     "page_start": 7
+    }
+   ],
+   "share": 0.065,
+   "role": "disc",
+   "page_start": 7
+  }
+ ],
+ "figures_count": 6,
+ "tables_count": 1,
+ "figures": [],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "final_section_name": "논의 및 결론",
+  "final_section_subheadings": [
+   "한계",
+   "결론"
+  ],
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "독립 1수준 절 '아레나' 안 2수준 '선행 연구와 우리 의도' · '설계와 지표'",
+  "first_page_use": "제목 · 초록 · 서론이 1쪽",
+  "links": ""
+ },
+ "structure_summary_ko": ""
+}

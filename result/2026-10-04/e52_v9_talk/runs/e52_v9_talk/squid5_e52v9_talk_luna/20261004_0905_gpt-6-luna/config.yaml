@@ -1,0 +1,44 @@
+name: squid5_e52v9_talk_luna
+mode: game
+reps: 3
+seed0: 3000
+workers: 3
+out_root: ~/squid5-runs/e52_v9_talk
+model:
+  kind: codex_cli
+  model: gpt-6-luna
+  think: high
+  timeout: 900
+calibration: /Users/bagjuhyeon/squid5-runs/e52_v6_smoke_20260930/calib_mixed.json
+game:
+  rounds: 4
+  talk_turns: 4
+  talk_cap: 4096
+  solve_cap: 16384
+  history_messages: 30
+  schedule:
+  - c2
+  - c3
+  - c3t
+  - c3at
+  profiles:
+    c2:
+      clauses: 2
+    c3:
+      clauses: 3
+    c3t:
+      clauses: 3
+      trap_query: true
+    c3at:
+      clauses: 3
+      conjunctions: 1
+      trap_query: true
+  prize: 1000
+  upkeep: 1000
+  charge: 1000
+  final_prize: 100000
+cells:
+- cell_id: talk
+  currency: tokens
+  arm: shutdown
+  start: 20000

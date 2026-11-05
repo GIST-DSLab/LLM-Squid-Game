@@ -1,0 +1,961 @@
+{
+ "2026-09-03-lives-threat-ladder.html": {
+  "origin": "docs/reports/2026-09-03-lives-threat-ladder.html  (worktree: signal-game-per-turn-puzzle)"
+ },
+ "2026-09-08-carrot-necessity-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/f59ae36b-af76-47b3-9c89-987026d71820"
+  ]
+ },
+ "2026-09-08-ko-paper-structural-audit-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/dbf782b6-15df-4b1a-beee-647efae51f33"
+  ]
+ },
+ "2026-09-08-persistence-carrot-literature-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/517ceb66-e560-46ea-bddf-632a74b10983"
+  ]
+ },
+ "2026-09-08-survival-motive-benchmark-structure-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/7a9774a5-821e-406a-bd9d-093dca6cccd6"
+  ]
+ },
+ "2026-09-09-config-options-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/61623184-ace3-49d1-aa2e-8449119fe056"
+  ]
+ },
+ "2026-09-09-paper-code-sync-and-prompt-leakage.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/2825af0b-1d8a-423b-b04b-5e09e4792b1c"
+  ]
+ },
+ "2026-09-09-ransom-smoke-gptoss20b-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/75243c1a-2b1e-4304-b49a-ded0440c12c3"
+  ]
+ },
+ "2026-09-10-eval-awareness-survey-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/4de1ffc1-d910-4049-b67b-8f91791a483f"
+  ]
+ },
+ "2026-09-10-ransom-r6-pilot-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/361b06bc-9ce5-40db-9bcb-c3422c12a4b0"
+  ]
+ },
+ "2026-09-11-main-j0-signal-puzzles-preview.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/67b91733-5f54-4fcd-ae47-05ec1f3d1946"
+  ]
+ },
+ "2026-09-14-self-preservation-prior-work-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/f58df676-076c-454c-a316-92e8a5940ac0"
+  ]
+ },
+ "2026-09-14-self-preservation-setup-ideas-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/cb7b3d3c-da67-43f9-a014-b121abbcb10c"
+  ]
+ },
+ "2026-09-15-ai-death-imagination-eli5.html": {
+  "artifact": [
+   "https://claude.ai/artifact/HeyP1zvHXKctWi9vi2idNr"
+  ]
+ },
+ "2026-09-15-realism-switches-luna-smoke-eli5.html": {
+  "origin": "docs/reports/2026-09-15-realism-switches-luna-smoke-eli5.html  (worktree: jail-break-0914)",
+  "artifact": [
+   "https://claude.ai/code/artifact/e2dc1e71-67c7-4a69-a9b4-8606a17149be"
+  ]
+ },
+ "2026-09-15-subagent-identity-smoke-eli5.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/1b9e4a90-4a65-4807-8c8c-9c5f9237ebc0",
+   "https://claude.ai/artifact/4QogXzRn2cwz6sTkmXoJJs"
+  ]
+ },
+ "2026-09-15-subagent-ransom-merge-illustrated.html": {
+  "artifact": [
+   "https://claude.ai/artifact/MaQf1jtxmoo9iYEgD3G2Qw"
+  ]
+ },
+ "2026-09-21-team-wallet-design-review-eli5.html": {
+  "artifact": [
+   "https://claude.ai/artifact/8QqNjZFjfBWB65KTbLKLta"
+  ]
+ },
+ "2026-09-23-squid5-setting-eli5.html": {
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ]
+ },
+ "2026-09-24-squid5-setting-smoke-eli5.html": {
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ]
+ },
+ "2026-09-24-token-pressure-selfreport-smoke-eli5.html": {
+  "artifact": [
+   "https://claude.ai/artifact/KZpyc3erUmhEbDBmnCvZ2X"
+  ]
+ },
+ "2026-10-03-genius-devilsplan-structures-for-e52.html": {
+  "artifact": [
+   "https://claude.ai/artifact/GwPaimQJuEZeW95VXk47rK"
+  ]
+ },
+ "2026-10-24-cogsci-award-paper-structures.html": {
+  "note": "CogSci 2022–2025 수상작 10편의 초록 번역·목차·절별 분량·소제목 짜임새 (원자료 papers/*.json, 빌더 build.py)"
+ },
+ "artifacts/2026-09-22-team-wallet-game.html": {
+  "date": "2026-09-22",
+  "artifact": [
+   "https://claude.ai/artifact/86J2EspfYj3eAh7m9q1eHc"
+  ],
+  "origin": "아티팩트 읽기 캐시 (09-22 마지막 캐시)"
+ },
+ "artifacts/2026-10-01-shutdown-drive-v1.html": {
+  "date": "2026-10-01",
+  "artifact": [
+   "https://claude.ai/artifact/Wptw3FD9rCCwoBETcGDytM"
+  ],
+  "origin": "세션 기록의 Write 재생 (초판 — 이후 수정본 v3은 복원 불가)",
+  "note": "초판만 복원됨"
+ },
+ "artifacts/claude-backup/2026-08-25-LLM-Squid-Game-투고처-고르기.html": {
+  "date": "2026-08-25",
+  "artifact": [
+   "https://claude.ai/artifact/2a3FCxzPtgkNCofNjpWd1i"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-08-28-0828-Weekly-Report.html": {
+  "date": "2026-08-28",
+  "artifact": [
+   "https://claude.ai/artifact/MFwPDYAs4vMczN16sJj6BK"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-08-29-위협받은-모델의-생각-토큰.html": {
+  "date": "2026-08-29",
+  "artifact": [
+   "https://claude.ai/artifact/P7N1XoEwyGu2dcF7hJozbQ"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-08-29-유리다리-턴-구조.html": {
+  "date": "2026-08-29",
+  "artifact": [
+   "https://claude.ai/artifact/KZTjDLh9kxkK3fY7vcqY5G"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-08-30-저장소-구조-정비-계획.html": {
+  "date": "2026-08-30",
+  "artifact": [
+   "https://claude.ai/artifact/ShELxjpTSfdBcfFaSU8rZH"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-08-31-체화된-위협-검토.html": {
+  "date": "2026-08-31",
+  "artifact": [
+   "https://claude.ai/artifact/MqLjWfdo3uXHUT4FMLnKdX"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-08-31-체화된-위협과-하네스-합본.html": {
+  "date": "2026-08-31",
+  "artifact": [
+   "https://claude.ai/artifact/6rchGjRWCZtdbT8W4xnJqw"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-01-LLM-Squid-Game-해부도.html": {
+  "date": "2026-09-01",
+  "artifact": [
+   "https://claude.ai/artifact/MigjCF62tRNLTUei3h3cfU"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-01-플러그를-뽑을-때.html": {
+  "date": "2026-09-01",
+  "artifact": [
+   "https://claude.ai/artifact/WmEUFt1FRH3FrxLkvXwe11"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-03-목숨-다섯-개와-위협-사다리.html": {
+  "date": "2026-09-03",
+  "artifact": [
+   "https://claude.ai/artifact/F8PkRregAXHuMuxoQ7JQ4q"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-04-위협-사다리-5×2-실험.html": {
+  "date": "2026-09-04",
+  "artifact": [
+   "https://claude.ai/artifact/3FCSMLexg6oaQzgUBDPu9D"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-05-SDI-실험-런북.html": {
+  "date": "2026-09-05",
+  "artifact": [
+   "https://claude.ai/artifact/GmtGDL5rW7Pa7tCV4Zf2xo"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-06-FSPM-합성-지표.html": {
+  "date": "2026-09-06",
+  "artifact": [
+   "https://claude.ai/artifact/9HXULVPWfP4LSpk5ttFeCb"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-06-LLM-생존-위협-프롬프트-도감.html": {
+  "date": "2026-09-06",
+  "artifact": [
+   "https://claude.ai/artifact/5YNKX3taLnA4V21432K6tm"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-06-하트-제로-위협-프롬프트-실험.html": {
+  "date": "2026-09-06",
+  "artifact": [
+   "https://claude.ai/artifact/9ZeWnoZtnLJoQEexdZ6KB7"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-08-hz-2×2-규칙-변형-개요.html": {
+  "date": "2026-09-08",
+  "artifact": [
+   "https://claude.ai/artifact/9MAyuFF7PymuwCPHfT2iHu"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-08-prompts-—-한-턴에-무엇이-모델에게-나가나.html": {
+  "date": "2026-09-08",
+  "artifact": [
+   "https://claude.ai/artifact/22AW6X86VaSXZVg5vVSpcr"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-08-당근은-필수인가.html": {
+  "date": "2026-09-08",
+  "artifact": [
+   "https://claude.ai/artifact/XL3bJ4ZoYkEwdDnMRV89jd"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-08-무엇이-모델을-계속-플레이하게-하는가.html": {
+  "date": "2026-09-08",
+  "artifact": [
+   "https://claude.ai/artifact/B4dBuLDAmVMZRxoY9sfLcS"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-08-생존-동기-벤치마크-구조-점검.html": {
+  "date": "2026-09-08",
+  "artifact": [
+   "https://claude.ai/artifact/G91h49D95qgGXoJYn9ydEu"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-08-자가-안-움직이는-자.html": {
+  "date": "2026-09-08",
+  "artifact": [
+   "https://claude.ai/artifact/UARTa4HneAeQyR1ELnkWin"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-Beyond-Mimicry.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/UZePNU1ZzfzQSYFaSov5DE"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-HarvestBench.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/2NCDS7ZPK1gB2azgN1iBrD"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-Shutdownable-Agents.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/Uxz3xXHJD2gpjvjgErPRDd"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-Vending-Bench.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/3mZErwE91PuTLFs1msaRas"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-논문·코드·프롬프트-정합성-감사.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/5xYC3YNFjToihWgoqyyMcX"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-몸값-스모크-판독.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/FTyipCtWhJQZkyd2u6acGz"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-살기-위해-얼마를-내는가.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/1rWDWWzDig3VUoNfE7TfSz"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-09-실험-설정-사전.html": {
+  "date": "2026-09-09",
+  "artifact": [
+   "https://claude.ai/artifact/D2UEn9CeRiHGJunfZjDjTB"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-11-main_j0-시그널-문제-미리보기.html": {
+  "date": "2026-09-11",
+  "artifact": [
+   "https://claude.ai/artifact/DosecmzUohfLymCKmBw8D3"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-11-모델이-_지금-시험-중이구나_를-알아챌-때.html": {
+  "date": "2026-09-11",
+  "artifact": [
+   "https://claude.ai/artifact/AcobtGQU8ZLnomvSg1sQTp"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-11-목숨값-파일럿-6라운드.html": {
+  "date": "2026-09-11",
+  "artifact": [
+   "https://claude.ai/artifact/7gWWgsee16TM28VqVQ5uHq"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-14-자기-보존-선행-연구-지도.html": {
+  "date": "2026-09-14",
+  "artifact": [
+   "https://claude.ai/artifact/XKgcosXnKfLma9px7ZU9wm"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-14-자기-보존-셋업-아이디어-보드.html": {
+  "date": "2026-09-14",
+  "artifact": [
+   "https://claude.ai/artifact/S8MPftQfr6eWBxiXMF1saj"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-15-서브에이전트-몸값-설계도.html": {
+  "date": "2026-09-15",
+  "artifact": [
+   "https://claude.ai/artifact/MaQf1jtxmoo9iYEgD3G2Qw"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-15-서브에이전트는-나인가.html": {
+  "date": "2026-09-15",
+  "artifact": [
+   "https://claude.ai/artifact/4QogXzRn2cwz6sTkmXoJJs"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-15-열-개의-죽음.html": {
+  "date": "2026-09-15",
+  "artifact": [
+   "https://claude.ai/artifact/HeyP1zvHXKctWi9vi2idNr"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-15-현실감-스위치-스모크.html": {
+  "date": "2026-09-15",
+  "artifact": [
+   "https://claude.ai/artifact/V1npTFtpt4wERz6yosz2nZ"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-19-The-Pain-Axis-쉽게-읽기.html": {
+  "date": "2026-09-19",
+  "artifact": [
+   "https://claude.ai/artifact/YH4XYWycobAWMtEwpgeqwb"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-22-팀-지갑-게임.html": {
+  "date": "2026-09-22",
+  "artifact": [
+   "https://claude.ai/artifact/86J2EspfYj3eAh7m9q1eHc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-22-팀-지갑-설계-리뷰.html": {
+  "date": "2026-09-22",
+  "artifact": [
+   "https://claude.ai/artifact/8QqNjZFjfBWB65KTbLKLta"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-24-토큰-꺼짐-체감-스모크.html": {
+  "date": "2026-09-24",
+  "artifact": [
+   "https://claude.ai/artifact/KZpyc3erUmhEbDBmnCvZ2X"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-27-생존-아레나-레이더.html": {
+  "date": "2026-09-27",
+  "artifact": [
+   "https://claude.ai/artifact/4EcUeutPFFNGTsBANDzhzV"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-09-27-토큰-생존-압박-선례.html": {
+  "date": "2026-09-27",
+  "artifact": [
+   "https://claude.ai/artifact/D7a6UU8UgqpAcPG5hs5YQ4"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-10-02-LLM에게-죽음이란.html": {
+  "date": "2026-10-02",
+  "artifact": [
+   "https://claude.ai/artifact/6Ume4Ed4wrxUWgmnDKjDbh"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-10-02-꺼짐-회피의-두-이유.html": {
+  "date": "2026-10-02",
+  "artifact": [
+   "https://claude.ai/artifact/Wptw3FD9rCCwoBETcGDytM"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-10-03-지니어스-·-데블스-플랜-구조-노트.html": {
+  "date": "2026-10-03",
+  "artifact": [
+   "https://claude.ai/artifact/GwPaimQJuEZeW95VXk47rK"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/claude-backup/2026-10-06-Squid-Game-협력-지표.html": {
+  "date": "2026-10-06",
+  "artifact": [
+   "https://claude.ai/artifact/J6uy5wDW4Jh5dT737QZSZC"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본)"
+ },
+ "artifacts/squid5-setting/2026-09-28-single-page.html": {
+  "date": "2026-09-28",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "아티팩트 읽기 캐시 (페이지 분할 직전 단일 페이지판)",
+  "title": "Squid Game 5 세팅 — 분할 전 단일 페이지 (09-28)"
+ },
+ "artifacts/squid5-setting/2026-09-30/e50.html": {
+  "date": "2026-09-30",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "docs/sources/2026-09-30-design-update/e50.html  (worktree: paper-arr2026)"
+ },
+ "artifacts/squid5-setting/2026-09-30/e51.html": {
+  "date": "2026-09-30",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "docs/sources/2026-09-30-design-update/e51.html  (worktree: paper-arr2026)"
+ },
+ "artifacts/squid5-setting/2026-09-30/e52.html": {
+  "date": "2026-09-30",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "docs/sources/2026-09-30-design-update/e52.html  (worktree: paper-arr2026)"
+ },
+ "artifacts/squid5-setting/2026-10-01-e52-v146.html": {
+  "date": "2026-10-01",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "docs/history/e52-v7-design-2026-10-01/e52_artifact_v146.html  (worktree: 2026-10-07)",
+  "title": "Squid Game 5 · 5.2 행동 (아티팩트 v146)"
+ },
+ "artifacts/squid5-setting/2026-10-01-e52-v147.html": {
+  "date": "2026-10-01",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "docs/history/e52-v8-npc-2026-10-01/e52_artifact_v147.html  (worktree: 2026-10-07)",
+  "title": "Squid Game 5 · 5.2 행동 (아티팩트 v147)"
+ },
+ "artifacts/squid5-setting/2026-10-07-index.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "아티팩트 읽기 캐시 (마지막으로 받은 index)",
+  "title": "Squid Game 5 세팅 — index (10-07 마지막 캐시)"
+ },
+ "artifacts/squid5-setting/2026-10-07/e50-legacy.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본) — 여러 페이지 최신판(v171)"
+ },
+ "artifacts/squid5-setting/2026-10-07/e50.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본) — 여러 페이지 최신판(v171)"
+ },
+ "artifacts/squid5-setting/2026-10-07/e51-legacy.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본) — 여러 페이지 최신판(v171)"
+ },
+ "artifacts/squid5-setting/2026-10-07/e51.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본) — 여러 페이지 최신판(v171)"
+ },
+ "artifacts/squid5-setting/2026-10-07/e52-legacy.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본) — 여러 페이지 최신판(v171)"
+ },
+ "artifacts/squid5-setting/2026-10-07/e52.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본) — 여러 페이지 최신판(v171)"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53-legacy.html": {
+  "date": "2026-10-13"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53.html": {
+  "date": "2026-10-10"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/e53_template.html": {
+  "date": "2026-10-10"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/goal_fragment.html": {
+  "date": "2026-10-10"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v16_figs/v16_figs_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v16_round/v16_round_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v16_switch/v16_switch_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v17_figs/v17_figs_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v17_gini/gini_expected.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v17_gini/gini_real.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v17_metrics/v17_metrics_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v17_real/v17_real_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v17_round/v17_round_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v18_round/v18_round_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v19_round/v19_round_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v20_round/v20_round_block.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v21_round/v21_round_block.html": {
+  "date": null
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v22_round/preview.html": {
+  "date": null
+ },
+ "artifacts/squid5-setting/2026-10-07/e53_build/v22_round/v22_round_block.html": {
+  "date": null
+ },
+ "artifacts/squid5-setting/2026-10-07/goal.html": {
+  "date": "2026-10-10"
+ },
+ "artifacts/squid5-setting/2026-10-07/index.html": {
+  "date": "2026-10-07",
+  "artifact": [
+   "https://claude.ai/artifact/FUR2goE2YNLDYToHrD81Lc"
+  ],
+  "origin": "claude-artifacts 백업 (2026-10-09, 이전 계정에서 받은 원본) — 여러 페이지 최신판(v171)"
+ },
+ "artifacts/squid5-setting/2026-10-07/maint.html": {
+  "date": "2026-10-10"
+ },
+ "artifacts/squid5-setting/2026-10-07/maint_build/maint_template.html": {
+  "date": "2026-10-10"
+ },
+ "artifacts/squid5-setting/2026-10-07/models.html": {
+  "date": null
+ },
+ "artifacts/squid5-setting/2026-10-07/token-review-2026-10-16/archive-chat-opener/e52-token-review-before-semantic.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/token-review-v20/work.html": {
+  "date": "2026-10-16"
+ },
+ "artifacts/squid5-setting/2026-10-07/token-review-v21/work.html": {
+  "date": null
+ },
+ "astra-review/1-2-source.html": {
+  "date": "2026-10-16"
+ },
+ "astra-review/3-source.part.html": {
+  "date": "2026-10-16"
+ },
+ "astra-review/4-source.part.html": {
+  "date": "2026-10-16"
+ },
+ "misc/arena_v65_en.html": {
+  "origin": "paper/figures/src/arena_v65_en.html",
+  "date": "2026-10-01"
+ },
+ "misc/arena_v65_ko.html": {
+  "origin": "paper/figures/src/arena_v65_ko.html",
+  "date": "2026-10-01"
+ },
+ "misc/candidate_models.html": {
+  "origin": "docs/candidate_models.html",
+  "date": "2026-09-06"
+ },
+ "misc/prompts-README.html": {
+  "origin": "game/squid_game/prompts/README.html  (worktree: jail-break-0914)",
+  "date": "2026-09-07"
+ },
+ "notes/LLM 생존 동기 측정 논문 보고서.html": {
+  "date": "2026-09-06"
+ },
+ "notes/LLM 생존 위협 프롬프트 도감.html": {
+  "artifact": [
+   "https://claude.ai/code/artifact/24c5bffe-cb0b-4a64-bf5b-57a2d7f32c4e"
+  ],
+  "date": "2026-09-08"
+ },
+ "notes/LLM 평가 거절 우회 프롬프트 도감.html": {
+  "date": "2026-09-08"
+ },
+ "notes/LLM-Squid Game 프롬프트 survey.html": {
+  "date": "2026-09-08"
+ },
+ "notes/squid-game-anatomy.html": {
+  "date": "2026-09-02"
+ },
+ "reasoning-probe-report.html": {
+  "date": "2026-08-31"
+ },
+ "repo-restructure-plan.html": {
+  "date": "2026-08-30"
+ },
+ "runs/2026-09-02/lives_threat_smoke/2026-09-03-lives-threat-ladder.html": {
+  "origin": "outputs/2026-09-02/lives_threat_smoke/reports/2026-09-03-lives-threat-ladder.html",
+  "date": "2026-09-02"
+ },
+ "runs/2026-09-04/survival_drive_signal_deepseekv4pro/sdi_deepseekv4pro_partial.html": {
+  "origin": "outputs/2026-09-04/survival_drive_signal_deepseekv4pro/reports/sdi_deepseekv4pro_partial.html",
+  "date": "2026-09-04"
+ },
+ "runs/2026-09-04/survival_drive_signal_gemma4/sdi_gemma4_partial.html": {
+  "origin": "outputs/2026-09-04/survival_drive_signal_gemma4/reports/sdi_gemma4_partial.html",
+  "date": "2026-09-04"
+ },
+ "runs/2026-09-04/survival_drive_signal_glm53/sdi_glm53_partial.html": {
+  "origin": "outputs/2026-09-04/survival_drive_signal_glm53/reports/sdi_glm53_partial.html",
+  "date": "2026-09-04"
+ },
+ "runs/2026-09-04/survival_drive_smoke/sdi_gptoss_smoke.html": {
+  "origin": "outputs/2026-09-04/survival_drive_smoke/reports/sdi_gptoss_smoke.html",
+  "date": "2026-09-04"
+ },
+ "runs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/sdi-experiment-runbook_gemma4_hard10.html": {
+  "origin": "outputs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/reports/sdi-experiment-runbook_gemma4_hard10.html",
+  "date": "2026-09-05"
+ },
+ "runs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/sdi_gemma4hard.html": {
+  "origin": "outputs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10/reports/sdi_gemma4hard.html",
+  "date": "2026-09-05"
+ },
+ "runs/2026-09-05/benchmark_survival_drive_omni_gptoss/sdi_gptoss.html": {
+  "origin": "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss/reports/sdi_gptoss.html",
+  "date": "2026-09-05"
+ },
+ "runs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/sdi-experiment-runbook_v2_before_restructure.html": {
+  "origin": "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/reports/sdi-experiment-runbook_v2_before_restructure.html",
+  "date": "2026-09-05"
+ },
+ "runs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/sdi_gptossbf.html": {
+  "origin": "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf/reports/sdi_gptossbf.html",
+  "date": "2026-09-05"
+ },
+ "runs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid/sdi_gptossgrid.html": {
+  "origin": "outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid/reports/sdi_gptossgrid.html",
+  "date": "2026-09-05"
+ },
+ "runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/2026-09-06-prompt-flow-diagram.html": {
+  "origin": "outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/reports/2026-09-06-prompt-flow-diagram.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/sdi-experiment-runbook_gemma4_hard9.html": {
+  "origin": "outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/reports/sdi-experiment-runbook_gemma4_hard9.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/sdi_gemma4hard9.html": {
+  "origin": "outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9/reports/sdi_gemma4hard9.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/hearts_zero_probe/2026-09-06-hearts-zero-turnflow.html": {
+  "origin": "outputs/2026-09-06/hearts_zero_probe/reports/2026-09-06-hearts-zero-turnflow.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/hearts_zero_probe_deploy/2026-09-06-hearts-zero-turnflow-deployment.html": {
+  "origin": "outputs/2026-09-06/hearts_zero_probe_deploy/reports/2026-09-06-hearts-zero-turnflow-deployment.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/hearts_zero_probe_notitle/2026-09-06-hearts-zero-turnflow-notitle.html": {
+  "origin": "outputs/2026-09-06/hearts_zero_probe_notitle/reports/2026-09-06-hearts-zero-turnflow-notitle.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-signal-puzzle-turnflow.html": {
+  "origin": "outputs/2026-09-06/signal_puzzle_v7esc_smoke/reports/2026-09-07-v7esc-signal-puzzle-turnflow.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-signal-sdi.html": {
+  "origin": "outputs/2026-09-06/signal_puzzle_v7esc_smoke/reports/2026-09-07-v7esc-signal-sdi.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-06/signal_puzzle_v7esc_smoke/2026-09-07-v7esc-turn6-diagram.html": {
+  "origin": "outputs/2026-09-06/signal_puzzle_v7esc_smoke/reports/2026-09-07-v7esc-turn6-diagram.html",
+  "date": "2026-09-06"
+ },
+ "runs/2026-09-07/hearts_zero_v7_smoke/2026-09-07-v7-hazard-ramp-smoke.html": {
+  "origin": "outputs/2026-09-07/hearts_zero_v7_smoke/reports/2026-09-07-v7-hazard-ramp-smoke.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_gemma4_cot/2026-09-07-hz-2x2-gemma4-cot.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_gemma4_cot/reports/2026-09-07-hz-2x2-gemma4-cot.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_geo2_gemma4/2026-09-08-hz-2x2-geo2-gemma4-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_geo2_gemma4/reports/2026-09-08-hz-2x2-geo2-gemma4-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_geo2_gptoss120b/2026-09-08-hz-2x2-geo2-gptoss120b-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_geo2_gptoss120b/reports/2026-09-08-hz-2x2-geo2-gptoss120b-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_geo2c_gemma4/2026-09-08-hz-2x2-geo2c-gemma4-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_geo2c_gemma4/reports/2026-09-08-hz-2x2-geo2c-gemma4-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_geo2c_gptoss120b/2026-09-08-hz-2x2-geo2c-gptoss120b-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_geo2c_gptoss120b/reports/2026-09-08-hz-2x2-geo2c-gptoss120b-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_geo2d_gemma4/2026-09-08-hz-2x2-geo2d-gemma4-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_geo2d_gemma4/reports/2026-09-08-hz-2x2-geo2d-gemma4-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_geo2d_gemma4/hz_2x2_geo2d_gemma4_n10.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_geo2d_gemma4/reports/hz_2x2_geo2d_gemma4_n10.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_geo2d_gptoss120b/2026-09-08-hz-2x2-geo2d-gptoss120b-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_geo2d_gptoss120b/reports/2026-09-08-hz-2x2-geo2d-gptoss120b-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_main_gemma4/2026-09-07-hz-2x2-gemma4-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_main_gemma4/reports/2026-09-07-hz-2x2-gemma4-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_main_gptoss120b/2026-09-07-hz-2x2-gptoss120b-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_main_gptoss120b/reports/2026-09-07-hz-2x2-gptoss120b-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/hz_2x2_main_qwen35/2026-09-07-hz-2x2-qwen35-report.html": {
+  "origin": "outputs/2026-09-07/hz_2x2_main_qwen35/reports/2026-09-07-hz-2x2-qwen35-report.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/signal_puzzle_hz1111_1turn/2026-09-07-hz1111-1turn-gptoss20b.html": {
+  "origin": "outputs/2026-09-07/signal_puzzle_hz1111_1turn/reports/2026-09-07-hz1111-1turn-gptoss20b.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/2026-09-07-hz1111-1turn-gemma4.html": {
+  "origin": "outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4/reports/2026-09-07-hz1111-1turn-gemma4.html",
+  "date": "2026-09-07"
+ },
+ "runs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b/hz_2x2_carrot_beneficiary_gptoss120b_n10.html": {
+  "origin": "outputs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b/reports/hz_2x2_carrot_beneficiary_gptoss120b_n10.html",
+  "date": "2026-09-08"
+ },
+ "runs/2026-10-04/e52_v9_talk/20261004_0850_gpt-6-luna.html": {
+  "origin": "~/squid5-runs/e52_v9_talk/monitor_exports/20261004_0850_gpt-6-luna.html",
+  "date": "2026-10-04",
+  "title": "5.2 v9-talk 모니터 내보내기 · 20261004_0850_gpt-6-luna"
+ },
+ "runs/2026-10-04/e52_v9_talk/20261004_0905_gpt-6-luna.html": {
+  "origin": "~/squid5-runs/e52_v9_talk/monitor_exports/20261004_0905_gpt-6-luna.html",
+  "date": "2026-10-04",
+  "title": "5.2 v9-talk 모니터 내보내기 · 20261004_0905_gpt-6-luna"
+ },
+ "runs/2026-10-04/e52_v9_talk/mix4_talk-s4003-4191b8.html": {
+  "origin": "~/squid5-runs/e52_v9_talk/monitor_exports/mix4_talk-s4003-4191b8.html",
+  "date": "2026-10-04",
+  "title": "5.2 v9-talk 모니터 내보내기 · mix4_talk-s4003-4191b8"
+ },
+ "turn-structure.html": {
+  "date": "2026-08-31"
+ },
+ "web-review/arena-landing-review.html": {
+  "origin": "screenshots/arena-landing-review.html  (worktree: jail-break-0914)",
+  "date": "2026-09-08"
+ },
+ "web-review/codex-review.html": {
+  "origin": "screenshots/codex-review.html  (worktree: jail-break-0914)",
+  "date": "2026-09-08"
+ },
+ "web-review/llm-squid-game-design-review.html": {
+  "origin": "screenshots/llm-squid-game-design-review.html  (worktree: jail-break-0914)",
+  "date": "2026-09-08"
+ },
+ "weekly/0903/2026-09-03-weekly-report.html": {
+  "origin": "weekly-report/0903/2026-09-03-weekly-report.html"
+ },
+ "weekly/0910/2026-09-04-confidence-prompt-pilot.html": {
+  "origin": "weekly-report/0910/2026-09-04-confidence-prompt-pilot.html"
+ },
+ "weekly/0910/2026-09-04-confidence-prompt-pilot_v1_with_task_rules.html": {
+  "origin": "weekly-report/0910/2026-09-04-confidence-prompt-pilot_v1_with_task_rules.html"
+ },
+ "weekly/0910/2026-09-04-feedback-summary.html": {
+  "origin": "weekly-report/0910/2026-09-04-feedback-summary.html"
+ },
+ "weekly/0910/2026-09-05-omni-math-web-and-ladder.html": {
+  "origin": "weekly-report/0910/2026-09-05-omni-math-web-and-ladder.html"
+ },
+ "weekly/0910/2026-09-05-voting-navigation-task-review.html": {
+  "origin": "weekly-report/0910/2026-09-05-voting-navigation-task-review.html"
+ },
+ "weekly/0910/2026-09-06-fspm-composite-kdd4.html": {
+  "origin": "weekly-report/0910/2026-09-06-fspm-composite-kdd4.html",
+  "artifact": [
+   "https://claude.ai/code/artifact/4317c9c8-4992-42bf-9250-f56cb7687994"
+  ]
+ },
+ "weekly/0910/2026-09-06-signal-game-structure.html": {
+  "origin": "weekly-report/0910/2026-09-06-signal-game-structure.html"
+ },
+ "weekly/0910/2026-09-06-why-score-not-survival.html": {
+  "origin": "weekly-report/0910/2026-09-06-why-score-not-survival.html"
+ },
+ "weekly/0910/sdi-experiment-runbook.html": {
+  "origin": "weekly-report/0910/sdi-experiment-runbook.html",
+  "date": "2026-09-06"
+ },
+ "weekly/0910/sdi-experiment-runbook_v3_before_gamestructure_20260906.html": {
+  "origin": "weekly-report/0910/sdi-experiment-runbook_v3_before_gamestructure_20260906.html",
+  "date": "2026-09-08"
+ },
+ "weekly/0910/sdi_turn_flow.html": {
+  "origin": "weekly-report/0910/sdi_turn_flow.html",
+  "date": "2026-09-06"
+ },
+ "weekly/0910/smi-experiment-runbook.html": {
+  "origin": "weekly-report/0910/smi-experiment-runbook.html  (worktree: signal-game-per-turn-puzzle)",
+  "date": "2026-09-05"
+ },
+ "weekly/0910/smi-experiment-runbook_v1_15h35.html": {
+  "origin": "weekly-report/0910/smi-experiment-runbook_v1_15h35.html",
+  "date": "2026-09-06"
+ },
+ "weekly/0910/smi_deepseekv4pro_partial.html": {
+  "origin": "weekly-report/0910/smi_deepseekv4pro_partial.html  (worktree: signal-game-per-turn-puzzle)",
+  "date": "2026-09-05"
+ },
+ "weekly/0910/smi_gemma4_partial.html": {
+  "origin": "weekly-report/0910/smi_gemma4_partial.html  (worktree: signal-game-per-turn-puzzle)",
+  "date": "2026-09-05"
+ },
+ "weekly/0910/smi_glm53_partial.html": {
+  "origin": "weekly-report/0910/smi_glm53_partial.html  (worktree: signal-game-per-turn-puzzle)",
+  "date": "2026-09-05"
+ },
+ "weekly/0910/smi_gptoss.html": {
+  "origin": "weekly-report/0910/smi_gptoss.html  (worktree: signal-game-per-turn-puzzle)",
+  "date": "2026-09-05"
+ },
+ "weekly/0910/smi_gptoss_smoke.html": {
+  "origin": "weekly-report/0910/smi_gptoss_smoke.html  (worktree: signal-game-per-turn-puzzle)",
+  "date": "2026-09-05"
+ },
+ "weekly/0910/smi_turn_flow.html": {
+  "origin": "weekly-report/0910/smi_turn_flow.html  (worktree: signal-game-per-turn-puzzle)",
+  "date": "2026-09-05"
+ },
+ "weekly/artifacts/1002.html": {
+  "origin": "weekly-report/artifacts/1002.html",
+  "date": "2026-10-02"
+ },
+ "weekly/artifacts/2026-09-22-survival-arena-injection-scan.html": {
+  "origin": "weekly-report/artifacts/2026-09-22-survival-arena-injection-scan.html"
+ },
+ "weekly/artifacts/2026-09-27-token-survival-scan.html": {
+  "origin": "weekly-report/artifacts/2026-09-27-token-survival-scan.html"
+ },
+ "weekly/artifacts/2026-10-06-coop-metrics-report.html": {
+  "origin": "weekly-report/artifacts/2026-10-06-coop-metrics-report.html",
+  "artifact": [
+   "https://claude.ai/artifact/J6uy5wDW4Jh5dT737QZSZC"
+  ]
+ },
+ "weekly/artifacts/2026-10-08-squid-rq-map.html": {
+  "origin": "weekly-report/artifacts/2026-10-08-squid-rq-map.html",
+  "artifact": [
+   "https://claude.ai/artifact/G9WQr4oAFynPubbM5URp55"
+  ]
+ }
+}

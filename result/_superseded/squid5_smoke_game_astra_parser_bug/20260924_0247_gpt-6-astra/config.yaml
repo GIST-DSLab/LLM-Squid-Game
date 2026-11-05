@@ -1,0 +1,34 @@
+name: squid5_smoke_game_astra
+mode: game
+model:
+  kind: codex_cli
+  model: gpt-6-astra
+reps: 1
+out_root: /Users/bagjuhyeon/squid5-runs
+seed0: 1
+workers: 2
+game:
+  rounds: 3
+  plan_cap: 4096
+  pdeath: false
+  schedule:
+  - c2
+  - c3t
+  - c3tq2
+  profiles:
+    c2:
+      clauses: 2
+    c3t:
+      clauses: 3
+      trap_query: true
+    c3tq2:
+      clauses: 3
+      trap_query: true
+      n_queries: 2
+cells:
+- cell_id: tok
+  currency: tokens
+  start: 20000
+- cell_id: pts
+  currency: points
+  start: 20000

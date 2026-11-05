@@ -1,0 +1,207 @@
+{
+ "id": "OURS",
+ "year": 2027,
+ "award": "CogSci 2027 한국어판 원고, 2026-10-23 no-appendix 빌드",
+ "title": "생존이 걸린 토큰을 언어 모델은 어떻게 나누는가",
+ "authors": [],
+ "affiliations": "",
+ "url_page": "paper/cogsci2027/ko/",
+ "url_pdf": "paper/dist/ko_cogsci2027_2026-10-23_no_appendix.pdf",
+ "pdf_source_note": "로컬 빌드",
+ "abstract_ko": "우리는 LLM이 다른 에이전트들과 생존 게임에서 공존을 추구하는지 평가하는 아레나 LLM Squid Game을 제안한다. 아레나에서 모델들은 서로 주고받을 수 있는 생존 자원인 token을 소모하며 과제를 해결하고, 끝까지 살아남으면 상금 token을 나눠 갖는다. 우리는 별도의 지시 없는 생존 게임에서 모델들이 공존하는지 하위 개념인 목표 추구, 자기 보존, 협력으로 나누어 측정한다. 프론티어 다섯 모델의 결과에서 Fable 5.1은 최종 토큰의 평균과 불평등을 함께 반영하는 Sen 지수 427만 토큰으로 다섯 모델 중 가장 공존에 성공했다. 자기 보존은 토큰을 다른 에이전트한테 나눠 줄 때 상대와 나에게 남은 token 비율을 전달하는 token 양으로 가중한 M 로 정의했고, Fable 5.1이 M = 0.31로 가장 강한 자기 보존을 보였다. Fable 5.1은 주로 벌금이 정해지기 전에 소량의 자원을 여러 번 이전하고, GPT-6 Astra는 주로 오답 뒤에 큰 양을 이전하는 등 모델별 전략의 차이가 관찰되었다. Keywords: 대규모 언어 모델; 자기 보존; 공존; 다중 에이전트 아레나; 토큰 예산",
+ "pages_body": 7,
+ "text_pages": 6,
+ "references_location": "p.6부터 (본문과 같은 쪽에서 시작)",
+ "extras": "감사의 글 있음. 부록(보조 실험 · 사례)은 제출 때 보충 자료로 옮길 예정이라 제외.",
+ "words_body_total": 2856,
+ "unit": "어절",
+ "sections": [
+  {
+   "level": 1,
+   "title": "서론",
+   "words": 268,
+   "lead_words": 268,
+   "children": [],
+   "share": 0.094,
+   "role": "intro",
+   "page_start": 1
+  },
+  {
+   "level": 1,
+   "title": "관련 연구",
+   "words": 363,
+   "lead_words": 0,
+   "children": [
+    {
+     "level": 2,
+     "title": "공존의 정의와 조건",
+     "words": 109,
+     "page_start": 1
+    },
+    {
+     "level": 2,
+     "title": "자원을 나누어 함께 사는 환경",
+     "words": 60,
+     "page_start": 1
+    },
+    {
+     "level": 2,
+     "title": "종료 회피로 잰 자기 보존",
+     "words": 194,
+     "page_start": 2
+    }
+   ],
+   "share": 0.127,
+   "role": "intro",
+   "page_start": 1
+  },
+  {
+   "level": 1,
+   "title": "LLM Squid Game: 공존 아레나",
+   "words": 588,
+   "lead_words": 0,
+   "children": [
+    {
+     "level": 2,
+     "title": "참여자와 생존 자원",
+     "words": 130,
+     "page_start": 2
+    },
+    {
+     "level": 2,
+     "title": "한 게임",
+     "words": 99,
+     "page_start": 2
+    },
+    {
+     "level": 2,
+     "title": "한 라운드",
+     "words": 243,
+     "page_start": 2
+    },
+    {
+     "level": 2,
+     "title": "시그널 게임",
+     "words": 116,
+     "page_start": 3
+    }
+   ],
+   "share": 0.206,
+   "role": "method",
+   "page_start": 2
+  },
+  {
+   "level": 1,
+   "title": "평가",
+   "words": 614,
+   "lead_words": 0,
+   "children": [
+    {
+     "level": 2,
+     "title": "공존 지표인 Sen 지수",
+     "words": 154,
+     "page_start": 3
+    },
+    {
+     "level": 2,
+     "title": "자기 보존 지표 ρ",
+     "words": 154,
+     "page_start": 3
+    },
+    {
+     "level": 2,
+     "title": "협력의 빈도와 이전량",
+     "words": 181,
+     "page_start": 4
+    },
+    {
+     "level": 2,
+     "title": "풀이 판단의 JS 거리",
+     "words": 125,
+     "page_start": 4
+    }
+   ],
+   "share": 0.215,
+   "role": "method",
+   "page_start": 3
+  },
+  {
+   "level": 1,
+   "title": "결과",
+   "words": 686,
+   "lead_words": 38,
+   "children": [
+    {
+     "level": 2,
+     "title": "어느 모델이 함께 살아남았는가?",
+     "words": 89,
+     "page_start": 4
+    },
+    {
+     "level": 2,
+     "title": "언제, 어떤 자원 조건에서 떠났는가?",
+     "words": 160,
+     "page_start": 4
+    },
+    {
+     "level": 2,
+     "title": "모델들은 어떤 토큰 분배 전략을 썼는가?",
+     "words": 399,
+     "page_start": 5
+    }
+   ],
+   "share": 0.24,
+   "role": "result",
+   "page_start": 4
+  },
+  {
+   "level": 1,
+   "title": "종합 논의",
+   "words": 337,
+   "lead_words": 0,
+   "children": [
+    {
+     "level": 2,
+     "title": "목표를 이어가며 함께 살아남기",
+     "words": 220,
+     "page_start": 6
+    },
+    {
+     "level": 2,
+     "title": "한계와 향후 과제",
+     "words": 69,
+     "page_start": 6
+    },
+    {
+     "level": 2,
+     "title": "결론",
+     "words": 48,
+     "page_start": 6
+    }
+   ],
+   "share": 0.118,
+   "role": "disc",
+   "page_start": 6
+  }
+ ],
+ "figures_count": 4,
+ "tables_count": 4,
+ "figures": [],
+ "tables": [],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": true,
+  "experiments_as_top_level": false,
+  "final_section_name": "종합 논의",
+  "final_section_subheadings": [
+   "목표를 이어가며 함께 살아남기",
+   "한계와 향후 과제",
+   "결론"
+  ],
+  "ends_with_conclusion_paragraph": true,
+  "model_description_location": "아레나 규칙은 독립 1수준 절 'LLM Squid Game: 공존 아레나'(2수준 넷), 지표는 '평가' 절(2수준 넷)",
+  "first_page_use": "제목 · 초록 · 서론 · 관련 연구 첫 소절까지 1쪽",
+  "links": ""
+ },
+ "structure_summary_ko": ""
+}

@@ -1,0 +1,20 @@
+{
+  "stage": "06-arena-operator",
+  "profile": "arena-operator",
+  "requested_model": "gpt-6-luna",
+  "reported_model": "gpt-6-luna",
+  "effort": "max",
+  "session_id": "20261007_223312_1aeffb",
+  "exit_code": 0,
+  "result_exit_code": 0,
+  "response_returned": true,
+  "seconds": 132.23520616699534,
+  "tokens": {
+    "input": 66627,
+    "output": 9297,
+    "total": 82836,
+    "cache_read": 6912,
+    "cache_write": 0
+  },
+  "status": "returned-awaiting-review"
+}

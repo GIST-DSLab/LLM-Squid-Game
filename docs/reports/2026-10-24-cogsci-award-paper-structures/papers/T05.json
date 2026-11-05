@@ -1,0 +1,209 @@
+{
+ "id": "T05",
+ "year": 2025,
+ "group": "tenenbaum",
+ "award": "발표 논문 (수상 아님)",
+ "title": "Decompose, Deduce, and Dispose: A Memory-Limited Metacognitive Model of Human Problem Solving",
+ "authors": [
+  "Samuel Cheyette",
+  "Tony Chen",
+  "Matthias Hofer",
+  "Frederick Callaway",
+  "Neil Bramley",
+  "Joshua Tenenbaum"
+ ],
+ "affiliations": "Massachusetts Institute of Technology (Cheyette, Chen, Hofer, Tenenbaum); New York University (Callaway); University of Edinburgh (Bramley). 앞의 세 저자(Cheyette, Chen, Hofer)는 동등 기여(†) 표시.",
+ "url_page": "https://escholarship.org/uc/item/517147vr",
+ "url_pdf": "https://escholarship.org/content/qt517147vr/qt517147vr.pdf",
+ "pdf_source_note": "eScholarship (Proceedings of the 47th Annual Conference of the Cognitive Science Society, vol. 47, pp. 4754-4761; 9쪽 PDF = 표지 1 + 학회 원고 8쪽). CogSci 2025 학회 페이지의 수상작 목록에 이 논문은 없음.",
+ "abstract_en": "Many real-world problems are defined by complex systems of interlocking constraints. How people are able to solve these problems with such limited working memory capacity remains poorly understood. We propose a formal model of human problem-solving that uses metacognitive knowledge of its own memory limits and imperfect reasoning to guide subproblem choice. We compare our model to human gameplay in two experiments using a variant of the classic game Minesweeper. In Experiment 1, we find that participants’ accuracy was influenced both by the order of subproblems and their ability to externalize intermediate results, indicative of a memory bottleneck in reasoning. In Experiment 2, we used a mouse-tracking paradigm to assess participants’ subproblem choice and time allocation. The model captures key patterns of subproblem ordering, error, and time allocation. Our results point toward memory limits and strategies for navigating those limits — including the careful choice of subproblems and memory-offloading — as central elements of human problem-solving.",
+ "abstract_ko": "현실의 많은 문제는 서로 맞물린 제약(constraint)들의 복잡한 체계로 정의된다. 사람들이 이렇게 제한된 작업기억 용량으로 어떻게 이런 문제를 풀 수 있는지는 아직 잘 이해되지 않았다. 우리는 자신의 기억 한계와 불완전한 추론에 관한 메타인지적 지식을 써서 하위 문제(subproblem) 선택을 이끄는 인간 문제 해결의 형식 모델을 제안한다. 고전 게임 지뢰찾기(Minesweeper)의 변형을 쓰는 두 실험에서 이 모델을 사람의 게임 플레이와 비교한다. 실험 1에서는 참가자의 정확도가 하위 문제의 순서와 중간 결과를 외부화(externalize)할 수 있는지의 영향을 모두 받았으며, 이는 추론에 기억 병목이 있음을 가리킨다. 실험 2에서는 마우스 추적(mouse-tracking) 패러다임을 써서 참가자의 하위 문제 선택과 시간 배분을 측정했다. 모델은 하위 문제 순서, 오류, 시간 배분의 핵심 패턴을 포착한다. 이 결과는 기억 한계와 그 한계를 다루는 전략, 곧 하위 문제를 신중하게 고르는 것과 기억 부담을 바깥으로 넘기는 것(memory-offloading)이 인간 문제 해결의 중심 요소임을 가리킨다.",
+ "pages_body": 8,
+ "references_location": "p.7-8: p.7은 두 단 모두 References로 꽉 차고, p.8은 왼쪽 단 위 ~1/4만 씀(오른쪽 단은 빈칸). 본문은 p.6 오른쪽 단 끝에서 Discussion and Future Work로 끝남.",
+ "extras": "Acknowledgments·부록·각주 없음(p.1 왼쪽 단 아래 학회 편집자/CC BY 꼬리말만). 번호 없는 별행 수식 2개(Model 안: 기억 버퍼 컬링 확률 p_L, 제약 통합의 가치 Q(a_c|s)); 우도 L(θ)는 Experiment 2 Results 본문 안 인라인. 저자 셋 동등 기여 표시.",
+ "words_body_total": 3675,
+ "words_note": "본문 합계에서 제목 블록, 초록(154단어)과 keywords(11단어), 그림/표 캡션과 그림 안 글자, Table 1 내용, 별행 수식 2개, 쪽 번호, 학회 꼬리말, 참고문헌(~832단어)은 뺌. pdftotext로 쪽마다 왼쪽/오른쪽 단을 따로 잘라(x 0-306 / 306-612) 읽기 순서를 복원하고, 그림·캡션 줄은 손으로 뺌. 제목 단어는 세지 않음.",
+ "sections": [
+  {
+   "level": 1,
+   "title": "Introduction",
+   "page_start": 1,
+   "words": 764,
+   "share": 0.208,
+   "role": "intro",
+   "children": []
+  },
+  {
+   "level": 1,
+   "title": "Model",
+   "page_start": 2,
+   "words": 966,
+   "share": 0.263,
+   "role": "method",
+   "children": [
+    {
+     "level": 3,
+     "title": "(untitled lead-in: CSP formalism, subproblem idea)",
+     "page_start": 2,
+     "words": 241
+    },
+    {
+     "level": 3,
+     "title": "Bounded Reasoner",
+     "page_start": 3,
+     "words": 407
+    },
+    {
+     "level": 3,
+     "title": "Metacognitive Planner",
+     "page_start": 3,
+     "words": 231
+    },
+    {
+     "level": 3,
+     "title": "(untitled closing paragraph: model simulations, Fig. 2)",
+     "page_start": 4,
+     "words": 87
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Experiments and Results",
+   "page_start": 4,
+   "words": 1345,
+   "share": 0.366,
+   "role": "result",
+   "children": [
+    {
+     "level": 2,
+     "title": "Experiment 1: Guided Subproblem Solving",
+     "page_start": 4,
+     "words": 626,
+     "children": [
+      {
+       "level": 3,
+       "title": "(untitled lead-in: manipulations and predictions)",
+       "page_start": 4,
+       "words": 240
+      },
+      {
+       "level": 3,
+       "title": "Stimuli",
+       "page_start": 4,
+       "words": 66
+      },
+      {
+       "level": 3,
+       "title": "Procedure",
+       "page_start": 4,
+       "words": 173
+      },
+      {
+       "level": 3,
+       "title": "Results",
+       "page_start": 4,
+       "words": 147
+      }
+     ]
+    },
+    {
+     "level": 2,
+     "title": "Experiment 2: Self-directed Subproblem Selection",
+     "page_start": 5,
+     "words": 719,
+     "children": [
+      {
+       "level": 3,
+       "title": "(untitled lead-in: free-play spotlight paradigm)",
+       "page_start": 5,
+       "words": 128
+      },
+      {
+       "level": 3,
+       "title": "Procedure",
+       "page_start": 5,
+       "words": 63
+      },
+      {
+       "level": 3,
+       "title": "Results",
+       "page_start": 5,
+       "words": 528
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "level": 1,
+   "title": "Discussion and Future Work",
+   "page_start": 6,
+   "words": 600,
+   "share": 0.163,
+   "role": "disc",
+   "children": []
+  }
+ ],
+ "figures": [
+  {
+   "n": 1,
+   "page": 2,
+   "size": "전체 폭(두 단 걸침), 캡션 포함 ~0.4쪽; 패널 A(지뢰찾기 판 -> 그래프 표현), B(상태·메타인지 planner·bounded reasoner 3단계 흐름도)",
+   "section": "Model (Introduction 뒤 p.2 맨 위에 배치)"
+  },
+  {
+   "n": 2,
+   "page": 3,
+   "size": "한 단(오른쪽 위), 캡션 포함 단의 ~1/3; 2x2 패널(β_O=0/1 x 풀이 비율/오류 확률), 용량 5-40 bits별 선",
+   "section": "Model"
+  },
+  {
+   "n": 3,
+   "page": 4,
+   "size": "한 단(왼쪽 위), 캡션 포함 단의 ~1/3; 실험 1(정해진 순서) 대 실험 2(3x3 창) 과제 화면 도식",
+   "section": "Model 끝 / Experiments and Results"
+  },
+  {
+   "n": 4,
+   "page": 4,
+   "size": "한 단(오른쪽 위), 캡션 포함 단의 ~1/3; 패널 2개(Curriculum/Unhelpful Order), 진행도별 P(correct), Regular 대 No Marking",
+   "section": "Experiments and Results > Experiment 1 > Results"
+  },
+  {
+   "n": 5,
+   "page": 5,
+   "size": "전체 폭, 캡션 포함 ~0.3쪽; 2x5 패널(사람/모델 x 판 5개), 칸별 정답 확률 곡선",
+   "section": "Experiments and Results > Experiment 2 > Results"
+  },
+  {
+   "n": 6,
+   "page": 6,
+   "size": "한 단(왼쪽 위), 캡션 포함 단의 ~0.4; 산점도 2개(칸별 총 주시 시간, 첫 정답 시점; 사람 대 모델)",
+   "section": "Experiments and Results > Experiment 2 > Results"
+  }
+ ],
+ "tables": [
+  {
+   "n": 1,
+   "page": 5,
+   "size": "한 단(오른쪽 아래쪽), 캡션 포함 단의 ~1/6로 작음; 모델 4개(Full, No RT, No Metacognition, Unbounded Memory)의 교차검증 ΔLL",
+   "section": "Experiments and Results > Experiment 2 > Results"
+  }
+ ],
+ "observations": {
+  "intro_subheadings": false,
+  "related_work_section": false,
+  "experiments_as_top_level": false,
+  "experiments_note": "실험 둘을 1단계 'Experiments and Results' 하나로 묶고, 그 아래 2단계 'Experiment 1: ...', 'Experiment 2: ...'(부제 붙은 제목)를 둠. 각 실험은 제목 없는 도입 문단 뒤 run-in 3단계(Stimuli/Procedure/Results; 실험 2는 같은 판을 써서 Stimuli 없음). 'Experiments and Results' 자체에는 도입 문단이 없음.",
+  "final_section_name": "Discussion and Future Work",
+  "final_section_subheadings": [],
+  "discussion_structure": "소제목 없는 네 문단: 요약('In this paper, we asked...'; 모델과 실험 1·2 결과), 선행연구와의 관계(문제 분해 연구, 자원-합리적 설명을 과정 수준으로 확장), 'capacity overflow'를 메타인지적 확신 판단으로 해석, 한계(완전 정보 설정)와 확률적 증거로의 확장이라는 향후 과제.",
+  "ends_with_conclusion_paragraph": false,
+  "model_description_location": "Introduction 바로 뒤 독립 1단계 절 'Model'(p.2-4, 본문의 26%): CSP 형식화 도입 문단 + run-in 'Bounded Reasoner'(기억 버퍼, 확률적 컬링 p_L, 런타임, capacity overflow) + run-in 'Metacognitive Planner'(Q 값, 정보 이득 - β_O·정보 손실 - β_T·시간, softmax) + 제목 없는 시뮬레이션 문단(Fig. 2). 모델 적합(PyBADS, 모수 추정치, 제거 모델 3개 비교, Table 1)은 Experiment 2 Results 안에 있음.",
+  "first_page_use": "제목(두 줄) + 저자 6명·소속·동등 기여·이메일이 p.1 위 ~22%; 초록(154단어 + keywords)이 왼쪽 단 위 ~45%; Introduction은 왼쪽 단 중간에서 시작해 p.1 나머지를 채우고, p.2에서 전폭 Figure 1 아래 왼쪽 단 끝까지 이어짐. Model은 p.2 오른쪽 단에서 시작.",
+  "links": "없음. 사전등록·OSF·코드·데이터 링크 없음(PyBADS DOI는 참고문헌에만)."
+ },
+ "structure_summary_ko": "1수준 절이 Introduction - Model - Experiments and Results - Discussion and Future Work 넷뿐인 '서론-모델-실험-논의' 구조다. 서론은 소제목 없이 다섯 문단(복잡한 문제와 표상 한계 -> Newell & Simon 이후 탐색 모델 -> 그 모델들이 기억 부담을 비켜 간다는 공백과 핵심 질문 -> 이 논문의 알고리즘 수준 모델과 가설 -> 지뢰찾기 실험 1·2와 결과 미리보기)으로 본문의 21%를 쓴다. 독립 1수준 절 'Model'(26%)은 CSP 형식화 뒤 run-in 소제목 둘(Bounded Reasoner, Metacognitive Planner)과 별행 수식 둘로 모델을 정의하고, 실험 전에 시뮬레이션 그림(Fig. 2)으로 예측을 먼저 보인다. 실험 둘은 1수준 'Experiments and Results'(37%, 가장 큼) 아래 2수준 절로 묶이고, 각각 제목 없는 도입 문단 뒤 Stimuli/Procedure/Results run-in을 두며, 모델 적합과 제거 모델 비교(Table 1)는 실험 2 Results 안에 들어간다. 마지막 'Discussion and Future Work'는 소제목 없이 요약 -> 선행연구와의 관계 -> 메타인지 해석 -> 한계와 향후 과제로 끝나며 별도 결론 문단은 없다. 본문은 6쪽을 꽉 채우고 참고문헌은 7-8쪽에 둔다.",
+ "text_pages": 6
+}

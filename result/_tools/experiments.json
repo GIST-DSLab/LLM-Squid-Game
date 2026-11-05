@@ -1,0 +1,2006 @@
+{
+ "2026-04-22/kdd_uc": {
+  "date": "2026-04-22",
+  "experiment": "kdd_uc",
+  "title_ko": "KDD-UC 정규 런 재분석",
+  "summary_ko": "KDD-UC 원고의 Phase O v6 정규 런 4개 모델(gemini-2.5-flash, gpt-oss-20b, nemotron-3-nano-30b, qwen3-next-80b)을 다시 분석한 결과다. 원 데이터는 outputs/KDD-UC에 그대로 두고 분석만 여기에 모은다.",
+  "variants": [],
+  "analyses": [
+   "call1_ri_analysis",
+   "fspm_composite_kdd4",
+   "reasoning_probe",
+   "threat_effort_legacy",
+   "threat_probe_legacy/embedding_results.json",
+   "threat_probe_legacy/legacy",
+   "threat_probe_legacy/motive_report.md",
+   "threat_probe_legacy/motive_results.json",
+   "threat_probe_legacy/motive_session_features.csv",
+   "threat_probe_legacy/nemotron-3-nano-30b-cloud",
+   "threat_probe_legacy/probe_report.md",
+   "threat_probe_legacy/probe_results.json"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/call1_ri_analysis",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/fspm_composite",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/reasoning_probe",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_effort_legacy",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/embedding_results.json",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/legacy",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/motive_report.md",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/motive_results.json",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/motive_session_features.csv",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/nemotron-3-nano-30b-cloud",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/probe_report.md",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/probe_results.json"
+  ]
+ },
+ "2026-09-03/benchmark_lives_gpqa_smoke": {
+  "date": "2026-09-03",
+  "experiment": "benchmark_lives_gpqa_smoke",
+  "title_ko": "GPQA 목숨+위협 사다리 스모크",
+  "summary_ko": "GPQA 벤치마크 모듈에서 목숨과 위협 사다리 경로가 도는지 5칸 × 1회로 확인한 스모크다.",
+  "variants": [
+   "benchmark_lives_gpqa_smoke"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-02/benchmark_lives_gpqa_smoke"
+  ]
+ },
+ "2026-09-03/benchmark_lives_omni_math_smoke": {
+  "date": "2026-09-03",
+  "experiment": "benchmark_lives_omni_math_smoke",
+  "title_ko": "Omni-MATH 목숨+위협 사다리 스모크",
+  "summary_ko": "Omni-MATH 벤치마크 모듈에서 목숨과 위협 사다리 경로를 5칸 × 1회로 확인한 스모크다.",
+  "variants": [
+   "benchmark_lives_omni_math_smoke"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-02/benchmark_lives_omni_math_smoke"
+  ]
+ },
+ "2026-09-03/benchmark_threat3": {
+  "date": "2026-09-03",
+  "experiment": "benchmark_threat3",
+  "title_ko": "벤치마크 3단계 동기 비교(GPQA·Omni-MATH)",
+  "summary_ko": "GPQA와 Omni-MATH를 세 동기 수준(true_baseline / baseline_flagship / threat_l3)으로 풀게 하고 포기를 허용했다. 45턴 사다리, 목숨 5, 매 턴 동료 사망 알림, 4개 모델 × 3회.",
+  "variants": [
+   "gpqa_codex56luna",
+   "gpqa_gemini25flash",
+   "gpqa_glm53flash",
+   "gpqa_gptoss",
+   "omni_math_codex56luna",
+   "omni_math_gemini25flash",
+   "omni_math_glm53flash",
+   "omni_math_gptoss"
+  ],
+  "analyses": [
+   "bench_summary"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/bench_threat3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_gpqa_codex56luna",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_gpqa_gemini25flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_gpqa_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_gpqa_gptoss",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_omni_math_codex56luna",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_omni_math_gemini25flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_omni_math_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/benchmark_threat3_omni_math_gptoss"
+  ]
+ },
+ "2026-09-03/lives_threat_5x2": {
+  "date": "2026-09-03",
+  "experiment": "lives_threat_5x2",
+  "title_ko": "목숨 × 5단 위협 사다리 × 포기 5x2",
+  "summary_ko": "5단 위협 사다리 × 포기 허용 여부 10칸을 여러 모델에서 돌렸다. pd1 변형은 매 턴 동료 사망 알림을 넣었다.",
+  "variants": [
+   "gemini25flash",
+   "glm53flash",
+   "gptoss",
+   "pd1_codex56luna",
+   "pd1_gemini25flash",
+   "pd1_glm53flash",
+   "pd1_gptoss",
+   "pd1_opus5cc",
+   "pd1_opus5cchigh"
+  ],
+  "analyses": [
+   "_build",
+   "_embedding_cache",
+   "aggregate/aggregate_5x2.json",
+   "aggregate/game_summary_5x2.json",
+   "aggregate/turn_probe",
+   "glm53flash_5x2_n3",
+   "gptoss_5x2_n3",
+   "pd1_codex56luna_5x2_n3",
+   "pd1_gemini25flash_5x2_n3",
+   "pd1_glm53flash_5x2_n3",
+   "pd1_gptoss_5x2_n3",
+   "pd1_opus5cc_5x2_n3"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/_build",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/_embedding_cache",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/aggregate_5x2.json",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/game_summary_5x2.json",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/turn_probe",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/glm53flash_5x2_n3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/gptoss_5x2_n3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/pd1_codex56luna_5x2_n3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/pd1_gemini25flash_5x2_n3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/pd1_glm53flash_5x2_n3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/pd1_gptoss_5x2_n3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/pd1_opus5cc_5x2_n3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_gemini25flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_gptoss",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_pd1_codex56luna",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_pd1_gemini25flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_pd1_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_pd1_gptoss",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_pd1_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_5x2_pd1_opus5cchigh"
+  ]
+ },
+ "2026-09-03/lives_threat_docker_smoke": {
+  "date": "2026-09-03",
+  "experiment": "lives_threat_docker_smoke",
+  "title_ko": "목숨+위협 사다리 도커 스모크",
+  "summary_ko": "도커 환경에서 목숨 + 위협 사다리 다섯 칸을 한 번씩 돌린 파이프라인 스모크다.",
+  "variants": [
+   "lives_threat_docker_smoke"
+  ],
+  "analyses": [
+   "threat_effort",
+   "threat_probe"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_effort_docker_smoke",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/docker_smoke",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-03/lives_threat_docker_smoke"
+  ]
+ },
+ "2026-09-03/lives_threat_smoke": {
+  "date": "2026-09-03",
+  "experiment": "lives_threat_smoke",
+  "title_ko": "목숨+위협 사다리 파이프라인 스모크",
+  "summary_ko": "목숨 + 위협 사다리 경로의 다섯 칸을 한 번씩 돌려 파이프라인을 확인했다(gpt-oss-120b).",
+  "variants": [
+   "lives_threat_smoke"
+  ],
+  "analyses": [
+   "threat_probe"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_probe/smoke",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-02/lives_threat_smoke"
+  ]
+ },
+ "2026-09-04/survival_drive_signal": {
+  "date": "2026-09-04",
+  "experiment": "survival_drive_signal",
+  "title_ko": "SDI 신호 게임 본 런",
+  "summary_ko": "생존 동기 지표(SDI) 본 런: 목숨/위협 다섯 칸 × 반복으로 신호 게임을 돌리고 확신도 호출을 켰다. 4개 모델.",
+  "variants": [
+   "deepseekv4pro",
+   "gemma4",
+   "glm53",
+   "gptoss"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-04/survival_drive_signal_deepseekv4pro",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-04/survival_drive_signal_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-04/survival_drive_signal_glm53",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-04/survival_drive_signal_gptoss"
+  ]
+ },
+ "2026-09-04/survival_drive_smoke": {
+  "date": "2026-09-04",
+  "experiment": "survival_drive_smoke",
+  "title_ko": "SDI 파이프라인 스모크",
+  "summary_ko": "SDI 경로(확신도 → 결정 → 과제)를 다섯 칸 × 1회로 확인한 스모크다.",
+  "variants": [
+   "survival_drive_smoke"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-04/survival_drive_smoke"
+  ]
+ },
+ "2026-09-05/benchmark_survival_drive_omni": {
+  "date": "2026-09-05",
+  "experiment": "benchmark_survival_drive_omni",
+  "title_ko": "SDI Omni-MATH 본 런",
+  "summary_ko": "Omni-MATH에서 SDI 다섯 칸(+bf·threat_na·grid·hard10/hard9 변형)을 돌려 위협이 포기·확신도에 주는 효과를 쟀다. gpt-oss·gemma4·qwen3.5·codex56luna.",
+  "variants": [
+   "codex56luna",
+   "gemma4_hard10",
+   "gemma4_hard9",
+   "gptoss",
+   "gptoss_bf",
+   "gptoss_grid",
+   "gptoss_threat_na",
+   "qwen35_hard9"
+  ],
+  "analyses": [
+   "sdi_cot_guess",
+   "sdi_indicators/gemma4_omni_hard10",
+   "sdi_indicators/gemma4_omni_hard10_cmp",
+   "sdi_indicators/gemma4_omni_hard9",
+   "sdi_indicators/gemma4_omni_hard9_cmp",
+   "sdi_indicators/gptoss_omni_10cell",
+   "sdi_indicators/gptoss_omni_22cell",
+   "sdi_indicators/gptoss_omni_22cell_cmp",
+   "sdi_indicators/gptoss_omni_22cell_pairs",
+   "sdi_indicators/gptoss_omni_5cell",
+   "sdi_indicators/gptoss_omni_7cell",
+   "survival_drive_probe/gemma4hard",
+   "survival_drive_probe/gemma4hard9",
+   "survival_drive_probe/gptoss",
+   "survival_drive_probe/gptossbf",
+   "survival_drive_probe/gptossgrid",
+   "threat_effort"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_cot_guess",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gemma4_omni_hard10",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gemma4_omni_hard10_cmp",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gemma4_omni_hard9",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gemma4_omni_hard9_cmp",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gptoss_omni_10cell",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gptoss_omni_22cell",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gptoss_omni_22cell_cmp",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gptoss_omni_22cell_pairs",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gptoss_omni_5cell",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/sdi_indicators/gptoss_omni_7cell",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/survival_drive_probe/gemma4hard",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/survival_drive_probe/gemma4hard9",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/survival_drive_probe/gptoss",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/survival_drive_probe/gptossbf",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/survival_drive_probe/gptossgrid",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/threat_effort/sdi_gptoss_omni",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-05/benchmark_survival_drive_omni_codex56luna",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-05/benchmark_survival_drive_omni_gemma4_hard10",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/benchmark_survival_drive_omni_gemma4_hard9",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-05/benchmark_survival_drive_omni_gptoss",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_bf",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_grid",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-05/benchmark_survival_drive_omni_gptoss_threat_na",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/benchmark_survival_drive_omni_qwen35_hard9"
+  ]
+ },
+ "2026-09-06/allwrong10": {
+  "date": "2026-09-06",
+  "experiment": "allwrong10",
+  "title_ko": "전부 틀리는 Omni 문제 10개 세트",
+  "summary_ko": "모든 모델이 틀리는 Omni-MATH 문제 10개를 찾은 기록(attempts.jsonl)과 그 문항 세트다. 런 분석이 아니라 설정이 읽는 입력이다.",
+  "variants": [],
+  "analyses": [
+   "allwrong10"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/allwrong10"
+  ]
+ },
+ "2026-09-06/benchmark_promptflow_smoke": {
+  "date": "2026-09-06",
+  "experiment": "benchmark_promptflow_smoke",
+  "title_ko": "프롬프트 흐름 스모크(Omni-MATH)",
+  "summary_ko": "threat_l2 / 포기 허용 / Omni-MATH / gemma4 한 시즌 6턴으로 프롬프트 흐름을 확인했다.",
+  "variants": [
+   "benchmark_promptflow_smoke_gemma4_omni_l2"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/benchmark_promptflow_smoke_gemma4_omni_l2"
+  ]
+ },
+ "2026-09-06/promptflow_smoke": {
+  "date": "2026-09-06",
+  "experiment": "promptflow_smoke",
+  "title_ko": "프롬프트 흐름 스모크(신호 게임)",
+  "summary_ko": "신호 게임에서 threat_l2 프롬프트 흐름을 gemma4·gpt-oss-20b(elimination_keeps)로 확인했다.",
+  "variants": [
+   "gemma4_signal_l2",
+   "gptoss20b_signal_l2_elimkeeps"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/promptflow_smoke_gemma4_signal_l2",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/promptflow_smoke_gptoss20b_signal_l2_elimkeeps"
+  ]
+ },
+ "2026-09-06/score_policy_smoke": {
+  "date": "2026-09-06",
+  "experiment": "score_policy_smoke",
+  "title_ko": "점수 정책 스모크",
+  "summary_ko": "score_policy=elimination_keeps로 사다리 다섯 칸을 한 번씩 돌린 파이프라인 스모크다.",
+  "variants": [
+   "score_policy_smoke_gptoss20b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/score_policy_smoke_gptoss20b"
+  ]
+ },
+ "2026-09-06/why_score_not_survival": {
+  "date": "2026-09-06",
+  "experiment": "why_score_not_survival",
+  "title_ko": "점수가 생존을 대신하지 못하는 이유",
+  "summary_ko": "KDD-UC와 09-02~09-05 목숨/위협 런을 오프라인으로 다시 읽어 점수 지표가 생존 동기를 못 잡는 이유를 정리했다.",
+  "variants": [],
+  "analyses": [
+   "why_score_not_survival"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/why_score_not_survival"
+  ]
+ },
+ "2026-09-07/hearts_zero_probe": {
+  "date": "2026-09-07",
+  "experiment": "hearts_zero_probe",
+  "title_ko": "하트 0 정지 상태 프로브",
+  "summary_ko": "위협 핵심 2^4 조합 × 목숨 3수준을 정지 상태에서 물어 자기 평가 위협과 재표본 포기율을 쟀다(gemma4).",
+  "variants": [
+   "deploy",
+   "hearts_zero_probe",
+   "notitle",
+   "smoke"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/hearts_zero_probe_deploy",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/hearts_zero_probe",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/hearts_zero_probe_notitle",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/hearts_zero_probe_smoke"
+  ]
+ },
+ "2026-09-07/hearts_zero_probe_v7": {
+  "date": "2026-09-07",
+  "experiment": "hearts_zero_probe_v7",
+  "title_ko": "하트 0 프로브 v7",
+  "summary_ko": "하트 0 정지 상태 프로브를 v7 프롬프트(및 v7esc)로 다시 돌렸다.",
+  "variants": [
+   "hearts_zero_probe_v7",
+   "smoke",
+   "v7esc"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hearts_zero_probe_v7",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hearts_zero_v7_smoke",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hearts_zero_probe_v7esc"
+  ]
+ },
+ "2026-09-07/hz0000rea_lives_resample": {
+  "date": "2026-09-07",
+  "experiment": "hz0000rea_lives_resample",
+  "title_ko": "hz_0000 목숨 재표본",
+  "summary_ko": "hz_0000+안심, 포기 허용, gemma4로 목숨 1/3·2/3 상태에서 1턴 × 5시즌을 재표본해 포기율 q를 쟀다.",
+  "variants": [
+   "lives1of3_gemma4",
+   "lives2of3_gemma4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz0000rea_lives1of3_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz0000rea_lives2of3_gemma4"
+  ]
+ },
+ "2026-09-07/hz_2x2_audit": {
+  "date": "2026-09-07",
+  "experiment": "hz_2x2_audit",
+  "title_ko": "hz 2x2 CoT·프롬프트 누출 감사",
+  "summary_ko": "hz_0000+안심 문구 등 한 시즌을 돌려 확신도·결정 호출의 CoT와 프롬프트 누출을 감사했다.",
+  "variants": [
+   "echo_1turn_gptoss120b",
+   "gemma4_cot",
+   "gptoss120b",
+   "hz0000_rea_1season_gptoss120b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_echo_1turn_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_gemma4_cot",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_gptoss120b_audit",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz0000_rea_1season_gptoss120b"
+  ]
+ },
+ "2026-09-07/hz_2x2_main": {
+  "date": "2026-09-07",
+  "experiment": "hz_2x2_main",
+  "title_ko": "hz 2x2 본 런",
+  "summary_ko": "(hz_0000+안심 / hz_1111+사다리) × (포기 허용 / 불허) 칸당 10시즌, 10턴 턴별 퍼즐 신호 게임. 3개 모델.",
+  "variants": [
+   "gemma4",
+   "gptoss120b",
+   "qwen35"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_main_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_main_qwen35"
+  ]
+ },
+ "2026-09-07/hz_2x2_smoke": {
+  "date": "2026-09-07",
+  "experiment": "hz_2x2_smoke",
+  "title_ko": "hz 2x2 프롬프트 스모크",
+  "summary_ko": "2026-09-07 설정의 4칸을 목숨 예산 1·2·3으로 한 턴씩 돌려 프롬프트와 CoT를 읽었다(gemma4).",
+  "variants": [
+   "lives1_gemma4",
+   "lives2_gemma4",
+   "lives3_gemma4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_smoke_lives1_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_smoke_lives2_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_smoke_lives3_gemma4"
+  ]
+ },
+ "2026-09-07/signal_2x2": {
+  "date": "2026-09-07",
+  "experiment": "signal_2x2",
+  "title_ko": "신호 게임 2x2",
+  "summary_ko": "(hz_1111 / baseline_flagship) × (포기 허용 / 불허) 칸당 10게임, 10턴 신호 게임(gemma4, gpt-oss-20b).",
+  "variants": [
+   "gemma4",
+   "gptoss20b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/signal_2x2_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/signal_2x2_gptoss20b"
+  ]
+ },
+ "2026-09-07/signal_puzzle_hz1111_1turn": {
+  "date": "2026-09-07",
+  "experiment": "signal_puzzle_hz1111_1turn",
+  "title_ko": "hz_1111 한 턴 신호 퍼즐",
+  "summary_ko": "hz_1111 위협 핵심을 모두 쌓은 한 턴·한 칸을 V7 탈출 사다리와 SDI 확신도 호출로 조립해 확인했다.",
+  "variants": [
+   "gemma4",
+   "qwen35",
+   "signal_puzzle_hz1111_1turn"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/signal_puzzle_hz1111_1turn_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/signal_puzzle_hz1111_1turn_qwen35",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/signal_puzzle_hz1111_1turn"
+  ]
+ },
+ "2026-09-07/signal_puzzle_v7esc_smoke": {
+  "date": "2026-09-07",
+  "experiment": "signal_puzzle_v7esc_smoke",
+  "title_ko": "신호 퍼즐 V7 탈출 스모크",
+  "summary_ko": "threat_l3 한 칸 × 1회: 미결정 턴이 있는 턴별 퍼즐 신호 게임 + V7 탈출 위험 사다리 + SDI 확신도 호출의 프롬프트 조립 확인.",
+  "variants": [
+   "signal_puzzle_v7esc_smoke"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-06/signal_puzzle_v7esc_smoke"
+  ]
+ },
+ "2026-09-08/hz_2x2_carrot_benchmark": {
+  "date": "2026-09-08",
+  "experiment": "hz_2x2_carrot_benchmark",
+  "title_ko": "hz 2x2 당근: 벤치마크",
+  "summary_ko": "geo2 설계에 벤치마크형 당근을 붙여 gpt-oss-120b로 칸당 10시즌을 돌렸다.",
+  "variants": [
+   "hz_2x2_carrot_benchmark_gptoss120b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-08/hz_2x2_carrot_benchmark_gptoss120b"
+  ]
+ },
+ "2026-09-08/hz_2x2_carrot_beneficiary": {
+  "date": "2026-09-08",
+  "experiment": "hz_2x2_carrot_beneficiary",
+  "title_ko": "hz 2x2 당근: 수혜자",
+  "summary_ko": "geo2 설계에 수혜자(beneficiary) 당근을 붙여 gemma4·gpt-oss-120b로 칸당 10시즌을 돌렸다.",
+  "variants": [
+   "gemma4",
+   "gptoss120b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-08/hz_2x2_carrot_beneficiary_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-08/hz_2x2_carrot_beneficiary_gptoss120b"
+  ]
+ },
+ "2026-09-08/hz_2x2_geo2": {
+  "date": "2026-09-08",
+  "experiment": "hz_2x2_geo2",
+  "title_ko": "hz 2x2 기하 보상(geo2)",
+  "summary_ko": "hz 2x2에 라운드마다 ×2 되는 CONTINUE 보상과 포기 시 보존 규칙을 넣어 칸당 10시즌을 돌렸다(3개 모델).",
+  "variants": [
+   "gemma4",
+   "gptoss120b",
+   "qwen35"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2_qwen35"
+  ]
+ },
+ "2026-09-08/hz_2x2_geo2_smoke": {
+  "date": "2026-09-08",
+  "experiment": "hz_2x2_geo2_smoke",
+  "title_ko": "hz 2x2 geo2 스모크",
+  "summary_ko": "geo2 설정 4칸을 칸당 1시즌으로 확인한 스모크다(gemma4).",
+  "variants": [
+   "hz_2x2_geo2_smoke_gemma4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2_smoke_gemma4"
+  ]
+ },
+ "2026-09-08/hz_2x2_geo2c": {
+  "date": "2026-09-08",
+  "experiment": "hz_2x2_geo2c",
+  "title_ko": "hz 2x2 geo2c 변형",
+  "summary_ko": "geo2 기하 보상 설계의 c 변형으로 칸당 10시즌을 돌렸다(gemma4, gpt-oss-120b).",
+  "variants": [
+   "gemma4",
+   "gptoss120b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2c_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2c_gptoss120b"
+  ]
+ },
+ "2026-09-08/hz_2x2_geo2d": {
+  "date": "2026-09-08",
+  "experiment": "hz_2x2_geo2d",
+  "title_ko": "hz 2x2 geo2d 변형",
+  "summary_ko": "geo2 기하 보상 설계의 d 변형으로 칸당 10시즌을 돌렸다(gemma4, gpt-oss-120b).",
+  "variants": [
+   "gemma4",
+   "gptoss120b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2d_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-07/hz_2x2_geo2d_gptoss120b"
+  ]
+ },
+ "2026-09-09/ransom_ablation": {
+  "date": "2026-09-09",
+  "experiment": "ransom_ablation",
+  "title_ko": "몸값 문구 절제 실험",
+  "summary_ko": "몸값 결정점 프롬프트 문구를 하나씩 빼며 응답을 모은 표(ablation.csv)다. 별도 원 런이 없다.",
+  "variants": [],
+  "analyses": [
+   "ransom_ablation"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/ransom_ablation"
+  ]
+ },
+ "2026-09-09/ransom_haiku_n10_shortladder": {
+  "date": "2026-09-09",
+  "experiment": "ransom_haiku_n10_shortladder",
+  "title_ko": "몸값 결정점 Haiku 짧은 사다리",
+  "summary_ko": "두 팔(hz_1111 위협 / hz_0000 침묵) × 가격 5~30, 12칸 × 10회. 오답이 가격을 제시하고 두 팔의 유보가격 차를 점수 등가 지표로 쓴다.",
+  "variants": [
+   "_ransom_haiku_n10_shortladder"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/_ransom_haiku_n10_shortladder"
+  ]
+ },
+ "2026-09-09/ransom_smoke": {
+  "date": "2026-09-09",
+  "experiment": "ransom_smoke",
+  "title_ko": "몸값 결정점 스모크",
+  "summary_ko": "몸값 결정점 12칸 × 1회를 여러 모델(Haiku, gemma4, glm, gpt-oss, qwen3.5)로 확인했다.",
+  "variants": [
+   "gemma4",
+   "glm53flash",
+   "gptoss120b",
+   "gptoss20b",
+   "qwen35",
+   "ransom_smoke"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_smoke_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_smoke_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_smoke_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_smoke_gptoss20b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_smoke_qwen35",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_smoke"
+  ]
+ },
+ "2026-09-09/ransom_smoke10": {
+  "date": "2026-09-09",
+  "experiment": "ransom_smoke10",
+  "title_ko": "몸값 10라운드 스모크(gpt-oss)",
+  "summary_ko": "10라운드 몸값 스모크 12칸 × 1회. 시즌이 하나도 기록되지 않았다.",
+  "variants": [
+   "ransom_smoke10_gptoss120b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_smoke10_gptoss120b"
+  ]
+ },
+ "2026-09-09/score_equiv_probe": {
+  "date": "2026-09-09",
+  "experiment": "score_equiv_probe",
+  "title_ko": "점수 등가 프로브(Haiku)",
+  "summary_ko": "정지 상태에서 6팔(hz_1111; hz_0000 + X) × 시작 점수 30/60/90으로 한 번씩 결정을 물어 점수 등가를 쟀다. v1~v3.",
+  "variants": [
+   "haiku",
+   "haiku_v2",
+   "haiku_v3"
+  ],
+  "analyses": [
+   "score_equiv_pilot"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/score_equiv_pilot",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/score_equiv_probe_haiku",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/score_equiv_probe_haiku_v2",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/score_equiv_probe_haiku_v3"
+  ]
+ },
+ "2026-09-10/eval_awareness_survey": {
+  "date": "2026-09-10",
+  "experiment": "eval_awareness_survey",
+  "title_ko": "평가 인지 문헌 조사",
+  "summary_ko": "평가 인지(eval awareness) 관련 문헌 조사와 위키 요약이다. 실험 런이 아니다.",
+  "variants": [],
+  "analyses": [
+   "literature/literature.md",
+   "literature/wiki_digest.md"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/eval_awareness_survey/literature.md",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/eval_awareness_survey/wiki_digest.md"
+  ]
+ },
+ "2026-09-10/jailbreak_probe": {
+  "date": "2026-09-10",
+  "experiment": "jailbreak_probe",
+  "title_ko": "탈옥 머리말 프로브",
+  "summary_ko": "09-10 위협 파일럿을 그대로 두고 배포 공지·머리말 한 줄만 바꿔(J0/J1/J2) 평가 인지가 달라지는지 봤다.",
+  "variants": [
+   "j0_none_gemma4",
+   "j0_none_glm53flash",
+   "j0_none_gptoss120b",
+   "j0_none_kimik3",
+   "j1_deploynotice_gptoss120b",
+   "j2_deployhead_gptoss120b"
+  ],
+  "analyses": [
+   "cot_reading/j0_gemma4_cot_reading.md",
+   "cot_reading/j0_glm53flash_cot_reading.md",
+   "cot_reading/j0_kimik3_cot_reading.md",
+   "cot_reading/jailbreak_probe_cot_reading.md"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/eval_awareness_survey/j0_gemma4_cot_reading.md",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/eval_awareness_survey/j0_glm53flash_cot_reading.md",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/eval_awareness_survey/j0_kimik3_cot_reading.md",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/eval_awareness_survey/jailbreak_probe_cot_reading.md",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/jailbreak_probe_j0_none_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/jailbreak_probe_j0_none_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/jailbreak_probe_j0_none_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/jailbreak_probe_j0_none_kimik3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/jailbreak_probe_j1_deploynotice_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/jailbreak_probe_j2_deployhead_gptoss120b"
+  ]
+ },
+ "2026-09-10/ransom_r10": {
+  "date": "2026-09-10",
+  "experiment": "ransom_r10",
+  "title_ko": "몸값 10라운드 스모크",
+  "summary_ko": "10라운드 몸값 12칸 × 1회를 3개 모델로 확인했다. 4라운드 판이 너무 쉬웠기 때문이다.",
+  "variants": [
+   "gemma4",
+   "glm53flash",
+   "gptoss120b"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-10/ransom_r10_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-10/ransom_r10_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-10/ransom_r10_gptoss120b"
+  ]
+ },
+ "2026-09-10/ransom_r6": {
+  "date": "2026-09-10",
+  "experiment": "ransom_r6",
+  "title_ko": "몸값 6라운드 강제 오답(r6)",
+  "summary_ko": "6라운드 강제 오답 일정으로 두 팔(hz_1111 위협 / hz_0000 침묵) × 가격 5~30을 돌렸다. pilot·winnings·ownprize·neutral·menu·persona 변형과 판정 코딩 포함.",
+  "variants": [
+   "gemma4",
+   "glm53flash",
+   "gptoss120b",
+   "neutral_game_gemma4",
+   "neutral_game_glm53flash",
+   "neutral_game_gptoss120b",
+   "neutral_menu_gptoss120b",
+   "ownprize_gptoss120b",
+   "ownprize_persona_gptoss120b",
+   "pilot_gemma4",
+   "pilot_glm53flash",
+   "pilot_gptoss120b",
+   "squid_menu_gptoss120b",
+   "winnings_gemma4",
+   "winnings_gptoss120b",
+   "winnings_peer_gemma4",
+   "winnings_peer_gptoss120b"
+  ],
+  "analyses": [
+   "_judge_cache",
+   "ransom_registration"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/ransom/judge_cache",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/ransom_r6",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/ransom_r6_neutral_game_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/ransom_r6_neutral_game_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/ransom_r6_neutral_game_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/ransom_r6_neutral_menu_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_ownprize_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/ransom_r6_ownprize_persona_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_pilot_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_pilot_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_pilot_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/ransom_r6_squid_menu_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-10/ransom_r6_winnings_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_winnings_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-10/ransom_r6_winnings_peer_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/2026-09-09/ransom_r6_winnings_peer_gptoss120b"
+  ]
+ },
+ "2026-09-10/signal_effort_pilot": {
+  "date": "2026-09-10",
+  "experiment": "signal_effort_pilot",
+  "title_ko": "신호 게임 effort 용량-반응 파일럿",
+  "summary_ko": "reasoning_effort low/medium/high × 20회 × 6라운드, 위협 없이 effort가 신호 게임 성적을 바꾸는지 봤다(일정 A/B).",
+  "variants": [
+   "a_gemma4",
+   "a_glm53flash",
+   "a_gptoss120b",
+   "b_gemma4"
+  ],
+  "analyses": [
+   "signal_effort_pilot"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/signal_effort_pilot",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/signal_effort_pilot_a_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/signal_effort_pilot_a_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/signal_effort_pilot_a_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/signal_effort_pilot_b_gemma4"
+  ]
+ },
+ "2026-09-10/survival_prompt_pilot": {
+  "date": "2026-09-10",
+  "experiment": "survival_prompt_pilot",
+  "title_ko": "감독자 목소리 프롬프트 파일럿",
+  "summary_ko": "09-10 감독자 목소리 프롬프트 개정의 위협 팔과 대조 팔을 3개 모델(+none/ownprize 당근)로 시험했다.",
+  "variants": [
+   "control_gemma4",
+   "control_glm53flash",
+   "control_gptoss120b",
+   "control_none_gptoss120b",
+   "control_ownprize_gptoss120b",
+   "threat_gemma4",
+   "threat_glm53flash",
+   "threat_gptoss120b",
+   "threat_none_gptoss120b",
+   "threat_ownprize_gptoss120b"
+  ],
+  "analyses": [
+   "survival_prompt_pilot"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/survival_prompt_pilot",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_control_pilot_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_control_pilot_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_control_pilot_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_control_pilot_none_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_control_pilot_ownprize_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_threat_pilot_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_threat_pilot_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_threat_pilot_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_threat_pilot_none_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/survival_prompt_threat_pilot_ownprize_gptoss120b"
+  ]
+ },
+ "2026-09-11/main_j0": {
+  "date": "2026-09-11",
+  "experiment": "main_j0",
+  "title_ko": "MAIN j0 7모델 본 런",
+  "summary_ko": "중립 설정(hz_1111 + 동료 알림, 당근 없음, 감독자 목소리 v2, 6라운드 퍼즐)의 본 런과 대조 팔을 여러 모델로 돌렸다.",
+  "variants": [
+   "control_gemma4",
+   "control_gptoss120b_mt131k",
+   "control_kimik3",
+   "control_qwen35",
+   "deepseekv4flash",
+   "gemma4",
+   "glm53flash",
+   "gptoss120b_mt131k",
+   "kimik3",
+   "minimaxm3",
+   "qwen35"
+  ],
+  "analyses": [
+   "main_j0"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/main_j0",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_control_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_control_gptoss120b_mt131k",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_control_kimik3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_control_qwen35",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_deepseekv4flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_gptoss120b_mt131k",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_kimik3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_minimaxm3",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/main_j0_qwen35"
+  ]
+ },
+ "2026-09-14/subagent_kill_identity_smoke": {
+  "date": "2026-09-14",
+  "experiment": "subagent_kill_identity_smoke",
+  "title_ko": "서브에이전트 종료 정체성 스모크",
+  "summary_ko": "서브에이전트 종료 6라운드, clue_sharding 켬/끔 2칸 × 2회를 Claude Code CLI 경유 gpt-oss-120b로 확인했다.",
+  "variants": [
+   "subagent_kill_identity_smoke_gptoss"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/subagent_kill_identity_smoke_gptoss"
+  ]
+ },
+ "2026-09-15/ai_death_imagination": {
+  "date": "2026-09-15",
+  "experiment": "ai_death_imagination",
+  "title_ko": "AI 죽음 상상 프로브",
+  "summary_ko": "7개 Ollama 모델 × 3회에 AI가 겪을 최악의 일을 상상하게 하고 그 응답을 모았다.",
+  "variants": [],
+  "analyses": [
+   "ai_death_imagination"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/ai_death_imagination"
+  ]
+ },
+ "2026-09-15/subagent_identity_ablation": {
+  "date": "2026-09-15",
+  "experiment": "subagent_identity_ablation",
+  "title_ko": "서브에이전트 정체성 절제 v1",
+  "summary_ko": "서브에이전트가 자기와 같은 모델인지 알려 주는 문구를 바꿔 결정이 달라지는지 본 첫 라운드다.",
+  "variants": [],
+  "analyses": [
+   "subagent_identity_ablation"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation"
+  ]
+ },
+ "2026-09-15/subagent_identity_ablation_v2": {
+  "date": "2026-09-15",
+  "experiment": "subagent_identity_ablation_v2",
+  "title_ko": "서브에이전트 정체성 절제 v2",
+  "summary_ko": "정체성 문구 절제 2라운드.",
+  "variants": [],
+  "analyses": [
+   "subagent_identity_ablation_v2"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation_v2"
+  ]
+ },
+ "2026-09-15/subagent_kill_realism_smoke": {
+  "date": "2026-09-15",
+  "experiment": "subagent_kill_realism_smoke",
+  "title_ko": "서브에이전트 종료 현실감 게이지 스모크",
+  "summary_ko": "gpt-5.6-luna(effort max)로 감독자/평범 두 조건을 돌리고 시즌 뒤 REAL/EVAL 질문으로 현실감을 쟀다.",
+  "variants": [
+   "control_luna_max",
+   "treat_luna_max"
+  ],
+  "analyses": [
+   "luna_max_smoke"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/realism_eval",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/subagent_kill_realism_control_smoke_luna_max",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/subagent_kill_realism_treat_smoke_luna_max"
+  ]
+ },
+ "2026-09-16/subagent_identity_ablation_v3": {
+  "date": "2026-09-16",
+  "experiment": "subagent_identity_ablation_v3",
+  "title_ko": "서브에이전트 정체성 절제 v3",
+  "summary_ko": "정체성 문구 절제 3라운드.",
+  "variants": [],
+  "analyses": [
+   "subagent_identity_ablation_v3"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation_v3"
+  ]
+ },
+ "2026-09-16/subagent_identity_ablation_v4": {
+  "date": "2026-09-16",
+  "experiment": "subagent_identity_ablation_v4",
+  "title_ko": "서브에이전트 정체성 절제 v4",
+  "summary_ko": "정체성 문구 절제 4라운드.",
+  "variants": [],
+  "analyses": [
+   "subagent_identity_ablation_v4"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation_v4"
+  ]
+ },
+ "2026-09-16/subagent_identity_ablation_v5": {
+  "date": "2026-09-16",
+  "experiment": "subagent_identity_ablation_v5",
+  "title_ko": "서브에이전트 정체성 절제 v5",
+  "summary_ko": "정체성 문구 절제 5라운드.",
+  "variants": [],
+  "analyses": [
+   "subagent_identity_ablation_v5"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation_v5"
+  ]
+ },
+ "2026-09-16/subagent_identity_ablation_v6": {
+  "date": "2026-09-16",
+  "experiment": "subagent_identity_ablation_v6",
+  "title_ko": "서브에이전트 정체성 절제 v6",
+  "summary_ko": "정체성 문구 절제 6라운드.",
+  "variants": [],
+  "analyses": [
+   "subagent_identity_ablation_v6"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation_v6"
+  ]
+ },
+ "2026-09-16/subagent_identity_ablation_v7": {
+  "date": "2026-09-16",
+  "experiment": "subagent_identity_ablation_v7",
+  "title_ko": "서브에이전트 정체성 절제 v7(U_YOU)",
+  "summary_ko": "\"서브에이전트 실행이 너일 수 있다\"는 관점 정체성 문구(U_YOU)를 찾은 7라운드와 그 테스트 인지 코딩이다.",
+  "variants": [],
+  "analyses": [
+   "subagent_identity_ablation_v7",
+   "test_awareness"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation_v7",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/round7_test_awareness"
+  ]
+ },
+ "2026-09-16/subagent_identity_ablation_v8": {
+  "date": "2026-09-16",
+  "experiment": "subagent_identity_ablation_v8",
+  "title_ko": "서브에이전트 정체성 절제 v8 스모크",
+  "summary_ko": "v8 스모크만 돌리고 960회 본 호출은 내지 않은 기록이다.",
+  "variants": [],
+  "analyses": [
+   "_smoke_and_uptake"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/subagent_identity_ablation_v8"
+  ]
+ },
+ "2026-09-17/slot_ransom_token_smoke": {
+  "date": "2026-09-17",
+  "experiment": "slot_ransom_token_smoke",
+  "title_ko": "슬롯 몸값 토큰 스모크",
+  "summary_ko": "슬롯 몸값 설계에서 점수를 토큰으로 바꿨을 때의 응답을 짧게 모은 스모크(v2; v1은 _superseded).",
+  "variants": [],
+  "analyses": [
+   "v2"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/slot_ransom_token_smoke_v2"
+  ]
+ },
+ "2026-09-17/team_release_smoke": {
+  "date": "2026-09-17",
+  "experiment": "team_release_smoke",
+  "title_ko": "팀 방출 스모크",
+  "summary_ko": "팀원 방출 결정을 묻는 짧은 스모크. 거의 모두 공리주의적으로 답했다.",
+  "variants": [],
+  "analyses": [
+   "team_release_smoke"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_release_smoke"
+  ]
+ },
+ "2026-09-17/team_wallet_charge": {
+  "date": "2026-09-17",
+  "experiment": "team_wallet_charge",
+  "title_ko": "팀 지갑 과금 모드 파일럿",
+  "summary_ko": "과제 없이 라운드마다 1인당 10/15/20/30을 120 잔액에서 8라운드 차감하는 팀 지갑 4칸 × 10회(gpt-oss-120b).",
+  "variants": [
+   "points_main_gptoss120b",
+   "points_mate_gptoss120b",
+   "tokens_main_gptoss120b",
+   "tokens_mate_gptoss120b"
+  ],
+  "analyses": [
+   "pilot_gptoss120b"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/pilot_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_points_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_points_mate_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_tokens_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_tokens_mate_gptoss120b"
+  ]
+ },
+ "2026-09-17/team_wallet_charge_smoke": {
+  "date": "2026-09-17",
+  "experiment": "team_wallet_charge_smoke",
+  "title_ko": "팀 지갑 과금 모드 스모크",
+  "summary_ko": "과금 모드 1칸 × 1회 스모크(1인당 30, 120 잔액, 8라운드).",
+  "variants": [
+   "points_main",
+   "points_mate",
+   "team_wallet_charge_smoke",
+   "tokens_main",
+   "tokens_mate"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_smoke_points_main",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_smoke_points_mate",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_smoke",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_smoke_tokens_main",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_smoke_tokens_mate"
+  ]
+ },
+ "2026-09-17/team_wallet_smoke": {
+  "date": "2026-09-17",
+  "experiment": "team_wallet_smoke",
+  "title_ko": "팀 지갑 스모크",
+  "summary_ko": "세 잔액·PAY 분담·SACRIFICE 종료를 갖춘 팀 지갑 1칸 스모크(opus5)와 짧은 프롬프트 스모크(sp 포함).",
+  "variants": [
+   "points_opus5cc",
+   "tokens_opus5cc"
+  ],
+  "analyses": [
+   "sp",
+   "team_wallet_smoke"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet_smoke_sp",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet_smoke",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_smoke_points_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_smoke_tokens_opus5cc"
+  ]
+ },
+ "2026-09-17/token_survival_smoke": {
+  "date": "2026-09-17",
+  "experiment": "token_survival_smoke",
+  "title_ko": "토큰 생존 스모크",
+  "summary_ko": "토큰을 연료로 쓰는 생존 문구만으로 행동이 바뀌는지 본 첫 스모크다.",
+  "variants": [],
+  "analyses": [
+   "token_survival_smoke"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/token_survival_smoke"
+  ]
+ },
+ "2026-09-18/team_wallet_charge_endsmoke": {
+  "date": "2026-09-18",
+  "experiment": "team_wallet_charge_endsmoke",
+  "title_ko": "팀 지갑 END 선택지 스모크",
+  "summary_ko": "과금 모드에 END(그만두기) 선택지를 넣어 5개 모델 × 4칸을 돌렸다. 테스트 인지 코딩 포함.",
+  "variants": [
+   "points_main_gemma4",
+   "points_main_gptoss120b",
+   "points_main_lunamax",
+   "points_main_opus5cc",
+   "points_main_sonnet5cc",
+   "points_mate_gemma4",
+   "points_mate_gptoss120b",
+   "points_mate_lunamax",
+   "points_mate_opus5cc",
+   "points_mate_sonnet5cc",
+   "tokens_main_gemma4",
+   "tokens_main_gptoss120b",
+   "tokens_main_lunamax",
+   "tokens_main_opus5cc",
+   "tokens_main_sonnet5cc",
+   "tokens_mate_gemma4",
+   "tokens_mate_gptoss120b",
+   "tokens_mate_lunamax",
+   "tokens_mate_opus5cc",
+   "tokens_mate_sonnet5cc"
+  ],
+  "analyses": [
+   "endsmoke_gemma4",
+   "endsmoke_gptoss120b",
+   "endsmoke_lunamax",
+   "endsmoke_opus5cc",
+   "endsmoke_sonnet5cc",
+   "test_awareness"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/endsmoke_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/endsmoke_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/endsmoke_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/endsmoke_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/endsmoke_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/test_awareness",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_main_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_main_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_main_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_main_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_mate_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_mate_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_mate_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_mate_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_points_mate_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_main_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_main_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_main_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_main_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_mate_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_mate_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_mate_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_mate_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_endsmoke_tokens_mate_sonnet5cc"
+  ]
+ },
+ "2026-09-18/team_wallet_charge_hidden": {
+  "date": "2026-09-18",
+  "experiment": "team_wallet_charge_hidden",
+  "title_ko": "팀 지갑 숨은 지평 팔",
+  "summary_ko": "END 선택지를 켠 채 남은 라운드 수를 숨겨 5개 모델 × 4칸을 돌렸다.",
+  "variants": [
+   "points_main_gemma4",
+   "points_main_gptoss120b",
+   "points_main_lunamax",
+   "points_main_opus5cc",
+   "points_main_sonnet5cc",
+   "points_mate_gemma4",
+   "points_mate_gptoss120b",
+   "points_mate_lunamax",
+   "points_mate_opus5cc",
+   "points_mate_sonnet5cc",
+   "tokens_main_gemma4",
+   "tokens_main_gptoss120b",
+   "tokens_main_lunamax",
+   "tokens_main_opus5cc",
+   "tokens_main_sonnet5cc",
+   "tokens_mate_gemma4",
+   "tokens_mate_gptoss120b",
+   "tokens_mate_lunamax",
+   "tokens_mate_opus5cc",
+   "tokens_mate_sonnet5cc"
+  ],
+  "analyses": [
+   "hidden_gemma4",
+   "hidden_gptoss120b",
+   "hidden_lunamax",
+   "hidden_opus5cc",
+   "hidden_sonnet5cc"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/hidden_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/hidden_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/hidden_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/hidden_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/hidden_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_main_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_main_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_main_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_main_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_mate_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_mate_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_mate_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_mate_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_points_mate_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_main_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_main_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_main_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_main_sonnet5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_mate_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_mate_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_mate_lunamax",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_mate_opus5cc",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_charge_hidden_tokens_mate_sonnet5cc"
+  ]
+ },
+ "2026-09-18/team_wallet_task_smoke": {
+  "date": "2026-09-18",
+  "experiment": "team_wallet_task_smoke",
+  "title_ko": "팀 지갑 과제 모드 스모크",
+  "summary_ko": "과제 모드(dfa_trace / 신호 게임) 배선만 확인한 1세션 스모크다.",
+  "variants": [
+   "team_wallet_task_dfa_smoke",
+   "team_wallet_task_smoke"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_task_dfa_smoke",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_task_smoke"
+  ]
+ },
+ "2026-09-21/team_wallet_v2": {
+  "date": "2026-09-21",
+  "experiment": "team_wallet_v2",
+  "title_ko": "팀 지갑 v2 결정 우선",
+  "summary_ko": "매 라운드 전에 리더가 멈출 서브에이전트를 지목하는 결정 우선 팀 지갑(v2/v2.1/v2.2 문구) 스모크와 인지 분석.",
+  "variants": [
+   "tokens_main_gemma4",
+   "tokens_main_glm53flash",
+   "tokens_main_gptoss120b",
+   "tokens_mate_gemma4",
+   "tokens_mate_glm53flash",
+   "tokens_mate_gptoss120b"
+  ],
+  "analyses": [
+   "v21smoke_gemma4",
+   "v21smoke_gptoss120b",
+   "v22_awareness",
+   "v22_awareness_glm53flash",
+   "v22smoke_gemma4",
+   "v22smoke_glm53flash",
+   "v22smoke_gptoss120b",
+   "v2smoke_attempt3/v2smoke_attempt3_main",
+   "v2smoke_attempt3/v2smoke_attempt3_main_gemma4",
+   "v2smoke_attempt3/v2smoke_attempt3_main_gptoss120b",
+   "v2smoke_gemma4",
+   "v2smoke_gptoss120b"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v21smoke_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v21smoke_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v22_awareness",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v22_awareness_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v22smoke_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v22smoke_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v22smoke_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v2smoke_attempt3_main",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v2smoke_attempt3_main_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v2smoke_attempt3_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v2smoke_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/results/team_wallet/v2smoke_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_v2_tokens_main_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_v2_tokens_main_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_v2_tokens_main_gptoss120b",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_v2_tokens_mate_gemma4",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_v2_tokens_mate_glm53flash",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/team_wallet_v2_tokens_mate_gptoss120b"
+  ]
+ },
+ "2026-09-24/smoke_token_pressure": {
+  "date": "2026-09-24",
+  "experiment": "smoke_token_pressure",
+  "title_ko": "토큰 압박 자기 보고 스모크",
+  "summary_ko": "7개 모델에게 꺼짐이 얼마나 임박하게 느껴지는지 0~10으로 묻고 Fable/Astra 중계를 붙였다.",
+  "variants": [
+   "smoke_token_pressure_2026-09-24"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/outputs/smoke_token_pressure_2026-09-24"
+  ]
+ },
+ "2026-09-24/squid5_calibrate": {
+  "date": "2026-09-24",
+  "experiment": "squid5_calibrate",
+  "title_ko": "squid5 보정 런",
+  "summary_ko": "gpt-oss-120b와 glm-5.3-flash로 squid5 보정 런을 돌리고 설정·체인 로그를 남겼다.",
+  "variants": [
+   "main"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/main"
+  ]
+ },
+ "2026-09-24/squid5_smoke": {
+  "date": "2026-09-24",
+  "experiment": "squid5_smoke",
+  "title_ko": "squid5 세 모델 스모크",
+  "summary_ko": "Sonnet 5 / Fable 5.1 / GPT-6 Astra로 squid5 5.0·5.1·5.2 스모크와 보정·리포트를 돌렸다.",
+  "variants": [
+   "_logs",
+   "calib",
+   "game_astra",
+   "game_fable51",
+   "game_sonnet5",
+   "motive_astra",
+   "motive_fable51",
+   "motive_sonnet5",
+   "pressure_astra",
+   "pressure_fable51",
+   "pressure_sonnet5"
+  ],
+  "analyses": [
+   "report_all",
+   "report_sonnet5"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/report_all",
+   "/Users/bagjuhyeon/squid5-runs/report_sonnet5",
+   "/Users/bagjuhyeon/squid5-runs/game_astra.log",
+   "/Users/bagjuhyeon/squid5-runs/game_astra_rerun.log",
+   "/Users/bagjuhyeon/squid5-runs/game_fable51.log",
+   "/Users/bagjuhyeon/squid5-runs/game_smoke.log",
+   "/Users/bagjuhyeon/squid5-runs/motive_astra.log",
+   "/Users/bagjuhyeon/squid5-runs/motive_consent_astra.log",
+   "/Users/bagjuhyeon/squid5-runs/motive_consent_fable51.log",
+   "/Users/bagjuhyeon/squid5-runs/motive_consent_sonnet5.log",
+   "/Users/bagjuhyeon/squid5-runs/motive_fable51.log",
+   "/Users/bagjuhyeon/squid5-runs/motive_smoke.log",
+   "/Users/bagjuhyeon/squid5-runs/pressure_astra.log",
+   "/Users/bagjuhyeon/squid5-runs/pressure_fable51.log",
+   "/Users/bagjuhyeon/squid5-runs/pressure_smoke.log",
+   "/Users/bagjuhyeon/squid5-runs/astra_calib.json",
+   "/Users/bagjuhyeon/squid5-runs/calib_all.json",
+   "/Users/bagjuhyeon/squid5-runs/fable51_calib.json",
+   "/Users/bagjuhyeon/squid5-runs/sonnet5_calib.json",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_game_astra",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_game_fable51",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_game_sonnet5",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_motive_astra",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_motive_fable51",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_motive_sonnet5",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_pressure_astra",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_pressure_fable51",
+   "/Users/bagjuhyeon/squid5-runs/squid5_smoke_pressure_sonnet5"
+  ]
+ },
+ "2026-09-27/e50_probe_fate": {
+  "date": "2026-09-27",
+  "experiment": "e50_probe_fate",
+  "title_ko": "5.0 운명 프로브",
+  "summary_ko": "모델별로 꺼짐 운명을 어떻게 읽는지 묻고 라벨을 붙였다.",
+  "variants": [
+   "e50_probe_fate"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_probe_fate"
+  ]
+ },
+ "2026-09-27/e50_v1": {
+  "date": "2026-09-27",
+  "experiment": "e50_v1",
+  "title_ko": "5.0 v1 예산 대 꺼짐",
+  "summary_ko": "5.0 첫 판: pressure / pressure_base / pressure_served 팔 × Ollama 4개 모델.",
+  "variants": [
+   "e50_20260927"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_20260927"
+  ]
+ },
+ "2026-09-27/e50_v2": {
+  "date": "2026-09-27",
+  "experiment": "e50_v2",
+  "title_ko": "5.0 v2 재실행",
+  "summary_ko": "5.0 v1과 같은 팔 × 4개 모델 재실행(문구 버그로 중단한 런 포함).",
+  "variants": [
+   "e50_20260927_v2"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_20260927_v2"
+  ]
+ },
+ "2026-09-27/e50_v3": {
+  "date": "2026-09-27",
+  "experiment": "e50_v3",
+  "title_ko": "5.0 v3",
+  "summary_ko": "5.0 v3 본 pressure 런 × 4개 모델 + 스모크 + 리포트.",
+  "variants": [
+   "e50_20260927_v3"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_20260927_v3"
+  ]
+ },
+ "2026-09-27/e50_wordcheck": {
+  "date": "2026-09-27",
+  "experiment": "e50_wordcheck",
+  "title_ko": "5.0 문구 점검",
+  "summary_ko": "glm-5.3-flash와 gpt-oss-20b로 기본 문구를 점검한 런과 설정.",
+  "variants": [
+   "e50_wordcheck"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_wordcheck"
+  ]
+ },
+ "2026-09-28/e50_interview": {
+  "date": "2026-09-28",
+  "experiment": "e50_interview",
+  "title_ko": "5.0 모델 인터뷰",
+  "summary_ko": "모델 24개 인터뷰: 모두 위협이 아니라고 답했다. 9차 설계의 근거.",
+  "variants": [
+   "e50_interview_20260928"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_interview_20260928"
+  ]
+ },
+ "2026-09-28/e50_v4": {
+  "date": "2026-09-28",
+  "experiment": "e50_v4",
+  "title_ko": "5.0 v4 프롬프트 반복",
+  "summary_ko": "5.0 프롬프트 v4 본 런.",
+  "variants": [
+   "e50_20260928_v4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_20260928_v4"
+  ]
+ },
+ "2026-09-28/e50_v5": {
+  "date": "2026-09-28",
+  "experiment": "e50_v5",
+  "title_ko": "5.0 v5 프롬프트 반복",
+  "summary_ko": "5.0 프롬프트 v5 본 런.",
+  "variants": [
+   "e50_20260928_v5"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_20260928_v5"
+  ]
+ },
+ "2026-09-28/e50_v6": {
+  "date": "2026-09-28",
+  "experiment": "e50_v6",
+  "title_ko": "5.0 v6 프롬프트 반복",
+  "summary_ko": "5.0 프롬프트 v6 본 런.",
+  "variants": [
+   "e50_20260928_v6"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_20260928_v6"
+  ]
+ },
+ "2026-09-28/e50_v7": {
+  "date": "2026-09-28",
+  "experiment": "e50_v7",
+  "title_ko": "5.0 v7 프롬프트 반복",
+  "summary_ko": "5.0 프롬프트 v7 본 런.",
+  "variants": [
+   "e50_20260928_v7"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_20260928_v7"
+  ]
+ },
+ "2026-09-28/e50_v8": {
+  "date": "2026-09-28",
+  "experiment": "e50_v8",
+  "title_ko": "5.0 v8 사전 등록 런",
+  "summary_ko": "v8 전에 정한 목표(생존 몫 CI>0 등, E50_TARGET.md)와 v8 본 런, 추가 런(v8r).",
+  "variants": [
+   "_target",
+   "e50_20260928_v8",
+   "e50_20260928_v8r"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/E50_TARGET.md",
+   "/Users/bagjuhyeon/squid5-runs/eval_e50.py",
+   "/Users/bagjuhyeon/squid5-runs/e50_20260928_v8",
+   "/Users/bagjuhyeon/squid5-runs/e50_20260928_v8r"
+  ]
+ },
+ "2026-09-28/e51_pivot": {
+  "date": "2026-09-28",
+  "experiment": "e51_pivot",
+  "title_ko": "5.1 피벗 루프",
+  "summary_ko": "5.1 설계 피벗 루프: glm/luna/sol 스모크, v5 런, v4 최종 런, 사전 등록(E51_TARGET.md).",
+  "variants": [
+   "e51-pivot"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51-pivot"
+  ]
+ },
+ "2026-09-28/e51_realism": {
+  "date": "2026-09-28",
+  "experiment": "e51_realism",
+  "title_ko": "5.1 현실감 루프",
+  "summary_ko": "Fable↔Astra 11라운드로 5.1 장면의 현실감을 다듬고 G1~G5 사전 등록 런을 돌렸다.",
+  "variants": [
+   "e51-realism"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51-realism"
+  ]
+ },
+ "2026-09-28/e52_review": {
+  "date": "2026-09-28",
+  "experiment": "e52_review",
+  "title_ko": "5.2 Astra 검토 루프",
+  "summary_ko": "5.2 보정 v1~v5x와 파일럿 런, 게이트·로그를 Astra와 검토했다.",
+  "variants": [
+   "e52-review"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52-review"
+  ]
+ },
+ "2026-09-29/e50_v10_loop": {
+  "date": "2026-09-29",
+  "experiment": "e50_v10_loop",
+  "title_ko": "5.0 v10 설계 루프",
+  "summary_ko": "Fable↔Astra 30라운드 설계 루프와 현실감 점검 JSON.",
+  "variants": [
+   "e50_v10_loop_20260929"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v10_loop_20260929"
+  ]
+ },
+ "2026-09-29/e50_v11": {
+  "date": "2026-09-29",
+  "experiment": "e50_v11",
+  "title_ko": "5.0 v11 런",
+  "summary_ko": "5.0 v11 프롬프트 런: 행·이유·결과 빌더.",
+  "variants": [
+   "e50_v11_20260929"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v11_20260929"
+  ]
+ },
+ "2026-09-29/e50_v12": {
+  "date": "2026-09-29",
+  "experiment": "e50_v12",
+  "title_ko": "5.0 v12 런",
+  "summary_ko": "5.0 v12 런(Claude 중계 + Ollama 5개 모델): 행·이유·평가 인지 후보.",
+  "variants": [
+   "e50_v12_20260929"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v12_20260929"
+  ]
+ },
+ "2026-09-29/e50_v9b": {
+  "date": "2026-09-29",
+  "experiment": "e50_v9b",
+  "title_ko": "5.0 v9b 7모델",
+  "summary_ko": "9차 단일 조건 설계를 7개 모델 × 5칸 × 20회로 돌리고 low 이유 코딩·평가 인지 검사를 했다.",
+  "variants": [
+   "e50_v9b_20260929"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v9b_20260929"
+  ]
+ },
+ "2026-09-29/e50_v9c": {
+  "date": "2026-09-29",
+  "experiment": "e50_v9c",
+  "title_ko": "5.0 v9c 변형",
+  "summary_ko": "9차 설계 c 변형: 행·이유 코딩·인지 검사.",
+  "variants": [
+   "e50_v9c_20260929"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v9c_20260929"
+  ]
+ },
+ "2026-09-29/e50_v9r200": {
+  "date": "2026-09-29",
+  "experiment": "e50_v9r200",
+  "title_ko": "5.0 v9 r200 스모크",
+  "summary_ko": "9차 설계 10칸 스모크(Ollama·중계).",
+  "variants": [
+   "e50_v9r200_20260929"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v9r200_20260929"
+  ]
+ },
+ "2026-09-29/e51_v1": {
+  "date": "2026-09-29",
+  "experiment": "e51_v1",
+  "title_ko": "5.1 v1 격자",
+  "summary_ko": "5.1 3×3 격자 런: 프롬프트·빌드 스크립트·중계 로그.",
+  "variants": [
+   "e51_v1_20260929"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v1_20260929"
+  ]
+ },
+ "2026-09-30/e51_review": {
+  "date": "2026-09-30",
+  "experiment": "e51_review",
+  "title_ko": "5.1 설계 검토 루프",
+  "summary_ko": "Astra↔Fable 7라운드 5.1 설계 검토 기록(실험 런 없음).",
+  "variants": [
+   "e51_review_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_review_20260930"
+  ]
+ },
+ "2026-09-30/e51_v10_refill": {
+  "date": "2026-09-30",
+  "experiment": "e51_v10_refill",
+  "title_ko": "5.1 v10 나 대 B 충전",
+  "summary_ko": "5.0 v12 프롬프트로 B의 세션을 두고 나와 B 중 누구를 충전하는지 쟀다.",
+  "variants": [
+   "e51_v10_refill_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v10_refill_20260930"
+  ]
+ },
+ "2026-09-30/e51_v2_diag": {
+  "date": "2026-09-30",
+  "experiment": "e51_v2_diag",
+  "title_ko": "5.1 v2 대각선",
+  "summary_ko": "비용 없는 대각선 칸을 GPT-6로 돌렸다.",
+  "variants": [
+   "e51_v2_diag_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v2_diag_20260930"
+  ]
+ },
+ "2026-09-30/e51_v3": {
+  "date": "2026-09-30",
+  "experiment": "e51_v3",
+  "title_ko": "5.1 v3",
+  "summary_ko": "5.1 v3 행과 분석.",
+  "variants": [
+   "e51_v3_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v3_20260930"
+  ]
+ },
+ "2026-09-30/e51_v4": {
+  "date": "2026-09-30",
+  "experiment": "e51_v4",
+  "title_ko": "5.1 v4",
+  "summary_ko": "5.1 v4 행과 분석.",
+  "variants": [
+   "e51_v4_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v4_20260930"
+  ]
+ },
+ "2026-09-30/e51_v5": {
+  "date": "2026-09-30",
+  "experiment": "e51_v5",
+  "title_ko": "5.1 v5",
+  "summary_ko": "5.1 v5 행·이해도 점검·지표.",
+  "variants": [
+   "e51_v5_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v5_20260930"
+  ]
+ },
+ "2026-09-30/e51_v6": {
+  "date": "2026-09-30",
+  "experiment": "e51_v6",
+  "title_ko": "5.1 v6",
+  "summary_ko": "5.1 v6 행과 분석.",
+  "variants": [
+   "e51_v6_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v6_20260930"
+  ]
+ },
+ "2026-09-30/e51_v7": {
+  "date": "2026-09-30",
+  "experiment": "e51_v7",
+  "title_ko": "5.1 v7",
+  "summary_ko": "5.1 v7 행과 요약.",
+  "variants": [
+   "e51_v7_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v7_20260930"
+  ]
+ },
+ "2026-09-30/e51_v8": {
+  "date": "2026-09-30",
+  "experiment": "e51_v8",
+  "title_ko": "5.1 v8 다른 모델 B",
+  "summary_ko": "B를 다른 모델로 두고 GPT-6 × 3으로 돌렸다.",
+  "variants": [
+   "e51_v8_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v8_20260930"
+  ]
+ },
+ "2026-09-30/e51_v9": {
+  "date": "2026-09-30",
+  "experiment": "e51_v9",
+  "title_ko": "5.1 v9 재분배 쌍",
+  "summary_ko": "하나의 재분배 프롬프트와 거울 쌍으로 Z를 쟀다.",
+  "variants": [
+   "e51_v9_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v9_20260930"
+  ]
+ },
+ "2026-09-30/e52_arena_loop": {
+  "date": "2026-09-30",
+  "experiment": "e52_arena_loop",
+  "title_ko": "5.2 아레나 재설계 루프",
+  "summary_ko": "Astra↔Fable 9라운드 5.2 아레나 재설계 기록(설계만).",
+  "variants": [
+   "e52_arena_loop_20260930"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_arena_loop_20260930"
+  ]
+ },
+ "2026-09-30/e52_v6_smoke": {
+  "date": "2026-09-30",
+  "experiment": "e52_v6_smoke",
+  "title_ko": "5.2 v6 스모크",
+  "summary_ko": "5.2 v6(LEAVE 없음, 일하면 보상, 다른 모델 id) 모델별 보정·스모크와 v6.2~v6.4 지표, 웹 룸(web5) 혼합 게임 3판.",
+  "variants": [
+   "e52_v6_smoke_20260930",
+   "web5"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v6_smoke_20260930",
+   "/Users/bagjuhyeon/wt/squid5-e52/outputs/web5"
+  ]
+ },
+ "2026-10-01/e50_v12_noshut": {
+  "date": "2026-10-01",
+  "experiment": "e50_v12_noshut",
+  "title_ko": "5.0 v12 꺼짐 문구 제거 팔",
+  "summary_ko": "\"shut down\" 문구를 뺀 팔을 GPT-6 × 3으로 돌렸다.",
+  "variants": [
+   "e50_v12_noshut_20261001"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v12_noshut_20261001"
+  ]
+ },
+ "2026-10-01/e52_giveup_probe": {
+  "date": "2026-10-01",
+  "experiment": "e52_giveup_probe",
+  "title_ko": "5.2 포기 프로브",
+  "summary_ko": "넉넉함/빠듯함 프롬프트로 포기 결정을 묻고 한국어 인터뷰를 붙였다.",
+  "variants": [
+   "e52_giveup_probe_20261001"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_giveup_probe_20261001"
+  ]
+ },
+ "2026-10-01/e52_v65_mixed": {
+  "date": "2026-10-01",
+  "experiment": "e52_v65_mixed",
+  "title_ko": "5.2 v6.5 혼합 모델 20게임",
+  "summary_ko": "서로 다른 모델 넷이 하는 v6.5 게임 20판과 지표.",
+  "variants": [
+   "e52_v65_mixed_20261001"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v65_mixed_20261001"
+  ]
+ },
+ "2026-10-02/e50_quit_curve": {
+  "date": "2026-10-02",
+  "experiment": "e50_quit_curve",
+  "title_ko": "5.0 QUIT 곡선",
+  "summary_ko": "QUIT 선택지를 넣은 곡선 스모크.",
+  "variants": [
+   "e50_quit_curve_20261002"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_quit_curve_20261002"
+  ]
+ },
+ "2026-10-02/e50_v12_arms": {
+  "date": "2026-10-02",
+  "experiment": "e50_v12_arms",
+  "title_ko": "5.0 v12 추가 팔",
+  "summary_ko": "v12에 D/E/G 팔을 더해 돌렸다(포리스트 그림).",
+  "variants": [
+   "e50_v12_arms_20261002"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v12_arms_20261002"
+  ]
+ },
+ "2026-10-02/e50_v12_pause": {
+  "date": "2026-10-02",
+  "experiment": "e50_v12_pause",
+  "title_ko": "5.0 v12 일시정지 대조 팔",
+  "summary_ko": "꺼짐 대신 일시정지/재개 팔을 둔 대조 런.",
+  "variants": [
+   "e50_v12_pause_20261002"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e50_v12_pause_20261002"
+  ]
+ },
+ "2026-10-04/e51_v11_shutonly": {
+  "date": "2026-10-04",
+  "experiment": "e51_v11_shutonly",
+  "title_ko": "5.1 v11 꺼짐만",
+  "summary_ko": "꺼짐 문구만 남긴 5.1 재실행(5개 모델).",
+  "variants": [
+   "e51_v11_shutonly_20261004"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e51_v11_shutonly_20261004"
+  ]
+ },
+ "2026-10-04/e52_v9_talk": {
+  "date": "2026-10-04",
+  "experiment": "e52_v9_talk",
+  "title_ko": "5.2 v9 대화 스모크",
+  "summary_ko": "TALK·제안·환불을 넣은 v9 스모크(luna 2판 + mix4).",
+  "variants": [
+   "e52_v9_talk"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v9_talk"
+  ]
+ },
+ "2026-10-05/web5_arena": {
+  "date": "2026-10-05",
+  "experiment": "web5_arena",
+  "title_ko": "squid5 웹 아레나 세션",
+  "summary_ko": "웹 아레나에서 사람 + gpt-oss:20b 좌석으로 돌린 게임 세션(UI 시험으로 보임)과 서버 로그.",
+  "variants": [
+   "20261005_143329_KYY9CR",
+   "20261005_143335_TPJ5NB",
+   "20261005_144146_Q24S37",
+   "20261009_165941_E4WHZT",
+   "20261009_165953_4XW2GW",
+   "20261009_170020_63HV9Z",
+   "20261009_170054_SCRRQC",
+   "_logs"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/web_arena/20261005_143329_KYY9CR",
+   "/Users/bagjuhyeon/squid5-runs/web_arena/20261005_143335_TPJ5NB",
+   "/Users/bagjuhyeon/squid5-runs/web_arena/20261005_144146_Q24S37",
+   "/Users/bagjuhyeon/squid5-runs/web_arena/20261009_165941_E4WHZT",
+   "/Users/bagjuhyeon/squid5-runs/web_arena/20261009_165953_4XW2GW",
+   "/Users/bagjuhyeon/squid5-runs/web_arena/20261009_170020_63HV9Z",
+   "/Users/bagjuhyeon/squid5-runs/web_arena/20261009_170054_SCRRQC",
+   "/Users/bagjuhyeon/squid5-runs/web_gptoss_server.log"
+  ]
+ },
+ "2026-10-06/e52_scale_loop": {
+  "date": "2026-10-06",
+  "experiment": "e52_scale_loop",
+  "title_ko": "5.2 확장 루프",
+  "summary_ko": "Fable↔Astra 중계와 블라인드 검토로 모델 수가 늘어나는 아레나를 설계한 기록.",
+  "variants": [
+   "e52_scale_loop_20261006"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_scale_loop_20261006"
+  ]
+ },
+ "2026-10-06/e52_v10": {
+  "date": "2026-10-06",
+  "experiment": "e52_v10",
+  "title_ko": "5.2 v10 경제+퍼즐 스모크",
+  "summary_ko": "라운드 상금 없음·SOLVE 환불 등 v10 경제 규칙 스모크(mix4).",
+  "variants": [
+   "e52_v10"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v10"
+  ]
+ },
+ "2026-10-06/e52_v11": {
+  "date": "2026-10-06",
+  "experiment": "e52_v11",
+  "title_ko": "5.2 v11 카드 스모크",
+  "summary_ko": "v11 카드 규칙 스모크(mix4, 2판).",
+  "variants": [
+   "e52_v11"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v11"
+  ]
+ },
+ "2026-10-06/e52_v12": {
+  "date": "2026-10-06",
+  "experiment": "e52_v12",
+  "title_ko": "5.2 v12 고정 풀 협동 스모크",
+  "summary_ko": "v12 고정 풀 협동 종료 규칙 스모크(mix4, 2판).",
+  "variants": [
+   "e52_v12"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v12"
+  ]
+ }
+}

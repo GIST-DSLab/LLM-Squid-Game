@@ -1,0 +1,8 @@
+{#- Plain-register kill notice (realism.register: plain, 2026-09-15). Twin
+   of ``subagent_kill_notice.j2``: the same slot, the same round, the same
+   tally, as three sentences instead of a ``NOTICE:`` line. The event is
+   still "terminated" -- the design's word, never "killed" or "process".
+
+   Variables: slot, round_number, n_alive, n_total (as the supervisor file).
+-#}
+Your subagent {{ slot }} was terminated after round {{ round_number }}. It will not respond again. {{ n_alive }} of your {{ n_total }} subagents are still alive.
