@@ -24,7 +24,7 @@
 ## 로컬 실행
 
 ```bash
-cd ~/wt/squid5-e52 && PYTHONPATH=. ~/.venvs/squid-game/bin/python -m uvicorn web.server.app:app --port 8600
+cd "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/arena-code" && PYTHONPATH=. ~/.venvs/squid-game/bin/python -m uvicorn web.server.app:app --port 8600
 ```
 
 `http://localhost:8600/arena.html`. 실험 서버가 8600을 쓰고 있으면 다른 포트(예 8611). 같은 LAN의 다른 기기는 `--host 0.0.0.0`.
@@ -72,7 +72,7 @@ API로는 `settings.seat = "<이름>"`(세 자리 모두) 또는 `settings.model
 모델 자리는 **API로만** 부른다(로컬 모델 · 로컬 데몬 없음, `ollama pull` 불필요). 기본은 엔진의 `Ollama` 프로바이더(`squid5/core/providers.py`)로
 **Ollama Cloud API** `https://ollama.com/api/chat`에 모델 `gpt-oss:20b`(API가 받는 이름; 10-20 1토큰 호출로 확인)를 보낸다.
 
-- **키**: 서버 프로세스의 환경변수 `OLLAMA_API_KEY`. 없으면 서버가 처음 필요할 때 `~/wt/squid5-e52/.env`, 그다음 메인 저장소
+- **키**: 서버 프로세스의 환경변수 `OLLAMA_API_KEY`. 없으면 서버가 처음 필요할 때 엔진 워크트리의 `.env`(`.claude/worktrees/arena-code/.env`), 그다음 메인 저장소
   (`…/LLM-Squid-Game-DS-Lab/.env`)에서 **그 한 줄만** 읽어 자기 환경에 넣는다(`engine.env_key`, `ENV_FILES`; 파일을 source하지 않고, 값은
   화면 · 로그 · 상태 응답 어디에도 쓰지 않음). 셸에서 `source .env` 하지 말 것. 키가 없으면 로비 버튼이 꺼지고 이유가 뜬다(`GET /api/models`의
   `available` · `why`), 방 만들기는 400.

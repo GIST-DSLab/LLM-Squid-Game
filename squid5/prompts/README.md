@@ -20,7 +20,7 @@
 
 ## 동기화 순서
 
-엔진 루트(`~/wt/squid5-e52`)에서:
+엔진 루트(저장소 안 `.claude/worktrees/arena-code`, 브랜치 `arena-code`)에서:
 
 1. 문구를 바꾼다 — `en/*.yaml`을 고치거나, `rules.py` · `e52_game.py`의 문장을 고친다.
 2. 5.2 문장을 바꿨으면 `python tools/prompts/sync.py render`로 `en/e52_*.md`를 다시 렌더한다. 새 판(v22 등)을 만들면 `tools/prompts/sync.py`의 `SNAPSHOTS`에 한 줄을 더한다.

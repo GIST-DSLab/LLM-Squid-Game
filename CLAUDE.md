@@ -68,6 +68,12 @@ python -m squid5 run configs/squid5/refill_gpt6astra.yaml   # 5.0 · 5.1 (claude
 (`/home/ubuntu/seungpil/CLAUDE.md`의 저장 규칙). 키는 환경변수(`OLLAMA_API_KEY` 등)로만 받는다.
 claude CLI 백엔드는 구독 로그인을 쓰며 `ANTHROPIC_API_KEY`를 자식 환경에서 지운다.
 
+## 워크트리와 용어
+
+- 워크트리는 모두 저장소 안 `.claude/worktrees/<이름>`에 둔다(`~/wt` 같은 바깥 경로에 만들지 않는다). 아레나 엔진은
+  `.claude/worktrees/arena-code`(브랜치 `arena-code`)다.
+- 용어는 `GLOSSARY.md`, 되돌리기 어려운 결정은 `docs/adr/`에 있다. 새 코드·문서에는 용어집의 _Avoid_ 말을 쓰지 않는다.
+
 ## 기록물
 
 - `outputs/**/*_turns.jsonl`은 **Git LFS**다. 스머지 없이 만든 워크트리에서는 0바이트 포인터로 보인다 —
