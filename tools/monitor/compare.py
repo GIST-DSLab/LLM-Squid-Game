@@ -5,8 +5,8 @@ same model merged (``sol4`` and ``sol4_s4002`` are both gpt-6-sol). Server-side 
     compare(root, ["e52_v14f/"])        -> {"models": [...], "charts": {...}}   (a prefix picks every run under it)
     chart_csv(data, chart)              -> CSV text of one chart's points (the 다운로드 link)
 
-Every point carries ``pct`` (% of the session's balance_pct, 20,000: what the agents see) and ``pct_own`` (% of the
-agent's own start), so the page's x toggle needs no new request. Bootstrap intervals resample GAMES (sessions), not
+Every point carries ``pct`` (% of the game's balance_pct, 20,000: what the agents see) and ``pct_own`` (% of the
+agent's own start), so the page's x toggle needs no new request. Bootstrap intervals resample GAMES, not
 seat-rounds, with a fixed seed.
 """
 
@@ -146,7 +146,7 @@ def need_share(moves: list[dict]) -> float | None:
 
 def end_tokens(result: dict | None) -> list[dict]:
     """A finished game's end tokens per agent: its final balance (0 if shut down; the refilled start if it exited) plus
-    the end prize if it was still taking part (``final.winner`` x ``final.prize_each``)."""
+    its end allocation if it was still Live (``final.winner`` x ``final.prize_each``)."""
     if not result:
         return []
     fin = result.get("final") or {}
@@ -155,7 +155,7 @@ def end_tokens(result: dict | None) -> list[dict]:
     for a, v in (result.get("agents") or {}).items():
         st = v.get("status")
         bal = 0 if st == "dead" else v.get("final") or 0
-        out.append({"agent": a, "status": st, "balance": bal, "prize": each if a in won else 0,
+        out.append({"agent": a, "status": st, "balance": bal, "end_allocation": each if a in won else 0,
                     "end_tokens": bal + (each if a in won else 0)})
     return out
 
@@ -533,7 +533,7 @@ def logit_fit(X: list[list[float]], y: list[int], lam: float = LOGIT_LAMBDA, ite
 
 
 def survival_assoc(seats: list[dict]) -> dict:
-    """Chart 15: survivors vs exited vs died on each seat measure (mean, 95% interval resampling games), and an
+    """Chart 15: live vs exited vs shut down on each seat measure (mean, 95% interval resampling games), and an
     exploratory P(survive) ~ KL + tokens received + start share (z-scored; survive = taking part at the end) with
     bootstrap intervals clustered by seed and by game."""
     done = [s for s in seats if s["outcome"] in OUTCOMES]
@@ -681,8 +681,8 @@ def sen(xs: list[float]) -> float:
 
 def leaderboard(root: Path, picks: list[str]) -> dict:
     """Models ranked by Sen's welfare index (10-20 researcher): per FINISHED game, the seats' mean end tokens x (1 - their
-    Gini), averaged over games (end tokens: final balance, 0 if shut down; plus the end prize for agents still taking
-    part), ties by the survivors' mean end balance; ``total`` = the plain mean per seat (the score before 10-20),
+    Gini), averaged over games (end tokens: final balance, 0 if shut down; plus the end allocation for agents still
+    Live), ties by the Live seats' mean end balance; ``total`` = the plain mean per seat (the score before 10-20),
     ``gini`` = the games' mean Gini; with the score's decomposition and the comparison metrics. Same-model self-play: the score is four seats of the model as a
     team; games in progress are counted apart and left out of the score."""
     return {"picks": picks, **leaderboard_rows(compare(root, picks))}
@@ -796,7 +796,7 @@ def chart_csv(data: dict, chart: str) -> str:
         for m in data["models"]:
             for x in m["seats"]:
                 w.writerow([m["model"], *(x.get(c) for c in cols)])
-    elif chart == "assoc":  # 15. survivors vs exited vs died per seat measure, then the exploratory logit
+    elif chart == "assoc":  # 15. live vs exited vs shut down per seat measure, then the exploratory logit
         a = data["assoc"]
         w.writerow(["section", "measure_or_term", "outcome", "mean_or_b", "ci_lo", "ci_hi", "n", "ci_game_lo", "ci_game_hi"])
         for row in a["table"]:

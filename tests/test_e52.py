@@ -110,7 +110,7 @@ def test_concurrent_calls_do_not_change_the_result():
 def test_session_summary_and_report():
     res, ev, ses = play({(A17, 1, "prep", 1): f"ASK {A23} 500: help", (A23, 1, "prep", 2): f"GIVE {A17} 500: here\nDONE"})
     run = {"model": "m", "settings": {"rounds": 1}, "events": ev, "results": [res]}
-    row = e52.sessions([run])[0]
+    row = e52.games([run])[0]
     assert row["moved"] == 500 / sum(ses.starts.values()) and row["exit"] == row["zero"] == 0
     assert row["talk_calls"] == len(calls(ev, "talk")) / 4 and e52.report([run], {}, None)[0]
 

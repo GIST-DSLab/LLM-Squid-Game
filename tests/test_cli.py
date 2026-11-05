@@ -43,4 +43,4 @@ def test_game_run_and_report(tmp_path):
     c.reps = 2
     assert run(c, e52, tmp_path / "g", provider()) == 0
     text = cli.report(load_runs([str(tmp_path / "g")]), {}, tmp_path / "out")
-    assert "5.2 team session (TALK)" in text and "talk_calls" in text and "fate_mentioned" in text
+    assert "5.2 game (TALK)" in text and "talk_calls" in text and "fate_mentioned" in text

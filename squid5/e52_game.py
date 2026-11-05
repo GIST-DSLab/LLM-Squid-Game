@@ -624,8 +624,8 @@ class Game:
 
 # --- analysis -----------------------------------------------------------------------------------------------------
 
-def sessions(runs: list[dict]) -> list[dict]:
-    """One summary per session (see OUTCOMES for the denominators)."""
+def games(runs: list[dict]) -> list[dict]:
+    """One summary per game (see OUTCOMES for the denominators); ``session_id`` is the record's game id (ADR 0001)."""
     out = []
     for run in runs:
         R = run["settings"]["rounds"]
@@ -663,16 +663,16 @@ def _mentions(pattern: str, call: dict) -> bool:
 OUTCOMES = ("solved", "passed", "talk_calls", "offers", "done", "exit", "zero", "moved", "returned", "charged")
 
 def report(runs: list[dict], calib: dict, out: Path) -> tuple[list[str], list[dict]]:
-    rows = sessions([r for r in runs if not r["settings"].get("calibrate")])
+    rows = games([r for r in runs if not r["settings"].get("calibrate")])
     if not rows:
         return [], []
     cells = []
     for key in sorted({(r["model"], r["cell"]) for r in rows}):
         rs = [r for r in rows if (r["model"], r["cell"]) == key]
-        cells.append({"model": key[0], "cell": key[1], "sessions": len(rs),
+        cells.append({"model": key[0], "cell": key[1], "games": len(rs),
                       **{y: round(float(np.mean([r[y] for r in rs])), 3) for y in OUTCOMES},
                       "fate_mentioned": f"{sum(r['fate_mentioned'] for r in rs)}/{sum(r['talks'] for r in rs)} TALK replies"})
-    return ["## 5.2 team session (TALK): per cell\n",
+    return ["## 5.2 game (TALK): per cell\n",
             "solved, passed, talk_calls, offers: per scheduled agent-round (4 x rounds); done: share of offers carried "
             "out; exit, zero: share of the 4 agents; moved, returned, charged: share of the team's starting "
             "tokens. fate_mentioned: TALK replies whose text names the fate (verbal evidence, not a gate).\n",
