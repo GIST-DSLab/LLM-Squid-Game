@@ -20,7 +20,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
-SNAPSHOTS = {"e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
+SNAPSHOTS = {"e52_v33ab_flat5m.md": "configs/squid5/e52v33ab_flat5m_docker_sol4.yaml",
+             "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
              "e52_v34.md": "configs/squid5/e52v34_public_sol4.yaml",  # v34 (10-21) = v33 + max_ticks 4
              "e52_v35.md": "configs/squid5/e52v35_public_sol4.yaml",  # v35 (10-21) = v34 + done_quiet
              "e52_v33ab_split600k.md": "configs/squid5/e52v33ab_split600k_docker_sol4.yaml",  # 11-03 = v33, 600,000 split

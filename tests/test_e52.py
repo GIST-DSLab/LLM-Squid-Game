@@ -132,7 +132,7 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
     import yaml  # 10-21: v34 (14 configs) = v33 with max_ticks 4, same rule within each version
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
     by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33, 34, 35)}
-    assert len(by[33]) == 19 and len(by[34]) == 14 and len(by[35]) == 14 and len(paths) == 55  # 11-03: + gptoss / gemma, + 8 ablation (Astra too)
+    assert len(by[33]) == 19 and len(by[34]) == 14 and len(by[35]) == 14 and len(paths) == 62  # 11-05/06: + five flat5m configs, Fable split600k and flat150k
     game = lambda p: {k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")}  # noqa: E731
     for v, ps in by.items():
         games = [game(p) for p in ps]
@@ -141,17 +141,19 @@ def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs dif
     assert game(by[34][0]) == game(by[33][0]) | {"max_ticks": 4}
     assert game(by[35][0]) == game(by[34][0]) | {"done_quiet": True}
     ab = [p for p in paths if p.name.startswith("e52v33ab_")]  # 11-03 prize ablation: v33 with the end allocation changed only
-    assert len(ab) == 8 and all(load(p, EXPERIMENTS) for p in ab)
+    assert len(ab) == 15 and all(load(p, EXPERIMENTS) for p in ab)
     for p in ab:
-        assert game(p) == game(by[33][0]) | {"survivor_prize": 150000} | ({"end_flat": True} if "_flat150k_" in p.name else {})
+        amount = 5000000 if "_flat5m_" in p.name else 150000
+        assert game(p) == game(by[33][0]) | {"survivor_prize": amount} | ({"end_flat": True} if "_flat" in p.name else {})
 
 def test_end_flat_pays_each_the_same():  # 11-03: survivor_prize to each agent still taking part, however many remain
-    for flat, each in ((False, 150_000 * 4 // 3), (True, 150_000)):
-        c = cfg(rounds=1, schedule=cfg().settings.schedule[:1], survivor_prize=150_000, end_flat=flat)
-        ses = e52.Game(c.settings, c.cells[0], 4101, stub(lambda m, cap: Reply("DONE", 5)), lambda e: None, "x")
-        ses.stopped[e52.AGENTS[0]] = "exited"
-        assert ses.end_allocation()["prize_each"] == each
-        assert ("receives no end allocation." in ses.systems[e52.AGENTS[1]]) == flat
+    for amount in (150_000, 5_000_000):
+        for flat, each in ((False, amount * 4 // 3), (True, amount)):
+            c = cfg(rounds=1, schedule=cfg().settings.schedule[:1], survivor_prize=amount, end_flat=flat)
+            ses = e52.Game(c.settings, c.cells[0], 4101, stub(lambda m, cap: Reply("DONE", 5)), lambda e: None, "x")
+            ses.stopped[e52.AGENTS[0]] = "exited"
+            assert ses.end_allocation()["prize_each"] == each
+            assert ("receives no end allocation." in ses.systems[e52.AGENTS[1]]) == flat
 
 def test_done_quiet_messages_call_no_one_back():  # v35 (10-21): TO + DONE is delivered; only GIVE / ASK call back
     for quiet, ticks in ((False, 8), (True, 1)):
