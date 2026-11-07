@@ -175,12 +175,12 @@ class FakeCli(providers.Provider):
 def test_experiment_seats_are_the_run_configs_model_sections_called_as_the_runs_called_them(client, fake, monkeypatch):
     import yaml
 
-    gemma = yaml.safe_load((engine._cfg.CONFIGS / "e52v35_codex_gemma4.yaml").read_text())["model"]
+    gemma = yaml.safe_load((engine._cfg.CONFIGS / "e52v33_codex_gemma4.yaml").read_text())["model"]
     m = client.get("/api/models").json()
     seats = {s["seat"]: s for s in m["seats"]}
     assert {"public_opus", "public_sol", "codex_gemma", "codex_glm", "codex_deepseek", "ollama_gptoss"} <= set(seats)
     assert not any(n.startswith(("docker_", "ko_")) for n in seats)  # sandboxed runs and Korean copies are not seats
-    assert seats["codex_gemma"]["think_fit"] == gemma["think_fit"] and seats["codex_gemma"]["config"] == "e52v35_codex_gemma4.yaml"
+    assert seats["codex_gemma"]["think"] == gemma["think"] and seats["codex_gemma"]["config"] == "e52v33_codex_gemma4.yaml"
     monkeypatch.setattr(engine.shutil, "which", lambda name: None)
     assert "codex CLI is not on" in engine.seat_ready(engine.seat_config("codex_gemma"))
     r = client.post("/api/rooms", json={"settings": {"fill": "models", "seat": "codex_gemma"}})
@@ -195,11 +195,11 @@ def test_experiment_seats_are_the_run_configs_model_sections_called_as_the_runs_
     s = play(ps, human, max_s=90)
     assert s["status"] == "finished", s["error"]
     cfg = FakeCli.calls[0]["cfg"]
-    assert (cfg.kind, cfg.model, cfg.base_url, cfg.think_talk, cfg.think_fit, cfg.timeout) == (
-        "codex_cli", gemma["model"], gemma["base_url"], "none", gemma["think_fit"], gemma["timeout"])
+    assert (cfg.kind, cfg.model, cfg.base_url, cfg.think, cfg.think_talk, cfg.think_fit, cfg.timeout) == (
+        "codex_cli", gemma["model"], gemma["base_url"], gemma["think"], None, None, gemma["timeout"])
     talk = [c["think"] for c in FakeCli.calls if "SOLVE." not in c["user"].split("\n")[0]]
     solve = [c["think"] for c in FakeCli.calls if "SOLVE." in c["user"].split("\n")[0]]
-    assert set(talk) == {"none"} and solve == ["high"]  # think_talk at TALK, think_fit's level for the SOLVE cap
+    assert set(talk) == {"high"} and solve == ["high"]  # v33 runs: one think level for every call (no tokctl think_talk / think_fit)
     assert s["rounds"][0]["solved"] and [r["model"] for r in ps[0].state()["seats"][1:]] == [gemma["model"]] * 3
     mixed = model_room(client, rounds=1, models=[{"seat": "codex_glm"}, {"model": "gpt-oss:20b"}])
     start(client, mixed)

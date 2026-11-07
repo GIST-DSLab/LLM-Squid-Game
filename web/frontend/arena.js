@@ -1,4 +1,4 @@
-// Arena: one page for the 4-seat 5.2 room. The rooms play the model runs' game, 5.2 v35 (web/server/engine.py): the
+// Arena: one page for the 4-seat 5.2 room. The rooms play the model runs' game, 5.2 v33 (web/server/engine.py): the
 // system draws the round's solver -> TALK BEFORE SOLVE (the messenger: ticks, rooms R1 (all four) and 1:1 rooms;
 // TO / GIVE / GIVE ALL / ASK / LEAVE / EXIT: YES|NO / DONE; EXIT never by the round's solver unless alone) -> SOLVE (solver
 // only, BELIEF + ACTIONS; an LLM solver is watched live) -> RESULTS -> TALK AFTER RESULTS (the task and both answers
@@ -95,7 +95,7 @@
   }
 
   // --- lobby -----------------------------------------------------------------------------------------------------
-  // the server's game (engine.RoomSettings from configs/squid5/e52v35_public_sol4.yaml): 20 examples, charge 24,000 split
+  // the server's game (engine.RoomSettings from configs/squid5/e52v33_public_sol4.yaml): 20 examples, charge 24,000 split
   // among those taking part, EXIT +20,000, end allocation 20,000,000 split among those left, 8 rounds (hidden)
   const DEF = { examples: 20, charge: 24000, bonus: 20000, allocation: 20000000, ticks: 4 };
   function flowKo(g) {
@@ -145,7 +145,7 @@
     } catch (e) { h.textContent = `모델 정보를 읽지 못했습니다: ${e.message}`; }
   }
 
-  // an experiment seat (configs/squid5/e52v35_<seat>4.yaml's model section) as the lobby names it
+  // an experiment seat (configs/squid5/e52v33_<seat>4.yaml's model section) as the lobby names it
   let seats = [], apiModel = null;
   const HARNESS = { claude_cli: "Claude Code", codex_cli: "Codex", ollama: "Ollama API", openai: "OpenAI API", anthropic: "Anthropic API" };
   function expSeatLabel(s) {
@@ -337,7 +337,7 @@
     const humans = st.seats.filter((r) => r.kind === "human").length;
     const s = st.settings;
     const rest = s.fill === "bots" ? "봇으로 채워집니다" : s.fill === "models" ? `모델(${[0, 1, 2].slice(0, 4 - s.humans).map((j) => modelPick(s, j)).join(" / ")})로 채워집니다` : "빈 자리(꺼진 상태)로 시작합니다";
-    $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 v35(모델 실험과 같은 게임) · ${flowKo(st.game || {})} · ` +
+    $("wait-note").innerHTML = `사람 ${humans} / ${s.humans}명. 시작할 때 비어 있는 자리는 ${rest}. 5.2 v33(모델 실험과 같은 게임) · ${flowKo(st.game || {})} · ` +
       `내 시작 토큰 ${fmt(st.you.start)}(${pctOf(st.you.start)}; 다른 자리의 토큰은 보이지 않음) · 사람은 초당 ${fmt2(s.rate)}토큰(60초 = ${fmt(s.rate * 60)}).`;
     setHTML("wait-seats", st.seats.map((r, i) => `<tr class="${r.is_you ? "you" : ""}"><td class="mono">${r.agent}</td><td>${seatWho(r, i)}</td>` +
       `<td class="num mono">${r.start === null || r.start === undefined ? `<span class="muted">?</span>` : `${fmt(r.start)} <span class="muted small">(${pctOf(r.start)})</span>`}</td></tr>`).join(""));
@@ -663,7 +663,7 @@
             <label class="f exit-reason"><span>이유</span><textarea id="x-why" rows="2" placeholder="이유"></textarea></label></div>`
             : v.solver_cannot_exit ? `<div class="exit-box muted small">EXIT 없음 — 이번 라운드 solver는 자기 라운드에 EXIT할 수 없습니다.</div>`
             : `<div class="exit-box muted small">EXIT 없음 — 결과 뒤 TALK에서는 떠날 수 없습니다.</div>`}
-          <label class="chk"><input type="checkbox" id="x-done" checked> <b>DONE</b> — 새로 온 것이 없으면 이 TALK에서 더 부르지 않음 · DONE과 함께 보낸 TO는 받는 쪽을 다시 부르지 않음(GIVE · ASK는 부름)</label>
+          <label class="chk"><input type="checkbox" id="x-done" checked> <b>DONE</b> — 새로 온 것이 없으면 이 TALK에서 더 부르지 않음</label>
           <div class="draft"><div class="comp-label">보낼 답 <span class="muted small">(엔진이 읽는 그대로)</span> <span id="cmd-warn" class="bad-text small"></span></div><pre id="draft-text" class="draft-text"></pre></div>
           <details class="raw-edit"><summary class="small">답 원문 직접 쓰기 (쓰면 위 대신 이 글을 보냄)</summary><textarea id="raw-text" rows="5" placeholder="TO R1: ...&#10;GIVE agent-11 500: ...&#10;DONE"></textarea></details>
           <div class="row submit-row"><button type="button" class="primary big" id="btn-send">보내기</button><span class="form-err" id="form-err"></span></div>

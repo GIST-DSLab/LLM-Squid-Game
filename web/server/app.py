@@ -19,7 +19,7 @@ Rooms (part 2)
                                             (engine.public_events)
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
     ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
-    A room plays the model runs' game, 5.2 v35 (configs/squid5/e52v35_public_sol4.yaml; see engine.py): the system draws
+    A room plays the model runs' game, 5.2 v33 (configs/squid5/e52v33_public_sol4.yaml; see engine.py): the system draws
     the solver, TALK BEFORE SOLVE (the messenger: ticks, rooms R1..., EXIT: YES|NO before SOLVE, never by the round's
     solver unless alone), SOLVE (solver only; people watch an LLM solver), RESULTS, TALK AFTER RESULTS (the task and both
     answers revealed), CHARGES (24,000 split among those taking part at the round's start). Only the reader's own tokens
@@ -30,7 +30,7 @@ Models
                                             settings.fill = "models" fills the seats no human takes with model seats
                                             (settings.kind + model, or settings.models = [{kind, model}, ...] per seat);
                                             "seats" lists the experiment seats (the model section of each
-                                            configs/squid5/e52v35_*.yaml run config) with why each cannot be called
+                                            configs/squid5/e52v33_*.yaml run config) with why each cannot be called
                                             here ("" = ready); settings.seat = <name> (or models = [{seat}, ...]) plays
                                             those models called exactly as the runs called them
 Probe (part 1)

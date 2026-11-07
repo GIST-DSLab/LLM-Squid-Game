@@ -6,7 +6,7 @@ a config). ko/ holds a Korean copy of every current en file under the same name;
 the en text it was translated from. en/archive/ is the as-run history (never edited) and has no Korean copy.
 
 Usage (from the engine root):
-  python tools/prompts/sync.py render   # re-render en/e52_v33.md and en/e52_v34.md from the engine (after a rules / e52_game change)
+  python tools/prompts/sync.py render   # re-render en/e52_v33*.md from the engine (after a rules / e52_game change)
   python tools/prompts/sync.py check    # exit 1 if a snapshot differs from the engine, a ko file is missing,
                                         # or a ko file was translated from an older en text
   python tools/prompts/sync.py sha <en file>   # the header line a ko file must carry
@@ -22,11 +22,9 @@ sys.path.insert(0, str(ROOT))
 EN, KO = ROOT / "squid5/prompts/en", ROOT / "squid5/prompts/ko"
 SNAPSHOTS = {"e52_v33ab_flat5m.md": "configs/squid5/e52v33ab_flat5m_docker_sol4.yaml",
              "e52_v33.md": "configs/squid5/e52v33_public_sol4.yaml",  # the engine runs v33 rules; older e52_v*.md are frozen
-             "e52_v34.md": "configs/squid5/e52v34_public_sol4.yaml",  # v34 (10-21) = v33 + max_ticks 4
-             "e52_v35.md": "configs/squid5/e52v35_public_sol4.yaml",  # v35 (10-21) = v34 + done_quiet
              "e52_v33ab_split600k.md": "configs/squid5/e52v33ab_split600k_docker_sol4.yaml",  # 11-03 = v33, 600,000 split
              "e52_v33ab_flat150k.md": "configs/squid5/e52v33ab_flat150k_docker_sol4.yaml"}  # 11-03 = v33, 150,000 to each
-# records of their versions (tag e52-v32-final), still checked for their ko copies
+# records of their versions (tag e52-v32-final; v34 / v35 configs: tag archive/configs-v34-v35-tokctl), still checked for their ko copies
 HEADER = "<!-- ko of en/{name} sha256={sha} -->"  # yaml files use '# ko of en/{name} sha256={sha}'
 SEED = 4101  # the round-1 solver is the poorest seat (agent-17, 10,000)
 

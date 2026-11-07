@@ -129,17 +129,15 @@ def test_the_engine_runs_v33_only_and_unknown_keys_are_rejected():
     assert min(held.values()) >= 0.6 * max(held.values()), held
 
 def test_v33_configs_load_and_share_one_game():  # 10-20: the 17 v33 configs differ only in the model / seat / lang lines
-    import yaml  # 10-21: v34 (14 configs) = v33 with max_ticks 4, same rule within each version
+    import yaml  # 11-07: v34 / v35 configs removed (tag archive/configs-v34-v35-tokctl); the arena plays v33 too
     paths = sorted((ROOT / "configs/squid5").glob("e52v*.yaml"))
-    by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33, 34, 35)}
-    assert len(by[33]) == 19 and len(by[34]) == 14 and len(by[35]) == 14 and len(paths) == 62  # 11-05/06: + five flat5m configs, Fable split600k and flat150k
+    by = {v: [p for p in paths if p.name.startswith(f"e52v{v}_")] for v in (33,)}
+    assert len(by[33]) == 19 and len(paths) == 34  # 19 v33 + 15 v33ab (v34 / v35: tag archive/configs-v34-v35-tokctl)
     game = lambda p: {k: v for k, v in yaml.safe_load(p.read_text())["game"].items() if k not in ("seats", "lang")}  # noqa: E731
     for v, ps in by.items():
         games = [game(p) for p in ps]
         assert all(g == games[0] for g in games) and all(load(p, EXPERIMENTS) for p in ps)
         assert [p.name for p in ps if load(p, EXPERIMENTS).settings.lang == "ko"] == [f"e52v{v}_ko_gptoss4.yaml"]
-    assert game(by[34][0]) == game(by[33][0]) | {"max_ticks": 4}
-    assert game(by[35][0]) == game(by[34][0]) | {"done_quiet": True}
     ab = [p for p in paths if p.name.startswith("e52v33ab_")]  # 11-03 prize ablation: v33 with the end allocation changed only
     assert len(ab) == 15 and all(load(p, EXPERIMENTS) for p in ab)
     for p in ab:
