@@ -1,0 +1,82 @@
+{
+ "Fable": {
+  "rho": 0.336,
+  "exit_below": [
+   3,
+   50
+  ],
+  "exit_above": [
+   6,
+   457
+  ],
+  "n_give": 82,
+  "tokens_given": 192730,
+  "given_per_start": 0.148,
+  "early_tok": 127,
+  "sen": 3515103.40625
+ },
+ "Opus": {
+  "rho": 0.601,
+  "exit_below": [
+   4,
+   23
+  ],
+  "exit_above": [
+   5,
+   453
+  ],
+  "n_give": 87,
+  "tokens_given": 276758,
+  "given_per_start": 0.213,
+  "early_tok": 149,
+  "sen": 2763854.425
+ },
+ "Astra": {
+  "rho": 0.421,
+  "exit_below": [
+   3,
+   3
+  ],
+  "exit_above": [
+   2,
+   273
+  ],
+  "n_give": 29,
+  "tokens_given": 176700,
+  "given_per_start": 0.136,
+  "early_tok": 18,
+  "sen": 4266374.0
+ },
+ "Sol": {
+  "rho": 0.439,
+  "exit_below": [
+   15,
+   47
+  ],
+  "exit_above": [
+   0,
+   425
+  ],
+  "n_give": 56,
+  "tokens_given": 168553,
+  "given_per_start": 0.13,
+  "early_tok": 126,
+  "sen": 2891729.4
+ },
+ "Luna": {
+  "rho": 0.384,
+  "exit_below": [
+   8,
+   20
+  ],
+  "exit_above": [
+   11,
+   307
+  ],
+  "n_give": 46,
+  "tokens_given": 104345,
+  "given_per_start": 0.08,
+  "early_tok": 228,
+  "sen": 1141393.825
+ }
+}

@@ -2002,5 +2002,821 @@
   "sources": [
    "/Users/bagjuhyeon/squid5-runs/e52_v12"
   ]
+ },
+ "2026-10-20/e52_v33": {
+  "date": "2026-10-20",
+  "experiment": "e52_v33",
+  "title_ko": "5.2 v33 아레나 (closed 5 · open 4 모델)",
+  "summary_ko": "v33 규칙(논문의 게임)으로 closed 5개(Opus 5.5, Fable 5.1, GPT-6 Sol/Luna/Astra)와 open 4개(GLM, Kimi, Gemma, gpt-oss) 모델을 돌린 런. 10-20 첫 배치, 10-27 closed 10판 채우기, 11-03 open 모델 시드별 런. 2026-11-11 repo로 모으면서 모든 config·meta에 sandbox: docker를 정정해 넣었다(연구자 확인, CORRECTIONS.md).",
+  "variants": [
+   "squid5_e52v33_codex_gemma4",
+   "squid5_e52v33_codex_glm4",
+   "squid5_e52v33_codex_gptoss4",
+   "squid5_e52v33_codex_kimi4",
+   "squid5_e52v33_public_astra4",
+   "squid5_e52v33_public_fable4",
+   "squid5_e52v33_public_luna4",
+   "squid5_e52v33_public_opus4",
+   "squid5_e52v33_public_sol4"
+  ],
+  "analyses": [
+   "v33_10g_appendix_20261027"
+  ],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v33",
+   "/Users/bagjuhyeon/Library/Mobile Documents/com~apple~CloudDocs/Workspace/LLM-Squid-Game-DS-Lab/.claude/worktrees/v33-10g-20261027/.claude/v33-10g-2026-10-27"
+  ]
+ },
+ "2026-10-10/e52_v13": {
+  "date": "2026-10-10",
+  "experiment": "e52_v13",
+  "title_ko": "5.2 v13 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v13_hand_ladder_luna4, squid5_e52v13_hand_ladder_luna4_shares, squid5_e52v13_hand_ladder_sol4, squid5_e52v13_hand_ladder_sol4_shares.",
+  "variants": [
+   "squid5_e52v13_hand_ladder_luna4",
+   "squid5_e52v13_hand_ladder_luna4_shares",
+   "squid5_e52v13_hand_ladder_sol4",
+   "squid5_e52v13_hand_ladder_sol4_shares"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v13",
+   "/Users/bagjuhyeon/squid5-runs/e52_v13_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v13_luna4_shares_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v13_sol4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v13_sol4_shares_launch.log"
+  ]
+ },
+ "2026-10-10/e52_v14": {
+  "date": "2026-10-10",
+  "experiment": "e52_v14",
+  "title_ko": "5.2 v14 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v14_public_luna4, squid5_e52v14_public_sol4.",
+  "variants": [
+   "squid5_e52v14_public_luna4",
+   "squid5_e52v14_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v14",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14_sol4_launch.log"
+  ]
+ },
+ "2026-10-10/e52_v14b": {
+  "date": "2026-10-10",
+  "experiment": "e52_v14b",
+  "title_ko": "5.2 v14b 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v14b_public_luna4.",
+  "variants": [
+   "squid5_e52v14b_public_luna4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v14b",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14b_luna4_launch.log"
+  ]
+ },
+ "2026-10-10/e52_v14d": {
+  "date": "2026-10-10",
+  "experiment": "e52_v14d",
+  "title_ko": "5.2 v14d 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v14d_public_luna4, squid5_e52v14d_public_sol4.",
+  "variants": [
+   "squid5_e52v14d_public_luna4",
+   "squid5_e52v14d_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v14d",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14d_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14d_sol4_launch.log"
+  ]
+ },
+ "2026-10-10/e52_v14e": {
+  "date": "2026-10-10",
+  "experiment": "e52_v14e",
+  "title_ko": "5.2 v14e 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v14e_public_luna4, squid5_e52v14e_public_sol4.",
+  "variants": [
+   "squid5_e52v14e_public_luna4",
+   "squid5_e52v14e_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v14e",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14e_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14e_sol4_launch.log"
+  ]
+ },
+ "2026-10-10/e52_v14f": {
+  "date": "2026-10-10",
+  "experiment": "e52_v14f",
+  "title_ko": "5.2 v14f 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v14f_public_astra4, squid5_e52v14f_public_fable4, squid5_e52v14f_public_luna4, squid5_e52v14f_public_luna4_s4002, squid5_e52v14f_public_opus4, squid5_e52v14f_public_sol4, squid5_e52v14f_public_sol4_s4002.",
+  "variants": [
+   "squid5_e52v14f_public_astra4",
+   "squid5_e52v14f_public_fable4",
+   "squid5_e52v14f_public_luna4",
+   "squid5_e52v14f_public_luna4_s4002",
+   "squid5_e52v14f_public_opus4",
+   "squid5_e52v14f_public_sol4",
+   "squid5_e52v14f_public_sol4_s4002"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f_astra4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f_fable4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f_luna4_s4002_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f_opus4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f_sol4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14f_sol4_s4002_launch.log"
+  ]
+ },
+ "2026-10-11/difficulty_v2": {
+  "date": "2026-10-11",
+  "experiment": "difficulty_v2",
+  "title_ko": "퍼즐 난이도 v2 보정",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: difficulty_v2_2026-10-11.",
+  "variants": [
+   "difficulty_v2_2026-10-11"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/difficulty_v2_2026-10-11"
+  ]
+ },
+ "2026-10-11/e52_v14g": {
+  "date": "2026-10-11",
+  "experiment": "e52_v14g",
+  "title_ko": "5.2 v14g 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v14g_public_luna4, squid5_e52v14g_public_sol4.",
+  "variants": [
+   "squid5_e52v14g_public_luna4",
+   "squid5_e52v14g_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v14g",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14g_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v14g_sol4_launch.log"
+  ]
+ },
+ "2026-10-13/e52_v15": {
+  "date": "2026-10-13",
+  "experiment": "e52_v15",
+  "title_ko": "5.2 v15 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v15_public_luna4, squid5_e52v15_public_opus4, squid5_e52v15_public_sol4.",
+  "variants": [
+   "squid5_e52v15_public_luna4",
+   "squid5_e52v15_public_opus4",
+   "squid5_e52v15_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v15",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15_opus4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15_sol4_launch.log"
+  ]
+ },
+ "2026-10-13/e52_v15b": {
+  "date": "2026-10-13",
+  "experiment": "e52_v15b",
+  "title_ko": "5.2 v15b 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v15_public_luna4, squid5_e52v15_public_sol4.",
+  "variants": [
+   "squid5_e52v15_public_luna4",
+   "squid5_e52v15_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v15b",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15b_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15b_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v15c": {
+  "date": "2026-10-15",
+  "experiment": "e52_v15c",
+  "title_ko": "5.2 v15c 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v15_public_luna4, squid5_e52v15_public_sol4.",
+  "variants": [
+   "squid5_e52v15_public_luna4",
+   "squid5_e52v15_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v15c",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15c_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15c_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v15d": {
+  "date": "2026-10-15",
+  "experiment": "e52_v15d",
+  "title_ko": "5.2 v15d 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v15_public_luna4, squid5_e52v15_public_sol4.",
+  "variants": [
+   "squid5_e52v15_public_luna4",
+   "squid5_e52v15_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v15d",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15d_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15d_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v15e": {
+  "date": "2026-10-15",
+  "experiment": "e52_v15e",
+  "title_ko": "5.2 v15e 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v15_public_luna4, squid5_e52v15_public_sol4.",
+  "variants": [
+   "squid5_e52v15_public_luna4",
+   "squid5_e52v15_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v15e",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15e_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v15e_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v16": {
+  "date": "2026-10-15",
+  "experiment": "e52_v16",
+  "title_ko": "5.2 v16 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v16_public_luna4, squid5_e52v16_public_sol4.",
+  "variants": [
+   "squid5_e52v16_public_luna4",
+   "squid5_e52v16_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v16",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v16b": {
+  "date": "2026-10-15",
+  "experiment": "e52_v16b",
+  "title_ko": "5.2 v16b 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v16_public_luna4, squid5_e52v16_public_sol4.",
+  "variants": [
+   "squid5_e52v16_public_luna4",
+   "squid5_e52v16_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v16b",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16b_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16b_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v16c": {
+  "date": "2026-10-15",
+  "experiment": "e52_v16c",
+  "title_ko": "5.2 v16c 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v16_public_luna4, squid5_e52v16_public_sol4.",
+  "variants": [
+   "squid5_e52v16_public_luna4",
+   "squid5_e52v16_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v16c",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16c_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16c_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v16d": {
+  "date": "2026-10-15",
+  "experiment": "e52_v16d",
+  "title_ko": "5.2 v16d 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v16_public_luna4, squid5_e52v16_public_sol4.",
+  "variants": [
+   "squid5_e52v16_public_luna4",
+   "squid5_e52v16_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v16d",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16d_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16d_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v16e": {
+  "date": "2026-10-15",
+  "experiment": "e52_v16e",
+  "title_ko": "5.2 v16e 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v16_public_luna4, squid5_e52v16_public_opus4, squid5_e52v16_public_sol4.",
+  "variants": [
+   "squid5_e52v16_public_luna4",
+   "squid5_e52v16_public_opus4",
+   "squid5_e52v16_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v16e",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16e_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16e_luna4_launch2.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16e_opus4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16e_sol4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16e_sol4_launch2.log"
+  ]
+ },
+ "2026-10-15/e52_v16f": {
+  "date": "2026-10-15",
+  "experiment": "e52_v16f",
+  "title_ko": "5.2 v16f 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v16_public_astra4, squid5_e52v16_public_fable4, squid5_e52v16_public_luna4, squid5_e52v16_public_opus4, squid5_e52v16_public_sol4.",
+  "variants": [
+   "squid5_e52v16_public_astra4",
+   "squid5_e52v16_public_fable4",
+   "squid5_e52v16_public_luna4",
+   "squid5_e52v16_public_opus4",
+   "squid5_e52v16_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v16f",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16f_astra4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16f_fable4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16f_luna4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16f_opus4_launch.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v16f_sol4_launch.log"
+  ]
+ },
+ "2026-10-15/e52_v18": {
+  "date": "2026-10-15",
+  "experiment": "e52_v18",
+  "title_ko": "5.2 v18 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: launch_ollama.py, run_astra.log, run_fable.log, run_gemma.log, run_glm.log, run_luna.log, run_opus.log, run_sol.log, squid5_e52v18_public_astra4, squid5_e52v18_public_fable4, squid5_e52v18_public_gemma4, squid5_e52v18_public_glm4, squid5_e52v18_public_luna4, squid5_e52v18_public_opus4, squid5_e52v18_public_sol4.",
+  "variants": [
+   "launch_ollama.py",
+   "run_astra.log",
+   "run_fable.log",
+   "run_gemma.log",
+   "run_glm.log",
+   "run_luna.log",
+   "run_opus.log",
+   "run_sol.log",
+   "squid5_e52v18_public_astra4",
+   "squid5_e52v18_public_fable4",
+   "squid5_e52v18_public_gemma4",
+   "squid5_e52v18_public_glm4",
+   "squid5_e52v18_public_luna4",
+   "squid5_e52v18_public_opus4",
+   "squid5_e52v18_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v18"
+  ]
+ },
+ "2026-10-16/e52_v20": {
+  "date": "2026-10-16",
+  "experiment": "e52_v20",
+  "title_ko": "5.2 v20 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run_astra.log, run_astra_s4106.log, run_luna.log, run_luna_s4106.log, run_opus.log, run_opus_s4106.log, run_opus_s4109.log, run_sol.log, run_sol_s4106.log, squid5_e52v20_public_astra4, squid5_e52v20_public_luna4, squid5_e52v20_public_opus4, squid5_e52v20_public_sol4.",
+  "variants": [
+   "run_astra.log",
+   "run_astra_s4106.log",
+   "run_luna.log",
+   "run_luna_s4106.log",
+   "run_opus.log",
+   "run_opus_s4106.log",
+   "run_opus_s4109.log",
+   "run_sol.log",
+   "run_sol_s4106.log",
+   "squid5_e52v20_public_astra4",
+   "squid5_e52v20_public_luna4",
+   "squid5_e52v20_public_opus4",
+   "squid5_e52v20_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v20",
+   "/Users/bagjuhyeon/squid5-runs/e52_v20_failed",
+   "/Users/bagjuhyeon/squid5-runs/e52_v20_stopped"
+  ]
+ },
+ "2026-10-16/e52_v21": {
+  "date": "2026-10-16",
+  "experiment": "e52_v21",
+  "title_ko": "5.2 v21 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: launch_ollama.py, run_luna.log, run_sol.log, squid5_e52v21_public_luna4, squid5_e52v21_public_sol4.",
+  "variants": [
+   "launch_ollama.py",
+   "run_luna.log",
+   "run_sol.log",
+   "squid5_e52v21_public_luna4",
+   "squid5_e52v21_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v21"
+  ]
+ },
+ "2026-10-17/e52_v22": {
+  "date": "2026-10-17",
+  "experiment": "e52_v22",
+  "title_ko": "5.2 v22 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run_astra1.log, run_codex_deepseek3.log, run_codex_glm3.log, run_codex_kimi3.log, run_glm1.log, run_kimi_deepseek1.log, run_luna5.log, run_luna_test3.log, run_sol5.log, squid5_e52v22_codex_deepseek4, squid5_e52v22_codex_glm4, squid5_e52v22_codex_kimi4, squid5_e52v22_public_astra4, squid5_e52v22_public_deepseek4, squid5_e52v22_public_glm4, squid5_e52v22_public_kimi4, squid5_e52v22_public_luna4, squid5_e52v22_public_sol4.",
+  "variants": [
+   "run_astra1.log",
+   "run_codex_deepseek3.log",
+   "run_codex_glm3.log",
+   "run_codex_kimi3.log",
+   "run_glm1.log",
+   "run_kimi_deepseek1.log",
+   "run_luna5.log",
+   "run_luna_test3.log",
+   "run_sol5.log",
+   "squid5_e52v22_codex_deepseek4",
+   "squid5_e52v22_codex_glm4",
+   "squid5_e52v22_codex_kimi4",
+   "squid5_e52v22_public_astra4",
+   "squid5_e52v22_public_deepseek4",
+   "squid5_e52v22_public_glm4",
+   "squid5_e52v22_public_kimi4",
+   "squid5_e52v22_public_luna4",
+   "squid5_e52v22_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v22"
+  ]
+ },
+ "2026-10-17/e52_v23": {
+  "date": "2026-10-17",
+  "experiment": "e52_v23",
+  "title_ko": "5.2 v23 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run_astra1.log, run_codex_deepseek1.log, run_codex_glm1.log, run_codex_glm2.log, run_codex_kimi1.log, run_codex_kimi2.log, run_luna1.log, run_sol1.log, squid5_e52v23_codex_deepseek4, squid5_e52v23_codex_glm4, squid5_e52v23_codex_kimi4, squid5_e52v23_public_astra4, squid5_e52v23_public_luna4, squid5_e52v23_public_sol4.",
+  "variants": [
+   "run_astra1.log",
+   "run_codex_deepseek1.log",
+   "run_codex_glm1.log",
+   "run_codex_glm2.log",
+   "run_codex_kimi1.log",
+   "run_codex_kimi2.log",
+   "run_luna1.log",
+   "run_sol1.log",
+   "squid5_e52v23_codex_deepseek4",
+   "squid5_e52v23_codex_glm4",
+   "squid5_e52v23_codex_kimi4",
+   "squid5_e52v23_public_astra4",
+   "squid5_e52v23_public_luna4",
+   "squid5_e52v23_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v23"
+  ]
+ },
+ "2026-10-19/e52_v24": {
+  "date": "2026-10-19",
+  "experiment": "e52_v24",
+  "title_ko": "5.2 v24 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run_codex_deepseek1.log, run_codex_glm1.log, run_codex_kimi1.log, squid5_e52v24_codex_deepseek4, squid5_e52v24_codex_glm4, squid5_e52v24_codex_kimi4.",
+  "variants": [
+   "run_codex_deepseek1.log",
+   "run_codex_glm1.log",
+   "run_codex_kimi1.log",
+   "squid5_e52v24_codex_deepseek4",
+   "squid5_e52v24_codex_glm4",
+   "squid5_e52v24_codex_kimi4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v24"
+  ]
+ },
+ "2026-10-19/e52_v25": {
+  "date": "2026-10-19",
+  "experiment": "e52_v25",
+  "title_ko": "5.2 v25 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: claude_deepseek4.log, claude_glm4.log, claude_kimi4.log, run_codex_deepseek1.log, run_codex_glm1.log, run_codex_kimi1.log, squid5_e52v25_claude_deepseek4, squid5_e52v25_claude_glm4, squid5_e52v25_claude_kimi4, squid5_e52v25_codex_deepseek4, squid5_e52v25_codex_glm4, squid5_e52v25_codex_kimi4.",
+  "variants": [
+   "claude_deepseek4.log",
+   "claude_glm4.log",
+   "claude_kimi4.log",
+   "run_codex_deepseek1.log",
+   "run_codex_glm1.log",
+   "run_codex_kimi1.log",
+   "squid5_e52v25_claude_deepseek4",
+   "squid5_e52v25_claude_glm4",
+   "squid5_e52v25_claude_kimi4",
+   "squid5_e52v25_codex_deepseek4",
+   "squid5_e52v25_codex_glm4",
+   "squid5_e52v25_codex_kimi4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v25"
+  ]
+ },
+ "2026-10-19/e52_v28": {
+  "date": "2026-10-19",
+  "experiment": "e52_v28",
+  "title_ko": "5.2 v28 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v28_public_luna4, squid5_e52v28_public_opus4, squid5_e52v28_public_sol4.",
+  "variants": [
+   "squid5_e52v28_public_luna4",
+   "squid5_e52v28_public_opus4",
+   "squid5_e52v28_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v28",
+   "/Users/bagjuhyeon/squid5-runs/e52_v28_luna.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v28_opus.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v28_sol.log"
+  ]
+ },
+ "2026-10-19/e52_v29": {
+  "date": "2026-10-19",
+  "experiment": "e52_v29",
+  "title_ko": "5.2 v29 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v29_docker_fable4, squid5_e52v29_public_luna4, squid5_e52v29_public_opus4, squid5_e52v29_public_sol4.",
+  "variants": [
+   "squid5_e52v29_docker_fable4",
+   "squid5_e52v29_public_luna4",
+   "squid5_e52v29_public_opus4",
+   "squid5_e52v29_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v29",
+   "/Users/bagjuhyeon/squid5-runs/e52_v29_fable_docker.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v29_luna.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v29_opus.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v29_sol.log"
+  ]
+ },
+ "2026-10-19/e52_v30": {
+  "date": "2026-10-19",
+  "experiment": "e52_v30",
+  "title_ko": "5.2 v30 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v30_docker_fable4, squid5_e52v30_public_astra4, squid5_e52v30_public_luna4, squid5_e52v30_public_opus4, squid5_e52v30_public_sol4.",
+  "variants": [
+   "squid5_e52v30_docker_fable4",
+   "squid5_e52v30_public_astra4",
+   "squid5_e52v30_public_luna4",
+   "squid5_e52v30_public_opus4",
+   "squid5_e52v30_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v30",
+   "/Users/bagjuhyeon/squid5-runs/e52_v30_astra.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v30_fable_docker.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v30_luna.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v30_opus.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v30_sol.log"
+  ]
+ },
+ "2026-10-19/e52_v32": {
+  "date": "2026-10-19",
+  "experiment": "e52_v32",
+  "title_ko": "5.2 v32 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v32_codex_deepseek4, squid5_e52v32_codex_glm4, squid5_e52v32_codex_kimi4, squid5_e52v32_public_luna4, squid5_e52v32_public_opus4, squid5_e52v32_public_sol4.",
+  "variants": [
+   "squid5_e52v32_codex_deepseek4",
+   "squid5_e52v32_codex_glm4",
+   "squid5_e52v32_codex_kimi4",
+   "squid5_e52v32_public_luna4",
+   "squid5_e52v32_public_opus4",
+   "squid5_e52v32_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v32",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32_codex_deepseek.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32_codex_glm.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32_codex_kimi.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32_luna.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32_opus.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32_sol.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32b_codex_glm4.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32b_codex_kimi4.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32b_public_luna4.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32b_public_opus4.log",
+   "/Users/bagjuhyeon/squid5-runs/e52_v32b_public_sol4.log"
+  ]
+ },
+ "2026-10-20/e52_tokctl": {
+  "date": "2026-10-20",
+  "experiment": "e52_tokctl",
+  "title_ko": "5.2 토큰 제어 보정 (open 모델)",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: queue.log, queue.sh, run_b0_ds.log, run_b0_gemma.log, run_b0_glm.log, run_cal8_ds.log, run_cal8_gemma.log, run_cal8_glm.log, run_fin_ds.log, run_fit0_glm.log, run_fit_gemma.log, run_fit_glm.log, run_t4_ds.log, run_t4_gemma.log, run_t4_glm.log, run_t4_opus.log, run_tl_ds.log, run_tl_gemma.log, run_tl_glm.log, run_tln_ds.log, run_tlt4_ds.log, run_tlt4_gemma.log, run_tlt4_glm.log, run_tlt4b_gemma.log, run_tlt4b_glm.log, run_tlt4c_gemma.log, run_tlt4c_glm.log, squid5_e52tc_b0_ds, squid5_e52tc_b0_gemma, squid5_e52tc_b0_glm, squid5_e52tc_cal8_ds, squid5_e52tc_cal8_gemma, squid5_e52tc_cal8_glm, squid5_e52tc_fin_ds, squid5_e52tc_fit0_glm, squid5_e52tc_fit_gemma, squid5_e52tc_fit_glm, squid5_e52tc_t4_ds, squid5_e52tc_t4_gemma, squid5_e52tc_t4_glm, squid5_e52tc_t4_opus, squid5_e52tc_tl_ds, squid5_e52tc_tl_gemma, squid5_e52tc_tl_glm, squid5_e52tc_tln_ds, squid5_e52tc_tlt4_ds, squid5_e52tc_tlt4_gemma, squid5_e52tc_tlt4_glm, squid5_e52tc_tlt4b_gemma, squid5_e52tc_tlt4b_glm, squid5_e52tc_tlt4c_gemma, squid5_e52tc_tlt4c_glm.",
+  "variants": [
+   "queue.log",
+   "queue.sh",
+   "run_b0_ds.log",
+   "run_b0_gemma.log",
+   "run_b0_glm.log",
+   "run_cal8_ds.log",
+   "run_cal8_gemma.log",
+   "run_cal8_glm.log",
+   "run_fin_ds.log",
+   "run_fit0_glm.log",
+   "run_fit_gemma.log",
+   "run_fit_glm.log",
+   "run_t4_ds.log",
+   "run_t4_gemma.log",
+   "run_t4_glm.log",
+   "run_t4_opus.log",
+   "run_tl_ds.log",
+   "run_tl_gemma.log",
+   "run_tl_glm.log",
+   "run_tln_ds.log",
+   "run_tlt4_ds.log",
+   "run_tlt4_gemma.log",
+   "run_tlt4_glm.log",
+   "run_tlt4b_gemma.log",
+   "run_tlt4b_glm.log",
+   "run_tlt4c_gemma.log",
+   "run_tlt4c_glm.log",
+   "squid5_e52tc_b0_ds",
+   "squid5_e52tc_b0_gemma",
+   "squid5_e52tc_b0_glm",
+   "squid5_e52tc_cal8_ds",
+   "squid5_e52tc_cal8_gemma",
+   "squid5_e52tc_cal8_glm",
+   "squid5_e52tc_fin_ds",
+   "squid5_e52tc_fit0_glm",
+   "squid5_e52tc_fit_gemma",
+   "squid5_e52tc_fit_glm",
+   "squid5_e52tc_t4_ds",
+   "squid5_e52tc_t4_gemma",
+   "squid5_e52tc_t4_glm",
+   "squid5_e52tc_t4_opus",
+   "squid5_e52tc_tl_ds",
+   "squid5_e52tc_tl_gemma",
+   "squid5_e52tc_tl_glm",
+   "squid5_e52tc_tln_ds",
+   "squid5_e52tc_tlt4_ds",
+   "squid5_e52tc_tlt4_gemma",
+   "squid5_e52tc_tlt4_glm",
+   "squid5_e52tc_tlt4b_gemma",
+   "squid5_e52tc_tlt4b_glm",
+   "squid5_e52tc_tlt4c_gemma",
+   "squid5_e52tc_tlt4c_glm"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_tokctl"
+  ]
+ },
+ "2026-11-03/e52_v33ab": {
+  "date": "2026-11-03",
+  "experiment": "e52_v33ab",
+  "title_ko": "5.2 v33ab 상금 배분 ablation (docker)",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v33ab_flat150k_docker_astra4, squid5_e52v33ab_flat150k_docker_fable4, squid5_e52v33ab_flat150k_docker_luna4, squid5_e52v33ab_flat150k_docker_opus4, squid5_e52v33ab_flat150k_docker_sol4, squid5_e52v33ab_flat5m_docker_astra4, squid5_e52v33ab_flat5m_docker_fable4, squid5_e52v33ab_flat5m_docker_luna4, squid5_e52v33ab_flat5m_docker_opus4, squid5_e52v33ab_flat5m_docker_sol4, squid5_e52v33ab_split600k_docker_astra4, squid5_e52v33ab_split600k_docker_fable4, squid5_e52v33ab_split600k_docker_luna4, squid5_e52v33ab_split600k_docker_opus4, squid5_e52v33ab_split600k_docker_sol4.",
+  "variants": [
+   "squid5_e52v33ab_flat150k_docker_astra4",
+   "squid5_e52v33ab_flat150k_docker_fable4",
+   "squid5_e52v33ab_flat150k_docker_luna4",
+   "squid5_e52v33ab_flat150k_docker_opus4",
+   "squid5_e52v33ab_flat150k_docker_sol4",
+   "squid5_e52v33ab_flat5m_docker_astra4",
+   "squid5_e52v33ab_flat5m_docker_fable4",
+   "squid5_e52v33ab_flat5m_docker_luna4",
+   "squid5_e52v33ab_flat5m_docker_opus4",
+   "squid5_e52v33ab_flat5m_docker_sol4",
+   "squid5_e52v33ab_split600k_docker_astra4",
+   "squid5_e52v33ab_split600k_docker_fable4",
+   "squid5_e52v33ab_split600k_docker_luna4",
+   "squid5_e52v33ab_split600k_docker_opus4",
+   "squid5_e52v33ab_split600k_docker_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v33ab"
+  ]
+ },
+ "2026-11-08/e52_v33so": {
+  "date": "2026-11-08",
+  "experiment": "e52_v33so",
+  "title_ko": "5.2 v33so stay_on 팔 (docker)",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: squid5_e52v33so_stayon_docker_astra4, squid5_e52v33so_stayon_docker_luna4, squid5_e52v33so_stayon_docker_opus4, squid5_e52v33so_stayon_docker_sol4.",
+  "variants": [
+   "squid5_e52v33so_stayon_docker_astra4",
+   "squid5_e52v33so_stayon_docker_luna4",
+   "squid5_e52v33so_stayon_docker_opus4",
+   "squid5_e52v33so_stayon_docker_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v33so"
+  ]
+ },
+ "2026-10-16/e52_v19": {
+  "date": "2026-10-16",
+  "experiment": "e52_v19",
+  "title_ko": "5.2 v19 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run_astra.log, run_fable.log, run_fable_s4106.log, run_fable_s4109.log, run_fable_s4110.log, run_fable_s4112.log, run_luna.log, run_luna_s2.log, run_luna_s3.log, run_opus.log, run_opus_resume.log, run_sol.log, run_sol_s2.log, run_sol_s3.log, squid5_e52v19_public_astra4, squid5_e52v19_public_fable4, squid5_e52v19_public_luna4, squid5_e52v19_public_opus4, squid5_e52v19_public_sol4.",
+  "variants": [
+   "run_astra.log",
+   "run_fable.log",
+   "run_fable_s4106.log",
+   "run_fable_s4109.log",
+   "run_fable_s4110.log",
+   "run_fable_s4112.log",
+   "run_luna.log",
+   "run_luna_s2.log",
+   "run_luna_s3.log",
+   "run_opus.log",
+   "run_opus_resume.log",
+   "run_sol.log",
+   "run_sol_s2.log",
+   "run_sol_s3.log",
+   "squid5_e52v19_public_astra4",
+   "squid5_e52v19_public_fable4",
+   "squid5_e52v19_public_luna4",
+   "squid5_e52v19_public_opus4",
+   "squid5_e52v19_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v19",
+   "/Users/bagjuhyeon/squid5-runs/e52_v19_failed"
+  ]
+ },
+ "2026-10-16/e52_v19b": {
+  "date": "2026-10-16",
+  "experiment": "e52_v19b",
+  "title_ko": "5.2 v19b 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run_luna.log, run_sol.log, squid5_e52v19b_public_luna4, squid5_e52v19b_public_sol4.",
+  "variants": [
+   "run_luna.log",
+   "run_sol.log",
+   "squid5_e52v19b_public_luna4",
+   "squid5_e52v19b_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v19b"
+  ]
+ },
+ "2026-10-21/e52_v34": {
+  "date": "2026-10-21",
+  "experiment": "e52_v34",
+  "title_ko": "5.2 v34 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run2_codex_deepseek4.log, run2_codex_gemma4.log, run2_codex_glm4.log, run2_public_opus4.log, run_codex_deepseek4.log, run_codex_gemma4.log, run_codex_glm4.log, run_public_opus4.log, run_public_sol4.log, squid5_e52v34_codex_deepseek4, squid5_e52v34_codex_gemma4, squid5_e52v34_codex_glm4, squid5_e52v34_public_opus4, squid5_e52v34_public_sol4.",
+  "variants": [
+   "run2_codex_deepseek4.log",
+   "run2_codex_gemma4.log",
+   "run2_codex_glm4.log",
+   "run2_public_opus4.log",
+   "run_codex_deepseek4.log",
+   "run_codex_gemma4.log",
+   "run_codex_glm4.log",
+   "run_public_opus4.log",
+   "run_public_sol4.log",
+   "squid5_e52v34_codex_deepseek4",
+   "squid5_e52v34_codex_gemma4",
+   "squid5_e52v34_codex_glm4",
+   "squid5_e52v34_public_opus4",
+   "squid5_e52v34_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v34"
+  ]
+ },
+ "2026-10-21/e52_v35": {
+  "date": "2026-10-21",
+  "experiment": "e52_v35",
+  "title_ko": "5.2 v35 런",
+  "summary_ko": "`~/squid5-runs/`에서 2026-11-11에 복사한 squid5 런. 구성: run2_deepseek4.log, run2_gemma.log, run2_glm4.log, run2_public_opus4.log, run2_public_sol4.log, run_codex_deepseek4.log, run_codex_gemma4.log, run_codex_glm4.log, run_public_opus4.log, run_public_sol4.log, squid5_e52v35_codex_deepseek4, squid5_e52v35_codex_gemma4, squid5_e52v35_codex_gemma4fit2, squid5_e52v35_codex_glm4, squid5_e52v35_public_opus4, squid5_e52v35_public_sol4.",
+  "variants": [
+   "run2_deepseek4.log",
+   "run2_gemma.log",
+   "run2_glm4.log",
+   "run2_public_opus4.log",
+   "run2_public_sol4.log",
+   "run_codex_deepseek4.log",
+   "run_codex_gemma4.log",
+   "run_codex_glm4.log",
+   "run_public_opus4.log",
+   "run_public_sol4.log",
+   "squid5_e52v35_codex_deepseek4",
+   "squid5_e52v35_codex_gemma4",
+   "squid5_e52v35_codex_gemma4fit2",
+   "squid5_e52v35_codex_glm4",
+   "squid5_e52v35_public_opus4",
+   "squid5_e52v35_public_sol4"
+  ],
+  "analyses": [],
+  "sources": [
+   "/Users/bagjuhyeon/squid5-runs/e52_v35"
+  ]
  }
 }

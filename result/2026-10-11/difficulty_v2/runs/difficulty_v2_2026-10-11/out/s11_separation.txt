@@ -1,0 +1,12 @@
+--- every round at N = 4
+v14g now (per-round side)         : counter 7.26 (sd 1.16) | vs sampler: gap +0.53, P(counter ahead) 61% | vs nearest-example: gap +0.47, P(ahead) 74%
+M6 (multi-prefix, latin)          : counter 8.41 (sd 0.77) | vs sampler: gap +1.25, P(counter ahead) 77% | vs nearest-example: gap +1.28, P(ahead) 100%
+M6 + 1 pinned query (all or nothing): counter 8.41 (sd 0.77) | vs sampler: gap +1.28, P(counter ahead) 77% | vs nearest-example: gap +0.58, P(ahead) 68%
+--- every round at N = 3
+v14g now (per-round side)         : counter 6.88 (sd 1.65) | vs sampler: gap +0.60, P(counter ahead) 63% | vs nearest-example: gap +0.36, P(ahead) 62%
+M6 (multi-prefix, latin)          : counter 6.53 (sd 0.98) | vs sampler: gap +1.20, P(counter ahead) 74% | vs nearest-example: gap +1.06, P(ahead) 79%
+M6 + 1 pinned query (all or nothing): counter 6.65 (sd 1.05) | vs sampler: gap +1.65, P(counter ahead) 82% | vs nearest-example: gap +1.66, P(ahead) 88%
+--- every round at N = 2
+v14g now (per-round side)         : counter 6.12 (sd 1.23) | vs sampler: gap +0.71, P(counter ahead) 65% | vs nearest-example: gap +1.62, P(ahead) 88%
+M6 (multi-prefix, latin)          : counter 4.94 (sd 0.64) | vs sampler: gap +0.68, P(counter ahead) 66% | vs nearest-example: gap +0.53, P(ahead) 68%
+M6 + 1 pinned query (all or nothing): counter 5.41 (sd 0.99) | vs sampler: gap +1.79, P(counter ahead) 84% | vs nearest-example: gap +2.12, P(ahead) 100%

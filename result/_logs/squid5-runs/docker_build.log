@@ -1,0 +1,95 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from agent-cli.Dockerfile
+#1 transferring dockerfile: 1.04kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-slim
+#2 ...
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-slim
+#2 DONE 2.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [1/3] FROM docker.io/library/node:22-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
+#5 CACHED
+
+#6 [2/3] RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*  && npm install -g @anthropic-ai/claude-code@2.1.303 @openai/codex@0.162.1  && npm cache clean --force
+#6 0.449 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#6 0.558 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#6 0.577 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#6 0.629 Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8689 kB]
+#6 2.007 Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+#6 2.021 Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [352 kB]
+#6 2.830 Fetched 9290 kB in 3s (3464 kB/s)
+#6 2.830 Reading package lists...
+#6 3.338 Reading package lists...
+#6 3.838 Building dependency tree...
+#6 3.949 Reading state information...
+#6 4.106 The following additional packages will be installed:
+#6 4.106   libssl3 openssl
+#6 4.122 The following NEW packages will be installed:
+#6 4.122   ca-certificates libssl3 openssl
+#6 4.187 0 upgraded, 3 newly installed, 0 to remove and 1 not upgraded.
+#6 4.187 Need to get 3400 kB of archives.
+#6 4.187 After this operation, 8942 kB of additional disk space will be used.
+#6 4.187 Get:1 http://deb.debian.org/debian-security bookworm-security/main arm64 libssl3 arm64 3.0.22-1~deb12u1 [1828 kB]
+#6 4.410 Get:2 http://deb.debian.org/debian-security bookworm-security/main arm64 openssl arm64 3.0.22-1~deb12u1 [1410 kB]
+#6 4.659 Get:3 http://deb.debian.org/debian-security bookworm-security/main arm64 ca-certificates all 20250419~deb12u1 [162 kB]
+#6 4.778 debconf: delaying package configuration, since apt-utils is not installed
+#6 4.796 Fetched 3400 kB in 1s (6313 kB/s)
+#6 4.810 Selecting previously unselected package libssl3:arm64.
+#6 4.810 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6090 files and directories currently installed.)
+#6 4.823 Preparing to unpack .../libssl3_3.0.22-1~deb12u1_arm64.deb ...
+#6 4.825 Unpacking libssl3:arm64 (3.0.22-1~deb12u1) ...
+#6 4.943 Selecting previously unselected package openssl.
+#6 4.944 Preparing to unpack .../openssl_3.0.22-1~deb12u1_arm64.deb ...
+#6 4.945 Unpacking openssl (3.0.22-1~deb12u1) ...
+#6 5.042 Selecting previously unselected package ca-certificates.
+#6 5.043 Preparing to unpack .../ca-certificates_20250419~deb12u1_all.deb ...
+#6 5.044 Unpacking ca-certificates (20250419~deb12u1) ...
+#6 5.071 Setting up libssl3:arm64 (3.0.22-1~deb12u1) ...
+#6 5.074 Setting up openssl (3.0.22-1~deb12u1) ...
+#6 5.079 Setting up ca-certificates (20250419~deb12u1) ...
+#6 5.135 debconf: unable to initialize frontend: Dialog
+#6 5.135 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#6 5.135 debconf: falling back to frontend: Readline
+#6 5.135 debconf: unable to initialize frontend: Readline
+#6 5.135 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/aarch64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/aarch64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/aarch64-linux-gnu/perl-base /usr/lib/aarch64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+#6 5.135 debconf: falling back to frontend: Teletype
+#6 5.395 Updating certificates in /etc/ssl/certs...
+#6 5.739 150 added, 0 removed; done.
+#6 5.756 Processing triggers for libc-bin (2.36-9+deb12u14) ...
+#6 5.778 Processing triggers for ca-certificates (20250419~deb12u1) ...
+#6 5.781 Updating certificates in /etc/ssl/certs...
+#6 6.062 0 added, 0 removed; done.
+#6 6.062 Running hooks in /etc/ca-certificates/update.d...
+#6 6.064 done.
+#6 32.61 
+#6 32.61 added 4 packages in 26s
+#6 32.61 npm notice
+#6 32.61 npm notice New major version of npm available! 10.9.9 -> 12.2.0
+#6 32.61 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+#6 32.61 npm notice To update run: npm install -g npm@12.2.0
+#6 32.61 npm notice
+#6 32.71 npm warn using --force Recommended protections disabled.
+#6 DONE 33.3s
+
+#7 [3/3] WORKDIR /home/node
+#7 DONE 0.0s
+
+#8 exporting to image
+#8 exporting layers
+#8 exporting layers 1.4s done
+#8 writing image sha256:c935390a9a79be7a2294a71edd5e1b19a8a20193d736891f7fbf13956b0183b5 done
+#8 naming to docker.io/library/squid5-agent-cli:latest done
+#8 naming to docker.io/library/squid5-agent-cli:cc2.1.303-codex0.162.1 done
+#8 DONE 1.4s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/lbo299iu7ckm11c4s1pfcej9k

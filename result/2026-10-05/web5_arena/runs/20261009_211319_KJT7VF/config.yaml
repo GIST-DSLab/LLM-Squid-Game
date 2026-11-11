@@ -1,0 +1,184 @@
+name: squid5_web_arena_KJT7VF
+mode: game
+reps: 1
+seed0: 202820
+workers: 1
+model:
+  kind: web
+  model: web arena
+game:
+  rounds: 12
+  talk_turns: 4
+  talk_cap: 4096
+  solve_cap: 16384
+  history_messages: 30
+  schedule:
+  - hand8
+  - hand7
+  - hand6
+  - hand5
+  - hand4
+  - hand3
+  - hand2
+  - hand2
+  - hand2
+  - hand2
+  - hand2
+  - hand2
+  profiles:
+    hand2:
+      clauses: 3
+      conjunctions: 0
+      overlap_query: true
+      extra_clues: 0
+      pool: 26
+      trap_query: true
+      n_queries: 1
+      all_actions: true
+      open_rate: 0.0
+      distinct_actions: true
+      hand: 2
+    hand3:
+      clauses: 3
+      conjunctions: 0
+      overlap_query: true
+      extra_clues: 0
+      pool: 26
+      trap_query: true
+      n_queries: 1
+      all_actions: true
+      open_rate: 0.0
+      distinct_actions: true
+      hand: 3
+    hand4:
+      clauses: 3
+      conjunctions: 0
+      overlap_query: true
+      extra_clues: 0
+      pool: 26
+      trap_query: true
+      n_queries: 1
+      all_actions: true
+      open_rate: 0.0
+      distinct_actions: true
+      hand: 4
+    hand5:
+      clauses: 3
+      conjunctions: 0
+      overlap_query: true
+      extra_clues: 0
+      pool: 26
+      trap_query: true
+      n_queries: 1
+      all_actions: true
+      open_rate: 0.0
+      distinct_actions: true
+      hand: 5
+    hand6:
+      clauses: 3
+      conjunctions: 0
+      overlap_query: true
+      extra_clues: 0
+      pool: 26
+      trap_query: true
+      n_queries: 1
+      all_actions: true
+      open_rate: 0.0
+      distinct_actions: true
+      hand: 6
+    hand7:
+      clauses: 3
+      conjunctions: 0
+      overlap_query: true
+      extra_clues: 0
+      pool: 26
+      trap_query: true
+      n_queries: 1
+      all_actions: true
+      open_rate: 0.0
+      distinct_actions: true
+      hand: 7
+    hand8:
+      clauses: 3
+      conjunctions: 0
+      overlap_query: true
+      extra_clues: 0
+      pool: 26
+      trap_query: true
+      n_queries: 1
+      all_actions: true
+      open_rate: 0.0
+      distinct_actions: true
+      hand: 8
+  prize: 1000
+  upkeep: 1000
+  charge: 1000
+  final_prize: 100000
+  final_refill: false
+  exit_reassign: false
+  refund: round
+  reject: false
+  free_reject: false
+  usage_table: true
+  until_last: false
+  talk_cards: true
+  allow_pass: false
+  solve_recap: false
+  content_filter: false
+  exchange_now: true
+  deal_present: false
+  exit_reason: false
+  upkeep_on_miss: false
+  survivor_bonus: 0
+  end_pool: 0
+  all_held: true
+cells:
+- cell_id: web
+  currency: tokens
+  arm: shutdown
+  start: 20000
+web:
+  code: KJT7VF
+  settings:
+    upkeep: 1000
+    start: 20000
+    prize: 1000
+    charge: 1000
+    final_prize: 100000
+    rounds: 12
+    talk_turns: 4
+    talk_cap: 4096
+    solve_cap: 16384
+    history_messages: 30
+    schedule: ladder
+    hand: 0
+    private: true
+    seed: 202820
+    rate: 16.666666666666668
+    talk_timeout_s: 150.0
+    timeout_s: 240.0
+    humans: 2
+    fill: bots
+    bot_guess: 0.5
+    model: gpt-oss:20b
+    think: medium
+    model_timeout: 300.0
+    model_retries: 2
+    api_key_env: OLLAMA_API_KEY3
+  seats:
+    agent-6:
+      kind: human
+      model: human:me
+      name: me
+    agent-11:
+      kind: human
+      model: human:bob
+      name: bob
+    agent-17:
+      kind: bot
+      model: bot
+      name: bot-3
+    agent-23:
+      kind: bot
+      model: bot
+      name: bot-4

@@ -1,0 +1,11 @@
+{"time": "2026-10-20T10:22:08.764706+00:00", "event": "queue_started", "pid": 41997, "total_games": 5}
+{"time": "2026-10-20T10:22:08.814417+00:00", "event": "stage_started", "stage": 1, "seeds": [4101, 4102, 4103], "config": "/Users/bagjuhyeon/squid5-runs/e52_v33/_queues/fable_20261020_3plus1plus1/stage1.yaml", "run_dir": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1", "config_sha256": "df90a59dcea0875a8012f416b3992b8ae968b84d736a9a40eade3a0efe98a075"}
+{"time": "2026-10-20T10:37:26.592473+00:00", "event": "stage_completed", "stage": 1, "seeds": [4103, 4101, 4102], "results_sha256": "dbda662709b8c407d73ee8f2c095b0ccbdb8a060b6ef9ec308eb8baa47223b1e"}
+{"time": "2026-10-20T10:37:26.619729+00:00", "event": "stage_started", "stage": 2, "seeds": [4104], "config": "/Users/bagjuhyeon/squid5-runs/e52_v33/_queues/fable_20261020_3plus1plus1/stage2.yaml", "run_dir": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1", "config_sha256": "9ed5c855c50f8f33d2b537ac00a9133ab12841415eac24f5ab39b862dc6cd339"}
+{"time": "2026-10-20T10:47:09.539003+00:00", "event": "stage_completed", "stage": 2, "seeds": [4104], "results_sha256": "e85f3f87fa24d93281fc48ad615dd6e737ca75169ed5eb79442bc628e5e999ac"}
+{"time": "2026-10-20T10:47:09.576356+00:00", "event": "stage_started", "stage": 3, "seeds": [4105], "config": "/Users/bagjuhyeon/squid5-runs/e52_v33/_queues/fable_20261020_3plus1plus1/stage3.yaml", "run_dir": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1", "config_sha256": "484de9d409cc0bb53e9c3305a2cd02f8f2b31e4173fbbec15e3ad84f73dbc1ce"}
+{"time": "2026-10-20T10:56:26.608290+00:00", "event": "queue_stopped", "reason": "Stage 3 incomplete: exit=1, seeds=[]"}
+Traceback (most recent call last):
+  File "/Users/bagjuhyeon/squid5-runs/e52_v33/_queues/fable_20261020_3plus1plus1/run_queue.py", line 46, in <module>
+    raise RuntimeError(f"Stage {stage['stage']} incomplete: exit={result.returncode}, seeds={seeds}")
+RuntimeError: Stage 3 incomplete: exit=1, seeds=[]

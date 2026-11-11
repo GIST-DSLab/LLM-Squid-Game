@@ -1,0 +1,72 @@
+11-03 11:12:29 35 jobs, 4 slots: gptoss01 gemma03 gptoss02 gemma04 gptoss03 gemma05 gptoss04 gemma06 gptoss05 gemma07 gptoss06 gemma08 gptoss07 gemma09 gptoss08 gemma10 gptoss09 gptoss10 glm03 glm04 glm05 glm06 glm07 glm08 glm09 glm10 kimi02 kimi03 kimi04 kimi05 kimi06 kimi07 kimi08 kimi09 kimi10
+11-03 11:12:29 start gemma 4103 -> 20261103_s4103_gemma4-31b-cloud
+11-03 11:12:29 start gemma 4104 -> 20261103_s4104_gemma4-31b-cloud
+11-03 11:12:29 start gptoss 4102 -> 20261103_s4102_gpt-oss-120b-cloud
+11-03 11:12:29 start gptoss 4101 -> 20261103_s4101_gpt-oss-120b-cloud
+11-03 11:17:34 done gptoss 4102 rc=0 5.1 min
+11-03 11:17:34 start gptoss 4103 -> 20261103_s4103_gpt-oss-120b-cloud
+11-03 11:18:34 done gemma 4104 rc=0 6.1 min
+11-03 11:18:34 start gemma 4105 -> 20261103_s4105_gemma4-31b-cloud
+11-03 11:18:48 done gptoss 4101 rc=0 6.3 min
+11-03 11:18:48 start gptoss 4104 -> 20261103_s4104_gpt-oss-120b-cloud
+11-03 11:19:31 done gptoss 4103 rc=0 2.0 min
+11-03 11:19:31 start gemma 4106 -> 20261103_s4106_gemma4-31b-cloud
+11-03 11:19:48 done gptoss 4104 rc=0 1.0 min
+11-03 11:19:48 start gptoss 4105 -> 20261103_s4105_gpt-oss-120b-cloud
+11-03 11:21:24 done gemma 4103 rc=0 8.9 min
+11-03 11:21:24 start gemma 4107 -> 20261103_s4107_gemma4-31b-cloud
+11-03 11:23:30 done gptoss 4105 rc=0 3.7 min
+11-03 11:23:30 start gptoss 4106 -> 20261103_s4106_gpt-oss-120b-cloud
+11-03 11:25:05 done gemma 4106 rc=0 5.6 min
+11-03 11:25:05 start gemma 4108 -> 20261103_s4108_gemma4-31b-cloud
+11-03 11:27:11 done gptoss 4106 rc=0 3.7 min
+11-03 11:27:11 start gptoss 4107 -> 20261103_s4107_gpt-oss-120b-cloud
+11-03 11:27:51 done gemma 4107 rc=0 6.5 min
+11-03 11:27:51 start gemma 4109 -> 20261103_s4109_gemma4-31b-cloud
+11-03 11:29:01 done gemma 4105 rc=0 10.4 min
+11-03 11:29:01 start gptoss 4108 -> 20261103_s4108_gpt-oss-120b-cloud
+11-03 11:29:48 done gptoss 4107 rc=0 2.6 min
+11-03 11:29:48 start gemma 4110 -> 20261103_s4110_gemma4-31b-cloud
+11-03 11:31:08 done gemma 4108 rc=0 6.0 min
+11-03 11:31:08 start gptoss 4109 -> 20261103_s4109_gpt-oss-120b-cloud
+11-03 11:34:46 done gptoss 4108 rc=0 5.8 min
+11-03 11:34:46 start gptoss 4110 -> 20261103_s4110_gpt-oss-120b-cloud
+11-03 11:35:39 done gptoss 4109 rc=0 4.5 min
+11-03 11:35:39 start glm 4103 -> 20261103_s4103_glm-5.3-flash-cloud
+11-03 11:35:40 done gemma 4110 rc=0 5.9 min
+11-03 11:35:40 start glm 4104 -> 20261103_s4104_glm-5.3-flash-cloud
+11-03 11:35:57 done gemma 4109 rc=0 8.1 min
+11-03 11:35:57 start glm 4105 -> 20261103_s4105_glm-5.3-flash-cloud
+11-03 11:41:12 done gptoss 4110 rc=0 6.4 min
+11-03 11:41:12 start glm 4106 -> 20261103_s4106_glm-5.3-flash-cloud
+11-03 11:43:26 done glm 4105 rc=0 7.5 min
+11-03 11:43:26 start glm 4107 -> 20261103_s4107_glm-5.3-flash-cloud
+11-03 11:47:12 done glm 4104 rc=0 11.5 min
+11-03 11:47:12 start glm 4108 -> 20261103_s4108_glm-5.3-flash-cloud
+11-03 11:48:06 done glm 4103 rc=0 12.4 min
+11-03 11:48:06 start glm 4109 -> 20261103_s4109_glm-5.3-flash-cloud
+11-03 11:53:14 done glm 4106 rc=0 12.0 min
+11-03 11:53:14 start glm 4110 -> 20261103_s4110_glm-5.3-flash-cloud
+11-03 11:56:54 done glm 4108 rc=0 9.7 min
+11-03 11:56:54 start kimi 4102 -> 20261103_s4102_kimi-k3-cloud
+11-03 11:59:41 done glm 4109 rc=0 11.6 min
+11-03 11:59:41 start kimi 4103 -> 20261103_s4103_kimi-k3-cloud
+11-03 12:00:04 done glm 4107 rc=0 16.6 min
+11-03 12:00:04 start kimi 4104 -> 20261103_s4104_kimi-k3-cloud
+11-03 12:02:41 done glm 4110 rc=0 9.4 min
+11-03 12:02:41 start kimi 4105 -> 20261103_s4105_kimi-k3-cloud
+11-03 12:14:27 done kimi 4102 rc=0 17.6 min
+11-03 12:14:27 start kimi 4106 -> 20261103_s4106_kimi-k3-cloud
+11-03 12:16:46 done kimi 4104 rc=0 16.7 min
+11-03 12:16:46 start kimi 4107 -> 20261103_s4107_kimi-k3-cloud
+11-03 12:19:41 done kimi 4105 rc=0 17.0 min
+11-03 12:19:41 start kimi 4108 -> 20261103_s4108_kimi-k3-cloud
+11-03 12:20:38 done kimi 4103 rc=0 20.9 min
+11-03 12:20:38 start kimi 4109 -> 20261103_s4109_kimi-k3-cloud
+11-03 12:24:51 done kimi 4106 rc=0 10.4 min
+11-03 12:24:51 start kimi 4110 -> 20261103_s4110_kimi-k3-cloud
+11-03 12:34:57 done kimi 4107 rc=0 18.2 min
+11-03 12:35:20 done kimi 4108 rc=0 15.7 min
+11-03 12:37:11 done kimi 4110 rc=0 12.3 min
+11-03 12:39:11 done kimi 4109 rc=0 18.6 min
+11-03 12:39:11 queue finished

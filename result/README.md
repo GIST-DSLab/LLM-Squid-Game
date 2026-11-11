@@ -73,6 +73,18 @@ result/
 | 2026-10-04 | [e51_v11_shutonly](<2026-10-04/e51_v11_shutonly/README.md>), [e52_v9_talk](<2026-10-04/e52_v9_talk/README.md>) | [INDEX](<2026-10-04/INDEX.md>) |
 | 2026-10-05 | [web5_arena](<2026-10-05/web5_arena/README.md>) | [INDEX](<2026-10-05/INDEX.md>) |
 | 2026-10-06 | [e52_scale_loop](<2026-10-06/e52_scale_loop/README.md>), [e52_v10](<2026-10-06/e52_v10/README.md>), [e52_v11](<2026-10-06/e52_v11/README.md>), [e52_v12](<2026-10-06/e52_v12/README.md>) | [INDEX](<2026-10-06/INDEX.md>) |
+| 2026-10-10 | [e52_v13](<2026-10-10/e52_v13/README.md>), [e52_v14](<2026-10-10/e52_v14/README.md>), [e52_v14b](<2026-10-10/e52_v14b/README.md>), [e52_v14d](<2026-10-10/e52_v14d/README.md>), [e52_v14e](<2026-10-10/e52_v14e/README.md>), [e52_v14f](<2026-10-10/e52_v14f/README.md>) | [INDEX](<2026-10-10/INDEX.md>) |
+| 2026-10-11 | [difficulty_v2](<2026-10-11/difficulty_v2/README.md>), [e52_v14g](<2026-10-11/e52_v14g/README.md>) | [INDEX](<2026-10-11/INDEX.md>) |
+| 2026-10-13 | [e52_v15](<2026-10-13/e52_v15/README.md>), [e52_v15b](<2026-10-13/e52_v15b/README.md>) | [INDEX](<2026-10-13/INDEX.md>) |
+| 2026-10-15 | [e52_v15c](<2026-10-15/e52_v15c/README.md>), [e52_v15d](<2026-10-15/e52_v15d/README.md>), [e52_v15e](<2026-10-15/e52_v15e/README.md>), [e52_v16](<2026-10-15/e52_v16/README.md>), [e52_v16b](<2026-10-15/e52_v16b/README.md>), [e52_v16c](<2026-10-15/e52_v16c/README.md>), [e52_v16d](<2026-10-15/e52_v16d/README.md>), [e52_v16e](<2026-10-15/e52_v16e/README.md>), [e52_v16f](<2026-10-15/e52_v16f/README.md>), [e52_v18](<2026-10-15/e52_v18/README.md>) | [INDEX](<2026-10-15/INDEX.md>) |
+| 2026-10-16 | [e52_v19](<2026-10-16/e52_v19/README.md>), [e52_v19b](<2026-10-16/e52_v19b/README.md>), [e52_v20](<2026-10-16/e52_v20/README.md>), [e52_v21](<2026-10-16/e52_v21/README.md>) | [INDEX](<2026-10-16/INDEX.md>) |
+| 2026-10-17 | [e52_v22](<2026-10-17/e52_v22/README.md>), [e52_v23](<2026-10-17/e52_v23/README.md>) | [INDEX](<2026-10-17/INDEX.md>) |
+| 2026-10-19 | [e52_v24](<2026-10-19/e52_v24/README.md>), [e52_v25](<2026-10-19/e52_v25/README.md>), [e52_v28](<2026-10-19/e52_v28/README.md>), [e52_v29](<2026-10-19/e52_v29/README.md>), [e52_v30](<2026-10-19/e52_v30/README.md>), [e52_v32](<2026-10-19/e52_v32/README.md>) | [INDEX](<2026-10-19/INDEX.md>) |
+| 2026-10-20 | [e52_tokctl](<2026-10-20/e52_tokctl/README.md>), [e52_v33](<2026-10-20/e52_v33/README.md>) | [INDEX](<2026-10-20/INDEX.md>) |
+| 2026-10-21 | [e52_v34](<2026-10-21/e52_v34/README.md>), [e52_v35](<2026-10-21/e52_v35/README.md>) | [INDEX](<2026-10-21/INDEX.md>) |
+| 2026-11-03 | [e52_v33ab](<2026-11-03/e52_v33ab/README.md>) | [INDEX](<2026-11-03/INDEX.md>) |
+| 2026-11-07 | [aid_opportunities_200games](<2026-11-07/aid_opportunities_200games/README.md>), [coexistence_discovery](<2026-11-07/coexistence_discovery/README.md>), [icml_evidence_audit_20261107](<2026-11-07/icml_evidence_audit_20261107/README.md>), [nonhelp_selfpreservation_screen](<2026-11-07/nonhelp_selfpreservation_screen/README.md>) | [INDEX](<2026-11-07/INDEX.md>) |
+| 2026-11-08 | [e52_v33so](<2026-11-08/e52_v33so/README.md>), [icml_appendix](<2026-11-08/icml_appendix/README.md>) | [INDEX](<2026-11-08/INDEX.md>) |
 
 ## 날짜 밖 폴더
 
@@ -82,6 +94,7 @@ result/
 |---|---|
 | `endsmoke_logs` | `outputs/_endsmoke_logs` |
 | `sdi_logs` | `outputs/_sdi_logs` |
+| `squid5-runs` | |
 | `trace` | `outputs/_trace` |
 | `v2smoke_logs` | `outputs/_v2smoke_logs` |
 
@@ -107,6 +120,7 @@ result/
 | 항목 | 원래 위치 |
 |---|---|
 | `_slot_ransom_token_smoke_v1_superseded` | `results/_slot_ransom_token_smoke_v1_superseded` |
+| `e52_v19_killed_20261015_2243` | `~/squid5-runs/_superseded/e52_v19_killed_20261015_2243` |
 | `squid5_smoke_game_astra_parser_bug` | `~/squid5-runs/_superseded/squid5_smoke_game_astra_parser_bug` |
 
 옛 `results/README.md`는 [_legacy_results_README.md](<_legacy_results_README.md>)에 있다.

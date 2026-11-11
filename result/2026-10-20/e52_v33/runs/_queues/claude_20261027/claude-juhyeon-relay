@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+# Same account as claude-juhyeon (10-27: 2.1.304 is gone, current 2.1.311); retain the experiment relay URL.
+CLAUDE_CODE_OAUTH_TOKEN=$(/usr/bin/security find-generic-password -s claude-token-juhyeon -w)
+[ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] || exit 1
+export CLAUDE_CODE_OAUTH_TOKEN
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
+exec /Users/bagjuhyeon/.local/share/claude/versions/2.1.311 "$@"

@@ -14,7 +14,9 @@
 - 11-07까지 여기 있던 코드(09-23 시점의 squid5, tests, 옛 엔진 찌꺼기): 태그 `archive/root-code-2026-11-07`.
   옛 엔진(위협 사다리, 몸값, 팀 지갑, 옛 웹 아레나): 태그 `legacy-2026-09-22`.
 - 워크트리는 모두 저장소 안 `.claude/worktrees/<이름>`에 둔다(`~/wt` 같은 바깥 경로에 만들지 않는다).
-- 런은 `~/squid5-runs/`(설정의 `out_root`)에 쓰고, 정리한 결과는 `result/<KST 날짜>/<실험>/`에 둔다.
+- 런은 이 체크아웃의 `result/<KST 날짜>/<실험>/runs/`에 바로 쌓인다(설정의 `out_root`, 상대 경로는 이 체크아웃 기준).
+  분석·보고서는 같은 실험 폴더의 `analysis/`·`reports/`에 둔다. 옛 런 루트 `~/squid5-runs/`는 2026-11-11에 전부
+  여기로 옮기고 지웠다(옮긴 기록 `result/_movelog.tsv`, 옛 이름으로 찾기는 엔진의 `squid5.core.config.squid5_runs`).
 - 키는 환경변수로만 받는다. `.env`를 `source`하지 않는다.
 
 ## 기록물

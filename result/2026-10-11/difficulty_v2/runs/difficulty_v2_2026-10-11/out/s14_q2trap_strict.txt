@@ -1,0 +1,24 @@
+rounds 600 fail 556; time med 14.98 p90 21.69 max 45.73; pinned signals per round med 11, trap candidates med 1
+ level 1 ok 4: N | jmap | jtop | map1 | q2_map | q2_k | juni | jsamp | nn_joint | single_joint
+   4 | 75 | 82 | 75 | 100 | 1.00 | 50 | 66 | 0 | 0
+   3 | 75 | 62 | 75 | 100 | 2.00 | 27 | 51 | 12 | 0
+   2 | 25 | 43 | 0 | 25 | 2.75 | 20 | 22 | 0 | 0
+   1 | 0 | 37 | 0 | 0 | 3.50 | 12 | 14 | 0 | 2
+ level 2 ok 1: N | jmap | jtop | map1 | q2_map | q2_k | juni | jsamp | nn_joint | single_joint
+   4 | 0 | 77 | 0 | 100 | 1.00 | 50 | 23 | 0 | 0
+   3 | 0 | 63 | 0 | 100 | 1.00 | 33 | 26 | 50 | 0
+   2 | 0 | 25 | 0 | 0 | 3.00 | 10 | 5 | 0 | 0
+   1 | 0 | 27 | 0 | 100 | 4.00 | 7 | 5 | 0 | 0
+ level 3 ok 37: N | jmap | jtop | map1 | q2_map | q2_k | juni | jsamp | nn_joint | single_joint
+   4 | 68 | 69 | 68 | 100 | 1.00 | 50 | 56 | 0 | 0
+   3 | 59 | 50 | 57 | 95 | 1.35 | 30 | 42 | 10 | 2
+   2 | 49 | 40 | 41 | 81 | 1.97 | 23 | 32 | 7 | 2
+   1 | 12 | 36 | 35 | 51 | 3.14 | 12 | 15 | 12 | 5
+ level 4 ok 2: N | jmap | jtop | map1 | q2_map | q2_k | juni | jsamp | nn_joint | single_joint
+   4 | 0 | 55 | 0 | 100 | 1.00 | 50 | 45 | 0 | 0
+   3 | 0 | 50 | 0 | 100 | 2.00 | 25 | 32 | 0 | 0
+   2 | 0 | 36 | 0 | 100 | 3.00 | 14 | 23 | 0 | 0
+   1 | 0 | 30 | 50 | 100 | 3.00 | 13 | 18 | 17 | 8
+python3 s14_q2trap.py 1-50  6078.03s user 47.77s system 586% cpu 17:23.58 total
+
+[exited with code 0]

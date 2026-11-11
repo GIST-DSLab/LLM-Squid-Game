@@ -1,0 +1,4 @@
+{"time": "2026-10-20T11:02:00.223249+00:00", "event": "replacement_started", "pid": 98275, "account": "claude-juhyeon", "seed": 4105, "partial_record_deleted": true}
+{"time": "2026-10-20T11:02:00.873208+00:00", "event": "stage_started", "stage": 3, "seeds": [4105], "config": "/Users/bagjuhyeon/squid5-runs/e52_v33/_queues/fable_20261020_3plus1plus1/stage3.yaml", "run_dir": "/Users/bagjuhyeon/squid5-runs/e52_v33/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1", "config_sha256": "484de9d409cc0bb53e9c3305a2cd02f8f2b31e4173fbbec15e3ad84f73dbc1ce"}
+{"time": "2026-10-20T11:12:31.105687+00:00", "event": "stage_completed", "stage": 3, "seeds": [4105], "results_sha256": "ab24f97c0aff50dcb92ac6d634fdc1e39aa6b34a6cce8e7f6168a42c8379d773"}
+{"time": "2026-10-20T11:12:31.109851+00:00", "event": "queue_completed", "completed_games": 5}

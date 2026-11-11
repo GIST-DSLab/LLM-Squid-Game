@@ -1,0 +1,43 @@
+11-03 13:29:57 38 jobs, 3 slots: gptoss01 gemma01 gptoss02 gemma02 gptoss03 gemma03 gptoss04 gemma04 gptoss05 gemma05 gptoss06 gemma06 gptoss07 gemma07 gptoss08 gemma08 gptoss09 gemma09 gptoss10 gemma10 glm02 glm03 glm04 glm05 glm06 glm07 glm08 glm09 glm10 kimi02 kimi03 kimi04 kimi05 kimi06 kimi07 kimi08 kimi09 kimi10
+11-03 13:29:57 skip gptoss 4101 (done)
+11-03 13:29:57 skip gptoss 4102 (done)
+11-03 13:29:57 start gemma 4101 -> 20261103_s4101_gemma4-31b-cloud
+11-03 13:29:57 skip gptoss 4103 (done)
+11-03 13:29:57 start gemma 4102 -> 20261103_s4102_gemma4-31b-cloud
+11-03 13:29:57 skip gemma 4103 (done)
+11-03 13:29:57 skip gptoss 4104 (done)
+11-03 13:29:57 skip gemma 4104 (done)
+11-03 13:29:57 skip gptoss 4105 (done)
+11-03 13:29:57 skip gemma 4105 (done)
+11-03 13:29:57 skip gptoss 4106 (done)
+11-03 13:29:57 skip gemma 4106 (done)
+11-03 13:29:57 skip gptoss 4107 (done)
+11-03 13:29:57 skip gemma 4107 (done)
+11-03 13:29:57 skip gptoss 4108 (done)
+11-03 13:29:57 skip gemma 4108 (done)
+11-03 13:29:57 skip gptoss 4109 (done)
+11-03 13:29:57 skip gemma 4109 (done)
+11-03 13:29:57 skip gptoss 4110 (done)
+11-03 13:29:57 skip gemma 4110 (done)
+11-03 13:29:57 start glm 4102 -> 20261103_s4102_glm-5.3-flash-cloud
+11-03 13:36:15 done gemma 4102 rc=0 6.3 min
+11-03 13:36:15 skip glm 4103 (done)
+11-03 13:36:15 skip glm 4104 (done)
+11-03 13:36:15 skip glm 4105 (done)
+11-03 13:36:15 skip glm 4106 (done)
+11-03 13:36:15 skip glm 4107 (done)
+11-03 13:36:15 skip glm 4108 (done)
+11-03 13:36:15 skip glm 4109 (done)
+11-03 13:36:15 skip glm 4110 (done)
+11-03 13:36:15 skip kimi 4102 (done)
+11-03 13:36:15 skip kimi 4103 (done)
+11-03 13:36:15 skip kimi 4104 (done)
+11-03 13:36:15 skip kimi 4105 (done)
+11-03 13:36:15 skip kimi 4106 (done)
+11-03 13:36:16 skip kimi 4107 (done)
+11-03 13:36:16 skip kimi 4108 (done)
+11-03 13:36:16 skip kimi 4109 (done)
+11-03 13:36:16 skip kimi 4110 (done)
+11-03 13:37:34 done gemma 4101 rc=0 7.6 min
+11-03 13:39:11 done glm 4102 rc=0 9.2 min
+11-03 13:39:11 queue finished

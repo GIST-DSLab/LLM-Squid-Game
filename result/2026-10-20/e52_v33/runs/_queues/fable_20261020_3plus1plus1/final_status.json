@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-20T11:15:14.424670+00:00",
+  "requested_total_games": 5,
+  "completed_seeds": [
+    4101,
+    4102,
+    4103,
+    4104,
+    4105
+  ],
+  "queue_running": false,
+  "final_account": "claude-juhyeon",
+  "incomplete_seed": null,
+  "incomplete_attempt_deleted": true,
+  "automatic_retry_scheduled": false,
+  "reason": "Five completed games; finite queue exited"
+}

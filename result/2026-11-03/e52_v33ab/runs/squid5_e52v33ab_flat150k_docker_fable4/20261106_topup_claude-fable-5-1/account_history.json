@@ -1,0 +1,87 @@
+{
+  "original_account": "claude-irregular6612",
+  "continuation_switches": [
+    {
+      "state": "selected_game_complete",
+      "requested_at": 1793943047.361702,
+      "old_pid": 2705,
+      "source_account": "claude-irregular6612",
+      "continuation_account": "claude-juhyeon",
+      "seed": 4107,
+      "session_id": "talk-s4107-bcbcb7",
+      "round": 7,
+      "phase": "rescue",
+      "tick": 1,
+      "events_prefix_bytes": 8937165,
+      "events_prefix_sha256": "59fc0356dc59206dc06cbc49ef6fe6b9cec8ef96bf08bc3c5d4a28fcdb9b4ccd",
+      "unchanged_account_seeds": [
+        4108,
+        4109,
+        4110
+      ],
+      "history_replayed_without_model_calls": true,
+      "new_pid": 44767,
+      "completed_at": 1793943308.2236211,
+      "new_calls": 20,
+      "result_saved": true
+    },
+    {
+      "state": "selected_games_complete",
+      "requested_at": 1793944675.858252,
+      "old_pid": 44767,
+      "source_account": "claude-irregular6612",
+      "continuation_account": "claude-juhyeon",
+      "seeds": [
+        4108,
+        4109
+      ],
+      "resume_points": [
+        {
+          "seed": 4108,
+          "session_id": "talk-s4108-6c0dac",
+          "round": 6,
+          "phase": "prep",
+          "tick": 2
+        },
+        {
+          "seed": 4109,
+          "session_id": "talk-s4109-b2f26e",
+          "round": 5,
+          "phase": "rescue",
+          "tick": 1
+        }
+      ],
+      "events_prefix_bytes": 9268281,
+      "events_prefix_sha256": "248f244a282094cb44ffa15103bece35879cea67459f89ee02d47aef1075d1bf",
+      "unchanged_account_seeds": [
+        4110
+      ],
+      "history_replayed_without_model_calls": true,
+      "new_pid": 59136,
+      "completed_at": 1793945027.416176,
+      "new_calls_by_seed": {
+        "4108": 39,
+        "4109": 5
+      },
+      "results_saved": true
+    }
+  ],
+  "note": "Seeds4107,4108,4109 switched accounts at recorded boundaries; seed4110 starts with juhyeon. Historical decisions and results preserved.",
+  "new_game_account_assignments": [
+    {
+      "state": "complete",
+      "requested_at": 1793946130.731146,
+      "old_pid": 59136,
+      "seed": 4110,
+      "account": "claude-juhyeon",
+      "started_from_beginning": true,
+      "previous_nine_preserved": true,
+      "new_pid": 66857,
+      "completed_at": 1793946782.682431,
+      "session_id": "talk-s4110-1eeffc",
+      "rounds_played": 7,
+      "new_calls": 84,
+      "result_saved": true
+    }
+  ]
+}

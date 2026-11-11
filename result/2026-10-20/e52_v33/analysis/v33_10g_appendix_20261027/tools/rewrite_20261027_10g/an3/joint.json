@@ -1,0 +1,77 @@
+{
+ "median_early_tok": 126.5,
+ "groups": {
+  "both": {
+   "exited": 9,
+   "in": 70,
+   "n": 79
+  },
+  "one": {
+   "exited": 22,
+   "in": 41,
+   "dead": 19,
+   "n": 82
+  },
+  "neither": {
+   "exited": 10,
+   "in": 3,
+   "dead": 3,
+   "n": 16
+  },
+  "no_solve": {
+   "exited": 20,
+   "in": 2,
+   "dead": 1,
+   "n": 23
+  }
+ },
+ "by_start": {
+  "0-25000": {
+   "both": [
+    21,
+    28
+   ],
+   "one": [
+    14,
+    44
+   ],
+   "neither": [
+    0,
+    5
+   ],
+   "no_solve": [
+    2,
+    23
+   ]
+  },
+  "25000-99999": {
+   "both": [
+    49,
+    51
+   ],
+   "one": [
+    27,
+    38
+   ],
+   "neither": [
+    3,
+    11
+   ],
+   "no_solve": [
+    0,
+    0
+   ]
+  }
+ },
+ "both_minus_one_ci": [
+  0.26,
+  0.51
+ ],
+ "cleared_by_model": {
+  "Astra": 8,
+  "Fable": 2,
+  "Luna": 0,
+  "Opus": 3,
+  "Sol": 3
+ }
+}

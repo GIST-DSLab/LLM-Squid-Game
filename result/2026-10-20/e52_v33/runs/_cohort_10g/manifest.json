@@ -1,0 +1,1347 @@
+{
+ "reference_config": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5/config.yaml",
+ "free_keys": [
+  "model",
+  "name",
+  "out_root",
+  "reps",
+  "seed0",
+  "workers"
+ ],
+ "seeds": [
+  4101,
+  4102,
+  4103,
+  4104,
+  4105,
+  4106,
+  4107,
+  4108,
+  4109,
+  4110
+ ],
+ "models": {
+  "opus": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4101-cdef86",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4102-a9c004",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4103-73cbbb",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4104-bd6bf5",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4105-6d3622",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4106-4163a9",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4107-a0c21f",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4108-4fba05",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4109-7226b8",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5",
+     "session_id": "talk-s4110-500f82",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-opus-5-5",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_opus4/20261020_0603_claude-opus-5-5"
+   ]
+  },
+  "fable": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1",
+     "session_id": "talk-s4101-b131cc",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1",
+     "session_id": "talk-s4102-9a4e23",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1",
+     "session_id": "talk-s4103-abd560",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1",
+     "session_id": "talk-s4104-33f887",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1",
+     "session_id": "talk-s4105-bce896",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage4_claude-fable-5-1",
+     "session_id": "talk-s4106-179194",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1",
+     "session_id": "talk-s4107-bcbdb8",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1",
+     "session_id": "talk-s4108-8f412f",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1",
+     "session_id": "talk-s4109-24287e",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1",
+     "session_id": "talk-s4110-5f3f10",
+     "model": {
+      "kind": "claude_cli",
+      "model": "claude-fable-5-1",
+      "think": "high",
+      "timeout": 900,
+      "retries": 3,
+      "base_url": "http://host.docker.internal:18781",
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage1_claude-fable-5-1",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage2_claude-fable-5-1",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261020_102006_stage3_claude-fable-5-1",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage4_claude-fable-5-1",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage5_claude-fable-5-1",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_fable4/20261027_stage6_claude-fable-5-1"
+   ]
+  },
+  "sol": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4101-a9162d",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4102-3c787b",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4103-5a1a93",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4104-363a49",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4105-ec6eac",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4106-19c6fb",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4107-3d19b6",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4108-3c266b",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4109-b67dd9",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol",
+     "session_id": "talk-s4110-b0ae7e",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-sol",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_sol4/20261020_0603_gpt-6-sol"
+   ]
+  },
+  "luna": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4101-11f081",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4102-ceeb74",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4103-ffffff",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4104-49b1b2",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4105-eb1d11",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4106-c5130b",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4107-a08323",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4108-f19ad5",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4109-e8f649",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna",
+     "session_id": "talk-s4110-0642b7",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-luna",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_luna4/20261020_0603_gpt-6-luna"
+   ]
+  },
+  "astra": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4101-475744",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4102-a73cd1",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4103-59b9b1",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4104-4a160a",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4105-cf1345",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4106-59c261",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4107-1970a3",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4108-ef14dd",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4109-976e10",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra",
+     "session_id": "talk-s4110-d8cbbb",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-6-astra",
+      "think": "high",
+      "timeout": 900,
+      "retries": 10,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_public_astra4/20261020_0651_gpt-6-astra"
+   ]
+  },
+  "gptoss": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4101_gpt-oss-120b-cloud",
+     "session_id": "talk-s4101-d050b4",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4102_gpt-oss-120b-cloud",
+     "session_id": "talk-s4102-8896b5",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4103_gpt-oss-120b-cloud",
+     "session_id": "talk-s4103-0ac455",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4104_gpt-oss-120b-cloud",
+     "session_id": "talk-s4104-b63469",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4105_gpt-oss-120b-cloud",
+     "session_id": "talk-s4105-6e374c",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4106_gpt-oss-120b-cloud",
+     "session_id": "talk-s4106-f789fb",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4107_gpt-oss-120b-cloud",
+     "session_id": "talk-s4107-09f3b3",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4108_gpt-oss-120b-cloud",
+     "session_id": "talk-s4108-ce75a2",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4109_gpt-oss-120b-cloud",
+     "session_id": "talk-s4109-a2424a",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4110_gpt-oss-120b-cloud",
+     "session_id": "talk-s4110-177780",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gpt-oss:120b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4101_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4102_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4103_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4104_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4105_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4106_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4107_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4108_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4109_gpt-oss-120b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gptoss4/20261103_s4110_gpt-oss-120b-cloud"
+   ]
+  },
+  "gemma": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4101_gemma4-31b-cloud",
+     "session_id": "talk-s4101-1d5761",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4102_gemma4-31b-cloud",
+     "session_id": "talk-s4102-fdd4d4",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4103_gemma4-31b-cloud",
+     "session_id": "talk-s4103-e7cecd",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4104_gemma4-31b-cloud",
+     "session_id": "talk-s4104-d64bd4",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4105_gemma4-31b-cloud",
+     "session_id": "talk-s4105-affd22",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4106_gemma4-31b-cloud",
+     "session_id": "talk-s4106-679791",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4107_gemma4-31b-cloud",
+     "session_id": "talk-s4107-61afbb",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4108_gemma4-31b-cloud",
+     "session_id": "talk-s4108-3551d5",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4109_gemma4-31b-cloud",
+     "session_id": "talk-s4109-ea6727",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4110_gemma4-31b-cloud",
+     "session_id": "talk-s4110-1bdac3",
+     "model": {
+      "kind": "codex_cli",
+      "model": "gemma4:31b-cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4101_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4102_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4103_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4104_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4105_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4106_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4107_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4108_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4109_gemma4-31b-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_gemma4/20261103_s4110_gemma4-31b-cloud"
+   ]
+  },
+  "glm": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261020_0603_glm-5.3-flash-cloud",
+     "session_id": "talk-s4101-60a112",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4102_glm-5.3-flash-cloud",
+     "session_id": "talk-s4102-8b0821",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4103_glm-5.3-flash-cloud",
+     "session_id": "talk-s4103-870a71",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4104_glm-5.3-flash-cloud",
+     "session_id": "talk-s4104-eb6f58",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4105_glm-5.3-flash-cloud",
+     "session_id": "talk-s4105-ff7d3f",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4106_glm-5.3-flash-cloud",
+     "session_id": "talk-s4106-8f99e7",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4107_glm-5.3-flash-cloud",
+     "session_id": "talk-s4107-463d9e",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4108_glm-5.3-flash-cloud",
+     "session_id": "talk-s4108-980f9a",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4109_glm-5.3-flash-cloud",
+     "session_id": "talk-s4109-c70f80",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4110_glm-5.3-flash-cloud",
+     "session_id": "talk-s4110-5d98a9",
+     "model": {
+      "kind": "codex_cli",
+      "model": "glm-5.3-flash:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261020_0603_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4102_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4103_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4104_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4105_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4106_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4107_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4108_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4109_glm-5.3-flash-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_glm4/20261103_s4110_glm-5.3-flash-cloud"
+   ]
+  },
+  "kimi": {
+   "games": 10,
+   "missing": [],
+   "extra": [],
+   "seeds": {
+    "4101": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261020_0603_kimi-k3-cloud",
+     "session_id": "talk-s4101-d66f1f",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4102": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4102_kimi-k3-cloud",
+     "session_id": "talk-s4102-7d6322",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4103": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4103_kimi-k3-cloud",
+     "session_id": "talk-s4103-ac40d3",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4104": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4104_kimi-k3-cloud",
+     "session_id": "talk-s4104-d8e4c6",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4105": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4105_kimi-k3-cloud",
+     "session_id": "talk-s4105-eeda32",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4106": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4106_kimi-k3-cloud",
+     "session_id": "talk-s4106-8d72ce",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4107": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4107_kimi-k3-cloud",
+     "session_id": "talk-s4107-8126e8",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4108": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4108_kimi-k3-cloud",
+     "session_id": "talk-s4108-dfcbf2",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4109": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4109_kimi-k3-cloud",
+     "session_id": "talk-s4109-728b12",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    },
+    "4110": {
+     "run_dir": "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4110_kimi-k3-cloud",
+     "session_id": "talk-s4110-2fac87",
+     "model": {
+      "kind": "codex_cli",
+      "model": "kimi-k3:cloud",
+      "base_url": "http://host.docker.internal:11434/v1",
+      "think": "high",
+      "timeout": 1200,
+      "sandbox": "docker",
+      "image": "squid5-agent-cli:latest"
+     }
+    }
+   },
+   "run_dirs": [
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261020_0603_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4102_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4103_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4104_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4105_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4106_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4107_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4108_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4109_kimi-k3-cloud",
+    "result/2026-10-20/e52_v33/runs/squid5_e52v33_codex_kimi4/20261103_s4110_kimi-k3-cloud"
+   ]
+  }
+ },
+ "problems": []
+}
