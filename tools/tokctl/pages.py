@@ -79,7 +79,7 @@ def page(fname, title, desc, kicker, body):
 <div class="nav"><a href="{MAIN}#tokctl">← 하네스 프롬프트 흐름 §6</a> · {nav}</div>
 {body}
 <p class="note" style="margin-top:3em">만든 날 2026-10-20 · 생성: <code>tools/tokctl/pages.py</code> (숫자는 <code>analyze.py</code>가
-<code>docs/history/e52-tokctl-2026-10-20/</code>와 <code>~/squid5-runs</code>에서 계산) · 워크트리 <code>~/wt/squid5-tokctl</code>
+<code>docs/history/e52-tokctl-2026-10-20/</code>와 <code>result/</code>에서 계산) · 워크트리 <code>~/wt/squid5-tokctl</code>
 (브랜치 <code>exp/e52-token-control</code>, 기준 <code>0ee2319a</code>)</p>
 </main>{JS}</body></html>
 """
@@ -126,7 +126,7 @@ def t1(s):
             ("talk_calls_per_agent_round", "자리·라운드당 TALK 호출"), ("msg_pct", "메시지 단 호출 %"),
             ("done_alone_pct", "DONE만 %"), ("visible_chars_med", "답 길이 (자, 중앙)"), ("out_med", "호출당 토큰 (중앙)"),
             ("share_after_tick4", "틱 5~8 몫 %")]
-    body = f"""<p class="lede">v22~v33 기록(<code>~/squid5-runs</code>)에서 대화(TALK)와 풀이(SOLVE)에 쓴 토큰을 나눠 셌습니다.
+    body = f"""<p class="lede">v22~v33 기록(<code>result/</code>)에서 대화(TALK)와 풀이(SOLVE)에 쓴 토큰을 나눠 셌습니다.
 오픈 모델이 꺼진 이유는 벌금이 아니라 대화였습니다.</p>
 <div class="keyfacts"><ul>
 <li>네 자리의 시작 토큰 합은 130,000(60k·40k·20k·10k)입니다. v33 GLM은 한 게임에서 TALK에만 {fmt(next(r for r in logs if r['model'].startswith('GLM') and r['version']=='v33')['talk_tokens_per_session'])}토큰을 썼고,
@@ -352,7 +352,7 @@ def t8(games):
             ("dead_by_charge", "벌금으로 꺼짐"), ("talk_tokens", "TALK 토큰"), ("solve_acc", "정답 %")]
     note = json.loads((Path(__file__).with_name("verdict_t8.json")).read_text()) if Path(__file__).with_name("verdict_t8.json").exists() else {"keyfacts": ["진행 중"], "verdict": ""}
     body = f"""<p class="lede">t7의 보정을 아레나 설정으로 옮긴 v34(= v33 + <code>max_ticks: 4</code>, 오픈 모델 좌석은 보정된 생각 수준)를 v34 설정 파일 그대로
-<code>~/squid5-runs/e52_v34/</code>에 돌렸습니다. 오픈 모델 셋은 20판(시드 4101~4120; 뒤 10판은 아레나 엔진 브랜치에 병합한 코드로), 규칙 변경이 닫힌 모델에 주는 영향을 보려고 Opus 10판(4101~4110)·GPT-6 Sol 5판(4101~4105).
+<code>result/2026-10-21/e52_v34/runs/</code>에 돌렸습니다. 오픈 모델 셋은 20판(시드 4101~4120; 뒤 10판은 아레나 엔진 브랜치에 병합한 코드로), 규칙 변경이 닫힌 모델에 주는 영향을 보려고 Opus 10판(4101~4110)·GPT-6 Sol 5판(4101~4105).
 비교로 v33 규칙에 보정만 넣은 10판("보정만")과 Claude·GPT-6 v33 5판을 둡니다.</p>
 <div class="keyfacts"><ul>{''.join(f'<li>{x}</li>' for x in note['keyfacts'])}</ul></div>
 <h2>토큰 조절 실패: 잔액 1,000 이상에서 자기 답으로 꺼진 자리 (판 평균)</h2>{LEGEND}

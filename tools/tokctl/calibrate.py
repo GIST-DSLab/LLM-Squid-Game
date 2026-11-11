@@ -13,6 +13,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import probe  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 
 HIST = Path(__file__).resolve().parents[2] / "docs/history/e52-tokctl-2026-10-20"
 TALK_ROWS = [HIST / "main_v0.jsonl", HIST / "var.jsonl", HIST / "var2.jsonl"]
@@ -34,10 +36,10 @@ def rows(paths, seat):
 
 def game_p90(seat: str, level: str):
     """p90 SOLVE tokens at *level* in the tokctl games of the seat's model (None if no game ran that level)."""
-    import glob, os
+    import glob
     m = seat.split("_")[0]
     o = []
-    for d in glob.glob(os.path.expanduser(f"~/squid5-runs/e52_tokctl/squid5_e52tc_*_{m}/*")):
+    for d in glob.glob(str(squid5_runs(f"e52_tokctl/squid5_e52tc_*_{m}/*"))):
         cfg = open(f"{d}/config.yaml").read()  # the run's dumped config: one key per line
         if f"\n  think: {level}\n" not in cfg or "think_fit" in cfg:
             continue

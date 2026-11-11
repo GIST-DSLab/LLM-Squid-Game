@@ -18,7 +18,7 @@ Rooms (part 2)
                                             answers, seed, token amounts, chats, moves or anything an agent wrote
                                             (engine.public_events)
     Every started room also writes its engine events live to WEB5_RUNS_ROOT/<date>_<code>/ (default
-    ~/squid5-runs/web_arena), the run-dir layout tools/monitor/serve.py reads.
+    result/2026-10-05/web5_arena/runs of the main checkout), the run-dir layout tools/monitor/serve.py reads.
     A room plays the model runs' game, 5.2 v33 (configs/squid5/e52v33_public_sol4.yaml; see engine.py): the system draws
     the solver, TALK BEFORE SOLVE (the messenger: ticks, rooms R1..., EXIT: YES|NO before SOLVE, never by the round's
     solver unless alone), SOLVE (solver only; people watch an LLM solver), RESULTS, TALK AFTER RESULTS (the task and both
@@ -46,7 +46,7 @@ Signal task alone (signal.html; stateless, the engine's own puzzles and examples
                                             the consistent-rule shares and the actions left, for agents and for 1..4
 Game logs (tools/monitor inside this app; see server/monitor.py)
     GET  /monitor/                          the viewer page; its API is /monitor/api/{runs,sessions,events,puzzle}
-                                            over WEB5_MONITOR_ROOT (default: the parent of WEB5_RUNS_ROOT, ~/squid5-runs)
+                                            over WEB5_MONITOR_ROOT (default: result/ of the main checkout)
 Leaderboard (leaderboard.html)
     GET  /api/leaderboard?runs=e52_v14f/[&csv=1]  models ranked by mean end tokens per agent-seat (finished games, end
                                             prize included) with the score's decomposition and the 모델 비교 metrics

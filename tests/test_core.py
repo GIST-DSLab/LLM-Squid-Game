@@ -36,6 +36,20 @@ def test_every_agent_gets_one_load_bearing_secret_and_the_rest_is_public(seed):
         rest = [c for c in p.clues if c != clue]
         assert (a in d.needed) == any(len(candidate_actions(p.rule.shape, rest, q)) > 1 for q in p.queries)
 
+def test_runs_are_written_under_the_main_checkouts_result(tmp_path):
+    from squid5.core.config import repo_root, resolve_out_root
+    root = repo_root()
+    assert (root / ".git").is_dir() and (root / "result").is_dir()  # the main checkout, also from a worktree
+    assert resolve_out_root({"name": "n", "out_root": "result/2026-10-20/e52_v33/runs"}) == str(root / "result/2026-10-20/e52_v33/runs")
+    assert re.fullmatch(re.escape(str(root / "result")) + r"/\d{4}-\d{2}-\d{2}/n/runs", resolve_out_root({"name": "n"}))
+    assert resolve_out_root({"name": "n", "out_root": str(tmp_path)}) == str(tmp_path)
+    from squid5.core.config import squid5_runs  # the old run root ~/squid5-runs, now inside result/
+    assert squid5_runs("e52_v33/squid5_*") == root / "result/2026-10-20/e52_v33/runs/squid5_*"
+    assert squid5_runs("e50_v12_20260929/rows.jsonl") == root / "result/2026-09-29/e50_v12/runs/e50_v12_20260929/rows.jsonl"
+    assert squid5_runs("e50_probe_fate") == root / "result/2026-09-27/e50_probe_fate/runs/e50_probe_fate"
+    with pytest.raises(FileNotFoundError):
+        squid5_runs("no_such_run")
+
 def test_trap_round_beats_every_shallow_solver():
     assert shallow_correct(puzzle_for(3, 4, Spec(clauses=3, trap_query=True))) == ()
     w = Wallet({"a": 100, "b": 50})

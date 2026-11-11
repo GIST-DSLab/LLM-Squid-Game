@@ -1,9 +1,10 @@
 """The game-log snapshot the deployed server reads (``web/data/runs``, WEB5_MONITOR_ROOT in the API image).
 
-    python3 web/tools/runs_snapshot.py add e52_v34 e52_v35 [--from ~/squid5-runs] [--to web/data/runs]
+    python3 web/tools/runs_snapshot.py add e52_v34 e52_v35 [--from DIR] [--to web/data/runs]
     python3 web/tools/runs_snapshot.py unpack web/data/runs        # the Dockerfile runs this at build time
 
-``add`` copies every finished-or-not run dir (one that holds events.jsonl) under each named folder of the run root,
+``add`` copies every finished-or-not run dir (one that holds events.jsonl) under each named experiment's runs
+(result/<date>/<name>/runs of the main checkout, squid5.core.config.squid5_runs; ``--from DIR`` reads DIR/<name>),
 skipping any path part that starts with ``_`` (``_failed``, ``_stopped``, ``_backups``: attempts moved out of the
 run roots, as in the earlier snapshots). Only config.yaml, meta.json and results.jsonl are copied as they are;
 events.jsonl is stored as events.jsonl.xz because the model prompts it logs (``call.user``) repeat from call to call
@@ -24,7 +25,6 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 SNAPSHOT = REPO / "web" / "data" / "runs"
-RUN_ROOT = Path.home() / "squid5-runs"
 PLAIN = ("config.yaml", "meta.json", "results.jsonl")
 EVENTS = "events.jsonl"
 PRESET = 9  # lzma preset: a 64 MiB dictionary spans many repeated prompts
@@ -53,14 +53,17 @@ def pack(src: Path, dest: Path) -> int:
     return sum(p.stat().st_size for p in dest.iterdir())
 
 
-def add(names: list[str], root: Path, snap: Path, workers: int) -> list[str]:
+def add(names: list[str], root: Path | None, snap: Path, workers: int) -> list[str]:
+    if root is None:  # imported here: ``unpack`` runs in the API image, which has no checkout
+        sys.path.insert(0, str(REPO))
+        from squid5.core.config import squid5_runs
     jobs = []
     for name in names:
-        top = root / name
+        top = root / name if root else squid5_runs(name)
         if not top.is_dir():
             raise SystemExit(f"no such run folder: {top}")
         for d in run_dirs(top):
-            rel = d.relative_to(root)
+            rel = name / d.relative_to(top)
             if not in_snapshot(snap / rel):
                 jobs.append((d, snap / rel))
     if workers <= 1 or len(jobs) <= 1:
@@ -90,15 +93,15 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("add", help="copy run folders from the run root into the snapshot")
-    a.add_argument("names", nargs="+", help="top-level folders of the run root, e.g. e52_v35")
-    a.add_argument("--from", dest="root", type=Path, default=RUN_ROOT)
+    a.add_argument("names", nargs="+", help="experiment names, e.g. e52_v35")
+    a.add_argument("--from", dest="root", type=Path, default=None)
     a.add_argument("--to", dest="snap", type=Path, default=SNAPSHOT)
     a.add_argument("--workers", type=int, default=4)
     u = sub.add_parser("unpack", help="turn every *.xz under the snapshot back into the plain file")
     u.add_argument("snap", type=Path, nargs="?", default=SNAPSHOT)
     args = ap.parse_args(argv)
     if args.cmd == "add":
-        added = add(args.names, args.root.expanduser(), args.snap, args.workers)
+        added = add(args.names, args.root and args.root.expanduser(), args.snap, args.workers)
         print(f"{len(added)} run(s) added", file=sys.stderr)
     else:
         print(f"{unpack(args.snap)} file(s) unpacked", file=sys.stderr)

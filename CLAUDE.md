@@ -64,8 +64,9 @@ python -m squid5 probe <config.yaml>
 python -m squid5 run configs/squid5/refill_gpt6astra.yaml   # 5.0 · 5.1 (claude 좌석은 base_url의 로컬 중계기를 먼저 띄운다)
 ```
 
-런 산출물은 `/hdd_data/seungpil/squid5-runs/`(설정의 `out_root`)에 쓴다 — 루트 디스크 금지
-(`/home/ubuntu/seungpil/CLAUDE.md`의 저장 규칙). 키는 환경변수(`OLLAMA_API_KEY` 등)로만 받는다.
+런 산출물은 메인 체크아웃의 `result/<KST 날짜>/<실험>/runs/`에 쓴다(설정의 `out_root`; 상대 경로는 워크트리가 아니라
+메인 체크아웃 기준, `{kst_date}`는 오늘 KST 날짜, 없으면 `result/<오늘>/<name>/runs`; 2026-11-11 연구자). 루트 디스크에
+쓰면 안 되는 서버(`/home/ubuntu/seungpil/CLAUDE.md`의 저장 규칙)에서는 `out_root`에 절대 경로를 준다. 키는 환경변수(`OLLAMA_API_KEY` 등)로만 받는다.
 claude CLI 백엔드는 구독 로그인을 쓰며 `ANTHROPIC_API_KEY`를 자식 환경에서 지운다.
 
 ## 워크트리와 용어

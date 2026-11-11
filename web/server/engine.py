@@ -58,7 +58,7 @@ if str(REPO) not in sys.path:  # the experiment engine is imported from the repo
 
 from squid5 import e52_game as e52  # noqa: E402
 from squid5.core import lang as L, rules  # noqa: E402
-from squid5.core.config import Cell  # noqa: E402
+from squid5.core.config import Cell, repo_root  # noqa: E402
 from squid5.core.providers import Ollama, Provider, ProviderConfig, Reply, _key, make_provider  # noqa: E402
 from squid5.core.puzzle import ACTIONS, Spec, candidate_actions, public_round  # noqa: E402
 
@@ -181,7 +181,7 @@ def seat_ready(cfg: ProviderConfig) -> str:
     if not shutil.which(cli):
         return f"the {cli} CLI is not on this server's PATH"
     if cfg.base_url and urlparse(cfg.base_url).hostname in ("127.0.0.1", "localhost") and not _listening(cfg.base_url):
-        what = "the relay (python3 ~/squid5-runs/e50_v9r200_20260929/inject/relay.py 18781)" if cfg.kind == "claude_cli" \
+        what = "the relay (python3 tools/relay.py 18781)" if cfg.kind == "claude_cli" \
             else "the local Ollama daemon"
         return f"{cfg.base_url} is not listening: start {what}"
     return ""
@@ -210,7 +210,8 @@ PRIVATE_EVENTS = ("room_msg", "room_new", "room_leave", "gift", "ask", "call")  
 
 
 def default_runs_root() -> Path:
-    return Path(os.environ.get("WEB5_RUNS_ROOT") or Path.home() / "squid5-runs" / "web_arena").expanduser()
+    env = os.environ.get("WEB5_RUNS_ROOT")
+    return Path(env).expanduser() if env else repo_root() / "result" / "2026-10-05" / "web5_arena" / "runs"
 
 
 @dataclass

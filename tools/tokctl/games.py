@@ -4,12 +4,13 @@ Death cause: 'call' = the agent reached zero by its own reply (TALK or SOLVE ove
 """
 from __future__ import annotations
 
-import collections, glob, json, os, statistics as st
+import collections, glob, json, os, statistics as st, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 HIST = ROOT / "docs/history/e52-tokctl-2026-10-20"
-RUNS = Path(os.path.expanduser("~/squid5-runs"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 SETS = [  # (group, label, open?, glob)
     *[(v, m, True, f"e52_tokctl/squid5_e52tc_{v}_{k}") for v in ("b0", "tl", "t4", "tlt4")
       for k, m in (("glm", "GLM-5.3-flash"), ("ds", "DeepSeek-v4.1-flash"), ("gemma", "Gemma4-31b"))],
@@ -32,7 +33,7 @@ SETS = [  # (group, label, open?, glob)
 
 
 def games(pattern):
-    for d in sorted(glob.glob(str(RUNS / pattern / "*"))):
+    for d in sorted(glob.glob(str(squid5_runs(pattern) / "*"))):
         ev_path, res_path = Path(d) / "events.jsonl", Path(d) / "results.jsonl"
         if not res_path.exists():
             continue
@@ -69,7 +70,7 @@ def games(pattern):
 def per_talk(*patterns):
     """tokens per TALK, calls per agent per TALK, tokens per call (all games of the set)."""
     talks, agent_talks, calls, tok = set(), set(), 0, 0
-    for d in (d for p in patterns for d in glob.glob(str(RUNS / p / "*/events.jsonl"))):
+    for d in (d for p in patterns for d in glob.glob(str(squid5_runs(p) / "*/events.jsonl"))):
         for x in map(json.loads, open(d)):
             if x.get("event") == "call" and x["kind"] == "talk":
                 k = (d, x["session_id"], x["round"], x["phase"])

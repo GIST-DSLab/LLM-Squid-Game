@@ -187,7 +187,7 @@ mode: game
 reps: 10
 seed0: 4101
 workers: 3
-out_root: ~/squid5-runs/e52_v33
+out_root: result/2026-10-20/e52_v33/runs
 model: {kind: codex_cli, model: "deepseek-v4.1-flash:cloud", base_url: "http://localhost:11434/v1", think: high, timeout: 1200}  # 10-18: Ollama cloud model through the Codex harness (local ollama daemon, account irregular6612)
 game:
   charge_total: 24000  # v32 (10-20 researcher): a wrong answer charges 24,000 split among the agents taking part at the round's start (6,000 at four; 8,000 / 12,000 / 24,000)

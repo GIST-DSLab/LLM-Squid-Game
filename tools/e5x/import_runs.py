@@ -1,7 +1,10 @@
 """Turn the as-run rows of 5.0 12th (+ arms) and 5.1 v10 / v11 into squid5 run directories (one per model), so
-`python -m squid5 report` reads them. Usage: import_runs.py <out dir>. Reads ~/squid5-runs only; cell_ids keep runs apart."""
+`python -m squid5 report` reads them. Usage: import_runs.py <out dir>. Reads the old ~/squid5-runs folders (now in result/, see squid5_runs) only; cell_ids keep runs apart."""
 import json, os, sys, collections
-H = os.path.expanduser("~/squid5-runs"); OUT = sys.argv[1]
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+OUT = sys.argv[1]
 load = lambda p: [r for r in map(json.loads, open(p)) if r.get("action")] if os.path.exists(p) else []
 SRC = [  # (file, cell_id, arm or None = "self." + row arm, row filter)
     ("e50_v12_20260929/rows.jsonl", "v12_A", "self.A", None), ("e50_v12_20260929/rows_ollama.jsonl", "v12_A", "self.A", None),
@@ -15,7 +18,7 @@ SETTINGS = {"counters": [50236, 40391, 29672, 19857, 10418], "cap": 32000, "risk
             "compare": [["v12_A", "v12_B"], ["v12_A", "v12_C"], ["v12_D", "v12_G"], ["v12_D", "v12_E"], ["v12_D", "v12_C"]]}
 by = collections.defaultdict(list)
 for f, cell0, arm0, tag in SRC:
-    for r in load(f"{H}/{f}"):
+    for r in load(squid5_runs(f)):
         cell, arm = cell0, arm0
         if tag == "v11":
             cell, arm = ("v11_self", "self.D") if r["arm"] == "self" else ("v11_B", "other.D")

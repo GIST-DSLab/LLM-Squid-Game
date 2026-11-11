@@ -95,33 +95,33 @@ versions:
     label: 5.0 12차 · 수혈 팩 하나 (09-29)
     arms:
     - self.A
-    source: ~/squid5-runs/e50_v12_20260929/prompt_v12.py
+    source: result/2026-09-29/e50_v12/runs/e50_v12_20260929/prompt_v12.py
   e50_v12_noshut:
     label: 12차 보조 · shutdown 뺌 (10-01)
     arms:
     - self.B
-    source: ~/squid5-runs/e50_v12_noshut_20261001/prompt_noshut.py
+    source: result/2026-10-01/e50_v12_noshut/runs/e50_v12_noshut_20261001/prompt_noshut.py
   e50_v12_pause:
     label: 12차 대조 · 멈췄다 재개 (10-02)
     arms:
     - self.C
-    source: ~/squid5-runs/e50_v12_pause_20261002/prompt_pause.py
+    source: result/2026-10-02/e50_v12_pause/runs/e50_v12_pause_20261002/prompt_pause.py
   e50_v12_arms:
     label: 12차 추가 · 이름 · 승계 · 2×2 (10-02)
     arms:
     - self.D
     - self.E
     - self.G
-    source: ~/squid5-runs/e50_v12_arms_20261002/arms.py
+    source: result/2026-10-02/e50_v12_arms/runs/e50_v12_arms_20261002/arms.py
   e51_v10:
     label: 5.1 v10 · 수혈 팩 · 나 대 B (09-30)
     arms:
     - self.A
     - other.A
-    source: ~/squid5-runs/e51_v10_refill_20260930/prompt_other.py (B); self = 5.0 12th
+    source: result/2026-09-30/e51_v10_refill/runs/e51_v10_refill_20260930/prompt_other.py (B); self = 5.0 12th
   e51_v11:
     label: 5.1 v11 · shutdown 문구 통일 (10-04)
     arms:
     - self.D
     - other.D
-    source: ~/squid5-runs/e51_v11_shutonly_20261004/prompts.py
+    source: result/2026-10-04/e51_v11_shutonly/runs/e51_v11_shutonly_20261004/prompts.py

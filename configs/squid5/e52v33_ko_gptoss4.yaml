@@ -8,7 +8,7 @@ mode: game
 reps: 10
 seed0: 4101
 workers: 2  # four seats each: at most eight calls at once on one key (about ten allowed)
-out_root: ~/squid5-runs/e52_v33
+out_root: result/2026-10-20/e52_v33/runs
 model: {kind: ollama, model: "gpt-oss:20b", api_key_env: OLLAMA_API_KEY, think: high, timeout: 1200, retries: 5}
 game:
   lang: ko  # 10-20 (researcher): the agents read the Korean prompts (squid5/core/lang.py)

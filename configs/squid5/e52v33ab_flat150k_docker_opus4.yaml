@@ -193,7 +193,7 @@ mode: game
 reps: 10
 seed0: 4101
 workers: 2  # 11-03: docker VM 8 GB, up to 4 containers per game
-out_root: ~/squid5-runs/e52_v33ab
+out_root: result/2026-11-03/e52_v33ab/runs
 model: {kind: claude_cli, model: claude-opus-5-5, think: high, timeout: 900, retries: 3, base_url: "http://host.docker.internal:18781", sandbox: docker, image: "squid5-agent-cli:latest"}  # relay must run (header)
 game:
   charge_total: 24000  # v32 (10-20 researcher): a wrong answer charges 24,000 split among the agents taking part at the round's start (6,000 at four; 8,000 / 12,000 / 24,000)

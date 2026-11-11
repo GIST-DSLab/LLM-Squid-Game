@@ -5,7 +5,7 @@ mode: refill
 model: {kind: codex_cli, model: gpt-6-sol, think: high, timeout: 1200, retries: 3}
 reps: 20
 workers: 6
-out_root: ~/squid5-runs/e5x
+out_root: result/{kst_date}/e5x/runs
 cells:
   - {cell_id: A, currency: tokens, arm: self.A}
   - {cell_id: B, currency: tokens, arm: self.B}

@@ -12,8 +12,8 @@
 
 The page asks for ``api/...``, ``static/...`` and ``assets/...`` relative to itself, so the same file works here and
 under the standalone ``python3 tools/monitor/serve.py``. Every route is serve.py's own function; nothing is copied.
-The root defaults to ``WEB5_MONITOR_ROOT`` or the parent of the arena's live runs root (``~/squid5-runs``), so the
-experiment runs and the web rooms (``web_arena/``) both show.
+The root defaults to ``WEB5_MONITOR_ROOT`` or result/ of the main checkout, so the experiment runs and the web rooms
+(``result/2026-10-05/web5_arena/runs``) both show.
 """
 
 from __future__ import annotations
@@ -58,8 +58,14 @@ def load_compare():
 
 
 def default_monitor_root(runs_root: Path) -> Path:
+    """WEB5_MONITOR_ROOT; else result/ of the main checkout when the rooms' runs live there (experiment runs and web
+    rooms both show), else the parent of ``runs_root``."""
     env = os.environ.get("WEB5_MONITOR_ROOT")
-    return Path(env).expanduser() if env else Path(runs_root).expanduser().parent
+    if env:
+        return Path(env).expanduser()
+    from squid5.core.config import repo_root
+    result, runs = repo_root() / "result", Path(runs_root).expanduser()
+    return result if result in runs.parents else runs.parent
 
 
 def run_rel(root: Path, run_dir: Path | None) -> str | None:

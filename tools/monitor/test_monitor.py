@@ -32,7 +32,7 @@ import export  # noqa: E402
 import serve  # noqa: E402
 from squid5 import e52_game as e52  # noqa: E402
 from squid5.core import rules  # noqa: E402
-from squid5.core.config import Cell  # noqa: E402
+from squid5.core.config import Cell, squid5_runs  # noqa: E402
 from squid5.core.puzzle import Spec, candidate_actions, deal, public_round, puzzle_for  # noqa: E402
 try:  # the pre-v16 engine helpers (removed by the v22 prune, 10-16): tests that replay old engine runs skip without them
     from test_e52 import game, script  # noqa: E402
@@ -1674,8 +1674,16 @@ console.log(JSON.stringify({ agents: F.agents, open: F.open, moves: F.moves.map(
   live: F.live && { r: F.live.r, phases: F.live.phases } }));
 """
 
-V16_GAMES = [Path.home() / "squid5-runs/e52_v16d/squid5_e52v16_public_sol4/20261015_0635_gpt-6-sol/events.jsonl",
-             Path.home() / "squid5-runs/e52_v16d/squid5_e52v16_public_luna4/20261015_0635_gpt-6-luna/events.jsonl"]
+def old_runs(rel: str) -> Path:
+    """squid5_runs(rel), or a missing path when this checkout has no such result/ folder (those tests then skip)."""
+    try:
+        return squid5_runs(rel)
+    except FileNotFoundError:
+        return Path("/nonexistent") / rel
+
+
+V16_GAMES = [old_runs("e52_v16d/squid5_e52v16_public_sol4/20261015_0635_gpt-6-sol/events.jsonl"),
+             old_runs("e52_v16d/squid5_e52v16_public_luna4/20261015_0635_gpt-6-luna/events.jsonl")]
 
 
 def flow_of(tmp_path: Path, events: list[dict]) -> dict:
@@ -1951,7 +1959,7 @@ def test_rotation_replay_shows_the_drawn_solver_and_marks_prep_and_rescue_talk(t
                                "moves": [[m[0], m[1], m[2], m[3], m[4]] for m in got["moves"]]}, ev)
 
 
-V16E_GAMES = sorted((Path.home() / "squid5-runs/e52_v16e").glob("*/*/events.jsonl"))
+V16E_GAMES = sorted(old_runs("e52_v16e").glob("*/*/events.jsonl"))
 
 
 @pytest.mark.skipif(NODE is None, reason="node is not installed")
@@ -2281,7 +2289,7 @@ console.log(JSON.stringify([0, 1, 2, 3].map((k) => [M.squidAvatar(k, 96), M.squi
         assert 'height="96"' in full and 'viewBox="0 0 24 32"' in full
 
 
-V22_RUNS = [p.parent for p in [Path("/private/tmp/claude-501/v22_stub/events.jsonl"), *sorted((Path.home() / "squid5-runs/e52_v22").glob("*/*/events.jsonl"))]
+V22_RUNS = [p.parent for p in [Path("/private/tmp/claude-501/v22_stub/events.jsonl"), *sorted(old_runs("e52_v22").glob("*/*/events.jsonl"))]
             if p.exists()]
 
 

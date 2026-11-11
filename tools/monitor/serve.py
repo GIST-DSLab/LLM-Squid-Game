@@ -1,6 +1,6 @@
 """Live monitor for squid5 5.2 sessions (v9-talk .. v14): a small stdlib HTTP server over run directories.
 
-    python3 tools/monitor/serve.py [--root ~/squid5-runs] [--port 8765] [--host 127.0.0.1]
+    python3 tools/monitor/serve.py [--root DIR (default: result/ of the main checkout)] [--port 8765] [--host 127.0.0.1]
 
 Routes
   /                                   the page (monitor.html)
@@ -1108,7 +1108,7 @@ def round_puzzle(run_dir: Path, sid: str, round_no) -> dict:
 # --- HTTP -----------------------------------------------------------------------------------------------------------
 
 class Handler(BaseHTTPRequestHandler):
-    root: Path = Path.home() / "squid5-runs"
+    root: Path  # set by make_server
     server_version = "squid5-monitor/1"
 
     def log_message(self, fmt, *args):  # quiet: the page polls every 1.5 s
@@ -1207,15 +1207,23 @@ def make_server(root: Path, host: str = "127.0.0.1", port: int = 8765) -> Thread
     return srv
 
 
+def _results_root() -> Path:
+    """result/ of the main checkout, where the engine writes runs (squid5.core.config.repo_root)."""
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
+    from squid5.core.config import repo_root
+    return repo_root() / "result"
+
+
 def main(argv=None) -> None:
     ap = argparse.ArgumentParser(description="squid5 5.2 arena monitor (v9-talk .. v14)")
-    ap.add_argument("--root", default="~/squid5-runs", help="directory searched for run dirs (default ~/squid5-runs)")
+    ap.add_argument("--root", help="directory searched for run dirs (default: result/ of the main checkout)")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--host", default="127.0.0.1")
     args = ap.parse_args(argv)
     for port in range(args.port, args.port + 20):  # the next free port if this one is taken
         try:
-            srv = make_server(Path(args.root), args.host, port)
+            srv = make_server(Path(args.root) if args.root else _results_root(), args.host, port)
             break
         except OSError as err:
             if err.errno not in (48, 98):  # EADDRINUSE on macOS / Linux

@@ -37,5 +37,5 @@ Claude·GPT-6의 v33 런(시드 4101~4105)을 같은 표에 참고로 둡니다.
 <h3>바꾼 것</h3>
 <ul class="note"><li><b>TALK 생각 낮춤</b>: <code>ProviderConfig.think_talk</code>(새 필드) — TALK 호출만 그 수준으로 부름. GLM·DeepSeek <code>low</code>, Gemma <code>none</code>(t4: Gemma는 low에서도 매번 생각). SOLVE는 <code>high</code> 그대로. 규칙서·USER 글은 그대로.</li>
 <li><b>틱 상한 4</b>: <code>game.max_ticks: 4</code>(v33: 8). 규칙서의 "Each TALK allows up to 8 turns"가 4로 바뀜 — 엔진이 이미 지원하는 설정.</li>
-<li>설정: <code>configs/squid5/e52tc_{{b0,tl,tln,t4,tlt4,tlt4b}}_{{glm,ds,gemma}}.yaml</code>, <code>e52tc_t4_opus.yaml</code> · 런: <code>~/squid5-runs/e52_tokctl/</code></li></ul>"""
+<li>설정: <code>configs/squid5/e52tc_{{b0,tl,tln,t4,tlt4,tlt4b}}_{{glm,ds,gemma}}.yaml</code>, <code>e52tc_t4_opus.yaml</code> · 런: <code>result/2026-10-20/e52_tokctl/runs/</code></li></ul>"""
     page("t5-games.html", "게임으로 확인", "TALK 생각 낮춤과 틱 상한 4를 v33 게임에 하나씩 넣어 오픈 모델 셋을 두 판씩 돌린 결과", "squid5 · 5.2 v33 · tokctl t5", body)

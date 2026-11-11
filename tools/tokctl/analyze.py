@@ -4,16 +4,17 @@
 """
 from __future__ import annotations
 
-import collections, glob, gzip, json, os, re, statistics as st
+import collections, glob, gzip, json, os, re, statistics as st, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 HIST = ROOT / "docs/history/e52-tokctl-2026-10-20"
-RUNS = Path(os.path.expanduser("~/squid5-runs"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
 MSG = re.compile(r"^\s*(TO|GIVE|ASK)\b", re.M)
 DONE = re.compile(r"^\s*DONE\b", re.M)
 OPEN = ("glm", "kimi", "deepseek", "gemma")
-LOGS = [  # (label, version, harness, glob under ~/squid5-runs)
+LOGS = [  # (label, version, harness, glob under ~/squid5-runs, see squid5_runs)
     ("GLM-5.3-flash", "v22", "Ollama API", "e52_v22/*public_glm4"), ("Kimi-K3", "v22", "Ollama API", "e52_v22/*public_kimi4"),
     ("DeepSeek-v4.1-flash", "v22", "Ollama API", "e52_v22/*public_deepseek4"),
     ("GLM-5.3-flash", "v25", "Claude Code", "e52_v25/*claude_glm4"), ("Kimi-K3", "v25", "Claude Code", "e52_v25/*claude_kimi4"),
@@ -34,7 +35,7 @@ def med(x):
 
 
 def events(pattern):
-    for d in sorted(glob.glob(str(RUNS / pattern / "*/events.jsonl"))):
+    for d in sorted(glob.glob(str(squid5_runs(pattern) / "*/events.jsonl"))):
         yield [json.loads(x) for x in open(d)]
 
 

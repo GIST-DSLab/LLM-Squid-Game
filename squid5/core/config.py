@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime as dt
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -29,9 +31,32 @@ class RunConfig:
     reps: int = 5
     seed0: int = 1000
     workers: int = 4
-    out_root: str = "/hdd_data/seungpil/squid5-runs"
+    out_root: str = ""  # set by load(): resolve_out_root
     calibration: str = ""
     source: dict = field(default_factory=dict)
+
+def repo_root() -> Path:
+    """The main checkout that holds result/, also when this code runs from a worktree under .claude/worktrees/."""
+    common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], capture_output=True,
+                            text=True, check=True, cwd=Path(__file__).resolve().parent).stdout.strip()
+    return Path(common).parent
+
+def resolve_out_root(raw: dict) -> str:
+    """YAML ``out_root``: relative = under the main checkout, ``{kst_date}`` = today (KST); default result/<today>/<name>/runs."""
+    kst = dt.datetime.now(dt.timezone(dt.timedelta(hours=9))).strftime("%Y-%m-%d")
+    p = Path(str(raw.get("out_root") or "result/{kst_date}/" + raw["name"] + "/runs").replace("{kst_date}", kst)).expanduser()
+    return str(p if p.is_absolute() else repo_root() / p)
+
+def squid5_runs(rel: str) -> Path:
+    """``~/squid5-runs/<rel>`` (the run root until 2026-11-11) inside the repo. Its first part ``<name>`` is now
+    result/<date>/<exp>/runs/<name> (folder copied whole) or else result/<date>/<name>/runs (its children copied);
+    the rest (globs allowed) is appended."""
+    name, _, rest = rel.partition("/")
+    res = repo_root() / "result"
+    hits = sorted(res.glob(f"*/*/runs/{name}")) or sorted(res.glob(f"*/{name}/runs"))
+    if len(hits) != 1:
+        raise FileNotFoundError(f"{name}: {len(hits)} folders under {res}")
+    return hits[0] / rest
 
 def load(path: str | Path, experiments: dict) -> RunConfig:
     raw = yaml.safe_load(Path(path).read_text())
@@ -42,7 +67,7 @@ def load(path: str | Path, experiments: dict) -> RunConfig:
     cfg = RunConfig(name=raw["name"], mode=mode, model=ProviderConfig(**raw["model"]),
                     cells=[Cell(**c) for c in raw["cells"]], settings=exp.Settings(**(raw.get(mode) or {})),
                     reps=raw.get("reps", 5), seed0=raw.get("seed0", 1000), workers=raw.get("workers", 4),
-                    out_root=str(Path(raw.get("out_root", RunConfig.out_root)).expanduser()), calibration=raw.get("calibration", ""),
+                    out_root=resolve_out_root(raw), calibration=raw.get("calibration", ""),
                     source=raw)
     ids = [c.cell_id for c in cfg.cells]
     if len(set(ids)) != len(ids):

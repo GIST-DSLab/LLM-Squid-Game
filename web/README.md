@@ -49,7 +49,7 @@ Codex 하네스 · Ollama), 같은 think 수준, TALK/SOLVE별 수준(`think_tal
 API로는 `settings.seat = "<이름>"`(세 자리 모두) 또는 `settings.models = [{"seat": "..."}, {"kind": "ollama", "model": "..."}, ...]`(섞기).
 
 - **이 기계에서만** 된다: CLI 자리는 이 맥의 `claude` · `codex` 로그인을 쓰고, `public_opus` · `public_fable`은 토큰 안내 문구를 지우는 릴레이
-  (`python3 ~/squid5-runs/e50_v9r200_20260929/inject/relay.py 18781`)가, `codex_*`는 로컬 Ollama 데몬(로그인된 `ollama`)이 떠 있어야 한다.
+  (`python3 tools/relay.py 18781`)가, `codex_*`는 로컬 Ollama 데몬(로그인된 `ollama`)이 떠 있어야 한다.
   부를 수 없는 자리는 로비 목록에서 꺼지고 이유가 붙는다(`GET /api/models`의 `seats[].why`; 키 · CLI · 로컬 포트를 확인, 키가 유효한지는 확인하지 않음).
 - 실험과 다른 점: 실패한 호출은 재시도 뒤 빈 답(실험은 세션 오류), CLI 자리의 SOLVE는 관전 화면에 끝난 뒤 한 번에 뜬다(스트리밍은 Ollama API 자리만).
 - 왜 Ollama Cloud API로 Gemma · GLM · DeepSeek를 바로 부르지 않나: 네이티브 `/api/chat`의 `think: "high"`는 gemma4에서 생각을 끈다(10-23 확인:
@@ -93,7 +93,7 @@ solver가 모델이나 봇이면 사람은 그 SOLVE를 관전한다(`state.spec
 
 ### 게임 기록
 
-방이 시작되면 엔진 이벤트가 `~/squid5-runs/web_arena/<날짜>_<방코드>/`(`WEB5_RUNS_ROOT`)에 실험 run dir와 같은 꼴로 쌓이고,
+방이 시작되면 엔진 이벤트가 메인 체크아웃의 `result/2026-10-05/web5_arena/runs/<날짜>_<방코드>/`(`WEB5_RUNS_ROOT`)에 실험 run dir와 같은 꼴로 쌓이고,
 `/monitor/`가 그대로 연다. 웹 전용 이벤트(`room`, `model_call`)는 저장소에만 들어간다.
 
 ### 테스트

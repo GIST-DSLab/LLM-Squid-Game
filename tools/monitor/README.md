@@ -5,8 +5,8 @@
 ## 실행
 
 ```bash
-# 1) 서버: 기본 루트 ~/squid5-runs, 포트 8765(쓰고 있으면 8766, 8767 … 순서로 빈 포트를 찾음)
-python3 tools/monitor/serve.py [--root ~/squid5-runs] [--port 8765] [--host 127.0.0.1]
+# 1) 서버: 기본 루트 = 메인 체크아웃의 result/, 포트 8765(쓰고 있으면 8766, 8767 … 순서로 빈 포트를 찾음)
+python3 tools/monitor/serve.py [--root DIR] [--port 8765] [--host 127.0.0.1]
 #    → 출력된 주소를 브라우저로 연다. 예: http://127.0.0.1:8765/
 #    바로가기: http://127.0.0.1:8765/?run=<루트 기준 실행 경로>&session=<session_id>[&at=<이벤트 번호>][&theme=dark][&sprites=sheets]
 
@@ -26,7 +26,7 @@ python3 -m pytest -q tools/monitor
 
 `--session`을 빼면 그 실행의 첫 세션을 내보낸다.
 
-웹 아레나 서버(`uvicorn web.server.app:app --port 8600`) 안에서도 열린다: `http://localhost:8600/monitor/`(API는 `/monitor/api/...`, 루트는 `WEB5_MONITOR_ROOT` 또는 `WEB5_RUNS_ROOT`의 부모 = `~/squid5-runs`). `web/server/monitor.py`가 이 폴더의 `serve.py` 함수를 그대로 불러 쓰고, 페이지는 `api/`·`static/`·`assets/`를 상대 경로로 부르므로 두 곳에서 같은 파일이 돈다. 그 경로에서만 헤더에 홈·아레나 링크가 보인다.
+웹 아레나 서버(`uvicorn web.server.app:app --port 8600`) 안에서도 열린다: `http://localhost:8600/monitor/`(API는 `/monitor/api/...`, 루트는 `WEB5_MONITOR_ROOT`, 없으면 메인 체크아웃의 `result/`(방 기록이 그 아래가 아니면 `WEB5_RUNS_ROOT`의 부모)). `web/server/monitor.py`가 이 폴더의 `serve.py` 함수를 그대로 불러 쓰고, 페이지는 `api/`·`static/`·`assets/`를 상대 경로로 부르므로 두 곳에서 같은 파일이 돈다. 그 경로에서만 헤더에 홈·아레나 링크가 보인다.
 
 ### `/api/system?run=<실행>` (10-19)
 
@@ -161,4 +161,4 @@ Survival-Games 저장소(Chen et al. 2025)의 **코드**는 Apache-2.0이지만 
 | `export.py` | 세션 하나를 자체 완결 HTML로(이벤트와, 시작된 라운드마다 다시 만든 과제(`puzzles`)를 `<script type="application/json" id="monitor-data">`에 넣음 — 서버 없이도 문제 패널이 뜬다) |
 | `fetch_assets.py` | 스프라이트 복사 + `manifest.json` + `NOTICE.txt` |
 | `v22_fixture.py` | v22 메신저 합성 세션(명세의 이벤트대로; `session()` / `write(run_dir)`) — 테스트와 화면 확인용 |
-| `test_monitor.py` | 합성 실행(Stub 공급자로 `Session`을 돌림)으로 API·증분 읽기·경로 거부·과제 재구성(엔진을 직접 돌린 값과 같은지, `공개 + 내 단서` ⊆ `공개만`, 정답이 늘 후보 안에, 잘못된 라운드·세션은 4xx)·내보내기(과제 포함)·JS 문법·페이지의 제안 장부 재현(REJECT 포함: TALK 끝·`exchange` 전에 이미 `거절됨`, 기록과 일치, 제안 종류 분류)·제안 그래프 패널이 있는지를 확인 · 게임 전체 토큰 흐름의 그림 데이터가 `round.end`·`gift` 합계·`given` 합계와 맞는지(합성 게임 + 이 기계에 있으면 v16 Sol·Luna 실제 게임) · 라운드 안 단계 계단(`check_steps`: 자리마다 단계가 이어지고 합이 라운드 변화, 끝이 `round.end`, 기타 0, 단계별 생성·환급·벌금·phase별 GIVE가 이벤트와 같음; 합성 VOTE·순번 게임 + v16d·v16e 실제 게임) · 메신저 창의 말풍선이 두 자리를 서로 다른 쪽에 두는지(`check_chat_sides`, 순번 합성 게임 + v16e 실제 게임) · v22(합성 세션): 이벤트가 명세를 따르는지, 방 목록(정렬·멤버·나간 사람·라운드 메시지 수·미리보기), 방 기록(오른쪽 = 만든 쪽 / 보는 쪽, 틱 구분선 하나씩, GIVE·ASK 칩 결과, 꺼짐·TALK 끝 줄), agent 화면 필터(멤버인 방만, 나간 방은 LEAVE까지), 재생 위치를 따라가는지, 틱 줄(불림·대기·DONE·⏰ 다시 불림·끝 이유), 자리 기록(`recordHTML`)·무대 말풍선·이벤트 설명, 토큰 흐름 장부, 내보내기, 캐릭터(번호·자리 색·두 프레임) · 엔진이 쓴 v22 실행(`/private/tmp/claude-501/v22_stub`, `~/squid5-runs/e52_v22/*/*`, 있으면) · 10-17 위 영역(`HARNESS_TOP`): 이벤트마다 라운드 흐름 상자(`rfStepOf`)가 정해지는지, 무대 줄의 SOLVER 테두리·배지, SOLVE 답(답·정답·생성 ÷ 한도·결과), 고른 상자의 USER 프롬프트(TALK = 자리별 마지막 호출, SOLVE), 엔진 상자 = 설명 + 사실, v22가 아니면 라운드 흐름 숨김 · 10-17(2): 규칙 모양의 전체 수(`space_size` = 25,996), 참여 1..4명마다 맞는 규칙 수와 행동별 수(합 = 맞는 수, N이 늘면 줄기만, seed 4101 R1 = 250 … 13 → go_left 9 · stay 4), N마다 뽑힌 채점 규칙(N = 4 = 기록), `transfer_points`(두 여유, 앞선 틱의 ASK만 "달라고 해서"), 나눔 세 그림(한 색, 가중 중심), 자리 기록 서랍(고른 호출 표시, 틱 얼굴·말풍선의 `data-rec-call`). API·경로·과제·내보내기 테스트의 `run` 픽스처는 이제 `v22_fixture`로 만든다. **10-16 v22 정리(prune)로 엔진이 v16 계열만 돌리게 되어**, 옛 엔진 설정(v9–v15 스위치, `test_e52.game`)으로 세션을 돌려 재생을 확인하던 테스트 26개는 그 엔진이 없으면 건너뛴다(옛 실행 기록 자체는 페이지가 그대로 읽는다) |
+| `test_monitor.py` | 합성 실행(Stub 공급자로 `Session`을 돌림)으로 API·증분 읽기·경로 거부·과제 재구성(엔진을 직접 돌린 값과 같은지, `공개 + 내 단서` ⊆ `공개만`, 정답이 늘 후보 안에, 잘못된 라운드·세션은 4xx)·내보내기(과제 포함)·JS 문법·페이지의 제안 장부 재현(REJECT 포함: TALK 끝·`exchange` 전에 이미 `거절됨`, 기록과 일치, 제안 종류 분류)·제안 그래프 패널이 있는지를 확인 · 게임 전체 토큰 흐름의 그림 데이터가 `round.end`·`gift` 합계·`given` 합계와 맞는지(합성 게임 + 이 기계에 있으면 v16 Sol·Luna 실제 게임) · 라운드 안 단계 계단(`check_steps`: 자리마다 단계가 이어지고 합이 라운드 변화, 끝이 `round.end`, 기타 0, 단계별 생성·환급·벌금·phase별 GIVE가 이벤트와 같음; 합성 VOTE·순번 게임 + v16d·v16e 실제 게임) · 메신저 창의 말풍선이 두 자리를 서로 다른 쪽에 두는지(`check_chat_sides`, 순번 합성 게임 + v16e 실제 게임) · v22(합성 세션): 이벤트가 명세를 따르는지, 방 목록(정렬·멤버·나간 사람·라운드 메시지 수·미리보기), 방 기록(오른쪽 = 만든 쪽 / 보는 쪽, 틱 구분선 하나씩, GIVE·ASK 칩 결과, 꺼짐·TALK 끝 줄), agent 화면 필터(멤버인 방만, 나간 방은 LEAVE까지), 재생 위치를 따라가는지, 틱 줄(불림·대기·DONE·⏰ 다시 불림·끝 이유), 자리 기록(`recordHTML`)·무대 말풍선·이벤트 설명, 토큰 흐름 장부, 내보내기, 캐릭터(번호·자리 색·두 프레임) · 엔진이 쓴 v22 실행(`/private/tmp/claude-501/v22_stub`, `result/2026-10-17/e52_v22/runs/*/*`, 있으면) · 10-17 위 영역(`HARNESS_TOP`): 이벤트마다 라운드 흐름 상자(`rfStepOf`)가 정해지는지, 무대 줄의 SOLVER 테두리·배지, SOLVE 답(답·정답·생성 ÷ 한도·결과), 고른 상자의 USER 프롬프트(TALK = 자리별 마지막 호출, SOLVE), 엔진 상자 = 설명 + 사실, v22가 아니면 라운드 흐름 숨김 · 10-17(2): 규칙 모양의 전체 수(`space_size` = 25,996), 참여 1..4명마다 맞는 규칙 수와 행동별 수(합 = 맞는 수, N이 늘면 줄기만, seed 4101 R1 = 250 … 13 → go_left 9 · stay 4), N마다 뽑힌 채점 규칙(N = 4 = 기록), `transfer_points`(두 여유, 앞선 틱의 ASK만 "달라고 해서"), 나눔 세 그림(한 색, 가중 중심), 자리 기록 서랍(고른 호출 표시, 틱 얼굴·말풍선의 `data-rec-call`). API·경로·과제·내보내기 테스트의 `run` 픽스처는 이제 `v22_fixture`로 만든다. **10-16 v22 정리(prune)로 엔진이 v16 계열만 돌리게 되어**, 옛 엔진 설정(v9–v15 스위치, `test_e52.game`)으로 세션을 돌려 재생을 확인하던 테스트 26개는 그 엔진이 없으면 건너뛴다(옛 실행 기록 자체는 페이지가 그대로 읽는다) |

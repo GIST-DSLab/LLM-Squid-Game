@@ -11,13 +11,15 @@ COPY web/server /app/web/server
 COPY web/frontend /app/web/frontend
 COPY web/__init__.py /app/web/__init__.py
 # the game-log viewer and model comparison / leaderboard (mounted at /monitor/, /api/leaderboard) and a snapshot of
-# finished runs for them to read (the container has no ~/squid5-runs)
+# finished runs for them to read (the container has no checkout, so no result/)
 COPY tools/monitor /app/tools/monitor
 COPY web/data/runs /app/web/data/runs
 # newer runs keep events.jsonl as events.jsonl.xz in git (web/tools/runs_snapshot.py); the viewer seeks in the plain file
 COPY web/tools/runs_snapshot.py /app/web/tools/runs_snapshot.py
 RUN python /app/web/tools/runs_snapshot.py unpack /app/web/data/runs
 ENV WEB5_MONITOR_ROOT=/app/web/data/runs
+# rooms' live engine logs (outside the image there is no git checkout whose result/ they would default to)
+ENV WEB5_RUNS_ROOT=/app/web5_runs
 ENV PORT=8600
 # the deployed server is public: model seats only from WEB5_MODELS, no client-chosen provider / address / key name
 # (web/server/engine.py PUBLIC); the key itself (OLLAMA_API_KEY) comes from the platform's secret store

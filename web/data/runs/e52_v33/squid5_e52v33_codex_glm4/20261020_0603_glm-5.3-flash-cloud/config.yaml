@@ -7,9 +7,11 @@ out_root: ~/squid5-runs/e52_v33
 model:
   kind: codex_cli
   model: glm-5.3-flash:cloud
-  base_url: http://localhost:11434/v1
+  base_url: http://host.docker.internal:11434/v1
   think: high
   timeout: 1200
+  sandbox: docker
+  image: squid5-agent-cli:latest
 game:
   charge_total: 24000
   exit_bonus_pct: 20

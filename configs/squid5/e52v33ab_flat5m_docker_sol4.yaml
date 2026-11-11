@@ -4,7 +4,7 @@ mode: game
 reps: 10
 seed0: 4101
 workers: 1
-out_root: ~/squid5-runs/e52_v33ab
+out_root: result/2026-11-03/e52_v33ab/runs
 model:
   kind: codex_cli
   model: gpt-6-sol

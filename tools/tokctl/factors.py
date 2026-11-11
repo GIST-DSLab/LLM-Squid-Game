@@ -13,7 +13,9 @@ import numpy as np
 VER = sys.argv[1] if len(sys.argv) > 1 else "35"
 SKIP = set(sys.argv[2].split(",")) if len(sys.argv) > 2 else set()  # seats left out, e.g. codex_gemma4 (the first v35 ladder)
 TAG = sys.argv[3] if len(sys.argv) > 3 else ""
-RUNS = Path(os.path.expanduser(f"~/squid5-runs/e52_v{VER}"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+RUNS = squid5_runs(f"e52_v{VER}")
 OUT = Path(__file__).resolve().parents[2] / f"docs/history/e52-tokctl-2026-10-20/factors_v{VER}{TAG}.json"
 CLOSED = ("public_opus4", "public_sol4")
 

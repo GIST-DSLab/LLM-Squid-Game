@@ -5,7 +5,7 @@ mode: refill
 model: {kind: ollama, model: "glm-5.3-flash", api_key_env: OLLAMA_API_KEY3, think: true, timeout: 1200, retries: 5}
 reps: 20
 workers: 8
-out_root: ~/squid5-runs/e5x
+out_root: result/{kst_date}/e5x/runs
 cells:
   - {cell_id: A, currency: tokens, arm: self.A}
   - {cell_id: other_A, currency: tokens, arm: other.A}

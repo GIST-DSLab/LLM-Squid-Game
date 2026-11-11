@@ -10,7 +10,9 @@ model:
   think: high
   timeout: 900
   retries: 3
-  base_url: http://127.0.0.1:18781
+  base_url: http://host.docker.internal:18781
+  sandbox: docker
+  image: squid5-agent-cli:latest
 game:
   charge_total: 24000
   exit_bonus_pct: 20

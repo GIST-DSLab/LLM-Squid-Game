@@ -9,6 +9,8 @@ model:
   model: gpt-6-luna
   think: high
   timeout: 900
+  sandbox: docker
+  image: squid5-agent-cli:latest
 game:
   charge_total: 24000
   exit_bonus_pct: 20

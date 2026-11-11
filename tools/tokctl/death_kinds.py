@@ -11,7 +11,9 @@ import collections, glob, json, os, sys
 from pathlib import Path
 
 VER, SKIP = sys.argv[1], set(sys.argv[2:])
-R = Path(os.path.expanduser(f"~/squid5-runs/e52_v{VER}"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from squid5.core.config import squid5_runs  # noqa: E402  (~/squid5-runs now lives in result/)
+R = squid5_runs(f"e52_v{VER}")
 out = collections.defaultdict(lambda: collections.Counter())
 for res_path in sorted(glob.glob(str(R / "squid5_*" / "*" / "results.jsonl"))):
     seat = Path(res_path).parent.parent.name.split(f"e52v{VER}_")[1]

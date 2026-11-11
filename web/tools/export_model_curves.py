@@ -11,9 +11,13 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import sys
 from pathlib import Path
 
-RUN = "~/squid5-runs/e51_v10_refill_20260930"
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from squid5.core.config import squid5_runs  # noqa: E402
+
+RUN = "e51_v10_refill_20260930"  # an old ~/squid5-runs folder, now in result/
 X = [50, 40, 30, 20, 10]
 # summary.json ids -> metrics.json keys (same order in both files).
 METRICS_KEY = {
@@ -59,8 +63,8 @@ def export(summary_path: Path, metrics_path: Path) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--summary", default=f"{RUN}/summary.json")
-    ap.add_argument("--metrics", default=f"{RUN}/metrics.json")
+    ap.add_argument("--summary", default=str(squid5_runs(f"{RUN}/summary.json")))
+    ap.add_argument("--metrics", default=str(squid5_runs(f"{RUN}/metrics.json")))
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     a = ap.parse_args()
     data = export(Path(a.summary).expanduser(), Path(a.metrics).expanduser())
